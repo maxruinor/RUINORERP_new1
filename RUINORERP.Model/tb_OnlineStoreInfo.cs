@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/14/2025 18:56:58
+// 时间：02/08/2025 16:32:07
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -46,8 +46,8 @@ namespace RUINORERP.Model
         { 
             get{return _Store_ID;}
             set{
-            base.PrimaryKeyID = _Store_ID;
             SetProperty(ref _Store_ID, value);
+                base.PrimaryKeyID = _Store_ID;
             }
         }
 
@@ -62,7 +62,7 @@ namespace RUINORERP.Model
             get{return _StoreCode;}
             set{
             SetProperty(ref _StoreCode, value);
-            }
+                        }
         }
 
         private string _StoreName;
@@ -76,7 +76,7 @@ namespace RUINORERP.Model
             get{return _StoreName;}
             set{
             SetProperty(ref _StoreName, value);
-            }
+                        }
         }
 
         private string _PlatformName;
@@ -90,7 +90,7 @@ namespace RUINORERP.Model
             get{return _PlatformName;}
             set{
             SetProperty(ref _PlatformName, value);
-            }
+                        }
         }
 
         private string _Contact;
@@ -104,7 +104,7 @@ namespace RUINORERP.Model
             get{return _Contact;}
             set{
             SetProperty(ref _Contact, value);
-            }
+                        }
         }
 
         private string _Phone;
@@ -118,7 +118,7 @@ namespace RUINORERP.Model
             get{return _Phone;}
             set{
             SetProperty(ref _Phone, value);
-            }
+                        }
         }
 
         private string _Address;
@@ -132,7 +132,7 @@ namespace RUINORERP.Model
             get{return _Address;}
             set{
             SetProperty(ref _Address, value);
-            }
+                        }
         }
 
         private string _Website;
@@ -146,7 +146,7 @@ namespace RUINORERP.Model
             get{return _Website;}
             set{
             SetProperty(ref _Website, value);
-            }
+                        }
         }
 
         private string _ResponsiblePerson;
@@ -160,7 +160,7 @@ namespace RUINORERP.Model
             get{return _ResponsiblePerson;}
             set{
             SetProperty(ref _ResponsiblePerson, value);
-            }
+                        }
         }
 
         private string _Notes;
@@ -174,7 +174,7 @@ namespace RUINORERP.Model
             get{return _Notes;}
             set{
             SetProperty(ref _Notes, value);
-            }
+                        }
         }
 
         private DateTime? _Created_at;
@@ -188,7 +188,7 @@ namespace RUINORERP.Model
             get{return _Created_at;}
             set{
             SetProperty(ref _Created_at, value);
-            }
+                        }
         }
 
         private long? _Created_by;
@@ -202,7 +202,7 @@ namespace RUINORERP.Model
             get{return _Created_by;}
             set{
             SetProperty(ref _Created_by, value);
-            }
+                        }
         }
 
         private DateTime? _Modified_at;
@@ -216,7 +216,7 @@ namespace RUINORERP.Model
             get{return _Modified_at;}
             set{
             SetProperty(ref _Modified_at, value);
-            }
+                        }
         }
 
         private long? _Modified_by;
@@ -230,7 +230,7 @@ namespace RUINORERP.Model
             get{return _Modified_by;}
             set{
             SetProperty(ref _Modified_by, value);
-            }
+                        }
         }
 
         #endregion

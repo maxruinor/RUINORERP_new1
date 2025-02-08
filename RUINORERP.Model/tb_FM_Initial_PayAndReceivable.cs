@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/14/2025 18:56:52
+// 时间：02/08/2025 16:32:00
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -46,8 +46,8 @@ namespace RUINORERP.Model
         { 
             get{return _Init_PRID;}
             set{
-            base.PrimaryKeyID = _Init_PRID;
             SetProperty(ref _Init_PRID, value);
+                base.PrimaryKeyID = _Init_PRID;
             }
         }
 
@@ -63,7 +63,7 @@ namespace RUINORERP.Model
             get{return _subject_id;}
             set{
             SetProperty(ref _subject_id, value);
-            }
+                        }
         }
 
         private long? _account_id;
@@ -78,7 +78,7 @@ namespace RUINORERP.Model
             get{return _account_id;}
             set{
             SetProperty(ref _account_id, value);
-            }
+                        }
         }
 
         private long? _ExpenseType_id;
@@ -93,7 +93,7 @@ namespace RUINORERP.Model
             get{return _ExpenseType_id;}
             set{
             SetProperty(ref _ExpenseType_id, value);
-            }
+                        }
         }
 
         private long? _Employee_ID;
@@ -108,7 +108,7 @@ namespace RUINORERP.Model
             get{return _Employee_ID;}
             set{
             SetProperty(ref _Employee_ID, value);
-            }
+                        }
         }
 
         private long? _DepartmentID;
@@ -123,7 +123,7 @@ namespace RUINORERP.Model
             get{return _DepartmentID;}
             set{
             SetProperty(ref _DepartmentID, value);
-            }
+                        }
         }
 
         private long? _CustomerVendor_ID;
@@ -138,7 +138,7 @@ namespace RUINORERP.Model
             get{return _CustomerVendor_ID;}
             set{
             SetProperty(ref _CustomerVendor_ID, value);
-            }
+                        }
         }
 
         private string _ExpenseName;
@@ -152,7 +152,7 @@ namespace RUINORERP.Model
             get{return _ExpenseName;}
             set{
             SetProperty(ref _ExpenseName, value);
-            }
+                        }
         }
 
         private DateTime? _TransactionDate;
@@ -166,7 +166,7 @@ namespace RUINORERP.Model
             get{return _TransactionDate;}
             set{
             SetProperty(ref _TransactionDate, value);
-            }
+                        }
         }
 
         private decimal _TotalAmount= ((0));
@@ -180,7 +180,7 @@ namespace RUINORERP.Model
             get{return _TotalAmount;}
             set{
             SetProperty(ref _TotalAmount, value);
-            }
+                        }
         }
 
         private bool _EXPOrINC= true;
@@ -194,7 +194,7 @@ namespace RUINORERP.Model
             get{return _EXPOrINC;}
             set{
             SetProperty(ref _EXPOrINC, value);
-            }
+                        }
         }
 
         private bool _IncludeTax= false;
@@ -208,7 +208,7 @@ namespace RUINORERP.Model
             get{return _IncludeTax;}
             set{
             SetProperty(ref _IncludeTax, value);
-            }
+                        }
         }
 
         private string _Notes;
@@ -222,7 +222,7 @@ namespace RUINORERP.Model
             get{return _Notes;}
             set{
             SetProperty(ref _Notes, value);
-            }
+                        }
         }
 
         private decimal? _TaxAmount;
@@ -236,7 +236,7 @@ namespace RUINORERP.Model
             get{return _TaxAmount;}
             set{
             SetProperty(ref _TaxAmount, value);
-            }
+                        }
         }
 
         private decimal? _TaxRate;
@@ -250,7 +250,7 @@ namespace RUINORERP.Model
             get{return _TaxRate;}
             set{
             SetProperty(ref _TaxRate, value);
-            }
+                        }
         }
 
         private decimal _UntaxedAmount;
@@ -264,7 +264,7 @@ namespace RUINORERP.Model
             get{return _UntaxedAmount;}
             set{
             SetProperty(ref _UntaxedAmount, value);
-            }
+                        }
         }
 
         private DateTime? _Created_at;
@@ -278,7 +278,7 @@ namespace RUINORERP.Model
             get{return _Created_at;}
             set{
             SetProperty(ref _Created_at, value);
-            }
+                        }
         }
 
         private long? _Created_by;
@@ -292,7 +292,7 @@ namespace RUINORERP.Model
             get{return _Created_by;}
             set{
             SetProperty(ref _Created_by, value);
-            }
+                        }
         }
 
         private DateTime? _Modified_at;
@@ -306,7 +306,7 @@ namespace RUINORERP.Model
             get{return _Modified_at;}
             set{
             SetProperty(ref _Modified_at, value);
-            }
+                        }
         }
 
         private long? _Modified_by;
@@ -320,7 +320,7 @@ namespace RUINORERP.Model
             get{return _Modified_by;}
             set{
             SetProperty(ref _Modified_by, value);
-            }
+                        }
         }
 
         private bool _isdeleted= false;
@@ -335,7 +335,7 @@ namespace RUINORERP.Model
             get{return _isdeleted;}
             set{
             SetProperty(ref _isdeleted, value);
-            }
+                        }
         }
 
         private int? _DataStatus;
@@ -349,7 +349,7 @@ namespace RUINORERP.Model
             get{return _DataStatus;}
             set{
             SetProperty(ref _DataStatus, value);
-            }
+                        }
         }
 
         private string _ApprovalOpinions;
@@ -363,7 +363,7 @@ namespace RUINORERP.Model
             get{return _ApprovalOpinions;}
             set{
             SetProperty(ref _ApprovalOpinions, value);
-            }
+                        }
         }
 
         private long? _Approver_by;
@@ -377,7 +377,7 @@ namespace RUINORERP.Model
             get{return _Approver_by;}
             set{
             SetProperty(ref _Approver_by, value);
-            }
+                        }
         }
 
         private DateTime? _Approver_at;
@@ -391,7 +391,7 @@ namespace RUINORERP.Model
             get{return _Approver_at;}
             set{
             SetProperty(ref _Approver_at, value);
-            }
+                        }
         }
 
         private int? _ApprovalStatus= ((0));
@@ -405,7 +405,7 @@ namespace RUINORERP.Model
             get{return _ApprovalStatus;}
             set{
             SetProperty(ref _ApprovalStatus, value);
-            }
+                        }
         }
 
         private bool? _ApprovalResults;
@@ -419,7 +419,7 @@ namespace RUINORERP.Model
             get{return _ApprovalResults;}
             set{
             SetProperty(ref _ApprovalResults, value);
-            }
+                        }
         }
 
         private int _PrintStatus= ((0));
@@ -433,39 +433,39 @@ namespace RUINORERP.Model
             get{return _PrintStatus;}
             set{
             SetProperty(ref _PrintStatus, value);
-            }
+                        }
         }
 
         #endregion
 
         #region 扩展属性
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(DepartmentID))]
         public virtual tb_Department tb_department { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(account_id))]
         public virtual tb_FM_Account tb_fm_account { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(ExpenseType_id))]
         public virtual tb_FM_ExpenseType tb_fm_expensetype { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(subject_id))]
         public virtual tb_FM_Subject tb_fm_subject { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(Employee_ID))]
         public virtual tb_Employee tb_employee { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(CustomerVendor_ID))]
         public virtual tb_CustomerVendor tb_customervendor { get; set; }
 

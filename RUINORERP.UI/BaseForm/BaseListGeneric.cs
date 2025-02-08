@@ -361,6 +361,15 @@ namespace RUINORERP.UI.BaseForm
             }
             BuildSummaryCols();
             BuildInvisibleCols();
+            BuildRelatedDisplay();
+        }
+
+        /// <summary>
+        /// 构建关联显示的一些数据
+        /// </summary>
+        public virtual void BuildRelatedDisplay()
+        {
+
         }
 
         public virtual void BuildSummaryCols()
@@ -378,8 +387,6 @@ namespace RUINORERP.UI.BaseForm
             //_UCBillChildQuery_Related.DefaultHideCols = new List<string>();
 
             //UIHelper.ControlColumnsInvisible(CurMenuInfo, _UCBillChildQuery_Related.InvisibleCols, _UCBillChildQuery_Related.DefaultHideCols);
-
-
         }
 
 
@@ -732,7 +739,7 @@ namespace RUINORERP.UI.BaseForm
 
                         return;
                     }
-                    Delete();
+                    await Delete();
                     break;
                 case MenuItemEnums.修改:
                     Modify();
@@ -1745,7 +1752,7 @@ namespace RUINORERP.UI.BaseForm
            */
         }
 
-        
+
         protected override void Exit(object thisform)
         {
             UIBizSrvice.SaveGridSettingData(CurMenuInfo, dataGridView1, typeof(T));
@@ -1763,9 +1770,9 @@ namespace RUINORERP.UI.BaseForm
                 }
             }
 
-            
+
         }
-        
+
 
 
         protected override void Refreshs()
@@ -1861,6 +1868,13 @@ namespace RUINORERP.UI.BaseForm
             }
             #region 请求缓存
             //通过表名获取需要缓存的关系表再判断是否存在。没有就从服务器请求。这种是全新的请求。后面还要设计更新式请求。
+            if (ColDisplayTypes.Count > 0)
+            {
+                foreach (Type item in ColDisplayTypes)
+                {
+                    UIBizSrvice.RequestCache(item);
+                }
+            }
             UIBizSrvice.RequestCache<T>();
             #endregion
 

@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/14/2025 18:57:16
+// 时间：02/08/2025 16:32:32
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -46,8 +46,8 @@ namespace RUINORERP.Model
         { 
             get{return _ConfigID;}
             set{
-            base.PrimaryKeyID = _ConfigID;
             SetProperty(ref _ConfigID, value);
+                base.PrimaryKeyID = _ConfigID;
             }
         }
 
@@ -62,7 +62,7 @@ namespace RUINORERP.Model
             get{return _RoleID;}
             set{
             SetProperty(ref _RoleID, value);
-            }
+                        }
         }
 
         private long? _User_ID;
@@ -76,7 +76,7 @@ namespace RUINORERP.Model
             get{return _User_ID;}
             set{
             SetProperty(ref _User_ID, value);
-            }
+                        }
         }
 
         private bool _Operable= false;
@@ -90,7 +90,7 @@ namespace RUINORERP.Model
             get{return _Operable;}
             set{
             SetProperty(ref _Operable, value);
-            }
+                        }
         }
 
         private bool _OnlyDisplay= false;
@@ -104,7 +104,7 @@ namespace RUINORERP.Model
             get{return _OnlyDisplay;}
             set{
             SetProperty(ref _OnlyDisplay, value);
-            }
+                        }
         }
 
         private string _ToDoList;
@@ -118,7 +118,7 @@ namespace RUINORERP.Model
             get{return _ToDoList;}
             set{
             SetProperty(ref _ToDoList, value);
-            }
+                        }
         }
 
         private string _FrequentlyMenus;
@@ -132,7 +132,7 @@ namespace RUINORERP.Model
             get{return _FrequentlyMenus;}
             set{
             SetProperty(ref _FrequentlyMenus, value);
-            }
+                        }
         }
 
         private string _DataOverview;
@@ -146,7 +146,7 @@ namespace RUINORERP.Model
             get{return _DataOverview;}
             set{
             SetProperty(ref _DataOverview, value);
-            }
+                        }
         }
 
         #endregion

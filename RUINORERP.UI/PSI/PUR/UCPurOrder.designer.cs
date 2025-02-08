@@ -173,7 +173,7 @@
             // 
             // lblIsIncludeTax
             // 
-            this.lblIsIncludeTax.Location = new System.Drawing.Point(609, 60);
+            this.lblIsIncludeTax.Location = new System.Drawing.Point(606, 60);
             this.lblIsIncludeTax.Name = "lblIsIncludeTax";
             this.lblIsIncludeTax.Size = new System.Drawing.Size(36, 20);
             this.lblIsIncludeTax.TabIndex = 123;
@@ -181,7 +181,7 @@
             // 
             // chkIsIncludeTax
             // 
-            this.chkIsIncludeTax.Location = new System.Drawing.Point(643, 65);
+            this.chkIsIncludeTax.Location = new System.Drawing.Point(646, 65);
             this.chkIsIncludeTax.Name = "chkIsIncludeTax";
             this.chkIsIncludeTax.Size = new System.Drawing.Size(19, 13);
             this.chkIsIncludeTax.TabIndex = 124;
@@ -189,7 +189,7 @@
             // 
             // lblApprovalOpinions
             // 
-            this.lblApprovalOpinions.Location = new System.Drawing.Point(581, 85);
+            this.lblApprovalOpinions.Location = new System.Drawing.Point(580, 85);
             this.lblApprovalOpinions.Name = "lblApprovalOpinions";
             this.lblApprovalOpinions.Size = new System.Drawing.Size(62, 20);
             this.lblApprovalOpinions.TabIndex = 111;
@@ -197,7 +197,7 @@
             // 
             // txtApprovalOpinions
             // 
-            this.txtApprovalOpinions.Location = new System.Drawing.Point(643, 84);
+            this.txtApprovalOpinions.Location = new System.Drawing.Point(646, 84);
             this.txtApprovalOpinions.Name = "txtApprovalOpinions";
             this.txtApprovalOpinions.Size = new System.Drawing.Size(143, 23);
             this.txtApprovalOpinions.TabIndex = 112;
@@ -230,6 +230,7 @@
             // cmbPaytype_ID
             // 
             this.cmbPaytype_ID.DropDownWidth = 100;
+            this.cmbPaytype_ID.IntegralHeight = false;
             this.cmbPaytype_ID.Location = new System.Drawing.Point(393, 39);
             this.cmbPaytype_ID.Name = "cmbPaytype_ID";
             this.cmbPaytype_ID.Size = new System.Drawing.Size(149, 21);
@@ -237,7 +238,7 @@
             // 
             // lblOrder_ID
             // 
-            this.lblOrder_ID.Location = new System.Drawing.Point(823, 72);
+            this.lblOrder_ID.Location = new System.Drawing.Point(827, 72);
             this.lblOrder_ID.Name = "lblOrder_ID";
             this.lblOrder_ID.Size = new System.Drawing.Size(62, 20);
             this.lblOrder_ID.TabIndex = 99;
@@ -246,7 +247,8 @@
             // cmbOrder_ID
             // 
             this.cmbOrder_ID.DropDownWidth = 100;
-            this.cmbOrder_ID.Location = new System.Drawing.Point(890, 68);
+            this.cmbOrder_ID.IntegralHeight = false;
+            this.cmbOrder_ID.Location = new System.Drawing.Point(893, 68);
             this.cmbOrder_ID.Name = "cmbOrder_ID";
             this.cmbOrder_ID.Size = new System.Drawing.Size(134, 21);
             this.cmbOrder_ID.TabIndex = 100;
@@ -262,14 +264,15 @@
             // cmbPDID
             // 
             this.cmbPDID.DropDownWidth = 100;
-            this.cmbPDID.Location = new System.Drawing.Point(890, 42);
+            this.cmbPDID.IntegralHeight = false;
+            this.cmbPDID.Location = new System.Drawing.Point(893, 42);
             this.cmbPDID.Name = "cmbPDID";
             this.cmbPDID.Size = new System.Drawing.Size(134, 21);
             this.cmbPDID.TabIndex = 102;
             // 
             // lblPurDate
             // 
-            this.lblPurDate.Location = new System.Drawing.Point(329, 68);
+            this.lblPurDate.Location = new System.Drawing.Point(326, 68);
             this.lblPurDate.Name = "lblPurDate";
             this.lblPurDate.Size = new System.Drawing.Size(62, 20);
             this.lblPurDate.TabIndex = 103;
@@ -284,7 +287,7 @@
             // 
             // lblPreDeliveryDate
             // 
-            this.lblPreDeliveryDate.Location = new System.Drawing.Point(581, 40);
+            this.lblPreDeliveryDate.Location = new System.Drawing.Point(580, 40);
             this.lblPreDeliveryDate.Name = "lblPreDeliveryDate";
             this.lblPreDeliveryDate.Size = new System.Drawing.Size(62, 20);
             this.lblPreDeliveryDate.TabIndex = 105;
@@ -292,7 +295,7 @@
             // 
             // dtpPreDeliveryDate
             // 
-            this.dtpPreDeliveryDate.Location = new System.Drawing.Point(643, 38);
+            this.dtpPreDeliveryDate.Location = new System.Drawing.Point(646, 38);
             this.dtpPreDeliveryDate.Name = "dtpPreDeliveryDate";
             this.dtpPreDeliveryDate.ShowCheckBox = true;
             this.dtpPreDeliveryDate.Size = new System.Drawing.Size(143, 21);
@@ -300,7 +303,7 @@
             // 
             // lblPurOrderNo
             // 
-            this.lblPurOrderNo.Location = new System.Drawing.Point(33, 39);
+            this.lblPurOrderNo.Location = new System.Drawing.Point(32, 39);
             this.lblPurOrderNo.Name = "lblPurOrderNo";
             this.lblPurOrderNo.Size = new System.Drawing.Size(62, 20);
             this.lblPurOrderNo.TabIndex = 89;
@@ -324,6 +327,7 @@
             // cmbCustomerVendor_ID
             // 
             this.cmbCustomerVendor_ID.DropDownWidth = 100;
+            this.cmbCustomerVendor_ID.IntegralHeight = false;
             this.cmbCustomerVendor_ID.Location = new System.Drawing.Point(106, 60);
             this.cmbCustomerVendor_ID.Name = "cmbCustomerVendor_ID";
             this.cmbCustomerVendor_ID.Size = new System.Drawing.Size(150, 21);
@@ -340,6 +344,7 @@
             // cmbEmployee_ID
             // 
             this.cmbEmployee_ID.DropDownWidth = 100;
+            this.cmbEmployee_ID.IntegralHeight = false;
             this.cmbEmployee_ID.Location = new System.Drawing.Point(106, 85);
             this.cmbEmployee_ID.Name = "cmbEmployee_ID";
             this.cmbEmployee_ID.Size = new System.Drawing.Size(150, 21);
@@ -347,7 +352,7 @@
             // 
             // lblDepartmentID
             // 
-            this.lblDepartmentID.Location = new System.Drawing.Point(325, 92);
+            this.lblDepartmentID.Location = new System.Drawing.Point(326, 92);
             this.lblDepartmentID.Name = "lblDepartmentID";
             this.lblDepartmentID.Size = new System.Drawing.Size(62, 20);
             this.lblDepartmentID.TabIndex = 95;
@@ -356,6 +361,7 @@
             // cmbDepartmentID
             // 
             this.cmbDepartmentID.DropDownWidth = 100;
+            this.cmbDepartmentID.IntegralHeight = false;
             this.cmbDepartmentID.Location = new System.Drawing.Point(392, 88);
             this.cmbDepartmentID.Name = "cmbDepartmentID";
             this.cmbDepartmentID.Size = new System.Drawing.Size(150, 21);

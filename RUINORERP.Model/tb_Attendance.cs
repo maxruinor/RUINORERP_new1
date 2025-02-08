@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/14/2025 18:56:44
+// 时间：02/08/2025 16:31:51
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -46,8 +46,8 @@ namespace RUINORERP.Model
         { 
             get{return _ID;}
             set{
-            base.PrimaryKeyID = _ID;
             SetProperty(ref _ID, value);
+                base.PrimaryKeyID = _ID;
             }
         }
 
@@ -62,7 +62,7 @@ namespace RUINORERP.Model
             get{return _badgenumber;}
             set{
             SetProperty(ref _badgenumber, value);
-            }
+                        }
         }
 
         private string _username;
@@ -76,7 +76,7 @@ namespace RUINORERP.Model
             get{return _username;}
             set{
             SetProperty(ref _username, value);
-            }
+                        }
         }
 
         private string _deptname;
@@ -90,7 +90,7 @@ namespace RUINORERP.Model
             get{return _deptname;}
             set{
             SetProperty(ref _deptname, value);
-            }
+                        }
         }
 
         private string _sDate;
@@ -104,7 +104,7 @@ namespace RUINORERP.Model
             get{return _sDate;}
             set{
             SetProperty(ref _sDate, value);
-            }
+                        }
         }
 
         private string _stime;
@@ -118,7 +118,7 @@ namespace RUINORERP.Model
             get{return _stime;}
             set{
             SetProperty(ref _stime, value);
-            }
+                        }
         }
 
         private DateTime? _eDate;
@@ -132,7 +132,7 @@ namespace RUINORERP.Model
             get{return _eDate;}
             set{
             SetProperty(ref _eDate, value);
-            }
+                        }
         }
 
         private DateTime? _t1;
@@ -146,7 +146,7 @@ namespace RUINORERP.Model
             get{return _t1;}
             set{
             SetProperty(ref _t1, value);
-            }
+                        }
         }
 
         private DateTime? _t2;
@@ -160,7 +160,7 @@ namespace RUINORERP.Model
             get{return _t2;}
             set{
             SetProperty(ref _t2, value);
-            }
+                        }
         }
 
         private DateTime? _t3;
@@ -174,7 +174,7 @@ namespace RUINORERP.Model
             get{return _t3;}
             set{
             SetProperty(ref _t3, value);
-            }
+                        }
         }
 
         private DateTime? _t4;
@@ -188,7 +188,7 @@ namespace RUINORERP.Model
             get{return _t4;}
             set{
             SetProperty(ref _t4, value);
-            }
+                        }
         }
 
         #endregion

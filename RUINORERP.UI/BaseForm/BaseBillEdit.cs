@@ -184,6 +184,10 @@ namespace RUINORERP.UI.BaseForm
                     }
                 }
             }
+            else
+            {
+                btnItem.Visible = true;
+            }
         }
 
 
@@ -237,6 +241,15 @@ namespace RUINORERP.UI.BaseForm
         {
 
         }
+
+        /// <summary>
+        /// 反结案
+        /// </summary>
+        protected virtual Task<bool> AntiCloseCaseAsync()
+        {
+            return null;
+        }
+
 
         /// <summary>
         /// 结案

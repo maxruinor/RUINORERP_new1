@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/18/2024 18:17:25
+// 时间：02/08/2025 16:32:13
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -48,7 +48,7 @@ namespace RUINORERP.Model
             get{return _ConversionID;}
             set{
             SetProperty(ref _ConversionID, value);
-            }
+                        }
         }
 
         private long _ConversionSub_ID;
@@ -61,8 +61,8 @@ namespace RUINORERP.Model
         { 
             get{return _ConversionSub_ID;}
             set{
-            base.PrimaryKeyID = _ConversionSub_ID;
             SetProperty(ref _ConversionSub_ID, value);
+                base.PrimaryKeyID = _ConversionSub_ID;
             }
         }
 
@@ -78,7 +78,7 @@ namespace RUINORERP.Model
             get{return _ProdDetailID_from;}
             set{
             SetProperty(ref _ProdDetailID_from, value);
-            }
+                        }
         }
 
         private string _BarCode_from;
@@ -92,7 +92,7 @@ namespace RUINORERP.Model
             get{return _BarCode_from;}
             set{
             SetProperty(ref _BarCode_from, value);
-            }
+                        }
         }
 
         private string _SKU_from;
@@ -106,7 +106,7 @@ namespace RUINORERP.Model
             get{return _SKU_from;}
             set{
             SetProperty(ref _SKU_from, value);
-            }
+                        }
         }
 
         private long _Type_ID_from;
@@ -121,7 +121,7 @@ namespace RUINORERP.Model
             get{return _Type_ID_from;}
             set{
             SetProperty(ref _Type_ID_from, value);
-            }
+                        }
         }
 
         private string _CNName_from;
@@ -135,7 +135,7 @@ namespace RUINORERP.Model
             get{return _CNName_from;}
             set{
             SetProperty(ref _CNName_from, value);
-            }
+                        }
         }
 
         private string _Model_from;
@@ -149,7 +149,7 @@ namespace RUINORERP.Model
             get{return _Model_from;}
             set{
             SetProperty(ref _Model_from, value);
-            }
+                        }
         }
 
         private string _Specifications_from;
@@ -163,7 +163,7 @@ namespace RUINORERP.Model
             get{return _Specifications_from;}
             set{
             SetProperty(ref _Specifications_from, value);
-            }
+                        }
         }
 
         private string _property_from;
@@ -177,7 +177,7 @@ namespace RUINORERP.Model
             get{return _property_from;}
             set{
             SetProperty(ref _property_from, value);
-            }
+                        }
         }
 
         private int _ConversionQty= ((0));
@@ -191,7 +191,7 @@ namespace RUINORERP.Model
             get{return _ConversionQty;}
             set{
             SetProperty(ref _ConversionQty, value);
-            }
+                        }
         }
 
         private long _ProdDetailID_to;
@@ -206,7 +206,7 @@ namespace RUINORERP.Model
             get{return _ProdDetailID_to;}
             set{
             SetProperty(ref _ProdDetailID_to, value);
-            }
+                        }
         }
 
         private string _BarCode_to;
@@ -220,7 +220,7 @@ namespace RUINORERP.Model
             get{return _BarCode_to;}
             set{
             SetProperty(ref _BarCode_to, value);
-            }
+                        }
         }
 
         private string _SKU_to;
@@ -234,7 +234,7 @@ namespace RUINORERP.Model
             get{return _SKU_to;}
             set{
             SetProperty(ref _SKU_to, value);
-            }
+                        }
         }
 
         private long _Type_ID_to;
@@ -249,7 +249,7 @@ namespace RUINORERP.Model
             get{return _Type_ID_to;}
             set{
             SetProperty(ref _Type_ID_to, value);
-            }
+                        }
         }
 
         private string _CNName_to;
@@ -263,7 +263,7 @@ namespace RUINORERP.Model
             get{return _CNName_to;}
             set{
             SetProperty(ref _CNName_to, value);
-            }
+                        }
         }
 
         private string _Model_to;
@@ -277,7 +277,7 @@ namespace RUINORERP.Model
             get{return _Model_to;}
             set{
             SetProperty(ref _Model_to, value);
-            }
+                        }
         }
 
         private string _Specifications_to;
@@ -291,7 +291,7 @@ namespace RUINORERP.Model
             get{return _Specifications_to;}
             set{
             SetProperty(ref _Specifications_to, value);
-            }
+                        }
         }
 
         private string _property_to;
@@ -305,7 +305,7 @@ namespace RUINORERP.Model
             get{return _property_to;}
             set{
             SetProperty(ref _property_to, value);
-            }
+                        }
         }
 
         private string _Summary;
@@ -319,34 +319,34 @@ namespace RUINORERP.Model
             get{return _Summary;}
             set{
             SetProperty(ref _Summary, value);
-            }
+                        }
         }
 
         #endregion
 
         #region 扩展属性
         [SugarColumn(IsIgnore = true)]
-        // [Browsable(false)]
+        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(ProdDetailID_from))]
         public virtual tb_ProdDetail tb_proddetail { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(ConversionID))]
         public virtual tb_ProdConversion tb_prodconversion { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        // [Browsable(false)]
+        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(ProdDetailID_to))]
         public virtual tb_ProdDetail tb_proddetail_to { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        // [Browsable(false)]
+        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(Type_ID_from))]
         public virtual tb_ProductType tb_producttype_from { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        // [Browsable(false)]
+        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(Type_ID_to))]
         public virtual tb_ProductType tb_producttype_to { get; set; }
 

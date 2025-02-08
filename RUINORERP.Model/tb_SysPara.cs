@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：02/08/2025 16:31:55
+// 时间：02/08/2025 16:32:31
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -18,144 +18,157 @@ using RUINORERP.Global.CustomAttribute;
 namespace RUINORERP.Model
 {
     /// <summary>
-    /// 联系人表-爱好跟进
+    /// 系统参数
     /// </summary>
     [Serializable()]
-    [Description("联系人表-爱好跟进")]
-    [SugarTable("tb_CRM_Contact")]
-    public partial class tb_CRM_Contact: BaseEntity, ICloneable
+    [Description("系统参数")]
+    [SugarTable("tb_SysPara")]
+    public partial class tb_SysPara: BaseEntity, ICloneable
     {
-        public tb_CRM_Contact()
+        public tb_SysPara()
         {
             base.FieldNameList = fieldNameList;
             if (!PK_FK_ID_Check())
             {
-                throw new Exception("联系人表-爱好跟进tb_CRM_Contact" + "外键ID与对应主主键名称不一致。请修改数据库");
+                throw new Exception("系统参数tb_SysPara" + "外键ID与对应主主键名称不一致。请修改数据库");
             }
         }
 
 
         #region 属性
-        private long _Contact_id;
+        private long _ID;
         /// <summary>
         /// 
         /// </summary>
  
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Contact_id" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "" , IsPrimaryKey = true)]
-        public long Contact_id
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "ID" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "" , IsPrimaryKey = true)]
+        public long ID
         { 
-            get{return _Contact_id;}
+            get{return _ID;}
             set{
-            SetProperty(ref _Contact_id, value);
-                base.PrimaryKeyID = _Contact_id;
+            SetProperty(ref _ID, value);
+                base.PrimaryKeyID = _ID;
             }
         }
 
-        private long _Customer_id;
+        private string _CompanyCode;
         /// <summary>
-        /// 目标客户
+        /// 公司代号
         /// </summary>
-        [AdvQueryAttribute(ColName = "Customer_id",ColDesc = "目标客户")] 
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Customer_id" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "目标客户" )]
-        [FKRelationAttribute("tb_CRM_Customer","Customer_id")]
-        public long Customer_id
+        [AdvQueryAttribute(ColName = "CompanyCode",ColDesc = "公司代号")] 
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "CompanyCode" ,Length=10,IsNullable = true,ColumnDescription = "公司代号" )]
+        public string CompanyCode
         { 
-            get{return _Customer_id;}
+            get{return _CompanyCode;}
             set{
-            SetProperty(ref _Customer_id, value);
+            SetProperty(ref _CompanyCode, value);
                         }
         }
 
-        private string _SocialTools;
+        private string _CNName;
         /// <summary>
-        /// 社交账号
+        /// 名称
         /// </summary>
-        [AdvQueryAttribute(ColName = "SocialTools",ColDesc = "社交账号")] 
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "SocialTools" ,Length=200,IsNullable = true,ColumnDescription = "社交账号" )]
-        public string SocialTools
+        [AdvQueryAttribute(ColName = "CNName",ColDesc = "名称")] 
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "CNName" ,Length=100,IsNullable = true,ColumnDescription = "名称" )]
+        public string CNName
         { 
-            get{return _SocialTools;}
+            get{return _CNName;}
             set{
-            SetProperty(ref _SocialTools, value);
+            SetProperty(ref _CNName, value);
                         }
         }
 
-        private string _Contact_Name;
+        private string _ENName;
         /// <summary>
-        /// 姓名
+        /// 英语名称
         /// </summary>
-        [AdvQueryAttribute(ColName = "Contact_Name",ColDesc = "姓名")] 
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "Contact_Name" ,Length=50,IsNullable = true,ColumnDescription = "姓名" )]
-        public string Contact_Name
+        [AdvQueryAttribute(ColName = "ENName",ColDesc = "英语名称")] 
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "ENName" ,Length=100,IsNullable = true,ColumnDescription = "英语名称" )]
+        public string ENName
         { 
-            get{return _Contact_Name;}
+            get{return _ENName;}
             set{
-            SetProperty(ref _Contact_Name, value);
+            SetProperty(ref _ENName, value);
                         }
         }
 
-        private string _Contact_Email;
+        private string _ShortName;
         /// <summary>
-        /// 邮箱
+        /// 简称
         /// </summary>
-        [AdvQueryAttribute(ColName = "Contact_Email",ColDesc = "邮箱")] 
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "Contact_Email" ,Length=100,IsNullable = true,ColumnDescription = "邮箱" )]
-        public string Contact_Email
+        [AdvQueryAttribute(ColName = "ShortName",ColDesc = "简称")] 
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "ShortName" ,Length=50,IsNullable = true,ColumnDescription = "简称" )]
+        public string ShortName
         { 
-            get{return _Contact_Email;}
+            get{return _ShortName;}
             set{
-            SetProperty(ref _Contact_Email, value);
+            SetProperty(ref _ShortName, value);
                         }
         }
 
-        private string _Contact_Phone;
+        private string _LegalPersonName;
+        /// <summary>
+        /// 法人姓名
+        /// </summary>
+        [AdvQueryAttribute(ColName = "LegalPersonName",ColDesc = "法人姓名")] 
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "LegalPersonName" ,Length=50,IsNullable = true,ColumnDescription = "法人姓名" )]
+        public string LegalPersonName
+        { 
+            get{return _LegalPersonName;}
+            set{
+            SetProperty(ref _LegalPersonName, value);
+                        }
+        }
+
+        private string _UnifiedSocialCreditIdentifier;
+        /// <summary>
+        /// 公司执照代码
+        /// </summary>
+        [AdvQueryAttribute(ColName = "UnifiedSocialCreditIdentifier",ColDesc = "公司执照代码")] 
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "UnifiedSocialCreditIdentifier" ,Length=50,IsNullable = true,ColumnDescription = "公司执照代码" )]
+        public string UnifiedSocialCreditIdentifier
+        { 
+            get{return _UnifiedSocialCreditIdentifier;}
+            set{
+            SetProperty(ref _UnifiedSocialCreditIdentifier, value);
+                        }
+        }
+
+        private string _Contact;
+        /// <summary>
+        /// 联系人
+        /// </summary>
+        [AdvQueryAttribute(ColName = "Contact",ColDesc = "联系人")] 
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "Contact" ,Length=100,IsNullable = true,ColumnDescription = "联系人" )]
+        public string Contact
+        { 
+            get{return _Contact;}
+            set{
+            SetProperty(ref _Contact, value);
+                        }
+        }
+
+        private string _Phone;
         /// <summary>
         /// 电话
         /// </summary>
-        [AdvQueryAttribute(ColName = "Contact_Phone",ColDesc = "电话")] 
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "Contact_Phone" ,Length=30,IsNullable = true,ColumnDescription = "电话" )]
-        public string Contact_Phone
+        [AdvQueryAttribute(ColName = "Phone",ColDesc = "电话")] 
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "Phone" ,Length=100,IsNullable = true,ColumnDescription = "电话" )]
+        public string Phone
         { 
-            get{return _Contact_Phone;}
+            get{return _Phone;}
             set{
-            SetProperty(ref _Contact_Phone, value);
-                        }
-        }
-
-        private string _Position;
-        /// <summary>
-        /// 职位
-        /// </summary>
-        [AdvQueryAttribute(ColName = "Position",ColDesc = "职位")] 
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "Position" ,Length=50,IsNullable = true,ColumnDescription = "职位" )]
-        public string Position
-        { 
-            get{return _Position;}
-            set{
-            SetProperty(ref _Position, value);
-                        }
-        }
-
-        private string _Preferences;
-        /// <summary>
-        /// 爱好
-        /// </summary>
-        [AdvQueryAttribute(ColName = "Preferences",ColDesc = "爱好")] 
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "Preferences" ,Length=200,IsNullable = true,ColumnDescription = "爱好" )]
-        public string Preferences
-        { 
-            get{return _Preferences;}
-            set{
-            SetProperty(ref _Preferences, value);
+            SetProperty(ref _Phone, value);
                         }
         }
 
         private string _Address;
         /// <summary>
-        /// 联系地址
+        /// 地址
         /// </summary>
-        [AdvQueryAttribute(ColName = "Address",ColDesc = "联系地址")] 
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "Address" ,Length=255,IsNullable = true,ColumnDescription = "联系地址" )]
+        [AdvQueryAttribute(ColName = "Address",ColDesc = "地址")] 
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "Address" ,Length=255,IsNullable = true,ColumnDescription = "地址" )]
         public string Address
         { 
             get{return _Address;}
@@ -164,17 +177,45 @@ namespace RUINORERP.Model
                         }
         }
 
-        private string _Notes;
+        private string _ENAddress;
         /// <summary>
-        /// 备注
+        /// 英文地址
         /// </summary>
-        [AdvQueryAttribute(ColName = "Notes",ColDesc = "备注")] 
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "Notes" ,Length=255,IsNullable = true,ColumnDescription = "备注" )]
-        public string Notes
+        [AdvQueryAttribute(ColName = "ENAddress",ColDesc = "英文地址")] 
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "ENAddress" ,Length=255,IsNullable = true,ColumnDescription = "英文地址" )]
+        public string ENAddress
         { 
-            get{return _Notes;}
+            get{return _ENAddress;}
             set{
-            SetProperty(ref _Notes, value);
+            SetProperty(ref _ENAddress, value);
+                        }
+        }
+
+        private string _Website;
+        /// <summary>
+        /// 网址
+        /// </summary>
+        [AdvQueryAttribute(ColName = "Website",ColDesc = "网址")] 
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "Website" ,Length=255,IsNullable = true,ColumnDescription = "网址" )]
+        public string Website
+        { 
+            get{return _Website;}
+            set{
+            SetProperty(ref _Website, value);
+                        }
+        }
+
+        private string _Email;
+        /// <summary>
+        /// 电子邮件
+        /// </summary>
+        [AdvQueryAttribute(ColName = "Email",ColDesc = "电子邮件")] 
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "Email" ,Length=100,IsNullable = true,ColumnDescription = "电子邮件" )]
+        public string Email
+        { 
+            get{return _Email;}
+            set{
+            SetProperty(ref _Email, value);
                         }
         }
 
@@ -234,29 +275,23 @@ namespace RUINORERP.Model
                         }
         }
 
-        private bool? _isdeleted= false;
+        private string _Notes;
         /// <summary>
-        /// 逻辑删除
+        /// 备注
         /// </summary>
-        [AdvQueryAttribute(ColName = "isdeleted",ColDesc = "逻辑删除")] 
-        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType ="Boolean",  ColumnName = "isdeleted" ,IsNullable = true,ColumnDescription = "逻辑删除" )]
-        [Browsable(false)]
-        public bool? isdeleted
+        [AdvQueryAttribute(ColName = "Notes",ColDesc = "备注")] 
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "Notes" ,Length=255,IsNullable = true,ColumnDescription = "备注" )]
+        public string Notes
         { 
-            get{return _isdeleted;}
+            get{return _Notes;}
             set{
-            SetProperty(ref _isdeleted, value);
+            SetProperty(ref _Notes, value);
                         }
         }
 
         #endregion
 
         #region 扩展属性
-        [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)] 打印报表时的数据源会不显示
-        [Navigate(NavigateType.OneToOne, nameof(Customer_id))]
-        public virtual tb_CRM_Customer tb_crm_customer { get; set; }
-
 
 
         #endregion
@@ -294,7 +329,7 @@ return rs;
                 {
                     fieldNameList = new ConcurrentDictionary<string, string>();
                     SugarColumn entityAttr;
-                    Type type = typeof(tb_CRM_Contact);
+                    Type type = typeof(tb_SysPara);
                     
                        foreach (PropertyInfo field in type.GetProperties())
                             {
@@ -337,7 +372,7 @@ return rs;
 
         public override object Clone()
         {
-            tb_CRM_Contact loctype = (tb_CRM_Contact)this.MemberwiseClone(); //创建当前对象的浅拷贝。
+            tb_SysPara loctype = (tb_SysPara)this.MemberwiseClone(); //创建当前对象的浅拷贝。
             return loctype;
         }
     }

@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/14/2025 18:56:54
+// 时间：02/08/2025 16:32:03
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -46,8 +46,8 @@ namespace RUINORERP.Model
         { 
             get{return _Inv_Alert_ID;}
             set{
-            base.PrimaryKeyID = _Inv_Alert_ID;
             SetProperty(ref _Inv_Alert_ID, value);
+                base.PrimaryKeyID = _Inv_Alert_ID;
             }
         }
 
@@ -63,7 +63,7 @@ namespace RUINORERP.Model
             get{return _Inventory_ID;}
             set{
             SetProperty(ref _Inventory_ID, value);
-            }
+                        }
         }
 
         private int? _AlertPeriod;
@@ -77,7 +77,7 @@ namespace RUINORERP.Model
             get{return _AlertPeriod;}
             set{
             SetProperty(ref _AlertPeriod, value);
-            }
+                        }
         }
 
         private int? _Max_quantity;
@@ -91,7 +91,7 @@ namespace RUINORERP.Model
             get{return _Max_quantity;}
             set{
             SetProperty(ref _Max_quantity, value);
-            }
+                        }
         }
 
         private int? _Min_quantity;
@@ -105,7 +105,7 @@ namespace RUINORERP.Model
             get{return _Min_quantity;}
             set{
             SetProperty(ref _Min_quantity, value);
-            }
+                        }
         }
 
         private bool? _Alert_Activation;
@@ -119,7 +119,7 @@ namespace RUINORERP.Model
             get{return _Alert_Activation;}
             set{
             SetProperty(ref _Alert_Activation, value);
-            }
+                        }
         }
 
         private DateTime? _Created_at;
@@ -133,7 +133,7 @@ namespace RUINORERP.Model
             get{return _Created_at;}
             set{
             SetProperty(ref _Created_at, value);
-            }
+                        }
         }
 
         private long? _Created_by;
@@ -147,7 +147,7 @@ namespace RUINORERP.Model
             get{return _Created_by;}
             set{
             SetProperty(ref _Created_by, value);
-            }
+                        }
         }
 
         private DateTime? _Modified_at;
@@ -161,7 +161,7 @@ namespace RUINORERP.Model
             get{return _Modified_at;}
             set{
             SetProperty(ref _Modified_at, value);
-            }
+                        }
         }
 
         private long? _Modified_by;
@@ -175,14 +175,14 @@ namespace RUINORERP.Model
             get{return _Modified_by;}
             set{
             SetProperty(ref _Modified_by, value);
-            }
+                        }
         }
 
         #endregion
 
         #region 扩展属性
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(Inventory_ID))]
         public virtual tb_Inventory tb_inventory { get; set; }
 

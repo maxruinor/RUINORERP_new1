@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/14/2025 18:56:53
+// 时间：02/08/2025 16:32:02
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -46,8 +46,8 @@ namespace RUINORERP.Model
         { 
             get{return _PaymentDetail_id;}
             set{
-            base.PrimaryKeyID = _PaymentDetail_id;
             SetProperty(ref _PaymentDetail_id, value);
+                base.PrimaryKeyID = _PaymentDetail_id;
             }
         }
 
@@ -62,7 +62,7 @@ namespace RUINORERP.Model
             get{return _IsAdvancePayment;}
             set{
             SetProperty(ref _IsAdvancePayment, value);
-            }
+                        }
         }
 
         private long? _PrePaymentBill_id;
@@ -76,7 +76,7 @@ namespace RUINORERP.Model
             get{return _PrePaymentBill_id;}
             set{
             SetProperty(ref _PrePaymentBill_id, value);
-            }
+                        }
         }
 
         private DateTime? _BillDate;
@@ -90,7 +90,7 @@ namespace RUINORERP.Model
             get{return _BillDate;}
             set{
             SetProperty(ref _BillDate, value);
-            }
+                        }
         }
 
         private DateTime? _PaymentDate;
@@ -104,7 +104,7 @@ namespace RUINORERP.Model
             get{return _PaymentDate;}
             set{
             SetProperty(ref _PaymentDate, value);
-            }
+                        }
         }
 
         private string _Notes;
@@ -118,7 +118,7 @@ namespace RUINORERP.Model
             get{return _Notes;}
             set{
             SetProperty(ref _Notes, value);
-            }
+                        }
         }
 
         private string _VoucherNumber;
@@ -132,7 +132,7 @@ namespace RUINORERP.Model
             get{return _VoucherNumber;}
             set{
             SetProperty(ref _VoucherNumber, value);
-            }
+                        }
         }
 
         private bool? _GenerateVoucher;
@@ -146,7 +146,7 @@ namespace RUINORERP.Model
             get{return _GenerateVoucher;}
             set{
             SetProperty(ref _GenerateVoucher, value);
-            }
+                        }
         }
 
         private string _Reason;
@@ -160,7 +160,7 @@ namespace RUINORERP.Model
             get{return _Reason;}
             set{
             SetProperty(ref _Reason, value);
-            }
+                        }
         }
 
         private decimal? _TotalAmount;
@@ -174,7 +174,7 @@ namespace RUINORERP.Model
             get{return _TotalAmount;}
             set{
             SetProperty(ref _TotalAmount, value);
-            }
+                        }
         }
 
         private int? _SourceBill_BizType;
@@ -188,7 +188,7 @@ namespace RUINORERP.Model
             get{return _SourceBill_BizType;}
             set{
             SetProperty(ref _SourceBill_BizType, value);
-            }
+                        }
         }
 
         private long? _SourceBill_ID;
@@ -202,7 +202,7 @@ namespace RUINORERP.Model
             get{return _SourceBill_ID;}
             set{
             SetProperty(ref _SourceBill_ID, value);
-            }
+                        }
         }
 
         private string _SourceBillNO;
@@ -216,7 +216,7 @@ namespace RUINORERP.Model
             get{return _SourceBillNO;}
             set{
             SetProperty(ref _SourceBillNO, value);
-            }
+                        }
         }
 
         private decimal? _OverpaymentAmount;
@@ -230,7 +230,7 @@ namespace RUINORERP.Model
             get{return _OverpaymentAmount;}
             set{
             SetProperty(ref _OverpaymentAmount, value);
-            }
+                        }
         }
 
         private DateTime? _Created_at;
@@ -244,7 +244,7 @@ namespace RUINORERP.Model
             get{return _Created_at;}
             set{
             SetProperty(ref _Created_at, value);
-            }
+                        }
         }
 
         private long? _Created_by;
@@ -258,7 +258,7 @@ namespace RUINORERP.Model
             get{return _Created_by;}
             set{
             SetProperty(ref _Created_by, value);
-            }
+                        }
         }
 
         private DateTime? _Modified_at;
@@ -272,7 +272,7 @@ namespace RUINORERP.Model
             get{return _Modified_at;}
             set{
             SetProperty(ref _Modified_at, value);
-            }
+                        }
         }
 
         private long? _Modified_by;
@@ -286,7 +286,7 @@ namespace RUINORERP.Model
             get{return _Modified_by;}
             set{
             SetProperty(ref _Modified_by, value);
-            }
+                        }
         }
 
         private string _Notes2;
@@ -300,7 +300,7 @@ namespace RUINORERP.Model
             get{return _Notes2;}
             set{
             SetProperty(ref _Notes2, value);
-            }
+                        }
         }
 
         private bool _isdeleted= false;
@@ -315,7 +315,7 @@ namespace RUINORERP.Model
             get{return _isdeleted;}
             set{
             SetProperty(ref _isdeleted, value);
-            }
+                        }
         }
 
         private string _ApprovalOpinions;
@@ -329,7 +329,7 @@ namespace RUINORERP.Model
             get{return _ApprovalOpinions;}
             set{
             SetProperty(ref _ApprovalOpinions, value);
-            }
+                        }
         }
 
         private long? _Approver_by;
@@ -343,7 +343,7 @@ namespace RUINORERP.Model
             get{return _Approver_by;}
             set{
             SetProperty(ref _Approver_by, value);
-            }
+                        }
         }
 
         private DateTime? _Approver_at;
@@ -357,7 +357,7 @@ namespace RUINORERP.Model
             get{return _Approver_at;}
             set{
             SetProperty(ref _Approver_at, value);
-            }
+                        }
         }
 
         private int? _ApprovalStatus= ((0));
@@ -371,7 +371,7 @@ namespace RUINORERP.Model
             get{return _ApprovalStatus;}
             set{
             SetProperty(ref _ApprovalStatus, value);
-            }
+                        }
         }
 
         private bool? _ApprovalResults;
@@ -385,7 +385,7 @@ namespace RUINORERP.Model
             get{return _ApprovalResults;}
             set{
             SetProperty(ref _ApprovalResults, value);
-            }
+                        }
         }
 
         private int? _DataStatus;
@@ -399,7 +399,7 @@ namespace RUINORERP.Model
             get{return _DataStatus;}
             set{
             SetProperty(ref _DataStatus, value);
-            }
+                        }
         }
 
         #endregion

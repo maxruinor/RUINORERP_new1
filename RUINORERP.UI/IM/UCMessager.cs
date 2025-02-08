@@ -120,15 +120,19 @@ namespace RUINORERP.UI.IM
 
             try
             {
-                //跳过自己
-                if (user.姓名 == MainForm.Instance.AppContext.CurUserInfo.UserInfo.tb_employee.Employee_Name)
+                if (MainForm.Instance.AppContext.CurUserInfo.UserInfo.tb_employee != null)
                 {
-                    item.Image = imageListBody.Images[0];
+                    //跳过自己
+                    if (user.姓名 == MainForm.Instance.AppContext.CurUserInfo.UserInfo.tb_employee.Employee_Name)
+                    {
+                        item.Image = imageListBody.Images[0];
+                    }
+                    else
+                    {
+                        item.Image = imageListBody.Images[1];
+                    }
                 }
-                else
-                {
-                    item.Image = imageListBody.Images[1];
-                }
+                
             }
             catch (Exception ex)
             {

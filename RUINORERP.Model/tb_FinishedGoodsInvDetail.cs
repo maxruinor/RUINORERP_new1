@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/14/2025 18:56:50
+// 时间：02/08/2025 16:31:59
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -46,8 +46,8 @@ namespace RUINORERP.Model
         { 
             get{return _Sub_ID;}
             set{
-            base.PrimaryKeyID = _Sub_ID;
             SetProperty(ref _Sub_ID, value);
+                base.PrimaryKeyID = _Sub_ID;
             }
         }
 
@@ -63,7 +63,7 @@ namespace RUINORERP.Model
             get{return _FG_ID;}
             set{
             SetProperty(ref _FG_ID, value);
-            }
+                        }
         }
 
         private long? _Unit_ID;
@@ -78,7 +78,7 @@ namespace RUINORERP.Model
             get{return _Unit_ID;}
             set{
             SetProperty(ref _Unit_ID, value);
-            }
+                        }
         }
 
         private long _ProdDetailID;
@@ -93,7 +93,7 @@ namespace RUINORERP.Model
             get{return _ProdDetailID;}
             set{
             SetProperty(ref _ProdDetailID, value);
-            }
+                        }
         }
 
         private long _Location_ID;
@@ -108,7 +108,7 @@ namespace RUINORERP.Model
             get{return _Location_ID;}
             set{
             SetProperty(ref _Location_ID, value);
-            }
+                        }
         }
 
         private long? _Rack_ID;
@@ -123,7 +123,7 @@ namespace RUINORERP.Model
             get{return _Rack_ID;}
             set{
             SetProperty(ref _Rack_ID, value);
-            }
+                        }
         }
 
         private int _PayableQty= ((0));
@@ -137,7 +137,7 @@ namespace RUINORERP.Model
             get{return _PayableQty;}
             set{
             SetProperty(ref _PayableQty, value);
-            }
+                        }
         }
 
         private int _Qty= ((0));
@@ -151,7 +151,7 @@ namespace RUINORERP.Model
             get{return _Qty;}
             set{
             SetProperty(ref _Qty, value);
-            }
+                        }
         }
 
         private decimal _UnitCost= ((0));
@@ -165,7 +165,7 @@ namespace RUINORERP.Model
             get{return _UnitCost;}
             set{
             SetProperty(ref _UnitCost, value);
-            }
+                        }
         }
 
         private int _UnpaidQty= ((0));
@@ -179,7 +179,7 @@ namespace RUINORERP.Model
             get{return _UnpaidQty;}
             set{
             SetProperty(ref _UnpaidQty, value);
-            }
+                        }
         }
 
         private decimal _NetMachineHours= ((0));
@@ -193,7 +193,7 @@ namespace RUINORERP.Model
             get{return _NetMachineHours;}
             set{
             SetProperty(ref _NetMachineHours, value);
-            }
+                        }
         }
 
         private decimal _NetWorkingHours= ((0));
@@ -207,7 +207,7 @@ namespace RUINORERP.Model
             get{return _NetWorkingHours;}
             set{
             SetProperty(ref _NetWorkingHours, value);
-            }
+                        }
         }
 
         private decimal _ApportionedCost= ((0));
@@ -221,7 +221,7 @@ namespace RUINORERP.Model
             get{return _ApportionedCost;}
             set{
             SetProperty(ref _ApportionedCost, value);
-            }
+                        }
         }
 
         private decimal _ManuFee= ((0));
@@ -235,7 +235,7 @@ namespace RUINORERP.Model
             get{return _ManuFee;}
             set{
             SetProperty(ref _ManuFee, value);
-            }
+                        }
         }
 
         private decimal _MaterialCost= ((0));
@@ -249,7 +249,7 @@ namespace RUINORERP.Model
             get{return _MaterialCost;}
             set{
             SetProperty(ref _MaterialCost, value);
-            }
+                        }
         }
 
         private decimal _SubtotalMaterialCost= ((0));
@@ -263,7 +263,7 @@ namespace RUINORERP.Model
             get{return _SubtotalMaterialCost;}
             set{
             SetProperty(ref _SubtotalMaterialCost, value);
-            }
+                        }
         }
 
         private decimal _ProductionAllCost= ((0));
@@ -277,7 +277,7 @@ namespace RUINORERP.Model
             get{return _ProductionAllCost;}
             set{
             SetProperty(ref _ProductionAllCost, value);
-            }
+                        }
         }
 
         private string _Summary;
@@ -291,7 +291,7 @@ namespace RUINORERP.Model
             get{return _Summary;}
             set{
             SetProperty(ref _Summary, value);
-            }
+                        }
         }
 
         private string _property;
@@ -305,34 +305,34 @@ namespace RUINORERP.Model
             get{return _property;}
             set{
             SetProperty(ref _property, value);
-            }
+                        }
         }
 
         #endregion
 
         #region 扩展属性
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(Location_ID))]
         public virtual tb_Location tb_location { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(Rack_ID))]
         public virtual tb_StorageRack tb_storagerack { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(FG_ID))]
         public virtual tb_FinishedGoodsInv tb_finishedgoodsinv { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(ProdDetailID))]
         public virtual tb_ProdDetail tb_proddetail { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(Unit_ID))]
         public virtual tb_Unit tb_unit { get; set; }
 

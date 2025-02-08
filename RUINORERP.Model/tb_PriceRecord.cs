@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/14/2025 18:57:00
+// 时间：02/08/2025 16:32:10
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -46,8 +46,8 @@ namespace RUINORERP.Model
         { 
             get{return _RecordID;}
             set{
-            base.PrimaryKeyID = _RecordID;
             SetProperty(ref _RecordID, value);
+                base.PrimaryKeyID = _RecordID;
             }
         }
 
@@ -63,7 +63,7 @@ namespace RUINORERP.Model
             get{return _ProdDetailID;}
             set{
             SetProperty(ref _ProdDetailID, value);
-            }
+                        }
         }
 
         private long _Employee_ID;
@@ -78,7 +78,7 @@ namespace RUINORERP.Model
             get{return _Employee_ID;}
             set{
             SetProperty(ref _Employee_ID, value);
-            }
+                        }
         }
 
         private DateTime? _PurDate;
@@ -92,7 +92,7 @@ namespace RUINORERP.Model
             get{return _PurDate;}
             set{
             SetProperty(ref _PurDate, value);
-            }
+                        }
         }
 
         private DateTime? _SaleDate;
@@ -106,7 +106,7 @@ namespace RUINORERP.Model
             get{return _SaleDate;}
             set{
             SetProperty(ref _SaleDate, value);
-            }
+                        }
         }
 
         private decimal _PurPrice= ((0));
@@ -120,7 +120,7 @@ namespace RUINORERP.Model
             get{return _PurPrice;}
             set{
             SetProperty(ref _PurPrice, value);
-            }
+                        }
         }
 
         private decimal _SalePrice= ((0));
@@ -134,19 +134,19 @@ namespace RUINORERP.Model
             get{return _SalePrice;}
             set{
             SetProperty(ref _SalePrice, value);
-            }
+                        }
         }
 
         #endregion
 
         #region 扩展属性
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(ProdDetailID))]
         public virtual tb_ProdDetail tb_proddetail { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(Employee_ID))]
         public virtual tb_Employee tb_employee { get; set; }
 

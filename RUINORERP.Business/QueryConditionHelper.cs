@@ -101,6 +101,7 @@ namespace RUINORERP.Business
                         queryConditions = queryConditions.Except(dicTimeRange.Keys).ToList();
                         break;
                     case Global.AdvQueryProcessType.stringLike:
+                        //默认是like 如果列的配置中指定了不用like则精确匹配
                         var dicLike = GetLikeDictionary(whereObj, queryConditions, useLike, group.Value);
                         if (dicLike.Count > 0)
                         {

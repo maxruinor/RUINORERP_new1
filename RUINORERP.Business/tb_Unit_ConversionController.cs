@@ -462,7 +462,7 @@ namespace RUINORERP.Business
         {
             List<tb_Unit_Conversion> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_Unit_Conversion>()
                                .Includes(t => t.tb_unit_source )
-                               .Includes(t => t.tb_unit_Target )
+                               .Includes(t => t.tb_unit_target )
                                             .Includes(t => t.tb_BOM_SDetails )
                                 .Includes(t => t.tb_BOM_SDetailSubstituteMaterials )
                         .ToListAsync();
@@ -485,7 +485,7 @@ namespace RUINORERP.Business
         {
             List<tb_Unit_Conversion> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_Unit_Conversion>().Where(exp)
                                .Includes(t => t.tb_unit_source)
-                               .Includes(t => t.tb_unit_Target)
+                               .Includes(t => t.tb_unit_target)
                                             .Includes(t => t.tb_BOM_SDetails )
                                 .Includes(t => t.tb_BOM_SDetailSubstituteMaterials )
                         .ToListAsync();
@@ -508,7 +508,7 @@ namespace RUINORERP.Business
         {
             List<tb_Unit_Conversion> list = _unitOfWorkManage.GetDbClient().Queryable<tb_Unit_Conversion>().Where(exp)
                                .Includes(t => t.tb_unit_source)
-                               .Includes(t => t.tb_unit_Target)
+                               .Includes(t => t.tb_unit_target)
                                         .Includes(t => t.tb_BOM_SDetails )
                             .Includes(t => t.tb_BOM_SDetailSubstituteMaterials )
                         .ToList();
@@ -548,7 +548,7 @@ namespace RUINORERP.Business
         {
             tb_Unit_Conversion entity = await _unitOfWorkManage.GetDbClient().Queryable<tb_Unit_Conversion>().Where(w => w.UnitConversion_ID == (long)id)
                                .Includes(t => t.tb_unit_source)
-                               .Includes(t => t.tb_unit_Target)
+                               .Includes(t => t.tb_unit_target)
                                         .Includes(t => t.tb_BOM_SDetails )
                             .Includes(t => t.tb_BOM_SDetailSubstituteMaterials )
                         .FirstAsync();

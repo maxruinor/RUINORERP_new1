@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/14/2025 18:56:54
+// 时间：02/08/2025 16:32:02
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -46,8 +46,8 @@ namespace RUINORERP.Model
         { 
             get{return _PrePaymentBillDetail_id;}
             set{
-            base.PrimaryKeyID = _PrePaymentBillDetail_id;
             SetProperty(ref _PrePaymentBillDetail_id, value);
+                base.PrimaryKeyID = _PrePaymentBillDetail_id;
             }
         }
 
@@ -63,7 +63,7 @@ namespace RUINORERP.Model
             get{return _PrePaymentBill_id;}
             set{
             SetProperty(ref _PrePaymentBill_id, value);
-            }
+                        }
         }
 
         private long? _CustomerVendor_ID;
@@ -78,7 +78,7 @@ namespace RUINORERP.Model
             get{return _CustomerVendor_ID;}
             set{
             SetProperty(ref _CustomerVendor_ID, value);
-            }
+                        }
         }
 
         private long? _Currency_ID;
@@ -93,7 +93,7 @@ namespace RUINORERP.Model
             get{return _Currency_ID;}
             set{
             SetProperty(ref _Currency_ID, value);
-            }
+                        }
         }
 
         private long? _account_id;
@@ -108,7 +108,7 @@ namespace RUINORERP.Model
             get{return _account_id;}
             set{
             SetProperty(ref _account_id, value);
-            }
+                        }
         }
 
         private string _PaymentReason;
@@ -122,7 +122,7 @@ namespace RUINORERP.Model
             get{return _PaymentReason;}
             set{
             SetProperty(ref _PaymentReason, value);
-            }
+                        }
         }
 
         private int? _SourceBill_BizType;
@@ -136,7 +136,7 @@ namespace RUINORERP.Model
             get{return _SourceBill_BizType;}
             set{
             SetProperty(ref _SourceBill_BizType, value);
-            }
+                        }
         }
 
         private long? _SourceBill_ID;
@@ -150,7 +150,7 @@ namespace RUINORERP.Model
             get{return _SourceBill_ID;}
             set{
             SetProperty(ref _SourceBill_ID, value);
-            }
+                        }
         }
 
         private string _SourceBillNO;
@@ -164,7 +164,7 @@ namespace RUINORERP.Model
             get{return _SourceBillNO;}
             set{
             SetProperty(ref _SourceBillNO, value);
-            }
+                        }
         }
 
         private string _Reason;
@@ -178,7 +178,7 @@ namespace RUINORERP.Model
             get{return _Reason;}
             set{
             SetProperty(ref _Reason, value);
-            }
+                        }
         }
 
         private string _OffsetMethod;
@@ -192,7 +192,7 @@ namespace RUINORERP.Model
             get{return _OffsetMethod;}
             set{
             SetProperty(ref _OffsetMethod, value);
-            }
+                        }
         }
 
         private decimal? _Amount;
@@ -206,7 +206,7 @@ namespace RUINORERP.Model
             get{return _Amount;}
             set{
             SetProperty(ref _Amount, value);
-            }
+                        }
         }
 
         private decimal? _PrepaidAmount;
@@ -220,7 +220,7 @@ namespace RUINORERP.Model
             get{return _PrepaidAmount;}
             set{
             SetProperty(ref _PrepaidAmount, value);
-            }
+                        }
         }
 
         private string _Notes;
@@ -234,29 +234,29 @@ namespace RUINORERP.Model
             get{return _Notes;}
             set{
             SetProperty(ref _Notes, value);
-            }
+                        }
         }
 
         #endregion
 
         #region 扩展属性
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(CustomerVendor_ID))]
         public virtual tb_CustomerVendor tb_customervendor { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(Currency_ID))]
         public virtual tb_Currency tb_currency { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(account_id))]
         public virtual tb_FM_Account tb_fm_account { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(PrePaymentBill_id))]
         public virtual tb_FM_PrePaymentBill tb_fm_prepaymentbill { get; set; }
 

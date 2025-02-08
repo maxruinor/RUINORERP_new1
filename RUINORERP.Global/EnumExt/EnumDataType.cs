@@ -25,6 +25,10 @@ namespace RUINORERP.Global
         stringLike,
 
         /// <summary>
+        /// 文本精确查询
+        /// </summary>
+        stringEquals,
+        /// <summary>
         /// 下拉默认值请选择
         /// </summary>
         defaultSelect,

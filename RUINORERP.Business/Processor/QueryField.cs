@@ -187,6 +187,10 @@ namespace RUINORERP.Business.Processor
         public IQueryFieldData QueryFieldDataPara { get; set; }
         public bool? Focused { get; set; }
 
+        /// <summary>
+        /// 如果是字符串时则默认是模糊搜索
+        /// </summary>
+        public bool? UseLike { get; set; } = true;
 
         //默认值1，2主要目前是针对时间区间
         public string Default1 { get; set; }

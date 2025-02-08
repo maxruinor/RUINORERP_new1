@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/14/2025 18:57:06
+// 时间：02/08/2025 16:32:20
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -46,8 +46,8 @@ namespace RUINORERP.Model
         { 
             get{return _ProvinceID;}
             set{
-            base.PrimaryKeyID = _ProvinceID;
             SetProperty(ref _ProvinceID, value);
+                base.PrimaryKeyID = _ProvinceID;
             }
         }
 
@@ -62,7 +62,7 @@ namespace RUINORERP.Model
             get{return _ProvinceCNName;}
             set{
             SetProperty(ref _ProvinceCNName, value);
-            }
+                        }
         }
 
         private long? _CountryID;
@@ -76,7 +76,7 @@ namespace RUINORERP.Model
             get{return _CountryID;}
             set{
             SetProperty(ref _CountryID, value);
-            }
+                        }
         }
 
         private string _ProvinceENName;
@@ -90,14 +90,14 @@ namespace RUINORERP.Model
             get{return _ProvinceENName;}
             set{
             SetProperty(ref _ProvinceENName, value);
-            }
+                        }
         }
 
         #endregion
 
         #region 扩展属性
 
-        //[Browsable(false)]
+        //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_Cities.ProvinceID))]
         public virtual List<tb_Cities> tb_Citieses { get; set; }
@@ -105,7 +105,7 @@ namespace RUINORERP.Model
         //ProvinceID.FK_TB_CITIE_REFERENCE_TB_PROVI)
         //tb_Provinces.ProvinceID)
 
-        //[Browsable(false)]
+        //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_CRM_Customer.ProvinceID))]
         public virtual List<tb_CRM_Customer> tb_CRM_Customers { get; set; }

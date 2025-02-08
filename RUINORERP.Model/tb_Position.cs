@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/14/2025 18:57:00
+// 时间：02/08/2025 16:32:10
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -46,8 +46,8 @@ namespace RUINORERP.Model
         { 
             get{return _Position_Id;}
             set{
-            base.PrimaryKeyID = _Position_Id;
             SetProperty(ref _Position_Id, value);
+                base.PrimaryKeyID = _Position_Id;
             }
         }
 
@@ -62,7 +62,7 @@ namespace RUINORERP.Model
             get{return _Left;}
             set{
             SetProperty(ref _Left, value);
-            }
+                        }
         }
 
         private string _Right;
@@ -76,7 +76,7 @@ namespace RUINORERP.Model
             get{return _Right;}
             set{
             SetProperty(ref _Right, value);
-            }
+                        }
         }
 
         private string _Bottom;
@@ -90,7 +90,7 @@ namespace RUINORERP.Model
             get{return _Bottom;}
             set{
             SetProperty(ref _Bottom, value);
-            }
+                        }
         }
 
         private string _Top;
@@ -104,14 +104,14 @@ namespace RUINORERP.Model
             get{return _Top;}
             set{
             SetProperty(ref _Top, value);
-            }
+                        }
         }
 
         #endregion
 
         #region 扩展属性
 
-        //[Browsable(false)]
+        //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_ProcessStep.Position_Id))]
         public virtual List<tb_ProcessStep> tb_ProcessSteps { get; set; }

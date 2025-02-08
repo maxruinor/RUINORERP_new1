@@ -62,6 +62,9 @@ namespace RUINORERP.UI.UserPersonalized
             DataBindingHelper.BindData4CheckBox<tb_UIQueryCondition>(entity, t => t.EnableDefault1, chkEnableDefault1, false);
             DataBindingHelper.BindData4CheckBox<tb_UIQueryCondition>(entity, t => t.EnableDefault2, chkEnableDefault2, false);
             DataBindingHelper.BindData4CheckBox<tb_UIQueryCondition>(entity, t => t.Focused, chkFocused, false);
+
+            DataBindingHelper.BindData4CheckBox<tb_UIQueryCondition>(entity, t => t.UseLike, chkUseLike, false);
+
             var queryField = QueryFields.FirstOrDefault(c => c.FieldName == entity.FieldName);
             if (queryField != null)
             {
@@ -179,7 +182,20 @@ namespace RUINORERP.UI.UserPersonalized
                         break;
                 }
 
-
+                if (queryField.SugarCol != null)
+                {
+                    //字符串才启用模糊查询
+                    if (queryField.SugarCol.SqlParameterDbType.ToString() == "String")
+                    {
+                        lblUselike.Visible = true;
+                        chkUseLike.Visible = true;
+                    }
+                    else
+                    {
+                        lblUselike.Visible = false;
+                        chkUseLike.Visible = false;
+                    }
+                }
 
             }
 
@@ -264,7 +280,7 @@ namespace RUINORERP.UI.UserPersonalized
                     queryField.Focused = chkFocused.Checked;
                     EditEntity.Focused = queryField.Focused;
 
-                    
+
                 }
             }
         }

@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/14/2025 18:57:02
+// 时间：02/08/2025 16:32:13
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -46,8 +46,8 @@ namespace RUINORERP.Model
         { 
             get{return _BundleChildID;}
             set{
-            base.PrimaryKeyID = _BundleChildID;
             SetProperty(ref _BundleChildID, value);
+                base.PrimaryKeyID = _BundleChildID;
             }
         }
 
@@ -63,7 +63,7 @@ namespace RUINORERP.Model
             get{return _BundleID;}
             set{
             SetProperty(ref _BundleID, value);
-            }
+                        }
         }
 
         private long _ProdDetailID;
@@ -78,7 +78,7 @@ namespace RUINORERP.Model
             get{return _ProdDetailID;}
             set{
             SetProperty(ref _ProdDetailID, value);
-            }
+                        }
         }
 
         private int _Quantity= ((1));
@@ -92,7 +92,7 @@ namespace RUINORERP.Model
             get{return _Quantity;}
             set{
             SetProperty(ref _Quantity, value);
-            }
+                        }
         }
 
         private string _SKU;
@@ -106,7 +106,7 @@ namespace RUINORERP.Model
             get{return _SKU;}
             set{
             SetProperty(ref _SKU, value);
-            }
+                        }
         }
 
         private string _property;
@@ -120,7 +120,7 @@ namespace RUINORERP.Model
             get{return _property;}
             set{
             SetProperty(ref _property, value);
-            }
+                        }
         }
 
         private string _Notes;
@@ -134,7 +134,7 @@ namespace RUINORERP.Model
             get{return _Notes;}
             set{
             SetProperty(ref _Notes, value);
-            }
+                        }
         }
 
         private bool _Is_enabled= true;
@@ -148,7 +148,7 @@ namespace RUINORERP.Model
             get{return _Is_enabled;}
             set{
             SetProperty(ref _Is_enabled, value);
-            }
+                        }
         }
 
         private bool _Is_available= true;
@@ -162,7 +162,7 @@ namespace RUINORERP.Model
             get{return _Is_available;}
             set{
             SetProperty(ref _Is_available, value);
-            }
+                        }
         }
 
         private DateTime? _Created_at;
@@ -176,7 +176,7 @@ namespace RUINORERP.Model
             get{return _Created_at;}
             set{
             SetProperty(ref _Created_at, value);
-            }
+                        }
         }
 
         private long? _Created_by;
@@ -190,7 +190,7 @@ namespace RUINORERP.Model
             get{return _Created_by;}
             set{
             SetProperty(ref _Created_by, value);
-            }
+                        }
         }
 
         private DateTime? _Modified_at;
@@ -204,7 +204,7 @@ namespace RUINORERP.Model
             get{return _Modified_at;}
             set{
             SetProperty(ref _Modified_at, value);
-            }
+                        }
         }
 
         private long? _Modified_by;
@@ -218,7 +218,7 @@ namespace RUINORERP.Model
             get{return _Modified_by;}
             set{
             SetProperty(ref _Modified_by, value);
-            }
+                        }
         }
 
         private bool _isdeleted= false;
@@ -233,19 +233,19 @@ namespace RUINORERP.Model
             get{return _isdeleted;}
             set{
             SetProperty(ref _isdeleted, value);
-            }
+                        }
         }
 
         #endregion
 
         #region 扩展属性
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(BundleID))]
         public virtual tb_ProdBundle tb_prodbundle { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(ProdDetailID))]
         public virtual tb_ProdDetail tb_proddetail { get; set; }
 

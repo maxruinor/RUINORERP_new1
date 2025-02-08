@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/14/2025 18:56:51
+// 时间：02/08/2025 16:31:59
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -47,8 +47,8 @@ namespace RUINORERP.Model
         { 
             get{return _ID;}
             set{
-            base.PrimaryKeyID = _ID;
             SetProperty(ref _ID, value);
+                base.PrimaryKeyID = _ID;
             }
         }
 
@@ -63,7 +63,7 @@ namespace RUINORERP.Model
             get{return _IconFile_Path;}
             set{
             SetProperty(ref _IconFile_Path, value);
-            }
+                        }
         }
 
         private string _Title;
@@ -77,7 +77,7 @@ namespace RUINORERP.Model
             get{return _Title;}
             set{
             SetProperty(ref _Title, value);
-            }
+                        }
         }
 
         private string _SizeString;
@@ -91,7 +91,7 @@ namespace RUINORERP.Model
             get{return _SizeString;}
             set{
             SetProperty(ref _SizeString, value);
-            }
+                        }
         }
 
         private string _PointToString;
@@ -105,14 +105,14 @@ namespace RUINORERP.Model
             get{return _PointToString;}
             set{
             SetProperty(ref _PointToString, value);
-            }
+                        }
         }
 
         #endregion
 
         #region 扩展属性
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(ID))]
         public virtual tb_FlowchartDefinition tb_flowchartdefinition { get; set; }
 

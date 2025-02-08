@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/14/2025 18:57:01
+// 时间：02/08/2025 16:32:11
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -46,8 +46,8 @@ namespace RUINORERP.Model
         { 
             get{return _Step_Id;}
             set{
-            base.PrimaryKeyID = _Step_Id;
             SetProperty(ref _Step_Id, value);
+                base.PrimaryKeyID = _Step_Id;
             }
         }
 
@@ -63,7 +63,7 @@ namespace RUINORERP.Model
             get{return _StepBodyld;}
             set{
             SetProperty(ref _StepBodyld, value);
-            }
+                        }
         }
 
         private long? _Position_Id;
@@ -78,7 +78,7 @@ namespace RUINORERP.Model
             get{return _Position_Id;}
             set{
             SetProperty(ref _Position_Id, value);
-            }
+                        }
         }
 
         private long? _NextNode_ID;
@@ -93,7 +93,7 @@ namespace RUINORERP.Model
             get{return _NextNode_ID;}
             set{
             SetProperty(ref _NextNode_ID, value);
-            }
+                        }
         }
 
         private string _Version;
@@ -107,7 +107,7 @@ namespace RUINORERP.Model
             get{return _Version;}
             set{
             SetProperty(ref _Version, value);
-            }
+                        }
         }
 
         private string _Name;
@@ -121,7 +121,7 @@ namespace RUINORERP.Model
             get{return _Name;}
             set{
             SetProperty(ref _Name, value);
-            }
+                        }
         }
 
         private string _DisplayName;
@@ -135,7 +135,7 @@ namespace RUINORERP.Model
             get{return _DisplayName;}
             set{
             SetProperty(ref _DisplayName, value);
-            }
+                        }
         }
 
         private string _StepNodeType;
@@ -149,7 +149,7 @@ namespace RUINORERP.Model
             get{return _StepNodeType;}
             set{
             SetProperty(ref _StepNodeType, value);
-            }
+                        }
         }
 
         private string _Description;
@@ -163,7 +163,7 @@ namespace RUINORERP.Model
             get{return _Description;}
             set{
             SetProperty(ref _Description, value);
-            }
+                        }
         }
 
         private string _Notes;
@@ -177,29 +177,29 @@ namespace RUINORERP.Model
             get{return _Notes;}
             set{
             SetProperty(ref _Notes, value);
-            }
+                        }
         }
 
         #endregion
 
         #region 扩展属性
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(NextNode_ID))]
         public virtual tb_NextNodes tb_nextnodes { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(Position_Id))]
         public virtual tb_Position tb_position { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(StepBodyld))]
         public virtual tb_StepBody tb_stepbody { get; set; }
 
 
-        //[Browsable(false)]
+        //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_ProcessDefinition.Step_Id))]
         public virtual List<tb_ProcessDefinition> tb_ProcessDefinitions { get; set; }

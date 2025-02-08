@@ -44,6 +44,7 @@ using MySqlX.XDevAPI.Common;
 using RUINORERP.UI.AdvancedUIModule;
 using FastReport.DevComponents.DotNetBar.Controls;
 using RUINORERP.UI.CommonUI;
+using NPOI.SS.Formula.Functions;
 
 
 namespace RUINORERP.UI.PSI.SAL
@@ -967,6 +968,64 @@ namespace RUINORERP.UI.PSI.SAL
           }
 
           */
+        protected async override Task<bool> AntiCloseCaseAsync()
+        {
+            if (EditEntity == null)
+            {
+                return false;
+            }
+            BillConverterFactory bcf = Startup.GetFromFac<BillConverterFactory>();
+            CommonUI.frmOpinion frm = new CommonUI.frmOpinion();
+            string PKCol = BaseUIHelper.GetEntityPrimaryKey<tb_SaleOrder>();
+            long pkid = (long)ReflectionHelper.GetPropertyValue(EditEntity, PKCol);
+            ApprovalEntity ae = new ApprovalEntity();
+            ae.BillID = pkid;
+            CommBillData cbd = bcf.GetBillData<tb_SaleOrder>(EditEntity);
+            ae.BillNo = cbd.BillNo;
+            ae.bizType = cbd.BizType;
+            ae.bizName = cbd.BizName;
+            ae.Approver_by = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID;
+            frm.BindData(ae);
+            if (frm.ShowDialog() == DialogResult.OK)//审核了。不管是同意还是不同意
+            {
+                List<tb_SaleOrder> EditEntitys = new List<tb_SaleOrder>();
+                EditEntity.CloseCaseOpinions = frm.txtOpinion.Text;
+                EditEntitys.Add(EditEntity);
+                //已经审核的,结案了的才能反结案
+                List<tb_SaleOrder> needCloseCases = EditEntitys.Where(c => c.DataStatus == (int)DataStatus.完结 && c.ApprovalStatus == (int)ApprovalStatus.已审核 && c.ApprovalResults.HasValue).ToList();
+                if (needCloseCases.Count == 0)
+                {
+                    MainForm.Instance.PrintInfoLog($"要反结案的数据为：{needCloseCases.Count}:请检查数据！");
+                    return false;
+                }
+
+                tb_SaleOrderController<tb_SaleOrder> ctr = Startup.GetFromFac<tb_SaleOrderController<tb_SaleOrder>>();
+                ReturnResults<bool> rs = await ctr.AntiBatchCloseCaseAsync(needCloseCases);
+                if (rs.Succeeded)
+                {
+                    //if (MainForm.Instance.WorkflowItemlist.ContainsKey(""))
+                    //{
+
+                    //}
+                    //这里审核完了的话，如果这个单存在于工作流的集合队列中，则向服务器说明审核完成。
+                    //这里推送到审核，启动工作流  队列应该有一个策略 比方优先级，桌面不动1 3 5分钟 
+                    //OriginalData od = ActionForClient.工作流审批(pkid, (int)BizType.盘点单, ae.ApprovalResults, ae.ApprovalComments);
+                    //MainForm.Instance.ecs.AddSendData(od);
+                    AuditLogHelper.Instance.CreateAuditLog<tb_SaleOrder>("反结案", EditEntity, $"反结案意见:{ae.CloseCaseOpinions}");
+                    Refreshs();
+                }
+                else
+                {
+                    MainForm.Instance.PrintInfoLog($"{EditEntity.SOrderNo}反结案操作失败,原因是{rs.ErrorMsg},如果无法解决，请联系管理员！", Color.Red);
+                }
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
         protected async override Task<bool> CloseCaseAsync()
         {
             if (EditEntity == null)
@@ -1010,6 +1069,7 @@ namespace RUINORERP.UI.PSI.SAL
                     //这里推送到审核，启动工作流  队列应该有一个策略 比方优先级，桌面不动1 3 5分钟 
                     //OriginalData od = ActionForClient.工作流审批(pkid, (int)BizType.盘点单, ae.ApprovalResults, ae.ApprovalComments);
                     //MainForm.Instance.ecs.AddSendData(od);
+                    AuditLogHelper.Instance.CreateAuditLog<tb_SaleOrder>("结案", EditEntity, $"结案意见:{ae.CloseCaseOpinions}");
                     Refreshs();
                 }
                 else
@@ -1023,7 +1083,6 @@ namespace RUINORERP.UI.PSI.SAL
                 return false;
             }
         }
-
 
         private void chk非平台单_CheckedChanged(object sender, EventArgs e)
         {
@@ -1047,7 +1106,18 @@ namespace RUINORERP.UI.PSI.SAL
             toolStripButton付款调整.ToolTipText = "客户付款情况变动时，使用本功能。";
             toolStripButton付款调整.Click += new System.EventHandler(this.toolStripButton付款调整_Click);
 
-            System.Windows.Forms.ToolStripItem[] extendButtons = new System.Windows.Forms.ToolStripItem[] { toolStripButton付款调整 };
+
+            toolStripButton反结案.Text = "反结案";
+            toolStripButton反结案.Image = global::RUINORERP.UI.Properties.Resources.Assignment;
+            toolStripButton反结案.ImageTransparentColor = System.Drawing.Color.Magenta;
+            toolStripButton反结案.Name = "反结案";
+            toolStripButton反结案.Visible = false;//默认隐藏
+            ControlButton(toolStripButton反结案);
+            toolStripButton反结案.ToolTipText = "结案错误，要上级特殊处理时，使用本功能。";
+            toolStripButton反结案.Click += new System.EventHandler(this.toolStripButton反结案_Click);
+
+            System.Windows.Forms.ToolStripItem[] extendButtons = new System.Windows.Forms.ToolStripItem[] { toolStripButton付款调整, toolStripButton反结案 };
+
             this.BaseToolStrip.Items.AddRange(extendButtons);
             return extendButtons;
         }
@@ -1055,6 +1125,29 @@ namespace RUINORERP.UI.PSI.SAL
         private void toolStripButton付款调整_Click(object sender, EventArgs e)
         {
             UpdatePaymentStatus();
+        }
+
+
+
+
+        #endregion
+
+        #region 反结案
+        ToolStripButton toolStripButton反结案 = new System.Windows.Forms.ToolStripButton();
+
+
+        private async void toolStripButton反结案_Click(object sender, EventArgs e)
+        {
+            if (EditEntity == null)
+            {
+                return;
+            }
+            if (EditEntity.DataStatus != (int)DataStatus.完结)
+            {
+                MessageBox.Show("只能对已【完结】的单据操作。\r\n请检查数据，刷新后重试！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+            await AntiCloseCaseAsync();
         }
 
 

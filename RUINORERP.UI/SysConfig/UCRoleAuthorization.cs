@@ -91,7 +91,8 @@ namespace RUINORERP.UI.SysConfig
             //MenuInfoList = await ctrMenu.QueryByNavAsync();
 
             List<tb_ModuleDefinition> Modules = await MainForm.Instance.AppContext.Db.CopyNew().Queryable<tb_ModuleDefinition>()
-            .Includes(m => m.tb_MenuInfos)
+            .Includes(m => m.tb_MenuInfos, a => a.tb_ButtonInfos)
+            .Includes(m => m.tb_MenuInfos, a => a.tb_FieldInfos)
             .ToListAsync();
 
             //检测CRM如果没有购买则不会显示
@@ -669,6 +670,7 @@ namespace RUINORERP.UI.SysConfig
             List<tb_P4Button> Newpblist = new List<tb_P4Button>();
             foreach (var item in objlist)
             {
+                //这里的意思是 按钮的数量要与角色对应按钮一致。可以不启用 但是重复的则可以不用加入
                 //存在过就不添加了 没有的才添加
                 if (pblist.Where(p => p.MenuID == menuInfo.MenuID && p.RoleID == CurrentRole.RoleID && p.ButtonInfo_ID == item.ButtonInfo_ID).FirstOrDefault() == null)
                 {
@@ -805,6 +807,8 @@ namespace RUINORERP.UI.SysConfig
             .Where(t => t.MenuID == selectMenu.MenuID)
             .Includes(t => t.tb_menuinfo)
             .ToListAsync();
+
+            //当前角色下如果可操作按钮为0时，或当前角色下添加的按钮数量小于当前菜单下的所有按钮时
             if (pblist.Count == 0 || pblist.Count < btnInfolist.Count)
             {
                 await InitBtnByRole(CurrentRole, selectMenu, pblist, btnInfolist);

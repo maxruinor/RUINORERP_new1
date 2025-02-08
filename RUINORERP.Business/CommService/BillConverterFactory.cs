@@ -70,7 +70,11 @@ namespace RUINORERP.Business.CommService
             {
                 this.UserMenuList = _context.UserMenuList;
             }
-
+            if (UserMenuList == null)
+            {
+                _logger.Error($"请联系管理员配置对应的菜单.=>{_context.CurUserInfo.Name}");
+                UserMenuList = new List<tb_MenuInfo>();
+            }
             tb_MenuInfo menuInfo = UserMenuList.Where(c => c.EntityName == type.Name).FirstOrDefault();
             if (menuInfo != null)
             {
@@ -154,7 +158,7 @@ namespace RUINORERP.Business.CommService
                     cbd.BillNo = PurEntry.PurEntryNo;
                     cbd.BillID = PurEntry.PurEntryID;
                     break;
-              
+
                 case BizType.采购退货单:
                     var purEntryRe = Entity as tb_PurEntryRe;
                     cbd.BillID = purEntryRe.PurEntryRe_ID;
@@ -333,8 +337,8 @@ namespace RUINORERP.Business.CommService
                 break;*/
                 case BizType.采购入库统计:
                     var PurEntryStatistics = Entity as View_PurEntryItems;
-                     //cbd.BillID = PurEntryStatistics.id;
-                     //cbd.BillNo = PurEntryStatistics.BillNo;
+                    //cbd.BillID = PurEntryStatistics.id;
+                    //cbd.BillNo = PurEntryStatistics.BillNo;
                     break;
                 case BizType.无对应数据:
                 default:

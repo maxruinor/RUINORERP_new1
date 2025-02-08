@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/14/2025 18:56:59
+// 时间：02/08/2025 16:32:08
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -46,8 +46,8 @@ namespace RUINORERP.Model
         { 
             get{return _P4Mod_ID;}
             set{
-            base.PrimaryKeyID = _P4Mod_ID;
             SetProperty(ref _P4Mod_ID, value);
+                base.PrimaryKeyID = _P4Mod_ID;
             }
         }
 
@@ -63,7 +63,7 @@ namespace RUINORERP.Model
             get{return _ModuleID;}
             set{
             SetProperty(ref _ModuleID, value);
-            }
+                        }
         }
 
         private long? _RoleID;
@@ -78,7 +78,7 @@ namespace RUINORERP.Model
             get{return _RoleID;}
             set{
             SetProperty(ref _RoleID, value);
-            }
+                        }
         }
 
         private bool _IsVisble;
@@ -92,7 +92,7 @@ namespace RUINORERP.Model
             get{return _IsVisble;}
             set{
             SetProperty(ref _IsVisble, value);
-            }
+                        }
         }
 
         private bool _IsEnabled;
@@ -106,7 +106,7 @@ namespace RUINORERP.Model
             get{return _IsEnabled;}
             set{
             SetProperty(ref _IsEnabled, value);
-            }
+                        }
         }
 
         private DateTime? _Created_at;
@@ -120,7 +120,7 @@ namespace RUINORERP.Model
             get{return _Created_at;}
             set{
             SetProperty(ref _Created_at, value);
-            }
+                        }
         }
 
         private long? _Created_by;
@@ -134,7 +134,7 @@ namespace RUINORERP.Model
             get{return _Created_by;}
             set{
             SetProperty(ref _Created_by, value);
-            }
+                        }
         }
 
         private DateTime? _Modified_at;
@@ -148,7 +148,7 @@ namespace RUINORERP.Model
             get{return _Modified_at;}
             set{
             SetProperty(ref _Modified_at, value);
-            }
+                        }
         }
 
         private long? _Modified_by;
@@ -162,19 +162,19 @@ namespace RUINORERP.Model
             get{return _Modified_by;}
             set{
             SetProperty(ref _Modified_by, value);
-            }
+                        }
         }
 
         #endregion
 
         #region 扩展属性
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(ModuleID))]
         public virtual tb_ModuleDefinition tb_moduledefinition { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(RoleID))]
         public virtual tb_RoleInfo tb_roleinfo { get; set; }
 

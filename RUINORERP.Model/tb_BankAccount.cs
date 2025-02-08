@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/14/2025 18:56:44
+// 时间：02/08/2025 16:31:51
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -46,8 +46,8 @@ namespace RUINORERP.Model
         { 
             get{return _BankAccount_id;}
             set{
-            base.PrimaryKeyID = _BankAccount_id;
             SetProperty(ref _BankAccount_id, value);
+                base.PrimaryKeyID = _BankAccount_id;
             }
         }
 
@@ -62,7 +62,7 @@ namespace RUINORERP.Model
             get{return _Account_Name;}
             set{
             SetProperty(ref _Account_Name, value);
-            }
+                        }
         }
 
         private string _Account_No;
@@ -76,7 +76,7 @@ namespace RUINORERP.Model
             get{return _Account_No;}
             set{
             SetProperty(ref _Account_No, value);
-            }
+                        }
         }
 
         private string _OpeningBank;
@@ -90,7 +90,7 @@ namespace RUINORERP.Model
             get{return _OpeningBank;}
             set{
             SetProperty(ref _OpeningBank, value);
-            }
+                        }
         }
 
         private bool _Is_enabled= true;
@@ -104,7 +104,7 @@ namespace RUINORERP.Model
             get{return _Is_enabled;}
             set{
             SetProperty(ref _Is_enabled, value);
-            }
+                        }
         }
 
         private string _Notes;
@@ -118,14 +118,14 @@ namespace RUINORERP.Model
             get{return _Notes;}
             set{
             SetProperty(ref _Notes, value);
-            }
+                        }
         }
 
         #endregion
 
         #region 扩展属性
 
-        //[Browsable(false)]
+        //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_Employee.BankAccount_id))]
         public virtual List<tb_Employee> tb_Employees { get; set; }
@@ -133,7 +133,7 @@ namespace RUINORERP.Model
         //BankAccount_id.FK_EMPLOYEE_REF_BANKACCOUNT)
         //tb_BankAccount.BankAccount_id)
 
-        //[Browsable(false)]
+        //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_CustomerVendor.BankAccount_id))]
         public virtual List<tb_CustomerVendor> tb_CustomerVendors { get; set; }

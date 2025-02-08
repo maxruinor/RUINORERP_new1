@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/14/2025 18:56:44
+// 时间：02/08/2025 16:31:52
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -46,8 +46,8 @@ namespace RUINORERP.Model
         { 
             get{return _BMType_ID;}
             set{
-            base.PrimaryKeyID = _BMType_ID;
             SetProperty(ref _BMType_ID, value);
+                base.PrimaryKeyID = _BMType_ID;
             }
         }
 
@@ -62,7 +62,7 @@ namespace RUINORERP.Model
             get{return _TypeName;}
             set{
             SetProperty(ref _TypeName, value);
-            }
+                        }
         }
 
         private string _Desc;
@@ -76,7 +76,7 @@ namespace RUINORERP.Model
             get{return _Desc;}
             set{
             SetProperty(ref _Desc, value);
-            }
+                        }
         }
 
         #endregion

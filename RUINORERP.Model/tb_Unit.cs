@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/14/2025 18:57:15
+// 时间：02/08/2025 16:32:32
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -46,8 +46,8 @@ namespace RUINORERP.Model
         { 
             get{return _Unit_ID;}
             set{
-            base.PrimaryKeyID = _Unit_ID;
             SetProperty(ref _Unit_ID, value);
+                base.PrimaryKeyID = _Unit_ID;
             }
         }
 
@@ -62,7 +62,7 @@ namespace RUINORERP.Model
             get{return _UnitName;}
             set{
             SetProperty(ref _UnitName, value);
-            }
+                        }
         }
 
         private string _Notes;
@@ -76,7 +76,7 @@ namespace RUINORERP.Model
             get{return _Notes;}
             set{
             SetProperty(ref _Notes, value);
-            }
+                        }
         }
 
         private bool _is_measurement_unit= false;
@@ -90,14 +90,14 @@ namespace RUINORERP.Model
             get{return _is_measurement_unit;}
             set{
             SetProperty(ref _is_measurement_unit, value);
-            }
+                        }
         }
 
         #endregion
 
         #region 扩展属性
 
-        //[Browsable(false)]
+        //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_FinishedGoodsInvDetail.Unit_ID))]
         public virtual List<tb_FinishedGoodsInvDetail> tb_FinishedGoodsInvDetails { get; set; }
@@ -105,7 +105,7 @@ namespace RUINORERP.Model
         //Unit_ID.FK_TB_FINISDetail_REF_TB_UNIT)
         //tb_Unit.Unit_ID)
 
-        //[Browsable(false)]
+        //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_Prod.Unit_ID))]
         public virtual List<tb_Prod> tb_Prods { get; set; }
@@ -113,7 +113,23 @@ namespace RUINORERP.Model
         //Unit_ID.FK_TB_PROD_REFERENCE_TB_UNIT)
         //tb_Unit.Unit_ID)
 
-        //[Browsable(false)]
+        //[Browsable(false)]打印报表时的数据源会不显示
+        [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_Unit_Conversion.Target_unit_id))]
+        public virtual List<tb_Unit_Conversion> tb_Unit_Conversions_target { get; set; }
+        //tb_Unit_Conversion.Unit_ID)
+        //Unit_ID.FK_UNIT_Conversions_TB_UNIT_1)
+        //tb_Unit.Target_unit_id)
+
+        //[Browsable(false)]打印报表时的数据源会不显示
+        [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_Unit_Conversion.Source_unit_id))]
+        public virtual List<tb_Unit_Conversion> tb_Unit_Conversions_source { get; set; }
+        //tb_Unit_Conversion.Unit_ID)
+        //Unit_ID.FK_UNIT_Conversions_TB_UNIT_2)
+        //tb_Unit.Source_unit_id)
+
+        //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_Packing.Unit_ID))]
         public virtual List<tb_Packing> tb_Packings { get; set; }
@@ -121,7 +137,7 @@ namespace RUINORERP.Model
         //Unit_ID.FK_PACKIING_REF_UNIT)
         //tb_Unit.Unit_ID)
 
-        //[Browsable(false)]
+        //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_BOM_SDetail.Unit_ID))]
         public virtual List<tb_BOM_SDetail> tb_BOM_SDetails { get; set; }
@@ -129,7 +145,7 @@ namespace RUINORERP.Model
         //Unit_ID.FK_BOM_SDetail_REF_UNIT)
         //tb_Unit.Unit_ID)
 
-        //[Browsable(false)]
+        //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_BOM_SDetailSubstituteMaterial.Unit_ID))]
         public virtual List<tb_BOM_SDetailSubstituteMaterial> tb_BOM_SDetailSubstituteMaterials { get; set; }
@@ -137,7 +153,7 @@ namespace RUINORERP.Model
         //Unit_ID.FK_BOM_SDetailSubstitute_REF_UNIT)
         //tb_Unit.Unit_ID)
 
-        //[Browsable(false)]
+        //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_ManufacturingOrder.Unit_ID))]
         public virtual List<tb_ManufacturingOrder> tb_ManufacturingOrders { get; set; }
@@ -145,7 +161,7 @@ namespace RUINORERP.Model
         //Unit_ID.FK_MANUFACTURINGORDER_REF_UNIT)
         //tb_Unit.Unit_ID)
 
-        //[Browsable(false)]
+        //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_ProdBundle.Unit_ID))]
         public virtual List<tb_ProdBundle> tb_ProdBundles { get; set; }

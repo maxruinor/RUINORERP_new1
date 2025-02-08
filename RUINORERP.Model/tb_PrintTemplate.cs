@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/14/2025 18:57:00
+// 时间：02/08/2025 16:32:10
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -46,8 +46,8 @@ namespace RUINORERP.Model
         { 
             get{return _ID;}
             set{
-            base.PrimaryKeyID = _ID;
             SetProperty(ref _ID, value);
+                base.PrimaryKeyID = _ID;
             }
         }
 
@@ -63,7 +63,7 @@ namespace RUINORERP.Model
             get{return _PrintConfigID;}
             set{
             SetProperty(ref _PrintConfigID, value);
-            }
+                        }
         }
 
         private string _Template_NO;
@@ -77,7 +77,7 @@ namespace RUINORERP.Model
             get{return _Template_NO;}
             set{
             SetProperty(ref _Template_NO, value);
-            }
+                        }
         }
 
         private string _Template_Name;
@@ -91,7 +91,7 @@ namespace RUINORERP.Model
             get{return _Template_Name;}
             set{
             SetProperty(ref _Template_Name, value);
-            }
+                        }
         }
 
         private int? _BizType;
@@ -105,7 +105,7 @@ namespace RUINORERP.Model
             get{return _BizType;}
             set{
             SetProperty(ref _BizType, value);
-            }
+                        }
         }
 
         private string _BizName;
@@ -119,7 +119,7 @@ namespace RUINORERP.Model
             get{return _BizName;}
             set{
             SetProperty(ref _BizName, value);
-            }
+                        }
         }
 
         private string _Templatet_Path;
@@ -133,7 +133,7 @@ namespace RUINORERP.Model
             get{return _Templatet_Path;}
             set{
             SetProperty(ref _Templatet_Path, value);
-            }
+                        }
         }
 
         private string _Template_DataSource;
@@ -147,7 +147,7 @@ namespace RUINORERP.Model
             get{return _Template_DataSource;}
             set{
             SetProperty(ref _Template_DataSource, value);
-            }
+                        }
         }
 
         private string _TemplateFileData;
@@ -161,7 +161,7 @@ namespace RUINORERP.Model
             get{return _TemplateFileData;}
             set{
             SetProperty(ref _TemplateFileData, value);
-            }
+                        }
         }
 
         private byte[] _TemplateFileStream;
@@ -175,7 +175,7 @@ namespace RUINORERP.Model
             get{return _TemplateFileStream;}
             set{
             SetProperty(ref _TemplateFileStream, value);
-            }
+                        }
         }
 
         private bool? _IsDefaultTemplate= false;
@@ -189,7 +189,7 @@ namespace RUINORERP.Model
             get{return _IsDefaultTemplate;}
             set{
             SetProperty(ref _IsDefaultTemplate, value);
-            }
+                        }
         }
 
         private DateTime? _Created_at;
@@ -203,7 +203,7 @@ namespace RUINORERP.Model
             get{return _Created_at;}
             set{
             SetProperty(ref _Created_at, value);
-            }
+                        }
         }
 
         private long? _Created_by;
@@ -217,7 +217,7 @@ namespace RUINORERP.Model
             get{return _Created_by;}
             set{
             SetProperty(ref _Created_by, value);
-            }
+                        }
         }
 
         private DateTime? _Modified_at;
@@ -231,7 +231,7 @@ namespace RUINORERP.Model
             get{return _Modified_at;}
             set{
             SetProperty(ref _Modified_at, value);
-            }
+                        }
         }
 
         private long? _Modified_by;
@@ -245,7 +245,7 @@ namespace RUINORERP.Model
             get{return _Modified_by;}
             set{
             SetProperty(ref _Modified_by, value);
-            }
+                        }
         }
 
         private bool _isdeleted= false;
@@ -260,14 +260,14 @@ namespace RUINORERP.Model
             get{return _isdeleted;}
             set{
             SetProperty(ref _isdeleted, value);
-            }
+                        }
         }
 
         #endregion
 
         #region 扩展属性
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(PrintConfigID))]
         public virtual tb_PrintConfig tb_printconfig { get; set; }
 

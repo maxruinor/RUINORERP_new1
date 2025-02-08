@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/14/2025 18:57:09
+// 时间：02/08/2025 16:32:24
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -46,8 +46,8 @@ namespace RUINORERP.Model
         { 
             get{return _PurReturnCID;}
             set{
-            base.PrimaryKeyID = _PurReturnCID;
             SetProperty(ref _PurReturnCID, value);
+                base.PrimaryKeyID = _PurReturnCID;
             }
         }
 
@@ -63,7 +63,7 @@ namespace RUINORERP.Model
             get{return _PurRetrunID;}
             set{
             SetProperty(ref _PurRetrunID, value);
-            }
+                        }
         }
 
         private long _ProdDetailID;
@@ -78,7 +78,7 @@ namespace RUINORERP.Model
             get{return _ProdDetailID;}
             set{
             SetProperty(ref _ProdDetailID, value);
-            }
+                        }
         }
 
         private long _Location_ID;
@@ -93,7 +93,7 @@ namespace RUINORERP.Model
             get{return _Location_ID;}
             set{
             SetProperty(ref _Location_ID, value);
-            }
+                        }
         }
 
         private string _property;
@@ -107,7 +107,7 @@ namespace RUINORERP.Model
             get{return _property;}
             set{
             SetProperty(ref _property, value);
-            }
+                        }
         }
 
         private int _Quantity;
@@ -121,7 +121,7 @@ namespace RUINORERP.Model
             get{return _Quantity;}
             set{
             SetProperty(ref _Quantity, value);
-            }
+                        }
         }
 
         private decimal? _Discount;
@@ -135,7 +135,7 @@ namespace RUINORERP.Model
             get{return _Discount;}
             set{
             SetProperty(ref _Discount, value);
-            }
+                        }
         }
 
         private decimal? _TransactionPrice;
@@ -149,7 +149,7 @@ namespace RUINORERP.Model
             get{return _TransactionPrice;}
             set{
             SetProperty(ref _TransactionPrice, value);
-            }
+                        }
         }
 
         private decimal? _TotalAmount;
@@ -163,7 +163,7 @@ namespace RUINORERP.Model
             get{return _TotalAmount;}
             set{
             SetProperty(ref _TotalAmount, value);
-            }
+                        }
         }
 
         private string _Summary;
@@ -177,7 +177,7 @@ namespace RUINORERP.Model
             get{return _Summary;}
             set{
             SetProperty(ref _Summary, value);
-            }
+                        }
         }
 
         private string _CustomerType;
@@ -191,7 +191,7 @@ namespace RUINORERP.Model
             get{return _CustomerType;}
             set{
             SetProperty(ref _CustomerType, value);
-            }
+                        }
         }
 
         private decimal? _commission;
@@ -205,7 +205,7 @@ namespace RUINORERP.Model
             get{return _commission;}
             set{
             SetProperty(ref _commission, value);
-            }
+                        }
         }
 
         private string _Notes;
@@ -219,24 +219,24 @@ namespace RUINORERP.Model
             get{return _Notes;}
             set{
             SetProperty(ref _Notes, value);
-            }
+                        }
         }
 
         #endregion
 
         #region 扩展属性
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(Location_ID))]
         public virtual tb_Location tb_location { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(ProdDetailID))]
         public virtual tb_ProdDetail tb_proddetail { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(PurRetrunID))]
         public virtual tb_PurOrderRe tb_purorderre { get; set; }
 

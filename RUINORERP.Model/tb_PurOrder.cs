@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/14/2025 18:57:08
+// 时间：02/08/2025 16:32:22
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -46,8 +46,8 @@ namespace RUINORERP.Model
         { 
             get{return _PurOrder_ID;}
             set{
-            base.PrimaryKeyID = _PurOrder_ID;
             SetProperty(ref _PurOrder_ID, value);
+                base.PrimaryKeyID = _PurOrder_ID;
             }
         }
 
@@ -62,7 +62,7 @@ namespace RUINORERP.Model
             get{return _PurOrderNo;}
             set{
             SetProperty(ref _PurOrderNo, value);
-            }
+                        }
         }
 
         private long _CustomerVendor_ID;
@@ -77,7 +77,7 @@ namespace RUINORERP.Model
             get{return _CustomerVendor_ID;}
             set{
             SetProperty(ref _CustomerVendor_ID, value);
-            }
+                        }
         }
 
         private long _Employee_ID;
@@ -92,7 +92,7 @@ namespace RUINORERP.Model
             get{return _Employee_ID;}
             set{
             SetProperty(ref _Employee_ID, value);
-            }
+                        }
         }
 
         private long? _DepartmentID;
@@ -107,7 +107,7 @@ namespace RUINORERP.Model
             get{return _DepartmentID;}
             set{
             SetProperty(ref _DepartmentID, value);
-            }
+                        }
         }
 
         private long? _Paytype_ID;
@@ -122,7 +122,7 @@ namespace RUINORERP.Model
             get{return _Paytype_ID;}
             set{
             SetProperty(ref _Paytype_ID, value);
-            }
+                        }
         }
 
         private long? _SOrder_ID;
@@ -137,7 +137,7 @@ namespace RUINORERP.Model
             get{return _SOrder_ID;}
             set{
             SetProperty(ref _SOrder_ID, value);
-            }
+                        }
         }
 
         private long? _PDID;
@@ -152,7 +152,7 @@ namespace RUINORERP.Model
             get{return _PDID;}
             set{
             SetProperty(ref _PDID, value);
-            }
+                        }
         }
 
         private DateTime _PurDate;
@@ -166,7 +166,7 @@ namespace RUINORERP.Model
             get{return _PurDate;}
             set{
             SetProperty(ref _PurDate, value);
-            }
+                        }
         }
 
         private DateTime? _PreDeliveryDate;
@@ -180,7 +180,7 @@ namespace RUINORERP.Model
             get{return _PreDeliveryDate;}
             set{
             SetProperty(ref _PreDeliveryDate, value);
-            }
+                        }
         }
 
         private int _TotalQty;
@@ -194,7 +194,7 @@ namespace RUINORERP.Model
             get{return _TotalQty;}
             set{
             SetProperty(ref _TotalQty, value);
-            }
+                        }
         }
 
         private decimal _ShippingCost;
@@ -208,7 +208,7 @@ namespace RUINORERP.Model
             get{return _ShippingCost;}
             set{
             SetProperty(ref _ShippingCost, value);
-            }
+                        }
         }
 
         private decimal _TotalTaxAmount;
@@ -222,7 +222,7 @@ namespace RUINORERP.Model
             get{return _TotalTaxAmount;}
             set{
             SetProperty(ref _TotalTaxAmount, value);
-            }
+                        }
         }
 
         private decimal _TotalAmount;
@@ -236,7 +236,7 @@ namespace RUINORERP.Model
             get{return _TotalAmount;}
             set{
             SetProperty(ref _TotalAmount, value);
-            }
+                        }
         }
 
         private decimal _ActualAmount;
@@ -250,7 +250,7 @@ namespace RUINORERP.Model
             get{return _ActualAmount;}
             set{
             SetProperty(ref _ActualAmount, value);
-            }
+                        }
         }
 
         private DateTime? _Arrival_date;
@@ -264,7 +264,7 @@ namespace RUINORERP.Model
             get{return _Arrival_date;}
             set{
             SetProperty(ref _Arrival_date, value);
-            }
+                        }
         }
 
         private string _Notes;
@@ -278,7 +278,7 @@ namespace RUINORERP.Model
             get{return _Notes;}
             set{
             SetProperty(ref _Notes, value);
-            }
+                        }
         }
 
         private bool _IsIncludeTax= false;
@@ -292,7 +292,7 @@ namespace RUINORERP.Model
             get{return _IsIncludeTax;}
             set{
             SetProperty(ref _IsIncludeTax, value);
-            }
+                        }
         }
 
         private int? _KeepAccountsType;
@@ -306,7 +306,7 @@ namespace RUINORERP.Model
             get{return _KeepAccountsType;}
             set{
             SetProperty(ref _KeepAccountsType, value);
-            }
+                        }
         }
 
         private decimal _PrePayMoney;
@@ -320,7 +320,7 @@ namespace RUINORERP.Model
             get{return _PrePayMoney;}
             set{
             SetProperty(ref _PrePayMoney, value);
-            }
+                        }
         }
 
         private decimal _Deposit;
@@ -334,7 +334,7 @@ namespace RUINORERP.Model
             get{return _Deposit;}
             set{
             SetProperty(ref _Deposit, value);
-            }
+                        }
         }
 
         private int? _TaxDeductionType;
@@ -348,7 +348,7 @@ namespace RUINORERP.Model
             get{return _TaxDeductionType;}
             set{
             SetProperty(ref _TaxDeductionType, value);
-            }
+                        }
         }
 
         private int _DataStatus;
@@ -362,7 +362,7 @@ namespace RUINORERP.Model
             get{return _DataStatus;}
             set{
             SetProperty(ref _DataStatus, value);
-            }
+                        }
         }
 
         private string _CloseCaseOpinions;
@@ -376,7 +376,7 @@ namespace RUINORERP.Model
             get{return _CloseCaseOpinions;}
             set{
             SetProperty(ref _CloseCaseOpinions, value);
-            }
+                        }
         }
 
         private string _ApprovalOpinions;
@@ -390,7 +390,7 @@ namespace RUINORERP.Model
             get{return _ApprovalOpinions;}
             set{
             SetProperty(ref _ApprovalOpinions, value);
-            }
+                        }
         }
 
         private int? _ApprovalStatus;
@@ -404,7 +404,7 @@ namespace RUINORERP.Model
             get{return _ApprovalStatus;}
             set{
             SetProperty(ref _ApprovalStatus, value);
-            }
+                        }
         }
 
         private bool? _ApprovalResults;
@@ -418,7 +418,7 @@ namespace RUINORERP.Model
             get{return _ApprovalResults;}
             set{
             SetProperty(ref _ApprovalResults, value);
-            }
+                        }
         }
 
         private long? _Approver_by;
@@ -432,7 +432,7 @@ namespace RUINORERP.Model
             get{return _Approver_by;}
             set{
             SetProperty(ref _Approver_by, value);
-            }
+                        }
         }
 
         private DateTime? _Approver_at;
@@ -446,7 +446,7 @@ namespace RUINORERP.Model
             get{return _Approver_at;}
             set{
             SetProperty(ref _Approver_at, value);
-            }
+                        }
         }
 
         private int _PrintStatus= ((0));
@@ -460,7 +460,7 @@ namespace RUINORERP.Model
             get{return _PrintStatus;}
             set{
             SetProperty(ref _PrintStatus, value);
-            }
+                        }
         }
 
         private bool _isdeleted= false;
@@ -475,7 +475,7 @@ namespace RUINORERP.Model
             get{return _isdeleted;}
             set{
             SetProperty(ref _isdeleted, value);
-            }
+                        }
         }
 
         private DateTime? _Created_at;
@@ -489,7 +489,7 @@ namespace RUINORERP.Model
             get{return _Created_at;}
             set{
             SetProperty(ref _Created_at, value);
-            }
+                        }
         }
 
         private long? _Created_by;
@@ -503,7 +503,7 @@ namespace RUINORERP.Model
             get{return _Created_by;}
             set{
             SetProperty(ref _Created_by, value);
-            }
+                        }
         }
 
         private DateTime? _Modified_at;
@@ -517,7 +517,7 @@ namespace RUINORERP.Model
             get{return _Modified_at;}
             set{
             SetProperty(ref _Modified_at, value);
-            }
+                        }
         }
 
         private long? _Modified_by;
@@ -531,7 +531,7 @@ namespace RUINORERP.Model
             get{return _Modified_by;}
             set{
             SetProperty(ref _Modified_by, value);
-            }
+                        }
         }
 
         private long? _RefBillID;
@@ -545,7 +545,7 @@ namespace RUINORERP.Model
             get{return _RefBillID;}
             set{
             SetProperty(ref _RefBillID, value);
-            }
+                        }
         }
 
         private string _RefNO;
@@ -559,7 +559,7 @@ namespace RUINORERP.Model
             get{return _RefNO;}
             set{
             SetProperty(ref _RefNO, value);
-            }
+                        }
         }
 
         private int? _RefBizType;
@@ -573,44 +573,44 @@ namespace RUINORERP.Model
             get{return _RefBizType;}
             set{
             SetProperty(ref _RefBizType, value);
-            }
+                        }
         }
 
         #endregion
 
         #region 扩展属性
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(CustomerVendor_ID))]
         public virtual tb_CustomerVendor tb_customervendor { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(Paytype_ID))]
         public virtual tb_PaymentMethod tb_paymentmethod { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(SOrder_ID))]
         public virtual tb_SaleOrder tb_saleorder { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(PDID))]
         public virtual tb_ProductionDemand tb_productiondemand { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(DepartmentID))]
         public virtual tb_Department tb_department { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(Employee_ID))]
         public virtual tb_Employee tb_employee { get; set; }
 
 
-        //[Browsable(false)]
+        //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_PurEntry.PurOrder_ID))]
         public virtual List<tb_PurEntry> tb_PurEntries { get; set; }
@@ -618,7 +618,7 @@ namespace RUINORERP.Model
         //PurOrder_ID.FK_TB_PUREN_REFERENCE_TB_PUROR)
         //tb_PurOrder.PurOrder_ID)
 
-        //[Browsable(false)]
+        //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_PurOrderDetail.PurOrder_ID))]
         public virtual List<tb_PurOrderDetail> tb_PurOrderDetails { get; set; }
@@ -626,7 +626,7 @@ namespace RUINORERP.Model
         //PurOrder_ID.FK_PURORDTAIL_REF_PURORDER)
         //tb_PurOrder.PurOrder_ID)
 
-        //[Browsable(false)]
+        //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_PurOrderRe.PurOrder_ID))]
         public virtual List<tb_PurOrderRe> tb_PurOrderRes { get; set; }

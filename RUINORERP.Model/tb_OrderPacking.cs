@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/14/2025 18:56:59
+// 时间：02/08/2025 16:32:08
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -46,8 +46,8 @@ namespace RUINORERP.Model
         { 
             get{return _OrderPackaging_ID;}
             set{
-            base.PrimaryKeyID = _OrderPackaging_ID;
             SetProperty(ref _OrderPackaging_ID, value);
+                base.PrimaryKeyID = _OrderPackaging_ID;
             }
         }
 
@@ -63,7 +63,7 @@ namespace RUINORERP.Model
             get{return _SOrder_ID;}
             set{
             SetProperty(ref _SOrder_ID, value);
-            }
+                        }
         }
 
         private string _BoxNo;
@@ -77,7 +77,7 @@ namespace RUINORERP.Model
             get{return _BoxNo;}
             set{
             SetProperty(ref _BoxNo, value);
-            }
+                        }
         }
 
         private string _BoxMark;
@@ -91,7 +91,7 @@ namespace RUINORERP.Model
             get{return _BoxMark;}
             set{
             SetProperty(ref _BoxMark, value);
-            }
+                        }
         }
 
         private string _Remarks;
@@ -105,7 +105,7 @@ namespace RUINORERP.Model
             get{return _Remarks;}
             set{
             SetProperty(ref _Remarks, value);
-            }
+                        }
         }
 
         private int _QuantityPerBox;
@@ -119,7 +119,7 @@ namespace RUINORERP.Model
             get{return _QuantityPerBox;}
             set{
             SetProperty(ref _QuantityPerBox, value);
-            }
+                        }
         }
 
         private decimal _Length= ((0));
@@ -133,7 +133,7 @@ namespace RUINORERP.Model
             get{return _Length;}
             set{
             SetProperty(ref _Length, value);
-            }
+                        }
         }
 
         private decimal _Width= ((0));
@@ -147,7 +147,7 @@ namespace RUINORERP.Model
             get{return _Width;}
             set{
             SetProperty(ref _Width, value);
-            }
+                        }
         }
 
         private decimal _Height= ((0));
@@ -161,7 +161,7 @@ namespace RUINORERP.Model
             get{return _Height;}
             set{
             SetProperty(ref _Height, value);
-            }
+                        }
         }
 
         private long? _Created_by;
@@ -175,7 +175,7 @@ namespace RUINORERP.Model
             get{return _Created_by;}
             set{
             SetProperty(ref _Created_by, value);
-            }
+                        }
         }
 
         private string _BoxMaterial;
@@ -189,7 +189,7 @@ namespace RUINORERP.Model
             get{return _BoxMaterial;}
             set{
             SetProperty(ref _BoxMaterial, value);
-            }
+                        }
         }
 
         private decimal _Volume= ((0));
@@ -203,7 +203,7 @@ namespace RUINORERP.Model
             get{return _Volume;}
             set{
             SetProperty(ref _Volume, value);
-            }
+                        }
         }
 
         private DateTime? _Created_at;
@@ -217,7 +217,7 @@ namespace RUINORERP.Model
             get{return _Created_at;}
             set{
             SetProperty(ref _Created_at, value);
-            }
+                        }
         }
 
         private DateTime? _Modified_at;
@@ -231,7 +231,7 @@ namespace RUINORERP.Model
             get{return _Modified_at;}
             set{
             SetProperty(ref _Modified_at, value);
-            }
+                        }
         }
 
         private long? _Modified_by;
@@ -245,7 +245,7 @@ namespace RUINORERP.Model
             get{return _Modified_by;}
             set{
             SetProperty(ref _Modified_by, value);
-            }
+                        }
         }
 
         private decimal? _GrossWeight;
@@ -259,7 +259,7 @@ namespace RUINORERP.Model
             get{return _GrossWeight;}
             set{
             SetProperty(ref _GrossWeight, value);
-            }
+                        }
         }
 
         private decimal? _NetWeight;
@@ -273,7 +273,7 @@ namespace RUINORERP.Model
             get{return _NetWeight;}
             set{
             SetProperty(ref _NetWeight, value);
-            }
+                        }
         }
 
         private string _PackingMethod;
@@ -287,14 +287,14 @@ namespace RUINORERP.Model
             get{return _PackingMethod;}
             set{
             SetProperty(ref _PackingMethod, value);
-            }
+                        }
         }
 
         #endregion
 
         #region 扩展属性
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(SOrder_ID))]
         public virtual tb_SaleOrder tb_saleorder { get; set; }
 

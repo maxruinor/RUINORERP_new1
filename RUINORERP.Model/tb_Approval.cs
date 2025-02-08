@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/14/2025 18:56:43
+// 时间：02/08/2025 16:31:51
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -46,8 +46,8 @@ namespace RUINORERP.Model
         { 
             get{return _ApprovalID;}
             set{
-            base.PrimaryKeyID = _ApprovalID;
             SetProperty(ref _ApprovalID, value);
+                base.PrimaryKeyID = _ApprovalID;
             }
         }
 
@@ -62,7 +62,7 @@ namespace RUINORERP.Model
             get{return _BillType;}
             set{
             SetProperty(ref _BillType, value);
-            }
+                        }
         }
 
         private string _BillName;
@@ -76,7 +76,7 @@ namespace RUINORERP.Model
             get{return _BillName;}
             set{
             SetProperty(ref _BillName, value);
-            }
+                        }
         }
 
         private string _BillEntityClassName;
@@ -90,7 +90,7 @@ namespace RUINORERP.Model
             get{return _BillEntityClassName;}
             set{
             SetProperty(ref _BillEntityClassName, value);
-            }
+                        }
         }
 
         private int? _ApprovalResults;
@@ -104,7 +104,7 @@ namespace RUINORERP.Model
             get{return _ApprovalResults;}
             set{
             SetProperty(ref _ApprovalResults, value);
-            }
+                        }
         }
 
         private bool? _GradedAudit;
@@ -118,7 +118,7 @@ namespace RUINORERP.Model
             get{return _GradedAudit;}
             set{
             SetProperty(ref _GradedAudit, value);
-            }
+                        }
         }
 
         private int? _Module;
@@ -132,14 +132,14 @@ namespace RUINORERP.Model
             get{return _Module;}
             set{
             SetProperty(ref _Module, value);
-            }
+                        }
         }
 
         #endregion
 
         #region 扩展属性
 
-        //[Browsable(false)]
+        //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_ApprovalProcessDetail.ApprovalID))]
         public virtual List<tb_ApprovalProcessDetail> tb_ApprovalProcessDetails { get; set; }

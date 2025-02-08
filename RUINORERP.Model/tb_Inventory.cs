@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/14/2025 18:56:54
+// 时间：02/08/2025 16:32:03
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -46,8 +46,8 @@ namespace RUINORERP.Model
         { 
             get{return _Inventory_ID;}
             set{
-            base.PrimaryKeyID = _Inventory_ID;
             SetProperty(ref _Inventory_ID, value);
+                base.PrimaryKeyID = _Inventory_ID;
             }
         }
 
@@ -63,7 +63,7 @@ namespace RUINORERP.Model
             get{return _ProdDetailID;}
             set{
             SetProperty(ref _ProdDetailID, value);
-            }
+                        }
         }
 
         private long? _Rack_ID;
@@ -78,7 +78,7 @@ namespace RUINORERP.Model
             get{return _Rack_ID;}
             set{
             SetProperty(ref _Rack_ID, value);
-            }
+                        }
         }
 
         private long _Location_ID;
@@ -93,7 +93,7 @@ namespace RUINORERP.Model
             get{return _Location_ID;}
             set{
             SetProperty(ref _Location_ID, value);
-            }
+                        }
         }
 
         private int _Quantity= ((0));
@@ -107,7 +107,7 @@ namespace RUINORERP.Model
             get{return _Quantity;}
             set{
             SetProperty(ref _Quantity, value);
-            }
+                        }
         }
 
         private int _InitInventory= ((0));
@@ -121,7 +121,7 @@ namespace RUINORERP.Model
             get{return _InitInventory;}
             set{
             SetProperty(ref _InitInventory, value);
-            }
+                        }
         }
 
         private int _Alert_Use= ((0));
@@ -135,7 +135,7 @@ namespace RUINORERP.Model
             get{return _Alert_Use;}
             set{
             SetProperty(ref _Alert_Use, value);
-            }
+                        }
         }
 
         private int _On_the_way_Qty= ((0));
@@ -149,7 +149,7 @@ namespace RUINORERP.Model
             get{return _On_the_way_Qty;}
             set{
             SetProperty(ref _On_the_way_Qty, value);
-            }
+                        }
         }
 
         private int _Sale_Qty= ((0));
@@ -163,7 +163,7 @@ namespace RUINORERP.Model
             get{return _Sale_Qty;}
             set{
             SetProperty(ref _Sale_Qty, value);
-            }
+                        }
         }
 
         private int _MakingQty= ((0));
@@ -177,7 +177,7 @@ namespace RUINORERP.Model
             get{return _MakingQty;}
             set{
             SetProperty(ref _MakingQty, value);
-            }
+                        }
         }
 
         private int _NotOutQty= ((0));
@@ -191,7 +191,7 @@ namespace RUINORERP.Model
             get{return _NotOutQty;}
             set{
             SetProperty(ref _NotOutQty, value);
-            }
+                        }
         }
 
         private int _BatchNumber= ((0));
@@ -205,7 +205,7 @@ namespace RUINORERP.Model
             get{return _BatchNumber;}
             set{
             SetProperty(ref _BatchNumber, value);
-            }
+                        }
         }
 
         private int _Alert_Quantity= ((0));
@@ -219,7 +219,7 @@ namespace RUINORERP.Model
             get{return _Alert_Quantity;}
             set{
             SetProperty(ref _Alert_Quantity, value);
-            }
+                        }
         }
 
         private decimal _CostFIFO= ((0));
@@ -233,7 +233,7 @@ namespace RUINORERP.Model
             get{return _CostFIFO;}
             set{
             SetProperty(ref _CostFIFO, value);
-            }
+                        }
         }
 
         private decimal _CostMonthlyWA= ((0));
@@ -247,7 +247,7 @@ namespace RUINORERP.Model
             get{return _CostMonthlyWA;}
             set{
             SetProperty(ref _CostMonthlyWA, value);
-            }
+                        }
         }
 
         private decimal _CostMovingWA= ((0));
@@ -261,7 +261,7 @@ namespace RUINORERP.Model
             get{return _CostMovingWA;}
             set{
             SetProperty(ref _CostMovingWA, value);
-            }
+                        }
         }
 
         private decimal _Inv_AdvCost= ((0));
@@ -275,7 +275,7 @@ namespace RUINORERP.Model
             get{return _Inv_AdvCost;}
             set{
             SetProperty(ref _Inv_AdvCost, value);
-            }
+                        }
         }
 
         private decimal _Inv_Cost= ((0));
@@ -289,7 +289,7 @@ namespace RUINORERP.Model
             get{return _Inv_Cost;}
             set{
             SetProperty(ref _Inv_Cost, value);
-            }
+                        }
         }
 
         private decimal _Inv_SubtotalCostMoney= ((0));
@@ -303,7 +303,7 @@ namespace RUINORERP.Model
             get{return _Inv_SubtotalCostMoney;}
             set{
             SetProperty(ref _Inv_SubtotalCostMoney, value);
-            }
+                        }
         }
 
         private DateTime? _LatestOutboundTime;
@@ -317,7 +317,7 @@ namespace RUINORERP.Model
             get{return _LatestOutboundTime;}
             set{
             SetProperty(ref _LatestOutboundTime, value);
-            }
+                        }
         }
 
         private DateTime? _LatestStorageTime;
@@ -331,7 +331,7 @@ namespace RUINORERP.Model
             get{return _LatestStorageTime;}
             set{
             SetProperty(ref _LatestStorageTime, value);
-            }
+                        }
         }
 
         private DateTime? _LastInventoryDate;
@@ -345,7 +345,7 @@ namespace RUINORERP.Model
             get{return _LastInventoryDate;}
             set{
             SetProperty(ref _LastInventoryDate, value);
-            }
+                        }
         }
 
         private string _Notes;
@@ -359,7 +359,7 @@ namespace RUINORERP.Model
             get{return _Notes;}
             set{
             SetProperty(ref _Notes, value);
-            }
+                        }
         }
 
         private DateTime? _Created_at;
@@ -373,7 +373,7 @@ namespace RUINORERP.Model
             get{return _Created_at;}
             set{
             SetProperty(ref _Created_at, value);
-            }
+                        }
         }
 
         private long? _Created_by;
@@ -387,7 +387,7 @@ namespace RUINORERP.Model
             get{return _Created_by;}
             set{
             SetProperty(ref _Created_by, value);
-            }
+                        }
         }
 
         private DateTime? _Modified_at;
@@ -401,7 +401,7 @@ namespace RUINORERP.Model
             get{return _Modified_at;}
             set{
             SetProperty(ref _Modified_at, value);
-            }
+                        }
         }
 
         private long? _Modified_by;
@@ -415,29 +415,29 @@ namespace RUINORERP.Model
             get{return _Modified_by;}
             set{
             SetProperty(ref _Modified_by, value);
-            }
+                        }
         }
 
         #endregion
 
         #region 扩展属性
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(Rack_ID))]
         public virtual tb_StorageRack tb_storagerack { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(ProdDetailID))]
         public virtual tb_ProdDetail tb_proddetail { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(Location_ID))]
         public virtual tb_Location tb_location { get; set; }
 
 
-        //[Browsable(false)]
+        //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_Inv_Alert_Attribute.Inventory_ID))]
         public virtual List<tb_Inv_Alert_Attribute> tb_Inv_Alert_Attributes { get; set; }
@@ -445,7 +445,7 @@ namespace RUINORERP.Model
         //Inventory_ID.FK_TB_INV_A_REFERENCE_TB_INVEN)
         //tb_Inventory.Inventory_ID)
 
-        //[Browsable(false)]
+        //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_OpeningInventory.Inventory_ID))]
         public virtual List<tb_OpeningInventory> tb_OpeningInventories { get; set; }

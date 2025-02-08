@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/14/2025 18:57:14
+// 时间：02/08/2025 16:32:30
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -46,8 +46,8 @@ namespace RUINORERP.Model
         { 
             get{return _Rack_ID;}
             set{
-            base.PrimaryKeyID = _Rack_ID;
             SetProperty(ref _Rack_ID, value);
+                base.PrimaryKeyID = _Rack_ID;
             }
         }
 
@@ -63,7 +63,7 @@ namespace RUINORERP.Model
             get{return _Location_ID;}
             set{
             SetProperty(ref _Location_ID, value);
-            }
+                        }
         }
 
         private string _RackNO;
@@ -77,7 +77,7 @@ namespace RUINORERP.Model
             get{return _RackNO;}
             set{
             SetProperty(ref _RackNO, value);
-            }
+                        }
         }
 
         private string _RackName;
@@ -91,7 +91,7 @@ namespace RUINORERP.Model
             get{return _RackName;}
             set{
             SetProperty(ref _RackName, value);
-            }
+                        }
         }
 
         private string _RackLocation;
@@ -105,7 +105,7 @@ namespace RUINORERP.Model
             get{return _RackLocation;}
             set{
             SetProperty(ref _RackLocation, value);
-            }
+                        }
         }
 
         private string _Desc;
@@ -119,19 +119,19 @@ namespace RUINORERP.Model
             get{return _Desc;}
             set{
             SetProperty(ref _Desc, value);
-            }
+                        }
         }
 
         #endregion
 
         #region 扩展属性
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(Location_ID))]
         public virtual tb_Location tb_location { get; set; }
 
 
-        //[Browsable(false)]
+        //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_StockOutDetail.Rack_ID))]
         public virtual List<tb_StockOutDetail> tb_StockOutDetails { get; set; }
@@ -139,7 +139,7 @@ namespace RUINORERP.Model
         //Rack_ID.FK_TB_STOCKOUTDETAIL_REF_TB_STORARACK)
         //tb_StorageRack.Rack_ID)
 
-        //[Browsable(false)]
+        //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_SaleOutReDetail.Rack_ID))]
         public virtual List<tb_SaleOutReDetail> tb_SaleOutReDetails { get; set; }
@@ -147,7 +147,7 @@ namespace RUINORERP.Model
         //Rack_ID.FK_SOREDETAIL_RE_STORARACK)
         //tb_StorageRack.Rack_ID)
 
-        //[Browsable(false)]
+        //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_PurReturnEntryDetail.Rack_ID))]
         public virtual List<tb_PurReturnEntryDetail> tb_PurReturnEntryDetails { get; set; }
@@ -155,7 +155,7 @@ namespace RUINORERP.Model
         //Rack_ID.FK_PURRETURNENTRYDETAIL_REF_STORAGERACK)
         //tb_StorageRack.Rack_ID)
 
-        //[Browsable(false)]
+        //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_FinishedGoodsInvDetail.Rack_ID))]
         public virtual List<tb_FinishedGoodsInvDetail> tb_FinishedGoodsInvDetails { get; set; }
@@ -163,7 +163,7 @@ namespace RUINORERP.Model
         //Rack_ID.FK_FINISHEDGOODSDETAIL_REF_STORARACK)
         //tb_StorageRack.Rack_ID)
 
-        //[Browsable(false)]
+        //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_Prod.Rack_ID))]
         public virtual List<tb_Prod> tb_Prods { get; set; }
@@ -171,7 +171,7 @@ namespace RUINORERP.Model
         //Rack_ID.FK_TB_PRODBASE_REF_TB_STORARACK)
         //tb_StorageRack.Rack_ID)
 
-        //[Browsable(false)]
+        //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_StocktakeDetail.Rack_ID))]
         public virtual List<tb_StocktakeDetail> tb_StocktakeDetails { get; set; }
@@ -179,7 +179,7 @@ namespace RUINORERP.Model
         //Rack_ID.FK_TB_STOCKSTAKEDETAIL_REF_TB_STORA)
         //tb_StorageRack.Rack_ID)
 
-        //[Browsable(false)]
+        //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_PurEntryDetail.Rack_ID))]
         public virtual List<tb_PurEntryDetail> tb_PurEntryDetails { get; set; }
@@ -187,7 +187,7 @@ namespace RUINORERP.Model
         //Rack_ID.FK_TB_PURENTRYDETAIL_REFE_TB_STORA)
         //tb_StorageRack.Rack_ID)
 
-        //[Browsable(false)]
+        //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_SaleOutDetail.Rack_ID))]
         public virtual List<tb_SaleOutDetail> tb_SaleOutDetails { get; set; }
@@ -195,7 +195,7 @@ namespace RUINORERP.Model
         //Rack_ID.FK_TB_SO_RE_STORAGERACK)
         //tb_StorageRack.Rack_ID)
 
-        //[Browsable(false)]
+        //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_MRP_ReworkEntryDetail.Rack_ID))]
         public virtual List<tb_MRP_ReworkEntryDetail> tb_MRP_ReworkEntryDetails { get; set; }
@@ -203,7 +203,7 @@ namespace RUINORERP.Model
         //Rack_ID.FK_MRP_ReworkEntrydetail_REF_Rack)
         //tb_StorageRack.Rack_ID)
 
-        //[Browsable(false)]
+        //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_PurEntryReDetail.Rack_ID))]
         public virtual List<tb_PurEntryReDetail> tb_PurEntryReDetails { get; set; }
@@ -211,7 +211,7 @@ namespace RUINORERP.Model
         //Rack_ID.FK_TB_PURENTRYREDETAIL_REF_TB_STORA)
         //tb_StorageRack.Rack_ID)
 
-        //[Browsable(false)]
+        //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_Inventory.Rack_ID))]
         public virtual List<tb_Inventory> tb_Inventories { get; set; }
@@ -219,7 +219,7 @@ namespace RUINORERP.Model
         //Rack_ID.FK_TB_INVEN_REF_TB_STORARACK)
         //tb_StorageRack.Rack_ID)
 
-        //[Browsable(false)]
+        //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_StockInDetail.Rack_ID))]
         public virtual List<tb_StockInDetail> tb_StockInDetails { get; set; }

@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/14/2025 18:56:51
+// 时间：02/08/2025 16:32:00
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -46,8 +46,8 @@ namespace RUINORERP.Model
         { 
             get{return _ClaimSubID;}
             set{
-            base.PrimaryKeyID = _ClaimSubID;
             SetProperty(ref _ClaimSubID, value);
+                base.PrimaryKeyID = _ClaimSubID;
             }
         }
 
@@ -63,7 +63,7 @@ namespace RUINORERP.Model
             get{return _ClaimMainID;}
             set{
             SetProperty(ref _ClaimMainID, value);
-            }
+                        }
         }
 
         private string _ClaimName;
@@ -77,7 +77,7 @@ namespace RUINORERP.Model
             get{return _ClaimName;}
             set{
             SetProperty(ref _ClaimName, value);
-            }
+                        }
         }
 
         private long? _DepartmentID;
@@ -92,7 +92,7 @@ namespace RUINORERP.Model
             get{return _DepartmentID;}
             set{
             SetProperty(ref _DepartmentID, value);
-            }
+                        }
         }
 
         private long? _ExpenseType_id;
@@ -107,7 +107,7 @@ namespace RUINORERP.Model
             get{return _ExpenseType_id;}
             set{
             SetProperty(ref _ExpenseType_id, value);
-            }
+                        }
         }
 
         private long? _Account_id;
@@ -122,7 +122,7 @@ namespace RUINORERP.Model
             get{return _Account_id;}
             set{
             SetProperty(ref _Account_id, value);
-            }
+                        }
         }
 
         private long? _Subject_id;
@@ -137,7 +137,7 @@ namespace RUINORERP.Model
             get{return _Subject_id;}
             set{
             SetProperty(ref _Subject_id, value);
-            }
+                        }
         }
 
         private long? _ProjectGroup_ID;
@@ -152,7 +152,7 @@ namespace RUINORERP.Model
             get{return _ProjectGroup_ID;}
             set{
             SetProperty(ref _ProjectGroup_ID, value);
-            }
+                        }
         }
 
         private DateTime _TranDate;
@@ -166,7 +166,7 @@ namespace RUINORERP.Model
             get{return _TranDate;}
             set{
             SetProperty(ref _TranDate, value);
-            }
+                        }
         }
 
         private decimal _TotalAmount= ((0));
@@ -180,7 +180,7 @@ namespace RUINORERP.Model
             get{return _TotalAmount;}
             set{
             SetProperty(ref _TotalAmount, value);
-            }
+                        }
         }
 
         private bool _IncludeTax= false;
@@ -194,7 +194,7 @@ namespace RUINORERP.Model
             get{return _IncludeTax;}
             set{
             SetProperty(ref _IncludeTax, value);
-            }
+                        }
         }
 
         private string _Summary;
@@ -208,7 +208,7 @@ namespace RUINORERP.Model
             get{return _Summary;}
             set{
             SetProperty(ref _Summary, value);
-            }
+                        }
         }
 
         private decimal? _TaxRate;
@@ -222,7 +222,7 @@ namespace RUINORERP.Model
             get{return _TaxRate;}
             set{
             SetProperty(ref _TaxRate, value);
-            }
+                        }
         }
 
         private decimal? _TaxAmount;
@@ -236,7 +236,7 @@ namespace RUINORERP.Model
             get{return _TaxAmount;}
             set{
             SetProperty(ref _TaxAmount, value);
-            }
+                        }
         }
 
         private decimal _UntaxedAmount;
@@ -250,7 +250,7 @@ namespace RUINORERP.Model
             get{return _UntaxedAmount;}
             set{
             SetProperty(ref _UntaxedAmount, value);
-            }
+                        }
         }
 
         private string _EvidenceImagePath;
@@ -264,39 +264,39 @@ namespace RUINORERP.Model
             get{return _EvidenceImagePath;}
             set{
             SetProperty(ref _EvidenceImagePath, value);
-            }
+                        }
         }
 
         #endregion
 
         #region 扩展属性
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(Account_id))]
         public virtual tb_FM_Account tb_fm_account { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(ExpenseType_id))]
         public virtual tb_FM_ExpenseType tb_fm_expensetype { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(ProjectGroup_ID))]
         public virtual tb_ProjectGroup tb_projectgroup { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(Subject_id))]
         public virtual tb_FM_Subject tb_fm_subject { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(DepartmentID))]
         public virtual tb_Department tb_department { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(ClaimMainID))]
         public virtual tb_FM_ExpenseClaim tb_fm_expenseclaim { get; set; }
 

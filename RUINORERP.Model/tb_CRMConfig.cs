@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/14/2025 18:56:48
+// 时间：02/08/2025 16:31:56
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -46,8 +46,8 @@ namespace RUINORERP.Model
         { 
             get{return _CRMConfigID;}
             set{
-            base.PrimaryKeyID = _CRMConfigID;
             SetProperty(ref _CRMConfigID, value);
+                base.PrimaryKeyID = _CRMConfigID;
             }
         }
 
@@ -62,7 +62,7 @@ namespace RUINORERP.Model
             get{return _CS_UseLeadsFunction;}
             set{
             SetProperty(ref _CS_UseLeadsFunction, value);
-            }
+                        }
         }
 
         private int _CS_NewCustToLeadsCustDays= ((30));
@@ -76,7 +76,7 @@ namespace RUINORERP.Model
             get{return _CS_NewCustToLeadsCustDays;}
             set{
             SetProperty(ref _CS_NewCustToLeadsCustDays, value);
-            }
+                        }
         }
 
         private int _CS_SleepingCustomerDays= ((180));
@@ -90,7 +90,7 @@ namespace RUINORERP.Model
             get{return _CS_SleepingCustomerDays;}
             set{
             SetProperty(ref _CS_SleepingCustomerDays, value);
-            }
+                        }
         }
 
         private int _CS_LostCustomersDays= ((365));
@@ -104,7 +104,7 @@ namespace RUINORERP.Model
             get{return _CS_LostCustomersDays;}
             set{
             SetProperty(ref _CS_LostCustomersDays, value);
-            }
+                        }
         }
 
         private int _CS_ActiveCustomers= ((15));
@@ -118,7 +118,7 @@ namespace RUINORERP.Model
             get{return _CS_ActiveCustomers;}
             set{
             SetProperty(ref _CS_ActiveCustomers, value);
-            }
+                        }
         }
 
         private int _LS_ConvCustHasFollowUpDays= ((15));
@@ -132,7 +132,7 @@ namespace RUINORERP.Model
             get{return _LS_ConvCustHasFollowUpDays;}
             set{
             SetProperty(ref _LS_ConvCustHasFollowUpDays, value);
-            }
+                        }
         }
 
         private int _LS_ConvCustNoTransDays= ((30));
@@ -146,7 +146,7 @@ namespace RUINORERP.Model
             get{return _LS_ConvCustNoTransDays;}
             set{
             SetProperty(ref _LS_ConvCustNoTransDays, value);
-            }
+                        }
         }
 
         private int _LS_ConvCustLostDays= ((60));
@@ -160,7 +160,7 @@ namespace RUINORERP.Model
             get{return _LS_ConvCustLostDays;}
             set{
             SetProperty(ref _LS_ConvCustLostDays, value);
-            }
+                        }
         }
 
         private int _NoFollToPublicPoolDays= ((90));
@@ -174,7 +174,7 @@ namespace RUINORERP.Model
             get{return _NoFollToPublicPoolDays;}
             set{
             SetProperty(ref _NoFollToPublicPoolDays, value);
-            }
+                        }
         }
 
         private int _CustomerNoOrderDays= ((30));
@@ -188,7 +188,7 @@ namespace RUINORERP.Model
             get{return _CustomerNoOrderDays;}
             set{
             SetProperty(ref _CustomerNoOrderDays, value);
-            }
+                        }
         }
 
         private int _CustomerNoFollowUpDays= ((20));
@@ -202,7 +202,7 @@ namespace RUINORERP.Model
             get{return _CustomerNoFollowUpDays;}
             set{
             SetProperty(ref _CustomerNoFollowUpDays, value);
-            }
+                        }
         }
 
         private DateTime _Created_at;
@@ -216,7 +216,7 @@ namespace RUINORERP.Model
             get{return _Created_at;}
             set{
             SetProperty(ref _Created_at, value);
-            }
+                        }
         }
 
         private long? _Created_by;
@@ -230,7 +230,7 @@ namespace RUINORERP.Model
             get{return _Created_by;}
             set{
             SetProperty(ref _Created_by, value);
-            }
+                        }
         }
 
         private DateTime? _Modified_at;
@@ -244,7 +244,7 @@ namespace RUINORERP.Model
             get{return _Modified_at;}
             set{
             SetProperty(ref _Modified_at, value);
-            }
+                        }
         }
 
         private long? _Modified_by;
@@ -258,7 +258,7 @@ namespace RUINORERP.Model
             get{return _Modified_by;}
             set{
             SetProperty(ref _Modified_by, value);
-            }
+                        }
         }
 
         #endregion

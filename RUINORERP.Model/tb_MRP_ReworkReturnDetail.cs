@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/14/2025 20:57:18
+// 时间：02/08/2025 16:32:07
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -46,8 +46,8 @@ namespace RUINORERP.Model
         { 
             get{return _ReworkReturnCID;}
             set{
-            base.PrimaryKeyID = _ReworkReturnCID;
             SetProperty(ref _ReworkReturnCID, value);
+                base.PrimaryKeyID = _ReworkReturnCID;
             }
         }
 
@@ -63,7 +63,7 @@ namespace RUINORERP.Model
             get{return _ReworkReturnID;}
             set{
             SetProperty(ref _ReworkReturnID, value);
-            }
+                        }
         }
 
         private long _Location_ID;
@@ -78,7 +78,7 @@ namespace RUINORERP.Model
             get{return _Location_ID;}
             set{
             SetProperty(ref _Location_ID, value);
-            }
+                        }
         }
 
         private long _ProdDetailID;
@@ -93,7 +93,7 @@ namespace RUINORERP.Model
             get{return _ProdDetailID;}
             set{
             SetProperty(ref _ProdDetailID, value);
-            }
+                        }
         }
 
         private string _property;
@@ -107,7 +107,7 @@ namespace RUINORERP.Model
             get{return _property;}
             set{
             SetProperty(ref _property, value);
-            }
+                        }
         }
 
         private int _Quantity= ((0));
@@ -121,7 +121,7 @@ namespace RUINORERP.Model
             get{return _Quantity;}
             set{
             SetProperty(ref _Quantity, value);
-            }
+                        }
         }
 
         private int _DeliveredQuantity= ((0));
@@ -135,7 +135,7 @@ namespace RUINORERP.Model
             get{return _DeliveredQuantity;}
             set{
             SetProperty(ref _DeliveredQuantity, value);
-            }
+                        }
         }
 
         private decimal _UnitCost= ((0));
@@ -149,7 +149,7 @@ namespace RUINORERP.Model
             get{return _UnitCost;}
             set{
             SetProperty(ref _UnitCost, value);
-            }
+                        }
         }
 
         private decimal _SubtotalReworkFee= ((0));
@@ -163,7 +163,7 @@ namespace RUINORERP.Model
             get{return _SubtotalReworkFee;}
             set{
             SetProperty(ref _SubtotalReworkFee, value);
-            }
+                        }
         }
 
         private decimal _ReworkFee= ((0));
@@ -177,7 +177,7 @@ namespace RUINORERP.Model
             get{return _ReworkFee;}
             set{
             SetProperty(ref _ReworkFee, value);
-            }
+                        }
         }
 
         private decimal _SubtotalCostAmount= ((0));
@@ -191,7 +191,7 @@ namespace RUINORERP.Model
             get{return _SubtotalCostAmount;}
             set{
             SetProperty(ref _SubtotalCostAmount, value);
-            }
+                        }
         }
 
         private string _CustomertModel;
@@ -205,7 +205,7 @@ namespace RUINORERP.Model
             get{return _CustomertModel;}
             set{
             SetProperty(ref _CustomertModel, value);
-            }
+                        }
         }
 
         private string _Summary;
@@ -219,7 +219,7 @@ namespace RUINORERP.Model
             get{return _Summary;}
             set{
             SetProperty(ref _Summary, value);
-            }
+                        }
         }
 
         #endregion

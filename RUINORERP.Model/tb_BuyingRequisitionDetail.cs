@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/14/2025 18:56:46
+// 时间：02/08/2025 16:31:54
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -46,8 +46,8 @@ namespace RUINORERP.Model
         { 
             get{return _PuRequisition_ChildID;}
             set{
-            base.PrimaryKeyID = _PuRequisition_ChildID;
             SetProperty(ref _PuRequisition_ChildID, value);
+                base.PrimaryKeyID = _PuRequisition_ChildID;
             }
         }
 
@@ -63,7 +63,7 @@ namespace RUINORERP.Model
             get{return _PuRequisition_ID;}
             set{
             SetProperty(ref _PuRequisition_ID, value);
-            }
+                        }
         }
 
         private long _ProdDetailID;
@@ -78,7 +78,7 @@ namespace RUINORERP.Model
             get{return _ProdDetailID;}
             set{
             SetProperty(ref _ProdDetailID, value);
-            }
+                        }
         }
 
         private DateTime? _RequirementDate;
@@ -92,7 +92,7 @@ namespace RUINORERP.Model
             get{return _RequirementDate;}
             set{
             SetProperty(ref _RequirementDate, value);
-            }
+                        }
         }
 
         private string _property;
@@ -106,7 +106,7 @@ namespace RUINORERP.Model
             get{return _property;}
             set{
             SetProperty(ref _property, value);
-            }
+                        }
         }
 
         private int _ActualRequiredQty;
@@ -120,7 +120,7 @@ namespace RUINORERP.Model
             get{return _ActualRequiredQty;}
             set{
             SetProperty(ref _ActualRequiredQty, value);
-            }
+                        }
         }
 
         private int _Quantity;
@@ -134,7 +134,7 @@ namespace RUINORERP.Model
             get{return _Quantity;}
             set{
             SetProperty(ref _Quantity, value);
-            }
+                        }
         }
 
         private decimal? _EstimatedPrice;
@@ -148,7 +148,7 @@ namespace RUINORERP.Model
             get{return _EstimatedPrice;}
             set{
             SetProperty(ref _EstimatedPrice, value);
-            }
+                        }
         }
 
         private int _DeliveredQuantity= ((0));
@@ -162,7 +162,7 @@ namespace RUINORERP.Model
             get{return _DeliveredQuantity;}
             set{
             SetProperty(ref _DeliveredQuantity, value);
-            }
+                        }
         }
 
         private string _Purpose;
@@ -176,7 +176,7 @@ namespace RUINORERP.Model
             get{return _Purpose;}
             set{
             SetProperty(ref _Purpose, value);
-            }
+                        }
         }
 
         private string _Notes;
@@ -190,7 +190,7 @@ namespace RUINORERP.Model
             get{return _Notes;}
             set{
             SetProperty(ref _Notes, value);
-            }
+                        }
         }
 
         private bool? _Purchased= false;
@@ -204,19 +204,19 @@ namespace RUINORERP.Model
             get{return _Purchased;}
             set{
             SetProperty(ref _Purchased, value);
-            }
+                        }
         }
 
         #endregion
 
         #region 扩展属性
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(ProdDetailID))]
         public virtual tb_ProdDetail tb_proddetail { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(PuRequisition_ID))]
         public virtual tb_BuyingRequisition tb_buyingrequisition { get; set; }
 

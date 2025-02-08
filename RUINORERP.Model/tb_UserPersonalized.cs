@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/14/2025 18:57:16
+// 时间：02/08/2025 16:32:32
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -46,8 +46,8 @@ namespace RUINORERP.Model
         { 
             get{return _UserPersonalizedID;}
             set{
-            base.PrimaryKeyID = _UserPersonalizedID;
             SetProperty(ref _UserPersonalizedID, value);
+                base.PrimaryKeyID = _UserPersonalizedID;
             }
         }
 
@@ -62,7 +62,7 @@ namespace RUINORERP.Model
             get{return _WorkCellSettings;}
             set{
             SetProperty(ref _WorkCellSettings, value);
-            }
+                        }
         }
 
         private string _WorkCellLayout;
@@ -76,7 +76,7 @@ namespace RUINORERP.Model
             get{return _WorkCellLayout;}
             set{
             SetProperty(ref _WorkCellLayout, value);
-            }
+                        }
         }
 
         private long _ID;
@@ -91,19 +91,19 @@ namespace RUINORERP.Model
             get{return _ID;}
             set{
             SetProperty(ref _ID, value);
-            }
+                        }
         }
 
         #endregion
 
         #region 扩展属性
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(ID))]
         public virtual tb_User_Role tb_user_role { get; set; }
 
 
-        //[Browsable(false)]
+        //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_UIMenuPersonalization.UserPersonalizedID))]
         public virtual List<tb_UIMenuPersonalization> tb_UIMenuPersonalizations { get; set; }

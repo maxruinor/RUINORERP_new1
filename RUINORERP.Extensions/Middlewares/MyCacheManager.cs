@@ -366,15 +366,24 @@ namespace RUINORERP.Extensions.Middlewares
                         var lastlist = ((IEnumerable<dynamic>)cachelist).Select(item => Activator.CreateInstance(elementType)).ToList();
 
                         //List<object> oldlist = (List<object>)cachelist;
-                        List<object> myList = TypeHelper.ConvertJArrayToList(elementType, newJarryList);
-                        if (myList.Count == lastlist.Count)
+                        List<object> newList = TypeHelper.ConvertJArrayToList(elementType, newJarryList);
+                        //如果是相同时 极有可能是 分页发送的 第一页100，第二页也100时，这时也要比较处理
+                        if (newList.Count == lastlist.Count)
                         {
-                            CacheEntityList.Update(tableName, k => myList);
+                            if (lastlist.Contains(newList))
+                            {
+                                CacheEntityList.Update(tableName, k => newList);
+                            }
+                            else
+                            {
+                                CacheEntityList.Update(tableName, k => newList);
+                            }
+                            
                         }
                         else
                         {
                             // 合并JArray并排除重复项,因为有分页传所以不能全部替换
-                            var combinedList = CombineLists(elementType, lastlist, myList, pair.Key);
+                            var combinedList = CombineLists(elementType, lastlist, newList, pair.Key);
                             CacheEntityList.Update(tableName, k => combinedList);
                         }
 
@@ -413,17 +422,38 @@ namespace RUINORERP.Extensions.Middlewares
             }
         }
 
+
         private List<object> CombineLists(Type elementType, List<object> cacheList, List<object> newList, string key)
         {
             var combinedList = cacheList
-                .Concat(newList)
-                .GroupBy(item => item.GetPropertyValue(key))
-                .Select(group => group.First())
-                .Where(c => c.GetPropertyValue(key).IsNotEmptyOrNull() && c.GetPropertyValue(key).ToString() != "0")
-                .ToList();
+                .Concat(newList) // 合并两个列表
+                .GroupBy(item => item.GetPropertyValue(key)) // 按键值分组
+                .Select(group => group.First()) // 从每个分组中选择第一个元素
+                .Where(c => c.GetPropertyValue(key).IsNotEmptyOrNull() && c.GetPropertyValue(key).ToString() != "0") // 过滤条件
+                .ToList(); // 转换为列表
 
             return combinedList;
         }
+
+
+
+        /*
+         代码解释
+Concat：
+连接：
+将 cacheList 和 newList 合并为一个列表。
+GroupBy：
+分组：
+按照 item.GetPropertyValue(key) 的值对合并后的列表进行分组。这里假设 GetPropertyValue 是一个扩展方法，用于获取对象的属性值。
+Select：
+选择：
+从每个分组中选择第一个元素。这会确保每个分组中只有一个元素被选中，从而排除重复项。
+Where：  其中：
+过滤掉 key 值为空或为 "0" 的元素。这里假设 IsNotEmptyOrNull 是一个扩展方法，用于检查字符串是否为空或 null。
+ToList：
+收件人列表：
+将结果转换为列表。
+         */
 
         private JArray CombineJArrays(JArray cacheArray, JArray newArray, string key)
         {

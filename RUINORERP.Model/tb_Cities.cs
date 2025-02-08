@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/14/2025 18:56:46
+// 时间：02/08/2025 16:31:54
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -46,8 +46,8 @@ namespace RUINORERP.Model
         { 
             get{return _CityID;}
             set{
-            base.PrimaryKeyID = _CityID;
             SetProperty(ref _CityID, value);
+                base.PrimaryKeyID = _CityID;
             }
         }
 
@@ -63,7 +63,7 @@ namespace RUINORERP.Model
             get{return _ProvinceID;}
             set{
             SetProperty(ref _ProvinceID, value);
-            }
+                        }
         }
 
         private string _CityCNName;
@@ -77,7 +77,7 @@ namespace RUINORERP.Model
             get{return _CityCNName;}
             set{
             SetProperty(ref _CityCNName, value);
-            }
+                        }
         }
 
         private string _CityENName;
@@ -91,19 +91,19 @@ namespace RUINORERP.Model
             get{return _CityENName;}
             set{
             SetProperty(ref _CityENName, value);
-            }
+                        }
         }
 
         #endregion
 
         #region 扩展属性
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(ProvinceID))]
         public virtual tb_Provinces tb_provinces { get; set; }
 
 
-        //[Browsable(false)]
+        //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_CRM_Customer.CityID))]
         public virtual List<tb_CRM_Customer> tb_CRM_Customers { get; set; }

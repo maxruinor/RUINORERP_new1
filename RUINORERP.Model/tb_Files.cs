@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/14/2025 18:56:50
+// 时间：02/08/2025 16:31:59
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -46,8 +46,8 @@ namespace RUINORERP.Model
         { 
             get{return _Doc_ID;}
             set{
-            base.PrimaryKeyID = _Doc_ID;
             SetProperty(ref _Doc_ID, value);
+                base.PrimaryKeyID = _Doc_ID;
             }
         }
 
@@ -62,7 +62,7 @@ namespace RUINORERP.Model
             get{return _Files_Path;}
             set{
             SetProperty(ref _Files_Path, value);
-            }
+                        }
         }
 
         private string _FileName;
@@ -76,14 +76,14 @@ namespace RUINORERP.Model
             get{return _FileName;}
             set{
             SetProperty(ref _FileName, value);
-            }
+                        }
         }
 
         #endregion
 
         #region 扩展属性
 
-        //[Browsable(false)]
+        //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_BOM_S.Doc_ID))]
         public virtual List<tb_BOM_S> tb_BOM_Ss { get; set; }

@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/14/2025 18:56:57
+// 时间：02/08/2025 16:32:06
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -46,8 +46,8 @@ namespace RUINORERP.Model
         { 
             get{return _MenuID;}
             set{
-            base.PrimaryKeyID = _MenuID;
             SetProperty(ref _MenuID, value);
+                base.PrimaryKeyID = _MenuID;
             }
         }
 
@@ -63,7 +63,7 @@ namespace RUINORERP.Model
             get{return _ModuleID;}
             set{
             SetProperty(ref _ModuleID, value);
-            }
+                        }
         }
 
         private string _MenuName;
@@ -77,7 +77,7 @@ namespace RUINORERP.Model
             get{return _MenuName;}
             set{
             SetProperty(ref _MenuName, value);
-            }
+                        }
         }
 
         private string _MenuType;
@@ -91,7 +91,7 @@ namespace RUINORERP.Model
             get{return _MenuType;}
             set{
             SetProperty(ref _MenuType, value);
-            }
+                        }
         }
 
         private string _BIBaseForm;
@@ -105,7 +105,7 @@ namespace RUINORERP.Model
             get{return _BIBaseForm;}
             set{
             SetProperty(ref _BIBaseForm, value);
-            }
+                        }
         }
 
         private int? _BizType;
@@ -119,7 +119,7 @@ namespace RUINORERP.Model
             get{return _BizType;}
             set{
             SetProperty(ref _BizType, value);
-            }
+                        }
         }
 
         private int? _UIType;
@@ -133,7 +133,7 @@ namespace RUINORERP.Model
             get{return _UIType;}
             set{
             SetProperty(ref _UIType, value);
-            }
+                        }
         }
 
         private string _CaptionCN;
@@ -147,7 +147,7 @@ namespace RUINORERP.Model
             get{return _CaptionCN;}
             set{
             SetProperty(ref _CaptionCN, value);
-            }
+                        }
         }
 
         private string _CaptionEN;
@@ -161,7 +161,7 @@ namespace RUINORERP.Model
             get{return _CaptionEN;}
             set{
             SetProperty(ref _CaptionEN, value);
-            }
+                        }
         }
 
         private string _FormName;
@@ -175,7 +175,7 @@ namespace RUINORERP.Model
             get{return _FormName;}
             set{
             SetProperty(ref _FormName, value);
-            }
+                        }
         }
 
         private string _ClassPath;
@@ -189,7 +189,7 @@ namespace RUINORERP.Model
             get{return _ClassPath;}
             set{
             SetProperty(ref _ClassPath, value);
-            }
+                        }
         }
 
         private string _EntityName;
@@ -203,7 +203,7 @@ namespace RUINORERP.Model
             get{return _EntityName;}
             set{
             SetProperty(ref _EntityName, value);
-            }
+                        }
         }
 
         private bool _IsVisble;
@@ -217,7 +217,7 @@ namespace RUINORERP.Model
             get{return _IsVisble;}
             set{
             SetProperty(ref _IsVisble, value);
-            }
+                        }
         }
 
         private bool _IsEnabled= true;
@@ -231,7 +231,7 @@ namespace RUINORERP.Model
             get{return _IsEnabled;}
             set{
             SetProperty(ref _IsEnabled, value);
-            }
+                        }
         }
 
         private long? _Parent_id;
@@ -245,7 +245,7 @@ namespace RUINORERP.Model
             get{return _Parent_id;}
             set{
             SetProperty(ref _Parent_id, value);
-            }
+                        }
         }
 
         private string _Discription;
@@ -259,7 +259,7 @@ namespace RUINORERP.Model
             get{return _Discription;}
             set{
             SetProperty(ref _Discription, value);
-            }
+                        }
         }
 
         private string _MenuNo;
@@ -273,7 +273,7 @@ namespace RUINORERP.Model
             get{return _MenuNo;}
             set{
             SetProperty(ref _MenuNo, value);
-            }
+                        }
         }
 
         private int? _MenuLevel;
@@ -287,7 +287,7 @@ namespace RUINORERP.Model
             get{return _MenuLevel;}
             set{
             SetProperty(ref _MenuLevel, value);
-            }
+                        }
         }
 
         private DateTime? _Created_at;
@@ -301,7 +301,7 @@ namespace RUINORERP.Model
             get{return _Created_at;}
             set{
             SetProperty(ref _Created_at, value);
-            }
+                        }
         }
 
         private long? _Created_by;
@@ -315,7 +315,7 @@ namespace RUINORERP.Model
             get{return _Created_by;}
             set{
             SetProperty(ref _Created_by, value);
-            }
+                        }
         }
 
         private DateTime? _Modified_at;
@@ -329,7 +329,7 @@ namespace RUINORERP.Model
             get{return _Modified_at;}
             set{
             SetProperty(ref _Modified_at, value);
-            }
+                        }
         }
 
         private long? _Modified_by;
@@ -343,7 +343,7 @@ namespace RUINORERP.Model
             get{return _Modified_by;}
             set{
             SetProperty(ref _Modified_by, value);
-            }
+                        }
         }
 
         private int _Sort;
@@ -357,7 +357,7 @@ namespace RUINORERP.Model
             get{return _Sort;}
             set{
             SetProperty(ref _Sort, value);
-            }
+                        }
         }
 
         private string _HotKey;
@@ -371,7 +371,7 @@ namespace RUINORERP.Model
             get{return _HotKey;}
             set{
             SetProperty(ref _HotKey, value);
-            }
+                        }
         }
 
         private string _DefaultLayout;
@@ -385,19 +385,19 @@ namespace RUINORERP.Model
             get{return _DefaultLayout;}
             set{
             SetProperty(ref _DefaultLayout, value);
-            }
+                        }
         }
 
         #endregion
 
         #region 扩展属性
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(ModuleID))]
         public virtual tb_ModuleDefinition tb_moduledefinition { get; set; }
 
 
-        //[Browsable(false)]
+        //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_ButtonInfo.MenuID))]
         public virtual List<tb_ButtonInfo> tb_ButtonInfos { get; set; }
@@ -405,7 +405,7 @@ namespace RUINORERP.Model
         //MenuID.FK_TB_BUTTO_REFERENCE_TB_MENUI)
         //tb_MenuInfo.MenuID)
 
-        //[Browsable(false)]
+        //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_UIMenuPersonalization.MenuID))]
         public virtual List<tb_UIMenuPersonalization> tb_UIMenuPersonalizations { get; set; }
@@ -413,7 +413,7 @@ namespace RUINORERP.Model
         //MenuID.FK_TB_UIMENPERSONALIZation_REF_MENUINFO)
         //tb_MenuInfo.MenuID)
 
-        //[Browsable(false)]
+        //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_P4Field.MenuID))]
         public virtual List<tb_P4Field> tb_P4Fields { get; set; }
@@ -421,7 +421,7 @@ namespace RUINORERP.Model
         //MenuID.FK_TB_P4FIE_REFERENCE_TB_MENUI)
         //tb_MenuInfo.MenuID)
 
-        //[Browsable(false)]
+        //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_FieldInfo.MenuID))]
         public virtual List<tb_FieldInfo> tb_FieldInfos { get; set; }
@@ -429,7 +429,7 @@ namespace RUINORERP.Model
         //MenuID.FK_TB_FIELD_REFERENCE_TB_MENUI)
         //tb_MenuInfo.MenuID)
 
-        //[Browsable(false)]
+        //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_P4Button.MenuID))]
         public virtual List<tb_P4Button> tb_P4Buttons { get; set; }
@@ -437,7 +437,7 @@ namespace RUINORERP.Model
         //MenuID.FK_TB_P4BUT_REFERENCE_TB_MENUI)
         //tb_MenuInfo.MenuID)
 
-        //[Browsable(false)]
+        //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_P4Menu.MenuID))]
         public virtual List<tb_P4Menu> tb_P4Menus { get; set; }

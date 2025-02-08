@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/14/2025 18:56:44
+// 时间：02/08/2025 16:31:52
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -46,8 +46,8 @@ namespace RUINORERP.Model
         { 
             get{return _Batch_ID;}
             set{
-            base.PrimaryKeyID = _Batch_ID;
             SetProperty(ref _Batch_ID, value);
+                base.PrimaryKeyID = _Batch_ID;
             }
         }
 
@@ -62,7 +62,7 @@ namespace RUINORERP.Model
             get{return _BatchNO;}
             set{
             SetProperty(ref _BatchNO, value);
-            }
+                        }
         }
 
         private string _采购单号;
@@ -76,7 +76,7 @@ namespace RUINORERP.Model
             get{return _采购单号;}
             set{
             SetProperty(ref _采购单号, value);
-            }
+                        }
         }
 
         private DateTime? _入库日期;
@@ -90,7 +90,7 @@ namespace RUINORERP.Model
             get{return _入库日期;}
             set{
             SetProperty(ref _入库日期, value);
-            }
+                        }
         }
 
         private int? _供应商;
@@ -104,7 +104,7 @@ namespace RUINORERP.Model
             get{return _供应商;}
             set{
             SetProperty(ref _供应商, value);
-            }
+                        }
         }
 
         private decimal? _采购单价;
@@ -118,7 +118,7 @@ namespace RUINORERP.Model
             get{return _采购单价;}
             set{
             SetProperty(ref _采购单价, value);
-            }
+                        }
         }
 
         private DateTime? _expiry_date;
@@ -132,7 +132,7 @@ namespace RUINORERP.Model
             get{return _expiry_date;}
             set{
             SetProperty(ref _expiry_date, value);
-            }
+                        }
         }
 
         private DateTime? _production_date;
@@ -146,7 +146,7 @@ namespace RUINORERP.Model
             get{return _production_date;}
             set{
             SetProperty(ref _production_date, value);
-            }
+                        }
         }
 
         private decimal? _sale_price;
@@ -160,7 +160,7 @@ namespace RUINORERP.Model
             get{return _sale_price;}
             set{
             SetProperty(ref _sale_price, value);
-            }
+                        }
         }
 
         private int? _quantity;
@@ -174,7 +174,7 @@ namespace RUINORERP.Model
             get{return _quantity;}
             set{
             SetProperty(ref _quantity, value);
-            }
+                        }
         }
 
         #endregion

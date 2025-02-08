@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/14/2025 18:57:15
+// 时间：02/08/2025 16:32:31
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -46,8 +46,8 @@ namespace RUINORERP.Model
         { 
             get{return _UIGID;}
             set{
-            base.PrimaryKeyID = _UIGID;
             SetProperty(ref _UIGID, value);
+                base.PrimaryKeyID = _UIGID;
             }
         }
 
@@ -63,7 +63,7 @@ namespace RUINORERP.Model
             get{return _UIMenuPID;}
             set{
             SetProperty(ref _UIMenuPID, value);
-            }
+                        }
         }
 
         private string _GridKeyName;
@@ -77,7 +77,7 @@ namespace RUINORERP.Model
             get{return _GridKeyName;}
             set{
             SetProperty(ref _GridKeyName, value);
-            }
+                        }
         }
 
         private string _ColsSetting;
@@ -91,7 +91,7 @@ namespace RUINORERP.Model
             get{return _ColsSetting;}
             set{
             SetProperty(ref _ColsSetting, value);
-            }
+                        }
         }
 
         private string _GridType;
@@ -105,7 +105,7 @@ namespace RUINORERP.Model
             get{return _GridType;}
             set{
             SetProperty(ref _GridType, value);
-            }
+                        }
         }
 
         private int? _ColumnsMode= ((1));
@@ -119,14 +119,14 @@ namespace RUINORERP.Model
             get{return _ColumnsMode;}
             set{
             SetProperty(ref _ColumnsMode, value);
-            }
+                        }
         }
 
         #endregion
 
         #region 扩展属性
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(UIMenuPID))]
         public virtual tb_UIMenuPersonalization tb_uimenupersonalization { get; set; }
 

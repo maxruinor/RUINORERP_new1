@@ -28,10 +28,10 @@ namespace RUINORERP.Model
 
         #region 扩展属性
 
-        //[SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
-        //[Navigate(NavigateType.OneToOne, nameof(ProdDetailID))]
-        //public virtual View_ProdDetail view_ProdDetail { get; set; }
+        [SugarColumn(IsIgnore = true)]
+        [Browsable(false)]
+        [Navigate(NavigateType.OneToOne, nameof(ProdDetailID))]
+        public virtual View_ProdDetail view_ProdDetail { get; set; }
 
 
         #endregion

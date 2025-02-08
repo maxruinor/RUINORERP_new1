@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/16/2025 11:47:57
+// 时间：02/08/2025 16:31:57
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -46,24 +46,24 @@ namespace RUINORERP.Model
         { 
             get{return _DepartmentID;}
             set{
-            base.PrimaryKeyID = _DepartmentID;
             SetProperty(ref _DepartmentID, value);
+                base.PrimaryKeyID = _DepartmentID;
             }
         }
 
         private long _ID;
         /// <summary>
-        /// 公司
+        /// 所属公司
         /// </summary>
-        [AdvQueryAttribute(ColName = "ID",ColDesc = "公司")] 
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "ID" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "公司" )]
+        [AdvQueryAttribute(ColName = "ID",ColDesc = "所属公司")] 
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "ID" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "所属公司" )]
         [FKRelationAttribute("tb_Company","ID")]
         public long ID
         { 
             get{return _ID;}
             set{
             SetProperty(ref _ID, value);
-            }
+                        }
         }
 
         private string _DepartmentCode;
@@ -77,7 +77,7 @@ namespace RUINORERP.Model
             get{return _DepartmentCode;}
             set{
             SetProperty(ref _DepartmentCode, value);
-            }
+                        }
         }
 
         private string _DepartmentName;
@@ -91,7 +91,7 @@ namespace RUINORERP.Model
             get{return _DepartmentName;}
             set{
             SetProperty(ref _DepartmentName, value);
-            }
+                        }
         }
 
         private string _TEL;
@@ -105,7 +105,7 @@ namespace RUINORERP.Model
             get{return _TEL;}
             set{
             SetProperty(ref _TEL, value);
-            }
+                        }
         }
 
         private string _Notes;
@@ -119,7 +119,7 @@ namespace RUINORERP.Model
             get{return _Notes;}
             set{
             SetProperty(ref _Notes, value);
-            }
+                        }
         }
 
         private string _Director;
@@ -133,7 +133,7 @@ namespace RUINORERP.Model
             get{return _Director;}
             set{
             SetProperty(ref _Director, value);
-            }
+                        }
         }
 
         #endregion

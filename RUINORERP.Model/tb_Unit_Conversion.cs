@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/21/2025 19:17:36
+// 时间：02/08/2025 16:32:32
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -46,8 +46,8 @@ namespace RUINORERP.Model
         { 
             get{return _UnitConversion_ID;}
             set{
-            base.PrimaryKeyID = _UnitConversion_ID;
             SetProperty(ref _UnitConversion_ID, value);
+                base.PrimaryKeyID = _UnitConversion_ID;
             }
         }
 
@@ -62,7 +62,7 @@ namespace RUINORERP.Model
             get{return _UnitConversion_Name;}
             set{
             SetProperty(ref _UnitConversion_Name, value);
-            }
+                        }
         }
 
         private long _Source_unit_id;
@@ -77,7 +77,7 @@ namespace RUINORERP.Model
             get{return _Source_unit_id;}
             set{
             SetProperty(ref _Source_unit_id, value);
-            }
+                        }
         }
 
         private long _Target_unit_id;
@@ -92,7 +92,7 @@ namespace RUINORERP.Model
             get{return _Target_unit_id;}
             set{
             SetProperty(ref _Target_unit_id, value);
-            }
+                        }
         }
 
         private decimal _Conversion_ratio= ((0));
@@ -106,7 +106,7 @@ namespace RUINORERP.Model
             get{return _Conversion_ratio;}
             set{
             SetProperty(ref _Conversion_ratio, value);
-            }
+                        }
         }
 
         private string _Notes;
@@ -120,7 +120,7 @@ namespace RUINORERP.Model
             get{return _Notes;}
             set{
             SetProperty(ref _Notes, value);
-            }
+                        }
         }
 
         #endregion
@@ -129,7 +129,7 @@ namespace RUINORERP.Model
         [SugarColumn(IsIgnore = true)]
         //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(Target_unit_id))]
-        public virtual tb_Unit tb_unit_Target { get; set; }
+        public virtual tb_Unit tb_unit_target { get; set; }
 
         [SugarColumn(IsIgnore = true)]
         //[Browsable(false)] 打印报表时的数据源会不显示

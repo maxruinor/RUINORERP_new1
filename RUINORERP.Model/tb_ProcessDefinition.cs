@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/14/2025 18:57:00
+// 时间：02/08/2025 16:32:10
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -46,8 +46,8 @@ namespace RUINORERP.Model
         { 
             get{return _ProcessDefinition_Id;}
             set{
-            base.PrimaryKeyID = _ProcessDefinition_Id;
             SetProperty(ref _ProcessDefinition_Id, value);
+                base.PrimaryKeyID = _ProcessDefinition_Id;
             }
         }
 
@@ -63,7 +63,7 @@ namespace RUINORERP.Model
             get{return _Step_Id;}
             set{
             SetProperty(ref _Step_Id, value);
-            }
+                        }
         }
 
         private string _Version;
@@ -77,7 +77,7 @@ namespace RUINORERP.Model
             get{return _Version;}
             set{
             SetProperty(ref _Version, value);
-            }
+                        }
         }
 
         private string _Title;
@@ -91,7 +91,7 @@ namespace RUINORERP.Model
             get{return _Title;}
             set{
             SetProperty(ref _Title, value);
-            }
+                        }
         }
 
         private string _Color;
@@ -105,7 +105,7 @@ namespace RUINORERP.Model
             get{return _Color;}
             set{
             SetProperty(ref _Color, value);
-            }
+                        }
         }
 
         private string _Icon;
@@ -119,7 +119,7 @@ namespace RUINORERP.Model
             get{return _Icon;}
             set{
             SetProperty(ref _Icon, value);
-            }
+                        }
         }
 
         private string _Description;
@@ -133,7 +133,7 @@ namespace RUINORERP.Model
             get{return _Description;}
             set{
             SetProperty(ref _Description, value);
-            }
+                        }
         }
 
         private string _Notes;
@@ -147,14 +147,14 @@ namespace RUINORERP.Model
             get{return _Notes;}
             set{
             SetProperty(ref _Notes, value);
-            }
+                        }
         }
 
         #endregion
 
         #region 扩展属性
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(Step_Id))]
         public virtual tb_ProcessStep tb_processstep { get; set; }
 

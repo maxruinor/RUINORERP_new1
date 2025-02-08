@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/14/2025 18:57:15
+// 时间：02/08/2025 16:32:31
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -46,8 +46,8 @@ namespace RUINORERP.Model
         { 
             get{return _UIMenuPID;}
             set{
-            base.PrimaryKeyID = _UIMenuPID;
             SetProperty(ref _UIMenuPID, value);
+                base.PrimaryKeyID = _UIMenuPID;
             }
         }
 
@@ -63,7 +63,7 @@ namespace RUINORERP.Model
             get{return _MenuID;}
             set{
             SetProperty(ref _MenuID, value);
-            }
+                        }
         }
 
         private long? _UserPersonalizedID;
@@ -78,7 +78,7 @@ namespace RUINORERP.Model
             get{return _UserPersonalizedID;}
             set{
             SetProperty(ref _UserPersonalizedID, value);
-            }
+                        }
         }
 
         private int _QueryConditionCols= ((4));
@@ -92,7 +92,7 @@ namespace RUINORERP.Model
             get{return _QueryConditionCols;}
             set{
             SetProperty(ref _QueryConditionCols, value);
-            }
+                        }
         }
 
         private bool? _IsRelatedQuerySettings= false;
@@ -106,7 +106,7 @@ namespace RUINORERP.Model
             get{return _IsRelatedQuerySettings;}
             set{
             SetProperty(ref _IsRelatedQuerySettings, value);
-            }
+                        }
         }
 
         private int? _FavoritesMenu= ((0));
@@ -120,7 +120,7 @@ namespace RUINORERP.Model
             get{return _FavoritesMenu;}
             set{
             SetProperty(ref _FavoritesMenu, value);
-            }
+                        }
         }
 
         private int? _BaseWidth= ((0));
@@ -134,7 +134,7 @@ namespace RUINORERP.Model
             get{return _BaseWidth;}
             set{
             SetProperty(ref _BaseWidth, value);
-            }
+                        }
         }
 
         private int _Sort= ((150));
@@ -148,7 +148,7 @@ namespace RUINORERP.Model
             get{return _Sort;}
             set{
             SetProperty(ref _Sort, value);
-            }
+                        }
         }
 
         private string _DefaultLayout;
@@ -162,7 +162,7 @@ namespace RUINORERP.Model
             get{return _DefaultLayout;}
             set{
             SetProperty(ref _DefaultLayout, value);
-            }
+                        }
         }
 
         private string _DefaultLayout2;
@@ -176,24 +176,24 @@ namespace RUINORERP.Model
             get{return _DefaultLayout2;}
             set{
             SetProperty(ref _DefaultLayout2, value);
-            }
+                        }
         }
 
         #endregion
 
         #region 扩展属性
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(MenuID))]
         public virtual tb_MenuInfo tb_menuinfo { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(UserPersonalizedID))]
         public virtual tb_UserPersonalized tb_userpersonalized { get; set; }
 
 
-        //[Browsable(false)]
+        //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_UIGridSetting.UIMenuPID))]
         public virtual List<tb_UIGridSetting> tb_UIGridSettings { get; set; }
@@ -201,7 +201,7 @@ namespace RUINORERP.Model
         //UIMenuPID.FK_UIGRIDSETTING_REF_UIMENUPERSONALIZATION)
         //tb_UIMenuPersonalization.UIMenuPID)
 
-        //[Browsable(false)]
+        //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_UIQueryCondition.UIMenuPID))]
         public virtual List<tb_UIQueryCondition> tb_UIQueryConditions { get; set; }

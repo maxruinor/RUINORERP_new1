@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/14/2025 18:56:58
+// 时间：02/08/2025 16:32:08
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -46,8 +46,8 @@ namespace RUINORERP.Model
         { 
             get{return _OI_ID;}
             set{
-            base.PrimaryKeyID = _OI_ID;
             SetProperty(ref _OI_ID, value);
+                base.PrimaryKeyID = _OI_ID;
             }
         }
 
@@ -63,7 +63,7 @@ namespace RUINORERP.Model
             get{return _Inventory_ID;}
             set{
             SetProperty(ref _Inventory_ID, value);
-            }
+                        }
         }
 
         private int _InitQty= ((0));
@@ -77,7 +77,7 @@ namespace RUINORERP.Model
             get{return _InitQty;}
             set{
             SetProperty(ref _InitQty, value);
-            }
+                        }
         }
 
         private decimal _Cost_price= ((0));
@@ -91,7 +91,7 @@ namespace RUINORERP.Model
             get{return _Cost_price;}
             set{
             SetProperty(ref _Cost_price, value);
-            }
+                        }
         }
 
         private decimal _Subtotal_Cost_Price= ((0));
@@ -105,7 +105,7 @@ namespace RUINORERP.Model
             get{return _Subtotal_Cost_Price;}
             set{
             SetProperty(ref _Subtotal_Cost_Price, value);
-            }
+                        }
         }
 
         private DateTime? _InitInvDate;
@@ -119,7 +119,7 @@ namespace RUINORERP.Model
             get{return _InitInvDate;}
             set{
             SetProperty(ref _InitInvDate, value);
-            }
+                        }
         }
 
         private long? _RefBillID;
@@ -133,7 +133,7 @@ namespace RUINORERP.Model
             get{return _RefBillID;}
             set{
             SetProperty(ref _RefBillID, value);
-            }
+                        }
         }
 
         private string _RefNO;
@@ -147,7 +147,7 @@ namespace RUINORERP.Model
             get{return _RefNO;}
             set{
             SetProperty(ref _RefNO, value);
-            }
+                        }
         }
 
         private string _RefBizType;
@@ -161,7 +161,7 @@ namespace RUINORERP.Model
             get{return _RefBizType;}
             set{
             SetProperty(ref _RefBizType, value);
-            }
+                        }
         }
 
         private string _Notes;
@@ -175,14 +175,14 @@ namespace RUINORERP.Model
             get{return _Notes;}
             set{
             SetProperty(ref _Notes, value);
-            }
+                        }
         }
 
         #endregion
 
         #region 扩展属性
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(Inventory_ID))]
         public virtual tb_Inventory tb_inventory { get; set; }
 

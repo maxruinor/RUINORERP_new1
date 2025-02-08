@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/14/2025 18:56:43
+// 时间：02/08/2025 16:31:51
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -46,8 +46,8 @@ namespace RUINORERP.Model
         { 
             get{return _ID;}
             set{
-            base.PrimaryKeyID = _ID;
             SetProperty(ref _ID, value);
+                base.PrimaryKeyID = _ID;
             }
         }
 
@@ -62,7 +62,7 @@ namespace RUINORERP.Model
             get{return _Date;}
             set{
             SetProperty(ref _Date, value);
-            }
+                        }
         }
 
         private string _Level;
@@ -76,7 +76,7 @@ namespace RUINORERP.Model
             get{return _Level;}
             set{
             SetProperty(ref _Level, value);
-            }
+                        }
         }
 
         private string _Logger;
@@ -90,7 +90,7 @@ namespace RUINORERP.Model
             get{return _Logger;}
             set{
             SetProperty(ref _Logger, value);
-            }
+                        }
         }
 
         private string _Message;
@@ -104,7 +104,7 @@ namespace RUINORERP.Model
             get{return _Message;}
             set{
             SetProperty(ref _Message, value);
-            }
+                        }
         }
 
         private string _Exception;
@@ -118,7 +118,7 @@ namespace RUINORERP.Model
             get{return _Exception;}
             set{
             SetProperty(ref _Exception, value);
-            }
+                        }
         }
 
         private string _Operator;
@@ -132,7 +132,7 @@ namespace RUINORERP.Model
             get{return _Operator;}
             set{
             SetProperty(ref _Operator, value);
-            }
+                        }
         }
 
         private string _ModName;
@@ -146,7 +146,7 @@ namespace RUINORERP.Model
             get{return _ModName;}
             set{
             SetProperty(ref _ModName, value);
-            }
+                        }
         }
 
         private string _Path;
@@ -160,7 +160,7 @@ namespace RUINORERP.Model
             get{return _Path;}
             set{
             SetProperty(ref _Path, value);
-            }
+                        }
         }
 
         private string _ActionName;
@@ -174,7 +174,7 @@ namespace RUINORERP.Model
             get{return _ActionName;}
             set{
             SetProperty(ref _ActionName, value);
-            }
+                        }
         }
 
         private string _IP;
@@ -188,7 +188,7 @@ namespace RUINORERP.Model
             get{return _IP;}
             set{
             SetProperty(ref _IP, value);
-            }
+                        }
         }
 
         private string _MAC;
@@ -202,7 +202,7 @@ namespace RUINORERP.Model
             get{return _MAC;}
             set{
             SetProperty(ref _MAC, value);
-            }
+                        }
         }
 
         private string _MachineName;
@@ -216,7 +216,7 @@ namespace RUINORERP.Model
             get{return _MachineName;}
             set{
             SetProperty(ref _MachineName, value);
-            }
+                        }
         }
 
         private long? _User_ID;
@@ -231,14 +231,14 @@ namespace RUINORERP.Model
             get{return _User_ID;}
             set{
             SetProperty(ref _User_ID, value);
-            }
+                        }
         }
 
         #endregion
 
         #region 扩展属性
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(User_ID))]
         public virtual tb_UserInfo tb_userinfo { get; set; }
 

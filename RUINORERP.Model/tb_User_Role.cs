@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/17/2025 11:45:04
+// 时间：02/08/2025 16:32:32
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -46,8 +46,8 @@ namespace RUINORERP.Model
         { 
             get{return _ID;}
             set{
-            base.PrimaryKeyID = _ID;
             SetProperty(ref _ID, value);
+                base.PrimaryKeyID = _ID;
             }
         }
 
@@ -63,7 +63,7 @@ namespace RUINORERP.Model
             get{return _User_ID;}
             set{
             SetProperty(ref _User_ID, value);
-            }
+                        }
         }
 
         private long _RoleID;
@@ -78,7 +78,7 @@ namespace RUINORERP.Model
             get{return _RoleID;}
             set{
             SetProperty(ref _RoleID, value);
-            }
+                        }
         }
 
         private bool _Authorized= false;
@@ -92,7 +92,7 @@ namespace RUINORERP.Model
             get{return _Authorized;}
             set{
             SetProperty(ref _Authorized, value);
-            }
+                        }
         }
 
         private bool _DefaultRole= false;
@@ -106,7 +106,21 @@ namespace RUINORERP.Model
             get{return _DefaultRole;}
             set{
             SetProperty(ref _DefaultRole, value);
-            }
+                        }
+        }
+
+        private string _WorkDefaultLayout;
+        /// <summary>
+        /// 
+        /// </summary>
+        [AdvQueryAttribute(ColName = "WorkDefaultLayout",ColDesc = "")] 
+        [SugarColumn(ColumnDataType = "text", SqlParameterDbType ="String",  ColumnName = "WorkDefaultLayout" ,Length=2147483647,IsNullable = true,ColumnDescription = "" )]
+        public string WorkDefaultLayout
+        { 
+            get{return _WorkDefaultLayout;}
+            set{
+            SetProperty(ref _WorkDefaultLayout, value);
+                        }
         }
 
         #endregion

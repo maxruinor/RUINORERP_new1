@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/14/2025 18:56:52
+// 时间：02/08/2025 16:32:01
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -46,8 +46,8 @@ namespace RUINORERP.Model
         { 
             get{return _PayeeInfoID;}
             set{
-            base.PrimaryKeyID = _PayeeInfoID;
             SetProperty(ref _PayeeInfoID, value);
+                base.PrimaryKeyID = _PayeeInfoID;
             }
         }
 
@@ -63,7 +63,7 @@ namespace RUINORERP.Model
             get{return _Employee_ID;}
             set{
             SetProperty(ref _Employee_ID, value);
-            }
+                        }
         }
 
         private long? _CustomerVendor_ID;
@@ -78,7 +78,7 @@ namespace RUINORERP.Model
             get{return _CustomerVendor_ID;}
             set{
             SetProperty(ref _CustomerVendor_ID, value);
-            }
+                        }
         }
 
         private int _Account_type;
@@ -92,7 +92,7 @@ namespace RUINORERP.Model
             get{return _Account_type;}
             set{
             SetProperty(ref _Account_type, value);
-            }
+                        }
         }
 
         private string _Account_name;
@@ -106,7 +106,7 @@ namespace RUINORERP.Model
             get{return _Account_name;}
             set{
             SetProperty(ref _Account_name, value);
-            }
+                        }
         }
 
         private string _Account_No;
@@ -120,7 +120,7 @@ namespace RUINORERP.Model
             get{return _Account_No;}
             set{
             SetProperty(ref _Account_No, value);
-            }
+                        }
         }
 
         private string _PaymentCodeImagePath;
@@ -134,7 +134,7 @@ namespace RUINORERP.Model
             get{return _PaymentCodeImagePath;}
             set{
             SetProperty(ref _PaymentCodeImagePath, value);
-            }
+                        }
         }
 
         private string _BelongingBank;
@@ -148,7 +148,7 @@ namespace RUINORERP.Model
             get{return _BelongingBank;}
             set{
             SetProperty(ref _BelongingBank, value);
-            }
+                        }
         }
 
         private string _OpeningBank;
@@ -162,7 +162,7 @@ namespace RUINORERP.Model
             get{return _OpeningBank;}
             set{
             SetProperty(ref _OpeningBank, value);
-            }
+                        }
         }
 
         private string _Notes;
@@ -176,7 +176,7 @@ namespace RUINORERP.Model
             get{return _Notes;}
             set{
             SetProperty(ref _Notes, value);
-            }
+                        }
         }
 
         private bool _IsDefault= false;
@@ -190,7 +190,7 @@ namespace RUINORERP.Model
             get{return _IsDefault;}
             set{
             SetProperty(ref _IsDefault, value);
-            }
+                        }
         }
 
         private bool _Is_enabled= true;
@@ -204,24 +204,24 @@ namespace RUINORERP.Model
             get{return _Is_enabled;}
             set{
             SetProperty(ref _Is_enabled, value);
-            }
+                        }
         }
 
         #endregion
 
         #region 扩展属性
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(CustomerVendor_ID))]
         public virtual tb_CustomerVendor tb_customervendor { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(Employee_ID))]
         public virtual tb_Employee tb_employee { get; set; }
 
 
-        //[Browsable(false)]
+        //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_FM_PaymentApplication.PayeeInfoID))]
         public virtual List<tb_FM_PaymentApplication> tb_FM_PaymentApplications { get; set; }
@@ -229,7 +229,7 @@ namespace RUINORERP.Model
         //PayeeInfoID.FK_PAYMENTAPPLICATION_REF_PAYEEINFO)
         //tb_FM_PayeeInfo.PayeeInfoID)
 
-        //[Browsable(false)]
+        //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_FM_ExpenseClaim.PayeeInfoID))]
         public virtual List<tb_FM_ExpenseClaim> tb_FM_ExpenseClaims { get; set; }

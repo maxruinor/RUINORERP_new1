@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/14/2025 18:57:05
+// 时间：02/08/2025 16:32:18
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -46,8 +46,8 @@ namespace RUINORERP.Model
         { 
             get{return _PDID;}
             set{
-            base.PrimaryKeyID = _PDID;
             SetProperty(ref _PDID, value);
+                base.PrimaryKeyID = _PDID;
             }
         }
 
@@ -62,7 +62,7 @@ namespace RUINORERP.Model
             get{return _PDNo;}
             set{
             SetProperty(ref _PDNo, value);
-            }
+                        }
         }
 
         private DateTime _AnalysisDate;
@@ -76,7 +76,7 @@ namespace RUINORERP.Model
             get{return _AnalysisDate;}
             set{
             SetProperty(ref _AnalysisDate, value);
-            }
+                        }
         }
 
         private string _PPNo;
@@ -90,7 +90,7 @@ namespace RUINORERP.Model
             get{return _PPNo;}
             set{
             SetProperty(ref _PPNo, value);
-            }
+                        }
         }
 
         private long _PPID;
@@ -105,7 +105,7 @@ namespace RUINORERP.Model
             get{return _PPID;}
             set{
             SetProperty(ref _PPID, value);
-            }
+                        }
         }
 
         private long _Employee_ID;
@@ -120,7 +120,7 @@ namespace RUINORERP.Model
             get{return _Employee_ID;}
             set{
             SetProperty(ref _Employee_ID, value);
-            }
+                        }
         }
 
         private int _DataStatus;
@@ -134,7 +134,7 @@ namespace RUINORERP.Model
             get{return _DataStatus;}
             set{
             SetProperty(ref _DataStatus, value);
-            }
+                        }
         }
 
         private string _ApprovalOpinions;
@@ -148,7 +148,7 @@ namespace RUINORERP.Model
             get{return _ApprovalOpinions;}
             set{
             SetProperty(ref _ApprovalOpinions, value);
-            }
+                        }
         }
 
         private int? _ApprovalStatus;
@@ -162,7 +162,7 @@ namespace RUINORERP.Model
             get{return _ApprovalStatus;}
             set{
             SetProperty(ref _ApprovalStatus, value);
-            }
+                        }
         }
 
         private bool? _ApprovalResults;
@@ -176,7 +176,7 @@ namespace RUINORERP.Model
             get{return _ApprovalResults;}
             set{
             SetProperty(ref _ApprovalResults, value);
-            }
+                        }
         }
 
         private string _Notes;
@@ -190,7 +190,7 @@ namespace RUINORERP.Model
             get{return _Notes;}
             set{
             SetProperty(ref _Notes, value);
-            }
+                        }
         }
 
         private DateTime? _Created_at;
@@ -204,7 +204,7 @@ namespace RUINORERP.Model
             get{return _Created_at;}
             set{
             SetProperty(ref _Created_at, value);
-            }
+                        }
         }
 
         private long? _Created_by;
@@ -218,7 +218,7 @@ namespace RUINORERP.Model
             get{return _Created_by;}
             set{
             SetProperty(ref _Created_by, value);
-            }
+                        }
         }
 
         private DateTime? _Modified_at;
@@ -232,7 +232,7 @@ namespace RUINORERP.Model
             get{return _Modified_at;}
             set{
             SetProperty(ref _Modified_at, value);
-            }
+                        }
         }
 
         private long? _Modified_by;
@@ -246,7 +246,7 @@ namespace RUINORERP.Model
             get{return _Modified_by;}
             set{
             SetProperty(ref _Modified_by, value);
-            }
+                        }
         }
 
         private long? _Approver_by;
@@ -260,7 +260,7 @@ namespace RUINORERP.Model
             get{return _Approver_by;}
             set{
             SetProperty(ref _Approver_by, value);
-            }
+                        }
         }
 
         private DateTime? _Approver_at;
@@ -274,7 +274,7 @@ namespace RUINORERP.Model
             get{return _Approver_at;}
             set{
             SetProperty(ref _Approver_at, value);
-            }
+                        }
         }
 
         private int _PrintStatus= ((0));
@@ -288,7 +288,7 @@ namespace RUINORERP.Model
             get{return _PrintStatus;}
             set{
             SetProperty(ref _PrintStatus, value);
-            }
+                        }
         }
 
         private bool _PurAllItems= false;
@@ -302,7 +302,7 @@ namespace RUINORERP.Model
             get{return _PurAllItems;}
             set{
             SetProperty(ref _PurAllItems, value);
-            }
+                        }
         }
 
         private bool _SuggestBasedOn= false;
@@ -316,7 +316,7 @@ namespace RUINORERP.Model
             get{return _SuggestBasedOn;}
             set{
             SetProperty(ref _SuggestBasedOn, value);
-            }
+                        }
         }
 
         private bool _isdeleted= false;
@@ -331,24 +331,24 @@ namespace RUINORERP.Model
             get{return _isdeleted;}
             set{
             SetProperty(ref _isdeleted, value);
-            }
+                        }
         }
 
         #endregion
 
         #region 扩展属性
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(Employee_ID))]
         public virtual tb_Employee tb_employee { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(PPID))]
         public virtual tb_ProductionPlan tb_productionplan { get; set; }
 
 
-        //[Browsable(false)]
+        //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_PurOrder.PDID))]
         public virtual List<tb_PurOrder> tb_PurOrders { get; set; }
@@ -356,7 +356,7 @@ namespace RUINORERP.Model
         //PDID.FK_PURORDER_REF_TB_PRODDEMAND)
         //tb_ProductionDemand.PDID)
 
-        //[Browsable(false)]
+        //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_ProduceGoodsRecommendDetail.PDID))]
         public virtual List<tb_ProduceGoodsRecommendDetail> tb_ProduceGoodsRecommendDetails { get; set; }
@@ -364,7 +364,7 @@ namespace RUINORERP.Model
         //PDID.FK_TB_PRODU_REFERENCE_TB_PRODU)
         //tb_ProductionDemand.PDID)
 
-        //[Browsable(false)]
+        //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_ProductionDemandDetail.PDID))]
         public virtual List<tb_ProductionDemandDetail> tb_ProductionDemandDetails { get; set; }
@@ -372,7 +372,7 @@ namespace RUINORERP.Model
         //PDID.FK_PRODUdemanddetail_REF_PRODUdemand)
         //tb_ProductionDemand.PDID)
 
-        //[Browsable(false)]
+        //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_ProductionDemandTargetDetail.PDID))]
         public virtual List<tb_ProductionDemandTargetDetail> tb_ProductionDemandTargetDetails { get; set; }
@@ -380,7 +380,7 @@ namespace RUINORERP.Model
         //PDID.FK_TB_PRODUDEMANDTARGETDETAIL_REF_TB_PRODUDEMAND)
         //tb_ProductionDemand.PDID)
 
-        //[Browsable(false)]
+        //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_PurGoodsRecommendDetail.PDID))]
         public virtual List<tb_PurGoodsRecommendDetail> tb_PurGoodsRecommendDetails { get; set; }
@@ -388,7 +388,7 @@ namespace RUINORERP.Model
         //PDID.FK_TB_PURGO_REFERENCE_TB_PRODU)
         //tb_ProductionDemand.PDID)
 
-        //[Browsable(false)]
+        //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_ManufacturingOrder.PDID))]
         public virtual List<tb_ManufacturingOrder> tb_ManufacturingOrders { get; set; }

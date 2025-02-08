@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/14/2025 18:57:12
+// 时间：02/08/2025 16:32:29
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -46,8 +46,8 @@ namespace RUINORERP.Model
         { 
             get{return _StepBodyld;}
             set{
-            base.PrimaryKeyID = _StepBodyld;
             SetProperty(ref _StepBodyld, value);
+                base.PrimaryKeyID = _StepBodyld;
             }
         }
 
@@ -63,7 +63,7 @@ namespace RUINORERP.Model
             get{return _Para_Id;}
             set{
             SetProperty(ref _Para_Id, value);
-            }
+                        }
         }
 
         private string _Name;
@@ -77,7 +77,7 @@ namespace RUINORERP.Model
             get{return _Name;}
             set{
             SetProperty(ref _Name, value);
-            }
+                        }
         }
 
         private string _DisplayName;
@@ -91,7 +91,7 @@ namespace RUINORERP.Model
             get{return _DisplayName;}
             set{
             SetProperty(ref _DisplayName, value);
-            }
+                        }
         }
 
         private string _TypeFullName;
@@ -105,7 +105,7 @@ namespace RUINORERP.Model
             get{return _TypeFullName;}
             set{
             SetProperty(ref _TypeFullName, value);
-            }
+                        }
         }
 
         private string _AssemblyFullName;
@@ -119,19 +119,19 @@ namespace RUINORERP.Model
             get{return _AssemblyFullName;}
             set{
             SetProperty(ref _AssemblyFullName, value);
-            }
+                        }
         }
 
         #endregion
 
         #region 扩展属性
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(Para_Id))]
         public virtual tb_StepBodyPara tb_stepbodypara { get; set; }
 
 
-        //[Browsable(false)]
+        //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_ProcessStep.StepBodyld))]
         public virtual List<tb_ProcessStep> tb_ProcessSteps { get; set; }

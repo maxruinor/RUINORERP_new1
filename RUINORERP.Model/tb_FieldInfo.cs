@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/14/2025 18:56:50
+// 时间：02/08/2025 16:31:58
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -46,8 +46,8 @@ namespace RUINORERP.Model
         { 
             get{return _FieldInfo_ID;}
             set{
-            base.PrimaryKeyID = _FieldInfo_ID;
             SetProperty(ref _FieldInfo_ID, value);
+                base.PrimaryKeyID = _FieldInfo_ID;
             }
         }
 
@@ -63,7 +63,7 @@ namespace RUINORERP.Model
             get{return _MenuID;}
             set{
             SetProperty(ref _MenuID, value);
-            }
+                        }
         }
 
         private string _EntityName;
@@ -77,7 +77,7 @@ namespace RUINORERP.Model
             get{return _EntityName;}
             set{
             SetProperty(ref _EntityName, value);
-            }
+                        }
         }
 
         private string _FieldName;
@@ -91,7 +91,7 @@ namespace RUINORERP.Model
             get{return _FieldName;}
             set{
             SetProperty(ref _FieldName, value);
-            }
+                        }
         }
 
         private string _FieldText;
@@ -105,7 +105,7 @@ namespace RUINORERP.Model
             get{return _FieldText;}
             set{
             SetProperty(ref _FieldText, value);
-            }
+                        }
         }
 
         private string _ClassPath;
@@ -119,7 +119,7 @@ namespace RUINORERP.Model
             get{return _ClassPath;}
             set{
             SetProperty(ref _ClassPath, value);
-            }
+                        }
         }
 
         private bool? _IsForm;
@@ -133,7 +133,7 @@ namespace RUINORERP.Model
             get{return _IsForm;}
             set{
             SetProperty(ref _IsForm, value);
-            }
+                        }
         }
 
         private bool _IsEnabled= true;
@@ -147,7 +147,7 @@ namespace RUINORERP.Model
             get{return _IsEnabled;}
             set{
             SetProperty(ref _IsEnabled, value);
-            }
+                        }
         }
 
         private string _Notes;
@@ -161,7 +161,7 @@ namespace RUINORERP.Model
             get{return _Notes;}
             set{
             SetProperty(ref _Notes, value);
-            }
+                        }
         }
 
         private bool _IsChild;
@@ -175,7 +175,7 @@ namespace RUINORERP.Model
             get{return _IsChild;}
             set{
             SetProperty(ref _IsChild, value);
-            }
+                        }
         }
 
         private string _ChildEntityName;
@@ -189,19 +189,33 @@ namespace RUINORERP.Model
             get{return _ChildEntityName;}
             set{
             SetProperty(ref _ChildEntityName, value);
-            }
+                        }
+        }
+
+        private DateTime? _Created_at;
+        /// <summary>
+        /// 创建时间
+        /// </summary>
+        [AdvQueryAttribute(ColName = "Created_at",ColDesc = "创建时间")] 
+        [SugarColumn(ColumnDataType = "datetime", SqlParameterDbType ="DateTime",  ColumnName = "Created_at" ,IsNullable = true,ColumnDescription = "创建时间" )]
+        public DateTime? Created_at
+        { 
+            get{return _Created_at;}
+            set{
+            SetProperty(ref _Created_at, value);
+                        }
         }
 
         #endregion
 
         #region 扩展属性
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(MenuID))]
         public virtual tb_MenuInfo tb_menuinfo { get; set; }
 
 
-        //[Browsable(false)]
+        //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_P4Field.FieldInfo_ID))]
         public virtual List<tb_P4Field> tb_P4Fields { get; set; }

@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/14/2025 18:57:15
+// 时间：02/08/2025 16:32:32
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -46,8 +46,8 @@ namespace RUINORERP.Model
         { 
             get{return _UIQCID;}
             set{
-            base.PrimaryKeyID = _UIQCID;
             SetProperty(ref _UIQCID, value);
+                base.PrimaryKeyID = _UIQCID;
             }
         }
 
@@ -63,7 +63,7 @@ namespace RUINORERP.Model
             get{return _UIMenuPID;}
             set{
             SetProperty(ref _UIMenuPID, value);
-            }
+                        }
         }
 
         private string _Caption;
@@ -77,7 +77,7 @@ namespace RUINORERP.Model
             get{return _Caption;}
             set{
             SetProperty(ref _Caption, value);
-            }
+                        }
         }
 
         private string _FieldName;
@@ -91,7 +91,7 @@ namespace RUINORERP.Model
             get{return _FieldName;}
             set{
             SetProperty(ref _FieldName, value);
-            }
+                        }
         }
 
         private string _ValueType;
@@ -105,7 +105,7 @@ namespace RUINORERP.Model
             get{return _ValueType;}
             set{
             SetProperty(ref _ValueType, value);
-            }
+                        }
         }
 
         private int _ControlWidth= ((0));
@@ -119,7 +119,7 @@ namespace RUINORERP.Model
             get{return _ControlWidth;}
             set{
             SetProperty(ref _ControlWidth, value);
-            }
+                        }
         }
 
         private int _Sort= ((0));
@@ -133,7 +133,7 @@ namespace RUINORERP.Model
             get{return _Sort;}
             set{
             SetProperty(ref _Sort, value);
-            }
+                        }
         }
 
         private bool _IsVisble;
@@ -147,7 +147,7 @@ namespace RUINORERP.Model
             get{return _IsVisble;}
             set{
             SetProperty(ref _IsVisble, value);
-            }
+                        }
         }
 
         private string _Default1;
@@ -161,7 +161,7 @@ namespace RUINORERP.Model
             get{return _Default1;}
             set{
             SetProperty(ref _Default1, value);
-            }
+                        }
         }
 
         private string _Default2;
@@ -175,7 +175,7 @@ namespace RUINORERP.Model
             get{return _Default2;}
             set{
             SetProperty(ref _Default2, value);
-            }
+                        }
         }
 
         private bool? _EnableDefault1;
@@ -189,7 +189,7 @@ namespace RUINORERP.Model
             get{return _EnableDefault1;}
             set{
             SetProperty(ref _EnableDefault1, value);
-            }
+                        }
         }
 
         private bool? _EnableDefault2;
@@ -203,7 +203,21 @@ namespace RUINORERP.Model
             get{return _EnableDefault2;}
             set{
             SetProperty(ref _EnableDefault2, value);
-            }
+                        }
+        }
+
+        private bool? _UseLike= true;
+        /// <summary>
+        /// 启用模糊查询
+        /// </summary>
+        [AdvQueryAttribute(ColName = "UseLike",ColDesc = "启用模糊查询")] 
+        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType ="Boolean",  ColumnName = "UseLike" ,IsNullable = true,ColumnDescription = "启用模糊查询" )]
+        public bool? UseLike
+        { 
+            get{return _UseLike;}
+            set{
+            SetProperty(ref _UseLike, value);
+                        }
         }
 
         private bool? _Focused= false;
@@ -217,7 +231,7 @@ namespace RUINORERP.Model
             get{return _Focused;}
             set{
             SetProperty(ref _Focused, value);
-            }
+                        }
         }
 
         private int? _DiffDays1;
@@ -231,7 +245,7 @@ namespace RUINORERP.Model
             get{return _DiffDays1;}
             set{
             SetProperty(ref _DiffDays1, value);
-            }
+                        }
         }
 
         private int? _DiffDays2;
@@ -245,14 +259,14 @@ namespace RUINORERP.Model
             get{return _DiffDays2;}
             set{
             SetProperty(ref _DiffDays2, value);
-            }
+                        }
         }
 
         #endregion
 
         #region 扩展属性
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(UIMenuPID))]
         public virtual tb_UIMenuPersonalization tb_uimenupersonalization { get; set; }
 

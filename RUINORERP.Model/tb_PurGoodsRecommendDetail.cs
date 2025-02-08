@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/14/2025 18:57:07
+// 时间：02/08/2025 16:32:22
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -46,8 +46,8 @@ namespace RUINORERP.Model
         { 
             get{return _PGRCID;}
             set{
-            base.PrimaryKeyID = _PGRCID;
             SetProperty(ref _PGRCID, value);
+                base.PrimaryKeyID = _PGRCID;
             }
         }
 
@@ -63,7 +63,7 @@ namespace RUINORERP.Model
             get{return _PDID;}
             set{
             SetProperty(ref _PDID, value);
-            }
+                        }
         }
 
         private long _ProdDetailID;
@@ -78,7 +78,7 @@ namespace RUINORERP.Model
             get{return _ProdDetailID;}
             set{
             SetProperty(ref _ProdDetailID, value);
-            }
+                        }
         }
 
         private long _Location_ID;
@@ -93,7 +93,7 @@ namespace RUINORERP.Model
             get{return _Location_ID;}
             set{
             SetProperty(ref _Location_ID, value);
-            }
+                        }
         }
 
         private string _property;
@@ -107,7 +107,7 @@ namespace RUINORERP.Model
             get{return _property;}
             set{
             SetProperty(ref _property, value);
-            }
+                        }
         }
 
         private long? _CustomerVendor_ID;
@@ -122,7 +122,7 @@ namespace RUINORERP.Model
             get{return _CustomerVendor_ID;}
             set{
             SetProperty(ref _CustomerVendor_ID, value);
-            }
+                        }
         }
 
         private decimal _RecommendPurPrice= ((0));
@@ -136,7 +136,7 @@ namespace RUINORERP.Model
             get{return _RecommendPurPrice;}
             set{
             SetProperty(ref _RecommendPurPrice, value);
-            }
+                        }
         }
 
         private int _ActualRequiredQty;
@@ -150,7 +150,7 @@ namespace RUINORERP.Model
             get{return _ActualRequiredQty;}
             set{
             SetProperty(ref _ActualRequiredQty, value);
-            }
+                        }
         }
 
         private int _RecommendQty= ((0));
@@ -164,7 +164,7 @@ namespace RUINORERP.Model
             get{return _RecommendQty;}
             set{
             SetProperty(ref _RecommendQty, value);
-            }
+                        }
         }
 
         private int _RequirementQty= ((0));
@@ -178,7 +178,7 @@ namespace RUINORERP.Model
             get{return _RequirementQty;}
             set{
             SetProperty(ref _RequirementQty, value);
-            }
+                        }
         }
 
         private DateTime _RequirementDate;
@@ -192,7 +192,7 @@ namespace RUINORERP.Model
             get{return _RequirementDate;}
             set{
             SetProperty(ref _RequirementDate, value);
-            }
+                        }
         }
 
         private string _Summary;
@@ -206,7 +206,7 @@ namespace RUINORERP.Model
             get{return _Summary;}
             set{
             SetProperty(ref _Summary, value);
-            }
+                        }
         }
 
         private string _RefBillNO;
@@ -220,7 +220,7 @@ namespace RUINORERP.Model
             get{return _RefBillNO;}
             set{
             SetProperty(ref _RefBillNO, value);
-            }
+                        }
         }
 
         private long? _RefBillType;
@@ -234,7 +234,7 @@ namespace RUINORERP.Model
             get{return _RefBillType;}
             set{
             SetProperty(ref _RefBillType, value);
-            }
+                        }
         }
 
         private long? _RefBillID;
@@ -248,7 +248,7 @@ namespace RUINORERP.Model
             get{return _RefBillID;}
             set{
             SetProperty(ref _RefBillID, value);
-            }
+                        }
         }
 
         private long? _PDCID_RowID;
@@ -262,29 +262,29 @@ namespace RUINORERP.Model
             get{return _PDCID_RowID;}
             set{
             SetProperty(ref _PDCID_RowID, value);
-            }
+                        }
         }
 
         #endregion
 
         #region 扩展属性
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(CustomerVendor_ID))]
         public virtual tb_CustomerVendor tb_customervendor { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(ProdDetailID))]
         public virtual tb_ProdDetail tb_proddetail { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(Location_ID))]
         public virtual tb_Location tb_location { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(PDID))]
         public virtual tb_ProductionDemand tb_productiondemand { get; set; }
 

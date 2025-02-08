@@ -79,6 +79,12 @@ namespace RUINORERP.UI.BI
             dataGridView1.DataSource = ListDataSoure;
         }
 
+        public override void BuildRelatedDisplay()
+        {
+            //表格显示时DataGridView1_CellFormatting 取外键类型
+            ColDisplayTypes.Add(typeof(tb_MenuInfo));
+        }
+
         public override void QueryConditionBuilder()
         {
             BaseProcessor baseProcessor = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_ButtonInfo).Name + "Processor");
@@ -95,7 +101,7 @@ namespace RUINORERP.UI.BI
             foreach (DataGridViewRow dr in this.dataGridView1.SelectedRows)
             {
                 tb_ButtonInfo buttonInfo = dr.DataBoundItem as tb_ButtonInfo;
-                 rs = await childctr.BaseDeleteByNavAsync(dr.DataBoundItem as tb_ButtonInfo);
+                rs = await childctr.BaseDeleteByNavAsync(dr.DataBoundItem as tb_ButtonInfo);
                 if (rs)
                 {
                     //提示

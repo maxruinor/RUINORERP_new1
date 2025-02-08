@@ -20,6 +20,7 @@ using RUINORERP.Common.SnowflakeIdHelper;
 using RUINORERP.UI.AdvancedUIModule;
 using Castle.Components.DictionaryAdapter.Xml;
 using System.Web.WebSockets;
+using SourceGrid2.Win32;
 
 namespace RUINORERP.UI.Common
 {
@@ -345,7 +346,7 @@ namespace RUINORERP.UI.Common
 
 
 
-        public void InitToolStripItem(MenuAttrAssemblyInfo info, tb_MenuInfo menuInfo)
+        public async void InitToolStripItem(MenuAttrAssemblyInfo info, tb_MenuInfo menuInfo)
         {
             Control c = Startup.ServiceProvider.GetService(info.ClassType) as Control;
             tb_ButtonInfoController<tb_ButtonInfo> BtnController = Startup.GetFromFac<tb_ButtonInfoController<tb_ButtonInfo>>();
@@ -503,7 +504,13 @@ namespace RUINORERP.UI.Common
 
             if (tb_ButtonInfos.Count > 0)
             {
-                _appContext.Db.CopyNew().Insertable<tb_ButtonInfo>(tb_ButtonInfos).ExecuteReturnSnowflakeIdListAsync();
+                List<long> idsbtn = await _appContext.Db.CopyNew().Insertable<tb_ButtonInfo>(tb_ButtonInfos).ExecuteReturnSnowflakeIdListAsync();
+                if (idsbtn.Count== tb_ButtonInfos.Count)
+                {
+                    //添加后才不会重复添加
+                    menuInfo.tb_ButtonInfos.AddRange(tb_ButtonInfos);
+                }
+                
             }
 
         }
@@ -552,8 +559,6 @@ namespace RUINORERP.UI.Common
         {
             try
             {
-
-
                 // Type[] ModelTypes
                 foreach (Type type in ModelTypes)
                 {
@@ -592,7 +597,7 @@ namespace RUINORERP.UI.Common
             }
         }
 
-        public void InitFieldInoMainAndSub(Type type, tb_MenuInfo menuInfo, bool isChild, string childType)
+        public async void  InitFieldInoMainAndSub(Type type, tb_MenuInfo menuInfo, bool isChild, string childType)
         {
             List<tb_FieldInfo> fields = new List<tb_FieldInfo>();
             var attrs = type.GetCustomAttributes<SugarTable>();
@@ -665,10 +670,15 @@ namespace RUINORERP.UI.Common
                     }
                     if (tb_FieldInfos.Count > 0)
                     {
-                        _appContext.Db.CopyNew().Insertable<tb_FieldInfo>(tb_FieldInfos).ExecuteReturnSnowflakeIdListAsync();
+                        List<long> idsbtn = await _appContext.Db.CopyNew().Insertable<tb_FieldInfo>(tb_FieldInfos).ExecuteReturnSnowflakeIdListAsync();
+                        if (idsbtn.Count == tb_FieldInfos.Count)
+                        {
+                            //添加后才不会重复添加
+                            menuInfo.tb_FieldInfos.AddRange(tb_FieldInfos);
+                        }
                     }
 
-                    //应该要优化为批量新增
+              
                 }
             }
         }

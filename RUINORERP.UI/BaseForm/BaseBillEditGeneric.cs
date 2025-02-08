@@ -1053,6 +1053,13 @@ namespace RUINORERP.UI.BaseForm
                     }
                     await CloseCaseAsync();
                     break;
+                case MenuItemEnums.反结案:
+                    if (IsLock())
+                    {
+                        return;
+                    }
+                    await AntiCloseCaseAsync();
+                    break;
                 case MenuItemEnums.打印:
                     Print();
                     toolStripbtnPrint.Enabled = false;

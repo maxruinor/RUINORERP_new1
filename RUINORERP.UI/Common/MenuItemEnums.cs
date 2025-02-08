@@ -39,6 +39,7 @@ namespace RUINORERP.UI
         设计,//报表设计
         功能,
         结案,
+        反结案,
         属性,
         审核,
         反审,

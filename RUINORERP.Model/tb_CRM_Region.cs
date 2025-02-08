@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/14/2025 18:56:48
+// 时间：02/08/2025 16:31:56
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -46,8 +46,8 @@ namespace RUINORERP.Model
         { 
             get{return _Region_ID;}
             set{
-            base.PrimaryKeyID = _Region_ID;
             SetProperty(ref _Region_ID, value);
+                base.PrimaryKeyID = _Region_ID;
             }
         }
 
@@ -62,7 +62,7 @@ namespace RUINORERP.Model
             get{return _Region_Name;}
             set{
             SetProperty(ref _Region_Name, value);
-            }
+                        }
         }
 
         private string _Region_code;
@@ -76,7 +76,7 @@ namespace RUINORERP.Model
             get{return _Region_code;}
             set{
             SetProperty(ref _Region_code, value);
-            }
+                        }
         }
 
         private long? _Parent_region_id;
@@ -91,7 +91,7 @@ namespace RUINORERP.Model
             get{return _Parent_region_id;}
             set{
             SetProperty(ref _Parent_region_id, value);
-            }
+                        }
         }
 
         private int? _Sort;
@@ -105,7 +105,7 @@ namespace RUINORERP.Model
             get{return _Sort;}
             set{
             SetProperty(ref _Sort, value);
-            }
+                        }
         }
 
         private bool? _Is_enabled= true;
@@ -119,7 +119,7 @@ namespace RUINORERP.Model
             get{return _Is_enabled;}
             set{
             SetProperty(ref _Is_enabled, value);
-            }
+                        }
         }
 
         private string _Notes;
@@ -133,19 +133,19 @@ namespace RUINORERP.Model
             get{return _Notes;}
             set{
             SetProperty(ref _Notes, value);
-            }
+                        }
         }
 
         #endregion
 
         #region 扩展属性
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(Parent_region_id))]
         public virtual tb_CRM_Region tb_crm_region { get; set; }
 
 
-        //[Browsable(false)]
+        //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_CRM_Customer.Region_ID))]
         public virtual List<tb_CRM_Customer> tb_CRM_Customers { get; set; }
@@ -153,7 +153,7 @@ namespace RUINORERP.Model
         //Region_ID.FK_CRM_Customer_REF_CRM_Region)
         //tb_CRM_Region.Region_ID)
 
-        //[Browsable(false)]
+        //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_CRM_Region.Parent_region_id))]
         public virtual List<tb_CRM_Region> tb_CRM_Regions { get; set; }

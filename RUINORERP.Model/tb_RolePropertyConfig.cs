@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/14/2025 18:57:10
+// 时间：02/08/2025 16:32:26
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -46,8 +46,8 @@ namespace RUINORERP.Model
         { 
             get{return _RolePropertyID;}
             set{
-            base.PrimaryKeyID = _RolePropertyID;
             SetProperty(ref _RolePropertyID, value);
+                base.PrimaryKeyID = _RolePropertyID;
             }
         }
 
@@ -62,7 +62,7 @@ namespace RUINORERP.Model
             get{return _RolePropertyName;}
             set{
             SetProperty(ref _RolePropertyName, value);
-            }
+                        }
         }
 
         private int _QtyDataPrecision= ((0));
@@ -76,7 +76,7 @@ namespace RUINORERP.Model
             get{return _QtyDataPrecision;}
             set{
             SetProperty(ref _QtyDataPrecision, value);
-            }
+                        }
         }
 
         private int _TaxRateDataPrecision= ((2));
@@ -90,7 +90,7 @@ namespace RUINORERP.Model
             get{return _TaxRateDataPrecision;}
             set{
             SetProperty(ref _TaxRateDataPrecision, value);
-            }
+                        }
         }
 
         private int _MoneyDataPrecision= ((2));
@@ -104,7 +104,7 @@ namespace RUINORERP.Model
             get{return _MoneyDataPrecision;}
             set{
             SetProperty(ref _MoneyDataPrecision, value);
-            }
+                        }
         }
 
         private bool _CurrencyDataPrecisionAutoAddZero= true;
@@ -118,7 +118,7 @@ namespace RUINORERP.Model
             get{return _CurrencyDataPrecisionAutoAddZero;}
             set{
             SetProperty(ref _CurrencyDataPrecisionAutoAddZero, value);
-            }
+                        }
         }
 
         private int _CostCalculationMethod;
@@ -132,7 +132,7 @@ namespace RUINORERP.Model
             get{return _CostCalculationMethod;}
             set{
             SetProperty(ref _CostCalculationMethod, value);
-            }
+                        }
         }
 
         private bool _ShowDebugInfo= false;
@@ -146,7 +146,7 @@ namespace RUINORERP.Model
             get{return _ShowDebugInfo;}
             set{
             SetProperty(ref _ShowDebugInfo, value);
-            }
+                        }
         }
 
         private bool _OwnershipControl= false;
@@ -160,7 +160,7 @@ namespace RUINORERP.Model
             get{return _OwnershipControl;}
             set{
             SetProperty(ref _OwnershipControl, value);
-            }
+                        }
         }
 
         private bool _SaleBizLimited= false;
@@ -174,7 +174,7 @@ namespace RUINORERP.Model
             get{return _SaleBizLimited;}
             set{
             SetProperty(ref _SaleBizLimited, value);
-            }
+                        }
         }
 
         private bool _DepartBizLimited= false;
@@ -188,7 +188,7 @@ namespace RUINORERP.Model
             get{return _DepartBizLimited;}
             set{
             SetProperty(ref _DepartBizLimited, value);
-            }
+                        }
         }
 
         private bool _PurchsaeBizLimited= false;
@@ -202,7 +202,7 @@ namespace RUINORERP.Model
             get{return _PurchsaeBizLimited;}
             set{
             SetProperty(ref _PurchsaeBizLimited, value);
-            }
+                        }
         }
 
         private bool _QueryPageLayoutCustomize;
@@ -216,7 +216,7 @@ namespace RUINORERP.Model
             get{return _QueryPageLayoutCustomize;}
             set{
             SetProperty(ref _QueryPageLayoutCustomize, value);
-            }
+                        }
         }
 
         private bool _QueryGridColCustomize;
@@ -230,7 +230,7 @@ namespace RUINORERP.Model
             get{return _QueryGridColCustomize;}
             set{
             SetProperty(ref _QueryGridColCustomize, value);
-            }
+                        }
         }
 
         private bool _BillGridColCustomize;
@@ -244,7 +244,7 @@ namespace RUINORERP.Model
             get{return _BillGridColCustomize;}
             set{
             SetProperty(ref _BillGridColCustomize, value);
-            }
+                        }
         }
 
         private bool _ExclusiveLimited;
@@ -258,7 +258,7 @@ namespace RUINORERP.Model
             get{return _ExclusiveLimited;}
             set{
             SetProperty(ref _ExclusiveLimited, value);
-            }
+                        }
         }
 
         private string _DataBoardUnits;
@@ -272,14 +272,14 @@ namespace RUINORERP.Model
             get{return _DataBoardUnits;}
             set{
             SetProperty(ref _DataBoardUnits, value);
-            }
+                        }
         }
 
         #endregion
 
         #region 扩展属性
 
-        //[Browsable(false)]
+        //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_RoleInfo.RolePropertyID))]
         public virtual List<tb_RoleInfo> tb_RoleInfos { get; set; }

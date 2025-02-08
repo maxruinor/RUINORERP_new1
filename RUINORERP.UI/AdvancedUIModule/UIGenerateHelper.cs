@@ -92,6 +92,7 @@ namespace RUINORERP.UI.AdvancedUIModule
                         queryField.DiffDays1 = condition.DiffDays1;
                         queryField.DiffDays2 = condition.DiffDays2;
                         queryField.Focused = condition.Focused;
+                        queryField.UseLike = condition.UseLike;
                     }
                 }
             }
@@ -101,10 +102,9 @@ namespace RUINORERP.UI.AdvancedUIModule
                 queryFields.ForEach(c => c.IsVisible = true);
             }
 
-
             Type newtype = null;
             object newDto = null;
-            newtype = AttributesBuilder_New2024(useLike, type, queryFilter);
+            newtype = AttributesBuilder_New2024(type, queryFilter);
             newDto = Activator.CreateInstance(newtype);
 
             BaseEntity Query = newDto as BaseEntity;
@@ -128,6 +128,9 @@ namespace RUINORERP.UI.AdvancedUIModule
                 queryField.Caption = item.Caption;
                 queryField.ColDataType = item.ColDataType.GetBaseType();
                 queryField.IsRelated = item.IsFKRelationAttribute;
+                
+                //不能覆盖设置的值
+                //queryField.UseLike = item.UseLike;
                 if (queryField.IsRelated)
                 {
                     queryField.fKRelationAttribute = item.fKRelationAttribute;
@@ -179,7 +182,15 @@ namespace RUINORERP.UI.AdvancedUIModule
                         case EnumDataType.Object:
                             break;
                         case EnumDataType.String:
-                            queryField.AdvQueryFieldType = AdvQueryProcessType.stringLike;
+                            if (queryField.UseLike.Value)
+                            {
+                                queryField.AdvQueryFieldType = AdvQueryProcessType.stringLike;
+                            }
+                            else
+                            {
+                                queryField.AdvQueryFieldType = AdvQueryProcessType.stringEquals;
+                            }
+                            
                             break;
                         default:
                             break;
@@ -678,7 +689,6 @@ namespace RUINORERP.UI.AdvancedUIModule
                         tb_box.Location = new System.Drawing.Point(_x, _y);
 
                         //动态生成一个右键菜单
-
                         MenuItem menuItem = new MenuItem();
 
                         menuItem.Text = "精确查询";
@@ -694,6 +704,18 @@ namespace RUINORERP.UI.AdvancedUIModule
                         UcPanel.Controls.Add(tb_box);
                         UcPanel.Controls.Add(lbl);
                         break;
+
+                    case AdvQueryProcessType.stringEquals:
+                        KryptonTextBox tb_boxEquals = new KryptonTextBox();
+                        tb_boxEquals.Name = queryField.FieldName;
+                        tb_boxEquals.Width = 150;
+
+                        DataBindingHelper.BindData4TextBox(newDto, queryField.FieldName, tb_boxEquals, BindDataType4TextBox.Text, false);
+                        tb_boxEquals.Location = new System.Drawing.Point(_x, _y);
+                        UcPanel.Controls.Add(tb_boxEquals);
+                        UcPanel.Controls.Add(lbl);
+                        break;
+
                     case AdvQueryProcessType.useYesOrNoToAll:
                         UCAdvYesOrNO chkgroup = new UCAdvYesOrNO();
                         // object datetimeValue1 = ReflectionHelper.GetPropertyValue(newDto, queryField.ExtendedAttribute[0].ColName);
@@ -755,7 +777,7 @@ namespace RUINORERP.UI.AdvancedUIModule
         /// </summary>
         /// <param name="type"></param>
         /// <returns></returns>
-        public static Type AttributesBuilder_New2024(bool useLike, Type type, QueryFilter queryFilter)
+        public static Type AttributesBuilder_New2024(Type type, QueryFilter queryFilter)
         {
             //TypeBuilder
             var aName = new System.Reflection.AssemblyName(Assembly.GetExecutingAssembly().GetName().Name);
@@ -764,310 +786,185 @@ namespace RUINORERP.UI.AdvancedUIModule
             var tb = mb.DefineType(type.Name + "Proxy", System.Reflection.TypeAttributes.Public, type);
             #region 前期处理  根据指定的类型  生成对应的相关属性
 
-            if (useLike)
+
+            #region 查询
+            //这里构建AdvExtQueryAttribute一个构造函数，注意参数个数
+            var attrCtorParams = new Type[] { typeof(string), typeof(string), typeof(string), typeof(AdvQueryProcessType) };
+            var attrCtorInfo = typeof(AdvExtQueryAttribute).GetConstructor(attrCtorParams);
+
+            var DtoEntityFieldNameList = UIHelper.GetDtoFieldNameList(type);
+
+            foreach (var oldCol in DtoEntityFieldNameList)
             {
-                #region 模糊查询
-                //这里构建AdvExtQueryAttribute一个构造函数，注意参数个数
-                var attrCtorParams = new Type[] { typeof(string), typeof(string), typeof(string), typeof(AdvQueryProcessType) };
-                var attrCtorInfo = typeof(AdvExtQueryAttribute).GetConstructor(attrCtorParams);
-
-                var DtoEntityFieldNameList = UIHelper.GetDtoFieldNameList(type);
-
-                foreach (var oldCol in DtoEntityFieldNameList)
+                var coldata = oldCol as BaseDtoField;
+                coldata.ColDataType = coldata.ColDataType.GetBaseType();
+                if (coldata.ColDataType.Name == "Byte[]")
                 {
-                    var coldata = oldCol as BaseDtoField;
-                    coldata.ColDataType = coldata.ColDataType.GetBaseType();
-                    if (coldata.ColDataType.Name == "Byte[]")
-                    {
-                        continue;
-                    }
+                    continue;
+                }
+                QueryField queryField = queryFilter.QueryFields.Find(x => x.FieldName == coldata.FieldName);
+                if (queryField == null)
+                {
+                    continue;
+                }
+                EnumDataType edt = (EnumDataType)Enum.Parse(typeof(EnumDataType), coldata.ColDataType.Name);
+                //应该是没有具体指定就用数据类型来进行统一处理
+                switch (edt)
+                {
+                    case EnumDataType.Boolean:
+                        if (!coldata.FieldName.Contains("isdeleted"))
+                        {
+                            string newBoolProName1 = coldata.FieldName + "_Enable";
+                            var attrBoolBuilder1 = new CustomAttributeBuilder(attrCtorInfo, new object[] { coldata.FieldName, "是", newBoolProName1, AdvQueryProcessType.useYesOrNoToAll });
+                            //动态属性要提前创建生成，后面要实体化传入控件
+                            PropertyBuilder newBoolProp1 = AddProperty(tb, newBoolProName1, typeof(bool));
+                            newBoolProp1.SetCustomAttribute(attrBoolBuilder1);
+                        }
+                        break;
+                    case EnumDataType.Char:
+                        break;
+                    case EnumDataType.Single:
+                        break;
+                    case EnumDataType.Double:
+                        break;
+                    case EnumDataType.Decimal:
+                        break;
+                    case EnumDataType.SByte:
+                        break;
+                    case EnumDataType.Byte:
+                        break;
+                    case EnumDataType.Int16:
+                    case EnumDataType.UInt16:
+                    case EnumDataType.Int32:
+                    case EnumDataType.UInt32:
+                    case EnumDataType.Int64:
+                    case EnumDataType.UInt64:
+                    case EnumDataType.IntPtr:
+                    case EnumDataType.UIntPtr:
+                   
+                        if (queryField.AdvQueryFieldType == AdvQueryProcessType.CmbMultiChoiceCanIgnore)
+                        {
+                            //先成一个标记可忽略的属性
+                            string newCmbMultiChoiceCanIgnore = coldata.FieldName + "_CmbMultiChoiceCanIgnore";
+                            var attrBuilderCmbMultiChoiceCanIgnore = new CustomAttributeBuilder(attrCtorInfo, new object[] { coldata.FieldName, "多选可忽略", newCmbMultiChoiceCanIgnore, AdvQueryProcessType.CmbMultiChoiceCanIgnore });
+                            //动态属性要提前创建生成，后面要实体化传入控件
+                            PropertyBuilder newPropCmbMultiChoiceCanIgnore = AddProperty(tb, newCmbMultiChoiceCanIgnore, typeof(bool));
+                            newPropCmbMultiChoiceCanIgnore.SetCustomAttribute(attrBuilderCmbMultiChoiceCanIgnore);
 
-                    QueryField queryField = queryFilter.QueryFields.Find(x => x.FieldName == coldata.FieldName);
+                            #region 动态属性要提前创建生成，后面要实体化传入控件
 
-                    EnumDataType edt = (EnumDataType)Enum.Parse(typeof(EnumDataType), coldata.ColDataType.Name);
-                    //应该是没有具体指定就用数据类型来进行统一处理
-                    switch (edt)
-                    {
-                        case EnumDataType.Boolean:
-                            if (!coldata.FieldName.Contains("isdeleted"))
-                            {
-                                string newBoolProName1 = coldata.FieldName + "_Enable";
-                                var attrBoolBuilder1 = new CustomAttributeBuilder(attrCtorInfo, new object[] { coldata.FieldName, "是", newBoolProName1, AdvQueryProcessType.useYesOrNoToAll });
-                                //动态属性要提前创建生成，后面要实体化传入控件
-                                PropertyBuilder newBoolProp1 = AddProperty(tb, newBoolProName1, typeof(bool));
-                                newBoolProp1.SetCustomAttribute(attrBoolBuilder1);
-                            }
-                            break;
-                        case EnumDataType.Char:
-                            break;
-                        case EnumDataType.Single:
-                            break;
-                        case EnumDataType.Double:
-                            break;
-                        case EnumDataType.Decimal:
-                            break;
-                        case EnumDataType.SByte:
-                            break;
-                        case EnumDataType.Byte:
-                            break;
-                        case EnumDataType.Int16:
-                        case EnumDataType.UInt16:
-                        case EnumDataType.Int32:
-                        case EnumDataType.UInt32:
-                        case EnumDataType.Int64:
-                            if (queryField == null)
-                            {
-                                continue;
-                            }
-                            if (queryField.AdvQueryFieldType == AdvQueryProcessType.CmbMultiChoiceCanIgnore)
-                            {
-                                //先成一个标记可忽略的属性
-                                string newCmbMultiChoiceCanIgnore = coldata.FieldName + "_CmbMultiChoiceCanIgnore";
-                                var attrBuilderCmbMultiChoiceCanIgnore = new CustomAttributeBuilder(attrCtorInfo, new object[] { coldata.FieldName, "多选可忽略", newCmbMultiChoiceCanIgnore, AdvQueryProcessType.CmbMultiChoiceCanIgnore });
-                                //动态属性要提前创建生成，后面要实体化传入控件
-                                PropertyBuilder newPropCmbMultiChoiceCanIgnore = AddProperty(tb, newCmbMultiChoiceCanIgnore, typeof(bool));
-                                newPropCmbMultiChoiceCanIgnore.SetCustomAttribute(attrBuilderCmbMultiChoiceCanIgnore);
+                            string newProNameMultiChoiceResults = coldata.FieldName + "_MultiChoiceResults";
+                            var attrBuilderMultiChoiceResults = new CustomAttributeBuilder(attrCtorInfo, new object[] { coldata.FieldName, "多选结果", newProNameMultiChoiceResults, AdvQueryProcessType.CmbMultiChoice });
+                            //动态属性要提前创建生成，后面要实体化传入控件
+                            PropertyBuilder newPropMultiChoiceResults = AddProperty(tb, newProNameMultiChoiceResults, typeof(List<object>));
+                            newPropMultiChoiceResults.SetCustomAttribute(attrBuilderMultiChoiceResults);
+                            #endregion
 
+                            //string newSelectProName1 = coldata.FieldName + "_请选择";
+                            //var attrSelectBuilder1 = new CustomAttributeBuilder(attrCtorInfo, new object[] { coldata.FieldName, "请选择", newSelectProName1, AdvQueryProcessType.CmbMultiChoice });
+                            ////动态属性要提前创建生成，后面要实体化传入控件
+                            //PropertyBuilder newlikeProp1 = AddProperty(tb, newSelectProName1);
+                            //newlikeProp1.SetCustomAttribute(attrSelectBuilder1);
+                            break;
+                        }
+
+                        if (queryField.AdvQueryFieldType == AdvQueryProcessType.CmbMultiChoice)
+                        {
+
+                            #region 动态属性要提前创建生成，后面要实体化传入控件
+
+                            string newProNameMultiChoiceResults = coldata.FieldName + "_MultiChoiceResults";
+                            var attrBuilderMultiChoiceResults = new CustomAttributeBuilder(attrCtorInfo, new object[] { coldata.FieldName, "多选结果", newProNameMultiChoiceResults, AdvQueryProcessType.CmbMultiChoice });
+                            //动态属性要提前创建生成，后面要实体化传入控件
+                            PropertyBuilder newPropMultiChoiceResults = AddProperty(tb, newProNameMultiChoiceResults, typeof(List<object>));
+                            newPropMultiChoiceResults.SetCustomAttribute(attrBuilderMultiChoiceResults);
+                            #endregion
+
+                            //string newSelectProName1 = coldata.FieldName + "_请选择";
+                            //var attrSelectBuilder1 = new CustomAttributeBuilder(attrCtorInfo, new object[] { coldata.FieldName, "请选择", newSelectProName1, AdvQueryProcessType.CmbMultiChoice });
+                            ////动态属性要提前创建生成，后面要实体化传入控件
+                            //PropertyBuilder newlikeProp1 = AddProperty(tb, newSelectProName1);
+                            //newlikeProp1.SetCustomAttribute(attrSelectBuilder1);
+                            break;
+                        }
+                        if (queryField.AdvQueryFieldType == AdvQueryProcessType.defaultSelect)
+                        {
+
+                            string newSelectProName1 = coldata.FieldName + "_请选择";
+                            var attrSelectBuilder1 = new CustomAttributeBuilder(attrCtorInfo, new object[] { coldata.FieldName, "请选择", newSelectProName1, AdvQueryProcessType.defaultSelect });
+                            //动态属性要提前创建生成，后面要实体化传入控件
+                            PropertyBuilder newlikeProp1 = AddProperty(tb, newSelectProName1);
+                            newlikeProp1.SetCustomAttribute(attrSelectBuilder1);
+                            break;
+                        }
+
+                        break;
+                        //下拉
+                        if (coldata.IsFKRelationAttribute)
+                        {
+                            if (coldata.fKRelationAttribute.CmbMultiChoice)
+                            {
                                 #region 动态属性要提前创建生成，后面要实体化传入控件
-
                                 string newProNameMultiChoiceResults = coldata.FieldName + "_MultiChoiceResults";
                                 var attrBuilderMultiChoiceResults = new CustomAttributeBuilder(attrCtorInfo, new object[] { coldata.FieldName, "多选结果", newProNameMultiChoiceResults, AdvQueryProcessType.CmbMultiChoice });
                                 //动态属性要提前创建生成，后面要实体化传入控件
+                                //PropertyBuilder newPropMultiChoiceResults = AddProperty(tb, newProNameMultiChoiceResults);
+
+                                //这个属性 在控件里定义了一个对应的MultiChoiceResults 属性是类型是List<object>
                                 PropertyBuilder newPropMultiChoiceResults = AddProperty(tb, newProNameMultiChoiceResults, typeof(List<object>));
                                 newPropMultiChoiceResults.SetCustomAttribute(attrBuilderMultiChoiceResults);
                                 #endregion
-
-                                //string newSelectProName1 = coldata.FieldName + "_请选择";
-                                //var attrSelectBuilder1 = new CustomAttributeBuilder(attrCtorInfo, new object[] { coldata.FieldName, "请选择", newSelectProName1, AdvQueryProcessType.CmbMultiChoice });
-                                ////动态属性要提前创建生成，后面要实体化传入控件
-                                //PropertyBuilder newlikeProp1 = AddProperty(tb, newSelectProName1);
-                                //newlikeProp1.SetCustomAttribute(attrSelectBuilder1);
-                                break;
-                            }
-
-                            if (queryField.AdvQueryFieldType == AdvQueryProcessType.CmbMultiChoice)
-                            {
-
-                                #region 动态属性要提前创建生成，后面要实体化传入控件
-
-                                string newProNameMultiChoiceResults = coldata.FieldName + "_MultiChoiceResults";
-                                var attrBuilderMultiChoiceResults = new CustomAttributeBuilder(attrCtorInfo, new object[] { coldata.FieldName, "多选结果", newProNameMultiChoiceResults, AdvQueryProcessType.CmbMultiChoice });
-                                //动态属性要提前创建生成，后面要实体化传入控件
-                                PropertyBuilder newPropMultiChoiceResults = AddProperty(tb, newProNameMultiChoiceResults, typeof(List<object>));
-                                newPropMultiChoiceResults.SetCustomAttribute(attrBuilderMultiChoiceResults);
-                                #endregion
-
-                                //string newSelectProName1 = coldata.FieldName + "_请选择";
-                                //var attrSelectBuilder1 = new CustomAttributeBuilder(attrCtorInfo, new object[] { coldata.FieldName, "请选择", newSelectProName1, AdvQueryProcessType.CmbMultiChoice });
-                                ////动态属性要提前创建生成，后面要实体化传入控件
-                                //PropertyBuilder newlikeProp1 = AddProperty(tb, newSelectProName1);
-                                //newlikeProp1.SetCustomAttribute(attrSelectBuilder1);
-                                break;
-                            }
-                            if (queryField.AdvQueryFieldType == AdvQueryProcessType.defaultSelect)
-                            {
 
                                 string newSelectProName1 = coldata.FieldName + "_请选择";
                                 var attrSelectBuilder1 = new CustomAttributeBuilder(attrCtorInfo, new object[] { coldata.FieldName, "请选择", newSelectProName1, AdvQueryProcessType.defaultSelect });
                                 //动态属性要提前创建生成，后面要实体化传入控件
                                 PropertyBuilder newlikeProp1 = AddProperty(tb, newSelectProName1);
                                 newlikeProp1.SetCustomAttribute(attrSelectBuilder1);
-                                break;
                             }
-
-                            break;
-                        case EnumDataType.UInt64:
-                        case EnumDataType.IntPtr:
-                        case EnumDataType.UIntPtr:
-                            //下拉
-                            if (coldata.IsFKRelationAttribute)
+                            else
                             {
-                                if (coldata.fKRelationAttribute.CmbMultiChoice)
-                                {
-                                    #region 动态属性要提前创建生成，后面要实体化传入控件
-                                    string newProNameMultiChoiceResults = coldata.FieldName + "_MultiChoiceResults";
-                                    var attrBuilderMultiChoiceResults = new CustomAttributeBuilder(attrCtorInfo, new object[] { coldata.FieldName, "多选结果", newProNameMultiChoiceResults, AdvQueryProcessType.CmbMultiChoice });
-                                    //动态属性要提前创建生成，后面要实体化传入控件
-                                    //PropertyBuilder newPropMultiChoiceResults = AddProperty(tb, newProNameMultiChoiceResults);
-
-                                    //这个属性 在控件里定义了一个对应的MultiChoiceResults 属性是类型是List<object>
-                                    PropertyBuilder newPropMultiChoiceResults = AddProperty(tb, newProNameMultiChoiceResults, typeof(List<object>));
-                                    newPropMultiChoiceResults.SetCustomAttribute(attrBuilderMultiChoiceResults);
-                                    #endregion
-
-                                    string newSelectProName1 = coldata.FieldName + "_请选择";
-                                    var attrSelectBuilder1 = new CustomAttributeBuilder(attrCtorInfo, new object[] { coldata.FieldName, "请选择", newSelectProName1, AdvQueryProcessType.defaultSelect });
-                                    //动态属性要提前创建生成，后面要实体化传入控件
-                                    PropertyBuilder newlikeProp1 = AddProperty(tb, newSelectProName1);
-                                    newlikeProp1.SetCustomAttribute(attrSelectBuilder1);
-                                }
-                                else
-                                {
-                                    string newSelectProName1 = coldata.FieldName + "_请选择";
-                                    var attrSelectBuilder1 = new CustomAttributeBuilder(attrCtorInfo, new object[] { coldata.FieldName, "请选择", newSelectProName1, AdvQueryProcessType.defaultSelect });
-                                    //动态属性要提前创建生成，后面要实体化传入控件
-                                    PropertyBuilder newlikeProp1 = AddProperty(tb, newSelectProName1);
-                                    newlikeProp1.SetCustomAttribute(attrSelectBuilder1);
-                                }
-
+                                string newSelectProName1 = coldata.FieldName + "_请选择";
+                                var attrSelectBuilder1 = new CustomAttributeBuilder(attrCtorInfo, new object[] { coldata.FieldName, "请选择", newSelectProName1, AdvQueryProcessType.defaultSelect });
+                                //动态属性要提前创建生成，后面要实体化传入控件
+                                PropertyBuilder newlikeProp1 = AddProperty(tb, newSelectProName1);
+                                newlikeProp1.SetCustomAttribute(attrSelectBuilder1);
                             }
-                            break;
-                        case EnumDataType.Object:
-                            break;
-                        case EnumDataType.String:
-                            //if (coldata.UseLike)
-                            //{
+
+                        }
+                        break;
+                    case EnumDataType.Object:
+                        break;
+                    case EnumDataType.String:
+                        //如果没有设置则默认为like。如果设置了则是开启了like就生成like属性
+                        if ((!queryField.UseLike.HasValue) || (queryField.UseLike.HasValue && queryField.UseLike.Value == true))
+                        {
                             string newlikeProNameString = coldata.FieldName + "_Like";
                             var attrlikeBuilder1 = new CustomAttributeBuilder(attrCtorInfo, new object[] { coldata.FieldName, "like", newlikeProNameString, AdvQueryProcessType.stringLike });
                             //动态属性要提前创建生成，后面要实体化传入控件
                             PropertyBuilder newlikePropstring = AddProperty(tb, newlikeProNameString);
                             newlikePropstring.SetCustomAttribute(attrlikeBuilder1);
-                            break;
-                        case EnumDataType.DateTime:
+                        }
+                         
+                        break;
+                    case EnumDataType.DateTime:
 
-                            string newProName1 = coldata.FieldName + "_Start";
-                            string newProName2 = coldata.FieldName + "_End";
-                            var attrBuilder1 = new CustomAttributeBuilder(attrCtorInfo, new object[] { coldata.FieldName, "时间起", newProName1, AdvQueryProcessType.datetimeRange });
-                            var attrBuilder2 = new CustomAttributeBuilder(attrCtorInfo, new object[] { coldata.FieldName, "时间止", newProName2, AdvQueryProcessType.datetimeRange });
-                            //动态属性要提前创建生成，后面要实体化传入控件
-                            PropertyBuilder newProp1 = AddProperty(tb, newProName1, typeof(DateTime?));//起始时间是可以选空的，实际如果不可空的话，要调试到这里看什么情况
-                            //动态属性要提前创建生成，后面要实体化传入控件
-                            PropertyBuilder newProp2 = AddProperty(tb, newProName2, typeof(DateTime?));
-                            newProp1.SetCustomAttribute(attrBuilder1);
-                            newProp2.SetCustomAttribute(attrBuilder2);
-                            break;
-                        default:
-                            break;
-                    }
+                        string newProName1 = coldata.FieldName + "_Start";
+                        string newProName2 = coldata.FieldName + "_End";
+                        var attrBuilder1 = new CustomAttributeBuilder(attrCtorInfo, new object[] { coldata.FieldName, "时间起", newProName1, AdvQueryProcessType.datetimeRange });
+                        var attrBuilder2 = new CustomAttributeBuilder(attrCtorInfo, new object[] { coldata.FieldName, "时间止", newProName2, AdvQueryProcessType.datetimeRange });
+                        //动态属性要提前创建生成，后面要实体化传入控件
+                        PropertyBuilder newProp1 = AddProperty(tb, newProName1, typeof(DateTime?));//起始时间是可以选空的，实际如果不可空的话，要调试到这里看什么情况
+                                                                                                   //动态属性要提前创建生成，后面要实体化传入控件
+                        PropertyBuilder newProp2 = AddProperty(tb, newProName2, typeof(DateTime?));
+                        newProp1.SetCustomAttribute(attrBuilder1);
+                        newProp2.SetCustomAttribute(attrBuilder2);
+                        break;
+                    default:
+                        break;
                 }
-                #endregion
             }
-            else
-            {
-                #region 普通查询
-                //这里构建AdvExtQueryAttribute一个构造函数，注意参数个数
-                var attrCtorParams = new Type[] { typeof(string), typeof(string), typeof(string), typeof(AdvQueryProcessType) };
-                var attrCtorInfo = typeof(AdvExtQueryAttribute).GetConstructor(attrCtorParams);
-                var DtoEntityFieldNameList = UIHelper.GetDtoFieldNameList(type);
-                foreach (var oldCol in DtoEntityFieldNameList)
-                {
-                    var coldata = oldCol as BaseDtoField;
-                    QueryField queryField = queryFilter.QueryFields.FirstOrDefault(f => f.FieldName == coldata.FieldName);
-                    coldata.ColDataType = coldata.ColDataType.GetBaseType();
-                    if (coldata.ColDataType.Name == "Byte[]")
-                    {
-                        continue;
-                    }
-                    EnumDataType edt = (EnumDataType)Enum.Parse(typeof(EnumDataType), coldata.ColDataType.Name);
-                    switch (edt)
-                    {
-                        case EnumDataType.Boolean:
-                            //string newBoolProName1 = coldata.ColName + "_Enable";
-                            //var attrBoolBuilder1 = new CustomAttributeBuilder(attrCtorInfo, new object[] { coldata.ColName, "是", newBoolProName1, AdvQueryProcessType.useYesOrNoToAll });
-                            ////动态属性要提前创建生成，后面要实体化传入控件
-                            //PropertyBuilder newBoolProp1 = AddProperty(tb, newBoolProName1);
-                            //newBoolProp1.SetCustomAttribute(attrBoolBuilder1);
-                            break;
-                        case EnumDataType.Char:
-                            break;
-                        case EnumDataType.Single:
-                            break;
-                        case EnumDataType.Double:
-                            break;
-                        case EnumDataType.Decimal:
-                            break;
-                        case EnumDataType.SByte:
-                            break;
-                        case EnumDataType.Byte:
-                            break;
-                        case EnumDataType.Int16:
-                        case EnumDataType.UInt16:
-                        case EnumDataType.Int32:
-                        case EnumDataType.UInt32:
-                        case EnumDataType.Int64:
-                        case EnumDataType.UInt64:
-                        case EnumDataType.IntPtr:
-                        case EnumDataType.UIntPtr:
+            #endregion
 
-                            if (queryField.AdvQueryFieldType == AdvQueryProcessType.CmbMultiChoiceCanIgnore)
-                            {
-                                //先成一个标记可忽略的属性
-                                string newCmbMultiChoiceCanIgnore = coldata.FieldName + "_CmbMultiChoiceCanIgnore";
-                                var attrBuilderCmbMultiChoiceCanIgnore = new CustomAttributeBuilder(attrCtorInfo, new object[] { coldata.FieldName, "多选可忽略", newCmbMultiChoiceCanIgnore, AdvQueryProcessType.CmbMultiChoiceCanIgnore });
-                                //动态属性要提前创建生成，后面要实体化传入控件
-                                PropertyBuilder newPropCmbMultiChoiceCanIgnore = AddProperty(tb, newCmbMultiChoiceCanIgnore, typeof(bool));
-                                newPropCmbMultiChoiceCanIgnore.SetCustomAttribute(attrBuilderCmbMultiChoiceCanIgnore);
-
-                                #region 动态属性要提前创建生成，后面要实体化传入控件
-
-                                string newProNameMultiChoiceResults = coldata.FieldName + "_MultiChoiceResults";
-                                var attrBuilderMultiChoiceResults = new CustomAttributeBuilder(attrCtorInfo, new object[] { coldata.FieldName, "多选结果", newProNameMultiChoiceResults, AdvQueryProcessType.CmbMultiChoice });
-                                //动态属性要提前创建生成，后面要实体化传入控件
-                                PropertyBuilder newPropMultiChoiceResults = AddProperty(tb, newProNameMultiChoiceResults, typeof(List<object>));
-                                newPropMultiChoiceResults.SetCustomAttribute(attrBuilderMultiChoiceResults);
-                                #endregion
-
-                                string newSelectProName1 = coldata.FieldName + "_请选择";
-                                var attrSelectBuilder1 = new CustomAttributeBuilder(attrCtorInfo, new object[] { coldata.FieldName, "请选择", newSelectProName1, AdvQueryProcessType.CmbMultiChoice });
-                                //动态属性要提前创建生成，后面要实体化传入控件
-                                PropertyBuilder newlikeProp1 = AddProperty(tb, newSelectProName1);
-                                newlikeProp1.SetCustomAttribute(attrSelectBuilder1);
-                                break;
-                            }
-
-
-                            if (coldata.IsFKRelationAttribute)
-                            {
-                                //MultiChoiceResults 多选时要生成这个特殊的属性。后面选中的结果都 放到这个属性里同步
-                                if (coldata.fKRelationAttribute.CmbMultiChoice)
-                                {
-                                    #region 动态属性要提前创建生成，后面要实体化传入控件
-                                    string newProNameMultiChoiceResults = coldata.FieldName + "_MultiChoiceResults";
-                                    var attrBuilderMultiChoiceResults = new CustomAttributeBuilder(attrCtorInfo, new object[] { coldata.FieldName, "多选结果", newProNameMultiChoiceResults, AdvQueryProcessType.CmbMultiChoice });
-                                    //动态属性要提前创建生成，后面要实体化传入控件
-                                    PropertyBuilder newPropMultiChoiceResults = AddProperty(tb, newProNameMultiChoiceResults, typeof(List<object>));
-                                    newPropMultiChoiceResults.SetCustomAttribute(attrBuilderMultiChoiceResults);
-                                    #endregion
-
-                                    string newSelectProName1 = coldata.FieldName + "_请选择";
-                                    var attrSelectBuilder1 = new CustomAttributeBuilder(attrCtorInfo, new object[] { coldata.FieldName, "请选择", newSelectProName1, AdvQueryProcessType.CmbMultiChoice });
-                                    //动态属性要提前创建生成，后面要实体化传入控件
-                                    PropertyBuilder newlikeProp1 = AddProperty(tb, newSelectProName1);
-                                    newlikeProp1.SetCustomAttribute(attrSelectBuilder1);
-                                }
-                                else
-                                {
-                                    string newSelectProName1 = coldata.FieldName + "_请选择";
-                                    var attrSelectBuilder1 = new CustomAttributeBuilder(attrCtorInfo, new object[] { coldata.FieldName, "请选择", newSelectProName1, AdvQueryProcessType.defaultSelect });
-                                    //动态属性要提前创建生成，后面要实体化传入控件
-                                    PropertyBuilder newlikeProp1 = AddProperty(tb, newSelectProName1);
-                                    newlikeProp1.SetCustomAttribute(attrSelectBuilder1);
-                                }
-
-                            }
-                            break;
-                        case EnumDataType.Object:
-                            break;
-                        case EnumDataType.String:
-                            if (coldata.UseLike)
-                            {
-                                string newlikeProName1 = coldata.FieldName + "_Like";
-                                var attrlikeBuilder1 = new CustomAttributeBuilder(attrCtorInfo, new object[] { coldata.FieldName, "like", newlikeProName1, AdvQueryProcessType.stringLike });
-                                //动态属性要提前创建生成，后面要实体化传入控件
-                                PropertyBuilder newlikeProp1 = AddProperty(tb, newlikeProName1);
-                                newlikeProp1.SetCustomAttribute(attrlikeBuilder1);
-                            }
-                            break;
-                        case EnumDataType.DateTime:
-
-
-                            break;
-                        default:
-                            break;
-                    }
-                }
-                #endregion
-            }
 
             #endregion
             Type newtype = tb.CreateType();

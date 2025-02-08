@@ -246,7 +246,7 @@ namespace RUINORERP.Business
             if (entity.Category_ID > 0)
             {
                 rs = await _unitOfWorkManage.GetDbClient().UpdateNav<tb_ProdCategories>(entity as tb_ProdCategories)
-                        .Include(m => m.tb_ProdCategorieses)
+                        .Include(m => m.tb_ProdCategorieses_parents)
                     .Include(m => m.tb_Prods)
                             .ExecuteCommandAsync();
          
@@ -254,7 +254,7 @@ namespace RUINORERP.Business
         else    
         {
             rs = await _unitOfWorkManage.GetDbClient().InsertNav<tb_ProdCategories>(entity as tb_ProdCategories)
-                .Include(m => m.tb_ProdCategorieses)
+                .Include(m => m.tb_ProdCategorieses_parents)
                 .Include(m => m.tb_Prods)
                                 .ExecuteCommandAsync();
         }
@@ -286,7 +286,7 @@ namespace RUINORERP.Business
         public async override Task<List<T>> BaseQueryByAdvancedNavAsync(bool useLike, object dto)
         {
             var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<tb_ProdCategories>()
-                                .Includes(m => m.tb_ProdCategorieses)
+                                .Includes(m => m.tb_ProdCategorieses_parents)
                         .Includes(m => m.tb_Prods)
                                         .Where(useLike, dto);
             return await querySqlQueryable.ToListAsync()as List<T>;
@@ -297,7 +297,7 @@ namespace RUINORERP.Business
         {
             tb_ProdCategories entity = model as tb_ProdCategories;
              bool rs = await _unitOfWorkManage.GetDbClient().DeleteNav<tb_ProdCategories>(m => m.Category_ID== entity.Category_ID)
-                                .Include(m => m.tb_ProdCategorieses)
+                                .Include(m => m.tb_ProdCategorieses_parents)
                         .Include(m => m.tb_Prods)
                                         .ExecuteCommandAsync();
             if (rs)
@@ -462,7 +462,7 @@ namespace RUINORERP.Business
         {
             List<tb_ProdCategories> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_ProdCategories>()
                                .Includes(t => t.tb_prodcategories_parent )
-                                            .Includes(t => t.tb_ProdCategorieses )
+                                            .Includes(t => t.tb_ProdCategorieses_parents)
                                 .Includes(t => t.tb_Prods )
                         .ToListAsync();
             
@@ -484,7 +484,7 @@ namespace RUINORERP.Business
         {
             List<tb_ProdCategories> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_ProdCategories>().Where(exp)
                                .Includes(t => t.tb_prodcategories_parent)
-                                            .Includes(t => t.tb_ProdCategorieses )
+                                            .Includes(t => t.tb_ProdCategorieses_parents)
                                 .Includes(t => t.tb_Prods )
                         .ToListAsync();
             
@@ -506,7 +506,7 @@ namespace RUINORERP.Business
         {
             List<tb_ProdCategories> list = _unitOfWorkManage.GetDbClient().Queryable<tb_ProdCategories>().Where(exp)
                             .Includes(t => t.tb_prodcategories_parent)
-                                        .Includes(t => t.tb_ProdCategorieses )
+                                        .Includes(t => t.tb_ProdCategorieses_parents)
                             .Includes(t => t.tb_Prods )
                         .ToList();
             
@@ -545,7 +545,7 @@ namespace RUINORERP.Business
         {
             tb_ProdCategories entity = await _unitOfWorkManage.GetDbClient().Queryable<tb_ProdCategories>().Where(w => w.Category_ID == (long)id)
                              .Includes(t => t.tb_prodcategories_parent)
-                                        .Includes(t => t.tb_ProdCategorieses )
+                                        .Includes(t => t.tb_ProdCategorieses_parents )
                             .Includes(t => t.tb_Prods )
                         .FirstAsync();
             if(entity!=null)

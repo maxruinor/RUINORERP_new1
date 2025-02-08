@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/14/2025 18:56:59
+// 时间：02/08/2025 16:32:08
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -46,8 +46,8 @@ namespace RUINORERP.Model
         { 
             get{return _ID;}
             set{
-            base.PrimaryKeyID = _ID;
             SetProperty(ref _ID, value);
+                base.PrimaryKeyID = _ID;
             }
         }
 
@@ -62,7 +62,7 @@ namespace RUINORERP.Model
             get{return _Quantity;}
             set{
             SetProperty(ref _Quantity, value);
-            }
+                        }
         }
 
         private decimal _Unit_price= ((0));
@@ -76,7 +76,7 @@ namespace RUINORERP.Model
             get{return _Unit_price;}
             set{
             SetProperty(ref _Unit_price, value);
-            }
+                        }
         }
 
         private decimal _Total_amount= ((0));
@@ -90,7 +90,7 @@ namespace RUINORERP.Model
             get{return _Total_amount;}
             set{
             SetProperty(ref _Total_amount, value);
-            }
+                        }
         }
 
         private int? _Status;
@@ -104,7 +104,7 @@ namespace RUINORERP.Model
             get{return _Status;}
             set{
             SetProperty(ref _Status, value);
-            }
+                        }
         }
 
         private DateTime? _Order_date;
@@ -118,7 +118,7 @@ namespace RUINORERP.Model
             get{return _Order_date;}
             set{
             SetProperty(ref _Order_date, value);
-            }
+                        }
         }
 
         private DateTime? _Delivery_date;
@@ -132,7 +132,7 @@ namespace RUINORERP.Model
             get{return _Delivery_date;}
             set{
             SetProperty(ref _Delivery_date, value);
-            }
+                        }
         }
 
         #endregion

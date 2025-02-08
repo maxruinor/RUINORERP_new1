@@ -240,6 +240,7 @@ namespace RUINORERP.UI.SuperSocketClient
 
         /// <summary>
         /// 是真正的缓存数据。按表名取的
+        /// 2025-2-08 建议在服务器发送时加一个标记。是批量发送时。接收时只要添加式更新
         /// </summary>
         /// <param name="gd"></param>
         /// <returns></returns>

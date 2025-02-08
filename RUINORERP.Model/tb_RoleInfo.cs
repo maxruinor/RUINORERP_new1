@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/14/2025 18:57:10
+// 时间：02/08/2025 16:32:26
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -46,8 +46,8 @@ namespace RUINORERP.Model
         { 
             get{return _RoleID;}
             set{
-            base.PrimaryKeyID = _RoleID;
             SetProperty(ref _RoleID, value);
+                base.PrimaryKeyID = _RoleID;
             }
         }
 
@@ -62,7 +62,7 @@ namespace RUINORERP.Model
             get{return _RoleName;}
             set{
             SetProperty(ref _RoleName, value);
-            }
+                        }
         }
 
         private string _Desc;
@@ -76,7 +76,7 @@ namespace RUINORERP.Model
             get{return _Desc;}
             set{
             SetProperty(ref _Desc, value);
-            }
+                        }
         }
 
         private long? _RolePropertyID;
@@ -91,19 +91,19 @@ namespace RUINORERP.Model
             get{return _RolePropertyID;}
             set{
             SetProperty(ref _RolePropertyID, value);
-            }
+                        }
         }
 
         #endregion
 
         #region 扩展属性
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(RolePropertyID))]
         public virtual tb_RolePropertyConfig tb_rolepropertyconfig { get; set; }
 
 
-        //[Browsable(false)]
+        //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_User_Role.RoleID))]
         public virtual List<tb_User_Role> tb_User_Roles { get; set; }
@@ -111,7 +111,7 @@ namespace RUINORERP.Model
         //RoleID.FKTB_USER_TB_ROLEI_Info)
         //tb_RoleInfo.RoleID)
 
-        //[Browsable(false)]
+        //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_P4Field.RoleID))]
         public virtual List<tb_P4Field> tb_P4Fields { get; set; }
@@ -119,7 +119,7 @@ namespace RUINORERP.Model
         //RoleID.FK_TB_P4FIE_REFERENCE_TB_ROLEI)
         //tb_RoleInfo.RoleID)
 
-        //[Browsable(false)]
+        //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_P4Button.RoleID))]
         public virtual List<tb_P4Button> tb_P4Buttons { get; set; }
@@ -127,7 +127,7 @@ namespace RUINORERP.Model
         //RoleID.FK_TB_P4BUT_REFERENCE_TB_ROLEI)
         //tb_RoleInfo.RoleID)
 
-        //[Browsable(false)]
+        //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_P4Menu.RoleID))]
         public virtual List<tb_P4Menu> tb_P4Menus { get; set; }
@@ -135,7 +135,7 @@ namespace RUINORERP.Model
         //RoleID.FK_TB_P4MEN_REFERENCE_TB_ROLEI)
         //tb_RoleInfo.RoleID)
 
-        //[Browsable(false)]
+        //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_P4Module.RoleID))]
         public virtual List<tb_P4Module> tb_P4Modules { get; set; }

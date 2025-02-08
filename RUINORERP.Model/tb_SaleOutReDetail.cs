@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/14/2025 18:57:12
+// 时间：02/08/2025 16:32:28
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -46,8 +46,8 @@ namespace RUINORERP.Model
         { 
             get{return _SOutReturnDetail_ID;}
             set{
-            base.PrimaryKeyID = _SOutReturnDetail_ID;
             SetProperty(ref _SOutReturnDetail_ID, value);
+                base.PrimaryKeyID = _SOutReturnDetail_ID;
             }
         }
 
@@ -63,7 +63,7 @@ namespace RUINORERP.Model
             get{return _Location_ID;}
             set{
             SetProperty(ref _Location_ID, value);
-            }
+                        }
         }
 
         private long? _Rack_ID;
@@ -78,7 +78,7 @@ namespace RUINORERP.Model
             get{return _Rack_ID;}
             set{
             SetProperty(ref _Rack_ID, value);
-            }
+                        }
         }
 
         private long _ProdDetailID;
@@ -93,7 +93,7 @@ namespace RUINORERP.Model
             get{return _ProdDetailID;}
             set{
             SetProperty(ref _ProdDetailID, value);
-            }
+                        }
         }
 
         private long _SaleOutRe_ID;
@@ -108,7 +108,7 @@ namespace RUINORERP.Model
             get{return _SaleOutRe_ID;}
             set{
             SetProperty(ref _SaleOutRe_ID, value);
-            }
+                        }
         }
 
         private string _property;
@@ -122,7 +122,7 @@ namespace RUINORERP.Model
             get{return _property;}
             set{
             SetProperty(ref _property, value);
-            }
+                        }
         }
 
         private int _Quantity= ((0));
@@ -136,7 +136,7 @@ namespace RUINORERP.Model
             get{return _Quantity;}
             set{
             SetProperty(ref _Quantity, value);
-            }
+                        }
         }
 
         private decimal _TransactionPrice= ((0));
@@ -150,7 +150,7 @@ namespace RUINORERP.Model
             get{return _TransactionPrice;}
             set{
             SetProperty(ref _TransactionPrice, value);
-            }
+                        }
         }
 
         private decimal _SubtotalTransAmount= ((0));
@@ -164,7 +164,7 @@ namespace RUINORERP.Model
             get{return _SubtotalTransAmount;}
             set{
             SetProperty(ref _SubtotalTransAmount, value);
-            }
+                        }
         }
 
         private string _Summary;
@@ -178,7 +178,7 @@ namespace RUINORERP.Model
             get{return _Summary;}
             set{
             SetProperty(ref _Summary, value);
-            }
+                        }
         }
 
         private string _CustomerPartNo;
@@ -192,7 +192,7 @@ namespace RUINORERP.Model
             get{return _CustomerPartNo;}
             set{
             SetProperty(ref _CustomerPartNo, value);
-            }
+                        }
         }
 
         private decimal _Cost= ((0));
@@ -206,7 +206,7 @@ namespace RUINORERP.Model
             get{return _Cost;}
             set{
             SetProperty(ref _Cost, value);
-            }
+                        }
         }
 
         private decimal _SubtotalCostAmount= ((0));
@@ -220,7 +220,7 @@ namespace RUINORERP.Model
             get{return _SubtotalCostAmount;}
             set{
             SetProperty(ref _SubtotalCostAmount, value);
-            }
+                        }
         }
 
         private decimal _SubtotalUntaxedAmount= ((0));
@@ -234,7 +234,7 @@ namespace RUINORERP.Model
             get{return _SubtotalUntaxedAmount;}
             set{
             SetProperty(ref _SubtotalUntaxedAmount, value);
-            }
+                        }
         }
 
         private bool? _Gift= false;
@@ -248,7 +248,7 @@ namespace RUINORERP.Model
             get{return _Gift;}
             set{
             SetProperty(ref _Gift, value);
-            }
+                        }
         }
 
         private decimal _TaxRate= ((0));
@@ -262,7 +262,7 @@ namespace RUINORERP.Model
             get{return _TaxRate;}
             set{
             SetProperty(ref _TaxRate, value);
-            }
+                        }
         }
 
         private decimal _SubtotalTaxAmount= ((0));
@@ -276,7 +276,7 @@ namespace RUINORERP.Model
             get{return _SubtotalTaxAmount;}
             set{
             SetProperty(ref _SubtotalTaxAmount, value);
-            }
+                        }
         }
 
         private decimal? _CommissionAmount;
@@ -290,29 +290,29 @@ namespace RUINORERP.Model
             get{return _CommissionAmount;}
             set{
             SetProperty(ref _CommissionAmount, value);
-            }
+                        }
         }
 
         #endregion
 
         #region 扩展属性
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(SaleOutRe_ID))]
         public virtual tb_SaleOutRe tb_saleoutre { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(Rack_ID))]
         public virtual tb_StorageRack tb_storagerack { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(Location_ID))]
         public virtual tb_Location tb_location { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(ProdDetailID))]
         public virtual tb_ProdDetail tb_proddetail { get; set; }
 

@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/14/2025 18:56:55
+// 时间：02/08/2025 16:32:03
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -46,8 +46,8 @@ namespace RUINORERP.Model
         { 
             get{return _InvoiceInfo_ID;}
             set{
-            base.PrimaryKeyID = _InvoiceInfo_ID;
             SetProperty(ref _InvoiceInfo_ID, value);
+                base.PrimaryKeyID = _InvoiceInfo_ID;
             }
         }
 
@@ -63,7 +63,7 @@ namespace RUINORERP.Model
             get{return _CustomerVendor_ID;}
             set{
             SetProperty(ref _CustomerVendor_ID, value);
-            }
+                        }
         }
 
         private string _PICompanyName;
@@ -77,7 +77,7 @@ namespace RUINORERP.Model
             get{return _PICompanyName;}
             set{
             SetProperty(ref _PICompanyName, value);
-            }
+                        }
         }
 
         private string _PITaxID;
@@ -91,7 +91,7 @@ namespace RUINORERP.Model
             get{return _PITaxID;}
             set{
             SetProperty(ref _PITaxID, value);
-            }
+                        }
         }
 
         private string _PIAddress;
@@ -105,7 +105,7 @@ namespace RUINORERP.Model
             get{return _PIAddress;}
             set{
             SetProperty(ref _PIAddress, value);
-            }
+                        }
         }
 
         private string _PITEL;
@@ -119,7 +119,7 @@ namespace RUINORERP.Model
             get{return _PITEL;}
             set{
             SetProperty(ref _PITEL, value);
-            }
+                        }
         }
 
         private string _PIBankName;
@@ -133,7 +133,7 @@ namespace RUINORERP.Model
             get{return _PIBankName;}
             set{
             SetProperty(ref _PIBankName, value);
-            }
+                        }
         }
 
         private string _PIBankNo;
@@ -147,7 +147,7 @@ namespace RUINORERP.Model
             get{return _PIBankNo;}
             set{
             SetProperty(ref _PIBankNo, value);
-            }
+                        }
         }
 
         private string _Notes;
@@ -161,7 +161,7 @@ namespace RUINORERP.Model
             get{return _Notes;}
             set{
             SetProperty(ref _Notes, value);
-            }
+                        }
         }
 
         private string _信用天数;
@@ -175,7 +175,7 @@ namespace RUINORERP.Model
             get{return _信用天数;}
             set{
             SetProperty(ref _信用天数, value);
-            }
+                        }
         }
 
         private string _往来余额;
@@ -189,7 +189,7 @@ namespace RUINORERP.Model
             get{return _往来余额;}
             set{
             SetProperty(ref _往来余额, value);
-            }
+                        }
         }
 
         private string _应收款;
@@ -203,7 +203,7 @@ namespace RUINORERP.Model
             get{return _应收款;}
             set{
             SetProperty(ref _应收款, value);
-            }
+                        }
         }
 
         private string _预收款;
@@ -217,7 +217,7 @@ namespace RUINORERP.Model
             get{return _预收款;}
             set{
             SetProperty(ref _预收款, value);
-            }
+                        }
         }
 
         private string _纳税号;
@@ -231,7 +231,7 @@ namespace RUINORERP.Model
             get{return _纳税号;}
             set{
             SetProperty(ref _纳税号, value);
-            }
+                        }
         }
 
         private string _开户行;
@@ -245,7 +245,7 @@ namespace RUINORERP.Model
             get{return _开户行;}
             set{
             SetProperty(ref _开户行, value);
-            }
+                        }
         }
 
         private string _银行帐号;
@@ -259,19 +259,19 @@ namespace RUINORERP.Model
             get{return _银行帐号;}
             set{
             SetProperty(ref _银行帐号, value);
-            }
+                        }
         }
 
         #endregion
 
         #region 扩展属性
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(CustomerVendor_ID))]
         public virtual tb_CustomerVendor tb_customervendor { get; set; }
 
 
-        //[Browsable(false)]
+        //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_Contract.InvoiceInfo_ID))]
         public virtual List<tb_Contract> tb_Contracts { get; set; }

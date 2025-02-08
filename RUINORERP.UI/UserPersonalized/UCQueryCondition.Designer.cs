@@ -42,12 +42,14 @@
             this.chkEnableDefault2 = new Krypton.Toolkit.KryptonCheckBox();
             this.lblVisble = new Krypton.Toolkit.KryptonLabel();
             this.chkVisble = new Krypton.Toolkit.KryptonCheckBox();
+            this.lblUselike = new Krypton.Toolkit.KryptonLabel();
+            this.chkUseLike = new Krypton.Toolkit.KryptonCheckBox();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).BeginInit();
             this.SuspendLayout();
             // 
             // lblCaption
             // 
-            this.lblCaption.Location = new System.Drawing.Point(6, 12);
+            this.lblCaption.Location = new System.Drawing.Point(22, 12);
             this.lblCaption.Name = "lblCaption";
             this.lblCaption.Size = new System.Drawing.Size(75, 20);
             this.lblCaption.TabIndex = 15;
@@ -55,14 +57,14 @@
             // 
             // txtCaption
             // 
-            this.txtCaption.Location = new System.Drawing.Point(97, 12);
+            this.txtCaption.Location = new System.Drawing.Point(113, 12);
             this.txtCaption.Name = "txtCaption";
             this.txtCaption.Size = new System.Drawing.Size(172, 23);
             this.txtCaption.TabIndex = 16;
             // 
             // lblValueType
             // 
-            this.lblValueType.Location = new System.Drawing.Point(32, 41);
+            this.lblValueType.Location = new System.Drawing.Point(48, 41);
             this.lblValueType.Name = "lblValueType";
             this.lblValueType.Size = new System.Drawing.Size(49, 20);
             this.lblValueType.TabIndex = 19;
@@ -70,14 +72,14 @@
             // 
             // txtValueType
             // 
-            this.txtValueType.Location = new System.Drawing.Point(97, 41);
+            this.txtValueType.Location = new System.Drawing.Point(113, 41);
             this.txtValueType.Name = "txtValueType";
             this.txtValueType.Size = new System.Drawing.Size(172, 23);
             this.txtValueType.TabIndex = 20;
             // 
             // lblDefault1
             // 
-            this.lblDefault1.Location = new System.Drawing.Point(25, 95);
+            this.lblDefault1.Location = new System.Drawing.Point(41, 95);
             this.lblDefault1.Name = "lblDefault1";
             this.lblDefault1.Size = new System.Drawing.Size(56, 20);
             this.lblDefault1.TabIndex = 25;
@@ -85,7 +87,7 @@
             // 
             // txtDefault1
             // 
-            this.txtDefault1.Location = new System.Drawing.Point(120, 95);
+            this.txtDefault1.Location = new System.Drawing.Point(136, 95);
             this.txtDefault1.Multiline = true;
             this.txtDefault1.Name = "txtDefault1";
             this.txtDefault1.Size = new System.Drawing.Size(172, 21);
@@ -93,7 +95,7 @@
             // 
             // lblDefault2
             // 
-            this.lblDefault2.Location = new System.Drawing.Point(25, 121);
+            this.lblDefault2.Location = new System.Drawing.Point(41, 121);
             this.lblDefault2.Name = "lblDefault2";
             this.lblDefault2.Size = new System.Drawing.Size(56, 20);
             this.lblDefault2.TabIndex = 27;
@@ -101,7 +103,7 @@
             // 
             // txtDefault2
             // 
-            this.txtDefault2.Location = new System.Drawing.Point(120, 121);
+            this.txtDefault2.Location = new System.Drawing.Point(136, 121);
             this.txtDefault2.Multiline = true;
             this.txtDefault2.Name = "txtDefault2";
             this.txtDefault2.Size = new System.Drawing.Size(172, 21);
@@ -109,7 +111,7 @@
             // 
             // lblFocused
             // 
-            this.lblFocused.Location = new System.Drawing.Point(19, 157);
+            this.lblFocused.Location = new System.Drawing.Point(35, 152);
             this.lblFocused.Name = "lblFocused";
             this.lblFocused.Size = new System.Drawing.Size(62, 20);
             this.lblFocused.TabIndex = 35;
@@ -117,7 +119,7 @@
             // 
             // chkFocused
             // 
-            this.chkFocused.Location = new System.Drawing.Point(97, 162);
+            this.chkFocused.Location = new System.Drawing.Point(113, 157);
             this.chkFocused.Name = "chkFocused";
             this.chkFocused.Size = new System.Drawing.Size(19, 13);
             this.chkFocused.TabIndex = 36;
@@ -127,7 +129,7 @@
             // 
             // chkEnableDefault1
             // 
-            this.chkEnableDefault1.Location = new System.Drawing.Point(94, 99);
+            this.chkEnableDefault1.Location = new System.Drawing.Point(113, 99);
             this.chkEnableDefault1.Name = "chkEnableDefault1";
             this.chkEnableDefault1.Size = new System.Drawing.Size(19, 13);
             this.chkEnableDefault1.TabIndex = 37;
@@ -135,7 +137,7 @@
             // 
             // chkEnableDefault2
             // 
-            this.chkEnableDefault2.Location = new System.Drawing.Point(94, 125);
+            this.chkEnableDefault2.Location = new System.Drawing.Point(113, 125);
             this.chkEnableDefault2.Name = "chkEnableDefault2";
             this.chkEnableDefault2.Size = new System.Drawing.Size(19, 13);
             this.chkEnableDefault2.TabIndex = 38;
@@ -143,7 +145,7 @@
             // 
             // lblVisble
             // 
-            this.lblVisble.Location = new System.Drawing.Point(19, 67);
+            this.lblVisble.Location = new System.Drawing.Point(35, 67);
             this.lblVisble.Name = "lblVisble";
             this.lblVisble.Size = new System.Drawing.Size(62, 20);
             this.lblVisble.TabIndex = 39;
@@ -151,11 +153,29 @@
             // 
             // chkVisble
             // 
-            this.chkVisble.Location = new System.Drawing.Point(95, 70);
+            this.chkVisble.Location = new System.Drawing.Point(113, 70);
             this.chkVisble.Name = "chkVisble";
             this.chkVisble.Size = new System.Drawing.Size(19, 13);
             this.chkVisble.TabIndex = 40;
             this.chkVisble.Values.Text = "";
+            // 
+            // lblUselike
+            // 
+            this.lblUselike.Location = new System.Drawing.Point(9, 182);
+            this.lblUselike.Name = "lblUselike";
+            this.lblUselike.Size = new System.Drawing.Size(88, 20);
+            this.lblUselike.TabIndex = 41;
+            this.lblUselike.Values.Text = "启用模糊查询";
+            // 
+            // chkUseLike
+            // 
+            this.chkUseLike.Location = new System.Drawing.Point(113, 189);
+            this.chkUseLike.Name = "chkUseLike";
+            this.chkUseLike.Size = new System.Drawing.Size(19, 13);
+            this.chkUseLike.TabIndex = 42;
+            this.chkUseLike.ToolTipValues.Description = "打开查询页面，第一个获取焦点的输入框。";
+            this.chkUseLike.ToolTipValues.Heading = "";
+            this.chkUseLike.Values.Text = "";
             // 
             // UCQueryCondition
             // 
@@ -163,6 +183,8 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(602, 218);
             this.ControlBox = false;
+            this.Controls.Add(this.lblUselike);
+            this.Controls.Add(this.chkUseLike);
             this.Controls.Add(this.lblVisble);
             this.Controls.Add(this.chkVisble);
             this.Controls.Add(this.chkEnableDefault1);
@@ -200,5 +222,7 @@
         private Krypton.Toolkit.KryptonCheckBox chkEnableDefault2;
         private Krypton.Toolkit.KryptonLabel lblVisble;
         private Krypton.Toolkit.KryptonCheckBox chkVisble;
+        private Krypton.Toolkit.KryptonLabel lblUselike;
+        private Krypton.Toolkit.KryptonCheckBox chkUseLike;
     }
 }

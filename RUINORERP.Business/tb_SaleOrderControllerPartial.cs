@@ -199,7 +199,7 @@ namespace RUINORERP.Business
 
         /// <summary>
         /// 批量结案  销售订单标记结案，数据状态为8, 
-        /// 如果还没有出库。但是结案的订单时。修正拟出库数量。
+        /// 如果还没有出库。但是结案的订单时。修正拟出库数量,将数量减掉。不需再出货了。
         /// 目前暂时是这个逻辑。后面再处理凭证财务相关的
         /// 目前认为结案 是仓库和业务确定这个订单不再执行的一个确认过程。
         /// </summary>
@@ -266,6 +266,95 @@ namespace RUINORERP.Business
                     BusinessHelper.Instance.EditEntity(entitys[m]);
                     //后面是不是要做一个审核历史记录表？
 
+                    //只更新指定列
+                    var affectedRows = await _unitOfWorkManage.GetDbClient().Updateable<tb_SaleOrder>(entitys[m]).UpdateColumns(it => new { it.DataStatus, it.CloseCaseOpinions, it.Modified_by, it.Modified_at, it.Notes }).ExecuteCommandAsync();
+                }
+
+                #endregion
+                // 注意信息的完整性
+                _unitOfWorkManage.CommitTran();
+                rs.Succeeded = true;
+                return rs;
+            }
+            catch (Exception ex)
+            {
+
+                _unitOfWorkManage.RollbackTran();
+                _logger.Error(ex);
+                rs.ErrorMsg = ex.Message;
+                rs.Succeeded = false;
+                return rs;
+            }
+
+        }
+
+        /// <summary>
+        /// 销售订单标记为结案前的状态，数据状态为4, 
+        /// 如果还没有出库。但是反结案的订单时。修正拟出库数量将数量加回去。
+        /// 目前暂时是这个逻辑。后面再处理凭证财务相关的
+        /// 目前认为结案 是仓库和业务确定这个订单不再执行的一个确认过程。
+        /// </summary>
+        /// <param name="entity"></param>
+        /// <returns></returns>
+        public async override Task<ReturnResults<bool>> AntiBatchCloseCaseAsync(List<T> NeedCloseCaseList)
+        {
+            List<tb_SaleOrder> entitys = new List<tb_SaleOrder>();
+            entitys = NeedCloseCaseList as List<tb_SaleOrder>;
+
+            ReturnResults<bool> rs = new ReturnResults<bool>();
+            try
+            {
+                // 开启事务，保证数据一致性
+                _unitOfWorkManage.BeginTran();
+                #region 反结案
+                tb_OpeningInventoryController<tb_OpeningInventory> ctrOPinv = _appContext.GetRequiredService<tb_OpeningInventoryController<tb_OpeningInventory>>();
+
+                //更新拟销售量  加回去
+                for (int m = 0; m < entitys.Count; m++)
+                {
+                    //判断 能结案的 是确认审核过的。
+                    if (entitys[m].DataStatus != (int)DataStatus.完结 || !entitys[m].ApprovalResults.HasValue)
+                    {
+                        //return false;
+                        continue;
+                    }
+
+                    //更新拟销售量
+                    //如果销售订单明细中的出库数量小于订单中数量，则拟销售量要减去这个差值，因为这种情况是强制结案，意思是可能出库只出一半。就不会自动结案。
+                    if (entitys[m].tb_SaleOrderDetails.Select(c => c.TotalDeliveredQty).Sum() < entitys[m].tb_SaleOrderDetails.Select(c => c.Quantity).Sum())
+                    {
+                        tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
+                        for (int c = 0; c < entitys[m].tb_SaleOrderDetails.Count; c++)
+                        {
+
+                            #region 库存表的更新 ，
+                            tb_Inventory inv = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == entitys[m].tb_SaleOrderDetails[c].ProdDetailID);
+                            if (inv == null)
+                            {
+                                inv = new tb_Inventory();
+                                inv.ProdDetailID = entitys[m].tb_SaleOrderDetails[c].ProdDetailID;
+                                inv.Location_ID = entitys[m].tb_SaleOrderDetails[c].Location_ID;
+                                inv.Quantity = 0;
+                                inv.InitInventory = (int)inv.Quantity;
+                                inv.Notes = "";//后面修改数据库是不需要？
+                                               //inv.LatestStorageTime = System.DateTime.Now;
+                                BusinessHelper.Instance.InitEntity(inv);
+                            }
+                            //更新在途库存 ,如果订单明细中，在途=在途+(订单数量-已出库数)
+                            inv.Sale_Qty += (entitys[m].tb_SaleOrderDetails[c].Quantity - entitys[m].tb_SaleOrderDetails[c].TotalDeliveredQty);
+                            BusinessHelper.Instance.EditEntity(inv);
+                            #endregion
+                            ReturnResults<tb_Inventory> rr = await ctrinv.SaveOrUpdate(inv);
+                            if (rr.Succeeded)
+                            {
+
+                            }
+                        }
+                    }
+                   
+                    entitys[m].DataStatus = (int)DataStatus.确认;
+                    BusinessHelper.Instance.EditEntity(entitys[m]);
+                  
                     //只更新指定列
                     var affectedRows = await _unitOfWorkManage.GetDbClient().Updateable<tb_SaleOrder>(entitys[m]).UpdateColumns(it => new { it.DataStatus, it.CloseCaseOpinions, it.Modified_by, it.Modified_at, it.Notes }).ExecuteCommandAsync();
                 }

@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/14/2025 18:56:45
+// 时间：02/08/2025 16:31:53
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -46,8 +46,8 @@ namespace RUINORERP.Model
         { 
             get{return _BoxRules_ID;}
             set{
-            base.PrimaryKeyID = _BoxRules_ID;
             SetProperty(ref _BoxRules_ID, value);
+                base.PrimaryKeyID = _BoxRules_ID;
             }
         }
 
@@ -63,7 +63,7 @@ namespace RUINORERP.Model
             get{return _Pack_ID;}
             set{
             SetProperty(ref _Pack_ID, value);
-            }
+                        }
         }
 
         private long _CartonID;
@@ -78,7 +78,7 @@ namespace RUINORERP.Model
             get{return _CartonID;}
             set{
             SetProperty(ref _CartonID, value);
-            }
+                        }
         }
 
         private string _BoxRuleName;
@@ -92,7 +92,7 @@ namespace RUINORERP.Model
             get{return _BoxRuleName;}
             set{
             SetProperty(ref _BoxRuleName, value);
-            }
+                        }
         }
 
         private int _QuantityPerBox= ((0));
@@ -106,7 +106,7 @@ namespace RUINORERP.Model
             get{return _QuantityPerBox;}
             set{
             SetProperty(ref _QuantityPerBox, value);
-            }
+                        }
         }
 
         private string _PackingMethod;
@@ -120,7 +120,7 @@ namespace RUINORERP.Model
             get{return _PackingMethod;}
             set{
             SetProperty(ref _PackingMethod, value);
-            }
+                        }
         }
 
         private decimal _Length;
@@ -134,7 +134,7 @@ namespace RUINORERP.Model
             get{return _Length;}
             set{
             SetProperty(ref _Length, value);
-            }
+                        }
         }
 
         private decimal _Width;
@@ -148,7 +148,7 @@ namespace RUINORERP.Model
             get{return _Width;}
             set{
             SetProperty(ref _Width, value);
-            }
+                        }
         }
 
         private decimal _Height;
@@ -162,7 +162,7 @@ namespace RUINORERP.Model
             get{return _Height;}
             set{
             SetProperty(ref _Height, value);
-            }
+                        }
         }
 
         private decimal _Volume;
@@ -176,7 +176,7 @@ namespace RUINORERP.Model
             get{return _Volume;}
             set{
             SetProperty(ref _Volume, value);
-            }
+                        }
         }
 
         private decimal _NetWeight;
@@ -190,7 +190,7 @@ namespace RUINORERP.Model
             get{return _NetWeight;}
             set{
             SetProperty(ref _NetWeight, value);
-            }
+                        }
         }
 
         private decimal _GrossWeight;
@@ -204,7 +204,7 @@ namespace RUINORERP.Model
             get{return _GrossWeight;}
             set{
             SetProperty(ref _GrossWeight, value);
-            }
+                        }
         }
 
         private string _Notes;
@@ -218,7 +218,7 @@ namespace RUINORERP.Model
             get{return _Notes;}
             set{
             SetProperty(ref _Notes, value);
-            }
+                        }
         }
 
         private bool _Is_enabled= true;
@@ -232,7 +232,7 @@ namespace RUINORERP.Model
             get{return _Is_enabled;}
             set{
             SetProperty(ref _Is_enabled, value);
-            }
+                        }
         }
 
         private DateTime? _Created_at;
@@ -246,7 +246,7 @@ namespace RUINORERP.Model
             get{return _Created_at;}
             set{
             SetProperty(ref _Created_at, value);
-            }
+                        }
         }
 
         private long? _Created_by;
@@ -260,7 +260,7 @@ namespace RUINORERP.Model
             get{return _Created_by;}
             set{
             SetProperty(ref _Created_by, value);
-            }
+                        }
         }
 
         private DateTime? _Modified_at;
@@ -274,7 +274,7 @@ namespace RUINORERP.Model
             get{return _Modified_at;}
             set{
             SetProperty(ref _Modified_at, value);
-            }
+                        }
         }
 
         private long? _Modified_by;
@@ -288,19 +288,19 @@ namespace RUINORERP.Model
             get{return _Modified_by;}
             set{
             SetProperty(ref _Modified_by, value);
-            }
+                        }
         }
 
         #endregion
 
         #region 扩展属性
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(CartonID))]
         public virtual tb_CartoonBox tb_cartoonbox { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(Pack_ID))]
         public virtual tb_Packing tb_packing { get; set; }
 

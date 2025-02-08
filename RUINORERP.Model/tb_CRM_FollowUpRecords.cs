@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/14/2025 18:56:48
+// 时间：02/08/2025 16:31:56
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -46,8 +46,8 @@ namespace RUINORERP.Model
         { 
             get{return _RecordID;}
             set{
-            base.PrimaryKeyID = _RecordID;
             SetProperty(ref _RecordID, value);
+                base.PrimaryKeyID = _RecordID;
             }
         }
 
@@ -63,7 +63,7 @@ namespace RUINORERP.Model
             get{return _Customer_id;}
             set{
             SetProperty(ref _Customer_id, value);
-            }
+                        }
         }
 
         private long? _LeadID;
@@ -78,7 +78,7 @@ namespace RUINORERP.Model
             get{return _LeadID;}
             set{
             SetProperty(ref _LeadID, value);
-            }
+                        }
         }
 
         private long? _PlanID;
@@ -93,7 +93,7 @@ namespace RUINORERP.Model
             get{return _PlanID;}
             set{
             SetProperty(ref _PlanID, value);
-            }
+                        }
         }
 
         private long _Employee_ID;
@@ -108,7 +108,7 @@ namespace RUINORERP.Model
             get{return _Employee_ID;}
             set{
             SetProperty(ref _Employee_ID, value);
-            }
+                        }
         }
 
         private DateTime _FollowUpDate;
@@ -122,7 +122,7 @@ namespace RUINORERP.Model
             get{return _FollowUpDate;}
             set{
             SetProperty(ref _FollowUpDate, value);
-            }
+                        }
         }
 
         private int _FollowUpMethod;
@@ -136,7 +136,7 @@ namespace RUINORERP.Model
             get{return _FollowUpMethod;}
             set{
             SetProperty(ref _FollowUpMethod, value);
-            }
+                        }
         }
 
         private string _FollowUpSubject;
@@ -150,7 +150,7 @@ namespace RUINORERP.Model
             get{return _FollowUpSubject;}
             set{
             SetProperty(ref _FollowUpSubject, value);
-            }
+                        }
         }
 
         private string _FollowUpContent;
@@ -164,7 +164,7 @@ namespace RUINORERP.Model
             get{return _FollowUpContent;}
             set{
             SetProperty(ref _FollowUpContent, value);
-            }
+                        }
         }
 
         private bool? _HasResponse= false;
@@ -178,7 +178,7 @@ namespace RUINORERP.Model
             get{return _HasResponse;}
             set{
             SetProperty(ref _HasResponse, value);
-            }
+                        }
         }
 
         private string _FollowUpResult;
@@ -192,7 +192,7 @@ namespace RUINORERP.Model
             get{return _FollowUpResult;}
             set{
             SetProperty(ref _FollowUpResult, value);
-            }
+                        }
         }
 
         private string _Notes;
@@ -206,7 +206,7 @@ namespace RUINORERP.Model
             get{return _Notes;}
             set{
             SetProperty(ref _Notes, value);
-            }
+                        }
         }
 
         private DateTime? _Created_at;
@@ -220,7 +220,7 @@ namespace RUINORERP.Model
             get{return _Created_at;}
             set{
             SetProperty(ref _Created_at, value);
-            }
+                        }
         }
 
         private long? _Created_by;
@@ -234,7 +234,7 @@ namespace RUINORERP.Model
             get{return _Created_by;}
             set{
             SetProperty(ref _Created_by, value);
-            }
+                        }
         }
 
         private DateTime? _Modified_at;
@@ -248,7 +248,7 @@ namespace RUINORERP.Model
             get{return _Modified_at;}
             set{
             SetProperty(ref _Modified_at, value);
-            }
+                        }
         }
 
         private long? _Modified_by;
@@ -262,7 +262,7 @@ namespace RUINORERP.Model
             get{return _Modified_by;}
             set{
             SetProperty(ref _Modified_by, value);
-            }
+                        }
         }
 
         private bool? _isdeleted= false;
@@ -277,29 +277,29 @@ namespace RUINORERP.Model
             get{return _isdeleted;}
             set{
             SetProperty(ref _isdeleted, value);
-            }
+                        }
         }
 
         #endregion
 
         #region 扩展属性
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(PlanID))]
         public virtual tb_CRM_FollowUpPlans tb_crm_followupplans { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(Employee_ID))]
         public virtual tb_Employee tb_employee { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(Customer_id))]
         public virtual tb_CRM_Customer tb_crm_customer { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(LeadID))]
         public virtual tb_CRM_Leads tb_crm_leads { get; set; }
 

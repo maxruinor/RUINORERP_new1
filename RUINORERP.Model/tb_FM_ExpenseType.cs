@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/14/2025 18:56:52
+// 时间：02/08/2025 16:32:00
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -46,8 +46,8 @@ namespace RUINORERP.Model
         { 
             get{return _ExpenseType_id;}
             set{
-            base.PrimaryKeyID = _ExpenseType_id;
             SetProperty(ref _ExpenseType_id, value);
+                base.PrimaryKeyID = _ExpenseType_id;
             }
         }
 
@@ -63,7 +63,7 @@ namespace RUINORERP.Model
             get{return _subject_id;}
             set{
             SetProperty(ref _subject_id, value);
-            }
+                        }
         }
 
         private string _Expense_name;
@@ -77,7 +77,7 @@ namespace RUINORERP.Model
             get{return _Expense_name;}
             set{
             SetProperty(ref _Expense_name, value);
-            }
+                        }
         }
 
         private bool _EXPOrINC= true;
@@ -91,7 +91,7 @@ namespace RUINORERP.Model
             get{return _EXPOrINC;}
             set{
             SetProperty(ref _EXPOrINC, value);
-            }
+                        }
         }
 
         private string _Notes;
@@ -105,19 +105,19 @@ namespace RUINORERP.Model
             get{return _Notes;}
             set{
             SetProperty(ref _Notes, value);
-            }
+                        }
         }
 
         #endregion
 
         #region 扩展属性
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(subject_id))]
         public virtual tb_FM_Subject tb_fm_subject { get; set; }
 
 
-        //[Browsable(false)]
+        //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_FM_OtherExpenseDetail.ExpenseType_id))]
         public virtual List<tb_FM_OtherExpenseDetail> tb_FM_OtherExpenseDetails { get; set; }
@@ -125,7 +125,7 @@ namespace RUINORERP.Model
         //ExpenseType_id.FK_TB_FM_OT_REFERENCE_TB_FM_EX)
         //tb_FM_ExpenseType.ExpenseType_id)
 
-        //[Browsable(false)]
+        //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_FM_ExpenseClaimDetail.ExpenseType_id))]
         public virtual List<tb_FM_ExpenseClaimDetail> tb_FM_ExpenseClaimDetails { get; set; }
@@ -133,7 +133,7 @@ namespace RUINORERP.Model
         //ExpenseType_id.FK_EXPENSECLAIMDETAIL_REF_EXPENSETYPE)
         //tb_FM_ExpenseType.ExpenseType_id)
 
-        //[Browsable(false)]
+        //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_FM_Initial_PayAndReceivable.ExpenseType_id))]
         public virtual List<tb_FM_Initial_PayAndReceivable> tb_FM_Initial_PayAndReceivables { get; set; }

@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/14/2025 18:56:54
+// 时间：02/08/2025 16:32:02
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -46,8 +46,8 @@ namespace RUINORERP.Model
         { 
             get{return _subject_id;}
             set{
-            base.PrimaryKeyID = _subject_id;
             SetProperty(ref _subject_id, value);
+                base.PrimaryKeyID = _subject_id;
             }
         }
 
@@ -62,7 +62,7 @@ namespace RUINORERP.Model
             get{return _parent_subject_id;}
             set{
             SetProperty(ref _parent_subject_id, value);
-            }
+                        }
         }
 
         private string _subject_code;
@@ -76,7 +76,7 @@ namespace RUINORERP.Model
             get{return _subject_code;}
             set{
             SetProperty(ref _subject_code, value);
-            }
+                        }
         }
 
         private string _subject_name;
@@ -90,7 +90,7 @@ namespace RUINORERP.Model
             get{return _subject_name;}
             set{
             SetProperty(ref _subject_name, value);
-            }
+                        }
         }
 
         private string _subject_en_name;
@@ -104,7 +104,7 @@ namespace RUINORERP.Model
             get{return _subject_en_name;}
             set{
             SetProperty(ref _subject_en_name, value);
-            }
+                        }
         }
 
         private int _Subject_Type;
@@ -118,7 +118,7 @@ namespace RUINORERP.Model
             get{return _Subject_Type;}
             set{
             SetProperty(ref _Subject_Type, value);
-            }
+                        }
         }
 
         private bool _Balance_direction;
@@ -132,7 +132,7 @@ namespace RUINORERP.Model
             get{return _Balance_direction;}
             set{
             SetProperty(ref _Balance_direction, value);
-            }
+                        }
         }
 
         private bool? _Is_enabled= true;
@@ -146,7 +146,7 @@ namespace RUINORERP.Model
             get{return _Is_enabled;}
             set{
             SetProperty(ref _Is_enabled, value);
-            }
+                        }
         }
 
         private DateTime? _EndDate;
@@ -160,7 +160,7 @@ namespace RUINORERP.Model
             get{return _EndDate;}
             set{
             SetProperty(ref _EndDate, value);
-            }
+                        }
         }
 
         private int? _Sort;
@@ -174,7 +174,7 @@ namespace RUINORERP.Model
             get{return _Sort;}
             set{
             SetProperty(ref _Sort, value);
-            }
+                        }
         }
 
         private byte[] _Images;
@@ -188,7 +188,7 @@ namespace RUINORERP.Model
             get{return _Images;}
             set{
             SetProperty(ref _Images, value);
-            }
+                        }
         }
 
         private string _Notes;
@@ -202,14 +202,14 @@ namespace RUINORERP.Model
             get{return _Notes;}
             set{
             SetProperty(ref _Notes, value);
-            }
+                        }
         }
 
         #endregion
 
         #region 扩展属性
 
-        //[Browsable(false)]
+        //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_FM_OtherExpenseDetail.Subject_id))]
         public virtual List<tb_FM_OtherExpenseDetail> tb_FM_OtherExpenseDetails { get; set; }
@@ -217,7 +217,7 @@ namespace RUINORERP.Model
         //subject_id.FK_TB_FM_OT_REFERENCE_TB_FM_SU)
         //tb_FM_Subject.Subject_id)
 
-        //[Browsable(false)]
+        //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_FM_ExpenseClaimDetail.Subject_id))]
         public virtual List<tb_FM_ExpenseClaimDetail> tb_FM_ExpenseClaimDetails { get; set; }
@@ -225,7 +225,7 @@ namespace RUINORERP.Model
         //subject_id.FK_EXPENSECLAIMDETAIL_REF_SUBJECT)
         //tb_FM_Subject.Subject_id)
 
-        //[Browsable(false)]
+        //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_FM_Account.Subject_id))]
         public virtual List<tb_FM_Account> tb_FM_Accounts { get; set; }
@@ -233,7 +233,7 @@ namespace RUINORERP.Model
         //subject_id.FK_TB_FM_AC_REFERENCE_TB_FM_SU)
         //tb_FM_Subject.Subject_id)
 
-        //[Browsable(false)]
+        //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_FM_ExpenseType.subject_id))]
         public virtual List<tb_FM_ExpenseType> tb_FM_ExpenseTypes { get; set; }
@@ -241,7 +241,7 @@ namespace RUINORERP.Model
         //subject_id.FK_TB_FM_EX_REFERENCE_TB_FM_SU)
         //tb_FM_Subject.subject_id)
 
-        //[Browsable(false)]
+        //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_FM_Initial_PayAndReceivable.subject_id))]
         public virtual List<tb_FM_Initial_PayAndReceivable> tb_FM_Initial_PayAndReceivables { get; set; }

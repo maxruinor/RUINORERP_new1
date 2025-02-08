@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/14/2025 18:57:00
+// 时间：02/08/2025 16:32:10
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -46,8 +46,8 @@ namespace RUINORERP.Model
         { 
             get{return _PrintConfigID;}
             set{
-            base.PrimaryKeyID = _PrintConfigID;
             SetProperty(ref _PrintConfigID, value);
+                base.PrimaryKeyID = _PrintConfigID;
             }
         }
 
@@ -62,7 +62,7 @@ namespace RUINORERP.Model
             get{return _Config_Name;}
             set{
             SetProperty(ref _Config_Name, value);
-            }
+                        }
         }
 
         private int _BizType;
@@ -76,7 +76,7 @@ namespace RUINORERP.Model
             get{return _BizType;}
             set{
             SetProperty(ref _BizType, value);
-            }
+                        }
         }
 
         private string _BizName;
@@ -90,7 +90,7 @@ namespace RUINORERP.Model
             get{return _BizName;}
             set{
             SetProperty(ref _BizName, value);
-            }
+                        }
         }
 
         private string _PrinterName;
@@ -104,7 +104,7 @@ namespace RUINORERP.Model
             get{return _PrinterName;}
             set{
             SetProperty(ref _PrinterName, value);
-            }
+                        }
         }
 
         private bool? _PrinterSelected= false;
@@ -118,7 +118,7 @@ namespace RUINORERP.Model
             get{return _PrinterSelected;}
             set{
             SetProperty(ref _PrinterSelected, value);
-            }
+                        }
         }
 
         private bool? _Landscape= false;
@@ -132,7 +132,7 @@ namespace RUINORERP.Model
             get{return _Landscape;}
             set{
             SetProperty(ref _Landscape, value);
-            }
+                        }
         }
 
         private DateTime? _Created_at;
@@ -146,7 +146,7 @@ namespace RUINORERP.Model
             get{return _Created_at;}
             set{
             SetProperty(ref _Created_at, value);
-            }
+                        }
         }
 
         private long? _Created_by;
@@ -160,7 +160,7 @@ namespace RUINORERP.Model
             get{return _Created_by;}
             set{
             SetProperty(ref _Created_by, value);
-            }
+                        }
         }
 
         private DateTime? _Modified_at;
@@ -174,7 +174,7 @@ namespace RUINORERP.Model
             get{return _Modified_at;}
             set{
             SetProperty(ref _Modified_at, value);
-            }
+                        }
         }
 
         private long? _Modified_by;
@@ -188,7 +188,7 @@ namespace RUINORERP.Model
             get{return _Modified_by;}
             set{
             SetProperty(ref _Modified_by, value);
-            }
+                        }
         }
 
         private bool _isdeleted= false;
@@ -203,14 +203,14 @@ namespace RUINORERP.Model
             get{return _isdeleted;}
             set{
             SetProperty(ref _isdeleted, value);
-            }
+                        }
         }
 
         #endregion
 
         #region 扩展属性
 
-        //[Browsable(false)]
+        //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_PrintTemplate.PrintConfigID))]
         public virtual List<tb_PrintTemplate> tb_PrintTemplates { get; set; }

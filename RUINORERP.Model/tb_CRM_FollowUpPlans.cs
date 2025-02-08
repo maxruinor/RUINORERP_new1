@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/14/2025 18:56:48
+// 时间：02/08/2025 16:31:55
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -46,8 +46,8 @@ namespace RUINORERP.Model
         { 
             get{return _PlanID;}
             set{
-            base.PrimaryKeyID = _PlanID;
             SetProperty(ref _PlanID, value);
+                base.PrimaryKeyID = _PlanID;
             }
         }
 
@@ -63,7 +63,7 @@ namespace RUINORERP.Model
             get{return _Customer_id;}
             set{
             SetProperty(ref _Customer_id, value);
-            }
+                        }
         }
 
         private long _Employee_ID;
@@ -78,7 +78,7 @@ namespace RUINORERP.Model
             get{return _Employee_ID;}
             set{
             SetProperty(ref _Employee_ID, value);
-            }
+                        }
         }
 
         private DateTime _PlanStartDate;
@@ -92,7 +92,7 @@ namespace RUINORERP.Model
             get{return _PlanStartDate;}
             set{
             SetProperty(ref _PlanStartDate, value);
-            }
+                        }
         }
 
         private DateTime _PlanEndDate;
@@ -106,7 +106,7 @@ namespace RUINORERP.Model
             get{return _PlanEndDate;}
             set{
             SetProperty(ref _PlanEndDate, value);
-            }
+                        }
         }
 
         private int _PlanStatus;
@@ -120,7 +120,7 @@ namespace RUINORERP.Model
             get{return _PlanStatus;}
             set{
             SetProperty(ref _PlanStatus, value);
-            }
+                        }
         }
 
         private string _PlanSubject;
@@ -134,7 +134,7 @@ namespace RUINORERP.Model
             get{return _PlanSubject;}
             set{
             SetProperty(ref _PlanSubject, value);
-            }
+                        }
         }
 
         private string _PlanContent;
@@ -148,7 +148,7 @@ namespace RUINORERP.Model
             get{return _PlanContent;}
             set{
             SetProperty(ref _PlanContent, value);
-            }
+                        }
         }
 
         private string _Notes;
@@ -162,7 +162,7 @@ namespace RUINORERP.Model
             get{return _Notes;}
             set{
             SetProperty(ref _Notes, value);
-            }
+                        }
         }
 
         private DateTime? _Created_at;
@@ -176,7 +176,7 @@ namespace RUINORERP.Model
             get{return _Created_at;}
             set{
             SetProperty(ref _Created_at, value);
-            }
+                        }
         }
 
         private long? _Created_by;
@@ -190,7 +190,7 @@ namespace RUINORERP.Model
             get{return _Created_by;}
             set{
             SetProperty(ref _Created_by, value);
-            }
+                        }
         }
 
         private DateTime? _Modified_at;
@@ -204,7 +204,7 @@ namespace RUINORERP.Model
             get{return _Modified_at;}
             set{
             SetProperty(ref _Modified_at, value);
-            }
+                        }
         }
 
         private long? _Modified_by;
@@ -218,7 +218,7 @@ namespace RUINORERP.Model
             get{return _Modified_by;}
             set{
             SetProperty(ref _Modified_by, value);
-            }
+                        }
         }
 
         private bool? _isdeleted= false;
@@ -233,24 +233,24 @@ namespace RUINORERP.Model
             get{return _isdeleted;}
             set{
             SetProperty(ref _isdeleted, value);
-            }
+                        }
         }
 
         #endregion
 
         #region 扩展属性
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(Employee_ID))]
         public virtual tb_Employee tb_employee { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(Customer_id))]
         public virtual tb_CRM_Customer tb_crm_customer { get; set; }
 
 
-        //[Browsable(false)]
+        //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_CRM_FollowUpRecords.PlanID))]
         public virtual List<tb_CRM_FollowUpRecords> tb_CRM_FollowUpRecordses { get; set; }

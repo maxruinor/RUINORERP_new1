@@ -90,7 +90,7 @@ namespace RUINORERP.Business
                     else
                     {
                         Opening = false;
-                        
+
                         inv.LastInventoryDate = System.DateTime.Now;
                         //ctrinv.EditEntity(inv);
                         BusinessHelper.Instance.EditEntity(inv);
@@ -108,9 +108,10 @@ namespace RUINORERP.Business
                   */
 
                     //盘点模式 三个含义是:期初时可以录入成本,另两个不可以,由库存表中带出来.
-                    if (CheckMode.期初盘点 == cm)
+                    //并且其实盘点时只有数量大于0时才计算成本
+                    if (CheckMode.期初盘点 == cm && child.DiffQty > 0)
                     {
-                        CommService.CostCalculations.CostCalculation(_appContext, inv, inv.Quantity, child.Cost);
+                        CommService.CostCalculations.CostCalculation(_appContext, inv, child.DiffQty, child.Cost);
                     }
                     //更新库存
                     if (entity.Adjust_Type == (int)Adjust_Type.全部)
@@ -125,7 +126,7 @@ namespace RUINORERP.Business
                     {
                         inv.Quantity = inv.Quantity + child.DiffQty;
                     }
-                  
+
                     inv.ProdDetailID = child.ProdDetailID;
                     inv.Rack_ID = child.Rack_ID;
                     inv.Inv_SubtotalCostMoney = inv.Inv_Cost * inv.Quantity;

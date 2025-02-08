@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/21/2025 14:35:41
+// 时间：02/08/2025 16:32:13
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -46,8 +46,8 @@ namespace RUINORERP.Model
         { 
             get{return _Category_ID;}
             set{
-            base.PrimaryKeyID = _Category_ID;
             SetProperty(ref _Category_ID, value);
+                base.PrimaryKeyID = _Category_ID;
             }
         }
 
@@ -62,7 +62,7 @@ namespace RUINORERP.Model
             get{return _Category_name;}
             set{
             SetProperty(ref _Category_name, value);
-            }
+                        }
         }
 
         private string _CategoryCode;
@@ -76,7 +76,7 @@ namespace RUINORERP.Model
             get{return _CategoryCode;}
             set{
             SetProperty(ref _CategoryCode, value);
-            }
+                        }
         }
 
         private bool? _Is_enabled= true;
@@ -90,7 +90,7 @@ namespace RUINORERP.Model
             get{return _Is_enabled;}
             set{
             SetProperty(ref _Is_enabled, value);
-            }
+                        }
         }
 
         private int? _Sort;
@@ -104,7 +104,7 @@ namespace RUINORERP.Model
             get{return _Sort;}
             set{
             SetProperty(ref _Sort, value);
-            }
+                        }
         }
 
         private long? _Parent_id;
@@ -119,7 +119,7 @@ namespace RUINORERP.Model
             get{return _Parent_id;}
             set{
             SetProperty(ref _Parent_id, value);
-            }
+                        }
         }
 
         private byte[] _Images;
@@ -133,7 +133,7 @@ namespace RUINORERP.Model
             get{return _Images;}
             set{
             SetProperty(ref _Images, value);
-            }
+                        }
         }
 
         private string _Notes;
@@ -147,7 +147,7 @@ namespace RUINORERP.Model
             get{return _Notes;}
             set{
             SetProperty(ref _Notes, value);
-            }
+                        }
         }
 
         #endregion
@@ -162,7 +162,7 @@ namespace RUINORERP.Model
         //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_ProdCategories.Parent_id))]
-        public virtual List<tb_ProdCategories> tb_ProdCategorieses { get; set; }
+        public virtual List<tb_ProdCategories> tb_ProdCategorieses_parents { get; set; }
         //tb_ProdCategories.Category_ID)
         //Category_ID.FK_PRODCATEGORES_RE_PRODCATEGORES_PARENT)
         //tb_ProdCategories.Parent_id)

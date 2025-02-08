@@ -89,7 +89,11 @@ namespace RUINORERP.UI.BI
             BaseProcessor baseProcessor = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_FieldInfo).Name + "Processor");
             QueryConditionFilter = baseProcessor.GetQueryFilter();
         }
-
+        public override void BuildRelatedDisplay()
+        {
+            //表格显示时DataGridView1_CellFormatting 取外键类型
+            ColDisplayTypes.Add(typeof(tb_MenuInfo));
+        }
 
         //因为tb_P4FieldInfo中引用了字段表中的信息，所以要使用导航删除。但是一定要细心
 

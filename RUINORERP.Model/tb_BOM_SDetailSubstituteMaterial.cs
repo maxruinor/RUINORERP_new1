@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/14/2025 18:56:45
+// 时间：02/08/2025 16:31:53
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -46,24 +46,24 @@ namespace RUINORERP.Model
         { 
             get{return _SubstituteMaterialID;}
             set{
-            base.PrimaryKeyID = _SubstituteMaterialID;
             SetProperty(ref _SubstituteMaterialID, value);
+                base.PrimaryKeyID = _SubstituteMaterialID;
             }
         }
 
         private long _SubID;
         /// <summary>
-        /// BOM子件
+        /// 
         /// </summary>
-        [AdvQueryAttribute(ColName = "SubID",ColDesc = "BOM子件")] 
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "SubID" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "BOM子件")]
+        [AdvQueryAttribute(ColName = "SubID",ColDesc = "")] 
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "SubID" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "" )]
         [FKRelationAttribute("tb_BOM_SDetail","SubID")]
         public long SubID
         { 
             get{return _SubID;}
             set{
             SetProperty(ref _SubID, value);
-            }
+                        }
         }
 
         private bool? _IsKeyMaterial;
@@ -77,7 +77,7 @@ namespace RUINORERP.Model
             get{return _IsKeyMaterial;}
             set{
             SetProperty(ref _IsKeyMaterial, value);
-            }
+                        }
         }
 
         private long _ProdDetailID;
@@ -92,7 +92,7 @@ namespace RUINORERP.Model
             get{return _ProdDetailID;}
             set{
             SetProperty(ref _ProdDetailID, value);
-            }
+                        }
         }
 
         private string _SKU;
@@ -106,7 +106,7 @@ namespace RUINORERP.Model
             get{return _SKU;}
             set{
             SetProperty(ref _SKU, value);
-            }
+                        }
         }
 
         private string _property;
@@ -120,7 +120,7 @@ namespace RUINORERP.Model
             get{return _property;}
             set{
             SetProperty(ref _property, value);
-            }
+                        }
         }
 
         private long _Unit_ID;
@@ -135,7 +135,7 @@ namespace RUINORERP.Model
             get{return _Unit_ID;}
             set{
             SetProperty(ref _Unit_ID, value);
-            }
+                        }
         }
 
         private long? _UnitConversion_ID;
@@ -150,7 +150,7 @@ namespace RUINORERP.Model
             get{return _UnitConversion_ID;}
             set{
             SetProperty(ref _UnitConversion_ID, value);
-            }
+                        }
         }
 
         private decimal _UsedQty= ((1));
@@ -164,7 +164,7 @@ namespace RUINORERP.Model
             get{return _UsedQty;}
             set{
             SetProperty(ref _UsedQty, value);
-            }
+                        }
         }
 
         private int? _Radix= ((1));
@@ -178,7 +178,7 @@ namespace RUINORERP.Model
             get{return _Radix;}
             set{
             SetProperty(ref _Radix, value);
-            }
+                        }
         }
 
         private decimal _LossRate= ((0));
@@ -192,7 +192,7 @@ namespace RUINORERP.Model
             get{return _LossRate;}
             set{
             SetProperty(ref _LossRate, value);
-            }
+                        }
         }
 
         private string _InstallPosition;
@@ -206,7 +206,7 @@ namespace RUINORERP.Model
             get{return _InstallPosition;}
             set{
             SetProperty(ref _InstallPosition, value);
-            }
+                        }
         }
 
         private string _PositionNo;
@@ -220,7 +220,7 @@ namespace RUINORERP.Model
             get{return _PositionNo;}
             set{
             SetProperty(ref _PositionNo, value);
-            }
+                        }
         }
 
         private decimal _UnitCost= ((0));
@@ -234,7 +234,7 @@ namespace RUINORERP.Model
             get{return _UnitCost;}
             set{
             SetProperty(ref _UnitCost, value);
-            }
+                        }
         }
 
         private decimal _SubtotalUnitCost= ((0));
@@ -248,7 +248,7 @@ namespace RUINORERP.Model
             get{return _SubtotalUnitCost;}
             set{
             SetProperty(ref _SubtotalUnitCost, value);
-            }
+                        }
         }
 
         private string _PositionDesc;
@@ -262,7 +262,7 @@ namespace RUINORERP.Model
             get{return _PositionDesc;}
             set{
             SetProperty(ref _PositionDesc, value);
-            }
+                        }
         }
 
         private long? _ManufacturingProcessID;
@@ -276,7 +276,7 @@ namespace RUINORERP.Model
             get{return _ManufacturingProcessID;}
             set{
             SetProperty(ref _ManufacturingProcessID, value);
-            }
+                        }
         }
 
         private decimal? _OutputRate;
@@ -290,7 +290,7 @@ namespace RUINORERP.Model
             get{return _OutputRate;}
             set{
             SetProperty(ref _OutputRate, value);
-            }
+                        }
         }
 
         private long? _Child_BOM_Node_ID;
@@ -304,7 +304,7 @@ namespace RUINORERP.Model
             get{return _Child_BOM_Node_ID;}
             set{
             SetProperty(ref _Child_BOM_Node_ID, value);
-            }
+                        }
         }
 
         private int? _PriorityUseType= ((0));
@@ -318,7 +318,7 @@ namespace RUINORERP.Model
             get{return _PriorityUseType;}
             set{
             SetProperty(ref _PriorityUseType, value);
-            }
+                        }
         }
 
         private int _Sort= ((0));
@@ -332,7 +332,7 @@ namespace RUINORERP.Model
             get{return _Sort;}
             set{
             SetProperty(ref _Sort, value);
-            }
+                        }
         }
 
         private string _Summary;
@@ -346,29 +346,29 @@ namespace RUINORERP.Model
             get{return _Summary;}
             set{
             SetProperty(ref _Summary, value);
-            }
+                        }
         }
 
         #endregion
 
         #region 扩展属性
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(SubID))]
         public virtual tb_BOM_SDetail tb_bom_sdetail { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(Unit_ID))]
         public virtual tb_Unit tb_unit { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(UnitConversion_ID))]
         public virtual tb_Unit_Conversion tb_unit_conversion { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(ProdDetailID))]
         public virtual tb_ProdDetail tb_proddetail { get; set; }
 

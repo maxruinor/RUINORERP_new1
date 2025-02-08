@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/14/2025 18:56:57
+// 时间：02/08/2025 16:32:06
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -46,8 +46,8 @@ namespace RUINORERP.Model
         { 
             get{return _ModuleID;}
             set{
-            base.PrimaryKeyID = _ModuleID;
             SetProperty(ref _ModuleID, value);
+                base.PrimaryKeyID = _ModuleID;
             }
         }
 
@@ -62,7 +62,7 @@ namespace RUINORERP.Model
             get{return _ModuleNo;}
             set{
             SetProperty(ref _ModuleNo, value);
-            }
+                        }
         }
 
         private string _ModuleName;
@@ -76,7 +76,7 @@ namespace RUINORERP.Model
             get{return _ModuleName;}
             set{
             SetProperty(ref _ModuleName, value);
-            }
+                        }
         }
 
         private bool _Visible;
@@ -90,7 +90,7 @@ namespace RUINORERP.Model
             get{return _Visible;}
             set{
             SetProperty(ref _Visible, value);
-            }
+                        }
         }
 
         private bool _Available;
@@ -104,7 +104,7 @@ namespace RUINORERP.Model
             get{return _Available;}
             set{
             SetProperty(ref _Available, value);
-            }
+                        }
         }
 
         private string _IconFile_Path;
@@ -118,14 +118,14 @@ namespace RUINORERP.Model
             get{return _IconFile_Path;}
             set{
             SetProperty(ref _IconFile_Path, value);
-            }
+                        }
         }
 
         #endregion
 
         #region 扩展属性
 
-        //[Browsable(false)]
+        //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_FlowchartDefinition.ModuleID))]
         public virtual List<tb_FlowchartDefinition> tb_FlowchartDefinitions { get; set; }
@@ -133,7 +133,7 @@ namespace RUINORERP.Model
         //ModuleID.FK_TB_FLOWC_REF_TB_MODULEDe)
         //tb_ModuleDefinition.ModuleID)
 
-        //[Browsable(false)]
+        //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_MenuInfo.ModuleID))]
         public virtual List<tb_MenuInfo> tb_MenuInfos { get; set; }
@@ -141,7 +141,7 @@ namespace RUINORERP.Model
         //ModuleID.FK_TB_MENUI_REFERENCE_TB_MODUL)
         //tb_ModuleDefinition.ModuleID)
 
-        //[Browsable(false)]
+        //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_P4Menu.ModuleID))]
         public virtual List<tb_P4Menu> tb_P4Menus { get; set; }
@@ -149,7 +149,7 @@ namespace RUINORERP.Model
         //ModuleID.FK_TB_P4MEN_REFERENCE_TB_MODUL)
         //tb_ModuleDefinition.ModuleID)
 
-        //[Browsable(false)]
+        //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_P4Module.ModuleID))]
         public virtual List<tb_P4Module> tb_P4Modules { get; set; }

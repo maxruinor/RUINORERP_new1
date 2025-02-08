@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/14/2025 18:57:06
+// 时间：02/08/2025 16:32:19
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -46,8 +46,8 @@ namespace RUINORERP.Model
         { 
             get{return _PPCID;}
             set{
-            base.PrimaryKeyID = _PPCID;
             SetProperty(ref _PPCID, value);
+                base.PrimaryKeyID = _PPCID;
             }
         }
 
@@ -63,7 +63,7 @@ namespace RUINORERP.Model
             get{return _PPID;}
             set{
             SetProperty(ref _PPID, value);
-            }
+                        }
         }
 
         private long _ProdDetailID;
@@ -78,7 +78,7 @@ namespace RUINORERP.Model
             get{return _ProdDetailID;}
             set{
             SetProperty(ref _ProdDetailID, value);
-            }
+                        }
         }
 
         private string _Specifications;
@@ -92,7 +92,7 @@ namespace RUINORERP.Model
             get{return _Specifications;}
             set{
             SetProperty(ref _Specifications, value);
-            }
+                        }
         }
 
         private string _property;
@@ -106,7 +106,7 @@ namespace RUINORERP.Model
             get{return _property;}
             set{
             SetProperty(ref _property, value);
-            }
+                        }
         }
 
         private long _Location_ID;
@@ -121,7 +121,7 @@ namespace RUINORERP.Model
             get{return _Location_ID;}
             set{
             SetProperty(ref _Location_ID, value);
-            }
+                        }
         }
 
         private int _Quantity= ((0));
@@ -135,7 +135,7 @@ namespace RUINORERP.Model
             get{return _Quantity;}
             set{
             SetProperty(ref _Quantity, value);
-            }
+                        }
         }
 
         private long _BOM_ID;
@@ -150,7 +150,7 @@ namespace RUINORERP.Model
             get{return _BOM_ID;}
             set{
             SetProperty(ref _BOM_ID, value);
-            }
+                        }
         }
 
         private string _Summary;
@@ -164,7 +164,7 @@ namespace RUINORERP.Model
             get{return _Summary;}
             set{
             SetProperty(ref _Summary, value);
-            }
+                        }
         }
 
         private int _CompletedQuantity= ((0));
@@ -178,7 +178,7 @@ namespace RUINORERP.Model
             get{return _CompletedQuantity;}
             set{
             SetProperty(ref _CompletedQuantity, value);
-            }
+                        }
         }
 
         private int _AnalyzedQuantity= ((0));
@@ -192,7 +192,7 @@ namespace RUINORERP.Model
             get{return _AnalyzedQuantity;}
             set{
             SetProperty(ref _AnalyzedQuantity, value);
-            }
+                        }
         }
 
         private bool? _IsAnalyzed= false;
@@ -206,29 +206,29 @@ namespace RUINORERP.Model
             get{return _IsAnalyzed;}
             set{
             SetProperty(ref _IsAnalyzed, value);
-            }
+                        }
         }
 
         #endregion
 
         #region 扩展属性
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(ProdDetailID))]
         public virtual tb_ProdDetail tb_proddetail { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(PPID))]
         public virtual tb_ProductionPlan tb_productionplan { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(Location_ID))]
         public virtual tb_Location tb_location { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(BOM_ID))]
         public virtual tb_BOM_S tb_bom_s { get; set; }
 

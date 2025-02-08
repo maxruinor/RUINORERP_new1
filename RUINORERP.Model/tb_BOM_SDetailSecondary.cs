@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/21/2025 18:51:08
+// 时间：02/08/2025 16:31:52
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -46,8 +46,8 @@ namespace RUINORERP.Model
         { 
             get{return _SecID;}
             set{
-            base.PrimaryKeyID = _SecID;
             SetProperty(ref _SecID, value);
+                base.PrimaryKeyID = _SecID;
             }
         }
 
@@ -63,22 +63,22 @@ namespace RUINORERP.Model
             get{return _ProdDetailID;}
             set{
             SetProperty(ref _ProdDetailID, value);
-            }
+                        }
         }
 
         private long? _BOM_ID;
         /// <summary>
-        /// BOM配方
+        /// BOM
         /// </summary>
-        [AdvQueryAttribute(ColName = "BOM_ID",ColDesc = "BOM配方")] 
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "BOM_ID" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "BOM配方")]
+        [AdvQueryAttribute(ColName = "BOM_ID",ColDesc = "BOM")] 
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "BOM_ID" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "BOM" )]
         [FKRelationAttribute("tb_BOM_S","BOM_ID")]
         public long? BOM_ID
         { 
             get{return _BOM_ID;}
             set{
             SetProperty(ref _BOM_ID, value);
-            }
+                        }
         }
 
         private decimal _Qty= ((0));
@@ -92,7 +92,7 @@ namespace RUINORERP.Model
             get{return _Qty;}
             set{
             SetProperty(ref _Qty, value);
-            }
+                        }
         }
 
         private decimal _Scale= ((0));
@@ -106,7 +106,7 @@ namespace RUINORERP.Model
             get{return _Scale;}
             set{
             SetProperty(ref _Scale, value);
-            }
+                        }
         }
 
         private string _property;
@@ -120,7 +120,7 @@ namespace RUINORERP.Model
             get{return _property;}
             set{
             SetProperty(ref _property, value);
-            }
+                        }
         }
 
         private decimal _UnitCost= ((0));
@@ -134,7 +134,7 @@ namespace RUINORERP.Model
             get{return _UnitCost;}
             set{
             SetProperty(ref _UnitCost, value);
-            }
+                        }
         }
 
         private decimal _SubtotalCost= ((0));
@@ -148,7 +148,7 @@ namespace RUINORERP.Model
             get{return _SubtotalCost;}
             set{
             SetProperty(ref _SubtotalCost, value);
-            }
+                        }
         }
 
         private string _Remarks;
@@ -162,7 +162,7 @@ namespace RUINORERP.Model
             get{return _Remarks;}
             set{
             SetProperty(ref _Remarks, value);
-            }
+                        }
         }
 
         #endregion

@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/14/2025 18:57:06
+// 时间：02/08/2025 16:32:19
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -46,8 +46,8 @@ namespace RUINORERP.Model
         { 
             get{return _Type_ID;}
             set{
-            base.PrimaryKeyID = _Type_ID;
             SetProperty(ref _Type_ID, value);
+                base.PrimaryKeyID = _Type_ID;
             }
         }
 
@@ -62,7 +62,7 @@ namespace RUINORERP.Model
             get{return _TypeName;}
             set{
             SetProperty(ref _TypeName, value);
-            }
+                        }
         }
 
         private string _TypeDesc;
@@ -76,14 +76,14 @@ namespace RUINORERP.Model
             get{return _TypeDesc;}
             set{
             SetProperty(ref _TypeDesc, value);
-            }
+                        }
         }
 
         #endregion
 
         #region 扩展属性
 
-        //[Browsable(false)]
+        //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_Prod.Type_ID))]
         public virtual List<tb_Prod> tb_Prods { get; set; }
@@ -91,15 +91,15 @@ namespace RUINORERP.Model
         //Type_ID.FK_TB_PROD_REFERENCE_TB_PRODU)
         //tb_ProductType.Type_ID)
 
-        //[Browsable(false)]
+        //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_ProdConversionDetail.Type_ID_from))]
-        public virtual List<tb_ProdConversionDetail> tb_ProdConversionDetails { get; set; }
+        public virtual List<tb_ProdConversionDetail> tb_ProdConversionDetails_from { get; set; }
         //tb_ProdConversionDetail.Type_ID)
         //Type_ID.FK_TB_PRODConvertiondetail_REFE_TB_PRODU_typeFrom)
         //tb_ProductType.Type_ID_from)
 
-        //[Browsable(false)]
+        //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_ProdConversionDetail.Type_ID_to))]
         public virtual List<tb_ProdConversionDetail> tb_ProdConversionDetails_to { get; set; }
@@ -107,7 +107,7 @@ namespace RUINORERP.Model
         //Type_ID.FK_TB_PRODConvertiondetail_REFE_TB_PRODU_typeTo)
         //tb_ProductType.Type_ID_to)
 
-        //[Browsable(false)]
+        //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_ManufacturingOrder.Type_ID))]
         public virtual List<tb_ManufacturingOrder> tb_ManufacturingOrders { get; set; }

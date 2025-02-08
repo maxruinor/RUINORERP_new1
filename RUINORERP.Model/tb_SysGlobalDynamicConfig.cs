@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/14/2025 18:57:15
+// 时间：02/08/2025 16:32:31
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -46,8 +46,8 @@ namespace RUINORERP.Model
         { 
             get{return _ConfigID;}
             set{
-            base.PrimaryKeyID = _ConfigID;
             SetProperty(ref _ConfigID, value);
+                base.PrimaryKeyID = _ConfigID;
             }
         }
 
@@ -62,7 +62,7 @@ namespace RUINORERP.Model
             get{return _ConfigKey;}
             set{
             SetProperty(ref _ConfigKey, value);
-            }
+                        }
         }
 
         private string _ConfigValue;
@@ -76,7 +76,7 @@ namespace RUINORERP.Model
             get{return _ConfigValue;}
             set{
             SetProperty(ref _ConfigValue, value);
-            }
+                        }
         }
 
         private string _Description;
@@ -90,7 +90,7 @@ namespace RUINORERP.Model
             get{return _Description;}
             set{
             SetProperty(ref _Description, value);
-            }
+                        }
         }
 
         private int _ValueType;
@@ -104,7 +104,7 @@ namespace RUINORERP.Model
             get{return _ValueType;}
             set{
             SetProperty(ref _ValueType, value);
-            }
+                        }
         }
 
         private string _ConfigType;
@@ -118,7 +118,7 @@ namespace RUINORERP.Model
             get{return _ConfigType;}
             set{
             SetProperty(ref _ConfigType, value);
-            }
+                        }
         }
 
         private bool? _IsActive= true;
@@ -132,7 +132,7 @@ namespace RUINORERP.Model
             get{return _IsActive;}
             set{
             SetProperty(ref _IsActive, value);
-            }
+                        }
         }
 
         private DateTime? _Created_at;
@@ -146,7 +146,7 @@ namespace RUINORERP.Model
             get{return _Created_at;}
             set{
             SetProperty(ref _Created_at, value);
-            }
+                        }
         }
 
         private long? _Created_by;
@@ -160,7 +160,7 @@ namespace RUINORERP.Model
             get{return _Created_by;}
             set{
             SetProperty(ref _Created_by, value);
-            }
+                        }
         }
 
         private DateTime? _Modified_at;
@@ -174,7 +174,7 @@ namespace RUINORERP.Model
             get{return _Modified_at;}
             set{
             SetProperty(ref _Modified_at, value);
-            }
+                        }
         }
 
         private long? _Modified_by;
@@ -188,7 +188,7 @@ namespace RUINORERP.Model
             get{return _Modified_by;}
             set{
             SetProperty(ref _Modified_by, value);
-            }
+                        }
         }
 
         #endregion

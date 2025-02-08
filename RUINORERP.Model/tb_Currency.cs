@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/14/2025 18:56:48
+// 时间：02/08/2025 16:31:56
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -46,8 +46,8 @@ namespace RUINORERP.Model
         { 
             get{return _Currency_ID;}
             set{
-            base.PrimaryKeyID = _Currency_ID;
             SetProperty(ref _Currency_ID, value);
+                base.PrimaryKeyID = _Currency_ID;
             }
         }
 
@@ -62,7 +62,7 @@ namespace RUINORERP.Model
             get{return _GroupName;}
             set{
             SetProperty(ref _GroupName, value);
-            }
+                        }
         }
 
         private string _CurrencyCode;
@@ -76,7 +76,7 @@ namespace RUINORERP.Model
             get{return _CurrencyCode;}
             set{
             SetProperty(ref _CurrencyCode, value);
-            }
+                        }
         }
 
         private string _CurrencyName;
@@ -90,7 +90,7 @@ namespace RUINORERP.Model
             get{return _CurrencyName;}
             set{
             SetProperty(ref _CurrencyName, value);
-            }
+                        }
         }
 
         private DateTime? _AdjustDate;
@@ -104,7 +104,7 @@ namespace RUINORERP.Model
             get{return _AdjustDate;}
             set{
             SetProperty(ref _AdjustDate, value);
-            }
+                        }
         }
 
         private decimal? _DefaultExchRate;
@@ -118,7 +118,7 @@ namespace RUINORERP.Model
             get{return _DefaultExchRate;}
             set{
             SetProperty(ref _DefaultExchRate, value);
-            }
+                        }
         }
 
         private decimal? _BuyExchRate;
@@ -132,7 +132,7 @@ namespace RUINORERP.Model
             get{return _BuyExchRate;}
             set{
             SetProperty(ref _BuyExchRate, value);
-            }
+                        }
         }
 
         private decimal? _SellOutExchRate;
@@ -146,7 +146,7 @@ namespace RUINORERP.Model
             get{return _SellOutExchRate;}
             set{
             SetProperty(ref _SellOutExchRate, value);
-            }
+                        }
         }
 
         private decimal? _MonthEndExchRate;
@@ -160,7 +160,7 @@ namespace RUINORERP.Model
             get{return _MonthEndExchRate;}
             set{
             SetProperty(ref _MonthEndExchRate, value);
-            }
+                        }
         }
 
         private bool? _Is_enabled= true;
@@ -174,7 +174,7 @@ namespace RUINORERP.Model
             get{return _Is_enabled;}
             set{
             SetProperty(ref _Is_enabled, value);
-            }
+                        }
         }
 
         private bool? _Is_available= true;
@@ -188,7 +188,7 @@ namespace RUINORERP.Model
             get{return _Is_available;}
             set{
             SetProperty(ref _Is_available, value);
-            }
+                        }
         }
 
         private DateTime? _Created_at;
@@ -202,7 +202,7 @@ namespace RUINORERP.Model
             get{return _Created_at;}
             set{
             SetProperty(ref _Created_at, value);
-            }
+                        }
         }
 
         private long? _Created_by;
@@ -216,7 +216,7 @@ namespace RUINORERP.Model
             get{return _Created_by;}
             set{
             SetProperty(ref _Created_by, value);
-            }
+                        }
         }
 
         private DateTime? _Modified_at;
@@ -230,7 +230,7 @@ namespace RUINORERP.Model
             get{return _Modified_at;}
             set{
             SetProperty(ref _Modified_at, value);
-            }
+                        }
         }
 
         private long? _Modified_by;
@@ -244,7 +244,7 @@ namespace RUINORERP.Model
             get{return _Modified_by;}
             set{
             SetProperty(ref _Modified_by, value);
-            }
+                        }
         }
 
         private bool? _Is_BaseCurrency= false;
@@ -258,14 +258,14 @@ namespace RUINORERP.Model
             get{return _Is_BaseCurrency;}
             set{
             SetProperty(ref _Is_BaseCurrency, value);
-            }
+                        }
         }
 
         #endregion
 
         #region 扩展属性
 
-        //[Browsable(false)]
+        //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_FM_PaymentApplication.Currency_ID))]
         public virtual List<tb_FM_PaymentApplication> tb_FM_PaymentApplications { get; set; }
@@ -273,7 +273,7 @@ namespace RUINORERP.Model
         //Currency_ID.FK_PAYMENTAPPLICATION_REF_CURRENCY)
         //tb_Currency.Currency_ID)
 
-        //[Browsable(false)]
+        //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_FM_Account.Currency_ID))]
         public virtual List<tb_FM_Account> tb_FM_Accounts { get; set; }
@@ -281,7 +281,7 @@ namespace RUINORERP.Model
         //Currency_ID.FK_ACCOUNTS_REF_CURRENCY)
         //tb_Currency.Currency_ID)
 
-        //[Browsable(false)]
+        //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_FM_ExpenseClaim.Currency_ID))]
         public virtual List<tb_FM_ExpenseClaim> tb_FM_ExpenseClaims { get; set; }
@@ -289,7 +289,7 @@ namespace RUINORERP.Model
         //Currency_ID.FK_EXPENSECLAIM_REF_CURRENCY)
         //tb_Currency.Currency_ID)
 
-        //[Browsable(false)]
+        //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_FM_PaymentBill.Currency_ID))]
         public virtual List<tb_FM_PaymentBill> tb_FM_PaymentBills { get; set; }
@@ -297,7 +297,7 @@ namespace RUINORERP.Model
         //Currency_ID.FK_FM_PAYMENTBILL_REF_CURRENCY)
         //tb_Currency.Currency_ID)
 
-        //[Browsable(false)]
+        //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_FM_PrePaymentBillDetail.Currency_ID))]
         public virtual List<tb_FM_PrePaymentBillDetail> tb_FM_PrePaymentBillDetails { get; set; }
@@ -305,7 +305,7 @@ namespace RUINORERP.Model
         //Currency_ID.FK_FM_PREPAYMENTDETAIL_REF_CURRENCY)
         //tb_Currency.Currency_ID)
 
-        //[Browsable(false)]
+        //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_FM_OtherExpense.Currency_ID))]
         public virtual List<tb_FM_OtherExpense> tb_FM_OtherExpenses { get; set; }

@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/14/2025 18:56:43
+// 时间：02/08/2025 16:31:51
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -48,7 +48,7 @@ namespace RUINORERP.Model
             get{return _ApprovalID;}
             set{
             SetProperty(ref _ApprovalID, value);
-            }
+                        }
         }
 
         private long _ApprovalCID;
@@ -61,8 +61,8 @@ namespace RUINORERP.Model
         { 
             get{return _ApprovalCID;}
             set{
-            base.PrimaryKeyID = _ApprovalCID;
             SetProperty(ref _ApprovalCID, value);
+                base.PrimaryKeyID = _ApprovalCID;
             }
         }
 
@@ -77,7 +77,7 @@ namespace RUINORERP.Model
             get{return _ApprovalResults;}
             set{
             SetProperty(ref _ApprovalResults, value);
-            }
+                        }
         }
 
         private int? _ApprovalOrder;
@@ -91,14 +91,14 @@ namespace RUINORERP.Model
             get{return _ApprovalOrder;}
             set{
             SetProperty(ref _ApprovalOrder, value);
-            }
+                        }
         }
 
         #endregion
 
         #region 扩展属性
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(ApprovalID))]
         public virtual tb_Approval tb_approval { get; set; }
 

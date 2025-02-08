@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/14/2025 18:57:14
+// 时间：02/08/2025 16:32:30
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -46,8 +46,8 @@ namespace RUINORERP.Model
         { 
             get{return _SubID;}
             set{
-            base.PrimaryKeyID = _SubID;
             SetProperty(ref _SubID, value);
+                base.PrimaryKeyID = _SubID;
             }
         }
 
@@ -63,7 +63,7 @@ namespace RUINORERP.Model
             get{return _MainID;}
             set{
             SetProperty(ref _MainID, value);
-            }
+                        }
         }
 
         private long _ProdDetailID;
@@ -78,7 +78,7 @@ namespace RUINORERP.Model
             get{return _ProdDetailID;}
             set{
             SetProperty(ref _ProdDetailID, value);
-            }
+                        }
         }
 
         private long? _Rack_ID;
@@ -93,7 +93,7 @@ namespace RUINORERP.Model
             get{return _Rack_ID;}
             set{
             SetProperty(ref _Rack_ID, value);
-            }
+                        }
         }
 
         private decimal _Cost= ((0));
@@ -107,7 +107,7 @@ namespace RUINORERP.Model
             get{return _Cost;}
             set{
             SetProperty(ref _Cost, value);
-            }
+                        }
         }
 
         private int _CarryinglQty= ((0));
@@ -121,7 +121,7 @@ namespace RUINORERP.Model
             get{return _CarryinglQty;}
             set{
             SetProperty(ref _CarryinglQty, value);
-            }
+                        }
         }
 
         private decimal _CarryingSubtotalAmount= ((0));
@@ -135,7 +135,7 @@ namespace RUINORERP.Model
             get{return _CarryingSubtotalAmount;}
             set{
             SetProperty(ref _CarryingSubtotalAmount, value);
-            }
+                        }
         }
 
         private int _DiffQty= ((0));
@@ -149,7 +149,7 @@ namespace RUINORERP.Model
             get{return _DiffQty;}
             set{
             SetProperty(ref _DiffQty, value);
-            }
+                        }
         }
 
         private decimal _DiffSubtotalAmount= ((0));
@@ -163,7 +163,7 @@ namespace RUINORERP.Model
             get{return _DiffSubtotalAmount;}
             set{
             SetProperty(ref _DiffSubtotalAmount, value);
-            }
+                        }
         }
 
         private int _CheckQty= ((0));
@@ -177,7 +177,7 @@ namespace RUINORERP.Model
             get{return _CheckQty;}
             set{
             SetProperty(ref _CheckQty, value);
-            }
+                        }
         }
 
         private decimal _CheckSubtotalAmount= ((0));
@@ -191,7 +191,7 @@ namespace RUINORERP.Model
             get{return _CheckSubtotalAmount;}
             set{
             SetProperty(ref _CheckSubtotalAmount, value);
-            }
+                        }
         }
 
         private string _Notes;
@@ -205,7 +205,7 @@ namespace RUINORERP.Model
             get{return _Notes;}
             set{
             SetProperty(ref _Notes, value);
-            }
+                        }
         }
 
         private string _property;
@@ -219,24 +219,24 @@ namespace RUINORERP.Model
             get{return _property;}
             set{
             SetProperty(ref _property, value);
-            }
+                        }
         }
 
         #endregion
 
         #region 扩展属性
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(ProdDetailID))]
         public virtual tb_ProdDetail tb_proddetail { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(MainID))]
         public virtual tb_Stocktake tb_stocktake { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(Rack_ID))]
         public virtual tb_StorageRack tb_storagerack { get; set; }
 

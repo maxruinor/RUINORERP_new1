@@ -426,7 +426,7 @@ namespace RUINORERP.UI.SysConfig
             List<tb_Prod> bomPordList = await MainForm.Instance.AppContext.Db.Queryable<tb_Prod>()
             .Includes(a => a.tb_unit)
             .Includes(b => b.tb_producttype)
-            .Includes(b => b.tb_prodcategories, d => d.tb_ProdCategorieses, c => c.tb_prodcategories_parent)
+            .Includes(b => b.tb_prodcategories, d => d.tb_prodcategories_parent, c => c.tb_prodcategories_parent)
             .Includes(b => b.tb_storagerack)
             .Includes(a => a.tb_location)
             .Includes(a => a.tb_Packings, b => b.tb_PackingDetails)
@@ -439,7 +439,7 @@ namespace RUINORERP.UI.SysConfig
             .AsNavQueryable()
             .Includes(b => b.tb_ProdDetails, c => c.tb_BOM_Ss, d => d.tb_BOM_SDetails, e => e.tb_unit)//bom主 
             .AsNavQueryable()
-            .Includes(a => a.tb_ProdDetails, b => b.tb_BOM_Ss, c => c.tb_BOM_SDetails, d => d.tb_unit_conversion, e => e.tb_unit_Target)//bom主 
+            .Includes(a => a.tb_ProdDetails, b => b.tb_BOM_Ss, c => c.tb_BOM_SDetails, d => d.tb_unit_conversion, e => e.tb_unit_target)//bom主 
             .AsNavQueryable()
             .Includes(a => a.tb_ProdDetails, b => b.tb_BOM_Ss, c => c.tb_BOM_SDetails, d => d.tb_unit_conversion, e => e.tb_unit_source)//bom主 
             .AsNavQueryable()
@@ -452,7 +452,7 @@ namespace RUINORERP.UI.SysConfig
             .AsNavQueryable()
             .Includes(b => b.tb_ProdDetails, c => c.tb_bom_s, d => d.tb_BOM_SDetails, e => e.tb_unit)//bom主 
             .AsNavQueryable()
-            .Includes(a => a.tb_ProdDetails, b => b.tb_bom_s, c => c.tb_BOM_SDetails, d => d.tb_unit_conversion, e => e.tb_unit_Target)//bom主 
+            .Includes(a => a.tb_ProdDetails, b => b.tb_bom_s, c => c.tb_BOM_SDetails, d => d.tb_unit_conversion, e => e.tb_unit_target)//bom主 
             .AsNavQueryable()
             .Includes(a => a.tb_ProdDetails, b => b.tb_bom_s, c => c.tb_BOM_SDetails, d => d.tb_unit_conversion, e => e.tb_unit_source)//bom主 
             .AsNavQueryable()
@@ -592,9 +592,9 @@ namespace RUINORERP.UI.SysConfig
                     if (item.tb_prodcategories != null && !prodcategoriesList.Exists(x => x.Category_ID == item.tb_prodcategories.Category_ID))
                     {
                         prodcategoriesList.Add(item.tb_prodcategories);
-                        if (item.tb_prodcategories.tb_ProdCategorieses != null && item.tb_prodcategories.tb_ProdCategorieses.Count > 0)
+                        if (item.tb_prodcategories.tb_ProdCategorieses_parents != null && item.tb_prodcategories.tb_ProdCategorieses_parents.Count > 0)
                         {
-                            item.tb_prodcategories.tb_ProdCategorieses.ForEach(c =>
+                            item.tb_prodcategories.tb_ProdCategorieses_parents.ForEach(c =>
                             {
                                 if (!prodcategoriesList.Any(x => x.Category_ID == c.tb_prodcategories_parent.Category_ID))
                                 {
@@ -1118,7 +1118,7 @@ namespace RUINORERP.UI.SysConfig
             List<tb_Prod> tb_ProdDetails = await MainForm.Instance.AppContext.Db.Queryable<tb_Prod>()
             .Includes(a => a.tb_unit)
             .Includes(b => b.tb_producttype)
-            .Includes(b => b.tb_prodcategories, d => d.tb_ProdCategorieses, c => c.tb_prodcategories_parent)
+            .Includes(b => b.tb_prodcategories, d => d.tb_ProdCategorieses_parents, c => c.tb_prodcategories_parent)
             .Includes(b => b.tb_storagerack)
             .Includes(a => a.tb_location)
             .Includes(a => a.tb_Packings, b => b.tb_PackingDetails)
@@ -1131,7 +1131,7 @@ namespace RUINORERP.UI.SysConfig
             .AsNavQueryable()
             .Includes(b => b.tb_ProdDetails, c => c.tb_BOM_Ss, d => d.tb_BOM_SDetails, e => e.tb_unit)//bom主 
             .AsNavQueryable()
-            .Includes(a => a.tb_ProdDetails, b => b.tb_BOM_Ss, c => c.tb_BOM_SDetails, d => d.tb_unit_conversion, e => e.tb_unit_Target)//bom主 
+            .Includes(a => a.tb_ProdDetails, b => b.tb_BOM_Ss, c => c.tb_BOM_SDetails, d => d.tb_unit_conversion, e => e.tb_unit_target)//bom主 
             .AsNavQueryable()
             .Includes(a => a.tb_ProdDetails, b => b.tb_BOM_Ss, c => c.tb_BOM_SDetails, d => d.tb_unit_conversion, e => e.tb_unit_source)//bom主 
             .AsNavQueryable()
@@ -1149,7 +1149,7 @@ namespace RUINORERP.UI.SysConfig
             .AsNavQueryable()
             .Includes(b => b.tb_ProdDetails, c => c.tb_bom_s, d => d.tb_BOM_SDetails, e => e.tb_unit)//bom主 
             .AsNavQueryable()
-            .Includes(a => a.tb_ProdDetails, b => b.tb_bom_s, c => c.tb_BOM_SDetails, d => d.tb_unit_conversion, e => e.tb_unit_Target)//bom主 
+            .Includes(a => a.tb_ProdDetails, b => b.tb_bom_s, c => c.tb_BOM_SDetails, d => d.tb_unit_conversion, e => e.tb_unit_target)//bom主 
             .AsNavQueryable()
             .Includes(a => a.tb_ProdDetails, b => b.tb_bom_s, c => c.tb_BOM_SDetails, d => d.tb_unit_conversion, e => e.tb_unit_source)//bom主 
             .AsNavQueryable()

@@ -241,9 +241,19 @@ namespace RUINORERP.Business
             //    .Where(useLike,dto);
             //return await querySqlQueryable.ToListAsync();
         }
-
-
         public async virtual Task<ReturnResults<bool>> BatchCloseCaseAsync(List<T> entitys)
+        {
+            ReturnResults<bool> result = new ReturnResults<bool>();
+            await Task.Delay(0); // 模拟异步操作
+            return result;
+        }
+
+        /// <summary>
+        /// 反结案,这个权限在最终
+        /// </summary>
+        /// <param name="entitys"></param>
+        /// <returns></returns>
+        public async virtual Task<ReturnResults<bool>> AntiBatchCloseCaseAsync(List<T> entitys)
         {
             ReturnResults<bool> result = new ReturnResults<bool>();
             await Task.Delay(0); // 模拟异步操作

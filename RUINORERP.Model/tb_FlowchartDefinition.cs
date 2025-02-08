@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/14/2025 18:56:51
+// 时间：02/08/2025 16:31:59
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -46,8 +46,8 @@ namespace RUINORERP.Model
         { 
             get{return _ID;}
             set{
-            base.PrimaryKeyID = _ID;
             SetProperty(ref _ID, value);
+                base.PrimaryKeyID = _ID;
             }
         }
 
@@ -63,7 +63,7 @@ namespace RUINORERP.Model
             get{return _ModuleID;}
             set{
             SetProperty(ref _ModuleID, value);
-            }
+                        }
         }
 
         private string _FlowchartNo;
@@ -77,7 +77,7 @@ namespace RUINORERP.Model
             get{return _FlowchartNo;}
             set{
             SetProperty(ref _FlowchartNo, value);
-            }
+                        }
         }
 
         private string _FlowchartName;
@@ -91,19 +91,19 @@ namespace RUINORERP.Model
             get{return _FlowchartName;}
             set{
             SetProperty(ref _FlowchartName, value);
-            }
+                        }
         }
 
         #endregion
 
         #region 扩展属性
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(ModuleID))]
         public virtual tb_ModuleDefinition tb_moduledefinition { get; set; }
 
 
-        //[Browsable(false)]
+        //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_FlowchartItem.ID))]
         public virtual List<tb_FlowchartItem> tb_FlowchartItems { get; set; }
@@ -111,7 +111,7 @@ namespace RUINORERP.Model
         //ID.FK_TB_FLOWC_REF_TB_FLOWCTION)
         //tb_FlowchartDefinition.ID)
 
-        //[Browsable(false)]
+        //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_FlowchartLine.ID))]
         public virtual List<tb_FlowchartLine> tb_FlowchartLines { get; set; }

@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/14/2025 20:57:16
+// 时间：02/08/2025 16:32:04
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -46,8 +46,8 @@ namespace RUINORERP.Model
         { 
             get{return _MOCID;}
             set{
-            base.PrimaryKeyID = _MOCID;
             SetProperty(ref _MOCID, value);
+                base.PrimaryKeyID = _MOCID;
             }
         }
 
@@ -63,7 +63,7 @@ namespace RUINORERP.Model
             get{return _MOID;}
             set{
             SetProperty(ref _MOID, value);
-            }
+                        }
         }
 
         private long _ProdDetailID;
@@ -78,7 +78,7 @@ namespace RUINORERP.Model
             get{return _ProdDetailID;}
             set{
             SetProperty(ref _ProdDetailID, value);
-            }
+                        }
         }
 
         private bool? _IsKeyMaterial;
@@ -92,7 +92,7 @@ namespace RUINORERP.Model
             get{return _IsKeyMaterial;}
             set{
             SetProperty(ref _IsKeyMaterial, value);
-            }
+                        }
         }
 
         private string _property;
@@ -106,7 +106,7 @@ namespace RUINORERP.Model
             get{return _property;}
             set{
             SetProperty(ref _property, value);
-            }
+                        }
         }
 
         private long _ID;
@@ -120,7 +120,7 @@ namespace RUINORERP.Model
             get{return _ID;}
             set{
             SetProperty(ref _ID, value);
-            }
+                        }
         }
 
         private long _ParentId;
@@ -134,7 +134,7 @@ namespace RUINORERP.Model
             get{return _ParentId;}
             set{
             SetProperty(ref _ParentId, value);
-            }
+                        }
         }
 
         private long _Location_ID;
@@ -149,7 +149,7 @@ namespace RUINORERP.Model
             get{return _Location_ID;}
             set{
             SetProperty(ref _Location_ID, value);
-            }
+                        }
         }
 
         private string _BOM_NO;
@@ -163,7 +163,7 @@ namespace RUINORERP.Model
             get{return _BOM_NO;}
             set{
             SetProperty(ref _BOM_NO, value);
-            }
+                        }
         }
 
         private decimal _ShouldSendQty= ((0));
@@ -177,7 +177,7 @@ namespace RUINORERP.Model
             get{return _ShouldSendQty;}
             set{
             SetProperty(ref _ShouldSendQty, value);
-            }
+                        }
         }
 
         private decimal _ActualSentQty= ((0));
@@ -191,7 +191,7 @@ namespace RUINORERP.Model
             get{return _ActualSentQty;}
             set{
             SetProperty(ref _ActualSentQty, value);
-            }
+                        }
         }
 
         private decimal _OverSentQty= ((0));
@@ -205,7 +205,7 @@ namespace RUINORERP.Model
             get{return _OverSentQty;}
             set{
             SetProperty(ref _OverSentQty, value);
-            }
+                        }
         }
 
         private decimal _WastageQty= ((0));
@@ -219,7 +219,7 @@ namespace RUINORERP.Model
             get{return _WastageQty;}
             set{
             SetProperty(ref _WastageQty, value);
-            }
+                        }
         }
 
         private decimal _CurrentIinventory= ((0));
@@ -233,7 +233,7 @@ namespace RUINORERP.Model
             get{return _CurrentIinventory;}
             set{
             SetProperty(ref _CurrentIinventory, value);
-            }
+                        }
         }
 
         private decimal _UnitCost= ((0));
@@ -247,7 +247,7 @@ namespace RUINORERP.Model
             get{return _UnitCost;}
             set{
             SetProperty(ref _UnitCost, value);
-            }
+                        }
         }
 
         private decimal _SubtotalUnitCost= ((0));
@@ -261,7 +261,7 @@ namespace RUINORERP.Model
             get{return _SubtotalUnitCost;}
             set{
             SetProperty(ref _SubtotalUnitCost, value);
-            }
+                        }
         }
 
         private long? _BOM_ID;
@@ -275,7 +275,7 @@ namespace RUINORERP.Model
             get{return _BOM_ID;}
             set{
             SetProperty(ref _BOM_ID, value);
-            }
+                        }
         }
 
         private bool? _IsExternalProduce;
@@ -289,7 +289,7 @@ namespace RUINORERP.Model
             get{return _IsExternalProduce;}
             set{
             SetProperty(ref _IsExternalProduce, value);
-            }
+                        }
         }
 
         private string _Summary;
@@ -303,7 +303,7 @@ namespace RUINORERP.Model
             get{return _Summary;}
             set{
             SetProperty(ref _Summary, value);
-            }
+                        }
         }
 
         private string _AssemblyPosition;
@@ -317,7 +317,7 @@ namespace RUINORERP.Model
             get{return _AssemblyPosition;}
             set{
             SetProperty(ref _AssemblyPosition, value);
-            }
+                        }
         }
 
         private string _AlternativeProducts;
@@ -331,7 +331,7 @@ namespace RUINORERP.Model
             get{return _AlternativeProducts;}
             set{
             SetProperty(ref _AlternativeProducts, value);
-            }
+                        }
         }
 
         private string _Prelevel_BOM_Desc;
@@ -345,7 +345,7 @@ namespace RUINORERP.Model
             get{return _Prelevel_BOM_Desc;}
             set{
             SetProperty(ref _Prelevel_BOM_Desc, value);
-            }
+                        }
         }
 
         private long? _Prelevel_BOM_ID;
@@ -359,7 +359,7 @@ namespace RUINORERP.Model
             get{return _Prelevel_BOM_ID;}
             set{
             SetProperty(ref _Prelevel_BOM_ID, value);
-            }
+                        }
         }
 
         #endregion

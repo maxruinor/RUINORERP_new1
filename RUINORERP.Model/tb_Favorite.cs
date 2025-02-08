@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/14/2025 18:56:50
+// 时间：02/08/2025 16:31:58
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -46,8 +46,8 @@ namespace RUINORERP.Model
         { 
             get{return _ID;}
             set{
-            base.PrimaryKeyID = _ID;
             SetProperty(ref _ID, value);
+                base.PrimaryKeyID = _ID;
             }
         }
 
@@ -62,7 +62,7 @@ namespace RUINORERP.Model
             get{return _ReferenceID;}
             set{
             SetProperty(ref _ReferenceID, value);
-            }
+                        }
         }
 
         private string _Ref_Table_Name;
@@ -76,7 +76,7 @@ namespace RUINORERP.Model
             get{return _Ref_Table_Name;}
             set{
             SetProperty(ref _Ref_Table_Name, value);
-            }
+                        }
         }
 
         private string _ModuleName;
@@ -90,7 +90,7 @@ namespace RUINORERP.Model
             get{return _ModuleName;}
             set{
             SetProperty(ref _ModuleName, value);
-            }
+                        }
         }
 
         private string _BusinessType;
@@ -104,7 +104,7 @@ namespace RUINORERP.Model
             get{return _BusinessType;}
             set{
             SetProperty(ref _BusinessType, value);
-            }
+                        }
         }
 
         private bool _Public_enabled;
@@ -118,7 +118,7 @@ namespace RUINORERP.Model
             get{return _Public_enabled;}
             set{
             SetProperty(ref _Public_enabled, value);
-            }
+                        }
         }
 
         private bool _is_enabled;
@@ -132,7 +132,7 @@ namespace RUINORERP.Model
             get{return _is_enabled;}
             set{
             SetProperty(ref _is_enabled, value);
-            }
+                        }
         }
 
         private bool _is_available;
@@ -146,7 +146,7 @@ namespace RUINORERP.Model
             get{return _is_available;}
             set{
             SetProperty(ref _is_available, value);
-            }
+                        }
         }
 
         private string _Notes;
@@ -160,7 +160,7 @@ namespace RUINORERP.Model
             get{return _Notes;}
             set{
             SetProperty(ref _Notes, value);
-            }
+                        }
         }
 
         private DateTime? _Created_at;
@@ -174,7 +174,7 @@ namespace RUINORERP.Model
             get{return _Created_at;}
             set{
             SetProperty(ref _Created_at, value);
-            }
+                        }
         }
 
         private long? _Owner_by;
@@ -188,7 +188,7 @@ namespace RUINORERP.Model
             get{return _Owner_by;}
             set{
             SetProperty(ref _Owner_by, value);
-            }
+                        }
         }
 
         private long? _Created_by;
@@ -202,7 +202,7 @@ namespace RUINORERP.Model
             get{return _Created_by;}
             set{
             SetProperty(ref _Created_by, value);
-            }
+                        }
         }
 
         private DateTime? _Modified_at;
@@ -216,7 +216,7 @@ namespace RUINORERP.Model
             get{return _Modified_at;}
             set{
             SetProperty(ref _Modified_at, value);
-            }
+                        }
         }
 
         private long? _Modified_by;
@@ -230,7 +230,7 @@ namespace RUINORERP.Model
             get{return _Modified_by;}
             set{
             SetProperty(ref _Modified_by, value);
-            }
+                        }
         }
 
         #endregion

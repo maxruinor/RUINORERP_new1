@@ -269,21 +269,22 @@ namespace RUINORERP.UI.UserPersonalized
             if (listView1.SelectedItems != null && listView1.SelectedItems.Count > 0)
             {
                 var entity = listView1.SelectedItems[0].Tag as tb_UIQueryCondition;
-                if (panelConditionEdit.Controls.ContainsKey(entity.UIQCID.ToString()))
+
+                if (panelConditionEdit.Controls.ContainsKey(entity.FieldName.ToString()))
                 {
-                    var uCQuery = panelConditionEdit.Controls.CastToList<Control>().FirstOrDefault(c => c.Name == entity.UIQCID.ToString());
+                    var uCQuery = panelConditionEdit.Controls.CastToList<Control>().FirstOrDefault(c => c.Name == entity.FieldName.ToString());
                     if (uCQuery != null)
                     {
                         uCQuery.Visible = true;
                     }
                     //其它隐藏
-                    panelConditionEdit.Controls.CastToList<Control>().Where(c => c.Name != entity.UIQCID.ToString()).ToList().ForEach(c => c.Visible = false);
+                    panelConditionEdit.Controls.CastToList<Control>().Where(c => c.Name != entity.FieldName.ToString()).ToList().ForEach(c => c.Visible = false);
                 }
                 else
                 {
                     //有些闪屏。后面优化是不是加载时就全部加进去 
                     UCQueryCondition uCQuery = new UCQueryCondition();
-                    uCQuery.Name = entity.UIQCID.ToString();
+                    uCQuery.Name = entity.FieldName.ToString();
                     uCQuery.OnSynchronizeUI += UCQuery_OnSynchronizeUI;
                     uCQuery.QueryFields = QueryFields;
                     uCQuery.QueryDto = QueryDto;
@@ -294,8 +295,11 @@ namespace RUINORERP.UI.UserPersonalized
                     uCQuery.Dock = DockStyle.Fill;
                     panelConditionEdit.Controls.Add(uCQuery as Control);
                     //其它隐藏
-                    panelConditionEdit.Controls.CastToList<Control>().Where(c => c.Name != entity.UIQCID.ToString()).ToList().ForEach(c => c.Visible = false);
+                    panelConditionEdit.Controls.CastToList<Control>().Where(c => c.Name != entity.FieldName.ToString()).ToList().ForEach(c => c.Visible = false);
                 }
+
+
+
 
             }
 

@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/14/2025 18:56:56
+// 时间：02/08/2025 16:32:05
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -46,8 +46,8 @@ namespace RUINORERP.Model
         { 
             get{return _Detail_ID;}
             set{
-            base.PrimaryKeyID = _Detail_ID;
             SetProperty(ref _Detail_ID, value);
+                base.PrimaryKeyID = _Detail_ID;
             }
         }
 
@@ -63,7 +63,7 @@ namespace RUINORERP.Model
             get{return _MR_ID;}
             set{
             SetProperty(ref _MR_ID, value);
-            }
+                        }
         }
 
         private long _Location_ID;
@@ -78,7 +78,7 @@ namespace RUINORERP.Model
             get{return _Location_ID;}
             set{
             SetProperty(ref _Location_ID, value);
-            }
+                        }
         }
 
         private long _ProdDetailID;
@@ -93,7 +93,7 @@ namespace RUINORERP.Model
             get{return _ProdDetailID;}
             set{
             SetProperty(ref _ProdDetailID, value);
-            }
+                        }
         }
 
         private string _property;
@@ -107,7 +107,7 @@ namespace RUINORERP.Model
             get{return _property;}
             set{
             SetProperty(ref _property, value);
-            }
+                        }
         }
 
         private int _ShouldSendQty= ((0));
@@ -121,7 +121,7 @@ namespace RUINORERP.Model
             get{return _ShouldSendQty;}
             set{
             SetProperty(ref _ShouldSendQty, value);
-            }
+                        }
         }
 
         private int _ActualSentQty= ((0));
@@ -135,7 +135,7 @@ namespace RUINORERP.Model
             get{return _ActualSentQty;}
             set{
             SetProperty(ref _ActualSentQty, value);
-            }
+                        }
         }
 
         private int _CanQuantity= ((0));
@@ -149,7 +149,7 @@ namespace RUINORERP.Model
             get{return _CanQuantity;}
             set{
             SetProperty(ref _CanQuantity, value);
-            }
+                        }
         }
 
         private string _Summary;
@@ -163,7 +163,7 @@ namespace RUINORERP.Model
             get{return _Summary;}
             set{
             SetProperty(ref _Summary, value);
-            }
+                        }
         }
 
         private string _CustomerPartNo;
@@ -177,7 +177,7 @@ namespace RUINORERP.Model
             get{return _CustomerPartNo;}
             set{
             SetProperty(ref _CustomerPartNo, value);
-            }
+                        }
         }
 
         private decimal _Cost= ((0));
@@ -191,7 +191,7 @@ namespace RUINORERP.Model
             get{return _Cost;}
             set{
             SetProperty(ref _Cost, value);
-            }
+                        }
         }
 
         private decimal _Price= ((0));
@@ -205,7 +205,7 @@ namespace RUINORERP.Model
             get{return _Price;}
             set{
             SetProperty(ref _Price, value);
-            }
+                        }
         }
 
         private decimal _SubtotalPrice= ((0));
@@ -219,7 +219,7 @@ namespace RUINORERP.Model
             get{return _SubtotalPrice;}
             set{
             SetProperty(ref _SubtotalPrice, value);
-            }
+                        }
         }
 
         private decimal _SubtotalCost= ((0));
@@ -233,7 +233,7 @@ namespace RUINORERP.Model
             get{return _SubtotalCost;}
             set{
             SetProperty(ref _SubtotalCost, value);
-            }
+                        }
         }
 
         private int _ReturnQty= ((0));
@@ -247,7 +247,7 @@ namespace RUINORERP.Model
             get{return _ReturnQty;}
             set{
             SetProperty(ref _ReturnQty, value);
-            }
+                        }
         }
 
         private long _ManufacturingOrderDetailRowID;
@@ -261,24 +261,24 @@ namespace RUINORERP.Model
             get{return _ManufacturingOrderDetailRowID;}
             set{
             SetProperty(ref _ManufacturingOrderDetailRowID, value);
-            }
+                        }
         }
 
         #endregion
 
         #region 扩展属性
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(ProdDetailID))]
         public virtual tb_ProdDetail tb_proddetail { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(Location_ID))]
         public virtual tb_Location tb_location { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(MR_ID))]
         public virtual tb_MaterialRequisition tb_materialrequisition { get; set; }
 

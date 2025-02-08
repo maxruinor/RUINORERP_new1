@@ -33,6 +33,11 @@ namespace RUINORERP.Business
 
     public partial class tb_FM_ExpenseClaimController<T> : BaseController<T> where T : class
     {
+        /// <summary>
+        /// 费用报销反审
+        /// </summary>
+        /// <param name="ObjectEntity"></param>
+        /// <returns></returns>
         public async override Task<ReturnResults<T>> AntiApprovalAsync(T ObjectEntity)
         {
             ReturnResults<T> rmrs = new ReturnResults<T>();
@@ -43,7 +48,7 @@ namespace RUINORERP.Business
             {
                 // 开启事务，保证数据一致性
                 _unitOfWorkManage.BeginTran();
-                entity.DataStatus = (int)DataStatus.草稿;
+                entity.DataStatus = (int)DataStatus.新建;
                 entity.ApprovalStatus = (int)ApprovalStatus.未审核;
                 BusinessHelper.Instance.ApproverEntity(entity);
                 //只更新指定列

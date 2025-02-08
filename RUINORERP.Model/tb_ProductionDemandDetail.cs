@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/14/2025 18:57:05
+// 时间：02/08/2025 16:32:18
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -46,8 +46,8 @@ namespace RUINORERP.Model
         { 
             get{return _PDCID;}
             set{
-            base.PrimaryKeyID = _PDCID;
             SetProperty(ref _PDCID, value);
+                base.PrimaryKeyID = _PDCID;
             }
         }
 
@@ -63,7 +63,7 @@ namespace RUINORERP.Model
             get{return _PDID;}
             set{
             SetProperty(ref _PDID, value);
-            }
+                        }
         }
 
         private long _ProdDetailID;
@@ -78,7 +78,7 @@ namespace RUINORERP.Model
             get{return _ProdDetailID;}
             set{
             SetProperty(ref _ProdDetailID, value);
-            }
+                        }
         }
 
         private string _property;
@@ -92,7 +92,7 @@ namespace RUINORERP.Model
             get{return _property;}
             set{
             SetProperty(ref _property, value);
-            }
+                        }
         }
 
         private long _Location_ID;
@@ -107,7 +107,7 @@ namespace RUINORERP.Model
             get{return _Location_ID;}
             set{
             SetProperty(ref _Location_ID, value);
-            }
+                        }
         }
 
         private long? _BOM_ID;
@@ -122,7 +122,7 @@ namespace RUINORERP.Model
             get{return _BOM_ID;}
             set{
             SetProperty(ref _BOM_ID, value);
-            }
+                        }
         }
 
         private long? _ID;
@@ -136,7 +136,7 @@ namespace RUINORERP.Model
             get{return _ID;}
             set{
             SetProperty(ref _ID, value);
-            }
+                        }
         }
 
         private long? _ParentId;
@@ -150,7 +150,7 @@ namespace RUINORERP.Model
             get{return _ParentId;}
             set{
             SetProperty(ref _ParentId, value);
-            }
+                        }
         }
 
         private int _NetRequirement= ((0));
@@ -164,7 +164,7 @@ namespace RUINORERP.Model
             get{return _NetRequirement;}
             set{
             SetProperty(ref _NetRequirement, value);
-            }
+                        }
         }
 
         private int _GrossRequirement= ((0));
@@ -178,7 +178,7 @@ namespace RUINORERP.Model
             get{return _GrossRequirement;}
             set{
             SetProperty(ref _GrossRequirement, value);
-            }
+                        }
         }
 
         private int _NeedQuantity= ((0));
@@ -192,7 +192,7 @@ namespace RUINORERP.Model
             get{return _NeedQuantity;}
             set{
             SetProperty(ref _NeedQuantity, value);
-            }
+                        }
         }
 
         private int _MissingQuantity= ((0));
@@ -206,7 +206,7 @@ namespace RUINORERP.Model
             get{return _MissingQuantity;}
             set{
             SetProperty(ref _MissingQuantity, value);
-            }
+                        }
         }
 
         private DateTime _RequirementDate;
@@ -220,7 +220,7 @@ namespace RUINORERP.Model
             get{return _RequirementDate;}
             set{
             SetProperty(ref _RequirementDate, value);
-            }
+                        }
         }
 
         private int _BookInventory= ((0));
@@ -234,7 +234,7 @@ namespace RUINORERP.Model
             get{return _BookInventory;}
             set{
             SetProperty(ref _BookInventory, value);
-            }
+                        }
         }
 
         private int _AvailableStock= ((0));
@@ -248,7 +248,7 @@ namespace RUINORERP.Model
             get{return _AvailableStock;}
             set{
             SetProperty(ref _AvailableStock, value);
-            }
+                        }
         }
 
         private int _InTransitInventory= ((0));
@@ -262,7 +262,7 @@ namespace RUINORERP.Model
             get{return _InTransitInventory;}
             set{
             SetProperty(ref _InTransitInventory, value);
-            }
+                        }
         }
 
         private int _MakeProcessInventory= ((0));
@@ -276,7 +276,7 @@ namespace RUINORERP.Model
             get{return _MakeProcessInventory;}
             set{
             SetProperty(ref _MakeProcessInventory, value);
-            }
+                        }
         }
 
         private int _Sale_Qty= ((0));
@@ -290,7 +290,7 @@ namespace RUINORERP.Model
             get{return _Sale_Qty;}
             set{
             SetProperty(ref _Sale_Qty, value);
-            }
+                        }
         }
 
         private int _NotOutQty= ((0));
@@ -304,7 +304,7 @@ namespace RUINORERP.Model
             get{return _NotOutQty;}
             set{
             SetProperty(ref _NotOutQty, value);
-            }
+                        }
         }
 
         private string _Summary;
@@ -318,29 +318,29 @@ namespace RUINORERP.Model
             get{return _Summary;}
             set{
             SetProperty(ref _Summary, value);
-            }
+                        }
         }
 
         #endregion
 
         #region 扩展属性
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(ProdDetailID))]
         public virtual tb_ProdDetail tb_proddetail { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(BOM_ID))]
         public virtual tb_BOM_S tb_bom_s { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(PDID))]
         public virtual tb_ProductionDemand tb_productiondemand { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(Location_ID))]
         public virtual tb_Location tb_location { get; set; }
 

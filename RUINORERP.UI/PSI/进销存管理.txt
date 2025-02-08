@@ -26,7 +26,7 @@ ERP术语英语
 期初入库单
 期初盘点（盘点单标记）
 
-
+https://www.processon.com/preview/67a42cf8efe72c43c94afe05
 
 成本选择
 https://baijiahao.baidu.com/s?id=1719375008650622455&wfr=spider&for=pc
@@ -127,11 +127,5 @@ https://baijiahao.baidu.com/s?id=1727443819695122486&wfr=spider&for=pc
         库存查询时 条件无法下拉
         ---------------------
 
-        拆分组合功能
 
-        本来是了解到，老系统缴库时会有切割缴库的功能。
-
-        我想到平时也会有这个业务。 一个产品拆开卖。或多个产品组合卖。
-
-        专门实现一下这个功能。已经实现
 

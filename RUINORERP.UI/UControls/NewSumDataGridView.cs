@@ -554,7 +554,7 @@ namespace RUINORERP.UI.UControls
             //        cdcInv.Disable = true;
             //    }
             //}
-
+            ColumnDisplays.Where(c => c.Disable).ToList().ForEach(f => f.ColDisplayIndex = 1000);
             ColumnDisplayController cdc = ColumnDisplays.Where(c => c.ColName == "Selected").FirstOrDefault();
             if (cdc != null)
             {

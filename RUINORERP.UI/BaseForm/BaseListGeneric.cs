@@ -118,6 +118,23 @@ namespace RUINORERP.UI.BaseForm
 
             dataGridView1.XmlFileName = tableName;
 
+            dataGridView1.ColumnHeadersDefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
+
+            //这里设置了指定列不可见
+            foreach (var item in InvisibleCols)
+            {
+                KeyValuePair<string, bool> kv = new KeyValuePair<string, bool>();
+                dataGridView1.FieldNameList.TryRemove(item, out kv);
+            }
+            //这里设置指定列默认隐藏。可以手动配置显示
+            foreach (var item in DefaultHideCols)
+            {
+                KeyValuePair<string, bool> kv = new KeyValuePair<string, bool>();
+                dataGridView1.FieldNameList.TryRemove(item, out kv);
+                KeyValuePair<string, bool> Newkv = new KeyValuePair<string, bool>(kv.Key, false);
+                dataGridView1.FieldNameList.TryAdd(item, Newkv);
+            }
+
 
         }
 
@@ -1353,7 +1370,12 @@ namespace RUINORERP.UI.BaseForm
 
 
 
-
+        /// <summary>
+        /// 保存默认隐藏的列  
+        /// HashSet比List性能更好
+        /// 为了提高性能，特别是当 InvisibleCols 和 DefaultHideCols 列表较大时，可以使用 HashSet<string> 替代 List<string>。HashSet<string> 的查找性能更高（平均时间复杂度为 O(1)），而 List<string> 的查找性能为 O(n)。
+        /// </summary>
+        public HashSet<string> DefaultHideCols { get; set; } = new HashSet<string>();
 
 
         /// <summary>
@@ -1398,13 +1420,26 @@ namespace RUINORERP.UI.BaseForm
             }
             List<string> expInvisibleCols = ExpressionHelper.ExpressionListToStringList(InvisibleColsExp);
             InvisibleCols.AddRange(expInvisibleCols.ToArray());
-            ControlSingleTableColumnsInvisible(InvisibleCols);
+
+            //ControlSingleTableColumnsInvisible(InvisibleCols);
+
+            DefaultHideCols = new HashSet<string>();
+            UIHelper.ControlColumnsInvisible(CurMenuInfo, InvisibleCols, DefaultHideCols, false);
+ 
+            //这里设置了指定列不可见
             foreach (var item in InvisibleCols)
             {
                 KeyValuePair<string, bool> kv = new KeyValuePair<string, bool>();
                 dataGridView1.FieldNameList.TryRemove(item, out kv);
             }
-
+            //这里设置指定列默认隐藏。可以手动配置显示
+            foreach (var item in DefaultHideCols)
+            {
+                KeyValuePair<string, bool> kv = new KeyValuePair<string, bool>();
+                dataGridView1.FieldNameList.TryRemove(item, out kv);
+                KeyValuePair<string, bool> Newkv = new KeyValuePair<string, bool>(kv.Key, false);
+                dataGridView1.FieldNameList.TryAdd(item, Newkv);
+            }
 
 
             List<T> list = new List<T>();
@@ -1547,7 +1582,7 @@ namespace RUINORERP.UI.BaseForm
 
         }
 
-
+        [Obsolete("该方法已经废弃，请使用UIHelper.ControlColumnsInvisible")]
         /// <summary>
         /// 控制字段是否显示，添加到里面的是不显示的
         /// </summary>
@@ -1564,14 +1599,19 @@ namespace RUINORERP.UI.BaseForm
                         {
                             if (item.tb_fieldinfo != null)
                             {
-                                if (!item.IsVisble && !item.tb_fieldinfo.IsChild && !InvisibleCols.Contains(item.tb_fieldinfo.FieldName))
+                                //if ((!item.tb_fieldinfo.IsEnabled || !item.IsVisble) && item.tb_fieldinfo.IsChild)
+                                bool Add = !item.IsVisble && !item.tb_fieldinfo.IsChild && !InvisibleCols.Contains(item.tb_fieldinfo.FieldName);
+                                if ((!item.tb_fieldinfo.IsEnabled && !item.tb_fieldinfo.IsChild) || Add)
                                 {
-                                    InvisibleCols.Add(item.tb_fieldinfo.FieldName);
+                                    if (!InvisibleCols.Contains(item.tb_fieldinfo.FieldName))
+                                    {
+                                        InvisibleCols.Add(item.tb_fieldinfo.FieldName);
+                                    }
                                 }
 
                                 if (DefaultHideCols != null)
                                 {
-                                    if (item.HideValue && !item.tb_fieldinfo.IsChild && !InvisibleCols.Contains(item.tb_fieldinfo.FieldName))
+                                    if (item.tb_fieldinfo.DefaultHide && !item.tb_fieldinfo.IsChild && !InvisibleCols.Contains(item.tb_fieldinfo.FieldName))
                                     {
                                         DefaultHideCols.Add(item.tb_fieldinfo.FieldName);
                                     }

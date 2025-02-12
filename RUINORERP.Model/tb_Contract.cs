@@ -51,6 +51,21 @@ namespace RUINORERP.Model
             }
         }
 
+        private string _ContractNo;
+        /// <summary>
+        /// 合同编号
+        /// </summary>
+        [AdvQueryAttribute(ColName = "ContractNo", ColDesc = "合同编号")]
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType = "String", ColumnName = "ContractNo", Length = 50, IsNullable = true, ColumnDescription = "合同编号")]
+        public string ContractNo
+        {
+            get { return _ContractNo; }
+            set
+            {
+                SetProperty(ref _ContractNo, value);
+            }
+        }
+
         private long? _InvoiceInfo_ID;
         /// <summary>
         /// 
@@ -68,10 +83,10 @@ namespace RUINORERP.Model
 
         private DateTime? _Contract_Date;
         /// <summary>
-        /// 单据日期
+        /// 签署日期
         /// </summary>
-        [AdvQueryAttribute(ColName = "Contract_Date",ColDesc = "单据日期")] 
-        [SugarColumn(ColumnDataType = "datetime", SqlParameterDbType ="DateTime",  ColumnName = "Contract_Date" ,IsNullable = true,ColumnDescription = "单据日期" )]
+        [AdvQueryAttribute(ColName = "Contract_Date",ColDesc = "签署日期")] 
+        [SugarColumn(ColumnDataType = "datetime", SqlParameterDbType ="DateTime",  ColumnName = "Contract_Date" ,IsNullable = true,ColumnDescription = "签署日期")]
         public DateTime? Contract_Date
         { 
             get{return _Contract_Date;}
@@ -96,10 +111,10 @@ namespace RUINORERP.Model
 
         private long? _CustomerVendor_ID;
         /// <summary>
-        /// 客户
+        /// 往来单位
         /// </summary>
-        [AdvQueryAttribute(ColName = "CustomerVendor_ID",ColDesc = "客户")] 
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "CustomerVendor_ID" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "客户" )]
+        [AdvQueryAttribute(ColName = "CustomerVendor_ID",ColDesc = "往来单位")] 
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "CustomerVendor_ID" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "往来单位")]
         public long? CustomerVendor_ID
         { 
             get{return _CustomerVendor_ID;}
@@ -122,19 +137,7 @@ namespace RUINORERP.Model
                         }
         }
 
-        private string _ContractNo;
-        /// <summary>
-        /// 合同编号
-        /// </summary>
-        [AdvQueryAttribute(ColName = "ContractNo",ColDesc = "合同编号")] 
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "ContractNo" ,Length=50,IsNullable = true,ColumnDescription = "合同编号" )]
-        public string ContractNo
-        { 
-            get{return _ContractNo;}
-            set{
-            SetProperty(ref _ContractNo, value);
-                        }
-        }
+
 
         private int? _TotalQty;
         /// <summary>

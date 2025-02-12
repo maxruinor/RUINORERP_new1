@@ -457,7 +457,6 @@ namespace RUINORERP.UI.MRP.MP
             listColsTarget.SetCol_ReadOnly<tb_ProductionDemandTargetDetail>(c => c.NotIssueMaterialQty);
             listColsTarget.SetCol_ReadOnly<tb_ProductionDemandTargetDetail>(c => c.SaleQty);
 
-
             listColsTarget.SetCol_Summary<tb_ProductionDemandTargetDetail>(c => c.NeedQuantity);
             listColsTarget.SetCol_Summary<tb_ProductionDemandTargetDetail>(c => c.AvailableStock);
             listColsTarget.SetCol_Summary<tb_ProductionDemandTargetDetail>(c => c.BookInventory);
@@ -477,11 +476,15 @@ namespace RUINORERP.UI.MRP.MP
             {
                 foreach (var item in CurMenuInfo.tb_P4Fields.Where(p => p.tb_fieldinfo.IsChild && !p.IsVisble))
                 {
-                    //listCols.SetCol_NeverVisible(item.tb_fieldinfo.FieldName);
                     listColsTarget.SetCol_NeverVisible(item.tb_fieldinfo.FieldName, typeof(tb_ProductionDemandTargetDetail));
                 }
-
             }
+            //if (!AppContext.SysConfig.UseBarCode)
+            //{
+            //    listColsTarget.SetCol_NeverVisible<ProductSharePart>(c => c.BarCode);
+            //}
+            //ControlChildColumnsInvisible(listColsTarget);
+
             /*
             //具体审核权限的人才显示
             if (AppContext.CurUserInfo.UserButtonList.Where(c => c.BtnText == MenuItemEnums.审核.ToString()).Any())

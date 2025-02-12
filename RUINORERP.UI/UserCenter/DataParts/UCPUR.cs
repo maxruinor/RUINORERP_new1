@@ -53,7 +53,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
             this.Dock = DockStyle.Fill;
         }
         public GridViewRelated GridRelated { get; set; } = new GridViewRelated();
-      
+
 
         public List<tb_PurOrder> OrderList = new List<tb_PurOrder>();
 
@@ -104,7 +104,11 @@ namespace RUINORERP.UI.UserCenter.DataParts
                    .AsNavQueryable()
                    .Includes(c => c.tb_PurEntries, d => d.tb_PurEntryRes, f => f.tb_PurReturnEntries, g => g.tb_PurReturnEntryDetails)
                   .WhereIF(AuthorizeController.GetPurBizLimitedAuth(MainForm.Instance.AppContext) && !MainForm.Instance.AppContext.IsSuperUser, t => t.Employee_ID == MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID)//限制了采购只看到自己的
-                  .Where(c => (c.DataStatus == 2 || c.DataStatus == 4)).OrderBy(c => c.PurDate)
+                  //.Where(c => (c.DataStatus == 2 || c.DataStatus == 4)).OrderBy(c => c.PurDate)
+                  //.Where(t => t.DataStatus == (int)DataStatus.确认)
+                  .Where(t => t.ApprovalStatus.HasValue && t.ApprovalStatus.Value == (int)ApprovalStatus.已审核)
+                  .Where(t => t.ApprovalResults.HasValue && t.ApprovalResults.Value == true)
+                   .Where(c => c.DataStatus == (int)DataStatus.确认).OrderBy(c => c.PurDate)
                     //.WithCache(60) // 缓存60秒
                   .ToListAsync();
                 }
@@ -155,7 +159,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
                         List<tb_PurOrderDetail> OrderDetails = Order.tb_PurOrderDetails;
                         foreach (tb_PurOrderDetail OrderDetail in OrderDetails)
                         {
-                            View_ProdDetail prodDetail =  UIBizSrvice.GetProdDetail<View_ProdDetail>(OrderDetail.ProdDetailID);
+                            View_ProdDetail prodDetail = UIBizSrvice.GetProdDetail<View_ProdDetail>(OrderDetail.ProdDetailID);
                             tb_ProductType productType = new tb_ProductType();
                             if (prodDetail.Type_ID.HasValue)
                             {
@@ -211,7 +215,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
                         item.Cells[3].Value = Order.tb_PurEntries.Sum(c => c.TotalQty);//已交付货数量
                         item.Cells[4].Value = project;
                     }
-                   
+
                     #endregion
 
                 }
@@ -319,7 +323,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
                     #endregion
                 }
 
-                
+
             }
         }
 

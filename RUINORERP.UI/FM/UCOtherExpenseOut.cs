@@ -282,7 +282,6 @@ namespace RUINORERP.UI.FM
             listCols.SetCol_NeverVisible<tb_FM_OtherExpenseDetail>(c => c.ExpenseSubID);
 
 
-
             //listCols.SetCol_ReadOnly<tb_FM_OtherExpenseDetail>(c => c.CNName);
 
 

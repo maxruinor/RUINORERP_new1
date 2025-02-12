@@ -7,6 +7,18 @@ using System.Threading.Tasks;
 
 namespace RUINORERP.Global
 {
+    //合同类型枚举
+
+    //合同类型枚举
+
+    public enum ContractEnum
+    {
+        [Description("销售合同")]
+        SaleContract = 1,
+        [Description("采购合同")]
+        PurContract = 2,
+    }
+
 
     public enum ProdQueryUseType
     {

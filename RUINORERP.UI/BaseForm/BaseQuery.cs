@@ -57,6 +57,7 @@ namespace RUINORERP.UI.BaseForm
         /// <returns></returns>
         internal virtual object LoadQueryConditionToUI(decimal QueryConditionShowColQty)
         {
+            
             return null;
         }
 
@@ -64,10 +65,11 @@ namespace RUINORERP.UI.BaseForm
 
         /// <summary>
         /// 设置GridView显示配置
+        /// 主子表查询与单表查询是不是命名要统一起来？
         /// </summary>
         public virtual void SetGridViewDisplayConfig()
         {
-
+            
         }
 
     }

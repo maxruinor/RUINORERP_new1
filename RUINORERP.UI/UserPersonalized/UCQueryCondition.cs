@@ -184,17 +184,37 @@ namespace RUINORERP.UI.UserPersonalized
 
                 if (queryField.SugarCol != null)
                 {
-                    //字符串才启用模糊查询
-                    if (queryField.SugarCol.SqlParameterDbType.ToString() == "String")
+                    if (queryField.SugarCol.SqlParameterDbType!=null)
                     {
-                        lblUselike.Visible = true;
-                        chkUseLike.Visible = true;
+                        //字符串才启用模糊查询
+                        if (queryField.SugarCol.SqlParameterDbType.ToString() == "String")
+                        {
+                            lblUselike.Visible = true;
+                            chkUseLike.Visible = true;
+                        }
+                        else
+                        {
+                            lblUselike.Visible = false;
+                            chkUseLike.Visible = false;
+                        }
                     }
                     else
                     {
-                        lblUselike.Visible = false;
-                        chkUseLike.Visible = false;
+                        #region 用其它方式判断
+                        //字符串才启用模糊查询
+                        if (queryField.FieldPropertyInfo!=null && queryField.FieldPropertyInfo.PropertyType.ToString() == "System.String")
+                        {
+                            lblUselike.Visible = true;
+                            chkUseLike.Visible = true;
+                        }
+                        else
+                        {
+                            lblUselike.Visible = false;
+                            chkUseLike.Visible = false;
+                        }
+                        #endregion
                     }
+
                 }
 
             }

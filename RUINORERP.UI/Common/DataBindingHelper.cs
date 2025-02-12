@@ -1248,7 +1248,11 @@ namespace RUINORERP.UI.Common
             // Change on event 因为UI中，有时选择后。直接操作按钮。并没有激发验证事件。所以实体中属性没有变更。这里强制变更一下。
             chkBox.CheckedChanged += delegate
             {
-                ReflectionHelper.SetPropertyValue(entity, key, chkBox.Checked);
+                if (chkBox.Focused)
+                {
+                    ReflectionHelper.SetPropertyValue(entity, key, chkBox.Checked);
+                }
+               
             };
             //数据源的数据类型转换为控件要求的数据类型。
             binddata.Format += (s, args) => args.Value = args.Value == null ? false : args.Value;

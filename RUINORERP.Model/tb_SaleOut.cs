@@ -240,10 +240,10 @@ namespace RUINORERP.Model
 
         private string _ShippingAddress;
         /// <summary>
-        /// 发货地址
+        /// 收货地址
         /// </summary>
-        [AdvQueryAttribute(ColName = "ShippingAddress",ColDesc = "发货地址")] 
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "ShippingAddress" ,Length=500,IsNullable = true,ColumnDescription = "发货地址" )]
+        [AdvQueryAttribute(ColName = "ShippingAddress",ColDesc = "收货地址")] 
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "ShippingAddress" ,Length=500,IsNullable = true,ColumnDescription = "收货地址")]
         public string ShippingAddress
         { 
             get{return _ShippingAddress;}

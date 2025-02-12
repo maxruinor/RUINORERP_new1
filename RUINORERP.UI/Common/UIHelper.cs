@@ -195,34 +195,21 @@ namespace RUINORERP.UI.Common
                     {
                         if (item != null)
                         {
-                            if (item.tb_fieldinfo != null)
+                            if (item.tb_fieldinfo != null && item.tb_fieldinfo.IsChild == isChild)
                             {
-                                if (isChild)
+                                //权限设置了不可见
+                                if (!item.IsVisble && !InvisibleCols.Contains(item.tb_fieldinfo.FieldName))
                                 {
-                                    if (!item.IsVisble && item.tb_fieldinfo.IsChild && !InvisibleCols.Contains(item.tb_fieldinfo.FieldName))
-                                    {
-                                        InvisibleCols.Add(item.tb_fieldinfo.FieldName);
-                                    }
-  
-
-                                    if (item.HideValue && item.tb_fieldinfo.IsChild && !DefaultHideCols.Contains(item.tb_fieldinfo.FieldName))
-                                    {
-                                        DefaultHideCols.Add(item.tb_fieldinfo.FieldName);
-                                    }
-
+                                    InvisibleCols.Add(item.tb_fieldinfo.FieldName);
                                 }
-                                else
+                                //系统级设置了字段不可用时
+                                if (!item.tb_fieldinfo.IsEnabled && !InvisibleCols.Contains(item.tb_fieldinfo.FieldName))
                                 {
-                                    if (!item.IsVisble && !item.tb_fieldinfo.IsChild && !InvisibleCols.Contains(item.tb_fieldinfo.FieldName))
-                                    {
-                                        InvisibleCols.Add(item.tb_fieldinfo.FieldName);
-                                    }
-
-                                    if (item.HideValue && !item.tb_fieldinfo.IsChild && !DefaultHideCols.Contains(item.tb_fieldinfo.FieldName))
-                                    {
-                                        DefaultHideCols.Add(item.tb_fieldinfo.FieldName);
-                                    }
-
+                                    InvisibleCols.Add(item.tb_fieldinfo.FieldName);
+                                }
+                                if (item.tb_fieldinfo.DefaultHide && !DefaultHideCols.Contains(item.tb_fieldinfo.FieldName))
+                                {
+                                    DefaultHideCols.Add(item.tb_fieldinfo.FieldName);
                                 }
 
                             }

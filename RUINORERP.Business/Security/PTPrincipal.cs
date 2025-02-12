@@ -262,6 +262,7 @@ namespace RUINORERP.Business.Security
                 appcontext.CurrentUser_Role_Personalized = new tb_UserPersonalized();
                 appcontext.CurrentUser_Role_Personalized.ID = appcontext.CurrentUser_Role.ID;
                 appcontext.CurrentUser_Role.tb_UserPersonalizeds.Add(appcontext.CurrentUser_Role_Personalized);
+                RUINORERP.Business.BusinessHelper.Instance.InitEntity(appcontext.CurrentUser_Role_Personalized);
                 appcontext.Db.Insertable(appcontext.CurrentUser_Role_Personalized).ExecuteReturnSnowflakeIdAsync();
             }
 

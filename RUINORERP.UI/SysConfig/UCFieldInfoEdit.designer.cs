@@ -29,6 +29,10 @@
         private void InitializeComponent()
         {
             this.kryptonPanel1 = new Krypton.Toolkit.KryptonPanel();
+            this.kryptonLabel2 = new Krypton.Toolkit.KryptonLabel();
+            this.chkReadOnly = new Krypton.Toolkit.KryptonCheckBox();
+            this.kryptonLabel1 = new Krypton.Toolkit.KryptonLabel();
+            this.chkDefaultHide = new Krypton.Toolkit.KryptonCheckBox();
             this.lblEntityName = new Krypton.Toolkit.KryptonLabel();
             this.txtEntityName = new Krypton.Toolkit.KryptonTextBox();
             this.lblFieldName = new Krypton.Toolkit.KryptonLabel();
@@ -52,6 +56,10 @@
             // 
             // kryptonPanel1
             // 
+            this.kryptonPanel1.Controls.Add(this.kryptonLabel2);
+            this.kryptonPanel1.Controls.Add(this.chkReadOnly);
+            this.kryptonPanel1.Controls.Add(this.kryptonLabel1);
+            this.kryptonPanel1.Controls.Add(this.chkDefaultHide);
             this.kryptonPanel1.Controls.Add(this.lblEntityName);
             this.kryptonPanel1.Controls.Add(this.txtEntityName);
             this.kryptonPanel1.Controls.Add(this.lblFieldName);
@@ -74,11 +82,43 @@
             this.kryptonPanel1.Size = new System.Drawing.Size(500, 337);
             this.kryptonPanel1.TabIndex = 2;
             // 
+            // kryptonLabel2
+            // 
+            this.kryptonLabel2.Location = new System.Drawing.Point(79, 200);
+            this.kryptonLabel2.Name = "kryptonLabel2";
+            this.kryptonLabel2.Size = new System.Drawing.Size(36, 20);
+            this.kryptonLabel2.TabIndex = 24;
+            this.kryptonLabel2.Values.Text = "只读";
+            // 
+            // chkReadOnly
+            // 
+            this.chkReadOnly.Location = new System.Drawing.Point(126, 204);
+            this.chkReadOnly.Name = "chkReadOnly";
+            this.chkReadOnly.Size = new System.Drawing.Size(19, 13);
+            this.chkReadOnly.TabIndex = 25;
+            this.chkReadOnly.Values.Text = "";
+            // 
+            // kryptonLabel1
+            // 
+            this.kryptonLabel1.Location = new System.Drawing.Point(53, 174);
+            this.kryptonLabel1.Name = "kryptonLabel1";
+            this.kryptonLabel1.Size = new System.Drawing.Size(62, 20);
+            this.kryptonLabel1.TabIndex = 22;
+            this.kryptonLabel1.Values.Text = "默认隐藏";
+            // 
+            // chkDefaultHide
+            // 
+            this.chkDefaultHide.Location = new System.Drawing.Point(126, 178);
+            this.chkDefaultHide.Name = "chkDefaultHide";
+            this.chkDefaultHide.Size = new System.Drawing.Size(19, 13);
+            this.chkDefaultHide.TabIndex = 23;
+            this.chkDefaultHide.Values.Text = "";
+            // 
             // lblEntityName
             // 
             this.lblEntityName.Location = new System.Drawing.Point(53, 26);
             this.lblEntityName.Name = "lblEntityName";
-            this.lblEntityName.Size = new System.Drawing.Size(60, 20);
+            this.lblEntityName.Size = new System.Drawing.Size(62, 20);
             this.lblEntityName.TabIndex = 8;
             this.lblEntityName.Values.Text = "实体名称";
             // 
@@ -94,7 +134,7 @@
             // 
             this.lblFieldName.Location = new System.Drawing.Point(53, 51);
             this.lblFieldName.Name = "lblFieldName";
-            this.lblFieldName.Size = new System.Drawing.Size(60, 20);
+            this.lblFieldName.Size = new System.Drawing.Size(62, 20);
             this.lblFieldName.TabIndex = 10;
             this.lblFieldName.Values.Text = "字段名称";
             // 
@@ -110,7 +150,7 @@
             // 
             this.lblFieldText.Location = new System.Drawing.Point(53, 76);
             this.lblFieldText.Name = "lblFieldText";
-            this.lblFieldText.Size = new System.Drawing.Size(60, 20);
+            this.lblFieldText.Size = new System.Drawing.Size(62, 20);
             this.lblFieldText.TabIndex = 12;
             this.lblFieldText.Values.Text = "字段显示";
             // 
@@ -124,9 +164,9 @@
             // 
             // lblClassPath
             // 
-            this.lblClassPath.Location = new System.Drawing.Point(53, 101);
+            this.lblClassPath.Location = new System.Drawing.Point(66, 101);
             this.lblClassPath.Name = "lblClassPath";
-            this.lblClassPath.Size = new System.Drawing.Size(48, 20);
+            this.lblClassPath.Size = new System.Drawing.Size(49, 20);
             this.lblClassPath.TabIndex = 14;
             this.lblClassPath.Values.Text = "类路径";
             // 
@@ -140,15 +180,15 @@
             // 
             // lblIsForm
             // 
-            this.lblIsForm.Location = new System.Drawing.Point(53, 126);
+            this.lblIsForm.Location = new System.Drawing.Point(40, 125);
             this.lblIsForm.Name = "lblIsForm";
-            this.lblIsForm.Size = new System.Drawing.Size(73, 20);
+            this.lblIsForm.Size = new System.Drawing.Size(75, 20);
             this.lblIsForm.TabIndex = 16;
             this.lblIsForm.Values.Text = "是否为窗体";
             // 
             // chkIsForm
             // 
-            this.chkIsForm.Location = new System.Drawing.Point(126, 122);
+            this.chkIsForm.Location = new System.Drawing.Point(126, 130);
             this.chkIsForm.Name = "chkIsForm";
             this.chkIsForm.Size = new System.Drawing.Size(19, 13);
             this.chkIsForm.TabIndex = 17;
@@ -158,13 +198,13 @@
             // 
             this.lblIsEnabled.Location = new System.Drawing.Point(53, 151);
             this.lblIsEnabled.Name = "lblIsEnabled";
-            this.lblIsEnabled.Size = new System.Drawing.Size(60, 20);
+            this.lblIsEnabled.Size = new System.Drawing.Size(62, 20);
             this.lblIsEnabled.TabIndex = 18;
             this.lblIsEnabled.Values.Text = "是否启用";
             // 
             // chkIsEnabled
             // 
-            this.chkIsEnabled.Location = new System.Drawing.Point(126, 147);
+            this.chkIsEnabled.Location = new System.Drawing.Point(126, 155);
             this.chkIsEnabled.Name = "chkIsEnabled";
             this.chkIsEnabled.Size = new System.Drawing.Size(19, 13);
             this.chkIsEnabled.TabIndex = 19;
@@ -172,15 +212,15 @@
             // 
             // lblNotes
             // 
-            this.lblNotes.Location = new System.Drawing.Point(53, 176);
+            this.lblNotes.Location = new System.Drawing.Point(79, 229);
             this.lblNotes.Name = "lblNotes";
-            this.lblNotes.Size = new System.Drawing.Size(35, 20);
+            this.lblNotes.Size = new System.Drawing.Size(36, 20);
             this.lblNotes.TabIndex = 20;
             this.lblNotes.Values.Text = "备注";
             // 
             // txtNotes
             // 
-            this.txtNotes.Location = new System.Drawing.Point(126, 172);
+            this.txtNotes.Location = new System.Drawing.Point(126, 225);
             this.txtNotes.Multiline = true;
             this.txtNotes.Name = "txtNotes";
             this.txtNotes.Size = new System.Drawing.Size(281, 21);
@@ -240,5 +280,9 @@
         private Krypton.Toolkit.KryptonCheckBox chkIsEnabled;
         private Krypton.Toolkit.KryptonLabel lblNotes;
         private Krypton.Toolkit.KryptonTextBox txtNotes;
+        private Krypton.Toolkit.KryptonLabel kryptonLabel1;
+        private Krypton.Toolkit.KryptonCheckBox chkDefaultHide;
+        private Krypton.Toolkit.KryptonLabel kryptonLabel2;
+        private Krypton.Toolkit.KryptonCheckBox chkReadOnly;
     }
 }

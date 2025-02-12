@@ -17,7 +17,7 @@ namespace RUINORERP.UI.UControls
     /// 列显示控制器
     /// </summary>
     [Serializable]
-    public class ColumnDisplayController : INotifyPropertyChanged
+    public class ColumnDisplayController : INotifyPropertyChanged, IEquatable<ColumnDisplayController>
     {
         //public string ColKeName { get; set; } = Guid.NewGuid().ToString();
         private string colDisplayText = string.Empty;
@@ -54,7 +54,7 @@ namespace RUINORERP.UI.UControls
                 return _isFixed;
             }
         }
-        
+
 
         /// <summary>
         /// 显示顺序
@@ -106,6 +106,7 @@ namespace RUINORERP.UI.UControls
         }
         /// <summary>
         /// 如果为真，则不参与控制，并且不显示
+        /// 不可用
         /// </summary>
         public bool Disable { get; set; } = false;
 
@@ -161,6 +162,28 @@ namespace RUINORERP.UI.UControls
             storage = value;
             this.OnPropertyChanged(propertyName);
         }
+
+        // 实现 IEquatable<T>
+        public bool Equals(ColumnDisplayController other)
+        {
+            if (other == null)
+                return false;
+
+            // 比较对象的属性值，根据业务需求选择合适的属性
+            return ColName == other.ColName && GridKeyName == other.GridKeyName;
+        }
+
+        // 重写 Equals 和 GetHashCode，确保两者保持一致
+        public override bool Equals(object obj)
+        {
+            return Equals(obj as ColumnDisplayController);
+        }
+
+        //public override int GetHashCode()
+        //{
+        //    // 使用一个工具类来生成哈希值
+        //    return HashCode.Combine(GridKeyName, ColName);
+        //}
 
         #endregion
 

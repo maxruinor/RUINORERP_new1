@@ -740,15 +740,11 @@ namespace RUINORERP.UI.SysConfig
                 pb.FieldInfo_ID = item.FieldInfo_ID;
                 pb.MenuID = menuInfo.MenuID;
                 pb.IsVisble = false;
-                pb.OnlyRead = true;
-                pb.CanReadWrite = false;
-                pb.HideValue = false;
-                pb.IsChild = item.IsChild;
                 BusinessHelper.Instance.InitEntity(pb);
                 bool isexist = ctrPField.IsExist(e => e.RoleID == pb.RoleID
                 && e.FieldInfo_ID == pb.FieldInfo_ID
                 && e.MenuID == menuInfo.MenuID
-                && e.IsChild == pb.IsChild);
+               );
                 if (!isexist)
                 {
                     pblist.Add(pb);

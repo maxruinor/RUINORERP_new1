@@ -15,6 +15,7 @@ using Mapster;
 using System.Linq;
 using System.Web.Caching;
 using Fireasy.Common.Extensions;
+using SqlSugar;
 
 namespace RUINORERP.Extensions.Middlewares
 {
@@ -362,33 +363,48 @@ namespace RUINORERP.Extensions.Middlewares
                     {
                         // Type elementType = TypeHelper.GetFirstArgumentType(listType);
                         Type elementType = NewTableTypeList.GetValue(tableName);
-                        #region  强类型
-                        var lastlist = ((IEnumerable<dynamic>)cachelist).Select(item => Activator.CreateInstance(elementType)).ToList();
-
                         //List<object> oldlist = (List<object>)cachelist;
                         List<object> newList = TypeHelper.ConvertJArrayToList(elementType, newJarryList);
-                        //如果是相同时 极有可能是 分页发送的 第一页100，第二页也100时，这时也要比较处理
-                        if (newList.Count == lastlist.Count)
+                        if (cachelist.GetType().FullName.Contains("System.Collections.Generic.List`1[["))
                         {
-                            if (lastlist.Contains(newList))
+                            List<object> newcachelist = new List<object>();
+                            foreach (object item in (IEnumerable)cachelist)
                             {
-                                CacheEntityList.Update(tableName, k => newList);
+                                newcachelist.Add(item);
                             }
-                            else
-                            {
-                                CacheEntityList.Update(tableName, k => newList);
-                            }
-                            
+                            // 合并JArray并排除重复项,因为有分页传所以不能全部替换
+                            var combinedList = CombineLists(elementType, newcachelist, newList, pair.Key);
+                            CacheEntityList.Update(tableName, k => combinedList);
                         }
                         else
                         {
-                            // 合并JArray并排除重复项,因为有分页传所以不能全部替换
-                            var combinedList = CombineLists(elementType, lastlist, newList, pair.Key);
-                            CacheEntityList.Update(tableName, k => combinedList);
+                            #region  强类型
+                            var lastlist = ((IEnumerable<dynamic>)cachelist).Select(item => Activator.CreateInstance(elementType)).ToList();
+
+                            //如果是相同时 极有可能是 分页发送的 第一页100，第二页也100时，这时也要比较处理
+                            if (newList.Count == lastlist.Count)
+                            {
+                                if (lastlist.Contains(newList))
+                                {
+                                    CacheEntityList.Update(tableName, k => newList);
+                                }
+                                else
+                                {
+                                    CacheEntityList.Update(tableName, k => newList);
+                                }
+
+                            }
+                            else
+                            {
+                                // 合并JArray并排除重复项,因为有分页传所以不能全部替换
+                                var combinedList = CombineLists(elementType, lastlist, newList, pair.Key);
+                                CacheEntityList.Update(tableName, k => combinedList);
+                            }
+
+
+                            #endregion
                         }
 
-
-                        #endregion
                     }
                     else if (TypeHelper.IsJArrayList(listType))
                     {
@@ -423,14 +439,32 @@ namespace RUINORERP.Extensions.Middlewares
         }
 
 
+        /// <summary>
+        /// 按主键合并后排除重复，后面是不是可以按时间等优先级来处理
+        /// </summary>
+        /// <param name="elementType"></param>
+        /// <param name="cacheList"></param>
+        /// <param name="newList"></param>
+        /// <param name="key"></param>
+        /// <returns></returns>
         private List<object> CombineLists(Type elementType, List<object> cacheList, List<object> newList, string key)
         {
             var combinedList = cacheList
                 .Concat(newList) // 合并两个列表
-                .GroupBy(item => item.GetPropertyValue(key)) // 按键值分组
+                .GroupBy(item => item.GetPropertyValue(key)) // 按键值分组 
                 .Select(group => group.First()) // 从每个分组中选择第一个元素
                 .Where(c => c.GetPropertyValue(key).IsNotEmptyOrNull() && c.GetPropertyValue(key).ToString() != "0") // 过滤条件
                 .ToList(); // 转换为列表
+
+            // combinedList = cacheList
+            //.Concat(newList)
+            //.ToLookup(item => item.GetPropertyValue(key)) // 按键值分组,会保留其它元素
+            //.Select(group => group.First()) // 从每个分组中选择第一个元素（优先保留 cacheList 中的元素）
+            //.Where(c => c.GetPropertyValue(key).IsNotEmptyOrNull() && c.GetPropertyValue(key).ToString() != "0") // 过滤条件
+            //.ToList(); // 转换为列表
+
+            //ToLookup 适合需要快速查找分组的场景，尤其是在需要多次查找时性能更好。
+            //GroupBy 适合处理大型集合，因为它使用延迟执行，可以节省内存和提高性能。
 
             return combinedList;
         }
@@ -439,6 +473,9 @@ namespace RUINORERP.Extensions.Middlewares
 
         /*
          代码解释
+        ToLookup：
+ToLookup 将集合中的元素按指定的键值分组，并返回一个 ILookup<TKey, TElement> 对象。
+这样可以确保每个键值对应的分组中包含所有相关的元素。
 Concat：
 连接：
 将 cacheList 和 newList 合并为一个列表。

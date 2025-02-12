@@ -176,9 +176,9 @@ namespace RUINORERP.UI.PUR
         }
         private void button设置查询条件_Click(object sender, EventArgs e)
         {
-             
+
         }
-    
+
 
 
         /// <summary>
@@ -266,6 +266,9 @@ namespace RUINORERP.UI.PUR
                         .Includes(c => c.tb_PurEntries, d => d.tb_PurEntryRes, f => f.tb_PurReturnEntries, g => g.tb_PurReturnEntryDetails)
                        .WhereIF(AuthorizeController.GetPurBizLimitedAuth(MainForm.Instance.AppContext) && !MainForm.Instance.AppContext.IsSuperUser, t => t.Employee_ID == MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID)//限制了采购只看到自己的
                       .Where(expPO)
+                      .Where(t => t.DataStatus == (int)DataStatus.确认)
+                      .Where(t => t.ApprovalStatus.HasValue && t.ApprovalStatus.Value == (int)ApprovalStatus.已审核)
+                      .Where(t => t.ApprovalResults.HasValue && t.ApprovalResults.Value == true)
                       .OrderBy(c => c.PurDate)
                       // .WithCache(60) // 缓存60秒
                       .ToPageListAsync(1, 1000);
@@ -700,7 +703,7 @@ namespace RUINORERP.UI.PUR
                     }
                 }
 
-                kryptonDockingManagerQuery.Cells.ForEach(c=>c.Button.CloseButtonDisplay= ButtonDisplay.Hide);
+                kryptonDockingManagerQuery.Cells.ForEach(c => c.Button.CloseButtonDisplay = ButtonDisplay.Hide);
 
             }
         }

@@ -31,6 +31,7 @@ namespace RUINORERP.UI.BaseForm
 
         /// <summary>
         /// 保存不可见的列
+        /// 系统设置为不可用，或程序中控制了不可见的列
         /// </summary>
         public HashSet<string> InvisibleCols { get; set; } = new HashSet<string>();
 

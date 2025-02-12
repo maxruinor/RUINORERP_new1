@@ -509,10 +509,14 @@ namespace RUINORERP.UI.BaseForm
                     {
                         if (item != null)
                         {
+
+                            //主表时,列不可用或设置为不可见时
+                            //设置不可见
                             if (item.tb_fieldinfo != null)
                             {
                                 //设置不可见
-                                if (!item.IsVisble && item.tb_fieldinfo.IsChild)
+                                //if (!item.IsVisble && item.tb_fieldinfo.IsChild)
+                                if ((!item.tb_fieldinfo.IsEnabled || !item.IsVisble) && item.tb_fieldinfo.IsChild)
                                 {
                                     SourceGridDefineColumnItem defineColumnItem = listCols.Where(w => w.ColName == item.tb_fieldinfo.FieldName).FirstOrDefault();
                                     if (defineColumnItem != null)
@@ -520,8 +524,9 @@ namespace RUINORERP.UI.BaseForm
                                         defineColumnItem.SetCol_NeverVisible(item.tb_fieldinfo.FieldName);
                                     }
                                 }
+
                                 //设置默认隐藏
-                                if (item.HideValue && item.tb_fieldinfo.IsChild)
+                                if (item.tb_fieldinfo.DefaultHide && item.tb_fieldinfo.IsChild)
                                 {
                                     SourceGridDefineColumnItem defineColumnItem = listCols.Where(w => w.ColName == item.tb_fieldinfo.FieldName).FirstOrDefault();
                                     if (defineColumnItem != null)
@@ -556,8 +561,9 @@ namespace RUINORERP.UI.BaseForm
                         {
                             if (item.tb_fieldinfo != null)
                             {
+                                //主表时,列不可用或设置为不可见时
                                 //设置不可见
-                                if (!item.IsVisble && !item.tb_fieldinfo.IsChild)
+                                if ((!item.tb_fieldinfo.IsEnabled || !item.IsVisble) && !item.tb_fieldinfo.IsChild)
                                 {
                                     KryptonTextBox txtTextBox = UIHelper.FindTextBox(this, item.tb_fieldinfo.FieldName);
                                     if (txtTextBox != null)
@@ -1304,7 +1310,7 @@ namespace RUINORERP.UI.BaseForm
                     }
                     if (ReflectionHelper.ExistPropertyName<T>("ApprovalStatus"))
                     {
-                        EditEntity.SetPropertyValue("ApprovalStatus",(int)ApprovalStatus.驳回);
+                        EditEntity.SetPropertyValue("ApprovalStatus", (int)ApprovalStatus.驳回);
                     }
                     if (ReflectionHelper.ExistPropertyName<T>("ApprovalResults"))
                     {
@@ -1313,7 +1319,7 @@ namespace RUINORERP.UI.BaseForm
                     BusinessHelper.Instance.ApproverEntity(EditEntity);
                     BaseController<T> ctrBase = Startup.GetFromFacByName<BaseController<T>>(typeof(T).Name + "Controller");
                     //因为只需要更新主表
-                   await ctrBase.BaseSaveOrUpdate(EditEntity);
+                    await ctrBase.BaseSaveOrUpdate(EditEntity);
                     return ae;
                 }
 
@@ -1379,7 +1385,7 @@ namespace RUINORERP.UI.BaseForm
                     {
                         toolStripbtnReview.Enabled = true;
                     }
-                   
+
                     ae.ApprovalResults = true;
                     AuditLogHelper.Instance.CreateAuditLog<T>("审核", EditEntity, $"审核结果：{ae.ApprovalResults}-{ae.ApprovalOpinions}");
                 }
@@ -1901,6 +1907,15 @@ namespace RUINORERP.UI.BaseForm
                 }
             }
 
+            //如果修改前的状态是新建，则修改后的状态是草稿。要重新提交才进入下一步审核
+            var dataStatus = (DataStatus)(editEntity.GetPropertyValue(typeof(DataStatus).Name).ToInt());
+            if (dataStatus == DataStatus.新建)
+            {
+                if (ReflectionHelper.ExistPropertyName<T>(typeof(DataStatus).Name))
+                {
+                    ReflectionHelper.SetPropertyValue(EditEntity, typeof(DataStatus).Name, (int)DataStatus.草稿);
+                }
+            }
 
             ReturnMainSubResults<T> rmr = new ReturnMainSubResults<T>();
             BaseController<T> ctr = Startup.GetFromFacByName<BaseController<T>>(typeof(T).Name + "Controller");
@@ -1915,7 +1930,6 @@ namespace RUINORERP.UI.BaseForm
 
                 ToolBarEnabledControl(MenuItemEnums.保存);
                 MainForm.Instance.uclog.AddLog("保存成功");
-
 
                 //var sw = new Stopwatch();
                 //sw.Start();
@@ -2059,12 +2073,11 @@ namespace RUINORERP.UI.BaseForm
                         ae.ApprovalOpinions = "自动审核";
                         ae.ApprovalResults = true;
                         ae.ApprovalStatus = (int)ApprovalStatus.已审核;
-
                         if (cbd.BizType == BizType.销售订单 && AppContext.SysConfig.AutoApprovedSaleOrderAmount > 0)
                         {
                             if (EditEntity is tb_SaleOrder saleOrder)
                             {
-                                if (saleOrder.TotalAmount < AppContext.SysConfig.AutoApprovedSaleOrderAmount)
+                                if (saleOrder.TotalAmount <= AppContext.SysConfig.AutoApprovedSaleOrderAmount)
                                 {
                                     RevertCommand command = new RevertCommand();
                                     //缓存当前编辑的对象。如果撤销就回原来的值
@@ -2106,7 +2119,7 @@ namespace RUINORERP.UI.BaseForm
                         {
                             if (EditEntity is tb_PurOrder purOrder)
                             {
-                                if (purOrder.TotalAmount < AppContext.SysConfig.AutoApprovedPurOrderAmount)
+                                if (purOrder.TotalAmount <= AppContext.SysConfig.AutoApprovedPurOrderAmount)
                                 {
                                     RevertCommand command = new RevertCommand();
                                     //缓存当前编辑的对象。如果撤销就回原来的值
@@ -2146,8 +2159,6 @@ namespace RUINORERP.UI.BaseForm
                             }
                         }
                         submitrs = true;
-
-
                     }
                     else
                     {
@@ -2155,7 +2166,6 @@ namespace RUINORERP.UI.BaseForm
                         submitrs = false;
                     }
                 }
-
             }
             else
             {
@@ -2192,8 +2202,6 @@ namespace RUINORERP.UI.BaseForm
             }
             return submitrs;
         }
-
-
 
 
 

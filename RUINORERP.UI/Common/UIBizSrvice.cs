@@ -198,7 +198,7 @@ namespace RUINORERP.UI.Common
         /// <returns></returns>
         public static async Task SetGridViewAsync(Type GridSourceType, NewSumDataGridView dataGridView, tb_MenuInfo CurMenuInfo, bool ShowSettingForm = false, HashSet<string> InvisibleCols = null, HashSet<string> DefaultHideCols = null, bool SaveGridSetting = false)
         {
-            if (dataGridView==null) 
+            if (dataGridView == null)
             {
                 return;
             }
@@ -216,6 +216,9 @@ namespace RUINORERP.UI.Common
                 userPersonalized = new tb_UserPersonalized();
                 userPersonalized.ID = MainForm.Instance.AppContext.CurrentUser_Role.ID;
                 MainForm.Instance.AppContext.CurrentUser_Role.tb_UserPersonalizeds.Add(MainForm.Instance.AppContext.CurrentUser_Role_Personalized);
+
+                RUINORERP.Business.BusinessHelper.Instance.InitEntity(MainForm.Instance.AppContext.CurrentUser_Role_Personalized);
+
                 await MainForm.Instance.AppContext.Db.Insertable(MainForm.Instance.AppContext.CurrentUser_Role_Personalized).ExecuteReturnSnowflakeIdAsync();
             }
             if (userPersonalized.tb_UIMenuPersonalizations == null)
@@ -498,11 +501,17 @@ namespace RUINORERP.UI.Common
 
             if (GridSetting.UIGID == 0)
             {
+                RUINORERP.Business.BusinessHelper.Instance.InitEntity(GridSetting);
                 await MainForm.Instance.AppContext.Db.Insertable(GridSetting).ExecuteReturnSnowflakeIdAsync();
             }
             else
             {
-                await MainForm.Instance.AppContext.Db.Updateable(GridSetting).ExecuteCommandAsync();
+                RUINORERP.Business.BusinessHelper.Instance.EditEntity(GridSetting);
+                int updatecount = await MainForm.Instance.AppContext.Db.Updateable(GridSetting).ExecuteCommandAsync();
+                if (updatecount > 0)
+                {
+
+                }
             }
         }
 

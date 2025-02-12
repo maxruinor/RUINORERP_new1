@@ -36,6 +36,8 @@ namespace RUINORERP.UI.BI
             DataBindingHelper.BindData4TextBox<tb_FieldInfo>(entity, t => t.ClassPath, txtClassPath, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4CheckBox<tb_FieldInfo>(entity, t => t.IsForm, chkIsForm, false);
             DataBindingHelper.BindData4CheckBox<tb_FieldInfo>(entity, t => t.IsEnabled, chkIsEnabled, false);
+            DataBindingHelper.BindData4CheckBox<tb_FieldInfo>(entity, t => t.DefaultHide, chkDefaultHide, false);
+            DataBindingHelper.BindData4CheckBox<tb_FieldInfo>(entity, t => t.ReadOnly, chkReadOnly, false);
             DataBindingHelper.BindData4TextBox<tb_FieldInfo>(entity, t => t.Notes, txtNotes, BindDataType4TextBox.Text, false);
             base.errorProviderForAllInput.DataSource = entity;
         }

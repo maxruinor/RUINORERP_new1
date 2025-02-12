@@ -66,8 +66,15 @@ namespace RUINORERP.UI.UserPersonalized
                     if (columnDisplays != null)
                     {
                         ColumnDisplayController cdc = ColumnDisplays.Where(c => c.ColName == columnDisplays.ColName).FirstOrDefault();
-                        cdc.Visible = item.Checked;
-                        cdc.ColDisplayIndex = sortindex;
+                        if (cdc != null)
+                        {
+                            cdc.ColDisplayIndex = sortindex;
+                        }
+                        else
+                        {
+                            cdc.ColDisplayIndex = -1;
+                        }
+
                     }
                 }
                 if (string.IsNullOrEmpty(item.Text))
@@ -89,42 +96,30 @@ namespace RUINORERP.UI.UserPersonalized
 
         public string MenuPathKey { get; set; }
 
-        private void frmMenuPersonalization_Load(object sender, EventArgs e)
+        private async void frmMenuPersonalization_Load(object sender, EventArgs e)
         {
             listView1.AllowDrop = true;
-            listView1.ItemDrag += ListView1_ItemDrag;
-            listView1.DragEnter += listView1_DragEnter;
-            listView1.DragOver += listView1_DragOver;
-            listView1.DragDrop += listView1_DragDrop;
-            listView1.DragLeave += listView1_DragLeave;
 
             //添加列宽显示模式
             dataGridView.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.ColumnHeader;
-
             //
             // 摘要:
             //     列宽不会自动调整。
-
             //
             // 摘要:
             //     列宽调整到适合列标头单元格的内容。
-
             //
             // 摘要:
             //     列宽调整到适合列中除标头单元格以外所有单元格的内容。
-
             //
             // 摘要:
             //     列宽调整到适合列中所有单元格（包括标头单元格）的内容。
-
             //
             // 摘要:
             //     列宽调整到适合位于屏幕上当前显示的行中的列的所有单元格（不包括标头单元格）的内容。
-
             //
             // 摘要:
             //     列宽调整到适合位于屏幕上当前显示的行中的列的所有单元格（包括标头单元格）的内容。
-
             //
             // 摘要:
             //     列宽调整到使所有列宽精确填充控件的显示区域，要求使用水平滚动的目的只是保持列宽大于 System.Windows.Forms.DataGridViewColumn.MinimumWidth
@@ -147,12 +142,19 @@ namespace RUINORERP.UI.UserPersonalized
             //Fill = 16
 
             DataBindingHelper.BindData4CmbByDictionary<tb_UIGridSetting>(GridSetting, k => k.ColumnsMode, valuePairs, cmbColsDisplayModel, false);
-
-
             LoadColumnDisplayList();
+            this.listView1.ItemChecked += new System.Windows.Forms.ItemCheckedEventHandler(this.listView1_ItemChecked);
+            //将LoadEditGridCol延迟1秒后执行
+            await Task.Delay(500);
+            LoadEditGridCol();
+
+            listView1.ItemDrag += ListView1_ItemDrag;
+            listView1.DragEnter += listView1_DragEnter;
+            listView1.DragOver += listView1_DragOver;
+            listView1.DragDrop += listView1_DragDrop;
+            listView1.DragLeave += listView1_DragLeave;
 
         }
-
 
         private void LoadColumnDisplayList()
         {
@@ -166,6 +168,17 @@ namespace RUINORERP.UI.UserPersonalized
 
             oldColumnDisplays = new ColumnDisplayController[ColumnDisplays.Count];
             ColumnDisplays.CopyTo(oldColumnDisplays);
+
+            //将不可用的显示排序设置为-1
+            //var uniqueItems = ColumnDisplays1.Except(ColumnDisplays2).ToList();
+            ColumnDisplays.Where(c => c.Disable).ToList().ForEach(f => f.ColDisplayIndex = 1000);
+
+            //重新得到一个集合的方法
+            // 对 ColumnDisplays 按 ColDisplayIndex 排序（升序，小的排在前面）OrderBy / 降序OrderByDescending
+            //ColumnDisplays = ColumnDisplays.OrderBy(c => c.ColDisplayIndex).ToList();
+            //对原始集合排序
+            ColumnDisplays.Sort((x, y) => x.ColDisplayIndex.CompareTo(y.ColDisplayIndex));
+
             foreach (ColumnDisplayController keyValue in ColumnDisplays)
             {
                 if (!keyValue.Disable)
@@ -269,6 +282,7 @@ namespace RUINORERP.UI.UserPersonalized
 
         private void listView1_SelectedIndexChanged(object sender, EventArgs e)
         {
+            //提前统一加载就不闪屏？
             if (listView1.SelectedItems != null && listView1.SelectedItems.Count > 0)
             {
                 var entity = listView1.SelectedItems[0].Tag as ColumnDisplayController;
@@ -288,9 +302,10 @@ namespace RUINORERP.UI.UserPersonalized
                     UCGridColSetting uCGridColSet = new UCGridColSetting();
                     uCGridColSet.Name = entity.ColName;
                     uCGridColSet.dataGridView = dataGridView;
-                    uCGridColSet.OnSynchronizeUI += UCQuery_OnSynchronizeUI;
                     uCGridColSet.BindData(entity);
-                    uCGridColSet.Visible = true;
+                    uCGridColSet.OnSynchronizeUI += UCQuery_OnSynchronizeUI;
+
+                    uCGridColSet.Visible = true;//这里是当前编辑的字段显示
                     uCGridColSet.TopLevel = false;
                     uCGridColSet.Dock = DockStyle.Fill;
                     panelConditionEdit.Controls.Add(uCGridColSet as Control);
@@ -301,6 +316,49 @@ namespace RUINORERP.UI.UserPersonalized
             }
 
         }
+
+
+        /// <summary>
+        /// 加载要编辑的列的UI
+        /// </summary>
+        private void LoadEditGridCol()
+        {
+
+            if (listView1.SelectedItems != null && listView1.SelectedItems.Count > 0)
+            {
+                for (int i = 0; i < listView1.SelectedItems.Count; i++)
+                {
+                    var entity = listView1.SelectedItems[i].Tag as ColumnDisplayController;
+                    if (panelConditionEdit.Controls.ContainsKey(entity.ColName.ToString()))
+                    {
+                        var uCQuery = panelConditionEdit.Controls.CastToList<Control>().FirstOrDefault(c => c.Name == entity.ColName.ToString());
+                        if (uCQuery != null)
+                        {
+                            uCQuery.Visible = true;
+                        }
+                        //其它隐藏
+                        panelConditionEdit.Controls.CastToList<Control>().Where(c => c.Name != entity.ColName.ToString()).ToList().ForEach(c => c.Visible = false);
+                    }
+                    else
+                    {
+                        //有些闪屏。后面优化是不是加载时就全部加进去 
+                        UCGridColSetting uCGridColSet = new UCGridColSetting();
+                        uCGridColSet.Name = entity.ColName;
+                        uCGridColSet.dataGridView = dataGridView;
+                        uCGridColSet.OnSynchronizeUI += UCQuery_OnSynchronizeUI;
+                        uCGridColSet.BindData(entity);
+                        uCGridColSet.Visible = true;//这里是当前编辑的字段显示
+                        uCGridColSet.TopLevel = false;
+                        uCGridColSet.Dock = DockStyle.Fill;
+                        panelConditionEdit.Controls.Add(uCGridColSet as Control);
+                        //其它隐藏
+                        panelConditionEdit.Controls.CastToList<Control>().Where(c => c.Name != entity.ColName.ToString()).ToList().ForEach(c => c.Visible = false);
+                    }
+                }
+            }
+
+        }
+
 
         private void contentMenu1_CheckAll(object sender, EventArgs e)
         {
@@ -350,7 +408,11 @@ namespace RUINORERP.UI.UserPersonalized
         }
 
 
-
+        /// <summary>
+        /// 创建编辑的这个列的控制数据时 同步到UI
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void UCQuery_OnSynchronizeUI(object sender, object e)
         {
             if (sender is ColumnDisplayController target)
@@ -368,7 +430,6 @@ namespace RUINORERP.UI.UserPersonalized
                     }
                 }
             }
-
         }
 
         #region 初始化使用的属性
@@ -426,6 +487,18 @@ namespace RUINORERP.UI.UserPersonalized
 
             }
 
+        }
+
+        private void listView1_ItemChecked(object sender, ItemCheckedEventArgs e)
+        {
+            //只有他有焦点人点时才生效。或全选 全不选
+            if ((sender is ListView target && listView1.Focused) || (chkAll.Checked || chkReverseSelection.Checked))
+            {
+                if (e.Item.Tag is ColumnDisplayController column)
+                {
+                    column.Visible = e.Item.Checked;
+                }
+            }
         }
     }
 }

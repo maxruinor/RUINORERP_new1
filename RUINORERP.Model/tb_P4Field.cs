@@ -110,47 +110,7 @@ namespace RUINORERP.Model
                         }
         }
 
-        private bool _CanReadWrite;
-        /// <summary>
-        /// 可读写
-        /// </summary>
-        [AdvQueryAttribute(ColName = "CanReadWrite",ColDesc = "可读写")] 
-        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType ="Boolean",  ColumnName = "CanReadWrite" ,IsNullable = false,ColumnDescription = "可读写" )]
-        public bool CanReadWrite
-        { 
-            get{return _CanReadWrite;}
-            set{
-            SetProperty(ref _CanReadWrite, value);
-                        }
-        }
-
-        private bool _OnlyRead;
-        /// <summary>
-        /// 只读
-        /// </summary>
-        [AdvQueryAttribute(ColName = "OnlyRead",ColDesc = "只读")] 
-        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType ="Boolean",  ColumnName = "OnlyRead" ,IsNullable = false,ColumnDescription = "只读" )]
-        public bool OnlyRead
-        { 
-            get{return _OnlyRead;}
-            set{
-            SetProperty(ref _OnlyRead, value);
-                        }
-        }
-
-        private bool _HideValue;
-        /// <summary>
-        /// 默认隐藏
-        /// </summary>
-        [AdvQueryAttribute(ColName = "HideValue",ColDesc = "默认隐藏")] 
-        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType ="Boolean",  ColumnName = "HideValue" ,IsNullable = false,ColumnDescription = "默认隐藏" )]
-        public bool HideValue
-        { 
-            get{return _HideValue;}
-            set{
-            SetProperty(ref _HideValue, value);
-                        }
-        }
+    
 
         private DateTime? _Created_at;
         /// <summary>
@@ -208,19 +168,19 @@ namespace RUINORERP.Model
                         }
         }
 
-        private bool _IsChild;
-        /// <summary>
-        /// 子表字段
-        /// </summary>
-        [AdvQueryAttribute(ColName = "IsChild",ColDesc = "子表字段")] 
-        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType ="Boolean",  ColumnName = "IsChild" ,IsNullable = false,ColumnDescription = "子表字段" )]
-        public bool IsChild
-        { 
-            get{return _IsChild;}
-            set{
-            SetProperty(ref _IsChild, value);
-                        }
-        }
+        //private bool _IsChild;
+        ///// <summary>
+        ///// 子表字段
+        ///// </summary>
+        //[AdvQueryAttribute(ColName = "IsChild",ColDesc = "子表字段")] 
+        //[SugarColumn(ColumnDataType = "bit", SqlParameterDbType ="Boolean",  ColumnName = "IsChild" ,IsNullable = false,ColumnDescription = "子表字段" )]
+        //public bool IsChild
+        //{ 
+        //    get{return _IsChild;}
+        //    set{
+        //    SetProperty(ref _IsChild, value);
+        //                }
+        //}
 
         #endregion
 

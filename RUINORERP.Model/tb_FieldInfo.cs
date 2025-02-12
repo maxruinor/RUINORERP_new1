@@ -150,6 +150,37 @@ namespace RUINORERP.Model
                         }
         }
 
+        private bool _DefaultHide;
+        /// <summary>
+        /// 默认隐藏
+        /// </summary>
+        [AdvQueryAttribute(ColName = "DefaultHide", ColDesc = "默认隐藏")]
+        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType = "Boolean", ColumnName = "DefaultHide", IsNullable = false, ColumnDescription = "默认隐藏")]
+        public bool DefaultHide
+        {
+            get { return _DefaultHide; }
+            set
+            {
+                SetProperty(ref _DefaultHide, value);
+            }
+        }
+
+
+        private bool _ReadOnly;
+        /// <summary>
+        /// 只读
+        /// </summary>
+        [AdvQueryAttribute(ColName = "ReadOnly", ColDesc = "只读")]
+        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType = "ReadOnly", ColumnName = "ReadOnly", IsNullable = false, ColumnDescription = "只读")]
+        public bool ReadOnly
+        {
+            get { return _ReadOnly; }
+            set
+            {
+                SetProperty(ref _ReadOnly, value);
+            }
+        }
+
         private string _Notes;
         /// <summary>
         /// 备注
@@ -183,7 +214,7 @@ namespace RUINORERP.Model
         /// 子表名称
         /// </summary>
         [AdvQueryAttribute(ColName = "ChildEntityName",ColDesc = "子表名称")] 
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "ChildEntityName" ,Length=50,IsNullable = false,ColumnDescription = "子表名称" )]
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "ChildEntityName" ,Length=50,IsNullable = true,ColumnDescription = "子表名称" )]
         public string ChildEntityName
         { 
             get{return _ChildEntityName;}

@@ -56,7 +56,6 @@ namespace RUINORERP.Business
 
 
  RuleFor(tb_FieldInfo =>tb_FieldInfo.ChildEntityName).MaximumLength(25).WithMessage("子表名称:不能超过最大长度,25.");
- RuleFor(tb_FieldInfo =>tb_FieldInfo.ChildEntityName).NotEmpty().WithMessage("子表名称:不能为空。");
 
            	        Initialize();
      }

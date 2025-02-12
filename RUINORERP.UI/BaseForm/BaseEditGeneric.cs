@@ -57,8 +57,8 @@ namespace RUINORERP.UI.BaseForm
 
         //[MustOverride]
         public virtual void BindData(BaseEntity entity, ActionStatus actionStatus = ActionStatus.无操作)
-        {   
-             
+        {
+
         }
         public virtual void BindData(BaseEntity entity)
         {
@@ -101,7 +101,7 @@ namespace RUINORERP.UI.BaseForm
         {
             if (!MainForm.Instance.AppContext.IsSuperUser)
             {
-                if (CurMenuInfo.tb_P4Fields != null)
+                if (CurMenuInfo != null && CurMenuInfo.tb_P4Fields != null)
                 {
                     foreach (var item in CurMenuInfo.tb_P4Fields)
                     {
@@ -110,7 +110,8 @@ namespace RUINORERP.UI.BaseForm
                             if (item.tb_fieldinfo != null)
                             {
                                 //设置不可见
-                                if (!item.IsVisble && !item.tb_fieldinfo.IsChild)
+                                //if (!item.IsVisble && !item.tb_fieldinfo.IsChild)
+                                if ((!item.tb_fieldinfo.IsEnabled || !item.IsVisble) && item.tb_fieldinfo.IsChild)
                                 {
                                     KryptonTextBox txtTextBox = UIHelper.FindTextBox(this, item.tb_fieldinfo.FieldName);
                                     if (txtTextBox != null)
@@ -635,7 +636,7 @@ namespace RUINORERP.UI.BaseForm
             {
                 ControlMasterColumnsInvisible();
             }
-            
+
         }
 
         private void BaseEditGeneric_Shown(object sender, EventArgs e)

@@ -627,6 +627,8 @@ protected async override void ReReview()
                 entity.ApprovalStatus = (int)ApprovalStatus.未审核;
                 entity.ApprovalResults = null;
                 entity.ApprovalOpinions = "";
+                entity.Modified_at = null;
+                entity.Modified_by = null;
                 entity.Approver_at = null;
                 entity.Approver_by = null;
                 entity.ActionStatus = ActionStatus.新增;

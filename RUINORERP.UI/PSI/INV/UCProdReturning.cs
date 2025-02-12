@@ -638,6 +638,8 @@ namespace RUINORERP.UI.PSI.INV
                 master.ApprovalStatus = (int)ApprovalStatus.未审核;
                 master.ApprovalResults = null;
                 master.ApprovalOpinions = "";
+                master.Modified_at = null;
+                master.Modified_by = null;
                 master.Approver_at = null;
                 master.Approver_by = null;
                 master.PrintStatus = 0;

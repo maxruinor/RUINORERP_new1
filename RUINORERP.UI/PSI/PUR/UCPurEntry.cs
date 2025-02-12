@@ -521,6 +521,8 @@ namespace RUINORERP.UI.PSI.PUR
                 entity.ApprovalStatus = (int)ApprovalStatus.未审核;
                 entity.ApprovalResults = null;
                 entity.ApprovalOpinions = "";
+                entity.Modified_at = null;
+                entity.Modified_by = null;
                 entity.Approver_at = null;
                 entity.Approver_by = null;
                 entity.PrintStatus = 0;

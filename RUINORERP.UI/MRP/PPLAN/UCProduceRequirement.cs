@@ -1260,6 +1260,8 @@ protected async override Task<ApprovalEntity> ReReview()
                     entity.DataStatus = (int)DataStatus.草稿;
                     entity.ApprovalStatus = (int)ApprovalStatus.未审核;
                     entity.ApprovalOpinions = "";
+                    entity.Modified_at = null;
+                    entity.Modified_by = null;
                     entity.ApprovalResults = null;
                     entity.Approver_at = null;
                     entity.Approver_by = null;

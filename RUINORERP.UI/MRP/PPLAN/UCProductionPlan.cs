@@ -37,6 +37,7 @@ using Krypton.Toolkit;
 using RUINORERP.UI.PSI.PUR;
 using RUINORERP.Model.CommonModel;
 using RUINORERP.Business.CommService;
+using static StackExchange.Redis.Role;
 
 namespace RUINORERP.UI.MRP.MP
 {
@@ -884,7 +885,10 @@ namespace RUINORERP.UI.MRP.MP
                 entity.DataStatus = (int)DataStatus.草稿;
                 entity.ApprovalStatus = (int)ApprovalStatus.未审核;
                 entity.ApprovalResults = null;
+
                 entity.ApprovalOpinions = "";
+                entity.Modified_at = null;
+                entity.Modified_by = null;
                 entity.Approver_at = null;
                 entity.Approver_by = null;
                 entity.ActionStatus = ActionStatus.新增;

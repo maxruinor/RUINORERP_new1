@@ -46,7 +46,8 @@ namespace RUINORERP.UI.UCSourceGrid
         ContextMenuStrip contextMenuStrip1 = new ContextMenuStrip();
         private ToolStripMenuItem draggedItem;
         private Point dragStartPoint;
-
+        private int InitItemsCount = 0;
+        private ToolStripMenuItem highlightedItem; // 跟踪当前高亮项
 
         public PopupMenuWithCustomColumns(string xmlfileName)
         {
@@ -57,20 +58,55 @@ namespace RUINORERP.UI.UCSourceGrid
             contextMenuStrip1.DragOver += ContextMenuStrip_DragOver;
             contextMenuStrip1.DragDrop += ContextMenuStrip_DragDrop;
             contextMenuStrip1.DragLeave += ContextMenuStrip_DragLeave;
-
+            contextMenuStrip1.Closing += ContextMenuStrip1_Closing;
             contextMenuStrip1.ShowCheckMargin = true;
             _xmlfileName = xmlfileName;
             ToolStripSeparator ss = new ToolStripSeparator();
             contextMenuStrip1.Items.Add(ss);
-            ToolStripMenuItem siCustom = new ToolStripMenuItem("自定义");
-            siCustom.Click += SiCustom_Click;
+            //ToolStripMenuItem siCustom = new ToolStripMenuItem("自定义");
+            //siCustom.Click += SiCustom_Click;
+            //contextMenuStrip1.Items.Add(siCustom);
+            //contextMenuStrip1.Renderer = new HighlightMenuRenderer();
 
-            contextMenuStrip1.Items.Add(siCustom);
+            ToolStripMenuItem LoadDefaultColumns = new ToolStripMenuItem("加载默认配置");
+            LoadDefaultColumns.Click += LoadDefaultColumns_Click;
 
+            contextMenuStrip1.Items.Add(LoadDefaultColumns);
+            InitItemsCount = contextMenuStrip1.Items.Count;
             ConfigColItems = Common.UIHelper.LoadColumnsList(xmlfileName);
 
             //menu.MenuItems.Add("Menu 1", new EventHandler(Menu1_Click));
             //menu.MenuItems.Add("Menu 2", new EventHandler(Menu2_Click));
+        }
+
+        // 自定义渲染器
+        private class HighlightMenuRenderer : ToolStripProfessionalRenderer
+        {
+            protected override void OnRenderMenuItemBackground(ToolStripItemRenderEventArgs e)
+            {
+                var menuItem = e.Item as ToolStripMenuItem;
+                if (menuItem != null && menuItem.Selected)
+                {
+                    using (var brush = new SolidBrush(Color.FromArgb(50, 150, 250)))
+                    {
+                        e.Graphics.FillRectangle(brush, e.Item.ContentRectangle);
+                    }
+                }
+                else
+                {
+                    base.OnRenderMenuItemBackground(e);
+                }
+            }
+        }
+
+
+        private void ContextMenuStrip1_Closing(object sender, ToolStripDropDownClosingEventArgs e)
+        {
+            ClearHighlight();
+        }
+        private void LoadDefaultColumns_Click(object sender, EventArgs e)
+        {
+
         }
 
         #region 拖放处理逻辑
@@ -126,7 +162,6 @@ namespace RUINORERP.UI.UCSourceGrid
                 return;
             }
 
-
             if (sourceItem != null && targetItem != null && sourceItem != targetItem)
             {
                 MoveMenuItem(sourceItem, targetItem);
@@ -156,6 +191,29 @@ namespace RUINORERP.UI.UCSourceGrid
             //items.RemoveAt(oldIndex);
             //items.Insert(newIndex, itemData);
         }
+
+        /// <summary>
+        /// 移动菜单项，但不考虑插入位置可视化。只在拖拽结束时调用此方法。
+        /// </summary>
+        /// <param name="source"></param>
+        /// <param name="target"></param>
+        private void MoveMenuItem(ToolStripMenuItem source, ToolStripMenuItem target)
+        {
+            int sourceIndex = contextMenuStrip1.Items.IndexOf(source);
+            int targetIndex = contextMenuStrip1.Items.IndexOf(target);
+
+            contextMenuStrip1.Items.Remove(source);
+            contextMenuStrip1.Items.Insert(targetIndex, source);
+
+            // 同步数据源
+            //var data = items[sourceIndex];
+            //items.RemoveAt(sourceIndex);
+            //items.Insert(targetIndex > sourceIndex ? targetIndex - 1 : targetIndex, data);
+
+            //SynchronizeGridColumns();
+        }
+
+
         #endregion
 
         #region 插入位置可视化
@@ -179,6 +237,11 @@ namespace RUINORERP.UI.UCSourceGrid
             contextMenuStrip1.Items.Insert(index, indicator);
         }
 
+        private void ClearHighlight()
+        {
+            highlightedItem = null;
+            contextMenuStrip1.Invalidate();
+        }
         private void ClearInsertIndicator()
         {
             foreach (var item in contextMenuStrip1.Items.OfType<ToolStripSeparator>().Where(s => s.Tag?.ToString() == "indicator"))
@@ -326,7 +389,7 @@ namespace RUINORERP.UI.UCSourceGrid
 
                 // MyMenu.Items.Add(si);
                 //初始时有几个，就减几
-                contextMenuStrip1.Items.Insert(contextMenuStrip1.Items.Count - 2, menuItem);
+                contextMenuStrip1.Items.Insert(contextMenuStrip1.Items.Count - InitItemsCount, menuItem);
             }
         }
         #region 拖放事件处理
@@ -356,6 +419,27 @@ namespace RUINORERP.UI.UCSourceGrid
             var targetItem = sender as ToolStripMenuItem;
             if (targetItem == null || e.Data.GetData(typeof(ToolStripMenuItem)) == null) return;
 
+            // 如果目标项存在且与拖动项不同，则更新目标项的高亮状态
+            //代码不起作用。暂时不处理了
+            //if (targetItem != null && targetItem != draggedItem)
+            //{
+            //    // 更新目标项的高亮状态
+            //    targetItem.BackColor = SystemColors.HotTrack;
+            //    targetItem.ForeColor = Color.Red;
+            //}
+            //else
+            //{
+            //    // 恢复默认颜色
+            //    targetItem?.ResetBackColor();
+            //    targetItem?.ResetForeColor();
+            //}
+
+            // 更新高亮项并重绘
+            if (highlightedItem != targetItem)
+            {
+                highlightedItem = targetItem;
+                contextMenuStrip1.Invalidate();
+            }
             e.Effect = DragDropEffects.Move;
 
             // 显示插入位置指示
@@ -369,6 +453,20 @@ namespace RUINORERP.UI.UCSourceGrid
 
             if (sourceItem == null || targetItem == null || sourceItem == targetItem) return;
 
+            // 如果目标项存在且与拖动项不同，则更新目标项的高亮状态
+            if (targetItem != null && targetItem != draggedItem)
+            {
+                // 更新目标项的高亮状态
+                targetItem.BackColor = SystemColors.HotTrack;
+                targetItem.ForeColor = SystemColors.Desktop;
+            }
+            else
+            {
+                // 恢复默认颜色
+                targetItem?.ResetBackColor();
+                targetItem?.ResetForeColor();
+            }
+
             // 移动菜单项
             MoveMenuItem(sourceItem, targetItem);
             ClearInsertIndicator();
@@ -377,6 +475,7 @@ namespace RUINORERP.UI.UCSourceGrid
         private void MenuItem_DragLeave(object sender, EventArgs e)
         {
             ClearInsertIndicator();
+            ClearHighlight();
         }
         #endregion
 
@@ -387,21 +486,6 @@ namespace RUINORERP.UI.UCSourceGrid
                    Math.Abs(currentPos.Y - dragStartPoint.Y) > SystemInformation.DragSize.Height;
         }
 
-        private void MoveMenuItem(ToolStripMenuItem source, ToolStripMenuItem target)
-        {
-            int sourceIndex = contextMenuStrip1.Items.IndexOf(source);
-            int targetIndex = contextMenuStrip1.Items.IndexOf(target);
-
-            contextMenuStrip1.Items.Remove(source);
-            contextMenuStrip1.Items.Insert(targetIndex, source);
-
-            // 同步数据源
-            //var data = items[sourceIndex];
-            //items.RemoveAt(sourceIndex);
-            //items.Insert(targetIndex > sourceIndex ? targetIndex - 1 : targetIndex, data);
-
-            //SynchronizeGridColumns();
-        }
 
         private void ShowInsertIndicator(ToolStripMenuItem targetItem)
         {
@@ -503,5 +587,6 @@ namespace RUINORERP.UI.UCSourceGrid
             //TODO Your code here
         }
     }
-
 }
+
+

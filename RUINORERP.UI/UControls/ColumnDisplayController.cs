@@ -67,6 +67,21 @@ namespace RUINORERP.UI.UControls
                 SetProperty(ref colDisplayIndex, value);
             }
         }
+
+
+        private int _ColIndex;
+
+        /// <summary>
+        /// 索引
+        /// </summary>
+        public int ColIndex
+        {
+            get { return _ColIndex; }
+            set
+            {
+                SetProperty(ref _ColIndex, value);
+            }
+        }
         /// <summary>
         /// 宽度
         /// </summary>

@@ -480,7 +480,7 @@ namespace RUINORERP.UI.UCSourceGrid
 
                         }
                         #region 自定义右键事件
-                       
+
                         if (OnAddRightClick != null)
                         {
                             PopupMenuCustomize pmc = new PopupMenuCustomize(pt.Row, dc.ParentGridDefine.grid, sgdefine);
@@ -997,6 +997,7 @@ namespace RUINORERP.UI.UCSourceGrid
             viewColumnHeader.TextAlignment = DevAge.Drawing.ContentAlignment.MiddleCenter;
 
 
+
             #region 创建列
             //排除列头，因为有行头 2024
             PopupMenuForDeleteSelect popupMenuForDelete = new PopupMenuForDeleteSelect(grid, griddefine);
@@ -1121,6 +1122,17 @@ namespace RUINORERP.UI.UCSourceGrid
 
             SetColumnsWidth(grid, griddefine);
 
+            #region 注册列宽的变化事件
+
+            ColumnInfoCollection cols = grid.Columns as ColumnInfoCollection;
+            cols.ColumnWidthChanged += (s, e) =>
+            {
+                 
+            };
+
+            #endregion
+
+
             SourceGridDefineColumnItem selected = griddefine.DefineColumns.Find(c => c.ColName == "Selected");
             if (selected != null)
             {
@@ -1204,7 +1216,7 @@ namespace RUINORERP.UI.UCSourceGrid
                 if (define.HasRowHeader && i == 0)
                 {
 
-                   
+
 
                     //右键删除行的菜单
                     //PopupMenuForRowHeader menuController = new PopupMenuForRowHeader(addRowIndex, grid, define);
@@ -1222,7 +1234,7 @@ namespace RUINORERP.UI.UCSourceGrid
                     //rh.View = rowHelderCellView;
                     //rh.AddController(menuController);
                     #region 自定义右键事件
-                   
+
                     if (OnAddRightClick != null)
                     {
                         PopupMenuCustomize pmc = new PopupMenuCustomize(addRowIndex, grid, define);

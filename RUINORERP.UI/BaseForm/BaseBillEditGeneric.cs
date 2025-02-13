@@ -124,6 +124,14 @@ namespace RUINORERP.UI.BaseForm
             CurrentBizTypeName = CurrentBizType.ToString();
         }
 
+
+        public event ColumnDisplayControlHandler SetColumnDisplayControl;
+        public delegate void ColumnDisplayControlHandler(Type GridSourceType);
+        protected  virtual void SetGridViewAsync()
+        {
+            if (SetColumnDisplayControl != null) SetColumnDisplayControl(typeof(C));
+        }
+
         #region 单据 主表公共信息 如类型：名称
 
         public BizType CurrentBizType { get; set; }

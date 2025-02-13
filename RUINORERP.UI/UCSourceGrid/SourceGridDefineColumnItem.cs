@@ -10,6 +10,7 @@ using System.Collections.Concurrent;
 using static NPOI.HSSF.Util.HSSFColor;
 using HLH.Lib.Helper;
 using System.Collections.Generic;
+using RUINORERP.UI.UControls;
 
 namespace RUINORERP.UI.UCSourceGrid
 {
@@ -21,6 +22,12 @@ namespace RUINORERP.UI.UCSourceGrid
     [Serializable]
     public class SourceGridDefineColumnItem
     {
+
+        /// <summary>
+        /// 2025-02-12为了能自定义显示逻辑，所以这里增加一个控制器。
+        /// </summary>
+        public ColumnDisplayController DisplayController { get; set; } =new ColumnDisplayController();
+
         /// <summary>
         /// 代表了主要的、真实的明细数据部分，其命名应该清晰地反映出它的核心地位和实际用途
         /// 与GuideToTargetColumn 重复了。暂时没有去重构优化

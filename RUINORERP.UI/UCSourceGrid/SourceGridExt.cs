@@ -54,6 +54,7 @@ namespace RUINORERP.UI.UCSourceGrid
                 if (item.BelongingObjectType.Name == typeof(T).Name)
                 {
                     item.SetCol_NeverVisible(minfo.Name, typeof(T));
+                    item.DisplayController.Disable = false;
                 }
             }
         }

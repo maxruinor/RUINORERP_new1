@@ -370,7 +370,6 @@ namespace RUINORERP.UI.Common
             appContext.log.ModName = pr.MenuType + "=>" + pr.CaptionCN;
             appContext.log.Path = pr.ClassPath;
             appContext.log.ActionName = "可取按钮动作等，或注入？";
-
             switch (pr.MenuType)
             {
                 case "行为菜单":
@@ -588,8 +587,6 @@ namespace RUINORERP.UI.Common
                 default:
                     break;
             }
-
-
         }
 
         private void Bs_Click(object sender, EventArgs e)

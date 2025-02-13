@@ -20,6 +20,9 @@ using Winista.Text.HtmlParser.Data;
 using static RUINORERP.UI.Log.UClog;
 using Color = System.Drawing.Color;
 using RUINOR.WinFormsUI.CustomPictureBox;
+using static FastReport.Design.ToolWindows.DictionaryWindow;
+using SqlSugar;
+
 namespace RUINORERP.UI.UCSourceGrid
 {
 
@@ -131,149 +134,6 @@ namespace RUINORERP.UI.UCSourceGrid
         }
     }
 
-
-    /// <summary>
-    /// 带自定义列的右键菜单。后面也可能合并都有配置性
-    /// </summary>
-    public class PopupMenuWithCustomColumns : SourceGrid.Cells.Controllers.ControllerBase
-    {
-
-        public delegate void ColumnsVisibleDelegate(KeyValuePair<string, SourceGridDefineColumnItem> kv);
-        //string bool  cost true-->表示 成本 显示
-        //public delegate void ColumnsVisibleDelegate(int colIndex, string colName, bool visible);
-        /// <summary>
-        /// 验证行数据
-        /// </summary>
-        public event ColumnsVisibleDelegate OnColumnsVisible;
-
-
-        ContextMenuStrip MyMenu = new ContextMenuStrip();
-
-        /// <summary>
-        /// 保存了要控制的列
-        /// </summary>
-        private List<KeyValuePair<string, SourceGridDefineColumnItem>> items = new List<KeyValuePair<string, SourceGridDefineColumnItem>>();
-        //private SerializableDictionary<string, bool> items = new SerializableDictionary<string, bool>();
-
-        /// <summary>
-        /// 用来保存配置自定义列
-        /// </summary>
-        private string _xmlfileName;
-        public PopupMenuWithCustomColumns(string xmlfileName)
-        {
-            MyMenu.ShowCheckMargin = true;
-            _xmlfileName = xmlfileName;
-            ToolStripSeparator ss = new ToolStripSeparator();
-            MyMenu.Items.Add(ss);
-            ToolStripMenuItem siCustom = new ToolStripMenuItem("自定义");
-            siCustom.Click += SiCustom_Click;
-            MyMenu.Items.Add(siCustom);
-
-            ConfigColItems = Common.UIHelper.LoadColumnsList(xmlfileName);
-
-            //menu.MenuItems.Add("Menu 1", new EventHandler(Menu1_Click));
-            //menu.MenuItems.Add("Menu 2", new EventHandler(Menu2_Click));
-        }
-
-        frmShowColumns frm = new frmShowColumns();
-
-        private void SiCustom_Click(object sender, EventArgs e)
-        {
-            frm.XmlFileName = _xmlfileName;
-            frm.Items = items;
-            frm.ConfigItems = ConfigColItems;
-            if (frm.ShowDialog() == DialogResult.OK)
-            {
-                //更新配置变化，体现到这里。思路是?
-                foreach (var item in items)
-                {
-                    OnColumnsVisible(item);
-                }
-                Common.UIHelper.SaveColumnsList(ConfigColItems, _xmlfileName);
-            }
-
-        }
-
-
-        private SerializableDictionary<string, bool> _ConfigColItems = new SerializableDictionary<string, bool>();
-
-        /// <summary>
-        /// 保存自定义列的集合
-        /// </summary>
-        public SerializableDictionary<string, bool> ConfigColItems { get => _ConfigColItems; set => _ConfigColItems = value; }
-
-
-        /// <summary>
-        /// 添加要控制的列,这个时候 就可以保存配置了
-        /// </summary>
-        /// <param name="item"></param>
-        public void AddItems(KeyValuePair<string, SourceGridDefineColumnItem> item)
-        {
-            if (!item.Value.NeverVisible)
-            {
-                //缓存控制，添加，如果存在则修改状态，如果没有则添加
-                if (ConfigColItems.ContainsKey(item.Key))
-                {
-                    ConfigColItems[item.Key] = item.Value.Visible;
-                }
-                else
-                {
-                    ConfigColItems.Add(item.Key, item.Value.Visible);
-                }
-
-                items.Add(item);
-                ToolStripMenuItem si = new ToolStripMenuItem(item.Key);
-                si.Checked = item.Value.Visible;
-                si.CheckOnClick = true;
-                si.Click += Si_Click;
-                // MyMenu.Items.Add(si);
-                //初始时有几个，就减几
-                MyMenu.Items.Insert(MyMenu.Items.Count - 2, si);
-            }
-        }
-
-
-
-
-        private void Si_Click(object sender, EventArgs e)
-        {
-            KeyValuePair<string, SourceGridDefineColumnItem> item = items.Find(kv => kv.Key == sender.ToString());
-            item.Value.Visible = (sender as ToolStripMenuItem).Checked;
-            //OnColumnsVisible(item.Value.ColIndex, item.Value.ColName, item.Value.Visible);
-            OnColumnsVisible(item);
-            //要更新到配置中
-            if (ConfigColItems.ContainsKey(item.Key))
-            {
-                ConfigColItems[item.Key] = item.Value.Visible;
-            }
-            Common.UIHelper.SaveColumnsList(ConfigColItems, _xmlfileName);
-        }
-
-
-
-        public override void OnClick(CellContext sender, EventArgs e)
-        {
-            base.OnClick(sender, e);
-        }
-
-
-        public override void OnMouseUp(SourceGrid.CellContext sender, MouseEventArgs e)
-        {
-            base.OnMouseUp(sender, e);
-
-            if (e.Button == MouseButtons.Right)
-                MyMenu.Show(sender.Grid, new Point(e.X, e.Y));
-        }
-
-        private void Menu1_Click(object sender, EventArgs e)
-        {
-            //TODO Your code here
-        }
-        private void Menu2_Click(object sender, EventArgs e)
-        {
-            //TODO Your code here
-        }
-    }
 
 
 
@@ -642,7 +502,7 @@ namespace RUINORERP.UI.UCSourceGrid
             sh.DeleteRow(sgdefine, addRowIndex);
             return;
 
-            
+
 
         }
 

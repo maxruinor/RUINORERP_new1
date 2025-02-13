@@ -121,16 +121,19 @@ namespace RUINORERP.Business.Security
 
                         appcontext.IsSuperUser = user.IsSuperUser;
 
-                        // List<tb_RoleInfo> roles = CtrRoles.QueryAsync();
+                        //GetAllAuthorizationInfo 里面已经实现
+                        //List<tb_ModuleDefinition> modlist = new List<tb_ModuleDefinition>();
+                        ////两套方式 正常是用P4表来控制的  超级管理员用默认菜单结构
+                        //modlist = appcontext.Db.CopyNew().Queryable<tb_ModuleDefinition>()
+                        //            .Includes(a => a.tb_MenuInfos, b => b.tb_ButtonInfos)
+                        //            .Includes(a => a.tb_MenuInfos, b => b.tb_FieldInfos)
+                        //            .Includes(a => a.tb_MenuInfos, b => b.tb_UIMenuPersonalizations, c => c.tb_userpersonalized)
+                        //            .Includes(a => a.tb_MenuInfos, b => b.tb_UIMenuPersonalizations, c => c.tb_UIQueryConditions)
+                        //            .Includes(a => a.tb_MenuInfos, b => b.tb_UIMenuPersonalizations, c => c.tb_UIGridSettings)
+                        //            .ToList();
 
-                        //Thread.CurrentPrincipal设置会导致在异步线程中设置的结果丢失
-                        //因此统一采用 AppDomain.CurrentDomain.SetThreadPrincipal中设置，确保进程中所有线程都会复制到信息
-                        //意思是线程上下文的数据也可以用这个传过去
-                        //这里要完善  ！！！
-                        //IPrincipal principal = new GenericPrincipal(identity, rolesName.Toaay);
-                        //AppDomain.CurrentDomain.SetThreadPrincipal(principal);
+                        //appcontext.CurUserInfo.UserModList = modlist;
 
-                        //appcontext.CurrentUser.userMenuList = user.tb_User_Roles;
                         loginSucceed = true;
                     }
                 }

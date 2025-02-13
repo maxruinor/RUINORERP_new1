@@ -2285,6 +2285,7 @@
     <Compile Include="UCSourceGrid\GridController.cs" />
     <Compile Include="UCSourceGrid\MyToolTipModel.cs" />
     <Compile Include="UCSourceGrid\PopupMenu.cs" />
+    <Compile Include="UCSourceGrid\PopupMenuWithCustomColumns.cs" />
     <Compile Include="UCSourceGrid\PropertyScanner.cs" />
     <Compile Include="UCSourceGrid\QueryForm.cs">
       <SubType>Form</SubType>

@@ -83,13 +83,13 @@ namespace RUINORERP.UI.UserPersonalized
         private void trackBarColWidth_Scroll(object sender, EventArgs e)
         {
             lblColWidthShow.Text = trackBarColWidth.Value.ToString();
+            if (dataGridView == null) return;
             try
             {
                 if (dataGridView.Columns.Contains(EditEntity.ColName))
                 {
                     dataGridView.Columns[EditEntity.ColName].Width = trackBarColWidth.Value;
                 }
-                
             }
             catch (Exception)
             {

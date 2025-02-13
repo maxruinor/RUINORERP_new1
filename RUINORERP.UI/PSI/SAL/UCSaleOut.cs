@@ -255,6 +255,7 @@ namespace RUINORERP.UI.PSI.SAL
 
             sgd.GridMasterData = entity;
             sgd.GridMasterDataType = entity.GetType();
+           
             base.BindData(entity);
         }
 
@@ -280,6 +281,8 @@ namespace RUINORERP.UI.PSI.SAL
         //设计关联列和目标列
         View_ProdDetailController<View_ProdDetail> dc = Startup.GetFromFac<View_ProdDetailController<View_ProdDetail>>();
         List<View_ProdDetail> list = new List<View_ProdDetail>();
+
+        List<SourceGridDefineColumnItem> listCols = new List<SourceGridDefineColumnItem>();
         private void UcSaleOrderEdit_Load(object sender, EventArgs e)
         {
             InitDataTocmbbox();
@@ -289,8 +292,6 @@ namespace RUINORERP.UI.PSI.SAL
             grid1.BorderStyle = BorderStyle.FixedSingle;
             grid1.Selection.EnableMultiSelection = false;
 
-
-            List<SourceGridDefineColumnItem> listCols = new List<SourceGridDefineColumnItem>();
             //指定了关键字段ProdDetailID
             listCols = sgh.GetGridColumns<ProductSharePart, tb_SaleOutDetail>(c => c.ProdDetailID, false);
 
@@ -320,15 +321,11 @@ namespace RUINORERP.UI.PSI.SAL
             listCols.SetCol_Summary<tb_SaleOutDetail>(c => c.Quantity);
             listCols.SetCol_Summary<tb_SaleOutDetail>(c => c.CommissionAmount);
 
-
             sgh.SetPointToColumnPairs<ProductSharePart, tb_SaleOutDetail>(sgd, f => f.Location_ID, t => t.Location_ID);
             sgh.SetPointToColumnPairs<ProductSharePart, tb_SaleOutDetail>(sgd, f => f.Rack_ID, t => t.Rack_ID);
             sgh.SetPointToColumnPairs<ProductSharePart, tb_SaleOutDetail>(sgd, f => f.Inv_Cost, t => t.Cost);
             sgh.SetPointToColumnPairs<ProductSharePart, tb_SaleOutDetail>(sgd, f => f.Standard_Price, t => t.UnitPrice);
             sgh.SetPointToColumnPairs<ProductSharePart, tb_SaleOutDetail>(sgd, f => f.prop, t => t.property);
-
-
-
 
             //应该只提供一个结构
             List<tb_SaleOutDetail> lines = new List<tb_SaleOutDetail>();
@@ -345,11 +342,18 @@ namespace RUINORERP.UI.PSI.SAL
             list = MainForm.Instance.list;
             sgd.SetDependencyObject<ProductSharePart, tb_SaleOutDetail>(list);
             sgd.HasRowHeader = true;
+            sgd.MainBizDependencyType=typeof(tb_SaleOutDetail);
             sgh.InitGrid(grid1, sgd, true, nameof(tb_SaleOutDetail));
             sgh.OnCalculateColumnValue += Sgh_OnCalculateColumnValue;
             sgh.OnGetTransferDataHandler += Sgh_OnGetTransferDataHandler;
             base.ControlMasterColumnsInvisible();
         }
+
+        protected async override void SetGridViewAsync()
+        {
+            await UIBizSrvice.SetSourceGridAsync(typeof(tb_SaleOutDetail), sgd, listCols, CurMenuInfo, true);
+        }
+
 
         private tb_ProdConversion Sgh_OnGetTransferDataHandler(ToolStripItem sender, object rowObj, SourceGridDefine CurrGridDefine)
         {
@@ -412,7 +416,7 @@ namespace RUINORERP.UI.PSI.SAL
 
                 EditEntity.TotalAmount = details.Sum(c => c.TransactionPrice * c.Quantity);
                 EditEntity.TotalTaxAmount = details.Sum(c => c.SubtotalTaxAmount);
-                EditEntity.TotalTaxAmount= EditEntity.TotalTaxAmount.ToRoundDecimalPlaces(MainForm.Instance.authorizeController.GetMoneyDataPrecision());
+                EditEntity.TotalTaxAmount = EditEntity.TotalTaxAmount.ToRoundDecimalPlaces(MainForm.Instance.authorizeController.GetMoneyDataPrecision());
                 EditEntity.TotalUntaxedAmount = details.Sum(c => c.SubtotalUntaxedAmount);
                 EditEntity.CollectedMoney = EditEntity.TotalAmount;
                 EditEntity.TotalUntaxedAmount = EditEntity.TotalUntaxedAmount + EditEntity.ShipCost;

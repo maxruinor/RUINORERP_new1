@@ -46,6 +46,7 @@ namespace RUINORERP.UI.UCSourceGrid
         /// </summary>
         public Type GridMasterDataType { get; set; }
 
+ 
 
         public delegate void CalculateTotalValue(SourceGridDefine griddefine);
 
@@ -63,11 +64,7 @@ namespace RUINORERP.UI.UCSourceGrid
             }
         }
 
-
-
-
         PopupMenu menuController = new PopupMenu();
-
 
         /// <summary>
         /// 获取表格中字段的列集合
@@ -568,8 +565,10 @@ namespace RUINORERP.UI.UCSourceGrid
         #endregion
 
 
-
-        public Type DependencyType;
+        /// <summary>
+        /// 表格主要依赖的类型
+        /// </summary>
+        public Type MainBizDependencyType { get; set; }
 
 
         private List<object> sourceList = new List<object>();

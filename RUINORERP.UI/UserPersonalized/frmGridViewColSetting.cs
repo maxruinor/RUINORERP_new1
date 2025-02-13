@@ -19,6 +19,7 @@ using Netron.GraphLib;
 using RUINORERP.Global.EnumExt;
 using RUINORERP.Common;
 using FastReport.DevComponents.WinForms.Drawing;
+using RUINORERP.UI.UCSourceGrid;
 
 namespace RUINORERP.UI.UserPersonalized
 {
@@ -32,6 +33,8 @@ namespace RUINORERP.UI.UserPersonalized
             InitializeComponent();
             this.StartPosition = FormStartPosition.CenterParent;
         }
+
+     
 
         public List<ColumnDisplayController> ColumnDisplays { get; set; } = new List<ColumnDisplayController>();
 
@@ -74,7 +77,6 @@ namespace RUINORERP.UI.UserPersonalized
                         {
                             cdc.ColDisplayIndex = -1;
                         }
-
                     }
                 }
                 if (string.IsNullOrEmpty(item.Text))
@@ -85,6 +87,9 @@ namespace RUINORERP.UI.UserPersonalized
 
                 sortindex++;
             }
+
+
+
             DialogResult = DialogResult.OK;
         }
 
@@ -98,32 +103,41 @@ namespace RUINORERP.UI.UserPersonalized
 
         private async void frmMenuPersonalization_Load(object sender, EventArgs e)
         {
-            listView1.AllowDrop = true;
+            if (ConfiguredGrid.GetType().Name == "NewSumDataGridView")
+            {
+                dataGridView = ConfiguredGrid as NewSumDataGridView;
+            }
 
-            //添加列宽显示模式
-            dataGridView.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.ColumnHeader;
-            //
-            // 摘要:
-            //     列宽不会自动调整。
-            //
-            // 摘要:
-            //     列宽调整到适合列标头单元格的内容。
-            //
-            // 摘要:
-            //     列宽调整到适合列中除标头单元格以外所有单元格的内容。
-            //
-            // 摘要:
-            //     列宽调整到适合列中所有单元格（包括标头单元格）的内容。
-            //
-            // 摘要:
-            //     列宽调整到适合位于屏幕上当前显示的行中的列的所有单元格（不包括标头单元格）的内容。
-            //
-            // 摘要:
-            //     列宽调整到适合位于屏幕上当前显示的行中的列的所有单元格（包括标头单元格）的内容。
-            //
-            // 摘要:
-            //     列宽调整到使所有列宽精确填充控件的显示区域，要求使用水平滚动的目的只是保持列宽大于 System.Windows.Forms.DataGridViewColumn.MinimumWidth
-            //     属性值。相对列宽由相对 System.Windows.Forms.DataGridViewColumn.FillWeight 属性值决定。
+
+            listView1.AllowDrop = true;
+            if (dataGridView != null)
+            {
+                //添加列宽显示模式
+                dataGridView.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.ColumnHeader;
+                //
+                // 摘要:
+                //     列宽不会自动调整。
+                //
+                // 摘要:
+                //     列宽调整到适合列标头单元格的内容。
+                //
+                // 摘要:
+                //     列宽调整到适合列中除标头单元格以外所有单元格的内容。
+                //
+                // 摘要:
+                //     列宽调整到适合列中所有单元格（包括标头单元格）的内容。
+                //
+                // 摘要:
+                //     列宽调整到适合位于屏幕上当前显示的行中的列的所有单元格（不包括标头单元格）的内容。
+                //
+                // 摘要:
+                //     列宽调整到适合位于屏幕上当前显示的行中的列的所有单元格（包括标头单元格）的内容。
+                //
+                // 摘要:
+                //     列宽调整到使所有列宽精确填充控件的显示区域，要求使用水平滚动的目的只是保持列宽大于 System.Windows.Forms.DataGridViewColumn.MinimumWidth
+                //     属性值。相对列宽由相对 System.Windows.Forms.DataGridViewColumn.FillWeight 属性值决定。
+            }
+
             Dictionary<int, string> valuePairs = new Dictionary<int, string>();
             valuePairs.Add(1, "无");
             valuePairs.Add(2, "列头");
@@ -225,7 +239,7 @@ namespace RUINORERP.UI.UserPersonalized
             listView1.ContextMenuStrip = contentMenu1;
         }
 
-
+        #region 拖拽事件
         //启动拖拽，设置拖拽的数据和效果。
         private void ListView1_ItemDrag(object sender, ItemDragEventArgs e)
         {
@@ -272,6 +286,8 @@ namespace RUINORERP.UI.UserPersonalized
         {
             listView1.InsertionMark.Index = -1;
         }
+
+        #endregion
         private class ListViewIndexComparer : System.Collections.IComparer
         {
             public int Compare(object x, object y)
@@ -279,6 +295,7 @@ namespace RUINORERP.UI.UserPersonalized
                 return ((ListViewItem)x).Index - ((ListViewItem)y).Index;
             }
         }
+
 
         private void listView1_SelectedIndexChanged(object sender, EventArgs e)
         {
@@ -434,33 +451,23 @@ namespace RUINORERP.UI.UserPersonalized
 
         #region 初始化使用的属性
         public Type gridviewType { get; set; }
-        public NewSumDataGridView dataGridView { get; set; }
+
+        public Control ConfiguredGrid { get; set; }
+
+        private NewSumDataGridView dataGridView { get; set; }
 
         public tb_UIGridSetting GridSetting { get; set; }
+
+
+
 
         #endregion
 
 
         private void btnInitCol_Click(object sender, EventArgs e)
         {
-            ColumnDisplays = UIHelper.GetColumnDisplayList(gridviewType);
-            // 获取Graphics对象
-            Graphics graphics = dataGridView.CreateGraphics();
-            ColumnDisplays.ForEach(c =>
-            {
-                c.GridKeyName = gridviewType.Name;
-                //计算文本宽度
-                float textWidth = UITools.CalculateTextWidth(c.ColDisplayText, dataGridView.Font, graphics);
-                c.ColWidth = (int)textWidth + 10; // 加上一些额外的空间
-                if (c.ColWidth < 100)
-                {
-                    c.ColWidth = 100;
-                }
-            });
-
-            dataGridView.ColumnDisplays = ColumnDisplays;
+            UIBizSrvice.InitDataGridViewColumnDisplays(ColumnDisplays, dataGridView, gridviewType);
             LoadColumnDisplayList();
-            dataGridView.BindColumnStyle();
         }
 
         private void cmbGridViewList_SelectedIndexChanged(object sender, EventArgs e)
@@ -474,15 +481,19 @@ namespace RUINORERP.UI.UserPersonalized
             {
                 if (kcmb.SelectedValue != null)
                 {
-                    dataGridView.AutoSizeColumnsMode = (DataGridViewAutoSizeColumnsMode)GridSetting.ColumnsMode;
-                    if (dataGridView.AutoSizeColumnsMode == DataGridViewAutoSizeColumnsMode.None)
+                    if (dataGridView != null)
                     {
+                        dataGridView.AutoSizeColumnsMode = (DataGridViewAutoSizeColumnsMode)GridSetting.ColumnsMode;
+                        if (dataGridView.AutoSizeColumnsMode == DataGridViewAutoSizeColumnsMode.None)
+                        {
 
-                    }
-                    else
-                    {
+                        }
+                        else
+                        {
 
+                        }
                     }
+
                 }
 
             }

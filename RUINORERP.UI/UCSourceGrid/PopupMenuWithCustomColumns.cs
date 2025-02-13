@@ -44,13 +44,10 @@ namespace RUINORERP.UI.UCSourceGrid
         /// 控件列配置的右键菜单，用于拖拽排序列的顺序和勾选是否显示列。
         /// </summary>
         ContextMenuStrip contextMenuStrip1 = new ContextMenuStrip();
-        private Point mouseDownPoint;
-        private ToolStripMenuItem selectedItem;
         private ToolStripMenuItem draggedItem;
         private Point dragStartPoint;
-        private ToolStripMenuItem targetItem;
-        private bool isDragging = false;
-        private ToolStripSeparator insertIndicator;
+
+
         public PopupMenuWithCustomColumns(string xmlfileName)
         {
             contextMenuStrip1.AllowDrop = true;
@@ -123,6 +120,13 @@ namespace RUINORERP.UI.UCSourceGrid
             var dropPos = contextMenuStrip1.PointToClient(new Point(e.X, e.Y));
             var targetItem = contextMenuStrip1.GetItemAt(dropPos);
 
+            //如果目标不是可拖动的。则返回不处理
+            if (!targetItem.AllowDrop)
+            {
+                return;
+            }
+
+
             if (sourceItem != null && targetItem != null && sourceItem != targetItem)
             {
                 MoveMenuItem(sourceItem, targetItem);
@@ -148,9 +152,9 @@ namespace RUINORERP.UI.UCSourceGrid
             contextMenuStrip1.Items.Insert(newIndex, source);
 
             // 同步数据源
-            var itemData = items[oldIndex];
-            items.RemoveAt(oldIndex);
-            items.Insert(newIndex, itemData);
+            //var itemData = items[oldIndex];
+            //items.RemoveAt(oldIndex);
+            //items.Insert(newIndex, itemData);
         }
         #endregion
 
@@ -159,6 +163,16 @@ namespace RUINORERP.UI.UCSourceGrid
         {
             ClearInsertIndicator();
             if (effect != DragDropEffects.Move) return;
+
+            if (targetItem is ToolStripSeparator)
+            {
+                return;
+            }
+            //这时应该是拖到了非表格列的位置 
+            if (!targetItem.AllowDrop)
+            {
+                return;
+            }
 
             var index = contextMenuStrip1.Items.IndexOf(targetItem);
             var indicator = new ToolStripSeparator();
@@ -187,101 +201,6 @@ namespace RUINORERP.UI.UCSourceGrid
         }
         #endregion
 
-
-        private void contextMenuStrip1_MouseDown(object sender, MouseEventArgs e)
-        {
-            if (e.Button == MouseButtons.Left)
-            {
-                mouseDownPoint = e.Location;
-                selectedItem = contextMenuStrip1.GetItemAt(e.Location) as ToolStripMenuItem;
-            }
-
-            if (e.Button == MouseButtons.Left)
-            {
-                mouseDownPoint = e.Location;
-                // 获取鼠标位置的子项
-                //draggedItem = contextMenuStrip1.GetItemAt(e.Location) as ToolStripMenuItem;
-                draggedItem = sender as ToolStripMenuItem;
-
-                if (draggedItem != null)
-                {
-                    // 开始拖动
-                    isDragging = true;
-                    // OnDragDrop(sender, new System.Windows.Forms.DragEventArgs(draggedItem,1, e.X, e.Y, System.Windows.Forms.DragDropEffects.Move, System.Windows.Forms.DragDropEffects.Move));
-                }
-            }
-        }
-
-        private void contextMenuStrip1_MouseMove(object sender, MouseEventArgs e)
-        {
-            if (e.Button != MouseButtons.None)
-            {
-                if (selectedItem != null && e.Button == MouseButtons.Left)
-                {
-                    ToolStripMenuItem NewSelectedItem = contextMenuStrip1.GetItemAt(e.Location) as ToolStripMenuItem;
-
-                    int distance = Math.Abs(e.Y - mouseDownPoint.Y);
-                    //if (distance > SystemInformation.DragDropThreshold)
-                    //{
-                    //   // DoDragDrop(selectedItem, DragDropEffects.Move);
-                    //}
-                }
-
-            }
-
-            if (isDragging && e.Button == MouseButtons.Left)
-            {
-                // 拖动过程中，更新目标位置
-                Point dropPoint = e.Location;
-                targetItem = contextMenuStrip1.GetItemAt(dropPoint) as ToolStripMenuItem;
-
-                if (targetItem != null && targetItem != draggedItem)
-                {
-                    // 更新目标位置的子项
-                    //int targetIndex = contextMenuStrip1.Items.IndexOf(targetItem);
-                    //contextMenuStrip1.Items.Remove(draggedItem);
-                    //contextMenuStrip1.Items.Insert(targetIndex, draggedItem);
-                }
-
-            }
-        }
-
-        private void contextMenuStrip1_DragDrop(object sender, DragEventArgs e)
-        {
-
-
-
-            if (draggedItem != null && targetItem != null && draggedItem != targetItem)
-            {
-                // 获取拖动的子项和目标子项
-                ToolStripMenuItem draggedItem = (ToolStripMenuItem)e.Data.GetData(typeof(ToolStripMenuItem));
-                Point dropPoint = contextMenuStrip1.PointToClient(new Point(e.X, e.Y));
-                targetItem = contextMenuStrip1.GetItemAt(dropPoint) as ToolStripMenuItem;
-
-                if (targetItem != null && draggedItem != targetItem)
-                {
-                    // 调整子项的顺序
-                    int targetIndex = contextMenuStrip1.Items.IndexOf(targetItem);
-                    contextMenuStrip1.Items.Remove(draggedItem);
-                    contextMenuStrip1.Items.Insert(targetIndex, draggedItem);
-
-                    // 同步到 SourceGrid.Grid
-                    SynchronizeGridColumns();
-                }
-            }
-
-            // 停止拖动
-            isDragging = false;
-
-
-        }
-        private void contextMenuStrip1_DragEnter(object sender, DragEventArgs e)
-        {
-            if (e.Data.GetDataPresent(typeof(ToolStripMenuItem)))
-            {
-                e.Effect = DragDropEffects.Move;
-            }
-        }
 
         private void SynchronizeGridColumns()
         {
@@ -327,12 +246,11 @@ namespace RUINORERP.UI.UCSourceGrid
 
         private void ContextMenuStrip1_Opening(object sender, CancelEventArgs e)
         {
-            selectedItem = null;
 
             // 初始化拖动状态
             draggedItem = null;
-            targetItem = null;
-            isDragging = false;
+
+
         }
         frmShowColumns frm = new frmShowColumns();
 
@@ -441,7 +359,7 @@ namespace RUINORERP.UI.UCSourceGrid
             e.Effect = DragDropEffects.Move;
 
             // 显示插入位置指示
-           // ShowInsertIndicator(targetItem);
+            // ShowInsertIndicator(targetItem);
         }
 
         private void MenuItem_DragDrop(object sender, DragEventArgs e)
@@ -478,29 +396,24 @@ namespace RUINORERP.UI.UCSourceGrid
             contextMenuStrip1.Items.Insert(targetIndex, source);
 
             // 同步数据源
-            var data = items[sourceIndex];
-            items.RemoveAt(sourceIndex);
-            items.Insert(targetIndex > sourceIndex ? targetIndex - 1 : targetIndex, data);
+            //var data = items[sourceIndex];
+            //items.RemoveAt(sourceIndex);
+            //items.Insert(targetIndex > sourceIndex ? targetIndex - 1 : targetIndex, data);
 
-            SynchronizeGridColumns();
+            //SynchronizeGridColumns();
         }
 
         private void ShowInsertIndicator(ToolStripMenuItem targetItem)
         {
             ClearInsertIndicator();
-
             int index = contextMenuStrip1.Items.IndexOf(targetItem);
-            insertIndicator = new ToolStripSeparator();
+            ToolStripSeparator insertIndicator = new ToolStripSeparator();
             contextMenuStrip1.Items.Insert(index, insertIndicator);
         }
 
 
         #endregion
 
-        private void Item_DragEnter(object sender, DragEventArgs e)
-        {
-            e.Effect = DragDropEffects.Move; // 允许移动操作
-        }
 
 
         private void Item_DragOver(object sender, DragEventArgs e)
@@ -543,25 +456,14 @@ namespace RUINORERP.UI.UCSourceGrid
             }
         }
 
-        //private void Item_DragDrop(object sender, DragEventArgs e)
-        //{
-        //    ToolStripItem sourceItem = (ToolStripItem)e.Data.GetData(typeof(ToolStripItem)); // 获取被拖动的项
-        //    if (sourceItem != null)
-        //    {
-        //        ToolStripItem targetItem = (ToolStripItem)sender; // 获取目标项（即放置的位置）
-        //        int sourceIndex = sourceItem.Owner.Items.IndexOf(sourceItem); // 获取原始索引
-        //        int targetIndex = targetItem.Owner.Items.IndexOf(targetItem); // 获取目标索引
-        //        if (sourceIndex < targetIndex) targetIndex--; // 如果拖动到上方，目标索引需要调整
-        //        sourceItem.Owner.Items.Remove(sourceItem); // 从原位置移除项
-        //        sourceItem.Owner.Items.Insert(targetIndex, sourceItem); // 在新位置插入项
-        //    }
-        //}
-
 
         private void Si_Click(object sender, EventArgs e)
         {
-            return;
             KeyValuePair<string, SourceGridDefineColumnItem> item = items.Find(kv => kv.Key == sender.ToString());
+            if (item.Value == null)
+            {
+                return;
+            }
             item.Value.Visible = (sender as ToolStripMenuItem).Checked;
 
             //var itemData = (KeyValuePair<string, SourceGridDefineColumnItem>)menuItem.Tag;

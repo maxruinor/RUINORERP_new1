@@ -230,7 +230,7 @@ namespace RUINORERP.UI.MRP.PQC
             grid1.Selection.EnableMultiSelection = false;
 
 
-            List<SourceGridDefineColumnItem> listCols = new List<SourceGridDefineColumnItem>();
+            List<SGDefineColumnItem> listCols = new List<SGDefineColumnItem>();
             //指定了关键字段ProdDetailID
             listCols = sgh.GetGridColumns<ProductSharePart, tb_MRP_ReworkReturnDetail>(c => c.ProdDetailID, false);
 

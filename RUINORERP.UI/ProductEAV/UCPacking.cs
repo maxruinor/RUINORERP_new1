@@ -331,8 +331,8 @@ namespace RUINORERP.UI.ProductEAV
         //设计关联列和目标列
         View_ProdDetailController<View_ProdDetail> dc = Startup.GetFromFac<View_ProdDetailController<View_ProdDetail>>();
         List<View_ProdDetail> list = new List<View_ProdDetail>();
-        List<SourceGridDefineColumnItem> listCols1 = new List<SourceGridDefineColumnItem>();
-        List<SourceGridDefineColumnItem> listCols2 = new List<SourceGridDefineColumnItem>();
+        List<SGDefineColumnItem> listCols1 = new List<SGDefineColumnItem>();
+        List<SGDefineColumnItem> listCols2 = new List<SGDefineColumnItem>();
 
         private void UcSaleOrderEdit_Load(object sender, EventArgs e)
         {
@@ -441,7 +441,7 @@ namespace RUINORERP.UI.ProductEAV
 
             grid2.BorderStyle = BorderStyle.FixedSingle;
             grid2.Selection.EnableMultiSelection = false;
-            listCols2 = new List<SourceGridDefineColumnItem>();
+            listCols2 = new List<SGDefineColumnItem>();
             //指定了关键字段ProdDetailID
             listCols2 = sgh2.GetGridColumns<tb_BoxRules>();
 

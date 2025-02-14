@@ -271,7 +271,7 @@ namespace RUINORERP.UI.PSI.SAL
             grid1.BorderStyle = BorderStyle.FixedSingle;
             grid1.Selection.EnableMultiSelection = false;
 
-            List<SourceGridDefineColumnItem> listCols = new List<SourceGridDefineColumnItem>();
+            List<SGDefineColumnItem> listCols = new List<SGDefineColumnItem>();
             //指定了关键字段ProdDetailID
             listCols = sgh.GetGridColumns<ProductSharePart, tb_SaleOutReDetail>(c => c.ProdDetailID, false);
 
@@ -345,7 +345,7 @@ namespace RUINORERP.UI.PSI.SAL
 
             grid2.BorderStyle = BorderStyle.FixedSingle;
             grid2.Selection.EnableMultiSelection = false;
-            List<SourceGridDefineColumnItem> listCols = new List<SourceGridDefineColumnItem>();
+            List<SGDefineColumnItem> listCols = new List<SGDefineColumnItem>();
             //指定了关键字段ProdDetailID
             listCols = sgh2.GetGridColumns<ProductSharePart, tb_SaleOutReRefurbishedMaterialsDetail>(c => c.ProdDetailID, false);
 

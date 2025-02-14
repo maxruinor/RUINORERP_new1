@@ -279,7 +279,7 @@ namespace RUINORERP.UI.PSI.INV
         //设计关联列和目标列
         View_ProdDetailController<View_ProdDetail> dc = Startup.GetFromFac<View_ProdDetailController<View_ProdDetail>>();
         List<View_ProdDetail> list = new List<View_ProdDetail>();
-        List<SourceGridDefineColumnItem> listCols = new List<SourceGridDefineColumnItem>();
+        List<SGDefineColumnItem> listCols = new List<SGDefineColumnItem>();
         private void UCStocktake_Load(object sender, EventArgs e)
         {
             grid1.Enter += Grid1_Enter;
@@ -290,7 +290,7 @@ namespace RUINORERP.UI.PSI.INV
             grid1.BorderStyle = BorderStyle.FixedSingle;
             grid1.Selection.EnableMultiSelection = false;
 
-            listCols = new List<SourceGridDefineColumnItem>();
+            listCols = new List<SGDefineColumnItem>();
             //指定了关键字段ProdDetailID
             listCols = sgh.GetGridColumns<ProductSharePart, tb_StocktakeDetail>(c => c.ProdDetailID, true);
 

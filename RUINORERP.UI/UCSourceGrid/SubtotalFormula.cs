@@ -28,7 +28,7 @@ namespace RUINORERP.UI.UCSourceGrid
         /// </summary>
         public string TagetColName { get; set; }
 
-        public SourceGridDefineColumnItem TagetCol { get; set; }
+        public SGDefineColumnItem TagetCol { get; set; }
 
         private int _OperandQty;
 

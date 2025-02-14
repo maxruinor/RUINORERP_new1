@@ -362,7 +362,7 @@ namespace RUINORERP.UI.UControls
             //保存在内存中
             #region 列有变化就保存到内存，关闭时保存到数据库设置中
 
-            ColumnDisplayController columnDisplay = this.ColumnDisplays.FirstOrDefault(c => c.ColName == e.Column.Name);
+            ColDisplayController columnDisplay = this.ColumnDisplays.FirstOrDefault(c => c.ColName == e.Column.Name);
             if (columnDisplay != null)
             {
                 columnDisplay.ColWidth = e.Column.Width;
@@ -490,7 +490,7 @@ namespace RUINORERP.UI.UControls
         /// 保存列控制信息的列表 ，这个值设计时不生成
         /// </summary>
         [DesignerSerializationVisibilityAttribute(DesignerSerializationVisibility.Hidden)]
-        public List<ColumnDisplayController> ColumnDisplays { get; set; } = new List<ColumnDisplayController>();
+        public List<ColDisplayController> ColumnDisplays { get; set; } = new List<ColDisplayController>();
 
         private bool _NeedSaveColumnsXml = true;
 
@@ -513,7 +513,7 @@ namespace RUINORERP.UI.UControls
         {
             foreach (DataGridViewColumn dc in Columns)
             {
-                ColumnDisplayController cdc = ColumnDisplays.Where(s => s.ColName == dc.Name).FirstOrDefault();
+                ColDisplayController cdc = ColumnDisplays.Where(s => s.ColName == dc.Name).FirstOrDefault();
                 if (cdc != null)
                 {
                     cdc.ColDisplayText = dc.HeaderText;
@@ -529,7 +529,7 @@ namespace RUINORERP.UI.UControls
                 }
             }
 
-            var cols = from ColumnDisplayController col in ColumnDisplays
+            var cols = from ColDisplayController col in ColumnDisplays
                        orderby col.ColDisplayIndex
                        select col;
 
@@ -555,13 +555,13 @@ namespace RUINORERP.UI.UControls
             //    }
             //}
             ColumnDisplays.Where(c => c.Disable).ToList().ForEach(f => f.ColDisplayIndex = 1000);
-            ColumnDisplayController cdc = ColumnDisplays.Where(c => c.ColName == "Selected").FirstOrDefault();
+            ColDisplayController cdc = ColumnDisplays.Where(c => c.ColName == "Selected").FirstOrDefault();
             if (cdc != null)
             {
                 cdc.Disable = !UseSelectedColumn;
             }
             //加载列样式
-            foreach (ColumnDisplayController displayController in ColumnDisplays)
+            foreach (ColDisplayController displayController in ColumnDisplays)
             {
                 if (Columns.Contains(displayController.ColName))
                 {
@@ -623,7 +623,7 @@ namespace RUINORERP.UI.UControls
                 return;
             }
             //加载列样式
-            foreach (ColumnDisplayController displayController in ColumnDisplays)
+            foreach (ColDisplayController displayController in ColumnDisplays)
             {
                 //加总的也要控制
                 if (_dgvSumRow.Columns.Contains(displayController.ColName))
@@ -701,7 +701,7 @@ namespace RUINORERP.UI.UControls
                     List<string> result = ColNamesDispays.Except(FieldNames).ToList();
                     foreach (string str in result)
                     {
-                        ColumnDisplayController cdc = ColumnDisplays.Where(c => c.ColName == str).FirstOrDefault();
+                        ColDisplayController cdc = ColumnDisplays.Where(c => c.ColName == str).FirstOrDefault();
                         if (cdc != null)
                         {
                             cdc.Disable = true;
@@ -712,7 +712,7 @@ namespace RUINORERP.UI.UControls
                     //这里认为只执行一次？并且要把显示名的中文传过来，并且不在默认中文及控制显示列表中，就不显示了。
                     foreach (var item in FieldNameList)
                     {
-                        ColumnDisplayController cdc = ColumnDisplays.Where(c => c.ColName == item.Key).FirstOrDefault();
+                        ColDisplayController cdc = ColumnDisplays.Where(c => c.ColName == item.Key).FirstOrDefault();
                         if (cdc != null)
                         {
                             cdc.ColDisplayText = item.Value.Key;
@@ -2274,7 +2274,7 @@ namespace RUINORERP.UI.UControls
                 List<string> result = ColNamesDispays.Except(FieldNames).ToList();
                 foreach (string str in result)
                 {
-                    ColumnDisplayController cdc = ColumnDisplays.Where(c => c.ColName == str).FirstOrDefault();
+                    ColDisplayController cdc = ColumnDisplays.Where(c => c.ColName == str).FirstOrDefault();
                     if (cdc != null)
                     {
                         cdc.Disable = true;
@@ -2286,7 +2286,7 @@ namespace RUINORERP.UI.UControls
                 //这里认为只执行一次？并且要把显示名的中文传过来，并且不在默认中文及控制显示列表中，就不显示了。
                 foreach (var item in FieldNameList)
                 {
-                    ColumnDisplayController cdc = ColumnDisplays.Where(c => c.ColName == item.Key).FirstOrDefault();
+                    ColDisplayController cdc = ColumnDisplays.Where(c => c.ColName == item.Key).FirstOrDefault();
                     if (cdc != null)
                     {
                         cdc.ColDisplayText = item.Value.Key;
@@ -2308,7 +2308,7 @@ namespace RUINORERP.UI.UControls
                     }
                 }
 
-                ColumnDisplayController cdcSelected = ColumnDisplays.Where(c => c.ColName == "Selected").FirstOrDefault();
+                ColDisplayController cdcSelected = ColumnDisplays.Where(c => c.ColName == "Selected").FirstOrDefault();
                 if (cdcSelected != null)
                 {
                     cdcSelected.Visible = UseSelectedColumn;

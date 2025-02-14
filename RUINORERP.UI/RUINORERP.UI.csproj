@@ -2219,7 +2219,7 @@
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="UCExtensions\dataGridViewExt.cs" />
-    <Compile Include="UControls\ColumnDisplayController.cs" />
+    <Compile Include="UControls\ColDisplayController.cs" />
     <Compile Include="UControls\CustomizeGrid.cs">
       <SubType>Component</SubType>
     </Compile>
@@ -2275,6 +2275,7 @@
     <Compile Include="UCSourceGrid\BillOperateController.cs" />
     <Compile Include="UCSourceGrid\AdditionalEvent.cs" />
     <Compile Include="UCSourceGrid\CellClickEvent.cs" />
+    <Compile Include="UCSourceGrid\SGColDisplayHandler.cs" />
     <Compile Include="UCSourceGrid\ComputingController.cs" />
     <Compile Include="UCSourceGrid\CustomKeyEvent.cs" />
     <Compile Include="UCSourceGrid\DependencyQuery.cs" />
@@ -2307,7 +2308,7 @@
     </Compile>
     <Compile Include="UCSourceGrid\SelectedForCheckBoxController.cs" />
     <Compile Include="UCSourceGrid\SourceGridDefine.cs" />
-    <Compile Include="UCSourceGrid\SourceGridDefineColumnItem.cs" />
+    <Compile Include="UCSourceGrid\SGDefineColumnItem.cs" />
     <Compile Include="UCSourceGrid\SourceGridExt.cs" />
     <Compile Include="UCSourceGrid\SourceGridHelper.cs" />
     <Compile Include="UCSourceGrid\SourceGridProcess.cs" />

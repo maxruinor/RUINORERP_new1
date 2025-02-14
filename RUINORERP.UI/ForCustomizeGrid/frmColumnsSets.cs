@@ -17,9 +17,9 @@ namespace RUINORERP.UI.ForCustomizeGrid
 
  
 
-        public List<ColumnDisplayController> ColumnDisplays { get; set; } = new List<ColumnDisplayController>();
+        public List<ColDisplayController> ColumnDisplays { get; set; } = new List<ColDisplayController>();
 
-        public ColumnDisplayController[] oldColumnDisplays;
+        public ColDisplayController[] oldColumnDisplays;
 
 
         ContextMenuStrip contentMenu1;
@@ -91,9 +91,9 @@ namespace RUINORERP.UI.ForCustomizeGrid
             //    return x;
             //});
             #endregion
-            oldColumnDisplays = new ColumnDisplayController[ColumnDisplays.Count];
+            oldColumnDisplays = new ColDisplayController[ColumnDisplays.Count];
             ColumnDisplays.CopyTo(oldColumnDisplays);
-            foreach (ColumnDisplayController keyValue in ColumnDisplays)
+            foreach (ColDisplayController keyValue in ColumnDisplays)
             {
                 if (!keyValue.Disable)
                 {
@@ -302,11 +302,11 @@ namespace RUINORERP.UI.ForCustomizeGrid
             //上面临时保存了一个之前的序列数组
             foreach (ListViewItem item in listView1.Items)
             {
-                if (item.Tag is ColumnDisplayController columnDisplays)
+                if (item.Tag is ColDisplayController columnDisplays)
                 {
                     if (columnDisplays != null)
                     {
-                        ColumnDisplayController cdc = ColumnDisplays.Where(c => c.ColName == columnDisplays.ColName).FirstOrDefault();
+                        ColDisplayController cdc = ColumnDisplays.Where(c => c.ColName == columnDisplays.ColName).FirstOrDefault();
                         cdc.Visible = item.Checked;
                         cdc.ColDisplayIndex = sortindex;
                     }

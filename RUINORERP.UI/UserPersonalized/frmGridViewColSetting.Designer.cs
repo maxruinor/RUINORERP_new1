@@ -38,6 +38,7 @@
             this.chkReverseSelection = new Krypton.Toolkit.KryptonCheckBox();
             this.chkAll = new Krypton.Toolkit.KryptonCheckBox();
             this.listView1 = new System.Windows.Forms.ListView();
+            this.btnApply = new Krypton.Toolkit.KryptonButton();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel1)).BeginInit();
             this.kryptonPanel1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.cmbColsDisplayModel)).BeginInit();
@@ -64,6 +65,7 @@
             // 
             // kryptonPanel1
             // 
+            this.kryptonPanel1.Controls.Add(this.btnApply);
             this.kryptonPanel1.Controls.Add(this.cmbColsDisplayModel);
             this.kryptonPanel1.Controls.Add(this.kryptonLabel1);
             this.kryptonPanel1.Controls.Add(this.btnInitCol);
@@ -142,8 +144,16 @@
             this.listView1.TabIndex = 16;
             this.listView1.UseCompatibleStateImageBehavior = false;
             this.listView1.View = System.Windows.Forms.View.Details;
-            
             this.listView1.SelectedIndexChanged += new System.EventHandler(this.listView1_SelectedIndexChanged);
+            // 
+            // btnApply
+            // 
+            this.btnApply.Location = new System.Drawing.Point(640, 576);
+            this.btnApply.Name = "btnApply";
+            this.btnApply.Size = new System.Drawing.Size(90, 25);
+            this.btnApply.TabIndex = 47;
+            this.btnApply.Values.Text = "应用(&U)";
+            this.btnApply.Click += new System.EventHandler(this.btnApply_Click);
             // 
             // frmGridViewColSetting
             // 
@@ -175,5 +185,6 @@
         private Krypton.Toolkit.KryptonButton btnInitCol;
         public Krypton.Toolkit.KryptonComboBox cmbColsDisplayModel;
         public Krypton.Toolkit.KryptonLabel kryptonLabel1;
+        private Krypton.Toolkit.KryptonButton btnApply;
     }
 }

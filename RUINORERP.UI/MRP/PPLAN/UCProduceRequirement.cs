@@ -418,7 +418,7 @@ namespace RUINORERP.UI.MRP.MP
         SourceGridDefine sgdTarget = null;
         //        SourceGridHelper<View_ProdDetail, tb_ProductionPlanDetail> sgh = new SourceGridHelper<View_ProdDetail, tb_ProductionPlanDetail>();
         SourceGridHelper sghTarget = new SourceGridHelper();
-        List<SourceGridDefineColumnItem> listColsTarget = new List<SourceGridDefineColumnItem>();
+        List<SGDefineColumnItem> listColsTarget = new List<SGDefineColumnItem>();
 
         public void LoadTargetItems()
         {
@@ -532,7 +532,7 @@ namespace RUINORERP.UI.MRP.MP
         //        SourceGridHelper<View_ProdDetail, tb_ProductionPlanDetail> sgh = new SourceGridHelper<View_ProdDetail, tb_ProductionPlanDetail>();
         SourceGridHelper sghPur = new SourceGridHelper();
 
-        List<SourceGridDefineColumnItem> listColsPur = new List<SourceGridDefineColumnItem>();
+        List<SGDefineColumnItem> listColsPur = new List<SGDefineColumnItem>();
 
         public void LoadPurItems()
         {

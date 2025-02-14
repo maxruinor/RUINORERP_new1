@@ -125,12 +125,12 @@ namespace RUINORERP.UI.BaseForm
         }
 
 
-        public event ColumnDisplayControlHandler SetColumnDisplayControl;
-        public delegate void ColumnDisplayControlHandler(Type GridSourceType);
-        protected  virtual void SetGridViewAsync()
-        {
-            if (SetColumnDisplayControl != null) SetColumnDisplayControl(typeof(C));
-        }
+        //public event ColumnDisplayControlHandler SetColumnDisplayControl;
+        //public delegate void ColumnDisplayControlHandler(Type GridSourceType);
+        //protected  virtual void SetGridViewAsync()
+        //{
+        //    if (SetColumnDisplayControl != null) SetColumnDisplayControl(typeof(C));
+        //}
 
         #region 单据 主表公共信息 如类型：名称
 
@@ -507,7 +507,7 @@ namespace RUINORERP.UI.BaseForm
         /// 控制字段是否显示，添加到里面的是不显示的
         /// </summary>
         /// <param name="InvisibleCols"></param>
-        public void ControlChildColumnsInvisible(List<SourceGridDefineColumnItem> listCols)
+        public void ControlChildColumnsInvisible(List<SGDefineColumnItem> listCols)
         {
             if (!MainForm.Instance.AppContext.IsSuperUser)
             {
@@ -526,7 +526,7 @@ namespace RUINORERP.UI.BaseForm
                                 //if (!item.IsVisble && item.tb_fieldinfo.IsChild)
                                 if ((!item.tb_fieldinfo.IsEnabled || !item.IsVisble) && item.tb_fieldinfo.IsChild)
                                 {
-                                    SourceGridDefineColumnItem defineColumnItem = listCols.Where(w => w.ColName == item.tb_fieldinfo.FieldName).FirstOrDefault();
+                                    SGDefineColumnItem defineColumnItem = listCols.Where(w => w.ColName == item.tb_fieldinfo.FieldName).FirstOrDefault();
                                     if (defineColumnItem != null)
                                     {
                                         defineColumnItem.SetCol_NeverVisible(item.tb_fieldinfo.FieldName);
@@ -536,7 +536,7 @@ namespace RUINORERP.UI.BaseForm
                                 //设置默认隐藏
                                 if (item.tb_fieldinfo.DefaultHide && item.tb_fieldinfo.IsChild)
                                 {
-                                    SourceGridDefineColumnItem defineColumnItem = listCols.Where(w => w.ColName == item.tb_fieldinfo.FieldName).FirstOrDefault();
+                                    SGDefineColumnItem defineColumnItem = listCols.Where(w => w.ColName == item.tb_fieldinfo.FieldName).FirstOrDefault();
                                     if (defineColumnItem != null)
                                     {
                                         defineColumnItem.SetCol_DefaultHide(item.tb_fieldinfo.FieldName);
@@ -1636,7 +1636,7 @@ namespace RUINORERP.UI.BaseForm
         public async Task<bool> SaveFileToServer(SourceGridDefine sgd, List<C> Details)
         {
             bool result = true;
-            List<SourceGridDefineColumnItem> ImgCols = new List<SourceGridDefineColumnItem>();
+            List<SGDefineColumnItem> ImgCols = new List<SGDefineColumnItem>();
             foreach (C detail in Details)
             {
                 PropertyInfo[] props = typeof(C).GetProperties();
@@ -1664,7 +1664,7 @@ namespace RUINORERP.UI.BaseForm
             return result;
         }
 
-        private async Task<bool> UploadImageAsync(List<SourceGridDefineColumnItem> ImgCols, Grid grid, List<C> Details)
+        private async Task<bool> UploadImageAsync(List<SGDefineColumnItem> ImgCols, Grid grid, List<C> Details)
         {
             bool rs = true;
             //保存图片到本地临时目录，图片数据保存在grid1控件中，所以要循环控件的行，控件真实数据行以1为起始
@@ -2386,6 +2386,16 @@ namespace RUINORERP.UI.BaseForm
 
         protected override void Exit(object thisform)
         {
+            try
+            {
+                
+                    //UIBizSrvice.SetCustomSourceGridAsync(CurMenuInfo,, typeof(C));
+            }
+            catch
+            {
+
+            }
+
             base.Exit(this);
         }
 

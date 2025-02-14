@@ -41,7 +41,7 @@ namespace RUINORERP.UI.UControls.Outlook
         /// 保存列控制信息的列表 ，这个值设计时不生成
         /// </summary>
         [DesignerSerializationVisibilityAttribute(DesignerSerializationVisibility.Hidden)]
-        public List<ColumnDisplayController> ColumnDisplays { get; set; } = new List<ColumnDisplayController>();
+        public List<ColDisplayController> ColumnDisplays { get; set; } = new List<ColDisplayController>();
 
 
         //public delegate void BindColumnStyle();
@@ -273,7 +273,7 @@ namespace RUINORERP.UI.UControls.Outlook
             }
 
             //加载列样式
-            foreach (ColumnDisplayController displayController in ColumnDisplays)
+            foreach (ColDisplayController displayController in ColumnDisplays)
             {
                 if (Grid.Columns.Contains(displayController.ColName))
                 {

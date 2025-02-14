@@ -361,7 +361,7 @@ namespace RUINORERP.UI.PSI.SAL
             grid1.Selection.EnableMultiSelection = false;
 
 
-            List<SourceGridDefineColumnItem> listCols = new List<SourceGridDefineColumnItem>();
+            List<SGDefineColumnItem> listCols = new List<SGDefineColumnItem>();
             //指定了关键字段ProdDetailID
             listCols = sgh.GetGridColumns<ProductSharePart, tb_SaleOrderDetail>(c => c.ProdDetailID, false);
 

@@ -195,7 +195,7 @@ namespace RUINORERP.UI.PSI.INV
             grid1.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             grid1.Selection.EnableMultiSelection = false;
 
-            List<SourceGridDefineColumnItem> listCols = new List<SourceGridDefineColumnItem>();
+            List<SGDefineColumnItem> listCols = new List<SGDefineColumnItem>();
             //指定了关键字段ProdDetailID
             listCols = sgh.GetGridColumns<ProductSharePart, tb_StockOutDetail>(c => c.ProdDetailID, false);
 

@@ -17,7 +17,7 @@ namespace RUINORERP.UI.UControls
     /// 列显示控制器
     /// </summary>
     [Serializable]
-    public class ColumnDisplayController : INotifyPropertyChanged, IEquatable<ColumnDisplayController>
+    public class ColDisplayController : INotifyPropertyChanged, IEquatable<ColDisplayController>
     {
         //public string ColKeName { get; set; } = Guid.NewGuid().ToString();
         private string colDisplayText = string.Empty;
@@ -179,7 +179,7 @@ namespace RUINORERP.UI.UControls
         }
 
         // 实现 IEquatable<T>
-        public bool Equals(ColumnDisplayController other)
+        public bool Equals(ColDisplayController other)
         {
             if (other == null)
                 return false;
@@ -191,7 +191,7 @@ namespace RUINORERP.UI.UControls
         // 重写 Equals 和 GetHashCode，确保两者保持一致
         public override bool Equals(object obj)
         {
-            return Equals(obj as ColumnDisplayController);
+            return Equals(obj as ColDisplayController);
         }
 
         //public override int GetHashCode()

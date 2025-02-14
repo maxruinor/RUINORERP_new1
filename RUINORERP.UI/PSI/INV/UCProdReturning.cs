@@ -224,7 +224,7 @@ namespace RUINORERP.UI.PSI.INV
             grid1.Selection.EnableMultiSelection = false;
 
 
-            List<SourceGridDefineColumnItem> listCols = sgh.GetGridColumns<ProductSharePart, tb_ProdReturningDetail>(c => c.ProdDetailID, false);
+            List<SGDefineColumnItem> listCols = sgh.GetGridColumns<ProductSharePart, tb_ProdReturningDetail>(c => c.ProdDetailID, false);
 
             listCols.SetCol_NeverVisible<tb_ProdReturningDetail>(c => c.ProdDetailID);
             listCols.SetCol_NeverVisible<tb_ProdReturningDetail>(c => c.ReturnSub_ID);

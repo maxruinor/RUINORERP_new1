@@ -20,13 +20,13 @@ namespace RUINORERP.UI.UCSourceGrid
     /// 所以标记
     /// </summary>
     [Serializable]
-    public class SourceGridDefineColumnItem
+    public class SGDefineColumnItem
     {
 
         /// <summary>
         /// 2025-02-12为了能自定义显示逻辑，所以这里增加一个控制器。
         /// </summary>
-        public ColumnDisplayController DisplayController { get; set; } =new ColumnDisplayController();
+        public SGColDisplayHandler DisplayController { get; set; } = new SGColDisplayHandler();
 
         /// <summary>
         /// 代表了主要的、真实的明细数据部分，其命名应该清晰地反映出它的核心地位和实际用途
@@ -97,12 +97,12 @@ namespace RUINORERP.UI.UCSourceGrid
         private SourceGridDefine _parentGridDefine = null;
         public SourceGridDefine ParentGridDefine { get => _parentGridDefine; set => _parentGridDefine = value; }
 
-        public SourceGridDefineColumnItem(SourceGridDefine parentGridDefine)
+        public SGDefineColumnItem(SourceGridDefine parentGridDefine)
         {
             _parentGridDefine = parentGridDefine;
         }
 
-        public SourceGridDefineColumnItem()
+        public SGDefineColumnItem()
         {
 
         }
@@ -112,12 +112,12 @@ namespace RUINORERP.UI.UCSourceGrid
         public EditorBase EditorForColumn { get => _editorForColumn; set => _editorForColumn = value; }
 
 
-        public SourceGridDefineColumnItem(string name, int width, string selectobject, CustomFormatType formatType = CustomFormatType.DefaultFormat)
+        public SGDefineColumnItem(string name, int width, string selectobject, CustomFormatType formatType = CustomFormatType.DefaultFormat)
         {
             this.ColCaption = name;
             this.CustomFormat = formatType;
             this.selectobject = selectobject;
-            this.width = width;
+            this.Width = width;
         }
 
 
@@ -131,16 +131,17 @@ namespace RUINORERP.UI.UCSourceGrid
 
 
         //默认值
-        public int width = 0;
+        private int width = 0;
 
         /// <summary>
         /// 保存了匹配列的索引
         /// </summary>
-        public int ColIndex = -1;
+        private int colIndex = -1;
 
+        private string colCaption;
 
-        public string ColCaption;
-        public string ColName;
+        private string colName;
+
         public string storename;
 
         /// <summary>
@@ -180,7 +181,18 @@ namespace RUINORERP.UI.UCSourceGrid
         /// <summary>
         ///  设置这个列永远不可见，权限也无法控制。目的是程序控制中要用到。比方产品详情的ID,单据明细ID
         /// </summary>
-        public bool NeverVisible { get => neverVisible; set => neverVisible = value; }
+        public bool NeverVisible { 
+            get => neverVisible;
+
+            set
+            {
+                neverVisible = value;
+                if (this.DisplayController != null)
+                {
+                    DisplayController.Disable = value;
+                }
+            }
+        }
 
         /// <summary>
         /// 是否默认隐藏
@@ -251,6 +263,10 @@ namespace RUINORERP.UI.UCSourceGrid
             set
             {
                 visible = value;
+                if (this.DisplayController != null)
+                {
+                    DisplayController.Visible = value;
+                }
             }
         }
 
@@ -258,6 +274,55 @@ namespace RUINORERP.UI.UCSourceGrid
         /// 列的编辑状态，用于计算列的值时各种关联列的混乱情况(暂时没有使用上)
         /// </summary>
         public bool IsEdit { get; internal set; }
+        public string ColCaption
+        {
+            get => colCaption;
+            set
+            {
+                colCaption = value;
+                if (this.DisplayController != null)
+                {
+                    DisplayController.ColCaption = value;
+                }
+            }
+        }
+
+        public int Width
+        {
+            get => width;
+            set
+            {
+                width = value;
+                if (this.DisplayController != null)
+                {
+                    DisplayController.ColWidth = value;
+                }
+            }
+        }
+
+        public string ColName
+        {
+            get => colName;
+            set
+            {
+                colName = value;
+                if (this.DisplayController != null)
+                {
+                    DisplayController.ColName = value;
+                }
+            }
+        }
+
+        public int ColIndex { get => colIndex;
+            set
+            {
+                colIndex = value;
+                if (this.DisplayController != null)
+                {
+                    DisplayController.ColIndex = value;
+                }
+            }
+        }
 
         private bool visible = true;
         public bool check = false;

@@ -251,10 +251,10 @@ namespace RUINORERP.UI
 
             ///显示列表对应的中文
             System.Collections.Concurrent.ConcurrentQueue<KeyValuePair<string, PropertyInfo>> Ddc = EmitHelper.GetfieldNameList(combinedType);
-            List<SourceGridDefineColumnItem> listCols = new List<SourceGridDefineColumnItem>();
+            List<SGDefineColumnItem> listCols = new List<SGDefineColumnItem>();
             foreach (var item in Ddc)
             {
-                SourceGridDefineColumnItem gdc = new SourceGridDefineColumnItem();
+                SGDefineColumnItem gdc = new SGDefineColumnItem();
                 gdc.ColCaption = item.Value.Name;
                 gdc.ColName = item.Key;
                 gdc.ColPropertyInfo = item.Value as PropertyInfo;

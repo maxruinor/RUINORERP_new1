@@ -338,7 +338,7 @@ namespace RUINORERP.UI.FM
         //设计关联列和目标列
         tb_FM_OtherExpenseDetailController<tb_FM_ExpenseClaimDetail> dc = Startup.GetFromFac<tb_FM_OtherExpenseDetailController<tb_FM_ExpenseClaimDetail>>();
         List<tb_FM_ExpenseClaimDetail> list = new List<tb_FM_ExpenseClaimDetail>();
-        List<SourceGridDefineColumnItem> listCols = new List<SourceGridDefineColumnItem>();
+        List<SGDefineColumnItem> listCols = new List<SGDefineColumnItem>();
         private void UCStockIn_Load(object sender, EventArgs e)
         {
             if (CurMenuInfo != null)
@@ -353,7 +353,7 @@ namespace RUINORERP.UI.FM
             grid1.Selection.EnableMultiSelection = false;
 
 
-            listCols = new List<SourceGridDefineColumnItem>();
+            listCols = new List<SGDefineColumnItem>();
             //指定了关键字段ProdDetailID
             listCols = sgh.GetGridColumns<tb_FM_ExpenseClaimDetail>();
 

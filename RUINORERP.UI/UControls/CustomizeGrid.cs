@@ -49,9 +49,9 @@ namespace RUINORERP.UI.UControls
         /// <summary>
         /// 保存列控制信息的列表
         /// </summary>
-        public List<ColumnDisplayController> ColumnDisplays { get; set; } = new List<ColumnDisplayController>();
+        public List<ColDisplayController> ColumnDisplays { get; set; } = new List<ColDisplayController>();
 
-    
+
 
         #region 配置持久化
 
@@ -89,12 +89,12 @@ namespace RUINORERP.UI.UControls
         /// 将DG的显示顺序等属性保存到list中
         /// </summary>
         /// <param name="ColumnDisplays"></param>
-        public List<ColumnDisplayController> SaveDisplayIndex(List<ColumnDisplayController> ColumnDisplays)
+        public List<ColDisplayController> SaveDisplayIndex(List<ColDisplayController> ColumnDisplays)
         {
 
             foreach (DataGridViewColumn dc in targetDataGridView.Columns)
             {
-                ColumnDisplayController cdc = ColumnDisplays.Where(s => s.ColName == dc.Name).FirstOrDefault();
+                ColDisplayController cdc = ColumnDisplays.Where(s => s.ColName == dc.Name).FirstOrDefault();
                 if (cdc != null)
                 {
                     cdc.ColDisplayText = dc.HeaderText;
@@ -124,7 +124,7 @@ namespace RUINORERP.UI.UControls
         /// 持久化只能这个格式，所以思路 只保存name->enname bool
         /// </summary>
         /// <param name="qs"></param>
-        public void SaveColumnsList(List<ColumnDisplayController> columnDisplays)
+        public void SaveColumnsList(List<ColDisplayController> columnDisplays)
         {
             if (!NeedSaveColumnsXml)
             {
@@ -146,34 +146,44 @@ namespace RUINORERP.UI.UControls
 
 
         RUINORERP.Common.Helper.XmlHelper manager = new RUINORERP.Common.Helper.XmlHelper();
-        public List<ColumnDisplayController> LoadColumnsListByCdc()
+        public List<ColDisplayController> LoadColumnsListByCdc()
         {
-            List<ColumnDisplayController> ColumnDisplays = new List<ColumnDisplayController>();
+            List<ColDisplayController> ColumnDisplays = new List<ColDisplayController>();
+
             string PickConfigPath = string.Empty;
-            if (this.XmlFileNamecdc == null)
+            try
             {
-                this.XmlFileNamecdc = "defaultColfilecdc.xml";
+                if (this.XmlFileNamecdc == null)
+                {
+                    this.XmlFileNamecdc = "defaultColfilecdc.xml";
+                }
+                string filepath = System.IO.Path.Combine(Application.StartupPath + "\\ColumnsConfig", this.XmlFileNamecdc.ToString());
+                //判断目录是否存在
+                if (!System.IO.Directory.Exists(Application.StartupPath + "\\ColumnsConfig"))
+                {
+                    System.IO.Directory.CreateDirectory(Application.StartupPath + "\\ColumnsConfig");
+                }
+                string s = "";
+                if (System.IO.File.Exists(filepath))
+                {
+
+                    if (!System.IO.File.Exists(filepath))
+                        s = "不存在相应的目录";
+                    else
+                    {
+                        ColumnDisplays = manager.deserialize_from_xml(filepath, typeof(List<ColDisplayController>)) as List<ColDisplayController>;
+                    }
+                }
+
             }
-            string filepath = System.IO.Path.Combine(Application.StartupPath + "\\ColumnsConfig", this.XmlFileNamecdc.ToString());
-            //判断目录是否存在
-            if (!System.IO.Directory.Exists(Application.StartupPath + "\\ColumnsConfig"))
-            {
-                System.IO.Directory.CreateDirectory(Application.StartupPath + "\\ColumnsConfig");
-            }
-            string s = "";
-            if (System.IO.File.Exists(filepath))
+            catch (Exception ex)
             {
 
-                if (!System.IO.File.Exists(filepath))
-                    s = "不存在相应的目录";
-                else
-                {
-                    ColumnDisplays = manager.deserialize_from_xml(filepath, typeof(List<ColumnDisplayController>)) as List<ColumnDisplayController>;
-                }
+
             }
             if (ColumnDisplays == null)
             {
-                ColumnDisplays = new List<ColumnDisplayController>();
+                ColumnDisplays = new List<ColDisplayController>();
             }
             if (NeedSaveColumnsXml)
             {
@@ -182,7 +192,7 @@ namespace RUINORERP.UI.UControls
                 {
                     foreach (DataGridViewColumn dc in targetDataGridView.Columns)
                     {
-                        ColumnDisplayController cdc = new ColumnDisplayController();
+                        ColDisplayController cdc = new ColDisplayController();
                         cdc.GridKeyName = XmlFileName;
                         cdc.ColDisplayText = dc.HeaderText;
                         cdc.ColDisplayIndex = dc.DisplayIndex;
@@ -196,7 +206,7 @@ namespace RUINORERP.UI.UControls
                     }
                 }
             }
-       
+
             return ColumnDisplays;
         }
 
@@ -326,7 +336,7 @@ namespace RUINORERP.UI.UControls
                 XmlFileNamecdc = xmlFileName + "_cdcfile";
             }
         }
- 
+
         private ConcurrentDictionary<string, KeyValuePair<string, bool>> _FieldNameList = new ConcurrentDictionary<string, KeyValuePair<string, bool>>();
         /// <summary>
         /// 列的显示，unitName,<单位,true>
@@ -347,7 +357,7 @@ namespace RUINORERP.UI.UControls
                 //为了显示传入带中文的集合
                 ForCustomizeGrid.frmColumnsSets set = new ForCustomizeGrid.frmColumnsSets();
 
-                var cols = from ColumnDisplayController col in ColumnDisplays
+                var cols = from ColDisplayController col in ColumnDisplays
                            orderby col.ColDisplayIndex
                            select col;
 

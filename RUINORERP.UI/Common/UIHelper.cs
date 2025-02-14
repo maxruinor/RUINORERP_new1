@@ -920,9 +920,9 @@ namespace RUINORERP.UI.Common
         /// </summary>
         /// <param name="types"></param>
         /// <returns></returns>
-        public static List<ColumnDisplayController> GetColumnDisplayList(params Type[] types)
+        public static List<ColDisplayController> GetColumnDisplayList(params Type[] types)
         {
-            List<ColumnDisplayController> columnDisplayControllers = new List<ColumnDisplayController>();
+            List<ColDisplayController> columnDisplayControllers = new List<ColDisplayController>();
 
             SugarColumn entityAttr;
             foreach (var type in types)
@@ -957,7 +957,7 @@ namespace RUINORERP.UI.Common
                             //类型
                             if (entityAttr.ColumnDescription == null)
                             {
-                                ColumnDisplayController col = new ColumnDisplayController();
+                                ColDisplayController col = new ColDisplayController();
                                 col.ColDisplayIndex = 0;
                                 col.Visible = false;//默认不显示主键
                                 col.ColName = field.Name;
@@ -967,7 +967,7 @@ namespace RUINORERP.UI.Common
                             }
                             if (entityAttr.IsIgnore)
                             {
-                                ColumnDisplayController col = new ColumnDisplayController();
+                                ColDisplayController col = new ColDisplayController();
                                 col.ColDisplayText = entityAttr.ColumnDescription;
                                 col.ColDisplayIndex = columnDisplayControllers.Count;
                                 col.Visible = false;//默认不显示主键
@@ -979,7 +979,7 @@ namespace RUINORERP.UI.Common
 
                             if (entityAttr.IsIdentity)
                             {
-                                ColumnDisplayController col = new ColumnDisplayController();
+                                ColDisplayController col = new ColDisplayController();
                                 col.ColDisplayText = entityAttr.ColumnDescription;
                                 col.ColDisplayIndex = columnDisplayControllers.Count;
                                 col.Visible = (entityAttr.ColumnDescription.Trim().Length > 0) ? true : false;
@@ -990,7 +990,7 @@ namespace RUINORERP.UI.Common
                             }
                             if (entityAttr.IsPrimaryKey)
                             {   //逻辑处理时可能要主键
-                                ColumnDisplayController col = new ColumnDisplayController();
+                                ColDisplayController col = new ColDisplayController();
                                 col.ColDisplayText = entityAttr.ColumnDescription;
                                 col.ColDisplayIndex = columnDisplayControllers.Count;
                                 col.Visible = false;//默认不显示主键
@@ -1002,7 +1002,7 @@ namespace RUINORERP.UI.Common
 
                             if (entityAttr.ColumnDescription.Trim().Length > 0 && Browsable)
                             {
-                                ColumnDisplayController col = new ColumnDisplayController();
+                                ColDisplayController col = new ColDisplayController();
                                 col.ColDisplayText = entityAttr.ColumnDescription;
                                 col.ColDisplayIndex = columnDisplayControllers.Count;
                                 col.Visible = true;
@@ -1012,7 +1012,7 @@ namespace RUINORERP.UI.Common
                             else
                             {
                                 //逻辑处理时可能要主键
-                                ColumnDisplayController col = new ColumnDisplayController();
+                                ColDisplayController col = new ColDisplayController();
                                 col.ColDisplayText = entityAttr.ColumnDescription;
                                 col.ColDisplayIndex = columnDisplayControllers.Count;
                                 col.Visible = (entityAttr.ColumnDescription.Trim().Length > 0) ? true : false;

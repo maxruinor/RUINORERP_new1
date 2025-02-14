@@ -271,7 +271,7 @@ namespace RUINORERP.UI.UCSourceGrid
                 {
                     foreach (var rc in item.Value)
                     {
-                        SourceGridDefineColumnItem targetCol = CurrGridDefine.DefineColumns.FirstOrDefault(c => c.ColName == rc.ColTargetName);
+                        SGDefineColumnItem targetCol = CurrGridDefine.DefineColumns.FirstOrDefault(c => c.ColName == rc.ColTargetName);
                         string newValue = rc.NewValue;
 
                         //定义一个最终的参数数组,通过反射得到真正的参数值

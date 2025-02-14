@@ -32,7 +32,7 @@ namespace RUINORERP.UI.UCSourceGrid
     public class PopupMenu : SourceGrid.Cells.Controllers.ControllerBase
     {
 
-        public delegate void ColumnsVisibleDelegate(KeyValuePair<string, SourceGridDefineColumnItem> kv);
+        public delegate void ColumnsVisibleDelegate(KeyValuePair<string, SGDefineColumnItem> kv);
         //string bool  cost true-->表示 成本 显示
         //public delegate void ColumnsVisibleDelegate(int colIndex, string colName, bool visible);
         /// <summary>
@@ -46,7 +46,7 @@ namespace RUINORERP.UI.UCSourceGrid
         /// <summary>
         /// 保存了要控制的列
         /// </summary>
-        private List<KeyValuePair<string, SourceGridDefineColumnItem>> items = new List<KeyValuePair<string, SourceGridDefineColumnItem>>();
+        private List<KeyValuePair<string, SGDefineColumnItem>> items = new List<KeyValuePair<string, SGDefineColumnItem>>();
         //private SerializableDictionary<string, bool> items = new SerializableDictionary<string, bool>();
 
 
@@ -82,7 +82,7 @@ namespace RUINORERP.UI.UCSourceGrid
         /// 添加要控制的列
         /// </summary>
         /// <param name="item"></param>
-        public void AddItems(KeyValuePair<string, SourceGridDefineColumnItem> item)
+        public void AddItems(KeyValuePair<string, SGDefineColumnItem> item)
         {
             if (!item.Value.NeverVisible)
             {
@@ -102,7 +102,7 @@ namespace RUINORERP.UI.UCSourceGrid
 
         private void Si_Click(object sender, EventArgs e)
         {
-            KeyValuePair<string, SourceGridDefineColumnItem> item = items.Find(kv => kv.Key == sender.ToString());
+            KeyValuePair<string, SGDefineColumnItem> item = items.Find(kv => kv.Key == sender.ToString());
             item.Value.Visible = (sender as ToolStripMenuItem).Checked;
             //OnColumnsVisible(item.Value.ColIndex, item.Value.ColName, item.Value.Visible);
             OnColumnsVisible(item);
@@ -164,7 +164,7 @@ namespace RUINORERP.UI.UCSourceGrid
 
         MenuPowerHelper menuPowerHelper;
 
-        public delegate void ColumnsVisibleDelegate(KeyValuePair<string, SourceGridDefineColumnItem> kv);
+        public delegate void ColumnsVisibleDelegate(KeyValuePair<string, SGDefineColumnItem> kv);
         /// <summary>
         /// 验证行数据
         /// </summary>
@@ -173,7 +173,7 @@ namespace RUINORERP.UI.UCSourceGrid
 
         ContextMenuStrip MyMenu = new ContextMenuStrip();
 
-        private List<KeyValuePair<string, SourceGridDefineColumnItem>> items = new List<KeyValuePair<string, SourceGridDefineColumnItem>>();
+        private List<KeyValuePair<string, SGDefineColumnItem>> items = new List<KeyValuePair<string, SGDefineColumnItem>>();
 
         SourceGridDefine sgdefine;
         public PopupMenuForRowHeader(int addRowIndex, Grid _grid, SourceGridDefine _sgdefine)
@@ -319,7 +319,7 @@ namespace RUINORERP.UI.UCSourceGrid
             #region  总计 总计列
             if (grid.HasSummary)
             {
-                foreach (SourceGridDefineColumnItem col in sgdefine)
+                foreach (SGDefineColumnItem col in sgdefine)
                 {
                     if (col.Summary)
                     {
@@ -354,7 +354,7 @@ namespace RUINORERP.UI.UCSourceGrid
 
         }
 
-        public void AddItems(KeyValuePair<string, SourceGridDefineColumnItem> item)
+        public void AddItems(KeyValuePair<string, SGDefineColumnItem> item)
         {
             items.Add(item);
             ToolStripMenuItem si = new ToolStripMenuItem(item.Key);
@@ -368,7 +368,7 @@ namespace RUINORERP.UI.UCSourceGrid
 
         private void Si_Click(object sender, EventArgs e)
         {
-            KeyValuePair<string, SourceGridDefineColumnItem> item = items.Find(kv => kv.Key == sender.ToString());
+            KeyValuePair<string, SGDefineColumnItem> item = items.Find(kv => kv.Key == sender.ToString());
             item.Value.Visible = (sender as ToolStripMenuItem).Checked;
             OnColumnsVisible(item);
         }
@@ -378,7 +378,7 @@ namespace RUINORERP.UI.UCSourceGrid
             base.OnClick(sender, e);
         }
 
-        public List<KeyValuePair<string, SourceGridDefineColumnItem>> Items { get => items; set => items = value; }
+        public List<KeyValuePair<string, SGDefineColumnItem>> Items { get => items; set => items = value; }
 
         public override void OnMouseUp(SourceGrid.CellContext sender, MouseEventArgs e)
         {
@@ -429,7 +429,7 @@ namespace RUINORERP.UI.UCSourceGrid
 
         MenuPowerHelper menuPowerHelper;
 
-        public delegate void ColumnsVisibleDelegate(KeyValuePair<string, SourceGridDefineColumnItem> kv);
+        public delegate void ColumnsVisibleDelegate(KeyValuePair<string, SGDefineColumnItem> kv);
         /// <summary>
         /// 验证行数据
         /// </summary>
@@ -438,7 +438,7 @@ namespace RUINORERP.UI.UCSourceGrid
 
         public ContextMenuStrip MyMenu = new ContextMenuStrip();
 
-        private List<KeyValuePair<string, SourceGridDefineColumnItem>> items = new List<KeyValuePair<string, SourceGridDefineColumnItem>>();
+        private List<KeyValuePair<string, SGDefineColumnItem>> items = new List<KeyValuePair<string, SGDefineColumnItem>>();
 
         SourceGridDefine sgdefine;
         public PopupMenuCustomize(int addRowIndex, Grid _grid, SourceGridDefine _sgdefine)
@@ -506,7 +506,7 @@ namespace RUINORERP.UI.UCSourceGrid
 
         }
 
-        public void AddItems(KeyValuePair<string, SourceGridDefineColumnItem> item)
+        public void AddItems(KeyValuePair<string, SGDefineColumnItem> item)
         {
             items.Add(item);
             ToolStripMenuItem si = new ToolStripMenuItem(item.Key);
@@ -520,7 +520,7 @@ namespace RUINORERP.UI.UCSourceGrid
 
         private void Si_Click(object sender, EventArgs e)
         {
-            KeyValuePair<string, SourceGridDefineColumnItem> item = items.Find(kv => kv.Key == sender.ToString());
+            KeyValuePair<string, SGDefineColumnItem> item = items.Find(kv => kv.Key == sender.ToString());
             item.Value.Visible = (sender as ToolStripMenuItem).Checked;
             OnColumnsVisible(item);
         }
@@ -530,7 +530,7 @@ namespace RUINORERP.UI.UCSourceGrid
             base.OnClick(sender, e);
         }
 
-        public List<KeyValuePair<string, SourceGridDefineColumnItem>> Items { get => items; set => items = value; }
+        public List<KeyValuePair<string, SGDefineColumnItem>> Items { get => items; set => items = value; }
 
         public override void OnMouseUp(SourceGrid.CellContext sender, MouseEventArgs e)
         {
@@ -559,7 +559,7 @@ namespace RUINORERP.UI.UCSourceGrid
         private Grid grid;
         ContextMenuStrip MyMenu = new ContextMenuStrip();
 
-        private List<KeyValuePair<string, SourceGridDefineColumnItem>> items = new List<KeyValuePair<string, SourceGridDefineColumnItem>>();
+        private List<KeyValuePair<string, SGDefineColumnItem>> items = new List<KeyValuePair<string, SGDefineColumnItem>>();
 
         SourceGridDefine sgdefine;
         public PopupMenuForSelect(Grid _grid, SourceGridDefine _sgdefine)
@@ -593,7 +593,7 @@ namespace RUINORERP.UI.UCSourceGrid
 
             System.Windows.Forms.ToolStripMenuItem item = (System.Windows.Forms.ToolStripMenuItem)sender;
             SourceGridDefine _sgdefine = item.Tag as SourceGridDefine;
-            SourceGridDefineColumnItem selected = _sgdefine.DefineColumns.Find(c => c.ColName == "Selected");
+            SGDefineColumnItem selected = _sgdefine.DefineColumns.Find(c => c.ColName == "Selected");
             if (selected != null)
             {
                 foreach (GridRow row in grid.Rows)
@@ -648,7 +648,7 @@ namespace RUINORERP.UI.UCSourceGrid
 
         }
 
-        public void AddItems(KeyValuePair<string, SourceGridDefineColumnItem> item)
+        public void AddItems(KeyValuePair<string, SGDefineColumnItem> item)
         {
             items.Add(item);
             ToolStripMenuItem si = new ToolStripMenuItem(item.Key);
@@ -662,7 +662,7 @@ namespace RUINORERP.UI.UCSourceGrid
 
         private void Si_Click(object sender, EventArgs e)
         {
-            KeyValuePair<string, SourceGridDefineColumnItem> item = items.Find(kv => kv.Key == sender.ToString());
+            KeyValuePair<string, SGDefineColumnItem> item = items.Find(kv => kv.Key == sender.ToString());
             item.Value.Visible = (sender as ToolStripMenuItem).Checked;
         }
 
@@ -671,7 +671,7 @@ namespace RUINORERP.UI.UCSourceGrid
             base.OnClick(sender, e);
         }
 
-        public List<KeyValuePair<string, SourceGridDefineColumnItem>> Items { get => items; set => items = value; }
+        public List<KeyValuePair<string, SGDefineColumnItem>> Items { get => items; set => items = value; }
 
         public override void OnMouseUp(SourceGrid.CellContext sender, MouseEventArgs e)
         {
@@ -692,7 +692,7 @@ namespace RUINORERP.UI.UCSourceGrid
         private Grid grid;
         ContextMenuStrip MyMenu = new ContextMenuStrip();
 
-        private List<KeyValuePair<string, SourceGridDefineColumnItem>> items = new List<KeyValuePair<string, SourceGridDefineColumnItem>>();
+        private List<KeyValuePair<string, SGDefineColumnItem>> items = new List<KeyValuePair<string, SGDefineColumnItem>>();
 
         SourceGridDefine sgdefine;
         public PopupMenuForDeleteSelect(Grid _grid, SourceGridDefine _sgdefine)
@@ -729,7 +729,7 @@ namespace RUINORERP.UI.UCSourceGrid
             SourceGridHelper sh = new SourceGridHelper();
             System.Windows.Forms.ToolStripMenuItem item = (System.Windows.Forms.ToolStripMenuItem)sender;
             SourceGridDefine _sgdefine = item.Tag as SourceGridDefine;
-            SourceGridDefineColumnItem selected = _sgdefine.DefineColumns.Find(c => c.ColName == "Selected");
+            SGDefineColumnItem selected = _sgdefine.DefineColumns.Find(c => c.ColName == "Selected");
             if (selected != null)
             {
                 List<int> deleteRows = new List<int>();
@@ -782,7 +782,7 @@ namespace RUINORERP.UI.UCSourceGrid
 
 
 
-        public void AddItems(KeyValuePair<string, SourceGridDefineColumnItem> item)
+        public void AddItems(KeyValuePair<string, SGDefineColumnItem> item)
         {
             items.Add(item);
             ToolStripMenuItem si = new ToolStripMenuItem(item.Key);
@@ -796,7 +796,7 @@ namespace RUINORERP.UI.UCSourceGrid
 
         private void Si_Click(object sender, EventArgs e)
         {
-            KeyValuePair<string, SourceGridDefineColumnItem> item = items.Find(kv => kv.Key == sender.ToString());
+            KeyValuePair<string, SGDefineColumnItem> item = items.Find(kv => kv.Key == sender.ToString());
             item.Value.Visible = (sender as ToolStripMenuItem).Checked;
         }
 
@@ -805,7 +805,7 @@ namespace RUINORERP.UI.UCSourceGrid
             base.OnClick(sender, e);
         }
 
-        public List<KeyValuePair<string, SourceGridDefineColumnItem>> Items { get => items; set => items = value; }
+        public List<KeyValuePair<string, SGDefineColumnItem>> Items { get => items; set => items = value; }
 
         public override void OnMouseUp(SourceGrid.CellContext sender, MouseEventArgs e)
         {
@@ -824,7 +824,7 @@ namespace RUINORERP.UI.UCSourceGrid
     public class PopupMenuForRemoteImageView : SourceGrid.Cells.Controllers.ControllerBase
     {
         private Grid grid;
-        public delegate void ColumnsVisibleDelegate(KeyValuePair<string, SourceGridDefineColumnItem> kv);
+        public delegate void ColumnsVisibleDelegate(KeyValuePair<string, SGDefineColumnItem> kv);
         /// <summary>
         /// 验证行数据
         /// </summary>
@@ -832,7 +832,7 @@ namespace RUINORERP.UI.UCSourceGrid
         ContextMenuStrip MyMenu = new ContextMenuStrip();
         SourceGrid.Cells.Cell _cell;
 
-        private List<KeyValuePair<string, SourceGridDefineColumnItem>> items = new List<KeyValuePair<string, SourceGridDefineColumnItem>>();
+        private List<KeyValuePair<string, SGDefineColumnItem>> items = new List<KeyValuePair<string, SGDefineColumnItem>>();
 
         SourceGridDefine sgdefine;
         public PopupMenuForRemoteImageView(SourceGrid.Cells.Cell cell, SourceGridDefine _sgdefine)

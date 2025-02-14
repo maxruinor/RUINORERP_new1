@@ -174,7 +174,7 @@ namespace RUINORERP.UI.ProductEAV
             grid1.Selection.EnableMultiSelection = false;
 
 
-            List<SourceGridDefineColumnItem> listCols = sgh.GetGridColumns<ProductSharePart, tb_ProdBundleDetail>(c => c.ProdDetailID, true);
+            List<SGDefineColumnItem> listCols = sgh.GetGridColumns<ProductSharePart, tb_ProdBundleDetail>(c => c.ProdDetailID, true);
 
             listCols.SetCol_NeverVisible<tb_ProdBundleDetail>(c => c.ProdDetailID);
             listCols.SetCol_NeverVisible<tb_ProdBundleDetail>(c => c.BundleChildID);

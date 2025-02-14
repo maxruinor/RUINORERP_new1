@@ -282,13 +282,11 @@ namespace RUINORERP.UI.PSI.SAL
         View_ProdDetailController<View_ProdDetail> dc = Startup.GetFromFac<View_ProdDetailController<View_ProdDetail>>();
         List<View_ProdDetail> list = new List<View_ProdDetail>();
 
-        List<SourceGridDefineColumnItem> listCols = new List<SourceGridDefineColumnItem>();
+        List<SGDefineColumnItem> listCols = new List<SGDefineColumnItem>();
         private void UcSaleOrderEdit_Load(object sender, EventArgs e)
         {
             InitDataTocmbbox();
             base.ToolBarEnabledControl(MenuItemEnums.刷新);
-
-
             grid1.BorderStyle = BorderStyle.FixedSingle;
             grid1.Selection.EnableMultiSelection = false;
 
@@ -342,17 +340,13 @@ namespace RUINORERP.UI.PSI.SAL
             list = MainForm.Instance.list;
             sgd.SetDependencyObject<ProductSharePart, tb_SaleOutDetail>(list);
             sgd.HasRowHeader = true;
-            sgd.MainBizDependencyType=typeof(tb_SaleOutDetail);
+   
             sgh.InitGrid(grid1, sgd, true, nameof(tb_SaleOutDetail));
             sgh.OnCalculateColumnValue += Sgh_OnCalculateColumnValue;
             sgh.OnGetTransferDataHandler += Sgh_OnGetTransferDataHandler;
             base.ControlMasterColumnsInvisible();
         }
 
-        protected async override void SetGridViewAsync()
-        {
-            await UIBizSrvice.SetSourceGridAsync(typeof(tb_SaleOutDetail), sgd, listCols, CurMenuInfo, true);
-        }
 
 
         private tb_ProdConversion Sgh_OnGetTransferDataHandler(ToolStripItem sender, object rowObj, SourceGridDefine CurrGridDefine)

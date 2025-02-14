@@ -52,12 +52,17 @@ namespace RUINORERP.UI.UCSourceGrid
 
     /// <summary>
     /// 绑定明细的一个帮助类
+    /// 右键 菜单有数据库的操作。尝试绑定了业务层了。不是一个独立的控件范畴了
     /// </summary>
     /// <typeparam name="P">产品表</typeparam>
     /// <typeparam name="T">明细表</typeparam>
     public class SourceGridHelper
     {
-
+        /// <summary>
+        /// sourcegrid 控件所在的UI窗体所属的菜单信息，用来判断显示列权限
+        /// </summary>
+        public tb_MenuInfo CurMenuInfo { get; set; }
+        public SourceGridDefine SGDefine { get; set; }
         /// <summary>
         /// 添加数据行时生成的事件  这里定义事件，还会在SourceGridHelper定义一下。用来事件传递。架构这样。暂时没有优化。
         /// </summary>
@@ -143,10 +148,10 @@ namespace RUINORERP.UI.UCSourceGrid
         /// </summary>
         /// <typeparam name="BillDetail"></typeparam>
         /// <returns></returns>
-        public List<SourceGridDefineColumnItem> GetGridColumns<BillDetail>()
+        public List<SGDefineColumnItem> GetGridColumns<BillDetail>()
         {
-            List<SourceGridDefineColumnItem> listCols = new List<SourceGridDefineColumnItem>();
-            List<SourceGridDefineColumnItem> cols1 = SourceGridDefine.GetSourceGridDefineColumnItems<BillDetail>();
+            List<SGDefineColumnItem> listCols = new List<SGDefineColumnItem>();
+            List<SGDefineColumnItem> cols1 = SourceGridDefine.GetSourceGridDefineColumnItems<BillDetail>();
             listCols.AddRange(cols1);
             //指定了关键字段ProdDetailID
             // List<SourceGridDefineColumnItem> cols2 = SourceGridDefine.GetSourceGridDefineColumnItems<BillDetail>(BizKeyTargetCol);
@@ -178,12 +183,12 @@ namespace RUINORERP.UI.UCSourceGrid
         /// <param name="BizKeyTargetCol">业务主键 一般指产品ID,必需设置，否则会使用没有描述的规则过滤掉</param>
         /// <param name="ShowSelected">明细中是否需要显示选择一列，如果要显示，默认只是添加的表格中。默认是visble=false。要手动显示</param>
         /// <returns></returns>
-        public List<SourceGridDefineColumnItem> GetGridColumns<Prod, BillDetail>(Expression<Func<BillDetail, long?>> BizKeyTargetCol, bool ShowSelected)
+        public List<SGDefineColumnItem> GetGridColumns<Prod, BillDetail>(Expression<Func<BillDetail, long?>> BizKeyTargetCol, bool ShowSelected)
         {
-            List<SourceGridDefineColumnItem> listCols = new List<SourceGridDefineColumnItem>();
-            List<SourceGridDefineColumnItem> cols1 = SourceGridDefine.GetSourceGridDefineColumnItems<Prod>();
+            List<SGDefineColumnItem> listCols = new List<SGDefineColumnItem>();
+            List<SGDefineColumnItem> cols1 = SourceGridDefine.GetSourceGridDefineColumnItems<Prod>();
             //指定了关键字段ProdDetailID
-            List<SourceGridDefineColumnItem> cols2 = SourceGridDefine.GetSourceGridDefineColumnItems<BillDetail>(BizKeyTargetCol, ShowSelected);
+            List<SGDefineColumnItem> cols2 = SourceGridDefine.GetSourceGridDefineColumnItems<BillDetail>(BizKeyTargetCol, ShowSelected);
             listCols.AddRange(cols1);
             listCols.AddRange(cols2);
 
@@ -263,11 +268,11 @@ namespace RUINORERP.UI.UCSourceGrid
         /// <param name="BizKeyTargetCol">业务主键 一般指产品ID,必需设置，否则会使用没有描述的规则过滤掉</param>
         /// <param name="ShowSelected">明细中是否需要显示选择一列，如果要显示，默认只是添加的表格中。默认是visble=false。要手动显示</param>
         /// <returns></returns>
-        public List<SourceGridDefineColumnItem> GetGridColumns<Prod, BillDetail, OtherInfo>(Expression<Func<BillDetail, long?>> BizKeyTargetCol, bool ShowSelected)
+        public List<SGDefineColumnItem> GetGridColumns<Prod, BillDetail, OtherInfo>(Expression<Func<BillDetail, long?>> BizKeyTargetCol, bool ShowSelected)
         {
-            List<SourceGridDefineColumnItem> listCols = new List<SourceGridDefineColumnItem>();
-            List<SourceGridDefineColumnItem> cols1 = SourceGridDefine.GetSourceGridDefineColumnItems<Prod>();
-            List<SourceGridDefineColumnItem> cols0 = SourceGridDefine.GetSourceGridDefineColumnItems<OtherInfo>();
+            List<SGDefineColumnItem> listCols = new List<SGDefineColumnItem>();
+            List<SGDefineColumnItem> cols1 = SourceGridDefine.GetSourceGridDefineColumnItems<Prod>();
+            List<SGDefineColumnItem> cols0 = SourceGridDefine.GetSourceGridDefineColumnItems<OtherInfo>();
 
             //OtherInfo 这个不能编辑，只读
             foreach (var item in cols0)
@@ -275,7 +280,7 @@ namespace RUINORERP.UI.UCSourceGrid
                 item.ReadOnly = true;
             }
             //指定了关键字段ProdDetailID
-            List<SourceGridDefineColumnItem> cols2 = SourceGridDefine.GetSourceGridDefineColumnItems<BillDetail>(BizKeyTargetCol, ShowSelected);
+            List<SGDefineColumnItem> cols2 = SourceGridDefine.GetSourceGridDefineColumnItems<BillDetail>(BizKeyTargetCol, ShowSelected);
             listCols.AddRange(cols1);
             listCols.AddRange(cols2);
             listCols.AddRange(cols0);
@@ -456,7 +461,7 @@ namespace RUINORERP.UI.UCSourceGrid
 
                 //将行的数据设置到每个格子中显示出来
                 #region 优化
-                foreach (SourceGridDefineColumnItem dc in sgdefine.ToArray())
+                foreach (SGDefineColumnItem dc in sgdefine.ToArray())
                 {
                     SourceGrid.Position pt = new SourceGrid.Position(i, dc.ColIndex);
                     SourceGrid.CellContext currContext = new SourceGrid.CellContext(dc.ParentGridDefine.grid, pt);
@@ -687,7 +692,7 @@ namespace RUINORERP.UI.UCSourceGrid
             //先清空
             for (int r = 1; r < grid1.Rows.Count; r++)
             {
-                foreach (SourceGridDefineColumnItem dc in sgdefine.ToArray())
+                foreach (SGDefineColumnItem dc in sgdefine.ToArray())
                 {
                     SourceGrid.Position pt = new SourceGrid.Position(r, dc.ColIndex);
                     SourceGrid.CellContext currContext = new SourceGrid.CellContext(dc.ParentGridDefine.grid, pt);
@@ -792,7 +797,7 @@ namespace RUINORERP.UI.UCSourceGrid
 
 
 
-        public string ShowFKColumnText(SourceGridDefineColumnItem dc, object cellvalue, SourceGridDefine sgdefine)
+        public string ShowFKColumnText(SGDefineColumnItem dc, object cellvalue, SourceGridDefine sgdefine)
         {
             string _DisplayText = string.Empty;
             #region 显示外键名称
@@ -814,17 +819,20 @@ namespace RUINORERP.UI.UCSourceGrid
             return _DisplayText;
         }
 
-        public void InitGrid(SourceGrid.Grid grid, SourceGridDefine griddefine, bool autofill, string xmlfileName)
+        public void InitGrid(SourceGrid.Grid grid, SourceGridDefine griddefine, bool autofill, string MainBizDependencyTypeName)
         {
-
+            FindCurMenuInfo(griddefine);
+            SGDefine = griddefine;
             griddefine.grid = grid;
+            griddefine.MainBizDependencyTypeName = MainBizDependencyTypeName;
+            grid.HandleDestroyed += Grid_HandleDestroyed;
             //_sourceGridDefine = griddefine;
             if (griddefine.Count == 0)
             {
                 return;
             }
 
-            InitGrid(grid, griddefine, xmlfileName);
+            InitGrid(grid, griddefine, MainBizDependencyTypeName);
 
             grid.Controller.AddController(new KeyDeleteController());
 
@@ -951,6 +959,49 @@ namespace RUINORERP.UI.UCSourceGrid
             griddefine.OnCalculateTotalValue += Griddefine_OnCalculateTotalValue;
         }
 
+        private void Grid_HandleDestroyed(object sender, EventArgs e)
+        {
+            SaveGridSettingData();
+        }
+
+        private async void SaveGridSettingData()
+        {
+            await UIBizSrvice.SetCustomSourceGridAsync(SGDefine, CurMenuInfo, null, null, true, menuController.ColumnDisplays);
+        }
+
+        private void FindCurMenuInfo(SourceGridDefine griddefine)
+        {
+            Control parent = griddefine.grid.Parent;
+            int parentCount = 0;
+            bool find = false;
+            while (parent != null)
+            {
+                if (parent.ToString().StartsWith("RUINORERP.UI."))
+                {
+                    //Console.WriteLine("找到了: " + parent.ToString());
+                    find = true;
+                    break;
+                }
+                parent = parent.Parent;
+                parentCount++;
+                // 为了避免无限循环，设置一个合理的上限
+                if (parentCount > 10)
+                {
+                    //Console.WriteLine("未找到符合条件的父窗体");
+                    break;
+                }
+            }
+            if (CurMenuInfo == null || CurMenuInfo.ClassPath.IsNullOrEmpty())
+            {
+                CurMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble && m.FormName == parent.GetType().Name && m.ClassPath == parent.ToString()).FirstOrDefault();
+                if (CurMenuInfo == null || CurMenuInfo.ClassPath.IsNullOrEmpty())
+                {
+                    MessageBox.Show(this.ToString() + "菜单有显示，在SourceGridHelper中没有找到对应的控制菜单项，请联系管理员。");
+                    return;
+                }
+            }
+
+        }
         public void Griddefine_OnCalculateTotalValue(SourceGridDefine griddefine)
         {
             if (OnCalculateColumnValue != null)
@@ -959,12 +1010,18 @@ namespace RUINORERP.UI.UCSourceGrid
             }
         }
 
+
+        /// <summary>
+        /// 一个表格就一个这种菜单控制器，因为一个表格就是一个菜单项。
+        /// </summary>
+        private PopupMenuWithCustomColumns menuController;
+
         /// <summary>
         /// 定义了表格，
         /// </summary>
         /// <param name="grid"></param>
         /// <param name="griddefine">索引,这个决定了顺序</param>
-        private void InitGrid(SourceGrid.Grid grid, SourceGridDefine griddefine, string customColumnsXMLFileName)
+        private async void InitGrid(SourceGrid.Grid grid, SourceGridDefine griddefine, string MainBizDependencyTypeName)
         {
             //启动时默认无选中
             grid.Selection.FocusStyle = SourceGrid.FocusStyle.None;
@@ -996,7 +1053,10 @@ namespace RUINORERP.UI.UCSourceGrid
             viewColumnHeader.Font = new Font("宋体", 10, FontStyle.Bold);
             viewColumnHeader.TextAlignment = DevAge.Drawing.ContentAlignment.MiddleCenter;
 
+            #region 创建列前去找到对应的列的权限等相关设置
+            List<SGColDisplayHandler> displayHandlers = await UIBizSrvice.SetCustomSourceGridAsync(SGDefine, CurMenuInfo, null, null, false);
 
+            #endregion
 
             #region 创建列
             //排除列头，因为有行头 2024
@@ -1004,7 +1064,8 @@ namespace RUINORERP.UI.UCSourceGrid
 
             PopupMenuForSelect menuForSelect = new PopupMenuForSelect(grid, griddefine);
 
-            PopupMenuWithCustomColumns menuController = new PopupMenuWithCustomColumns(customColumnsXMLFileName);
+            menuController = new PopupMenuWithCustomColumns(MainBizDependencyTypeName, griddefine);
+            menuController.ColumnDisplays = displayHandlers;
             for (int i = 0; i < griddefine.Count; i++)
             {
                 griddefine[i].ParentGridDefine = griddefine;
@@ -1012,6 +1073,7 @@ namespace RUINORERP.UI.UCSourceGrid
                 {
                     grid.HasSummary = true;
                 }
+                
                 //HasHeader
                 SourceGrid.Cells.ColumnHeader columnHeader = new SourceGrid.Cells.ColumnHeader();
                 columnHeader.View = viewColumnHeader;
@@ -1022,7 +1084,7 @@ namespace RUINORERP.UI.UCSourceGrid
                 }
                 //暂时默认所有列不自动排序  如果排序则全乱了。总计 和提前插入的空白行都以及数据修改全乱
                 columnHeader.AutomaticSortEnabled = false;
-
+                grid.Columns[i].Tag=griddefine[i];
                 //griddefine[i].ColIndex = i;
 
                 //if (griddefine[i].ColName == griddefine.DependQuery.TargetCol.TargetColumnName)
@@ -1041,9 +1103,9 @@ namespace RUINORERP.UI.UCSourceGrid
                     griddefine[i].Visible = !griddefine[i].DefaultHide;
 
                     //加载配置中的自定义显示列的控制
-                    if (menuController.ConfigColItems.ContainsKey(griddefine[i].ColCaption))
+                    if (menuController.ColumnDisplays.Any(c => c.ColCaption == griddefine[i].ColCaption))
                     {
-                        griddefine[i].Visible = menuController.ConfigColItems[griddefine[i].ColCaption];
+                        griddefine[i].Visible = menuController.ColumnDisplays.Where(c => c.ColCaption == griddefine[i].ColCaption).FirstOrDefault().Visible;
                     }
                     grid.Columns[i].Visible = griddefine[i].Visible;
                 }
@@ -1070,8 +1132,13 @@ namespace RUINORERP.UI.UCSourceGrid
                     //{
                     //    grid.Columns[colIndex].Visible = visible;
                     //};
-                    menuController.AddItems(new KeyValuePair<string, SourceGridDefineColumnItem>(griddefine[i].ColCaption, griddefine[i]));
-                    menuController.OnColumnsVisible += delegate (KeyValuePair<string, SourceGridDefineColumnItem> kv)
+
+                    menuController.AddNewItems(griddefine[i].DisplayController);
+
+                    //menuController.AddItems(new KeyValuePair<string, SGDefineColumnItem>(griddefine[i].ColCaption, griddefine[i]));
+
+
+                    menuController.OnColumnsVisible += delegate (KeyValuePair<string, SGDefineColumnItem> kv)
                     {
                         grid.Columns[kv.Value.ColIndex].Visible = kv.Value.Visible;
                     };
@@ -1122,25 +1189,44 @@ namespace RUINORERP.UI.UCSourceGrid
 
             SetColumnsWidth(grid, griddefine);
 
+            //设置列宽
+
+            for (int i = 0; i < displayHandlers.Count; i++)
+            {
+                if (displayHandlers[i].ColIndex >= 0)
+                {
+                    grid.Columns[displayHandlers[i].ColIndex].Width=displayHandlers[i].ColWidth;
+                    grid.Columns[displayHandlers[i].ColIndex].Visible = displayHandlers[i].Visible;
+
+                }
+            }
+
             #region 注册列宽的变化事件
 
             ColumnInfoCollection cols = grid.Columns as ColumnInfoCollection;
             cols.ColumnWidthChanged += (s, e) =>
             {
-                 
+                foreach (SGColDisplayHandler colDisplay in menuController.ColumnDisplays)
+                {
+                    if (colDisplay.ColIndex == e.Column.Index)
+                    {
+                        colDisplay.ColWidth = grid.Columns[e.Column.Index].Width;
+                    }
+                }
+
             };
 
             #endregion
 
 
-            SourceGridDefineColumnItem selected = griddefine.DefineColumns.Find(c => c.ColName == "Selected");
+            SGDefineColumnItem selected = griddefine.DefineColumns.Find(c => c.ColName == "Selected");
             if (selected != null)
             {
                 DevAge.Drawing.RectangleBorder border = new DevAge.Drawing.RectangleBorder(new DevAge.Drawing.BorderLine(Color.DarkGreen), new DevAge.Drawing.BorderLine(Color.DarkGreen));
                 SourceGrid.Cells.Views.CheckBox checkView = new SourceGrid.Cells.Views.CheckBox();
                 checkView.Background = new DevAge.Drawing.VisualElements.BackgroundLinearGradient(Color.ForestGreen, Color.White, 45);
                 checkView.Border = border;
-                selected.width = 40;
+                selected.Width = 40;
                 grid.Columns[selected.ColIndex].Width = 40;
                 // grid1[r, 2].View = checkView;
             }
@@ -1538,7 +1624,7 @@ namespace RUINORERP.UI.UCSourceGrid
             #region  总计 总计列
             if (grid.HasSummary)
             {
-                foreach (SourceGridDefineColumnItem col in sgdefine)
+                foreach (SGDefineColumnItem col in sgdefine)
                 {
                     if (col.Summary)
                     {
@@ -1679,7 +1765,7 @@ namespace RUINORERP.UI.UCSourceGrid
         /// <param name="dci"></param>
         /// <returns></returns>
         [Obsolete]
-        private Cell GetGridCell(SourceGridDefineColumnItem dci)
+        private Cell GetGridCell(SGDefineColumnItem dci)
         {
             //不同情况会有多种类型，先逻辑处理得到最终的类型
             Type newcolType;
@@ -1777,7 +1863,7 @@ namespace RUINORERP.UI.UCSourceGrid
         /// </summary>
         /// <param name="dci"></param>
         /// <returns></returns>
-        private SourceGrid.Cells.Editors.EditorBase SetColumnEditor(SourceGridDefineColumnItem dci)
+        private SourceGrid.Cells.Editors.EditorBase SetColumnEditor(SGDefineColumnItem dci)
         {
             if (dci.ColName == null)
             {
@@ -2020,7 +2106,7 @@ namespace RUINORERP.UI.UCSourceGrid
 
             //相关联的列才会验证
             #region 默认的情况
-            foreach (SourceGridDefineColumnItem item in dci.ParentGridDefine)
+            foreach (SGDefineColumnItem item in dci.ParentGridDefine)
             {
                 if (pi != null)
                 {
@@ -2101,7 +2187,7 @@ namespace RUINORERP.UI.UCSourceGrid
                                 }
 
                                 //先找到主键，通过主键去找
-                                SourceGridDefineColumnItem BizKeyCol = dci.ParentGridDefine.CastToList<SourceGridDefineColumnItem>().Where(c => c.IsPrimaryBizKeyColumn).FirstOrDefault();
+                                SGDefineColumnItem BizKeyCol = dci.ParentGridDefine.CastToList<SGDefineColumnItem>().Where(c => c.IsPrimaryBizKeyColumn).FirstOrDefault();
                                 //object dcKeyValue = string.Empty;
                                 //if (BizKeyCol == null)
                                 //{
@@ -2408,7 +2494,7 @@ namespace RUINORERP.UI.UCSourceGrid
 
 
             #region 特殊指定的列以及数据源
-            foreach (SourceGridDefineColumnItem item in dci.ParentGridDefine)
+            foreach (SGDefineColumnItem item in dci.ParentGridDefine)
             {
                 if (pi != null)
                 {
@@ -2491,7 +2577,7 @@ namespace RUINORERP.UI.UCSourceGrid
                                             }
 
                                             //先找到主键，通过主键去找
-                                            SourceGridDefineColumnItem BizKeyCol = dci.ParentGridDefine.CastToList<SourceGridDefineColumnItem>().Where(c => c.IsPrimaryBizKeyColumn).FirstOrDefault();
+                                            SGDefineColumnItem BizKeyCol = dci.ParentGridDefine.CastToList<SGDefineColumnItem>().Where(c => c.IsPrimaryBizKeyColumn).FirstOrDefault();
                                             //object dcKeyValue = string.Empty;
                                             //if (BizKeyCol == null)
                                             //{
@@ -2806,7 +2892,7 @@ namespace RUINORERP.UI.UCSourceGrid
         /// <param name="dci"></param>
         /// <param name="TypeForEnumOptions">如果是枚举时，传入枚举类型用于创建下拉值</param>
         /// <returns></returns>
-        private SourceGrid.Cells.Editors.ComboBox SetComboxEditor(SourceGridDefineColumnItem dci)
+        private SourceGrid.Cells.Editors.ComboBox SetComboxEditor(SGDefineColumnItem dci)
         {
 
             var _editor = new SourceGrid.Cells.Editors.ComboBox(typeof(string));
@@ -2870,7 +2956,7 @@ namespace RUINORERP.UI.UCSourceGrid
 
                     Position position = _editor.EditPosition;
                     //这里是可以知道条件的下拉及其值，控制目标的下拉显示
-                    SourceGridDefineColumnItem targetCol = null;
+                    SGDefineColumnItem targetCol = null;
                     dci.ParentGridDefine.LimitedConditionsForSelectionRange.TryGetValue(dci, out targetCol);
                     if (targetCol != null)
                     {
@@ -2978,7 +3064,7 @@ namespace RUINORERP.UI.UCSourceGrid
 
                                 Position position = _editor.EditPosition;
                                 //这里是可以知道条件的下拉及其值，控制目标的下拉显示
-                                SourceGridDefineColumnItem targetCol = null;
+                                SGDefineColumnItem targetCol = null;
                                 dci.ParentGridDefine.LimitedConditionsForSelectionRange.TryGetValue(dci, out targetCol);
                                 if (targetCol != null)
                                 {
@@ -3124,7 +3210,7 @@ namespace RUINORERP.UI.UCSourceGrid
         {
             string fromColName = fromExp.GetMemberInfo().Name;
             string toColName = toExp.GetMemberInfo().Name;
-            SourceGridDefineColumnItem fromdc = define.DefineColumns.Where(c => c.ColName == fromColName && c.BelongingObjectType.Name == typeof(ProdcutShare).Name).FirstOrDefault();
+            SGDefineColumnItem fromdc = define.DefineColumns.Where(c => c.ColName == fromColName && c.BelongingObjectType.Name == typeof(ProdcutShare).Name).FirstOrDefault();
             if (fromdc == null)
             {
                 return;
@@ -3133,7 +3219,7 @@ namespace RUINORERP.UI.UCSourceGrid
             {
                 fromdc.Visible = false;
                 fromdc.NeverVisible = true;
-                SourceGridDefineColumnItem todc = define.DefineColumns.Where(c => c.ColName == toColName && c.BelongingObjectType.Name == typeof(BillDetail).Name).FirstOrDefault();
+                SGDefineColumnItem todc = define.DefineColumns.Where(c => c.ColName == toColName && c.BelongingObjectType.Name == typeof(BillDetail).Name).FirstOrDefault();
                 if (todc == null)
                 {
                     MainForm.Instance.uclog.AddLog("提醒", $"当前字段{toColName}没有提取到,请确认在单据明细{typeof(BillDetail).Name}中描述是否为空");
@@ -3159,7 +3245,7 @@ namespace RUINORERP.UI.UCSourceGrid
             string toColName = toExp.GetMemberInfo().Name;
             if (!define.QueryItemToColumnPairList.ContainsKey(fromColName))
             {
-                SourceGridDefineColumnItem todc = define.DefineColumns.Where(c => c.ColName == toColName && c.BelongingObjectType.Name == typeof(BillDetail).Name).FirstOrDefault();
+                SGDefineColumnItem todc = define.DefineColumns.Where(c => c.ColName == toColName && c.BelongingObjectType.Name == typeof(BillDetail).Name).FirstOrDefault();
                 if (todc == null)
                 {
                     MainForm.Instance.uclog.AddLog("提醒", $"当前字段{toColName}没有提取到,请确认在单据明细{typeof(BillDetail).Name}中描述是否为空");
@@ -3183,7 +3269,7 @@ namespace RUINORERP.UI.UCSourceGrid
         {
             string ToColName = ToExp.GetMemberInfo().Name;
             string ConditionFromColName = ConditionFromExp.GetMemberInfo().Name;
-            SourceGridDefineColumnItem fromdc = define.DefineColumns.Where(c => c.ColName == ConditionFromColName && c.BelongingObjectType.Name == typeof(BillDetail).Name).FirstOrDefault();
+            SGDefineColumnItem fromdc = define.DefineColumns.Where(c => c.ColName == ConditionFromColName && c.BelongingObjectType.Name == typeof(BillDetail).Name).FirstOrDefault();
             if (fromdc == null)
             {
                 return;
@@ -3192,7 +3278,7 @@ namespace RUINORERP.UI.UCSourceGrid
             {
                 //fromdc.Visible = false;
                 //fromdc.NeverVisible = true;
-                SourceGridDefineColumnItem todc = define.DefineColumns.Where(c => c.ColName == ToColName && c.BelongingObjectType.Name == typeof(BillDetail).Name).FirstOrDefault();
+                SGDefineColumnItem todc = define.DefineColumns.Where(c => c.ColName == ToColName && c.BelongingObjectType.Name == typeof(BillDetail).Name).FirstOrDefault();
                 if (todc == null)
                 {
                     return;
@@ -3210,7 +3296,7 @@ namespace RUINORERP.UI.UCSourceGrid
         /// <param name="details"></param>
         public void SynchronizeUpdateCellValue<C>(SourceGridDefine sgdefine, Expression<Func<C, object>> col, List<C> details)
         {
-            List<SourceGridDefineColumnItem> cols = sgdefine.DefineColumns.Where(c => c.ColName == col.GetMemberInfo().Name).ToList();
+            List<SGDefineColumnItem> cols = sgdefine.DefineColumns.Where(c => c.ColName == col.GetMemberInfo().Name).ToList();
             List<object> list = new List<object>();
             foreach (var item in details)
             {
@@ -3220,14 +3306,14 @@ namespace RUINORERP.UI.UCSourceGrid
         }
 
         //更新一列多行,有一个唯一的业务主键？
-        public void SynchronizeUpdateCellValue(SourceGridDefine sgdefine, List<SourceGridDefineColumnItem> cols, List<object> details)
+        public void SynchronizeUpdateCellValue(SourceGridDefine sgdefine, List<SGDefineColumnItem> cols, List<object> details)
         {
             //SourceGrid.Position startpos,
             //       SourceGridDefine sgdefine = dc.ParentGridDefine;
             //sgdefine.grid[p.Row, qtc.Value.ColIndex].Value = newTagetValue;
             foreach (object detail in details)
             {
-                foreach (SourceGridDefineColumnItem dc in cols)
+                foreach (SGDefineColumnItem dc in cols)
                 {
                     int rowindex = 0;
                     for (global::System.Int32 i = 0; i < sgdefine.grid.Rows.Count; i++)
@@ -3274,7 +3360,7 @@ namespace RUINORERP.UI.UCSourceGrid
         {
 
             string colName = colNameExp.GetMemberInfo().Name;
-            SourceGridDefineColumnItem dc = sgdefine.DefineColumns.Where(c => c.ColName == colNameExp.GetMemberInfo().Name
+            SGDefineColumnItem dc = sgdefine.DefineColumns.Where(c => c.ColName == colNameExp.GetMemberInfo().Name
             && c.BelongingObjectType == typeof(T)).FirstOrDefault();
             if (dc == null)
             {
@@ -3355,14 +3441,14 @@ namespace RUINORERP.UI.UCSourceGrid
         /// <param name="rowObj"></param>
         /// <param name="isbatch"></param>
         /// <param name="isOnlyPointColumn">是否只设置指定列的值</param>
-        public void SetCellValue(SourceGridDefineColumnItem dc, SourceGrid.Position p, object rowObj, bool isbatch, bool isOnlyPointColumn = false)
+        public void SetCellValue(SGDefineColumnItem dc, SourceGrid.Position p, object rowObj, bool isbatch, bool isOnlyPointColumn = false)
         {
             if (p.Column == -1 || p.Row == -1)
             {
                 return;
             }
             SourceGridDefine sgdefine = dc.ParentGridDefine;
-            foreach (SourceGridDefineColumnItem item in sgdefine)
+            foreach (SGDefineColumnItem item in sgdefine)
             {
                 if (isOnlyPointColumn)
                 {
@@ -3618,7 +3704,7 @@ namespace RUINORERP.UI.UCSourceGrid
         /// <param name="rowObj"></param>
         /// <param name="isbatch"></param>
         /// <param name="isOnlyPointColumn">是否只设置指定列的值</param>
-        public void SetCellValueOnlySelf(SourceGridDefineColumnItem dc, string formColName, string toColName, SourceGrid.Position p, object rowObj)
+        public void SetCellValueOnlySelf(SGDefineColumnItem dc, string formColName, string toColName, SourceGrid.Position p, object rowObj)
         {
             if (p.Column == -1 || p.Row == -1)
             {
@@ -3868,11 +3954,11 @@ namespace RUINORERP.UI.UCSourceGrid
                 {
                     grid.Columns[i].Width = 90;
                 }
-                SourceGridDefineColumnItem sgdc = griddefine[i];
+                SGDefineColumnItem sgdc = griddefine[i];
                 //应该更宽的才要设置
-                if (sgdc.width > 90)
+                if (sgdc.Width > 90)
                 {
-                    grid.Columns[i].Width = sgdc.width;
+                    grid.Columns[i].Width = sgdc.Width;
                 }
                 else
                 {

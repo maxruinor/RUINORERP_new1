@@ -29,7 +29,7 @@ using System.Windows.Forms;
 namespace RUINORERP.UI.UserPersonalized
 {
     [MenuAttrAssemblyInfo("表格列设置编辑", true, UIType.单表数据)]
-    public partial class UCGridColSetting : BaseEditGeneric<ColumnDisplayController>
+    public partial class UCGridColSetting : BaseEditGeneric<ColDisplayController>
     {
         public UCGridColSetting()
         {
@@ -37,16 +37,16 @@ namespace RUINORERP.UI.UserPersonalized
         }
 
         public NewSumDataGridView dataGridView { get; set; }
-        public ColumnDisplayController EditEntity { get; set; }
+        public ColDisplayController EditEntity { get; set; }
 
-        public void BindData(ColumnDisplayController entity)
+        public void BindData(ColDisplayController entity)
         {
             EditEntity = entity;
-            DataBindingHelper.BindData4TextBox<ColumnDisplayController>(entity, t => t.ColDisplayText, txtColCaption, BindDataType4TextBox.Text, false);
-            DataBindingHelper.BindData4CheckBox<ColumnDisplayController>(entity, t => t.Visible, chkVisble, false);
-            DataBindingHelper.BindData4CheckBox<ColumnDisplayController>(entity, t => t.IsFixed, chkisFixed, false);
-            DataBindingHelper.BindData4TrackBar<ColumnDisplayController>(entity, nameof(entity.ColWidth), trackBarColWidth, false);
-            DataBindingHelper.BindData4NumericUpDown<ColumnDisplayController>(entity, nameof(entity.ColDisplayIndex), txtSort, false);
+            DataBindingHelper.BindData4TextBox<ColDisplayController>(entity, t => t.ColDisplayText, txtColCaption, BindDataType4TextBox.Text, false);
+            DataBindingHelper.BindData4CheckBox<ColDisplayController>(entity, t => t.Visible, chkVisble, false);
+            DataBindingHelper.BindData4CheckBox<ColDisplayController>(entity, t => t.IsFixed, chkisFixed, false);
+            DataBindingHelper.BindData4TrackBar<ColDisplayController>(entity, nameof(entity.ColWidth), trackBarColWidth, false);
+            DataBindingHelper.BindData4NumericUpDown<ColDisplayController>(entity, nameof(entity.ColDisplayIndex), txtSort, false);
             lblColWidthShow.Text = entity.ColWidth.ToString();
             entity.PropertyChanged += (sender, s2) =>
             {

@@ -34,14 +34,14 @@ namespace RUINORERP.UI.UserPersonalized
             this.StartPosition = FormStartPosition.CenterParent;
         }
 
-     
 
-        public List<ColumnDisplayController> ColumnDisplays { get; set; } = new List<ColumnDisplayController>();
 
-        public ColumnDisplayController[] oldColumnDisplays;
+        public List<ColDisplayController> ColumnDisplays { get; set; } = new List<ColDisplayController>();
+
+        public ColDisplayController[] oldColumnDisplays;
 
         ContextMenuStrip contentMenu1;
-
+        public tb_MenuInfo CurMenuInfo { get; set; }
 
         private void btnOk_Click(object sender, EventArgs e)
         {
@@ -64,11 +64,11 @@ namespace RUINORERP.UI.UserPersonalized
             //上面临时保存了一个之前的序列数组
             foreach (ListViewItem item in listView1.Items)
             {
-                if (item.Tag is ColumnDisplayController columnDisplays)
+                if (item.Tag is ColDisplayController columnDisplays)
                 {
                     if (columnDisplays != null)
                     {
-                        ColumnDisplayController cdc = ColumnDisplays.Where(c => c.ColName == columnDisplays.ColName).FirstOrDefault();
+                        ColDisplayController cdc = ColumnDisplays.Where(c => c.ColName == columnDisplays.ColName).FirstOrDefault();
                         if (cdc != null)
                         {
                             cdc.ColDisplayIndex = sortindex;
@@ -180,7 +180,7 @@ namespace RUINORERP.UI.UserPersonalized
             listView1.Columns[0].TextAlign = HorizontalAlignment.Center;
             listView1.Columns[0].Width = -2; //-1 -2 
 
-            oldColumnDisplays = new ColumnDisplayController[ColumnDisplays.Count];
+            oldColumnDisplays = new ColDisplayController[ColumnDisplays.Count];
             ColumnDisplays.CopyTo(oldColumnDisplays);
 
             //将不可用的显示排序设置为-1
@@ -193,7 +193,7 @@ namespace RUINORERP.UI.UserPersonalized
             //对原始集合排序
             ColumnDisplays.Sort((x, y) => x.ColDisplayIndex.CompareTo(y.ColDisplayIndex));
 
-            foreach (ColumnDisplayController keyValue in ColumnDisplays)
+            foreach (ColDisplayController keyValue in ColumnDisplays)
             {
                 if (!keyValue.Disable)
                 {
@@ -302,7 +302,7 @@ namespace RUINORERP.UI.UserPersonalized
             //提前统一加载就不闪屏？
             if (listView1.SelectedItems != null && listView1.SelectedItems.Count > 0)
             {
-                var entity = listView1.SelectedItems[0].Tag as ColumnDisplayController;
+                var entity = listView1.SelectedItems[0].Tag as ColDisplayController;
                 if (panelConditionEdit.Controls.ContainsKey(entity.ColName.ToString()))
                 {
                     var uCQuery = panelConditionEdit.Controls.CastToList<Control>().FirstOrDefault(c => c.Name == entity.ColName.ToString());
@@ -345,7 +345,7 @@ namespace RUINORERP.UI.UserPersonalized
             {
                 for (int i = 0; i < listView1.SelectedItems.Count; i++)
                 {
-                    var entity = listView1.SelectedItems[i].Tag as ColumnDisplayController;
+                    var entity = listView1.SelectedItems[i].Tag as ColDisplayController;
                     if (panelConditionEdit.Controls.ContainsKey(entity.ColName.ToString()))
                     {
                         var uCQuery = panelConditionEdit.Controls.CastToList<Control>().FirstOrDefault(c => c.Name == entity.ColName.ToString());
@@ -432,11 +432,11 @@ namespace RUINORERP.UI.UserPersonalized
         /// <param name="e"></param>
         private void UCQuery_OnSynchronizeUI(object sender, object e)
         {
-            if (sender is ColumnDisplayController target)
+            if (sender is ColDisplayController target)
             {
                 foreach (ListViewItem item in listView1.Items)
                 {
-                    if (item.Tag is ColumnDisplayController column)
+                    if (item.Tag is ColDisplayController column)
                     {
                         if (column.ColName == target.ColName)
                         {
@@ -457,8 +457,6 @@ namespace RUINORERP.UI.UserPersonalized
         private NewSumDataGridView dataGridView { get; set; }
 
         public tb_UIGridSetting GridSetting { get; set; }
-
-
 
 
         #endregion
@@ -505,11 +503,17 @@ namespace RUINORERP.UI.UserPersonalized
             //只有他有焦点人点时才生效。或全选 全不选
             if ((sender is ListView target && listView1.Focused) || (chkAll.Checked || chkReverseSelection.Checked))
             {
-                if (e.Item.Tag is ColumnDisplayController column)
+                if (e.Item.Tag is ColDisplayController column)
                 {
                     column.Visible = e.Item.Checked;
                 }
             }
+        }
+
+        private void btnApply_Click(object sender, EventArgs e)
+        {
+            //保存设置到DB
+            UIBizSrvice.SaveGridSettingData(CurMenuInfo, dataGridView, gridviewType);
         }
     }
 }

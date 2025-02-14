@@ -235,7 +235,7 @@ namespace RUINORERP.UI.PSI.PUR
 
         DateTime PreDeliveryDate = System.DateTime.Now;
 
-        List<SourceGridDefineColumnItem> listCols = new List<SourceGridDefineColumnItem>();
+        List<SGDefineColumnItem> listCols = new List<SGDefineColumnItem>();
 
         private void UCStockIn_Load(object sender, EventArgs e)
         {

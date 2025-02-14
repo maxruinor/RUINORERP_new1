@@ -32,7 +32,7 @@ namespace RUINORERP.UI.UCSourceGrid
     public class PopupMenuWithCustomColumns : SourceGrid.Cells.Controllers.ControllerBase
     {
 
-        public delegate void ColumnsVisibleDelegate(KeyValuePair<string, SourceGridDefineColumnItem> kv);
+        public delegate void ColumnsVisibleDelegate(KeyValuePair<string, SGDefineColumnItem> kv);
         //string bool  cost true-->表示 成本 显示
         //public delegate void ColumnsVisibleDelegate(int colIndex, string colName, bool visible);
         /// <summary>
@@ -48,9 +48,11 @@ namespace RUINORERP.UI.UCSourceGrid
         private Point dragStartPoint;
         private int InitItemsCount = 0;
         private ToolStripMenuItem highlightedItem; // 跟踪当前高亮项
-
-        public PopupMenuWithCustomColumns(string xmlfileName)
+        SourceGridDefine sgdefine;
+        tb_MenuInfo CurMenuInfo { get; set; }
+        public PopupMenuWithCustomColumns(string xmlfileName, SourceGridDefine _sgdefine)
         {
+            sgdefine = _sgdefine;
             contextMenuStrip1.AllowDrop = true;
             contextMenuStrip1.Opening += ContextMenuStrip1_Opening;
             contextMenuStrip1.MouseDown += ContextMenuStrip_MouseDown;
@@ -61,22 +63,25 @@ namespace RUINORERP.UI.UCSourceGrid
             contextMenuStrip1.Closing += ContextMenuStrip1_Closing;
             contextMenuStrip1.ShowCheckMargin = true;
             _xmlfileName = xmlfileName;
+            InitializeContextMenu();
+            //ConfigColItems = Common.UIHelper.LoadColumnsList(xmlfileName);
+        }
+
+
+        private void InitializeContextMenu()
+        {
+            // 初始化菜单项，例如添加分隔线、自定义项等
             ToolStripSeparator ss = new ToolStripSeparator();
             contextMenuStrip1.Items.Add(ss);
             //ToolStripMenuItem siCustom = new ToolStripMenuItem("自定义");
             //siCustom.Click += SiCustom_Click;
             //contextMenuStrip1.Items.Add(siCustom);
             //contextMenuStrip1.Renderer = new HighlightMenuRenderer();
-
             ToolStripMenuItem LoadDefaultColumns = new ToolStripMenuItem("加载默认配置");
             LoadDefaultColumns.Click += LoadDefaultColumns_Click;
-
             contextMenuStrip1.Items.Add(LoadDefaultColumns);
             InitItemsCount = contextMenuStrip1.Items.Count;
-            ConfigColItems = Common.UIHelper.LoadColumnsList(xmlfileName);
 
-            //menu.MenuItems.Add("Menu 1", new EventHandler(Menu1_Click));
-            //menu.MenuItems.Add("Menu 2", new EventHandler(Menu2_Click));
         }
 
         // 自定义渲染器
@@ -106,7 +111,22 @@ namespace RUINORERP.UI.UCSourceGrid
         }
         private void LoadDefaultColumns_Click(object sender, EventArgs e)
         {
-
+            ColumnDisplays = UIBizSrvice.LoadInitSourceGridSetting(sgdefine, CurMenuInfo);
+            //先清掉之前的
+            //for (int i = contextMenuStrip1.Items.Count - 1; i >= InitItemsCount; i--)
+            //{
+            //    if (contextMenuStrip1.Items[0].AllowDrop == true)
+            //    {
+            //        contextMenuStrip1.Items.RemoveAt(i);
+            //    }
+            //}
+            contextMenuStrip1.Items.Clear();
+            InitializeContextMenu();
+            foreach (var item in ColumnDisplays)
+            {
+                AddNewItems(item);
+            }
+            //显示 宽度 排序 生效
         }
 
         #region 拖放处理逻辑
@@ -201,16 +221,48 @@ namespace RUINORERP.UI.UCSourceGrid
         {
             int sourceIndex = contextMenuStrip1.Items.IndexOf(source);
             int targetIndex = contextMenuStrip1.Items.IndexOf(target);
+            SGColDisplayHandler sourceCol = source.Tag as SGColDisplayHandler;
+            SGColDisplayHandler targetCol = target.Tag as SGColDisplayHandler;
 
             contextMenuStrip1.Items.Remove(source);
             contextMenuStrip1.Items.Insert(targetIndex, source);
 
+            int tempOldIndex = 0;
+            tempOldIndex = ColumnDisplays.First(c => c.ColName == sourceCol.ColName).ColIndex;
+            int tempNewIndex = 0;
+            tempNewIndex = ColumnDisplays.First(c => c.ColName == targetCol.ColName).ColIndex;
+            SynchronizeDefineColumns(source, target);
+            //旧的索引位置 改成新的索引位置，旧的会删除，新的会插入
+            //旧的索引位置 删除后旧的下面的所有+1上移一个位置
+            //for (int i = tempOldIndex; i < ColumnDisplays.Count(); i++)
+            //{
+            //    if (ColumnDisplays[i].ColIndex > tempOldIndex)
+            //    {
+            //        ColumnDisplays[i].ColIndex += 1;
+            //    }
+            //}
+
+            //插入位置是第一个
+            //if (targetIndex == 0)
+            //{
+            //    //新的索引位置 插入后新的下面的所有-1下移一个位置
+            //    for (int i = tempOldIndex; i < ColumnDisplays.Count(); i++)
+            //    {
+            //        if (ColumnDisplays[i].ColIndex == tempNewIndex + 1)
+            //        {
+            //            ColumnDisplays[i].ColIndex += 1;
+            //        }
+            //    }
+            //}
+
+            //ColumnDisplays.First(c=>c.ColName == sourceCol.ColName).ColIndex = targetIndex;
+            //ColumnDisplays.First(c => c.ColName == sourceCol.ColName).ColIndex = targetIndex;
             // 同步数据源
             //var data = items[sourceIndex];
             //items.RemoveAt(sourceIndex);
             //items.Insert(targetIndex > sourceIndex ? targetIndex - 1 : targetIndex, data);
 
-            //SynchronizeGridColumns();
+            SynchronizeGridColumns();
         }
 
 
@@ -265,41 +317,127 @@ namespace RUINORERP.UI.UCSourceGrid
         #endregion
 
 
+        private void SynchronizeDefineColumns(ToolStripMenuItem sourceItem, ToolStripMenuItem targetItem)
+        {
+            // 获取源项和目标项的 DisplayController
+            SGColDisplayHandler sourceDisplay = sourceItem.Tag as SGColDisplayHandler;
+            SGColDisplayHandler targetDisplay = targetItem.Tag as SGColDisplayHandler;
+
+            if (sourceDisplay == null || targetDisplay == null)
+            {
+                return; // 如果没有找到 DisplayController，直接返回
+            }
+
+            // 在 DefineColumns 中找到对应的列
+            SGDefineColumnItem sourceColumn = sgdefine.DefineColumns.FirstOrDefault(c => c.ColName == sourceDisplay.ColName);
+            SGDefineColumnItem targetColumn = sgdefine.DefineColumns.FirstOrDefault(c => c.ColName == targetDisplay.ColName);
+
+            if (sourceColumn == null || targetColumn == null)
+            {
+                return; // 如果没有找到对应的列，直接返回
+            }
+
+            // 交换 DefineColumns 中的顺序
+            int sourceIndex = sgdefine.DefineColumns.IndexOf(sourceColumn);
+            int targetIndex = sgdefine.DefineColumns.IndexOf(targetColumn);
+
+            sgdefine.DefineColumns.RemoveAt(sourceIndex);
+            sgdefine.DefineColumns.Insert(targetIndex, sourceColumn);
+
+            List<ColumnInfo> columnInfos = new List<ColumnInfo>();
+            for (int i = 0; i < sgdefine.grid.Columns.Count; i++)
+            {
+                columnInfos.Add(sgdefine.grid.Columns[i]);
+            }
+
+            List<ColumnInfo> OtherColumnInfos = new List<ColumnInfo>();
+
+            //根据这些重新更新ColumnDisplays的顺序
+            sgdefine.grid.Columns.Clear();
+
+            //项总是第一列
+
+            var ItemColInfo = columnInfos.FirstOrDefault(c => c.Tag as SGDefineColumnItem != null && c.Tag is SGDefineColumnItem columnItem && columnItem.ColName == "项");
+            sgdefine.grid.Columns.Add(ItemColInfo);
+
+            for (int i = 0; i < sgdefine.DefineColumns.Count; i++)
+            {
+
+                //bool isExist = columnInfos.Any(c =>
+                // {
+                //     if (c.Tag as SGDefineColumnItem != null && c.Tag is SGDefineColumnItem columnItem)
+                //     {
+                //         if (columnItem.ColName == sgdefine.DefineColumns[i].ColName)
+                //         {
+                //             return true;
+                //         }
+                //         else
+                //         {
+                //             return false;
+                //         }
+                //     }
+                //     else
+                //     {
+                //         return false;
+                //     }
+                // }
+                // );
+
+                var colInfo = columnInfos.FirstOrDefault(c => c.Tag as SGDefineColumnItem != null && c.Tag is SGDefineColumnItem columnItem && columnItem.ColName == sgdefine.DefineColumns[i].ColName);
+                //如果存在 就直接添加 不需要重新创建列对象
+                if (colInfo != null)
+                {
+                    sgdefine.grid.Columns.Add(colInfo);
+                }
+                else
+                {
+                    OtherColumnInfos.Add(sgdefine.grid.Columns[i]);
+                }
+            }
+
+            foreach (var item in OtherColumnInfos)
+            {
+                sgdefine.grid.Columns.Add(item);
+            }
+
+        }
         private void SynchronizeGridColumns()
         {
-            // 实现列同步逻辑，例如：
-            //var grid = GetAttachedGrid(); // 需要实现获取关联网格的方法
-            //grid.Columns.Clear();
-            //foreach (var menuItem in contextMenuStrip1.Items.OfType<ToolStripMenuItem>())
-            //{
-            //    var column = items.FirstOrDefault(i => i.Key == menuItem.Text);
-            //    if (column.Value != null)
-            //    {
-            //        grid.Columns.Add(column.Value);
-            //    }
-            //}
+            // 获取 ContextMenuStrip 的子项顺序
+            var menuItems = contextMenuStrip1.Items.Cast<ToolStripMenuItem>().ToList();
 
-            // 获取 ContextMenuStrip 的菜单项顺序
-            //var menuOrder = contextMenuStrip1.Items.Cast<ToolStripMenuItem>().Select(item => item.Text).ToList();
+            // 获取列的显示控制器列表
+            var columnDisplays = ColumnDisplays.ToList();
 
-            //// 调整 SourceGrid 的列顺序
-            //var gridColumns = grid.Columns.Cast<SourceGrid.Columns.BaseColumn>().ToList();
-            //grid.Columns.Clear();
+            // 创建一个字典，用于快速查找列的索引
+            var columnDisplayDict = columnDisplays.ToDictionary(c => c.ColName, c => c);
 
-            //foreach (var columnName in menuOrder)
-            //{
-            //    var column = gridColumns.FirstOrDefault(c => c.HeaderText == columnName);
-            //    if (column != null)
-            //    {
-            //        grid.Columns.Add(column);
-            //    }
-            //}
+            // 更新 SourceGrid 的列顺序
+            foreach (ToolStripMenuItem menuItem in menuItems)
+            {
+                // 获取当前子项对应的列显示控制器
+                SGColDisplayHandler columnDisplay = menuItem.Tag as SGColDisplayHandler;
+
+                if (columnDisplay != null)
+                {
+                    // 更新列的索引
+                    columnDisplay.ColIndex = menuItems.IndexOf(menuItem);
+
+                    // 更新 SourceGrid 的列顺序
+                    if (sgdefine.grid != null && columnDisplay.ColIndex < sgdefine.grid.ColumnsCount)
+                    {
+                        sgdefine.grid.Columns[columnDisplay.ColIndex].Visible = columnDisplay.Visible;
+                    }
+                }
+            }
+
+            // 重新排列 SourceGrid 的列
+            sgdefine.grid.AutoSizeCells();
         }
-
         /// <summary>
-        /// 保存了要控制的列
+        /// 保存了要控制的列  可以作废
         /// </summary>
-        private List<KeyValuePair<string, SourceGridDefineColumnItem>> items = new List<KeyValuePair<string, SourceGridDefineColumnItem>>();
+        private List<KeyValuePair<string, SGDefineColumnItem>> items = new List<KeyValuePair<string, SGDefineColumnItem>>();
         //private SerializableDictionary<string, bool> items = new SerializableDictionary<string, bool>();
 
         /// <summary>
@@ -309,14 +447,13 @@ namespace RUINORERP.UI.UCSourceGrid
 
         private void ContextMenuStrip1_Opening(object sender, CancelEventArgs e)
         {
-
             // 初始化拖动状态
             draggedItem = null;
-
-
         }
+
         frmShowColumns frm = new frmShowColumns();
 
+        /* 自定义
         private void SiCustom_Click(object sender, EventArgs e)
         {
             frm.XmlFileName = _xmlfileName;
@@ -333,44 +470,86 @@ namespace RUINORERP.UI.UCSourceGrid
             }
 
         }
+        */
 
+        //private SerializableDictionary<string, bool> _ConfigColItems = new SerializableDictionary<string, bool>();
 
-        private SerializableDictionary<string, bool> _ConfigColItems = new SerializableDictionary<string, bool>();
+        ///// <summary>
+        ///// 保存自定义列的集合
+        ///// </summary>
+        //public SerializableDictionary<string, bool> ConfigColItems { get => _ConfigColItems; set => _ConfigColItems = value; }
 
         /// <summary>
-        /// 保存自定义列的集合
+        /// 保存列控制信息的列表 ，这个值设计时不生成
         /// </summary>
-        public SerializableDictionary<string, bool> ConfigColItems { get => _ConfigColItems; set => _ConfigColItems = value; }
+        [DesignerSerializationVisibilityAttribute(DesignerSerializationVisibility.Hidden)]
+        public List<SGColDisplayHandler> ColumnDisplays { get; set; } = new List<SGColDisplayHandler>();
 
 
+        /*
+         public void AddItems(KeyValuePair<string, SGDefineColumnItem> item)
+         {
+             if (!item.Value.NeverVisible)
+             {
+                 //缓存控制，添加，如果存在则修改状态，如果没有则添加
+                 if (ConfigColItems.ContainsKey(item.Key))
+                 {
+                     ConfigColItems[item.Key] = item.Value.Visible;
+                 }
+                 else
+                 {
+                     ConfigColItems.Add(item.Key, item.Value.Visible);
+                 }
+
+                 items.Add(item);
+                 ToolStripMenuItem menuItem = new ToolStripMenuItem(item.Key)
+                 {
+                     Checked = item.Value.Visible,
+                     CheckOnClick = true,
+                     Tag = item // 存储原始数据
+                 };
+                 menuItem.Checked = item.Value.Visible;
+                 menuItem.CheckOnClick = true;
+                 menuItem.Click += Si_Click;
+                 menuItem.AllowDrop = true;
+                 //menuItem.DragEnter += Item_DragEnter;
+                 //menuItem.DragOver += Item_DragOver;
+                 //menuItem.DragDrop += Item_DragDrop;
+                 menuItem.MouseDown += ContextMenuStrip_MouseDown;
+                 menuItem.MouseMove += ContextMenuStrip_MouseMove;
+
+                 // 为每个菜单项绑定独立事件
+                 menuItem.MouseDown += MenuItem_MouseDown;
+                 menuItem.MouseMove += MenuItem_MouseMove;
+                 menuItem.DragOver += MenuItem_DragOver;
+                 menuItem.DragDrop += MenuItem_DragDrop;
+                 menuItem.DragLeave += MenuItem_DragLeave;
+                 //menuItem.MouseDown += ContextMenuStrip_MouseDown;
+                 //menuItem.MouseMove += ContextMenuStrip_MouseMove;
+
+                 // MyMenu.Items.Add(si);
+                 //初始时有几个，就减几
+                 contextMenuStrip1.Items.Insert(contextMenuStrip1.Items.Count - InitItemsCount, menuItem);
+             }
+         }
+        */
         /// <summary>
         /// 添加要控制的列,这个时候 就可以保存配置了
         /// </summary>
         /// <param name="item"></param>
-        public void AddItems(KeyValuePair<string, SourceGridDefineColumnItem> item)
+        public void AddNewItems(SGColDisplayHandler DisplayController)
         {
-            if (!item.Value.NeverVisible)
+            //如果不是禁用状态，则添加到菜单中
+            if (!DisplayController.Disable)
             {
-                //缓存控制，添加，如果存在则修改状态，如果没有则添加
-                if (ConfigColItems.ContainsKey(item.Key))
+                ToolStripMenuItem menuItem = new ToolStripMenuItem(DisplayController.ColCaption)
                 {
-                    ConfigColItems[item.Key] = item.Value.Visible;
-                }
-                else
-                {
-                    ConfigColItems.Add(item.Key, item.Value.Visible);
-                }
-
-                items.Add(item);
-                ToolStripMenuItem menuItem = new ToolStripMenuItem(item.Key)
-                {
-                    Checked = item.Value.Visible,
+                    Checked = DisplayController.Visible,
                     CheckOnClick = true,
-                    Tag = item // 存储原始数据
+                    Tag = DisplayController // 存储原始数据
                 };
-                menuItem.Checked = item.Value.Visible;
                 menuItem.CheckOnClick = true;
-                menuItem.Click += Si_Click;
+                menuItem.Click += menuItem_Click;
                 menuItem.AllowDrop = true;
                 //menuItem.DragEnter += Item_DragEnter;
                 //menuItem.DragOver += Item_DragOver;
@@ -392,6 +571,21 @@ namespace RUINORERP.UI.UCSourceGrid
                 contextMenuStrip1.Items.Insert(contextMenuStrip1.Items.Count - InitItemsCount, menuItem);
             }
         }
+
+        private void menuItem_Click(object sender, EventArgs e)
+        {
+            //OnColumnsVisible?.Invoke(itemData);
+            //OnColumnsVisible(item);
+            //要更新到配置中
+            var colDisplay = (sender as ToolStripMenuItem).Tag as SGColDisplayHandler;
+            colDisplay.Visible = (sender as ToolStripMenuItem).Checked;
+            sgdefine.grid.Columns[colDisplay.ColIndex].Visible = colDisplay.Visible;
+            ColumnDisplays.First(x => x.ColName == colDisplay.ColName && x.ColCaption == colDisplay.ColCaption)
+                .Visible = colDisplay.Visible;
+            //Common.UIHelper.SaveColumnsList(ConfigColItems, _xmlfileName);
+
+        }
+
         #region 拖放事件处理
         private void MenuItem_MouseDown(object sender, MouseEventArgs e)
         {
@@ -540,10 +734,10 @@ namespace RUINORERP.UI.UCSourceGrid
             }
         }
 
-
+        /*
         private void Si_Click(object sender, EventArgs e)
         {
-            KeyValuePair<string, SourceGridDefineColumnItem> item = items.Find(kv => kv.Key == sender.ToString());
+            KeyValuePair<string, SGDefineColumnItem> item = items.Find(kv => kv.Key == sender.ToString());
             if (item.Value == null)
             {
                 return;
@@ -552,7 +746,6 @@ namespace RUINORERP.UI.UCSourceGrid
 
             //var itemData = (KeyValuePair<string, SourceGridDefineColumnItem>)menuItem.Tag;
             //OnColumnsVisible?.Invoke(itemData);
-
             OnColumnsVisible(item);
             //要更新到配置中
             if (ConfigColItems.ContainsKey(item.Key))
@@ -561,7 +754,7 @@ namespace RUINORERP.UI.UCSourceGrid
             }
             Common.UIHelper.SaveColumnsList(ConfigColItems, _xmlfileName);
         }
-
+        */
 
 
         public override void OnClick(CellContext sender, EventArgs e)
@@ -578,14 +771,6 @@ namespace RUINORERP.UI.UCSourceGrid
                 contextMenuStrip1.Show(sender.Grid, new Point(e.X, e.Y));
         }
 
-        private void Menu1_Click(object sender, EventArgs e)
-        {
-            //TODO Your code here
-        }
-        private void Menu2_Click(object sender, EventArgs e)
-        {
-            //TODO Your code here
-        }
     }
 }
 

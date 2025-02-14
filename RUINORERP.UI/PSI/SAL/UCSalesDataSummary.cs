@@ -303,7 +303,7 @@ namespace RUINORERP.UI.PSI.SAL
             //动态 控制显示列
             foreach (var item in conditions)
             {
-                ColumnDisplayController cdcInv = queryMaster.newSumDataGridViewMaster.ColumnDisplays.Where(c => c.ColName == item).FirstOrDefault();
+                ColDisplayController cdcInv = queryMaster.newSumDataGridViewMaster.ColumnDisplays.Where(c => c.ColName == item).FirstOrDefault();
                 if (cdcInv != null)
                 {
                     //分组存在就显示，不则不显示

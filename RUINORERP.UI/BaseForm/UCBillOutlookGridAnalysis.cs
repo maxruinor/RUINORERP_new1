@@ -35,7 +35,7 @@ namespace RUINORERP.UI.BaseForm
         /// 保存列控制信息的列表 ，这个值设计时不生成
         /// </summary>
         [DesignerSerializationVisibilityAttribute(DesignerSerializationVisibility.Hidden)]
-        public List<ColumnDisplayController> ColumnDisplays { get; set; } = new List<ColumnDisplayController>();
+        public List<ColDisplayController> ColumnDisplays { get; set; } = new List<ColDisplayController>();
 
 
 
@@ -105,11 +105,11 @@ namespace RUINORERP.UI.BaseForm
                 //如果显示列没有指定，就默认全部显示
                 if (ColumnDisplays == null || ColumnDisplays.Count == 0)
                 {
-                    List<ColumnDisplayController> columnDisplayControllers = new List<ColumnDisplayController>();
+                    List<ColDisplayController> columnDisplayControllers = new List<ColDisplayController>();
                     foreach (var item in setup.FieldNameList)
                     {
                         //ConcurrentDictionary<string, KeyValuePair<string, bool>>
-                        ColumnDisplayController cdc = ColumnDisplays.Where(s => s.ColName == item.Key).FirstOrDefault();
+                        ColDisplayController cdc = ColumnDisplays.Where(s => s.ColName == item.Key).FirstOrDefault();
                         if (cdc != null)
                         {
                             cdc.ColDisplayText = item.Value.Key;

@@ -36,8 +36,8 @@ namespace RUINORERP.UI.ToolForm
         private SerializableDictionary<string, bool> _ConfigItems = new SerializableDictionary<string, bool>();
         public SerializableDictionary<string, bool> ConfigItems { get => _ConfigItems; set => _ConfigItems = value; }
 
-        private List<KeyValuePair<string, SourceGridDefineColumnItem>> items = new List<KeyValuePair<string, SourceGridDefineColumnItem>>();
-        public List<KeyValuePair<string, SourceGridDefineColumnItem>> Items { get => items; set => items = value; }
+        private List<KeyValuePair<string, SGDefineColumnItem>> items = new List<KeyValuePair<string, SGDefineColumnItem>>();
+        public List<KeyValuePair<string, SGDefineColumnItem>> Items { get => items; set => items = value; }
 
         private void btnCancel_Click(object sender, EventArgs e)
         {
@@ -71,13 +71,13 @@ namespace RUINORERP.UI.ToolForm
             {
                 if (listView1.Items[i].Checked)
                 {
-                    KeyValuePair<string, SourceGridDefineColumnItem> kvitem = Items.Find(kv => kv.Key == listView1.Items[i].Text);
+                    KeyValuePair<string, SGDefineColumnItem> kvitem = Items.Find(kv => kv.Key == listView1.Items[i].Text);
                     kvitem.Value.Visible = true;
 
                 }
                 else
                 {
-                    KeyValuePair<string, SourceGridDefineColumnItem> kvitem = Items.Find(kv => kv.Key == listView1.Items[i].Text);
+                    KeyValuePair<string, SGDefineColumnItem> kvitem = Items.Find(kv => kv.Key == listView1.Items[i].Text);
                     kvitem.Value.Visible = false;
                 }
 

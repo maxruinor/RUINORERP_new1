@@ -1120,7 +1120,7 @@ namespace RUINORERP.UI.MRP.BOM
             grid1.Selection.EnableMultiSelection = false;
 
 
-            List<SourceGridDefineColumnItem> listCols = sgh.GetGridColumns<ProductSharePart, tb_BOM_SDetail>(c => c.ProdDetailID, true);
+            List<SGDefineColumnItem> listCols = sgh.GetGridColumns<ProductSharePart, tb_BOM_SDetail>(c => c.ProdDetailID, true);
 
             listCols.SetCol_NeverVisible<tb_BOM_SDetail>(c => c.ProdDetailID);
             listCols.SetCol_NeverVisible<tb_BOM_SDetail>(c => c.SubID);
@@ -1267,7 +1267,7 @@ namespace RUINORERP.UI.MRP.BOM
             gridSubstituteMaterial.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             gridSubstituteMaterial.Selection.EnableMultiSelection = false;
 
-            List<SourceGridDefineColumnItem> listCols = sgh2.GetGridColumns<ProductSharePart, tb_BOM_SDetailSubstituteMaterial>(c => c.ProdDetailID, true);
+            List<SGDefineColumnItem> listCols = sgh2.GetGridColumns<ProductSharePart, tb_BOM_SDetailSubstituteMaterial>(c => c.ProdDetailID, true);
 
             listCols.SetCol_NeverVisible<tb_BOM_SDetailSubstituteMaterial>(c => c.ProdDetailID);
             listCols.SetCol_NeverVisible<tb_BOM_SDetailSubstituteMaterial>(c => c.SubID);

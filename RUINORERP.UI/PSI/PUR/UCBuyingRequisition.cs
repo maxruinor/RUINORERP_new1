@@ -218,7 +218,7 @@ namespace RUINORERP.UI.PSI.PUR
 
 
 
-        List<SourceGridDefineColumnItem> listCols = new List<SourceGridDefineColumnItem>();
+        List<SGDefineColumnItem> listCols = new List<SGDefineColumnItem>();
 
         private void UCStockIn_Load(object sender, EventArgs e)
         {
@@ -763,7 +763,7 @@ namespace RUINORERP.UI.PSI.PUR
             {
                 List<tb_BuyingRequisitionDetail> buyingRequisitionDetails = new List<tb_BuyingRequisitionDetail>();
                 Expression<Func<tb_BuyingRequisitionDetail, object>> expSelected = c => c.Selected;
-                SourceGridDefineColumnItem selected = sgd.DefineColumns.Find(c => c.ColName == expSelected.GetMemberInfo().Name);
+                SGDefineColumnItem selected = sgd.DefineColumns.Find(c => c.ColName == expSelected.GetMemberInfo().Name);
                 // List<int> SelectedRows = new List<int>();
                 if (selected != null && chkSplitRequisitionDetails.Checked)
                 {
@@ -880,7 +880,7 @@ namespace RUINORERP.UI.PSI.PUR
 
         private void ShowSelectedColumn()
         {
-            SourceGridDefineColumnItem selected = listCols.Find(c => c.ColName == "Selected");
+            SGDefineColumnItem selected = listCols.Find(c => c.ColName == "Selected");
             if (selected != null)
             {
                 grid1.Columns[selected.ColIndex].Visible = chkSplitRequisitionDetails.Checked;

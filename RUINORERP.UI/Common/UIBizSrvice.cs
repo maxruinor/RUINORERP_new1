@@ -262,7 +262,7 @@ namespace RUINORERP.UI.Common
                 GridSetting.UIMenuPID = menuPersonalization.UIMenuPID;
                 menuPersonalization.tb_UIGridSettings.Add(GridSetting);
             }
-            List<ColumnDisplayController> originalColumnDisplays = new List<ColumnDisplayController>();
+            List<ColDisplayController> originalColumnDisplays = new List<ColDisplayController>();
             //如果数据有则加载，无则加载默认的
             if (!string.IsNullOrEmpty(GridSetting.ColsSetting))
             {
@@ -270,7 +270,7 @@ namespace RUINORERP.UI.Common
                 if (objList != null && objList.GetType().Name == "JArray")//(Newtonsoft.Json.Linq.JArray))
                 {
                     var jsonlist = objList as Newtonsoft.Json.Linq.JArray;
-                    originalColumnDisplays = jsonlist.ToObject<List<ColumnDisplayController>>();
+                    originalColumnDisplays = jsonlist.ToObject<List<ColDisplayController>>();
                 }
             }
             else
@@ -313,10 +313,10 @@ namespace RUINORERP.UI.Common
 
             if (dataGridView.ColumnDisplays == null)
             {
-                dataGridView.ColumnDisplays = new List<ColumnDisplayController>();
+                dataGridView.ColumnDisplays = new List<ColDisplayController>();
                 foreach (DataGridViewColumn dc in dataGridView.Columns)
                 {
-                    ColumnDisplayController cdc = new ColumnDisplayController();
+                    ColDisplayController cdc = new ColDisplayController();
                     cdc.GridKeyName = GridSourceType.Name;
                     cdc.ColDisplayText = dc.HeaderText;
                     cdc.ColDisplayIndex = dc.DisplayIndex;
@@ -375,6 +375,7 @@ namespace RUINORERP.UI.Common
                 frmGridViewColSetting set = new frmGridViewColSetting();
                 set.ConfiguredGrid = dataGridView;
                 set.gridviewType = GridSourceType;
+                set.CurMenuInfo = CurMenuInfo;
                 set.GridSetting = GridSetting;
                 set.ColumnDisplays = dataGridView.ColumnDisplays;
                 if (set.ShowDialog() == DialogResult.OK)
@@ -425,7 +426,7 @@ namespace RUINORERP.UI.Common
                 GridSetting.UIMenuPID = menuPersonalization.UIMenuPID;
                 menuPersonalization.tb_UIGridSettings.Add(GridSetting);
             }
-            List<ColumnDisplayController> originalColumnDisplays = new List<ColumnDisplayController>();
+            List<ColDisplayController> originalColumnDisplays = new List<ColDisplayController>();
             //如果数据有则加载，无则加载默认的
             if (!string.IsNullOrEmpty(GridSetting.ColsSetting))
             {
@@ -433,7 +434,7 @@ namespace RUINORERP.UI.Common
                 if (objList != null && objList.GetType().Name == "JArray")//(Newtonsoft.Json.Linq.JArray))
                 {
                     var jsonlist = objList as Newtonsoft.Json.Linq.JArray;
-                    originalColumnDisplays = jsonlist.ToObject<List<ColumnDisplayController>>();
+                    originalColumnDisplays = jsonlist.ToObject<List<ColDisplayController>>();
                 }
             }
             else
@@ -466,10 +467,10 @@ namespace RUINORERP.UI.Common
 
             if (dataGridView.ColumnDisplays == null)
             {
-                dataGridView.ColumnDisplays = new List<ColumnDisplayController>();
+                dataGridView.ColumnDisplays = new List<ColDisplayController>();
                 foreach (DataGridViewColumn dc in dataGridView.Columns)
                 {
-                    ColumnDisplayController cdc = new ColumnDisplayController();
+                    ColDisplayController cdc = new ColDisplayController();
                     cdc.GridKeyName = datasourceType.Name;
                     cdc.ColDisplayText = dc.HeaderText;
                     cdc.ColDisplayIndex = dc.DisplayIndex;
@@ -524,7 +525,7 @@ namespace RUINORERP.UI.Common
         }
 
 
-        public static void InitDataGridViewColumnDisplays(List<ColumnDisplayController> ColumnDisplays, NewSumDataGridView dataGridView, Type GridSourceType)
+        public static void InitDataGridViewColumnDisplays(List<ColDisplayController> ColumnDisplays, NewSumDataGridView dataGridView, Type GridSourceType)
         {
             if (dataGridView == null)
             {
@@ -886,22 +887,21 @@ namespace RUINORERP.UI.Common
         /// <summary>
         /// 设置NewSumDataGridView列的显示的个性化参数
         /// </summary>
-        /// <param name="type"></param>
-        /// <param name="dataGridView"></param>
+        /// <param name="gridDefine"></param>
         /// <param name="CurMenuInfo"></param>
-        /// <param name="ShowSettingForm"></param>
         /// <param name="InvisibleCols">系统硬编码不可见和权限设置的不可见</param>
         /// <param name="DefaultHideCols">系统硬编码不可见和权限设置的不可见</param>
         /// <returns></returns>
-        public static async Task SetSourceGridAsync(Type GridSourceType, SourceGridDefine gridDefine,
-            List<SourceGridDefineColumnItem> listCols,
-            tb_MenuInfo CurMenuInfo, bool ShowSettingForm = false, HashSet<string> InvisibleCols = null, HashSet<string> DefaultHideCols = null, bool SaveGridSetting = false)
+        public static async Task<List<SGColDisplayHandler>> SetCustomSourceGridAsync(SourceGridDefine gridDefine,
+            tb_MenuInfo CurMenuInfo,
+            HashSet<string> InvisibleCols = null,
+            HashSet<string> DefaultHideCols = null,
+            bool SaveGridSetting = false,
+            List<SGColDisplayHandler> SaveTargetColumnDisplays = null
+            )
         {
             SourceGrid.Grid grid1 = gridDefine.grid;
-            if (grid1 == null)
-            {
-                return;
-            }
+
             //if (MainForm.Instance.AppContext.CurrentUser_Role == null && MainForm.Instance.AppContext.IsSuperUser)
             //{
             //    grid1.NeedSaveColumnsXml = true;
@@ -947,18 +947,19 @@ namespace RUINORERP.UI.Common
             {
                 menuPersonalization.tb_UIGridSettings = new List<tb_UIGridSetting>();
             }
-            tb_UIGridSetting GridSetting = menuPersonalization.tb_UIGridSettings.FirstOrDefault(c => c.GridKeyName == GridSourceType.Name
+            tb_UIGridSetting GridSetting = menuPersonalization
+                .tb_UIGridSettings.FirstOrDefault(c => c.GridKeyName == gridDefine.MainBizDependencyTypeName
             && c.GridType == grid1.GetType().Name
             && c.UIMenuPID == menuPersonalization.UIMenuPID);
             if (GridSetting == null)
             {
                 GridSetting = new tb_UIGridSetting();
-                GridSetting.GridKeyName = GridSourceType.Name;
+                GridSetting.GridKeyName = gridDefine.MainBizDependencyTypeName;
                 GridSetting.GridType = grid1.GetType().Name;
                 GridSetting.UIMenuPID = menuPersonalization.UIMenuPID;
                 menuPersonalization.tb_UIGridSettings.Add(GridSetting);
             }
-            List<ColumnDisplayController> originalColumnDisplays = new List<ColumnDisplayController>();
+            List<SGColDisplayHandler> originalColumnDisplays = new List<SGColDisplayHandler>();
             //如果数据有则加载，无则加载默认的
             if (!string.IsNullOrEmpty(GridSetting.ColsSetting))
             {
@@ -966,33 +967,14 @@ namespace RUINORERP.UI.Common
                 if (objList != null && objList.GetType().Name == "JArray")//(Newtonsoft.Json.Linq.JArray))
                 {
                     var jsonlist = objList as Newtonsoft.Json.Linq.JArray;
-                    originalColumnDisplays = jsonlist.ToObject<List<ColumnDisplayController>>();
+                    originalColumnDisplays = jsonlist.ToObject<List<SGColDisplayHandler>>();
                 }
             }
             else
             {
-                originalColumnDisplays = LoadInitSourceGridSetting(listCols, gridDefine, CurMenuInfo);
-
+                originalColumnDisplays = LoadInitSourceGridSetting(gridDefine, CurMenuInfo);
             }
 
-            //if (grid1.ColumnDisplays == null)
-            //{
-            //    grid1.ColumnDisplays = new List<ColumnDisplayController>();
-            //    foreach (DataGridViewColumn dc in grid1.Columns)
-            //    {
-            //        ColumnDisplayController cdc = new ColumnDisplayController();
-            //        cdc.GridKeyName = GridSourceType.Name;
-            //        cdc.ColDisplayText = dc.HeaderText;
-            //        cdc.ColDisplayIndex = dc.DisplayIndex;
-            //        cdc.ColWidth = dc.Width;
-            //        cdc.ColEncryptedName = dc.Name;
-            //        cdc.ColName = dc.Name;
-            //        cdc.IsFixed = dc.Frozen;
-            //        cdc.Visible = dc.Visible;
-            //        cdc.DataPropertyName = dc.DataPropertyName;
-            //        originalColumnDisplays.Add(cdc);
-            //    }
-            //}
 
 
             //不管什么情况都处理系统和权限的限制列显示
@@ -1045,6 +1027,17 @@ namespace RUINORERP.UI.Common
                 }
                 else
                 {
+                    //TODO:后可以改成增量更新。或变化了才更新主要是判断 GolsSetting
+                    if (SaveTargetColumnDisplays != null && SaveTargetColumnDisplays.Count > 0)
+                    {
+                        //发送缓存数据
+                         json = JsonConvert.SerializeObject(SaveTargetColumnDisplays,
+                           new JsonSerializerSettings
+                           {
+                               ReferenceLoopHandling = ReferenceLoopHandling.Ignore // 或 ReferenceLoopHandling.Serialize
+                           });
+                        GridSetting.ColsSetting = json;
+                    }
                     RUINORERP.Business.BusinessHelper.Instance.EditEntity(GridSetting);
                     int updatecount = await MainForm.Instance.AppContext.Db.Updateable(GridSetting).ExecuteCommandAsync();
                     if (updatecount > 0)
@@ -1052,65 +1045,28 @@ namespace RUINORERP.UI.Common
 
                     }
                 }
-                return;
+
             }
+            return originalColumnDisplays;
 
-            if (true)
-            {
-                 
-                    //发送缓存数据
-                    string json = JsonConvert.SerializeObject(originalColumnDisplays,
-                       new JsonSerializerSettings
-                       {
-                           ReferenceLoopHandling = ReferenceLoopHandling.Ignore // 或 ReferenceLoopHandling.Serialize
-                       });
-                    GridSetting.ColsSetting = json;
 
-                    if (GridSetting.UIGID == 0)
-                    {
-                        RUINORERP.Business.BusinessHelper.Instance.InitEntity(GridSetting);
-                        await MainForm.Instance.AppContext.Db.Insertable(GridSetting).ExecuteReturnSnowflakeIdAsync();
-                    }
-                    else
-                    {
-                        RUINORERP.Business.BusinessHelper.Instance.EditEntity(GridSetting);
-                        int updatecount = await MainForm.Instance.AppContext.Db.Updateable(GridSetting).ExecuteCommandAsync();
-                        if (updatecount > 0)
-                        {
-
-                        }
-                    }
-                
-            }
-
-            gridDefine = new SourceGridDefine(grid1, listCols, true);
         }
 
-        private static List<ColumnDisplayController> Set_InitDisplayController(List<SourceGridDefineColumnItem> listCols, SourceGridDefine gridDefine, tb_MenuInfo CurMenuInfo)
-        {
-            return LoadInitSourceGridSetting(listCols, gridDefine, CurMenuInfo);
-        }
 
-        private static List<ColumnDisplayController> LoadInitSourceGridSetting(List<SourceGridDefineColumnItem> listCols, SourceGridDefine gridDefine, tb_MenuInfo CurMenuInfo)
+        public static List<SGColDisplayHandler> LoadInitSourceGridSetting(SourceGridDefine gridDefine, tb_MenuInfo CurMenuInfo)
         {
+
+            List<SGDefineColumnItem> listCols = null;
             //找到最原始的数据来自于硬编码
-            //originalColumnDisplays = listCols UIHelper.GetColumnDisplayList(GridSourceType);
-            listCols.ForEach(c =>
+
+            if (listCols == null)
             {
-                c.DisplayController.ColDisplayText = c.ColCaption;
-                c.DisplayController.ColName = c.ColName;
-                c.DisplayController.ColEncryptedName = c.ColName;
-                c.DisplayController.DataPropertyName = c.ColName;
-                c.DisplayController.ColWidth = c.width;
-                c.DisplayController.ColDisplayIndex = c.ColIndex;
-                c.DisplayController.ColIndex = c.ColIndex;
-                c.DisplayController.Visible = c.Visible;
-                c.DisplayController.Disable = c.NeverVisible;
-            });
+                listCols = new List<SGDefineColumnItem>();
+            }
+            listCols = gridDefine.DefineColumns;
 
-
-            List<ColumnDisplayController> originalColumnDisplays = listCols.Select(c => c.DisplayController).ToList();
-
+            List<SGColDisplayHandler> originalColumnDisplays = listCols.Select(c => c.DisplayController).ToList();
+            originalColumnDisplays = originalColumnDisplays.Where(c => c.Disable == false).ToList();
             //newSumDataGridViewMaster.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.ColumnHeader;
             //不能设置上面这两个属性。因为设置了将不能自动调整宽度。这里计算一下按标题给个差不多的
 
@@ -1118,10 +1074,16 @@ namespace RUINORERP.UI.Common
             Graphics graphics = gridDefine.grid.CreateGraphics();
             originalColumnDisplays.ForEach(c =>
             {
-                c.GridKeyName = gridDefine.MainBizDependencyType.Name;
-
+                if (c.Disable)
+                {
+                    c.Visible = true;
+                }
+                else
+                {
+                    c.Visible = true;
+                }
                 // 计算文本宽度
-                float textWidth = UITools.CalculateTextWidth(c.ColDisplayText, gridDefine.grid.Font, graphics);
+                float textWidth = UITools.CalculateTextWidth(c.ColCaption, gridDefine.grid.Font, graphics);
                 c.ColWidth = (int)textWidth + 10; // 加上一些额外的空间
                 if (c.ColWidth < 100)
                 {
@@ -1154,7 +1116,6 @@ namespace RUINORERP.UI.Common
             });
             return originalColumnDisplays;
         }
-
 
         #endregion
 

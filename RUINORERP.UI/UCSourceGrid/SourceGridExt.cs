@@ -26,7 +26,7 @@ namespace RUINORERP.UI.UCSourceGrid
         /// <typeparam name="T">这个类型，要与这个要控制的列关联对应</typeparam>
         /// <param name="cols"></param>
         /// <param name="colNameExp"></param>
-        public static void SetCol_AutoSizeMode<T>(this List<SourceGridDefineColumnItem> cols, Expression<Func<T, object>> colNameExp, SourceGrid.AutoSizeMode autoSizeMode)
+        public static void SetCol_AutoSizeMode<T>(this List<SGDefineColumnItem> cols, Expression<Func<T, object>> colNameExp, SourceGrid.AutoSizeMode autoSizeMode)
         {
             MemberInfo minfo = colNameExp.GetMemberInfo();
             foreach (var item in cols)
@@ -46,7 +46,7 @@ namespace RUINORERP.UI.UCSourceGrid
         /// <typeparam name="T">这个类型，要与这个要控制的列关联对应</typeparam>
         /// <param name="cols"></param>
         /// <param name="colNameExp"></param>
-        public static void SetCol_NeverVisible<T>(this List<SourceGridDefineColumnItem> cols, Expression<Func<T, object>> colNameExp)
+        public static void SetCol_NeverVisible<T>(this List<SGDefineColumnItem> cols, Expression<Func<T, object>> colNameExp)
         {
             MemberInfo minfo = colNameExp.GetMemberInfo();
             foreach (var item in cols)
@@ -54,12 +54,11 @@ namespace RUINORERP.UI.UCSourceGrid
                 if (item.BelongingObjectType.Name == typeof(T).Name)
                 {
                     item.SetCol_NeverVisible(minfo.Name, typeof(T));
-                    item.DisplayController.Disable = false;
                 }
             }
         }
 
-        public static void SetCol_CanMuliSelect<T>(this List<SourceGridDefineColumnItem> cols, Expression<Func<T, object>> colNameExp, bool CanMuliSelect)
+        public static void SetCol_CanMuliSelect<T>(this List<SGDefineColumnItem> cols, Expression<Func<T, object>> colNameExp, bool CanMuliSelect)
         {
             MemberInfo minfo = colNameExp.GetMemberInfo();
             foreach (var item in cols)
@@ -71,7 +70,7 @@ namespace RUINORERP.UI.UCSourceGrid
             }
         }
 
-        public static void SetCol_CanMuliSelect(this SourceGridDefineColumnItem col, string colName, Type BelongingObjectType, bool CanMuliSelect)
+        public static void SetCol_CanMuliSelect(this SGDefineColumnItem col, string colName, Type BelongingObjectType, bool CanMuliSelect)
         {
             if (col.ColName == colName && col.BelongingObjectType == BelongingObjectType)
             {
@@ -79,23 +78,25 @@ namespace RUINORERP.UI.UCSourceGrid
             }
         }
 
-        public static void SetCol_NeverVisible(this SourceGridDefineColumnItem col, string colName, Type BelongingObjectType)
+        public static void SetCol_NeverVisible(this SGDefineColumnItem col, string colName, Type BelongingObjectType)
         {
             if (col.ColName == colName && col.BelongingObjectType == BelongingObjectType)
             {
                 col.NeverVisible = true;
+                col.DisplayController.Disable = true;
             }
         }
 
-        public static void SetCol_NeverVisible(this SourceGridDefineColumnItem col, string colName)
+        public static void SetCol_NeverVisible(this SGDefineColumnItem col, string colName)
         {
             if (col.ColName == colName)
             {
                 col.NeverVisible = true;
+                col.DisplayController.Disable = true;
             }
         }
 
-        public static void SetCol_AutoSizeMode(this SourceGridDefineColumnItem col, string colName, SourceGrid.AutoSizeMode autoSizeMode)
+        public static void SetCol_AutoSizeMode(this SGDefineColumnItem col, string colName, SourceGrid.AutoSizeMode autoSizeMode)
         {
             if (col.ColName == colName)
             {
@@ -105,7 +106,7 @@ namespace RUINORERP.UI.UCSourceGrid
 
 
 
-        public static void SetCol_NeverVisible(this List<SourceGridDefineColumnItem> cols, string colName, Type BelongingObjectType)
+        public static void SetCol_NeverVisible(this List<SGDefineColumnItem> cols, string colName, Type BelongingObjectType)
         {
             foreach (var item in cols)
             {
@@ -113,7 +114,7 @@ namespace RUINORERP.UI.UCSourceGrid
             }
         }
 
-        public static void SetCol_NeverVisible(this List<SourceGridDefineColumnItem> cols, string colName)
+        public static void SetCol_NeverVisible(this List<SGDefineColumnItem> cols, string colName)
         {
             foreach (var item in cols)
             {
@@ -128,7 +129,7 @@ namespace RUINORERP.UI.UCSourceGrid
         /// <typeparam name="T"></typeparam>
         /// <param name="cols"></param>
         /// <param name="colNameExp"></param>
-        public static void SetCol_DefaultHide<T>(this List<SourceGridDefineColumnItem> cols, Expression<Func<T, object>> colNameExp)
+        public static void SetCol_DefaultHide<T>(this List<SGDefineColumnItem> cols, Expression<Func<T, object>> colNameExp)
         {
             MemberInfo minfo = colNameExp.GetMemberInfo();
             foreach (var item in cols)
@@ -140,7 +141,7 @@ namespace RUINORERP.UI.UCSourceGrid
                 item.SetCol_DefaultHide(minfo.Name);
             }
         }
-        public static void SetCol_DefaultHide(this SourceGridDefineColumnItem col, string colName)
+        public static void SetCol_DefaultHide(this SGDefineColumnItem col, string colName)
         {
             if (col.ColName == colName)
             {
@@ -148,7 +149,7 @@ namespace RUINORERP.UI.UCSourceGrid
             }
         }
 
-        public static void SetCol_DefaultHide(this List<SourceGridDefineColumnItem> cols, string colName)
+        public static void SetCol_DefaultHide(this List<SGDefineColumnItem> cols, string colName)
         {
             foreach (var item in cols)
             {
@@ -163,7 +164,7 @@ namespace RUINORERP.UI.UCSourceGrid
         /// <typeparam name="T"></typeparam>
         /// <param name="cols"></param>
         /// <param name="colNameExp"></param>
-        public static void SetCol_ReadOnly<T>(this List<SourceGridDefineColumnItem> cols, Expression<Func<T, object>> colNameExp)
+        public static void SetCol_ReadOnly<T>(this List<SGDefineColumnItem> cols, Expression<Func<T, object>> colNameExp)
         {
             MemberInfo minfo = colNameExp.GetMemberInfo();
             foreach (var item in cols)
@@ -183,7 +184,7 @@ namespace RUINORERP.UI.UCSourceGrid
         /// <typeparam name="T"></typeparam>
         /// <param name="cols"></param>
         /// <param name="colNameExp"></param>
-        public static void SetCol_DefaultValue<T>(this List<SourceGridDefineColumnItem> cols, Expression<Func<T, object>> colNameExp, object DefaultValue)
+        public static void SetCol_DefaultValue<T>(this List<SGDefineColumnItem> cols, Expression<Func<T, object>> colNameExp, object DefaultValue)
         {
             MemberInfo minfo = colNameExp.GetMemberInfo();
             foreach (var item in cols)
@@ -208,7 +209,7 @@ namespace RUINORERP.UI.UCSourceGrid
         /// <param name="colNameTargetExp">程序控制要变化的列的值</param>
         /// <param name="NewValue">值内容，可以固定</param>
         /// <param name="valueParameters">可以用这个集合的列取值后点位符替换</param>
-        public static void SetCol_RelatedValue<T>(this List<SourceGridDefineColumnItem> cols, Expression<Func<T, object>> colNameSourceExp, Expression<Func<T, object>> colNameTargetExp, string NewValue, params Expression<Func<T, object>>[] valueParameters)
+        public static void SetCol_RelatedValue<T>(this List<SGDefineColumnItem> cols, Expression<Func<T, object>> colNameSourceExp, Expression<Func<T, object>> colNameTargetExp, string NewValue, params Expression<Func<T, object>>[] valueParameters)
         {
             MemberInfo minfoSource = colNameSourceExp.GetMemberInfo();
             MemberInfo minfoTarget = colNameTargetExp.GetMemberInfo();
@@ -249,7 +250,7 @@ namespace RUINORERP.UI.UCSourceGrid
         /// <param name="colNameTargetExp">程序控制要变化的列的值</param>
         /// <param name="NewValue">值内容，可以固定</param>
         /// <param name="valueParameters">可以用这个集合的列取值后点位符替换，并且可以指向另一列值:其中有两种情况，T1时直接指向明细实体中的一个其他列，T2时指向明细实体中的一个关联列的外键实体的显示列（名称）</param>
-        public static void SetCol_RelatedValue<T, S>(this List<SourceGridDefineColumnItem> cols, Expression<Func<T, object>> colNameSourceExp, Expression<Func<T, object>> colNameTargetExp, string NewValue,
+        public static void SetCol_RelatedValue<T, S>(this List<SGDefineColumnItem> cols, Expression<Func<T, object>> colNameSourceExp, Expression<Func<T, object>> colNameTargetExp, string NewValue,
             params KeyNamePair[] valueParameters)
         {
             MemberInfo minfoSource = colNameSourceExp.GetMemberInfo();
@@ -292,7 +293,7 @@ namespace RUINORERP.UI.UCSourceGrid
         /// <typeparam name="T"></typeparam>
         /// <param name="cols"></param>
         /// <param name="colNameExp"></param>
-        public static void SetCol_Format<T>(this List<SourceGridDefineColumnItem> cols, Expression<Func<T, object>> colNameExp, CustomFormatType CustomFormat, string[] FormatText = null, Type TypeForEnumOptions = null)
+        public static void SetCol_Format<T>(this List<SGDefineColumnItem> cols, Expression<Func<T, object>> colNameExp, CustomFormatType CustomFormat, string[] FormatText = null, Type TypeForEnumOptions = null)
         {
             MemberInfo minfo = colNameExp.GetMemberInfo();
             foreach (var item in cols)
@@ -310,7 +311,7 @@ namespace RUINORERP.UI.UCSourceGrid
         /// <typeparam name="T"></typeparam>
         /// <param name="cols"></param>
         /// <param name="colNameExp"></param>
-        public static void SetCol_ReadWrite<T>(this List<SourceGridDefineColumnItem> cols, Expression<Func<T, object>> colNameExp)
+        public static void SetCol_ReadWrite<T>(this List<SGDefineColumnItem> cols, Expression<Func<T, object>> colNameExp)
         {
             MemberInfo minfo = colNameExp.GetMemberInfo();
             foreach (var item in cols)
@@ -330,7 +331,7 @@ namespace RUINORERP.UI.UCSourceGrid
         /// <typeparam name="T"></typeparam>
         /// <param name="cols"></param>
         /// <param name="colNameExp"></param>
-        public static void SetCol_Exclude<T>(this List<SourceGridDefineColumnItem> cols, Expression<Func<T, object>> colNameExp)
+        public static void SetCol_Exclude<T>(this List<SGDefineColumnItem> cols, Expression<Func<T, object>> colNameExp)
         {
             MemberInfo minfo = colNameExp.GetMemberInfo();
             cols.RemoveWhere(c => c.ColName == minfo.Name);
@@ -365,7 +366,7 @@ namespace RUINORERP.UI.UCSourceGrid
         }
         */
 
-        public static void SetCol_ReadOnly(this SourceGridDefineColumnItem col, string colName)
+        public static void SetCol_ReadOnly(this SGDefineColumnItem col, string colName)
         {
             if (col.ColName == colName)
             {
@@ -394,7 +395,7 @@ namespace RUINORERP.UI.UCSourceGrid
             }
         }
 
-        private static void SetCol_Format(this SourceGridDefineColumnItem col, string colName, CustomFormatType CustomFormat, string[] FormatText = null, Type TypeForEnumOptions = null)
+        private static void SetCol_Format(this SGDefineColumnItem col, string colName, CustomFormatType CustomFormat, string[] FormatText = null, Type TypeForEnumOptions = null)
         {
             if (col.ColName == colName)
             {
@@ -435,7 +436,7 @@ namespace RUINORERP.UI.UCSourceGrid
 
         }
 
-        public static void SetCol_DefaultValue(this SourceGridDefineColumnItem col, string colName, object DefaultValue)
+        public static void SetCol_DefaultValue(this SGDefineColumnItem col, string colName, object DefaultValue)
         {
             if (col.ColName == colName)
             {
@@ -451,7 +452,7 @@ namespace RUINORERP.UI.UCSourceGrid
         /// <param name="colSourceName">key</param>
         /// <param name="colTargetName"></param>
         /// <param name="NewValue"></param>
-        public static void SetCol_RelatedValue(this SourceGridDefineColumnItem col, string colSourceName, string colTargetName, string NewValue, params TargetValueParameter[] valueParameters)
+        public static void SetCol_RelatedValue(this SGDefineColumnItem col, string colSourceName, string colTargetName, string NewValue, params TargetValueParameter[] valueParameters)
         {
             if (col.ColName == colSourceName)
             {
@@ -498,7 +499,7 @@ namespace RUINORERP.UI.UCSourceGrid
             }
         }
 
-        public static void SetCol_ReadWrite(this SourceGridDefineColumnItem col, string colName)
+        public static void SetCol_ReadWrite(this SGDefineColumnItem col, string colName)
         {
             if (col.ColName == colName)
             {
@@ -535,7 +536,7 @@ namespace RUINORERP.UI.UCSourceGrid
         /// <param name="colNameExp">当前列是否要总计</param>
         /// <param name="isTotal">当前列是否是统计列</param>
         /// <param name="subtotalColsExps">参与小计的列集合_乘法</param>
-        public static void SetCol_Summary<T>(this List<SourceGridDefineColumnItem> cols, Expression<Func<T, object>> colNameExp)
+        public static void SetCol_Summary<T>(this List<SGDefineColumnItem> cols, Expression<Func<T, object>> colNameExp)
         {
             MemberInfo minfo = colNameExp.GetMemberInfo();
             foreach (var item in cols)
@@ -560,7 +561,7 @@ namespace RUINORERP.UI.UCSourceGrid
         /// <param name="cols"></param>
         /// <param name="FormulaExp"></param>
         /// <param name="ResultColName"></param>
-        public static void SetCol_Formula<T>(this List<SourceGridDefineColumnItem> cols, Expression<Func<T, object>> FormulaExp, Expression<Func<T, object>> ResultColName, Expression<Func<T, object>> ConditionExpression = null)
+        public static void SetCol_Formula<T>(this List<SGDefineColumnItem> cols, Expression<Func<T, object>> FormulaExp, Expression<Func<T, object>> ResultColName, Expression<Func<T, object>> ConditionExpression = null)
         {
             CalculateFormula expStr = CalculateParser<T>.ParserString(FormulaExp);
             SetCalculateFormula(cols, ConditionExpression, ResultColName, expStr, FormulaExp.Body.ToString());
@@ -604,7 +605,7 @@ namespace RUINORERP.UI.UCSourceGrid
         /// <param name="FormulaExp">公式表达式</param>
         /// <param name="ResultColName">目标结果列</param>
         /// <param name="ConditionExpression">条件表达式，如果为真则执行计算</param>
-        public static void SetCol_Formula<T>(this List<SourceGridDefineColumnItem> cols, Expression<Func<T, T, object>> FormulaExp, Expression<Func<T, object>> ResultColName, Expression<Func<T, object>> ConditionExpression = null)
+        public static void SetCol_Formula<T>(this List<SGDefineColumnItem> cols, Expression<Func<T, T, object>> FormulaExp, Expression<Func<T, object>> ResultColName, Expression<Func<T, object>> ConditionExpression = null)
         {
             /*
             MemberInfo minfo = ResultColName.GetMemberInfo();
@@ -643,11 +644,11 @@ namespace RUINORERP.UI.UCSourceGrid
         /// <param name="FormulaExp">公式表达式</param>
         /// <param name="ResultColName">目标结果列</param>
         /// <param name="ConditionExpression">条件表达式，如果为真则执行计算</param>
-        private static void SetCalculateFormula<T>(this List<SourceGridDefineColumnItem> cols, Expression<Func<T, object>> ConditionExpression, Expression<Func<T, object>> ResultColName, CalculateFormula calculateFormula, string OriginalExpressionStr)
+        private static void SetCalculateFormula<T>(this List<SGDefineColumnItem> cols, Expression<Func<T, object>> ConditionExpression, Expression<Func<T, object>> ResultColName, CalculateFormula calculateFormula, string OriginalExpressionStr)
         {
 
             MemberInfo minfo = ResultColName.GetMemberInfo();
-            foreach (SourceGridDefineColumnItem item in cols)
+            foreach (SGDefineColumnItem item in cols)
             {
                 if (item.BelongingObjectType.Name != typeof(T).Name)
                 {
@@ -705,7 +706,7 @@ namespace RUINORERP.UI.UCSourceGrid
         /// <param name="FormulaExp">公式表达式</param>
         /// <param name="ResultColName">目标结果列</param>
         /// <param name="ConditionExpression">条件表达式，如果为真则执行计算</param>
-        public static void SetCol_Formula<T>(this List<SourceGridDefineColumnItem> cols, Expression<Func<T, T, T, object>> FormulaExp,
+        public static void SetCol_Formula<T>(this List<SGDefineColumnItem> cols, Expression<Func<T, T, T, object>> FormulaExp,
             Expression<Func<T, object>> ResultColName, Expression<Func<T, object>> ConditionExpression = null)
         {
             CalculateFormula expStr = CalculateParser<T>.ParserString(FormulaExp);
@@ -754,11 +755,11 @@ namespace RUINORERP.UI.UCSourceGrid
         /// <param name="FormulaExp">公式表达式</param>
         /// <param name="ResultColName">目标结果列</param>
         /// <param name="ConditionExpression">条件表达式，如果为真则执行计算</param>
-        private static void SetCalculateFormulaReverse<T>(this List<SourceGridDefineColumnItem> cols, Expression<Func<T, object>> ResultColName, CalculateFormula calculateFormula, string OriginalExpressionStr, Expression<Func<T, object>> ConditionExpression = null)
+        private static void SetCalculateFormulaReverse<T>(this List<SGDefineColumnItem> cols, Expression<Func<T, object>> ResultColName, CalculateFormula calculateFormula, string OriginalExpressionStr, Expression<Func<T, object>> ConditionExpression = null)
         {
 
             MemberInfo minfo = ResultColName.GetMemberInfo();
-            foreach (SourceGridDefineColumnItem item in cols)
+            foreach (SGDefineColumnItem item in cols)
             {
                 if (item.BelongingObjectType.Name != typeof(T).Name)
                 {
@@ -802,7 +803,7 @@ namespace RUINORERP.UI.UCSourceGrid
         }
 
 
-        public static void SetCol_FormulaReverse<T>(this List<SourceGridDefineColumnItem> cols, Expression<Func<T, object>> ConditionExpression, Expression<Func<T, object>> FormulaExp, Expression<Func<T, object>> ResultColName)
+        public static void SetCol_FormulaReverse<T>(this List<SGDefineColumnItem> cols, Expression<Func<T, object>> ConditionExpression, Expression<Func<T, object>> FormulaExp, Expression<Func<T, object>> ResultColName)
         {
             CalculateFormula expStr = CalculateParser<T>.ParserString(FormulaExp);
             SetCalculateFormulaReverse(cols, ResultColName, expStr, FormulaExp.Body.ToString(), ConditionExpression);
@@ -817,7 +818,7 @@ namespace RUINORERP.UI.UCSourceGrid
         /// <param name="FormulaExp">公式表达式</param>
         /// <param name="ResultColName">目标结果列</param>
         /// <param name="ConditionExpression">条件表达式，如果为真则执行计算</param>
-        public static void SetCol_FormulaReverse<T>(this List<SourceGridDefineColumnItem> cols, Expression<Func<T, object>> ConditionExpression, Expression<Func<T, T, object>> FormulaExp, Expression<Func<T, object>> ResultColName)
+        public static void SetCol_FormulaReverse<T>(this List<SGDefineColumnItem> cols, Expression<Func<T, object>> ConditionExpression, Expression<Func<T, T, object>> FormulaExp, Expression<Func<T, object>> ResultColName)
         {
             CalculateFormula expStr = CalculateParser<T>.ParserString(FormulaExp);
             SetCalculateFormulaReverse(cols, ResultColName, expStr, FormulaExp.Body.ToString(), ConditionExpression);
@@ -865,7 +866,7 @@ namespace RUINORERP.UI.UCSourceGrid
 
              }*/
         }
-        public static void SetCol_FormulaReverse<T>(this List<SourceGridDefineColumnItem> cols, Expression<Func<T, object>> ConditionExpression, Expression<Func<T, T, T, object>> FormulaExp, Expression<Func<T, object>> ResultColName)
+        public static void SetCol_FormulaReverse<T>(this List<SGDefineColumnItem> cols, Expression<Func<T, object>> ConditionExpression, Expression<Func<T, T, T, object>> FormulaExp, Expression<Func<T, object>> ResultColName)
         {
             CalculateFormula expStr = CalculateParser<T>.ParserString(FormulaExp);
             SetCalculateFormulaReverse(cols, ResultColName, expStr, FormulaExp.Body.ToString(), ConditionExpression);
@@ -875,7 +876,7 @@ namespace RUINORERP.UI.UCSourceGrid
 
 
 
-        public static void SetCol_Summary<T>(this SourceGridDefineColumnItem col, string colName)
+        public static void SetCol_Summary<T>(this SGDefineColumnItem col, string colName)
         {
             if (col.ColName == colName && col.BelongingObjectType.Name == typeof(T).Name)
             {
@@ -887,7 +888,7 @@ namespace RUINORERP.UI.UCSourceGrid
         /// <summary>
         /// 设置列的编辑器数据源 ,目前框架支持的是默认的产品主要部分，并且是目标列存在于公共产品部分的就会显示查询。这里手动可以指定
         /// </summary>
-        public static void SetCol_EditorDataSource<Source, Target>(this List<SourceGridDefineColumnItem> cols,
+        public static void SetCol_EditorDataSource<Source, Target>(this List<SGDefineColumnItem> cols,
             Expression<Func<Target, object>> colNameTargetExp, List<SourceToTargetMatchCol> sourceToTargetMatches)
         {
             MemberInfo minfoTarget = colNameTargetExp.GetMemberInfo();
@@ -905,7 +906,7 @@ namespace RUINORERP.UI.UCSourceGrid
         }
 
 
-        public static void SetCol_EditorDataSource(this SourceGridDefineColumnItem col, string colTargetName, List<SourceToTargetMatchCol> sourceToTargetMatches)
+        public static void SetCol_EditorDataSource(this SGDefineColumnItem col, string colTargetName, List<SourceToTargetMatchCol> sourceToTargetMatches)
         {
             if (col.ColName == colTargetName)
             {

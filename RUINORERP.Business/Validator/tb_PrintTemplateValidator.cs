@@ -41,8 +41,6 @@ namespace RUINORERP.Business
  RuleFor(tb_PrintTemplate =>tb_PrintTemplate.PrintConfigID).Must(CheckForeignKeyValueCanNull).WithMessage(":下拉选择值不正确。");
  RuleFor(tb_PrintTemplate =>tb_PrintTemplate.PrintConfigID).NotEmpty().When(x => x.PrintConfigID.HasValue);
 
- RuleFor(tb_PrintTemplate =>tb_PrintTemplate.Template_NO).MaximumLength(10).WithMessage("模板编号:不能超过最大长度,10.");
-
  RuleFor(tb_PrintTemplate =>tb_PrintTemplate.Template_Name).MaximumLength(50).WithMessage("模板名称:不能超过最大长度,50.");
 
  RuleFor(tb_PrintTemplate =>tb_PrintTemplate.BizType).NotEmpty().When(x => x.BizType.HasValue);

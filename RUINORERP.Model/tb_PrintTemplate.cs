@@ -65,20 +65,7 @@ namespace RUINORERP.Model
             SetProperty(ref _PrintConfigID, value);
                         }
         }
-
-        private string _Template_NO;
-        /// <summary>
-        /// 模板编号
-        /// </summary>
-        [AdvQueryAttribute(ColName = "Template_NO",ColDesc = "模板编号")] 
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "Template_NO" ,Length=20,IsNullable = true,ColumnDescription = "模板编号" )]
-        public string Template_NO
-        { 
-            get{return _Template_NO;}
-            set{
-            SetProperty(ref _Template_NO, value);
-                        }
-        }
+        
 
         private string _Template_Name;
         /// <summary>

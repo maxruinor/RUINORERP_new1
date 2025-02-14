@@ -105,7 +105,6 @@ namespace RUINORERP.UI.Report
             tb_PrintTemplate reportTemplate = new tb_PrintTemplate();
             reportTemplate.PrintConfigID = printConfig.PrintConfigID;
             reportTemplate.Template_Name = "新建";// frmnew.txtTemplateName.Text.Trim();
-            reportTemplate.Template_NO = "";//生成?
             if (reportTemplate.ID > 0)
             {
                 BusinessHelper.Instance.EditEntity(reportTemplate);

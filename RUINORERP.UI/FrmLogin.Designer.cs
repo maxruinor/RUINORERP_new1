@@ -55,19 +55,21 @@
             // 
             // lblpwd
             // 
-            this.lblpwd.Location = new System.Drawing.Point(101, 166);
+            this.lblpwd.Font = new System.Drawing.Font("宋体", 14.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.lblpwd.Location = new System.Drawing.Point(86, 164);
             this.lblpwd.Name = "lblpwd";
-            this.lblpwd.Size = new System.Drawing.Size(43, 14);
+            this.lblpwd.Size = new System.Drawing.Size(66, 29);
             this.lblpwd.TabIndex = 13;
-            this.lblpwd.Text = "密 码:";
+            this.lblpwd.Text = "密码:";
             // 
             // lblID
             // 
-            this.lblID.Location = new System.Drawing.Point(101, 114);
+            this.lblID.Font = new System.Drawing.Font("宋体", 14.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.lblID.Location = new System.Drawing.Point(86, 112);
             this.lblID.Name = "lblID";
-            this.lblID.Size = new System.Drawing.Size(43, 14);
+            this.lblID.Size = new System.Drawing.Size(66, 29);
             this.lblID.TabIndex = 12;
-            this.lblID.Text = "账 号:";
+            this.lblID.Text = "账号:";
             // 
             // chksaveIDpwd
             // 
@@ -135,6 +137,7 @@
             this.pictureBox1.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
             this.pictureBox1.TabIndex = 14;
             this.pictureBox1.TabStop = false;
+            this.pictureBox1.Visible = false;
             // 
             // errorProvider1
             // 

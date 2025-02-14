@@ -30,6 +30,7 @@ using RUINORERP.Model.Models;
 using RUINORERP.UI.AdvancedUIModule;
 using RUINORERP.UI.Common;
 using RUINORERP.UI.FormProperty;
+using RUINORERP.UI.PSI.PUR;
 using RUINORERP.UI.Report;
 using RUINORERP.UI.UControls;
 using RUINORERP.UI.UCSourceGrid;
@@ -130,6 +131,8 @@ namespace RUINORERP.UI.BaseForm
                             return;
                         }
                     }
+                    MainForm.Instance.AppContext.log.ActionName = "BaseBillQueryMC()";
+
                     toolStripButton结案.Visible = false;
                     foreach (var item in BaseToolStrip.Items)
                     {
@@ -1352,6 +1355,7 @@ namespace RUINORERP.UI.BaseForm
             }
             else
             {
+                MainForm.Instance.AppContext.log.ActionName = sender.ToString();
                 //先加载一遍缓存
                 var tableNames = MainForm.Instance.CacheInfoList.Keys.ToList();
                 foreach (var nextTableName in tableNames)

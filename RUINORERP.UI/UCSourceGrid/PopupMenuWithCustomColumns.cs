@@ -185,7 +185,6 @@ namespace RUINORERP.UI.UCSourceGrid
             if (sourceItem != null && targetItem != null && sourceItem != targetItem)
             {
                 MoveMenuItem(sourceItem, targetItem);
-                SynchronizeGridColumns();
             }
             ClearInsertIndicator();
         }
@@ -226,43 +225,7 @@ namespace RUINORERP.UI.UCSourceGrid
 
             contextMenuStrip1.Items.Remove(source);
             contextMenuStrip1.Items.Insert(targetIndex, source);
-
-            int tempOldIndex = 0;
-            tempOldIndex = ColumnDisplays.First(c => c.ColName == sourceCol.ColName).ColIndex;
-            int tempNewIndex = 0;
-            tempNewIndex = ColumnDisplays.First(c => c.ColName == targetCol.ColName).ColIndex;
             SynchronizeDefineColumns(source, target);
-            //旧的索引位置 改成新的索引位置，旧的会删除，新的会插入
-            //旧的索引位置 删除后旧的下面的所有+1上移一个位置
-            //for (int i = tempOldIndex; i < ColumnDisplays.Count(); i++)
-            //{
-            //    if (ColumnDisplays[i].ColIndex > tempOldIndex)
-            //    {
-            //        ColumnDisplays[i].ColIndex += 1;
-            //    }
-            //}
-
-            //插入位置是第一个
-            //if (targetIndex == 0)
-            //{
-            //    //新的索引位置 插入后新的下面的所有-1下移一个位置
-            //    for (int i = tempOldIndex; i < ColumnDisplays.Count(); i++)
-            //    {
-            //        if (ColumnDisplays[i].ColIndex == tempNewIndex + 1)
-            //        {
-            //            ColumnDisplays[i].ColIndex += 1;
-            //        }
-            //    }
-            //}
-
-            //ColumnDisplays.First(c=>c.ColName == sourceCol.ColName).ColIndex = targetIndex;
-            //ColumnDisplays.First(c => c.ColName == sourceCol.ColName).ColIndex = targetIndex;
-            // 同步数据源
-            //var data = items[sourceIndex];
-            //items.RemoveAt(sourceIndex);
-            //items.Insert(targetIndex > sourceIndex ? targetIndex - 1 : targetIndex, data);
-
-            SynchronizeGridColumns();
         }
 
 
@@ -400,39 +363,6 @@ namespace RUINORERP.UI.UCSourceGrid
                 sgdefine.grid.Columns.Add(item);
             }
 
-        }
-        private void SynchronizeGridColumns()
-        {
-            // 获取 ContextMenuStrip 的子项顺序
-            var menuItems = contextMenuStrip1.Items.Cast<ToolStripMenuItem>().ToList();
-
-            // 获取列的显示控制器列表
-            var columnDisplays = ColumnDisplays.ToList();
-
-            // 创建一个字典，用于快速查找列的索引
-            var columnDisplayDict = columnDisplays.ToDictionary(c => c.ColName, c => c);
-
-            // 更新 SourceGrid 的列顺序
-            foreach (ToolStripMenuItem menuItem in menuItems)
-            {
-                // 获取当前子项对应的列显示控制器
-                SGColDisplayHandler columnDisplay = menuItem.Tag as SGColDisplayHandler;
-
-                if (columnDisplay != null)
-                {
-                    // 更新列的索引
-                    columnDisplay.ColIndex = menuItems.IndexOf(menuItem);
-
-                    // 更新 SourceGrid 的列顺序
-                    if (sgdefine.grid != null && columnDisplay.ColIndex < sgdefine.grid.ColumnsCount)
-                    {
-                        sgdefine.grid.Columns[columnDisplay.ColIndex].Visible = columnDisplay.Visible;
-                    }
-                }
-            }
-
-            // 重新排列 SourceGrid 的列
-            sgdefine.grid.AutoSizeCells();
         }
         /// <summary>
         /// 保存了要控制的列  可以作废
@@ -579,9 +509,9 @@ namespace RUINORERP.UI.UCSourceGrid
             //要更新到配置中
             var colDisplay = (sender as ToolStripMenuItem).Tag as SGColDisplayHandler;
             colDisplay.Visible = (sender as ToolStripMenuItem).Checked;
-            sgdefine.grid.Columns[colDisplay.ColIndex].Visible = colDisplay.Visible;
-            ColumnDisplays.First(x => x.ColName == colDisplay.ColName && x.ColCaption == colDisplay.ColCaption)
-                .Visible = colDisplay.Visible;
+            sgdefine.grid.Columns.GetColumnInfo(colDisplay.UniqueId).Visible = colDisplay.Visible;
+            //ColumnDisplays.First(x => x.UniqueId == colDisplay.UniqueId)
+            //    .Visible = colDisplay.Visible;
             //Common.UIHelper.SaveColumnsList(ConfigColItems, _xmlfileName);
 
         }

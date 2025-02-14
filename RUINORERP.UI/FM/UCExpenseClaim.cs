@@ -471,6 +471,7 @@ namespace RUINORERP.UI.FM
                     var col = sgd[prop.Name];
                     if (col != null)
                     {
+                        int realIndex = grid1.Columns.GetColumnInfo(col.UniqueId).Index;
                         if (col.CustomFormat == CustomFormatType.WebPathImage)
                         {
                             //保存图片到本地临时目录，图片数据保存在grid1控件中，所以要循环控件的行，控件真实数据行以1为起始
@@ -481,19 +482,19 @@ namespace RUINORERP.UI.FM
                             }
                             for (int i = 1; i < totalRowsFlag; i++)
                             {
-                                var model = grid1[i, col.ColIndex].Model.FindModel(typeof(SourceGrid.Cells.Models.ValueImageWeb));
+                                var model = grid1[i, realIndex].Model.FindModel(typeof(SourceGrid.Cells.Models.ValueImageWeb));
                                 SourceGrid.Cells.Models.ValueImageWeb valueImageWeb = (SourceGrid.Cells.Models.ValueImageWeb)model;
 
-                                if (grid1[i, col.ColIndex].Value == null)
+                                if (grid1[i, realIndex].Value == null)
                                 {
                                     continue;
                                 }
                                 string fileName = string.Empty;
-                                if (grid1[i, col.ColIndex].Value.ToString().Contains(".jpg") && grid1[i, col.ColIndex].Value.ToString() == detail.GetPropertyValue(prop.Name).ToString())
+                                if (grid1[i, realIndex].Value.ToString().Contains(".jpg") && grid1[i, realIndex].Value.ToString() == detail.GetPropertyValue(prop.Name).ToString())
                                 {
-                                    fileName = grid1[i, col.ColIndex].Value.ToString();
+                                    fileName = grid1[i, realIndex].Value.ToString();
                                     //  fileName = System.IO.Path.Combine(Application.StartupPath + @"\temp\", fileName);
-                                    //if (grid1[i, col.ColIndex].Tag == null && valueImageWeb.CellImageBytes != null)
+                                    //if (grid1[i, realIndex].Tag == null && valueImageWeb.CellImageBytes != null)
                                     if (valueImageWeb.CellImageBytes != null)
                                     {
                                         //保存到本地
@@ -501,7 +502,7 @@ namespace RUINORERP.UI.FM
                                         //{
                                         //    //保存在本地临时目录
                                         //    ImageProcessor.SaveBytesAsImage(valueImageWeb.CellImageBytes, fileName);
-                                        //    grid1[i, col.ColIndex].Tag = ImageHashHelper.GenerateHash(valueImageWeb.CellImageBytes);
+                                        //    grid1[i, realIndex].Tag = ImageHashHelper.GenerateHash(valueImageWeb.CellImageBytes);
                                         //}
                                         //else
                                         //{

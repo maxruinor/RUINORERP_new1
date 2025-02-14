@@ -16,12 +16,32 @@ namespace RUINORERP.UI.UCSourceGrid
 {
     /// <summary>
     /// 单个列的定义
-    /// 这个列是SourceGrid的，在目前表格控件中，主要是单据明细。再加上公共部分和辅助显示部分。
+    /// 这个列是SourceGrid的，在目前表格控件中，主要是单据明细。
+    /// 再加上公共部分和辅助显示部分。
     /// 所以标记
+    /// 他会对应实际grid表格控件的列定义
     /// </summary>
     [Serializable]
     public class SGDefineColumnItem
     {
+        private string _UniqueId;
+        /// <summary>
+        /// 唯一标识符
+        /// 对应实际grid表格控件的列定义的唯一标识符
+        /// </summary>
+        public string UniqueId
+        {
+            get => _UniqueId;
+            set
+            {
+                _UniqueId = value;
+                if (this.DisplayController != null)
+                {
+                    DisplayController.UniqueId = value;
+                }
+            }
+        }
+
 
         /// <summary>
         /// 2025-02-12为了能自定义显示逻辑，所以这里增加一个控制器。
@@ -181,7 +201,8 @@ namespace RUINORERP.UI.UCSourceGrid
         /// <summary>
         ///  设置这个列永远不可见，权限也无法控制。目的是程序控制中要用到。比方产品详情的ID,单据明细ID
         /// </summary>
-        public bool NeverVisible { 
+        public bool NeverVisible
+        {
             get => neverVisible;
 
             set
@@ -313,14 +334,12 @@ namespace RUINORERP.UI.UCSourceGrid
             }
         }
 
-        public int ColIndex { get => colIndex;
+        public int ColIndex
+        {
+            get => colIndex;
             set
             {
                 colIndex = value;
-                if (this.DisplayController != null)
-                {
-                    DisplayController.ColIndex = value;
-                }
             }
         }
 

@@ -22,6 +22,7 @@ using Color = System.Drawing.Color;
 using RUINOR.WinFormsUI.CustomPictureBox;
 using static FastReport.Design.ToolWindows.DictionaryWindow;
 using SqlSugar;
+using MathNet.Numerics.LinearAlgebra.Factorization;
 
 namespace RUINORERP.UI.UCSourceGrid
 {
@@ -235,123 +236,6 @@ namespace RUINORERP.UI.UCSourceGrid
             int addRowIndex = int.Parse(item.Tag.ToString());
             SourceGridHelper sh = new SourceGridHelper();
             sh.DeleteRow(sgdefine, addRowIndex);
-            return;
-
-            //注意这里可能有顺序，先删除数据行的数据，不然下面grid.remove可能是变化的索引
-            sgdefine.BindingSourceLines.Remove(grid.Rows[addRowIndex].RowData);
-            grid.Rows.Remove(addRowIndex);
-
-            //
-            sgdefine.UseCalculateTotalValue(grid.Tag as SourceGridDefine);
-
-            grid.Selection.ResetSelection(true);
-
-            //插入一行新的空行
-            sh.InsertRow(grid, sgdefine, true);
-
-            //删除一行后。后面的行的索引都会变化。要重新处理一次，并且行号重新显示
-            foreach (GridRow row in grid.Rows)
-            {
-                //重新设置列行头跳过
-                if (row.Index == 0)
-                {
-                    continue;
-                }
-                if (grid.HasSummary)
-                {
-                    //排除总计行
-                    if (grid[row.Index, 0].Tag != null && grid[row.Index, 0].Tag.ToString() == "SummaryRow")
-                    {
-                        continue;
-                    }
-                }
-                grid[row.Index, 0].View.BackColor = Color.LightGreen;
-
-                //行头给右键菜单 不为空的才是已经设置过了。有正常数据的行
-                PopupMenuForRowHeader pop = grid[row.Index, 0].FindController<PopupMenuForRowHeader>();
-                if (pop == null)
-                {
-                    //没有设置过右键菜单的，非正常数据行
-                    grid[row.Index, 0].Value = row.Index;
-                    //先全部默认为紫色，再有正常数据的行再重新设置颜色为绿色
-                    grid[row.Index, 0].View.BackColor = sgdefine.RowHeadBackColor;
-                }
-                else
-                {
-                    grid[row.Index, 0].Controller.RemoveController(pop);
-                    PopupMenuForRowHeader menuController = new PopupMenuForRowHeader(row.Index, grid, sgdefine);
-                    grid[row.Index, 0].Controller.AddController(menuController);
-                    grid[row.Index, 0].Value = row.Index;
-                    //grid[row.Index, 0].View.BackColor = Color.LightGreen;
-                    //grid[row.Index, 0].View = new DevAge.Drawing.VisualElements.BackgroundLinearGradient(Color.ForestGreen, Color.White, 45);
-                }
-
-                if (row.RowData != null)
-                {
-                    //有数据行则为绿色
-                    var pk = sgdefine.DefineColumns.FirstOrDefault(c => c.IsPrimaryBizKeyColumn);
-                    if (pk != null)
-                    {
-                        var pkid = row.RowData.GetPropertyValue(pk.ColName);
-                        if (pkid.ToDecimal() > 0)
-                        {
-                            grid[row.Index, 0].View.BackColor = Color.LightGreen;
-                        }
-                        else
-                        {
-
-                        }
-                    }
-
-                }
-                else
-                {
-
-                }
-
-
-            }
-
-
-
-            //要更新总计行数据。实际这暂时是复制单据控制器里的代码。应该可以重构出一个公共的方法
-
-            #region  总计 总计列
-            if (grid.HasSummary)
-            {
-                foreach (SGDefineColumnItem col in sgdefine)
-                {
-                    if (col.Summary)
-                    {
-                        #region 总计其中一列
-                        decimal totalTemp = 0;
-                        //去掉首尾行
-                        for (int r = 1; r < grid.RowsCount - 1; r++)
-                        {
-                            if (grid[r, col.ColIndex].Value != null &&
-                                grid.Rows[r].RowData != null
-                                )
-                            {
-                                decimal CurrentTemp = 0;
-                                if (decimal.TryParse(grid[r, col.ColIndex].Value.ToString(), out CurrentTemp))
-                                {
-                                    totalTemp = CurrentTemp + totalTemp;
-
-                                }
-                            }
-                        }
-                        //最后一行
-                        grid[grid.RowsCount - 1, col.ColIndex].Value = totalTemp;
-                        #endregion
-                    }
-                }
-
-            }
-            #endregion
-
-            //强制重绘
-            grid.Refresh();
-
         }
 
         public void AddItems(KeyValuePair<string, SGDefineColumnItem> item)
@@ -594,6 +478,7 @@ namespace RUINORERP.UI.UCSourceGrid
             System.Windows.Forms.ToolStripMenuItem item = (System.Windows.Forms.ToolStripMenuItem)sender;
             SourceGridDefine _sgdefine = item.Tag as SourceGridDefine;
             SGDefineColumnItem selected = _sgdefine.DefineColumns.Find(c => c.ColName == "Selected");
+            int selectRealIndex = _sgdefine.grid.Columns.GetColumnInfo(selected.UniqueId).Index;
             if (selected != null)
             {
                 foreach (GridRow row in grid.Rows)
@@ -602,22 +487,22 @@ namespace RUINORERP.UI.UCSourceGrid
                     {
                         continue;
                     }
-                    GridColumn mColumn = grid.Columns[selected.ColIndex] as GridColumn;
+                    GridColumn mColumn = grid.Columns[selectRealIndex] as GridColumn;
                     if (mColumn != null)
                     {
                         string txt = sender.ToString();
                         switch (txt)
                         {
                             case "全选":
-                                grid[row.Index, selected.ColIndex].Value = true;
+                                grid[row.Index, selectRealIndex].Value = true;
                                 break;
                             case "全不选":
-                                grid[row.Index, selected.ColIndex].Value = false;
+                                grid[row.Index, selectRealIndex].Value = false;
                                 break;
-                            case "反选"://_sgdefine.grid.Columns[selected.ColIndex].
-                                if (grid[row.Index, selected.ColIndex].Value is Boolean bl)
+                            case "反选": 
+                                if (grid[row.Index, selectRealIndex].Value is Boolean bl)
                                 {
-                                    grid[row.Index, selected.ColIndex].Value = !bl;
+                                    grid[row.Index, selectRealIndex].Value = !bl;
                                 }
                                 break;
                             default:
@@ -730,6 +615,7 @@ namespace RUINORERP.UI.UCSourceGrid
             System.Windows.Forms.ToolStripMenuItem item = (System.Windows.Forms.ToolStripMenuItem)sender;
             SourceGridDefine _sgdefine = item.Tag as SourceGridDefine;
             SGDefineColumnItem selected = _sgdefine.DefineColumns.Find(c => c.ColName == "Selected");
+            int selectRealIndex = _sgdefine.grid.Columns.GetColumnInfo(selected.UniqueId).Index;
             if (selected != null)
             {
                 List<int> deleteRows = new List<int>();
@@ -739,7 +625,7 @@ namespace RUINORERP.UI.UCSourceGrid
                     {
                         continue;
                     }
-                    if (grid[row.Index, selected.ColIndex].Value is Boolean bl)
+                    if (grid[row.Index, selectRealIndex].Value is Boolean bl)
                     {
                         if (bl)
                         {
@@ -748,7 +634,7 @@ namespace RUINORERP.UI.UCSourceGrid
                     }
                 }
 
-                GridColumn mColumn = grid.Columns[selected.ColIndex] as GridColumn;
+                GridColumn mColumn = grid.Columns[selectRealIndex] as GridColumn;
                 if (mColumn != null)
                 {
                     string txt = sender.ToString();
@@ -760,7 +646,7 @@ namespace RUINORERP.UI.UCSourceGrid
                         case "显示多选":
                             if (selected != null)
                             {
-                                grid.Columns[selected.ColIndex].Visible = item.Checked;
+                                grid.Columns[selectRealIndex].Visible = item.Checked;
                                 MyMenu.Items.Find("删除选中行", true)[0].Visible = item.Checked;
                             }
                             else
@@ -768,7 +654,7 @@ namespace RUINORERP.UI.UCSourceGrid
                                 //没有实现选中列的功能，请在明细表加载时候处理指定选择列
                             }
                             break;
-                        case "反选"://_sgdefine.grid.Columns[selected.ColIndex].
+                        case "反选":
                             break;
                         default:
                             break;

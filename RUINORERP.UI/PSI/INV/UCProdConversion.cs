@@ -327,8 +327,12 @@ namespace RUINORERP.UI.PSI.INV
             if (vp.ProdDetailID > 0 && EditEntity.Employee_ID > 0)
             {
                 _SDetail.property_from = vp.prop;
-                int ColIndex = griddefine.DefineColumns.FirstOrDefault(c => c.ColName == nameof(tb_ProdConversionDetail.property_from)).ColIndex;
-                griddefine.grid[Position.Row, ColIndex].Value = _SDetail.property_from;
+                var Col = griddefine.grid.Columns.GetColumnInfo(griddefine.DefineColumns.FirstOrDefault(c => c.ColName == nameof(tb_ProdConversionDetail.property_from)).UniqueId);
+                if (Col!=null)
+                {
+                    griddefine.grid[Position.Row, Col.Index].Value = _SDetail.property_from;
+                }
+                
             }
         }
 

@@ -1358,16 +1358,18 @@ namespace RUINORERP.UI.MRP.BOM
                     _BOM_SDetail.UnitCost = vp.tb_bom_s.SelfProductionAllCosts == 0 ? vp.tb_bom_s.OutProductionAllCosts : vp.tb_bom_s.SelfProductionAllCosts;
                 }
 
-                int ColIndex = griddefine.DefineColumns.FirstOrDefault(c => c.ColName == nameof(tb_BOM_SDetail.UnitCost)).ColIndex;
-                griddefine.grid[Position.Row, ColIndex].Value = _BOM_SDetail.UnitCost;
-
+                var Col = griddefine.grid.Columns.GetColumnInfo(griddefine.DefineColumns.FirstOrDefault(c => c.ColName == nameof(tb_BOM_SDetail.UnitCost)).UniqueId);
+                if (Col != null)
+                {
+                    griddefine.grid[Position.Row, Col.Index].Value = _BOM_SDetail.UnitCost;
+                }
 
 
                 //Child_BOM_Node_ID 这个在明细中显示的是ID，没有使用外键关联显示，因为列名不一致。手动显示为配方名称
-                var cbni = griddefine.DefineColumns.FirstOrDefault(c => c.ColName == nameof(tb_BOM_SDetail.Child_BOM_Node_ID));
+                var cbni = griddefine.grid.Columns.GetColumnInfo(griddefine.DefineColumns.FirstOrDefault(c => c.ColName == nameof(tb_BOM_SDetail.Child_BOM_Node_ID)).UniqueId);
                 if (cbni != null)
                 {
-                    griddefine.grid[Position.Row, cbni.ColIndex].DisplayText = vp.tb_bom_s.BOM_Name;
+                    griddefine.grid[Position.Row, cbni.Index].DisplayText = vp.tb_bom_s.BOM_Name;
                 }
 
 

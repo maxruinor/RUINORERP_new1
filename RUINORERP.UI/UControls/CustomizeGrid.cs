@@ -193,7 +193,6 @@ namespace RUINORERP.UI.UControls
                     foreach (DataGridViewColumn dc in targetDataGridView.Columns)
                     {
                         ColDisplayController cdc = new ColDisplayController();
-                        cdc.GridKeyName = XmlFileName;
                         cdc.ColDisplayText = dc.HeaderText;
                         cdc.ColDisplayIndex = dc.DisplayIndex;
                         cdc.ColWidth = dc.Width;

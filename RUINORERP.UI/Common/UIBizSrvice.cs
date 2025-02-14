@@ -285,7 +285,6 @@ namespace RUINORERP.UI.Common
                 Graphics graphics = dataGridView.CreateGraphics();
                 originalColumnDisplays.ForEach(c =>
                 {
-                    c.GridKeyName = GridSourceType.Name;
                     // 计算文本宽度
                     float textWidth = UITools.CalculateTextWidth(c.ColDisplayText, dataGridView.Font, graphics);
                     c.ColWidth = (int)textWidth + 10; // 加上一些额外的空间
@@ -317,7 +316,6 @@ namespace RUINORERP.UI.Common
                 foreach (DataGridViewColumn dc in dataGridView.Columns)
                 {
                     ColDisplayController cdc = new ColDisplayController();
-                    cdc.GridKeyName = GridSourceType.Name;
                     cdc.ColDisplayText = dc.HeaderText;
                     cdc.ColDisplayIndex = dc.DisplayIndex;
                     cdc.ColWidth = dc.Width;
@@ -351,7 +349,7 @@ namespace RUINORERP.UI.Common
             foreach (var oldCol in originalColumnDisplays)
             {
                 // 检查existingConditions中是否已经存在相同的条件
-                if (!dataGridView.ColumnDisplays.Any(ec => ec.ColName == oldCol.ColName && ec.GridKeyName == GridSourceType.Name))
+                if (!dataGridView.ColumnDisplays.Any(ec => ec.ColName == oldCol.ColName))
                 {
                     // 如果不存在 
                     dataGridView.ColumnDisplays.Add(oldCol);
@@ -359,7 +357,7 @@ namespace RUINORERP.UI.Common
                 else
                 {
                     //更新一下标题
-                    var colset = dataGridView.ColumnDisplays.FirstOrDefault(ec => ec.ColName == oldCol.ColName && ec.GridKeyName == GridSourceType.Name);
+                    var colset = dataGridView.ColumnDisplays.FirstOrDefault(ec => ec.ColName == oldCol.ColName );
                     colset = oldCol;
                 }
             }
@@ -454,7 +452,6 @@ namespace RUINORERP.UI.Common
                 Graphics graphics = dataGridView.CreateGraphics();
                 originalColumnDisplays.ForEach(c =>
                 {
-                    c.GridKeyName = datasourceType.Name;
                     // 计算文本宽度
                     float textWidth = UITools.CalculateTextWidth(c.ColDisplayText, dataGridView.Font, graphics);
                     c.ColWidth = (int)textWidth + 10; // 加上一些额外的空间
@@ -471,7 +468,6 @@ namespace RUINORERP.UI.Common
                 foreach (DataGridViewColumn dc in dataGridView.Columns)
                 {
                     ColDisplayController cdc = new ColDisplayController();
-                    cdc.GridKeyName = datasourceType.Name;
                     cdc.ColDisplayText = dc.HeaderText;
                     cdc.ColDisplayIndex = dc.DisplayIndex;
                     cdc.ColWidth = dc.Width;
@@ -488,7 +484,7 @@ namespace RUINORERP.UI.Common
             foreach (var oldCol in originalColumnDisplays)
             {
                 // 检查existingConditions中是否已经存在相同的条件
-                if (!dataGridView.ColumnDisplays.Any(ec => ec.ColName == oldCol.ColName && ec.GridKeyName == datasourceType.Name))
+                if (!dataGridView.ColumnDisplays.Any(ec => ec.ColName == oldCol.ColName))
                 {
                     // 如果不存在 
                     dataGridView.ColumnDisplays.Add(oldCol);
@@ -496,7 +492,7 @@ namespace RUINORERP.UI.Common
                 else
                 {
                     //更新
-                    var colset = dataGridView.ColumnDisplays.FirstOrDefault(ec => ec.ColName == oldCol.ColName && ec.GridKeyName == datasourceType.Name);
+                    var colset = dataGridView.ColumnDisplays.FirstOrDefault(ec => ec.ColName == oldCol.ColName);
                     colset = oldCol;
                 }
             }
@@ -536,7 +532,6 @@ namespace RUINORERP.UI.Common
             Graphics graphics = dataGridView.CreateGraphics();
             ColumnDisplays.ForEach(c =>
             {
-                c.GridKeyName = GridSourceType.Name;
                 //计算文本宽度
                 float textWidth = UITools.CalculateTextWidth(c.ColDisplayText, dataGridView.Font, graphics);
                 c.ColWidth = (int)textWidth + 10; // 加上一些额外的空间

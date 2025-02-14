@@ -41,7 +41,8 @@ namespace RUINORERP.UI.BI
         public async override void BindData(BaseEntity entity, ActionStatus actionStatus = ActionStatus.无操作)
         {
             _EditEntity = entity as tb_CustomerVendor;
-
+            //默认不是专属客户，默认不是专属责任人。
+            _EditEntity.IsExclusive = false;
             if (_EditEntity.CustomerVendor_ID == 0)
             {
                 if (Text.Contains("其他"))
@@ -67,7 +68,7 @@ namespace RUINORERP.UI.BI
             }
 
             DataBindingHelper.BindData4Cmb<tb_CustomerVendorType>(entity, k => k.Type_ID, v => v.TypeName, txtType_ID);
-           
+
             DataBindingHelper.BindData4TextBox<tb_CustomerVendor>(entity, t => t.CVName, txtCVName, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_CustomerVendor>(entity, t => t.Contact, txtContact, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_CustomerVendor>(entity, t => t.Phone, txtPhone, BindDataType4TextBox.Text, false);
@@ -199,7 +200,7 @@ namespace RUINORERP.UI.BI
                 lblCustomer_id.Visible = true;
                 cmbCustomer_id.Visible = true;
                 txtIsCustomer.Checked = true;
-               
+
             }
             else
             {

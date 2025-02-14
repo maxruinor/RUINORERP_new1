@@ -29,7 +29,7 @@ namespace RUINORERP.UI.UControls
         /// <summary>
         /// 所属表格的唯一名称
         /// </summary>
-        public string GridKeyName { get; set; }
+        //public string GridKeyName { get; set; }
 
         /// <summary>
         /// 显示的文字
@@ -185,9 +185,8 @@ namespace RUINORERP.UI.UControls
                 return false;
 
             // 比较对象的属性值，根据业务需求选择合适的属性
-            return ColName == other.ColName && GridKeyName == other.GridKeyName;
+            return ColName == other.ColName && ColDisplayText == other.ColDisplayText;
         }
-
         // 重写 Equals 和 GetHashCode，确保两者保持一致
         public override bool Equals(object obj)
         {

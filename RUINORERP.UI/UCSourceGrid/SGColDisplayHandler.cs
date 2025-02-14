@@ -19,6 +19,12 @@ namespace RUINORERP.UI.UCSourceGrid
     [Serializable]
     public class SGColDisplayHandler : INotifyPropertyChanged, IEquatable<SGColDisplayHandler>
     {
+        /// <summary>
+        /// 唯一标识符
+        /// 对应实际grid表格控件的列定义的唯一标识符也对应他的上级SGDefineColumnItem的唯一标识符
+        /// 用于唯一标识一个列的定义
+        /// </summary>
+        public string UniqueId { get; set; }
 
         public string ColCaption
         {
@@ -49,19 +55,6 @@ namespace RUINORERP.UI.UCSourceGrid
         }
 
 
-        private int _ColIndex;
-
-        /// <summary>
-        /// 索引
-        /// </summary>
-        public int ColIndex
-        {
-            get { return _ColIndex; }
-            set
-            {
-                SetProperty(ref _ColIndex, value);
-            }
-        }
         /// <summary>
         /// 宽度
         /// </summary>

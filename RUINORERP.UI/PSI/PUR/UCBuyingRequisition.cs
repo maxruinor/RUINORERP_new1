@@ -39,7 +39,7 @@ using RUINORERP.Business.Processor;
 using RUINORERP.Model.CommonModel;
 using Krypton.Toolkit;
 using RUINORERP.UI.MRP.MP;
- 
+
 using RUINORERP.Business.CommService;
 
 
@@ -54,10 +54,10 @@ namespace RUINORERP.UI.PSI.PUR
         public UCBuyingRequisition()
         {
             InitializeComponent();
-            
+
 
         }
-   
+
         internal override void LoadDataToUI(object Entity)
         {
             ActionStatus actionStatus = ActionStatus.无操作;
@@ -131,7 +131,7 @@ namespace RUINORERP.UI.PSI.PUR
             DataBindingHelper.BindData4TextBox<tb_BuyingRequisition>(entity, t => t.Notes, txtNotes, BindDataType4TextBox.Text, false);
 
             DataBindingHelper.BindData4TextBox<tb_BuyingRequisition>(entity, t => t.ApprovalOpinions, txtApprovalOpinions, BindDataType4TextBox.Text, false);
-           
+
 
             DataBindingHelper.BindData4ControlByEnum<tb_BuyingRequisition>(entity, t => t.DataStatus, lblDataStatus, BindDataType4Enum.EnumName, typeof(Global.DataStatus));
             DataBindingHelper.BindData4ControlByEnum<tb_BuyingRequisition>(entity, t => t.ApprovalStatus, lblReview, BindDataType4Enum.EnumName, typeof(Global.ApprovalStatus));
@@ -150,7 +150,7 @@ namespace RUINORERP.UI.PSI.PUR
                 //权限允许
                 if ((true && entity.DataStatus == (int)DataStatus.草稿) || (true && entity.DataStatus == (int)DataStatus.新建))
                 {
-                    
+
                 }
 
 
@@ -171,7 +171,7 @@ namespace RUINORERP.UI.PSI.PUR
             //后面这些依赖于控件绑定的数据源和字段。所以要在绑定后执行。
             if (entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改)
             {
-                base.InitRequiredToControl(MainForm.Instance.AppContext.GetRequiredService <tb_BuyingRequisitionValidator> (), kryptonSplitContainer1.Panel1.Controls);
+                base.InitRequiredToControl(MainForm.Instance.AppContext.GetRequiredService<tb_BuyingRequisitionValidator>(), kryptonSplitContainer1.Panel1.Controls);
 
             }
 
@@ -764,6 +764,7 @@ namespace RUINORERP.UI.PSI.PUR
                 List<tb_BuyingRequisitionDetail> buyingRequisitionDetails = new List<tb_BuyingRequisitionDetail>();
                 Expression<Func<tb_BuyingRequisitionDetail, object>> expSelected = c => c.Selected;
                 SGDefineColumnItem selected = sgd.DefineColumns.Find(c => c.ColName == expSelected.GetMemberInfo().Name);
+                int selectRealIndex = sgd.grid.Columns.GetColumnInfo(selected.UniqueId).Index;
                 // List<int> SelectedRows = new List<int>();
                 if (selected != null && chkSplitRequisitionDetails.Checked)
                 {
@@ -774,7 +775,7 @@ namespace RUINORERP.UI.PSI.PUR
                         {
                             continue;
                         }
-                        if (grid1[row.Index, selected.ColIndex].Value is Boolean bl)
+                        if (grid1[row.Index, selectRealIndex].Value is Boolean bl)
                         {
                             if (bl)
                             {
@@ -881,9 +882,10 @@ namespace RUINORERP.UI.PSI.PUR
         private void ShowSelectedColumn()
         {
             SGDefineColumnItem selected = listCols.Find(c => c.ColName == "Selected");
+            int selectRealIndex = sgd.grid.Columns.GetColumnInfo(selected.UniqueId).Index;
             if (selected != null)
             {
-                grid1.Columns[selected.ColIndex].Visible = chkSplitRequisitionDetails.Checked;
+                grid1.Columns[selectRealIndex].Visible = chkSplitRequisitionDetails.Checked;
             }
         }
     }

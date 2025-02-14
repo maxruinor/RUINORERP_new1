@@ -520,8 +520,14 @@ namespace RUINORERP.UI.PSI.SAL
                 if (pr != null)
                 {
                     _SDetail.UnitPrice = pr.SalePrice;
-                    int ColIndex = griddefine.DefineColumns.FirstOrDefault(c => c.ColName == nameof(tb_SaleOrderDetail.UnitPrice)).ColIndex;
-                    griddefine.grid[Position.Row, ColIndex].Value = _SDetail.UnitPrice;
+
+                    var Col = griddefine.grid.Columns.GetColumnInfo(griddefine.DefineColumns.FirstOrDefault(c => c.ColName == nameof(tb_SaleOrderDetail.UnitPrice)).UniqueId);
+                    if (Col != null)
+                    {
+                        griddefine.grid[Position.Row, Col.Index].Value = _SDetail.UnitPrice;
+                    }
+
+                    
                 }
             }
         }

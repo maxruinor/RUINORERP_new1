@@ -463,10 +463,11 @@ namespace RUINORERP.UI.UCSourceGrid
                 #region 优化
                 foreach (SGDefineColumnItem dc in sgdefine.ToArray())
                 {
-                    SourceGrid.Position pt = new SourceGrid.Position(i, dc.ColIndex);
+                    int realIndex = grid1.Columns.GetColumnInfo(dc.UniqueId).Index;
+                    SourceGrid.Position pt = new SourceGrid.Position(i, realIndex);
                     SourceGrid.CellContext currContext = new SourceGrid.CellContext(dc.ParentGridDefine.grid, pt);
 
-                    //设置为可以编辑
+                    //设置为可以编辑行数
                     SetRowEditable(dc.ParentGridDefine.grid, new int[] { i }, dc.ParentGridDefine);
                     //如果行头，就添加右键删除菜单
                     if (dc.IsRowHeaderCol)
@@ -694,7 +695,8 @@ namespace RUINORERP.UI.UCSourceGrid
             {
                 foreach (SGDefineColumnItem dc in sgdefine.ToArray())
                 {
-                    SourceGrid.Position pt = new SourceGrid.Position(r, dc.ColIndex);
+                    int realIndex = grid1.Columns.GetColumnInfo(dc.UniqueId).Index;
+                    SourceGrid.Position pt = new SourceGrid.Position(r, realIndex);
                     SourceGrid.CellContext currContext = new SourceGrid.CellContext(dc.ParentGridDefine.grid, pt);
                     currContext.Value = null;
                     //如果是图片列。但不是总计行。则清空为平常的样式
@@ -1068,12 +1070,28 @@ namespace RUINORERP.UI.UCSourceGrid
             menuController.ColumnDisplays = displayHandlers;
             for (int i = 0; i < griddefine.Count; i++)
             {
+                //映射列唯一标识
+                griddefine[i].UniqueId = grid.Columns[i].UniqueId;
+                //重要：这时要更新DB加载过来的配置列中的唯一标识.因为新创建列时，重新生成了唯一标识。
+                displayHandlers.ForEach(
+                    d =>
+                    {
+                        if (d.ColCaption == griddefine[i].ColCaption && d.ColName == griddefine[i].ColName)
+                        {
+                            d.UniqueId = grid.Columns[i].UniqueId;
+                        }
+                    }
+                    );
+
+
+
+
                 griddefine[i].ParentGridDefine = griddefine;
                 if (griddefine[i].Summary)
                 {
                     grid.HasSummary = true;
                 }
-                
+
                 //HasHeader
                 SourceGrid.Cells.ColumnHeader columnHeader = new SourceGrid.Cells.ColumnHeader();
                 columnHeader.View = viewColumnHeader;
@@ -1084,13 +1102,9 @@ namespace RUINORERP.UI.UCSourceGrid
                 }
                 //暂时默认所有列不自动排序  如果排序则全乱了。总计 和提前插入的空白行都以及数据修改全乱
                 columnHeader.AutomaticSortEnabled = false;
-                grid.Columns[i].Tag=griddefine[i];
+                grid.Columns[i].Tag = griddefine[i];
                 //griddefine[i].ColIndex = i;
 
-                //if (griddefine[i].ColName == griddefine.DependQuery.TargetCol.TargetColumnName)
-                //{
-                //    griddefine.DependQuery.TargetCol.TargetColIndex = griddefine[i].ColIndex;
-                //}
                 ///控制列的可见性,这里设置为永远不可见，指定字段时
                 if (griddefine[i].NeverVisible)
                 {
@@ -1140,7 +1154,7 @@ namespace RUINORERP.UI.UCSourceGrid
 
                     menuController.OnColumnsVisible += delegate (KeyValuePair<string, SGDefineColumnItem> kv)
                     {
-                        grid.Columns[kv.Value.ColIndex].Visible = kv.Value.Visible;
+                       // grid.Columns[kv.Value.ColIndex].Visible = kv.Value.Visible;
                     };
                 }
                 if (columnHeader.Value.ToString() == "项")
@@ -1165,8 +1179,6 @@ namespace RUINORERP.UI.UCSourceGrid
                 //else //设置最后一列铺满整个grid
                 //    grid.Columns[i].Width = grid1.Width - otherColsWidth - 2 * i;
                 //==
-
-
 
                 //grid.Columns[i].Width = griddefine[i].width;
                 /*
@@ -1193,12 +1205,11 @@ namespace RUINORERP.UI.UCSourceGrid
 
             for (int i = 0; i < displayHandlers.Count; i++)
             {
-                if (displayHandlers[i].ColIndex >= 0)
-                {
-                    grid.Columns[displayHandlers[i].ColIndex].Width=displayHandlers[i].ColWidth;
-                    grid.Columns[displayHandlers[i].ColIndex].Visible = displayHandlers[i].Visible;
+             
+                    grid.Columns.GetColumnInfo(displayHandlers[i].UniqueId).Width = displayHandlers[i].ColWidth;
+                    grid.Columns.GetColumnInfo(displayHandlers[i].UniqueId).Visible = displayHandlers[i].Visible;
 
-                }
+               
             }
 
             #region 注册列宽的变化事件
@@ -1208,9 +1219,10 @@ namespace RUINORERP.UI.UCSourceGrid
             {
                 foreach (SGColDisplayHandler colDisplay in menuController.ColumnDisplays)
                 {
-                    if (colDisplay.ColIndex == e.Column.Index)
+                    if (colDisplay.UniqueId == e.Column.UniqueId)
                     {
-                        colDisplay.ColWidth = grid.Columns[e.Column.Index].Width;
+                        //colDisplay.ColWidth = grid.Columns[e.Column.Index].Width;
+                        colDisplay.ColWidth = e.Column.Width;
                     }
                 }
 
@@ -1222,12 +1234,13 @@ namespace RUINORERP.UI.UCSourceGrid
             SGDefineColumnItem selected = griddefine.DefineColumns.Find(c => c.ColName == "Selected");
             if (selected != null)
             {
+                int selectedIndex = grid.Columns.GetColumnInfo(selected.UniqueId).Index;
                 DevAge.Drawing.RectangleBorder border = new DevAge.Drawing.RectangleBorder(new DevAge.Drawing.BorderLine(Color.DarkGreen), new DevAge.Drawing.BorderLine(Color.DarkGreen));
                 SourceGrid.Cells.Views.CheckBox checkView = new SourceGrid.Cells.Views.CheckBox();
                 checkView.Background = new DevAge.Drawing.VisualElements.BackgroundLinearGradient(Color.ForestGreen, Color.White, 45);
                 checkView.Border = border;
                 selected.Width = 40;
-                grid.Columns[selected.ColIndex].Width = 40;
+                grid.Columns[selectedIndex].Width = 40;
                 // grid1[r, 2].View = checkView;
             }
             //if (grid.Tag is SourceGridDefine)
@@ -1293,7 +1306,7 @@ namespace RUINORERP.UI.UCSourceGrid
                 grid.Columns.SetWidth(0, 35);
             }
 
-
+            /* 大修改前的代码
             //Grid_Minerals.Columns[0].Width = 20; 某一列宽度
             //创建本列上所有的单元格的值等属性
             for (int i = 0; i < define.Count; i++)
@@ -1301,9 +1314,6 @@ namespace RUINORERP.UI.UCSourceGrid
 
                 if (define.HasRowHeader && i == 0)
                 {
-
-
-
                     //右键删除行的菜单
                     //PopupMenuForRowHeader menuController = new PopupMenuForRowHeader(addRowIndex, grid, define);
                     //行号
@@ -1533,6 +1543,243 @@ namespace RUINORERP.UI.UCSourceGrid
                 }
 
             }
+            */
+
+            //Grid_Minerals.Columns[0].Width = 20; 某一列宽度
+            //创建本列上所有的单元格的值等属性
+
+            for (int i = 0; i < define.Count; i++)
+            {
+                if (define.HasRowHeader && i == 0)
+                {
+                    //右键删除行的菜单
+                    //PopupMenuForRowHeader menuController = new PopupMenuForRowHeader(addRowIndex, grid, define);
+                    //行号
+                    //SourceGrid.Cells.RowHeader rh = new SourceGrid.Cells.RowHeader((row + 1).ToString());
+
+                    SourceGrid.Cells.RowHeader rh = new SourceGrid.Cells.RowHeader(null);
+                    CellBackColorAlternate viewRowHeader = new CellBackColorAlternate(define.RowHeadBackColor, define.RowHeadBackColor);
+                    rh.View = viewRowHeader;
+                    rh.View.TextAlignment = DevAge.Drawing.ContentAlignment.MiddleCenter;
+
+                    SourceGrid.Cells.Views.Cell rowHelderCellView = new SourceGrid.Cells.Views.Cell();
+                    //绿的背景渐变。只是不太好看。
+                    rowHelderCellView.Background = new DevAge.Drawing.VisualElements.BackgroundLinearGradient(Color.ForestGreen, Color.White, 45);
+                    //rh.View = rowHelderCellView;
+                    //rh.AddController(menuController);
+                    #region 自定义右键事件
+
+                    if (OnAddRightClick != null)
+                    {
+                        PopupMenuCustomize pmc = new PopupMenuCustomize(addRowIndex, grid, define);
+                        OnAddRightClick(pmc, new Position(addRowIndex, i));
+                        rh.AddController(pmc);
+                    }
+
+                    #endregion
+
+                    grid[addRowIndex, i] = rh;
+
+                    continue;
+                }
+                else
+                {
+
+                    //SourceGrid.Cells.Controllers.ToolTipText toolTipController = new SourceGrid.Cells.Controllers.ToolTipText();
+                    //toolTipController.ToolTipTitle = "ToolTip example";
+                    //toolTipController.ToolTipIcon = ToolTipIcon.Info;
+                    //toolTipController.IsBalloon = true;
+
+                    ////目前只加到要手输入的，非关联字段上
+                    //提示控制器
+                    SourceGrid.Cells.Controllers.ToolTipText toolTipController = new SourceGrid.Cells.Controllers.ToolTipText();
+                    //toolTipController.ToolTipTitle = "asdfad";
+                    //toolTipController.ToolTipIcon = ToolTipIcon.Info;
+                    //toolTipController.IsBalloon = true;
+
+                    //PictureViewerController pictureViewer = new PictureViewerController();
+
+                    //目前只加到要手输入的，非关联字段上
+                    CustomKeyEvent tabkeyController = new CustomKeyEvent();
+
+                    //Setup the controllers
+                    CellClickEvent clickController = new CellClickEvent();
+
+
+                    //Setup the controllers
+                    AdditionalEvent additionalController = new AdditionalEvent();
+
+                    BillOperateController billController = new BillOperateController(define);
+                    billController.OnValidateDataCell += (rowObj) =>
+                    {
+
+                    };
+
+                    billController.OnAddDataRow += (rowObj) =>
+                    {
+                        //添加默认值
+                        if (OnAddDataRow != null)
+                        {
+                            OnAddDataRow(rowObj);
+                        }
+                    };
+
+
+                    //目前认为是目标列才计算，并且 类型要为数字型
+                    if (define[i].Summary || define[i].CustomFormat == CustomFormatType.CurrencyFormat)
+                    {
+                        billController.OnCalculateColumnValue += (rowdata, CurrGridDefine, rowIndex) =>
+                        {
+                            if (rowdata != null && OnCalculateColumnValue != null)
+                            {
+                                OnCalculateColumnValue(rowdata, grid.Tag as SourceGridDefine, rowIndex);
+                            }
+                        };
+                    }
+
+                    //第二列起不是列头
+                    SourceGrid.Cells.Cell c = new SourceGrid.Cells.Cell(null);
+                    if (!RowReadonly)
+                    {
+                        //值
+                        if (!define[i].ReadOnly)
+                        {
+                            define[i].EditorForColumn.EnableEdit = RowReadonly;
+                            c = new SourceGrid.Cells.Cell(null, define[i].EditorForColumn);
+                        }
+                    }
+
+                    System.Reflection.PropertyInfo pi = null;
+                    Type newcolType;
+                    if (define[i].ColPropertyInfo == null)
+                    {
+                        newcolType = typeof(string);
+                    }
+                    else
+                    {
+                        pi = define[i].ColPropertyInfo;
+                        if (pi.PropertyType.IsGenericType && pi.PropertyType.GetGenericTypeDefinition() == typeof(Nullable<>))
+                        {
+                            newcolType = pi.PropertyType.GetGenericArguments()[0];
+                        }
+                        else
+                        {
+                            newcolType = pi.PropertyType;
+                        }
+                    }
+                    switch (newcolType.FullName)
+                    {
+
+                        case "System.Char":
+                        case "System.String":
+                            break;
+                        case "System.Guid":
+                            break;
+                        case "System.Decimal":
+                            c = new SourceGrid.Cells.Cell(null);
+                            //c = new SourceGrid.Cells.Cell(0, typeof(decimal));
+                            //c = new SourceGrid.Cells.Cell(88.2M);
+                            break;
+                        case "System.Int16":
+                        case "System.Int32":
+                        case "System.Int64":
+                            break;
+                        case "System.Byte[]":
+                            c = new SourceGrid.Cells.Image(null);
+                            c.View = new SourceGrid.Cells.Views.SingleImage();
+                            //PopupMenuForRemoteImageView popupMenu = new PopupMenuForRemoteImageView(c, define);
+                            //c.AddController(popupMenu);
+                            //c.AddController(pictureViewer);
+                            break;
+                        case "System.Boolean":
+                            c = new SourceGrid.Cells.CheckBox(null, true);
+                            if (RowReadonly)
+                            {
+                                c.Editor = null; //如果为空 是灰色无法编辑
+                            }
+                            if (define[i].ColName == "Selected")
+                            {
+                                c = new SourceGrid.Cells.Cell("");
+                                c.Value = null;
+                                c.Editor = null;
+                                c.View = define.ViewNormal;
+                            }
+                            break;
+                    }
+
+
+                    //处理图片列 ，的特殊情况
+                    #region 图片cell
+                    if (define[i].CustomFormat == CustomFormatType.WebPathImage)
+                    {
+                        c = new SourceGrid.Cells.ImageWebCell(null);
+                        c.View = new SourceGrid.Cells.Views.RemoteImageView();
+                        PopupMenuForRemoteImageView popupMenu = new PopupMenuForRemoteImageView(c, define);
+                        c.AddController(popupMenu);
+                    }
+                    if (define[i].CustomFormat == CustomFormatType.Image)
+                    {
+                        c = new SourceGrid.Cells.Image(null);
+                        c.View = new SourceGrid.Cells.Views.SingleImage();
+                        //PopupMenuForRemoteImageView popupMenu = new PopupMenuForRemoteImageView(c, define);
+                        //c.AddController(popupMenu);
+                        // c.AddController(pictureViewer);
+                    }
+                    #endregion
+
+                    if (!string.IsNullOrEmpty(define[i].ColCaption))
+                    {
+                        //c.ToolTipText = define[i].ToolTipText;
+                        c.ToolTipText = define[i].ColCaption;
+                        c.AddController(toolTipController);
+                    }
+                    if (!string.IsNullOrEmpty(define[i].FormatText))
+                    {
+
+                    }
+
+                    if (define[i].DefaultValue != null)
+                    {
+
+                    }
+
+                    //添加点击控制器
+                    c.AddController(clickController);
+
+                    c.AddController(additionalController);
+                    //验证？
+                    c.AddController(billController);
+
+                    if (define[i].GuideToTargetColumn)
+                    {
+                        c.AddController(tabkeyController);
+                    }
+
+                    if (newcolType.FullName == "System.Byte[]")
+                    {
+                        //  c.View = define.ImagesViewModel;
+                        c.View = define.ViewNormal;
+                    }
+                    else if (define[i].CustomFormat == CustomFormatType.CurrencyFormat)
+                    {
+                        c.View = define.ViewNormalMoney;
+                    }
+                    else
+                    {
+                        c.View = define.ViewNormal;
+                    }
+
+                    grid[addRowIndex, i] = c;
+                    //如果可空，默认显示空白
+                    if (pi.PropertyType.Name == "Nullable`1")
+                    {
+                        c.DisplayText = string.Empty;
+                    }
+                    grid.Rows[addRowIndex].Height = 20;
+
+                }
+
+            }
 
         }
 
@@ -1628,17 +1875,18 @@ namespace RUINORERP.UI.UCSourceGrid
                 {
                     if (col.Summary)
                     {
+                        int summaryColIndex = grid.Columns.GetColumnInfo(col.UniqueId).Index;
                         #region 总计其中一列
                         decimal totalTemp = 0;
                         //去掉首尾行
                         for (int r = 1; r < grid.RowsCount - 1; r++)
                         {
-                            if (grid[r, col.ColIndex].Value != null &&
+                            if (grid[r, summaryColIndex].Value != null &&
                                 grid.Rows[r].RowData != null
                                 )
                             {
                                 decimal CurrentTemp = 0;
-                                if (decimal.TryParse(grid[r, col.ColIndex].Value.ToString(), out CurrentTemp))
+                                if (decimal.TryParse(grid[r, summaryColIndex].Value.ToString(), out CurrentTemp))
                                 {
                                     totalTemp = CurrentTemp + totalTemp;
 
@@ -1646,7 +1894,7 @@ namespace RUINORERP.UI.UCSourceGrid
                             }
                         }
                         //最后一行
-                        grid[grid.RowsCount - 1, col.ColIndex].Value = totalTemp;
+                        grid[grid.RowsCount - 1, summaryColIndex].Value = totalTemp;
                         #endregion
                     }
                 }
@@ -1712,16 +1960,18 @@ namespace RUINORERP.UI.UCSourceGrid
             {
                 for (int c = cc; c < grid.Columns.Count; c++)
                 {
-                    if (define[c].ColName == "Selected")
+                    var newdefind = define.GetColDefine(grid[r, c].Column.UniqueId);
+                    if (newdefind.ColName == "Selected")
                     {
                         continue;
                     }
-                    grid[r, c].Column.Visible = define[c].Visible;
-                    if (!define[c].ReadOnly)
+
+                    grid[r, c].Column.Visible = newdefind.Visible;
+                    if (!newdefind.ReadOnly)
                     {
                         if (grid[r, c].Editor == null)
                         {
-                            grid[r, c].Editor = define[c].EditorForColumn;
+                            grid[r, c].Editor = newdefind.EditorForColumn;
                             if (grid[r, c].Editor != null)
                             {
                                 grid[r, c].Editor.EnableEdit = true;
@@ -2759,7 +3009,7 @@ namespace RUINORERP.UI.UCSourceGrid
                                                 foreach (var col in sttcol)
                                                 {
                                                     var coltarget = dci.ParentGridDefine[col.TargetToColName];
-                                                    int colIndex = coltarget.ColIndex;
+                                                    int colIndex = dci.ParentGridDefine.grid.Columns.GetColumnInfo(coltarget.UniqueId).Index;
                                                     Position position = new Position(_editor.EditPosition.Row, colIndex);
                                                     SetCellValueOnlySelf(coltarget, col.SourceColName, col.TargetToColName, position, proObj);
                                                 }
@@ -3324,7 +3574,9 @@ namespace RUINORERP.UI.UCSourceGrid
                             break;
                         }
                     }
-                    sgdefine.grid[rowindex, dc.ColIndex].Value = detail.GetPropertyValue(dc.ColName);
+                    int realIndex = sgdefine.grid.Columns.GetColumnInfo(dc.UniqueId).Index;
+                    sgdefine.grid[rowindex, realIndex].Value = detail.GetPropertyValue(dc.ColName);
+                    //sgdefine.grid[rowindex, dc.ColIndex].Value = detail.GetPropertyValue(dc.ColName);
                 }
             }
         }
@@ -3372,14 +3624,15 @@ namespace RUINORERP.UI.UCSourceGrid
             {
                 if (sgdefine.grid.Rows[row.Index].RowData != null)
                 {
-                    SourceGrid.CellContext processDefaultContext = new SourceGrid.CellContext(sgdefine.grid, new Position(row.Index, dc.ColIndex));
+                    int realIndex = sgdefine.grid.Columns.GetColumnInfo(dc.UniqueId).Index;
+                    SourceGrid.CellContext processDefaultContext = new SourceGrid.CellContext(sgdefine.grid, new Position(row.Index, realIndex));
                     var currentObj = sgdefine.grid.Rows[row.Index].RowData;
                     //设置为可以编辑
                     SetRowEditable(dc.ParentGridDefine.grid, new int[] { row.Index }, dc.ParentGridDefine);
                     if (TargetValue != null && TargetValue.IsNotEmptyOrNull())
                     {
                         currentObj.SetPropertyValue(colName, TargetValue);
-                        sgdefine.grid[row.Index, dc.ColIndex].Value = TargetValue;
+                        sgdefine.grid[row.Index, realIndex].Value = TargetValue;
                         if (dc.IsFKRelationColumn)
                         {
                             processDefaultContext.DisplayText = ShowFKColumnText(dc, TargetValue, sgdefine);
@@ -3390,11 +3643,11 @@ namespace RUINORERP.UI.UCSourceGrid
                                 break;
                             case CustomFormatType.PercentFormat:
                                 decimal pf = decimal.Parse(TargetValue.ToString());
-                                sgdefine.grid[row.Index, dc.ColIndex].Value = pf;
+                                sgdefine.grid[row.Index, realIndex].Value = pf;
                                 break;
                             case CustomFormatType.CurrencyFormat:
                                 decimal cf = decimal.Parse(TargetValue.ToString());
-                                sgdefine.grid[row.Index, dc.ColIndex].Value = cf;
+                                sgdefine.grid[row.Index, realIndex].Value = cf;
                                 break;
                             case CustomFormatType.DecimalPrecision:
                                 break;
@@ -3402,11 +3655,11 @@ namespace RUINORERP.UI.UCSourceGrid
                                 bool bl = TargetValue.ToBool();
                                 if (bl == true)
                                 {
-                                    sgdefine.grid[row.Index, dc.ColIndex].DisplayText = "是";
+                                    sgdefine.grid[row.Index, realIndex].DisplayText = "是";
                                 }
                                 else
                                 {
-                                    sgdefine.grid[row.Index, dc.ColIndex].DisplayText = "否";
+                                    sgdefine.grid[row.Index, realIndex].DisplayText = "否";
                                 }
                                 break;
                             case CustomFormatType.Image:
@@ -3415,9 +3668,9 @@ namespace RUINORERP.UI.UCSourceGrid
                             case CustomFormatType.WebPathImage:
                                 //tag中保存图片的path name
                                 currentObj.SetPropertyValue(colName, TargetValue);
-                                sgdefine.grid[row.Index, dc.ColIndex].Tag = TargetValue;
-                                sgdefine.grid[row.Index, dc.ColIndex].Value = TargetValue;
-                                sgdefine.grid[row.Index, dc.ColIndex].Editor.SetCellTagValue(processDefaultContext, TargetValue);
+                                sgdefine.grid[row.Index, realIndex].Tag = TargetValue;
+                                sgdefine.grid[row.Index, realIndex].Value = TargetValue;
+                                sgdefine.grid[row.Index, realIndex].Editor.SetCellTagValue(processDefaultContext, TargetValue);
                                 break;
                             default:
                                 break;
@@ -3435,21 +3688,26 @@ namespace RUINORERP.UI.UCSourceGrid
 
         /// <summary>
         /// 设置单元格的值,包含关联的值
+        /// 意思是在指定位置上，设置单元格的值。
         /// </summary>
-        /// <param name="dc">指定列</param>
-        /// <param name="p"></param>
+        /// <param name="dc">指定列,基准</param>
+        /// <param name="p">要找，如果顺序变了</param>
         /// <param name="rowObj"></param>
         /// <param name="isbatch"></param>
         /// <param name="isOnlyPointColumn">是否只设置指定列的值</param>
         public void SetCellValue(SGDefineColumnItem dc, SourceGrid.Position p, object rowObj, bool isbatch, bool isOnlyPointColumn = false)
         {
+            SourceGridDefine sgdefine = dc.ParentGridDefine;
+           var colInfo = sgdefine.grid.Columns.GetColumnInfo(dc.UniqueId);
+            
             if (p.Column == -1 || p.Row == -1)
             {
                 return;
             }
-            SourceGridDefine sgdefine = dc.ParentGridDefine;
+            
             foreach (SGDefineColumnItem item in sgdefine)
             {
+                int realIndex = sgdefine.grid.Columns.GetColumnInfo(item.UniqueId).Index;
                 if (isOnlyPointColumn)
                 {
                     if (item.ColName != dc.ColName)
@@ -3475,25 +3733,24 @@ namespace RUINORERP.UI.UCSourceGrid
                     if (sgdefine.grid.Rows[p.Row].RowData != null)
                     {
                         //设置目标的绑定数据值，就是产品ID
-                        SourceGrid.CellContext processDefaultContext = new SourceGrid.CellContext(sgdefine.grid, new Position(p.Row, item.ColIndex));
-
+                        SourceGrid.CellContext processDefaultContext = new SourceGrid.CellContext(sgdefine.grid, new Position(p.Row, realIndex));
                         var currentObj = sgdefine.grid.Rows[p.Row].RowData;
                         var cellDefaultValue = ReflectionHelper.GetPropertyValue(currentObj, item.ColName);
-
+                       
                         if (cellDefaultValue != null && !item.IsFKRelationColumn && cellDefaultValue.IsNotEmptyOrNull())
                         {
-                            sgdefine.grid[p.Row, item.ColIndex].Value = cellDefaultValue;
+                            sgdefine.grid[p.Row, realIndex].Value = cellDefaultValue;
                             switch (item.CustomFormat)
                             {
                                 case CustomFormatType.DefaultFormat:
                                     break;
                                 case CustomFormatType.PercentFormat:
                                     decimal pf = decimal.Parse(cellDefaultValue.ToString());
-                                    sgdefine.grid[p.Row, item.ColIndex].Value = pf;
+                                    sgdefine.grid[p.Row, realIndex].Value = pf;
                                     break;
                                 case CustomFormatType.CurrencyFormat:
                                     decimal cf = decimal.Parse(cellDefaultValue.ToString());
-                                    sgdefine.grid[p.Row, item.ColIndex].Value = cf;
+                                    sgdefine.grid[p.Row, realIndex].Value = cf;
                                     break;
                                 case CustomFormatType.DecimalPrecision:
                                     break;
@@ -3501,11 +3758,11 @@ namespace RUINORERP.UI.UCSourceGrid
                                     bool bl = cellDefaultValue.ToBool();
                                     if (bl == true)
                                     {
-                                        sgdefine.grid[p.Row, item.ColIndex].DisplayText = "是";
+                                        sgdefine.grid[p.Row, realIndex].DisplayText = "是";
                                     }
                                     else
                                     {
-                                        sgdefine.grid[p.Row, item.ColIndex].DisplayText = "否";
+                                        sgdefine.grid[p.Row, realIndex].DisplayText = "否";
                                     }
                                     break;
                                 case CustomFormatType.Image:
@@ -3522,19 +3779,19 @@ namespace RUINORERP.UI.UCSourceGrid
                         //针对特殊的选择列，用一个控制器来给行对象值。
                         if (item.ColName == "Selected")
                         {
-                            sgdefine.grid[p.Row, item.ColIndex].Editor = item.EditorForColumn;
-                            sgdefine.grid[p.Row, item.ColIndex].Editor.EnableEdit = true;
-                            sgdefine.grid[p.Row, item.ColIndex] = new SourceGrid.Cells.CheckBox(null, false);
-                            if (sgdefine.grid[p.Row, item.ColIndex].Editor != null)
+                            sgdefine.grid[p.Row, realIndex].Editor = item.EditorForColumn;
+                            sgdefine.grid[p.Row, realIndex].Editor.EnableEdit = true;
+                            sgdefine.grid[p.Row, realIndex] = new SourceGrid.Cells.CheckBox(null, false);
+                            if (sgdefine.grid[p.Row, realIndex].Editor != null)
                             {
-                                if (sgdefine.grid[p.Row, item.ColIndex].FindController(typeof(SelectedForCheckBoxController)) == null)
+                                if (sgdefine.grid[p.Row, realIndex].FindController(typeof(SelectedForCheckBoxController)) == null)
                                 {
                                     SelectedForCheckBoxController SeletedController = new SelectedForCheckBoxController("Seleted", sgdefine);
                                     SeletedController.OnValidateDataCell += (MycurrentObj) =>
                                     {
 
                                     };
-                                    sgdefine.grid[p.Row, item.ColIndex].AddController(SeletedController);
+                                    sgdefine.grid[p.Row, realIndex].AddController(SeletedController);
                                 }
 
                             }
@@ -3558,16 +3815,16 @@ namespace RUINORERP.UI.UCSourceGrid
                                     {
                                         ReflectionHelper.SetPropertyValue(setcurrentObj, item.ColName, item.DefaultValue);
                                     }
-                                    sgdefine.grid[p.Row, item.ColIndex].DisplayText = string.Format("{0:yyyy-MM-dd}", item.DefaultValue);
+                                    sgdefine.grid[p.Row, realIndex].DisplayText = string.Format("{0:yyyy-MM-dd}", item.DefaultValue);
                                 }
 
                             }
 
                             if (item.CustomFormat == CustomFormatType.CurrencyFormat)
                             {
-                                sgdefine.grid[p.Row, item.ColIndex].DisplayText = string.Format("{0:C}", item.DefaultValue);
+                                sgdefine.grid[p.Row, realIndex].DisplayText = string.Format("{0:C}", item.DefaultValue);
                             }
-                            sgdefine.grid[p.Row, item.ColIndex].Value = item.DefaultValue;
+                            sgdefine.grid[p.Row, realIndex].Value = item.DefaultValue;
                         }
 
 
@@ -3584,11 +3841,12 @@ namespace RUINORERP.UI.UCSourceGrid
 
                                 var newTagetValue = ReflectionHelper.GetPropertyValue(rowObj, qtc.Key);
                                 //公共部分。只是显示用来看
-                                sgdefine.grid[p.Row, item.ColIndex].Value = newTagetValue;
+                                sgdefine.grid[p.Row, realIndex].Value = newTagetValue;
 
                                 //目标存于明细中。是保存进数据库的
+                                int newTargetIndex= sgdefine.grid.Columns.GetColumnInfo(qtc.Value.UniqueId).Index;
                                 ReflectionHelper.SetPropertyValue(currentObj, qtc.Value.ColName, newTagetValue);
-                                sgdefine.grid[p.Row, qtc.Value.ColIndex].Value = newTagetValue;
+                                sgdefine.grid[p.Row, newTargetIndex].Value = newTagetValue;
 
                             }
                         }
@@ -3601,8 +3859,9 @@ namespace RUINORERP.UI.UCSourceGrid
 
                     continue;
                 }
+
                 #region 设置表格UI中的其他关联列的值
-                SourceGrid.Position pt = new Position(p.Row, item.ColIndex);
+                SourceGrid.Position pt = new Position(p.Row, realIndex);
                 SourceGrid.CellContext processContext = new SourceGrid.CellContext(sgdefine.grid, pt);
                 string displaytxt = string.Empty;
                 object newValue = string.Empty;
@@ -3647,14 +3906,15 @@ namespace RUINORERP.UI.UCSourceGrid
                         if (sgdefine.grid.Rows[pt.Row].RowData != null)
                         {
                             //公共部分。只是显示用来看
-                            sgdefine.grid[pt.Row, item.ColIndex].Value = newValue;
+                            sgdefine.grid[pt.Row, realIndex].Value = newValue;
 
                             //设置目标的绑定数据值，就是产品ID
                             var currentObj = sgdefine.grid.Rows[pt.Row].RowData;
 
                             //目标存于明细中。是保存进数据库的
+                            int newTargetIndex = sgdefine.grid.Columns.GetColumnInfo(sgdefine.PointToColumnPairList[item].UniqueId).Index;
                             ReflectionHelper.SetPropertyValue(currentObj, sgdefine.PointToColumnPairList[item].ColName, newValue);
-                            sgdefine.grid[pt.Row, sgdefine.PointToColumnPairList[item].ColIndex].Value = newValue;
+                            sgdefine.grid[pt.Row, newTargetIndex].Value = newValue;
 
                         }
                     }
@@ -3715,8 +3975,9 @@ namespace RUINORERP.UI.UCSourceGrid
 
             if (sgdefine.grid.Rows[p.Row].RowData != null)
             {
+                int realIndex = sgdefine.grid.Columns.GetColumnInfo(dc.UniqueId).Index;
                 //设置目标的绑定数据值，就是产品ID
-                SourceGrid.CellContext processDefaultContext = new SourceGrid.CellContext(sgdefine.grid, new Position(p.Row, dc.ColIndex));
+                SourceGrid.CellContext processDefaultContext = new SourceGrid.CellContext(sgdefine.grid, new Position(p.Row, realIndex));
 
                 var currentObj = sgdefine.grid.Rows[p.Row].RowData;
                 var cellOldValue = ReflectionHelper.GetPropertyValue(currentObj, toColName);
@@ -3724,7 +3985,7 @@ namespace RUINORERP.UI.UCSourceGrid
 
                 if (cellNewValue != null && cellNewValue.IsNotEmptyOrNull() && !cellOldValue.Equals(cellNewValue))
                 {
-                    sgdefine.grid[p.Row, dc.ColIndex].Value = cellNewValue;
+                    sgdefine.grid[p.Row, realIndex].Value = cellNewValue;
                     sgdefine.grid.Rows[p.Row].RowData.SetPropertyValue(toColName, cellNewValue);
                     switch (dc.CustomFormat)
                     {
@@ -3732,11 +3993,11 @@ namespace RUINORERP.UI.UCSourceGrid
                             break;
                         case CustomFormatType.PercentFormat:
                             decimal pf = decimal.Parse(cellNewValue.ToString());
-                            sgdefine.grid[p.Row, dc.ColIndex].Value = pf;
+                            sgdefine.grid[p.Row, realIndex].Value = pf;
                             break;
                         case CustomFormatType.CurrencyFormat:
                             decimal cf = decimal.Parse(cellNewValue.ToString());
-                            sgdefine.grid[p.Row, dc.ColIndex].Value = cf;
+                            sgdefine.grid[p.Row, realIndex].Value = cf;
                             break;
                         case CustomFormatType.DecimalPrecision:
                             break;
@@ -3744,11 +4005,11 @@ namespace RUINORERP.UI.UCSourceGrid
                             bool bl = cellNewValue.ToBool();
                             if (bl == true)
                             {
-                                sgdefine.grid[p.Row, dc.ColIndex].DisplayText = "是";
+                                sgdefine.grid[p.Row, realIndex].DisplayText = "是";
                             }
                             else
                             {
-                                sgdefine.grid[p.Row, dc.ColIndex].DisplayText = "否";
+                                sgdefine.grid[p.Row, realIndex].DisplayText = "否";
                             }
                             break;
                         case CustomFormatType.Image:
@@ -3781,16 +4042,16 @@ namespace RUINORERP.UI.UCSourceGrid
                             {
                                 ReflectionHelper.SetPropertyValue(setcurrentObj, dc.ColName, dc.DefaultValue);
                             }
-                            sgdefine.grid[p.Row, dc.ColIndex].DisplayText = string.Format("{0:yyyy-MM-dd}", dc.DefaultValue);
+                            sgdefine.grid[p.Row, realIndex].DisplayText = string.Format("{0:yyyy-MM-dd}", dc.DefaultValue);
                         }
 
                     }
 
                     if (dc.CustomFormat == CustomFormatType.CurrencyFormat)
                     {
-                        sgdefine.grid[p.Row, dc.ColIndex].DisplayText = string.Format("{0:C}", dc.DefaultValue);
+                        sgdefine.grid[p.Row, realIndex].DisplayText = string.Format("{0:C}", dc.DefaultValue);
                     }
-                    sgdefine.grid[p.Row, dc.ColIndex].Value = dc.DefaultValue;
+                    sgdefine.grid[p.Row, realIndex].Value = dc.DefaultValue;
                 }
 
             }

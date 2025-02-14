@@ -12,6 +12,8 @@ namespace SourceGrid
 	
 	public class GridColumn : ColumnInfo
 	{
+
+
 		public GridColumn(Grid grid)
 			: base(grid)
 		{

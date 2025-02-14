@@ -375,14 +375,10 @@ namespace RUINORERP.UI.UCSourceGrid
                 {
                     foreach (var item in col.ParentGridDefine.grid.Rows)
                     {
-                        if (col.ParentGridDefine.grid[item.Index, col.ColIndex] == null)
+                        int realIndex = col.ParentGridDefine.grid.Columns.GetColumnInfo(col.UniqueId).Index;
+                        if (col.ParentGridDefine.grid[item.Index, realIndex] == null)
                         {
                             continue;
-                        }
-
-                        if (col.ParentGridDefine.grid[item.Index, col.ColIndex].Editor != null)
-                        {
-
                         }
 
                         if (col.EditorForColumn != null)
@@ -510,15 +506,17 @@ namespace RUINORERP.UI.UCSourceGrid
                     {
                         foreach (var item in col.ParentGridDefine.grid.Rows)
                         {
+                           
                             if (col.EditorForColumn != null)
                             {
+                                int realIndex = col.ParentGridDefine.grid.Columns.GetColumnInfo(col.UniqueId).Index;
                                 col.EditorForColumn.EnableEdit = true;
-                                if (col.ParentGridDefine.grid[item.Index, col.ColIndex].Editor == null)
+                                if (col.ParentGridDefine.grid[item.Index, realIndex].Editor == null)
                                 {
-                                    if (col.ParentGridDefine.grid[item.Index, col.ColIndex].Editor == null)
+                                    if (col.ParentGridDefine.grid[item.Index, realIndex].Editor == null)
                                     {
-                                        col.ParentGridDefine.grid[item.Index, col.ColIndex].Editor = col.EditorForColumn;
-                                        col.ParentGridDefine.grid[item.Index, col.ColIndex].Editor.EnableEdit = true;
+                                        col.ParentGridDefine.grid[item.Index, realIndex].Editor = col.EditorForColumn;
+                                        col.ParentGridDefine.grid[item.Index, realIndex].Editor.EnableEdit = true;
                                     }
                                 }
                             }

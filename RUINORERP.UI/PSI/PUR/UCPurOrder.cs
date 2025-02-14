@@ -271,7 +271,7 @@ namespace RUINORERP.UI.PSI.PUR
             listCols.SetCol_ReadOnly<tb_PurOrderDetail>(c => c.IncludingTax);
             listCols.SetCol_ReadOnly<tb_PurOrderDetail>(c => c.DeliveredQuantity);
             listCols.SetCol_ReadOnly<tb_PurOrderDetail>(c => c.TotalReturnedQty);
-            
+
             //listCols.SetCol_ReadOnly<ProductSharePart>(c => c.Location_ID);
 
 
@@ -358,8 +358,12 @@ namespace RUINORERP.UI.PSI.PUR
                 if (pr != null)
                 {
                     _SDetail.UnitPrice = pr.PurPrice;
-                    int ColIndex = griddefine.DefineColumns.FirstOrDefault(c => c.ColName == nameof(tb_PurOrderDetail.UnitPrice)).ColIndex;
-                    griddefine.grid[Position.Row, ColIndex].Value = _SDetail.UnitPrice;
+                    var Col = griddefine.grid.Columns.GetColumnInfo(griddefine.DefineColumns.FirstOrDefault(c => c.ColName == nameof(tb_PurOrderDetail.UnitPrice)).UniqueId);
+                    if (Col != null)
+                    {
+                        griddefine.grid[Position.Row, Col.Index].Value = _SDetail.UnitPrice;
+                    }
+
                 }
             }
         }
@@ -557,8 +561,8 @@ namespace RUINORERP.UI.PSI.PUR
 
         tb_PurOrderController<tb_PurOrder> ctr = Startup.GetFromFac<tb_PurOrderController<tb_PurOrder>>();
 
-    
-     
+
+
 
         /// <summary>
         /// 结案

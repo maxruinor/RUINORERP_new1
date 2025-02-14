@@ -1677,11 +1677,12 @@ namespace RUINORERP.UI.BaseForm
             {
                 foreach (var col in ImgCols)
                 {
-                    if (grid[i, col.ColIndex].Value == null)
+                    int realIndex = grid.Columns.GetColumnInfo(col.UniqueId).Index;
+                    if (grid[i, realIndex].Value == null)
                     {
                         continue;
                     }
-                    var model = grid[i, col.ColIndex].Model.FindModel(typeof(SourceGrid.Cells.Models.ValueImageWeb));
+                    var model = grid[i, realIndex].Model.FindModel(typeof(SourceGrid.Cells.Models.ValueImageWeb));
                     SourceGrid.Cells.Models.ValueImageWeb valueImageWeb = (SourceGrid.Cells.Models.ValueImageWeb)model;
                     //比较是否更新了图片数据
                     string newhash = valueImageWeb.GetImageNewHash();
@@ -1690,7 +1691,7 @@ namespace RUINORERP.UI.BaseForm
                         #region 需要上传
 
                         if (!valueImageWeb.GetImageoldHash().Equals(newhash, StringComparison.OrdinalIgnoreCase)
-                        && grid[i, col.ColIndex].Value.ToString() == valueImageWeb.CellImageHashName)
+                        && grid[i, realIndex].Value.ToString() == valueImageWeb.CellImageHashName)
                         {
                             string oldfileName = valueImageWeb.GetOldRealfileName();
                             string newfileName = valueImageWeb.GetNewRealfileName();
@@ -1706,10 +1707,10 @@ namespace RUINORERP.UI.BaseForm
                             if (uploadRsult.Contains("UploadSuccessful"))
                             {
                                 valueImageWeb.UpdateImageName(newhash);
-                                grid[i, col.ColIndex].Value = valueImageWeb.CellImageHashName;
+                                grid[i, realIndex].Value = valueImageWeb.CellImageHashName;
 
                                 string detailPKName = UIHelper.GetPrimaryKeyColName(typeof(C));
-                                object PKValue = grid[i, col.ColIndex].Row.RowData.GetPropertyValue(detailPKName);
+                                object PKValue = grid[i, realIndex].Row.RowData.GetPropertyValue(detailPKName);
                                 var detail = Details.Where(x => x.GetPropertyValue(detailPKName).ToString().Equals(PKValue.ToString())).FirstOrDefault();
                                 detail.SetPropertyValue(col.ColName, valueImageWeb.CellImageHashName);
                                 rs = true;

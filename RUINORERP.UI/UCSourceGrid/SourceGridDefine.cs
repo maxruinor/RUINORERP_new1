@@ -35,7 +35,13 @@ namespace RUINORERP.UI.UCSourceGrid
     /// </summary>
     public class SourceGridDefine : ArrayList
     {
+        public SGDefineColumnItem GetColDefine(string UniqueId)
+        {
+            //return this.Cast<SGDefineColumnItem>().FirstOrDefault();
+            return DefineColumns.FirstOrDefault(c => c.UniqueId == UniqueId);
 
+
+        }
         /// <summary>
         /// 保存主子表中的主表数据
         /// </summary>
@@ -364,7 +370,7 @@ namespace RUINORERP.UI.UCSourceGrid
 
 
         public SourceGridDefine(SourceGrid.Grid _grid, List<SGDefineColumnItem> DataColList, bool hasRowHeader)
-        {
+            {
             //行头文字居中
             RowHeaderWithData.TextAlignment = DevAge.Drawing.ContentAlignment.MiddleCenter;
             RowHeaderWithoutData.TextAlignment = DevAge.Drawing.ContentAlignment.MiddleCenter;
@@ -406,7 +412,7 @@ namespace RUINORERP.UI.UCSourceGrid
             SGDefineColumnItem[] cols = DataColList.ToArray();
             //这里设置的列是真实的数据列，不包括项行头那一行。所以标号索引从1开始，到多一列止，留0的位置 给行号列=》项
             for (int i = 0; i < cols.Length; i++)
-            {
+                {
                 cols[i].ColIndex = i;
                 //按标题数字计算列宽
                 if (cols[i].ColCaption.Length > 0)
@@ -725,7 +731,9 @@ namespace RUINORERP.UI.UCSourceGrid
                 //相当于当前的值清空。刚相关的也清空
                 foreach (SGDefineColumnItem item in this)
                 {
-                    SourceGrid.Position pt = new Position(currPosition.Row, item.ColIndex);
+                    int colRealIndex = this.grid.Columns.GetColumnInfo(item.UniqueId).Index;
+
+                    SourceGrid.Position pt = new Position(currPosition.Row, colRealIndex);
                     SourceGrid.CellContext processContext = new SourceGrid.CellContext(this.grid, pt);
                     if (item.CustomFormat == CustomFormatType.Image)
                     {
@@ -760,14 +768,16 @@ namespace RUINORERP.UI.UCSourceGrid
 
             foreach (SGDefineColumnItem item in this)
             {
+                int colRealIndex = this.grid.Columns.GetColumnInfo(item.UniqueId).Index;
+
                 //跳过自己列
-                if (currPosition.Column == item.ColIndex)
+                if (currPosition.Column == colRealIndex)
                 {
                     continue;
                 }
 
                 #region 设置表格UI中的其他关联列的值
-                SourceGrid.Position pt = new Position(currPosition.Row, item.ColIndex);
+                SourceGrid.Position pt = new Position(currPosition.Row, colRealIndex);
                 SourceGrid.CellContext processContext = new SourceGrid.CellContext(this.grid, pt);
 
                 var newotherVal = ReflectionHelper.GetPropertyValue(productSharePart, item.ColName);

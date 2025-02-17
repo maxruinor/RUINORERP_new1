@@ -9,7 +9,7 @@ using ApplicationContext = RUINORERP.Model.Context.ApplicationContext;
 
 namespace RUINORERP.Business.Security
 {
- 
+
     public interface IAuthorizeController
     {
         bool GetQueryPageLayoutCustomize();
@@ -134,6 +134,8 @@ namespace RUINORERP.Business.Security
         /// <summary>
         /// 查询页布局自定义
         ///  这个意思是？待定
+        ///  应该 是 是否允许自定义布局，
+        ///  如果为直则可以，如果为假则不行只会加载越级用户设置的默认的。
         /// </summary>
         /// <param name="context"></param>
         /// <returns>不限制返回false</returns>

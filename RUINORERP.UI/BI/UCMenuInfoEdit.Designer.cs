@@ -31,25 +31,6 @@
             this.btnOk = new Krypton.Toolkit.KryptonButton();
             this.btnCancel = new Krypton.Toolkit.KryptonButton();
             this.kryptonPanel1 = new Krypton.Toolkit.KryptonPanel();
-            this.lblModuleID = new Krypton.Toolkit.KryptonLabel();
-            this.cmbModuleID = new Krypton.Toolkit.KryptonComboBox();
-            this.lblMenuName = new Krypton.Toolkit.KryptonLabel();
-            this.txtMenuName = new Krypton.Toolkit.KryptonTextBox();
-            this.lblMenuType = new Krypton.Toolkit.KryptonLabel();
-            this.txtMenuType = new Krypton.Toolkit.KryptonTextBox();
-            this.lblBIBaseForm = new Krypton.Toolkit.KryptonLabel();
-            this.txtBIBaseForm = new Krypton.Toolkit.KryptonTextBox();
-            this.lblBizType = new Krypton.Toolkit.KryptonLabel();
-            this.txtBizType = new Krypton.Toolkit.KryptonTextBox();
-            this.lblUIType = new Krypton.Toolkit.KryptonLabel();
-            this.txtUIType = new Krypton.Toolkit.KryptonTextBox();
-            this.lblCaptionCN = new Krypton.Toolkit.KryptonLabel();
-            this.txtCaptionCN = new Krypton.Toolkit.KryptonTextBox();
-            this.lblCaptionEN = new Krypton.Toolkit.KryptonLabel();
-            this.txtCaptionEN = new Krypton.Toolkit.KryptonTextBox();
-            this.lblFormName = new Krypton.Toolkit.KryptonLabel();
-            this.txtFormName = new Krypton.Toolkit.KryptonTextBox();
-            this.txtClassPath = new Krypton.Toolkit.KryptonTextBox();
             this.lblClassPath = new Krypton.Toolkit.KryptonLabel();
             this.lblEntityName = new Krypton.Toolkit.KryptonLabel();
             this.txtEntityName = new Krypton.Toolkit.KryptonTextBox();
@@ -71,6 +52,25 @@
             this.txtHotKey = new Krypton.Toolkit.KryptonTextBox();
             this.lblDefaultLayout = new Krypton.Toolkit.KryptonLabel();
             this.txtDefaultLayout = new Krypton.Toolkit.KryptonTextBox();
+            this.lblModuleID = new Krypton.Toolkit.KryptonLabel();
+            this.cmbModuleID = new Krypton.Toolkit.KryptonComboBox();
+            this.lblMenuName = new Krypton.Toolkit.KryptonLabel();
+            this.txtMenuName = new Krypton.Toolkit.KryptonTextBox();
+            this.lblMenuType = new Krypton.Toolkit.KryptonLabel();
+            this.txtMenuType = new Krypton.Toolkit.KryptonTextBox();
+            this.lblBIBaseForm = new Krypton.Toolkit.KryptonLabel();
+            this.txtBIBaseForm = new Krypton.Toolkit.KryptonTextBox();
+            this.lblBizType = new Krypton.Toolkit.KryptonLabel();
+            this.txtBizType = new Krypton.Toolkit.KryptonTextBox();
+            this.lblUIType = new Krypton.Toolkit.KryptonLabel();
+            this.txtUIType = new Krypton.Toolkit.KryptonTextBox();
+            this.lblCaptionCN = new Krypton.Toolkit.KryptonLabel();
+            this.txtCaptionCN = new Krypton.Toolkit.KryptonTextBox();
+            this.lblCaptionEN = new Krypton.Toolkit.KryptonLabel();
+            this.txtCaptionEN = new Krypton.Toolkit.KryptonTextBox();
+            this.lblFormName = new Krypton.Toolkit.KryptonLabel();
+            this.txtFormName = new Krypton.Toolkit.KryptonTextBox();
+            this.txtClassPath = new Krypton.Toolkit.KryptonTextBox();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel1)).BeginInit();
             this.kryptonPanel1.SuspendLayout();
@@ -145,158 +145,9 @@
             this.kryptonPanel1.Size = new System.Drawing.Size(744, 571);
             this.kryptonPanel1.TabIndex = 2;
             // 
-            // lblModuleID
-            // 
-            this.lblModuleID.Location = new System.Drawing.Point(69, 18);
-            this.lblModuleID.Name = "lblModuleID";
-            this.lblModuleID.Size = new System.Drawing.Size(36, 20);
-            this.lblModuleID.TabIndex = 11;
-            this.lblModuleID.Values.Text = "模块";
-            // 
-            // cmbModuleID
-            // 
-            this.cmbModuleID.DropDownWidth = 100;
-            this.cmbModuleID.IntegralHeight = false;
-            this.cmbModuleID.Location = new System.Drawing.Point(142, 14);
-            this.cmbModuleID.Name = "cmbModuleID";
-            this.cmbModuleID.Size = new System.Drawing.Size(100, 21);
-            this.cmbModuleID.TabIndex = 12;
-            // 
-            // lblMenuName
-            // 
-            this.lblMenuName.Location = new System.Drawing.Point(69, 43);
-            this.lblMenuName.Name = "lblMenuName";
-            this.lblMenuName.Size = new System.Drawing.Size(62, 20);
-            this.lblMenuName.TabIndex = 13;
-            this.lblMenuName.Values.Text = "菜单名称";
-            // 
-            // txtMenuName
-            // 
-            this.txtMenuName.Location = new System.Drawing.Point(142, 39);
-            this.txtMenuName.Multiline = true;
-            this.txtMenuName.Name = "txtMenuName";
-            this.txtMenuName.Size = new System.Drawing.Size(100, 21);
-            this.txtMenuName.TabIndex = 14;
-            // 
-            // lblMenuType
-            // 
-            this.lblMenuType.Location = new System.Drawing.Point(69, 68);
-            this.lblMenuType.Name = "lblMenuType";
-            this.lblMenuType.Size = new System.Drawing.Size(62, 20);
-            this.lblMenuType.TabIndex = 15;
-            this.lblMenuType.Values.Text = "菜单类型";
-            // 
-            // txtMenuType
-            // 
-            this.txtMenuType.Location = new System.Drawing.Point(142, 64);
-            this.txtMenuType.Name = "txtMenuType";
-            this.txtMenuType.Size = new System.Drawing.Size(100, 23);
-            this.txtMenuType.TabIndex = 16;
-            // 
-            // lblBIBaseForm
-            // 
-            this.lblBIBaseForm.Location = new System.Drawing.Point(69, 93);
-            this.lblBIBaseForm.Name = "lblBIBaseForm";
-            this.lblBIBaseForm.Size = new System.Drawing.Size(62, 20);
-            this.lblBIBaseForm.TabIndex = 17;
-            this.lblBIBaseForm.Values.Text = "注入基类";
-            // 
-            // txtBIBaseForm
-            // 
-            this.txtBIBaseForm.Location = new System.Drawing.Point(142, 89);
-            this.txtBIBaseForm.Name = "txtBIBaseForm";
-            this.txtBIBaseForm.Size = new System.Drawing.Size(100, 23);
-            this.txtBIBaseForm.TabIndex = 18;
-            // 
-            // lblBizType
-            // 
-            this.lblBizType.Location = new System.Drawing.Point(69, 118);
-            this.lblBizType.Name = "lblBizType";
-            this.lblBizType.Size = new System.Drawing.Size(62, 20);
-            this.lblBizType.TabIndex = 20;
-            this.lblBizType.Values.Text = "业务类型";
-            // 
-            // txtBizType
-            // 
-            this.txtBizType.Location = new System.Drawing.Point(142, 114);
-            this.txtBizType.Name = "txtBizType";
-            this.txtBizType.Size = new System.Drawing.Size(100, 23);
-            this.txtBizType.TabIndex = 19;
-            // 
-            // lblUIType
-            // 
-            this.lblUIType.Location = new System.Drawing.Point(69, 143);
-            this.lblUIType.Name = "lblUIType";
-            this.lblUIType.Size = new System.Drawing.Size(62, 20);
-            this.lblUIType.TabIndex = 21;
-            this.lblUIType.Values.Text = "窗体类型";
-            // 
-            // txtUIType
-            // 
-            this.txtUIType.Location = new System.Drawing.Point(142, 139);
-            this.txtUIType.Name = "txtUIType";
-            this.txtUIType.Size = new System.Drawing.Size(100, 23);
-            this.txtUIType.TabIndex = 22;
-            // 
-            // lblCaptionCN
-            // 
-            this.lblCaptionCN.Location = new System.Drawing.Point(69, 168);
-            this.lblCaptionCN.Name = "lblCaptionCN";
-            this.lblCaptionCN.Size = new System.Drawing.Size(62, 20);
-            this.lblCaptionCN.TabIndex = 23;
-            this.lblCaptionCN.Values.Text = "中文显示";
-            // 
-            // txtCaptionCN
-            // 
-            this.txtCaptionCN.Location = new System.Drawing.Point(142, 164);
-            this.txtCaptionCN.Multiline = true;
-            this.txtCaptionCN.Name = "txtCaptionCN";
-            this.txtCaptionCN.Size = new System.Drawing.Size(100, 21);
-            this.txtCaptionCN.TabIndex = 24;
-            // 
-            // lblCaptionEN
-            // 
-            this.lblCaptionEN.Location = new System.Drawing.Point(69, 193);
-            this.lblCaptionEN.Name = "lblCaptionEN";
-            this.lblCaptionEN.Size = new System.Drawing.Size(62, 20);
-            this.lblCaptionEN.TabIndex = 25;
-            this.lblCaptionEN.Values.Text = "英文显示";
-            // 
-            // txtCaptionEN
-            // 
-            this.txtCaptionEN.Location = new System.Drawing.Point(142, 189);
-            this.txtCaptionEN.Multiline = true;
-            this.txtCaptionEN.Name = "txtCaptionEN";
-            this.txtCaptionEN.Size = new System.Drawing.Size(100, 21);
-            this.txtCaptionEN.TabIndex = 26;
-            // 
-            // lblFormName
-            // 
-            this.lblFormName.Location = new System.Drawing.Point(69, 218);
-            this.lblFormName.Name = "lblFormName";
-            this.lblFormName.Size = new System.Drawing.Size(62, 20);
-            this.lblFormName.TabIndex = 28;
-            this.lblFormName.Values.Text = "窗体名称";
-            // 
-            // txtFormName
-            // 
-            this.txtFormName.Location = new System.Drawing.Point(142, 214);
-            this.txtFormName.Multiline = true;
-            this.txtFormName.Name = "txtFormName";
-            this.txtFormName.Size = new System.Drawing.Size(100, 21);
-            this.txtFormName.TabIndex = 27;
-            // 
-            // txtClassPath
-            // 
-            this.txtClassPath.Location = new System.Drawing.Point(488, 3);
-            this.txtClassPath.Multiline = true;
-            this.txtClassPath.Name = "txtClassPath";
-            this.txtClassPath.Size = new System.Drawing.Size(100, 21);
-            this.txtClassPath.TabIndex = 29;
-            // 
             // lblClassPath
             // 
-            this.lblClassPath.Location = new System.Drawing.Point(415, 14);
+            this.lblClassPath.Location = new System.Drawing.Point(396, 53);
             this.lblClassPath.Name = "lblClassPath";
             this.lblClassPath.Size = new System.Drawing.Size(49, 20);
             this.lblClassPath.TabIndex = 30;
@@ -304,7 +155,7 @@
             // 
             // lblEntityName
             // 
-            this.lblEntityName.Location = new System.Drawing.Point(415, 39);
+            this.lblEntityName.Location = new System.Drawing.Point(370, 84);
             this.lblEntityName.Name = "lblEntityName";
             this.lblEntityName.Size = new System.Drawing.Size(75, 20);
             this.lblEntityName.TabIndex = 31;
@@ -312,14 +163,14 @@
             // 
             // txtEntityName
             // 
-            this.txtEntityName.Location = new System.Drawing.Point(488, 35);
+            this.txtEntityName.Location = new System.Drawing.Point(469, 84);
             this.txtEntityName.Name = "txtEntityName";
-            this.txtEntityName.Size = new System.Drawing.Size(100, 23);
+            this.txtEntityName.Size = new System.Drawing.Size(224, 23);
             this.txtEntityName.TabIndex = 32;
             // 
             // lblIsVisble
             // 
-            this.lblIsVisble.Location = new System.Drawing.Point(415, 64);
+            this.lblIsVisble.Location = new System.Drawing.Point(383, 109);
             this.lblIsVisble.Name = "lblIsVisble";
             this.lblIsVisble.Size = new System.Drawing.Size(62, 20);
             this.lblIsVisble.TabIndex = 33;
@@ -327,7 +178,7 @@
             // 
             // chkIsVisble
             // 
-            this.chkIsVisble.Location = new System.Drawing.Point(488, 60);
+            this.chkIsVisble.Location = new System.Drawing.Point(469, 109);
             this.chkIsVisble.Name = "chkIsVisble";
             this.chkIsVisble.Size = new System.Drawing.Size(19, 13);
             this.chkIsVisble.TabIndex = 34;
@@ -335,7 +186,7 @@
             // 
             // lblIsEnabled
             // 
-            this.lblIsEnabled.Location = new System.Drawing.Point(415, 89);
+            this.lblIsEnabled.Location = new System.Drawing.Point(383, 134);
             this.lblIsEnabled.Name = "lblIsEnabled";
             this.lblIsEnabled.Size = new System.Drawing.Size(62, 20);
             this.lblIsEnabled.TabIndex = 35;
@@ -345,7 +196,7 @@
             // 
             this.chkIsEnabled.Checked = true;
             this.chkIsEnabled.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.chkIsEnabled.Location = new System.Drawing.Point(488, 85);
+            this.chkIsEnabled.Location = new System.Drawing.Point(469, 134);
             this.chkIsEnabled.Name = "chkIsEnabled";
             this.chkIsEnabled.Size = new System.Drawing.Size(19, 13);
             this.chkIsEnabled.TabIndex = 36;
@@ -353,7 +204,7 @@
             // 
             // lblParent_id
             // 
-            this.lblParent_id.Location = new System.Drawing.Point(415, 114);
+            this.lblParent_id.Location = new System.Drawing.Point(410, 159);
             this.lblParent_id.Name = "lblParent_id";
             this.lblParent_id.Size = new System.Drawing.Size(35, 20);
             this.lblParent_id.TabIndex = 37;
@@ -361,14 +212,14 @@
             // 
             // txtParent_id
             // 
-            this.txtParent_id.Location = new System.Drawing.Point(488, 110);
+            this.txtParent_id.Location = new System.Drawing.Point(469, 159);
             this.txtParent_id.Name = "txtParent_id";
-            this.txtParent_id.Size = new System.Drawing.Size(100, 23);
+            this.txtParent_id.Size = new System.Drawing.Size(224, 23);
             this.txtParent_id.TabIndex = 38;
             // 
             // lblDiscription
             // 
-            this.lblDiscription.Location = new System.Drawing.Point(415, 139);
+            this.lblDiscription.Location = new System.Drawing.Point(409, 184);
             this.lblDiscription.Name = "lblDiscription";
             this.lblDiscription.Size = new System.Drawing.Size(36, 20);
             this.lblDiscription.TabIndex = 39;
@@ -376,15 +227,15 @@
             // 
             // txtDiscription
             // 
-            this.txtDiscription.Location = new System.Drawing.Point(488, 135);
+            this.txtDiscription.Location = new System.Drawing.Point(469, 184);
             this.txtDiscription.Multiline = true;
             this.txtDiscription.Name = "txtDiscription";
-            this.txtDiscription.Size = new System.Drawing.Size(100, 21);
+            this.txtDiscription.Size = new System.Drawing.Size(224, 21);
             this.txtDiscription.TabIndex = 40;
             // 
             // lblMenuNo
             // 
-            this.lblMenuNo.Location = new System.Drawing.Point(415, 164);
+            this.lblMenuNo.Location = new System.Drawing.Point(383, 212);
             this.lblMenuNo.Name = "lblMenuNo";
             this.lblMenuNo.Size = new System.Drawing.Size(62, 20);
             this.lblMenuNo.TabIndex = 41;
@@ -392,15 +243,15 @@
             // 
             // txtMenuNo
             // 
-            this.txtMenuNo.Location = new System.Drawing.Point(488, 160);
+            this.txtMenuNo.Location = new System.Drawing.Point(469, 209);
             this.txtMenuNo.Multiline = true;
             this.txtMenuNo.Name = "txtMenuNo";
-            this.txtMenuNo.Size = new System.Drawing.Size(100, 21);
+            this.txtMenuNo.Size = new System.Drawing.Size(224, 21);
             this.txtMenuNo.TabIndex = 42;
             // 
             // lblMenuLevel
             // 
-            this.lblMenuLevel.Location = new System.Drawing.Point(415, 189);
+            this.lblMenuLevel.Location = new System.Drawing.Point(383, 238);
             this.lblMenuLevel.Name = "lblMenuLevel";
             this.lblMenuLevel.Size = new System.Drawing.Size(62, 20);
             this.lblMenuLevel.TabIndex = 44;
@@ -408,14 +259,14 @@
             // 
             // txtMenuLevel
             // 
-            this.txtMenuLevel.Location = new System.Drawing.Point(488, 185);
+            this.txtMenuLevel.Location = new System.Drawing.Point(469, 234);
             this.txtMenuLevel.Name = "txtMenuLevel";
-            this.txtMenuLevel.Size = new System.Drawing.Size(100, 23);
+            this.txtMenuLevel.Size = new System.Drawing.Size(224, 23);
             this.txtMenuLevel.TabIndex = 43;
             // 
             // lblSort
             // 
-            this.lblSort.Location = new System.Drawing.Point(415, 222);
+            this.lblSort.Location = new System.Drawing.Point(409, 271);
             this.lblSort.Name = "lblSort";
             this.lblSort.Size = new System.Drawing.Size(36, 20);
             this.lblSort.TabIndex = 53;
@@ -423,14 +274,14 @@
             // 
             // txtSort
             // 
-            this.txtSort.Location = new System.Drawing.Point(488, 218);
+            this.txtSort.Location = new System.Drawing.Point(469, 267);
             this.txtSort.Name = "txtSort";
-            this.txtSort.Size = new System.Drawing.Size(100, 23);
+            this.txtSort.Size = new System.Drawing.Size(224, 23);
             this.txtSort.TabIndex = 54;
             // 
             // lblHotKey
             // 
-            this.lblHotKey.Location = new System.Drawing.Point(415, 247);
+            this.lblHotKey.Location = new System.Drawing.Point(409, 296);
             this.lblHotKey.Name = "lblHotKey";
             this.lblHotKey.Size = new System.Drawing.Size(36, 20);
             this.lblHotKey.TabIndex = 55;
@@ -438,14 +289,14 @@
             // 
             // txtHotKey
             // 
-            this.txtHotKey.Location = new System.Drawing.Point(488, 243);
+            this.txtHotKey.Location = new System.Drawing.Point(469, 292);
             this.txtHotKey.Name = "txtHotKey";
-            this.txtHotKey.Size = new System.Drawing.Size(100, 23);
+            this.txtHotKey.Size = new System.Drawing.Size(224, 23);
             this.txtHotKey.TabIndex = 56;
             // 
             // lblDefaultLayout
             // 
-            this.lblDefaultLayout.Location = new System.Drawing.Point(415, 364);
+            this.lblDefaultLayout.Location = new System.Drawing.Point(439, 323);
             this.lblDefaultLayout.Name = "lblDefaultLayout";
             this.lblDefaultLayout.Size = new System.Drawing.Size(6, 2);
             this.lblDefaultLayout.TabIndex = 57;
@@ -453,11 +304,160 @@
             // 
             // txtDefaultLayout
             // 
-            this.txtDefaultLayout.Location = new System.Drawing.Point(488, 268);
+            this.txtDefaultLayout.Location = new System.Drawing.Point(469, 317);
             this.txtDefaultLayout.Multiline = true;
             this.txtDefaultLayout.Name = "txtDefaultLayout";
-            this.txtDefaultLayout.Size = new System.Drawing.Size(100, 21);
+            this.txtDefaultLayout.Size = new System.Drawing.Size(224, 21);
             this.txtDefaultLayout.TabIndex = 58;
+            // 
+            // lblModuleID
+            // 
+            this.lblModuleID.Location = new System.Drawing.Point(51, 57);
+            this.lblModuleID.Name = "lblModuleID";
+            this.lblModuleID.Size = new System.Drawing.Size(36, 20);
+            this.lblModuleID.TabIndex = 11;
+            this.lblModuleID.Values.Text = "模块";
+            // 
+            // cmbModuleID
+            // 
+            this.cmbModuleID.DropDownWidth = 100;
+            this.cmbModuleID.IntegralHeight = false;
+            this.cmbModuleID.Location = new System.Drawing.Point(124, 53);
+            this.cmbModuleID.Name = "cmbModuleID";
+            this.cmbModuleID.Size = new System.Drawing.Size(209, 21);
+            this.cmbModuleID.TabIndex = 12;
+            // 
+            // lblMenuName
+            // 
+            this.lblMenuName.Location = new System.Drawing.Point(51, 82);
+            this.lblMenuName.Name = "lblMenuName";
+            this.lblMenuName.Size = new System.Drawing.Size(62, 20);
+            this.lblMenuName.TabIndex = 13;
+            this.lblMenuName.Values.Text = "菜单名称";
+            // 
+            // txtMenuName
+            // 
+            this.txtMenuName.Location = new System.Drawing.Point(124, 78);
+            this.txtMenuName.Multiline = true;
+            this.txtMenuName.Name = "txtMenuName";
+            this.txtMenuName.Size = new System.Drawing.Size(209, 21);
+            this.txtMenuName.TabIndex = 14;
+            // 
+            // lblMenuType
+            // 
+            this.lblMenuType.Location = new System.Drawing.Point(51, 107);
+            this.lblMenuType.Name = "lblMenuType";
+            this.lblMenuType.Size = new System.Drawing.Size(62, 20);
+            this.lblMenuType.TabIndex = 15;
+            this.lblMenuType.Values.Text = "菜单类型";
+            // 
+            // txtMenuType
+            // 
+            this.txtMenuType.Location = new System.Drawing.Point(124, 103);
+            this.txtMenuType.Name = "txtMenuType";
+            this.txtMenuType.Size = new System.Drawing.Size(209, 23);
+            this.txtMenuType.TabIndex = 16;
+            // 
+            // lblBIBaseForm
+            // 
+            this.lblBIBaseForm.Location = new System.Drawing.Point(51, 132);
+            this.lblBIBaseForm.Name = "lblBIBaseForm";
+            this.lblBIBaseForm.Size = new System.Drawing.Size(62, 20);
+            this.lblBIBaseForm.TabIndex = 17;
+            this.lblBIBaseForm.Values.Text = "注入基类";
+            // 
+            // txtBIBaseForm
+            // 
+            this.txtBIBaseForm.Location = new System.Drawing.Point(124, 128);
+            this.txtBIBaseForm.Name = "txtBIBaseForm";
+            this.txtBIBaseForm.Size = new System.Drawing.Size(209, 23);
+            this.txtBIBaseForm.TabIndex = 18;
+            // 
+            // lblBizType
+            // 
+            this.lblBizType.Location = new System.Drawing.Point(51, 157);
+            this.lblBizType.Name = "lblBizType";
+            this.lblBizType.Size = new System.Drawing.Size(62, 20);
+            this.lblBizType.TabIndex = 20;
+            this.lblBizType.Values.Text = "业务类型";
+            // 
+            // txtBizType
+            // 
+            this.txtBizType.Location = new System.Drawing.Point(124, 153);
+            this.txtBizType.Name = "txtBizType";
+            this.txtBizType.Size = new System.Drawing.Size(209, 23);
+            this.txtBizType.TabIndex = 19;
+            // 
+            // lblUIType
+            // 
+            this.lblUIType.Location = new System.Drawing.Point(51, 182);
+            this.lblUIType.Name = "lblUIType";
+            this.lblUIType.Size = new System.Drawing.Size(62, 20);
+            this.lblUIType.TabIndex = 21;
+            this.lblUIType.Values.Text = "窗体类型";
+            // 
+            // txtUIType
+            // 
+            this.txtUIType.Location = new System.Drawing.Point(124, 178);
+            this.txtUIType.Name = "txtUIType";
+            this.txtUIType.Size = new System.Drawing.Size(209, 23);
+            this.txtUIType.TabIndex = 22;
+            // 
+            // lblCaptionCN
+            // 
+            this.lblCaptionCN.Location = new System.Drawing.Point(51, 207);
+            this.lblCaptionCN.Name = "lblCaptionCN";
+            this.lblCaptionCN.Size = new System.Drawing.Size(62, 20);
+            this.lblCaptionCN.TabIndex = 23;
+            this.lblCaptionCN.Values.Text = "中文显示";
+            // 
+            // txtCaptionCN
+            // 
+            this.txtCaptionCN.Location = new System.Drawing.Point(124, 203);
+            this.txtCaptionCN.Multiline = true;
+            this.txtCaptionCN.Name = "txtCaptionCN";
+            this.txtCaptionCN.Size = new System.Drawing.Size(209, 21);
+            this.txtCaptionCN.TabIndex = 24;
+            // 
+            // lblCaptionEN
+            // 
+            this.lblCaptionEN.Location = new System.Drawing.Point(51, 232);
+            this.lblCaptionEN.Name = "lblCaptionEN";
+            this.lblCaptionEN.Size = new System.Drawing.Size(62, 20);
+            this.lblCaptionEN.TabIndex = 25;
+            this.lblCaptionEN.Values.Text = "英文显示";
+            // 
+            // txtCaptionEN
+            // 
+            this.txtCaptionEN.Location = new System.Drawing.Point(124, 228);
+            this.txtCaptionEN.Multiline = true;
+            this.txtCaptionEN.Name = "txtCaptionEN";
+            this.txtCaptionEN.Size = new System.Drawing.Size(209, 21);
+            this.txtCaptionEN.TabIndex = 26;
+            // 
+            // lblFormName
+            // 
+            this.lblFormName.Location = new System.Drawing.Point(51, 257);
+            this.lblFormName.Name = "lblFormName";
+            this.lblFormName.Size = new System.Drawing.Size(62, 20);
+            this.lblFormName.TabIndex = 28;
+            this.lblFormName.Values.Text = "窗体名称";
+            // 
+            // txtFormName
+            // 
+            this.txtFormName.Location = new System.Drawing.Point(124, 253);
+            this.txtFormName.Multiline = true;
+            this.txtFormName.Name = "txtFormName";
+            this.txtFormName.Size = new System.Drawing.Size(209, 21);
+            this.txtFormName.TabIndex = 27;
+            // 
+            // txtClassPath
+            // 
+            this.txtClassPath.Location = new System.Drawing.Point(469, 52);
+            this.txtClassPath.Multiline = true;
+            this.txtClassPath.Name = "txtClassPath";
+            this.txtClassPath.Size = new System.Drawing.Size(224, 21);
+            this.txtClassPath.TabIndex = 29;
             // 
             // UCMenuInfoEdit
             // 

@@ -8,6 +8,7 @@ using Microsoft.Extensions.Logging;
 using RUINORERP.AutoMapper;
 using RUINORERP.Business;
 using RUINORERP.Business.Processor;
+using RUINORERP.Business.Security;
 using RUINORERP.Common.CollectionExtension;
 using RUINORERP.Common.Extensions;
 using RUINORERP.Common.Helper;
@@ -306,7 +307,7 @@ namespace RUINORERP.UI.BaseForm
             bool rs = await UIBizSrvice.SetQueryConditionsAsync(CurMenuInfo, QueryFilter, QueryDto);
             if (rs)
             {
-                  LoadQueryConditionToUI();
+                LoadQueryConditionToUI();
             }
         }
 
@@ -620,9 +621,8 @@ namespace RUINORERP.UI.BaseForm
         }
 
 
-        protected virtual void Exit(object thisform)
+        protected virtual async void Exit(object thisform)
         {
-
             if (_UCMasterQuery != null && _UCMasterQuery.newSumDataGridViewMaster != null)
             {
                 UIBizSrvice.SaveGridSettingData(CurMenuInfo, _UCMasterQuery.newSumDataGridViewMaster, typeof(M));
@@ -633,29 +633,45 @@ namespace RUINORERP.UI.BaseForm
             settings.Encoding = new UTF8Encoding(false);
             settings.NewLineChars = Environment.NewLine;
             settings.Indent = true;
-            using XmlWriter xmlWriter = XmlWriter.Create("Navigator" + typeof(M).Name + "Persistence.xml", settings);
+            string xmlfilepath = System.IO.Path.Combine(Application.StartupPath, "Navigator" + typeof(M).Name + "Persistence.xml");
+            using XmlWriter xmlWriter = XmlWriter.Create(xmlfilepath, settings);
             {
-                xmlWriter.WriteStartDocument(true);
-                //文档类型
-                xmlWriter.WriteDocType("Html", null, null, "<!ENTITY h \"hardcover\">");
+                //xmlWriter.WriteStartDocument(true);
+                ////文档类型
+                //xmlWriter.WriteDocType("Html", null, null, "<!ENTITY h \"hardcover\">");
 
-                xmlWriter.WriteStartElement("Html");
-                //命名空间
-                xmlWriter.WriteAttributeString("xmlns", "xsi", null, "http://www/XMLSchema-instance");
-                xmlWriter.WriteAttributeString("xsi", "schemaLocation", null, @"http://.xsd");
-                //指令
-                String PItext = "type=\"text/xsl\" href=\"book.xsl\"";
-                xmlWriter.WriteProcessingInstruction("xml-stylesheet", PItext);
-                //注释
-                xmlWriter.WriteComment("标题头");
-                //cdata
-                xmlWriter.WriteCData(@"<javasritpt><javasritpt>");
+                //xmlWriter.WriteStartElement("Html");
+                ////命名空间
+                //xmlWriter.WriteAttributeString("xmlns", "xsi", null, "http://www/XMLSchema-instance");
+                //xmlWriter.WriteAttributeString("xsi", "schemaLocation", null, @"http://.xsd");
+                ////指令
+                //String PItext = "type=\"text/xsl\" href=\"book.xsl\"";
+                //xmlWriter.WriteProcessingInstruction("xml-stylesheet", PItext);
+                ////注释
+                //xmlWriter.WriteComment("标题头");
+                ////cdata
+                //xmlWriter.WriteCData(@"<javasritpt><javasritpt>");
                 kryptonWorkspace1.SaveLayoutToXml(xmlWriter);
+                xmlWriter.Close();//要关闭，否则下面再用时会报错。
             }
 
+
+            //=============!!
+            //保存超级用户的布局为默认布局
+            if (MainForm.Instance.AppContext.IsSuperUser && System.IO.File.Exists(xmlfilepath))
+            {
+                //加载XML文件
+                XmlDocument xmldoc = new XmlDocument();
+                xmldoc.Load(xmlfilepath);
+                //获取XML字符串
+                string xmlStr = xmldoc.InnerXml;
+                //字符串转XML
+                //xmldoc.LoadXml(xmlStr);
+                CurMenuInfo.DefaultLayout = xmlStr;
+                await MainForm.Instance.AppContext.Db.Storageable<tb_MenuInfo>(CurMenuInfo).ExecuteReturnEntityAsync();
+            }
             //退出
             CloseTheForm(thisform);
-
         }
         private void CloseTheForm(object thisform)
         {
@@ -791,16 +807,12 @@ namespace RUINORERP.UI.BaseForm
                         }
                     }
                 }
-
-
-
-
             }
             try
             {
                 //Location of XML file
                 string xmlFilePath = "Navigator" + typeof(M).Name + "Persistence.xml";
-                if (System.IO.File.Exists(xmlFilePath))
+                if (System.IO.File.Exists(xmlFilePath) && AuthorizeController.GetQueryPageLayoutCustomize(MainForm.Instance.AppContext))
                 {
                     // Create the XmlNodeReader object.
                     XmlDocument doc = new XmlDocument();
@@ -828,7 +840,35 @@ namespace RUINORERP.UI.BaseForm
 
                     }
                 }
+                else
+                {
+                    //没有个性化文件时用默认的
+                    if (!string.IsNullOrEmpty(CurMenuInfo.DefaultLayout))
+                    {
+                        #region load
+                        //加载XML文件
+                        XmlDocument xmldoc = new XmlDocument();
+                        //获取XML字符串
+                        string xmlStr = xmldoc.InnerXml;
+                        //字符串转XML
+                        xmldoc.LoadXml(CurMenuInfo.DefaultLayout);
 
+                        XmlNodeReader nodeReader = new XmlNodeReader(xmldoc);
+                        XmlReaderSettings settings = new XmlReaderSettings();
+                        using (XmlReader reader = XmlReader.Create(nodeReader, settings))
+                        {
+                            while (reader.Read())
+                            {
+                                if (reader.NodeType == XmlNodeType.Element && reader.Name == "KW")
+                                {
+                                    //加载停靠信息
+                                    kryptonWorkspace1.LoadLayoutFromXml(reader, Kpages);
+                                }
+                            }
+                        }
+                        #endregion
+                    }
+                }
             }
             catch (Exception ex)
             {

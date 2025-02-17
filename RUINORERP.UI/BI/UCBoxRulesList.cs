@@ -20,7 +20,7 @@ using RUINORERP.Business;
 namespace RUINORERP.UI.BI
 {
 
-    [MenuAttrAssemblyInfo("箱规管理", ModuleMenuDefine.模块定义.基础资料, ModuleMenuDefine.基础资料.产品资料)]
+    [MenuAttrAssemblyInfo("箱规管理", ModuleMenuDefine.模块定义.基础资料, ModuleMenuDefine.基础资料.包装资料)]
     public partial class UCBoxRulesList : BaseForm.BaseListGeneric<tb_BoxRules>
     {
         public UCBoxRulesList()

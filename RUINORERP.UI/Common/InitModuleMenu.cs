@@ -322,6 +322,11 @@ namespace RUINORERP.UI.Common
                 }
                 menu.MenuType = "行为菜单";
                 menu.EntityName = info.EntityName;
+                if (menu.BIBaseForm.Contains("BaseBillQueryMC"))
+                {
+                    //如果是查询式 ，添加默认的布局
+                    menu.DefaultLayout = $"<?xml version=\"1.0\" encoding=\"utf-8\"?><DW N=\"Workspace\" O=\"0\" S=\"1715, 693\"><KW V=\"1\" A=\"明细信息\"><CGD /><WS UN=\"1E691A582DF14E8443907289238B58BD\" S=\"T,0,50:T,0,50\" D=\"Horizontal\"><WS UN=\"e3f23429df664a559f8a64593e8e2221\" S=\"T,0,50:T,0,50\" D=\"Vertical\"><WC UN=\"b84cdfb9b68c401a865ecba6ce06f11a\" S=\"T,0,50:T,0,50\" NM=\"BarTabGroup\" AR=\"True\" MINS=\"150, 87\" SP=\"单据信息\"><KP UN=\"单据信息\" S=\"False\"><CPD /></KP></WC><WC UN=\"35e3228682914082bbb1a275ee166a95\" S=\"T,0,50:T,0,50\" NM=\"BarTabGroup\" AR=\"True\" MINS=\"150, 110\" SP=\"明细信息\"><KP UN=\"明细信息\" S=\"False\"><CPD /></KP></WC></WS></WS></KW></DW>";
+                }
                 menu.Created_at = System.DateTime.Now;
                 menu = mc.AddReEntity(menu);
                 // WantAddMenuList.Add(menu);
@@ -505,12 +510,12 @@ namespace RUINORERP.UI.Common
             if (tb_ButtonInfos.Count > 0)
             {
                 List<long> idsbtn = await _appContext.Db.CopyNew().Insertable<tb_ButtonInfo>(tb_ButtonInfos).ExecuteReturnSnowflakeIdListAsync();
-                if (idsbtn.Count== tb_ButtonInfos.Count)
+                if (idsbtn.Count == tb_ButtonInfos.Count)
                 {
                     //添加后才不会重复添加
                     menuInfo.tb_ButtonInfos.AddRange(tb_ButtonInfos);
                 }
-                
+
             }
 
         }
@@ -597,7 +602,7 @@ namespace RUINORERP.UI.Common
             }
         }
 
-        public async void  InitFieldInoMainAndSub(Type type, tb_MenuInfo menuInfo, bool isChild, string childType)
+        public async void InitFieldInoMainAndSub(Type type, tb_MenuInfo menuInfo, bool isChild, string childType)
         {
             List<tb_FieldInfo> fields = new List<tb_FieldInfo>();
             var attrs = type.GetCustomAttributes<SugarTable>();
@@ -678,7 +683,7 @@ namespace RUINORERP.UI.Common
                         }
                     }
 
-              
+
                 }
             }
         }

@@ -39,7 +39,7 @@ using RUINORERP.Global.Model;
 
 namespace RUINORERP.UI.ProductEAV
 {
-    [MenuAttrAssemblyInfo("包装信息", ModuleMenuDefine.模块定义.基础资料, ModuleMenuDefine.基础资料.产品资料, BizType.包装信息)]
+    [MenuAttrAssemblyInfo("包装信息", ModuleMenuDefine.模块定义.基础资料, ModuleMenuDefine.基础资料.包装资料, BizType.包装信息)]
     public partial class UCPacking : BaseBillEditGeneric<tb_Packing, tb_PackingDetail>
     {
         public UCPacking()

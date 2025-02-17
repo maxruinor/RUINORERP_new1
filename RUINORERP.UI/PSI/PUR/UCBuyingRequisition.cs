@@ -882,11 +882,12 @@ namespace RUINORERP.UI.PSI.PUR
         private void ShowSelectedColumn()
         {
             SGDefineColumnItem selected = listCols.Find(c => c.ColName == "Selected");
-            int selectRealIndex = sgd.grid.Columns.GetColumnInfo(selected.UniqueId).Index;
-            if (selected != null)
+            if (selected != null && selected.UniqueId != null)
             {
+                int selectRealIndex = sgd.grid.Columns.GetColumnInfo(selected.UniqueId).Index;
                 grid1.Columns[selectRealIndex].Visible = chkSplitRequisitionDetails.Checked;
             }
+
         }
     }
 }

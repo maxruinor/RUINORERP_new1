@@ -32,7 +32,7 @@ namespace RUINORERP.UI.BI
         public tb_MenuInfo EditEntity { get => _EditEntity; set => _EditEntity = value; }
         public override void BindData(BaseEntity entity)
         {
-            // DataBindingHelper.BindData4Cmb<tb_ModuleDefinition>(entity, k => k.ModuleID, v=>v.XXNAME, cmbModuleID);
+            DataBindingHelper.BindData4Cmb<tb_ModuleDefinition>(entity, k => k.ModuleID, v => v.ModuleName, cmbModuleID);
             _EditEntity = entity as tb_MenuInfo;
             DataBindingHelper.BindData4TextBox<tb_MenuInfo>(entity, t => t.MenuName, txtMenuName, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_MenuInfo>(entity, t => t.MenuType, txtMenuType, BindDataType4TextBox.Text, false);

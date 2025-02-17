@@ -21,7 +21,7 @@ using RUINORERP.UI.BaseForm;
 namespace RUINORERP.UI.BI
 {
 
-    [MenuAttrAssemblyInfo( "卡通箱", ModuleMenuDefine.模块定义.基础资料, ModuleMenuDefine.基础资料.产品资料)]
+    [MenuAttrAssemblyInfo( "卡通箱", ModuleMenuDefine.模块定义.基础资料, ModuleMenuDefine.基础资料.包装资料)]
     public partial class UCCartoonBoxList : BaseListGeneric<tb_CartoonBox>
     {
 

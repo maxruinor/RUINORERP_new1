@@ -207,10 +207,10 @@ namespace RUINORERP.Model
 
         private bool _QueryPageLayoutCustomize;
         /// <summary>
-        /// 查询页布局自定义
+        /// 查询统计布局自定义
         /// </summary>
-        [AdvQueryAttribute(ColName = "QueryPageLayoutCustomize",ColDesc = "查询页布局自定义")] 
-        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType ="Boolean",  ColumnName = "QueryPageLayoutCustomize" ,IsNullable = false,ColumnDescription = "查询页布局自定义" )]
+        [AdvQueryAttribute(ColName = "QueryPageLayoutCustomize",ColDesc = "查询统计布局自定义")] 
+        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType ="Boolean",  ColumnName = "QueryPageLayoutCustomize" ,IsNullable = false,ColumnDescription = "查询统计布局自定义")]
         public bool QueryPageLayoutCustomize
         { 
             get{return _QueryPageLayoutCustomize;}

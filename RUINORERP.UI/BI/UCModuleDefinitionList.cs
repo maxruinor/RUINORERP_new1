@@ -21,7 +21,7 @@ using RUINORERP.Common.Extensions;
 namespace RUINORERP.UI.BI
 {
 
-    [MenuAttrAssemblyInfo("模块定义", ModuleMenuDefine.模块定义.系统设置, ModuleMenuDefine.系统设置.系统参数)]
+    [MenuAttrAssemblyInfo("模块定义", ModuleMenuDefine.模块定义.系统设置, ModuleMenuDefine.系统设置.权限管理)]
     public partial class UCModuleDefinitionList : BaseForm.BaseListGeneric<tb_ModuleDefinition>
     {
         public UCModuleDefinitionList()

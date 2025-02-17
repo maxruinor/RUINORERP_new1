@@ -43,7 +43,7 @@ using RUINORERP.UI.ToolForm;
 
 namespace RUINORERP.UI.MRP.PQC
 {
-    [MenuAttrAssemblyInfo("返工退库单", ModuleMenuDefine.模块定义.生产管理, ModuleMenuDefine.生产管理.制程生产, BizType.返工退库单)]
+    [MenuAttrAssemblyInfo("返工退库单", ModuleMenuDefine.模块定义.生产管理, ModuleMenuDefine.生产管理.生产品控, BizType.返工退库单)]
     public partial class UCMRPReworkReturn : BaseBillEditGeneric<tb_MRP_ReworkReturn, tb_MRP_ReworkReturnDetail>
     {
         public UCMRPReworkReturn()

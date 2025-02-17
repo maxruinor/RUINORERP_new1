@@ -80,7 +80,20 @@ namespace RUINORERP.Model
             SetProperty(ref _Template_Name, value);
                         }
         }
-
+        private bool? _IsDefaultTemplate = false;
+        /// <summary>
+        /// 默认模板
+        /// </summary>
+        [AdvQueryAttribute(ColName = "IsDefaultTemplate", ColDesc = "默认模板")]
+        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType = "Boolean", ColumnName = "IsDefaultTemplate", IsNullable = true, ColumnDescription = "默认模板")]
+        public bool? IsDefaultTemplate
+        {
+            get { return _IsDefaultTemplate; }
+            set
+            {
+                SetProperty(ref _IsDefaultTemplate, value);
+            }
+        }
         private int? _BizType;
         /// <summary>
         /// 业务类型
@@ -165,19 +178,7 @@ namespace RUINORERP.Model
                         }
         }
 
-        private bool? _IsDefaultTemplate= false;
-        /// <summary>
-        /// 默认模板
-        /// </summary>
-        [AdvQueryAttribute(ColName = "IsDefaultTemplate",ColDesc = "默认模板")] 
-        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType ="Boolean",  ColumnName = "IsDefaultTemplate" ,IsNullable = true,ColumnDescription = "默认模板" )]
-        public bool? IsDefaultTemplate
-        { 
-            get{return _IsDefaultTemplate;}
-            set{
-            SetProperty(ref _IsDefaultTemplate, value);
-                        }
-        }
+
 
         private DateTime? _Created_at;
         /// <summary>

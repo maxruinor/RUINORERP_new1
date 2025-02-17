@@ -1034,7 +1034,20 @@ namespace RUINORERP.Server
         }
 
         #endregion
+        protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
+        {
+            if (keyData == (Keys.Control | Keys.P))
+            {
+                // 在这里编写 Ctrl + P 按下时要执行的代码
+                Console.WriteLine("Ctrl + P 被按下");
+                frmPasswordInput frmPassword = new frmPasswordInput();
+                if (frmPassword.ShowDialog() == DialogResult.OK)
+                {
 
+                }
+            }
+            return base.ProcessCmdKey(ref msg, keyData);
+        }
         private void DbInit()
         {
             var sut = new ServiceCollection()

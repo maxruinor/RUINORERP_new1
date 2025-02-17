@@ -42,7 +42,7 @@ using ZXing.Common;
 
 namespace RUINORERP.UI.PSI.PUR
 {
-    [MenuAttrAssemblyInfo("采购订单", ModuleMenuDefine.模块定义.进销存管理, ModuleMenuDefine.供应链管理.采购管理, BizType.采购订单)]
+    [MenuAttrAssemblyInfo("采购订单", ModuleMenuDefine.模块定义.进销存管理, ModuleMenuDefine.进销存管理.采购管理, BizType.采购订单)]
     public partial class UCPurOrder : BaseBillEditGeneric<tb_PurOrder, tb_PurOrderDetail>
     {
         public UCPurOrder()

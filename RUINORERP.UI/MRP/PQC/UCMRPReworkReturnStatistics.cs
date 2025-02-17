@@ -22,7 +22,7 @@ using RUINORERP.Business.Processor;
 
 namespace RUINORERP.UI.MRP.PQC
 {
-    [MenuAttrAssemblyInfo("返工退库统计", ModuleMenuDefine.模块定义.进销存管理, ModuleMenuDefine.供应链管理.库存管理, BizType.返工退库统计)]
+    [MenuAttrAssemblyInfo("返工退库统计", ModuleMenuDefine.模块定义.生产管理, ModuleMenuDefine.生产管理.生产品控, BizType.返工退库统计)]
     public partial class UCMRPReworkReturnStatistics : BaseNavigatorGeneric<View_MRP_ReworkReturn, View_MRP_ReworkReturn>
     {
         public UCMRPReworkReturnStatistics()

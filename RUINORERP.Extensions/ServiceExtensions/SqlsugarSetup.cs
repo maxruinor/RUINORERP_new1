@@ -60,7 +60,7 @@ namespace RUINORERP.Extensions
                     db.Aop.OnLogExecuting = (sql, pars) =>
                         {
                             //获取原生SQL推荐 5.1.4.63  性能OK
-                            //Console.WriteLine(UtilMethods.GetNativeSql(sql, pars));
+                            Console.WriteLine(UtilMethods.GetNativeSql(sql, pars));
 
                             if (CheckEvent != null)
                             {

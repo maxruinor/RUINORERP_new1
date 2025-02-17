@@ -22,7 +22,7 @@ using RUINORERP.Business.Processor;
 
 namespace RUINORERP.UI.PSI.INV
 {
-    [MenuAttrAssemblyInfo("借出单查询", ModuleMenuDefine.模块定义.进销存管理, ModuleMenuDefine.供应链管理.库存管理, BizType.借出单)]
+    [MenuAttrAssemblyInfo("借出单查询", ModuleMenuDefine.模块定义.进销存管理, ModuleMenuDefine.进销存管理.库存管理, BizType.借出单)]
     public partial class UCProdBorrowingQuery : BaseBillQueryMC<tb_ProdBorrowing, tb_ProdBorrowingDetail>
     {
  

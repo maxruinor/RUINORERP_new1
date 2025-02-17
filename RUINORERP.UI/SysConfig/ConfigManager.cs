@@ -1,4 +1,5 @@
-﻿ 
+﻿
+using Microsoft.Extensions.Logging;
 using RUINORERP.Business;
 using RUINORERP.Model;
 using System;
@@ -67,24 +68,23 @@ namespace RUINORERP.UI.SysConfig
             {
                 // 从数据库加载配置项
                 tb_SysGlobalDynamicConfigController<tb_SysGlobalDynamicConfig> ctr = Startup.GetFromFac<tb_SysGlobalDynamicConfigController<tb_SysGlobalDynamicConfig>>();
-                  configEntries = await ctr.QueryAsync();
+                configEntries = await ctr.QueryAsync();
+                if (configEntries == null)
+                {
+                    return;
+                }
+                foreach (var entry in configEntries)
+                {
+                    if (!_configCache.ContainsKey(entry.ConfigKey))
+                    {
+                        _configCache.Add(entry.ConfigKey, entry.ConfigValue);
+                    }
+                }
             }
             catch (Exception)
             {
 
-                 
-            }
-           
-            if (configEntries == null)
-            {
-                return;
-            }
-            foreach (var entry in configEntries)
-            {
-                if(!_configCache.ContainsKey(entry.ConfigKey))
-                {
-                    _configCache.Add(entry.ConfigKey, entry.ConfigValue);
-                }
+
             }
 
         }
@@ -95,7 +95,13 @@ namespace RUINORERP.UI.SysConfig
             {
                 return value;
             }
-            throw new KeyNotFoundException($"The configuration key '{key}' was not found.");
+            else
+            {
+                MainForm.Instance.logger.LogError("GetValue" + $"The configuration key '{key}' was not found.");
+                return "";
+            }
+            //throw new KeyNotFoundException($"The configuration key '{key}' was not found.");
+
         }
 
 

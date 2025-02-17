@@ -109,19 +109,6 @@ namespace RUINORERP.Model
                         }
         }
 
-        private string _WorkDefaultLayout;
-        /// <summary>
-        /// 
-        /// </summary>
-        [AdvQueryAttribute(ColName = "WorkDefaultLayout",ColDesc = "")] 
-        [SugarColumn(ColumnDataType = "text", SqlParameterDbType ="String",  ColumnName = "WorkDefaultLayout" ,Length=2147483647,IsNullable = true,ColumnDescription = "" )]
-        public string WorkDefaultLayout
-        { 
-            get{return _WorkDefaultLayout;}
-            set{
-            SetProperty(ref _WorkDefaultLayout, value);
-                        }
-        }
 
         #endregion
 

@@ -180,12 +180,18 @@ namespace RUINORERP.UI.Common
 
                 }
 
-                if (!var.IsEnabled || !var.IsVisble)
+                //如果是普通用户 不启用就直接返回
+                if (!Program.AppContextData.IsSuperUser && !var.IsVisble)
                 {
                     continue;
                 }
 
                 ToolStripMenuItem item = new ToolStripMenuItem();
+                item.Enabled = var.IsEnabled;
+                if (Program.AppContextData.IsSuperUser)
+                {
+                    item.Enabled = true;
+                }
                 if (!string.IsNullOrEmpty(var.HotKey))
                 {
                     item.Text = "" + var.MenuName + "(&" + var.HotKey + ")";
@@ -393,7 +399,7 @@ namespace RUINORERP.UI.Common
                         if (page == null)
                         {
                             // Create new document to be added into workspace
-                            if (pr.IsVisble && pr.IsEnabled)
+                            if ((pr.IsVisble && pr.IsEnabled) || Program.AppContextData.IsSuperUser)
                             {
                                 if (pr.BIBaseForm.Trim().Length == 0)
                                 {
@@ -635,7 +641,7 @@ namespace RUINORERP.UI.Common
 
                         }
                     }
-                    
+
                     if (control.GetType() != null && control.GetType().BaseType.Name.Contains("BaseNavigatorGeneric"))
                     {
                         // 获取泛型参数类型

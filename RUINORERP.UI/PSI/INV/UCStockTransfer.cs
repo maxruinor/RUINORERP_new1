@@ -42,7 +42,7 @@ using RUINORERP.Business.Security;
 
 namespace RUINORERP.UI.PSI.INV
 {
-    [MenuAttrAssemblyInfo("调拨单", ModuleMenuDefine.模块定义.进销存管理, ModuleMenuDefine.供应链管理.库存管理, BizType.调拨单)]
+    [MenuAttrAssemblyInfo("调拨单", ModuleMenuDefine.模块定义.进销存管理, ModuleMenuDefine.进销存管理.库存管理, BizType.调拨单)]
     public partial class UCStockTransfer : BaseBillEditGeneric<tb_StockTransfer, tb_StockTransferDetail>
     {
         public UCStockTransfer()

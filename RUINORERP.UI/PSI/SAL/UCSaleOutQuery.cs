@@ -24,7 +24,7 @@ using RUINORERP.Business.Processor;
 namespace RUINORERP.UI.PSI.SAL
 {
 
-    [MenuAttrAssemblyInfo("销售出库单查询", ModuleMenuDefine.模块定义.进销存管理, ModuleMenuDefine.供应链管理.销售管理, BizType.销售出库单)]
+    [MenuAttrAssemblyInfo("销售出库单查询", ModuleMenuDefine.模块定义.进销存管理, ModuleMenuDefine.进销存管理.销售管理, BizType.销售出库单)]
     public partial class UCSaleOutQuery : BaseBillQueryMC<tb_SaleOut, tb_SaleOutDetail>
     {
         public UCSaleOutQuery()

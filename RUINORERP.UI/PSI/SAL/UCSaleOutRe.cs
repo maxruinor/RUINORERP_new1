@@ -42,7 +42,7 @@ using RUINORERP.Business.CommService;
 
 namespace RUINORERP.UI.PSI.SAL
 {
-    [MenuAttrAssemblyInfo("销售退回单", ModuleMenuDefine.模块定义.进销存管理, ModuleMenuDefine.供应链管理.销售管理, BizType.销售退回单)]
+    [MenuAttrAssemblyInfo("销售退回单", ModuleMenuDefine.模块定义.进销存管理, ModuleMenuDefine.进销存管理.销售管理, BizType.销售退回单)]
     public partial class UCSaleOutRe : BaseBillEditGeneric<tb_SaleOutRe, tb_SaleOutReDetail>
     {
         public UCSaleOutRe()

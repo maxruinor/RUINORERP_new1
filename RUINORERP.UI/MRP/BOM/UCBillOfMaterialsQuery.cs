@@ -22,7 +22,7 @@ using NPOI.Util;
 
 namespace RUINORERP.UI.MRP.BOM
 {
-    [MenuAttrAssemblyInfo("产品配方查询", ModuleMenuDefine.模块定义.进销存管理, ModuleMenuDefine.生产管理.MRP基本资料, BizType.BOM物料清单)]
+    [MenuAttrAssemblyInfo("产品配方查询", ModuleMenuDefine.模块定义.生产管理, ModuleMenuDefine.生产管理.MRP基本资料, BizType.BOM物料清单)]
     public partial class UCBillOfMaterialsQuery : BaseBillQueryMC<View_BOM, tb_BOM_SDetail>
     {
         public UCBillOfMaterialsQuery()

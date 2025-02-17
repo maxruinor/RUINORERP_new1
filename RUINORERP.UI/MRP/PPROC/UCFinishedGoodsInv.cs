@@ -30,7 +30,7 @@ using SourceGridHelper = RUINORERP.UI.UCSourceGrid.SourceGridHelper;
 
 namespace RUINORERP.UI.PSI.PUR
 {
-    [MenuAttrAssemblyInfo("缴库单", ModuleMenuDefine.模块定义.进销存管理, ModuleMenuDefine.供应链管理.库存管理, BizType.缴库单)]
+    [MenuAttrAssemblyInfo("缴库单", ModuleMenuDefine.模块定义.生产管理, ModuleMenuDefine.生产管理.制程生产, BizType.缴库单)]
     public partial class UCFinishedGoodsInv : BaseBillEditGeneric<tb_FinishedGoodsInv, tb_FinishedGoodsInvDetail>
     {
         public UCFinishedGoodsInv()

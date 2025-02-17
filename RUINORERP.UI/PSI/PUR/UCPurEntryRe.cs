@@ -44,7 +44,7 @@ using RUINORERP.UI.ToolForm;
 
 namespace RUINORERP.UI.PSI.PUR
 {
-    [MenuAttrAssemblyInfo("采购退货单", ModuleMenuDefine.模块定义.进销存管理, ModuleMenuDefine.供应链管理.采购管理, BizType.采购退货单)]
+    [MenuAttrAssemblyInfo("采购退货单", ModuleMenuDefine.模块定义.进销存管理, ModuleMenuDefine.进销存管理.采购管理, BizType.采购退货单)]
     public partial class UCPurEntryRe : BaseBillEditGeneric<tb_PurEntryRe, tb_PurEntryReDetail>
     {
         public UCPurEntryRe()

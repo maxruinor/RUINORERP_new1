@@ -20,7 +20,7 @@ using System.Windows.Forms;
 namespace RUINORERP.UI.PSI.INV
 {
 
-    [MenuAttrAssemblyInfo("归还明细统计", ModuleMenuDefine.模块定义.进销存管理, ModuleMenuDefine.供应链管理.库存管理, BizType.归还明细统计)]
+    [MenuAttrAssemblyInfo("归还明细统计", ModuleMenuDefine.模块定义.进销存管理, ModuleMenuDefine.进销存管理.库存管理, BizType.归还明细统计)]
     public partial class UCProdReturningStatistics : BaseNavigatorGeneric<View_ProdReturningItems, View_ProdReturningItems>
     {
         public UCProdReturningStatistics()

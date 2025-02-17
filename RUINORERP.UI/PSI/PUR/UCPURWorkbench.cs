@@ -72,7 +72,7 @@ using XmlDocument = System.Xml.XmlDocument;
 namespace RUINORERP.UI.PUR
 {
 
-    [MenuAttrAssemblyInfo("采购工作台", ModuleMenuDefine.模块定义.进销存管理, ModuleMenuDefine.供应链管理.采购管理)]
+    [MenuAttrAssemblyInfo("采购工作台", ModuleMenuDefine.模块定义.进销存管理, ModuleMenuDefine.进销存管理.采购管理)]
     public partial class UCPURWorkbench : BaseForm.BaseQuery
     {
 

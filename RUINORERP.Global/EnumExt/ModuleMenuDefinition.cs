@@ -8,6 +8,9 @@ namespace RUINORERP.Model
 {
     public class ModuleMenuDefine
     {
+        /// <summary>
+        /// 里面的定义要与下面的枚举一一对应，不然会出错。这里是固定的菜单
+        /// </summary>
         public enum 模块定义
         {
             生产管理,
@@ -20,7 +23,7 @@ namespace RUINORERP.Model
             系统设置,
         }
 
-
+         
         public enum 生产管理
         {
             MRP基本资料,
@@ -31,12 +34,11 @@ namespace RUINORERP.Model
             成本管理,
         }
 
-        public enum 供应链管理
+        public enum 进销存管理
         {
             采购管理,
-            库存管理,
             销售管理,
-            品质检验,
+            库存管理,
         }
 
         public enum 客户关系

@@ -20,7 +20,7 @@ using System.Windows.Forms;
 namespace RUINORERP.UI.PSI.INV
 {
 
-    [MenuAttrAssemblyInfo("其他出库统计", ModuleMenuDefine.模块定义.进销存管理, ModuleMenuDefine.供应链管理.库存管理, BizType.其他出库统计)]
+    [MenuAttrAssemblyInfo("其他出库统计", ModuleMenuDefine.模块定义.进销存管理, ModuleMenuDefine.进销存管理.库存管理, BizType.其他出库统计)]
     public partial class UCStockOutStatistics : BaseNavigatorGeneric<View_StockOutItems, View_StockOutItems>
     {
         public UCStockOutStatistics()

@@ -45,7 +45,7 @@ using static System.Windows.Forms.VisualStyles.VisualStyleElement.ListView;
 
 namespace RUINORERP.UI.MRP.PQC
 {
-    [MenuAttrAssemblyInfo("返工入库单", ModuleMenuDefine.模块定义.生产管理, ModuleMenuDefine.生产管理.制程生产, BizType.返工入库单)]
+    [MenuAttrAssemblyInfo("返工入库单", ModuleMenuDefine.模块定义.生产管理, ModuleMenuDefine.生产管理.生产品控, BizType.返工入库单)]
     public partial class UCMRPReworkEntry : BaseBillEditGeneric<tb_MRP_ReworkEntry, tb_MRP_ReworkEntryDetail>
     {
         public UCMRPReworkEntry()

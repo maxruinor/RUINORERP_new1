@@ -357,7 +357,7 @@ namespace RUINORERP.UI.Common
                 else
                 {
                     //更新一下标题
-                    var colset = dataGridView.ColumnDisplays.FirstOrDefault(ec => ec.ColName == oldCol.ColName );
+                    var colset = dataGridView.ColumnDisplays.FirstOrDefault(ec => ec.ColName == oldCol.ColName);
                     colset = oldCol;
                 }
             }
@@ -963,6 +963,15 @@ namespace RUINORERP.UI.Common
                 {
                     var jsonlist = objList as Newtonsoft.Json.Linq.JArray;
                     originalColumnDisplays = jsonlist.ToObject<List<SGColDisplayHandler>>();
+                    //如果缓存设置中的唯一标识为空，则重新生成唯一标识
+                    originalColumnDisplays.ForEach(c =>
+                    {
+                        if (c.UniqueId == null)
+                        {
+                            c.UniqueId = Guid.NewGuid().ToString();
+                        }
+                    }
+                    );
                 }
             }
             else
@@ -1026,11 +1035,11 @@ namespace RUINORERP.UI.Common
                     if (SaveTargetColumnDisplays != null && SaveTargetColumnDisplays.Count > 0)
                     {
                         //发送缓存数据
-                         json = JsonConvert.SerializeObject(SaveTargetColumnDisplays,
-                           new JsonSerializerSettings
-                           {
-                               ReferenceLoopHandling = ReferenceLoopHandling.Ignore // 或 ReferenceLoopHandling.Serialize
-                           });
+                        json = JsonConvert.SerializeObject(SaveTargetColumnDisplays,
+                          new JsonSerializerSettings
+                          {
+                              ReferenceLoopHandling = ReferenceLoopHandling.Ignore // 或 ReferenceLoopHandling.Serialize
+                          });
                         GridSetting.ColsSetting = json;
                     }
                     RUINORERP.Business.BusinessHelper.Instance.EditEntity(GridSetting);
@@ -1090,7 +1099,7 @@ namespace RUINORERP.UI.Common
             originalColumnDisplays.ForEach(c =>
             {
                 //权限设置隐藏的和不可用的情况
-                if (CurMenuInfo != null)
+                if (CurMenuInfo != null && CurMenuInfo.tb_P4Fields != null)
                 {
                     CurMenuInfo.tb_P4Fields.ForEach(p =>
                     {

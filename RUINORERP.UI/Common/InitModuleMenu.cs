@@ -192,7 +192,7 @@ namespace RUINORERP.UI.Common
                     InitNavMenu<生产管理>(menuInfoparent, menulist);
                     break;
                 case 模块定义.进销存管理:
-                    InitNavMenu<供应链管理>(menuInfoparent, menulist);
+                    InitNavMenu<进销存管理>(menuInfoparent, menulist);
                     break;
                 case 模块定义.客户关系:
                     InitNavMenu<客户关系>(menuInfoparent, menulist);

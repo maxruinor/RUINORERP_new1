@@ -31,7 +31,7 @@ using RUINORERP.Global.Model;
 
 namespace RUINORERP.UI.PSI.INV
 {
-    [MenuAttrAssemblyInfo("库存跟踪", ModuleMenuDefine.模块定义.进销存管理, ModuleMenuDefine.供应链管理.库存管理, BizType.库存跟踪)]
+    [MenuAttrAssemblyInfo("库存跟踪", ModuleMenuDefine.模块定义.进销存管理, ModuleMenuDefine.进销存管理.库存管理, BizType.库存跟踪)]
     public partial class UCInventoryTracking : BaseNavigatorGeneric<View_Inventory, View_Inventory>
     {
         public UCInventoryTracking()

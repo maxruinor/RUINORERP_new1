@@ -149,19 +149,6 @@ namespace RUINORERP.Model
                         }
         }
 
-        private DateTime? _EndDate;
-        /// <summary>
-        /// 离职日期
-        /// </summary>
-        [AdvQueryAttribute(ColName = "EndDate",ColDesc = "离职日期")] 
-        [SugarColumn(ColumnDataType = "datetime", SqlParameterDbType ="DateTime",  ColumnName = "EndDate" ,IsNullable = true,ColumnDescription = "离职日期" )]
-        public DateTime? EndDate
-        { 
-            get{return _EndDate;}
-            set{
-            SetProperty(ref _EndDate, value);
-                        }
-        }
 
         private int? _Sort;
         /// <summary>

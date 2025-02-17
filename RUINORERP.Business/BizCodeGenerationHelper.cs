@@ -86,52 +86,52 @@ namespace RUINORERP.Business
             switch (BIT)
             {
                 case BaseInfoType.ModuleDefinition:
-                    rule = "{S:MD}{redis:MD/000}";//bst001
+                    rule = "{S:MD}{redis:{S:MD}/000}";
                     break;
                 case BaseInfoType.ProductNo:
                     //rule = "{S:P}{D:yyMM}{redis:P/000}";//bst001
-                    rule = "{S:P}{Hex:yyMM}{redis:P/000}";//bst001
+                    rule = "{S:P}{Hex:yyMM}{redis:{S:P}/000}";
 
                     break;
                 case BaseInfoType.Employee:
-                    rule = "{S:BST}{redis:BST/000}";//bst001
+                    rule = "{S:EMP}{redis:{S:EMP}/000}";
                     break;
 
                 case BaseInfoType.Department:
-                    rule = "{S:D}{redis:D/000}";
+                    rule = "{S:D}{redis:{S:D}/000}";
                     break;
                 case BaseInfoType.Storehouse:
-                    rule = "{S:ST}{redis:ST/00}";
+                    rule = "{S:ST}{redis:{S:ST}/000}";
                     break;
                 case BaseInfoType.Supplier:
-                    rule = "{S:SU}{redis:SU/000}";
+                    rule = "{S:SU}{redis:{S:SU}/000}";
                     break;
                 case BaseInfoType.Customer:
-                    rule = "{S:CU}{redis:CU/000}";
+                    rule = "{S:CU}{redis:{S:CU}/000}";
                     break;
                 case BaseInfoType.CVOther:
-                    rule = "{S:CV}{redis:CV/000}";
+                    rule = "{S:CV}{redis:{S:CV}/000}";
                     break;
                 case BaseInfoType.StoreCode:
-                    rule = "{S:S}{redis:S/000}";
+                    rule = "{S:SHOP}{redis:{S:SHOP}/000}";
                     break;
 
                 case BaseInfoType.Location:
-                    rule = "{S:L}{redis:L/000}";
+                    rule = "{S:L}{redis:{S:L}/000}";
                     break;
                 case BaseInfoType.SKU_No:
                     rule = "{S:SK}{Hex:yyMM}{redis:SK/0000}";
                     break;
                 case BaseInfoType.ProCategories:
-                    rule = "{S:C}{redis:C/0000}";
+                    rule = "{S:C}{redis:{S:C}/000}";
                     break;
                 //case BaseInfoType.ShortCode:
                 //    rule = "{S:SC}{Hex:yyMM}{redis:C/000}";
                 case BaseInfoType.ShortCode:
-                    rule = "{redis:ShortCode/000}";
+                    rule = "{S:SC}{redis:{S:SC}/000}";
                     break;
                 case BaseInfoType.ProjectGroupCode:
-                    rule = "{S:PG}{redis:ShortCode/000}";
+                    rule = "{S:PG}{redis:{S:ShortCode}/000}";
                     break;
                 default:
                     break;

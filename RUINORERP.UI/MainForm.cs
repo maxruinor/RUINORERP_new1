@@ -565,7 +565,6 @@ namespace RUINORERP.UI
             kryptonDockableWorkspace1.ActivePageChanged += kryptonDockableWorkspace1_ActivePageChanged;
             GetActivePage(kryptonDockableWorkspace1);
 
-
             LoginWebServer();
 
             System.Windows.Forms.Timer timerStatus = new System.Windows.Forms.Timer();

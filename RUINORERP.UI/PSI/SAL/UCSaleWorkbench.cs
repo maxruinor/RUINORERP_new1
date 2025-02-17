@@ -63,7 +63,7 @@ using XmlDocument = System.Xml.XmlDocument;
 namespace RUINORERP.UI.SAL
 {
 
-    [MenuAttrAssemblyInfo("销售工作台", ModuleMenuDefine.模块定义.进销存管理, ModuleMenuDefine.供应链管理.销售管理)]
+    [MenuAttrAssemblyInfo("销售工作台", ModuleMenuDefine.模块定义.进销存管理, ModuleMenuDefine.进销存管理.销售管理)]
     public partial class UCSaleWorkbench : BaseForm.BaseQuery
     {
 

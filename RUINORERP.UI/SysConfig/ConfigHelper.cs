@@ -16,8 +16,6 @@ namespace RUINORERP.UI.SysConfig
     {
         public static (string value, string description) GetConfig(string key)
         {
-
-
             // 从数据库或缓存中获取配置项
             var configEntry = Startup.GetFromFac<ConfigManager>().GetValue(key);
 

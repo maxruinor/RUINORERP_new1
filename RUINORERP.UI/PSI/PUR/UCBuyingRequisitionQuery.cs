@@ -28,7 +28,7 @@ using System.Linq.Expressions;
 namespace RUINORERP.UI.PSI.PUR
 {
 
-    [MenuAttrAssemblyInfo("请购单查询", ModuleMenuDefine.模块定义.进销存管理, ModuleMenuDefine.供应链管理.采购管理, BizType.请购单)]
+    [MenuAttrAssemblyInfo("请购单查询", ModuleMenuDefine.模块定义.进销存管理, ModuleMenuDefine.进销存管理.采购管理, BizType.请购单)]
     public partial class UCBuyingRequisitionQuery : BaseBillQueryMC<tb_BuyingRequisition, tb_BuyingRequisitionDetail>
     {
         public UCBuyingRequisitionQuery()

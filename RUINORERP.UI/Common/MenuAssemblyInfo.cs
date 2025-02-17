@@ -113,7 +113,7 @@ namespace RUINORERP.UI.Common
             }
         }
 
-        public MenuAttrAssemblyInfo(string describe, 模块定义 所属模块, 供应链管理 NextNavMenu, params BizType[] bizType)
+        public MenuAttrAssemblyInfo(string describe, 模块定义 所属模块, 进销存管理 NextNavMenu, params BizType[] bizType)
         {
             string _MenuPath = string.Empty;
             _MenuPath = 所属模块.ToString() + "|" + NextNavMenu.ToString() + "|";

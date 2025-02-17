@@ -49,7 +49,7 @@ namespace RUINORERP.UI.PSI.SAL
     /// 处理统计分析等各种情况
     /// 多个tabPage添加，自动生成条件
     /// 单表带条件查询 并且可以带分析outlook
-    [MenuAttrAssemblyInfo("销售数据汇总", ModuleMenuDefine.模块定义.进销存管理, ModuleMenuDefine.供应链管理.销售管理, BizType.销售数据汇总)]
+    [MenuAttrAssemblyInfo("销售数据汇总", ModuleMenuDefine.模块定义.进销存管理, ModuleMenuDefine.进销存管理.销售管理, BizType.销售数据汇总)]
     public partial class UCSalesDataSummary : UserControl
     {
         //是否可以放到主窗体 公用？
@@ -131,6 +131,7 @@ namespace RUINORERP.UI.PSI.SAL
                             UCBillMasterQuery queryMaster = kryptonNavigator1.SelectedPage.Controls.Find(navigatorMenu.menuType.ToString(), true).FirstOrDefault() as UCBillMasterQuery;
                             if (queryMaster != null)
                             {
+                                queryMaster.newSumDataGridViewMaster.NeedSaveColumnsXml = true;
                                 GetSaleOrderDataListFromProc(queryMaster);
 
                             }
@@ -177,7 +178,7 @@ namespace RUINORERP.UI.PSI.SAL
                             UCBillMasterQuery queryMaster = kryptonNavigator1.SelectedPage.Controls.Find(navigatorMenu.menuType.ToString(), true).FirstOrDefault() as UCBillMasterQuery;
                             if (queryMaster != null)
                             {
-                                 
+                                queryMaster.newSumDataGridViewMaster.NeedSaveColumnsXml = true;
                                 queryMaster.bindingSourceMaster.DataSource =SaleOutList.ToBindingSortCollection();
                                 queryMaster.ShowSummaryCols();
                             }

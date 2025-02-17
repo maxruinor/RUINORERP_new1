@@ -23,7 +23,7 @@ using RUINORERP.Business.Processor;
 
 namespace RUINORERP.UI.PSI.INV
 {
-    [MenuAttrAssemblyInfo("产品转换单查询", ModuleMenuDefine.模块定义.进销存管理, ModuleMenuDefine.供应链管理.库存管理, BizType.产品转换单)]
+    [MenuAttrAssemblyInfo("产品转换单查询", ModuleMenuDefine.模块定义.进销存管理, ModuleMenuDefine.进销存管理.库存管理, BizType.产品转换单)]
     public partial class UCProdConversionQuery : BaseBillQueryMC<tb_ProdConversion, tb_ProdConversionDetail>
     {
 

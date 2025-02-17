@@ -1908,12 +1908,6 @@
     <Compile Include="PSI\PUR\UCPurEntry.designer.cs">
       <DependentUpon>UCPurEntry.cs</DependentUpon>
     </Compile>
-    <Compile Include="PSI\PUR\UCPurEntryAnalysis.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="PSI\PUR\UCPurEntryAnalysis.Designer.cs">
-      <DependentUpon>UCPurEntryAnalysis.cs</DependentUpon>
-    </Compile>
     <Compile Include="PSI\PUR\UCPurEntryQuery.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -2115,8 +2109,6 @@
     <Compile Include="ClientSuperSocket\SocketSession.cs" />
     <Compile Include="ClientSuperSocket\SystemOptimizerService.cs" />
     <Compile Include="ClientSuperSocket\WorkflowService.cs" />
-    <Compile Include="SysConfig\ConfigHelper.cs" />
-    <Compile Include="SysConfig\ConfigKeys.cs" />
     <Compile Include="SysConfig\ConfigManager.cs" />
     <Compile Include="SysConfig\DataImportExportManager.cs" />
     <Compile Include="SysConfig\UCButtonInfoEdit.cs">
@@ -3259,9 +3251,6 @@
     </EmbeddedResource>
     <EmbeddedResource Include="PSI\PUR\UCPurEntry.resx">
       <DependentUpon>UCPurEntry.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="PSI\PUR\UCPurEntryAnalysis.resx">
-      <DependentUpon>UCPurEntryAnalysis.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="PSI\PUR\UCPurEntryQuery.resx">
       <DependentUpon>UCPurEntryQuery.cs</DependentUpon>

@@ -45,7 +45,7 @@ using Netron.GraphLib;
 
 namespace RUINORERP.UI.PSI.INV
 {
-    [MenuAttrAssemblyInfo("归还单", ModuleMenuDefine.模块定义.进销存管理, ModuleMenuDefine.供应链管理.库存管理, BizType.归还单)]
+    [MenuAttrAssemblyInfo("归还单", ModuleMenuDefine.模块定义.进销存管理, ModuleMenuDefine.进销存管理.库存管理, BizType.归还单)]
     public partial class UCProdReturning : BaseBillEditGeneric<tb_ProdReturning, tb_ProdReturningDetail>
     {
         public UCProdReturning()

@@ -20,7 +20,7 @@ using System.Windows.Forms;
 namespace RUINORERP.UI.PSI.INV
 {
 
-    [MenuAttrAssemblyInfo("转换单统计", ModuleMenuDefine.模块定义.进销存管理, ModuleMenuDefine.供应链管理.库存管理, BizType.转换单统计)]
+    [MenuAttrAssemblyInfo("转换单统计", ModuleMenuDefine.模块定义.进销存管理, ModuleMenuDefine.进销存管理.库存管理, BizType.转换单统计)]
     public partial class UCProdConversionStatistics : BaseNavigatorGeneric<View_ProdConversionItems, View_ProdConversionItems>
     {
         public UCProdConversionStatistics()

@@ -25,7 +25,7 @@ using RUINORERP.Business.Processor;
 namespace RUINORERP.UI.PSI.PUR
 {
 
-    [MenuAttrAssemblyInfo("采购入库查询", ModuleMenuDefine.模块定义.进销存管理, ModuleMenuDefine.供应链管理.采购管理, BizType.采购入库单)]
+    [MenuAttrAssemblyInfo("采购入库查询", ModuleMenuDefine.模块定义.进销存管理, ModuleMenuDefine.进销存管理.采购管理, BizType.采购入库单)]
     public partial class UCPurEntryQuery : BaseBillQueryMC<tb_PurEntry, tb_PurEntryDetail>
     {
         public UCPurEntryQuery()

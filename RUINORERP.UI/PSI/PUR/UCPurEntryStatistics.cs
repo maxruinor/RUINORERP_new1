@@ -20,7 +20,7 @@ using System.Windows.Forms;
 namespace RUINORERP.UI.PSI.PUR
 {
 
-    [MenuAttrAssemblyInfo("采购入库统计", ModuleMenuDefine.模块定义.进销存管理, ModuleMenuDefine.供应链管理.采购管理, BizType.采购入库统计)]
+    [MenuAttrAssemblyInfo("采购入库统计", ModuleMenuDefine.模块定义.进销存管理, ModuleMenuDefine.进销存管理.采购管理, BizType.采购入库统计)]
     public partial class UCPurEntryStatistics : BaseNavigatorGeneric<View_PurEntryItems, View_PurEntryItems>
     {
         public UCPurEntryStatistics()

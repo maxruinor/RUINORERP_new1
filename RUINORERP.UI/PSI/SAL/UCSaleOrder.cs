@@ -49,7 +49,7 @@ using NPOI.SS.Formula.Functions;
 
 namespace RUINORERP.UI.PSI.SAL
 {
-    [MenuAttrAssemblyInfo("销售订单", ModuleMenuDefine.模块定义.进销存管理, ModuleMenuDefine.供应链管理.销售管理, BizType.销售订单)]
+    [MenuAttrAssemblyInfo("销售订单", ModuleMenuDefine.模块定义.进销存管理, ModuleMenuDefine.进销存管理.销售管理, BizType.销售订单)]
     public partial class UCSaleOrder : BaseBillEditGeneric<tb_SaleOrder, tb_SaleOrderDetail>, IFormAuth
     {
         public UCSaleOrder()

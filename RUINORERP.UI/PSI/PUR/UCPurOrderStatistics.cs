@@ -22,7 +22,7 @@ using RUINORERP.Business.Processor;
 
 namespace RUINORERP.UI.PSI.PUR
 {
-    [MenuAttrAssemblyInfo("采购订单统计", ModuleMenuDefine.模块定义.进销存管理, ModuleMenuDefine.供应链管理.库存管理, BizType.采购订单统计)]
+    [MenuAttrAssemblyInfo("采购订单统计", ModuleMenuDefine.模块定义.进销存管理, ModuleMenuDefine.进销存管理.采购管理, BizType.采购订单统计)]
     public partial class UCPurOrderStatistics : BaseNavigatorGeneric<View_PurOrderItems, View_PurOrderItems>
     {
         public UCPurOrderStatistics()

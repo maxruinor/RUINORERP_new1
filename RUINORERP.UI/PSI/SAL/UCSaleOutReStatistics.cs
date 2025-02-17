@@ -22,7 +22,7 @@ using RUINORERP.Business.Processor;
 
 namespace RUINORERP.UI.PSI.SAL
 {
-    [MenuAttrAssemblyInfo("销售退回统计", ModuleMenuDefine.模块定义.进销存管理, ModuleMenuDefine.供应链管理.库存管理, BizType.销售退回统计)]
+    [MenuAttrAssemblyInfo("销售退回统计", ModuleMenuDefine.模块定义.进销存管理, ModuleMenuDefine.进销存管理.销售管理, BizType.销售退回统计)]
     public partial class UCSaleOutReStatistics : BaseNavigatorGeneric<View_SaleOutReItems, View_SaleOutReItems>
     {
         public UCSaleOutReStatistics()

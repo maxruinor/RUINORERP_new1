@@ -55,6 +55,8 @@ using Newtonsoft.Json;
 using Fireasy.Common.Extensions;
 using RUINORERP.Global;
 using FastReport.Table;
+using NPOI.SS.Formula.Functions;
+using Newtonsoft.Json.Linq;
 
 
 namespace RUINORERP.UI.Common
@@ -200,6 +202,14 @@ namespace RUINORERP.UI.Common
                             kvlist.Add(kv);
 
                             ReferenceKeyMapping mapping = new ReferenceKeyMapping(fkrattr.FKTableName, fkrattr.FK_IDColName, tableName);
+
+                            //只处理需要缓存的表
+                            KeyValuePair<string, string> pair = new KeyValuePair<string, string>();
+                            if (BizCacheHelper.Manager.NewTableList.TryGetValue(mapping.ReferenceTableName, out pair))
+                            {
+                                //要显示的默认值是从缓存表中获取的字段名，默认是主键ID字段对应的名称
+                                mapping.ReferenceDefaultDisplayFieldName = pair.Value;
+                            }
                             AddReferenceKeyMapping(fkrattr.FK_IDColName, mapping);
                         }
                     }
@@ -223,11 +233,12 @@ namespace RUINORERP.UI.Common
         /// <summary>
         /// 手动添加外键关联指向
         /// </summary>
-        /// <typeparam name="source">单位表</typeparam>
-        /// <typeparam name="target">单位换算，产品等引用单位的表，字段和主键不一样时使用</typeparam>
+        /// <typeparam name="source">from单位表</typeparam>
+        /// <typeparam name="target">to单位换算，产品等引用单位的表，字段和主键不一样时使用</typeparam>
         /// <param name="SourceField"></param>
         /// <param name="TargetField"></param>
-        public void AddReferenceKeyMapping<source, target>(Expression<Func<source, object>> SourceField, Expression<Func<target, object>> TargetField)
+        /// <param name="CustomDisplaySourceField">如果有特殊指定显示为其它列时</param>
+        public void AddReferenceKeyMapping<source, target>(Expression<Func<source, object>> SourceField, Expression<Func<target, object>> TargetField, Expression<Func<source, object>> CustomDisplaySourceField = null)
         {
             MemberInfo Sourceinfo = SourceField.GetMemberInfo();
             MemberInfo Targetinfo = TargetField.GetMemberInfo();
@@ -237,7 +248,22 @@ namespace RUINORERP.UI.Common
                 ReferenceKeyMappings = new HashSet<ReferenceKeyMapping>();
             }
             ReferenceKeyMapping mapping = new ReferenceKeyMapping(typeof(source).Name, Sourceinfo.Name, typeof(target).Name, Targetinfo.Name);
-
+            if (typeof(source).Name == typeof(target).Name)
+            {
+                mapping.IsSelfReferencing = true;
+            }
+            //只处理需要缓存的表
+            KeyValuePair<string, string> pair = new KeyValuePair<string, string>();
+            if (BizCacheHelper.Manager.NewTableList.TryGetValue(mapping.ReferenceTableName, out pair))
+            {
+                //要显示的默认值是从缓存表中获取的字段名，默认是主键ID字段对应的名称
+                mapping.ReferenceDefaultDisplayFieldName = pair.Value;
+            }
+            if (CustomDisplaySourceField != null)
+            {
+                MemberInfo CustomDisplayColInfo = CustomDisplaySourceField.GetMemberInfo();
+                mapping.CustomDisplayColumnName = CustomDisplayColInfo.Name;
+            }
             //以目标为主键，原始的相同的只能为值
             ReferenceKeyMappings.Add(mapping);
         }
@@ -327,26 +353,26 @@ namespace RUINORERP.UI.Common
         }
 
         // 获取显示名称
-        private string GetDisplayNameByReferenceKeyMappings(string tableName, string columnName, object value)
+        private string GetDisplayNameByReferenceKeyMappings(string TargetTableName, string idColName, object IdValue)
         {
             try
             {
                 // 如果值为空，直接返回空字符串
-                if (value == null)
+                if (IdValue == null)
                 {
                     return string.Empty;
                 }
 
                 // 如果值是 decimal 类型，直接返回
-                if (value.GetType().Name == "Decimal")
+                if (IdValue.GetType().Name == "Decimal")
                 {
-                    return value.ToString();
+                    return IdValue.ToString();
                 }
 
                 // 如果值不是 long 类型，直接返回
-                if (value.GetType().Name != "Int64")
+                if (IdValue.GetType().Name != "Int64")
                 {
-                    return value.ToString();
+                    return IdValue.ToString();
                 }
                 string NameValue = string.Empty;
                 // 特殊字段处理（如创建人、修改人）
@@ -362,14 +388,14 @@ namespace RUINORERP.UI.Common
                 Created_by = c => c.Created_by.Value;
                 Modified_by = c => c.Modified_by.Value;
 
-                if (columnName == Created_by.GetMemberInfo().Name || columnName == Modified_by.GetMemberInfo().Name || columnName == "Approver_by")
+                if (idColName == Created_by.GetMemberInfo().Name || idColName == Modified_by.GetMemberInfo().Name || idColName == "Approver_by")
                 {
-                    if (value.ToString() == "0")
+                    if (IdValue.ToString() == "0")
                     {
                         return "";
                     }
                     string SourceTableName = typeof(tb_Employee).Name;
-                    object objText = BizCacheHelper.Instance.GetValue(SourceTableName, value);
+                    object objText = BizCacheHelper.Instance.GetValue(SourceTableName, IdValue);
                     if (objText != null && objText.ToString() != "System.Object")
                     {
                         NameValue = objText.ToString();
@@ -377,55 +403,150 @@ namespace RUINORERP.UI.Common
                     }
                 }
 
-
-                //视图暂时没有实体生成时没有设置关联外键的特性，所以在具体业务实现时 手工指定成一个集合了。
-                if (!tableName.Contains("View") && type != null)
-                {
-                    BizCacheHelper.Manager.SetFkColList(type);
-                }
-
                 #endregion
 
-                return UIHelper.ShowGridColumnsNameValue(mapping.ReferenceTableName, mapping.ReferenceOriginalFieldName, value);
-
-                // 自引用表处理（如类别表）
-                if (mapping.IsSelfReferencing)
+                ReferenceKeyMapping mapping = ReferenceKeyMappings.Where(c => c.MappedTargetTableName == TargetTableName && c.MappedTargetFieldName == idColName).FirstOrDefault();
+                if (mapping != null)
                 {
-                    string tableName = mapping.ReferenceTableName;
-                    if (!BizCacheHelper.Manager.FkPairTableList.ContainsKey(tableName))
+                    if (mapping.MappedTargetFieldName == idColName)
                     {
-                        List<KeyValuePair<string, string>> kvSelflist = new List<KeyValuePair<string, string>>();
-                        //Expression<Func<T, long?>> expKey = mapping.KeyExpression;
-                        //MemberInfo minfo = expKey.GetMemberInfo();
-                        string key = mapping.ReferenceOriginalFieldName;
-                        KeyValuePair<string, string> kv = new KeyValuePair<string, string>(key, typeof(T).Name);
-                        kvSelflist.Add(kv);
-                        if (kvSelflist.Count > 0)
+
+                        #region 从缓存中取值
+                        object entity = new object();
+                        //只处理需要缓存的表
+                        KeyValuePair<string, string> pair = new KeyValuePair<string, string>();
+                        if (BizCacheHelper.Manager.NewTableList.TryGetValue(mapping.ReferenceTableName, out pair))
                         {
-                            BizCacheHelper.Manager.FkPairTableList.TryAdd(tableName, kvSelflist);
+                            string key = pair.Key;
+                            string KeyValue = IdValue.ToString();
+                            //设置属性的值
+                            if (BizCacheHelper.Manager.CacheEntityList.Exists(mapping.ReferenceTableName))
+                            {
+                                var rslist = BizCacheHelper.Manager.CacheEntityList.Get(mapping.ReferenceTableName);
+                                if (TypeHelper.IsGenericList(rslist.GetType()))
+                                {
+                                    var lastlist = ((IEnumerable<dynamic>)rslist).ToList();
+                                    if (lastlist != null)
+                                    {
+                                        foreach (var item in lastlist)
+                                        {
+                                            var id = RUINORERP.Common.Helper.ReflectionHelper.GetPropertyValue(item, key);
+                                            if (id != null)
+                                            {
+                                                if (id.ToString() == IdValue.ToString())
+                                                {
+                                                    entity = RUINORERP.Common.Helper.ReflectionHelper.GetPropertyValue(item, pair.Value);
+                                                    break;
+                                                }
+                                            }
+
+                                        }
+                                    }
+                                }
+                                else if (rslist != null && TypeHelper.IsJArrayList(rslist.GetType()))
+                                {
+
+                                    var lastlist = ((IEnumerable<dynamic>)rslist).ToList();
+                                    if (lastlist != null)
+                                    {
+                                        foreach (var item in lastlist)
+                                        {
+                                            // 将item转换为JObject
+                                            var jobj = JObject.Parse(item.ToString());
+
+                                            // 获取DepartmentID属性的值
+                                            var id = jobj[key]?.ToString();
+
+                                            if (id != null && id == IdValue.ToString())
+                                            {
+                                                //如果找到了匹配的id，获取对应的属性值，如果有特殊指定则取特殊值
+                                                if (string.IsNullOrEmpty(mapping.CustomDisplayColumnName))
+                                                {
+                                                    // 假设你想要获取的属性是DepartmentName
+                                                    var departmentName = jobj[pair.Value]?.ToString();
+                                                    if (departmentName != null)
+                                                    {
+                                                        entity = departmentName;
+                                                        break;
+                                                    }
+                                                }
+                                                else
+                                                {
+                                                    var departmentName = jobj[mapping.CustomDisplayColumnName]?.ToString();
+                                                    if (departmentName != null)
+                                                    {
+                                                        entity = departmentName;
+                                                        break;
+                                                    }
+                                                }
+
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        #endregion
+
+                        if (entity != null && entity.GetType().Name != "Object")
+                        {
+                            NameValue = entity.ToString();
+                            return NameValue;
                         }
                     }
                 }
-
-                // 获取外键表的名称和字段名
-                string baseTableName = mapping.ReferenceTableName;
-                string keyFieldName = mapping.ReferenceOriginalFieldName;
-
-                // 获取外键表的值
-                object obj = BizCacheHelper.Instance.GetValue(baseTableName, value);
-                if (obj != null)
+                else
                 {
-                    return obj.ToString();
+                    #region 没有映射的情况
+
+                    List<KeyValuePair<string, string>> kvlist = new List<KeyValuePair<string, string>>();
+                    if (BizCacheHelper.Manager.FkPairTableList.TryGetValue(TargetTableName, out kvlist))
+                    {
+                        var kv = kvlist.Find(k => k.Key == idColName);
+                        //如果找不到呢？
+                        if (kv.Key == null)
+                        {
+                            return string.Empty;
+                        }
+                        string baseTableName = kv.Value;
+                        object obj = BizCacheHelper.Instance.GetValue(baseTableName, IdValue);
+                        if (obj != null)
+                        {
+                            NameValue = obj.ToString();
+                        }
+                    }
+                    if (string.IsNullOrEmpty(NameValue) && TargetTableName.Contains("View"))
+                    {
+                        object obj = BizCacheHelper.Instance.GetValue(TargetTableName, IdValue);
+                        if (obj != null && obj.GetType().Name != "Object")
+                        {
+                            NameValue = obj.ToString();
+                        }
+                    }
+                    else
+                    {
+                        if (string.IsNullOrEmpty(NameValue))
+                        {
+                            object obj = BizCacheHelper.Instance.GetValue(TargetTableName, IdValue);
+                            if (obj != null && obj.GetType().Name != "Object")
+                            {
+                                NameValue = obj.ToString();
+                            }
+                        }
+                    }
+                    return NameValue;
+                    #endregion
                 }
+
             }
             catch (Exception ex)
             {
-                // 异常处理
-                Console.WriteLine($"Error getting display name: {ex.Message}");
+                return string.Empty;
             }
-
-            return string.Empty;
+            return IdValue.ToString();
         }
+
     }
 
     // 外键映射类 多种情况 
@@ -479,7 +600,7 @@ namespace RUINORERP.UI.Common
         /// 如：仓库ID 默认是仓库名称，也可以显示为仓库编号
         /// UnitNo 【实际单据没有这个字段】 这里代指  有名称 有编号的情况
         /// </summary>
-        public string ReferenceTargetedDisplayFieldName { get; set; } // 将要显示的名称字段名
+        public string CustomDisplayColumnName { get; set; }
 
 
         /// <summary>
@@ -487,9 +608,10 @@ namespace RUINORERP.UI.Common
         /// 如：仓库ID 默认是仓库名称，也可以显示为仓库编号
         /// </summary>
         public string ReferenceDisplayFieldName { get; set; } // 将要显示的名称字段名
-        public bool IsSpecialField { get; set; } // 是否是特殊字段（如创建人、修改人）
-        public string SpecialFieldName { get; set; } // 特殊字段的表名
-        public bool IsSelfReferencing { get; set; } // 是否是自引用表
+
+
+        // 是否是自引用表
+        public bool IsSelfReferencing { get; set; }
         //public List<KeyValuePair<object, string>> KeyValuePairList { get; set; } // 键值对集合
 
         public ReferenceKeyMapping(string referenceTableName, string referenceOriginalFieldName, string mappedTargetTableName, string mappedTargetFieldName = null, string referenceDefaultDisplayFieldName = null, string referenceTargetedDisplayFieldName = null)

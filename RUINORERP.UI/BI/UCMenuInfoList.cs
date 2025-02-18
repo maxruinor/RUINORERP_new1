@@ -27,9 +27,8 @@ namespace RUINORERP.UI.BI
         {
             InitializeComponent();
             base.EditForm = typeof(UCMenuInfoEdit);
-            
 
-            DisplayTextResolver.AddReferenceKeyMapping<tb_MenuInfo, tb_MenuInfo>(s => s.MenuID, t => t.Parent_id);
+            DisplayTextResolver.AddReferenceKeyMapping<tb_MenuInfo, tb_MenuInfo>(t => t.MenuID, s => s.Parent_id, t => t.ClassPath);
 
             #region 数据源来源单位和目标单位的字段不等于原始单位表中的主键字段，在显示时通过主键无法找到对应显示的名称
 
@@ -59,7 +58,7 @@ namespace RUINORERP.UI.BI
             foreach (DataGridViewRow dr in this.dataGridView1.SelectedRows)
             {
                 tb_MenuInfo Info = dr.DataBoundItem as tb_MenuInfo;
-                 rs = await childctr.BaseDeleteByNavAsync(dr.DataBoundItem as tb_MenuInfo);
+                rs = await childctr.BaseDeleteByNavAsync(dr.DataBoundItem as tb_MenuInfo);
                 if (rs)
                 {
                     //提示

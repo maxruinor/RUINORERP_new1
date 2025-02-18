@@ -29,6 +29,7 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(FrmLogin));
             this.lblpwd = new System.Windows.Forms.Label();
             this.lblID = new System.Windows.Forms.Label();
             this.chksaveIDpwd = new System.Windows.Forms.CheckBox();
@@ -56,24 +57,24 @@
             // lblpwd
             // 
             this.lblpwd.Font = new System.Drawing.Font("宋体", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.lblpwd.Location = new System.Drawing.Point(86, 164);
+            this.lblpwd.Location = new System.Drawing.Point(86, 150);
             this.lblpwd.Name = "lblpwd";
-            this.lblpwd.Size = new System.Drawing.Size(66, 29);
+            this.lblpwd.Size = new System.Drawing.Size(65, 16);
             this.lblpwd.TabIndex = 13;
-            this.lblpwd.Text = "密  码:";
+            this.lblpwd.Text = "密    码:";
             // 
             // lblID
             // 
             this.lblID.Font = new System.Drawing.Font("宋体", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.lblID.Location = new System.Drawing.Point(86, 112);
             this.lblID.Name = "lblID";
-            this.lblID.Size = new System.Drawing.Size(66, 29);
+            this.lblID.Size = new System.Drawing.Size(65, 16);
             this.lblID.TabIndex = 12;
-            this.lblID.Text = "账  号:";
+            this.lblID.Text = "账    号:";
             // 
             // chksaveIDpwd
             // 
-            this.chksaveIDpwd.Location = new System.Drawing.Point(158, 215);
+            this.chksaveIDpwd.Location = new System.Drawing.Point(159, 200);
             this.chksaveIDpwd.Name = "chksaveIDpwd";
             this.chksaveIDpwd.Size = new System.Drawing.Size(144, 24);
             this.chksaveIDpwd.TabIndex = 9;
@@ -83,7 +84,7 @@
             // btncancel
             // 
             this.btncancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.btncancel.Location = new System.Drawing.Point(263, 251);
+            this.btncancel.Location = new System.Drawing.Point(264, 236);
             this.btncancel.Name = "btncancel";
             this.btncancel.Size = new System.Drawing.Size(73, 35);
             this.btncancel.TabIndex = 11;
@@ -92,7 +93,7 @@
             // 
             // btnok
             // 
-            this.btnok.Location = new System.Drawing.Point(158, 251);
+            this.btnok.Location = new System.Drawing.Point(159, 236);
             this.btnok.Name = "btnok";
             this.btnok.Size = new System.Drawing.Size(73, 35);
             this.btnok.TabIndex = 10;
@@ -103,7 +104,7 @@
             // 
             this.txtPassWord.AccessibleDescription = "password";
             this.txtPassWord.AccessibleName = "password";
-            this.txtPassWord.Location = new System.Drawing.Point(158, 162);
+            this.txtPassWord.Location = new System.Drawing.Point(157, 148);
             this.txtPassWord.Name = "txtPassWord";
             this.txtPassWord.PasswordChar = '*';
             this.txtPassWord.Size = new System.Drawing.Size(178, 21);
@@ -116,7 +117,7 @@
             this.txtUserName.AccessibleName = "";
             this.txtUserName.AutoCompleteMode = System.Windows.Forms.AutoCompleteMode.SuggestAppend;
             this.txtUserName.AutoCompleteSource = System.Windows.Forms.AutoCompleteSource.CustomSource;
-            this.txtUserName.Location = new System.Drawing.Point(158, 110);
+            this.txtUserName.Location = new System.Drawing.Point(157, 110);
             this.txtUserName.Name = "txtUserName";
             this.txtUserName.Size = new System.Drawing.Size(178, 21);
             this.txtUserName.TabIndex = 7;
@@ -130,14 +131,14 @@
             // pictureBox1
             // 
             this.pictureBox1.BackColor = System.Drawing.SystemColors.GradientActiveCaption;
-            this.pictureBox1.Image = global::RUINORERP.UI.Properties.Resources.logo11;
-            this.pictureBox1.Location = new System.Drawing.Point(71, 6);
+            this.pictureBox1.Image = ((System.Drawing.Image)(resources.GetObject("pictureBox1.Image")));
+            this.pictureBox1.Location = new System.Drawing.Point(52, -3);
             this.pictureBox1.Name = "pictureBox1";
-            this.pictureBox1.Size = new System.Drawing.Size(304, 64);
+            this.pictureBox1.Size = new System.Drawing.Size(360, 103);
             this.pictureBox1.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
             this.pictureBox1.TabIndex = 14;
             this.pictureBox1.TabStop = false;
-            this.pictureBox1.Visible = false;
+            this.pictureBox1.Click += new System.EventHandler(this.pictureBox1_Click);
             // 
             // errorProvider1
             // 
@@ -149,7 +150,7 @@
             this.pictureBox2.Image = global::RUINORERP.UI.Properties.Resources.logo11;
             this.pictureBox2.Location = new System.Drawing.Point(0, 63);
             this.pictureBox2.Name = "pictureBox2";
-            this.pictureBox2.Size = new System.Drawing.Size(81, 176);
+            this.pictureBox2.Size = new System.Drawing.Size(46, 176);
             this.pictureBox2.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
             this.pictureBox2.TabIndex = 15;
             this.pictureBox2.TabStop = false;
@@ -171,7 +172,7 @@
             // chkSelectServer
             // 
             this.chkSelectServer.AutoSize = true;
-            this.chkSelectServer.Location = new System.Drawing.Point(347, 324);
+            this.chkSelectServer.Location = new System.Drawing.Point(347, 308);
             this.chkSelectServer.Name = "chkSelectServer";
             this.chkSelectServer.Size = new System.Drawing.Size(84, 16);
             this.chkSelectServer.TabIndex = 18;
@@ -184,7 +185,7 @@
             this.chkAutoReminderUpdate.AutoSize = true;
             this.chkAutoReminderUpdate.Checked = true;
             this.chkAutoReminderUpdate.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.chkAutoReminderUpdate.Location = new System.Drawing.Point(279, 219);
+            this.chkAutoReminderUpdate.Location = new System.Drawing.Point(280, 204);
             this.chkAutoReminderUpdate.Name = "chkAutoReminderUpdate";
             this.chkAutoReminderUpdate.Size = new System.Drawing.Size(96, 16);
             this.chkAutoReminderUpdate.TabIndex = 19;
@@ -228,7 +229,7 @@
             this.gbIPPort.Controls.Add(this.lblPort);
             this.gbIPPort.Controls.Add(this.txtServerIP);
             this.gbIPPort.Controls.Add(this.lblIP);
-            this.gbIPPort.Location = new System.Drawing.Point(71, 301);
+            this.gbIPPort.Location = new System.Drawing.Point(71, 285);
             this.gbIPPort.Name = "gbIPPort";
             this.gbIPPort.Size = new System.Drawing.Size(262, 49);
             this.gbIPPort.TabIndex = 25;
@@ -242,7 +243,7 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.SystemColors.GradientActiveCaption;
             this.CancelButton = this.btncancel;
-            this.ClientSize = new System.Drawing.Size(443, 362);
+            this.ClientSize = new System.Drawing.Size(461, 348);
             this.ControlBox = false;
             this.Controls.Add(this.gbIPPort);
             this.Controls.Add(this.chkAutoReminderUpdate);

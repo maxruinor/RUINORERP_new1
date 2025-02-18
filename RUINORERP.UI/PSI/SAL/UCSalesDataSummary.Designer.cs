@@ -271,6 +271,7 @@
             // 
             // txtMaxRow
             // 
+            this.txtMaxRow.Font = new System.Drawing.Font("Microsoft YaHei UI", 9F);
             this.txtMaxRow.Name = "txtMaxRow";
             this.txtMaxRow.Size = new System.Drawing.Size(100, 25);
             this.txtMaxRow.Text = "200";

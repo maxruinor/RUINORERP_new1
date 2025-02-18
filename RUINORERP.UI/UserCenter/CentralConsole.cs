@@ -31,7 +31,7 @@ namespace RUINORERP.UI.UserCenter
         }
     }
 
-    
+
     public enum 待办事项
     {
         采购_采购订单,
@@ -39,7 +39,7 @@ namespace RUINORERP.UI.UserCenter
         销售_销售订单,
         销售_退款退货处理,
         销售_销售出库单,
-    
+
         生产_计划单,
 
         仓库_采购入库单,
@@ -72,24 +72,21 @@ namespace RUINORERP.UI.UserCenter
     public enum 数据概览
     {
         销售单元 = 1,
-        销售业绩 = 2,
+        销售情况概览 = 2,
         采购单元 = 3,
         采购金额 = 4,
-
         库存单元 = 5,
-
         生产单元 = 6,
         /// <summary>
         /// 显示其他出库入情况，盘点，销售退回
         /// </summary>
         财务单元 = 8,
-
-        订单销售额,
-        出库销售额,
+        订单销售额 = 9,
+        出库销售额 = 10,
         毛利润,
         净利润,
         订单量,
-        客户数量,
+
         库存周转率,
         生产效率,
         采购成本,

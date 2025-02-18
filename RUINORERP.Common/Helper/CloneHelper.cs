@@ -376,14 +376,42 @@ namespace RUINORERP.Common.Helper
 
                 foreach (var propertyInfo in propertyInfos)
                 {
+                    // 检查属性是否可写
+                    if (!propertyInfo.CanWrite)
+                    {
+                        continue; // 如果不可写，跳过该属性
+                    }
+                    var sourceValue = propertyInfo.GetValue(item);
+
                     if (propertyInfo.PropertyType.IsGenericType && propertyInfo.PropertyType.GetGenericTypeDefinition().Equals(typeof(Nullable<>)))
                     {
                         var nullableConverter = new NullableConverter(propertyInfo.PropertyType);
-                        propertyInfo.SetValue(model, Convert.ChangeType(propertyInfo.GetValue(item), nullableConverter.UnderlyingType), null);
+
+                        // 如果源值为 null，则直接设置为 null
+                        if (sourceValue == null)
+                        {
+                            propertyInfo.SetValue(model, null, null);
+                        }
+                        else
+                        {
+                            // 转换为可空类型的底层类型
+                            var convertedValue = Convert.ChangeType(sourceValue, nullableConverter.UnderlyingType);
+                            propertyInfo.SetValue(model, convertedValue, null);
+                        }
                     }
                     else
                     {
-                        propertyInfo.SetValue(model, Convert.ChangeType(propertyInfo.GetValue(item), propertyInfo.PropertyType), null);
+                        // 如果源值为 null，则直接设置为 null
+                        if (sourceValue == null)
+                        {
+                            propertyInfo.SetValue(model, null, null);
+                        }
+                        else
+                        {
+                            // 转换为目标类型的值
+                            var convertedValue = Convert.ChangeType(sourceValue, propertyInfo.PropertyType);
+                            propertyInfo.SetValue(model, convertedValue, null);
+                        }
                     }
                 }
 
@@ -392,6 +420,5 @@ namespace RUINORERP.Common.Helper
 
             return result;
         }
-
     }
 }

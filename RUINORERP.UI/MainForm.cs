@@ -478,10 +478,6 @@ namespace RUINORERP.UI
             }
             else
             {
-
-              
-
-
                 UIBizSrvice.RequestCache(typeof(tb_RoleInfo));
                 UIBizSrvice.RequestCache(typeof(tb_ProductType));
                 UIBizSrvice.RequestCache(typeof(View_ProdDetail));

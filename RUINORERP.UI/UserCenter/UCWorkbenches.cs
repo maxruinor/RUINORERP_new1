@@ -211,6 +211,14 @@ namespace RUINORERP.UI.UserCenter
                     数据概览 DataOverview = (数据概览)Enum.Parse(typeof(数据概览), item);
                     switch (DataOverview)
                     {
+                        case 数据概览.销售情况概览:
+                            
+                            UCSalePerformanceCell uCSalePerformanceCell = new UCSalePerformanceCell();
+                            KryptonPage puCSalePerformanceCell = UIForKryptonHelper.NewPage("销售情况概览", uCSalePerformanceCell);
+
+                            Kpages.Add(puCSalePerformanceCell);
+                            break;
+
                         case 数据概览.销售单元:
                             UCSaleCell uCSaleCell = new UCSaleCell();
                             KryptonPage pSalecell = UIForKryptonHelper.NewPage("销售单元", uCSaleCell);

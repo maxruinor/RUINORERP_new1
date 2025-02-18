@@ -214,6 +214,9 @@ namespace RUINORERP.UI.SysConfig
         }
 
 
+        /// <summary>
+        /// 加载待办事项下拉列表数据枚举值到控件中，便于选择配置。
+        /// </summary>
         private void LoadToDolist()
         {
             kryptonCheckedListBox待办事项.Items.Clear();
@@ -223,6 +226,9 @@ namespace RUINORERP.UI.SysConfig
             }
         }
 
+        /// <summary>
+        /// 数据概览下拉列表加载数据枚举值到控件中，便于选择配置。
+        /// </summary>
         private void LoadDataOverview()
         {
             kryptonCheckedListBox数据概览.Items.Clear();
@@ -233,7 +239,7 @@ namespace RUINORERP.UI.SysConfig
         }
 
         /// <summary>
-        /// 将模块 菜单 显示为树
+        /// 加载角色和用户，加载树形控件
         /// </summary>
         private async void LoadTreeView()
         {

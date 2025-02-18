@@ -2364,6 +2364,12 @@
     <Compile Include="UserCenter\DataParts\UCPURCell.Designer.cs">
       <DependentUpon>UCPURCell.cs</DependentUpon>
     </Compile>
+    <Compile Include="UserCenter\DataParts\UCSalePerformanceCell.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="UserCenter\DataParts\UCSalePerformanceCell.Designer.cs">
+      <DependentUpon>UCSalePerformanceCell.cs</DependentUpon>
+    </Compile>
     <Compile Include="UserCenter\DataParts\UCSaleCell.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -3433,6 +3439,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="UserCenter\DataParts\UCPURCell.resx">
       <DependentUpon>UCPURCell.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UserCenter\DataParts\UCSalePerformanceCell.resx">
+      <DependentUpon>UCSalePerformanceCell.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="UserCenter\DataParts\UCSaleCell.resx">
       <DependentUpon>UCSaleCell.cs</DependentUpon>

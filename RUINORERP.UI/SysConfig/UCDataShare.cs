@@ -84,6 +84,7 @@ using FluentValidation;
 using FluentValidation.Results;
 using System.Windows.Documents;
 using Org.BouncyCastle.Utilities;
+using SixLabors.ImageSharp.Processing;
 
 
 
@@ -351,7 +352,7 @@ namespace RUINORERP.UI.SysConfig
                     //Property();
                     break;
                 case MenuItemEnums.导入:
-                    
+
                     OpenFileDialog openFileDialog = new OpenFileDialog();
                     if (openFileDialog.ShowDialog() == DialogResult.OK)
                     {
@@ -433,8 +434,8 @@ namespace RUINORERP.UI.SysConfig
             .Includes(b => b.tb_Prod_Attr_Relations, c => c.tb_prodproperty)
             .Includes(b => b.tb_Prod_Attr_Relations, c => c.tb_prodpropertyvalue)
             .Includes(b => b.tb_Prod_Attr_Relations, c => c.tb_proddetail)
-           // .Includes(b => b.tb_ProdDetails, c => c.tb_BOM_Ss, d => d.tb_BOM_SDetailSecondaries)
-             
+            // .Includes(b => b.tb_ProdDetails, c => c.tb_BOM_Ss, d => d.tb_BOM_SDetailSecondaries)
+
 
             .AsNavQueryable()
             .Includes(b => b.tb_ProdDetails, c => c.tb_BOM_Ss, d => d.tb_BOM_SDetails, e => e.tb_unit)//bom主 
@@ -578,7 +579,7 @@ namespace RUINORERP.UI.SysConfig
                 //来自于bom明细的明细产品信息
                 List<tb_ProdDetail> ProdDetailList = new List<tb_ProdDetail>();
 
-              
+
                 foreach (var item in ImportDataList)
                 {
                     if (item.tb_unit != null && !unitList.Exists(x => x.Unit_ID == item.tb_unit.Unit_ID))
@@ -698,7 +699,7 @@ namespace RUINORERP.UI.SysConfig
                                                     {
                                                         productTypeList.Add(x.tb_proddetail.tb_prod.tb_producttype);
                                                     }
-                                                    
+
 
                                                     if (x.tb_proddetail.tb_prod.tb_prodcategories != null && !prodcategoriesList.Any(Y => Y.Category_ID == x.tb_proddetail.tb_prod.tb_prodcategories.Category_ID))
                                                     {
@@ -932,9 +933,36 @@ namespace RUINORERP.UI.SysConfig
                 producttypes.AsInsertable.ExecuteCommand();//不存在插入
                 producttypes.AsUpdateable.ExecuteCommand();//存在更新
 
-                var category = MainForm.Instance.AppContext.Db.Storageable(prodcategoriesList).ToStorage();
-                category.AsInsertable.ExecuteCommand();//不存在插入
-                category.AsUpdateable.ExecuteCommand();//存在更新
+
+
+                //类目要找一下他的上级ID直到Parent_id为0
+                //List<tb_ProdCategories> ParentList = new List<tb_ProdCategories>();
+                //for (int i = 0; i < prodcategoriesList.Count; i++)
+                //{
+                //    if (prodcategoriesList[i].Parent_id == 0)
+                //    {
+                //        break;
+                //    }
+                //    else
+                //    {
+                //        if (prodcategoriesList[i].tb_prodcategories_parent != null && prodcategoriesList.Any(x => x.Category_ID == prodcategoriesList[i].Parent_id))
+                //        {
+                //            ParentList.Add(prodcategoriesList[i].tb_prodcategories_parent);
+                //        }
+                //    }
+                //}
+                //var Parentcategory = MainForm.Instance.AppContext.Db.Storageable(ParentList).ToStorage();
+                //Parentcategory.AsInsertable.ExecuteCommand();//不存在插入
+                //Parentcategory.AsUpdateable.ExecuteCommand();//存在更新
+                //这里是递归查找上级类目，直到Parent_id为0为止的反操作。不在这个树外的 统一再进行插入更新操作。
+                List<tb_ProdCategories> TempCategoryList = new List<tb_ProdCategories>();
+                TempCategoryList = prodcategoriesList.DeepCloneList<tb_ProdCategories>().ToList();
+
+                SaveCategory(prodcategoriesList, 0, TempCategoryList);
+
+                //var category = MainForm.Instance.AppContext.Db.Storageable(prodcategoriesList).ToStorage();
+                //category.AsInsertable.ExecuteCommand();//不存在插入
+                //category.AsUpdateable.ExecuteCommand();//存在更新
 
                 var ProdPropertys = MainForm.Instance.AppContext.Db.Storageable(ProdPropertyList).ToStorage();
                 ProdPropertys.AsInsertable.ExecuteCommand();//不存在插入
@@ -943,6 +971,16 @@ namespace RUINORERP.UI.SysConfig
                 var ProdPropertyValues = MainForm.Instance.AppContext.Db.Storageable(ProdPropertyValueList).ToStorage();
                 ProdPropertyValues.AsInsertable.ExecuteCommand();//不存在插入
                 ProdPropertyValues.AsUpdateable.ExecuteCommand();//存在更新
+
+                ProdList.ForEach(m =>
+                {
+                    if (!prodcategoriesList.Any(x => x.Category_ID == m.Category_ID))
+                    {
+
+                    };
+
+                }
+ );
 
                 var Prods = MainForm.Instance.AppContext.Db.Storageable(ProdList).ToStorage();
                 Prods.AsInsertable.ExecuteCommand();//不存在插入
@@ -1006,6 +1044,27 @@ namespace RUINORERP.UI.SysConfig
 
 
             }
+        }
+
+
+        private void SaveCategory(List<tb_ProdCategories> prodcategoriesList, long pid, List<tb_ProdCategories> TempCategoryList)
+        {
+            var list = prodcategoriesList.Where(x => x.Parent_id == pid).ToList();
+            if (list.Count > 0)
+            {
+
+                var category = MainForm.Instance.AppContext.Db.Storageable(list).ToStorage();
+                category.AsInsertable.ExecuteCommand();//不存在插入
+                category.AsUpdateable.ExecuteCommand();//存在更新
+                //保存过的就去掉，看还有没剩下的
+                TempCategoryList.RemoveWhere(x => list.Any(y => y.Category_ID == x.Category_ID));
+
+                for (int i = 0; i < list.Count; i++)
+                {
+                    SaveCategory(prodcategoriesList, list[i].Category_ID, TempCategoryList);
+                }
+            }
+
         }
 
         public void BindData(tb_Prod entity)
@@ -1142,7 +1201,7 @@ namespace RUINORERP.UI.SysConfig
             .Includes(a => a.tb_ProdDetails, b => b.tb_BOM_Ss, c => c.tb_BOM_SDetails, d => d.tb_proddetail, e => e.tb_prod, f => f.tb_prodcategories, g => g.tb_prodcategories_parent)//bom主
 
 
-      
+
 
 
 

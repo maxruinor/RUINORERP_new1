@@ -20,7 +20,7 @@ using System.Windows.Forms;
 namespace RUINORERP.UI.PSI.INV
 {
 
-    [MenuAttrAssemblyInfo("组合明细统计", ModuleMenuDefine.模块定义.进销存管理, ModuleMenuDefine.进销存管理.库存管理, BizType.组合明细统计)]
+    [MenuAttrAssemblyInfo("组合明细统计", ModuleMenuDefine.模块定义.进销存管理, ModuleMenuDefine.进销存管理.产品分割与组合, BizType.组合明细统计)]
     public partial class UCProdMergeStatistics : BaseNavigatorGeneric<View_ProdMergeItems, View_ProdMergeItems>
     {
         public UCProdMergeStatistics()

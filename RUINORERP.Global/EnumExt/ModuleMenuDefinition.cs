@@ -23,7 +23,7 @@ namespace RUINORERP.Model
             系统设置,
         }
 
-         
+
         public enum 生产管理
         {
             MRP基本资料,
@@ -39,6 +39,11 @@ namespace RUINORERP.Model
             采购管理,
             销售管理,
             库存管理,
+            借出归还,
+            盘点管理,
+            调拨管理,
+            产品分割与组合,
+            其他出入库管理,
         }
 
         public enum 客户关系

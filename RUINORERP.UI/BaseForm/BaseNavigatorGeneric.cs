@@ -316,6 +316,7 @@ namespace RUINORERP.UI.BaseForm
         /// 固定的值显示，入库ture 出库false
         /// 每个列表对应的值 ，单独设置
         /// 这里是用于分析。查询来的结果和要分析的是一样的数据。所有可以共用
+       
         /// </summary>
         public ConcurrentDictionary<string, List<KeyValuePair<object, string>>> MasterColNameDataDictionary { set; get; } = new ConcurrentDictionary<string, List<KeyValuePair<object, string>>>();
 

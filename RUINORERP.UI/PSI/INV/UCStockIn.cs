@@ -41,7 +41,7 @@ using RUINORERP.Business.Security;
 
 namespace RUINORERP.UI.PSI.INV
 {
-    [MenuAttrAssemblyInfo("其他入库单", ModuleMenuDefine.模块定义.进销存管理, ModuleMenuDefine.进销存管理.库存管理, BizType.其他入库单)]
+    [MenuAttrAssemblyInfo("其他入库单", ModuleMenuDefine.模块定义.进销存管理, ModuleMenuDefine.进销存管理.其他出入库管理, BizType.其他入库单)]
     public partial class UCStockIn : BaseBillEditGeneric<tb_StockIn, tb_StockInDetail>
     {
         public UCStockIn()

@@ -1297,6 +1297,20 @@ namespace RUINORERP.UI.Common
         /// <returns></returns>
         public static string ShowGridColumnsNameValue(Type type, string idColName, object value)
         {
+            return ShowGridColumnsNameValue(type.Name, idColName, value, type);
+        }
+
+        /// <summary>
+        /// 通过基础资料表中的id列名和值找到对应的描述
+        /// </summary>
+        /// <param name="TableName"></param>
+        /// <param name="idColName"></param>
+        /// <param name="value"></param>
+        /// <param name="type">如果是视图则不能为空，否则可以为空。直接用表名即可</param>
+        /// <returns></returns>
+        public static string ShowGridColumnsNameValue(string TableName, string idColName, object value
+            , Type type = null)
+        {
             if (value == null)
             {
                 return string.Empty;
@@ -1341,10 +1355,10 @@ namespace RUINORERP.UI.Common
             }
 
             //自己引用自己的特殊处理 如类 目 BOM?
-            if (typeof(tb_ProdCategories).Name == type.Name)
+            if (typeof(tb_ProdCategories).Name == TableName)
             {
                 #region
-                string tableName = type.Name;
+                string tableName = TableName;
                 if (!BizCacheHelper.Manager.FkPairTableList.ContainsKey(tableName))
                 {
                     List<KeyValuePair<string, string>> kvSelflist = new List<KeyValuePair<string, string>>();
@@ -1363,18 +1377,18 @@ namespace RUINORERP.UI.Common
             }
 
             //视图暂时没有实体生成时没有设置关联外键的特性，所以在具体业务实现时 手工指定成一个集合了。
-            if (!type.Name.Contains("View"))
+            if (!TableName.Contains("View") && type != null)
             {
                 BizCacheHelper.Manager.SetFkColList(type);
             }
 
             //优先处理本身，比方 BOM_ID显示BOM_NO，只要传tb_BOM_S
-            if (BizCacheHelper.Manager.NewTableList.ContainsKey(type.Name))
+            if (BizCacheHelper.Manager.NewTableList.ContainsKey(TableName))
             {
-                var nkv = BizCacheHelper.Manager.NewTableList[type.Name];
+                var nkv = BizCacheHelper.Manager.NewTableList[TableName];
                 if (nkv.Key == idColName)
                 {
-                    string baseTableName = type.Name;
+                    string baseTableName = TableName;
                     object obj = BizCacheHelper.Instance.GetValue(baseTableName, value);
                     if (obj != null && obj.GetType().Name != "Object")
                     {
@@ -1386,7 +1400,7 @@ namespace RUINORERP.UI.Common
             }
 
             List<KeyValuePair<string, string>> kvlist = new List<KeyValuePair<string, string>>();
-            if (BizCacheHelper.Manager.FkPairTableList.TryGetValue(type.Name, out kvlist))
+            if (BizCacheHelper.Manager.FkPairTableList.TryGetValue(TableName, out kvlist))
             {
                 var kv = kvlist.Find(k => k.Key == idColName);
                 //如果找不到呢？
@@ -1401,9 +1415,9 @@ namespace RUINORERP.UI.Common
                     NameValue = obj.ToString();
                 }
             }
-            if (string.IsNullOrEmpty(NameValue) && type.Name.Contains("View"))
+            if (string.IsNullOrEmpty(NameValue) && TableName.Contains("View"))
             {
-                object obj = BizCacheHelper.Instance.GetValue(type.Name, value);
+                object obj = BizCacheHelper.Instance.GetValue(TableName, value);
                 if (obj != null && obj.GetType().Name != "Object")
                 {
                     NameValue = obj.ToString();
@@ -1413,7 +1427,7 @@ namespace RUINORERP.UI.Common
             {
                 if (string.IsNullOrEmpty(NameValue))
                 {
-                    object obj = BizCacheHelper.Instance.GetValue(type.Name, value);
+                    object obj = BizCacheHelper.Instance.GetValue(TableName, value);
                     if (obj != null && obj.GetType().Name != "Object")
                     {
                         NameValue = obj.ToString();

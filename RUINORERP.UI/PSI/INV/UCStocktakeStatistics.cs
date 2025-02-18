@@ -20,7 +20,7 @@ using System.Windows.Forms;
 namespace RUINORERP.UI.PSI.INV
 {
 
-    [MenuAttrAssemblyInfo("盘点明细统计", ModuleMenuDefine.模块定义.进销存管理, ModuleMenuDefine.进销存管理.库存管理, BizType.盘点明细统计)]
+    [MenuAttrAssemblyInfo("盘点明细统计", ModuleMenuDefine.模块定义.进销存管理, ModuleMenuDefine.进销存管理.盘点管理, BizType.盘点明细统计)]
     public partial class UCStocktakeStatistics : BaseNavigatorGeneric<View_StocktakeItems, View_StocktakeItems>
     {
         public UCStocktakeStatistics()

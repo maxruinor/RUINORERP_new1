@@ -47,7 +47,7 @@ namespace RUINORERP.UI.PSI.INV
     /// 思路更改，期初表 存在的意义少了。
     /// 盘点时如果选择期初，成本强制显示出来，并且必须输入。其他的方式。不显示成本也不用必须输入。
     /// </summary>
-    [MenuAttrAssemblyInfo("盘点作业", ModuleMenuDefine.模块定义.进销存管理, ModuleMenuDefine.进销存管理.库存管理, BizType.盘点单)]
+    [MenuAttrAssemblyInfo("盘点作业", ModuleMenuDefine.模块定义.进销存管理, ModuleMenuDefine.进销存管理.盘点管理, BizType.盘点单)]
     public partial class UCStocktake : BaseBillEditGeneric<tb_Stocktake, tb_StocktakeDetail>
     {
         public UCStocktake()

@@ -53,6 +53,7 @@ using RUINORERP.UI.UserPersonalized;
 using RUINORERP.UI.UControls;
 using Newtonsoft.Json;
 using Fireasy.Common.Extensions;
+using static RUINORERP.UI.Common.DataGridViewDisplayNameResolver;
 
 
 namespace RUINORERP.UI.BaseForm
@@ -178,6 +179,7 @@ namespace RUINORERP.UI.BaseForm
         /// <summary>
         /// 通过这个类型取到显示的列的中文名
         /// 视图可能来自多个表的内容，所以显示不一样
+        /// 手动设置的。优化级比较自动的FKValueColNameTBList高
         /// </summary>
         public List<Type> ColDisplayTypes { get; set; } = new List<Type>();
 
@@ -212,9 +214,9 @@ namespace RUINORERP.UI.BaseForm
                         e.Value = thumbnailthumbnail;
                         return;
                     }
-
                 }
             }
+
             string colDbName = dataGridView1.Columns[e.ColumnIndex].Name;
             if (ForeignkeyPoints != null && ForeignkeyPoints.Count > 0)
             {
@@ -249,7 +251,22 @@ namespace RUINORERP.UI.BaseForm
             }
             else
             {
-                colName = UIHelper.ShowGridColumnsNameValue<T>(colDbName, e.Value);
+                if (FKValueColNameTBList.Count > 0)
+                {
+                    foreach (var item in FKValueColNameTBList)
+                    {
+                        colName = UIHelper.ShowGridColumnsNameValue(item.Value, item.Key, e.Value);
+                        if (!string.IsNullOrEmpty(colName))
+                        {
+                            break;
+                        }
+                    }
+                }
+                else
+                {
+                    colName = UIHelper.ShowGridColumnsNameValue<T>(colDbName, e.Value);
+                }
+
             }
             if (!string.IsNullOrEmpty(colName))
             {
@@ -264,7 +281,7 @@ namespace RUINORERP.UI.BaseForm
         }
 
 
-
+        public DataGridViewDisplayTextResolver<T> DisplayTextResolver = new DataGridViewDisplayTextResolver<T>();
 
         public BaseListGeneric()
         {
@@ -328,6 +345,8 @@ namespace RUINORERP.UI.BaseForm
                     ClassGenericType = typeof(T);
                     Builder();
 
+                    #region 添加按钮
+
                     Krypton.Toolkit.KryptonButton button设置查询条件 = new Krypton.Toolkit.KryptonButton();
                     button设置查询条件.Text = "设置查询条件";
                     button设置查询条件.ToolTipValues.Description = "对查询条件进行个性化设置。";
@@ -345,6 +364,33 @@ namespace RUINORERP.UI.BaseForm
                     button表格显示设置.Click += button表格显示设置_Click;
                     button表格显示设置.Width = 120;
                     frm.flowLayoutPanelButtonsArea.Controls.Add(button表格显示设置);
+                    #endregion
+
+                    /*
+                    // 初始化解析器
+                    var resolver = new DataGridViewDisplayNameResolver
+         
+                    // 绑定到DataGridView
+                    resolver.Attach(dataGridView1);
+                    dataGridView1.CellFormatting -= DataGridView1_CellFormatting;
+                    */
+                    dataGridView1.CellFormatting -= DataGridView1_CellFormatting;
+                    DisplayTextResolver.Initialize(dataGridView1);
+
+                    //ForeignKeyMapping moduleMapping = new ForeignKeyMapping
+                    //{
+                    //    TableName = "Modules",
+                    //    KeyFieldName = "Id",
+                    //    ValueFieldName = "Name",
+                    //    IsSpecialField = false,
+                    //    IsSelfReferencing = false
+                    //};
+                    //resolver.AddForeignKeyMapping("ModuleId", moduleMapping);
+
+
+                    //resolver.AddColumnDisplayType("Image", "Image");
+
+                    // resolver.AddForeignKeyColumnMapping("Module", "ModuleId");
                 }
             }
 
@@ -1425,7 +1471,7 @@ namespace RUINORERP.UI.BaseForm
 
             DefaultHideCols = new HashSet<string>();
             UIHelper.ControlColumnsInvisible(CurMenuInfo, InvisibleCols, DefaultHideCols, false);
- 
+
             //这里设置了指定列不可见
             foreach (var item in InvisibleCols)
             {

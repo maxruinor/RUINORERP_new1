@@ -16,6 +16,7 @@ using RUINOR.Core;
 using RUINORERP.Common.Helper;
 using RUINORERP.Business;
 using RUINORERP.Business.Processor;
+using FastReport.Table;
 namespace RUINORERP.UI.BI
 {
 
@@ -26,13 +27,17 @@ namespace RUINORERP.UI.BI
         {
             InitializeComponent();
             base.EditForm = typeof(UCMenuInfoEdit);
+            
+
+            DisplayTextResolver.AddReferenceKeyMapping<tb_MenuInfo, tb_MenuInfo>(s => s.MenuID, t => t.Parent_id);
+
             #region 数据源来源单位和目标单位的字段不等于原始单位表中的主键字段，在显示时通过主键无法找到对应显示的名称
 
-            base.SetForeignkeyPointsList<tb_MenuInfo, tb_MenuInfo>(s => s.Parent_id, t => t.MenuID);
-            base.SetForeignkeyPointsList<tb_MenuInfo, tb_MenuInfo>(s => s.MenuID, t => t.Parent_id);
+            //base.SetForeignkeyPointsList<tb_MenuInfo, tb_MenuInfo>(s => s.Parent_id, t => t.MenuID);
+            //base.SetForeignkeyPointsList<tb_MenuInfo, tb_MenuInfo>(s => s.MenuID, t => t.Parent_id);
             // base.SetForeignkeyPointsList<tb_Unit, tb_Unit_Conversion>(s => s.Unit_ID, t => t.Target_unit_id);
 
-            ColDisplayTypes.Add(typeof(tb_ModuleDefinition));
+            //ColDisplayTypes.Add(typeof(tb_ModuleDefinition));
 
             #endregion
         }

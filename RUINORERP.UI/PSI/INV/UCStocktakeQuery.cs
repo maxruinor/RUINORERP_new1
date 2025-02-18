@@ -22,7 +22,7 @@ using RUINORERP.Business.Processor;
 
 namespace RUINORERP.UI.PSI.INV
 {
-    [MenuAttrAssemblyInfo("盘点单查询", ModuleMenuDefine.模块定义.进销存管理, ModuleMenuDefine.进销存管理.库存管理, BizType.盘点单)]
+    [MenuAttrAssemblyInfo("盘点单查询", ModuleMenuDefine.模块定义.进销存管理, ModuleMenuDefine.进销存管理.盘点管理, BizType.盘点单)]
     public partial class UCStocktakeQuery : BaseBillQueryMC<tb_Stocktake, tb_StocktakeDetail>
     {
         public UCStocktakeQuery()

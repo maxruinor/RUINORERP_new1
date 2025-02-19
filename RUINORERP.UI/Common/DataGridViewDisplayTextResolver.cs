@@ -275,8 +275,41 @@ namespace RUINORERP.UI.Common
             if (typeof(T).GetProperty(tableName) != null)
             {
                 FixedDictionaryMappings.Add(new FixedDictionaryMapping(typeof(T).Name, columnName, CommonHelper.Instance.GetKeyValuePairs(typeof(DataStatus))));
+                FixedDictionaryMappings.Add(new FixedDictionaryMapping(typeof(T).Name, nameof(ApprovalStatus), CommonHelper.Instance.GetKeyValuePairs(typeof(ApprovalStatus))));
             }
         }
+
+        /// <summary>
+        /// 添加枚举类型的固定字典映射，枚举类型做为显示值，枚举的名称做为键值
+        /// </summary>
+        /// <typeparam name="target">指定了目标表</typeparam>
+        /// <param name="TargetField"></param>
+        /// <param name="enumType"></param>
+        public void AddFixedDictionaryMappingByEnum<target>(Expression<Func<target, object>> TargetField,Type enumType )
+        {
+            MemberInfo Targetinfo = TargetField.GetMemberInfo();
+            FixedDictionaryMappings.Add(new FixedDictionaryMapping(typeof(target).Name, Targetinfo.Name, CommonHelper.Instance.GetKeyValuePairs(enumType)));
+        }
+
+        /// <summary>
+        /// 目标表为T
+        /// </summary>
+        /// <param name="TargetField"></param>
+        /// <param name="enumType"></param>
+        public void AddFixedDictionaryMappingByEnum(Expression<Func<T, object>> TargetField, Type enumType)
+        {
+            MemberInfo Targetinfo = TargetField.GetMemberInfo();
+            FixedDictionaryMappings.Add(new FixedDictionaryMapping(typeof(T).Name, Targetinfo.Name, CommonHelper.Instance.GetKeyValuePairs(enumType)));
+        }
+
+        //    public void AddFixedDictionaryMapping<T>(string columnName, List<KeyValuePair<object, string>> mappings)
+        //{
+        //    if (typeof(T).GetProperty(tableName) != null)
+        //    {
+        //        FixedDictionaryMappings.Add(new FixedDictionaryMapping(typeof(T).Name, columnName, CommonHelper.Instance.GetKeyValuePairs(typeof(DataStatus))));
+        //        FixedDictionaryMappings.Add(new FixedDictionaryMapping(typeof(T).Name, nameof(ApprovalStatus), CommonHelper.Instance.GetKeyValuePairs(typeof(ApprovalStatus))));
+        //    }
+        //}
 
         // 添加列显示类型
         public void AddColumnDisplayType(string columnName, string displayType)

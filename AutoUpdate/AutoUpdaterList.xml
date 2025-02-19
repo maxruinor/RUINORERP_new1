@@ -5,8 +5,8 @@
 		<Url>http://fact.tpddns.cn:1688/updaterFiler/</Url>
 		<LastUpdateTime>2024-01-10</LastUpdateTime>
 	</Updater>
-	<Application applicationId = "贝思特管理系统">
-		<EntryPoint>贝思特管理系统.exe</EntryPoint>
+	<Application applicationId = "企业数字化集成ERP">
+		<EntryPoint>企业数字化集成ERP.exe</EntryPoint>
 		<Location>.</Location>
 		<Version>1.0.0.0</Version>
 	</Application>

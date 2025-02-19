@@ -804,7 +804,7 @@ namespace RUINORERP.UI.SysConfig
 
                     #endregion
 
-                    #region 销售订单数量与明细数量和的检测
+                    #region 销售出库数量与明细数量和的检测
                     List<tb_SaleOut> SaleOuts = MainForm.Instance.AppContext.Db.Queryable<tb_SaleOut>()
                         .Includes(c => c.tb_SaleOutDetails)
                        .ToList();

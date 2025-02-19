@@ -1154,7 +1154,7 @@ namespace RUINORERP.UI.UCSourceGrid
 
                     menuController.OnColumnsVisible += delegate (KeyValuePair<string, SGDefineColumnItem> kv)
                     {
-                       // grid.Columns[kv.Value.ColIndex].Visible = kv.Value.Visible;
+                        // grid.Columns[kv.Value.ColIndex].Visible = kv.Value.Visible;
                     };
                 }
                 if (columnHeader.Value.ToString() == "项")
@@ -1205,11 +1205,11 @@ namespace RUINORERP.UI.UCSourceGrid
 
             for (int i = 0; i < displayHandlers.Count; i++)
             {
-             
+                if (grid.Columns.GetColumnInfo(displayHandlers[i].UniqueId) != null)
+                {
                     grid.Columns.GetColumnInfo(displayHandlers[i].UniqueId).Width = displayHandlers[i].ColWidth;
                     grid.Columns.GetColumnInfo(displayHandlers[i].UniqueId).Visible = displayHandlers[i].Visible;
-
-               
+                }
             }
 
             #region 注册列宽的变化事件
@@ -3698,13 +3698,13 @@ namespace RUINORERP.UI.UCSourceGrid
         public void SetCellValue(SGDefineColumnItem dc, SourceGrid.Position p, object rowObj, bool isbatch, bool isOnlyPointColumn = false)
         {
             SourceGridDefine sgdefine = dc.ParentGridDefine;
-           var colInfo = sgdefine.grid.Columns.GetColumnInfo(dc.UniqueId);
-            
+            var colInfo = sgdefine.grid.Columns.GetColumnInfo(dc.UniqueId);
+
             if (p.Column == -1 || p.Row == -1)
             {
                 return;
             }
-            
+
             foreach (SGDefineColumnItem item in sgdefine)
             {
                 int realIndex = sgdefine.grid.Columns.GetColumnInfo(item.UniqueId).Index;
@@ -3736,7 +3736,7 @@ namespace RUINORERP.UI.UCSourceGrid
                         SourceGrid.CellContext processDefaultContext = new SourceGrid.CellContext(sgdefine.grid, new Position(p.Row, realIndex));
                         var currentObj = sgdefine.grid.Rows[p.Row].RowData;
                         var cellDefaultValue = ReflectionHelper.GetPropertyValue(currentObj, item.ColName);
-                       
+
                         if (cellDefaultValue != null && !item.IsFKRelationColumn && cellDefaultValue.IsNotEmptyOrNull())
                         {
                             sgdefine.grid[p.Row, realIndex].Value = cellDefaultValue;
@@ -3844,7 +3844,7 @@ namespace RUINORERP.UI.UCSourceGrid
                                 sgdefine.grid[p.Row, realIndex].Value = newTagetValue;
 
                                 //目标存于明细中。是保存进数据库的
-                                int newTargetIndex= sgdefine.grid.Columns.GetColumnInfo(qtc.Value.UniqueId).Index;
+                                int newTargetIndex = sgdefine.grid.Columns.GetColumnInfo(qtc.Value.UniqueId).Index;
                                 ReflectionHelper.SetPropertyValue(currentObj, qtc.Value.ColName, newTagetValue);
                                 sgdefine.grid[p.Row, newTargetIndex].Value = newTagetValue;
 

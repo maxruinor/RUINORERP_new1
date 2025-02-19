@@ -47,7 +47,7 @@ SELECT A.Employee_ID,A.ProjectGroup_ID,总销售出库数量,出库成交金额,
 
 ( SELECT Employee_ID,ProjectGroup_ID,sum(c.Quantity) as  总销售出库数量, sum(c.TransactionPrice*c.Quantity)  as 出库成交金额 ,sum(c.SubtotalTaxAmount) as [销售税额] ,sum(c.CommissionAmount) as 佣金返点,sum(cost*Quantity) as 成本 from  tb_SaleOut m RIGHT JOIN  tb_SaleOutDetail c on  m.SaleOut_MainID=c.SaleOut_MainID
 
-WHERE (m.DataStatus=4 or m.DataStatus=8) and m.ApprovalStatus=1 
+WHERE (m.DataStatus=4 or m.DataStatus=8) and m.ApprovalResults=1 and m.ApprovalStatus=1 
  and  Convert(varchar(10),m.OutDate,120) >=''' + @Start + '''
  and  Convert(varchar(10),m.OutDate,120) <= ''' + @End + '''
 GROUP BY Employee_ID,m.ProjectGroup_ID ) as A
@@ -56,13 +56,13 @@ LEFT JOIN
 (
 
 SELECT Employee_ID,ProjectGroup_ID, sum(c.SubtotalTaxAmount)  as [退货税额] , sum(Quantity) as 退货数量,sum(c.TransactionPrice*c.Quantity) as 退货金额 , sum(CommissionAmount) as 佣金返还 ,sum(cost*Quantity) as 成本 from  tb_SaleOutRe m RIGHT JOIN  tb_SaleOutReDetail c on  m.SaleOutRe_ID=c.SaleOutRe_ID
-WHERE (m.DataStatus=4 or m.DataStatus=8) and m.ApprovalStatus=1 and m.RefundOnly=0
+WHERE (m.DataStatus=4 or m.DataStatus=8) and m.ApprovalStatus=1 and m.ApprovalResults=1 and m.RefundOnly=0
  and  Convert(varchar(10),m.ReturnDate,120) >=''' + @Start + '''
  and  Convert(varchar(10),m.ReturnDate,120) <= ''' + @End + '''
 GROUP BY Employee_ID,m.ProjectGroup_ID 
 union all
 SELECT Employee_ID,ProjectGroup_ID, 0  as [退货税额] , sum(TotalQty) as 退货数量,sum(ActualRefundAmount) as 退货金额 , sum(0) as 佣金返还,sum(cost*Quantity) as 成本 from  tb_SaleOutRe m RIGHT JOIN  tb_SaleOutReDetail c on  m.SaleOutRe_ID=c.SaleOutRe_ID
-WHERE (m.DataStatus=4 or m.DataStatus=8) and m.ApprovalStatus=1 and m.RefundOnly=1
+WHERE (m.DataStatus=4 or m.DataStatus=8) and m.ApprovalStatus=1 and m.ApprovalResults=1 and m.RefundOnly=1
  and  Convert(varchar(10),m.ReturnDate,120) >=''' + @Start + '''
  and  Convert(varchar(10),m.ReturnDate,120) <= ''' + @End + '''
 GROUP BY Employee_ID,m.ProjectGroup_ID 
@@ -111,7 +111,7 @@ create proc Proc_SaleOrderStatisticsByEmployee
 @GroupByField NVARCHAR ( 50 )= '', -- 默认为''，表示同时，可以是 'Employee_ID', 'ProjectGroup_ID' ,或其中一个
 @ProjectGroups nvarchar(1000),
 @Employees nvarchar(1000),
-@Start varchar(80),
+@Start varchar(80),--时间注意到日期格式，不然数据会不准 2024-02-01 16:26 这样时间上午的没算到
 @End varchar(80),
 @sqlOutput VARCHAR(8000) OUT -- 定义 OUT 参数来输出 @sql 的值
 as 
@@ -181,7 +181,7 @@ SELECT A.Employee_ID,A.ProjectGroup_ID,总销售订单数量,订单成交金额,
 (
  SELECT Employee_ID,ProjectGroup_ID,sum(c.Quantity) as  总销售订单数量, sum(c.TransactionPrice*c.Quantity)  as 订单成交金额 ,sum(c.SubtotalTaxAmount) as [销售税额] ,sum(c.CommissionAmount) as 佣金返点,sum(c.TotalReturnedQty) as 退货数量, sum(c.TransactionPrice*c.TotalReturnedQty)  as 退货金额 from  tb_SaleOrder m RIGHT JOIN  tb_SaleOrderDetail c on  m.SOrder_ID=c.SOrder_ID
 
-WHERE (m.DataStatus=4 or m.DataStatus=8) and m.ApprovalStatus=1 
+WHERE (m.DataStatus=4 or m.DataStatus=8) and m.ApprovalStatus=1 and m.ApprovalResults=1
  and  Convert(varchar(10),m.SaleDate,120) >=''' + @Start + '''
  and  Convert(varchar(10),m.SaleDate,120) <= ''' + @End + '''
 GROUP BY Employee_ID,m.ProjectGroup_ID

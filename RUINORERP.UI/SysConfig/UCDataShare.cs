@@ -427,7 +427,9 @@ namespace RUINORERP.UI.SysConfig
             List<tb_Prod> bomPordList = await MainForm.Instance.AppContext.Db.Queryable<tb_Prod>()
             .Includes(a => a.tb_unit)
             .Includes(b => b.tb_producttype)
-            .Includes(b => b.tb_prodcategories, d => d.tb_prodcategories_parent, c => c.tb_prodcategories_parent)
+             .AsNavQueryable()
+            .Includes(a => a.tb_prodcategories, b => b.tb_prodcategories_parent, c => c.tb_prodcategories_parent,
+            d => d.tb_prodcategories_parent, e => e.tb_prodcategories_parent, f => f.tb_prodcategories_parent)
             .Includes(b => b.tb_storagerack)
             .Includes(a => a.tb_location)
             .Includes(a => a.tb_Packings, b => b.tb_PackingDetails)
@@ -435,7 +437,6 @@ namespace RUINORERP.UI.SysConfig
             .Includes(b => b.tb_Prod_Attr_Relations, c => c.tb_prodpropertyvalue)
             .Includes(b => b.tb_Prod_Attr_Relations, c => c.tb_proddetail)
             // .Includes(b => b.tb_ProdDetails, c => c.tb_BOM_Ss, d => d.tb_BOM_SDetailSecondaries)
-
 
             .AsNavQueryable()
             .Includes(b => b.tb_ProdDetails, c => c.tb_BOM_Ss, d => d.tb_BOM_SDetails, e => e.tb_unit)//bom主 
@@ -471,7 +472,7 @@ namespace RUINORERP.UI.SysConfig
             .Includes(a => a.tb_ProdDetails, b => b.tb_BOM_Ss, c => c.tb_BOM_SDetails, d => d.tb_proddetail, e => e.tb_prod, f => f.tb_Prod_Attr_Relations, g => g.tb_proddetail)
 
 
-              .AsNavQueryable()
+            .AsNavQueryable()
             .Includes(a => a.tb_ProdDetails, b => b.tb_bom_s, c => c.tb_BOM_SDetails, d => d.tb_proddetail, e => e.tb_prod, f => f.tb_Prod_Attr_Relations, g => g.tb_prodproperty)
             .AsNavQueryable()
             .Includes(a => a.tb_ProdDetails, b => b.tb_bom_s, c => c.tb_BOM_SDetails, d => d.tb_proddetail, e => e.tb_prod, f => f.tb_Prod_Attr_Relations, g => g.tb_prodpropertyvalue)
@@ -554,9 +555,10 @@ namespace RUINORERP.UI.SysConfig
                 ImportDataList.ForEach(
                     c =>
                     {
-                        c.Category_ID = TempProd.Category_ID;
+                        //c.Category_ID = TempProd.Category_ID;
                         c.Employee_ID = null;
                         c.Created_by = MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID;
+                        c.Created_at = DateTime.Now;
                         c.Rack_ID = TempProd.Rack_ID;
                         c.Location_ID = TempProd.Location_ID;
                         c.DepartmentID = TempProd.DepartmentID;
@@ -590,7 +592,7 @@ namespace RUINORERP.UI.SysConfig
                     {
                         productTypeList.Add(item.tb_producttype);
                     }
-                    if (item.tb_prodcategories != null && !prodcategoriesList.Exists(x => x.Category_ID == item.tb_prodcategories.Category_ID))
+                    if (item.tb_prodcategories != null && !prodcategoriesList.Any(x => x.Category_ID == item.tb_prodcategories.Category_ID))
                     {
                         prodcategoriesList.Add(item.tb_prodcategories);
                         if (item.tb_prodcategories.tb_ProdCategorieses_parents != null && item.tb_prodcategories.tb_ProdCategorieses_parents.Count > 0)
@@ -601,9 +603,26 @@ namespace RUINORERP.UI.SysConfig
                                 {
                                     prodcategoriesList.Add(c.tb_prodcategories_parent);
                                 }
+
+                                #region 再判断一级或用循环来判断？
+
+                                if (c.tb_prodcategories_parent.tb_ProdCategorieses_parents != null && c.tb_prodcategories_parent.tb_ProdCategorieses_parents.Count > 0)
+                                {
+                                    c.tb_prodcategories_parent.tb_ProdCategorieses_parents.ForEach(c =>
+                                    {
+                                        if (!prodcategoriesList.Any(x => x.Category_ID == c.tb_prodcategories_parent.Category_ID))
+                                        {
+                                            prodcategoriesList.Add(c.tb_prodcategories_parent);
+                                        }
+                                    }
+                                    );
+                                }
+
+                                #endregion
                             }
                             );
                         }
+
                     }
                     if (item.tb_Prod_Attr_Relations != null)
                     {

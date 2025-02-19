@@ -750,7 +750,7 @@ namespace AutoUpdate
         /// <summary>
         /// 保留最多最新的版本数量
         /// </summary>
-        public int MaxVersionCount = 10;
+        public int MaxVersionCount = 3;
 
         public int mainResult = 0;
         //点击完成复制更新文件到应用程序目录

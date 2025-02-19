@@ -157,7 +157,16 @@ namespace RUINORERP.UI
         // class reads, decrypts and deserializes the user settings for the local user.
         public static UserGlobalConfig Deserialize()
         {
-            return (UserGlobalConfig)SerializationHelper.Deserialize(Application.StartupPath + "\\" + "UserGlobalConfig", false);
+            UserGlobalConfig userGlobalConfig = new UserGlobalConfig();
+            try
+            {
+                userGlobalConfig=(UserGlobalConfig)SerializationHelper.Deserialize(Application.StartupPath + "\\" + "UserGlobalConfig", false);
+            }
+            catch (Exception)
+            {
+                userGlobalConfig = new UserGlobalConfig();
+            }
+            return userGlobalConfig;
         }
 
 

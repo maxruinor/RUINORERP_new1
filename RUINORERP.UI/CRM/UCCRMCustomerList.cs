@@ -49,6 +49,8 @@ namespace RUINORERP.UI.CRM
             expLeadsStatus = (p) => p.CustomerStatus;
             base.ColNameDataDictionary.TryAdd(expLeadsStatus.GetMemberInfo().Name, Common.CommonHelper.Instance.GetKeyValuePairs(typeof(CustomerStatus)));
 
+            DisplayTextResolver.AddFixedDictionaryMappingByEnum(t => t.CustomerStatus, typeof(CustomerStatus));
+            //DisplayTextResolver.AddFixedDictionaryMappingByEnum<tb_CRM_Customer>(t => t.CustomerStatus, typeof(CustomerStatus));
 
             //固定值也包括枚举值,也可以将没有缓存的提前查询出来给
 
@@ -73,7 +75,7 @@ namespace RUINORERP.UI.CRM
                 MessageBox.Show("只有【新增客户】的线索,并且没有任何跟进信息时才能删除。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 return Task.FromResult(false);
             }
-           return base.Delete();
+            return base.Delete();
         }
 
 

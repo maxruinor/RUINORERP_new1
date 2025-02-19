@@ -921,17 +921,30 @@ namespace AutoUpdate
         private bool IsMainAppRun()
         {
             string mainAppExe = updaterXmlFiles.GetNodeValue("//EntryPoint");
-            bool isRun = false;
+            bool isRun = true;
             Process[] allProcess = Process.GetProcesses();
             foreach (Process p in allProcess)
             {
-
                 if (p.ProcessName.ToLower() + ".exe" == mainAppExe.ToLower())
                 {
-                    isRun = true;
                     p.Kill();
-                    //break;
+                    isRun = false;
+                    break;
                 }
+                try
+                {
+                    if (p.ProcessName.ToLower() + ".exe" == "企业数字化集成ERP.exe".ToLower())
+                    {
+                        p.Kill();
+                        isRun = false;
+                        break;
+                    }
+                }
+                catch (Exception)
+                {
+ 
+                }
+
             }
             return isRun;
         }

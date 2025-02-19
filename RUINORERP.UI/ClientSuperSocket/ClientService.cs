@@ -66,6 +66,7 @@ namespace RUINORERP.UI.SuperSocketClient
                     onlineuser.姓名 = empName;
 
                     MainForm.Instance.AppContext.CurrentUser = onlineuser;
+                    MainForm.Instance.AppContext.CurrentUser.客户端版本 = Program.ERPVersion;
                 }
             }
             catch (Exception ex)
@@ -303,7 +304,7 @@ namespace RUINORERP.UI.SuperSocketClient
             {
                 int index = 0;
                 ByteBuff bg = new ByteBuff(gd.Two);
-                 
+
                 //清空
                 MainForm.Instance.UserInfos = new List<UserInfo>();
                 string json = ByteDataAnalysis.GetString(gd.Two, ref index);

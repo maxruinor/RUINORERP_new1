@@ -15,6 +15,7 @@ using System.Security.Cryptography;
 using System.Xml.Linq;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.StartPanel;
 using System.IO.Compression;
+using System.Xml;
 /*------------------------------------------------------------
 * 
 * 
@@ -107,6 +108,8 @@ namespace AULWriter
                     txtUrl.Text = dataConfig.UpdateHttpAddress;
                     txtCompareSource.Text = dataConfig.CompareSource;
                     txtBaseDir.Text = dataConfig.BaseDir;
+                    chkUseBaseVersion.Checked = dataConfig.UseBaseVersion;
+                    txtBaseVerNo.Text = dataConfig.BaseVersion;
                     txtAutoUpdateXmlSavePath.Text = dataConfig.SavePath;
                     txtMainExePath.Text = dataConfig.EntryPoint;
                     StringBuilder sbexfiles = new StringBuilder();
@@ -560,6 +563,11 @@ namespace AULWriter
             sb.Append("</Location>\r\n");
 
             FileVersionInfo _lcObjFVI = FileVersionInfo.GetVersionInfo(this.txtMainExePath.Text);
+            if (chkCustomVer.Checked)
+            {
+                _lcObjFVI = FileVersionInfo.GetVersionInfo(this.txtBaseVerNo.Text);
+            }
+
             sb.Append("\t\t<Version>");
             sb.Append(string.Format("{0}.{1}.{2}.{3}", _lcObjFVI.FileMajorPart, _lcObjFVI.FileMinorPart, _lcObjFVI.FileBuildPart, _lcObjFVI.FilePrivatePart));
             sb.Append("</Version>\r\n");
@@ -730,6 +738,7 @@ namespace AULWriter
                 dataConfig.UpdatedFiles = txtUpdatedFiles.Text;
                 dataConfig.CompareSource = txtCompareSource.Text;
                 dataConfig.BaseDir = txtBaseDir.Text;
+                dataConfig.BaseVersion = txtBaseVerNo.Text;
                 string path = configFilePath;
                 SerializeXmlHelper.SerializeXml(dataConfig, path);
             }
@@ -896,6 +905,16 @@ namespace AULWriter
         {
             XDocument doc = XDocument.Load(xmlFilePath);
             txtDiff.Clear();
+
+            if (chkUseBaseVersion.Checked)
+            {
+                // 查找 <Version> 元素
+                var versionElement = doc.Descendants("Version").FirstOrDefault();
+                if (versionElement != null)
+                {
+                    versionElement.Value = txtBaseVerNo.Text; // 替换为您想要设置的新值
+                }
+            }
 
             foreach (XElement fileElement in doc.Descendants("File"))
             {

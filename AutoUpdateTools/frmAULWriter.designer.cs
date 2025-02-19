@@ -62,7 +62,6 @@
             this.tbpOpt = new System.Windows.Forms.TabPage();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.txtUpdatedFiles = new System.Windows.Forms.TextBox();
-            this.label8 = new System.Windows.Forms.Label();
             this.txtBaseVerNo = new System.Windows.Forms.TextBox();
             this.chk目录转为明细 = new System.Windows.Forms.CheckBox();
             this.chkAppend = new System.Windows.Forms.CheckBox();
@@ -76,6 +75,7 @@
             this.sfdDest = new System.Windows.Forms.SaveFileDialog();
             this.ofdExpt = new System.Windows.Forms.OpenFileDialog();
             this.folderBrowserDialogCompareSource = new System.Windows.Forms.FolderBrowserDialog();
+            this.chkUseBaseVersion = new System.Windows.Forms.CheckBox();
             this.panel1.SuspendLayout();
             this.panel2.SuspendLayout();
             this.groupBox1.SuspendLayout();
@@ -118,7 +118,7 @@
             this.panel2.Controls.Add(this.btnrelease);
             this.panel2.Controls.Add(this.btnProduce);
             this.panel2.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.panel2.Location = new System.Drawing.Point(0, 637);
+            this.panel2.Location = new System.Drawing.Point(0, 651);
             this.panel2.Name = "panel2";
             this.panel2.Size = new System.Drawing.Size(1008, 40);
             this.panel2.TabIndex = 1;
@@ -194,7 +194,7 @@
             this.groupBox1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.groupBox1.Location = new System.Drawing.Point(0, 53);
             this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(1008, 584);
+            this.groupBox1.Size = new System.Drawing.Size(1008, 598);
             this.groupBox1.TabIndex = 2;
             this.groupBox1.TabStop = false;
             // 
@@ -208,7 +208,7 @@
             this.tabControl1.Location = new System.Drawing.Point(3, 17);
             this.tabControl1.Name = "tabControl1";
             this.tabControl1.SelectedIndex = 0;
-            this.tabControl1.Size = new System.Drawing.Size(1002, 564);
+            this.tabControl1.Size = new System.Drawing.Size(1002, 578);
             this.tabControl1.TabIndex = 0;
             // 
             // tbpBase
@@ -416,7 +416,7 @@
             this.tbpOpt.Location = new System.Drawing.Point(4, 22);
             this.tbpOpt.Name = "tbpOpt";
             this.tbpOpt.Padding = new System.Windows.Forms.Padding(3);
-            this.tbpOpt.Size = new System.Drawing.Size(994, 538);
+            this.tbpOpt.Size = new System.Drawing.Size(994, 552);
             this.tbpOpt.TabIndex = 1;
             this.tbpOpt.Text = "※选项";
             this.tbpOpt.UseVisualStyleBackColor = true;
@@ -433,13 +433,13 @@
             // 
             // splitContainer1.Panel2
             // 
-            this.splitContainer1.Panel2.Controls.Add(this.label8);
+            this.splitContainer1.Panel2.Controls.Add(this.chkUseBaseVersion);
             this.splitContainer1.Panel2.Controls.Add(this.txtBaseVerNo);
             this.splitContainer1.Panel2.Controls.Add(this.chk目录转为明细);
             this.splitContainer1.Panel2.Controls.Add(this.chkAppend);
             this.splitContainer1.Panel2.Controls.Add(this.txtVerNo);
             this.splitContainer1.Panel2.Controls.Add(this.chkCustomVer);
-            this.splitContainer1.Size = new System.Drawing.Size(988, 532);
+            this.splitContainer1.Size = new System.Drawing.Size(988, 546);
             this.splitContainer1.SplitterDistance = 750;
             this.splitContainer1.TabIndex = 0;
             // 
@@ -451,27 +451,18 @@
             this.txtUpdatedFiles.Multiline = true;
             this.txtUpdatedFiles.Name = "txtUpdatedFiles";
             this.txtUpdatedFiles.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.txtUpdatedFiles.Size = new System.Drawing.Size(750, 532);
+            this.txtUpdatedFiles.Size = new System.Drawing.Size(750, 546);
             this.txtUpdatedFiles.TabIndex = 0;
             this.txtUpdatedFiles.DragDrop += new System.Windows.Forms.DragEventHandler(this.txtUpdatedFiles_DragDrop);
             this.txtUpdatedFiles.DragEnter += new System.Windows.Forms.DragEventHandler(this.txtUpdatedFiles_DragEnter);
             // 
-            // label8
-            // 
-            this.label8.AutoSize = true;
-            this.label8.Location = new System.Drawing.Point(16, 177);
-            this.label8.Name = "label8";
-            this.label8.Size = new System.Drawing.Size(65, 12);
-            this.label8.TabIndex = 5;
-            this.label8.Text = "基准版本号";
-            // 
             // txtBaseVerNo
             // 
-            this.txtBaseVerNo.Location = new System.Drawing.Point(92, 174);
+            this.txtBaseVerNo.Location = new System.Drawing.Point(19, 179);
             this.txtBaseVerNo.Name = "txtBaseVerNo";
             this.txtBaseVerNo.Size = new System.Drawing.Size(119, 21);
             this.txtBaseVerNo.TabIndex = 4;
-            this.txtBaseVerNo.Text = "1.0.0.0";
+            this.txtBaseVerNo.Text = "1.0.0.1";
             // 
             // chk目录转为明细
             // 
@@ -579,12 +570,22 @@
             this.ofdExpt.Title = "请选择主程序文件";
             this.ofdExpt.FileOk += new System.ComponentModel.CancelEventHandler(this.ofdExpt_FileOk);
             // 
+            // chkUseBaseVersion
+            // 
+            this.chkUseBaseVersion.AutoSize = true;
+            this.chkUseBaseVersion.Location = new System.Drawing.Point(19, 145);
+            this.chkUseBaseVersion.Name = "chkUseBaseVersion";
+            this.chkUseBaseVersion.Size = new System.Drawing.Size(204, 16);
+            this.chkUseBaseVersion.TabIndex = 6;
+            this.chkUseBaseVersion.Text = "指定版本【不从文件属性中获取】";
+            this.chkUseBaseVersion.UseVisualStyleBackColor = true;
+            // 
             // frmAULWriter
             // 
             this.AllowDrop = true;
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1008, 677);
+            this.ClientSize = new System.Drawing.Size(1008, 691);
             this.Controls.Add(this.groupBox1);
             this.Controls.Add(this.panel2);
             this.Controls.Add(this.panel1);
@@ -663,8 +664,8 @@
         private System.Windows.Forms.Label label7;
         private System.Windows.Forms.Button btnBaseDir;
         private System.Windows.Forms.Button btnPreview;
-        private System.Windows.Forms.Label label8;
         private System.Windows.Forms.TextBox txtBaseVerNo;
+        private System.Windows.Forms.CheckBox chkUseBaseVersion;
     }
 }
 

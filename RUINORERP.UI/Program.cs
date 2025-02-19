@@ -33,12 +33,19 @@ using System.Threading;
 using SuperSocket.ClientEngine;
 using RUINORERP.UI.SuperSocketClient;
 using RUINORERP.Business.Security;
+using AutoUpdate;
+using System.Xml.Linq;
 
 
 namespace RUINORERP.UI
 {
     static class Program
     {
+        /// <summary>
+        /// 应用程序的版本信息
+        /// </summary>
+        public static string ERPVersion { get; set; } 
+
         private static ApplicationContext _AppContextData;
         public static ApplicationContext AppContextData
         {
@@ -276,7 +283,29 @@ namespace RUINORERP.UI
                     Console.WriteLine("接收到的命令行参数如下：");
                     foreach (var arg in args)
                     {
-                        AppContextData.CurrentUser.客户端版本 = arg;
+                        ERPVersion = arg;
+                    }
+                }
+                else
+                {
+                    //自己读取配置文件中的版本号
+                    string localXmlFile = Application.StartupPath + "\\AutoUpdaterList.xml";
+                    try
+                    {
+                        //从本地读取更新配置文件信息
+
+                        XDocument doc = XDocument.Load(localXmlFile);
+                        // 查找 <Version> 元素
+                        var versionElement = doc.Descendants("Version").FirstOrDefault();
+                        if (versionElement != null)
+                        {
+                            ERPVersion = versionElement.Value;
+                        }
+
+                    }
+                    catch (Exception ex)
+                    {
+
                     }
                 }
 
@@ -487,12 +516,12 @@ namespace RUINORERP.UI
                         #endregion
 
 
-                          var form1 = Startup.ServiceProvider.GetService<MainForm>();
+                        var form1 = Startup.ServiceProvider.GetService<MainForm>();
                         Application.Run(form1);
 
-                          //ILogger<MainForm> logger = null;
-                          // MainForm form1 = new MainForm(logger,null);
-                          //Application.Run(form1);
+                        //ILogger<MainForm> logger = null;
+                        // MainForm form1 = new MainForm(logger,null);
+                        //Application.Run(form1);
 
                     }
                     catch (Exception ex)

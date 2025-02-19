@@ -441,7 +441,7 @@ namespace RUINORERP.UI
             }
 
 
-            this.Text = "企业数字化集成ERP v2.0" + "_" + AppContext.CurrentUser.客户端版本;
+            this.Text = "企业数字化集成ERP v2.0" + "-" + Program.ERPVersion;
             //MessageBox.Show("登陆成功后，请要系统设置中添加公司基本资料。");
 
 
@@ -1090,7 +1090,7 @@ namespace RUINORERP.UI
                 }
                 if (AppContext.CompanyInfo != null)
                 {
-                    this.Text = AppContext.CompanyInfo.ShortName + "企业数字化集成ERP v2.0" + "_" + AppContext.CurrentUser.客户端版本;
+                    this.Text = AppContext.CompanyInfo.ShortName + "企业数字化集成ERP v2.0" + "-" + Program.ERPVersion;
                 }
 
                 UIBizSrvice.RequestCache(nameof(tb_RoleInfo));
@@ -1120,7 +1120,7 @@ namespace RUINORERP.UI
             {
                 this.SystemOperatorState.Text = "登出";
                 AuditLogHelper.Instance.CreateAuditLog("登出", "成功登出服务器");
-                if (MainForm.Instance.AppContext.CurUserInfo!=null&&MainForm.Instance.AppContext.CurUserInfo.UserInfo!=null)
+                if (MainForm.Instance.AppContext.CurUserInfo != null && MainForm.Instance.AppContext.CurUserInfo.UserInfo != null)
                 {
                     MainForm.Instance.AppContext.CurUserInfo.UserInfo.Lastlogout_at = System.DateTime.Now;
                     var result = await MainForm.Instance.AppContext.Db.Updateable<tb_UserInfo>(MainForm.Instance.AppContext.CurUserInfo.UserInfo)
@@ -1638,7 +1638,7 @@ namespace RUINORERP.UI
                 MenuList = p.AddMenu(this.menuStripMain);
                 p.OtherEvent += p_OtherEvent;
                 p.MainMenu = this.menuStripMain;
-               
+
                 voidHandler handler = new voidHandler(LoadEvent);
                 //异步操作接口(注意BeginInvoke方法的不同！)
                 IAsyncResult result = handler.BeginInvoke(new AsyncCallback(callback), "AsycState:OK");
@@ -2571,6 +2571,20 @@ namespace RUINORERP.UI
 
         private void btntsbRefresh_Click(object sender, EventArgs e)
         {
+            Process[] allProcess = Process.GetProcesses();
+            foreach (Process p in allProcess)
+            {
+                if (p.ProcessName.ToLower() + ".exe" == "企业数字化集成ERP.exe".ToLower())
+                {
+                    //break;
+                }
+
+                if (p.ProcessName.ToUpper().Contains("RUINORERP.UI"))
+                {
+
+                }
+            }
+
             LoginWebServer();
             if (MainForm.Instance.AppContext.IsSuperUser)
             {

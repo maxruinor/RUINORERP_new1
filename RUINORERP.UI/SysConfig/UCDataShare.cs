@@ -196,6 +196,8 @@ namespace RUINORERP.UI.SysConfig
 
         private void UCDataShare_Load(object sender, EventArgs e)
         {
+
+
             LoadShareDataListTableToUI();
 
             BindData(TempProd);
@@ -268,6 +270,11 @@ namespace RUINORERP.UI.SysConfig
             kvList.Value = typeof(tb_Prod);
             ShareDataList.Add(kvList);
 
+            KeyValue kvCategories = new KeyValue();
+            kvCategories.Key = "类目数据";
+            kvCategories.Value = typeof(tb_ProdCategories);
+            ShareDataList.Add(kvCategories);
+
             listBoxTableList.Items.Clear();
 
             foreach (var tableName in ShareDataList)
@@ -275,7 +282,13 @@ namespace RUINORERP.UI.SysConfig
                 SuperValue kv = new SuperValue(tableName.Key.ToString(), tableName.Value);
                 listBoxTableList.Items.Add(kv);
             }
-
+            //默认加载第一个类型的查询条件
+            if (listBoxTableList.Items.Count > 0)
+            {
+                var kv = listBoxTableList.Items[0] as SuperValue;
+                string tableName = kv.superDataTypeName;
+                LoadQueryConditionToUI(kv.Tag as Type);
+            }
         }
 
 
@@ -389,13 +402,17 @@ namespace RUINORERP.UI.SysConfig
             }
         }
 
+        /// <summary>
+        /// 导出分享数据到文件。
+        /// </summary>
+        /// <param name="list"></param>
         private async void ExportShareData(BindingSortCollection<tb_Prod> list)
         {
             List<long> ids = new List<long>();
             //找到导出主产品的明细中的BOM中的bom明细对应的详情的主产品的ID。
             foreach (var item in list)
             {
-                if (item.tb_ProdDetails == null)
+                if (item.tb_ProdDetails != null)
                 {
                     foreach (var detail in item.tb_ProdDetails)
                     {
@@ -1196,7 +1213,10 @@ namespace RUINORERP.UI.SysConfig
             List<tb_Prod> tb_ProdDetails = await MainForm.Instance.AppContext.Db.Queryable<tb_Prod>()
             .Includes(a => a.tb_unit)
             .Includes(b => b.tb_producttype)
-            .Includes(b => b.tb_prodcategories, d => d.tb_ProdCategorieses_parents, c => c.tb_prodcategories_parent)
+             .AsNavQueryable()
+            .Includes(a => a.tb_prodcategories, b => b.tb_prodcategories_parent, c => c.tb_prodcategories_parent,
+            d => d.tb_prodcategories_parent, e => e.tb_prodcategories_parent, f => f.tb_prodcategories_parent)
+            //            .Includes(b => b.tb_prodcategories, d => d.tb_ProdCategorieses_parents, c => c.tb_prodcategories_parent)
             .Includes(b => b.tb_storagerack)
             .Includes(a => a.tb_location)
             .Includes(a => a.tb_Packings, b => b.tb_PackingDetails)

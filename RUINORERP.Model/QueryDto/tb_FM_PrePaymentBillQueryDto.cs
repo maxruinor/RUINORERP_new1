@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/13/2024 18:43:45
+// 时间：02/19/2025 22:58:08
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -19,7 +19,7 @@ using RUINORERP.Model.Base;
 namespace RUINORERP.Model.QueryDto
 {
     /// <summary>
-    /// 预收预付单,冲销动作会在付款单和收款单中体现
+    /// 预收预付单
     /// </summary>
     [Serializable()]
     [SugarTable("tb_FM_PrePaymentBill")]
@@ -118,7 +118,7 @@ namespace RUINORERP.Model.QueryDto
         /// 预交易原因
         /// </summary>
         [AdvQueryAttribute(ColName = "Reason",ColDesc = "预交易原因")]
-        [SugarColumn(ColumnDataType = "char",SqlParameterDbType ="String",ColumnName = "Reason",Length=10,IsNullable = true,ColumnDescription = "预交易原因" )]
+        [SugarColumn(ColumnDataType = "varchar",SqlParameterDbType ="String",ColumnName = "Reason",Length=500,IsNullable = true,ColumnDescription = "预交易原因" )]
         public string Reason 
         { 
             get{return _Reason;}

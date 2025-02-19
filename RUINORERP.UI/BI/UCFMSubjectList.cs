@@ -186,6 +186,8 @@ namespace RUINORERP.UI.BI
             dataGridView1.NeedSaveColumnsXml = true;
             base.dataGridView1.XmlFileName = typeof(tb_FM_Subject).Name;
             //dataGridView1.CellFormatting += DataGridView1_CellFormatting;
+
+       
         }
 
         //集成到了基类实现
@@ -206,10 +208,10 @@ namespace RUINORERP.UI.BI
                     //这里要用缓存
                     BindingSortCollection<tb_FM_Subject> list = ListDataSoure.DataSource as BindingSortCollection<tb_FM_Subject>;
                     List<tb_FM_Subject> clist = list.ToList<tb_FM_Subject>();
-                    tb_FM_Subject pc = clist.Find(t => t.subject_id == int.Parse(e.Value.ToString()));
+                    tb_FM_Subject pc = clist.Find(t => t.Subject_id == int.Parse(e.Value.ToString()));
                     if (pc != null)
                     {
-                        e.Value = pc.subject_name;
+                        e.Value = pc.Subject_name;
                     }
 
                 }

@@ -38,20 +38,18 @@ namespace RUINORERP.UI.BI
             tb_Currency currency = entity as tb_Currency;
             if (currency.Currency_ID == 0)
             {
-                currency.GroupName = string.Empty;
+                currency.Country = string.Empty;
             }
 
-            DataBindingHelper.BindData4TextBox<tb_Currency>(entity, t => t.GroupName, txtGroupName, BindDataType4TextBox.Text, false);
+            DataBindingHelper.BindData4TextBox<tb_Currency>(entity, t => t.Country, txtCountry, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_Currency>(entity, t => t.CurrencyCode, txtCurrencyCode, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_Currency>(entity, t => t.CurrencyName, txtCurrencyName, BindDataType4TextBox.Text, false);
-            DataBindingHelper.BindData4TextBox<tb_Currency>(entity, t => t.DefaultExchRate.ToString(), txtDefaultExchRate, BindDataType4TextBox.Money, false);
-            DataBindingHelper.BindData4TextBox<tb_Currency>(entity, t => t.BuyExchRate.ToString(), txtBuyExchRate, BindDataType4TextBox.Money, false);
-            DataBindingHelper.BindData4TextBox<tb_Currency>(entity, t => t.SellOutExchRate.ToString(), txtSellOutExchRate, BindDataType4TextBox.Money, false);
-            DataBindingHelper.BindData4TextBox<tb_Currency>(entity, t => t.MonthEndExchRate.ToString(), txtMonthEndExchRate, BindDataType4TextBox.Money, false);
+            DataBindingHelper.BindData4TextBox<tb_Currency>(entity, t => t.CurrencySymbol, txtCurrencySymbol, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4CheckBox<tb_Currency>(entity, t => t.Is_enabled, chkIs_enabled, false);
             //有默认值
             DataBindingHelper.BindData4CheckBox<tb_Currency>(entity, t => t.Is_available, chkIs_available, false);
-            DataBindingHelper.BindData4DataTime<tb_Currency>(entity, t => t.AdjustDate, dtpAdjustDate, false);
+            //有默认值
+            DataBindingHelper.BindData4CheckBox<tb_Currency>(entity, t => t.Is_BaseCurrency, chkIs_BaseCurrency, false);
             base.BindData(entity);
         }
 
@@ -72,6 +70,11 @@ namespace RUINORERP.UI.BI
                 this.DialogResult = DialogResult.OK;
                 this.Close();
             }
+        }
+
+        private void UCCurrencyEdit_Load(object sender, EventArgs e)
+        {
+
         }
     }
 }

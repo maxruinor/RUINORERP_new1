@@ -51,10 +51,12 @@
             this.lbl盘点单 = new Krypton.Toolkit.KryptonLabel();
             this.kryptonSplitContainer2 = new Krypton.Toolkit.KryptonSplitContainer();
             this.grid1 = new SourceGrid.Grid();
+            this.chkSplitRequisitionDetails = new Krypton.Toolkit.KryptonCheckBox();
             this.btnTransferToPurOrder = new Krypton.Toolkit.KryptonButton();
             this.txtTotalQty = new Krypton.Toolkit.KryptonTextBox();
             this.kryptonLabel1 = new Krypton.Toolkit.KryptonLabel();
-            this.chkSplitRequisitionDetails = new Krypton.Toolkit.KryptonCheckBox();
+            this.kryptonLabel2 = new Krypton.Toolkit.KryptonLabel();
+            this.txtPurpose = new Krypton.Toolkit.KryptonTextBox();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceSub)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1)).BeginInit();
@@ -83,6 +85,8 @@
             // 
             // kryptonSplitContainer1.Panel1
             // 
+            this.kryptonSplitContainer1.Panel1.Controls.Add(this.kryptonLabel2);
+            this.kryptonSplitContainer1.Panel1.Controls.Add(this.txtPurpose);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.lblPuRequisitionNo);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.txtPuRequisitionNo);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.kryptonLabel5);
@@ -192,7 +196,7 @@
             // 
             // lblNotes
             // 
-            this.lblNotes.Location = new System.Drawing.Point(64, 83);
+            this.lblNotes.Location = new System.Drawing.Point(350, 84);
             this.lblNotes.Name = "lblNotes";
             this.lblNotes.Size = new System.Drawing.Size(36, 20);
             this.lblNotes.TabIndex = 121;
@@ -200,10 +204,10 @@
             // 
             // txtNotes
             // 
-            this.txtNotes.Location = new System.Drawing.Point(106, 86);
+            this.txtNotes.Location = new System.Drawing.Point(392, 87);
             this.txtNotes.Multiline = true;
             this.txtNotes.Name = "txtNotes";
-            this.txtNotes.Size = new System.Drawing.Size(436, 59);
+            this.txtNotes.Size = new System.Drawing.Size(150, 59);
             this.txtNotes.TabIndex = 122;
             // 
             // lblApprovalOpinions
@@ -315,6 +319,15 @@
             this.grid1.TabStop = true;
             this.grid1.ToolTipText = "";
             // 
+            // chkSplitRequisitionDetails
+            // 
+            this.chkSplitRequisitionDetails.Location = new System.Drawing.Point(774, 18);
+            this.chkSplitRequisitionDetails.Name = "chkSplitRequisitionDetails";
+            this.chkSplitRequisitionDetails.Size = new System.Drawing.Size(49, 20);
+            this.chkSplitRequisitionDetails.TabIndex = 122;
+            this.chkSplitRequisitionDetails.Values.Text = "拆分";
+            this.chkSplitRequisitionDetails.CheckedChanged += new System.EventHandler(this.chkSplitRequisitionDetails_CheckedChanged);
+            // 
             // btnTransferToPurOrder
             // 
             this.btnTransferToPurOrder.Location = new System.Drawing.Point(829, 16);
@@ -339,14 +352,21 @@
             this.kryptonLabel1.TabIndex = 119;
             this.kryptonLabel1.Values.Text = "总数量";
             // 
-            // chkSplitRequisitionDetails
+            // kryptonLabel2
             // 
-            this.chkSplitRequisitionDetails.Location = new System.Drawing.Point(774, 18);
-            this.chkSplitRequisitionDetails.Name = "chkSplitRequisitionDetails";
-            this.chkSplitRequisitionDetails.Size = new System.Drawing.Size(49, 20);
-            this.chkSplitRequisitionDetails.TabIndex = 122;
-            this.chkSplitRequisitionDetails.Values.Text = "拆分";
-            this.chkSplitRequisitionDetails.CheckedChanged += new System.EventHandler(this.chkSplitRequisitionDetails_CheckedChanged);
+            this.kryptonLabel2.Location = new System.Drawing.Point(36, 87);
+            this.kryptonLabel2.Name = "kryptonLabel2";
+            this.kryptonLabel2.Size = new System.Drawing.Size(36, 20);
+            this.kryptonLabel2.TabIndex = 144;
+            this.kryptonLabel2.Values.Text = "用途";
+            // 
+            // txtPurpose
+            // 
+            this.txtPurpose.Location = new System.Drawing.Point(106, 87);
+            this.txtPurpose.Multiline = true;
+            this.txtPurpose.Name = "txtPurpose";
+            this.txtPurpose.Size = new System.Drawing.Size(150, 58);
+            this.txtPurpose.TabIndex = 145;
             // 
             // UCBuyingRequisition
             // 
@@ -409,5 +429,7 @@
         private Krypton.Toolkit.KryptonTextBox txtTotalQty;
         private Krypton.Toolkit.KryptonButton btnTransferToPurOrder;
         private Krypton.Toolkit.KryptonCheckBox chkSplitRequisitionDetails;
+        private Krypton.Toolkit.KryptonLabel kryptonLabel2;
+        private Krypton.Toolkit.KryptonTextBox txtPurpose;
     }
 }

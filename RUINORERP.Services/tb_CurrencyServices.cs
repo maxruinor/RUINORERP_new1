@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/13/2024 18:43:31
+// 时间：02/19/2025 22:56:54
 // **************************************
 using AutoMapper;
 using RUINORERP.IRepository.Base;
@@ -20,7 +20,7 @@ using System.Collections.Generic;
 namespace RUINORERP.Services
 {
     /// <summary>
-    /// 币别资料表
+    /// 币别资料表-备份第一行数据后删除重建 如果不行则直接修改字段删除字段
     /// </summary>
     public partial class tb_CurrencyServices : BaseServices<tb_Currency>, Itb_CurrencyServices
     {

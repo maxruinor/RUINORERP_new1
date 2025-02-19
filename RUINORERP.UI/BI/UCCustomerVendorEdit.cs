@@ -88,7 +88,7 @@ namespace RUINORERP.UI.BI
             //有默认值
             //如果在模块定义中客户关系是启用时，就必须录入来源的目标客户。
             crmMod = await MainForm.Instance.AppContext.Db.Queryable<tb_ModuleDefinition>().Where(c => c.ModuleName == nameof(ModuleMenuDefine.客户关系)).FirstAsync();
-            if (crmMod.Available && _EditEntity.IsCustomer)
+            if (crmMod != null && crmMod.Available && _EditEntity.IsCustomer)
             {
                 lblCustomer_id.Visible = true;
                 cmbCustomer_id.Visible = true;
@@ -154,7 +154,7 @@ namespace RUINORERP.UI.BI
 
         private void btnOk_Click(object sender, EventArgs e)
         {
-            if (crmMod.Available && (!_EditEntity.Customer_id.HasValue || _EditEntity.Customer_id.Value <= 0) && _EditEntity.IsCustomer)
+            if (crmMod != null && crmMod.Available && (!_EditEntity.Customer_id.HasValue || _EditEntity.Customer_id.Value <= 0) && _EditEntity.IsCustomer)
             {
                 //客户关系模块启用时，销售客户的来源必须选择。
                 MessageBox.Show("销售客户的来源必须选择。", "系统提示", MessageBoxButtons.OK, MessageBoxIcon.Information);

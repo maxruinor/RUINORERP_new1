@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：02/08/2025 16:32:01
+// 时间：02/19/2025 22:57:59
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -81,13 +81,27 @@ namespace RUINORERP.Model
                         }
         }
 
-        private int _Account_type;
+        private bool? _IsDefault= false;
+        /// <summary>
+        /// 默认账号
+        /// </summary>
+        [AdvQueryAttribute(ColName = "IsDefault",ColDesc = "默认账号")] 
+        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType ="Boolean",  ColumnName = "IsDefault" ,IsNullable = true,ColumnDescription = "默认账号" )]
+        public bool? IsDefault
+        { 
+            get{return _IsDefault;}
+            set{
+            SetProperty(ref _IsDefault, value);
+                        }
+        }
+
+        private int? _Account_type;
         /// <summary>
         /// 账户类型
         /// </summary>
         [AdvQueryAttribute(ColName = "Account_type",ColDesc = "账户类型")] 
-        [SugarColumn(ColumnDataType = "int", SqlParameterDbType ="Int32",  ColumnName = "Account_type" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "账户类型" )]
-        public int Account_type
+        [SugarColumn(ColumnDataType = "int", SqlParameterDbType ="Int32",  ColumnName = "Account_type" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "账户类型" )]
+        public int? Account_type
         { 
             get{return _Account_type;}
             set{
@@ -100,7 +114,7 @@ namespace RUINORERP.Model
         /// 账户名称
         /// </summary>
         [AdvQueryAttribute(ColName = "Account_name",ColDesc = "账户名称")] 
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "Account_name" ,Length=50,IsNullable = true,ColumnDescription = "账户名称" )]
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "Account_name" ,Length=50,IsNullable = false,ColumnDescription = "账户名称" )]
         public string Account_name
         { 
             get{return _Account_name;}
@@ -179,27 +193,13 @@ namespace RUINORERP.Model
                         }
         }
 
-        private bool _IsDefault= false;
-        /// <summary>
-        /// 默认账号
-        /// </summary>
-        [AdvQueryAttribute(ColName = "IsDefault",ColDesc = "默认账号")] 
-        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType ="Boolean",  ColumnName = "IsDefault" ,IsNullable = false,ColumnDescription = "默认账号" )]
-        public bool IsDefault
-        { 
-            get{return _IsDefault;}
-            set{
-            SetProperty(ref _IsDefault, value);
-                        }
-        }
-
-        private bool _Is_enabled= true;
+        private bool? _Is_enabled= true;
         /// <summary>
         /// 是否启用
         /// </summary>
         [AdvQueryAttribute(ColName = "Is_enabled",ColDesc = "是否启用")] 
-        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType ="Boolean",  ColumnName = "Is_enabled" ,IsNullable = false,ColumnDescription = "是否启用" )]
-        public bool Is_enabled
+        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType ="Boolean",  ColumnName = "Is_enabled" ,IsNullable = true,ColumnDescription = "是否启用" )]
+        public bool? Is_enabled
         { 
             get{return _Is_enabled;}
             set{
@@ -223,18 +223,26 @@ namespace RUINORERP.Model
 
         //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_FM_PaymentApplication.PayeeInfoID))]
-        public virtual List<tb_FM_PaymentApplication> tb_FM_PaymentApplications { get; set; }
-        //tb_FM_PaymentApplication.PayeeInfoID)
-        //PayeeInfoID.FK_PAYMENTAPPLICATION_REF_PAYEEINFO)
-        //tb_FM_PayeeInfo.PayeeInfoID)
-
-        //[Browsable(false)]打印报表时的数据源会不显示
-        [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_FM_ExpenseClaim.PayeeInfoID))]
         public virtual List<tb_FM_ExpenseClaim> tb_FM_ExpenseClaims { get; set; }
         //tb_FM_ExpenseClaim.PayeeInfoID)
         //PayeeInfoID.FK_EXPENSECLAIM_REF_PAYEEINFO)
+        //tb_FM_PayeeInfo.PayeeInfoID)
+
+        //[Browsable(false)]打印报表时的数据源会不显示
+        [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_FM_Payment.PayeeInfoID))]
+        public virtual List<tb_FM_Payment> tb_FM_Payments { get; set; }
+        //tb_FM_Payment.PayeeInfoID)
+        //PayeeInfoID.FK_FM_PAYMENTREQUEST_REF_FM_PAYEEINFO)
+        //tb_FM_PayeeInfo.PayeeInfoID)
+
+        //[Browsable(false)]打印报表时的数据源会不显示
+        [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_FM_PaymentApplication.PayeeInfoID))]
+        public virtual List<tb_FM_PaymentApplication> tb_FM_PaymentApplications { get; set; }
+        //tb_FM_PaymentApplication.PayeeInfoID)
+        //PayeeInfoID.FK_PAYMENTAPPLICATION_REF_PAYEEINFO)
         //tb_FM_PayeeInfo.PayeeInfoID)
 
 

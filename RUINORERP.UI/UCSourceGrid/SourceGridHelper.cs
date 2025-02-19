@@ -958,6 +958,15 @@ namespace RUINORERP.UI.UCSourceGrid
             // grid.Height = (r + 2) * grid.DefaultHeight + grid.BorderWidth * 2;
             //  griddefine.needheight = (r + 1) * grid.DefaultHeight + grid.BorderWidth * 2 + grid.SummaryHeight + 4;
 
+            for (int i = 0; i < grid.Rows.Count; i++)
+            {
+                if (grid.Rows[i].Height < 20)
+                {
+                    grid.Rows[i].Height = 20;
+                }
+            }
+
+
             griddefine.OnCalculateTotalValue += Griddefine_OnCalculateTotalValue;
         }
 

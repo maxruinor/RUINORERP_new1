@@ -995,7 +995,7 @@ namespace RUINORERP.Business
             List<tb_BuyingRequisitionDetail> BuyingDetails = mapper.Map<List<tb_BuyingRequisitionDetail>>(PurDetails);
             foreach (var item in BuyingDetails)
             {
-                item.Purpose = $"由{_appContext.CurUserInfo.Name}在生产需要分析{demand.PDNo}时自动生成";
+                BuyingRequisition.Purpose = $"由{_appContext.CurUserInfo.Name}在生产需要分析{demand.PDNo}时自动生成";
                 //设置一个默认的需求日期
                 if (BuyingRequisition.RequirementDate == null)
                 {

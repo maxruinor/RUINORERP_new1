@@ -18,6 +18,7 @@ using System.Globalization;
 using RUINORERP.UI.Common;
 using RUINORERP.Global;
 using RUINORERP.Global.EnumExt;
+using NPOI.SS.Formula.Functions;
 
 namespace RUINORERP.UI.BI
 {
@@ -37,27 +38,27 @@ namespace RUINORERP.UI.BI
         public override void BindData(BaseEntity entity)
         {
             _EditEntity = entity as tb_FM_Subject;
-            if (_EditEntity.subject_id == 0)
+            if (_EditEntity.Subject_id == 0)
             {
                 string 上级代码 = "1";
-                if (_EditEntity.tb_fm_subject != null)
+                if (_EditEntity.tb_FM_SubjectParent != null)
                 {
-                    上级代码 = _EditEntity.tb_fm_subject.subject_code;
+                    上级代码 = _EditEntity.tb_FM_SubjectParent.Subject_code;
                 }
-                _EditEntity.subject_code = BizCodeGenerator.Instance.GetBaseInfoNo(BaseInfoType.FMSubject, 上级代码);
+                _EditEntity.Subject_code = BizCodeGenerator.Instance.GetBaseInfoNo(BaseInfoType.FMSubject, 上级代码);
             }
 
             DataBindingHelper.BindData4RadioGroupTrueFalse<tb_FM_Subject>(entity, t => t.Balance_direction, rdb贷, rdb借);
-            DataBindingHelper.BindData4TextBox<tb_FM_Subject>(entity, t => t.subject_code, txtsubject_code, BindDataType4TextBox.Text, false);
-            DataBindingHelper.BindData4TextBox<tb_FM_Subject>(entity, t => t.subject_name, txtsubject_name, BindDataType4TextBox.Text, false);
-            DataBindingHelper.BindData4TextBox<tb_FM_Subject>(entity, t => t.subject_en_name, txtsubject_en_name, BindDataType4TextBox.Text, false);
+            DataBindingHelper.BindData4TextBox<tb_FM_Subject>(entity, t => t.Subject_code, txtsubject_code, BindDataType4TextBox.Text, false);
+            DataBindingHelper.BindData4TextBox<tb_FM_Subject>(entity, t => t.Subject_name, txtsubject_name, BindDataType4TextBox.Text, false);
+            DataBindingHelper.BindData4TextBox<tb_FM_Subject>(entity, t => t.Subject_en_name, txtsubject_en_name, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4CmbByEnum<tb_FM_Subject>(entity, k => k.Subject_Type, typeof(SubjectType), cmbSubject_Type, false);
             DataBindingHelper.BindData4CheckBox<tb_FM_Subject>(entity, t => t.Is_enabled, chkIs_enabled, false);
             //有默认值
             DataBindingHelper.BindData4TextBox<tb_FM_Subject>(entity, t => t.Notes, txtNotes, BindDataType4TextBox.Text, false);
 
             //父类
-            var parent_subjet = new Binding("Text", entity, "parent_subject_id", true, DataSourceUpdateMode.OnValidation);
+            var parent_subjet = new Binding("Text", entity, "Parent_subject_id", true, DataSourceUpdateMode.OnValidation);
             //数据源的数据类型转换为控件要求的数据类型。
             parent_subjet.Format += new ConvertEventHandler(DataSourceToControl);
             //将控件的数据类型转换为数据源要求的数据类型。
@@ -87,10 +88,10 @@ namespace RUINORERP.UI.BI
             else
             {
                 //显示名称
-                tb_FM_Subject entity = list.Find(t => t.subject_id.ToString() == cevent.Value.ToString());
+                tb_FM_Subject entity = list.Find(t => t.Subject_id.ToString() == cevent.Value.ToString());
                 if (entity != null)
                 {
-                    cevent.Value = entity.subject_name;
+                    cevent.Value = entity.Subject_code + "【" + entity.Subject_name + "】";
                 }
                 else
                 {
@@ -110,10 +111,13 @@ namespace RUINORERP.UI.BI
             }
             else
             {
-                tb_FM_Subject entity = list.Find(t => t.subject_name == cevent.Value.ToString());
+                //tb_FM_Subject entity = list.Find(t => t.Subject_name == cevent.Value.ToString());
+                //这里是按 显示的文本来找，这里显示格式变化了一下。
+                tb_FM_Subject entity = list.Find(t => t.Subject_code + "【" + t.Subject_name + "】" == cevent.Value.ToString());
+                
                 if (entity != null)
                 {
-                    cevent.Value = entity.subject_id;
+                    cevent.Value = entity.Subject_id;
                 }
                 else
                 {
@@ -128,15 +132,15 @@ namespace RUINORERP.UI.BI
         //递归方法
         private void Bind(TreeNode parNode, List<tb_FM_Subject> list, long nodeId)
         {
-            var childList = list.FindAll(t => t.parent_subject_id == nodeId).OrderBy(t => t.Sort);
+            var childList = list.FindAll(t => t.Parent_subject_id == nodeId).OrderBy(t => t.Sort);
             foreach (var nodeObj in childList)
             {
                 var node = new TreeNode();
-                node.Name = nodeObj.subject_id.ToString();
-                node.Text = nodeObj.subject_name;
+                node.Name = nodeObj.Subject_id.ToString();
+                node.Text = nodeObj.Subject_name;
                 node.Tag = nodeObj;
                 parNode.Nodes.Add(node);
-                Bind(node, list, nodeObj.subject_id);
+                Bind(node, list, nodeObj.Subject_id);
             }
         }
 
@@ -153,9 +157,11 @@ namespace RUINORERP.UI.BI
         private void btnOk_Click(object sender, EventArgs e)
         {
             //默认给个值，因为如果操作的人不动，不选。这个值会为空
-            if (EditEntity.parent_subject_id == null)
+            if (EditEntity.Parent_subject_id == null)
             {
-                EditEntity.parent_subject_id = 0;
+                //这里 在数据库中不能建立外键约束，0为默认值，不然会报错
+                //或者先给你默认的顶级节点为，id为0的节点，这样子就不会报错。
+                EditEntity.Parent_subject_id =0;
             }
 
             if (base.Validator())

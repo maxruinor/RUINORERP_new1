@@ -165,19 +165,7 @@ namespace RUINORERP.Model
                         }
         }
 
-        private string _Purpose;
-        /// <summary>
-        /// 用途
-        /// </summary>
-        [AdvQueryAttribute(ColName = "Purpose",ColDesc = "用途")] 
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "Purpose" ,Length=500,IsNullable = false,ColumnDescription = "用途" )]
-        public string Purpose
-        { 
-            get{return _Purpose;}
-            set{
-            SetProperty(ref _Purpose, value);
-                        }
-        }
+       
 
         private string _Notes;
         /// <summary>

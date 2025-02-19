@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：02/08/2025 16:32:02
+// 时间：02/19/2025 22:58:08
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -18,10 +18,10 @@ using RUINORERP.Global.CustomAttribute;
 namespace RUINORERP.Model
 {
     /// <summary>
-    /// 预收预付单,冲销动作会在付款单和收款单中体现
+    /// 预收预付单
     /// </summary>
     [Serializable()]
-    [Description("预收预付单,冲销动作会在付款单和收款单中体现")]
+    [Description("预收预付单")]
     [SugarTable("tb_FM_PrePaymentBill")]
     public partial class tb_FM_PrePaymentBill: BaseEntity, ICloneable
     {
@@ -30,7 +30,7 @@ namespace RUINORERP.Model
             base.FieldNameList = fieldNameList;
             if (!PK_FK_ID_Check())
             {
-                throw new Exception("预收预付单,冲销动作会在付款单和收款单中体现tb_FM_PrePaymentBill" + "外键ID与对应主主键名称不一致。请修改数据库");
+                throw new Exception("预收预付单tb_FM_PrePaymentBill" + "外键ID与对应主主键名称不一致。请修改数据库");
             }
         }
 
@@ -142,7 +142,7 @@ namespace RUINORERP.Model
         /// 预交易原因
         /// </summary>
         [AdvQueryAttribute(ColName = "Reason",ColDesc = "预交易原因")] 
-        [SugarColumn(ColumnDataType = "char", SqlParameterDbType ="String",  ColumnName = "Reason" ,Length=10,IsNullable = true,ColumnDescription = "预交易原因" )]
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "Reason" ,Length=500,IsNullable = true,ColumnDescription = "预交易原因" )]
         public string Reason
         { 
             get{return _Reason;}

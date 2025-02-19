@@ -30,7 +30,7 @@ namespace RUINORERP.UI.BI
 
         public override void BindData(BaseEntity entity)
         {
-            DataBindingHelper.BindData4Cmb<tb_FM_Subject>(entity, k => k.subject_id, v => v.subject_name, cmbsubject_id);
+            DataBindingHelper.BindData4Cmb<tb_FM_Subject>(entity, k => k.Subject_id, v => v.Subject_name, cmbsubject_id);
 
             DataBindingHelper.BindData4TextBox<tb_FM_ExpenseType>(entity, t => t.Expense_name, txtExpense_name, BindDataType4TextBox.Text, false);
 

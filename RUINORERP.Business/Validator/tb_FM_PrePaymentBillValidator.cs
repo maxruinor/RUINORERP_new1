@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/18/2024 17:45:27
+// 时间：02/19/2025 22:58:08
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,7 +21,7 @@ using Microsoft.Extensions.Options;
 namespace RUINORERP.Business
 {
     /// <summary>
-    /// 预收预付单,冲销动作会在付款单和收款单中体现验证类
+    /// 预收预付单验证类
     /// </summary>
     /*public partial class tb_FM_PrePaymentBillValidator:AbstractValidator<tb_FM_PrePaymentBill>*/
     public partial class tb_FM_PrePaymentBillValidator:BaseValidatorGeneric<tb_FM_PrePaymentBill>
@@ -50,6 +50,7 @@ namespace RUINORERP.Business
 
  RuleFor(x => x.PrePaidTotalAmount).PrecisionScale(19,4,true).WithMessage("已预交易总金额:小数位不能超过4。");
 
+ RuleFor(tb_FM_PrePaymentBill =>tb_FM_PrePaymentBill.Reason).MaximumLength(250).WithMessage("预交易原因:不能超过最大长度,250.");
 
  RuleFor(tb_FM_PrePaymentBill =>tb_FM_PrePaymentBill.Remark).MaximumLength(150).WithMessage("备注:不能超过最大长度,150.");
 

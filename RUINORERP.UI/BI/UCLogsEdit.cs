@@ -33,10 +33,9 @@ namespace RUINORERP.UI.BI
             Logs _EditEntity = entity as Logs;
             if (_EditEntity.ID == 0)
             {
-                dtpDate.Checked = true;
                 _EditEntity.Date = System.DateTime.Now;
             }
-            DataBindingHelper.BindData4DataTime<Logs>(entity, t => t.Date, dtpDate, false);
+            DataBindingHelper.BindData4TextBox<Logs>(entity, t => t.Date, txtDate, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<Logs>(entity, t => t.Level, txtLevel, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<Logs>(entity, t => t.Logger, txtLogger, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<Logs>(entity, t => t.Message, txtMessage, BindDataType4TextBox.Text, false);

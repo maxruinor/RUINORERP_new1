@@ -32,7 +32,6 @@
             this.btnCancel = new Krypton.Toolkit.KryptonButton();
             this.kryptonPanel1 = new Krypton.Toolkit.KryptonPanel();
             this.lblDate = new Krypton.Toolkit.KryptonLabel();
-            this.dtpDate = new Krypton.Toolkit.KryptonDateTimePicker();
             this.lblLevel = new Krypton.Toolkit.KryptonLabel();
             this.txtLevel = new Krypton.Toolkit.KryptonTextBox();
             this.lblLogger = new Krypton.Toolkit.KryptonLabel();
@@ -55,6 +54,7 @@
             this.txtMAC = new Krypton.Toolkit.KryptonTextBox();
             this.lblMachineName = new Krypton.Toolkit.KryptonLabel();
             this.txtMachineName = new Krypton.Toolkit.KryptonTextBox();
+            this.txtDate = new Krypton.Toolkit.KryptonTextBox();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel1)).BeginInit();
             this.kryptonPanel1.SuspendLayout();
@@ -80,8 +80,8 @@
             // 
             // kryptonPanel1
             // 
+            this.kryptonPanel1.Controls.Add(this.txtDate);
             this.kryptonPanel1.Controls.Add(this.lblDate);
-            this.kryptonPanel1.Controls.Add(this.dtpDate);
             this.kryptonPanel1.Controls.Add(this.lblLevel);
             this.kryptonPanel1.Controls.Add(this.txtLevel);
             this.kryptonPanel1.Controls.Add(this.lblLogger);
@@ -114,19 +114,11 @@
             // 
             // lblDate
             // 
-            this.lblDate.Location = new System.Drawing.Point(16, 14);
+            this.lblDate.Location = new System.Drawing.Point(16, 12);
             this.lblDate.Name = "lblDate";
             this.lblDate.Size = new System.Drawing.Size(36, 20);
             this.lblDate.TabIndex = 13;
             this.lblDate.Values.Text = "时间";
-            // 
-            // dtpDate
-            // 
-            this.dtpDate.Location = new System.Drawing.Point(52, 8);
-            this.dtpDate.Name = "dtpDate";
-            this.dtpDate.ShowCheckBox = true;
-            this.dtpDate.Size = new System.Drawing.Size(235, 21);
-            this.dtpDate.TabIndex = 14;
             // 
             // lblLevel
             // 
@@ -297,6 +289,13 @@
             this.txtMachineName.Size = new System.Drawing.Size(272, 23);
             this.txtMachineName.TabIndex = 36;
             // 
+            // txtDate
+            // 
+            this.txtDate.Location = new System.Drawing.Point(52, 8);
+            this.txtDate.Name = "txtDate";
+            this.txtDate.Size = new System.Drawing.Size(235, 23);
+            this.txtDate.TabIndex = 37;
+            // 
             // UCLogsEdit
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
@@ -318,7 +317,6 @@
         private Krypton.Toolkit.KryptonButton btnCancel;
         private Krypton.Toolkit.KryptonPanel kryptonPanel1;
         private Krypton.Toolkit.KryptonLabel lblDate;
-        private Krypton.Toolkit.KryptonDateTimePicker dtpDate;
         private Krypton.Toolkit.KryptonLabel lblLevel;
         private Krypton.Toolkit.KryptonTextBox txtLevel;
         private Krypton.Toolkit.KryptonLabel lblLogger;
@@ -341,5 +339,6 @@
         private Krypton.Toolkit.KryptonTextBox txtMAC;
         private Krypton.Toolkit.KryptonLabel lblMachineName;
         private Krypton.Toolkit.KryptonTextBox txtMachineName;
+        private Krypton.Toolkit.KryptonTextBox txtDate;
     }
 }

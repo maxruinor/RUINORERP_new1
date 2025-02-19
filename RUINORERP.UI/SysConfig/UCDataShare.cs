@@ -85,6 +85,8 @@ using FluentValidation.Results;
 using System.Windows.Documents;
 using Org.BouncyCastle.Utilities;
 using SixLabors.ImageSharp.Processing;
+using RUINORERP.UI.BI;
+using NPOI.Util;
 
 
 
@@ -358,7 +360,7 @@ namespace RUINORERP.UI.SysConfig
                     break;
 
                 case MenuItemEnums.保存:
-                    SaveShareData();
+                    SaveShareData(true);
                     break;
 
                 case MenuItemEnums.属性:
@@ -453,6 +455,13 @@ namespace RUINORERP.UI.SysConfig
             .Includes(b => b.tb_Prod_Attr_Relations, c => c.tb_prodproperty)
             .Includes(b => b.tb_Prod_Attr_Relations, c => c.tb_prodpropertyvalue)
             .Includes(b => b.tb_Prod_Attr_Relations, c => c.tb_proddetail)
+            .AsNavQueryable()
+            .Includes(b => b.tb_Prod_Attr_Relations, c => c.tb_proddetail, d => d.tb_prod, e => e.tb_prodcategories, h => h.tb_prodcategories_parent, i => i.tb_prodcategories_parent, j => j.tb_prodcategories_parent)
+             .AsNavQueryable()
+            .Includes(b => b.tb_Prod_Attr_Relations, c => c.tb_proddetail, d => d.tb_prod, e => e.tb_unit)
+                .AsNavQueryable()
+            .Includes(b => b.tb_Prod_Attr_Relations, c => c.tb_proddetail, d => d.tb_prod, e => e.tb_producttype)
+
             // .Includes(b => b.tb_ProdDetails, c => c.tb_BOM_Ss, d => d.tb_BOM_SDetailSecondaries)
 
             .AsNavQueryable()
@@ -513,8 +522,24 @@ namespace RUINORERP.UI.SysConfig
             if (saveFileDialog.ShowDialog() == DialogResult.OK)
             {
                 DataImportExportManager.ExportDataAsync(ProdList, saveFileDialog.FileName);
+
             }
         }
+
+        private async void ExportDataBom(List<tb_Prod> prods)
+        {
+            List<tb_BOM_S> bomList = await MainForm.Instance.AppContext.Db.Queryable<tb_BOM_S>()
+           .Includes(a => a.tb_BOM_SDetails)
+            .AsNavQueryable()
+           .Includes(a => a.tb_proddetail, b => b.tb_prod, c => c.tb_prodcategories
+           , d => d.tb_prodcategories_parent, e => e.tb_prodcategories_parent, f => f.tb_prodcategories_parent)
+            .AsNavQueryable()
+           .Includes(a => a.tb_proddetail, b => b.tb_prod, c => c.tb_producttype)
+            .AsNavQueryable()
+           .Includes(a => a.tb_proddetail, b => b.tb_prod, c => c.tb_unit).ToListAsync() as List<tb_BOM_S>;
+            //.Where(m => ids.ToArray().Contains(m.ProdBaseID)).ToListAsync() as List<tb_BOM_S>;
+        }
+
 
         public bool ShowInvalidMessage(ValidationResult results)
         {
@@ -541,10 +566,22 @@ namespace RUINORERP.UI.SysConfig
 
         private List<tb_Prod> ImportDataList = new List<tb_Prod>();
 
+
+
+        /// <summary>
+        /// 从导出的数据为基本构建可以保存的数据列表。
+        /// 因为有外键引用关系
+        /// </summary>
+        private void BuildSaveData()
+        {
+
+        }
+
+        private List<object> NeedSaveDataList = new List<object>();
         /// <summary>
         /// 保存数据 去掉了价格和供应商
         /// </summary>
-        private async void SaveShareData()
+        private async void SaveShareData(bool SaveData = false)
         {
             var validator = new Temptb_ProdValidator();
             var result = validator.Validate(TempProd);
@@ -556,19 +593,6 @@ namespace RUINORERP.UI.SysConfig
 
             if (bindingSourceOut.DataSource != null)
             {
-                //BindingSortCollection<tb_Prod> bcProdDetailList = bindingSourceOut.DataSource as BindingSortCollection<tb_Prod>;
-                //bcProdDetailList.ForEach(
-                //    c =>
-                //    {
-                //        c.Category_ID = TempProd.Category_ID;
-                //        c.Employee_ID = null;
-                //        c.Created_by = MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID;
-                //        c.Rack_ID = TempProd.Rack_ID;
-                //        c.Location_ID = TempProd.Location_ID;
-                //        c.DepartmentID = TempProd.DepartmentID;
-                //    }
-                //);
-
                 ImportDataList.ForEach(
                     c =>
                     {
@@ -588,6 +612,7 @@ namespace RUINORERP.UI.SysConfig
                 List<tb_ProdProperty> ProdPropertyList = new List<tb_ProdProperty>();
                 List<tb_ProdPropertyValue> ProdPropertyValueList = new List<tb_ProdPropertyValue>();
                 List<tb_Prod_Attr_Relation> attr_RelationsList = new List<tb_Prod_Attr_Relation>();
+                List<tb_Unit_Conversion> UnitConversionList = new List<tb_Unit_Conversion>();
 
                 List<tb_BOM_S> MainbomList = new List<tb_BOM_S>();
 
@@ -598,12 +623,11 @@ namespace RUINORERP.UI.SysConfig
                 //来自于bom明细的明细产品信息
                 List<tb_ProdDetail> ProdDetailList = new List<tb_ProdDetail>();
 
-
                 foreach (var item in ImportDataList)
                 {
-                    if (item.tb_unit != null && !unitList.Exists(x => x.Unit_ID == item.tb_unit.Unit_ID))
+                    if (item.tb_unit != null)
                     {
-                        unitList.Add(item.tb_unit);
+                        LoadUnitConversion(item.tb_unit, unitList, UnitConversionList);
                     }
                     if (item.tb_producttype != null && !productTypeList.Exists(x => x.Type_ID == item.tb_producttype.Type_ID))
                     {
@@ -612,34 +636,7 @@ namespace RUINORERP.UI.SysConfig
                     if (item.tb_prodcategories != null && !prodcategoriesList.Any(x => x.Category_ID == item.tb_prodcategories.Category_ID))
                     {
                         prodcategoriesList.Add(item.tb_prodcategories);
-                        if (item.tb_prodcategories.tb_ProdCategorieses_parents != null && item.tb_prodcategories.tb_ProdCategorieses_parents.Count > 0)
-                        {
-                            item.tb_prodcategories.tb_ProdCategorieses_parents.ForEach(c =>
-                            {
-                                if (!prodcategoriesList.Any(x => x.Category_ID == c.tb_prodcategories_parent.Category_ID))
-                                {
-                                    prodcategoriesList.Add(c.tb_prodcategories_parent);
-                                }
-
-                                #region 再判断一级或用循环来判断？
-
-                                if (c.tb_prodcategories_parent.tb_ProdCategorieses_parents != null && c.tb_prodcategories_parent.tb_ProdCategorieses_parents.Count > 0)
-                                {
-                                    c.tb_prodcategories_parent.tb_ProdCategorieses_parents.ForEach(c =>
-                                    {
-                                        if (!prodcategoriesList.Any(x => x.Category_ID == c.tb_prodcategories_parent.Category_ID))
-                                        {
-                                            prodcategoriesList.Add(c.tb_prodcategories_parent);
-                                        }
-                                    }
-                                    );
-                                }
-
-                                #endregion
-                            }
-                            );
-                        }
-
+                        LoadParentCategory(prodcategoriesList, item.tb_prodcategories);
                     }
                     if (item.tb_Prod_Attr_Relations != null)
                     {
@@ -664,6 +661,16 @@ namespace RUINORERP.UI.SysConfig
                             if (c.tb_proddetail != null && !ProdDetailList.Any(x => x.ProdDetailID == c.tb_proddetail.ProdDetailID))
                             {
                                 ProdDetailList.Add(c.tb_proddetail);
+                                if (c.tb_proddetail.tb_prod != null && !ProdList.Any(x => x.ProdBaseID == c.tb_proddetail.tb_prod.ProdBaseID))
+                                {
+                                    c.tb_proddetail.tb_prod.Created_at = System.DateTime.Now;
+                                    c.tb_proddetail.tb_prod.Created_by = TempProd.Created_by;
+                                    c.tb_proddetail.tb_prod.CustomerVendor_ID = null;
+                                    c.tb_proddetail.tb_prod.DepartmentID = TempProd.DepartmentID;
+                                    c.tb_proddetail.tb_prod.Rack_ID = TempProd.Rack_ID;
+                                    c.tb_proddetail.tb_prod.Location_ID = TempProd.Location_ID;
+                                    ProdList.Add(c.tb_proddetail.tb_prod);
+                                }
                             }
                         });
                     }
@@ -701,14 +708,6 @@ namespace RUINORERP.UI.SysConfig
                                                     x.IsKeyMaterial = true;
                                                 }
                                                 DetailbomList.Add(x);
-
-                                                #region  添加单位
-                                                if (x.tb_unit != null
-                                                && !unitList.Any(Y => Y.Unit_ID == x.tb_unit.Unit_ID))
-                                                {
-                                                    unitList.Add(x.tb_unit);
-                                                }
-                                                #endregion
                                             }
                                             if (x.tb_proddetail != null && !ProdDetailList.Any(Y => Y.ProdDetailID == x.tb_proddetail.ProdDetailID))
                                             {
@@ -749,11 +748,9 @@ namespace RUINORERP.UI.SysConfig
                                                         #endregion
                                                     }
                                                     #region  添加单位
-                                                    if (x.tb_proddetail.tb_prod.tb_unit != null
-                                                    && !unitList.Any(Y => Y.Unit_ID == x.tb_proddetail.tb_prod.tb_unit.Unit_ID))
-                                                    {
-                                                        unitList.Add(x.tb_proddetail.tb_prod.tb_unit);
-                                                    }
+
+                                                    LoadUnitConversion(x.tb_proddetail.tb_prod.tb_unit, unitList, UnitConversionList);
+
                                                     #endregion
 
                                                     #region  添加产品类型
@@ -765,14 +762,24 @@ namespace RUINORERP.UI.SysConfig
                                                     #endregion
 
                                                     #region  添加单位
-                                                    if (x.tb_proddetail.tb_prod.tb_unit != null
-                                                    && !unitList.Any(Y => Y.Unit_ID == x.tb_proddetail.tb_prod.tb_unit.Unit_ID))
-                                                    {
-                                                        unitList.Add(x.tb_proddetail.tb_prod.tb_unit);
-                                                    }
+
+                                                    LoadUnitConversion(x.tb_proddetail.tb_prod.tb_unit, unitList, UnitConversionList);
+
                                                     #endregion
                                                 }
                                             }
+                                            if (x.tb_unit_conversion != null)
+                                            {
+                                                if (!UnitConversionList.Any(c => c.UnitConversion_ID == x.UnitConversion_ID))
+                                                {
+                                                    UnitConversionList.Add(x.tb_unit_conversion);
+                                                }
+                                                LoadUnitConversion(x.tb_unit_conversion.tb_unit_source, unitList, UnitConversionList);
+                                                LoadUnitConversion(x.tb_unit_conversion.tb_unit_target, unitList, UnitConversionList);
+                                            }
+                                            #region  添加单位
+                                            LoadUnitConversion(x.tb_unit, unitList, UnitConversionList);
+                                            #endregion
                                         }
 
                                     });
@@ -784,8 +791,6 @@ namespace RUINORERP.UI.SysConfig
                             {
                                 c.tb_BOM_Ss.ForEach(t =>
                                 {
-
-
                                     #region 根据tb_BOM_Ss添加
                                     if (!MainbomList.Any(x => x.BOM_ID == t.BOM_ID))
                                     {
@@ -809,11 +814,9 @@ namespace RUINORERP.UI.SysConfig
                                                     DetailbomList.Add(x);
 
                                                     #region  添加单位
-                                                    if (x.tb_unit != null
-                                                    && !unitList.Any(Y => Y.Unit_ID == x.tb_unit.Unit_ID))
-                                                    {
-                                                        unitList.Add(x.tb_unit);
-                                                    }
+
+                                                    LoadUnitConversion(x.tb_unit, unitList, UnitConversionList);
+
                                                     #endregion
                                                 }
                                                 if (x.tb_proddetail != null && !ProdDetailList.Any(Y => Y.ProdDetailID == x.tb_proddetail.ProdDetailID))
@@ -850,7 +853,6 @@ namespace RUINORERP.UI.SysConfig
                                                         }
 
                                                         #endregion
-
                                                         x.tb_proddetail.tb_prod.Created_at = System.DateTime.Now;
                                                         x.tb_proddetail.tb_prod.Created_by = TempProd.Created_by;
                                                         x.tb_proddetail.tb_prod.CustomerVendor_ID = null;
@@ -870,11 +872,9 @@ namespace RUINORERP.UI.SysConfig
                                                             #endregion
                                                         }
                                                         #region  添加单位
-                                                        if (x.tb_proddetail.tb_prod.tb_unit != null
-                                                        && !unitList.Any(Y => Y.Unit_ID == x.tb_proddetail.tb_prod.tb_unit.Unit_ID))
-                                                        {
-                                                            unitList.Add(x.tb_proddetail.tb_prod.tb_unit);
-                                                        }
+
+                                                        LoadUnitConversion(x.tb_proddetail.tb_prod.tb_unit, unitList, UnitConversionList);
+
                                                         #endregion
 
                                                         #region  添加产品类型
@@ -886,11 +886,9 @@ namespace RUINORERP.UI.SysConfig
                                                         #endregion
 
                                                         #region  添加单位
-                                                        if (x.tb_proddetail.tb_prod.tb_unit != null
-                                                        && !unitList.Any(Y => Y.Unit_ID == x.tb_proddetail.tb_prod.tb_unit.Unit_ID))
-                                                        {
-                                                            unitList.Add(x.tb_proddetail.tb_prod.tb_unit);
-                                                        }
+
+                                                        LoadUnitConversion(x.tb_proddetail.tb_prod.tb_unit, unitList, UnitConversionList);
+
                                                         #endregion
                                                     }
                                                 }
@@ -927,6 +925,16 @@ namespace RUINORERP.UI.SysConfig
                                 c.Created_at = System.DateTime.Now;
                                 c.Created_by = TempProd.Created_by;
                                 ProdDetailList.Add(c);
+                                if (c.tb_prod != null && !ProdList.Any(x => x.ProdBaseID == c.tb_prod.ProdBaseID))
+                                {
+                                    c.tb_prod.Created_at = System.DateTime.Now;
+                                    c.tb_prod.Created_by = TempProd.Created_by;
+                                    c.tb_prod.CustomerVendor_ID = null;
+                                    c.tb_prod.DepartmentID = TempProd.DepartmentID;
+                                    c.tb_prod.Rack_ID = TempProd.Rack_ID;
+                                    c.tb_prod.Location_ID = TempProd.Location_ID;
+                                    ProdList.Add(c.tb_prod);
+                                }
                             }
                         });
                     }
@@ -935,79 +943,89 @@ namespace RUINORERP.UI.SysConfig
 
                 foreach (var item in ProdList)
                 {
-                    item.tb_Prod_Attr_Relations.ForEach(c =>
+                    if (item.tb_Prod_Attr_Relations != null)
                     {
-                        if (c.tb_prodproperty != null && !ProdPropertyList.Any(x => x.Property_ID == c.tb_prodproperty.Property_ID))
+                        item.tb_Prod_Attr_Relations.ForEach(c =>
                         {
-                            ProdPropertyList.Add(c.tb_prodproperty);
-                        }
-                        if (c.tb_prodpropertyvalue != null && !ProdPropertyValueList.Any(x => x.PropertyValueID == c.tb_prodpropertyvalue.PropertyValueID))
-                        {
-                            ProdPropertyValueList.Add(c.tb_prodpropertyvalue);
-                        }
-                        if (!attr_RelationsList.Any(r => r.RAR_ID == c.RAR_ID))
-                        {
-                            attr_RelationsList.Add(c);
-                        }
-                        if (c.tb_prod != null && !ProdList.Any(x => x.ProdBaseID == c.tb_prod.ProdBaseID))
-                        {
-                            ProdList.Add(c.tb_prod);
-                        }
-                        if (c.tb_proddetail != null && !ProdDetailList.Any(x => x.ProdDetailID == c.tb_proddetail.ProdDetailID))
-                        {
-                            ProdDetailList.Add(c.tb_proddetail);
-                        }
-                    });
+                            if (c.tb_prodproperty != null && !ProdPropertyList.Any(x => x.Property_ID == c.tb_prodproperty.Property_ID))
+                            {
+                                ProdPropertyList.Add(c.tb_prodproperty);
+                            }
+                            if (c.tb_prodpropertyvalue != null && !ProdPropertyValueList.Any(x => x.PropertyValueID == c.tb_prodpropertyvalue.PropertyValueID))
+                            {
+                                ProdPropertyValueList.Add(c.tb_prodpropertyvalue);
+                            }
+                            if (!attr_RelationsList.Any(r => r.RAR_ID == c.RAR_ID))
+                            {
+                                attr_RelationsList.Add(c);
+                            }
+                            if (c.tb_prod != null && !ProdList.Any(x => x.ProdBaseID == c.tb_prod.ProdBaseID))
+                            {
+                                ProdList.Add(c.tb_prod);
+                            }
+                            if (c.tb_proddetail != null && !ProdDetailList.Any(x => x.ProdDetailID == c.tb_proddetail.ProdDetailID))
+                            {
+                                ProdDetailList.Add(c.tb_proddetail);
+
+                                if (c.tb_proddetail.tb_prod != null && !ProdList.Any(x => x.ProdBaseID == c.tb_proddetail.tb_prod.ProdBaseID))
+                                {
+                                    c.tb_proddetail.tb_prod.Created_at = System.DateTime.Now;
+                                    c.tb_proddetail.tb_prod.Created_by = TempProd.Created_by;
+                                    c.tb_proddetail.tb_prod.CustomerVendor_ID = null;
+                                    c.tb_proddetail.tb_prod.DepartmentID = TempProd.DepartmentID;
+                                    c.tb_proddetail.tb_prod.Rack_ID = TempProd.Rack_ID;
+                                    c.tb_proddetail.tb_prod.Location_ID = TempProd.Location_ID;
+                                    ProdList.Add(c.tb_proddetail.tb_prod);
+                                }
+
+                            }
+                        });
+                    }
+
+                }
+
+                if (SaveData)
+                {
+
+                    var units = MainForm.Instance.AppContext.Db.Storageable(unitList).ToStorage();
+                    units.AsInsertable.ExecuteCommand();//不存在插入
+                    units.AsUpdateable.ExecuteCommand();//存在更新
+
+
+                    var UnitConverList = MainForm.Instance.AppContext.Db.Storageable(UnitConversionList).ToStorage();
+                    UnitConverList.AsInsertable.ExecuteCommand();//不存在插入
+                    UnitConverList.AsUpdateable.ExecuteCommand();//存在更新
+
+                    var producttypes = MainForm.Instance.AppContext.Db.Storageable(productTypeList).ToStorage();
+                    producttypes.AsInsertable.ExecuteCommand();//不存在插入
+                    producttypes.AsUpdateable.ExecuteCommand();//存在更新
+                }
+                else
+                {
+                    NeedSaveDataList.Add(unitList);
+                    NeedSaveDataList.Add(productTypeList);
                 }
 
 
-                var units = MainForm.Instance.AppContext.Db.Storageable(unitList).ToStorage();
-                units.AsInsertable.ExecuteCommand();//不存在插入
-                units.AsUpdateable.ExecuteCommand();//存在更新
-
-                var producttypes = MainForm.Instance.AppContext.Db.Storageable(productTypeList).ToStorage();
-                producttypes.AsInsertable.ExecuteCommand();//不存在插入
-                producttypes.AsUpdateable.ExecuteCommand();//存在更新
-
-
-
-                //类目要找一下他的上级ID直到Parent_id为0
-                //List<tb_ProdCategories> ParentList = new List<tb_ProdCategories>();
-                //for (int i = 0; i < prodcategoriesList.Count; i++)
-                //{
-                //    if (prodcategoriesList[i].Parent_id == 0)
-                //    {
-                //        break;
-                //    }
-                //    else
-                //    {
-                //        if (prodcategoriesList[i].tb_prodcategories_parent != null && prodcategoriesList.Any(x => x.Category_ID == prodcategoriesList[i].Parent_id))
-                //        {
-                //            ParentList.Add(prodcategoriesList[i].tb_prodcategories_parent);
-                //        }
-                //    }
-                //}
-                //var Parentcategory = MainForm.Instance.AppContext.Db.Storageable(ParentList).ToStorage();
-                //Parentcategory.AsInsertable.ExecuteCommand();//不存在插入
-                //Parentcategory.AsUpdateable.ExecuteCommand();//存在更新
                 //这里是递归查找上级类目，直到Parent_id为0为止的反操作。不在这个树外的 统一再进行插入更新操作。
                 List<tb_ProdCategories> TempCategoryList = new List<tb_ProdCategories>();
                 TempCategoryList = prodcategoriesList.DeepCloneList<tb_ProdCategories>().ToList();
 
-                SaveCategory(prodcategoriesList, 0, TempCategoryList);
+                SaveCategory(prodcategoriesList, 0, TempCategoryList, SaveData);
 
                 //var category = MainForm.Instance.AppContext.Db.Storageable(prodcategoriesList).ToStorage();
                 //category.AsInsertable.ExecuteCommand();//不存在插入
                 //category.AsUpdateable.ExecuteCommand();//存在更新
+                if (SaveData)
+                {
+                    var ProdPropertys = MainForm.Instance.AppContext.Db.Storageable(ProdPropertyList).ToStorage();
+                    ProdPropertys.AsInsertable.ExecuteCommand();//不存在插入
+                    ProdPropertys.AsUpdateable.ExecuteCommand();//存在更新
 
-                var ProdPropertys = MainForm.Instance.AppContext.Db.Storageable(ProdPropertyList).ToStorage();
-                ProdPropertys.AsInsertable.ExecuteCommand();//不存在插入
-                ProdPropertys.AsUpdateable.ExecuteCommand();//存在更新
-
-                var ProdPropertyValues = MainForm.Instance.AppContext.Db.Storageable(ProdPropertyValueList).ToStorage();
-                ProdPropertyValues.AsInsertable.ExecuteCommand();//不存在插入
-                ProdPropertyValues.AsUpdateable.ExecuteCommand();//存在更新
-
+                    var ProdPropertyValues = MainForm.Instance.AppContext.Db.Storageable(ProdPropertyValueList).ToStorage();
+                    ProdPropertyValues.AsInsertable.ExecuteCommand();//不存在插入
+                    ProdPropertyValues.AsUpdateable.ExecuteCommand();//存在更新
+                }
                 ProdList.ForEach(m =>
                 {
                     if (!prodcategoriesList.Any(x => x.Category_ID == m.Category_ID))
@@ -1017,15 +1035,33 @@ namespace RUINORERP.UI.SysConfig
 
                 }
  );
+                if (SaveData)
+                {
+                    var Prods = MainForm.Instance.AppContext.Db.Storageable(ProdList).ToStorage();
 
-                var Prods = MainForm.Instance.AppContext.Db.Storageable(ProdList).ToStorage();
-                Prods.AsInsertable.ExecuteCommand();//不存在插入
-                Prods.AsUpdateable.ExecuteCommand();//存在更新
+                    Prods.AsInsertable.ExecuteCommand();//不存在插入
+                    Prods.AsUpdateable.ExecuteCommand();//存在更新
 
-                var ProdDetails = MainForm.Instance.AppContext.Db.Storageable(ProdDetailList).ToStorage();
-                ProdDetails.AsInsertable.ExecuteCommand();//不存在插入
-                ProdDetails.AsUpdateable.ExecuteCommand();//存在更新
+                    //检测明细中的主产品是不是都在上面的列表中
+                    for (int i = 0; i < ProdDetailList.Count; i++)
+                    {
+                        ProdDetailList[i].BOM_ID = null;//这里是为了防止导入的产品明细中存在不属于当前导入产品的BOM，这里先置空，后面再校验。
+                        if (!ProdList.Any(x => x.ProdBaseID == ProdDetailList[i].ProdBaseID.Value))
+                        {
+                            throw new Exception("导入的产品明细中存在不属于当前导入产品的产品");
+                        }
+                    }
 
+                    var ProdDetails = MainForm.Instance.AppContext.Db.Storageable(ProdDetailList).ToStorage();
+
+                    ProdDetails.AsInsertable.ExecuteCommand();//不存在插入
+                    ProdDetails.AsUpdateable.ExecuteCommand();//存在更新
+                }
+                else
+                {
+                    NeedSaveDataList.Add(ProdList);
+                    NeedSaveDataList.Add(ProdDetailList);
+                }
                 MainbomList.ForEach(m =>
                 {
                     m.OutApportionedCost = 0;
@@ -1043,24 +1079,34 @@ namespace RUINORERP.UI.SysConfig
                     m.UnitCost = 0;
                 });
 
-                var boms = MainForm.Instance.AppContext.Db.Storageable(MainbomList).ToStorage();
-                boms.AsInsertable.ExecuteCommand();//不存在插入
-                boms.AsUpdateable.ExecuteCommand();//存在更新
-
-                var Detailboms = MainForm.Instance.AppContext.Db.Storageable(DetailbomList).ToStorage();
-                Detailboms.AsInsertable.ExecuteCommand();//不存在插入
-                Detailboms.AsUpdateable.ExecuteCommand();//存在更新
-
-                foreach (var item in ImportDataList)
+                if (SaveData)
                 {
-                    item.CustomerVendor_ID = null;
-                    ////不存在插入主表，子表存在不插入，不存在插入
-                    MainForm.Instance.AppContext.Db.InsertNav(item)
-                          .Include(it => it.tb_ProdDetails, new InsertNavOptions()
-                          { OneToManyIfExistsNoInsert = true })//配置存在不插入
-                            .Include(it => it.tb_Prod_Attr_Relations, new InsertNavOptions()
-                            { OneToManyIfExistsNoInsert = true })//配置存在不插入
-                          .ExecuteCommand();
+                    var boms = MainForm.Instance.AppContext.Db.Storageable(MainbomList).ToStorage();
+                    boms.AsInsertable.ExecuteCommand();//不存在插入
+                    boms.AsUpdateable.ExecuteCommand();//存在更新
+
+                    var Detailboms = MainForm.Instance.AppContext.Db.Storageable(DetailbomList).ToStorage();
+                    Detailboms.AsInsertable.ExecuteCommand();//不存在插入
+                    Detailboms.AsUpdateable.ExecuteCommand();//存在更新
+                }
+                else
+                {
+                    NeedSaveDataList.Add(MainbomList);
+                    NeedSaveDataList.Add(DetailbomList);
+                }
+                if (SaveData)
+                {
+                    foreach (var item in ImportDataList)
+                    {
+                        item.CustomerVendor_ID = null;
+                        ////不存在插入主表，子表存在不插入，不存在插入
+                        MainForm.Instance.AppContext.Db.InsertNav(item)
+                              .Include(it => it.tb_ProdDetails, new InsertNavOptions()
+                              { OneToManyIfExistsNoInsert = true })//配置存在不插入
+                                .Include(it => it.tb_Prod_Attr_Relations, new InsertNavOptions()
+                                { OneToManyIfExistsNoInsert = true })//配置存在不插入
+                              .ExecuteCommand();
+                    }
                 }
 
                 //更新产品详情中的BOM指向
@@ -1071,33 +1117,118 @@ namespace RUINORERP.UI.SysConfig
                         ProdDetail.BOM_ID = ProdDetail.tb_bom_s.BOM_ID;
                     }
                 }
+                if (SaveData)
+                {
+                    await MainForm.Instance.AppContext.Db.Updateable(ProdDetailList).UpdateColumns(it => new { it.BOM_ID }).ExecuteCommandAsync();
+                    var attr_Relations = MainForm.Instance.AppContext.Db.Storageable(attr_RelationsList).ToStorage();
+                    attr_Relations.AsInsertable.ExecuteCommand();//不存在插入
+                    attr_Relations.AsUpdateable.ExecuteCommand();//存在更新
+                }
+                else
+                {
+                    NeedSaveDataList.Add(attr_RelationsList);
+                }
+            }
+        }
 
-                await MainForm.Instance.AppContext.Db.Updateable(ProdDetailList).UpdateColumns(it => new { it.BOM_ID }).ExecuteCommandAsync();
 
-                var attr_Relations = MainForm.Instance.AppContext.Db.Storageable(attr_RelationsList).ToStorage();
-                attr_Relations.AsInsertable.ExecuteCommand();//不存在插入
-                attr_Relations.AsUpdateable.ExecuteCommand();//存在更新
+        private void LoadUnitConversion(tb_Unit item, List<tb_Unit> unitList, List<tb_Unit_Conversion> UnitConversionList)
+        {
+            if (item == null) return;
+            if (!unitList.Exists(x => x.Unit_ID == item.Unit_ID))
+            {
+                unitList.Add(item);
+            }
 
+            #region 单位转换
+
+            if (item.tb_Unit_Conversions_source != null)
+            {
+                if (item.tb_Unit_Conversions_source != null)
+                    item.tb_Unit_Conversions_source.ForEach(x =>
+                    {
+                        if (x.tb_unit_source != null && !unitList.Any(u => u.Unit_ID == x.tb_unit_source.Unit_ID))
+                        {
+                            unitList.Add(x.tb_unit_source);
+                        }
+                        if (x.tb_unit_target != null && !unitList.Any(u => u.Unit_ID == x.tb_unit_target.Unit_ID))
+                        {
+                            unitList.Add(x.tb_unit_target);
+                        }
+                        if (!UnitConversionList.Any(c => c.UnitConversion_ID == x.UnitConversion_ID))
+                        {
+                            UnitConversionList.Add(x);
+                        }
+
+                    }
+                    );
+            }
+
+            if (item.tb_Unit_Conversions_target != null)
+            {
+
+                if (item.tb_Unit_Conversions_target != null)
+                    item.tb_Unit_Conversions_target.ForEach(x =>
+                    {
+                        if (x.tb_unit_source != null && !unitList.Any(u => u.Unit_ID == x.tb_unit_source.Unit_ID))
+                        {
+                            unitList.Add(x.tb_unit_source);
+                        }
+                        if (x.tb_unit_target != null && !unitList.Any(u => u.Unit_ID == x.tb_unit_target.Unit_ID))
+                        {
+                            unitList.Add(x.tb_unit_target);
+                        }
+                        if (!UnitConversionList.Any(c => c.UnitConversion_ID == x.UnitConversion_ID))
+                        {
+                            UnitConversionList.Add(x);
+                        }
+                    }
+                    );
+            }
+
+            #endregion
+        }
+
+        private void LoadParentCategory(List<tb_ProdCategories> CategoryList, tb_ProdCategories Category)
+        {
+            if (Category.tb_prodcategories_parent != null)
+            {
+                if (!CategoryList.Any(x => x.Category_ID == Category.tb_prodcategories_parent.Category_ID))
+                {
+                    CategoryList.Add(Category.tb_prodcategories_parent);
+                    if (Category.tb_prodcategories_parent.Category_ID != 0)
+                    {
+                        LoadParentCategory(CategoryList, Category.tb_prodcategories_parent);
+                    }
+                }
 
             }
         }
 
 
-        private void SaveCategory(List<tb_ProdCategories> prodcategoriesList, long pid, List<tb_ProdCategories> TempCategoryList)
+        private void SaveCategory(List<tb_ProdCategories> prodcategoriesList,
+            long pid, List<tb_ProdCategories> TempCategoryList, bool SaveData = false)
         {
             var list = prodcategoriesList.Where(x => x.Parent_id == pid).ToList();
             if (list.Count > 0)
             {
 
                 var category = MainForm.Instance.AppContext.Db.Storageable(list).ToStorage();
-                category.AsInsertable.ExecuteCommand();//不存在插入
-                category.AsUpdateable.ExecuteCommand();//存在更新
+                if (SaveData)
+                {
+                    category.AsInsertable.ExecuteCommand();//不存在插入
+                    category.AsUpdateable.ExecuteCommand();//存在更新
+                }
+                else
+                {
+                    NeedSaveDataList.Add(list);
+                }
                 //保存过的就去掉，看还有没剩下的
                 TempCategoryList.RemoveWhere(x => list.Any(y => y.Category_ID == x.Category_ID));
 
                 for (int i = 0; i < list.Count; i++)
                 {
-                    SaveCategory(prodcategoriesList, list[i].Category_ID, TempCategoryList);
+                    SaveCategory(prodcategoriesList, list[i].Category_ID, TempCategoryList, SaveData);
                 }
             }
 
@@ -1210,40 +1341,41 @@ namespace RUINORERP.UI.SysConfig
             //能分享的数据主要 是 产品数据和BOM配方
             //产品包含有属性类目主产品明细产品等等
             //通过主产品找到关系再到关系中的明细及属性属性值
-            List<tb_Prod> tb_ProdDetails = await MainForm.Instance.AppContext.Db.Queryable<tb_Prod>()
-            .Includes(a => a.tb_unit)
+            //这里要处理掉一些敏感信息 比如价格之类的 供应商之类
+            List<tb_Prod> Prods = await MainForm.Instance.AppContext.Db.Queryable<tb_Prod>()
+            .Includes(a => a.tb_unit, b => b.tb_Unit_Conversions_source)
+            .Includes(a => a.tb_unit, b => b.tb_Unit_Conversions_target)
             .Includes(b => b.tb_producttype)
              .AsNavQueryable()
             .Includes(a => a.tb_prodcategories, b => b.tb_prodcategories_parent, c => c.tb_prodcategories_parent,
-            d => d.tb_prodcategories_parent, e => e.tb_prodcategories_parent, f => f.tb_prodcategories_parent)
+            d => d.tb_prodcategories_parent, e => e.tb_prodcategories_parent, f => f.tb_prodcategories_parent, g => g.tb_prodcategories_parent)
+            //最多能查到7层
             //            .Includes(b => b.tb_prodcategories, d => d.tb_ProdCategorieses_parents, c => c.tb_prodcategories_parent)
             .Includes(b => b.tb_storagerack)
             .Includes(a => a.tb_location)
             .Includes(a => a.tb_Packings, b => b.tb_PackingDetails)
             .Includes(b => b.tb_Prod_Attr_Relations, c => c.tb_prodproperty)
             .Includes(b => b.tb_Prod_Attr_Relations, c => c.tb_prodpropertyvalue)
-            .Includes(b => b.tb_Prod_Attr_Relations, c => c.tb_proddetail)
+            .AsNavQueryable()
+            .Includes(b => b.tb_Prod_Attr_Relations, c => c.tb_proddetail, d => d.tb_prod, e => e.tb_prodcategories, h => h.tb_prodcategories_parent, i => i.tb_prodcategories_parent, j => j.tb_prodcategories_parent)
+             .AsNavQueryable()
+            .Includes(b => b.tb_Prod_Attr_Relations, c => c.tb_proddetail, d => d.tb_prod, e => e.tb_unit, f => f.tb_Unit_Conversions_source)
+              .AsNavQueryable()
+            .Includes(b => b.tb_Prod_Attr_Relations, c => c.tb_proddetail, d => d.tb_prod, e => e.tb_unit, f => f.tb_Unit_Conversions_target)
+                .AsNavQueryable()
+            .Includes(b => b.tb_Prod_Attr_Relations, c => c.tb_proddetail, d => d.tb_prod, e => e.tb_producttype)
+
             // .Includes(b => b.tb_ProdDetails, c => c.tb_BOM_Ss, d => d.tb_BOM_SDetailSecondaries)
-
-
-            .AsNavQueryable()
-            .Includes(b => b.tb_ProdDetails, c => c.tb_BOM_Ss, d => d.tb_BOM_SDetails, e => e.tb_unit)//bom主 
-            .AsNavQueryable()
-            .Includes(a => a.tb_ProdDetails, b => b.tb_BOM_Ss, c => c.tb_BOM_SDetails, d => d.tb_unit_conversion, e => e.tb_unit_target)//bom主 
-            .AsNavQueryable()
-            .Includes(a => a.tb_ProdDetails, b => b.tb_BOM_Ss, c => c.tb_BOM_SDetails, d => d.tb_unit_conversion, e => e.tb_unit_source)//bom主 
-            .AsNavQueryable()
-            .Includes(a => a.tb_ProdDetails, b => b.tb_BOM_Ss, c => c.tb_BOM_SDetails, d => d.tb_proddetail, e => e.tb_prod, f => f.tb_unit)//bom主
-            .AsNavQueryable()
-            .Includes(a => a.tb_ProdDetails, b => b.tb_BOM_Ss, c => c.tb_BOM_SDetails, d => d.tb_proddetail, e => e.tb_prod, f => f.tb_producttype)//bom主
-            .AsNavQueryable()
-            .Includes(a => a.tb_ProdDetails, b => b.tb_BOM_Ss, c => c.tb_BOM_SDetails, d => d.tb_proddetail, e => e.tb_prod, f => f.tb_prodcategories, g => g.tb_prodcategories_parent)//bom主
-
-
-
-
-
-
+            //.AsNavQueryable()
+            //.Includes(a => a.tb_ProdDetails, b => b.tb_BOM_Ss, c => c.tb_BOM_SDetails, d => d.tb_unit_conversion, e => e.tb_unit_target)//bom主 
+            //.AsNavQueryable()
+            //.Includes(a => a.tb_ProdDetails, b => b.tb_BOM_Ss, c => c.tb_BOM_SDetails, d => d.tb_unit_conversion, e => e.tb_unit_source)//bom主 
+            //.AsNavQueryable()
+            //.Includes(a => a.tb_ProdDetails, b => b.tb_BOM_Ss, c => c.tb_BOM_SDetails, d => d.tb_proddetail, e => e.tb_prod, f => f.tb_unit)//bom主
+            //.AsNavQueryable()
+            //.Includes(a => a.tb_ProdDetails, b => b.tb_BOM_Ss, c => c.tb_BOM_SDetails, d => d.tb_proddetail, e => e.tb_prod, f => f.tb_producttype)//bom主
+            //.AsNavQueryable()
+            //.Includes(a => a.tb_ProdDetails, b => b.tb_BOM_Ss, c => c.tb_BOM_SDetails, d => d.tb_proddetail, e => e.tb_prod, f => f.tb_prodcategories, g => g.tb_prodcategories_parent)//bom主
             .AsNavQueryable()
             .Includes(b => b.tb_ProdDetails, c => c.tb_bom_s, d => d.tb_BOM_SDetails, e => e.tb_unit)//bom主 
             .AsNavQueryable()
@@ -1287,7 +1419,27 @@ namespace RUINORERP.UI.SysConfig
             newSumDataGridViewOut.FieldNameList.TryRemove("Images", out kv);
 
             newSumDataGridViewOut.NeedSaveColumnsXml = true;
-            bindingSourceOut.DataSource = tb_ProdDetails.ToBindingSortCollection();
+
+            Prods.ForEach(a =>
+            {
+                a.CustomerVendor_ID = null;
+                a.ProductENDesc = string.Empty;
+                a.ProductCNDesc = string.Empty;
+                a.SourceType = null;
+                if (a.tb_ProdDetails != null)
+                {
+                    a.tb_ProdDetails.ForEach(b =>
+                    {
+                        b.Discount_Price = null;
+                        b.Market_Price = null;
+                        b.Standard_Price = null;
+                        b.tb_PriceRecords = null;
+                        b.tb_ProdBorrowingDetails = null;
+                    });
+                }
+            });
+
+            bindingSourceOut.DataSource = Prods.ToBindingSortCollection();
             newSumDataGridViewOut.DataSource = bindingSourceOut;
         }
         //三级 还是两级呢。  反向来 一是 KEY VALUE  然后是列名

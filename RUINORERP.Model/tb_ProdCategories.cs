@@ -92,6 +92,21 @@ namespace RUINORERP.Model
             SetProperty(ref _Is_enabled, value);
                         }
         }
+        private int? _CategoryLevel;
+        /// <summary>
+        /// 层级
+        /// </summary>
+        [AdvQueryAttribute(ColName = "CategoryLevel", ColDesc = "层级")]
+        [SugarColumn(ColumnDataType = "int", SqlParameterDbType = "Int32", ColumnName = "CategoryLevel", DecimalDigits = 0, IsNullable = true, ColumnDescription = "层级")]
+        public int? CategoryLevel
+        {
+            get { return _CategoryLevel; }
+            set
+            {
+                SetProperty(ref _CategoryLevel, value);
+            }
+        }
+
 
         private int? _Sort;
         /// <summary>
@@ -106,6 +121,8 @@ namespace RUINORERP.Model
             SetProperty(ref _Sort, value);
                         }
         }
+
+
 
         private long? _Parent_id;
         /// <summary>

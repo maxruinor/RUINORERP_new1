@@ -56,8 +56,8 @@ namespace RUINORERP.Business
 //***** 
  RuleFor(tb_BuyingRequisitionDetail =>tb_BuyingRequisitionDetail.DeliveredQuantity).NotNull().WithMessage("已交数量:不能为空。");
 
- RuleFor(tb_BuyingRequisitionDetail =>tb_BuyingRequisitionDetail.Purpose).MaximumLength(250).WithMessage("用途:不能超过最大长度,250.");
- RuleFor(tb_BuyingRequisitionDetail =>tb_BuyingRequisitionDetail.Purpose).NotEmpty().WithMessage("用途:不能为空。");
+ //RuleFor(tb_BuyingRequisitionDetail =>tb_BuyingRequisitionDetail.Purpose).MaximumLength(250).WithMessage("用途:不能超过最大长度,250.");
+ //RuleFor(tb_BuyingRequisitionDetail =>tb_BuyingRequisitionDetail.Purpose).NotEmpty().WithMessage("用途:不能为空。");
 
  RuleFor(tb_BuyingRequisitionDetail =>tb_BuyingRequisitionDetail.Notes).MaximumLength(500).WithMessage("备注:不能超过最大长度,500.");
 

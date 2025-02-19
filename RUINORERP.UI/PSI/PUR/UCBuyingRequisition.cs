@@ -122,7 +122,8 @@ namespace RUINORERP.UI.PSI.PUR
             DataBindingHelper.BindData4Cmb<tb_Department>(entity, k => k.DepartmentID, v => v.DepartmentName, cmbDepartmentID);
 
             DataBindingHelper.BindData4TextBox<tb_BuyingRequisition>(entity, t => t.PuRequisitionNo, txtPuRequisitionNo, BindDataType4TextBox.Text, false);
-
+            DataBindingHelper.BindData4TextBox<tb_BuyingRequisition>(entity, t => t.Purpose, txtPurpose, BindDataType4TextBox.Text, false);
+            
             DataBindingHelper.BindData4DataTime<tb_BuyingRequisition>(entity, t => t.RequirementDate, dtpRequirementDate, false);
             DataBindingHelper.BindData4DataTime<tb_BuyingRequisition>(entity, t => t.ApplicationDate, dtpApplicationDate, false);
 

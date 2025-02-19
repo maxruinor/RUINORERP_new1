@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/13/2024 18:43:45
+// 时间：02/19/2025 22:58:08
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -16,7 +16,7 @@ using RUINORERP.Model;
 namespace RUINORERP.IServices
 {
     /// <summary>
-    /// 预收预付单,冲销动作会在付款单和收款单中体现
+    /// 预收预付单
     /// </summary>
     public partial interface Itb_FM_PrePaymentBillServices : IBaseServices<tb_FM_PrePaymentBill>
     {

@@ -62,30 +62,30 @@ namespace RUINORERP.UI.Common
         //递归方法
         private static void Bind(TreeNodeCollection Nodes, List<tb_FM_Subject> list, long nodeId)
         {
-            var childList = list.FindAll(t => t.parent_subject_id == nodeId).OrderBy(t => t.Subject_Type);
+            var childList = list.FindAll(t => t.Parent_subject_id == nodeId).OrderBy(t => t.Subject_Type);
             foreach (var nodeObj in childList)
             {
                 var node = new TreeNode();
-                node.Name = nodeObj.subject_id.ToString();
-                node.Text = nodeObj.subject_code + "【" + nodeObj.subject_name + "】";
+                node.Name = nodeObj.Subject_id.ToString();
+                node.Text = nodeObj.Subject_code + "【" + nodeObj.Subject_name + "】";
                 node.Tag = nodeObj;
                 Nodes.Add(node);
-                Bind(node, list, nodeObj.subject_id);
+                Bind(node, list, nodeObj.Subject_id);
             }
         }
 
         //递归方法
         private static void Bind(TreeNode parNode, List<tb_FM_Subject> list, long nodeId)
         {
-            var childList = list.FindAll(t => t.parent_subject_id == nodeId).OrderBy(t => t.Subject_Type);
+            var childList = list.FindAll(t => t.Parent_subject_id == nodeId).OrderBy(t => t.Subject_Type);
             foreach (var nodeObj in childList)
             {
                 var node = new TreeNode();
-                node.Name = nodeObj.subject_id.ToString();
-                node.Text = nodeObj.subject_code+"【"+nodeObj.subject_name+"】";
+                node.Name = nodeObj.Subject_id.ToString();
+                node.Text = nodeObj.Subject_code+"【"+nodeObj.Subject_name+"】";
                 node.Tag = nodeObj;
                 parNode.Nodes.Add(node);
-                Bind(node, list, nodeObj.subject_id);
+                Bind(node, list, nodeObj.Subject_id);
             }
         }
 

@@ -30,8 +30,8 @@
         {
             this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(UCDataShare));
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle3 = new System.Windows.Forms.DataGridViewCellStyle();
             this.kryptonSplitContainer1 = new Krypton.Toolkit.KryptonSplitContainer();
             this.listBoxTableList = new System.Windows.Forms.ListBox();
             this.kryptonSplitContainer2 = new Krypton.Toolkit.KryptonSplitContainer();
@@ -57,6 +57,12 @@
             this.kryptonPage3 = new Krypton.Navigator.KryptonPage();
             this.kryptonSplitContainerLef = new Krypton.Toolkit.KryptonSplitContainer();
             this.kryptonPanelInput = new Krypton.Toolkit.KryptonPanel();
+            this.kryptonLabel3 = new Krypton.Toolkit.KryptonLabel();
+            this.cmbDepartment = new Krypton.Toolkit.KryptonComboBox();
+            this.kryptonLabel1 = new Krypton.Toolkit.KryptonLabel();
+            this.cmbStorageRack = new Krypton.Toolkit.KryptonComboBox();
+            this.lblLocation_ID = new Krypton.Toolkit.KryptonLabel();
+            this.cmbLocation_ID = new Krypton.Toolkit.KryptonComboBox();
             this.groupLine2 = new WinLib.Line.GroupLine();
             this.toolStripImport = new System.Windows.Forms.ToolStrip();
             this.toolStripButton3 = new System.Windows.Forms.ToolStripButton();
@@ -77,12 +83,6 @@
             this.groupLine1 = new WinLib.Line.GroupLine();
             this.bindingSourceOut = new System.Windows.Forms.BindingSource(this.components);
             this.bindingSourceImport = new System.Windows.Forms.BindingSource(this.components);
-            this.lblLocation_ID = new Krypton.Toolkit.KryptonLabel();
-            this.cmbLocation_ID = new Krypton.Toolkit.KryptonComboBox();
-            this.kryptonLabel1 = new Krypton.Toolkit.KryptonLabel();
-            this.cmbStorageRack = new Krypton.Toolkit.KryptonComboBox();
-            this.kryptonLabel3 = new Krypton.Toolkit.KryptonLabel();
-            this.cmbDepartment = new Krypton.Toolkit.KryptonComboBox();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1.Panel1)).BeginInit();
             this.kryptonSplitContainer1.Panel1.SuspendLayout();
@@ -121,15 +121,15 @@
             this.kryptonSplitContainerLef.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanelInput)).BeginInit();
             this.kryptonPanelInput.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.cmbDepartment)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.cmbStorageRack)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.cmbLocation_ID)).BeginInit();
             this.toolStripImport.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanelOutGrid)).BeginInit();
             this.kryptonPanelOutGrid.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.newSumDataGridViewImport)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceOut)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceImport)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.cmbLocation_ID)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.cmbStorageRack)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.cmbDepartment)).BeginInit();
             this.SuspendLayout();
             // 
             // kryptonSplitContainer1
@@ -208,7 +208,7 @@
             this.kryptonNavigator1.Pages.AddRange(new Krypton.Navigator.KryptonPage[] {
             this.kryptonPage1,
             this.kryptonPage3});
-            this.kryptonNavigator1.SelectedIndex = 1;
+            this.kryptonNavigator1.SelectedIndex = 0;
             this.kryptonNavigator1.Size = new System.Drawing.Size(587, 572);
             this.kryptonNavigator1.TabIndex = 3;
             this.kryptonNavigator1.Text = "kryptonNavigator1";
@@ -371,8 +371,8 @@
             this.newSumDataGridViewOut.AllowUserToAddRows = false;
             this.newSumDataGridViewOut.AllowUserToDeleteRows = false;
             this.newSumDataGridViewOut.AllowUserToOrderColumns = true;
-            dataGridViewCellStyle2.BackColor = System.Drawing.Color.Beige;
-            this.newSumDataGridViewOut.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle2;
+            dataGridViewCellStyle1.BackColor = System.Drawing.Color.Beige;
+            this.newSumDataGridViewOut.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle1;
             this.newSumDataGridViewOut.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
@@ -454,6 +454,57 @@
             this.kryptonPanelInput.Name = "kryptonPanelInput";
             this.kryptonPanelInput.Size = new System.Drawing.Size(585, 144);
             this.kryptonPanelInput.TabIndex = 2;
+            // 
+            // kryptonLabel3
+            // 
+            this.kryptonLabel3.Location = new System.Drawing.Point(32, 92);
+            this.kryptonLabel3.Name = "kryptonLabel3";
+            this.kryptonLabel3.Size = new System.Drawing.Size(62, 20);
+            this.kryptonLabel3.TabIndex = 147;
+            this.kryptonLabel3.Values.Text = "所属部门";
+            // 
+            // cmbDepartment
+            // 
+            this.cmbDepartment.DropDownWidth = 100;
+            this.cmbDepartment.IntegralHeight = false;
+            this.cmbDepartment.Location = new System.Drawing.Point(100, 92);
+            this.cmbDepartment.Name = "cmbDepartment";
+            this.cmbDepartment.Size = new System.Drawing.Size(147, 21);
+            this.cmbDepartment.TabIndex = 148;
+            // 
+            // kryptonLabel1
+            // 
+            this.kryptonLabel1.Location = new System.Drawing.Point(27, 54);
+            this.kryptonLabel1.Name = "kryptonLabel1";
+            this.kryptonLabel1.Size = new System.Drawing.Size(62, 20);
+            this.kryptonLabel1.TabIndex = 89;
+            this.kryptonLabel1.Values.Text = "所属货架";
+            // 
+            // cmbStorageRack
+            // 
+            this.cmbStorageRack.DropDownWidth = 100;
+            this.cmbStorageRack.IntegralHeight = false;
+            this.cmbStorageRack.Location = new System.Drawing.Point(100, 50);
+            this.cmbStorageRack.Name = "cmbStorageRack";
+            this.cmbStorageRack.Size = new System.Drawing.Size(147, 21);
+            this.cmbStorageRack.TabIndex = 90;
+            // 
+            // lblLocation_ID
+            // 
+            this.lblLocation_ID.Location = new System.Drawing.Point(27, 18);
+            this.lblLocation_ID.Name = "lblLocation_ID";
+            this.lblLocation_ID.Size = new System.Drawing.Size(62, 20);
+            this.lblLocation_ID.TabIndex = 87;
+            this.lblLocation_ID.Values.Text = "所属仓库";
+            // 
+            // cmbLocation_ID
+            // 
+            this.cmbLocation_ID.DropDownWidth = 100;
+            this.cmbLocation_ID.IntegralHeight = false;
+            this.cmbLocation_ID.Location = new System.Drawing.Point(100, 14);
+            this.cmbLocation_ID.Name = "cmbLocation_ID";
+            this.cmbLocation_ID.Size = new System.Drawing.Size(147, 21);
+            this.cmbLocation_ID.TabIndex = 88;
             // 
             // groupLine2
             // 
@@ -559,8 +610,8 @@
             this.newSumDataGridViewImport.AllowUserToAddRows = false;
             this.newSumDataGridViewImport.AllowUserToDeleteRows = false;
             this.newSumDataGridViewImport.AllowUserToOrderColumns = true;
-            dataGridViewCellStyle3.BackColor = System.Drawing.Color.Beige;
-            this.newSumDataGridViewImport.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle3;
+            dataGridViewCellStyle2.BackColor = System.Drawing.Color.Beige;
+            this.newSumDataGridViewImport.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle2;
             this.newSumDataGridViewImport.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
@@ -626,57 +677,6 @@
             this.groupLine1.Size = new System.Drawing.Size(585, 1);
             this.groupLine1.TabIndex = 2;
             // 
-            // lblLocation_ID
-            // 
-            this.lblLocation_ID.Location = new System.Drawing.Point(27, 18);
-            this.lblLocation_ID.Name = "lblLocation_ID";
-            this.lblLocation_ID.Size = new System.Drawing.Size(62, 20);
-            this.lblLocation_ID.TabIndex = 87;
-            this.lblLocation_ID.Values.Text = "所属仓库";
-            // 
-            // cmbLocation_ID
-            // 
-            this.cmbLocation_ID.DropDownWidth = 100;
-            this.cmbLocation_ID.IntegralHeight = false;
-            this.cmbLocation_ID.Location = new System.Drawing.Point(100, 14);
-            this.cmbLocation_ID.Name = "cmbLocation_ID";
-            this.cmbLocation_ID.Size = new System.Drawing.Size(147, 21);
-            this.cmbLocation_ID.TabIndex = 88;
-            // 
-            // kryptonLabel1
-            // 
-            this.kryptonLabel1.Location = new System.Drawing.Point(27, 54);
-            this.kryptonLabel1.Name = "kryptonLabel1";
-            this.kryptonLabel1.Size = new System.Drawing.Size(62, 20);
-            this.kryptonLabel1.TabIndex = 89;
-            this.kryptonLabel1.Values.Text = "所属货架";
-            // 
-            // cmbStorageRack
-            // 
-            this.cmbStorageRack.DropDownWidth = 100;
-            this.cmbStorageRack.IntegralHeight = false;
-            this.cmbStorageRack.Location = new System.Drawing.Point(100, 50);
-            this.cmbStorageRack.Name = "cmbStorageRack";
-            this.cmbStorageRack.Size = new System.Drawing.Size(147, 21);
-            this.cmbStorageRack.TabIndex = 90;
-            // 
-            // kryptonLabel3
-            // 
-            this.kryptonLabel3.Location = new System.Drawing.Point(32, 92);
-            this.kryptonLabel3.Name = "kryptonLabel3";
-            this.kryptonLabel3.Size = new System.Drawing.Size(62, 20);
-            this.kryptonLabel3.TabIndex = 147;
-            this.kryptonLabel3.Values.Text = "所属部门";
-            // 
-            // cmbDepartment
-            // 
-            this.cmbDepartment.DropDownWidth = 100;
-            this.cmbDepartment.IntegralHeight = false;
-            this.cmbDepartment.Location = new System.Drawing.Point(100, 92);
-            this.cmbDepartment.Name = "cmbDepartment";
-            this.cmbDepartment.Size = new System.Drawing.Size(147, 21);
-            this.cmbDepartment.TabIndex = 148;
-            // 
             // UCDataShare
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
@@ -728,6 +728,9 @@
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanelInput)).EndInit();
             this.kryptonPanelInput.ResumeLayout(false);
             this.kryptonPanelInput.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.cmbDepartment)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.cmbStorageRack)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.cmbLocation_ID)).EndInit();
             this.toolStripImport.ResumeLayout(false);
             this.toolStripImport.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanelOutGrid)).EndInit();
@@ -735,9 +738,6 @@
             ((System.ComponentModel.ISupportInitialize)(this.newSumDataGridViewImport)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceOut)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceImport)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.cmbLocation_ID)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.cmbStorageRack)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.cmbDepartment)).EndInit();
             this.ResumeLayout(false);
 
         }

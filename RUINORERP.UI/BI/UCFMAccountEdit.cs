@@ -32,7 +32,7 @@ namespace RUINORERP.UI.BI
         {
             DataBindingHelper.BindData4Cmb<tb_Department>(entity, k => k.DepartmentID, v => v.DepartmentName, cmbDepartmentID);
 
-            DataBindingHelper.BindData4Cmb<tb_FM_Subject>(entity, k => k.subject_id, v => v.subject_name, cmbsubject_id);
+            DataBindingHelper.BindData4Cmb<tb_FM_Subject>(entity, k => k.Subject_id, v => v.Subject_name, cmbsubject_id);
 
             DataBindingHelper.BindData4Cmb<tb_Currency>(entity, k => k.Currency_ID, v => v.CurrencyCode, cmbCurrency_ID);
 

@@ -576,7 +576,7 @@ namespace RUINORERP.Business.CommService
                     SetDictDataSource<tb_FM_ExpenseType>(k => k.ExpenseType_id, v => v.Expense_name, LoadData);
                     break;
                 case "tb_FM_Subject":
-                    SetDictDataSource<tb_FM_Subject>(k => k.subject_id, v => v.subject_name, LoadData);
+                    SetDictDataSource<tb_FM_Subject>(k => k.Subject_id, v => v.Subject_name, LoadData);
                     break;
                 case "tb_RolePropertyConfig":
                     SetDictDataSource<tb_RolePropertyConfig>(k => k.RolePropertyID, v => v.RolePropertyName, LoadData);

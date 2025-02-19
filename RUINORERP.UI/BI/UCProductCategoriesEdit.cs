@@ -100,8 +100,6 @@ namespace RUINORERP.UI.BI
             base.BindData(entity);
 
 
-
-
         }
 
         private void DataSourceToControl(object sender, ConvertEventArgs cevent)
@@ -210,6 +208,16 @@ namespace RUINORERP.UI.BI
             if (EditEntity.Parent_id == null)
             {
                 EditEntity.Parent_id = 0;
+                EditEntity.CategoryLevel = 0;
+            }
+            else
+            {
+                EditEntity.CategoryLevel = ((tb_ProdCategories)cmbTreeParent_id.SelectedItem).CategoryLevel + 1;
+            }
+            if (EditEntity.CategoryLevel > 6)
+            {
+                MessageBox.Show("系统要求类目层级不能超过7层", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
             }
 
             if (base.Validator())

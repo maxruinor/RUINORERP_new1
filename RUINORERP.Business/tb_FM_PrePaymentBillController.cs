@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/18/2024 18:02:05
+// 时间：02/19/2025 22:58:08
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -29,7 +29,7 @@ using RUINORERP.Common.Helper;
 namespace RUINORERP.Business
 {
     /// <summary>
-    /// 预收预付单,冲销动作会在付款单和收款单中体现
+    /// 预收预付单
     /// </summary>
     public partial class tb_FM_PrePaymentBillController<T>:BaseController<T> where T : class
     {

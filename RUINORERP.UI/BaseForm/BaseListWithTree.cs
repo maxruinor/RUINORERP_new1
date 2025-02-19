@@ -67,7 +67,11 @@ namespace RUINORERP.UI.BaseForm
                     break;
                 case ListChangedType.ItemAdded:
                     entity = bindingSourceList.List[e.NewIndex] as BaseEntity;
-                    entity.ActionStatus = ActionStatus.新增;
+                    if (entity != null)
+                    {
+                        entity.ActionStatus = ActionStatus.新增;
+                    }
+                    
                     break;
                 case ListChangedType.ItemDeleted:
                     if (e.NewIndex < bindingSourceList.Count)
@@ -119,7 +123,7 @@ namespace RUINORERP.UI.BaseForm
                 }
             }
             */
- 
+
             //foreach (DataGridViewColumn var in this.dataGridView1.Columns)
             //{
             //    var.HeaderText = this.FieldNameList.Find(delegate (KeyValuePair<string, string> kv) { return kv.Key == var.Name; }).Value;
@@ -150,7 +154,7 @@ namespace RUINORERP.UI.BaseForm
                 case MenuItemEnums.保存:
                     toolStripButtonSave.Enabled = false;
                     break;
-               
+
                 case MenuItemEnums.关闭:
                     break;
                 case MenuItemEnums.刷新:
@@ -299,7 +303,7 @@ namespace RUINORERP.UI.BaseForm
                     this.ValidateChildren(System.Windows.Forms.ValidationConstraints.None);
                     Save();
                     break;
-               
+
                 case MenuItemEnums.关闭:
                     Exit(this);
                     break;
@@ -525,10 +529,10 @@ namespace RUINORERP.UI.BaseForm
                     //}
 
                 }
-            
+
             }
 
-  
+
             if (ColNameDataDictionary.ContainsKey(colDbName))
             {
                 List<KeyValuePair<object, string>> kvlist = new List<KeyValuePair<object, string>>();

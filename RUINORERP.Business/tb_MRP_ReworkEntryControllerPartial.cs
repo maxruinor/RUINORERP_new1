@@ -122,6 +122,7 @@ namespace RUINORERP.Business
                         //如果已交数据大于 订单数量 给出警告实际操作中 使用其他方式将备品入库
                         if (entity.tb_mrp_reworkreturn.tb_MRP_ReworkReturnDetails[i].DeliveredQuantity > entity.tb_mrp_reworkreturn.tb_MRP_ReworkReturnDetails[i].Quantity)
                         {
+                            _unitOfWorkManage.RollbackTran();
                             throw new Exception($"返工入库：{entity.ReworkEntryNo}审核时，对应的退库单：{entity.tb_mrp_reworkreturn.ReworkReturnNo}，入库总数量不能大于退库数量！");
                         }
                     }
@@ -143,6 +144,7 @@ namespace RUINORERP.Business
                     tb_Inventory inv = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == child.ProdDetailID && i.Location_ID == child.Location_ID);
                     if (inv == null)
                     {
+                        _unitOfWorkManage.RollbackTran();
                         throw new Exception($"返工入库：{entity.ReworkEntryNo}审核时，对应的入库明细没有对应的库存初始数据！");
                     }
                     else
@@ -260,6 +262,7 @@ namespace RUINORERP.Business
                     tb_Inventory inv = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == child.ProdDetailID && i.Location_ID == child.Location_ID);
                     if (inv == null)
                     {
+                        _unitOfWorkManage.RollbackTran();
                         throw new Exception($"返工入库：{entity.ReworkEntryNo}审核时，对应的入库明细没有对应的库存初始数据！");
                     }
                     else
@@ -337,6 +340,7 @@ namespace RUINORERP.Business
                             //如果已交数据大于 订单数量 给出警告实际操作中 使用其他方式将备品入库
                             if (entity.tb_mrp_reworkreturn.tb_MRP_ReworkReturnDetails[i].DeliveredQuantity < 0)
                             {
+                                _unitOfWorkManage.RollbackTran();
                                 throw new Exception($"返工入库：{entity.ReworkEntryNo}反审核时，对应的退库：{entity.tb_mrp_reworkreturn.ReworkReturnNo}，{prodName}的明细不能为负数！");
                             }
                         }

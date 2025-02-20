@@ -210,7 +210,7 @@ namespace RUINORERP.UI.PSI.SAL
             this.AutoValidate = AutoValidate.EnableAllowFocusChange;
             DataBindingHelper.BindData4ControlByEnum<tb_SaleOrder>(entity, t => t.DataStatus, lblDataStatus, BindDataType4Enum.EnumName, typeof(Global.DataStatus));
             DataBindingHelper.BindData4ControlByEnum<tb_SaleOrder>(entity, t => t.ApprovalStatus, lblReview, BindDataType4Enum.EnumName, typeof(Global.ApprovalStatus));
-
+            
             if (entity.tb_SaleOrderDetails != null && entity.tb_SaleOrderDetails.Count > 0)
             {
                 //LoadDataToGrid(entity.tb_SaleOrderDetails);

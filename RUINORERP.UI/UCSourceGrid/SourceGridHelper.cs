@@ -3257,9 +3257,17 @@ namespace RUINORERP.UI.UCSourceGrid
                             {
                                 //假如是库位选择  有一个没有启用。但是又要显示原来选择过的数据用于显示。编辑时不能选择没有启用的库位。如何处理实际是如何呢？
                                 //这里要不要利用process中设置的条件来判断呢？
-                                string id = item[ColID].ToString();
-                                ids.Add(id.ToString());//设置一个主键集合 
-                                OutNames.TryAdd(id, item[ColName].ToString());//设置一个显示名称的集合
+                                try
+                                {
+                                    string id = item[ColID].ToString();
+                                    ids.Add(id.ToString());//设置一个主键集合 
+                                    OutNames.TryAdd(id, item[ColName].ToString());//设置一个显示名称的集合
+                                }
+                                catch (Exception ex)
+                                {
+                                    //ColID  列名 大小写。或根本不存在缓存数据的集合中。所以会出错
+                                }
+
                             }
                             else
                             {

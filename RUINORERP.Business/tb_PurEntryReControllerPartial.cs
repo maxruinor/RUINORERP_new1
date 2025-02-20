@@ -105,6 +105,7 @@ namespace RUINORERP.Business
                         //如果已退数量大于订单数量 给出警告实际操作中 使用其他方式出库
                         if (child.ReturnedQty > entity.tb_purentry.TotalQty)
                         {
+                            _unitOfWorkManage.RollbackTran();
                             throw new Exception("退回数量不能大于对应入库数量！");
                         }
                     }
@@ -180,6 +181,7 @@ namespace RUINORERP.Business
                     else
                     {
                         //不应该为空
+                        _unitOfWorkManage.RollbackTran();
                         throw new Exception(child.ProdDetailID + "期初库存不应该为空.");
                     }
                     inv.ProdDetailID = child.ProdDetailID;
@@ -227,6 +229,7 @@ namespace RUINORERP.Business
                         //如果已交数据大于 订单数量 给出警告实际操作中 使用其他方式将备品入库
                         if (child.ReturnedQty < 0)
                         {
+                            _unitOfWorkManage.RollbackTran();
                             throw new Exception("已退回数量不能小于0！");
                         }
                     }

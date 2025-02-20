@@ -443,7 +443,12 @@ namespace RUINORERP.UI
                             _builder.Register(c => Assemblyobj.CreateInstance(type.FullName)).Named<BaseUControl>(type.Name)
                           .PropertiesAutowired(new CustPropertyAutowiredSelector());//指定属性注入
                         }
-
+                        //上面已经判断是泛型，则指定到他的基类，并指定属性注入。使用时也一样？
+                        if (type.BaseType.Name.Contains("BaseListWithTree"))
+                        {
+                            _builder.Register(c => Assemblyobj.CreateInstance(type.FullName)).Named<BaseListWithTree>(type.Name)
+                          .PropertiesAutowired(new CustPropertyAutowiredSelector());//指定属性注入
+                        }
                         if (type.BaseType.Name.Contains("BaseBillQueryMC"))
                         {
                             _builder.Register(c => Assemblyobj.CreateInstance(type.FullName)).Named<BaseQuery>(type.Name)

@@ -458,8 +458,10 @@ namespace RUINORERP.UI.AdvancedUIModule
                 {
                     QueryConditionFilter.InvisibleCols.Add("SOrder_ID");
                 }
-
-
+                if (typeof(T).Name == typeof(tb_SaleOutRe).Name)
+                {
+                    QueryConditionFilter.InvisibleCols.Add("SaleOut_MainID");
+                }
 
                 //这里设置了指定列不可见
                 foreach (var item in QueryConditionFilter.InvisibleCols)

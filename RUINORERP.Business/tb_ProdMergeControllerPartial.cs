@@ -234,6 +234,7 @@ namespace RUINORERP.Business
                 }
                 else
                 {
+                    _unitOfWorkManage.RollbackTran();
                     throw new Exception("系统对应的仓库中没有母件库存,请检查数据！ ");
                 }
                 ReturnResults<tb_Inventory> rrm = await ctrinv.SaveOrUpdate(invMother);

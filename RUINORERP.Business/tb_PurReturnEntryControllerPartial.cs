@@ -206,6 +206,7 @@ namespace RUINORERP.Business
                             //如果已交数据大于 退货单数量 给出警告实际操作中 使用其他方式将备品入库
                             if (entity.tb_purentryre.tb_PurEntryReDetails[i].DeliveredQuantity > entity.tb_purentryre.tb_PurEntryReDetails[i].Quantity)
                             {
+                                _unitOfWorkManage.RollbackTran();
                                 throw new Exception($"采购退货入库：{entity.PurReEntryNo}审核时，对应的采购退货单：{entity.tb_purentryre.PurEntryReNo}中，入库总数量不能大于退货数量！");
                             }
                         }
@@ -231,6 +232,7 @@ namespace RUINORERP.Business
                             //如果已交数据大于 退货单数量 给出警告实际操作中 使用其他方式将备品入库
                             if (entity.tb_purentryre.tb_PurEntryReDetails[i].DeliveredQuantity > entity.tb_purentryre.tb_PurEntryReDetails[i].Quantity)
                             {
+                                _unitOfWorkManage.RollbackTran();
                                 throw new Exception($"入库单：{entity.PurReEntryNo}审核时，对应的退货单：{entity.tb_purentryre.PurEntryReNo}，入库总数量不能大于退货单数量！");
                             }
                         }
@@ -427,6 +429,7 @@ namespace RUINORERP.Business
                                 //如果已交数据大于 退货单数量 给出警告实际操作中 使用其他方式将备品入库
                                 if (entity.tb_purentryre.tb_PurEntryReDetails[i].DeliveredQuantity < 0)
                                 {
+                                    _unitOfWorkManage.RollbackTran();
                                     throw new Exception($"入库单：{entity.PurReEntryNo}反审核时，对应的退货单：{entity.tb_purentryre.PurEntryReNo}，{prodName}的明细不能为负数！"); throw new Exception($"入库单：{entity.PurReEntryNo}审核时，对应的退货单：{entity.tb_purentryre.PurEntryReNo}，入库总数量不能大于退货单数量！");
                                 }
                             }
@@ -455,6 +458,7 @@ namespace RUINORERP.Business
                                 //如果已交数据大于 退货单数量 给出警告实际操作中 使用其他方式将备品入库
                                 if (entity.tb_purentryre.tb_PurEntryReDetails[i].DeliveredQuantity < 0)
                                 {
+                                    _unitOfWorkManage.RollbackTran();
                                     throw new Exception($"入库单：{entity.PurReEntryNo}反审核时，对应的退货单：{entity.tb_purentryre.PurEntryReNo}，{prodName}的明细不能为负数！");
                                 }
                             }

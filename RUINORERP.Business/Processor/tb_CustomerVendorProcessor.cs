@@ -30,9 +30,9 @@ namespace RUINORERP.Business.Processor
             //内部的公共部分，外部是特殊情况
             var lambda = Expressionable.Create<tb_CustomerVendor>()
                             .And(t => t.isdeleted == false)
-                            .And(t => t.Is_available == true)
+                            //.And(t => t.Is_available == true)
                             .AndIF(AuthorizeController.GetExclusiveLimitedAuth(_appContext), t => t.IsExclusive == false)
-                            .And(t => t.Is_enabled == true)
+                           // .And(t => t.Is_enabled == true)
                            .OrIF(AuthorizeController.GetExclusiveLimitedAuth(_appContext), t => t.IsExclusive == true && t.Employee_ID == _appContext.CurUserInfo.UserInfo.Employee_ID)
                           .ToExpression();//注意 这一句 不能少
             //这个因为供应商和客户混在一起。限制条件在外面 调用时确定 
@@ -41,6 +41,11 @@ namespace RUINORERP.Business.Processor
 
             queryFilter.SetQueryField<tb_CustomerVendor>(c => c.CVName);
             queryFilter.SetQueryField<tb_CustomerVendor>(c => c.Employee_ID);
+            queryFilter.SetQueryField<tb_CustomerVendor>(c => c.IsCustomer);
+            queryFilter.SetQueryField<tb_CustomerVendor>(c => c.IsVendor);
+            queryFilter.SetQueryField<tb_CustomerVendor>(c => c.IsOther);
+            queryFilter.SetQueryField<tb_CustomerVendor>(c => c.Is_available);//是不是做一个功能可以设置默认值 TODO:by watson
+            queryFilter.SetQueryField<tb_CustomerVendor>(c => c.Is_enabled);
             queryFilter.SetQueryField<tb_CustomerVendor>(c => c.CVCode);
             queryFilter.SetQueryField<tb_CustomerVendor>(c => c.Contact);
             queryFilter.SetQueryField<tb_CustomerVendor>(c => c.Notes);

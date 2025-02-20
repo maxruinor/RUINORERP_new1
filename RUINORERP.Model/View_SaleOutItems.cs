@@ -576,8 +576,42 @@ namespace RUINORERP.Model
                 }
         }
 
+        private decimal? _GrossProfit;
 
 
+        /// <summary>
+        /// 毛利润
+        /// </summary>
+
+        [AdvQueryAttribute(ColName = "GrossProfit", ColDesc = "毛利润")]
+        [SugarColumn(ColumnDataType = "decimal", SqlParameterDbType = "Decimal", ColumnName = "GrossProfit", DecimalDigits = 6, Length = 18, IsNullable = false, ColumnDescription = "毛利润")]
+        [Display(Name = "毛利润")]
+        public decimal? GrossProfit
+        {
+            get { return _GrossProfit; }
+            set
+            {
+                SetProperty(ref _GrossProfit, value);
+            }
+        }
+        private decimal? _GrossProfitRatio;
+
+
+        /// <summary>
+        /// 毛利率
+        /// </summary>
+
+        [AdvQueryAttribute(ColName = "GrossProfitRatio", ColDesc = "毛利率")]
+        [SugarColumn(ColumnDataType = "decimal", SqlParameterDbType = "Decimal", ColumnName = "GrossProfitRatio", DecimalDigits = 6, Length = 18, IsNullable = false, ColumnDescription = "毛利率")]
+        [Display(Name = "毛利率")]
+        public decimal? GrossProfitRatio
+        {
+            get { return _GrossProfitRatio; }
+            set
+            {
+                SetProperty(ref _GrossProfitRatio, value);
+            }
+        }
         private string _CNName;
         
         

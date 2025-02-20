@@ -38,7 +38,7 @@ namespace RUINORERP.Business
             RuleFor(customer => customer.CVName)
           .Custom((value, context) =>
           {
-             var customer = context.InstanceToValidate as tb_CustomerVendor; // 假设你的实体类名为Customer
+              var customer = context.InstanceToValidate as tb_CustomerVendor; // 假设你的实体类名为Customer
 
               // 确保customer不为null  并且是新增时才判断
               if (customer != null && customer.CustomerVendor_ID == 0)
@@ -54,10 +54,75 @@ namespace RUINORERP.Business
               }
           });
 
- 
+       
+
+            // 或者使用更简洁的方式
+            RuleFor(customer => customer.IsCustomer)
+                .Custom((isCustomer, context) =>
+                {
+                    var customer = context.InstanceToValidate as tb_CustomerVendor;
+                    if (!customer.IsCustomer && !customer.IsVendor && !customer.IsOther)
+                    {
+                        context.AddFailure("【客户】，【供应商】或【其它往来单位】，至少 选一个。");
+                    }
+                });
+            RuleFor(customer => customer.IsVendor)
+              .Custom((isCustomer, context) =>
+              {
+                  var customer = context.InstanceToValidate as tb_CustomerVendor;
+                  if (!customer.IsCustomer && !customer.IsVendor && !customer.IsOther)
+                  {
+                      context.AddFailure("【客户】，【供应商】或【其它往来单位】，至少 选一个。");
+                  }
+              });
+
+            RuleFor(customer => customer.IsOther)
+              .Custom((isCustomer, context) =>
+              {
+                  var customer = context.InstanceToValidate as tb_CustomerVendor;
+                  if (!customer.IsCustomer && !customer.IsVendor && !customer.IsOther)
+                  {
+                      context.AddFailure("【客户】，【供应商】或【其它往来单位】，至少 选一个。");
+                  }
+              });
 
 
+            /*
+            RuleFor(x => x.IsCustomer).
+           Custom((contact, context) =>
+           {
+               var customer = context.InstanceToValidate as tb_CustomerVendor; // 假设你的实体类名为Customer
+               bool isEmployeeValid = customer.IsCustomer;
+               bool isCustomerVendorValid = customer.IsCustomer && customer.IsVendor && customer.IsOther;
+               if (!isEmployeeValid && !isCustomerVendorValid)
+               {
+                   context.AddFailure("【客户】，【供应商】或【其它往来单位】，至少 选一个。");
+               }
+           });
+            RuleFor(x => x.IsVendor).
+            Custom((contact, context) =>
+            {
+                var customer = context.InstanceToValidate as tb_CustomerVendor; // 假设你的实体类名为Customer
+                bool isEmployeeValid = customer.IsVendor;
+                bool isCustomerVendorValid = customer.IsCustomer && customer.IsVendor && customer.IsOther;
+                if (!isEmployeeValid && !isCustomerVendorValid)
+                {
+                    context.AddFailure("【客户】，【供应商】或【其它往来单位】，至少 选一个。");
+                }
+            });
+            RuleFor(x => x.IsOther).
+        Custom((contact, context) =>
+        {
+            var customer = context.InstanceToValidate as tb_CustomerVendor; // 假设你的实体类名为Customer
+            bool isEmployeeValid = customer.IsOther;
+            bool isCustomerVendorValid = customer.IsCustomer && customer.IsVendor && customer.IsOther;
+            if (!isEmployeeValid && !isCustomerVendorValid)
+            {
+                context.AddFailure("【客户】，【供应商】或【其它往来单位】，至少 选一个。");
+            }
+        });
 
+            */
         }
     }
 

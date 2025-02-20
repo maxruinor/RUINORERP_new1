@@ -127,6 +127,7 @@ namespace RUINORERP.Business
                             //如果已交数据大于 归还数量 给出警告实际操作中 
                             if (entity.tb_prodborrowing.tb_ProdBorrowingDetails[i].ReQty > entity.tb_prodborrowing.tb_ProdBorrowingDetails[i].Qty)
                             {
+                                _unitOfWorkManage.RollbackTran();
                                 throw new Exception($"归还单：{entity.ReturnNo}审核时，【{prodName}】的归还总数不能大于借出时数量！");
                             }
                         }
@@ -136,6 +137,7 @@ namespace RUINORERP.Business
                     //如果已交数据大于 订单数量 给出警告实际操作中 使用其他方式将备品入库
                     if (entity.tb_prodborrowing.tb_ProdBorrowingDetails.Sum(c => c.ReQty) > entity.tb_prodborrowing.TotalQty)
                     {
+                        _unitOfWorkManage.RollbackTran();
                         throw new Exception($"归还单：{entity.ReturnNo}审核时，归还总数不能大于借出时数量！");
                     }
 

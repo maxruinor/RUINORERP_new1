@@ -262,11 +262,21 @@ namespace RUINORERP.UI.BaseForm
             tb_MenuInfo menuinfo = MainForm.Instance.MenuList.FirstOrDefault(t => t.EntityName == fktableName.ToString());
             if (menuinfo == null)
             {
-                MainForm.Instance.PrintInfoLog("菜单关联类型为空,或您没有执行此菜单的权限，请联系管理员。");
+                MainForm.Instance.PrintInfoLog("菜单关联类型为空,或您没有执行此菜单的权限，或配置菜时参数不正确。请联系管理员。");
                 return;
             }
             //暂时认为基础数据都是这个基类出来的 否则可以根据菜单中的基类类型来判断生成
-            BaseUControl ucBaseList = Startup.GetFromFacByName<BaseUControl>(menuinfo.FormName);
+            BaseUControl ucBaseList = null;
+
+            if (menuinfo.BIBaseForm == "BaseListWithTree`1")
+            {
+                ucBaseList=Startup.GetFromFacByName<BaseListWithTree>(menuinfo.FormName);
+            }
+            else
+            {
+                ucBaseList=Startup.GetFromFacByName<BaseUControl>(menuinfo.FormName);
+            }
+        
             ucBaseList.Runway = BaseListRunWay.选中模式;
             //从这里调用 就是来自于关联窗体，下面这个公共基类用于这个情况。暂时在那个里面来控制.Runway = BaseListRunWay.窗体;
             frmBaseEditList frmedit = new frmBaseEditList();

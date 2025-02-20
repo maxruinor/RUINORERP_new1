@@ -15,6 +15,8 @@ using Krypton.Navigator;
 using RUINORERP.Model;
 using RUINORERP.UI.Common;
 using System.Collections.Concurrent;
+using System.Windows.Documents;
+using Fireasy.Common.Extensions;
 
 namespace RUINORERP.UI.BaseForm
 {
@@ -22,7 +24,7 @@ namespace RUINORERP.UI.BaseForm
     /// <summary>
     /// 暂时只用于产品类别 如果用于其他基类<T>写法
     /// </summary>
-    public partial class BaseListWithTree : UserControl
+    public partial class BaseListWithTree : BaseUControl
     {
         public BaseListWithTree()
         {
@@ -71,7 +73,7 @@ namespace RUINORERP.UI.BaseForm
                     {
                         entity.ActionStatus = ActionStatus.新增;
                     }
-                    
+
                     break;
                 case ListChangedType.ItemDeleted:
                     if (e.NewIndex < bindingSourceList.Count)
@@ -431,9 +433,33 @@ namespace RUINORERP.UI.BaseForm
                 cell = new KryptonWorkspaceCell();
                 MainForm.Instance.kryptonDockableWorkspace1.Root.Children.Add(cell);
             }
-            KryptonPage page = (thisform as Control).Parent as KryptonPage;
-            MainForm.Instance.kryptonDockingManager1.RemovePage(page.UniqueName, true);
-            page.Dispose();
+
+            KryptonPage page = FindPage(thisform as Control);
+            if (page != null)
+            {
+                MainForm.Instance.kryptonDockingManager1.RemovePage(page.UniqueName, true);
+                page.Dispose();
+            }
+            else
+            {
+                //浮动窗体关闭
+
+                KryptonForm form = FindKryptonForm(thisform as Control);
+                if (form != null)
+                {
+                    form.Close();
+                }
+                //thisform is KryptonForm ? (thisform as KryptonForm).Close() : this.Close();
+            }
+
+            //KryptonPage page = (thisform as Control).Parent as KryptonPage;
+            //if (page != null)
+            //{
+            //    MainForm.Instance.kryptonDockingManager1.RemovePage(page.UniqueName, true);
+            //    page.Dispose();
+            //}
+
+
             /*
             if (page == null)
             {
@@ -450,6 +476,42 @@ namespace RUINORERP.UI.BaseForm
                 }
             }
             */
+        }
+
+        private KryptonPage FindPage(Control control)
+        {
+            KryptonPage OutPutPage = null;
+            KryptonPage page = control as KryptonPage;
+            if (page != null)
+            {
+                OutPutPage = page;
+            }
+            else
+            {
+                if (control.Parent != null)
+                {
+                    return FindPage(control.Parent as Control);
+                }
+            }
+            return OutPutPage;
+        }
+
+        private KryptonForm FindKryptonForm(Control control)
+        {
+            KryptonForm OutPutForm = null;
+            KryptonForm form = control as KryptonForm;
+            if (form != null)
+            {
+                OutPutForm = form;
+            }
+            else
+            {
+                if (control.Parent != null)
+                {
+                    return FindKryptonForm(control.Parent as Control);
+                }
+            }
+            return OutPutForm;
         }
 
         private void bindingNavigatorMovePreviousItem_Click(object sender, EventArgs e)

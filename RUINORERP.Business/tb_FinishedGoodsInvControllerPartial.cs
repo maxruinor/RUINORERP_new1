@@ -297,6 +297,7 @@ namespace RUINORERP.Business
                     //如果已交数据大于 订单数量 给出警告实际操作中 使用其他方式将备品入库
                     if (manufacturingOrder.QuantityDelivered > detailList.Sum(c => c.Qty))
                     {
+                        _unitOfWorkManage.RollbackTran();
                         throw new Exception($"缴库单：{entity.DeliveryBillNo}审核时，缴库总数量不能大于制令单{manufacturingOrder.MONO}中的生产数量！");
                     }
 
@@ -535,6 +536,7 @@ namespace RUINORERP.Business
                     //如果已交数据大于制令单数量 给出警告实际操作中 使用其他方式将备品入库
                     if (manufacturingOrder.QuantityDelivered < 0)
                     {
+                        _unitOfWorkManage.RollbackTran();
                         throw new Exception($"缴库单：{entity.DeliveryBillNo}反审核时，对应的制令单：{manufacturingOrder.MONO}，{prodName}的生产数量不能为负数！");
                     }
 

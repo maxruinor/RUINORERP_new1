@@ -188,6 +188,7 @@ namespace RUINORERP.Business
                         }
                         else
                         {
+                            _unitOfWorkManage.RollbackTran();
                             throw new Exception($"当前仓库无产品{prodInfo}的库存数据,请联系管理员");
                         }
                         // CommService.CostCalculations.CostCalculation(_appContext, inv, child.TransactionPrice);
@@ -204,6 +205,7 @@ namespace RUINORERP.Business
                             //如果退料数量大于领料数量就不对了
                             if (tb_MaterialRequisitionDetail.ActualSentQty < child.Quantity)
                             {
+                                _unitOfWorkManage.RollbackTran();
                                 throw new Exception($"{prodInfo}的退回数量不能大于实发数量,请检查后再试");
                             }
                             tb_MaterialRequisitionDetail.ReturnQty += child.Quantity;

@@ -571,10 +571,10 @@ protected async override void ReReview()
             if (purEntry != null)
             {
                 purEntryid = purEntry.PurEntryID.ToString();
-                if (!string.IsNullOrEmpty(purEntryid) && purEntryid.Equals(purEntry.PurEntryID.ToString()))
-                {
-                    return;
-                }
+                //if (!string.IsNullOrEmpty(purEntryid) && purEntryid.Equals(purEntry.PurEntryID.ToString()))
+                //{
+                //    return;
+                //}
                 purEntryid = purEntry.PurEntryID.ToString();
                 IMapper mapper = AutoMapperConfig.RegisterMappings().CreateMapper();
                 tb_PurEntryRe entity = mapper.Map<tb_PurEntryRe>(purEntry);

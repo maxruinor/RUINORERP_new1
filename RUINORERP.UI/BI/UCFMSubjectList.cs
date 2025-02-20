@@ -25,7 +25,7 @@ namespace RUINORERP.UI.BI
 {
 
     [MenuAttrAssemblyInfo("会计科目", ModuleMenuDefine.模块定义.基础资料, ModuleMenuDefine.基础资料.财务资料)]
-    public partial class UCFMSubjectList : BaseForm.BaseListWithTree
+    public partial class UCFMSubjectList : BaseForm.BaseListWithTree<tb_FM_Subject>
     {
         //三级 还是两级呢。  反向来 一是 KEY VALUE  然后是列名
         ConcurrentDictionary<string, List<KeyValuePair<object, string>>> _DataDictionary = new ConcurrentDictionary<string, List<KeyValuePair<object, string>>>();

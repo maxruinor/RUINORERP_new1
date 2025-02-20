@@ -228,7 +228,7 @@ namespace RUINORERP.UI.Common
                                     tb_MenuInfo menuinfo = MainForm.Instance.MenuList.FirstOrDefault(t => t.EntityName == fktableName.ToString());
                                     if (menuinfo == null)
                                     {
-                                        MainForm.Instance.PrintInfoLog("菜单关联类型为空,或您没有执行此菜单的权限，请联系管理员。");
+                                        MainForm.Instance.PrintInfoLog("菜单关联类型为空,或您没有执行此菜单的权限，或配置菜时参数不正确。请联系管理员。");
                                         return;
                                     }
                                     //暂时认为基础数据都是这个基类出来的 否则可以根据菜单中的基类类型来判断生成

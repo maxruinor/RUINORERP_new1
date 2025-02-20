@@ -435,6 +435,16 @@ namespace RUINORERP.UI.Common
                                     page = NewPage(pr.CaptionCN, 1, menu);
                                 }
                                 else
+                                if (pr.BIBaseForm.Contains("BaseListWithTree`1"))
+                                {
+                                    var menu = Startup.GetFromFacByName<BaseListWithTree>(pr.FormName);
+                                    if (menu is BaseUControl baseListGeneric)
+                                    {
+                                        menu.CurMenuInfo = pr;
+                                    }
+                                    page = NewPage(pr.CaptionCN, 1, menu);
+                                }
+                                else
                                 if (pr.BIBaseForm.Contains("BaseBillQueryMC"))
                                 {
                                     var menu = Startup.GetFromFacByName<BaseQuery>(pr.FormName);

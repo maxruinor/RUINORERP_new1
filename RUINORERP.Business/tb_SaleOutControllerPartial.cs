@@ -199,6 +199,7 @@ namespace RUINORERP.Business
                         }
                         else
                         {
+                            _unitOfWorkManage.RollbackTran();
                             throw new Exception($"当前仓库{child.Location_ID}无产品{child.ProdDetailID}的库存数据,请联系管理员");
                         }
                         // CommService.CostCalculations.CostCalculation(_appContext, inv, child.TransactionPrice);
@@ -293,6 +294,7 @@ namespace RUINORERP.Business
                                 //如果已交数据大于 订单数量 给出警告实际操作中 使用其他方式将备品入库
                                 if (entity.tb_saleorder.tb_SaleOrderDetails[i].TotalDeliveredQty > entity.tb_saleorder.tb_SaleOrderDetails[i].Quantity)
                                 {
+                                    _unitOfWorkManage.RollbackTran();
                                     throw new Exception($"销售出库单：{entity.SaleOutNo}审核时，对应的订单：{entity.tb_saleorder.SOrderNo}，入库总数量不能大于订单数量！");
                                 }
                             }
@@ -319,6 +321,7 @@ namespace RUINORERP.Business
                                 //如果已交数据大于 订单数量 给出警告实际操作中 使用其他方式将备品入库
                                 if (entity.tb_saleorder.tb_SaleOrderDetails[i].TotalDeliveredQty > entity.tb_saleorder.tb_SaleOrderDetails[i].Quantity)
                                 {
+                                    _unitOfWorkManage.RollbackTran();
                                     throw new Exception($"销售出库单：{entity.SaleOutNo}审核时，【{prodName}】的出库总数量不能大于订单数量！");
                                 }
                             }
@@ -328,6 +331,7 @@ namespace RUINORERP.Business
                     //如果已交数据大于 订单数量 给出警告实际操作中 使用其他方式将备品入库
                     if (entity.tb_saleorder.tb_SaleOrderDetails.Sum(c => c.TotalDeliveredQty) > entity.tb_saleorder.TotalQty)
                     {
+                        _unitOfWorkManage.RollbackTran();
                         throw new Exception($"销售订单：{entity.tb_saleorder.SOrderNo}中，出库总交付数量不能大于订单数量！");
                     }
 
@@ -595,6 +599,7 @@ namespace RUINORERP.Business
                                 //如果已交数据大于 订单数量 给出警告实际操作中 使用其他方式将备品入库
                                 if (entity.tb_saleorder.tb_SaleOrderDetails[i].TotalDeliveredQty < 0)
                                 {
+                                    _unitOfWorkManage.RollbackTran();
                                     throw new Exception($"销售出库单：{entity.SaleOutNo}反审核时，对应的订单：{entity.tb_saleorder.SOrderNo}，{prodName}的明细不能为负数！");
                                 }
                             }
@@ -620,6 +625,7 @@ namespace RUINORERP.Business
                                 //如果已交数据大于 订单数量 给出警告实际操作中 使用其他方式将备品入库
                                 if (entity.tb_saleorder.tb_SaleOrderDetails[i].TotalDeliveredQty < 0)
                                 {
+                                    _unitOfWorkManage.RollbackTran();
                                     throw new Exception($"入库单：{entity.SaleOutNo}反审核时，对应的订单：{entity.tb_saleorder.SOrderNo}，{prodName}的明细不能为负数！");
                                 }
                             }

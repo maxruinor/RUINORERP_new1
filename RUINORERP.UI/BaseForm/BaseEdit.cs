@@ -227,7 +227,7 @@ namespace RUINORERP.UI.BaseForm
             tb_MenuInfo menuinfo = menuList.FirstOrDefault(t => t.EntityName == classObjName.ToString());
             if (menuinfo == null)
             {
-                MainForm.Instance.PrintInfoLog("菜单关联类型为空,或您没有执行此菜单的权限，请联系管理员。");
+                MainForm.Instance.PrintInfoLog("菜单关联类型为空,或您没有执行此菜单的权限，或配置菜时参数不正确。请联系管理员。");
                 return;
             }
             UserControl menu = Startup.GetFromFacByName<UserControl>(menuinfo.FormName);

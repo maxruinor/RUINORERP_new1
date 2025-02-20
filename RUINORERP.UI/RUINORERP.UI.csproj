@@ -599,6 +599,12 @@
     <Compile Include="BaseForm\BaseListWithTree.Designer.cs">
       <DependentUpon>BaseListWithTree.cs</DependentUpon>
     </Compile>
+    <Compile Include="BaseForm\BaseListWithTreeGeneric.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="BaseForm\BaseListWithTreeGeneric.Designer.cs">
+      <DependentUpon>BaseListWithTreeGeneric.cs</DependentUpon>
+    </Compile>
     <Compile Include="BaseForm\BaseNavigator.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -1137,7 +1143,7 @@
     </Compile>
     <Compile Include="Common\DataGridViewDisplayNameResolver.cs" />
     <Compile Include="Common\DataGridViewDisplayTextResolver.cs" />
-    <Compile Include="Common\UICRM_RegionHelper.cs" />
+    <Compile Include="Common\UICRMRegionHelper.cs" />
     <Compile Include="Common\UIForKryptonHelper.cs" />
     <Compile Include="Common\UIBaseTool.cs" />
     <Compile Include="Common\UIBizSrvice.cs" />

@@ -62,6 +62,10 @@ namespace RUINORERP.UI.BI
                     _EditEntity.CVCode = BizCodeGenerator.Instance.GetBaseInfoNo(BaseInfoType.Supplier);
                     _EditEntity.IsVendor = true;
                 }
+                if (string.IsNullOrEmpty(_EditEntity.CVCode))
+                {
+                    _EditEntity.CVCode = BizCodeGenerator.Instance.GetBaseInfoNo(BaseInfoType.BusinessPartner);
+                }
                 //新建时默认启用
                 _EditEntity.Is_available = true;
                 _EditEntity.Is_enabled = true;
@@ -88,7 +92,10 @@ namespace RUINORERP.UI.BI
             //有默认值
             //如果在模块定义中客户关系是启用时，就必须录入来源的目标客户。
             crmMod = await MainForm.Instance.AppContext.Db.Queryable<tb_ModuleDefinition>().Where(c => c.ModuleName == nameof(ModuleMenuDefine.客户关系)).FirstAsync();
-            if (crmMod != null && crmMod.Available && _EditEntity.IsCustomer)
+
+            if (crmMod != null &&
+                MainForm.Instance.AppContext.CanUsefunctionModules.Contains(Global.GlobalFunctionModule.客户管理系统CRM)
+                && crmMod.Available && _EditEntity.IsCustomer)
             {
                 lblCustomer_id.Visible = true;
                 cmbCustomer_id.Visible = true;
@@ -154,7 +161,9 @@ namespace RUINORERP.UI.BI
 
         private void btnOk_Click(object sender, EventArgs e)
         {
-            if (crmMod != null && crmMod.Available && (!_EditEntity.Customer_id.HasValue || _EditEntity.Customer_id.Value <= 0) && _EditEntity.IsCustomer)
+            if (crmMod != null &&
+         MainForm.Instance.AppContext.CanUsefunctionModules.Contains(Global.GlobalFunctionModule.客户管理系统CRM)
+         && crmMod.Available && (!_EditEntity.Customer_id.HasValue || _EditEntity.Customer_id.Value <= 0) && _EditEntity.IsCustomer)
             {
                 //客户关系模块启用时，销售客户的来源必须选择。
                 MessageBox.Show("销售客户的来源必须选择。", "系统提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
@@ -251,8 +260,15 @@ namespace RUINORERP.UI.BI
 
         private void txtIsCustomer_CheckedChanged(object sender, EventArgs e)
         {
-            lblCustomer_id.Visible = txtIsCustomer.Checked;
-            cmbCustomer_id.Visible = txtIsCustomer.Checked;
+            //如果CRM启用，则客户要选择来源客户。
+            //如果CRM启用了
+            if (crmMod != null &&
+         MainForm.Instance.AppContext.CanUsefunctionModules.Contains(Global.GlobalFunctionModule.客户管理系统CRM)
+         && crmMod.Available)
+            {
+                lblCustomer_id.Visible = txtIsCustomer.Checked;
+                cmbCustomer_id.Visible = txtIsCustomer.Checked;
+            }
         }
     }
 }

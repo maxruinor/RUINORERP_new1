@@ -244,6 +244,7 @@ namespace RUINORERP.Business
                     }
                     else
                     {
+                        _unitOfWorkManage.RollbackTran();
                         throw new Exception($"ProdDetailID:{inv.ProdDetailID}不存在库存信息");
                     }
                     BusinessHelper.Instance.EditEntity(inv);

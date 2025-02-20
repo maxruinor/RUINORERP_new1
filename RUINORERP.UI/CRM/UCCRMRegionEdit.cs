@@ -167,7 +167,7 @@ namespace RUINORERP.UI.CRM
         {
             tb_CRM_RegionController<tb_CRM_Region> ctr = Startup.GetFromFac<tb_CRM_RegionController<tb_CRM_Region>>();
             list = await ctr.QueryAsync();
-            Common.UICRM_RegionHelper.BindToTreeView(list, cmbTreeParent_id.TreeView);
+            Common.UICRMRegionHelper.BindToTreeView(list, cmbTreeParent_id.TreeView);
         }
     }
 }

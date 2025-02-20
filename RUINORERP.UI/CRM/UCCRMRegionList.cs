@@ -24,7 +24,7 @@ namespace RUINORERP.UI.CRM
 {
 
     [MenuAttrAssemblyInfo("业务区域", ModuleMenuDefine.模块定义.基础资料, ModuleMenuDefine.基础资料.供销资料)]
-    public partial class UCCRMRegionList : BaseForm.BaseListWithTree
+    public partial class UCCRMRegionList : BaseForm.BaseListWithTree<tb_CRM_Region>
     {
         //三级 还是两级呢。  反向来 一是 KEY VALUE  然后是列名
         ConcurrentDictionary<string, List<KeyValuePair<object, string>>> _DataDictionary = new ConcurrentDictionary<string, List<KeyValuePair<object, string>>>();
@@ -36,16 +36,16 @@ namespace RUINORERP.UI.CRM
 
             //base<tb_ProductCategories>(t => t.);
 
-            List<KeyValuePair<object, string>> kvlist = new List<KeyValuePair<object, string>>();
-            kvlist.Add(new KeyValuePair<object, string>(false, "借"));
-            kvlist.Add(new KeyValuePair<object, string>(true, "贷"));
-            System.Linq.Expressions.Expression<Func<tb_FM_Subject, bool?>> expr;
-            expr = (p) => p.Balance_direction;
-            string colName = expr.GetMemberInfo().Name;
-            ColNameDataDictionary.TryAdd(colName, kvlist);
+            //List<KeyValuePair<object, string>> kvlist = new List<KeyValuePair<object, string>>();
+            //kvlist.Add(new KeyValuePair<object, string>(false, "借"));
+            //kvlist.Add(new KeyValuePair<object, string>(true, "贷"));
+            //System.Linq.Expressions.Expression<Func<tb_CRM_Region, bool?>> expr;
+            //expr = (p) => p.Balance_direction;
+            //string colName = expr.GetMemberInfo().Name;
+            //ColNameDataDictionary.TryAdd(colName, kvlist);
         }
 
-        tb_FM_SubjectController<tb_FM_Subject> ctr = Startup.GetFromFac<tb_FM_SubjectController<tb_FM_Subject>>();
+        tb_CRM_RegionController<tb_CRM_Region> ctr = Startup.GetFromFac<tb_CRM_RegionController<tb_CRM_Region>>();
         protected override void Add()
         {
             UCCRMRegionEdit frmadd = new UCCRMRegionEdit();
@@ -77,7 +77,7 @@ namespace RUINORERP.UI.CRM
         {
             if (MessageBox.Show("系统不建议删除基本资料\r\n确定删除吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Information) == DialogResult.Yes)
             {
-                tb_FM_Subject loc = (tb_FM_Subject)this.bindingSourceList.Current;
+                tb_CRM_Region loc = (tb_CRM_Region)this.bindingSourceList.Current;
                 this.bindingSourceList.Remove(loc);
 
                 await ctr.DeleteAsync(loc);
@@ -95,12 +95,12 @@ namespace RUINORERP.UI.CRM
                 frmadd.BindData(base.bindingSourceList.Current as BaseEntity);
                 //缓存当前编辑的对象。如果撤销就回原来的值
                 // object obj = (base.bindingSourceList.Current as tb_LocationType).Clone();
-                object oldobj = CloneHelper.DeepCloneObject<tb_FM_Subject>(base.bindingSourceList.Current as tb_FM_Subject);
+                object oldobj = CloneHelper.DeepCloneObject<tb_CRM_Region>(base.bindingSourceList.Current as tb_CRM_Region);
                 int UpdateIndex = base.bindingSourceList.Position;
                 command.UndoOperation = delegate ()
                 {
                     //Undo操作会执行到的代码
-                    CloneHelper.SetValues<tb_FM_Subject>(base.bindingSourceList[UpdateIndex], oldobj);
+                    CloneHelper.SetValues<tb_CRM_Region>(base.bindingSourceList[UpdateIndex], oldobj);
                 };
                 if (frmadd.ShowDialog() == DialogResult.Cancel)
                 {
@@ -128,7 +128,7 @@ namespace RUINORERP.UI.CRM
 
             ListDataSoure.DataSourceChanged += ListDataSoure_DataSourceChanged;
             dataGridView1.ReadOnly = true;
-            List<tb_FM_Subject> list = await ctr.QueryAsync();
+            List<tb_CRM_Region> list = await ctr.QueryAsync();
             ListDataSoure.DataSource = list.ToBindingSortCollection();
             dataGridView1.DataSource = ListDataSoure;
 
@@ -138,16 +138,16 @@ namespace RUINORERP.UI.CRM
 
         private void ListDataSoure_DataSourceChanged(object sender, EventArgs e)
         {
-            BindingSortCollection<tb_FM_Subject> list = ListDataSoure.DataSource as BindingSortCollection<tb_FM_Subject>;
-            List<tb_FM_Subject> clist = list.ToList<tb_FM_Subject>();
-            UIFMSubjectHelper.BindToTreeView(clist, base.kryptonTreeView1);
+            BindingSortCollection<tb_CRM_Region> list = ListDataSoure.DataSource as BindingSortCollection<tb_CRM_Region>;
+            List<tb_CRM_Region> clist = list.ToList<tb_CRM_Region>();
+            UICRMRegionHelper.BindToTreeView(clist, base.kryptonTreeView1);
         }
 
         protected async override void Save()
         {
             foreach (var item in bindingSourceList.List)
             {
-                var entity = item as tb_FM_Subject;
+                var entity = item as tb_CRM_Region;
 
                 switch (entity.ActionStatus)
                 {
@@ -180,10 +180,10 @@ namespace RUINORERP.UI.CRM
         private void UCLocationTypeList_Load(object sender, EventArgs e)
         {
             ///显示列表对应的中文
-            base.FieldNameList = UIHelper.GetFieldNameColList(typeof(tb_FM_Subject)); // UIHelper.GetFieldNameList<tb_ProdCategories>();
+            base.FieldNameList = UIHelper.GetFieldNameColList(typeof(tb_CRM_Region)); // UIHelper.GetFieldNameList<tb_ProdCategories>();
             base.Refreshs();
             dataGridView1.NeedSaveColumnsXml = true;
-            base.dataGridView1.XmlFileName = typeof(tb_FM_Subject).Name;
+            base.dataGridView1.XmlFileName = typeof(tb_CRM_Region).Name;
             //dataGridView1.CellFormatting += DataGridView1_CellFormatting;
         }
 
@@ -203,12 +203,12 @@ namespace RUINORERP.UI.CRM
                 else
                 {
                     //这里要用缓存
-                    BindingSortCollection<tb_FM_Subject> list = ListDataSoure.DataSource as BindingSortCollection<tb_FM_Subject>;
-                    List<tb_FM_Subject> clist = list.ToList<tb_FM_Subject>();
-                    tb_FM_Subject pc = clist.Find(t => t.Subject_id == int.Parse(e.Value.ToString()));
+                    BindingSortCollection<tb_CRM_Region> list = ListDataSoure.DataSource as BindingSortCollection<tb_CRM_Region>;
+                    List<tb_CRM_Region> clist = list.ToList<tb_CRM_Region>();
+                    tb_CRM_Region pc = clist.Find(t => t.Region_ID == int.Parse(e.Value.ToString()));
                     if (pc != null)
                     {
-                        e.Value = pc.Subject_name;
+                        e.Value = pc.Region_Name;
                     }
 
                 }

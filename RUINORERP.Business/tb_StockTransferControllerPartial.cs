@@ -239,6 +239,7 @@ namespace RUINORERP.Business
                     else
                     {
                         //正常逻辑不会执行到这里
+                        _unitOfWorkManage.RollbackTran(); 
                         throw new Exception("调入仓库中不存在这个产品的库存，出库产品必须存在于仓库中。");
                     }
 

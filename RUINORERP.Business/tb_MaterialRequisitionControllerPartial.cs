@@ -278,6 +278,7 @@ namespace RUINORERP.Business
                         }
                         else
                         {
+                            _unitOfWorkManage.RollbackTran();
                             throw new Exception($"当前仓库{child.Location_ID}无产品{child.ProdDetailID}的库存数据,请联系管理员");
                         }
                         // CommService.CostCalculations.CostCalculation(_appContext, inv, child.TransactionPrice);
@@ -490,6 +491,7 @@ namespace RUINORERP.Business
                         decimal diff = mochild.ActualSentQty - mochild.ShouldSendQty;
                         if (Difference < 0)
                         {
+                            _unitOfWorkManage.RollbackTran();
                             throw new Exception($"领料单：{entity.MaterialRequisitionNO}反审核，对应的制令单：{entity.tb_manufacturingorder.MONO}，{prodName}的实发明细不能为负数！");
                         }
                         else

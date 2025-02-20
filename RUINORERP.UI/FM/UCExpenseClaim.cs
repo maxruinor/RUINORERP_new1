@@ -195,7 +195,7 @@ namespace RUINORERP.UI.FM
                         {
                             DataBindingHelper.BindData4CmbByEnum<tb_FM_PayeeInfo>(cv, k => k.Account_type, typeof(AccountType), cmbAccount_type, false);
                             //添加收款信息。展示给财务看
-
+                            cmbAccount_type.Enabled = false;
                             txtAccount_No.Text = cv.Account_No;
                             if (!string.IsNullOrEmpty(cv.PaymentCodeImagePath))
                             {
@@ -257,7 +257,7 @@ namespace RUINORERP.UI.FM
                         {
                             DataBindingHelper.BindData4CmbByEnum<tb_FM_PayeeInfo>(cv, k => k.Account_type, typeof(AccountType), cmbAccount_type, false);
                             //添加收款信息。展示给财务看
-
+                            cmbAccount_type.Enabled = false;
                             txtAccount_No.Text = cv.Account_No;
                             if (!string.IsNullOrEmpty(cv.PaymentCodeImagePath))
                             {
@@ -759,6 +759,7 @@ namespace RUINORERP.UI.FM
                         // bindingSourceSub.Clear();
 
                         ////删除远程图片及本地图片
+                        ///暂时使用了逻辑删除所以不执行删除远程图片操作。
                         //await DeleteRemoteImages();
 
                         //提示一下删除成功

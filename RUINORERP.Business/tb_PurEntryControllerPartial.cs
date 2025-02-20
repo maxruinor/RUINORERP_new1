@@ -143,6 +143,7 @@ namespace RUINORERP.Business
                             //如果已交数据大于 订单数量 给出警告实际操作中 使用其他方式将备品入库
                             if (entity.tb_purorder.tb_PurOrderDetails[i].DeliveredQuantity > entity.tb_purorder.tb_PurOrderDetails[i].Quantity)
                             {
+                                _unitOfWorkManage.RollbackTran();
                                 throw new Exception($"入库单：{entity.PurEntryNo}审核时，对应的订单：{entity.tb_purorder.PurOrderNo}，入库总数量不能大于订单数量！");
                             }
                         }
@@ -168,6 +169,7 @@ namespace RUINORERP.Business
                             //如果已交数据大于 订单数量 给出警告实际操作中 使用其他方式将备品入库
                             if (entity.tb_purorder.tb_PurOrderDetails[i].DeliveredQuantity > entity.tb_purorder.tb_PurOrderDetails[i].Quantity)
                             {
+                                _unitOfWorkManage.RollbackTran();
                                 throw new Exception($"入库单：{entity.PurEntryNo}审核时，对应的订单：{entity.tb_purorder.PurOrderNo}，入库总数量不能大于订单数量！");
                             }
                         }
@@ -554,7 +556,8 @@ namespace RUINORERP.Business
                                 //如果已交数据大于 订单数量 给出警告实际操作中 使用其他方式将备品入库
                                 if (entity.tb_purorder.tb_PurOrderDetails[i].DeliveredQuantity < 0)
                                 {
-                                    throw new Exception($"入库单：{entity.PurEntryNo}反审核时，对应的订单：{entity.tb_purorder.PurOrderNo}，{prodName}的明细不能为负数！"); throw new Exception($"入库单：{entity.PurEntryNo}审核时，对应的订单：{entity.tb_purorder.PurOrderNo}，入库总数量不能大于订单数量！");
+                                    _unitOfWorkManage.RollbackTran();
+                                    throw new Exception($"入库单：{entity.PurEntryNo}反审核时，对应的订单：{entity.tb_purorder.PurOrderNo}，{prodName}的明细不能为负数！");
                                 }
                             }
                         }
@@ -582,6 +585,7 @@ namespace RUINORERP.Business
                                 //如果已交数据大于 订单数量 给出警告实际操作中 使用其他方式将备品入库
                                 if (entity.tb_purorder.tb_PurOrderDetails[i].DeliveredQuantity < 0)
                                 {
+                                    _unitOfWorkManage.RollbackTran();
                                     throw new Exception($"入库单：{entity.PurEntryNo}反审核时，对应的订单：{entity.tb_purorder.PurOrderNo}，{prodName}的明细不能为负数！");
                                 }
                             }
@@ -595,7 +599,8 @@ namespace RUINORERP.Business
                     int updatecounter = await _unitOfWorkManage.GetDbClient().Updateable<tb_PurOrderDetail>(entity.tb_purorder.tb_PurOrderDetails).ExecuteCommandAsync();
                     if (updatecounter == 0)
                     {
-
+                        _unitOfWorkManage.RollbackTran();
+                        throw new Exception($"入库单：{entity.PurEntryNo}反审核时，对应的订单：{entity.tb_purorder.PurOrderNo}明细中的已交数更新出错！");
                     }
 
                 }

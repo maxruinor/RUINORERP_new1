@@ -607,6 +607,7 @@ namespace RUINORERP.Business
                 }
                 else
                 {
+                    _unitOfWorkManage.RollbackTran();
                     throw new Exception("分析的目标必须要有配方!");
                 }
 

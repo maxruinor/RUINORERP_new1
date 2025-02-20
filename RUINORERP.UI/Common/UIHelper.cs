@@ -1595,10 +1595,10 @@ namespace RUINORERP.UI.Common
                             //var menu=Startup.GetFromFac<UI.BI.UCLocationTypeList>();
                             //获取关联实体名
                         }
-                        if (type.BaseType.Name == "BaseListWithTree")
-                        {
-                            info.EntityName = typeof(tb_ProdCategories).Name;
-                        }
+                        //if (type.BaseType.Name == "BaseListWithTree")
+                        //{
+                        //    info.EntityName = typeof(tb_ProdCategories).Name;
+                        //}
                         // Console.WriteLine($"注入：{attribute.FormType.Namespace}.{attribute.FormType.Name},{attribute.Describe}");
                     }
 
@@ -1698,10 +1698,10 @@ namespace RUINORERP.UI.Common
                             //var menu=Startup.GetFromFac<UI.BI.UCLocationTypeList>();
                             //获取关联实体名
                         }
-                        if (type.BaseType.Name == "BaseListWithTree")
-                        {
-                            info.EntityName = typeof(tb_ProdCategories).Name;
-                        }
+                        //if (type.BaseType.Name == "BaseListWithTree")
+                        //{
+                        //    info.EntityName = typeof(tb_ProdCategories).Name;
+                        //}
                         // Console.WriteLine($"注入：{attribute.FormType.Namespace}.{attribute.FormType.Name},{attribute.Describe}");
                     }
 

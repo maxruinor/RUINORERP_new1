@@ -9,7 +9,7 @@ using System.Windows.Forms;
 
 namespace RUINORERP.UI.Common
 {
-    public static class UICRM_RegionHelper
+    public static class UICRMRegionHelper
     {
 
         /// <summary>

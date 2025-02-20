@@ -72,6 +72,7 @@ namespace RUINORERP.Business
                     }
                     else
                     {
+                        _unitOfWorkManage.RollbackTran(); 
                         throw new Exception($"当前仓库{child.Location_ID}无产品{child.ProdDetailID}的库存数据,请联系管理员");
                     }
                     /*

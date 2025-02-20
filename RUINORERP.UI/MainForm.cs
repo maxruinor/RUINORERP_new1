@@ -313,6 +313,8 @@ namespace RUINORERP.UI
                 MessageBox.Show("服务器有新版本，更新前请保存当前操作，关闭系统。", "温馨提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 Process.Start(Update.currentexeName);
                 rs = true;
+                // 确保当前程序退出
+                Environment.Exit(0);
             }
             else
             {

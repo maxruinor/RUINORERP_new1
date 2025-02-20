@@ -187,6 +187,11 @@ namespace RUINORERP.Global
         /// 区域代码
         /// </summary>
         CRM_RegionCode,
+
+        /// <summary>
+        /// 往来单位
+        /// </summary>
+        BusinessPartner,
     }
 
     //上面只是测试，b

@@ -27,7 +27,7 @@ using RUINORERP.Business.Processor;
 namespace RUINORERP.UI.MRP.MP
 {
 
-    [MenuAttrAssemblyInfo("计划生产单查询", ModuleMenuDefine.模块定义.生产管理, ModuleMenuDefine.生产管理.制造规划, BizType.生产计划单)]
+    [MenuAttrAssemblyInfo("生产计划单查询", ModuleMenuDefine.模块定义.生产管理, ModuleMenuDefine.生产管理.制造规划, BizType.生产计划单)]
     public partial class UCProductionPlanQuery : BaseBillQueryMC<tb_ProductionPlan, tb_ProductionPlanDetail>
     {
         public UCProductionPlanQuery()

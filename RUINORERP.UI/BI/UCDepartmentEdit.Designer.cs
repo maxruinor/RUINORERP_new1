@@ -31,12 +31,14 @@
             this.btnOk = new Krypton.Toolkit.KryptonButton();
             this.btnCancel = new Krypton.Toolkit.KryptonButton();
             this.kryptonPanel1 = new Krypton.Toolkit.KryptonPanel();
+            this.cmbCompnay = new Krypton.Toolkit.KryptonComboBox();
+            this.lblDepartmentID = new Krypton.Toolkit.KryptonLabel();
             this.lblDepartmentName = new Krypton.Toolkit.KryptonLabel();
             this.txtDepartmentName = new Krypton.Toolkit.KryptonTextBox();
             this.lblNotes = new Krypton.Toolkit.KryptonLabel();
             this.txtNotes = new Krypton.Toolkit.KryptonTextBox();
-            this.cmbCompnay = new Krypton.Toolkit.KryptonComboBox();
-            this.lblDepartmentID = new Krypton.Toolkit.KryptonLabel();
+            this.kryptonLabel1 = new Krypton.Toolkit.KryptonLabel();
+            this.txtDepartmentCode = new Krypton.Toolkit.KryptonTextBox();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel1)).BeginInit();
             this.kryptonPanel1.SuspendLayout();
@@ -63,6 +65,8 @@
             // 
             // kryptonPanel1
             // 
+            this.kryptonPanel1.Controls.Add(this.kryptonLabel1);
+            this.kryptonPanel1.Controls.Add(this.txtDepartmentCode);
             this.kryptonPanel1.Controls.Add(this.cmbCompnay);
             this.kryptonPanel1.Controls.Add(this.lblDepartmentID);
             this.kryptonPanel1.Controls.Add(this.lblDepartmentName);
@@ -76,6 +80,23 @@
             this.kryptonPanel1.Name = "kryptonPanel1";
             this.kryptonPanel1.Size = new System.Drawing.Size(404, 300);
             this.kryptonPanel1.TabIndex = 2;
+            // 
+            // cmbCompnay
+            // 
+            this.cmbCompnay.DropDownWidth = 100;
+            this.cmbCompnay.IntegralHeight = false;
+            this.cmbCompnay.Location = new System.Drawing.Point(135, 12);
+            this.cmbCompnay.Name = "cmbCompnay";
+            this.cmbCompnay.Size = new System.Drawing.Size(183, 21);
+            this.cmbCompnay.TabIndex = 73;
+            // 
+            // lblDepartmentID
+            // 
+            this.lblDepartmentID.Location = new System.Drawing.Point(94, 11);
+            this.lblDepartmentID.Name = "lblDepartmentID";
+            this.lblDepartmentID.Size = new System.Drawing.Size(36, 20);
+            this.lblDepartmentID.TabIndex = 72;
+            this.lblDepartmentID.Values.Text = "公司";
             // 
             // lblDepartmentName
             // 
@@ -108,22 +129,20 @@
             this.txtNotes.Size = new System.Drawing.Size(183, 109);
             this.txtNotes.TabIndex = 7;
             // 
-            // cmbCompnay
+            // kryptonLabel1
             // 
-            this.cmbCompnay.DropDownWidth = 100;
-            this.cmbCompnay.IntegralHeight = false;
-            this.cmbCompnay.Location = new System.Drawing.Point(135, 34);
-            this.cmbCompnay.Name = "cmbCompnay";
-            this.cmbCompnay.Size = new System.Drawing.Size(183, 21);
-            this.cmbCompnay.TabIndex = 73;
+            this.kryptonLabel1.Location = new System.Drawing.Point(62, 47);
+            this.kryptonLabel1.Name = "kryptonLabel1";
+            this.kryptonLabel1.Size = new System.Drawing.Size(62, 20);
+            this.kryptonLabel1.TabIndex = 74;
+            this.kryptonLabel1.Values.Text = "部门编号";
             // 
-            // lblDepartmentID
+            // txtDepartmentCode
             // 
-            this.lblDepartmentID.Location = new System.Drawing.Point(94, 33);
-            this.lblDepartmentID.Name = "lblDepartmentID";
-            this.lblDepartmentID.Size = new System.Drawing.Size(36, 20);
-            this.lblDepartmentID.TabIndex = 72;
-            this.lblDepartmentID.Values.Text = "公司";
+            this.txtDepartmentCode.Location = new System.Drawing.Point(135, 47);
+            this.txtDepartmentCode.Name = "txtDepartmentCode";
+            this.txtDepartmentCode.Size = new System.Drawing.Size(183, 23);
+            this.txtDepartmentCode.TabIndex = 75;
             // 
             // UCDepartmentEdit
             // 
@@ -152,5 +171,7 @@
         private Krypton.Toolkit.KryptonTextBox txtNotes;
         private Krypton.Toolkit.KryptonComboBox cmbCompnay;
         private Krypton.Toolkit.KryptonLabel lblDepartmentID;
+        private Krypton.Toolkit.KryptonLabel kryptonLabel1;
+        private Krypton.Toolkit.KryptonTextBox txtDepartmentCode;
     }
 }

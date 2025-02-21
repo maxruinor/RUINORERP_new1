@@ -179,6 +179,7 @@ namespace RUINORERP.UI.MRP.MP
                 if ((entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改) && entity.MOID > 0 && s2.PropertyName == entity.GetPropertyName<tb_MaterialRequisition>(c => c.MOID))
                 {
                     LoadChildItems(entity.MOID);
+                    ToolBarEnabledControl(entity);
                 }
 
                 //数据状态变化会影响按钮变化
@@ -289,9 +290,6 @@ namespace RUINORERP.UI.MRP.MP
 
             grid1.BorderStyle = BorderStyle.FixedSingle;
             grid1.Selection.EnableMultiSelection = false;
-
-
-
             //指定了关键字段ProdDetailID
             listCols = sgh.GetGridColumns<ProductSharePart, tb_MaterialRequisitionDetail>(c => c.ProdDetailID, true);
 
@@ -687,10 +685,6 @@ namespace RUINORERP.UI.MRP.MP
 
                 }
 
-
-
-
-
                 if (SourceBill.MOID > 0)
                 {
                     entity.MOID = SourceBill.MOID;
@@ -702,7 +696,6 @@ namespace RUINORERP.UI.MRP.MP
                 {
                     entity.MaterialRequisitionNO = EditEntity.MaterialRequisitionNO;
                 }
-
 
                 ActionStatus actionStatus = ActionStatus.无操作;
                 BindData(entity, actionStatus);

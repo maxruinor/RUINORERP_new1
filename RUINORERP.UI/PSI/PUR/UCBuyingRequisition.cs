@@ -180,7 +180,7 @@ namespace RUINORERP.UI.PSI.PUR
             {
                 #region 引用到了不同的单据，需要特殊处理
 
-                if (entity.RefBizType == (int)BizType.生产需求分析)
+                if (entity.RefBizType == (int)BizType.需求分析)
                 {
                     /* ----------这个引用到了 不同的单据：需求分析。手动。销售订单。其他？。需要特殊处理 ----------- */
 

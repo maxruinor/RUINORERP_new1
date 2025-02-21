@@ -197,11 +197,20 @@ namespace RUINORERP.UI.SysConfig
             var selectList = list.Where(m => m.Parent_id == parent_id).OrderBy(c => c.Sort);
             foreach (var item in selectList)
             {
+                if (!item.IsVisble)
+                {
+                    return;
+                }
+                if (!item.IsEnabled)
+                {
+                    return;
+                }
                 string NodeText = "";
                 NodeText = item.CaptionCN;
                 //建立一个新节点
                 ThreeStateTreeNode node = new ThreeStateTreeNode(NodeText);
                 node.Tag = item;
+             
                 if (item.MenuType == "行为菜单")
                 {
                     node.ContextMenuStrip = contextMenuStrip4InitData;

@@ -18,6 +18,7 @@ using RUINORERP.Business;
 using RUINORERP.Global;
 using RUINORERP.Global.EnumExt;
 using RUINORERP.Common.Extensions;
+using RUINORERP.Global.EnumExt.CRM;
 
 namespace RUINORERP.UI.BI
 {
@@ -34,6 +35,7 @@ namespace RUINORERP.UI.BI
             System.Linq.Expressions.Expression<Func<tb_gl_Comment, int?>> exp;
             exp = (p) => p.BizTypeID;
             base.ColNameDataDictionary.TryAdd(exp.GetMemberInfo().Name, Common.CommonHelper.Instance.GetKeyValuePairs(typeof(BizType)));
+            DisplayTextResolver.AddFixedDictionaryMappingByEnum(t => t.BizTypeID, typeof(BizType));
         }
 
         public override void BuildInvisibleCols()

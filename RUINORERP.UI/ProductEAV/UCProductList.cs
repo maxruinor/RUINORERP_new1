@@ -46,7 +46,7 @@ namespace RUINORERP.UI.ProductEAV
             System.Linq.Expressions.Expression<Func<tb_Prod, int?>> expr;
             expr = (p) => p.SourceType;
             base.ColNameDataDictionary.TryAdd(expr.GetMemberInfo().Name, CommonHelper.Instance.GetKeyValuePairs(typeof(GoodsSource)));
-
+            DisplayTextResolver.AddFixedDictionaryMappingByEnum(t => t.SourceType, typeof(GoodsSource));
             #endregion
 
             #region 准备枚举值在列表中显示
@@ -54,7 +54,7 @@ namespace RUINORERP.UI.ProductEAV
             exprP = (p) => p.PropertyType;
             base.ColNameDataDictionary.TryAdd(exprP.GetMemberInfo().Name, CommonHelper.Instance.GetKeyValuePairs(typeof(ProductAttributeType)));
 
-
+            DisplayTextResolver.AddFixedDictionaryMappingByEnum(t => t.PropertyType, typeof(ProductAttributeType));
             #endregion
 
             dataGridView1.CustomRowNo = true;

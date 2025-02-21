@@ -147,6 +147,8 @@ namespace RUINORERP.UI.Report
             //frm.printTemplate = bindingSourcePrintTemplate.Current as tb_PrintTemplate;
             frm.bindingSourceTemplateDesign = bindingSourcePrintTemplate;
             frm.PrintDataSources = this.PrintDataSources;
+            frm.currUserInfos = currUserInfos;
+            frm.companyInfos = companyInfos;
             if (frm.ShowDialog() == DialogResult.OK)
             {
 

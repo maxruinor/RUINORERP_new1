@@ -221,20 +221,7 @@ namespace RUINORERP.Model
                         }
         }
 
-        private bool _isdeleted= false;
-        /// <summary>
-        /// 逻辑删除
-        /// </summary>
-        [AdvQueryAttribute(ColName = "isdeleted",ColDesc = "逻辑删除")] 
-        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType ="Boolean",  ColumnName = "isdeleted" ,IsNullable = false,ColumnDescription = "逻辑删除" )]
-        [Browsable(false)]
-        public bool isdeleted
-        { 
-            get{return _isdeleted;}
-            set{
-            SetProperty(ref _isdeleted, value);
-                        }
-        }
+ 
 
         #endregion
 

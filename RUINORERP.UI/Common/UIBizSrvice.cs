@@ -1059,7 +1059,6 @@ namespace RUINORERP.UI.Common
 
         public static List<SGColDisplayHandler> LoadInitSourceGridSetting(SourceGridDefine gridDefine, tb_MenuInfo CurMenuInfo)
         {
-
             List<SGDefineColumnItem> listCols = null;
             //找到最原始的数据来自于硬编码
 
@@ -1085,6 +1084,11 @@ namespace RUINORERP.UI.Common
                 else
                 {
                     c.Visible = true;
+                }
+                if (c.ColName == "Selected")
+                {
+                    //选择列默认隐藏,上面设置后，再覆盖上面的值
+                    c.Visible = false;
                 }
                 // 计算文本宽度
                 float textWidth = UITools.CalculateTextWidth(c.ColCaption, gridDefine.grid.Font, graphics);

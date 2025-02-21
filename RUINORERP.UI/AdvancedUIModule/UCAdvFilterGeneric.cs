@@ -462,7 +462,10 @@ namespace RUINORERP.UI.AdvancedUIModule
                 {
                     QueryConditionFilter.InvisibleCols.Add("SaleOut_MainID");
                 }
-
+                if (typeof(T).Name == typeof(tb_ProductionPlan).Name)
+                {
+                    QueryConditionFilter.InvisibleCols.Add("SOrder_ID");
+                }
                 //这里设置了指定列不可见
                 foreach (var item in QueryConditionFilter.InvisibleCols)
                 {

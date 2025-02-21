@@ -153,6 +153,7 @@ namespace RUINORERP.UI.ProductEAV
             dataGridViewProd.ColumnHeadersDefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
             FieldNameList1 = UIHelper.GetFieldNameColList(typeof(tb_Prod));
             dataGridViewProd.XmlFileName = "UCMultiPropertyEditor_" + typeof(tb_Prod).Name;
+            dataGridViewProd.NeedSaveColumnsXml = true;
             dataGridViewProd.FieldNameList = FieldNameList1;
             dataGridViewProd.DataSource = null;
             bindingSourc产品.DataSource = new List<tb_Prod>();

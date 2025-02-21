@@ -49,6 +49,7 @@ namespace RUINORERP.UI.CRM
             System.Linq.Expressions.Expression<Func<tb_CRM_FollowUpPlans, int?>> expPlanStatus;
             expPlanStatus = (p) => p.PlanStatus;
             base.ColNameDataDictionary.TryAdd(expPlanStatus.GetMemberInfo().Name, Common.CommonHelper.Instance.GetKeyValuePairs(typeof(FollowUpPlanStatus)));
+            DisplayTextResolver.AddFixedDictionaryMappingByEnum(t => t.PlanStatus, typeof(FollowUpPlanStatus));
         }
         protected override async Task<bool> Delete()
         {

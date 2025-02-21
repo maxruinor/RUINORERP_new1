@@ -34,8 +34,8 @@ namespace RUINORERP.UI.BI
             System.Linq.Expressions.Expression<Func<tb_FM_Account, int?>> exprCheckMode;
             exprCheckMode = (p) => p.Account_type;
             base.ColNameDataDictionary.TryAdd(exprCheckMode.GetMemberInfo().Name, Common.CommonHelper.Instance.GetKeyValuePairs(typeof(AccountType)));
+            DisplayTextResolver.AddFixedDictionaryMappingByEnum(t => t.Account_type, typeof(AccountType));
 
- 
 
         }
 

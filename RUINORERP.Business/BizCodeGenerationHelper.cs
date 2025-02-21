@@ -258,7 +258,7 @@ namespace RUINORERP.Business
                 case BizType.生产计划单:
                     rule = "{S:PP}{D:yyMMdd}{redis:{S:生产计划单}{D:yyMM}/00}";
                     break;
-                case BizType.生产需求分析:
+                case BizType.需求分析:
                     rule = "{S:PD}{D:yyMMdd}{redis:{S:生产需求分析}{D:yyMM}/00}";
                     break;
                 case BizType.制令单:

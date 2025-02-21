@@ -376,6 +376,7 @@ namespace RUINORERP.UI.BaseForm
             if (entity.ContainsProperty(typeof(DataStatus).Name))
             {
                 DataStatus dataStatus = (DataStatus)int.Parse(entity.GetPropertyValue(typeof(DataStatus).Name).ToString());
+                ActionStatus actionStatus = (ActionStatus)(Enum.Parse(typeof(ActionStatus), entity.GetPropertyValue(typeof(ActionStatus).Name).ToString()));
                 switch (dataStatus)
                 {
                     //点新增
@@ -385,7 +386,16 @@ namespace RUINORERP.UI.BaseForm
                         toolStripbtnModify.Enabled = true;
                         toolStripbtnSubmit.Enabled = true;
                         toolStripbtnReview.Enabled = false;
-                        toolStripButtonSave.Enabled = false;
+                        if (actionStatus == ActionStatus.新增)
+                        {
+                            toolStripButtonSave.Enabled = true;
+                            toolStripbtnModify.Enabled = false;
+                        }
+                        else
+                        {
+                            toolStripButtonSave.Enabled = false;
+                        }
+                    
                         toolStripBtnReverseReview.Enabled = false;
                         toolStripbtnPrint.Enabled = false;
                         toolStripbtnDelete.Enabled = true;
@@ -2389,8 +2399,8 @@ namespace RUINORERP.UI.BaseForm
         {
             try
             {
-                
-                    //UIBizSrvice.SetCustomSourceGridAsync(CurMenuInfo,, typeof(C));
+
+                //UIBizSrvice.SetCustomSourceGridAsync(CurMenuInfo,, typeof(C));
             }
             catch
             {

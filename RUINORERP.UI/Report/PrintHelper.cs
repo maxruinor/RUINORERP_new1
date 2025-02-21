@@ -253,7 +253,13 @@ namespace RUINORERP.UI.Report
                     FReport.RegisterData(mlist, "rd");
                     FReport.RegisterData(currUserInfos, "currUserInfo");
                     FReport.RegisterData(companyInfos, "companyInfo");
-
+                    if (printConfig.tb_PrintTemplates == null)
+                    {
+                        MessageBox.Show("请先配置正确的打印模板！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        ////释放资源
+                        FReport.Dispose();
+                        return rs;
+                    }
                     var printTemplate = printConfig.tb_PrintTemplates.Where(t => t.IsDefaultTemplate == true).FirstOrDefault();
                     if (printTemplate == null && printConfig != null && printConfig.tb_PrintTemplates.Count > 0)
                     {

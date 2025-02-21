@@ -48,7 +48,7 @@ namespace RUINORERP.Business.CommService
             Mapping.Add(BizType.生产计划单, typeof(tb_ProductionPlan));
             Mapping.Add(BizType.生产领料单, typeof(tb_MaterialRequisition));
             Mapping.Add(BizType.生产退料单, typeof(tb_MaterialReturn));
-            Mapping.Add(BizType.生产需求分析, typeof(tb_ProductionDemand));
+            Mapping.Add(BizType.需求分析, typeof(tb_ProductionDemand));
             Mapping.Add(BizType.缴库单, typeof(tb_FinishedGoodsInv));
             Mapping.Add(BizType.借出单, typeof(tb_ProdBorrowing));
             Mapping.Add(BizType.归还单, typeof(tb_ProdReturning));

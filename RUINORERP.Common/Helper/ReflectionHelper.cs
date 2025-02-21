@@ -323,6 +323,137 @@ namespace RUINORERP.Common.Helper
         /// <param name="aobj_propertyvalue"></param>
         public static void SetPropertyValue(object obj, string as_propertyname, object aobj_propertyvalue)
         {
+            if (obj == null)
+            {
+                return;
+            }
+
+            Type t = obj.GetType();
+            PropertyInfo property = t.GetProperty(as_propertyname);
+            if (property == null)
+            {
+                return;
+            }
+
+            object PropertyValue = aobj_propertyvalue;
+
+            // 设置属性值
+            try
+            {
+                // 枚举类型
+                if (property.PropertyType.IsEnum)
+                {
+                    if (PropertyValue == null)
+                    {
+                        property.SetValue(obj, null);
+                    }
+                    else
+                    {
+                        property.SetValue(obj, Enum.Parse(property.PropertyType, PropertyValue.ToString()));
+                    }
+                }
+                // 字节数组
+                else if (property.PropertyType.IsArray && property.PropertyType.Name.ToLower() == "byte[]")
+                {
+                    if (PropertyValue == null)
+                    {
+                        property.SetValue(obj, null);
+                    }
+                    else if (PropertyValue.GetType().Name == "Bitmap")
+                    {
+                        property.SetValue(obj, ImageHelper.ConvertImageToByteEx(PropertyValue as Bitmap));
+                    }
+                    else if (PropertyValue.GetType().Name == "Image")
+                    {
+                        property.SetValue(obj, ImageHelper.ConvertImageToByteEx(PropertyValue as Image));
+                    }
+                    else
+                    {
+                        property.SetValue(obj, PropertyValue);
+                    }
+                }
+                // 日期时间类型
+                else if (property.PropertyType == typeof(DateTime))
+                {
+                    if (PropertyValue == null)
+                    {
+                        property.SetValue(obj, default(DateTime));
+                    }
+                    else if (PropertyValue is DateTime)
+                    {
+                        property.SetValue(obj, PropertyValue);
+                    }
+                    else
+                    {
+                        if (DateTime.TryParse(PropertyValue.ToString(), out DateTime parsedDate))
+                        {
+                            property.SetValue(obj, parsedDate);
+                        }
+                        else
+                        {
+                            property.SetValue(obj, default(DateTime));
+                        }
+                    }
+                }
+                // 字符串类型
+                else if (property.PropertyType == typeof(string))
+                {
+                    property.SetValue(obj, PropertyValue?.ToString() ?? string.Empty);
+                }
+                // 泛型 Nullable<>
+                else if (property.PropertyType.IsGenericType && property.PropertyType.GetGenericTypeDefinition() == typeof(Nullable<>))
+                {
+                    if (PropertyValue == null || PropertyValue.ToString() == "")
+                    {
+                        property.SetValue(obj, null);
+                    }
+                    else
+                    {
+                        var underlyingType = Nullable.GetUnderlyingType(property.PropertyType);
+                        property.SetValue(obj, Convert.ChangeType(PropertyValue, underlyingType));
+                    }
+                }
+                // 值类型（如 int, long, double 等）
+                else if (property.PropertyType.IsValueType)
+                {
+                    if (PropertyValue == null || PropertyValue.ToString() == "")
+                    {
+                        property.SetValue(obj, Activator.CreateInstance(property.PropertyType));
+                    }
+                    else
+                    {
+                        try
+                        {
+                            property.SetValue(obj, Convert.ChangeType(PropertyValue, property.PropertyType));
+                        }
+                        catch (Exception exC)
+                        {
+                            property.SetValue(obj, Activator.CreateInstance(property.PropertyType));
+                        }
+                    }
+                }
+                // 其他类型
+                else
+                {
+                    if (PropertyValue == null)
+                    {
+                        property.SetValue(obj, Activator.CreateInstance(property.PropertyType));
+                    }
+                    else
+                    {
+                        property.SetValue(obj, Convert.ChangeType(PropertyValue, property.PropertyType));
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"设置属性值时出错：{obj.GetType().Name}: 属性名: {as_propertyname}, 值: {aobj_propertyvalue}, 错误信息: {ex.Message}");
+            }
+        }
+
+        /*
+        public static void SetPropertyValue(object obj, string as_propertyname, object aobj_propertyvalue)
+        {
             try
             {
                 if (obj == null)
@@ -420,264 +551,6 @@ namespace RUINORERP.Common.Helper
 
                 return;
 
-                string s_datatype = property.PropertyType.Name.Trim().ToLower();
-
-                if (property.PropertyType.IsGenericParameter)
-                {
-
-                }
-                //属性赋值
-                object obj_propertyvalue = null;
-                switch (s_datatype)
-                {
-                    case "datetime":
-
-                        //case "System.Nullable`1[System.DateTime]":
-                        if (IsType(property.PropertyType, "System.Nullable`1[System.DateTime]"))
-                        {
-                            if (aobj_propertyvalue.ToString() != "")
-                            {
-                                try
-                                {
-                                    //if (aobj_propertyvalue.ToString().Contains("PDT"))
-                                    //{
-                                    //    aobj_propertyvalue = aobj_propertyvalue.ToString().Replace("PDT", "-0700");
-                                    //}
-                                    DateTime dtime = DateTime.Parse(aobj_propertyvalue.ToString());
-                                    obj_propertyvalue = dtime;
-
-                                    //property.SetValue(obj, dtime, null);
-                                    //property.SetValue(obj, (DateTime?)DateTime.ParseExact(aobj_propertyvalue.ToString(), "yyyy-MM-dd HH:mm:ss", null), null);
-                                }
-                                catch
-                                {
-                                    //property.SetValue(obj, (DateTime?)DateTime.ParseExact(aobj_propertyvalue.ToString(), "yyyy-MM-dd", null), null);
-                                }
-                            }
-                            else
-                            {
-                                obj_propertyvalue = null;
-                            }
-                            //property.SetValue(obj, null, null);
-                        }
-                        else
-                        {
-                            DateTime dtime = DateTime.Parse(aobj_propertyvalue.ToString());
-                            obj_propertyvalue = dtime;
-                        }
-                        break;
-
-
-
-                    case "nullable`1":
-                        #region  不可空类型
-                        string tempdataType = property.PropertyType.FullName.Trim().ToLower();
-                        if (tempdataType.Contains("system.int32"))
-                        {
-                            int i32_parm = 0;
-                            if (aobj_propertyvalue == null || string.IsNullOrEmpty(aobj_propertyvalue.ToString()))
-                                aobj_propertyvalue = 0;
-
-                            i32_parm = Convert.ToInt32(aobj_propertyvalue);
-                            obj_propertyvalue = i32_parm;
-                        }
-
-                        if (tempdataType.Contains("system.decimal"))
-                        {
-                            decimal i32_parm = 0;
-                            if (aobj_propertyvalue == null || string.IsNullOrEmpty(aobj_propertyvalue.ToString()))
-                                aobj_propertyvalue = 0;
-
-                            i32_parm = Convert.ToDecimal(aobj_propertyvalue);
-                            obj_propertyvalue = i32_parm;
-                        }
-                        if (tempdataType.Contains("system.datetime"))
-                        {
-
-                            var isGeneric = property.PropertyType.IsGenericType;
-                            //var isPrimitive = property.PropertyType.IsPrimitive;
-                            var isValueType = property.PropertyType.IsValueType;
-                            if (isGeneric || (isGeneric && property.PropertyType.GetGenericTypeDefinition() == typeof(Nullable<>)))
-                            {
-                                //property.SetValue(t, value == null ? null : Convert.ChangeType(value, Nullable.GetUnderlyingType(pi.PropertyType)),
-                            }
-
-
-                            //case "System.Nullable`1[System.DateTime]":
-                            if (IsType(property.PropertyType, "System.Nullable`1[System.DateTime]"))
-                            {
-                                if (aobj_propertyvalue.ToString() != "")
-                                {
-                                    try
-                                    {
-                                        //if (aobj_propertyvalue.ToString().Contains("PDT"))
-                                        //{
-                                        //    aobj_propertyvalue = aobj_propertyvalue.ToString().Replace("PDT", "-0700");
-                                        //}
-                                        DateTime dtime = DateTime.Parse(aobj_propertyvalue.ToString());
-                                        obj_propertyvalue = dtime;
-
-                                        //property.SetValue(obj, dtime, null);
-                                        //property.SetValue(obj, (DateTime?)DateTime.ParseExact(aobj_propertyvalue.ToString(), "yyyy-MM-dd HH:mm:ss", null), null);
-                                    }
-                                    catch
-                                    {
-                                        //property.SetValue(obj, (DateTime?)DateTime.ParseExact(aobj_propertyvalue.ToString(), "yyyy-MM-dd", null), null);
-                                    }
-                                }
-                                else
-                                {
-                                    obj_propertyvalue = null;
-                                }
-                                //property.SetValue(obj, null, null);
-                            }
-                            break;
-                        }
-
-
-                        #endregion
-
-                        break;
-
-
-                    case "object":
-                        object objparm = new object();
-                        if (aobj_propertyvalue == null || string.IsNullOrEmpty(aobj_propertyvalue.ToString()))
-                            aobj_propertyvalue = "";
-                        objparm = aobj_propertyvalue;
-                        obj_propertyvalue = objparm;
-                        break;
-
-                    case "boolean":
-
-                        Boolean Boolean_parm = false;
-                        if (aobj_propertyvalue == null || string.IsNullOrEmpty(aobj_propertyvalue.ToString()))
-                            aobj_propertyvalue = 0;
-                        Boolean_parm = Convert.ToBoolean(aobj_propertyvalue);
-                        obj_propertyvalue = Boolean_parm;
-                        break;
-
-                    case "double":
-                        Double double_parm = 0;
-                        if (aobj_propertyvalue == null || string.IsNullOrEmpty(aobj_propertyvalue.ToString()))
-                            aobj_propertyvalue = 0;
-
-                        double_parm = Convert.ToDouble(aobj_propertyvalue);
-                        obj_propertyvalue = double_parm;
-                        break;
-
-
-                    case "int64":
-                        Int64 int64_parm = 0;
-                        if (aobj_propertyvalue == null || string.IsNullOrEmpty(aobj_propertyvalue.ToString()))
-                            aobj_propertyvalue = 0;
-
-                        int64_parm = Convert.ToInt64(aobj_propertyvalue);
-                        obj_propertyvalue = int64_parm;
-                        break;
-
-                    case "decimal":
-                        decimal decimal_parm = 0;
-                        if (aobj_propertyvalue == null || string.IsNullOrEmpty(aobj_propertyvalue.ToString()))
-                            aobj_propertyvalue = 0;
-
-                        decimal_parm = Convert.ToDecimal(aobj_propertyvalue);
-                        obj_propertyvalue = decimal_parm;
-                        break;
-
-                    case "int32":
-                        int i_parm = 0;
-                        if (aobj_propertyvalue == null || string.IsNullOrEmpty(aobj_propertyvalue.ToString()))
-                            aobj_propertyvalue = 0;
-
-                        i_parm = Convert.ToInt32(aobj_propertyvalue);
-                        obj_propertyvalue = i_parm;
-                        break;
-                    case "dec":
-                        decimal dc_parm = 0.0m;
-                        if (aobj_propertyvalue == null || string.IsNullOrEmpty(aobj_propertyvalue.ToString()))
-                            aobj_propertyvalue = 0.0m;
-
-                        dc_parm = Convert.ToDecimal(aobj_propertyvalue);
-                        obj_propertyvalue = dc_parm;
-                        break;
-                    case "string":
-                        string s_parm = string.Empty;
-                        if (aobj_propertyvalue == null || string.IsNullOrEmpty(aobj_propertyvalue.ToString()))
-                            aobj_propertyvalue = "";
-
-                        s_parm = aobj_propertyvalue.ToString();
-                        obj_propertyvalue = s_parm;
-                        break;
-                    case "dat":
-                        DateTime dtm_parm = DateTime.MinValue;
-                        if (aobj_propertyvalue == null || string.IsNullOrEmpty(aobj_propertyvalue.ToString()))
-                            obj_propertyvalue = DateTime.MinValue;
-
-                        dtm_parm = Convert.ToDateTime(aobj_propertyvalue);
-                        obj_propertyvalue = dtm_parm;
-                        break;
-
-                    case "list`1":
-                        object list_parm = new object();
-                        if (aobj_propertyvalue == null || string.IsNullOrEmpty(aobj_propertyvalue.ToString()))
-                            aobj_propertyvalue = "";
-                        list_parm = aobj_propertyvalue;
-                        obj_propertyvalue = list_parm;
-                        break;
-                    default:
-                        //如果这个字段是基础实体类型，则
-                        if (aobj_propertyvalue.GetType().BaseType.ToString() == "SMTAPI.Entity.BaseEntity")
-                        {
-                            object obj_parm = new object();
-                            if (aobj_propertyvalue == null || string.IsNullOrEmpty(aobj_propertyvalue.ToString()))
-                                aobj_propertyvalue = "";
-
-                            obj_parm = aobj_propertyvalue;
-                            obj_propertyvalue = obj_parm;
-                        }
-                        else
-                        {
-                            throw new Exception("请修改代码，处理这种数据类型。" + s_datatype);
-                        }
-
-
-                        break;
-                }
-
-
-                //非泛型 时可以用   property.SetValue(obj，Convert.ChangeType(value,property.PropertyType),null);
-
-                if (!property.PropertyType.IsGenericType)
-                {
-                    //非泛型
-                    t.GetProperty(as_propertyname).SetValue(obj, Convert.ChangeType(obj_propertyvalue, property.PropertyType), null);
-                }
-                else
-                {
-                    //泛型Nullable<>
-                    Type genericTypeDefinition = property.PropertyType.GetGenericTypeDefinition();
-                    if (genericTypeDefinition == typeof(Nullable<>))
-                    {
-                        t.GetProperty(as_propertyname).SetValue(obj, Convert.ChangeType(obj_propertyvalue, Nullable.GetUnderlyingType(property.PropertyType)), null);
-                    }
-                }
-
-                if (property.PropertyType.IsEnum) //属性类型是否表示枚举
-                {
-                    object enumName = Enum.ToObject(property.PropertyType, obj_propertyvalue);
-                    t.GetProperty(as_propertyname).SetValue(obj, enumName, null); //获取枚举值，设置属性值
-                }
-                else if (property.PropertyType.IsGenericType) //属性类型是否表示泛型
-                {
-                    t.GetProperty(as_propertyname).SetValue(obj, obj_propertyvalue, null); //获取枚举值，设置属性值
-                }
-                else
-                {
-                    //普通属性
-                    t.GetProperty(as_propertyname).SetValue(obj, obj_propertyvalue, null);
-                }
-
                 #endregion
             }
             catch (Exception ex)
@@ -687,7 +560,7 @@ namespace RUINORERP.Common.Helper
 
         }
 
-
+        */
 
 
         /// <summary>

@@ -552,6 +552,8 @@ namespace RUINORERP.Business
                 topDetail.ParentId = 0;//一级数据
 
                 //修正数量,注意这里只是成品的数量
+                //根节点是成品时。需求时间就是计划需求时间
+                topDetail.RequirementDate = item.RequirementDate;
 
                 topDetail.GrossRequirement = item.NeedQuantity;
                 topDetail.BookInventory = item.BookInventory;
@@ -653,6 +655,8 @@ namespace RUINORERP.Business
             NewDetail.RequirementDate = RequirementDate;
             NewDetail.tb_proddetail = detail.tb_proddetail;
 
+
+
             //这个产品对应的BOM
             NewDetail.BOM_ID = detail.tb_proddetail.BOM_ID;
             //这个产品对应的BOM实体
@@ -714,6 +718,26 @@ namespace RUINORERP.Business
             {
                 NewDetail.NeedQuantity = NewDetail.GrossRequirement;
             }
+
+
+            //如果仓库有的原料 需求时间就是当前
+            if (NewDetail.GrossRequirement == 0)
+            {
+                NewDetail.RequirementDate = DateTime.Now;
+            }
+            else
+            {
+                //节点是非成品时。需求时间就是计划需求时间-生产周期10天 如果总时间都不够10天就是当前时间就要材料了
+                if (RequirementDate.AddDays(-10) < DateTime.Now)
+                {
+                    NewDetail.RequirementDate = DateTime.Now;
+                }
+                else
+                {
+                    NewDetail.RequirementDate = RequirementDate.AddDays(-10);
+                }
+            }
+            
 
             //可用库存是多次递减，所以多次赋值
             NewDetail.AvailableStock = detail.tb_proddetail.tb_Inventories
@@ -998,9 +1022,22 @@ namespace RUINORERP.Business
             {
                 BuyingRequisition.Purpose = $"由{_appContext.CurUserInfo.Name}在生产需要分析{demand.PDNo}时自动生成";
                 //设置一个默认的需求日期
-                if (BuyingRequisition.RequirementDate == null)
+                if (BuyingRequisition.RequirementDate == null && item.RequirementDate.HasValue)
                 {
-                    BuyingRequisition.RequirementDate = item.RequirementDate;
+                    //请购单的需求时间 是原料。成品需要的时间要 ，还要 来料时间，生产时间
+                    //定义一个10天生产时间，如果成品需求还长大于10，则否则
+                    TimeSpan days = item.RequirementDate.Value - System.DateTime.Now.Date;
+                    if (days.Days > 10)
+                    {
+                        //先给三天吧
+                        BuyingRequisition.RequirementDate = item.RequirementDate.Value.AddDays(10 - 3);
+                    }
+                    else
+                    {
+                        //先给三天吧
+                        BuyingRequisition.RequirementDate = System.DateTime.Now.AddDays(3);
+                    }
+
                 }
             }
             //没有经验通过下面先不计算
@@ -1009,7 +1046,7 @@ namespace RUINORERP.Business
             BuyingRequisition.PuRequisitionNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.请购单);
             BuyingRequisition.RefBillID = demand.PDID;
             BuyingRequisition.RefBillNO = demand.PDNo;
-            BuyingRequisition.RefBizType = (int)BizType.生产需求分析;
+            BuyingRequisition.RefBizType = (int)BizType.需求分析;
 
             if (demand.tb_productionplan != null)
             {
@@ -1069,6 +1106,7 @@ namespace RUINORERP.Business
             //需求分析单审核后才可以生成制令单，因为确定需求才生产
             //一个中间件的详情ID和PCID即行号一行，生成一个制作令单
             tb_ManufacturingOrder ManufacturingOrder = mapper.Map<tb_ManufacturingOrder>(MakingItem);
+            ManufacturingOrder.PDCID = MakingItem.PDCID;
             #region 
             //tb_BOM_SController<tb_BOM_S> ctrBOM = _appContext.GetRequiredService<tb_BOM_SController<tb_BOM_S>>();
             //一次性查出。为了性能，如果是上层模式，则全部，如果是中间件模式，则只要查下一级
@@ -1267,7 +1305,7 @@ namespace RUINORERP.Business
             return ManufacturingOrder;
         }
 
-   
+
 
         /// <summary>
         /// 生成制令单明细
@@ -1318,7 +1356,7 @@ namespace RUINORERP.Business
                     //中间有BOM的制成品,只在子循环中引用
                     mItemGoods.CurrentIinventory = MediumBomInfo.tb_proddetail.tb_Inventories.Where(c => c.Location_ID == MakingItem.Location_ID).Sum(i => i.Quantity);
                     mItemGoods.UnitCost = MediumBomInfo.tb_proddetail.tb_Inventories.Where(c => c.Location_ID == MakingItem.Location_ID).Sum(i => i.Inv_Cost);
-             
+
                     //找下一级的材料。当前级就不需要。否则将当前级认为是中间半成品。要提供数量
                     if (needLoop)
                     {

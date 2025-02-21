@@ -51,7 +51,7 @@ namespace RUINORERP.UI.PSI.INV
         {
             InitializeComponent();
         }
-  
+
         internal override void LoadDataToUI(object Entity)
         {
             BindData(Entity as tb_ProdSplit);
@@ -190,7 +190,7 @@ namespace RUINORERP.UI.PSI.INV
             DataBindingHelper.BindData4TextBoxWithTagQuery<tb_ProdSplit>(entity, v => v.ProdDetailID, txtProdDetailID, true);
             if (entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改)
             {
-                base.InitRequiredToControl(MainForm.Instance.AppContext.GetRequiredService <tb_ProdSplitValidator> (), kryptonSplitContainer1.Panel1.Controls);
+                base.InitRequiredToControl(MainForm.Instance.AppContext.GetRequiredService<tb_ProdSplitValidator>(), kryptonSplitContainer1.Panel1.Controls);
 
                 //创建表达式  草稿 结案 和没有提交的都不显示
                 var lambdaOrder = Expressionable.Create<View_ProdDetail>()
@@ -209,7 +209,7 @@ namespace RUINORERP.UI.PSI.INV
                 //影响子件的数量
                 if (s2.PropertyName == entity.GetPropertyName<tb_ProdSplit>(c => c.SplitParentQty))
                 {
-                    if (EditEntity.BOM_ID > 0 && EditEntity.tb_ProdSplitDetails.Count > 0)
+                    if (EditEntity.BOM_ID > 0 && EditEntity.tb_ProdSplitDetails != null && EditEntity.tb_ProdSplitDetails.Count > 0)
                     {
                         decimal bomOutQty = EditEntity.tb_bom_s.OutputQty;
                         for (int i = 0; i < EditEntity.tb_ProdSplitDetails.Count; i++)
@@ -242,7 +242,7 @@ namespace RUINORERP.UI.PSI.INV
                 //权限允许
                 if ((true && entity.DataStatus == (int)DataStatus.草稿) || (true && entity.DataStatus == (int)DataStatus.新建))
                 {
-                    
+
                     if (entity.ProdDetailID > 0 && s2.PropertyName == entity.GetPropertyName<tb_ProdSplit>(c => c.ProdDetailID))
                     {
 
@@ -285,7 +285,18 @@ namespace RUINORERP.UI.PSI.INV
                         }
                         else
                         {
-                            MessageBox.Show("没有找到对应的BOM\r\n请确认选择的产品有对应BOM配方。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                            if (tlist.Count == 1)
+                            {
+                                MessageBox.Show("没有找到对应的BOM\r\n请确认选择的产品有对应BOM配方。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                            }
+                            else
+                            {
+                                //给一个默认
+                                cmbBOM_ID.SelectedIndex = 0;
+                                cmbBOM_ID.SelectedIndexChanged -= CmbBOM_ID_SelectedIndexChanged;
+                                cmbBOM_ID.SelectedIndexChanged += CmbBOM_ID_SelectedIndexChanged;
+                            }
+
                         }
 
 
@@ -313,6 +324,11 @@ namespace RUINORERP.UI.PSI.INV
 
             base.BindData(entity);
 
+        }
+
+        private void CmbBOM_ID_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            LoadItemsFromBOM();
         }
 
         SourceGridDefine sgd = null;
@@ -718,6 +734,10 @@ namespace RUINORERP.UI.PSI.INV
                         MessageBox.Show("请选择要拆分的配方");
                     }
                 }
+
+                //清空一下明细？
+                EditEntity.tb_ProdSplitDetails.Clear();
+                sgh.LoadItemDataToGrid<tb_ProdSplitDetail>(grid1, sgd, new List<tb_ProdSplitDetail>(), c => c.ProdDetailID);
                 return;
             }
             if (EditEntity.tb_ProdSplitDetails == null)
@@ -727,7 +747,11 @@ namespace RUINORERP.UI.PSI.INV
             //新建时才全新加载
             if (EditEntity.tb_ProdSplitDetails.Count > 0)
             {
-                return;
+                if (EditEntity.DataStatus != (int)DataStatus.新建 && EditEntity.tb_ProdSplitDetails.Count > 0)
+                {
+                    return;
+                }
+
             }
             EditEntity.tb_ProdSplitDetails.Clear();
             //通过BOM_id找到明细加载

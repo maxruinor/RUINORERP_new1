@@ -249,7 +249,7 @@ namespace RUINORERP.UI.PSI.PUR
             // listCols.SetCol_ReadOnly<ProductSharePart>(c => c.Inv_Cost);
             listCols.SetCol_ReadOnly<tb_FinishedGoodsInvDetail>(c => c.PayableQty);
             listCols.SetCol_ReadOnly<tb_FinishedGoodsInvDetail>(c => c.UnpaidQty);
-
+            listCols.SetCol_ReadOnly<tb_FinishedGoodsInvDetail>(c => c.UnitCost);
             //listCols.SetCol_ReadOnly<tb_FinishedGoodsInvDetail>(c => c.UnitCost);
             //listCols.SetCol_ReadOnly<tb_FinishedGoodsInvDetail>(c => c.ProductionAllCost);
             // listCols.SetCol_ReadOnly<tb_FinishedGoodsInvDetail>(c => c.MaterialCost);
@@ -651,13 +651,17 @@ protected async override Task<ApprovalEntity> ReReview()
                 NewDetail.UnpaidQty = NewDetail.PayableQty - NewDetail.Qty;// 已经交数量去掉
                 NewDetail.Location_ID = SourceBill.Location_ID;
 
+                //NewDetail.SubtotalMaterialCost = SourceBill.TotalMaterialCost;
+                //这里根据制令单的时间 费用假设全缴库时算出单位时间
+                //再手动输入实缴时再算
+
                 NewDetail.NetWorkingHours = SourceBill.WorkingHour / SourceBill.ManufacturingQty;
                 NewDetail.NetMachineHours = SourceBill.MachineHour / SourceBill.ManufacturingQty;
                 NewDetail.MaterialCost = SourceBill.TotalMaterialCost / SourceBill.ManufacturingQty;
-                NewDetail.SubtotalMaterialCost = SourceBill.TotalMaterialCost;
                 NewDetail.ManuFee = SourceBill.TotalManuFee / SourceBill.ManufacturingQty;
                 NewDetail.ApportionedCost = SourceBill.ApportionedCost / SourceBill.ManufacturingQty;
                 NewDetail.ProductionAllCost = SourceBill.TotalProductionCost / SourceBill.ManufacturingQty;
+
                 #endregion
                 NewDetails.Add(NewDetail);
                 if (NewDetails.Count == 0)

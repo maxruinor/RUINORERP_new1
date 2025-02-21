@@ -688,7 +688,7 @@ namespace SourceGrid.Selection
         #endregion
 
         #region Selection
-        private bool mEnableMultiSelection = true;
+        private bool mEnableMultiSelection = false;
         /// <summary>
         /// Gets or sets if enable multi selection using Ctrl key or Shift Key or with mouse. Default is true.
         /// </summary>

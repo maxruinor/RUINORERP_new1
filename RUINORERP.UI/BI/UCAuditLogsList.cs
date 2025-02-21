@@ -21,6 +21,7 @@ using SqlSugar;
 using RUINORERP.Global;
 using RUINORERP.Common.Extensions;
 using System.Reflection;
+using RUINORERP.Global.EnumExt.CRM;
 
 namespace RUINORERP.UI.BI
 {
@@ -40,6 +41,8 @@ namespace RUINORERP.UI.BI
             System.Linq.Expressions.Expression<Func<tb_AuditLogs, int?>> exp;
             exp = (p) => p.ObjectType;
             base.ColNameDataDictionary.TryAdd(exp.GetMemberInfo().Name, Common.CommonHelper.Instance.GetKeyValuePairs(typeof(BizType)));
+
+            DisplayTextResolver.AddFixedDictionaryMappingByEnum(t => t.ObjectType, typeof(BizType));
 
             Krypton.Toolkit.KryptonButton button检查数据 = new Krypton.Toolkit.KryptonButton();
             button检查数据.Text = "提取重复数据";

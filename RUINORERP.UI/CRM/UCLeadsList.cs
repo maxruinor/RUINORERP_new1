@@ -27,6 +27,7 @@ using AutoMapper;
 using RUINORERP.Business.AutoMapper;
 using RUINORERP.Business.CommService;
 using TransInstruction;
+using RUINORERP.Global;
 
 namespace RUINORERP.UI.CRM
 {
@@ -53,7 +54,7 @@ namespace RUINORERP.UI.CRM
             System.Linq.Expressions.Expression<Func<tb_CRM_Leads, int>> expLeadsStatus;
             expLeadsStatus = (p) => p.LeadsStatus;
             base.ColNameDataDictionary.TryAdd(expLeadsStatus.GetMemberInfo().Name, Common.CommonHelper.Instance.GetKeyValuePairs(typeof(LeadsStatus)));
-
+            DisplayTextResolver.AddFixedDictionaryMappingByEnum(t => t.LeadsStatus, typeof(LeadsStatus));
 
         }
         //public override void QueryConditionBuilder()

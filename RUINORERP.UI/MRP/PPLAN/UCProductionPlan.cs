@@ -38,6 +38,7 @@ using RUINORERP.UI.PSI.PUR;
 using RUINORERP.Model.CommonModel;
 using RUINORERP.Business.CommService;
 using static StackExchange.Redis.Role;
+using RUINORERP.Global.Model;
 
 namespace RUINORERP.UI.MRP.MP
 {
@@ -99,6 +100,7 @@ namespace RUINORERP.UI.MRP.MP
                     entity.Employee_ID = MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID.Value;
                     entity.PlanDate = System.DateTime.Now;
                     entity.RequirementDate = System.DateTime.Now.AddDays(10);//这是不是一个平均时间。将来可以根据数据优化？
+                    listCols.SetCol_DefaultValue<tb_ProductionPlanDetail>(c => c.RequirementDate, EditEntity.RequirementDate.ToShortDateString());
                     if (entity.tb_ProductionPlanDetails != null && entity.tb_ProductionPlanDetails.Count > 0)
                     {
                         entity.tb_ProductionPlanDetails.ForEach(c => c.PPID = 0);
@@ -151,9 +153,25 @@ namespace RUINORERP.UI.MRP.MP
                 }
 
                 //如果是销售订单引入变化则加载明细及相关数据
-                if ((entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改) && entity.SOrder_ID.HasValue && entity.SOrder_ID > 0 && s2.PropertyName == entity.GetPropertyName<tb_ProductionPlan>(c => c.SOrder_ID))
+                if ((entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改))
                 {
-                    LoadChildItems(entity.SOrder_ID.Value);
+                    if (s2.PropertyName == entity.GetPropertyName<tb_ProductionPlan>(c => c.SOrder_ID) && entity.SOrder_ID.HasValue)
+                    {
+                        LoadChildItems(entity.SOrder_ID.Value);
+                    }
+
+                    if (s2.PropertyName == entity.GetPropertyName<tb_ProductionPlan>(c => c.RequirementDate))
+                    {
+                        //明细优先来自于主表，可以手动修改。
+                        listCols.SetCol_DefaultValue<tb_ProductionPlanDetail>(c => c.RequirementDate, EditEntity.RequirementDate.ToShortDateString());
+                        for (int i = 0; i < EditEntity.tb_ProductionPlanDetails.Count; i++)
+                        {
+                            EditEntity.tb_ProductionPlanDetails[i].RequirementDate = EditEntity.RequirementDate;
+                        }
+
+                        //同步到明细UI表格中？
+                        sgh.SynchronizeUpdateCellValue<tb_ProductionPlanDetail>(sgd, c => c.RequirementDate, EditEntity.tb_ProductionPlanDetails);
+                    }
                 }
 
 
@@ -265,7 +283,6 @@ namespace RUINORERP.UI.MRP.MP
 
             //bomid的下拉值。受当前行选择时会改变下拉范围,由产品ID决定BOM显示
             sgh.SetCol_LimitedConditionsForSelectionRange<tb_ProductionPlanDetail>(sgd, t => t.ProdDetailID, f => f.BOM_ID);
-
 
             if (CurMenuInfo.tb_P4Fields != null)
             {

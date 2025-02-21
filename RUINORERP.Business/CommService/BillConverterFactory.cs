@@ -223,7 +223,7 @@ namespace RUINORERP.Business.CommService
                     cbd.BillNo = ProductionPlan.PPNo;
                     cbd.BillID = ProductionPlan.PPID;
                     break;
-                case BizType.生产需求分析:
+                case BizType.需求分析:
                     var ProductionDemand = Entity as tb_ProductionDemand;
                     cbd.BillNo = ProductionDemand.PDNo;
                     cbd.BillID = ProductionDemand.PDID;

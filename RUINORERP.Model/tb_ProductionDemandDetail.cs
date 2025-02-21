@@ -18,7 +18,7 @@ using RUINORERP.Global.CustomAttribute;
 namespace RUINORERP.Model
 {
     /// <summary>
-    /// 生产需求分析表明细
+    /// 生产需求分析表明细-库存不足
     /// </summary>
     [Serializable()]
     [Description("生产需求分析表明细")]

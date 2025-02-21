@@ -108,11 +108,11 @@ namespace SourceGrid.Selection
 		/// Check if the cell is selected.
 		/// </summary>
 		bool IsSelectedCell(Position position);
-		
+
 		/// <summary>
 		/// Gets or sets if enable multi selection using Ctrl key or Shift Key or with mouse. Default is true.
 		/// </summary>
-		bool EnableMultiSelection {get;set;}
+		bool EnableMultiSelection { get; set; } 
 		
 		/// <summary>
 		/// Reset the selection

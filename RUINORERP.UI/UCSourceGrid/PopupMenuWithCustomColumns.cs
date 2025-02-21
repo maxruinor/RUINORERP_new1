@@ -478,6 +478,9 @@ namespace RUINORERP.UI.UCSourceGrid
                     CheckOnClick = true,
                     Tag = DisplayController // 存储原始数据
                 };
+
+                menuItem.Checked = DisplayController.Visible;
+
                 menuItem.CheckOnClick = true;
                 menuItem.Click += menuItem_Click;
                 menuItem.AllowDrop = true;

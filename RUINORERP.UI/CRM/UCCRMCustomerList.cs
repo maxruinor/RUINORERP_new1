@@ -48,7 +48,6 @@ namespace RUINORERP.UI.CRM
             System.Linq.Expressions.Expression<Func<tb_CRM_Customer, int?>> expLeadsStatus;
             expLeadsStatus = (p) => p.CustomerStatus;
             base.ColNameDataDictionary.TryAdd(expLeadsStatus.GetMemberInfo().Name, Common.CommonHelper.Instance.GetKeyValuePairs(typeof(CustomerStatus)));
-
             DisplayTextResolver.AddFixedDictionaryMappingByEnum(t => t.CustomerStatus, typeof(CustomerStatus));
             //DisplayTextResolver.AddFixedDictionaryMappingByEnum<tb_CRM_Customer>(t => t.CustomerStatus, typeof(CustomerStatus));
 
@@ -57,7 +56,7 @@ namespace RUINORERP.UI.CRM
             System.Linq.Expressions.Expression<Func<tb_CRM_Customer, int?>> exp;
             exp = (p) => p.CustomerStatus;
             base.ColNameDataDictionary.TryAdd(exp.GetMemberInfo().Name, Common.CommonHelper.Instance.GetKeyValuePairs(typeof(CustomerStatus)));
-
+            DisplayTextResolver.AddFixedDictionaryMappingByEnum(t => t.CustomerStatus, typeof(CustomerStatus));
         }
 
         protected override Task<bool> Delete()

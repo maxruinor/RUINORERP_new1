@@ -47,7 +47,7 @@ namespace RUINORERP.UI.MRP.MP
 {
 
     //bindingSourceSub  在基在中。是普通的主子表。这里有多个子表暂时不使用基类个的这个组件。全部在子类中新建数据源。并且实现 保存  删除等功能。
-    [MenuAttrAssemblyInfo("生产需求分析", ModuleMenuDefine.模块定义.生产管理, ModuleMenuDefine.生产管理.制造规划, BizType.生产需求分析)]
+    [MenuAttrAssemblyInfo("需求分析", ModuleMenuDefine.模块定义.生产管理, ModuleMenuDefine.生产管理.制造规划, BizType.需求分析)]
     public partial class UCProduceRequirement : BaseBillEditGeneric<tb_ProductionDemand, tb_ProductionDemand>
     {
         public UCProduceRequirement()
@@ -109,7 +109,7 @@ namespace RUINORERP.UI.MRP.MP
                     entity.DataStatus = (int)DataStatus.草稿;
                     if (entity.PDNo.IsNullOrEmpty())
                     {
-                        entity.PDNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.生产需求分析);
+                        entity.PDNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.需求分析);
                     }
                     entity.AnalysisDate = System.DateTime.Now;
                     if (entity.tb_ProductionDemandDetails != null && entity.tb_ProductionDemandDetails.Count > 0)
@@ -186,7 +186,7 @@ namespace RUINORERP.UI.MRP.MP
 
                     PurItem.PropertyChanged += (sender, s2) =>
                     {
-                        //如果是计划生产单引入变化则加载明细及相关数据
+                        //如果是生产计划单引入变化则加载明细及相关数据
                         if ((entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改) && PurItem.RequirementQty > 0 && s2.PropertyName == PurItem.GetPropertyName<tb_PurGoodsRecommendDetail>(c => c.RequirementQty))
                         {
                             if (PurItem.RequirementQty < PurItem.RecommendQty)
@@ -240,7 +240,7 @@ namespace RUINORERP.UI.MRP.MP
 
             if (entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改)
             {
-                base.InitRequiredToControl(MainForm.Instance.AppContext.GetRequiredService <tb_ProductionDemandValidator> (), kryptonPanelMainInfo.Controls);
+                base.InitRequiredToControl(MainForm.Instance.AppContext.GetRequiredService<tb_ProductionDemandValidator>(), kryptonPanelMainInfo.Controls);
                 // base.InitEditItemToControl(entity, kryptonPanelMainInfo.Controls);
                 rdbis_available净需求.Enabled = true;
                 rdbis_available毛需求.Enabled = true;
@@ -267,7 +267,7 @@ namespace RUINORERP.UI.MRP.MP
                 }
 
 
-                //如果是计划生产单引入变化则加载明细及相关数据
+                //如果是生产计划单引入变化则加载明细及相关数据
                 if ((entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改) && entity.PPID > 0 && s2.PropertyName == entity.GetPropertyName<tb_ProductionDemand>(c => c.PPID))
                 {
                     await LoadPlanChildItems(entity.PPID);
@@ -622,7 +622,7 @@ namespace RUINORERP.UI.MRP.MP
         #endregion
 
         #region for 自制品建议
-    
+
         #endregion
 
 
@@ -647,7 +647,112 @@ namespace RUINORERP.UI.MRP.MP
 
             GridRelated.SetRelatedInfo<tb_ManufacturingOrder>(c => c.MONO);
             base.ControlMasterColumnsInvisible();
+
+            kryptonTreeGridViewStockLess.CellPainting += KryptonTreeGridViewStockLess_CellPainting;
+            kryptonTreeGridViewMaking.CellPainting += KryptonTreeGridViewMaking_CellPainting;
         }
+
+        #region 画行号
+
+    
+        private void KryptonTreeGridViewMaking_CellPainting(object sender, DataGridViewCellPaintingEventArgs e)
+        {
+            //这个特殊这里是第一行的行号
+            if (e.RowIndex == 0 && e.ColumnIndex == -1)
+            {
+                e.Paint(e.ClipBounds, DataGridViewPaintParts.All);
+                Rectangle indexRect = e.CellBounds;
+                indexRect.Inflate(-2, -2);
+
+                TextRenderer.DrawText(e.Graphics,
+                    (e.RowIndex + 1).ToString(),
+                    e.CellStyle.Font,
+                    indexRect,
+                    e.CellStyle.ForeColor,
+                    TextFormatFlags.Right | TextFormatFlags.VerticalCenter);
+                e.Handled = true;
+            }
+
+            if (e.RowIndex > 0)
+            {
+                #region 画行号
+                if (e.ColumnIndex >= 0 && e.RowIndex >= 0)
+                {
+                    DataGridViewPaintParts paintParts =
+                        e.PaintParts & ~DataGridViewPaintParts.Focus;
+
+                    e.Paint(e.ClipBounds, paintParts);
+                    e.Handled = true;
+                }
+
+                if (e.ColumnIndex < 0 && e.RowIndex >= 0)
+                {
+                    e.Paint(e.ClipBounds, DataGridViewPaintParts.All);
+                    Rectangle indexRect = e.CellBounds;
+                    indexRect.Inflate(-2, -2);
+
+                    TextRenderer.DrawText(e.Graphics,
+                        (e.RowIndex + 1).ToString(),
+                        e.CellStyle.Font,
+                        indexRect,
+                        e.CellStyle.ForeColor,
+                        TextFormatFlags.Right | TextFormatFlags.VerticalCenter);
+                    e.Handled = true;
+                }
+
+                #endregion
+            }
+        }
+
+        private void KryptonTreeGridViewStockLess_CellPainting(object sender, DataGridViewCellPaintingEventArgs e)
+        {
+            //这个特殊这里是第一行的行号
+            if (e.RowIndex == 0 && e.ColumnIndex == -1)
+            {
+                e.Paint(e.ClipBounds, DataGridViewPaintParts.All);
+                Rectangle indexRect = e.CellBounds;
+                indexRect.Inflate(-2, -2);
+
+                TextRenderer.DrawText(e.Graphics,
+                    (e.RowIndex + 1).ToString(),
+                    e.CellStyle.Font,
+                    indexRect,
+                    e.CellStyle.ForeColor,
+                    TextFormatFlags.Right | TextFormatFlags.VerticalCenter);
+                e.Handled = true;
+            }
+
+            if (e.RowIndex > 0)
+            {
+                #region 画行号
+                if (e.ColumnIndex >= 0 && e.RowIndex >= 0)
+                {
+                    DataGridViewPaintParts paintParts =
+                        e.PaintParts & ~DataGridViewPaintParts.Focus;
+
+                    e.Paint(e.ClipBounds, paintParts);
+                    e.Handled = true;
+                }
+
+                if (e.ColumnIndex < 0 && e.RowIndex >= 0)
+                {
+                    e.Paint(e.ClipBounds, DataGridViewPaintParts.All);
+                    Rectangle indexRect = e.CellBounds;
+                    indexRect.Inflate(-2, -2);
+
+                    TextRenderer.DrawText(e.Graphics,
+                        (e.RowIndex + 1).ToString(),
+                        e.CellStyle.Font,
+                        indexRect,
+                        e.CellStyle.ForeColor,
+                        TextFormatFlags.Right | TextFormatFlags.VerticalCenter);
+                    e.Handled = true;
+                }
+
+                #endregion
+            }
+        }
+        #endregion
         public GridViewRelated GridRelated { get; set; } = new GridViewRelated();
 
 
@@ -1373,6 +1478,10 @@ protected async override Task<ApprovalEntity> ReReview()
             }
         }
 
+        /// <summary>
+        /// 加载显示库存不足表格
+        /// </summary>
+        /// <param name="lastNeedIitems"></param>
         private void LoadTreeGridViewStockLess(List<tb_ProductionDemandDetail> lastNeedIitems)
         {
 
@@ -1644,7 +1753,7 @@ protected async override Task<ApprovalEntity> ReReview()
                 e.Value = colName;
             }
 
-            
+
             //处理创建人 修改人，因为这两个字段没有做外键。固定的所以可以统一处理
 
         }
@@ -1737,7 +1846,7 @@ protected async override Task<ApprovalEntity> ReReview()
             //生成请购单  请购单，可以来自于其他入口。所以这里不能用导航查询。只能主动查询
             //如果这个已经审核并且没有生成过请购单。这里可以显示，否则为灰色
             tb_BuyingRequisitionController<tb_BuyingRequisition> ctrBuy = Startup.GetFromFac<tb_BuyingRequisitionController<tb_BuyingRequisition>>();
-            bool IsCreatePurRequisition = await ctrBuy.IsExistAsync(c => c.RefBillID == EditEntity.PDID && c.RefBizType == (int)BizType.生产需求分析);
+            bool IsCreatePurRequisition = await ctrBuy.IsExistAsync(c => c.RefBillID == EditEntity.PDID && c.RefBizType == (int)BizType.需求分析);
             if (IsCreatePurRequisition)
             {
                 MainForm.Instance.uclog.AddLog("当前单据已经生成过请购单，无法重复生成");
@@ -1905,7 +2014,13 @@ protected async override Task<ApprovalEntity> ReReview()
                         subMaking.ProdDetailID = detail.ProdDetailID;
                         subMaking.property = detail.view_ProdDetail.prop;
                         subMaking.Location_ID = Location_ID;
-                        //subMaking.PreEndDate= SubItem.RequirementDate
+
+                        //计划还要看有不有物料 。没有还要算出采购时间，还要按产品排程所以这里计算复杂。
+                        //暂时给一个大约时间
+                        subMaking.PreStartDate = DateTime.Now.AddDays(3);
+
+                        subMaking.PreEndDate = SubItem.RequirementDate.AddDays(-1);
+
                         subMaking.UnitCost = detail.UnitCost;
                         decimal needQty = NeedQuantity * detail.UsedQty / bomOutQty;
 
@@ -2183,11 +2298,11 @@ protected async override Task<ApprovalEntity> ReReview()
                             //同时要更新其子级的材料用量
                             KryptonTreeGridNodeRow tgn = ktgv.CurrentNode.Parent;
                             tb_ProduceGoodsRecommendDetail Prow = EditEntity.tb_ProduceGoodsRecommendDetails.FirstOrDefault(c => c.ParentId == ID);
-                            if (Prow!= null)
+                            if (Prow != null)
                             {
                                 updateSubItem(row, Prow);
                             }
-                            
+
                         }
                         else
                         {
@@ -2230,9 +2345,9 @@ protected async override Task<ApprovalEntity> ReReview()
             //要通过上级BOM找到BOM明细再算出对应的数量,里面可能存在已经累计过的。相同的物料。这里只是算出差值。直接减掉。
             if (Prow.BOM_ID.HasValue)
             {
-                if (Prow.tb_bom_s==null)
+                if (Prow.tb_bom_s == null)
                 {
-                    Prow.tb_bom_s= await MainForm.Instance.AppContext.Db.Queryable<tb_BOM_S>().Where(c=>c.BOM_ID==Prow.BOM_ID.Value).FirstAsync();
+                    Prow.tb_bom_s = await MainForm.Instance.AppContext.Db.Queryable<tb_BOM_S>().Where(c => c.BOM_ID == Prow.BOM_ID.Value).FirstAsync();
                 }
                 decimal bomOutQty = Prow.tb_bom_s.OutputQty;
                 foreach (var item in EditEntity.tb_PurGoodsRecommendDetails)

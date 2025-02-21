@@ -37,6 +37,7 @@ namespace RUINORERP.UI.CRM
             System.Linq.Expressions.Expression<Func<tb_CRM_FollowUpRecords, int?>> exp;
             exp = (p) => p.FollowUpMethod;
             base.ColNameDataDictionary.TryAdd(exp.GetMemberInfo().Name, Common.CommonHelper.Instance.GetKeyValuePairs(typeof(FollowUpMethod)));
+            DisplayTextResolver.AddFixedDictionaryMappingByEnum(t => t.FollowUpMethod, typeof(FollowUpMethod));
         }
         //public override void QueryConditionBuilder()
         //{

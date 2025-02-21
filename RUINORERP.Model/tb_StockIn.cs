@@ -57,6 +57,7 @@ namespace RUINORERP.Model
         /// </summary>
         [AdvQueryAttribute(ColName = "Type_ID",ColDesc = "入库类型")] 
         [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Type_ID" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "入库类型" )]
+        [FKRelationAttribute("tb_OutInStockType", "Type_ID")]
         public long Type_ID
         { 
             get{return _Type_ID;}

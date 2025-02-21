@@ -2563,9 +2563,19 @@ namespace RUINORERP.UI.UCSourceGrid
                                                         ConcurrentDictionary<string, string> names = new ConcurrentDictionary<string, string>();
                                                         foreach (var titem in tlist)
                                                         {
-                                                            string id = ReflectionHelper.GetPropertyValue(titem, ColID).ToString();
-                                                            ids.Add(id.ToString());
-                                                            names.TryAdd(id, ReflectionHelper.GetPropertyValue(titem, ColName).ToString());
+                                                            if (titem is JObject)
+                                                            {
+                                                                string id = titem[ColID].ToString();
+                                                                ids.Add(id.ToString());
+                                                                names.TryAdd(id, titem[ColName].ToString());
+                                                            }
+                                                            else
+                                                            {
+                                                                string id = ReflectionHelper.GetPropertyValue(titem, ColID).ToString();
+                                                                ids.Add(id.ToString());
+                                                                names.TryAdd(id, ReflectionHelper.GetPropertyValue(titem, ColName).ToString());
+                                                            }
+
                                                         }
 
 
@@ -3862,7 +3872,11 @@ namespace RUINORERP.UI.UCSourceGrid
 
                                 //目标存于明细中。是保存进数据库的
                                 int newTargetIndex = sgdefine.grid.Columns.GetColumnInfo(qtc.Value.UniqueId).Index;
-                                ReflectionHelper.SetPropertyValue(currentObj, qtc.Value.ColName, newTagetValue);
+                                if (newTagetValue != null && newTagetValue.ToString() != "")
+                                {
+                                    ReflectionHelper.SetPropertyValue(currentObj, qtc.Value.ColName, newTagetValue);
+                                }
+                                
                                 sgdefine.grid[p.Row, newTargetIndex].Value = newTagetValue;
 
                             }
@@ -3930,7 +3944,14 @@ namespace RUINORERP.UI.UCSourceGrid
 
                             //目标存于明细中。是保存进数据库的
                             int newTargetIndex = sgdefine.grid.Columns.GetColumnInfo(sgdefine.PointToColumnPairList[item].UniqueId).Index;
-                            ReflectionHelper.SetPropertyValue(currentObj, sgdefine.PointToColumnPairList[item].ColName, newValue);
+                            if (newValue != null && !string.IsNullOrEmpty(newValue.ToString()))
+                            {
+                                if (sgdefine.PointToColumnPairList[item].ColName == "BOM_ID")
+                                {
+
+                                }
+                                ReflectionHelper.SetPropertyValue(currentObj, sgdefine.PointToColumnPairList[item].ColName, newValue);
+                            }
                             sgdefine.grid[pt.Row, newTargetIndex].Value = newValue;
 
                         }

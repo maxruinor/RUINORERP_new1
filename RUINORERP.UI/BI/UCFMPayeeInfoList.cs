@@ -22,6 +22,7 @@ using SqlSugar;
 using RUINORERP.Business.Security;
 using NPOI.SS.Formula.Functions;
 using NPOI.SS.Formula;
+using RUINORERP.Global;
 
 namespace RUINORERP.UI.BI
 {
@@ -38,7 +39,7 @@ namespace RUINORERP.UI.BI
             System.Linq.Expressions.Expression<Func<tb_FM_PayeeInfo, int?>> exprCheckMode;
             exprCheckMode = (p) => p.Account_type;
             base.ColNameDataDictionary.TryAdd(exprCheckMode.GetMemberInfo().Name, Common.CommonHelper.Instance.GetKeyValuePairs(typeof(AccountType)));
-
+            DisplayTextResolver.AddFixedDictionaryMappingByEnum(t => t.Account_type, typeof(AccountType));
         }
 
 

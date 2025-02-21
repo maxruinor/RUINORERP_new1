@@ -36,6 +36,7 @@ namespace RUINORERP.UI.BI
             {
                 _EditEntity.DepartmentCode = BizCodeGenerator.Instance.GetBaseInfoNo(BaseInfoType.Department);
             }
+            DataBindingHelper.BindData4TextBox<tb_Department>(entity, t => t.DepartmentCode, txtDepartmentCode, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_Department>(entity, t => t.DepartmentName, txtDepartmentName, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4Cmb<tb_Company>(entity, k => k.ID, v => v.CNName, cmbCompnay);
             DataBindingHelper.BindData4TextBox<tb_Department>(entity, t => t.Notes, txtNotes, BindDataType4TextBox.Text, false);

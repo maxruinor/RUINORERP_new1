@@ -79,6 +79,7 @@ namespace RUINORERP.UI.MRP.MP
 
             if (entity != null)
             {
+                cmbCustomerVendor_ID.Visible = entity.Outgoing;
                 if (entity.MR_ID > 0)
                 {
                     entity.PrimaryKeyID = entity.MR_ID;
@@ -175,18 +176,40 @@ namespace RUINORERP.UI.MRP.MP
                 }
 
                 //如果是制令单引入变化则加载明细及相关数据
-                if ((entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改) && entity.MOID > 0 && s2.PropertyName == entity.GetPropertyName<tb_MaterialRequisition>(c => c.MOID))
+                if ((entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改))
                 {
-                    LoadChildItems(entity.MOID);
-                    ToolBarEnabledControl(entity);
+                    if (entity.MOID > 0 && s2.PropertyName == entity.GetPropertyName<tb_MaterialRequisition>(c => c.MOID))
+                    {
+                        LoadChildItems(entity.MOID);
+                    }
                     if (s2.PropertyName == entity.GetPropertyName<tb_MaterialRequisition>(c => c.DepartmentID))
                     {
-                        if (cmbDepartmentID.SelectedIndex == -1)
+                        if (cmbDepartmentID.SelectedIndex == 0)
                         {
-                            entity.DepartmentID=null;
+                            entity.DepartmentID = null;
+                        }
+                    }
+                    if (s2.PropertyName == entity.GetPropertyName<tb_MaterialRequisition>(c => c.CustomerVendor_ID))
+                    {
+                        if (cmbCustomerVendor_ID.SelectedIndex == 0)
+                        {
+                            entity.CustomerVendor_ID = null;
+                        }
+                    }
+                    if (s2.PropertyName == entity.GetPropertyName<tb_MaterialRequisition>(c => c.Outgoing))
+                    {
+                        cmbCustomerVendor_ID.Visible = entity.Outgoing;
+                        if (entity.Outgoing)
+                        {
+                            entity.DepartmentID = null;
+                        }
+                        else
+                        {
+                            cmbCustomerVendor_ID.Visible = false;
                         }
                     }
 
+                    ToolBarEnabledControl(entity);
                 }
 
 

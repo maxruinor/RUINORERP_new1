@@ -78,6 +78,7 @@ namespace RUINORERP.UI.MRP.MP
 
             if (entity != null)
             {
+                cmbCustomerVendor_ID.Visible = entity.IsOutSourced;
                 if (entity.MOID > 0)
                 {
                     entity.PrimaryKeyID = entity.MOID;
@@ -1011,7 +1012,6 @@ protected override void Print()
 
         private void chkIsOutSourced_CheckedChanged(object sender, EventArgs e)
         {
-            lblCustomerVendor_ID.Visible = chkIsOutSourced.Checked;
             cmbCustomerVendor_ID_Out.Visible = chkIsOutSourced.Checked;
         }
 

@@ -77,10 +77,12 @@ namespace RUINORERP.UI.MRP.MP
 
             if (entity != null)
             {
+                cmbCustomerVendor_ID.Visible = entity.Outgoing;
                 if (entity.MRE_ID > 0)
                 {
                     entity.PrimaryKeyID = entity.MRE_ID;
                     entity.ActionStatus = ActionStatus.加载;
+                   
                     // entity.DataStatus = (int)DataStatus.确认;
                     //如果审核了，审核要灰色
                 }
@@ -151,9 +153,39 @@ namespace RUINORERP.UI.MRP.MP
                 }
 
                 //如果是制令单引入变化则加载明细及相关数据
-                if ((entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改) && entity.MR_ID > 0 && s2.PropertyName == entity.GetPropertyName<tb_MaterialReturn>(c => c.MR_ID))
+                if (entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改)
                 {
-                    LoadChildItems(entity.MR_ID);
+                    if (entity.MR_ID > 0 && s2.PropertyName == entity.GetPropertyName<tb_MaterialReturn>(c => c.MR_ID))
+                    {
+                        LoadChildItems(entity.MR_ID);
+                    }
+                    if (s2.PropertyName == entity.GetPropertyName<tb_MaterialReturn>(c => c.DepartmentID))
+                    {
+                        if (cmbDepartmentID.SelectedIndex == 0)
+                        {
+                            entity.DepartmentID = null;
+                        }
+                    }
+                    if (s2.PropertyName == entity.GetPropertyName<tb_MaterialReturn>(c => c.CustomerVendor_ID))
+                    {
+                        if (cmbCustomerVendor_ID.SelectedIndex == 0)
+                        {
+                            entity.CustomerVendor_ID = null;
+                        }
+                    }
+                    if (s2.PropertyName == entity.GetPropertyName<tb_MaterialReturn>(c => c.Outgoing))
+                    {
+                        cmbCustomerVendor_ID.Visible = entity.Outgoing;
+                        if (entity.Outgoing)
+                        {
+                            entity.DepartmentID = null;
+                        }
+                        else
+                        {
+                            cmbCustomerVendor_ID.Visible = false;
+                        }
+                    }
+                    ToolBarEnabledControl(entity);
                 }
 
                 //数据状态变化会影响按钮变化
@@ -204,7 +236,7 @@ namespace RUINORERP.UI.MRP.MP
              .And(t => t.DataStatus == (int)DataStatus.确认)
               .And(t => t.isdeleted == false)
              .ToExpression();//注意 这一句 不能少
-            //如果有限制则设置一下 但是注意 不应该在这设置，灵活的应该是在调用层设置
+                             //如果有限制则设置一下 但是注意 不应该在这设置，灵活的应该是在调用层设置
             queryFilter.SetFieldLimitCondition(lambdaOrder);
 
             DataBindingHelper.InitFilterForControlByExp<tb_MaterialRequisition>(entity, txtRefNO, c => c.MaterialRequisitionNO, queryFilter);
@@ -466,16 +498,16 @@ namespace RUINORERP.UI.MRP.MP
         }
         /*
 
-protected async override Task<ApprovalEntity> Review()
-{
-    if (EditEntity == null)
-    {
+        protected async override Task<ApprovalEntity> Review()
+        {
+        if (EditEntity == null)
+        {
         return null;
-    }
+        }
 
-    //如果已经审核通过，则不能重复审核
-    if (EditEntity.ApprovalStatus.HasValue)
-    {
+        //如果已经审核通过，则不能重复审核
+        if (EditEntity.ApprovalStatus.HasValue)
+        {
         if (EditEntity.ApprovalStatus.Value == (int)ApprovalStatus.已审核)
         {
             if (EditEntity.ApprovalResults.HasValue && EditEntity.ApprovalResults.Value)
@@ -484,42 +516,42 @@ protected async override Task<ApprovalEntity> Review()
                 return null;
             }
         }
-    }
+        }
 
-    if (EditEntity.tb_MaterialReturnDetails == null || EditEntity.tb_MaterialReturnDetails.Count == 0)
-    {
+        if (EditEntity.tb_MaterialReturnDetails == null || EditEntity.tb_MaterialReturnDetails.Count == 0)
+        {
         MainForm.Instance.uclog.AddLog("单据中没有明细数据，请确认录入了完整产品数量和金额数据。", UILogType.警告);
         return null;
-    }
+        }
 
-    RevertCommand command = new RevertCommand();
-    //缓存当前编辑的对象。如果撤销就回原来的值
-    tb_MaterialReturn oldobj = CloneHelper.DeepCloneObject<tb_MaterialReturn>(EditEntity);
-    command.UndoOperation = delegate ()
-    {
+        RevertCommand command = new RevertCommand();
+        //缓存当前编辑的对象。如果撤销就回原来的值
+        tb_MaterialReturn oldobj = CloneHelper.DeepCloneObject<tb_MaterialReturn>(EditEntity);
+        command.UndoOperation = delegate ()
+        {
         //Undo操作会执行到的代码 意思是如果退审核，内存中审核的数据要变为空白（之前的样子）
         CloneHelper.SetValues<tb_MaterialReturn>(EditEntity, oldobj);
-    };
-    ApprovalEntity ae = await base.Review();
-    if (EditEntity == null)
-    {
+        };
+        ApprovalEntity ae = await base.Review();
+        if (EditEntity == null)
+        {
         return null;
-    }
-    if (ae.ApprovalStatus == (int)ApprovalStatus.未审核)
-    {
+        }
+        if (ae.ApprovalStatus == (int)ApprovalStatus.未审核)
+        {
         return null;
-    }
-    //ReturnResults<tb_Stocktake> rmr = new ReturnResults<tb_Stocktake>();
-    // BaseController<T> ctr = Startup.GetFromFacByName<BaseController<T>>(typeof(T).Name + "Controller");
-    //因为只需要更新主表
-    //rmr = await ctr.BaseSaveOrUpdate(EditEntity);
-    // rmr = await ctr.BaseSaveOrUpdateWithChild<T>(EditEntity);
-    tb_MaterialReturnController<tb_MaterialReturn> ctr = Startup.GetFromFac<tb_MaterialReturnController<tb_MaterialReturn>>();
-    List<tb_MaterialReturn> entitys = new List<tb_MaterialReturn>();
-    entitys.Add(EditEntity);
-    ReturnResults<bool> rmrs = await ctr.BatchApprovalAsync(entitys, ae);
-    if (rmrs.Succeeded)
-    {
+        }
+        //ReturnResults<tb_Stocktake> rmr = new ReturnResults<tb_Stocktake>();
+        // BaseController<T> ctr = Startup.GetFromFacByName<BaseController<T>>(typeof(T).Name + "Controller");
+        //因为只需要更新主表
+        //rmr = await ctr.BaseSaveOrUpdate(EditEntity);
+        // rmr = await ctr.BaseSaveOrUpdateWithChild<T>(EditEntity);
+        tb_MaterialReturnController<tb_MaterialReturn> ctr = Startup.GetFromFac<tb_MaterialReturnController<tb_MaterialReturn>>();
+        List<tb_MaterialReturn> entitys = new List<tb_MaterialReturn>();
+        entitys.Add(EditEntity);
+        ReturnResults<bool> rmrs = await ctr.BatchApprovalAsync(entitys, ae);
+        if (rmrs.Succeeded)
+        {
         //if (MainForm.Instance.WorkflowItemlist.ContainsKey(""))
         //{
 
@@ -536,80 +568,80 @@ protected async override Task<ApprovalEntity> Review()
         {
             toolStripbtnReview.Enabled = true;
         }
-    }
-    else
-    {
+        }
+        else
+        {
         //审核失败 要恢复之前的值
         command.Undo();
         MainForm.Instance.PrintInfoLog($"{ae.bizName}:{ae.BillNo}审核失败,原因是：{rmrs.ErrorMsg},如果无法解决，请联系管理员！", Color.Red);
-    }
-    return ae;
-}
+        }
+        return ae;
+        }
 
 
-protected override void Print()
-{
-    //base.Print();
-    //return;
-    //if (_EditEntity == null)
-    //{
-    //    return;
-    //    _EditEntity = new tb_Stocktake();
-    //}
-    //List<tb_Stocktake> main = new List<tb_Stocktake>();
-    ////公共产品数据部分
-    //List<tb_Product> products = new List<tb_Product>();
-    //foreach (tb_StocktakeDetail item in details)
-    //{
-    //    //载入数据就是相对完整的
-    //    tb_Product prod = list.Find(p => p.Product_ID == item.Product_ID);
-    //    if (prod != null)
-    //    {
-    //        item.tb_Product = prod;
-    //    }
-    //}
+        protected override void Print()
+        {
+        //base.Print();
+        //return;
+        //if (_EditEntity == null)
+        //{
+        //    return;
+        //    _EditEntity = new tb_Stocktake();
+        //}
+        //List<tb_Stocktake> main = new List<tb_Stocktake>();
+        ////公共产品数据部分
+        //List<tb_Product> products = new List<tb_Product>();
+        //foreach (tb_StocktakeDetail item in details)
+        //{
+        //    //载入数据就是相对完整的
+        //    tb_Product prod = list.Find(p => p.Product_ID == item.Product_ID);
+        //    if (prod != null)
+        //    {
+        //        item.tb_Product = prod;
+        //    }
+        //}
 
-    //_EditEntity.tb_StocktakeDetail = details;
-    // main.Add(_EditEntity);
-    //FastReport.Report FReport;
-    //FReport = new FastReport.Report();
-    //FReport.RegisterData(details, "Main");
-    //String reportFile = "SOB.frx";
-    //RptPreviewForm frm = new RptPreviewForm();
-    //frm.ReprotfileName = reportFile;
-    //frm.MyReport = FReport;
-    //frm.ShowDialog();
-
-
-    //List<tb_Stocktake> main = new List<tb_Stocktake>();
-    ////公共产品数据部分
-    //List<View_ProdDetail> products = new List<tb_Product>();
-    //foreach (tb_StocktakeDetail item in details)
-    //{
-    //    //载入数据就是相对完整的
-    //    tb_Product prod = list.Find(p => p.Product_ID == item.Product_ID);
-    //    if (prod != null)
-    //    {
-    //        item.tb_Product = prod;
-    //    }
-    //}
-
-    //_EditEntity.tb_StocktakeDetail = details;
-    //main.Add(_EditEntity);
+        //_EditEntity.tb_StocktakeDetail = details;
+        // main.Add(_EditEntity);
+        //FastReport.Report FReport;
+        //FReport = new FastReport.Report();
+        //FReport.RegisterData(details, "Main");
+        //String reportFile = "SOB.frx";
+        //RptPreviewForm frm = new RptPreviewForm();
+        //frm.ReprotfileName = reportFile;
+        //frm.MyReport = FReport;
+        //frm.ShowDialog();
 
 
-    FastReport.Report FReport;
-    FReport = new FastReport.Report();
-    FReport.RegisterData(details, "Main");
-    String reportFile = typeof(tb_MaterialReturn).Name + ".frx";
-    RptPreviewForm frm = new RptPreviewForm();
-    frm.ReprotfileName = reportFile;
-    frm.MyReport = FReport;
-    frm.ShowDialog();
+        //List<tb_Stocktake> main = new List<tb_Stocktake>();
+        ////公共产品数据部分
+        //List<View_ProdDetail> products = new List<tb_Product>();
+        //foreach (tb_StocktakeDetail item in details)
+        //{
+        //    //载入数据就是相对完整的
+        //    tb_Product prod = list.Find(p => p.Product_ID == item.Product_ID);
+        //    if (prod != null)
+        //    {
+        //        item.tb_Product = prod;
+        //    }
+        //}
+
+        //_EditEntity.tb_StocktakeDetail = details;
+        //main.Add(_EditEntity);
 
 
-}
-*/
+        FastReport.Report FReport;
+        FReport = new FastReport.Report();
+        FReport.RegisterData(details, "Main");
+        String reportFile = typeof(tb_MaterialReturn).Name + ".frx";
+        RptPreviewForm frm = new RptPreviewForm();
+        frm.ReprotfileName = reportFile;
+        frm.MyReport = FReport;
+        frm.ShowDialog();
+
+
+        }
+        */
 
         //protected override void Print()
         //{
@@ -876,11 +908,6 @@ protected override void Print()
                 BindData(entity, actionStatus);
             }
         }
-
-        private void chkOutgoing_CheckedChanged(object sender, EventArgs e)
-        {
-            lblCustomerVendor_ID.Visible = chkOutgoing.Checked;
-            cmbCustomerVendor_ID.Visible = chkOutgoing.Checked;
-        }
+       
     }
 }

@@ -64,7 +64,6 @@
             this.cmbCustomerVendor_ID = new Krypton.Toolkit.KryptonComboBox();
             this.lblIsOutSourced = new Krypton.Toolkit.KryptonLabel();
             this.chkIsOutSourced = new Krypton.Toolkit.KryptonCheckBox();
-            this.lblCustomerVendor_ID = new Krypton.Toolkit.KryptonLabel();
             this.cmbCustomerVendor_ID_Out = new Krypton.Toolkit.KryptonComboBox();
             this.lblTotalManuFee = new Krypton.Toolkit.KryptonLabel();
             this.txtTotalManuFee = new Krypton.Toolkit.KryptonTextBox();
@@ -177,7 +176,6 @@
             this.kryptonPanelMainInfo.Controls.Add(this.cmbCustomerVendor_ID);
             this.kryptonPanelMainInfo.Controls.Add(this.lblIsOutSourced);
             this.kryptonPanelMainInfo.Controls.Add(this.chkIsOutSourced);
-            this.kryptonPanelMainInfo.Controls.Add(this.lblCustomerVendor_ID);
             this.kryptonPanelMainInfo.Controls.Add(this.cmbCustomerVendor_ID_Out);
             this.kryptonPanelMainInfo.Controls.Add(this.lblTotalManuFee);
             this.kryptonPanelMainInfo.Controls.Add(this.txtTotalManuFee);
@@ -338,9 +336,9 @@
             // 
             this.cmbUnit.DropDownWidth = 100;
             this.cmbUnit.IntegralHeight = false;
-            this.cmbUnit.Location = new System.Drawing.Point(646, 147);
+            this.cmbUnit.Location = new System.Drawing.Point(626, 147);
             this.cmbUnit.Name = "cmbUnit";
-            this.cmbUnit.Size = new System.Drawing.Size(147, 21);
+            this.cmbUnit.Size = new System.Drawing.Size(181, 21);
             this.cmbUnit.TabIndex = 205;
             // 
             // txtWorkingHour
@@ -354,9 +352,9 @@
             // 
             this.cmbEmployee_ID.DropDownWidth = 100;
             this.cmbEmployee_ID.IntegralHeight = false;
-            this.cmbEmployee_ID.Location = new System.Drawing.Point(646, 43);
+            this.cmbEmployee_ID.Location = new System.Drawing.Point(626, 43);
             this.cmbEmployee_ID.Name = "cmbEmployee_ID";
-            this.cmbEmployee_ID.Size = new System.Drawing.Size(147, 21);
+            this.cmbEmployee_ID.Size = new System.Drawing.Size(181, 21);
             this.cmbEmployee_ID.TabIndex = 204;
             // 
             // lblWorkingHour
@@ -386,7 +384,7 @@
             // 
             // kryptonLabel8
             // 
-            this.kryptonLabel8.Location = new System.Drawing.Point(604, 147);
+            this.kryptonLabel8.Location = new System.Drawing.Point(584, 147);
             this.kryptonLabel8.Name = "kryptonLabel8";
             this.kryptonLabel8.Size = new System.Drawing.Size(36, 20);
             this.kryptonLabel8.TabIndex = 200;
@@ -394,7 +392,7 @@
             // 
             // kryptonLabel7
             // 
-            this.kryptonLabel7.Location = new System.Drawing.Point(604, 119);
+            this.kryptonLabel7.Location = new System.Drawing.Point(584, 119);
             this.kryptonLabel7.Name = "kryptonLabel7";
             this.kryptonLabel7.Size = new System.Drawing.Size(36, 20);
             this.kryptonLabel7.TabIndex = 198;
@@ -402,9 +400,9 @@
             // 
             // txtproperty
             // 
-            this.txtproperty.Location = new System.Drawing.Point(646, 118);
+            this.txtproperty.Location = new System.Drawing.Point(626, 118);
             this.txtproperty.Name = "txtproperty";
-            this.txtproperty.Size = new System.Drawing.Size(147, 23);
+            this.txtproperty.Size = new System.Drawing.Size(181, 23);
             this.txtproperty.TabIndex = 199;
             // 
             // kryptonLabel5
@@ -463,7 +461,7 @@
             // 
             // lblIsOutSourced
             // 
-            this.lblIsOutSourced.Location = new System.Drawing.Point(604, 168);
+            this.lblIsOutSourced.Location = new System.Drawing.Point(584, 174);
             this.lblIsOutSourced.Name = "lblIsOutSourced";
             this.lblIsOutSourced.Size = new System.Drawing.Size(36, 20);
             this.lblIsOutSourced.TabIndex = 188;
@@ -471,29 +469,20 @@
             // 
             // chkIsOutSourced
             // 
-            this.chkIsOutSourced.Location = new System.Drawing.Point(649, 173);
+            this.chkIsOutSourced.Location = new System.Drawing.Point(629, 178);
             this.chkIsOutSourced.Name = "chkIsOutSourced";
             this.chkIsOutSourced.Size = new System.Drawing.Size(19, 13);
             this.chkIsOutSourced.TabIndex = 189;
             this.chkIsOutSourced.Values.Text = "";
             this.chkIsOutSourced.CheckedChanged += new System.EventHandler(this.chkIsOutSourced_CheckedChanged);
             // 
-            // lblCustomerVendor_ID
-            // 
-            this.lblCustomerVendor_ID.Location = new System.Drawing.Point(578, 192);
-            this.lblCustomerVendor_ID.Name = "lblCustomerVendor_ID";
-            this.lblCustomerVendor_ID.Size = new System.Drawing.Size(62, 20);
-            this.lblCustomerVendor_ID.TabIndex = 186;
-            this.lblCustomerVendor_ID.Values.Text = "外发厂商";
-            this.lblCustomerVendor_ID.Visible = false;
-            // 
             // cmbCustomerVendor_ID_Out
             // 
             this.cmbCustomerVendor_ID_Out.DropDownWidth = 100;
             this.cmbCustomerVendor_ID_Out.IntegralHeight = false;
-            this.cmbCustomerVendor_ID_Out.Location = new System.Drawing.Point(646, 191);
+            this.cmbCustomerVendor_ID_Out.Location = new System.Drawing.Point(653, 174);
             this.cmbCustomerVendor_ID_Out.Name = "cmbCustomerVendor_ID_Out";
-            this.cmbCustomerVendor_ID_Out.Size = new System.Drawing.Size(147, 21);
+            this.cmbCustomerVendor_ID_Out.Size = new System.Drawing.Size(154, 21);
             this.cmbCustomerVendor_ID_Out.TabIndex = 187;
             this.cmbCustomerVendor_ID_Out.Visible = false;
             // 
@@ -618,7 +607,7 @@
             // 
             // lblEmployee_ID
             // 
-            this.lblEmployee_ID.Location = new System.Drawing.Point(591, 43);
+            this.lblEmployee_ID.Location = new System.Drawing.Point(571, 43);
             this.lblEmployee_ID.Name = "lblEmployee_ID";
             this.lblEmployee_ID.Size = new System.Drawing.Size(49, 20);
             this.lblEmployee_ID.TabIndex = 147;
@@ -626,7 +615,7 @@
             // 
             // kryptonLabel3
             // 
-            this.kryptonLabel3.Location = new System.Drawing.Point(578, 91);
+            this.kryptonLabel3.Location = new System.Drawing.Point(558, 91);
             this.kryptonLabel3.Name = "kryptonLabel3";
             this.kryptonLabel3.Size = new System.Drawing.Size(62, 20);
             this.kryptonLabel3.TabIndex = 145;
@@ -636,9 +625,9 @@
             // 
             this.cmbDepartment.DropDownWidth = 100;
             this.cmbDepartment.IntegralHeight = false;
-            this.cmbDepartment.Location = new System.Drawing.Point(646, 91);
+            this.cmbDepartment.Location = new System.Drawing.Point(626, 91);
             this.cmbDepartment.Name = "cmbDepartment";
-            this.cmbDepartment.Size = new System.Drawing.Size(147, 21);
+            this.cmbDepartment.Size = new System.Drawing.Size(181, 21);
             this.cmbDepartment.TabIndex = 146;
             // 
             // lblDataStatus
@@ -691,9 +680,9 @@
             // 
             this.cmbPriority.DropDownWidth = 100;
             this.cmbPriority.IntegralHeight = false;
-            this.cmbPriority.Location = new System.Drawing.Point(646, 67);
+            this.cmbPriority.Location = new System.Drawing.Point(626, 67);
             this.cmbPriority.Name = "cmbPriority";
-            this.cmbPriority.Size = new System.Drawing.Size(147, 21);
+            this.cmbPriority.Size = new System.Drawing.Size(181, 21);
             this.cmbPriority.TabIndex = 95;
             // 
             // lbl销售订单
@@ -709,7 +698,7 @@
             // 
             // lblPriority
             // 
-            this.lblPriority.Location = new System.Drawing.Point(578, 67);
+            this.lblPriority.Location = new System.Drawing.Point(558, 67);
             this.lblPriority.Name = "lblPriority";
             this.lblPriority.Size = new System.Drawing.Size(62, 20);
             this.lblPriority.TabIndex = 91;
@@ -849,7 +838,6 @@
         private Krypton.Toolkit.KryptonTextBox txtMachineHour;
         private Krypton.Toolkit.KryptonLabel lblTotalManuFee;
         private Krypton.Toolkit.KryptonTextBox txtTotalManuFee;
-        private Krypton.Toolkit.KryptonLabel lblCustomerVendor_ID;
         private Krypton.Toolkit.KryptonComboBox cmbCustomerVendor_ID_Out;
         private Krypton.Toolkit.KryptonLabel lblIsOutSourced;
         private Krypton.Toolkit.KryptonCheckBox chkIsOutSourced;

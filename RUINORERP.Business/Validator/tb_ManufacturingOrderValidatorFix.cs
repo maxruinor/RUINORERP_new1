@@ -34,6 +34,9 @@ namespace RUINORERP.Business
             RuleFor(x => x.DepartmentID).Must(CheckForeignKeyValueCanNull)
                 .When(x => x.IsOutSourced == false)
                 .WithMessage("生产部门:非外发时，生产部门必须选择。");
+            RuleFor(x => x.DepartmentID).NotNull()
+                .When(x => x.IsOutSourced == false)
+                .WithMessage("生产部门:非外发时，生产部门必须选择。");
 
             RuleFor(x => x.PreStartDate)
           .Custom((value, context) =>

@@ -88,7 +88,7 @@ namespace RUINORERP.Business
 
  RuleFor(tb_ManufacturingOrder =>tb_ManufacturingOrder.Location_ID).Must(CheckForeignKeyValue).WithMessage("预入库位:下拉选择值不正确。");
 
- RuleFor(tb_ManufacturingOrder =>tb_ManufacturingOrder.DepartmentID).Must(CheckForeignKeyValue).WithMessage("需求部门:下拉选择值不正确。");
+ RuleFor(tb_ManufacturingOrder =>tb_ManufacturingOrder.DepartmentID).Must(CheckForeignKeyValueCanNull).WithMessage("需求部门:下拉选择值不正确。");
 
  RuleFor(tb_ManufacturingOrder =>tb_ManufacturingOrder.CustomerVendor_ID_Out).NotEmpty().When(x => x.CustomerVendor_ID_Out.HasValue);
 

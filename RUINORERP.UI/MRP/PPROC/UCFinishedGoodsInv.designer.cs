@@ -29,6 +29,8 @@
         private void InitializeComponent()
         {
             this.kryptonSplitContainer1 = new Krypton.Toolkit.KryptonSplitContainer();
+            this.kryptonLabel1 = new Krypton.Toolkit.KryptonLabel();
+            this.txtTotalQty = new Krypton.Toolkit.KryptonTextBox();
             this.lblTotalNetMachineHours = new Krypton.Toolkit.KryptonLabel();
             this.txtTotalNetMachineHours = new Krypton.Toolkit.KryptonTextBox();
             this.lblGeneEvidence = new Krypton.Toolkit.KryptonLabel();
@@ -57,7 +59,6 @@
             this.cmbEmployee_ID = new Krypton.Toolkit.KryptonComboBox();
             this.lblDepartmentID = new Krypton.Toolkit.KryptonLabel();
             this.cmbDepartmentID = new Krypton.Toolkit.KryptonComboBox();
-            this.lblCustomerVendor_ID = new Krypton.Toolkit.KryptonLabel();
             this.cmbCustomerVendor_ID = new Krypton.Toolkit.KryptonComboBox();
             this.lblDeliveryDate = new Krypton.Toolkit.KryptonLabel();
             this.dtpDeliveryDate = new Krypton.Toolkit.KryptonDateTimePicker();
@@ -69,8 +70,8 @@
             this.lbl盘点单 = new Krypton.Toolkit.KryptonLabel();
             this.kryptonSplitContainer2 = new Krypton.Toolkit.KryptonSplitContainer();
             this.grid1 = new SourceGrid.Grid();
-            this.kryptonLabel1 = new Krypton.Toolkit.KryptonLabel();
-            this.txtTotalQty = new Krypton.Toolkit.KryptonTextBox();
+            this.lblIsOutSourced = new Krypton.Toolkit.KryptonLabel();
+            this.chkIsOutSourced = new Krypton.Toolkit.KryptonCheckBox();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceSub)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1)).BeginInit();
@@ -99,6 +100,8 @@
             // 
             // kryptonSplitContainer1.Panel1
             // 
+            this.kryptonSplitContainer1.Panel1.Controls.Add(this.lblIsOutSourced);
+            this.kryptonSplitContainer1.Panel1.Controls.Add(this.chkIsOutSourced);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.kryptonLabel1);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.txtTotalQty);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.lblTotalNetMachineHours);
@@ -129,7 +132,6 @@
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.cmbEmployee_ID);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.lblDepartmentID);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.cmbDepartmentID);
-            this.kryptonSplitContainer1.Panel1.Controls.Add(this.lblCustomerVendor_ID);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.cmbCustomerVendor_ID);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.lblDeliveryDate);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.dtpDeliveryDate);
@@ -146,6 +148,21 @@
             this.kryptonSplitContainer1.Size = new System.Drawing.Size(1133, 746);
             this.kryptonSplitContainer1.SplitterDistance = 219;
             this.kryptonSplitContainer1.TabIndex = 4;
+            // 
+            // kryptonLabel1
+            // 
+            this.kryptonLabel1.Location = new System.Drawing.Point(743, 121);
+            this.kryptonLabel1.Name = "kryptonLabel1";
+            this.kryptonLabel1.Size = new System.Drawing.Size(49, 20);
+            this.kryptonLabel1.TabIndex = 175;
+            this.kryptonLabel1.Values.Text = "总数量";
+            // 
+            // txtTotalQty
+            // 
+            this.txtTotalQty.Location = new System.Drawing.Point(797, 119);
+            this.txtTotalQty.Name = "txtTotalQty";
+            this.txtTotalQty.Size = new System.Drawing.Size(100, 23);
+            this.txtTotalQty.TabIndex = 176;
             // 
             // lblTotalNetMachineHours
             // 
@@ -353,7 +370,7 @@
             this.lblDepartmentID.Name = "lblDepartmentID";
             this.lblDepartmentID.Size = new System.Drawing.Size(62, 20);
             this.lblDepartmentID.TabIndex = 143;
-            this.lblDepartmentID.Values.Text = "需求部门";
+            this.lblDepartmentID.Values.Text = "生产部门";
             // 
             // cmbDepartmentID
             // 
@@ -363,14 +380,6 @@
             this.cmbDepartmentID.Name = "cmbDepartmentID";
             this.cmbDepartmentID.Size = new System.Drawing.Size(161, 21);
             this.cmbDepartmentID.TabIndex = 144;
-            // 
-            // lblCustomerVendor_ID
-            // 
-            this.lblCustomerVendor_ID.Location = new System.Drawing.Point(358, 71);
-            this.lblCustomerVendor_ID.Name = "lblCustomerVendor_ID";
-            this.lblCustomerVendor_ID.Size = new System.Drawing.Size(49, 20);
-            this.lblCustomerVendor_ID.TabIndex = 145;
-            this.lblCustomerVendor_ID.Values.Text = "生产商";
             // 
             // cmbCustomerVendor_ID
             // 
@@ -482,20 +491,21 @@
             this.grid1.TabStop = true;
             this.grid1.ToolTipText = "";
             // 
-            // kryptonLabel1
+            // lblIsOutSourced
             // 
-            this.kryptonLabel1.Location = new System.Drawing.Point(743, 121);
-            this.kryptonLabel1.Name = "kryptonLabel1";
-            this.kryptonLabel1.Size = new System.Drawing.Size(49, 20);
-            this.kryptonLabel1.TabIndex = 175;
-            this.kryptonLabel1.Values.Text = "总数量";
+            this.lblIsOutSourced.Location = new System.Drawing.Point(345, 71);
+            this.lblIsOutSourced.Name = "lblIsOutSourced";
+            this.lblIsOutSourced.Size = new System.Drawing.Size(36, 20);
+            this.lblIsOutSourced.TabIndex = 191;
+            this.lblIsOutSourced.Values.Text = "外发";
             // 
-            // txtTotalQty
+            // chkIsOutSourced
             // 
-            this.txtTotalQty.Location = new System.Drawing.Point(797, 119);
-            this.txtTotalQty.Name = "txtTotalQty";
-            this.txtTotalQty.Size = new System.Drawing.Size(100, 23);
-            this.txtTotalQty.TabIndex = 176;
+            this.chkIsOutSourced.Location = new System.Drawing.Point(387, 73);
+            this.chkIsOutSourced.Name = "chkIsOutSourced";
+            this.chkIsOutSourced.Size = new System.Drawing.Size(19, 13);
+            this.chkIsOutSourced.TabIndex = 192;
+            this.chkIsOutSourced.Values.Text = "";
             // 
             // UCFinishedGoodsInv
             // 
@@ -545,7 +555,6 @@
         private Krypton.Toolkit.KryptonComboBox cmbEmployee_ID;
         private Krypton.Toolkit.KryptonLabel lblDepartmentID;
         private Krypton.Toolkit.KryptonComboBox cmbDepartmentID;
-        private Krypton.Toolkit.KryptonLabel lblCustomerVendor_ID;
         private Krypton.Toolkit.KryptonComboBox cmbCustomerVendor_ID;
         private Krypton.Toolkit.KryptonLabel lblDeliveryDate;
         private Krypton.Toolkit.KryptonDateTimePicker dtpDeliveryDate;
@@ -573,5 +582,7 @@
         private Krypton.Toolkit.KryptonTextBox txtTotalNetMachineHours;
         private Krypton.Toolkit.KryptonLabel kryptonLabel1;
         private Krypton.Toolkit.KryptonTextBox txtTotalQty;
+        private Krypton.Toolkit.KryptonLabel lblIsOutSourced;
+        private Krypton.Toolkit.KryptonCheckBox chkIsOutSourced;
     }
 }

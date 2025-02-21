@@ -48,7 +48,6 @@
             this.chkReceiptInvoiceClosed = new Krypton.Toolkit.KryptonCheckBox();
             this.lblReworkEntryNo = new Krypton.Toolkit.KryptonLabel();
             this.txtReworkEntryNo = new Krypton.Toolkit.KryptonTextBox();
-            this.lblCustomerVendor_ID = new Krypton.Toolkit.KryptonLabel();
             this.cmbCustomerVendor_ID = new Krypton.Toolkit.KryptonComboBox();
             this.lblDepartmentID = new Krypton.Toolkit.KryptonLabel();
             this.cmbDepartmentID = new Krypton.Toolkit.KryptonComboBox();
@@ -67,6 +66,8 @@
             this.txtTotalQty = new Krypton.Toolkit.KryptonTextBox();
             this.txtTotalReworkFee = new Krypton.Toolkit.KryptonTextBox();
             this.lblTotalQty = new Krypton.Toolkit.KryptonLabel();
+            this.lblIsOutSourced = new Krypton.Toolkit.KryptonLabel();
+            this.chkIsOutSourced = new Krypton.Toolkit.KryptonCheckBox();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceSub)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1)).BeginInit();
@@ -96,6 +97,8 @@
             // 
             // kryptonSplitContainer1.Panel1
             // 
+            this.kryptonSplitContainer1.Panel1.Controls.Add(this.lblIsOutSourced);
+            this.kryptonSplitContainer1.Panel1.Controls.Add(this.chkIsOutSourced);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.txtReworkReturnID);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.lblEntryDate);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.dtpEntryDate);
@@ -115,7 +118,6 @@
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.chkReceiptInvoiceClosed);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.lblReworkEntryNo);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.txtReworkEntryNo);
-            this.kryptonSplitContainer1.Panel1.Controls.Add(this.lblCustomerVendor_ID);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.cmbCustomerVendor_ID);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.lblDepartmentID);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.cmbDepartmentID);
@@ -281,14 +283,6 @@
             this.txtReworkEntryNo.Name = "txtReworkEntryNo";
             this.txtReworkEntryNo.Size = new System.Drawing.Size(140, 23);
             this.txtReworkEntryNo.TabIndex = 147;
-            // 
-            // lblCustomerVendor_ID
-            // 
-            this.lblCustomerVendor_ID.Location = new System.Drawing.Point(315, 81);
-            this.lblCustomerVendor_ID.Name = "lblCustomerVendor_ID";
-            this.lblCustomerVendor_ID.Size = new System.Drawing.Size(62, 20);
-            this.lblCustomerVendor_ID.TabIndex = 148;
-            this.lblCustomerVendor_ID.Values.Text = "生产单位";
             // 
             // cmbCustomerVendor_ID
             // 
@@ -465,6 +459,22 @@
             this.lblTotalQty.TabIndex = 178;
             this.lblTotalQty.Values.Text = "合计数量";
             // 
+            // lblIsOutSourced
+            // 
+            this.lblIsOutSourced.Location = new System.Drawing.Point(315, 81);
+            this.lblIsOutSourced.Name = "lblIsOutSourced";
+            this.lblIsOutSourced.Size = new System.Drawing.Size(36, 20);
+            this.lblIsOutSourced.TabIndex = 193;
+            this.lblIsOutSourced.Values.Text = "外发";
+            // 
+            // chkIsOutSourced
+            // 
+            this.chkIsOutSourced.Location = new System.Drawing.Point(357, 83);
+            this.chkIsOutSourced.Name = "chkIsOutSourced";
+            this.chkIsOutSourced.Size = new System.Drawing.Size(19, 13);
+            this.chkIsOutSourced.TabIndex = 194;
+            this.chkIsOutSourced.Values.Text = "";
+            // 
             // UCMRPReworkEntry
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
@@ -509,7 +519,6 @@
         private Krypton.Toolkit.KryptonLabel lblDataStatus;
         private Krypton.Toolkit.KryptonLabel lblReworkEntryNo;
         private Krypton.Toolkit.KryptonTextBox txtReworkEntryNo;
-        private Krypton.Toolkit.KryptonLabel lblCustomerVendor_ID;
         private Krypton.Toolkit.KryptonComboBox cmbCustomerVendor_ID;
         private Krypton.Toolkit.KryptonLabel lblDepartmentID;
         private Krypton.Toolkit.KryptonComboBox cmbDepartmentID;
@@ -539,5 +548,7 @@
         private Krypton.Toolkit.KryptonTextBox txtTotalCost;
         private Krypton.Toolkit.KryptonTextBox txtTotalReworkFee;
         private Krypton.Toolkit.KryptonTextBox txtReworkReturnID;
+        private Krypton.Toolkit.KryptonLabel lblIsOutSourced;
+        private Krypton.Toolkit.KryptonCheckBox chkIsOutSourced;
     }
 }

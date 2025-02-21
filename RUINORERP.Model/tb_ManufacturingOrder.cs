@@ -867,13 +867,7 @@ namespace RUINORERP.Model
         //MOID.FK_TB_MANUFODER_REF_TB_MANUFORDERDE)
         //tb_ManufacturingOrder.MOID)
 
-        //[Browsable(false)]打印报表时的数据源会不显示
-        [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_MRP_ReworkReturn.MOID))]
-        public virtual List<tb_MRP_ReworkReturn> tb_MRP_ReworkReturns { get; set; }
-        //tb_MRP_ReworkReturn.MOID)
-        //MOID.FK_MRP_Reworkreturn_REF_ManufacturingOrder)
-        //tb_ManufacturingOrder.MOID)
+     
 
 
         #endregion

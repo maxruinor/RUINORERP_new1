@@ -49,10 +49,10 @@ namespace RUINORERP.Business
 
  RuleFor(tb_MRP_ReworkReturn =>tb_MRP_ReworkReturn.Employee_ID).Must(CheckForeignKeyValue).WithMessage("经办人:下拉选择值不正确。");
 
- RuleFor(tb_MRP_ReworkReturn =>tb_MRP_ReworkReturn.MOID).Must(CheckForeignKeyValueCanNull).WithMessage(":下拉选择值不正确。");
- RuleFor(tb_MRP_ReworkReturn =>tb_MRP_ReworkReturn.MOID).NotEmpty().When(x => x.MOID.HasValue);
+ RuleFor(tb_MRP_ReworkReturn =>tb_MRP_ReworkReturn.FG_ID).Must(CheckForeignKeyValueCanNull).WithMessage("缴库单:下拉选择值不正确。");
+ RuleFor(tb_MRP_ReworkReturn =>tb_MRP_ReworkReturn.FG_ID).NotEmpty().When(x => x.FG_ID.HasValue);
 
- RuleFor(tb_MRP_ReworkReturn =>tb_MRP_ReworkReturn.MONO).MaximumLength(50).WithMessage("制令单号:不能超过最大长度,50.");
+ RuleFor(tb_MRP_ReworkReturn =>tb_MRP_ReworkReturn.DeliveryBillNo).MaximumLength(50).WithMessage("制令单号:不能超过最大长度,50.");
 
 //***** 
  RuleFor(tb_MRP_ReworkReturn =>tb_MRP_ReworkReturn.TotalQty).NotNull().WithMessage("数量:不能为空。");

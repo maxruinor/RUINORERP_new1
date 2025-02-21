@@ -86,6 +86,7 @@ namespace RUINORERP.UI.MRP.PQC
         public override void BuildInvisibleCols()
         {
             base.MasterInvisibleCols.Add(c => c.ReworkEntryID);
+            base.MasterInvisibleCols.Add(c => c.ReworkReturnID);
             base.MasterInvisibleCols.Add(c => c.PrimaryKeyID);
         }
 

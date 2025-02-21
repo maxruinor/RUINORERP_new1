@@ -87,7 +87,7 @@ namespace RUINORERP.Business
                                     View_ProdDetail view_Prod = await _unitOfWorkManage.GetDbClient().Queryable<View_ProdDetail>().Where(w => w.ProdDetailID == child.ProdDetailID).FirstAsync();
                                     string prodName = "【" + view_Prod.SKU + "】" + view_Prod.CNName;
                                     _unitOfWorkManage.RollbackTran();
-                                    rrs.ErrorMsg = $"{prodName} ，\r\n不存在于对应销售出库的明细数据中!";
+                                    rrs.ErrorMsg = $"{prodName} ，不存在于对应销售出库的明细数据中!";
                                     rrs.Succeeded = false;
                                     return rrs;
                                 }

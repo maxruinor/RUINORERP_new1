@@ -493,17 +493,17 @@ namespace RUINORERP.Model
                         }
         }
 
-        private bool _Outgoing= false;
+        private bool _Outgoing = false;
         /// <summary>
         /// 外发加工
         /// </summary>
-        [AdvQueryAttribute(ColName = "Outgoing",ColDesc = "外发加工")] 
-        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType ="Boolean",  ColumnName = "Outgoing" ,IsNullable = false,ColumnDescription = "外发加工" )]
-        public bool Outgoing
+        [AdvQueryAttribute(ColName = "Outgoing ",ColDesc = "外发加工")] 
+        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType ="Boolean",  ColumnName = "Outgoing " ,IsNullable = false,ColumnDescription = "外发加工" )]
+        public bool Outgoing 
         { 
-            get{return _Outgoing;}
+            get{return _Outgoing ;}
             set{
-            SetProperty(ref _Outgoing, value);
+            SetProperty(ref _Outgoing , value);
                         }
         }
 

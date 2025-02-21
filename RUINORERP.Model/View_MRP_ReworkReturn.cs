@@ -63,36 +63,7 @@ namespace RUINORERP.Model
         { 
             get{return _ReworkReturnNo;}            set{                SetProperty(ref _ReworkReturnNo, value);                }
         }
-
-        private long? _MOID;
-        
-        
-        /// <summary>
-        /// 制令单
-        /// </summary>
-
-        [AdvQueryAttribute(ColName = "MOID",ColDesc = "制令单")]
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "MOID" ,IsNullable = true,ColumnDescription = "制令单" )]
-        [Display(Name = "制令单")]
-        public long? MOID 
-        { 
-            get{return _MOID;}            set{                SetProperty(ref _MOID, value);                }
-        }
-
-        private string _MONO;
-        
-        
-        /// <summary>
-        /// 制令单号
-        /// </summary>
-
-        [AdvQueryAttribute(ColName = "MONO",ColDesc = "制令单号")]
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "MONO" ,Length=100,IsNullable = true,ColumnDescription = "制令单号" )]
-        [Display(Name = "制令单号")]
-        public string MONO 
-        { 
-            get{return _MONO;}            set{                SetProperty(ref _MONO, value);                }
-        }
+           
 
         private long? _CustomerVendor_ID;
         
@@ -110,8 +81,21 @@ namespace RUINORERP.Model
         }
 
         private long? _Employee_ID;
-        
-        
+
+        private string _DeliveryBillNo;
+        /// <summary>
+        /// 缴库单号
+        /// </summary>
+        [AdvQueryAttribute(ColName = "DeliveryBillNo", ColDesc = "缴库单号")]
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType = "String", ColumnName = "DeliveryBillNo", Length = 100, IsNullable = true, ColumnDescription = "缴库单号")]
+        public string DeliveryBillNo
+        {
+            get { return _DeliveryBillNo; }
+            set
+            {
+                SetProperty(ref _DeliveryBillNo, value);
+            }
+        }
         /// <summary>
         /// 经办人
         /// </summary>

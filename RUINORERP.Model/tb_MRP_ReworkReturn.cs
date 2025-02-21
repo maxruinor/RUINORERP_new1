@@ -64,13 +64,27 @@ namespace RUINORERP.Model
             SetProperty(ref _ReworkReturnNo, value);
                         }
         }
+        private bool _IsOutSourced = false;
+        /// <summary>
+        /// 是否托工
+        /// </summary>
+        [AdvQueryAttribute(ColName = "IsOutSourced", ColDesc = "是否托工")]
+        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType = "Boolean", ColumnName = "IsOutSourced", IsNullable = false, ColumnDescription = "是否托工")]
+        public bool IsOutSourced
+        {
+            get { return _IsOutSourced; }
+            set
+            {
+                SetProperty(ref _IsOutSourced, value);
+            }
+        }
 
         private long? _CustomerVendor_ID;
         /// <summary>
-        /// 生产单位
+        /// 外发工厂
         /// </summary>
-        [AdvQueryAttribute(ColName = "CustomerVendor_ID",ColDesc = "生产单位")] 
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "CustomerVendor_ID" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "生产单位" )]
+        [AdvQueryAttribute(ColName = "CustomerVendor_ID",ColDesc = "外发工厂")] 
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "CustomerVendor_ID" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "外发工厂")]
         [FKRelationAttribute("tb_CustomerVendor","CustomerVendor_ID")]
         public long? CustomerVendor_ID
         { 
@@ -82,10 +96,10 @@ namespace RUINORERP.Model
 
         private long? _DepartmentID;
         /// <summary>
-        /// 需求部门
+        /// 生产部门
         /// </summary>
-        [AdvQueryAttribute(ColName = "DepartmentID",ColDesc = "需求部门")] 
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "DepartmentID" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "需求部门" )]
+        [AdvQueryAttribute(ColName = "DepartmentID",ColDesc = "生产部门")] 
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "DepartmentID" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "生产部门")]
         [FKRelationAttribute("tb_Department","DepartmentID")]
         public long? DepartmentID
         { 
@@ -110,32 +124,32 @@ namespace RUINORERP.Model
                         }
         }
 
-        private long? _MOID;
+        private long? _FG_ID;
         /// <summary>
-        /// 制令单
+        /// 缴库单
         /// </summary>
-        [AdvQueryAttribute(ColName = "MOID",ColDesc = "制令单")] 
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "MOID" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "制令单" )]
-        [FKRelationAttribute("tb_ManufacturingOrder","MOID")]
-        public long? MOID
+        [AdvQueryAttribute(ColName = "FG_ID",ColDesc = "缴库单")] 
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "FG_ID" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "缴库单")]
+        [FKRelationAttribute("tb_FinishedGoodsInv", "FG_ID")]
+        public long? FG_ID
         { 
-            get{return _MOID;}
+            get{return _FG_ID;}
             set{
-            SetProperty(ref _MOID, value);
+            SetProperty(ref _FG_ID, value);
                         }
         }
 
-        private string _MONO;
+        private string _DeliveryBillNo;
         /// <summary>
-        /// 制令单号
+        /// 缴库单号
         /// </summary>
-        [AdvQueryAttribute(ColName = "MONO",ColDesc = "制令单号")] 
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "MONO" ,Length=100,IsNullable = true,ColumnDescription = "制令单号" )]
-        public string MONO
+        [AdvQueryAttribute(ColName = "DeliveryBillNo",ColDesc = "缴库单号")] 
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "DeliveryBillNo" ,Length=100,IsNullable = true,ColumnDescription = "缴库单号")]
+        public string DeliveryBillNo
         { 
-            get{return _MONO;}
+            get{return _DeliveryBillNo;}
             set{
-            SetProperty(ref _MONO, value);
+            SetProperty(ref _DeliveryBillNo, value);
                         }
         }
 
@@ -491,8 +505,8 @@ namespace RUINORERP.Model
 
         [SugarColumn(IsIgnore = true)]
         //[Browsable(false)] 打印报表时的数据源会不显示
-        [Navigate(NavigateType.OneToOne, nameof(MOID))]
-        public virtual tb_ManufacturingOrder tb_manufacturingorder { get; set; }
+        [Navigate(NavigateType.OneToOne, nameof(FG_ID))]
+        public virtual tb_FinishedGoodsInv tb_finishedgoodsinv { get; set; }
 
         [SugarColumn(IsIgnore = true)]
         //[Browsable(false)] 打印报表时的数据源会不显示

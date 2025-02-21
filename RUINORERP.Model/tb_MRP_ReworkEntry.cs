@@ -64,13 +64,26 @@ namespace RUINORERP.Model
             SetProperty(ref _ReworkEntryNo, value);
                         }
         }
-
+        private bool _IsOutSourced = false;
+        /// <summary>
+        /// 是否托工
+        /// </summary>
+        [AdvQueryAttribute(ColName = "IsOutSourced", ColDesc = "是否托工")]
+        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType = "Boolean", ColumnName = "IsOutSourced", IsNullable = false, ColumnDescription = "是否托工")]
+        public bool IsOutSourced
+        {
+            get { return _IsOutSourced; }
+            set
+            {
+                SetProperty(ref _IsOutSourced, value);
+            }
+        }
         private long? _CustomerVendor_ID;
         /// <summary>
-        /// 生产单位
+        /// 外发工厂
         /// </summary>
-        [AdvQueryAttribute(ColName = "CustomerVendor_ID",ColDesc = "生产单位")] 
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "CustomerVendor_ID" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "生产单位" )]
+        [AdvQueryAttribute(ColName = "CustomerVendor_ID",ColDesc = "外发工厂")] 
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "CustomerVendor_ID" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "外发工厂")]
         [FKRelationAttribute("tb_CustomerVendor","CustomerVendor_ID")]
         public long? CustomerVendor_ID
         { 

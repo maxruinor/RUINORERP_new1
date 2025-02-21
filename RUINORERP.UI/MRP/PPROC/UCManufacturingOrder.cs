@@ -222,10 +222,41 @@ namespace RUINORERP.UI.MRP.MP
                     }
                 }
                 //如果是销售订单引入变化则加载明细及相关数据
-                if ((entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改) && entity.PDID.HasValue && entity.PDID > 0 && s2.PropertyName == entity.GetPropertyName<tb_ManufacturingOrder>(c => c.PDID))
+                if ((entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改) && entity.PDID.HasValue)
                 {
-                    //因为太复杂。目前暂时只能由需求分析那边生成
-                    //LoadChildItems(entity.PDID.Value);
+                    if(entity.PDID > 0 && s2.PropertyName == entity.GetPropertyName<tb_ManufacturingOrder>(c => c.PDID))
+                    {
+                        //因为太复杂。目前暂时只能由需求分析那边生成
+                        //LoadChildItems(entity.PDID.Value);
+                    }
+
+                    if (s2.PropertyName == entity.GetPropertyName<tb_ManufacturingOrder>(c => c.DepartmentID))
+                    {
+                        if (cmbDepartment.SelectedIndex == 0)
+                        {
+                            entity.DepartmentID = null;
+                        }
+                    }
+                    if (s2.PropertyName == entity.GetPropertyName<tb_ManufacturingOrder>(c => c.CustomerVendor_ID))
+                    {
+                        if (cmbCustomerVendor_ID.SelectedIndex == 0)
+                        {
+                            entity.CustomerVendor_ID = null;
+                        }
+                    }
+                    if (s2.PropertyName == entity.GetPropertyName<tb_ManufacturingOrder>(c => c.IsOutSourced))
+                    {
+                        cmbCustomerVendor_ID.Visible = entity.IsOutSourced;
+                        if (entity.IsOutSourced)
+                        {
+                            entity.DepartmentID = null;
+                        }
+                        else
+                        {
+                            cmbCustomerVendor_ID.Visible = false;
+                        }
+                    }
+                    ToolBarEnabledControl(entity);
                 }
 
                 //影响子件的数量
@@ -1012,7 +1043,7 @@ protected override void Print()
 
         private void chkIsOutSourced_CheckedChanged(object sender, EventArgs e)
         {
-            cmbCustomerVendor_ID_Out.Visible = chkIsOutSourced.Checked;
+           // cmbCustomerVendor_ID_Out.Visible = chkIsOutSourced.Checked;
         }
 
 

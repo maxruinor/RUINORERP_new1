@@ -68,55 +68,61 @@ namespace RUINORERP.Business
                 tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
                 BillConverterFactory bcf = _appContext.GetRequiredService<BillConverterFactory>();
 
-                //如果引用了制令单。退库数量不能大于制令单已交数量
-                if (entity.MOID.HasValue && entity.tb_manufacturingorder == null)
+                //如果引用了缴库单。退库数量不能大于缴库单已交数量
+                if (entity.FG_ID.HasValue && entity.tb_finishedgoodsinv == null)
                 {
-                    entity.tb_manufacturingorder = _unitOfWorkManage.GetDbClient().Queryable<tb_ManufacturingOrder>()
+                    entity.tb_finishedgoodsinv = _unitOfWorkManage.GetDbClient().Queryable<tb_FinishedGoodsInv>()
                          .AsNavQueryable()//加这个前面,超过三级在前面加这一行，并且第四级无VS智能提示，但是可以用
                          .Includes(a => a.tb_MRP_ReworkReturns, b => b.tb_MRP_ReworkReturnDetails, c => c.tb_proddetail, d => d.tb_prod)
-                         .Includes(a => a.tb_ManufacturingOrderDetails)
-                         .Where(c => c.MOID == entity.MOID)
+                         .Includes(a => a.tb_FinishedGoodsInvDetails, c => c.tb_proddetail, d => d.tb_prod)
+                         .Where(c => c.FG_ID == entity.FG_ID)
                          .Single();
-                    //如果入库明细中的产品。不存在于订单中。审核失败。
+                    //如果退的产品不在缴库单位明细中审核失败。
                     foreach (var child in entity.tb_MRP_ReworkReturnDetails)
                     {
-                        if (entity.tb_manufacturingorder.ProdDetailID == child.ProdDetailID)
+                        if (!entity.tb_finishedgoodsinv.tb_FinishedGoodsInvDetails.Any(c => c.ProdDetailID == child.ProdDetailID))
                         {
                             rs.Succeeded = false;
                             _unitOfWorkManage.RollbackTran();
-                            rs.ErrorMsg = $"入库明细中有产品不属于当前订单!请检查数据后重试！";
+                            rs.ErrorMsg = $"退库明细中有产品不属于当前缴库单!请检查数据后重试！";
                             return rs;
                         }
                     }
 
-                    //先找到所有入库明细,再找按订单明细去循环比较。如果入库总数量大于订单数量，则不允许入库。
+                    //先找到所有退库明细,再找按订单明细去循环比较。如果入库总数量大于订单数量，则不允许入库。
+                    //这里注意退库可以入库再退。所以状态限制是退了未返回的情况。来比较数量。比方 缴库 100个， 多次 -5，+5   还是100可以再退
+                    //即结案的不算
                     List<tb_MRP_ReworkReturnDetail> detailList = new List<tb_MRP_ReworkReturnDetail>();
-                    foreach (var item in entity.tb_manufacturingorder.tb_MRP_ReworkReturns)
+                    foreach (var item in entity.tb_finishedgoodsinv.tb_MRP_ReworkReturns
+                        .Where(s => s.DataStatus == 4).ToList())
                     {
                         detailList.AddRange(item.tb_MRP_ReworkReturnDetails);
                     }
 
-                    //如果当前订单明细行，不存在于入库明细行。直接跳过。这种就是多行多品被删除时。不需要比较
-                    string prodName = entity.tb_manufacturingorder.tb_proddetail.tb_prod.CNName +
-                              entity.tb_manufacturingorder.tb_proddetail.tb_prod.Specifications;
-
-                    //一对一时
-                    var inQty = detailList.Where(c => c.ProdDetailID == entity.tb_manufacturingorder.ProdDetailID).Sum(c => c.Quantity);
-                    if (inQty > entity.tb_manufacturingorder.QuantityDelivered)
+                    //分两种情况处理。
+                    for (int i = 0; i < entity.tb_finishedgoodsinv.tb_FinishedGoodsInvDetails.Count; i++)
                     {
+                        tb_FinishedGoodsInvDetail detail = entity.tb_finishedgoodsinv.tb_FinishedGoodsInvDetails[i];
+                        //如果当前订单明细行，不存在于入库明细行。直接跳过。这种就是多行多品被删除时。不需要比较
+                        string prodName = detail.tb_proddetail.tb_prod.CNName + detail.tb_proddetail.tb_prod.Specifications;
 
-                        string msg = $"返工退库:{entity.ReworkReturnNo}的【{prodName}】的退库数量不能大于制令单中已交的数量\r\n" + $"或存在针对当前制令单重复录入了返工退库单，审核失败！";
-                        MessageBox.Show(msg, "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                        _unitOfWorkManage.RollbackTran();
-                        _logger.LogInformation(msg);
-                        return rs;
+                        //一对一时
+                        var inQty = detailList.Where(c => c.ProdDetailID == detail.ProdDetailID).Sum(c => c.Quantity);
+                        if (inQty > detail.Qty)
+                        {
+                            string msg = $"返工退库:{entity.ReworkReturnNo}的【{prodName}】的数量不能大于缴款单中数量\r\n" + $"或存在针对当前缴单重复录入了返工退库单，审核失败！";
+                            MessageBox.Show(msg, "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                            _unitOfWorkManage.RollbackTran();
+                            _logger.LogInformation(msg);
+                            return rs;
+                        }
                     }
                 }
 
                 foreach (tb_MRP_ReworkReturnDetail child in entity.tb_MRP_ReworkReturnDetails)
                 {
                     #region 库存表的更新 这里应该是必需有库存的数据，
-                    
+
                     tb_Inventory inv = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == child.ProdDetailID && i.Location_ID == child.Location_ID);
                     if (inv == null)
                     {
@@ -137,7 +143,7 @@ namespace RUINORERP.Business
                     //采购订单时添加 。这里减掉在路上的数量
                     inv.On_the_way_Qty = inv.On_the_way_Qty + child.Quantity;
 
-                  
+
 
                     inv.Quantity = inv.Quantity - child.Quantity;
                     inv.Inv_SubtotalCostMoney = inv.Inv_Cost * inv.Quantity;
@@ -203,7 +209,7 @@ namespace RUINORERP.Business
             rs.Succeeded = false;
             try
             {
-              
+
 
                 // 开启事务，保证数据一致性
                 _unitOfWorkManage.BeginTran();
@@ -215,7 +221,7 @@ namespace RUINORERP.Business
                 {
                     #region 库存表的更新 这里应该是必需有库存的数据，
                     //实际 期初已经有数据了，则要
-               
+
                     tb_Inventory inv = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == child.ProdDetailID && i.Location_ID == child.Location_ID);
                     if (inv == null)
                     {
@@ -236,7 +242,7 @@ namespace RUINORERP.Business
 
                     //采购订单时添加 。这里减掉在路上的数量
                     inv.On_the_way_Qty = inv.On_the_way_Qty + child.Quantity;
-                  
+
                     inv.Quantity = inv.Quantity - child.Quantity;
                     inv.Inv_SubtotalCostMoney = inv.Inv_Cost * inv.Quantity;
                     inv.LatestOutboundTime = System.DateTime.Now;
@@ -245,11 +251,11 @@ namespace RUINORERP.Business
                     ReturnResults<tb_Inventory> rr = await ctrinv.SaveOrUpdate(inv);
                     if (rr.Succeeded)
                     {
-                     
+
                     }
                 }
 
-                 
+
                 //这部分是否能提出到上一级公共部分？
                 entity.DataStatus = (int)DataStatus.新建;
                 entity.ApprovalOpinions = "被反审核";

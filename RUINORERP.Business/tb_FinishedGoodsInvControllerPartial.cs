@@ -344,7 +344,6 @@ namespace RUINORERP.Business
                        .Where(c => c.PDID == manufacturingOrder.PDID)
                        .SingleAsync();
 
-
                     //一个缴款单上面一个制令单。一个制令单 找到 需求单，再找到计划单。但是：需求下有多个制令单都来自于一个计划单，
                     //所以这里要循环加总保存到计划单中。
                     #region 更新计划单的完成数量
@@ -415,8 +414,6 @@ namespace RUINORERP.Business
 
 
                     #endregion
-
-
                 }
 
                 entity.DataStatus = (int)DataStatus.确认;

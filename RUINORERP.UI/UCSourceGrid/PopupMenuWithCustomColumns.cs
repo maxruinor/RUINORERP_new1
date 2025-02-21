@@ -513,8 +513,8 @@ namespace RUINORERP.UI.UCSourceGrid
             var colDisplay = (sender as ToolStripMenuItem).Tag as SGColDisplayHandler;
             colDisplay.Visible = (sender as ToolStripMenuItem).Checked;
             sgdefine.grid.Columns.GetColumnInfo(colDisplay.UniqueId).Visible = colDisplay.Visible;
-            //ColumnDisplays.First(x => x.UniqueId == colDisplay.UniqueId)
-            //    .Visible = colDisplay.Visible;
+            ColumnDisplays.First(x => x.UniqueId == colDisplay.UniqueId)
+               .Visible = colDisplay.Visible;
             //Common.UIHelper.SaveColumnsList(ConfigColItems, _xmlfileName);
 
         }

@@ -527,7 +527,8 @@ namespace RUINORERP.UI.Common
             {
                 return;
             }
-            ColumnDisplays = UIHelper.GetColumnDisplayList(GridSourceType);
+            List<ColDisplayController> allInitCols = new List<ColDisplayController>();
+            allInitCols = UIHelper.GetColumnDisplayList(GridSourceType);
             // 获取Graphics对象
             Graphics graphics = dataGridView.CreateGraphics();
             ColumnDisplays.ForEach(c =>
@@ -538,6 +539,11 @@ namespace RUINORERP.UI.Common
                 if (c.ColWidth < 100)
                 {
                     c.ColWidth = 100;
+                }
+                if (allInitCols.Any(x => x.ColName == c.ColName))
+                {
+                    var colset = allInitCols.FirstOrDefault(x => x.ColName == c.ColName);
+                    c.Visible = colset.Visible;
                 }
             });
 
@@ -1046,7 +1052,7 @@ namespace RUINORERP.UI.Common
                     int updatecount = await MainForm.Instance.AppContext.Db.Updateable(GridSetting).ExecuteCommandAsync();
                     if (updatecount > 0)
                     {
-
+                        //更新到自己
                     }
                 }
 

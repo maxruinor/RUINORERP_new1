@@ -101,7 +101,7 @@ namespace RUINORERP.UI.PSI.PUR
 
 
             DataBindingHelper.BindData4TextBox<tb_FinishedGoodsInv>(entity, t => t.DeliveryBillNo, txtDeliveryBillNo, BindDataType4TextBox.Text, false);
-
+            DataBindingHelper.BindData4CheckBox<tb_FinishedGoodsInv>(entity, t => t.IsOutSourced, chkIsOutSourced, false);
             DataBindingHelper.BindData4Cmb<tb_Employee>(entity, k => k.Employee_ID, v => v.Employee_Name, cmbEmployee_ID);
             DataBindingHelper.BindData4Cmb<tb_Department>(entity, k => k.DepartmentID, v => v.DepartmentName, cmbDepartmentID);
 
@@ -155,9 +155,40 @@ namespace RUINORERP.UI.PSI.PUR
 
                 }
                 //如果是销售订单引入变化则加载明细及相关数据
-                if ((entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改) && entity.MOID > 0 && s2.PropertyName == entity.GetPropertyName<tb_FinishedGoodsInv>(c => c.MOID))
+                if (entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改)
                 {
-                    LoadSubLines(entity.MOID);
+                    if (entity.MOID > 0 && s2.PropertyName == entity.GetPropertyName<tb_FinishedGoodsInv>(c => c.MOID))
+                    {
+                        LoadSubLines(entity.MOID);
+                    }
+
+                    if (s2.PropertyName == entity.GetPropertyName<tb_FinishedGoodsInv>(c => c.DepartmentID))
+                    {
+                        if (cmbDepartmentID.SelectedIndex == 0)
+                        {
+                            entity.DepartmentID = null;
+                        }
+                    }
+                    if (s2.PropertyName == entity.GetPropertyName<tb_FinishedGoodsInv>(c => c.CustomerVendor_ID))
+                    {
+                        if (cmbCustomerVendor_ID.SelectedIndex == 0)
+                        {
+                            entity.CustomerVendor_ID = null;
+                        }
+                    }
+                    if (s2.PropertyName == entity.GetPropertyName<tb_FinishedGoodsInv>(c => c.IsOutSourced))
+                    {
+                        cmbCustomerVendor_ID.Visible = entity.IsOutSourced;
+                        if (entity.IsOutSourced)
+                        {
+                            entity.DepartmentID = null;
+                        }
+                        else
+                        {
+                            cmbCustomerVendor_ID.Visible = false;
+                        }
+                    }
+                    ToolBarEnabledControl(entity);
                 }
                 ShowPrintStatus(lblPrintStatus, EditEntity);
 
@@ -167,7 +198,7 @@ namespace RUINORERP.UI.PSI.PUR
             //后面这些依赖于控件绑定的数据源和字段。所以要在绑定后执行。
             if (entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改)
             {
-                base.InitRequiredToControl(MainForm.Instance.AppContext.GetRequiredService <tb_FinishedGoodsInvValidator> (), kryptonSplitContainer1.Panel1.Controls);
+                base.InitRequiredToControl(MainForm.Instance.AppContext.GetRequiredService<tb_FinishedGoodsInvValidator>(), kryptonSplitContainer1.Panel1.Controls);
             }
             ShowPrintStatus(lblPrintStatus, EditEntity);
 
@@ -208,8 +239,8 @@ namespace RUINORERP.UI.PSI.PUR
 
         SourceGridDefine sgd = null;
         SourceGridHelper sgh = new SourceGridHelper();
-        
-         
+
+
         private void UCStockIn_Load(object sender, EventArgs e)
         {
 
@@ -234,7 +265,7 @@ namespace RUINORERP.UI.PSI.PUR
             //这个小计可以删除。全是单个的。不用小计了。
             listCols.SetCol_NeverVisible<tb_FinishedGoodsInvDetail>(c => c.SubtotalMaterialCost);
 
-           // listCols.SetCol_Width<tb_FinishedGoodsInvDetail>(c => c.ApportionedCost, 200);
+            // listCols.SetCol_Width<tb_FinishedGoodsInvDetail>(c => c.ApportionedCost, 200);
 
             if (!AppContext.SysConfig.UseBarCode)
             {
@@ -302,7 +333,7 @@ namespace RUINORERP.UI.PSI.PUR
             List<tb_FinishedGoodsInvDetail> lines = new List<tb_FinishedGoodsInvDetail>();
             bindingSourceSub.DataSource = lines;
             sgd.BindingSourceLines = bindingSourceSub;
- 
+
             sgd.SetDependencyObject<ProductSharePart, tb_FinishedGoodsInvDetail>(MainForm.Instance.list);
 
             sgd.HasRowHeader = true;
@@ -422,7 +453,7 @@ namespace RUINORERP.UI.PSI.PUR
                 //         return;
                 //     }
                 //}
-                
+
 
                 if (NeedValidated && !base.Validator<tb_FinishedGoodsInvDetail>(details))
                 {
@@ -629,7 +660,7 @@ protected async override Task<ApprovalEntity> ReReview()
                 entity.DeliveryDate = System.DateTime.Now;
                 entity.tb_manufacturingorder = SourceBill;
                 entity.IsOutSourced = SourceBill.IsOutSourced;
-                if (entity.IsOutSourced.HasValue)
+                if (entity.IsOutSourced)
                 {
                     entity.CustomerVendor_ID = SourceBill.CustomerVendor_ID_Out;
                 }

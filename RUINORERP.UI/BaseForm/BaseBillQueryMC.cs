@@ -1579,7 +1579,7 @@ namespace RUINORERP.UI.BaseForm
 
             if (_UCBillChildQuery_Related != null && _UCBillChildQuery_Related.newSumDataGridViewChild != null)
             {
-                _UCBillChildQuery_Related.newSumDataGridViewChild.NeedSaveColumnsXml = true;
+                _UCBillChildQuery_Related.newSumDataGridViewChild.NeedSaveColumnsXml = false;
             }
         }
 

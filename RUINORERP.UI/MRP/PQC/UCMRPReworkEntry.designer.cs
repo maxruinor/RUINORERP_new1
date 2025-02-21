@@ -29,6 +29,7 @@
         private void InitializeComponent()
         {
             this.kryptonSplitContainer1 = new Krypton.Toolkit.KryptonSplitContainer();
+            this.txtReworkReturnID = new Krypton.Toolkit.KryptonTextBox();
             this.lblEntryDate = new Krypton.Toolkit.KryptonLabel();
             this.dtpEntryDate = new Krypton.Toolkit.KryptonDateTimePicker();
             this.lblGenerateVouchers = new Krypton.Toolkit.KryptonLabel();
@@ -66,7 +67,6 @@
             this.txtTotalQty = new Krypton.Toolkit.KryptonTextBox();
             this.txtTotalReworkFee = new Krypton.Toolkit.KryptonTextBox();
             this.lblTotalQty = new Krypton.Toolkit.KryptonLabel();
-            this.txtReworkReturnID = new Krypton.Toolkit.KryptonTextBox();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceSub)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1)).BeginInit();
@@ -133,6 +133,14 @@
             this.kryptonSplitContainer1.Size = new System.Drawing.Size(1133, 746);
             this.kryptonSplitContainer1.SplitterDistance = 209;
             this.kryptonSplitContainer1.TabIndex = 4;
+            // 
+            // txtReworkReturnID
+            // 
+            this.txtReworkReturnID.Location = new System.Drawing.Point(111, 81);
+            this.txtReworkReturnID.Name = "txtReworkReturnID";
+            this.txtReworkReturnID.ReadOnly = true;
+            this.txtReworkReturnID.Size = new System.Drawing.Size(140, 23);
+            this.txtReworkReturnID.TabIndex = 186;
             // 
             // lblEntryDate
             // 
@@ -276,7 +284,7 @@
             // 
             // lblCustomerVendor_ID
             // 
-            this.lblCustomerVendor_ID.Location = new System.Drawing.Point(43, 114);
+            this.lblCustomerVendor_ID.Location = new System.Drawing.Point(315, 81);
             this.lblCustomerVendor_ID.Name = "lblCustomerVendor_ID";
             this.lblCustomerVendor_ID.Size = new System.Drawing.Size(62, 20);
             this.lblCustomerVendor_ID.TabIndex = 148;
@@ -286,9 +294,9 @@
             // 
             this.cmbCustomerVendor_ID.DropDownWidth = 100;
             this.cmbCustomerVendor_ID.IntegralHeight = false;
-            this.cmbCustomerVendor_ID.Location = new System.Drawing.Point(111, 114);
+            this.cmbCustomerVendor_ID.Location = new System.Drawing.Point(383, 81);
             this.cmbCustomerVendor_ID.Name = "cmbCustomerVendor_ID";
-            this.cmbCustomerVendor_ID.Size = new System.Drawing.Size(140, 21);
+            this.cmbCustomerVendor_ID.Size = new System.Drawing.Size(169, 21);
             this.cmbCustomerVendor_ID.TabIndex = 149;
             // 
             // lblDepartmentID
@@ -297,7 +305,7 @@
             this.lblDepartmentID.Name = "lblDepartmentID";
             this.lblDepartmentID.Size = new System.Drawing.Size(62, 20);
             this.lblDepartmentID.TabIndex = 150;
-            this.lblDepartmentID.Values.Text = "需求部门";
+            this.lblDepartmentID.Values.Text = "生产部门";
             // 
             // cmbDepartmentID
             // 
@@ -310,7 +318,7 @@
             // 
             // lblEmployee_ID
             // 
-            this.lblEmployee_ID.Location = new System.Drawing.Point(328, 81);
+            this.lblEmployee_ID.Location = new System.Drawing.Point(56, 110);
             this.lblEmployee_ID.Name = "lblEmployee_ID";
             this.lblEmployee_ID.Size = new System.Drawing.Size(49, 20);
             this.lblEmployee_ID.TabIndex = 152;
@@ -320,9 +328,9 @@
             // 
             this.cmbEmployee_ID.DropDownWidth = 100;
             this.cmbEmployee_ID.IntegralHeight = false;
-            this.cmbEmployee_ID.Location = new System.Drawing.Point(383, 81);
+            this.cmbEmployee_ID.Location = new System.Drawing.Point(111, 110);
             this.cmbEmployee_ID.Name = "cmbEmployee_ID";
-            this.cmbEmployee_ID.Size = new System.Drawing.Size(169, 21);
+            this.cmbEmployee_ID.Size = new System.Drawing.Size(140, 21);
             this.cmbEmployee_ID.TabIndex = 153;
             // 
             // lblReworkReturnID
@@ -456,14 +464,6 @@
             this.lblTotalQty.Size = new System.Drawing.Size(62, 20);
             this.lblTotalQty.TabIndex = 178;
             this.lblTotalQty.Values.Text = "合计数量";
-            // 
-            // txtReworkReturnID
-            // 
-            this.txtReworkReturnID.Location = new System.Drawing.Point(111, 81);
-            this.txtReworkReturnID.Name = "txtReworkReturnID";
-            this.txtReworkReturnID.ReadOnly = true;
-            this.txtReworkReturnID.Size = new System.Drawing.Size(140, 23);
-            this.txtReworkReturnID.TabIndex = 186;
             // 
             // UCMRPReworkEntry
             // 

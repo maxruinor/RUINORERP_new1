@@ -1032,7 +1032,7 @@ namespace RUINORERP.UI.UCSourceGrid
         /// </summary>
         /// <param name="grid"></param>
         /// <param name="griddefine">索引,这个决定了顺序</param>
-        private async void InitGrid(SourceGrid.Grid grid, SourceGridDefine griddefine, string MainBizDependencyTypeName)
+        private void InitGrid(SourceGrid.Grid grid, SourceGridDefine griddefine, string MainBizDependencyTypeName)
         {
             //启动时默认无选中
             grid.Selection.FocusStyle = SourceGrid.FocusStyle.None;
@@ -1065,7 +1065,8 @@ namespace RUINORERP.UI.UCSourceGrid
             viewColumnHeader.TextAlignment = DevAge.Drawing.ContentAlignment.MiddleCenter;
 
             #region 创建列前去找到对应的列的权限等相关设置
-            List<SGColDisplayHandler> displayHandlers = await UIBizSrvice.SetCustomSourceGridAsync(SGDefine, CurMenuInfo, null, null, false);
+            //            List<SGColDisplayHandler> displayHandlers = await UIBizSrvice.SetCustomSourceGridAsync(SGDefine, CurMenuInfo, null, null, false);
+            List<SGColDisplayHandler> displayHandlers = Task.Run(() => UIBizSrvice.SetCustomSourceGridAsync(SGDefine, CurMenuInfo, null, null, false)).Result;
 
             #endregion
 
@@ -3876,7 +3877,7 @@ namespace RUINORERP.UI.UCSourceGrid
                                 {
                                     ReflectionHelper.SetPropertyValue(currentObj, qtc.Value.ColName, newTagetValue);
                                 }
-                                
+
                                 sgdefine.grid[p.Row, newTargetIndex].Value = newTagetValue;
 
                             }

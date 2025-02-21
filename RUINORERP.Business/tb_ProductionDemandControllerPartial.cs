@@ -1107,6 +1107,7 @@ namespace RUINORERP.Business
             //一个中间件的详情ID和PCID即行号一行，生成一个制作令单
             tb_ManufacturingOrder ManufacturingOrder = mapper.Map<tb_ManufacturingOrder>(MakingItem);
             ManufacturingOrder.PDCID = MakingItem.PDCID;
+            
             #region 
             //tb_BOM_SController<tb_BOM_S> ctrBOM = _appContext.GetRequiredService<tb_BOM_SController<tb_BOM_S>>();
             //一次性查出。为了性能，如果是上层模式，则全部，如果是中间件模式，则只要查下一级
@@ -1176,7 +1177,8 @@ namespace RUINORERP.Business
             //暂时认为一定有计划
             if (demand.tb_productionplan != null)
             {
-                ManufacturingOrder.DepartmentID = demand.tb_productionplan.DepartmentID;
+                //ManufacturingOrder.DepartmentID = demand.tb_productionplan.DepartmentID;
+                ManufacturingOrder.DepartmentID = null;//要人员来安排哪个生产 这里是指生产部门
             }
             if (demand.tb_productionplan.tb_saleorder == null)
             {

@@ -31,7 +31,9 @@ namespace RUINORERP.Business
             // 如果选择了外发，则必须填写外发加工商
             RuleFor(x => x.CustomerVendor_ID_Out).NotNull().When(x => x.IsOutSourced == true).WithMessage("选择外发时，必须要选择外发的工厂。");
             RuleFor(x => x.CustomerVendor_ID_Out).GreaterThan(0).When(x => x.IsOutSourced == true).WithMessage("选择外发时，必须要选择外发的工厂。");
-
+            RuleFor(x => x.DepartmentID).Must(CheckForeignKeyValueCanNull)
+                .When(x => x.IsOutSourced == false)
+                .WithMessage("生产部门:非外发时，生产部门必须选择。");
 
             RuleFor(x => x.PreStartDate)
           .Custom((value, context) =>

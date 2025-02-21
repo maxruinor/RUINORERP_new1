@@ -30,22 +30,20 @@
         {
             this.kryptonSplitContainer1 = new Krypton.Toolkit.KryptonSplitContainer();
             this.kryptonPanelMainInfo = new Krypton.Toolkit.KryptonPanel();
+            this.lblOutgoing = new Krypton.Toolkit.KryptonLabel();
+            this.chkOutgoing = new Krypton.Toolkit.KryptonCheckBox();
             this.cmbCustomerVendor_ID = new Krypton.Toolkit.KryptonComboBox();
             this.lblReturnDate = new Krypton.Toolkit.KryptonLabel();
             this.dtpReturnDate = new Krypton.Toolkit.KryptonDateTimePicker();
             this.lblGeneEvidence = new Krypton.Toolkit.KryptonLabel();
-            this.txtTotalQty = new Krypton.Toolkit.KryptonTextBox();
             this.chkGeneEvidence = new Krypton.Toolkit.KryptonCheckBox();
             this.lblCustomerVendor_ID = new Krypton.Toolkit.KryptonLabel();
-            this.lblTotalQty = new Krypton.Toolkit.KryptonLabel();
             this.lblDepartmentID = new Krypton.Toolkit.KryptonLabel();
             this.cmbDepartmentID = new Krypton.Toolkit.KryptonComboBox();
             this.lblRefNO = new Krypton.Toolkit.KryptonLabel();
             this.txtRefNO = new Krypton.Toolkit.KryptonTextBox();
             this.lblBillNo = new Krypton.Toolkit.KryptonLabel();
             this.txtBillNo = new Krypton.Toolkit.KryptonTextBox();
-            this.lblLocation_ID = new Krypton.Toolkit.KryptonLabel();
-            this.cmbLocation_ID = new Krypton.Toolkit.KryptonComboBox();
             this.lblEmployee_ID = new Krypton.Toolkit.KryptonLabel();
             this.cmbEmployee_ID = new Krypton.Toolkit.KryptonComboBox();
             this.lblDataStatus = new Krypton.Toolkit.KryptonLabel();
@@ -60,10 +58,10 @@
             this.lblTotalAmount = new Krypton.Toolkit.KryptonLabel();
             this.lblApprovalOpinions = new Krypton.Toolkit.KryptonLabel();
             this.txtTotalAmount = new Krypton.Toolkit.KryptonTextBox();
+            this.txtTotalQty = new Krypton.Toolkit.KryptonTextBox();
             this.txtTotalCostAmount = new Krypton.Toolkit.KryptonTextBox();
             this.lblTotalCostAmount = new Krypton.Toolkit.KryptonLabel();
-            this.lblOutgoing = new Krypton.Toolkit.KryptonLabel();
-            this.chkOutgoing = new Krypton.Toolkit.KryptonCheckBox();
+            this.lblTotalQty = new Krypton.Toolkit.KryptonLabel();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceSub)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1)).BeginInit();
@@ -76,7 +74,6 @@
             this.kryptonPanelMainInfo.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.cmbCustomerVendor_ID)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmbDepartmentID)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.cmbLocation_ID)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmbEmployee_ID)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainerGridAndSub)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainerGridAndSub.Panel1)).BeginInit();
@@ -121,8 +118,6 @@
             this.kryptonPanelMainInfo.Controls.Add(this.txtRefNO);
             this.kryptonPanelMainInfo.Controls.Add(this.lblBillNo);
             this.kryptonPanelMainInfo.Controls.Add(this.txtBillNo);
-            this.kryptonPanelMainInfo.Controls.Add(this.lblLocation_ID);
-            this.kryptonPanelMainInfo.Controls.Add(this.cmbLocation_ID);
             this.kryptonPanelMainInfo.Controls.Add(this.lblEmployee_ID);
             this.kryptonPanelMainInfo.Controls.Add(this.cmbEmployee_ID);
             this.kryptonPanelMainInfo.Controls.Add(this.lblDataStatus);
@@ -137,14 +132,32 @@
             this.kryptonPanelMainInfo.Size = new System.Drawing.Size(1067, 206);
             this.kryptonPanelMainInfo.TabIndex = 100;
             // 
+            // lblOutgoing
+            // 
+            this.lblOutgoing.Location = new System.Drawing.Point(628, 67);
+            this.lblOutgoing.Name = "lblOutgoing";
+            this.lblOutgoing.Size = new System.Drawing.Size(62, 20);
+            this.lblOutgoing.TabIndex = 187;
+            this.lblOutgoing.Values.Text = "外发加工";
+            // 
+            // chkOutgoing
+            // 
+            this.chkOutgoing.Location = new System.Drawing.Point(696, 70);
+            this.chkOutgoing.Name = "chkOutgoing";
+            this.chkOutgoing.Size = new System.Drawing.Size(19, 13);
+            this.chkOutgoing.TabIndex = 188;
+            this.chkOutgoing.Values.Text = "";
+            this.chkOutgoing.CheckedChanged += new System.EventHandler(this.chkOutgoing_CheckedChanged);
+            // 
             // cmbCustomerVendor_ID
             // 
             this.cmbCustomerVendor_ID.DropDownWidth = 100;
             this.cmbCustomerVendor_ID.IntegralHeight = false;
-            this.cmbCustomerVendor_ID.Location = new System.Drawing.Point(378, 41);
+            this.cmbCustomerVendor_ID.Location = new System.Drawing.Point(696, 91);
             this.cmbCustomerVendor_ID.Name = "cmbCustomerVendor_ID";
             this.cmbCustomerVendor_ID.Size = new System.Drawing.Size(180, 21);
             this.cmbCustomerVendor_ID.TabIndex = 133;
+            this.cmbCustomerVendor_ID.Visible = false;
             // 
             // lblReturnDate
             // 
@@ -163,22 +176,15 @@
             // 
             // lblGeneEvidence
             // 
-            this.lblGeneEvidence.Location = new System.Drawing.Point(798, 63);
+            this.lblGeneEvidence.Location = new System.Drawing.Point(943, 45);
             this.lblGeneEvidence.Name = "lblGeneEvidence";
             this.lblGeneEvidence.Size = new System.Drawing.Size(62, 20);
             this.lblGeneEvidence.TabIndex = 129;
             this.lblGeneEvidence.Values.Text = "产生凭证";
             // 
-            // txtTotalQty
-            // 
-            this.txtTotalQty.Location = new System.Drawing.Point(88, 10);
-            this.txtTotalQty.Name = "txtTotalQty";
-            this.txtTotalQty.Size = new System.Drawing.Size(134, 23);
-            this.txtTotalQty.TabIndex = 122;
-            // 
             // chkGeneEvidence
             // 
-            this.chkGeneEvidence.Location = new System.Drawing.Point(864, 63);
+            this.chkGeneEvidence.Location = new System.Drawing.Point(1009, 45);
             this.chkGeneEvidence.Name = "chkGeneEvidence";
             this.chkGeneEvidence.Size = new System.Drawing.Size(19, 13);
             this.chkGeneEvidence.TabIndex = 130;
@@ -186,33 +192,26 @@
             // 
             // lblCustomerVendor_ID
             // 
-            this.lblCustomerVendor_ID.Location = new System.Drawing.Point(323, 41);
+            this.lblCustomerVendor_ID.Location = new System.Drawing.Point(628, 91);
             this.lblCustomerVendor_ID.Name = "lblCustomerVendor_ID";
-            this.lblCustomerVendor_ID.Size = new System.Drawing.Size(49, 20);
+            this.lblCustomerVendor_ID.Size = new System.Drawing.Size(62, 20);
             this.lblCustomerVendor_ID.TabIndex = 119;
-            this.lblCustomerVendor_ID.Values.Text = "加工方";
-            // 
-            // lblTotalQty
-            // 
-            this.lblTotalQty.Location = new System.Drawing.Point(33, 10);
-            this.lblTotalQty.Name = "lblTotalQty";
-            this.lblTotalQty.Size = new System.Drawing.Size(49, 20);
-            this.lblTotalQty.TabIndex = 121;
-            this.lblTotalQty.Values.Text = "总数量";
+            this.lblCustomerVendor_ID.Values.Text = "加工厂商";
+            this.lblCustomerVendor_ID.Visible = false;
             // 
             // lblDepartmentID
             // 
-            this.lblDepartmentID.Location = new System.Drawing.Point(336, 67);
+            this.lblDepartmentID.Location = new System.Drawing.Point(310, 45);
             this.lblDepartmentID.Name = "lblDepartmentID";
-            this.lblDepartmentID.Size = new System.Drawing.Size(36, 20);
+            this.lblDepartmentID.Size = new System.Drawing.Size(62, 20);
             this.lblDepartmentID.TabIndex = 109;
-            this.lblDepartmentID.Values.Text = "部门";
+            this.lblDepartmentID.Values.Text = "生产部门";
             // 
             // cmbDepartmentID
             // 
             this.cmbDepartmentID.DropDownWidth = 100;
             this.cmbDepartmentID.IntegralHeight = false;
-            this.cmbDepartmentID.Location = new System.Drawing.Point(378, 65);
+            this.cmbDepartmentID.Location = new System.Drawing.Point(378, 43);
             this.cmbDepartmentID.Name = "cmbDepartmentID";
             this.cmbDepartmentID.Size = new System.Drawing.Size(180, 21);
             this.cmbDepartmentID.TabIndex = 110;
@@ -247,26 +246,9 @@
             this.txtBillNo.Size = new System.Drawing.Size(137, 23);
             this.txtBillNo.TabIndex = 102;
             // 
-            // lblLocation_ID
-            // 
-            this.lblLocation_ID.Location = new System.Drawing.Point(336, 93);
-            this.lblLocation_ID.Name = "lblLocation_ID";
-            this.lblLocation_ID.Size = new System.Drawing.Size(36, 20);
-            this.lblLocation_ID.TabIndex = 105;
-            this.lblLocation_ID.Values.Text = "库位";
-            // 
-            // cmbLocation_ID
-            // 
-            this.cmbLocation_ID.DropDownWidth = 100;
-            this.cmbLocation_ID.IntegralHeight = false;
-            this.cmbLocation_ID.Location = new System.Drawing.Point(378, 89);
-            this.cmbLocation_ID.Name = "cmbLocation_ID";
-            this.cmbLocation_ID.Size = new System.Drawing.Size(180, 21);
-            this.cmbLocation_ID.TabIndex = 106;
-            // 
             // lblEmployee_ID
             // 
-            this.lblEmployee_ID.Location = new System.Drawing.Point(696, 42);
+            this.lblEmployee_ID.Location = new System.Drawing.Point(641, 45);
             this.lblEmployee_ID.Name = "lblEmployee_ID";
             this.lblEmployee_ID.Size = new System.Drawing.Size(49, 20);
             this.lblEmployee_ID.TabIndex = 107;
@@ -276,9 +258,9 @@
             // 
             this.cmbEmployee_ID.DropDownWidth = 100;
             this.cmbEmployee_ID.IntegralHeight = false;
-            this.cmbEmployee_ID.Location = new System.Drawing.Point(751, 40);
+            this.cmbEmployee_ID.Location = new System.Drawing.Point(696, 40);
             this.cmbEmployee_ID.Name = "cmbEmployee_ID";
-            this.cmbEmployee_ID.Size = new System.Drawing.Size(125, 21);
+            this.cmbEmployee_ID.Size = new System.Drawing.Size(180, 21);
             this.cmbEmployee_ID.TabIndex = 108;
             // 
             // lblDataStatus
@@ -409,6 +391,13 @@
             this.txtTotalAmount.Size = new System.Drawing.Size(100, 23);
             this.txtTotalAmount.TabIndex = 126;
             // 
+            // txtTotalQty
+            // 
+            this.txtTotalQty.Location = new System.Drawing.Point(88, 10);
+            this.txtTotalQty.Name = "txtTotalQty";
+            this.txtTotalQty.Size = new System.Drawing.Size(134, 23);
+            this.txtTotalQty.TabIndex = 122;
+            // 
             // txtTotalCostAmount
             // 
             this.txtTotalCostAmount.Location = new System.Drawing.Point(283, 10);
@@ -424,21 +413,13 @@
             this.lblTotalCostAmount.TabIndex = 123;
             this.lblTotalCostAmount.Values.Text = "总成本";
             // 
-            // lblOutgoing
+            // lblTotalQty
             // 
-            this.lblOutgoing.Location = new System.Drawing.Point(683, 67);
-            this.lblOutgoing.Name = "lblOutgoing";
-            this.lblOutgoing.Size = new System.Drawing.Size(62, 20);
-            this.lblOutgoing.TabIndex = 187;
-            this.lblOutgoing.Values.Text = "外发加工";
-            // 
-            // chkOutgoing
-            // 
-            this.chkOutgoing.Location = new System.Drawing.Point(751, 70);
-            this.chkOutgoing.Name = "chkOutgoing";
-            this.chkOutgoing.Size = new System.Drawing.Size(19, 13);
-            this.chkOutgoing.TabIndex = 188;
-            this.chkOutgoing.Values.Text = "";
+            this.lblTotalQty.Location = new System.Drawing.Point(33, 10);
+            this.lblTotalQty.Name = "lblTotalQty";
+            this.lblTotalQty.Size = new System.Drawing.Size(49, 20);
+            this.lblTotalQty.TabIndex = 121;
+            this.lblTotalQty.Values.Text = "总数量";
             // 
             // UCMaterialReturn
             // 
@@ -462,7 +443,6 @@
             this.kryptonPanelMainInfo.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.cmbCustomerVendor_ID)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmbDepartmentID)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.cmbLocation_ID)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmbEmployee_ID)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainerGridAndSub.Panel1)).EndInit();
             this.kryptonSplitContainerGridAndSub.Panel1.ResumeLayout(false);
@@ -492,8 +472,6 @@
         private Krypton.Toolkit.KryptonLabel lblDataStatus;
         private Krypton.Toolkit.KryptonLabel lblBillNo;
         private Krypton.Toolkit.KryptonTextBox txtBillNo;
-        private Krypton.Toolkit.KryptonLabel lblLocation_ID;
-        private Krypton.Toolkit.KryptonComboBox cmbLocation_ID;
         private Krypton.Toolkit.KryptonLabel lblEmployee_ID;
         private Krypton.Toolkit.KryptonComboBox cmbEmployee_ID;
         private Krypton.Toolkit.KryptonLabel lblDepartmentID;

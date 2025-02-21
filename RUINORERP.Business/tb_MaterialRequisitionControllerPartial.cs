@@ -570,7 +570,6 @@ namespace RUINORERP.Business
                              .Includes(a => a.tb_manufacturingorder)
                              .Includes(a => a.tb_department)
                              .Includes(a => a.tb_customervendor)
-                              .Includes(a => a.tb_location)
                               .AsNavQueryable()//加这个前面,超过三级在前面加这一行，并且第四级无VS智能提示，但是可以用
                               .Includes(a => a.tb_MaterialRequisitionDetails, b => b.tb_proddetail, c => c.tb_prod, d => d.tb_unit)
                                .AsNavQueryable()//加这个前面,超过三级在前面加这一行，并且第四级无VS智能提示，但是可以用

@@ -237,13 +237,7 @@ namespace RUINORERP.Model
         //Location_ID.FK_MATERIALREDETAIL_REF_LOCATION)
         //tb_Location.Location_ID)
 
-        //[Browsable(false)]打印报表时的数据源会不显示
-        [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_MaterialRequisition.Location_ID))]
-        public virtual List<tb_MaterialRequisition> tb_MaterialRequisitions { get; set; }
-        //tb_MaterialRequisition.Location_ID)
-        //Location_ID.FK_MATERIALREQUISITIONS_REF_LOCATION)
-        //tb_Location.Location_ID)
+         
 
         //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
@@ -293,13 +287,7 @@ namespace RUINORERP.Model
         //Location_ID.FK_PRODRetruningdetail_REF_LOCAT)
         //tb_Location.Location_ID)
 
-        //[Browsable(false)]打印报表时的数据源会不显示
-        [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_MaterialReturn.Location_ID))]
-        public virtual List<tb_MaterialReturn> tb_MaterialReturns { get; set; }
-        //tb_MaterialReturn.Location_ID)
-        //Location_ID.FK_TB_MATERE_REF_TB_LOCAT)
-        //tb_Location.Location_ID)
+        
 
         //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]

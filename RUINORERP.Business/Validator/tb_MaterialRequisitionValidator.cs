@@ -55,7 +55,6 @@ namespace RUINORERP.Business
 
  RuleFor(tb_MaterialRequisition =>tb_MaterialRequisition.MOID).Must(CheckForeignKeyValue).WithMessage("制令单:下拉选择值不正确。");
 
- RuleFor(tb_MaterialRequisition =>tb_MaterialRequisition.Location_ID).Must(CheckForeignKeyValue).WithMessage("库位:下拉选择值不正确。");
 
  RuleFor(tb_MaterialRequisition =>tb_MaterialRequisition.ProjectGroup_ID).Must(CheckForeignKeyValueCanNull).WithMessage("项目组:下拉选择值不正确。");
  RuleFor(tb_MaterialRequisition =>tb_MaterialRequisition.ProjectGroup_ID).NotEmpty().When(x => x.ProjectGroup_ID.HasValue);

@@ -51,7 +51,6 @@ namespace RUINORERP.UI.MRP.MP
             // InitDataToCmbByEnumDynamicGeneratedDataSource<tb_MaterialRequisition>(typeof(Priority), e => e.Priority, cmbOrderPriority, false);
         }
 
-     
 
         internal override void LoadDataToUI(object Entity)
         {
@@ -153,7 +152,7 @@ namespace RUINORERP.UI.MRP.MP
                     {
                         if ((entity.ActionStatus == ActionStatus.加载 && entity.ApprovalStatus == (int)ApprovalStatus.未审核) && s2.PropertyName == entity.GetPropertyName<tb_MaterialRequisitionDetail>(c => c.ActualSentQty))
                         {
-                            
+
                         }
                     };
                 }
@@ -172,7 +171,7 @@ namespace RUINORERP.UI.MRP.MP
                 //权限允许
                 if ((true && entity.DataStatus == (int)DataStatus.草稿) || (true && entity.DataStatus == (int)DataStatus.新建))
                 {
-                    
+
                 }
 
                 //如果是制令单引入变化则加载明细及相关数据
@@ -180,7 +179,16 @@ namespace RUINORERP.UI.MRP.MP
                 {
                     LoadChildItems(entity.MOID);
                     ToolBarEnabledControl(entity);
+                    if (s2.PropertyName == entity.GetPropertyName<tb_MaterialRequisition>(c => c.DepartmentID))
+                    {
+                        if (cmbDepartmentID.SelectedIndex == -1)
+                        {
+                            entity.DepartmentID=null;
+                        }
+                    }
+
                 }
+
 
                 //数据状态变化会影响按钮变化
                 if (s2.PropertyName == entity.GetPropertyName<tb_MaterialRequisition>(c => c.DataStatus))
@@ -212,7 +220,7 @@ namespace RUINORERP.UI.MRP.MP
                         }
                     }
                     //同步到明细UI表格中？
-                     sgh.SynchronizeUpdateCellValue<tb_MaterialRequisitionDetail>(sgd, c => c.ActualSentQty, EditEntity.tb_MaterialRequisitionDetails);
+                    sgh.SynchronizeUpdateCellValue<tb_MaterialRequisitionDetail>(sgd, c => c.ActualSentQty, EditEntity.tb_MaterialRequisitionDetails);
                 }
                 //显示 打印状态 如果是草稿状态 不显示打印
                 if ((DataStatus)EditEntity.DataStatus != DataStatus.草稿)
@@ -253,7 +261,7 @@ namespace RUINORERP.UI.MRP.MP
 
             //创建表达式 外发工厂
             var lambdaOut = Expressionable.Create<tb_CustomerVendor>()
-                            .And(t => t.IsOther== true)
+                            .And(t => t.IsOther == true)
                             .ToExpression();
 
             BaseProcessor baseProcessorOut = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_CustomerVendor).Name + "Processor");
@@ -266,7 +274,7 @@ namespace RUINORERP.UI.MRP.MP
 
             if (entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改)
             {
-                base.InitRequiredToControl(MainForm.Instance.AppContext.GetRequiredService <tb_MaterialRequisitionValidator> (), kryptonPanelMainInfo.Controls);
+                base.InitRequiredToControl(MainForm.Instance.AppContext.GetRequiredService<tb_MaterialRequisitionValidator>(), kryptonPanelMainInfo.Controls);
                 // base.InitEditItemToControl(entity, kryptonPanelMainInfo.Controls);
             }
             base.BindData(entity);
@@ -276,9 +284,9 @@ namespace RUINORERP.UI.MRP.MP
         SourceGridDefine sgd = null;
         //        SourceGridHelper<View_ProdDetail, tb_MaterialRequisitionsDetail> sgh = new SourceGridHelper<View_ProdDetail, tb_MaterialRequisitionsDetail>();
         SourceGridHelper sgh = new SourceGridHelper();
-       
 
-                List<SGDefineColumnItem> listCols = new List<SGDefineColumnItem>();
+
+        List<SGDefineColumnItem> listCols = new List<SGDefineColumnItem>();
         private void UcSaleOrderEdit_Load(object sender, EventArgs e)
         {
             //InitDataTocmbbox();
@@ -357,7 +365,7 @@ namespace RUINORERP.UI.MRP.MP
             bindingSourceSub.DataSource = lines;
             sgd.BindingSourceLines = bindingSourceSub;
 
-      
+
             sgd.SetDependencyObject<ProductSharePart, tb_MaterialRequisitionDetail>(MainForm.Instance.list);
 
             sgd.HasRowHeader = true;
@@ -530,7 +538,7 @@ namespace RUINORERP.UI.MRP.MP
             return false;
         }
 
-     
+
 
         protected async override Task<bool> CloseCaseAsync()
         {

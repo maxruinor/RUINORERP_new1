@@ -42,7 +42,6 @@ namespace RUINORERP.Business
 
  RuleFor(tb_MaterialReturn =>tb_MaterialReturn.BillType).NotEmpty().When(x => x.BillType.HasValue);
 
- RuleFor(tb_MaterialReturn =>tb_MaterialReturn.Location_ID).Must(CheckForeignKeyValue).WithMessage("库位:下拉选择值不正确。");
 
  RuleFor(tb_MaterialReturn =>tb_MaterialReturn.Employee_ID).Must(CheckForeignKeyValue).WithMessage("经办人:下拉选择值不正确。");
 
@@ -50,7 +49,7 @@ namespace RUINORERP.Business
  RuleFor(tb_MaterialReturn =>tb_MaterialReturn.DepartmentID).NotEmpty().When(x => x.DepartmentID.HasValue);
 
 
- RuleFor(tb_MaterialReturn =>tb_MaterialReturn.CustomerVendor_ID).Must(CheckForeignKeyValue).WithMessage("加工厂商:下拉选择值不正确。");
+ RuleFor(tb_MaterialReturn =>tb_MaterialReturn.CustomerVendor_ID).Must(CheckForeignKeyValueCanNull).WithMessage("加工厂商:下拉选择值不正确。");
 
  RuleFor(x => x.TotalQty).PrecisionScale(18,0,true).WithMessage("总数量:小数位不能超过0。");
 

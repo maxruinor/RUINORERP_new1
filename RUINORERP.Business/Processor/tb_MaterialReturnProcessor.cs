@@ -50,7 +50,6 @@ namespace RUINORERP.Business.Processor
             queryFilter.SetQueryField<tb_MaterialReturn, tb_MaterialRequisition>(c => c.MR_ID, c => c.MaterialRequisitionNO, t => t.MaterialRequisitionNO);
             queryFilter.SetQueryField<tb_MaterialReturn>(c => c.CustomerVendor_ID);
             queryFilter.SetQueryField<tb_MaterialReturn>(c => c.Employee_ID);
-            queryFilter.SetQueryField<tb_MaterialReturn>(c => c.tb_location);
             queryFilter.SetQueryField<tb_MaterialReturn>(c => c.DepartmentID);
             queryFilter.SetQueryField<tb_MaterialReturn>(c => c.ReturnDate);
             return queryFilter;

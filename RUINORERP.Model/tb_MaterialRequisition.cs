@@ -153,20 +153,7 @@ namespace RUINORERP.Model
                         }
         }
 
-        private long _Location_ID;
-        /// <summary>
-        /// 库位
-        /// </summary>
-        [AdvQueryAttribute(ColName = "Location_ID",ColDesc = "库位")] 
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Location_ID" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "库位" )]
-        [FKRelationAttribute("tb_Location","Location_ID")]
-        public long Location_ID
-        { 
-            get{return _Location_ID;}
-            set{
-            SetProperty(ref _Location_ID, value);
-                        }
-        }
+ 
 
         private long? _ProjectGroup_ID;
         /// <summary>
@@ -506,13 +493,13 @@ namespace RUINORERP.Model
                         }
         }
 
-        private bool? _Outgoing= false;
+        private bool _Outgoing= false;
         /// <summary>
         /// 外发加工
         /// </summary>
         [AdvQueryAttribute(ColName = "Outgoing",ColDesc = "外发加工")] 
-        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType ="Boolean",  ColumnName = "Outgoing" ,IsNullable = true,ColumnDescription = "外发加工" )]
-        public bool? Outgoing
+        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType ="Boolean",  ColumnName = "Outgoing" ,IsNullable = false,ColumnDescription = "外发加工" )]
+        public bool Outgoing
         { 
             get{return _Outgoing;}
             set{
@@ -551,11 +538,6 @@ namespace RUINORERP.Model
         //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(MOID))]
         public virtual tb_ManufacturingOrder tb_manufacturingorder { get; set; }
-
-        [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)] 打印报表时的数据源会不显示
-        [Navigate(NavigateType.OneToOne, nameof(Location_ID))]
-        public virtual tb_Location tb_location { get; set; }
 
         [SugarColumn(IsIgnore = true)]
         //[Browsable(false)] 打印报表时的数据源会不显示

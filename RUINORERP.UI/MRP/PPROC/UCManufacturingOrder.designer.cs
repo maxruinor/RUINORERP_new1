@@ -630,7 +630,7 @@
             this.kryptonLabel3.Name = "kryptonLabel3";
             this.kryptonLabel3.Size = new System.Drawing.Size(62, 20);
             this.kryptonLabel3.TabIndex = 145;
-            this.kryptonLabel3.Values.Text = "需求部门";
+            this.kryptonLabel3.Values.Text = "生产部门";
             // 
             // cmbDepartment
             // 

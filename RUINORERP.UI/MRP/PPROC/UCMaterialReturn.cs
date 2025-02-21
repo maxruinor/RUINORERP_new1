@@ -48,7 +48,7 @@ namespace RUINORERP.UI.MRP.MP
             // InitDataToCmbByEnumDynamicGeneratedDataSource<tb_MaterialReturn>(typeof(Priority), e => e.Priority, cmbOrderPriority, false);
         }
 
- 
+
 
         internal override void LoadDataToUI(object Entity)
         {
@@ -109,7 +109,6 @@ namespace RUINORERP.UI.MRP.MP
             EditEntity = entity;
 
             DataBindingHelper.BindData4TextBox<tb_MaterialReturn>(entity, t => t.BillNo, txtBillNo, BindDataType4TextBox.Text, false);
-            DataBindingHelper.BindData4Cmb<tb_Location>(entity, k => k.Location_ID, v => v.Name, cmbLocation_ID);
             DataBindingHelper.BindData4TextBox<tb_MaterialReturn>(entity, t => t.TotalQty.ToString(), txtTotalQty, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4TextBox<tb_MaterialReturn>(entity, t => t.TotalCostAmount.ToString(), txtTotalCostAmount, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4TextBox<tb_MaterialReturn>(entity, t => t.TotalAmount.ToString(), txtTotalAmount, BindDataType4TextBox.Money, false);
@@ -121,7 +120,7 @@ namespace RUINORERP.UI.MRP.MP
             DataBindingHelper.BindData4CheckBox<tb_MaterialReturn>(entity, t => t.GeneEvidence, chkGeneEvidence, false);
             DataBindingHelper.BindData4CheckBox<tb_MaterialReturn>(entity, t => t.Outgoing, chkOutgoing, false);
             DataBindingHelper.BindData4Cmb<tb_Employee>(entity, k => k.Employee_ID, v => v.Employee_Name, cmbEmployee_ID, true);
-            DataBindingHelper.BindData4Cmb<tb_CustomerVendor>(entity, k => k.CustomerVendor_ID, v => v.CVName, cmbCustomerVendor_ID);
+
             DataBindingHelper.BindData4Cmb<tb_Department>(entity, k => k.DepartmentID, v => v.DepartmentName, cmbDepartmentID);
             DataBindingHelper.BindData4TextBox<tb_MaterialReturn>(entity, t => t.Notes, txtNotes, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_MaterialReturn>(entity, t => t.ApprovalOpinions, txtApprovalOpinions, BindDataType4TextBox.Text, false);
@@ -148,7 +147,7 @@ namespace RUINORERP.UI.MRP.MP
                 //权限允许
                 if ((true && entity.DataStatus == (int)DataStatus.草稿) || (true && entity.DataStatus == (int)DataStatus.新建))
                 {
-                    
+
                 }
 
                 //如果是制令单引入变化则加载明细及相关数据
@@ -211,10 +210,21 @@ namespace RUINORERP.UI.MRP.MP
             DataBindingHelper.InitFilterForControlByExp<tb_MaterialRequisition>(entity, txtRefNO, c => c.MaterialRequisitionNO, queryFilter);
 
 
+            //创建表达式 外发工厂
+            var lambdaOut = Expressionable.Create<tb_CustomerVendor>()
+                            .And(t => t.IsOther == true)
+                            .ToExpression();
+
+            BaseProcessor baseProcessorOut = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_CustomerVendor).Name + "Processor");
+            QueryFilter queryFilterCOut = baseProcessorOut.GetQueryFilter();
+            queryFilterCOut.FilterLimitExpressions.Add(lambdaOut);
+            DataBindingHelper.BindData4Cmb<tb_CustomerVendor, tb_MaterialReturn>(entity, k => k.CustomerVendor_ID, v => v.CVName, k => k.CustomerVendor_ID.Value, cmbCustomerVendor_ID, true, queryFilterCOut.GetFilterExpression<tb_CustomerVendor>());
+            DataBindingHelper.InitFilterForControlByExp<tb_CustomerVendor>(entity, cmbCustomerVendor_ID, c => c.CVName, queryFilterCOut);
+
 
             if (entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改)
             {
-                base.InitRequiredToControl(MainForm.Instance.AppContext.GetRequiredService <tb_MaterialReturnValidator> (), kryptonPanelMainInfo.Controls);
+                base.InitRequiredToControl(MainForm.Instance.AppContext.GetRequiredService<tb_MaterialReturnValidator>(), kryptonPanelMainInfo.Controls);
                 // base.InitEditItemToControl(entity, kryptonPanelMainInfo.Controls);
             }
             base.BindData(entity);
@@ -224,7 +234,7 @@ namespace RUINORERP.UI.MRP.MP
         SourceGridDefine sgd = null;
         //        SourceGridHelper<View_ProdDetail, tb_MaterialReturnDetail> sgh = new SourceGridHelper<View_ProdDetail, tb_MaterialReturnDetail>();
         SourceGridHelper sgh = new SourceGridHelper();
-  
+
         List<SGDefineColumnItem> listCols = new List<SGDefineColumnItem>();
         private void UcSaleOrderEdit_Load(object sender, EventArgs e)
         {
@@ -303,7 +313,7 @@ namespace RUINORERP.UI.MRP.MP
             bindingSourceSub.DataSource = lines;
             sgd.BindingSourceLines = bindingSourceSub;
 
-             
+
             sgd.SetDependencyObject<ProductSharePart, tb_MaterialReturnDetail>(MainForm.Instance.list);
 
             sgd.HasRowHeader = true;
@@ -867,5 +877,10 @@ protected override void Print()
             }
         }
 
+        private void chkOutgoing_CheckedChanged(object sender, EventArgs e)
+        {
+            lblCustomerVendor_ID.Visible = chkOutgoing.Checked;
+            cmbCustomerVendor_ID.Visible = chkOutgoing.Checked;
+        }
     }
 }

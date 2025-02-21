@@ -115,7 +115,6 @@ namespace RUINORERP.Business
                 _unitOfWorkManage.BeginTran();
                 tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
 
-
                 //这部分是否能提出到上一级公共部分？
                 entity.DataStatus = (int)DataStatus.确认;
                 //entity.ApprovalOpinions = approvalEntity.ApprovalComments;
@@ -154,8 +153,6 @@ namespace RUINORERP.Business
                          .ToListAsync();
                     }
                 }
-
-
 
                 //先获取到相关发料主子数据
                 if (entity.tb_materialrequisition.tb_manufacturingorder != null)
@@ -259,7 +256,8 @@ namespace RUINORERP.Business
         }
 
         /// <summary>
-        /// 反审核 减少库存，发料单中的实发数量增加
+        /// 反审核 
+        /// 这里要判断，如果针对这个返工退货，已经有或部分入库了。这时不可以反审。
         /// </summary>
         /// <param name="entity"></param>
         /// <returns></returns>

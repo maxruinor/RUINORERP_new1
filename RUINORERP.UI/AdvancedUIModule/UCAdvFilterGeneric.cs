@@ -454,6 +454,14 @@ namespace RUINORERP.UI.AdvancedUIModule
                 {
                     QueryConditionFilter.InvisibleCols.Add("PurOrder_ID");
                 }
+                if (typeof(T).Name == typeof(tb_PurEntryRe).Name)
+                {
+                    QueryConditionFilter.InvisibleCols.Add("PurEntryID");
+                }
+                if (typeof(T).Name == typeof(tb_PurReturnEntry).Name)
+                {
+                    QueryConditionFilter.InvisibleCols.Add("PurEntryRe_ID");
+                }
                 if (typeof(T).Name == typeof(tb_SaleOut).Name)
                 {
                     QueryConditionFilter.InvisibleCols.Add("SOrder_ID");
@@ -466,6 +474,39 @@ namespace RUINORERP.UI.AdvancedUIModule
                 {
                     QueryConditionFilter.InvisibleCols.Add("SOrder_ID");
                 }
+                if (typeof(T).Name == typeof(tb_FinishedGoodsInv).Name)
+                {
+                    QueryConditionFilter.InvisibleCols.Add("MOID");
+                }
+                if (typeof(T).Name == typeof(tb_MRP_ReworkEntry).Name)
+                {
+                    QueryConditionFilter.InvisibleCols.Add("ReworkReturnID");
+                }
+                if (typeof(T).Name == typeof(tb_MRP_ReworkReturn).Name)
+                {
+                    QueryConditionFilter.InvisibleCols.Add("FG_ID");
+                }
+                if (typeof(T).Name == typeof(tb_ManufacturingOrder).Name)
+                {
+                    QueryConditionFilter.InvisibleCols.Add("PDID");
+                }
+                if (typeof(T).Name == typeof(tb_ProductionDemand).Name)
+                {
+                    QueryConditionFilter.InvisibleCols.Add("PPID");
+                }
+                if (typeof(T).Name == typeof(tb_ProductionPlan).Name)
+                {
+                    QueryConditionFilter.InvisibleCols.Add("SOrder_ID");
+                }
+                if (typeof(T).Name == typeof(tb_MaterialRequisition).Name)
+                {
+                    QueryConditionFilter.InvisibleCols.Add("MOID");
+                }
+                if (typeof(T).Name == typeof(tb_MaterialReturn).Name)
+                {
+                    QueryConditionFilter.InvisibleCols.Add("MR_ID");
+                }
+
                 //这里设置了指定列不可见
                 foreach (var item in QueryConditionFilter.InvisibleCols)
                 {

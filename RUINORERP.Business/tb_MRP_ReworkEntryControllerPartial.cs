@@ -349,7 +349,8 @@ namespace RUINORERP.Business
                         #endregion
 
                         //更新已交数量
-                        int updatecounter = await _unitOfWorkManage.GetDbClient().Updateable<tb_PurOrderDetail>(entity.tb_mrp_reworkreturn.tb_MRP_ReworkReturnDetails).ExecuteCommandAsync();
+                        int updatecounter = await _unitOfWorkManage.GetDbClient()
+                            .Updateable<tb_MRP_ReworkReturnDetail>(entity.tb_mrp_reworkreturn.tb_MRP_ReworkReturnDetails).ExecuteCommandAsync();
                         if (updatecounter == 0)
                         {
 

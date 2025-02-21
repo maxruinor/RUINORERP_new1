@@ -209,7 +209,12 @@ namespace RUINORERP.Business
             rs.Succeeded = false;
             try
             {
-
+                if (entity.tb_MRP_ReworkEntries != null && (entity.tb_MRP_ReworkEntries.Any(c => c.DataStatus == (int)DataStatus.确认 || c.DataStatus == (int)DataStatus.完结) && entity.tb_MRP_ReworkEntries.Any(c => c.ApprovalStatus == (int)ApprovalStatus.已审核)))
+                {
+                    rs.ErrorMsg = "对应的返工退货单下存在已确认或已完结，或已审核的返工入库单，不能反审核  ";
+                    rs.Succeeded = false;
+                    return rs;
+                }
 
                 // 开启事务，保证数据一致性
                 _unitOfWorkManage.BeginTran();
@@ -241,13 +246,14 @@ namespace RUINORERP.Business
                     inv.LatestStorageTime = System.DateTime.Now;
 
                     //采购订单时添加 。这里减掉在路上的数量
-                    inv.On_the_way_Qty = inv.On_the_way_Qty + child.Quantity;
+                    inv.On_the_way_Qty = inv.On_the_way_Qty - child.Quantity;
 
-                    inv.Quantity = inv.Quantity - child.Quantity;
+                    inv.Quantity = inv.Quantity + child.Quantity;
                     inv.Inv_SubtotalCostMoney = inv.Inv_Cost * inv.Quantity;
                     inv.LatestOutboundTime = System.DateTime.Now;
 
                     #endregion
+
                     ReturnResults<tb_Inventory> rr = await ctrinv.SaveOrUpdate(inv);
                     if (rr.Succeeded)
                     {

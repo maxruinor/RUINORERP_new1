@@ -52,7 +52,6 @@ namespace RUINORERP.UI.PSI.INV
 
 
 
-
             txtMaxRow.Text = "100";
             //base.RelatedBillEditCol = (c => c.PurEntryNo);
             //base.ChildRelatedEntityType = typeof(tb_PurOrderDetail);
@@ -135,6 +134,8 @@ namespace RUINORERP.UI.PSI.INV
             { "调拨出库", "tb_StockTransfer" },
             { "转换单减", "tb_ProdConversion" },
             { "转换单加", "tb_ProdConversion" },
+            { "返工退库", "tb_MRP_ReworkReturn" },
+            { "返工入库", "tb_MRP_ReworkEntry" },
             { "缴库", "tb_FinishedGoodsInv" }
         };//还要添加调拨单 转换单，采购退回及采购退回入库。后面还要实现的返厂入库，返厂出库，返厂退回，返厂退回入库，返厂领用，返厂领用退回，返
             foreach (KeyValuePair<string, string> item in mappings)

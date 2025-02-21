@@ -348,6 +348,7 @@ namespace RUINORERP.Business
 
         /// <summary>
         /// 反审核  
+        /// 如果退了部分了。这时领料单不可以反审了
         /// </summary>
         /// <param name="entity"></param>
         /// <returns></returns>
@@ -360,6 +361,34 @@ namespace RUINORERP.Business
 
             try
             {
+                //判断是否能反审?
+                if (entity.tb_manufacturingorder != null && entity.tb_manufacturingorder.tb_FinishedGoodsInvs != null
+                    && (entity.tb_manufacturingorder.tb_FinishedGoodsInvs.Any(c => c.DataStatus == (int)DataStatus.确认 || c.DataStatus == (int)DataStatus.完结) && entity.tb_manufacturingorder.tb_FinishedGoodsInvs.Any(c => c.ApprovalStatus == (int)ApprovalStatus.已审核)))
+                {
+
+                    rs.ErrorMsg = "对应的制令单下存在已确认或已完结，或已审核的缴库单，不能反审核  ";
+                    //_unitOfWorkManage.RollbackTran();
+                    rs.Succeeded = false;
+                    return rs;
+                }
+                if (entity.tb_MaterialReturns != null && (entity.tb_MaterialReturns.Any(c => c.DataStatus == (int)DataStatus.确认 || c.DataStatus == (int)DataStatus.完结) && entity.tb_MaterialReturns.Any(c => c.ApprovalStatus == (int)ApprovalStatus.已审核)))
+                {
+                    rs.ErrorMsg = "对应的领料单下存在已确认或已完结，或已审核的退料单，不能反审核  ";
+                    //_unitOfWorkManage.RollbackTran();
+                    rs.Succeeded = false;
+                    return rs;
+                }
+
+                //判断是否能反审?
+                if (entity.DataStatus != (int)DataStatus.确认 || !entity.ApprovalResults.HasValue)
+                {
+                    //return false;
+                    rs.ErrorMsg = "有结案的单据，已经跳过反审";
+                    //_unitOfWorkManage.RollbackTran();
+                    rs.Succeeded = false;
+                    return rs;
+                }
+
                 // 开启事务，保证数据一致性
                 _unitOfWorkManage.BeginTran();
                 tb_OpeningInventoryController<tb_OpeningInventory> ctrOPinv = _appContext.GetRequiredService<tb_OpeningInventoryController<tb_OpeningInventory>>();
@@ -367,25 +396,7 @@ namespace RUINORERP.Business
                 //更新拟销售量减少
 
 
-                //判断是否能反审?
-                if (entity.tb_manufacturingorder != null && entity.tb_manufacturingorder.tb_FinishedGoodsInvs != null
-                    && (entity.tb_manufacturingorder.tb_FinishedGoodsInvs.Any(c => c.DataStatus == (int)DataStatus.确认 || c.DataStatus == (int)DataStatus.完结) && entity.tb_manufacturingorder.tb_FinishedGoodsInvs.Any(c => c.ApprovalStatus == (int)ApprovalStatus.已审核)))
-                {
 
-                    rs.ErrorMsg = "对应的制令单下存在已确认或已完结，或已审核的缴库单，不能反审核  ";
-                    _unitOfWorkManage.RollbackTran();
-                    rs.Succeeded = false;
-                    return rs;
-                }
-                //判断是否能反审?
-                if (entity.DataStatus != (int)DataStatus.确认 || !entity.ApprovalResults.HasValue)
-                {
-                    //return false;
-                    rs.ErrorMsg = "有结案的单据，已经跳过反审";
-                    _unitOfWorkManage.RollbackTran();
-                    rs.Succeeded = false;
-                    return rs;
-                }
 
                 //这部分是否能提出到上一级公共部分？
                 entity.DataStatus = (int)DataStatus.新建;

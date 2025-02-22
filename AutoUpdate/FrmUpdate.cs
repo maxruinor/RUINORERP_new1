@@ -377,8 +377,20 @@ namespace AutoUpdate
 
         string localXmlFile = Application.StartupPath + "\\AutoUpdaterList.xml";
         string serverXmlFile = string.Empty;
+
+        // 定义文件路径
+        private string filePath = "UpdateLog.txt";
+        /// <summary>
+        /// 启动加载这个窗体时。会在当前目录下生成一个文本文件里面写入值
+        /// 当点下一步时写入值“升级”
+        /// 当点取消时写入值“取消升级”
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void FrmUpdate_Load(object sender, System.EventArgs e)
         {
+            // 在当前目录下创建或打开文件
+            File.WriteAllText(filePath, "准备升级");
 
             btnskipCurrentVersion.Visible = SkipCurrentVersion;
 
@@ -477,6 +489,8 @@ namespace AutoUpdate
 
         private void btnCancel_Click(object sender, System.EventArgs e)
         {
+             
+            File.WriteAllText(filePath, "取消升级");
             this.Close();
             Application.ExitThread();
             Application.Exit();
@@ -486,6 +500,9 @@ namespace AutoUpdate
         {
             if (availableUpdate > 0)
             {
+                
+                File.WriteAllText(filePath, "升级中");
+
                 btnNext.Enabled = false;
                 try
                 {
@@ -758,6 +775,7 @@ namespace AutoUpdate
         {
             try
             {
+                File.WriteAllText(filePath, "升级完成");
                 //下载完成后，copy文件 ,将下载到临时文件夹中的最新的文件复制到应用程序目录中生效再启动
                 //CopyFile(tempUpdatePath, Directory.GetCurrentDirectory());
                 //System.IO.Directory.Delete(tempUpdatePath, true);
@@ -1283,6 +1301,7 @@ namespace AutoUpdate
 
         private void btnskipCurrentVersion_Click(object sender, EventArgs e)
         {
+            File.WriteAllText(filePath, "跳过当前版本");
             mainResult = -9;
             SkipCurrentVersion = true;
             this.Close();

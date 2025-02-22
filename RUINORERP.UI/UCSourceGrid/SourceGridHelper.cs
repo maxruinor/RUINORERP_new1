@@ -821,7 +821,7 @@ namespace RUINORERP.UI.UCSourceGrid
             return _DisplayText;
         }
 
-        public void InitGrid(SourceGrid.Grid grid, SourceGridDefine griddefine, bool autofill, string MainBizDependencyTypeName)
+        public async void InitGrid(SourceGrid.Grid grid, SourceGridDefine griddefine, bool autofill, string MainBizDependencyTypeName)
         {
             FindCurMenuInfo(griddefine);
             SGDefine = griddefine;
@@ -939,7 +939,6 @@ namespace RUINORERP.UI.UCSourceGrid
             //        grid.Columns[griddefine.Count - 1].Width = griddefine[griddefine.Count - 1].width;
             //}
 
-
             //GridHelper.AddSummaryRow(grid, griddefine);
             //grid.Redim(20,grid.Cols);
             // 按照 grid的 大小 添加行数
@@ -965,7 +964,6 @@ namespace RUINORERP.UI.UCSourceGrid
                     grid.Rows[i].Height = 20;
                 }
             }
-
 
             griddefine.OnCalculateTotalValue += Griddefine_OnCalculateTotalValue;
         }
@@ -1032,7 +1030,7 @@ namespace RUINORERP.UI.UCSourceGrid
         /// </summary>
         /// <param name="grid"></param>
         /// <param name="griddefine">索引,这个决定了顺序</param>
-        private void InitGrid(SourceGrid.Grid grid, SourceGridDefine griddefine, string MainBizDependencyTypeName)
+        private async void InitGrid(SourceGrid.Grid grid, SourceGridDefine griddefine, string MainBizDependencyTypeName)
         {
             //启动时默认无选中
             grid.Selection.FocusStyle = SourceGrid.FocusStyle.None;
@@ -1064,18 +1062,25 @@ namespace RUINORERP.UI.UCSourceGrid
             viewColumnHeader.Font = new Font("宋体", 10, FontStyle.Bold);
             viewColumnHeader.TextAlignment = DevAge.Drawing.ContentAlignment.MiddleCenter;
 
-            #region 创建列前去找到对应的列的权限等相关设置
-            //            List<SGColDisplayHandler> displayHandlers = await UIBizSrvice.SetCustomSourceGridAsync(SGDefine, CurMenuInfo, null, null, false);
-            List<SGColDisplayHandler> displayHandlers = Task.Run(() => UIBizSrvice.SetCustomSourceGridAsync(SGDefine, CurMenuInfo, null, null, false)).Result;
-
-            #endregion
 
             #region 创建列
             //排除列头，因为有行头 2024
             PopupMenuForDeleteSelect popupMenuForDelete = new PopupMenuForDeleteSelect(grid, griddefine);
-
+            #region 创建列前去找到对应的列的权限等相关设置
+            //List<SGColDisplayHandler> displayHandlers = await UIBizSrvice.SetCustomSourceGridAsync(SGDefine, CurMenuInfo, null, null, false);
+            List<SGColDisplayHandler> displayHandlers = Task.Run(() => UIBizSrvice.SetCustomSourceGridAsync(SGDefine, CurMenuInfo, null, null, false)).Result;
+            #endregion
+            //设置列宽
+            for (int i = 0; i < displayHandlers.Count; i++)
+            {
+                if (grid.Columns.GetColumnInfo(displayHandlers[i].UniqueId) != null)
+                {
+                    grid.Columns.GetColumnInfo(displayHandlers[i].UniqueId).Width = displayHandlers[i].ColWidth;
+                    grid.Columns.GetColumnInfo(displayHandlers[i].UniqueId).Visible = displayHandlers[i].Visible;
+                }
+            }
+    
             PopupMenuForSelect menuForSelect = new PopupMenuForSelect(grid, griddefine);
-
             menuController = new PopupMenuWithCustomColumns(MainBizDependencyTypeName, griddefine);
             menuController.ColumnDisplays = displayHandlers;
             for (int i = 0; i < griddefine.Count; i++)
@@ -1211,16 +1216,6 @@ namespace RUINORERP.UI.UCSourceGrid
 
             SetColumnsWidth(grid, griddefine);
 
-            //设置列宽
-
-            for (int i = 0; i < displayHandlers.Count; i++)
-            {
-                if (grid.Columns.GetColumnInfo(displayHandlers[i].UniqueId) != null)
-                {
-                    grid.Columns.GetColumnInfo(displayHandlers[i].UniqueId).Width = displayHandlers[i].ColWidth;
-                    grid.Columns.GetColumnInfo(displayHandlers[i].UniqueId).Visible = displayHandlers[i].Visible;
-                }
-            }
 
             #region 注册列宽的变化事件
 
@@ -1258,12 +1253,12 @@ namespace RUINORERP.UI.UCSourceGrid
             //    SourceGridDefine dd = (SourceGridDefine)grid.Tag;
             //}
 
-
             grid.Tag = griddefine;
 
             griddefine.grid = grid;
 
             grid.AutoSizeCells();
+
 
         }
 

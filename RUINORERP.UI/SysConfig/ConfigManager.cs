@@ -81,7 +81,7 @@ namespace RUINORERP.UI.SysConfig
                     }
                 }
             }
-            catch (Exception)
+            catch (Exception wx)
             {
 
 

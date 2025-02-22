@@ -100,7 +100,7 @@
             // lblMonthlyplans
             // 
             this.lblMonthlyplans.LabelStyle = Krypton.Toolkit.LabelStyle.BoldControl;
-            this.lblMonthlyplans.Location = new System.Drawing.Point(284, 216);
+            this.lblMonthlyplans.Location = new System.Drawing.Point(220, 216);
             this.lblMonthlyplans.Name = "lblMonthlyplans";
             this.lblMonthlyplans.Size = new System.Drawing.Size(38, 34);
             this.lblMonthlyplans.StateNormal.ShortText.Color1 = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(128)))), ((int)(((byte)(0)))));
@@ -151,7 +151,7 @@
             // lblMonthly商机
             // 
             this.lblMonthly商机.LabelStyle = Krypton.Toolkit.LabelStyle.BoldControl;
-            this.lblMonthly商机.Location = new System.Drawing.Point(284, 160);
+            this.lblMonthly商机.Location = new System.Drawing.Point(220, 160);
             this.lblMonthly商机.Name = "lblMonthly商机";
             this.lblMonthly商机.Size = new System.Drawing.Size(38, 34);
             this.lblMonthly商机.StateNormal.ShortText.Color1 = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(128)))), ((int)(((byte)(0)))));

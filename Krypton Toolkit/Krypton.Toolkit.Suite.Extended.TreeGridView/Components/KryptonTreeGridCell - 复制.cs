@@ -28,8 +28,6 @@
 // ReSharper disable AssignNullToNotNullAttribute
 #pragma warning disable CS8602
 #nullable enable
-using System.Drawing.Drawing2D;
-
 namespace Krypton.Toolkit.Suite.Extended.TreeGridView
 {
     /// <summary>
@@ -39,7 +37,6 @@ namespace Krypton.Toolkit.Suite.Extended.TreeGridView
     {
         private const int INDENT_WIDTH = 20;
         private const int INDENT_MARGIN = 5;
-        private const int ProgressBarHeight = 20; // 进度条高度
         private int _glyphWidth;
         private int _calculatedLeftPadding;
         internal bool IsSited;
@@ -155,7 +152,6 @@ namespace Krypton.Toolkit.Suite.Extended.TreeGridView
 
         protected override void Paint(Graphics graphics, Rectangle clipBounds, Rectangle cellBounds, int rowIndex, DataGridViewElementStates cellState, object value, object formattedValue, string errorText, DataGridViewCellStyle cellStyle, DataGridViewAdvancedBorderStyle advancedBorderStyle, DataGridViewPaintParts paintParts)
         {
-            //base.Paint(graphics, clipBounds, cellBounds, rowIndex, cellState, value, formattedValue, errorText, cellStyle, advancedBorderStyle, paintParts);
 
             KryptonTreeGridNodeRow? node = OwningNode;
             if (node == null)
@@ -172,39 +168,6 @@ namespace Krypton.Toolkit.Suite.Extended.TreeGridView
 
             // paint the cell normally
             base.Paint(graphics, clipBounds, cellBounds, rowIndex, cellState, value, formattedValue, errorText, cellStyle, advancedBorderStyle, paintParts);
-
-            #region Progress Bar 画进度条的代码位置 有注意这里不会影响下面树的结构这些
-            // 绘制进度条背景和前景
-            double percentage = ProcessBarValue ?? 0;
-            // 绘制进度条背景
-
-            //using (Brush backgroundBrush = new SolidBrush(Color.LightGray))
-            //{
-            //    graphics.FillRectangle(backgroundBrush, cellBounds.X + _calculatedLeftPadding, cellBounds.Y + (cellBounds.Height - ProgressBarHeight) / 2, cellBounds.Width - _calculatedLeftPadding, ProgressBarHeight);
-            //}
-            if (percentage > 0)
-            {
-                int progressBarWidth = (int)(cellBounds.Width * percentage / 100);
-
-                using (LinearGradientBrush progressBrush = new LinearGradientBrush(
-                    new Rectangle(cellBounds.X + _calculatedLeftPadding, cellBounds.Y + (cellBounds.Height - ProgressBarHeight) / 2, progressBarWidth, ProgressBarHeight),
-                    GetGradientColor(percentage, Color.LightSalmon, Color.LightGreen),
-                    GetGradientColor(percentage, Color.LightSalmon, Color.LightGreen),
-                    LinearGradientMode.Horizontal))
-                {
-                    graphics.FillRectangle(progressBrush, cellBounds.X + _calculatedLeftPadding, cellBounds.Y + (cellBounds.Height - ProgressBarHeight) / 2, progressBarWidth, ProgressBarHeight);
-                }
-            }
-            // 绘制单元格值的内容
-            //if (value != null)
-            //{
-            //    string cellText = value.ToString();
-            //    SizeF textSize = graphics.MeasureString(cellText, cellStyle.Font);
-            //    PointF textPoint = new PointF(cellBounds.X + _calculatedLeftPadding, cellBounds.Y + (cellBounds.Height - textSize.Height) / 2);
-            //    graphics.DrawString(cellText, cellStyle.Font, Brushes.Black, textPoint);
-            //}
-            #endregion
-
 
             // TODO: Indent width needs to take image size into account
             var glyphRect = new Rectangle(cellBounds.X + GlyphMargin, cellBounds.Y, INDENT_WIDTH, cellBounds.Height - 1);
@@ -228,7 +191,7 @@ namespace Krypton.Toolkit.Suite.Extended.TreeGridView
                 }
                 graphics.EndContainer(gc);
             }
-            if (node.Grid == null)
+            if (node.Grid==null)
             {
                 return;
             }
@@ -321,22 +284,7 @@ namespace Krypton.Toolkit.Suite.Extended.TreeGridView
             }
 
 
-
         }
-        /// <summary>
-        /// 进度条的值
-        /// 优先按这个来画
-        /// </summary>
-        public double? ProcessBarValue { get; set; }
-
-        private Color GetGradientColor(double percentage, Color startColor, Color endColor)
-        {
-            float red = startColor.R + (endColor.R - startColor.R) * (float)(percentage / 100);
-            float green = startColor.G + (endColor.G - startColor.G) * (float)(percentage / 100);
-            float blue = startColor.B + (endColor.B - startColor.B) * (float)(percentage / 100);
-            return Color.FromArgb((int)red, (int)green, (int)blue);
-        }
-
         protected override void OnMouseUp(DataGridViewCellMouseEventArgs e)
         {
             base.OnMouseUp(e);

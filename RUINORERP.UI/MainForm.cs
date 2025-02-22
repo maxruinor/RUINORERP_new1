@@ -86,6 +86,7 @@ using RUINORERP.Global;
 using TransInstruction.CommandService;
 using HLH.Lib.Security;
 using Netron.NetronLight;
+using Netron.Xeon;
 
 
 
@@ -299,7 +300,7 @@ namespace RUINORERP.UI
                 buttonSpecNavigator1.TypeRestricted = PaletteNavButtonSpecStyle.ArrowLeft;
             }
         }
-
+        string UpdatefilePath = "UpdateLog.txt";
         /// <summary>
         /// 主动更新，就有提示，被动 就不需要提示了。TODO 后面完善
         /// </summary>
@@ -313,8 +314,19 @@ namespace RUINORERP.UI
                 MessageBox.Show("服务器有新版本，更新前请保存当前操作，关闭系统。", "温馨提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 Process.Start(Update.currentexeName);
                 rs = true;
+
+                // 等待2秒，确保更新程序启动
+                await Task.Delay(1000);
+
+
+
+                //启动另一个exe程序后等待2秒后来检测读取这个文件
+               // string content = FileHelper.ReadFileContent(UpdatefilePath);
+
                 // 确保当前程序退出
-                Environment.Exit(0);
+                rs = true;
+
+
             }
             else
             {
@@ -325,6 +337,12 @@ namespace RUINORERP.UI
                 rs = false;
             }
             await Task.Delay(10); // 假设操作需要一段时间
+            if (rs)
+            {
+                // 确保当前程序退出
+                //Environment.Exit(0);
+            }
+
             return rs;
         }
 
@@ -418,10 +436,98 @@ namespace RUINORERP.UI
         /// 锁单
         /// </summary>
         public IMemoryCache CacheTemp { get; set; }
+        ///监控升级标记文件 
+        FileSystemWatcher watcher = new FileSystemWatcher();
 
+        private void InitUpdateSystemWatcher()
+        {
+            //UpdatefilePath = System.IO.Path.Combine(Application.ExecutablePath, UpdatefilePath);
+
+            // 设置监控的路径
+            watcher.Path = Path.GetDirectoryName(Application.ExecutablePath);
+            if (watcher.Path == null)
+            {
+                Console.WriteLine("文件路径无效。");
+                return;
+            }
+
+            // 设置监控的文件名
+            watcher.Filter = Path.GetFileName(UpdatefilePath);
+            if (watcher.Filter == null)
+            {
+                Console.WriteLine("文件名无效。");
+                return;
+            }
+
+            // 设置监控的更改类型
+            watcher.NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.FileName;
+            // watcher.NotifyFilter = NotifyFilters.LastWrite;
+
+            watcher.Changed += (sender, e) =>
+            {
+                if (e.Name == UpdatefilePath && e.ChangeType == WatcherChangeTypes.Changed)
+                {
+                    Console.WriteLine($"文件已修改: {e.FullPath}");
+
+                    // 尝试读取文件内容
+                    string content = string.Empty;
+                    bool isFileAccessed = false;
+
+                    // 重试机制，最多重试5次
+                    int retryCount = 0;
+                    while (retryCount < 5 && !isFileAccessed)
+                    {
+                        try
+                        {
+                            // 尝试读取文件内容
+                            content = File.ReadAllText(UpdatefilePath);
+                            isFileAccessed = true;
+                        }
+                        catch (IOException ioEx)
+                        {
+                            // 文件被占用，等待2秒后重试
+                            Console.WriteLine($"文件被占用，正在重试... ({retryCount + 1}/5)");
+                            Thread.Sleep(2000);
+                            retryCount++;
+                        }
+                        catch (Exception ex)
+                        {
+                            // 其他异常
+                            Console.WriteLine($"读取文件时发生错误: {ex.Message}");
+                            break;
+                        }
+                    }
+
+                    if (isFileAccessed)
+                    {
+                        Console.WriteLine("文件内容：");
+                        Console.WriteLine(content);
+
+                        if (content == "取消升级")
+                        {
+                            // 处理取消升级逻辑
+                        }
+                        else if (content == "升级中" || content == "升级完成")
+                        {
+                            // 确保当前程序退出
+                            Environment.Exit(0);
+                        }
+                    }
+                    else
+                    {
+                        Console.WriteLine("文件读取失败，重试次数已用尽。");
+                    }
+                }
+            };
+            watcher.EnableRaisingEvents = true;
+
+        }
 
         private async void MainForm_Load(object sender, EventArgs e)
         {
+
+            InitUpdateSystemWatcher();
+
             CacheTemp = Startup.GetFromFac<IMemoryCache>();
             authorizeController = Startup.GetFromFac<AuthorizeController>();
 
@@ -1964,6 +2070,9 @@ namespace RUINORERP.UI
             _byteArray = kryptonDockableWorkspace1.SaveLayoutToArray();
             try
             {
+                watcher.EnableRaisingEvents = false;
+                watcher.Dispose();
+
                 //if (MessageBox.Show(this, "确定退出本系统吗?", "询问", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button2) == DialogResult.Yes)
                 //{
 

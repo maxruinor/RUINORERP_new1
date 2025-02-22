@@ -153,6 +153,10 @@
 	</Choose>
 
 	<ItemGroup>
+	  <Compile Remove="Components\KryptonTreeGridCell - 复制.cs" />
+	</ItemGroup>
+
+	<ItemGroup>
 	  <ProjectReference Include="..\..\Krypton Components\Krypton.Toolkit\Krypton.Toolkit 2022.csproj" />
 	</ItemGroup>
 

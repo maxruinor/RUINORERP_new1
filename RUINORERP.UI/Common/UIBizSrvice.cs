@@ -540,11 +540,18 @@ namespace RUINORERP.UI.Common
                 {
                     c.ColWidth = 100;
                 }
+
+                //如果设置前有列，则按这些列重新设置一下是否可见。如果初始列为空或0则全部显示
                 if (allInitCols.Any(x => x.ColName == c.ColName))
                 {
                     var colset = allInitCols.FirstOrDefault(x => x.ColName == c.ColName);
                     c.Visible = colset.Visible;
                 }
+                if (allInitCols.Count == 0)
+                {
+                    c.Visible = true;
+                }
+
             });
 
             dataGridView.ColumnDisplays = ColumnDisplays;
@@ -908,7 +915,6 @@ namespace RUINORERP.UI.Common
             //    grid1.NeedSaveColumnsXml = true;
             //    return;
             //}
-            tb_UIMenuPersonalizationController<tb_UIMenuPersonalization> ctr = Startup.GetFromFac<tb_UIMenuPersonalizationController<tb_UIMenuPersonalization>>();
             //dataGridView.NeedSaveColumnsXml = false;
             //用户登陆后会有对应的角色下的个性化配置数据。如果没有则给一个默认的（登陆验证时已经实现）。
             tb_UserPersonalized userPersonalized = MainForm.Instance.AppContext.CurrentUser_Role_Personalized;
@@ -935,11 +941,8 @@ namespace RUINORERP.UI.Common
                 menuPersonalization.UserPersonalizedID = userPersonalized.UserPersonalizedID;
                 menuPersonalization.QueryConditionCols = 4;//查询条件显示的列数 默认值
                 userPersonalized.tb_UIMenuPersonalizations.Add(menuPersonalization);
-                ReturnResults<tb_UIMenuPersonalization> rs = await ctr.SaveOrUpdate(menuPersonalization);
-                if (!rs.Succeeded)
-                {
+                await MainForm.Instance.AppContext.Db.Updateable<tb_UIMenuPersonalization>(menuPersonalization).ExecuteCommandAsync();
 
-                }
             }
 
 

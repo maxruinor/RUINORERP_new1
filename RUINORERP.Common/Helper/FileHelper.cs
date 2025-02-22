@@ -169,6 +169,68 @@ namespace RUINORERP.Common.Helper
         }
         #endregion
 
+        #region 以只读模式读取文件内容
+        /// <summary>
+        /// 以只读模式读取文件内容
+        /// </summary>
+        /// <param name="filePath">文件路径</param>
+        /// <returns>文件内容</returns>
+        public static string ReadFileContent(string filePath)
+        {
+            try
+            {
+                // 检查文件是否存在
+                if (!File.Exists(filePath))
+                {
+                    return "文件不存在。";
+                }
+
+                // 以只读模式打开文件并读取内容
+                using (StreamReader reader = new StreamReader(filePath, System.Text.Encoding.UTF8))
+                {
+                    return reader.ReadToEnd();
+                }
+            }
+            catch (Exception ex)
+            {
+                // 捕获异常并返回错误信息
+                return $"读取文件时发生错误：{ex.Message}";
+            }
+        }
+
+        /// <summary>
+        /// 如果文件较大，可以逐行读取内容
+        /// </summary>
+        /// <param name="filePath"></param>
+        /// <returns></returns>
+        public static string ReadFileContentLineByLine(string filePath)
+
+        {
+            try
+            {
+                if (!File.Exists(filePath))
+                {
+                    return "文件不存在。";
+                }
+
+                using (StreamReader reader = new StreamReader(filePath, System.Text.Encoding.UTF8))
+                {
+                    string line;
+                    string content = "";
+                    while ((line = reader.ReadLine()) != null)
+                    {
+                        content += line + "\n";
+                    }
+                    return content;
+                }
+            }
+            catch (Exception ex)
+            {
+                return $"读取文件时发生错误：{ex.Message}";
+            }
+        }
+        #endregion
+
         #region 读文件
         /****************************************
           * 函数名称：ReadFile

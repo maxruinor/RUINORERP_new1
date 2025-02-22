@@ -31,6 +31,7 @@ using Krypton.Toolkit.Suite.Extended.Outlook.Grid;
 using RUINORERP.UI.PSI.SAL;
 using RUINORERP.UI.MRP.MP;
 using SuperSocket.ClientEngine;
+using Krypton.Toolkit.Suite.Extended.TreeGridView.Components;
 
 namespace RUINORERP.UI.UserCenter.DataParts
 {
@@ -99,7 +100,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
                   .Includes(c => c.tb_employee)
                   .Includes(c => c.tb_department)
                    .Includes(c => c.tb_projectgroup)
-//                  .Includes(c => c.tb_ProductionPlanDetails,d=>d.tb_proddetail,e=>e.tb_prod)
+                    //                  .Includes(c => c.tb_ProductionPlanDetails,d=>d.tb_proddetail,e=>e.tb_prod)
                     .Includes(c => c.tb_ProductionPlanDetails)
                   .Includes(c => c.tb_ProductionDemands, d => d.tb_ProductionDemandTargetDetails)
                   .AsNavQueryable()
@@ -141,7 +142,23 @@ namespace RUINORERP.UI.UserCenter.DataParts
                         var ProductionPlan = PURList.FirstOrDefault(p => p.PPNo == PPNo);
                         item.Tag = ProductionPlan;
                         item.Cells[0].Tag = "PPNo";
+                        
                         item.Cells[6].Value = "计划";
+                        double processBarValue = 0d;
+                        if (ProductionPlan.TotalQuantity == 0)
+                        {
+                            processBarValue = 0d; // 或者其他默认值
+                        }
+                        else
+                        {
+                            processBarValue = ((double)ProductionPlan.TotalCompletedQuantity / ProductionPlan.TotalQuantity) * 100;
+                        }
+                        item.Cells[7].Value = processBarValue;
+                        if (item.Cells[0] is KryptonTreeGridCell barCell)
+                        {
+                            barCell.ProcessBarValue = processBarValue;
+                        }
+                        //item.Cells[7].Value = 80.1d;
                         item.Cells[9].Value = ProductionPlan.tb_employee.Employee_Name;
                         if (ProductionPlan.tb_department != null)
                         {
@@ -163,7 +180,8 @@ namespace RUINORERP.UI.UserCenter.DataParts
                             {
                                 productType = UIBizSrvice.GetProdDetail<tb_ProductType>(prodDetail.Type_ID.Value);
                             }
-                            project += $"{productType.TypeName}:{prodDetail.CNName}{prodDetail.prop}" + ";";
+                            project += $"{productType.TypeName}:{prodDetail.CNName}-{prodDetail.prop}" + ";";
+                            
                             //子级
                             KryptonTreeGridNodeRow PlanDetailsubrow = item.Nodes.Add(prodDetail.SKU);
                             PlanDetailsubrow.Cells[0].Tag = "PPNo";//保存列名 值对象=》tag(如果是明细则指向主表) 的列名。比方值是编号：则是PPNo
@@ -206,6 +224,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
                         }
                         #endregion
                         project = project.TrimEnd(';');
+                        project = project.TrimEnd('-');
                         item.Cells[4].Value = project;
                     }
                     #endregion

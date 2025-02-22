@@ -127,11 +127,11 @@ namespace Krypton.Toolkit.Suite.Extended.TreeGridView
                 else if (e.KeyCode == Keys.Enter && !IsCurrentCellInEditMode)
                 {
                     SelectionMode = DataGridViewSelectionMode.FullRowSelect;
-                    if (CurrentCell!=null)
+                    if (CurrentCell != null)
                     {
                         CurrentCell.OwningRow.Selected = true;
                     }
-                   
+
                 }
             }
         }
@@ -231,7 +231,7 @@ namespace Krypton.Toolkit.Suite.Extended.TreeGridView
                     {
                         _dataSource = FilterSortData(_dataSource, SelectFilter, _dataSource.Columns[0].ColumnName);
                     }
-                    
+
 
                     //-------------------------- 
                     //Add Columns
@@ -244,6 +244,7 @@ namespace Krypton.Toolkit.Suite.Extended.TreeGridView
                             {
                                 throw new Exception(@"隐藏的列集合中不能在第一列！");
                             }
+
 
                             //-------------------------- 
                             //Add new Columns - 0 第一列要指定为树形列，第一列要指定有有意义的列？
@@ -258,6 +259,21 @@ namespace Krypton.Toolkit.Suite.Extended.TreeGridView
                             Columns.Add(clm);
                         }
                         else
+                            //-----
+                            //处理进度条的列 暂时列名为ProgressBar时就处理
+                            if (_dataSource.Columns[i].ColumnName == "ProgressBar")
+                        {
+                            var dgvProBar = new Components.ProgressBarColumn
+                            {
+                                HeaderText = _dataSource.Columns[i].Caption,
+                                DataPropertyName = _dataSource.Columns[i].ColumnName,
+                                AutoSizeMode = DataGridViewAutoSizeColumnMode.None
+                            };
+                            dgvProBar.Name = _dataSource.Columns[i].ColumnName;
+                            Columns.Add(dgvProBar);
+                        }
+                        else
+
                         if (_dataSource.Columns[i].ColumnName == "Selected")
                         {
                             var dgvChk = new DataGridViewCheckBoxColumn

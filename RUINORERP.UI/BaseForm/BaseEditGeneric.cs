@@ -270,13 +270,13 @@ namespace RUINORERP.UI.BaseForm
 
             if (menuinfo.BIBaseForm == "BaseListWithTree`1")
             {
-                ucBaseList=Startup.GetFromFacByName<BaseListWithTree>(menuinfo.FormName);
+                ucBaseList = Startup.GetFromFacByName<BaseListWithTree>(menuinfo.FormName);
             }
             else
             {
-                ucBaseList=Startup.GetFromFacByName<BaseUControl>(menuinfo.FormName);
+                ucBaseList = Startup.GetFromFacByName<BaseUControl>(menuinfo.FormName);
             }
-        
+
             ucBaseList.Runway = BaseListRunWay.选中模式;
             //从这里调用 就是来自于关联窗体，下面这个公共基类用于这个情况。暂时在那个里面来控制.Runway = BaseListRunWay.窗体;
             frmBaseEditList frmedit = new frmBaseEditList();
@@ -284,6 +284,9 @@ namespace RUINORERP.UI.BaseForm
             ucBaseList.Dock = DockStyle.Fill;
             frmedit.kryptonPanel1.Controls.Add(ucBaseList);
             frmedit.Text = menuinfo.CaptionCN;
+
+            //加载一次默认的查询
+            ucBaseList.LoadQueryParametersToUI(null, null);
 
             if (frmedit.ShowDialog() == DialogResult.OK)
             {

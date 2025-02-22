@@ -1385,7 +1385,7 @@ namespace RUINORERP.UI.MRP.BOM
             if (rss.Succeeded)
             {
                 //清空对应产品明细中的BOM信息
-                if (rss.ReturnObject.tb_proddetail.BOM_ID.HasValue)
+                if (rss.ReturnObject.tb_proddetail != null && rss.ReturnObject.tb_proddetail.BOM_ID.HasValue)
                 {
                     rss.ReturnObject.tb_proddetail.BOM_ID = null;
                     BaseController<tb_ProdDetail> ctrDetail = Startup.GetFromFacByName<BaseController<tb_ProdDetail>>(typeof(tb_ProdDetail).Name + "Controller");

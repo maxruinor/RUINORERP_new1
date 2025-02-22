@@ -29,7 +29,9 @@
 #pragma warning disable CS8602
 #nullable enable
 using System.Drawing.Drawing2D;
-
+using System.Drawing;
+using System.Windows.Forms;
+using System.Drawing.Imaging;
 namespace Krypton.Toolkit.Suite.Extended.TreeGridView
 {
     /// <summary>
@@ -174,27 +176,6 @@ namespace Krypton.Toolkit.Suite.Extended.TreeGridView
             base.Paint(graphics, clipBounds, cellBounds, rowIndex, cellState, value, formattedValue, errorText, cellStyle, advancedBorderStyle, paintParts);
 
             #region Progress Bar 画进度条的代码位置 有注意这里不会影响下面树的结构这些
-            // 绘制进度条背景和前景
-            double percentage = ProcessBarValue ?? 0;
-            // 绘制进度条背景
-
-            //using (Brush backgroundBrush = new SolidBrush(Color.LightGray))
-            //{
-            //    graphics.FillRectangle(backgroundBrush, cellBounds.X + _calculatedLeftPadding, cellBounds.Y + (cellBounds.Height - ProgressBarHeight) / 2, cellBounds.Width - _calculatedLeftPadding, ProgressBarHeight);
-            //}
-            if (percentage > 0)
-            {
-                int progressBarWidth = (int)(cellBounds.Width * percentage / 100);
-
-                using (LinearGradientBrush progressBrush = new LinearGradientBrush(
-                    new Rectangle(cellBounds.X + _calculatedLeftPadding, cellBounds.Y + (cellBounds.Height - ProgressBarHeight) / 2, progressBarWidth, ProgressBarHeight),
-                    GetGradientColor(percentage, Color.LightSalmon, Color.LightGreen),
-                    GetGradientColor(percentage, Color.LightSalmon, Color.LightGreen),
-                    LinearGradientMode.Horizontal))
-                {
-                    graphics.FillRectangle(progressBrush, cellBounds.X + _calculatedLeftPadding, cellBounds.Y + (cellBounds.Height - ProgressBarHeight) / 2, progressBarWidth, ProgressBarHeight);
-                }
-            }
             // 绘制单元格值的内容
             //if (value != null)
             //{
@@ -203,6 +184,48 @@ namespace Krypton.Toolkit.Suite.Extended.TreeGridView
             //    PointF textPoint = new PointF(cellBounds.X + _calculatedLeftPadding, cellBounds.Y + (cellBounds.Height - textSize.Height) / 2);
             //    graphics.DrawString(cellText, cellStyle.Font, Brushes.Black, textPoint);
             //}
+
+            // 绘制进度条背景和前景
+            double percentage = ProcessBarValue ?? 0;
+            int progressBarWidth = (int)(cellBounds.Width * percentage / 100);
+
+            //using (Brush backgroundBrush = new SolidBrush(Color.LightGray))
+            //{
+            //    graphics.FillRectangle(backgroundBrush, cellBounds.X + _calculatedLeftPadding, cellBounds.Y + (cellBounds.Height - ProgressBarHeight) / 2, cellBounds.Width - _calculatedLeftPadding, ProgressBarHeight);
+            //}
+
+            using (LinearGradientBrush progressBrush = new LinearGradientBrush(
+                new Rectangle(cellBounds.X + _calculatedLeftPadding, cellBounds.Y + (cellBounds.Height - ProgressBarHeight) / 2, progressBarWidth, ProgressBarHeight),
+                GetGradientColor(percentage, Color.LightSalmon, Color.LightGreen),
+                GetGradientColor(percentage, Color.LightSalmon, Color.LightGreen),
+                LinearGradientMode.Horizontal))
+            {
+                // 设置半透明前景色
+                using (Bitmap bitmap = new Bitmap(progressBarWidth, ProgressBarHeight))
+                {
+                    using (Graphics g = Graphics.FromImage(bitmap))
+                    {
+                        g.FillRectangle(progressBrush, 0, 0, progressBarWidth, ProgressBarHeight);
+                    }
+
+                    // 设置透明度
+                    ColorMatrix colorMatrix = new ColorMatrix();
+                    colorMatrix.Matrix33 = 0.5f; // 设置透明度为50%
+
+                    ImageAttributes imageAttributes = new ImageAttributes();
+                    imageAttributes.SetColorMatrix(colorMatrix, ColorMatrixFlag.Default, ColorAdjustType.Bitmap);
+
+                    // 修正 DrawImage 方法的调用
+                    graphics.DrawImage(
+                        bitmap,
+                        new Rectangle(cellBounds.X + _calculatedLeftPadding, cellBounds.Y + (cellBounds.Height - ProgressBarHeight) / 2, progressBarWidth, ProgressBarHeight),
+                        0, 0, progressBarWidth, ProgressBarHeight,
+                        GraphicsUnit.Pixel,
+                        imageAttributes
+                    );
+                }
+            }
+
             #endregion
 
 

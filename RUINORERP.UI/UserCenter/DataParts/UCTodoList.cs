@@ -239,6 +239,14 @@ namespace RUINORERP.UI.UserCenter.DataParts
             conModel返工待完成.Add(new ConditionalModel { FieldName = "isdeleted", ConditionalType = ConditionalType.Equal, FieldValue = "False", CSharpTypeName = "bool" });
 
 
+            //审核通过未结案，像返工退库后还没有入库，采购退货也没有入库
+            var conModel未结案 = new List<IConditionalModel>();
+            conModel未结案.Add(new ConditionalModel { FieldName = "ApprovalStatus", ConditionalType = ConditionalType.Equal, FieldValue = "1", CSharpTypeName = "int" });
+            conModel未结案.Add(new ConditionalModel { FieldName = "DataStatus", ConditionalType = ConditionalType.Equal, FieldValue = "4", CSharpTypeName = "int" });
+            conModel未结案.Add(new ConditionalModel { FieldName = "ApprovalResults", ConditionalType = ConditionalType.Equal, FieldValue = "True", CSharpTypeName = "bool" });
+            conModel未结案.Add(new ConditionalModel { FieldName = "isdeleted", ConditionalType = ConditionalType.Equal, FieldValue = "False", CSharpTypeName = "bool" });
+
+
             List<BizType> bizTypes = new List<BizType>();
             if (centerConfig != null)
             {
@@ -376,25 +384,6 @@ namespace RUINORERP.UI.UserCenter.DataParts
                 }
 
                 //下面是特殊情况。上面是所有单据的情况
-                if (item == BizType.返工退库单)
-                {
-                    QueryParameter parameter = new QueryParameter();
-                    parameter.conditionals = conModel返工待完成;
-                    parameter.tableType = tableType;
-                    //未出库
-                    TreeNode SubNode返工待完成 = new TreeNode(item.ToString());
-                    DataTable queryList返工待完成 = MainForm.Instance.AppContext.Db.Queryable(tableType.Name, "TN").Where(conModel返工待完成).ToDataTable();
-                    if (queryList返工待完成.Rows.Count > 0)
-                    {
-                        SubNode返工待完成.Text = "待完成【" + queryList返工待完成.Rows.Count + "】";
-                        SubNode返工待完成.Tag = parameter;
-                        if (!node.Nodes.Contains(SubNode返工待完成))
-                        {
-                            node.Nodes.Add(SubNode返工待完成);
-                        }
-                    }
-                }
-
                 if (item == BizType.销售订单)
                 {
                     QueryParameter parameter = new QueryParameter();
@@ -469,7 +458,24 @@ namespace RUINORERP.UI.UserCenter.DataParts
                     //    }
                     //}
                 }
-
+                if (item==BizType.采购退货单||item==BizType.返工退库单)
+                {
+                    QueryParameter parameter = new QueryParameter();
+                    parameter.conditionals = conModel未结案;
+                    parameter.tableType = tableType;
+                    //未出库
+                    TreeNode SubNode采购退货待入库 = new TreeNode(item.ToString());
+                    DataTable queryList采购退货待入库 = MainForm.Instance.AppContext.Db.Queryable(tableType.Name, "TN").Where(conModel未结案).ToDataTable();
+                    if (queryList采购退货待入库.Rows.Count > 0)
+                    {
+                        SubNode采购退货待入库.Text = "待返回【" + queryList采购退货待入库.Rows.Count + "】";
+                        SubNode采购退货待入库.Tag = parameter;
+                        if (!node.Nodes.Contains(SubNode采购退货待入库))
+                        {
+                            node.Nodes.Add(SubNode采购退货待入库);
+                        }
+                    }
+                }
                 //没有数据的不用显示
                 if (node.Nodes.Count > 0)
                 {

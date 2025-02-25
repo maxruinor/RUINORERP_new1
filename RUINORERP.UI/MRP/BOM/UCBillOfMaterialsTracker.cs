@@ -65,7 +65,7 @@ namespace RUINORERP.UI.MRP.BOM
 
         public override void BuildInvisibleCols()
         {
-            base.InvisibleColsExp.Add(c => c.ProdDetailID);
+            //base.InvisibleColsExp.Add(c => c.ProdDetailID);
         }
 
 

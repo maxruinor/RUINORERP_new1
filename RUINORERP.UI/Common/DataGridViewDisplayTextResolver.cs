@@ -156,11 +156,11 @@ namespace RUINORERP.UI.Common
             string colName2 = expr2.GetMemberInfo().Name;
             if (typeof(tb_Employee).Name == typeof(T).Name && typeof(T).GetProperty(colName1) != null)
             {
-                FixedDictionaryMappings.Add(new FixedDictionaryMapping(typeof(tb_Employee).Name, colName1, Genderkvlist));
+                FixedDictionaryMappings.Add(new FixedDictionaryMapping(typeof(tb_Employee).Name, colName1, kvlist1));
             }
             if (typeof(tb_Employee).Name == typeof(T).Name && typeof(T).GetProperty(colName2) != null)
             {
-                FixedDictionaryMappings.Add(new FixedDictionaryMapping(typeof(tb_Employee).Name, colName2, Genderkvlist));
+                FixedDictionaryMappings.Add(new FixedDictionaryMapping(typeof(tb_Employee).Name, colName2, kvlist1));
             }
 
         }

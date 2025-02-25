@@ -331,7 +331,7 @@ namespace RUINORERP.UI.SysConfig
         /// </summary>
         private bool IsUserSetting = false;
 
-
+        tb_WorkCenterConfig workCenterConfig = null;
         tb_User_Role CurrentRole;
         private void TreeView1_AfterSelect(object sender, TreeViewEventArgs e)
         {
@@ -357,8 +357,9 @@ namespace RUINORERP.UI.SysConfig
 
             tb_User_Role selectNode = TreeView1.SelectedNode.Tag as tb_User_Role;
             CurrentRole = selectNode;
+            
             toolStripButtonSave.Enabled = true;
-            tb_WorkCenterConfig workCenterConfig = null;
+           
             List<string> ToDoList = new List<string>();
             List<string> DataOverviewList = new List<string>();
             //加载值
@@ -405,13 +406,7 @@ namespace RUINORERP.UI.SysConfig
                 MainForm.Instance.PrintInfoLog("请先选择角色或人员。");
                 return;
             }
-
-            //角色
-            tb_WorkCenterConfig workCenterConfig = MainForm.Instance.AppContext.Db.Queryable<tb_WorkCenterConfig>()
-                .Where(c => c.RoleID == CurrentRole.RoleID)
-                .WhereIF(IsUserSetting && CurrentRole.User_ID > 0, c => c.User_ID == CurrentRole.User_ID)
-                .Single();
-
+          
             if (workCenterConfig == null)
             {
                 workCenterConfig = new tb_WorkCenterConfig();
@@ -421,6 +416,10 @@ namespace RUINORERP.UI.SysConfig
                 if (IsUserSetting)
                 {
                     workCenterConfig.User_ID = CurrentRole.User_ID;
+                }
+                else
+                {
+                    workCenterConfig.User_ID = null;
                 }
             }
             string todolist = string.Empty;

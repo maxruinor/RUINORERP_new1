@@ -68,6 +68,7 @@ namespace RUINORERP.UI
             this.toolBtnExit = new System.Windows.Forms.ToolStripButton();
             this.btntsbRefresh = new System.Windows.Forms.ToolStripButton();
             this.tsbtnloginFileServer = new System.Windows.Forms.ToolStripButton();
+            this.tsbtnSysTest = new System.Windows.Forms.ToolStripButton();
             this.menuStripMain = new System.Windows.Forms.MenuStrip();
             this.窗口ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.关闭所有窗口ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -84,7 +85,8 @@ namespace RUINORERP.UI
             this.kryptonContextMenuItem1 = new Krypton.Toolkit.KryptonContextMenuItem();
             this.kryptonPanelBigg = new Krypton.Toolkit.KryptonPanel();
             this.kryptonSeparator1 = new Krypton.Toolkit.KryptonSeparator();
-            this.tsbtnSysTest = new System.Windows.Forms.ToolStripButton();
+            this.tsdropBtn = new System.Windows.Forms.ToolStripDropDownButton();
+            this.toolStripComboBox1 = new System.Windows.Forms.ToolStripComboBox();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonNavigator1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPage5)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPage2)).BeginInit();
@@ -333,7 +335,8 @@ namespace RUINORERP.UI
             this.toolStripDropDownBtnRoles,
             this.lblServerStatus,
             this.lblStatusGlobal,
-            this.lblServerInfo});
+            this.lblServerInfo,
+            this.tsdropBtn});
             this.statusStrip1.Location = new System.Drawing.Point(0, 627);
             this.statusStrip1.Name = "statusStrip1";
             this.statusStrip1.RenderMode = System.Windows.Forms.ToolStripRenderMode.ManagerRenderMode;
@@ -483,6 +486,17 @@ namespace RUINORERP.UI
             this.tsbtnloginFileServer.Text = "文件服务器";
             this.tsbtnloginFileServer.Click += new System.EventHandler(this.tsbtnloginFileServer_Click);
             // 
+            // tsbtnSysTest
+            // 
+            this.tsbtnSysTest.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+            this.tsbtnSysTest.Image = ((System.Drawing.Image)(resources.GetObject("tsbtnSysTest.Image")));
+            this.tsbtnSysTest.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.tsbtnSysTest.Name = "tsbtnSysTest";
+            this.tsbtnSysTest.Size = new System.Drawing.Size(76, 22);
+            this.tsbtnSysTest.Text = "系统测试用";
+            this.tsbtnSysTest.Visible = false;
+            this.tsbtnSysTest.Click += new System.EventHandler(this.tsbtnSysTest_Click);
+            // 
             // menuStripMain
             // 
             this.menuStripMain.Font = new System.Drawing.Font("Segoe UI", 9F);
@@ -605,16 +619,21 @@ namespace RUINORERP.UI
             this.kryptonSeparator1.Size = new System.Drawing.Size(10, 578);
             this.kryptonSeparator1.TabIndex = 3;
             // 
-            // tsbtnSysTest
+            // tsdropBtn
             // 
-            this.tsbtnSysTest.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
-            this.tsbtnSysTest.Image = ((System.Drawing.Image)(resources.GetObject("tsbtnSysTest.Image")));
-            this.tsbtnSysTest.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.tsbtnSysTest.Name = "tsbtnSysTest";
-            this.tsbtnSysTest.Size = new System.Drawing.Size(76, 22);
-            this.tsbtnSysTest.Text = "系统测试用";
-            this.tsbtnSysTest.Visible = false;
-            this.tsbtnSysTest.Click += new System.EventHandler(this.tsbtnSysTest_Click);
+            this.tsdropBtn.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+            this.tsdropBtn.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.toolStripComboBox1});
+            this.tsdropBtn.Image = ((System.Drawing.Image)(resources.GetObject("tsdropBtn.Image")));
+            this.tsdropBtn.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.tsdropBtn.Name = "tsdropBtn";
+            this.tsdropBtn.Size = new System.Drawing.Size(164, 20);
+            this.tsdropBtn.Text = "toolStripDropDownButton1";
+            // 
+            // toolStripComboBox1
+            // 
+            this.toolStripComboBox1.Name = "toolStripComboBox1";
+            this.toolStripComboBox1.Size = new System.Drawing.Size(121, 25);
             // 
             // MainForm
             // 
@@ -710,6 +729,8 @@ namespace RUINORERP.UI
         private KryptonSeparator kryptonSeparator1;
         private System.Windows.Forms.ToolStripButton tsbtnloginFileServer;
         private System.Windows.Forms.ToolStripButton tsbtnSysTest;
+        private System.Windows.Forms.ToolStripComboBox toolStripComboBox1;
+        internal System.Windows.Forms.ToolStripDropDownButton tsdropBtn;
     }
 }
 

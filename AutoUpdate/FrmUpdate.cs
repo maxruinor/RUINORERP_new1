@@ -1094,6 +1094,7 @@ namespace AutoUpdate
             var autoupdate = filesList.Where(c => c.Key.Contains(currentexeName)).FirstOrDefault();
             if (autoupdate.Key != null)
             {
+                //先删除原来的.delete备份 再将现有的变以.delete 再复制过来
                 autoupdatePath = autoupdate.Key + "|" + autoupdate.Value;
                 string filename = Assembly.GetExecutingAssembly().Location;
                 if (System.IO.File.Exists(filename + ".delete"))
@@ -1109,20 +1110,7 @@ namespace AutoUpdate
                 //Process.Start(p);
             }
 
-
-            /*
-            if (System.IO.File.Exists(System.IO.Path.Combine(tempUpdatePath, currentexeName)))
-            {
-                string filename = Assembly.GetExecutingAssembly().Location;
-                if (System.IO.File.Exists(filename + ".delete"))
-                {
-                    System.IO.File.Delete(filename + ".delete");
-                }
-                File.Move(filename, filename + ".delete");                
-                File.Copy(System.IO.Path.Combine(tempUpdatePath, currentexeName), filename);              
-                // Application.Restart();
-            }
-            */
+           
 
             //全部更新完成后。配置文件也要更新过来
             File.Copy(serverXmlFile, localXmlFile, true);

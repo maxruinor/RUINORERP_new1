@@ -51,7 +51,7 @@ namespace RUINORERP.UI.UserCenter
         其他_出库单,
 
         财务_费用报销单,
-        返工退库,
+        返工退库,//指加工模块
         请购单,
         借出单,
         归还单,

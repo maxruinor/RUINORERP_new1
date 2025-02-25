@@ -535,7 +535,7 @@ namespace AULWriter
             StringBuilder sb = new StringBuilder();
             sb.Append("<?xml version=\"1.0\" encoding=\"gb2312\" ?>");
             sb.Append("\r\n<AutoUpdater>\r\n");
-
+            sb.Append("  <Debug>1</Debug>");
             #region[description]
             sb.Append("<Description>");
             sb.Append(strEntryPoint.Substring(0, strEntryPoint.LastIndexOf(".")) + " autoUpdate");

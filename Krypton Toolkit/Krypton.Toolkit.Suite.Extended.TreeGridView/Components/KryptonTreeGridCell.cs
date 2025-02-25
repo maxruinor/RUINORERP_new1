@@ -176,54 +176,65 @@ namespace Krypton.Toolkit.Suite.Extended.TreeGridView
             base.Paint(graphics, clipBounds, cellBounds, rowIndex, cellState, value, formattedValue, errorText, cellStyle, advancedBorderStyle, paintParts);
 
             #region Progress Bar 画进度条的代码位置 有注意这里不会影响下面树的结构这些
-            // 绘制单元格值的内容
-            //if (value != null)
-            //{
-            //    string cellText = value.ToString();
-            //    SizeF textSize = graphics.MeasureString(cellText, cellStyle.Font);
-            //    PointF textPoint = new PointF(cellBounds.X + _calculatedLeftPadding, cellBounds.Y + (cellBounds.Height - textSize.Height) / 2);
-            //    graphics.DrawString(cellText, cellStyle.Font, Brushes.Black, textPoint);
-            //}
 
-            // 绘制进度条背景和前景
             double percentage = ProcessBarValue ?? 0;
-            int progressBarWidth = (int)(cellBounds.Width * percentage / 100);
-
-            //using (Brush backgroundBrush = new SolidBrush(Color.LightGray))
-            //{
-            //    graphics.FillRectangle(backgroundBrush, cellBounds.X + _calculatedLeftPadding, cellBounds.Y + (cellBounds.Height - ProgressBarHeight) / 2, cellBounds.Width - _calculatedLeftPadding, ProgressBarHeight);
-            //}
-
-            using (LinearGradientBrush progressBrush = new LinearGradientBrush(
-                new Rectangle(cellBounds.X + _calculatedLeftPadding, cellBounds.Y + (cellBounds.Height - ProgressBarHeight) / 2, progressBarWidth, ProgressBarHeight),
-                GetGradientColor(percentage, Color.LightSalmon, Color.LightGreen),
-                GetGradientColor(percentage, Color.LightSalmon, Color.LightGreen),
-                LinearGradientMode.Horizontal))
+            if (percentage > 0)
             {
-                // 设置半透明前景色
-                using (Bitmap bitmap = new Bitmap(progressBarWidth, ProgressBarHeight))
+                #region 背景色
+
+                // 绘制进度条背景和前景
+                int progressBarWidth = (int)(cellBounds.Width * percentage / 100);
+
+                using (Brush backgroundBrush = new SolidBrush(Color.LightGray))
                 {
-                    using (Graphics g = Graphics.FromImage(bitmap))
-                    {
-                        g.FillRectangle(progressBrush, 0, 0, progressBarWidth, ProgressBarHeight);
-                    }
-
-                    // 设置透明度
-                    ColorMatrix colorMatrix = new ColorMatrix();
-                    colorMatrix.Matrix33 = 0.5f; // 设置透明度为50%
-
-                    ImageAttributes imageAttributes = new ImageAttributes();
-                    imageAttributes.SetColorMatrix(colorMatrix, ColorMatrixFlag.Default, ColorAdjustType.Bitmap);
-
-                    // 修正 DrawImage 方法的调用
-                    graphics.DrawImage(
-                        bitmap,
-                        new Rectangle(cellBounds.X + _calculatedLeftPadding, cellBounds.Y + (cellBounds.Height - ProgressBarHeight) / 2, progressBarWidth, ProgressBarHeight),
-                        0, 0, progressBarWidth, ProgressBarHeight,
-                        GraphicsUnit.Pixel,
-                        imageAttributes
-                    );
+                    graphics.FillRectangle(backgroundBrush, cellBounds.X + _calculatedLeftPadding, cellBounds.Y + (cellBounds.Height - ProgressBarHeight) / 2, cellBounds.Width - _calculatedLeftPadding, ProgressBarHeight);
                 }
+
+                using (LinearGradientBrush progressBrush = new LinearGradientBrush(
+                    new Rectangle(cellBounds.X + _calculatedLeftPadding, cellBounds.Y + (cellBounds.Height - ProgressBarHeight) / 2, progressBarWidth, ProgressBarHeight),
+                    GetGradientColor(percentage, Color.LightSalmon, Color.LightGreen),
+                    GetGradientColor(percentage, Color.LightSalmon, Color.LightGreen),
+                    LinearGradientMode.Horizontal))
+                {
+                    // 设置半透明前景色
+                    using (Bitmap bitmap = new Bitmap(progressBarWidth, ProgressBarHeight))
+                    {
+                        using (Graphics g = Graphics.FromImage(bitmap))
+                        {
+                            g.FillRectangle(progressBrush, 0, 0, progressBarWidth, ProgressBarHeight);
+                        }
+
+                        // 设置透明度
+                        ColorMatrix colorMatrix = new ColorMatrix();
+                        colorMatrix.Matrix33 = 0.9f; // 设置透明度为90%
+
+                        ImageAttributes imageAttributes = new ImageAttributes();
+                        imageAttributes.SetColorMatrix(colorMatrix, ColorMatrixFlag.Default, ColorAdjustType.Bitmap);
+
+                        graphics.DrawImage(
+                                    bitmap,
+                                    new Rectangle(cellBounds.X + _calculatedLeftPadding, cellBounds.Y + (cellBounds.Height - ProgressBarHeight) / 2, progressBarWidth, ProgressBarHeight),
+                                    0, 0, progressBarWidth, ProgressBarHeight,
+                                    GraphicsUnit.Pixel,
+                                    imageAttributes
+                                );
+                    }
+                }
+
+                #endregion
+
+                // 绘制单元格值的内容 下面的虚线+号 往右移了x+20px（本来就移动了2个_calculatedLeftPadding）
+                if (value != null)
+                {
+                    string cellText = value.ToString();
+                    SizeF textSize = graphics.MeasureString(cellText, cellStyle.Font);
+                    PointF textPoint = new PointF(cellBounds.X+20 + _calculatedLeftPadding, cellBounds.Y + (cellBounds.Height - textSize.Height) / 2);
+                    graphics.DrawString(cellText, cellStyle.Font, Brushes.Black, textPoint);
+                }
+            }
+            else
+            {
+                //如果没有启动刚是白色，还是给红色呢？
             }
 
             #endregion

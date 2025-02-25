@@ -16,6 +16,7 @@ using System.Net.NetworkInformation;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
+using System.Runtime.Remoting.Contexts;
 
 namespace AutoUpdate
 {
@@ -343,7 +344,7 @@ namespace AutoUpdate
             this.MinimizeBox = false;
             this.Name = "FrmUpdate";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
-            this.Text = "自动更新 2.0.0.8";
+            this.Text = "自动更新 2.0.0.9";
             this.Load += new System.EventHandler(this.FrmUpdate_Load);
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
             this.panel1.ResumeLayout(false);
@@ -354,21 +355,24 @@ namespace AutoUpdate
         }
         #endregion
 
+
+        #region 定义属性
+        public bool Debug { get; set; }
+        #endregion
+
         private string updateUrl = string.Empty;
         private string tempUpdatePath = string.Empty;
         XmlFiles updaterXmlFiles = null;
         private int availableUpdate = 0;
         bool isRun = false;
 
+
         /// <summary>
         /// 更新文件中指定的启动程序名
         /// </summary>
         string mainAppExe = "";
 
-
-
         public string currentexeName = Assembly.GetExecutingAssembly().ManifestModule.ToString();
-
 
         ///保存更新文件列表，key:为当前执行文件的目录及文件名，value为更新的对应版本的目录及文件名
         private List<KeyValuePair<string, string>> filesList = new List<KeyValuePair<string, string>>();
@@ -380,6 +384,7 @@ namespace AutoUpdate
 
         // 定义文件路径
         private string filePath = "UpdateLog.txt";
+        private string debugfilePath = "UpdateLog.log";
         /// <summary>
         /// 启动加载这个窗体时。会在当前目录下生成一个文本文件里面写入值
         /// 当点下一步时写入值“升级”
@@ -400,7 +405,6 @@ namespace AutoUpdate
                 System.IO.File.Delete(AppDomain.CurrentDomain.BaseDirectory + currentexeName + ".delete");
             }
 
-
             panel2.Visible = false;
             btnFinish.Visible = false;
             linkLabel1.Visible = false;
@@ -408,14 +412,17 @@ namespace AutoUpdate
             {
                 //从本地读取更新配置文件信息
                 updaterXmlFiles = new XmlFiles(localXmlFile);
-           
+                string debug = updaterXmlFiles.GetNodeValue("//Debug");
+                if (debug == "1")
+                {
+                    Debug = true;
+                }
             }
             catch (Exception ex)
             {
                 MessageBox.Show("配置文件出错!", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 MessageBox.Show(ex.Message + ex.StackTrace);
                 MessageBox.Show(localXmlFile);
-
                 // HLH.Lib.Helper.log4netHelper.info(localXmlFile);
                 this.Close();
                 return;
@@ -465,11 +472,18 @@ namespace AutoUpdate
             //找到了差异的文件集合显示的UI中，等待用户点击下一步
             if (availableUpdate > 0)
             {
+                List<string> contents = new List<string>();
                 for (int i = 0; i < htUpdateFile.Count; i++)
                 {
                     string[] fileArray = (string[])htUpdateFile[i];
                     lvUpdateList.Items.Add(new ListViewItem(fileArray));
+                    // 在当前目录下创建或打开文件
+                    string content = string.Join(",", fileArray);
+                    contents.Add(content);
                 }
+
+                //AppendAllLines(contents);
+
             }
             else
             {
@@ -477,7 +491,6 @@ namespace AutoUpdate
                 StartEntryPointExe(NewVersion);
                 this.Close();
             }
-
             //else
             //    btnNext.Enabled = false;
         }
@@ -489,7 +502,7 @@ namespace AutoUpdate
 
         private void btnCancel_Click(object sender, System.EventArgs e)
         {
-             
+
             File.WriteAllText(filePath, "取消升级");
             this.Close();
             Application.ExitThread();
@@ -500,7 +513,7 @@ namespace AutoUpdate
         {
             if (availableUpdate > 0)
             {
-                
+
                 File.WriteAllText(filePath, "升级中");
 
                 btnNext.Enabled = false;
@@ -569,6 +582,9 @@ namespace AutoUpdate
                         //break;
                     }
                 }
+
+                List<string> contents = new List<string>();
+
                 WebClient wcClient = new WebClient();
                 for (int i = 0; i < this.lvUpdateList.Items.Count; i++)
                 {
@@ -584,11 +600,11 @@ namespace AutoUpdate
                     {
                         string updateFileUrl = updateUrl + lvUpdateList.Items[i].Text.Trim();
                         long fileLength = 0;
-
+                        string content = System.DateTime.Now.ToString() + "准备下载" + updateFileUrl;
                         WebRequest webReq = WebRequest.Create(updateFileUrl);
                         WebResponse webRes = webReq.GetResponse();
                         fileLength = webRes.ContentLength;
-
+                        content += "fileLength:" + fileLength;
                         lbState.Text = "正在下载更新文件,请稍后...";
                         pbDownFile.Value = 0;
                         if ((int)fileLength < 0)
@@ -642,8 +658,8 @@ namespace AutoUpdate
                         srm.Close();
                         srmReader.Close();
                         fs.Close();
-
-
+                        content += " 状态:下载完成";
+                        contents.Add(System.DateTime.Now.ToString() + " " + content);
                     }
                     catch (WebException ex)
                     {
@@ -651,6 +667,9 @@ namespace AutoUpdate
 
                     }
                 }
+
+                AppendAllLines(contents);
+
             }
             catch (Exception exx)
             {
@@ -678,6 +697,25 @@ namespace AutoUpdate
             }
         }
 
+        /// <summary>
+        /// 追加文本内容
+        /// </summary>
+        /// <param name="content"></param>
+        public void AppendAllText(string content)
+        {
+            if (Debug)
+            {
+                File.AppendAllText(debugfilePath, System.DateTime.Now.ToString() + content);
+            }
+        }
+
+        public void AppendAllLines(List<string> contents)
+        {
+            if (Debug)
+            {
+                File.AppendAllLines(debugfilePath, contents);
+            }
+        }
 
         /// <summary>
         /// 复制文件  将版本号下面的文件 全部
@@ -686,6 +724,8 @@ namespace AutoUpdate
         /// <param name="objPath"></param>
         public void CopyFile(string sourcePath, string objPath)
         {
+            List<string> contents = new List<string>();
+
             //			char[] split = @"\".ToCharArray();
             if (!Directory.Exists(objPath))
             {
@@ -700,6 +740,8 @@ namespace AutoUpdate
                     //前面处理了自己更新自己，这时如果是自己则不处理
                     if (files[i] == sourcePath + @"\" + currentexeName)
                     {
+                        //MessageBox.Show("不复制自己");
+                        contents.Add(System.DateTime.Now.ToString() + "不复制自己:" + files[i]);
                         continue;
                     }
                     //http://sevenzipsharp.codeplex.com/
@@ -742,6 +784,7 @@ namespace AutoUpdate
                     else
                     {
                         File.Copy(files[i], System.IO.Path.Combine(objPath, fileName), true);
+                        contents.Add(System.DateTime.Now.ToString() + "复制文件成功:" + files[i]);
                     }
                     #endregion
                 }
@@ -756,7 +799,9 @@ namespace AutoUpdate
             {
                 string[] childdir = dirs[i].Split('\\');
                 CopyFile(dirs[i], objPath + @"\" + childdir[childdir.Length - 1]);
+                contents.Add(System.DateTime.Now.ToString() + "复制目录成功:" + dirs[i]);
             }
+            AppendAllLines(contents);
         }
 
         private void linkLabel1_LinkClicked(object sender, System.Windows.Forms.LinkLabelLinkClickedEventArgs e)
@@ -780,11 +825,12 @@ namespace AutoUpdate
                 //CopyFile(tempUpdatePath, Directory.GetCurrentDirectory());
                 //System.IO.Directory.Delete(tempUpdatePath, true);
 
-
                 for (int i = 0; i < versionDirList.Count; i++)
                 {
                     CopyFile((tempUpdatePath + versionDirList[i]), Directory.GetCurrentDirectory());
                 }
+                AppendAllText("复制完成");
+
                 try
                 {
                     #region 为了实现版本回滚只保留5个版本
@@ -816,9 +862,8 @@ namespace AutoUpdate
                 }
                 catch (Exception exx)
                 {
- 
+                    AppendAllText(" 删除出错" + exx.Message);
                 }
-
             }
             catch (Exception ex)
             {
@@ -865,7 +910,7 @@ namespace AutoUpdate
 
             //全部更新完成后。配置文件也要更新过来
             File.Copy(serverXmlFile, localXmlFile, true);
-           
+
             StartEntryPointExe(NewVersion);
             mainResult = 0;
             this.Close();
@@ -960,7 +1005,7 @@ namespace AutoUpdate
                 }
                 catch (Exception)
                 {
- 
+
                 }
 
             }

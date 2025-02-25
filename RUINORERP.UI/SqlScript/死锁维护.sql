@@ -81,7 +81,9 @@ DBCC INPUTBUFFER (63)--显示从客户端发送到服务器的最后一个语句
 ------------
 
 --查询死锁进程语句
- 
+ use master
+ go
+
 select
 request_session_id spid, 
 OBJECT_NAME(resource_associated_entity_id) tableName 

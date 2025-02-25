@@ -195,7 +195,7 @@ namespace RUINORERP.UI.FM
                         {
                             DataBindingHelper.BindData4CmbByEnum<tb_FM_PayeeInfo>(cv, k => k.Account_type, typeof(AccountType), cmbAccount_type, false);
                             //添加收款信息。展示给财务看
-                            cmbAccount_type.Enabled = false;
+                                cmbAccount_type.Enabled = false;
                             txtAccount_No.Text = cv.Account_No;
                             if (!string.IsNullOrEmpty(cv.PaymentCodeImagePath))
                             {

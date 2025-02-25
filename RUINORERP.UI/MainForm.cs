@@ -917,7 +917,6 @@ namespace RUINORERP.UI
                     p.Name = item.ModuleID.ToString();
                     p.TextDescription = item.ModuleName;// + item.BizType.ToString();
                                                         // p.ImageSmall = imageListSmall.Images[image];
-
                     KryptonTreeView TreeView1 = new KryptonTreeView();
                     TreeView1.MouseDoubleClick += TreeView1_DoubleClick;
 
@@ -970,7 +969,6 @@ namespace RUINORERP.UI
             {
                 foreach (tb_ModuleDefinition item in AppContext.CurUserInfo.UserModList)
                 {
-
                     // Create new page with title and image
                     KryptonPage p = new KryptonPage();
                     p.Text = item.ModuleName;
@@ -1009,18 +1007,8 @@ namespace RUINORERP.UI
 
                     }
                     kryptonNavigator1.Pages.Add(p);
-
                 }
-
-
-
-
-
-
             }
-
-
-
         }
 
         private void TreeView1_NodeMouseDoubleClick(object sender, TreeNodeMouseClickEventArgs e)

@@ -193,11 +193,16 @@ namespace RUINORERP.UI.UControls
             return Equals(obj as ColDisplayController);
         }
 
-        //public override int GetHashCode()
-        //{
-        //    // 使用一个工具类来生成哈希值
-        //    return HashCode.Combine(GridKeyName, ColName);
-        //}
+        public override int GetHashCode()
+        {
+            // 使用一个工具类来生成哈希值
+            unchecked
+            {
+                int hash = 17;
+                hash = hash * 23 + (ColName?.GetHashCode() ?? 0);
+                return hash;
+            }
+        }
 
         #endregion
 

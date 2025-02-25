@@ -136,6 +136,23 @@ namespace RUINORERP.UI.UserCenter.DataParts
                         item.Tag = SaleOrder;
                         item.Cells[0].Tag = "SOrderNo";
                         item.Cells[6].Value = "订单";
+                        #region 显示进度条
+                        double processBarValue = 0d;
+                        if (SaleOrder.TotalQty == 0)
+                        {
+                            processBarValue = 0d; // 或者其他默认值
+                        }
+                        else
+                        {
+                            processBarValue = ((double)SaleOrder.tb_SaleOrderDetails.Sum(s => s.TotalDeliveredQty) / SaleOrder.TotalQty) * 100;
+                        }
+                        item.Cells[7].Value = processBarValue;
+                        if (item.Cells[0] is KryptonTreeGridCell barCell)
+                        {
+                            barCell.ProcessBarValue = processBarValue;
+                        }
+
+                        #endregion
                         item.Cells[9].Value = SaleOrder.tb_employee.Employee_Name;
                         if (SaleOrder.tb_customervendor != null)
                         {

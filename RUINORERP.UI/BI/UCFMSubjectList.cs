@@ -52,6 +52,7 @@ namespace RUINORERP.UI.BI
             UCFMSubjectEdit frmadd = new UCFMSubjectEdit();
             frmadd.bindingSourceEdit = bindingSourceList;
             object obj = frmadd.bindingSourceEdit.AddNew();
+            frmadd.SubjectList = list;
             frmadd.BindData(obj as BaseEntity);
             //RevertCommand command = new RevertCommand();
             ///*
@@ -93,6 +94,7 @@ namespace RUINORERP.UI.BI
                 RevertCommand command = new RevertCommand();
                 UCFMSubjectEdit frmadd = new UCFMSubjectEdit();
                 frmadd.bindingSourceEdit = bindingSourceList;
+                frmadd.SubjectList = list;
                 frmadd.BindData(base.bindingSourceList.Current as BaseEntity);
                 //缓存当前编辑的对象。如果撤销就回原来的值
                 // object obj = (base.bindingSourceList.Current as tb_LocationType).Clone();
@@ -115,7 +117,7 @@ namespace RUINORERP.UI.BI
                 dataGridView1.Refresh();
             }
         }
-
+        List<tb_FM_Subject> list = new List<tb_FM_Subject>();
         protected async override void Query()
         {
             if (base.Edited)
@@ -129,7 +131,7 @@ namespace RUINORERP.UI.BI
 
             ListDataSoure.DataSourceChanged += ListDataSoure_DataSourceChanged;
             dataGridView1.ReadOnly = true;
-            List<tb_FM_Subject> list = await ctr.QueryAsync();
+           list = await ctr.QueryAsync();
             ListDataSoure.DataSource = list.ToBindingSortCollection();
             dataGridView1.DataSource = ListDataSoure;
 

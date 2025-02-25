@@ -19,6 +19,7 @@ using System.Collections.Concurrent;
 using RUINORERP.Common.Extensions;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Windows.Documents;
 
 namespace RUINORERP.UI.BI
 {
@@ -52,6 +53,7 @@ namespace RUINORERP.UI.BI
             UCProductCategoriesEdit frmadd = new UCProductCategoriesEdit();
             frmadd.bindingSourceEdit = bindingSourceList;
             object obj = frmadd.bindingSourceEdit.AddNew();
+            frmadd.categories = list;
             frmadd.BindData(obj as BaseEntity);
             //RevertCommand command = new RevertCommand();
             ///*
@@ -93,6 +95,7 @@ namespace RUINORERP.UI.BI
                 RevertCommand command = new RevertCommand();
                 UCProductCategoriesEdit frmadd = new UCProductCategoriesEdit();
                 frmadd.bindingSourceEdit = bindingSourceList;
+                frmadd.categories = list;
                 frmadd.BindData(base.bindingSourceList.Current as BaseEntity);
                 //缓存当前编辑的对象。如果撤销就回原来的值
                 // object obj = (base.bindingSourceList.Current as tb_LocationType).Clone();
@@ -115,7 +118,7 @@ namespace RUINORERP.UI.BI
                 dataGridView1.Refresh();
             }
         }
-
+        List<tb_ProdCategories> list = new List<tb_ProdCategories>();
         protected async override void Query()
         {
             if (base.Edited)
@@ -129,7 +132,7 @@ namespace RUINORERP.UI.BI
 
             ListDataSoure.DataSourceChanged += ListDataSoure_DataSourceChanged;
             dataGridView1.ReadOnly = true;
-            List<tb_ProdCategories> list = await ctr.QueryAsync();
+            list = await ctr.QueryAsync();
             ListDataSoure.DataSource = list.ToBindingSortCollection();
             dataGridView1.DataSource = ListDataSoure;
 

@@ -973,9 +973,9 @@ namespace RUINORERP.UI.UCSourceGrid
             SaveGridSettingData();
         }
 
-        private async void SaveGridSettingData()
+        private void SaveGridSettingData()
         {
-            await UIBizSrvice.SetCustomSourceGridAsync(SGDefine, CurMenuInfo, null, null, true, menuController.ColumnDisplays);
+            UIBizSrvice.SetCustomSourceGridAsync(SGDefine, CurMenuInfo, null, null, true, menuController.ColumnDisplays);
         }
 
         private void FindCurMenuInfo(SourceGridDefine griddefine)
@@ -1068,7 +1068,10 @@ namespace RUINORERP.UI.UCSourceGrid
             PopupMenuForDeleteSelect popupMenuForDelete = new PopupMenuForDeleteSelect(grid, griddefine);
             #region 创建列前去找到对应的列的权限等相关设置
             //List<SGColDisplayHandler> displayHandlers = await UIBizSrvice.SetCustomSourceGridAsync(SGDefine, CurMenuInfo, null, null, false);
-            List<SGColDisplayHandler> displayHandlers = Task.Run(() => UIBizSrvice.SetCustomSourceGridAsync(SGDefine, CurMenuInfo, null, null, false)).Result;
+
+            //这里卡住会打不开UI单据窗体。这里考虑用缓存保存再查询。
+            //List<SGColDisplayHandler> displayHandlers = Task.Run(() => UIBizSrvice.SetCustomSourceGridAsync(SGDefine, CurMenuInfo, null, null, false)).Result;
+            List<SGColDisplayHandler> displayHandlers = UIBizSrvice.SetCustomSourceGridAsync(SGDefine, CurMenuInfo, null, null, false);
             #endregion
             //设置列宽
             for (int i = 0; i < displayHandlers.Count; i++)
@@ -1079,7 +1082,7 @@ namespace RUINORERP.UI.UCSourceGrid
                     grid.Columns.GetColumnInfo(displayHandlers[i].UniqueId).Visible = displayHandlers[i].Visible;
                 }
             }
-    
+
             PopupMenuForSelect menuForSelect = new PopupMenuForSelect(grid, griddefine);
             menuController = new PopupMenuWithCustomColumns(MainBizDependencyTypeName, griddefine);
             menuController.ColumnDisplays = displayHandlers;

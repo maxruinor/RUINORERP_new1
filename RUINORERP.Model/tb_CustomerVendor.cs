@@ -492,13 +492,6 @@ namespace RUINORERP.Model
         //CustomerVendor_ID.FK_TB_PROD_B_TB_CUSTOME)
         //tb_CustomerVendor.CustomerVendor_ID)
 
-        //[Browsable(false)]打印报表时的数据源会不显示
-        [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_InvoiceInfo.CustomerVendor_ID))]
-        public virtual List<tb_InvoiceInfo> tb_InvoiceInfos { get; set; }
-        //tb_InvoiceInfo.CustomerVendor_ID)
-        //CustomerVendor_ID.FK_TB_INVOI_REFERENCE_TB_CUSTO)
-        //tb_CustomerVendor.CustomerVendor_ID)
 
         //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]

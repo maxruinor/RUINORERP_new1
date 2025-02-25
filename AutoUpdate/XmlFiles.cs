@@ -42,6 +42,10 @@ namespace AutoUpdate
 		public string GetNodeValue(string xPath)
 		{
 			XmlNode xmlNode = this.SelectSingleNode(xPath);
+			if (xmlNode==null)
+			{
+				return "";
+			}
 			return xmlNode.InnerText;
 		}
 		/// <summary>

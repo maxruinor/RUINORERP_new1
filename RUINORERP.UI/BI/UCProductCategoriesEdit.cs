@@ -17,6 +17,7 @@ using RUINORERP.Business;
 using System.Globalization;
 using RUINORERP.UI.Common;
 using RUINORERP.Global;
+using RUINOR.WinFormsUI;
 
 namespace RUINORERP.UI.BI
 {
@@ -30,8 +31,7 @@ namespace RUINORERP.UI.BI
 
         private tb_ProdCategories _EditEntity;
         public tb_ProdCategories EditEntity { get => _EditEntity; set => _EditEntity = value; }
-
-        List<tb_ProdCategories> list = new List<tb_ProdCategories>(0);
+        public List<tb_ProdCategories> categories { get; set; }
         public override void BindData(BaseEntity entity)
         {
             _EditEntity = entity as tb_ProdCategories;
@@ -96,7 +96,6 @@ namespace RUINORERP.UI.BI
             parent_categorie.Parse += new ConvertEventHandler(ControlToDataSource);
 
             cmbTreeParent_id.DataBindings.Add(parent_categorie);
-
             base.BindData(entity);
 
 
@@ -104,27 +103,34 @@ namespace RUINORERP.UI.BI
 
         private void DataSourceToControl(object sender, ConvertEventArgs cevent)
         {
-            // 该方法仅转换为字符串类型。使用DesiredType进行测试。
-            if (cevent.DesiredType != typeof(string)) return;
-            if (cevent.Value == null || cevent.Value.ToString() == "0")
+            if (sender is Binding binder)
             {
-                //cevent.Value = ((decimal)cevent.Value).ToString("c");
-                cevent.Value = "类目根结节";
-            }
-            else
-            {
-                //显示名称
-                tb_ProdCategories entity = list.Find(t => t.Category_ID.ToString() == cevent.Value.ToString());
-                if (entity != null)
+                if (binder.Control is ComboBoxTreeView cmbtreeview)
                 {
-                    cevent.Value = entity.Category_name;
-                }
-                else
-                {
-                    cevent.Value = 0;
-                }
-            }
+                    // 该方法仅转换为字符串类型。使用DesiredType进行测试。
+                    if (cevent.DesiredType != typeof(string)) return;
+                    if (cevent.Value == null || cevent.Value.ToString() == "0")
+                    {
+                        //cevent.Value = ((decimal)cevent.Value).ToString("c");
+                        cevent.Value = "类目根结节";
+                    }
+                    else
+                    {
+                        //显示名称
+                        tb_ProdCategories entity = categories.Find(t => t.Category_ID.ToString() == cevent.Value.ToString());
+                        if (entity != null)
+                        {
+                            cevent.Value = entity.Category_name;
+                            cmbtreeview.Tag = entity;
+                        }
+                        else
+                        {
+                            cevent.Value = 0;
+                        }
+                    }
 
+                }
+            }
         }
 
         private void ControlToDataSource(object sender, ConvertEventArgs cevent)
@@ -137,7 +143,7 @@ namespace RUINORERP.UI.BI
             }
             else
             {
-                tb_ProdCategories entity = list.Find(t => t.Category_name == cevent.Value.ToString());
+                tb_ProdCategories entity = categories.Find(t => t.Category_name == cevent.Value.ToString());
                 if (entity != null)
                 {
                     cevent.Value = entity.Category_ID;
@@ -212,7 +218,20 @@ namespace RUINORERP.UI.BI
             }
             else
             {
-                EditEntity.CategoryLevel = ((tb_ProdCategories)cmbTreeParent_id.SelectedItem).CategoryLevel + 1;
+                //如果父类选择的还是根目录则级别是0，否则+1
+                if (cmbTreeParent_id.Text.Contains("类目根结节"))
+                {
+                    EditEntity.CategoryLevel = 0;
+                }
+                else
+                {
+                    if (cmbTreeParent_id.Tag!= null && cmbTreeParent_id.Tag is tb_ProdCategories category)
+                    {
+                        EditEntity.CategoryLevel = (category.CategoryLevel??0) + 1; 
+                    }
+                    
+                }
+
             }
             if (EditEntity.CategoryLevel > 6)
             {
@@ -228,11 +247,15 @@ namespace RUINORERP.UI.BI
             }
         }
 
-        private async void UCProductCategoriesEdit_Load(object sender, EventArgs e)
+
+
+
+        private void UCProductCategoriesEdit_Load(object sender, EventArgs e)
         {
-            tb_ProdCategoriesController<tb_ProdCategories> ctr = Startup.GetFromFac<tb_ProdCategoriesController<tb_ProdCategories>>();
-            list = await ctr.QueryAsync();
-            Common.UIProdCateHelper.BindToTreeView(list, cmbTreeParent_id.TreeView);
+            //tb_ProdCategoriesController<tb_ProdCategories> ctr = Startup.GetFromFac<tb_ProdCategoriesController<tb_ProdCategories>>();
+            //list = ctr.Query();
+            Common.UIProdCateHelper.BindToTreeView(categories, cmbTreeParent_id.TreeView);
         }
     }
 }
+;

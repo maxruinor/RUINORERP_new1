@@ -214,16 +214,6 @@ namespace RUINORERP.UI.Common
             dataGridView.NeedSaveColumnsXml = false;
             //用户登陆后会有对应的角色下的个性化配置数据。如果没有则给一个默认的（登陆验证时已经实现）。
             tb_UserPersonalized userPersonalized = MainForm.Instance.AppContext.CurrentUser_Role_Personalized;
-            if (userPersonalized == null)
-            {
-                userPersonalized = new tb_UserPersonalized();
-                userPersonalized.ID = MainForm.Instance.AppContext.CurrentUser_Role.ID;
-                MainForm.Instance.AppContext.CurrentUser_Role.tb_UserPersonalizeds.Add(MainForm.Instance.AppContext.CurrentUser_Role_Personalized);
-
-                RUINORERP.Business.BusinessHelper.Instance.InitEntity(MainForm.Instance.AppContext.CurrentUser_Role_Personalized);
-
-                await MainForm.Instance.AppContext.Db.Insertable(MainForm.Instance.AppContext.CurrentUser_Role_Personalized).ExecuteReturnSnowflakeIdAsync();
-            }
             if (userPersonalized.tb_UIMenuPersonalizations == null)
             {
                 userPersonalized.tb_UIMenuPersonalizations = new();
@@ -553,6 +543,13 @@ namespace RUINORERP.UI.Common
                 }
 
             });
+
+            //如果功能变化 新增加了列则会显示到allInitCols,这时要把多出来的也显示到ColumnDisplays
+            foreach (var col in allInitCols.Except(ColumnDisplays))
+            {
+                col.Visible = true;
+                ColumnDisplays.Add(col);
+            }
 
             dataGridView.ColumnDisplays = ColumnDisplays;
             dataGridView.BindColumnStyle();
@@ -900,7 +897,7 @@ namespace RUINORERP.UI.Common
         /// <param name="InvisibleCols">系统硬编码不可见和权限设置的不可见</param>
         /// <param name="DefaultHideCols">系统硬编码不可见和权限设置的不可见</param>
         /// <returns></returns>
-        public static async Task<List<SGColDisplayHandler>> SetCustomSourceGridAsync(SourceGridDefine gridDefine,
+        public static  List<SGColDisplayHandler> SetCustomSourceGridAsync(SourceGridDefine gridDefine,
             tb_MenuInfo CurMenuInfo,
             HashSet<string> InvisibleCols = null,
             HashSet<string> DefaultHideCols = null,
@@ -918,16 +915,7 @@ namespace RUINORERP.UI.Common
             //dataGridView.NeedSaveColumnsXml = false;
             //用户登陆后会有对应的角色下的个性化配置数据。如果没有则给一个默认的（登陆验证时已经实现）。
             tb_UserPersonalized userPersonalized = MainForm.Instance.AppContext.CurrentUser_Role_Personalized;
-            if (userPersonalized == null)
-            {
-                userPersonalized = new tb_UserPersonalized();
-                userPersonalized.ID = MainForm.Instance.AppContext.CurrentUser_Role.ID;
-                MainForm.Instance.AppContext.CurrentUser_Role.tb_UserPersonalizeds.Add(MainForm.Instance.AppContext.CurrentUser_Role_Personalized);
-
-                RUINORERP.Business.BusinessHelper.Instance.InitEntity(MainForm.Instance.AppContext.CurrentUser_Role_Personalized);
-
-                await MainForm.Instance.AppContext.Db.Insertable(MainForm.Instance.AppContext.CurrentUser_Role_Personalized).ExecuteReturnSnowflakeIdAsync();
-            }
+            
             if (userPersonalized.tb_UIMenuPersonalizations == null)
             {
                 userPersonalized.tb_UIMenuPersonalizations = new();
@@ -941,8 +929,7 @@ namespace RUINORERP.UI.Common
                 menuPersonalization.UserPersonalizedID = userPersonalized.UserPersonalizedID;
                 menuPersonalization.QueryConditionCols = 4;//查询条件显示的列数 默认值
                 userPersonalized.tb_UIMenuPersonalizations.Add(menuPersonalization);
-                await MainForm.Instance.AppContext.Db.Updateable<tb_UIMenuPersonalization>(menuPersonalization).ExecuteCommandAsync();
-
+                MainForm.Instance.AppContext.Db.Insertable<tb_UIMenuPersonalization>(menuPersonalization).ExecuteReturnEntityAsync();
             }
 
 
@@ -988,8 +975,6 @@ namespace RUINORERP.UI.Common
                 originalColumnDisplays = LoadInitSourceGridSetting(gridDefine, CurMenuInfo);
             }
 
-
-
             //不管什么情况都处理系统和权限的限制列显示
             originalColumnDisplays.ForEach(c =>
             {
@@ -1022,7 +1007,7 @@ namespace RUINORERP.UI.Common
             //        colset = oldCol;
             //    }
             //}
-
+            /*
             if (SaveGridSetting)
             {
                 //发送缓存数据
@@ -1060,9 +1045,42 @@ namespace RUINORERP.UI.Common
                 }
 
             }
+            */
+            if (SaveGridSetting)
+            {
+                // 如果需要保存设置，启动后台任务
+                Task.Run(async () =>
+                {
+                    await SaveGridSettingsAsync(menuPersonalization, GridSetting, SaveTargetColumnDisplays ?? originalColumnDisplays);
+                });
+            }
             return originalColumnDisplays;
 
 
+        }
+        private static async Task SaveGridSettingsAsync(tb_UIMenuPersonalization menuPersonalization, tb_UIGridSetting gridSetting, List<SGColDisplayHandler> columnDisplays)
+        {
+            // 发送缓存数据
+            string json = JsonConvert.SerializeObject(columnDisplays, new JsonSerializerSettings
+            {
+                ReferenceLoopHandling = ReferenceLoopHandling.Ignore
+            });
+            gridSetting.ColsSetting = json;
+
+            if (gridSetting.UIGID == 0)
+            {
+                RUINORERP.Business.BusinessHelper.Instance.InitEntity(gridSetting);
+                await MainForm.Instance.AppContext.Db.Insertable(gridSetting).ExecuteReturnSnowflakeIdAsync();
+            }
+            else
+            {
+                RUINORERP.Business.BusinessHelper.Instance.EditEntity(gridSetting);
+                int updateCount = await MainForm.Instance.AppContext.Db.Updateable(gridSetting).ExecuteCommandAsync();
+                if (updateCount > 0)
+                {
+                    // 更新成功后的逻辑（如果有）
+                }
+            }
         }
 
 

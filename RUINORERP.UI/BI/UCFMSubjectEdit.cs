@@ -19,6 +19,9 @@ using RUINORERP.UI.Common;
 using RUINORERP.Global;
 using RUINORERP.Global.EnumExt;
 using NPOI.SS.Formula.Functions;
+using SourceGrid2.Win32;
+using System.Reflection;
+using RUINOR.WinFormsUI;
 
 namespace RUINORERP.UI.BI
 {
@@ -34,7 +37,7 @@ namespace RUINORERP.UI.BI
         private tb_FM_Subject _EditEntity;
         public tb_FM_Subject EditEntity { get => _EditEntity; set => _EditEntity = value; }
 
-        List<tb_FM_Subject> list = new List<tb_FM_Subject>(0);
+      public List<tb_FM_Subject> SubjectList { get; set; }
         public override void BindData(BaseEntity entity)
         {
             _EditEntity = entity as tb_FM_Subject;
@@ -78,27 +81,33 @@ namespace RUINORERP.UI.BI
 
         private void DataSourceToControl(object sender, ConvertEventArgs cevent)
         {
-            // 该方法仅转换为字符串类型。使用DesiredType进行测试。
-            if (cevent.DesiredType != typeof(string)) return;
-            if (cevent.Value == null || cevent.Value.ToString() == "0")
+            if (sender is Binding binder)
             {
-                //cevent.Value = ((decimal)cevent.Value).ToString("c");
-                cevent.Value = "类目根结节";
-            }
-            else
-            {
-                //显示名称
-                tb_FM_Subject entity = list.Find(t => t.Subject_id.ToString() == cevent.Value.ToString());
-                if (entity != null)
+                if (binder.Control is ComboBoxTreeView cmbtreeview)
                 {
-                    cevent.Value = entity.Subject_code + "【" + entity.Subject_name + "】";
-                }
-                else
-                {
-                    cevent.Value = 0;
+                    // 该方法仅转换为字符串类型。使用DesiredType进行测试。
+                    if (cevent.DesiredType != typeof(string)) return;
+                    if (cevent.Value == null || cevent.Value.ToString() == "0")
+                    {
+                        //cevent.Value = ((decimal)cevent.Value).ToString("c");
+                        cevent.Value = "类目根结节";
+                    }
+                    else
+                    {
+                        //显示名称
+                        tb_FM_Subject entity = SubjectList.Find(t => t.Subject_id.ToString() == cevent.Value.ToString());
+                        if (entity != null)
+                        {
+                            cevent.Value = entity.Subject_code + "【" + entity.Subject_name + "】";
+                            cmbtreeview.Tag = entity;
+                        }
+                        else
+                        {
+                            cevent.Value = 0;
+                        }
+                    }
                 }
             }
-
         }
 
         private void ControlToDataSource(object sender, ConvertEventArgs cevent)
@@ -113,7 +122,7 @@ namespace RUINORERP.UI.BI
             {
                 //tb_FM_Subject entity = list.Find(t => t.Subject_name == cevent.Value.ToString());
                 //这里是按 显示的文本来找，这里显示格式变化了一下。
-                tb_FM_Subject entity = list.Find(t => t.Subject_code + "【" + t.Subject_name + "】" == cevent.Value.ToString());
+                tb_FM_Subject entity = SubjectList.Find(t => t.Subject_code + "【" + t.Subject_name + "】" == cevent.Value.ToString());
                 
                 if (entity != null)
                 {
@@ -172,11 +181,11 @@ namespace RUINORERP.UI.BI
             }
         }
 
-        private async void UCProductCategoriesEdit_Load(object sender, EventArgs e)
+        private  void UCProductCategoriesEdit_Load(object sender, EventArgs e)
         {
-            tb_FM_SubjectController<tb_FM_Subject> ctr = Startup.GetFromFac<tb_FM_SubjectController<tb_FM_Subject>>();
-            list = await ctr.QueryAsync();
-            Common.UIFMSubjectHelper.BindToTreeView(list, cmbTreeParent_id.TreeView);
+            //tb_FM_SubjectController<tb_FM_Subject> ctr = Startup.GetFromFac<tb_FM_SubjectController<tb_FM_Subject>>();
+            //list = await ctr.QueryAsync();
+            Common.UIFMSubjectHelper.BindToTreeView(SubjectList, cmbTreeParent_id.TreeView);
         }
     }
 }

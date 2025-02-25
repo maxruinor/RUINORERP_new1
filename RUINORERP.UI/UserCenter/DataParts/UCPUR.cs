@@ -104,8 +104,8 @@ namespace RUINORERP.UI.UserCenter.DataParts
                    .AsNavQueryable()
                    .Includes(c => c.tb_PurEntries, d => d.tb_PurEntryRes, f => f.tb_PurReturnEntries, g => g.tb_PurReturnEntryDetails)
                   .WhereIF(AuthorizeController.GetPurBizLimitedAuth(MainForm.Instance.AppContext) && !MainForm.Instance.AppContext.IsSuperUser, t => t.Employee_ID == MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID)//限制了采购只看到自己的
-                  //.Where(c => (c.DataStatus == 2 || c.DataStatus == 4)).OrderBy(c => c.PurDate)
-                  //.Where(t => t.DataStatus == (int)DataStatus.确认)
+                                                                                                                                                                                                                                    //.Where(c => (c.DataStatus == 2 || c.DataStatus == 4)).OrderBy(c => c.PurDate)
+                                                                                                                                                                                                                                    //.Where(t => t.DataStatus == (int)DataStatus.确认)
                   .Where(t => t.ApprovalStatus.HasValue && t.ApprovalStatus.Value == (int)ApprovalStatus.已审核)
                   .Where(t => t.ApprovalResults.HasValue && t.ApprovalResults.Value == true)
                    .Where(c => c.DataStatus == (int)DataStatus.确认).OrderBy(c => c.PurDate)
@@ -144,6 +144,21 @@ namespace RUINORERP.UI.UserCenter.DataParts
                         item.Tag = Order;
                         item.Cells[0].Tag = "PurOrderNo";
                         item.Cells[6].Value = "订单";
+                        double processBarValue = 0d;
+                        if (Order.TotalQty == 0)
+                        {
+                            processBarValue = 0d; // 或者其他默认值
+                        }
+                        else
+                        {
+                            processBarValue = ((double)Order.tb_PurOrderDetails.Sum(s => s.DeliveredQuantity) / Order.TotalQty) * 100;
+                        }
+                        item.Cells[7].Value = processBarValue;
+                        if (item.Cells[0] is KryptonTreeGridCell barCell)
+                        {
+                            barCell.ProcessBarValue = processBarValue;
+                        }
+
                         item.Cells[9].Value = Order.tb_employee.Employee_Name;
                         if (Order.tb_customervendor != null)
                         {

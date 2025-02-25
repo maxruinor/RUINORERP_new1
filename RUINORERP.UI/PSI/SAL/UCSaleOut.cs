@@ -87,6 +87,7 @@ namespace RUINORERP.UI.PSI.SAL
                     entity.ActionStatus = ActionStatus.加载;
                     //entity.DataStatus = (int)DataStatus.确认;
                     //如果审核了，审核要灰色
+
                 }
                 else
                 {
@@ -110,8 +111,8 @@ namespace RUINORERP.UI.PSI.SAL
             DataBindingHelper.BindData4Cmb<tb_CustomerVendor>(entity, k => k.CustomerVendor_ID, v => v.CVName, cmbCustomerVendor_ID, c => c.IsCustomer == true);
 
             //DataBindingHelper.BindData4Cmb<tb_SaleOrder>(entity, k => k.SOrder_ID, v => v.SOrderNo, cmbOrder_ID);
-
-
+            DataBindingHelper.BindData4CmbByEnum<tb_SaleOut>(entity, k => k.PayStatus, typeof(PayStatus), cmbPayStatus, false);
+            DataBindingHelper.BindData4Cmb<tb_PaymentMethod>(entity, k => k.Paytype_ID, v => v.Paytype_Name, cmbPaytype_ID);
             DataBindingHelper.BindData4CheckBox<tb_SaleOut>(entity, t => t.IsFromPlatform, chk平台单, false);
             DataBindingHelper.BindData4TextBox<tb_SaleOut>(entity, t => t.PlatformOrderNo, txtPlatformOrderNo, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_SaleOut>(entity, t => t.SaleOutNo, txtSaleOutNo, BindDataType4TextBox.Text, false);

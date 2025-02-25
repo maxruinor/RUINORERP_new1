@@ -1084,8 +1084,10 @@ namespace RUINORERP.UI.UCSourceGrid
             }
 
             PopupMenuForSelect menuForSelect = new PopupMenuForSelect(grid, griddefine);
+
             menuController = new PopupMenuWithCustomColumns(MainBizDependencyTypeName, griddefine);
             menuController.ColumnDisplays = displayHandlers;
+            menuController.CurMenuInfo = CurMenuInfo;
             for (int i = 0; i < griddefine.Count; i++)
             {
                 //映射列唯一标识

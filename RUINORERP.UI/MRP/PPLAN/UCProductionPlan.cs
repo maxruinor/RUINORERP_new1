@@ -284,15 +284,19 @@ namespace RUINORERP.UI.MRP.MP
             //bomid的下拉值。受当前行选择时会改变下拉范围,由产品ID决定BOM显示
             sgh.SetCol_LimitedConditionsForSelectionRange<tb_ProductionPlanDetail>(sgd, t => t.ProdDetailID, f => f.BOM_ID);
 
-            if (CurMenuInfo.tb_P4Fields != null)
-            {
-                foreach (var item in CurMenuInfo.tb_P4Fields.Where(p => p.tb_fieldinfo.IsChild && !p.IsVisble))
-                {
-                    //listCols.SetCol_NeverVisible(item.tb_fieldinfo.FieldName);
-                    listCols.SetCol_NeverVisible(item.tb_fieldinfo.FieldName, typeof(tb_ProductionPlanDetail));
-                }
+            //if (CurMenuInfo.tb_P4Fields != null)
+            //{
+            //    List<tb_P4Field> P4Fields =
+            //        CurMenuInfo.tb_P4Fields
+            //        .Where(p => p.RoleID == MainForm.Instance.AppContext.CurrentUser_Role.RoleID
+            //        && p.tb_fieldinfo.IsChild && !p.IsVisble).ToList();
+            //    foreach (var item in P4Fields)
+            //    {
+            //        //listCols.SetCol_NeverVisible(item.tb_fieldinfo.FieldName);
+            //        listCols.SetCol_NeverVisible(item.tb_fieldinfo.FieldName, typeof(tb_ProductionPlanDetail));
+            //    }
 
-            }
+            //}
             /*
             //具体审核权限的人才显示
             if (AppContext.CurUserInfo.UserButtonList.Where(c => c.BtnText == MenuItemEnums.审核.ToString()).Any())

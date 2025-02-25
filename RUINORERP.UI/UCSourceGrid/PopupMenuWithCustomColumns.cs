@@ -49,7 +49,7 @@ namespace RUINORERP.UI.UCSourceGrid
         private int InitItemsCount = 0;
         private ToolStripMenuItem highlightedItem; // 跟踪当前高亮项
         SourceGridDefine sgdefine;
-        tb_MenuInfo CurMenuInfo { get; set; }
+        public tb_MenuInfo CurMenuInfo { get; set; }
         public PopupMenuWithCustomColumns(string xmlfileName, SourceGridDefine _sgdefine)
         {
             sgdefine = _sgdefine;

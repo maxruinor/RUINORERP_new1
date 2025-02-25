@@ -1628,46 +1628,50 @@ namespace RUINORERP.UI.BaseForm
 
         }
 
-        [Obsolete("该方法已经废弃，请使用UIHelper.ControlColumnsInvisible")]
-        /// <summary>
-        /// 控制字段是否显示，添加到里面的是不显示的
-        /// </summary>
-        /// <param name="InvisibleCols"></param>
-        public void ControlSingleTableColumnsInvisible(HashSet<string> InvisibleCols, HashSet<string> DefaultHideCols = null)
-        {
-            if (!MainForm.Instance.AppContext.IsSuperUser)
-            {
-                if (CurMenuInfo.tb_P4Fields != null)
-                {
-                    foreach (var item in CurMenuInfo.tb_P4Fields)
-                    {
-                        if (item != null)
-                        {
-                            if (item.tb_fieldinfo != null)
-                            {
-                                //if ((!item.tb_fieldinfo.IsEnabled || !item.IsVisble) && item.tb_fieldinfo.IsChild)
-                                bool Add = !item.IsVisble && !item.tb_fieldinfo.IsChild && !InvisibleCols.Contains(item.tb_fieldinfo.FieldName);
-                                if ((!item.tb_fieldinfo.IsEnabled && !item.tb_fieldinfo.IsChild) || Add)
-                                {
-                                    if (!InvisibleCols.Contains(item.tb_fieldinfo.FieldName))
-                                    {
-                                        InvisibleCols.Add(item.tb_fieldinfo.FieldName);
-                                    }
-                                }
+        //[Obsolete("该方法已经废弃，请使用UIHelper.ControlColumnsInvisible")]
+        ///// <summary>
+        ///// 控制字段是否显示，添加到里面的是不显示的
+        ///// </summary>
+        ///// <param name="InvisibleCols"></param>
+        //public void ControlSingleTableColumnsInvisible(HashSet<string> InvisibleCols, HashSet<string> DefaultHideCols = null)
+        //{
+        //    if (!MainForm.Instance.AppContext.IsSuperUser)
+        //    {
+        //        if (CurMenuInfo.tb_P4Fields != null)
+        //        {
+        //            List<tb_P4Field> P4Fields =
+        //           CurMenuInfo.tb_P4Fields
+        //           .Where(p => p.RoleID == MainForm.Instance.AppContext.CurrentUser_Role.RoleID
+        //           && p.tb_fieldinfo.IsChild && !p.IsVisble).ToList();
+        //            foreach (var item in P4Fields)
+        //            {
+        //                if (item != null)
+        //                {
+        //                    if (item.tb_fieldinfo != null)
+        //                    {
+        //                        //if ((!item.tb_fieldinfo.IsEnabled || !item.IsVisble) && item.tb_fieldinfo.IsChild)
+        //                        bool Add = !item.IsVisble && !item.tb_fieldinfo.IsChild && !InvisibleCols.Contains(item.tb_fieldinfo.FieldName);
+        //                        if ((!item.tb_fieldinfo.IsEnabled && !item.tb_fieldinfo.IsChild) || Add)
+        //                        {
+        //                            if (!InvisibleCols.Contains(item.tb_fieldinfo.FieldName))
+        //                            {
+        //                                InvisibleCols.Add(item.tb_fieldinfo.FieldName);
+        //                            }
+        //                        }
 
-                                if (DefaultHideCols != null)
-                                {
-                                    if (item.tb_fieldinfo.DefaultHide && !item.tb_fieldinfo.IsChild && !InvisibleCols.Contains(item.tb_fieldinfo.FieldName))
-                                    {
-                                        DefaultHideCols.Add(item.tb_fieldinfo.FieldName);
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
+        //                        if (DefaultHideCols != null)
+        //                        {
+        //                            if (item.tb_fieldinfo.DefaultHide && !item.tb_fieldinfo.IsChild && !InvisibleCols.Contains(item.tb_fieldinfo.FieldName))
+        //                            {
+        //                                DefaultHideCols.Add(item.tb_fieldinfo.FieldName);
+        //                            }
+        //                        }
+        //                    }
+        //                }
+        //            }
+        //        }
+        //    }
+        //}
 
         private void UcAdv_OnSelectDataRow(T entity)
         {

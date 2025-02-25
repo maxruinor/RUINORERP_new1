@@ -511,7 +511,8 @@ namespace RUINORERP.UI.Common
         }
 
 
-        public static void InitDataGridViewColumnDisplays(List<ColDisplayController> ColumnDisplays, NewSumDataGridView dataGridView, Type GridSourceType)
+        public static void InitDataGridViewColumnDisplays(List<ColDisplayController> ColumnDisplays,
+            NewSumDataGridView dataGridView, Type GridSourceType, tb_MenuInfo CurMenuInfo)
         {
             if (dataGridView == null)
             {
@@ -550,6 +551,42 @@ namespace RUINORERP.UI.Common
                 col.Visible = true;
                 ColumnDisplays.Add(col);
             }
+
+            //权限限制，默认值等
+            ColumnDisplays.ForEach(c =>
+            {
+                List<tb_P4Field> P4Fields =
+                CurMenuInfo.tb_P4Fields
+                .Where(p => p.RoleID == MainForm.Instance.AppContext.CurrentUser_Role.RoleID
+                && p.tb_fieldinfo.IsChild).ToList();
+
+                P4Fields.ForEach(p =>
+                {
+                    if (p.tb_fieldinfo.FieldName == c.ColName)
+                    {
+                        if (!p.tb_fieldinfo.IsEnabled)
+                        {
+                            c.Disable = true;
+                            return;
+                        }
+                        else
+                        {
+                            c.Disable = false;
+                            if (p.tb_fieldinfo.DefaultHide)
+                            {
+                                c.Visible = false;
+                            }
+                            else
+                            {
+                                c.Visible = true;
+                            }
+                            //如果字段表中已经设置默认啥的 这里初始化要以默认的为标准
+                        }
+
+                    }
+
+                });
+            });
 
             dataGridView.ColumnDisplays = ColumnDisplays;
             dataGridView.BindColumnStyle();
@@ -897,7 +934,7 @@ namespace RUINORERP.UI.Common
         /// <param name="InvisibleCols">系统硬编码不可见和权限设置的不可见</param>
         /// <param name="DefaultHideCols">系统硬编码不可见和权限设置的不可见</param>
         /// <returns></returns>
-        public static  List<SGColDisplayHandler> SetCustomSourceGridAsync(SourceGridDefine gridDefine,
+        public static List<SGColDisplayHandler> SetCustomSourceGridAsync(SourceGridDefine gridDefine,
             tb_MenuInfo CurMenuInfo,
             HashSet<string> InvisibleCols = null,
             HashSet<string> DefaultHideCols = null,
@@ -915,7 +952,7 @@ namespace RUINORERP.UI.Common
             //dataGridView.NeedSaveColumnsXml = false;
             //用户登陆后会有对应的角色下的个性化配置数据。如果没有则给一个默认的（登陆验证时已经实现）。
             tb_UserPersonalized userPersonalized = MainForm.Instance.AppContext.CurrentUser_Role_Personalized;
-            
+
             if (userPersonalized.tb_UIMenuPersonalizations == null)
             {
                 userPersonalized.tb_UIMenuPersonalizations = new();
@@ -1132,19 +1169,36 @@ namespace RUINORERP.UI.Common
                 //权限设置隐藏的和不可用的情况
                 if (CurMenuInfo != null && CurMenuInfo.tb_P4Fields != null)
                 {
-                    CurMenuInfo.tb_P4Fields.ForEach(p =>
+                    List<tb_P4Field> P4Fields =
+                   CurMenuInfo.tb_P4Fields
+                   .Where(p => p.RoleID == MainForm.Instance.AppContext.CurrentUser_Role.RoleID
+                   && p.tb_fieldinfo.IsChild).ToList();
+
+                    P4Fields.ForEach(p =>
                     {
-                        if (p.tb_fieldinfo.DefaultHide && p.tb_fieldinfo.FieldName == c.ColName)
+                        if (p.tb_fieldinfo.FieldName == c.ColName)
                         {
-                            c.Visible = false;
-                            c.Disable = false;
+                            if (!p.tb_fieldinfo.IsEnabled)
+                            {
+                                c.Disable = true;
+                                return;
+                            }
+                            else
+                            {
+                                c.Disable = false;
+                                if (p.tb_fieldinfo.DefaultHide)
+                                {
+                                    c.Visible = false;
+                                }
+                                else
+                                {
+                                    c.Visible = true;
+                                }
+                                //如果字段表中已经设置默认啥的 这里初始化要以默认的为标准
+                            }
+
                         }
 
-                        if (!p.tb_fieldinfo.IsEnabled && p.tb_fieldinfo.FieldName == c.ColName)
-                        {
-                            c.Visible = false;
-                            c.Disable = true;
-                        }
                     });
                 }
 

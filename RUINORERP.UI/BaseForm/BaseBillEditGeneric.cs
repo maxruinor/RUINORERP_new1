@@ -395,7 +395,7 @@ namespace RUINORERP.UI.BaseForm
                         {
                             toolStripButtonSave.Enabled = false;
                         }
-                    
+
                         toolStripBtnReverseReview.Enabled = false;
                         toolStripbtnPrint.Enabled = false;
                         toolStripbtnDelete.Enabled = true;
@@ -523,7 +523,11 @@ namespace RUINORERP.UI.BaseForm
             {
                 if (CurMenuInfo.tb_P4Fields != null)
                 {
-                    foreach (var item in CurMenuInfo.tb_P4Fields)
+                    List<tb_P4Field> P4Fields =
+                    CurMenuInfo.tb_P4Fields
+                    .Where(p => p.RoleID == MainForm.Instance.AppContext.CurrentUser_Role.RoleID
+                    && p.tb_fieldinfo.IsChild).ToList();
+                    foreach (var item in P4Fields)
                     {
                         if (item != null)
                         {
@@ -551,7 +555,6 @@ namespace RUINORERP.UI.BaseForm
                                     {
                                         defineColumnItem.SetCol_DefaultHide(item.tb_fieldinfo.FieldName);
                                     }
-
                                 }
                             }
                         }
@@ -573,7 +576,11 @@ namespace RUINORERP.UI.BaseForm
             {
                 if (CurMenuInfo.tb_P4Fields != null)
                 {
-                    foreach (var item in CurMenuInfo.tb_P4Fields)
+                    List<tb_P4Field> P4Fields =
+                   CurMenuInfo.tb_P4Fields
+                   .Where(p => p.RoleID == MainForm.Instance.AppContext.CurrentUser_Role.RoleID
+                   && !p.tb_fieldinfo.IsChild).ToList();
+                    foreach (var item in P4Fields)
                     {
                         if (item != null)
                         {

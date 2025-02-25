@@ -169,6 +169,10 @@ namespace RUINORERP.UI.UCSourceGrid
                         setcurrentObj.SetPropertyInfoToNull(propertyInfo);
                         return;
                     }
+                    if (string.IsNullOrEmpty(sender.Value.ToString()) && CurrDefinedColumn.ColPropertyInfo.PropertyType.FullName == "System.Int64")
+                    {
+                        return;
+                    }
                     var realTypeVal = sender.Value.ChangeTypeSafely(CurrDefinedColumn.ColPropertyInfo.PropertyType);
                     ReflectionHelper.SetPropertyValue(setcurrentObj, CurrDefinedColumn.ColName, realTypeVal);
                     #region 处理特殊情况  比方 时间值为：{0001-01-01 0:00:00}

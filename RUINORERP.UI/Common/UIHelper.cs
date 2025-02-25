@@ -191,7 +191,12 @@ namespace RUINORERP.UI.Common
             {
                 if (CurMenuInfo.tb_P4Fields != null)
                 {
-                    foreach (var item in CurMenuInfo.tb_P4Fields)
+                    List<tb_P4Field> P4Fields =
+                    CurMenuInfo.tb_P4Fields
+                    .Where(p => p.RoleID == MainForm.Instance.AppContext.CurrentUser_Role.RoleID
+                    ).ToList();
+
+                    foreach (var item in P4Fields)
                     {
                         if (item != null)
                         {

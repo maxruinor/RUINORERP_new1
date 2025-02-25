@@ -251,13 +251,6 @@ namespace RUINORERP.Model
         //User_ID.FK_TB_USER_REFERENCE_TB_USERI)
         //tb_UserInfo.User_ID)
 
-        //[Browsable(false)]打印报表时的数据源会不显示
-        [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_UserPersonalization.User_ID))]
-        public virtual List<tb_UserPersonalization> tb_UserPersonalizations { get; set; }
-        //tb_UserPersonalization.User_ID)
-        //User_ID.FK_TB_USERP_REFERENCE_TB_USERI)
-        //tb_UserInfo.User_ID)
 
         //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]

@@ -378,6 +378,7 @@ namespace RUINORERP.UI.ProductEAV
 
             listCols1.SetCol_ReadOnly<tb_PackingDetail>(c => c.PackDetail_ID);
             listCols1.SetCol_ReadOnly<tb_PackingDetail>(c => c.property);
+            ControlChildColumnsInvisible(listCols1);
             sgd1 = new SourceGridDefine(grid1, listCols1, true);
             sgd1.GridMasterData = EditEntity;
 
@@ -387,15 +388,19 @@ namespace RUINORERP.UI.ProductEAV
 
 
 
-            if (CurMenuInfo.tb_P4Fields != null)
-            {
-                foreach (var item in CurMenuInfo.tb_P4Fields.Where(p => p.tb_fieldinfo.IsChild && !p.IsVisble))
-                {
-                    //listCols.SetCol_NeverVisible(item.tb_fieldinfo.FieldName);
-                    listCols1.SetCol_NeverVisible(item.tb_fieldinfo.FieldName, typeof(tb_PackingDetail));
-                }
+            //if (CurMenuInfo.tb_P4Fields != null)
+            //{
+            //    List<tb_P4Field> P4Fields =
+            //         CurMenuInfo.tb_P4Fields
+            //         .Where(p => p.RoleID == MainForm.Instance.AppContext.CurrentUser_Role.RoleID
+            //         && p.tb_fieldinfo.IsChild && !p.IsVisble).ToList();
+            //    foreach (var item in P4Fields)
+            //    { 
+            //        //listCols.SetCol_NeverVisible(item.tb_fieldinfo.FieldName);
+            //        listCols1.SetCol_NeverVisible(item.tb_fieldinfo.FieldName, typeof(tb_PackingDetail));
+            //    }
 
-            }
+            //}
             /*
             //具体审核权限的人才显示
             if (AppContext.CurUserInfo.UserButtonList.Where(c => c.BtnText == MenuItemEnums.审核.ToString()).Any())
@@ -404,7 +409,7 @@ namespace RUINORERP.UI.ProductEAV
             }*/
 
 
-
+  
 
             sgh1.SetPointToColumnPairs<ProductSharePart, tb_PackingDetail>(sgd1, f => f.prop, t => t.property);
 

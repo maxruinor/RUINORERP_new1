@@ -447,6 +447,7 @@ namespace RUINORERP.UI.MRP.MP
 
             //listCols.SetCol_ReadOnly<tb_ProductionDemandDetail>(c => c.CompletedQuantity);
 
+            ControlChildColumnsInvisible(listColsTarget);
             sgdTarget = new SourceGridDefine(gridTargetItems, listColsTarget, true);
 
 
@@ -472,18 +473,22 @@ namespace RUINORERP.UI.MRP.MP
             listColsTarget.SetCol_DefaultHide<ProductSharePart>(c => c.Brand);
             listColsTarget.SetCol_DefaultHide<ProductSharePart>(c => c.BarCode);
             listColsTarget.SetCol_DefaultHide<ProductSharePart>(c => c.ShortCode);
-            if (CurMenuInfo.tb_P4Fields != null)
-            {
-                foreach (var item in CurMenuInfo.tb_P4Fields.Where(p => p.tb_fieldinfo.IsChild && !p.IsVisble))
-                {
-                    listColsTarget.SetCol_NeverVisible(item.tb_fieldinfo.FieldName, typeof(tb_ProductionDemandTargetDetail));
-                }
-            }
+            //if (CurMenuInfo.tb_P4Fields != null)
+            //{
+            //    List<tb_P4Field> P4Fields =
+            //         CurMenuInfo.tb_P4Fields
+            //         .Where(p => p.RoleID == MainForm.Instance.AppContext.CurrentUser_Role.RoleID
+            //         && p.tb_fieldinfo.IsChild && !p.IsVisble).ToList();
+            //    foreach (var item in P4Fields)
+            //    {
+            //        listColsTarget.SetCol_NeverVisible(item.tb_fieldinfo.FieldName, typeof(tb_ProductionDemandTargetDetail));
+            //    }
+            //}
             //if (!AppContext.SysConfig.UseBarCode)
             //{
             //    listColsTarget.SetCol_NeverVisible<ProductSharePart>(c => c.BarCode);
             //}
-            //ControlChildColumnsInvisible(listColsTarget);
+            ControlChildColumnsInvisible(listColsTarget);
 
             /*
             //具体审核权限的人才显示
@@ -572,15 +577,19 @@ namespace RUINORERP.UI.MRP.MP
 
 
 
-            if (CurMenuInfo.tb_P4Fields != null)
-            {
-                foreach (var item in CurMenuInfo.tb_P4Fields.Where(p => p.tb_fieldinfo.IsChild && !p.IsVisble))
-                {
-                    //listCols.SetCol_NeverVisible(item.tb_fieldinfo.FieldName);
-                    listColsPur.SetCol_NeverVisible(item.tb_fieldinfo.FieldName, typeof(tb_PurGoodsRecommendDetail));
-                }
+            //if (CurMenuInfo.tb_P4Fields != null)
+            //{
+            //    List<tb_P4Field> P4Fields =
+            //         CurMenuInfo.tb_P4Fields
+            //         .Where(p => p.RoleID == MainForm.Instance.AppContext.CurrentUser_Role.RoleID
+            //         && p.tb_fieldinfo.IsChild && !p.IsVisble).ToList();
+            //    foreach (var item in P4Fields)
+            //    {
+            //        //listCols.SetCol_NeverVisible(item.tb_fieldinfo.FieldName);
+            //        listColsPur.SetCol_NeverVisible(item.tb_fieldinfo.FieldName, typeof(tb_PurGoodsRecommendDetail));
+            //    }
 
-            }
+            //}
             /*
             //具体审核权限的人才显示
             if (AppContext.CurUserInfo.UserButtonList.Where(c => c.BtnText == MenuItemEnums.审核.ToString()).Any())

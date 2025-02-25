@@ -210,7 +210,7 @@ namespace RUINORERP.UI.PSI.SAL
             this.AutoValidate = AutoValidate.EnableAllowFocusChange;
             DataBindingHelper.BindData4ControlByEnum<tb_SaleOrder>(entity, t => t.DataStatus, lblDataStatus, BindDataType4Enum.EnumName, typeof(Global.DataStatus));
             DataBindingHelper.BindData4ControlByEnum<tb_SaleOrder>(entity, t => t.ApprovalStatus, lblReview, BindDataType4Enum.EnumName, typeof(Global.ApprovalStatus));
-            
+
             if (entity.tb_SaleOrderDetails != null && entity.tb_SaleOrderDetails.Count > 0)
             {
                 //LoadDataToGrid(entity.tb_SaleOrderDetails);
@@ -444,15 +444,18 @@ namespace RUINORERP.UI.PSI.SAL
         Console.WriteLine(result); // 38.95
              */
 
-            if (CurMenuInfo.tb_P4Fields != null)
-            {
-                foreach (var item in CurMenuInfo.tb_P4Fields.Where(p => p.tb_fieldinfo.IsChild && !p.IsVisble))
-                {
-                    //listCols.SetCol_NeverVisible(item.tb_fieldinfo.FieldName);
-                    listCols.SetCol_NeverVisible(item.tb_fieldinfo.FieldName, typeof(tb_SaleOrderDetail));
-                }
+            //if (CurMenuInfo.tb_P4Fields != null)
+            //{
+            //    List<tb_P4Field> P4Fields =
+            //        CurMenuInfo.tb_P4Fields
+            //        .Where(p => p.RoleID == MainForm.Instance.AppContext.CurrentUser_Role.RoleID
+            //        && p.tb_fieldinfo.IsChild && !p.IsVisble).ToList();
+            //    foreach (var item in P4Fields)
+            //    {
+            //        listCols.SetCol_NeverVisible(item.tb_fieldinfo.FieldName, typeof(tb_SaleOrderDetail));
+            //    }
 
-            }
+            //}
             /*
             //具体审核权限的人才显示
             if (AppContext.CurUserInfo.UserButtonList.Where(c => c.BtnText == MenuItemEnums.审核.ToString()).Any())
@@ -527,7 +530,7 @@ namespace RUINORERP.UI.PSI.SAL
                         griddefine.grid[Position.Row, Col.Index].Value = _SDetail.UnitPrice;
                     }
 
-                    
+
                 }
             }
         }

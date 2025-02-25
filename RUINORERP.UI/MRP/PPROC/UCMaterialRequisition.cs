@@ -344,7 +344,7 @@ namespace RUINORERP.UI.MRP.MP
             listCols.SetCol_ReadOnly<tb_MaterialRequisitionDetail>(c => c.ReturnQty);
             listCols.SetCol_ReadOnly<tb_MaterialRequisitionDetail>(c => c.Cost);
 
-
+            ControlChildColumnsInvisible(listCols);
             sgd = new SourceGridDefine(grid1, listCols, true);
             sgd.GridMasterData = EditEntity;
             listCols.SetCol_Summary<tb_MaterialRequisitionDetail>(c => c.SubtotalCost);
@@ -358,15 +358,19 @@ namespace RUINORERP.UI.MRP.MP
             // sgh.SetCol_LimitedConditionsForSelectionRange<tb_MaterialRequisitionsDetail>(sgd, t => t.ProdDetailID, f => f.BOM_ID);
 
 
-            if (CurMenuInfo.tb_P4Fields != null)
-            {
-                foreach (var item in CurMenuInfo.tb_P4Fields.Where(p => p.tb_fieldinfo.IsChild && !p.IsVisble))
-                {
-                    //listCols.SetCol_NeverVisible(item.tb_fieldinfo.FieldName);
-                    listCols.SetCol_NeverVisible(item.tb_fieldinfo.FieldName, typeof(tb_MaterialRequisitionDetail));
-                }
+            //if (CurMenuInfo.tb_P4Fields != null)
+            //{
+            //    List<tb_P4Field> P4Fields =
+            //         CurMenuInfo.tb_P4Fields
+            //         .Where(p => p.RoleID == MainForm.Instance.AppContext.CurrentUser_Role.RoleID
+            //         && p.tb_fieldinfo.IsChild && !p.IsVisble).ToList();
+            //    foreach (var item in P4Fields)
+            //    {
+            //        //listCols.SetCol_NeverVisible(item.tb_fieldinfo.FieldName);
+            //        listCols.SetCol_NeverVisible(item.tb_fieldinfo.FieldName, typeof(tb_MaterialRequisitionDetail));
+            //    }
 
-            }
+            //}
             /*
             //具体审核权限的人才显示
             if (AppContext.CurUserInfo.UserButtonList.Where(c => c.BtnText == MenuItemEnums.审核.ToString()).Any())

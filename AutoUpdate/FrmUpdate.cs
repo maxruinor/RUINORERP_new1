@@ -33,7 +33,7 @@ namespace AutoUpdate
         private System.Windows.Forms.ColumnHeader chProgress;
         private System.Windows.Forms.GroupBox groupBox2;
         private System.Windows.Forms.ListView lvUpdateList;
-        private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.Label lblupdatefiles;
         private System.Windows.Forms.Button btnNext;
         private System.Windows.Forms.Button btnCancel;
         private System.Windows.Forms.Label lbState;
@@ -53,7 +53,7 @@ namespace AutoUpdate
         /// 必需的设计器变量。
         /// </summary>
         private System.ComponentModel.Container components = null;
-
+        public frmDebugInfo frmDebug;
 
         public FrmUpdate()
         {
@@ -62,6 +62,8 @@ namespace AutoUpdate
             //
             InitializeComponent();
             System.Windows.Forms.Control.CheckForIllegalCrossThreadCalls = false;
+            _main = this;
+            frmDebug = new frmDebugInfo();
             //
             // TODO: 在 InitializeComponent 调用后添加任何构造函数代码
             //
@@ -93,7 +95,7 @@ namespace AutoUpdate
             this.pictureBox1 = new System.Windows.Forms.PictureBox();
             this.panel1 = new System.Windows.Forms.Panel();
             this.btnskipCurrentVersion = new System.Windows.Forms.Button();
-            this.label1 = new System.Windows.Forms.Label();
+            this.lblupdatefiles = new System.Windows.Forms.Label();
             this.groupBox2 = new System.Windows.Forms.GroupBox();
             this.lvUpdateList = new System.Windows.Forms.ListView();
             this.chFileName = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
@@ -131,7 +133,7 @@ namespace AutoUpdate
             // panel1
             // 
             this.panel1.Controls.Add(this.btnskipCurrentVersion);
-            this.panel1.Controls.Add(this.label1);
+            this.panel1.Controls.Add(this.lblupdatefiles);
             this.panel1.Controls.Add(this.groupBox2);
             this.panel1.Controls.Add(this.lvUpdateList);
             this.panel1.Controls.Add(this.pbDownFile);
@@ -139,12 +141,12 @@ namespace AutoUpdate
             this.panel1.Controls.Add(this.groupBox1);
             this.panel1.Location = new System.Drawing.Point(120, 8);
             this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(280, 240);
+            this.panel1.Size = new System.Drawing.Size(371, 343);
             this.panel1.TabIndex = 2;
             // 
             // btnskipCurrentVersion
             // 
-            this.btnskipCurrentVersion.Location = new System.Drawing.Point(168, 8);
+            this.btnskipCurrentVersion.Location = new System.Drawing.Point(280, 9);
             this.btnskipCurrentVersion.Name = "btnskipCurrentVersion";
             this.btnskipCurrentVersion.Size = new System.Drawing.Size(88, 23);
             this.btnskipCurrentVersion.TabIndex = 10;
@@ -152,20 +154,20 @@ namespace AutoUpdate
             this.btnskipCurrentVersion.UseVisualStyleBackColor = true;
             this.btnskipCurrentVersion.Click += new System.EventHandler(this.btnskipCurrentVersion_Click);
             // 
-            // label1
+            // lblupdatefiles
             // 
-            this.label1.Location = new System.Drawing.Point(16, 16);
-            this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(136, 16);
-            this.label1.TabIndex = 9;
-            this.label1.Text = "以下为更新文件列表";
+            this.lblupdatefiles.Location = new System.Drawing.Point(16, 16);
+            this.lblupdatefiles.Name = "lblupdatefiles";
+            this.lblupdatefiles.Size = new System.Drawing.Size(136, 16);
+            this.lblupdatefiles.TabIndex = 9;
+            this.lblupdatefiles.Text = "以下为更新文件列表";
             // 
             // groupBox2
             // 
             this.groupBox2.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.groupBox2.Location = new System.Drawing.Point(0, 238);
+            this.groupBox2.Location = new System.Drawing.Point(0, 341);
             this.groupBox2.Name = "groupBox2";
-            this.groupBox2.Size = new System.Drawing.Size(280, 2);
+            this.groupBox2.Size = new System.Drawing.Size(371, 2);
             this.groupBox2.TabIndex = 7;
             this.groupBox2.TabStop = false;
             this.groupBox2.Text = "groupBox2";
@@ -179,7 +181,7 @@ namespace AutoUpdate
             this.lvUpdateList.HideSelection = false;
             this.lvUpdateList.Location = new System.Drawing.Point(3, 48);
             this.lvUpdateList.Name = "lvUpdateList";
-            this.lvUpdateList.Size = new System.Drawing.Size(272, 120);
+            this.lvUpdateList.Size = new System.Drawing.Size(365, 216);
             this.lvUpdateList.TabIndex = 6;
             this.lvUpdateList.UseCompatibleStateImageBehavior = false;
             this.lvUpdateList.View = System.Windows.Forms.View.Details;
@@ -187,7 +189,7 @@ namespace AutoUpdate
             // chFileName
             // 
             this.chFileName.Text = "组件名";
-            this.chFileName.Width = 123;
+            this.chFileName.Width = 190;
             // 
             // chVersion
             // 
@@ -197,34 +199,34 @@ namespace AutoUpdate
             // chProgress
             // 
             this.chProgress.Text = "进度";
-            this.chProgress.Width = 47;
+            this.chProgress.Width = 69;
             // 
             // pbDownFile
             // 
-            this.pbDownFile.Location = new System.Drawing.Point(3, 200);
+            this.pbDownFile.Location = new System.Drawing.Point(3, 301);
             this.pbDownFile.Name = "pbDownFile";
-            this.pbDownFile.Size = new System.Drawing.Size(274, 17);
+            this.pbDownFile.Size = new System.Drawing.Size(365, 17);
             this.pbDownFile.TabIndex = 5;
             // 
             // lbState
             // 
-            this.lbState.Location = new System.Drawing.Point(3, 176);
+            this.lbState.Location = new System.Drawing.Point(3, 277);
             this.lbState.Name = "lbState";
             this.lbState.Size = new System.Drawing.Size(240, 16);
             this.lbState.TabIndex = 4;
-            this.lbState.Text = "点击“下一步”开始更新文件";
+            this.lbState.Text = "点击“下一步”开始下载文件";
             // 
             // groupBox1
             // 
             this.groupBox1.Location = new System.Drawing.Point(0, 32);
             this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(280, 8);
+            this.groupBox1.Size = new System.Drawing.Size(368, 8);
             this.groupBox1.TabIndex = 1;
             this.groupBox1.TabStop = false;
             // 
             // btnNext
             // 
-            this.btnNext.Location = new System.Drawing.Point(224, 264);
+            this.btnNext.Location = new System.Drawing.Point(323, 369);
             this.btnNext.Name = "btnNext";
             this.btnNext.Size = new System.Drawing.Size(80, 24);
             this.btnNext.TabIndex = 0;
@@ -233,7 +235,7 @@ namespace AutoUpdate
             // 
             // btnCancel
             // 
-            this.btnCancel.Location = new System.Drawing.Point(312, 264);
+            this.btnCancel.Location = new System.Drawing.Point(411, 369);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(80, 24);
             this.btnCancel.TabIndex = 2;
@@ -248,7 +250,7 @@ namespace AutoUpdate
             this.panel2.Controls.Add(this.label5);
             this.panel2.Controls.Add(this.groupBox3);
             this.panel2.Controls.Add(this.groupBox4);
-            this.panel2.Location = new System.Drawing.Point(13, 292);
+            this.panel2.Location = new System.Drawing.Point(104, 408);
             this.panel2.Name = "panel2";
             this.panel2.Size = new System.Drawing.Size(387, 303);
             this.panel2.TabIndex = 5;
@@ -282,7 +284,7 @@ namespace AutoUpdate
             // label5
             // 
             this.label5.Font = new System.Drawing.Font("宋体", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.label5.Location = new System.Drawing.Point(16, 8);
+            this.label5.Location = new System.Drawing.Point(24, 5);
             this.label5.Name = "label5";
             this.label5.Size = new System.Drawing.Size(136, 24);
             this.label5.TabIndex = 9;
@@ -311,7 +313,7 @@ namespace AutoUpdate
             // 
             this.linkLabel1.Location = new System.Drawing.Point(16, -10);
             this.linkLabel1.Name = "linkLabel1";
-            this.linkLabel1.Size = new System.Drawing.Size(98, 18);
+            this.linkLabel1.Size = new System.Drawing.Size(99, 10);
             this.linkLabel1.TabIndex = 12;
             this.linkLabel1.TabStop = true;
             this.linkLabel1.Text = "http://www.maxruinor.com";
@@ -320,7 +322,7 @@ namespace AutoUpdate
             // 
             // btnFinish
             // 
-            this.btnFinish.Location = new System.Drawing.Point(136, 264);
+            this.btnFinish.Location = new System.Drawing.Point(235, 369);
             this.btnFinish.Name = "btnFinish";
             this.btnFinish.Size = new System.Drawing.Size(80, 24);
             this.btnFinish.TabIndex = 1;
@@ -330,7 +332,7 @@ namespace AutoUpdate
             // FrmUpdate
             // 
             this.AutoScaleBaseSize = new System.Drawing.Size(6, 14);
-            this.ClientSize = new System.Drawing.Size(410, 291);
+            this.ClientSize = new System.Drawing.Size(491, 397);
             this.ControlBox = false;
             this.Controls.Add(this.panel2);
             this.Controls.Add(this.btnCancel);
@@ -357,7 +359,7 @@ namespace AutoUpdate
 
 
         #region 定义属性
-        public bool Debug { get; set; }
+        public bool IsDebugMode { get; set; }
         #endregion
 
         private string updateUrl = string.Empty;
@@ -382,6 +384,9 @@ namespace AutoUpdate
         string localXmlFile = Application.StartupPath + "\\AutoUpdaterList.xml";
         string serverXmlFile = string.Empty;
 
+        int _Next = 0;
+        public int Next { get { return _Next; } set { _Next = value; } }
+
         // 定义文件路径
         private string filePath = "UpdateLog.txt";
         private string debugfilePath = "UpdateLog.log";
@@ -394,6 +399,9 @@ namespace AutoUpdate
         /// <param name="e"></param>
         private void FrmUpdate_Load(object sender, System.EventArgs e)
         {
+            this.KeyPreview = true; // 允许窗体捕获所有键盘事件
+            this.KeyDown += Form1_KeyDown;
+
             // 在当前目录下创建或打开文件
             File.WriteAllText(filePath, "准备升级");
 
@@ -412,11 +420,11 @@ namespace AutoUpdate
             {
                 //从本地读取更新配置文件信息
                 updaterXmlFiles = new XmlFiles(localXmlFile);
-                string debug = updaterXmlFiles.GetNodeValue("//Debug");
-                if (debug == "1")
-                {
-                    Debug = true;
-                }
+                //string debug = updaterXmlFiles.GetNodeValue("//Debug");
+                //if (debug == "1")
+                //{
+                //    IsDebugMode = true;
+                //}
             }
             catch (Exception ex)
             {
@@ -481,7 +489,7 @@ namespace AutoUpdate
                     string content = string.Join(",", fileArray);
                     contents.Add(content);
                 }
-
+                lblupdatefiles.Text = $"以下为更新文件列表:{htUpdateFile.Count}";
                 //AppendAllLines(contents);
 
             }
@@ -495,8 +503,46 @@ namespace AutoUpdate
             //    btnNext.Enabled = false;
         }
 
+        private void Form1_KeyDown(object sender, KeyEventArgs e)
+        {
+            // 检测是否按下 Ctrl+D
+            if (e.Control && e.KeyCode == Keys.D)
+            {
+                // 切换调试开关
+                IsDebugMode = !IsDebugMode;
+                // 在界面上显示调试开关的状态（可选）
+                //UpdateDebugStatus();
+                if (frmDebug != null)
+                {
+                    frmDebug.Visible = IsDebugMode;
+                }
+            }
+        }
+
+        private static FrmUpdate _main;
+        public static FrmUpdate Instance
+        {
+            get { return _main; }
+        }
 
 
+        internal void PrintInfoLog(string msg)
+        {
+            try
+            {
+                FrmUpdate.Instance.Invoke(new Action(() =>
+                {
+                    frmDebug.richtxt.AppendText(msg + "\r\n");
+                }));
+
+            }
+            catch (Exception ex)
+            {
+
+            }
+
+
+        }
 
 
 
@@ -511,9 +557,20 @@ namespace AutoUpdate
 
         private void btnNext_Click(object sender, System.EventArgs e)
         {
+            //if (Next == 2)
+            //{
+            //    InvalidateControl();
+            //    return;
+            //}
+            //if (Next == 1)
+            //{
+            //    LastCopy();
+            //    Next++;
+            //    return;
+            //}
+
             if (availableUpdate > 0)
             {
-
                 File.WriteAllText(filePath, "升级中");
 
                 btnNext.Enabled = false;
@@ -646,7 +703,7 @@ namespace AutoUpdate
 
                         filesList.Add(new KeyValuePair<string, string>(AppDomain.CurrentDomain.BaseDirectory + UpdateFile, tempPath));
 
-                        //添加对应的版本目录
+                        //下载时，添加对应的版本目录根据版本号分类 后面根据这个来复制
                         if (!versionDirList.Contains(VerNo))
                         {
                             versionDirList.Add(VerNo);
@@ -660,6 +717,7 @@ namespace AutoUpdate
                         fs.Close();
                         content += " 状态:下载完成";
                         contents.Add(System.DateTime.Now.ToString() + " " + content);
+                        PrintInfoLog(System.DateTime.Now.ToString() + " " + content);
                     }
                     catch (WebException ex)
                     {
@@ -675,9 +733,9 @@ namespace AutoUpdate
             {
                 MessageBox.Show("更新文件列表下载失败！" + exx.Message.ToString() + "\r\n" + exx.StackTrace, "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
-
-
-
+            Next++;
+            btnNext.Enabled = true;
+            //lbState.Text = "点击“下一步”开始更新文件";
             InvalidateControl();
             this.Cursor = Cursors.Default;
         }
@@ -703,26 +761,27 @@ namespace AutoUpdate
         /// <param name="content"></param>
         public void AppendAllText(string content)
         {
-            if (Debug)
+            if (IsDebugMode)
             {
-                File.AppendAllText(debugfilePath, System.DateTime.Now.ToString() + content);
+                //File.AppendAllText(debugfilePath, System.DateTime.Now.ToString() + content);
             }
         }
 
         public void AppendAllLines(List<string> contents)
         {
-            if (Debug)
+            if (IsDebugMode)
             {
-                File.AppendAllLines(debugfilePath, contents);
+                //File.AppendAllLines(debugfilePath, contents);
             }
         }
+
 
         /// <summary>
         /// 复制文件  将版本号下面的文件 全部
         /// </summary>
         /// <param name="sourcePath"></param>
         /// <param name="objPath"></param>
-        public void CopyFile(string sourcePath, string objPath)
+        public void CopyFile(string sourcePath, string objPath, string VerNo)
         {
             List<string> contents = new List<string>();
 
@@ -731,7 +790,35 @@ namespace AutoUpdate
             {
                 Directory.CreateDirectory(objPath);
             }
-            string[] files = Directory.GetFiles(sourcePath);
+
+            List<string> needCopyFiles = new List<string>();
+
+            string[] allfiles = Directory.GetFiles(sourcePath);
+            // 遍历所有文件，过滤出需要更新的文件
+            foreach (string file in allfiles)
+            {
+                // 获取文件名
+                string fileName = Path.GetFileName(file);
+                // 检查文件名是否存在于 Hashtable 中
+                foreach (DictionaryEntry var in htUpdateFile)
+                {
+                    if (var.Value is string[] info)
+                    {
+                        FileInfo fileInfo = new FileInfo(info[0]);
+                        if (fileInfo.Name == fileName && info[1] == VerNo && !needCopyFiles.Contains(file))
+                        {
+                            needCopyFiles.Add(file);
+                        }
+                    }
+
+                }
+
+            }
+
+            string[] files = needCopyFiles.ToArray();
+            //注意点：从版本号目录中得到所有的文件后 只对上面下载的列表中的文件才复制。旧的不管
+
+
             for (int i = 0; i < files.Length; i++)
             {
                 try
@@ -784,6 +871,7 @@ namespace AutoUpdate
                     else
                     {
                         File.Copy(files[i], System.IO.Path.Combine(objPath, fileName), true);
+                        PrintInfoLog(System.DateTime.Now.ToString() + $"复制文件：从{files[i]}复制到{System.IO.Path.Combine(objPath, fileName)}");
                         contents.Add(System.DateTime.Now.ToString() + "复制文件成功:" + files[i]);
                     }
                     #endregion
@@ -799,7 +887,125 @@ namespace AutoUpdate
             {
                 string[] childdir = dirs[i].Split('\\');
                 CopyFile(dirs[i], objPath + @"\" + childdir[childdir.Length - 1]);
-                contents.Add(System.DateTime.Now.ToString() + "复制目录成功:" + dirs[i]);
+                //PrintInfoLog(System.DateTime.Now.ToString() + "复制目录：" + files[i]);
+                //contents.Add(System.DateTime.Now.ToString() + "复制目录成功:" + dirs[i]);
+            }
+            AppendAllLines(contents);
+        }
+
+        /// <summary>
+        /// 复制文件  将版本号下面的文件 全部
+        /// </summary>
+        /// <param name="sourcePath"></param>
+        /// <param name="objPath"></param>
+        public void CopyFile(string sourcePath, string objPath)
+        {
+            List<string> contents = new List<string>();
+
+            //			char[] split = @"\".ToCharArray();
+            if (!Directory.Exists(objPath))
+            {
+                Directory.CreateDirectory(objPath);
+            }
+
+            List<string> needCopyFiles = new List<string>();
+
+            string[] allfiles = Directory.GetFiles(sourcePath);
+            // 遍历所有文件，过滤出需要更新的文件
+            foreach (string file in allfiles)
+            {
+                // 获取文件名
+                string fileName = Path.GetFileName(file);
+                // 检查文件名是否存在于 Hashtable 中
+                foreach (DictionaryEntry var in htUpdateFile)
+                {
+                    if (var.Value is string[] info)
+                    {
+                        FileInfo fileInfo = new FileInfo(info[0]);
+                        if (fileInfo.Name == fileName && !needCopyFiles.Contains(file))
+                        {
+                            needCopyFiles.Add(file);
+                        }
+                    }
+
+                }
+
+            }
+
+            string[] files = needCopyFiles.ToArray();
+            //注意点：从版本号目录中得到所有的文件后 只对上面下载的列表中的文件才复制。旧的不管
+
+
+            for (int i = 0; i < files.Length; i++)
+            {
+                try
+                {
+                    #region 复制文件
+                    //前面处理了自己更新自己，这时如果是自己则不处理
+                    if (files[i] == sourcePath + @"\" + currentexeName)
+                    {
+                        //MessageBox.Show("不复制自己");
+                        contents.Add(System.DateTime.Now.ToString() + "不复制自己:" + files[i]);
+                        continue;
+                    }
+                    //http://sevenzipsharp.codeplex.com/
+                    //如果为压缩文件，则解压，否则直接复制
+                    string fileName = System.IO.Path.GetFileName(files[i]);
+                    if (System.IO.Path.GetExtension(fileName).ToLower() == ".zip")
+                    {
+                        ///这个默认方法。存在时会出错。不能覆盖
+                        //System.IO.Compression.ZipFile.ExtractToDirectory(System.IO.Path.Combine(sourcePath, fileName), objPath); //解压
+                        string zipPathWithName = System.IO.Path.Combine(sourcePath, fileName);
+                        //MessageBox.Show("zipPathWithName:" + zipPathWithName);
+                        //MessageBox.Show("objPath:" + objPath);
+                        using (ZipArchive archive = ZipFile.OpenRead(zipPathWithName))
+                        {
+                            archive.ExtractToDirectory(objPath, true);
+                        }
+                    }
+                    else if (System.IO.Path.GetExtension(fileName).ToLower() == ".rar")
+                    {
+                        //using (SevenZipExtractor tmp = new SevenZipExtractor(System.IO.Path.Combine(sourcePath, fileName)))
+                        //{
+                        //    for (int f = 0; f < tmp.ArchiveFileData.Count; f++)
+                        //    {
+                        //        tmp.ExtractFiles(objPath, tmp.ArchiveFileData[f].Index);
+                        //    }
+                        //}
+
+                        RARToFileEmail(objPath, System.IO.Path.Combine(sourcePath, fileName));
+
+                        //using (SevenZipExtractor tmp = new SevenZipExtractor(System.IO.Path.Combine(sourcePath, fileName)))
+                        //{
+                        //    for (int f = 0; f < tmp.ArchiveFileData.Count; f++)
+                        //    {
+                        //        tmp.ExtractFiles(objPath, tmp.ArchiveFileData[f].Index);
+                        //    }
+                        //}
+
+
+                    }
+                    else
+                    {
+                        File.Copy(files[i], System.IO.Path.Combine(objPath, fileName), true);
+                        PrintInfoLog(System.DateTime.Now.ToString() + $"复制文件：从{files[i]}复制到{System.IO.Path.Combine(objPath, fileName)}");
+                        contents.Add(System.DateTime.Now.ToString() + "复制文件成功:" + files[i]);
+                    }
+                    #endregion
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(ex.Message);
+                }
+            }
+
+            string[] dirs = Directory.GetDirectories(sourcePath);
+            for (int i = 0; i < dirs.Length; i++)
+            {
+                string[] childdir = dirs[i].Split('\\');
+                CopyFile(dirs[i], objPath + @"\" + childdir[childdir.Length - 1]);
+                //PrintInfoLog(System.DateTime.Now.ToString() + "复制目录：" + files[i]);
+                //contents.Add(System.DateTime.Now.ToString() + "复制目录成功:" + dirs[i]);
             }
             AppendAllLines(contents);
         }
@@ -812,11 +1018,22 @@ namespace AutoUpdate
         /// <summary>
         /// 保留最多最新的版本数量
         /// </summary>
-        public int MaxVersionCount = 3;
+        public int MaxVersionCount = 10;
 
         public int mainResult = 0;
         //点击完成复制更新文件到应用程序目录
         private void btnFinish_Click(object sender, System.EventArgs e)
+        {
+            LastCopy();
+            Thread.Sleep(500);
+            StartEntryPointExe(NewVersion);
+            mainResult = 0;
+            this.Close();
+            this.Dispose();
+        }
+
+
+        private void LastCopy()
         {
             try
             {
@@ -824,10 +1041,11 @@ namespace AutoUpdate
                 //下载完成后，copy文件 ,将下载到临时文件夹中的最新的文件复制到应用程序目录中生效再启动
                 //CopyFile(tempUpdatePath, Directory.GetCurrentDirectory());
                 //System.IO.Directory.Delete(tempUpdatePath, true);
+                //根据不同的版本号。下载到对应的文件夹下面了。但是注意：复制时也以最开始下载的文件列表为基本。并不是所有。因为所有包含旧版本。会覆盖原来的
 
                 for (int i = 0; i < versionDirList.Count; i++)
                 {
-                    CopyFile((tempUpdatePath + versionDirList[i]), Directory.GetCurrentDirectory());
+                    CopyFile((tempUpdatePath + versionDirList[i]), Directory.GetCurrentDirectory(), versionDirList[i]);
                 }
                 AppendAllText("复制完成");
 
@@ -870,8 +1088,6 @@ namespace AutoUpdate
                 MessageBox.Show(ex.Message.ToString());
             }
 
-
-
             //如果下载下来的文件有自己autoUpdate，则重命名 自动更新程序的自我更新，最后处理。前面的要排除
             //在主程序中处理自我更新。实际是A->B    B->A
             string autoupdatePath = string.Empty;
@@ -911,10 +1127,6 @@ namespace AutoUpdate
             //全部更新完成后。配置文件也要更新过来
             File.Copy(serverXmlFile, localXmlFile, true);
 
-            StartEntryPointExe(NewVersion);
-            mainResult = 0;
-            this.Close();
-            this.Dispose();
         }
 
         //重新绘制窗体部分控件属性
@@ -1172,6 +1384,7 @@ namespace AutoUpdate
         }
         /// <summary>
         /// 下载文件列表
+        /// 后面复制文件也要基于这个列表
         /// </summary>
         Hashtable htUpdateFile = new Hashtable();
 

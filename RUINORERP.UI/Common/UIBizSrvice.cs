@@ -562,28 +562,57 @@ namespace RUINORERP.UI.Common
 
                 P4Fields.ForEach(p =>
                 {
-                    if (p.tb_fieldinfo.FieldName == c.ColName)
+                    if (GridSourceType.ToString().Contains("Detail"))
                     {
-                        if (!p.tb_fieldinfo.IsEnabled)
+                        if (p.tb_fieldinfo.FieldName == c.ColName  && p.tb_fieldinfo.IsChild)
                         {
-                            c.Disable = true;
-                            return;
-                        }
-                        else
-                        {
-                            c.Disable = false;
-                            if (p.tb_fieldinfo.DefaultHide)
+                            if (!p.tb_fieldinfo.IsEnabled)
                             {
-                                c.Visible = false;
+                                c.Disable = true;
+                                return;
                             }
                             else
                             {
-                                c.Visible = true;
+                                c.Disable = false;
+                                if (p.tb_fieldinfo.DefaultHide)
+                                {
+                                    c.Visible = false;
+                                }
+                                else
+                                {
+                                    c.Visible = true;
+                                }
+                                //如果字段表中已经设置默认啥的 这里初始化要以默认的为标准
                             }
-                            //如果字段表中已经设置默认啥的 这里初始化要以默认的为标准
-                        }
 
+                        }
                     }
+                    else
+                    {
+                        if (p.tb_fieldinfo.FieldName == c.ColName && !p.tb_fieldinfo.IsChild)
+                        {
+                            if (!p.tb_fieldinfo.IsEnabled)
+                            {
+                                c.Disable = true;
+                                return;
+                            }
+                            else
+                            {
+                                c.Disable = false;
+                                if (p.tb_fieldinfo.DefaultHide)
+                                {
+                                    c.Visible = false;
+                                }
+                                else
+                                {
+                                    c.Visible = true;
+                                }
+                                //如果字段表中已经设置默认啥的 这里初始化要以默认的为标准
+                            }
+
+                        }
+                    }
+                    
 
                 });
             });
@@ -1171,8 +1200,7 @@ namespace RUINORERP.UI.Common
                 {
                     List<tb_P4Field> P4Fields =
                    CurMenuInfo.tb_P4Fields
-                   .Where(p => p.RoleID == MainForm.Instance.AppContext.CurrentUser_Role.RoleID
-                   && p.tb_fieldinfo.IsChild).ToList();
+                   .Where(p => p.RoleID == MainForm.Instance.AppContext.CurrentUser_Role.RoleID                   ).ToList();
 
                     P4Fields.ForEach(p =>
                     {

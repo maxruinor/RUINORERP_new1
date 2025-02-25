@@ -1,5 +1,6 @@
 ﻿using RUINORERP.Business;
 using RUINORERP.Business.Processor;
+using RUINORERP.Business.Security;
 using RUINORERP.Global;
 using RUINORERP.Model;
 using RUINORERP.Model.ReportData;
@@ -79,8 +80,8 @@ namespace RUINORERP.UI.PSI.PUR
                             //.AndIF(CurMenuInfo.CaptionCN.Contains("客户"), t => t.IsCustomer == true)
                             // .AndIF(CurMenuInfo.CaptionCN.Contains("供应商"), t => t.IsVendor == true)
                             //.And(t => t.isdeleted == false)
-
-                            //.And(t => t.Is_enabled == true)
+                            .AndIF(AuthorizeController.GetPurBizLimitedAuth(MainForm.Instance.AppContext) && !MainForm.Instance.AppContext.IsSuperUser, t => t.Employee_ID == MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID)//限制了销售只看到自己的客户,采购不限制
+                                                                                                                                                                                                                                            //.And(t => t.Is_enabled == true)
 
                             .ToExpression();//注意 这一句 不能少
             base.LimitQueryConditions = lambda;

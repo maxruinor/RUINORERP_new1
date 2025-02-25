@@ -686,13 +686,14 @@ protected async override Task<ApprovalEntity> ReReview()
                 //这里根据制令单的时间 费用假设全缴库时算出单位时间
                 //再手动输入实缴时再算
 
-                NewDetail.NetWorkingHours = SourceBill.WorkingHour / SourceBill.ManufacturingQty;
-                NewDetail.NetMachineHours = SourceBill.MachineHour / SourceBill.ManufacturingQty;
-                NewDetail.MaterialCost = SourceBill.TotalMaterialCost / SourceBill.ManufacturingQty;
-                NewDetail.ManuFee = SourceBill.TotalManuFee / SourceBill.ManufacturingQty;
-                NewDetail.ApportionedCost = SourceBill.ApportionedCost / SourceBill.ManufacturingQty;
-                NewDetail.ProductionAllCost = SourceBill.TotalProductionCost / SourceBill.ManufacturingQty;
-
+                NewDetail.NetWorkingHours = decimal.Round(SourceBill.WorkingHour / SourceBill.ManufacturingQty, 4); 
+                NewDetail.NetMachineHours = decimal.Round(SourceBill.MachineHour / SourceBill.ManufacturingQty, 4);
+                NewDetail.MaterialCost = decimal.Round(SourceBill.TotalMaterialCost / SourceBill.ManufacturingQty, 4);
+                NewDetail.ManuFee = decimal.Round(SourceBill.TotalManuFee / SourceBill.ManufacturingQty, 4);
+                //NewDetail.ApportionedCost = SourceBill.ApportionedCost / SourceBill.ManufacturingQty;
+                //NewDetail.ProductionAllCost = SourceBill.TotalProductionCost / SourceBill.ManufacturingQty;
+                NewDetail.ApportionedCost = decimal.Round(SourceBill.ApportionedCost / SourceBill.ManufacturingQty, 4);
+                NewDetail.ProductionAllCost = decimal.Round(SourceBill.TotalProductionCost / SourceBill.ManufacturingQty, 4);
                 #endregion
                 NewDetails.Add(NewDetail);
                 if (NewDetails.Count == 0)

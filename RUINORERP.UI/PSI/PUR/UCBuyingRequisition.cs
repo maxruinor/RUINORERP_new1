@@ -41,6 +41,7 @@ using Krypton.Toolkit;
 using RUINORERP.UI.MRP.MP;
 
 using RUINORERP.Business.CommService;
+using RUINORERP.Business.Security;
 
 
 namespace RUINORERP.UI.PSI.PUR
@@ -192,6 +193,7 @@ namespace RUINORERP.UI.PSI.PUR
                     var lambdaOrder = Expressionable.Create<tb_PurOrder>()
                                     .And(t => t.DataStatus == (int)DataStatus.确认)
                                      .And(t => t.isdeleted == false)
+                                     .AndIF(AuthorizeController.GetPurBizLimitedAuth(MainForm.Instance.AppContext) && !MainForm.Instance.AppContext.IsSuperUser, t => t.Employee_ID == MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID)//限制了销售只看到自己的客户,采购不限制
                                     .ToExpression();//注意 这一句 不能少
                     //base.InitFilterForControl<tb_PurOrder, tb_PurOrderQueryDto>(entity, txtPurOrderNO, c => c.PurOrderNo, lambdaOrder, ctrPurorder.GetQueryParameters());
 

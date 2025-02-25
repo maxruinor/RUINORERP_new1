@@ -60,7 +60,7 @@ namespace RUINORERP.UI.PSI.SAL
                             //.AndIF(CurMenuInfo.CaptionCN.Contains("客户"), t => t.IsCustomer == true)
                             // .AndIF(CurMenuInfo.CaptionCN.Contains("供应商"), t => t.IsVendor == true)
                             // .And(t => t.isdeleted == false)
-
+                              .AndIF(AuthorizeController.GetSaleLimitedAuth(MainForm.Instance.AppContext), t => t.Employee_ID == MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID)//限制了销售只看到自己的客户,采购不限制
                             //.And(t => t.Is_enabled == true)
 
                             .ToExpression();//注意 这一句 不能少

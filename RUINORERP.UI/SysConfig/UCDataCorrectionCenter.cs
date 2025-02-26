@@ -43,9 +43,9 @@ using static System.Windows.Forms.VisualStyles.VisualStyleElement.ListView;
 using Netron.GraphLib;
 using AutoMapper;
 using RUINORERP.Business.AutoMapper;
-using NPOI.SS.Formula.Functions;
 using RUINORERP.Global.EnumExt.CRM;
 using HLH.Lib.Security;
+using NPOI.SS.Formula.Functions;
 
 namespace RUINORERP.UI.SysConfig
 {
@@ -704,11 +704,14 @@ namespace RUINORERP.UI.SysConfig
                 {
                     //成本修复思路
                     //1）成本本身修复，将所有入库明细按加权平均算一下。更新到库存里面。
-                    //2）修复所有出库明细
+                    //2）修复所有出库明细，主要是销售出库，当然还有其它，比方借出，成本金额是重要的指标数据
+                    //3）成本修复 分  成品 外采和生产  因为这两种成本产生的方式不一样
                     #region 成本本身修复
                     List<tb_Inventory> Allitems = MainForm.Instance.AppContext.Db.Queryable<tb_Inventory>()
-                    .Includes(c => c.tb_proddetail, d => d.tb_PurEntryDetails)
-                   .ToList();
+                    .AsNavQueryable()
+                    .Includes(c => c.tb_proddetail, d => d.tb_PurEntryDetails, e => e.tb_proddetail, f => f.tb_prod)
+                    .Includes(c => c.tb_proddetail, d => d.tb_prod)
+                    .ToList();
 
                     List<tb_Inventory> updateList = new List<tb_Inventory>();
                     foreach (tb_Inventory item in Allitems)
@@ -718,17 +721,22 @@ namespace RUINORERP.UI.SysConfig
                             && item.tb_proddetail.tb_PurEntryDetails.Sum(c => c.Quantity) > 0
                             )
                         {
-                            //第笔的入库的数量*成交价/总数量
+                            //每笔的入库的数量*成交价/总数量
                             var transPrice = item.tb_proddetail.tb_PurEntryDetails
                                 .Where(c => c.TransactionPrice > 0 && c.Quantity > 0)
                                 .Sum(c => c.TransactionPrice * c.Quantity) / item.tb_proddetail.tb_PurEntryDetails.Sum(c => c.Quantity);
                             if (transPrice > 0)
                             {
                                 transPrice = Math.Round(transPrice, 3);
+                                decimal diffpirce = Math.Abs(transPrice - item.Inv_Cost);
+                                richTextBoxLog.AppendText($"产品{item.tb_proddetail.tb_prod.CNName} " +
+                                    $"SKU:{item.tb_proddetail.SKU}的旧成本{item.Inv_Cost},相差为{diffpirce}, 修复为：{transPrice}：" + "\r\n");
+
                                 item.CostMovingWA = transPrice;
                                 item.Inv_AdvCost = item.CostMovingWA;
                                 item.Inv_Cost = item.CostMovingWA;
-                                richTextBoxLog.AppendText($"产品SKU:{item.tb_proddetail.SKU}的价格以最后成本价格修复为：{transPrice}：" + "\r\n");
+                                item.Inv_SubtotalCostMoney = item.Inv_Cost * item.Quantity;
+
                                 updateList.Add(item);
                             }
                         }

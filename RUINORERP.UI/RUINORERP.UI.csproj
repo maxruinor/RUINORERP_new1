@@ -1133,8 +1133,9 @@
     <Compile Include="CommonUI\frmInputContent.Designer.cs">
       <DependentUpon>frmInputContent.cs</DependentUpon>
     </Compile>
-    <Compile Include="Common\DataGridViewDisplayNameResolver.cs" />
-    <Compile Include="Common\DataGridViewDisplayTextResolver.cs" />
+    <Compile Include="Common\GridViewDisplayNameResolver.cs" />
+    <Compile Include="Common\GridViewDisplayTextResolverGeneric.cs" />
+    <Compile Include="Common\GridViewDisplayTextResolver.cs" />
     <Compile Include="Common\UICRMRegionHelper.cs" />
     <Compile Include="Common\UIForKryptonHelper.cs" />
     <Compile Include="Common\UIBaseTool.cs" />

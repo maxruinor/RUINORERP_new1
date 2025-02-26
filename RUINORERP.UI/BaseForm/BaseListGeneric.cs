@@ -53,7 +53,7 @@ using RUINORERP.UI.UserPersonalized;
 using RUINORERP.UI.UControls;
 using Newtonsoft.Json;
 using Fireasy.Common.Extensions;
-using static RUINORERP.UI.Common.DataGridViewDisplayNameResolver;
+
 
 
 namespace RUINORERP.UI.BaseForm
@@ -281,7 +281,7 @@ namespace RUINORERP.UI.BaseForm
         }
 
 
-        public DataGridViewDisplayTextResolver<T> DisplayTextResolver = new DataGridViewDisplayTextResolver<T>();
+        public GridViewDisplayTextResolverGeneric<T> DisplayTextResolver = new GridViewDisplayTextResolverGeneric<T>();
 
         public BaseListGeneric()
         {

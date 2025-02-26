@@ -3,7 +3,6 @@ using CacheManager.Core;
 using FastReport.DevComponents.DotNetBar.Controls;
 using FastReport.Table;
 using HLH.Lib.Helper;
-using NPOI.SS.Formula.Functions;
 using RUINORERP.Business.CommService;
 using RUINORERP.Extensions.Middlewares;
 using RUINORERP.Model;

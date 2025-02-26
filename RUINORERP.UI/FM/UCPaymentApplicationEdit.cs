@@ -126,10 +126,11 @@ namespace RUINORERP.UI.FM
 
             DataBindingHelper.BindData4TextBox<tb_FM_PaymentApplication>(entity, t => t.CloseCaseOpinions, txtCloseCaseOpinions, BindDataType4TextBox.Text, false);
 
-
             //创建表达式
             var lambda = Expressionable.Create<tb_CustomerVendor>()
-                            .And(t => t.IsCustomer == false)//非客户
+                            .And(t => t.isdeleted == false)
+                            .And(t => t.Is_enabled == true)
+                            .And(t => t.Is_available == true)
                             .ToExpression();//注意 这一句 不能少
 
             BaseProcessor baseProcessor = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_CustomerVendor).Name + "Processor");
@@ -219,7 +220,7 @@ namespace RUINORERP.UI.FM
 
                 if (s2.PropertyName == entity.GetPropertyName<tb_FM_PaymentApplication>(c => c.TotalAmount))
                 {
-                    entity.PamountInWords= entity.TotalAmount.Value.ToUpper();
+                    entity.PamountInWords = entity.TotalAmount.Value.ToUpper();
                     //lblMoneyUpper.Text = entity.TotalAmount.Value.ToUpper();
                 }
 

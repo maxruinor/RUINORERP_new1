@@ -20,7 +20,6 @@ using RUINORERP.UI.SysConfig;
 using System.Diagnostics;
 using RUINORERP.Common.Extensions;
 using RUINORERP.UI.BI;
-using NPOI.SS.Formula.Functions;
 using RUINORERP.Global.CustomAttribute;
 using System.Collections.Concurrent;
 using RUINORERP.Common.Helper;
@@ -140,7 +139,7 @@ namespace RUINORERP.UI.CRM.DockUI
             }
             else
             {
-                colName = UIHelper.ShowGridColumnsNameValue<T>(colDbName, e.Value);
+                colName = UIHelper.ShowGridColumnsNameValue<tb_CRM_Contact>(colDbName, e.Value);
             }
             if (!string.IsNullOrEmpty(colName))
             {

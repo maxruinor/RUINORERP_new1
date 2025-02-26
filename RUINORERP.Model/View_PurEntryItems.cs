@@ -14,6 +14,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Reflection;
 using System.Collections.Concurrent;
 using RUINORERP.Global.CustomAttribute;
+using RUINORERP.Model.Base;
 
 namespace RUINORERP.Model
 {
@@ -22,10 +23,11 @@ namespace RUINORERP.Model
     /// </summary>
     [Serializable()]
     [SugarTable("View_PurEntryItems")]
-    public class View_PurEntryItems : BaseEntity, ICloneable
+    public partial class View_PurEntryItems : BaseViewEntity
     {
         public View_PurEntryItems()
         {
+            InitRelatedTableTypes();
             FieldNameList = fieldNameList;
             if (!PK_FK_ID_Check())
             {

@@ -55,7 +55,6 @@ using Newtonsoft.Json;
 using Fireasy.Common.Extensions;
 using RUINORERP.Global;
 using FastReport.Table;
-using NPOI.SS.Formula.Functions;
 using Newtonsoft.Json.Linq;
 
 
@@ -64,7 +63,7 @@ namespace RUINORERP.UI.Common
     /// <summary>
     /// 用于解析DataGridView显示ID列时，转换为对应名称的工具类
     /// </summary>
-    public class DataGridViewDisplayTextResolver<T> where T : class
+    public class GridViewDisplayTextResolverGeneric<T> where T : class
     {
 
 
@@ -89,7 +88,7 @@ namespace RUINORERP.UI.Common
         public ConcurrentDictionary<string, List<KeyValuePair<string, string>>> ReferenceTableList { get; set; } = new ConcurrentDictionary<string, List<KeyValuePair<string, string>>>();
 
 
-        public DataGridViewDisplayTextResolver()
+        public GridViewDisplayTextResolverGeneric()
         {
 
         }

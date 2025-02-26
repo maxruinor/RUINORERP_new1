@@ -28,7 +28,6 @@ using RUINORERP.Model.ConfigModel;
 using System.IO;
 using RUINORERP.Extensions.ServiceExtensions;
 using static RUINORERP.Extensions.ServiceExtensions.EditConfigCommand;
-using NPOI.SS.Formula.Functions;
 using TransInstruction;
 using RUINORERP.UI.ClientCmdService;
 using TransInstruction.CommandService;
@@ -354,7 +353,9 @@ namespace RUINORERP.UI.SysConfig
             }
 
             //如果有更新变动就上传到服务器再分发到所有客户端
-            OriginalData odforCache = ActionForClient.更新动态配置<T>(propertyGrid1.SelectedObject);
+
+            //SystemGlobalconfig 下面类型有问题应该要根据选择的节点来配置
+            OriginalData odforCache = ActionForClient.更新动态配置<SystemGlobalconfig>(propertyGrid1.SelectedObject);
             byte[] buffer = CryptoProtocol.EncryptClientPackToServer(odforCache);
             MainForm.Instance.ecs.client.Send(buffer);
 

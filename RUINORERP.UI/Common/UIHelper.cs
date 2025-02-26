@@ -28,7 +28,6 @@ using FastReport.Table;
 using System.Drawing.Drawing2D;
 using System.Drawing;
 using StackExchange.Redis;
-using NPOI.SS.Formula.Functions;
 
 namespace RUINORERP.UI.Common
 {

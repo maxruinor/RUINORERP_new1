@@ -30,7 +30,6 @@ using Krypton.Docking;
 using Krypton.Navigator;
 using RUINORERP.UI.CRM.DockUI;
 using Krypton.Workspace;
-using NPOI.SS.Formula.Functions;
 using System.Reflection;
 using RUINORERP.Business.Security;
 using RUINORERP.Business.CommService;

@@ -45,7 +45,6 @@ using RUINORERP.Global.EnumExt;
 using RUINORERP.Business.CommService;
 using RUINORERP.Business.Processor;
 using RUINORERP.Business.Security;
-using NPOI.SS.Formula.Functions;
 using System.Configuration;
 
 namespace RUINORERP.UI.FM

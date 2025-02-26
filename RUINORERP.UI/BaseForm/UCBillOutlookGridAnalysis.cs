@@ -303,45 +303,6 @@ namespace RUINORERP.UI.BaseForm
         /// </summary>
         public List<Type> ColDisplayTypes { get; set; } = new List<Type>();
 
-        private string GetDisplayText(string colDbName, object Value)
-        {
-            string DisplayText = string.Empty;
-            //固定字典值显示
-            if (ColNameDataDictionary.ContainsKey(colDbName))
-            {
-                List<KeyValuePair<object, string>> kvlist = new List<KeyValuePair<object, string>>();
-                //意思是通过列名找，再通过值找到对应的文本
-                ColNameDataDictionary.TryGetValue(colDbName, out kvlist);
-                if (kvlist != null)
-                {
-                    KeyValuePair<object, string> kv = kvlist.FirstOrDefault(t => t.Key.ToString().ToLower() == Value.ToString().ToLower());
-                    if (kv.Value != null)
-                    {
-                        DisplayText = kv.Value;
-                    }
-                }
-            }
-            if (!string.IsNullOrEmpty(DisplayText))
-            {
-                return DisplayText;
-            }
-            //动态字典值显示
-            string colName = string.Empty;
-            if (ColDisplayTypes != null && ColDisplayTypes.Count > 0)
-            {
-                colName = UIHelper.ShowGridColumnsNameValue(ColDisplayTypes.ToArray(), colDbName, Value);
-            }
-            else
-            {
-                colName = UIHelper.ShowGridColumnsNameValue(entityType, colDbName, Value);
-            }
-            if (!string.IsNullOrEmpty(colName))
-            {
-                DisplayText = colName;
-            }
-            return DisplayText;
-        }
-
 
         /// <summary>
         /// 加载数据

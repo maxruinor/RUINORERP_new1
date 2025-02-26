@@ -16,7 +16,7 @@ namespace RUINORERP.UI.Common
     using System.Linq;
     using System.Windows.Forms;
 
-    public class DataGridViewDisplayNameResolver
+    public class GridViewDisplayNameResolver
     {
         #region Configuration Classes
         public class ForeignKeyMapping

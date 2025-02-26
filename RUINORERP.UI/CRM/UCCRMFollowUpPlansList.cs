@@ -23,7 +23,6 @@ using RUINORERP.Business.Security;
 using RUINORERP.Global.EnumExt;
 using RUINORERP.Global.EnumExt.CRM;
 using RUINORERP.Global;
-using NPOI.SS.Formula.Functions;
 using RUINORERP.UI.BaseForm;
 using RUINORERP.UI.SuperSocketClient;
 using RUINORERP.UI.SysConfig;

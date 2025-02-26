@@ -62,6 +62,8 @@ namespace RUINORERP.UI
             this.lblServerStatus = new System.Windows.Forms.ToolStripStatusLabel();
             this.lblStatusGlobal = new System.Windows.Forms.ToolStripStatusLabel();
             this.lblServerInfo = new System.Windows.Forms.ToolStripStatusLabel();
+            this.tsdropBtn = new System.Windows.Forms.ToolStripDropDownButton();
+            this.toolStripComboBox1 = new System.Windows.Forms.ToolStripComboBox();
             this.toolStrip1 = new System.Windows.Forms.ToolStrip();
             this.toolStripBtnUpdate = new System.Windows.Forms.ToolStripButton();
             this.toolBtnlogOff = new System.Windows.Forms.ToolStripButton();
@@ -85,8 +87,6 @@ namespace RUINORERP.UI
             this.kryptonContextMenuItem1 = new Krypton.Toolkit.KryptonContextMenuItem();
             this.kryptonPanelBigg = new Krypton.Toolkit.KryptonPanel();
             this.kryptonSeparator1 = new Krypton.Toolkit.KryptonSeparator();
-            this.tsdropBtn = new System.Windows.Forms.ToolStripDropDownButton();
-            this.toolStripComboBox1 = new System.Windows.Forms.ToolStripComboBox();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonNavigator1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPage5)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPage2)).BeginInit();
@@ -421,6 +421,23 @@ namespace RUINORERP.UI
             this.lblServerInfo.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
             this.lblServerInfo.Visible = false;
             // 
+            // tsdropBtn
+            // 
+            this.tsdropBtn.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+            this.tsdropBtn.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.toolStripComboBox1});
+            this.tsdropBtn.Image = ((System.Drawing.Image)(resources.GetObject("tsdropBtn.Image")));
+            this.tsdropBtn.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.tsdropBtn.Name = "tsdropBtn";
+            this.tsdropBtn.Size = new System.Drawing.Size(164, 20);
+            this.tsdropBtn.Text = "toolStripDropDownButton1";
+            this.tsdropBtn.Visible = false;
+            // 
+            // toolStripComboBox1
+            // 
+            this.toolStripComboBox1.Name = "toolStripComboBox1";
+            this.toolStripComboBox1.Size = new System.Drawing.Size(121, 25);
+            // 
             // toolStrip1
             // 
             this.toolStrip1.Font = new System.Drawing.Font("Segoe UI", 9F);
@@ -618,22 +635,6 @@ namespace RUINORERP.UI
             this.kryptonSeparator1.Name = "kryptonSeparator1";
             this.kryptonSeparator1.Size = new System.Drawing.Size(10, 578);
             this.kryptonSeparator1.TabIndex = 3;
-            // 
-            // tsdropBtn
-            // 
-            this.tsdropBtn.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
-            this.tsdropBtn.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.toolStripComboBox1});
-            this.tsdropBtn.Image = ((System.Drawing.Image)(resources.GetObject("tsdropBtn.Image")));
-            this.tsdropBtn.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.tsdropBtn.Name = "tsdropBtn";
-            this.tsdropBtn.Size = new System.Drawing.Size(164, 20);
-            this.tsdropBtn.Text = "toolStripDropDownButton1";
-            // 
-            // toolStripComboBox1
-            // 
-            this.toolStripComboBox1.Name = "toolStripComboBox1";
-            this.toolStripComboBox1.Size = new System.Drawing.Size(121, 25);
             // 
             // MainForm
             // 

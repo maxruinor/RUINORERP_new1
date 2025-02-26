@@ -17,7 +17,6 @@ using System.Windows.Forms;
 using Microsoft.Extensions.Logging;
 using FastReport;
 using RUINORERP.Business.CommService;
-using NPOI.SS.Formula.Functions;
 
 namespace RUINORERP.UI.Report
 {

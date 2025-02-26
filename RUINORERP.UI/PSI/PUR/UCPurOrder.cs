@@ -348,14 +348,13 @@ namespace RUINORERP.UI.PSI.PUR
             {
                 return;
             }
-
             View_ProdDetail vp = (View_ProdDetail)_View_ProdDetail;
             tb_PurOrderDetail _SDetail = (tb_PurOrderDetail)rowObj;
             //通过产品查询页查出来后引过来才有值，如果直接在输入框输入SKU这种唯一的。就没有则要查一次。这时是缓存了？
             if (vp.ProdDetailID > 0 && EditEntity.Employee_ID > 0)
             {
                 tb_PriceRecord pr = MainForm.Instance.AppContext.Db.Queryable<tb_PriceRecord>().Where(a => a.Employee_ID == EditEntity.Employee_ID && a.ProdDetailID == vp.ProdDetailID).Single();
-                if (pr != null)
+                if (pr != null && _SDetail != null)
                 {
                     _SDetail.UnitPrice = pr.PurPrice;
                     var Col = griddefine.grid.Columns.GetColumnInfo(griddefine.DefineColumns.FirstOrDefault(c => c.ColName == nameof(tb_PurOrderDetail.UnitPrice)).UniqueId);

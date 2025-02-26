@@ -20,6 +20,7 @@ using System.Linq.Dynamic.Core;
 using System.Collections.Concurrent;
 
 
+
 namespace RUINORERP.UI.BaseForm
 {
     public partial class UCBillMasterQuery : UCBaseQuery
@@ -46,9 +47,12 @@ namespace RUINORERP.UI.BaseForm
             InitializeComponent();
         }
 
+
+        public GridViewDisplayTextResolver DisplayTextResolver;
+
         private void UCBillMasterQuery_Load(object sender, EventArgs e)
         {
-
+            DisplayTextResolver = new GridViewDisplayTextResolver(entityType);
             newSumDataGridViewMaster.ColumnHeadersDefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
             newSumDataGridViewMaster.XmlFileName = this.Name + entityType.Name + "BaseMasterQueryWithCondition";
             newSumDataGridViewMaster.FieldNameList = UIHelper.GetFieldNameColList(entityType);
@@ -86,7 +90,8 @@ namespace RUINORERP.UI.BaseForm
             //dataGridView1.DataSource = ListDataSoure;
             //dataGridView1.FieldNameList = this.FieldNameList;
 
-
+            newSumDataGridViewMaster.CellFormatting -= DataGridView1_CellFormatting;
+            DisplayTextResolver.Initialize(newSumDataGridViewMaster);
         }
 
         private void BindingSourceMaster_CurrentItemChanged(object sender, EventArgs e)

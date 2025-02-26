@@ -22,7 +22,7 @@ namespace RUINORERP.Model
     /// </summary>
     [Serializable()]
     [SugarTable("View_StocktakeItems")]
-    public class View_StocktakeItems:BaseEntity, ICloneable
+    public class View_StocktakeItems::BaseViewEntity
     {
         public View_StocktakeItems()
         {

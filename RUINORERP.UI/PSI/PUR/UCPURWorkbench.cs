@@ -12,7 +12,6 @@ using Microsoft.Extensions.Logging;
 using Mysqlx.Expr;
 using Netron.GraphLib;
 using NPOI.OpenXmlFormats.Spreadsheet;
-using NPOI.SS.Formula.Functions;
 using OfficeOpenXml;
 using Org.BouncyCastle.Asn1.X509.Qualified;
 using RUINOR.Core;

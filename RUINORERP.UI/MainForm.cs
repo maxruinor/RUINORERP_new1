@@ -73,7 +73,6 @@ using Mysqlx;
 using RUINORERP.Model.CommonModel;
 using Microsoft.Extensions.Caching.Memory;
 using Newtonsoft.Json.Linq;
-using NPOI.SS.Formula.Functions;
 using Mysqlx.Prepare;
 using FastReport.DevComponents.DotNetBar;
 using FastReport.Table;

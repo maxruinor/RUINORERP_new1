@@ -18,7 +18,6 @@ using System.Globalization;
 using RUINORERP.UI.Common;
 using RUINORERP.Global;
 using RUINORERP.Global.EnumExt;
-using NPOI.SS.Formula.Functions;
 using SourceGrid2.Win32;
 using System.Reflection;
 using RUINOR.WinFormsUI;

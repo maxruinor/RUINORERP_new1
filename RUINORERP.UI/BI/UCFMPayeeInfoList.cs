@@ -20,8 +20,6 @@ using RUINORERP.Global.EnumExt;
 using RUINORERP.Common.Extensions;
 using SqlSugar;
 using RUINORERP.Business.Security;
-using NPOI.SS.Formula.Functions;
-using NPOI.SS.Formula;
 using RUINORERP.Global;
 
 namespace RUINORERP.UI.BI

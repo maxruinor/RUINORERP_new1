@@ -25,7 +25,6 @@ using RUINORERP.Common.Extensions;
 using System.Collections;
 using RUINORERP.Business.Processor;
 using RUINORERP.Global;
-using NPOI.SS.Formula.Functions;
 using RUINORERP.Business.CommService;
 using TransInstruction;
 
@@ -227,10 +226,10 @@ namespace RUINORERP.UI.ProductEAV
                             //根据要缓存的列表集合来判断是否需要上传到服务器。让服务器分发到其他客户端
                             KeyValuePair<string, string> pair = new KeyValuePair<string, string>();
                             //只处理需要缓存的表
-                            if (BizCacheHelper.Manager.NewTableList.TryGetValue(typeof(T).Name, out pair))
+                            if (BizCacheHelper.Manager.NewTableList.TryGetValue(typeof(tb_Prod).Name, out pair))
                             {
                                 //如果有更新变动就上传到服务器再分发到所有客户端
-                                OriginalData odforCache = ActionForClient.更新缓存<T>(rr.ReturnObject);
+                                OriginalData odforCache = ActionForClient.更新缓存<tb_Prod>(rr.ReturnObject);
                                 byte[] buffer = CryptoProtocol.EncryptClientPackToServer(odforCache);
                                 MainForm.Instance.ecs.client.Send(buffer);
                             }

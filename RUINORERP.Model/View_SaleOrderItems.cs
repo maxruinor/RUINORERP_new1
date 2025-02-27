@@ -27,7 +27,6 @@ namespace RUINORERP.Model
     {
         public View_SaleOrderItems()
         {
-            InitRelatedTableTypes();
             FieldNameList = fieldNameList;
             if (!PK_FK_ID_Check())
             {

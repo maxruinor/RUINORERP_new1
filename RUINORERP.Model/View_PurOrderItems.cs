@@ -27,7 +27,6 @@ namespace RUINORERP.Model
     {
         public View_PurOrderItems()
         {
-            InitRelatedTableTypes();
             FieldNameList = fieldNameList;
             if (!PK_FK_ID_Check())
             {

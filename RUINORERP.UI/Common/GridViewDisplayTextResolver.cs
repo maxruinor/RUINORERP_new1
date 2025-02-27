@@ -56,6 +56,7 @@ using Fireasy.Common.Extensions;
 using RUINORERP.Global;
 using FastReport.Table;
 using Newtonsoft.Json.Linq;
+using System.Collections;
 
 namespace RUINORERP.UI.Common
 {
@@ -67,13 +68,36 @@ namespace RUINORERP.UI.Common
     {
         private Type _type;
         private HashSet<ReferenceKeyMapping> ReferenceKeyMappings { get; set; } = new HashSet<ReferenceKeyMapping>();
-
+        private static IList _relatedTableTypesCache;
         public GridViewDisplayTextResolver(Type type)
         {
             _type = type;
+            // 在类初始化时缓存 RelatedTableTypes
+            // BaseViewEntity baseView = (BaseViewEntity)Activator.CreateInstance(_type);
+            //  _relatedTableTypesCache = baseView.InstanceRelatedTableTypes;
+
             InitializeFixedDictionaryMappings();
             InitializeReferenceKeyMapping();
         }
+
+        #region 缓存相关显示外键的类型
+        private static readonly ConcurrentDictionary<Type, List<Type>> relatedTableCache = new ConcurrentDictionary<Type, List<Type>>();
+
+        public static List<Type> GetRelatedTableTypes(Type type)
+        {
+            return relatedTableCache.GetOrAdd(type, t =>
+            {
+                BaseViewEntity instance = (BaseViewEntity)Activator.CreateInstance(t);
+                instance.InitRelatedTableTypes();
+                List<Type> RelatedTableTypes= instance.InstanceRelatedTableTypes;
+                foreach (var item in RelatedTableTypes)
+                {
+                    BizCacheHelper.Manager.SetFkColList(item);
+                }
+                return RelatedTableTypes;
+            });
+        }
+        #endregion
 
         // 用于存储固定字典值的映射
         //private Dictionary<string, List<KeyValuePair<object, string>>> FixedDictionaryMappings { get; set; } = new Dictionary<string, List<KeyValuePair<object, string>>>();
@@ -124,11 +148,19 @@ namespace RUINORERP.UI.Common
                 {
                     FixedDictionaryMappings.Add(new FixedDictionaryMapping(_type.Name, nameof(PurReProcessWay), Common.CommonHelper.Instance.GetKeyValuePairs(typeof(PurReProcessWay))));
                 }
-
+                 
                 else if (prop.Name == nameof(PurReProcessWay))
                 {
                     FixedDictionaryMappings.Add(new FixedDictionaryMapping(_type.Name, nameof(PurReProcessWay), Common.CommonHelper.Instance.GetKeyValuePairs(typeof(PurReProcessWay))));
                 }
+                else if (prop.Name == "ApprovalResults")
+                {
+                    List<KeyValuePair<object, string>> ApprovalResultskvlist = new List<KeyValuePair<object, string>>();
+                    ApprovalResultskvlist.Add(new KeyValuePair<object, string>(true, "同意"));
+                    ApprovalResultskvlist.Add(new KeyValuePair<object, string>(false, "否决"));
+                    FixedDictionaryMappings.Add(new FixedDictionaryMapping(_type.Name, "ApprovalResults", ApprovalResultskvlist));
+                }
+
 
                 List<KeyValuePair<object, string>> Genderkvlist = new List<KeyValuePair<object, string>>();
                 Genderkvlist.Add(new KeyValuePair<object, string>(true, "男"));
@@ -314,6 +346,11 @@ namespace RUINORERP.UI.Common
             ReferenceKeyColumnMappings[columnName] = foreignKeyColumnName;
         }
 
+
+
+
+
+
         // 单元格格式化事件处理
         private void DataGridView_CellFormatting(object sender, DataGridViewCellFormattingEventArgs e)
         {
@@ -366,8 +403,9 @@ namespace RUINORERP.UI.Common
 
             if (_type.Name.Contains("View_"))
             {
-                BaseViewEntity baseView = (BaseViewEntity)Activator.CreateInstance(_type);
-                foreach (var item in baseView.RelatedTableTypes)
+                //BaseViewEntity baseView = (BaseViewEntity)Activator.CreateInstance(_type);
+                var relatedTableTypes = GetRelatedTableTypes(_type);
+                foreach (var item in relatedTableTypes)
                 {
                     string displayName = GetDisplayNameByReferenceKeyMappings(item.Name, columnName, e.Value);
                     if (!string.IsNullOrEmpty(displayName))

@@ -124,6 +124,11 @@ namespace RUINORERP.Extensions.Middlewares
         public void SetFkColList(Type type)
         {
             string tableName = type.Name;
+            if (tableName.Contains("View"))
+            {
+                //视图暂时去掉
+                return;
+            }
             if (!FkPairTableList.ContainsKey(tableName))
             {
                 List<KeyValuePair<string, string>> kvlist = new List<KeyValuePair<string, string>>();
@@ -443,8 +448,8 @@ namespace RUINORERP.Extensions.Middlewares
         /// 按主键合并后排除重复，后面是不是可以按时间等优先级来处理
         /// </summary>
         /// <param name="elementType"></param>
-        /// <param name="cacheList"></param>
-        /// <param name="newList"></param>
+        /// <param name="cacheList">缓存中本身存在的集合</param>
+        /// <param name="newList">收到的集合</param>
         /// <param name="key"></param>
         /// <returns></returns>
         private List<object> CombineLists(Type elementType, List<object> cacheList, List<object> newList, string key)
@@ -720,7 +725,13 @@ ToList：
                         oldlist = new List<object>();
                     }
                     object obj = null;
-                    CacheEntityList.TryUpdate(tableName, k => newlist, out obj);
+                    Type elementType = NewTableTypeList.GetValue(tableName);
+                    //100个100个传过来时要合并
+                    // 合并JArray并排除重复项,因为有分页传所以不能全部替换
+                    var combinedList = CombineLists(elementType, oldlist, newlist, pair.Key);
+                    CacheEntityList.Update(tableName, k => combinedList);
+
+                    //CacheEntityList.TryUpdate(tableName, k => newlist, out obj);
                 }
                 else
                 {

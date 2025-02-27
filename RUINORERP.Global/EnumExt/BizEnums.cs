@@ -495,7 +495,7 @@ var description = typeof(BoxRuleBasis)
     //public enum ApprovalResults
     //{
     //    同意, 
-    //    驳回
+    //    否决
     //}
 
     /// <summary>

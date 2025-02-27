@@ -14,6 +14,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Reflection;
 using System.Collections.Concurrent;
 using RUINORERP.Global.CustomAttribute;
+using RUINORERP.Model.Base;
 
 namespace RUINORERP.Model
 {
@@ -22,7 +23,7 @@ namespace RUINORERP.Model
     /// </summary>
     [Serializable()]
     [SugarTable("View_ProdMergeItems")]
-    public class View_ProdMergeItems:BaseEntity, ICloneable
+    public partial class View_ProdMergeItems: BaseViewEntity
     {
         public View_ProdMergeItems()
         {

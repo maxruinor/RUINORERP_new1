@@ -14,6 +14,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Reflection;
 using System.Collections.Concurrent;
 using RUINORERP.Global.CustomAttribute;
+using RUINORERP.Model.Base;
 
 namespace RUINORERP.Model
 {
@@ -22,8 +23,8 @@ namespace RUINORERP.Model
     /// </summary>
     [Serializable()]
     [SugarTable("View_InventoryTracking")]
-    public class View_InventoryTracking:BaseEntity, ICloneable
-    {
+    public partial class View_InventoryTracking: BaseViewEntity
+    { 
         public View_InventoryTracking()
         {
             FieldNameList = fieldNameList;

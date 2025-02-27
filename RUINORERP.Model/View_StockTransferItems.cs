@@ -14,7 +14,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Reflection;
 using System.Collections.Concurrent;
 using RUINORERP.Global.CustomAttribute;
-
+using RUINORERP.Model.Base;
 namespace RUINORERP.Model
 {
     /// <summary>
@@ -22,7 +22,7 @@ namespace RUINORERP.Model
     /// </summary>
     [Serializable()]
     [SugarTable("View_StockTransferItems")]
-    public class View_StockTransferItems::BaseViewEntity
+    public partial class View_StockTransferItems:BaseViewEntity
     {
         public View_StockTransferItems()
         {

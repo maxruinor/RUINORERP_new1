@@ -17,6 +17,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using System.Web.Caching;
@@ -261,8 +262,16 @@ namespace RUINORERP.UI.SuperSocketClient
                         object objList = JsonConvert.DeserializeObject(json);
                         if (objList != null && objList.GetType().Name == "JArray")//(Newtonsoft.Json.Linq.JArray))
                         {
-                            var jsonlist = objList as Newtonsoft.Json.Linq.JArray;
-                            MyCacheManager.Instance.UpdateEntityList(tablename, jsonlist);
+                            JArray jsonlist = objList as Newtonsoft.Json.Linq.JArray;
+
+                             
+                            // 转换为 List<T>，其中 T 是 MyClass 的类型
+                            List<object> myList = ConvertJArrayToList(jsonlist, $"RUINORERP.Model.{tablename},RUINORERP.Model");
+
+                            // 如果你需要强类型列表，可以进一步转换
+                           // List<MyClass> myStrongTypedList = myList.ConvertAll(item => (MyClass)item);
+
+                            MyCacheManager.Instance.UpdateEntityList(tablename, myList);
                         }
                     }
                     if (MainForm.Instance.authorizeController.GetDebugInfoAuth())
@@ -280,6 +289,41 @@ namespace RUINORERP.UI.SuperSocketClient
 
         }
 
+
+        // 假设 T 是具体类型的类名，例如 "MyNamespace.MyClass"
+        //Type type = Type.GetType("MyNamespace.MyClass, MyAssembly");
+        public static List<object> ConvertJArrayToList(JArray jsonlist, string typeName)
+        {
+            if (jsonlist == null)
+                throw new ArgumentNullException(nameof(jsonlist));
+
+            if (string.IsNullOrEmpty(typeName))
+                throw new ArgumentException("typeName 不能为空", nameof(typeName));
+
+            try
+            {
+                Type type = Type.GetType(typeName);
+                if (type == null)
+                    throw new ArgumentException($"无法找到类型: {typeName}");
+
+                //MethodInfo toObjectMethod = typeof(JToken).GetMethod("ToObject");
+                MethodInfo toObjectMethod = typeof(JToken).GetMethod("ToObject", new Type[] { });
+                MethodInfo genericToObjectMethod = toObjectMethod.MakeGenericMethod(type);
+
+                List<object> list = new List<object>(jsonlist.Count);
+                foreach (JToken token in jsonlist)
+                {
+                    object item = genericToObjectMethod.Invoke(token, null);
+                    list.Add(item);
+                }
+
+                return list;
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException("转换失败", ex);
+            }
+        }
         public static string 接收服务器提示消息(OriginalData gd)
         {
             string Message = "";

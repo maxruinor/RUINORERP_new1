@@ -22,6 +22,7 @@ using Microsoft.Extensions.Caching.Memory;
 using Newtonsoft.Json.Linq;
 using RUINORERP.Common.Helper;
 using Fireasy.Common.Extensions;
+
 namespace RUINORERP.Business.CommService
 {
     /// <summary>
@@ -136,7 +137,12 @@ namespace RUINORERP.Business.CommService
                         Type listType = cachelist.GetType();
                         if (TypeHelper.IsGenericList(listType))
                         {
-                            List<T> list = Manager.CacheEntityList.Get(tableName) as List<T>;
+                            List<object> list = Manager.CacheEntityList.Get(tableName) as List<object>;
+                            if (list == null)
+                            {
+                                list = new List<object>();
+                            }
+                            //List<T> list = Manager.CacheEntityList.Get(tableName) as List<T>;
                             entity = list.Find(t => t.GetPropertyValue(key).ToString() == IdValue.ToString());
                             if (entity != null)
                             {
@@ -262,6 +268,14 @@ namespace RUINORERP.Business.CommService
                         var lastlist = ((IEnumerable<dynamic>)rslist).ToList();
                         if (lastlist != null)
                         {
+                            //entity = lastlist.Find(t => t.GetPropertyValue(key).ToString() == IdValue.ToString());
+                            //entity = lastlist.Find(t => t.GetPropertyValue(key).ToString() == IdValue.ToString());
+                            //if (entity != null)
+                            //{
+                            //    //return (T)entity;
+                            //}
+
+
                             foreach (var item in lastlist)
                             {
                                 var id = RUINORERP.Common.Helper.ReflectionHelper.GetPropertyValue(item, key);

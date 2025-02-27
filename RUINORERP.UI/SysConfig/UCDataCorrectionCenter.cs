@@ -711,6 +711,7 @@ namespace RUINORERP.UI.SysConfig
                     .AsNavQueryable()
                     .Includes(c => c.tb_proddetail, d => d.tb_PurEntryDetails, e => e.tb_proddetail, f => f.tb_prod)
                     .Includes(c => c.tb_proddetail, d => d.tb_prod)
+                    //.Where(c => c.tb_proddetail.SKU == "SKU7E881B4629")
                     .ToList();
 
                     List<tb_Inventory> updateList = new List<tb_Inventory>();
@@ -721,23 +722,30 @@ namespace RUINORERP.UI.SysConfig
                             && item.tb_proddetail.tb_PurEntryDetails.Sum(c => c.Quantity) > 0
                             )
                         {
+
+                            //参与成本计算的入库明细记录。要排除单价为0的项
+                            var realDetails = item.tb_proddetail.tb_PurEntryDetails.Where(c => c.UnitPrice > 0).ToList();
+
                             //每笔的入库的数量*成交价/总数量
-                            var transPrice = item.tb_proddetail.tb_PurEntryDetails
-                                .Where(c => c.TransactionPrice > 0 && c.Quantity > 0)
-                                .Sum(c => c.TransactionPrice * c.Quantity) / item.tb_proddetail.tb_PurEntryDetails.Sum(c => c.Quantity);
+                            var transPrice = realDetails
+                                .Where(c => c.TransactionPrice > 0 && c.Quantity > 0 && c.UnitPrice > 0)
+                                .Sum(c => c.TransactionPrice * c.Quantity) / realDetails.Sum(c => c.Quantity);
                             if (transPrice > 0)
                             {
                                 transPrice = Math.Round(transPrice, 3);
                                 decimal diffpirce = Math.Abs(transPrice - item.Inv_Cost);
-                                richTextBoxLog.AppendText($"产品{item.tb_proddetail.tb_prod.CNName} " +
+                                if (diffpirce>0.5m)
+                                {
+                                    richTextBoxLog.AppendText($"产品{item.tb_proddetail.tb_prod.CNName} " +
                                     $"SKU:{item.tb_proddetail.SKU}的旧成本{item.Inv_Cost},相差为{diffpirce}, 修复为：{transPrice}：" + "\r\n");
 
-                                item.CostMovingWA = transPrice;
-                                item.Inv_AdvCost = item.CostMovingWA;
-                                item.Inv_Cost = item.CostMovingWA;
-                                item.Inv_SubtotalCostMoney = item.Inv_Cost * item.Quantity;
+                                    item.CostMovingWA = transPrice;
+                                    item.Inv_AdvCost = item.CostMovingWA;
+                                    item.Inv_Cost = item.CostMovingWA;
+                                    item.Inv_SubtotalCostMoney = item.Inv_Cost * item.Quantity;
 
-                                updateList.Add(item);
+                                    updateList.Add(item);
+                                }
                             }
                         }
                     }

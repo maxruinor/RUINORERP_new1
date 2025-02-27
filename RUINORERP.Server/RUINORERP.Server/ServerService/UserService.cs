@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.Extensions.Caching.Memory;
 using NetTaste;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Linq;
 using RUINORERP.Business;
 using RUINORERP.Business.CommService;
@@ -143,7 +144,8 @@ namespace RUINORERP.Server.BizService
                       new JsonSerializerSettings
                       {
                           Converters = new List<JsonConverter> { new CustomCollectionJsonConverter() },
-                          ReferenceLoopHandling = ReferenceLoopHandling.Ignore // 或 ReferenceLoopHandling.Serialize
+                          ReferenceLoopHandling = ReferenceLoopHandling.Ignore, // 或 ReferenceLoopHandling.Serialize
+                          Formatting = Formatting.None // 禁用格式化
                       });
                 ByteBuff tx = new ByteBuff(200);
                 tx.PushString(tableName);
@@ -566,7 +568,8 @@ namespace RUINORERP.Server.BizService
                       new JsonSerializerSettings
                       {
                           Converters = new List<JsonConverter> { new CustomCollectionJsonConverter() },
-                          ReferenceLoopHandling = ReferenceLoopHandling.Ignore // 或 ReferenceLoopHandling.Serialize
+                          ReferenceLoopHandling = ReferenceLoopHandling.Ignore, // 或 ReferenceLoopHandling.Serialize
+                          Formatting = Formatting.None // 禁用格式化
                       });
 
 
@@ -606,7 +609,8 @@ namespace RUINORERP.Server.BizService
                       new JsonSerializerSettings
                       {
                           Converters = new List<JsonConverter> { new CustomCollectionJsonConverter() },
-                          ReferenceLoopHandling = ReferenceLoopHandling.Ignore // 或 ReferenceLoopHandling.Serialize
+                          ReferenceLoopHandling = ReferenceLoopHandling.Ignore, // 或 ReferenceLoopHandling.Serialize
+                          Formatting = Formatting.None // 禁用格式化
                       });
 
 
@@ -641,7 +645,8 @@ namespace RUINORERP.Server.BizService
                       new JsonSerializerSettings
                       {
                           Converters = new List<JsonConverter> { new CustomCollectionJsonConverter() },
-                          ReferenceLoopHandling = ReferenceLoopHandling.Ignore // 或 ReferenceLoopHandling.Serialize
+                          ReferenceLoopHandling = ReferenceLoopHandling.Ignore, // 或 ReferenceLoopHandling.Serialize
+                          Formatting = Formatting.None // 禁用格式化
                       });
 
 

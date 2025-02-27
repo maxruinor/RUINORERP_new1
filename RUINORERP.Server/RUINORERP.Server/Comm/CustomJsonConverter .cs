@@ -41,9 +41,25 @@ namespace RUINORERP.Server.Comm
                         // 序列化属性
                         try
                         {
-                            // 序列化属性
-                            writer.WritePropertyName(property.Name);
-                            writer.WriteValue(property.GetValue(item));
+                            // 检查属性值是否为 DateTime 类型
+                            if (property.PropertyType == typeof(DateTime))
+                            {
+                                // 格式化 DateTime 为字符串
+                                writer.WritePropertyName(property.Name);
+                                writer.WriteValue(((DateTime)property.GetValue(item)).ToString("yyyy-MM-dd HH:mm:ss"));
+                            }
+                            else if (property.PropertyType == typeof(DateTime?)) // 处理可空 DateTime
+                            {
+                                var dateTime = (DateTime?)property.GetValue(item);
+                                writer.WritePropertyName(property.Name);
+                                writer.WriteValue(dateTime?.ToString("yyyy-MM-dd HH:mm:ss") ?? (object)null);
+                            }
+                            else
+                            {
+                                // 序列化属性
+                                writer.WritePropertyName(property.Name);
+                                writer.WriteValue(property.GetValue(item));
+                            }
                         }
                         catch (Exception ex)
                         {

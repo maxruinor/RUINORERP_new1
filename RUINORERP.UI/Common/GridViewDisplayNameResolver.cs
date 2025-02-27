@@ -16,6 +16,9 @@ namespace RUINORERP.UI.Common
     using System.Linq;
     using System.Windows.Forms;
 
+    /// <summary>
+    /// AI代码借鉴 没有使用
+    /// </summary>
     public class GridViewDisplayNameResolver
     {
         #region Configuration Classes

@@ -1133,6 +1133,7 @@
     <Compile Include="CommonUI\frmInputContent.Designer.cs">
       <DependentUpon>frmInputContent.cs</DependentUpon>
     </Compile>
+    <Compile Include="Common\GridViewDisplayHelper.cs" />
     <Compile Include="Common\GridViewDisplayNameResolver.cs" />
     <Compile Include="Common\GridViewDisplayTextResolverGeneric.cs" />
     <Compile Include="Common\GridViewDisplayTextResolver.cs" />

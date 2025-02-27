@@ -405,6 +405,8 @@ new { table_catalog = "erpnew" });
             string tableName = cmb导入所属数据表.SelectedValue.ToString();
             BindingSortCollection<object> sortList = new BindingSortCollection<object>();
             Type t = GetTypeByTableName(tableName);
+            //创建一个实体对象
+            object si = Activator.CreateInstance(t);
             DataTable dt = new DataTable();
             dt = dataGridView1.DataSource as DataTable;
             if (dt == null)
@@ -450,8 +452,7 @@ new { table_catalog = "erpnew" });
                     try
                     {
                         var dcrow = new Dictionary<string, object>();
-                        //创建一个实体对象
-                        object si = Activator.CreateInstance(t);
+                   
                         //这个列表需要检测  更新的是匹配结果的列的集合了。
                         foreach (SuperKeyValuePair dc in dclist)
                         {
@@ -1046,7 +1047,7 @@ new { table_catalog = "erpnew" });
                     HLH.Lib.Helper.JsonHelper jsonhelper = new HLH.Lib.Helper.JsonHelper();
 
                     //必须是更新
-                    si = Activator.CreateInstance(t);
+                    //si = Activator.CreateInstance(t);
                     //si = ExistOrders.Find(delegate (object o) { return ReflectionHelper.GetPropertyValue(o, KeyColName) == dr[KeyColNameExcel].ToString().Trim(); });
                     si = obj;
                     if (si == null)

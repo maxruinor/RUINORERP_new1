@@ -57,9 +57,13 @@ using RUINORERP.Global;
 using FastReport.Table;
 using Newtonsoft.Json.Linq;
 using FastReport.DevComponents.DotNetBar;
+using System.Runtime.InteropServices;
 
 namespace RUINORERP.UI.Common
 {
+    /// <summary>
+    /// 所有表格显示为名称的代码都放到这里，还有一些没有重构完
+    /// </summary>
     public class GridViewDisplayHelper
     {
         // 用于存储固定字典值的映射
@@ -83,84 +87,97 @@ namespace RUINORERP.UI.Common
         /// </summary>
         public ConcurrentDictionary<string, List<KeyValuePair<string, string>>> ReferenceTableList { get; set; } = new ConcurrentDictionary<string, List<KeyValuePair<string, string>>>();
 
+        public void InitializeFixedDictionaryMappings(Type _type)
+        {
+            // 动态检查类型是否包含指定的属性
+            foreach (var prop in _type.GetProperties())
+            {
+                // 检查类型 是否包含 DataStatus 列
+                if (prop.Name == nameof(DataStatus))
+                {
+                    FixedDictionaryMappings.Add(new FixedDictionaryMapping(_type.Name, prop.Name, CommonHelper.Instance.GetKeyValuePairs(typeof(DataStatus))));
+                }
+                else if (prop.Name == nameof(ApprovalStatus))
+                {
+                    FixedDictionaryMappings.Add(new FixedDictionaryMapping(_type.Name, prop.Name, CommonHelper.Instance.GetKeyValuePairs(typeof(ApprovalStatus))));
+                }
+
+                // 检查类型 T 是否包含 PayStatus 列
+                else if (prop.Name == nameof(PayStatus))
+                {
+                    FixedDictionaryMappings.Add(new FixedDictionaryMapping(_type.Name, nameof(PayStatus), CommonHelper.Instance.GetKeyValuePairs(typeof(PayStatus))));
+                }
+                // 检查类型 T 是否包含 Priority 列
+                else if (prop.Name == nameof(Priority))
+                {
+                    FixedDictionaryMappings.Add(new FixedDictionaryMapping(_type.Name, nameof(Priority), Common.CommonHelper.Instance.GetKeyValuePairs(typeof(Priority))));
+                }
+
+                // 检查类型 T 是否包含 PurReProcessWay 列
+                else if (prop.Name == nameof(PurReProcessWay))
+                {
+                    FixedDictionaryMappings.Add(new FixedDictionaryMapping(_type.Name, nameof(PurReProcessWay), Common.CommonHelper.Instance.GetKeyValuePairs(typeof(PurReProcessWay))));
+                }
+
+                else if (prop.Name == nameof(PurReProcessWay))
+                {
+                    FixedDictionaryMappings.Add(new FixedDictionaryMapping(_type.Name, nameof(PurReProcessWay), Common.CommonHelper.Instance.GetKeyValuePairs(typeof(PurReProcessWay))));
+                }
+                else if (prop.Name == "ApprovalResults")
+                {
+                    List<KeyValuePair<object, string>> ApprovalResultskvlist = new List<KeyValuePair<object, string>>();
+                    ApprovalResultskvlist.Add(new KeyValuePair<object, string>(true, "同意"));
+                    ApprovalResultskvlist.Add(new KeyValuePair<object, string>(false, "否决"));
+                    FixedDictionaryMappings.Add(new FixedDictionaryMapping(_type.Name, "ApprovalResults", ApprovalResultskvlist));
+                }
+
+                List<KeyValuePair<object, string>> Genderkvlist = new List<KeyValuePair<object, string>>();
+                Genderkvlist.Add(new KeyValuePair<object, string>(true, "男"));
+                Genderkvlist.Add(new KeyValuePair<object, string>(false, "女"));
+                Expression<Func<tb_Employee, bool?>> expr;
+                expr = (p) => p.Gender;// == name;
+                var mb = expr.GetMemberInfo();
+                string colName = mb.Name;
+                if (typeof(tb_Employee).Name == _type.Name && prop.Name == colName)
+                {
+                    FixedDictionaryMappings.Add(new FixedDictionaryMapping(typeof(tb_Employee).Name, colName, Genderkvlist));
+                }
+
+                List<KeyValuePair<object, string>> kvlist1 = new List<KeyValuePair<object, string>>();
+                kvlist1.Add(new KeyValuePair<object, string>(true, "是"));
+                kvlist1.Add(new KeyValuePair<object, string>(false, "否"));
+                System.Linq.Expressions.Expression<Func<tb_Employee, bool?>> expr1;
+                expr1 = (p) => p.Is_available;// == name;
+                System.Linq.Expressions.Expression<Func<tb_Employee, bool?>> expr2;
+                expr2 = (p) => p.Is_enabled;// == name;
+                string colName1 = expr1.GetMemberInfo().Name;
+                string colName2 = expr2.GetMemberInfo().Name;
+                if (typeof(tb_Employee).Name == _type.Name && prop.Name == colName1)
+                {
+                    FixedDictionaryMappings.Add(new FixedDictionaryMapping(typeof(tb_Employee).Name, colName1, kvlist1));
+                }
+                if (typeof(tb_Employee).Name == _type.Name && prop.Name == colName2)
+                {
+                    FixedDictionaryMappings.Add(new FixedDictionaryMapping(typeof(tb_Employee).Name, colName2, kvlist1));
+                }
+            }
+        }
 
         public void InitializeFixedDictionaryMappings<T>()
         {
-            // 检查类型 T 是否包含 DataStatus 列
-            if (typeof(T).GetProperty(nameof(DataStatus)) != null)
-            {
-                FixedDictionaryMappings.Add(new FixedDictionaryMapping(typeof(T).Name, nameof(DataStatus), CommonHelper.Instance.GetKeyValuePairs(typeof(DataStatus))));
-            }
-
-            // 检查类型 T 是否包含 ApprovalStatus 列
-            if (typeof(T).GetProperty(nameof(ApprovalStatus)) != null)
-            {
-                FixedDictionaryMappings.Add(new FixedDictionaryMapping(typeof(T).Name, nameof(ApprovalStatus), CommonHelper.Instance.GetKeyValuePairs(typeof(ApprovalStatus))));
-            }
-
-            // 检查类型 T 是否包含 PayStatus 列
-            if (typeof(T).GetProperty(nameof(PayStatus)) != null)
-            {
-                FixedDictionaryMappings.Add(new FixedDictionaryMapping(typeof(T).Name, nameof(PayStatus), CommonHelper.Instance.GetKeyValuePairs(typeof(PayStatus))));
-            }
-
-            // 检查类型 T 是否包含 Priority 列
-            if (typeof(T).GetProperty(nameof(Priority)) != null)
-            {
-                FixedDictionaryMappings.Add(new FixedDictionaryMapping(typeof(T).Name, nameof(Priority), Common.CommonHelper.Instance.GetKeyValuePairs(typeof(Priority))));
-            }
-
-            // 检查类型 T 是否包含 PurReProcessWay 列
-            if (typeof(T).GetProperty(nameof(PurReProcessWay)) != null)
-            {
-                FixedDictionaryMappings.Add(new FixedDictionaryMapping(typeof(T).Name, nameof(PurReProcessWay), Common.CommonHelper.Instance.GetKeyValuePairs(typeof(PurReProcessWay))));
-            }
-
-            if (typeof(T).GetProperty(nameof(PurReProcessWay)) != null)
-            {
-                FixedDictionaryMappings.Add(new FixedDictionaryMapping(typeof(T).Name, nameof(PurReProcessWay), Common.CommonHelper.Instance.GetKeyValuePairs(typeof(PurReProcessWay))));
-            }
-
-            List<KeyValuePair<object, string>> Genderkvlist = new List<KeyValuePair<object, string>>();
-            Genderkvlist.Add(new KeyValuePair<object, string>(true, "男"));
-            Genderkvlist.Add(new KeyValuePair<object, string>(false, "女"));
-            Expression<Func<tb_Employee, bool?>> expr;
-            expr = (p) => p.Gender;// == name;
-            var mb = expr.GetMemberInfo();
-            string colName = mb.Name;
-            if (typeof(tb_Employee).Name == typeof(T).Name && typeof(T).GetProperty(colName) != null)
-            {
-                FixedDictionaryMappings.Add(new FixedDictionaryMapping(typeof(tb_Employee).Name, colName, Genderkvlist));
-            }
-
-
-            List<KeyValuePair<object, string>> kvlist1 = new List<KeyValuePair<object, string>>();
-            kvlist1.Add(new KeyValuePair<object, string>(true, "是"));
-            kvlist1.Add(new KeyValuePair<object, string>(false, "否"));
-            System.Linq.Expressions.Expression<Func<tb_Employee, bool?>> expr1;
-            expr1 = (p) => p.Is_available;// == name;
-            System.Linq.Expressions.Expression<Func<tb_Employee, bool?>> expr2;
-            expr2 = (p) => p.Is_enabled;// == name;
-            string colName1 = expr1.GetMemberInfo().Name;
-            string colName2 = expr2.GetMemberInfo().Name;
-            if (typeof(tb_Employee).Name == typeof(T).Name && typeof(T).GetProperty(colName1) != null)
-            {
-                FixedDictionaryMappings.Add(new FixedDictionaryMapping(typeof(tb_Employee).Name, colName1, kvlist1));
-            }
-            if (typeof(tb_Employee).Name == typeof(T).Name && typeof(T).GetProperty(colName2) != null)
-            {
-                FixedDictionaryMappings.Add(new FixedDictionaryMapping(typeof(tb_Employee).Name, colName2, kvlist1));
-            }
-
+            // 动态检查类型是否包含指定的属性
+            var type = typeof(T);
+            InitializeFixedDictionaryMappings(type);
         }
+  
 
-        public void InitializeReferenceKeyMapping<T>()
+        public void InitializeReferenceKeyMapping(Type _type)
         {
-            string tableName = typeof(T).Name;
+            string tableName = _type.Name;
             if (!ReferenceTableList.ContainsKey(tableName))
             {
                 List<KeyValuePair<string, string>> kvlist = new List<KeyValuePair<string, string>>();
-                foreach (var field in typeof(T).GetProperties())
+                foreach (var field in _type.GetProperties())
                 {
                     //获取指定类型的自定义特性
                     object[] attrs = field.GetCustomAttributes(false);
@@ -200,6 +217,12 @@ namespace RUINORERP.UI.Common
                 }
             }
         }
+
+        public void InitializeReferenceKeyMapping<T>()
+        {
+            var type = typeof(T);
+            InitializeReferenceKeyMapping(type);
+        }
         // 添加外键映射
         public void AddReferenceKeyMapping(string columnName, ReferenceKeyMapping mapping)
         {
@@ -215,7 +238,7 @@ namespace RUINORERP.UI.Common
         }
 
 
-        public string GetGridViewDisplayText(string tableName, string columnName,object value)
+        public string GetGridViewDisplayText(string tableName, string columnName, object value)
         {
             string DisplayText = string.Empty;
             #region 
@@ -246,7 +269,7 @@ namespace RUINORERP.UI.Common
 
 
         // 获取显示名称
-        private string GetDisplayNameByReferenceKeyMappings(string TargetTableName, string idColName, object IdValue)
+        public string GetDisplayNameByReferenceKeyMappings(string TargetTableName, string idColName, object IdValue)
         {
             try
             {
@@ -393,6 +416,28 @@ namespace RUINORERP.UI.Common
                 {
                     #region 没有映射的情况
 
+                    //视图暂时没有实体生成时没有设置关联外键的特性，所以在具体业务实现时 手工指定成一个集合了。
+
+
+                    //先处理类型本身
+                    //只处理需要缓存的表
+                    KeyValuePair<string, string> pair = new KeyValuePair<string, string>();
+                    if (BizCacheHelper.Manager.NewTableList.TryGetValue(TargetTableName, out pair))
+                    {
+                        //在基本表中但是缓存中没有则请求
+                        if (!BizCacheHelper.Manager.CacheEntityList.Exists(TargetTableName))
+                        {
+                            UIBizSrvice.RequestCache(TargetTableName);
+                        }
+                        var selfTypeDisplayText = BizCacheHelper.Instance.GetValue(TargetTableName, IdValue);
+                        if (selfTypeDisplayText != null && !string.IsNullOrWhiteSpace(selfTypeDisplayText.ToString())
+                             && selfTypeDisplayText.GetType().Name != "Object"
+                            )
+                        {
+                            return selfTypeDisplayText.ToString();
+                        }
+                    }
+                    //再处理外键关联
                     List<KeyValuePair<string, string>> kvlist = new List<KeyValuePair<string, string>>();
                     if (BizCacheHelper.Manager.FkPairTableList.TryGetValue(TargetTableName, out kvlist))
                     {

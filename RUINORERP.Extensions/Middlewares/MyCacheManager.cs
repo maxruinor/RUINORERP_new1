@@ -101,7 +101,9 @@ namespace RUINORERP.Extensions.Middlewares
         public ConcurrentDictionary<string, List<KeyValuePair<string, string>>> FkPairTableList { get => _fkPairTableList; set => _fkPairTableList = value; }
 
 
-
+        /// <summary>
+        /// 保存了基础数据中的名值对，对表名为KEY
+        /// </summary>
         public ConcurrentDictionary<string, KeyValuePair<string, string>> NewTableList { get => _newTableList; set => _newTableList = value; }
 
         //结合上面的表集合一起用。不然应该是在开始设计时NewTableList的key用Type.
@@ -166,6 +168,7 @@ namespace RUINORERP.Extensions.Middlewares
             }
         }
 
+     
         /*
         public void AddCacheEntity<T>(object entity, Expression<Func<T, int>> expkey, Expression<Func<T, string>> expvalue)
         {

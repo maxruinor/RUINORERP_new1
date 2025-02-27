@@ -207,7 +207,10 @@ namespace RUINORERP.UI.Common
                     }
                 }
             }
-
+            if (typeof(T).Name.Contains("tb_"))
+            {
+                BizCacheHelper.Manager.SetFkColList(typeof(T));
+            }
             e.Value = displayHelper.GetGridViewDisplayText(typeof(T).Name, columnName, e.Value);
             return;
         }

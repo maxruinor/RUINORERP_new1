@@ -18,7 +18,7 @@ using RUINORERP.Global.CustomAttribute;
 namespace RUINORERP.Model
 {
     /// <summary>
-    /// 处理销售订单的数据统计时，对存储过程提供参数的情况。手动创建的
+    /// 处理销售订单的数据统计时，对存储过程提供参数的情况。手动创建的 不能删除！
     /// </summary>
     public class Proc_SaleOrderStatisticsByEmployeePara : BaseEntity, ICloneable
     {

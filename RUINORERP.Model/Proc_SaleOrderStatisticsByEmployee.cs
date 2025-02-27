@@ -14,6 +14,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Reflection;
 using System.Collections.Concurrent;
 using RUINORERP.Global.CustomAttribute;
+using RUINORERP.Model.Base;
 
 namespace RUINORERP.Model
 {
@@ -22,7 +23,7 @@ namespace RUINORERP.Model
     /// </summary>
     [Serializable()]
     [SugarTable("Proc_SaleOrderStatisticsByEmployee")]
-    public class Proc_SaleOrderStatisticsByEmployee : BaseEntity, ICloneable
+    public partial class Proc_SaleOrderStatisticsByEmployee : BaseViewEntity
     {
         public Proc_SaleOrderStatisticsByEmployee()
         {

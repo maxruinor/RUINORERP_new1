@@ -43,6 +43,8 @@ namespace RUINORERP.Business.Processor
             queryFilter.SetQueryField<Proc_SaleOrderStatisticsByEmployeePara>(c => c.End, AdvQueryProcessType.datetime);
             queryFilter.SetQueryField<Proc_SaleOrderStatisticsByEmployeePara>(c => c.Employee_ID, true, AdvQueryProcessType.CmbMultiChoiceCanIgnore);
             queryFilter.SetQueryField<Proc_SaleOrderStatisticsByEmployeePara>(c => c.ProjectGroup_ID, true, AdvQueryProcessType.CmbMultiChoiceCanIgnore);
+
+           
             return queryFilter;
         }
 

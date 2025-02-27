@@ -322,6 +322,7 @@ namespace RUINORERP.Business.CommService
 
                     }
                 }
+                
             }
             return entity;
         }

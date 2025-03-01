@@ -144,6 +144,7 @@ namespace RUINORERP.Business
                     tb_Inventory inv = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == child.ProdDetailID && i.Location_ID == child.Location_ID);
                     if (inv == null)
                     {
+
                         _unitOfWorkManage.RollbackTran();
                         throw new Exception($"返工入库：{entity.ReworkEntryNo}审核时，对应的入库明细没有对应的库存初始数据！");
                     }

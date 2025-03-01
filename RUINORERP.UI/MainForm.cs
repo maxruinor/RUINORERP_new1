@@ -320,7 +320,7 @@ namespace RUINORERP.UI
 
 
                 //启动另一个exe程序后等待2秒后来检测读取这个文件
-               // string content = FileHelper.ReadFileContent(UpdatefilePath);
+                // string content = FileHelper.ReadFileContent(UpdatefilePath);
 
                 // 确保当前程序退出
                 rs = true;
@@ -2577,10 +2577,11 @@ namespace RUINORERP.UI
                     {
                         #region  强类型
                         List<object> oldlist = new List<object>();
-                        foreach (object ca in (IEnumerable)cachelist)
-                        {
-                            oldlist.Add(ca);
-                        }
+                        oldlist = cachelist as List<object>;
+                        //foreach (object ca in (IEnumerable)cachelist)
+                        //{
+                        //    oldlist.Add(ca);
+                        //}
 
                         //提取产品视图缓存转为强类型
                         if (info != null && IsView_ProdDetail && !list.Count.Equals(oldlist.Count))

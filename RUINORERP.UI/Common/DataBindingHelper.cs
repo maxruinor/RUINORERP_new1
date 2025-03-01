@@ -41,6 +41,7 @@ using RUINORERP.UI.SS;
 using System.Windows.Documents;
 using static Google.Protobuf.Reflection.FeatureSet.Types;
 using System.Windows.Media.Animation;
+using Fireasy.Common.Extensions;
 
 
 namespace RUINORERP.UI.Common
@@ -544,7 +545,7 @@ namespace RUINORERP.UI.Common
         }
 
 
-        public static void BindData4CmbByDictionary<T>(object entity, Expression<Func<T, int?>> expkey, Dictionary<int,string> valuePairs, KryptonComboBox cmbBox, bool addSelect)
+        public static void BindData4CmbByDictionary<T>(object entity, Expression<Func<T, int?>> expkey, Dictionary<int, string> valuePairs, KryptonComboBox cmbBox, bool addSelect)
         {
             cmbBox.DataBindings.Clear();
             MemberInfo minfo = expkey.GetMemberInfo();
@@ -586,7 +587,7 @@ namespace RUINORERP.UI.Common
             Type newType = TypeBuilderHelper.BuildType(typeConfig);
 
             List<object> list = new List<object>();
-         
+
             int currentValue;
             string currentName;
             foreach (var item in valuePairs)
@@ -598,7 +599,7 @@ namespace RUINORERP.UI.Common
                 eobj.SetPropertyValue("Name", currentName);
                 list.Add(eobj);
             }
-             
+
             if (addSelect)
             {
                 object sobj = Activator.CreateInstance(newType);
@@ -1252,7 +1253,7 @@ namespace RUINORERP.UI.Common
                 {
                     ReflectionHelper.SetPropertyValue(entity, key, chkBox.Checked);
                 }
-               
+
             };
             //数据源的数据类型转换为控件要求的数据类型。
             binddata.Format += (s, args) => args.Value = args.Value == null ? false : args.Value;
@@ -1737,9 +1738,9 @@ namespace RUINORERP.UI.Common
             txtBox.DataBindings.Add(depa);
         }
 
-        
 
-             public static void BindData4NumericUpDown<T>(object entity, string textField, KryptonNumericUpDown numericUpDown, bool SyncUI)
+
+        public static void BindData4NumericUpDown<T>(object entity, string textField, KryptonNumericUpDown numericUpDown, bool SyncUI)
         {
             Binding depa = null;
             if (SyncUI)
@@ -1769,7 +1770,7 @@ namespace RUINORERP.UI.Common
         }
 
 
-        public static void BindData4TrackBar<T>(object entity, string textField, TrackBar trackBar,   bool SyncUI)
+        public static void BindData4TrackBar<T>(object entity, string textField, TrackBar trackBar, bool SyncUI)
         {
             Binding depa = null;
             if (SyncUI)
@@ -2049,7 +2050,7 @@ namespace RUINORERP.UI.Common
                     else if (TypeHelper.IsJArrayList(listType))
                     {
                         List<T> lastOKList = new List<T>();
-                        
+
                         var objlist = TypeHelper.ConvertJArrayToList(typeof(T), cachelist as JArray);
                         var lastlist = ((IEnumerable<dynamic>)objlist).ToList();
                         foreach (var item in lastlist)
@@ -2182,38 +2183,7 @@ namespace RUINORERP.UI.Common
 
 
 
-        ///// <summary>
-        ///// 绑定数据到下拉（使用了缓存机制）
-        ///// </summary>
-        ///// <typeparam name="T"></typeparam>
-        ///// <param name="expression"></param>
-        ///// <param name="expValue"></param>
-        ///// <param name="cmbBox"></param>
-        //public static void InitDataToCmb(string key, string tableName, ComboBox cmbBox)
-        //{
-
-        //    if (BizCacheHelper.Manager.NewTableList.ContainsKey(tableName))
-        //    {
-        //        string ShowName = BizCacheHelper.Manager.NewTableList[tableName].Value;
-
-        //        BindingSource bs = new BindingSource();
-        //        var objlist = BizCacheHelper.Manager.CacheEntityList.Get(tableName);
-        //        var tlist = ((IEnumerable<dynamic>)objlist).ToList();
-        //        if (tlist == null || tlist.Count == 0)
-        //        {
-        //            Business.CommService.CommonController bdc = Startup.GetFromFac<Business.CommService.CommonController>();
-        //            var list = bdc.GetBindSourceList(tableName);
-        //            // InsertSelectItem<T>(key, value, tlist);
-        //            // bs.DataSource = list;
-        //        }
-        //        else
-        //        {
-        //            // InsertSelectItem<T>(key, value, tlist);
-        //            bs.DataSource = tlist;
-        //        }
-        //        ComboBoxHelper.InitDropList(bs, cmbBox, key, ShowName, ComboBoxStyle.DropDownList, false, true);
-        //    }
-        //}
+       
 
 
         /// <summary>
@@ -2328,20 +2298,41 @@ namespace RUINORERP.UI.Common
                     Type listType = cachelist.GetType();
                     if (TypeHelper.IsGenericList(listType))
                     {
-                        tlist = cachelist as List<T>;
-                        if (tlist == null)
+                        //tlist = cachelist as List<T>;
+                        //tlist = cachelist as List<object>;
+                        // Type elementType = listType.GetGenericArguments()[0];
+                        // 创建一个新的 List<object>
+                        List<object> convertedList = new List<object>();
+                        convertedList = cachelist as List<object>;
+                        if (convertedList != null)
                         {
                             // Type elementType = TypeHelper.GetFirstArgumentType(listType);
                             Type elementType = null;
                             if (BizCacheHelper.Manager.NewTableTypeList.TryGetValue(tableName, out elementType))
                             {
-                                #region  强类型
-                                var lastlist = ((IEnumerable<dynamic>)cachelist).Select(item => Activator.CreateInstance(elementType)).ToList();
-                                tlist = lastlist as List<T>;
+                                foreach (var item in convertedList)
+                                {
+                                    try
+                                    {
+                                        var convertedItem = Convert.ChangeType(item, elementType);
+                                        tlist.Add(convertedItem as T);
+                                    }
+                                    catch (InvalidCastException)
+                                    {
+                                        // 处理类型转换失败的情况
+                                    }
+                                }
+                                //var newInstance = Activator.CreateInstance(elementType);
+                                //// 这里需要根据具体情况实现属性值的复制 这个方法也可以。但是还要处理赋值，麻烦一些
+                                //tlist.Add(newInstance as T);
+
+                                #region  强类型 转换失败
+                                //var lastlist = ((IEnumerable<dynamic>)convertedList).Select(item => Activator.CreateInstance(elementType)).ToList();
+                                //tlist = lastlist as List<T>;
                                 #endregion
                             }
-
                         }
+
 
                     }
                     else if (TypeHelper.IsJArrayList(listType))

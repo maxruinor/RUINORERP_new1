@@ -35,9 +35,9 @@ using RUINORERP.Common.Extensions;
 namespace RUINORERP.UI.FM
 {
     [MenuAttrAssemblyInfo("付款申请单查询", ModuleMenuDefine.模块定义.财务管理, ModuleMenuDefine.财务管理.应付管理, BizType.付款申请单)]
-    public partial class UCPaymentApplicationList : BaseBillQueryMC<tb_FM_PaymentApplication, tb_FM_PaymentApplication>
+    public partial class UCPaymentApplicationQuery : BaseBillQueryMC<tb_FM_PaymentApplication, tb_FM_PaymentApplication>
     {
-        public UCPaymentApplicationList()
+        public UCPaymentApplicationQuery()
         {
             InitializeComponent();
             base.RelatedBillEditCol = (c => c.ApplicationNo);
@@ -50,7 +50,7 @@ namespace RUINORERP.UI.FM
             var lambda = Expressionable.Create<tb_FM_PaymentApplication>()
                               .And(t => t.isdeleted == false)
                             .AndIF(AuthorizeController.GetOwnershipControl(MainForm.Instance.AppContext),
-             t => t.Employee_ID == MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID)
+                             t => t.Employee_ID == MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID)
                          .ToExpression();//注意 这一句 不能少
 
             QueryConditionFilter.FilterLimitExpressions.Add(lambda);

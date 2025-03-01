@@ -264,12 +264,12 @@ namespace RUINORERP.Model
         
         
         /// <summary>
-        /// 实缴数量
+        /// 数量
         /// </summary>
 
-        [AdvQueryAttribute(ColName = "Qty",ColDesc = "实缴数量")]
+        [AdvQueryAttribute(ColName = "Qty",ColDesc = "数量")]
         [SugarColumn(ColumnDataType = "int", SqlParameterDbType ="Int32",  ColumnName = "Qty" ,IsNullable = true,ColumnDescription = "实缴数量" )]
-        [Display(Name = "实缴数量")]
+        [Display(Name = "数量")]
         public int? Qty 
         { 
             get{return _Qty;}            set{                SetProperty(ref _Qty, value);                }

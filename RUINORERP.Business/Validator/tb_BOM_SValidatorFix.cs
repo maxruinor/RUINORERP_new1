@@ -28,6 +28,8 @@ namespace RUINORERP.Business
     {
         public override void Initialize()
         {
+            List<string> errorList = new List<string>();
+
             RuleFor(tb_BOM_S => tb_BOM_S.BOM_Name).MinimumLength(2).WithMessage("配方名称:长度要大于2。");
 
             RuleFor(x => x.TotalMaterialCost).GreaterThan(0).WithMessage("总物料费用:要大于零。");
@@ -55,7 +57,11 @@ namespace RUINORERP.Business
                 bool isselt = bom.TotalSelfManuCost > 0;
                 if (!isout && !isselt)
                 {
-                    context.AddFailure("外发费用、自产制造费用、至少填写一个。");
+                    if (!errorList.Contains("委托外发费用、自行制造费用、至少填写一个。"))
+                    {
+                        context.AddFailure("委托外发费用、自行制造费用、至少填写一个。");
+                    }
+                   
                 }
             });
 
@@ -68,7 +74,10 @@ namespace RUINORERP.Business
                 bool isselt = bom.TotalSelfManuCost > 0;
                 if (!isout && !isselt)
                 {
-                    context.AddFailure("外发费用、自产制造费用、至少填写一个。");
+                    if (!errorList.Contains("委托外发费用、自行制造费用、至少填写一个。"))
+                    {
+                        context.AddFailure("委托外发费用、自行制造费用、至少填写一个。");
+                    }
                 }
             });
 
@@ -82,7 +91,10 @@ namespace RUINORERP.Business
               bool isselt = bom.SelfProductionAllCosts > 0;
               if (!isout && !isselt)
               {
-                  context.AddFailure("外发总成本、自产制造费用、至少填写一个。");
+                  if (!errorList.Contains("委托外发、自产制造的总费用至少填写一个。"))
+                  {
+                      context.AddFailure("委托外发、自产制造的总费用至少填写一个。");
+                  }
               }
           });
 
@@ -95,7 +107,10 @@ namespace RUINORERP.Business
                 bool isselt = bom.SelfProductionAllCosts > 0;
                 if (!isout && !isselt)
                 {
-                    context.AddFailure("外发总成本、自产制造费用、至少填写一个。");
+                    if (!errorList.Contains("委托外发、自产制造的总费用至少填写一个。"))
+                    {
+                        context.AddFailure("委托外发、自产制造的总费用至少填写一个。");
+                    }
                 }
             });
 

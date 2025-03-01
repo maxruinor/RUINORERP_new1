@@ -252,26 +252,26 @@ namespace RUINORERP.Model
                         }
         }
 
-        private decimal _SubtotalMaterialCost= ((0));
-        /// <summary>
-        /// 材料小计
-        /// </summary>
-        [AdvQueryAttribute(ColName = "SubtotalMaterialCost",ColDesc = "材料小计")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "SubtotalMaterialCost" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "材料小计" )]
-        public decimal SubtotalMaterialCost
-        { 
-            get{return _SubtotalMaterialCost;}
-            set{
-            SetProperty(ref _SubtotalMaterialCost, value);
-                        }
-        }
+        //private decimal _SubtotalMaterialCost= ((0));
+        ///// <summary>
+        ///// 材料小计
+        ///// </summary>
+        //[AdvQueryAttribute(ColName = "SubtotalMaterialCost",ColDesc = "材料小计")] 
+        //[SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "SubtotalMaterialCost" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "材料小计" )]
+        //public decimal SubtotalMaterialCost
+        //{ 
+        //    get{return _SubtotalMaterialCost;}
+        //    set{
+        //    SetProperty(ref _SubtotalMaterialCost, value);
+        //                }
+        //}
 
         private decimal _ProductionAllCost= ((0));
         /// <summary>
-        /// 单项总成本
+        /// 成本小计
         /// </summary>
-        [AdvQueryAttribute(ColName = "ProductionAllCost",ColDesc = "单项总成本")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "ProductionAllCost" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "单项总成本" )]
+        [AdvQueryAttribute(ColName = "ProductionAllCost",ColDesc = "成本小计")] 
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "ProductionAllCost" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "成本小计")]
         public decimal ProductionAllCost
         { 
             get{return _ProductionAllCost;}

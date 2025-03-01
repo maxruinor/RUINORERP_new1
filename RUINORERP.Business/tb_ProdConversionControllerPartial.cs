@@ -49,6 +49,10 @@ namespace RUINORERP.Business
                     tb_Inventory invForm = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == child.ProdDetailID_from && i.Location_ID == entity.Location_ID);
                     if (invForm == null)
                     {
+                        _unitOfWorkManage.RollbackTran();
+                        rmrs.ErrorMsg = $"来源产品必须通过【采购入库】，【期初盘点】或【缴库记录】产生过库存记录。转换失败。";
+                        rmrs.Succeeded = false;
+                        return rmrs;
                         invForm = new tb_Inventory();
                         invForm.ProdDetailID = child.ProdDetailID_from;
                         invForm.Location_ID = entity.Location_ID;
@@ -60,7 +64,7 @@ namespace RUINORERP.Business
                     {
                         BusinessHelper.Instance.EditEntity(invForm);
                     }
-                 
+
                     if (TransferQty > 0)
                     {
                         if (!_appContext.SysConfig.CheckNegativeInventory && (invForm.Quantity - TransferQty) < 0)
@@ -83,6 +87,10 @@ namespace RUINORERP.Business
                     tb_Inventory invTo = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == child.ProdDetailID_to && i.Location_ID == entity.Location_ID);
                     if (invTo == null)
                     {
+                        _unitOfWorkManage.RollbackTran();
+                        rmrs.ErrorMsg = $"目标产品必须通过【采购入库】，【期初盘点】或【缴库记录】产生过库存记录。转换失败。";
+                        rmrs.Succeeded = false;
+                        return rmrs;
                         invTo = new tb_Inventory();
                         invTo.ProdDetailID = child.ProdDetailID_to;
                         invTo.Location_ID = entity.Location_ID;
@@ -94,7 +102,7 @@ namespace RUINORERP.Business
                     {
                         BusinessHelper.Instance.EditEntity(invTo);
                     }
-                    
+
                     if (TransferQty > 0)
                     {
                         invTo.LatestStorageTime = System.DateTime.Now;
@@ -233,7 +241,7 @@ namespace RUINORERP.Business
                     {
                         BusinessHelper.Instance.EditEntity(invForm);
                     }
-               
+
                     if (TransferQty > 0)
                     {
                         invForm.LatestStorageTime = System.DateTime.Now;
@@ -268,7 +276,7 @@ namespace RUINORERP.Business
                     {
                         BusinessHelper.Instance.EditEntity(invTo);
                     }
-                  
+
                     if (TransferQty > 0)
                     {
                         if (!_appContext.SysConfig.CheckNegativeInventory && (invTo.Quantity - TransferQty) < 0)

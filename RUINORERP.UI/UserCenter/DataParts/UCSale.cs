@@ -52,9 +52,10 @@ namespace RUINORERP.UI.UserCenter.DataParts
             this.Dock = DockStyle.Fill;
         }
         public GridViewRelated GridRelated { get; set; } = new GridViewRelated();
-        
+
         public List<tb_SaleOrder> SaleOrderList = new List<tb_SaleOrder>();
 
+        GridViewDisplayHelper displayHelper = new GridViewDisplayHelper();
         public async Task<int> QueryData(List<tb_SaleOrder> _PURList = null)
         {
             try
@@ -88,12 +89,12 @@ namespace RUINORERP.UI.UserCenter.DataParts
                 else
                 {
                     SaleOrderList = await MainForm.Instance.AppContext.Db.Queryable<tb_SaleOrder>()
-                  .Includes(c => c.tb_employee)
+                  //.Includes(c => c.tb_employee)
                   .Includes(c => c.tb_SaleOrderDetails)
-                  .Includes(c => c.tb_projectgroup)
-                  .Includes(c => c.tb_customervendor)
-                  .Includes(c => c.tb_OrderPackings)
-                  .Includes(c => c.tb_paymentmethod)
+                  //.Includes(c => c.tb_projectgroup)
+                  //.Includes(c => c.tb_customervendor)
+                  //.Includes(c => c.tb_OrderPackings)
+                  //.Includes(c => c.tb_paymentmethod)
                   .Includes(c => c.tb_PurOrders, d => d.tb_PurOrderDetails)
                   .Includes(c => c.tb_PurOrders, d => d.tb_PurEntries, f => f.tb_PurEntryDetails)
                   .Includes(c => c.tb_SaleOuts, d => d.tb_SaleOutRes, f => f.tb_SaleOutReDetails)
@@ -101,7 +102,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
                   .Includes(c => c.tb_SaleOuts, d => d.tb_SaleOutDetails)
                   .Where(c => (c.DataStatus == 2 || c.DataStatus == 4)).OrderBy(c => c.SaleDate)
                   .WhereIF(AuthorizeController.GetSaleLimitedAuth(MainForm.Instance.AppContext), t => t.Employee_ID == MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID)//限制了销售只看到自己的客户,采购不限制
-                  //.WithCache(60) // 缓存60秒
+                                                                                                                                                                                     //.WithCache(60) // 缓存60秒
                   .ToPageListAsync(1, 1000); // 第一页，每页最多显示2000条
                 }
                 kryptonTreeGridView1.ReadOnly = true;
@@ -153,14 +154,33 @@ namespace RUINORERP.UI.UserCenter.DataParts
                         }
 
                         #endregion
-                        item.Cells[9].Value = SaleOrder.tb_employee.Employee_Name;
+
+                        if (SaleOrder.tb_employee != null)
+                        {
+                            item.Cells[9].Value = SaleOrder.tb_employee.Employee_Name;
+                        }
+                        else
+                        {
+                            item.Cells[9].Value = displayHelper.GetGridViewDisplayText(nameof(tb_Employee), nameof(tb_Employee.Employee_Name), SaleOrder.Employee_ID);
+
+                        }
+
+
                         if (SaleOrder.tb_customervendor != null)
                         {
                             item.Cells[10].Value = SaleOrder.tb_customervendor.CVName;
                         }
+                        else
+                        {
+                            item.Cells[10].Value = displayHelper.GetGridViewDisplayText(nameof(tb_CustomerVendor), nameof(tb_CustomerVendor.CustomerVendor_ID), SaleOrder.CustomerVendor_ID);
+                        }
                         if (SaleOrder.tb_projectgroup != null)
                         {
                             item.Cells[11].Value = SaleOrder.tb_projectgroup.ProjectGroupName;
+                        }
+                        else
+                        {
+                            item.Cells[11].Value = displayHelper.GetGridViewDisplayText(nameof(tb_ProjectGroup), nameof(tb_ProjectGroup.ProjectGroup_ID), SaleOrder.ProjectGroup_ID);
                         }
                         item.Cells[12].Value = UIHelper.GetDisplayText(UIBizSrvice.GetFixedDataDict(), nameof(SaleOrder.DataStatus), SaleOrder.DataStatus).ToString();
                         string project = string.Empty;
@@ -168,11 +188,11 @@ namespace RUINORERP.UI.UserCenter.DataParts
                         List<tb_SaleOrderDetail> SaleOrderDetails = SaleOrder.tb_SaleOrderDetails;
                         foreach (tb_SaleOrderDetail SaleOrderDetail in SaleOrderDetails)
                         {
-                            View_ProdDetail prodDetail =  UIBizSrvice.GetProdDetail<View_ProdDetail>(SaleOrderDetail.ProdDetailID);
+                            View_ProdDetail prodDetail = UIBizSrvice.GetProdDetail<View_ProdDetail>(SaleOrderDetail.ProdDetailID);
                             tb_ProductType productType = new tb_ProductType();
                             if (prodDetail.Type_ID.HasValue)
                             {
-                               productType = UIBizSrvice.GetProdDetail<tb_ProductType>(prodDetail.Type_ID.Value);
+                                productType = UIBizSrvice.GetProdDetail<tb_ProductType>(prodDetail.Type_ID.Value);
                             }
 
                             project += $"{productType.TypeName}:{prodDetail.CNName}{prodDetail.prop}" + ";";
@@ -251,7 +271,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
             }
             return SaleOrderList.Count;
         }
- 
+
 
         /// <summary>
         /// 加载子件的MO（成品 也一样）

@@ -663,7 +663,7 @@ namespace RUINORERP.UI.MRP.MP
 
         #region 画行号
 
-    
+
         private void KryptonTreeGridViewMaking_CellPainting(object sender, DataGridViewCellPaintingEventArgs e)
         {
             //这个特殊这里是第一行的行号
@@ -1969,7 +1969,11 @@ protected async override Task<ApprovalEntity> ReReview()
                     subMaking.property = detail.view_ProdDetail.prop;
                     subMaking.Location_ID = Location_ID;
                     //  subMaking.PreEndDate=
-                    //subMaking.UnitCost
+                    tb_Inventory inventory = detail.tb_proddetail.tb_Inventories.FirstOrDefault(c => c.Location_ID == Location_ID);
+                    if (inventory != null)
+                    {
+                        subMaking.UnitCost = inventory.Inv_Cost;//库存成本
+                    }
                     decimal needQty = NeedQuantity * detail.UsedQty / bomOutQty;
                     subMaking.PlanNeedQty = needQty.ToInt();//配方用量和实际请制量决定
                     subMaking.RequirementQty = needQty.ToInt();//配方用量和实际请制量决定
@@ -1979,7 +1983,7 @@ protected async override Task<ApprovalEntity> ReReview()
                         var nextSublist = await GetNextBomToMakingItem(NeedQuantity, RequirementDate, subMaking.ID.Value, detail.tb_proddetail.BOM_ID.Value, AlreadyReducedQtyList, Location_ID);
                         SubMakingProditems.AddRange(nextSublist);
                     }
-
+                    subMaking.SubtotalCostAmount = subMaking.UnitCost * subMaking.RequirementQty;
                     SubMakingProditems.Add(subMaking);
                 }
             }

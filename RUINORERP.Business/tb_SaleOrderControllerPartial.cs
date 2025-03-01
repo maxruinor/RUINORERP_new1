@@ -59,6 +59,7 @@ namespace RUINORERP.Business
                     tb_Inventory inv = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == child.ProdDetailID && i.Location_ID == child.Location_ID);
                     if (inv == null)
                     {
+                        //采购和销售都会提前处理。所以这里默认提供一行数据。成本和数量都可能为0
                         inv = new tb_Inventory();
                         inv.ProdDetailID = child.ProdDetailID;
                         inv.Location_ID = child.Location_ID;
@@ -66,8 +67,8 @@ namespace RUINORERP.Business
                         inv.Quantity = 0;
 
                         inv.InitInventory = (int)inv.Quantity;
-                        inv.Notes = "";//后面修改数据库是不需要？
-                                       //inv.LatestStorageTime = System.DateTime.Now;
+                        inv.Notes = "销售订单创建";//后面修改数据库是不需要？
+                        //inv.LatestStorageTime = System.DateTime.Now;
                         BusinessHelper.Instance.InitEntity(inv);
                     }
                     //更新在途库存
@@ -507,7 +508,7 @@ namespace RUINORERP.Business
                         inv.Quantity = 0;
                         inv.InitInventory = (int)inv.Quantity;
                         inv.Notes = "";//后面修改数据库是不需要？
-                                       //inv.LatestStorageTime = System.DateTime.Now;
+                        //inv.LatestStorageTime = System.DateTime.Now;
                         BusinessHelper.Instance.InitEntity(inv);
                     }
                     //更新在途库存

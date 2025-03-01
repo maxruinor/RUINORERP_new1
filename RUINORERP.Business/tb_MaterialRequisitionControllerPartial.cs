@@ -410,6 +410,10 @@ namespace RUINORERP.Business
                     tb_Inventory inv = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == child.ProdDetailID && i.Location_ID == child.Location_ID);
                     if (inv == null)
                     {
+                        _unitOfWorkManage.RollbackTran();
+                        rs.ErrorMsg = $"{child.ProdDetailID}库存中没有当前的产品。请使用【期初盘点】【采购入库】】【生产缴库】的方式进行盘点后，再操作。";
+                        rs.Succeeded = false;
+                        return rs;
                         inv = new tb_Inventory();
                         inv.ProdDetailID = child.ProdDetailID;
                         inv.Location_ID = child.Location_ID;

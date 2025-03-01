@@ -47,6 +47,7 @@ namespace RUINORERP.UI.UserCenter
         仓库_缴库单,
         仓库_退料单,
         仓库_领料单,
+        仓库_分割组合,
         其他_入库单,
         其他_出库单,
 

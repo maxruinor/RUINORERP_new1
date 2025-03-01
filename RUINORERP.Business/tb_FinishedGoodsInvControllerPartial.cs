@@ -89,9 +89,10 @@ namespace RUINORERP.Business
                     {
                         Opening = true;
                         inv = new tb_Inventory();
-
                         inv.InitInventory = (int)inv.Quantity;
                         inv.Notes = "";//后面修改数据库是不需要？
+                        inv.Inv_Cost = child.UnitCost ;
+                        inv.Inv_AdvCost = child.UnitCost;
                         BusinessHelper.Instance.InitEntity(inv);
                     }
                     else

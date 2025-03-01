@@ -33,9 +33,9 @@ using Fireasy.Common.Extensions;
 namespace RUINORERP.UI.FM
 {
     [MenuAttrAssemblyInfo("付款申请单", ModuleMenuDefine.模块定义.财务管理, ModuleMenuDefine.财务管理.应付管理, BizType.付款申请单)]
-    public partial class UCPaymentApplicationEdit : BaseBillEditGeneric<tb_FM_PaymentApplication, tb_FM_PaymentApplication>
+    public partial class UCPaymentApplication : BaseBillEditGeneric<tb_FM_PaymentApplication, tb_FM_PaymentApplication>
     {
-        public UCPaymentApplicationEdit()
+        public UCPaymentApplication()
         {
             InitializeComponent();
             // usedActionStatus = true;

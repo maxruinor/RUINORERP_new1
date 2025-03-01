@@ -26,6 +26,7 @@ using RUINORERP.Global;
 using RUINORERP.Model.CommonModel;
 using RUINORERP.Business.Security;
 using RUINORERP.Business.CommService;
+using Microsoft.Extensions.Hosting;
 
 namespace RUINORERP.Business
 {
@@ -75,11 +76,25 @@ namespace RUINORERP.Business
                         {
                             View_ProdDetail view_Prod = await _unitOfWorkManage.GetDbClient().Queryable<View_ProdDetail>().Where(c => c.ProdDetailID == child.ProdDetailID).FirstAsync();
                             _unitOfWorkManage.RollbackTran();
-                            rmsr.ErrorMsg = $"{view_Prod.SKU}=> {view_Prod.CNName}库存中没有当前盘点的产品。请使用期初盘点的方式进行盘点。";
+                            rmsr.ErrorMsg = $"{view_Prod.SKU}=> {view_Prod.CNName}\r\n当前盘点产品在当前仓库中，无库存数据。请使用【期初盘点】方式盘点。";
                             return rmsr;
                         }
                         Opening = true;
                         inv = new tb_Inventory();
+                        if (child.Cost == 0)
+                        {
+                            View_ProdDetail view_Prod = await _unitOfWorkManage.GetDbClient().Queryable<View_ProdDetail>().Where(c => c.ProdDetailID == child.ProdDetailID).FirstAsync();
+                            _unitOfWorkManage.RollbackTran();
+                            rmsr.ErrorMsg = $"{view_Prod.SKU}=> {view_Prod.CNName}\r\n【期初盘点】时，必须输入正确的成本价格。";
+                            return rmsr;
+                        }
+                        else
+                        {
+                            inv.Inv_Cost = child.Cost;
+                            inv.Inv_AdvCost = child.Cost;
+                            inv.CostMovingWA = child.Cost;
+                            inv.CostFIFO = child.Cost;
+                        }
                         inv.Location_ID = entity.Location_ID;
                         inv.ProdDetailID = child.ProdDetailID;
                         inv.InitInventory = (int)inv.Quantity;
@@ -92,7 +107,6 @@ namespace RUINORERP.Business
                         Opening = false;
 
                         inv.LastInventoryDate = System.DateTime.Now;
-                        //ctrinv.EditEntity(inv);
                         BusinessHelper.Instance.EditEntity(inv);
                     }
 
@@ -166,9 +180,6 @@ namespace RUINORERP.Business
                     }
 
                 }
-
-
-
 
                 //这部分是否能提出到上一级公共部分？
                 entity.DataStatus = (int)DataStatus.确认;

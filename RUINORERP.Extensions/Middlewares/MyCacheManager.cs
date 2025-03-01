@@ -48,9 +48,9 @@ namespace RUINORERP.Extensions.Middlewares
         /// <summary>
         /// 缓存所有的基础数据的实体列表，通过表名寻找
         /// 得到实体列表，用于下拉等绑定 实际保存的是强类型，如果jobject则要转换一下
-        /// 
-        /// 在服务器端：保存的是强类型List<Customer>  ,在客户端保存的是 JArray
+        /// 在服务器端：保存的是强类型List<Customer>  ,再传送到客户端时使用JArray再转换为List<object>
         /// 目前暂时不改格式。先优化转换。再看是否要统一。
+        /// 2025-2-27 决定：所有缓存统一转换为List<object>类型
         /// </summary>
         public ICacheManager<object> CacheEntityList { get => _cacheEntityList; set => _cacheEntityList = value; }
 
@@ -168,7 +168,7 @@ namespace RUINORERP.Extensions.Middlewares
             }
         }
 
-     
+
         /*
         public void AddCacheEntity<T>(object entity, Expression<Func<T, int>> expkey, Expression<Func<T, string>> expvalue)
         {
@@ -296,6 +296,7 @@ namespace RUINORERP.Extensions.Middlewares
             KeyValuePair<string, string> pair = new KeyValuePair<string, string>();
             if (NewTableList.TryGetValue(tableName, out pair))
             {
+                var objectList = newlist.Cast<object>().ToList();
                 #region 处理新表
                 //只处理需要缓存的表  并且基础信息的列查算是一次查出来？即使筛选则  新旧合并？
                 if (CacheEntityList.Exists(tableName))
@@ -305,8 +306,8 @@ namespace RUINORERP.Extensions.Middlewares
                     if (cachelist != null)
                     {
                         //不管是强类型的集合还是json的集合，直接替换。（如果知道哪种情况性能列好可以默认哪种。以后再优化吧。TODO:by watson)
-                        CacheEntityList.Update(tableName, k => newlist);
-                        AddCacheInfo(tableName, newlist.Count, HasExpire);
+                        CacheEntityList.Update(tableName, k => objectList);
+                        AddCacheInfo(tableName, objectList.Count, HasExpire);
                         //验证过  添加时相同KEY有过期时间。更新后还有效
                         //if (HasExpire)
                         //{
@@ -324,16 +325,12 @@ namespace RUINORERP.Extensions.Middlewares
                     }
                     else
                     {
-                        //CacheEntityList.Add(tableName, newlist);
-                        AddCacheEntityList(tableName, newlist, HasExpire);
+                        AddCacheEntityList(tableName, objectList, HasExpire);
                     }
-
-
                 }
                 else
                 {
-                    // CacheEntityList.Add(tableName, newlist);
-                    AddCacheEntityList(tableName, newlist, HasExpire);
+                    AddCacheEntityList(tableName, objectList, HasExpire);
                 }
                 #endregion
             }
@@ -671,14 +668,14 @@ ToList：
                     {
                         List<T> clist = new List<T>();
                         clist.Add((T)entity);
-                        CacheEntityList.Add(tableName, clist);
+                        CacheEntityList.Add(tableName, clist as List<object>);
                     }
                 }
                 else
                 {
                     List<T> clist = new List<T>();
                     clist.Add((T)entity);
-                    CacheEntityList.Add(tableName, clist);
+                    CacheEntityList.Add(tableName, clist as List<object>);
                 }
             }
 
@@ -772,7 +769,8 @@ ToList：
             //只处理需要缓存的表
             if (!CacheEntityList.Exists(tableName))
             {
-                CacheEntityList.Add(tableName, objList);
+                var objectList = objList.Cast<object>().ToList();
+                CacheEntityList.Add(tableName, objectList);
             }
         }
 
@@ -785,8 +783,9 @@ ToList：
             //只处理需要缓存的表
             if (!CacheEntityList.Exists(tableName))
             {
-                CacheEntityList.Add(tableName, objList);
-                AddCacheInfo(tableName, objList.Count, HasExpire);
+                var objectList = objList.Cast<object>().ToList();
+                CacheEntityList.Add(tableName, objectList);
+                AddCacheInfo(tableName, objectList.Count, HasExpire);
             }
         }
 

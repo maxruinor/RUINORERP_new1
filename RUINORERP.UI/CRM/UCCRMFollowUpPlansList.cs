@@ -315,7 +315,7 @@ namespace RUINORERP.UI.CRM
                     else
                     {
                         //提示出计划的状态。不能添加记录。
-                        MessageBox.Show($"跟进计划状态为{plan.PlanStatus.ToString()},不能添加记录。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        MessageBox.Show($"跟进计划状态为【{((FollowUpPlanStatus)plan.PlanStatus)}】,不能添加记录。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     }
 
 

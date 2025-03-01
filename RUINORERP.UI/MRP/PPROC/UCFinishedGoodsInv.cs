@@ -263,7 +263,7 @@ namespace RUINORERP.UI.PSI.PUR
             listCols.SetCol_NeverVisible<ProductSharePart>(c => c.TransPrice);
             listCols.SetCol_NeverVisible<ProductSharePart>(c => c.Inv_Cost);
             //这个小计可以删除。全是单个的。不用小计了。
-            listCols.SetCol_NeverVisible<tb_FinishedGoodsInvDetail>(c => c.SubtotalMaterialCost);
+            //listCols.SetCol_NeverVisible<tb_FinishedGoodsInvDetail>(c => c.SubtotalMaterialCost);
 
             // listCols.SetCol_Width<tb_FinishedGoodsInvDetail>(c => c.ApportionedCost, 200);
 
@@ -291,7 +291,7 @@ namespace RUINORERP.UI.PSI.PUR
             listCols.SetCol_Format<tb_FinishedGoodsInvDetail>(c => c.UnitCost, CustomFormatType.CurrencyFormat);
             listCols.SetCol_Format<tb_FinishedGoodsInvDetail>(c => c.ProductionAllCost, CustomFormatType.CurrencyFormat);
             listCols.SetCol_Format<tb_FinishedGoodsInvDetail>(c => c.MaterialCost, CustomFormatType.CurrencyFormat);
-            listCols.SetCol_Format<tb_FinishedGoodsInvDetail>(c => c.SubtotalMaterialCost, CustomFormatType.CurrencyFormat);
+            //listCols.SetCol_Format<tb_FinishedGoodsInvDetail>(c => c.SubtotalMaterialCost, CustomFormatType.CurrencyFormat);
 
             sgd = new SourceGridDefine(grid1, listCols, true);
             sgd.GridMasterData = EditEntity;
@@ -310,7 +310,7 @@ namespace RUINORERP.UI.PSI.PUR
             listCols.SetCol_Summary<tb_FinishedGoodsInvDetail>(c => c.NetWorkingHours);
             listCols.SetCol_Summary<tb_FinishedGoodsInvDetail>(c => c.NetMachineHours);
             listCols.SetCol_Summary<tb_FinishedGoodsInvDetail>(c => c.ApportionedCost);
-            listCols.SetCol_Summary<tb_FinishedGoodsInvDetail>(c => c.SubtotalMaterialCost);
+           // listCols.SetCol_Summary<tb_FinishedGoodsInvDetail>(c => c.SubtotalMaterialCost);
             listCols.SetCol_Summary<tb_FinishedGoodsInvDetail>(c => c.ManuFee);
             listCols.SetCol_Summary<tb_FinishedGoodsInvDetail>(c => c.ProductionAllCost);
 

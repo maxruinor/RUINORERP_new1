@@ -1255,17 +1255,17 @@
     <Compile Include="CRM\UCLeadsList.Designer.cs">
       <DependentUpon>UCLeadsList.cs</DependentUpon>
     </Compile>
-    <Compile Include="FM\UCPaymentApplicationEdit.cs">
+    <Compile Include="FM\UCPaymentApplication.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="FM\UCPaymentApplicationEdit.Designer.cs">
-      <DependentUpon>UCPaymentApplicationEdit.cs</DependentUpon>
+    <Compile Include="FM\UCPaymentApplication.Designer.cs">
+      <DependentUpon>UCPaymentApplication.cs</DependentUpon>
     </Compile>
-    <Compile Include="FM\UCPaymentApplicationList.cs">
+    <Compile Include="FM\UCPaymentApplicationQuery.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="FM\UCPaymentApplicationList.Designer.cs">
-      <DependentUpon>UCPaymentApplicationList.cs</DependentUpon>
+    <Compile Include="FM\UCPaymentApplicationQuery.Designer.cs">
+      <DependentUpon>UCPaymentApplicationQuery.cs</DependentUpon>
     </Compile>
     <Compile Include="FM\UCOtherExpenseStatistics.cs">
       <SubType>UserControl</SubType>
@@ -2963,11 +2963,11 @@
     <EmbeddedResource Include="CRM\UCLeadsList.resx">
       <DependentUpon>UCLeadsList.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="FM\UCPaymentApplicationEdit.resx">
-      <DependentUpon>UCPaymentApplicationEdit.cs</DependentUpon>
+    <EmbeddedResource Include="FM\UCPaymentApplication.resx">
+      <DependentUpon>UCPaymentApplication.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="FM\UCPaymentApplicationList.resx">
-      <DependentUpon>UCPaymentApplicationList.cs</DependentUpon>
+    <EmbeddedResource Include="FM\UCPaymentApplicationQuery.resx">
+      <DependentUpon>UCPaymentApplicationQuery.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="FM\UCOtherExpenseStatistics.resx">
       <DependentUpon>UCOtherExpenseStatistics.cs</DependentUpon>

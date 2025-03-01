@@ -1,11 +1,14 @@
 ﻿using AutoUpdateTools;
+using FastReport.DevComponents.DotNetBar;
 using FastReport.Table;
+using Fireasy.Common.Serialization;
 using Krypton.Navigator;
 using Microsoft.Extensions.Caching.Memory;
 using Netron.GraphLib;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using NPOI.SS.Formula;
+using NPOI.SS.Formula.Functions;
+using RUINORERP.Business.CommService;
 using RUINORERP.Business.Security;
 using RUINORERP.Extensions.Middlewares;
 using RUINORERP.Global;
@@ -264,13 +267,37 @@ namespace RUINORERP.UI.SuperSocketClient
                         {
                             JArray jsonlist = objList as Newtonsoft.Json.Linq.JArray;
 
-                             
                             // 转换为 List<T>，其中 T 是 MyClass 的类型
                             List<object> myList = ConvertJArrayToList(jsonlist, $"RUINORERP.Model.{tablename},RUINORERP.Model");
+                            //List<dynamic> last = new List<dynamic>();
+                            #region  转换为 List<T>
+                            // Type elementType = TypeHelper.GetFirstArgumentType(listType);
+                            Type elementType = null;
+                            if (BizCacheHelper.Manager.NewTableTypeList.TryGetValue(tablename, out elementType))
+                            {
+                                //foreach (var item in myList)
+                                //{
+                                //    try
+                                //    {
+                                //        var convertedItem = Convert.ChangeType(item, elementType);
+                                //        //last.Add(convertedItem);
+                                //    }
+                                //    catch (InvalidCastException)
+                                //    {
+                                //        // 处理类型转换失败的情况
+                                //    }
+                                //}
+                                //var newInstance = Activator.CreateInstance(elementType);
+                                //// 这里需要根据具体情况实现属性值的复制 这个方法也可以。但是还要处理赋值，麻烦一些
+                                //tlist.Add(newInstance as T);
 
-                            // 如果你需要强类型列表，可以进一步转换
-                           // List<MyClass> myStrongTypedList = myList.ConvertAll(item => (MyClass)item);
-
+                                #region  强类型 转换失败
+                                //var lastlist = ((IEnumerable<dynamic>)convertedList).Select(item => Activator.CreateInstance(elementType)).ToList();
+                                //tlist = lastlist as List<T>;
+                                #endregion
+                            }
+                            #endregion
+                            //var ss = (last as List<T>).GetType().FullName;
                             MyCacheManager.Instance.UpdateEntityList(tablename, myList);
                         }
                     }

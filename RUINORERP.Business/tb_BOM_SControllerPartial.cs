@@ -122,6 +122,7 @@ namespace RUINORERP.Business
 
         /// <summary>
         /// BOM审核，改变本身状态，修改对应母件的详情中的BOMID
+        /// BOM明细成本不能为0，如果是新物料，后面会采购入库时覆盖这个物料成本变为最新成本
         /// </summary>
         /// <param name="entity"></param>
         /// <returns></returns>
@@ -143,6 +144,17 @@ namespace RUINORERP.Business
                     return rmrs;
                 }
 
+                foreach (tb_BOM_SDetail detailEntity in entity.tb_BOM_SDetails)
+                {
+                    if (detailEntity.UnitCost == 0)
+                    {
+                        _unitOfWorkManage.RollbackTran();
+                        rmrs.ErrorMsg = $"{detailEntity.SKU}的单位成本不能为0。审核失败。";
+                        rmrs.Succeeded = false;
+                        return rmrs;
+                    }
+                }
+
                 //更新产品表回写他的配方号
                 //entity.tb_proddetail.DataStatus = (int)DataStatus.完结;
                 //entity.tb_proddetail.MainID = entity.MainID;
@@ -154,6 +166,8 @@ namespace RUINORERP.Business
                     detail.DataStatus = (int)DataStatus.确认;
                     await ctrDetail.UpdateAsync(detail);
                 }
+
+
 
                 //这部分是否能提出到上一级公共部分？
                 entity.DataStatus = (int)DataStatus.确认;

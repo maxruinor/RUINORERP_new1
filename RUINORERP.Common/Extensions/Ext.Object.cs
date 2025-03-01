@@ -620,6 +620,11 @@ namespace RUINORERP.Common.Extensions
                     {
                         return decimal.Zero;
                     }
+                    // 如果obj是空字符串，特殊处理
+                    if (targetType == typeof(int) || targetType == typeof(int?))
+                    {
+                        return 0;
+                    }
                 }
 
                 if (targetType.IsGenericType && targetType.GetGenericTypeDefinition().Equals(typeof(Nullable<>)))

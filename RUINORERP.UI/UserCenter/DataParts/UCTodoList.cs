@@ -265,6 +265,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
                             break;
                         case 待办事项.采购_退款退货处理:
                             bizTypes.Add(BizType.采购退货单);
+                            bizTypes.Add(BizType.采购退货入库);
                             break;
                         case 待办事项.销售_销售订单:
                             bizTypes.Add(BizType.销售订单);
@@ -290,11 +291,17 @@ namespace RUINORERP.UI.UserCenter.DataParts
                         case 待办事项.仓库_领料单:
                             bizTypes.Add(BizType.生产领料单);
                             break;
+                        case 待办事项.仓库_分割组合:
+                            bizTypes.Add(BizType.产品分割单);
+                            bizTypes.Add(BizType.产品组合单);
+                            bizTypes.Add(BizType.产品转换单);
+                            break;
                         case 待办事项.生产_计划单:
                             bizTypes.Add(BizType.生产计划单);
                             break;
                         case 待办事项.财务_费用报销单:
                             bizTypes.Add(BizType.费用报销单);
+                            bizTypes.Add(BizType.付款申请单);
                             break;
                         case 待办事项.其他_入库单:
                             bizTypes.Add(BizType.其他入库单);
@@ -313,6 +320,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
                             break;
                         case 待办事项.返工退库:
                             bizTypes.Add(BizType.返工退库单);
+                            bizTypes.Add(BizType.返工入库单);
                             break;
                         default:
                             break;

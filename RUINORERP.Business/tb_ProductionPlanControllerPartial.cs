@@ -66,40 +66,7 @@ namespace RUINORERP.Business
 订单数据：
 关联订单进度：如果是为了满足特定订单的生产计划，会影响订单的生产进度更新。
 
-
-                foreach (var child in entity.tb_ProductionPlanDetails)
-                {
-                    #region 库存表的更新 ，
-                    tb_Inventory inv = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == child.ProdDetailID);
-                    if (inv == null)
-                    {
-                        inv = new tb_Inventory();
-                        inv.ProdDetailID = child.ProdDetailID;
-                        inv.Location_ID = child.Location_ID;
-                        if (_appContext.SysConfig.CheckNegativeInventory)
-                        {
-                            inv.Quantity = -child.Quantity;
-                        }
-                        else
-                        {
-                            inv.Quantity = 0;
-                        }
-
-                        inv.InitInventory = (int)inv.Quantity;
-                        inv.Notes = "";//后面修改数据库是不需要？
-                        //inv.LatestStorageTime = System.DateTime.Now;
-                        BusinessHelper.Instance.InitEntity(inv);
-                    }
-                    //更新在途库存
-                    inv.Sale_Qty = inv.Sale_Qty + child.Quantity;
-                    BusinessHelper.Instance.EditEntity(inv);
-                    #endregion
-                    ReturnResults<tb_Inventory> rr = await ctrinv.SaveOrUpdate(inv);
-                    if (rr.Succeeded)
-                    {
-
-                    }
-                }*/
+ */
 
                 //这部分是否能提出到上一级公共部分？
                 entity.DataStatus = (int)DataStatus.确认;

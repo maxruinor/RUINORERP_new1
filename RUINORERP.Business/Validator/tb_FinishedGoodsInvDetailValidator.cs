@@ -71,7 +71,7 @@ namespace RUINORERP.Business
 
  RuleFor(x => x.MaterialCost).PrecisionScale(19,4,true).WithMessage("单位材料成本:小数位不能超过4。");
 
- RuleFor(x => x.SubtotalMaterialCost).PrecisionScale(19,4,true).WithMessage("材料小计:小数位不能超过4。");
+//RuleFor(x => x.SubtotalMaterialCost).PrecisionScale(19,4,true).WithMessage("材料小计:小数位不能超过4。");
 
  RuleFor(x => x.ProductionAllCost).PrecisionScale(19,4,true).WithMessage("单项总成本:小数位不能超过4。");
 

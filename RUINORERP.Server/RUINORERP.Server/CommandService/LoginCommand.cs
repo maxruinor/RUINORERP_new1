@@ -52,7 +52,7 @@ namespace RUINORERP.Server.CommandService
             // 模拟登录逻辑，这里可以替换为实际的登录逻辑
             await Task.Run(async () =>
             {
-              
+
                 // 登录逻辑，例如验证用户名和密码
                 {
 
@@ -82,6 +82,13 @@ namespace RUINORERP.Server.CommandService
                                         {
                                             frmMain.Instance.PrintMsg($"登陆{Username}的指令成功,重复判断通过，接下来人数限制");
                                         }
+
+                                        //正常注册时不会为0，只有自己的情况
+                                        if (frmMain.Instance.registrationInfo.ConcurrentUsers == 0)
+                                        {
+                                            frmMain.Instance.registrationInfo.ConcurrentUsers = 1000;
+                                        }
+
                                         //登陆成功时。
                                         if (frmMain.Instance.sessionListBiz.Count > frmMain.Instance.registrationInfo.ConcurrentUsers)
                                         {
@@ -110,7 +117,7 @@ namespace RUINORERP.Server.CommandService
 
                                         }
 
-                                        
+
                                     }
 
                                     //确定成功时统一分发加载配置
@@ -148,9 +155,9 @@ namespace RUINORERP.Server.CommandService
                     }
                     catch (Exception)
                     {
-                       
+
                     }
-                   
+
 
                 }
             }, cancellationToken);

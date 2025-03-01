@@ -274,8 +274,10 @@ namespace RUINORERP.Server
 
             try
             {
+
                 HardwareInfoService infoService = new HardwareInfoService();
                 UniqueHarewareInfo = infoService.GetHardDiskId() + infoService.GetMacAddress();
+      
                 #region 检查是否注册
                 ////没有返回Null，如果结果大于1条会抛出错误
                 registrationInfo = await Program.AppContextData.Db.CopyNew().Queryable<tb_sys_RegistrationInfo>().SingleAsync();
@@ -321,10 +323,10 @@ namespace RUINORERP.Server
                             if (registrationInfo.MachineCode != frmMain.Instance.CreateMachineCode(registrationInfo))
                             {
                                 //您没有购买任何模块功能或修改过授权数据，请联系管理员
-                                MessageBox.Show("硬件有变化请重新注册", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                                toolStrip1.Visible = false;
-                                menuStrip1.Visible = false;
-                                return;
+                                //MessageBox.Show("硬件有变化请重新注册", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                                //toolStrip1.Visible = false;
+                                //menuStrip1.Visible = false;
+                                //return;
                             }
 
 
@@ -363,7 +365,7 @@ namespace RUINORERP.Server
                 }
 
                 #endregion
-
+            
                 _logger.Error("ErrorError2233");
                 _logger.LogError("LogErrorLogError2233");
 
@@ -395,7 +397,7 @@ namespace RUINORERP.Server
                     {
                         this.Invoke(new MethodInvoker(() =>
                         {
-                            CheckSystemProtection();
+                            //CheckSystemProtection();
                             CheckCacheList();
                             CheckReminderBizDataList();
                         }
@@ -403,7 +405,7 @@ namespace RUINORERP.Server
                     }
                     else
                     {
-                        CheckSystemProtection();
+                       // CheckSystemProtection();
                         CheckCacheList();
                         CheckReminderBizDataList();
                     }

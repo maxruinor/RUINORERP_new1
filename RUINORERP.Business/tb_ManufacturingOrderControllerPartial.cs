@@ -86,6 +86,7 @@ namespace RUINORERP.Business
                             //View_ProdDetail view_Prod = await _unitOfWorkManage.GetDbClient().Queryable<View_ProdDetail>().Where(c => c.ProdDetailID == entitys[m].ProdDetailID).FirstAsync();
                             _unitOfWorkManage.RollbackTran();
                             rs.ErrorMsg = $"{entitys[m].tb_ManufacturingOrderDetails[c].ProdDetailID}库存中没有当前的产品。请使用【期初盘点】的方式进行盘点后，再操作。";
+                            rs.Succeeded = false;
                             return rs;
                         }
                         //更新未发数,这种情况是少发领料，强制结案时。

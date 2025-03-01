@@ -44,6 +44,7 @@ using MySqlX.XDevAPI.Common;
 using RUINORERP.UI.AdvancedUIModule;
 using FastReport.DevComponents.DotNetBar.Controls;
 using RUINORERP.UI.CommonUI;
+using NPOI.SS.Formula.Functions;
 
 
 namespace RUINORERP.UI.PSI.SAL
@@ -114,6 +115,7 @@ namespace RUINORERP.UI.PSI.SAL
             ReturnResults<bool> rr = await ctr.UpdatePaymentStatus(EditEntity);
             if (rr.Succeeded)
             {
+                AuditLogHelper.Instance.CreateAuditLog<tb_SaleOrder>("付款调整", EditEntity);
                 //if (MainForm.Instance.WorkflowItemlist.ContainsKey(""))
                 //{
 

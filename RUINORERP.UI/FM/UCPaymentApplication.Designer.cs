@@ -1,6 +1,6 @@
 ﻿namespace RUINORERP.UI.FM
 {
-    partial class UCPaymentApplicationEdit
+    partial class UCPaymentApplication
     {
         /// <summary> 
         /// 必需的设计器变量。

@@ -328,7 +328,7 @@ namespace RUINORERP.Model
             }
         }
 
-        private decimal? _Inv_Cost;
+        private decimal _Inv_Cost=0;
 
 
         /// <summary>
@@ -336,9 +336,9 @@ namespace RUINORERP.Model
         /// </summary>
 
         [AdvQueryAttribute(ColName = "Inv_Cost", ColDesc = "产品成本")]
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType = "Decimal", ColumnName = "Inv_Cost", IsNullable = true, ColumnDescription = "产品成本")]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType = "Decimal", ColumnName = "Inv_Cost", IsNullable = false, ColumnDescription = "产品成本")]
         [Display(Name = "产品成本")]
-        public decimal? Inv_Cost
+        public decimal Inv_Cost
         {
             get { return _Inv_Cost; }            set
             {                SetProperty(ref _Inv_Cost, value);

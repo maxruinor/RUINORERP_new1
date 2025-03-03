@@ -170,7 +170,7 @@ namespace HLH.WinControl.MyTypeConverter
         /// </summary>
         /// <param name="obj"></param>
         /// <returns></returns>
-        public static decimal ToDecimal(this object obj)
+        public static decimal ToDecimalbyHLH(this object obj)
         {
             return ObjToDecimal(obj);
         }

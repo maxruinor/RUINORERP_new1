@@ -50,7 +50,12 @@
             this.kryptonSplitContainer2 = new Krypton.Toolkit.KryptonSplitContainer();
             this.toolStripContainer1 = new System.Windows.Forms.ToolStripContainer();
             this.kryptonGroup1 = new Krypton.Toolkit.KryptonGroup();
+            this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.treeView1 = new System.Windows.Forms.TreeView();
+            this.dataGridView1 = new System.Windows.Forms.DataGridView();
+            this.contextMenuStrip1 = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.执行选中数据ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.txtSearchKey = new System.Windows.Forms.TextBox();
             this.kryptonHeaderGrouptop = new Krypton.Toolkit.KryptonHeaderGroup();
             this.buttonSpecHeaderGroup1 = new Krypton.Toolkit.ButtonSpecHeaderGroup();
             this.kryptonLabel6 = new Krypton.Toolkit.KryptonLabel();
@@ -61,6 +66,7 @@
             this.toolStripButton1 = new System.Windows.Forms.ToolStripButton();
             this.richTextBoxLog = new System.Windows.Forms.RichTextBox();
             this.bindingSourceList = new System.Windows.Forms.BindingSource(this.components);
+            this.kryptonCheckBox1 = new Krypton.Toolkit.KryptonCheckBox();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1.Panel1)).BeginInit();
             this.kryptonSplitContainer1.Panel1.SuspendLayout();
@@ -80,6 +86,12 @@
             ((System.ComponentModel.ISupportInitialize)(this.kryptonGroup1.Panel)).BeginInit();
             this.kryptonGroup1.Panel.SuspendLayout();
             this.kryptonGroup1.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
+            this.splitContainer1.Panel1.SuspendLayout();
+            this.splitContainer1.Panel2.SuspendLayout();
+            this.splitContainer1.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
+            this.contextMenuStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonHeaderGrouptop)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonHeaderGrouptop.Panel)).BeginInit();
             this.kryptonHeaderGrouptop.Panel.SuspendLayout();
@@ -158,17 +170,36 @@
             // kryptonGroup1
             // 
             this.kryptonGroup1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.kryptonGroup1.Location = new System.Drawing.Point(0, 66);
+            this.kryptonGroup1.Location = new System.Drawing.Point(0, 64);
             this.kryptonGroup1.Name = "kryptonGroup1";
             // 
             // kryptonGroup1.Panel
             // 
-            this.kryptonGroup1.Panel.Controls.Add(this.treeView1);
-            this.kryptonGroup1.Size = new System.Drawing.Size(534, 356);
+            this.kryptonGroup1.Panel.Controls.Add(this.splitContainer1);
+            this.kryptonGroup1.Size = new System.Drawing.Size(534, 358);
             this.kryptonGroup1.TabIndex = 2;
+            // 
+            // splitContainer1
+            // 
+            this.splitContainer1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.splitContainer1.Location = new System.Drawing.Point(0, 0);
+            this.splitContainer1.Name = "splitContainer1";
+            // 
+            // splitContainer1.Panel1
+            // 
+            this.splitContainer1.Panel1.Controls.Add(this.treeView1);
+            // 
+            // splitContainer1.Panel2
+            // 
+            this.splitContainer1.Panel2.Controls.Add(this.dataGridView1);
+            this.splitContainer1.Panel2.Controls.Add(this.txtSearchKey);
+            this.splitContainer1.Size = new System.Drawing.Size(532, 356);
+            this.splitContainer1.SplitterDistance = 177;
+            this.splitContainer1.TabIndex = 1;
             // 
             // treeView1
             // 
+            this.treeView1.CheckBoxes = true;
             this.treeView1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.treeView1.Location = new System.Drawing.Point(0, 0);
             this.treeView1.Name = "treeView1";
@@ -218,9 +249,45 @@
             treeNode13,
             treeNode14,
             treeNode15});
-            this.treeView1.Size = new System.Drawing.Size(532, 354);
+            this.treeView1.Size = new System.Drawing.Size(177, 356);
             this.treeView1.TabIndex = 0;
             this.treeView1.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.treeView1_MouseDoubleClick);
+            // 
+            // dataGridView1
+            // 
+            this.dataGridView1.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.dataGridView1.ContextMenuStrip = this.contextMenuStrip1;
+            this.dataGridView1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.dataGridView1.Location = new System.Drawing.Point(0, 21);
+            this.dataGridView1.Name = "dataGridView1";
+            this.dataGridView1.RowTemplate.Height = 23;
+            this.dataGridView1.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
+            this.dataGridView1.Size = new System.Drawing.Size(351, 335);
+            this.dataGridView1.TabIndex = 0;
+            // 
+            // contextMenuStrip1
+            // 
+            this.contextMenuStrip1.Font = new System.Drawing.Font("Segoe UI", 9F);
+            this.contextMenuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.执行选中数据ToolStripMenuItem});
+            this.contextMenuStrip1.Name = "contextMenuStrip1";
+            this.contextMenuStrip1.Size = new System.Drawing.Size(153, 26);
+            // 
+            // 执行选中数据ToolStripMenuItem
+            // 
+            this.执行选中数据ToolStripMenuItem.Name = "执行选中数据ToolStripMenuItem";
+            this.执行选中数据ToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.执行选中数据ToolStripMenuItem.Text = "执行选中数据";
+            this.执行选中数据ToolStripMenuItem.Click += new System.EventHandler(this.执行选中数据ToolStripMenuItem_Click);
+            // 
+            // txtSearchKey
+            // 
+            this.txtSearchKey.Dock = System.Windows.Forms.DockStyle.Top;
+            this.txtSearchKey.Location = new System.Drawing.Point(0, 0);
+            this.txtSearchKey.Name = "txtSearchKey";
+            this.txtSearchKey.Size = new System.Drawing.Size(351, 21);
+            this.txtSearchKey.TabIndex = 1;
+            this.txtSearchKey.TextChanged += new System.EventHandler(this.txtSearchKey_TextChanged);
             // 
             // kryptonHeaderGrouptop
             // 
@@ -234,11 +301,12 @@
             // 
             // kryptonHeaderGrouptop.Panel
             // 
+            this.kryptonHeaderGrouptop.Panel.Controls.Add(this.kryptonCheckBox1);
             this.kryptonHeaderGrouptop.Panel.Controls.Add(this.kryptonLabel6);
             this.kryptonHeaderGrouptop.Panel.Controls.Add(this.chkTestMode);
             this.kryptonHeaderGrouptop.Panel.Controls.Add(this.txtTableName);
             this.kryptonHeaderGrouptop.Panel.Controls.Add(this.btnQuery);
-            this.kryptonHeaderGrouptop.Size = new System.Drawing.Size(534, 66);
+            this.kryptonHeaderGrouptop.Size = new System.Drawing.Size(534, 64);
             this.kryptonHeaderGrouptop.TabIndex = 0;
             // 
             // buttonSpecHeaderGroup1
@@ -248,7 +316,7 @@
             // 
             // kryptonLabel6
             // 
-            this.kryptonLabel6.Location = new System.Drawing.Point(41, 9);
+            this.kryptonLabel6.Location = new System.Drawing.Point(15, 9);
             this.kryptonLabel6.Name = "kryptonLabel6";
             this.kryptonLabel6.Size = new System.Drawing.Size(39, 20);
             this.kryptonLabel6.TabIndex = 157;
@@ -258,7 +326,7 @@
             // 
             this.chkTestMode.Checked = true;
             this.chkTestMode.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.chkTestMode.Location = new System.Drawing.Point(435, 9);
+            this.chkTestMode.Location = new System.Drawing.Point(366, 7);
             this.chkTestMode.Name = "chkTestMode";
             this.chkTestMode.Size = new System.Drawing.Size(75, 20);
             this.chkTestMode.TabIndex = 1;
@@ -266,7 +334,7 @@
             // 
             // txtTableName
             // 
-            this.txtTableName.Location = new System.Drawing.Point(97, 3);
+            this.txtTableName.Location = new System.Drawing.Point(71, 3);
             this.txtTableName.Multiline = true;
             this.txtTableName.Name = "txtTableName";
             this.txtTableName.Size = new System.Drawing.Size(184, 26);
@@ -274,7 +342,7 @@
             // 
             // btnQuery
             // 
-            this.btnQuery.Location = new System.Drawing.Point(307, 3);
+            this.btnQuery.Location = new System.Drawing.Point(261, 1);
             this.btnQuery.Name = "btnQuery";
             this.btnQuery.Size = new System.Drawing.Size(99, 29);
             this.btnQuery.TabIndex = 0;
@@ -310,6 +378,16 @@
             this.richTextBoxLog.TabIndex = 0;
             this.richTextBoxLog.Text = "";
             // 
+            // kryptonCheckBox1
+            // 
+            this.kryptonCheckBox1.Checked = true;
+            this.kryptonCheckBox1.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.kryptonCheckBox1.Location = new System.Drawing.Point(447, 7);
+            this.kryptonCheckBox1.Name = "kryptonCheckBox1";
+            this.kryptonCheckBox1.Size = new System.Drawing.Size(75, 20);
+            this.kryptonCheckBox1.TabIndex = 158;
+            this.kryptonCheckBox1.Values.Text = "安全模式";
+            // 
             // UCDataCorrectionCenter
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
@@ -340,6 +418,13 @@
             this.kryptonGroup1.Panel.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.kryptonGroup1)).EndInit();
             this.kryptonGroup1.ResumeLayout(false);
+            this.splitContainer1.Panel1.ResumeLayout(false);
+            this.splitContainer1.Panel2.ResumeLayout(false);
+            this.splitContainer1.Panel2.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).EndInit();
+            this.splitContainer1.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).EndInit();
+            this.contextMenuStrip1.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.kryptonHeaderGrouptop.Panel)).EndInit();
             this.kryptonHeaderGrouptop.Panel.ResumeLayout(false);
             this.kryptonHeaderGrouptop.Panel.PerformLayout();
@@ -370,5 +455,11 @@
         private System.Windows.Forms.TreeView treeView1;
         private Krypton.Toolkit.KryptonLabel kryptonLabel6;
         private Krypton.Toolkit.KryptonTreeView treeViewTableList;
+        private System.Windows.Forms.SplitContainer splitContainer1;
+        private System.Windows.Forms.DataGridView dataGridView1;
+        private System.Windows.Forms.ContextMenuStrip contextMenuStrip1;
+        private System.Windows.Forms.ToolStripMenuItem 执行选中数据ToolStripMenuItem;
+        private System.Windows.Forms.TextBox txtSearchKey;
+        private Krypton.Toolkit.KryptonCheckBox kryptonCheckBox1;
     }
 }

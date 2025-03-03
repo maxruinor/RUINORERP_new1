@@ -79,14 +79,14 @@ namespace RUINORERP.Model
                         }
         }
 
-        private long _Paytype_ID;
+        private long? _Paytype_ID;
         /// <summary>
         /// 付款类型
         /// </summary>
         [AdvQueryAttribute(ColName = "Paytype_ID",ColDesc = "付款类型")] 
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Paytype_ID" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "付款类型" )]
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Paytype_ID" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "付款类型" )]
         [FKRelationAttribute("tb_PaymentMethod","Paytype_ID")]
-        public long Paytype_ID
+        public long? Paytype_ID
         { 
             get{return _Paytype_ID;}
             set{

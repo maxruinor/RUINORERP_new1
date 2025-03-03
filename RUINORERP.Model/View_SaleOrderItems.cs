@@ -385,6 +385,43 @@ namespace RUINORERP.Model
                 SetProperty(ref _Discount, value);
                 }
         }
+        private decimal? _Cost;
+
+
+        /// <summary>
+        /// 成本
+        /// </summary>
+
+        [AdvQueryAttribute(ColName = "Cost", ColDesc = "成本")]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType = "Decimal", ColumnName = "Cost", IsNullable = true, ColumnDescription = "成本")]
+        [Display(Name = "成本")]
+        public decimal? Cost
+        {
+            get { return _Cost; }
+            set
+            {
+                SetProperty(ref _Cost, value);
+            }
+        }
+
+        private decimal? _SubtotalCostAmount;
+
+
+        /// <summary>
+        /// 成本小计
+        /// </summary>
+
+        [AdvQueryAttribute(ColName = "SubtotalCostAmount", ColDesc = "成本小计")]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType = "Decimal", ColumnName = "SubtotalCostAmount", IsNullable = true, ColumnDescription = "成本小计")]
+        [Display(Name = "成本小计")]
+        public decimal? SubtotalCostAmount
+        {
+            get { return _SubtotalCostAmount; }
+            set
+            {
+                SetProperty(ref _SubtotalCostAmount, value);
+            }
+        }
 
         private decimal? _TransactionPrice;
         

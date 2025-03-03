@@ -28,6 +28,10 @@ using RUINORERP.Global.Model;
 
 namespace RUINORERP.UI.MRP.BOM
 {
+
+    /// <summary>
+    /// 一个物料所存在的配方全查出来。容易分析 查找替代料
+    /// </summary>
     [MenuAttrAssemblyInfo("产品配方追溯", ModuleMenuDefine.模块定义.生产管理, ModuleMenuDefine.生产管理.MRP基本资料, BizType.BOM物料清单)]
     public partial class UCBillOfMaterialsTracker : BaseForm.BaseListGeneric<tb_BOM_SDetail>
     {

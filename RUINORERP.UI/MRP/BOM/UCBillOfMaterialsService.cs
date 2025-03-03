@@ -258,7 +258,7 @@ namespace RUINORERP.UI.MRP.BOM
             //图片特殊处理
             if (newSumDataGridView产品.Columns[e.ColumnIndex].Name == "Images")
             {
-                if (e.Value != null)
+                if (e.Value != null && e.Value.GetType().Name=="Byte[]")
                 {
                     System.IO.MemoryStream buf = new System.IO.MemoryStream((byte[])e.Value);
                     Image image = Image.FromStream(buf, true);

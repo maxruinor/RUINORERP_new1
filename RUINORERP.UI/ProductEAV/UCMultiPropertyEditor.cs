@@ -38,6 +38,7 @@ using ObjectsComparer;
 using System.Collections;
 using Force.DeepCloner;
 using AutoUpdateTools;
+
 namespace RUINORERP.UI.ProductEAV
 {
 
@@ -1755,7 +1756,7 @@ namespace RUINORERP.UI.ProductEAV
             {
                 if (dataGridViewProd.CurrentRow != null)
                 {
-                    EditEntity = null;
+                    //EditEntity = null;
                     oldOjb = null;
                     if (dataGridViewProd.CurrentRow.DataBoundItem is tb_Prod Prod)
                     {
@@ -1780,7 +1781,15 @@ namespace RUINORERP.UI.ProductEAV
                                     }
                                 }
                             }
+                        }
+                        else
+                        {
+                            //新增式 生成的组合有错误时。这里可以手动删除指定的行，其实就是树的节点
 
+                            if (treeGridView1.CurrentNode != null && treeGridView1.CurrentNode.Tag is tb_ProdDetail)
+                            {
+                                treeGridView1.Nodes.Remove(treeGridView1.CurrentNode);
+                            }
                         }
                     }
                 }

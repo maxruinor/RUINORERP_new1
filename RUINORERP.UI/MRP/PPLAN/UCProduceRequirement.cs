@@ -42,6 +42,7 @@ using FastReport.DevComponents.DotNetBar;
 using NPOI.Util;
 using NPOI.POIFS.Properties;
 using Netron.GraphLib;
+using Org.BouncyCastle.Utilities;
 
 namespace RUINORERP.UI.MRP.MP
 {
@@ -1292,7 +1293,6 @@ protected async override Task<ApprovalEntity> ReReview()
                 List<tb_ProductionDemandTargetDetail> details = mapper.Map<List<tb_ProductionDemandTargetDetail>>(SourceBill.tb_ProductionPlanDetails);
                 entity.AnalysisDate = System.DateTime.Now;
 
-
                 List<string> tipsMsg = new List<string>();
                 for (global::System.Int32 i = 0; i < details.Count; i++)
                 {
@@ -1354,9 +1354,7 @@ protected async override Task<ApprovalEntity> ReReview()
                     {
                         details[i].BOM_ID = planDetail.tb_proddetail.BOM_ID.Value;
                     }
-
                     rslist.Add(details[i]);
-
                     StringBuilder msg = new StringBuilder();
                     foreach (var item in tipsMsg)
                     {
@@ -1422,6 +1420,36 @@ protected async override Task<ApprovalEntity> ReReview()
             //库存不足不能修改。只是显示，
             kryptonTreeGridViewStockLess.ReadOnly = true;
 
+
+            if (sgdTarget.BindingSourceLines.DataSource is List<tb_ProductionDemandTargetDetail> _targetDetails)
+            {
+                _targetDetails = _targetDetails.Where(c => c.ProdDetailID > 0).ToList();
+
+                //目标中的产品  与 选择的配方的所属
+                List<long> longids = new List<long>();
+                foreach (var item in _targetDetails)
+                {
+                    if (!longids.Contains(item.ProdDetailID))
+                    {
+                        longids.Add(item.ProdDetailID);
+                    }
+                }
+
+                List<tb_BOM_S> boms = MainForm.Instance.AppContext.Db.Queryable<tb_BOM_S>()
+                       .Includes(c => c.tb_proddetail, d => d.tb_prod)
+                          .Where(c => longids.ToArray().Contains(c.ProdDetailID)).ToList();
+
+                foreach (var item in _targetDetails)
+                {
+                    if (!boms.Any(c => c.ProdDetailID == item.ProdDetailID))
+                    {
+                        //当前目标产品的配方选择不正确。
+                        MessageBox.Show($"当前目标产品的配方选择不正确。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    }
+                }
+            }
+
+
             AnalysisTargetItems();
         }
 
@@ -1436,8 +1464,11 @@ protected async override Task<ApprovalEntity> ReReview()
             //算出库存量，如果有BOM则是自制品，如果没有。则是外购
             if (sgdTarget.BindingSourceLines.DataSource is List<tb_ProductionDemandTargetDetail> _targetDetails)
             {
-
                 _targetDetails = _targetDetails.Where(c => c.ProdDetailID > 0).ToList();
+
+                //目标中的产品  与 选择的配方的所属
+
+
                 tb_ProductionDemandController<tb_ProductionDemand> ctr = Startup.GetFromFac<tb_ProductionDemandController<tb_ProductionDemand>>();
 
                 //先取最外层的数据，下面通过 GetBOMNextNodeInventoryInfo 循环取所有子集合

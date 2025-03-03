@@ -60,8 +60,10 @@ namespace RUINORERP.Business.CommService
                     break;
             }
 
-
-
+            if (inv.Inv_Cost < 0)
+            {
+                throw new Exception("库存成本不能小于0");
+            }
         }
 
         /// <summary>
@@ -90,11 +92,11 @@ namespace RUINORERP.Business.CommService
                     if ((inv.Quantity - currentQty) == 0)
                     {
                         //如果没有引用入库明细传入成本。则要手工指定。如果为零则是没有手工指定。将默认保留原始成本
-                        if (currentCostPrice>0)
+                        if (currentCostPrice > 0)
                         {
                             inv.Inv_Cost = currentCostPrice;
                         }
-                        
+
                         return;
                     }
                     inv.CostMovingWA = (inv.CostMovingWA * inv.Quantity - currentCostPrice * currentQty) / (inv.Quantity - currentQty);

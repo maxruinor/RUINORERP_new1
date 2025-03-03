@@ -441,7 +441,6 @@ namespace RUINORERP.Business
             catch (Exception ex)
             {
                 _unitOfWorkManage.RollbackTran();
-
                 rs.Succeeded = false;
                 rs.ErrorMsg = ex.Message;
                 return rs;

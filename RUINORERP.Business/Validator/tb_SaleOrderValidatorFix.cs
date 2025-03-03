@@ -13,6 +13,7 @@ using RUINORERP.Model;
 using FluentValidation;
 using Castle.Core.Resource;
 using System.Linq;
+using RUINORERP.Global;
 
 //https://github.com/FluentValidation/FluentValidation 使用实例
 //https://blog.csdn.net/WuLex/article/details/127985756 中文教程
@@ -33,7 +34,7 @@ namespace RUINORERP.Business
             RuleFor(x => x.TotalQty).GreaterThan(0).WithMessage("总数量：要大于零。");
             RuleFor(x => x.PlatformOrderNo).NotEmpty().When(c => c.IsFromPlatform).WithMessage("平台单时，平台订单号不能为空。");
             RuleFor(x => x.PayStatus).GreaterThan(0).WithMessage("付款状态:不能为空。");
-
+            RuleFor(x => x.Paytype_ID).GreaterThan(0).When(c => c.PayStatus != (int)PayStatus.未付款).WithMessage("付款类型:有付款的情况下，付款类型不能为空。");
         }
     }
 }

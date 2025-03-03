@@ -652,8 +652,7 @@ namespace RUINORERP.UI.PSI.SAL
                 EditEntity.TotalCost = details.Sum(c => c.Cost * c.Quantity);
                 EditEntity.TotalAmount = details.Sum(c => c.TransactionPrice * c.Quantity);
                 EditEntity.TotalTaxAmount = details.Sum(c => c.SubtotalTaxAmount);
-                EditEntity.TotalUntaxedAmount = details.Sum(c => c.SubtotalUntaxedAmount);
-                EditEntity.TotalUntaxedAmount = EditEntity.TotalUntaxedAmount + EditEntity.ShipCost;
+                EditEntity.TotalUntaxedAmount = details.Sum(c => c.SubtotalUntaxedAmount)+ EditEntity.ShipCost;
                 EditEntity.CollectedMoney = EditEntity.TotalUntaxedAmount;
                 EditEntity.TotalAmount = EditEntity.TotalAmount + EditEntity.ShipCost;
                 //如果没有有效的明细。直接提示

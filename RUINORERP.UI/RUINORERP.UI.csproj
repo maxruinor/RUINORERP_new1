@@ -177,9 +177,17 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\dll\Krypton.Ribbon.dll</HintPath>
     </Reference>
+    <Reference Include="Krypton.Toolkit, Version=80.25.2.53, Culture=neutral, PublicKeyToken=a87e673e9ecb6e8e, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\dll\Krypton.Toolkit.dll</HintPath>
+    </Reference>
     <Reference Include="Krypton.Toolkit.Suite.Extended.Outlook.Grid, Version=80.24.12.352, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\dll\Krypton.Toolkit.Suite.Extended.Outlook.Grid.dll</HintPath>
+    </Reference>
+    <Reference Include="Krypton.Toolkit.Suite.Extended.TreeGridView, Version=80.25.2.55, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\dll\Krypton.Toolkit.Suite.Extended.TreeGridView.dll</HintPath>
     </Reference>
     <Reference Include="Krypton.Workspace, Version=80.24.12.352, Culture=neutral, PublicKeyToken=a87e673e9ecb6e8e, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -1724,6 +1732,7 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
+    <Compile Include="PSI\INV\CostFixHelper.cs" />
     <Compile Include="PSI\INV\UCInventoryQuery.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -2124,6 +2133,12 @@
     </Compile>
     <Compile Include="SysConfig\UCButtonInfoList.designer.cs">
       <DependentUpon>UCButtonInfoList.cs</DependentUpon>
+    </Compile>
+    <Compile Include="SysConfig\UCDataFixForCost.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="SysConfig\UCDataFixForCost.Designer.cs">
+      <DependentUpon>UCDataFixForCost.cs</DependentUpon>
     </Compile>
     <Compile Include="SysConfig\UCDataShare.cs">
       <SubType>UserControl</SubType>
@@ -3359,6 +3374,9 @@
     <EmbeddedResource Include="SysConfig\UCButtonInfoList.resx">
       <DependentUpon>UCButtonInfoList.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="SysConfig\UCDataFixForCost.resx">
+      <DependentUpon>UCDataFixForCost.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="SysConfig\UCDataShare.resx">
       <DependentUpon>UCDataShare.cs</DependentUpon>
     </EmbeddedResource>
@@ -3674,14 +3692,6 @@
     <ProjectReference Include="..\HLH.Lib\HLH.Lib.csproj">
       <Project>{d9c7b9fb-8234-4c54-8a7a-4172878e3586}</Project>
       <Name>HLH.Lib</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Krypton Components\Krypton.Toolkit\Krypton.Toolkit 2022.csproj">
-      <Project>{626b796f-f3a0-40b7-8fc2-38804726c1f5}</Project>
-      <Name>Krypton.Toolkit 2022</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Krypton Toolkit\Krypton.Toolkit.Suite.Extended.TreeGridView\Krypton.Toolkit.Suite.Extended.TreeGridView 2022.csproj">
-      <Project>{fa46f8d6-e5f3-4525-ba4b-a0c063bf8d95}</Project>
-      <Name>Krypton.Toolkit.Suite.Extended.TreeGridView 2022</Name>
     </ProjectReference>
     <ProjectReference Include="..\LightTalkChatBox\LightTalkChatBox\LightTalkChatBox.csproj">
       <Project>{2b53b023-f715-4ff0-ac73-33321f4de09c}</Project>

@@ -265,7 +265,24 @@ namespace RUINORERP.UI.CRM
 
         public override async Task<List<tb_CRM_Customer>> Save()
         {
-            List<tb_CRM_Customer> list = await base.Save();
+            List<tb_CRM_Customer> list = new List<tb_CRM_Customer>();
+            try
+            {
+                list = await base.Save();
+            }
+            catch (Exception ex)
+            {
+                if (ex.Message.Contains("AK_KEY_CUSTOMERNAME_TB_CRM_C"))
+                {
+                    MessageBox.Show("客户名称不能重复！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                }
+                else
+                {
+                    throw;
+                }
+
+            }
+
             if (list.Count > 0)
             {
                 foreach (var item in list)

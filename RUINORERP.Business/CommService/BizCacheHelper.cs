@@ -166,6 +166,10 @@ namespace RUINORERP.Business.CommService
 
                     }
                 }
+                if (entity==null)
+                {
+                    return default(T);
+                }
                 return (T)entity;
             }
             catch (Exception ex)

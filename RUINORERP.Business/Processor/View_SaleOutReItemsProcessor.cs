@@ -61,6 +61,7 @@ namespace RUINORERP.Business.Processor
             queryFilter.SetQueryField<View_SaleOutReItems>(c => c.Location_ID,  typeof(tb_Location));
             queryFilter.SetQueryField<View_SaleOutReItems>(c => c.ProdDetailID,  typeof(View_ProdDetail));
             queryFilter.SetQueryField<View_SaleOutReItems>(c => c.property);
+            queryFilter.SetQueryField<View_SaleOutReItems>(c => c.ProductNo);
             queryFilter.SetQueryField<View_SaleOutReItems>(c => c.CNName);
             queryFilter.SetQueryField<View_SaleOutReItems>(c => c.SKU);
             queryFilter.SetQueryField<View_SaleOutReItems>(c => c.Model);

@@ -51,16 +51,19 @@
             toolStripButton2 = new System.Windows.Forms.ToolStripButton();
             menuStrip2 = new System.Windows.Forms.MenuStrip();
             系统注册ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            statusStrip1 = new System.Windows.Forms.StatusStrip();
+            tslblStatus = new System.Windows.Forms.ToolStripStatusLabel();
             menuStrip1.SuspendLayout();
             toolStrip1.SuspendLayout();
             menuStrip2.SuspendLayout();
+            statusStrip1.SuspendLayout();
             SuspendLayout();
             // 
             // splitter1
             // 
             splitter1.BackColor = System.Drawing.Color.DarkGray;
             splitter1.Dock = System.Windows.Forms.DockStyle.Bottom;
-            splitter1.Location = new System.Drawing.Point(0, 349);
+            splitter1.Location = new System.Drawing.Point(0, 322);
             splitter1.Name = "splitter1";
             splitter1.Size = new System.Drawing.Size(800, 5);
             splitter1.TabIndex = 0;
@@ -69,9 +72,9 @@
             // richTextBox1
             // 
             richTextBox1.Dock = System.Windows.Forms.DockStyle.Bottom;
-            richTextBox1.Location = new System.Drawing.Point(0, 354);
+            richTextBox1.Location = new System.Drawing.Point(0, 327);
             richTextBox1.Name = "richTextBox1";
-            richTextBox1.Size = new System.Drawing.Size(800, 96);
+            richTextBox1.Size = new System.Drawing.Size(800, 101);
             richTextBox1.TabIndex = 1;
             richTextBox1.Text = "";
             // 
@@ -240,6 +243,21 @@
             系统注册ToolStripMenuItem.Text = "系统注册";
             系统注册ToolStripMenuItem.Click += 系统注册ToolStripMenuItem_Click;
             // 
+            // statusStrip1
+            // 
+            statusStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] { tslblStatus });
+            statusStrip1.Location = new System.Drawing.Point(0, 428);
+            statusStrip1.Name = "statusStrip1";
+            statusStrip1.Size = new System.Drawing.Size(800, 22);
+            statusStrip1.TabIndex = 9;
+            statusStrip1.Text = "statusStrip1";
+            // 
+            // tslblStatus
+            // 
+            tslblStatus.Name = "tslblStatus";
+            tslblStatus.Size = new System.Drawing.Size(0, 17);
+            tslblStatus.DoubleClick += tslblStatus_DoubleClick;
+            // 
             // frmMain
             // 
             AutoScaleDimensions = new System.Drawing.SizeF(7F, 17F);
@@ -250,6 +268,7 @@
             Controls.Add(richTextBox1);
             Controls.Add(menuStrip1);
             Controls.Add(menuStrip2);
+            Controls.Add(statusStrip1);
             Icon = (System.Drawing.Icon)resources.GetObject("$this.Icon");
             IsMdiContainer = true;
             MainMenuStrip = menuStrip2;
@@ -263,6 +282,8 @@
             toolStrip1.PerformLayout();
             menuStrip2.ResumeLayout(false);
             menuStrip2.PerformLayout();
+            statusStrip1.ResumeLayout(false);
+            statusStrip1.PerformLayout();
             ResumeLayout(false);
             PerformLayout();
         }
@@ -291,7 +312,8 @@
         private System.Windows.Forms.ToolStripMenuItem 参数配置ToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem 系统注册ToolStripMenuItem;
         private System.Windows.Forms.MenuStrip menuStrip2;
-        
+        private System.Windows.Forms.StatusStrip statusStrip1;
+        private System.Windows.Forms.ToolStripStatusLabel tslblStatus;
     }
 }
 

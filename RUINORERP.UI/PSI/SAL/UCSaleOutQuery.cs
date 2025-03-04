@@ -87,6 +87,7 @@ namespace RUINORERP.UI.PSI.SAL
             base.ChildSummaryCols.Add(c => c.CommissionAmount);
             base.ChildSummaryCols.Add(c => c.SubtotalTaxAmount);
             base.ChildSummaryCols.Add(c => c.SubtotalCostAmount);
+            base.ChildSummaryCols.Add(c => c.SubtotalTransAmount);
             base.ChildSummaryCols.Add(c => c.TotalReturnedQty);
             base.BuildSummaryCols();
         }

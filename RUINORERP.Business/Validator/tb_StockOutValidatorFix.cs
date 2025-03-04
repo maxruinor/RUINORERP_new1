@@ -29,6 +29,7 @@ namespace RUINORERP.Business
         public override void Initialize()
         {
             RuleFor(x => x.Type_ID).Must(CheckForeignKeyValue).WithMessage("出库类型:下拉选择值不正确。");
+            RuleFor(tb_StockOut => tb_StockOut.TotalQty).GreaterThan(0).WithMessage("总数量:必须大于零。");
         }
 
     }

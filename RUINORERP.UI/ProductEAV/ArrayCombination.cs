@@ -98,6 +98,11 @@ namespace RUINORERP.UI.ProductEAV
             return rs;
         }
 
+        /// <summary>
+        /// 排列组合
+        /// </summary>
+        /// <param name="kvps"></param>
+        /// <returns></returns>
         public static List<string> Combination4Table(List<KeyValuePair<long, string[]>> kvps)
         {
             List<string[]> arrays = new List<string[]>();

@@ -96,7 +96,7 @@ namespace RUINORERP.UI.CRM
                 MessageBox.Show("只有【新建】的线索,并且没有转换为目标客户时才能删除。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 return Task.FromResult(false);
             }
-           return base.Delete();
+            return base.Delete();
         }
         private async void 转为目标客户ToolStripMenuItem_Click(object sender, EventArgs e)
         {
@@ -124,28 +124,44 @@ namespace RUINORERP.UI.CRM
                         if (frmaddg.ShowDialog() == DialogResult.OK)
                         {
                             BaseController<tb_CRM_Customer> ctrContactInfo = Startup.GetFromFacByName<BaseController<tb_CRM_Customer>>(typeof(tb_CRM_Customer).Name + "Controller");
-                            ReturnResults<tb_CRM_Customer> result = await ctrContactInfo.BaseSaveOrUpdate(EntityInfo);
-                            if (result.Succeeded)
+                            try
                             {
+                                ReturnResults<tb_CRM_Customer> result = await ctrContactInfo.BaseSaveOrUpdate(EntityInfo);
                                 if (result.Succeeded)
                                 {
-                                    //根据要缓存的列表集合来判断是否需要上传到服务器。让服务器分发到其他客户端
-                                    KeyValuePair<string, string> pair = new KeyValuePair<string, string>();
-                                    //只处理需要缓存的表
-                                    if (BizCacheHelper.Manager.NewTableList.TryGetValue(typeof(tb_CRM_Customer).Name, out pair))
+                                    if (result.Succeeded)
                                     {
-                                        //如果有更新变动就上传到服务器再分发到所有客户端
-                                        OriginalData odforCache = ActionForClient.更新缓存<tb_CRM_Customer>(result.ReturnObject);
-                                        byte[] buffer = CryptoProtocol.EncryptClientPackToServer(odforCache);
-                                        MainForm.Instance.ecs.client.Send(buffer);
+                                        //根据要缓存的列表集合来判断是否需要上传到服务器。让服务器分发到其他客户端
+                                        KeyValuePair<string, string> pair = new KeyValuePair<string, string>();
+                                        //只处理需要缓存的表
+                                        if (BizCacheHelper.Manager.NewTableList.TryGetValue(typeof(tb_CRM_Customer).Name, out pair))
+                                        {
+                                            //如果有更新变动就上传到服务器再分发到所有客户端
+                                            OriginalData odforCache = ActionForClient.更新缓存<tb_CRM_Customer>(result.ReturnObject);
+                                            byte[] buffer = CryptoProtocol.EncryptClientPackToServer(odforCache);
+                                            MainForm.Instance.ecs.client.Send(buffer);
+                                        }
                                     }
+                                    MainForm.Instance.ShowStatusText("添加成功!");
                                 }
-                                MainForm.Instance.ShowStatusText("添加成功!");
+                                else
+                                {
+                                    MainForm.Instance.ShowStatusText("添加失败!");
+                                }
                             }
-                            else
+                            catch (Exception ex)
                             {
-                                MainForm.Instance.ShowStatusText("添加失败!");
+                                if (ex.Message.Contains("AK_KEY_CUSTOMERNAME_TB_CRM_C"))
+                                {
+                                    MessageBox.Show("客户名称不能重复！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                                }
+                                else
+                                {
+                                    throw;
+                                }
+
                             }
+
                         }
                     }
                 }

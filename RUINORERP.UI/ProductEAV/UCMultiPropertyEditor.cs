@@ -38,6 +38,7 @@ using ObjectsComparer;
 using System.Collections;
 using Force.DeepCloner;
 using AutoUpdateTools;
+using RUINORERP.Business.CommService;
 
 namespace RUINORERP.UI.ProductEAV
 {
@@ -110,7 +111,6 @@ namespace RUINORERP.UI.ProductEAV
         View_ProdDetailController<View_ProdDetail> dc = Startup.GetFromFac<View_ProdDetailController<View_ProdDetail>>();
         List<View_ProdDetail> list = new List<View_ProdDetail>();
 
-
         private void UCMultiPropertyEditor_Load(object sender, EventArgs e)
         {
             ImgCol.DefaultCellStyle.NullValue = null;
@@ -166,8 +166,6 @@ namespace RUINORERP.UI.ProductEAV
         }
 
 
-
-
         //当前编辑的品
         tb_Prod EditEntity;
 
@@ -189,14 +187,6 @@ namespace RUINORERP.UI.ProductEAV
         List<tb_ProdPropertyValue> prodpropValueList = new List<tb_ProdPropertyValue>();
         tb_ProdPropertyController<tb_ProdProperty> mcProperty = Startup.GetFromFac<tb_ProdPropertyController<tb_ProdProperty>>();
         tb_ProdPropertyValueController<tb_ProdPropertyValue> mcPropertyValue = Startup.GetFromFac<tb_ProdPropertyValueController<tb_ProdPropertyValue>>();
-
-
-        /// <summary>
-        /// 属性原始组合队列，以文字显示。方便查看而已。后面已经改为了ID
-        /// </summary>
-        // public List<KeyValuePair<long, string[]>> attrGoupsByName { get => _attrGoups; set => _attrGoups = value; }
-
-        // private List<KeyValuePair<long, string[]>> _attrGoups = new List<KeyValuePair<long, string[]>>();
 
 
         private void btnAddProperty_Click(object sender, EventArgs e)
@@ -235,41 +225,6 @@ namespace RUINORERP.UI.ProductEAV
             //CreateSKUList();
         }
 
-
-        /*
-                /// <summary>
-                /// 将listview的UI值转为属性组
-                /// </summary>
-                /// <param name="lv"></param>
-                /// <param name="getId">取ID</param>
-                /// <param name="getValue">取名称值</param>
-                /// <returns></returns>
-                private List<KeyValuePair<long, string[]>> GetAttrGoups(TileListView lv, Func<TileGroup, string> getId, Func<CheckBox, string> getValue)
-                {
-                    List<KeyValuePair<long, string[]>> attrGoups = new List<KeyValuePair<long, string[]>>();
-                    foreach (TileGroup g in lv.Groups)
-                    {
-                        tb_ProdProperty pp = g.BusinessData as tb_ProdProperty;
-                        long key = getId(g).ToLong();
-                        string values = string.Empty;
-                        foreach (CheckBox lvitem in g.Items)
-                        {
-                            if (lvitem.Checked)
-                            {
-                                values += getValue(lvitem) + ",";
-                            }
-                        }
-                        values = values.TrimEnd(',');
-                        if (values.Length > 0)
-                        {
-                            KeyValuePair<long, string[]> kvp = new KeyValuePair<long, string[]>(key, values.Split(','));
-                            attrGoups.Add(kvp);
-                        }
-                    }
-                    return attrGoups;
-                }
-        */
-
         /// <summary>
         /// 将listview的UI值转为属性组 属性ID+值的ID|名称
         /// </summary>
@@ -303,85 +258,7 @@ namespace RUINORERP.UI.ProductEAV
             return attrGoups;
         }
 
-        /*
-        private void CreateSKUList()
-        {
-            List<Eav_ProdDetails> propGroups = new List<Eav_ProdDetails>();
-            if (bindingSourceSKU明细.DataSource is List<Eav_ProdDetails>)
-            {
-                propGroups = bindingSourceSKU明细.DataSource as List<Eav_ProdDetails>;
-            }
 
-            //如果存在则更新，
-            // List<string> rs = ArrayCombination.Combination4Table(para);
-            //目前在数据库端控制属性值表中的名称不能重复。再通过对应的值名找对应的属性值ID和属性ID
-            List<string> newMix = new List<string>(); //  ArrayCombination.Combination4Table(attrGoupsByName);
-            ////Intersect 交集，Except 差集，Union 并集 Distinct去重 如果是值类型可以直接用，如果是引用类型则要重写 
-            //参考凯旋游戏中的 差集合等处理再加上排序
-            //按组合先后排序？
-            List<string> oldMix = new List<string>();
-            foreach (Eav_ProdDetails epd in propGroups)
-            {
-                oldMix.Add(epd.GroupName);
-            }
-
-            var Item交集 = newMix.Intersect(oldMix);// 交集
-            //如果交集没有，则认为新的，与旧的完全不一样。把旧的全删除
-            if (Item交集.Count() == 0)
-            {
-                foreach (var old in oldMix)
-                {
-                    //更新删除
-                    Eav_ProdDetails ep = propGroups.Cast<Eav_ProdDetails>().FirstOrDefault(w => w.GroupName == old.Trim());
-                    bindingSourceSKU明细.Remove(ep);
-                    //将删除的sku行 暂时加入一个临时列表中
-                    // removeSkuList.Add(ep);
-                }
-                //添加新的
-                foreach (var newItem in newMix)
-                {
-                    Eav_ProdDetails ppg = new Eav_ProdDetails();
-                    ppg.GroupName = newItem;
-                    ppg.SKU = BizCodeGenerator.Instance.GetBaseInfoNo(BaseInfoType.SKU_No);
-                    if (MainForm.Instance.AppContext.SysConfig.UseBarCode)
-                    {
-                        //补码
-                        ppg.BarCode = BizCodeGenerator.Instance.GetBarCode(ppg.SKU, EditEntity.CNName.Substring(0).ToCharArray()[0]);
-                    }
-                    bindingSourceSKU明细.Add(ppg);
-                }
-            }
-            else
-            {
-                //如果组合少了，则删除？
-                if (newMix.Count < oldMix.Count)
-                {
-                    var Item差集 = oldMix.Except(newMix);
-                    foreach (var item in Item差集)
-                    {
-                        //更新删除
-                        Eav_ProdDetails ep = propGroups.Cast<Eav_ProdDetails>().FirstOrDefault(w => w.GroupName == item.Trim());
-                        bindingSourceSKU明细.Remove(ep);
-                        //将删除的sku行 暂时加入一个临时列表中
-                        // removeSkuList.Add(ep);
-                    }
-                }
-                else
-                {
-                    var Item差集 = newMix.Except(oldMix);
-                    foreach (var item in Item差集)
-                    {
-                        Eav_ProdDetails ppg = new Eav_ProdDetails();
-                        ppg.GroupName = item;
-                        ppg.SKU = BizCodeGenerator.Instance.GetBaseInfoNo(BaseInfoType.SKU_No);
-                        bindingSourceSKU明细.Add(ppg);
-
-                    }
-                }
-
-            }
-        }
-        */
 
         /// <summary>
         /// 单属性可以变为多属性，反过来不可以。
@@ -413,9 +290,6 @@ namespace RUINORERP.UI.ProductEAV
                     break;
             }
         }
-
-
-
 
 
         /// <summary>    
@@ -548,33 +422,41 @@ namespace RUINORERP.UI.ProductEAV
             //List<KeyValuePair<long, string[]>> attrGoupsByID = GetAttrGoups(listView1, g => g.GroupID, lvitem => lvitem.Name);
             List<KeyValuePair<long, string[]>> attrGoupsByID = GetAttrGoupsByIDName(listView1, g => g.GroupID, lvitem => lvitem.Text);
 
-            List<string> MixByListView = ArrayCombination.Combination4Table(attrGoupsByID);
+            List<string> NewMixByListView = ArrayCombination.Combination4Table(attrGoupsByID);
 #if DEBUG
             //attrGoupsByName = GetAttrGoups(listView1, g => g.GroupID, lvitem => lvitem.Text);
             //List<string> newMixName = ArrayCombination.Combination4Table(attrGoupsByName);
 #endif
 
             //要比较的集合数据
-            List<string> MixByTreeGrid = new List<string>();
+            List<string> OldMixByTreeGrid = new List<string>();
 
-            #region 获取最新的组合关系。并且保存为一个新的数组与现有的组合关系进行比较 取差集
+            #region 从下面TreeGrid中获取的组合关系。新旧进行比较 取差集 注意排序问题 不然比较结果有问题
+
             List<tb_Prod_Attr_Relation> attr_Relations = GetProdDetailsFromTreeGrid();
+
             var existDetails = attr_Relations.GroupBy(c => c.ProdDetailID).ToList();
 
+            //看用户选择的是单属性还是多属性
             ProductAttributeType pt = (ProductAttributeType)(int.Parse(cmbPropertyType.SelectedValue.ToString()));
-            if (EditEntity.tb_Prod_Attr_Relations.Count == 1)
+            if (EditEntity.tb_Prod_Attr_Relations.Count == 1 && pt == ProductAttributeType.可配置多属性)
             {
-                //如果为单属性时，则直接添加为空
+                //如果开始是由单属性转为多属性时，第一行默认给空 则直接添加为空
                 if (EditEntity.tb_Prod_Attr_Relations[0].Property_ID == null)
                 {
-                    MixByTreeGrid.Add("");
+                    OldMixByTreeGrid.Add("");
                 }
                 else
                 {
                     foreach (var item in existDetails)
                     {
-                        var array = attr_Relations.Where(c => c.ProdDetailID == item.Key).ToList().Select(c => c.PropertyValueID + "|" + c.tb_prodpropertyvalue.PropertyValueName).ToArray();
-                        MixByTreeGrid.Add(string.Join(",", array));
+                        var array = attr_Relations
+                            .Where(c => c.ProdDetailID == item.Key)
+                             .OrderBy(c => c.Property_ID) // 按属性 ID 排序
+                            .ToList()
+                            .Select(c => c.PropertyValueID + "|" + c.tb_prodpropertyvalue.PropertyValueName)
+                            .ToArray();
+                        OldMixByTreeGrid.Add(string.Join(",", array));
                     }
                 }
 
@@ -583,14 +465,17 @@ namespace RUINORERP.UI.ProductEAV
             {
                 foreach (var item in existDetails)
                 {
-                    var array = attr_Relations.Where(c => c.ProdDetailID == item.Key).ToList().Select(c => c.PropertyValueID + "|" + c.tb_prodpropertyvalue.PropertyValueName).ToArray();
-                    MixByTreeGrid.Add(string.Join(",", array));
+                    var array = attr_Relations
+                        .Where(c => c.ProdDetailID == item.Key)
+                        .OrderBy(c => c.Property_ID) // 按属性 ID 排序
+                        .ToList()
+                        .Select(c => c.PropertyValueID + "|" + c.tb_prodpropertyvalue.PropertyValueName)
+                        .ToArray();
+                    OldMixByTreeGrid.Add(string.Join(",", array));
                 }
             }
 
-
             #endregion
-
             if (cb.Tag is tb_ProdPropertyValue ppv)
             {
                 tb_ProdProperty tpp = ppv.tb_prodproperty;
@@ -600,11 +485,11 @@ namespace RUINORERP.UI.ProductEAV
                 {
                     //增加时以listview为新数据源，gridview为旧数据源
                     //Intersect 交集，Except 差集，Union 并集 Distinct去重
-                    var addItem差集 = MixByListView.Except(MixByTreeGrid).ToList();
+                    var addItem差集 = NewMixByListView.Except(OldMixByTreeGrid).ToList();
                     //先判断差值的唯度。就是属性的个数是否一样
-                    if (MixByTreeGrid.Count > 0 && MixByListView.Count > 0)
+                    if (OldMixByTreeGrid.Count > 0 && NewMixByListView.Count > 0)
                     {
-                        if (MixByTreeGrid[0].Split(',').Count() != MixByListView[0].Split(',').Count())
+                        if (OldMixByTreeGrid[0].Split(',').Count() != NewMixByListView[0].Split(',').Count())
                         {
                             #region 全新的属性
                             //实际是按明细来分组。每个组中都要包含所有属性的其中一个值
@@ -626,7 +511,6 @@ namespace RUINORERP.UI.ProductEAV
                                     if (nodeDetail != null)
                                     {
                                         //添加
-
                                         tb_Prod_Attr_Relation par = new tb_Prod_Attr_Relation();
                                         par.PropertyValueID = ppv.PropertyValueID;
                                         par.Property_ID = ppv.Property_ID;
@@ -650,8 +534,6 @@ namespace RUINORERP.UI.ProductEAV
                                     #endregion
                                 }
                             }
-
-
                             #endregion
                         }
                         else
@@ -837,22 +719,21 @@ namespace RUINORERP.UI.ProductEAV
                             #endregion
                         }
                     }
-
                 }
                 else
                 {
                     //减少时以listview为旧数据源，Treegridview为新数据源
                     //新比旧，新在前
-                    var reduceItem差集 = MixByTreeGrid.Except(MixByListView).ToList();
+                    var reduceItem差集 = OldMixByTreeGrid.Except(NewMixByListView).ToList();
                     //
                     #region 选中的取消属性值
 
                     //先判断差值的唯度。就是属性的个数是否一样
-                    if (MixByTreeGrid.Count > 0 && MixByListView.Count > 0)
+                    if (OldMixByTreeGrid.Count > 0 && NewMixByListView.Count > 0)
                     {
-                        if (MixByTreeGrid[0].Split(',').Count() != MixByListView[0].Split(',').Count())
+                        if (OldMixByTreeGrid[0].Split(',').Count() != NewMixByListView[0].Split(',').Count())
                         {
-                            var reduceItem差集2 = MixByListView.Except(MixByTreeGrid).ToList();
+                            var reduceItem差集2 = NewMixByListView.Except(OldMixByTreeGrid).ToList();
                             #region 新属性的值取消时  取消的是差集的这个属性值？
 
                             foreach (var item in reduceItem差集)
@@ -962,6 +843,10 @@ namespace RUINORERP.UI.ProductEAV
                                                         pd.tb_Prod_Attr_Relations.Remove(par);
                                                         EditEntity.tb_Prod_Attr_Relations.Remove(par);
                                                     }
+                                                    else
+                                                    {
+                                                        MessageBox.Show($"已经存在的属性组合【{values[0].Substring(values[0].IndexOf('|') + 1)}】暂时不支持删除。\r\n可以通过勾选顺序来调整生成SKU属性值时的顺序。");
+                                                    }
                                                 }
                                             }
                                             // 删除所有标记为删除的子节点
@@ -990,155 +875,12 @@ namespace RUINORERP.UI.ProductEAV
                             #endregion
                         }
                     }
-                    /*
 
-                    //当前属性值所在属性已经存在于实际数据时,标记删除， 如果是新增加临时性的直接删除
-                    foreach (var item in reduceItem差集2)
-                    {
-                        List<TreeGridNode> NodetoRemove = new List<TreeGridNode>(); // 存储需要删除的子节点
-                        string[] values = item.Split(',');
-                        for (int n = 0; n < treeGridView1.Nodes.Count; n++)
-                        {
-                            var node = treeGridView1.Nodes[n];
-                            if (node.Tag is tb_ProdDetail pd)
-                            {
-                                List<tb_Prod_Attr_Relation> parDeleteList = new List<tb_Prod_Attr_Relation>();
-                                // 检查并输出结果
-                                foreach (var value in values)
-                                {
-                                    var dpar = pd.tb_Prod_Attr_Relations.FirstOrDefault(c => c.PropertyValueID.ToString() == value);
-                                    if (dpar != null)
-                                    {
-                                        parDeleteList.Add(dpar);
-                                    }
-                                }
-
-                                if (parDeleteList.Count == values.Length)
-                                {
-                                    List<TreeGridNode> SubNodetoRemove = new List<TreeGridNode>(); // 存储需要删除的子节点
-
-                                    for (int i = 0; i < node.Nodes.Count; i++)
-                                    {
-                                        var subNode = node.Nodes[i];
-                                        if (subNode.Tag is tb_Prod_Attr_Relation par)
-                                        {
-                                            if (par.ActionStatus == ActionStatus.新增)
-                                            {
-                                                //直接删除
-                                                // 标记为删除
-                                                SubNodetoRemove.Add(subNode);
-                                                pd.tb_Prod_Attr_Relations.Remove(par);
-                                                EditEntity.tb_Prod_Attr_Relations.Remove(par);
-                                            }
-                                        }
-                                    }
-                                    // 删除所有标记为删除的子节点
-                                    foreach (var subNode in SubNodetoRemove)
-                                    {
-                                        node.Nodes.Remove(subNode);
-                                    }
-
-                                    // 如果父节点也需要删除
-                                    if (pd.ActionStatus == ActionStatus.新增 && node.Nodes.Count == 0)
-                                    {
-                                        EditEntity.tb_ProdDetails.Remove(pd);
-                                        NodetoRemove.Add(node);
-                                    }
-                                }
-                            }
-                        }
-
-                        // 删除所有标记为删除的子节点
-                        foreach (var node in NodetoRemove)
-                        {
-                            treeGridView1.Nodes.Remove(node);
-                        }
-                    }
-
-                    return;
-
-                    //也分为两种情况，当前属性值所在属性已经存在于实际数据时,标记删除， 如果是新增加临时性的直接删除
-                    if (existProperty)
-                    {
-
-                    }
-                    else
-                    {
-                        // 以old为标准，恢复原来的
-                        foreach (var item in reduceItem差集2)
-                        {
-                            string[] values = item.Split(',');
-                            for (int n = 0; n < treeGridView1.Nodes.Count; n++)
-                            {
-                                var node = treeGridView1.Nodes[n];
-                                if (node.Tag is tb_ProdDetail pd)
-                                {
-                                    List<tb_Prod_Attr_Relation> parDeleteList = new List<tb_Prod_Attr_Relation>();
-                                    // 检查并输出结果
-                                    foreach (var value in values)
-                                    {
-                                        var dpar = pd.tb_Prod_Attr_Relations.FirstOrDefault(c => c.PropertyValueID.ToString() == value);
-                                        if (dpar != null)
-                                        {
-                                            parDeleteList.Add(dpar);
-                                        }
-                                    }
-
-                                    if (parDeleteList.Count == values.Length)
-                                    {
-                                        List<TreeGridNode> toRemove = new List<TreeGridNode>(); // 存储需要删除的子节点
-
-                                        for (int i = 0; i < node.Nodes.Count; i++)
-                                        {
-                                            var subNode = node.Nodes[i];
-                                            if (subNode.Tag is tb_Prod_Attr_Relation par)
-                                            {
-                                                if (par.ActionStatus == ActionStatus.新增)
-                                                {
-                                                    //直接删除
-                                                    // 标记为删除
-                                                    toRemove.Add(subNode);
-                                                    pd.tb_Prod_Attr_Relations.Remove(par);
-                                                    EditEntity.tb_Prod_Attr_Relations.Remove(par);
-                                                }
-                                            }
-                                        }
-                                        // 删除所有标记为删除的子节点
-                                        foreach (var subNode in toRemove)
-                                        {
-                                            node.Nodes.Remove(subNode);
-                                        }
-
-                                        // 如果父节点也需要删除
-                                        if (pd.ActionStatus == ActionStatus.新增 && node.Nodes.Count == 0)
-                                        {
-                                            EditEntity.tb_ProdDetails.Remove(pd);
-                                            treeGridView1.Nodes.Remove(node);
-                                        }
-
-                                    }
-                                    else
-                                    {
-                                        continue;
-                                    }
-
-
-
-
-                                }
-
-
-
-                            }
-                        }
-                    }
-                    */
                     #endregion
                 }
             }
             #endregion
         }
-
 
         private string GetPropertiesText(List<tb_Prod_Attr_Relation> list)
         {
@@ -1170,7 +912,7 @@ namespace RUINORERP.UI.ProductEAV
                 }
             }
             // 按照 PropertyValueID 进行排序 方便后面比较
-            prodDetails_relation = prodDetails_relation.OrderBy(p => p.PropertyValueID).ToList();
+            prodDetails_relation = prodDetails_relation.OrderBy(p => p.Property_ID).ToList();
 
             return prodDetails_relation;
         }
@@ -1350,15 +1092,18 @@ namespace RUINORERP.UI.ProductEAV
             //遍历产品明细集合
             foreach (var item in prod.tb_ProdDetails)
             {
-
-
                 // 按照 PropertyValueID 进行排序 方便后面比较
-                List<tb_Prod_Attr_Relation> ProdAttrRelations = item.tb_Prod_Attr_Relations.OrderBy(p => p.PropertyValueID).ToList();
+                List<tb_Prod_Attr_Relation> ProdAttrRelations = item.tb_Prod_Attr_Relations
+                    .OrderBy(p => p.Property_ID).ToList();
+                View_ProdDetail viewProdDetail = null;
+                viewProdDetail = BizCacheHelper.Instance.GetEntity<View_ProdDetail>(item.ProdDetailID);
+                if (viewProdDetail == null)
+                {
+                    //根据产品明细ID查询View_ProdDetail视图
+                    viewProdDetail = MainForm.Instance.AppContext.Db.CopyNew().Queryable<View_ProdDetail>()
+                                   .Where(c => c.ProdDetailID == item.ProdDetailID).Single();
+                }
 
-
-                //根据产品明细ID查询View_ProdDetail视图
-                var viewProdDetail = MainForm.Instance.AppContext.Db.CopyNew().Queryable<View_ProdDetail>()
-                                .Where(c => c.ProdDetailID == item.ProdDetailID).Single();
                 //如果查询到视图，则添加节点
                 if (viewProdDetail != null)
                 {
@@ -1366,7 +1111,10 @@ namespace RUINORERP.UI.ProductEAV
                     if (viewProdDetail.prop != null)
                     {
                         DisplayPropText = viewProdDetail.prop;
-                        var array = ProdAttrRelations.Where(c => c.ProdDetailID == item.ProdDetailID).ToList().Select(c => c.tb_prodpropertyvalue.PropertyValueName).ToArray();
+                        var array = ProdAttrRelations
+                            .Where(c => c.ProdDetailID == item.ProdDetailID)
+                            .OrderBy(c => c.Property_ID) // 按属性 ID 排序
+                            .ToList().Select(c => c.tb_prodpropertyvalue.PropertyValueName).ToArray();
                         DisplayPropText = string.Join(",", array);
                     }
                     TreeGridNode node = treeGridView1.Nodes.Add(item.ProdDetailID, item.ProdDetailID, "", DisplayPropText, item.SKU, viewProdDetail.CNName, "加载");
@@ -1493,7 +1241,11 @@ namespace RUINORERP.UI.ProductEAV
             var existDetails = attr_Relations.GroupBy(c => c.ProdDetailID).ToList();
             foreach (var item in existDetails)
             {
-                var array = attr_Relations.Where(c => c.ProdDetailID == item.Key).ToList().Select(c => c.PropertyValueID + "|" + c.tb_prodpropertyvalue.PropertyValueName).ToArray();
+                var array = attr_Relations
+                    .Where(c => c.ProdDetailID == item.Key)
+                     .OrderBy(c => c.Property_ID) // 按属性 ID 排序
+                    .ToList()
+                    .Select(c => c.PropertyValueID + "|" + c.tb_prodpropertyvalue.PropertyValueName).ToArray();
                 MixByTreeGrid.Add(string.Join(",", array));
 
             }

@@ -1069,7 +1069,7 @@ namespace RUINORERP.UI
         {
             if (AuthorizeController.GetShowDebugInfoAuthorization(AppContext))
             {
-                MainForm.Instance.uclog.AddLog(sql);
+                //MainForm.Instance.uclog.AddLog(sql);
             }
         }
 

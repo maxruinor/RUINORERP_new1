@@ -188,6 +188,7 @@ namespace RUINORERP.Server
             }
             catch (Exception ex)
             {
+                _logger.Error("StartServerUI ex" + ex.Message);
                 frmMain.Instance._logger.LogError("StartServerUI", ex);
                 //log4netHelper.error("StartServer总异常", ex);
                 _logger.LogInformation(ex, "StartServer总异常");
@@ -277,7 +278,7 @@ namespace RUINORERP.Server
 
                 HardwareInfoService infoService = new HardwareInfoService();
                 UniqueHarewareInfo = infoService.GetHardDiskId() + infoService.GetMacAddress();
-      
+
                 #region 检查是否注册
                 ////没有返回Null，如果结果大于1条会抛出错误
                 registrationInfo = await Program.AppContextData.Db.CopyNew().Queryable<tb_sys_RegistrationInfo>().SingleAsync();
@@ -365,7 +366,7 @@ namespace RUINORERP.Server
                 }
 
                 #endregion
-            
+
                 _logger.Error("ErrorError2233");
                 _logger.LogError("LogErrorLogError2233");
 
@@ -405,7 +406,7 @@ namespace RUINORERP.Server
                     }
                     else
                     {
-                       // CheckSystemProtection();
+                        // CheckSystemProtection();
                         CheckCacheList();
                         CheckReminderBizDataList();
                     }
@@ -543,6 +544,7 @@ namespace RUINORERP.Server
                         //如果验证不通过 或当前时间小于限制时间。就退出
                         if (!CheckRegistered(registrationInfo) || registrationInfo.ExpirationDate.Date <= DateTime.Now.Date)
                         {
+                            _logger.LogError("Shutdown:验证不通过 或当前时间小于限制时间");
                             result = true;
                             //断开所有链接
                             Shutdown();
@@ -773,7 +775,10 @@ namespace RUINORERP.Server
                         {
                             //获取服务配置
                             // ReSharper disable once ConvertToLambdaExpression
-                            return config.GetSection("ServiceforBiz");
+                            var configSection = config.GetSection("ServiceforBiz");
+                            tslblStatus.Text = "服务已启动。";
+                            tslblStatus.Tag = configSection.GetSection("listeners").GetSection("0").GetSection("port").Value;
+                            return configSection;
                         })
                         .UsePackageDecoder<MyPackageDecoder>()//注册自定义解包器
                         .UseSession<SessionforBiz>()
@@ -833,6 +838,7 @@ namespace RUINORERP.Server
                         catch (Exception quitex)
                         {
                             frmMain.Instance._logger.LogError("客户端退出", quitex);
+
                         }
 
                         await Task.Delay(0);
@@ -897,8 +903,8 @@ namespace RUINORERP.Server
             catch (Exception hostex)
             {
                 frmMain.Instance._logger.LogError("hostex", hostex);
+                frmMain.Instance.PrintInfoLog("hostex" + hostex.Message);
             }
-
 
             try
             {
@@ -911,7 +917,6 @@ namespace RUINORERP.Server
             }
 
         }
-
 
 
         public void StartupServer()
@@ -928,6 +933,8 @@ namespace RUINORERP.Server
 
         async public void Shutdown()
         {
+
+
             try
             {
                 await DrainAllServers();
@@ -1285,6 +1292,15 @@ namespace RUINORERP.Server
             frm.MdiParent = this;
             frm.Show();
             frm.Activate();
+        }
+
+        private void tslblStatus_DoubleClick(object sender, EventArgs e)
+        {
+            if (tslblStatus.Tag != null)
+            {
+                PrintMsg($"port:{tslblStatus.Tag.ToString()}");
+            }
+
         }
     }
 }

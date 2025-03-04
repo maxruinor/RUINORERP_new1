@@ -44,12 +44,18 @@
             this.更新库存成本数据ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.更新关联成本ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.全部更新ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.修复关联小计总计ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.splitContainer2 = new System.Windows.Forms.SplitContainer();
             this.dataGridViewPurEntryItems = new System.Windows.Forms.DataGridView();
             this.panel相关数据 = new System.Windows.Forms.Panel();
             this.tabControl = new System.Windows.Forms.TabControl();
             this.kryptonHeaderGrouptop = new Krypton.Toolkit.KryptonHeaderGroup();
             this.buttonSpecHeaderGroup1 = new Krypton.Toolkit.ButtonSpecHeaderGroup();
+            this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.rdb小计总计 = new System.Windows.Forms.RadioButton();
+            this.rdb其它 = new System.Windows.Forms.RadioButton();
+            this.rdb小于单项成本才更新 = new System.Windows.Forms.RadioButton();
+            this.rdb成本为0的才修复 = new System.Windows.Forms.RadioButton();
             this.chk单项成本更新 = new Krypton.Toolkit.KryptonCheckBox();
             this.txtUnitCost = new System.Windows.Forms.TextBox();
             this.cmbType = new Krypton.Toolkit.KryptonComboBox();
@@ -60,10 +66,12 @@
             this.richTextBoxLog = new System.Windows.Forms.RichTextBox();
             this.bindingSourceList = new System.Windows.Forms.BindingSource(this.components);
             this.bindingSourceInv = new System.Windows.Forms.BindingSource(this.components);
-            this.groupBox1 = new System.Windows.Forms.GroupBox();
-            this.rdb成本为0的才修复 = new System.Windows.Forms.RadioButton();
-            this.rdb小于单项成本才更新 = new System.Windows.Forms.RadioButton();
-            this.rdb按库存成本比例 = new System.Windows.Forms.RadioButton();
+            this.kryptonLabel1 = new Krypton.Toolkit.KryptonLabel();
+            this.kryptonLabel2 = new Krypton.Toolkit.KryptonLabel();
+            this.kryptonLabel3 = new Krypton.Toolkit.KryptonLabel();
+            this.kryptonLabel4 = new Krypton.Toolkit.KryptonLabel();
+            this.txtCNName = new System.Windows.Forms.TextBox();
+            this.txtProp = new System.Windows.Forms.TextBox();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1.Panel1)).BeginInit();
             this.kryptonSplitContainer1.Panel1.SuspendLayout();
@@ -100,10 +108,10 @@
             ((System.ComponentModel.ISupportInitialize)(this.kryptonHeaderGrouptop.Panel)).BeginInit();
             this.kryptonHeaderGrouptop.Panel.SuspendLayout();
             this.kryptonHeaderGrouptop.SuspendLayout();
+            this.groupBox1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.cmbType)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceList)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceInv)).BeginInit();
-            this.groupBox1.SuspendLayout();
             this.SuspendLayout();
             // 
             // kryptonSplitContainer1
@@ -258,9 +266,10 @@
             this.contextMenuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.更新库存成本数据ToolStripMenuItem,
             this.更新关联成本ToolStripMenuItem,
-            this.全部更新ToolStripMenuItem});
+            this.全部更新ToolStripMenuItem,
+            this.修复关联小计总计ToolStripMenuItem});
             this.contextMenuStrip1.Name = "contextMenuStrip1";
-            this.contextMenuStrip1.Size = new System.Drawing.Size(179, 70);
+            this.contextMenuStrip1.Size = new System.Drawing.Size(179, 92);
             // 
             // 更新库存成本数据ToolStripMenuItem
             // 
@@ -282,6 +291,13 @@
             this.全部更新ToolStripMenuItem.Size = new System.Drawing.Size(178, 22);
             this.全部更新ToolStripMenuItem.Text = "全部更新";
             this.全部更新ToolStripMenuItem.Click += new System.EventHandler(this.全部更新ToolStripMenuItem_Click);
+            // 
+            // 修复关联小计总计ToolStripMenuItem
+            // 
+            this.修复关联小计总计ToolStripMenuItem.Name = "修复关联小计总计ToolStripMenuItem";
+            this.修复关联小计总计ToolStripMenuItem.Size = new System.Drawing.Size(178, 22);
+            this.修复关联小计总计ToolStripMenuItem.Text = "修复关联小计总计";
+            this.修复关联小计总计ToolStripMenuItem.Click += new System.EventHandler(this.修复关联小计总计ToolStripMenuItem_Click);
             // 
             // splitContainer2
             // 
@@ -345,6 +361,12 @@
             // kryptonHeaderGrouptop.Panel
             // 
             this.kryptonHeaderGrouptop.Panel.AutoScroll = true;
+            this.kryptonHeaderGrouptop.Panel.Controls.Add(this.txtProp);
+            this.kryptonHeaderGrouptop.Panel.Controls.Add(this.txtCNName);
+            this.kryptonHeaderGrouptop.Panel.Controls.Add(this.kryptonLabel4);
+            this.kryptonHeaderGrouptop.Panel.Controls.Add(this.kryptonLabel3);
+            this.kryptonHeaderGrouptop.Panel.Controls.Add(this.kryptonLabel2);
+            this.kryptonHeaderGrouptop.Panel.Controls.Add(this.kryptonLabel1);
             this.kryptonHeaderGrouptop.Panel.Controls.Add(this.groupBox1);
             this.kryptonHeaderGrouptop.Panel.Controls.Add(this.chk单项成本更新);
             this.kryptonHeaderGrouptop.Panel.Controls.Add(this.txtUnitCost);
@@ -363,6 +385,61 @@
             // 
             this.buttonSpecHeaderGroup1.Type = Krypton.Toolkit.PaletteButtonSpecStyle.ArrowUp;
             this.buttonSpecHeaderGroup1.UniqueName = "aa05785cd09043e4bd13a0269efcb893";
+            // 
+            // groupBox1
+            // 
+            this.groupBox1.Controls.Add(this.rdb小计总计);
+            this.groupBox1.Controls.Add(this.rdb其它);
+            this.groupBox1.Controls.Add(this.rdb小于单项成本才更新);
+            this.groupBox1.Controls.Add(this.rdb成本为0的才修复);
+            this.groupBox1.Location = new System.Drawing.Point(541, 48);
+            this.groupBox1.Name = "groupBox1";
+            this.groupBox1.Size = new System.Drawing.Size(499, 45);
+            this.groupBox1.TabIndex = 168;
+            this.groupBox1.TabStop = false;
+            this.groupBox1.Text = "关联数据修复选项";
+            // 
+            // rdb小计总计
+            // 
+            this.rdb小计总计.AutoSize = true;
+            this.rdb小计总计.Location = new System.Drawing.Point(278, 20);
+            this.rdb小计总计.Name = "rdb小计总计";
+            this.rdb小计总计.Size = new System.Drawing.Size(107, 16);
+            this.rdb小计总计.TabIndex = 3;
+            this.rdb小计总计.Text = "只更新小计总计";
+            this.rdb小计总计.UseVisualStyleBackColor = true;
+            // 
+            // rdb其它
+            // 
+            this.rdb其它.AutoSize = true;
+            this.rdb其它.Location = new System.Drawing.Point(404, 20);
+            this.rdb其它.Name = "rdb其它";
+            this.rdb其它.Size = new System.Drawing.Size(65, 16);
+            this.rdb其它.TabIndex = 2;
+            this.rdb其它.Text = "rdb其它";
+            this.rdb其它.UseVisualStyleBackColor = true;
+            // 
+            // rdb小于单项成本才更新
+            // 
+            this.rdb小于单项成本才更新.AutoSize = true;
+            this.rdb小于单项成本才更新.Location = new System.Drawing.Point(141, 20);
+            this.rdb小于单项成本才更新.Name = "rdb小于单项成本才更新";
+            this.rdb小于单项成本才更新.Size = new System.Drawing.Size(131, 16);
+            this.rdb小于单项成本才更新.TabIndex = 1;
+            this.rdb小于单项成本才更新.Text = "小于单项成本才更新";
+            this.rdb小于单项成本才更新.UseVisualStyleBackColor = true;
+            // 
+            // rdb成本为0的才修复
+            // 
+            this.rdb成本为0的才修复.AutoSize = true;
+            this.rdb成本为0的才修复.Checked = true;
+            this.rdb成本为0的才修复.Location = new System.Drawing.Point(21, 20);
+            this.rdb成本为0的才修复.Name = "rdb成本为0的才修复";
+            this.rdb成本为0的才修复.Size = new System.Drawing.Size(113, 16);
+            this.rdb成本为0的才修复.TabIndex = 0;
+            this.rdb成本为0的才修复.TabStop = true;
+            this.rdb成本为0的才修复.Text = "成本为0的才修复";
+            this.rdb成本为0的才修复.UseVisualStyleBackColor = true;
             // 
             // chk单项成本更新
             // 
@@ -385,16 +462,16 @@
             // 
             this.cmbType.DropDownWidth = 100;
             this.cmbType.IntegralHeight = false;
-            this.cmbType.Location = new System.Drawing.Point(182, 30);
+            this.cmbType.Location = new System.Drawing.Point(69, 8);
             this.cmbType.Name = "cmbType";
-            this.cmbType.Size = new System.Drawing.Size(88, 21);
+            this.cmbType.Size = new System.Drawing.Size(113, 21);
             this.cmbType.TabIndex = 161;
             // 
             // txtSearchKey
             // 
-            this.txtSearchKey.Location = new System.Drawing.Point(5, 31);
+            this.txtSearchKey.Location = new System.Drawing.Point(284, 10);
             this.txtSearchKey.Name = "txtSearchKey";
-            this.txtSearchKey.Size = new System.Drawing.Size(161, 21);
+            this.txtSearchKey.Size = new System.Drawing.Size(107, 21);
             this.txtSearchKey.TabIndex = 159;
             this.txtSearchKey.TextChanged += new System.EventHandler(this.txtSearchKey_TextChanged);
             // 
@@ -410,7 +487,7 @@
             // 
             // btnQuery
             // 
-            this.btnQuery.Location = new System.Drawing.Point(301, 28);
+            this.btnQuery.Location = new System.Drawing.Point(396, 60);
             this.btnQuery.Name = "btnQuery";
             this.btnQuery.Size = new System.Drawing.Size(99, 24);
             this.btnQuery.TabIndex = 0;
@@ -423,7 +500,7 @@
             this.toolStrip1.Font = new System.Drawing.Font("Segoe UI", 9F);
             this.toolStrip1.Location = new System.Drawing.Point(3, 0);
             this.toolStrip1.Name = "toolStrip1";
-            this.toolStrip1.Size = new System.Drawing.Size(43, 25);
+            this.toolStrip1.Size = new System.Drawing.Size(111, 25);
             this.toolStrip1.TabIndex = 0;
             // 
             // richTextBoxLog
@@ -435,49 +512,52 @@
             this.richTextBoxLog.TabIndex = 0;
             this.richTextBoxLog.Text = "";
             // 
-            // groupBox1
+            // kryptonLabel1
             // 
-            this.groupBox1.Controls.Add(this.rdb按库存成本比例);
-            this.groupBox1.Controls.Add(this.rdb小于单项成本才更新);
-            this.groupBox1.Controls.Add(this.rdb成本为0的才修复);
-            this.groupBox1.Location = new System.Drawing.Point(563, 36);
-            this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(400, 45);
-            this.groupBox1.TabIndex = 168;
-            this.groupBox1.TabStop = false;
-            this.groupBox1.Text = "关联数据修复选项";
+            this.kryptonLabel1.Location = new System.Drawing.Point(3, 8);
+            this.kryptonLabel1.Name = "kryptonLabel1";
+            this.kryptonLabel1.Size = new System.Drawing.Size(65, 20);
+            this.kryptonLabel1.TabIndex = 169;
+            this.kryptonLabel1.Values.Text = "产品类型:";
             // 
-            // rdb成本为0的才修复
+            // kryptonLabel2
             // 
-            this.rdb成本为0的才修复.AutoSize = true;
-            this.rdb成本为0的才修复.Checked = true;
-            this.rdb成本为0的才修复.Location = new System.Drawing.Point(21, 20);
-            this.rdb成本为0的才修复.Name = "rdb成本为0的才修复";
-            this.rdb成本为0的才修复.Size = new System.Drawing.Size(113, 16);
-            this.rdb成本为0的才修复.TabIndex = 0;
-            this.rdb成本为0的才修复.TabStop = true;
-            this.rdb成本为0的才修复.Text = "成本为0的才修复";
-            this.rdb成本为0的才修复.UseVisualStyleBackColor = true;
+            this.kryptonLabel2.Location = new System.Drawing.Point(217, 10);
+            this.kryptonLabel2.Name = "kryptonLabel2";
+            this.kryptonLabel2.Size = new System.Drawing.Size(61, 20);
+            this.kryptonLabel2.TabIndex = 170;
+            this.kryptonLabel2.Values.Text = "产品SKU:";
+            this.kryptonLabel2.Click += new System.EventHandler(this.kryptonLabel2_Click);
             // 
-            // rdb小于单项成本才更新
+            // kryptonLabel3
             // 
-            this.rdb小于单项成本才更新.AutoSize = true;
-            this.rdb小于单项成本才更新.Location = new System.Drawing.Point(141, 20);
-            this.rdb小于单项成本才更新.Name = "rdb小于单项成本才更新";
-            this.rdb小于单项成本才更新.Size = new System.Drawing.Size(131, 16);
-            this.rdb小于单项成本才更新.TabIndex = 1;
-            this.rdb小于单项成本才更新.Text = "小于单项成本才更新";
-            this.rdb小于单项成本才更新.UseVisualStyleBackColor = true;
+            this.kryptonLabel3.Location = new System.Drawing.Point(2, 36);
+            this.kryptonLabel3.Name = "kryptonLabel3";
+            this.kryptonLabel3.Size = new System.Drawing.Size(65, 20);
+            this.kryptonLabel3.TabIndex = 171;
+            this.kryptonLabel3.Values.Text = "产品名称:";
             // 
-            // rdb按库存成本比例
+            // kryptonLabel4
             // 
-            this.rdb按库存成本比例.AutoSize = true;
-            this.rdb按库存成本比例.Location = new System.Drawing.Point(278, 20);
-            this.rdb按库存成本比例.Name = "rdb按库存成本比例";
-            this.rdb按库存成本比例.Size = new System.Drawing.Size(107, 16);
-            this.rdb按库存成本比例.TabIndex = 2;
-            this.rdb按库存成本比例.Text = "按库存成本比例";
-            this.rdb按库存成本比例.UseVisualStyleBackColor = true;
+            this.kryptonLabel4.Location = new System.Drawing.Point(0, 62);
+            this.kryptonLabel4.Name = "kryptonLabel4";
+            this.kryptonLabel4.Size = new System.Drawing.Size(65, 20);
+            this.kryptonLabel4.TabIndex = 172;
+            this.kryptonLabel4.Values.Text = "产品属性:";
+            // 
+            // txtCNName
+            // 
+            this.txtCNName.Location = new System.Drawing.Point(71, 36);
+            this.txtCNName.Name = "txtCNName";
+            this.txtCNName.Size = new System.Drawing.Size(319, 21);
+            this.txtCNName.TabIndex = 173;
+            // 
+            // txtProp
+            // 
+            this.txtProp.Location = new System.Drawing.Point(71, 61);
+            this.txtProp.Name = "txtProp";
+            this.txtProp.Size = new System.Drawing.Size(319, 21);
+            this.txtProp.TabIndex = 174;
             // 
             // UCDataFixForCost
             // 
@@ -526,11 +606,11 @@
             this.kryptonHeaderGrouptop.Panel.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonHeaderGrouptop)).EndInit();
             this.kryptonHeaderGrouptop.ResumeLayout(false);
+            this.groupBox1.ResumeLayout(false);
+            this.groupBox1.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.cmbType)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceList)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceInv)).EndInit();
-            this.groupBox1.ResumeLayout(false);
-            this.groupBox1.PerformLayout();
             this.ResumeLayout(false);
 
         }
@@ -569,8 +649,16 @@
         private System.Windows.Forms.ToolStripMenuItem 更新关联成本ToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem 更新库存成本数据ToolStripMenuItem;
         private System.Windows.Forms.GroupBox groupBox1;
-        private System.Windows.Forms.RadioButton rdb按库存成本比例;
+        private System.Windows.Forms.RadioButton rdb其它;
         private System.Windows.Forms.RadioButton rdb小于单项成本才更新;
         private System.Windows.Forms.RadioButton rdb成本为0的才修复;
+        private System.Windows.Forms.ToolStripMenuItem 修复关联小计总计ToolStripMenuItem;
+        private System.Windows.Forms.RadioButton rdb小计总计;
+        private Krypton.Toolkit.KryptonLabel kryptonLabel4;
+        private Krypton.Toolkit.KryptonLabel kryptonLabel3;
+        private Krypton.Toolkit.KryptonLabel kryptonLabel2;
+        private Krypton.Toolkit.KryptonLabel kryptonLabel1;
+        private System.Windows.Forms.TextBox txtProp;
+        private System.Windows.Forms.TextBox txtCNName;
     }
 }

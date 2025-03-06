@@ -31,6 +31,7 @@ using RUINORERP.Model.TransModel;
 using RUINORERP.Server.BizService;
 using RUINORERP.Server.Comm;
 using RUINORERP.Server.Commands;
+using RUINORERP.Server.CommandService;
 using RUINORERP.Server.ServerService;
 using RUINORERP.Server.ServerSession;
 using RUINORERP.Server.Workflow.WFReminder;
@@ -82,6 +83,8 @@ namespace RUINORERP.Server
         /// 系统保护数据
         /// </summary>
         public tb_sys_RegistrationInfo registrationInfo = new tb_sys_RegistrationInfo();
+
+        public LockManager lockManager = new LockManager();
 
         /// <summary>
         /// 可配置性全局参数 不要设置为只读 readonly
@@ -391,7 +394,7 @@ namespace RUINORERP.Server
                 MyCacheManager.Instance.CacheInfoList.OnUpdate += CacheInfoList_OnUpdate;
                 MyCacheManager.Instance.CacheEntityList.OnRemove += CacheEntityList_OnRemove;
                 //1分钟检查一次
-                timer = new System.Timers.Timer(60000);
+                timer = new System.Timers.Timer(120000);
                 timer.Elapsed += new System.Timers.ElapsedEventHandler((s, x) =>
                 {
                     if (this.InvokeRequired)
@@ -401,6 +404,7 @@ namespace RUINORERP.Server
                             //CheckSystemProtection();
                             CheckCacheList();
                             CheckReminderBizDataList();
+                            lockManager.CheckLocks();
                         }
                         ));
                     }
@@ -409,6 +413,7 @@ namespace RUINORERP.Server
                         // CheckSystemProtection();
                         CheckCacheList();
                         CheckReminderBizDataList();
+                        lockManager.CheckLocks();
                     }
                 });
                 timer.Enabled = true;
@@ -777,7 +782,11 @@ namespace RUINORERP.Server
                             // ReSharper disable once ConvertToLambdaExpression
                             var configSection = config.GetSection("ServiceforBiz");
                             tslblStatus.Text = "服务已启动。";
-                            tslblStatus.Tag = configSection.GetSection("listeners").GetSection("0").GetSection("port").Value;
+                            if (IsDebug)
+                            {
+                                PrintMsg($"port:{configSection.GetSection("listeners").GetSection("0").GetSection("port").Value}");
+                                tslblStatus.Text = "服务已启动，端口：" + configSection.GetSection("listeners").GetSection("0").GetSection("port").Value;
+                            }
                             return configSection;
                         })
                         .UsePackageDecoder<MyPackageDecoder>()//注册自定义解包器
@@ -827,6 +836,11 @@ namespace RUINORERP.Server
 
                             //谁突然掉线或退出。服务器主动将他的锁在别人电脑上的单据释放
                             SystemService.process断开连接锁定释放(sg.User.UserID);
+
+                            //移除再广播出去
+                            lockManager.RemoveLockByUserID(sg.User.UserID);
+                            ReceiveResponseLockManagerCmd cmd = new ReceiveResponseLockManagerCmd(CmdOperation.Send);
+                            cmd.BuildDataPacketforward();
 
                             //广播出去
                             foreach (SessionforBiz PlayerSession in sessionListBiz.Values)
@@ -1294,13 +1308,6 @@ namespace RUINORERP.Server
             frm.Activate();
         }
 
-        private void tslblStatus_DoubleClick(object sender, EventArgs e)
-        {
-            if (tslblStatus.Tag != null)
-            {
-                PrintMsg($"port:{tslblStatus.Tag.ToString()}");
-            }
 
-        }
     }
 }

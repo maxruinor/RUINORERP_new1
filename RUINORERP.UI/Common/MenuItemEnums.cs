@@ -55,6 +55,7 @@ namespace RUINORERP.UI
     
         帮助,
         付款调整,
+        已锁定,
     }
 
 

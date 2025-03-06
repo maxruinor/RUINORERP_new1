@@ -280,7 +280,6 @@ namespace RUINORERP.Business.Security
             appcontext.WorkCenterConfigList = new List<tb_WorkCenterConfig>();
             appcontext.WorkCenterConfigList = appcontext.Db.CopyNew().Queryable<tb_WorkCenterConfig>().Where(c => c.RoleID == appcontext.CurrentRole.RoleID).ToList();
 
-
             //下面所有能控制的东西都有路径和从属性一级传导到下一级 菜单名都可相同
             //模块
 

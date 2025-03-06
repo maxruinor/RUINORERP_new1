@@ -61,6 +61,14 @@ using Newtonsoft.Json.Linq;
 using System.Web.Caching;
 using Microsoft.Extensions.Caching.Memory;
 using RUINORERP.UI.PSI.SAL;
+using RUINORERP.UI.ClientCmdService;
+using TransInstruction.CommandService;
+using RUINORERP.Model.TransModel;
+using System.Threading;
+using static RUINORERP.Business.CommService.LockManager;
+using System.Management.Instrumentation;
+using FastReport.DevComponents.DotNetBar;
+using RUINORERP.UI.WorkFlowDesigner.Entities;
 namespace RUINORERP.UI.BaseForm
 {
     /// <summary>
@@ -444,31 +452,46 @@ namespace RUINORERP.UI.BaseForm
                 long pkid = (long)ReflectionHelper.GetPropertyValue(entity, PKCol);
                 if (pkid > 0)
                 {
-                    BillLockInfo lockInfo = null;
-                    MainForm.Instance.LockInfoList.TryGetValue(pkid, out lockInfo);
-                    if (lockInfo != null)
+                    //如果要锁这个单 看这个单是不是已经被其它人锁，如果没有人锁则我可以锁
+                    long userid = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID;
+                    if (MainForm.Instance.lockManager.GetLockedBy(pkid) > 0)
                     {
-                        string tipMsg = $"单据已被用户{lockInfo.LockedName}锁定，请稍后刷新后再试,或联系锁定人员解锁。";
-                        MainForm.Instance.uclog.AddLog(tipMsg);
-                        tslLocked.AutoToolTip = true;
-                        tslLocked.ToolTipText = tipMsg;
-                        tslLocked.Visible = true;
-                        toolStripBtnCancel.Visible = true;
-                        toolStripbtnModify.Enabled = false;
-                        toolStripbtnSubmit.Enabled = false;
-                        toolStripBtnReverseReview.Enabled = false;
-                        toolStripbtnReview.Enabled = false;
-                        toolStripButtonSave.Enabled = false;
-                        toolStripbtnDelete.Enabled = false;
-                        toolStripbtnPrint.Enabled = false;
-                        toolStripButton结案.Enabled = false;
+                        var lockinfo = MainForm.Instance.lockManager.GetLockStatus(pkid);
+                        if (lockinfo.LockedByID == userid)
+                        {
+                            //得到了锁 就是自己。得不到就是
+                            tsBtnLocked.AutoToolTip = false;
+                            tsBtnLocked.ToolTipText = string.Empty;
+                            tsBtnLocked.Visible = false;
+                        }
+                        else
+                        {
+                            //别人锁定了
+                            string tipMsg = $"单据已被用户{lockinfo.LockedByName}锁定，请稍后刷新后再试,或联系锁定人员解锁。";
+                            MainForm.Instance.uclog.AddLog(tipMsg);
+                            tsBtnLocked.AutoToolTip = true;
+                            tsBtnLocked.ToolTipText = tipMsg;
+                            tsBtnLocked.Visible = true;
+                            tsBtnLocked.Tag = lockinfo;
+                            toolStripBtnCancel.Visible = true;
+                            toolStripbtnModify.Enabled = false;
+                            toolStripbtnSubmit.Enabled = false;
+                            toolStripBtnReverseReview.Enabled = false;
+                            toolStripbtnReview.Enabled = false;
+                            toolStripButtonSave.Enabled = false;
+                            toolStripbtnDelete.Enabled = false;
+                            toolStripbtnPrint.Enabled = false;
+                            toolStripButton结案.Enabled = false;
+                        }
                     }
                     else
                     {
-                        tslLocked.AutoToolTip = false;
-                        tslLocked.ToolTipText = string.Empty;
-                        tslLocked.Visible = false;
+                        //没人锁定
+                        tsBtnLocked.AutoToolTip = false;
+                        tsBtnLocked.ToolTipText = string.Empty;
+                        tsBtnLocked.Visible = false;
                     }
+
                 }
 
                 #region 数据状态修改时也会影响到按钮
@@ -934,9 +957,9 @@ namespace RUINORERP.UI.BaseForm
                 long pkid = (long)ReflectionHelper.GetPropertyValue(EditEntity, PKCol);
                 if (pkid == lockInfo.BillID)
                 {
-                    tslLocked.AutoToolTip = false;
-                    tslLocked.ToolTipText = string.Empty;
-                    tslLocked.Visible = false;
+                    tsBtnLocked.AutoToolTip = false;
+                    tsBtnLocked.ToolTipText = string.Empty;
+                    tsBtnLocked.Visible = false;
                 }
             }
 
@@ -975,6 +998,14 @@ namespace RUINORERP.UI.BaseForm
 
             switch (menuItem)
             {
+                case MenuItemEnums.已锁定:
+                    //弹出一个确认框来请求解锁 
+                    if (tsBtnLocked.Visible && MessageBox.Show("确认向锁定者解锁吗？", "提示", MessageBoxButtons.OKCancel, MessageBoxIcon.Question) == DialogResult.OK)
+                    {
+                        RequestReleaseLock();
+
+                    }
+                    break;
                 case MenuItemEnums.新增:
                     Add();
                     break;
@@ -1033,7 +1064,7 @@ namespace RUINORERP.UI.BaseForm
                         {
                             await Save(true);
                         }
-                        RequestReleaseLock();
+                        UNLock();
                     }
                     else
                     {
@@ -1111,6 +1142,11 @@ namespace RUINORERP.UI.BaseForm
 
         }
 
+
+
+        /// <summary>
+        ///UI上有显示锁定时不重复锁。后面要优化
+        /// </summary>
         private void LockBill()
         {
             if (EditEntity == null)
@@ -1120,28 +1156,67 @@ namespace RUINORERP.UI.BaseForm
             long pkid = (long)ReflectionHelper.GetPropertyValue(EditEntity, PKCol);
             if (pkid > 0)
             {
+                //如果要锁这个单 看这个单是不是已经被其它人锁，如果没有人锁则我可以锁
+                long userid = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID;
+                var lockeduserid = MainForm.Instance.lockManager.GetLockedBy(pkid);
+                if (lockeduserid == 0)
+                {
+                    LockBill(pkid, userid);
+                }
+
+                /*
                 #region 锁定当前单据  后面流程上也要能锁定
 
-                OriginalData od = ActionForClient.单据锁定(pkid,
+                //注意如果别人先锁则自己后锁不能再锁一次了
+                if (!MainForm.Instance.LockInfoList.ContainsKey(pkid))
+                {
+                    OriginalData od = ActionForClient.单据锁定(pkid,
                     MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID,
                                 MainForm.Instance.AppContext.CurUserInfo.UserInfo.tb_employee.Employee_Name,
                                 (int)CurrentBizType, CurMenuInfo.MenuID);
-                MainForm.Instance.ecs.AddSendData(od);
-                if (MainForm.Instance.authorizeController.GetDebugInfoAuth())
-                {
-                    MainForm.Instance.PrintInfoLog($"{CurrentBizTypeName}单据锁定{pkid}成功！");
+                    MainForm.Instance.ecs.AddSendData(od);
+
+                    if (MainForm.Instance.authorizeController.GetDebugInfoAuth())
+                    {
+                        MainForm.Instance.PrintInfoLog($"{CurrentBizTypeName}单据锁定{pkid}成功！");
+                    }
                 }
                 #endregion
+                */
+            }
+        }
+
+        private void LockBill(long BillID, long userid)
+        {
+            //先自己锁。实际服务器收到后还会广播一次 包括自己 只是这里已经锁，不会重复添加
+            if (MainForm.Instance.lockManager.TryLock(BillID, userid))
+            {
+                RequestReceiveLockManagerCmd cmd = new RequestReceiveLockManagerCmd(CmdOperation.Send);
+                cmd.lockCmd = LockCmd.LOCK;//单据锁定
+                LockRequestInfo lockRequest = new LockRequestInfo();
+                lockRequest.BillID = BillID;
+                lockRequest.LockedUserID = userid;
+                lockRequest.LockedUserName = MainForm.Instance.AppContext.CurUserInfo.UserInfo.tb_employee.Employee_Name;
+                lockRequest.BillBizType = (int)CurrentBizType;
+                lockRequest.MenuID = CurMenuInfo.MenuID;
+                cmd.lockRequest = lockRequest;
+                //request.ReceiverSessionID = Receiver.SessionId;
+                MainForm.Instance.dispatcher.DispatchAsync(cmd, CancellationToken.None);
+                cmd.LockChanged += (sender, e) =>
+                {
+                    //更新？
+                    Console.WriteLine($"Document {e.DocumentId} is now {(e.IsLocked ? "locked" : "unlocked")} by {e.LockedBy}");
+                };
             }
         }
 
         private bool IsLock()
         {
             //如果已经有锁定标记了。即使已经释放了锁。也要刷新数据后才可以保存。不然数据不会统一。
-            if (tslLocked.Visible)
+            if (tsBtnLocked.Visible && tsBtnLocked.Tag != null && tsBtnLocked.Tag is LockInfo lockInfo)
             {
                 //显示锁定认为锁定。要刷新数据
-                MessageBox.Show($"单据已被锁定，请刷新后重试。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show($"单据已被{lockInfo.LockedByName}锁定，请刷新后重试。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return true;
             }
 
@@ -1154,14 +1229,13 @@ namespace RUINORERP.UI.BaseForm
                 pkid = (long)ReflectionHelper.GetPropertyValue(EditEntity, PKCol);
                 if (pkid > 0)
                 {
-                    BillLockInfo lockInfo = null;
-                    MainForm.Instance.LockInfoList.TryGetValue(pkid, out lockInfo);
-                    if (lockInfo != null)
+                    var lockuserid = MainForm.Instance.lockManager.GetLockedBy(pkid);
+                    if (lockuserid > 0)
                     {
-                        if (lockInfo.LockedName != MainForm.Instance.AppContext.CurUserInfo.UserInfo.tb_employee.Employee_Name)
+                        if (lockuserid != MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID)
                         {
                             //锁定提示
-                            MessageBox.Show($"单据已被用户{lockInfo.LockedName}锁定，请稍后再试,或联系他解锁。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                            MessageBox.Show($"单据已被用户{lockuserid}锁定，请稍后再试,或联系他解锁。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Error);
                             isLocked = true;
                         }
                     }
@@ -1245,6 +1319,10 @@ namespace RUINORERP.UI.BaseForm
                             EditEntity.SetPropertyValue("CloseCaseImagePath", strCloseCaseImagePath);
                             //这里更新数据库
                             await ctr.BaseSaveOrUpdate(EditEntity);
+                        }
+                        else
+                        {
+                            MainForm.Instance.LoginWebServer();
                         }
                     }
 
@@ -1389,11 +1467,13 @@ namespace RUINORERP.UI.BaseForm
                         {
                             if (saleOut.tb_saleorder != null)
                             {
-                                OriginalData od = ActionForClient.单据锁定(saleOut.tb_saleorder.SOrder_ID,
-                                    MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID,
-                                    MainForm.Instance.AppContext.CurUserInfo.UserInfo.tb_employee.Employee_Name,
-                                    (int)BizType.销售订单, 11);
-                                MainForm.Instance.ecs.AddSendData(od);
+                                LockBill(saleOut.tb_saleorder.SOrder_ID, MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID);
+
+                                //OriginalData od = ActionForClient.单据锁定(saleOut.tb_saleorder.SOrder_ID,
+                                //    MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID,
+                                //    MainForm.Instance.AppContext.CurUserInfo.UserInfo.tb_employee.Employee_Name,
+                                //    (int)BizType.销售订单, 11);
+                                //MainForm.Instance.ecs.AddSendData(od);
                             }
                         }
                     }
@@ -1444,11 +1524,10 @@ namespace RUINORERP.UI.BaseForm
             long pkid = (long)ReflectionHelper.GetPropertyValue(EditEntity, PKCol);
             if (pkid > 0)
             {
-                BillLockInfo bli = null;
                 //判断是否锁定
-                if (MainForm.Instance.LockInfoList.TryGetValue(pkid, out bli))
+                if (IsLock())
                 {
-                    MainForm.Instance.uclog.AddLog($"单据已被{bli.LockedName}锁定，请刷新后再试");
+                    MainForm.Instance.uclog.AddLog($"单据已被锁定，请刷新后再试");
                     return ae;
 
                     //分读写锁  保存后就只有读。释放 写？
@@ -1513,6 +1592,11 @@ namespace RUINORERP.UI.BaseForm
 
                 ReturnResults<T> rmr = new ReturnResults<T>();
                 BaseController<T> ctr = Startup.GetFromFacByName<BaseController<T>>(typeof(T).Name + "Controller");
+
+                //反审前 刷新最新数据才能判断 比方销售订单 没有关掉当前UI时。已经出库。再反审。后面再优化为缓存处理锁单来不用查数据库刷新。
+                BaseEntity pkentity = (editEntity as T) as BaseEntity;
+                EditEntity = await ctr.BaseQueryByIdNavAsync(pkentity.PrimaryKeyID) as T;
+
                 rmr = await ctr.AntiApprovalAsync(EditEntity);
                 if (rmr.Succeeded)
                 {
@@ -1524,11 +1608,12 @@ namespace RUINORERP.UI.BaseForm
                         {
                             if (saleOut.tb_saleorder != null)
                             {
-                                OriginalData od = ActionForClient.单据锁定释放(saleOut.tb_saleorder.SOrder_ID,
-                                    MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID,
-                                    MainForm.Instance.AppContext.CurUserInfo.UserInfo.tb_employee.Employee_Name,
-                                    (int)BizType.销售订单);
-                                MainForm.Instance.ecs.AddSendData(od);
+                                UNLock(saleOut.tb_saleorder.SOrder_ID, MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID);
+                                //OriginalData od = ActionForClient.单据锁定释放(saleOut.tb_saleorder.SOrder_ID,
+                                //    MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID,
+                                //    MainForm.Instance.AppContext.CurUserInfo.UserInfo.tb_employee.Employee_Name,
+                                //    (int)BizType.销售订单, CurMenuInfo.MenuID);
+                                //MainForm.Instance.ecs.AddSendData(od);
                             }
                         }
 
@@ -1736,6 +1821,7 @@ namespace RUINORERP.UI.BaseForm
                             }
                             else
                             {
+                                MainForm.Instance.LoginWebServer();
                                 rs = false;
                             }
                         }
@@ -1922,13 +2008,13 @@ namespace RUINORERP.UI.BaseForm
             }
             else
             {
-                BillLockInfo bli = null;
-                if (MainForm.Instance.LockInfoList.TryGetValue(pkid, out bli))
+
+                if (IsLock())
                 {
                     return new ReturnMainSubResults<T>()
                     {
                         Succeeded = false,
-                        ErrorMsg = $"单据已被{bli.LockedName}锁定，请刷新后再试"
+                        ErrorMsg = $"单据已被{"xxx"}锁定，请刷新后再试"
                     };
                 }
             }
@@ -2417,7 +2503,7 @@ namespace RUINORERP.UI.BaseForm
             base.Exit(this);
         }
 
-        public void RequestReleaseLock()
+        public override void RequestReleaseLock()
         {
             if (EditEntity != null)
             {
@@ -2425,19 +2511,80 @@ namespace RUINORERP.UI.BaseForm
                 long pkid = (long)ReflectionHelper.GetPropertyValue(EditEntity, PKCol);
                 if (pkid > 0)
                 {
-                    BizTypeMapper mapper = new BizTypeMapper();
-                    OriginalData od = ActionForClient.单据锁定释放(pkid, MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID,
-                             MainForm.Instance.AppContext.CurUserInfo.UserInfo.tb_employee.Employee_Name,
-                             (int)mapper.GetBizType(typeof(T)));
-                    MainForm.Instance.ecs.AddSendData(od);
+                    //如果这个锁是自己锁的。就释放
+                    long userid = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID;
+                    long lockeduserid = (long)MainForm.Instance.lockManager.GetLockedBy(pkid);
+                    if (lockeduserid > 0 && lockeduserid != userid)
+                    {
+                        RequestReceiveLockManagerCmd cmd = new RequestReceiveLockManagerCmd(CmdOperation.Send);
+                        cmd.lockCmd = LockCmd.RequestReleaseLock;
+                        LockRequestInfo lockRequest = new LockRequestInfo();
+                        lockRequest.RequestReleaseUserName = MainForm.Instance.AppContext.CurUserInfo.UserInfo.tb_employee.Employee_Name;
+                        lockRequest.BillID = pkid;
+                        lockRequest.BillBizType = (int)CurrentBizType;
+                        lockRequest.MenuID = CurMenuInfo.MenuID;
+                        cmd.lockRequest = lockRequest;
+                        MainForm.Instance.dispatcher.DispatchAsync(cmd, CancellationToken.None);
+                        cmd.LockChanged += (sender, e) =>
+                        {
+                            MessageBox.Show("已经向锁定者发送了解锁请求。等待结果中");
+                            //Console.WriteLine($"Document {e.DocumentId} is now {(e.IsLocked ? "locked" : "unlocked")} by {e.LockedBy}");
+                            //如果收到释放成功的信息时
+                            tsBtnLocked.Visible = false;
+                        };
+                    }
+
                 }
             }
         }
 
+        public void UNLock()
+        {
+            if (EditEntity != null)
+            {
+                string PKCol = BaseUIHelper.GetEntityPrimaryKey<T>();
+                long pkid = (long)ReflectionHelper.GetPropertyValue(EditEntity, PKCol);
+                if (pkid > 0)
+                {
+                    //如果这个锁是自己锁的。就释放
+                    long userid = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID;
+                    if (MainForm.Instance.lockManager.GetLockedBy(pkid) == userid)
+                    {
+                        //先本地再服务器
+                        if (MainForm.Instance.lockManager.Unlock(pkid, userid))
+                        {
+                            UNLock(pkid, userid);
+                        }
+
+                    }
+
+                    //BizTypeMapper mapper = new BizTypeMapper();
+                    //OriginalData od = ActionForClient.单据锁定释放(pkid, MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID,
+                    //         MainForm.Instance.AppContext.CurUserInfo.UserInfo.tb_employee.Employee_Name,
+                    //         (int)mapper.GetBizType(typeof(T)), CurMenuInfo.MenuID);
+                    //MainForm.Instance.ecs.AddSendData(od);
+                }
+            }
+        }
+
+        public void UNLock(long billid, long userid)
+        {
+            //得到了锁
+            RequestReceiveLockManagerCmd cmd = new RequestReceiveLockManagerCmd(CmdOperation.Send);
+            cmd.lockCmd = LockCmd.UNLOCK;
+            LockRequestInfo lockRequest = new LockRequestInfo();
+            lockRequest.BillID = billid;
+            lockRequest.LockedUserID = userid;
+            lockRequest.LockedUserName = MainForm.Instance.AppContext.CurUserInfo.UserInfo.tb_employee.Employee_Name;
+            lockRequest.BillBizType = (int)CurrentBizType;
+            lockRequest.MenuID = CurMenuInfo.MenuID;
+            cmd.lockRequest = lockRequest;
+            MainForm.Instance.dispatcher.DispatchAsync(cmd, CancellationToken.None);
+        }
+
         internal override void CloseTheForm(object thisform)
         {
-            RequestReleaseLock();
-
+            UNLock();
             base.CloseTheForm(thisform);
         }
 

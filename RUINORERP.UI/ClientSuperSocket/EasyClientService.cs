@@ -516,19 +516,23 @@ namespace RUINORERP.UI.SuperSocketClient
                         case ServerCmdEnum.工作流提醒推送:
                             ClientService.接收工作流的提醒消息(od);
                             break;
-
-                        case ServerCmdEnum.转发单据锁定:
-                            //单个实例
-                            ClientService.接收转发单据锁定(od);
+                        case ServerCmdEnum.复合型锁单处理:
+                            var LockCommand = new RequestReceiveLockManagerCmd(CmdOperation.Receive);
+                            LockCommand.DataPacket = od;
+                            MainForm.Instance.dispatcher.DispatchAsync(LockCommand, CancellationToken.None);
                             break;
-                        case ServerCmdEnum.转发单据锁定释放:
-                            //单个实例
-                            ClientService.接收转发单据锁定释放(od);
-                            break;
-                        case ServerCmdEnum.根据锁定用户释放:
-                            //单个实例
-                            ClientService.接收根据锁定用户释放(od);
-                            break;
+                        //case ServerCmdEnum.转发单据锁定:
+                        //    //单个实例
+                        //    ClientService.接收转发单据锁定(od);
+                        //    break;
+                        //case ServerCmdEnum.转发单据锁定释放:
+                        //    //单个实例
+                        //    ClientService.接收转发单据锁定释放(od);
+                        //    break;
+                        //case ServerCmdEnum.根据锁定用户释放:
+                        //    //单个实例
+                        //    ClientService.接收根据锁定用户释放(od);
+                        //    break;
                         case ServerCmdEnum.转发更新动态配置:
                             //单个实例
                             ClientService.接收转发更新动态配置(od);

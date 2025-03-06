@@ -367,15 +367,15 @@ namespace RUINORERP.Model
         }
 
         private decimal? _ProductionAllCost;
-        
-        
+
+
         /// <summary>
-        /// 单项总成本
+        /// 成本小计
         /// </summary>
 
-        [AdvQueryAttribute(ColName = "ProductionAllCost",ColDesc = "单项总成本")]
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "ProductionAllCost" ,IsNullable = true,ColumnDescription = "单项总成本" )]
-        [Display(Name = "单项总成本")]
+        [AdvQueryAttribute(ColName = "ProductionAllCost",ColDesc = "成本小计")]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "ProductionAllCost" ,IsNullable = true,ColumnDescription = "成本小计")]
+        [Display(Name = "成本小计")]
         public decimal? ProductionAllCost 
         { 
             get{return _ProductionAllCost;}            set{                SetProperty(ref _ProductionAllCost, value);                }

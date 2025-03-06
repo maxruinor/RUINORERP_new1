@@ -72,6 +72,7 @@
     <ProjectReference Include="..\RUINORERP.IServices\RUINORERP.IServices.csproj" />
     <ProjectReference Include="..\RUINORERP.Model\RUINORERP.Model.csproj" />
     <ProjectReference Include="..\RUINORERP.Repository\RUINORERP.Repository.csproj" />
+    <ProjectReference Include="..\RUINORERP.Server\ERPInstruction\TransInstruction.csproj" />
     <ProjectReference Include="..\RUINORERP.Services\RUINORERP.Services.csproj" />
   </ItemGroup>
 

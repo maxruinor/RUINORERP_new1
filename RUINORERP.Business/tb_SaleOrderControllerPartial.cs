@@ -33,6 +33,13 @@ namespace RUINORERP.Business
         //}
 
 
+        public async override Task<ReturnResults<T>> AdvancedSave(T ObjectEntity)
+        {
+            ReturnResults<T> result = new ReturnResults<T>();
+            await Task.Delay(0); // 模拟异步操作
+            return result; // 或者根据实际情况返回值
+        }
+
         /// <summary>
         /// 库存中的拟销售量增加，同时检查数量和金额，总数量和总金额不能小于明细小计的和
         /// </summary>
@@ -582,14 +589,15 @@ namespace RUINORERP.Business
                 }
 
                 entity.tb_SaleOuts.ForEach(c => c.PayStatus = entity.PayStatus);
+                entity.tb_SaleOuts.ForEach(c => c.ProjectGroup_ID = entity.ProjectGroup_ID);
                 entity.tb_SaleOuts.ForEach(c => c.Paytype_ID = entity.Paytype_ID);
 
 
                 //后面是不是要做一个审核历史记录表？
 
                 //只更新指定列
-                await _unitOfWorkManage.GetDbClient().Updateable<tb_SaleOrder>(entity).UpdateColumns(it => new { it.PayStatus, it.Paytype_ID }).ExecuteCommandAsync();
-                await _unitOfWorkManage.GetDbClient().Updateable<tb_SaleOut>(entity.tb_SaleOuts).UpdateColumns(it => new { it.PayStatus, it.Paytype_ID }).ExecuteCommandAsync();
+                await _unitOfWorkManage.GetDbClient().Updateable<tb_SaleOrder>(entity).UpdateColumns(it => new { it.PayStatus, it.Paytype_ID ,it.ProjectGroup_ID}).ExecuteCommandAsync();
+                await _unitOfWorkManage.GetDbClient().Updateable<tb_SaleOut>(entity.tb_SaleOuts).UpdateColumns(it => new { it.PayStatus, it.Paytype_ID, it.ProjectGroup_ID }).ExecuteCommandAsync();
 
                 // 注意信息的完整性
                 _unitOfWorkManage.CommitTran();

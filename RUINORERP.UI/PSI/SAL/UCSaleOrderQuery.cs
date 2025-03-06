@@ -42,11 +42,6 @@ namespace RUINORERP.UI.PSI.SAL
             tsbtnBatchConversion.Visible = true;
             //base._UCBillMasterQuery.ColDisplayType = typeof(tb_SaleOrder);
         }
-
-
-
-
-
         public override void BuildLimitQueryConditions()
         {
             //创建表达式

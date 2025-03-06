@@ -412,16 +412,20 @@ namespace RUINORERP.UI.SysConfig
                 workCenterConfig = new tb_WorkCenterConfig();
                 long sid = RUINORERP.Common.SnowflakeIdHelper.IdHelper.GetLongId();
                 workCenterConfig.ConfigID = sid;
-                workCenterConfig.RoleID = CurrentRole.RoleID;
-                if (IsUserSetting)
-                {
-                    workCenterConfig.User_ID = CurrentRole.User_ID;
-                }
-                else
-                {
-                    workCenterConfig.User_ID = null;
-                }
             }
+
+            workCenterConfig.RoleID = CurrentRole.RoleID;
+
+            //这里是根据树节点来区别要保存的对象
+            if (IsUserSetting)
+            {
+                workCenterConfig.User_ID = CurrentRole.User_ID;
+            }
+            else
+            {
+                workCenterConfig.User_ID = null;
+            }
+
             string todolist = string.Empty;
             foreach (var item in kryptonCheckedListBox待办事项.CheckedItems)
             {

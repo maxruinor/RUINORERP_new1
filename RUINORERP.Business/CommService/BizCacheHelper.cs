@@ -166,9 +166,13 @@ namespace RUINORERP.Business.CommService
 
                     }
                 }
-                if (entity==null)
+                if (entity == null)
                 {
                     return default(T);
+                }
+                else if (entity.ToString() == "System.Object")
+                {
+                    return (T)entity;
                 }
                 return (T)entity;
             }
@@ -326,7 +330,7 @@ namespace RUINORERP.Business.CommService
 
                     }
                 }
-                
+
             }
             return entity;
         }
@@ -463,10 +467,10 @@ namespace RUINORERP.Business.CommService
              "tb_CRM_Leads",
              "tb_CRM_Region",
              "tb_CRM_Contact",
-                "tb_Provinces",
-                "tb_Cities",
-                "tb_Packing",
-                "tb_ProdBundle",
+             "tb_Provinces",
+             "tb_Cities",
+             "tb_Packing",
+             "tb_ProdBundle",
             "tb_BOMConfigHistory",
             "tb_RolePropertyConfig",
             "tb_Unit_Conversion"

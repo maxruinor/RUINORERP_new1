@@ -85,6 +85,7 @@
             this.SKU = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.产品名称 = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.数据状态 = new FastReport.DevComponents.DotNetBar.Controls.DataGridViewLabelXColumn();
+            this.Is_enabled = new System.Windows.Forms.DataGridViewCheckBoxColumn();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer生成组合)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer生成组合.Panel1)).BeginInit();
             this.kryptonSplitContainer生成组合.Panel1.SuspendLayout();
@@ -515,7 +516,8 @@
             this.属性值,
             this.SKU,
             this.产品名称,
-            this.数据状态});
+            this.数据状态,
+            this.Is_enabled});
             this.treeGridView1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.treeGridView1.EditMode = System.Windows.Forms.DataGridViewEditMode.EditProgrammatically;
             this.treeGridView1.ImageList = null;
@@ -638,6 +640,7 @@
             // 
             // ImgCol
             // 
+            this.ImgCol.Frozen = true;
             this.ImgCol.HeaderText = "";
             this.ImgCol.Name = "ImgCol";
             this.ImgCol.Resizable = System.Windows.Forms.DataGridViewTriState.True;
@@ -651,6 +654,7 @@
             // 属性
             // 
             this.属性.DefaultNodeImage = null;
+            this.属性.Frozen = true;
             this.属性.HeaderText = "属性";
             this.属性.Name = "属性";
             this.属性.Resizable = System.Windows.Forms.DataGridViewTriState.True;
@@ -659,6 +663,7 @@
             // 
             // 属性值
             // 
+            this.属性值.Frozen = true;
             this.属性值.HeaderText = "属性值";
             this.属性值.Name = "属性值";
             this.属性值.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
@@ -666,12 +671,14 @@
             // 
             // SKU
             // 
+            this.SKU.Frozen = true;
             this.SKU.HeaderText = "SKU";
             this.SKU.Name = "SKU";
             this.SKU.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
             // 
             // 产品名称
             // 
+            this.产品名称.Frozen = true;
             this.产品名称.HeaderText = "产品名称";
             this.产品名称.Name = "产品名称";
             this.产品名称.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
@@ -679,8 +686,15 @@
             // 
             // 数据状态
             // 
+            this.数据状态.Frozen = true;
             this.数据状态.HeaderText = "数据状态";
             this.数据状态.Name = "数据状态";
+            // 
+            // Is_enabled
+            // 
+            this.Is_enabled.Frozen = true;
+            this.Is_enabled.HeaderText = "是否启用";
+            this.Is_enabled.Name = "Is_enabled";
             // 
             // UCMultiPropertyEditor
             // 
@@ -804,5 +818,6 @@
         private System.Windows.Forms.DataGridViewTextBoxColumn SKU;
         private System.Windows.Forms.DataGridViewTextBoxColumn 产品名称;
         private FastReport.DevComponents.DotNetBar.Controls.DataGridViewLabelXColumn 数据状态;
+        private System.Windows.Forms.DataGridViewCheckBoxColumn Is_enabled;
     }
 }

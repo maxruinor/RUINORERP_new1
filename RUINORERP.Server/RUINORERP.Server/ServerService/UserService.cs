@@ -74,7 +74,7 @@ namespace RUINORERP.Server.BizService
 
         }
 
-        public static void 发送缓存数据列表(SessionforBiz PlayerSession, string tableName)
+        public static async void 发送缓存数据列表(SessionforBiz PlayerSession, string tableName)
         {
             try
             {
@@ -86,8 +86,16 @@ namespace RUINORERP.Server.BizService
                     {
                         //启动时服务器都没有加载缓存，则不发送
                         BizCacheHelper.Instance.SetDictDataSource(tableName, true);
+                        await Task.Delay(500);
                         CacheList = BizCacheHelper.Manager.CacheEntityList.Get(tableName);
                     }
+
+                    //上面查询可能还是没有立即加载成功
+                    if (CacheList == null)
+                    {
+                        return;
+                    }
+
                     if (CacheList is JArray)
                     {
                         //暂时认为服务器的都是泛型形式保存的
@@ -175,7 +183,7 @@ namespace RUINORERP.Server.BizService
                 //更新服务器的缓存
                 // 将item转换为JObject
                 JObject obj = JObject.Parse(json);
-            
+
                 MyCacheManager.Instance.UpdateEntityList(tableName, obj);
                 //再转发给其他客户端
 
@@ -257,7 +265,7 @@ namespace RUINORERP.Server.BizService
                         frmMain.Instance.PrintMsg($"转发转发更新动态配置{configEntityName}给：" + item.Value.User.姓名);
                     }
                 }
-                
+
             }
             catch (Exception ex)
             {
@@ -630,7 +638,7 @@ namespace RUINORERP.Server.BizService
         {
             try
             {
-                ByteBuff tx = new ByteBuff(100); 
+                ByteBuff tx = new ByteBuff(100);
                 List<UserInfo> userInfos = new List<UserInfo>();
 
                 // tx.PushInt(frmMain.Instance.sessionListBiz.Count);
@@ -705,7 +713,7 @@ namespace RUINORERP.Server.BizService
         /// <returns></returns>
         public static void 给客户端发消息实体(SessionforBiz PlayerSession, MessageModel messageModel, bool MustDisplay)
         {
-            
+
             try
             {
                 //发送缓存数据
@@ -724,9 +732,9 @@ namespace RUINORERP.Server.BizService
             {
                 Comm.CommService.ShowExceptionMsg("给客户端发消息实体:" + ex.Message);
             }
-            
 
-             
+
+
         }
         public static bool 转发弹窗消息(SessionforBiz PlayerSession, OriginalData gd)
         {
@@ -921,7 +929,7 @@ namespace RUINORERP.Server.BizService
 
         }
 
- 
+
 
 
         public static void 推送版本更新(SessionforBiz PlayerSession)

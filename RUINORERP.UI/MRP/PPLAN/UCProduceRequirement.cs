@@ -998,7 +998,7 @@ namespace RUINORERP.UI.MRP.MP
                 var pur = PurDetails.Select(c => c.ProdDetailID).ToList().GroupBy(x => x).Where(x => x.Count() > 1).Select(x => x.Key).ToList();
                 if (NeedValidated && pur.Count > 0)
                 {
-                    System.Windows.Forms.MessageBox.Show("采购建议中，相同的产品不能多行录入\r\n，库位或需求日期不一致要拆分为两个需求分析单!", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    System.Windows.Forms.MessageBox.Show("采购产品建议中，相同的产品不能多行录入\r\n，库位或需求日期不一致要拆分为两个需求分析单!", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     return false;
                 }
 
@@ -1060,7 +1060,7 @@ namespace RUINORERP.UI.MRP.MP
                 {
                     if (EditEntity.tb_ManufacturingOrders != null && EditEntity.tb_ManufacturingOrders.Count > 0)
                     {
-                        MessageBox.Show("当前需求分析单已经存在制令单数据，无法修改保存。请联系仓库处理。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        MessageBox.Show("当前需求分析单已经存在制令单数据，无法修改保存。请联系制单员处理。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                         return false;
                     }
                 }

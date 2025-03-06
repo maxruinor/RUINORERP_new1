@@ -299,6 +299,15 @@ namespace RUINORERP.Server.Commands
                         case ClientCmdEnum.单据锁定释放:
                             SystemService.process单据审核锁定释放(fromPlayer, gd);
                             break;
+
+                        case ClientCmdEnum.复合型锁单处理:
+                            // 创建一个命令实例 
+                            //  实际收到一个转发指令
+                            var lockcmd = new ReceiveResponseLockManagerCmd(CmdOperation.Receive, fromPlayer);
+                            lockcmd.DataPacket = gd;
+                            await lockcmd.ExecuteAsync(CancellationToken.None);
+                            break;
+
                         case ClientCmdEnum.发送弹窗消息:
                             UserService.转发弹窗消息(fromPlayer, gd);
                             UserService.转发消息结果(fromPlayer);

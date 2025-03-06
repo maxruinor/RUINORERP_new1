@@ -51,12 +51,18 @@
             this.tabControl = new System.Windows.Forms.TabControl();
             this.kryptonHeaderGrouptop = new Krypton.Toolkit.KryptonHeaderGroup();
             this.buttonSpecHeaderGroup1 = new Krypton.Toolkit.ButtonSpecHeaderGroup();
+            this.txtProp = new System.Windows.Forms.TextBox();
+            this.txtCNName = new System.Windows.Forms.TextBox();
+            this.kryptonLabel4 = new Krypton.Toolkit.KryptonLabel();
+            this.kryptonLabel3 = new Krypton.Toolkit.KryptonLabel();
+            this.kryptonLabel2 = new Krypton.Toolkit.KryptonLabel();
+            this.kryptonLabel1 = new Krypton.Toolkit.KryptonLabel();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.rdb小计总计 = new System.Windows.Forms.RadioButton();
             this.rdb其它 = new System.Windows.Forms.RadioButton();
             this.rdb小于单项成本才更新 = new System.Windows.Forms.RadioButton();
             this.rdb成本为0的才修复 = new System.Windows.Forms.RadioButton();
-            this.chk单项成本更新 = new Krypton.Toolkit.KryptonCheckBox();
+            this.chk指定单项成本更新 = new Krypton.Toolkit.KryptonCheckBox();
             this.txtUnitCost = new System.Windows.Forms.TextBox();
             this.cmbType = new Krypton.Toolkit.KryptonComboBox();
             this.txtSearchKey = new System.Windows.Forms.TextBox();
@@ -66,12 +72,6 @@
             this.richTextBoxLog = new System.Windows.Forms.RichTextBox();
             this.bindingSourceList = new System.Windows.Forms.BindingSource(this.components);
             this.bindingSourceInv = new System.Windows.Forms.BindingSource(this.components);
-            this.kryptonLabel1 = new Krypton.Toolkit.KryptonLabel();
-            this.kryptonLabel2 = new Krypton.Toolkit.KryptonLabel();
-            this.kryptonLabel3 = new Krypton.Toolkit.KryptonLabel();
-            this.kryptonLabel4 = new Krypton.Toolkit.KryptonLabel();
-            this.txtCNName = new System.Windows.Forms.TextBox();
-            this.txtProp = new System.Windows.Forms.TextBox();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1.Panel1)).BeginInit();
             this.kryptonSplitContainer1.Panel1.SuspendLayout();
@@ -141,7 +141,6 @@
             this.treeViewNeedUpdateCostList.Name = "treeViewNeedUpdateCostList";
             this.treeViewNeedUpdateCostList.Size = new System.Drawing.Size(155, 709);
             this.treeViewNeedUpdateCostList.TabIndex = 0;
-            this.treeViewNeedUpdateCostList.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.treeView1_MouseDoubleClick);
             // 
             // contextMenuStrip选择要更新的业务
             // 
@@ -368,7 +367,7 @@
             this.kryptonHeaderGrouptop.Panel.Controls.Add(this.kryptonLabel2);
             this.kryptonHeaderGrouptop.Panel.Controls.Add(this.kryptonLabel1);
             this.kryptonHeaderGrouptop.Panel.Controls.Add(this.groupBox1);
-            this.kryptonHeaderGrouptop.Panel.Controls.Add(this.chk单项成本更新);
+            this.kryptonHeaderGrouptop.Panel.Controls.Add(this.chk指定单项成本更新);
             this.kryptonHeaderGrouptop.Panel.Controls.Add(this.txtUnitCost);
             this.kryptonHeaderGrouptop.Panel.Controls.Add(this.cmbType);
             this.kryptonHeaderGrouptop.Panel.Controls.Add(this.txtSearchKey);
@@ -385,6 +384,53 @@
             // 
             this.buttonSpecHeaderGroup1.Type = Krypton.Toolkit.PaletteButtonSpecStyle.ArrowUp;
             this.buttonSpecHeaderGroup1.UniqueName = "aa05785cd09043e4bd13a0269efcb893";
+            // 
+            // txtProp
+            // 
+            this.txtProp.Location = new System.Drawing.Point(71, 61);
+            this.txtProp.Name = "txtProp";
+            this.txtProp.Size = new System.Drawing.Size(319, 21);
+            this.txtProp.TabIndex = 174;
+            // 
+            // txtCNName
+            // 
+            this.txtCNName.Location = new System.Drawing.Point(71, 36);
+            this.txtCNName.Name = "txtCNName";
+            this.txtCNName.Size = new System.Drawing.Size(319, 21);
+            this.txtCNName.TabIndex = 173;
+            // 
+            // kryptonLabel4
+            // 
+            this.kryptonLabel4.Location = new System.Drawing.Point(0, 62);
+            this.kryptonLabel4.Name = "kryptonLabel4";
+            this.kryptonLabel4.Size = new System.Drawing.Size(65, 20);
+            this.kryptonLabel4.TabIndex = 172;
+            this.kryptonLabel4.Values.Text = "产品属性:";
+            // 
+            // kryptonLabel3
+            // 
+            this.kryptonLabel3.Location = new System.Drawing.Point(2, 36);
+            this.kryptonLabel3.Name = "kryptonLabel3";
+            this.kryptonLabel3.Size = new System.Drawing.Size(65, 20);
+            this.kryptonLabel3.TabIndex = 171;
+            this.kryptonLabel3.Values.Text = "产品名称:";
+            // 
+            // kryptonLabel2
+            // 
+            this.kryptonLabel2.Location = new System.Drawing.Point(217, 10);
+            this.kryptonLabel2.Name = "kryptonLabel2";
+            this.kryptonLabel2.Size = new System.Drawing.Size(61, 20);
+            this.kryptonLabel2.TabIndex = 170;
+            this.kryptonLabel2.Values.Text = "产品SKU:";
+            this.kryptonLabel2.Click += new System.EventHandler(this.kryptonLabel2_Click);
+            // 
+            // kryptonLabel1
+            // 
+            this.kryptonLabel1.Location = new System.Drawing.Point(3, 8);
+            this.kryptonLabel1.Name = "kryptonLabel1";
+            this.kryptonLabel1.Size = new System.Drawing.Size(65, 20);
+            this.kryptonLabel1.TabIndex = 169;
+            this.kryptonLabel1.Values.Text = "产品类型:";
             // 
             // groupBox1
             // 
@@ -441,15 +487,15 @@
             this.rdb成本为0的才修复.Text = "成本为0的才修复";
             this.rdb成本为0的才修复.UseVisualStyleBackColor = true;
             // 
-            // chk单项成本更新
+            // chk指定单项成本更新
             // 
-            this.chk单项成本更新.Checked = true;
-            this.chk单项成本更新.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.chk单项成本更新.Location = new System.Drawing.Point(563, 10);
-            this.chk单项成本更新.Name = "chk单项成本更新";
-            this.chk单项成本更新.Size = new System.Drawing.Size(127, 20);
-            this.chk单项成本更新.TabIndex = 164;
-            this.chk单项成本更新.Values.Text = "指定单项成本更新";
+            this.chk指定单项成本更新.Checked = true;
+            this.chk指定单项成本更新.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.chk指定单项成本更新.Location = new System.Drawing.Point(563, 10);
+            this.chk指定单项成本更新.Name = "chk指定单项成本更新";
+            this.chk指定单项成本更新.Size = new System.Drawing.Size(127, 20);
+            this.chk指定单项成本更新.TabIndex = 164;
+            this.chk指定单项成本更新.Values.Text = "指定单项成本更新";
             // 
             // txtUnitCost
             // 
@@ -511,53 +557,6 @@
             this.richTextBoxLog.Size = new System.Drawing.Size(1050, 182);
             this.richTextBoxLog.TabIndex = 0;
             this.richTextBoxLog.Text = "";
-            // 
-            // kryptonLabel1
-            // 
-            this.kryptonLabel1.Location = new System.Drawing.Point(3, 8);
-            this.kryptonLabel1.Name = "kryptonLabel1";
-            this.kryptonLabel1.Size = new System.Drawing.Size(65, 20);
-            this.kryptonLabel1.TabIndex = 169;
-            this.kryptonLabel1.Values.Text = "产品类型:";
-            // 
-            // kryptonLabel2
-            // 
-            this.kryptonLabel2.Location = new System.Drawing.Point(217, 10);
-            this.kryptonLabel2.Name = "kryptonLabel2";
-            this.kryptonLabel2.Size = new System.Drawing.Size(61, 20);
-            this.kryptonLabel2.TabIndex = 170;
-            this.kryptonLabel2.Values.Text = "产品SKU:";
-            this.kryptonLabel2.Click += new System.EventHandler(this.kryptonLabel2_Click);
-            // 
-            // kryptonLabel3
-            // 
-            this.kryptonLabel3.Location = new System.Drawing.Point(2, 36);
-            this.kryptonLabel3.Name = "kryptonLabel3";
-            this.kryptonLabel3.Size = new System.Drawing.Size(65, 20);
-            this.kryptonLabel3.TabIndex = 171;
-            this.kryptonLabel3.Values.Text = "产品名称:";
-            // 
-            // kryptonLabel4
-            // 
-            this.kryptonLabel4.Location = new System.Drawing.Point(0, 62);
-            this.kryptonLabel4.Name = "kryptonLabel4";
-            this.kryptonLabel4.Size = new System.Drawing.Size(65, 20);
-            this.kryptonLabel4.TabIndex = 172;
-            this.kryptonLabel4.Values.Text = "产品属性:";
-            // 
-            // txtCNName
-            // 
-            this.txtCNName.Location = new System.Drawing.Point(71, 36);
-            this.txtCNName.Name = "txtCNName";
-            this.txtCNName.Size = new System.Drawing.Size(319, 21);
-            this.txtCNName.TabIndex = 173;
-            // 
-            // txtProp
-            // 
-            this.txtProp.Location = new System.Drawing.Point(71, 61);
-            this.txtProp.Name = "txtProp";
-            this.txtProp.Size = new System.Drawing.Size(319, 21);
-            this.txtProp.TabIndex = 174;
             // 
             // UCDataFixForCost
             // 
@@ -645,7 +644,7 @@
         private System.Windows.Forms.TabControl tabControl;
         private Krypton.Toolkit.KryptonComboBox cmbType;
         private System.Windows.Forms.TextBox txtUnitCost;
-        private Krypton.Toolkit.KryptonCheckBox chk单项成本更新;
+        private Krypton.Toolkit.KryptonCheckBox chk指定单项成本更新;
         private System.Windows.Forms.ToolStripMenuItem 更新关联成本ToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem 更新库存成本数据ToolStripMenuItem;
         private System.Windows.Forms.GroupBox groupBox1;

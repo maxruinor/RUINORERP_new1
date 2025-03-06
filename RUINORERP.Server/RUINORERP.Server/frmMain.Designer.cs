@@ -256,7 +256,7 @@
             // 
             tslblStatus.Name = "tslblStatus";
             tslblStatus.Size = new System.Drawing.Size(0, 17);
-            tslblStatus.DoubleClick += tslblStatus_DoubleClick;
+            
             // 
             // frmMain
             // 

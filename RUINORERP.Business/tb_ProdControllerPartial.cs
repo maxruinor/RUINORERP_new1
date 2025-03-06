@@ -241,26 +241,6 @@ namespace RUINORERP.Business
                             await _unitOfWorkManage.GetDbClient().Insertable(info.tb_ProdDetails[d].tb_Prod_Attr_Relations[r]).ExecuteReturnEntityAsync();//会自动生成雪花ID
                         }
                     }
-                    //if (info.tb_Prod_Attr_Relations != null)
-                    //{
-                    //    //按sku分组，相同的SKU则组成一个属性组合指向一个产品
-                    //    var skus = info.tb_Prod_Attr_Relations.GroupBy(x => x.tb_ProdDetail.SKU);
-                    //    foreach (var sku in skus)
-                    //    {
-                    //        tb_ProdDetail detail = info.tb_Prod_Attr_Relations.FirstOrDefault(x => x.tb_ProdDetail.SKU == sku.Key.ToString()).tb_ProdDetail;
-                    //        detail.ProdBaseID = newinfo.ProdBaseID;
-                    //        //sku count
-                    //        long detailID = await _unitOfWorkManage.GetDbClient().Insertable(detail).ExecuteReturnSnowflakeIdAsync();
-                    //        foreach (var relation in sku)
-                    //        {
-                    //            relation.ProdBaseID = newinfo.ProdBaseID;
-                    //            relation.ProdDetailID = detailID;
-                    //            await _unitOfWorkManage.GetDbClient().Insertable(relation).ExecuteReturnEntityAsync();//会自动生成雪花ID
-                    //                                                                                                  //await _unitOfWorkManage.GetDbClient().Insertable(relation).ExecuteCommandAsync();//不会自动生成雪花ID
-                    //        }
-
-                    //    }
-                    //}
                     rr.ReturnObject = newinfo;
 
                 }

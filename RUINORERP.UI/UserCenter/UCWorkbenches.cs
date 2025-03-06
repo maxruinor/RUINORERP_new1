@@ -195,7 +195,7 @@ namespace RUINORERP.UI.UserCenter
             tb_UserInfo CurrentUser = MainForm.Instance.AppContext.CurUserInfo.UserInfo;
 
             tb_WorkCenterConfig centerConfig = MainForm.Instance.AppContext.WorkCenterConfigList.FirstOrDefault(c => c.RoleID == CurrentRole.RoleID && c.User_ID == CurrentUser.User_ID);
-            if (centerConfig == null)
+            if (centerConfig == null || (centerConfig != null && centerConfig.DataOverview.Split(',').ToList().Count == 0))
             {
                 centerConfig = MainForm.Instance.AppContext.WorkCenterConfigList.FirstOrDefault(c => c.RoleID == CurrentRole.RoleID);
             }
@@ -212,7 +212,7 @@ namespace RUINORERP.UI.UserCenter
                     switch (DataOverview)
                     {
                         case 数据概览.销售情况概览:
-                            
+
                             UCSalePerformanceCell uCSalePerformanceCell = new UCSalePerformanceCell();
                             KryptonPage puCSalePerformanceCell = UIForKryptonHelper.NewPage("销售情况概览", uCSalePerformanceCell);
 
@@ -411,8 +411,8 @@ namespace RUINORERP.UI.UserCenter
         private void LoadDefaultLayoutFromDb(KryptonPageCollection Kpages)
         {
             //没有个性化文件时用默认的
-            if (MainForm.Instance.AppContext.CurrentUser != null 
-                && MainForm.Instance.AppContext.CurrentUser_Role_Personalized != null 
+            if (MainForm.Instance.AppContext.CurrentUser != null
+                && MainForm.Instance.AppContext.CurrentUser_Role_Personalized != null
                 && !string.IsNullOrEmpty(MainForm.Instance.AppContext.CurrentUser_Role_Personalized.WorkCellLayout))
             {
                 #region load
@@ -518,7 +518,7 @@ namespace RUINORERP.UI.UserCenter
         //        MainForm.Instance.logger.LogError(ex, "加载查询页布局配置文件出错。");
         //    }
         //}
-     
+
         #endregion
 
         private void btnReload_Click(object sender, EventArgs e)

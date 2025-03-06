@@ -652,7 +652,7 @@ namespace RUINORERP.UI.PSI.SAL
                 EditEntity.TotalCost = details.Sum(c => c.Cost * c.Quantity);
                 EditEntity.TotalAmount = details.Sum(c => c.TransactionPrice * c.Quantity);
                 EditEntity.TotalTaxAmount = details.Sum(c => c.SubtotalTaxAmount);
-                EditEntity.TotalUntaxedAmount = details.Sum(c => c.SubtotalUntaxedAmount)+ EditEntity.ShipCost;
+                EditEntity.TotalUntaxedAmount = details.Sum(c => c.SubtotalUntaxedAmount) + EditEntity.ShipCost;
                 EditEntity.CollectedMoney = EditEntity.TotalUntaxedAmount;
                 EditEntity.TotalAmount = EditEntity.TotalAmount + EditEntity.ShipCost;
                 //如果没有有效的明细。直接提示
@@ -744,6 +744,13 @@ namespace RUINORERP.UI.PSI.SAL
 
                 if (NeedValidated)
                 {
+                    //1 2  4  8  大于等于 4 就是审核或结案了
+                    //if (EditEntity.tb_SaleOuts != null && EditEntity.tb_SaleOuts.Where(c => c.DataStatus >= 4).ToList().Count > 0)
+                    //{
+                    //    MessageBox.Show("当前订单已有销售出库数据，无法修改保存。请联系仓库处理。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    //    return false;
+                    //}
+                    //简单来处理就是要先删除出库数据
                     if (EditEntity.tb_SaleOuts != null && EditEntity.tb_SaleOuts.Count > 0)
                     {
                         MessageBox.Show("当前订单已有销售出库数据，无法修改保存。请联系仓库处理。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
@@ -759,6 +766,23 @@ namespace RUINORERP.UI.PSI.SAL
                     }
                 }
 
+                
+                ReturnMainSubResults<tb_SaleOrder> SaveResult = new ReturnMainSubResults<tb_SaleOrder>();
+                if (NeedValidated)
+                {
+                    SaveResult = await base.Save(EditEntity);
+                    if (SaveResult.Succeeded)
+                    {
+                        MainForm.Instance.PrintInfoLog($"保存成功,{EditEntity.SOrderNo}。");
+                    }
+                    else
+                    {
+                        MainForm.Instance.PrintInfoLog($"保存失败,{SaveResult.ErrorMsg}。", Color.Red);
+                    }
+                }
+                return SaveResult.Succeeded;
+
+                /*
                 if (EditEntity.SOrder_ID > 0)
                 {
                     //如果是超级管理员，提供一个保存方式 就是在基本明细数据行不变时。只更新部分字段
@@ -830,6 +854,7 @@ namespace RUINORERP.UI.PSI.SAL
                     }
                     return SaveResult.Succeeded;
                 }
+                */
             }
             return false;
         }

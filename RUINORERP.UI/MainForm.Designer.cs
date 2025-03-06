@@ -610,7 +610,7 @@ namespace RUINORERP.UI
             // 
             // statusTimer
             // 
-            this.statusTimer.Interval = 5000;
+            this.statusTimer.Interval = 8000;
             this.statusTimer.Tick += new System.EventHandler(this.statusTimer_Tick);
             // 
             // kryptonContextMenuItem1

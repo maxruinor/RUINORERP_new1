@@ -179,7 +179,7 @@ namespace RUINORERP.UI.PSI.INV
             DataBindingHelper.BindData4TextBoxWithTagQuery<tb_ProdMerge>(entity, v => v.ProdDetailID, txtProdDetailID, true);
             if (entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改)
             {
-                base.InitRequiredToControl(MainForm.Instance.AppContext.GetRequiredService <tb_ProdMergeValidator> (), kryptonSplitContainer1.Panel1.Controls);
+                base.InitRequiredToControl(MainForm.Instance.AppContext.GetRequiredService<tb_ProdMergeValidator>(), kryptonSplitContainer1.Panel1.Controls);
 
                 //创建表达式  草稿 结案 和没有提交的都不显示
                 var lambdaOrder = Expressionable.Create<View_ProdDetail>()
@@ -366,7 +366,7 @@ namespace RUINORERP.UI.PSI.INV
             sgd.GridMasterData = EditEntity;
             //要放到初始化sgd后面
             listCols.SetCol_Summary<tb_ProdMergeDetail>(c => c.Qty);
-
+            listCols.SetCol_Summary<ProductSharePart>(c => c.Inv_Cost.Value);
             sgh.SetPointToColumnPairs<ProductSharePart, tb_ProdMergeDetail>(sgd, f => f.Location_ID, t => t.Location_ID);
 
             sgh.SetPointToColumnPairs<ProductSharePart, tb_ProdMergeDetail>(sgd, f => f.prop, t => t.property);

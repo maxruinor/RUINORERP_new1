@@ -309,6 +309,21 @@ namespace RUINORERP.Business
             return result; // 或者根据实际情况返回值
         }
 
+        
+
+
+                    /// <summary>
+                    /// 反审核  反审核本身就是一个特殊情况。所以不能批量处理
+                    /// </summary>
+                    /// <param name="entity"></param>
+                    /// <returns></returns>
+        public async virtual Task<ReturnResults<T>> AdvancedSave(T entity)
+        {
+            ReturnResults<T> result = new ReturnResults<T>();
+            await Task.Delay(0); // 模拟异步操作
+            return result; // 或者根据实际情况返回值
+        }
+
 
         /// <summary>
         /// 反审核  反审核本身就是一个特殊情况。所以不能批量处理

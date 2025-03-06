@@ -819,6 +819,10 @@ namespace RUINORERP.UI.Common
                             //成功后。旧文件名部分要和上传成功后新文件名部分一致。后面修改只修改新文件名部分。再对比
                             MainForm.Instance.PrintInfoLog("UploadSuccessful for base List:" + newfileName);
                         }
+                        else
+                        {
+                            MainForm.Instance.LoginWebServer();
+                        }
                     }
                 }
 

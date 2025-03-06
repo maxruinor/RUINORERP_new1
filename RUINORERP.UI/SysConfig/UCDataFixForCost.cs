@@ -56,6 +56,7 @@ using System.Diagnostics;
 using RUINORERP.UI.CommonUI;
 using RUINORERP.UI.ATechnologyStack;
 using Winista.Text.HtmlParser.Tags;
+using Org.BouncyCastle.Crypto;
 
 
 namespace RUINORERP.UI.SysConfig
@@ -68,7 +69,51 @@ namespace RUINORERP.UI.SysConfig
             InitializeComponent();
         }
 
+        /// <summary>
+        /// esc退出窗体
+        /// </summary>
+        /// <param name="msg"></param>
+        /// <param name="keyData"></param>
+        /// <returns></returns>
+        protected override bool ProcessCmdKey(ref System.Windows.Forms.Message msg, System.Windows.Forms.Keys keyData) //激活回车键
+        {
+            int WM_KEYDOWN = 256;
+            int WM_SYSKEYDOWN = 260;
 
+            if (msg.Msg == WM_KEYDOWN | msg.Msg == WM_SYSKEYDOWN)
+            {
+                switch (keyData)
+                {
+                    //case Keys.Escape:
+                    //    //Exit(this);//csc关闭窗体
+                    //    break;
+                    case Keys.Enter:
+                        QueryInv(); 
+                        break;
+                }
+
+            }
+            //return false;
+            var key = keyData & Keys.KeyCode;
+            var modeifierKey = keyData & Keys.Modifiers;
+            if (modeifierKey == Keys.Control && key == Keys.F)
+            {
+                // MessageBox.Show("Control+F is pressed");
+                return true;
+
+            }
+
+            var otherkey = keyData & Keys.KeyCode;
+            var othermodeifierKey = keyData & Keys.Modifiers;
+            if (othermodeifierKey == Keys.Control && otherkey == Keys.F)
+            {
+                MessageBox.Show("Control+F is pressed");
+                return true;
+            }
+
+            return base.ProcessCmdKey(ref msg, keyData);
+
+        }
 
         private void UCDataFix_Load(object sender, EventArgs e)
         {
@@ -99,10 +144,7 @@ namespace RUINORERP.UI.SysConfig
         BizTypeMapper mapper = new BizTypeMapper();
 
 
-        private void treeView1_MouseDoubleClick(object sender, MouseEventArgs e)
-        {
 
-        }
 
         /*
         /// <summary>
@@ -254,7 +296,12 @@ namespace RUINORERP.UI.SysConfig
             return Math.Round(percentage, 2); // 四舍五入到 2 位小数
         }
 
-        private async void btnQuery_Click(object sender, EventArgs e)
+        private  void btnQuery_Click(object sender, EventArgs e)
+        {
+            QueryInv();
+        }
+
+        private async void QueryInv()
         {
             List<View_Inventory> inventories = new List<View_Inventory>();
             inventories = await MainForm.Instance.AppContext.Db.Queryable<View_Inventory>()
@@ -290,14 +337,6 @@ namespace RUINORERP.UI.SysConfig
             }
             richTextBoxLog.AppendText($"查询结果{inventories.Count} " + "\r\n");
         }
-
-
-
-
-
-
-
-
 
         private static void CancelCheckedExceptOne(TreeNodeCollection tnc, TreeNode tn)
         {
@@ -665,11 +704,15 @@ namespace RUINORERP.UI.SysConfig
                        .Where(a => a.ProdDetailID == ProdDetailID)
                        .Select(it => (dynamic)new
                        {
+                           数量 = it.Qty,
                            缴库单号 = it.DeliveryBillNo,
                            缴库日期 = it.DeliveryDate,
-                           成本 = it.UnitCost,
-                           成本小计 = it.ProductionAllCost,
-                           数量 = it.Qty
+                           材料成本 = it.MaterialCost,
+                           材料成本小计 = it.SubtotalMaterialCost,
+                           分摊成本 = it.ApportionedCost,
+                           制造费 = it.ManuFee,
+                           单位成本 = it.UnitCost,
+                           成本小计 = it.ProductionAllCost
                        }).ToList();
 
                             DataGridView dgv缴库单 = new DataGridView();
@@ -680,11 +723,9 @@ namespace RUINORERP.UI.SysConfig
                             dgv缴库单.AutoResizeRows();
                             dgv缴库单.Tag = bt;
                             #endregion
-
                             page缴库单.Text = "缴库单" + ProdFinishedItems.Count;
                             page缴库单.Controls.Add(dgv缴库单);
                             tabControl.TabPages.Add(page缴库单);
-
                             break;
                         case BizType.请购单:
                             break;
@@ -798,6 +839,12 @@ namespace RUINORERP.UI.SysConfig
                 //2）修复所有出库明细，主要是销售出库，当然还有其它，比方借出，成本金额是重要的指标数据
                 //3）成本修复 分  成品 外采和生产  因为这两种成本产生的方式不一样
                 #region 成本本身修复
+                long[] ids = updateInvList.Select(c => c.Inventory_ID).ToArray();
+                updateInvList = await MainForm.Instance.AppContext.Db.Queryable<tb_Inventory>()
+                   .AsNavQueryable()
+                   .Includes(c => c.tb_proddetail, d => d.tb_PurEntryDetails, e => e.tb_proddetail, f => f.tb_prod)
+                   .Includes(c => c.tb_proddetail, d => d.tb_prod)
+                    .Where(c => ids.Contains(c.Inventory_ID)).ToListAsync();
 
                 foreach (tb_Inventory item in updateInvList)
                 {
@@ -853,6 +900,18 @@ namespace RUINORERP.UI.SysConfig
                             }
                         }
                     }
+                    else
+                    {
+                        if (chk指定单项成本更新.Checked && updateInvList.Count == 1)
+                        {
+                            item.CostMovingWA = txtUnitCost.Text.ToDecimal();
+                            item.Inv_AdvCost = item.CostMovingWA;
+                            item.Inv_Cost = item.CostMovingWA;
+                            item.Inv_SubtotalCostMoney = item.Inv_Cost * item.Quantity;
+                            item.Notes += $"{System.DateTime.Now.ToString("yyyy-MM-dd")}成本修复为指定值：{txtUnitCost.Text}";
+                            updateInvList.Add(item);
+                        }
+                    }
                 }
                 if (chkTestMode.Checked)
                 {
@@ -894,14 +953,14 @@ namespace RUINORERP.UI.SysConfig
             }
             try
             {
-                if (chk单项成本更新.Checked && updateInvList.Count > 1)
+                if (chk指定单项成本更新.Checked && updateInvList.Count > 1)
                 {
                     MessageBox.Show("选择单项成本更新时,更新库存数据不能大于1");
                     return;
                 }
                 foreach (var child in updateInvList)
                 {
-                    if (chk单项成本更新.Checked && updateInvList.Count == 1)
+                    if (chk指定单项成本更新.Checked && updateInvList.Count == 1)
                     {
                         child.Inv_Cost = txtUnitCost.Text.ToDecimal();
                     }
@@ -1621,6 +1680,7 @@ namespace RUINORERP.UI.SysConfig
                                                         Detail.MaterialCost = child.Inv_Cost;
                                                         Detail.UnitCost = Detail.MaterialCost * Detail.ManuFee + Detail.ApportionedCost;
                                                         Detail.ProductionAllCost = Detail.UnitCost * Detail.Qty;
+                                                        
                                                         //这时可以算出缴库的产品的单位成本
                                                         var nextInv = Detail.tb_proddetail.tb_Inventories.FirstOrDefault(c => c.Location_ID == Detail.Location_ID);
                                                         if (nextInv != null)
@@ -1655,24 +1715,24 @@ namespace RUINORERP.UI.SysConfig
                                                             updateFGListdetail.Add(Detail);
                                                         }
                                                     }
-                                                    if (rdb其它.Checked && Detail.UnitCost != 0)
-                                                    {
-                                                        Detail.MaterialCost = child.Inv_Cost;
-                                                        Detail.UnitCost = Detail.MaterialCost * Detail.ManuFee + Detail.ApportionedCost;
-                                                        Detail.ProductionAllCost = Detail.UnitCost * Detail.Qty;
-                                                        //这时可以算出缴库的产品的单位成本
-                                                        var nextInv = Detail.tb_proddetail.tb_Inventories.FirstOrDefault(c => c.Location_ID == Detail.Location_ID);
-                                                        if (nextInv != null)
-                                                        {
-                                                            nextInv.Inv_Cost = Detail.UnitCost;
-                                                            if (!chkTestMode.Checked)
-                                                            {
-                                                                await MainForm.Instance.AppContext.Db.Updateable<tb_Inventory>(nextInv).ExecuteCommandAsync();
-                                                            }
-                                                        }
+                                                    //if (rdb其它.Checked && Detail.UnitCost != 0)
+                                                    //{
+                                                    //    Detail.MaterialCost = child.Inv_Cost;
+                                                    //    Detail.UnitCost = Detail.MaterialCost * Detail.ManuFee + Detail.ApportionedCost;
+                                                    //    Detail.ProductionAllCost = Detail.UnitCost * Detail.Qty;
+                                                    //    //这时可以算出缴库的产品的单位成本
+                                                    //    var nextInv = Detail.tb_proddetail.tb_Inventories.FirstOrDefault(c => c.Location_ID == Detail.Location_ID);
+                                                    //    if (nextInv != null)
+                                                    //    {
+                                                    //        nextInv.Inv_Cost = Detail.UnitCost;
+                                                    //        if (!chkTestMode.Checked)
+                                                    //        {
+                                                    //            await MainForm.Instance.AppContext.Db.Updateable<tb_Inventory>(nextInv).ExecuteCommandAsync();
+                                                    //        }
+                                                    //    }
 
-                                                        updateFGListdetail.Add(Detail);
-                                                    }
+                                                    //    updateFGListdetail.Add(Detail);
+                                                    //}
 
                                                 }
                                             }
@@ -1773,9 +1833,9 @@ namespace RUINORERP.UI.SysConfig
                                         #region 归还单
                                         if (bill.tb_ProdReturnings != null)
                                         {
-                                            foreach (var borrow in bill.tb_ProdReturnings)
+                                            foreach (var borrowReturn in bill.tb_ProdReturnings)
                                             {
-                                                foreach (var returning in borrow.tb_ProdReturningDetails)
+                                                foreach (var returning in borrowReturn.tb_ProdReturningDetails)
                                                 {
                                                     if (returning.ProdDetailID == child.ProdDetailID)
                                                     {
@@ -1800,12 +1860,13 @@ namespace RUINORERP.UI.SysConfig
                                                             }
                                                         }
                                                     }
-                                                    borrow.TotalCost = borrow.tb_ProdReturningDetails.Sum(c => c.SubtotalCostAmount);
+                                                    borrowReturn.TotalCost = borrowReturn.tb_ProdReturningDetails.Sum(c => c.SubtotalCostAmount);
 
                                                     if (!chkTestMode.Checked)
                                                     {
-                                                        await MainForm.Instance.AppContext.Db.Updateable<tb_ProdBorrowing>(borrow).ExecuteCommandAsync();
-                                                        await MainForm.Instance.AppContext.Db.Updateable<tb_ProdBorrowingDetail>(borrow.tb_ProdReturningDetails).ExecuteCommandAsync();
+
+                                                        await MainForm.Instance.AppContext.Db.Updateable<tb_ProdReturning>(borrowReturn).ExecuteCommandAsync();
+                                                        await MainForm.Instance.AppContext.Db.Updateable<tb_ProdReturningDetail>(borrowReturn.tb_ProdReturningDetails).ExecuteCommandAsync();
                                                     }
                                                 }
                                             }
@@ -1821,7 +1882,7 @@ namespace RUINORERP.UI.SysConfig
                                                 await MainForm.Instance.AppContext.Db.Updateable<tb_ProdBorrowingDetail>(updateBRListdetail).ExecuteCommandAsync();
                                             }
                                         }
-                                        
+
 
                                     }
                                     #endregion
@@ -1993,10 +2054,12 @@ namespace RUINORERP.UI.SysConfig
             }
             catch (Exception ex)
             {
+                richTextBoxLog.AppendText($"更新关联成本出错： {ex.Message} " + "\r\n");
                 if (!chkTestMode.Checked)
                 {
                     MainForm.Instance.AppContext.Db.Ado.RollbackTran();
                 }
+
             }
         }
 

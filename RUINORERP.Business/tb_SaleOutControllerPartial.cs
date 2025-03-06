@@ -257,6 +257,12 @@ namespace RUINORERP.Business
                     for (int i = 0; i < entity.tb_saleorder.tb_SaleOrderDetails.Count; i++)
                     {
                         //如果当前订单明细行，不存在于出库明细行。直接跳过。这种就是多行多品被删除时。不需要比较
+                        decimal saleOutDetailCost = 0;
+                        var saleOutDetail = detailList.Where(c => c.ProdDetailID == entity.tb_saleorder.tb_SaleOrderDetails[i].ProdDetailID).FirstOrDefault();
+                        if (saleOutDetail != null)
+                        {
+                            saleOutDetailCost = saleOutDetail.Cost;
+                        }
 
                         string prodName = entity.tb_saleorder.tb_SaleOrderDetails[i].tb_proddetail.tb_prod.CNName +
                                   entity.tb_saleorder.tb_SaleOrderDetails[i].tb_proddetail.tb_prod.Specifications;
@@ -277,6 +283,7 @@ namespace RUINORERP.Business
                             #endregion
 
                             var inQty = detailList.Where(c => c.ProdDetailID == entity.tb_saleorder.tb_SaleOrderDetails[i].ProdDetailID && c.SaleOrderDetail_ID == entity.tb_saleorder.tb_SaleOrderDetails[i].SaleOrderDetail_ID).Sum(c => c.Quantity);
+
                             if (inQty > entity.tb_saleorder.tb_SaleOrderDetails[i].Quantity)
                             {
                                 string msg = $"销售订单:{entity.tb_saleorder.SOrderNo}的【{prodName}】的出库数量不能大于订单中对应行的数量，\r\n\" " +
@@ -291,6 +298,13 @@ namespace RUINORERP.Business
                                 var RowQty = entity.tb_SaleOutDetails.Where(c => c.ProdDetailID == entity.tb_saleorder.tb_SaleOrderDetails[i].ProdDetailID && c.SaleOrderDetail_ID == entity.tb_saleorder.tb_SaleOrderDetails[i].SaleOrderDetail_ID).Sum(c => c.Quantity);
                                 //算出交付的数量
                                 entity.tb_saleorder.tb_SaleOrderDetails[i].TotalDeliveredQty += RowQty;
+
+                                //如果是业务员在没有成本数据（新品口头上问了采购）就录入了订单。后面入库后销售出库时成本是正确时。要更新回去
+                                if (entity.tb_saleorder.tb_SaleOrderDetails[i].Cost == 0 && saleOutDetailCost > 0)
+                                {
+                                    entity.tb_saleorder.tb_SaleOrderDetails[i].Cost = saleOutDetailCost;
+                                    entity.tb_saleorder.tb_SaleOrderDetails[i].SubtotalCostAmount = saleOutDetailCost * entity.tb_saleorder.tb_SaleOrderDetails[i].Quantity;
+                                }
                                 //如果已交数据大于 订单数量 给出警告实际操作中 使用其他方式将备品入库
                                 if (entity.tb_saleorder.tb_SaleOrderDetails[i].TotalDeliveredQty > entity.tb_saleorder.tb_SaleOrderDetails[i].Quantity)
                                 {
@@ -303,6 +317,7 @@ namespace RUINORERP.Business
                         {
                             //一对一时，找到所有的出库明细数量总和
                             var inQty = detailList.Where(c => c.ProdDetailID == entity.tb_saleorder.tb_SaleOrderDetails[i].ProdDetailID).Sum(c => c.Quantity);
+
                             if (inQty > entity.tb_saleorder.tb_SaleOrderDetails[i].Quantity)
                             {
 
@@ -318,6 +333,14 @@ namespace RUINORERP.Business
                                 //当前行累计到交付，只能是当前行所以重新找到当前出库单明细的的数量
                                 var RowQty = entity.tb_SaleOutDetails.Where(c => c.ProdDetailID == entity.tb_saleorder.tb_SaleOrderDetails[i].ProdDetailID).Sum(c => c.Quantity);
                                 entity.tb_saleorder.tb_SaleOrderDetails[i].TotalDeliveredQty += RowQty;
+
+                                //如果是业务员在没有成本数据（新品口头上问了采购）就录入了订单。后面入库后销售出库时成本是正确时。要更新回去
+                                if (entity.tb_saleorder.tb_SaleOrderDetails[i].Cost == 0 && saleOutDetailCost > 0)
+                                {
+                                    entity.tb_saleorder.tb_SaleOrderDetails[i].Cost = saleOutDetailCost;
+                                    entity.tb_saleorder.tb_SaleOrderDetails[i].SubtotalCostAmount = saleOutDetailCost * entity.tb_saleorder.tb_SaleOrderDetails[i].Quantity;
+                                }
+
                                 //如果已交数据大于 订单数量 给出警告实际操作中 使用其他方式将备品入库
                                 if (entity.tb_saleorder.tb_SaleOrderDetails[i].TotalDeliveredQty > entity.tb_saleorder.tb_SaleOrderDetails[i].Quantity)
                                 {
@@ -346,8 +369,6 @@ namespace RUINORERP.Business
                     }
 
                     #endregion
-
-
 
 
                     //如果出库金额为0，但是订单中不是为0，则不允许出库,如果明细中注明了。都是赠品是可以的。
@@ -419,8 +440,8 @@ namespace RUINORERP.Business
                     {
                         entity.tb_saleorder.DataStatus = (int)DataStatus.完结;
                         entity.tb_saleorder.CloseCaseOpinions = "【系统自动结案】==》" + System.DateTime.Now.ToString() + _appContext.CurUserInfo.UserInfo.tb_employee.Employee_Name + "审核销售库单时:" + entity.SaleOutNo + "结案。"; ;
-
-                        await _unitOfWorkManage.GetDbClient().Updateable(entity.tb_saleorder).UpdateColumns(t => new { t.DataStatus, t.CloseCaseOpinions }).ExecuteCommandAsync();
+                        entity.tb_saleorder.TotalCost = entity.tb_SaleOutDetails.Sum(c => c.Cost * c.Quantity);
+                        await _unitOfWorkManage.GetDbClient().Updateable(entity.tb_saleorder).UpdateColumns(t => new { t.DataStatus, t.CloseCaseOpinions, entity.tb_saleorder.TotalCost }).ExecuteCommandAsync();
                     }
 
 
@@ -540,111 +561,106 @@ namespace RUINORERP.Business
 
                     // }
                 }
-                if (entity.tb_saleorder != null)
+
+                #region  反审检测写回 退回
+                //处理销售订单
+                entity.tb_saleorder = _unitOfWorkManage.GetDbClient().Queryable<tb_SaleOrder>()
+                     .Includes(a => a.tb_SaleOuts, b => b.tb_SaleOutDetails)
+                     .Includes(a => a.tb_customervendor, b => b.tb_crm_customer, c => c.tb_crm_leads)
+                     .AsNavQueryable()//加这个前面,超过三级在前面加这一行，并且第四级无VS智能提示，但是可以用
+                     .Includes(a => a.tb_SaleOrderDetails, b => b.tb_proddetail, c => c.tb_prod)
+                     .Where(c => c.SOrder_ID == entity.SOrder_ID)
+                     .Single();
+
+                //先找到所有出库明细,再找按订单明细去循环比较。如果出库总数量大于订单数量，则不允许出库。
+                List<tb_SaleOutDetail> detailList = new List<tb_SaleOutDetail>();
+                foreach (var item in entity.tb_saleorder.tb_SaleOuts)
                 {
+                    detailList.AddRange(item.tb_SaleOutDetails);
+                }
 
-                    #region  反审检测写回 退回
-                    //处理销售订单
-                    entity.tb_saleorder = _unitOfWorkManage.GetDbClient().Queryable<tb_SaleOrder>()
-                         .Includes(a => a.tb_SaleOuts, b => b.tb_SaleOutDetails)
-                         .Includes(a => a.tb_customervendor, b => b.tb_crm_customer, c => c.tb_crm_leads)
-                         .AsNavQueryable()//加这个前面,超过三级在前面加这一行，并且第四级无VS智能提示，但是可以用
-                         .Includes(a => a.tb_SaleOrderDetails, b => b.tb_proddetail, c => c.tb_prod)
-                         .Where(c => c.SOrder_ID == entity.SOrder_ID)
-                         .Single();
+                //分两种情况处理。
+                for (int i = 0; i < entity.tb_saleorder.tb_SaleOrderDetails.Count; i++)
+                {
+                    //如果当前订单明细行，不存在于出库明细行。直接跳过。这种就是多行多品被删除时。不需要比较
 
-
-
-                    //先找到所有出库明细,再找按订单明细去循环比较。如果出库总数量大于订单数量，则不允许出库。
-                    List<tb_SaleOutDetail> detailList = new List<tb_SaleOutDetail>();
-                    foreach (var item in entity.tb_saleorder.tb_SaleOuts)
+                    string prodName = entity.tb_saleorder.tb_SaleOrderDetails[i].tb_proddetail.tb_prod.CNName +
+                              entity.tb_saleorder.tb_SaleOrderDetails[i].tb_proddetail.tb_prod.Specifications;
+                    //明细中有相同的产品或物品。
+                    var aa = entity.tb_saleorder.tb_SaleOrderDetails.Select(c => c.ProdDetailID).ToList().GroupBy(x => x).Where(x => x.Count() > 1).Select(x => x.Key).ToList();
+                    if (aa.Count > 0 && entity.tb_saleorder.tb_SaleOrderDetails[i].SaleOrderDetail_ID > 0)
                     {
-                        detailList.AddRange(item.tb_SaleOutDetails);
-                    }
-
-                    //分两种情况处理。
-                    for (int i = 0; i < entity.tb_saleorder.tb_SaleOrderDetails.Count; i++)
-                    {
-                        //如果当前订单明细行，不存在于出库明细行。直接跳过。这种就是多行多品被删除时。不需要比较
-
-                        string prodName = entity.tb_saleorder.tb_SaleOrderDetails[i].tb_proddetail.tb_prod.CNName +
-                                  entity.tb_saleorder.tb_SaleOrderDetails[i].tb_proddetail.tb_prod.Specifications;
-                        //明细中有相同的产品或物品。
-                        var aa = entity.tb_saleorder.tb_SaleOrderDetails.Select(c => c.ProdDetailID).ToList().GroupBy(x => x).Where(x => x.Count() > 1).Select(x => x.Key).ToList();
-                        if (aa.Count > 0 && entity.tb_saleorder.tb_SaleOrderDetails[i].SaleOrderDetail_ID > 0)
+                        #region 如果存在不是引用的明细,则不允许入库。这样不支持手动添加的情况。
+                        if (entity.tb_SaleOutDetails.Any(c => c.SaleOrderDetail_ID == 0))
                         {
-                            #region //如果存在不是引用的明细,则不允许入库。这样不支持手动添加的情况。
-                            if (entity.tb_SaleOutDetails.Any(c => c.SaleOrderDetail_ID == 0))
-                            {
-                                //如果存在不是引用的明细,则不允许入库。这样不支持手动添加的情况。
-                                string msg = $"销售订单:{entity.tb_saleorder.SOrderNo}的【{prodName}】在订单明细中拥有多行记录，必须使用引用的方式添加，反审失败！";
-                                MessageBox.Show(msg, "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                                _unitOfWorkManage.RollbackTran();
-                                _logger.LogInformation(msg);
-                                return rs;
-                            }
-                            #endregion
+                            //如果存在不是引用的明细,则不允许入库。这样不支持手动添加的情况。
+                            string msg = $"销售订单:{entity.tb_saleorder.SOrderNo}的【{prodName}】在订单明细中拥有多行记录，必须使用引用的方式添加，反审失败！";
+                            MessageBox.Show(msg, "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                            _unitOfWorkManage.RollbackTran();
+                            _logger.LogInformation(msg);
+                            return rs;
+                        }
+                        #endregion
 
-                            var inQty = detailList.Where(c => c.ProdDetailID == entity.tb_saleorder.tb_SaleOrderDetails[i].ProdDetailID && c.SaleOrderDetail_ID == entity.tb_saleorder.tb_SaleOrderDetails[i].SaleOrderDetail_ID).Sum(c => c.Quantity);
-                            if (inQty > entity.tb_saleorder.tb_SaleOrderDetails[i].Quantity)
-                            {
-                                string msg = $"销售订单:{entity.tb_saleorder.SOrderNo}的【{prodName}】的出库数量不能大于订单中对应行的数量，审核失败！";
-                                MessageBox.Show(msg, "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                                _unitOfWorkManage.RollbackTran();
-                                _logger.LogInformation(msg);
-                                return rs;
-                            }
-                            else
-                            {
-                                var RowQty = entity.tb_SaleOutDetails.Where(c => c.ProdDetailID == entity.tb_saleorder.tb_SaleOrderDetails[i].ProdDetailID
-                                && c.SaleOrderDetail_ID == entity.tb_saleorder.tb_SaleOrderDetails[i].SaleOrderDetail_ID).Sum(c => c.Quantity);
-                                //算出交付的数量
-                                entity.tb_saleorder.tb_SaleOrderDetails[i].TotalDeliveredQty -= RowQty;
-                                //如果已交数据大于 订单数量 给出警告实际操作中 使用其他方式将备品入库
-                                if (entity.tb_saleorder.tb_SaleOrderDetails[i].TotalDeliveredQty < 0)
-                                {
-                                    _unitOfWorkManage.RollbackTran();
-                                    throw new Exception($"销售出库单：{entity.SaleOutNo}反审核时，对应的订单：{entity.tb_saleorder.SOrderNo}，{prodName}的明细不能为负数！");
-                                }
-                            }
+                        var inQty = detailList.Where(c => c.ProdDetailID == entity.tb_saleorder.tb_SaleOrderDetails[i].ProdDetailID && c.SaleOrderDetail_ID == entity.tb_saleorder.tb_SaleOrderDetails[i].SaleOrderDetail_ID).Sum(c => c.Quantity);
+                        if (inQty > entity.tb_saleorder.tb_SaleOrderDetails[i].Quantity)
+                        {
+                            string msg = $"销售订单:{entity.tb_saleorder.SOrderNo}的【{prodName}】的出库数量不能大于订单中对应行的数量，审核失败！";
+                            MessageBox.Show(msg, "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                            _unitOfWorkManage.RollbackTran();
+                            _logger.LogInformation(msg);
+                            return rs;
                         }
                         else
                         {
-                            //一对一时
-                            var inQty = detailList.Where(c => c.ProdDetailID == entity.tb_saleorder.tb_SaleOrderDetails[i].ProdDetailID).Sum(c => c.Quantity);
-                            if (inQty > entity.tb_saleorder.tb_SaleOrderDetails[i].Quantity)
+                            var RowQty = entity.tb_SaleOutDetails.Where(c => c.ProdDetailID == entity.tb_saleorder.tb_SaleOrderDetails[i].ProdDetailID
+                            && c.SaleOrderDetail_ID == entity.tb_saleorder.tb_SaleOrderDetails[i].SaleOrderDetail_ID).Sum(c => c.Quantity);
+                            //算出交付的数量
+                            entity.tb_saleorder.tb_SaleOrderDetails[i].TotalDeliveredQty -= RowQty;
+                            //如果已交数据大于 订单数量 给出警告实际操作中 使用其他方式将备品入库
+                            if (entity.tb_saleorder.tb_SaleOrderDetails[i].TotalDeliveredQty < 0)
                             {
-
-                                string msg = $"销售订单:{entity.tb_saleorder.SOrderNo}的【{prodName}】的出库数量不能大于订单中对应行的数量，审核失败！";
-                                MessageBox.Show(msg, "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                                 _unitOfWorkManage.RollbackTran();
-                                _logger.LogInformation(msg);
-                                return rs;
-                            }
-                            else
-                            {
-                                //当前行累计到交付
-                                var RowQty = entity.tb_SaleOutDetails.Where(c => c.ProdDetailID == entity.tb_saleorder.tb_SaleOrderDetails[i].ProdDetailID).Sum(c => c.Quantity);
-                                entity.tb_saleorder.tb_SaleOrderDetails[i].TotalDeliveredQty -= RowQty;
-                                //如果已交数据大于 订单数量 给出警告实际操作中 使用其他方式将备品入库
-                                if (entity.tb_saleorder.tb_SaleOrderDetails[i].TotalDeliveredQty < 0)
-                                {
-                                    _unitOfWorkManage.RollbackTran();
-                                    throw new Exception($"入库单：{entity.SaleOutNo}反审核时，对应的订单：{entity.tb_saleorder.SOrderNo}，{prodName}的明细不能为负数！");
-                                }
+                                throw new Exception($"销售出库单：{entity.SaleOutNo}反审核时，对应的订单：{entity.tb_saleorder.SOrderNo}，{prodName}的明细不能为负数！");
                             }
                         }
                     }
-                    #endregion
-
-                    //更新已交数量
-                    await _unitOfWorkManage.GetDbClient().Updateable<tb_SaleOrderDetail>(entity.tb_saleorder.tb_SaleOrderDetails).ExecuteCommandAsync();
-                    //销售出库单，如果来自于销售订单，则要把出库数量累加到订单中的已交数量 并且如果数量够则自动结案
-                    if (entity.tb_saleorder != null && entity.tb_saleorder.tb_SaleOrderDetails.Sum(c => c.TotalDeliveredQty) != entity.tb_saleorder.tb_SaleOrderDetails.Sum(c => c.Quantity))
+                    else
                     {
-                        entity.tb_saleorder.DataStatus = (int)DataStatus.确认;
-                        await _unitOfWorkManage.GetDbClient().Updateable(entity.tb_saleorder).UpdateColumns(t => new { t.DataStatus }).ExecuteCommandAsync();
+                        //一对一时
+                        var inQty = detailList.Where(c => c.ProdDetailID == entity.tb_saleorder.tb_SaleOrderDetails[i].ProdDetailID).Sum(c => c.Quantity);
+                        if (inQty > entity.tb_saleorder.tb_SaleOrderDetails[i].Quantity)
+                        {
+
+                            string msg = $"销售订单:{entity.tb_saleorder.SOrderNo}的【{prodName}】的出库数量不能大于订单中对应行的数量，审核失败！";
+                            MessageBox.Show(msg, "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                            _unitOfWorkManage.RollbackTran();
+                            _logger.LogInformation(msg);
+                            return rs;
+                        }
+                        else
+                        {
+                            //当前行累计到交付
+                            var RowQty = entity.tb_SaleOutDetails.Where(c => c.ProdDetailID == entity.tb_saleorder.tb_SaleOrderDetails[i].ProdDetailID).Sum(c => c.Quantity);
+                            entity.tb_saleorder.tb_SaleOrderDetails[i].TotalDeliveredQty -= RowQty;
+                            //如果已交数据大于 订单数量 给出警告实际操作中 使用其他方式将备品入库
+                            if (entity.tb_saleorder.tb_SaleOrderDetails[i].TotalDeliveredQty < 0)
+                            {
+                                _unitOfWorkManage.RollbackTran();
+                                throw new Exception($"入库单：{entity.SaleOutNo}反审核时，对应的订单：{entity.tb_saleorder.SOrderNo}，{prodName}的明细不能为负数！");
+                            }
+                        }
                     }
+                }
+                #endregion
+
+                //更新已交数量
+                await _unitOfWorkManage.GetDbClient().Updateable<tb_SaleOrderDetail>(entity.tb_saleorder.tb_SaleOrderDetails).ExecuteCommandAsync();
+                //销售出库单，如果来自于销售订单，则要把出库数量累加到订单中的已交数量 并且如果数量够则自动结案
+                if (entity.tb_saleorder != null && entity.tb_saleorder.tb_SaleOrderDetails.Sum(c => c.TotalDeliveredQty) != entity.tb_saleorder.tb_SaleOrderDetails.Sum(c => c.Quantity))
+                {
+                    entity.tb_saleorder.DataStatus = (int)DataStatus.确认;
+                    await _unitOfWorkManage.GetDbClient().Updateable(entity.tb_saleorder).UpdateColumns(t => new { t.DataStatus }).ExecuteCommandAsync();
                 }
 
                 //如果是新客户或潜在客户。则转换为首单客户

@@ -52,10 +52,10 @@
             this.复制性新增ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripbtnProperty = new System.Windows.Forms.ToolStripButton();
             this.toolStripbtnClose = new System.Windows.Forms.ToolStripButton();
-            this.tslLocked = new System.Windows.Forms.ToolStripLabel();
             this.bwRemoting = new System.ComponentModel.BackgroundWorker();
             this.errorProviderForAllInput = new System.Windows.Forms.ErrorProvider(this.components);
             this.bindingSourceSub = new System.Windows.Forms.BindingSource(this.components);
+            this.tsBtnLocked = new System.Windows.Forms.ToolStripButton();
             this.BaseToolStrip.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceSub)).BeginInit();
@@ -85,10 +85,10 @@
             this.toolStripbtnFunction,
             this.toolStripbtnProperty,
             this.toolStripbtnClose,
-            this.tslLocked});
+            this.tsBtnLocked});
             this.BaseToolStrip.Location = new System.Drawing.Point(0, 0);
             this.BaseToolStrip.Name = "BaseToolStrip";
-            this.BaseToolStrip.Size = new System.Drawing.Size(869, 25);
+            this.BaseToolStrip.Size = new System.Drawing.Size(1049, 25);
             this.BaseToolStrip.TabIndex = 3;
             this.BaseToolStrip.Text = "toolStrip1";
             // 
@@ -221,7 +221,7 @@
             // 复制性新增ToolStripMenuItem
             // 
             this.复制性新增ToolStripMenuItem.Name = "复制性新增ToolStripMenuItem";
-            this.复制性新增ToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.复制性新增ToolStripMenuItem.Size = new System.Drawing.Size(139, 22);
             this.复制性新增ToolStripMenuItem.Text = "复制性新增";
             // 
             // toolStripbtnProperty
@@ -229,7 +229,7 @@
             this.toolStripbtnProperty.Image = ((System.Drawing.Image)(resources.GetObject("toolStripbtnProperty.Image")));
             this.toolStripbtnProperty.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.toolStripbtnProperty.Name = "toolStripbtnProperty";
-            this.toolStripbtnProperty.Size = new System.Drawing.Size(53, 20);
+            this.toolStripbtnProperty.Size = new System.Drawing.Size(53, 22);
             this.toolStripbtnProperty.Text = "属性";
             // 
             // toolStripbtnClose
@@ -237,16 +237,8 @@
             this.toolStripbtnClose.Image = ((System.Drawing.Image)(resources.GetObject("toolStripbtnClose.Image")));
             this.toolStripbtnClose.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.toolStripbtnClose.Name = "toolStripbtnClose";
-            this.toolStripbtnClose.Size = new System.Drawing.Size(53, 20);
+            this.toolStripbtnClose.Size = new System.Drawing.Size(53, 22);
             this.toolStripbtnClose.Text = "关闭";
-            // 
-            // tslLocked
-            // 
-            this.tslLocked.Image = global::RUINORERP.UI.Properties.Resources.lock_security_padlock_secure_icon;
-            this.tslLocked.Name = "tslLocked";
-            this.tslLocked.Size = new System.Drawing.Size(62, 16);
-            this.tslLocked.Text = "已锁定";
-            this.tslLocked.Visible = false;
             // 
             // bwRemoting
             // 
@@ -257,13 +249,21 @@
             // 
             this.errorProviderForAllInput.ContainerControl = this;
             // 
+            // tsBtnLocked
+            // 
+            this.tsBtnLocked.Image = global::RUINORERP.UI.Properties.Resources.lock_security_padlock_secure_icon;
+            this.tsBtnLocked.Name = "tsBtnLocked";
+            this.tsBtnLocked.Size = new System.Drawing.Size(66, 22);
+            this.tsBtnLocked.Text = "已锁定";
+            this.tsBtnLocked.Visible = false;
+            // 
             // BaseBillEdit
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.Controls.Add(this.BaseToolStrip);
             this.Name = "BaseBillEdit";
-            this.Size = new System.Drawing.Size(869, 524);
+            this.Size = new System.Drawing.Size(1049, 524);
             this.Load += new System.EventHandler(this.BaseBillEdit_Load);
             this.BaseToolStrip.ResumeLayout(false);
             this.BaseToolStrip.PerformLayout();
@@ -301,6 +301,6 @@
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem2;
         public System.Windows.Forms.ToolStripSplitButton toolStripbtnPrint;
         private System.ComponentModel.BackgroundWorker bwRemoting;
-        public System.Windows.Forms.ToolStripLabel tslLocked;
+        public System.Windows.Forms.ToolStripButton tsBtnLocked;
     }
 }

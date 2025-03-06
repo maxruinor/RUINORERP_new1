@@ -74,14 +74,13 @@ namespace RUINORERP.UI.SysConfig
                         SuperValue kv = new SuperValue(tableName + "[" + lastlist.Count + "]", tableName);
                         listBoxTableList.Items.Add(kv);
                     }
-
                 }
             }
 
             //添加锁定信息
-            if (MainForm.Instance.LockInfoList != null)
+            if (MainForm.Instance.lockManager != null)
             {
-                SuperValue kv = new SuperValue("锁定信息列表" + "[" + MainForm.Instance.LockInfoList.Count + "]", "锁定信息列表");
+                SuperValue kv = new SuperValue($"锁定信息列表{MainForm.Instance.lockManager.GetLockItemCount()}", "锁定信息列表");
                 listBoxTableList.Items.Add(kv);
             }
         }
@@ -103,13 +102,8 @@ namespace RUINORERP.UI.SysConfig
 
                 if (tableName == "锁定信息列表")
                 {
-                    List<BillLockInfo> lockInfoList = new List<BillLockInfo>();
-                    foreach (var item in MainForm.Instance.LockInfoList)
-                    {
-                        lockInfoList.Add(item.Value);
-                    }
                     this.dataGridView1.SetUseCustomColumnDisplay(false);
-                    dataGridView1.DataSource = lockInfoList;
+                    dataGridView1.DataSource = MainForm.Instance.lockManager.GetLockItems();
                 }
                 else
                 {

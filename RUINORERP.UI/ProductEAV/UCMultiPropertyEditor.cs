@@ -553,17 +553,16 @@ namespace RUINORERP.UI.ProductEAV
                                     long SkuRowid = RUINORERP.Common.SnowflakeIdHelper.IdHelper.GetLongId();
                                     Font boldFont = new Font(treeGridView1.DefaultCellStyle.Font, FontStyle.Bold);
                                     string prop = string.Empty;
-                                    TreeGridNode node = treeGridView1.Nodes.Add(SkuRowid, 0, "", prop, "等待生成", EditEntity.CNName, "新增");
                                     tb_ProdDetail detail = new tb_ProdDetail();
                                     detail.ProdBaseID = EditEntity.ProdBaseID;
                                     detail.ProdDetailID = SkuRowid; //为了后面可以查询暂时保存行号。实际保存DB前要生新设置为0.
                                     //detail.SKU = prop;为了不浪费  保存时再成生一次
-
                                     detail.ActionStatus = ActionStatus.新增;
                                     detail.Is_enabled = true;
                                     detail.Is_available = true;
                                     detail.Created_at = DateTime.Now;
                                     detail.Created_by = MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID;
+                                    TreeGridNode node = treeGridView1.Nodes.Add(SkuRowid, 0, "", prop, "等待生成", EditEntity.CNName, "新增", detail.Is_enabled);
                                     node.NodeName = SkuRowid.ToString();//标记节点ID， 
                                     node.ImageIndex = 1;//0 加载，1 新增 2 编辑 3 删除 4 下拉
                                     node.Tag = detail;

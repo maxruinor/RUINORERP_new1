@@ -256,7 +256,7 @@ namespace RUINORERP.UI.PSI.SAL
 
             sgd.GridMasterData = entity;
             sgd.GridMasterDataType = entity.GetType();
-           
+
             base.BindData(entity);
         }
 
@@ -341,7 +341,7 @@ namespace RUINORERP.UI.PSI.SAL
             list = MainForm.Instance.list;
             sgd.SetDependencyObject<ProductSharePart, tb_SaleOutDetail>(list);
             sgd.HasRowHeader = true;
-   
+
             sgh.InitGrid(grid1, sgd, true, nameof(tb_SaleOutDetail));
             sgh.OnCalculateColumnValue += Sgh_OnCalculateColumnValue;
             sgh.OnGetTransferDataHandler += Sgh_OnGetTransferDataHandler;
@@ -786,8 +786,9 @@ namespace RUINORERP.UI.PSI.SAL
             //saleorder = bsa.Tag as tb_SaleOrder;
 
             saleorder = await MainForm.Instance.AppContext.Db.Queryable<tb_SaleOrder>()
-            .Where(c => c.SOrder_ID == _sorderid)
+            .Includes(a => a.tb_SaleOuts)
             .Includes(a => a.tb_SaleOrderDetails, b => b.tb_proddetail, c => c.tb_prod)
+            .Where(c => c.SOrder_ID == _sorderid)
             .SingleAsync();
 
             IMapper mapper = AutoMapperConfig.RegisterMappings().CreateMapper();
@@ -803,6 +804,13 @@ namespace RUINORERP.UI.PSI.SAL
             entity.Approver_by = null;
             entity.PrintStatus = 0;
             entity.ActionStatus = ActionStatus.新增;
+
+            //如果这个订单已经有出库单 则第二次运费为0
+            if (saleorder.tb_SaleOuts != null && saleorder.tb_SaleOuts.Count > 0)
+            {
+                entity.ShipCost = 0;
+            }
+
             if (saleorder.DeliveryDate.HasValue)
             {
                 entity.OutDate = saleorder.DeliveryDate.Value;

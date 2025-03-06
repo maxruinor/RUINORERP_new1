@@ -86,6 +86,8 @@ using TransInstruction.CommandService;
 using HLH.Lib.Security;
 using Netron.NetronLight;
 using Netron.Xeon;
+using RUINORERP.UI.WorkFlowDesigner.Entities;
+using static RUINORERP.Business.CommService.LockManager;
 
 
 
@@ -178,6 +180,7 @@ namespace RUINORERP.UI
 
 
             ecs.OnConnectClosed += Ecs_OnConnectClosed;
+
             if (config != null)
             {
                 Globalconfig = config;
@@ -195,6 +198,14 @@ namespace RUINORERP.UI
             var clientCommandHandlers = clientCommandRegistry.AutoRegisterCommandHandler();
             dispatcher = new ClientCommandDispatcher(clientCommandHandlers);
 
+
+        }
+        private void OnLockChanged(object sender, LockChangedEventArgs e)
+        {
+            this.Invoke(new Action(() =>
+            {
+                MessageBox.Show($"Document {e.DocumentId} is now {(e.IsLocked ? "locked" : "unlocked")} by {e.LockedBy}");
+            }));
         }
 
         private void KryptonDockableWorkspace1_PageCloseClicked(object sender, UniqueNameEventArgs e)
@@ -428,13 +439,18 @@ namespace RUINORERP.UI
         /// <summary>
         /// 保存锁定信息集合
         /// </summary>
-        public ConcurrentDictionary<long, BillLockInfo> LockInfoList = new ConcurrentDictionary<long, BillLockInfo>();
+        //public ConcurrentDictionary<long, BillLockInfo> LockInfoList = new ConcurrentDictionary<long, BillLockInfo>();
+
+        public LockManager lockManager = new LockManager();
+
 
         /// <summary>
         /// 转发单据审核锁定 https://www.cnblogs.com/fanfan-90/p/12151924.html
         /// 锁单
         /// </summary>
-        public IMemoryCache CacheTemp { get; set; }
+        public IMemoryCache CacheLockManager { get; set; }
+
+
         ///监控升级标记文件 
         FileSystemWatcher watcher = new FileSystemWatcher();
 
@@ -527,7 +543,9 @@ namespace RUINORERP.UI
 
             InitUpdateSystemWatcher();
 
-            CacheTemp = Startup.GetFromFac<IMemoryCache>();
+            //只是表示如何使用。暂时没有用到
+            CacheLockManager = Startup.GetFromFac<IMemoryCache>();
+
             authorizeController = Startup.GetFromFac<AuthorizeController>();
 
             //cache.Set("test1", "test123");
@@ -668,7 +686,7 @@ namespace RUINORERP.UI
             kryptonDockableWorkspace1.ActivePageChanged += kryptonDockableWorkspace1_ActivePageChanged;
             GetActivePage(kryptonDockableWorkspace1);
 
-            LoginWebServer();
+
 
             System.Windows.Forms.Timer timerStatus = new System.Windows.Forms.Timer();
             timerStatus.Interval = 1000; // 设置定时器间隔为1000毫秒（1秒）
@@ -685,6 +703,7 @@ namespace RUINORERP.UI
             MainForm.Instance.kryptonDockingManager1.DockspaceCellRemoved += KryptonDockingManager1_DockspaceCellRemoved;
 
             MainForm.Instance.kryptonDockingManager1.DockspaceRemoved += KryptonDockingManager1_DockspaceRemoved;
+
 
         }
 
@@ -729,17 +748,21 @@ namespace RUINORERP.UI
                     lblServerStatus.ToolTipText = $"Server:{UserGlobalConfig.Instance.ServerIP},Port:{UserGlobalConfig.Instance.ServerPort}，Connected:{ecs.IsConnected}，LocIP:{ecs.client.Socket.LocalEndPoint},FreeTime:{GetLastInputTime()}";
                 }
 
-
-
-
-
                 lblServerInfo.Text = lblServerStatus.ToolTipText;
                 if (MessageList.Count > 0)
                 {
-
-
-
                     ReminderData MessageInfo = MessageList.Dequeue();
+
+                    if (MessageInfo.messageCmd == MessageCmdType.UnLockRequest)
+                    {
+                        InstructionsPrompt instructionsPrompt = new InstructionsPrompt();
+                        instructionsPrompt.ReminderData = MessageInfo;
+                        instructionsPrompt.Content=$"{MessageInfo.BizKeyID}";
+                        instructionsPrompt.Show();
+                        instructionsPrompt.TopMost = true;
+                        return;
+                    }
+
                     //NotificationBox notificationBox = new NotificationBox();
                     //notificationBox.ShowForm(MessageInfo.Content);
                     MessagePrompt messager = new MessagePrompt();
@@ -747,7 +770,15 @@ namespace RUINORERP.UI
 
                     if (MessageInfo.ReceiverEmployeeIDs == null)
                     {
-                        MessageInfo.SenderEmployeeName = "系统";
+                        if (!string.IsNullOrEmpty(MessageInfo.SenderEmployeeName))
+                        {
+                            MessageInfo.SenderEmployeeName = MessageInfo.SenderEmployeeName;
+                        }
+                        else
+                        {
+                            MessageInfo.SenderEmployeeName = "系统";
+                        }
+                        
                     }
                     else
                     {
@@ -755,7 +786,14 @@ namespace RUINORERP.UI
                         var userinfo = MainForm.Instance.UserInfos.FirstOrDefault(c => c.Employee_ID == Employee_ID);
                         if (userinfo == null)
                         {
-                            MessageInfo.SenderEmployeeName = "系统";
+                            if (!string.IsNullOrEmpty(MessageInfo.SenderEmployeeName))
+                            {
+                                MessageInfo.SenderEmployeeName = MessageInfo.SenderEmployeeName;
+                            }
+                            else
+                            {
+                                MessageInfo.SenderEmployeeName = "系统";
+                            }
                         }
                         else
                         {
@@ -1141,7 +1179,6 @@ namespace RUINORERP.UI
                     this.SystemOperatorState.Text = $"登陆: {AppContext.CurUserInfo.Name}【{AppContext.CurrentRole.RoleName}】";
                 }
 
-
                 //加载角色
                 //toolStripDropDownBtnRoles.DropDownItems.Clear();
                 //超级管理员没有权限组
@@ -1195,6 +1232,16 @@ namespace RUINORERP.UI
                     MessageBox.Show("初始密码【123456】有风险，请及时修改！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 }
 
+                LoginWebServer();
+                RequestReceiveLockManagerCmd cmd = new RequestReceiveLockManagerCmd(CmdOperation.Send);
+                cmd.lockCmd = LockCmd.Broadcast;
+                //request.nextProcesszStep = TransInstruction.CommandService.NextProcesszStep.转发;
+                MainForm.Instance.dispatcher.DispatchAsync(cmd, CancellationToken.None);
+                cmd.LockChanged += (sender, e) =>
+                {
+                    Console.WriteLine($"Document {e.DocumentId} is now {(e.IsLocked ? "locked" : "unlocked")} by {e.LockedBy}");
+                    //使用事件模式来查询某一个单据被谁锁定
+                };
             }
             else
             {

@@ -8,12 +8,29 @@ using System.Threading.Tasks;
 namespace RUINORERP.Model.TransModel
 {
 
+    public enum MessageCmdType
+    {
+        Unknown = 0,
+        Message = 1,
+        Reminder = 2,
+        Event = 3,
+        Task = 4,
+        Notice = 5,
+        Business = 6,
+        Prompt = 7,
+        UnLockRequest = 8,
+        ExceptionLog = 9
+    }
+
     /// <summary>
     /// 提醒数据用于工作流和所有交互
     /// </summary>
     public class ReminderData : ReminderDataBase
     {
+        public object BizData { get; set; }
 
+        public long BizKeyID { get; set; }
+        public MessageCmdType messageCmd { get; set; } = MessageCmdType.Unknown;
         // 消息状态
         public MessageStatus Status { get; set; } = MessageStatus.Unread;
 

@@ -214,7 +214,7 @@ namespace RUINORERP.UI.SuperSocketClient
             try
             {
                 int index = 0;
-                ByteBuff bg = new ByteBuff(gd.Two);
+                //ByteBuff bg = new ByteBuff(gd.Two);
 
                 //清空
                 MainForm.Instance.CacheInfoList = new System.Collections.Concurrent.ConcurrentDictionary<string, CacheInfo>();
@@ -455,7 +455,7 @@ namespace RUINORERP.UI.SuperSocketClient
 
                 ReminderData MessageInfo = new ReminderData();
                 MessageInfo.SendTime = sendtime;
-                //  MessageInfo.Id = SessionID;
+                MessageInfo.messageCmd = MessageCmdType.ExceptionLog;
                 MessageInfo.SenderEmployeeName = 发送者姓名;
                 MessageInfo.ReminderContent = Msg;
                 MainForm.Instance.MessageList.Enqueue(MessageInfo);
@@ -582,135 +582,139 @@ namespace RUINORERP.UI.SuperSocketClient
             }
         }
 
-        internal static void 接收转发单据锁定(OriginalData gd)
-        {
-            try
-            {
 
-                int index = 0;
-                string 时间 = ByteDataAnalysis.GetString(gd.Two, ref index);
-                long lockUserid = ByteDataAnalysis.GetInt64(gd.Two, ref index);
-                string lockName = ByteDataAnalysis.GetString(gd.Two, ref index);
-                long billid = ByteDataAnalysis.GetInt64(gd.Two, ref index);
-                int BizType = ByteDataAnalysis.GetInt(gd.Two, ref index);
+        /*
+      internal static void 接收转发单据锁定(OriginalData gd)
+      {
+          try
+          {
+              int index = 0;
+              string 时间 = ByteDataAnalysis.GetString(gd.Two, ref index);
+              long lockUserid = ByteDataAnalysis.GetInt64(gd.Two, ref index);
+              string lockName = ByteDataAnalysis.GetString(gd.Two, ref index);
+              long billid = ByteDataAnalysis.GetInt64(gd.Two, ref index);
+              int BizType = ByteDataAnalysis.GetInt(gd.Two, ref index);
 
-                if (!MainForm.Instance.LockInfoList.ContainsKey(billid))
-                {
-                    BillLockInfo lockInfo = new BillLockInfo();
-                    lockInfo.LockedName = lockName;
-                    lockInfo.BillID = billid;
-                    lockInfo.LockedUserID = lockUserid;
-                    lockInfo.Available = true;
-                    lockInfo.BizType = BizType;
-                    MainForm.Instance.LockInfoList.AddOrUpdate(billid, lockInfo, (key, oldValue) => lockInfo);
-                    //因为启动系统就会接收数据。还没有等加载初始化对象
-                    if (MainForm.Instance.authorizeController == null)
-                    {
-                        MainForm.Instance.authorizeController = Startup.GetFromFac<AuthorizeController>();
-                    }
-                    if (MainForm.Instance.authorizeController.GetDebugInfoAuth())
-                    {
-                        MainForm.Instance.PrintInfoLog($"接收转发单据锁定{BizType}成功！");
-                    }
-                }
+              if (!MainForm.Instance.LockInfoList.ContainsKey(billid))
+              {
+                  BillLockInfo lockInfo = new BillLockInfo();
+                  lockInfo.LockedName = lockName;
+                  lockInfo.BillID = billid;
+                  lockInfo.LockedUserID = lockUserid;
+                  lockInfo.Available = true;
+                  lockInfo.BizType = BizType;
+                  MainForm.Instance.LockInfoList.AddOrUpdate(billid, lockInfo, (key, oldValue) => lockInfo);
+                  //因为启动系统就会接收数据。还没有等加载初始化对象
+                  if (MainForm.Instance.authorizeController == null)
+                  {
+                      MainForm.Instance.authorizeController = Startup.GetFromFac<AuthorizeController>();
+                  }
+                  if (MainForm.Instance.authorizeController.GetDebugInfoAuth())
+                  {
+                      MainForm.Instance.PrintInfoLog($"接收转发单据锁定{BizType}成功！");
+                  }
+              }
 
-                //using (ICacheEntry cacheEntry = MainForm.Instance.CacheLockTheOrder.CreateEntry(billid))
-                //{
+              //using (ICacheEntry cacheEntry = MainForm.Instance.CacheLockTheOrder.CreateEntry(billid))
+              //{
 
-                //}
+              //}
 
-            }
-            catch (Exception ex)
-            {
-                MainForm.Instance.PrintInfoLog("接收转发单据锁定:" + ex.Message);
-            }
-        }
+          }
+          catch (Exception ex)
+          {
+              MainForm.Instance.PrintInfoLog("接收转发单据锁定:" + ex.Message);
+          }
+      }
 
-        internal static void 接收转发单据锁定释放(OriginalData gd)
-        {
-            try
-            {
-                int index = 0;
-                string 时间 = ByteDataAnalysis.GetString(gd.Two, ref index);
-                long lockUserid = ByteDataAnalysis.GetInt64(gd.Two, ref index);
-                string lockName = ByteDataAnalysis.GetString(gd.Two, ref index);
-                long billid = ByteDataAnalysis.GetInt64(gd.Two, ref index);
-                int BizType = ByteDataAnalysis.GetInt(gd.Two, ref index);
+      internal static void 接收转发单据锁定释放(OriginalData gd)
+      {
+          try
+          {
+              int index = 0;
+              string 时间 = ByteDataAnalysis.GetString(gd.Two, ref index);
+              long lockUserid = ByteDataAnalysis.GetInt64(gd.Two, ref index);
+              string lockName = ByteDataAnalysis.GetString(gd.Two, ref index);
+              long billid = ByteDataAnalysis.GetInt64(gd.Two, ref index);
+              int BizType = ByteDataAnalysis.GetInt(gd.Two, ref index);
+              //菜单ID
+              long MenuID = ByteDataAnalysis.GetInt(gd.Two, ref index);
 
-                BillLockInfo lockInfo = null;
-                if (MainForm.Instance.LockInfoList.TryGetValue(billid, out lockInfo))
-                {
-                    bool result = MainForm.Instance.LockInfoList.TryRemove(billid, out lockInfo);
-                    if (result)
-                    {
-                        //应该通知界面解锁
-                        if (MainForm.Instance.kryptonDockableWorkspace1.ActiveCell != null)
-                        {
-                            foreach (KryptonPage kp in MainForm.Instance.kryptonDockableWorkspace1.ActiveCell.Pages)
-                            {
-                                if (kp.Controls.Count > 0)
-                                {
-                                    if (kp.Controls[0].GetType().BaseType == typeof(BaseBillEdit))
-                                    {
-                                        ((BaseBillEdit)kp.Controls[0]).ReleaseLock(lockInfo);
-                                    }
-                                }
-                            }
-                        }
+              BillLockInfo lockInfo = null;
+              if (MainForm.Instance.LockInfoList.TryGetValue(billid, out lockInfo))
+              {
+                  bool result = MainForm.Instance.LockInfoList.TryRemove(billid, out lockInfo);
+                  if (result)
+                  {
+                      //应该通知界面解锁
+                      if (MainForm.Instance.kryptonDockableWorkspace1.ActiveCell != null)
+                      {
+                          foreach (KryptonPage kp in MainForm.Instance.kryptonDockableWorkspace1.ActiveCell.Pages)
+                          {
+                              if (kp.Controls.Count > 0)
+                              {
+                                  if (kp.Controls[0].GetType().BaseType == typeof(BaseBillEdit))
+                                  {
+                                      ((BaseBillEdit)kp.Controls[0]).ReleaseLock(lockInfo);
+                                  }
+                              }
+                          }
+                      }
 
-                    }
+                  }
 
-                    if (MainForm.Instance.authorizeController.GetDebugInfoAuth())
-                    {
-                        if (result)
-                        {
-                            MainForm.Instance.PrintInfoLog($"接收转发单据锁定释放{billid}{BizType}成功！");
-                        }
-                        else
-                        {
-                            MainForm.Instance.PrintInfoLog($"接收转发单据锁定释放{billid}{BizType}成功！");
-                        }
+                  if (MainForm.Instance.authorizeController.GetDebugInfoAuth())
+                  {
+                      if (result)
+                      {
+                          MainForm.Instance.PrintInfoLog($"接收转发单据锁定释放{billid}{BizType}成功！");
+                      }
+                      else
+                      {
+                          MainForm.Instance.PrintInfoLog($"接收转发单据锁定释放{billid}{BizType}成功！");
+                      }
 
-                    }
-                }
+                  }
+              }
 
-            }
-            catch (Exception ex)
-            {
-                MainForm.Instance.PrintInfoLog("接收转发单据锁定释放:" + ex.Message);
-            }
-        }
+          }
+          catch (Exception ex)
+          {
+              MainForm.Instance.PrintInfoLog("接收转发单据锁定释放:" + ex.Message);
+          }
+      }
 
-        /// <summary>
-        /// 服务器根据掉线的用户释放锁。主动发到客户端
-        /// </summary>
-        /// <param name="gd"></param>
-        internal static void 接收根据锁定用户释放(OriginalData gd)
-        {
-            try
-            {
-                int index = 0;
-                string 时间 = ByteDataAnalysis.GetString(gd.Two, ref index);
-                long lockUserid = ByteDataAnalysis.GetInt64(gd.Two, ref index);
 
-                var tempList = MainForm.Instance.LockInfoList.Where(c => c.Value.LockedUserID == lockUserid).ToList();
-                foreach (var item in tempList)
-                {
-                    BillLockInfo lockInfo = null;
-                    MainForm.Instance.LockInfoList.TryRemove(item.Key, out lockInfo);
-                    if (MainForm.Instance.authorizeController.GetDebugInfoAuth())
-                    {
-                        MainForm.Instance.PrintInfoLog($"根据锁定用户释放{item.Key}成功！");
-                    }
-                }
+      /// <summary>
+      /// 服务器根据掉线的用户释放锁。主动发到客户端
+      /// </summary>
+      /// <param name="gd"></param>
+      internal static void 接收根据锁定用户释放(OriginalData gd)
+      {
+          try
+          {
+              int index = 0;
+              string 时间 = ByteDataAnalysis.GetString(gd.Two, ref index);
+              long lockUserid = ByteDataAnalysis.GetInt64(gd.Two, ref index);
 
-            }
-            catch (Exception ex)
-            {
-                MainForm.Instance.PrintInfoLog("接收转发单据锁定释放:" + ex.Message);
-            }
-        }
+              var tempList = MainForm.Instance.LockInfoList.Where(c => c.Value.LockedUserID == lockUserid).ToList();
+              foreach (var item in tempList)
+              {
+                  BillLockInfo lockInfo = null;
+                  MainForm.Instance.LockInfoList.TryRemove(item.Key, out lockInfo);
+                  if (MainForm.Instance.authorizeController.GetDebugInfoAuth())
+                  {
+                      MainForm.Instance.PrintInfoLog($"根据锁定用户释放{item.Key}成功！");
+                  }
+              }
 
+          }
+          catch (Exception ex)
+          {
+              MainForm.Instance.PrintInfoLog("接收转发单据锁定释放:" + ex.Message);
+          }
+      }
+      */
 
 
         public static string 接收工作流的提醒消息(OriginalData gd)

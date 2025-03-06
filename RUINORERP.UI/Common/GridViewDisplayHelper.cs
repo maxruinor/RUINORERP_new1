@@ -101,7 +101,7 @@ namespace RUINORERP.UI.Common
                 {
                     FixedDictionaryMappings.Add(new FixedDictionaryMapping(_type.Name, prop.Name, CommonHelper.Instance.GetKeyValuePairs(typeof(ApprovalStatus))));
                 }
-
+              
                 // 检查类型 T 是否包含 PayStatus 列
                 else if (prop.Name == nameof(PayStatus))
                 {
@@ -118,11 +118,15 @@ namespace RUINORERP.UI.Common
                 {
                     FixedDictionaryMappings.Add(new FixedDictionaryMapping(_type.Name, nameof(PurReProcessWay), Common.CommonHelper.Instance.GetKeyValuePairs(typeof(PurReProcessWay))));
                 }
-
+                else if (prop.Name == nameof(GoodsSource)||prop.Name == "SourceType") //应该字段名和枚举名相同才好
+                {
+                    FixedDictionaryMappings.Add(new FixedDictionaryMapping(_type.Name, nameof(GoodsSource), Common.CommonHelper.Instance.GetKeyValuePairs(typeof(GoodsSource))));
+                }
                 else if (prop.Name == nameof(PurReProcessWay))
                 {
                     FixedDictionaryMappings.Add(new FixedDictionaryMapping(_type.Name, nameof(PurReProcessWay), Common.CommonHelper.Instance.GetKeyValuePairs(typeof(PurReProcessWay))));
                 }
+                
                 else if (prop.Name == "ApprovalResults")
                 {
                     List<KeyValuePair<object, string>> ApprovalResultskvlist = new List<KeyValuePair<object, string>>();

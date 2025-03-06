@@ -29,6 +29,10 @@ using RUINORERP.Common.Extensions;
 using RUINORERP.Global;
 using RUINORERP.UI.Common;
 using Microsoft.Extensions.Caching.Memory;
+using RUINORERP.Model.TransModel;
+using RUINORERP.UI.ClientCmdService;
+using System.Threading;
+using TransInstruction.CommandService;
 
 namespace RUINORERP.UI.BaseForm
 {
@@ -40,13 +44,22 @@ namespace RUINORERP.UI.BaseForm
         public BaseBillEdit()
         {
             InitializeComponent();
-         
+
             bwRemoting.DoWork += bwRemoting_DoWork;
             bwRemoting.RunWorkerCompleted += bwRemoting_RunWorkerCompleted;
             bwRemoting.ProgressChanged += bwRemoting_progressChanged;
             //如果打开单时。被其它人锁定。才显示锁定图标
-            tslLocked.Visible = false;
+            tsBtnLocked.Visible = false;
+          
         }
+
+   
+
+        public virtual void RequestReleaseLock()
+        {
+
+        }
+
         public virtual void ShowPrintStatus(KryptonLabel lblPrintStatus, BaseEntity entity)
         {
             //可以修改
@@ -399,7 +412,7 @@ namespace RUINORERP.UI.BaseForm
 
         internal virtual void ReleaseLock(BillLockInfo lockInfo)
         {
-           
+
         }
 
 
@@ -437,9 +450,9 @@ namespace RUINORERP.UI.BaseForm
             catch (Exception)
             {
 
-                
+
             }
-            
+
         }
 
 

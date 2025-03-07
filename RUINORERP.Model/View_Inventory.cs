@@ -513,7 +513,20 @@ namespace RUINORERP.Model
                 SetProperty(ref _BOM_ID, value);
             }
         }
-
+        private string _Notes;
+        /// <summary>
+        /// 备注说明
+        /// </summary>
+        [AdvQueryAttribute(ColName = "Notes", ColDesc = "备注说明")]
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType = "String", ColumnName = "Notes", Length = 250, IsNullable = true, ColumnDescription = "备注说明")]
+        public string Notes
+        {
+            get { return _Notes; }
+            set
+            {
+                SetProperty(ref _Notes, value);
+            }
+        }
         #region 扩展属性
 
 

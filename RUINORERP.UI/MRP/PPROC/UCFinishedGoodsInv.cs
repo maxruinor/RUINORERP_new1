@@ -218,21 +218,21 @@ namespace RUINORERP.UI.PSI.PUR
             //先绑定这个。InitFilterForControl 这个才生效
             DataBindingHelper.BindData4TextBox<tb_FinishedGoodsInv>(entity, v => v.MONo, txtRef_BillNo, BindDataType4TextBox.Text, true);
             DataBindingHelper.BindData4TextBoxWithTagQuery<tb_FinishedGoodsInv>(entity, v => v.MOID, txtRef_BillNo, true);
-
-            //创建表达式  草稿 结案 和没有提交的都不显示
-            var lambdaOrder = Expressionable.Create<tb_ManufacturingOrder>()
+            //if (entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改)
+            //{
+                //创建表达式  草稿 结案 和没有提交的都不显示
+                var lambdaOrder = Expressionable.Create<tb_ManufacturingOrder>()
                             .And(t => t.DataStatus == (int)DataStatus.确认)
                              .And(t => t.isdeleted == false)
                             .ToExpression();//注意 这一句 不能少
-            //base.InitFilterForControl<tb_PurOrder, tb_PurOrderQueryDto>(entity, txtPurOrderNO, c => c.PurOrderNo, lambdaOrder, ctrPurorder.GetQueryParameters());
+                                            //base.InitFilterForControl<tb_PurOrder, tb_PurOrderQueryDto>(entity, txtPurOrderNO, c => c.PurOrderNo, lambdaOrder, ctrPurorder.GetQueryParameters());
 
-            BaseProcessor basePro = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_ManufacturingOrder).Name + "Processor");
-            QueryFilter queryFilter = basePro.GetQueryFilter();
+                BaseProcessor basePro = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_ManufacturingOrder).Name + "Processor");
+                QueryFilter queryFilter = basePro.GetQueryFilter();
 
-            queryFilter.FilterLimitExpressions.Add(lambdaOrder);//意思是只有审核确认的。没有结案的。才能查询出来。
-            DataBindingHelper.InitFilterForControlByExp<tb_ManufacturingOrder>(entity, txtRef_BillNo, c => c.MONO, queryFilter, null, c => c.MOID);
-
-
+                queryFilter.FilterLimitExpressions.Add(lambdaOrder);//意思是只有审核确认的。没有结案的。才能查询出来。
+                DataBindingHelper.InitFilterForControlByExp<tb_ManufacturingOrder>(entity, txtRef_BillNo, c => c.MONO, queryFilter, null, c => c.MOID);
+            //}
             ToolBarEnabledControl(entity);
         }
 
@@ -310,7 +310,7 @@ namespace RUINORERP.UI.PSI.PUR
             listCols.SetCol_Summary<tb_FinishedGoodsInvDetail>(c => c.NetWorkingHours);
             listCols.SetCol_Summary<tb_FinishedGoodsInvDetail>(c => c.NetMachineHours);
             listCols.SetCol_Summary<tb_FinishedGoodsInvDetail>(c => c.ApportionedCost);
-           // listCols.SetCol_Summary<tb_FinishedGoodsInvDetail>(c => c.SubtotalMaterialCost);
+            // listCols.SetCol_Summary<tb_FinishedGoodsInvDetail>(c => c.SubtotalMaterialCost);
             listCols.SetCol_Summary<tb_FinishedGoodsInvDetail>(c => c.ManuFee);
             listCols.SetCol_Summary<tb_FinishedGoodsInvDetail>(c => c.ProductionAllCost);
 
@@ -483,6 +483,7 @@ namespace RUINORERP.UI.PSI.PUR
             return false;
 
         }
+
         /*
 /// <summary>
 /// 采购入库审核成功后。如果有对应的采购订单引入，则将其结案，并把数量回写？
@@ -686,14 +687,13 @@ protected async override Task<ApprovalEntity> ReReview()
                 //这里根据制令单的时间 费用假设全缴库时算出单位时间
                 //再手动输入实缴时再算
 
-                NewDetail.NetWorkingHours = decimal.Round(SourceBill.WorkingHour / SourceBill.ManufacturingQty, 4); 
+                NewDetail.NetWorkingHours = decimal.Round(SourceBill.WorkingHour / SourceBill.ManufacturingQty, 4);
                 NewDetail.NetMachineHours = decimal.Round(SourceBill.MachineHour / SourceBill.ManufacturingQty, 4);
                 NewDetail.MaterialCost = decimal.Round(SourceBill.TotalMaterialCost / SourceBill.ManufacturingQty, 4);
                 NewDetail.ManuFee = decimal.Round(SourceBill.TotalManuFee / SourceBill.ManufacturingQty, 4);
-                //NewDetail.ApportionedCost = SourceBill.ApportionedCost / SourceBill.ManufacturingQty;
-                //NewDetail.ProductionAllCost = SourceBill.TotalProductionCost / SourceBill.ManufacturingQty;
                 NewDetail.ApportionedCost = decimal.Round(SourceBill.ApportionedCost / SourceBill.ManufacturingQty, 4);
-                NewDetail.ProductionAllCost = decimal.Round(SourceBill.TotalProductionCost / SourceBill.ManufacturingQty, 4);
+                NewDetail.UnitCost = NewDetail.MaterialCost+ NewDetail.ManuFee+ NewDetail.ApportionedCost;
+                NewDetail.ProductionAllCost = decimal.Round(NewDetail.UnitCost * NewDetail.Qty, 4);
                 #endregion
                 NewDetails.Add(NewDetail);
                 if (NewDetails.Count == 0)

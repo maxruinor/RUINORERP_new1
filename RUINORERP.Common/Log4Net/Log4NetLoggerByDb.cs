@@ -94,8 +94,8 @@ namespace RUINORERP.Common.Log4Net
                     message = formatter(state, exception);
                 }
                 catch (Exception)
-                { 
-                   
+                {
+
                 }
 
             }
@@ -121,6 +121,10 @@ namespace RUINORERP.Common.Log4Net
                 {
                     if (item is Exception ex)
                     {
+                        if (log.Message==null)
+                        {
+                            log.Message = string.Empty;
+                        }
                         if (log.Message.Trim().Length > 0)
                         {
                             log.Message += "\r\n";
@@ -209,7 +213,7 @@ namespace RUINORERP.Common.Log4Net
                         });
             adoNetAppender.AddParameter(new AdoNetAppenderParameter { ParameterName = "@log_level", DbType = System.Data.DbType.String, Size = 50, Layout = new Layout2RawLayoutAdapter(new PatternLayout("%level")) });
             adoNetAppender.AddParameter(new AdoNetAppenderParameter { ParameterName = "@logger", DbType = System.Data.DbType.String, Size = 255, Layout = new Layout2RawLayoutAdapter(new PatternLayout("%logger")) });
-         
+
             log4net.Layout.PatternLayout layout = new CustomLayout() { ConversionPattern = "%property{Operator}" };
             layout.ActivateOptions();
             adoNetAppender.AddParameter(new AdoNetAppenderParameter { ParameterName = "@Operator", DbType = System.Data.DbType.String, Size = 4000, Layout = new Layout2RawLayoutAdapter(layout) });

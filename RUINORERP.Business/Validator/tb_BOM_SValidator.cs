@@ -67,11 +67,11 @@ namespace RUINORERP.Business
 
 //有默认值
 
- RuleFor(x => x.OutApportionedCost).PrecisionScale(19,4,true).WithMessage("处发分摊费用:小数位不能超过4。");
+ RuleFor(x => x.OutApportionedCost).PrecisionScale(19,4,true).WithMessage("外发分摊费用:小数位不能超过4。");
 
  RuleFor(x => x.SelfApportionedCost).PrecisionScale(19,4,true).WithMessage("自制分摊费用:小数位不能超过4。");
 
- RuleFor(x => x.TotalSelfManuCost).PrecisionScale(19,4,true).WithMessage("自产制造费用:小数位不能超过4。");
+ RuleFor(x => x.TotalSelfManuCost).PrecisionScale(19,4,true).WithMessage("自制费用:小数位不能超过4。");
 
  RuleFor(x => x.TotalOutManuCost).PrecisionScale(19,4,true).WithMessage("外发费用:小数位不能超过4。");
 

@@ -28,10 +28,19 @@ namespace RUINORERP.Model
             base.SetRelatedTableTypes<tb_Inventory>();
             base.SetRelatedTableTypes<tb_Prod>();
         }
+
         [SugarColumn(IsIgnore = true)]
         [Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(Inventory_ID))]
         public virtual tb_Inventory tb_inventory { get; set; }
+
+
+        [SugarColumn(IsIgnore = true)]
+        [Browsable(false)]
+        [Navigate(NavigateType.OneToOne, nameof(ProdDetailID))]
+        public virtual tb_ProdDetail tb_proddetail { get; set; }
+   
+
     }
 }
 

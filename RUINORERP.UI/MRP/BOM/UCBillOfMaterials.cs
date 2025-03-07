@@ -744,7 +744,6 @@ namespace RUINORERP.UI.MRP.BOM
             else
             {
                 txtProdDetailID.ToolTipValues.Heading = "请选择物料编码，不能手动输入SKU码";
-             
                 EditEntity.DataStatus = (int)DataStatus.草稿;
                 EditEntity.ActionStatus = ActionStatus.新增;
                 EditEntity.BOM_No = BizCodeGenerator.Instance.GetBizBillNo(BizType.BOM物料清单);
@@ -920,7 +919,7 @@ namespace RUINORERP.UI.MRP.BOM
 
                 EditEntity.OutProductionAllCosts = EditEntity.TotalMaterialCost + EditEntity.TotalOutManuCost + EditEntity.OutApportionedCost;
                 EditEntity.SelfProductionAllCosts = EditEntity.TotalMaterialCost + EditEntity.TotalSelfManuCost + EditEntity.SelfApportionedCost;
-
+              
 
 
             };

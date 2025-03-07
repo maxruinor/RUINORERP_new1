@@ -78,7 +78,7 @@ namespace RUINORERP.UI.MRP.MP
 
             if (entity != null)
             {
-                cmbCustomerVendor_ID.Visible = entity.IsOutSourced;
+                cmbCustomerVendor_ID_Out.Visible = entity.IsOutSourced;
                 if (entity.MOID > 0)
                 {
                     entity.PrimaryKeyID = entity.MOID;
@@ -242,18 +242,15 @@ namespace RUINORERP.UI.MRP.MP
                         if (cmbCustomerVendor_ID.SelectedIndex == 0)
                         {
                             entity.CustomerVendor_ID = null;
+                            cmbCustomerVendor_ID.SelectedIndex = -1;
                         }
                     }
                     if (s2.PropertyName == entity.GetPropertyName<tb_ManufacturingOrder>(c => c.IsOutSourced))
                     {
-                        cmbCustomerVendor_ID.Visible = entity.IsOutSourced;
+                        cmbCustomerVendor_ID_Out.Visible = entity.IsOutSourced;
                         if (entity.IsOutSourced)
                         {
                             entity.DepartmentID = null;
-                        }
-                        else
-                        {
-                            cmbCustomerVendor_ID.Visible = false;
                         }
                     }
                     ToolBarEnabledControl(entity);
@@ -1048,7 +1045,7 @@ protected override void Print()
 
         private void chkIsOutSourced_CheckedChanged(object sender, EventArgs e)
         {
-           // cmbCustomerVendor_ID_Out.Visible = chkIsOutSourced.Checked;
+            cmbCustomerVendor_ID_Out.Visible = chkIsOutSourced.Checked;
         }
 
 

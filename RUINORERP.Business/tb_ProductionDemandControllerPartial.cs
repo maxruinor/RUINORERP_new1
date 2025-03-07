@@ -737,7 +737,7 @@ namespace RUINORERP.Business
                     NewDetail.RequirementDate = RequirementDate.AddDays(-10);
                 }
             }
-            
+
 
             //可用库存是多次递减，所以多次赋值
             NewDetail.AvailableStock = detail.tb_proddetail.tb_Inventories
@@ -1107,7 +1107,7 @@ namespace RUINORERP.Business
             //一个中间件的详情ID和PCID即行号一行，生成一个制作令单
             tb_ManufacturingOrder ManufacturingOrder = mapper.Map<tb_ManufacturingOrder>(MakingItem);
             ManufacturingOrder.PDCID = MakingItem.PDCID;
-            
+
             #region 
             //tb_BOM_SController<tb_BOM_S> ctrBOM = _appContext.GetRequiredService<tb_BOM_SController<tb_BOM_S>>();
             //一次性查出。为了性能，如果是上层模式，则全部，如果是中间件模式，则只要查下一级
@@ -1275,19 +1275,23 @@ namespace RUINORERP.Business
             }
             //这里所有工时 。成本都按计划数量来算。到缴库时才按实际数量来算
             ManufacturingOrder.PeopleQty = MakingItemBom.PeopleQty * ManufacturingOrder.ManufacturingQty;
-            ManufacturingOrder.TotalMaterialCost = MakingItemBom.TotalMaterialCost * ManufacturingOrder.ManufacturingQty;
+            //ManufacturingOrder.TotalMaterialCost = MakingItemBom.TotalMaterialCost * ManufacturingOrder.ManufacturingQty;
+            ManufacturingOrder.TotalMaterialCost = AllMakingGoods.Sum(c => c.SubtotalUnitCost); //MakingItemBom.TotalMaterialCost * ManufacturingOrder.ManufacturingQty
             if (ManufacturingOrder.IsOutSourced)
             {
                 ManufacturingOrder.ApportionedCost = MakingItemBom.OutApportionedCost * ManufacturingOrder.ManufacturingQty;
                 ManufacturingOrder.TotalManuFee = MakingItemBom.TotalOutManuCost * ManufacturingOrder.ManufacturingQty;
-                ManufacturingOrder.TotalProductionCost = MakingItemBom.OutProductionAllCosts * ManufacturingOrder.ManufacturingQty;
+                //MakingItemBom.OutProductionAllCosts bom中的总自产  自外发  在这里不用。只是用于配方中的查看
+                //这里是 分摊  加工费和材料一起加总算
             }
             else
             {
                 ManufacturingOrder.ApportionedCost = MakingItemBom.SelfApportionedCost * ManufacturingOrder.ManufacturingQty;
                 ManufacturingOrder.TotalManuFee = MakingItemBom.TotalSelfManuCost * ManufacturingOrder.ManufacturingQty;
-                ManufacturingOrder.TotalProductionCost = MakingItemBom.SelfProductionAllCosts * ManufacturingOrder.ManufacturingQty;
+               
             }
+            ManufacturingOrder.TotalProductionCost = ManufacturingOrder.TotalMaterialCost + ManufacturingOrder.ApportionedCost + ManufacturingOrder.TotalManuFee;
+           
             ManufacturingOrder.ApprovalOpinions = string.Empty;
             ManufacturingOrder.ApprovalResults = null;
             ManufacturingOrder.ApprovalStatus = null;
@@ -1408,6 +1412,8 @@ namespace RUINORERP.Business
                     //中间件，直接就是上级的请制量作为标准*用量
                     mItemGoods.ShouldSendQty = MakingItem.RequirementQty * mItem.UsedQty;
                     mItemGoods.CurrentIinventory = mItem.tb_proddetail.tb_Inventories.Where(c => c.Location_ID == MakingItem.Location_ID).Sum(i => i.Quantity);
+
+                    //制令单的成本来源于实时成本
                     mItemGoods.UnitCost = mItem.tb_proddetail.tb_Inventories.Where(c => c.Location_ID == MakingItem.Location_ID).Sum(i => i.Inv_Cost);
                     //IncludeSubBOM ==true 制令单主表中应该是上层驱动 
 

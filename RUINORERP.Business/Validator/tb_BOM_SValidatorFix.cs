@@ -41,12 +41,12 @@ namespace RUINORERP.Business
             RuleFor(x => x.MachineHour).PrecisionScale(15, 5, true).WithMessage("机时:小数位不能超过5。");
             RuleFor(x => x.DailyQty).PrecisionScale(18, 0, true).WithMessage("日产量:小数位不能超过0。");
 
-            RuleFor(x => x.OutApportionedCost).PrecisionScale(19, 4, true).WithMessage("处发分摊费用:小数位不能超过4。");
+            RuleFor(x => x.OutApportionedCost).PrecisionScale(19, 4, true).WithMessage("外发分摊费用:小数位不能超过4。");
             RuleFor(x => x.TotalOutManuCost).PrecisionScale(19, 4, true).WithMessage("外发费用:小数位不能超过4。");
             RuleFor(x => x.OutProductionAllCosts).PrecisionScale(19, 4, true).WithMessage("外发总成本:小数位不能超过4。");
 
             RuleFor(x => x.SelfApportionedCost).PrecisionScale(19, 4, true).WithMessage("自制分摊费用:小数位不能超过4。");
-            RuleFor(x => x.TotalSelfManuCost).PrecisionScale(19, 4, true).WithMessage("自产制造费用:小数位不能超过4。");
+            RuleFor(x => x.TotalSelfManuCost).PrecisionScale(19, 4, true).WithMessage("自制费用:小数位不能超过4。");
             RuleFor(x => x.SelfProductionAllCosts).PrecisionScale(19, 4, true).WithMessage("自产总成本:小数位不能超过4。");
 
             RuleFor(x => x.TotalOutManuCost).

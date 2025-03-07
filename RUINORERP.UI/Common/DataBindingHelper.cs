@@ -90,6 +90,8 @@ namespace RUINORERP.UI.Common
         /// <param name="ValueFieldCol">是指源头的ID列名,被引用的实体的ID列</param>
         public static void InitFilterForControlByExp<P>(BaseEntity entity, System.Windows.Forms.Control item, Expression<Func<P, object>> DisplayColExp, QueryFilter queryFilter, Type KeyValueTypeForDgv = null, Expression<Func<P, object>> ValueFieldColExp = null) where P : class
         {
+            // 移除事件处理程序
+            item.Validating -= textBox1_Validating;
             if (ValueFieldColExp == null)
             {
                 InitFilterForControlRef<P>(entity, item, DisplayColExp.GetMemberInfo().Name, queryFilter, KeyValueTypeForDgv);
@@ -98,6 +100,10 @@ namespace RUINORERP.UI.Common
             {
                 InitFilterForControlRef<P>(entity, item, DisplayColExp.GetMemberInfo().Name, queryFilter, KeyValueTypeForDgv, ValueFieldColExp.GetMemberInfo().Name);
             }
+        }
+        private static void textBox1_Validating(object sender, CancelEventArgs e)
+        {
+            // 不设置 e.Cancel = true，允许焦点移开
         }
 
         /// <summary>
@@ -922,6 +928,15 @@ namespace RUINORERP.UI.Common
                         cmbBox.Text = "";
                         InitDataToCmb<T>(expkey, expValue, cmbBox, expCondition);
                         cmbBox.SelectedItem = null;
+                        try
+                        {
+                            entity.SetPropertyValue(key, null);
+                            //entity.SetPropertyValue(key, DBNull.Value);
+                        }
+                        catch
+                        {
+                        }
+                        cmbBox.SelectedIndex = -1;
                         cmbBox.SelectedValue = -1;
                         //如果字段值能允许null。直接设置一下。不然验证框架会验证。导致 要重新开UI窗体
 
@@ -2183,7 +2198,7 @@ namespace RUINORERP.UI.Common
 
 
 
-       
+
 
 
         /// <summary>

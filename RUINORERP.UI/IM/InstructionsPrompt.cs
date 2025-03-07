@@ -126,7 +126,7 @@ namespace RUINORERP.UI.IM
 
         private void btnCancel_Click(object sender, EventArgs e)
         {
-            ResponseToServer(ReminderData.BizKeyID);
+            RefuseReleaseLock(ReminderData);
             // this.DialogResult = DialogResult.Cancel;
             this.DialogResult = DialogResult.OK;
             this.Close();
@@ -142,7 +142,7 @@ namespace RUINORERP.UI.IM
             lockRequest.LockedUserID = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID;
             lockRequest.LockedUserName = MainForm.Instance.AppContext.CurUserInfo.UserInfo.tb_employee.Employee_Name;
             lockRequest.BillBizType = (int)0;
-            lockRequest.MenuID =0;
+            lockRequest.MenuID = 0;
             cmd.lockRequest = lockRequest;
             MainForm.Instance.dispatcher.DispatchAsync(cmd, CancellationToken.None);
 
@@ -189,7 +189,7 @@ namespace RUINORERP.UI.IM
                 menuPowerHelper.ExecuteEvents(RelatedBillMenuInfo, instance, parameter);
                 //要卸载，不然会多次执行
                 menuPowerHelper.OnSetQueryConditionsDelegate -= MenuPowerHelper_OnSetQueryConditionsDelegate;
-              
+
                 this.DialogResult = DialogResult.OK;
                 this.Close();
             }
@@ -263,14 +263,15 @@ namespace RUINORERP.UI.IM
         /// 拒绝
         /// </summary>
         /// <param name="billid"></param>
-        private void ResponseToServer(long billid)
+        private void RefuseReleaseLock(ReminderData reminderData)
         {
+            //谁拒绝谁的什么请求
             RequestReceiveLockManagerCmd cmd = new RequestReceiveLockManagerCmd(CmdOperation.Send);
             cmd.lockCmd = LockCmd.RefuseReleaseLock;
             LockRequestInfo lockRequest = new LockRequestInfo();
             lockRequest.LockedUserName = MainForm.Instance.AppContext.CurUserInfo.UserInfo.tb_employee.Employee_Name;
             lockRequest.LockedUserID = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID;
-            lockRequest.BillID = billid;
+            lockRequest.BillID = reminderData.BizKeyID;
             cmd.lockRequest = lockRequest;
             MainForm.Instance.dispatcher.DispatchAsync(cmd, CancellationToken.None);
             cmd.LockChanged += (sender, e) =>
@@ -366,7 +367,7 @@ namespace RUINORERP.UI.IM
                         break;
                 }
             }
-            
+
             this.DialogResult = DialogResult.OK;
             this.Close();
         }

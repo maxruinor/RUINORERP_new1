@@ -293,7 +293,20 @@ namespace RUINORERP.Model
             SetProperty(ref _IsFromPlatform, value);
                         }
         }
-
+        private bool _IsCustomizedOrder;
+        /// <summary>
+        /// 定制订单
+        /// </summary>
+        [AdvQueryAttribute(ColName = "IsCustomizedOrder", ColDesc = "定制订单")]
+        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType = "Boolean", ColumnName = "IsCustomizedOrder", IsNullable = false, ColumnDescription = "定制订单")]
+        public bool IsCustomizedOrder
+        {
+            get { return _IsCustomizedOrder; }
+            set
+            {
+                SetProperty(ref _IsCustomizedOrder, value);
+            }
+        }
         private string _TrackNo;
         /// <summary>
         /// 物流单号

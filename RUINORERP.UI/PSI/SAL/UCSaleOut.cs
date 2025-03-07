@@ -137,6 +137,8 @@ namespace RUINORERP.UI.PSI.SAL
             DataBindingHelper.BindData4CheckBox<tb_SaleOut>(entity, t => t.GenerateVouchers, chkGenerateVouchers, false);
             DataBindingHelper.BindData4TextBox<tb_SaleOut>(entity, t => t.DiscountAmount.ToString(), txtDiscountAmount, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4TextBox<tb_SaleOut>(entity, t => t.PrePayMoney.ToString(), txtPrePayMoney, BindDataType4TextBox.Money, false);
+            DataBindingHelper.BindData4CheckBox<tb_SaleOut>(entity, t => t.IsCustomizedOrder, chkIsCustomizedOrder, false);
+
             base.errorProviderForAllInput.DataSource = entity;
             base.errorProviderForAllInput.ContainerControl = this;
             //this.ValidateChildren();
@@ -310,7 +312,8 @@ namespace RUINORERP.UI.PSI.SAL
             */
 
             listCols.SetCol_Formula<tb_SaleOutDetail>((a, b) => a.UnitPrice * b.Discount, c => c.TransactionPrice);
-            listCols.SetCol_Formula<tb_SaleOutDetail>((a, b) => a.Cost * b.Quantity, c => c.SubtotalCostAmount);
+            //listCols.SetCol_Formula<tb_SaleOutDetail>((a, b) => a.Cost * b.Quantity, c => c.SubtotalCostAmount);
+            listCols.SetCol_Formula<tb_SaleOutDetail>((a, b) => (a.Cost + a.CustomizedCost) * b.Quantity, c => c.SubtotalCostAmount);
             listCols.SetCol_Formula<tb_SaleOutDetail>((a, b) => a.TransactionPrice * b.Quantity, c => c.SubtotalTransAmount);
             listCols.SetCol_Formula<tb_SaleOutDetail>((a, b, c) => a.SubtotalTransAmount / (1 + b.TaxRate) * c.TaxRate, d => d.SubtotalTaxAmount);
             listCols.SetCol_Formula<tb_SaleOutDetail>((a, b, c) => a.TransactionPrice * b.Quantity - c.SubtotalTaxAmount, d => d.SubtotalUntaxedAmount);
@@ -347,8 +350,6 @@ namespace RUINORERP.UI.PSI.SAL
             sgh.OnGetTransferDataHandler += Sgh_OnGetTransferDataHandler;
             base.ControlMasterColumnsInvisible();
         }
-
-
 
         private tb_ProdConversion Sgh_OnGetTransferDataHandler(ToolStripItem sender, object rowObj, SourceGridDefine CurrGridDefine)
         {

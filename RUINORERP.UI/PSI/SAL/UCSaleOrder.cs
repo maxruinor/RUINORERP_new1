@@ -202,7 +202,7 @@ namespace RUINORERP.UI.PSI.SAL
             DataBindingHelper.BindData4TextBox<tb_SaleOrder>(entity, t => t.TotalUntaxedAmount, txtUntaxedAmount, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4TextBox<tb_SaleOrder>(entity, t => t.TotalTaxAmount, txtTaxAmount, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4CheckBox<tb_SaleOrder>(entity, t => t.IsFromPlatform, chk平台单, false);
-
+            DataBindingHelper.BindData4CheckBox<tb_SaleOrder>(entity, t => t.IsCustomizedOrder, chkIsCustomizedOrder, false);
 
             base.errorProviderForAllInput.DataSource = entity;
             base.errorProviderForAllInput.ContainerControl = this;
@@ -409,7 +409,7 @@ namespace RUINORERP.UI.PSI.SAL
 
             listCols.SetCol_Formula<tb_SaleOrderDetail>((a, b, c) => a.SubtotalTransAmount / (1 + b.TaxRate) * c.TaxRate, d => d.SubtotalTaxAmount);
             listCols.SetCol_Formula<tb_SaleOrderDetail>((a, b, c) => a.TransactionPrice * b.Quantity - c.SubtotalTaxAmount, d => d.SubtotalUntaxedAmount);
-            listCols.SetCol_Formula<tb_SaleOrderDetail>((a, b) => a.Cost * b.Quantity, c => c.SubtotalCostAmount);
+            listCols.SetCol_Formula<tb_SaleOrderDetail>((a, b) => (a.Cost + a.CustomizedCost) * b.Quantity, c => c.SubtotalCostAmount);
 
 
 
@@ -766,7 +766,7 @@ namespace RUINORERP.UI.PSI.SAL
                     }
                 }
 
-                
+
                 ReturnMainSubResults<tb_SaleOrder> SaveResult = new ReturnMainSubResults<tb_SaleOrder>();
                 if (NeedValidated)
                 {

@@ -355,6 +355,21 @@ namespace RUINORERP.UI.ClientCmdService
     }
     public delegate void LockManagerEventHandler(object sender, LockManagerEventArgs e);
 
+    public class LockRefusalInfo
+    {
+        public string RefusingUserID { get; set; } // 拒绝释放锁的用户的ID
+        public string RefusingUserName { get; set; } // 拒绝释放锁的用户的姓名
+        public string LockedUserID { get; set; } // 被拒绝释放锁的用户的ID
+        public string LockedUserName { get; set; } // 被拒绝释放锁的用户的姓名
+        public string BillID { get; set; } // 单据ID
+        public int BillBizType { get; set; } // 单据业务类型
+        public string RefusalReason { get; set; } // 拒绝释放锁的原因
+        public DateTime RefusalTime { get; set; } // 拒绝释放锁的时间
 
+        public LockRefusalInfo()
+        {
+            RefusalTime = DateTime.Now; // 默认设置为当前时间
+        }
+    }
 
 }

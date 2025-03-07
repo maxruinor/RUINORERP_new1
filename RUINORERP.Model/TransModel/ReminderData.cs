@@ -29,6 +29,9 @@ namespace RUINORERP.Model.TransModel
     {
         public object BizData { get; set; }
 
+        /// <summary>
+        /// 单据主键 这种业务性keyid
+        /// </summary>
         public long BizKeyID { get; set; }
         public MessageCmdType messageCmd { get; set; } = MessageCmdType.Unknown;
         // 消息状态

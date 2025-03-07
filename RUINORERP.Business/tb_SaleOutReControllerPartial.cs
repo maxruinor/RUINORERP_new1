@@ -57,8 +57,11 @@ namespace RUINORERP.Business
                         rrs.Succeeded = false;
                         return rrs;
                     }
-               
-                    //如果退回单是引用了销售订单来的。则所退产品要在订单出库明细中。
+
+                if (!entity.RefundOnly)
+                {
+
+                    //如果退回单是引用了销售订单来的。则所退产品要在订单出库明细中体现出来。回写。
                     if (entity.SaleOut_MainID.HasValue && entity.SaleOut_MainID.Value > 0)
                     {
                         if (entity.tb_saleout == null || entity.tb_saleout.tb_SaleOutDetails == null)
@@ -106,9 +109,9 @@ namespace RUINORERP.Business
                                 child.TotalReturnedQty += returnDetail.Quantity;
                                 //如果已交数据大于 订单数量 给出警告实际操作中 使用其他方式将备品入库
                                 if (child.TotalReturnedQty > child.Quantity)
-                            {
-                                _unitOfWorkManage.RollbackTran();
-                                throw new Exception($"销售退回单中：{entity.ReturnNo}中，明细退回总数量不能大于出库数量！请检查该出库单是否已经退回过！");
+                                {
+                                    _unitOfWorkManage.RollbackTran();
+                                    throw new Exception($"销售退回单中：{entity.ReturnNo}中，明细退回总数量不能大于出库数量！请检查该出库单是否已经退回过！");
                                 }
                             }
                             await _unitOfWorkManage.GetDbClient().Updateable<tb_SaleOutDetail>(entity.tb_saleout.tb_SaleOutDetails).ExecuteCommandAsync();
@@ -156,8 +159,8 @@ namespace RUINORERP.Business
                                 //如果已交数据大于 订单数量 给出警告实际操作中 使用其他方式将备品入库
                                 if (orderDetail.TotalReturnedQty > orderDetail.Quantity)
                                 {
-                                _unitOfWorkManage.RollbackTran(); 
-                                throw new Exception($"销售出库退回时，出库单：{entity.tb_saleout.SaleOutNo}中，SKU的退回总数量不能大于订单数量！");
+                                    _unitOfWorkManage.RollbackTran();
+                                    throw new Exception($"销售出库退回时，出库单：{entity.tb_saleout.SaleOutNo}中，SKU的退回总数量不能大于订单数量！");
                                 }
 
 
@@ -236,11 +239,11 @@ namespace RUINORERP.Business
                             tb_Inventory inv = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == child.ProdDetailID && i.Location_ID == child.Location_ID);
                             if (inv == null)
                             {
-                            _unitOfWorkManage.RollbackTran();
-                            rrs.ErrorMsg = $"{child.ProdDetailID}当前产品无库存数据，无法进行销售退货。请使用【期初盘点】【采购入库】】【生产缴库】的方式进行盘点后，再操作。";
-                            rrs.Succeeded = false;
-                            return rrs;
-                            Opening = true;
+                                _unitOfWorkManage.RollbackTran();
+                                rrs.ErrorMsg = $"{child.ProdDetailID}当前产品无库存数据，无法进行销售退货。请使用【期初盘点】【采购入库】】【生产缴库】的方式进行盘点后，再操作。";
+                                rrs.Succeeded = false;
+                                return rrs;
+                                Opening = true;
                                 inv = new tb_Inventory();
                                 inv.InitInventory = (int)inv.Quantity;
                                 inv.Quantity = inv.Quantity - child.Quantity;
@@ -265,7 +268,7 @@ namespace RUINORERP.Business
                             //生产成本：自行生产产品时的成本，包括原材料、人工和间接费用等。
                             //市场价格：参考市场上类似产品或物品的价格。
 
-                           // CommService.CostCalculations.CostCalculation(_appContext, inv, child.TransactionPrice);
+                            // CommService.CostCalculations.CostCalculation(_appContext, inv, child.TransactionPrice);
 
                             //inv.Inv_Cost = child.TransactionPrice;//这里需要计算，根据系统设置中的算法计算。
                             //inv.CostFIFO = child.TransactionPrice;
@@ -308,10 +311,43 @@ namespace RUINORERP.Business
 
                         }
                     }
+                }
+                else
+                {
+                    //正常在仅退款时 录入销售退货单后 审核时就会生成一个
+                    /*
+                     仅退款的财务处理
+生成记账凭证：
+记账凭证名称：通常称为“退款记账凭证”或“仅退款记账凭证”。
+会计分录：
+借：应收账款（红字）
+贷：主营业务收入（红字）
+贷：应交税费—销项税（红字）
+生成报损清单：
+报损清单：用于记录资产损失或费用支出，确保资产损失的合法性。
+主要内容：包括退货申请单、能证明资产损失确属已实际发生的合法证据，如发票、收据等。
+仅退款的特殊处理
+核对账户余额：
+完成记账后，核对账户余额，确保所有账目准确无误。
+附上原始凭证：
+每笔退款都需要附上相关的原始凭证，如发票、收据等，以证明交易的真实性。
+生成报损清单：
+商家应妥善留存电商平台的相关规则（网页截图等），把单笔“快速退货退款”业务、“仅退款不退货”业务的判定结论（通知）、退款单据、订货单、发货凭证、快递（物流）运输单据等资料（含电子资料），作为进行相关账务处理的凭证。
+仅退款的会计分录示例
+客户退回已支付的货款：
+借：银行存款（红字）
+贷：主营业务收入（红字）
+贷：应交税费—销项税（红字）
+商品退回结转营业成本：
+借：营业成本（红字）
+贷：库存商品（红字）
+总结
+在仅退款的情况下，财务处理需要生成“退款记账凭证”和“报损清单”，确保财务记录的准确性和合法性。通过附上原始凭证和报损清单，可以为后续的财务审核和税务检查提供依据。
+                     */
+                }
 
-            
-                //更库累计退回数量
-                await _unitOfWorkManage.GetDbClient().Updateable<tb_SaleOutReDetail>(entity.tb_SaleOutReDetails).ExecuteCommandAsync();
+                //更新累计退回数量
+               // await _unitOfWorkManage.GetDbClient().Updateable<tb_SaleOutReDetail>(entity.tb_SaleOutReDetails).ExecuteCommandAsync();
 
                 //entity.ApprovalOpinions = approvalEntity.ApprovalComments;
                 //后面已经修改为

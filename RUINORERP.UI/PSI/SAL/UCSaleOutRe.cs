@@ -123,7 +123,7 @@ namespace RUINORERP.UI.PSI.SAL
             DataBindingHelper.BindData4CheckBox<tb_SaleOutRe>(entity, t => t.IsIncludeTax, chkIsIncludeTax, false);
             DataBindingHelper.BindData4CheckBox<tb_SaleOutRe>(entity, t => t.RefundOnly, chkRefundOnly, false);
             DataBindingHelper.BindData4CheckBox<tb_SaleOutRe>(entity, t => t.GenerateVouchers, chkGenerateVouchers, false);
-
+            DataBindingHelper.BindData4CheckBox<tb_SaleOutRe>(entity, t => t.IsCustomizedOrder, chkIsCustomizedOrder, false);
             base.errorProviderForAllInput.DataSource = entity;
             base.errorProviderForAllInput.ContainerControl = this;
             //this.ValidateChildren();

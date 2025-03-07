@@ -93,6 +93,7 @@
             this.txtTaxAmount = new Krypton.Toolkit.KryptonTextBox();
             this.txtCollectedMoney = new Krypton.Toolkit.KryptonTextBox();
             this.lblCollectedMoney = new Krypton.Toolkit.KryptonLabel();
+            this.chkIsCustomizedOrder = new Krypton.Toolkit.KryptonCheckBox();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceSub)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1)).BeginInit();
@@ -123,6 +124,7 @@
             // 
             // kryptonSplitContainer1.Panel1
             // 
+            this.kryptonSplitContainer1.Panel1.Controls.Add(this.chkIsCustomizedOrder);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.kryptonLabel3);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.cmbPayStatus);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.cmbPaytype_ID);
@@ -722,6 +724,15 @@
             this.lblCollectedMoney.TabIndex = 114;
             this.lblCollectedMoney.Values.Text = "实收金额";
             // 
+            // chkIsCustomizedOrder
+            // 
+            this.chkIsCustomizedOrder.Enabled = false;
+            this.chkIsCustomizedOrder.Location = new System.Drawing.Point(643, 115);
+            this.chkIsCustomizedOrder.Name = "chkIsCustomizedOrder";
+            this.chkIsCustomizedOrder.Size = new System.Drawing.Size(75, 20);
+            this.chkIsCustomizedOrder.TabIndex = 154;
+            this.chkIsCustomizedOrder.Values.Text = "定制订单";
+            // 
             // UCSaleOut
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
@@ -823,5 +834,6 @@
         private Krypton.Toolkit.KryptonComboBox cmbPayStatus;
         private Krypton.Toolkit.KryptonComboBox cmbPaytype_ID;
         private Krypton.Toolkit.KryptonLabel lblPaytype_ID;
+        private Krypton.Toolkit.KryptonCheckBox chkIsCustomizedOrder;
     }
 }

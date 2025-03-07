@@ -109,6 +109,37 @@ namespace RUINORERP.Model
                         }
         }
 
+
+        private bool _IsFromPlatform;
+        /// <summary>
+        /// 平台单
+        /// </summary>
+        [AdvQueryAttribute(ColName = "IsFromPlatform", ColDesc = "平台单")]
+        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType = "Boolean", ColumnName = "IsFromPlatform", IsNullable = false, ColumnDescription = "平台单")]
+        public bool IsFromPlatform
+        {
+            get { return _IsFromPlatform; }
+            set
+            {
+                SetProperty(ref _IsFromPlatform, value);
+            }
+        }
+        private bool _IsCustomizedOrder;
+        /// <summary>
+        /// 定制订单
+        /// </summary>
+        [AdvQueryAttribute(ColName = "IsCustomizedOrder", ColDesc = "定制订单")]
+        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType = "Boolean", ColumnName = "IsCustomizedOrder", IsNullable = false, ColumnDescription = "定制订单")]
+        public bool IsCustomizedOrder
+        {
+            get { return _IsCustomizedOrder; }
+            set
+            {
+                SetProperty(ref _IsCustomizedOrder, value);
+            }
+        }
+
+
         private long? _Employee_ID;
         /// <summary>
         /// 业务员

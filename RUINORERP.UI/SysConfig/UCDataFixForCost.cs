@@ -88,7 +88,7 @@ namespace RUINORERP.UI.SysConfig
                     //    //Exit(this);//csc关闭窗体
                     //    break;
                     case Keys.Enter:
-                        QueryInv(); 
+                        QueryInv();
                         break;
                 }
 
@@ -137,6 +137,7 @@ namespace RUINORERP.UI.SysConfig
             }
 
             DataBindingHelper.BindData4Cmb<tb_ProductType>(InventoryDto, k => k.Type_ID, v => v.TypeName, cmbType);
+            DataBindingHelper.InitDataToCmb<tb_Department>(k => k.DepartmentID, v => v.DepartmentName, cmbdepartment);
         }
 
         View_Inventory InventoryDto = new View_Inventory();
@@ -296,7 +297,7 @@ namespace RUINORERP.UI.SysConfig
             return Math.Round(percentage, 2); // 四舍五入到 2 位小数
         }
 
-        private  void btnQuery_Click(object sender, EventArgs e)
+        private void btnQuery_Click(object sender, EventArgs e)
         {
             QueryInv();
         }
@@ -309,6 +310,7 @@ namespace RUINORERP.UI.SysConfig
                           .WhereIF(!string.IsNullOrEmpty(txtCNName.Text), c => c.CNName.Contains(txtCNName.Text))
                           .WhereIF(!string.IsNullOrEmpty(txtProp.Text), c => c.prop.Contains(txtProp.Text))
                           .WhereIF(!string.IsNullOrEmpty(txtSearchKey.Text), c => c.SKU == txtSearchKey.Text)
+                          .WhereIF(cmbdepartment.SelectedItem != null, c => c.SKU == txtSearchKey.Text)
                           .WhereIF((InventoryDto.Type_ID != null && InventoryDto.Type_ID != -1), c => c.Type_ID == InventoryDto.Type_ID)
                           .ToListAsync();
             bindingSourceInv.DataSource = inventories.ToBindingSortCollection();
@@ -317,7 +319,7 @@ namespace RUINORERP.UI.SysConfig
             //只显示成本 和详情ID。
             foreach (DataGridViewColumn item in dataGridViewInv.Columns)
             {
-                if (item.Name == "Inv_Cost" || item.Name == "ProdDetailID")
+                if (item.Name == "Inv_Cost" || item.Name == "ProdDetailID" || item.Name == "Quantity")
                 {
                     item.Visible = true;
                     if (item.Name == "Inv_Cost")
@@ -327,7 +329,11 @@ namespace RUINORERP.UI.SysConfig
                     if (item.Name == "ProdDetailID")
                     {
                         item.HeaderText = "产品详情";
-                        item.Width = 200;
+                        item.Width = 250;
+                    }
+                    if (item.Name == "Quantity")
+                    {
+                        item.HeaderText = "实际数量";
                     }
                 }
                 else
@@ -518,8 +524,8 @@ namespace RUINORERP.UI.SysConfig
                             .Where(a => a.ProdDetailID == ProdDetailID)
                             .Select(it => (dynamic)new
                             {
-                                出库单号 = it.SOrderNo,
-                                出库日期 = it.SaleDate,
+                                销售订单号 = it.SOrderNo,
+                                订单日期 = it.SaleDate,
                                 sku = it.SKU,
                                 成本 = it.Cost,
                                 成本小计 = it.SubtotalCostAmount,
@@ -823,8 +829,9 @@ namespace RUINORERP.UI.SysConfig
         /// </summary>
         /// <param name="updateInvList">要更新的对象集合</param>
         /// <returns></returns>
-        private async Task<List<tb_Inventory>> UpdateInventoryCost(List<tb_Inventory> updateInvList)
+        private async Task<List<tb_Inventory>> UpdateInventoryCost(List<tb_Inventory> NeedUpdateInvList)
         {
+            List<tb_Inventory> updateInvList = new List<tb_Inventory>();
             List<tb_Inventory> Allitems = new List<tb_Inventory>();
             try
             {
@@ -839,14 +846,15 @@ namespace RUINORERP.UI.SysConfig
                 //2）修复所有出库明细，主要是销售出库，当然还有其它，比方借出，成本金额是重要的指标数据
                 //3）成本修复 分  成品 外采和生产  因为这两种成本产生的方式不一样
                 #region 成本本身修复
-                long[] ids = updateInvList.Select(c => c.Inventory_ID).ToArray();
-                updateInvList = await MainForm.Instance.AppContext.Db.Queryable<tb_Inventory>()
+                long[] ids = NeedUpdateInvList.Select(c => c.Inventory_ID).ToArray();
+
+                Allitems = await MainForm.Instance.AppContext.Db.Queryable<tb_Inventory>()
                    .AsNavQueryable()
                    .Includes(c => c.tb_proddetail, d => d.tb_PurEntryDetails, e => e.tb_proddetail, f => f.tb_prod)
                    .Includes(c => c.tb_proddetail, d => d.tb_prod)
                     .Where(c => ids.Contains(c.Inventory_ID)).ToListAsync();
 
-                foreach (tb_Inventory item in updateInvList)
+                foreach (tb_Inventory item in Allitems)
                 {
                     if (item.tb_proddetail.tb_PurEntryDetails.Count > 0
                         && item.tb_proddetail.tb_PurEntryDetails.Sum(c => c.TransactionPrice) > 0
@@ -1680,7 +1688,7 @@ namespace RUINORERP.UI.SysConfig
                                                         Detail.MaterialCost = child.Inv_Cost;
                                                         Detail.UnitCost = Detail.MaterialCost * Detail.ManuFee + Detail.ApportionedCost;
                                                         Detail.ProductionAllCost = Detail.UnitCost * Detail.Qty;
-                                                        
+
                                                         //这时可以算出缴库的产品的单位成本
                                                         var nextInv = Detail.tb_proddetail.tb_Inventories.FirstOrDefault(c => c.Location_ID == Detail.Location_ID);
                                                         if (nextInv != null)

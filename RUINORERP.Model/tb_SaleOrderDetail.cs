@@ -194,6 +194,22 @@ namespace RUINORERP.Model
                         }
         }
 
+
+        private decimal _CustomizedCost = ((0));
+        /// <summary>
+        /// 定制成本
+        /// </summary>
+        [AdvQueryAttribute(ColName = "CustomizedCost", ColDesc = "定制成本")]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType = "Decimal", ColumnName = "CustomizedCost", DecimalDigits = 4, IsNullable = false, ColumnDescription = "定制成本")]
+        public decimal CustomizedCost
+        {
+            get { return _CustomizedCost; }
+            set
+            {
+                SetProperty(ref _CustomizedCost, value);
+            }
+        }
+
         private decimal _SubtotalCostAmount= ((0));
         /// <summary>
         /// 成本小计

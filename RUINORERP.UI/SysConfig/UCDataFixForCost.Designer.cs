@@ -72,6 +72,8 @@
             this.richTextBoxLog = new System.Windows.Forms.RichTextBox();
             this.bindingSourceList = new System.Windows.Forms.BindingSource(this.components);
             this.bindingSourceInv = new System.Windows.Forms.BindingSource(this.components);
+            this.cmbdepartment = new Krypton.Toolkit.KryptonComboBox();
+            this.kryptonLabel6 = new Krypton.Toolkit.KryptonLabel();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1.Panel1)).BeginInit();
             this.kryptonSplitContainer1.Panel1.SuspendLayout();
@@ -112,6 +114,7 @@
             ((System.ComponentModel.ISupportInitialize)(this.cmbType)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceList)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceInv)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.cmbdepartment)).BeginInit();
             this.SuspendLayout();
             // 
             // kryptonSplitContainer1
@@ -360,6 +363,8 @@
             // kryptonHeaderGrouptop.Panel
             // 
             this.kryptonHeaderGrouptop.Panel.AutoScroll = true;
+            this.kryptonHeaderGrouptop.Panel.Controls.Add(this.cmbdepartment);
+            this.kryptonHeaderGrouptop.Panel.Controls.Add(this.kryptonLabel6);
             this.kryptonHeaderGrouptop.Panel.Controls.Add(this.txtProp);
             this.kryptonHeaderGrouptop.Panel.Controls.Add(this.txtCNName);
             this.kryptonHeaderGrouptop.Panel.Controls.Add(this.kryptonLabel4);
@@ -389,7 +394,7 @@
             // 
             this.txtProp.Location = new System.Drawing.Point(71, 61);
             this.txtProp.Name = "txtProp";
-            this.txtProp.Size = new System.Drawing.Size(319, 21);
+            this.txtProp.Size = new System.Drawing.Size(111, 21);
             this.txtProp.TabIndex = 174;
             // 
             // txtCNName
@@ -417,7 +422,7 @@
             // 
             // kryptonLabel2
             // 
-            this.kryptonLabel2.Location = new System.Drawing.Point(217, 10);
+            this.kryptonLabel2.Location = new System.Drawing.Point(199, 11);
             this.kryptonLabel2.Name = "kryptonLabel2";
             this.kryptonLabel2.Size = new System.Drawing.Size(61, 20);
             this.kryptonLabel2.TabIndex = 170;
@@ -515,9 +520,9 @@
             // 
             // txtSearchKey
             // 
-            this.txtSearchKey.Location = new System.Drawing.Point(284, 10);
+            this.txtSearchKey.Location = new System.Drawing.Point(266, 10);
             this.txtSearchKey.Name = "txtSearchKey";
-            this.txtSearchKey.Size = new System.Drawing.Size(107, 21);
+            this.txtSearchKey.Size = new System.Drawing.Size(125, 21);
             this.txtSearchKey.TabIndex = 159;
             this.txtSearchKey.TextChanged += new System.EventHandler(this.txtSearchKey_TextChanged);
             // 
@@ -533,7 +538,7 @@
             // 
             // btnQuery
             // 
-            this.btnQuery.Location = new System.Drawing.Point(396, 60);
+            this.btnQuery.Location = new System.Drawing.Point(416, 63);
             this.btnQuery.Name = "btnQuery";
             this.btnQuery.Size = new System.Drawing.Size(99, 24);
             this.btnQuery.TabIndex = 0;
@@ -557,6 +562,23 @@
             this.richTextBoxLog.Size = new System.Drawing.Size(1050, 182);
             this.richTextBoxLog.TabIndex = 0;
             this.richTextBoxLog.Text = "";
+            // 
+            // cmbdepartment
+            // 
+            this.cmbdepartment.DropDownWidth = 205;
+            this.cmbdepartment.IntegralHeight = false;
+            this.cmbdepartment.Location = new System.Drawing.Point(265, 63);
+            this.cmbdepartment.Name = "cmbdepartment";
+            this.cmbdepartment.Size = new System.Drawing.Size(126, 21);
+            this.cmbdepartment.TabIndex = 176;
+            // 
+            // kryptonLabel6
+            // 
+            this.kryptonLabel6.Location = new System.Drawing.Point(220, 63);
+            this.kryptonLabel6.Name = "kryptonLabel6";
+            this.kryptonLabel6.Size = new System.Drawing.Size(39, 20);
+            this.kryptonLabel6.TabIndex = 175;
+            this.kryptonLabel6.Values.Text = "部门:";
             // 
             // UCDataFixForCost
             // 
@@ -610,6 +632,7 @@
             ((System.ComponentModel.ISupportInitialize)(this.cmbType)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceList)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceInv)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.cmbdepartment)).EndInit();
             this.ResumeLayout(false);
 
         }
@@ -659,5 +682,7 @@
         private Krypton.Toolkit.KryptonLabel kryptonLabel1;
         private System.Windows.Forms.TextBox txtProp;
         private System.Windows.Forms.TextBox txtCNName;
+        private Krypton.Toolkit.KryptonComboBox cmbdepartment;
+        private Krypton.Toolkit.KryptonLabel kryptonLabel6;
     }
 }

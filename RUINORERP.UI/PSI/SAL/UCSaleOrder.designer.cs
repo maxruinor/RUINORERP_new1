@@ -91,6 +91,7 @@
             this.lblApprovalOpinions = new Krypton.Toolkit.KryptonLabel();
             this.txtTrackNo = new Krypton.Toolkit.KryptonTextBox();
             this.lblTrackNo = new Krypton.Toolkit.KryptonLabel();
+            this.chkIsCustomizedOrder = new Krypton.Toolkit.KryptonCheckBox();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceSub)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1)).BeginInit();
@@ -137,6 +138,7 @@
             // 
             // kryptonPanelMainInfo
             // 
+            this.kryptonPanelMainInfo.Controls.Add(this.chkIsCustomizedOrder);
             this.kryptonPanelMainInfo.Controls.Add(this.chk平台单);
             this.kryptonPanelMainInfo.Controls.Add(this.lblDataStatus);
             this.kryptonPanelMainInfo.Controls.Add(this.txtShippingAddress);
@@ -287,7 +289,7 @@
             this.txtNotes.Location = new System.Drawing.Point(76, 186);
             this.txtNotes.Multiline = true;
             this.txtNotes.Name = "txtNotes";
-            this.txtNotes.Size = new System.Drawing.Size(968, 49);
+            this.txtNotes.Size = new System.Drawing.Size(838, 49);
             this.txtNotes.TabIndex = 75;
             // 
             // txtOrderNo
@@ -713,6 +715,14 @@
             this.lblTrackNo.TabIndex = 68;
             this.lblTrackNo.Values.Text = "物流单号";
             // 
+            // chkIsCustomizedOrder
+            // 
+            this.chkIsCustomizedOrder.Location = new System.Drawing.Point(922, 188);
+            this.chkIsCustomizedOrder.Name = "chkIsCustomizedOrder";
+            this.chkIsCustomizedOrder.Size = new System.Drawing.Size(75, 20);
+            this.chkIsCustomizedOrder.TabIndex = 102;
+            this.chkIsCustomizedOrder.Values.Text = "定制订单";
+            // 
             // UCSaleOrder
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
@@ -817,5 +827,6 @@
         private Krypton.Toolkit.KryptonPanel kryptonPanelMainInfo;
         private Krypton.Toolkit.KryptonLabel lblDataStatus;
         private Krypton.Toolkit.KryptonCheckBox chk平台单;
+        private Krypton.Toolkit.KryptonCheckBox chkIsCustomizedOrder;
     }
 }

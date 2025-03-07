@@ -30,6 +30,8 @@
         {
             this.components = new System.ComponentModel.Container();
             this.kryptonSplitContainer1 = new Krypton.Toolkit.KryptonSplitContainer();
+            this.kryptonLabel5 = new Krypton.Toolkit.KryptonLabel();
+            this.chkRefundOnly = new Krypton.Toolkit.KryptonCheckBox();
             this.kryptonLabel4 = new Krypton.Toolkit.KryptonLabel();
             this.kryptonLabel3 = new Krypton.Toolkit.KryptonLabel();
             this.txtShipcost = new Krypton.Toolkit.KryptonTextBox();
@@ -77,8 +79,7 @@
             this.kryptonLabel2 = new Krypton.Toolkit.KryptonLabel();
             this.txtTotalQty = new Krypton.Toolkit.KryptonTextBox();
             this.bindingSourceOtherSub = new System.Windows.Forms.BindingSource(this.components);
-            this.kryptonLabel5 = new Krypton.Toolkit.KryptonLabel();
-            this.chkRefundOnly = new Krypton.Toolkit.KryptonCheckBox();
+            this.chkIsCustomizedOrder = new Krypton.Toolkit.KryptonCheckBox();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceSub)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1)).BeginInit();
@@ -115,6 +116,7 @@
             // 
             // kryptonSplitContainer1.Panel1
             // 
+            this.kryptonSplitContainer1.Panel1.Controls.Add(this.chkIsCustomizedOrder);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.kryptonLabel5);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.chkRefundOnly);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.kryptonLabel4);
@@ -157,6 +159,22 @@
             this.kryptonSplitContainer1.Size = new System.Drawing.Size(1067, 755);
             this.kryptonSplitContainer1.SplitterDistance = 207;
             this.kryptonSplitContainer1.TabIndex = 0;
+            // 
+            // kryptonLabel5
+            // 
+            this.kryptonLabel5.Location = new System.Drawing.Point(881, 49);
+            this.kryptonLabel5.Name = "kryptonLabel5";
+            this.kryptonLabel5.Size = new System.Drawing.Size(49, 20);
+            this.kryptonLabel5.TabIndex = 149;
+            this.kryptonLabel5.Values.Text = "仅退款";
+            // 
+            // chkRefundOnly
+            // 
+            this.chkRefundOnly.Location = new System.Drawing.Point(930, 51);
+            this.chkRefundOnly.Name = "chkRefundOnly";
+            this.chkRefundOnly.Size = new System.Drawing.Size(19, 13);
+            this.chkRefundOnly.TabIndex = 150;
+            this.chkRefundOnly.Values.Text = "";
             // 
             // kryptonLabel4
             // 
@@ -572,21 +590,14 @@
             this.txtTotalQty.Size = new System.Drawing.Size(100, 23);
             this.txtTotalQty.TabIndex = 107;
             // 
-            // kryptonLabel5
+            // chkIsCustomizedOrder
             // 
-            this.kryptonLabel5.Location = new System.Drawing.Point(881, 49);
-            this.kryptonLabel5.Name = "kryptonLabel5";
-            this.kryptonLabel5.Size = new System.Drawing.Size(49, 20);
-            this.kryptonLabel5.TabIndex = 149;
-            this.kryptonLabel5.Values.Text = "仅退款";
-            // 
-            // chkRefundOnly
-            // 
-            this.chkRefundOnly.Location = new System.Drawing.Point(930, 51);
-            this.chkRefundOnly.Name = "chkRefundOnly";
-            this.chkRefundOnly.Size = new System.Drawing.Size(19, 13);
-            this.chkRefundOnly.TabIndex = 150;
-            this.chkRefundOnly.Values.Text = "";
+            this.chkIsCustomizedOrder.Enabled = false;
+            this.chkIsCustomizedOrder.Location = new System.Drawing.Point(930, 96);
+            this.chkIsCustomizedOrder.Name = "chkIsCustomizedOrder";
+            this.chkIsCustomizedOrder.Size = new System.Drawing.Size(75, 20);
+            this.chkIsCustomizedOrder.TabIndex = 155;
+            this.chkIsCustomizedOrder.Values.Text = "定制订单";
             // 
             // UCSaleOutRe
             // 
@@ -681,5 +692,6 @@
         private Krypton.Toolkit.KryptonTextBox txtShipcost;
         private Krypton.Toolkit.KryptonLabel kryptonLabel5;
         private Krypton.Toolkit.KryptonCheckBox chkRefundOnly;
+        private Krypton.Toolkit.KryptonCheckBox chkIsCustomizedOrder;
     }
 }

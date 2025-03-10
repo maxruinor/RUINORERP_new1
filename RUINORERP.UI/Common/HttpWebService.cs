@@ -173,7 +173,7 @@ namespace RUINORERP.UI.Common
             string webServerUrl = _configManager.GetValue("WebServerUrl");
             cookieContainer.Add(new Uri(webServerUrl), new Cookie("sessionId", _appContext.SessionId));
 
-            return cookieContainer;
+                return cookieContainer;
         }
 
         /// <summary>

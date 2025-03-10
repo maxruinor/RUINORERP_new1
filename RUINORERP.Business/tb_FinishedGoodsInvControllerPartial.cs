@@ -70,7 +70,7 @@ namespace RUINORERP.Business
                     .Includes(d => d.tb_ManufacturingOrderDetails, e => e.tb_bom_s, c => c.tb_BOM_SDetails, f => f.tb_BOM_SDetailSubstituteMaterials)
                     .Includes(b => b.tb_productiondemand, c => c.tb_productionplan, d => d.tb_ProductionPlanDetails)
                     //  .Includes(b => b.tb_productiondemand, c => c.tb_ManufacturingOrders, d => d.tb_ManufacturingOrderDetails)
-                    .Includes(b => b.tb_MaterialRequisitions)
+                    .Includes(b => b.tb_MaterialRequisitions, c => c.tb_MaterialRequisitionDetails)
                    .Includes(a => a.tb_FinishedGoodsInvs, b => b.tb_FinishedGoodsInvDetails) //找到他名下的所有的缴库信息
                     .Where(c => c.MOID == entity.MOID)
                     .SingleAsync();
@@ -91,7 +91,7 @@ namespace RUINORERP.Business
                         inv = new tb_Inventory();
                         inv.InitInventory = (int)inv.Quantity;
                         inv.Notes = "";//后面修改数据库是不需要？
-                        inv.Inv_Cost = child.UnitCost ;
+                        inv.Inv_Cost = child.UnitCost;
                         inv.Inv_AdvCost = child.UnitCost;
                         BusinessHelper.Instance.InitEntity(inv);
                     }
@@ -303,13 +303,19 @@ namespace RUINORERP.Business
                     }
 
                     //制令单已交数量和判断是否结案
-                    if (manufacturingOrder.QuantityDelivered == manufacturingOrder.ManufacturingQty)
+                    if (manufacturingOrder.QuantityDelivered == manufacturingOrder.ManufacturingQty 
+                        && manufacturingOrder.DataStatus == (int)DataStatus.确认 && entity.ApprovalStatus.Value == (int)ApprovalStatus.已审核)
                     {
                         manufacturingOrder.DataStatus = (int)DataStatus.完结;
                         manufacturingOrder.CloseCaseOpinions = $"缴库单:{entity.DeliveryBillNo}->制令单:{manufacturingOrder.MONO},缴库单审核时，生产数量等于交付数量，自动结案";
 
                         //修改领料单状态 系统认为制令单已完成时。领料单也会结案
-                        manufacturingOrder.tb_MaterialRequisitions.ToList().ForEach(c => c.DataStatus = (int)DataStatus.完结);
+                        //但是有个前提是实发数据大于等于（有超发情况） 应该发的数量。并且是审核通过时
+                        if (true)
+                        {
+
+                        }
+                        manufacturingOrder.tb_MaterialRequisitions.Where(c => c.DataStatus == (int)DataStatus.确认 && entity.ApprovalStatus == (int)ApprovalStatus.已审核).ToList().ForEach(c => c.DataStatus = (int)DataStatus.完结);
 
                         int pomrCounter = await _unitOfWorkManage.GetDbClient().Updateable<tb_MaterialRequisition>(manufacturingOrder.tb_MaterialRequisitions).ExecuteCommandAsync();
                         if (pomrCounter > 0)
@@ -403,7 +409,8 @@ namespace RUINORERP.Business
                     }
 
                     //如果计划数量等于已完成数量 结案？   完成数量大于等于计划算结案。 意思是制令单时可以修改计划数量。缴库根据制令单数量来
-                    if (productionDemand.tb_productionplan.TotalQuantity <= productionDemand.tb_productionplan.TotalCompletedQuantity)
+                    if (productionDemand.tb_productionplan.TotalQuantity <= productionDemand.tb_productionplan.TotalCompletedQuantity 
+                        && productionDemand.tb_productionplan.DataStatus == (int)DataStatus.确认)
                     {
                         productionDemand.tb_productionplan.DataStatus = (int)DataStatus.完结;
                         PlanHasChanged = true;

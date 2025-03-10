@@ -241,11 +241,11 @@ namespace RUINORERP.Business
                                 await _unitOfWorkManage.GetDbClient().Updateable<tb_BOM_S>(bomDetail.tb_bom_s).ExecuteCommandAsync();
                             }
                         }
-                         if (bomDetails.Count > 0)
-                         {
-                             await _unitOfWorkManage.GetDbClient().Updateable<tb_BOM_SDetail>(bomDetails).ExecuteCommandAsync();
-                         }
-                         
+                        if (bomDetails.Count > 0)
+                        {
+                            await _unitOfWorkManage.GetDbClient().Updateable<tb_BOM_SDetail>(bomDetails).ExecuteCommandAsync();
+                        }
+
 
                         #endregion
                     }
@@ -324,12 +324,14 @@ namespace RUINORERP.Business
                 {
                     if (AuthorizeController.GetShowDebugInfoAuthorization(_appContext))
                     {
-                       // _logger.Info(entity.PurEntryNo + "==>" + "状态更新成功");
+                        // _logger.Info(entity.PurEntryNo + "==>" + "状态更新成功");
                     }
                 }
 
                 //采购入库单，如果来自于采购订单，则要把入库数量累加到订单中的已交数量 TODO 销售也会有这种情况
-                if (entity.tb_purorder != null && (entity.TotalQty == entity.tb_purorder.TotalQty || entity.tb_purorder.tb_PurOrderDetails.Sum(c => c.DeliveredQuantity) == entity.tb_purorder.TotalQty))
+                if (entity.tb_purorder != null && entity.tb_purorder.DataStatus == (int)DataStatus.确认 &&
+                    (entity.TotalQty == entity.tb_purorder.TotalQty || entity.tb_purorder.tb_PurOrderDetails.Sum(c => c.DeliveredQuantity)
+                    == entity.tb_purorder.TotalQty))
                 {
                     entity.tb_purorder.DataStatus = (int)DataStatus.完结;
                     entity.tb_purorder.CloseCaseOpinions = "【系统自动结案】==》" + System.DateTime.Now.ToString() + _appContext.CurUserInfo.UserInfo.tb_employee.Employee_Name + "审核入库单:" + entity.PurEntryNo + "结案。"; ;
@@ -451,11 +453,11 @@ namespace RUINORERP.Business
                                 await _unitOfWorkManage.GetDbClient().Updateable<tb_BOM_S>(bomDetail.tb_bom_s).ExecuteCommandAsync();
                             }
                         }
-                        if (bomDetails.Count>0)
+                        if (bomDetails.Count > 0)
                         {
                             await _unitOfWorkManage.GetDbClient().Updateable<tb_BOM_SDetail>(bomDetails).ExecuteCommandAsync();
                         }
-                        
+
 
 
                         #endregion

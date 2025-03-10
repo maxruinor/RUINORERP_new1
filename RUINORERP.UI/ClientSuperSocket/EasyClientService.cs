@@ -31,82 +31,6 @@ namespace RUINORERP.UI.SuperSocketClient
 {
     public class EasyClientService
     {
-
-        // 定义一个事件集合
-        private List<EventHandler<CustomEventArgs>> eventHandlers = new List<EventHandler<CustomEventArgs>>();
-
-        // 定义一个自定义事件参数类
-        public class CustomEventArgs : EventArgs
-        {
-            public string EventName { get; set; }
-            public string EventData { get; set; }
-        }
-
-        // 添加事件处理程序
-        public void AddEventHandler(EventHandler<CustomEventArgs> handler)
-        {
-            eventHandlers.Add(handler);
-        }
-
-        // 触发事件
-        public void RaiseEvent(string eventName, string eventData)
-        {
-            var args = new CustomEventArgs { EventName = eventName, EventData = eventData };
-            foreach (var handler in eventHandlers)
-            {
-                handler(this, args);
-            }
-        }
-
-        // 定义一个事件集合，用于存储不同指令的事件处理程序
-        private ConcurrentDictionary<ServerCmdEnum, ServerCommandHandler> _commandHandlers = new ConcurrentDictionary<ServerCmdEnum, ServerCommandHandler>();
-
-        // 添加事件处理程序
-        public void AddCommandHandler(ServerCmdEnum command, ServerCommandHandler handler)
-        {
-            //lock (_commandHandlers)
-            //{
-                if (!_commandHandlers.ContainsKey(command))
-                {
-                    _commandHandlers[command] = handler;
-                }
-            //}
-        }
-
-        // 移除事件处理程序
-        public void RemoveCommandHandler(ServerCmdEnum command, ServerCommandHandler handler)
-        {
-            //lock (_commandHandlers)
-            {
-                if (_commandHandlers.ContainsKey(command))
-                {
-                    _commandHandlers[command] -= handler;
-                    if (_commandHandlers[command] == null)
-                    {
-                        _commandHandlers.TryRemove(command, out ServerCommandHandler _);
-                    }
-                }
-            }
-        }
-
-        // 触发事件
-        public void RaiseCommandEvent(ServerCmdEnum command, byte[] data)
-        {
-            lock (_commandHandlers)
-            {
-                if (_commandHandlers.ContainsKey(command))
-                {
-                    var handler = _commandHandlers[command];
-                    if (handler != null)
-                    {
-                        handler(this, new ServerCommandEventArgs { CommandName = command.ToString(), Data = data });
-                    }
-                }
-            }
-        }
-
-        //========
-
         public delegate void ConnectClosed(bool isconect);
 
         [Browsable(true), Description("连接事件")]
@@ -606,9 +530,8 @@ namespace RUINORERP.UI.SuperSocketClient
                                 Console.WriteLine($"Document {e.DocumentId} is now {(e.IsSuccess ? "locked" : "unlocked")} ");
                             };
 
-
-                            // 触发相应的事件
-                            RaiseCommandEvent(serverCmd, od.Two);
+                            //// 触发相应的事件
+                            //RaiseCommandEvent(serverCmd, od.Two);
 
                             break;
                         //case ServerCmdEnum.转发单据锁定:

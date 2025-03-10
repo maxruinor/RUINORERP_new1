@@ -193,10 +193,7 @@ namespace RUINORERP.UI.PSI.SAL
                 {
                     LoadSaleOutBillData(entity.SaleOut_MainID);
                 }
-                else
-                {
-                    MainForm.Instance.PrintInfoLog(entity.ActionStatus.GetName());
-                }
+                
                 if (entity.CustomerVendor_ID > 0 && s2.PropertyName == entity.GetPropertyName<tb_SaleOrder>(c => c.CustomerVendor_ID))
                 {
                     var obj = BizCacheHelper.Instance.GetEntity<tb_CustomerVendor>(entity.CustomerVendor_ID);

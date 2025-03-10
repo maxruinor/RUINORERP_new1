@@ -1,4 +1,5 @@
-﻿using FastReport.Table;
+﻿using Autofac.Core;
+using FastReport.Table;
 using Force.DeepCloner;
 using Krypton.Navigator;
 using LightTalkChatBox;
@@ -35,8 +36,9 @@ namespace RUINORERP.UI.ClientCmdService
     /// 锁单指令
     /// 类似客户端的代理作用 请求一个指令后 等待返回值就触发事件 LockManagerProxy
     /// </summary>
-    public class ClientLockManagerCmd : IClientCommand
+    public class ClientLockManagerCmd : IClientCommand, IDisposable
     {
+        private bool _disposed;
         public CmdOperation OperationType { get; set; }
         public OriginalData DataPacket { get; set; }
 
@@ -116,9 +118,10 @@ namespace RUINORERP.UI.ClientCmdService
                             if (MainForm.Instance.lockManager.TryLock(lockRequest.BillID, lockRequest.BillData.BillNo, lockRequest.LockedUserID))
                             {
                                 MainForm.Instance.PrintInfoLog($"{lockRequest.BillData.BillNo}本地锁定成功");
-                                LockChanged?.Invoke(this, new LockChangedEventArgs(lockCmd,lockRequest.BillID, isSuccess));
+                                //LockChanged?.Invoke(this, new LockChangedEventArgs(lockCmd, lockRequest.BillID, isSuccess));
+                                ClientEventManager.Instance.RaiseCommandEvent(ServerCmdEnum.复合型锁单处理, lockCmd, isSuccess, gd.Two);
                             }
-                           
+
                         }
 
 
@@ -134,7 +137,8 @@ namespace RUINORERP.UI.ClientCmdService
                         if (isSuccess)
                         {
                             MainForm.Instance.lockManager.Unlock(unLockInfo.BillID, unLockInfo.LockedUserID);
-                            LockChanged?.Invoke(this, new LockChangedEventArgs(lockCmd,unLockInfo.BillID, isSuccess));
+                            // LockChanged?.Invoke(this, new LockChangedEventArgs(lockCmd, unLockInfo.BillID, isSuccess));
+                            ClientEventManager.Instance.RaiseCommandEvent(ServerCmdEnum.复合型锁单处理, lockCmd, isSuccess, gd.Two);
                         }
 
                         break;
@@ -147,7 +151,7 @@ namespace RUINORERP.UI.ClientCmdService
                         isSuccess = ByteDataAnalysis.Getbool(gd.Two, ref index);
 
                         //发送提醒
-                        LockChanged?.Invoke(this, new LockChangedEventArgs(lockCmd,requestUnLockInfo.BillID, true));
+                        LockChanged?.Invoke(this, new LockChangedEventArgs(lockCmd, requestUnLockInfo.BillID, true));
 
                         ReminderData MessageInfo = new ReminderData();
                         MessageInfo.BizKeyID = requestUnLockInfo.BillID;
@@ -167,7 +171,7 @@ namespace RUINORERP.UI.ClientCmdService
                         isSuccess = ByteDataAnalysis.Getbool(gd.Two, ref index);
 
                         //发送提醒 直接弹窗
-                        LockChanged?.Invoke(this, new LockChangedEventArgs(lockCmd,refuseUnLockInfo.BillID, true));
+                        LockChanged?.Invoke(this, new LockChangedEventArgs(lockCmd, refuseUnLockInfo.BillID, true));
 
                         ReminderData RefuseInfo = new ReminderData();
                         RefuseInfo.BizKeyID = refuseUnLockInfo.BillID;
@@ -406,11 +410,26 @@ namespace RUINORERP.UI.ClientCmdService
             }
         }
 
-        public void HandleLockDocument(object sender, ServerCommandEventArgs e)
+        public void HandleLockEvent(object sender, ServerLockCommandEventArgs e)
         {
             // 处理锁定单据的逻辑
-            MainForm.Instance.uclog.AddLog($"收到锁定单据指令，数据: {BitConverter.ToString(e.Data)}");
-            LockChanged?.Invoke(this, new LockChangedEventArgs(lockCmd, 0, true));
+            MainForm.Instance.uclog.AddLog($"收到锁定单据指令，结果为{e.lockCmd.ToString()}{e.isSuccess},数据: {BitConverter.ToString(e.Data)}");
+            if (true)
+            {
+
+            }
+            LockChanged?.Invoke(this, new LockChangedEventArgs(lockCmd, e.BillID, e.isSuccess));
+        }
+
+        public void Dispose()
+        {
+            if (!_disposed)
+            {
+                // 移除处理器
+                ClientEventManager.Instance.RemoveCommandHandler(ServerCmdEnum.复合型锁单处理, HandleLockEvent);
+                _disposed = true;
+            }
+            GC.SuppressFinalize(this);
         }
     }
 
@@ -420,6 +439,7 @@ namespace RUINORERP.UI.ClientCmdService
         public string SenderName { get; internal set; }
         public string SenderSessionID { get; internal set; }
     }
+
     public delegate void LockManagerEventHandler(object sender, LockManagerEventArgs e);
 
     public class LockRefusalInfo

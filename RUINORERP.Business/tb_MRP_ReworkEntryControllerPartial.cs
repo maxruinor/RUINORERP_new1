@@ -201,7 +201,11 @@ namespace RUINORERP.Business
                 }
 
                 //采购入库单，如果来自于采购订单，则要把入库数量累加到订单中的已交数量 TODO 销售也会有这种情况
-                if (entity.tb_mrp_reworkreturn != null && (entity.TotalQty == entity.tb_mrp_reworkreturn.TotalQty || entity.tb_mrp_reworkreturn.tb_MRP_ReworkReturnDetails.Sum(c => c.DeliveredQuantity) == entity.tb_mrp_reworkreturn.TotalQty))
+                if (entity.tb_mrp_reworkreturn != null && entity.tb_mrp_reworkreturn.DataStatus == (int)DataStatus.确认 &&
+                    (entity.TotalQty == entity.tb_mrp_reworkreturn.TotalQty || 
+                    entity.tb_mrp_reworkreturn.tb_MRP_ReworkReturnDetails.Sum(c => c.DeliveredQuantity) == entity.tb_mrp_reworkreturn.TotalQty)
+                    && entity.ApprovalStatus == (int)ApprovalStatus.已审核
+                    )
                 {
                     entity.tb_mrp_reworkreturn.DataStatus = (int)DataStatus.完结;
                     entity.tb_mrp_reworkreturn.CloseCaseOpinions = "【系统自动结案】==》" + System.DateTime.Now.ToString() + _appContext.CurUserInfo.UserInfo.tb_employee.Employee_Name + "审核退工入库单:" + entity.ReworkEntryNo + "结案。"; ;

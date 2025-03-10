@@ -1,5 +1,6 @@
 ﻿using RUINORERP.Common.CustomAttribute;
 using RUINORERP.Global;
+using RUINORERP.Model.TransModel;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -17,51 +18,35 @@ using TransInstruction;
 namespace RUINORERP.UI.ClientCmdService
 {
 
+
     /*
-                 eventManager = new DynamicEventManager();
-
-            // 动态添加事件处理程序
-            eventManager.AddEventHandler((sender, args) =>
-            {
-                Console.WriteLine("Event 1 triggered.");
-            });
-
-            eventManager.AddEventHandler((sender, args) =>
-            {
-                Console.WriteLine("Event 2 triggered.");
-            });
-
-            // 触发事件
-            eventManager.RaiseCommandEvent();
-     */
-
     /// <summary>
     /// 为了在能在接收到服务器信息时根据不同指令或内容 触发不同的事件
     /// 设计一个这种事件集合来统一处理
     /// 
     //DynamicEventManager eventManager;
     //eventManager = new DynamicEventManager();
-     // eventManager.AddCommandHandler(ServerCmdEnum.复合型锁单处理, cmd.HandleLockDocument);
+    // eventManager.AddCommandHandler(ServerCmdEnum.复合型锁单处理, cmd.HandleLockDocument);
     /// ConcurrentDictionary<ServerCmdEnum, ServerCommandHandler> 的生命周期应该由一个全局或长期存在的对象来管理，这样可以确保在不同的类中都能访问到同一个实例。通常，这种集合可以保存在一个静态类或单例模式的类中，以便在应用程序的任何地方都能方便地访问和使用
     /// </summary>
     public class DynamicEventManager
     {
 
         // 定义一个事件集合，用于存储不同指令的事件处理程序
-        private ConcurrentDictionary<ServerCmdEnum, ServerCommandHandler> _commandHandlers = new ConcurrentDictionary<ServerCmdEnum, ServerCommandHandler>();
+        private ConcurrentDictionary<ServerCmdEnum, ServerLockCommandHandler> _commandHandlers = new ConcurrentDictionary<ServerCmdEnum, ServerLockCommandHandler>();
 
         // 添加事件处理程序
-        public void AddCommandHandler(ServerCmdEnum command, ServerCommandHandler handler)
+        public void AddCommandHandler(ServerCmdEnum command, ServerLockCommandHandler handler)
         {
             _commandHandlers.AddOrUpdate(command, handler, (key, existingHandler) => existingHandler + handler);
         }
 
         // 移除事件处理程序
-        public void RemoveCommandHandler(ServerCmdEnum command, ServerCommandHandler handler)
+        public void RemoveCommandHandler(ServerCmdEnum command, ServerLockCommandHandler handler)
         {
-            if (_commandHandlers.TryGetValue(command, out ServerCommandHandler existingHandler))
+            if (_commandHandlers.TryGetValue(command, out ServerLockCommandHandler existingHandler))
             {
-                ServerCommandHandler newHandler = existingHandler - handler;
+                ServerLockCommandHandler newHandler = existingHandler - handler;
                 if (newHandler == null)
                 {
                     _commandHandlers.TryRemove(command, out _);
@@ -76,12 +61,15 @@ namespace RUINORERP.UI.ClientCmdService
         // 触发事件
         public void RaiseCommandEvent(ServerCmdEnum command, byte[] data)
         {
-            if (_commandHandlers.TryGetValue(command, out ServerCommandHandler handler))
+            if (_commandHandlers.TryGetValue(command, out ServerLockCommandHandler handler))
             {
-                handler(this, new ServerCommandEventArgs { CommandName = command.ToString(), Data = data });
+                handler(this, new ServerCommandEventArgs { Command = command, Data = data });
             }
         }
     }
+ */
+
+
 
     /// <summary>
     /// 线程安全的单例模式
@@ -89,31 +77,10 @@ namespace RUINORERP.UI.ClientCmdService
     [NoWantIOC]
     public class ClientEventManager : IDisposable, IExcludeFromRegistration
     {
-
-        /*
-            EventManager.Instance.AddCommandHandler(ServerCmdEnum.Login, OnLoginCommand);
-        EventManager.Instance.AddCommandHandler(ServerCmdEnum.SendData, OnSendDataCommand);
-
-        // 模拟事件触发
-        EventManager.Instance.RaiseCommandEvent(ServerCmdEnum.Login, new byte[] { 0x01 });
-        EventManager.Instance.RaiseCommandEvent(ServerCmdEnum.SendData, new byte[] { 0x02 });
-    }
-
-    private static void OnLoginCommand(object sender, ServerCommandEventArgs e)
-    {
-        Console.WriteLine($"Login command received: {e.CommandName}");
-        // 处理登录逻辑
-    }
-
-    private static void OnSendDataCommand(object sender, ServerCommandEventArgs e)
-    {
-        Console.WriteLine($"SendData command received: {e.CommandName}");
-        // 处理发送数据逻辑
-    }
-         */
+       
         private static readonly Lazy<ClientEventManager> _instance = new Lazy<ClientEventManager>(() => new ClientEventManager(), LazyThreadSafetyMode.ExecutionAndPublication);
 
-        private ConcurrentDictionary<ServerCmdEnum, ServerCommandHandler> _commandHandlers = new ConcurrentDictionary<ServerCmdEnum, ServerCommandHandler>();
+        private ConcurrentDictionary<ServerCmdEnum, ServerLockCommandHandler> _commandHandlers = new ConcurrentDictionary<ServerCmdEnum, ServerLockCommandHandler>();
 
         private ClientEventManager()
         {
@@ -128,37 +95,82 @@ namespace RUINORERP.UI.ClientCmdService
             }
         }
 
-        public ConcurrentDictionary<ServerCmdEnum, ServerCommandHandler> CommandHandlers
+        public ConcurrentDictionary<ServerCmdEnum, ServerLockCommandHandler> CommandHandlers
         {
             get { return _commandHandlers; }
         }
 
-        public void AddCommandHandler(ServerCmdEnum command, ServerCommandHandler handler)
+        //public void AddCommandHandler(ServerCmdEnum command, ServerLockCommandHandler handler)
+        //{
+        //    if (true)
+        //    {
+
+        //    }
+        //    _commandHandlers.AddOrUpdate(command, handler, (key, existingHandler) => existingHandler + handler);
+        //}
+
+        public void AddCommandHandler(ServerCmdEnum command, ServerLockCommandHandler handler)
         {
-            _commandHandlers.AddOrUpdate(command, handler, (key, existingHandler) => existingHandler + handler);
+            _commandHandlers.AddOrUpdate(
+                command,
+                handler,
+                (key, existingHandler) => Delegate.Combine(existingHandler, handler) as ServerLockCommandHandler
+            );
         }
 
-        public void RemoveCommandHandler(ServerCmdEnum command, ServerCommandHandler handler)
+
+        //public void RemoveCommandHandler(ServerCmdEnum command, ServerLockCommandHandler handler)
+        //{
+        //    if (_commandHandlers.TryGetValue(command, out ServerLockCommandHandler existingHandler))
+        //    {
+        //        ServerLockCommandHandler newHandler = existingHandler - handler;
+        //        if (newHandler == null)
+        //        {
+        //            _commandHandlers.TryRemove(command, out _);
+        //        }
+        //        else
+        //        {
+        //            _commandHandlers.TryUpdate(command, newHandler, existingHandler);
+        //        }
+        //    }
+        //}
+
+
+        public void RemoveCommandHandler(ServerCmdEnum command, ServerLockCommandHandler handler)
         {
-            if (_commandHandlers.TryGetValue(command, out ServerCommandHandler existingHandler))
+            if (_commandHandlers.TryGetValue(command, out ServerLockCommandHandler existingHandler))
             {
-                ServerCommandHandler newHandler = existingHandler - handler;
+                // 使用 Delegate.Remove 方法安全移除委托
+                ServerLockCommandHandler newHandler = (ServerLockCommandHandler)Delegate.Remove(existingHandler, handler);
+
                 if (newHandler == null)
                 {
+                    // 如果没有剩余处理程序，完全移除该命令的处理程序
                     _commandHandlers.TryRemove(command, out _);
                 }
                 else
                 {
+                    // 如果还有剩余处理程序，更新处理程序
                     _commandHandlers.TryUpdate(command, newHandler, existingHandler);
                 }
             }
         }
 
-        public void RaiseCommandEvent(ServerCmdEnum command, byte[] data)
+
+        /// <summary>
+        /// 触发事件
+        /// </summary>
+        /// <param name="command"></param>
+        /// <param name="data"></param>
+        public void RaiseCommandEvent(ServerCmdEnum command, LockCmd lockCmd, bool isSuccess, byte[] data)
         {
-            if (_commandHandlers.TryGetValue(command, out ServerCommandHandler handler))
+            if (_commandHandlers.TryGetValue(command, out ServerLockCommandHandler handler))
             {
-                var args = new ServerCommandEventArgs { CommandName = command.ToString(), Data = data };
+                var args = new ServerLockCommandEventArgs { Command = command, Data = data };
+
+                args.lockCmd = lockCmd;
+                args.isSuccess = isSuccess;
+
                 handler(null, args);
             }
         }
@@ -171,11 +183,21 @@ namespace RUINORERP.UI.ClientCmdService
     }
 
 
-
-    public delegate void ServerCommandHandler(object sender, ServerCommandEventArgs e);
+    public delegate void ServerLockCommandHandler(object sender, ServerLockCommandEventArgs e);
     public class ServerCommandEventArgs : EventArgs
     {
-        public string CommandName { get; set; }
+        public ServerCmdEnum Command { get; set; }
         public byte[] Data { get; set; }
     }
+
+    /// <summary>
+    /// 服务器返回的情况
+    /// </summary>
+    public class ServerLockCommandEventArgs : ServerCommandEventArgs
+    {
+        public long BillID { get; set; }
+        public LockCmd lockCmd { get; set; }
+        public bool isSuccess { get; set; }
+    }
+
 }

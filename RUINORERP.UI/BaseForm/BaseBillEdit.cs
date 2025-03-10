@@ -53,7 +53,10 @@ namespace RUINORERP.UI.BaseForm
           
         }
 
-   
+        public virtual void LockBill()
+        {
+
+        }
 
         public virtual void RequestUnLock()
         {

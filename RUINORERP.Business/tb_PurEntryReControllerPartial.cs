@@ -336,8 +336,11 @@ namespace RUINORERP.Business
                                     .Where(c => c.PurEntryID == entity.PurEntryID.Value)
                                     .SingleAsync();
                             }
-
-                            entity.tb_purentry.DataStatus = (int)DataStatus.完结;
+                            if (entity.tb_purentry.DataStatus == (int)DataStatus.确认)
+                            {
+                                entity.tb_purentry.DataStatus = (int)DataStatus.完结;
+                            }
+                         
                             BusinessHelper.Instance.EditEntity(entity);
                             if (entity.tb_purentry.tb_purorder == null && entity.tb_purentry.PurOrder_ID.HasValue)
                             {
@@ -345,7 +348,10 @@ namespace RUINORERP.Business
                                    .Where(c => c.PurOrder_ID == entity.tb_purentry.PurOrder_ID.Value)
                                    .SingleAsync();
                             }
-                            entity.tb_purentry.tb_purorder.DataStatus = (int)DataStatus.完结;
+                            if (entity.tb_purentry.tb_purorder.DataStatus == (int)DataStatus.确认)
+                            {
+                                entity.tb_purentry.tb_purorder.DataStatus = (int)DataStatus.完结;
+                            }
                             entity.tb_purentry.tb_purorder.CloseCaseOpinions = "由采购退货单关联式结案";
                             BusinessHelper.Instance.EditEntity(entity);
                             var affectedPORows = await _unitOfWorkManage.GetDbClient().Updateable<tb_PurOrder>(entity).UpdateColumns(it => new

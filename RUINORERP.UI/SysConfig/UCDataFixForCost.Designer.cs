@@ -50,6 +50,7 @@
             this.tabControl = new System.Windows.Forms.TabControl();
             this.kryptonHeaderGrouptop = new Krypton.Toolkit.KryptonHeaderGroup();
             this.buttonSpecHeaderGroup1 = new Krypton.Toolkit.ButtonSpecHeaderGroup();
+            this.rdb更新配方及缴库 = new Krypton.Toolkit.KryptonCheckBox();
             this.chk有入库记录成本为0 = new Krypton.Toolkit.KryptonCheckBox();
             this.cmbdepartment = new Krypton.Toolkit.KryptonComboBox();
             this.kryptonLabel6 = new Krypton.Toolkit.KryptonLabel();
@@ -60,6 +61,7 @@
             this.kryptonLabel2 = new Krypton.Toolkit.KryptonLabel();
             this.kryptonLabel1 = new Krypton.Toolkit.KryptonLabel();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.rdb大于单项成本 = new System.Windows.Forms.RadioButton();
             this.rdb小计总计 = new System.Windows.Forms.RadioButton();
             this.rdb其它 = new System.Windows.Forms.RadioButton();
             this.rdb小于指定成本 = new System.Windows.Forms.RadioButton();
@@ -74,8 +76,8 @@
             this.richTextBoxLog = new System.Windows.Forms.RichTextBox();
             this.bindingSourceList = new System.Windows.Forms.BindingSource(this.components);
             this.bindingSourceInv = new System.Windows.Forms.BindingSource(this.components);
-            this.rdb大于单项成本 = new System.Windows.Forms.RadioButton();
-            this.rdb更新配方及缴库 = new Krypton.Toolkit.KryptonCheckBox();
+            this.contextMenuStripBOMPrice = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.将配方成本更新到库存ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1.Panel1)).BeginInit();
             this.kryptonSplitContainer1.Panel1.SuspendLayout();
@@ -117,6 +119,7 @@
             ((System.ComponentModel.ISupportInitialize)(this.cmbType)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceList)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceInv)).BeginInit();
+            this.contextMenuStripBOMPrice.SuspendLayout();
             this.SuspendLayout();
             // 
             // kryptonSplitContainer1
@@ -386,6 +389,14 @@
             this.buttonSpecHeaderGroup1.Type = Krypton.Toolkit.PaletteButtonSpecStyle.ArrowUp;
             this.buttonSpecHeaderGroup1.UniqueName = "aa05785cd09043e4bd13a0269efcb893";
             // 
+            // rdb更新配方及缴库
+            // 
+            this.rdb更新配方及缴库.Location = new System.Drawing.Point(521, 38);
+            this.rdb更新配方及缴库.Name = "rdb更新配方及缴库";
+            this.rdb更新配方及缴库.Size = new System.Drawing.Size(114, 20);
+            this.rdb更新配方及缴库.TabIndex = 178;
+            this.rdb更新配方及缴库.Values.Text = "更新配方及缴库";
+            // 
             // chk有入库记录成本为0
             // 
             this.chk有入库记录成本为0.Location = new System.Drawing.Point(322, 38);
@@ -471,6 +482,16 @@
             this.groupBox1.TabIndex = 168;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "关联数据修复更新选项";
+            // 
+            // rdb大于单项成本
+            // 
+            this.rdb大于单项成本.AutoSize = true;
+            this.rdb大于单项成本.Location = new System.Drawing.Point(193, 20);
+            this.rdb大于单项成本.Name = "rdb大于单项成本";
+            this.rdb大于单项成本.Size = new System.Drawing.Size(95, 16);
+            this.rdb大于单项成本.TabIndex = 4;
+            this.rdb大于单项成本.Text = "大于指定成本";
+            this.rdb大于单项成本.UseVisualStyleBackColor = true;
             // 
             // rdb小计总计
             // 
@@ -585,23 +606,20 @@
             this.richTextBoxLog.TabIndex = 0;
             this.richTextBoxLog.Text = "";
             // 
-            // rdb大于单项成本
+            // contextMenuStripBOMPrice
             // 
-            this.rdb大于单项成本.AutoSize = true;
-            this.rdb大于单项成本.Location = new System.Drawing.Point(193, 20);
-            this.rdb大于单项成本.Name = "rdb大于单项成本";
-            this.rdb大于单项成本.Size = new System.Drawing.Size(95, 16);
-            this.rdb大于单项成本.TabIndex = 4;
-            this.rdb大于单项成本.Text = "大于指定成本";
-            this.rdb大于单项成本.UseVisualStyleBackColor = true;
+            this.contextMenuStripBOMPrice.Font = new System.Drawing.Font("Segoe UI", 9F);
+            this.contextMenuStripBOMPrice.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.将配方成本更新到库存ToolStripMenuItem});
+            this.contextMenuStripBOMPrice.Name = "contextMenuStripBOMPrice";
+            this.contextMenuStripBOMPrice.Size = new System.Drawing.Size(205, 48);
             // 
-            // rdb更新配方及缴库
+            // 将配方成本更新到库存ToolStripMenuItem
             // 
-            this.rdb更新配方及缴库.Location = new System.Drawing.Point(521, 38);
-            this.rdb更新配方及缴库.Name = "rdb更新配方及缴库";
-            this.rdb更新配方及缴库.Size = new System.Drawing.Size(114, 20);
-            this.rdb更新配方及缴库.TabIndex = 178;
-            this.rdb更新配方及缴库.Values.Text = "更新配方及缴库";
+            this.将配方成本更新到库存ToolStripMenuItem.Name = "将配方成本更新到库存ToolStripMenuItem";
+            this.将配方成本更新到库存ToolStripMenuItem.Size = new System.Drawing.Size(204, 22);
+            this.将配方成本更新到库存ToolStripMenuItem.Text = "将配方成本更新到库存";
+            this.将配方成本更新到库存ToolStripMenuItem.Click += new System.EventHandler(this.将配方成本更新到库存ToolStripMenuItem_Click);
             // 
             // UCDataFixForCost
             // 
@@ -656,6 +674,7 @@
             ((System.ComponentModel.ISupportInitialize)(this.cmbType)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceList)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceInv)).EndInit();
+            this.contextMenuStripBOMPrice.ResumeLayout(false);
             this.ResumeLayout(false);
 
         }
@@ -709,5 +728,7 @@
         private Krypton.Toolkit.KryptonCheckBox chk有入库记录成本为0;
         private System.Windows.Forms.RadioButton rdb大于单项成本;
         private Krypton.Toolkit.KryptonCheckBox rdb更新配方及缴库;
+        private System.Windows.Forms.ContextMenuStrip contextMenuStripBOMPrice;
+        private System.Windows.Forms.ToolStripMenuItem 将配方成本更新到库存ToolStripMenuItem;
     }
 }

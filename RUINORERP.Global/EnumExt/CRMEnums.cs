@@ -111,6 +111,11 @@ namespace RUINORERP.Global.EnumExt.CRM
         /// </summary>
         市场活动反馈,
 
+
+        /// <summary>
+        /// 其他，用于不属于以上分类的跟进事项。
+        /// </summary>
+        样品测试,
         /// <summary>
         /// 其他，用于不属于以上分类的跟进事项。
         /// </summary>

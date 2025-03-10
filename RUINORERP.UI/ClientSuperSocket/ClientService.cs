@@ -308,7 +308,7 @@ namespace RUINORERP.UI.SuperSocketClient
                     }
                     if (MainForm.Instance.authorizeController.GetDebugInfoAuth())
                     {
-                        MainForm.Instance.PrintInfoLog($"接收缓存数据{tablename}成功！");
+                       // MainForm.Instance.PrintInfoLog($"接收缓存数据{tablename}成功！");
                     }
 
                 }

@@ -4,6 +4,7 @@ using RUINORERP.Global;
 using RUINORERP.Global.CustomAttribute;
 using RUINORERP.Global.Model;
 using RUINORERP.Model.Base;
+using SharpYaml.Tokens;
 using SqlSugar;
 using System;
 using System.Collections.Concurrent;
@@ -151,10 +152,11 @@ namespace RUINORERP.Model
         public bool HasChanged { get; set; }
 
 
-
+        // 定义一个事件，用于通知外部实体属性值的变化
+        public event EventHandler<ActionStatusChangedEventArgs> ActionStatusChanged;
 
         private ActionStatus _ActionStatus;
-
+        private ActionStatus _previousActionStatus;
         /// <summary>
         /// 操作状态码,实际的属性变化事件中，调用OnPropertyChanged方法
         /// </summary>
@@ -165,12 +167,19 @@ namespace RUINORERP.Model
             get { return _ActionStatus; }
             set
             {
+                _previousActionStatus = _ActionStatus;
+                OnActionStatusChanged(_previousActionStatus, value);
                 SetProperty(ref _ActionStatus, value);
             }
         }
 
 
-
+        protected virtual void OnActionStatusChanged(ActionStatus oldValue, ActionStatus newValue)
+        {
+            if (object.Equals(oldValue, newValue)) return;
+            // 触发事件，通知外部实体属性值的变化
+            ActionStatusChanged?.Invoke(this, new ActionStatusChangedEventArgs(oldValue, newValue));
+        }
 
 
 
@@ -342,6 +351,19 @@ namespace RUINORERP.Model
         {
             BaseEntity loctype = (BaseEntity)this.MemberwiseClone(); //创建当前对象的浅拷贝。
             return loctype;
+        }
+    }
+
+    // 定义一个事件参数类，用于传递新旧值
+    public class ActionStatusChangedEventArgs : EventArgs
+    {
+        public ActionStatus OldValue { get; }
+        public ActionStatus NewValue { get; }
+
+        public ActionStatusChangedEventArgs(ActionStatus oldValue, ActionStatus newValue)
+        {
+            OldValue = oldValue;
+            NewValue = newValue;
         }
     }
 }

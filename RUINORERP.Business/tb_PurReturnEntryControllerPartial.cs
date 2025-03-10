@@ -272,7 +272,7 @@ namespace RUINORERP.Business
                 }
 
                 //采购入库单，如果来自于采购退货单，则要把入库数量累加到退货单中的已交数量 TODO 销售也会有这种情况
-                if (entity.tb_purentryre != null && (entity.TotalQty == entity.tb_purentryre.TotalQty || entity.tb_purentryre.tb_PurEntryReDetails.Sum(c => c.DeliveredQuantity) == entity.tb_purentryre.TotalQty))
+                if (entity.tb_purentryre != null && entity.tb_purentryre.DataStatus == (int)DataStatus.确认 && (entity.TotalQty == entity.tb_purentryre.TotalQty || entity.tb_purentryre.tb_PurEntryReDetails.Sum(c => c.DeliveredQuantity) == entity.tb_purentryre.TotalQty))
                 {
                     entity.tb_purentryre.DataStatus = (int)DataStatus.完结;
                     // entity.tb_purentryre.ApprovalOpinions = "【系统自动结案】==》" + System.DateTime.Now.ToString() + _appContext.CurUserInfo.UserInfo.tb_employee.Employee_Name + "审核入库单:" + entity.PurReEntryNo + "结案。"; ;

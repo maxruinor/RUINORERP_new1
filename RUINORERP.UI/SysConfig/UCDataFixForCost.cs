@@ -57,6 +57,7 @@ using RUINORERP.UI.CommonUI;
 using RUINORERP.UI.ATechnologyStack;
 using Winista.Text.HtmlParser.Tags;
 using Org.BouncyCastle.Crypto;
+using NPOI.POIFS.Properties;
 
 
 namespace RUINORERP.UI.SysConfig
@@ -728,7 +729,7 @@ namespace RUINORERP.UI.SysConfig
                                 dgv制令单.AutoResizeRows();
                                 dgv制令单.Tag = bt;
 
-                                dgv制令单.Text = "制令单" + MOItems.Count;
+                                page制令单.Text = "制令单" + MOItems.Count;
                                 page制令单.Controls.Add(dgv制令单);
                                 tabControl.TabPages.Add(page制令单);
                             }
@@ -809,6 +810,8 @@ namespace RUINORERP.UI.SysConfig
                                 pageBOM.Text = "对应配方" + boms.Count;
                                 pageBOM.Controls.Add(dgvBOM);
                                 tabControl.TabPages.Add(pageBOM);
+                                dgvBOM.ContextMenuStrip = this.contextMenuStripBOMPrice;
+
                                 #endregion
 
                             }
@@ -1036,7 +1039,6 @@ namespace RUINORERP.UI.SysConfig
                 DataGridView dgv = controls.FirstOrDefault(c => c.GetType().Name == "DataGridView") as DataGridView;
                 if (dgv != null)
                 {
-                    dgv.ContextMenuStrip = null;
                     dgv.AllowUserToAddRows = false;
                     if (tabControl.SelectedTab.Text.Contains("对应配方"))
                     {
@@ -1058,7 +1060,8 @@ namespace RUINORERP.UI.SysConfig
         /// </summary>
         /// <param name="updateInvList">要更新的对象集合</param>
         /// <returns></returns>
-        private async Task<List<tb_Inventory>> UpdateInventoryCost(List<tb_Inventory> NeedUpdateInvList)
+        private async Task<List<tb_Inventory>> UpdateInventoryCost
+            (List<tb_Inventory> NeedUpdateInvList, decimal targetCost = 0)
         {
             List<tb_Inventory> updateInvList = new List<tb_Inventory>();
             List<tb_Inventory> Allitems = new List<tb_Inventory>();
@@ -1068,6 +1071,7 @@ namespace RUINORERP.UI.SysConfig
                 {
                     MainForm.Instance.AppContext.Db.Ado.BeginTran();
                 }
+
                 //MainForm.Instance.AppContext.Db.Insertable(new Order() { .....}).ExecuteCommand();
                 // MainForm.Instance.AppContext.Db.Insertable(new Order() { .....}).ExecuteCommand();
                 //成本修复思路
@@ -1092,35 +1096,39 @@ namespace RUINORERP.UI.SysConfig
                     {
                         //参与成本计算的入库明细记录。要排除单价为0的项
                         var realDetails = item.tb_proddetail.tb_PurEntryDetails.Where(c => c.UnitPrice > 0).ToList();
-
                         //每笔的入库的数量*成交价/总数量
                         var transPrice = realDetails
                             .Where(c => c.TransactionPrice > 0 && c.Quantity > 0 && c.UnitPrice > 0)
                             .Sum(c => c.TransactionPrice * c.Quantity) / realDetails.Sum(c => c.Quantity);
-                        if (transPrice > 0)
+                        if (targetCost > 0)
+                        {
+                            transPrice = targetCost;
+                        }
+
+                        if (rdb成本为0的才修复.Checked && item.Inv_Cost == 0)
                         {
 
-                            if (rdb成本为0的才修复.Checked && item.Inv_Cost == 0)
-                            {
+                            item.CostMovingWA = transPrice;
+                            item.Inv_AdvCost = item.CostMovingWA;
+                            item.Inv_Cost = item.CostMovingWA;
+                            item.Inv_SubtotalCostMoney = item.Inv_Cost * item.Quantity;
+                            item.Notes += $"{System.DateTime.Now.ToString("yyyy-MM-dd")}成本修复为：{transPrice}";
+                            updateInvList.Add(item);
+                        }
+                        if (rdb小于指定成本.Checked && item.Inv_Cost < txtUnitCost.Text.ToDecimal())
+                        {
 
-                                item.CostMovingWA = transPrice;
-                                item.Inv_AdvCost = item.CostMovingWA;
-                                item.Inv_Cost = item.CostMovingWA;
-                                item.Inv_SubtotalCostMoney = item.Inv_Cost * item.Quantity;
-                                item.Notes += $"{System.DateTime.Now.ToString("yyyy-MM-dd")}成本修复为：{transPrice}";
-                                updateInvList.Add(item);
-                            }
-                            if (rdb小于指定成本.Checked && item.Inv_Cost < txtUnitCost.Text.ToDecimal())
-                            {
+                            item.CostMovingWA = transPrice;
+                            item.Inv_AdvCost = item.CostMovingWA;
+                            item.Inv_Cost = item.CostMovingWA;
+                            item.Inv_SubtotalCostMoney = item.Inv_Cost * item.Quantity;
+                            item.Notes += $"{System.DateTime.Now.ToString("yyyy-MM-dd")}成本修复为：{transPrice}";
+                            updateInvList.Add(item);
+                        }
+                        if (rdb其它.Checked)
+                        {
 
-                                item.CostMovingWA = transPrice;
-                                item.Inv_AdvCost = item.CostMovingWA;
-                                item.Inv_Cost = item.CostMovingWA;
-                                item.Inv_SubtotalCostMoney = item.Inv_Cost * item.Quantity;
-                                item.Notes += $"{System.DateTime.Now.ToString("yyyy-MM-dd")}成本修复为：{transPrice}";
-                                updateInvList.Add(item);
-                            }
-                            if (rdb其它.Checked)
+                            if (transPrice > 0)
                             {
                                 //百分比
                                 decimal diffpirce = Math.Abs(transPrice - item.Inv_Cost);
@@ -1279,6 +1287,7 @@ namespace RUINORERP.UI.SysConfig
                                             {
                                                 await MainForm.Instance.AppContext.Db.Updateable<tb_BOM_S>(bill).ExecuteCommandAsync();
                                             }
+                                            LoopUpdateBom(bill);
                                         }
                                     }
 
@@ -2004,10 +2013,10 @@ namespace RUINORERP.UI.SysConfig
                                         {
                                             if (Detail.ProdDetailID == child.ProdDetailID)
                                             {
-                                                if (rdb成本为0的才修复.Checked && Detail.MaterialCost == 0)
+                                                if (rdb成本为0的才修复.Checked && Detail.UnitCost == 0)
                                                 {
                                                     Detail.MaterialCost = child.Inv_Cost;
-                                                    Detail.UnitCost = Detail.MaterialCost * Detail.ManuFee + Detail.ApportionedCost;
+                                                    Detail.UnitCost = Detail.MaterialCost + Detail.ManuFee + Detail.ApportionedCost;
                                                     Detail.ProductionAllCost = Detail.UnitCost * Detail.Qty;
 
                                                     //这时可以算出缴库的产品的单位成本
@@ -2028,7 +2037,7 @@ namespace RUINORERP.UI.SysConfig
                                                     if (Detail.UnitCost < txtUnitCost.Text.ToDecimal())
                                                     {
                                                         Detail.MaterialCost = child.Inv_Cost;
-                                                        Detail.UnitCost = Detail.MaterialCost * Detail.ManuFee + Detail.ApportionedCost;
+                                                        Detail.UnitCost = Detail.MaterialCost + Detail.ManuFee + Detail.ApportionedCost;
                                                         Detail.ProductionAllCost = Detail.UnitCost * Detail.Qty;
                                                         //这时可以算出缴库的产品的单位成本
                                                         var nextInv = Detail.tb_proddetail.tb_Inventories.FirstOrDefault(c => c.Location_ID == Detail.Location_ID);
@@ -2049,7 +2058,7 @@ namespace RUINORERP.UI.SysConfig
                                                     if (Detail.UnitCost > txtUnitCost.Text.ToDecimal())
                                                     {
                                                         Detail.MaterialCost = child.Inv_Cost;
-                                                        Detail.UnitCost = Detail.MaterialCost * Detail.ManuFee + Detail.ApportionedCost;
+                                                        Detail.UnitCost = Detail.MaterialCost + Detail.ManuFee + Detail.ApportionedCost;
                                                         Detail.ProductionAllCost = Detail.UnitCost * Detail.Qty;
                                                         //这时可以算出缴库的产品的单位成本
                                                         var nextInv = Detail.tb_proddetail.tb_Inventories.FirstOrDefault(c => c.Location_ID == Detail.Location_ID);
@@ -2064,6 +2073,26 @@ namespace RUINORERP.UI.SysConfig
 
                                                         updateFGListdetail.Add(Detail);
                                                     }
+                                                }
+                                                if (rdb小计总计.Checked && Detail.UnitCost != 0)
+                                                {    //如果存在则更新 
+
+                                                    //Detail.MaterialCost = child.Inv_Cost;
+                                                    Detail.UnitCost = Detail.MaterialCost + Detail.ManuFee + Detail.ApportionedCost;
+                                                    Detail.ProductionAllCost = Detail.UnitCost * Detail.Qty;
+                                                    //这时可以算出缴库的产品的单位成本
+                                                    var nextInv = Detail.tb_proddetail.tb_Inventories.FirstOrDefault(c => c.Location_ID == Detail.Location_ID);
+                                                    if (nextInv != null)
+                                                    {
+                                                        //nextInv.Inv_Cost = Detail.UnitCost;
+                                                        if (!chkTestMode.Checked)
+                                                        {
+                                                            await MainForm.Instance.AppContext.Db.Updateable<tb_Inventory>(nextInv).ExecuteCommandAsync();
+                                                        }
+                                                    }
+
+                                                    updateFGListdetail.Add(Detail);
+
                                                 }
                                                 if (rdb其它.Checked && Detail.UnitCost != 0)
                                                 {    //如果存在则更新 
@@ -2459,6 +2488,96 @@ namespace RUINORERP.UI.SysConfig
             }
         }
 
+
+
+        private async void LoopUpdateBom(tb_BOM_S bOM_S)
+        {
+            if (bOM_S.SelfProductionAllCosts != bOM_S.OutProductionAllCosts)
+            {
+                richTextBoxLog.AppendText($"配方自产和外发成本不一样, {bOM_S.BOM_No} 条" + "\r\n");
+            }
+
+            #region 更新BOM价格将母件当子件去查询，如果他存在其它的配方中时，更新成本
+
+            List<tb_BOM_S> BOM_SOrders = MainForm.Instance.AppContext.Db.Queryable<tb_BOM_S>()
+            .InnerJoin<tb_BOM_SDetail>((a, b) => a.BOM_ID == b.BOM_ID)
+            .Includes(a => a.tb_BOM_SDetails)
+            .Where(a => a.tb_BOM_SDetails.Any(c => c.ProdDetailID == bOM_S.ProdDetailID)).ToList();
+
+            var distinctBOMbills = BOM_SOrders
+            .GroupBy(o => o.BOM_ID)
+            .Select(g => g.First())
+            .ToList();
+
+            List<tb_BOM_SDetail> updateListbomdetail = new List<tb_BOM_SDetail>();
+            foreach (var bill in distinctBOMbills)
+            {
+                foreach (var bomDetail in bill.tb_BOM_SDetails)
+                {
+                    if (bomDetail.ProdDetailID == bOM_S.ProdDetailID)
+                    {
+                        if (rdb成本为0的才修复.Checked && bomDetail.UnitCost == 0)
+                        {
+                            bomDetail.UnitCost = bOM_S.SelfProductionAllCosts;
+                            bomDetail.SubtotalUnitCost = bomDetail.UnitCost * bomDetail.UsedQty;
+                            updateListbomdetail.Add(bomDetail);
+                        }
+                        if (rdb小于指定成本.Checked && bomDetail.UnitCost != 0)
+                        {
+                            if (bomDetail.UnitCost < txtUnitCost.Text.ToDecimal())
+                            {
+                                bomDetail.UnitCost = bOM_S.SelfProductionAllCosts;
+                                bomDetail.SubtotalUnitCost = bomDetail.UnitCost * bomDetail.UsedQty;
+                                updateListbomdetail.Add(bomDetail);
+                            }
+                        }
+                        if (rdb大于单项成本.Checked && bomDetail.UnitCost != 0)
+                        {
+                            if (bomDetail.UnitCost > txtUnitCost.Text.ToDecimal())
+                            {
+                                bomDetail.UnitCost = bOM_S.SelfProductionAllCosts;
+                                bomDetail.SubtotalUnitCost = bomDetail.UnitCost * bomDetail.UsedQty;
+                                updateListbomdetail.Add(bomDetail);
+                            }
+                        }
+                        if (rdb其它.Checked && bomDetail.UnitCost != 0)
+                        {  //如果存在则更新 
+                            decimal diffpirce = Math.Abs(bomDetail.UnitCost - bOM_S.SelfProductionAllCosts);
+                            if (diffpirce > 0.01m)
+                            {
+                                bomDetail.UnitCost = bOM_S.SelfProductionAllCosts;
+                                bomDetail.SubtotalUnitCost = bomDetail.UnitCost * bomDetail.UsedQty;
+                                updateListbomdetail.Add(bomDetail);
+                            }
+                        }
+                    }
+                }
+
+                if (updateListbomdetail.Count > 0)
+                {
+                    bill.TotalMaterialCost = bill.tb_BOM_SDetails.Sum(c => c.SubtotalUnitCost);
+                    bill.OutProductionAllCosts = bill.TotalMaterialCost + bill.TotalOutManuCost + bill.OutApportionedCost;
+                    bill.SelfProductionAllCosts = bill.TotalMaterialCost + bill.TotalSelfManuCost + bill.SelfApportionedCost;
+                    if (!chkTestMode.Checked)
+                    {
+                        await MainForm.Instance.AppContext.Db.Updateable<tb_BOM_S>(bill).ExecuteCommandAsync();
+                    }
+                }
+            }
+
+            if (!chkTestMode.Checked && updateListbomdetail.Count > 0)
+            {
+                await MainForm.Instance.AppContext.Db.Updateable<tb_BOM_SDetail>(updateListbomdetail).ExecuteCommandAsync();
+            }
+            if (BOM_SOrders.Count > 0)
+            {
+                LoopUpdateBom(bOM_S);
+            }
+
+            #endregion
+        }
+
+
         private async void 更新为当前成本ToolStripMenuItem_Click(object sender, EventArgs e)
         {
             if (sender is ToolStripMenuItem toolStripMenu)
@@ -2611,7 +2730,6 @@ namespace RUINORERP.UI.SysConfig
             if (dataGridViewInv.SelectedRows != null)
             {
                 List<tb_Inventory> inventories = new List<tb_Inventory>();
-
                 foreach (DataGridViewRow dr in dataGridViewInv.SelectedRows)
                 {
                     if (dr.DataBoundItem is View_Inventory inventory)
@@ -2628,6 +2746,43 @@ namespace RUINORERP.UI.SysConfig
         private void kryptonLabel2_Click(object sender, EventArgs e)
         {
 
+        }
+
+        private async void 将配方成本更新到库存ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (tabControl.SelectedTab != null)
+            {
+                List<Control> controls = tabControl.SelectedTab.Controls.CastToList<Control>();
+                DataGridView dgv = controls.FirstOrDefault(c => c.GetType().Name == "DataGridView") as DataGridView;
+                if (dgv != null)
+                {
+                    dgv.AllowUserToAddRows = false;
+                    if (tabControl.SelectedTab.Text.Contains("对应配方"))
+                    {
+                        foreach (DataGridViewRow item in dgv.SelectedRows)
+                        {
+                            if (true)
+                            {
+                                if (dataGridViewInv.SelectedRows != null)
+                                {
+                                    List<tb_Inventory> inventories = new List<tb_Inventory>();
+                                    foreach (DataGridViewRow dr in dataGridViewInv.SelectedRows)
+                                    {
+                                        if (dr.DataBoundItem is View_Inventory inventory)
+                                        {
+                                            inventories.Add(inventory.tb_inventory);
+                                        }
+                                    }
+                                    await UpdateInventoryCost(inventories);
+                                }
+
+                            }
+                        }
+                    }
+
+                }
+
+            }
         }
     }
 }

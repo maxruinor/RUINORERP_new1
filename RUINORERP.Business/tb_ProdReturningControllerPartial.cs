@@ -148,7 +148,9 @@ namespace RUINORERP.Business
 
 
                     //归还的等于借出的，数量够则自动结案
-                    if (entity.tb_prodborrowing != null && entity.tb_prodborrowing.tb_ProdBorrowingDetails.Sum(c => c.ReQty) == entity.tb_prodborrowing.tb_ProdBorrowingDetails.Sum(c => c.Qty))
+                    if (entity.tb_prodborrowing != null && entity.tb_prodborrowing.DataStatus == (int)DataStatus.确认 &&
+                        entity.tb_prodborrowing.tb_ProdBorrowingDetails.Sum(c => c.ReQty) == entity.tb_prodborrowing.tb_ProdBorrowingDetails
+                        .Sum(c => c.Qty))
                     {
                         entity.tb_prodborrowing.DataStatus = (int)DataStatus.完结;
                         entity.tb_prodborrowing.CloseCaseOpinions = "【系统自动结案】==》" + System.DateTime.Now.ToString() + _appContext.CurUserInfo.UserInfo.tb_employee.Employee_Name + "审核归还单时:" + entity.ReturnNo + "结案。"; ;

@@ -24,18 +24,95 @@ using System.Drawing;
 using RUINORERP.UI.ClientCmdService;
 using RUINORERP.Model.TransModel;
 using TransInstruction.CommandService;
+using FastReport.DevComponents.DotNetBar;
+using NPOI.POIFS.Crypt.Dsig;
 
 namespace RUINORERP.UI.SuperSocketClient
 {
     public class EasyClientService
     {
 
+        // 定义一个事件集合
+        private List<EventHandler<CustomEventArgs>> eventHandlers = new List<EventHandler<CustomEventArgs>>();
 
+        // 定义一个自定义事件参数类
+        public class CustomEventArgs : EventArgs
+        {
+            public string EventName { get; set; }
+            public string EventData { get; set; }
+        }
+
+        // 添加事件处理程序
+        public void AddEventHandler(EventHandler<CustomEventArgs> handler)
+        {
+            eventHandlers.Add(handler);
+        }
+
+        // 触发事件
+        public void RaiseEvent(string eventName, string eventData)
+        {
+            var args = new CustomEventArgs { EventName = eventName, EventData = eventData };
+            foreach (var handler in eventHandlers)
+            {
+                handler(this, args);
+            }
+        }
+
+        // 定义一个事件集合，用于存储不同指令的事件处理程序
+        private ConcurrentDictionary<ServerCmdEnum, ServerCommandHandler> _commandHandlers = new ConcurrentDictionary<ServerCmdEnum, ServerCommandHandler>();
+
+        // 添加事件处理程序
+        public void AddCommandHandler(ServerCmdEnum command, ServerCommandHandler handler)
+        {
+            //lock (_commandHandlers)
+            //{
+                if (!_commandHandlers.ContainsKey(command))
+                {
+                    _commandHandlers[command] = handler;
+                }
+            //}
+        }
+
+        // 移除事件处理程序
+        public void RemoveCommandHandler(ServerCmdEnum command, ServerCommandHandler handler)
+        {
+            //lock (_commandHandlers)
+            {
+                if (_commandHandlers.ContainsKey(command))
+                {
+                    _commandHandlers[command] -= handler;
+                    if (_commandHandlers[command] == null)
+                    {
+                        _commandHandlers.TryRemove(command, out ServerCommandHandler _);
+                    }
+                }
+            }
+        }
+
+        // 触发事件
+        public void RaiseCommandEvent(ServerCmdEnum command, byte[] data)
+        {
+            lock (_commandHandlers)
+            {
+                if (_commandHandlers.ContainsKey(command))
+                {
+                    var handler = _commandHandlers[command];
+                    if (handler != null)
+                    {
+                        handler(this, new ServerCommandEventArgs { CommandName = command.ToString(), Data = data });
+                    }
+                }
+            }
+        }
+
+        //========
 
         public delegate void ConnectClosed(bool isconect);
 
         [Browsable(true), Description("连接事件")]
         public event ConnectClosed OnConnectClosed;
+
+        //定义一个事件集合 通过收到不同类型的回复后响应不同的事件
 
 
         #region 
@@ -493,13 +570,13 @@ namespace RUINORERP.UI.SuperSocketClient
                 try
                 {
                     string rs = string.Empty;
-                    ServerCmdEnum msg = (ServerCmdEnum)e.Package.od.cmd;
+                    ServerCmdEnum serverCmd = (ServerCmdEnum)e.Package.od.cmd;
                     OriginalData od = e.Package.od;
-                    if (ServerCmdEnum.心跳回复 != msg)
+                    if (ServerCmdEnum.心跳回复 != serverCmd)
                     {
 
                     }
-                    switch (msg)
+                    switch (serverCmd)
                     {
                         case ServerCmdEnum.复合型实体处理:
                             RequestReceiveEntityCmd ReceiverEntityCmd = new RequestReceiveEntityCmd(CmdOperation.Receive);
@@ -517,9 +594,22 @@ namespace RUINORERP.UI.SuperSocketClient
                             ClientService.接收工作流的提醒消息(od);
                             break;
                         case ServerCmdEnum.复合型锁单处理:
-                            var LockCommand = new RequestReceiveLockManagerCmd(CmdOperation.Receive);
+                            var LockCommand = new ClientLockManagerCmd(CmdOperation.Receive);
                             LockCommand.DataPacket = od;
                             MainForm.Instance.dispatcher.DispatchAsync(LockCommand, CancellationToken.None);
+                            LockCommand.LockChanged += (sender, e) =>
+                            {
+                                //this.tsBtnLocked.Visible = true;
+                                ////自己就表达绿色
+                                //this.tsBtnLocked.Image = global::RUINORERP.UI.Properties.Resources.unlockbill;
+                                //更新？
+                                Console.WriteLine($"Document {e.DocumentId} is now {(e.IsSuccess ? "locked" : "unlocked")} ");
+                            };
+
+
+                            // 触发相应的事件
+                            RaiseCommandEvent(serverCmd, od.Two);
+
                             break;
                         //case ServerCmdEnum.转发单据锁定:
                         //    //单个实例
@@ -660,8 +750,8 @@ namespace RUINORERP.UI.SuperSocketClient
                     //ise.ClientActionDefault
                     if (TransService.ServerActionList.Count > 0)
                     {
-                        rs += TransService.PorcessServerMsg(msg, TransService.ServerActionList[msg], od);
-                        rs += msg.ToString() + "|";
+                        rs += TransService.PorcessServerMsg(serverCmd, TransService.ServerActionList[serverCmd], od);
+                        rs += serverCmd.ToString() + "|";
                         MainForm.Instance.PrintInfoLog("【收到服务器数据】" + rs.ToString());
                     }
 

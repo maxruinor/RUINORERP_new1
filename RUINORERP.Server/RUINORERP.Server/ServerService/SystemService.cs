@@ -52,7 +52,7 @@ namespace RUINORERP.Server.ServerService
             }
             catch (Exception ex)
             {
-                Comm.CommService.ShowExceptionMsg("发送缓存数据列表:" + ex.Message);
+                Comm.CommService.ShowExceptionMsg("转发异常数据:" + ex.Message);
             }
 
         }
@@ -73,7 +73,7 @@ namespace RUINORERP.Server.ServerService
             }
             catch (Exception ex)
             {
-                Comm.CommService.ShowExceptionMsg("发送缓存数据列表:" + ex.Message);
+                Comm.CommService.ShowExceptionMsg("process请求协助处理:" + ex.Message);
             }
         }
 
@@ -130,10 +130,11 @@ namespace RUINORERP.Server.ServerService
             }
             catch (Exception ex)
             {
-                Comm.CommService.ShowExceptionMsg("发送缓存数据列表:" + ex.Message);
+                Comm.CommService.ShowExceptionMsg("process请求协助处理:" + ex.Message);
             }
         }
 
+        /*
         public static void process单据审核锁定(SessionforBiz Sender, OriginalData gd)
         {
             try
@@ -152,14 +153,10 @@ namespace RUINORERP.Server.ServerService
                     }
                 }
 
-
-
-
-
             }
             catch (Exception ex)
             {
-                Comm.CommService.ShowExceptionMsg("发送缓存数据列表:" + ex.Message);
+                Comm.CommService.ShowExceptionMsg("process单据审核锁定:" + ex.Message);
             }
         }
 
@@ -188,10 +185,10 @@ namespace RUINORERP.Server.ServerService
             }
             catch (Exception ex)
             {
-                Comm.CommService.ShowExceptionMsg("发送缓存数据列表:" + ex.Message);
+                Comm.CommService.ShowExceptionMsg("process单据审核锁定释放:" + ex.Message);
             }
         }
-
+       
 
         public static void process断开连接锁定释放(long LockerUserID)
         {
@@ -218,9 +215,11 @@ namespace RUINORERP.Server.ServerService
             }
             catch (Exception ex)
             {
-                Comm.CommService.ShowExceptionMsg("发送缓存数据列表:" + ex.Message);
+                Comm.CommService.ShowExceptionMsg("process断开连接锁定释放:" + ex.Message);
             }
         }
+         */
+
         /// <summary>
         /// 转发到能处理的人
         /// </summary>
@@ -235,7 +234,7 @@ namespace RUINORERP.Server.ServerService
             }
             catch (Exception ex)
             {
-                Comm.CommService.ShowExceptionMsg("发送缓存数据列表:" + ex.Message);
+                Comm.CommService.ShowExceptionMsg("转发协助处理:" + ex.Message);
             }
 
         }

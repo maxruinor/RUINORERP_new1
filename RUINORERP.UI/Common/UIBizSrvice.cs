@@ -9,6 +9,7 @@ using Newtonsoft.Json.Linq;
 using RUINORERP.Business;
 using RUINORERP.Business.CommService;
 using RUINORERP.Business.Processor;
+using RUINORERP.Business.Security;
 using RUINORERP.Common.Extensions;
 using RUINORERP.Common.Helper;
 using RUINORERP.Extensions.Middlewares;
@@ -883,6 +884,7 @@ namespace RUINORERP.UI.Common
                 if (NeedRequesCache(rslist, tableName) && BizCacheHelper.Instance.typeNames.Contains(tableName))
                 {
                     ClientService.请求缓存(tableName);
+                    
                 }
             }
 

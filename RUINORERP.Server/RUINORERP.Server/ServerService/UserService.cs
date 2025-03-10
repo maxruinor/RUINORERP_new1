@@ -35,6 +35,7 @@ namespace RUINORERP.Server.BizService
 {
     public class UserService
     {
+        /*
         public static void 发送缓存数据(SessionforBiz PlayerSession, string tableName)
         {
             if (string.IsNullOrEmpty(tableName))
@@ -73,6 +74,7 @@ namespace RUINORERP.Server.BizService
             }
 
         }
+        */
 
         public static async void 发送缓存数据列表(SessionforBiz PlayerSession, string tableName)
         {
@@ -116,7 +118,7 @@ namespace RUINORERP.Server.BizService
                                 object page = lastlist.Skip(i).Take(endIndex - i).ToArray();
 
                                 // 处理当前页
-                                发送缓存数据(PlayerSession, tableName, page);
+                                发送缓存数据列表(PlayerSession, tableName, page);
 
                                 // 如果当前页是最后一页，可能不足200行，需要特殊处理
                                 if (endIndex == lastlist.Count)
@@ -144,7 +146,7 @@ namespace RUINORERP.Server.BizService
         }
 
 
-        private static void 发送缓存数据(SessionforBiz PlayerSession, string tableName, object list)
+        private static void 发送缓存数据列表(SessionforBiz PlayerSession, string tableName, object list)
         {
             try
             {
@@ -884,6 +886,8 @@ namespace RUINORERP.Server.BizService
                 tx.PushString("强制用户退出");
                 tx.PushString(Message);
                 PlayerSession.AddSendData((byte)ServerCmdEnum.强制用户退出, null, tx.toByte());
+              
+
             }
             catch (Exception ex)
             {

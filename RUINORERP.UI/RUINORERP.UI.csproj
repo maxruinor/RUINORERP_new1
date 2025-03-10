@@ -1117,10 +1117,11 @@
     </Compile>
     <Compile Include="ClientCmdService\ClientCommandDispatcher.cs" />
     <Compile Include="ClientCmdService\ClientCommandRegistry.cs" />
+    <Compile Include="ClientCmdService\DynamicEventManager.cs" />
     <Compile Include="ClientCmdService\IClientCommand.cs" />
     <Compile Include="ClientCmdService\RequestReceiveEntityCmd.cs" />
     <Compile Include="ClientCmdService\ReceiveCacheCommand.cs" />
-    <Compile Include="ClientCmdService\RequestReceiveLockManagerCmd.cs" />
+    <Compile Include="ClientCmdService\ClientLockManagerCmd.cs" />
     <Compile Include="ClientCmdService\RequestReceiveMessageCmd.cs" />
     <Compile Include="ClientCmdService\RequestLoginCommand.cs" />
     <Compile Include="ClientCmdService\RequestReminderCommand.cs" />
@@ -2622,7 +2623,9 @@
     <Content Include="InitSQL.sql" />
     <Content Include="ResourceFile\money-rmb.png" />
     <None Include="ResourceFile\人民币 -32.png" />
+    <Content Include="ResourceFile\unlockbill.png" />
     <Content Include="ResourceFile\人民币.png" />
+    <None Include="Resources\lockbill.png" />
     <Content Include="UpdateLog.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -3636,7 +3639,6 @@
     <None Include="ReportTemplate\test.frx" />
     <None Include="ReportTemplate\TEST1.frx" />
     <None Include="ReportTemplate\可以用的模板新销售订单.frx" />
-    <None Include="ResourceFile\Help.png" />
     <None Include="ResourceFile\Help0.png" />
     <None Include="ResourceFile\US_Dollar.png" />
     <None Include="Resources\WF.minus.ico" />
@@ -3657,7 +3659,7 @@
     <None Include="ResourceFile\Save_ok.png" />
     <None Include="ResourceFile\SaveLayout.png" />
     <None Include="ResourceFile\reset.png" />
-    <None Include="ResourceFile\Lock.png" />
+    <None Include="ResourceFile\Lockbill.png" />
     <None Include="ResourceFile\locked.png" />
     <Content Include="ResourceFile\lock_security_padlock_secure_icon.png" />
     <None Include="Resources\分配-.png" />

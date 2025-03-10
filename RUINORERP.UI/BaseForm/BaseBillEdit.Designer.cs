@@ -52,10 +52,10 @@
             this.复制性新增ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripbtnProperty = new System.Windows.Forms.ToolStripButton();
             this.toolStripbtnClose = new System.Windows.Forms.ToolStripButton();
+            this.tsBtnLocked = new System.Windows.Forms.ToolStripButton();
             this.bwRemoting = new System.ComponentModel.BackgroundWorker();
             this.errorProviderForAllInput = new System.Windows.Forms.ErrorProvider(this.components);
             this.bindingSourceSub = new System.Windows.Forms.BindingSource(this.components);
-            this.tsBtnLocked = new System.Windows.Forms.ToolStripButton();
             this.BaseToolStrip.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceSub)).BeginInit();
@@ -240,6 +240,14 @@
             this.toolStripbtnClose.Size = new System.Drawing.Size(53, 22);
             this.toolStripbtnClose.Text = "关闭";
             // 
+            // tsBtnLocked
+            // 
+            this.tsBtnLocked.Image = global::RUINORERP.UI.Properties.Resources.unlockbill;
+            this.tsBtnLocked.Name = "tsBtnLocked";
+            this.tsBtnLocked.Size = new System.Drawing.Size(66, 22);
+            this.tsBtnLocked.Text = "已锁定";
+            this.tsBtnLocked.Visible = false;
+            // 
             // bwRemoting
             // 
             this.bwRemoting.WorkerReportsProgress = true;
@@ -248,14 +256,6 @@
             // errorProviderForAllInput
             // 
             this.errorProviderForAllInput.ContainerControl = this;
-            // 
-            // tsBtnLocked
-            // 
-            this.tsBtnLocked.Image = global::RUINORERP.UI.Properties.Resources.lock_security_padlock_secure_icon;
-            this.tsBtnLocked.Name = "tsBtnLocked";
-            this.tsBtnLocked.Size = new System.Drawing.Size(66, 22);
-            this.tsBtnLocked.Text = "已锁定";
-            this.tsBtnLocked.Visible = false;
             // 
             // BaseBillEdit
             // 

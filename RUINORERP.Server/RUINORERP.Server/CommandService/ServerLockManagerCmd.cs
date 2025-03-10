@@ -1,9 +1,13 @@
-﻿using Microsoft.EntityFrameworkCore.Metadata.Internal;
+﻿using Azure;
+using Azure.Core;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.VisualBasic.ApplicationServices;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using RUINORERP.Business.CommService;
 using RUINORERP.Model;
+using RUINORERP.Model.CommonModel;
 using RUINORERP.Model.TransModel;
 using RUINORERP.Server.ServerSession;
 using System;
@@ -17,6 +21,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using TransInstruction;
 using TransInstruction.CommandService;
+using TransInstruction.DataModel;
 using TransInstruction.DataPortal;
 using static RUINORERP.Business.CommService.LockManager;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement;
@@ -27,17 +32,18 @@ namespace RUINORERP.Server.CommandService
     /// <summary>
     /// Server 锁单指令
     /// </summary>
-    public class ReceiveResponseLockManagerCmd : IServerCommand
+    public class ServerLockManagerCmd : IServerCommand
     {
         public event LockChangedHandler LockChanged;
         public LockCmd lockCmd { get; set; }
-        public LockRequestInfo lockRequest { get; set; }
+
+        public LockRequestBaseInfo lockRequest { get; set; }
         public SessionforBiz FromSession { get; set; }
         public SessionforBiz ToSession { get; set; }
         public CmdOperation OperationType { get; set; }
         public OriginalData DataPacket { get; set; }
 
-        public ReceiveResponseLockManagerCmd(CmdOperation operation, SessionforBiz FromSession = null, SessionforBiz ToSession = null)
+        public ServerLockManagerCmd(CmdOperation operation, SessionforBiz FromSession = null, SessionforBiz ToSession = null)
         {
             this.OperationType = operation;
             this.FromSession = FromSession;
@@ -56,7 +62,7 @@ namespace RUINORERP.Server.CommandService
                           AnalyzeDataPacket(DataPacket, FromSession);
                           break;
                       case CmdOperation.Send:
-                          BuildDataPacket(lockRequest);
+                          ResponseToClient(false, null);
                           break;
                       default:
                           break;
@@ -69,10 +75,6 @@ namespace RUINORERP.Server.CommandService
         }
 
 
-
-
-
-
         public bool AnalyzeDataPacket(OriginalData gd, SessionforBiz FromSession)
         {
             bool rs = false;
@@ -82,85 +84,69 @@ namespace RUINORERP.Server.CommandService
                 int index = 0;
                 //当前
                 string 时间 = ByteDataAnalysis.GetString(gd.Two, ref index);
-                LockCmd lockCmd = (LockCmd)ByteDataAnalysis.GetInt(gd.Two, ref index);
+                lockCmd = (LockCmd)ByteDataAnalysis.GetInt(gd.Two, ref index);
                 if (lockCmd == LockCmd.Broadcast)
                 {
                     //广播
-                    BuildDataPacketforward();
+                    BuildDataPacketBroadcastLockStatus();
                     return true;
                 }
-                long BillID = ByteDataAnalysis.GetInt64(gd.Two, ref index);
-                if (lockRequest == null)
-                {
-                    lockRequest = new LockRequestInfo();
-                }
-                lockRequest.BillID = BillID;
                 //目前服务器主要是转发作用的功能
                 switch (lockCmd)
                 {
                     case LockCmd.LOCK:
-                    case LockCmd.UNLOCK:
-                        long LockedUserID = ByteDataAnalysis.GetInt64(gd.Two, ref index);
-                        //如果是请求解锁就是请求人。否则就是锁定人
-                        string UserName = ByteDataAnalysis.GetString(gd.Two, ref index);
-                        int BillBizType = ByteDataAnalysis.GetInt(gd.Two, ref index);
-                        long MenuID = ByteDataAnalysis.GetInt64(gd.Two, ref index);
-
-                        lockRequest.LockedUserName = UserName;
-                        lockRequest.BillBizType = BillBizType;
-                        lockRequest.MenuID = MenuID;
-                        lockRequest.LockedUserID = LockedUserID;
-
-                        if (lockCmd == LockCmd.UNLOCK)
+                        string json = ByteDataAnalysis.GetString(gd.Two, ref index);
+                        JObject obj = JObject.Parse(json);
+                        LockedInfo lockRequest = obj.ToObject<LockedInfo>();
+                        var isLocked = frmMain.Instance.lockManager.TryLock(lockRequest.BillID, lockRequest.BillData.BillNo, lockRequest.LockedUserID);
+                        if (isLocked)
                         {
-                            var isUnlocked = frmMain.Instance.lockManager.Unlock(BillID, LockedUserID);
-                            if (isUnlocked)
+                            if (frmMain.Instance.IsDebug)
                             {
-                                //通知所有人。这个单被锁了 包含锁单本人
-                                BuildDataPacket(lockRequest);
-                                OnLockChanged(BillID, false, LockedUserID);
+                                frmMain.Instance.PrintInfoLog($"服务器锁{lockRequest.BillID}成功");
                             }
                         }
-                        else
-                        {
-                            var isLocked = frmMain.Instance.lockManager.TryLock(BillID, LockedUserID);
-                            if (isLocked)
-                            {
-                                //通知所有人。这个单被锁了 包含锁单本人
-                                BuildDataPacket(lockRequest);
-                                OnLockChanged(BillID, true, LockedUserID);
-                            }
-                        }
+                        //通知所有人。这个单被锁了 包含锁单本人
+                        ResponseToClient(isLocked, lockRequest);
+                        OnLockChanged(lockCmd,lockRequest.BillID, isLocked);
+
                         break;
+                    case LockCmd.UNLOCK:
+                        json = ByteDataAnalysis.GetString(gd.Two, ref index);
+                        obj = JObject.Parse(json);
+                        UnLockInfo unLockInfo = obj.ToObject<UnLockInfo>();
+                        var isUnlocked = frmMain.Instance.lockManager.Unlock(unLockInfo.BillID, unLockInfo.LockedUserID);
+                        if (isUnlocked)
+                        {
+                            if (frmMain.Instance.IsDebug)
+                            {
+                                frmMain.Instance.PrintInfoLog($"服务器解锁{unLockInfo.BillID}成功");
+                            }
+                            //通知所有人。这个单被锁了 包含锁单本人
+                            ResponseToClient(isUnlocked, unLockInfo);
+                        }
+                        
+                        //OnLockChanged(lockCmd,unLockInfo.BillID, isUnlocked);
 
-                    case LockCmd.RequestReleaseLock:
-                        //有人申请解锁 通知其它所有人[所有人收到判断是不是自己 是的才弹出窗口]。申请人没有锁不用通知
-                         LockedUserID = ByteDataAnalysis.GetInt64(gd.Two, ref index);
-                        //如果是请求解锁就是请求人。否则就是锁定人
-                         UserName = ByteDataAnalysis.GetString(gd.Two, ref index);
-                         BillBizType = ByteDataAnalysis.GetInt(gd.Two, ref index);
-                        MenuID = ByteDataAnalysis.GetInt64(gd.Two, ref index);
-                      
-                        lockRequest.RequestReleaseUserName = UserName;
-                        lockRequest.BillBizType = BillBizType;
-                        lockRequest.MenuID = MenuID;
-                        lockRequest.LockedUserID = LockedUserID;
+                        break;
+                    case LockCmd.RequestUnLock:
+                        //接收每个人的请求，但是通知谁要看谁锁定了
+                        json = ByteDataAnalysis.GetString(gd.Two, ref index);
+                        obj = JObject.Parse(json);
+                        RequestUnLockInfo requestUnLockInfo = obj.ToObject<RequestUnLockInfo>();
+                        //转发请求
+                        //OnLockChanged(lockCmd,requestUnLockInfo.BillID, true);
 
                         tx = new ByteBuff(100);
                         string sendtime = System.DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
                         tx.PushString(sendtime);
                         tx.PushInt((int)lockCmd);
-                        tx.PushInt64(BillID);
-                        tx.PushInt64(lockRequest.LockedUserID);
-                        tx.PushString(lockRequest.RequestReleaseUserName);
-                        tx.PushInt((int)lockRequest.BillBizType);
-                        tx.PushInt64(lockRequest.MenuID);
-
+                        tx.PushString(json);
                         //将来再加上提醒配置规则,或加在请求实体中
-                        //gd.cmd = (byte)ServerCmdEnum.复合型锁单处理;
-                        //gd.One = new byte[] { (byte)lockCmd };
-                        //gd.Two = tx.toByte();
-
+                        gd.cmd = (byte)ServerCmdEnum.复合型锁单处理;
+                        gd.One = new byte[] { (byte)lockCmd };
+                        gd.Two = tx.toByte();
+                        //通知拥有锁的人
                         foreach (var item in frmMain.Instance.sessionListBiz)
                         {
                             //跳过自己
@@ -171,16 +157,53 @@ namespace RUINORERP.Server.CommandService
                             //有指定目标时  其它人就不发了。
                             if (ToSession != null && item.Value.SessionID == ToSession.SessionID)
                             {
-                                item.Value.AddSendData((byte)ServerCmdEnum.复合型锁单处理, new byte[] { (byte)lockCmd }, tx.toByte());
+                                item.Value.AddSendData(gd);
                                 break;
                             }
-                            item.Value.AddSendData((byte)ServerCmdEnum.复合型锁单处理, new byte[] { (byte)lockCmd }, tx.toByte());
+                            if (item.Value.User.UserID == requestUnLockInfo.LockedUserID)
+                            {
+                                item.Value.AddSendData(gd);
+                                break;
+                            }
                         }
                         break;
+                    case LockCmd.RefuseUnLock:
+                        json = ByteDataAnalysis.GetString(gd.Two, ref index);
+                        obj = JObject.Parse(json);
+                        RefuseUnLockInfo refuseUnLockInfo = obj.ToObject<RefuseUnLockInfo>();
+                        
+                        ////服务器没有啥事件  事件都在客户端的操作回应结果
+                        //OnLockChanged(lockCmd，refuseUnLockInfo.BillID, false);
 
+                        tx = new ByteBuff(100);
+                        sendtime = System.DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+                        tx.PushString(sendtime);
+                        tx.PushInt((int)lockCmd);
+                        tx.PushString(json);
+
+                        //通知请求的人
+                        foreach (var item in frmMain.Instance.sessionListBiz)
+                        {
+                            //跳过自己
+                            if (FromSession != null && item.Value.SessionID == FromSession.SessionID)
+                            {
+                                continue;
+                            }
+                            //有指定目标时  其它人就不发了。
+                            if (ToSession != null && item.Value.SessionID == ToSession.SessionID)
+                            {
+                                item.Value.AddSendData(gd);
+                                break;
+                            }
+                            if (item.Value.User.UserID == refuseUnLockInfo.RequestUserID)
+                            {
+                                item.Value.AddSendData(gd);
+                                break;
+                            }
+                        }
+                        break;
                     case LockCmd.Broadcast:
                         break;
-
                     default:
                         break;
                 }
@@ -196,9 +219,9 @@ namespace RUINORERP.Server.CommandService
         }
 
 
-        protected virtual void OnLockChanged(long documentId, bool isLocked, long lockedBy)
+        protected virtual void OnLockChanged(LockCmd lockCmd, long documentId, bool isSuccess)
         {
-            LockChanged?.Invoke(this, new LockChangedEventArgs(documentId, isLocked, lockedBy));
+            LockChanged?.Invoke(this, new LockChangedEventArgs(lockCmd,documentId, isSuccess));
         }
 
 
@@ -206,7 +229,7 @@ namespace RUINORERP.Server.CommandService
         /// 原数据转发broadcast
         /// </summary>
         /// <param name="request"></param>
-        public void BuildDataPacketforward()
+        public void BuildDataPacketBroadcastLockStatus()
         {
             try
             {
@@ -229,18 +252,20 @@ namespace RUINORERP.Server.CommandService
                         break;
                     }
                 }
-
             }
             catch (Exception ex)
             {
 
             }
-
-
         }
 
         //回应给客户端
         public void BuildDataPacket(object request = null)
+        {
+
+        }
+
+        public void ResponseToClient(bool isSuccess, object request = null)
         {
             ByteBuff tx = new ByteBuff(100);
             try
@@ -248,17 +273,22 @@ namespace RUINORERP.Server.CommandService
                 string sendtime = System.DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
                 tx.PushString(sendtime);
                 tx.PushInt((int)lockCmd);
+                lockRequest = request as LockRequestBaseInfo;
+                string json = JsonConvert.SerializeObject(lockRequest,
+               new JsonSerializerSettings
+               {
+                   ReferenceLoopHandling = ReferenceLoopHandling.Ignore // 或 ReferenceLoopHandling.Serialize
+               });
+                tx.PushString(json);
                 //发送消息数据 
                 //将消息转换为一个实体先
                 switch (lockCmd)
                 {
                     case LockCmd.LOCK:
                     case LockCmd.UNLOCK:
-                        tx.PushInt64(lockRequest.BillID);
-                        tx.PushInt64(lockRequest.LockedUserID);
-                        tx.PushString(lockRequest.LockedUserName);
-                        tx.PushInt((int)lockRequest.BillBizType);
-                        tx.PushInt64(lockRequest.MenuID);
+                        tx.PushBool(isSuccess);
+                        break;
+                    case LockCmd.RequestUnLock:
                         break;
                     default:
                         break;

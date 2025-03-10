@@ -69,6 +69,10 @@ using static RUINORERP.Business.CommService.LockManager;
 using System.Management.Instrumentation;
 using FastReport.DevComponents.DotNetBar;
 using RUINORERP.UI.WorkFlowDesigner.Entities;
+using System.Windows.Controls.Primitives;
+using TransInstruction.DataModel;
+using RUINORERP.Common.LogHelper;
+
 namespace RUINORERP.UI.BaseForm
 {
     /// <summary>
@@ -462,17 +466,26 @@ namespace RUINORERP.UI.BaseForm
                             //得到了锁 就是自己。得不到就是
                             tsBtnLocked.AutoToolTip = false;
                             tsBtnLocked.ToolTipText = string.Empty;
-                            tsBtnLocked.Visible = false;
-                        }
-                        else
-                        {
                             //别人锁定了
-                            string tipMsg = $"单据已被用户{lockinfo.LockedByName}锁定，请稍后刷新后再试,或联系锁定人员解锁。";
+                            string tipMsg = $"您锁定了当前单据。";
                             MainForm.Instance.uclog.AddLog(tipMsg);
                             tsBtnLocked.AutoToolTip = true;
                             tsBtnLocked.ToolTipText = tipMsg;
                             tsBtnLocked.Visible = true;
                             tsBtnLocked.Tag = lockinfo;
+                            //自己就表达绿色
+                            this.tsBtnLocked.Image = global::RUINORERP.UI.Properties.Resources.unlockbill;
+                        }
+                        else
+                        {
+                            //别人锁定了
+                            string tipMsg = $"单据已被用户{lockinfo.LockedByName}锁定，请刷新后再试,或【点击已锁定】联系锁定人员解锁。";
+                            MainForm.Instance.uclog.AddLog(tipMsg);
+                            tsBtnLocked.AutoToolTip = true;
+                            tsBtnLocked.ToolTipText = tipMsg;
+                            tsBtnLocked.Visible = true;
+                            tsBtnLocked.Tag = lockinfo;
+                            this.tsBtnLocked.Image = global::RUINORERP.UI.Properties.Resources.Lockbill;
                             toolStripBtnCancel.Visible = true;
                             toolStripbtnModify.Enabled = false;
                             toolStripbtnSubmit.Enabled = false;
@@ -491,7 +504,6 @@ namespace RUINORERP.UI.BaseForm
                         tsBtnLocked.ToolTipText = string.Empty;
                         tsBtnLocked.Visible = false;
                     }
-
                 }
 
                 #region 数据状态修改时也会影响到按钮
@@ -500,6 +512,33 @@ namespace RUINORERP.UI.BaseForm
                     //如果属性变化 则状态为修改
                     baseEntity.PropertyChanged += (sender, s2) =>
                     {
+                        //权限允许
+                        if ((true && dataStatus == DataStatus.草稿) || (true && dataStatus == DataStatus.新建))
+                        {
+                            baseEntity.ActionStatus = ActionStatus.修改;
+                            ToolBarEnabledControl(MenuItemEnums.修改);
+                            //如果要锁这个单 看这个单是不是已经被其它人锁，如果没有人锁则我可以锁
+                            //long userid = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID;
+                            //if (MainForm.Instance.lockManager.GetLockedBy(pkid) > 0)
+                            //{
+                            //    var lockinfo = MainForm.Instance.lockManager.GetLockStatus(pkid);
+                            //    if (lockinfo.LockedByID != userid)
+                            //    {
+                            //        LockBill();//不是自己尝试锁
+                            //    }
+                            //}
+                            //else
+                            //{
+                            //    LockBill();//也人锁定也要锁
+                            //}
+                            if (s2.PropertyName == "ActionStatus")
+                            {
+                                //当判断由其它状态变为修改状态时才执行一次
+                                LockBill();//不是自己尝试锁
+                            }
+                        }
+                        
+
                         //数据状态变化会影响按钮变化
                         if (s2.PropertyName == "DataStatus")
                         {
@@ -523,13 +562,7 @@ namespace RUINORERP.UI.BaseForm
 
                         }
 
-                        //权限允许
-                        if ((true && dataStatus == DataStatus.草稿) || (true && dataStatus == DataStatus.新建))
-                        {
-                            baseEntity.ActionStatus = ActionStatus.修改;
-                            ToolBarEnabledControl(MenuItemEnums.修改);
-                            LockBill();
-                        }
+
 
                     };
                 }
@@ -946,24 +979,7 @@ namespace RUINORERP.UI.BaseForm
         public event BindDataToUIHander OnBindDataToUIEvent;
 
 
-        /// <summary>
-        /// 释放锁
-        /// </summary>
-        /// <param name="key"></param>
-        internal override void ReleaseLock(BillLockInfo lockInfo)
-        {
-            if (EditEntity != null)
-            {
-                long pkid = (long)ReflectionHelper.GetPropertyValue(EditEntity, PKCol);
-                if (pkid == lockInfo.BillID)
-                {
-                    tsBtnLocked.AutoToolTip = false;
-                    tsBtnLocked.ToolTipText = string.Empty;
-                    tsBtnLocked.Visible = false;
-                }
-            }
 
-        }
         string PKCol = BaseUIHelper.GetEntityPrimaryKey<T>();
         /// <summary>
         /// 控制功能按钮
@@ -1002,8 +1018,8 @@ namespace RUINORERP.UI.BaseForm
                     //弹出一个确认框来请求解锁 
                     if (tsBtnLocked.Visible && MessageBox.Show("确认向锁定者解锁吗？", "提示", MessageBoxButtons.OKCancel, MessageBoxIcon.Question) == DialogResult.OK)
                     {
-                        RequestReleaseLock();
 
+                        RequestUnLock();
                     }
                     break;
                 case MenuItemEnums.新增:
@@ -1159,65 +1175,88 @@ namespace RUINORERP.UI.BaseForm
                 //如果要锁这个单 看这个单是不是已经被其它人锁，如果没有人锁则我可以锁
                 long userid = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID;
                 var lockeduserid = MainForm.Instance.lockManager.GetLockedBy(pkid);
-                if (lockeduserid == 0)
+                if (lockeduserid == 0 || lockeduserid != userid)
                 {
-                    LockBill(pkid, userid);
+                    if (lockeduserid > 0)
+                    {
+                        //被人锁了
+                        this.tsBtnLocked.Image = global::RUINORERP.UI.Properties.Resources.Lockbill;
+                    }
+                    else
+                    {
+                        LockBill(pkid, userid);
+                    }
                 }
 
                 /*
                 #region 锁定当前单据  后面流程上也要能锁定
 
-                //注意如果别人先锁则自己后锁不能再锁一次了
-                if (!MainForm.Instance.LockInfoList.ContainsKey(pkid))
-                {
-                    OriginalData od = ActionForClient.单据锁定(pkid,
-                    MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID,
-                                MainForm.Instance.AppContext.CurUserInfo.UserInfo.tb_employee.Employee_Name,
-                                (int)CurrentBizType, CurMenuInfo.MenuID);
-                    MainForm.Instance.ecs.AddSendData(od);
-
-                    if (MainForm.Instance.authorizeController.GetDebugInfoAuth())
-                    {
-                        MainForm.Instance.PrintInfoLog($"{CurrentBizTypeName}单据锁定{pkid}成功！");
-                    }
-                }
+             
                 #endregion
                 */
             }
         }
 
+
         private void LockBill(long BillID, long userid)
         {
-            //先自己锁。实际服务器收到后还会广播一次 包括自己 只是这里已经锁，不会重复添加
-            if (MainForm.Instance.lockManager.TryLock(BillID, userid))
+
+
+
+            BillConverterFactory bcf = Startup.GetFromFac<BillConverterFactory>();
+            CommBillData cbd = new CommBillData();
+            cbd = bcf.GetBillData(typeof(T), EditEntity);
+
+            LockedInfo lockRequest = new LockedInfo();
+            lockRequest.BillID = BillID;
+            lockRequest.BillData = cbd;
+            lockRequest.LockedUserID = userid;
+            lockRequest.LockedUserName = MainForm.Instance.AppContext.CurUserInfo.UserInfo.tb_employee.Employee_Name;
+            lockRequest.MenuID = CurMenuInfo.MenuID;
+
+            ClientLockManagerCmd cmd = new ClientLockManagerCmd(CmdOperation.Send);
+            cmd.lockCmd = LockCmd.LOCK;//单据锁定
+            cmd.RequestInfo = lockRequest;
+
+            //request.ReceiverSessionID = Receiver.SessionId;
+            MainForm.Instance.dispatcher.DispatchAsync(cmd, CancellationToken.None);
+            cmd.LockChanged += (sender, e) =>
             {
-                RequestReceiveLockManagerCmd cmd = new RequestReceiveLockManagerCmd(CmdOperation.Send);
-                cmd.lockCmd = LockCmd.LOCK;//单据锁定
-                LockRequestInfo lockRequest = new LockRequestInfo();
-                lockRequest.BillID = BillID;
-                lockRequest.LockedUserID = userid;
-                lockRequest.LockedUserName = MainForm.Instance.AppContext.CurUserInfo.UserInfo.tb_employee.Employee_Name;
-                lockRequest.BillBizType = (int)CurrentBizType;
-                lockRequest.MenuID = CurMenuInfo.MenuID;
-                cmd.lockRequest = lockRequest;
-                //request.ReceiverSessionID = Receiver.SessionId;
-                MainForm.Instance.dispatcher.DispatchAsync(cmd, CancellationToken.None);
-                cmd.LockChanged += (sender, e) =>
-                {
-                    //更新？
-                    Console.WriteLine($"Document {e.DocumentId} is now {(e.IsLocked ? "locked" : "unlocked")} by {e.LockedBy}");
-                };
-            }
+                this.tsBtnLocked.Visible = true;
+                //自己就表达绿色
+                this.tsBtnLocked.Image = global::RUINORERP.UI.Properties.Resources.unlockbill;
+                //更新？
+                Console.WriteLine($"Document {e.DocumentId} is now {(e.IsSuccess ? "locked" : "unlocked")} ");
+            };
+
+          
+            ClientEventManager.Instance.AddCommandHandler(ServerCmdEnum.复合型锁单处理, cmd.HandleLockDocument);
+
+            // 注册锁定单据的事件处理程序
+            MainForm.Instance.ecs.AddCommandHandler(ServerCmdEnum.复合型锁单处理, cmd.HandleLockDocument);
         }
+
 
         private bool IsLock()
         {
             //如果已经有锁定标记了。即使已经释放了锁。也要刷新数据后才可以保存。不然数据不会统一。
-            if (tsBtnLocked.Visible && tsBtnLocked.Tag != null && tsBtnLocked.Tag is LockInfo lockInfo)
+            if (tsBtnLocked.Tag != null && tsBtnLocked.Tag is LockInfo lockInfo)
             {
-                //显示锁定认为锁定。要刷新数据
-                MessageBox.Show($"单据已被{lockInfo.LockedByName}锁定，请刷新后重试。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return true;
+                if (lockInfo.IsLocked && lockInfo.LockedByID != MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID)
+                {
+                    //别人锁定了
+                    string tipMsg = $"单据已被用户{lockInfo.LockedByName}锁定，请刷新后再试,或【点击已锁定】联系锁定人员解锁。";
+                    MainForm.Instance.uclog.AddLog(tipMsg);
+                    tsBtnLocked.AutoToolTip = true;
+                    tsBtnLocked.ToolTipText = tipMsg;
+                    tsBtnLocked.Visible = true;
+                    tsBtnLocked.Tag = lockInfo;
+                    this.tsBtnLocked.Image = global::RUINORERP.UI.Properties.Resources.Lockbill;
+                    //显示锁定认为锁定。要刷新数据
+                    MessageBox.Show($"单据已被{lockInfo.LockedByName}锁定，请刷新后重试。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return true;
+                }
+
             }
 
             bool isLocked = false;
@@ -2011,10 +2050,18 @@ namespace RUINORERP.UI.BaseForm
 
                 if (IsLock())
                 {
+                    string tipmsg = string.Empty;
+                    //如果已经有锁定标记了。即使已经释放了锁。也要刷新数据后才可以保存。不然数据不会统一。
+                    if (tsBtnLocked.Visible && tsBtnLocked.Tag != null && tsBtnLocked.Tag is LockInfo lockInfo)
+                    {
+                        //显示锁定认为锁定。要刷新数据
+                        tipmsg = $"单据已被{lockInfo.LockedByName}锁定，请刷新后再试";
+                    }
+
                     return new ReturnMainSubResults<T>()
                     {
                         Succeeded = false,
-                        ErrorMsg = $"单据已被{"xxx"}锁定，请刷新后再试"
+                        ErrorMsg = tipmsg
                     };
                 }
             }
@@ -2503,7 +2550,7 @@ namespace RUINORERP.UI.BaseForm
             base.Exit(this);
         }
 
-        public override void RequestReleaseLock()
+        public override void RequestUnLock()
         {
             if (EditEntity != null)
             {
@@ -2516,21 +2563,38 @@ namespace RUINORERP.UI.BaseForm
                     long lockeduserid = (long)MainForm.Instance.lockManager.GetLockedBy(pkid);
                     if (lockeduserid > 0 && lockeduserid != userid)
                     {
-                        RequestReceiveLockManagerCmd cmd = new RequestReceiveLockManagerCmd(CmdOperation.Send);
-                        cmd.lockCmd = LockCmd.RequestReleaseLock;
-                        LockRequestInfo lockRequest = new LockRequestInfo();
-                        lockRequest.RequestReleaseUserName = MainForm.Instance.AppContext.CurUserInfo.UserInfo.tb_employee.Employee_Name;
+                        BillConverterFactory bcf = Startup.GetFromFac<BillConverterFactory>();
+                        //这里只是取打印配置信息
+                        CommBillData cbd = new CommBillData();
+                        cbd = bcf.GetBillData(typeof(T), EditEntity);
+
+                        ClientLockManagerCmd cmd = new ClientLockManagerCmd(CmdOperation.Send);
+                        cmd.lockCmd = LockCmd.RequestUnLock;
+
+                        RequestUnLockInfo lockRequest = new RequestUnLockInfo();
+                        lockRequest.RequestUserName = MainForm.Instance.AppContext.CurUserInfo.UserInfo.tb_employee.Employee_Name;
+                        lockRequest.RequestUserID = userid;
                         lockRequest.BillID = pkid;
-                        lockRequest.BillBizType = (int)CurrentBizType;
+                        lockRequest.BillData = cbd;
                         lockRequest.MenuID = CurMenuInfo.MenuID;
-                        cmd.lockRequest = lockRequest;
+                        lockRequest.LockedUserID = lockeduserid;
+                        cmd.RequestInfo = lockRequest;
+
                         MainForm.Instance.dispatcher.DispatchAsync(cmd, CancellationToken.None);
                         cmd.LockChanged += (sender, e) =>
                         {
                             MessageBox.Show("已经向锁定者发送了解锁请求。等待结果中");
                             //Console.WriteLine($"Document {e.DocumentId} is now {(e.IsLocked ? "locked" : "unlocked")} by {e.LockedBy}");
                             //如果收到释放成功的信息时
-                            tsBtnLocked.Visible = false;
+                            //tsBtnLocked.Visible = false;
+
+                            //this.tsBtnLocked.Visible = true;
+                            ////自己就表达绿色
+                            //this.tsBtnLocked.Image = global::RUINORERP.UI.Properties.Resources.unlockbill;
+                            ////更新？
+                            //Console.WriteLine($"Document {e.DocumentId} is now {(e.IsLocked ? "locked" : "unlocked")} ");
+
+
                         };
                     }
 
@@ -2548,14 +2612,20 @@ namespace RUINORERP.UI.BaseForm
                 {
                     //如果这个锁是自己锁的。就释放
                     long userid = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID;
+                    UNLock(pkid, userid);
                     if (MainForm.Instance.lockManager.GetLockedBy(pkid) == userid)
                     {
                         //先本地再服务器
                         if (MainForm.Instance.lockManager.Unlock(pkid, userid))
                         {
-                            UNLock(pkid, userid);
+                            MainForm.Instance.PrintInfoLog($"本地删除{pkid}锁成功");
                         }
+                        else
+                        {
 
+                        }
+                        this.tsBtnLocked.Visible = true;
+                        this.tsBtnLocked.Image = global::RUINORERP.UI.Properties.Resources.unlockbill;
                     }
 
                     //BizTypeMapper mapper = new BizTypeMapper();
@@ -2569,17 +2639,46 @@ namespace RUINORERP.UI.BaseForm
 
         public void UNLock(long billid, long userid)
         {
+            BillConverterFactory bcf = Startup.GetFromFac<BillConverterFactory>();
+            CommBillData cbd = new CommBillData();
+            cbd = bcf.GetBillData(typeof(T), EditEntity);
+
             //得到了锁
-            RequestReceiveLockManagerCmd cmd = new RequestReceiveLockManagerCmd(CmdOperation.Send);
+            ClientLockManagerCmd cmd = new ClientLockManagerCmd(CmdOperation.Send);
             cmd.lockCmd = LockCmd.UNLOCK;
-            LockRequestInfo lockRequest = new LockRequestInfo();
+            UnLockInfo lockRequest = new UnLockInfo();
+            lockRequest.BillData = cbd;
             lockRequest.BillID = billid;
             lockRequest.LockedUserID = userid;
             lockRequest.LockedUserName = MainForm.Instance.AppContext.CurUserInfo.UserInfo.tb_employee.Employee_Name;
-            lockRequest.BillBizType = (int)CurrentBizType;
             lockRequest.MenuID = CurMenuInfo.MenuID;
-            cmd.lockRequest = lockRequest;
+            cmd.RequestInfo = lockRequest;
             MainForm.Instance.dispatcher.DispatchAsync(cmd, CancellationToken.None);
+
+            //EventManager eventManager = new EventManager();
+
+            //// 添加事件处理程序
+            //eventManager.AddEventHandler((sender, args) =>
+            //{
+            //    Console.WriteLine($"Event '{args.EventName}' triggered with data: {args.EventData}");
+            //});
+
+            //// 触发事件
+            //eventManager.RaiseEvent("ContextClick", "Right-clicked");
+            //eventManager.RaiseEvent("ButtonClick", "Button clicked");
+
+
+
+            cmd.LockChanged += (sender, e) =>
+            {
+                this.tsBtnLocked.Visible = true;
+                //自己就表达绿色
+                this.tsBtnLocked.Image = global::RUINORERP.UI.Properties.Resources.unlockbill;
+                //更新？
+                Console.WriteLine($"Document {e.DocumentId} is now {(e.IsSuccess ? "locked" : "unlocked")} ");
+            };
+
+
         }
 
         internal override void CloseTheForm(object thisform)

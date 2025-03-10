@@ -743,6 +743,16 @@ namespace RUINORERP.UI.Properties {
         /// <summary>
         ///   查找 System.Drawing.Bitmap 类型的本地化资源。
         /// </summary>
+        internal static System.Drawing.Bitmap Lockbill {
+            get {
+                object obj = ResourceManager.GetObject("Lockbill", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   查找 System.Drawing.Bitmap 类型的本地化资源。
+        /// </summary>
         internal static System.Drawing.Bitmap locked {
             get {
                 object obj = ResourceManager.GetObject("locked", resourceCulture);
@@ -1157,6 +1167,16 @@ namespace RUINORERP.UI.Properties {
             get {
                 object obj = ResourceManager.GetObject("undo1", resourceCulture);
                 return ((System.Drawing.Icon)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   查找 System.Drawing.Bitmap 类型的本地化资源。
+        /// </summary>
+        internal static System.Drawing.Bitmap unlockbill {
+            get {
+                object obj = ResourceManager.GetObject("unlockbill", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
             }
         }
         

@@ -26,13 +26,20 @@ namespace RUINORERP.Model.TransModel
         //ISLOCKED, // 已经锁定
         UNLOCK, // 释放锁
         //GetLockedBy, // 释放锁
-        RequestReleaseLock, // 请求释放锁
+
+
+        /// <summary>
+        /// 请求释放锁
+        /// </summary>
+        RequestUnLock, // 
 
 
         /// <summary>
         /// 拒绝释放锁
         /// </summary>
-        RefuseReleaseLock,
+        RefuseUnLock,
+
+
         /// <summary>
         /// 新登陆的客户 要收到全部锁的情况。状态更新
         /// </summary>

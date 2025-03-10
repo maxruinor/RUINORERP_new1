@@ -172,7 +172,7 @@ namespace RUINORERP.Business.CommService
                 }
                 else if (entity.ToString() == "System.Object")
                 {
-                    return (T)entity;
+                    return default(T);
                 }
                 return (T)entity;
             }

@@ -204,7 +204,7 @@ namespace RUINORERP.UI
         {
             this.Invoke(new Action(() =>
             {
-                MessageBox.Show($"Document {e.DocumentId} is now {(e.IsLocked ? "locked" : "unlocked")} by {e.LockedBy}");
+                MessageBox.Show($"Document {e.DocumentId} is now {(e.IsSuccess ? "locked" : "unlocked")} ");
             }));
         }
 
@@ -757,7 +757,9 @@ namespace RUINORERP.UI
                     {
                         InstructionsPrompt instructionsPrompt = new InstructionsPrompt();
                         instructionsPrompt.ReminderData = MessageInfo;
-                        instructionsPrompt.Content=$"{MessageInfo.BizKeyID}";
+                        instructionsPrompt.txtSender.Text = MessageInfo.SenderEmployeeName;
+                        instructionsPrompt.txtSubject.Text= $"【{MessageInfo.BizType.ToString()}】解锁";
+                        instructionsPrompt.Content=$"{MessageInfo.ReminderContent}";
                         instructionsPrompt.Show();
                         instructionsPrompt.TopMost = true;
                         return;
@@ -1233,13 +1235,13 @@ namespace RUINORERP.UI
                 }
 
                 LoginWebServer();
-                RequestReceiveLockManagerCmd cmd = new RequestReceiveLockManagerCmd(CmdOperation.Send);
+                ClientLockManagerCmd cmd = new ClientLockManagerCmd(CmdOperation.Send);
                 cmd.lockCmd = LockCmd.Broadcast;
                 //request.nextProcesszStep = TransInstruction.CommandService.NextProcesszStep.转发;
                 MainForm.Instance.dispatcher.DispatchAsync(cmd, CancellationToken.None);
                 cmd.LockChanged += (sender, e) =>
                 {
-                    Console.WriteLine($"Document {e.DocumentId} is now {(e.IsLocked ? "locked" : "unlocked")} by {e.LockedBy}");
+                    Console.WriteLine($"Document {e.DocumentId} is now {(e.IsSuccess ? "locked" : "unlocked")} ");
                     //使用事件模式来查询某一个单据被谁锁定
                 };
             }
@@ -2732,12 +2734,12 @@ namespace RUINORERP.UI
             }
 
             LoginWebServer();
-            if (MainForm.Instance.AppContext.IsSuperUser)
-            {
-                //请为空时。是请求全部
-                ClientService.请求缓存(string.Empty);
-                SystemOptimizerService.异常信息发送("测试异常信息发送");
-            }
+            //if (MainForm.Instance.AppContext.IsSuperUser)
+            //{
+            //    //请为空时。是请求全部
+            //    ClientService.请求缓存(string.Empty);
+            //    SystemOptimizerService.异常信息发送("测试异常信息发送");
+            //}
         }
 
         public async void LoginWebServer()

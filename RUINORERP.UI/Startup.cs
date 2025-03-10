@@ -54,6 +54,7 @@ using RUINORERP.Model.ConfigModel;
 using RUINORERP.UI.IM;
 using System.Net.Mail;
 using StackExchange.Redis;
+using RUINORERP.UI.ClientCmdService;
 
 
 namespace RUINORERP.UI
@@ -115,16 +116,32 @@ namespace RUINORERP.UI
 
             ConfigureServices(Services);
 
+            //直接实现。或排除
+            //builder.Register(c => new ClientEventManager()).As<IClientEventManager>();
             //注册当前程序集的所有类成员
+            //builder.RegisterAssemblyTypes(System.Reflection.Assembly.GetExecutingAssembly())
+            //    .AsImplementedInterfaces().AsSelf();
+
+            //builder.RegisterAssemblyTypes(System.Reflection.Assembly.GetExecutingAssembly())
+            //.Where(type => type != typeof(ClientEventManager)) // 排除指定类
+            //.AsImplementedInterfaces()
+            //.AsSelf();
+
+
             builder.RegisterAssemblyTypes(System.Reflection.Assembly.GetExecutingAssembly())
-                .AsImplementedInterfaces().AsSelf();
+            .Where(type => !typeof(IExcludeFromRegistration).IsAssignableFrom(type)) // 排除实现了 IExcludeFromRegistration 接口的类
+            .AsImplementedInterfaces()
+            .AsSelf();
+
+          
+
 
             //覆盖上面自动注册的？说是最后的才是
+
             //builder.RegisterType<UserControl>().Named<UserControl>("MENU").InstancePerDependency();
             //如果注册为名称的，需要这样操作
             builder.RegisterType<RUINORERP.UI.SS.MenuInit>().Named<UserControl>("MENU")
             .AsImplementedInterfaces().AsSelf();
-
 
 
             ConfigureContainerForDll(builder);

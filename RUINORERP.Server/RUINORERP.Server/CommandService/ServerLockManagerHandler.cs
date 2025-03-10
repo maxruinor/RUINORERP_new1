@@ -13,15 +13,15 @@ namespace RUINORERP.Server.CommandService
     /// 锁单指令
     /// </summary>
     [CommandHandler]
-    public class ReceiveResponseLockManagerHandler : ICommandHandler
+    public class ServerLockManagerHandler : ICommandHandler
     {
         public bool targetUserOnlineStatus { get; set; } = true;
         public bool CanHandle(IServerCommand command, BlockingCollection<IServerCommand> queue)
         {
 
             //不在线不发送。在线后再发送
-            bool result = command is ReceiveResponseLockManagerCmd;
-            if (result && command is ReceiveResponseLockManagerCmd messageCmd)
+            bool result = command is ServerLockManagerCmd;
+            if (result && command is ServerLockManagerCmd messageCmd)
             {
                 if (messageCmd.ToSession != null) result = true;
             }
@@ -31,7 +31,7 @@ namespace RUINORERP.Server.CommandService
 
         public async Task HandleCommandAsync(IServerCommand command, CancellationToken cancellationToken)
         {
-            var sendCmd = command as ReceiveResponseLockManagerCmd;
+            var sendCmd = command as ServerLockManagerCmd;
             await sendCmd.ExecuteAsync(cancellationToken);
         }
         //public void HandleCommand(IServerCommand command)

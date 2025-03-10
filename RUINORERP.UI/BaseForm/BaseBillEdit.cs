@@ -55,7 +55,7 @@ namespace RUINORERP.UI.BaseForm
 
    
 
-        public virtual void RequestReleaseLock()
+        public virtual void RequestUnLock()
         {
 
         }
@@ -409,11 +409,7 @@ namespace RUINORERP.UI.BaseForm
 
         }
 
-
-        internal virtual void ReleaseLock(BillLockInfo lockInfo)
-        {
-
-        }
+ 
 
 
         #endregion

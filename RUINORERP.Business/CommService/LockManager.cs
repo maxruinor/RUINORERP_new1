@@ -8,6 +8,7 @@ using RUINORERP.Model.TransModel;
 using TransInstruction.CommandService;
 using Newtonsoft.Json;
 using RUINORERP.Model;
+using RUINORERP.Model.CommonModel;
 
 namespace RUINORERP.Business.CommService
 {
@@ -19,7 +20,7 @@ namespace RUINORERP.Business.CommService
 
         private ConcurrentDictionary<long, LockInfo> _lockDictionary = new ConcurrentDictionary<long, LockInfo>();
 
-        public bool TryLock(long documentId, long userId)
+        public bool TryLock(long documentId, string billNo, long userId)
         {
             // 检查单据是否已经被锁定
             if (_lockDictionary.TryGetValue(documentId, out var lockInfo))
@@ -32,7 +33,7 @@ namespace RUINORERP.Business.CommService
             }
 
             // 创建一个新的锁记录，标记单据为已锁定，并记录锁定用户和时间
-            var newLockInfo = new LockInfo { IsLocked = true, LockedByID = userId, LockTime = DateTime.Now };
+            var newLockInfo = new LockInfo { BillNo = billNo, IsLocked = true, LockedByID = userId, LockTime = DateTime.Now };
 
             // 如果字典中没有该单据的锁记录，则添加新的记录
             if (!_lockDictionary.ContainsKey(documentId))
@@ -56,8 +57,12 @@ namespace RUINORERP.Business.CommService
             {
                 if (lockInfo.IsLocked && lockInfo.LockedByID == userId)
                 {
+                    // 如果更新成功，检查是否需要删除记录
+                    return _lockDictionary.TryRemove(documentId, out _);
+                    
+                    /*
                     // 创建一个新的锁记录，标记单据为未锁定
-                    var newLockInfo = new LockInfo { IsLocked = false, LockedByID = 0, LockTime = DateTime.Now };
+                    var newLockInfo = new LockInfo {IsLocked = false, LockedByID = 0, LockTime = DateTime.Now };
 
                     // 更新锁记录到字典中
                     if (_lockDictionary.TryUpdate(documentId, newLockInfo, lockInfo))
@@ -70,6 +75,7 @@ namespace RUINORERP.Business.CommService
                         // 返回 true，表示解锁成功
                         return true;
                     }
+                    */
                 }
             }
 
@@ -140,18 +146,18 @@ namespace RUINORERP.Business.CommService
 
                 if (lockInfo.IsLocked && (now - lockInfo.LockTime) > timeout)
                 {
-                    // 创建一个新的锁记录，标记单据为未锁定
-                    var newLockInfo = new LockInfo { IsLocked = false, LockedByID = 0, LockTime = DateTime.Now };
+                    //// 创建一个新的锁记录，标记单据为未锁定
+                    //var newLockInfo = new LockInfo { IsLocked = false, LockedByID = 0, LockTime = DateTime.Now };
 
-                    // 更新锁记录到字典中
-                    if (_lockDictionary.TryUpdate(documentId, newLockInfo, lockInfo))
-                    {
-                        // 如果更新成功，检查是否需要删除记录
-                        if (!newLockInfo.IsLocked)
-                        {
-                            keysToRemove.Add(documentId);
-                        }
-                    }
+                    //// 更新锁记录到字典中
+                    //if (_lockDictionary.TryUpdate(documentId, newLockInfo, lockInfo))
+                    //{
+                    //    // 如果更新成功，检查是否需要删除记录
+                    //    if (!newLockInfo.IsLocked)
+                    //    {
+                    keysToRemove.Add(documentId);
+                    //    }
+                    //}
                 }
             }
 
@@ -162,17 +168,16 @@ namespace RUINORERP.Business.CommService
             }
         }
 
-        public void UpdateLockStatus(long documentId, bool isLocked, long lockedBy)
-        {
-            var lockInfo = new LockInfo
-            {
-                IsLocked = isLocked,
-                LockedByID = lockedBy,
-                LockTime = DateTime.Now
-            };
-
-            _lockDictionary[documentId] = lockInfo;
-        }
+        //public void UpdateLockStatus(long documentId, bool isLocked, long lockedBy)
+        //{
+        //    var lockInfo = new LockInfo
+        //    {
+        //        IsLocked = isLocked,
+        //        LockedByID = lockedBy,
+        //        LockTime = DateTime.Now
+        //    };
+        //    _lockDictionary[documentId] = lockInfo;
+        //}
 
         public LockInfo GetLockStatus(long documentId)
         {
@@ -215,59 +220,64 @@ namespace RUINORERP.Business.CommService
     }
 
     public delegate void LockChangedHandler(object sender, LockChangedEventArgs e);
+
+    /// <summary>
+    /// 11
+    /// </summary>
     public class LockChangedEventArgs : EventArgs
     {
+      public  LockCmd lockCmd { get; }
         public long DocumentId { get; }
-        public bool IsLocked { get; }
-        public long LockedBy { get; }
+        public bool IsSuccess { get; }
 
-        public LockChangedEventArgs(long documentId, bool isLocked, long lockedBy)
+        public LockChangedEventArgs(LockCmd _lockCmd ,long documentId, bool isSuccess)
         {
+            LockCmd lockCmd=_lockCmd;
             DocumentId = documentId;
-            IsLocked = isLocked;
-            LockedBy = lockedBy;
+            IsSuccess = isSuccess;
         }
     }
 
     public class LockInfo
     {
+        /// <summary>
+        /// 单号
+        /// </summary>
+        public string BillNo { get; set; }
         public bool IsLocked { get; set; } // 是否锁定
         public long LockedByID { get; set; } // 锁定用户
 
         private string _LockedByName;
         public string LockedByName
         {
-            get { return _LockedByName; }
+            get
+            {
+                if (string.IsNullOrEmpty(_LockedByName))
+                {
+                    tb_UserInfo userInfo = BizCacheHelper.Instance.GetEntity<tb_UserInfo>(LockedByID);
+                    if (userInfo != null)
+                    {
+                        _LockedByName = userInfo.UserName;
+                    }
+                }
+                return _LockedByName;
+            }
             set
             {
                 _LockedByName = value;
                 if (string.IsNullOrEmpty(_LockedByName))
                 {
-                    _LockedByName = BizCacheHelper.Instance.GetEntity<tb_UserInfo>(LockedByID).UserName;
+                    tb_UserInfo userInfo = BizCacheHelper.Instance.GetEntity<tb_UserInfo>(LockedByID);
+                    if (userInfo != null)
+                    {
+                        _LockedByName = userInfo.UserName;
+                    }
                 }
             }
         }
-
         public DateTime LockTime { get; set; } // 锁定时间
     }
 
-    public class LockRequestInfo
-    {
-        public LockCmd LockCmd { get; set; } // 锁单操作类型
-        public long LockedUserID { get; set; } // 锁定用户的ID
-        public long BillID { get; set; } // 单据ID
-        public string LockedUserName { get; set; } // 锁定用户的姓名
-        public int BillBizType { get; set; } // 单据业务类型
-        public long MenuID { get; set; } // 菜单ID
 
-        /// <summary>
-        /// 请求说来释放锁的ID
-        /// 后面使用，比方看到锁了。但是我要修改。可以请求另一个人先释放
-        /// 请求人的姓名
-        /// </summary>
-        public string RequestReleaseUserName { get; set; }
-
-        public string ReceiverSessionID { get; set; } // 接收者会话ID
-    }
 
 }

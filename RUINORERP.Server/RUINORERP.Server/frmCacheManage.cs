@@ -46,21 +46,29 @@ namespace RUINORERP.Server
             if (listBoxTableList.SelectedItem is SuperValue kv)
             {
                 string tableName = kv.superDataTypeName;
-                var CacheList = BizCacheHelper.Manager.CacheEntityList.Get(tableName);
-                if (CacheList == null)
+                if (tableName == "锁定信息列表")
                 {
-                    dataGridView1.DataSource = null;
-                    return;
+                    dataGridView1.DataSource = frmMain.Instance.lockManager.GetLockItems();
                 }
-                // 使用 Assembly.Load 加载包含 PrintHelper<T> 类的程序集
+                else
+                {
+                    var CacheList = BizCacheHelper.Manager.CacheEntityList.Get(tableName);
+                    if (CacheList == null)
+                    {
+                        dataGridView1.DataSource = null;
+                        return;
+                    }
+                    // 使用 Assembly.Load 加载包含 PrintHelper<T> 类的程序集
 
-                // 使用 GetType 方法获取 PrintHelper<T> 的类型
-                //Type type = assembly.GetType("RUINORERP.Model." + tableName);
-                //dataGridView1.FieldNameList = UIHelper.GetFieldNameColList(type);
-                dataGridView1.ColumnHeadersDefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
-                //dataGridView1.XmlFileName = "UCCacheManage" + tableName;
-                dataGridView1.DataSource = null;
-                dataGridView1.DataSource = CacheList;
+                    // 使用 GetType 方法获取 PrintHelper<T> 的类型
+                    //Type type = assembly.GetType("RUINORERP.Model." + tableName);
+                    //dataGridView1.FieldNameList = UIHelper.GetFieldNameColList(type);
+                    dataGridView1.ColumnHeadersDefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
+                    //dataGridView1.XmlFileName = "UCCacheManage" + tableName;
+                    dataGridView1.DataSource = null;
+                    dataGridView1.DataSource = CacheList;
+                }
+               
             }
             else
             {
@@ -148,6 +156,14 @@ namespace RUINORERP.Server
 
                 listBoxTableList.Items.Add(kv);
             }
+
+            //添加锁定信息
+            if (frmMain.Instance.lockManager != null)
+            {
+                SuperValue kv = new SuperValue($"锁定信息列表{frmMain.Instance.lockManager.GetLockItemCount()}", "锁定信息列表");
+                listBoxTableList.Items.Add(kv);
+            }
+
         }
 
         private async void toolStripButton加载缓存_Click(object sender, EventArgs e)

@@ -835,12 +835,12 @@ namespace RUINORERP.Server
                             }
 
                             //谁突然掉线或退出。服务器主动将他的锁在别人电脑上的单据释放
-                            SystemService.process断开连接锁定释放(sg.User.UserID);
+                            //SystemService.process断开连接锁定释放(sg.User.UserID);
 
-                            //移除再广播出去
+                            //移除再广播出去 服务器主动将他的锁在别人电脑上的单据释放
                             lockManager.RemoveLockByUserID(sg.User.UserID);
-                            ReceiveResponseLockManagerCmd cmd = new ReceiveResponseLockManagerCmd(CmdOperation.Send);
-                            cmd.BuildDataPacketforward();
+                            ServerLockManagerCmd cmd = new ServerLockManagerCmd(CmdOperation.Send);
+                            cmd.BuildDataPacketBroadcastLockStatus();
 
                             //广播出去
                             foreach (SessionforBiz PlayerSession in sessionListBiz.Values)

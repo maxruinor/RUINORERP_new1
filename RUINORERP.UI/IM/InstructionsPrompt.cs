@@ -27,6 +27,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using TransInstruction;
 using TransInstruction.CommandService;
+using TransInstruction.DataModel;
 using Timer = System.Windows.Forms.Timer;
 
 namespace RUINORERP.UI.IM
@@ -126,7 +127,7 @@ namespace RUINORERP.UI.IM
 
         private void btnCancel_Click(object sender, EventArgs e)
         {
-            RefuseReleaseLock(ReminderData);
+            RefuseUnLock(ReminderData);
             // this.DialogResult = DialogResult.Cancel;
             this.DialogResult = DialogResult.OK;
             this.Close();
@@ -135,15 +136,14 @@ namespace RUINORERP.UI.IM
         private void btnOk_Click(object sender, EventArgs e)
         {
             //通知服务器解锁
-            RequestReceiveLockManagerCmd cmd = new RequestReceiveLockManagerCmd(CmdOperation.Send);
+            ClientLockManagerCmd cmd = new ClientLockManagerCmd(CmdOperation.Send);
             cmd.lockCmd = LockCmd.UNLOCK;
-            LockRequestInfo lockRequest = new LockRequestInfo();
+            UnLockInfo lockRequest = new UnLockInfo();
             lockRequest.BillID = ReminderData.BizKeyID;
             lockRequest.LockedUserID = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID;
             lockRequest.LockedUserName = MainForm.Instance.AppContext.CurUserInfo.UserInfo.tb_employee.Employee_Name;
-            lockRequest.BillBizType = (int)0;
             lockRequest.MenuID = 0;
-            cmd.lockRequest = lockRequest;
+            cmd.RequestInfo = lockRequest;
             MainForm.Instance.dispatcher.DispatchAsync(cmd, CancellationToken.None);
 
             return;
@@ -263,21 +263,24 @@ namespace RUINORERP.UI.IM
         /// 拒绝
         /// </summary>
         /// <param name="billid"></param>
-        private void RefuseReleaseLock(ReminderData reminderData)
+        private void RefuseUnLock(ReminderData reminderData)
         {
             //谁拒绝谁的什么请求
-            RequestReceiveLockManagerCmd cmd = new RequestReceiveLockManagerCmd(CmdOperation.Send);
-            cmd.lockCmd = LockCmd.RefuseReleaseLock;
-            LockRequestInfo lockRequest = new LockRequestInfo();
-            lockRequest.LockedUserName = MainForm.Instance.AppContext.CurUserInfo.UserInfo.tb_employee.Employee_Name;
-            lockRequest.LockedUserID = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID;
+            ClientLockManagerCmd cmd = new ClientLockManagerCmd(CmdOperation.Send);
+            cmd.lockCmd = LockCmd.RefuseUnLock;
+            RefuseUnLockInfo lockRequest = new RefuseUnLockInfo();
             lockRequest.BillID = reminderData.BizKeyID;
-            cmd.lockRequest = lockRequest;
+            lockRequest.RefuseUserName = MainForm.Instance.AppContext.CurUserInfo.UserInfo.tb_employee.Employee_Name;
+            lockRequest.RefuseUserID = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID;
+            //lockRequest.RequestUserID = reminderData;
+           // lockRequest.RequestUserName = MainForm.Instance.AppContext.CurUserInfo.UserInfo.tb_employee.Employee_Name;
+
+            cmd.RequestInfo = lockRequest;
             MainForm.Instance.dispatcher.DispatchAsync(cmd, CancellationToken.None);
             cmd.LockChanged += (sender, e) =>
             {
                 MessageBox.Show("已经向锁定者发送了解锁请求。等待结果中");
-                Console.WriteLine($"Document {e.DocumentId} is now {(e.IsLocked ? "locked" : "unlocked")} by {e.LockedBy}");
+                Console.WriteLine($"Document {e.DocumentId} is now {(e.IsSuccess ? "locked" : "unlocked")}");
             };
         }
 

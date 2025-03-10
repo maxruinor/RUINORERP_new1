@@ -250,6 +250,7 @@ namespace RUINORERP.Server.Commands
                             }
 
                             break;
+
                         case ClientCmdEnum.请求缓存:
                             index = 0;
                             string datatime = ByteDataAnalysis.GetString(gd.Two, ref index);
@@ -264,12 +265,20 @@ namespace RUINORERP.Server.Commands
                             if (!string.IsNullOrEmpty(RequestTableName) && BizCacheHelper.Manager.NewTableList.Keys.Contains(RequestTableName))
                             {
                                 UserService.发送缓存数据列表(fromPlayer, RequestTableName);
+                                if (frmMain.Instance.IsDebug)
+                                {
+                                    frmMain.Instance.PrintInfoLog($"发送缓存数据列表{RequestTableName}给{fromPlayer.User.用户名} 耗时：{stopwatchSender.ElapsedMilliseconds} 毫秒");
+                                }
+                            }
+                            else
+                            {
+                                if (frmMain.Instance.IsDebug)
+                                {
+                                    frmMain.Instance.PrintInfoLog($"发送缓存数据列表{RequestTableName}给{fromPlayer.User.用户名} 耗时：{stopwatchSender.ElapsedMilliseconds} 毫秒");
+                                }
                             }
                             stopwatchSender.Stop();
-                            if (frmMain.Instance.IsDebug)
-                            {
-                                frmMain.Instance.PrintInfoLog($"发送缓存数据{RequestTableName}给{fromPlayer.User.用户名} 耗时：{stopwatchSender.ElapsedMilliseconds} 毫秒");
-                            }
+                           
 
                             break;
 
@@ -287,23 +296,23 @@ namespace RUINORERP.Server.Commands
                         case ClientCmdEnum.请求协助处理:
                             SystemService.process请求协助处理(gd);
                             break;
-                        case ClientCmdEnum.单据锁定:
+                        //case ClientCmdEnum.单据锁定:
 
-                            //意思是如:审核了销售出库单时，订单是无法再操作了。转发到所有电脑。保存等各种操作都要判断一下？
-                            //这种主要是比方业务订单UI没有关掉。仓库出库了。业务还可以反审等？不在线的不管。会重新打开。这时状态不一样。会判断好。
-                            //所有缓存到客户机。服务器不用缓存列表了？
-                            //或者相同的一个单。A在编辑没有完成。B再接着编辑保存。这时B打开时就会看到锁定状态。B保存时就会提示
-                            //退出后 解除锁定
-                            SystemService.process单据审核锁定(fromPlayer, gd);
-                            break;
-                        case ClientCmdEnum.单据锁定释放:
-                            SystemService.process单据审核锁定释放(fromPlayer, gd);
-                            break;
+                        //    //意思是如:审核了销售出库单时，订单是无法再操作了。转发到所有电脑。保存等各种操作都要判断一下？
+                        //    //这种主要是比方业务订单UI没有关掉。仓库出库了。业务还可以反审等？不在线的不管。会重新打开。这时状态不一样。会判断好。
+                        //    //所有缓存到客户机。服务器不用缓存列表了？
+                        //    //或者相同的一个单。A在编辑没有完成。B再接着编辑保存。这时B打开时就会看到锁定状态。B保存时就会提示
+                        //    //退出后 解除锁定
+                        //    SystemService.process单据审核锁定(fromPlayer, gd);
+                        //    break;
+                        //case ClientCmdEnum.单据锁定释放:
+                        //    SystemService.process单据审核锁定释放(fromPlayer, gd);
+                        //    break;
 
                         case ClientCmdEnum.复合型锁单处理:
                             // 创建一个命令实例 
                             //  实际收到一个转发指令
-                            var lockcmd = new ReceiveResponseLockManagerCmd(CmdOperation.Receive, fromPlayer);
+                            var lockcmd = new ServerLockManagerCmd(CmdOperation.Receive, fromPlayer);
                             lockcmd.DataPacket = gd;
                             await lockcmd.ExecuteAsync(CancellationToken.None);
                             break;
@@ -459,6 +468,7 @@ namespace RUINORERP.Server.Commands
                                 //发出一个提示？
                                 // UserService.发消息给客户端()
                                 //这里是强制用户退出，让客户端自动断开服务器。
+                                _logger.LogError($"{empName}的客户端电脑时间与服务器的差值异常强制用户退出，请检查!");
                                 UserService.强制用户退出(PlayerSession);
                             }
                         }

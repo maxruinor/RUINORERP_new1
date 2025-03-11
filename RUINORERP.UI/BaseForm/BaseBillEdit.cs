@@ -284,8 +284,12 @@ namespace RUINORERP.UI.BaseForm
         {
 
         }
+        protected virtual void SpecialDataFix()
+        {
 
+        }
 
+        
         protected virtual void AddByCopy()
         {
 

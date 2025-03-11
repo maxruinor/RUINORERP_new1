@@ -32,6 +32,11 @@ namespace RUINORERP.Model
     public class BaseEntity : INotifyPropertyChanged, IDataErrorInfo
     {
 
+        public  void SetDetails<C>(List<C> details) where C : class, new()
+        {
+
+        }
+
         private DataRowImage _RowImage = new DataRowImage();
 
         /// <summary>

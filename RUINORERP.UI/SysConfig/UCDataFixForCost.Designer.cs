@@ -78,6 +78,7 @@
             this.bindingSourceInv = new System.Windows.Forms.BindingSource(this.components);
             this.contextMenuStripBOMPrice = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.将配方成本更新到库存ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.库存成本更新为指定值ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1.Panel1)).BeginInit();
             this.kryptonSplitContainer1.Panel1.SuspendLayout();
@@ -273,28 +274,29 @@
             this.contextMenuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.更新库存成本数据ToolStripMenuItem,
             this.更新关联成本ToolStripMenuItem,
-            this.全部更新ToolStripMenuItem});
+            this.全部更新ToolStripMenuItem,
+            this.库存成本更新为指定值ToolStripMenuItem});
             this.contextMenuStrip1.Name = "contextMenuStrip1";
-            this.contextMenuStrip1.Size = new System.Drawing.Size(179, 70);
+            this.contextMenuStrip1.Size = new System.Drawing.Size(205, 114);
             // 
             // 更新库存成本数据ToolStripMenuItem
             // 
             this.更新库存成本数据ToolStripMenuItem.Name = "更新库存成本数据ToolStripMenuItem";
-            this.更新库存成本数据ToolStripMenuItem.Size = new System.Drawing.Size(178, 22);
+            this.更新库存成本数据ToolStripMenuItem.Size = new System.Drawing.Size(204, 22);
             this.更新库存成本数据ToolStripMenuItem.Text = "更新库存成本数据";
             this.更新库存成本数据ToolStripMenuItem.Click += new System.EventHandler(this.更新库存成本数据ToolStripMenuItem_Click);
             // 
             // 更新关联成本ToolStripMenuItem
             // 
             this.更新关联成本ToolStripMenuItem.Name = "更新关联成本ToolStripMenuItem";
-            this.更新关联成本ToolStripMenuItem.Size = new System.Drawing.Size(178, 22);
+            this.更新关联成本ToolStripMenuItem.Size = new System.Drawing.Size(204, 22);
             this.更新关联成本ToolStripMenuItem.Text = "更新关联成本数据";
             this.更新关联成本ToolStripMenuItem.Click += new System.EventHandler(this.更新关联成本ToolStripMenuItem_Click);
             // 
             // 全部更新ToolStripMenuItem
             // 
             this.全部更新ToolStripMenuItem.Name = "全部更新ToolStripMenuItem";
-            this.全部更新ToolStripMenuItem.Size = new System.Drawing.Size(178, 22);
+            this.全部更新ToolStripMenuItem.Size = new System.Drawing.Size(204, 22);
             this.全部更新ToolStripMenuItem.Text = "全部更新";
             this.全部更新ToolStripMenuItem.Click += new System.EventHandler(this.全部更新ToolStripMenuItem_Click);
             // 
@@ -612,7 +614,7 @@
             this.contextMenuStripBOMPrice.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.将配方成本更新到库存ToolStripMenuItem});
             this.contextMenuStripBOMPrice.Name = "contextMenuStripBOMPrice";
-            this.contextMenuStripBOMPrice.Size = new System.Drawing.Size(205, 48);
+            this.contextMenuStripBOMPrice.Size = new System.Drawing.Size(205, 26);
             // 
             // 将配方成本更新到库存ToolStripMenuItem
             // 
@@ -620,6 +622,13 @@
             this.将配方成本更新到库存ToolStripMenuItem.Size = new System.Drawing.Size(204, 22);
             this.将配方成本更新到库存ToolStripMenuItem.Text = "将配方成本更新到库存";
             this.将配方成本更新到库存ToolStripMenuItem.Click += new System.EventHandler(this.将配方成本更新到库存ToolStripMenuItem_Click);
+            // 
+            // 库存成本更新为指定值ToolStripMenuItem
+            // 
+            this.库存成本更新为指定值ToolStripMenuItem.Name = "库存成本更新为指定值ToolStripMenuItem";
+            this.库存成本更新为指定值ToolStripMenuItem.Size = new System.Drawing.Size(204, 22);
+            this.库存成本更新为指定值ToolStripMenuItem.Text = "库存成本更新为指定值";
+            this.库存成本更新为指定值ToolStripMenuItem.Click += new System.EventHandler(this.库存成本更新为指定值ToolStripMenuItem_Click);
             // 
             // UCDataFixForCost
             // 
@@ -730,5 +739,6 @@
         private Krypton.Toolkit.KryptonCheckBox rdb更新配方及缴库;
         private System.Windows.Forms.ContextMenuStrip contextMenuStripBOMPrice;
         private System.Windows.Forms.ToolStripMenuItem 将配方成本更新到库存ToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem 库存成本更新为指定值ToolStripMenuItem;
     }
 }

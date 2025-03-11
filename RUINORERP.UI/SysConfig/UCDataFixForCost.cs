@@ -1105,77 +1105,29 @@ namespace RUINORERP.UI.SysConfig
                             transPrice = targetCost;
                         }
 
-                        if (rdb成本为0的才修复.Checked && item.Inv_Cost == 0)
-                        {
+                        item.CostMovingWA = transPrice;
+                        item.Inv_AdvCost = item.CostMovingWA;
+                        item.Inv_Cost = item.CostMovingWA;
+                        item.Inv_SubtotalCostMoney = item.Inv_Cost * item.Quantity;
+                        item.Notes += $"{System.DateTime.Now.ToString("yyyy-MM-dd")}成本修复为：{transPrice}";
+                        updateInvList.Add(item);
 
-                            item.CostMovingWA = transPrice;
-                            item.Inv_AdvCost = item.CostMovingWA;
-                            item.Inv_Cost = item.CostMovingWA;
-                            item.Inv_SubtotalCostMoney = item.Inv_Cost * item.Quantity;
-                            item.Notes += $"{System.DateTime.Now.ToString("yyyy-MM-dd")}成本修复为：{transPrice}";
-                            updateInvList.Add(item);
-                        }
-                        if (rdb小于指定成本.Checked && item.Inv_Cost < txtUnitCost.Text.ToDecimal())
-                        {
-
-                            item.CostMovingWA = transPrice;
-                            item.Inv_AdvCost = item.CostMovingWA;
-                            item.Inv_Cost = item.CostMovingWA;
-                            item.Inv_SubtotalCostMoney = item.Inv_Cost * item.Quantity;
-                            item.Notes += $"{System.DateTime.Now.ToString("yyyy-MM-dd")}成本修复为：{transPrice}";
-                            updateInvList.Add(item);
-                        }
-                        if (rdb其它.Checked)
-                        {
-
-                            if (transPrice > 0)
-                            {
-                                //百分比
-                                decimal diffpirce = Math.Abs(transPrice - item.Inv_Cost);
-                                diffpirce = Math.Round(diffpirce, 2);
-                                double percentDiff = ComparePrice(item.Inv_Cost.ToDouble(), transPrice.ToDouble());
-                                if (percentDiff > 10)
-                                {
-                                    richTextBoxLog.AppendText($"产品{item.tb_proddetail.tb_prod.CNName} " +
-                                    $"{item.ProdDetailID}  SKU:{item.tb_proddetail.SKU}   旧成本{item.Inv_Cost},  相差为{diffpirce}   百分比为{percentDiff}%,    修复为：{transPrice}：" + "\r\n");
-                                    item.CostMovingWA = transPrice;
-                                    item.Inv_AdvCost = item.CostMovingWA;
-                                    item.Inv_Cost = item.CostMovingWA;
-                                    item.Inv_SubtotalCostMoney = item.Inv_Cost * item.Quantity;
-                                    item.Notes += $"{System.DateTime.Now.ToString("yyyy-MM-dd")}成本修复为：{transPrice}";
-                                    updateInvList.Add(item);
-                                }
-                            }
-                        }
                     }
-                    else
+                    if (chkTestMode.Checked)
                     {
-                        if (chk指定成本.Checked && NeedUpdateInvList.Count == 1)
-                        {
-                            item.CostMovingWA = txtUnitCost.Text.ToDecimal();
-                            item.Inv_AdvCost = item.CostMovingWA;
-                            item.Inv_Cost = item.CostMovingWA;
-                            item.Inv_SubtotalCostMoney = item.Inv_Cost * item.Quantity;
-                            item.Notes += $"{System.DateTime.Now.ToString("yyyy-MM-dd")}成本修复为指定值：{txtUnitCost.Text}";
-                            updateInvList.Add(item);
-                        }
+                        richTextBoxLog.AppendText($"要修复的行数为:{Allitems.Count}" + "\r\n");
+                    }
+                    if (!chkTestMode.Checked)
+                    {
+                        int totalamountCounter = await MainForm.Instance.AppContext.Db.Updateable(updateInvList).UpdateColumns(t => new { t.CostMovingWA, t.Inv_AdvCost, t.Inv_Cost }).ExecuteCommandAsync();
+                        richTextBoxLog.AppendText($"修复成本价格成功：{totalamountCounter} " + "\r\n");
+                    }
+                    #endregion
+                    if (!chkTestMode.Checked)
+                    {
+                        MainForm.Instance.AppContext.Db.Ado.CommitTran();
                     }
                 }
-                if (chkTestMode.Checked)
-                {
-                    richTextBoxLog.AppendText($"要修复的行数为:{Allitems.Count}" + "\r\n");
-                }
-                if (!chkTestMode.Checked)
-                {
-                    int totalamountCounter = await MainForm.Instance.AppContext.Db.Updateable(updateInvList).UpdateColumns(t => new { t.CostMovingWA, t.Inv_AdvCost, t.Inv_Cost }).ExecuteCommandAsync();
-                    richTextBoxLog.AppendText($"修复成本价格成功：{totalamountCounter} " + "\r\n");
-                }
-                #endregion
-                if (!chkTestMode.Checked)
-                {
-                    MainForm.Instance.AppContext.Db.Ado.CommitTran();
-                }
-
             }
             catch (Exception ex)
             {
@@ -2780,6 +2732,31 @@ namespace RUINORERP.UI.SysConfig
                         }
                     }
 
+                }
+
+            }
+        }
+
+        private async void 库存成本更新为指定值ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (dataGridViewInv.SelectedRows != null)
+            {
+                List<tb_Inventory> inventories = new List<tb_Inventory>();
+                foreach (DataGridViewRow dr in dataGridViewInv.SelectedRows)
+                {
+                    if (dr.DataBoundItem is View_Inventory inventory)
+                    {
+                        inventories.Add(inventory.tb_inventory);
+                    }
+                }
+                if (inventories.Count == 1)
+                {
+                    await UpdateInventoryCost(inventories, txtUnitCost.Text.ToDecimal());
+                }
+                else
+                {
+                    //只能操作一行库存数据
+                    MessageBox.Show("一次只能操作一行库存数据", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
 
             }

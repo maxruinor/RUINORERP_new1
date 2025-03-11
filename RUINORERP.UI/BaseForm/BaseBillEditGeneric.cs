@@ -503,6 +503,7 @@ namespace RUINORERP.UI.BaseForm
                         tsBtnLocked.AutoToolTip = false;
                         tsBtnLocked.ToolTipText = string.Empty;
                         tsBtnLocked.Visible = false;
+                        tsBtnLocked.Tag = null;
                     }
                 }
 
@@ -1033,6 +1034,11 @@ namespace RUINORERP.UI.BaseForm
                 case MenuItemEnums.复制性新增:
                     AddByCopy();
                     break;
+
+                case MenuItemEnums.数据特殊修正:
+                    SpecialDataFix();
+                    break;
+
                 case MenuItemEnums.删除:
                     if (IsLock())
                     {
@@ -1200,7 +1206,7 @@ namespace RUINORERP.UI.BaseForm
         }
 
 
-     
+
 
         private void LockBill(long BillID, long userid)
         {
@@ -1227,17 +1233,20 @@ namespace RUINORERP.UI.BaseForm
                 // 注册一次性事件（确保匿名委托不会重复）
                 cmd.LockChanged += (sender, e) =>
                 {
-                    if (e.requestBaseInfo.BillID!=BillID)
+                    if (e.requestBaseInfo.BillID != BillID)
                     {
                         return;
                     }
+
                     this.tsBtnLocked.Visible = true;
-                    this.tsBtnLocked.Image = e.isSuccess
-                        ? global::RUINORERP.UI.Properties.Resources.unlockbill
-                        : global::RUINORERP.UI.Properties.Resources.Lockbill;
+                    if (e.isSuccess)
+                    {
+                        this.tsBtnLocked.Image = global::RUINORERP.UI.Properties.Resources.unlockbill;
+                    }
+
                 };
 
-              
+
             }
         }
 
@@ -1919,6 +1928,67 @@ namespace RUINORERP.UI.BaseForm
             ToolBarEnabledControl(MenuItemEnums.修改);
         }
 
+        protected async override void SpecialDataFix()
+        {
+            if (EditEntity == null)
+            {
+                return;
+            }
+
+            List<C> details = new List<C>();
+            bindingSourceSub.EndEdit();
+            List<C> detailentity = bindingSourceSub.DataSource as List<C>;
+
+            string detailPKName = UIHelper.GetPrimaryKeyColName(typeof(C));
+
+            //产品ID有值才算有效值
+            details = detailentity.Where(t => t.GetPropertyValue(detailPKName).ToLong() > 0).ToList();
+
+            EditEntity.SetPropertyValue(typeof(C).Name.ToLower() + "s", details);
+
+            //没有经验通过下面先不计算
+            if (!Validator(EditEntity))
+            {
+                return;
+            }
+            if (!Validator<C>(details))
+            {
+                return;
+            }
+
+           // BaseController<C> ctrDetail = Startup.GetFromFacByName<BaseController<C>>(typeof(C).Name + "Controller");
+            var result =await MainForm.Instance.AppContext.Db.UpdateableByObject(details).ExecuteCommandAsync();
+            BaseController<T> ctr = Startup.GetFromFacByName<BaseController<T>>(typeof(T).Name + "Controller");
+            ReturnResults<T> SaveResult = new ReturnResults<T>();
+            SaveResult = await ctr.BaseSaveOrUpdate(EditEntity);
+            if (SaveResult.Succeeded)
+            {
+                MainForm.Instance.PrintInfoLog($"修正成功。");
+            }
+            else
+            {
+                MainForm.Instance.PrintInfoLog($"修正失败。", Color.Red);
+            }
+        }
+
+        private string GetPrimaryKeyProperty(Type type)
+        {
+            foreach (PropertyInfo property in type.GetProperties())
+            {
+                if (property.GetCustomAttributes(typeof(SugarColumn), true).Length > 0)
+                {
+                    if (((SugarColumn)property.GetCustomAttributes(typeof(SugarColumn), true)[0]).IsPrimaryKey)
+                    {
+                        return property.Name;
+                    }
+
+                }
+            }
+            return string.Empty;
+        }
+
+
+   
 
 
         protected override void AddByCopy()
@@ -2672,20 +2742,14 @@ namespace RUINORERP.UI.BaseForm
                 {
                     return;
                 }
-                if (e.isSuccess && e.requestBaseInfo.LockedUserName == MainForm.Instance.AppContext.CurUserInfo.UserInfo.UserName)
+                if (e.isSuccess)
                 {
-                    this.tsBtnLocked.Visible = true;
-                    //解锁成本就是别人的 或别人可以锁了。
-                    this.tsBtnLocked.Image = global::RUINORERP.UI.Properties.Resources.Lockbill;
-                }
-                else
-                {
-                    this.tsBtnLocked.Image = global::RUINORERP.UI.Properties.Resources.unlockbill;
+                    this.tsBtnLocked.Visible = false;
                 }
 
             };
 
-           
+
 
         }
 

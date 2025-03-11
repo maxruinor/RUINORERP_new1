@@ -24,6 +24,7 @@ namespace RUINORERP.UI
         新增,
         取消,
         复制性新增,
+        数据特殊修正,
         删除,
         修改,
         提交,
@@ -52,7 +53,7 @@ namespace RUINORERP.UI
         /// 转采购入库单
         /// </summary>
         转入库单,
-    
+
         帮助,
         付款调整,
         已锁定,

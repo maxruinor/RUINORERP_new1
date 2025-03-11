@@ -56,6 +56,7 @@
             this.bwRemoting = new System.ComponentModel.BackgroundWorker();
             this.errorProviderForAllInput = new System.Windows.Forms.ErrorProvider(this.components);
             this.bindingSourceSub = new System.Windows.Forms.BindingSource(this.components);
+            this.数据特殊修正ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.BaseToolStrip.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceSub)).BeginInit();
@@ -211,7 +212,8 @@
             // toolStripbtnFunction
             // 
             this.toolStripbtnFunction.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.复制性新增ToolStripMenuItem});
+            this.复制性新增ToolStripMenuItem,
+            this.数据特殊修正ToolStripMenuItem});
             this.toolStripbtnFunction.Image = ((System.Drawing.Image)(resources.GetObject("toolStripbtnFunction.Image")));
             this.toolStripbtnFunction.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.toolStripbtnFunction.Name = "toolStripbtnFunction";
@@ -221,7 +223,7 @@
             // 复制性新增ToolStripMenuItem
             // 
             this.复制性新增ToolStripMenuItem.Name = "复制性新增ToolStripMenuItem";
-            this.复制性新增ToolStripMenuItem.Size = new System.Drawing.Size(139, 22);
+            this.复制性新增ToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             this.复制性新增ToolStripMenuItem.Text = "复制性新增";
             // 
             // toolStripbtnProperty
@@ -256,6 +258,12 @@
             // errorProviderForAllInput
             // 
             this.errorProviderForAllInput.ContainerControl = this;
+            // 
+            // 数据特殊修正ToolStripMenuItem
+            // 
+            this.数据特殊修正ToolStripMenuItem.Name = "数据特殊修正ToolStripMenuItem";
+            this.数据特殊修正ToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.数据特殊修正ToolStripMenuItem.Text = "数据特殊修正";
             // 
             // BaseBillEdit
             // 
@@ -302,5 +310,6 @@
         public System.Windows.Forms.ToolStripSplitButton toolStripbtnPrint;
         private System.ComponentModel.BackgroundWorker bwRemoting;
         public System.Windows.Forms.ToolStripButton tsBtnLocked;
+        private System.Windows.Forms.ToolStripMenuItem 数据特殊修正ToolStripMenuItem;
     }
 }

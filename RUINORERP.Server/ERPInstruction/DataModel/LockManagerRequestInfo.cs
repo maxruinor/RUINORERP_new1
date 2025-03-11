@@ -10,6 +10,7 @@ namespace TransInstruction.DataModel
 {
     public class LockRequestBaseInfo
     {
+        public Guid PacketId { get; set; }
         public long BillID { get; set; } // 单据ID
         /// <summary>
         /// 单据的信息
@@ -80,8 +81,6 @@ namespace TransInstruction.DataModel
     /// </summary>
     public class ServerLockCommandEventArgs : ServerCommandEventArgs
     {
-        public Guid PacketId { get; set; }
-        public long BillID { get; set; }
         public LockCmd lockCmd { get; set; }
         public bool isSuccess { get; set; }
     }

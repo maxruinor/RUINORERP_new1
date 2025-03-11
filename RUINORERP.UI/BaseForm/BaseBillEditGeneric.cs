@@ -1200,51 +1200,7 @@ namespace RUINORERP.UI.BaseForm
         }
 
 
-        private void LockBill1(long BillID, long userid)
-        {
-            BillConverterFactory bcf = Startup.GetFromFac<BillConverterFactory>();
-            CommBillData cbd = new CommBillData();
-            cbd = bcf.GetBillData(typeof(T), EditEntity);
-
-            LockedInfo lockRequest = new LockedInfo();
-            lockRequest.BillID = BillID;
-            lockRequest.BillData = cbd;
-            lockRequest.LockedUserID = userid;
-            lockRequest.LockedUserName = MainForm.Instance.AppContext.CurUserInfo.UserInfo.tb_employee.Employee_Name;
-            lockRequest.MenuID = CurMenuInfo.MenuID;
-            using (ClientLockManagerCmd cmd = new ClientLockManagerCmd(CmdOperation.Send))
-            {
-                cmd.lockCmd = LockCmd.LOCK;//单据锁定
-                cmd.RequestInfo = lockRequest;
-                MainForm.Instance.dispatcher.DispatchAsync(cmd, CancellationToken.None);
-                if (AuthorizeController.GetShowDebugInfoAuthorization(MainForm.Instance.AppContext))
-                {
-                    MainForm.Instance.PrintInfoLog($"向服务器发送锁{lockRequest.BillID}成功");
-                }
-                cmd.LockChanged += (sender, e) =>
-                {
-                    this.tsBtnLocked.Visible = true;
-                    if (e.isSuccess)
-                    {
-                        //自己就表达绿色
-                        this.tsBtnLocked.Image = global::RUINORERP.UI.Properties.Resources.unlockbill;
-                    }
-                    else
-                    {
-                        //自己就表达绿色
-                        this.tsBtnLocked.Image = global::RUINORERP.UI.Properties.Resources.Lockbill;
-                    }
-
-
-                };
-
-                // 注册锁定单据的事件处理程序
-                ClientEventManager.Instance.AddCommandHandler(ServerCmdEnum.复合型锁单处理, cmd.HandleLockEvent);
-            }
-
-
-        }
-
+     
 
         private void LockBill(long BillID, long userid)
         {
@@ -1262,25 +1218,26 @@ namespace RUINORERP.UI.BaseForm
 
             using (ClientLockManagerCmd cmd = new ClientLockManagerCmd(CmdOperation.Send))
             {
+                lockRequest.PacketId = cmd.PacketId;
                 cmd.lockCmd = LockCmd.LOCK;
                 cmd.RequestInfo = lockRequest;
-
+                // 注册锁定单据的事件处理程序
+                ClientEventManager.Instance.AddCommandHandler(cmd.PacketId, cmd.HandleLockEvent);
+                MainForm.Instance.dispatcher.DispatchAsync(cmd, CancellationToken.None);
                 // 注册一次性事件（确保匿名委托不会重复）
                 cmd.LockChanged += (sender, e) =>
                 {
+                    if (e.requestBaseInfo.BillID!=BillID)
+                    {
+                        return;
+                    }
                     this.tsBtnLocked.Visible = true;
                     this.tsBtnLocked.Image = e.isSuccess
                         ? global::RUINORERP.UI.Properties.Resources.unlockbill
                         : global::RUINORERP.UI.Properties.Resources.Lockbill;
                 };
 
-                MainForm.Instance.dispatcher.DispatchAsync(cmd, CancellationToken.None);
-                if (AuthorizeController.GetShowDebugInfoAuthorization(MainForm.Instance.AppContext))
-                {
-                    MainForm.Instance.PrintInfoLog($"向服务器发送锁{lockRequest.BillID}成功");
-                }
-                // 注册锁定单据的事件处理程序
-                ClientEventManager.Instance.AddCommandHandler(ServerCmdEnum.复合型锁单处理, cmd.HandleLockEvent);
+              
             }
         }
 
@@ -2616,6 +2573,7 @@ namespace RUINORERP.UI.BaseForm
                         cbd = bcf.GetBillData(typeof(T), EditEntity);
 
                         ClientLockManagerCmd cmd = new ClientLockManagerCmd(CmdOperation.Send);
+
                         cmd.lockCmd = LockCmd.RequestUnLock;
 
                         RequestUnLockInfo lockRequest = new RequestUnLockInfo();
@@ -2626,6 +2584,7 @@ namespace RUINORERP.UI.BaseForm
                         lockRequest.MenuID = CurMenuInfo.MenuID;
                         lockRequest.LockedUserID = lockeduserid;
                         lockRequest.LockedUserName = BizCacheHelper.Instance.GetEntity<tb_UserInfo>(lockeduserid).UserName;
+                        lockRequest.PacketId = cmd.PacketId;
                         cmd.RequestInfo = lockRequest;
 
                         MainForm.Instance.dispatcher.DispatchAsync(cmd, CancellationToken.None);
@@ -2696,7 +2655,11 @@ namespace RUINORERP.UI.BaseForm
             lockRequest.LockedUserID = userid;
             lockRequest.LockedUserName = MainForm.Instance.AppContext.CurUserInfo.UserInfo.tb_employee.Employee_Name;
             lockRequest.MenuID = CurMenuInfo.MenuID;
+            lockRequest.PacketId = cmd.PacketId;
             cmd.RequestInfo = lockRequest;
+            // 注册锁定单据的事件处理程序
+            ClientEventManager.Instance.AddCommandHandler(cmd.PacketId, cmd.HandleLockEvent);
+
             MainForm.Instance.dispatcher.DispatchAsync(cmd, CancellationToken.None);
 
             if (AuthorizeController.GetShowDebugInfoAuthorization(MainForm.Instance.AppContext))
@@ -2705,12 +2668,7 @@ namespace RUINORERP.UI.BaseForm
             }
             cmd.LockChanged += (sender, e) =>
             {
-                var clientLockManagerCmd = sender as ClientLockManagerCmd;
-                if (e.lockCmd != clientLockManagerCmd.lockCmd)
-                {
-                    return;
-                }
-                if (e.BillID != billid)
+                if (e.requestBaseInfo.BillID != billid)
                 {
                     return;
                 }
@@ -2727,9 +2685,7 @@ namespace RUINORERP.UI.BaseForm
 
             };
 
-            // 注册锁定单据的事件处理程序
-            ClientEventManager.Instance.AddCommandHandler(ServerCmdEnum.复合型锁单处理, cmd.HandleLockEvent);
-
+           
 
         }
 

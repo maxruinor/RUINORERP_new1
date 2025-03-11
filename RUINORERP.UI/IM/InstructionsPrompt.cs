@@ -143,6 +143,7 @@ namespace RUINORERP.UI.IM
             lockRequest.LockedUserID = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID;
             lockRequest.LockedUserName = MainForm.Instance.AppContext.CurUserInfo.UserInfo.tb_employee.Employee_Name;
             lockRequest.MenuID = 0;
+            lockRequest.PacketId = cmd.PacketId;
             cmd.RequestInfo = lockRequest;
             MainForm.Instance.dispatcher.DispatchAsync(cmd, CancellationToken.None);
             this.DialogResult = DialogResult.OK;
@@ -273,6 +274,7 @@ namespace RUINORERP.UI.IM
             lockRequest.BillID = reminderData.BizKeyID;
             lockRequest.RefuseUserName = MainForm.Instance.AppContext.CurUserInfo.UserInfo.tb_employee.Employee_Name;
             lockRequest.RefuseUserID = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID;
+            lockRequest.PacketId = cmd.PacketId;
             //拒绝谁？
             cmd.RequestInfo = lockRequest;
             MainForm.Instance.dispatcher.DispatchAsync(cmd, CancellationToken.None);

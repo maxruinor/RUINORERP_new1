@@ -16,6 +16,7 @@ using RUINORERP.Model.TransModel;
 using RUINORERP.UI.IM;
 using RUINORERP.UI.WorkFlowDesigner.Entities;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -108,20 +109,17 @@ namespace RUINORERP.UI.ClientCmdService
                             //自己也锁。实际服务器收到后还会广播一次 包括自己 只是这里已经锁，不会重复添加
                             if (MainForm.Instance.lockManager.TryLock(lockRequest.BillID, lockRequest.BillData.BillNo, lockRequest.LockedUserID))
                             {
-                                MainForm.Instance.PrintInfoLog($"{lockRequest.BillData.BillNo}本地锁定成功");
-                                //LockChanged?.Invoke(this, new LockChangedEventArgs(lockCmd, lockRequest.BillID, isSuccess));
-
-                                ServerLockCommandEventArgs args = new ServerLockCommandEventArgs();
-                                args.lockCmd = lockCmd;
-                                args.isSuccess = isSuccess;
-                                args.requestBaseInfo = lockRequest;
-                                args.BillID = lockRequest.BillID;
-
-                                ClientEventManager.Instance.RaiseCommandEvent(ServerCmdEnum.复合型锁单处理, args);
+                                if (AuthorizeController.GetShowDebugInfoAuthorization(MainForm.Instance.AppContext))
+                                {
+                                    MainForm.Instance.PrintInfoLog($"{lockRequest.BillData.BillNo}本地锁定成功");
+                                }
                             }
                         }
-
-                        //
+                        ServerLockCommandEventArgs args = new ServerLockCommandEventArgs();
+                        args.lockCmd = lockCmd;
+                        args.isSuccess = isSuccess;
+                        args.requestBaseInfo = lockRequest;
+                        ClientEventManager.Instance.RaiseCommandEvent(lockRequest.PacketId, args);
 
                         break;
                     case LockCmd.UNLOCK:
@@ -133,13 +131,17 @@ namespace RUINORERP.UI.ClientCmdService
                         {
                             if (MainForm.Instance.lockManager.Unlock(unLockInfo.BillID, unLockInfo.LockedUserID))
                             {
-                                ServerLockCommandEventArgs args = new ServerLockCommandEventArgs();
-                                args.lockCmd = lockCmd;
-                                args.isSuccess = isSuccess;
-                                args.requestBaseInfo = unLockInfo;
-                                ClientEventManager.Instance.RaiseCommandEvent(ServerCmdEnum.复合型锁单处理, args);
+                                if (AuthorizeController.GetShowDebugInfoAuthorization(MainForm.Instance.AppContext))
+                                {
+                                    MainForm.Instance.PrintInfoLog($"{unLockInfo.BillData.BillNo}本地解锁成功");
+                                }
                             }
                         }
+                        ServerLockCommandEventArgs UNLOCKargs = new ServerLockCommandEventArgs();
+                        UNLOCKargs.lockCmd = lockCmd;
+                        UNLOCKargs.isSuccess = isSuccess;
+                        UNLOCKargs.requestBaseInfo = unLockInfo;
+                        ClientEventManager.Instance.RaiseCommandEvent(unLockInfo.PacketId, UNLOCKargs);
 
                         break;
 
@@ -179,26 +181,10 @@ namespace RUINORERP.UI.ClientCmdService
                         RefuseInfo.messageCmd = MessageCmdType.Notice;
                         MainForm.Instance.MessageList.Enqueue(RefuseInfo);
                         break;
-
-                    //case LockCmd.GetLockedBy:
-                    //    long LockeduserID = ByteDataAnalysis.GetInt64(gd.Two, ref index);
-                    //    LockChanged?.Invoke(this, new LockChangedEventArgs(BillID, true, LockeduserID));
-
-                    //MainForm.Instance.lockManager.UpdateLockStatus()
-
-                    //case PromptType.确认窗口:
-                    //    MessageBox.Show(obj["Content"].ToString(), "提示");
-                    //    break;
-                    //case PromptType.日志消息:
-                    //    MainForm.Instance.PrintInfoLog(obj["Content"].ToString());
-                    //    break;
-                    //string message = ByteDataAnalysis.GetString(gd.Two, ref index);
-                    //NextProcesszStep nextProcesszStep = (NextProcesszStep)ByteDataAnalysis.GetInt(gd.Two, ref index);
-                    //string fromSessionID = ByteDataAnalysis.GetString(gd.Two, ref index);
-                    //MessageContent = message;
-                    //这里指定的是IM的，则会影响IM窗体
-                    //判断是不是打开。打开就显示内容。弹出提示？
-                    //break;
+                    case LockCmd.Broadcast:
+                        json = ByteDataAnalysis.GetString(gd.Two, ref index);
+                        MainForm.Instance.lockManager.UpdateLockStatusByJson(json);
+                        break;
 
                     default:
                         break;
@@ -407,22 +393,36 @@ namespace RUINORERP.UI.ClientCmdService
 
         public void HandleLockEvent(object sender, ServerLockCommandEventArgs e)
         {
-            // 处理锁定单据的逻辑
-            MainForm.Instance.uclog.AddLog($"收到锁定单据指令，结果为{e.lockCmd.ToString()}{e.isSuccess}:{e.BillID}");
-            if (sender is ClientLockManagerCmd)
+            if (AuthorizeController.GetShowDebugInfoAuthorization(MainForm.Instance.AppContext))
             {
-                ClientLockManagerCmd cmd = sender as ClientLockManagerCmd;
-                if (cmd.lockCmd == e.lockCmd)
+                switch (e.lockCmd)
                 {
-                    LockChanged?.Invoke(this, e);
+                    case LockCmd.LOCK:
+                        MainForm.Instance.PrintInfoLog($"成功锁定{e.requestBaseInfo.BillData.BillNo}");
+                        break;
+                    case LockCmd.UNLOCK:
+                        MainForm.Instance.PrintInfoLog($"成功解锁{e.requestBaseInfo.BillData.BillNo}");
+                        break;
+                    case LockCmd.RequestUnLock:
+                        break;
+                    case LockCmd.RefuseUnLock:
+                        break;
+                    case LockCmd.Broadcast:
+                        break;
                 }
-                else
-                {
-                    //指向不对就不用触发了
-                }
+                
+                // 处理锁定单据的逻辑
+                //MainForm.Instance.uclog.AddLog($"收到锁定单据指令，结果为{e.lockCmd.ToString()}{e.isSuccess}:{e.BillID}");
             }
 
-
+            LockChanged?.Invoke(this, e);
+            if (sender is ServerLockCommandHandler commandHandler)
+            {
+               
+                
+            }
+            //事件处理完了才删除
+            ClientEventManager.Instance.RemoveCommandHandler(e.requestBaseInfo.PacketId, HandleLockEvent);
         }
 
         public void Dispose()
@@ -430,7 +430,7 @@ namespace RUINORERP.UI.ClientCmdService
             if (!_disposed)
             {
                 // 移除处理器
-                ClientEventManager.Instance.RemoveCommandHandler(ServerCmdEnum.复合型锁单处理, HandleLockEvent);
+                //ClientEventManager.Instance.RemoveCommandHandler(PacketId, HandleLockEvent);
                 _disposed = true;
             }
             GC.SuppressFinalize(this);

@@ -85,12 +85,7 @@ namespace RUINORERP.Server.CommandService
                 //当前
                 string 时间 = ByteDataAnalysis.GetString(gd.Two, ref index);
                 lockCmd = (LockCmd)ByteDataAnalysis.GetInt(gd.Two, ref index);
-                if (lockCmd == LockCmd.Broadcast)
-                {
-                    //广播
-                    BuildDataPacketBroadcastLockStatus();
-                    return true;
-                }
+                
                 //目前服务器主要是转发作用的功能
                 switch (lockCmd)
                 {
@@ -203,6 +198,8 @@ namespace RUINORERP.Server.CommandService
                         }
                         break;
                     case LockCmd.Broadcast:
+                        //广播
+                        BuildDataPacketBroadcastLockStatus();
                         break;
                     default:
                         break;
@@ -232,11 +229,6 @@ namespace RUINORERP.Server.CommandService
                 tx.PushString(sendtime);
                 tx.PushInt((int)LockCmd.Broadcast);
                 tx.PushString(frmMain.Instance.lockManager.GetLockStatusToJson());
-
-                //将来再加上提醒配置规则,或加在请求实体中
-                //gd.cmd = (byte)ServerCmdEnum.复合型锁单处理;
-                //gd.One = new byte[] { (byte)lockCmd };
-                //gd.Two = tx.toByte();
                 //广播到在线所有人
                 foreach (var item in frmMain.Instance.sessionListBiz)
                 {

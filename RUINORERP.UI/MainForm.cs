@@ -1248,8 +1248,7 @@ namespace RUINORERP.UI
 
                 LoginWebServer();
                 ClientLockManagerCmd cmd = new ClientLockManagerCmd(CmdOperation.Send);
-                cmd.lockCmd = LockCmd.Broadcast;
-                //request.nextProcesszStep = TransInstruction.CommandService.NextProcesszStep.转发;
+                cmd.lockCmd = LockCmd.Broadcast;  
                 MainForm.Instance.dispatcher.DispatchAsync(cmd, CancellationToken.None);
                 cmd.LockChanged += (sender, e) =>
                 {

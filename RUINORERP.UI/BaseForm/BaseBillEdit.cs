@@ -58,6 +58,11 @@ namespace RUINORERP.UI.BaseForm
 
         }
 
+        public virtual void UNLock()
+        {
+
+        }
+
         public virtual void RequestUnLock()
         {
 

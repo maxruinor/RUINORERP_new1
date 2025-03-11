@@ -521,18 +521,6 @@ namespace RUINORERP.UI.SuperSocketClient
                             var LockCommand = new ClientLockManagerCmd(CmdOperation.Receive);
                             LockCommand.DataPacket = od;
                             MainForm.Instance.dispatcher.DispatchAsync(LockCommand, CancellationToken.None);
-                            LockCommand.LockChanged += (sender, e) =>
-                            {
-                                //this.tsBtnLocked.Visible = true;
-                                ////自己就表达绿色
-                                //this.tsBtnLocked.Image = global::RUINORERP.UI.Properties.Resources.unlockbill;
-                                //更新？
-                                Console.WriteLine($"Document {e.DocumentId} is now {(e.IsSuccess ? "locked" : "unlocked")} ");
-                            };
-
-                            //// 触发相应的事件
-                            //RaiseCommandEvent(serverCmd, od.Two);
-
                             break;
                         //case ServerCmdEnum.转发单据锁定:
                         //    //单个实例

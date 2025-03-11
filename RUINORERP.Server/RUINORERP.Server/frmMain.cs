@@ -824,7 +824,7 @@ namespace RUINORERP.Server
                             SessionforBiz sg = session as SessionforBiz;
                             //if (sg.player != null && sg.player.Online)
                             //{
-                            //   // SephirothServer.CommandServer.RoleService.角色退出(sg);
+                            // SephirothServer.CommandServer.RoleService.角色退出(sg);
                             //}
                             PrintMsg($"{DateTime.Now} [SessionforBiz-主要程序]  {session.RemoteEndPoint} closed，原因：: {reason.Reason}");
                             sessionListBiz.Remove(sg.SessionID, out sg);

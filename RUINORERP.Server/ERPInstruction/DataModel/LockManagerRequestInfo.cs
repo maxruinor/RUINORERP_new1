@@ -1,4 +1,5 @@
 ﻿using RUINORERP.Model.CommonModel;
+using RUINORERP.Model.TransModel;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -66,5 +67,23 @@ namespace TransInstruction.DataModel
     }
 
 
+
+    public delegate void ServerLockCommandHandler(object sender, ServerLockCommandEventArgs e);
+    public class ServerCommandEventArgs : EventArgs
+    {
+        public ServerCmdEnum Command { get; set; }
+        public LockRequestBaseInfo requestBaseInfo { get; set; }
+    }
+
+    /// <summary>
+    /// 服务器返回的情况
+    /// </summary>
+    public class ServerLockCommandEventArgs : ServerCommandEventArgs
+    {
+        public Guid PacketId { get; set; }
+        public long BillID { get; set; }
+        public LockCmd lockCmd { get; set; }
+        public bool isSuccess { get; set; }
+    }
 
 }

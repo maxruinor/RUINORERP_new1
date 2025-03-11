@@ -9,6 +9,7 @@ using TransInstruction.CommandService;
 using Newtonsoft.Json;
 using RUINORERP.Model;
 using RUINORERP.Model.CommonModel;
+using TransInstruction.DataModel;
 
 namespace RUINORERP.Business.CommService
 {
@@ -219,25 +220,9 @@ namespace RUINORERP.Business.CommService
         }
     }
 
-    public delegate void LockChangedHandler(object sender, LockChangedEventArgs e);
+    public delegate void LockChangedHandler(object sender, ServerLockCommandEventArgs e);
 
-    /// <summary>
-    /// 11
-    /// </summary>
-    public class LockChangedEventArgs : EventArgs
-    {
-      public  LockCmd lockCmd { get; }
-        public long DocumentId { get; }
-        public bool IsSuccess { get; }
-
-        public LockChangedEventArgs(LockCmd _lockCmd ,long documentId, bool isSuccess)
-        {
-            LockCmd lockCmd=_lockCmd;
-            DocumentId = documentId;
-            IsSuccess = isSuccess;
-        }
-    }
-
+     
     public class LockInfo
     {
         /// <summary>

@@ -108,7 +108,7 @@ namespace RUINORERP.Server.CommandService
                         }
                         //通知所有人。这个单被锁了 包含锁单本人
                         ResponseToClient(isLocked, lockRequest);
-                        OnLockChanged(lockCmd,lockRequest.BillID, isLocked);
+            
 
                         break;
                     case LockCmd.UNLOCK:
@@ -125,7 +125,7 @@ namespace RUINORERP.Server.CommandService
                             //通知所有人。这个单被锁了 包含锁单本人
                             ResponseToClient(isUnlocked, unLockInfo);
                         }
-                        
+
                         //OnLockChanged(lockCmd,unLockInfo.BillID, isUnlocked);
 
                         break;
@@ -171,7 +171,7 @@ namespace RUINORERP.Server.CommandService
                         json = ByteDataAnalysis.GetString(gd.Two, ref index);
                         obj = JObject.Parse(json);
                         RefuseUnLockInfo refuseUnLockInfo = obj.ToObject<RefuseUnLockInfo>();
-                        
+
                         ////服务器没有啥事件  事件都在客户端的操作回应结果
                         //OnLockChanged(lockCmd，refuseUnLockInfo.BillID, false);
 
@@ -219,12 +219,6 @@ namespace RUINORERP.Server.CommandService
         }
 
 
-        protected virtual void OnLockChanged(LockCmd lockCmd, long documentId, bool isSuccess)
-        {
-            LockChanged?.Invoke(this, new LockChangedEventArgs(lockCmd,documentId, isSuccess));
-        }
-
-
         /// <summary>
         /// 原数据转发broadcast
         /// </summary>
@@ -243,14 +237,10 @@ namespace RUINORERP.Server.CommandService
                 //gd.cmd = (byte)ServerCmdEnum.复合型锁单处理;
                 //gd.One = new byte[] { (byte)lockCmd };
                 //gd.Two = tx.toByte();
-                //谁请求就给谁
+                //广播到在线所有人
                 foreach (var item in frmMain.Instance.sessionListBiz)
                 {
-                    if (FromSession != null && item.Value.SessionID == FromSession.SessionID)
-                    {
-                        item.Value.AddSendData((byte)ServerCmdEnum.复合型锁单处理, new byte[] { (byte)lockCmd }, tx.toByte());
-                        break;
-                    }
+                    item.Value.AddSendData((byte)ServerCmdEnum.复合型锁单处理, new byte[] { (byte)lockCmd }, tx.toByte());
                 }
             }
             catch (Exception ex)

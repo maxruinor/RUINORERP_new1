@@ -213,8 +213,6 @@
         private Krypton.Toolkit.KryptonLabel lblUnitName;
         private Krypton.Toolkit.KryptonLabel lblDesc;
         private Krypton.Toolkit.KryptonTextBox txtContent;
-        private Krypton.Toolkit.KryptonButton btnRefuse;
-        private Krypton.Toolkit.KryptonButton btnAgree;
         private System.Windows.Forms.Timer timerForToolTip;
         internal System.Windows.Forms.ToolTip toolTipBase;
         public Krypton.Toolkit.KryptonTextBox txtSender;
@@ -223,5 +221,7 @@
         private Krypton.Toolkit.KryptonCommand kryptonCommandWait;
         private Krypton.Toolkit.KryptonLabel lblSendTime;
         private Krypton.Toolkit.KryptonContextMenuRadioButton kryptonContextMenuRadioButton1;
+        internal Krypton.Toolkit.KryptonButton btnRefuse;
+        internal Krypton.Toolkit.KryptonButton btnAgree;
     }
 }

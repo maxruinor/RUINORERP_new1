@@ -200,13 +200,7 @@ namespace RUINORERP.UI
 
 
         }
-        private void OnLockChanged(object sender, LockChangedEventArgs e)
-        {
-            this.Invoke(new Action(() =>
-            {
-                MessageBox.Show($"Document {e.DocumentId} is now {(e.IsSuccess ? "locked" : "unlocked")} ");
-            }));
-        }
+       
 
         private void KryptonDockableWorkspace1_PageCloseClicked(object sender, UniqueNameEventArgs e)
         {
@@ -263,7 +257,11 @@ namespace RUINORERP.UI
                         UIBizSrvice.SaveGridSettingData(baseUControl.CurMenuInfo, baseUControl.BaseMainDataGridView, genericParameterType);
                     }
                 }
-
+                if (control.GetType() != null && control.GetType().BaseType.Name == "BaseBillEditGeneric`2")
+                {
+                    var baseBillEdit = (BaseBillEdit)control;
+                    baseBillEdit.UNLock();
+                }
             }
 
         }
@@ -758,8 +756,22 @@ namespace RUINORERP.UI
                         InstructionsPrompt instructionsPrompt = new InstructionsPrompt();
                         instructionsPrompt.ReminderData = MessageInfo;
                         instructionsPrompt.txtSender.Text = MessageInfo.SenderEmployeeName;
-                        instructionsPrompt.txtSubject.Text= $"【{MessageInfo.BizType.ToString()}】解锁";
-                        instructionsPrompt.Content=$"{MessageInfo.ReminderContent}";
+                        instructionsPrompt.txtSubject.Text = $"请求解锁【{MessageInfo.BizType.ToString()}】";
+                        instructionsPrompt.Content = $"{MessageInfo.ReminderContent}";
+                        instructionsPrompt.Show();
+                        instructionsPrompt.TopMost = true;
+                        return;
+                    }
+
+                    if (MessageInfo.messageCmd == MessageCmdType.Notice)
+                    {
+                        InstructionsPrompt instructionsPrompt = new InstructionsPrompt();
+                        instructionsPrompt.btnAgree.Visible = false;
+                        instructionsPrompt.btnRefuse.Visible = false;
+                        instructionsPrompt.ReminderData = MessageInfo;
+                        instructionsPrompt.txtSender.Text = MessageInfo.SenderEmployeeName;
+                        instructionsPrompt.txtSubject.Text = MessageInfo.RemindSubject;
+                        instructionsPrompt.Content = MessageInfo.ReminderContent;
                         instructionsPrompt.Show();
                         instructionsPrompt.TopMost = true;
                         return;
@@ -780,7 +792,7 @@ namespace RUINORERP.UI
                         {
                             MessageInfo.SenderEmployeeName = "系统";
                         }
-                        
+
                     }
                     else
                     {
@@ -1241,7 +1253,6 @@ namespace RUINORERP.UI
                 MainForm.Instance.dispatcher.DispatchAsync(cmd, CancellationToken.None);
                 cmd.LockChanged += (sender, e) =>
                 {
-                    Console.WriteLine($"Document {e.DocumentId} is now {(e.IsSuccess ? "locked" : "unlocked")} ");
                     //使用事件模式来查询某一个单据被谁锁定
                 };
             }

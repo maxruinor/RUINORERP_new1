@@ -605,6 +605,11 @@ namespace RUINORERP.UI.Common
             }
         }
 
+        /// <summary>
+        /// 关闭的一个方法
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void Bs_Click(object sender, EventArgs e)
         {
             if (sender is ButtonSpecAny btn && btn.Owner is KryptonPage kpage)
@@ -630,6 +635,12 @@ namespace RUINORERP.UI.Common
                             //第二个参数 换为名称，第三个是不是 将他放到上层基类中保存。意思是窗体保存对应的这个列的个性化设置？
                             ;
                         }
+                    }
+
+                    if (control.GetType() != null && control.GetType().BaseType.Name == "BaseBillEditGeneric`2")
+                    {
+                        var baseBillEdit = (BaseBillEdit)control;
+                        baseBillEdit.UNLock();
                     }
 
                     if (control.GetType() != null && control.GetType().BaseType.Name.Contains("BaseBillQueryMC"))

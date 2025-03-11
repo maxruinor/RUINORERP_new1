@@ -145,7 +145,8 @@ namespace RUINORERP.UI.IM
             lockRequest.MenuID = 0;
             cmd.RequestInfo = lockRequest;
             MainForm.Instance.dispatcher.DispatchAsync(cmd, CancellationToken.None);
-
+            this.DialogResult = DialogResult.OK;
+            this.Close();
             return;
             //计划提醒，则把要提醒的计划查出条件找到
             Type tableType = mapper.GetTableType(ReminderData.BizType);
@@ -272,15 +273,12 @@ namespace RUINORERP.UI.IM
             lockRequest.BillID = reminderData.BizKeyID;
             lockRequest.RefuseUserName = MainForm.Instance.AppContext.CurUserInfo.UserInfo.tb_employee.Employee_Name;
             lockRequest.RefuseUserID = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID;
-            //lockRequest.RequestUserID = reminderData;
-           // lockRequest.RequestUserName = MainForm.Instance.AppContext.CurUserInfo.UserInfo.tb_employee.Employee_Name;
-
+            //拒绝谁？
             cmd.RequestInfo = lockRequest;
             MainForm.Instance.dispatcher.DispatchAsync(cmd, CancellationToken.None);
             cmd.LockChanged += (sender, e) =>
             {
                 MessageBox.Show("已经向锁定者发送了解锁请求。等待结果中");
-                Console.WriteLine($"Document {e.DocumentId} is now {(e.IsSuccess ? "locked" : "unlocked")}");
             };
         }
 

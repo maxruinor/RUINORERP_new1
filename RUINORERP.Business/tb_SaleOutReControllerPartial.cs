@@ -49,14 +49,12 @@ namespace RUINORERP.Business
                 // 开启事务，保证数据一致性
                 _unitOfWorkManage.BeginTran();
                 tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
-
-               
-                    if (entity == null)
-                    {
-                        _unitOfWorkManage.RollbackTran();
-                        rrs.Succeeded = false;
-                        return rrs;
-                    }
+                if (entity == null)
+                {
+                    _unitOfWorkManage.RollbackTran();
+                    rrs.Succeeded = false;
+                    return rrs;
+                }
 
                 if (!entity.RefundOnly)
                 {
@@ -347,11 +345,11 @@ namespace RUINORERP.Business
                 }
 
                 //更新累计退回数量
-               // await _unitOfWorkManage.GetDbClient().Updateable<tb_SaleOutReDetail>(entity.tb_SaleOutReDetails).ExecuteCommandAsync();
+                // await _unitOfWorkManage.GetDbClient().Updateable<tb_SaleOutReDetail>(entity.tb_SaleOutReDetails).ExecuteCommandAsync();
 
                 //entity.ApprovalOpinions = approvalEntity.ApprovalComments;
                 //后面已经修改为
-              //  entity.ApprovalResults = approvalEntity.ApprovalResults;
+                //  entity.ApprovalResults = approvalEntity.ApprovalResults;
                 entity.ApprovalStatus = (int)ApprovalStatus.已审核;
                 entity.DataStatus = (int)DataStatus.确认;
                 BusinessHelper.Instance.ApproverEntity(entity);
@@ -367,7 +365,7 @@ namespace RUINORERP.Business
             {
                 _unitOfWorkManage.RollbackTran();
                 rrs.Succeeded = false;
-                rrs.ErrorMsg =   "事务回滚=>" + ex.Message;
+                rrs.ErrorMsg = "事务回滚=>" + ex.Message;
                 _logger.Error(ex, "事务回滚");
                 return rrs;
             }
@@ -382,7 +380,7 @@ namespace RUINORERP.Business
         /// <returns></returns>
         public async override Task<ReturnResults<T>> AntiApprovalAsync(T ObjectEntity)
         {
-        
+
             tb_SaleOutRe entity = ObjectEntity as tb_SaleOutRe;
 
 
@@ -506,7 +504,7 @@ namespace RUINORERP.Business
                         //如果已交数据大于 订单数量 给出警告实际操作中 使用其他方式将备品入库
                         if (child.TotalReturnedQty > child.Quantity)
                         {
-                            _unitOfWorkManage.RollbackTran(); 
+                            _unitOfWorkManage.RollbackTran();
                             throw new Exception($"销售退回单中：{entity.ReturnNo}中，SKU明细的退回总数量不能大于出库数量！");
                         }
                     }
@@ -555,7 +553,7 @@ namespace RUINORERP.Business
                         //如果已交数据大于 订单数量 给出警告实际操作中 使用其他方式将备品入库
                         if (orderDetail.TotalReturnedQty > orderDetail.Quantity)
                         {
-                            _unitOfWorkManage.RollbackTran(); 
+                            _unitOfWorkManage.RollbackTran();
                             throw new Exception($"销售出库退回时，销售单：{saleout.SaleOutNo}中，SKU的退回总数量不能大于订单数量！");
                         }
 

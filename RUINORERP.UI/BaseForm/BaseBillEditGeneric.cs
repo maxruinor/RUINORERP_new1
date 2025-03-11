@@ -479,7 +479,7 @@ namespace RUINORERP.UI.BaseForm
                         else
                         {
                             //别人锁定了
-                            string tipMsg = $"单据已被用户{lockinfo.LockedByName}锁定，请刷新后再试,或【点击已锁定】联系锁定人员解锁。";
+                            string tipMsg = $"单据已被用户【{lockinfo.LockedByName}】锁定，请刷新后再试,或点击【已锁定】联系锁定人员解锁。";
                             MainForm.Instance.uclog.AddLog(tipMsg);
                             tsBtnLocked.AutoToolTip = true;
                             tsBtnLocked.ToolTipText = tipMsg;
@@ -1009,12 +1009,20 @@ namespace RUINORERP.UI.BaseForm
             switch (menuItem)
             {
                 case MenuItemEnums.已锁定:
-                    //弹出一个确认框来请求解锁 
-                    if (tsBtnLocked.Visible && MessageBox.Show("确认向锁定者解锁吗？", "提示", MessageBoxButtons.OKCancel, MessageBoxIcon.Question) == DialogResult.OK)
+                    if (tsBtnLocked.Tag is LockInfo lockRequest)
                     {
-
-                        RequestUnLock();
+                        //如果是自己时则不能申请
+                        if (lockRequest.LockedByID == MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID)
+                        {
+                            return;
+                        }
+                        //弹出一个确认框来请求解锁 
+                        if (tsBtnLocked.Visible && MessageBox.Show($"确认向锁定者【{lockRequest.LockedByName}】申请解锁吗？", "提示", MessageBoxButtons.OKCancel, MessageBoxIcon.Question) == DialogResult.OK)
+                        {
+                            RequestUnLock();
+                        }
                     }
+
                     break;
                 case MenuItemEnums.新增:
                     Add();
@@ -1206,10 +1214,6 @@ namespace RUINORERP.UI.BaseForm
             lockRequest.MenuID = CurMenuInfo.MenuID;
             using (ClientLockManagerCmd cmd = new ClientLockManagerCmd(CmdOperation.Send))
             {
-
-                // 注册锁定单据的事件处理程序
-                ClientEventManager.Instance.AddCommandHandler(ServerCmdEnum.复合型锁单处理, cmd.HandleLockEvent);
-
                 cmd.lockCmd = LockCmd.LOCK;//单据锁定
                 cmd.RequestInfo = lockRequest;
                 MainForm.Instance.dispatcher.DispatchAsync(cmd, CancellationToken.None);
@@ -1220,7 +1224,7 @@ namespace RUINORERP.UI.BaseForm
                 cmd.LockChanged += (sender, e) =>
                 {
                     this.tsBtnLocked.Visible = true;
-                    if (e.IsSuccess)
+                    if (e.isSuccess)
                     {
                         //自己就表达绿色
                         this.tsBtnLocked.Image = global::RUINORERP.UI.Properties.Resources.unlockbill;
@@ -1231,9 +1235,11 @@ namespace RUINORERP.UI.BaseForm
                         this.tsBtnLocked.Image = global::RUINORERP.UI.Properties.Resources.Lockbill;
                     }
 
-                    //更新？
-                    Console.WriteLine($"Document {e.DocumentId} is now {(e.IsSuccess ? "locked" : "unlocked")} ");
+
                 };
+
+                // 注册锁定单据的事件处理程序
+                ClientEventManager.Instance.AddCommandHandler(ServerCmdEnum.复合型锁单处理, cmd.HandleLockEvent);
             }
 
 
@@ -1260,20 +1266,21 @@ namespace RUINORERP.UI.BaseForm
                 cmd.RequestInfo = lockRequest;
 
                 // 注册一次性事件（确保匿名委托不会重复）
-                cmd.LockChanged += (object sender, LockChangedEventArgs e) =>
+                cmd.LockChanged += (sender, e) =>
                 {
                     this.tsBtnLocked.Visible = true;
-                    this.tsBtnLocked.Image = e.IsSuccess
+                    this.tsBtnLocked.Image = e.isSuccess
                         ? global::RUINORERP.UI.Properties.Resources.unlockbill
                         : global::RUINORERP.UI.Properties.Resources.Lockbill;
                 };
-              
 
                 MainForm.Instance.dispatcher.DispatchAsync(cmd, CancellationToken.None);
                 if (AuthorizeController.GetShowDebugInfoAuthorization(MainForm.Instance.AppContext))
                 {
                     MainForm.Instance.PrintInfoLog($"向服务器发送锁{lockRequest.BillID}成功");
                 }
+                // 注册锁定单据的事件处理程序
+                ClientEventManager.Instance.AddCommandHandler(ServerCmdEnum.复合型锁单处理, cmd.HandleLockEvent);
             }
         }
 
@@ -2095,7 +2102,7 @@ namespace RUINORERP.UI.BaseForm
                     if (tsBtnLocked.Visible && tsBtnLocked.Tag != null && tsBtnLocked.Tag is LockInfo lockInfo)
                     {
                         //显示锁定认为锁定。要刷新数据
-                        tipmsg = $"单据已被{lockInfo.LockedByName}锁定，请刷新后再试";
+                        tipmsg = $"单据已被【{lockInfo.LockedByName}】锁定，请刷新后再试";
                     }
 
                     return new ReturnMainSubResults<T>()
@@ -2618,12 +2625,13 @@ namespace RUINORERP.UI.BaseForm
                         lockRequest.BillData = cbd;
                         lockRequest.MenuID = CurMenuInfo.MenuID;
                         lockRequest.LockedUserID = lockeduserid;
+                        lockRequest.LockedUserName = BizCacheHelper.Instance.GetEntity<tb_UserInfo>(lockeduserid).UserName;
                         cmd.RequestInfo = lockRequest;
 
                         MainForm.Instance.dispatcher.DispatchAsync(cmd, CancellationToken.None);
                         cmd.LockChanged += (sender, e) =>
                         {
-                            MessageBox.Show("已经向锁定者发送了解锁请求。等待结果中");
+                            MessageBox.Show($"已经向锁定者【{lockRequest.LockedUserName}】发送了解锁请求。等待结果中");
                             //Console.WriteLine($"Document {e.DocumentId} is now {(e.IsLocked ? "locked" : "unlocked")} by {e.LockedBy}");
                             //如果收到释放成功的信息时
                             //tsBtnLocked.Visible = false;
@@ -2642,7 +2650,7 @@ namespace RUINORERP.UI.BaseForm
             }
         }
 
-        public void UNLock()
+        public override void UNLock()
         {
             if (EditEntity != null)
             {
@@ -2652,17 +2660,13 @@ namespace RUINORERP.UI.BaseForm
                 {
                     //如果这个锁是自己锁的。就释放
                     long userid = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID;
-                    UNLock(pkid, userid);
                     if (MainForm.Instance.lockManager.GetLockedBy(pkid) == userid)
                     {
+                        UNLock(pkid, userid);
                         //先本地再服务器
                         if (MainForm.Instance.lockManager.Unlock(pkid, userid))
                         {
                             MainForm.Instance.PrintInfoLog($"本地删除{pkid}锁成功");
-                        }
-                        else
-                        {
-
                         }
                         this.tsBtnLocked.Visible = true;
                         this.tsBtnLocked.Image = global::RUINORERP.UI.Properties.Resources.unlockbill;
@@ -2701,9 +2705,18 @@ namespace RUINORERP.UI.BaseForm
             }
             cmd.LockChanged += (sender, e) =>
             {
-                this.tsBtnLocked.Visible = true;
-                if (e.IsSuccess)
+                var clientLockManagerCmd = sender as ClientLockManagerCmd;
+                if (e.lockCmd != clientLockManagerCmd.lockCmd)
                 {
+                    return;
+                }
+                if (e.BillID != billid)
+                {
+                    return;
+                }
+                if (e.isSuccess && e.requestBaseInfo.LockedUserName == MainForm.Instance.AppContext.CurUserInfo.UserInfo.UserName)
+                {
+                    this.tsBtnLocked.Visible = true;
                     //解锁成本就是别人的 或别人可以锁了。
                     this.tsBtnLocked.Image = global::RUINORERP.UI.Properties.Resources.Lockbill;
                 }
@@ -2712,8 +2725,6 @@ namespace RUINORERP.UI.BaseForm
                     this.tsBtnLocked.Image = global::RUINORERP.UI.Properties.Resources.unlockbill;
                 }
 
-                //更新？
-                Console.WriteLine($"Document {e.DocumentId} is now {(e.IsSuccess ? "locked" : "unlocked")} ");
             };
 
             // 注册锁定单据的事件处理程序

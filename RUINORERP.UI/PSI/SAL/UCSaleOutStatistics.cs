@@ -88,7 +88,6 @@ namespace RUINORERP.UI.PSI.SAL
         {
             BaseProcessor baseProcessor = Startup.GetFromFacByName<BaseProcessor>(typeof(View_SaleOutItems).Name + "Processor");
             QueryFilter = baseProcessor.GetQueryFilter();
-
         }
 
         public override void BuildSummaryCols()
@@ -96,6 +95,7 @@ namespace RUINORERP.UI.PSI.SAL
             base.MasterSummaryCols.Add(c => c.Quantity);
             base.MasterSummaryCols.Add(c => c.SubtotalTransAmount);
             base.MasterSummaryCols.Add(c => c.SubtotalCostAmount);
+            base.MasterSummaryCols.Add(c => c.GrossProfit);
             base.MasterSummaryCols.Add(c => c.Quantity);
         }
 

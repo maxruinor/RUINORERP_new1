@@ -150,10 +150,10 @@ namespace RUINORERP.UI.ClientCmdService
                         RequestUnLockInfo requestUnLockInfo = obj.ToObject<RequestUnLockInfo>();
                         ////发送提醒
                         //每个人都收到请求。锁定的人才真正收到提醒？还是在服务器处理比较好。这里也判断一下。
-                        if (requestUnLockInfo.LockedUserID==MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID)
+                        if (requestUnLockInfo.LockedUserID == MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID)
                         {
                             ReminderData MessageInfo = new ReminderData();
-                            MessageInfo.BizData=requestUnLockInfo.BillData;
+                            MessageInfo.BizData = requestUnLockInfo.BillData;
                             MessageInfo.BizKeyID = requestUnLockInfo.BillID;
                             MessageInfo.SendTime = sendTime;
                             MessageInfo.BizType = requestUnLockInfo.BillData.BizType;
@@ -164,7 +164,15 @@ namespace RUINORERP.UI.ClientCmdService
                             MessageInfo.messageCmd = MessageCmdType.UnLockRequest;
                             MainForm.Instance.MessageList.Enqueue(MessageInfo);
                         }
-                        
+                        //每个人都收到请求。请求的人才也能收到提醒 
+                        if (requestUnLockInfo.RequestUserID == MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID)
+                        {
+                            ServerLockCommandEventArgs requestKargs = new ServerLockCommandEventArgs();
+                            requestKargs.lockCmd = lockCmd;
+                            requestKargs.isSuccess = true;
+                            requestKargs.requestBaseInfo = requestUnLockInfo;
+                            ClientEventManager.Instance.RaiseCommandEvent(requestUnLockInfo.PacketId, requestKargs);
+                        }
                         break;
 
                     case LockCmd.RefuseUnLock:
@@ -243,43 +251,17 @@ namespace RUINORERP.UI.ClientCmdService
                             #region
                             try
                             {
-                                index = 0;
-                                bg = new ByteBuff(gd.Two);
-                                sendTime = ByteDataAnalysis.GetString(gd.Two, ref index);
-                                LockCmd lockCmd = (LockCmd)ByteDataAnalysis.GetInt(gd.Two, ref index);
-                                long BillID = ByteDataAnalysis.GetInt64(gd.Two, ref index);
-                                long LockedUserID = ByteDataAnalysis.GetInt64(gd.Two, ref index);
-                                string RequestReleaseUserName = ByteDataAnalysis.GetString(gd.Two, ref index);
-                                int BillBizType = ByteDataAnalysis.GetInt(gd.Two, ref index);
-                                long MenuID = ByteDataAnalysis.GetInt64(gd.Two, ref index);
-                                if (lockCmd == LockCmd.RefuseUnLock)
-                                {
-                                    long lockuserid = MainForm.Instance.lockManager.GetLockedBy(BillID);
-                                    //锁定的人就是自己时才提醒
-                                    long selfUserid = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID;
-                                    if (lockuserid == selfUserid)
-                                    {
-                                        //MessageBox.Show("xx请您请求释放锁！", "提示");
-                                        //RequestReleaseUserName
-                                        //xx请您请求释放锁！弹出窗口确认 是否同意
-                                        if (System.Windows.Forms.MessageBox.Show($"{RequestReleaseUserName}请求操作当前单据，是否同意释放锁！", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
-                                        {
-                                            if (MainForm.Instance.lockManager.Unlock(BillID, LockedUserID))
-                                            {
-                                                //同意则向服务器发消息
-                                                //BuildDataPacket(object request)
-                                                //释放锁成功
-                                                //MainForm.Instance.PrintInfoLog("释放锁成功");
-                                                //通知对方 或广播一下？  
-                                            }
-                                        }
-                                        else
-                                        {
-                                            //拒绝消息通知到对方
+                                //被拒绝后的 得到服务器的通知
+                                string json = ByteDataAnalysis.GetString(gd.Two, ref index);
+                                JObject obj = JObject.Parse(json);
+                                RefuseUnLockInfo lockRequest = obj.ToObject<RefuseUnLockInfo>();
 
-                                        }
-                                    }
+                                long selfUserid = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID;
+                                if (lockRequest.RequestUserID == selfUserid)
+                                {
+                                    MessageBox.Show($"【{lockRequest.RefuseUserName}】拒绝释放{lockRequest.BillData.BillNo}的数据保护锁！", "提示");
                                 }
+
                             }
                             catch (Exception ex)
                             {
@@ -413,7 +395,7 @@ namespace RUINORERP.UI.ClientCmdService
                     case LockCmd.Broadcast:
                         break;
                 }
-                
+
                 // 处理锁定单据的逻辑
                 //MainForm.Instance.uclog.AddLog($"收到锁定单据指令，结果为{e.lockCmd.ToString()}{e.isSuccess}:{e.BillID}");
             }
@@ -421,8 +403,8 @@ namespace RUINORERP.UI.ClientCmdService
             LockChanged?.Invoke(this, e);
             if (sender is ServerLockCommandHandler commandHandler)
             {
-               
-                
+
+
             }
             //事件处理完了才删除
             ClientEventManager.Instance.RemoveCommandHandler(e.requestBaseInfo.PacketId, HandleLockEvent);

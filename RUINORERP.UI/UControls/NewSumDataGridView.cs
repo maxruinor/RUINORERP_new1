@@ -302,6 +302,7 @@ namespace RUINORERP.UI.UControls
             this.ColumnDisplayIndexChanged += NewSumDataGridView_ColumnDisplayIndexChanged;
             this.MouseDown += NewSumDataGridView_MouseDown;
             this.CellClick += NewSumDataGridView_CellClick;
+            this.CellStateChanged += dataGridView1_CellStateChanged;
             //所以行号不需要特别处理，调用者也不需要实现，除非有特殊要求
             //this.CellPainting += NewSumDataGridView_CellPainting;
             this.ReadOnly = false;
@@ -353,8 +354,45 @@ namespace RUINORERP.UI.UControls
             this.ColumnWidthChanged += DataGridView_ColumnWidthChanged;
 
 
+            this.CurrentCellChanged += dataGridView1_CurrentCellChanged;
+            this.SelectionChanged += dataGridView1_SelectionChanged;
         }
 
+     
+
+        // 处理CurrentCellChanged事件，以更新当前单元格的背景色
+        private void dataGridView1_CurrentCellChanged(object sender, EventArgs e)
+        {
+            if (this.CurrentCell != null)
+            {
+                // 设置当前单元格的选中背景色为蓝色
+                this.CurrentCell.Style.SelectionBackColor = Color.LightBlue;
+                //将当前单元各对应的行的其它单元格的背景色设置恢复一下
+                foreach (DataGridViewCell cell in this.SelectedCells)
+                {
+                    if (cell != this.CurrentCell)
+                    {
+                        cell.Style.SelectionBackColor = Color.MistyRose; ;
+                    }
+                }
+            }
+            
+        }
+
+        // 处理SelectionChanged事件，以更新其他选中单元格的背景色
+        private void dataGridView1_SelectionChanged(object sender, EventArgs e)
+        {
+            foreach (DataGridViewCell cell in this.SelectedCells)
+            {
+                if (cell != this.CurrentCell)
+                {
+                    // 设置其他选中单元格的背景色为默认颜色
+                    //cell.Style.SelectionBackColor = this.DefaultCellStyle.BackColor;
+                    cell.Style.SelectionBackColor =Color.MistyRose;
+
+                }
+            }
+        }
 
         private void DataGridView_ColumnWidthChanged(object sender, DataGridViewColumnEventArgs e)
         {
@@ -1647,6 +1685,21 @@ namespace RUINORERP.UI.UControls
             }
         }
 
+        private void dataGridView1_CellStateChanged(object sender, DataGridViewCellStateChangedEventArgs e)
+        {
+            if (e.StateChanged==DataGridViewElementStates.Selected)
+            {
+                if (e.Cell == this.CurrentCell)
+                {
+                    e.Cell.Style.SelectionBackColor = Color.LightBlue;
+                }
+                else
+                {
+                    e.Cell.Style.SelectionBackColor = this.DefaultCellStyle.SelectionBackColor;
+                }
+            }
+        }
+
         private void NewSumDataGridView_复制单元数据(object sender, EventArgs e)
         {
             // MessageBox.Show("复制单元数据");
@@ -1659,7 +1712,6 @@ namespace RUINORERP.UI.UControls
 
             }
         }
-
 
         /// <summary>
         /// 初始化合计行

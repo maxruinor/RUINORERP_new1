@@ -2652,7 +2652,7 @@ namespace RUINORERP.UI.BaseForm
                         ClientLockManagerCmd cmd = new ClientLockManagerCmd(CmdOperation.Send);
 
                         cmd.lockCmd = LockCmd.RequestUnLock;
-
+                        
                         RequestUnLockInfo lockRequest = new RequestUnLockInfo();
                         lockRequest.RequestUserName = MainForm.Instance.AppContext.CurUserInfo.UserInfo.tb_employee.Employee_Name;
                         lockRequest.RequestUserID = userid;
@@ -2663,22 +2663,11 @@ namespace RUINORERP.UI.BaseForm
                         lockRequest.LockedUserName = LockInfo.LockedByName;
                         lockRequest.PacketId = cmd.PacketId;
                         cmd.RequestInfo = lockRequest;
-
+                        ClientEventManager.Instance.AddCommandHandler(cmd.PacketId, cmd.HandleLockEvent);
                         MainForm.Instance.dispatcher.DispatchAsync(cmd, CancellationToken.None);
                         cmd.LockChanged += (sender, e) =>
                         {
                             MessageBox.Show($"已经向锁定者【{lockRequest.LockedUserName}】发送了解锁请求。等待结果中");
-                            //Console.WriteLine($"Document {e.DocumentId} is now {(e.IsLocked ? "locked" : "unlocked")} by {e.LockedBy}");
-                            //如果收到释放成功的信息时
-                            //tsBtnLocked.Visible = false;
-
-                            //this.tsBtnLocked.Visible = true;
-                            ////自己就表达绿色
-                            //this.tsBtnLocked.Image = global::RUINORERP.UI.Properties.Resources.unlockbill;
-                            ////更新？
-                            //Console.WriteLine($"Document {e.DocumentId} is now {(e.IsLocked ? "locked" : "unlocked")} ");
-
-
                         };
                     }
 

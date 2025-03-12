@@ -168,14 +168,15 @@ namespace RUINORERP.Server.CommandService
                         obj = JObject.Parse(json);
                         RefuseUnLockInfo refuseUnLockInfo = obj.ToObject<RefuseUnLockInfo>();
 
-                        ////服务器没有啥事件  事件都在客户端的操作回应结果
-                        //OnLockChanged(lockCmd，refuseUnLockInfo.BillID, false);
-
                         tx = new ByteBuff(100);
                         sendtime = System.DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
                         tx.PushString(sendtime);
                         tx.PushInt((int)lockCmd);
                         tx.PushString(json);
+                        //将来再加上提醒配置规则,或加在请求实体中
+                        gd.cmd = (byte)ServerCmdEnum.复合型锁单处理;
+                        gd.One = new byte[] { (byte)lockCmd };
+                        gd.Two = tx.toByte();
 
                         //通知请求的人
                         foreach (var item in frmMain.Instance.sessionListBiz)

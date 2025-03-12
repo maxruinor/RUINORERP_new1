@@ -277,7 +277,10 @@ namespace RUINORERP.UI.IM
             cmd.lockCmd = LockCmd.RefuseUnLock;
             RefuseUnLockInfo lockRequest = new RefuseUnLockInfo();
             lockRequest.BillID = reminderData.BizKeyID;
-
+            if (lockRequest.BillData == null && ReminderData.BizData != null)
+            {
+                lockRequest.BillData = ReminderData.BizData as CommBillData;
+            }
             lockRequest.RefuseUserName = MainForm.Instance.AppContext.CurUserInfo.UserInfo.tb_employee.Employee_Name;
             lockRequest.RefuseUserID = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID;
 

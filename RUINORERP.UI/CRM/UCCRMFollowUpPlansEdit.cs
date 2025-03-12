@@ -100,7 +100,7 @@ namespace RUINORERP.UI.CRM
             //后面这些依赖于控件绑定的数据源和字段。所以要在绑定后执行。
             if (entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改)
             {
-                base.InitRequiredToControl(MainForm.Instance.AppContext.GetRequiredService <tb_CRM_FollowUpPlansValidator> (), kryptonPanel1.Controls);
+                base.InitRequiredToControl(MainForm.Instance.AppContext.GetRequiredService<tb_CRM_FollowUpPlansValidator>(), kryptonPanel1.Controls);
                 base.InitEditItemToControl(entity, kryptonPanel1.Controls);
             }
             if (plan.PlanID > 0)
@@ -117,7 +117,9 @@ namespace RUINORERP.UI.CRM
             }
             if (plan.tb_CRM_FollowUpRecordses.Count > 0)
             {
-                flowLayoutPanel1.Visible = true;
+                //flowLayoutPanel1.Visible = true;
+                flowLayoutPanel1.AutoScroll=true;
+              
                 foreach (var item in plan.tb_CRM_FollowUpRecordses)
                 {
                     UCFollowUpRecord ucrecord = new UCFollowUpRecord();
@@ -305,6 +307,8 @@ namespace RUINORERP.UI.CRM
                 NewInfo.Customer_id = _EditEntity.Customer_id;
                 NewInfo.PlanID = _EditEntity.PlanID;
                 NewInfo.Employee_ID = _EditEntity.Employee_ID;
+                NewInfo.FollowUpSubject = _EditEntity.PlanSubject;
+                NewInfo.FollowUpContent = _EditEntity.PlanContent;
                 BaseEntity bty = NewInfo as BaseEntity;
                 bty.ActionStatus = ActionStatus.加载;
                 BusinessHelper.Instance.InitEntity(bty);

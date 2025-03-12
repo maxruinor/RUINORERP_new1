@@ -581,6 +581,16 @@ namespace RUINORERP.UI.Properties {
         }
         
         /// <summary>
+        ///   查找 System.Drawing.Bitmap 类型的本地化资源。
+        /// </summary>
+        internal static System.Drawing.Bitmap Hint {
+            get {
+                object obj = ResourceManager.GetObject("Hint", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
         ///   查找类似于 (图标) 的 System.Drawing.Icon 类型的本地化资源。
         /// </summary>
         internal static System.Drawing.Icon history {
@@ -1061,6 +1071,16 @@ namespace RUINORERP.UI.Properties {
         }
         
         /// <summary>
+        ///   查找 System.Drawing.Bitmap 类型的本地化资源。
+        /// </summary>
+        internal static System.Drawing.Bitmap search_history_16x16 {
+            get {
+                object obj = ResourceManager.GetObject("search history_16x16", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
         ///   查找类似于 (图标) 的 System.Drawing.Icon 类型的本地化资源。
         /// </summary>
         internal static System.Drawing.Icon search1 {
@@ -1186,6 +1206,16 @@ namespace RUINORERP.UI.Properties {
         internal static System.Drawing.Bitmap US_Dollar {
             get {
                 object obj = ResourceManager.GetObject("US_Dollar", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   查找 System.Drawing.Bitmap 类型的本地化资源。
+        /// </summary>
+        internal static System.Drawing.Bitmap user_available {
+            get {
+                object obj = ResourceManager.GetObject("user-available", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }

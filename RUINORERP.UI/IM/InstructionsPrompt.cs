@@ -7,6 +7,7 @@ using RUINORERP.Common.Extensions;
 using RUINORERP.Common.Helper;
 using RUINORERP.Global;
 using RUINORERP.Model;
+using RUINORERP.Model.CommonModel;
 using RUINORERP.Model.TransModel;
 using RUINORERP.UI.BaseForm;
 using RUINORERP.UI.ClientCmdService;
@@ -144,6 +145,10 @@ namespace RUINORERP.UI.IM
             lockRequest.LockedUserName = MainForm.Instance.AppContext.CurUserInfo.UserInfo.tb_employee.Employee_Name;
             lockRequest.MenuID = 0;
             lockRequest.PacketId = cmd.PacketId;
+            if (lockRequest.BillData == null && ReminderData.BizData != null)
+            {
+                lockRequest.BillData = ReminderData.BizData as CommBillData;
+            }
             cmd.RequestInfo = lockRequest;
             MainForm.Instance.dispatcher.DispatchAsync(cmd, CancellationToken.None);
             this.DialogResult = DialogResult.OK;
@@ -272,8 +277,13 @@ namespace RUINORERP.UI.IM
             cmd.lockCmd = LockCmd.RefuseUnLock;
             RefuseUnLockInfo lockRequest = new RefuseUnLockInfo();
             lockRequest.BillID = reminderData.BizKeyID;
+
             lockRequest.RefuseUserName = MainForm.Instance.AppContext.CurUserInfo.UserInfo.tb_employee.Employee_Name;
             lockRequest.RefuseUserID = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID;
+
+            lockRequest.RequestUserName = reminderData.SenderEmployeeName;
+            lockRequest.RequestUserID = reminderData.SenderEmployeeID;
+
             lockRequest.PacketId = cmd.PacketId;
             //拒绝谁？
             cmd.RequestInfo = lockRequest;

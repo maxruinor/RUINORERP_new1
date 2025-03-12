@@ -142,26 +142,29 @@ namespace RUINORERP.UI.ClientCmdService
                         UNLOCKargs.isSuccess = isSuccess;
                         UNLOCKargs.requestBaseInfo = unLockInfo;
                         ClientEventManager.Instance.RaiseCommandEvent(unLockInfo.PacketId, UNLOCKargs);
-
                         break;
 
                     case LockCmd.RequestUnLock:
-
                         json = ByteDataAnalysis.GetString(gd.Two, ref index);
                         obj = JObject.Parse(json);
                         RequestUnLockInfo requestUnLockInfo = obj.ToObject<RequestUnLockInfo>();
-
                         ////发送提醒
-                        //LockChanged?.Invoke(this, new LockChangedEventArgs(lockCmd, requestUnLockInfo.BillID, true));
-
-                        ReminderData MessageInfo = new ReminderData();
-                        MessageInfo.BizKeyID = requestUnLockInfo.BillID;
-                        MessageInfo.SendTime = sendTime;
-                        MessageInfo.BizType = requestUnLockInfo.BillData.BizType;
-                        MessageInfo.SenderEmployeeName = requestUnLockInfo.RequestUserName;
-                        MessageInfo.ReminderContent = $"【{requestUnLockInfo.RequestUserName}】请求释放{requestUnLockInfo.BillData.BizName}:{requestUnLockInfo.BillData.BillNo}的锁！请保存数据后，关闭对应单据窗口。";
-                        MessageInfo.messageCmd = MessageCmdType.UnLockRequest;
-                        MainForm.Instance.MessageList.Enqueue(MessageInfo);
+                        //每个人都收到请求。锁定的人才真正收到提醒？还是在服务器处理比较好。这里也判断一下。
+                        if (requestUnLockInfo.LockedUserID==MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID)
+                        {
+                            ReminderData MessageInfo = new ReminderData();
+                            MessageInfo.BizData=requestUnLockInfo.BillData;
+                            MessageInfo.BizKeyID = requestUnLockInfo.BillID;
+                            MessageInfo.SendTime = sendTime;
+                            MessageInfo.BizType = requestUnLockInfo.BillData.BizType;
+                            MessageInfo.SenderEmployeeName = requestUnLockInfo.RequestUserName;
+                            MessageInfo.ReminderContent = $"【{requestUnLockInfo.RequestUserName}】请求释放{requestUnLockInfo.BillData.BizName}:{requestUnLockInfo.BillData.BillNo}的锁！请保存数据后，关闭对应单据窗口。";
+                            MessageInfo.SenderEmployeeName = requestUnLockInfo.RequestUserName;
+                            MessageInfo.SenderEmployeeID = requestUnLockInfo.RequestUserID;
+                            MessageInfo.messageCmd = MessageCmdType.UnLockRequest;
+                            MainForm.Instance.MessageList.Enqueue(MessageInfo);
+                        }
+                        
                         break;
 
                     case LockCmd.RefuseUnLock:

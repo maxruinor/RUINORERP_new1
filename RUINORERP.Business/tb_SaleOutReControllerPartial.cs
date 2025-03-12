@@ -109,7 +109,9 @@ namespace RUINORERP.Business
                                 if (child.TotalReturnedQty > child.Quantity)
                                 {
                                     _unitOfWorkManage.RollbackTran();
-                                    throw new Exception($"销售退回单中：{entity.ReturnNo}中，明细退回总数量不能大于出库数量！请检查该出库单是否已经退回过！");
+                                    rrs.ErrorMsg = $"销售退回单中：{entity.ReturnNo}中，明细退回总数量不能大于出库数量！请检查该出库单是否已经退回过！";
+                                    rrs.Succeeded = false;
+                                    return rrs;
                                 }
                             }
                             await _unitOfWorkManage.GetDbClient().Updateable<tb_SaleOutDetail>(entity.tb_saleout.tb_SaleOutDetails).ExecuteCommandAsync();
@@ -158,7 +160,9 @@ namespace RUINORERP.Business
                                 if (orderDetail.TotalReturnedQty > orderDetail.Quantity)
                                 {
                                     _unitOfWorkManage.RollbackTran();
-                                    throw new Exception($"销售出库退回时，出库单：{entity.tb_saleout.SaleOutNo}中，SKU的退回总数量不能大于订单数量！");
+                                    rrs.ErrorMsg = $"销售出库退回时，出库单：{entity.tb_saleout.SaleOutNo}中，SKU的退回总数量不能大于订单数量！";
+                                    rrs.Succeeded = false;
+                                    return rrs;
                                 }
 
 
@@ -505,7 +509,9 @@ namespace RUINORERP.Business
                         if (child.TotalReturnedQty > child.Quantity)
                         {
                             _unitOfWorkManage.RollbackTran();
-                            throw new Exception($"销售退回单中：{entity.ReturnNo}中，SKU明细的退回总数量不能大于出库数量！");
+                            rrs.ErrorMsg = $"销售退回单中：{entity.ReturnNo}中，SKU明细的退回总数量不能大于出库数量！";
+                            rrs.Succeeded = false;
+                            return rrs;
                         }
                     }
                     await _unitOfWorkManage.GetDbClient().Updateable<tb_SaleOutDetail>(saleout.tb_SaleOutDetails).ExecuteCommandAsync();
@@ -554,7 +560,9 @@ namespace RUINORERP.Business
                         if (orderDetail.TotalReturnedQty > orderDetail.Quantity)
                         {
                             _unitOfWorkManage.RollbackTran();
-                            throw new Exception($"销售出库退回时，销售单：{saleout.SaleOutNo}中，SKU的退回总数量不能大于订单数量！");
+                            rrs.ErrorMsg = $"销售出库退回时，销售单：{saleout.SaleOutNo}中，SKU的退回总数量不能大于订单数量！";
+                            rrs.Succeeded = false;
+                            return rrs;
                         }
 
 

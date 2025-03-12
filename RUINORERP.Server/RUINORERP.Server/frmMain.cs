@@ -405,6 +405,8 @@ namespace RUINORERP.Server
                             CheckCacheList();
                             CheckReminderBizDataList();
                             lockManager.CheckLocks();
+                            ServerLockManagerCmd cmd = new ServerLockManagerCmd(CmdOperation.Send);
+                            cmd.BuildDataPacketBroadcastLockStatus();
                         }
                         ));
                     }
@@ -414,6 +416,8 @@ namespace RUINORERP.Server
                         CheckCacheList();
                         CheckReminderBizDataList();
                         lockManager.CheckLocks();
+                        ServerLockManagerCmd cmd = new ServerLockManagerCmd(CmdOperation.Send);
+                        cmd.BuildDataPacketBroadcastLockStatus();
                     }
                 });
                 timer.Enabled = true;

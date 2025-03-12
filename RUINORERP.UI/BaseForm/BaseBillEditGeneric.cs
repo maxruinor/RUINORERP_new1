@@ -510,15 +510,22 @@ namespace RUINORERP.UI.BaseForm
                 #region 数据状态修改时也会影响到按钮
                 if (entity is BaseEntity baseEntity)
                 {
-                    baseEntity.ActionStatusChanged += (sender, s2) =>
+                    //为了不重复执行
+                    // 定义一个局部变量来存储事件处理程序
+                    EventHandler<ActionStatusChangedEventArgs> eventHandler = (sender, s2) =>
                     {
-                        // 判断是否从其他状态变为"修改"状态
                         if (s2.OldValue != ActionStatus.修改 && s2.NewValue == ActionStatus.修改)
                         {
-                            // 在UI层执行LockBill方法
                             LockBill();
                         }
                     };
+
+                    // 先移除之前可能添加的处理程序
+                    baseEntity.ActionStatusChanged -= eventHandler;
+                    // 再添加处理程序
+                    baseEntity.ActionStatusChanged += eventHandler;
+
+
                     //如果属性变化 则状态为修改
                     baseEntity.PropertyChanged += (sender, s2) =>
                 {
@@ -1238,9 +1245,9 @@ namespace RUINORERP.UI.BaseForm
                         return;
                     }
 
-                    this.tsBtnLocked.Visible = true;
                     if (e.isSuccess)
                     {
+                        this.tsBtnLocked.Visible = true;
                         this.tsBtnLocked.Image = global::RUINORERP.UI.Properties.Resources.unlockbill;
                     }
 
@@ -1956,8 +1963,8 @@ namespace RUINORERP.UI.BaseForm
                 return;
             }
 
-           // BaseController<C> ctrDetail = Startup.GetFromFacByName<BaseController<C>>(typeof(C).Name + "Controller");
-            var result =await MainForm.Instance.AppContext.Db.UpdateableByObject(details).ExecuteCommandAsync();
+            // BaseController<C> ctrDetail = Startup.GetFromFacByName<BaseController<C>>(typeof(C).Name + "Controller");
+            var result = await MainForm.Instance.AppContext.Db.UpdateableByObject(details).ExecuteCommandAsync();
             BaseController<T> ctr = Startup.GetFromFacByName<BaseController<T>>(typeof(T).Name + "Controller");
             ReturnResults<T> SaveResult = new ReturnResults<T>();
             SaveResult = await ctr.BaseSaveOrUpdate(EditEntity);
@@ -1988,7 +1995,7 @@ namespace RUINORERP.UI.BaseForm
         }
 
 
-   
+
 
 
         protected override void AddByCopy()
@@ -2634,8 +2641,8 @@ namespace RUINORERP.UI.BaseForm
                 {
                     //如果这个锁是自己锁的。就释放
                     long userid = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID;
-                    long lockeduserid = (long)MainForm.Instance.lockManager.GetLockedBy(pkid);
-                    if (lockeduserid > 0 && lockeduserid != userid)
+                    var LockInfo = MainForm.Instance.lockManager.GetLockStatus(pkid);
+                    if (LockInfo != null && LockInfo.LockedByID != userid)
                     {
                         BillConverterFactory bcf = Startup.GetFromFac<BillConverterFactory>();
                         //这里只是取打印配置信息
@@ -2652,8 +2659,8 @@ namespace RUINORERP.UI.BaseForm
                         lockRequest.BillID = pkid;
                         lockRequest.BillData = cbd;
                         lockRequest.MenuID = CurMenuInfo.MenuID;
-                        lockRequest.LockedUserID = lockeduserid;
-                        lockRequest.LockedUserName = BizCacheHelper.Instance.GetEntity<tb_UserInfo>(lockeduserid).UserName;
+                        lockRequest.LockedUserID = LockInfo.LockedByID;
+                        lockRequest.LockedUserName = LockInfo.LockedByName;
                         lockRequest.PacketId = cmd.PacketId;
                         cmd.RequestInfo = lockRequest;
 
@@ -2748,8 +2755,6 @@ namespace RUINORERP.UI.BaseForm
                 }
 
             };
-
-
 
         }
 

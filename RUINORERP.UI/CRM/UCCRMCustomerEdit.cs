@@ -195,8 +195,12 @@ namespace RUINORERP.UI.CRM
                 {
                     foreach (var item in customer.tb_CRM_FollowUpRecordses)
                     {
+                        
                         UCFollowUpRecord ucrecord = new UCFollowUpRecord();
+                        ucrecord.AutoSize = true;
+                        ucrecord.AutoSizeMode = AutoSizeMode.GrowAndShrink;
                         ucrecord.BindData(item);
+                        uCTrackRecordses.flowLayoutPanel1.WrapContents = true;
                         uCTrackRecordses.flowLayoutPanel1.Controls.Add(ucrecord);
                         loadTrack = true;
                     }

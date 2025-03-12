@@ -135,7 +135,7 @@ namespace RUINORERP.Business.CommService
         public void CheckLocks()
         {
             // 检查并释放超时的锁
-            var timeout = TimeSpan.FromMinutes(60); // 锁超时时间
+            var timeout = TimeSpan.FromMinutes(120); // 锁超时时间
             var now = DateTime.Now;
 
             var keysToRemove = new List<long>();

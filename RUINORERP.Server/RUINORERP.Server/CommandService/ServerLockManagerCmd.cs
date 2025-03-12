@@ -115,7 +115,7 @@ namespace RUINORERP.Server.CommandService
                         {
                             if (frmMain.Instance.IsDebug)
                             {
-                                frmMain.Instance.PrintInfoLog($"服务器解锁{unLockInfo.BillID}成功");
+                                frmMain.Instance.PrintInfoLog($"服务器解锁{unLockInfo.BillData.BillNo}成功");
                             }
                             //通知所有人。这个单被锁了 包含锁单本人
                             ResponseToClient(isUnlocked, unLockInfo);
@@ -155,6 +155,7 @@ namespace RUINORERP.Server.CommandService
                                 item.Value.AddSendData(gd);
                                 break;
                             }
+                            //向锁定的人发送消息 请求解锁
                             if (item.Value.User.UserID == requestUnLockInfo.LockedUserID)
                             {
                                 item.Value.AddSendData(gd);

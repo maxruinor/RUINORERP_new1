@@ -264,7 +264,7 @@
             | Krypton.Workspace.CompactFlags.PromoteLeafs)));
             this.kryptonDockableWorkspaceQuery.ContainerBackStyle = Krypton.Toolkit.PaletteBackStyle.PanelClient;
             this.kryptonDockableWorkspaceQuery.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.kryptonDockableWorkspaceQuery.Location = new System.Drawing.Point(0, 145);
+            this.kryptonDockableWorkspaceQuery.Location = new System.Drawing.Point(0, 139);
             this.kryptonDockableWorkspaceQuery.Name = "kryptonDockableWorkspaceQuery";
             // 
             // 
@@ -273,7 +273,7 @@
             this.kryptonDockableWorkspaceQuery.Root.WorkspaceControl = this.kryptonDockableWorkspaceQuery;
             this.kryptonDockableWorkspaceQuery.SeparatorStyle = Krypton.Toolkit.SeparatorStyle.LowProfile;
             this.kryptonDockableWorkspaceQuery.ShowMaximizeButton = false;
-            this.kryptonDockableWorkspaceQuery.Size = new System.Drawing.Size(1110, 551);
+            this.kryptonDockableWorkspaceQuery.Size = new System.Drawing.Size(1110, 557);
             this.kryptonDockableWorkspaceQuery.SplitterWidth = 5;
             this.kryptonDockableWorkspaceQuery.TabIndex = 0;
             this.kryptonDockableWorkspaceQuery.TabStop = true;
@@ -290,13 +290,13 @@
             // kryptonHeaderGroupTop.Panel
             // 
             this.kryptonHeaderGroupTop.Panel.Controls.Add(this.kryptonPanelQuery);
-            this.kryptonHeaderGroupTop.Size = new System.Drawing.Size(1110, 145);
+            this.kryptonHeaderGroupTop.Size = new System.Drawing.Size(1110, 139);
             this.kryptonHeaderGroupTop.StateCommon.HeaderPrimary.Border.DrawBorders = ((Krypton.Toolkit.PaletteDrawBorders)((((Krypton.Toolkit.PaletteDrawBorders.Top | Krypton.Toolkit.PaletteDrawBorders.Bottom) 
             | Krypton.Toolkit.PaletteDrawBorders.Left) 
             | Krypton.Toolkit.PaletteDrawBorders.Right)));
             this.kryptonHeaderGroupTop.TabIndex = 2;
             this.kryptonHeaderGroupTop.ValuesPrimary.Heading = "";
-            this.kryptonHeaderGroupTop.ValuesPrimary.Image = global::RUINORERP.UI.Properties.Resources.searcher1;
+            this.kryptonHeaderGroupTop.ValuesPrimary.Image = global::RUINORERP.UI.Properties.Resources.search_history_16x16;
             // 
             // buttonSpecHeaderGroup1
             // 

@@ -2622,9 +2622,12 @@
     <Compile Include="WorkFlowTester\WorkWorkflow2.cs" />
     <None Include="ResourceFile\import_32x32.ico" />
     <Content Include="InitSQL.sql" />
+    <None Include="ResourceFile\Hint.ico" />
     <Content Include="ResourceFile\money-rmb.png" />
     <None Include="ResourceFile\人民币 -32.png" />
+    <None Include="ResourceFile\search history_16x16.ico" />
     <Content Include="ResourceFile\unlockbill.png" />
+    <None Include="ResourceFile\user-available.png" />
     <Content Include="ResourceFile\人民币.png" />
     <None Include="Resources\lockbill.png" />
     <Content Include="UpdateLog.txt">

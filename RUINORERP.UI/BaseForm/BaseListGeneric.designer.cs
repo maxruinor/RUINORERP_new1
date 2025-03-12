@@ -108,13 +108,13 @@ namespace RUINORERP.UI.BaseForm
             // kryptonGroup中间
             // 
             this.kryptonGroup中间.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.kryptonGroup中间.Location = new System.Drawing.Point(0, 110);
+            this.kryptonGroup中间.Location = new System.Drawing.Point(0, 104);
             this.kryptonGroup中间.Name = "kryptonGroup中间";
             // 
             // kryptonGroup中间.Panel
             // 
             this.kryptonGroup中间.Panel.Controls.Add(this.dataGridView1);
-            this.kryptonGroup中间.Size = new System.Drawing.Size(927, 474);
+            this.kryptonGroup中间.Size = new System.Drawing.Size(927, 480);
             this.kryptonGroup中间.TabIndex = 62;
             // 
             // dataGridView1
@@ -124,8 +124,8 @@ namespace RUINORERP.UI.BaseForm
             this.dataGridView1.AllowUserToOrderColumns = true;
             dataGridViewCellStyle1.BackColor = System.Drawing.Color.Beige;
             this.dataGridView1.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle1;
-            this.dataGridView1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
+            this.dataGridView1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+            | System.Windows.Forms.AnchorStyles.Left)
             | System.Windows.Forms.AnchorStyles.Right)));
             this.dataGridView1.BorderStyle = System.Windows.Forms.BorderStyle.None;
             this.dataGridView1.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
@@ -138,7 +138,7 @@ namespace RUINORERP.UI.BaseForm
             this.dataGridView1.NeedSaveColumnsXml = false;
             this.dataGridView1.PaletteMode = Krypton.Toolkit.PaletteMode.Office2007Blue;
             this.dataGridView1.RowTemplate.Height = 23;
-            this.dataGridView1.Size = new System.Drawing.Size(925, 472);
+            this.dataGridView1.Size = new System.Drawing.Size(925, 478);
             this.dataGridView1.SumColumns = null;
             this.dataGridView1.SummaryDescription = "2020-08最新 带有合计列功能;";
             this.dataGridView1.SumRowCellFormat = "N2";
@@ -167,10 +167,10 @@ namespace RUINORERP.UI.BaseForm
             // kryptonHeaderGroupTop.Panel
             // 
             this.kryptonHeaderGroupTop.Panel.Controls.Add(this.kryptonPanel条件生成容器);
-            this.kryptonHeaderGroupTop.Size = new System.Drawing.Size(927, 85);
+            this.kryptonHeaderGroupTop.Size = new System.Drawing.Size(927, 79);
             this.kryptonHeaderGroupTop.TabIndex = 61;
             this.kryptonHeaderGroupTop.ValuesPrimary.Heading = "";
-            this.kryptonHeaderGroupTop.ValuesPrimary.Image = global::RUINORERP.UI.Properties.Resources.searcher1;
+            this.kryptonHeaderGroupTop.ValuesPrimary.Image = global::RUINORERP.UI.Properties.Resources.search_history_16x16;
             this.kryptonHeaderGroupTop.CollapsedChanged += new System.EventHandler(this.kryptonHeaderGroupTop_CollapsedChanged);
             // 
             // buttonSpecHeaderGroup1

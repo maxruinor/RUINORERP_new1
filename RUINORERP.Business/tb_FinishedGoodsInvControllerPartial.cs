@@ -299,7 +299,10 @@ namespace RUINORERP.Business
                     if (manufacturingOrder.QuantityDelivered > detailList.Sum(c => c.Qty))
                     {
                         _unitOfWorkManage.RollbackTran();
-                        throw new Exception($"缴库单：{entity.DeliveryBillNo}审核时，缴库总数量不能大于制令单{manufacturingOrder.MONO}中的生产数量！");
+                        rs.ErrorMsg = $"缴库单：{entity.DeliveryBillNo}审核时，缴库总数量不能大于制令单{manufacturingOrder.MONO}中的生产数量！";
+                        rs.Succeeded = false;
+                        return rs;
+                 
                     }
 
                     //制令单已交数量和判断是否结案

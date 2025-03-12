@@ -39,11 +39,14 @@ namespace RUINORERP.UI.CRM.DockUI
             DataBindingHelper.BindData4CmbByEnum<tb_CRM_FollowUpRecords>(entity, k => k.FollowUpMethod, typeof(FollowUpMethod), cmbFollowUpMethod, false);
             DataBindingHelper.BindData4TextBox<tb_CRM_FollowUpRecords>(entity, t => t.FollowUpSubject, txtFollowUpSubject, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_CRM_FollowUpRecords>(entity, t => t.FollowUpContent, txtFollowUpContent, BindDataType4TextBox.Text, false);
+            DataBindingHelper.BindData4TextBox<tb_CRM_FollowUpRecords>(entity, t => t.FollowUpResult, txtFollowUpResult, BindDataType4TextBox.Text, false);
+            DataBindingHelper.BindData4TextBox<tb_CRM_FollowUpRecords>(entity, t => t.Notes, txtNotes, BindDataType4TextBox.Text, false);
         }
 
-        private void klinklblDetail_LinkClicked(object sender, EventArgs e)
+  
+        private void buttonSpecHeaderGroup1_Click(object sender, EventArgs e)
         {
-            //打开详情
+           // kryptonPanel条件生成容器.AutoSize=true;
         }
     }
 }

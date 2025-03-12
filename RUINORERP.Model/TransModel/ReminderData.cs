@@ -27,6 +27,9 @@ namespace RUINORERP.Model.TransModel
     /// </summary>
     public class ReminderData : ReminderDataBase
     {
+        /// <summary>
+        /// 锁单时 保存的是CommBillData
+        /// </summary>
         public object BizData { get; set; }
 
         /// <summary>

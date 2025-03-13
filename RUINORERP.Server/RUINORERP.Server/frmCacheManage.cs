@@ -96,7 +96,7 @@ namespace RUINORERP.Server
         {
             //加载所有用户
             cmbUser.Items.Clear();
-            foreach (var user in frmMain.Instance.sessionListBiz)
+            foreach (var user in frmMain.Instance.sessionListBiz.ToArray())
             {
                 SessionforBiz sessionforBiz = user.Value as SessionforBiz;
                 SuperValue skv = new SuperValue(sessionforBiz.User.姓名, user.Key);
@@ -192,7 +192,7 @@ namespace RUINORERP.Server
                     string tableName = kv.superDataTypeName;
                     SuperValue skv = cmbUser.SelectedItem as SuperValue;
 
-                    foreach (var item in frmMain.Instance.sessionListBiz)
+                    foreach (var item in frmMain.Instance.sessionListBiz.ToArray())
                     {
                         SessionforBiz sessionforBiz = item.Value as SessionforBiz;
                         UserService.发送缓存数据列表(sessionforBiz, tableName);

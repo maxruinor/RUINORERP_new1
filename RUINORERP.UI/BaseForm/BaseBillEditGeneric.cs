@@ -2887,8 +2887,6 @@ namespace RUINORERP.UI.BaseForm
 
         }
 
-
-
         private async Task<bool> AutoSaveDataAsync()
         {
             bool result = false;

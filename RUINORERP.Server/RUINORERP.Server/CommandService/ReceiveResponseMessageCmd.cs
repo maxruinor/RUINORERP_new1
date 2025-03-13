@@ -166,7 +166,7 @@ namespace RUINORERP.Server.CommandService
                 }
                 if (ToSession == null)
                 {
-                    foreach (var item in frmMain.Instance.sessionListBiz)
+                    foreach (var item in frmMain.Instance.sessionListBiz.ToArray())
                     {
                         item.Value.AddSendData((byte)ServerCmdEnum.复合型消息处理, new byte[] { (byte)messageType }, tx.toByte());
                     }

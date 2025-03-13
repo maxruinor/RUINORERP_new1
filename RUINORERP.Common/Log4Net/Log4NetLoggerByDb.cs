@@ -121,7 +121,7 @@ namespace RUINORERP.Common.Log4Net
                 {
                     if (item is Exception ex)
                     {
-                        if (log.Message==null)
+                        if (log.Message == null)
                         {
                             log.Message = string.Empty;
                         }
@@ -153,7 +153,14 @@ namespace RUINORERP.Common.Log4Net
             {
 
             }
-
+            if (log.Date == null)
+            {
+                log.Date = DateTime.Now;
+            }
+            if (log.User_ID == null)
+            {
+               // log.User_ID = DBNull.Value;
+            }
 
             if (!string.IsNullOrEmpty(message) || exception != null)
             {

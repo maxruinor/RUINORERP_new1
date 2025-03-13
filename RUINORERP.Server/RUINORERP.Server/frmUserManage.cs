@@ -82,12 +82,6 @@ namespace RUINORERP.Server
 
                         }
 
-                        //SessionforBiz biz = frmMain.Instance.sessionListBiz[((UserInfo)e.NewItems[e.NewStartingIndex]).SessionId];
-                        //userInfoBindingSource.Add(((UserInfo)e.NewItems[e.NewStartingIndex]));
-                        // 处理添加元素的逻辑
-                        //userInfoBindingSource.DataSource = frmMain.Instance.userInfos;
-                        //dataGridView1.DataSource = null;
-                        //dataGridView1.DataSource = userInfoBindingSource;
 
                         break;
                     case System.Collections.Specialized.NotifyCollectionChangedAction.Remove:
@@ -158,6 +152,7 @@ namespace RUINORERP.Server
         public void UserInfo_PropertyChanged(object sender, PropertyChangedEventArgs e)
         {
 
+
             try
             {
                 if (sender != null && sender is UserInfo info)
@@ -166,26 +161,28 @@ namespace RUINORERP.Server
                     if (frmMain.Instance.sessionListBiz.ContainsKey(info.SessionId))
                     {
                         SessionforBiz biz = frmMain.Instance.sessionListBiz[info.SessionId];
-                        for (int i = 0; i < dataGridView1.Rows.Count; i++)
+                        dataGridView1.Invoke(new Action(() =>
                         {
-                            if (dataGridView1.Rows[i].DataBoundItem is UserInfo userInfo)
+                            for (int i = 0; i < dataGridView1.Rows.Count; i++)
                             {
-                                if (userInfo.SessionId == biz.SessionID)
+                                if (dataGridView1.Rows[i].DataBoundItem is UserInfo userInfo)
                                 {
-                                    foreach (DataGridViewColumn dc in dataGridView1.Columns)
+                                    if (userInfo.SessionId == biz.SessionID)
                                     {
-                                        if (dc.DataPropertyName == e.PropertyName)
+                                        foreach (DataGridViewColumn dc in dataGridView1.Columns)
                                         {
-                                            dataGridView1.Rows[i].Cells[dc.Name].Value = HLH.Lib.Helper.ReflectionHelper.GetPropertyValue(info, e.PropertyName);
-                                            dataGridView1.Refresh();
-                                            // dataGridView1.PerformLayout();
-                                            break;
+                                            if (dc.DataPropertyName == e.PropertyName)
+                                            {
+                                                dataGridView1.Rows[i].Cells[dc.Name].Value = HLH.Lib.Helper.ReflectionHelper.GetPropertyValue(info, e.PropertyName);
+                                                dataGridView1.Refresh();
+                                                // dataGridView1.PerformLayout();
+                                                break;
+                                            }
                                         }
                                     }
                                 }
                             }
-                        }
-                        //RefreshData();
+                        }));
                     }
 
                 }
@@ -194,8 +191,8 @@ namespace RUINORERP.Server
             catch (Exception ex)
             {
                 Console.WriteLine("UserInfo_PropertyChanged时出错" + ex.Message);
-
             }
+
         }
 
 

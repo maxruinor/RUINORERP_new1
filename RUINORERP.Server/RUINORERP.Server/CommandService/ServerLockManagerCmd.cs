@@ -142,7 +142,7 @@ namespace RUINORERP.Server.CommandService
                         gd.One = new byte[] { (byte)lockCmd };
                         gd.Two = tx.toByte();
                         //通知拥有锁的人
-                        foreach (var item in frmMain.Instance.sessionListBiz)
+                        foreach (var item in frmMain.Instance.sessionListBiz.ToArray())
                         {
                             //跳过自己
                             if (FromSession != null && item.Value.SessionID == FromSession.SessionID)
@@ -179,7 +179,7 @@ namespace RUINORERP.Server.CommandService
                         gd.Two = tx.toByte();
 
                         //通知请求的人
-                        foreach (var item in frmMain.Instance.sessionListBiz)
+                        foreach (var item in frmMain.Instance.sessionListBiz.ToArray())
                         {
                             //跳过自己
                             if (FromSession != null && item.Value.SessionID == FromSession.SessionID)
@@ -232,7 +232,7 @@ namespace RUINORERP.Server.CommandService
                 tx.PushInt((int)LockCmd.Broadcast);
                 tx.PushString(frmMain.Instance.lockManager.GetLockStatusToJson());
                 //广播到在线所有人
-                foreach (var item in frmMain.Instance.sessionListBiz)
+                foreach (var item in frmMain.Instance.sessionListBiz.ToArray())
                 {
                     item.Value.AddSendData((byte)ServerCmdEnum.复合型锁单处理, new byte[] { (byte)lockCmd }, tx.toByte());
                 }
@@ -279,7 +279,7 @@ namespace RUINORERP.Server.CommandService
                 }
                 if (ToSession == null)
                 {
-                    foreach (var item in frmMain.Instance.sessionListBiz)
+                    foreach (var item in frmMain.Instance.sessionListBiz.ToArray())
                     {
                         item.Value.AddSendData((byte)ServerCmdEnum.复合型锁单处理, new byte[] { (byte)lockCmd }, tx.toByte());
                     }

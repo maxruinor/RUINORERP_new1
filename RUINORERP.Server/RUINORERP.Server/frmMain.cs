@@ -217,7 +217,7 @@ namespace RUINORERP.Server
                     Thread.Sleep(10);
                     if (frmMain.Instance.sessionListBiz.Count > 0)
                     {
-                        foreach (var item in frmMain.Instance.sessionListBiz)
+                        foreach (var item in frmMain.Instance.sessionListBiz.ToArray())
                         {
                             // SessionforGame sg;
                             while (item.Value.DataQueue.Count > 0)
@@ -498,7 +498,7 @@ namespace RUINORERP.Server
 
         private void CacheInfoList_OnUpdate(object sender, CacheManager.Core.Internal.CacheActionEventArgs e)
         {
-            foreach (SessionforBiz PlayerSession in sessionListBiz.Values)
+            foreach (SessionforBiz PlayerSession in sessionListBiz.Values.ToArray())
             {
                 BizService.UserService.发送缓存信息列表(PlayerSession);
             }
@@ -506,7 +506,7 @@ namespace RUINORERP.Server
 
         private void CacheInfoList_OnClear(object sender, CacheManager.Core.Internal.CacheClearEventArgs e)
         {
-            foreach (SessionforBiz PlayerSession in sessionListBiz.Values)
+            foreach (SessionforBiz PlayerSession in sessionListBiz.Values.ToArray())
             {
                 BizService.UserService.发送缓存信息列表(PlayerSession);
             }
@@ -514,7 +514,7 @@ namespace RUINORERP.Server
 
         private void CacheInfoList_OnAdd(object sender, CacheManager.Core.Internal.CacheActionEventArgs e)
         {
-            foreach (SessionforBiz PlayerSession in sessionListBiz.Values)
+            foreach (SessionforBiz PlayerSession in sessionListBiz.Values.ToArray())
             {
                 BizService.UserService.发送缓存信息列表(PlayerSession);
             }
@@ -522,7 +522,7 @@ namespace RUINORERP.Server
 
         private void CacheEntityList_OnRemove(object sender, CacheManager.Core.Internal.CacheActionEventArgs e)
         {
-            foreach (SessionforBiz PlayerSession in sessionListBiz.Values)
+            foreach (SessionforBiz PlayerSession in sessionListBiz.Values.ToArray())
             {
                 BizService.UserService.发送缓存信息列表(PlayerSession);
             }
@@ -814,7 +814,7 @@ namespace RUINORERP.Server
 
                         }
                         //广播出去
-                        foreach (SessionforBiz PlayerSession in sessionListBiz.Values)
+                        foreach (SessionforBiz PlayerSession in sessionListBiz.Values.ToArray())
                         {
                             BizService.UserService.发送在线列表(PlayerSession);
                         }
@@ -909,8 +909,11 @@ namespace RUINORERP.Server
                         //logBuilder.AddProvider(new Log4NetProvider("log4net.config"));
                         //引用的long4net.dll要版本一样。
                         string conn = AppSettings.GetValue("ConnectString");
+                        string key = "ruinor1234567890";
+                        string newconn = HLH.Lib.Security.EncryptionHelper.AesDecrypt(conn, key);
+
                         logging.AddLog4Net();
-                        logging.AddProvider(new Log4NetProviderByCustomeDb("Log4net_db.config", conn, Program.AppContextData));
+                        logging.AddProvider(new Log4NetProviderByCustomeDb("Log4net_db.config", newconn, Program.AppContextData));
 
                     }
                 })//.UseLog4Net()
@@ -1007,7 +1010,7 @@ namespace RUINORERP.Server
             if (container != null)
             {
                 var serverSessions = container.GetSessions();
-                foreach (var session in serverSessions)
+                foreach (var session in serverSessions.ToArray())
                 {
                     try
                     {
@@ -1045,12 +1048,10 @@ namespace RUINORERP.Server
             }
             if (!richTextBox1.InvokeRequired)//判断是否需要进行唤醒的请求，如果控件与主线程在一个线程内，可以写成 if(!InvokeRequired)
             {
-                // MessageBox.Show("同一线程内");
                 PrintInfoLog(t);
             }
             else
             {
-                // MessageBox.Show("不是同一个线程");
                 printMsg a1 = new printMsg(PrintMsg);
                 if (this.IsHandleCreated)
                 {
@@ -1089,7 +1090,7 @@ namespace RUINORERP.Server
             builder.AddJsonFile("configuration.json");
             var configuration = builder.Build();
             var collections = configuration.AsEnumerable();
-            foreach (var item in collections)
+            foreach (var item in collections.ToArray())
             {
                 Console.WriteLine("{0}={1}", item.Key, item.Value);
             }
@@ -1117,6 +1118,7 @@ namespace RUINORERP.Server
 
         public void PrintInfoLog(string msg)
         {
+           
             // Console.WriteLine(msg);
             if (!System.Diagnostics.Process.GetCurrentProcess().MainModule.ToString().ToLower().Contains("iis"))
             {

@@ -2306,7 +2306,15 @@ namespace RUINORERP.UI
             }
             else
             {
-                Application.Exit();
+                try
+                {
+                    Application.DoEvents();
+                    Application.Exit();
+                }
+                catch (Exception)
+                {
+                
+                }
             }
         }
 

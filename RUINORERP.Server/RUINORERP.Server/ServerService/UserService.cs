@@ -58,7 +58,7 @@ namespace RUINORERP.Server.BizService
                     ByteBuff tx = new ByteBuff(100);
                     tx.PushString(tableName);
                     tx.PushInt(frmMain.Instance.sessionListBiz.Count);
-                    foreach (var item in frmMain.Instance.sessionListBiz)
+                    foreach (var item in frmMain.Instance.sessionListBiz.ToArray())
                     {
                         tx.PushString(item.Value.SessionID);
                         tx.PushString(item.Value.User.用户名);
@@ -196,7 +196,7 @@ namespace RUINORERP.Server.BizService
                 tx.PushString(tableName);
                 tx.PushString(json);
 
-                foreach (var item in frmMain.Instance.sessionListBiz)
+                foreach (var item in frmMain.Instance.sessionListBiz.ToArray())
                 {
                     //排除更新者自己
                     if (item.Key == UserSession.SessionID)
@@ -252,7 +252,7 @@ namespace RUINORERP.Server.BizService
                 tx.PushString(configEntityName);
                 tx.PushString(json);
 
-                foreach (var item in frmMain.Instance.sessionListBiz)
+                foreach (var item in frmMain.Instance.sessionListBiz.ToArray())
                 {
                     //排除更新者自己
                     if (item.Key == UserSession.SessionID)
@@ -301,7 +301,7 @@ namespace RUINORERP.Server.BizService
                 tx.PushString(PKColName);
                 tx.PushInt64(PKValue);
 
-                foreach (var item in frmMain.Instance.sessionListBiz)
+                foreach (var item in frmMain.Instance.sessionListBiz.ToArray())
                 {
                     //排除更新者自己
                     if (item.Key == UserSession.SessionID)
@@ -332,42 +332,48 @@ namespace RUINORERP.Server.BizService
         }
 
 
-
-
         private async static void BroadcastProdCatchData(SessionforBiz UserSession, tb_Prod prod)
         {
-            View_ProdDetail ViewProdDetail = new View_ProdDetail();
-            ViewProdDetail = await Program.AppContextData.Db.CopyNew().Queryable<View_ProdDetail>()
-                .SingleAsync(p => p.ProdBaseID == prod.ProdBaseID);
-            MyCacheManager.Instance.UpdateEntityList<View_ProdDetail>(ViewProdDetail);
-            //发送缓存数据
-            string json = JsonConvert.SerializeObject(ViewProdDetail,
-               new JsonSerializerSettings
-               {
-                   ReferenceLoopHandling = ReferenceLoopHandling.Ignore // 或 ReferenceLoopHandling.Serialize
-               });
-
-            string tableName = nameof(View_ProdDetail);
-            ByteBuff tx = new ByteBuff(200);
-            tx.PushString(System.DateTime.Now.ToString());
-            tx.PushString(tableName);
-            tx.PushString(json);
-
-            foreach (var item in frmMain.Instance.sessionListBiz)
+            try
             {
-                //排除更新者自己
-                if (item.Key == UserSession.SessionID)
-                {
-                    continue;
-                }
-                SessionforBiz sessionforBiz = item.Value as SessionforBiz;
-                sessionforBiz.AddSendData((byte)ServerCmdEnum.转发更新缓存, null, tx.toByte());
+                View_ProdDetail ViewProdDetail = new View_ProdDetail();
+                ViewProdDetail = await Program.AppContextData.Db.CopyNew().Queryable<View_ProdDetail>()
+                    .SingleAsync(p => p.ProdBaseID == prod.ProdBaseID);
+                MyCacheManager.Instance.UpdateEntityList<View_ProdDetail>(ViewProdDetail);
+                //发送缓存数据
+                string json = JsonConvert.SerializeObject(ViewProdDetail,
+                   new JsonSerializerSettings
+                   {
+                       ReferenceLoopHandling = ReferenceLoopHandling.Ignore // 或 ReferenceLoopHandling.Serialize
+                   });
 
-                if (frmMain.Instance.IsDebug)
+                string tableName = nameof(View_ProdDetail);
+                ByteBuff tx = new ByteBuff(200);
+                tx.PushString(System.DateTime.Now.ToString());
+                tx.PushString(tableName);
+                tx.PushString(json);
+
+                foreach (var item in frmMain.Instance.sessionListBiz.ToArray())
                 {
-                    frmMain.Instance.PrintMsg($"转发更新缓存{tableName}给：" + item.Value.User.姓名);
+                    //排除更新者自己
+                    if (item.Key == UserSession.SessionID)
+                    {
+                        continue;
+                    }
+                    SessionforBiz sessionforBiz = item.Value as SessionforBiz;
+                    sessionforBiz.AddSendData((byte)ServerCmdEnum.转发更新缓存, null, tx.toByte());
+
+                    if (frmMain.Instance.IsDebug)
+                    {
+                        frmMain.Instance.PrintMsg($"转发更新缓存{tableName}给：" + item.Value.User.姓名);
+                    }
                 }
             }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"BroadcastProdCatchData: {ex.Message}");
+            }
+            
         }
 
         /// <summary>
@@ -562,7 +568,7 @@ namespace RUINORERP.Server.BizService
                 List<UserInfo> userInfos = new List<UserInfo>();
 
                 // tx.PushInt(frmMain.Instance.sessionListBiz.Count);
-                foreach (var item in frmMain.Instance.sessionListBiz)
+                foreach (var item in frmMain.Instance.sessionListBiz.ToArray())
                 {
                     if (item.Value != null && item.Value.User != null)
                     {
@@ -644,7 +650,7 @@ namespace RUINORERP.Server.BizService
                 List<UserInfo> userInfos = new List<UserInfo>();
 
                 // tx.PushInt(frmMain.Instance.sessionListBiz.Count);
-                foreach (var item in frmMain.Instance.sessionListBiz)
+                foreach (var item in frmMain.Instance.sessionListBiz.ToArray())
                 {
                     if (item.Value != null && item.Value.User != null)
                     {

@@ -192,7 +192,7 @@ namespace RUINORERP.Server.CommandService
                 tx.PushInt((int)0);
                 //tx.PushString(FromSession.SessionID);来源是不是要加上？
 
-                foreach (var item in frmMain.Instance.sessionListBiz)
+                foreach (var item in frmMain.Instance.sessionListBiz.ToArray())
                 {
                     //跳过自己
                     if (FromSession != null && item.Value.SessionID == FromSession.SessionID)

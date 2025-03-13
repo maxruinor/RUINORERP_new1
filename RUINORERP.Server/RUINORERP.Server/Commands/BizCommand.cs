@@ -239,7 +239,7 @@ namespace RUINORERP.Server.Commands
                             break;
 
                         case ClientCmdEnum.实时汇报异常:
-                            foreach (var item in frmMain.Instance.sessionListBiz)
+                            foreach (var item in frmMain.Instance.sessionListBiz.ToArray())
                             {
                                 SessionforBiz sessionforBiz = item.Value as SessionforBiz;
                                 //自己的不会上传。 只转给超级管理员。

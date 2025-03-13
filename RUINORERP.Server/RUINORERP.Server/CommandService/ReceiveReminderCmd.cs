@@ -127,7 +127,7 @@ namespace RUINORERP.Server.CommandService
                 tx.PushString(sendtime);
                 tx.PushString(json);
 
-                foreach (var item in frmMain.Instance.sessionListBiz)
+                foreach (var item in frmMain.Instance.sessionListBiz.ToArray())
                 {
                     tx.PushString(item.Value.SessionID);
                     tx.PushString(item.Value.User.用户名);

@@ -126,10 +126,10 @@ namespace RUINORERP.Model
         }
         private bool _IsCustomizedOrder;
         /// <summary>
-        /// 定制订单
+        /// 定制单
         /// </summary>
-        [AdvQueryAttribute(ColName = "IsCustomizedOrder", ColDesc = "定制订单")]
-        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType = "Boolean", ColumnName = "IsCustomizedOrder", IsNullable = false, ColumnDescription = "定制订单")]
+        [AdvQueryAttribute(ColName = "IsCustomizedOrder", ColDesc = "定制单")]
+        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType = "Boolean", ColumnName = "IsCustomizedOrder", IsNullable = false, ColumnDescription = "定制单")]
         public bool IsCustomizedOrder
         {
             get { return _IsCustomizedOrder; }

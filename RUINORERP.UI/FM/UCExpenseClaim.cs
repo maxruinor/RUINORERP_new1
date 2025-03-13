@@ -74,6 +74,7 @@ namespace RUINORERP.UI.FM
         //}
         public override void BindData(tb_FM_ExpenseClaim entity, ActionStatus actionStatus)
         {
+           
             if (entity == null)
             {
                 return;
@@ -326,6 +327,25 @@ namespace RUINORERP.UI.FM
         }
 
 
+        /// <summary>
+        /// 如果需要查询条件查询，就要在子类中重写这个方法
+        /// </summary>
+        public override void QueryConditionBuilder()
+        {
+            BaseProcessor baseProcessor = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_FM_ExpenseClaim).Name + "Processor");
+            QueryConditionFilter = baseProcessor.GetQueryFilter();
+
+            //创建表达式
+            var lambda = Expressionable.Create<tb_FM_ExpenseClaim>()
+                             //.AndIF(CurMenuInfo.CaptionCN.Contains("客户"), t => t.IsCustomer == true)
+                             // .AndIF(CurMenuInfo.CaptionCN.Contains("供应商"), t => t.IsVendor == true)
+                             .And(t => t.isdeleted == false)
+                            //报销人员限制，财务不限制 自己的只能查自己的
+                            .AndIF(AuthorizeController.GetOwnershipControl(MainForm.Instance.AppContext), t => t.Employee_ID == MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID)//限制了销售只看到自己的客户,采购不限制
+                            .ToExpression();//注意 这一句 不能少
+            QueryConditionFilter.SetFieldLimitCondition(lambda);
+
+        }
 
         private void Grid1_BindingContextChanged(object sender, EventArgs e)
         {
@@ -340,6 +360,7 @@ namespace RUINORERP.UI.FM
         List<SGDefineColumnItem> listCols = new List<SGDefineColumnItem>();
         private void UCStockIn_Load(object sender, EventArgs e)
         {
+            MainForm.Instance.LoginWebServer();
             if (CurMenuInfo != null)
             {
                 lbl盘点单.Text = CurMenuInfo.CaptionCN;
@@ -347,10 +368,8 @@ namespace RUINORERP.UI.FM
             InitDataTocmbbox();
             base.ToolBarEnabledControl(MenuItemEnums.刷新);
 
-
             grid1.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             grid1.Selection.EnableMultiSelection = false;
-
 
             listCols = new List<SGDefineColumnItem>();
             //指定了关键字段ProdDetailID
@@ -549,6 +568,7 @@ namespace RUINORERP.UI.FM
             {
                 return false;
             }
+           
             var eer = errorProviderForAllInput.GetError(txtClaimlAmount);
             bindingSourceSub.EndEdit();
             List<tb_FM_ExpenseClaimDetail> detailentity = bindingSourceSub.DataSource as List<tb_FM_ExpenseClaimDetail>;

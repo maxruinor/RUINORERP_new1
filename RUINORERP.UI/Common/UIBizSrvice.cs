@@ -884,7 +884,6 @@ namespace RUINORERP.UI.Common
                 if (NeedRequesCache(rslist, tableName) && BizCacheHelper.Instance.typeNames.Contains(tableName))
                 {
                     ClientService.请求缓存(tableName);
-                    
                 }
             }
 

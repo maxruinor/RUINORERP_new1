@@ -36,6 +36,8 @@ using RUINOR.Core;
 using AutoMapper;
 using RUINORERP.Business.AutoMapper;
 using Krypton.Toolkit;
+using RUINORERP.Business.Processor;
+using RUINORERP.Business.Security;
 
 
 namespace RUINORERP.UI.FM
@@ -175,6 +177,27 @@ namespace RUINORERP.UI.FM
         }
 
 
+        /// <summary>
+        /// 如果需要查询条件查询，就要在子类中重写这个方法
+        /// </summary>
+        public override void QueryConditionBuilder()
+        {
+            BaseProcessor baseProcessor = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_FM_OtherExpense).Name + "Processor");
+            QueryConditionFilter = baseProcessor.GetQueryFilter();
+
+            //创建表达式
+            var lambda = Expressionable.Create<tb_FM_OtherExpense>()
+                             //.AndIF(CurMenuInfo.CaptionCN.Contains("客户"), t => t.IsCustomer == true)
+                             // .AndIF(CurMenuInfo.CaptionCN.Contains("供应商"), t => t.IsVendor == true)
+                             .And(t => t.isdeleted == false)
+                                .And(t => t.EXPOrINC == true)
+                            // .And(t => t.Is_enabled == true)
+                            //报销人员限制，财务不限制
+                            .AndIF(AuthorizeController.GetOwnershipControl(MainForm.Instance.AppContext), t => t.Employee_ID == MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID)//限制了销售只看到自己的客户,采购不限制
+                            .ToExpression();//注意 这一句 不能少
+            QueryConditionFilter.SetFieldLimitCondition(lambda);
+
+        }
         private async void LoadImageData(string CloseCaseImagePath)
         {
             if (!string.IsNullOrWhiteSpace(CloseCaseImagePath))

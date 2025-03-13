@@ -200,7 +200,7 @@ namespace RUINORERP.UI
 
 
         }
-       
+
 
         private void KryptonDockableWorkspace1_PageCloseClicked(object sender, UniqueNameEventArgs e)
         {
@@ -566,7 +566,6 @@ namespace RUINORERP.UI
 
             this.Text = "企业数字化集成ERP v2.0" + "-" + Program.ERPVersion;
             //MessageBox.Show("登陆成功后，请要系统设置中添加公司基本资料。");
-
 
 
             InitRemind();
@@ -1248,7 +1247,7 @@ namespace RUINORERP.UI
 
                 LoginWebServer();
                 ClientLockManagerCmd cmd = new ClientLockManagerCmd(CmdOperation.Send);
-                cmd.lockCmd = LockCmd.Broadcast;  
+                cmd.lockCmd = LockCmd.Broadcast;
                 MainForm.Instance.dispatcher.DispatchAsync(cmd, CancellationToken.None);
                 cmd.LockChanged += (sender, e) =>
                 {
@@ -2652,7 +2651,7 @@ namespace RUINORERP.UI
                             }
                         }
 
-                        if (oldlist.Count == 0 || oldlist.Count != info.CacheCount)
+                        if (info != null && oldlist.Count == 0 || oldlist.Count != info.CacheCount)
                         {
                             needRequestCache = true;
                         }
@@ -2772,7 +2771,6 @@ namespace RUINORERP.UI
             {
                 MainForm.Instance.logger.LogError(ex, "LoginWebServer");
             }
-
         }
 
         private void lblServerStatus_DoubleClick(object sender, EventArgs e)

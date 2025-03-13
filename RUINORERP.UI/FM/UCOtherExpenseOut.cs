@@ -37,6 +37,7 @@ using AutoMapper;
 using RUINORERP.Business.AutoMapper;
 using Krypton.Toolkit;
 using RUINORERP.Business.Processor;
+using RUINORERP.Business.Security;
 
 namespace RUINORERP.UI.FM
 {
@@ -368,7 +369,7 @@ namespace RUINORERP.UI.FM
                                 .And(t => t.EXPOrINC == false)
                             // .And(t => t.Is_enabled == true)
                             //报销人员限制，财务不限制
-                            //  .AndIF(MainForm.Instance.AppContext.SysConfig.SaleBizLimited && !MainForm.Instance.AppContext.IsSuperUser, t => t.Employee_ID == MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID)//限制了销售只看到自己的客户,采购不限制
+                            .AndIF(AuthorizeController.GetOwnershipControl(MainForm.Instance.AppContext), t => t.Employee_ID == MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID)//限制了销售只看到自己的客户,采购不限制
                             .ToExpression();//注意 这一句 不能少
             QueryConditionFilter.SetFieldLimitCondition(lambda);
 

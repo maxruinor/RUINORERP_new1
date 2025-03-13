@@ -597,7 +597,7 @@
             this.chkIsCustomizedOrder.Name = "chkIsCustomizedOrder";
             this.chkIsCustomizedOrder.Size = new System.Drawing.Size(75, 20);
             this.chkIsCustomizedOrder.TabIndex = 155;
-            this.chkIsCustomizedOrder.Values.Text = "定制订单";
+            this.chkIsCustomizedOrder.Values.Text = "定制单";
             // 
             // UCSaleOutRe
             // 

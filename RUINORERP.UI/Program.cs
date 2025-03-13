@@ -44,7 +44,7 @@ namespace RUINORERP.UI
         /// <summary>
         /// 应用程序的版本信息
         /// </summary>
-        public static string ERPVersion { get; set; } 
+        public static string ERPVersion { get; set; }
 
         private static ApplicationContext _AppContextData;
         public static ApplicationContext AppContextData
@@ -649,6 +649,14 @@ namespace RUINORERP.UI
         }
         static void Application_ThreadException(object sender, System.Threading.ThreadExceptionEventArgs e)
         {
+            if (e.Exception != null)
+            {
+                //特殊的几个异常暂时屏蔽掉
+                if (e.Exception.Message.Contains("执行 CreateHandle() 时无法调用值 Dispose()"))
+                {
+                    return;
+                }
+            }
             string str = "";
             string strDateInfo = "\r\n\r\n出现应用程序未处理的异常,请更新到最新版本，如果无法解决，请联系管理员!" + DateTime.Now.ToString() + "\r\n";
             Exception error = e.Exception as Exception;

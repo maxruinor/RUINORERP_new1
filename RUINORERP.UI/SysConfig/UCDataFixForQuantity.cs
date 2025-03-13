@@ -62,10 +62,10 @@ using NPOI.POIFS.Properties;
 
 namespace RUINORERP.UI.SysConfig
 {
-    [MenuAttrAssemblyInfo("成本数据校正", ModuleMenuDefine.模块定义.系统设置, ModuleMenuDefine.系统设置.系统工具)]
-    public partial class UCDataFixForCost : UserControl
+    [MenuAttrAssemblyInfo("库存数据校正", ModuleMenuDefine.模块定义.系统设置, ModuleMenuDefine.系统设置.系统工具)]
+    public partial class UCDataFixForQuantity : UserControl
     {
-        public UCDataFixForCost()
+        public UCDataFixForQuantity()
         {
             InitializeComponent();
         }
@@ -119,14 +119,28 @@ namespace RUINORERP.UI.SysConfig
         private void UCDataFix_Load(object sender, EventArgs e)
         {
             List<BizType> list = new List<BizType>();
-            list.Add(BizType.BOM物料清单);
-            list.Add(BizType.制令单);
-            list.Add(BizType.缴库单);
+            //在途数量
+            list.Add(BizType.采购订单);
+            list.Add(BizType.采购入库单);
+            list.Add(BizType.采购退货单);
+            list.Add(BizType.采购退货入库);
+            list.Add(BizType.返工退库单);
+            list.Add(BizType.返工入库单);
+
+            //拟销量
             list.Add(BizType.销售订单);
-            list.Add(BizType.生产领料单);
-            list.Add(BizType.借出单);
+            list.Add(BizType.销售出库单);
             list.Add(BizType.其他出库单);
             list.Add(BizType.销售出库单);
+            //在制量
+            list.Add(BizType.制令单);
+            list.Add(BizType.缴库单);
+
+            //未发数量
+            list.Add(BizType.制令单);
+            list.Add(BizType.生产领料单);
+            list.Add(BizType.生产退料单);
+
 
             foreach (var item in list)
             {
@@ -144,6 +158,8 @@ namespace RUINORERP.UI.SysConfig
         View_Inventory InventoryDto = new View_Inventory();
 
         BizTypeMapper mapper = new BizTypeMapper();
+
+
 
 
 
@@ -172,64 +188,7 @@ namespace RUINORERP.UI.SysConfig
 
         private void btnQuery_Click(object sender, EventArgs e)
         {
-            if (chk有入库记录成本为0.Checked)
-            {
-                QueryInvNeedUpdate();
-            }
-            else
-            {
-                QueryInv();
-            }
-
-        }
-
-
-        private async void QueryInvNeedUpdate()
-        {
-            List<View_Inventory> inventories = new List<View_Inventory>();
-            //inventories = await MainForm.Instance.AppContext.Db.Queryable<View_Inventory>()
-            //              .Includes(a => a.tb_proddetail, b => b.tb_PurEntryDetails)
-            //            .Where(a => a.Inv_Cost == 0)
-            //            .Where(a => a.tb_proddetail.tb_PurEntryDetails.Count > 0)
-            //              .ToListAsync();
-
-
-            inventories = await MainForm.Instance.AppContext.Db.Queryable<View_Inventory>()
-               .Includes(a => a.tb_proddetail, b => b.tb_PurEntryDetails)
-               .Where(a => a.Inv_Cost == 0)
-               .Where(a => a.tb_proddetail.tb_PurEntryDetails.Any())
-               .ToListAsync();
-
-
-            bindingSourceInv.DataSource = inventories.ToBindingSortCollection();
-            dataGridViewInv.DataSource = bindingSourceInv;
-
-            //只显示成本 和详情ID。
-            foreach (DataGridViewColumn item in dataGridViewInv.Columns)
-            {
-                if (item.Name == "Inv_Cost" || item.Name == "ProdDetailID" || item.Name == "Quantity")
-                {
-                    item.Visible = true;
-                    if (item.Name == "Inv_Cost")
-                    {
-                        item.HeaderText = "成本";
-                    }
-                    if (item.Name == "ProdDetailID")
-                    {
-                        item.HeaderText = "产品详情";
-                        item.Width = 250;
-                    }
-                    if (item.Name == "Quantity")
-                    {
-                        item.HeaderText = "实际数量";
-                    }
-                }
-                else
-                {
-                    item.Visible = false;
-                }
-            }
-            richTextBoxLog.AppendText($"查询结果{inventories.Count} " + "\r\n");
+            QueryInv();
         }
 
 
@@ -247,36 +206,25 @@ namespace RUINORERP.UI.SysConfig
             bindingSourceInv.DataSource = inventories.ToBindingSortCollection();
             dataGridViewInv.DataSource = bindingSourceInv;
 
+            Dictionary<string, string> dic = new Dictionary<string, string>();
+            //设置一个集合：列名和显示的名称添加的集合中
+            dic = new Dictionary<string, string> {
+                { "SKU", "SKU" },
+                { "CNName", "产品" },
+                { "Quantity", "数量" },
+                { "On_the_way_Qty", "在途" },
+                { "Sale_Qty", "拟销" },
+                { "MakingQty", "在制" },
+                { "NotOutQty", "未发" }
+            };
+
             //只显示成本 和详情ID。
             foreach (DataGridViewColumn item in dataGridViewInv.Columns)
             {
-                if (item.Name == "Inv_Cost" ||
-                    item.Name == "ProdDetailID"
-                    || item.Name == "Quantity"
-                    || item.Name == "Notes")
+                if (dic.Any(c => c.Key.Contains(item.DataPropertyName)))
                 {
                     item.Visible = true;
-                    if (item.Name == "Inv_Cost")
-                    {
-                        item.HeaderText = "成本";
-                    }
-                    if (item.Name == "ProdDetailID")
-                    {
-                        item.HeaderText = "产品";
-                        item.Width = 250;
-                    }
-                    if (item.Name == "Quantity")
-                    {
-                        item.HeaderText = "数量";
-                    }
-                    if (item.Name == "Quantity")
-                    {
-                        item.HeaderText = "数量";
-                    }
-                    if (item.Name == "Notes")
-                    {
-                        item.HeaderText = "备注";
-                    }
+                    item.HeaderText = dic.Where(c => c.Key.Contains(item.DataPropertyName)).FirstOrDefault().Value;
                 }
                 else
                 {
@@ -416,27 +364,6 @@ namespace RUINORERP.UI.SysConfig
             {
                 ProdDetailID = inventory.ProdDetailID.Value;
                 child = inventory;
-                #region 采购入库明细
-                List<dynamic> PurEntryItems = MainForm.Instance.AppContext.Db.Queryable<View_PurEntryItems>()
-                         .OrderBy(a => a.EntryDate)
-                        .Where(a => a.ProdDetailID == ProdDetailID)
-                        .Select(it => (dynamic)new
-                        {
-                            入库日期 = it.EntryDate,
-                            采购入库单号 = it.PurEntryNo,
-                            SKU码 = it.SKU,
-                            成本 = it.TransactionPrice,
-                            数量 = it.Quantity
-                        })
-                        .ToList();
-
-                dataGridViewPurEntryItems.Dock = DockStyle.Fill;
-                dataGridViewPurEntryItems.DataSource = PurEntryItems.ToDataTable();
-                // 自动调整列宽
-                dataGridViewPurEntryItems.AutoResizeColumns(DataGridViewAutoSizeColumnsMode.AllCells);
-                dataGridViewPurEntryItems.AutoResizeRows();
-                txtUnitCost.Text = inventory.Inv_Cost.ToString();
-                #endregion
 
                 object obj = BizCacheHelper.Instance.GetEntity<View_ProdDetail>(ProdDetailID);
                 if (obj != null && obj.GetType().Name != "Object" && obj is View_ProdDetail _prodDetail)
@@ -447,7 +374,7 @@ namespace RUINORERP.UI.SysConfig
             }
 
             //显示选择库存行对应的其它相关数据
-            panel相关数据.Controls.Clear();
+
             tabControl.TabPages.Clear();
             tabControl.Dock = DockStyle.Fill;
             foreach (TreeNode item in treeViewNeedUpdateCostList.Nodes)
@@ -456,6 +383,8 @@ namespace RUINORERP.UI.SysConfig
                 {
                     switch (bt)
                     {
+
+
                         case BizType.销售订单:
 
 
@@ -533,6 +462,35 @@ namespace RUINORERP.UI.SysConfig
                         case BizType.销售退回单:
                             break;
                         case BizType.采购订单:
+                            //审核没有完结的
+                            #region 采购订单
+                            var PurOrderItems = MainForm.Instance.AppContext.Db.Queryable<tb_PurOrderDetail>()
+                                  .LeftJoin<tb_PurOrder>((x, y) => x.PurOrder_ID == y.PurOrder_ID)
+                                .Where((x, y) => x.ProdDetailID == ProdDetailID && y.DataStatus == (int)DataStatus.确认) //如果用到i需要这么写
+                              .Select(x => (dynamic)new
+                              {
+                                  qty = x.Quantity,
+                              }).ToList();
+
+                            if (PurOrderItems.Count > 0)
+                            {
+                                TabPage page采购订单 = new TabPage();
+                                DataGridView dgv采购订单 = new DataGridView();
+                                dgv采购订单.AutoGenerateColumns = true;
+                                dgv采购订单.DataSource = PurOrderItems.ToDataTable();
+                                dgv采购订单.Tag = bt;
+
+                                // 自动调整列宽
+                                dgv采购订单.AutoResizeColumns(DataGridViewAutoSizeColumnsMode.AllCells);
+                                dgv采购订单.AutoResizeRows();
+                                dgv采购订单.Dock = DockStyle.Fill;
+                                #endregion
+                                page采购订单.Text = "采购订单" + PurOrderItems.Count;
+                                page采购订单.Controls.Add(dgv采购订单);
+                                tabControl.TabPages.Add(page采购订单);
+                                dgv采购订单.Refresh();
+                            }
+
                             break;
                         case BizType.采购入库单:
                             break;
@@ -874,7 +832,6 @@ namespace RUINORERP.UI.SysConfig
                             break;
                         case BizType.归还单:
                             break;
-
                         case BizType.产品转换单:
                             break;
                         case BizType.调拨单:
@@ -899,7 +856,7 @@ namespace RUINORERP.UI.SysConfig
                     }
                 }
             }
-            panel相关数据.Controls.Add(tabControl);
+
 
         }
 

@@ -242,13 +242,11 @@ namespace RUINORERP.Business
                 };
                 // 开启事务，保证数据一致性
                 _unitOfWorkManage.BeginTran();
-
                 if (entity.FG_ID > 0)
                 {
                     rs = await _unitOfWorkManage.GetDbClient().UpdateNav<tb_FinishedGoodsInv>(entity as tb_FinishedGoodsInv)
                             .Include(m => m.tb_FinishedGoodsInvDetails)
                                 .ExecuteCommandAsync();
-
                 }
                 else
                 {

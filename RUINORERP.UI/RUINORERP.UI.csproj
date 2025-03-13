@@ -2143,6 +2143,12 @@
     <Compile Include="SysConfig\UCButtonInfoList.designer.cs">
       <DependentUpon>UCButtonInfoList.cs</DependentUpon>
     </Compile>
+    <Compile Include="SysConfig\UCDataFixForQuantity.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="SysConfig\UCDataFixForQuantity.Designer.cs">
+      <DependentUpon>UCDataFixForQuantity.cs</DependentUpon>
+    </Compile>
     <Compile Include="SysConfig\UCDataFixForCost.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -3390,6 +3396,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="SysConfig\UCButtonInfoList.resx">
       <DependentUpon>UCButtonInfoList.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SysConfig\UCDataFixForQuantity.resx">
+      <DependentUpon>UCDataFixForQuantity.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="SysConfig\UCDataFixForCost.resx">
       <DependentUpon>UCDataFixForCost.cs</DependentUpon>

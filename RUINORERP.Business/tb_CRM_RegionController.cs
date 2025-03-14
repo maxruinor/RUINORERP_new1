@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/18/2024 18:02:02
+// 时间：03/14/2025 20:39:38
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -230,10 +230,11 @@ namespace RUINORERP.Business
             bool rs = false;
             RevertCommand command = new RevertCommand();
             ReturnMainSubResults<T> rsms = new ReturnMainSubResults<T>();
+                             //缓存当前编辑的对象。如果撤销就回原来的值
+                T oldobj = CloneHelper.DeepCloneObject<T>((T)model);
             try
             {
-                 //缓存当前编辑的对象。如果撤销就回原来的值
-                T oldobj = CloneHelper.DeepCloneObject<T>((T)model);
+
                 tb_CRM_Region entity = model as tb_CRM_Region;
                 command.UndoOperation = delegate ()
                 {
@@ -245,18 +246,19 @@ namespace RUINORERP.Business
                 
             if (entity.Region_ID > 0)
             {
-                rs = await _unitOfWorkManage.GetDbClient().UpdateNav<tb_CRM_Region>(entity as tb_CRM_Region)
+            
+                             rs = await _unitOfWorkManage.GetDbClient().UpdateNav<tb_CRM_Region>(entity as tb_CRM_Region)
                         .Include(m => m.tb_CRM_Customers)
-                    .Include(m => m.tb_CRM_Regions)
-                            .ExecuteCommandAsync();
-         
-        }
+                    .ExecuteCommandAsync();
+                 }
         else    
         {
-            rs = await _unitOfWorkManage.GetDbClient().InsertNav<tb_CRM_Region>(entity as tb_CRM_Region)
+                        rs = await _unitOfWorkManage.GetDbClient().InsertNav<tb_CRM_Region>(entity as tb_CRM_Region)
                 .Include(m => m.tb_CRM_Customers)
-                .Include(m => m.tb_CRM_Regions)
-                                .ExecuteCommandAsync();
+         
+                .ExecuteCommandAsync();
+                                          
+                     
         }
         
                 // 注意信息的完整性
@@ -268,11 +270,11 @@ namespace RUINORERP.Business
             catch (Exception ex)
             {
                 _unitOfWorkManage.RollbackTran();
-                _logger.Error(ex);
                 //出错后，取消生成的ID等值
                 command.Undo();
                 rsms.ErrorMsg = ex.Message;
                 rsms.Succeeded = false;
+                _logger.Error(ex);
             }
 
             return rsms;
@@ -287,7 +289,6 @@ namespace RUINORERP.Business
         {
             var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<tb_CRM_Region>()
                                 .Includes(m => m.tb_CRM_Customers)
-                        .Includes(m => m.tb_CRM_Regions)
                                         .Where(useLike, dto);
             return await querySqlQueryable.ToListAsync()as List<T>;
         }
@@ -298,7 +299,6 @@ namespace RUINORERP.Business
             tb_CRM_Region entity = model as tb_CRM_Region;
              bool rs = await _unitOfWorkManage.GetDbClient().DeleteNav<tb_CRM_Region>(m => m.Region_ID== entity.Region_ID)
                                 .Include(m => m.tb_CRM_Customers)
-                        .Include(m => m.tb_CRM_Regions)
                                         .ExecuteCommandAsync();
             if (rs)
             {
@@ -461,9 +461,7 @@ namespace RUINORERP.Business
          public virtual async Task<List<tb_CRM_Region>> QueryByNavAsync()
         {
             List<tb_CRM_Region> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_CRM_Region>()
-                               .Includes(t => t.tb_crm_region )
                                             .Includes(t => t.tb_CRM_Customers )
-                                .Includes(t => t.tb_CRM_Regions )
                         .ToListAsync();
             
             foreach (var item in list)
@@ -483,9 +481,7 @@ namespace RUINORERP.Business
          public virtual async Task<List<tb_CRM_Region>> QueryByNavAsync(Expression<Func<tb_CRM_Region, bool>> exp)
         {
             List<tb_CRM_Region> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_CRM_Region>().Where(exp)
-                               .Includes(t => t.tb_crm_region )
                                             .Includes(t => t.tb_CRM_Customers )
-                                .Includes(t => t.tb_CRM_Regions )
                         .ToListAsync();
             
             foreach (var item in list)
@@ -505,9 +501,7 @@ namespace RUINORERP.Business
          public virtual List<tb_CRM_Region> QueryByNav(Expression<Func<tb_CRM_Region, bool>> exp)
         {
             List<tb_CRM_Region> list = _unitOfWorkManage.GetDbClient().Queryable<tb_CRM_Region>().Where(exp)
-                            .Includes(t => t.tb_crm_region )
                                         .Includes(t => t.tb_CRM_Customers )
-                            .Includes(t => t.tb_CRM_Regions )
                         .ToList();
             
             foreach (var item in list)
@@ -544,9 +538,7 @@ namespace RUINORERP.Business
         public override async Task<T> BaseQueryByIdNavAsync(object id)
         {
             tb_CRM_Region entity = await _unitOfWorkManage.GetDbClient().Queryable<tb_CRM_Region>().Where(w => w.Region_ID == (long)id)
-                             .Includes(t => t.tb_crm_region )
-                                        .Includes(t => t.tb_CRM_Customers )
-                            .Includes(t => t.tb_CRM_Regions )
+                                         .Includes(t => t.tb_CRM_Customers )
                         .FirstAsync();
             if(entity!=null)
             {

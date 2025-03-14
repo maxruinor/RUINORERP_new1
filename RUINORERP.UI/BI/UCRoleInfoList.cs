@@ -18,6 +18,7 @@ using RUINORERP.Business;
 using RUINORERP.UI.BaseForm;
 using SqlSugar;
 using RUINORERP.Business.Processor;
+using MathNet.Numerics.Distributions;
 
 
 namespace RUINORERP.UI.BI
@@ -56,21 +57,23 @@ namespace RUINORERP.UI.BI
                         await Task.Delay(0);
                         if (entity.RoleID > 0)
                         {
-                            if (entity.tb_rolepropertyconfig != null && entity.tb_rolepropertyconfig.RolePropertyID > 0)
-                            {
-                                //更新
-                                MainForm.Instance.AppContext.Db.Updateable<tb_RolePropertyConfig>(entity.tb_rolepropertyconfig).ExecuteCommand(); //都是参数化实现
-                                entity.RolePropertyID = entity.tb_rolepropertyconfig.RolePropertyID;
-                            }
-                            else if (entity.tb_rolepropertyconfig != null && entity.tb_rolepropertyconfig.RolePropertyID == 0)
-                            {
-                                //新增
-                                entity.tb_rolepropertyconfig = await MainForm.Instance.AppContext.Db.Insertable<tb_RolePropertyConfig>(entity.tb_rolepropertyconfig).ExecuteReturnEntityAsync(); //都是参数化实现
-                                entity.RolePropertyID = entity.tb_rolepropertyconfig.RolePropertyID;
-                            }
-
-                            rr.Succeeded = MainForm.Instance.AppContext.Db.Updateable<tb_RoleInfo>(entity).ExecuteCommand() > 0 ? true : false;
-
+                            //if (entity.tb_rolepropertyconfig != null && entity.tb_rolepropertyconfig.RolePropertyID > 0)
+                            //{
+                            //    //更新
+                            //    MainForm.Instance.AppContext.Db.Updateable<tb_RolePropertyConfig>(entity.tb_rolepropertyconfig).ExecuteCommand(); //都是参数化实现
+                            //    entity.RolePropertyID = entity.tb_rolepropertyconfig.RolePropertyID;
+                            //}
+                            //else if (entity.tb_rolepropertyconfig != null && entity.tb_rolepropertyconfig.RolePropertyID == 0)
+                            //{
+                            //    //新增
+                            //    entity.tb_rolepropertyconfig = await MainForm.Instance.AppContext.Db.Insertable<tb_RolePropertyConfig>(entity.tb_rolepropertyconfig).ExecuteReturnEntityAsync(); //都是参数化实现
+                            //    entity.RolePropertyID = entity.tb_rolepropertyconfig.RolePropertyID;
+                            //}
+                            ////逻辑更新主表 ，子表存在更新，不存在插入
+                            rr.Succeeded = MainForm.Instance.AppContext.Db.UpdateNav(entity)
+                            .Include(z1 => z1.tb_rolepropertyconfig)
+                            .ExecuteCommand();
+                           // rr.Succeeded = MainForm.Instance.AppContext.Db.Updateable<tb_RoleInfo>(entity).ExecuteCommand() > 0 ? true : false;
                         }
                         else
                         {

@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/18/2024 18:02:14
+// 时间：03/14/2025 20:39:52
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -230,10 +230,11 @@ namespace RUINORERP.Business
             bool rs = false;
             RevertCommand command = new RevertCommand();
             ReturnMainSubResults<T> rsms = new ReturnMainSubResults<T>();
+                             //缓存当前编辑的对象。如果撤销就回原来的值
+                T oldobj = CloneHelper.DeepCloneObject<T>((T)model);
             try
             {
-                 //缓存当前编辑的对象。如果撤销就回原来的值
-                T oldobj = CloneHelper.DeepCloneObject<T>((T)model);
+
                 tb_SaleOut entity = model as tb_SaleOut;
                 command.UndoOperation = delegate ()
                 {
@@ -245,18 +246,21 @@ namespace RUINORERP.Business
                 
             if (entity.SaleOut_MainID > 0)
             {
-                rs = await _unitOfWorkManage.GetDbClient().UpdateNav<tb_SaleOut>(entity as tb_SaleOut)
-                        .Include(m => m.tb_SaleOutRes)
-                    .Include(m => m.tb_SaleOutDetails)
-                            .ExecuteCommandAsync();
-         
-        }
+            
+                             rs = await _unitOfWorkManage.GetDbClient().UpdateNav<tb_SaleOut>(entity as tb_SaleOut)
+                        .Include(m => m.tb_SaleOutDetails)
+                    .Include(m => m.tb_SaleOutRes)
+                    .ExecuteCommandAsync();
+                 }
         else    
         {
-            rs = await _unitOfWorkManage.GetDbClient().InsertNav<tb_SaleOut>(entity as tb_SaleOut)
-                .Include(m => m.tb_SaleOutRes)
+                        rs = await _unitOfWorkManage.GetDbClient().InsertNav<tb_SaleOut>(entity as tb_SaleOut)
                 .Include(m => m.tb_SaleOutDetails)
-                                .ExecuteCommandAsync();
+                .Include(m => m.tb_SaleOutRes)
+         
+                .ExecuteCommandAsync();
+                                          
+                     
         }
         
                 // 注意信息的完整性
@@ -268,11 +272,11 @@ namespace RUINORERP.Business
             catch (Exception ex)
             {
                 _unitOfWorkManage.RollbackTran();
-                _logger.Error(ex);
                 //出错后，取消生成的ID等值
                 command.Undo();
                 rsms.ErrorMsg = ex.Message;
                 rsms.Succeeded = false;
+                _logger.Error(ex);
             }
 
             return rsms;
@@ -286,8 +290,8 @@ namespace RUINORERP.Business
         public async override Task<List<T>> BaseQueryByAdvancedNavAsync(bool useLike, object dto)
         {
             var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<tb_SaleOut>()
-                                .Includes(m => m.tb_SaleOutRes)
-                        .Includes(m => m.tb_SaleOutDetails)
+                                .Includes(m => m.tb_SaleOutDetails)
+                        .Includes(m => m.tb_SaleOutRes)
                                         .Where(useLike, dto);
             return await querySqlQueryable.ToListAsync()as List<T>;
         }
@@ -297,8 +301,8 @@ namespace RUINORERP.Business
         {
             tb_SaleOut entity = model as tb_SaleOut;
              bool rs = await _unitOfWorkManage.GetDbClient().DeleteNav<tb_SaleOut>(m => m.SaleOut_MainID== entity.SaleOut_MainID)
-                                .Include(m => m.tb_SaleOutRes)
-                        .Include(m => m.tb_SaleOutDetails)
+                                .Include(m => m.tb_SaleOutDetails)
+                        .Include(m => m.tb_SaleOutRes)
                                         .ExecuteCommandAsync();
             if (rs)
             {
@@ -461,13 +465,8 @@ namespace RUINORERP.Business
          public virtual async Task<List<tb_SaleOut>> QueryByNavAsync()
         {
             List<tb_SaleOut> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_SaleOut>()
-                               .Includes(t => t.tb_employee )
-                               .Includes(t => t.tb_saleorder )
-                               .Includes(t => t.tb_customervendor )
-                               .Includes(t => t.tb_paymentmethod )
-                   
-                                            .Includes(t => t.tb_SaleOutRes )
-                                .Includes(t => t.tb_SaleOutDetails )
+                                            .Includes(t => t.tb_SaleOutDetails )
+                                .Includes(t => t.tb_SaleOutRes )
                         .ToListAsync();
             
             foreach (var item in list)
@@ -487,13 +486,8 @@ namespace RUINORERP.Business
          public virtual async Task<List<tb_SaleOut>> QueryByNavAsync(Expression<Func<tb_SaleOut, bool>> exp)
         {
             List<tb_SaleOut> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_SaleOut>().Where(exp)
-                               .Includes(t => t.tb_employee )
-                               .Includes(t => t.tb_saleorder )
-                               .Includes(t => t.tb_customervendor )
-                               .Includes(t => t.tb_paymentmethod )
-                    
-                                            .Includes(t => t.tb_SaleOutRes )
-                                .Includes(t => t.tb_SaleOutDetails )
+                                            .Includes(t => t.tb_SaleOutDetails )
+                                .Includes(t => t.tb_SaleOutRes )
                         .ToListAsync();
             
             foreach (var item in list)
@@ -513,13 +507,8 @@ namespace RUINORERP.Business
          public virtual List<tb_SaleOut> QueryByNav(Expression<Func<tb_SaleOut, bool>> exp)
         {
             List<tb_SaleOut> list = _unitOfWorkManage.GetDbClient().Queryable<tb_SaleOut>().Where(exp)
-                            .Includes(t => t.tb_employee )
-                            .Includes(t => t.tb_saleorder )
-                            .Includes(t => t.tb_customervendor )
-                            .Includes(t => t.tb_paymentmethod )
-                     
-                                        .Includes(t => t.tb_SaleOutRes )
-                            .Includes(t => t.tb_SaleOutDetails )
+                                        .Includes(t => t.tb_SaleOutDetails )
+                            .Includes(t => t.tb_SaleOutRes )
                         .ToList();
             
             foreach (var item in list)
@@ -556,12 +545,8 @@ namespace RUINORERP.Business
         public override async Task<T> BaseQueryByIdNavAsync(object id)
         {
             tb_SaleOut entity = await _unitOfWorkManage.GetDbClient().Queryable<tb_SaleOut>().Where(w => w.SaleOut_MainID == (long)id)
-                             .Includes(t => t.tb_employee )
-                            .Includes(t => t.tb_saleorder )
-                            .Includes(t => t.tb_customervendor )
-                            .Includes(t => t.tb_paymentmethod )
-                 
-                            .Includes(t => t.tb_SaleOutDetails )
+                                         .Includes(t => t.tb_SaleOutDetails )
+                            .Includes(t => t.tb_SaleOutRes )
                         .FirstAsync();
             if(entity!=null)
             {

@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/18/2024 18:01:59
+// 时间：03/14/2025 20:39:36
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -230,10 +230,11 @@ namespace RUINORERP.Business
             bool rs = false;
             RevertCommand command = new RevertCommand();
             ReturnMainSubResults<T> rsms = new ReturnMainSubResults<T>();
+                             //缓存当前编辑的对象。如果撤销就回原来的值
+                T oldobj = CloneHelper.DeepCloneObject<T>((T)model);
             try
             {
-                 //缓存当前编辑的对象。如果撤销就回原来的值
-                T oldobj = CloneHelper.DeepCloneObject<T>((T)model);
+
                 Logs entity = model as Logs;
                 command.UndoOperation = delegate ()
                 {
@@ -245,18 +246,24 @@ namespace RUINORERP.Business
                 
             if (entity.ID > 0)
             {
-                rs = await _unitOfWorkManage.GetDbClient().UpdateNav<Logs>(entity as Logs)
-                    //这里一般是子表，或没有一对多外键的情况 ，用自动的只是为了语法正常一般不会调用这个方法
-                .IncludesAllFirstLayer()//自动更新导航 只能两层。这里项目中有时会失效，具体看文档
-                            .ExecuteCommandAsync();
-         
-        }
+            
+                                 var result= await _unitOfWorkManage.GetDbClient().Updateable<Logs>(entity as Logs)
+                    .ExecuteCommandAsync();
+                    if (result > 0)
+                    {
+                        rs = true;
+                    }
+            }
         else    
         {
-            rs = await _unitOfWorkManage.GetDbClient().InsertNav<Logs>(entity as Logs)
-                //这里一般是子表，或没有一对多外键的情况 ，用自动的只是为了语法正常一般不会调用这个方法
-                .IncludesAllFirstLayer()//自动更新导航 只能两层。这里项目中有时会失效，具体看文档
-                                .ExecuteCommandAsync();
+                                  var result= await _unitOfWorkManage.GetDbClient().Insertable<Logs>(entity as Logs)
+                    .ExecuteCommandAsync();
+                    if (result > 0)
+                    {
+                        rs = true;
+                    }
+                                              
+                     
         }
         
                 // 注意信息的完整性
@@ -268,11 +275,11 @@ namespace RUINORERP.Business
             catch (Exception ex)
             {
                 _unitOfWorkManage.RollbackTran();
-                _logger.Error(ex);
                 //出错后，取消生成的ID等值
                 command.Undo();
                 rsms.ErrorMsg = ex.Message;
                 rsms.Succeeded = false;
+                _logger.Error(ex);
             }
 
             return rsms;
@@ -461,7 +468,6 @@ namespace RUINORERP.Business
          public virtual async Task<List<Logs>> QueryByNavAsync()
         {
             List<Logs> list = await _unitOfWorkManage.GetDbClient().Queryable<Logs>()
-                               .Includes(t => t.tb_userinfo )
                                     .ToListAsync();
             
             foreach (var item in list)
@@ -481,7 +487,6 @@ namespace RUINORERP.Business
          public virtual async Task<List<Logs>> QueryByNavAsync(Expression<Func<Logs, bool>> exp)
         {
             List<Logs> list = await _unitOfWorkManage.GetDbClient().Queryable<Logs>().Where(exp)
-                               .Includes(t => t.tb_userinfo )
                                     .ToListAsync();
             
             foreach (var item in list)
@@ -501,7 +506,6 @@ namespace RUINORERP.Business
          public virtual List<Logs> QueryByNav(Expression<Func<Logs, bool>> exp)
         {
             List<Logs> list = _unitOfWorkManage.GetDbClient().Queryable<Logs>().Where(exp)
-                            .Includes(t => t.tb_userinfo )
                                     .ToList();
             
             foreach (var item in list)
@@ -538,8 +542,7 @@ namespace RUINORERP.Business
         public override async Task<T> BaseQueryByIdNavAsync(object id)
         {
             Logs entity = await _unitOfWorkManage.GetDbClient().Queryable<Logs>().Where(w => w.ID == (long)id)
-                             .Includes(t => t.tb_userinfo )
-                                    .FirstAsync();
+                                     .FirstAsync();
             if(entity!=null)
             {
                 entity.HasChanged = false;

@@ -386,49 +386,7 @@ namespace RUINORERP.Business
             throw new Exception("子类要重写BaseQueryByAdvancedNavAsync");
         }
 
-        /*
-        public async virtual Task<List<T>> BaseQueryByAdvancedNavWithConditionAsync(bool useLike, List<Expression<Func<T, object>>> _queryConditions, object dto)
-        {
-            ISugarQueryable<T> querySqlQueryable;
-            if (_queryConditions.Count == 0)
-            {
-                if (typeof(T).GetProperties().ContainsProperty("isdeleted"))
-                {
-                    querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<T>()
-                    //这里一般是子表，或没有一对多外键的情况 ，用自动的只是为了语法正常一般不会调用这个方法
-                    .IncludesAllFirstLayer()//自动更新导航 只能两层。这里项目中有时会失效，具体看文档
-                    .Where("isdeleted=@isdeleted", new { isdeleted = 0 });
-                }
-                else
-                {
-                    querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<T>()
-                  //这里一般是子表，或没有一对多外键的情况 ，用自动的只是为了语法正常一般不会调用这个方法
-                  .IncludesAllFirstLayer();//自动更新导航 只能两层。这里项目中有时会失效，具体看文档
-                }
-
-            }
-            else
-            {
-                if (typeof(T).GetProperties().ContainsProperty("isdeleted"))
-                {
-                    querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<T>()
-                //这里一般是子表，或没有一对多外键的情况 ，用自动的只是为了语法正常一般不会调用这个方法
-                .IncludesAllFirstLayer()//自动更新导航 只能两层。这里项目中有时会失效，具体看文档
-                                .Where(useLike, _queryConditions, dto)
-                                .Where("isdeleted=@isdeleted", new { isdeleted = 0 });
-                }
-                else
-                {
-                    querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<T>()
-                        //这里一般是子表，或没有一对多外键的情况 ，用自动的只是为了语法正常一般不会调用这个方法
-                        .IncludesAllFirstLayer()//自动更新导航 只能两层。这里项目中有时会失效，具体看文档
-                        .Where(useLike, _queryConditions, dto);
-                }
-            }
-
-            return await querySqlQueryable.ToListAsync() as List<T>;
-        }
-        */
+ 
 
 
         public async virtual Task<List<T>> BaseQueryByAdvancedNavWithConditionsAsync(bool useLike, List<string> _queryConditions, Expression<Func<T, bool>> whereLambda, object dto)

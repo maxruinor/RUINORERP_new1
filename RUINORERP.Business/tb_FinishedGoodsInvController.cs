@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/18/2024 18:02:03
+// 时间：03/14/2025 20:39:40
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -31,7 +31,7 @@ namespace RUINORERP.Business
     /// <summary>
     /// 成品入库单 要进一步完善
     /// </summary>
-    public partial class tb_FinishedGoodsInvController<T> : BaseController<T> where T : class
+    public partial class tb_FinishedGoodsInvController<T>:BaseController<T> where T : class
     {
         /// <summary>
         /// 本为私有修改为公有，暴露出来方便使用
@@ -39,28 +39,28 @@ namespace RUINORERP.Business
         //public readonly IUnitOfWorkManage _unitOfWorkManage;
         //public readonly ILogger<BaseController<T>> _logger;
         public Itb_FinishedGoodsInvServices _tb_FinishedGoodsInvServices { get; set; }
-        // private readonly ApplicationContext _appContext;
-
-        public tb_FinishedGoodsInvController(ILogger<tb_FinishedGoodsInvController<T>> logger, IUnitOfWorkManage unitOfWorkManage, tb_FinishedGoodsInvServices tb_FinishedGoodsInvServices, ApplicationContext appContext = null) : base(logger, unitOfWorkManage, appContext)
+       // private readonly ApplicationContext _appContext;
+       
+        public tb_FinishedGoodsInvController(ILogger<tb_FinishedGoodsInvController<T>> logger, IUnitOfWorkManage unitOfWorkManage,tb_FinishedGoodsInvServices tb_FinishedGoodsInvServices , ApplicationContext appContext = null): base(logger, unitOfWorkManage, appContext)
         {
             _logger = logger;
-            _unitOfWorkManage = unitOfWorkManage;
-            _tb_FinishedGoodsInvServices = tb_FinishedGoodsInvServices;
+           _unitOfWorkManage = unitOfWorkManage;
+           _tb_FinishedGoodsInvServices = tb_FinishedGoodsInvServices;
             _appContext = appContext;
         }
-
-
+      
+        
         public ValidationResult Validator(tb_FinishedGoodsInv info)
         {
 
-            // tb_FinishedGoodsInvValidator validator = new tb_FinishedGoodsInvValidator();
-            tb_FinishedGoodsInvValidator validator = _appContext.GetRequiredService<tb_FinishedGoodsInvValidator>();
+           // tb_FinishedGoodsInvValidator validator = new tb_FinishedGoodsInvValidator();
+           tb_FinishedGoodsInvValidator validator = _appContext.GetRequiredService<tb_FinishedGoodsInvValidator>();
             ValidationResult results = validator.Validate(info);
             return results;
         }
-
+        
         #region 扩展方法
-
+        
         /// <summary>
         /// 某字段是否存在
         /// </summary>
@@ -70,8 +70,8 @@ namespace RUINORERP.Business
         {
             return _unitOfWorkManage.GetDbClient().Queryable<T>().Where(exp).Any();
         }
-
-
+      
+        
         /// <summary>
         /// 雪花ID模式下的新增和修改
         /// </summary>
@@ -110,14 +110,14 @@ namespace RUINORERP.Business
             }
             return rr;
         }
-
-
+        
+        
         /// <summary>
         /// 雪花ID模式下的新增和修改
         /// </summary>
         /// <param name="entity"></param>
         /// <returns></returns>
-        public async override Task<ReturnResults<T>> BaseSaveOrUpdate(T model)
+        public async override Task<ReturnResults<T>>  BaseSaveOrUpdate(T model)
         {
             ReturnResults<T> rr = new ReturnResults<T>();
             tb_FinishedGoodsInv entity = model as tb_FinishedGoodsInv;
@@ -136,7 +136,7 @@ namespace RUINORERP.Business
                 }
                 else
                 {
-                    Returnobj = await _tb_FinishedGoodsInvServices.AddReEntityAsync(entity) as T;
+                    Returnobj = await _tb_FinishedGoodsInvServices.AddReEntityAsync(entity) as T ;
                     MyCacheManager.Instance.UpdateEntityList<tb_FinishedGoodsInv>(entity);
                 }
 
@@ -151,8 +151,8 @@ namespace RUINORERP.Business
             }
             return rr;
         }
-
-        public async override Task<List<T>> BaseQueryAsync(string wheresql)
+        
+        public async override Task<List<T>> BaseQueryAsync(string wheresql) 
         {
             List<T> list = await _tb_FinishedGoodsInvServices.QueryAsync(wheresql) as List<T>;
             foreach (var item in list)
@@ -163,11 +163,11 @@ namespace RUINORERP.Business
             if (list != null)
             {
                 MyCacheManager.Instance.UpdateEntityList<List<T>>(list);
-            }
+             }
             return list;
         }
-
-        public async override Task<List<T>> BaseQueryAsync()
+        
+        public async override Task<List<T>> BaseQueryAsync() 
         {
             List<T> list = await _tb_FinishedGoodsInvServices.QueryAsync() as List<T>;
             foreach (var item in list)
@@ -178,11 +178,11 @@ namespace RUINORERP.Business
             if (list != null)
             {
                 MyCacheManager.Instance.UpdateEntityList<List<T>>(list);
-            }
+             }
             return list;
         }
-
-
+        
+        
         public async override Task<bool> BaseDeleteAsync(T model)
         {
             tb_FinishedGoodsInv entity = model as tb_FinishedGoodsInv;
@@ -194,89 +194,95 @@ namespace RUINORERP.Business
             }
             return rs;
         }
-
+        
         public async override Task<bool> BaseDeleteAsync(List<T> models)
         {
-            bool rs = false;
+            bool rs=false;
             List<tb_FinishedGoodsInv> entitys = models as List<tb_FinishedGoodsInv>;
             int c = await _unitOfWorkManage.GetDbClient().Deleteable<tb_FinishedGoodsInv>(entitys).ExecuteCommandAsync();
-            if (c > 0)
+            if (c>0)
             {
-                rs = true;
+                rs=true;
                 ////生成时暂时只考虑了一个主键的情况
-                long[] result = entitys.Select(e => e.FG_ID).ToArray();
+                 long[] result = entitys.Select(e => e.FG_ID).ToArray();
                 MyCacheManager.Instance.DeleteEntityList<tb_FinishedGoodsInv>(result);
             }
             return rs;
         }
-
+        
         public override ValidationResult BaseValidator(T info)
         {
             //tb_FinishedGoodsInvValidator validator = new tb_FinishedGoodsInvValidator();
-            tb_FinishedGoodsInvValidator validator = _appContext.GetRequiredService<tb_FinishedGoodsInvValidator>();
+           tb_FinishedGoodsInvValidator validator = _appContext.GetRequiredService<tb_FinishedGoodsInvValidator>();
             ValidationResult results = validator.Validate(info as tb_FinishedGoodsInv);
             return results;
         }
-
-
-        public async override Task<List<T>> BaseQueryByAdvancedAsync(bool useLike, object dto)
+        
+        
+        public async override Task<List<T>> BaseQueryByAdvancedAsync(bool useLike,object dto) 
         {
-            var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<T>().Where(useLike, dto);
+            var  querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<T>().Where(useLike,dto);
             return await querySqlQueryable.ToListAsync();
         }
-
+        
         public async override Task<ReturnMainSubResults<T>> BaseSaveOrUpdateWithChild<C>(T model) where C : class
         {
             bool rs = false;
             RevertCommand command = new RevertCommand();
             ReturnMainSubResults<T> rsms = new ReturnMainSubResults<T>();
+                             //缓存当前编辑的对象。如果撤销就回原来的值
+                T oldobj = CloneHelper.DeepCloneObject<T>((T)model);
             try
             {
-                //缓存当前编辑的对象。如果撤销就回原来的值
-                T oldobj = CloneHelper.DeepCloneObject<T>((T)model);
+
                 tb_FinishedGoodsInv entity = model as tb_FinishedGoodsInv;
                 command.UndoOperation = delegate ()
                 {
                     //Undo操作会执行到的代码
                     CloneHelper.SetValues<T>(entity, oldobj);
                 };
-                // 开启事务，保证数据一致性
+                       // 开启事务，保证数据一致性
                 _unitOfWorkManage.BeginTran();
-                if (entity.FG_ID > 0)
-                {
-                    rs = await _unitOfWorkManage.GetDbClient().UpdateNav<tb_FinishedGoodsInv>(entity as tb_FinishedGoodsInv)
-                            .Include(m => m.tb_FinishedGoodsInvDetails)
-                                .ExecuteCommandAsync();
-                }
-                else
-                {
-                    rs = await _unitOfWorkManage.GetDbClient().InsertNav<tb_FinishedGoodsInv>(entity as tb_FinishedGoodsInv)
+                
+            if (entity.FG_ID > 0)
+            {
+            
+                             rs = await _unitOfWorkManage.GetDbClient().UpdateNav<tb_FinishedGoodsInv>(entity as tb_FinishedGoodsInv)
                         .Include(m => m.tb_FinishedGoodsInvDetails)
-                                        .ExecuteCommandAsync();
-                }
-
+                    .ExecuteCommandAsync();
+                 }
+        else    
+        {
+                        rs = await _unitOfWorkManage.GetDbClient().InsertNav<tb_FinishedGoodsInv>(entity as tb_FinishedGoodsInv)
+                .Include(m => m.tb_FinishedGoodsInvDetails)
+         
+                .ExecuteCommandAsync();
+                                          
+                     
+        }
+        
                 // 注意信息的完整性
                 _unitOfWorkManage.CommitTran();
-                rsms.ReturnObject = entity as T;
+                rsms.ReturnObject = entity as T ;
                 entity.PrimaryKeyID = entity.FG_ID;
                 rsms.Succeeded = rs;
             }
             catch (Exception ex)
             {
                 _unitOfWorkManage.RollbackTran();
-                _logger.Error(ex);
                 //出错后，取消生成的ID等值
                 command.Undo();
                 rsms.ErrorMsg = ex.Message;
                 rsms.Succeeded = false;
+                _logger.Error(ex);
             }
 
             return rsms;
         }
-
+        
         #endregion
-
-
+        
+        
         #region override mothed
 
         public async override Task<List<T>> BaseQueryByAdvancedNavAsync(bool useLike, object dto)
@@ -284,16 +290,16 @@ namespace RUINORERP.Business
             var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<tb_FinishedGoodsInv>()
                                 .Includes(m => m.tb_FinishedGoodsInvDetails)
                                         .Where(useLike, dto);
-            return await querySqlQueryable.ToListAsync() as List<T>;
+            return await querySqlQueryable.ToListAsync()as List<T>;
         }
 
 
-        public async override Task<bool> BaseDeleteByNavAsync(T model)
+        public async override Task<bool> BaseDeleteByNavAsync(T model) 
         {
             tb_FinishedGoodsInv entity = model as tb_FinishedGoodsInv;
-            bool rs = await _unitOfWorkManage.GetDbClient().DeleteNav<tb_FinishedGoodsInv>(m => m.FG_ID == entity.FG_ID)
-                               .Include(m => m.tb_FinishedGoodsInvDetails)
-                                       .ExecuteCommandAsync();
+             bool rs = await _unitOfWorkManage.GetDbClient().DeleteNav<tb_FinishedGoodsInv>(m => m.FG_ID== entity.FG_ID)
+                                .Include(m => m.tb_FinishedGoodsInvDetails)
+                                        .ExecuteCommandAsync();
             if (rs)
             {
                 //////生成时暂时只考虑了一个主键的情况
@@ -302,68 +308,68 @@ namespace RUINORERP.Business
             return rs;
         }
         #endregion
-
-
-
+        
+        
+        
         public tb_FinishedGoodsInv AddReEntity(tb_FinishedGoodsInv entity)
         {
-            tb_FinishedGoodsInv AddEntity = _tb_FinishedGoodsInvServices.AddReEntity(entity);
+            tb_FinishedGoodsInv AddEntity =  _tb_FinishedGoodsInvServices.AddReEntity(entity);
             MyCacheManager.Instance.UpdateEntityList<tb_FinishedGoodsInv>(AddEntity);
             entity.ActionStatus = ActionStatus.无操作;
             return AddEntity;
         }
-
-        public async Task<tb_FinishedGoodsInv> AddReEntityAsync(tb_FinishedGoodsInv entity)
+        
+         public async Task<tb_FinishedGoodsInv> AddReEntityAsync(tb_FinishedGoodsInv entity)
         {
             tb_FinishedGoodsInv AddEntity = await _tb_FinishedGoodsInvServices.AddReEntityAsync(entity);
             MyCacheManager.Instance.UpdateEntityList<tb_FinishedGoodsInv>(AddEntity);
             entity.ActionStatus = ActionStatus.无操作;
             return AddEntity;
         }
-
+        
         public async Task<long> AddAsync(tb_FinishedGoodsInv entity)
         {
             long id = await _tb_FinishedGoodsInvServices.Add(entity);
-            if (id > 0)
+            if(id>0)
             {
-                MyCacheManager.Instance.UpdateEntityList<tb_FinishedGoodsInv>(entity);
+                 MyCacheManager.Instance.UpdateEntityList<tb_FinishedGoodsInv>(entity);
             }
             return id;
         }
-
+        
         public async Task<List<long>> AddAsync(List<tb_FinishedGoodsInv> infos)
         {
             List<long> ids = await _tb_FinishedGoodsInvServices.Add(infos);
-            if (ids.Count > 0)//成功的个数 这里缓存 对不对呢？
+            if(ids.Count>0)//成功的个数 这里缓存 对不对呢？
             {
-                MyCacheManager.Instance.UpdateEntityList<tb_FinishedGoodsInv>(infos);
+                 MyCacheManager.Instance.UpdateEntityList<tb_FinishedGoodsInv>(infos);
             }
             return ids;
         }
-
-
+        
+        
         public async Task<bool> DeleteAsync(tb_FinishedGoodsInv entity)
         {
             bool rs = await _tb_FinishedGoodsInvServices.Delete(entity);
             if (rs)
             {
                 MyCacheManager.Instance.DeleteEntityList<tb_FinishedGoodsInv>(entity);
-
+                
             }
             return rs;
         }
-
+        
         public async Task<bool> UpdateAsync(tb_FinishedGoodsInv entity)
         {
             bool rs = await _tb_FinishedGoodsInvServices.Update(entity);
             if (rs)
             {
-                MyCacheManager.Instance.UpdateEntityList<tb_FinishedGoodsInv>(entity);
+                 MyCacheManager.Instance.UpdateEntityList<tb_FinishedGoodsInv>(entity);
                 entity.ActionStatus = ActionStatus.无操作;
             }
             return rs;
         }
-
+        
         public async Task<bool> DeleteAsync(long id)
         {
             bool rs = await _tb_FinishedGoodsInvServices.DeleteById(id);
@@ -373,8 +379,8 @@ namespace RUINORERP.Business
             }
             return rs;
         }
-
-        public async Task<bool> DeleteAsync(long[] ids)
+        
+         public async Task<bool> DeleteAsync(long[] ids)
         {
             bool rs = await _tb_FinishedGoodsInvServices.DeleteByIds(ids);
             if (rs)
@@ -383,10 +389,10 @@ namespace RUINORERP.Business
             }
             return rs;
         }
-
+        
         public virtual async Task<List<tb_FinishedGoodsInv>> QueryAsync()
         {
-            List<tb_FinishedGoodsInv> list = await _tb_FinishedGoodsInvServices.QueryAsync();
+            List<tb_FinishedGoodsInv> list = await  _tb_FinishedGoodsInvServices.QueryAsync();
             foreach (var item in list)
             {
                 item.HasChanged = false;
@@ -394,10 +400,10 @@ namespace RUINORERP.Business
             MyCacheManager.Instance.UpdateEntityList<tb_FinishedGoodsInv>(list);
             return list;
         }
-
+        
         public virtual List<tb_FinishedGoodsInv> Query()
         {
-            List<tb_FinishedGoodsInv> list = _tb_FinishedGoodsInvServices.Query();
+            List<tb_FinishedGoodsInv> list =  _tb_FinishedGoodsInvServices.Query();
             foreach (var item in list)
             {
                 item.HasChanged = false;
@@ -405,10 +411,10 @@ namespace RUINORERP.Business
             MyCacheManager.Instance.UpdateEntityList<tb_FinishedGoodsInv>(list);
             return list;
         }
-
+        
         public virtual List<tb_FinishedGoodsInv> Query(string wheresql)
         {
-            List<tb_FinishedGoodsInv> list = _tb_FinishedGoodsInvServices.Query(wheresql);
+            List<tb_FinishedGoodsInv> list =  _tb_FinishedGoodsInvServices.Query(wheresql);
             foreach (var item in list)
             {
                 item.HasChanged = false;
@@ -416,8 +422,8 @@ namespace RUINORERP.Business
             MyCacheManager.Instance.UpdateEntityList<tb_FinishedGoodsInv>(list);
             return list;
         }
-
-        public virtual async Task<List<tb_FinishedGoodsInv>> QueryAsync(string wheresql)
+        
+        public virtual async Task<List<tb_FinishedGoodsInv>> QueryAsync(string wheresql) 
         {
             List<tb_FinishedGoodsInv> list = await _tb_FinishedGoodsInvServices.QueryAsync(wheresql);
             foreach (var item in list)
@@ -427,7 +433,7 @@ namespace RUINORERP.Business
             MyCacheManager.Instance.UpdateEntityList<tb_FinishedGoodsInv>(list);
             return list;
         }
-
+        
 
 
         /// <summary>
@@ -445,28 +451,28 @@ namespace RUINORERP.Business
             MyCacheManager.Instance.UpdateEntityList<tb_FinishedGoodsInv>(list);
             return list;
         }
-
-
-
+        
+        
+        
         /// <summary>
         /// 无参数异步导航查询
         /// </summary>
         /// <returns>数据列表</returns>
-        public virtual async Task<List<tb_FinishedGoodsInv>> QueryByNavAsync()
+         public virtual async Task<List<tb_FinishedGoodsInv>> QueryByNavAsync()
         {
             List<tb_FinishedGoodsInv> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_FinishedGoodsInv>()
-                               .Includes(t => t.tb_manufacturingorder)
-                               .Includes(t => t.tb_employee)
-                               .Includes(t => t.tb_customervendor)
-                               .Includes(t => t.tb_department)
-                                            .Includes(t => t.tb_FinishedGoodsInvDetails)
+                               .Includes(t => t.tb_manufacturingorder )
+                               .Includes(t => t.tb_employee )
+                               .Includes(t => t.tb_customervendor )
+                               .Includes(t => t.tb_department )
+                                            .Includes(t => t.tb_FinishedGoodsInvDetails )
                         .ToListAsync();
-
+            
             foreach (var item in list)
             {
                 item.HasChanged = false;
             }
-
+            
             MyCacheManager.Instance.UpdateEntityList<tb_FinishedGoodsInv>(list);
             return list;
         }
@@ -476,58 +482,58 @@ namespace RUINORERP.Business
         /// 带参数异步导航查询
         /// </summary>
         /// <returns>数据列表</returns>
-        public virtual async Task<List<tb_FinishedGoodsInv>> QueryByNavAsync(Expression<Func<tb_FinishedGoodsInv, bool>> exp)
+         public virtual async Task<List<tb_FinishedGoodsInv>> QueryByNavAsync(Expression<Func<tb_FinishedGoodsInv, bool>> exp)
         {
             List<tb_FinishedGoodsInv> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_FinishedGoodsInv>().Where(exp)
-                               .Includes(t => t.tb_manufacturingorder)
-                               .Includes(t => t.tb_employee)
-                               .Includes(t => t.tb_customervendor)
-                               .Includes(t => t.tb_department)
-                                            .Includes(t => t.tb_FinishedGoodsInvDetails)
+                               .Includes(t => t.tb_manufacturingorder )
+                               .Includes(t => t.tb_employee )
+                               .Includes(t => t.tb_customervendor )
+                               .Includes(t => t.tb_department )
+                                            .Includes(t => t.tb_FinishedGoodsInvDetails )
                         .ToListAsync();
-
+            
             foreach (var item in list)
             {
                 item.HasChanged = false;
             }
-
+            
             MyCacheManager.Instance.UpdateEntityList<tb_FinishedGoodsInv>(list);
             return list;
         }
-
-
+        
+        
         /// <summary>
         /// 带参数异步导航查询
         /// </summary>
         /// <returns>数据列表</returns>
-        public virtual List<tb_FinishedGoodsInv> QueryByNav(Expression<Func<tb_FinishedGoodsInv, bool>> exp)
+         public virtual List<tb_FinishedGoodsInv> QueryByNav(Expression<Func<tb_FinishedGoodsInv, bool>> exp)
         {
             List<tb_FinishedGoodsInv> list = _unitOfWorkManage.GetDbClient().Queryable<tb_FinishedGoodsInv>().Where(exp)
-                            .Includes(t => t.tb_manufacturingorder)
-                            .Includes(t => t.tb_employee)
-                            .Includes(t => t.tb_customervendor)
-                            .Includes(t => t.tb_department)
-                                        .Includes(t => t.tb_FinishedGoodsInvDetails)
+                            .Includes(t => t.tb_manufacturingorder )
+                            .Includes(t => t.tb_employee )
+                            .Includes(t => t.tb_customervendor )
+                            .Includes(t => t.tb_department )
+                                        .Includes(t => t.tb_FinishedGoodsInvDetails )
                         .ToList();
-
+            
             foreach (var item in list)
             {
                 item.HasChanged = false;
             }
-
+            
             MyCacheManager.Instance.UpdateEntityList<tb_FinishedGoodsInv>(list);
             return list;
         }
-
-
+        
+        
 
         /// <summary>
         /// 高级查询
         /// </summary>
         /// <returns></returns>
-        public async Task<List<tb_FinishedGoodsInv>> QueryByAdvancedAsync(bool useLike, object dto)
+        public async Task<List<tb_FinishedGoodsInv>> QueryByAdvancedAsync(bool useLike,object dto)
         {
-            var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<tb_FinishedGoodsInv>().Where(useLike, dto);
+            var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<tb_FinishedGoodsInv>().Where(useLike,dto);
             return await querySqlQueryable.ToListAsync();
         }
 
@@ -538,19 +544,19 @@ namespace RUINORERP.Business
             T entity = await _tb_FinishedGoodsInvServices.QueryByIdAsync(id) as T;
             return entity;
         }
-
-
-
+        
+        
+        
         public override async Task<T> BaseQueryByIdNavAsync(object id)
         {
             tb_FinishedGoodsInv entity = await _unitOfWorkManage.GetDbClient().Queryable<tb_FinishedGoodsInv>().Where(w => w.FG_ID == (long)id)
-                             .Includes(t => t.tb_manufacturingorder)
-                            .Includes(t => t.tb_employee)
-                            .Includes(t => t.tb_customervendor)
-                            .Includes(t => t.tb_department)
-                                        .Includes(t => t.tb_FinishedGoodsInvDetails)
+                             .Includes(t => t.tb_manufacturingorder )
+                            .Includes(t => t.tb_employee )
+                            .Includes(t => t.tb_customervendor )
+                            .Includes(t => t.tb_department )
+                                        .Includes(t => t.tb_FinishedGoodsInvDetails )
                         .FirstAsync();
-            if (entity != null)
+            if(entity!=null)
             {
                 entity.HasChanged = false;
             }
@@ -558,12 +564,12 @@ namespace RUINORERP.Business
             MyCacheManager.Instance.UpdateEntityList<tb_FinishedGoodsInv>(entity);
             return entity as T;
         }
-
-
-
-
-
-
+        
+        
+        
+        
+        
+        
     }
 }
 

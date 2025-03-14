@@ -2117,7 +2117,6 @@ namespace RUINORERP.UI.BaseForm
             return rmr;
         }
 
-
         protected async Task<ReturnMainSubResults<T>> Save(T entity)
         {
             string PKCol = BaseUIHelper.GetEntityPrimaryKey<T>();

@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/18/2024 18:02:15
+// 时间：03/14/2025 20:39:53
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -230,10 +230,11 @@ namespace RUINORERP.Business
             bool rs = false;
             RevertCommand command = new RevertCommand();
             ReturnMainSubResults<T> rsms = new ReturnMainSubResults<T>();
+                             //缓存当前编辑的对象。如果撤销就回原来的值
+                T oldobj = CloneHelper.DeepCloneObject<T>((T)model);
             try
             {
-                 //缓存当前编辑的对象。如果撤销就回原来的值
-                T oldobj = CloneHelper.DeepCloneObject<T>((T)model);
+
                 tb_StockIn entity = model as tb_StockIn;
                 command.UndoOperation = delegate ()
                 {
@@ -245,16 +246,19 @@ namespace RUINORERP.Business
                 
             if (entity.MainID > 0)
             {
-                rs = await _unitOfWorkManage.GetDbClient().UpdateNav<tb_StockIn>(entity as tb_StockIn)
+            
+                             rs = await _unitOfWorkManage.GetDbClient().UpdateNav<tb_StockIn>(entity as tb_StockIn)
                         .Include(m => m.tb_StockInDetails)
-                            .ExecuteCommandAsync();
-         
-        }
+                    .ExecuteCommandAsync();
+                 }
         else    
         {
-            rs = await _unitOfWorkManage.GetDbClient().InsertNav<tb_StockIn>(entity as tb_StockIn)
+                        rs = await _unitOfWorkManage.GetDbClient().InsertNav<tb_StockIn>(entity as tb_StockIn)
                 .Include(m => m.tb_StockInDetails)
-                                .ExecuteCommandAsync();
+         
+                .ExecuteCommandAsync();
+                                          
+                     
         }
         
                 // 注意信息的完整性
@@ -266,11 +270,11 @@ namespace RUINORERP.Business
             catch (Exception ex)
             {
                 _unitOfWorkManage.RollbackTran();
-                _logger.Error(ex);
                 //出错后，取消生成的ID等值
                 command.Undo();
                 rsms.ErrorMsg = ex.Message;
                 rsms.Succeeded = false;
+                _logger.Error(ex);
             }
 
             return rsms;
@@ -457,6 +461,7 @@ namespace RUINORERP.Business
          public virtual async Task<List<tb_StockIn>> QueryByNavAsync()
         {
             List<tb_StockIn> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_StockIn>()
+                               .Includes(t => t.tb_outinstocktype )
                                .Includes(t => t.tb_customervendor )
                                .Includes(t => t.tb_employee )
                                             .Includes(t => t.tb_StockInDetails )
@@ -479,6 +484,7 @@ namespace RUINORERP.Business
          public virtual async Task<List<tb_StockIn>> QueryByNavAsync(Expression<Func<tb_StockIn, bool>> exp)
         {
             List<tb_StockIn> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_StockIn>().Where(exp)
+                               .Includes(t => t.tb_outinstocktype )
                                .Includes(t => t.tb_customervendor )
                                .Includes(t => t.tb_employee )
                                             .Includes(t => t.tb_StockInDetails )
@@ -501,6 +507,7 @@ namespace RUINORERP.Business
          public virtual List<tb_StockIn> QueryByNav(Expression<Func<tb_StockIn, bool>> exp)
         {
             List<tb_StockIn> list = _unitOfWorkManage.GetDbClient().Queryable<tb_StockIn>().Where(exp)
+                            .Includes(t => t.tb_outinstocktype )
                             .Includes(t => t.tb_customervendor )
                             .Includes(t => t.tb_employee )
                                         .Includes(t => t.tb_StockInDetails )
@@ -540,7 +547,8 @@ namespace RUINORERP.Business
         public override async Task<T> BaseQueryByIdNavAsync(object id)
         {
             tb_StockIn entity = await _unitOfWorkManage.GetDbClient().Queryable<tb_StockIn>().Where(w => w.MainID == (long)id)
-                             .Includes(t => t.tb_customervendor )
+                             .Includes(t => t.tb_outinstocktype )
+                            .Includes(t => t.tb_customervendor )
                             .Includes(t => t.tb_employee )
                                         .Includes(t => t.tb_StockInDetails )
                         .FirstAsync();

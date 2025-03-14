@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/18/2024 18:02:04
+// 时间：03/14/2025 20:39:41
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -29,7 +29,7 @@ using RUINORERP.Common.Helper;
 namespace RUINORERP.Business
 {
     /// <summary>
-    /// 账户管理，财务系统中使用
+    /// 付款账号管理
     /// </summary>
     public partial class tb_FM_AccountController<T>:BaseController<T> where T : class
     {
@@ -230,10 +230,11 @@ namespace RUINORERP.Business
             bool rs = false;
             RevertCommand command = new RevertCommand();
             ReturnMainSubResults<T> rsms = new ReturnMainSubResults<T>();
+                             //缓存当前编辑的对象。如果撤销就回原来的值
+                T oldobj = CloneHelper.DeepCloneObject<T>((T)model);
             try
             {
-                 //缓存当前编辑的对象。如果撤销就回原来的值
-                T oldobj = CloneHelper.DeepCloneObject<T>((T)model);
+
                 tb_FM_Account entity = model as tb_FM_Account;
                 command.UndoOperation = delegate ()
                 {
@@ -245,24 +246,31 @@ namespace RUINORERP.Business
                 
             if (entity.Account_id > 0)
             {
-                rs = await _unitOfWorkManage.GetDbClient().UpdateNav<tb_FM_Account>(entity as tb_FM_Account)
+            
+                             rs = await _unitOfWorkManage.GetDbClient().UpdateNav<tb_FM_Account>(entity as tb_FM_Account)
                         .Include(m => m.tb_FM_OtherExpenseDetails)
+                    .Include(m => m.tb_FM_PaymentApplications)
                     .Include(m => m.tb_FM_ExpenseClaimDetails)
                     .Include(m => m.tb_FM_Initial_PayAndReceivables)
                     .Include(m => m.tb_FM_PaymentBills)
+                   
                     .Include(m => m.tb_FM_PrePaymentBillDetails)
-                            .ExecuteCommandAsync();
-         
-        }
+                    .ExecuteCommandAsync();
+                 }
         else    
         {
-            rs = await _unitOfWorkManage.GetDbClient().InsertNav<tb_FM_Account>(entity as tb_FM_Account)
+                        rs = await _unitOfWorkManage.GetDbClient().InsertNav<tb_FM_Account>(entity as tb_FM_Account)
                 .Include(m => m.tb_FM_OtherExpenseDetails)
+                .Include(m => m.tb_FM_PaymentApplications)
                 .Include(m => m.tb_FM_ExpenseClaimDetails)
                 .Include(m => m.tb_FM_Initial_PayAndReceivables)
                 .Include(m => m.tb_FM_PaymentBills)
+               
                 .Include(m => m.tb_FM_PrePaymentBillDetails)
-                                .ExecuteCommandAsync();
+         
+                .ExecuteCommandAsync();
+                                          
+                     
         }
         
                 // 注意信息的完整性
@@ -274,11 +282,11 @@ namespace RUINORERP.Business
             catch (Exception ex)
             {
                 _unitOfWorkManage.RollbackTran();
-                _logger.Error(ex);
                 //出错后，取消生成的ID等值
                 command.Undo();
                 rsms.ErrorMsg = ex.Message;
                 rsms.Succeeded = false;
+                _logger.Error(ex);
             }
 
             return rsms;
@@ -293,9 +301,11 @@ namespace RUINORERP.Business
         {
             var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<tb_FM_Account>()
                                 .Includes(m => m.tb_FM_OtherExpenseDetails)
+                        .Includes(m => m.tb_FM_PaymentApplications)
                         .Includes(m => m.tb_FM_ExpenseClaimDetails)
                         .Includes(m => m.tb_FM_Initial_PayAndReceivables)
                         .Includes(m => m.tb_FM_PaymentBills)
+                      
                         .Includes(m => m.tb_FM_PrePaymentBillDetails)
                                         .Where(useLike, dto);
             return await querySqlQueryable.ToListAsync()as List<T>;
@@ -307,9 +317,11 @@ namespace RUINORERP.Business
             tb_FM_Account entity = model as tb_FM_Account;
              bool rs = await _unitOfWorkManage.GetDbClient().DeleteNav<tb_FM_Account>(m => m.Account_id== entity.Account_id)
                                 .Include(m => m.tb_FM_OtherExpenseDetails)
+                        .Include(m => m.tb_FM_PaymentApplications)
                         .Include(m => m.tb_FM_ExpenseClaimDetails)
                         .Include(m => m.tb_FM_Initial_PayAndReceivables)
                         .Include(m => m.tb_FM_PaymentBills)
+                      
                         .Include(m => m.tb_FM_PrePaymentBillDetails)
                                         .ExecuteCommandAsync();
             if (rs)
@@ -477,9 +489,11 @@ namespace RUINORERP.Business
                                .Includes(t => t.tb_currency )
                                .Includes(t => t.tb_fm_subject )
                                             .Includes(t => t.tb_FM_OtherExpenseDetails )
+                                .Includes(t => t.tb_FM_PaymentApplications )
                                 .Includes(t => t.tb_FM_ExpenseClaimDetails )
                                 .Includes(t => t.tb_FM_Initial_PayAndReceivables )
                                 .Includes(t => t.tb_FM_PaymentBills )
+                             
                                 .Includes(t => t.tb_FM_PrePaymentBillDetails )
                         .ToListAsync();
             
@@ -504,9 +518,11 @@ namespace RUINORERP.Business
                                .Includes(t => t.tb_currency )
                                .Includes(t => t.tb_fm_subject )
                                             .Includes(t => t.tb_FM_OtherExpenseDetails )
+                                .Includes(t => t.tb_FM_PaymentApplications )
                                 .Includes(t => t.tb_FM_ExpenseClaimDetails )
                                 .Includes(t => t.tb_FM_Initial_PayAndReceivables )
                                 .Includes(t => t.tb_FM_PaymentBills )
+                            
                                 .Includes(t => t.tb_FM_PrePaymentBillDetails )
                         .ToListAsync();
             
@@ -531,9 +547,11 @@ namespace RUINORERP.Business
                             .Includes(t => t.tb_currency )
                             .Includes(t => t.tb_fm_subject )
                                         .Includes(t => t.tb_FM_OtherExpenseDetails )
+                            .Includes(t => t.tb_FM_PaymentApplications )
                             .Includes(t => t.tb_FM_ExpenseClaimDetails )
                             .Includes(t => t.tb_FM_Initial_PayAndReceivables )
                             .Includes(t => t.tb_FM_PaymentBills )
+                           
                             .Includes(t => t.tb_FM_PrePaymentBillDetails )
                         .ToList();
             
@@ -575,9 +593,11 @@ namespace RUINORERP.Business
                             .Includes(t => t.tb_currency )
                             .Includes(t => t.tb_fm_subject )
                                         .Includes(t => t.tb_FM_OtherExpenseDetails )
+                            .Includes(t => t.tb_FM_PaymentApplications )
                             .Includes(t => t.tb_FM_ExpenseClaimDetails )
                             .Includes(t => t.tb_FM_Initial_PayAndReceivables )
                             .Includes(t => t.tb_FM_PaymentBills )
+                       
                             .Includes(t => t.tb_FM_PrePaymentBillDetails )
                         .FirstAsync();
             if(entity!=null)

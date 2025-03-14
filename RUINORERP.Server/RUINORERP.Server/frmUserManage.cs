@@ -28,7 +28,7 @@ namespace RUINORERP.Server
         public ObservableCollection<UserInfo> userInfos = new ObservableCollection<UserInfo>();
         private void frmUserManage_Load(object sender, EventArgs e)
         {
-            dataGridView1.VirtualMode = false;
+            dataGridView1.VirtualMode = true;
             // 订阅CollectionChanged事件
             userInfos.CollectionChanged -= UserInfos_CollectionChanged;
             userInfos.CollectionChanged += UserInfos_CollectionChanged;
@@ -161,28 +161,32 @@ namespace RUINORERP.Server
                     if (frmMain.Instance.sessionListBiz.ContainsKey(info.SessionId))
                     {
                         SessionforBiz biz = frmMain.Instance.sessionListBiz[info.SessionId];
-                        dataGridView1.Invoke(new Action(() =>
+                        if (dataGridView1.IsHandleCreated)
                         {
-                            for (int i = 0; i < dataGridView1.Rows.Count; i++)
+                            dataGridView1.Invoke(new Action(() =>
                             {
-                                if (dataGridView1.Rows[i].DataBoundItem is UserInfo userInfo)
+                                for (int i = 0; i < dataGridView1.Rows.Count; i++)
                                 {
-                                    if (userInfo.SessionId == biz.SessionID)
+                                    if (dataGridView1.Rows[i].DataBoundItem is UserInfo userInfo)
                                     {
-                                        foreach (DataGridViewColumn dc in dataGridView1.Columns)
+                                        if (userInfo.SessionId == biz.SessionID)
                                         {
-                                            if (dc.DataPropertyName == e.PropertyName)
+                                            foreach (DataGridViewColumn dc in dataGridView1.Columns)
                                             {
-                                                dataGridView1.Rows[i].Cells[dc.Name].Value = HLH.Lib.Helper.ReflectionHelper.GetPropertyValue(info, e.PropertyName);
-                                                dataGridView1.Refresh();
-                                                // dataGridView1.PerformLayout();
-                                                break;
+                                                if (dc.DataPropertyName == e.PropertyName)
+                                                {
+                                                    //dataGridView1.Rows[i].Cells[dc.Name].Value = HLH.Lib.Helper.ReflectionHelper.GetPropertyValue(info, e.PropertyName);
+                                                    //dataGridView1.Refresh();
+                                                    // dataGridView1.PerformLayout();
+                                                    break;
+                                                }
                                             }
                                         }
                                     }
                                 }
-                            }
-                        }));
+                            }));
+                        }
+                        
                     }
 
                 }

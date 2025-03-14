@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/18/2024 18:02:17
+// 时间：03/14/2025 20:39:55
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -230,10 +230,11 @@ namespace RUINORERP.Business
             bool rs = false;
             RevertCommand command = new RevertCommand();
             ReturnMainSubResults<T> rsms = new ReturnMainSubResults<T>();
+                             //缓存当前编辑的对象。如果撤销就回原来的值
+                T oldobj = CloneHelper.DeepCloneObject<T>((T)model);
             try
             {
-                 //缓存当前编辑的对象。如果撤销就回原来的值
-                T oldobj = CloneHelper.DeepCloneObject<T>((T)model);
+
                 tb_UserPersonalized entity = model as tb_UserPersonalized;
                 command.UndoOperation = delegate ()
                 {
@@ -245,16 +246,19 @@ namespace RUINORERP.Business
                 
             if (entity.UserPersonalizedID > 0)
             {
-                rs = await _unitOfWorkManage.GetDbClient().UpdateNav<tb_UserPersonalized>(entity as tb_UserPersonalized)
+            
+                             rs = await _unitOfWorkManage.GetDbClient().UpdateNav<tb_UserPersonalized>(entity as tb_UserPersonalized)
                         .Include(m => m.tb_UIMenuPersonalizations)
-                            .ExecuteCommandAsync();
-         
-        }
+                    .ExecuteCommandAsync();
+                 }
         else    
         {
-            rs = await _unitOfWorkManage.GetDbClient().InsertNav<tb_UserPersonalized>(entity as tb_UserPersonalized)
+                        rs = await _unitOfWorkManage.GetDbClient().InsertNav<tb_UserPersonalized>(entity as tb_UserPersonalized)
                 .Include(m => m.tb_UIMenuPersonalizations)
-                                .ExecuteCommandAsync();
+         
+                .ExecuteCommandAsync();
+                                          
+                     
         }
         
                 // 注意信息的完整性
@@ -266,11 +270,11 @@ namespace RUINORERP.Business
             catch (Exception ex)
             {
                 _unitOfWorkManage.RollbackTran();
-                _logger.Error(ex);
                 //出错后，取消生成的ID等值
                 command.Undo();
                 rsms.ErrorMsg = ex.Message;
                 rsms.Succeeded = false;
+                _logger.Error(ex);
             }
 
             return rsms;

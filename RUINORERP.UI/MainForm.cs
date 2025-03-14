@@ -279,9 +279,6 @@ namespace RUINORERP.UI
         public EasyClientService ecs = new EasyClientService();
 
 
-
-
-
         private void Ecs_OnConnectClosed(bool isconect)
         {
             // ecs.LoginStatus = false;
@@ -1120,7 +1117,7 @@ namespace RUINORERP.UI
         {
             if (AuthorizeController.GetShowDebugInfoAuthorization(AppContext))
             {
-                //MainForm.Instance.uclog.AddLog(sql);
+                MainForm.Instance.uclog.AddLog(sql);
             }
         }
 

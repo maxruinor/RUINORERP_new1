@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/18/2024 18:02:14
+// 时间：03/14/2025 20:39:52
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -230,10 +230,11 @@ namespace RUINORERP.Business
             bool rs = false;
             RevertCommand command = new RevertCommand();
             ReturnMainSubResults<T> rsms = new ReturnMainSubResults<T>();
+                             //缓存当前编辑的对象。如果撤销就回原来的值
+                T oldobj = CloneHelper.DeepCloneObject<T>((T)model);
             try
             {
-                 //缓存当前编辑的对象。如果撤销就回原来的值
-                T oldobj = CloneHelper.DeepCloneObject<T>((T)model);
+
                 tb_SaleOrder entity = model as tb_SaleOrder;
                 command.UndoOperation = delegate ()
                 {
@@ -245,24 +246,25 @@ namespace RUINORERP.Business
                 
             if (entity.SOrder_ID > 0)
             {
-                rs = await _unitOfWorkManage.GetDbClient().UpdateNav<tb_SaleOrder>(entity as tb_SaleOrder)
-                        .Include(m => m.tb_PurOrders)
-                    .Include(m => m.tb_SaleOuts)
-                    .Include(m => m.tb_SaleOrderDetails)
+            
+                             rs = await _unitOfWorkManage.GetDbClient().UpdateNav<tb_SaleOrder>(entity as tb_SaleOrder)
+                        .Include(m => m.tb_SaleOrderDetails)
                     .Include(m => m.tb_ProductionPlans)
                     .Include(m => m.tb_OrderPackings)
-                            .ExecuteCommandAsync();
-         
-        }
+                    .Include(m => m.tb_PurOrders)
+                    .ExecuteCommandAsync();
+                 }
         else    
         {
-            rs = await _unitOfWorkManage.GetDbClient().InsertNav<tb_SaleOrder>(entity as tb_SaleOrder)
-                .Include(m => m.tb_PurOrders)
-                .Include(m => m.tb_SaleOuts)
+                        rs = await _unitOfWorkManage.GetDbClient().InsertNav<tb_SaleOrder>(entity as tb_SaleOrder)
                 .Include(m => m.tb_SaleOrderDetails)
                 .Include(m => m.tb_ProductionPlans)
                 .Include(m => m.tb_OrderPackings)
-                                .ExecuteCommandAsync();
+                .Include(m => m.tb_PurOrders)
+         
+                .ExecuteCommandAsync();
+                                          
+                     
         }
         
                 // 注意信息的完整性
@@ -274,11 +276,11 @@ namespace RUINORERP.Business
             catch (Exception ex)
             {
                 _unitOfWorkManage.RollbackTran();
-                _logger.Error(ex);
                 //出错后，取消生成的ID等值
                 command.Undo();
                 rsms.ErrorMsg = ex.Message;
                 rsms.Succeeded = false;
+                _logger.Error(ex);
             }
 
             return rsms;
@@ -292,11 +294,10 @@ namespace RUINORERP.Business
         public async override Task<List<T>> BaseQueryByAdvancedNavAsync(bool useLike, object dto)
         {
             var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<tb_SaleOrder>()
-                                .Includes(m => m.tb_PurOrders)
-                        .Includes(m => m.tb_SaleOuts)
-                        .Includes(m => m.tb_SaleOrderDetails)
+                                .Includes(m => m.tb_SaleOrderDetails)
                         .Includes(m => m.tb_ProductionPlans)
                         .Includes(m => m.tb_OrderPackings)
+                        .Includes(m => m.tb_PurOrders)
                                         .Where(useLike, dto);
             return await querySqlQueryable.ToListAsync()as List<T>;
         }
@@ -306,11 +307,10 @@ namespace RUINORERP.Business
         {
             tb_SaleOrder entity = model as tb_SaleOrder;
              bool rs = await _unitOfWorkManage.GetDbClient().DeleteNav<tb_SaleOrder>(m => m.SOrder_ID== entity.SOrder_ID)
-                                .Include(m => m.tb_PurOrders)
-                        .Include(m => m.tb_SaleOuts)
-                        .Include(m => m.tb_SaleOrderDetails)
+                                .Include(m => m.tb_SaleOrderDetails)
                         .Include(m => m.tb_ProductionPlans)
                         .Include(m => m.tb_OrderPackings)
+                        .Include(m => m.tb_PurOrders)
                                         .ExecuteCommandAsync();
             if (rs)
             {
@@ -477,11 +477,10 @@ namespace RUINORERP.Business
                                .Includes(t => t.tb_customervendor )
                                .Includes(t => t.tb_employee )
                                .Includes(t => t.tb_paymentmethod )
-                                            .Includes(t => t.tb_PurOrders )
-                                .Includes(t => t.tb_SaleOuts )
-                                .Includes(t => t.tb_SaleOrderDetails )
+                                            .Includes(t => t.tb_SaleOrderDetails )
                                 .Includes(t => t.tb_ProductionPlans )
                                 .Includes(t => t.tb_OrderPackings )
+                                .Includes(t => t.tb_PurOrders )
                         .ToListAsync();
             
             foreach (var item in list)
@@ -505,11 +504,10 @@ namespace RUINORERP.Business
                                .Includes(t => t.tb_customervendor )
                                .Includes(t => t.tb_employee )
                                .Includes(t => t.tb_paymentmethod )
-                                            .Includes(t => t.tb_PurOrders )
-                                .Includes(t => t.tb_SaleOuts )
-                                .Includes(t => t.tb_SaleOrderDetails )
+                                            .Includes(t => t.tb_SaleOrderDetails )
                                 .Includes(t => t.tb_ProductionPlans )
                                 .Includes(t => t.tb_OrderPackings )
+                                .Includes(t => t.tb_PurOrders )
                         .ToListAsync();
             
             foreach (var item in list)
@@ -533,11 +531,10 @@ namespace RUINORERP.Business
                             .Includes(t => t.tb_customervendor )
                             .Includes(t => t.tb_employee )
                             .Includes(t => t.tb_paymentmethod )
-                                        .Includes(t => t.tb_PurOrders )
-                            .Includes(t => t.tb_SaleOuts )
-                            .Includes(t => t.tb_SaleOrderDetails )
+                                        .Includes(t => t.tb_SaleOrderDetails )
                             .Includes(t => t.tb_ProductionPlans )
                             .Includes(t => t.tb_OrderPackings )
+                            .Includes(t => t.tb_PurOrders )
                         .ToList();
             
             foreach (var item in list)
@@ -578,11 +575,10 @@ namespace RUINORERP.Business
                             .Includes(t => t.tb_customervendor )
                             .Includes(t => t.tb_employee )
                             .Includes(t => t.tb_paymentmethod )
-                                        .Includes(t => t.tb_PurOrders )
-                            .Includes(t => t.tb_SaleOuts )
-                            .Includes(t => t.tb_SaleOrderDetails )
+                                        .Includes(t => t.tb_SaleOrderDetails )
                             .Includes(t => t.tb_ProductionPlans )
                             .Includes(t => t.tb_OrderPackings )
+                            .Includes(t => t.tb_PurOrders )
                         .FirstAsync();
             if(entity!=null)
             {

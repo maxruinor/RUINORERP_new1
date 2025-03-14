@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/18/2024 18:02:16
+// 时间：03/14/2025 20:39:53
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -230,10 +230,11 @@ namespace RUINORERP.Business
             bool rs = false;
             RevertCommand command = new RevertCommand();
             ReturnMainSubResults<T> rsms = new ReturnMainSubResults<T>();
+                             //缓存当前编辑的对象。如果撤销就回原来的值
+                T oldobj = CloneHelper.DeepCloneObject<T>((T)model);
             try
             {
-                 //缓存当前编辑的对象。如果撤销就回原来的值
-                T oldobj = CloneHelper.DeepCloneObject<T>((T)model);
+
                 tb_StorageRack entity = model as tb_StorageRack;
                 command.UndoOperation = delegate ()
                 {
@@ -245,36 +246,41 @@ namespace RUINORERP.Business
                 
             if (entity.Rack_ID > 0)
             {
-                rs = await _unitOfWorkManage.GetDbClient().UpdateNav<tb_StorageRack>(entity as tb_StorageRack)
+            
+                             rs = await _unitOfWorkManage.GetDbClient().UpdateNav<tb_StorageRack>(entity as tb_StorageRack)
                         .Include(m => m.tb_StockOutDetails)
-                    .Include(m => m.tb_SaleOutReDetails)
                     .Include(m => m.tb_PurReturnEntryDetails)
                     .Include(m => m.tb_FinishedGoodsInvDetails)
                     .Include(m => m.tb_Prods)
+                    .Include(m => m.tb_SaleOutDetails)
                     .Include(m => m.tb_StocktakeDetails)
                     .Include(m => m.tb_PurEntryDetails)
-                    .Include(m => m.tb_SaleOutDetails)
+                    .Include(m => m.tb_SaleOutReDetails)
+                    .Include(m => m.tb_MRP_ReworkEntryDetails)
                     .Include(m => m.tb_PurEntryReDetails)
                     .Include(m => m.tb_Inventories)
                     .Include(m => m.tb_StockInDetails)
-                            .ExecuteCommandAsync();
-         
-        }
+                    .ExecuteCommandAsync();
+                 }
         else    
         {
-            rs = await _unitOfWorkManage.GetDbClient().InsertNav<tb_StorageRack>(entity as tb_StorageRack)
+                        rs = await _unitOfWorkManage.GetDbClient().InsertNav<tb_StorageRack>(entity as tb_StorageRack)
                 .Include(m => m.tb_StockOutDetails)
-                .Include(m => m.tb_SaleOutReDetails)
                 .Include(m => m.tb_PurReturnEntryDetails)
                 .Include(m => m.tb_FinishedGoodsInvDetails)
                 .Include(m => m.tb_Prods)
+                .Include(m => m.tb_SaleOutDetails)
                 .Include(m => m.tb_StocktakeDetails)
                 .Include(m => m.tb_PurEntryDetails)
-                .Include(m => m.tb_SaleOutDetails)
+                .Include(m => m.tb_SaleOutReDetails)
+                .Include(m => m.tb_MRP_ReworkEntryDetails)
                 .Include(m => m.tb_PurEntryReDetails)
                 .Include(m => m.tb_Inventories)
                 .Include(m => m.tb_StockInDetails)
-                                .ExecuteCommandAsync();
+         
+                .ExecuteCommandAsync();
+                                          
+                     
         }
         
                 // 注意信息的完整性
@@ -286,11 +292,11 @@ namespace RUINORERP.Business
             catch (Exception ex)
             {
                 _unitOfWorkManage.RollbackTran();
-                _logger.Error(ex);
                 //出错后，取消生成的ID等值
                 command.Undo();
                 rsms.ErrorMsg = ex.Message;
                 rsms.Succeeded = false;
+                _logger.Error(ex);
             }
 
             return rsms;
@@ -305,13 +311,14 @@ namespace RUINORERP.Business
         {
             var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<tb_StorageRack>()
                                 .Includes(m => m.tb_StockOutDetails)
-                        .Includes(m => m.tb_SaleOutReDetails)
                         .Includes(m => m.tb_PurReturnEntryDetails)
                         .Includes(m => m.tb_FinishedGoodsInvDetails)
                         .Includes(m => m.tb_Prods)
+                        .Includes(m => m.tb_SaleOutDetails)
                         .Includes(m => m.tb_StocktakeDetails)
                         .Includes(m => m.tb_PurEntryDetails)
-                        .Includes(m => m.tb_SaleOutDetails)
+                        .Includes(m => m.tb_SaleOutReDetails)
+                        .Includes(m => m.tb_MRP_ReworkEntryDetails)
                         .Includes(m => m.tb_PurEntryReDetails)
                         .Includes(m => m.tb_Inventories)
                         .Includes(m => m.tb_StockInDetails)
@@ -325,7 +332,17 @@ namespace RUINORERP.Business
             tb_StorageRack entity = model as tb_StorageRack;
              bool rs = await _unitOfWorkManage.GetDbClient().DeleteNav<tb_StorageRack>(m => m.Rack_ID== entity.Rack_ID)
                                 .Include(m => m.tb_StockOutDetails)
-                      
+                        .Include(m => m.tb_PurReturnEntryDetails)
+                        .Include(m => m.tb_FinishedGoodsInvDetails)
+                        .Include(m => m.tb_Prods)
+                        .Include(m => m.tb_SaleOutDetails)
+                        .Include(m => m.tb_StocktakeDetails)
+                        .Include(m => m.tb_PurEntryDetails)
+                        .Include(m => m.tb_SaleOutReDetails)
+                        .Include(m => m.tb_MRP_ReworkEntryDetails)
+                        .Include(m => m.tb_PurEntryReDetails)
+                        .Include(m => m.tb_Inventories)
+                        .Include(m => m.tb_StockInDetails)
                                         .ExecuteCommandAsync();
             if (rs)
             {
@@ -490,13 +507,14 @@ namespace RUINORERP.Business
             List<tb_StorageRack> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_StorageRack>()
                                .Includes(t => t.tb_location )
                                             .Includes(t => t.tb_StockOutDetails )
-                                .Includes(t => t.tb_SaleOutReDetails )
                                 .Includes(t => t.tb_PurReturnEntryDetails )
                                 .Includes(t => t.tb_FinishedGoodsInvDetails )
                                 .Includes(t => t.tb_Prods )
+                                .Includes(t => t.tb_SaleOutDetails )
                                 .Includes(t => t.tb_StocktakeDetails )
                                 .Includes(t => t.tb_PurEntryDetails )
-                                .Includes(t => t.tb_SaleOutDetails )
+                                .Includes(t => t.tb_SaleOutReDetails )
+                                .Includes(t => t.tb_MRP_ReworkEntryDetails )
                                 .Includes(t => t.tb_PurEntryReDetails )
                                 .Includes(t => t.tb_Inventories )
                                 .Includes(t => t.tb_StockInDetails )
@@ -521,13 +539,14 @@ namespace RUINORERP.Business
             List<tb_StorageRack> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_StorageRack>().Where(exp)
                                .Includes(t => t.tb_location )
                                             .Includes(t => t.tb_StockOutDetails )
-                                .Includes(t => t.tb_SaleOutReDetails )
                                 .Includes(t => t.tb_PurReturnEntryDetails )
                                 .Includes(t => t.tb_FinishedGoodsInvDetails )
                                 .Includes(t => t.tb_Prods )
+                                .Includes(t => t.tb_SaleOutDetails )
                                 .Includes(t => t.tb_StocktakeDetails )
                                 .Includes(t => t.tb_PurEntryDetails )
-                                .Includes(t => t.tb_SaleOutDetails )
+                                .Includes(t => t.tb_SaleOutReDetails )
+                                .Includes(t => t.tb_MRP_ReworkEntryDetails )
                                 .Includes(t => t.tb_PurEntryReDetails )
                                 .Includes(t => t.tb_Inventories )
                                 .Includes(t => t.tb_StockInDetails )
@@ -552,13 +571,14 @@ namespace RUINORERP.Business
             List<tb_StorageRack> list = _unitOfWorkManage.GetDbClient().Queryable<tb_StorageRack>().Where(exp)
                             .Includes(t => t.tb_location )
                                         .Includes(t => t.tb_StockOutDetails )
-                            .Includes(t => t.tb_SaleOutReDetails )
                             .Includes(t => t.tb_PurReturnEntryDetails )
                             .Includes(t => t.tb_FinishedGoodsInvDetails )
                             .Includes(t => t.tb_Prods )
+                            .Includes(t => t.tb_SaleOutDetails )
                             .Includes(t => t.tb_StocktakeDetails )
                             .Includes(t => t.tb_PurEntryDetails )
-                            .Includes(t => t.tb_SaleOutDetails )
+                            .Includes(t => t.tb_SaleOutReDetails )
+                            .Includes(t => t.tb_MRP_ReworkEntryDetails )
                             .Includes(t => t.tb_PurEntryReDetails )
                             .Includes(t => t.tb_Inventories )
                             .Includes(t => t.tb_StockInDetails )
@@ -600,13 +620,14 @@ namespace RUINORERP.Business
             tb_StorageRack entity = await _unitOfWorkManage.GetDbClient().Queryable<tb_StorageRack>().Where(w => w.Rack_ID == (long)id)
                              .Includes(t => t.tb_location )
                                         .Includes(t => t.tb_StockOutDetails )
-                            .Includes(t => t.tb_SaleOutReDetails )
                             .Includes(t => t.tb_PurReturnEntryDetails )
                             .Includes(t => t.tb_FinishedGoodsInvDetails )
                             .Includes(t => t.tb_Prods )
+                            .Includes(t => t.tb_SaleOutDetails )
                             .Includes(t => t.tb_StocktakeDetails )
                             .Includes(t => t.tb_PurEntryDetails )
-                            .Includes(t => t.tb_SaleOutDetails )
+                            .Includes(t => t.tb_SaleOutReDetails )
+                            .Includes(t => t.tb_MRP_ReworkEntryDetails )
                             .Includes(t => t.tb_PurEntryReDetails )
                             .Includes(t => t.tb_Inventories )
                             .Includes(t => t.tb_StockInDetails )

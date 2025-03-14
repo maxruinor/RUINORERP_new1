@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/13/2025 18:30:18
+// 时间：03/14/2025 20:39:54
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -230,10 +230,11 @@ namespace RUINORERP.Business
             bool rs = false;
             RevertCommand command = new RevertCommand();
             ReturnMainSubResults<T> rsms = new ReturnMainSubResults<T>();
+                             //缓存当前编辑的对象。如果撤销就回原来的值
+                T oldobj = CloneHelper.DeepCloneObject<T>((T)model);
             try
             {
-                 //缓存当前编辑的对象。如果撤销就回原来的值
-                T oldobj = CloneHelper.DeepCloneObject<T>((T)model);
+
                 tb_UIMenuPersonalization entity = model as tb_UIMenuPersonalization;
                 command.UndoOperation = delegate ()
                 {
@@ -245,18 +246,21 @@ namespace RUINORERP.Business
                 
             if (entity.UIMenuPID > 0)
             {
-                rs = await _unitOfWorkManage.GetDbClient().UpdateNav<tb_UIMenuPersonalization>(entity as tb_UIMenuPersonalization)
-                        .Include(m => m.tb_UIQueryConditions)
-                    .Include(m => m.tb_UIGridSettings)
-                            .ExecuteCommandAsync();
-         
-        }
+            
+                             rs = await _unitOfWorkManage.GetDbClient().UpdateNav<tb_UIMenuPersonalization>(entity as tb_UIMenuPersonalization)
+                        .Include(m => m.tb_UIGridSettings)
+                    .Include(m => m.tb_UIQueryConditions)
+                    .ExecuteCommandAsync();
+                 }
         else    
         {
-            rs = await _unitOfWorkManage.GetDbClient().InsertNav<tb_UIMenuPersonalization>(entity as tb_UIMenuPersonalization)
-                .Include(m => m.tb_UIQueryConditions)
+                        rs = await _unitOfWorkManage.GetDbClient().InsertNav<tb_UIMenuPersonalization>(entity as tb_UIMenuPersonalization)
                 .Include(m => m.tb_UIGridSettings)
-                                .ExecuteCommandAsync();
+                .Include(m => m.tb_UIQueryConditions)
+         
+                .ExecuteCommandAsync();
+                                          
+                     
         }
         
                 // 注意信息的完整性
@@ -268,11 +272,11 @@ namespace RUINORERP.Business
             catch (Exception ex)
             {
                 _unitOfWorkManage.RollbackTran();
-                _logger.Error(ex);
                 //出错后，取消生成的ID等值
                 command.Undo();
                 rsms.ErrorMsg = ex.Message;
                 rsms.Succeeded = false;
+                _logger.Error(ex);
             }
 
             return rsms;
@@ -286,8 +290,8 @@ namespace RUINORERP.Business
         public async override Task<List<T>> BaseQueryByAdvancedNavAsync(bool useLike, object dto)
         {
             var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<tb_UIMenuPersonalization>()
-                                .Includes(m => m.tb_UIQueryConditions)
-                        .Includes(m => m.tb_UIGridSettings)
+                                .Includes(m => m.tb_UIGridSettings)
+                        .Includes(m => m.tb_UIQueryConditions)
                                         .Where(useLike, dto);
             return await querySqlQueryable.ToListAsync()as List<T>;
         }
@@ -297,8 +301,8 @@ namespace RUINORERP.Business
         {
             tb_UIMenuPersonalization entity = model as tb_UIMenuPersonalization;
              bool rs = await _unitOfWorkManage.GetDbClient().DeleteNav<tb_UIMenuPersonalization>(m => m.UIMenuPID== entity.UIMenuPID)
-                                .Include(m => m.tb_UIQueryConditions)
-                        .Include(m => m.tb_UIGridSettings)
+                                .Include(m => m.tb_UIGridSettings)
+                        .Include(m => m.tb_UIQueryConditions)
                                         .ExecuteCommandAsync();
             if (rs)
             {
@@ -463,8 +467,8 @@ namespace RUINORERP.Business
             List<tb_UIMenuPersonalization> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_UIMenuPersonalization>()
                                .Includes(t => t.tb_menuinfo )
                                .Includes(t => t.tb_userpersonalized )
-                                            .Includes(t => t.tb_UIQueryConditions )
-                                .Includes(t => t.tb_UIGridSettings )
+                                            .Includes(t => t.tb_UIGridSettings )
+                                .Includes(t => t.tb_UIQueryConditions )
                         .ToListAsync();
             
             foreach (var item in list)
@@ -486,8 +490,8 @@ namespace RUINORERP.Business
             List<tb_UIMenuPersonalization> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_UIMenuPersonalization>().Where(exp)
                                .Includes(t => t.tb_menuinfo )
                                .Includes(t => t.tb_userpersonalized )
-                                            .Includes(t => t.tb_UIQueryConditions )
-                                .Includes(t => t.tb_UIGridSettings )
+                                            .Includes(t => t.tb_UIGridSettings )
+                                .Includes(t => t.tb_UIQueryConditions )
                         .ToListAsync();
             
             foreach (var item in list)
@@ -509,8 +513,8 @@ namespace RUINORERP.Business
             List<tb_UIMenuPersonalization> list = _unitOfWorkManage.GetDbClient().Queryable<tb_UIMenuPersonalization>().Where(exp)
                             .Includes(t => t.tb_menuinfo )
                             .Includes(t => t.tb_userpersonalized )
-                                        .Includes(t => t.tb_UIQueryConditions )
-                            .Includes(t => t.tb_UIGridSettings )
+                                        .Includes(t => t.tb_UIGridSettings )
+                            .Includes(t => t.tb_UIQueryConditions )
                         .ToList();
             
             foreach (var item in list)
@@ -549,8 +553,8 @@ namespace RUINORERP.Business
             tb_UIMenuPersonalization entity = await _unitOfWorkManage.GetDbClient().Queryable<tb_UIMenuPersonalization>().Where(w => w.UIMenuPID == (long)id)
                              .Includes(t => t.tb_menuinfo )
                             .Includes(t => t.tb_userpersonalized )
-                                        .Includes(t => t.tb_UIQueryConditions )
-                            .Includes(t => t.tb_UIGridSettings )
+                                        .Includes(t => t.tb_UIGridSettings )
+                            .Includes(t => t.tb_UIQueryConditions )
                         .FirstAsync();
             if(entity!=null)
             {

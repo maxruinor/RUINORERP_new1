@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/18/2024 18:02:09
+// 时间：03/14/2025 20:39:47
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -52,6 +52,7 @@ namespace RUINORERP.Business
         
         public ValidationResult Validator(tb_Prod info)
         {
+
            // tb_ProdValidator validator = new tb_ProdValidator();
            tb_ProdValidator validator = _appContext.GetRequiredService<tb_ProdValidator>();
             ValidationResult results = validator.Validate(info);
@@ -229,10 +230,11 @@ namespace RUINORERP.Business
             bool rs = false;
             RevertCommand command = new RevertCommand();
             ReturnMainSubResults<T> rsms = new ReturnMainSubResults<T>();
+                             //缓存当前编辑的对象。如果撤销就回原来的值
+                T oldobj = CloneHelper.DeepCloneObject<T>((T)model);
             try
             {
-                 //缓存当前编辑的对象。如果撤销就回原来的值
-                T oldobj = CloneHelper.DeepCloneObject<T>((T)model);
+
                 tb_Prod entity = model as tb_Prod;
                 command.UndoOperation = delegate ()
                 {
@@ -244,20 +246,23 @@ namespace RUINORERP.Business
                 
             if (entity.ProdBaseID > 0)
             {
-                rs = await _unitOfWorkManage.GetDbClient().UpdateNav<tb_Prod>(entity as tb_Prod)
+            
+                             rs = await _unitOfWorkManage.GetDbClient().UpdateNav<tb_Prod>(entity as tb_Prod)
                         .Include(m => m.tb_ProdDetails)
                     .Include(m => m.tb_Prod_Attr_Relations)
                     .Include(m => m.tb_Packings)
-                            .ExecuteCommandAsync();
-         
-        }
+                    .ExecuteCommandAsync();
+                 }
         else    
         {
-            rs = await _unitOfWorkManage.GetDbClient().InsertNav<tb_Prod>(entity as tb_Prod)
+                        rs = await _unitOfWorkManage.GetDbClient().InsertNav<tb_Prod>(entity as tb_Prod)
                 .Include(m => m.tb_ProdDetails)
                 .Include(m => m.tb_Prod_Attr_Relations)
                 .Include(m => m.tb_Packings)
-                                .ExecuteCommandAsync();
+         
+                .ExecuteCommandAsync();
+                                          
+                     
         }
         
                 // 注意信息的完整性
@@ -269,11 +274,11 @@ namespace RUINORERP.Business
             catch (Exception ex)
             {
                 _unitOfWorkManage.RollbackTran();
-                _logger.Error(ex);
                 //出错后，取消生成的ID等值
                 command.Undo();
                 rsms.ErrorMsg = ex.Message;
                 rsms.Succeeded = false;
+                _logger.Error(ex);
             }
 
             return rsms;

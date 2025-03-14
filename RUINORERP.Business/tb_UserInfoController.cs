@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/10/2025 15:31:57
+// 时间：03/14/2025 20:39:55
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -230,10 +230,11 @@ namespace RUINORERP.Business
             bool rs = false;
             RevertCommand command = new RevertCommand();
             ReturnMainSubResults<T> rsms = new ReturnMainSubResults<T>();
+                             //缓存当前编辑的对象。如果撤销就回原来的值
+                T oldobj = CloneHelper.DeepCloneObject<T>((T)model);
             try
             {
-                 //缓存当前编辑的对象。如果撤销就回原来的值
-                T oldobj = CloneHelper.DeepCloneObject<T>((T)model);
+
                 tb_UserInfo entity = model as tb_UserInfo;
                 command.UndoOperation = delegate ()
                 {
@@ -245,18 +246,19 @@ namespace RUINORERP.Business
                 
             if (entity.User_ID > 0)
             {
-                rs = await _unitOfWorkManage.GetDbClient().UpdateNav<tb_UserInfo>(entity as tb_UserInfo)
+            
+                             rs = await _unitOfWorkManage.GetDbClient().UpdateNav<tb_UserInfo>(entity as tb_UserInfo)
                         .Include(m => m.tb_User_Roles)
-                    .Include(m => m.Logses)
-                            .ExecuteCommandAsync();
-         
-        }
+                    .ExecuteCommandAsync();
+                 }
         else    
         {
-            rs = await _unitOfWorkManage.GetDbClient().InsertNav<tb_UserInfo>(entity as tb_UserInfo)
+                        rs = await _unitOfWorkManage.GetDbClient().InsertNav<tb_UserInfo>(entity as tb_UserInfo)
                 .Include(m => m.tb_User_Roles)
-                .Include(m => m.Logses)
-                                .ExecuteCommandAsync();
+         
+                .ExecuteCommandAsync();
+                                          
+                     
         }
         
                 // 注意信息的完整性
@@ -268,11 +270,11 @@ namespace RUINORERP.Business
             catch (Exception ex)
             {
                 _unitOfWorkManage.RollbackTran();
-                _logger.Error(ex);
                 //出错后，取消生成的ID等值
                 command.Undo();
                 rsms.ErrorMsg = ex.Message;
                 rsms.Succeeded = false;
+                _logger.Error(ex);
             }
 
             return rsms;
@@ -287,7 +289,6 @@ namespace RUINORERP.Business
         {
             var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<tb_UserInfo>()
                                 .Includes(m => m.tb_User_Roles)
-                        .Includes(m => m.Logses)
                                         .Where(useLike, dto);
             return await querySqlQueryable.ToListAsync()as List<T>;
         }
@@ -298,7 +299,6 @@ namespace RUINORERP.Business
             tb_UserInfo entity = model as tb_UserInfo;
              bool rs = await _unitOfWorkManage.GetDbClient().DeleteNav<tb_UserInfo>(m => m.User_ID== entity.User_ID)
                                 .Include(m => m.tb_User_Roles)
-                        .Include(m => m.Logses)
                                         .ExecuteCommandAsync();
             if (rs)
             {
@@ -463,7 +463,6 @@ namespace RUINORERP.Business
             List<tb_UserInfo> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_UserInfo>()
                                .Includes(t => t.tb_employee )
                                             .Includes(t => t.tb_User_Roles )
-                                .Includes(t => t.Logses )
                         .ToListAsync();
             
             foreach (var item in list)
@@ -485,7 +484,6 @@ namespace RUINORERP.Business
             List<tb_UserInfo> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_UserInfo>().Where(exp)
                                .Includes(t => t.tb_employee )
                                             .Includes(t => t.tb_User_Roles )
-                                .Includes(t => t.Logses )
                         .ToListAsync();
             
             foreach (var item in list)
@@ -507,7 +505,6 @@ namespace RUINORERP.Business
             List<tb_UserInfo> list = _unitOfWorkManage.GetDbClient().Queryable<tb_UserInfo>().Where(exp)
                             .Includes(t => t.tb_employee )
                                         .Includes(t => t.tb_User_Roles )
-                            .Includes(t => t.Logses )
                         .ToList();
             
             foreach (var item in list)
@@ -546,7 +543,6 @@ namespace RUINORERP.Business
             tb_UserInfo entity = await _unitOfWorkManage.GetDbClient().Queryable<tb_UserInfo>().Where(w => w.User_ID == (long)id)
                              .Includes(t => t.tb_employee )
                                         .Includes(t => t.tb_User_Roles )
-                            .Includes(t => t.Logses )
                         .FirstAsync();
             if(entity!=null)
             {

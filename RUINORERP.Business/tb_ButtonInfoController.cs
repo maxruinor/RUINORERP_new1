@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/18/2024 18:02:00
+// 时间：03/14/2025 20:39:37
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -230,10 +230,11 @@ namespace RUINORERP.Business
             bool rs = false;
             RevertCommand command = new RevertCommand();
             ReturnMainSubResults<T> rsms = new ReturnMainSubResults<T>();
+                             //缓存当前编辑的对象。如果撤销就回原来的值
+                T oldobj = CloneHelper.DeepCloneObject<T>((T)model);
             try
             {
-                 //缓存当前编辑的对象。如果撤销就回原来的值
-                T oldobj = CloneHelper.DeepCloneObject<T>((T)model);
+
                 tb_ButtonInfo entity = model as tb_ButtonInfo;
                 command.UndoOperation = delegate ()
                 {
@@ -245,16 +246,19 @@ namespace RUINORERP.Business
                 
             if (entity.ButtonInfo_ID > 0)
             {
-                rs = await _unitOfWorkManage.GetDbClient().UpdateNav<tb_ButtonInfo>(entity as tb_ButtonInfo)
+            
+                             rs = await _unitOfWorkManage.GetDbClient().UpdateNav<tb_ButtonInfo>(entity as tb_ButtonInfo)
                         .Include(m => m.tb_P4Buttons)
-                            .ExecuteCommandAsync();
-         
-        }
+                    .ExecuteCommandAsync();
+                 }
         else    
         {
-            rs = await _unitOfWorkManage.GetDbClient().InsertNav<tb_ButtonInfo>(entity as tb_ButtonInfo)
+                        rs = await _unitOfWorkManage.GetDbClient().InsertNav<tb_ButtonInfo>(entity as tb_ButtonInfo)
                 .Include(m => m.tb_P4Buttons)
-                                .ExecuteCommandAsync();
+         
+                .ExecuteCommandAsync();
+                                          
+                     
         }
         
                 // 注意信息的完整性
@@ -266,11 +270,11 @@ namespace RUINORERP.Business
             catch (Exception ex)
             {
                 _unitOfWorkManage.RollbackTran();
-                _logger.Error(ex);
                 //出错后，取消生成的ID等值
                 command.Undo();
                 rsms.ErrorMsg = ex.Message;
                 rsms.Succeeded = false;
+                _logger.Error(ex);
             }
 
             return rsms;

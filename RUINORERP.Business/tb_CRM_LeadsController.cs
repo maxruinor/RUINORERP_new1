@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/18/2024 18:02:02
+// 时间：03/14/2025 20:39:38
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -230,10 +230,11 @@ namespace RUINORERP.Business
             bool rs = false;
             RevertCommand command = new RevertCommand();
             ReturnMainSubResults<T> rsms = new ReturnMainSubResults<T>();
+                             //缓存当前编辑的对象。如果撤销就回原来的值
+                T oldobj = CloneHelper.DeepCloneObject<T>((T)model);
             try
             {
-                 //缓存当前编辑的对象。如果撤销就回原来的值
-                T oldobj = CloneHelper.DeepCloneObject<T>((T)model);
+
                 tb_CRM_Leads entity = model as tb_CRM_Leads;
                 command.UndoOperation = delegate ()
                 {
@@ -245,18 +246,21 @@ namespace RUINORERP.Business
                 
             if (entity.LeadID > 0)
             {
-                rs = await _unitOfWorkManage.GetDbClient().UpdateNav<tb_CRM_Leads>(entity as tb_CRM_Leads)
+            
+                             rs = await _unitOfWorkManage.GetDbClient().UpdateNav<tb_CRM_Leads>(entity as tb_CRM_Leads)
                         .Include(m => m.tb_CRM_FollowUpRecordses)
                     .Include(m => m.tb_CRM_Customers)
-                            .ExecuteCommandAsync();
-         
-        }
+                    .ExecuteCommandAsync();
+                 }
         else    
         {
-            rs = await _unitOfWorkManage.GetDbClient().InsertNav<tb_CRM_Leads>(entity as tb_CRM_Leads)
+                        rs = await _unitOfWorkManage.GetDbClient().InsertNav<tb_CRM_Leads>(entity as tb_CRM_Leads)
                 .Include(m => m.tb_CRM_FollowUpRecordses)
                 .Include(m => m.tb_CRM_Customers)
-                                .ExecuteCommandAsync();
+         
+                .ExecuteCommandAsync();
+                                          
+                     
         }
         
                 // 注意信息的完整性
@@ -268,11 +272,11 @@ namespace RUINORERP.Business
             catch (Exception ex)
             {
                 _unitOfWorkManage.RollbackTran();
-                _logger.Error(ex);
                 //出错后，取消生成的ID等值
                 command.Undo();
                 rsms.ErrorMsg = ex.Message;
                 rsms.Succeeded = false;
+                _logger.Error(ex);
             }
 
             return rsms;

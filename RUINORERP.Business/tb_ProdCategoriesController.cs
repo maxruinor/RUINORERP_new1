@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/21/2025 14:35:40
+// 时间：03/14/2025 20:39:47
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -230,10 +230,11 @@ namespace RUINORERP.Business
             bool rs = false;
             RevertCommand command = new RevertCommand();
             ReturnMainSubResults<T> rsms = new ReturnMainSubResults<T>();
+                             //缓存当前编辑的对象。如果撤销就回原来的值
+                T oldobj = CloneHelper.DeepCloneObject<T>((T)model);
             try
             {
-                 //缓存当前编辑的对象。如果撤销就回原来的值
-                T oldobj = CloneHelper.DeepCloneObject<T>((T)model);
+
                 tb_ProdCategories entity = model as tb_ProdCategories;
                 command.UndoOperation = delegate ()
                 {
@@ -245,18 +246,21 @@ namespace RUINORERP.Business
                 
             if (entity.Category_ID > 0)
             {
-                rs = await _unitOfWorkManage.GetDbClient().UpdateNav<tb_ProdCategories>(entity as tb_ProdCategories)
-                        .Include(m => m.tb_ProdCategorieses_parents)
-                    .Include(m => m.tb_Prods)
-                            .ExecuteCommandAsync();
-         
-        }
+            
+                             rs = await _unitOfWorkManage.GetDbClient().UpdateNav<tb_ProdCategories>(entity as tb_ProdCategories)
+                        .Include(m => m.tb_Prods)
+                    .Include(m => m.tb_ProdCategorieses_parents)
+                    .ExecuteCommandAsync();
+                 }
         else    
         {
-            rs = await _unitOfWorkManage.GetDbClient().InsertNav<tb_ProdCategories>(entity as tb_ProdCategories)
-                .Include(m => m.tb_ProdCategorieses_parents)
+                        rs = await _unitOfWorkManage.GetDbClient().InsertNav<tb_ProdCategories>(entity as tb_ProdCategories)
                 .Include(m => m.tb_Prods)
-                                .ExecuteCommandAsync();
+                .Include(m => m.tb_ProdCategorieses_parents)
+         
+                .ExecuteCommandAsync();
+                                          
+                     
         }
         
                 // 注意信息的完整性
@@ -268,11 +272,11 @@ namespace RUINORERP.Business
             catch (Exception ex)
             {
                 _unitOfWorkManage.RollbackTran();
-                _logger.Error(ex);
                 //出错后，取消生成的ID等值
                 command.Undo();
                 rsms.ErrorMsg = ex.Message;
                 rsms.Succeeded = false;
+                _logger.Error(ex);
             }
 
             return rsms;
@@ -286,8 +290,8 @@ namespace RUINORERP.Business
         public async override Task<List<T>> BaseQueryByAdvancedNavAsync(bool useLike, object dto)
         {
             var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<tb_ProdCategories>()
-                                .Includes(m => m.tb_ProdCategorieses_parents)
-                        .Includes(m => m.tb_Prods)
+                                .Includes(m => m.tb_Prods)
+                        .Includes(m => m.tb_ProdCategorieses_parents)
                                         .Where(useLike, dto);
             return await querySqlQueryable.ToListAsync()as List<T>;
         }
@@ -297,8 +301,8 @@ namespace RUINORERP.Business
         {
             tb_ProdCategories entity = model as tb_ProdCategories;
              bool rs = await _unitOfWorkManage.GetDbClient().DeleteNav<tb_ProdCategories>(m => m.Category_ID== entity.Category_ID)
-                                .Include(m => m.tb_ProdCategorieses_parents)
-                        .Include(m => m.tb_Prods)
+                                .Include(m => m.tb_Prods)
+                        .Include(m => m.tb_ProdCategorieses_parents)
                                         .ExecuteCommandAsync();
             if (rs)
             {
@@ -461,9 +465,9 @@ namespace RUINORERP.Business
          public virtual async Task<List<tb_ProdCategories>> QueryByNavAsync()
         {
             List<tb_ProdCategories> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_ProdCategories>()
-                               .Includes(t => t.tb_prodcategories_parent )
-                                            .Includes(t => t.tb_ProdCategorieses_parents)
-                                .Includes(t => t.tb_Prods )
+                               .Includes(t => t.tb_ProdCategorieses_parents)
+                                            .Includes(t => t.tb_Prods )
+                                .Includes(t => t.tb_ProdCategorieses_parents)
                         .ToListAsync();
             
             foreach (var item in list)
@@ -483,9 +487,9 @@ namespace RUINORERP.Business
          public virtual async Task<List<tb_ProdCategories>> QueryByNavAsync(Expression<Func<tb_ProdCategories, bool>> exp)
         {
             List<tb_ProdCategories> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_ProdCategories>().Where(exp)
-                               .Includes(t => t.tb_prodcategories_parent)
-                                            .Includes(t => t.tb_ProdCategorieses_parents)
-                                .Includes(t => t.tb_Prods )
+                               .Includes(t => t.tb_ProdCategorieses_parents)
+                                            .Includes(t => t.tb_Prods )
+                                .Includes(t => t.tb_ProdCategorieses_parents)
                         .ToListAsync();
             
             foreach (var item in list)
@@ -505,9 +509,9 @@ namespace RUINORERP.Business
          public virtual List<tb_ProdCategories> QueryByNav(Expression<Func<tb_ProdCategories, bool>> exp)
         {
             List<tb_ProdCategories> list = _unitOfWorkManage.GetDbClient().Queryable<tb_ProdCategories>().Where(exp)
-                            .Includes(t => t.tb_prodcategories_parent)
-                                        .Includes(t => t.tb_ProdCategorieses_parents)
-                            .Includes(t => t.tb_Prods )
+                            .Includes(t => t.tb_ProdCategorieses_parents)
+                                        .Includes(t => t.tb_Prods )
+                            .Includes(t => t.tb_ProdCategorieses_parents)
                         .ToList();
             
             foreach (var item in list)
@@ -544,9 +548,9 @@ namespace RUINORERP.Business
         public override async Task<T> BaseQueryByIdNavAsync(object id)
         {
             tb_ProdCategories entity = await _unitOfWorkManage.GetDbClient().Queryable<tb_ProdCategories>().Where(w => w.Category_ID == (long)id)
-                             .Includes(t => t.tb_prodcategories_parent)
-                                        .Includes(t => t.tb_ProdCategorieses_parents )
-                            .Includes(t => t.tb_Prods )
+                             .Includes(t => t.tb_ProdCategorieses_parents)
+                                        .Includes(t => t.tb_Prods )
+                            .Includes(t => t.tb_ProdCategorieses_parents)
                         .FirstAsync();
             if(entity!=null)
             {

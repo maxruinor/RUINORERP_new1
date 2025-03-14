@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：02/19/2025 22:58:08
+// 时间：03/14/2025 20:39:42
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -29,7 +29,7 @@ using RUINORERP.Common.Helper;
 namespace RUINORERP.Business
 {
     /// <summary>
-    /// 预收预付单
+    /// 预收预付单,冲销动作会在付款单和收款单中体现
     /// </summary>
     public partial class tb_FM_PrePaymentBillController<T>:BaseController<T> where T : class
     {
@@ -230,10 +230,11 @@ namespace RUINORERP.Business
             bool rs = false;
             RevertCommand command = new RevertCommand();
             ReturnMainSubResults<T> rsms = new ReturnMainSubResults<T>();
+                             //缓存当前编辑的对象。如果撤销就回原来的值
+                T oldobj = CloneHelper.DeepCloneObject<T>((T)model);
             try
             {
-                 //缓存当前编辑的对象。如果撤销就回原来的值
-                T oldobj = CloneHelper.DeepCloneObject<T>((T)model);
+
                 tb_FM_PrePaymentBill entity = model as tb_FM_PrePaymentBill;
                 command.UndoOperation = delegate ()
                 {
@@ -245,18 +246,21 @@ namespace RUINORERP.Business
                 
             if (entity.PrePaymentBill_id > 0)
             {
-                rs = await _unitOfWorkManage.GetDbClient().UpdateNav<tb_FM_PrePaymentBill>(entity as tb_FM_PrePaymentBill)
+            
+                             rs = await _unitOfWorkManage.GetDbClient().UpdateNav<tb_FM_PrePaymentBill>(entity as tb_FM_PrePaymentBill)
                         .Include(m => m.tb_FM_PaymentBills)
                     .Include(m => m.tb_FM_PrePaymentBillDetails)
-                            .ExecuteCommandAsync();
-         
-        }
+                    .ExecuteCommandAsync();
+                 }
         else    
         {
-            rs = await _unitOfWorkManage.GetDbClient().InsertNav<tb_FM_PrePaymentBill>(entity as tb_FM_PrePaymentBill)
+                        rs = await _unitOfWorkManage.GetDbClient().InsertNav<tb_FM_PrePaymentBill>(entity as tb_FM_PrePaymentBill)
                 .Include(m => m.tb_FM_PaymentBills)
                 .Include(m => m.tb_FM_PrePaymentBillDetails)
-                                .ExecuteCommandAsync();
+         
+                .ExecuteCommandAsync();
+                                          
+                     
         }
         
                 // 注意信息的完整性
@@ -268,11 +272,11 @@ namespace RUINORERP.Business
             catch (Exception ex)
             {
                 _unitOfWorkManage.RollbackTran();
-                _logger.Error(ex);
                 //出错后，取消生成的ID等值
                 command.Undo();
                 rsms.ErrorMsg = ex.Message;
                 rsms.Succeeded = false;
+                _logger.Error(ex);
             }
 
             return rsms;

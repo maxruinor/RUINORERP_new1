@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/14/2025 20:57:14
+// 时间：03/14/2025 20:39:44
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -230,10 +230,11 @@ namespace RUINORERP.Business
             bool rs = false;
             RevertCommand command = new RevertCommand();
             ReturnMainSubResults<T> rsms = new ReturnMainSubResults<T>();
+                             //缓存当前编辑的对象。如果撤销就回原来的值
+                T oldobj = CloneHelper.DeepCloneObject<T>((T)model);
             try
             {
-                 //缓存当前编辑的对象。如果撤销就回原来的值
-                T oldobj = CloneHelper.DeepCloneObject<T>((T)model);
+
                 tb_ManufacturingOrder entity = model as tb_ManufacturingOrder;
                 command.UndoOperation = delegate ()
                 {
@@ -245,20 +246,23 @@ namespace RUINORERP.Business
                 
             if (entity.MOID > 0)
             {
-                rs = await _unitOfWorkManage.GetDbClient().UpdateNav<tb_ManufacturingOrder>(entity as tb_ManufacturingOrder)
+            
+                             rs = await _unitOfWorkManage.GetDbClient().UpdateNav<tb_ManufacturingOrder>(entity as tb_ManufacturingOrder)
                         .Include(m => m.tb_MaterialRequisitions)
                     .Include(m => m.tb_FinishedGoodsInvs)
                     .Include(m => m.tb_ManufacturingOrderDetails)
-                            .ExecuteCommandAsync();
-         
-        }
+                    .ExecuteCommandAsync();
+                 }
         else    
         {
-            rs = await _unitOfWorkManage.GetDbClient().InsertNav<tb_ManufacturingOrder>(entity as tb_ManufacturingOrder)
+                        rs = await _unitOfWorkManage.GetDbClient().InsertNav<tb_ManufacturingOrder>(entity as tb_ManufacturingOrder)
                 .Include(m => m.tb_MaterialRequisitions)
                 .Include(m => m.tb_FinishedGoodsInvs)
                 .Include(m => m.tb_ManufacturingOrderDetails)
-                                .ExecuteCommandAsync();
+         
+                .ExecuteCommandAsync();
+                                          
+                     
         }
         
                 // 注意信息的完整性
@@ -270,11 +274,11 @@ namespace RUINORERP.Business
             catch (Exception ex)
             {
                 _unitOfWorkManage.RollbackTran();
-                _logger.Error(ex);
                 //出错后，取消生成的ID等值
                 command.Undo();
                 rsms.ErrorMsg = ex.Message;
                 rsms.Succeeded = false;
+                _logger.Error(ex);
             }
 
             return rsms;

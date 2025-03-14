@@ -794,7 +794,7 @@ namespace RUINORERP.UI.PSI.SAL
 
             IMapper mapper = AutoMapperConfig.RegisterMappings().CreateMapper();
             tb_SaleOut entity = mapper.Map<tb_SaleOut>(saleorder);
-
+            List<string> tipsMsg = new List<string>();
             entity.DataStatus = (int)DataStatus.草稿;
             entity.ApprovalStatus = (int)ApprovalStatus.未审核;
             entity.ApprovalResults = null;
@@ -809,6 +809,7 @@ namespace RUINORERP.UI.PSI.SAL
             //如果这个订单已经有出库单 则第二次运费为0
             if (saleorder.tb_SaleOuts != null && saleorder.tb_SaleOuts.Count > 0)
             {
+                tipsMsg.Add($"当前订单已经有出库记录，运费已经计入前面出库单，当前出库运费为零！");
                 entity.ShipCost = 0;
             }
 
@@ -833,7 +834,7 @@ namespace RUINORERP.UI.PSI.SAL
 
             List<tb_SaleOutDetail> details = mapper.Map<List<tb_SaleOutDetail>>(saleorder.tb_SaleOrderDetails);
             List<tb_SaleOutDetail> NewDetails = new List<tb_SaleOutDetail>();
-            List<string> tipsMsg = new List<string>();
+           
             for (global::System.Int32 i = 0; i < details.Count; i++)
             {
                 var aa = details.Select(c => c.ProdDetailID).ToList().GroupBy(x => x).Where(x => x.Count() > 1).Select(x => x.Key).ToList();

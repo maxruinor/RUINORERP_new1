@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/18/2024 18:02:14
+// 时间：03/14/2025 20:39:51
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -230,10 +230,11 @@ namespace RUINORERP.Business
             bool rs = false;
             RevertCommand command = new RevertCommand();
             ReturnMainSubResults<T> rsms = new ReturnMainSubResults<T>();
+                             //缓存当前编辑的对象。如果撤销就回原来的值
+                T oldobj = CloneHelper.DeepCloneObject<T>((T)model);
             try
             {
-                 //缓存当前编辑的对象。如果撤销就回原来的值
-                T oldobj = CloneHelper.DeepCloneObject<T>((T)model);
+
                 tb_RoleInfo entity = model as tb_RoleInfo;
                 command.UndoOperation = delegate ()
                 {
@@ -245,24 +246,27 @@ namespace RUINORERP.Business
                 
             if (entity.RoleID > 0)
             {
-                rs = await _unitOfWorkManage.GetDbClient().UpdateNav<tb_RoleInfo>(entity as tb_RoleInfo)
-                        .Include(m => m.tb_User_Roles)
-                    .Include(m => m.tb_P4Fields)
+            
+                             rs = await _unitOfWorkManage.GetDbClient().UpdateNav<tb_RoleInfo>(entity as tb_RoleInfo)
+                        .Include(m => m.tb_P4Fields)
+                    .Include(m => m.tb_User_Roles)
                     .Include(m => m.tb_P4Buttons)
                     .Include(m => m.tb_P4Menus)
                     .Include(m => m.tb_P4Modules)
-                            .ExecuteCommandAsync();
-         
-        }
+                    .ExecuteCommandAsync();
+                 }
         else    
         {
-            rs = await _unitOfWorkManage.GetDbClient().InsertNav<tb_RoleInfo>(entity as tb_RoleInfo)
-                .Include(m => m.tb_User_Roles)
+                        rs = await _unitOfWorkManage.GetDbClient().InsertNav<tb_RoleInfo>(entity as tb_RoleInfo)
                 .Include(m => m.tb_P4Fields)
+                .Include(m => m.tb_User_Roles)
                 .Include(m => m.tb_P4Buttons)
                 .Include(m => m.tb_P4Menus)
                 .Include(m => m.tb_P4Modules)
-                                .ExecuteCommandAsync();
+         
+                .ExecuteCommandAsync();
+                                          
+                     
         }
         
                 // 注意信息的完整性
@@ -274,11 +278,11 @@ namespace RUINORERP.Business
             catch (Exception ex)
             {
                 _unitOfWorkManage.RollbackTran();
-                _logger.Error(ex);
                 //出错后，取消生成的ID等值
                 command.Undo();
                 rsms.ErrorMsg = ex.Message;
                 rsms.Succeeded = false;
+                _logger.Error(ex);
             }
 
             return rsms;
@@ -292,8 +296,8 @@ namespace RUINORERP.Business
         public async override Task<List<T>> BaseQueryByAdvancedNavAsync(bool useLike, object dto)
         {
             var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<tb_RoleInfo>()
-                                .Includes(m => m.tb_User_Roles)
-                        .Includes(m => m.tb_P4Fields)
+                                .Includes(m => m.tb_P4Fields)
+                        .Includes(m => m.tb_User_Roles)
                         .Includes(m => m.tb_P4Buttons)
                         .Includes(m => m.tb_P4Menus)
                         .Includes(m => m.tb_P4Modules)
@@ -306,8 +310,8 @@ namespace RUINORERP.Business
         {
             tb_RoleInfo entity = model as tb_RoleInfo;
              bool rs = await _unitOfWorkManage.GetDbClient().DeleteNav<tb_RoleInfo>(m => m.RoleID== entity.RoleID)
-                                .Include(m => m.tb_User_Roles)
-                        .Include(m => m.tb_P4Fields)
+                                .Include(m => m.tb_P4Fields)
+                        .Include(m => m.tb_User_Roles)
                         .Include(m => m.tb_P4Buttons)
                         .Include(m => m.tb_P4Menus)
                         .Include(m => m.tb_P4Modules)
@@ -474,8 +478,8 @@ namespace RUINORERP.Business
         {
             List<tb_RoleInfo> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_RoleInfo>()
                                .Includes(t => t.tb_rolepropertyconfig )
-                                            .Includes(t => t.tb_User_Roles )
-                                .Includes(t => t.tb_P4Fields )
+                                            .Includes(t => t.tb_P4Fields )
+                                .Includes(t => t.tb_User_Roles )
                                 .Includes(t => t.tb_P4Buttons )
                                 .Includes(t => t.tb_P4Menus )
                                 .Includes(t => t.tb_P4Modules )
@@ -499,8 +503,8 @@ namespace RUINORERP.Business
         {
             List<tb_RoleInfo> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_RoleInfo>().Where(exp)
                                .Includes(t => t.tb_rolepropertyconfig )
-                                            .Includes(t => t.tb_User_Roles )
-                                .Includes(t => t.tb_P4Fields )
+                                            .Includes(t => t.tb_P4Fields )
+                                .Includes(t => t.tb_User_Roles )
                                 .Includes(t => t.tb_P4Buttons )
                                 .Includes(t => t.tb_P4Menus )
                                 .Includes(t => t.tb_P4Modules )
@@ -524,8 +528,8 @@ namespace RUINORERP.Business
         {
             List<tb_RoleInfo> list = _unitOfWorkManage.GetDbClient().Queryable<tb_RoleInfo>().Where(exp)
                             .Includes(t => t.tb_rolepropertyconfig )
-                                        .Includes(t => t.tb_User_Roles )
-                            .Includes(t => t.tb_P4Fields )
+                                        .Includes(t => t.tb_P4Fields )
+                            .Includes(t => t.tb_User_Roles )
                             .Includes(t => t.tb_P4Buttons )
                             .Includes(t => t.tb_P4Menus )
                             .Includes(t => t.tb_P4Modules )
@@ -566,8 +570,8 @@ namespace RUINORERP.Business
         {
             tb_RoleInfo entity = await _unitOfWorkManage.GetDbClient().Queryable<tb_RoleInfo>().Where(w => w.RoleID == (long)id)
                              .Includes(t => t.tb_rolepropertyconfig )
-                                        .Includes(t => t.tb_User_Roles )
-                            .Includes(t => t.tb_P4Fields )
+                                        .Includes(t => t.tb_P4Fields )
+                            .Includes(t => t.tb_User_Roles )
                             .Includes(t => t.tb_P4Buttons )
                             .Includes(t => t.tb_P4Menus )
                             .Includes(t => t.tb_P4Modules )

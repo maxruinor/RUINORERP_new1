@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/18/2024 18:02:10
+// 时间：03/14/2025 20:39:47
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -230,10 +230,11 @@ namespace RUINORERP.Business
             bool rs = false;
             RevertCommand command = new RevertCommand();
             ReturnMainSubResults<T> rsms = new ReturnMainSubResults<T>();
+                             //缓存当前编辑的对象。如果撤销就回原来的值
+                T oldobj = CloneHelper.DeepCloneObject<T>((T)model);
             try
             {
-                 //缓存当前编辑的对象。如果撤销就回原来的值
-                T oldobj = CloneHelper.DeepCloneObject<T>((T)model);
+
                 tb_ProdConversionDetail entity = model as tb_ProdConversionDetail;
                 command.UndoOperation = delegate ()
                 {
@@ -245,18 +246,24 @@ namespace RUINORERP.Business
                 
             if (entity.ConversionSub_ID > 0)
             {
-                rs = await _unitOfWorkManage.GetDbClient().UpdateNav<tb_ProdConversionDetail>(entity as tb_ProdConversionDetail)
-                    //这里一般是子表，或没有一对多外键的情况 ，用自动的只是为了语法正常一般不会调用这个方法
-                .IncludesAllFirstLayer()//自动更新导航 只能两层。这里项目中有时会失效，具体看文档
-                            .ExecuteCommandAsync();
-         
-        }
+            
+                                 var result= await _unitOfWorkManage.GetDbClient().Updateable<tb_ProdConversionDetail>(entity as tb_ProdConversionDetail)
+                    .ExecuteCommandAsync();
+                    if (result > 0)
+                    {
+                        rs = true;
+                    }
+            }
         else    
         {
-            rs = await _unitOfWorkManage.GetDbClient().InsertNav<tb_ProdConversionDetail>(entity as tb_ProdConversionDetail)
-                //这里一般是子表，或没有一对多外键的情况 ，用自动的只是为了语法正常一般不会调用这个方法
-                .IncludesAllFirstLayer()//自动更新导航 只能两层。这里项目中有时会失效，具体看文档
-                                .ExecuteCommandAsync();
+                                  var result= await _unitOfWorkManage.GetDbClient().Insertable<tb_ProdConversionDetail>(entity as tb_ProdConversionDetail)
+                    .ExecuteCommandAsync();
+                    if (result > 0)
+                    {
+                        rs = true;
+                    }
+                                              
+                     
         }
         
                 // 注意信息的完整性
@@ -268,11 +275,11 @@ namespace RUINORERP.Business
             catch (Exception ex)
             {
                 _unitOfWorkManage.RollbackTran();
-                _logger.Error(ex);
                 //出错后，取消生成的ID等值
                 command.Undo();
                 rsms.ErrorMsg = ex.Message;
                 rsms.Succeeded = false;
+                _logger.Error(ex);
             }
 
             return rsms;
@@ -463,9 +470,9 @@ namespace RUINORERP.Business
             List<tb_ProdConversionDetail> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_ProdConversionDetail>()
                                .Includes(t => t.tb_proddetail )
                                .Includes(t => t.tb_prodconversion )
-                               .Includes(t => t.tb_proddetail_to )
-                               .Includes(t => t.tb_producttype_from )
+                               .Includes(t => t.tb_proddetail )
                                .Includes(t => t.tb_producttype_to )
+                               .Includes(t => t.tb_producttype_from )
                                     .ToListAsync();
             
             foreach (var item in list)
@@ -488,8 +495,8 @@ namespace RUINORERP.Business
                                .Includes(t => t.tb_proddetail )
                                .Includes(t => t.tb_prodconversion )
                                .Includes(t => t.tb_proddetail )
-                    .Includes(t => t.tb_producttype_from)
-                               .Includes(t => t.tb_producttype_to)
+                               .Includes(t => t.tb_producttype_from )
+                               .Includes(t => t.tb_producttype_to )
                                     .ToListAsync();
             
             foreach (var item in list)
@@ -512,8 +519,8 @@ namespace RUINORERP.Business
                             .Includes(t => t.tb_proddetail )
                             .Includes(t => t.tb_prodconversion )
                             .Includes(t => t.tb_proddetail )
-                             .Includes(t => t.tb_producttype_from)
-                               .Includes(t => t.tb_producttype_to)
+                                 .Includes(t => t.tb_producttype_to)
+                               .Includes(t => t.tb_producttype_from)
                                     .ToList();
             
             foreach (var item in list)
@@ -553,8 +560,8 @@ namespace RUINORERP.Business
                              .Includes(t => t.tb_proddetail )
                             .Includes(t => t.tb_prodconversion )
                             .Includes(t => t.tb_proddetail )
-                      .Includes(t => t.tb_producttype_from)
                                .Includes(t => t.tb_producttype_to)
+                               .Includes(t => t.tb_producttype_from)
                                     .FirstAsync();
             if(entity!=null)
             {

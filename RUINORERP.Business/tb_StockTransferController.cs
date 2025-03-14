@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/18/2024 18:02:16
+// 时间：03/14/2025 20:39:53
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -230,10 +230,11 @@ namespace RUINORERP.Business
             bool rs = false;
             RevertCommand command = new RevertCommand();
             ReturnMainSubResults<T> rsms = new ReturnMainSubResults<T>();
+                             //缓存当前编辑的对象。如果撤销就回原来的值
+                T oldobj = CloneHelper.DeepCloneObject<T>((T)model);
             try
             {
-                 //缓存当前编辑的对象。如果撤销就回原来的值
-                T oldobj = CloneHelper.DeepCloneObject<T>((T)model);
+
                 tb_StockTransfer entity = model as tb_StockTransfer;
                 command.UndoOperation = delegate ()
                 {
@@ -245,16 +246,19 @@ namespace RUINORERP.Business
                 
             if (entity.StockTransferID > 0)
             {
-                rs = await _unitOfWorkManage.GetDbClient().UpdateNav<tb_StockTransfer>(entity as tb_StockTransfer)
+            
+                             rs = await _unitOfWorkManage.GetDbClient().UpdateNav<tb_StockTransfer>(entity as tb_StockTransfer)
                         .Include(m => m.tb_StockTransferDetails)
-                            .ExecuteCommandAsync();
-         
-        }
+                    .ExecuteCommandAsync();
+                 }
         else    
         {
-            rs = await _unitOfWorkManage.GetDbClient().InsertNav<tb_StockTransfer>(entity as tb_StockTransfer)
+                        rs = await _unitOfWorkManage.GetDbClient().InsertNav<tb_StockTransfer>(entity as tb_StockTransfer)
                 .Include(m => m.tb_StockTransferDetails)
-                                .ExecuteCommandAsync();
+         
+                .ExecuteCommandAsync();
+                                          
+                     
         }
         
                 // 注意信息的完整性
@@ -266,11 +270,11 @@ namespace RUINORERP.Business
             catch (Exception ex)
             {
                 _unitOfWorkManage.RollbackTran();
-                _logger.Error(ex);
                 //出错后，取消生成的ID等值
                 command.Undo();
                 rsms.ErrorMsg = ex.Message;
                 rsms.Succeeded = false;
+                _logger.Error(ex);
             }
 
             return rsms;
@@ -458,7 +462,8 @@ namespace RUINORERP.Business
         {
             List<tb_StockTransfer> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_StockTransfer>()
                                .Includes(t => t.tb_employee )
-                             
+                              .Includes(t => t.tb_location_from)
+                               .Includes(t => t.tb_location_to)
                                             .Includes(t => t.tb_StockTransferDetails )
                         .ToListAsync();
             
@@ -480,7 +485,8 @@ namespace RUINORERP.Business
         {
             List<tb_StockTransfer> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_StockTransfer>().Where(exp)
                                .Includes(t => t.tb_employee )
-                              
+                               .Includes(t => t.tb_location_from )
+                               .Includes(t => t.tb_location_to )
                                             .Includes(t => t.tb_StockTransferDetails )
                         .ToListAsync();
             
@@ -502,8 +508,8 @@ namespace RUINORERP.Business
         {
             List<tb_StockTransfer> list = _unitOfWorkManage.GetDbClient().Queryable<tb_StockTransfer>().Where(exp)
                             .Includes(t => t.tb_employee )
-                       
-                           
+                              .Includes(t => t.tb_location_from)
+                               .Includes(t => t.tb_location_to)
                                         .Includes(t => t.tb_StockTransferDetails )
                         .ToList();
             
@@ -542,7 +548,8 @@ namespace RUINORERP.Business
         {
             tb_StockTransfer entity = await _unitOfWorkManage.GetDbClient().Queryable<tb_StockTransfer>().Where(w => w.StockTransferID == (long)id)
                              .Includes(t => t.tb_employee )
-                          
+                              .Includes(t => t.tb_location_from)
+                               .Includes(t => t.tb_location_to)
                                         .Includes(t => t.tb_StockTransferDetails )
                         .FirstAsync();
             if(entity!=null)

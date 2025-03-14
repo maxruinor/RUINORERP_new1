@@ -385,6 +385,7 @@ namespace RUINORERP.UI.SuperSocketClient
                     _threadSendDataWorker = null;
                 }
             }
+            IsConnected = false;
             return rs;
         }
 

@@ -16,6 +16,8 @@ using RUINORERP.Model;
 using RUINORERP.Model.CommonModel;
 using RUINORERP.Model.TransModel;
 using RUINORERP.UI.BaseForm;
+using RUINORERP.UI.IM;
+using RUINORERP.UI.Log;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -308,7 +310,7 @@ namespace RUINORERP.UI.SuperSocketClient
                     }
                     if (MainForm.Instance.authorizeController.GetDebugInfoAuth())
                     {
-                       // MainForm.Instance.PrintInfoLog($"接收缓存数据{tablename}成功！");
+                        // MainForm.Instance.PrintInfoLog($"接收缓存数据{tablename}成功！");
                     }
 
                 }
@@ -356,22 +358,69 @@ namespace RUINORERP.UI.SuperSocketClient
                 throw new InvalidOperationException("转换失败", ex);
             }
         }
-        public static string 接收服务器提示消息(OriginalData gd)
+        public static async void 接收服务器提示消息(OriginalData gd)
         {
-            string Message = "";
             try
             {
                 int index = 0;
                 ByteBuff bg = new ByteBuff(gd.Two);
-                Message = ByteDataAnalysis.GetString(gd.Two, ref index);
-                MainForm.Instance.PrintInfoLog(Message);
+                string modelName = ByteDataAnalysis.GetString(gd.Two, ref index);
+                string messageJson = ByteDataAnalysis.GetString(gd.Two, ref index);
+                JObject obj = JObject.Parse(messageJson);
+                MessageModel MessageInfo = obj.ToObject<MessageModel>();
+                bool MustDisplay = ByteDataAnalysis.Getbool(gd.Two, ref index);
+                MainForm.Instance.PrintInfoLog(MessageInfo.msg);
+                if (MessageInfo.msg.Contains("换IP"))
+                {
+                    try
+                    {
+                        string newIP = "192.168.0.254";
+                        int port = 3001;
+                        bool stop = await MainForm.Instance.ecs.Stop();
+                        if (MainForm.Instance.ecs == null)
+                        {
+                            MainForm.Instance.ecs = new EasyClientService();
+                        }
+                        if (!MainForm.Instance.ecs.IsConnected)
+                        {
+                            MainForm.Instance.ecs.ServerIp = newIP;
+                            MainForm.Instance.ecs.Port = port;
+                            bool connect = await MainForm.Instance.ecs.Connect();
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+
+
+                    }
+                     
+                }
+
+                if (MustDisplay)
+                {
+                    if (MainForm.Instance.IsHandleCreated)
+                    {
+                        MainForm.Instance.Invoke(new Action(() =>
+                        {
+                            InstructionsPrompt instructionsPrompt = new InstructionsPrompt();
+                            instructionsPrompt.btnAgree.Visible = false;
+                            instructionsPrompt.btnRefuse.Visible = false;
+                            instructionsPrompt.txtSender.Text = "服务器提示";
+                            instructionsPrompt.txtSubject.Text = "服务器提示";
+                            instructionsPrompt.Content = MessageInfo.msg;
+                            instructionsPrompt.Show();
+                            instructionsPrompt.TopMost = true;
+
+                        }));
+                    }
+
+                }
+
             }
             catch (Exception ex)
             {
                 MainForm.Instance.PrintInfoLog("接收服务器提示消息:" + ex.Message);
             }
-            return Message;
-
         }
         public static string 接收服务器心跳回复(OriginalData gd)
         {

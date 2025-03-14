@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/18/2024 18:02:11
+// 时间：03/14/2025 20:39:49
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -230,10 +230,11 @@ namespace RUINORERP.Business
             bool rs = false;
             RevertCommand command = new RevertCommand();
             ReturnMainSubResults<T> rsms = new ReturnMainSubResults<T>();
+                             //缓存当前编辑的对象。如果撤销就回原来的值
+                T oldobj = CloneHelper.DeepCloneObject<T>((T)model);
             try
             {
-                 //缓存当前编辑的对象。如果撤销就回原来的值
-                T oldobj = CloneHelper.DeepCloneObject<T>((T)model);
+
                 tb_ProductionDemand entity = model as tb_ProductionDemand;
                 command.UndoOperation = delegate ()
                 {
@@ -245,26 +246,29 @@ namespace RUINORERP.Business
                 
             if (entity.PDID > 0)
             {
-                rs = await _unitOfWorkManage.GetDbClient().UpdateNav<tb_ProductionDemand>(entity as tb_ProductionDemand)
-                        .Include(m => m.tb_PurOrders)
-                    .Include(m => m.tb_ProduceGoodsRecommendDetails)
+            
+                             rs = await _unitOfWorkManage.GetDbClient().UpdateNav<tb_ProductionDemand>(entity as tb_ProductionDemand)
+                        .Include(m => m.tb_ProduceGoodsRecommendDetails)
                     .Include(m => m.tb_ProductionDemandDetails)
                     .Include(m => m.tb_ProductionDemandTargetDetails)
-                    .Include(m => m.tb_ManufacturingOrders)
                     .Include(m => m.tb_PurGoodsRecommendDetails)
-                            .ExecuteCommandAsync();
-         
-        }
+                    .Include(m => m.tb_PurOrders)
+                    .Include(m => m.tb_ManufacturingOrders)
+                    .ExecuteCommandAsync();
+                 }
         else    
         {
-            rs = await _unitOfWorkManage.GetDbClient().InsertNav<tb_ProductionDemand>(entity as tb_ProductionDemand)
-                .Include(m => m.tb_PurOrders)
+                        rs = await _unitOfWorkManage.GetDbClient().InsertNav<tb_ProductionDemand>(entity as tb_ProductionDemand)
                 .Include(m => m.tb_ProduceGoodsRecommendDetails)
                 .Include(m => m.tb_ProductionDemandDetails)
                 .Include(m => m.tb_ProductionDemandTargetDetails)
-                .Include(m => m.tb_ManufacturingOrders)
                 .Include(m => m.tb_PurGoodsRecommendDetails)
-                                .ExecuteCommandAsync();
+                .Include(m => m.tb_PurOrders)
+                .Include(m => m.tb_ManufacturingOrders)
+         
+                .ExecuteCommandAsync();
+                                          
+                     
         }
         
                 // 注意信息的完整性
@@ -276,11 +280,11 @@ namespace RUINORERP.Business
             catch (Exception ex)
             {
                 _unitOfWorkManage.RollbackTran();
-                _logger.Error(ex);
                 //出错后，取消生成的ID等值
                 command.Undo();
                 rsms.ErrorMsg = ex.Message;
                 rsms.Succeeded = false;
+                _logger.Error(ex);
             }
 
             return rsms;
@@ -294,12 +298,12 @@ namespace RUINORERP.Business
         public async override Task<List<T>> BaseQueryByAdvancedNavAsync(bool useLike, object dto)
         {
             var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<tb_ProductionDemand>()
-                                .Includes(m => m.tb_PurOrders)
-                        .Includes(m => m.tb_ProduceGoodsRecommendDetails)
+                                .Includes(m => m.tb_ProduceGoodsRecommendDetails)
                         .Includes(m => m.tb_ProductionDemandDetails)
                         .Includes(m => m.tb_ProductionDemandTargetDetails)
-                        .Includes(m => m.tb_ManufacturingOrders)
                         .Includes(m => m.tb_PurGoodsRecommendDetails)
+                        .Includes(m => m.tb_PurOrders)
+                        .Includes(m => m.tb_ManufacturingOrders)
                                         .Where(useLike, dto);
             return await querySqlQueryable.ToListAsync()as List<T>;
         }
@@ -309,12 +313,12 @@ namespace RUINORERP.Business
         {
             tb_ProductionDemand entity = model as tb_ProductionDemand;
              bool rs = await _unitOfWorkManage.GetDbClient().DeleteNav<tb_ProductionDemand>(m => m.PDID== entity.PDID)
-                                .Include(m => m.tb_PurOrders)
-                        .Include(m => m.tb_ProduceGoodsRecommendDetails)
+                                .Include(m => m.tb_ProduceGoodsRecommendDetails)
                         .Include(m => m.tb_ProductionDemandDetails)
                         .Include(m => m.tb_ProductionDemandTargetDetails)
-                        .Include(m => m.tb_ManufacturingOrders)
                         .Include(m => m.tb_PurGoodsRecommendDetails)
+                        .Include(m => m.tb_PurOrders)
+                        .Include(m => m.tb_ManufacturingOrders)
                                         .ExecuteCommandAsync();
             if (rs)
             {
@@ -479,12 +483,12 @@ namespace RUINORERP.Business
             List<tb_ProductionDemand> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_ProductionDemand>()
                                .Includes(t => t.tb_employee )
                                .Includes(t => t.tb_productionplan )
-                                            .Includes(t => t.tb_PurOrders )
-                                .Includes(t => t.tb_ProduceGoodsRecommendDetails )
+                                            .Includes(t => t.tb_ProduceGoodsRecommendDetails )
                                 .Includes(t => t.tb_ProductionDemandDetails )
                                 .Includes(t => t.tb_ProductionDemandTargetDetails )
-                                .Includes(t => t.tb_ManufacturingOrders )
                                 .Includes(t => t.tb_PurGoodsRecommendDetails )
+                                .Includes(t => t.tb_PurOrders )
+                                .Includes(t => t.tb_ManufacturingOrders )
                         .ToListAsync();
             
             foreach (var item in list)
@@ -506,12 +510,12 @@ namespace RUINORERP.Business
             List<tb_ProductionDemand> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_ProductionDemand>().Where(exp)
                                .Includes(t => t.tb_employee )
                                .Includes(t => t.tb_productionplan )
-                                            .Includes(t => t.tb_PurOrders )
-                                .Includes(t => t.tb_ProduceGoodsRecommendDetails )
+                                            .Includes(t => t.tb_ProduceGoodsRecommendDetails )
                                 .Includes(t => t.tb_ProductionDemandDetails )
                                 .Includes(t => t.tb_ProductionDemandTargetDetails )
-                                .Includes(t => t.tb_ManufacturingOrders )
                                 .Includes(t => t.tb_PurGoodsRecommendDetails )
+                                .Includes(t => t.tb_PurOrders )
+                                .Includes(t => t.tb_ManufacturingOrders )
                         .ToListAsync();
             
             foreach (var item in list)
@@ -533,12 +537,12 @@ namespace RUINORERP.Business
             List<tb_ProductionDemand> list = _unitOfWorkManage.GetDbClient().Queryable<tb_ProductionDemand>().Where(exp)
                             .Includes(t => t.tb_employee )
                             .Includes(t => t.tb_productionplan )
-                                        .Includes(t => t.tb_PurOrders )
-                            .Includes(t => t.tb_ProduceGoodsRecommendDetails )
+                                        .Includes(t => t.tb_ProduceGoodsRecommendDetails )
                             .Includes(t => t.tb_ProductionDemandDetails )
                             .Includes(t => t.tb_ProductionDemandTargetDetails )
-                            .Includes(t => t.tb_ManufacturingOrders )
                             .Includes(t => t.tb_PurGoodsRecommendDetails )
+                            .Includes(t => t.tb_PurOrders )
+                            .Includes(t => t.tb_ManufacturingOrders )
                         .ToList();
             
             foreach (var item in list)
@@ -577,12 +581,12 @@ namespace RUINORERP.Business
             tb_ProductionDemand entity = await _unitOfWorkManage.GetDbClient().Queryable<tb_ProductionDemand>().Where(w => w.PDID == (long)id)
                              .Includes(t => t.tb_employee )
                             .Includes(t => t.tb_productionplan )
-                                        .Includes(t => t.tb_PurOrders )
-                            .Includes(t => t.tb_ProduceGoodsRecommendDetails )
+                                        .Includes(t => t.tb_ProduceGoodsRecommendDetails )
                             .Includes(t => t.tb_ProductionDemandDetails )
                             .Includes(t => t.tb_ProductionDemandTargetDetails )
-                            .Includes(t => t.tb_ManufacturingOrders )
                             .Includes(t => t.tb_PurGoodsRecommendDetails )
+                            .Includes(t => t.tb_PurOrders )
+                            .Includes(t => t.tb_ManufacturingOrders )
                         .FirstAsync();
             if(entity!=null)
             {

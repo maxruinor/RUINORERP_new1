@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/14/2025 20:57:17
+// 时间：03/14/2025 20:39:45
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -230,10 +230,11 @@ namespace RUINORERP.Business
             bool rs = false;
             RevertCommand command = new RevertCommand();
             ReturnMainSubResults<T> rsms = new ReturnMainSubResults<T>();
+                             //缓存当前编辑的对象。如果撤销就回原来的值
+                T oldobj = CloneHelper.DeepCloneObject<T>((T)model);
             try
             {
-                 //缓存当前编辑的对象。如果撤销就回原来的值
-                T oldobj = CloneHelper.DeepCloneObject<T>((T)model);
+
                 tb_MRP_ReworkReturn entity = model as tb_MRP_ReworkReturn;
                 command.UndoOperation = delegate ()
                 {
@@ -245,18 +246,21 @@ namespace RUINORERP.Business
                 
             if (entity.ReworkReturnID > 0)
             {
-                rs = await _unitOfWorkManage.GetDbClient().UpdateNav<tb_MRP_ReworkReturn>(entity as tb_MRP_ReworkReturn)
-                        .Include(m => m.tb_MRP_ReworkEntries)
-                    .Include(m => m.tb_MRP_ReworkReturnDetails)
-                            .ExecuteCommandAsync();
-         
-        }
+            
+                             rs = await _unitOfWorkManage.GetDbClient().UpdateNav<tb_MRP_ReworkReturn>(entity as tb_MRP_ReworkReturn)
+                        .Include(m => m.tb_MRP_ReworkReturnDetails)
+                    .Include(m => m.tb_MRP_ReworkEntries)
+                    .ExecuteCommandAsync();
+                 }
         else    
         {
-            rs = await _unitOfWorkManage.GetDbClient().InsertNav<tb_MRP_ReworkReturn>(entity as tb_MRP_ReworkReturn)
-                .Include(m => m.tb_MRP_ReworkEntries)
+                        rs = await _unitOfWorkManage.GetDbClient().InsertNav<tb_MRP_ReworkReturn>(entity as tb_MRP_ReworkReturn)
                 .Include(m => m.tb_MRP_ReworkReturnDetails)
-                                .ExecuteCommandAsync();
+                .Include(m => m.tb_MRP_ReworkEntries)
+         
+                .ExecuteCommandAsync();
+                                          
+                     
         }
         
                 // 注意信息的完整性
@@ -268,11 +272,11 @@ namespace RUINORERP.Business
             catch (Exception ex)
             {
                 _unitOfWorkManage.RollbackTran();
-                _logger.Error(ex);
                 //出错后，取消生成的ID等值
                 command.Undo();
                 rsms.ErrorMsg = ex.Message;
                 rsms.Succeeded = false;
+                _logger.Error(ex);
             }
 
             return rsms;
@@ -286,8 +290,8 @@ namespace RUINORERP.Business
         public async override Task<List<T>> BaseQueryByAdvancedNavAsync(bool useLike, object dto)
         {
             var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<tb_MRP_ReworkReturn>()
-                                .Includes(m => m.tb_MRP_ReworkEntries)
-                        .Includes(m => m.tb_MRP_ReworkReturnDetails)
+                                .Includes(m => m.tb_MRP_ReworkReturnDetails)
+                        .Includes(m => m.tb_MRP_ReworkEntries)
                                         .Where(useLike, dto);
             return await querySqlQueryable.ToListAsync()as List<T>;
         }
@@ -297,8 +301,8 @@ namespace RUINORERP.Business
         {
             tb_MRP_ReworkReturn entity = model as tb_MRP_ReworkReturn;
              bool rs = await _unitOfWorkManage.GetDbClient().DeleteNav<tb_MRP_ReworkReturn>(m => m.ReworkReturnID== entity.ReworkReturnID)
-                                .Include(m => m.tb_MRP_ReworkEntries)
-                        .Include(m => m.tb_MRP_ReworkReturnDetails)
+                                .Include(m => m.tb_MRP_ReworkReturnDetails)
+                        .Include(m => m.tb_MRP_ReworkEntries)
                                         .ExecuteCommandAsync();
             if (rs)
             {
@@ -463,10 +467,9 @@ namespace RUINORERP.Business
             List<tb_MRP_ReworkReturn> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_MRP_ReworkReturn>()
                                .Includes(t => t.tb_customervendor )
                                .Includes(t => t.tb_employee )
-                               .Includes(t => t.tb_finishedgoodsinv )
                                .Includes(t => t.tb_department )
-                                            .Includes(t => t.tb_MRP_ReworkEntries )
-                                .Includes(t => t.tb_MRP_ReworkReturnDetails )
+                                            .Includes(t => t.tb_MRP_ReworkReturnDetails )
+                                .Includes(t => t.tb_MRP_ReworkEntries )
                         .ToListAsync();
             
             foreach (var item in list)
@@ -488,10 +491,9 @@ namespace RUINORERP.Business
             List<tb_MRP_ReworkReturn> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_MRP_ReworkReturn>().Where(exp)
                                .Includes(t => t.tb_customervendor )
                                .Includes(t => t.tb_employee )
-                               .Includes(t => t.tb_finishedgoodsinv)
                                .Includes(t => t.tb_department )
-                                            .Includes(t => t.tb_MRP_ReworkEntries )
-                                .Includes(t => t.tb_MRP_ReworkReturnDetails )
+                                            .Includes(t => t.tb_MRP_ReworkReturnDetails )
+                                .Includes(t => t.tb_MRP_ReworkEntries )
                         .ToListAsync();
             
             foreach (var item in list)
@@ -513,10 +515,9 @@ namespace RUINORERP.Business
             List<tb_MRP_ReworkReturn> list = _unitOfWorkManage.GetDbClient().Queryable<tb_MRP_ReworkReturn>().Where(exp)
                             .Includes(t => t.tb_customervendor )
                             .Includes(t => t.tb_employee )
-                            .Includes(t => t.tb_finishedgoodsinv)
                             .Includes(t => t.tb_department )
-                                        .Includes(t => t.tb_MRP_ReworkEntries )
-                            .Includes(t => t.tb_MRP_ReworkReturnDetails )
+                                        .Includes(t => t.tb_MRP_ReworkReturnDetails )
+                            .Includes(t => t.tb_MRP_ReworkEntries )
                         .ToList();
             
             foreach (var item in list)
@@ -555,10 +556,9 @@ namespace RUINORERP.Business
             tb_MRP_ReworkReturn entity = await _unitOfWorkManage.GetDbClient().Queryable<tb_MRP_ReworkReturn>().Where(w => w.ReworkReturnID == (long)id)
                              .Includes(t => t.tb_customervendor )
                             .Includes(t => t.tb_employee )
-                            .Includes(t => t.tb_finishedgoodsinv)
                             .Includes(t => t.tb_department )
-                                        .Includes(t => t.tb_MRP_ReworkEntries )
-                            .Includes(t => t.tb_MRP_ReworkReturnDetails )
+                                        .Includes(t => t.tb_MRP_ReworkReturnDetails )
+                            .Includes(t => t.tb_MRP_ReworkEntries )
                         .FirstAsync();
             if(entity!=null)
             {

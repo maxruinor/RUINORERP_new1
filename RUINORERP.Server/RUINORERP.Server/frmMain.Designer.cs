@@ -53,6 +53,7 @@
             系统注册ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             statusStrip1 = new System.Windows.Forms.StatusStrip();
             tslblStatus = new System.Windows.Forms.ToolStripStatusLabel();
+            tsbtn在线用户 = new System.Windows.Forms.ToolStripButton();
             menuStrip1.SuspendLayout();
             toolStrip1.SuspendLayout();
             menuStrip2.SuspendLayout();
@@ -132,7 +133,7 @@
             // 
             // toolStrip1
             // 
-            toolStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] { tsBtnStartServer, toolStripButton1, toolStripButton3, toolStripButton5, toolStripddbtnDebug, tsbtnDataViewer });
+            toolStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] { tsBtnStartServer, toolStripButton1, toolStripButton3, toolStripButton5, toolStripddbtnDebug, tsbtnDataViewer, tsbtn在线用户 });
             toolStrip1.Location = new System.Drawing.Point(0, 50);
             toolStrip1.Name = "toolStrip1";
             toolStrip1.Size = new System.Drawing.Size(800, 25);
@@ -256,7 +257,15 @@
             // 
             tslblStatus.Name = "tslblStatus";
             tslblStatus.Size = new System.Drawing.Size(0, 17);
-            
+            // 
+            // tsbtn在线用户
+            // 
+            tsbtn在线用户.Image = (System.Drawing.Image)resources.GetObject("tsbtn在线用户.Image");
+            tsbtn在线用户.ImageTransparentColor = System.Drawing.Color.Magenta;
+            tsbtn在线用户.Name = "tsbtn在线用户";
+            tsbtn在线用户.Size = new System.Drawing.Size(76, 22);
+            tsbtn在线用户.Text = "在线用户";
+            tsbtn在线用户.Click += tsbtn在线用户_Click;
             // 
             // frmMain
             // 
@@ -314,6 +323,7 @@
         private System.Windows.Forms.MenuStrip menuStrip2;
         private System.Windows.Forms.StatusStrip statusStrip1;
         private System.Windows.Forms.ToolStripStatusLabel tslblStatus;
+        private System.Windows.Forms.ToolStripButton tsbtn在线用户;
     }
 }
 

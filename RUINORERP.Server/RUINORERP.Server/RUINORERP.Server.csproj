@@ -149,6 +149,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Update="frmUserListManage.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Update="frmWFManage.cs">
       <SubType>Form</SubType>
     </Compile>

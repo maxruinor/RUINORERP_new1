@@ -785,12 +785,12 @@ namespace RUINORERP.Server
                             //获取服务配置
                             // ReSharper disable once ConvertToLambdaExpression
                             var configSection = config.GetSection("ServiceforBiz");
-                            tslblStatus.Text = "服务已启动。";
-                            if (IsDebug)
-                            {
-                                PrintMsg($"port:{configSection.GetSection("listeners").GetSection("0").GetSection("port").Value}");
-                                tslblStatus.Text = "服务已启动，端口：" + configSection.GetSection("listeners").GetSection("0").GetSection("port").Value;
-                            }
+                            //tslblStatus.Text = "服务已启动。";
+                            //if (IsDebug)
+                            //{
+                            //    PrintMsg($"port:{configSection.GetSection("listeners").GetSection("0").GetSection("port").Value}");
+                            tslblStatus.Text = "服务已启动，端口：" + configSection.GetSection("listeners").GetSection("0").GetSection("port").Value;
+                            //}
                             return configSection;
                         })
                         .UsePackageDecoder<MyPackageDecoder>()//注册自定义解包器
@@ -800,10 +800,25 @@ namespace RUINORERP.Server
                     .UseSessionHandler(async (session) =>
                     {
                         SessionforBiz sessionforBiz = session as SessionforBiz;
+                        sessionListBiz.TryAdd(session.SessionID, session as SessionforBiz);
+                        if (frmusermange==null)
+                        {
+                            frmusermange=Startup.GetFromFac<frmUserManage>();
+                        }
                         sessionforBiz.User.PropertyChanged -= frmusermange.UserInfo_PropertyChanged;
                         sessionforBiz.User.PropertyChanged += frmusermange.UserInfo_PropertyChanged;
-                        sessionListBiz.TryAdd(session.SessionID, session as SessionforBiz);
                         frmusermange.userInfos.Add(sessionforBiz.User);
+
+                        if (frmUserList==null)
+                        {
+                            frmUserList= Startup.GetFromFac<frmUserListManage>();
+                        }
+                        sessionforBiz.User.PropertyChanged -= frmUserList.UserInfo_PropertyChanged;
+                        sessionforBiz.User.PropertyChanged += frmUserList.UserInfo_PropertyChanged;
+                        frmUserList.userInfos.Add(sessionforBiz.User);
+
+
+
                         if (sessionforBiz.User != null)
                         {
                             while (MessageList.Count > 0 && sessionforBiz.User.超级用户)
@@ -1118,7 +1133,7 @@ namespace RUINORERP.Server
 
         public void PrintInfoLog(string msg)
         {
-           
+
             // Console.WriteLine(msg);
             if (!System.Diagnostics.Process.GetCurrentProcess().MainModule.ToString().ToLower().Contains("iis"))
             {
@@ -1313,7 +1328,17 @@ namespace RUINORERP.Server
             frm.Show();
             frm.Activate();
         }
-
-
+        frmUserListManage    frmUserList = Startup.GetFromFac<frmUserListManage>();
+        private void tsbtn在线用户_Click(object sender, EventArgs e)
+        {
+            if (frmUserList == null)
+            {
+                frmUserList = Startup.GetFromFac<frmUserListManage>();
+            }
+          
+            frmUserList.MdiParent = this;
+            frmUserList.Show();
+            frmUserList.Activate();
+        }
     }
 }

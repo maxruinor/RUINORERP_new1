@@ -29,6 +29,7 @@
         private void InitializeComponent()
         {
             components = new System.ComponentModel.Container();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(frmUserListManage));
             contextMenuStrip1 = new System.Windows.Forms.ContextMenuStrip(components);
             toolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
             toolStripMenuItem2 = new System.Windows.Forms.ToolStripMenuItem();
@@ -37,10 +38,11 @@
             toolStripMenuItem6 = new System.Windows.Forms.ToolStripMenuItem();
             推送版本更新ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             推送缓存数据ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            userInfoBindingSource = new System.Windows.Forms.BindingSource(components);
             listView1 = new System.Windows.Forms.ListView();
+            toolStrip1 = new System.Windows.Forms.ToolStrip();
+            tsbtn刷新 = new System.Windows.Forms.ToolStripButton();
             contextMenuStrip1.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)userInfoBindingSource).BeginInit();
+            toolStrip1.SuspendLayout();
             SuspendLayout();
             // 
             // contextMenuStrip1
@@ -61,7 +63,6 @@
             toolStripMenuItem2.Name = "toolStripMenuItem2";
             toolStripMenuItem2.Size = new System.Drawing.Size(160, 22);
             toolStripMenuItem2.Text = "强制用户退出";
-            toolStripMenuItem2.Click += toolStripMenuItem2_Click;
             // 
             // toolStripMenuItem4
             // 
@@ -74,7 +75,6 @@
             toolStripMenuItem5.Name = "toolStripMenuItem5";
             toolStripMenuItem5.Size = new System.Drawing.Size(160, 22);
             toolStripMenuItem5.Text = "发消息给客户端";
-            toolStripMenuItem5.Click += toolStripMenuItem5_Click_2;
             // 
             // toolStripMenuItem6
             // 
@@ -94,10 +94,6 @@
             推送缓存数据ToolStripMenuItem.Size = new System.Drawing.Size(160, 22);
             推送缓存数据ToolStripMenuItem.Text = "推送缓存数据";
             // 
-            // userInfoBindingSource
-            // 
-            userInfoBindingSource.DataSource = typeof(Model.CommonModel.UserInfo);
-            // 
             // listView1
             // 
             listView1.ContextMenuStrip = contextMenuStrip1;
@@ -110,24 +106,46 @@
             listView1.UseCompatibleStateImageBehavior = false;
             listView1.View = System.Windows.Forms.View.Details;
             listView1.VirtualMode = true;
+            listView1.MouseClick += listView1_MouseClick;
+            // 
+            // toolStrip1
+            // 
+            toolStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] { tsbtn刷新 });
+            toolStrip1.Location = new System.Drawing.Point(0, 0);
+            toolStrip1.Name = "toolStrip1";
+            toolStrip1.Size = new System.Drawing.Size(1295, 25);
+            toolStrip1.TabIndex = 2;
+            toolStrip1.Text = "toolStrip1";
+            // 
+            // tsbtn刷新
+            // 
+            tsbtn刷新.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+            tsbtn刷新.Image = (System.Drawing.Image)resources.GetObject("tsbtn刷新.Image");
+            tsbtn刷新.ImageTransparentColor = System.Drawing.Color.Magenta;
+            tsbtn刷新.Name = "tsbtn刷新";
+            tsbtn刷新.Size = new System.Drawing.Size(36, 22);
+            tsbtn刷新.Text = "刷新";
+            tsbtn刷新.Click += tsbtn刷新_Click;
             // 
             // frmUserListManage
             // 
             AutoScaleDimensions = new System.Drawing.SizeF(7F, 17F);
             AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             ClientSize = new System.Drawing.Size(1295, 450);
+            Controls.Add(toolStrip1);
             Controls.Add(listView1);
             Name = "frmUserListManage";
             Text = "用户管理";
             FormClosing += frmUserManage_FormClosing;
             Load += frmUserManage_Load;
             contextMenuStrip1.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)userInfoBindingSource).EndInit();
+            toolStrip1.ResumeLayout(false);
+            toolStrip1.PerformLayout();
             ResumeLayout(false);
+            PerformLayout();
         }
 
         #endregion
-        public System.Windows.Forms.BindingSource userInfoBindingSource;
         private System.Windows.Forms.ContextMenuStrip contextMenuStrip1;
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem1;
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem2;
@@ -140,5 +158,7 @@
         private System.Windows.Forms.DataGridViewCheckBoxColumn onlineDataGridViewCheckBoxColumn;
         private System.Windows.Forms.DataGridViewCheckBoxColumn serverAuthenticationDataGridViewCheckBoxColumn;
         private System.Windows.Forms.ListView listView1;
+        private System.Windows.Forms.ToolStrip toolStrip1;
+        private System.Windows.Forms.ToolStripButton tsbtn刷新;
     }
 }

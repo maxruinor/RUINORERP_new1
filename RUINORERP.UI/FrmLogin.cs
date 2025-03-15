@@ -20,6 +20,7 @@ using System.Threading.Tasks;
 using System.Net;
 using RUINORERP.Business;
 using HLH.Lib.Security;
+using AutoUpdateTools;
 
 
 namespace RUINORERP.UI
@@ -126,7 +127,7 @@ namespace RUINORERP.UI
             {
                 chksaveIDpwd.Checked = false;
             }
-
+            MainForm.Instance.AppContext.CurrentUser.授权状态 = false;
             txtUserName.Focus();
         }
 
@@ -252,7 +253,7 @@ namespace RUINORERP.UI
                             UserGlobalConfig.Instance.IsSupperUser = Program.AppContextData.IsSuperUser;
                             UserGlobalConfig.Instance.AutoRminderUpdate = chkAutoReminderUpdate.Checked;
                             UserGlobalConfig.Instance.Serialize();
-
+                            MainForm.Instance.AppContext.CurrentUser.授权状态 = true;
                             //先指定一下服务器IP
                             //BizCodeGenerator.Instance.RedisServerIP = UserGlobalConfig.Instance.ServerIP;
                             Program.AppContextData.IsOnline = true;
@@ -319,20 +320,33 @@ namespace RUINORERP.UI
 
         private void btncancel_Click(object sender, EventArgs e)
         {
-            //在指定的毫秒数后取消task执行
-            source.CancelAfter(0);
-            //取消任务后的回调
-            source.Token.Register(() =>
+            try
             {
-                //不延迟会获取不到正确的状态
-                Thread.Sleep(50);
-                //  Console.WriteLine("task1状态：" + task1.Status);
-                //  Console.WriteLine("IsFaulted状态：" + task1.IsFaulted);//由于未处理的异常，任务已完成。
-                //  Console.WriteLine("IsCompleted状态：" + task1.IsCompleted);//获取一个值，该值指示任务是否已完成。
-            });
-            this.DialogResult = DialogResult.Cancel;
-            this.Close();
 
+                //在指定的毫秒数后取消task执行
+                source.CancelAfter(0);
+                //取消任务后的回调
+                source.Token.Register(() =>
+                {
+                    //不延迟会获取不到正确的状态
+                    Thread.Sleep(50);
+                    //  Console.WriteLine("task1状态：" + task1.Status);
+                    //  Console.WriteLine("IsFaulted状态：" + task1.IsFaulted);//由于未处理的异常，任务已完成。
+                    //  Console.WriteLine("IsCompleted状态：" + task1.IsCompleted);//获取一个值，该值指示任务是否已完成。
+                });
+                this.DialogResult = DialogResult.Cancel;
+                this.Close();
+
+            }
+            catch (Exception)
+            {
+
+            }
+            finally
+            {
+                Application.DoEvents();
+                Application.Exit();
+            }
         }
 
         private void chksaveIDpwd_CheckedChanged(object sender, EventArgs e)

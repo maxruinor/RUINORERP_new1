@@ -40,20 +40,19 @@
             关闭ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             toolStrip1 = new System.Windows.Forms.ToolStrip();
             tsBtnStartServer = new System.Windows.Forms.ToolStripButton();
-            toolStripButton1 = new System.Windows.Forms.ToolStripButton();
             toolStripButton3 = new System.Windows.Forms.ToolStripButton();
             toolStripButton5 = new System.Windows.Forms.ToolStripButton();
             toolStripddbtnDebug = new System.Windows.Forms.ToolStripDropDownButton();
             tsmY = new System.Windows.Forms.ToolStripMenuItem();
             tsmNo = new System.Windows.Forms.ToolStripMenuItem();
             tsbtnDataViewer = new System.Windows.Forms.ToolStripButton();
+            tsbtn在线用户 = new System.Windows.Forms.ToolStripButton();
             toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
             toolStripButton2 = new System.Windows.Forms.ToolStripButton();
             menuStrip2 = new System.Windows.Forms.MenuStrip();
             系统注册ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             statusStrip1 = new System.Windows.Forms.StatusStrip();
             tslblStatus = new System.Windows.Forms.ToolStripStatusLabel();
-            tsbtn在线用户 = new System.Windows.Forms.ToolStripButton();
             menuStrip1.SuspendLayout();
             toolStrip1.SuspendLayout();
             menuStrip2.SuspendLayout();
@@ -133,7 +132,7 @@
             // 
             // toolStrip1
             // 
-            toolStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] { tsBtnStartServer, toolStripButton1, toolStripButton3, toolStripButton5, toolStripddbtnDebug, tsbtnDataViewer, tsbtn在线用户 });
+            toolStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] { tsBtnStartServer, toolStripButton3, toolStripButton5, toolStripddbtnDebug, tsbtnDataViewer, tsbtn在线用户 });
             toolStrip1.Location = new System.Drawing.Point(0, 50);
             toolStrip1.Name = "toolStrip1";
             toolStrip1.Size = new System.Drawing.Size(800, 25);
@@ -149,16 +148,6 @@
             tsBtnStartServer.Size = new System.Drawing.Size(88, 22);
             tsBtnStartServer.Text = "启动服务器";
             tsBtnStartServer.Click += tsBtnStartServer_Click;
-            // 
-            // toolStripButton1
-            // 
-            toolStripButton1.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
-            toolStripButton1.Image = (System.Drawing.Image)resources.GetObject("toolStripButton1.Image");
-            toolStripButton1.ImageTransparentColor = System.Drawing.Color.Magenta;
-            toolStripButton1.Name = "toolStripButton1";
-            toolStripButton1.Size = new System.Drawing.Size(84, 22);
-            toolStripButton1.Text = "在线用户管理";
-            toolStripButton1.Click += toolStripButton1_Click;
             // 
             // toolStripButton3
             // 
@@ -214,6 +203,15 @@
             tsbtnDataViewer.Text = "数据查看器";
             tsbtnDataViewer.Click += tsbtnDataViewer_Click;
             // 
+            // tsbtn在线用户
+            // 
+            tsbtn在线用户.Image = (System.Drawing.Image)resources.GetObject("tsbtn在线用户.Image");
+            tsbtn在线用户.ImageTransparentColor = System.Drawing.Color.Magenta;
+            tsbtn在线用户.Name = "tsbtn在线用户";
+            tsbtn在线用户.Size = new System.Drawing.Size(76, 22);
+            tsbtn在线用户.Text = "在线用户";
+            tsbtn在线用户.Click += tsbtn在线用户_Click;
+            // 
             // toolStripSeparator1
             // 
             toolStripSeparator1.Name = "toolStripSeparator1";
@@ -258,15 +256,6 @@
             tslblStatus.Name = "tslblStatus";
             tslblStatus.Size = new System.Drawing.Size(0, 17);
             // 
-            // tsbtn在线用户
-            // 
-            tsbtn在线用户.Image = (System.Drawing.Image)resources.GetObject("tsbtn在线用户.Image");
-            tsbtn在线用户.ImageTransparentColor = System.Drawing.Color.Magenta;
-            tsbtn在线用户.Name = "tsbtn在线用户";
-            tsbtn在线用户.Size = new System.Drawing.Size(76, 22);
-            tsbtn在线用户.Text = "在线用户";
-            tsbtn在线用户.Click += tsbtn在线用户_Click;
-            // 
             // frmMain
             // 
             AutoScaleDimensions = new System.Drawing.SizeF(7F, 17F);
@@ -303,7 +292,6 @@
         private System.Windows.Forms.RichTextBox richTextBox1;
         private System.Windows.Forms.MenuStrip menuStrip1;
         private System.Windows.Forms.ToolStrip toolStrip1;
-        private System.Windows.Forms.ToolStripButton toolStripButton1;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
         private System.Windows.Forms.ToolStripButton toolStripButton2;
         private System.Windows.Forms.ToolStripButton toolStripButton3;

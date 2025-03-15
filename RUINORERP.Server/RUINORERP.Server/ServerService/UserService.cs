@@ -644,6 +644,7 @@ namespace RUINORERP.Server.BizService
 
         public static void 回复心跳(SessionforBiz PlayerSession)
         {
+            //这里要注意了 心跳回复中。是否要全部用户信息。还是只回复本人
             try
             {
                 ByteBuff tx = new ByteBuff(100);

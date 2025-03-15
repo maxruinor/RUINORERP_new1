@@ -30,7 +30,7 @@ namespace RUINORERP.Model.Context
         /// <summary>
         /// 这里保存了可以使用的功能模块
         /// </summary>
-        public List<GlobalFunctionModule> CanUsefunctionModules { get; set; }
+        public List<GlobalFunctionModule> CanUsefunctionModules { get; set; } = new List<GlobalFunctionModule>();
 
         /// <summary>
         /// web服务器身份验证

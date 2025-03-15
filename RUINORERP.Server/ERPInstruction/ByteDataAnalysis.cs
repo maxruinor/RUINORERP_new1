@@ -102,6 +102,10 @@ namespace TransInstruction
 
         public static string GetString(byte[] buffer, ref int Index)
         {
+            if (buffer == null)
+            {
+                return string.Empty;
+            }
             if (buffer.Length < Index + 4)
                 throw new InvalidOperationException("Buffer underflow.");
 

@@ -22,6 +22,8 @@
     <Compile Remove="CommandService\CommandQueue.cs" />
     <Compile Remove="Comm\AutoMapperProfile.cs" />
     <Compile Remove="Comm\CacheHelper.cs" />
+    <Compile Remove="frmUserManage.cs" />
+    <Compile Remove="frmUserManage.Designer.cs" />
     <Compile Remove="frmUserOnline.cs" />
     <Compile Remove="frmUserOnline.Designer.cs" />
     <Compile Remove="log4netHelper.cs" />
@@ -36,6 +38,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <EmbeddedResource Remove="frmUserManage.resx" />
     <EmbeddedResource Remove="frmUserOnline.resx" />
   </ItemGroup>
 

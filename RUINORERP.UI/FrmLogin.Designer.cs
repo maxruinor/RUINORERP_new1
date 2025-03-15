@@ -162,9 +162,9 @@
             this.txtServerIP.AccessibleName = "";
             this.txtServerIP.AutoCompleteMode = System.Windows.Forms.AutoCompleteMode.SuggestAppend;
             this.txtServerIP.AutoCompleteSource = System.Windows.Forms.AutoCompleteSource.CustomSource;
-            this.txtServerIP.Location = new System.Drawing.Point(51, 18);
+            this.txtServerIP.Location = new System.Drawing.Point(69, 18);
             this.txtServerIP.Name = "txtServerIP";
-            this.txtServerIP.Size = new System.Drawing.Size(96, 21);
+            this.txtServerIP.Size = new System.Drawing.Size(110, 21);
             this.txtServerIP.TabIndex = 17;
             this.txtServerIP.Text = "192.168.0.254";
             this.txtServerIP.TextChanged += new System.EventHandler(this.txtServerIP_TextChanged);
@@ -172,7 +172,7 @@
             // chkSelectServer
             // 
             this.chkSelectServer.AutoSize = true;
-            this.chkSelectServer.Location = new System.Drawing.Point(347, 308);
+            this.chkSelectServer.Location = new System.Drawing.Point(365, 308);
             this.chkSelectServer.Name = "chkSelectServer";
             this.chkSelectServer.Size = new System.Drawing.Size(84, 16);
             this.chkSelectServer.TabIndex = 18;
@@ -199,7 +199,7 @@
             this.txtPort.AccessibleName = "";
             this.txtPort.AutoCompleteMode = System.Windows.Forms.AutoCompleteMode.SuggestAppend;
             this.txtPort.AutoCompleteSource = System.Windows.Forms.AutoCompleteSource.CustomSource;
-            this.txtPort.Location = new System.Drawing.Point(200, 18);
+            this.txtPort.Location = new System.Drawing.Point(253, 18);
             this.txtPort.Name = "txtPort";
             this.txtPort.Size = new System.Drawing.Size(46, 21);
             this.txtPort.TabIndex = 20;
@@ -208,16 +208,16 @@
             // lblIP
             // 
             this.lblIP.AutoSize = true;
-            this.lblIP.Location = new System.Drawing.Point(22, 22);
+            this.lblIP.Location = new System.Drawing.Point(10, 22);
             this.lblIP.Name = "lblIP";
-            this.lblIP.Size = new System.Drawing.Size(23, 12);
+            this.lblIP.Size = new System.Drawing.Size(53, 12);
             this.lblIP.TabIndex = 23;
-            this.lblIP.Text = "IP:";
+            this.lblIP.Text = "IP/域名:";
             // 
             // lblPort
             // 
             this.lblPort.AutoSize = true;
-            this.lblPort.Location = new System.Drawing.Point(159, 22);
+            this.lblPort.Location = new System.Drawing.Point(212, 22);
             this.lblPort.Name = "lblPort";
             this.lblPort.Size = new System.Drawing.Size(35, 12);
             this.lblPort.TabIndex = 24;
@@ -229,9 +229,9 @@
             this.gbIPPort.Controls.Add(this.lblPort);
             this.gbIPPort.Controls.Add(this.txtServerIP);
             this.gbIPPort.Controls.Add(this.lblIP);
-            this.gbIPPort.Location = new System.Drawing.Point(71, 285);
+            this.gbIPPort.Location = new System.Drawing.Point(43, 285);
             this.gbIPPort.Name = "gbIPPort";
-            this.gbIPPort.Size = new System.Drawing.Size(262, 49);
+            this.gbIPPort.Size = new System.Drawing.Size(316, 49);
             this.gbIPPort.TabIndex = 25;
             this.gbIPPort.TabStop = false;
             this.gbIPPort.Text = "服务器信息";

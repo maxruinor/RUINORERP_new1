@@ -637,6 +637,11 @@ namespace RUINORERP.UI
                         }
                     }
 
+                    if (MainForm.Instance.AppContext.CanUsefunctionModules == null)
+                    {
+                        MainForm.Instance.AppContext.CanUsefunctionModules = new List<GlobalFunctionModule>();
+                    }
+
                     #endregion
                     //这里做一个事件。缓存中的变化了。这里也变化一下。todo:
                     try
@@ -1297,8 +1302,8 @@ namespace RUINORERP.UI
             {
                 this.SystemOperatorState.Text = "注销";
                 Program.AppContextData.IsOnline = false;
-                MainForm.Instance.AppContext.CurrentUser.授权状态 = false;
-                MainForm.Instance.AppContext.CurrentUser.在线状态 = false;
+                //MainForm.Instance.AppContext.CurrentUser.授权状态 = false;
+                MainForm.Instance.AppContext.CurrentUser.在线状态 = ecs.IsConnected;
                 ClearUI();
                 ClearRoles();
                 System.GC.Collect();
@@ -2310,7 +2315,7 @@ namespace RUINORERP.UI
                 }
                 catch (Exception)
                 {
-                
+
                 }
             }
         }
@@ -2656,7 +2661,7 @@ namespace RUINORERP.UI
                             }
                         }
 
-                        if (info != null && oldlist.Count == 0 || oldlist.Count != info.CacheCount)
+                        if (info != null && (oldlist.Count == 0 || oldlist.Count != info.CacheCount))
                         {
                             needRequestCache = true;
                         }

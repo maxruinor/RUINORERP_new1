@@ -1152,6 +1152,7 @@
     <Compile Include="Common\UIForKryptonHelper.cs" />
     <Compile Include="Common\UIBaseTool.cs" />
     <Compile Include="Common\UIBizSrvice.cs" />
+    <Compile Include="Common\Network.Ext.cs" />
     <Compile Include="CRM\DockUI\UCCRMContact.cs">
       <SubType>UserControl</SubType>
     </Compile>

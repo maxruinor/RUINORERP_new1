@@ -26,6 +26,7 @@ using RUINORERP.Model.TransModel;
 using TransInstruction.CommandService;
 using FastReport.DevComponents.DotNetBar;
 using NPOI.POIFS.Crypt.Dsig;
+using NPOI.SS.Formula.Functions;
 
 namespace RUINORERP.UI.SuperSocketClient
 {
@@ -192,6 +193,10 @@ namespace RUINORERP.UI.SuperSocketClient
                 tx.PushInt64(MainForm.Instance.AppContext.CurrentUser.静止时间);//电脑空闲时间
                 tx.PushString(MainForm.Instance.AppContext.log.Path);
                 tx.PushString(MainForm.Instance.AppContext.log.ModName);
+                if (MainForm.Instance.ecs != null && MainForm.Instance.AppContext.CurrentUser.在线状态 != MainForm.Instance.ecs.IsConnected)
+                {
+                    MainForm.Instance.AppContext.CurrentUser.在线状态 = MainForm.Instance.ecs.IsConnected;
+                }
                 tx.PushBool(MainForm.Instance.AppContext.CurrentUser.在线状态);
                 tx.PushBool(MainForm.Instance.AppContext.CurrentUser.授权状态);
                 tx.PushString(System.DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));//客户端时间，用来对比服务器的时间，如果多个客户端时间与服务器不一样。则服务器有问题。相差一个小时以上。就直接断开客户端
@@ -654,7 +659,9 @@ namespace RUINORERP.UI.SuperSocketClient
 
                             break;
                         case ServerCmdEnum.心跳回复:
-                            ClientService.接收服务器心跳回复(od);
+                            int aaa = 0;
+
+                            //ClientService.接收服务器心跳回复(od);
                             break;
                         default:
                             break;

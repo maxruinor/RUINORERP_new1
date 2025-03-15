@@ -105,7 +105,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
                         lblMonthlyCustomer.Text = "本月新增客户:" + NewCustomerQty.ToString("##,###0个");
 
                         //如果CRM启用了
-                        if (MainForm.Instance.AppContext.CanUsefunctionModules.Contains(Global.GlobalFunctionModule.客户管理系统CRM))
+                        if (MainForm.Instance.AppContext.CanUsefunctionModules != null && MainForm.Instance.AppContext.CanUsefunctionModules.Contains(Global.GlobalFunctionModule.客户管理系统CRM))
                         {
                             //本月新增线索数
                             lblMonthly商机.Text = string.Empty;
@@ -142,7 +142,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
 
                     }
 
-                    
+
 
 
                 }
@@ -155,7 +155,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
                 //检测CRM如果没有购买则不会显示
                 if (MainForm.Instance.AppContext.CanUsefunctionModules.Contains(Global.GlobalFunctionModule.客户管理系统CRM))
                 {
-                    
+
                 }
                 #endregion
 

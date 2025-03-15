@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace RUINORERP.Model.CommonModel
@@ -235,20 +236,38 @@ namespace RUINORERP.Model.CommonModel
             }
         }
 
+
+        private readonly object _lock = new object();
+
         /// <summary>
         /// 登陆成功 的正常状态
         /// </summary>
         public bool 授权状态
         {
-            get => _serverAuthentication;
-            set
+            get
             {
-                if (_serverAuthentication != value)
+                lock (_lock)
                 {
-                    _serverAuthentication = value;
-                    OnPropertyChanged(nameof(授权状态));
+                    return _serverAuthentication;
                 }
             }
+            set
+            {
+                lock (_lock)
+                {
+                    if (_serverAuthentication != value)
+                    {
+                        _serverAuthentication = value;
+                        //Console.WriteLine($"授权状态 changed to {value}. StackTrace: {new System.Diagnostics.StackTrace()}");
+                        Console.WriteLine($"AuthorizationStatus set to {value} by Thread ID: {Thread.CurrentThread.ManagedThreadId}");
+                        //Console.WriteLine($"Call Stack: {Environment.StackTrace}");
+
+                        OnPropertyChanged(nameof(授权状态));
+                    }
+                }
+            }
+
+            
         }
 
         public event PropertyChangedEventHandler PropertyChanged;

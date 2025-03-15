@@ -1,4 +1,5 @@
 ﻿using RUINORERP.Model;
+using RUINORERP.Model.TransModel;
 using RUINORERP.Server.BizService;
 using RUINORERP.Server.ServerSession;
 using System;
@@ -42,6 +43,9 @@ namespace RUINORERP.Server.CommandService
             try
             {
                 ByteBuff tx = new ByteBuff(100);
+                string sendtime = System.DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+                tx.PushString(sendtime);
+                tx.PushInt((int)LoginProcessType.登陆回复);
                 if (arg2.user != null)
                 {
                     tx.PushBool(arg1);
@@ -54,7 +58,8 @@ namespace RUINORERP.Server.CommandService
                 {
                     tx.PushBool(arg1);
                 }
-                arg2.RequestSession.AddSendData((byte)ServerCmdEnum.用户登陆回复, null, tx.toByte());
+                //arg2.RequestSession.AddSendData((byte)ServerCmdEnum.用户登陆回复, null, tx.toByte());
+                arg2.RequestSession.AddSendData((byte)ServerCmdEnum.复合型登陆处理, null, tx.toByte());
                 UserService.发送在线列表(arg2.RequestSession);
                 UserService.发送缓存信息列表(arg2.RequestSession);
 

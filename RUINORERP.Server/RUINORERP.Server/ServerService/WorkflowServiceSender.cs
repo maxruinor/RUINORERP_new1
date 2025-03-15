@@ -39,7 +39,7 @@ namespace RUINORERP.Server.ServerService
             }
           
         }
-
+        /*
         public static bool 通知事件(SessionforBiz PlayerSession, tb_UserInfo user)
         {
             bool rs = false;
@@ -73,7 +73,7 @@ namespace RUINORERP.Server.ServerService
             return rs;
         }
 
-
+        */
 
 
     }

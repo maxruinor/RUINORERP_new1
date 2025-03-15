@@ -127,6 +127,9 @@ namespace RUINORERP.UI
             {
                 chksaveIDpwd.Checked = false;
             }
+
+            Console.WriteLine($"UI: {Thread.CurrentThread.ManagedThreadId}");
+
             MainForm.Instance.AppContext.CurrentUser.授权状态 = false;
             txtUserName.Focus();
         }
@@ -211,7 +214,6 @@ namespace RUINORERP.UI
                                 }
                                 else
                                 {
-                                    MainForm.Instance.AppContext.CurrentUser.授权状态 = true;
                                     MainForm.Instance.AppContext.CurrentUser.在线状态 = true;
                                 }
 
@@ -253,7 +255,6 @@ namespace RUINORERP.UI
                             UserGlobalConfig.Instance.IsSupperUser = Program.AppContextData.IsSuperUser;
                             UserGlobalConfig.Instance.AutoRminderUpdate = chkAutoReminderUpdate.Checked;
                             UserGlobalConfig.Instance.Serialize();
-                            MainForm.Instance.AppContext.CurrentUser.授权状态 = true;
                             //先指定一下服务器IP
                             //BizCodeGenerator.Instance.RedisServerIP = UserGlobalConfig.Instance.ServerIP;
                             Program.AppContextData.IsOnline = true;

@@ -36,9 +36,24 @@ namespace TransInstruction.CommandService
 
     public enum LoginProcessType
     {
-        登陆,
+        /// <summary>
+        /// 用户向服务器发送登陆请求
+        /// </summary>
+        用户登陆,
+
+        /// <summary>
+        /// 用户收到服务器的数据包
+        /// </summary>
         登陆回复,
+
+        /// <summary>
+        /// 告诉用户重复登陆
+        /// </summary>
         已经在线,
+
+        /// <summary>
+        /// 告诉用户超过限制了
+        /// </summary>
         超过限制,
     }
 

@@ -103,6 +103,9 @@ namespace RUINORERP.UI.SuperSocketClient
         static System.Timers.Timer timer = null;
         public EasyClientService()
         {
+
+            Console.WriteLine($"EasyClientService  Thread ID: {Thread.CurrentThread.ManagedThreadId}");
+
             _stopThreadEvent = new AutoResetEvent(false);
             client = new EasyClient<BizPackageInfo>();
 
@@ -124,6 +127,7 @@ namespace RUINORERP.UI.SuperSocketClient
                         if (MainForm.Instance.AppContext.CurUserInfo != null)
                         {
                             OriginalData beatData = HeartbeatCmdBuilder();
+                            Console.WriteLine($"心跳 Thread ID: {Thread.CurrentThread.ManagedThreadId}");
                             MainForm.Instance.ecs.AddSendData(beatData);
                         }
                     }
@@ -198,6 +202,9 @@ namespace RUINORERP.UI.SuperSocketClient
                     MainForm.Instance.AppContext.CurrentUser.在线状态 = MainForm.Instance.ecs.IsConnected;
                 }
                 tx.PushBool(MainForm.Instance.AppContext.CurrentUser.在线状态);
+
+                Console.WriteLine($"esc: {Thread.CurrentThread.ManagedThreadId}");
+
                 tx.PushBool(MainForm.Instance.AppContext.CurrentUser.授权状态);
                 tx.PushString(System.DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));//客户端时间，用来对比服务器的时间，如果多个客户端时间与服务器不一样。则服务器有问题。相差一个小时以上。就直接断开客户端
                 gd.cmd = (byte)ClientCmdEnum.客户端心跳包;
@@ -508,6 +515,12 @@ namespace RUINORERP.UI.SuperSocketClient
                     }
                     switch (serverCmd)
                     {
+                        case ServerCmdEnum.复合型登陆处理:
+                            var loginCommand = new RequestLoginCommand(CmdOperation.Receive);
+                            loginCommand.DataPacket = od;
+                            MainForm.Instance.dispatcher.DispatchAsync(loginCommand, CancellationToken.None);
+                            break;
+
                         case ServerCmdEnum.复合型实体处理:
                             RequestReceiveEntityCmd ReceiverEntityCmd = new RequestReceiveEntityCmd(CmdOperation.Receive);
                             ReceiverEntityCmd.DataPacket = od;
@@ -528,18 +541,7 @@ namespace RUINORERP.UI.SuperSocketClient
                             LockCommand.DataPacket = od;
                             MainForm.Instance.dispatcher.DispatchAsync(LockCommand, CancellationToken.None);
                             break;
-                        //case ServerCmdEnum.转发单据锁定:
-                        //    //单个实例
-                        //    ClientService.接收转发单据锁定(od);
-                        //    break;
-                        //case ServerCmdEnum.转发单据锁定释放:
-                        //    //单个实例
-                        //    ClientService.接收转发单据锁定释放(od);
-                        //    break;
-                        //case ServerCmdEnum.根据锁定用户释放:
-                        //    //单个实例
-                        //    ClientService.接收根据锁定用户释放(od);
-                        //    break;
+
                         case ServerCmdEnum.转发更新动态配置:
                             //单个实例
                             ClientService.接收转发更新动态配置(od);
@@ -574,14 +576,14 @@ namespace RUINORERP.UI.SuperSocketClient
                         case ServerCmdEnum.通知相关人员审批完成:
                             WorkflowService.接收服务器审核完成通知(od);
                             break;
-                        case ServerCmdEnum.用户登陆回复:
-                            bool Successed = ClientService.用户登陆回复(od);
-                            LoginStatus = Successed;
-                            Program.AppContextData.IsOnline = Successed;
-                            break;
-                        case ServerCmdEnum.回复用户重复登陆:
-                            Program.AppContextData.AlreadyLogged = ClientService.接收回复用户重复登陆(od);
-                            break;
+                        //case ServerCmdEnum.用户登陆回复:
+                        //    bool Successed = ClientService.用户登陆回复(od);
+                        //    LoginStatus = Successed;
+                        //    Program.AppContextData.IsOnline = Successed;
+                        //    break;
+                        //case ServerCmdEnum.回复用户重复登陆:
+                        //    Program.AppContextData.AlreadyLogged = ClientService.接收回复用户重复登陆(od);
+                        //    break;
                         case ServerCmdEnum.发送在线列表:
                             ClientService.接收在线用户列表(od);
                             break;
@@ -659,8 +661,7 @@ namespace RUINORERP.UI.SuperSocketClient
 
                             break;
                         case ServerCmdEnum.心跳回复:
-                            int aaa = 0;
-
+                            //客户端发送到服务器。 不再返回。将来看是否需要
                             //ClientService.接收服务器心跳回复(od);
                             break;
                         default:

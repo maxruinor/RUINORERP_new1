@@ -253,6 +253,7 @@ namespace RUINORERP.UI.SysConfig
                 if (item.Name == "Inv_Cost" ||
                     item.Name == "ProdDetailID"
                     || item.Name == "Quantity"
+                      || item.Name == "SKU"
                     || item.Name == "Notes")
                 {
                     item.Visible = true;
@@ -268,10 +269,12 @@ namespace RUINORERP.UI.SysConfig
                     if (item.Name == "Quantity")
                     {
                         item.HeaderText = "数量";
+                        item.Width = 60;
                     }
-                    if (item.Name == "Quantity")
+                    if (item.Name == "SKU")
                     {
-                        item.HeaderText = "数量";
+                        item.HeaderText = "SKU";
+                        item.Width = 100;
                     }
                     if (item.Name == "Notes")
                     {
@@ -442,7 +445,6 @@ namespace RUINORERP.UI.SysConfig
                 if (obj != null && obj.GetType().Name != "Object" && obj is View_ProdDetail _prodDetail)
                 {
                     prodDetail = _prodDetail;
-                    txtSearchKey.Text = prodDetail.SKU;
                 }
             }
 
@@ -983,7 +985,15 @@ namespace RUINORERP.UI.SysConfig
                         item.Inv_SubtotalCostMoney = item.Inv_Cost * item.Quantity;
                         item.Notes += $"{System.DateTime.Now.ToString("yyyy-MM-dd")}成本修复为：{transPrice}";
                         updateInvList.Add(item);
-
+                    }
+                    else
+                    {
+                        item.CostMovingWA = targetCost;
+                        item.Inv_AdvCost = item.CostMovingWA;
+                        item.Inv_Cost = item.CostMovingWA;
+                        item.Inv_SubtotalCostMoney = item.Inv_Cost * item.Quantity;
+                        item.Notes += $"{System.DateTime.Now.ToString("yyyy-MM-dd")}成本修复为指定值：{targetCost}";
+                        updateInvList.Add(item);
                     }
                     if (chkTestMode.Checked)
                     {
@@ -2546,7 +2556,9 @@ namespace RUINORERP.UI.SysConfig
                     }
                 }
                 UpdateRelatedCost(inventories);
+                MainForm.Instance.ShowStatusText("更新关联成本完成。");
             }
+
         }
 
         private async void 更新库存成本数据ToolStripMenuItem_Click(object sender, EventArgs e)
@@ -2562,6 +2574,7 @@ namespace RUINORERP.UI.SysConfig
                     }
                 }
                 await UpdateInventoryCost(inventories);
+                MainForm.Instance.ShowStatusText("更新库存成本完成。");
             }
 
         }
@@ -2630,7 +2643,7 @@ namespace RUINORERP.UI.SysConfig
                     //只能操作一行库存数据
                     MessageBox.Show("一次只能操作一行库存数据", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
-
+                MainForm.Instance.ShowStatusText("库存成本更新为指定值完成。");
             }
         }
     }

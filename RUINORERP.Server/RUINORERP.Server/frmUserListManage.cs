@@ -109,6 +109,10 @@ namespace RUINORERP.Server
                 {
                     this.Invoke(new Action(SyncUserInfosFull));
                 }
+                else
+                {
+                    SyncUserInfosFull();
+                }
             }
         }
 
@@ -275,10 +279,8 @@ namespace RUINORERP.Server
                         break;
                         // 可以根据需要处理其他事件类型
                 }
-                //if (userInfos.Count == 0)
-                //{
-                //   // dataGridView1.Rows.Clear();
-                //}
+                
+                //如果listview中的数据不存在于userinfos中。UI上也要移除
 
             }
             catch (Exception ex)
@@ -290,22 +292,7 @@ namespace RUINORERP.Server
 
         }
 
-        //private void RemoveUserFromListView(UserInfo user)
-        //{
-        //    if (listView1.InvokeRequired)
-        //    {
-        //        listView1.Invoke(new Action(() => RemoveUserFromListView(user)));
-        //        return;
-        //    }
-
-        //    int index = userInfos.IndexOf(user);
-        //    if (index != -1)
-        //    {
-        //        userInfos.RemoveAt(index);
-        //        listView1.VirtualListSize = userInfos.Count;
-        //    }
-        //}
-
+   
 
         private void RemoveUserFromListView(UserInfo user)
         {

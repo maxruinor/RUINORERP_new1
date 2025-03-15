@@ -1169,6 +1169,7 @@ namespace RUINORERP.Business
             // ManufacturingOrder.t = MakingItemBom.LaborCost;
             ManufacturingOrder.MONO = BizCodeGenerator.Instance.GetBizBillNo(BizType.制令单);
             ManufacturingOrder.PDID = demand.PDID;
+
             ManufacturingOrder.PDNO = demand.PDNo;
             ManufacturingOrder.Location_ID = MakingItem.Location_ID;
             ManufacturingOrder.QuantityDelivered = 0;
@@ -1198,6 +1199,7 @@ namespace RUINORERP.Business
                         ManufacturingOrder.CustomerPartNo = saleOrderDetail.CustomerPartNo;
                     }
                 }
+                ManufacturingOrder.IsCustomizedOrder = demand.tb_productionplan.tb_saleorder.IsCustomizedOrder;
             }
 
             // ManufacturingOrder.PeopleQty = bom.PeopleQty * item.RecommendQty;
@@ -1288,10 +1290,10 @@ namespace RUINORERP.Business
             {
                 ManufacturingOrder.ApportionedCost = MakingItemBom.SelfApportionedCost * ManufacturingOrder.ManufacturingQty;
                 ManufacturingOrder.TotalManuFee = MakingItemBom.TotalSelfManuCost * ManufacturingOrder.ManufacturingQty;
-               
+
             }
             ManufacturingOrder.TotalProductionCost = ManufacturingOrder.TotalMaterialCost + ManufacturingOrder.ApportionedCost + ManufacturingOrder.TotalManuFee;
-           
+
             ManufacturingOrder.ApprovalOpinions = string.Empty;
             ManufacturingOrder.ApprovalResults = null;
             ManufacturingOrder.ApprovalStatus = null;

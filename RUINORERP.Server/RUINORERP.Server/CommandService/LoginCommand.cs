@@ -15,6 +15,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using TransInstruction;
 using TransInstruction.CommandService;
+using TransInstruction.DataPortal;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.StartPanel;
 
 namespace RUINORERP.Server.CommandService
@@ -60,7 +61,7 @@ namespace RUINORERP.Server.CommandService
                     {
                         switch (requestType)
                         {
-                            case LoginProcessType.登陆:
+                            case LoginProcessType.用户登陆:
                                 AnalyzeDataPacket(gd, RequestSession);
                                 bool success = await Login(Username, Password);
                                 if (success)
@@ -74,7 +75,7 @@ namespace RUINORERP.Server.CommandService
                                     var ExistSession = frmMain.Instance.sessionListBiz.Values.FirstOrDefault(c => c.User != null && !c.SessionID.Equals(RequestSession.SessionID) && c.User.用户名 == user.UserName);
                                     if (ExistSession != null)
                                     {
-                                        UserService.回复用户重复登陆(RequestSession, ExistSession);
+                                        回复用户重复登陆(RequestSession, ExistSession);
                                     }
                                     else
                                     {
@@ -228,6 +229,32 @@ namespace RUINORERP.Server.CommandService
             throw new NotImplementedException();
         }
 
+
+        public static bool 回复用户重复登陆(SessionforBiz PlayerSession, SessionforBiz ExistSessionforBiz = null)
+        {
+            bool rs = false;
+#pragma warning disable CS0168 // 声明了变量，但从未使用过
+            try
+            {
+                //PacketProcess pp = new PacketProcess(PlayerSession);
+                ByteBuff tx = new ByteBuff(100);
+
+                string sendtime = System.DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+                tx.PushString(sendtime);
+                tx.PushInt((int)LoginProcessType.已经在线);
+                rs = true;
+                tx.PushBool(rs);
+
+                PlayerSession.AddSendData((byte)ServerCmdEnum.复合型登陆处理, null, tx.toByte());
+                return rs;
+            }
+            catch (Exception ex)
+            {
+                rs = false;
+            }
+#pragma warning restore CS0168 // 声明了变量，但从未使用过
+            return rs;
+        }
 
 
 

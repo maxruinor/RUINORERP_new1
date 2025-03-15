@@ -134,6 +134,7 @@ namespace RUINORERP.UI.Common
             }
         }
 
+        [Obsolete]
         public async Task<bool> LoginServerByEasyClient11(EasyClientService _ecs, string userName, string password, CancellationToken cancellationToken)
         {
             bool rs = false;
@@ -179,15 +180,12 @@ namespace RUINORERP.UI.Common
 
 
 
-
-
                 //OriginalData od1 = ActionForClient.UserLogin(userName, password);
                 //byte[] buffer1 = CryptoProtocol.EncryptClientPackToServer(od1);
                 //_ecs.client.Send(buffer1);
 
-                RequestLoginCommand request = new RequestLoginCommand();
-                request.OperationType = CmdOperation.Send;
-                request.requestType = LoginProcessType.登陆;
+                RequestLoginCommand request = new RequestLoginCommand(CmdOperation.Send);
+                request.requestType = LoginProcessType.用户登陆;
                 request.Username = userName;
                 request.Password = password;
                 MainForm.Instance.dispatcher.DispatchAsync(request, cancellationToken);
@@ -203,7 +201,7 @@ namespace RUINORERP.UI.Common
             return rs;
         }
 
- 
+
         public async Task<bool> LoginServerByEasyClient(
             EasyClientService _ecs,
             string userName,
@@ -290,14 +288,14 @@ namespace RUINORERP.UI.Common
                 }
 
                 // 发送登录请求
-                var request = new RequestLoginCommand
+                var request = new RequestLoginCommand(CmdOperation.Send)
                 {
                     OperationType = CmdOperation.Send,
-                    requestType = LoginProcessType.登陆,
+                    requestType = LoginProcessType.用户登陆,
                     Username = userName,
                     Password = password
                 };
- 
+
                 MainForm.Instance.dispatcher.DispatchAsync(request, cancellationToken);
 
                 // 持久化配置
@@ -331,7 +329,7 @@ namespace RUINORERP.UI.Common
             };
         }
 
-  
+
         // 辅助方法：生成友好错误信息
         private static string GetFriendlyErrorMessage(Exception ex)
         {

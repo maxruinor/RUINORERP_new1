@@ -248,6 +248,7 @@ namespace RUINORERP.Model.CommonModel
             {
                 lock (_lock)
                 {
+                    Console.WriteLine($"读取  {_serverAuthentication} by Thread ID: {Thread.CurrentThread.ManagedThreadId}");
                     return _serverAuthentication;
                 }
             }
@@ -255,13 +256,14 @@ namespace RUINORERP.Model.CommonModel
             {
                 lock (_lock)
                 {
+                    _serverAuthentication = value;
+                    //Console.WriteLine($"授权状态 changed to {value}. StackTrace: {new System.Diagnostics.StackTrace()}");
+                    Console.WriteLine($"设置 set to {value} by Thread ID: {Thread.CurrentThread.ManagedThreadId}");
+                    //Console.WriteLine($"Call Stack: {Environment.StackTrace}");
+
                     if (_serverAuthentication != value)
                     {
-                        _serverAuthentication = value;
-                        //Console.WriteLine($"授权状态 changed to {value}. StackTrace: {new System.Diagnostics.StackTrace()}");
-                        Console.WriteLine($"AuthorizationStatus set to {value} by Thread ID: {Thread.CurrentThread.ManagedThreadId}");
-                        //Console.WriteLine($"Call Stack: {Environment.StackTrace}");
-
+                        Console.WriteLine($"授权状态: {Thread.CurrentThread.ManagedThreadId}");
                         OnPropertyChanged(nameof(授权状态));
                     }
                 }

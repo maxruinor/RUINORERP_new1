@@ -372,7 +372,6 @@ namespace RUINORERP.Server
                 #endregion
 
                 _logger.Error("ErrorError2233");
-                _logger.LogError("LogErrorLogError2233");
 
                 // var logger = new LoggerFactory().AddLog4Net().CreateLogger("logs");
                 //logger.LogError($"{DateTime.Now} LogError 日志");

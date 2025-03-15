@@ -196,6 +196,7 @@ namespace RUINORERP.Server.Commands
                             }
                             break;
 
+                            /*
                         case ClientCmdEnum.用户登陆:
                             _cache.Set("用户登陆", "用户登陆");
 
@@ -237,7 +238,7 @@ namespace RUINORERP.Server.Commands
 
 
                             break;
-
+                            */
                         case ClientCmdEnum.实时汇报异常:
                             foreach (var item in frmMain.Instance.sessionListBiz.ToArray())
                             {
@@ -488,7 +489,7 @@ namespace RUINORERP.Server.Commands
 
 
                     //回复是更新状态：包括在线用户列表
-                    UserService.回复心跳(PlayerSession);
+                    //UserService.回复心跳(PlayerSession);
 
                     #endregion
                 }

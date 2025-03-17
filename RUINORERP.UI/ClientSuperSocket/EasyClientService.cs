@@ -114,7 +114,7 @@ namespace RUINORERP.UI.SuperSocketClient
             client.NewPackageReceived += OnPackageReceived;
             client.Error += OnClientError;
             client.Closed += OnClientClosed;
-
+            //连上就需要做一些动作，如果登陆成功过的。
             //每10s发送一次心跳或尝试一次重连
             timer = new System.Timers.Timer(2000);
             timer.Elapsed += new System.Timers.ElapsedEventHandler((s, x) =>
@@ -127,7 +127,7 @@ namespace RUINORERP.UI.SuperSocketClient
                         if (MainForm.Instance.AppContext.CurUserInfo != null)
                         {
                             OriginalData beatData = HeartbeatCmdBuilder();
-                            Console.WriteLine($"心跳 Thread ID: {Thread.CurrentThread.ManagedThreadId}");
+                           Console.WriteLine($"心跳 Thread ID: {Thread.CurrentThread.ManagedThreadId}");
                             MainForm.Instance.ecs.AddSendData(beatData);
                         }
                     }
@@ -141,28 +141,10 @@ namespace RUINORERP.UI.SuperSocketClient
                 {
 
                 }
-                //断线重连
-
-                //else if (!client.IsConnected)
-                //{
-                //    try
-                //    {
-                //        Stop();
-                //    }
-                //    catch (Exception)
-                //    {
-                //    }
-                //    //client.Connect(new IPEndPoint(IPAddress.Parse("127.0.0.1"), port));
-                //    MainForm.Instance.uclog.AddLog("正在重新连接...");
-                //    Connect();
-                //    //client.Connect(new IPEndPoint(IPAddress.Parse(_Ip), _Port));
-                //}
-
-
-
             });
             timer.Enabled = true;
             timer.Start();
+
 
 
         }
@@ -203,7 +185,7 @@ namespace RUINORERP.UI.SuperSocketClient
                 }
                 tx.PushBool(MainForm.Instance.AppContext.CurrentUser.在线状态);
 
-                Console.WriteLine($"esc: {Thread.CurrentThread.ManagedThreadId}");
+                //Console.WriteLine($"esc: {Thread.CurrentThread.ManagedThreadId}");
 
                 tx.PushBool(MainForm.Instance.AppContext.CurrentUser.授权状态);
                 tx.PushString(System.DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));//客户端时间，用来对比服务器的时间，如果多个客户端时间与服务器不一样。则服务器有问题。相差一个小时以上。就直接断开客户端
@@ -769,32 +751,7 @@ namespace RUINORERP.UI.SuperSocketClient
             {
                 this.LoginStatus = true;
             }
-            //连上就需要做一些动作，如果登陆成功过的。
-            /*
-            if (this.LoginStatus == false)
-            {
-                try
-                {
-                    ServerAuthorizer serverAuthorizer = new ServerAuthorizer();
-                    await serverAuthorizer.LongRunningOperationAsync(this, UserGlobalConfig.Instance.UseName, UserGlobalConfig.Instance.PassWord, 5);
-                    UITools.SuperSleep(3000);
-                    if (this.LoginStatus)
-                    {
-                        MainForm.Instance.logger.LogInformation("成功登陆服务器");
-                    }
-                    else
-                    {
-                        MainForm.Instance.logger.LogInformation("验证失败或超时请重试");
-                    }
-                }
-                catch (Exception)
-                {
-
-
-                }
-            }
-            //获取用户列表
-            */
+            
             string msg = $"{System.Threading.Thread.CurrentThread.ManagedThreadId}连接成功{LoginStatus},{this.client.LocalEndPoint}";
             MainForm.Instance.uclog.AddLog(msg);
         }

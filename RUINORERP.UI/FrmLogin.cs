@@ -130,8 +130,9 @@ namespace RUINORERP.UI
 
             Console.WriteLine($"UI: {Thread.CurrentThread.ManagedThreadId}");
 
-            MainForm.Instance.AppContext.CurrentUser.授权状态 = false;
+            
             txtUserName.Focus();
+
         }
 
         static CancellationTokenSource source = new CancellationTokenSource();

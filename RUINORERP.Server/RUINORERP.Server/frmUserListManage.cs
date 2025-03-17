@@ -447,9 +447,6 @@ namespace RUINORERP.Server
             }
         }
 
-
-
-
         private void HandleForceLogout(UserInfo user)
         {
             if (frmMain.Instance.sessionListBiz.TryGetValue(user.SessionId, out SessionforBiz SB))
@@ -486,14 +483,11 @@ namespace RUINORERP.Server
                         MessageModel message = new MessageModel
                         {
                             msg = frm.Message,
-                            // 其他消息参数...
                         };
                         UserService.给客户端发消息实体(sb, message, frm.MustDisplay);
                     }
                 }
             }
-
-
         }
 
         private void HandlePushUpdate(UserInfo user)
@@ -540,6 +534,7 @@ namespace RUINORERP.Server
                 RemoveUserFromListView(user);
             }
         }
+        
         private void CleanupInactiveUsers()
         {
             //var inactiveUsers = userInfos.Where(u => u.静止时间 > 300).ToList();
@@ -549,20 +544,11 @@ namespace RUINORERP.Server
             //}
         }
 
-
-
-
-
-
         private void frmUserManage_FormClosing(object sender, FormClosingEventArgs e)
         {
             e.Cancel = true;
             this.Hide();
         }
-
-
-
-
 
 
         private void listView1_MouseClick(object sender, MouseEventArgs e)

@@ -99,9 +99,9 @@
             listView1.ContextMenuStrip = contextMenuStrip1;
             listView1.Dock = System.Windows.Forms.DockStyle.Fill;
             listView1.FullRowSelect = true;
-            listView1.Location = new System.Drawing.Point(0, 0);
+            listView1.Location = new System.Drawing.Point(0, 25);
             listView1.Name = "listView1";
-            listView1.Size = new System.Drawing.Size(1295, 450);
+            listView1.Size = new System.Drawing.Size(1295, 425);
             listView1.TabIndex = 1;
             listView1.UseCompatibleStateImageBehavior = false;
             listView1.View = System.Windows.Forms.View.Details;
@@ -132,8 +132,8 @@
             AutoScaleDimensions = new System.Drawing.SizeF(7F, 17F);
             AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             ClientSize = new System.Drawing.Size(1295, 450);
-            Controls.Add(toolStrip1);
             Controls.Add(listView1);
+            Controls.Add(toolStrip1);
             Name = "frmUserListManage";
             Text = "用户管理";
             FormClosing += frmUserManage_FormClosing;

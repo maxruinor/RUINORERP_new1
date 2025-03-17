@@ -42,24 +42,25 @@ namespace RUINORERP.UI.ClientCmdService
 
         public async Task ExecuteAsync(CancellationToken cancellationToken, object parameters = null)
         {
+            #region 执行方法
 
+            switch (OperationType)
+            {
+                case CmdOperation.Send:
+                    BuildDataPacket();
+                    break;
+                case CmdOperation.Receive:
+                    AnalyzeDataPacket(DataPacket);
+                    break;
+                default:
+                    break;
+            }
+
+            #endregion
             await Task.Run(
                () =>
             {
-                #region 执行方法
-
-                switch (OperationType)
-                {
-                    case CmdOperation.Send:
-                        BuildDataPacket();
-                        break;
-                    case CmdOperation.Receive:
-                        AnalyzeDataPacket(DataPacket);
-                        break;
-                    default:
-                        break;
-                }
-                #endregion
+            
             }
                ,
             cancellationToken
@@ -110,6 +111,7 @@ namespace RUINORERP.UI.ClientCmdService
                     #region
                     try
                     {
+                        //MainForm.Instance.AppContext.CurrentUser.授权状态 = false;
                         bool isSuccess = ByteDataAnalysis.Getbool(gd.Two, ref index);
                         if (isSuccess)
                         {

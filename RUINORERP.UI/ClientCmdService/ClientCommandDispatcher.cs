@@ -49,7 +49,7 @@ namespace RUINORERP.UI.ClientCmdService
         /// </summary>
         /// <param name="command"></param>
         /// <exception cref="InvalidOperationException"></exception>
-        public async void DispatchAsync(IClientCommand command, CancellationToken cancellationToken , object parameters = null)
+        public  void DispatchAsync(IClientCommand command, CancellationToken cancellationToken , object parameters = null)
         {
             if (_handlers.TryGetValue(command.GetType(), out var handler))
             {
@@ -70,7 +70,7 @@ namespace RUINORERP.UI.ClientCmdService
 
                 #endregion
                 // handler.ExecuteAsync(cancellationToken, parameters).GetAwaiter().GetResult();
-                await handler.ExecuteAsync(cancellationToken, parameters);
+                handler.ExecuteAsync(cancellationToken, parameters);
             }
             else
             {

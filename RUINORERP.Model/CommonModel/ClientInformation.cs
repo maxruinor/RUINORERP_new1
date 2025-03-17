@@ -189,7 +189,7 @@ namespace RUINORERP.Model.CommonModel
         private bool _online;
         private bool _IsSuperUser;
         private long _userID;
-        private bool _serverAuthentication;
+        private bool _serverAuthentication = true;
 
         /// <summary>
         /// 用户名表中的主键
@@ -248,7 +248,7 @@ namespace RUINORERP.Model.CommonModel
             {
                 lock (_lock)
                 {
-                    Console.WriteLine($"读取  {_serverAuthentication} by Thread ID: {Thread.CurrentThread.ManagedThreadId}");
+                    //Console.WriteLine($"读取  {_serverAuthentication} by Thread ID: {Thread.CurrentThread.ManagedThreadId}");
                     return _serverAuthentication;
                 }
             }
@@ -258,18 +258,18 @@ namespace RUINORERP.Model.CommonModel
                 {
                     _serverAuthentication = value;
                     //Console.WriteLine($"授权状态 changed to {value}. StackTrace: {new System.Diagnostics.StackTrace()}");
-                    Console.WriteLine($"设置 set to {value} by Thread ID: {Thread.CurrentThread.ManagedThreadId}");
+                   // Console.WriteLine($"设置 set to {value} by Thread ID: {Thread.CurrentThread.ManagedThreadId}");
                     //Console.WriteLine($"Call Stack: {Environment.StackTrace}");
 
                     if (_serverAuthentication != value)
                     {
-                        Console.WriteLine($"授权状态: {Thread.CurrentThread.ManagedThreadId}");
+                        //Console.WriteLine($"授权状态{_serverAuthentication}: {Thread.CurrentThread.ManagedThreadId}");
                         OnPropertyChanged(nameof(授权状态));
                     }
                 }
             }
 
-            
+
         }
 
         public event PropertyChangedEventHandler PropertyChanged;
@@ -280,9 +280,9 @@ namespace RUINORERP.Model.CommonModel
         }
     }
 
-   
 
- 
 
- 
+
+
+
 }

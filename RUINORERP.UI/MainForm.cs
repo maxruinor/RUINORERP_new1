@@ -1302,7 +1302,7 @@ namespace RUINORERP.UI
             {
                 this.SystemOperatorState.Text = "注销";
                 Program.AppContextData.IsOnline = false;
-                //MainForm.Instance.AppContext.CurrentUser.授权状态 = false;
+                MainForm.Instance.AppContext.CurrentUser.授权状态 = false;
                 MainForm.Instance.AppContext.CurrentUser.在线状态 = ecs.IsConnected;
                 ClearUI();
                 ClearRoles();

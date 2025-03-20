@@ -67,7 +67,7 @@ namespace RUINORERP.Model
             固定资产,
             合同管理,
             发票管理,
-        }
+        }   
 
         public enum 行政管理
         {

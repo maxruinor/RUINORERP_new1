@@ -731,7 +731,12 @@ namespace RUINORERP.UI.UCSourceGrid
                 //相当于当前的值清空。刚相关的也清空
                 foreach (SGDefineColumnItem item in this)
                 {
-                    int colRealIndex = this.grid.Columns.GetColumnInfo(item.UniqueId).Index;
+                    ColumnInfo columnInfo = this.grid.Columns.GetColumnInfo(item.UniqueId);
+                    if (columnInfo==null)
+                    {
+                        continue;
+                    }
+                    int colRealIndex = columnInfo.Index;
 
                     SourceGrid.Position pt = new Position(currPosition.Row, colRealIndex);
                     SourceGrid.CellContext processContext = new SourceGrid.CellContext(this.grid, pt);

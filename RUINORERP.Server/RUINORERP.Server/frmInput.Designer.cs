@@ -1,6 +1,6 @@
 ﻿namespace RUINORERP.Server
 {
-    partial class frmPasswordInput
+    partial class frmInput
     {
         /// <summary>
         /// Required designer variable.
@@ -28,17 +28,17 @@
         /// </summary>
         private void InitializeComponent()
         {
-            txtSupperPassword = new System.Windows.Forms.TextBox();
+            txtInputContent = new System.Windows.Forms.TextBox();
             btnOK = new System.Windows.Forms.Button();
             SuspendLayout();
             // 
-            // txtSupperPassword
+            // txtInputContent
             // 
-            txtSupperPassword.Location = new System.Drawing.Point(7, 18);
-            txtSupperPassword.Name = "txtSupperPassword";
-            txtSupperPassword.PasswordChar = '*';
-            txtSupperPassword.Size = new System.Drawing.Size(251, 23);
-            txtSupperPassword.TabIndex = 0;
+            txtInputContent.Location = new System.Drawing.Point(7, 18);
+            txtInputContent.Name = "txtInputContent";
+  
+            txtInputContent.Size = new System.Drawing.Size(251, 23);
+            txtInputContent.TabIndex = 0;
             // 
             // btnOK
             // 
@@ -50,22 +50,22 @@
             btnOK.UseVisualStyleBackColor = true;
             btnOK.Click += button1_Click;
             // 
-            // frmPasswordInput
+            // frmInput
             // 
             AutoScaleDimensions = new System.Drawing.SizeF(7F, 17F);
             AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             ClientSize = new System.Drawing.Size(391, 71);
             Controls.Add(btnOK);
-            Controls.Add(txtSupperPassword);
-            Name = "frmPasswordInput";
+            Controls.Add(txtInputContent);
+            Name = "frmInput";
+            StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             Text = "请输入超级密码";
             ResumeLayout(false);
             PerformLayout();
         }
 
         #endregion
-
-        private System.Windows.Forms.TextBox txtSupperPassword;
         private System.Windows.Forms.Button btnOK;
+        internal System.Windows.Forms.TextBox txtInputContent;
     }
 }

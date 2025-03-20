@@ -80,6 +80,20 @@ namespace RUINORERP.Model
             SetProperty(ref _ProdDetailID, value);
                         }
         }
+        private string _SKU;
+        /// <summary>
+        /// SKU
+        /// </summary>
+        [AdvQueryAttribute(ColName = "SKU", ColDesc = "SKU")]
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType = "String", ColumnName = "SKU", Length = 80, IsNullable = true, ColumnDescription = "SKU")]
+        public string SKU
+        {
+            get { return _SKU; }
+            set
+            {
+                SetProperty(ref _SKU, value);
+            }
+        }
 
         private int _Quantity= ((1));
         /// <summary>
@@ -95,18 +109,20 @@ namespace RUINORERP.Model
                         }
         }
 
-        private string _SKU;
+
+        private decimal _SaleUnitPrice=0m;
         /// <summary>
-        /// SKU
+        /// 销售单价
         /// </summary>
-        [AdvQueryAttribute(ColName = "SKU",ColDesc = "SKU")] 
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "SKU" ,Length=80,IsNullable = true,ColumnDescription = "SKU" )]
-        public string SKU
-        { 
-            get{return _SKU;}
-            set{
-            SetProperty(ref _SKU, value);
-                        }
+        [AdvQueryAttribute(ColName = "SaleUnitPrice", ColDesc = "销售单价")]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType = "Decimal", ColumnName = "SaleUnitPrice", DecimalDigits = 4, IsNullable = false, ColumnDescription = "销售单价")]
+        public decimal SaleUnitPrice
+        {
+            get { return _SaleUnitPrice; }
+            set
+            {
+                SetProperty(ref _SaleUnitPrice, value);
+            }
         }
 
         private string _property;

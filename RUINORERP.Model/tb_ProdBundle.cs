@@ -94,6 +94,21 @@ namespace RUINORERP.Model
                         }
         }
 
+        private int _TargetQty = 1;
+        /// <summary>
+        /// 目标数量
+        /// </summary>
+        [AdvQueryAttribute(ColName = "TargetQty", ColDesc = "目标数量")]
+        [SugarColumn(ColumnDataType = "int", SqlParameterDbType = "Int32", ColumnName = "TargetQty", DecimalDigits = 0, IsNullable = false, ColumnDescription = "目标数量")]
+        public int TargetQty
+        {
+            get { return _TargetQty; }
+            set
+            {
+                SetProperty(ref _TargetQty, value);
+            }
+        }
+
         private string _ImagesPath;
         /// <summary>
         /// 产品图片

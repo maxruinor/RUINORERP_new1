@@ -10,24 +10,22 @@ using System.Windows.Forms;
 
 namespace RUINORERP.Server
 {
-    public partial class frmPasswordInput : Form
+    public partial class frmInput : Form
     {
-        public frmPasswordInput()
+        public frmInput()
         {
             InitializeComponent();
+            
         }
+
+        private string _InputContent = string.Empty;
+
+        public string InputContent { get => _InputContent; set => _InputContent = value; }
 
         private void button1_Click(object sender, EventArgs e)
         {
-            if (txtSupperPassword.Text == "amwtjhwxf")
-            {
-                this.DialogResult = DialogResult.OK;
-                this.Close();
-            }
-            else
-            {
-                MessageBox.Show("密码错误");
-            }
+            InputContent = txtInputContent.Text;
+            this.DialogResult=DialogResult.OK;
         }
     }
 }

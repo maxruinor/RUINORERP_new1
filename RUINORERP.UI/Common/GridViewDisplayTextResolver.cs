@@ -116,7 +116,7 @@ namespace RUINORERP.UI.Common
 
 
 
-       
+
         // 初始化方法
         public void Initialize(DataGridView dataGridView)
         {
@@ -250,10 +250,13 @@ namespace RUINORERP.UI.Common
                 }
             }
 
-            if (_type.Name.Contains("View_")|| _type.Name.Contains("Proc_"))
+            if (_type.Name.Contains("View_") || _type.Name.Contains("Proc_"))
             {
+                //视图优先添加本身其次是关联表
+                List<Type> relatedTableTypes = new List<Type>();
+                relatedTableTypes.Add(_type);
                 //BaseViewEntity baseView = (BaseViewEntity)Activator.CreateInstance(_type);
-                var relatedTableTypes = GetRelatedTableTypes(_type);
+                relatedTableTypes.AddRange(GetRelatedTableTypes(_type));
                 foreach (var item in relatedTableTypes)
                 {
                     if (item.Name.Contains("tb_"))

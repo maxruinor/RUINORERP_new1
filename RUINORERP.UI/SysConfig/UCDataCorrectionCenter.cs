@@ -49,6 +49,7 @@ using NPOI.SS.Formula.Functions;
 using RUINORERP.UI.PSI.SAL;
 using HLH.WinControl.MyTypeConverter;
 using RUINORERP.UI.UserCenter.DataParts;
+using NPOI.POIFS.Properties;
 
 
 namespace RUINORERP.UI.SysConfig
@@ -718,6 +719,56 @@ namespace RUINORERP.UI.SysConfig
                 {
 
                 }
+
+                if (treeView1.SelectedNode.Text == "配方数量成本的检测")
+                {
+                    List<tb_BOM_S> bomupdatelist = new();
+                    #region 明细要等于主表中的数量的检测
+                    List<tb_BOM_S> BOM_Ss = MainForm.Instance.AppContext.Db.Queryable<tb_BOM_S>()
+                        .Includes(c => c.tb_BOM_SDetails)
+                       .ToList();
+                    foreach (tb_BOM_S bom in BOM_Ss.ToArray())
+                    {
+                        if (!bom.TotalMaterialQty.Equals(bom.tb_BOM_SDetails.Sum(c => c.UsedQty)))
+                        {
+                            richTextBoxLog.AppendText($"配方主次表数量不一致：{bom.BOM_ID}：{bom.BOM_No} new:{bom.tb_BOM_SDetails.Sum(c => c.UsedQty)} old{bom.TotalMaterialQty}" + "\r\n");
+                            bom.TotalMaterialQty = bom.tb_BOM_SDetails.Sum(c => c.UsedQty);
+                            bomupdatelist.Add(bom);
+                        }
+
+                        if (!bom.TotalMaterialCost.Equals(bom.tb_BOM_SDetails.Sum(c => c.SubtotalUnitCost)))
+                        {
+                           
+                            decimal diffpirce = Math.Abs(bom.tb_BOM_SDetails.Sum(c => c.SubtotalUnitCost) - bom.TotalMaterialCost);
+                            if (diffpirce > 0.2m && ComparePrice(bom.tb_BOM_SDetails.Sum(c => c.SubtotalUnitCost).ToDouble(), bom.TotalMaterialCost.ToDouble()) > 10)
+                            {
+                                richTextBoxLog.AppendText($"=====成本相差较大：{bom.BOM_ID}：{bom.BOM_No}   new {bom.tb_BOM_SDetails.Sum(c => c.SubtotalUnitCost)}  old {bom.TotalMaterialCost}" + "\r\n");
+                                richTextBoxLog.AppendText($"配方主次表材料成本不一致：{bom.BOM_ID}：{bom.BOM_No}   new {bom.tb_BOM_SDetails.Sum(c => c.SubtotalUnitCost)}  old {bom.TotalMaterialCost}" + "\r\n");
+                            }
+                            
+
+                            bom.TotalMaterialCost = bom.tb_BOM_SDetails.Sum(c => c.SubtotalUnitCost);
+                            bom.OutProductionAllCosts = bom.TotalMaterialCost + bom.TotalOutManuCost + bom.OutApportionedCost;
+                            bom.SelfProductionAllCosts = bom.TotalMaterialCost + bom.TotalSelfManuCost + bom.SelfApportionedCost;
+                            bomupdatelist.Add(bom);
+                        }
+                    }
+
+                    #endregion
+                    if (!chkTestMode.Checked)
+                    {
+                        int totalamountCounter = await MainForm.Instance.AppContext.Db.Updateable(bomupdatelist)
+                            .UpdateColumns(t => new
+                            {
+                                t.TotalMaterialQty,
+                                t.TotalMaterialCost,
+                                t.OutProductionAllCosts,
+                                t.SelfProductionAllCosts
+                            }).ExecuteCommandAsync();
+                        richTextBoxLog.AppendText($"修复配方数量成本的检测 修复成功：{totalamountCounter} " + "\r\n");
+                    }
+
+                }
                 if (treeView1.SelectedNode.Text == "销售数量与明细数量和的检测")
                 {
                     #region 销售订单数量与明细数量和的检测
@@ -1316,12 +1367,12 @@ namespace RUINORERP.UI.SysConfig
                                     {
                                         Detail.Cost = child.Inv_Cost;
                                         Detail.SubtotalCostAmount = Detail.Cost * Detail.Quantity;
-                                        Detail.SubtotalTransAmount= Detail.TransactionPrice* Detail.Quantity;
-                                        if (Detail.TaxRate>0)
+                                        Detail.SubtotalTransAmount = Detail.TransactionPrice * Detail.Quantity;
+                                        if (Detail.TaxRate > 0)
                                         {
                                             Detail.SubtotalTaxAmount = Detail.SubtotalTransAmount / (1 + Detail.TaxRate) * Detail.TaxRate;
                                         }
-                                        Detail.SubtotalUntaxedAmount = Detail.SubtotalTransAmount-Detail.SubtotalTaxAmount;
+                                        Detail.SubtotalUntaxedAmount = Detail.SubtotalTransAmount - Detail.SubtotalTaxAmount;
 
                                     }
                                 }
@@ -1359,11 +1410,11 @@ namespace RUINORERP.UI.SysConfig
                                         }
                                     }
                                     SaleOut.TotalCost = SaleOut.tb_SaleOutDetails.Sum(c => c.SubtotalCostAmount);
-                                    SaleOut.TotalAmount= SaleOut.tb_SaleOutDetails.Sum(c => c.SubtotalTransAmount);
-                                    SaleOut.TotalQty= SaleOut.tb_SaleOutDetails.Sum(c => c.Quantity);
-                                    SaleOut.TotalTaxAmount= SaleOut.tb_SaleOutDetails.Sum(c => c.SubtotalTaxAmount);
-                                    SaleOut.TotalUntaxedAmount= SaleOut.tb_SaleOutDetails.Sum(c => c.SubtotalUntaxedAmount);
-                                        
+                                    SaleOut.TotalAmount = SaleOut.tb_SaleOutDetails.Sum(c => c.SubtotalTransAmount);
+                                    SaleOut.TotalQty = SaleOut.tb_SaleOutDetails.Sum(c => c.Quantity);
+                                    SaleOut.TotalTaxAmount = SaleOut.tb_SaleOutDetails.Sum(c => c.SubtotalTaxAmount);
+                                    SaleOut.TotalUntaxedAmount = SaleOut.tb_SaleOutDetails.Sum(c => c.SubtotalUntaxedAmount);
+
                                     richTextBoxLog.AppendText($"销售出库{SaleOut.SaleOutNo}总金额：{SaleOut.TotalCost} " + "\r\n");
                                     #region 销售退回
                                     if (SaleOut.tb_SaleOutRes != null)
@@ -1386,7 +1437,7 @@ namespace RUINORERP.UI.SysConfig
                                             }
                                             SaleOutRe.TotalAmount = SaleOutRe.tb_SaleOutReDetails.Sum(c => c.SubtotalTransAmount);
                                             SaleOutRe.TotalQty = SaleOutRe.tb_SaleOutReDetails.Sum(c => c.Quantity);
-                                            
+
                                             if (SaleOutRe.tb_SaleOutReRefurbishedMaterialsDetails != null)
                                             {
                                                 foreach (var Refurbished in SaleOutRe.tb_SaleOutReRefurbishedMaterialsDetails)
@@ -1398,7 +1449,7 @@ namespace RUINORERP.UI.SysConfig
                                                     }
                                                 }
                                             }
-                                            
+
 
                                             if (!chkTestMode.Checked)
                                             {
@@ -1634,7 +1685,8 @@ namespace RUINORERP.UI.SysConfig
         }
 
 
-        //写一个方法来实现两个价格的比较 前一个为原价，后一个为最新价格。求最新价格大于前的价格的百分比。价格是ecimal类型
+        //写一个方法来实现两个价格的比较 前一个为原价，后一个为最新价格。
+        //求最新价格大于前的价格的百分比。价格是decimal类型
         private double ComparePrice(double oldPrice, double newPrice)
         {
             if (oldPrice < 0 || newPrice < 0)

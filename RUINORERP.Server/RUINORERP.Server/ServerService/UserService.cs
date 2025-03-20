@@ -350,7 +350,8 @@ namespace RUINORERP.Server.BizService
 
                 string tableName = nameof(View_ProdDetail);
                 ByteBuff tx = new ByteBuff(200);
-                tx.PushString(System.DateTime.Now.ToString());
+                string sendtime = System.DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+                tx.PushString(sendtime);
                 tx.PushString(tableName);
                 tx.PushString(json);
 
@@ -374,7 +375,7 @@ namespace RUINORERP.Server.BizService
             {
                 Console.WriteLine($"BroadcastProdCatchData: {ex.Message}");
             }
-            
+
         }
 
         /// <summary>
@@ -473,50 +474,50 @@ namespace RUINORERP.Server.BizService
         }
         */
 
-//        /// <summary>
-//        /// 回复用户登陆受限，要么退出。要么T掉人家。自己上。
-//        /// </summary>
-//        /// <param name="PlayerSession"></param>
-//        /// <param name="ExistSessionforBiz"></param>
-//        /// <returns></returns>
-//        public static bool 回复用户登陆受限(SessionforBiz PlayerSession, SessionforBiz ExistSessionforBiz = null)
-//        {
-//            bool rs = false;
-//#pragma warning disable CS0168 // 声明了变量，但从未使用过
-//            try
-//            {
-//                //PacketProcess pp = new PacketProcess(PlayerSession);
-//                ByteBuff tx = new ByteBuff(100);
-//                if (ExistSessionforBiz == null)
-//                {
-//                    rs = false;
-//                    tx.PushBool(rs);
-//                }
-//                else
-//                {
-//                    if (ExistSessionforBiz.User != null)
-//                    {
-//                        rs = true;
-//                        tx.PushBool(rs);
-//                        tx.PushString(ExistSessionforBiz.User.SessionId);
-//                    }
-//                    else
-//                    {
-//                        rs = false;
-//                        tx.PushBool(rs);
-//                    }
-//                }
+        //        /// <summary>
+        //        /// 回复用户登陆受限，要么退出。要么T掉人家。自己上。
+        //        /// </summary>
+        //        /// <param name="PlayerSession"></param>
+        //        /// <param name="ExistSessionforBiz"></param>
+        //        /// <returns></returns>
+        //        public static bool 回复用户登陆受限(SessionforBiz PlayerSession, SessionforBiz ExistSessionforBiz = null)
+        //        {
+        //            bool rs = false;
+        //#pragma warning disable CS0168 // 声明了变量，但从未使用过
+        //            try
+        //            {
+        //                //PacketProcess pp = new PacketProcess(PlayerSession);
+        //                ByteBuff tx = new ByteBuff(100);
+        //                if (ExistSessionforBiz == null)
+        //                {
+        //                    rs = false;
+        //                    tx.PushBool(rs);
+        //                }
+        //                else
+        //                {
+        //                    if (ExistSessionforBiz.User != null)
+        //                    {
+        //                        rs = true;
+        //                        tx.PushBool(rs);
+        //                        tx.PushString(ExistSessionforBiz.User.SessionId);
+        //                    }
+        //                    else
+        //                    {
+        //                        rs = false;
+        //                        tx.PushBool(rs);
+        //                    }
+        //                }
 
-//                PlayerSession.AddSendData((byte)ServerCmdEnum.回复用户重复登陆, null, tx.toByte());
-//                return rs;
-//            }
-//            catch (Exception ex)
-//            {
-//                rs = false;
-//            }
-//#pragma warning restore CS0168 // 声明了变量，但从未使用过
-//            return rs;
-//        }
+        //                PlayerSession.AddSendData((byte)ServerCmdEnum.回复用户重复登陆, null, tx.toByte());
+        //                return rs;
+        //            }
+        //            catch (Exception ex)
+        //            {
+        //                rs = false;
+        //            }
+        //#pragma warning restore CS0168 // 声明了变量，但从未使用过
+        //            return rs;
+        //        }
 
         /// <summary>
         /// 有人上线掉线都要通知客户端 可以优化
@@ -715,7 +716,7 @@ namespace RUINORERP.Server.BizService
                 msg = Message,
                 // 其他消息参数...
             };
-            UserService.给客户端发消息实体(UserSession, message,false);
+            UserService.给客户端发消息实体(UserSession, message, false);
         }
         public static bool 转发消息结果(SessionforBiz PlayerSession)
         {
@@ -805,11 +806,12 @@ namespace RUINORERP.Server.BizService
             try
             {
                 ByteBuff tx = new ByteBuff(50);
-                tx.PushString(System.DateTime.Now.ToString());
+                string sendtime = System.DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+                tx.PushString(sendtime);
                 tx.PushString("强制用户退出");
                 tx.PushString(Message);
                 PlayerSession.AddSendData((byte)ServerCmdEnum.强制用户退出, null, tx.toByte());
-              
+
 
             }
             catch (Exception ex)
@@ -826,7 +828,8 @@ namespace RUINORERP.Server.BizService
             try
             {
                 ByteBuff tx = new ByteBuff(50);
-                tx.PushString(System.DateTime.Now.ToString());
+                string sendtime = System.DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+                tx.PushString(sendtime);
                 tx.PushString("删除列配置文件");
                 PlayerSession.AddSendData((byte)ServerCmdEnum.删除列的配置文件, null, tx.toByte());
             }
@@ -838,13 +841,34 @@ namespace RUINORERP.Server.BizService
 
         }
 
+        public static void 切换服务器(SessionforBiz PlayerSession, string IPPORT)
+        {
+#pragma warning disable CS0168 // 声明了变量，但从未使用过
+            try
+            {
+                ByteBuff tx = new ByteBuff(50);
+
+                string sendtime = System.DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+                tx.PushString(sendtime);
+                tx.PushString(IPPORT);
+                PlayerSession.AddSendData((byte)ServerCmdEnum.切换服务器, null, tx.toByte());
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("强制用户关机时出错" + ex.Message);
+            }
+#pragma warning restore CS0168 // 声明了变量，但从未使用过
+
+        }
+
         public static void 强制用户关机(SessionforBiz PlayerSession)
         {
 #pragma warning disable CS0168 // 声明了变量，但从未使用过
             try
             {
                 ByteBuff tx = new ByteBuff(50);
-                tx.PushString(System.DateTime.Now.ToString());
+                string sendtime = System.DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+                tx.PushString(sendtime);
                 tx.PushString("强制用户关机");
                 PlayerSession.AddSendData((byte)ServerCmdEnum.关机, null, tx.toByte());
             }
@@ -863,7 +887,8 @@ namespace RUINORERP.Server.BizService
             try
             {
                 ByteBuff tx = new ByteBuff(50);
-                tx.PushString(System.DateTime.Now.ToString());
+                string sendtime = System.DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+                tx.PushString(sendtime);
                 tx.PushString("你好，系统向您推送新的版本，需要您更新。");
                 PlayerSession.AddSendData((byte)ServerCmdEnum.推送版本更新, null, tx.toByte());
             }

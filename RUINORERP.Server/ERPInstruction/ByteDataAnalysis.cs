@@ -10,7 +10,7 @@ namespace TransInstruction
     {
         public static bool Getbool(byte[] buffer, ref int Index)
         {
-            if (buffer.Length <= Index)
+             if (buffer.Length <= Index)
                 throw new InvalidOperationException("Buffer underflow.");
 
             bool b = buffer[Index++] == 1;

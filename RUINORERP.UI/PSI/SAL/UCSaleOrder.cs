@@ -567,12 +567,13 @@ namespace RUINORERP.UI.PSI.SAL
                 MainForm.Instance.uclog.AddLog("请先使用新增或查询加载数据");
                 return;
             }
+            Summation();
+        }
+
+        private void Summation()
+        {
             try
             {
-                //if (EditEntity.actionStatus == ActionStatus.加载)
-                //{
-                //    return;
-                //}
                 //计算总金额  这些逻辑是不是放到业务层？后面要优化
                 List<tb_SaleOrderDetail> details = sgd.BindingSourceLines.DataSource as List<tb_SaleOrderDetail>;
                 details = details.Where(c => c.ProdDetailID > 0).ToList();
@@ -583,10 +584,8 @@ namespace RUINORERP.UI.PSI.SAL
                 }
                 EditEntity.TotalQty = details.Sum(c => c.Quantity);
                 EditEntity.TotalCost = details.Sum(c => c.Cost * c.Quantity);
-
                 EditEntity.TotalTaxAmount = details.Sum(c => c.SubtotalTaxAmount);
                 EditEntity.TotalUntaxedAmount = details.Sum(c => c.SubtotalUntaxedAmount);
-
                 EditEntity.TotalAmount = details.Sum(c => c.TransactionPrice * c.Quantity);
                 EditEntity.TotalAmount = EditEntity.TotalAmount + EditEntity.ShipCost;
                 EditEntity.CollectedMoney = EditEntity.TotalAmount;
@@ -598,6 +597,8 @@ namespace RUINORERP.UI.PSI.SAL
                 MainForm.Instance.uclog.AddLog("Sgh_OnCalculateColumnValue" + ex.Message);
             }
         }
+
+
 
         List<tb_SaleOrderDetail> details = new List<tb_SaleOrderDetail>();
         /// <summary>
@@ -642,7 +643,6 @@ namespace RUINORERP.UI.PSI.SAL
             List<tb_SaleOrderDetail> oldOjb = new List<tb_SaleOrderDetail>(details.ToArray());
 
             List<tb_SaleOrderDetail> detailentity = bindingSourceSub.DataSource as List<tb_SaleOrderDetail>;
-
 
             if (EditEntity.ActionStatus == ActionStatus.新增 || EditEntity.ActionStatus == ActionStatus.修改)
             {

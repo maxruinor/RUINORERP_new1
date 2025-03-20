@@ -50,7 +50,7 @@ namespace RUINORERP.UI.ProductEAV
         {
             InitializeComponent();
         }
-  
+
         internal override void LoadDataToUI(object Entity)
         {
             BindData(Entity as tb_ProdBundle);
@@ -105,7 +105,7 @@ namespace RUINORERP.UI.ProductEAV
             DataBindingHelper.BindData4TextBox<tb_ProdBundle>(entity, t => t.Description, txtDescription, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_ProdBundle>(entity, t => t.BundleName, txtBundleName, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_ProdBundle>(entity, t => t.BundleName, txtBundleName, BindDataType4TextBox.Text, false);
-
+            DataBindingHelper.BindData4TextBox<tb_ProdBundle>(entity, t => t.TargetQty, txtTargetQty, BindDataType4TextBox.Qty, false);
             DataBindingHelper.BindData4TextBox<tb_ProdBundle>(entity, t => t.Notes, txtDescription, BindDataType4TextBox.Text, false);
             if (entity.tb_ProdBundleDetails != null && entity.tb_ProdBundleDetails.Count > 0)
             {
@@ -124,14 +124,9 @@ namespace RUINORERP.UI.ProductEAV
                 lblPrintStatus.Text = $"打印{EditEntity.PrintStatus}次";
             }
 
-
-
-
             //如果属性变化 则状态为修改
             entity.PropertyChanged += (sender, s2) =>
             {
-                
-
                 //显示 打印状态 如果是草稿状态 不显示打印
                 if ((DataStatus)EditEntity.DataStatus != DataStatus.草稿)
                 {
@@ -179,7 +174,10 @@ namespace RUINORERP.UI.ProductEAV
             listCols.SetCol_NeverVisible<tb_ProdBundleDetail>(c => c.ProdDetailID);
             listCols.SetCol_NeverVisible<tb_ProdBundleDetail>(c => c.BundleChildID);
             listCols.SetCol_NeverVisible<tb_ProdBundleDetail>(c => c.BundleID);
-
+            listCols.SetCol_NeverVisible<ProductSharePart>(c => c.Location_ID);
+            listCols.SetCol_NeverVisible<ProductSharePart>(c => c.Rack_ID);
+            listCols.SetCol_NeverVisible<ProductSharePart>(c => c.Standard_Price);
+            listCols.SetCol_NeverVisible<ProductSharePart>(c => c.TransPrice);
 
             ControlChildColumnsInvisible(listCols);
             //实际在中间实体定义时加了只读属性，功能相同
@@ -187,7 +185,7 @@ namespace RUINORERP.UI.ProductEAV
             listCols.SetCol_ReadOnly<ProductSharePart>(c => c.Brand);
             listCols.SetCol_ReadOnly<ProductSharePart>(c => c.prop);
             listCols.SetCol_ReadOnly<ProductSharePart>(c => c.CNName);
-            //listCols.SetCol_ReadOnly<tb_ProdBundleDetail>(c => c.Qty);
+            //listCols.SetCol_ReadOnly<tb_ProdBundleDetail>(c => c.);
 
 
 
@@ -207,11 +205,8 @@ namespace RUINORERP.UI.ProductEAV
             //要放到初始化sgd后面
             listCols.SetCol_Summary<tb_ProdBundleDetail>(c => c.Quantity);
 
-
-
             sgh.SetPointToColumnPairs<ProductSharePart, tb_ProdBundleDetail>(sgd, f => f.prop, t => t.property);
-
-
+            sgh.SetPointToColumnPairs<ProductSharePart, tb_ProdBundleDetail>(sgd, f => f.Standard_Price, t => t.SaleUnitPrice);
 
             //应该只提供一个结构
             List<tb_ProdBundleDetail> lines = new List<tb_ProdBundleDetail>();
@@ -503,8 +498,8 @@ namespace RUINORERP.UI.ProductEAV
                 {
                     return false;
                 }
- 
-        
+
+
                 ReturnMainSubResults<tb_ProdBundle> SaveResult = new ReturnMainSubResults<tb_ProdBundle>();
                 if (NeedValidated)
                 {

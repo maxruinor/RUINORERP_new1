@@ -279,7 +279,7 @@ namespace RUINORERP.Server
                         break;
                         // 可以根据需要处理其他事件类型
                 }
-                
+
                 //如果listview中的数据不存在于userinfos中。UI上也要移除
 
             }
@@ -292,7 +292,7 @@ namespace RUINORERP.Server
 
         }
 
-   
+
 
         private void RemoveUserFromListView(UserInfo user)
         {
@@ -428,9 +428,31 @@ namespace RUINORERP.Server
                 case "关机":
                     HandleShutdown(user);
                     break;
+                case "切换服务器":
+                    HandleSwitchServer(user);
+                    break;
                 default:
                     break;
             }
+        }
+
+        private void HandleSwitchServer(UserInfo user)
+        {
+            frmInput frmInput = new frmInput();
+            frmInput.Text = "请输入服务器IP和端口，格式为 IP:端口";
+            frmInput.txtInputContent.Text = "192.168.0.254:3001";
+            if (frmInput.ShowDialog() == DialogResult.OK)
+            {
+                if (frmMain.Instance.sessionListBiz.TryGetValue(user.SessionId, out SessionforBiz sb))
+                {
+                    if (sb.State == SessionState.Connected)
+                    {
+                        UserService.切换服务器(sb, frmInput.InputContent);
+                    }
+                }
+            }
+
+
         }
 
         //----------- 子方法实现 -----------
@@ -534,7 +556,7 @@ namespace RUINORERP.Server
                 RemoveUserFromListView(user);
             }
         }
-        
+
         private void CleanupInactiveUsers()
         {
             //var inactiveUsers = userInfos.Where(u => u.静止时间 > 300).ToList();
@@ -583,6 +605,8 @@ namespace RUINORERP.Server
         {
             AddUserList();
         }
+
+
     }
 }
 

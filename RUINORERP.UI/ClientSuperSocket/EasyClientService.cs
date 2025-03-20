@@ -407,7 +407,7 @@ namespace RUINORERP.UI.SuperSocketClient
         //}
 
 
-        private async void OnClientClosed(object sender, EventArgs e)
+        public async void OnClientClosed(object sender, EventArgs e)
         {
 
             // 设置连接状态为断开
@@ -550,7 +550,9 @@ namespace RUINORERP.UI.SuperSocketClient
 
                         case ServerCmdEnum.未知指令:
                             break;
-
+                        case ServerCmdEnum.切换服务器:
+                            ClientService.接收切换服务器消息(od); 
+                            break;
                         case ServerCmdEnum.通知审批人审批:
                             //这里会弹出内容，没有实现具体功能前不生效
                             //WorkflowService.接收服务器审核通知(od);
@@ -704,7 +706,7 @@ namespace RUINORERP.UI.SuperSocketClient
             await Reconnect();
         }
 
-        private async Task<bool> Reconnect()
+        public async Task<bool> Reconnect()
         {
             bool connected = false;
             if (_isConnecting || _reconnectAttempts >= MaxReconnectAttempts)

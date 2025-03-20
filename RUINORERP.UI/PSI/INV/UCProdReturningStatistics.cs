@@ -1,5 +1,6 @@
 ﻿using RUINORERP.Business;
 using RUINORERP.Business.Processor;
+using RUINORERP.Business.Security;
 using RUINORERP.Global;
 using RUINORERP.Model;
 using RUINORERP.Model.ReportData;
@@ -78,7 +79,7 @@ namespace RUINORERP.UI.PSI.INV
                             //.And(t => t.isdeleted == false)
 
                             //.And(t => t.Is_enabled == true)
-
+                            .AndIF(AuthorizeController.GetOwnershipControl(MainForm.Instance.AppContext) && !MainForm.Instance.AppContext.IsSuperUser, t => t.Employee_ID == MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID)
                             .ToExpression();//注意 这一句 不能少
             base.LimitQueryConditions = lambda;
         }

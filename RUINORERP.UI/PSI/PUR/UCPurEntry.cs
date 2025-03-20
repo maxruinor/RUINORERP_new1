@@ -389,7 +389,9 @@ namespace RUINORERP.UI.PSI.PUR
                         return false;
                     }
                 }
-
+                EditEntity.TotalQty = details.Sum(c => c.Quantity);
+                EditEntity.TotalAmount = details.Sum(c => c.SubtotalAmount);
+                EditEntity.ActualAmount = EditEntity.TotalAmount + EditEntity.ShippingCost;
                 if (NeedValidated && !base.Validator<tb_PurEntryDetail>(details))
                 {
                     return false;

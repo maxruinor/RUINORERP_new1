@@ -615,9 +615,9 @@ namespace RUINORERP.UI.UCSourceGrid
             System.Windows.Forms.ToolStripMenuItem item = (System.Windows.Forms.ToolStripMenuItem)sender;
             SourceGridDefine _sgdefine = item.Tag as SourceGridDefine;
             SGDefineColumnItem selected = _sgdefine.DefineColumns.Find(c => c.ColName == "Selected");
-            int selectRealIndex = _sgdefine.grid.Columns.GetColumnInfo(selected.UniqueId).Index;
             if (selected != null)
             {
+                int selectRealIndex = _sgdefine.grid.Columns.GetColumnInfo(selected.UniqueId).Index;
                 List<int> deleteRows = new List<int>();
                 foreach (GridRow row in grid.Rows)
                 {

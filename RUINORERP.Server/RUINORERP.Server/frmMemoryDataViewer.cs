@@ -146,7 +146,8 @@ namespace RUINORERP.Server
 
                                 //这种可以写一个扩展方法
                                 ByteBuff tx = new ByteBuff(100);
-                                tx.PushString(System.DateTime.Now.ToString());
+                                string sendtime = System.DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+                                tx.PushString(sendtime);
                                 string json = JsonConvert.SerializeObject(exData,
                         new JsonSerializerSettings
                         {

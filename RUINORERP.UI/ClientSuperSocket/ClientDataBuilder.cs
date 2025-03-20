@@ -30,7 +30,8 @@ namespace RUINORERP.UI.SuperSocketClient
             try
             {
                 var tx = new ByteBuff(100);
-                tx.PushString(System.DateTime.Now.ToString());
+                string sendtime = System.DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+                tx.PushString(sendtime);
                 WorkflowBizType workflowBiz = WorkflowBizType.基础数据信息推送;
                 tx.PushInt((int)workflowBiz);
                 tx.PushString(TableName);
@@ -64,7 +65,8 @@ namespace RUINORERP.UI.SuperSocketClient
            {
                ReferenceLoopHandling = ReferenceLoopHandling.Ignore // 或 ReferenceLoopHandling.Serialize
            });
-                tx.PushString(System.DateTime.Now.ToString());
+                string sendtime = System.DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+                tx.PushString(sendtime);
                 tx.PushString(json);
                 //将来再加上提醒配置规则,或加在请求实体中
                 gd.cmd = (byte)ClientCmdEnum.工作流提醒请求;
@@ -92,7 +94,8 @@ namespace RUINORERP.UI.SuperSocketClient
                    {
                        ReferenceLoopHandling = ReferenceLoopHandling.Ignore // 或 ReferenceLoopHandling.Serialize
                    });
-                tx.PushString(System.DateTime.Now.ToString());
+                string sendtime = System.DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+                tx.PushString(sendtime);
                 tx.PushString(json);
                 //将来再加上提醒配置规则
 

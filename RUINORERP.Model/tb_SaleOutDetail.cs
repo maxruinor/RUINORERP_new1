@@ -139,6 +139,36 @@ namespace RUINORERP.Model
                         }
         }
 
+        private decimal _UnitPrice;
+        /// <summary>
+        /// 单价
+        /// </summary>
+        [AdvQueryAttribute(ColName = "UnitPrice", ColDesc = "单价")]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType = "Decimal", ColumnName = "UnitPrice", DecimalDigits = 4, IsNullable = false, ColumnDescription = "单价")]
+        public decimal UnitPrice
+        {
+            get { return _UnitPrice; }
+            set
+            {
+                SetProperty(ref _UnitPrice, value);
+            }
+        }
+
+        private decimal? _Discount;
+        /// <summary>
+        /// 折扣
+        /// </summary>
+        [AdvQueryAttribute(ColName = "Discount", ColDesc = "折扣")]
+        [SugarColumn(ColumnDataType = "decimal", SqlParameterDbType = "Decimal", ColumnName = "Discount", DecimalDigits = 3, IsNullable = true, ColumnDescription = "折扣")]
+        public decimal? Discount
+        {
+            get { return _Discount; }
+            set
+            {
+                SetProperty(ref _Discount, value);
+            }
+        }
+
         private decimal _TransactionPrice= ((0));
         /// <summary>
         /// 成交单价
@@ -294,33 +324,7 @@ namespace RUINORERP.Model
                         }
         }
 
-        private decimal _UnitPrice;
-        /// <summary>
-        /// 单价
-        /// </summary>
-        [AdvQueryAttribute(ColName = "UnitPrice",ColDesc = "单价")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "UnitPrice" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "单价" )]
-        public decimal UnitPrice
-        { 
-            get{return _UnitPrice;}
-            set{
-            SetProperty(ref _UnitPrice, value);
-                        }
-        }
-
-        private decimal? _Discount;
-        /// <summary>
-        /// 折扣
-        /// </summary>
-        [AdvQueryAttribute(ColName = "Discount",ColDesc = "折扣")] 
-        [SugarColumn(ColumnDataType = "decimal", SqlParameterDbType ="Decimal",  ColumnName = "Discount" , DecimalDigits = 3,IsNullable = true,ColumnDescription = "折扣" )]
-        public decimal? Discount
-        { 
-            get{return _Discount;}
-            set{
-            SetProperty(ref _Discount, value);
-                        }
-        }
+     
 
         private decimal _SubtotalUntaxedAmount;
         /// <summary>

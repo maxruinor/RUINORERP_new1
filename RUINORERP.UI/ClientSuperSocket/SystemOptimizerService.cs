@@ -19,7 +19,8 @@ namespace RUINORERP.UI.SuperSocketClient
             try
             {
                 var tx = new ByteBuff(100);
-                tx.PushString(System.DateTime.Now.ToString());
+                string sendtime = System.DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+                tx.PushString(sendtime);
                 if (MainForm.Instance.AppContext.CurUserInfo==null)
                 {
                     tx.PushString(MainForm.Instance.AppContext.SessionId);
@@ -64,7 +65,8 @@ namespace RUINORERP.UI.SuperSocketClient
             try
             {
                 var tx = new ByteBuff(100);
-                tx.PushString(System.DateTime.Now.ToString());
+                string sendtime = System.DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+                tx.PushString(sendtime);
                 tx.PushString(MainForm.Instance.AppContext.CurUserInfo.UserInfo.tb_employee.Employee_Name);
                 tx.PushString(MainForm.Instance.AppContext.log.MachineName);
                 tx.PushString(HLH.Lib.Net.IpAddressHelper.GetLocIP());

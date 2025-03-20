@@ -4,6 +4,7 @@ using FastReport.Table;
 using Fireasy.Common.Serialization;
 using Krypton.Navigator;
 using Microsoft.Extensions.Caching.Memory;
+using MySqlX.XDevAPI;
 using Netron.GraphLib;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -16,6 +17,7 @@ using RUINORERP.Model;
 using RUINORERP.Model.CommonModel;
 using RUINORERP.Model.TransModel;
 using RUINORERP.UI.BaseForm;
+using RUINORERP.UI.Common;
 using RUINORERP.UI.IM;
 using RUINORERP.UI.Log;
 using System;
@@ -131,7 +133,8 @@ namespace RUINORERP.UI.SuperSocketClient
             try
             {
                 ByteBuff tx = new ByteBuff(100);
-                tx.PushString(System.DateTime.Now.ToString());
+                string sendtime = System.DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+                tx.PushString(sendtime);
                 tx.PushString(UserName);
                 //排除自己当前的SessionId
                 tx.PushString(MainForm.Instance.AppContext.CurrentUser.SessionId);
@@ -161,7 +164,8 @@ namespace RUINORERP.UI.SuperSocketClient
             try
             {
                 ByteBuff tx = new ByteBuff(100);
-                tx.PushString(System.DateTime.Now.ToString());
+                string sendtime = System.DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+                tx.PushString(sendtime);
                 tx.PushString(userName);
                 //排除自己当前的SessionId
                 tx.PushString(MainForm.Instance.AppContext.CurrentUser.SessionId);
@@ -358,6 +362,68 @@ namespace RUINORERP.UI.SuperSocketClient
                 throw new InvalidOperationException("转换失败", ex);
             }
         }
+
+        public static async void 接收切换服务器消息(OriginalData gd)
+        {
+            try
+            {
+                int index = 0;
+                ByteBuff bg = new ByteBuff(gd.Two);
+                string sendtime = ByteDataAnalysis.GetString(gd.Two, ref index);
+                string IpPort = ByteDataAnalysis.GetString(gd.Two, ref index);
+                try
+                {
+                    string newIP = IpPort.Split(':')[0];
+                    int newport = IpPort.Split(':')[1].ObjToInt();
+
+                    if (MainForm.Instance.ecs == null)
+                    {
+                        MainForm.Instance.ecs = new EasyClientService();
+                    }
+                    if (MainForm.Instance.ecs.IsConnected)
+                    {
+                        MainForm.Instance.ecs.ServerIp = newIP;
+                        MainForm.Instance.ecs.Port = newport;
+                        MainForm.Instance.ecs.client.Closed -= MainForm.Instance.ecs.OnClientClosed;
+                        bool stop = await MainForm.Instance.ecs.Stop();
+                        if (stop)
+                        {
+                            bool connect = await MainForm.Instance.ecs.Reconnect();
+                            if (connect)
+                            {
+                                //进行登陆验证。逻辑上一定通过
+
+                                ServerAuthorizer serverAuthorizer = new ServerAuthorizer();
+                                bool result = await serverAuthorizer.loginRunningOperationAsync(MainForm.Instance.ecs, UserGlobalConfig.Instance.UseName, UserGlobalConfig.Instance.PassWord, 3);
+                                //UITools.SuperSleep(1000);
+                                if (result)
+                                {
+                                    UserGlobalConfig.Instance.ServerIP = newIP;
+                                    UserGlobalConfig.Instance.ServerPort = newport.ToString();
+                                    UserGlobalConfig.Instance.Serialize();
+                                    MainForm.Instance.PrintInfoLog("切换服务器成功");
+                                }
+                                else
+                                {
+                                    MainForm.Instance.PrintInfoLog("切换服务器失败");
+                                    MainForm.Instance.LogLock();
+                                }
+                            }
+                        }
+                        //bool connect = await MainForm.Instance.ecs.Connect();
+                    }
+                }
+                catch (Exception ex)
+                {
+
+                }
+
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance.PrintInfoLog("接收服务器提示消息:" + ex.Message);
+            }
+        }
         public static async void 接收服务器提示消息(OriginalData gd)
         {
             try
@@ -393,7 +459,7 @@ namespace RUINORERP.UI.SuperSocketClient
 
 
                     }
-                     
+
                 }
 
                 if (MustDisplay)

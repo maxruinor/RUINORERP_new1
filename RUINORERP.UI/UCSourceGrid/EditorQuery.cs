@@ -105,7 +105,6 @@ namespace RUINORERP.UI.UCSourceGrid
 
                 if (dg.ShowDialog() == DialogResult.OK)
                 {
-
                     Control.Tag = dg.prodQuery.QueryObjects;
                     Control.Value = dg.prodQuery.QueryValue;
                     if (dg.prodQuery.QueryObjects.Count > 1)

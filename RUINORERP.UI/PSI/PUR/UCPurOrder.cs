@@ -446,7 +446,7 @@ namespace RUINORERP.UI.PSI.PUR
                 */
 
                 EditEntity.TotalQty = details.Sum(c => c.Quantity);
-                //                EditEntity.TotalAmount = details.Sum(c => c.TransactionPrice * c.Quantity);
+                //EditEntity.TotalAmount = details.Sum(c => c.TransactionPrice * c.Quantity);
                 EditEntity.TotalAmount = details.Sum(c => c.SubtotalAmount);
                 EditEntity.ActualAmount = EditEntity.TotalAmount + EditEntity.ShippingCost;
             }
@@ -509,8 +509,9 @@ namespace RUINORERP.UI.PSI.PUR
                 {
                     return false;
                 }
-
-
+                EditEntity.TotalQty = details.Sum(c => c.Quantity);
+                EditEntity.TotalAmount = details.Sum(c => c.SubtotalAmount);
+                EditEntity.ActualAmount = EditEntity.TotalAmount + EditEntity.ShippingCost;
 
                 if (NeedValidated && EditEntity.TotalQty != details.Sum(c => c.Quantity))
                 {

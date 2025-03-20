@@ -199,6 +199,10 @@ namespace RUINORERP.UI.UserCenter
             {
                 centerConfig = MainForm.Instance.AppContext.WorkCenterConfigList.FirstOrDefault(c => c.RoleID == CurrentRole.RoleID);
             }
+            else if(string.IsNullOrEmpty(centerConfig.DataOverview))
+            {
+                centerConfig = MainForm.Instance.AppContext.WorkCenterConfigList.FirstOrDefault(c => c.RoleID == CurrentRole.RoleID);
+            }
             if (centerConfig != null)
             {
                 List<string> DataOverviewItems = centerConfig.DataOverview.Split(',').ToList();

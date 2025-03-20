@@ -231,15 +231,15 @@ namespace RUINORERP.Model
         }
 
         private decimal? _TransactionPrice;
-        
-        
+
+
         /// <summary>
-        /// 成交单价
+        /// 实际退款单价
         /// </summary>
 
-        [AdvQueryAttribute(ColName = "TransactionPrice",ColDesc = "成交单价")]
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "TransactionPrice" ,IsNullable = true,ColumnDescription = "成交单价" )]
-        [Display(Name = "成交单价")]
+        [AdvQueryAttribute(ColName = "TransactionPrice",ColDesc = "实际退款单价")]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "TransactionPrice" ,IsNullable = true,ColumnDescription = "实际退款单价")]
+        [Display(Name = "实际退款单价")]
         public decimal? TransactionPrice 
         { 
             get{return _TransactionPrice;}            set{                SetProperty(ref _TransactionPrice, value);                }

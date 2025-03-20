@@ -195,7 +195,8 @@ namespace RUINORERP.Server.ServerService
             try
             {
                 var tx = new ByteBuff(2 + 4);
-                tx.PushString(System.DateTime.Now.ToString());
+                       string sendtime = System.DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+                tx.PushString(sendtime);
                 tx.PushInt64(LockerUserID);
                 OriginalData gd = new OriginalData();
                 //  gd.cmd = (byte)ClientCmdEnum.单据锁定释放;

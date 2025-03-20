@@ -46,9 +46,9 @@ namespace RUINORERP.UI.MRP.BOM
 
             //是否能通过一两个主表，通过 外键去找多级关联的表？
             //base._UCBillMasterQuery.ColDisplayTypes.Add(typeof(View_ProdDetail));
-           // base._UCBillMasterQuery.ColDisplayTypes.Add(typeof(tb_BOM_S));
+            // base._UCBillMasterQuery.ColDisplayTypes.Add(typeof(tb_BOM_S));
             base._UCBillMasterQuery.ColDisplayTypes.Add(typeof(tb_ProductType));
-           
+
         }
 
 
@@ -197,7 +197,13 @@ namespace RUINORERP.UI.MRP.BOM
         public override void BuildSummaryCols()
         {
             base.MasterSummaryCols.Add(c => c.TotalMaterialQty);
-            base.MasterSummaryCols.Add(c => c.TotalMaterialQty);
+            base.MasterSummaryCols.Add(c => c.OutProductionAllCosts);
+            base.MasterSummaryCols.Add(c => c.SelfApportionedCost);
+            base.MasterSummaryCols.Add(c => c.SelfProductionAllCosts);
+            base.MasterSummaryCols.Add(c => c.TotalMaterialCost);
+            base.MasterSummaryCols.Add(c => c.TotalOutManuCost);
+            base.MasterSummaryCols.Add(c => c.TotalSelfManuCost);
+            base.ChildInvisibleCols.Add(c => c.SubtotalUnitCost);
         }
 
         public override void BuildInvisibleCols()
@@ -208,9 +214,9 @@ namespace RUINORERP.UI.MRP.BOM
             base.ChildInvisibleCols.Add(C => C.BOM_ID);
         }
 
-      
 
-    
+
+
 
     }
 }

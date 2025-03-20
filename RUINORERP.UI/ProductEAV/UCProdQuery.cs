@@ -1107,7 +1107,7 @@ namespace RUINORERP.UI.ProductEAV
                         //.ToExpression();
                         // int maxrow = int.Parse(txtMaxRows.Value.ToString());
                         // var list = dc.BaseQueryByWhereTop(GetQueryExp(), maxrow);
-
+                        //这里想将数量和销售单价带过去。目前传入的是产品视图。暂时将数量和单价放到产品视图中的库存和标准价中
 
 
                         var _detail_ids = bundle.tb_ProdBundleDetails.Select(x => new { x.ProdDetailID }).ToList();
@@ -1123,8 +1123,13 @@ namespace RUINORERP.UI.ProductEAV
                         details = MainForm.Instance.AppContext.Db.CopyNew().Queryable<View_ProdDetail>()
                         .Where(m => longids.ToArray().Contains(m.ProdDetailID)).ToList();
 
-                        foreach (var item in details)
+                        foreach (var item in details.ToArray())
                         {
+                            //找到数量和标准价
+                            var prodbundleDetail = bundle.tb_ProdBundleDetails.FirstOrDefault(c => c.ProdDetailID == item.ProdDetailID);
+                            item.Quantity = prodbundleDetail.Quantity;
+                            item.Standard_Price = prodbundleDetail.SaleUnitPrice;
+
                             QueryObjects.Add((View_ProdDetail)item);
                         }
 

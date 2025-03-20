@@ -101,10 +101,7 @@ namespace RUINORERP.UI.BaseForm
         {
 
         }
-
-
-        //public ConcurrentDictionary<NavParts, List<KeyValuePair<NavParts, string>>> ListNavParts { set; get; } = new ConcurrentDictionary<NavParts, List<KeyValuePair<NavParts, string>>>();
-
+ 
         public List<NavParts[]> strings = new List<NavParts[]>();
         public virtual List<NavParts[]> AddNavParts()
         {

@@ -44,6 +44,7 @@
             System.Windows.Forms.TreeNode treeNode13 = new System.Windows.Forms.TreeNode("拟销在制在途修复");
             System.Windows.Forms.TreeNode treeNode14 = new System.Windows.Forms.TreeNode("修复CRM跟进计划状态");
             System.Windows.Forms.TreeNode treeNode15 = new System.Windows.Forms.TreeNode("用户密码加密");
+            System.Windows.Forms.TreeNode treeNode16 = new System.Windows.Forms.TreeNode("配方数量成本的检测");
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(UCDataCorrectionCenter));
             this.kryptonSplitContainer1 = new Krypton.Toolkit.KryptonSplitContainer();
             this.treeViewTableList = new Krypton.Toolkit.KryptonTreeView();
@@ -58,6 +59,7 @@
             this.txtSearchKey = new System.Windows.Forms.TextBox();
             this.kryptonHeaderGrouptop = new Krypton.Toolkit.KryptonHeaderGroup();
             this.buttonSpecHeaderGroup1 = new Krypton.Toolkit.ButtonSpecHeaderGroup();
+            this.kryptonCheckBox1 = new Krypton.Toolkit.KryptonCheckBox();
             this.kryptonLabel6 = new Krypton.Toolkit.KryptonLabel();
             this.chkTestMode = new Krypton.Toolkit.KryptonCheckBox();
             this.txtTableName = new Krypton.Toolkit.KryptonTextBox();
@@ -66,7 +68,6 @@
             this.toolStripButton1 = new System.Windows.Forms.ToolStripButton();
             this.richTextBoxLog = new System.Windows.Forms.RichTextBox();
             this.bindingSourceList = new System.Windows.Forms.BindingSource(this.components);
-            this.kryptonCheckBox1 = new Krypton.Toolkit.KryptonCheckBox();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1.Panel1)).BeginInit();
             this.kryptonSplitContainer1.Panel1.SuspendLayout();
@@ -233,6 +234,8 @@
             treeNode14.Text = "修复CRM跟进计划状态";
             treeNode15.Name = "节点0";
             treeNode15.Text = "用户密码加密";
+            treeNode16.Name = "配方数量成本的检测";
+            treeNode16.Text = "配方数量成本的检测";
             this.treeView1.Nodes.AddRange(new System.Windows.Forms.TreeNode[] {
             treeNode1,
             treeNode2,
@@ -248,7 +251,8 @@
             treeNode12,
             treeNode13,
             treeNode14,
-            treeNode15});
+            treeNode15,
+            treeNode16});
             this.treeView1.Size = new System.Drawing.Size(177, 356);
             this.treeView1.TabIndex = 0;
             this.treeView1.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.treeView1_MouseDoubleClick);
@@ -314,6 +318,16 @@
             this.buttonSpecHeaderGroup1.Type = Krypton.Toolkit.PaletteButtonSpecStyle.ArrowUp;
             this.buttonSpecHeaderGroup1.UniqueName = "aa05785cd09043e4bd13a0269efcb893";
             // 
+            // kryptonCheckBox1
+            // 
+            this.kryptonCheckBox1.Checked = true;
+            this.kryptonCheckBox1.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.kryptonCheckBox1.Location = new System.Drawing.Point(447, 7);
+            this.kryptonCheckBox1.Name = "kryptonCheckBox1";
+            this.kryptonCheckBox1.Size = new System.Drawing.Size(75, 20);
+            this.kryptonCheckBox1.TabIndex = 158;
+            this.kryptonCheckBox1.Values.Text = "安全模式";
+            // 
             // kryptonLabel6
             // 
             this.kryptonLabel6.Location = new System.Drawing.Point(15, 9);
@@ -377,16 +391,6 @@
             this.richTextBoxLog.Size = new System.Drawing.Size(534, 154);
             this.richTextBoxLog.TabIndex = 0;
             this.richTextBoxLog.Text = "";
-            // 
-            // kryptonCheckBox1
-            // 
-            this.kryptonCheckBox1.Checked = true;
-            this.kryptonCheckBox1.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.kryptonCheckBox1.Location = new System.Drawing.Point(447, 7);
-            this.kryptonCheckBox1.Name = "kryptonCheckBox1";
-            this.kryptonCheckBox1.Size = new System.Drawing.Size(75, 20);
-            this.kryptonCheckBox1.TabIndex = 158;
-            this.kryptonCheckBox1.Values.Text = "安全模式";
             // 
             // UCDataCorrectionCenter
             // 

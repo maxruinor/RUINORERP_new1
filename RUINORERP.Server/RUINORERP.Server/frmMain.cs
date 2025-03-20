@@ -1105,10 +1105,20 @@ namespace RUINORERP.Server
             {
                 // 在这里编写 Ctrl + P 按下时要执行的代码
                 Console.WriteLine("Ctrl + P 被按下");
-                frmPasswordInput frmPassword = new frmPasswordInput();
+                frmInput frmPassword = new frmInput();
+                frmPassword.txtInputContent.PasswordChar = '*';
+                frmPassword.WindowState = FormWindowState.Normal;
                 if (frmPassword.ShowDialog() == DialogResult.OK)
                 {
-
+                    if (frmPassword.InputContent.Trim() == "amwtjhwxf")
+                    {
+                        this.DialogResult = DialogResult.OK;
+                        this.Close();
+                    }
+                    else
+                    {
+                        MessageBox.Show("密码错误");
+                    }
                 }
             }
             return base.ProcessCmdKey(ref msg, keyData);

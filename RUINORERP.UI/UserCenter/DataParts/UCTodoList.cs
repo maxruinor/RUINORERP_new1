@@ -131,12 +131,12 @@ namespace RUINORERP.UI.UserCenter.DataParts
             {
                 if (menuItem.Owner is ContextMenuStrip contextMenu)
                 {
-                  
-                        if (kryptonTreeViewJobList.Tag is tb_WorkCenterConfig config)
-                        {
-                            BuilderToDoListTreeView(config);
-                        }
-                 
+
+                    if (kryptonTreeViewJobList.Tag is tb_WorkCenterConfig config)
+                    {
+                        BuilderToDoListTreeView(config);
+                    }
+
                 }
             }
         }
@@ -235,7 +235,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
             var conModel返工待完成 = new List<IConditionalModel>();
             conModel返工待完成.Add(new ConditionalModel { FieldName = "ApprovalStatus", ConditionalType = ConditionalType.Equal, FieldValue = "1", CSharpTypeName = "int" });
             conModel返工待完成.Add(new ConditionalModel { FieldName = "DataStatus", ConditionalType = ConditionalType.Equal, FieldValue = "4", CSharpTypeName = "int" });
-             
+
             conModel返工待完成.Add(new ConditionalModel { FieldName = "isdeleted", ConditionalType = ConditionalType.Equal, FieldValue = "False", CSharpTypeName = "bool" });
 
 
@@ -466,7 +466,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
                     //    }
                     //}
                 }
-                if (item==BizType.采购退货单||item==BizType.返工退库单)
+                if (item == BizType.采购退货单 || item == BizType.返工退库单)
                 {
                     QueryParameter parameter = new QueryParameter();
                     parameter.conditionals = conModel未结案;
@@ -494,7 +494,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
 
             //添加重新加载的菜单
             // nd.ContextMenuStrip = contextMenuStrip1;
-           // kryptonTreeViewJobList.Nodes.Add(nd);
+            // kryptonTreeViewJobList.Nodes.Add(nd);
             //直接添加子节点
             foreach (TreeNode item in nd.Nodes)
             {
@@ -524,6 +524,10 @@ namespace RUINORERP.UI.UserCenter.DataParts
             //先取人，无人再取角色。
             tb_WorkCenterConfig centerConfig = MainForm.Instance.AppContext.WorkCenterConfigList.FirstOrDefault(c => c.RoleID == CurrentRole.RoleID && c.User_ID == CurrentUser.User_ID);
             if (centerConfig == null)
+            {
+                centerConfig = MainForm.Instance.AppContext.WorkCenterConfigList.FirstOrDefault(c => c.RoleID == CurrentRole.RoleID);
+            }
+            if (string.IsNullOrEmpty(centerConfig.ToDoList))
             {
                 centerConfig = MainForm.Instance.AppContext.WorkCenterConfigList.FirstOrDefault(c => c.RoleID == CurrentRole.RoleID);
             }

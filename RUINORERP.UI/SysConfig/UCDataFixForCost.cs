@@ -978,7 +978,7 @@ namespace RUINORERP.UI.SysConfig
                         {
                             transPrice = targetCost;
                         }
-
+                        richTextBoxLog.AppendText($"要修复:{item.tb_proddetail.SKU} ,new:{transPrice}, old: {item.Inv_Cost}\r\n");
                         item.CostMovingWA = transPrice;
                         item.Inv_AdvCost = item.CostMovingWA;
                         item.Inv_Cost = item.CostMovingWA;
@@ -988,6 +988,7 @@ namespace RUINORERP.UI.SysConfig
                     }
                     else
                     {
+                        richTextBoxLog.AppendText($"要修复:{item.tb_proddetail.SKU} ,new:{targetCost}, old: {item.Inv_Cost}\r\n");
                         item.CostMovingWA = targetCost;
                         item.Inv_AdvCost = item.CostMovingWA;
                         item.Inv_Cost = item.CostMovingWA;

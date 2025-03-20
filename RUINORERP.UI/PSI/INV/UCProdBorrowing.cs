@@ -238,7 +238,11 @@ namespace RUINORERP.UI.PSI.INV
             listCols.SetCol_ReadOnly<ProductSharePart>(c => c.Brand);
             listCols.SetCol_ReadOnly<ProductSharePart>(c => c.prop);
             listCols.SetCol_ReadOnly<ProductSharePart>(c => c.CNName);
-            listCols.SetCol_ReadOnly<tb_ProdBorrowingDetail>(c => c.ReQty);
+            if (!AppContext.IsSuperUser)
+            {
+                listCols.SetCol_ReadOnly<tb_ProdBorrowingDetail>(c => c.ReQty);
+            }
+           
             //具体审核权限的人才显示
             /*
             if (!AppContext.CurUserInfo.UserButtonList.Where(c => c.BtnText == MenuItemEnums.审核.ToString()).Any())

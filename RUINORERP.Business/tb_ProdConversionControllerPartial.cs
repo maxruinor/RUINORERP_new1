@@ -50,7 +50,8 @@ namespace RUINORERP.Business
                     if (invForm == null)
                     {
                         _unitOfWorkManage.RollbackTran();
-                        rmrs.ErrorMsg = $"来源产品必须通过【采购入库】，【期初盘点】或【缴库记录】产生过库存记录。转换失败。";
+                        rmrs.ErrorMsg = $"来源产品必须通过【采购入库】，【期初盘点】或【缴库记录】产生过库存记录。转换失败。" +
+                            $"\r\n可以尝用【期初盘点】数量为零的方式录入初始成本。";
                         rmrs.Succeeded = false;
                         return rmrs;
                         invForm = new tb_Inventory();

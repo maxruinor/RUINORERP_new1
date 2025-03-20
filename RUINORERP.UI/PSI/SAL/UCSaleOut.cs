@@ -298,6 +298,17 @@ namespace RUINORERP.UI.PSI.SAL
 
             listCols.SetCol_NeverVisible<tb_SaleOutDetail>(c => c.SaleOutDetail_ID);
             listCols.SetCol_NeverVisible<tb_SaleOutDetail>(c => c.ProdDetailID);
+            listCols.SetCol_ReadOnly<tb_SaleOutDetail>(c => c.Cost);
+            if (!AppContext.CurUserInfo.UserInfo.IsSuperUser)
+            {
+                listCols.SetCol_ReadOnly<tb_SaleOutDetail>(c => c.UnitPrice);
+                listCols.SetCol_ReadOnly<tb_SaleOutDetail>(c => c.TransactionPrice);
+            }
+            listCols.SetCol_ReadOnly<tb_SaleOutDetail>(c => c.SubtotalTransAmount);
+            listCols.SetCol_ReadOnly<tb_SaleOutDetail>(c => c.CustomizedCost);
+            listCols.SetCol_ReadOnly<tb_SaleOutDetail>(c => c.SubtotalCostAmount);
+
+
             ControlChildColumnsInvisible(listCols);
             listCols.SetCol_Format<tb_SaleOutDetail>(c => c.Discount, CustomFormatType.PercentFormat);
             listCols.SetCol_Format<tb_SaleOutDetail>(c => c.TaxRate, CustomFormatType.PercentFormat);

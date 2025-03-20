@@ -121,7 +121,7 @@ namespace Krypton.Toolkit
         // Try and keep the shadows where  they are supposed to be when the form is flashing.
         private void OnFlashWindowExListenerOnFlashEvent(Form form, bool flashing)
         {
-            if (!flashing)
+            if (!flashing && _parentForm.IsHandleCreated)
             {
                 _parentForm.BeginInvoke((MethodInvoker)(() => PositionShadowForms(false)));
             }

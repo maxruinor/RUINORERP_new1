@@ -48,10 +48,7 @@ namespace RUINORERP.UI.FM
         public UCOtherExpenseINC()
         {
             InitializeComponent();
-
-
         }
-
 
         internal override void LoadDataToUI(object Entity)
         {

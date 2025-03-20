@@ -31,8 +31,8 @@ namespace RUINORERP.Server.Workflow.WFPush
                     exMsg.One = null;
                     //这种可以写一个扩展方法
                     ByteBuff tx = new ByteBuff(100);
-                    //tx.PushString(System.DateTime.Now.ToString());
-                    tx.PushString(System.DateTime.Now.ToString());
+                    string sendtime = System.DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+                    tx.PushString(sendtime);
                     tx.PushString(TagetTableName);
                     //  tx.PushInt(pushdata.Length);
                     //  tx.PushBytes(pushdata);

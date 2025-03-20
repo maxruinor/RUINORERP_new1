@@ -280,7 +280,8 @@ namespace RUINORERP.Server.ServerService
            {
                ReferenceLoopHandling = ReferenceLoopHandling.Ignore // 或 ReferenceLoopHandling.Serialize
            });
-                tx.PushString(System.DateTime.Now.ToString());
+                string sendtime = System.DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+                tx.PushString(sendtime);
                 tx.PushString(json);
                 //将来再加上提醒配置规则,或加在请求实体中
                 gd.cmd = (byte)ClientCmdEnum.工作流提醒请求;

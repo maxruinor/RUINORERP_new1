@@ -1423,6 +1423,12 @@ namespace RUINORERP.UI.MRP.BOM
 
         private void Sgh_OnCalculateColumnValue(object _rowObj, SourceGridDefine myGridDefine, SourceGrid.Position position)
         {
+            Summation();
+        }
+
+
+        private void Summation()
+        {
             if (EditEntity == null)
             {
                 //都不是正常状态
@@ -1454,7 +1460,6 @@ namespace RUINORERP.UI.MRP.BOM
             }
         }
 
-
         List<tb_BOM_SDetail> details = new List<tb_BOM_SDetail>();
         protected async override Task<bool> Save(bool NeedValidated)
         {
@@ -1467,8 +1472,7 @@ namespace RUINORERP.UI.MRP.BOM
             var eer = errorProviderForAllInput.GetError(txtBOM_Name);
             bindingSourceSub.EndEdit();
             List<tb_BOM_SDetail> detailentity = bindingSourceSub.DataSource as List<tb_BOM_SDetail>;
-
-
+            Summation();
             //删除明细的机制应该是  ROM框架中 先全部删除明细再新增。说是性能好。
             if (EditEntity.ActionStatus == ActionStatus.新增 || EditEntity.ActionStatus == ActionStatus.修改)
             {
@@ -1527,7 +1531,7 @@ namespace RUINORERP.UI.MRP.BOM
 
 
                 EditEntity.tb_BOM_SDetailSecondaries.Clear();
-
+          
                 tb_BOM_SController<tb_BOM_S> ctr = Startup.GetFromFac<tb_BOM_SController<tb_BOM_S>>();
                 ReturnMainSubResults<tb_BOM_S> SaveResult = new ReturnMainSubResults<tb_BOM_S>();
                 if (NeedValidated)

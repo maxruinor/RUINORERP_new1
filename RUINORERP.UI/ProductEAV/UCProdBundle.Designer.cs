@@ -56,6 +56,8 @@
             this.grid1 = new SourceGrid.Grid();
             this.txtMergeSourceTotalQty = new Krypton.Toolkit.KryptonTextBox();
             this.lblMergeSourceTotalQty = new Krypton.Toolkit.KryptonLabel();
+            this.txtTargetQty = new Krypton.Toolkit.KryptonTextBox();
+            this.lblTargetQty = new Krypton.Toolkit.KryptonLabel();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceSub)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1)).BeginInit();
@@ -84,6 +86,8 @@
             // 
             // kryptonSplitContainer1.Panel1
             // 
+            this.kryptonSplitContainer1.Panel1.Controls.Add(this.txtTargetQty);
+            this.kryptonSplitContainer1.Panel1.Controls.Add(this.lblTargetQty);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.kryptonLabel3);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.cmbUnit);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.btnSelectedImageFiles);
@@ -117,7 +121,7 @@
             // 
             // kryptonLabel3
             // 
-            this.kryptonLabel3.Location = new System.Drawing.Point(48, 75);
+            this.kryptonLabel3.Location = new System.Drawing.Point(48, 74);
             this.kryptonLabel3.Name = "kryptonLabel3";
             this.kryptonLabel3.Size = new System.Drawing.Size(62, 20);
             this.kryptonLabel3.TabIndex = 160;
@@ -127,14 +131,14 @@
             // 
             this.cmbUnit.DropDownWidth = 100;
             this.cmbUnit.IntegralHeight = false;
-            this.cmbUnit.Location = new System.Drawing.Point(121, 73);
+            this.cmbUnit.Location = new System.Drawing.Point(121, 74);
             this.cmbUnit.Name = "cmbUnit";
             this.cmbUnit.Size = new System.Drawing.Size(239, 21);
             this.cmbUnit.TabIndex = 161;
             // 
             // btnSelectedImageFiles
             // 
-            this.btnSelectedImageFiles.Location = new System.Drawing.Point(783, 50);
+            this.btnSelectedImageFiles.Location = new System.Drawing.Point(783, 46);
             this.btnSelectedImageFiles.Name = "btnSelectedImageFiles";
             this.btnSelectedImageFiles.Size = new System.Drawing.Size(33, 25);
             this.btnSelectedImageFiles.TabIndex = 159;
@@ -144,13 +148,13 @@
             // 
             this.kryptonPictureBox1.Location = new System.Drawing.Point(836, 51);
             this.kryptonPictureBox1.Name = "kryptonPictureBox1";
-            this.kryptonPictureBox1.Size = new System.Drawing.Size(164, 113);
+            this.kryptonPictureBox1.Size = new System.Drawing.Size(250, 137);
             this.kryptonPictureBox1.TabIndex = 158;
             this.kryptonPictureBox1.TabStop = false;
             // 
             // txtWeight
             // 
-            this.txtWeight.Location = new System.Drawing.Point(495, 48);
+            this.txtWeight.Location = new System.Drawing.Point(495, 47);
             this.txtWeight.Name = "txtWeight";
             this.txtWeight.Size = new System.Drawing.Size(100, 23);
             this.txtWeight.TabIndex = 156;
@@ -164,7 +168,7 @@
             // 
             // lblDescription
             // 
-            this.lblDescription.Location = new System.Drawing.Point(74, 98);
+            this.lblDescription.Location = new System.Drawing.Point(74, 99);
             this.lblDescription.Name = "lblDescription";
             this.lblDescription.Size = new System.Drawing.Size(36, 20);
             this.lblDescription.TabIndex = 152;
@@ -172,7 +176,7 @@
             // 
             // txtDescription
             // 
-            this.txtDescription.Location = new System.Drawing.Point(121, 97);
+            this.txtDescription.Location = new System.Drawing.Point(121, 99);
             this.txtDescription.Multiline = true;
             this.txtDescription.Name = "txtDescription";
             this.txtDescription.Size = new System.Drawing.Size(239, 21);
@@ -180,7 +184,7 @@
             // 
             // lblNotes
             // 
-            this.lblNotes.Location = new System.Drawing.Point(74, 125);
+            this.lblNotes.Location = new System.Drawing.Point(74, 126);
             this.lblNotes.Name = "lblNotes";
             this.lblNotes.Size = new System.Drawing.Size(36, 20);
             this.lblNotes.TabIndex = 154;
@@ -196,7 +200,7 @@
             // 
             // lblWeight
             // 
-            this.lblWeight.Location = new System.Drawing.Point(404, 47);
+            this.lblWeight.Location = new System.Drawing.Point(394, 48);
             this.lblWeight.Name = "lblWeight";
             this.lblWeight.Size = new System.Drawing.Size(88, 20);
             this.lblWeight.TabIndex = 142;
@@ -204,7 +208,7 @@
             // 
             // lblMarket_Price
             // 
-            this.lblMarket_Price.Location = new System.Drawing.Point(405, 76);
+            this.lblMarket_Price.Location = new System.Drawing.Point(407, 75);
             this.lblMarket_Price.Name = "lblMarket_Price";
             this.lblMarket_Price.Size = new System.Drawing.Size(75, 20);
             this.lblMarket_Price.TabIndex = 144;
@@ -212,7 +216,7 @@
             // 
             // lblIs_enabled
             // 
-            this.lblIs_enabled.Location = new System.Drawing.Point(419, 102);
+            this.lblIs_enabled.Location = new System.Drawing.Point(715, 74);
             this.lblIs_enabled.Name = "lblIs_enabled";
             this.lblIs_enabled.Size = new System.Drawing.Size(62, 20);
             this.lblIs_enabled.TabIndex = 148;
@@ -222,7 +226,7 @@
             // 
             this.chkIs_enabled.Checked = true;
             this.chkIs_enabled.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.chkIs_enabled.Location = new System.Drawing.Point(493, 105);
+            this.chkIs_enabled.Location = new System.Drawing.Point(790, 77);
             this.chkIs_enabled.Name = "chkIs_enabled";
             this.chkIs_enabled.Size = new System.Drawing.Size(19, 13);
             this.chkIs_enabled.TabIndex = 149;
@@ -230,7 +234,7 @@
             // 
             // lblIs_available
             // 
-            this.lblIs_available.Location = new System.Drawing.Point(516, 102);
+            this.lblIs_available.Location = new System.Drawing.Point(715, 98);
             this.lblIs_available.Name = "lblIs_available";
             this.lblIs_available.Size = new System.Drawing.Size(62, 20);
             this.lblIs_available.TabIndex = 150;
@@ -240,7 +244,7 @@
             // 
             this.chkIs_available.Checked = true;
             this.chkIs_available.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.chkIs_available.Location = new System.Drawing.Point(580, 105);
+            this.chkIs_available.Location = new System.Drawing.Point(790, 102);
             this.chkIs_available.Name = "chkIs_available";
             this.chkIs_available.Size = new System.Drawing.Size(19, 13);
             this.chkIs_available.TabIndex = 151;
@@ -248,7 +252,7 @@
             // 
             // lblBundleName
             // 
-            this.lblBundleName.Location = new System.Drawing.Point(53, 51);
+            this.lblBundleName.Location = new System.Drawing.Point(53, 48);
             this.lblBundleName.Name = "lblBundleName";
             this.lblBundleName.Size = new System.Drawing.Size(62, 20);
             this.lblBundleName.TabIndex = 136;
@@ -256,7 +260,7 @@
             // 
             // txtBundleName
             // 
-            this.txtBundleName.Location = new System.Drawing.Point(121, 50);
+            this.txtBundleName.Location = new System.Drawing.Point(121, 48);
             this.txtBundleName.Multiline = true;
             this.txtBundleName.Name = "txtBundleName";
             this.txtBundleName.Size = new System.Drawing.Size(239, 21);
@@ -264,7 +268,7 @@
             // 
             // lblImagesPath
             // 
-            this.lblImagesPath.Location = new System.Drawing.Point(715, 50);
+            this.lblImagesPath.Location = new System.Drawing.Point(715, 48);
             this.lblImagesPath.Name = "lblImagesPath";
             this.lblImagesPath.Size = new System.Drawing.Size(62, 20);
             this.lblImagesPath.TabIndex = 140;
@@ -360,6 +364,21 @@
             this.lblMergeSourceTotalQty.TabIndex = 149;
             this.lblMergeSourceTotalQty.Values.Text = "子件总数量";
             // 
+            // txtTargetQty
+            // 
+            this.txtTargetQty.Location = new System.Drawing.Point(495, 99);
+            this.txtTargetQty.Name = "txtTargetQty";
+            this.txtTargetQty.Size = new System.Drawing.Size(100, 23);
+            this.txtTargetQty.TabIndex = 163;
+            // 
+            // lblTargetQty
+            // 
+            this.lblTargetQty.Location = new System.Drawing.Point(420, 99);
+            this.lblTargetQty.Name = "lblTargetQty";
+            this.lblTargetQty.Size = new System.Drawing.Size(62, 20);
+            this.lblTargetQty.TabIndex = 162;
+            this.lblTargetQty.Values.Text = "目标数量";
+            // 
             // UCProdBundle
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
@@ -422,5 +441,7 @@
         private Krypton.Toolkit.KryptonButton btnSelectedImageFiles;
         private Krypton.Toolkit.KryptonLabel kryptonLabel3;
         private Krypton.Toolkit.KryptonComboBox cmbUnit;
+        private Krypton.Toolkit.KryptonTextBox txtTargetQty;
+        private Krypton.Toolkit.KryptonLabel lblTargetQty;
     }
 }

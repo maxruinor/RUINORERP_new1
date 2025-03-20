@@ -41,15 +41,16 @@
             listView1 = new System.Windows.Forms.ListView();
             toolStrip1 = new System.Windows.Forms.ToolStrip();
             tsbtn刷新 = new System.Windows.Forms.ToolStripButton();
+            切换服务器ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             contextMenuStrip1.SuspendLayout();
             toolStrip1.SuspendLayout();
             SuspendLayout();
             // 
             // contextMenuStrip1
             // 
-            contextMenuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] { toolStripMenuItem1, toolStripMenuItem2, toolStripMenuItem4, toolStripMenuItem5, toolStripMenuItem6, 推送版本更新ToolStripMenuItem, 推送缓存数据ToolStripMenuItem });
+            contextMenuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] { toolStripMenuItem1, toolStripMenuItem2, toolStripMenuItem4, toolStripMenuItem5, toolStripMenuItem6, 推送版本更新ToolStripMenuItem, 推送缓存数据ToolStripMenuItem, 切换服务器ToolStripMenuItem });
             contextMenuStrip1.Name = "contextMenuStrip1";
-            contextMenuStrip1.Size = new System.Drawing.Size(161, 158);
+            contextMenuStrip1.Size = new System.Drawing.Size(161, 180);
             contextMenuStrip1.ItemClicked += contextMenuStrip1_ItemClicked;
             // 
             // toolStripMenuItem1
@@ -127,6 +128,12 @@
             tsbtn刷新.Text = "刷新";
             tsbtn刷新.Click += tsbtn刷新_Click;
             // 
+            // 切换服务器ToolStripMenuItem
+            // 
+            切换服务器ToolStripMenuItem.Name = "切换服务器ToolStripMenuItem";
+            切换服务器ToolStripMenuItem.Size = new System.Drawing.Size(160, 22);
+            切换服务器ToolStripMenuItem.Text = "切换服务器";
+            // 
             // frmUserListManage
             // 
             AutoScaleDimensions = new System.Drawing.SizeF(7F, 17F);
@@ -160,5 +167,6 @@
         private System.Windows.Forms.ListView listView1;
         private System.Windows.Forms.ToolStrip toolStrip1;
         private System.Windows.Forms.ToolStripButton tsbtn刷新;
+        private System.Windows.Forms.ToolStripMenuItem 切换服务器ToolStripMenuItem;
     }
 }

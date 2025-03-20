@@ -507,6 +507,10 @@ namespace RUINORERP.UI.UCSourceGrid
                     obj = 0;
                 }
 
+                //最大小数位
+                int maxDecimalPlaces = 4;
+                decimal amount = 0.00m;
+
                 #region 处理显示格式
                 int sfRealIndex = CurrGridDefine.grid.Columns.GetColumnInfo(sf.TagetCol.UniqueId).Index;
                 switch (sf.TagetCol.CustomFormat)
@@ -515,14 +519,18 @@ namespace RUINORERP.UI.UCSourceGrid
 
                         //实际上面转换过一次了。
                         var realvalue = obj.ChangeTypeSafely(sf.TagetCol.ColPropertyInfo.PropertyType);
-                        ReflectionHelper.SetPropertyValue(currentObj, sf.TagetCol.ColName, realvalue);
-                        CurrGridDefine.grid[rowindex, sfRealIndex].Value = realvalue;
-                        CurrGridDefine.grid[rowindex, sfRealIndex].DisplayText = CurrGridDefine.grid[rowindex, sfRealIndex].Editor.ValueToDisplayString(realvalue);
+
+                        amount = RoundToNDecimalPlaces(realvalue, maxDecimalPlaces);
+                        ReflectionHelper.SetPropertyValue(currentObj, sf.TagetCol.ColName, amount);
+                        CurrGridDefine.grid[rowindex, sfRealIndex].Value = amount;
+                        CurrGridDefine.grid[rowindex, sfRealIndex].DisplayText = CurrGridDefine.grid[rowindex, sfRealIndex].Editor.ValueToDisplayString(amount);
                         break;
                     case CustomFormatType.CurrencyFormat:
                         //var ColCurrencyTypeConverter = new DevAge.ComponentModel.Converter.CurrencyTypeConverter(typeof(decimal));
-                        int maxDecimalPlaces = AuthorizeController.GetMoneyDataPrecision(MainForm.Instance.AppContext);
-                        decimal amount = 0.00m;
+                       // int maxDecimalPlaces = AuthorizeController.GetMoneyDataPrecision(MainForm.Instance.AppContext);
+                        //TODO 这里暂时用4位 By watson 
+                       // maxDecimalPlaces = 4;
+                     
                         amount = RoundToNDecimalPlaces(obj, maxDecimalPlaces);
                         CurrGridDefine.grid[rowindex, sfRealIndex].Value = amount;
                         CurrGridDefine.grid[rowindex, sfRealIndex].DisplayText = string.Format("{0:C}", amount.ToString());

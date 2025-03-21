@@ -33,6 +33,8 @@ using RUINORERP.Model;
 using WorkflowCore.Services.DefinitionStorage;
 using RUINORERP.Business.AutoMapper;
 using SuperSocket.Server.Host;
+using RUINORERP.Server.Comm;
+using Mapster;
 
 namespace RUINORERP.Server
 {
@@ -78,20 +80,26 @@ namespace RUINORERP.Server
         [STAThread]
         static void Main()
         {
-            //这里判断是否已经有实例在运行
-            Process instance = RunningInstance();
-            if (instance != null) //进程中已经有一个实例在运行
+            if (SingleInstanceChecker.IsAlreadyRunning())
             {
-                HandleRunningInstance(instance);
+                // 激活已有窗口并退出
+                BringExistingInstanceToFront();
                 return;
             }
+            try
+            {
+                // 正常启动程序
+                StartServerUI();
+            }
+            finally
+            {
+                SingleInstanceChecker.Release();
+            }
+        }
 
-            //else //没有实例在运行
-            //{
-            //    Application.EnableVisualStyles();
-            //    Application.SetCompatibleTextRenderingDefault(false);
-            //    Application.Run(new Form1()); //***主窗体的Form名称**//
-            //}
+        static void StartServerUI()
+        {
+
             Application.SetHighDpiMode(HighDpiMode.SystemAware);
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
@@ -100,9 +108,9 @@ namespace RUINORERP.Server
             AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
 
             //log4netHelper配置这个文件的代码
-             ILoggerRepository repository = LogManager.CreateRepository("erpServer");
-             XmlConfigurator.Configure(repository, new FileInfo("log4net.config"));
-             //Host..loggerRepository = repository;
+            //ILoggerRepository repository = LogManager.CreateRepository("erpServer");
+            //XmlConfigurator.Configure(repository, new FileInfo("log4net.config"));
+            //Host..loggerRepository = repository;
 
 
 #pragma warning disable CS0168 // 声明了变量，但从未使用过
@@ -121,7 +129,7 @@ namespace RUINORERP.Server
                     Startup starter = new Startup();
                     IHost myhost = starter.CslaDIPort();
                     // IHostBuilder  myhost = starter.CslaDIPort();
-
+                   
                     IServiceProvider services = myhost.Services;
                     //https://github.com/autofac/Autofac.Extensions.DependencyInjection/releases
                     //给上下文服务源
@@ -130,7 +138,7 @@ namespace RUINORERP.Server
                     Startup.AutofacContainerScope = services.GetAutofacRoot();
                     AppContextData.SetAutofacContainerScope(Startup.AutofacContainerScope);
                     BusinessHelper.Instance.SetContext(AppContextData);
-                    
+
                     //Program.AppContextData.SetServiceProvider(services);
                     //Program.AppContextData.Status = "init";
 
@@ -155,7 +163,7 @@ namespace RUINORERP.Server
                     // 如果host启动了，不能再次启动，但没有判断方法
                     if (!serviceStarted)
                     {
-                         host.Start();
+                        host.Start();
                         serviceStarted = true;
                     }
                     WorkflowHost = host;
@@ -171,7 +179,7 @@ namespace RUINORERP.Server
                     //ILogger<frmMain> logger = services.GetService<ILogger<frmMain>>();
                     //frmMain frmMain1 = new frmMain(logger);
                     //Application.Run(frmMain1);
-                   
+
                     var form1 = Startup.GetFromFac<frmMain>();
                     form1._ServiceProvider = services;
                     //starter.GetMultipleServerHost(Startup.Services).StartAsync();
@@ -213,7 +221,6 @@ namespace RUINORERP.Server
 
 
             //Application.Run(new frmMain());
-
         }
 
 
@@ -348,31 +355,53 @@ namespace RUINORERP.Server
 
 
 
+        private static void BringExistingInstanceToFront()
+        {
+            Process current = Process.GetCurrentProcess();
+            foreach (Process process in Process.GetProcessesByName(current.ProcessName))
+            {
+                if (process.Id == current.Id) continue;
+                SetForegroundWindow(process.MainWindowHandle);
+                break;
+            }
+        }
 
 
 
         #region 禁止多个进程运行，当重复运行时激活以前的进程
         #region 在进程中查找是否已经有实例在运行
-        //确保程序只运行一个实例
+        // 确保程序只运行一个实例
         public static Process RunningInstance()
         {
             Process currentProcess = Process.GetCurrentProcess();
-            Process[] Processes = Process.GetProcessesByName(currentProcess.ProcessName);
-            //遍历与当前进程名称相同的进程列表
-            foreach (Process process in Processes)
+            string currentProcessPath = Assembly.GetExecutingAssembly().Location;
+            currentProcessPath = Path.GetFullPath(currentProcessPath).Replace("/", "\\"); // 规范化路径
+
+            Process[] processes = Process.GetProcessesByName(currentProcess.ProcessName);
+
+            foreach (Process process in processes)
             {
-                //如果实例已经存在,则忽略当前进程
-                if (process.Id != currentProcess.Id)
+                if (process.Id == currentProcess.Id)
+                    continue; // 跳过当前进程
+
+                try
                 {
-                    //保证要打开的进程 同 已经存在的进程来自同一个文件路径
-                    if (Assembly.GetExecutingAssembly().Location.Replace("/", "\\") == currentProcess.MainModule.FileName)
+                    string processPath = process.MainModule.FileName;
+                    processPath = Path.GetFullPath(processPath).Replace("/", "\\");
+
+                    // 不区分大小写比较路径
+                    if (currentProcessPath.Equals(processPath, StringComparison.OrdinalIgnoreCase))
                     {
-                        //返回另一个进程实例
-                        return process;
+                        return process; // 找到相同路径的实例
                     }
                 }
+                catch (Exception)
+                {
+                    // 无权限访问该进程信息，忽略
+                    continue;
+                }
             }
-            return null; //找不到其他进程实例，返回nulL。
+            return null; // 无其他实例运行
         }
         #endregion
         #region 调用Win32API,进程中已经有一个实例在运行,激活其窗口并显示在最前端
@@ -446,7 +475,7 @@ namespace RUINORERP.Server
                 Step = step,
                 Workflow = workflow
             });
-           
+
 
             frmMain.Instance.PrintInfoLog(workflow.Id + step.Id + exception.Message);
         }

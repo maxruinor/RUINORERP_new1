@@ -29,6 +29,8 @@
         private void InitializeComponent()
         {
             this.kryptonSplitContainer1 = new Krypton.Toolkit.KryptonSplitContainer();
+            this.lblIsOutSourced = new Krypton.Toolkit.KryptonLabel();
+            this.chkIsOutSourced = new Krypton.Toolkit.KryptonCheckBox();
             this.kryptonLabel1 = new Krypton.Toolkit.KryptonLabel();
             this.txtTotalQty = new Krypton.Toolkit.KryptonTextBox();
             this.lblTotalNetMachineHours = new Krypton.Toolkit.KryptonLabel();
@@ -70,8 +72,7 @@
             this.lbl盘点单 = new Krypton.Toolkit.KryptonLabel();
             this.kryptonSplitContainer2 = new Krypton.Toolkit.KryptonSplitContainer();
             this.grid1 = new SourceGrid.Grid();
-            this.lblIsOutSourced = new Krypton.Toolkit.KryptonLabel();
-            this.chkIsOutSourced = new Krypton.Toolkit.KryptonCheckBox();
+            this.chkIsCustomizedOrder = new Krypton.Toolkit.KryptonCheckBox();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceSub)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1)).BeginInit();
@@ -100,6 +101,7 @@
             // 
             // kryptonSplitContainer1.Panel1
             // 
+            this.kryptonSplitContainer1.Panel1.Controls.Add(this.chkIsCustomizedOrder);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.lblIsOutSourced);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.chkIsOutSourced);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.kryptonLabel1);
@@ -148,6 +150,22 @@
             this.kryptonSplitContainer1.Size = new System.Drawing.Size(1133, 746);
             this.kryptonSplitContainer1.SplitterDistance = 219;
             this.kryptonSplitContainer1.TabIndex = 4;
+            // 
+            // lblIsOutSourced
+            // 
+            this.lblIsOutSourced.Location = new System.Drawing.Point(345, 71);
+            this.lblIsOutSourced.Name = "lblIsOutSourced";
+            this.lblIsOutSourced.Size = new System.Drawing.Size(36, 20);
+            this.lblIsOutSourced.TabIndex = 191;
+            this.lblIsOutSourced.Values.Text = "外发";
+            // 
+            // chkIsOutSourced
+            // 
+            this.chkIsOutSourced.Location = new System.Drawing.Point(387, 73);
+            this.chkIsOutSourced.Name = "chkIsOutSourced";
+            this.chkIsOutSourced.Size = new System.Drawing.Size(19, 13);
+            this.chkIsOutSourced.TabIndex = 192;
+            this.chkIsOutSourced.Values.Text = "";
             // 
             // kryptonLabel1
             // 
@@ -491,21 +509,13 @@
             this.grid1.TabStop = true;
             this.grid1.ToolTipText = "";
             // 
-            // lblIsOutSourced
+            // chkIsCustomizedOrder
             // 
-            this.lblIsOutSourced.Location = new System.Drawing.Point(345, 71);
-            this.lblIsOutSourced.Name = "lblIsOutSourced";
-            this.lblIsOutSourced.Size = new System.Drawing.Size(36, 20);
-            this.lblIsOutSourced.TabIndex = 191;
-            this.lblIsOutSourced.Values.Text = "外发";
-            // 
-            // chkIsOutSourced
-            // 
-            this.chkIsOutSourced.Location = new System.Drawing.Point(387, 73);
-            this.chkIsOutSourced.Name = "chkIsOutSourced";
-            this.chkIsOutSourced.Size = new System.Drawing.Size(19, 13);
-            this.chkIsOutSourced.TabIndex = 192;
-            this.chkIsOutSourced.Values.Text = "";
+            this.chkIsCustomizedOrder.Location = new System.Drawing.Point(632, 42);
+            this.chkIsCustomizedOrder.Name = "chkIsCustomizedOrder";
+            this.chkIsCustomizedOrder.Size = new System.Drawing.Size(62, 20);
+            this.chkIsCustomizedOrder.TabIndex = 216;
+            this.chkIsCustomizedOrder.Values.Text = "定制单";
             // 
             // UCFinishedGoodsInv
             // 
@@ -584,5 +594,6 @@
         private Krypton.Toolkit.KryptonTextBox txtTotalQty;
         private Krypton.Toolkit.KryptonLabel lblIsOutSourced;
         private Krypton.Toolkit.KryptonCheckBox chkIsOutSourced;
+        private Krypton.Toolkit.KryptonCheckBox chkIsCustomizedOrder;
     }
 }

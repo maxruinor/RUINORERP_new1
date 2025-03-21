@@ -9,7 +9,9 @@ using log4net.Core;
 
 namespace RUINORERP.Common.Log4Net
 {
-
+    /// <summary>
+    /// 还有些问题
+    /// </summary>
     public class CustomLayout : PatternLayout
     {
         public CustomLayout()
@@ -25,12 +27,15 @@ namespace RUINORERP.Common.Log4Net
         {
             if (Option != null)
             {
+                // 获取指定属性的值
+                object value = LookupProperty(Option, loggingEvent);
+                WriteObject(writer, loggingEvent.Repository, value);
                 // Write the value for the specified key
-                WriteObject(writer, loggingEvent.Repository, LookupProperty(Option, loggingEvent));
+                //WriteObject(writer, loggingEvent.Repository, LookupProperty(Option, loggingEvent));
             }
             else
             {
-                // Write all the key value pairs
+                // Write all the key value pairs  // 如果没有指定属性，则写入所有属性
                 WriteDictionary(writer, loggingEvent.Repository, loggingEvent.GetProperties());
             }
         }
@@ -48,6 +53,25 @@ namespace RUINORERP.Common.Log4Net
                 propertyValue = propertyInfo.GetValue(loggingEvent.MessageObject, null);
             return propertyValue;
         }
+
+        //private object LookupProperty(string property, LoggingEvent loggingEvent)
+        //{
+        //    // 尝试从 MDC 中获取值
+        //    object value = loggingEvent.Repository.GetContext().GetProperty(property);
+
+        //    // 如果 MDC 中没有找到，尝试从消息对象中获取
+        //    if (value == null && loggingEvent.MessageObject != null)
+        //    {
+        //        PropertyInfo propertyInfo = loggingEvent.MessageObject.GetType().GetProperty(property);
+        //        if (propertyInfo != null)
+        //        {
+        //            value = propertyInfo.GetValue(loggingEvent.MessageObject, null);
+        //        }
+        //    }
+
+        //    return value ?? string.Empty;
+        //}
+
     }
 
 

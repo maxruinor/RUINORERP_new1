@@ -10,6 +10,10 @@ namespace RUINORERP.Server.Workflow
         private readonly ILogger<IfWorkflow> _logger;
         public IfWorkflow(ILogger<IfWorkflow> logger)
         {
+            // 设置日志级别为 Error
+            //LoggerFilterRules rules = new LoggerFilterRules();
+            //rules.Add(new LoggerFilterRule(LogLevel.Error, null, null));
+            //logger.BeginScope(rules);
             _logger = logger;
         }
 
@@ -18,6 +22,8 @@ namespace RUINORERP.Server.Workflow
 
         public void Build(IWorkflowBuilder<MyData> builder)
         {
+            
+
             _logger.LogInformation(" IfWorkflow info2222 build");
             builder
                 .StartWith<SayHello>()

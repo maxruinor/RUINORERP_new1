@@ -140,11 +140,16 @@ namespace RUINORERP.UI.ATechnologyStack.ServiceRegister
             //builder.RegisterType(ipmap)
 
             log4net.Repository.ILoggerRepository repository = LogManager.CreateRepository("kxrz");
-            log4net.Config.XmlConfigurator.Configure(repository, new FileInfo("log4net.config"));
+
+            string conn = "d8ZwIL2mV+UGMvqOMiIk4W/0mvrg8N6V7OijnojUimbn29VfgwwAJ5/G8Kj5nJGSKm0Uaiuf/Zl3TEXPs3oPuqx7zZtyYIfq8/fhAQhOYvKqDtalzr/bWf/atKb7YKbzfcpvgGfsUi82qEt4p54VQPg1csG3hdwTkgaHTTZt4mZLnXiqD+mK+WT2PQ8OnCnf";
+            string key = "ruinor1234567890";
+            string newconn = HLH.Lib.Security.EncryptionHelper.AesDecrypt(conn, key);
+            log4net.GlobalContext.Properties["connectionString"] = newconn;
+            log4net.Config.XmlConfigurator.Configure();
+            //log4net.Config.XmlConfigurator.Configure(repository, new FileInfo("log4net.config"));
             var loggerRepository = repository;
             var _loger = log4net.LogManager.GetLogger(loggerRepository.Name, "infoAppender");
             // builder.Register(c => _loger);
-
 
             //事务 缓存 AOP
             //!!!!!!下面的开关是统计绑定的，相当于 [Intercept(typeof(LogInterceptor))] // Person 使用 LogInterceptor拦截器

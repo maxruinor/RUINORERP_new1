@@ -1126,6 +1126,7 @@
     <Compile Include="ClientCmdService\RequestLoginCommand.cs" />
     <Compile Include="ClientCmdService\RequestReminderCommand.cs" />
     <Compile Include="ClientCmdService\ServerResponseEventManager.cs" />
+    <Compile Include="ClientSuperSocket\HeartbeatManager.cs" />
     <Compile Include="CommonUI\frmInputObject.cs">
       <SubType>Form</SubType>
     </Compile>

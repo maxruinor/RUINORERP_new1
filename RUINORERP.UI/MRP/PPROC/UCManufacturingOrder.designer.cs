@@ -95,6 +95,7 @@
             this.grid1 = new SourceGrid.Grid();
             this.txtApprovalOpinions = new Krypton.Toolkit.KryptonTextBox();
             this.lblApprovalOpinions = new Krypton.Toolkit.KryptonLabel();
+            this.chkIsCustomizedOrder = new Krypton.Toolkit.KryptonCheckBox();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceSub)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1)).BeginInit();
@@ -142,6 +143,7 @@
             // 
             // kryptonPanelMainInfo
             // 
+            this.kryptonPanelMainInfo.Controls.Add(this.chkIsCustomizedOrder);
             this.kryptonPanelMainInfo.Controls.Add(this.lblTotalProductionCost);
             this.kryptonPanelMainInfo.Controls.Add(this.txtTotalProductionCost);
             this.kryptonPanelMainInfo.Controls.Add(this.lblTotalMaterialCost);
@@ -469,7 +471,7 @@
             // 
             // chkIsOutSourced
             // 
-            this.chkIsOutSourced.Location = new System.Drawing.Point(629, 178);
+            this.chkIsOutSourced.Location = new System.Drawing.Point(629, 177);
             this.chkIsOutSourced.Name = "chkIsOutSourced";
             this.chkIsOutSourced.Size = new System.Drawing.Size(19, 13);
             this.chkIsOutSourced.TabIndex = 189;
@@ -480,7 +482,7 @@
             // 
             this.cmbCustomerVendor_ID_Out.DropDownWidth = 100;
             this.cmbCustomerVendor_ID_Out.IntegralHeight = false;
-            this.cmbCustomerVendor_ID_Out.Location = new System.Drawing.Point(653, 174);
+            this.cmbCustomerVendor_ID_Out.Location = new System.Drawing.Point(653, 173);
             this.cmbCustomerVendor_ID_Out.Name = "cmbCustomerVendor_ID_Out";
             this.cmbCustomerVendor_ID_Out.Size = new System.Drawing.Size(154, 21);
             this.cmbCustomerVendor_ID_Out.TabIndex = 187;
@@ -754,6 +756,14 @@
             this.lblApprovalOpinions.TabIndex = 76;
             this.lblApprovalOpinions.Values.Text = "审批意见";
             // 
+            // chkIsCustomizedOrder
+            // 
+            this.chkIsCustomizedOrder.Location = new System.Drawing.Point(629, 197);
+            this.chkIsCustomizedOrder.Name = "chkIsCustomizedOrder";
+            this.chkIsCustomizedOrder.Size = new System.Drawing.Size(62, 20);
+            this.chkIsCustomizedOrder.TabIndex = 215;
+            this.chkIsCustomizedOrder.Values.Text = "定制单";
+            // 
             // UCManufacturingOrder
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
@@ -863,5 +873,6 @@
         private Krypton.Toolkit.KryptonTextBox txtTotalMaterialCost;
         private Krypton.Toolkit.KryptonLabel lblTotalProductionCost;
         private Krypton.Toolkit.KryptonTextBox txtTotalProductionCost;
+        private Krypton.Toolkit.KryptonCheckBox chkIsCustomizedOrder;
     }
 }

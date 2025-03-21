@@ -140,7 +140,6 @@ namespace RUINORERP.Server
             _services = Startup.Services;
             host = workflowHost;
 
-
             Globalconfig = config;
             // 监听配置变化
             Globalconfig.OnChange(updatedConfig =>
@@ -933,8 +932,9 @@ namespace RUINORERP.Server
                     // the defaults be overridden by the configuration.
                     if (isWindows)
                     {
+                        //注意这里配置日志级别 配置文件不生效？
                         // Default the EventLogLoggerProvider to warning or above
-                        logging.AddFilter<EventLogLoggerProvider>(level => level >= Microsoft.Extensions.Logging.LogLevel.Information);
+                        logging.AddFilter<EventLogLoggerProvider>(level => level >= Microsoft.Extensions.Logging.LogLevel.Error);
                     }
                     logging.AddConfiguration(hostingContext.Configuration.GetSection("Logging"));
                     logging.AddConsole();
@@ -949,7 +949,7 @@ namespace RUINORERP.Server
                         string key = "ruinor1234567890";
                         string newconn = HLH.Lib.Security.EncryptionHelper.AesDecrypt(conn, key);
 
-                        logging.AddLog4Net();
+                        //logging.AddLog4Net();
                         logging.AddProvider(new Log4NetProviderByCustomeDb("Log4net_db.config", newconn, Program.AppContextData));
 
                     }

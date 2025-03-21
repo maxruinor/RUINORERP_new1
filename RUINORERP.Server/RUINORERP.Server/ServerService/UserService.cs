@@ -847,7 +847,6 @@ namespace RUINORERP.Server.BizService
             try
             {
                 ByteBuff tx = new ByteBuff(50);
-
                 string sendtime = System.DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
                 tx.PushString(sendtime);
                 tx.PushString(IPPORT);

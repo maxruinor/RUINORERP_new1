@@ -171,7 +171,12 @@ namespace RUINORERP.Server
                 string newconn = HLH.Lib.Security.EncryptionHelper.AesDecrypt(conn, key);
 
                 logBuilder.AddProvider(new Log4NetProviderByCustomeDb("Log4net_db.config", newconn, Program.AppContextData));
-                logBuilder.AddLog4Net();
+                //设置日志级别
+                logBuilder.AddFilter("RUINORERP.Server.Workflow", LogLevel.Error);
+                logBuilder.AddFilter("Microsoft.Hosting.Lifetime", LogLevel.Error);
+                logBuilder.AddFilter("WorkflowCore.Services.WorkflowHost", LogLevel.Error);
+                //这一句会再次加载 默认的名字的配置文件 log4net.config 相当于多次记录日志？
+                //logBuilder.AddLog4Net();
             });
 
 
@@ -295,6 +300,7 @@ namespace RUINORERP.Server
             var hostBuilder = new HostBuilder()
             .UseServiceProviderFactory(new AutofacServiceProviderFactory())
            .ConfigureContainer<ContainerBuilder>(new Action<HostBuilderContext, ContainerBuilder>(cb))
+        
             .ConfigureServices((context, services) =>
             {
                 services.AddAutofac();
@@ -316,7 +322,8 @@ namespace RUINORERP.Server
                 //测试服务 
                 //services.AddHostedService<DemoService>();
 
-            }).Build();
+            })
+            .Build();
 
             return hostBuilder;
         }

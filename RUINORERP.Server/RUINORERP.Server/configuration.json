@@ -1,16 +1,16 @@
 ﻿{
     "Logging": {
         "IncludeScopes": false,
-        "LogLevel": {
-            "Default": "Debug",
-            "System": "Information",
-            "Microsoft": "Information"
-        }
+      "LogLevel": {
+        "Default": "Debug",
+        "System": "Error",
+        "Microsoft": "Error"
+      }
     },
     "File": {
-        "LogLevel": {
-            "Default": "Debug" //具体输入级别自行修改，也可添加详细的分类别输出
-        }
+      "LogLevel": {
+        "Default": "Error" //具体输入级别自行修改，也可添加详细的分类别输出
+      }
     },
   "ConnectionStrings": {
     "es_mssql": "Host=localhost;Database=mykx;Username=postgres;Password=amwtjhwxf",

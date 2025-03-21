@@ -232,7 +232,7 @@ namespace RUINORERP.Model
             }
         }
 
-        private long? _User_ID = 1893959165789999104;
+        private long? _User_ID = 0;
         /// <summary>
         /// 用户
         /// </summary>

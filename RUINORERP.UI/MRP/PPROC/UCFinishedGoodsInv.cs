@@ -104,7 +104,7 @@ namespace RUINORERP.UI.PSI.PUR
             DataBindingHelper.BindData4CheckBox<tb_FinishedGoodsInv>(entity, t => t.IsOutSourced, chkIsOutSourced, false);
             DataBindingHelper.BindData4Cmb<tb_Employee>(entity, k => k.Employee_ID, v => v.Employee_Name, cmbEmployee_ID);
             DataBindingHelper.BindData4Cmb<tb_Department>(entity, k => k.DepartmentID, v => v.DepartmentName, cmbDepartmentID);
-
+            
             //创建表达式 外发工厂
             var lambdaOut = Expressionable.Create<tb_CustomerVendor>()
                             .And(t => t.IsOther == true)

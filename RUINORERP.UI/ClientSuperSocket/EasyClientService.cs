@@ -27,6 +27,7 @@ using TransInstruction.CommandService;
 using FastReport.DevComponents.DotNetBar;
 using NPOI.POIFS.Crypt.Dsig;
 using NPOI.SS.Formula.Functions;
+using RUINORERP.UI.ClientSuperSocket;
 
 namespace RUINORERP.UI.SuperSocketClient
 {
@@ -101,6 +102,7 @@ namespace RUINORERP.UI.SuperSocketClient
         private int _port;
 
         static System.Timers.Timer timer = null;
+        HeartbeatManager heartbeat = null;
         public EasyClientService()
         {
 
@@ -114,92 +116,46 @@ namespace RUINORERP.UI.SuperSocketClient
             client.NewPackageReceived += OnPackageReceived;
             client.Error += OnClientError;
             client.Closed += OnClientClosed;
+
+            heartbeat = new HeartbeatManager();
+            heartbeat.Start();
+
             //连上就需要做一些动作，如果登陆成功过的。
             //每10s发送一次心跳或尝试一次重连
-            timer = new System.Timers.Timer(2000);
-            timer.Elapsed += new System.Timers.ElapsedEventHandler((s, x) =>
-            {
-                //心跳包
-                if (client.IsConnected && LoginStatus)
-                {
-                    try
-                    {
-                        if (MainForm.Instance.AppContext.CurUserInfo != null)
-                        {
-                            OriginalData beatData = HeartbeatCmdBuilder();
-                           Console.WriteLine($"心跳 Thread ID: {Thread.CurrentThread.ManagedThreadId}");
-                            MainForm.Instance.ecs.AddSendData(beatData);
-                        }
-                    }
-                    catch (Exception)
-                    {
+            //timer = new System.Timers.Timer(2000);
+            //timer.Elapsed += new System.Timers.ElapsedEventHandler((s, x) =>
+            //{
+            //    //心跳包
+            //    if (client.IsConnected && LoginStatus)
+            //    {
+            //        try
+            //        {
+            //            if (MainForm.Instance.AppContext.CurUserInfo != null)
+            //            {
+            //                OriginalData beatData = HeartbeatCmdBuilder();
+            //               Console.WriteLine($"心跳 Thread ID: {Thread.CurrentThread.ManagedThreadId}");
+            //                MainForm.Instance.ecs.AddSendData(beatData);
+            //            }
+            //        }
+            //        catch (Exception)
+            //        {
 
 
-                    }
-                }
-                else
-                {
+            //        }
+            //    }
+            //    else
+            //    {
 
-                }
-            });
-            timer.Enabled = true;
-            timer.Start();
+            //    }
+            //});
+            //timer.Enabled = true;
+            //timer.Start();
 
 
 
         }
 
-        /// <summary>
-        /// 客户端的心跳包
-        /// </summary>
-        /// <returns></returns>
-        public static OriginalData HeartbeatCmdBuilder()
-        {
-            OriginalData gd = new OriginalData();
-            try
-            {
-                if (MainForm.HeartbeatCounter == 256)
-                {
-                    MainForm.HeartbeatCounter = 0;
-                }
-                var tx = new ByteBuff(36);
-                tx.PushInt16(MainForm.HeartbeatCounter++); //累加数
-                tx.PushInt(0);
-                tx.PushInt64(MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID);
-                if (MainForm.Instance.AppContext.CurUserInfo.UserInfo.tb_employee != null)
-                {
-                    tx.PushString(MainForm.Instance.AppContext.CurUserInfo.UserInfo.tb_employee.Employee_Name);
-                }
-                else
-                {
-                    tx.PushString("");
-                }
-                tx.PushString(System.Environment.MachineName + ":" + MainForm.Instance.AppContext.CurrentUser.客户端版本);
-                MainForm.Instance.AppContext.CurrentUser.静止时间 = MainForm.GetLastInputTime();
-                tx.PushInt64(MainForm.Instance.AppContext.CurrentUser.静止时间);//电脑空闲时间
-                tx.PushString(MainForm.Instance.AppContext.log.Path);
-                tx.PushString(MainForm.Instance.AppContext.log.ModName);
-                if (MainForm.Instance.ecs != null && MainForm.Instance.AppContext.CurrentUser.在线状态 != MainForm.Instance.ecs.IsConnected)
-                {
-                    MainForm.Instance.AppContext.CurrentUser.在线状态 = MainForm.Instance.ecs.IsConnected;
-                }
-                tx.PushBool(MainForm.Instance.AppContext.CurrentUser.在线状态);
 
-                //Console.WriteLine($"esc: {Thread.CurrentThread.ManagedThreadId}");
-
-                tx.PushBool(MainForm.Instance.AppContext.CurrentUser.授权状态);
-                tx.PushString(System.DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));//客户端时间，用来对比服务器的时间，如果多个客户端时间与服务器不一样。则服务器有问题。相差一个小时以上。就直接断开客户端
-                gd.cmd = (byte)ClientCmdEnum.客户端心跳包;
-                gd.One = null;
-                gd.Two = tx.toByte();
-                //  RoleService.实时更新相关数据(PlayerSession);
-            }
-            catch (Exception)
-            {
-
-            }
-            return gd;
-        }
 
         private Task _connectTask;
         private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
@@ -551,7 +507,7 @@ namespace RUINORERP.UI.SuperSocketClient
                         case ServerCmdEnum.未知指令:
                             break;
                         case ServerCmdEnum.切换服务器:
-                            ClientService.接收切换服务器消息(od); 
+                            ClientService.接收切换服务器消息(od);
                             break;
                         case ServerCmdEnum.通知审批人审批:
                             //这里会弹出内容，没有实现具体功能前不生效
@@ -753,7 +709,7 @@ namespace RUINORERP.UI.SuperSocketClient
             {
                 this.LoginStatus = true;
             }
-            
+
             string msg = $"{System.Threading.Thread.CurrentThread.ManagedThreadId}连接成功{LoginStatus},{this.client.LocalEndPoint}";
             MainForm.Instance.uclog.AddLog(msg);
         }

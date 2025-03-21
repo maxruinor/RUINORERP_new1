@@ -5,6 +5,7 @@ using RUINORERP.Business.CommService;
 using RUINORERP.Common.Extensions;
 using RUINORERP.Common.Helper;
 using RUINORERP.Model.ConfigModel;
+using SharpYaml.Tokens;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -19,22 +20,22 @@ namespace RUINORERP.Business
     {
 
 
-       // public readonly IOptionsMonitor<GlobalValidatorConfig> ValidatorConfig;
+        // public readonly IOptionsMonitor<GlobalValidatorConfig> ValidatorConfig;
 
         //protected BaseValidatorGeneric(IOptionsMonitor<GlobalValidatorConfig> config)
         //{
-           // ValidatorConfig = config;
-            // 监听配置变化
-           // ValidatorConfig.OnChange(updatedConfig =>
-            //{
-            //    Console.WriteLine($"Configuration has changed: {updatedConfig.SomeSetting}");
-            //});
+        // ValidatorConfig = config;
+        // 监听配置变化
+        // ValidatorConfig.OnChange(updatedConfig =>
+        //{
+        //    Console.WriteLine($"Configuration has changed: {updatedConfig.SomeSetting}");
+        //});
         //}
 
-         protected BaseValidatorGeneric()
-         {
-         
-         }
+        protected BaseValidatorGeneric()
+        {
+
+        }
         //public abstract void Initialize();
 
         public virtual void Initialize()
@@ -76,6 +77,10 @@ namespace RUINORERP.Business
                         {
                             //或直接在这里取。取到返回也可以
                             convertedList.Add(item);
+                        }
+                        if (convertedList.FirstOrDefault(c => RUINORERP.Common.Helper.ReflectionHelper.GetPropertyValue(c, FiledName).ToString() == FieldValue) != null)
+                        { // 模拟检查唯一性的逻辑，返回 true 表示唯一，false 表示不唯一
+                            return false;
                         }
                     }
                     else if (TypeHelper.IsJArrayList(listType))

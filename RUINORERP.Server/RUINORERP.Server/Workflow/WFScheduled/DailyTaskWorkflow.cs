@@ -59,6 +59,11 @@ namespace RUINORERP.Server.Workflow.WFScheduled
 
         public override async Task<ExecutionResult> RunAsync(IStepExecutionContext context)
         {
+            // 设置日志级别为 Error
+            //LoggerFilterRules rules = new LoggerFilterRules();
+            //rules.Add(new LoggerFilterRule(LogLevel.Error, null, null));
+            //logger.BeginScope(rules);
+
             try
             {
                 

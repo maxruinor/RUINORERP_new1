@@ -93,6 +93,23 @@ namespace RUINORERP.UI.AdvancedUIModule
                         queryField.DiffDays2 = condition.DiffDays2;
                         queryField.Focused = condition.Focused;
                         queryField.UseLike = condition.UseLike;
+                        if (queryField.AdvQueryFieldType==AdvQueryProcessType.defaultSelect 
+                            || queryField.AdvQueryFieldType == AdvQueryProcessType.CmbMultiChoice
+                            || queryField.AdvQueryFieldType == AdvQueryProcessType.CmbMultiChoiceCanIgnore
+                            )
+                        {
+                            if (condition.MultiChoice.HasValue && condition.MultiChoice.Value)
+                            {
+                                //只有下拉等三种情况。才会显示是否多选
+                                queryField.AdvQueryFieldType = AdvQueryProcessType.CmbMultiChoiceCanIgnore;
+                            }
+                            else
+                            {
+                                //只有下拉等三种情况。才会显示是否多选
+                                queryField.AdvQueryFieldType = AdvQueryProcessType.defaultSelect;
+                            }
+                           
+                        }
                     }
                 }
             }

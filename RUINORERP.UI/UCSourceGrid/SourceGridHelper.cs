@@ -1166,8 +1166,9 @@ namespace RUINORERP.UI.UCSourceGrid
                     //{
                     //    grid.Columns[colIndex].Visible = visible;
                     //};
-
-                    menuController.AddNewItems(griddefine[i].DisplayController);
+                  
+                        menuController.AddNewItems(griddefine[i].DisplayController);
+                    
 
                     //menuController.AddItems(new KeyValuePair<string, SGDefineColumnItem>(griddefine[i].ColCaption, griddefine[i]));
 
@@ -4280,6 +4281,9 @@ namespace RUINORERP.UI.UCSourceGrid
 
             }
         }
+
+
+
 
 
 

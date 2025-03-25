@@ -45,7 +45,7 @@ namespace RUINORERP.Business.Processor
             SummaryCols.Add(c => c.SubtotalTransAmount);
             SummaryCols.Add(c => c.TotalDeliveredQty);
             SummaryCols.Add(c => c.TotalReturnedQty);
-            List<string> SummaryList = ExpressionHelper.ExpressionListToStringList<tb_SaleOrderDetail>(SummaryCols);
+            List<string> SummaryList = RuinorExpressionHelper.ExpressionListToStringList<tb_SaleOrderDetail>(SummaryCols);
             return SummaryList;
         }
 

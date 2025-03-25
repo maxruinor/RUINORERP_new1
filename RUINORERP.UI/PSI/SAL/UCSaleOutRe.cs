@@ -278,6 +278,7 @@ namespace RUINORERP.UI.PSI.SAL
             ControlChildColumnsInvisible(listCols);
             listCols.SetCol_Format<tb_SaleOutReDetail>(c => c.TaxRate, CustomFormatType.PercentFormat);
             listCols.SetCol_NeverVisible<ProductSharePart>(c => c.Location_ID);
+            listCols.SetCol_NeverVisible<ProductSharePart>(c => c.VendorModelCode);
 
             listCols.SetCol_NeverVisible<ProductSharePart>(c => c.Rack_ID);
             if (!AppContext.SysConfig.UseBarCode)

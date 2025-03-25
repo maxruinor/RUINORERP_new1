@@ -156,10 +156,33 @@ namespace RUINORERP.UI.CRM
                         }
                     }
 
+                    //如果区域有变化，带出对应省  省带市
+                    if (customer.Region_ID > 0 && s2.PropertyName == entity.GetPropertyName<tb_CRM_Customer>(c => c.Region_ID))
+                    {
+                       
+                        //创建表达式
+                        var lambdaProvince = Expressionable.Create<tb_Provinces>()
+                                        .And(t => t.Region_ID != null)
+                                        .And(t => t.Region_ID == customer.Region_ID)
+                                        .ToExpression();//注意 这一句 不能少
+
+                        //带过滤的下拉绑定要这样
+                        DataBindingHelper.BindData4Cmb<tb_Provinces>(entity, k => k.ProvinceID, v => v.ProvinceCNName, cmbProvinceID, lambdaProvince, true);
+
+                    }
+
+                    //如果区域有变化，带出对应省  省带市
+                    if (customer.ProvinceID > 0 && s2.PropertyName == entity.GetPropertyName<tb_CRM_Customer>(c => c.ProvinceID))
+                    {
+                        //创建表达式
+                        var lambdaCity = Expressionable.Create<tb_Cities>()
+                                        .And(t => t.ProvinceID == customer.ProvinceID)
+                                        .ToExpression();//注意 这一句 不能少
+                        //带过滤的下拉绑定要这样
+                        DataBindingHelper.BindData4Cmb<tb_Cities>(entity, k => k.CityID, v => v.CityCNName, cmbCityID, lambdaCity, true);
+                    }
+
                 }
-
-
-
 
             };
 

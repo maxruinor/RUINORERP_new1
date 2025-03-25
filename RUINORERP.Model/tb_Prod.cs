@@ -280,6 +280,10 @@ namespace RUINORERP.Model
                         }
         }
 
+
+        
+
+
         private long? _Location_ID;
         /// <summary>
         /// 默认仓库

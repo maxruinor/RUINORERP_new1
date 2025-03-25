@@ -369,6 +369,8 @@ namespace RUINORERP.UI.PSI.SAL
             listCols.SetCol_NeverVisible<tb_SaleOrderDetail>(c => c.SaleOrderDetail_ID);
             listCols.SetCol_NeverVisible<tb_SaleOrderDetail>(c => c.ProdDetailID);
             listCols.SetCol_NeverVisible<ProductSharePart>(c => c.Rack_ID);
+            listCols.SetCol_NeverVisible<ProductSharePart>(c => c.VendorModelCode);
+   
             if (!AppContext.SysConfig.UseBarCode)
             {
                 listCols.SetCol_NeverVisible<ProductSharePart>(c => c.BarCode);

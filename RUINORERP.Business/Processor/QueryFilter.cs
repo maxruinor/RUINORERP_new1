@@ -334,7 +334,7 @@ namespace RUINORERP.Business.Processor
                 QueryTargetType = typeof(T);
             }
             //指定到字符类型，方便使用
-            string ColName = ExpressionHelper.ExpressionToString<T>(ColNameExp);
+            string ColName = RuinorExpressionHelper.ExpressionToString<T>(ColNameExp);
             if (InvisibleCols != null && !InvisibleCols.Contains(ColName))
             {
                 InvisibleCols.Add(ColName);
@@ -442,21 +442,21 @@ namespace RUINORERP.Business.Processor
             QueryTargetType = typeof(T);
             queryField.QueryTargetType = QueryTargetType;
 
-            queryField.FieldName = ExpressionHelper.ExpressionToString(queryFieldExp);
+            queryField.FieldName = RuinorExpressionHelper.ExpressionToString(queryFieldExp);
             queryField.FieldPropertyInfo = typeof(T).GetProperties().FirstOrDefault(c => c.Name == queryField.FieldName);
             //代替字段
             if (queryFieldNameExp != null)
             {
                 //指定到字符类型，方便显示给用户时就可以用文本框了
                 queryField.AdvQueryFieldType = AdvQueryProcessType.TextSelect;
-                string fieldName = ExpressionHelper.ExpressionToString(queryFieldNameExp);
+                string fieldName = RuinorExpressionHelper.ExpressionToString(queryFieldNameExp);
                 queryField.FriendlyFieldNameFormBiz = fieldName;
                 queryField.FriendlyFieldNameFromSource = fieldName;
             }
             //指定了就覆盖，不然认为是一样的
             if (queryOriginalFieldNameExp != null)
             {
-                string OriginalFieldName = ExpressionHelper.ExpressionToString(queryOriginalFieldNameExp);
+                string OriginalFieldName = RuinorExpressionHelper.ExpressionToString(queryOriginalFieldNameExp);
                 queryField.FriendlyFieldNameFromSource = OriginalFieldName;
             }
 
@@ -498,7 +498,7 @@ namespace RUINORERP.Business.Processor
             queryField.QueryTargetType = QueryTargetType;
 
             //原始的字段。但是和外键表主键不一样。无法加载下拉
-            queryField.FieldName = ExpressionHelper.ExpressionToString(ReferenceFieldExp);
+            queryField.FieldName = RuinorExpressionHelper.ExpressionToString(ReferenceFieldExp);
             queryField.FieldPropertyInfo = typeof(T).GetProperties().FirstOrDefault(c => c.Name == queryField.FieldName);
 
             //目前这个情况更适合下拉？
@@ -507,20 +507,20 @@ namespace RUINORERP.Business.Processor
             //这里重新覆盖上面的字段。用代替字段
             if (ReferenceReplaceFieldExp != null)
             {
-                string fieldName = ExpressionHelper.ExpressionToString(ReferenceReplaceFieldExp);
+                string fieldName = RuinorExpressionHelper.ExpressionToString(ReferenceReplaceFieldExp);
                 queryField.FriendlyFieldNameFormBiz = fieldName;
             }
             // 覆盖显示的。用名称字段
             if (SourceIDExp != null)
             {
-                string strSourceIDExp = ExpressionHelper.ExpressionToString(SourceIDExp);
+                string strSourceIDExp = RuinorExpressionHelper.ExpressionToString(SourceIDExp);
                 queryField.FriendlyFieldValueFromSource = strSourceIDExp;
             }
 
             // 覆盖显示的。用名称字段
             if (SourceNameExp != null)
             {
-                string OriginalFieldName = ExpressionHelper.ExpressionToString(SourceNameExp);
+                string OriginalFieldName = RuinorExpressionHelper.ExpressionToString(SourceNameExp);
                 queryField.FriendlyFieldNameFromSource = OriginalFieldName;
             }
 
@@ -554,7 +554,7 @@ namespace RUINORERP.Business.Processor
             QueryTargetType = typeof(T);
             queryField.QueryTargetType = QueryTargetType;
 
-            string fieldID = ExpressionHelper.ExpressionToString(queryFieldIDExp);
+            string fieldID = RuinorExpressionHelper.ExpressionToString(queryFieldIDExp);
             queryField.QueryTargetType = typeof(T);
             queryField.FieldName = fieldID;
             queryField.FieldPropertyInfo = typeof(T).GetProperties().FirstOrDefault(c => c.Name == fieldID);
@@ -562,7 +562,7 @@ namespace RUINORERP.Business.Processor
             //代替字段
             if (queryFieldNameExp != null)
             {
-                string fieldName = ExpressionHelper.ExpressionToString(queryFieldNameExp);
+                string fieldName = RuinorExpressionHelper.ExpressionToString(queryFieldNameExp);
                 queryField.FriendlyFieldNameFormBiz = fieldName;
             }
 
@@ -661,7 +661,7 @@ namespace RUINORERP.Business.Processor
                 QueryTargetType = typeof(T);
             }
             //指定到字符类型，方便使用
-            string fieldName = ExpressionHelper.ExpressionToString<T>(queryFieldExp);
+            string fieldName = RuinorExpressionHelper.ExpressionToString<T>(queryFieldExp);
             QueryField queryField = new QueryField(fieldName);
             queryField.QueryTargetType = QueryTargetType;
             queryField.FieldPropertyInfo = typeof(T).GetProperties().FirstOrDefault(c => c.Name == fieldName);

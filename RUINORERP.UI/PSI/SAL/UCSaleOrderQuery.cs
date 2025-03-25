@@ -24,6 +24,20 @@ using RUINOR.Core;
 using RUINORERP.Common.Helper;
 using RUINORERP.Business.Processor;
 using Microsoft.Extensions.Logging;
+using RulesEngine.Models;
+using System.Linq.Dynamic.Core;
+using Newtonsoft.Json;
+using System.IO;
+using Rule = RulesEngine.Models.Rule;
+using RUINORERP.Model.CommonModel;
+using System.Linq.Expressions;
+using RUINORERP.UI.WorkFlowDesigner.Entities;
+using WorkflowCore.Interface;
+using RUINORERP.UI.SS;
+using RulesEngine;
+using System.Linq.Dynamic.Core.CustomTypeProviders;
+using Fireasy.Common.Extensions;
+using Netron.NetronLight;
 
 namespace RUINORERP.UI.PSI.SAL
 {
@@ -36,28 +50,269 @@ namespace RUINORERP.UI.PSI.SAL
             InitializeComponent();
             base.RelatedBillEditCol = (c => c.SOrderNo);
 
-          
+
 
             //显示转出库单
             tsbtnBatchConversion.Visible = true;
             //base._UCBillMasterQuery.ColDisplayType = typeof(tb_SaleOrder);
         }
-        public override void BuildLimitQueryConditions()
+
+        //public override void BuildLimitQueryConditions()
+        //{
+        //    //// 替换占位符为参数名
+        //    //.Replace("@EmployeeId", ":employeeId");
+        //    //// SqlSugar自动处理参数
+        //    //lambda.And(t => t.Employee_ID == SqlFunc.Param("employeeId", user.EmployeeId));
+        //    //创建表达式
+        //    var lambda = Expressionable.Create<tb_SaleOrder>()
+        //                     //.AndIF(CurMenuInfo.CaptionCN.Contains("客户"), t => t.IsCustomer == true)
+        //                     // .AndIF(CurMenuInfo.CaptionCN.Contains("供应商"), t => t.IsVendor == true)
+        //                     .And(t => t.isdeleted == false)
+        //                       // .And(t => t.Is_enabled == true)
+        //                       .AndIF(AuthorizeController.GetSaleLimitedAuth(MainForm.Instance.AppContext), t => t.Employee_ID == MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID)//限制了销售只看到自己的客户,采购不限制
+        //                    .ToExpression();//注意 这一句 不能少
+        //    base.LimitQueryConditions = lambda;
+        //    QueryConditionFilter.FilterLimitExpressions.Add(lambda);
+        //}
+
+        public List<RuleResultWithFilter> ExecuteRulesWithFilter(RulesEngine.RulesEngine re, tb_UserInfo user, tb_MenuInfo menu)
         {
-            //创建表达式
-            var lambda = Expressionable.Create<tb_SaleOrder>()
-                             //.AndIF(CurMenuInfo.CaptionCN.Contains("客户"), t => t.IsCustomer == true)
-                             // .AndIF(CurMenuInfo.CaptionCN.Contains("供应商"), t => t.IsVendor == true)
-                             .And(t => t.isdeleted == false)
-
-                               // .And(t => t.Is_enabled == true)
-                               .AndIF(AuthorizeController.GetSaleLimitedAuth(MainForm.Instance.AppContext), t => t.Employee_ID == MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID)//限制了销售只看到自己的客户,采购不限制
-
-                            .ToExpression();//注意 这一句 不能少
-            base.LimitQueryConditions = lambda;
-            QueryConditionFilter.FilterLimitExpressions.Add(lambda);
+            var results = re.ExecuteAllRulesAsync("QueryFilterRules", user, menu).Result;
+            return results.Select(r => new RuleResultWithFilter
+            {
+                IsSuccess = r.IsSuccess,
+                FilterExpression = r.IsSuccess ?
+                    r.Rule.Expression.Split(new[] { "=>" }, StringSplitOptions.RemoveEmptyEntries)[1].Trim().Trim('"')
+                    : null
+            }).ToList();
         }
 
+        /*
+        public override void BuildLimitQueryConditions()
+        {
+
+            // 注册自定义函数
+            var reSettings = new ReSettings
+            {
+                CustomTypes = new Type[] { typeof(FilterHelper), typeof(tb_UserInfo), typeof(tb_MenuInfo) }
+            };
+
+            // 加载规则配置
+            //var rulesJson = File.ReadAllText("permission_rules.json");
+            //var workflows = new List<Workflow> {
+            //       new Workflow {
+            //           WorkflowName = "QueryFilterRules",
+            //           Rules = JsonConvert.DeserializeObject<List<Rule>>(rulesJson)
+            //       }
+            //   };
+            // 1. 从JSON文件加载工作流配置
+            //var json = File.ReadAllText("permission_rules.json");
+            var json = @"[
+                          {
+                            ""WorkflowName"": ""QueryFilterRules"", // 工作流名称必须与代码中执行时一致
+                            ""Rules"": [ // 必须包含Rules数组
+                              {
+                                ""RuleName"": ""DepartmentFilter"",
+                                ""Expression"": ""t => t.Employee_ID == @EmployeeId &&  t.DepartmentId == @DepartmentId""
+                              },
+                              {
+                                ""RuleName"": ""SoftDelete"",
+                                ""Expression"": ""t => t.isdeleted == false""
+                              }
+                            ]
+                          }
+                        ]";
+
+            var workflows = JsonConvert.DeserializeObject<List<Workflow>>(json); // 注意：反序列化为List<Workflow>
+
+            var re = new RulesEngine.RulesEngine(workflows.ToArray(), reSettings);
+            //var re = new RulesEngine.RulesEngine(workflows.ToArray(), null);
+
+            var user = MainForm.Instance.AppContext.CurUserInfo.UserInfo;
+            var menu = CurMenuInfo;
+
+            // 执行规则
+            // var resultList = await re.ExecuteAllRulesAsync("QueryFilterRules", user, menu);
+            // 执行规则并获取过滤条件
+            var ruleResults = ExecuteRulesWithFilter(re, user, menu);
+
+            //var successResults = resultList.Where(r =>
+            //    r.IsSuccess &&
+            //    r.f == "ApplyFilter" // 根据事件类型过滤
+            //);
+
+            var lambda = Expressionable.Create<tb_SaleOrder>();
+
+            var param = Expression.Parameter(typeof(tb_SaleOrder), "t");
+
+
+            foreach (var result in ruleResults.Where(r => r.IsSuccess && !string.IsNullOrEmpty(r.FilterExpression)))
+            {
+                var resolvedExpr = ReplacePlaceholders(result.FilterExpression, menu, user);
+                //var exprE = DynamicExpressionParser.ParseLambda<tb_SaleOrder, bool>(
+                //    ParsingConfig.Default,
+                //    resolvedExpr
+                //);
+            }
+
+            // 应用基础条件（如无规则时）
+            if (!ruleResults.Any(r => r.IsSuccess))
+            {
+                lambda.And(t => t.isdeleted == false);
+            }
+
+            var results = re.ExecuteAllRulesAsync("QueryFilterRules",
+            new RuleParameter("user", user),
+            new RuleParameter("menu", menu)
+                 ).Result;
+
+            //foreach (var result in ruleResults.Where(r => r.IsSuccess))
+            foreach (var result in results)
+            {
+                #region 解析Expression
+
+                // 从规则中获取过滤表达式字符串
+                var Expr = result.Rule.Expression.ToString();// result.Rule.Actions["FilterExpression"].ToString();
+
+                // 替换占位符（如@UserId → 实际值） 实际值是 由哪个对象来决定的呢？
+                var resolvedExpr = ReplacePlaceholders(Expr, menu, user);
+
+
+                // 解析为Lambda表达式
+
+                var paramUser = Expression.Parameter(typeof(tb_UserInfo), "user");
+                var paramMenu = Expression.Parameter(typeof(tb_MenuInfo), "menu");
+                var paramT = Expression.Parameter(typeof(tb_SaleOrder), "t");
+          
+                var resolvedExpr1 = "t => t.Employee_ID == \"121\" && t.DepartmentId == \"121\"";
+
+                // 使用ParsingConfig放宽解析限制
+                var config = new ParsingConfig
+                {
+                    ResolveTypesBySimpleName = true // 允许简单类型名称解析
+                };
+
+                var filterExprLambda1 = DynamicExpressionParser.ParseLambda(
+                    config,
+                    new[] { paramT },
+                    typeof(bool),
+                    resolvedExpr1
+                ) as Expression<Func<tb_SaleOrder, bool>>;
+
+
+
+                if (result.Rule.RuleName == "SalesOrderAccess")
+                {
+                    // 解析条件表达式（如 menu.CaptionCN.Contains("客户")）
+                    var conditionExpr = DynamicExpressionParser.ParseLambda(
+                        new[] { paramUser, paramMenu },
+                        typeof(bool),
+                        resolvedExpr
+                    ) as Expression<Func<tb_SaleOrder, bool>>;
+                    lambda.And(conditionExpr);
+                }
+                else
+                {
+                    resolvedExpr = resolvedExpr1;
+                    // 解析过滤表达式（如 t => t.Employee_ID == 123）
+                    var filterExprLambda = DynamicExpressionParser.ParseLambda(
+                        new[] { paramT },
+                        typeof(bool),
+                        resolvedExpr
+                    ) as Expression<Func<tb_SaleOrder, bool>>;
+
+                    // 添加到SqlSugar的条件组合器
+                    lambda.And(filterExprLambda);
+                }
+
+                #endregion
+                // 从规则中获取过滤表达式字符串
+                var filterExpr = result.Rule.Expression.ToString();// result.Rule.Actions["FilterExpression"].ToString();
+                                                                   // 从Actions中获取过滤条件
+
+                // 替换占位符（如@UserId → 实际值）
+                var resolvedFilterExpr = ReplacePlaceholders(filterExpr, menu, user);
+
+                // 解析为Lambda表达式
+                var Filterparam = Expression.Parameter(typeof(tb_SaleOrder), "t");
+                var Filterexpr = DynamicExpressionParser.ParseLambda(
+                    new[] { Filterparam },
+                    typeof(bool),
+                    resolvedExpr
+                ) as Expression<Func<tb_SaleOrder, bool>>;
+
+                // 添加到SqlSugar的条件组合器
+                lambda.And(Filterexpr);
+            }
+
+            // 必须添加的基础条件（如软删除）
+            lambda.And(t => t.isdeleted == false);
+
+            base.LimitQueryConditions = lambda.ToExpression();
+            //QueryConditionFilter.FilterLimitExpressions.Add(lambda);
+        }
+        */
+        /// <summary>
+        /// 可以通过  注册 数字要"引号" 转换不然会失败
+        /// </summary>
+        private void lambdaTest()
+        {
+            // 构造 lambda 表达式的字符串形式
+            string exprString = "t => t.Employee_ID == \"121\" && t.DepartmentId == \"11\"";
+            // 解析 lambda 表达式字符串，生成表达式树
+            var parameter = Expression.Parameter(typeof(tb_SaleOrder), "t");
+            var lambdaExpr = DynamicExpressionParser.ParseLambda(new[] { parameter }, typeof(bool), exprString);
+
+            // 编译表达式树为委托
+            var func = (Func<tb_SaleOrder, bool>)lambdaExpr.Compile();
+
+            var lambda = Expressionable.Create<tb_SaleOrder>();
+            var user = MainForm.Instance.AppContext.CurUserInfo.UserInfo;
+            var menu = CurMenuInfo;
+
+
+            // 示例值（根据实际类型调整）
+            var resolvedExpr = "t => t.Employee_ID == \"112\" && t.DepartmentId == \"3121\"";
+
+            // 解析为 Lambda 表达式
+            var config = new ParsingConfig
+            {
+                ResolveTypesBySimpleName = true,
+                CustomTypeProvider = new DefaultDynamicLinqCustomTypeProvider() // 确保识别自定义类型
+            };
+
+            var paramT = Expression.Parameter(typeof(tb_SaleOrder), "t");
+            var filterExprLambda = DynamicExpressionParser.ParseLambda(
+                config,
+                new[] { paramT },
+                typeof(bool),
+                resolvedExpr
+            ) as Expression<Func<tb_SaleOrder, bool>>;
+
+            lambda.And(filterExprLambda);
+            lambda.And(t => t.isdeleted == false);
+
+            // 验证生成的表达式
+            Console.WriteLine(lambda.ToExpression().ToString());
+            // 输出示例: t => ((t.Employee_ID == 121) && (t.DepartmentId == 11)) && (t.isdeleted == False)
+        }
+
+        // 占位符替换方法
+        private string ReplacePlaceholders(string expr, tb_MenuInfo menu, tb_UserInfo user)
+        {
+            return expr
+                //.Replace("@UserId", user.User_ID.ToString())
+                .Replace("@EmployeeId", user.Employee_ID.ToString())
+                .Replace("@DepartmentId", user.tb_employee.tb_department.ID.ToString());
+        }
+        private string ReplacePlaceholders(string expr, tb_SaleOrder t)
+        {
+            return expr
+                .Replace("@EmployeeId", t.Employee_ID.ToString())
+                .Replace("@DepartmentId", t.tb_employee.tb_department.ID.ToString());
+        }
+
+       
         /// <summary>
         /// 如果需要查询条件查询，就要在子类中重写这个方法
         /// </summary>
@@ -73,6 +328,7 @@ namespace RUINORERP.UI.PSI.SAL
 
             QueryConditionFilter.FilterLimitExpressions.Add(lambda);
         }
+        
 
         public override void BuildSummaryCols()
         {

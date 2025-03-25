@@ -102,7 +102,7 @@ namespace RUINORERP.UI.MRP.BOM
                 Expression<Func<tb_BOM_SDetail, bool>> expression = QueryConditionFilter.GetFilterExpression<tb_BOM_SDetail>();
                 List<tb_BOM_SDetail> list = await MainForm.Instance.AppContext.Db.Queryable<tb_BOM_SDetail>().WhereIF(expression != null, expression).ToListAsync();
 
-                List<string> masterlist = ExpressionHelper.ExpressionListToStringList(SummaryCols);
+                List<string> masterlist = RuinorExpressionHelper.ExpressionListToStringList(SummaryCols);
                 if (masterlist.Count > 0)
                 {
                     dataGridView1.IsShowSumRow = true;
@@ -143,7 +143,7 @@ namespace RUINORERP.UI.MRP.BOM
             //list = await ctr.BaseQueryByAdvancedNavWithConditionsAsync(true, queryConditions, QueryConditionFilter.GetFilterExpression<T>(), QueryDto, pageNum, pageSize) as List<T>;
             List<tb_BOM_SDetail> list = await ctr.BaseQueryByAdvancedNavWithConditionsAsync(true, QueryConditionFilter, QueryDtoProxy, pageNum, pageSize) as List<tb_BOM_SDetail>;
 
-            List<string> masterlist = ExpressionHelper.ExpressionListToStringList(SummaryCols);
+            List<string> masterlist = RuinorExpressionHelper.ExpressionListToStringList(SummaryCols);
             if (masterlist.Count > 0)
             {
                 dataGridView1.IsShowSumRow = true;

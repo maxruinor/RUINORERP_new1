@@ -306,7 +306,7 @@ namespace RUINORERP.UI.Common
             catch (Exception ex) when (ex is not OperationCanceledException)
             {
                 MainForm.Instance.ShowStatusText(GetUserFriendlyError(ex));
-                MainForm.Instance.logger.LogError(ex, "登录失败");
+                MainForm.Instance.logger.Debug(ex, "登录失败"+ex.Message);
                 return false;
             }
         }

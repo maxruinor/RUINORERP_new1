@@ -58,6 +58,8 @@ using RUINORERP.UI.ATechnologyStack;
 using Winista.Text.HtmlParser.Tags;
 using Org.BouncyCastle.Crypto;
 using NPOI.POIFS.Properties;
+using RUINORERP.UI.AdvancedUIModule;
+using FastReport.DevComponents.WinForms.Drawing;
 
 
 namespace RUINORERP.UI.SysConfig
@@ -118,6 +120,10 @@ namespace RUINORERP.UI.SysConfig
 
         private void UCDataFix_Load(object sender, EventArgs e)
         {
+            dataGridViewInv.RowHeadersVisible = false;
+            ucAdvDateTimerPickerGroup1.Visible = false;
+            ucAdvDateTimerPickerGroup1.dtp1.ShowCheckBox = false;
+            ucAdvDateTimerPickerGroup1.dtp2.ShowCheckBox = false;
             List<BizType> list = new List<BizType>();
             list.Add(BizType.BOM物料清单);
             list.Add(BizType.制令单);
@@ -144,7 +150,6 @@ namespace RUINORERP.UI.SysConfig
         View_Inventory InventoryDto = new View_Inventory();
 
         BizTypeMapper mapper = new BizTypeMapper();
-
 
 
 
@@ -246,7 +251,7 @@ namespace RUINORERP.UI.SysConfig
                           .ToListAsync();
             bindingSourceInv.DataSource = inventories.ToBindingSortCollection();
             dataGridViewInv.DataSource = bindingSourceInv;
-
+            dataGridViewInv.SelectionMode = DataGridViewSelectionMode.CellSelect;
             //只显示成本 和详情ID。
             foreach (DataGridViewColumn item in dataGridViewInv.Columns)
             {
@@ -260,6 +265,7 @@ namespace RUINORERP.UI.SysConfig
                     if (item.Name == "Inv_Cost")
                     {
                         item.HeaderText = "成本";
+                        item.Width = 60;
                     }
                     if (item.Name == "ProdDetailID")
                     {
@@ -402,7 +408,7 @@ namespace RUINORERP.UI.SysConfig
             object obj = BizCacheHelper.Instance.GetEntity<View_ProdDetail>(e.Value);
             if (obj != null && obj.GetType().Name != "Object" && obj is View_ProdDetail prodDetail)
             {
-                e.Value = prodDetail.SKU + " " + prodDetail.CNName + prodDetail.prop + prodDetail.Specifications;
+                e.Value = prodDetail.CNName + prodDetail.prop + prodDetail.Specifications;
             }
         }
 
@@ -412,6 +418,12 @@ namespace RUINORERP.UI.SysConfig
             {
                 return;
             }
+
+            AddLoadRelatedData();
+        }
+
+        private void AddLoadRelatedData()
+        {
             View_Inventory child = null;
             long ProdDetailID = 0;
             View_ProdDetail prodDetail = null;
@@ -490,6 +502,9 @@ namespace RUINORERP.UI.SysConfig
                                 dgv销售订单.Dock = DockStyle.Fill;
                                 #endregion
                                 page销售订单.Text = "销售订单" + SaleOrderItems.Count;
+                                page销售订单.Tag = bt;
+                                dgv销售订单.Tag = bt;
+
                                 page销售订单.Controls.Add(dgv销售订单);
                                 tabControl.TabPages.Add(page销售订单);
                                 dgv销售订单.Refresh();
@@ -527,6 +542,8 @@ namespace RUINORERP.UI.SysConfig
                                 dgv销售出库.Dock = DockStyle.Fill;
                                 #endregion
                                 page销售出库单.Text = "销售出库" + SaleOutItems.Count;
+                                page销售出库单.Tag = bt;
+                                dgv销售出库.Tag = bt;
                                 page销售出库单.Controls.Add(dgv销售出库);
                                 tabControl.TabPages.Add(page销售出库单);
                             }
@@ -571,6 +588,8 @@ namespace RUINORERP.UI.SysConfig
 
 
                                 page其他出库单.Text = "其他出库单" + list其它出库.Count;
+                                page其他出库单.Tag = bt;
+                                dgv其他出库单.Tag = bt;
                                 page其他出库单.Controls.Add(dgv其他出库单);
                                 tabControl.TabPages.Add(page其他出库单);
                             }
@@ -604,6 +623,8 @@ namespace RUINORERP.UI.SysConfig
                                 dgv制令单.Tag = bt;
 
                                 page制令单.Text = "制令单" + MOItems.Count;
+                                page制令单.Tag = bt;
+                                dgv制令单.Tag = bt;
                                 page制令单.Controls.Add(dgv制令单);
                                 tabControl.TabPages.Add(page制令单);
                             }
@@ -642,6 +663,8 @@ namespace RUINORERP.UI.SysConfig
 
 
                                 pageBOMDetail.Text = "配方清单明细" + ProdbomItems.Count;
+                                pageBOMDetail.Tag = bt;
+                                dgvBOMDetail.Tag = bt;
                                 pageBOMDetail.Controls.Add(dgvBOMDetail);
                                 tabControl.TabPages.Add(pageBOMDetail);
                             }
@@ -682,6 +705,9 @@ namespace RUINORERP.UI.SysConfig
                                 dgvBOM.AutoResizeColumns(DataGridViewAutoSizeColumnsMode.AllCells);
                                 dgvBOM.AutoResizeRows();
                                 pageBOM.Text = "对应配方" + boms.Count;
+                                pageBOM.Tag = bt;
+                                dgvBOM.Tag = bt;
+
                                 pageBOM.Controls.Add(dgvBOM);
                                 tabControl.TabPages.Add(pageBOM);
                                 dgvBOM.ContextMenuStrip = this.contextMenuStripBOMPrice;
@@ -723,6 +749,9 @@ namespace RUINORERP.UI.SysConfig
 
 
                                 page生产领料单.Text = "生产领料单" + MRBills.Count;
+                                page生产领料单.Tag = bt;
+                                dgv生产领料单.Tag = bt;
+
                                 page生产领料单.Controls.Add(dgv生产领料单);
                                 tabControl.TabPages.Add(page生产领料单);
                             }
@@ -767,6 +796,9 @@ namespace RUINORERP.UI.SysConfig
                                 dgv缴库单.Tag = bt;
 
                                 page缴库单.Text = "缴库单" + ProdFinishedItems.Count;
+                                page缴库单.Tag = bt;
+                                dgv缴库单.Tag = bt;
+
                                 page缴库单.Controls.Add(dgv缴库单);
                                 tabControl.TabPages.Add(page缴库单);
                             }
@@ -802,6 +834,9 @@ namespace RUINORERP.UI.SysConfig
                                 dgv产品组合单.Tag = bt;
 
                                 page产品组合单.Text = "产品组合单母件" + ProdMerge.Count;
+                                page产品组合单.Tag = bt;
+                                dgv产品组合单.Tag = bt;
+
                                 page产品组合单.Controls.Add(dgv产品组合单);
                                 tabControl.TabPages.Add(page产品组合单);
                             }
@@ -832,6 +867,9 @@ namespace RUINORERP.UI.SysConfig
                                 dgv产品组合单生成件.Tag = bt;
 
                                 page产品组合单生成件.Text = "产品组合单生成件" + ProdMergeItems.Count;
+                                page产品组合单生成件.Tag = bt;
+                                dgv产品组合单生成件.Tag = bt;
+
                                 page产品组合单生成件.Controls.Add(dgv产品组合单生成件);
                                 tabControl.TabPages.Add(page产品组合单生成件);
                             }
@@ -869,6 +907,10 @@ namespace RUINORERP.UI.SysConfig
                                 dgvBorrow.AutoResizeRows();
 
                                 page借出单.Text = "借出单" + ProdBorrowingItems.Count;
+                                page借出单.Tag = bt;
+                                dgvBorrow.Tag = bt;
+
+
                                 page借出单.Controls.Add(dgvBorrow);
                                 tabControl.TabPages.Add(page借出单);
                             }
@@ -902,7 +944,6 @@ namespace RUINORERP.UI.SysConfig
                 }
             }
             panel相关数据.Controls.Add(tabControl);
-
         }
 
         private void tabControl_SelectedIndexChanged(object sender, EventArgs e)
@@ -914,6 +955,7 @@ namespace RUINORERP.UI.SysConfig
                 if (dgv != null)
                 {
                     dgv.AllowUserToAddRows = false;
+                    dgv.ContextMenuStrip = contextMenuStripBOMPrice;
                     if (tabControl.SelectedTab.Text.Contains("对应配方"))
                     {
                         //双击母件行能将子件所有库存数据带出来+并且将他
@@ -1023,11 +1065,16 @@ namespace RUINORERP.UI.SysConfig
             return Allitems;
 
         }
+
+
+        private int totalloop;
+
+
         /// <summary>
         /// 更新相关出库的明细中的成本
         /// </summary>
         /// <param name="updateInvList"></param>
-        private async void UpdateRelatedCost(List<tb_Inventory> updateInvList, bool FixSubtotal = false)
+        private async void UpdateRelatedCost(List<tb_Inventory> updateInvList, BizType SelectBizType = BizType.无对应数据, bool FixSubtotal = false)
         {
 
             if (!chkTestMode.Checked)
@@ -1053,6 +1100,15 @@ namespace RUINORERP.UI.SysConfig
                     {
                         if (item.Checked && item.Tag is BizType bt)
                         {
+                            if (SelectBizType != BizType.无对应数据)
+                            {
+                                //指定行
+                                if (SelectBizType != bt)
+                                {
+                                    continue;
+                                }
+                            }
+
                             switch (bt)
                             {
                                 case BizType.BOM物料清单:
@@ -1062,8 +1118,8 @@ namespace RUINORERP.UI.SysConfig
                                     List<tb_BOM_S> BOM_SOrders = MainForm.Instance.AppContext.Db.Queryable<tb_BOM_S>()
                                     .InnerJoin<tb_BOM_SDetail>((a, b) => a.BOM_ID == b.BOM_ID)
                                     .Includes(a => a.tb_BOM_SDetails)
+                                    .Where(a => a.DataStatus == (int)DataStatus.确认)
                                     .Where(a => a.tb_BOM_SDetails.Any(c => c.ProdDetailID == child.ProdDetailID)).ToList();
-
                                     var distinctBOMbills = BOM_SOrders
                                     .GroupBy(o => o.BOM_ID)
                                     .Select(g => g.First())
@@ -1122,6 +1178,8 @@ namespace RUINORERP.UI.SysConfig
                                             {
                                                 await MainForm.Instance.AppContext.Db.Updateable<tb_BOM_S>(bill).ExecuteCommandAsync();
                                             }
+
+                                            totalloop = 0;
                                             LoopUpdateBom(bill);
                                         }
                                     }
@@ -1144,6 +1202,7 @@ namespace RUINORERP.UI.SysConfig
                                 .InnerJoin<tb_ManufacturingOrderDetail>((a, b) => a.MOID == b.MOID)
                                 .Includes(b => b.tb_bom_s, c => c.tb_BOM_SDetails)
                                 .Includes(a => a.tb_ManufacturingOrderDetails)
+
                                 .Where(a => a.tb_ManufacturingOrderDetails.Any(c => c.ProdDetailID == child.ProdDetailID)).ToList();
 
 
@@ -1240,7 +1299,10 @@ namespace RUINORERP.UI.SysConfig
                                     .Includes(a => a.tb_SaleOrderDetails)
                                     .Includes(a => a.tb_SaleOuts, c => c.tb_SaleOutDetails)
                                     .Includes(a => a.tb_SaleOuts, c => c.tb_SaleOutRes, d => d.tb_SaleOutReDetails)
+                                    .WhereIF(rdb时间区间.Checked, a => a.SaleDate >= ucAdvDateTimerPickerGroup1.dtp1.Value && a.SaleDate <= ucAdvDateTimerPickerGroup1.dtp2.Value)
                                     .Where(a => a.tb_SaleOrderDetails.Any(c => c.ProdDetailID == child.ProdDetailID)).ToList();
+
+
                                     var distinctSoOrders = SOorders
                                     .GroupBy(o => o.SOrder_ID)
                                     .Select(g => g.First())
@@ -1268,6 +1330,18 @@ namespace RUINORERP.UI.SysConfig
                                                     needupdateorder = true;
                                                 }
 
+                                                if (rdb时间区间.Checked)
+                                                {
+                                                    Detail.Cost = child.Inv_Cost;
+                                                    Detail.SubtotalCostAmount = Detail.Cost * Detail.Quantity;
+                                                    Detail.SubtotalTransAmount = Detail.TransactionPrice * Detail.Quantity;
+                                                    if (Detail.TaxRate > 0)
+                                                    {
+                                                        Detail.SubtotalTaxAmount = Detail.SubtotalTransAmount / (1 + Detail.TaxRate) * Detail.TaxRate;
+                                                    }
+                                                    Detail.SubtotalUntaxedAmount = Detail.SubtotalTransAmount - Detail.SubtotalTaxAmount;
+                                                    needupdateorder = true;
+                                                }
 
                                                 if (rdb成本为0的才修复.Checked && Detail.Cost == 0)
                                                 {
@@ -1356,212 +1430,7 @@ namespace RUINORERP.UI.SysConfig
                                                 await MainForm.Instance.AppContext.Db.Updateable<tb_SaleOrder>(order).ExecuteCommandAsync();
                                             }
                                         }
-                                        /*
-                                        #region 销售出库
-                                        if (order.tb_SaleOuts != null)
-                                        {
-                                            int saleoutCounter = 0;
-                                            foreach (var SaleOut in order.tb_SaleOuts)
-                                            {
-                                                if (SaleOut.SaleOutNo == "SOD7E8C121774" || SaleOut.SaleOutNo == "SOD7E92190226")
-                                                {
 
-                                                }
-                                                bool needupdateOut = false;
-                                                foreach (var saleoutdetails in SaleOut.tb_SaleOutDetails)
-                                                {
-                                                    if (saleoutdetails.ProdDetailID == child.ProdDetailID)
-                                                    {
-                                                        //不更新成本只改小计总计
-                                                        if (rdb小计总计.Checked)
-                                                        {
-                                                            //saleoutdetails.Cost = child.Inv_Cost;
-                                                            saleoutdetails.SubtotalCostAmount = saleoutdetails.Cost * saleoutdetails.Quantity;
-
-                                                            saleoutdetails.SubtotalTransAmount = saleoutdetails.TransactionPrice * saleoutdetails.Quantity;
-                                                            if (saleoutdetails.TaxRate > 0)
-                                                            {
-                                                                saleoutdetails.SubtotalTaxAmount = saleoutdetails.SubtotalTransAmount / (1 + saleoutdetails.TaxRate) * saleoutdetails.TaxRate;
-                                                            }
-                                                            saleoutdetails.SubtotalUntaxedAmount = saleoutdetails.SubtotalTransAmount - saleoutdetails.SubtotalTaxAmount;
-                                                            needupdateOut = true;
-                                                        }
-                                                        if (rdb成本为0的才修复.Checked && saleoutdetails.Cost == 0)
-                                                        {
-                                                            saleoutdetails.Cost = child.Inv_Cost;
-                                                            saleoutdetails.SubtotalCostAmount = saleoutdetails.Cost * saleoutdetails.Quantity;
-
-                                                            saleoutdetails.SubtotalTransAmount = saleoutdetails.TransactionPrice * saleoutdetails.Quantity;
-                                                            if (saleoutdetails.TaxRate > 0)
-                                                            {
-                                                                saleoutdetails.SubtotalTaxAmount = saleoutdetails.SubtotalTransAmount / (1 + saleoutdetails.TaxRate) * saleoutdetails.TaxRate;
-                                                            }
-                                                            saleoutdetails.SubtotalUntaxedAmount = saleoutdetails.SubtotalTransAmount - saleoutdetails.SubtotalTaxAmount;
-                                                            needupdateOut = true;
-                                                        }
-                                                        if (rdb小于单项成本才更新.Checked && saleoutdetails.Cost != 0)
-                                                        {
-                                                            if (saleoutdetails.Cost < txtUnitCost.Text.ToDecimal())
-                                                            {
-                                                                saleoutdetails.Cost = child.Inv_Cost;
-                                                                saleoutdetails.SubtotalCostAmount = saleoutdetails.Cost * saleoutdetails.Quantity;
-
-                                                                saleoutdetails.SubtotalTransAmount = saleoutdetails.TransactionPrice * saleoutdetails.Quantity;
-                                                                if (saleoutdetails.TaxRate > 0)
-                                                                {
-                                                                    saleoutdetails.SubtotalTaxAmount = saleoutdetails.SubtotalTransAmount / (1 + saleoutdetails.TaxRate) * saleoutdetails.TaxRate;
-                                                                }
-                                                                saleoutdetails.SubtotalUntaxedAmount = saleoutdetails.SubtotalTransAmount - saleoutdetails.SubtotalTaxAmount;
-                                                                needupdateOut = true;
-                                                            }
-                                                        }
-                                                        if (rdb按库存成本比例.Checked && saleoutdetails.Cost != 0)
-                                                        {
-                                                            saleoutdetails.Cost = child.Inv_Cost;
-                                                            saleoutdetails.SubtotalCostAmount = saleoutdetails.Cost * saleoutdetails.Quantity;
-
-                                                            saleoutdetails.SubtotalTransAmount = saleoutdetails.TransactionPrice * saleoutdetails.Quantity;
-                                                            if (saleoutdetails.TaxRate > 0)
-                                                            {
-                                                                saleoutdetails.SubtotalTaxAmount = saleoutdetails.SubtotalTransAmount / (1 + saleoutdetails.TaxRate) * saleoutdetails.TaxRate;
-                                                            }
-                                                            saleoutdetails.SubtotalUntaxedAmount = saleoutdetails.SubtotalTransAmount - saleoutdetails.SubtotalTaxAmount;
-                                                            needupdateOut = true;
-                                                        }
-                                                    }
-                                                }
-                                                if (needupdateOut)
-                                                {
-                                                    saleoutCounter++;
-                                                    SaleOut.TotalCost = SaleOut.tb_SaleOutDetails.Sum(c => c.SubtotalCostAmount);
-                                                    SaleOut.TotalAmount = SaleOut.tb_SaleOutDetails.Sum(c => c.SubtotalTransAmount);
-                                                    SaleOut.TotalQty = SaleOut.tb_SaleOutDetails.Sum(c => c.Quantity);
-                                                    SaleOut.TotalTaxAmount = SaleOut.tb_SaleOutDetails.Sum(c => c.SubtotalTaxAmount);
-                                                    SaleOut.TotalUntaxedAmount = SaleOut.tb_SaleOutDetails.Sum(c => c.SubtotalUntaxedAmount);
-
-                                                    richTextBoxLog.AppendText($"销售出库{SaleOut.SaleOutNo}总金额：{SaleOut.TotalCost} " + "\r\n");
-                                                }
-                                                if (saleoutCounter > 0)
-                                                {
-                                                    richTextBoxLog.AppendText($"更新销售出库单 {saleoutCounter} 条" + "\r\n");
-                                                }
-
-
-                                                #region 销售退回
-                                                if (SaleOut.tb_SaleOutRes != null)
-                                                {
-                                                    int saleoutresCounter = 0;
-                                                    foreach (var SaleOutRe in SaleOut.tb_SaleOutRes)
-                                                    {
-                                                        bool needupdateback = false;
-                                                        foreach (var SaleOutReDetail in SaleOutRe.tb_SaleOutReDetails)
-                                                        {
-                                                            if (SaleOutReDetail.ProdDetailID == child.ProdDetailID)
-                                                            {
-                                                                //不改成本 
-                                                                if (rdb小计总计.Checked)
-                                                                {
-                                                                    SaleOutReDetail.SubtotalCostAmount = SaleOutReDetail.Cost * SaleOutReDetail.Quantity;
-                                                                    SaleOutReDetail.SubtotalTransAmount = SaleOutReDetail.TransactionPrice * SaleOutReDetail.Quantity;
-                                                                    if (SaleOutReDetail.TaxRate > 0)
-                                                                    {
-                                                                        SaleOutReDetail.SubtotalTaxAmount = SaleOutReDetail.SubtotalTransAmount / (1 + SaleOutReDetail.TaxRate) * SaleOutReDetail.TaxRate;
-                                                                    }
-                                                                    SaleOutReDetail.SubtotalUntaxedAmount = SaleOutReDetail.SubtotalTransAmount - SaleOutReDetail.SubtotalTaxAmount;
-                                                                    needupdateback = true;
-                                                                }
-                                                                if (rdb成本为0的才修复.Checked && SaleOutReDetail.Cost == 0)
-                                                                {
-
-                                                                    SaleOutReDetail.Cost = child.Inv_Cost;
-                                                                    SaleOutReDetail.SubtotalCostAmount = SaleOutReDetail.Cost * SaleOutReDetail.Quantity;
-                                                                    SaleOutReDetail.SubtotalTransAmount = SaleOutReDetail.TransactionPrice * SaleOutReDetail.Quantity;
-                                                                    if (SaleOutReDetail.TaxRate > 0)
-                                                                    {
-                                                                        SaleOutReDetail.SubtotalTaxAmount = SaleOutReDetail.SubtotalTransAmount / (1 + SaleOutReDetail.TaxRate) * SaleOutReDetail.TaxRate;
-                                                                    }
-                                                                    SaleOutReDetail.SubtotalUntaxedAmount = SaleOutReDetail.SubtotalTransAmount - SaleOutReDetail.SubtotalTaxAmount;
-                                                                    needupdateback = true;
-                                                                }
-                                                                if (rdb小于单项成本才更新.Checked && SaleOutReDetail.Cost < txtUnitCost.Text.ToDecimal())
-                                                                {
-
-                                                                    SaleOutReDetail.Cost = child.Inv_Cost;
-                                                                    SaleOutReDetail.SubtotalCostAmount = SaleOutReDetail.Cost * SaleOutReDetail.Quantity;
-                                                                    SaleOutReDetail.SubtotalTransAmount = SaleOutReDetail.TransactionPrice * SaleOutReDetail.Quantity;
-                                                                    if (SaleOutReDetail.TaxRate > 0)
-                                                                    {
-                                                                        SaleOutReDetail.SubtotalTaxAmount = SaleOutReDetail.SubtotalTransAmount / (1 + SaleOutReDetail.TaxRate) * SaleOutReDetail.TaxRate;
-                                                                    }
-                                                                    SaleOutReDetail.SubtotalUntaxedAmount = SaleOutReDetail.SubtotalTransAmount - SaleOutReDetail.SubtotalTaxAmount;
-                                                                    needupdateback = true;
-                                                                }
-                                                            }
-                                                        }
-
-                                                        if (needupdateback)
-                                                        {
-                                                            saleoutresCounter++;
-                                                            //SaleOutRe.TotalCost = SaleOutRe.tb_SaleOutReDetails.Sum(c => c.SubtotalCostAmount);
-                                                            SaleOutRe.TotalAmount = SaleOutRe.tb_SaleOutReDetails.Sum(c => c.SubtotalTransAmount);
-                                                            SaleOutRe.TotalQty = SaleOutRe.tb_SaleOutReDetails.Sum(c => c.Quantity);
-                                                        }
-
-
-                                                        if (SaleOutRe.tb_SaleOutReRefurbishedMaterialsDetails != null)
-                                                        {
-                                                            foreach (var Refurbished in SaleOutRe.tb_SaleOutReRefurbishedMaterialsDetails)
-                                                            {
-                                                                if (Refurbished.ProdDetailID == child.ProdDetailID)
-                                                                {
-                                                                    //不改成本 
-                                                                    if (rdb小计总计.Checked)
-                                                                    {
-                                                                        Refurbished.SubtotalCostAmount = Refurbished.Cost * Refurbished.Quantity;
-                                                                    }
-                                                                    if (rdb成本为0的才修复.Checked && Refurbished.Cost == 0)
-                                                                    {
-                                                                        Refurbished.Cost = child.Inv_Cost;
-                                                                        Refurbished.SubtotalCostAmount = Refurbished.Cost * Refurbished.Quantity;
-                                                                    }
-                                                                    if (rdb小于单项成本才更新.Checked && Refurbished.Cost < txtUnitCost.Text.ToDecimal())
-                                                                    {
-                                                                        Refurbished.Cost = child.Inv_Cost;
-                                                                        Refurbished.SubtotalCostAmount = Refurbished.Cost * Refurbished.Quantity;
-                                                                    }
-                                                                }
-                                                            }
-                                                        }
-
-                                                        if (needupdateback)
-                                                        {
-                                                            if (!chkTestMode.Checked)
-                                                            {
-                                                                await MainForm.Instance.AppContext.Db.Updateable<tb_SaleOutRe>(SaleOutRe).ExecuteCommandAsync();
-                                                                await MainForm.Instance.AppContext.Db.Updateable<tb_SaleOutReDetail>(SaleOutRe.tb_SaleOutReDetails).ExecuteCommandAsync();
-                                                                await MainForm.Instance.AppContext.Db.Updateable<tb_SaleOutReRefurbishedMaterialsDetail>(SaleOutRe.tb_SaleOutReRefurbishedMaterialsDetails).ExecuteCommandAsync();
-                                                            }
-                                                            richTextBoxLog.AppendText($"销售退回{SaleOutRe.ReturnNo}总金额：{SaleOutRe.tb_SaleOutReDetails.Sum(c => c.SubtotalCostAmount)} " + "\r\n");
-                                                        }
-
-                                                    }
-                                                    if (saleoutresCounter > 0)
-                                                    {
-                                                        richTextBoxLog.AppendText($"更新销售出库退库单 {saleoutresCounter} 条" + "\r\n");
-                                                    }
-                                                }
-
-                                                #endregion
-
-                                                if (!chkTestMode.Checked)
-                                                {
-                                                    await MainForm.Instance.AppContext.Db.Updateable<tb_SaleOut>(SaleOut).ExecuteCommandAsync();
-                                                    await MainForm.Instance.AppContext.Db.Updateable<tb_SaleOutDetail>(SaleOut.tb_SaleOutDetails).ExecuteCommandAsync();
-                                                }
-                                            }
-                                        }
-                                        #endregion
-                                        */
                                         #endregion
                                     }
                                     if (ordercounter > 0)
@@ -1578,6 +1447,7 @@ namespace RUINORERP.UI.SysConfig
                                      .InnerJoin<tb_SaleOutDetail>((a, b) => a.SaleOut_MainID == b.SaleOut_MainID)
                                     .Includes(a => a.tb_SaleOutDetails)
                                     .Includes(c => c.tb_SaleOutRes, d => d.tb_SaleOutReDetails)
+                                    .WhereIF(rdb时间区间.Checked, a => a.OutDate >= ucAdvDateTimerPickerGroup1.dtp1.Value && a.OutDate <= ucAdvDateTimerPickerGroup1.dtp2.Value)
                                     .Where(a => a.tb_SaleOutDetails.Any(c => c.ProdDetailID == child.ProdDetailID)).ToList();
 
                                     var distinctSoutOrders = SOutorders
@@ -1590,10 +1460,7 @@ namespace RUINORERP.UI.SysConfig
                                     int saleoutCounter = 0;
                                     foreach (var SaleOut in distinctSoutOrders)
                                     {
-                                        if (SaleOut.SaleOutNo == "SOD7E8C121774" || SaleOut.SaleOutNo == "SOD7E92190226")
-                                        {
 
-                                        }
                                         bool needupdateOut = false;
                                         foreach (var saleoutdetails in SaleOut.tb_SaleOutDetails)
                                         {
@@ -1625,6 +1492,20 @@ namespace RUINORERP.UI.SysConfig
                                                     saleoutdetails.SubtotalUntaxedAmount = saleoutdetails.SubtotalTransAmount - saleoutdetails.SubtotalTaxAmount;
                                                     needupdateOut = true;
                                                 }
+                                                if (rdb时间区间.Checked)
+                                                {
+                                                    saleoutdetails.Cost = child.Inv_Cost;
+                                                    saleoutdetails.SubtotalCostAmount = saleoutdetails.Cost * saleoutdetails.Quantity;
+
+                                                    saleoutdetails.SubtotalTransAmount = saleoutdetails.TransactionPrice * saleoutdetails.Quantity;
+                                                    if (saleoutdetails.TaxRate > 0)
+                                                    {
+                                                        saleoutdetails.SubtotalTaxAmount = saleoutdetails.SubtotalTransAmount / (1 + saleoutdetails.TaxRate) * saleoutdetails.TaxRate;
+                                                    }
+                                                    saleoutdetails.SubtotalUntaxedAmount = saleoutdetails.SubtotalTransAmount - saleoutdetails.SubtotalTaxAmount;
+                                                    needupdateOut = true;
+                                                }
+
                                                 if (rdb小于指定成本.Checked && saleoutdetails.Cost != 0)
                                                 {
                                                     if (saleoutdetails.Cost < txtUnitCost.Text.ToDecimal())
@@ -1769,6 +1650,11 @@ namespace RUINORERP.UI.SysConfig
                                                     {
                                                         if (Refurbished.ProdDetailID == child.ProdDetailID)
                                                         {
+                                                            if (rdb时间区间.Checked)
+                                                            {
+                                                                Refurbished.Cost = child.Inv_Cost;
+                                                                Refurbished.SubtotalCostAmount = Refurbished.Cost * Refurbished.Quantity;
+                                                            }
                                                             //不改成本 
                                                             if (rdb小计总计.Checked)
                                                             {
@@ -1833,6 +1719,7 @@ namespace RUINORERP.UI.SysConfig
                                     List<tb_FinishedGoodsInv> orders = MainForm.Instance.AppContext.Db.Queryable<tb_FinishedGoodsInv>()
                                     .InnerJoin<tb_FinishedGoodsInvDetail>((a, b) => a.FG_ID == b.FG_ID)
                                     .Includes(a => a.tb_FinishedGoodsInvDetails, b => b.tb_proddetail, c => c.tb_Inventories)
+                                    .WhereIF(rdb时间区间.Checked, a => a.DeliveryDate >= ucAdvDateTimerPickerGroup1.dtp1.Value && a.DeliveryDate <= ucAdvDateTimerPickerGroup1.dtp2.Value)
                                     .Where(a => a.tb_FinishedGoodsInvDetails.Any(c => c.ProdDetailID == child.ProdDetailID)).ToList();
 
                                     var distinctbills = orders
@@ -1848,6 +1735,25 @@ namespace RUINORERP.UI.SysConfig
                                         {
                                             if (Detail.ProdDetailID == child.ProdDetailID)
                                             {
+                                                if (rdb时间区间.Checked)
+                                                {
+                                                    Detail.MaterialCost = child.Inv_Cost;
+                                                    Detail.UnitCost = Detail.MaterialCost + Detail.ManuFee + Detail.ApportionedCost;
+                                                    Detail.ProductionAllCost = Detail.UnitCost * Detail.Qty;
+
+                                                    //这时可以算出缴库的产品的单位成本
+                                                    var nextInv = Detail.tb_proddetail.tb_Inventories.FirstOrDefault(c => c.Location_ID == Detail.Location_ID);
+                                                    if (nextInv != null)
+                                                    {
+                                                        nextInv.Inv_Cost = Detail.UnitCost;
+                                                        if (!chkTestMode.Checked)
+                                                        {
+                                                            await MainForm.Instance.AppContext.Db.Updateable<tb_Inventory>(nextInv).ExecuteCommandAsync();
+                                                        }
+                                                    }
+
+                                                    updateFGListdetail.Add(Detail);
+                                                }
                                                 if (rdb成本为0的才修复.Checked && Detail.UnitCost == 0)
                                                 {
                                                     Detail.MaterialCost = child.Inv_Cost;
@@ -1987,6 +1893,7 @@ namespace RUINORERP.UI.SysConfig
                                     .InnerJoin<tb_ProdBorrowingDetail>((a, b) => a.BorrowID == b.BorrowID)
                                    .Includes(a => a.tb_ProdBorrowingDetails)
                                    .Includes(a => a.tb_ProdReturnings, c => c.tb_ProdReturningDetails)
+                                 .WhereIF(rdb时间区间.Checked, a => a.Out_date >= ucAdvDateTimerPickerGroup1.dtp1.Value && a.Out_date <= ucAdvDateTimerPickerGroup1.dtp2.Value)
                                    .Where(a => a.tb_ProdBorrowingDetails.Any(c => c.ProdDetailID == child.ProdDetailID)).ToList();
 
                                     var distinctBRbills = Brorders
@@ -2002,7 +1909,13 @@ namespace RUINORERP.UI.SysConfig
                                         {
                                             if (Detail.ProdDetailID == child.ProdDetailID)
                                             {
-
+                                                if (rdb时间区间.Checked)
+                                                {
+                                                    Detail.Cost = child.Inv_Cost;
+                                                    Detail.SubtotalCostAmount = Detail.Cost * Detail.Qty;
+                                                    updateBRListdetail.Add(Detail);
+                                                    needupdate = true;
+                                                }
                                                 if (rdb成本为0的才修复.Checked && Detail.Cost == 0)
                                                 {
                                                     Detail.Cost = child.Inv_Cost;
@@ -2069,6 +1982,11 @@ namespace RUINORERP.UI.SysConfig
                                                 {
                                                     if (returning.ProdDetailID == child.ProdDetailID)
                                                     {
+                                                        if (rdb时间区间.Checked)
+                                                        {
+                                                            returning.Cost = child.Inv_Cost;
+                                                            returning.SubtotalCostAmount = returning.Cost * returning.Qty;
+                                                        }
                                                         if (rdb成本为0的才修复.Checked && returning.Cost == 0)
                                                         {
                                                             returning.Cost = child.Inv_Cost;
@@ -2134,6 +2052,7 @@ namespace RUINORERP.UI.SysConfig
                                     List<tb_StockOut> StockOutorders = MainForm.Instance.AppContext.Db.Queryable<tb_StockOut>()
                                         .InnerJoin<tb_StockOutDetail>((a, b) => a.MainID == b.MainID)
                                         .Includes(a => a.tb_StockOutDetails)
+                                      .WhereIF(rdb时间区间.Checked, a => a.Bill_Date >= ucAdvDateTimerPickerGroup1.dtp1.Value && a.Bill_Date <= ucAdvDateTimerPickerGroup1.dtp2.Value)
                                         .Where(a => a.tb_StockOutDetails.Any(c => c.ProdDetailID == child.ProdDetailID)).ToList();
 
                                     var distinctStockOutbills = StockOutorders
@@ -2148,7 +2067,12 @@ namespace RUINORERP.UI.SysConfig
                                         {
                                             if (Detail.ProdDetailID == child.ProdDetailID)
                                             {
-
+                                                if (rdb时间区间.Checked)
+                                                {
+                                                    Detail.Cost = child.Inv_Cost;
+                                                    Detail.SubtotalCostAmount = Detail.Cost * Detail.Qty;
+                                                    updateStockOutListdetail.Add(Detail);
+                                                }
                                                 if (rdb成本为0的才修复.Checked && Detail.Cost == 0)
                                                 {
                                                     Detail.Cost = child.Inv_Cost;
@@ -2221,6 +2145,7 @@ namespace RUINORERP.UI.SysConfig
                                     List<tb_MaterialRequisition> MRorders = MainForm.Instance.AppContext.Db.Queryable<tb_MaterialRequisition>()
                                   .InnerJoin<tb_MaterialRequisitionDetail>((a, b) => a.MR_ID == b.MR_ID)
                                   .Includes(a => a.tb_MaterialRequisitionDetails)
+                                  .WhereIF(rdb时间区间.Checked, a => a.DeliveryDate >= ucAdvDateTimerPickerGroup1.dtp1.Value && a.DeliveryDate <= ucAdvDateTimerPickerGroup1.dtp2.Value)
                                   .Where(a => a.tb_MaterialRequisitionDetails.Any(c => c.ProdDetailID == child.ProdDetailID)).ToList();
                                     var distinctMRbills = MRorders
                                     .GroupBy(o => o.MR_ID)
@@ -2234,7 +2159,12 @@ namespace RUINORERP.UI.SysConfig
                                         {
                                             if (Detail.ProdDetailID == child.ProdDetailID)
                                             {
-
+                                                if (rdb时间区间.Checked)
+                                                {
+                                                    Detail.Cost = child.Inv_Cost;
+                                                    Detail.SubtotalCost = Detail.Cost * Detail.ActualSentQty;
+                                                    updateListdetail.Add(Detail);
+                                                }
                                                 if (rdb成本为0的才修复.Checked && Detail.Cost == 0)
                                                 {
                                                     Detail.Cost = child.Inv_Cost;
@@ -2324,7 +2254,10 @@ namespace RUINORERP.UI.SysConfig
         }
 
 
-
+        /// <summary>
+        /// 将母件当子件查询。找他的上级。如果存在则更新他的本身的成本及他的BOM的总成本，直到没有。如果进入循环看最多次数为10层是不可能的
+        /// </summary>
+        /// <param name="bOM_S"></param>
         private async void LoopUpdateBom(tb_BOM_S bOM_S)
         {
             if (bOM_S.SelfProductionAllCosts != bOM_S.OutProductionAllCosts)
@@ -2343,9 +2276,14 @@ namespace RUINORERP.UI.SysConfig
             .GroupBy(o => o.BOM_ID)
             .Select(g => g.First())
             .ToList();
-
+            totalloop++;
+            if (totalloop > 6)
+            {
+                richTextBoxLog.AppendText($"BOM配方超出最大循环次数6，请检查BOM是否存在循环引用,SKU{bOM_S.SKU}" + "\r\n");
+                throw new Exception($"BOM配方超出最大循环次数6，请检查BOM是否存在循环引用,SKU{bOM_S.SKU}");
+            }
             List<tb_BOM_SDetail> updateListbomdetail = new List<tb_BOM_SDetail>();
-            foreach (var bill in distinctBOMbills)
+            foreach (tb_BOM_S bill in distinctBOMbills)
             {
                 foreach (var bomDetail in bill.tb_BOM_SDetails)
                 {
@@ -2398,16 +2336,15 @@ namespace RUINORERP.UI.SysConfig
                         await MainForm.Instance.AppContext.Db.Updateable<tb_BOM_S>(bill).ExecuteCommandAsync();
                     }
                 }
+                if (!chkTestMode.Checked && updateListbomdetail.Count > 0)
+                {
+                    await MainForm.Instance.AppContext.Db.Updateable<tb_BOM_SDetail>(updateListbomdetail).ExecuteCommandAsync();
+                }
+                LoopUpdateBom(bill);
             }
 
-            if (!chkTestMode.Checked && updateListbomdetail.Count > 0)
-            {
-                await MainForm.Instance.AppContext.Db.Updateable<tb_BOM_SDetail>(updateListbomdetail).ExecuteCommandAsync();
-            }
-            if (BOM_SOrders.Count > 0)
-            {
-                LoopUpdateBom(bOM_S);
-            }
+
+
 
             #endregion
         }
@@ -2545,17 +2482,14 @@ namespace RUINORERP.UI.SysConfig
 
         private void 更新关联成本ToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (dataGridViewInv.SelectedRows != null)
+            if (dataGridViewInv.CurrentRow != null)
             {
                 List<tb_Inventory> inventories = new List<tb_Inventory>();
-
-                foreach (DataGridViewRow dr in dataGridViewInv.SelectedRows)
+                if (dataGridViewInv.CurrentRow.DataBoundItem is View_Inventory inventory)
                 {
-                    if (dr.DataBoundItem is View_Inventory inventory)
-                    {
-                        inventories.Add(inventory.tb_inventory);
-                    }
+                    inventories.Add(inventory.tb_inventory);
                 }
+
                 UpdateRelatedCost(inventories);
                 MainForm.Instance.ShowStatusText("更新关联成本完成。");
             }
@@ -2595,28 +2529,33 @@ namespace RUINORERP.UI.SysConfig
                 if (dgv != null)
                 {
                     dgv.AllowUserToAddRows = false;
-                    if (tabControl.SelectedTab.Text.Contains("对应配方"))
+                    if (tabControl.SelectedTab.Text.Contains("配方"))
                     {
-                        foreach (DataGridViewRow item in dgv.SelectedRows)
+                        if (tabControl.SelectedTab.Text.Contains("对应配方"))
                         {
-                            if (true)
+                            foreach (DataGridViewRow item in dgv.SelectedRows)
                             {
                                 if (dataGridViewInv.SelectedRows != null)
                                 {
                                     List<tb_Inventory> inventories = new List<tb_Inventory>();
-                                    foreach (DataGridViewRow dr in dataGridViewInv.SelectedRows)
+                                    foreach (DataGridViewRow dr in dataGridViewInv.Rows)
                                     {
                                         if (dr.DataBoundItem is View_Inventory inventory)
                                         {
-                                            inventories.Add(inventory.tb_inventory);
+                                            if (inventory.SKU == item.Cells["母件SKU"].Value.ToString())
+                                            {
+                                                inventories.Add(inventory.tb_inventory);
+                                            }
+
                                         }
                                     }
                                     await UpdateInventoryCost(inventories);
                                 }
-
                             }
                         }
+
                     }
+
 
                 }
 
@@ -2647,5 +2586,17 @@ namespace RUINORERP.UI.SysConfig
                 MainForm.Instance.ShowStatusText("库存成本更新为指定值完成。");
             }
         }
+
+        private void rdb时间区间_CheckedChanged(object sender, EventArgs e)
+        {
+            ucAdvDateTimerPickerGroup1.Visible = rdb时间区间.Checked;
+        }
+
+        private void 加载关联数据ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            AddLoadRelatedData();
+        }
+
+
     }
 }

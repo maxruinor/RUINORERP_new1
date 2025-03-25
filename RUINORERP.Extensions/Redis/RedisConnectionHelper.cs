@@ -56,10 +56,25 @@ namespace RUINORERP.Extensions.Redis
         /// <param name="connectionString"></param>
         public static ConnectionMultiplexer CreateConnection(string connectionString = null)
         {
-            //连接字符串
-            string connectStr = connectionString ?? "192.168.0.254:6379";
-            ConnectionMultiplexer redis = ConnectionMultiplexer.Connect(connectStr);
-            //redis 事件注册
+            ////连接字符串
+             string connectStr = connectionString ?? "192.168.0.254:6379";
+            //ConnectionMultiplexer redis = ConnectionMultiplexer.Connect(connectStr);
+            ////redis 事件注册
+            //redis.ConnectionFailed += Redis_ConnectionFailed;
+
+            // 使用 ConfigurationOptions 明确配置
+            var config = ConfigurationOptions.Parse(connectStr);
+
+            // 关键配置项
+            config.Proxy = Proxy.None;              // 禁用代理模式
+            //config.BeforeSocketConnect = false;     // 禁用共享 Socket 池
+            config.AsyncTimeout = 5000;             // 设置异步操作超时（毫秒）
+            config.SyncTimeout = 5000;              // 设置同步操作超时（毫秒）
+
+            // 创建连接
+            ConnectionMultiplexer redis = ConnectionMultiplexer.Connect(config);
+
+            // 注册事件
             redis.ConnectionFailed += Redis_ConnectionFailed;
             return redis;
         }

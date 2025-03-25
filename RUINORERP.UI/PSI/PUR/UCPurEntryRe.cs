@@ -280,7 +280,7 @@ namespace RUINORERP.UI.PSI.PUR
             sgh.SetPointToColumnPairs<ProductSharePart, tb_PurEntryReDetail>(sgd, f => f.Location_ID, t => t.Location_ID);
             sgh.SetPointToColumnPairs<ProductSharePart, tb_PurEntryReDetail>(sgd, f => f.Rack_ID, t => t.Rack_ID);
             sgh.SetPointToColumnPairs<ProductSharePart, tb_PurEntryReDetail>(sgd, f => f.prop, t => t.property);
-
+            sgh.SetPointToColumnPairs<ProductSharePart, tb_PurEntryReDetail>(sgd, f => f.VendorModelCode, t => t.VendorModelCode);
 
             //应该只提供一个结构
             List<tb_PurEntryReDetail> lines = new List<tb_PurEntryReDetail>();

@@ -28,6 +28,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using System.Web.Caching;
+using System.Web.WebSockets;
 using System.Windows.Forms;
 using TransInstruction;
 using TransInstruction.DataPortal;
@@ -602,6 +603,10 @@ namespace RUINORERP.UI.SuperSocketClient
                 string BillType = ByteDataAnalysis.GetString(gd.Two, ref index);
                 string BillData = ByteDataAnalysis.GetString(gd.Two, ref index);
                 var userinfo = MainForm.Instance.UserInfos.FirstOrDefault(c => c.UserID == RequestUserID);
+                if (userinfo==null)
+                {
+                    userinfo = new();
+                }
                 ReminderData MessageInfo = new ReminderData();
                 MessageInfo.SendTime = sendtime;
                 //  MessageInfo.Id = SessionID;

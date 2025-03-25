@@ -42,7 +42,7 @@ namespace RUINORERP.Business.Processor
             SummaryCols.Add(c => c.TotalReturnedQty);
             SummaryCols.Add(c => c.DeliveredQuantity);
             SummaryCols.Add(c => c.TaxAmount);
-            List<string> SummaryList = ExpressionHelper.ExpressionListToStringList<tb_PurOrderDetail>(SummaryCols);
+            List<string> SummaryList = RuinorExpressionHelper.ExpressionListToStringList<tb_PurOrderDetail>(SummaryCols);
             return SummaryList;
         }
 

@@ -51,6 +51,21 @@ namespace RUINORERP.Model
             }
         }
 
+        private long? _Region_ID;
+        /// <summary>
+        /// 地区
+        /// </summary>
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType = "Int64", ColumnName = "Region_ID", DecimalDigits = 0, IsNullable = false, ColumnDescription = "地区")]
+        [FKRelationAttribute("tb_CRM_Region", "Region_ID")]
+        public long? Region_ID
+        {
+            get { return _Region_ID; }
+            set
+            {
+                SetProperty(ref _Region_ID, value);
+            }
+        }
+
         private string _ProvinceCNName;
         /// <summary>
         /// 省份中文名

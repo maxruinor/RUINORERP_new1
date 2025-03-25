@@ -39,6 +39,7 @@ using static StackExchange.Redis.Role;
 using RUINORERP.Business.CommService;
 using RUINORERP.Common.Extensions;
 using RUINORERP.Business.Security;
+using NPOI.SS.Formula.Functions;
 namespace RUINORERP.UI.PSI.SAL
 {
     [MenuAttrAssemblyInfo("销售出库单", ModuleMenuDefine.模块定义.进销存管理, ModuleMenuDefine.进销存管理.销售管理, BizType.销售出库单)]
@@ -298,6 +299,8 @@ namespace RUINORERP.UI.PSI.SAL
 
             listCols.SetCol_NeverVisible<tb_SaleOutDetail>(c => c.SaleOutDetail_ID);
             listCols.SetCol_NeverVisible<tb_SaleOutDetail>(c => c.ProdDetailID);
+            listCols.SetCol_NeverVisible<ProductSharePart>(c => c.VendorModelCode);
+
             listCols.SetCol_ReadOnly<tb_SaleOutDetail>(c => c.Cost);
             if (!AppContext.CurUserInfo.UserInfo.IsSuperUser)
             {
@@ -593,6 +596,18 @@ namespace RUINORERP.UI.PSI.SAL
             return false;
         }
 
+        protected async override Task<ReturnResults<tb_SaleOut>> Delete()
+        {
+            ReturnResults<tb_SaleOut> rss = new ReturnResults<tb_SaleOut>();
+            rss = await base.Delete();
+            if (rss.Succeeded)
+            {
+                string msg = string.Empty;
+                msg = $"订单号：{EditEntity.SaleOrderNo} 对应的出库单 {EditEntity.SaleOutNo} 删除成功。";
+                AuditLogHelper.Instance.CreateAuditLog<tb_SaleOut>("删除细节", EditEntity, msg);
+            }
+            return rss;
+        }
 
         protected async override Task<bool> CloseCaseAsync()
         {
@@ -641,148 +656,7 @@ namespace RUINORERP.UI.PSI.SAL
             //}
 
         }
-        /*
-        protected async override Task<ApprovalEntity> Review()
-        {
-            if (EditEntity == null)
-            {
-                return null;
-            }
-            //如果已经审核通过，则不能重复审核
-            if (EditEntity.ApprovalStatus.HasValue)
-            {
-                if (EditEntity.ApprovalStatus.Value == (int)ApprovalStatus.已审核)
-                {
-                    if (EditEntity.ApprovalResults.HasValue && EditEntity.ApprovalResults.Value)
-                    {
-                        MainForm.Instance.uclog.AddLog("已经审核,且【同意】的单据不能重复审核。");
-                        return null;
-                    }
-                }
-            }
-            if (EditEntity.tb_SaleOutDetails == null || EditEntity.tb_SaleOutDetails.Count == 0)
-            {
-                MainForm.Instance.uclog.AddLog("单据中没有明细数据，请确认录入了完整数量和金额。", UILogType.警告);
-                return null;
-            }
-            RevertCommand command = new RevertCommand();
-            //缓存当前编辑的对象。如果撤销就回原来的值
-            tb_SaleOut oldobj = CloneHelper.DeepCloneObject<tb_SaleOut>(EditEntity);
-            command.UndoOperation = delegate ()
-            {
-                //Undo操作会执行到的代码 意思是如果退审核，内存中审核的数据要变为空白（之前的样子）
-                CloneHelper.SetValues<tb_SaleOut>(EditEntity, oldobj);
-            };
-            ApprovalEntity ae = await base.Review();
-            if (EditEntity == null)
-            {
-                return null;
-            }
-            if (ae.ApprovalStatus == (int)ApprovalStatus.未审核)
-            {
-                return null;
-            }
-            tb_SaleOutController<tb_SaleOut> ctr = Startup.GetFromFac<tb_SaleOutController<tb_SaleOut>>();
-       
-            ReturnResults<tb_SaleOut> rrs = await ctr.ApprovalAsync(EditEntity);
-            if (rrs.Succeeded)
-            {
-                ////销售出库 如果数据来自销售订单。数量相等也一样 在销售订单中 结案。
-                //if (EditEntity.tb_saleorder != null && EditEntity.TotalQty == EditEntity.tb_saleorder.TotalQty)
-                //{
-                //    EditEntity.tb_saleorder.DataStatus = (int)DataStatus.完结;
-                //    await AppContext.Db.Updateable(EditEntity.tb_saleorder).UpdateColumns(t => new { t.DataStatus }).ExecuteCommandAsync();
-                //}
 
-                //if (MainForm.Instance.WorkflowItemlist.ContainsKey(""))
-                //{
-
-                //}
-                //这里审核完了的话，如果这个单存在于工作流的集合队列中，则向服务器说明审核完成。
-                //这里推送到审核，启动工作流  队列应该有一个策略 比方优先级，桌面不动1 3 5分钟 
-                //OriginalData od = ActionForClient.工作流审批(pkid, (int)BizType.盘点单, ae.ApprovalResults, ae.ApprovalComments);
-                //MainForm.Instance.ecs.AddSendData(od);
-
-                //审核成功
-                base.ToolBarEnabledControl(MenuItemEnums.审核);
-                //如果审核结果为不通过时，审核不是灰色。
-                if (!ae.ApprovalResults)
-                {
-                    toolStripbtnReview.Enabled = true;
-                }
-            }
-            else
-            {
-                //审核失败 要恢复之前的值
-                command.Undo();
-                MainForm.Instance.PrintInfoLog($"{ae.bizName}:{ae.BillNo}审核失败,请联系管理员！", Color.Red);
-            }
-
-            return ae;
-        }
-        */
-        /*
-        /// <summary>
-        /// 列表中不再实现反审，批量，出库反审情况极少。并且是仔细处理
-        /// </summary>
-        protected async override void ReReview()
-        {
-            if (EditEntity == null)
-            {
-                return;
-            }
-
-            //反审，要审核过，并且通过了，才能反审。
-            if (EditEntity.ApprovalStatus.Value == (int)ApprovalStatus.已审核 && !EditEntity.ApprovalResults.HasValue)
-            {
-                MainForm.Instance.uclog.AddLog("已经审核,且【同意】的单据才能反审核。");
-                return;
-            }
-
-
-            if (EditEntity.tb_SaleOutDetails == null || EditEntity.tb_SaleOutDetails.Count == 0)
-            {
-                MainForm.Instance.uclog.AddLog("单据中没有明细数据，请确认录入了完整数量和金额。", UILogType.警告);
-                return;
-            }
-
-            RevertCommand command = new RevertCommand();
-            //缓存当前编辑的对象。如果撤销就回原来的值
-            tb_SaleOut oldobj = CloneHelper.DeepCloneObject<tb_SaleOut>(EditEntity);
-            command.UndoOperation = delegate ()
-            {
-                //Undo操作会执行到的代码 意思是如果退审核，内存中审核的数据要变为空白（之前的样子）
-                CloneHelper.SetValues<tb_SaleOut>(EditEntity, oldobj);
-            };
-
-            tb_SaleOutController<tb_SaleOut> ctr = Startup.GetFromFac<tb_SaleOutController<tb_SaleOut>>();
-            ReturnResults<bool> rs = await ctr.AntiApprovalAsync(EditEntity);
-            if (rs.Succeeded)
-            {
-
-                //if (MainForm.Instance.WorkflowItemlist.ContainsKey(""))
-                //{
-
-                //}
-                //这里审核完了的话，如果这个单存在于工作流的集合队列中，则向服务器说明审核完成。
-                //这里推送到审核，启动工作流  队列应该有一个策略 比方优先级，桌面不动1 3 5分钟 
-                //OriginalData od = ActionForClient.工作流审批(pkid, (int)BizType.盘点单, ae.ApprovalResults, ae.ApprovalComments);
-                //MainForm.Instance.ecs.AddSendData(od);
-
-                //审核成功
-                base.ToolBarEnabledControl(MenuItemEnums.反审);
-                toolStripbtnReview.Enabled = true;
-
-            }
-            else
-            {
-                //审核失败 要恢复之前的值
-                command.Undo();
-                MainForm.Instance.PrintInfoLog($"销售出库单{EditEntity.SaleOutNo}反审失败,{rs.ErrorMsg},请联系管理员！", Color.Red);
-            }
-
-        }
-        */
 
 
         string saleorderid = string.Empty;
@@ -845,7 +719,7 @@ namespace RUINORERP.UI.PSI.SAL
 
             List<tb_SaleOutDetail> details = mapper.Map<List<tb_SaleOutDetail>>(saleorder.tb_SaleOrderDetails);
             List<tb_SaleOutDetail> NewDetails = new List<tb_SaleOutDetail>();
-           
+
             for (global::System.Int32 i = 0; i < details.Count; i++)
             {
                 var aa = details.Select(c => c.ProdDetailID).ToList().GroupBy(x => x).Where(x => x.Count() > 1).Select(x => x.Key).ToList();

@@ -73,7 +73,7 @@ namespace RUINORERP.Common.Helper
             return type.GetCustomAttributes(false).FirstOrDefault();
         }
 
-        protected object GetMemberAttributes(Type type, ExpressionHelper.ExpressionMemberInfo expressionMemberInfo)
+        protected object GetMemberAttributes(Type type, RuinorExpressionHelper.ExpressionMemberInfo expressionMemberInfo)
         {
             MemberInfo memberInfo = null;
             if (expressionMemberInfo.ParameterTypes == null)
@@ -164,7 +164,7 @@ namespace RUINORERP.Common.Helper
         /// <param name="types">如果是MethodBase，可傳入參數的Type</param>
         public T Get<TModel>(string memberName, params Type[] types)
         {
-            return (T)GetMemberAttributes(typeof(TModel), new ExpressionHelper.ExpressionMemberInfo() { MemberName = memberName, ParameterTypes = types.ToList() });
+            return (T)GetMemberAttributes(typeof(TModel), new RuinorExpressionHelper.ExpressionMemberInfo() { MemberName = memberName, ParameterTypes = types.ToList() });
         }
 
 
@@ -175,7 +175,7 @@ namespace RUINORERP.Common.Helper
         /// <param name="func">可用Lambda的方式指定成員名稱</param>
         public T Get<TModel>(Expression<Func<TModel, object>> func)
         {
-            var expressionMemberInfo = ExpressionHelper.GetMemberName(func);
+            var expressionMemberInfo = RuinorExpressionHelper.GetMemberName(func);
             return (T)GetMemberAttributes(typeof(TModel), expressionMemberInfo);
         }
      

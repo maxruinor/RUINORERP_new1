@@ -479,11 +479,18 @@ namespace RUINORERP.UI.UCSourceGrid
                     Tag = DisplayController // 存储原始数据
                 };
 
+                //不可以拖动
+                if (DisplayController.ColName == "Selected")
+                {
+                    menuItem.AllowDrop = false;
+                }
+                else
+                {
+                    menuItem.AllowDrop = true;
+                }
                 menuItem.Checked = DisplayController.Visible;
-
                 menuItem.CheckOnClick = true;
                 menuItem.Click += menuItem_Click;
-                menuItem.AllowDrop = true;
                 //menuItem.DragEnter += Item_DragEnter;
                 //menuItem.DragOver += Item_DragOver;
                 //menuItem.DragDrop += Item_DragDrop;
@@ -525,6 +532,10 @@ namespace RUINORERP.UI.UCSourceGrid
             if (e.Button == MouseButtons.Left)
             {
                 draggedItem = sender as ToolStripMenuItem;
+                if (draggedItem.AllowDrop == false)
+                {
+                    draggedItem = null;
+                }
                 dragStartPoint = e.Location;
             }
         }
@@ -576,6 +587,11 @@ namespace RUINORERP.UI.UCSourceGrid
         private void MenuItem_DragDrop(object sender, DragEventArgs e)
         {
             var sourceItem = e.Data.GetData(typeof(ToolStripMenuItem)) as ToolStripMenuItem;
+
+            if (sourceItem.AllowDrop == false)
+            {
+                return;
+            }
             var targetItem = sender as ToolStripMenuItem;
 
             if (sourceItem == null || targetItem == null || sourceItem == targetItem) return;

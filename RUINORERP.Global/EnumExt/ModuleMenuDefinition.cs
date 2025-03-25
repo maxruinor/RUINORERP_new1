@@ -55,6 +55,8 @@ namespace RUINORERP.Model
             合同管理,
             回款管理,
             开票管理,
+            商机总览,
+            //销售看板
             绩效分析,
         }
 

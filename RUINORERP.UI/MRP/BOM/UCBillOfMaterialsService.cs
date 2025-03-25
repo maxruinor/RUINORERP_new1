@@ -395,7 +395,7 @@ namespace RUINORERP.UI.MRP.BOM
             List<Expression<Func<tb_BOM_S, object>>> ChildRelatedInvisibleCols = new List<Expression<Func<tb_BOM_S, object>>>();
             ChildRelatedInvisibleCols.Add(C => C.BOM_ID);
             ChildRelatedInvisibleCols.Add(C => C.ProdDetailID);
-            List<string> InvisibleCols = ExpressionHelper.ExpressionListToStringList(ChildRelatedInvisibleCols);
+            List<string> InvisibleCols = RuinorExpressionHelper.ExpressionListToStringList(ChildRelatedInvisibleCols);
             foreach (var item in InvisibleCols)
             {
                 KeyValuePair<string, bool> kv = new KeyValuePair<string, bool>();
@@ -417,7 +417,7 @@ namespace RUINORERP.UI.MRP.BOM
             List<Expression<Func<View_BOM, object>>> ChildRelatedInvisibleMainCols = new List<Expression<Func<View_BOM, object>>>();
             ChildRelatedInvisibleMainCols.Add(C => C.BOM_ID);
             ChildRelatedInvisibleMainCols.Add(C => C.ProdDetailID);
-            List<string> InvisibleMianCols = ExpressionHelper.ExpressionListToStringList(ChildRelatedInvisibleMainCols);
+            List<string> InvisibleMianCols = RuinorExpressionHelper.ExpressionListToStringList(ChildRelatedInvisibleMainCols);
             foreach (var item in InvisibleMianCols)
             {
                 KeyValuePair<string, bool> kv = new KeyValuePair<string, bool>();

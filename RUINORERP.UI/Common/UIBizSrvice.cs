@@ -383,6 +383,10 @@ namespace RUINORERP.UI.Common
 
         public static async void SaveGridSettingData(tb_MenuInfo CurMenuInfo, NewSumDataGridView dataGridView, Type datasourceType = null)
         {
+            if (dataGridView==null)
+            {
+                return;
+            }
             tb_UserPersonalized userPersonalized = MainForm.Instance.AppContext.CurrentUser_Role_Personalized;
             if (userPersonalized == null)
             {
@@ -1187,6 +1191,7 @@ namespace RUINORERP.UI.Common
                     //选择列默认隐藏,上面设置后，再覆盖上面的值
                     c.Visible = false;
                 }
+             
                 // 计算文本宽度
                 float textWidth = UITools.CalculateTextWidth(c.ColCaption, gridDefine.grid.Font, graphics);
                 c.ColWidth = (int)textWidth + 10; // 加上一些额外的空间

@@ -57,10 +57,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="FluentValidation" Version="11.4.0" />
+    <PackageReference Include="FluentValidation" Version="11.11.0" />
     <PackageReference Include="SqlSugar" Version="5.1.4.160" />
     <PackageReference Include="StackExchange.Redis" Version="2.7.10" />
-    <PackageReference Include="ZXing.Net" Version="0.16.9" />
+    <PackageReference Include="ZXing.Net" Version="0.16.10" />
   </ItemGroup>
 
   <ItemGroup>

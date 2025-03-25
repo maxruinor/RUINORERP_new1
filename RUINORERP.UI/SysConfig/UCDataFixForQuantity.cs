@@ -161,10 +161,6 @@ namespace RUINORERP.UI.SysConfig
 
 
 
-
-
-
-
         //写一个方法来实现两个价格的比较 前一个为原价，后一个为最新价格。求最新价格大于前的价格的百分比。价格是ecimal类型
         private double ComparePrice(double oldPrice, double newPrice)
         {
@@ -205,7 +201,8 @@ namespace RUINORERP.UI.SysConfig
                           .ToListAsync();
             bindingSourceInv.DataSource = inventories.ToBindingSortCollection();
             dataGridViewInv.DataSource = bindingSourceInv;
-
+            dataGridViewInv.EditMode = DataGridViewEditMode.EditOnEnter;
+            
             Dictionary<string, string> dic = new Dictionary<string, string>();
             //设置一个集合：列名和显示的名称添加的集合中
             dic = new Dictionary<string, string> {
@@ -351,6 +348,9 @@ namespace RUINORERP.UI.SysConfig
             }
         }
 
+
+        //将当前选择的库存行 为条件去查询所有相关的单据 比方 在途中 是采购，加工 退货等
+        //还要整理一下 哪些是记录到在途数量的单据。加工厂的退返
         private void dataGridViewInv_CellContentDoubleClick(object sender, DataGridViewCellEventArgs e)
         {
             if (e.RowIndex < 0 || e.ColumnIndex < 0)
@@ -640,7 +640,7 @@ namespace RUINORERP.UI.SysConfig
                                 pageBOM.Text = "对应配方" + boms.Count;
                                 pageBOM.Controls.Add(dgvBOM);
                                 tabControl.TabPages.Add(pageBOM);
-                                dgvBOM.ContextMenuStrip = this.contextMenuStripBOMPrice;
+                               
 
                                 #endregion
 

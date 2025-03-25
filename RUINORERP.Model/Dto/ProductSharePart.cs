@@ -15,8 +15,8 @@ namespace RUINORERP.Model.Dto
     /// 产品共用部分，用于动态合并，体现于明细中表格中
     /// </summary>
     [Serializable]
-    [Description("tb_SaleOrder11")]
-    [SugarTable("tb_SaleOrder22")]
+    [Description("ProductSharePart")]
+    [SugarTable("ProductSharePart")]
     public class ProductSharePart : BaseEntity, ICloneable
     {
 
@@ -122,6 +122,15 @@ namespace RUINORERP.Model.Dto
         public string Brand { get; set; }
 
         /// <summary>
+        /// 厂商型号
+        /// </summary>
+        [SugarColumn(ColumnName = "VendorModelCode", Length = 50, IsNullable = true, ColumnDescription = "厂商型号")]
+        [ReadOnly(true)]
+        [Browsable(false)]
+        [VisibleAttribute(false)]
+        public string VendorModelCode { get; set; }
+
+        /// <summary>
         /// 产品图片
         /// </summary>
         [SugarColumn(ColumnDataType = "image", ColumnName = "Images", Length = 2147483647, IsNullable = true, ColumnDescription = "产品图片")]
@@ -171,7 +180,7 @@ namespace RUINORERP.Model.Dto
                 {
                     fieldNameList = new ConcurrentDictionary<string, string>();
                     SugarColumn entityAttr;
-                    Type type = typeof(tb_SaleOrderDetail);
+                    Type type = typeof(ProductSharePart);
 
                     foreach (PropertyInfo field in type.GetProperties())
                     {

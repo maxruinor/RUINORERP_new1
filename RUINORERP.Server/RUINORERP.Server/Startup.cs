@@ -172,9 +172,38 @@ namespace RUINORERP.Server
 
                 logBuilder.AddProvider(new Log4NetProviderByCustomeDb("Log4net_db.config", newconn, Program.AppContextData));
                 //设置日志级别
-                logBuilder.AddFilter("RUINORERP.Server.Workflow", LogLevel.Error);
-                logBuilder.AddFilter("Microsoft.Hosting.Lifetime", LogLevel.Error);
-                logBuilder.AddFilter("WorkflowCore.Services.WorkflowHost", LogLevel.Error);
+                //logBuilder.AddFilter("RUINORERP.Server.Workflow", LogLevel.Error);
+                //logBuilder.AddFilter("Microsoft.Hosting.Lifetime", LogLevel.Error);
+                //logBuilder.AddFilter("WorkflowCore.Services.WorkflowHost", LogLevel.Error);
+                //logBuilder.AddFilter("Microsoft", LogLevel.Error);
+                //logBuilder.AddFilter("System.Net.Http.HttpClient", LogLevel.Error);
+                //logBuilder.AddFilter("RUINORERP.Server.frmMain", LogLevel.Error);
+
+                logBuilder.AddFilter((provider, category, logLevel) =>
+                {
+                    // 所有RUINORERP开头的命名空间使用Error级别
+                    if (category.StartsWith("RUINORERP"))
+                    {
+                        return logLevel >= LogLevel.Error;
+                    }
+                    if (category.StartsWith("WorkflowCore"))
+                    {
+                        return logLevel >= LogLevel.Error;
+                    }
+
+                    // 保留原有其他过滤规则
+                    else if (category == "Microsoft.Hosting.Lifetime" ||
+                             category.StartsWith("Microsoft") ||
+                             category.StartsWith("System.Net.Http.HttpClient"))
+                    {
+                        return logLevel >= LogLevel.Error;
+                    }
+                    // 其他日志正常记录  
+                    //所有的都变为错误才记录
+                    return logLevel >= LogLevel.Error;
+                   // return true;
+                });
+
                 //这一句会再次加载 默认的名字的配置文件 log4net.config 相当于多次记录日志？
                 //logBuilder.AddLog4Net();
             });

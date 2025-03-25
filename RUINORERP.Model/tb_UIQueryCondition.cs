@@ -234,6 +234,22 @@ namespace RUINORERP.Model
                         }
         }
 
+        private bool? _MultiChoice = false;
+        /// <summary>
+        /// 默认多选
+        /// </summary>
+        [AdvQueryAttribute(ColName = "MultiChoice", ColDesc = "默认多选")]
+        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType = "Boolean", ColumnName = "MultiChoice", IsNullable = true, ColumnDescription = "默认多选")]
+        public bool? MultiChoice
+        {
+            get { return _MultiChoice; }
+            set
+            {
+                SetProperty(ref _MultiChoice, value);
+            }
+        }
+
+
         private int? _DiffDays1;
         /// <summary>
         /// 差异天数1

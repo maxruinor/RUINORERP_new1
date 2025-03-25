@@ -38,6 +38,7 @@ using RUINORERP.Business.Processor;
 using RUINORERP.Business.Security;
 using FastReport.Table;
 using Org.BouncyCastle.Asn1.Cmp;
+using RUINORERP.Business.CommService;
 
 
 
@@ -785,7 +786,11 @@ namespace RUINORERP.UI.PSI.INV
                             tb_ProdSplitDetail bOM_SDetail = mapper.Map<tb_ProdSplitDetail>(item);
                             bOM_SDetail.Location_ID = EditEntity.Location_ID;
                             bOM_SDetail.Qty = (RowDetails.FirstOrDefault(c => c.ProdDetailID == bOM_SDetail.ProdDetailID).UsedQty * EditEntity.SplitParentQty / bomOutQty).ToInt();
-
+                            View_ProdDetail obj = BizCacheHelper.Instance.GetEntity<View_ProdDetail>(item.ProdDetailID);
+                            if (obj != null)
+                            {
+                                bOM_SDetail.property = obj.prop;
+                            }
                             details.Add(bOM_SDetail);
                         }
                         EditEntity.tb_ProdSplitDetails = details;

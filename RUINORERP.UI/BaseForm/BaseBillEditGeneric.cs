@@ -570,7 +570,6 @@ namespace RUINORERP.UI.BaseForm
         }
 
 
-
         /// <summary>
         /// 控制字段是否显示，添加到里面的是不显示的
         /// </summary>
@@ -622,7 +621,6 @@ namespace RUINORERP.UI.BaseForm
                 }
             }
         }
-
 
         /// <summary>
         /// 设置主表字段是否显示

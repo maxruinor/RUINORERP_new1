@@ -60,9 +60,9 @@ namespace RUINORERP.Business
  RuleFor(tb_CRM_FollowUpRecords =>tb_CRM_FollowUpRecords.FollowUpContent).NotEmpty().WithMessage("跟进内容:不能为空。");
 
 
- RuleFor(tb_CRM_FollowUpRecords =>tb_CRM_FollowUpRecords.FollowUpResult).MaximumLength(50).WithMessage("备注:不能超过最大长度,50.");
+ RuleFor(tb_CRM_FollowUpRecords =>tb_CRM_FollowUpRecords.FollowUpResult).MaximumLength(50).WithMessage("跟进结果:不能超过最大长度,50.");
 
- RuleFor(tb_CRM_FollowUpRecords =>tb_CRM_FollowUpRecords.Notes).MaximumLength(127).WithMessage("跟进结果:不能超过最大长度,127.");
+ RuleFor(tb_CRM_FollowUpRecords =>tb_CRM_FollowUpRecords.Notes).MaximumLength(127).WithMessage("备注:不能超过最大长度,127.");
 
 
  RuleFor(tb_CRM_FollowUpRecords =>tb_CRM_FollowUpRecords.Created_by).NotEmpty().When(x => x.Created_by.HasValue);

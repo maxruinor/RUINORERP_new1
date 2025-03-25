@@ -113,7 +113,7 @@ namespace RUINORERP.UI.BI
             //要导航查出角色属性，所以重写用了自动 导致的方法
             List<tb_RoleInfo> list = await ctr.BaseQueryByAdvancedNavWithConditionsAsync(true, QueryConditionFilter, QueryDtoProxy, pageNum, pageSize);
 
-            List<string> masterlist = ExpressionHelper.ExpressionListToStringList(SummaryCols);
+            List<string> masterlist = RuinorExpressionHelper.ExpressionListToStringList(SummaryCols);
             if (masterlist.Count > 0)
             {
                 dataGridView1.IsShowSumRow = true;

@@ -51,13 +51,15 @@ namespace RUINORERP.Business
                     {
                         _unitOfWorkManage.RollbackTran();
                         rmrs.ErrorMsg = $"来源产品必须通过【采购入库】，【期初盘点】或【缴库记录】产生过库存记录。转换失败。" +
-                            $"\r\n可以尝用【期初盘点】数量为零的方式录入初始成本。";
+                            $"\r\n可以尝用【期初盘点】数量为零的方式或开启【手工录入】初始成本。";
                         rmrs.Succeeded = false;
                         return rmrs;
                         invForm = new tb_Inventory();
                         invForm.ProdDetailID = child.ProdDetailID_from;
                         invForm.Location_ID = entity.Location_ID;
                         invForm.Quantity = 0;
+                        invForm.Inv_Cost = child.TargetInitCost;
+
                         invForm.InitInventory = (int)invForm.Quantity;
                         BusinessHelper.Instance.InitEntity(invForm);
                     }
@@ -72,6 +74,7 @@ namespace RUINORERP.Business
                         {
                             _unitOfWorkManage.RollbackTran();
                             rmrs.ErrorMsg = $"来源产品库存为：{invForm.Quantity}，拟转换数量为：{TransferQty}\r\n 系统设置不允许负库存， 请检查要转换出库数量的情况。";
+
                             rmrs.Succeeded = false;
                             return rmrs;
                         }
@@ -88,14 +91,20 @@ namespace RUINORERP.Business
                     tb_Inventory invTo = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == child.ProdDetailID_to && i.Location_ID == entity.Location_ID);
                     if (invTo == null)
                     {
-                        _unitOfWorkManage.RollbackTran();
-                        rmrs.ErrorMsg = $"目标产品必须通过【采购入库】，【期初盘点】或【缴库记录】产生过库存记录。转换失败。";
-                        rmrs.Succeeded = false;
-                        return rmrs;
+                        if (child.TargetInitCost == 0)
+                        {
+                            _unitOfWorkManage.RollbackTran();
+                            rmrs.ErrorMsg = $"来源产品必须通过【采购入库】，【期初盘点】或【缴库记录】产生过库存记录。转换失败。" +
+                                 $"\r\n可以尝用【期初盘点】数量为零的方式或开启【手工录入】初始成本。";
+                            rmrs.Succeeded = false;
+                            return rmrs;
+                        }
                         invTo = new tb_Inventory();
                         invTo.ProdDetailID = child.ProdDetailID_to;
                         invTo.Location_ID = entity.Location_ID;
                         invTo.Quantity = 0;
+                        invTo.Inv_Cost = child.TargetInitCost;
+                        invForm.Notes = $"由转换单{entity.ConversionNo}初始化";
                         invTo.InitInventory = (int)invTo.Quantity;
                         BusinessHelper.Instance.InitEntity(invTo);
                     }

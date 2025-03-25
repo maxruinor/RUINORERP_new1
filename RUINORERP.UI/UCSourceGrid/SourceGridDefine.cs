@@ -155,6 +155,8 @@ namespace RUINORERP.UI.UCSourceGrid
                     {
                         VisibleAttribute visibleAttribute = attr as VisibleAttribute;
                         col.Visible = visibleAttribute.Visible;
+                        col.DefaultHide = visibleAttribute.Visible;
+                        col.DisplayController.Visible= visibleAttribute.Visible;
                     }
 
                     if (attr is SugarColumn)

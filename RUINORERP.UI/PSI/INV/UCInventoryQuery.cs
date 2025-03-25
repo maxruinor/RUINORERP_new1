@@ -166,7 +166,7 @@ namespace RUINORERP.UI.PSI.INV
                 Expression<Func<View_Inventory, bool>> expression = QueryConditionFilter.GetFilterExpression<View_Inventory>();
                 List<View_Inventory> list = await MainForm.Instance.AppContext.Db.Queryable<View_Inventory>().WhereIF(expression != null, expression).ToListAsync();
 
-                List<string> masterlist = ExpressionHelper.ExpressionListToStringList(SummaryCols);
+                List<string> masterlist = RuinorExpressionHelper.ExpressionListToStringList(SummaryCols);
                 if (masterlist.Count > 0)
                 {
                     dataGridView1.IsShowSumRow = true;
@@ -207,7 +207,7 @@ namespace RUINORERP.UI.PSI.INV
             //list = await ctr.BaseQueryByAdvancedNavWithConditionsAsync(true, queryConditions, QueryConditionFilter.GetFilterExpression<T>(), QueryDto, pageNum, pageSize) as List<T>;
             List<View_Inventory> list = await ctr.BaseQueryByAdvancedNavWithConditionsAsync(true, QueryConditionFilter, QueryDtoProxy, pageNum, pageSize) as List<View_Inventory>;
 
-            List<string> masterlist = ExpressionHelper.ExpressionListToStringList(SummaryCols);
+            List<string> masterlist = RuinorExpressionHelper.ExpressionListToStringList(SummaryCols);
             if (masterlist.Count > 0)
             {
                 dataGridView1.IsShowSumRow = true;

@@ -267,6 +267,7 @@ namespace RUINORERP.UI.PSI.PUR
 
             sgh.SetPointToColumnPairs<ProductSharePart, tb_PurEntryDetail>(sgd, f => f.Location_ID, t => t.Location_ID);
             sgh.SetPointToColumnPairs<ProductSharePart, tb_PurEntryDetail>(sgd, f => f.prop, t => t.property);
+            sgh.SetPointToColumnPairs<ProductSharePart, tb_PurEntryDetail>(sgd, f => f.VendorModelCode, t => t.VendorModelCode);
 
 
 

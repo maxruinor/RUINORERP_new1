@@ -1770,8 +1770,8 @@ namespace RUINORERP.UI.BaseForm
             _UCBillChildQuery = new UCBillChildQuery();
             _UCBillChildQuery.Name = "_UCBillChildQuery";
             _UCBillChildQuery.entityType = typeof(C);
-            List<string> childlist = ExpressionHelper.ExpressionListToStringList(ChildSummaryCols);
-            _UCBillChildQuery.InvisibleCols = ExpressionHelper.ExpressionListToHashSet(ChildInvisibleCols);
+            List<string> childlist = RuinorExpressionHelper.ExpressionListToStringList(ChildSummaryCols);
+            _UCBillChildQuery.InvisibleCols = RuinorExpressionHelper.ExpressionListToHashSet(ChildInvisibleCols);
             List<BaseDtoField> tempChildFiledList = UIHelper.GetDtoFieldNameList<C>();//<M>
             foreach (var item in tempChildFiledList)
             {
@@ -1805,13 +1805,13 @@ namespace RUINORERP.UI.BaseForm
             _UCBillChildQuery_Related.Name = "_UCBillChildQuery_Related";
             _UCBillChildQuery_Related.entityType = ChildRelatedEntityType;
 
-            List<string> childlist = ExpressionHelper.ExpressionListToStringList(ChildRelatedSummaryCols);
+            List<string> childlist = RuinorExpressionHelper.ExpressionListToStringList(ChildRelatedSummaryCols);
             _UCBillChildQuery_Related.SummaryCols = childlist;
             if (_UCBillChildQuery_Related.InvisibleCols == null)
             {
                 _UCBillChildQuery_Related.InvisibleCols = new HashSet<string>();
             }
-            _UCBillChildQuery_Related.InvisibleCols.AddRange(ExpressionHelper.ExpressionListToHashSet(ChildRelatedInvisibleCols).ToArray());
+            _UCBillChildQuery_Related.InvisibleCols.AddRange(RuinorExpressionHelper.ExpressionListToHashSet(ChildRelatedInvisibleCols).ToArray());
 
             _UCBillChildQuery_Related.DefaultHideCols = new HashSet<string>();
             UIHelper.ControlColumnsInvisible(CurMenuInfo, _UCBillChildQuery_Related.InvisibleCols, _UCBillChildQuery_Related.DefaultHideCols, true);
@@ -1831,9 +1831,9 @@ namespace RUINORERP.UI.BaseForm
             _UCBillMasterQuery = new UCBillMasterQuery();
             _UCBillMasterQuery.entityType = typeof(M);
             _UCBillMasterQuery.Name = "_UCBillMasterQuery";
-            List<string> masterlist = ExpressionHelper.ExpressionListToStringList(MasterSummaryCols);
+            List<string> masterlist = RuinorExpressionHelper.ExpressionListToStringList(MasterSummaryCols);
             _UCBillMasterQuery.SummaryCols = masterlist;
-            _UCBillMasterQuery.InvisibleCols = ExpressionHelper.ExpressionListToHashSet(MasterInvisibleCols);
+            _UCBillMasterQuery.InvisibleCols = RuinorExpressionHelper.ExpressionListToHashSet(MasterInvisibleCols);
 
             //一般主单的主键不用显示 这里统一处理？
             string PKColName = BaseUIHelper.GetEntityPrimaryKey<M>();

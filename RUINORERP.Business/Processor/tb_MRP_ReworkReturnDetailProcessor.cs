@@ -41,7 +41,7 @@ namespace RUINORERP.Business.Processor
             SummaryCols.Add(c => c.SubtotalCostAmount);
             SummaryCols.Add(c => c.SubtotalReworkFee);
             SummaryCols.Add(c => c.DeliveredQuantity);
-            List<string> SummaryList = ExpressionHelper.ExpressionListToStringList<tb_MRP_ReworkReturnDetail>(SummaryCols);
+            List<string> SummaryList = RuinorExpressionHelper.ExpressionListToStringList<tb_MRP_ReworkReturnDetail>(SummaryCols);
             return SummaryList;
         }
 

@@ -41,9 +41,11 @@
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.dataGridViewInv = new System.Windows.Forms.DataGridView();
             this.contextMenuStrip1 = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.加载关联数据ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.更新库存成本数据ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.更新关联成本ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.全部更新ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.库存成本更新为指定值ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.splitContainer2 = new System.Windows.Forms.SplitContainer();
             this.dataGridViewPurEntryItems = new System.Windows.Forms.DataGridView();
             this.panel相关数据 = new System.Windows.Forms.Panel();
@@ -61,6 +63,8 @@
             this.kryptonLabel2 = new Krypton.Toolkit.KryptonLabel();
             this.kryptonLabel1 = new Krypton.Toolkit.KryptonLabel();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.rdb时间区间 = new System.Windows.Forms.RadioButton();
+            this.ucAdvDateTimerPickerGroup1 = new RUINORERP.UI.AdvancedUIModule.UCAdvDateTimerPickerGroup();
             this.rdb大于单项成本 = new System.Windows.Forms.RadioButton();
             this.rdb小计总计 = new System.Windows.Forms.RadioButton();
             this.rdb其它 = new System.Windows.Forms.RadioButton();
@@ -78,7 +82,6 @@
             this.bindingSourceInv = new System.Windows.Forms.BindingSource(this.components);
             this.contextMenuStripBOMPrice = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.将配方成本更新到库存ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.库存成本更新为指定值ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1.Panel1)).BeginInit();
             this.kryptonSplitContainer1.Panel1.SuspendLayout();
@@ -259,8 +262,6 @@
             this.dataGridViewInv.Dock = System.Windows.Forms.DockStyle.Fill;
             this.dataGridViewInv.Location = new System.Drawing.Point(0, 0);
             this.dataGridViewInv.Name = "dataGridViewInv";
-            this.dataGridViewInv.ReadOnly = true;
-            this.dataGridViewInv.RowHeadersVisible = false;
             this.dataGridViewInv.RowTemplate.Height = 23;
             this.dataGridViewInv.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
             this.dataGridViewInv.Size = new System.Drawing.Size(301, 365);
@@ -272,12 +273,20 @@
             // 
             this.contextMenuStrip1.Font = new System.Drawing.Font("Segoe UI", 9F);
             this.contextMenuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.加载关联数据ToolStripMenuItem,
             this.更新库存成本数据ToolStripMenuItem,
             this.更新关联成本ToolStripMenuItem,
             this.全部更新ToolStripMenuItem,
             this.库存成本更新为指定值ToolStripMenuItem});
             this.contextMenuStrip1.Name = "contextMenuStrip1";
             this.contextMenuStrip1.Size = new System.Drawing.Size(205, 114);
+            // 
+            // 加载关联数据ToolStripMenuItem
+            // 
+            this.加载关联数据ToolStripMenuItem.Name = "加载关联数据ToolStripMenuItem";
+            this.加载关联数据ToolStripMenuItem.Size = new System.Drawing.Size(204, 22);
+            this.加载关联数据ToolStripMenuItem.Text = "加载关联数据";
+            this.加载关联数据ToolStripMenuItem.Click += new System.EventHandler(this.加载关联数据ToolStripMenuItem_Click);
             // 
             // 更新库存成本数据ToolStripMenuItem
             // 
@@ -299,6 +308,13 @@
             this.全部更新ToolStripMenuItem.Size = new System.Drawing.Size(204, 22);
             this.全部更新ToolStripMenuItem.Text = "全部更新";
             this.全部更新ToolStripMenuItem.Click += new System.EventHandler(this.全部更新ToolStripMenuItem_Click);
+            // 
+            // 库存成本更新为指定值ToolStripMenuItem
+            // 
+            this.库存成本更新为指定值ToolStripMenuItem.Name = "库存成本更新为指定值ToolStripMenuItem";
+            this.库存成本更新为指定值ToolStripMenuItem.Size = new System.Drawing.Size(204, 22);
+            this.库存成本更新为指定值ToolStripMenuItem.Text = "库存成本更新为指定值";
+            this.库存成本更新为指定值ToolStripMenuItem.Click += new System.EventHandler(this.库存成本更新为指定值ToolStripMenuItem_Click);
             // 
             // splitContainer2
             // 
@@ -473,6 +489,8 @@
             // 
             // groupBox1
             // 
+            this.groupBox1.Controls.Add(this.rdb时间区间);
+            this.groupBox1.Controls.Add(this.ucAdvDateTimerPickerGroup1);
             this.groupBox1.Controls.Add(this.rdb大于单项成本);
             this.groupBox1.Controls.Add(this.rdb小计总计);
             this.groupBox1.Controls.Add(this.rdb其它);
@@ -484,6 +502,24 @@
             this.groupBox1.TabIndex = 168;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "关联数据修复更新选项";
+            // 
+            // rdb时间区间
+            // 
+            this.rdb时间区间.AutoSize = true;
+            this.rdb时间区间.Location = new System.Drawing.Point(21, 53);
+            this.rdb时间区间.Name = "rdb时间区间";
+            this.rdb时间区间.Size = new System.Drawing.Size(71, 16);
+            this.rdb时间区间.TabIndex = 6;
+            this.rdb时间区间.Text = "时间区间";
+            this.rdb时间区间.UseVisualStyleBackColor = true;
+            this.rdb时间区间.CheckedChanged += new System.EventHandler(this.rdb时间区间_CheckedChanged);
+            // 
+            // ucAdvDateTimerPickerGroup1
+            // 
+            this.ucAdvDateTimerPickerGroup1.Location = new System.Drawing.Point(98, 49);
+            this.ucAdvDateTimerPickerGroup1.Name = "ucAdvDateTimerPickerGroup1";
+            this.ucAdvDateTimerPickerGroup1.Size = new System.Drawing.Size(260, 25);
+            this.ucAdvDateTimerPickerGroup1.TabIndex = 5;
             // 
             // rdb大于单项成本
             // 
@@ -623,13 +659,6 @@
             this.将配方成本更新到库存ToolStripMenuItem.Text = "将配方成本更新到库存";
             this.将配方成本更新到库存ToolStripMenuItem.Click += new System.EventHandler(this.将配方成本更新到库存ToolStripMenuItem_Click);
             // 
-            // 库存成本更新为指定值ToolStripMenuItem
-            // 
-            this.库存成本更新为指定值ToolStripMenuItem.Name = "库存成本更新为指定值ToolStripMenuItem";
-            this.库存成本更新为指定值ToolStripMenuItem.Size = new System.Drawing.Size(204, 22);
-            this.库存成本更新为指定值ToolStripMenuItem.Text = "库存成本更新为指定值";
-            this.库存成本更新为指定值ToolStripMenuItem.Click += new System.EventHandler(this.库存成本更新为指定值ToolStripMenuItem_Click);
-            // 
             // UCDataFixForCost
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
@@ -740,5 +769,8 @@
         private System.Windows.Forms.ContextMenuStrip contextMenuStripBOMPrice;
         private System.Windows.Forms.ToolStripMenuItem 将配方成本更新到库存ToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem 库存成本更新为指定值ToolStripMenuItem;
+        private System.Windows.Forms.RadioButton rdb时间区间;
+        private AdvancedUIModule.UCAdvDateTimerPickerGroup ucAdvDateTimerPickerGroup1;
+        private System.Windows.Forms.ToolStripMenuItem 加载关联数据ToolStripMenuItem;
     }
 }

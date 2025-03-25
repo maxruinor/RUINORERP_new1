@@ -622,7 +622,7 @@ namespace RUINORERP.Business
 
                 //要移除的是  Is_available == false && Is_enabled == false ,可用启用条件是包含在结果中，不用处理。
                 //目标就是要全部查出来，然后再过滤（其他条件，如删除和客户供应商标记）
-                Expression<Func<T, bool>> expression = ExpressionUtils.RemoveEqualityConditions(QueryConditionFilter.GetFilterExpression<T>(), "Is_enabled", "Is_available");
+                Expression<Func<T, bool>> expression = RuinorExpressionUtils.RemoveEqualityConditions(QueryConditionFilter.GetFilterExpression<T>(), "Is_enabled", "Is_available");
 
 
                 QueryConditionFilter.FilterLimitExpressions.Clear();
@@ -670,6 +670,10 @@ namespace RUINORERP.Business
             {
                 //如果这个item的字段 在T中是？类型 说明可有可无？则不用加子限制条件？如产品中供应商不一定填写了。
                 PropertyInfo propertyInfo = typeof(T).GetProperty(item.FieldName);
+                if (propertyInfo==null)
+                {
+                    continue;
+                }
                 if (item.SubFilter.FilterLimitExpressions.Count > 0 && propertyInfo.PropertyType.Name != "Nullable`1")
                 {
                     select = $" EXISTS ( SELECT [{item.SubFilter.QueryTargetType.Name}].{item.FieldName} FROM [{item.SubFilter.QueryTargetType.Name}] WHERE [{typeof(T).Name}].{item.FieldName}= [{item.SubFilter.QueryTargetType.Name}].{item.FieldName}  ";
@@ -1246,7 +1250,7 @@ namespace RUINORERP.Business
                         .ToExpression(); 
          */
 
-        List<string> qlist = Common.Helper.ExpressionHelper.ExpressionListToStringList(QueryConditions);
+        List<string> qlist = Common.Helper.RuinorExpressionHelper.ExpressionListToStringList(QueryConditions);
         return keyValues;
     }
 

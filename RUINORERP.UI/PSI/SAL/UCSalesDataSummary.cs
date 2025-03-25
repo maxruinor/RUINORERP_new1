@@ -226,7 +226,7 @@ namespace RUINORERP.UI.PSI.SAL
             expressions.Add(c => c.Employee_ID);
             expressions.Add(c => c.ProjectGroup_ID);
 
-            List<string> conditions = ExpressionHelper.ExpressionListToStringList(expressions);
+            List<string> conditions = RuinorExpressionHelper.ExpressionListToStringList(expressions);
 
 
 

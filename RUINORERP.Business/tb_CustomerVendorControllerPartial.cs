@@ -74,15 +74,15 @@ namespace RUINORERP.Business
                               .AndIF(AuthorizeController.GetSaleLimitedAuth(_appContext) && !_appContext.IsSuperUser, t => t.Employee_ID == _appContext.CurUserInfo.UserInfo.Employee_ID)//限制了销售只看到自己的客户
                            .ToExpression();//注意 这一句 不能少
 
-            QueryConditions.Add(new KeyValuePair<string, Expression<Func<T, bool>>>(ExpressionHelper.ExpressionToString<tb_CustomerVendor>(c => c.CVName), null));
-            QueryConditions.Add(new KeyValuePair<string, Expression<Func<T, bool>>>(ExpressionHelper.ExpressionToString<tb_CustomerVendor>(c => c.CVCode), null));
-            QueryConditions.Add(new KeyValuePair<string, Expression<Func<T, bool>>>(ExpressionHelper.ExpressionToString<tb_CustomerVendor>(c => c.Contact), null));
-            QueryConditions.Add(new KeyValuePair<string, Expression<Func<T, bool>>>(ExpressionHelper.ExpressionToString<tb_CustomerVendor>(c => c.Notes), null));
-            QueryConditions.Add(new KeyValuePair<string, Expression<Func<T, bool>>>(ExpressionHelper.ExpressionToString<tb_CustomerVendor>(c => c.Phone), null));
-            QueryConditions.Add(new KeyValuePair<string, Expression<Func<T, bool>>>(ExpressionHelper.ExpressionToString<tb_CustomerVendor>(c => c.Address), null));
-            QueryConditions.Add(new KeyValuePair<string, Expression<Func<T, bool>>>(ExpressionHelper.ExpressionToString<tb_CustomerVendor>(c => c.Employee_ID), null));
-            QueryConditions.Add(new KeyValuePair<string, Expression<Func<T, bool>>>(ExpressionHelper.ExpressionToString<tb_CustomerVendor>(c => c.Paytype_ID), null));
-            QueryConditions.Add(new KeyValuePair<string, Expression<Func<T, bool>>>(ExpressionHelper.ExpressionToString<tb_CustomerVendor>(c => c.CVName), null));
+            QueryConditions.Add(new KeyValuePair<string, Expression<Func<T, bool>>>(RuinorExpressionHelper.ExpressionToString<tb_CustomerVendor>(c => c.CVName), null));
+            QueryConditions.Add(new KeyValuePair<string, Expression<Func<T, bool>>>(RuinorExpressionHelper.ExpressionToString<tb_CustomerVendor>(c => c.CVCode), null));
+            QueryConditions.Add(new KeyValuePair<string, Expression<Func<T, bool>>>(RuinorExpressionHelper.ExpressionToString<tb_CustomerVendor>(c => c.Contact), null));
+            QueryConditions.Add(new KeyValuePair<string, Expression<Func<T, bool>>>(RuinorExpressionHelper.ExpressionToString<tb_CustomerVendor>(c => c.Notes), null));
+            QueryConditions.Add(new KeyValuePair<string, Expression<Func<T, bool>>>(RuinorExpressionHelper.ExpressionToString<tb_CustomerVendor>(c => c.Phone), null));
+            QueryConditions.Add(new KeyValuePair<string, Expression<Func<T, bool>>>(RuinorExpressionHelper.ExpressionToString<tb_CustomerVendor>(c => c.Address), null));
+            QueryConditions.Add(new KeyValuePair<string, Expression<Func<T, bool>>>(RuinorExpressionHelper.ExpressionToString<tb_CustomerVendor>(c => c.Employee_ID), null));
+            QueryConditions.Add(new KeyValuePair<string, Expression<Func<T, bool>>>(RuinorExpressionHelper.ExpressionToString<tb_CustomerVendor>(c => c.Paytype_ID), null));
+            QueryConditions.Add(new KeyValuePair<string, Expression<Func<T, bool>>>(RuinorExpressionHelper.ExpressionToString<tb_CustomerVendor>(c => c.CVName), null));
 
 
             //Expression<Func<T, bool>> expCondition,

@@ -59,7 +59,7 @@ namespace RUINORERP.Business.Processor
             SummaryCols.Add(c => c.总销售订单数量);
             SummaryCols.Add(c => c.实际成交数量);
             SummaryCols.Add(c => c.实际成交金额);
-            List<string> SummaryList = ExpressionHelper.ExpressionListToStringList<Proc_SaleOrderStatisticsByEmployee>(SummaryCols);
+            List<string> SummaryList = RuinorExpressionHelper.ExpressionListToStringList<Proc_SaleOrderStatisticsByEmployee>(SummaryCols);
             return SummaryList;
         }
 

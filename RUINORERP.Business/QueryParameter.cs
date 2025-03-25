@@ -140,7 +140,7 @@ namespace RUINORERP.Business
             {
                 _QueryFieldExpression = value;
                 //指定到字符类型，方便使用
-                QueryField = ExpressionHelper.ExpressionToString<M>(_QueryFieldExpression);
+                QueryField = RuinorExpressionHelper. ExpressionToString<M>(_QueryFieldExpression);
             }
         }
 

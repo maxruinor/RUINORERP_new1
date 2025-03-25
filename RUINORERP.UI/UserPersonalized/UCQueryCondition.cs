@@ -62,7 +62,7 @@ namespace RUINORERP.UI.UserPersonalized
             DataBindingHelper.BindData4CheckBox<tb_UIQueryCondition>(entity, t => t.EnableDefault1, chkEnableDefault1, false);
             DataBindingHelper.BindData4CheckBox<tb_UIQueryCondition>(entity, t => t.EnableDefault2, chkEnableDefault2, false);
             DataBindingHelper.BindData4CheckBox<tb_UIQueryCondition>(entity, t => t.Focused, chkFocused, false);
-
+            DataBindingHelper.BindData4CheckBox<tb_UIQueryCondition>(entity, t => t.MultiChoice, chkMultiChoice, false);
             DataBindingHelper.BindData4CheckBox<tb_UIQueryCondition>(entity, t => t.UseLike, chkUseLike, false);
 
             var queryField = QueryFields.FirstOrDefault(c => c.FieldName == entity.FieldName);
@@ -197,6 +197,20 @@ namespace RUINORERP.UI.UserPersonalized
                             lblUselike.Visible = false;
                             chkUseLike.Visible = false;
                         }
+
+
+                        //下拉才可能多选
+                        if (queryField.SugarCol.SqlParameterDbType.ToString() == "Int64")
+                        {
+                            lblMultiChoice.Visible = true;
+                            chkMultiChoice.Visible = true;
+                        }
+                        else
+                        {
+                            lblMultiChoice.Visible = false;
+                            chkMultiChoice.Visible = false;
+                        }
+
                     }
                     else
                     {
@@ -211,6 +225,20 @@ namespace RUINORERP.UI.UserPersonalized
                         {
                             lblUselike.Visible = false;
                             chkUseLike.Visible = false;
+                        }
+                        #endregion
+
+                        #region 用其它方式判断是否能多选
+                        //字符串才启用模糊查询
+                        if (queryField.FieldPropertyInfo != null && queryField.FieldPropertyInfo.PropertyType.ToString() == "System.Int64")
+                        {
+                            lblMultiChoice.Visible = true;
+                            chkMultiChoice.Visible = true;
+                        }
+                        else
+                        {
+                            lblMultiChoice.Visible = false;
+                            chkMultiChoice.Visible = false;
                         }
                         #endregion
                     }

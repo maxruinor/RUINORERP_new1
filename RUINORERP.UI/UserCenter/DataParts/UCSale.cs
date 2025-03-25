@@ -88,7 +88,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
                 }
                 else
                 {
-                    SaleOrderList = await MainForm.Instance.AppContext.Db.Queryable<tb_SaleOrder>()
+                    SaleOrderList = await MainForm.Instance.AppContext.Db.CopyNew().Queryable<tb_SaleOrder>()
                   //.Includes(c => c.tb_employee)
                   .Includes(c => c.tb_SaleOrderDetails)
                   //.Includes(c => c.tb_projectgroup)

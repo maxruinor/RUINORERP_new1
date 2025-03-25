@@ -486,7 +486,7 @@ namespace RUINORERP.UI.ProductEAV
             {
                 ProdInvisibleCols.Add(c => c.Inv_Cost);
             }
-            var InvisibleCols = ExpressionHelper.ExpressionListToStringList(ProdInvisibleCols);
+            var InvisibleCols = RuinorExpressionHelper.ExpressionListToStringList(ProdInvisibleCols);
             //这里设置了指定列不可见
             foreach (var item in InvisibleCols)
             {

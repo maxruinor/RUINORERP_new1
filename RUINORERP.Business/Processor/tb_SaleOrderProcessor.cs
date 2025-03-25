@@ -36,7 +36,14 @@ namespace RUINORERP.Business.Processor
 
             //可以根据关联外键自动加载条件，条件用公共虚方法
             queryFilter.SetQueryField<tb_SaleOrder>(c => c.SOrderNo);
-            queryFilter.SetQueryField<tb_SaleOrder>(c => c.Employee_ID);
+
+            //单选下拉条件
+            //queryFilter.SetQueryField<tb_SaleOrder>(c => c.Employee_ID);
+
+            //多选可控条件  在属性中可以自由切换
+            queryFilter.SetQueryField<tb_SaleOrder>(c => c.Employee_ID, true, AdvQueryProcessType.CmbMultiChoiceCanIgnore);
+
+
             queryFilter.SetQueryField<tb_SaleOrder>(c => c.ProjectGroup_ID, true, AdvQueryProcessType.CmbMultiChoiceCanIgnore);
             queryFilter.SetQueryField<tb_SaleOrder>(c => c.PayStatus, QueryFieldType.CmbEnum, typeof(PayStatus));
             queryFilter.SetQueryField<tb_SaleOrder>(c => c.PlatformOrderNo);
@@ -78,7 +85,7 @@ namespace RUINORERP.Business.Processor
             SummaryCols.Add(c => c.CollectedMoney);
             SummaryCols.Add(c => c.PrePayMoney);
             SummaryCols.Add(c => c.Deposit);
-            List<string> SummaryList = ExpressionHelper.ExpressionListToStringList<tb_SaleOrder>(SummaryCols);
+            List<string> SummaryList = RuinorExpressionHelper.ExpressionListToStringList<tb_SaleOrder>(SummaryCols);
             return SummaryList;
         }
 

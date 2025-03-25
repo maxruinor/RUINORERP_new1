@@ -131,6 +131,7 @@ namespace RUINORERP.Server
                     // IHostBuilder  myhost = starter.CslaDIPort();
                    
                     IServiceProvider services = myhost.Services;
+                    
                     //https://github.com/autofac/Autofac.Extensions.DependencyInjection/releases
                     //给上下文服务源
                     Startup.ServiceProvider = services;
@@ -138,7 +139,7 @@ namespace RUINORERP.Server
                     Startup.AutofacContainerScope = services.GetAutofacRoot();
                     AppContextData.SetAutofacContainerScope(Startup.AutofacContainerScope);
                     BusinessHelper.Instance.SetContext(AppContextData);
-
+                    
                     //Program.AppContextData.SetServiceProvider(services);
                     //Program.AppContextData.Status = "init";
 

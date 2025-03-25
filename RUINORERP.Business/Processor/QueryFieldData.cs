@@ -45,7 +45,7 @@ namespace RUINORERP.Business.Processor
         public void SetEnumValueColName<T>(Expression<Func<T, object>> _expEnumValueColName)
         {
             //指定到字符类型，方便使用
-            string fieldName = ExpressionHelper.ExpressionToString<T>(_expEnumValueColName);
+            string fieldName = RuinorExpressionHelper.ExpressionToString<T>(_expEnumValueColName);
             EnumValueColName = fieldName;
 
         }

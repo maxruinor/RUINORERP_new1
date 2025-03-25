@@ -129,7 +129,7 @@ namespace RUINORERP.UI.ProductEAV
 
             List<tb_Prod> list = await ctr.BaseQueryByAdvancedNavWithConditionsAsync(true, QueryConditionFilter, QueryDtoProxy, pageNum, pageSize) as List<tb_Prod>;
 
-            List<string> masterlist = ExpressionHelper.ExpressionListToStringList(SummaryCols);
+            List<string> masterlist = RuinorExpressionHelper.ExpressionListToStringList(SummaryCols);
             if (masterlist.Count > 0)
             {
                 dataGridView1.IsShowSumRow = true;

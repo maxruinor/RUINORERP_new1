@@ -1401,7 +1401,7 @@ namespace RUINORERP.UI.BaseForm
 
             List<T> list = await ctr.BaseQuerySimpleByAdvancedNavWithConditionsAsync(true, QueryConditionFilter, QueryDtoProxy, pageNum, pageSize, UseAutoNavQuery);
 
-            List<string> masterlist = ExpressionHelper.ExpressionListToStringList(SummaryCols);
+            List<string> masterlist = RuinorExpressionHelper.ExpressionListToStringList(SummaryCols);
             if (masterlist.Count > 0)
             {
                 dataGridView1.IsShowSumRow = true;
@@ -1464,7 +1464,7 @@ namespace RUINORERP.UI.BaseForm
             {
                 InvisibleCols = new HashSet<string>();
             }
-            List<string> expInvisibleCols = ExpressionHelper.ExpressionListToStringList(InvisibleColsExp);
+            List<string> expInvisibleCols = RuinorExpressionHelper.ExpressionListToStringList(InvisibleColsExp);
             InvisibleCols.AddRange(expInvisibleCols.ToArray());
 
             //ControlSingleTableColumnsInvisible(InvisibleCols);
@@ -1608,7 +1608,7 @@ namespace RUINORERP.UI.BaseForm
                   .ToListAsync();
                 }
 
-                List<string> masterlist = ExpressionHelper.ExpressionListToStringList(SummaryCols);
+                List<string> masterlist = RuinorExpressionHelper.ExpressionListToStringList(SummaryCols);
                 if (masterlist.Count > 0)
                 {
                     dataGridView1.IsShowSumRow = true;

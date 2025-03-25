@@ -38,7 +38,7 @@ using RUINORERP.Business.Processor;
 using RUINORERP.Business.Security;
 using Netron.GraphLib;
 using Krypton.Toolkit;
- 
+
 
 
 namespace RUINORERP.UI.PSI.INV
@@ -129,7 +129,7 @@ namespace RUINORERP.UI.PSI.INV
 
             if (entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改)
             {
-                base.InitRequiredToControl(MainForm.Instance.AppContext.GetRequiredService <tb_ProdConversionValidator> (), kryptonSplitContainer1.Panel1.Controls);
+                base.InitRequiredToControl(MainForm.Instance.AppContext.GetRequiredService<tb_ProdConversionValidator>(), kryptonSplitContainer1.Panel1.Controls);
             }
 
             //如果属性变化 则状态为修改
@@ -198,6 +198,8 @@ namespace RUINORERP.UI.PSI.INV
             listCols.SetCol_NeverVisible<tb_ProdConversionDetail>(c => c.ConversionID);
             listCols.SetCol_NeverVisible<tb_ProdConversionDetail>(c => c.ConversionID);
 
+            listCols.SetCol_DefaultHide<tb_ProdConversionDetail>(c => c.TargetInitCost);
+
             List<SourceToTargetMatchCol> sourceToTargetMatchesA = new List<SourceToTargetMatchCol>();
             sourceToTargetMatchesA.SetSourceToTargetMatchCol<View_ProdDetail, tb_ProdConversionDetail>(s => s.SKU, t => t.SKU_from);
             sourceToTargetMatchesA.SetSourceToTargetMatchCol<View_ProdDetail, tb_ProdConversionDetail>(s => s.CNName, t => t.CNName_from);
@@ -241,7 +243,7 @@ namespace RUINORERP.UI.PSI.INV
             listCols.SetCol_EditorDataSource<View_ProdDetail, tb_ProdConversionDetail>(c => c.Type_ID_to, sourceToTargetMatchesB);
             listCols.SetCol_EditorDataSource<View_ProdDetail, tb_ProdConversionDetail>(c => c.ProdDetailID_to, sourceToTargetMatchesB);
             listCols.SetCol_EditorDataSource<View_ProdDetail, tb_ProdConversionDetail>(c => c.BarCode_to, sourceToTargetMatchesB);
-            
+
             //产品选择时不能多选。会出问题。
             listCols.SetCol_CanMuliSelect<tb_ProdConversionDetail>(c => c.SKU_from, false);
             listCols.SetCol_CanMuliSelect<tb_ProdConversionDetail>(c => c.CNName_from, false);
@@ -328,11 +330,11 @@ namespace RUINORERP.UI.PSI.INV
             {
                 _SDetail.property_from = vp.prop;
                 var Col = griddefine.grid.Columns.GetColumnInfo(griddefine.DefineColumns.FirstOrDefault(c => c.ColName == nameof(tb_ProdConversionDetail.property_from)).UniqueId);
-                if (Col!=null)
+                if (Col != null)
                 {
                     griddefine.grid[Position.Row, Col.Index].Value = _SDetail.property_from;
                 }
-                
+
             }
         }
 
@@ -353,11 +355,10 @@ namespace RUINORERP.UI.PSI.INV
                 cmbLocation_ID.Focus();
             }
         }
-       
+
 
         private void Sgh_OnCalculateColumnValue(object _rowObj, SourceGridDefine myGridDefine, SourceGrid.Position position)
         {
-
             if (EditEntity == null)
             {
                 //都不是正常状态
@@ -366,7 +367,6 @@ namespace RUINORERP.UI.PSI.INV
             }
             try
             {
-
                 //计算总金额  这些逻辑是不是放到业务层？后面要优化
                 List<tb_ProdConversionDetail> details = sgd.BindingSourceLines.DataSource as List<tb_ProdConversionDetail>;
                 details = details.Where(c => c.ProdDetailID_from > 0).ToList();
@@ -375,7 +375,6 @@ namespace RUINORERP.UI.PSI.INV
                     MainForm.Instance.uclog.AddLog("请先选择产品数据");
                     return;
                 }
-
                 EditEntity.TotalConversionQty = details.Sum(c => Math.Abs(c.ConversionQty));
             }
             catch (Exception ex)
@@ -383,7 +382,6 @@ namespace RUINORERP.UI.PSI.INV
                 logger.LogError("计算出错", ex);
                 MainForm.Instance.uclog.AddLog("Sgh_OnCalculateColumnValue" + ex.Message);
             }
-
         }
 
 
@@ -471,9 +469,9 @@ namespace RUINORERP.UI.PSI.INV
 
         }
 
-
-
-
-
+        private void chkInitCost_CheckedChanged(object sender, EventArgs e)
+        {
+             listCols.SetCol_Visible<tb_ProdConversionDetail>(c => c.TargetInitCost, sgd, chkInitCost.Checked);
+        }
     }
 }

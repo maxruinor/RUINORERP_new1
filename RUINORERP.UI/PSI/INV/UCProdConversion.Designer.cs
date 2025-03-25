@@ -51,6 +51,7 @@
             this.kryptonHeaderGroup2 = new Krypton.Toolkit.KryptonHeaderGroup();
             this.buttonSpecHeaderGroup2 = new Krypton.Toolkit.ButtonSpecHeaderGroup();
             this.grid1 = new SourceGrid.Grid();
+            this.chkInitCost = new Krypton.Toolkit.KryptonCheckBox();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceSub)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1)).BeginInit();
@@ -82,6 +83,7 @@
             // 
             // kryptonSplitContainer1.Panel1
             // 
+            this.kryptonSplitContainer1.Panel1.Controls.Add(this.chkInitCost);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.lblReason);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.txtReason);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.lblLocation_ID);
@@ -228,7 +230,7 @@
             this.txtNotes.Location = new System.Drawing.Point(661, 93);
             this.txtNotes.Multiline = true;
             this.txtNotes.Name = "txtNotes";
-            this.txtNotes.Size = new System.Drawing.Size(312, 69);
+            this.txtNotes.Size = new System.Drawing.Size(278, 69);
             this.txtNotes.TabIndex = 104;
             // 
             // lblPrintStatus
@@ -313,6 +315,15 @@
             this.grid1.TabStop = true;
             this.grid1.ToolTipText = "";
             // 
+            // chkInitCost
+            // 
+            this.chkInitCost.Location = new System.Drawing.Point(984, 65);
+            this.chkInitCost.Name = "chkInitCost";
+            this.chkInitCost.Size = new System.Drawing.Size(101, 20);
+            this.chkInitCost.TabIndex = 171;
+            this.chkInitCost.Values.Text = "录入初始成本";
+            this.chkInitCost.CheckedChanged += new System.EventHandler(this.chkInitCost_CheckedChanged);
+            // 
             // UCProdConversion
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
@@ -372,5 +383,6 @@
         private Krypton.Toolkit.ButtonSpecHeaderGroup buttonSpecHeaderGroup2;
         private Krypton.Toolkit.KryptonLabel lblReason;
         private Krypton.Toolkit.KryptonTextBox txtReason;
+        private Krypton.Toolkit.KryptonCheckBox chkInitCost;
     }
 }

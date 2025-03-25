@@ -44,6 +44,8 @@
             this.chkVisble = new Krypton.Toolkit.KryptonCheckBox();
             this.lblUselike = new Krypton.Toolkit.KryptonLabel();
             this.chkUseLike = new Krypton.Toolkit.KryptonCheckBox();
+            this.lblMultiChoice = new Krypton.Toolkit.KryptonLabel();
+            this.chkMultiChoice = new Krypton.Toolkit.KryptonCheckBox();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).BeginInit();
             this.SuspendLayout();
             // 
@@ -177,12 +179,32 @@
             this.chkUseLike.ToolTipValues.Heading = "";
             this.chkUseLike.Values.Text = "";
             // 
+            // lblMultiChoice
+            // 
+            this.lblMultiChoice.Location = new System.Drawing.Point(212, 152);
+            this.lblMultiChoice.Name = "lblMultiChoice";
+            this.lblMultiChoice.Size = new System.Drawing.Size(62, 20);
+            this.lblMultiChoice.TabIndex = 43;
+            this.lblMultiChoice.Values.Text = "默认多选";
+            // 
+            // chkMultiChoice
+            // 
+            this.chkMultiChoice.Location = new System.Drawing.Point(290, 157);
+            this.chkMultiChoice.Name = "chkMultiChoice";
+            this.chkMultiChoice.Size = new System.Drawing.Size(19, 13);
+            this.chkMultiChoice.TabIndex = 44;
+            this.chkMultiChoice.ToolTipValues.Description = "打开查询页面，第一个获取焦点的输入框。";
+            this.chkMultiChoice.ToolTipValues.Heading = "";
+            this.chkMultiChoice.Values.Text = "";
+            // 
             // UCQueryCondition
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(602, 218);
             this.ControlBox = false;
+            this.Controls.Add(this.lblMultiChoice);
+            this.Controls.Add(this.chkMultiChoice);
             this.Controls.Add(this.lblUselike);
             this.Controls.Add(this.chkUseLike);
             this.Controls.Add(this.lblVisble);
@@ -224,5 +246,7 @@
         private Krypton.Toolkit.KryptonCheckBox chkVisble;
         private Krypton.Toolkit.KryptonLabel lblUselike;
         private Krypton.Toolkit.KryptonCheckBox chkUseLike;
+        private Krypton.Toolkit.KryptonLabel lblMultiChoice;
+        private Krypton.Toolkit.KryptonCheckBox chkMultiChoice;
     }
 }

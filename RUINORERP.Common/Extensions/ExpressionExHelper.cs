@@ -9,9 +9,6 @@ namespace RUINORERP.Common.Extensions
 {
     /*
      然后就是接口的定义
-
- 
-
 1
 2
 3
@@ -22,12 +19,6 @@ return db.Set<T>().Where(whereLambda.Compile()).AsQueryable().OrderBy(orderBy).S
 }
 　　接下来就是实现了
 
-1
-2
-3
-4
-5
-6
 var where = PredicateBuilder.True<BaoGaiTouBit>();
 where = where.And(e => e.IsEnable);
 where = where.And(e => e.DeadLine >= mindate);

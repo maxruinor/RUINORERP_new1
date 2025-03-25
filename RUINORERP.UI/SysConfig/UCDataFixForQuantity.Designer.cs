@@ -72,8 +72,6 @@
             this.richTextBoxLog = new System.Windows.Forms.RichTextBox();
             this.bindingSourceList = new System.Windows.Forms.BindingSource(this.components);
             this.bindingSourceInv = new System.Windows.Forms.BindingSource(this.components);
-            this.contextMenuStripBOMPrice = new System.Windows.Forms.ContextMenuStrip(this.components);
-            this.将配方成本更新到库存ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1.Panel1)).BeginInit();
             this.kryptonSplitContainer1.Panel1.SuspendLayout();
@@ -109,7 +107,6 @@
             ((System.ComponentModel.ISupportInitialize)(this.cmbType)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceList)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceInv)).BeginInit();
-            this.contextMenuStripBOMPrice.SuspendLayout();
             this.SuspendLayout();
             // 
             // kryptonSplitContainer1
@@ -248,7 +245,6 @@
             this.dataGridViewInv.Dock = System.Windows.Forms.DockStyle.Fill;
             this.dataGridViewInv.Location = new System.Drawing.Point(0, 0);
             this.dataGridViewInv.Name = "dataGridViewInv";
-            this.dataGridViewInv.ReadOnly = true;
             this.dataGridViewInv.RowHeadersVisible = false;
             this.dataGridViewInv.RowTemplate.Height = 23;
             this.dataGridViewInv.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
@@ -266,7 +262,7 @@
             this.全部更新ToolStripMenuItem,
             this.库存成本更新为指定值ToolStripMenuItem});
             this.contextMenuStrip1.Name = "contextMenuStrip1";
-            this.contextMenuStrip1.Size = new System.Drawing.Size(205, 92);
+            this.contextMenuStrip1.Size = new System.Drawing.Size(205, 114);
             // 
             // 更新库存成本数据ToolStripMenuItem
             // 
@@ -546,21 +542,6 @@
             this.richTextBoxLog.TabIndex = 0;
             this.richTextBoxLog.Text = "";
             // 
-            // contextMenuStripBOMPrice
-            // 
-            this.contextMenuStripBOMPrice.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.contextMenuStripBOMPrice.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.将配方成本更新到库存ToolStripMenuItem});
-            this.contextMenuStripBOMPrice.Name = "contextMenuStripBOMPrice";
-            this.contextMenuStripBOMPrice.Size = new System.Drawing.Size(205, 26);
-            // 
-            // 将配方成本更新到库存ToolStripMenuItem
-            // 
-            this.将配方成本更新到库存ToolStripMenuItem.Name = "将配方成本更新到库存ToolStripMenuItem";
-            this.将配方成本更新到库存ToolStripMenuItem.Size = new System.Drawing.Size(204, 22);
-            this.将配方成本更新到库存ToolStripMenuItem.Text = "将配方成本更新到库存";
-            this.将配方成本更新到库存ToolStripMenuItem.Click += new System.EventHandler(this.将配方成本更新到库存ToolStripMenuItem_Click);
-            // 
             // UCDataFixForQuantity
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
@@ -608,7 +589,6 @@
             ((System.ComponentModel.ISupportInitialize)(this.cmbType)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceList)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceInv)).EndInit();
-            this.contextMenuStripBOMPrice.ResumeLayout(false);
             this.ResumeLayout(false);
 
         }
@@ -657,8 +637,6 @@
         private Krypton.Toolkit.KryptonComboBox cmbdepartment;
         private Krypton.Toolkit.KryptonLabel kryptonLabel6;
         private System.Windows.Forms.RadioButton rdb大于单项成本;
-        private System.Windows.Forms.ContextMenuStrip contextMenuStripBOMPrice;
-        private System.Windows.Forms.ToolStripMenuItem 将配方成本更新到库存ToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem 库存成本更新为指定值ToolStripMenuItem;
     }
 }

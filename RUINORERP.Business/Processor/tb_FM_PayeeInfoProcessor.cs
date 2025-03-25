@@ -57,7 +57,7 @@ namespace RUINORERP.Business.Processor
             queryFilter.SetQueryField<tb_FM_PayeeInfo>(c => c.Employee_ID);
             queryFilter.SetQueryField<tb_FM_PayeeInfo>(c => c.CustomerVendor_ID);
             queryFilter.SetQueryField<tb_FM_PayeeInfo>(c => c.Account_No);
-            queryFilter.SetQueryField<tb_FM_PayeeInfo>(c => c.Account_name);
+            queryFilter.SetQueryField<tb_FM_PayeeInfo>(c => c.Account_name); 
             queryFilter.SetQueryField<tb_FM_PayeeInfo>(c => c.Account_type, QueryFieldType.CmbEnum, typeof(AccountType));
             queryFilter.SetQueryField<tb_FM_PayeeInfo>(c => c.Notes);
             return queryFilter;

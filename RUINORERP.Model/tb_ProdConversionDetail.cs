@@ -237,6 +237,21 @@ namespace RUINORERP.Model
                         }
         }
 
+        private decimal _TargetInitCost;
+        /// <summary>
+        /// 初始成本
+        /// </summary>
+        [AdvQueryAttribute(ColName = "TargetInitCost", ColDesc = "初始成本")]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType = "Decimal", ColumnName = "TargetInitCost", DecimalDigits = 4, IsNullable = false, ColumnDescription = "初始成本")]
+        public decimal TargetInitCost
+        {
+            get { return _TargetInitCost; }
+            set
+            {
+                SetProperty(ref _TargetInitCost, value);
+            }
+        }
+
         private long _Type_ID_to;
         /// <summary>
         /// 目标产品类型

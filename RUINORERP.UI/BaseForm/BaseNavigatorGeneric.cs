@@ -1045,9 +1045,9 @@ namespace RUINORERP.UI.BaseForm
             _UCMasterQuery = new UCBillMasterQuery();
             _UCMasterQuery.entityType = typeof(M);
             _UCMasterQuery.Name = "BaseNavGen_UCMasterQuery";
-            List<string> masterlist = ExpressionHelper.ExpressionListToStringList(MasterSummaryCols);
+            List<string> masterlist = RuinorExpressionHelper.ExpressionListToStringList(MasterSummaryCols);
             _UCMasterQuery.SummaryCols = masterlist;
-            _UCMasterQuery.InvisibleCols = ExpressionHelper.ExpressionListToHashSet(MasterInvisibleCols);
+            _UCMasterQuery.InvisibleCols = RuinorExpressionHelper.ExpressionListToHashSet(MasterInvisibleCols);
 
             //一般主单的主键不用显示 这里统一处理？
             string PKColName = BaseUIHelper.GetEntityPrimaryKey<M>();
@@ -1101,8 +1101,8 @@ namespace RUINORERP.UI.BaseForm
             _UCBillChildQuery = new UCBillChildQuery();
             _UCBillChildQuery.Name = "_UCBillChildQuery";
             _UCBillChildQuery.entityType = typeof(C);
-            List<string> childlist = ExpressionHelper.ExpressionListToStringList(ChildSummaryCols);
-            _UCBillChildQuery.InvisibleCols = ExpressionHelper.ExpressionListToHashSet(ChildInvisibleCols);
+            List<string> childlist = RuinorExpressionHelper.ExpressionListToStringList(ChildSummaryCols);
+            _UCBillChildQuery.InvisibleCols = RuinorExpressionHelper.ExpressionListToHashSet(ChildInvisibleCols);
             _UCBillChildQuery.SummaryCols = childlist;
             //_UCBillChildQuery.ColDisplayTypes=
             _UCBillChildQuery.ColNameDataDictionary = ChildColNameDataDictionary;
@@ -1138,8 +1138,8 @@ namespace RUINORERP.UI.BaseForm
             _UCBillChildQuery_Related = new UCBillChildQuery();
             _UCBillChildQuery_Related.Name = "_UCBillChildQuery_Related";
             _UCBillChildQuery_Related.entityType = ChildRelatedEntityType;
-            List<string> childlist = ExpressionHelper.ExpressionListToStringList(ChildRelatedSummaryCols);
-            _UCBillChildQuery_Related.InvisibleCols = ExpressionHelper.ExpressionListToHashSet(ChildRelatedInvisibleCols);
+            List<string> childlist = RuinorExpressionHelper.ExpressionListToStringList(ChildRelatedSummaryCols);
+            _UCBillChildQuery_Related.InvisibleCols = RuinorExpressionHelper.ExpressionListToHashSet(ChildRelatedInvisibleCols);
             _UCBillChildQuery_Related.SummaryCols = childlist;
             _UCBillChildQuery_Related.ColNameDataDictionary = ChildColNameDataDictionary;
             KryptonPage page = NewPage(NavParts.关联单据.ToString(), 1, _UCBillChildQuery_Related);
@@ -1180,9 +1180,9 @@ namespace RUINORERP.UI.BaseForm
             _UCOutlookGridGroupAnalysis.ColDisplayTypes = _UCMasterQuery.ColDisplayTypes;
 
 
-            List<string> masterlist = ExpressionHelper.ExpressionListToStringList(MasterSummaryCols);
+            List<string> masterlist = RuinorExpressionHelper.ExpressionListToStringList(MasterSummaryCols);
             _UCOutlookGridGroupAnalysis.SummaryCols = masterlist;
-            _UCOutlookGridGroupAnalysis.InvisibleCols = ExpressionHelper.ExpressionListToHashSet(MasterInvisibleCols);
+            _UCOutlookGridGroupAnalysis.InvisibleCols = RuinorExpressionHelper.ExpressionListToHashSet(MasterInvisibleCols);
             _UCOutlookGridGroupAnalysis.ColNameDataDictionary = MasterColNameDataDictionary;
             UIHelper.ControlColumnsInvisible(CurMenuInfo, _UCOutlookGridGroupAnalysis.InvisibleCols);
             KryptonPage page = NewPage(NavParts.分组显示.ToString(), 1, _UCOutlookGridGroupAnalysis);

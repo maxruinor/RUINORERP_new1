@@ -341,7 +341,7 @@ namespace SourceGrid
 			if (mHScrollBar.Value > MaximumHScroll)
 				mHScrollBar.Value = MaximumHScroll;
 		}
-
+        /*
 		/// <summary>
 		/// 重新计算垂直滚动条的位置
 		/// </summary>
@@ -350,11 +350,12 @@ namespace SourceGrid
 			if (VScrollBarVisible == false)
 				return;
 			mVScrollBar.Minimum = 0;
-			//MICK(4): Now (rows + VerticalPage - 1) equals the count of all rows minus fixed rows...
-			// But I do not change it here because I do not know how to do that properly
-			mVScrollBar.Maximum = rows + VerticalPage - 1;
+            //MICK(4): Now (rows + VerticalPage - 1) equals the count of all rows minus fixed rows...
+            // But I do not change it here because I do not know how to do that properly
+             mVScrollBar.Maximum = rows + VerticalPage - 1;
+            
 			//MICK(5): this is changed too
-			if (VerticalPage > 1)
+            if (VerticalPage > 1)
 				mVScrollBar.LargeChange = VerticalPage;
 			else
 				mVScrollBar.LargeChange = 1;
@@ -364,12 +365,54 @@ namespace SourceGrid
 			if (mVScrollBar.Value > MaximumVScroll)
 				mVScrollBar.Value = MaximumVScroll;
 		}
+		*/
 
+
+
+        private void RecalcVScrollBar(int rows)
+        {
+            if (VScrollBarVisible == false)
+                return;
+
+            // 确保rows非负
+            rows = Math.Max(rows, 0);
+
+            // 解除事件处理以避免递归
+            mVScrollBar.ValueChanged -= new EventHandler(HScroll_Change);
+
+            try
+            {
+                mVScrollBar.Minimum = 0;
+                // 正确设置Maximum为rows - 1
+                int max = Math.Max(rows - 1, 0);
+                mVScrollBar.Maximum = max;
+
+                // 计算LargeChange，确保不超过可滚动范围
+                int largeChange = Math.Max(VerticalPage, 1);
+                largeChange = Math.Min(largeChange, max + 1); // max+1即rows，因max=rows-1
+                mVScrollBar.LargeChange = largeChange;
+
+                // 计算允许的最大Value
+                int maxValue = Math.Max(max - largeChange + 1, 0);
+                if (mVScrollBar.Value > maxValue)
+                    mVScrollBar.Value = maxValue;
+            }
+            finally
+            {
+                // 重新绑定事件处理
+                mVScrollBar.ValueChanged += new EventHandler(HScroll_Change);
+            }
+
+            // 可选：确保SmallChange合理
+            mVScrollBar.SmallChange = 1;
+        }
+        
+		
 		/// <summary>
-		/// Recalculate the scrollbars position and size.
-		/// Use this to refresh scroll bars
-		/// </summary>
-		public void RecalcCustomScrollBars()
+        /// Recalculate the scrollbars position and size.
+        /// Use this to refresh scroll bars
+        /// </summary>
+        public void RecalcCustomScrollBars()
 		{
 			SuspendLayout();
 

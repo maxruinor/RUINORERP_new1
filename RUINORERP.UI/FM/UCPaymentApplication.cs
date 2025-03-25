@@ -177,38 +177,41 @@ namespace RUINORERP.UI.FM
                 //后面这些依赖于控件绑定的数据源和字段。所以要在绑定后执行。
                 if (entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改)
                 {
-                    cmbPayeeInfoID.Enabled = true;
-                    //加载收款信息
-                    if (entity.PayeeInfoID > 0)
+                    if (s2.PropertyName == entity.GetPropertyName<tb_FM_PayeeInfo>(c => c.PayeeInfoID))
                     {
-                        //cmbPayeeInfoID.SelectedIndex = cmbPayeeInfoID.FindStringExact(emp.Account_name);
-                        var obj = BizCacheHelper.Instance.GetEntity<tb_FM_PayeeInfo>(entity.PayeeInfoID);
-                        if (obj != null && obj.ToString() != "System.Object")
+                        cmbPayeeInfoID.Enabled = true;
+                        //加载收款信息
+                        if (entity.PayeeInfoID > 0)
                         {
-                            if (obj is tb_FM_PayeeInfo cv)
+                            //cmbPayeeInfoID.SelectedIndex = cmbPayeeInfoID.FindStringExact(emp.Account_name);
+                            var obj = BizCacheHelper.Instance.GetEntity<tb_FM_PayeeInfo>(entity.PayeeInfoID);
+                            if (obj != null && obj.ToString() != "System.Object")
                             {
-                                DataBindingHelper.BindData4CmbByEnum<tb_FM_PayeeInfo>(cv, k => k.Account_type, typeof(AccountType), cmbAccount_type, false);
-                                //添加收款信息。展示给财务看
-                                entity.PayeeAccountNo = cv.Account_No;
-                                lblBelongingBank.Text = cv.BelongingBank;
-                                lblOpeningbank.Text = cv.OpeningBank;
-                                cmbAccount_type.SelectedItem = cv.Account_type;
-                                if (!string.IsNullOrEmpty(cv.PaymentCodeImagePath))
+                                if (obj is tb_FM_PayeeInfo cv)
                                 {
-                                    btnInfo.Tag = cv;
-                                    btnInfo.Visible = true;
+                                    DataBindingHelper.BindData4CmbByEnum<tb_FM_PayeeInfo>(cv, k => k.Account_type, typeof(AccountType), cmbAccount_type, false);
+                                    //添加收款信息。展示给财务看
+                                    entity.PayeeAccountNo = cv.Account_No;
+                                    lblBelongingBank.Text = cv.BelongingBank;
+                                    lblOpeningbank.Text = cv.OpeningBank;
+                                    cmbAccount_type.SelectedItem = cv.Account_type;
+                                    if (!string.IsNullOrEmpty(cv.PaymentCodeImagePath))
+                                    {
+                                        btnInfo.Tag = cv;
+                                        btnInfo.Visible = true;
+                                    }
+                                    else
+                                    {
+                                        btnInfo.Tag = string.Empty;
+                                        btnInfo.Visible = false;
+                                    }
                                 }
                                 else
                                 {
-                                    btnInfo.Tag = string.Empty;
-                                    btnInfo.Visible = false;
+                                    txtPayeeAccountNo.Text = "";
+                                    lblBelongingBank.Text = "";
+                                    lblOpeningbank.Text = "";
                                 }
-                            }
-                            else
-                            {
-                                txtPayeeAccountNo.Text = "";
-                                lblBelongingBank.Text = "";
-                                lblOpeningbank.Text = "";
                             }
                         }
                     }
@@ -320,7 +323,8 @@ namespace RUINORERP.UI.FM
                 ReturnMainSubResults<tb_FM_PaymentApplication> SaveResult = new ReturnMainSubResults<tb_FM_PaymentApplication>();
                 if (NeedValidated)
                 {
-                    SaveResult = await base.Save(EditEntity);
+                    //SaveResult = await base.UpdateSave(EditEntity);
+                   SaveResult = await base.Save(EditEntity);
                     if (SaveResult.Succeeded)
                     {
                         MainForm.Instance.PrintInfoLog($"保存成功,{EditEntity.ApplicationNo}。");

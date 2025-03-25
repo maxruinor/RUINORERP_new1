@@ -51,3 +51,17 @@ https://www.cnblogs.com/llcdbk/p/5160262.html
 
   //Newtonsoft.Json高级用法 1.忽略某些属性 2.默认值的处理 3.空值的处理 4.支持非公共成员 5.日期处理 6.自定义序列化的字段名称
   https://www.cnblogs.com/1175429393wljblog/p/5888098.html
+
+
+
+  .NET的RulesEngine（规则引擎）使用
+https://www.cnblogs.com/wl-blog/p/17202834.html
+
+
+
+https://www.cnblogs.com/wuhuacong/p/16399567.html
+这样我们就可以转换SQL条件表达式为实际的C#表达式，并通过赋值参数，实现动态表达式的求值处理。
+
+
+图表	
+https://livecharts.dev/docs/WinForms/2.0.0-rc5.4/Overview.Installation

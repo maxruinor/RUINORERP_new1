@@ -38,6 +38,29 @@ namespace RUINORERP.UI.UCSourceGrid
             }
         }
 
+        /// <summary>
+        /// 设置列的是否可见,并且实时起作用用于初始化之后
+        /// </summary>
+        /// <param name="grid"></param>
+        /// <param name="griddefine"></param>
+        public static void SetCol_Visible<T>(this List<SGDefineColumnItem> cols, Expression<Func<T, object>> colNameExp, SourceGridDefine griddefine, bool Visible = true)
+        {
+            MemberInfo minfo = colNameExp.GetMemberInfo();
+            foreach (var item in cols)
+            {
+                if (item.BelongingObjectType.Name == typeof(T).Name)
+                {
+                    if (item.ColName == minfo.Name && item.BelongingObjectType == typeof(T))
+                    {
+                        SourceGridDefine sgdefine = griddefine;
+                        item.Visible = Visible;
+                        int realIndex = sgdefine.grid.Columns.GetColumnInfo(item.UniqueId).Index;
+                        griddefine.grid.Columns[realIndex].Visible = Visible;
+                        break;
+                    }
+                }
+            }
+        }
 
 
         /// <summary>
@@ -46,14 +69,14 @@ namespace RUINORERP.UI.UCSourceGrid
         /// <typeparam name="T">这个类型，要与这个要控制的列关联对应</typeparam>
         /// <param name="cols"></param>
         /// <param name="colNameExp"></param>
-        public static void SetCol_NeverVisible<T>(this List<SGDefineColumnItem> cols, Expression<Func<T, object>> colNameExp)
+        public static void SetCol_NeverVisible<T>(this List<SGDefineColumnItem> cols, Expression<Func<T, object>> colNameExp, bool NeverVisible = true)
         {
             MemberInfo minfo = colNameExp.GetMemberInfo();
             foreach (var item in cols)
             {
                 if (item.BelongingObjectType.Name == typeof(T).Name)
                 {
-                    item.SetCol_NeverVisible(minfo.Name, typeof(T));
+                    item.SetCol_NeverVisible(minfo.Name, typeof(T), NeverVisible);
                 }
             }
         }
@@ -78,12 +101,12 @@ namespace RUINORERP.UI.UCSourceGrid
             }
         }
 
-        public static void SetCol_NeverVisible(this SGDefineColumnItem col, string colName, Type BelongingObjectType)
+        public static void SetCol_NeverVisible(this SGDefineColumnItem col, string colName, Type BelongingObjectType, bool NeverVisible = true)
         {
             if (col.ColName == colName && col.BelongingObjectType == BelongingObjectType)
             {
-                col.NeverVisible = true;
-                col.DisplayController.Disable = true;
+                col.NeverVisible = NeverVisible;
+                col.DisplayController.Disable = NeverVisible;
             }
         }
 
@@ -506,7 +529,7 @@ namespace RUINORERP.UI.UCSourceGrid
                     {
                         foreach (var item in col.ParentGridDefine.grid.Rows)
                         {
-                           
+
                             if (col.EditorForColumn != null)
                             {
                                 int realIndex = col.ParentGridDefine.grid.Columns.GetColumnInfo(col.UniqueId).Index;

@@ -457,7 +457,13 @@ namespace RUINORERP.UI.BaseForm
                 if (pkid > 0)
                 {
                     //如果要锁这个单 看这个单是不是已经被其它人锁，如果没有人锁则我可以锁
+                    //TODO 注意 同一个人，同一个业务单据。只能锁定一张单。所以在锁新单时。清除所有旧单。
+                    //关闭时会解锁，查询的方式不停加载也要解锁前面的
                     long userid = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID;
+
+                    //解锁这个业务的自己名下的其它单
+                    UNLockByBizName(userid);
+
                     if (MainForm.Instance.lockManager.GetLockedBy(pkid) > 0)
                     {
                         var lockinfo = MainForm.Instance.lockManager.GetLockStatus(pkid);
@@ -475,6 +481,9 @@ namespace RUINORERP.UI.BaseForm
                             tsBtnLocked.Tag = lockinfo;
                             //自己就表达绿色
                             this.tsBtnLocked.Image = global::RUINORERP.UI.Properties.Resources.unlockbill;
+
+                     
+
                         }
                         else
                         {
@@ -1182,11 +1191,16 @@ namespace RUINORERP.UI.BaseForm
             {
                 return;
             }
+            //如果要锁这个单 看这个单是不是已经被其它人锁，如果没有人锁则我可以锁
+            long userid = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID;
+
+            // 锁这个单这前要把这个类型的前面的单全部释放出来。一个业务一个人只能锁一个单号
+            UNLockByBizName(userid);
+
             long pkid = (long)ReflectionHelper.GetPropertyValue(EditEntity, PKCol);
             if (pkid > 0)
             {
-                //如果要锁这个单 看这个单是不是已经被其它人锁，如果没有人锁则我可以锁
-                long userid = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID;
+               
                 var lockeduserid = MainForm.Instance.lockManager.GetLockedBy(pkid);
                 if (lockeduserid != userid)
                 {
@@ -2702,6 +2716,34 @@ namespace RUINORERP.UI.BaseForm
                 }
             }
         }
+
+
+        public void UNLockByBizName(long userid)
+        {
+            BillConverterFactory bcf = Startup.GetFromFac<BillConverterFactory>();
+            CommBillData cbd = new CommBillData();
+            cbd = bcf.GetBillData(typeof(T), EditEntity);
+
+            //得到了锁
+            ClientLockManagerCmd cmd = new ClientLockManagerCmd(CmdOperation.Send);
+            cmd.lockCmd = LockCmd.UnLockByBizName;
+            UnLockInfo lockRequest = new UnLockInfo();
+            lockRequest.BillData = cbd;
+            lockRequest.LockedUserID = userid;
+            lockRequest.LockedUserName = MainForm.Instance.AppContext.CurUserInfo.UserInfo.tb_employee.Employee_Name;
+            lockRequest.MenuID = CurMenuInfo.MenuID;
+            lockRequest.PacketId = cmd.PacketId;
+            cmd.RequestInfo = lockRequest;
+            // 注册锁定单据的事件处理程序
+            ClientEventManager.Instance.AddCommandHandler(cmd.PacketId, cmd.HandleLockEvent);
+            MainForm.Instance.dispatcher.DispatchAsync(cmd, CancellationToken.None);
+            if (AuthorizeController.GetShowDebugInfoAuthorization(MainForm.Instance.AppContext))
+            {
+                MainForm.Instance.PrintInfoLog($"向服务器发送【业务类型】解锁{lockRequest.BillData.BizName }成功");
+            }
+
+        }
+
 
         public void UNLock(long billid, long userid)
         {

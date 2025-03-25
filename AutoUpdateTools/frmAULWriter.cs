@@ -16,6 +16,7 @@ using System.Xml.Linq;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.StartPanel;
 using System.IO.Compression;
 using System.Xml;
+using AutoUpdateTools.XmlCompare;
 /*------------------------------------------------------------
 * 
 * 
@@ -30,15 +31,160 @@ namespace AULWriter
 {
     public partial class frmAULWriter : Form
     {
+        private readonly Color SameColor = Color.FromArgb(240, 240, 240);
+        private readonly Color DiffColor = Color.FromArgb(255, 220, 220);
+        private readonly Color AddedColor = Color.FromArgb(220, 255, 220);
+        private readonly Color RemovedColor = Color.FromArgb(255, 200, 200);
+        private readonly Color HeaderColor = Color.FromArgb(230, 230, 255);
 
         #region [基本入口构造函数]
 
         public frmAULWriter()
         {
             InitializeComponent();
+            SetupRichTextBoxes();
+            SetupSafeScrollSync();
         }
 
+        private SafeScrollSynchronizer _syncOldToNew;
+        private SafeScrollSynchronizer _syncNewToOld;
+        private void SetupSafeScrollSync()
+        {
+            // 关键：使用单向同步，并交换主从关系
+            _syncOldToNew = new SafeScrollSynchronizer(rtbOld, rtbNew);
+            _syncNewToOld = new SafeScrollSynchronizer(rtbNew, rtbOld);
+        }
+
+       
+
         #endregion [基本入口构造函数]
+
+        #region
+
+        private void SetupRichTextBoxes()
+        {
+            // 设置左右两个RichTextBox的样式
+            foreach (var rtb in new[] { rtbOld, rtbNew })
+            {
+                rtb.Font = new Font("Consolas", 10);
+                rtb.WordWrap = false;
+                rtb.ScrollBars = RichTextBoxScrollBars.Both;
+                rtb.DetectUrls = false;
+            }
+
+        }
+
+
+      
+
+        private void CompareXmlDocuments(XDocument oldDoc, XDocument newDoc)
+        {
+            // 格式化XML并分割为行
+            var oldLines = FormatXml(oldDoc).Split('\n');
+            var newLines = FormatXml(newDoc).Split('\n');
+
+            // 使用改进的差异算法比较
+            var diff = new AdvancedDiff(oldLines, newLines);
+            diff.SetLineMatchFunction((line1, line2) =>
+                NormalizeXmlLine(line1) == NormalizeXmlLine(line2));
+
+            var diffResults = diff.ComputeDiff();
+
+            // 显示比较结果
+            DisplayComparison(diffResults);
+        }
+
+        private string FormatXml(XDocument doc)
+        {
+            // 格式化XML为可读字符串
+            return doc.ToString(SaveOptions.None);
+        }
+
+        private string NormalizeXmlLine(string line)
+        {
+            // 标准化XML行，忽略空格和换行差异
+            return line?.Trim();
+        }
+
+        private void DisplayComparison(List<DiffResult> diffResults)
+        {
+            rtbOld.Clear();
+            rtbNew.Clear();
+
+            foreach (var result in diffResults)
+            {
+                switch (result.Type)
+                {
+                    case DiffType.Unchanged:
+                        AddLinesToRichTextBox(rtbOld, result.LeftLines, Color.Gray);
+                        AddLinesToRichTextBox(rtbNew, result.RightLines, Color.Gray);
+                        break;
+
+                    case DiffType.Modified:
+                        for (int i = 0; i < result.LeftLines.Length; i++)
+                        {
+                            AddInlineDiffToRichTextBox(rtbOld, result.LeftLines[i],
+                                result.InlineDiffs?[i], false);
+                            AddInlineDiffToRichTextBox(rtbNew, result.RightLines[i],
+                                result.InlineDiffs?[i], true);
+                        }
+                        break;
+
+                    case DiffType.Added:
+                        AddLinesToRichTextBox(rtbNew, result.RightLines, Color.LightGreen);
+                        break;
+
+                    case DiffType.Removed:
+                        AddLinesToRichTextBox(rtbOld, result.LeftLines, Color.LightPink);
+                        break;
+                }
+            }
+        }
+
+        private void AddInlineDiffToRichTextBox(RichTextBox rtb, string line,
+            IEnumerable<DiffSegment> segments, bool isRightSide)
+        {
+            if (segments == null)
+            {
+                rtb.AppendText(line + "\n");
+                return;
+            }
+
+            rtb.SelectionStart = rtb.TextLength;
+
+            foreach (var segment in segments)
+            {
+                if (segment.IsModified)
+                {
+                    rtb.SelectionColor = Color.Red;
+                    rtb.SelectionBackColor = Color.FromArgb(255, 240, 240);
+                    rtb.AppendText(isRightSide && !string.IsNullOrEmpty(segment.RightText)
+                        ? segment.RightText : segment.Text);
+                }
+                else
+                {
+                    rtb.SelectionColor = Color.Black;
+                    rtb.SelectionBackColor = Color.White;
+                    rtb.AppendText(segment.Text);
+                }
+            }
+
+            rtb.AppendText("\n");
+        }
+
+        private void AddLinesToRichTextBox(RichTextBox rtb, string[] lines, Color backColor)
+        {
+            foreach (var line in lines)
+            {
+                rtb.SelectionStart = rtb.TextLength;
+                rtb.SelectionBackColor = backColor;
+                rtb.AppendText(line + "\n");
+            }
+        }
+ 
+       
+
+        #endregion
 
 
 
@@ -93,6 +239,7 @@ namespace AULWriter
         {
             //从配置文件读取配置
             readConfigFromFile();
+            btnDiff.Enabled = false;
         }
 
         //从配置文件读取配置
@@ -109,7 +256,7 @@ namespace AULWriter
                     txtCompareSource.Text = dataConfig.CompareSource;
                     txtBaseDir.Text = dataConfig.BaseDir;
                     chkUseBaseVersion.Checked = dataConfig.UseBaseVersion;
-                    txtBaseVerNo.Text = dataConfig.BaseVersion;
+                    txt指定版本.Text = dataConfig.BaseVersion;
                     txtAutoUpdateXmlSavePath.Text = dataConfig.SavePath;
                     txtMainExePath.Text = dataConfig.EntryPoint;
                     StringBuilder sbexfiles = new StringBuilder();
@@ -127,7 +274,7 @@ namespace AULWriter
                         sbupfiles.Append(item).Append("\r\n");
                     }
                     txtUpdatedFiles.Text = sbupfiles.ToString();
-                    chkCustomVer.Checked = dataConfig.CustomVer;
+                    chk更新文件版本号.Checked = dataConfig.CustomVer;
 
                     txtVerNo.Text = dataConfig.CustomVersion;
                 }
@@ -156,7 +303,6 @@ namespace AULWriter
                 WriterAUList();
             }
 
-
             try
             {
                 saveConfigToFile();
@@ -166,6 +312,10 @@ namespace AULWriter
             {
                 MessageBox.Show("配置保存失败:" + ex.Message);
             }
+
+
+            btnDiff.Enabled = true;
+
             return;
             //建立新线程
 
@@ -325,7 +475,7 @@ namespace AULWriter
                     if (!CheckExist(files[i].Trim()))
                     {
                         //暂时统一了。如果指定版本号
-                        if (chkCustomVer.Checked)
+                        if (chk更新文件版本号.Checked)
                         {
                             txtVerNo.Text = strVerNo;
                             string rootDir = this.txtMainExePath.Text.Substring(0, this.txtMainExePath.Text.LastIndexOf(@"\")) + @"\";
@@ -561,15 +711,22 @@ namespace AULWriter
             sb.Append("\t\t<Location>");
             sb.Append(".");
             sb.Append("</Location>\r\n");
+            sb.Append("\t\t<Version>");
 
             FileVersionInfo _lcObjFVI = FileVersionInfo.GetVersionInfo(this.txtMainExePath.Text);
-            if (chkCustomVer.Checked)
+            if (chkUseBaseVersion.Checked)
             {
-                _lcObjFVI = FileVersionInfo.GetVersionInfo(this.txtBaseVerNo.Text);
+                if (this.txt指定版本.Text.TrimEnd().Length == 0)
+                {
+                    MessageBox.Show("选择指定版本，但是没有输入版本。");
+                    return;
+                }
+                sb.Append(this.txt指定版本.Text);
             }
-
-            sb.Append("\t\t<Version>");
-            sb.Append(string.Format("{0}.{1}.{2}.{3}", _lcObjFVI.FileMajorPart, _lcObjFVI.FileMinorPart, _lcObjFVI.FileBuildPart, _lcObjFVI.FilePrivatePart));
+            else
+            {
+                sb.Append(string.Format("{0}.{1}.{2}.{3}", _lcObjFVI.FileMajorPart, _lcObjFVI.FileMinorPart, _lcObjFVI.FileBuildPart, _lcObjFVI.FilePrivatePart));
+            }
             sb.Append("</Version>\r\n");
             sb.Append("\t</Application>\r\n");
             #endregion [application]
@@ -583,6 +740,11 @@ namespace AULWriter
             if (txtUpdatedFiles.Text.Trim().Length > 0)
             {
                 string[] files = txtUpdatedFiles.Text.Split(new string[] { "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
+
+
+                //排序
+                Array.Sort(files);
+
 
                 string strVerNo = string.Empty;
                 strVerNo = txtVerNo.Text;
@@ -599,7 +761,7 @@ namespace AULWriter
                     if (!CheckExist(files[i].Trim()))
                     {
                         //暂时统一了。如果指定版本号
-                        if (chkCustomVer.Checked)
+                        if (chk更新文件版本号.Checked)
                         {
                             sb.Append("\t\t<File Ver=\""
                                 + strVerNo
@@ -733,12 +895,12 @@ namespace AULWriter
                 dataConfig.SavePath = txtAutoUpdateXmlSavePath.Text;
                 dataConfig.EntryPoint = txtMainExePath.Text;
                 dataConfig.ExcludeFiles = txtExpt.Text;
-                dataConfig.CustomVer = chkCustomVer.Checked;
+                dataConfig.CustomVer = chk更新文件版本号.Checked;
                 dataConfig.CustomVersion = txtVerNo.Text;
                 dataConfig.UpdatedFiles = txtUpdatedFiles.Text;
                 dataConfig.CompareSource = txtCompareSource.Text;
                 dataConfig.BaseDir = txtBaseDir.Text;
-                dataConfig.BaseVersion = txtBaseVerNo.Text;
+                dataConfig.BaseVersion = txt指定版本.Text;
                 string path = configFilePath;
                 SerializeXmlHelper.SerializeXml(dataConfig, path);
             }
@@ -912,7 +1074,7 @@ namespace AULWriter
                 var versionElement = doc.Descendants("Version").FirstOrDefault();
                 if (versionElement != null)
                 {
-                    versionElement.Value = txtBaseVerNo.Text; // 替换为您想要设置的新值
+                    versionElement.Value = txt指定版本.Text; // 替换为您想要设置的新值
                 }
             }
 
@@ -1086,6 +1248,8 @@ namespace AULWriter
         //先复制 再生成xml
 
         #endregion [复制发布]
+
+
         private void btnrelease_Click(object sender, EventArgs e)
         {
             foreach (var item in DiffList)
@@ -1104,6 +1268,43 @@ namespace AULWriter
             }
             richTxtLog.AppendText($"发布到目标-{lastTargetPath}成功。");
             richTxtLog.AppendText("\r\n");
+        }
+
+
+
+
+        #region 新旧版本比较
+
+        private void CompareUpdateXml(string OldConfigPath)
+        {
+            if (string.IsNullOrWhiteSpace(OldConfigPath))
+            {
+                MessageBox.Show("请先选择两个要比较的配置文件");
+                return;
+            }
+
+            try
+            {
+                rtbOld.Clear();
+                rtbNew.Clear();
+                XDocument oldDoc = XDocument.Load(OldConfigPath);
+                //XDocument newDoc = XDocument.Load(NewConfigPath);
+                XDocument newDoc = XDocument.Parse(txtLastXml.Text);
+                CompareXmlDocuments(oldDoc, newDoc);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"比较配置文件时出错: {ex.Message}");
+            }
+        }
+
+
+        #endregion
+        
+        private void btnDiff_Click(object sender, EventArgs e)
+        {
+            //比较
+            CompareUpdateXml(txtAutoUpdateXmlSavePath.Text);
         }
     }
 }

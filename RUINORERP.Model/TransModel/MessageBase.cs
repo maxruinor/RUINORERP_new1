@@ -24,10 +24,10 @@ namespace RUINORERP.Model.TransModel
         LOCK, // 锁定
         //UNLOCK, // 未锁定
         //ISLOCKED, // 已经锁定
-        UNLOCK, // 释放锁
+        UNLOCK, // 释放锁一个单据
         //GetLockedBy, // 释放锁
 
-
+        UnLockByBizName, // 释放锁一个单据
         /// <summary>
         /// 请求释放锁
         /// </summary>

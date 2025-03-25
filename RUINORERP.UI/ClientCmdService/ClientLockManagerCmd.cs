@@ -107,7 +107,7 @@ namespace RUINORERP.UI.ClientCmdService
                         if (isSuccess)
                         {
                             //自己也锁。实际服务器收到后还会广播一次 包括自己 只是这里已经锁，不会重复添加
-                            if (MainForm.Instance.lockManager.TryLock(lockRequest.BillID, lockRequest.BillData.BillNo, lockRequest.LockedUserID))
+                            if (MainForm.Instance.lockManager.TryLock(lockRequest.BillID, lockRequest.BillData.BillNo, lockRequest.BillData.BizName, lockRequest.LockedUserID))
                             {
                                 if (AuthorizeController.GetShowDebugInfoAuthorization(MainForm.Instance.AppContext))
                                 {
@@ -143,7 +143,28 @@ namespace RUINORERP.UI.ClientCmdService
                         UNLOCKargs.requestBaseInfo = unLockInfo;
                         ClientEventManager.Instance.RaiseCommandEvent(unLockInfo.PacketId, UNLOCKargs);
                         break;
-
+                    case LockCmd.UnLockByBizName:
+                        json = ByteDataAnalysis.GetString(gd.Two, ref index);
+                        obj = JObject.Parse(json);
+                        UnLockInfo unLockInfoBizName = obj.ToObject<UnLockInfo>();
+                        isSuccess = ByteDataAnalysis.Getbool(gd.Two, ref index);
+                        if (isSuccess)
+                        {
+                            if (MainForm.Instance.lockManager.RemoveLockByBizName(unLockInfoBizName.LockedUserID, unLockInfoBizName.BillData.BizName))
+                            {
+                                if (AuthorizeController.GetShowDebugInfoAuthorization(MainForm.Instance.AppContext))
+                                {
+                                    MainForm.Instance.PrintInfoLog($"{unLockInfoBizName.BillData.BizName}本地解锁成功");
+                                }
+                            }
+                        }
+                        //
+                        //ServerLockCommandEventArgs UNLOCKargs = new ServerLockCommandEventArgs();
+                        //UNLOCKargs.lockCmd = lockCmd;
+                        //UNLOCKargs.isSuccess = isSuccess;
+                        //UNLOCKargs.requestBaseInfo = unLockInfo;
+                        //ClientEventManager.Instance.RaiseCommandEvent(unLockInfo.PacketId, UNLOCKargs);
+                        break;
                     case LockCmd.RequestUnLock:
                         json = ByteDataAnalysis.GetString(gd.Two, ref index);
                         obj = JObject.Parse(json);
@@ -222,6 +243,7 @@ namespace RUINORERP.UI.ClientCmdService
                     {
                         case LockCmd.LOCK:
                         case LockCmd.UNLOCK:
+                        case LockCmd.UnLockByBizName:
                         case LockCmd.RequestUnLock:
                         case LockCmd.RefuseUnLock:
                             BuildDataPacket(RequestInfo);
@@ -243,6 +265,7 @@ namespace RUINORERP.UI.ClientCmdService
                     {
                         case LockCmd.LOCK:
                         case LockCmd.UNLOCK:
+                        case LockCmd.UnLockByBizName:
                         case LockCmd.RequestUnLock:
                             AnalyzeDataPacket(DataPacket);
                             break;
@@ -338,6 +361,15 @@ namespace RUINORERP.UI.ClientCmdService
                       });
                         tx.PushString(json);
                         break;
+                    case LockCmd.UnLockByBizName:
+                        UnLockInfo unLockInfoBizName = request as UnLockInfo;
+                        json = JsonConvert.SerializeObject(unLockInfoBizName,
+                      new JsonSerializerSettings
+                      {
+                          ReferenceLoopHandling = ReferenceLoopHandling.Ignore // 或 ReferenceLoopHandling.Serialize
+                      });
+                        tx.PushString(json);
+                        break;
                     case LockCmd.RequestUnLock:
                         RequestUnLockInfo requestUnLockInfo = request as RequestUnLockInfo;
                         json = JsonConvert.SerializeObject(requestUnLockInfo,
@@ -387,6 +419,9 @@ namespace RUINORERP.UI.ClientCmdService
                         break;
                     case LockCmd.UNLOCK:
                         MainForm.Instance.PrintInfoLog($"成功解锁{e.requestBaseInfo.BillData.BillNo}");
+                        break;
+                    case LockCmd.UnLockByBizName:
+                        MainForm.Instance.PrintInfoLog($"成功按业务类型解锁{e.requestBaseInfo.BillData.BizName}");
                         break;
                     case LockCmd.RequestUnLock:
                         break;

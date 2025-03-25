@@ -21,7 +21,7 @@ namespace RUINORERP.Business.CommService
 
         private ConcurrentDictionary<long, LockInfo> _lockDictionary = new ConcurrentDictionary<long, LockInfo>();
 
-        public bool TryLock(long documentId, string billNo, long userId)
+        public bool TryLock(long documentId, string billNo, string BizName, long userId)
         {
             // 检查单据是否已经被锁定
             if (_lockDictionary.TryGetValue(documentId, out var lockInfo))
@@ -34,7 +34,7 @@ namespace RUINORERP.Business.CommService
             }
 
             // 创建一个新的锁记录，标记单据为已锁定，并记录锁定用户和时间
-            var newLockInfo = new LockInfo { BillNo = billNo, IsLocked = true, LockedByID = userId, LockTime = DateTime.Now };
+            var newLockInfo = new LockInfo { BillID = documentId, BillNo = billNo, BizName = BizName, IsLocked = true, LockedByID = userId, LockTime = DateTime.Now };
 
             // 如果字典中没有该单据的锁记录，则添加新的记录
             if (!_lockDictionary.ContainsKey(documentId))
@@ -60,7 +60,7 @@ namespace RUINORERP.Business.CommService
                 {
                     // 如果更新成功，检查是否需要删除记录
                     return _lockDictionary.TryRemove(documentId, out _);
-                    
+
                     /*
                     // 创建一个新的锁记录，标记单据为未锁定
                     var newLockInfo = new LockInfo {IsLocked = false, LockedByID = 0, LockTime = DateTime.Now };
@@ -131,7 +131,28 @@ namespace RUINORERP.Business.CommService
             }
         }
 
-
+        /// <summary>
+        /// 一个业务一个人只会锁定一个单据。
+        /// </summary>
+        /// <param name="documentId"></param>
+        /// <returns></returns>
+        public bool RemoveLockByBizName(long UserID, string BizName)
+        {
+            bool rs = false;
+            var keysToRemove = new List<long>();
+            foreach (var pair in _lockDictionary)
+            {
+                if (pair.Value.LockedByID == UserID && pair.Value.BizName == BizName)
+                {
+                    keysToRemove.Add(pair.Key);
+                }
+            }
+            foreach (var documentId in keysToRemove)
+            {
+                rs = _lockDictionary.TryRemove(documentId, out _);
+            }
+            return rs;
+        }
         public void CheckLocks()
         {
             // 检查并释放超时的锁
@@ -222,13 +243,27 @@ namespace RUINORERP.Business.CommService
 
     public delegate void LockChangedHandler(object sender, ServerLockCommandEventArgs e);
 
-     
+
     public class LockInfo
     {
+
+
+        /// <summary>
+        /// 业务类型
+        /// 一个业务类型同时会有锁定一个单
+        /// </summary>
+        public string BizName { get; set; }
+
         /// <summary>
         /// 单号
         /// </summary>
         public string BillNo { get; set; }
+
+        /// <summary>
+        /// 单号ID
+        /// </summary>
+        public long BillID { get; set; }
+
         public bool IsLocked { get; set; } // 是否锁定
         public long LockedByID { get; set; } // 锁定用户
 

@@ -85,7 +85,7 @@ namespace RUINORERP.Server.CommandService
                 //当前
                 string 时间 = ByteDataAnalysis.GetString(gd.Two, ref index);
                 lockCmd = (LockCmd)ByteDataAnalysis.GetInt(gd.Two, ref index);
-                
+
                 //目前服务器主要是转发作用的功能
                 switch (lockCmd)
                 {
@@ -93,7 +93,8 @@ namespace RUINORERP.Server.CommandService
                         string json = ByteDataAnalysis.GetString(gd.Two, ref index);
                         JObject obj = JObject.Parse(json);
                         LockedInfo lockRequest = obj.ToObject<LockedInfo>();
-                        var isLocked = frmMain.Instance.lockManager.TryLock(lockRequest.BillID, lockRequest.BillData.BillNo, lockRequest.LockedUserID);
+                        var isLocked = frmMain.Instance.lockManager.TryLock(lockRequest.BillID,
+                            lockRequest.BillData.BillNo, lockRequest.BillData.BizName, lockRequest.LockedUserID);
                         if (isLocked)
                         {
                             if (frmMain.Instance.IsDebug)
@@ -103,7 +104,7 @@ namespace RUINORERP.Server.CommandService
                         }
                         //通知所有人。这个单被锁了 包含锁单本人
                         ResponseToClient(isLocked, lockRequest);
-            
+
 
                         break;
                     case LockCmd.UNLOCK:
@@ -119,6 +120,24 @@ namespace RUINORERP.Server.CommandService
                             }
                             //通知所有人。这个单被锁了 包含锁单本人
                             ResponseToClient(isUnlocked, unLockInfo);
+                        }
+
+                        //OnLockChanged(lockCmd,unLockInfo.BillID, isUnlocked);
+
+                        break;
+                    case LockCmd.UnLockByBizName:
+                        json = ByteDataAnalysis.GetString(gd.Two, ref index);
+                        obj = JObject.Parse(json);
+                        UnLockInfo unLockInfoBizName = obj.ToObject<UnLockInfo>();
+                        var isUnlockedBizName = frmMain.Instance.lockManager.RemoveLockByBizName( unLockInfoBizName.LockedUserID, unLockInfoBizName.BillData.BizName);
+                        if (isUnlockedBizName)
+                        {
+                            if (frmMain.Instance.IsDebug)
+                            {
+                                frmMain.Instance.PrintInfoLog($"服务器解锁业务类型{unLockInfoBizName.BillData.BizName }成功");
+                            }
+                            //通知所有人。这个类型的单被解锁了， 包含锁单本人
+                            ResponseToClient(isUnlockedBizName, unLockInfoBizName);
                         }
 
                         //OnLockChanged(lockCmd,unLockInfo.BillID, isUnlocked);
@@ -270,6 +289,7 @@ namespace RUINORERP.Server.CommandService
                 {
                     case LockCmd.LOCK:
                     case LockCmd.UNLOCK:
+                    case LockCmd.UnLockByBizName:
                         tx.PushBool(isSuccess);
                         break;
                     case LockCmd.RequestUnLock:

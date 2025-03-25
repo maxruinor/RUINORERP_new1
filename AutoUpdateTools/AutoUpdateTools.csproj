@@ -54,6 +54,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DataConfig.cs" />
+    <Compile Include="XmlCompare\AdvancedDiff.cs" />
+    <Compile Include="XmlCompare\Diff.cs" />
     <Compile Include="FileHelper.cs" />
     <Compile Include="frmAULWriter.cs">
       <SubType>Form</SubType>
@@ -69,7 +71,11 @@
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="RichTextBoxExtensions.cs" />
     <Compile Include="SerializeXmlHelper.cs" />
+    <Compile Include="XmlCompare\SafeScrollSynchronizer.cs" />
+    <Compile Include="XmlCompare\ScrollSynchronizer.cs" />
+    <Compile Include="XmlCompare\Win32.cs" />
     <EmbeddedResource Include="frmAULWriter.resx">
       <DependentUpon>frmAULWriter.cs</DependentUpon>
     </EmbeddedResource>

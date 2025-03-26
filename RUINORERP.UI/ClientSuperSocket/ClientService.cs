@@ -606,6 +606,7 @@ namespace RUINORERP.UI.SuperSocketClient
                 if (userinfo==null)
                 {
                     userinfo = new();
+                    userinfo.姓名 = RequestEmpName;
                 }
                 ReminderData MessageInfo = new ReminderData();
                 MessageInfo.SendTime = sendtime;

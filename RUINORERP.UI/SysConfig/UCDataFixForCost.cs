@@ -1320,7 +1320,7 @@ namespace RUINORERP.UI.SysConfig
                                                 if (rdb小计总计.Checked)
                                                 {
                                                     // Detail.Cost = child.Inv_Cost;
-                                                    Detail.SubtotalCostAmount = Detail.Cost * Detail.Quantity;
+                                                    Detail.SubtotalCostAmount = (Detail.Cost+Detail.CustomizedCost) * Detail.Quantity;
                                                     Detail.SubtotalTransAmount = Detail.TransactionPrice * Detail.Quantity;
                                                     if (Detail.TaxRate > 0)
                                                     {
@@ -1333,7 +1333,7 @@ namespace RUINORERP.UI.SysConfig
                                                 if (rdb时间区间.Checked)
                                                 {
                                                     Detail.Cost = child.Inv_Cost;
-                                                    Detail.SubtotalCostAmount = Detail.Cost * Detail.Quantity;
+                                                    Detail.SubtotalCostAmount = (Detail.Cost + Detail.CustomizedCost) * Detail.Quantity;
                                                     Detail.SubtotalTransAmount = Detail.TransactionPrice * Detail.Quantity;
                                                     if (Detail.TaxRate > 0)
                                                     {
@@ -1346,7 +1346,7 @@ namespace RUINORERP.UI.SysConfig
                                                 if (rdb成本为0的才修复.Checked && Detail.Cost == 0)
                                                 {
                                                     Detail.Cost = child.Inv_Cost;
-                                                    Detail.SubtotalCostAmount = Detail.Cost * Detail.Quantity;
+                                                    Detail.SubtotalCostAmount = (Detail.Cost + Detail.CustomizedCost) * Detail.Quantity;
                                                     Detail.SubtotalTransAmount = Detail.TransactionPrice * Detail.Quantity;
                                                     if (Detail.TaxRate > 0)
                                                     {
@@ -1360,7 +1360,7 @@ namespace RUINORERP.UI.SysConfig
                                                     if (Detail.Cost < txtUnitCost.Text.ToDecimal())
                                                     {
                                                         Detail.Cost = child.Inv_Cost;
-                                                        Detail.SubtotalCostAmount = Detail.Cost * Detail.Quantity;
+                                                        Detail.SubtotalCostAmount = (Detail.Cost + Detail.CustomizedCost) * Detail.Quantity;
                                                         Detail.SubtotalTransAmount = Detail.TransactionPrice * Detail.Quantity;
                                                         if (Detail.TaxRate > 0)
                                                         {
@@ -1375,7 +1375,7 @@ namespace RUINORERP.UI.SysConfig
                                                     if (Detail.Cost > txtUnitCost.Text.ToDecimal())
                                                     {
                                                         Detail.Cost = child.Inv_Cost;
-                                                        Detail.SubtotalCostAmount = Detail.Cost * Detail.Quantity;
+                                                        Detail.SubtotalCostAmount = (Detail.Cost + Detail.CustomizedCost) * Detail.Quantity;
                                                         Detail.SubtotalTransAmount = Detail.TransactionPrice * Detail.Quantity;
                                                         if (Detail.TaxRate > 0)
                                                         {
@@ -1387,7 +1387,7 @@ namespace RUINORERP.UI.SysConfig
                                                 }
                                                 if (rdb小计总计.Checked && Detail.Cost != 0)
                                                 {
-                                                    Detail.SubtotalCostAmount = Detail.Cost * Detail.Quantity;
+                                                    Detail.SubtotalCostAmount = (Detail.Cost + Detail.CustomizedCost) * Detail.Quantity;
                                                     Detail.SubtotalTransAmount = Detail.TransactionPrice * Detail.Quantity;
                                                     if (Detail.TaxRate > 0)
                                                     {
@@ -1402,7 +1402,7 @@ namespace RUINORERP.UI.SysConfig
                                                     if (ComparePrice(child.Inv_Cost.ToDouble(), Detail.Cost.ToDouble()) > 10)
                                                     {
                                                         Detail.Cost = child.Inv_Cost;
-                                                        Detail.SubtotalCostAmount = Detail.Cost * Detail.Quantity;
+                                                        Detail.SubtotalCostAmount = (Detail.Cost + Detail.CustomizedCost) * Detail.Quantity;
                                                         Detail.SubtotalTransAmount = Detail.TransactionPrice * Detail.Quantity;
                                                         if (Detail.TaxRate > 0)
                                                         {

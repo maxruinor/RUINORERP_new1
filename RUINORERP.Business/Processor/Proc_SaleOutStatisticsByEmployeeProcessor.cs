@@ -41,8 +41,8 @@ namespace RUINORERP.Business.Processor
             QueryFilter queryFilter = new QueryFilter();
             queryFilter.SetQueryField<Proc_SaleOutStatisticsByEmployeePara>(c => c.Start, AdvQueryProcessType.datetime);
             queryFilter.SetQueryField<Proc_SaleOutStatisticsByEmployeePara>(c => c.End, AdvQueryProcessType.datetime);
-            queryFilter.SetQueryField<Proc_SaleOutStatisticsByEmployeePara>(c => c.Employee_ID, true, AdvQueryProcessType.CmbMultiChoice);
-            queryFilter.SetQueryField<Proc_SaleOutStatisticsByEmployeePara>(c => c.ProjectGroup_ID, true, AdvQueryProcessType.CmbMultiChoice);
+            queryFilter.SetQueryField<Proc_SaleOutStatisticsByEmployeePara>(c => c.Employee_ID, true, AdvQueryProcessType.CmbMultiChoiceCanIgnore);
+            queryFilter.SetQueryField<Proc_SaleOutStatisticsByEmployeePara>(c => c.ProjectGroup_ID, true, AdvQueryProcessType.CmbMultiChoiceCanIgnore);
             return queryFilter;
         }
         public override List<string> GetSummaryCols()

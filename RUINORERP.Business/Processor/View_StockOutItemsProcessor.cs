@@ -67,7 +67,13 @@ namespace RUINORERP.Business.Processor
             queryFilter.SetQueryField<View_StockOutItems>(c => c.Specifications);
             queryFilter.SetQueryField<View_StockOutItems>(c => c.ProductNo);
             queryFilter.SetQueryField<View_StockOutItems>(c => c.RefNO);
-            queryFilter.SetQueryField<View_StockOutItems>(c => c.Type_ID,  typeof(tb_ProductType));
+            queryFilter.SetQueryField<View_StockOutItems>(c => c.Notes);
+
+            var lambdaType = Expressionable.Create<tb_OutInStockType>()
+                        .And(t => t.OutIn == false)
+                        .And(t => t.Is_enabled == true)
+                        .ToExpression();
+            queryFilter.SetQueryField<View_StockOutItems>(c => c.Type_ID,  typeof(tb_OutInStockType),true,lambdaType);
             return queryFilter;
         }
 

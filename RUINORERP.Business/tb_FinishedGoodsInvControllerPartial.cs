@@ -256,8 +256,6 @@ namespace RUINORERP.Business
                     //如果总缴库数量大于最小制成数量则审核出错。
                     if (PaidQuantity > CanManufactureQtyBybom)
                     {
-                        //暂时只是提示。
-
                         if (MessageBox.Show("系统检测到缴库数量大于发出的关键物料能生产的最小数量,你确定要审核通过吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Asterisk) == DialogResult.No)
                         {
                             string msg = $"制令单:{manufacturingOrder.MONO}的【{prodName}】的缴库数不能大于制令单中发出物料能生产的最小数量，审核失败！";
@@ -280,13 +278,19 @@ namespace RUINORERP.Business
                             _logger.LogInformation(msg);
                             return rs;
                         }
-
                     }
                 }
 
+                //如果制令单中没有发任何数量的物料是不可能缴库的。
+                if (manufacturingOrder.tb_ManufacturingOrderDetails.Sum(c => c.ActualSentQty) == 0)
+                {
+                    string msg = $"制令单:{manufacturingOrder.MONO}，没有任何物料发出，审核失败！";
+                    MessageBox.Show(msg, "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    _unitOfWorkManage.RollbackTran();
+                    return rs;
+                }
 
                 #endregion
-
                 if (PaidQuantity > manufacturingOrder.ManufacturingQty)
                 {
                     string msg = $"制令单:{manufacturingOrder.MONO}的【{prodName}】的缴库数量不能大于制令单中要生产的数量，审核失败！";
@@ -307,11 +311,10 @@ namespace RUINORERP.Business
                         rs.ErrorMsg = $"缴库单：{entity.DeliveryBillNo}审核时，缴库总数量不能大于制令单{manufacturingOrder.MONO}中的生产数量！";
                         rs.Succeeded = false;
                         return rs;
-                 
                     }
 
                     //制令单已交数量和判断是否结案
-                    if (manufacturingOrder.QuantityDelivered == manufacturingOrder.ManufacturingQty 
+                    if (manufacturingOrder.QuantityDelivered == manufacturingOrder.ManufacturingQty
                         && manufacturingOrder.DataStatus == (int)DataStatus.确认 && entity.ApprovalStatus.Value == (int)ApprovalStatus.已审核)
                     {
                         manufacturingOrder.DataStatus = (int)DataStatus.完结;
@@ -324,7 +327,6 @@ namespace RUINORERP.Business
 
                         }
                         manufacturingOrder.tb_MaterialRequisitions.Where(c => c.DataStatus == (int)DataStatus.确认 && entity.ApprovalStatus == (int)ApprovalStatus.已审核).ToList().ForEach(c => c.DataStatus = (int)DataStatus.完结);
-
                         int pomrCounter = await _unitOfWorkManage.GetDbClient().Updateable<tb_MaterialRequisition>(manufacturingOrder.tb_MaterialRequisitions).ExecuteCommandAsync();
                         if (pomrCounter > 0)
                         {
@@ -417,7 +419,7 @@ namespace RUINORERP.Business
                     }
 
                     //如果计划数量等于已完成数量 结案？   完成数量大于等于计划算结案。 意思是制令单时可以修改计划数量。缴库根据制令单数量来
-                    if (productionDemand.tb_productionplan.TotalQuantity <= productionDemand.tb_productionplan.TotalCompletedQuantity 
+                    if (productionDemand.tb_productionplan.TotalQuantity <= productionDemand.tb_productionplan.TotalCompletedQuantity
                         && productionDemand.tb_productionplan.DataStatus == (int)DataStatus.确认)
                     {
                         productionDemand.tb_productionplan.DataStatus = (int)DataStatus.完结;

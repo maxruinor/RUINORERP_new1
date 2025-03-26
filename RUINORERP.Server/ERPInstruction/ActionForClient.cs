@@ -200,14 +200,14 @@ namespace TransInstruction
         /// </summary>
         /// <param name="TableName"></param>
         /// <returns></returns>
-        public static OriginalData 请求协助处理(long? RequestEmpID, string RequestEmpName, string RequestContent, string BillData, string EntityType)
+        public static OriginalData 请求协助处理(long? RequestUserID, string RequestEmpName, string RequestContent, string BillData, string EntityType)
         {
             var tx = new ByteBuff(2 + 4);
 
             tx.PushString(System.DateTime.Now.ToString());
-            if (RequestEmpID.HasValue)
+            if (RequestUserID.HasValue)
             {
-                tx.PushInt64(RequestEmpID.Value);//请示的ID。后面单据数据要保存时要名称开头
+                tx.PushInt64(RequestUserID.Value);//请求的员工ID。后面单据数据要保存时要名称开头
             }
             else
             {

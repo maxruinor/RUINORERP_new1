@@ -585,7 +585,7 @@ namespace RUINORERP.UI.PSI.SAL
                     return;
                 }
                 EditEntity.TotalQty = details.Sum(c => c.Quantity);
-                EditEntity.TotalCost = details.Sum(c => c.Cost * c.Quantity);
+                EditEntity.TotalCost = details.Sum(c => (c.Cost+c.CustomizedCost) * c.Quantity);
                 EditEntity.TotalTaxAmount = details.Sum(c => c.SubtotalTaxAmount);
                 EditEntity.TotalUntaxedAmount = details.Sum(c => c.SubtotalUntaxedAmount);
                 EditEntity.TotalAmount = details.Sum(c => c.TransactionPrice * c.Quantity);
@@ -651,7 +651,7 @@ namespace RUINORERP.UI.PSI.SAL
                 //产品ID有值才算有效值
                 details = detailentity.Where(t => t.ProdDetailID > 0).ToList();
                 EditEntity.TotalQty = details.Sum(c => c.Quantity);
-                EditEntity.TotalCost = details.Sum(c => c.Cost * c.Quantity);
+                EditEntity.TotalCost = details.Sum(c => (c.Cost+c.CustomizedCost) * c.Quantity);
                 EditEntity.TotalAmount = details.Sum(c => c.TransactionPrice * c.Quantity);
                 EditEntity.TotalTaxAmount = details.Sum(c => c.SubtotalTaxAmount);
                 EditEntity.TotalUntaxedAmount = details.Sum(c => c.SubtotalUntaxedAmount) + EditEntity.ShipCost;

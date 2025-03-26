@@ -35,28 +35,131 @@ namespace RUINORERP.UI.ChartAnalyzer
             };
         }
 
-        //public async Task<ChartDataSet> GetDataAsync(ChartRequest request)
-        //{
-        //    var query = MainForm.Instance.AppContext.Db.Queryable<tb_CRM_Customer>();
-             
-        //    query.GroupBy(x => x.Region_ID);
-        //    // 应用过滤条件
-        //    //ApplyFilters(ref query, request.Filters);
-           
-        //    // 动态分组
-        //    var groupQuery = query.GroupByDynamic(request.Dimensions);
+        #region new function
+        public async Task<ChartDataSet> GetCustomerStatsAsync(ChartRequest request)
+        {
+            var (startTime, endTime) = request.GetTimeRange();
 
-        //    // 执行查询
-        //    var result = await groupQuery
-        //        .Select(g => new
-        //        {
-        //            Keys = g.Customer_id,
-        //            Count = g.Count()
-        //        })
-        //        .ToListAsync();
+            var query = MainForm.Instance.AppContext.Db.Queryable<tb_CRM_Customer>()
+                .Where(c => c.Created_at >= startTime && c.Created_at <= endTime);
 
-        //    return TransformToDataSet(result, request);
-        //}
+            // 构建分组字段（时间维度 + 其他维度）
+            var groupFields = new List<string>(); //{ request.GetTimeGroupExpression() };
+            groupFields.Add(request.GetGroupByTimeField(request.TimeField));
+            //groupFields.Add(request.TimeField);
+            //groupFields.AddRange(request.Dimensions);
+
+            // 执行分组查询
+            //var result = await query
+            //    .GroupByDynamic(groupFields.ToArray())
+            //    .Select(g => (dynamic)new
+            //    {
+            //        TimeGroup = request.GetQueryTimeFieldBySql(), // 时间分组键
+            //        //OtherDimensions = request.Dimensions
+            //        //    .Select(d => "未知")
+            //        //    .ToList(),
+            //        Count = SqlFunc.AggregateCount(1)
+            //    })
+            //    .ToListAsync();
+
+            // 构建 GroupByModel 列表
+            var groupByModels = new List<GroupByModel>();
+            var columnName = request.GetGroupByTimeField(request.TimeField);
+            var groupByModel = new GroupByModel
+            {
+                FieldName = columnName
+            };
+            groupByModels.Add(groupByModel);
+            var result = await query
+                  .GroupBy(groupByModels)
+               .Select(g => (dynamic)new
+               {
+                   TimeGroup = request.GetGroupByTimeField(request.TimeField), // 时间分组键
+                                                                 //OtherDimensions = request.Dimensions
+                                                                 //    .Select(d => "未知")
+                                                                 //    .ToList(),
+                   Count = SqlFunc.AggregateCount(1)
+               })
+              
+               .ToListAsync();
+
+            // 转换为图表数据
+            return TransformToChartDataSet1(result, request);
+        }
+
+        private ChartDataSet TransformToChartDataSet1(List<dynamic> data, ChartRequest request)
+        {
+            var chartData = new ChartDataSet();
+
+            // 1. 处理时间维度作为X轴标签
+            chartData.Labels = data.Select(x => (string)x.TimeGroup).Distinct().OrderBy(x => x).ToList().ToArray();
+
+            // 2. 处理其他维度作为系列
+            if (request.Dimensions.Any())
+            {
+                var seriesGroups = data
+                    .GroupBy(x => string.Join("|", x.OtherDimensions))
+                    .ToList();
+
+
+                foreach (var group in seriesGroups)
+                {
+                    // 兼容方式构建系列名称
+                    var dimensionPairs = new List<string>();
+                    for (int i = 0; i < request.Dimensions.Count; i++)
+                    {
+                        var dimValue = i < group.First().OtherDimensions.Count
+                            ? group.First().OtherDimensions[i]
+                            : "未知";
+                        dimensionPairs.Add($"{request.Dimensions[i]}:{dimValue}");
+                    }
+
+                    var seriesName = string.Join("+",
+                    request.Dimensions.Select((dim, index) =>
+                    $"{dim}:{(index < group.First().OtherDimensions.Count
+                      ? group.First().OtherDimensions[index]
+                      : "未知")}"));
+
+                    //var seriesName = string.Join("+", dimensionPairs);
+
+                    var series = new ChartSeries
+                    {
+                        Name = seriesName,
+                        Values = new List<double>()
+                    };
+
+                    // 填充每个时间点的值
+                    foreach (var label in chartData.Labels)
+                    {
+                        var value = group.FirstOrDefault(x => (string)x.TimeGroup == label)?.Count ?? 0;
+                        series.Values.Add((double)value);
+                    }
+
+                    chartData.Series.Add(series);
+                }
+            }
+            else
+            {
+                // 没有其他维度时，只显示一个系列
+                var series = new ChartSeries
+                {
+                    Name = "客户数量",
+                    Values = new List<double>()
+                };
+
+                foreach (var label in chartData.Labels)
+                {
+                    var value = data.FirstOrDefault(x => (string)x.TimeGroup == label)?.Count ?? 0;
+                    series.Values.Add((double)value);
+                }
+
+                chartData.Series.Add(series);
+            }
+
+            return chartData;
+        }
+
+        #endregion
 
         public async Task<ChartDataSet> GetDataAsync(ChartRequest request)
         {
@@ -72,7 +175,7 @@ namespace RUINORERP.UI.ChartAnalyzer
                 {
                     // 假设第一个维度作为分类轴
                     // Category = g.PurchaseCount.Key[request.Dimensions[0]]?.ToString() ?? "未知",
-                    Category =g.CustomerName,
+                    Category = g.CustomerName,
                     // 其他维度可以作为标签或分组
                     //SecondaryDimension = request.Dimensions.Count > 1
                     //    ? g.Key[request.Dimensions[1]]?.ToString() ?? "未知"

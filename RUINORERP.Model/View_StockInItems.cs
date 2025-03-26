@@ -36,15 +36,15 @@ namespace RUINORERP.Model
 
     
         private long? _Type_ID;
-        
-        
+
+
         /// <summary>
-        /// 出库类型
+        /// 入库类型
         /// </summary>
 
-        [AdvQueryAttribute(ColName = "Type_ID",ColDesc = "出库类型")]
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Type_ID" ,IsNullable = true,ColumnDescription = "出库类型" )]
-        [Display(Name = "出库类型")]
+        [AdvQueryAttribute(ColName = "Type_ID",ColDesc = "入库类型")]
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Type_ID" ,IsNullable = true,ColumnDescription = "入库类型")]
+        [Display(Name = "入库类型")]
         public long? Type_ID 
         { 
             get{return _Type_ID;}            set{                SetProperty(ref _Type_ID, value);                }
@@ -54,12 +54,12 @@ namespace RUINORERP.Model
         
         
         /// <summary>
-        /// 接收单位
+        /// 来源单位
         /// </summary>
 
-        [AdvQueryAttribute(ColName = "CustomerVendor_ID",ColDesc = "接收单位")]
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "CustomerVendor_ID" ,IsNullable = true,ColumnDescription = "接收单位" )]
-        [Display(Name = "接收单位")]
+        [AdvQueryAttribute(ColName = "CustomerVendor_ID",ColDesc = "来源单位")]
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "CustomerVendor_ID" ,IsNullable = true,ColumnDescription = "来源单位")]
+        [Display(Name = "来源单位")]
         public long? CustomerVendor_ID 
         { 
             get{return _CustomerVendor_ID;}            set{                SetProperty(ref _CustomerVendor_ID, value);                }
@@ -84,12 +84,12 @@ namespace RUINORERP.Model
         
         
         /// <summary>
-        /// 其他出库单号
+        /// 其他入库单号
         /// </summary>
 
-        [AdvQueryAttribute(ColName = "BillNo",ColDesc = "其他出库单号")]
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "BillNo" ,Length=50,IsNullable = true,ColumnDescription = "其他出库单号" )]
-        [Display(Name = "其他出库单号")]
+        [AdvQueryAttribute(ColName = "BillNo",ColDesc = "其他入库单号")]
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "BillNo" ,Length=50,IsNullable = true,ColumnDescription = "其他入库单号")]
+        [Display(Name = "其他入库单号")]
         public string BillNo 
         { 
             get{return _BillNo;}            set{                SetProperty(ref _BillNo, value);                }

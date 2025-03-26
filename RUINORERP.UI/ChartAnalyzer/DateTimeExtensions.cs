@@ -9,23 +9,36 @@ namespace RUINORERP.UI.ChartAnalyzer
     // 扩展方法
     public static class DateTimeExtensions
     {
+        public static DateTime EndOfWeek(this DateTime dt, DayOfWeek startOfWeek)
+        {
+            return dt.StartOfWeek(startOfWeek).AddDays(6).AddTicks(-1);
+        }
+
+        //public static DateTime EndOfWeek(this DateTime dt, DayOfWeek startOfWeek)
+        //{
+        //    return dt.StartOfWeek(startOfWeek).AddDays(6).Date.AddDays(1).AddTicks(-1);
+        //}
+
+        public static DateTime LastDayOfMonth(this DateTime dt)
+        {
+            return new DateTime(dt.Year, dt.Month, DateTime.DaysInMonth(dt.Year, dt.Month));
+        }
+
+
+
+
+
+
         public static DateTime StartOfWeek(this DateTime dt, DayOfWeek startOfWeek)
         {
             int diff = (7 + (dt.DayOfWeek - startOfWeek)) % 7;
             return dt.AddDays(-1 * diff).Date;
         }
 
-        public static DateTime EndOfWeek(this DateTime dt, DayOfWeek startOfWeek)
-        {
-            return dt.StartOfWeek(startOfWeek).AddDays(6).AddTicks(-1);
-        }
+  
 
-        public static DateTime LastDayOfMonth(this DateTime dt)
-        {
-            return new DateTime(dt.Year, dt.Month, 1)
-                .AddMonths(1)
-                .AddDays(-1);
-        }
+
+
 
 
         /// <summary>
@@ -42,6 +55,12 @@ namespace RUINORERP.UI.ChartAnalyzer
 
             return new DateTime(date.Year, startMonth, 1);
         }
+
+
+        //public static DateTime LastDayOfQuarter(this DateTime dt)
+        //{
+        //    return dt.FirstDayOfQuarter().AddMonths(3).AddTicks(-1);
+        //}
 
         /// <summary>
         /// 获取当前日期所在季度的最后一天

@@ -727,8 +727,20 @@ namespace RUINORERP.UI.PSI.SAL
                 {
                     #region 产品ID可能大于1行，共用料号情况
                     tb_SaleOrderDetail item = saleorder.tb_SaleOrderDetails.FirstOrDefault(c => c.ProdDetailID == details[i].ProdDetailID && c.SaleOrderDetail_ID == details[i].SaleOrderDetail_ID);
+                    details[i].Cost = item.Cost;
+                    details[i].CustomizedCost = item.CustomizedCost;
+                    //这时有一种情况就是订单时没有成本。没有产品。出库前有类似采购入库确定的成本
+                    if (details[i].Cost == 0)
+                    {
+                        View_ProdDetail obj = BizCacheHelper.Instance.GetEntity<View_ProdDetail>(details[i].ProdDetailID);
+                        if (obj != null && obj.GetType().Name != "Object" && obj is View_ProdDetail prodDetail)
+                        {
+                            details[i].Cost = obj.Inv_Cost.Value;
+                        }
+                    }
                     details[i].Quantity = item.Quantity - item.TotalDeliveredQty;// 已经出数量去掉
                     details[i].SubtotalTransAmount = details[i].TransactionPrice * details[i].Quantity;
+                    details[i].SubtotalCostAmount = (details[i].Cost + details[i].CustomizedCost) * details[i].Quantity;
                     if (details[i].Quantity > 0)
                     {
                         NewDetails.Add(details[i]);
@@ -744,9 +756,20 @@ namespace RUINORERP.UI.PSI.SAL
                 {
                     #region 每行产品ID唯一
                     tb_SaleOrderDetail item = saleorder.tb_SaleOrderDetails.FirstOrDefault(c => c.ProdDetailID == details[i].ProdDetailID);
+                    details[i].Cost = item.Cost;
+                    details[i].CustomizedCost = item.CustomizedCost;
+                    //这时有一种情况就是订单时没有成本。没有产品。出库前有类似采购入库确定的成本
+                    if (details[i].Cost == 0)
+                    {
+                        View_ProdDetail obj = BizCacheHelper.Instance.GetEntity<View_ProdDetail>(details[i].ProdDetailID);
+                        if (obj != null && obj.GetType().Name != "Object" && obj is View_ProdDetail prodDetail)
+                        {
+                            details[i].Cost = obj.Inv_Cost.Value;
+                        }
+                    }
                     details[i].Quantity = details[i].Quantity - item.TotalDeliveredQty;// 减掉已经出库的数量
                     details[i].SubtotalTransAmount = details[i].TransactionPrice * details[i].Quantity;
-                    details[i].SubtotalCostAmount = details[i].Cost * details[i].Quantity;
+                    details[i].SubtotalCostAmount = (details[i].Cost+ details[i].CustomizedCost) * details[i].Quantity;
 
                     if (details[i].Quantity > 0)
                     {

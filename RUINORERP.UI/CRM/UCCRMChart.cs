@@ -14,6 +14,7 @@ using LiveChartsCore;
 using RUINORERP.Model;
 using RUINORERP.UI.Common;
 using RUINORERP.UI.ChartAnalyzer;
+using LiveChartsCore.SkiaSharpView.VisualElements;
 
 namespace RUINORERP.UI.CRM
 {
@@ -25,7 +26,64 @@ namespace RUINORERP.UI.CRM
             InitializeComponent();
         }
 
-        private async void UCCRMChart_Load(object sender, EventArgs e)
+        private  void UCCRMChart_Load(object sender, EventArgs e)
+        {
+            Load2();
+        }
+
+        private async void Load2()
+        {
+
+            // 示例1：按月统计
+            var monthlyRequest = new ChartRequest
+            {
+                TimeGroupType = TimeRangeType.Monthly,
+                StartTime = new DateTime(2025, 1, 1),
+                EndTime = new DateTime(2025, 12, 31)
+            };
+
+            // 创建数据源和构建器
+            var dataSource = new CustomerDataSource();
+          
+
+
+            var monthlyData = await dataSource.GetCustomerStatsAsync(monthlyRequest);
+            DisplayChart(monthlyData, "按月客户统计");
+
+            // 示例2：按季度+地区统计
+            var quarterRequest = new ChartRequest
+            {
+                TimeGroupType = TimeRangeType.Quarterly,
+                Dimensions = new List<string> { "Region_ID" },
+                StartTime = new DateTime(2025, 1, 1),
+                EndTime = new DateTime(2025, 12, 31)
+            };
+
+            var quarterData = await dataSource.GetCustomerStatsAsync(quarterRequest);
+            DisplayChart(quarterData, "按季度+地区客户统计");
+        }
+
+
+        private void DisplayChart(ChartDataSet data, string title)
+        {
+            var seriesCollection = new List<ISeries>();
+
+            foreach (var series in data.Series)
+            {
+                seriesCollection.Add(new ColumnSeries<double>
+                {
+                    Name = series.Name,
+                    Values = series.Values.ToArray(),
+                    XToolTipLabelFormatter = point => $"{point.Context.Series.Name}: {point.AsDataLabel}"
+                });
+            }
+
+            cartesianChart1.Series = seriesCollection.ToArray();
+            cartesianChart1.XAxes = new[] { new Axis { Labels = data.Labels.ToArray() } };
+            cartesianChart1.Title = new LabelVisual { Text = title, TextSize = 16 };
+        }
+
+        private async void Load1()
         {
             // 创建请求参数
             var request = new ChartRequest

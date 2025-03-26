@@ -6,9 +6,11 @@ using Krypton.Toolkit;
 using Krypton.Workspace;
 using Microsoft.Extensions.Logging;
 using NPOI.SS.Formula.PTG;
+using NPOI.SS.UserModel;
 using OfficeOpenXml;
 using RUINORERP.AutoMapper;
 using RUINORERP.Business;
+using RUINORERP.Business.CommService;
 using RUINORERP.Business.Processor;
 using RUINORERP.Business.Security;
 using RUINORERP.Common;
@@ -102,7 +104,7 @@ namespace RUINORERP.UI.PSI.SAL
         /// </summary>
         /// <param name="dto"></param>
         [MustOverride]
-        protected virtual  void Query()
+        protected virtual void Query()
         {
             //var eer = errorProviderForAllInput.GetError(txtPDNo);
 
@@ -165,7 +167,7 @@ namespace RUINORERP.UI.PSI.SAL
                     case NavigatorMenuType.销售出库业绩汇总:
 
                         #region 销售出库业绩汇总 
-                        List<Proc_SaleOutStatisticsByEmployee> SaleOutList = GetSaleOutDataListFromProc();
+
                         if (kryptonNavigator1.SelectedPage != null)
                         {
                             UCQueryShow queryShow = kryptonNavigator1.SelectedPage.Controls.Find(navigatorMenu.menuType.ToString() + "QueryShow", true).FirstOrDefault() as UCQueryShow;
@@ -179,8 +181,9 @@ namespace RUINORERP.UI.PSI.SAL
                             if (queryMaster != null)
                             {
                                 queryMaster.newSumDataGridViewMaster.NeedSaveColumnsXml = true;
-                                queryMaster.bindingSourceMaster.DataSource =SaleOutList.ToBindingSortCollection();
-                                queryMaster.ShowSummaryCols();
+                                GetSaleOutDataListFromProc(queryMaster);
+                                //queryMaster.bindingSourceMaster.DataSource =SaleOutList.ToBindingSortCollection();
+                                //queryMaster.ShowSummaryCols();
                             }
 
                         }
@@ -218,7 +221,7 @@ namespace RUINORERP.UI.PSI.SAL
             }
         }
 
-        public  List<Proc_SaleOrderStatisticsByEmployee> GetSaleOrderDataListFromProc(UCBillMasterQuery queryMaster)
+        public List<Proc_SaleOrderStatisticsByEmployee> GetSaleOrderDataListFromProc(UCBillMasterQuery queryMaster)
         {
 
             //先固定两个特殊的查询条件集合
@@ -227,8 +230,6 @@ namespace RUINORERP.UI.PSI.SAL
             expressions.Add(c => c.ProjectGroup_ID);
 
             List<string> conditions = RuinorExpressionHelper.ExpressionListToStringList(expressions);
-
-
 
             //带有output的存储过程 
             Proc_SaleOrderStatisticsByEmployeePara paraOrder = UIparaOrder as Proc_SaleOrderStatisticsByEmployeePara;
@@ -296,9 +297,9 @@ namespace RUINORERP.UI.PSI.SAL
             var ProjectGroups = new SugarParameter("@ProjectGroups ", strProjectGroups == string.Empty ? null : strProjectGroups);
             var Employees = new SugarParameter("@Employees ", strEmployees == string.Empty ? null : strEmployees);
             var StartQuery = new SugarParameter("@Start ", paraOrder.Start.ToString("yyyy-MM-dd"));//string 格式  '2024-04-01'
-            var EndQuery = new SugarParameter("@End ", paraOrder.End.ToString("yyyy-MM-dd"));
+            var EndQuery = new SugarParameter("@End ", paraOrder.End.Date.AddDays(1).AddTicks(-1).ToString("yyyy-MM-dd HH:mm:ss"));
             var sqloutput = new SugarParameter("@sqlOutput", null, true);//设置为output
-            var SaleOrderDataList =  MainForm.Instance.AppContext.Db.Ado.UseStoredProcedure().SqlQuery<Proc_SaleOrderStatisticsByEmployee>("Proc_SaleOrderStatisticsByEmployee",
+            var SaleOrderDataList = MainForm.Instance.AppContext.Db.Ado.UseStoredProcedure().SqlQuery<Proc_SaleOrderStatisticsByEmployee>("Proc_SaleOrderStatisticsByEmployee",
                 GroupByField, ProjectGroups, Employees, StartQuery, EndQuery, sqloutput);//返回List
 
             //动态 控制显示列
@@ -319,44 +320,109 @@ namespace RUINORERP.UI.PSI.SAL
             return SaleOrderDataList;
         }
 
-        public  List<Proc_SaleOutStatisticsByEmployee> GetSaleOutDataListFromProc()
+        ConcurrentDictionary<string, string> _ProjectGroupsEmployees = new ConcurrentDictionary<string, string>();
+
+        public List<Proc_SaleOutStatisticsByEmployee> GetSaleOutDataListFromProc(UCBillMasterQuery queryMaster)
         {
+            //先固定两个特殊的查询条件集合
+            List<Expression<Func<Proc_SaleOutStatisticsByEmployeePara, object>>> expressions = new List<Expression<Func<Proc_SaleOutStatisticsByEmployeePara, object>>>();
+            expressions.Add(c => c.Employee_ID);
+            expressions.Add(c => c.ProjectGroup_ID);
+            List<string> conditions = RuinorExpressionHelper.ExpressionListToStringList(expressions);
+
             //带有output的存储过程 
             Proc_SaleOutStatisticsByEmployeePara paraOut = UIparaOut as Proc_SaleOutStatisticsByEmployeePara;
-            string strProjectGroups = string.Empty;
-            List<object> ProjectGroupList = new List<object>();
-            ProjectGroupList = paraOut.GetPropertyValue("ProjectGroup_ID" + "_MultiChoiceResults") as List<object>;
-            if (ProjectGroupList.Count > 0)
-            {
-                strProjectGroups = string.Join(",", ProjectGroupList.ToArray());
-            }
-
-            string strEmployees = string.Empty;
-            List<object> EmployeeGroupList = new List<object>();
-            EmployeeGroupList = paraOut.GetPropertyValue("Employee_ID" + "_MultiChoiceResults") as List<object>;
+            OutInvisibleCols.Clear();
+ 
+            #region 提取业务员和项目勾选项
+ 
             //如果限制
-            if (AuthorizeController.GetSaleLimitedAuth(MainForm.Instance.AppContext))
+            //if (AuthorizeController.GetSaleLimitedAuth(MainForm.Instance.AppContext))
+            //{
+            //    if (!EmployeeGroupList.Contains(MainForm.Instance.AppContext.CurUserInfo.UserInfo.tb_employee.Employee_ID.ToString()))
+            //    {
+            //        EmployeeGroupList.Add(MainForm.Instance.AppContext.CurUserInfo.UserInfo.tb_employee.Employee_ID.ToString());
+            //    }
+            //}
+         
+            #endregion
+
+            #region 分组条件
+            _ProjectGroupsEmployees.Clear();
+            List<string> GroupByFields = new List<string>();
+            for (int i = 0; i < conditions.Count; i++)
             {
-                if (!EmployeeGroupList.Contains(MainForm.Instance.AppContext.CurUserInfo.UserInfo.tb_employee.Employee_ID.ToString()))
+
+                bool pgGroupCanIgnore = paraOut.GetPropertyValue(conditions[i] + "_CmbMultiChoiceCanIgnore").ToBool();
+                if (pgGroupCanIgnore)
                 {
-                    EmployeeGroupList.Add(MainForm.Instance.AppContext.CurUserInfo.UserInfo.tb_employee.Employee_ID.ToString());
+                    GroupByFields.Add(conditions[i]);
+                    List<object> ProjectGroupList = paraOut.GetPropertyValue(conditions[i] + "_MultiChoiceResults") as List<object>;
+                    if (ProjectGroupList.Count > 0)
+                    {
+                        _ProjectGroupsEmployees.TryAdd(conditions[i], string.Join(",", ProjectGroupList.ToArray()));
+                    }
+
+                }
+                else
+                {
+                    //将条件都认为不可见
+                    OutInvisibleCols.AddRange(conditions[i]);
                 }
             }
 
-            if (EmployeeGroupList.Count > 0)
+            string GroupByFieldValue = string.Empty;
+            if (GroupByFields.Count == 0)
             {
-                strEmployees = string.Join(",", EmployeeGroupList.ToArray());
+                GroupByFieldValue = "";
+            }
+            else if (GroupByFields.Count == 1)
+            {
+                GroupByFieldValue = GroupByFields[0];
+            }
+            else
+            {
+                GroupByFieldValue = "Both";
+            }
+            #endregion
+
+            string strProjectGroups = string.Empty;
+            if (_ProjectGroupsEmployees.TryGetValue("ProjectGroup_ID", out string projectGroup))
+            {
+                strProjectGroups= projectGroup;
+            }
+            string strEmployees = string.Empty;
+            if (_ProjectGroupsEmployees.TryGetValue("Employee_ID", out string Employee))
+            {
+                strEmployees = Employee;
             }
 
-
+            //-- 默认为''，可以是 'Employee_ID', 'ProjectGroup_ID' 或 '其中一个',如果为''则不分组
+            var GroupByField = new SugarParameter("@GroupByField ", GroupByFieldValue);
             var ProjectGroups = new SugarParameter("@ProjectGroups ", strProjectGroups == string.Empty ? null : strProjectGroups);
             var Employees = new SugarParameter("@Employees ", strEmployees == string.Empty ? null : strEmployees);
             var StartQuery = new SugarParameter("@Start ", paraOut.Start.ToString("yyyy-MM-dd"));//string 格式  '2024-04-01'
-            var EndQuery = new SugarParameter("@End ", paraOut.End.ToString("yyyy-MM-dd"));
+            var EndQuery = new SugarParameter("@End ", paraOut.End.Date.AddDays(1).AddTicks(-1).ToString("yyyy-MM-dd HH:mm:ss")); ; // 这将时间设置为 23:59:59.9999999 (DateTime 的最大值)
             var sqloutput = new SugarParameter("@sqlOutput", null, true);//设置为output
                                                                          //var list = db.Ado.UseStoredProcedure().SqlQuery<Class1>("sp_school", nameP, ageP);//返回List
-            var SaleOutList =  MainForm.Instance.AppContext.Db.Ado.UseStoredProcedure().SqlQuery<Proc_SaleOutStatisticsByEmployee>("Proc_SaleOutStatisticsByEmployee"
-                , ProjectGroups, Employees, StartQuery, EndQuery, sqloutput);//返回List
+            var SaleOutList = MainForm.Instance.AppContext.Db.Ado.UseStoredProcedure().SqlQuery<Proc_SaleOutStatisticsByEmployee>("Proc_SaleOutStatisticsByEmployee",
+                GroupByField, ProjectGroups, Employees, StartQuery, EndQuery, sqloutput);//返回List
+
+
+            //动态 控制显示列
+            foreach (var item in conditions)
+            {
+                ColDisplayController cdcInv = queryMaster.newSumDataGridViewMaster.ColumnDisplays.Where(c => c.ColName == item).FirstOrDefault();
+                if (cdcInv != null)
+                {
+                    //分组存在就显示，不则不显示
+                    cdcInv.Disable = GroupByFields.Any(c => c == item) ? false : true;
+                }
+            }
+
+            queryMaster.bindingSourceMaster.DataSource = SaleOutList.ToBindingSortCollection();
+            queryMaster.ShowSummaryCols();
+
             return SaleOutList;
         }
 
@@ -1039,7 +1105,7 @@ namespace RUINORERP.UI.PSI.SAL
         public ConcurrentDictionary<string, List<KeyValuePair<object, string>>> ChildColNameDataDictionary { set; get; } = new ConcurrentDictionary<string, List<KeyValuePair<object, string>>>();
 
 
-      
+
         private void kryptonTreeViewMenu_AfterSelect(object sender, TreeViewEventArgs e)
         {
             if (kryptonTreeViewMenu.SelectedNode != null)

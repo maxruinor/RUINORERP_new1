@@ -2689,6 +2689,7 @@
     <Compile Include="WorkFlowTester\WorkWorkflow2.cs" />
     <None Include="OpenTK.dll.config" />
     <None Include="ResourceFile\import_32x32.ico" />
+    <Content Include="CRM\商机总览.sql" />
     <Content Include="InitSQL.sql" />
     <None Include="ResourceFile\Hint.ico" />
     <Content Include="ResourceFile\money-rmb.png" />

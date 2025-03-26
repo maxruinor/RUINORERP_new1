@@ -441,14 +441,11 @@ namespace RUINORERP.Business
                     {
                         entity.tb_saleorder.DataStatus = (int)DataStatus.完结;
                         entity.tb_saleorder.CloseCaseOpinions = "【系统自动结案】==》" + System.DateTime.Now.ToString() + _appContext.CurUserInfo.UserInfo.tb_employee.Employee_Name + "审核销售库单时:" + entity.SaleOutNo + "结案。"; ;
-                        entity.tb_saleorder.TotalCost = entity.tb_SaleOutDetails.Sum(c => c.Cost * c.Quantity);
+                        entity.tb_saleorder.TotalCost = entity.tb_SaleOutDetails.Sum(c => (c.Cost+c.CustomizedCost) * c.Quantity);
                         await _unitOfWorkManage.GetDbClient().Updateable(entity.tb_saleorder).UpdateColumns(t => new { t.DataStatus, t.CloseCaseOpinions, entity.tb_saleorder.TotalCost }).ExecuteCommandAsync();
                     }
 
-
                     #endregion
-
-
                     //运费检测  如果一个订单有运费。多次出库时。运费也默认加到了每次的出库单。
                     //这里审核时检测之前的是不是已加过（多次出库第一次加上运费。后面财务如何处理？再说） 第二次起都是为0.
                     if (entity.tb_saleorder.tb_SaleOuts.Count > 1)

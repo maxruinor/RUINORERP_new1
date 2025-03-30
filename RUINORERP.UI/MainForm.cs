@@ -658,10 +658,6 @@ namespace RUINORERP.UI
                         // logger.Error(ex);
                         MainForm.Instance.uclog.AddLog(ex.Message + ex.StackTrace);
                     }
-                    if (UserGlobalConfig.Instance.MenuPersonalizationlist == null)
-                    {
-                        UserGlobalConfig.Instance.MenuPersonalizationlist = new ConcurrentDictionary<string, MenuPersonalization>();
-                    }
 
                     //设计关联列和目标列
                     View_ProdDetailController<View_ProdDetail> dc = Startup.GetFromFac<View_ProdDetailController<View_ProdDetail>>();
@@ -2138,7 +2134,12 @@ namespace RUINORERP.UI
             {
                 logger.LogError(ex, "MainForm_FormClosing");
             }
-            System.GC.Collect();
+            finally
+            {
+                System.GC.Collect();
+                Application.Exit();
+            }
+           
         }
 
         internal void PrintInfoLog(string msg, Color c)

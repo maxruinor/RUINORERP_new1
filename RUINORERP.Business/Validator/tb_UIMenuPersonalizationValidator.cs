@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/13/2025 18:30:18
+// 时间：03/30/2025 15:54:07
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -48,8 +48,10 @@ namespace RUINORERP.Business
 
 
 
+ RuleFor(tb_UIMenuPersonalization =>tb_UIMenuPersonalization.BaseWidth).NotEmpty().When(x => x.BaseWidth.HasValue);
+
 //***** 
- RuleFor(tb_UIMenuPersonalization =>tb_UIMenuPersonalization.Sort).NotNull().WithMessage("排序:不能为空。");
+ RuleFor(tb_UIMenuPersonalization =>tb_UIMenuPersonalization.Sort).NotNull().WithMessage("基准宽度:不能为空。");
 
 
 

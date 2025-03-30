@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/13/2025 18:30:17
+// 时间：03/30/2025 15:54:06
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -47,6 +47,12 @@ namespace RUINORERP.Business
  RuleFor(tb_UIGridSetting =>tb_UIGridSetting.GridType).MaximumLength(25).WithMessage("表格类型:不能超过最大长度,25.");
 
  RuleFor(tb_UIGridSetting =>tb_UIGridSetting.ColumnsMode).NotEmpty().When(x => x.ColumnsMode.HasValue);
+
+
+ RuleFor(tb_UIGridSetting =>tb_UIGridSetting.Created_by).NotEmpty().When(x => x.Created_by.HasValue);
+
+
+ RuleFor(tb_UIGridSetting =>tb_UIGridSetting.Modified_by).NotEmpty().When(x => x.Modified_by.HasValue);
 
            	        Initialize();
      }

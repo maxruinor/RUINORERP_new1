@@ -88,13 +88,7 @@ namespace RUINORERP.UI
 
          */
 
-        //public ConcurrentDictionary<string, MenuPersonalization> _MenuPersonalizationlist = new ConcurrentDictionary<string, MenuPersonalization>();
-
-        /// <summary>
-        /// 队列应该有一个策略 比方优先级，桌面不动1 3 5分钟 
-        /// </summary>
-        public ConcurrentDictionary<string, MenuPersonalization> MenuPersonalizationlist { get; set; } = new ConcurrentDictionary<string, MenuPersonalization>();
-
+ 
         
         #region 其他
 

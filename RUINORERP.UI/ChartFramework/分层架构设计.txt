@@ -1,0 +1,23 @@
+﻿LiveChartsCore 提供的主要图表类型：
+
+笛卡尔坐标系图表 (CartesianChart)
+
+折线图 (LineSeries)
+
+柱状图 (ColumnSeries)
+
+面积图 (AreaSeries)
+
+散点图 (ScatterSeries)
+
+极坐标系图表 (PieChart)
+
+饼图 (PieSeries)
+
+环形图 (设置 InnerRadius)
+
+其他类型
+
+仪表图 (GaugeChart)
+
+雷达图 (RadarChart)

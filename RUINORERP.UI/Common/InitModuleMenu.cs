@@ -659,7 +659,7 @@ namespace RUINORERP.UI.Common
                         {
                             info.EntityName = type.Name;
                         }
-
+                        info.IsEnabled = true;
                         info.FieldName = kv.Key;
                         info.FieldText = kv.Value;
                         info.MenuID = menuInfo.MenuID;

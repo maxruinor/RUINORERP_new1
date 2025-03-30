@@ -32,6 +32,7 @@ using RUINORERP.Common.CollectionExtension;
 using RUINORERP.Business.Processor;
 using RUINORERP.UI.BaseForm;
 using RUINORERP.Model.Models;
+using RUINORERP.UI.UserPersonalized;
 
 
 namespace RUINORERP.UI.AdvancedUIModule
@@ -174,9 +175,9 @@ namespace RUINORERP.UI.AdvancedUIModule
 
         // [AdvAttribute("asd")]
         public string DtoEntityTalbeName { get => dtoEntityTalbeName; set => dtoEntityTalbeName = value; }
-        private BaseEntity _queryDto = new BaseEntity();
+        private object _queryDto = new BaseEntity();
 
-        public BaseEntity QueryDto { get => _queryDto; set => _queryDto = value; }
+        public object QueryDto { get => _queryDto; set => _queryDto = value; }
 
         private string dtoEntityTalbeName;
         private Type dtoEntityType;
@@ -225,16 +226,14 @@ namespace RUINORERP.UI.AdvancedUIModule
             }
 
         }
-        protected virtual void MenuPersonalizedSettings()
+        protected async virtual void MenuPersonalizedSettings()
         {
-            UserCenter.frmMenuPersonalization frmMenu = new UserCenter.frmMenuPersonalization();
-            frmMenu.MenuPathKey = CurMenuInfo.ClassPath;
-            if (frmMenu.ShowDialog() == DialogResult.OK)
+            bool rs = await UIBizSrvice.SetQueryConditionsAsync(CurMenuInfo, QueryConditionFilter, QueryDto as BaseEntity);
+            if (rs)
             {
-                LoadQueryConditionToUI(frmMenu.QueryShowColQty.Value);
+                QueryDto = LoadQueryConditionToUI();
             }
         }
-
         /*
         /// <summary>
         /// esc退出窗体
@@ -419,7 +418,7 @@ namespace RUINORERP.UI.AdvancedUIModule
         /// 默认不是模糊查询
         /// </summary>
         /// <param name="useLike"></param>
-        public void LoadQueryConditionToUI(decimal QueryConditionShowColQty)
+        public object LoadQueryConditionToUI(decimal QueryConditionShowColQty = 4)
         {
             //为了验证设置的属性
             this.AutoValidate = AutoValidate.EnableAllowFocusChange;
@@ -429,9 +428,28 @@ namespace RUINORERP.UI.AdvancedUIModule
             PanelForQuery.Visible = false;
             PanelForQuery.Controls.Clear();
             PanelForQuery.SuspendLayout();
+            if (MainForm.Instance.AppContext.CurrentUser_Role == null && MainForm.Instance.AppContext.IsSuperUser)
+            {
+                QueryDtoProxy = UIGenerateHelper.CreateQueryUI(typeof(T), true, PanelForQuery, QueryConditionFilter, QueryConditionShowColQty);
+            }
+            else
+            {
+                if (MainForm.Instance.AppContext.CurrentUser_Role_Personalized.tb_UIMenuPersonalizations == null)
+                {
+                    MainForm.Instance.AppContext.CurrentUser_Role_Personalized.tb_UIMenuPersonalizations = new List<tb_UIMenuPersonalization>();
+                }
+                tb_UIMenuPersonalization menuSetting = MainForm.Instance.AppContext.CurrentUser_Role_Personalized.tb_UIMenuPersonalizations.FirstOrDefault(c => c.MenuID == CurMenuInfo.MenuID);
+                if (menuSetting != null)
+                {
+                    QueryDto = UIGenerateHelper.CreateQueryUI(typeof(T), true, PanelForQuery, QueryConditionFilter, menuSetting);
+                }
+                else
+                {
+                    QueryDto = UIGenerateHelper.CreateQueryUI(typeof(T), true, PanelForQuery, QueryConditionFilter, QueryConditionShowColQty);
+                }
+            }
 
-
-            QueryDto = UIGenerateHelper.CreateQueryUI(typeof(T), true, PanelForQuery, QueryConditionFilter, QueryConditionShowColQty);
+          //  QueryDto = UIGenerateHelper.CreateQueryUI(typeof(T), true, PanelForQuery, QueryConditionFilter, QueryConditionShowColQty);
 
             PanelForQuery.ResumeLayout();
             PanelForQuery.Visible = true;
@@ -527,6 +545,7 @@ namespace RUINORERP.UI.AdvancedUIModule
                 dataGridView1.IsShowSumRow = true;
                 dataGridView1.SumColumns = SummaryCols.ToArray();
             }*/
+            return QueryDto;
         }
 
 
@@ -536,17 +555,20 @@ namespace RUINORERP.UI.AdvancedUIModule
         {
             if (!this.DesignMode)
             {
-                MenuPersonalization personalization = new MenuPersonalization();
-                UserGlobalConfig.Instance.MenuPersonalizationlist.TryGetValue(CurMenuInfo.ClassPath, out personalization);
-                if (personalization != null)
+                tb_UIMenuPersonalization menuSetting = MainForm.Instance.AppContext.CurrentUser_Role_Personalized.tb_UIMenuPersonalizations.FirstOrDefault(c => c.MenuID == CurMenuInfo.MenuID);
+                if (menuSetting != null)
                 {
-                    decimal QueryShowColQty = personalization.QueryConditionShowColsQty;
-                    LoadQueryConditionToUI(QueryShowColQty);
+                    if (menuSetting.tb_UIQueryConditions != null && menuSetting.tb_UIQueryConditions.Count > 0)
+                    {
+                        LoadQueryConditionToUI(menuSetting.QueryConditionCols); 
+                    }
+                    else
+                    {
+                        LoadQueryConditionToUI(4);
+                    }
                 }
-                else
-                {
-                    LoadQueryConditionToUI(4);
-                }
+
+                   
                 #region 请求缓存
                 //通过表名获取需要缓存的关系表再判断是否存在。没有就从服务器请求。这种是全新的请求。后面还要设计更新式请求。
                 UIBizSrvice.RequestCache<T>();

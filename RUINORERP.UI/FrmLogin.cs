@@ -22,17 +22,14 @@ using RUINORERP.Business;
 using HLH.Lib.Security;
 using AutoUpdateTools;
 
-
 namespace RUINORERP.UI
 {
     public partial class FrmLogin : Krypton.Toolkit.KryptonForm
     {
-
         public FrmLogin(EasyClientService _ecs)
         {
             InitializeComponent();
             ecs = _ecs;
-
         }
         private bool m_showing = true;
         private void fadeTimer_Tick(object sender, EventArgs e)

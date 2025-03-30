@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/13/2025 18:30:18
+// 时间：03/30/2025 15:54:07
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -48,6 +48,9 @@ namespace RUINORERP.Business
  RuleFor(tb_UIQueryCondition =>tb_UIQueryCondition.ValueType).MaximumLength(25).WithMessage("值类型:不能超过最大长度,25.");
 
 //***** 
+ RuleFor(tb_UIQueryCondition =>tb_UIQueryCondition.ControlWidth).NotNull().WithMessage("控件宽度:不能为空。");
+
+//***** 
  RuleFor(tb_UIQueryCondition =>tb_UIQueryCondition.Sort).NotNull().WithMessage("排序:不能为空。");
 
 
@@ -57,10 +60,19 @@ namespace RUINORERP.Business
 
 
 
+//有默认值
+
+
 
  RuleFor(tb_UIQueryCondition =>tb_UIQueryCondition.DiffDays1).NotEmpty().When(x => x.DiffDays1.HasValue);
 
  RuleFor(tb_UIQueryCondition =>tb_UIQueryCondition.DiffDays2).NotEmpty().When(x => x.DiffDays2.HasValue);
+
+
+ RuleFor(tb_UIQueryCondition =>tb_UIQueryCondition.Created_by).NotEmpty().When(x => x.Created_by.HasValue);
+
+
+ RuleFor(tb_UIQueryCondition =>tb_UIQueryCondition.Modified_by).NotEmpty().When(x => x.Modified_by.HasValue);
 
            	        Initialize();
      }

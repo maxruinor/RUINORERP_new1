@@ -326,7 +326,7 @@ namespace RUINORERP.UI
                 Application.ThreadException += new System.Threading.ThreadExceptionEventHandler(Application_ThreadException);
                 //UnhandledException 处理非UI线程异常
                 AppDomain.CurrentDomain.UnhandledException += new UnhandledExceptionEventHandler(CurrentDomain_UnhandledException);
-                //Application.EnableVisualStyles();可能会让其他电脑布局有问题？？
+                Application.EnableVisualStyles();
                 Application.SetCompatibleTextRenderingDefault(false);
                 //公共类中的 先要执行
                 //  ILoggerRepository repository = LogManager.CreateRepository("erpComm");

@@ -1585,6 +1585,9 @@ namespace RUINORERP.UI.BaseForm
 
         private object _queryDto = new BaseEntity();
 
+
+        
+        [Obsolete("//生成 加载查询条件时 LoadQueryConditionToUI 时 为什么 一会用这个。一会用 QueryDtoProxy TODO有问题哦。")]
         public object QueryDto { get => _queryDto; set => _queryDto = value; }
 
 

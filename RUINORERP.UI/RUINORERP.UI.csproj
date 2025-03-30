@@ -496,6 +496,7 @@
     <Reference Include="Ulid, Version=1.3.4.0, Culture=neutral, PublicKeyToken=5635ede1d450abf5, processorArchitecture=MSIL">
       <HintPath>..\packages\Ulid.1.3.4\lib\netstandard2.0\Ulid.dll</HintPath>
     </Reference>
+    <Reference Include="WindowsFormsIntegration" />
     <Reference Include="Winista.HtmlParser, Version=1.8.0.0, Culture=neutral">
       <HintPath>..\packages\Winista.HtmlParser.1.8.0\lib\Winista.HtmlParser.dll</HintPath>
     </Reference>
@@ -1154,21 +1155,46 @@
     <Compile Include="BusinessFlow\FlowDesign.Designer.cs">
       <DependentUpon>FlowDesign.cs</DependentUpon>
     </Compile>
-    <Compile Include="ChartAnalyzer\ChartBuilderBase.cs" />
-    <Compile Include="ChartAnalyzer\ChartRequest.cs" />
-    <Compile Include="ChartAnalyzer\ChartDataSet.cs" />
-    <Compile Include="ChartAnalyzer\ChartTypeAdapter.cs" />
-    <Compile Include="ChartAnalyzer\ColorHelper.cs" />
-    <Compile Include="ChartAnalyzer\CustomerChartBuilder.cs" />
-    <Compile Include="ChartAnalyzer\CustomerDataSource.cs" />
-    <Compile Include="ChartAnalyzer\DateTimeExtensions.cs" />
-    <Compile Include="ChartAnalyzer\DefaultTooltip.cs" />
-    <Compile Include="ChartAnalyzer\DynamicGroupingExtensions.cs" />
-    <Compile Include="ChartAnalyzer\HighPerformanceChart.cs">
+    <Compile Include="ChartFramework\Core\Models\DimensionConfig.cs" />
+    <Compile Include="ChartFramework\Core\Models\MetricConfig.cs" />
+    <Compile Include="ChartFramework\Core\Rendering\Builders\ChartInteractionEventArgs.cs" />
+    <Compile Include="ChartFramework\DataProviders\Adapters\CustomerDataAdapter.cs" />
+    <Compile Include="ChartFramework\DataProviders\SqlSugar\SqlDataProviderBase.cs" />
+    <Compile Include="ChartFramework\Core\Rendering\Utilities\ThreadSafeChartUpdater.cs" />
+    <Compile Include="ChartFramework\DataProviders\SqlSugar\SqlBuilder.cs" />
+    <Compile Include="ChartFramework\DataProviders\SqlSugar\SqlTimeGroupBuilder.cs" />
+    <Compile Include="ChartFramework\Shared\Theming\ChartExtensions.cs" />
+    <Compile Include="ChartFramework\Shared\Utilities\LabelGenerator.cs" />
+    <Compile Include="ChartFramework\Shared\ChartPerfMonitor.cs" />
+    <Compile Include="ChartFramework\Core\Rendering\AxisBuilder.cs" />
+    <Compile Include="ChartFramework\Core\Rendering\Builders\ChartBuilderFactory.cs" />
+    <Compile Include="ChartFramework\Core\Rendering\Builders\ChartTypeAdapter.cs" />
+    <Compile Include="ChartFramework\Shared\Utilities\ChartHelper.cs" />
+    <Compile Include="ChartFramework\Core\Rendering\Builders\ColumnChartBuilder.cs" />
+    <Compile Include="ChartFramework\Core\Rendering\Builders\CustomerChartBuilder.cs" />
+    <Compile Include="ChartFramework\Shared\Utilities\DateTimeHelper.cs" />
+    <Compile Include="ChartFramework\Core\Rendering\Builders\DefaultTooltip.cs" />
+    <Compile Include="ChartFramework\Shared\Extensions\DynamicGroupingExtensions.cs" />
+    <Compile Include="ChartFramework\Core\Models\Enums.cs" />
+    <Compile Include="ChartFramework\DataProviders\SqlSugar\SqlDynamicBuilder.cs" />
+    <Compile Include="ChartFramework\Core\Contracts\IDataProvider.cs" />
+    <Compile Include="ChartFramework\Shared\Extensions\DataProcessing\Pipeline.cs" />
+    <Compile Include="ChartFramework\Shared\Theming\ChartTheme.cs" />
+    <Compile Include="ChartFramework\Shared\Theming\StyleExtensions.cs" />
+    <Compile Include="ChartFramework\Shared\Extensions\UI\ChartContextMenuExtensions.cs" />
+    <Compile Include="ChartFramework\Core\Models\ChartData.cs" />
+    <Compile Include="ChartFramework\Core\Models\ChartInteraction.cs" />
+    <Compile Include="ChartFramework\Core\Models\DataRequest.cs" />
+    <Compile Include="ChartFramework\Core\Models\DataSeries.cs" />
+    <Compile Include="ChartFramework\Core\Models\FieldFilter.cs" />
+    <Compile Include="ChartFramework\Core\Rendering\Builders\ChartBuilderBase.cs" />
+    <Compile Include="ChartFramework\Core\Rendering\Builders\LineChartBuilder.cs" />
+    <Compile Include="ChartFramework\Core\Rendering\Builders\PieChartBuilder.cs" />
+    <Compile Include="ChartFramework\Core\Contracts\IChartBuilder.cs" />
+    <Compile Include="ChartFramework\Core\Rendering\Controls\ChartControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="ChartAnalyzer\IChartDataSource.cs" />
-    <Compile Include="ChartAnalyzer\QueryFilter.cs" />
+    <Compile Include="ChartFramework\Shared\Extensions\UI\ChartDataService.cs" />
     <Compile Include="ClientCmdService\ClientCommandDispatcher.cs" />
     <Compile Include="ClientCmdService\ClientCommandRegistry.cs" />
     <Compile Include="ClientCmdService\DynamicEventManager.cs" />
@@ -2360,6 +2386,7 @@
     <Compile Include="UCSourceGrid\BillOperateController.cs" />
     <Compile Include="UCSourceGrid\AdditionalEvent.cs" />
     <Compile Include="UCSourceGrid\CellClickEvent.cs" />
+    <Compile Include="UCSourceGrid\CollectionExtensions.cs" />
     <Compile Include="UCSourceGrid\SGColDisplayHandler.cs" />
     <Compile Include="UCSourceGrid\ComputingController.cs" />
     <Compile Include="UCSourceGrid\CustomKeyEvent.cs" />
@@ -2499,12 +2526,6 @@
     </Compile>
     <Compile Include="UserCenter\FlowPanel.cs">
       <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="UserCenter\frmMenuPersonalization.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="UserCenter\frmMenuPersonalization.Designer.cs">
-      <DependentUpon>frmMenuPersonalization.cs</DependentUpon>
     </Compile>
     <Compile Include="UserCenter\PanelView.cs">
       <SubType>UserControl</SubType>
@@ -2689,6 +2710,7 @@
     <Compile Include="WorkFlowTester\WorkWorkflow2.cs" />
     <None Include="OpenTK.dll.config" />
     <None Include="ResourceFile\import_32x32.ico" />
+    <Content Include="ChartFramework\分层架构设计.txt" />
     <Content Include="CRM\商机总览.sql" />
     <Content Include="InitSQL.sql" />
     <None Include="ResourceFile\Hint.ico" />
@@ -2995,6 +3017,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="BusinessFlow\FlowDesign.resx">
       <DependentUpon>FlowDesign.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ChartFramework\Core\Rendering\Controls\ChartControl.resx">
+      <DependentUpon>ChartControl.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="CommonUI\frmInputObject.resx">
       <DependentUpon>frmInputObject.cs</DependentUpon>
@@ -3578,9 +3603,6 @@
     <EmbeddedResource Include="UserCenter\FlowPanel.resx">
       <DependentUpon>FlowPanel.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="UserCenter\frmMenuPersonalization.resx">
-      <DependentUpon>frmMenuPersonalization.cs</DependentUpon>
-    </EmbeddedResource>
     <EmbeddedResource Include="UserCenter\PanelView.resx">
       <DependentUpon>PanelView.cs</DependentUpon>
     </EmbeddedResource>
@@ -4163,6 +4185,11 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="AM\" />
+    <Folder Include="ChartAnalyzer\" />
+    <Folder Include="ChartFramework\DataProviders\Caching\" />
+    <Folder Include="ChartFramework\Features\" />
+    <Folder Include="ChartFramework\Shared\Extensions\Export\" />
+    <Folder Include="ChartFramework\Shared\Extensions\SqlSugar\" />
     <Folder Include="IMResources\Icons\" />
     <Folder Include="IMResources\Images\" />
     <Folder Include="MRP\RR\" />

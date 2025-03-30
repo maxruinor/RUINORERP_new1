@@ -153,8 +153,12 @@ namespace RUINORERP.UI.UCSourceGrid
                     //如果不是单据明细值的变化不需要处理
                     return;
                 }
-
-                int targetColumnIndex = CurrGridDefine.grid.Columns.GetColumnInfo(CurrDefinedColumn.UniqueId).Index;
+                var columninfo = CurrGridDefine.grid.Columns.GetColumnInfo(CurrDefinedColumn.UniqueId);
+                if (columninfo == null)
+                {
+                    return;
+                }
+                int targetColumnIndex = columninfo.Index;
 
                 //要把当前合法的值给到 真正的对象
                 var setcurrentObj = CurrGridDefine.grid.Rows[sender.Position.Row].RowData;

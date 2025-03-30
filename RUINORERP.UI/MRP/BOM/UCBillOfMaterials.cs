@@ -795,6 +795,13 @@ namespace RUINORERP.UI.MRP.BOM
             DataBindingHelper.BindData4TextBox<tb_BOM_S>(EditEntity, t => t.DailyQty.ToString(), txtDailyQty, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4TextBox<tb_BOM_S>(EditEntity, t => t.Notes, txtNotes, BindDataType4TextBox.Text, false);
 
+
+            base.errorProviderForAllInput.DataSource = entity;
+            base.errorProviderForAllInput.ContainerControl = this;
+
+            //this.ValidateChildren();
+            this.AutoValidate = AutoValidate.EnableAllowFocusChange;
+
             DataBindingHelper.BindData4ControlByEnum<tb_BOM_S>(EditEntity, t => t.DataStatus, lblDataStatus, BindDataType4Enum.EnumName, typeof(Global.DataStatus));
             DataBindingHelper.BindData4ControlByEnum<tb_BOM_S>(EditEntity, t => t.ApprovalStatus, lblReview, BindDataType4Enum.EnumName, typeof(Global.ApprovalStatus));
 
@@ -847,13 +854,14 @@ namespace RUINORERP.UI.MRP.BOM
             //先绑定这个。InitFilterForControl 这个才生效, 一共三个来控制，这里分别是绑定ID和SKU。下面InitFilterForControlByExp 是生成快捷按钮
             DataBindingHelper.BindData4TextBox<tb_BOM_S>(EditEntity, k => k.SKU, txtProdDetailID, BindDataType4TextBox.Text, true);
             DataBindingHelper.BindData4TextBoxWithTagQuery<tb_BOM_S>(EditEntity, v => v.ProdDetailID, txtProdDetailID, true);
-     
+
 
             //如果属性变化 则状态为修改
             EditEntity.PropertyChanged += async (sender, s2) =>
             {
                 //权限允许,草稿新建或修改状态时，才允许修改（修改要未审核或审核未通过）
-                if (((true && EditEntity.DataStatus == (int)DataStatus.草稿) || (true && EditEntity.DataStatus == (int)DataStatus.新建)))
+                if (((true && EditEntity.DataStatus == (int)DataStatus.草稿) ||
+                (true && EditEntity.DataStatus == (int)DataStatus.新建)))
                 {
                     if (EditEntity.ProdDetailID > 0 &&
                     (s2.PropertyName == EditEntity.GetPropertyName<tb_BOM_S>(c => c.ProdDetailID) ||
@@ -917,8 +925,10 @@ namespace RUINORERP.UI.MRP.BOM
                     }
                 }
 
-                EditEntity.OutProductionAllCosts = EditEntity.TotalMaterialCost + EditEntity.TotalOutManuCost + EditEntity.OutApportionedCost;
-                EditEntity.SelfProductionAllCosts = EditEntity.TotalMaterialCost + EditEntity.TotalSelfManuCost + EditEntity.SelfApportionedCost;
+              
+                    EditEntity.OutProductionAllCosts = EditEntity.TotalMaterialCost + EditEntity.TotalOutManuCost + EditEntity.OutApportionedCost;
+                    EditEntity.SelfProductionAllCosts = EditEntity.TotalMaterialCost + EditEntity.TotalSelfManuCost + EditEntity.SelfApportionedCost;
+           
                 //数据状态变化会影响按钮变化
                 if (s2.PropertyName == entity.GetPropertyName<tb_BOM_S>(c => c.DataStatus))
                 {
@@ -1533,7 +1543,7 @@ namespace RUINORERP.UI.MRP.BOM
 
 
                 EditEntity.tb_BOM_SDetailSecondaries.Clear();
-          
+
                 tb_BOM_SController<tb_BOM_S> ctr = Startup.GetFromFac<tb_BOM_SController<tb_BOM_S>>();
                 ReturnMainSubResults<tb_BOM_S> SaveResult = new ReturnMainSubResults<tb_BOM_S>();
                 if (NeedValidated)

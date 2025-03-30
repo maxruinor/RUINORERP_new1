@@ -150,28 +150,7 @@ namespace RUINORERP.UI.Common
             //                 select condition;
             //set.Conditions = conditions.ToList();
 
-            /*
-            List<ColumnDisplayController> ColumnDisplays = new List<ColumnDisplayController>();
-
-            if (QueryConditionFilter != null)
-            {
-                foreach (var item in QueryConditionFilter.QueryFields)
-                {
-                    ColumnDisplayController col = new ColumnDisplayController();
-                    col.ColName = item.FieldName;
-                    col.ColDisplayText = item.Caption;
-                    col.ColDisplayIndex = item.DisplayIndex;
-                    col.Visible = true;
-                    ColumnDisplays.Add(col);
-                }
-            }
-
-            var cols = from ColumnDisplayController col in ColumnDisplays
-                       orderby col.ColDisplayIndex
-                       select col;
-
-            set.Conditions = cols.ToList();
-            */
+            
 
             if (set.ShowDialog() == DialogResult.OK)
             {
@@ -383,7 +362,7 @@ namespace RUINORERP.UI.Common
 
         public static async void SaveGridSettingData(tb_MenuInfo CurMenuInfo, NewSumDataGridView dataGridView, Type datasourceType = null)
         {
-            if (dataGridView==null)
+            if (dataGridView == null)
             {
                 return;
             }
@@ -568,7 +547,7 @@ namespace RUINORERP.UI.Common
                 {
                     if (GridSourceType.ToString().Contains("Detail"))
                     {
-                        if (p.tb_fieldinfo.FieldName == c.ColName  && p.tb_fieldinfo.IsChild)
+                        if (p.tb_fieldinfo.FieldName == c.ColName && p.tb_fieldinfo.IsChild)
                         {
                             if (!p.tb_fieldinfo.IsEnabled)
                             {
@@ -616,7 +595,7 @@ namespace RUINORERP.UI.Common
 
                         }
                     }
-                    
+
 
                 });
             });
@@ -1065,61 +1044,6 @@ namespace RUINORERP.UI.Common
 
             });
 
-            // 检查并添加条件
-            //foreach (var oldCol in originalColumnDisplays)
-            //{
-            //    // 检查existingConditions中是否已经存在相同的条件
-            //    if (!dataGridView.ColumnDisplays.Any(ec => ec.ColName == oldCol.ColName && ec.GridKeyName == GridSourceType.Name))
-            //    {
-            //        // 如果不存在 
-            //        dataGridView.ColumnDisplays.Add(oldCol);
-            //    }
-            //    else
-            //    {
-            //        //更新一下标题
-            //        var colset = dataGridView.ColumnDisplays.FirstOrDefault(ec => ec.ColName == oldCol.ColName && ec.GridKeyName == GridSourceType.Name);
-            //        colset = oldCol;
-            //    }
-            //}
-            /*
-            if (SaveGridSetting)
-            {
-                //发送缓存数据
-                string json = JsonConvert.SerializeObject(originalColumnDisplays,
-                   new JsonSerializerSettings
-                   {
-                       ReferenceLoopHandling = ReferenceLoopHandling.Ignore // 或 ReferenceLoopHandling.Serialize
-                   });
-                GridSetting.ColsSetting = json;
-
-                if (GridSetting.UIGID == 0)
-                {
-                    RUINORERP.Business.BusinessHelper.Instance.InitEntity(GridSetting);
-                    await MainForm.Instance.AppContext.Db.Insertable(GridSetting).ExecuteReturnSnowflakeIdAsync();
-                }
-                else
-                {
-                    //TODO:后可以改成增量更新。或变化了才更新主要是判断 GolsSetting
-                    if (SaveTargetColumnDisplays != null && SaveTargetColumnDisplays.Count > 0)
-                    {
-                        //发送缓存数据
-                        json = JsonConvert.SerializeObject(SaveTargetColumnDisplays,
-                          new JsonSerializerSettings
-                          {
-                              ReferenceLoopHandling = ReferenceLoopHandling.Ignore // 或 ReferenceLoopHandling.Serialize
-                          });
-                        GridSetting.ColsSetting = json;
-                    }
-                    RUINORERP.Business.BusinessHelper.Instance.EditEntity(GridSetting);
-                    int updatecount = await MainForm.Instance.AppContext.Db.Updateable(GridSetting).ExecuteCommandAsync();
-                    if (updatecount > 0)
-                    {
-                        //更新到自己
-                    }
-                }
-
-            }
-            */
             if (SaveGridSetting)
             {
                 // 如果需要保存设置，启动后台任务
@@ -1167,8 +1091,8 @@ namespace RUINORERP.UI.Common
             {
                 listCols = new List<SGDefineColumnItem>();
             }
-            listCols = gridDefine.DefineColumns;
-
+            //listCols = gridDefine.DefineColumns; 这个在调整顺序时 变为了UI上显示调整过的。不是默认
+            listCols = gridDefine.InitDefineColumns;
             List<SGColDisplayHandler> originalColumnDisplays = listCols.Select(c => c.DisplayController).ToList();
             originalColumnDisplays = originalColumnDisplays.Where(c => c.Disable == false).ToList();
             //newSumDataGridViewMaster.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.ColumnHeader;
@@ -1191,7 +1115,7 @@ namespace RUINORERP.UI.Common
                     //选择列默认隐藏,上面设置后，再覆盖上面的值
                     c.Visible = false;
                 }
-             
+
                 // 计算文本宽度
                 float textWidth = UITools.CalculateTextWidth(c.ColCaption, gridDefine.grid.Font, graphics);
                 c.ColWidth = (int)textWidth + 10; // 加上一些额外的空间
@@ -1209,7 +1133,7 @@ namespace RUINORERP.UI.Common
                 {
                     List<tb_P4Field> P4Fields =
                    CurMenuInfo.tb_P4Fields
-                   .Where(p => p.RoleID == MainForm.Instance.AppContext.CurrentUser_Role.RoleID                   ).ToList();
+                   .Where(p => p.RoleID == MainForm.Instance.AppContext.CurrentUser_Role.RoleID).ToList();
 
                     P4Fields.ForEach(p =>
                     {

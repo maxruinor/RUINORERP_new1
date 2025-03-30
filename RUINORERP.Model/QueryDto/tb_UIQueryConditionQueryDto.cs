@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/13/2025 18:30:18
+// 时间：03/30/2025 15:54:07
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -86,6 +86,19 @@ namespace RUINORERP.Model.QueryDto
         }
      
 
+        private int _ControlWidth= ((0));
+        /// <summary>
+        /// 控件宽度
+        /// </summary>
+        [AdvQueryAttribute(ColName = "ControlWidth",ColDesc = "控件宽度")]
+        [SugarColumn(ColumnDataType = "int",SqlParameterDbType ="Int32",ColumnName = "ControlWidth",IsNullable = false,ColumnDescription = "控件宽度" )]
+        public int ControlWidth 
+        { 
+            get{return _ControlWidth;}
+            set{SetProperty(ref _ControlWidth, value);}
+        }
+     
+
         private int _Sort= ((0));
         /// <summary>
         /// 排序
@@ -164,6 +177,19 @@ namespace RUINORERP.Model.QueryDto
         }
      
 
+        private bool? _UseLike= true;
+        /// <summary>
+        /// 启用模糊查询
+        /// </summary>
+        [AdvQueryAttribute(ColName = "UseLike",ColDesc = "启用模糊查询")]
+        [SugarColumn(ColumnDataType = "bit",SqlParameterDbType ="Boolean",ColumnName = "UseLike",IsNullable = true,ColumnDescription = "启用模糊查询" )]
+        public bool? UseLike 
+        { 
+            get{return _UseLike;}
+            set{SetProperty(ref _UseLike, value);}
+        }
+     
+
         private bool? _Focused= false;
         /// <summary>
         /// 默认焦点
@@ -174,6 +200,19 @@ namespace RUINORERP.Model.QueryDto
         { 
             get{return _Focused;}
             set{SetProperty(ref _Focused, value);}
+        }
+     
+
+        private bool? _MultiChoice= false;
+        /// <summary>
+        /// 默认多选
+        /// </summary>
+        [AdvQueryAttribute(ColName = "MultiChoice",ColDesc = "默认多选")]
+        [SugarColumn(ColumnDataType = "bit",SqlParameterDbType ="Boolean",ColumnName = "MultiChoice",IsNullable = true,ColumnDescription = "默认多选" )]
+        public bool? MultiChoice 
+        { 
+            get{return _MultiChoice;}
+            set{SetProperty(ref _MultiChoice, value);}
         }
      
 
@@ -200,6 +239,58 @@ namespace RUINORERP.Model.QueryDto
         { 
             get{return _DiffDays2;}
             set{SetProperty(ref _DiffDays2, value);}
+        }
+     
+
+        private DateTime? _Created_at;
+        /// <summary>
+        /// 创建时间
+        /// </summary>
+        [AdvQueryAttribute(ColName = "Created_at",ColDesc = "创建时间")]
+        [SugarColumn(ColumnDataType = "datetime",SqlParameterDbType ="DateTime",ColumnName = "Created_at",IsNullable = true,ColumnDescription = "创建时间" )]
+        public DateTime? Created_at 
+        { 
+            get{return _Created_at;}
+            set{SetProperty(ref _Created_at, value);}
+        }
+     
+
+        private long? _Created_by;
+        /// <summary>
+        /// 创建人
+        /// </summary>
+        [AdvQueryAttribute(ColName = "Created_by",ColDesc = "创建人")]
+        [SugarColumn(ColumnDataType = "bigint",SqlParameterDbType ="Int64",ColumnName = "Created_by",IsNullable = true,ColumnDescription = "创建人" )]
+        public long? Created_by 
+        { 
+            get{return _Created_by;}
+            set{SetProperty(ref _Created_by, value);}
+        }
+     
+
+        private DateTime? _Modified_at;
+        /// <summary>
+        /// 修改时间
+        /// </summary>
+        [AdvQueryAttribute(ColName = "Modified_at",ColDesc = "修改时间")]
+        [SugarColumn(ColumnDataType = "datetime",SqlParameterDbType ="DateTime",ColumnName = "Modified_at",IsNullable = true,ColumnDescription = "修改时间" )]
+        public DateTime? Modified_at 
+        { 
+            get{return _Modified_at;}
+            set{SetProperty(ref _Modified_at, value);}
+        }
+     
+
+        private long? _Modified_by;
+        /// <summary>
+        /// 修改人
+        /// </summary>
+        [AdvQueryAttribute(ColName = "Modified_by",ColDesc = "修改人")]
+        [SugarColumn(ColumnDataType = "bigint",SqlParameterDbType ="Int64",ColumnName = "Modified_by",IsNullable = true,ColumnDescription = "修改人" )]
+        public long? Modified_by 
+        { 
+            get{return _Modified_by;}
+            set{SetProperty(ref _Modified_by, value);}
         }
 
 

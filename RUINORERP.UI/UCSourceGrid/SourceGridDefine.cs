@@ -156,7 +156,7 @@ namespace RUINORERP.UI.UCSourceGrid
                         VisibleAttribute visibleAttribute = attr as VisibleAttribute;
                         col.Visible = visibleAttribute.Visible;
                         col.DefaultHide = visibleAttribute.Visible;
-                        col.DisplayController.Visible= visibleAttribute.Visible;
+                        col.DisplayController.Visible = visibleAttribute.Visible;
                     }
 
                     if (attr is SugarColumn)
@@ -324,7 +324,13 @@ namespace RUINORERP.UI.UCSourceGrid
 
 
         /// <summary>
-        /// 表格对应的列集合
+        /// 表格对应的列集合 ， 为了能右键 加载默认设置将第一次的保存在这个集合中。
+        /// </summary>
+        public List<SGDefineColumnItem> InitDefineColumns { get; set; } = new List<SGDefineColumnItem>();
+
+
+        /// <summary>
+        /// 表格对应的列集合  , 右键 调整顺序后都是以这个为标准调整的。反而 索引没有。后面是不是将索引去掉。
         /// </summary>
         public List<SGDefineColumnItem> DefineColumns { get; set; }
         /// <summary>
@@ -372,7 +378,8 @@ namespace RUINORERP.UI.UCSourceGrid
 
 
         public SourceGridDefine(SourceGrid.Grid _grid, List<SGDefineColumnItem> DataColList, bool hasRowHeader)
-            {
+        {
+            InitDefineColumns.Clear();
             //行头文字居中
             RowHeaderWithData.TextAlignment = DevAge.Drawing.ContentAlignment.MiddleCenter;
             RowHeaderWithoutData.TextAlignment = DevAge.Drawing.ContentAlignment.MiddleCenter;
@@ -380,9 +387,8 @@ namespace RUINORERP.UI.UCSourceGrid
             grid = _grid;
             SetSelection(grid);
             this.HasRowHeader = hasRowHeader;
-            this.DefineColumns = DataColList;
+      
             //判断是否有选择列
-
             SGDefineColumnItem SelectedCol = DataColList.Find(c => c.ColName.Contains("Selected"));
             if (SelectedCol != null)
             {
@@ -392,14 +398,12 @@ namespace RUINORERP.UI.UCSourceGrid
                 SelectedCol.DefaultHide = true;
                 SelectedCol.DefaultValue = false;
             }
-
-
             // 按照Selected列降序，其他列升序排序
             DataColList = DataColList.OrderByDescending(x => x.ColName == "Selected")
                                .ThenBy(x => x.ColIndex)
                                .ToList();
-
-            //插入了一列为项的行头     //默认先插入行头
+            //插入了一列为项的行头     
+            //默认先插入行头
             if (hasRowHeader)
             {
                 SGDefineColumnItem rowheaderCol = new SGDefineColumnItem("项", 40, null);
@@ -410,11 +414,10 @@ namespace RUINORERP.UI.UCSourceGrid
                 DataColList.Insert(0, rowheaderCol);
                 //一般这种情况不排序
             }
-
             SGDefineColumnItem[] cols = DataColList.ToArray();
             //这里设置的列是真实的数据列，不包括项行头那一行。所以标号索引从1开始，到多一列止，留0的位置 给行号列=》项
             for (int i = 0; i < cols.Length; i++)
-                {
+            {
                 cols[i].ColIndex = i;
                 //按标题数字计算列宽
                 if (cols[i].ColCaption.Length > 0)
@@ -427,23 +430,12 @@ namespace RUINORERP.UI.UCSourceGrid
                 {
                     this.HasSummaryRow = true;
                 }
-
+                
                 this.Add(cols[i]);
+                InitDefineColumns.Add(cols[i]);
             }
 
-            //for (int i = 0; i < names.Length; i++)
-            //{
-            //    GridDefineColumnItem item = new GridDefineColumnItem(names[i], 0, false, null);
-            //    item.name = names[i];
-            //    if (currencys != null) item.currency = currencys[i];
-            //    if (sobjects != null) item.selectobject = sobjects[i];
-            //    if (width != null) item.width = width[i];
-
-            //}
-            //this.linecontrol = linecontrol;
-
-
-
+            this.DefineColumns = DataColList;
         }
         /// <summary>
         /// 应该可以优化掉
@@ -734,7 +726,7 @@ namespace RUINORERP.UI.UCSourceGrid
                 foreach (SGDefineColumnItem item in this)
                 {
                     ColumnInfo columnInfo = this.grid.Columns.GetColumnInfo(item.UniqueId);
-                    if (columnInfo==null)
+                    if (columnInfo == null)
                     {
                         continue;
                     }

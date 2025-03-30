@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/13/2025 18:30:17
+// 时间：03/30/2025 15:54:06
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -96,6 +96,58 @@ namespace RUINORERP.Model.QueryDto
         { 
             get{return _ColumnsMode;}
             set{SetProperty(ref _ColumnsMode, value);}
+        }
+     
+
+        private DateTime? _Created_at;
+        /// <summary>
+        /// 创建时间
+        /// </summary>
+        [AdvQueryAttribute(ColName = "Created_at",ColDesc = "创建时间")]
+        [SugarColumn(ColumnDataType = "datetime",SqlParameterDbType ="DateTime",ColumnName = "Created_at",IsNullable = true,ColumnDescription = "创建时间" )]
+        public DateTime? Created_at 
+        { 
+            get{return _Created_at;}
+            set{SetProperty(ref _Created_at, value);}
+        }
+     
+
+        private long? _Created_by;
+        /// <summary>
+        /// 创建人
+        /// </summary>
+        [AdvQueryAttribute(ColName = "Created_by",ColDesc = "创建人")]
+        [SugarColumn(ColumnDataType = "bigint",SqlParameterDbType ="Int64",ColumnName = "Created_by",IsNullable = true,ColumnDescription = "创建人" )]
+        public long? Created_by 
+        { 
+            get{return _Created_by;}
+            set{SetProperty(ref _Created_by, value);}
+        }
+     
+
+        private DateTime? _Modified_at;
+        /// <summary>
+        /// 修改时间
+        /// </summary>
+        [AdvQueryAttribute(ColName = "Modified_at",ColDesc = "修改时间")]
+        [SugarColumn(ColumnDataType = "datetime",SqlParameterDbType ="DateTime",ColumnName = "Modified_at",IsNullable = true,ColumnDescription = "修改时间" )]
+        public DateTime? Modified_at 
+        { 
+            get{return _Modified_at;}
+            set{SetProperty(ref _Modified_at, value);}
+        }
+     
+
+        private long? _Modified_by;
+        /// <summary>
+        /// 修改人
+        /// </summary>
+        [AdvQueryAttribute(ColName = "Modified_by",ColDesc = "修改人")]
+        [SugarColumn(ColumnDataType = "bigint",SqlParameterDbType ="Int64",ColumnName = "Modified_by",IsNullable = true,ColumnDescription = "修改人" )]
+        public long? Modified_by 
+        { 
+            get{return _Modified_by;}
+            set{SetProperty(ref _Modified_by, value);}
         }
 
 

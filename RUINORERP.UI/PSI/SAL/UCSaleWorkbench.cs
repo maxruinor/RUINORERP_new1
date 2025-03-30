@@ -166,29 +166,12 @@ namespace RUINORERP.UI.SAL
         }
         private void button设置查询条件_Click(object sender, EventArgs e)
         {
-            MenuPersonalizedSettings();
+            MessageBox.Show("工作台是特殊的查询，暂时无法个性化设置条件。");
+           // MenuPersonalizedSettings();
         }
         protected virtual void MenuPersonalizedSettings()
         {
-            UserCenter.frmMenuPersonalization frmMenu = new UserCenter.frmMenuPersonalization();
-            frmMenu.MenuPathKey = CurMenuInfo.ClassPath;
-            if (frmMenu.ShowDialog() == DialogResult.OK)
-            {
-                if (!this.DesignMode)
-                {
-                    MenuPersonalization personalization = new MenuPersonalization();
-                    UserGlobalConfig.Instance.MenuPersonalizationlist.TryGetValue(CurMenuInfo.ClassPath, out personalization);
-                    if (personalization != null)
-                    {
-                        decimal QueryShowColQty = personalization.QueryConditionShowColsQty;
-                        QueryDtoProxy = LoadQueryConditionToUI(QueryShowColQty);
-                    }
-                    else
-                    {
-                        QueryDtoProxy = LoadQueryConditionToUI(frmMenu.QueryShowColQty.Value);
-                    }
-                }
-            }
+             
         }
 
 

@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：02/08/2025 16:32:31
+// 时间：03/30/2025 15:54:07
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -195,6 +195,14 @@ namespace RUINORERP.Model
 
         //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_UIQueryCondition.UIMenuPID))]
+        public virtual List<tb_UIQueryCondition> tb_UIQueryConditions { get; set; }
+        //tb_UIQueryCondition.UIMenuPID)
+        //UIMenuPID.FK_UIQUERYCONDITION_REF_UIMENUPERSONALIZATION)
+        //tb_UIMenuPersonalization.UIMenuPID)
+
+        //[Browsable(false)]打印报表时的数据源会不显示
+        [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_UIGridSetting.UIMenuPID))]
         public virtual List<tb_UIGridSetting> tb_UIGridSettings { get; set; }
         //tb_UIGridSetting.UIMenuPID)
@@ -203,10 +211,10 @@ namespace RUINORERP.Model
 
         //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_UIQueryCondition.UIMenuPID))]
-        public virtual List<tb_UIQueryCondition> tb_UIQueryConditions { get; set; }
-        //tb_UIQueryCondition.UIMenuPID)
-        //UIMenuPID.FK_UIQUERYCONDITION_REF_UIMENUPERSONALIZATION)
+        [Navigate(NavigateType.OneToMany, nameof(tb_UIDataFieldSetting.UIMenuPID))]
+        public virtual List<tb_UIDataFieldSetting> tb_UIDataFieldSettings { get; set; }
+        //tb_UIDataFieldSetting.UIMenuPID)
+        //UIMenuPID.FK_TB_UIDATAFIELDSETTING_REF_TB_UIMENPERSONLIZATION)
         //tb_UIMenuPersonalization.UIMenuPID)
 
 

@@ -218,9 +218,6 @@ namespace RUINORERP.UI.PSI.PUR
         SourceGridDefine sgd = null;
         SourceGridHelper sgh = new SourceGridHelper();
 
-
-
-
         List<SGDefineColumnItem> listCols = new List<SGDefineColumnItem>();
 
         private void UCStockIn_Load(object sender, EventArgs e)
@@ -274,10 +271,7 @@ namespace RUINORERP.UI.PSI.PUR
 
             listCols.SetCol_Summary<tb_BuyingRequisitionDetail>(c => c.Quantity);
 
-
             sgh.SetPointToColumnPairs<ProductSharePart, tb_BuyingRequisitionDetail>(sgd, f => f.prop, t => t.property);
-
-
 
 
             //应该只提供一个结构
@@ -285,12 +279,7 @@ namespace RUINORERP.UI.PSI.PUR
             bindingSourceSub.DataSource = lines; //  ctrSub.Query(" 1>2 ");
             sgd.BindingSourceLines = bindingSourceSub;
 
-
-
-
-
             sgd.SetDependencyObject<ProductSharePart, tb_BuyingRequisitionDetail>(MainForm.Instance.list);
-
 
             sgd.HasRowHeader = true;
             sgh.InitGrid(grid1, sgd, true, nameof(tb_BuyingRequisitionDetail));

@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/13/2025 18:30:18
+// 时间：03/30/2025 15:54:07
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -100,12 +100,25 @@ namespace RUINORERP.Model.QueryDto
         }
      
 
-        private int _Sort= ((0));
+        private int? _BaseWidth= ((0));
         /// <summary>
         /// 排序
         /// </summary>
-        [AdvQueryAttribute(ColName = "Sort",ColDesc = "排序")]
-        [SugarColumn(ColumnDataType = "int",SqlParameterDbType ="Int32",ColumnName = "Sort",IsNullable = false,ColumnDescription = "排序" )]
+        [AdvQueryAttribute(ColName = "BaseWidth",ColDesc = "排序")]
+        [SugarColumn(ColumnDataType = "int",SqlParameterDbType ="Int32",ColumnName = "BaseWidth",IsNullable = true,ColumnDescription = "排序" )]
+        public int? BaseWidth 
+        { 
+            get{return _BaseWidth;}
+            set{SetProperty(ref _BaseWidth, value);}
+        }
+     
+
+        private int _Sort= ((150));
+        /// <summary>
+        /// 基准宽度
+        /// </summary>
+        [AdvQueryAttribute(ColName = "Sort",ColDesc = "基准宽度")]
+        [SugarColumn(ColumnDataType = "int",SqlParameterDbType ="Int32",ColumnName = "Sort",IsNullable = false,ColumnDescription = "基准宽度" )]
         public int Sort 
         { 
             get{return _Sort;}

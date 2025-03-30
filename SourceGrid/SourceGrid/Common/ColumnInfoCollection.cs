@@ -20,6 +20,7 @@ namespace SourceGrid
             return m_List.FirstOrDefault(c => c.UniqueId == UniqueId);
         }
 
+
         /// <summary>
         /// Constructor
         /// </summary>
@@ -300,11 +301,16 @@ namespace SourceGrid
 
         public override bool IsColumnVisible(int column)
         {
+            if (this[column] == null)
+                return false;
             return this[column].Visible;
         }
         public override void HideColumn(int column)
         {
-            this[column].Visible = false;
+            if (this[column] != null)
+            {
+                this[column].Visible = false;
+            }
         }
         public override void ShowColumn(int column)
         {

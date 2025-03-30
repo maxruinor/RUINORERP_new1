@@ -170,13 +170,24 @@ namespace RUINORERP.UI.UCSourceGrid
         public bool IsRowHeaderCol { get; set; }
 
 
-
+        private Type _BelongingObjectType = null;
 
 
         /// <summary>
         /// 根据大思路 表格数据源是来自公共产品部分和单据明细部分。这里保存了分别所属类型
         /// </summary>
-        public Type BelongingObjectType { get; set; }
+        public Type BelongingObjectType
+        {
+            get => _BelongingObjectType;
+            set
+            {
+                _BelongingObjectType = value;
+                if (this.DisplayController != null && value != null)
+                {
+                    DisplayController.BelongingObjectName = value.Name;
+                }
+            }
+        }
 
 
 
@@ -349,22 +360,7 @@ namespace RUINORERP.UI.UCSourceGrid
 
         public bool addlink = false;
         public string linkprop;
-        //public bool visible
-        //{
-        //    get
-        //    {
-        //        return visi;
-        //    }
-        //    set
-        //    {
-        //        visi = value;
-        //        if (this.parent != null) parent.VisibleChange();
 
-        //    }
-        //}
-
-
-        //public InputType type = InputType.Normal;
         public bool time = false;
         public string[] enums = null;
         public int span = 1;

@@ -25,6 +25,7 @@ using RUINORERP.Model.Context;
 using System.Linq;
 using RUINOR.Core;
 using RUINORERP.Common.Helper;
+using RUINORERP.Global;
 
 
 namespace RUINORERP.Business.Processor
@@ -38,6 +39,9 @@ namespace RUINORERP.Business.Processor
         {
             QueryFilter queryFilter = new QueryFilter();
             queryFilter.SetQueryField<tb_ProdMerge>(c => c.MergeNo);
+            queryFilter.SetQueryField<tb_ProdMerge>(c => c.ApprovalStatus, QueryFieldType.CmbEnum, typeof(ApprovalStatus));
+            queryFilter.SetQueryField<tb_ProdMerge>(c => c.DataStatus, QueryFieldType.CmbEnum, typeof(DataStatus));
+            queryFilter.SetQueryField<tb_ProdMerge>(c => c.PrintStatus, QueryFieldType.CmbEnum, typeof(PrintStatus));
             queryFilter.SetQueryField<tb_ProdMerge>(c => c.MergeDate);
             queryFilter.SetQueryField<tb_ProdMerge>(c => c.Notes);
             queryFilter.SetQueryField<tb_ProdMerge>(c => c.BOM_No);

@@ -19,6 +19,13 @@ namespace RUINORERP.UI.UCSourceGrid
     [Serializable]
     public class SGColDisplayHandler : INotifyPropertyChanged, IEquatable<SGColDisplayHandler>
     {
+
+        /// <summary>
+        /// 根据大思路 表格数据源是来自公共产品部分和单据明细部分。这里保存了分别所属类型
+        /// 这个类来于自定义列。有些表格显示时  有产品公共部分和明细 要用这个来区别
+        /// </summary>
+        public string BelongingObjectName { get; set; }
+
         /// <summary>
         /// 唯一标识符
         /// 对应实际grid表格控件的列定义的唯一标识符也对应他的上级SGDefineColumnItem的唯一标识符

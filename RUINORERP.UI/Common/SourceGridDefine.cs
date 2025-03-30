@@ -12,12 +12,9 @@ namespace RUINORERP.UI.Common
 {
     public class SourceGridDefine : ArrayList
     {
-
         private SourceGrid.Grid _grid;
-
         public Color HeadForecolor = Color.Black;
         public Color HeadBackColor = Color.FromArgb(152, 152, 200);
-
         public Color SummaryColor = Color.FromArgb(217, 217, 255);
 
         public SourceGridDefine(SourceGridDefineColumnItem[] cols)

@@ -1,6 +1,8 @@
 ﻿using HLH.WinControl.MyTypeConverter;
 using Krypton.Toolkit;
+using RUINORERP.Model;
 using RUINORERP.Model.Models;
+using RUINORERP.UI.Common;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -26,12 +28,19 @@ namespace RUINORERP.UI.UserCenter
 
         private void btnOk_Click(object sender, EventArgs e)
         {
-            if (mp == null)
+            tb_UIMenuPersonalization menuSetting = MainForm.Instance.AppContext.CurrentUser_Role_Personalized.tb_UIMenuPersonalizations.FirstOrDefault(c => c.MenuID == CurMenuInfo.MenuID);
+            if (menuSetting != null)
             {
-                mp = new MenuPersonalization();
-              
+                QueryShowColQty.Value= menuSetting.QueryConditionCols ;
             }
-            mp.QueryConditionShowColsQty = QueryShowColQty.Value;
+            else
+            {
+                QueryShowColQty.Value = 5;
+                menuSetting=new tb_UIMenuPersonalization
+                menuSetting.QueryConditionShowColsQty = QueryShowColQty.Value;
+            }
+
+        
             UserGlobalConfig.Instance.MenuPersonalizationlist[MenuPathKey] = mp;
             //保存
             UserGlobalConfig.Instance.Serialize();
@@ -45,20 +54,33 @@ namespace RUINORERP.UI.UserCenter
             this.Close();
         }
 
-        public string MenuPathKey { get; set; }
-        MenuPersonalization mp = new MenuPersonalization();
+        /// <summary>
+        /// 关联的菜单信息 实际是可以从点击时传入
+        /// </summary>
+        public tb_MenuInfo CurMenuInfo { get; set; }
+
         private void frmMenuPersonalization_Load(object sender, EventArgs e)
         {
-            UserGlobalConfig.Instance.MenuPersonalizationlist.TryGetValue(MenuPathKey, out mp);
-            if (mp == null)
+            bool rs = await UIBizSrvice.SetQueryConditionsAsync(CurMenuInfo, QueryConditionFilter, QueryDtoProxy);
+            if (rs)
             {
-                mp = new MenuPersonalization();
-                mp.QueryConditionShowColsQty = QueryShowColQty.Value;
+                QueryDtoProxy = LoadQueryConditionToUI();
             }
-            else
+            1
+            tb_UIMenuPersonalization menuSetting = MainForm.Instance.AppContext.CurrentUser_Role_Personalized.tb_UIMenuPersonalizations.FirstOrDefault(c => c.MenuID == CurMenuInfo.MenuID);
+            if (menuSetting != null)
             {
-                QueryShowColQty.Value = mp.QueryConditionShowColsQty;
+                if (menuSetting.tb_UIQueryConditions != null && menuSetting.tb_UIQueryConditions.Count > 0)
+                {
+                    QueryShowColQty.Value = menuSetting.QueryConditionCols;
+                }
+                else
+                {
+                    QueryShowColQty.Value = 5;
+                }
             }
+
+
         }
     }
 }

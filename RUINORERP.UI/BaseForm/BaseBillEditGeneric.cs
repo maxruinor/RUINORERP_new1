@@ -606,7 +606,9 @@ namespace RUINORERP.UI.BaseForm
                                 //if (!item.IsVisble && item.tb_fieldinfo.IsChild)
                                 if ((!item.tb_fieldinfo.IsEnabled || !item.IsVisble) && item.tb_fieldinfo.IsChild)
                                 {
-                                    SGDefineColumnItem defineColumnItem = listCols.Where(w => w.ColName == item.tb_fieldinfo.FieldName).FirstOrDefault();
+                                    SGDefineColumnItem defineColumnItem = listCols.Where(w => w.ColName == item.tb_fieldinfo.FieldName
+                                    && !w.BelongingObjectType.Name.Contains("ProductSharePart")
+                                    ).FirstOrDefault();
                                     if (defineColumnItem != null)
                                     {
                                         defineColumnItem.SetCol_NeverVisible(item.tb_fieldinfo.FieldName);
@@ -616,7 +618,8 @@ namespace RUINORERP.UI.BaseForm
                                 //设置默认隐藏
                                 if (item.tb_fieldinfo.DefaultHide && item.tb_fieldinfo.IsChild)
                                 {
-                                    SGDefineColumnItem defineColumnItem = listCols.Where(w => w.ColName == item.tb_fieldinfo.FieldName).FirstOrDefault();
+                                    SGDefineColumnItem defineColumnItem = listCols.Where(w => w.ColName == item.tb_fieldinfo.FieldName 
+                                    && !w.BelongingObjectType.Name.Contains("ProductSharePart")).FirstOrDefault();
                                     if (defineColumnItem != null)
                                     {
                                         defineColumnItem.SetCol_DefaultHide(item.tb_fieldinfo.FieldName);
@@ -1644,6 +1647,24 @@ namespace RUINORERP.UI.BaseForm
                         //Expression<Func<ApprovalEntity, object>> PNameExp = t => t.ApprovalStatus;
                         //MemberInfo minfo = PNameExp.GetMemberInfo();
                         //string propertyName = minfo.Name;
+
+                        //反审核。驳回 时数据状态要更新为新建。要再次修改后提交
+                        EditEntity.SetPropertyValue(typeof(DataStatus).Name, (int)DataStatus.新建);
+                        if (ReflectionHelper.ExistPropertyName<T>("ApprovalOpinions"))
+                        {
+                            EditEntity.SetPropertyValue("ApprovalOpinions", ae.ApprovalOpinions);
+                        }
+                        if (ReflectionHelper.ExistPropertyName<T>("ApprovalStatus"))
+                        {
+                            EditEntity.SetPropertyValue("ApprovalStatus", (int)ApprovalStatus.未审核);
+                        }
+                        if (ReflectionHelper.ExistPropertyName<T>("ApprovalResults"))
+                        {
+                            EditEntity.SetPropertyValue("ApprovalResults", false);
+                        }
+                        BusinessHelper.Instance.ApproverEntity(EditEntity);
+
+
                         if (ReflectionHelper.ExistPropertyName<T>(property.Name))
                         {
                             object aeValue = ReflectionHelper.GetPropertyValue(ae, property.Name);

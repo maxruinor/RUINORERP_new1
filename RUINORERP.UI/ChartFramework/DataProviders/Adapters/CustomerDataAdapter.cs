@@ -21,8 +21,14 @@ using System.Threading.Tasks;
 
 namespace RUINORERP.UI.ChartFramework.DataProviders.Adapters
 {
+    /// <summary>
+    /// 提供数据源
+    /// </summary>
     public class CustomerDataAdapter : SqlDataProviderBase
     {
+        public CustomerDataAdapter()
+        { 
+        }
         public CustomerDataAdapter(ISqlSugarClient db) : base(db) { }
 
         public override IEnumerable<DimensionConfig> GetDimensions() => new[]
@@ -34,7 +40,7 @@ namespace RUINORERP.UI.ChartFramework.DataProviders.Adapters
         // return new[] { "Region", "Employee", "ProductCategory" };
         public override IEnumerable<MetricConfig> GetMetrics() => new[]
         {
-            new MetricConfig("Count", "客户数量", MetricType.Count, ChartHelper.HexToSKColor("#4CAF50"))
+            new MetricConfig("Count", "客户数量", MetricType.Count, MetricUnit.人)
         };
         //  return new[] { "Count", "Sum", "Average" };
         protected override string PrimaryTableName => "tb_CRM_Customer";
@@ -101,7 +107,7 @@ namespace RUINORERP.UI.ChartFramework.DataProviders.Adapters
             }
 
             // 1. 处理时间维度作为X轴标签
-            chartData.MetaData.CategoryLabels = data.Select(x => (string)x.TimeGroup.ToString()).Distinct().OrderBy(x => x).ToList().ToArray();
+            chartData.CategoryLabels = data.Select(x => (string)x.TimeGroup.ToString()).Distinct().OrderBy(x => x).ToList().ToArray();
 
             // 2. 处理其他维度作为系列
             if (request.Dimensions.Any())
@@ -126,7 +132,7 @@ namespace RUINORERP.UI.ChartFramework.DataProviders.Adapters
                     };
 
                     // 填充每个时间点的值
-                    foreach (var label in chartData.MetaData.CategoryLabels)
+                    foreach (var label in chartData.CategoryLabels)
                     {
                         var value = group.FirstOrDefault(x => (string)(x.TimeGroup.ToString()) == label)?.Count ?? 0;
                         series.Values.Add((double)value);
@@ -144,7 +150,7 @@ namespace RUINORERP.UI.ChartFramework.DataProviders.Adapters
                     Values = new List<double>()
                 };
 
-                foreach (var label in chartData.MetaData.CategoryLabels)
+                foreach (var label in chartData.CategoryLabels)
                 {
                     var value = data.FirstOrDefault(x => (string)(x.TimeGroup.ToString()) == label)?.Count ?? 0;
                     series.Values.Add((double)value);
@@ -159,7 +165,7 @@ namespace RUINORERP.UI.ChartFramework.DataProviders.Adapters
             {
                 Title = "客户统计",
                 ChartType = ChartType.Column,
-                PrimaryLabels = new[] { "1月", "2月", "3月", "4月", "5月" },
+                CategoryLabels = new[] { "1月", "2月", "3月", "4月", "5月" },
                 IsStacked = false
             };
 
@@ -184,7 +190,7 @@ namespace RUINORERP.UI.ChartFramework.DataProviders.Adapters
                     Title = "季度销售对比",
                     ChartType = ChartType.Column,
                     IsStacked = true,
-                    Labels = new[] { "Q1", "Q2", "Q3", "Q4" },
+                    CategoryLabels = new[] { "Q1", "Q2", "Q3", "Q4" },
 
                     Series = new List<DataSeries>
                 {
@@ -209,7 +215,6 @@ namespace RUINORERP.UI.ChartFramework.DataProviders.Adapters
             chartData1.Series.Add(series1);
             chartData1.Series.Add(series2);
             return chartData1;
-            // return await Task.FromResult(chartData);
             return chartData;
         }
 
@@ -230,7 +235,6 @@ namespace RUINORERP.UI.ChartFramework.DataProviders.Adapters
         //        TimeFormat = request.RangeType == TimeRangeType.Monthly ? "{0}月" : null
         //    });
         //}
-
 
 
         protected override ChartData TransformToChartData(List<dynamic> rawData, DataRequest request)

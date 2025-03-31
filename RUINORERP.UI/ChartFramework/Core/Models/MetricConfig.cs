@@ -12,19 +12,31 @@ namespace RUINORERP.UI.ChartFramework.Core.Models
     /// </summary>
     public class MetricConfig
     {
-        public MetricConfig(string fieldName, string displayName, MetricType metricType, SKColor color)
+        public MetricConfig()
         {
-            DataFieldName = fieldName;
+                
+        }
+
+        public MetricConfig(string fieldName, string displayName,  MetricUnit unit)
+        {
+            FieldName = fieldName;
+            DisplayName = displayName;
+            Unit = unit;
+
+        }
+        public MetricConfig(string fieldName, string displayName, MetricType metricType, MetricUnit unit)
+        {
+            FieldName = fieldName;
             DisplayName = displayName;
             MetricType = metricType;
-            Color = color;
+            Unit = unit;
         }
 
         public ChartType ChartType { get; set; }
         public string DisplayName { get; set; }
-        public string DataFieldName { get; set; }
+        public string FieldName { get; set; }
         public MetricType MetricType { get; set; }
-        public SKColor Color { get; set; }
+        public MetricUnit Unit { get; set; }
     }
 
 }

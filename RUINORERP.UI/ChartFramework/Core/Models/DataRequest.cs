@@ -14,11 +14,8 @@ namespace RUINORERP.UI.ChartFramework.Models
     /// </summary>
     public class DataRequest : ICloneable
     {
-
         public string Title { get; set; }
         public ChartType ChartType { get; set; }
- 
-
  
         public ChartType chartType { get; set; }
 

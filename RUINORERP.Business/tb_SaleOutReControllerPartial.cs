@@ -350,7 +350,7 @@ namespace RUINORERP.Business
 
                 //entity.ApprovalOpinions = approvalEntity.ApprovalComments;
                 //后面已经修改为
-                //  entity.ApprovalResults = approvalEntity.ApprovalResults;
+                //entity.ApprovalResults = ae.ApprovalResults;
                 entity.ApprovalStatus = (int)ApprovalStatus.已审核;
                 entity.DataStatus = (int)DataStatus.确认;
                 BusinessHelper.Instance.ApproverEntity(entity);

@@ -1,9 +1,12 @@
 ﻿using Microsoft.Extensions.Logging;
 using OfficeOpenXml;
 using RUINORERP.Model;
+using RUINORERP.UI.CommonUI;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -40,7 +43,7 @@ namespace RUINORERP.UI.Common
         /// </summary>
         /// <param name="newSumDataGridViewMaster">NewSumDataGridView类型的控件内容</param>
         /// <returns></returns>
-        public static void ExportExcel(UControls.NewSumDataGridView newSumDataGridViewMaster)
+        public static void ExportExcel_old(UControls.NewSumDataGridView newSumDataGridViewMaster)
         {
 
             string selectedFile = string.Empty;
@@ -182,6 +185,155 @@ excelDoc.SaveAs(fileInfo);
 
 
         }
+
+        /// <summary>
+        /// 导出DataGridView数据到Excel（支持特殊绑定的数据源）
+        /// </summary>
+        /// <param name="dataGridView">NewSumDataGridView控件</param>
+        public static void ExportExcel(UControls.NewSumDataGridView dataGridView)
+        {
+            if (dataGridView == null || dataGridView.RowCount == 0)
+            {
+                MessageBox.Show("没有可导出的数据", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            try
+            {
+                using (SaveFileDialog saveDialog = new SaveFileDialog
+                {
+                    Filter = "Excel文件 (*.xlsx)|*.xlsx|Excel 97-2003文件 (*.xls)|*.xls",
+                    FilterIndex = 1,
+                    Title = "导出Excel文件",
+                    FileName = $"导出数据_{DateTime.Now:yyyyMMddHHmmss}",
+                    RestoreDirectory = true
+                })
+                {
+                    if (saveDialog.ShowDialog() != DialogResult.OK) return;
+
+                    ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
+                    var stopwatch = Stopwatch.StartNew();
+
+                    using (var progressForm = new ProgressForm("正在导出数据..."))
+                    using (var package = new ExcelPackage())
+                    {
+                        progressForm.Show();
+                        Application.DoEvents();
+
+                        ExcelWorksheet worksheet = package.Workbook.Worksheets.Add("Sheet1");
+                        int exportedRows = 0;
+
+                        try
+                        {
+                            // 生成表头
+                            int colIndex = 1;
+                            var visibleColumns = dataGridView.Columns.Cast<DataGridViewColumn>()
+                                .Where(c => c.Visible && !string.IsNullOrEmpty(c.HeaderText))
+                                .ToList();
+
+                            foreach (var column in visibleColumns)
+                            {
+                                worksheet.Cells[1, colIndex].Value = column.HeaderText;
+                                worksheet.Column(colIndex).Width = column.Width / 7.5; // 更精确的列宽计算
+                                colIndex++;
+                            }
+
+                            // 填充数据
+                            for (int rowIndex = 0; rowIndex < dataGridView.RowCount; rowIndex++)
+                            {
+                                colIndex = 1;
+                                foreach (var column in visibleColumns)
+                                {
+                                    var cell = dataGridView[column.Index, rowIndex];
+                                    if (cell.Value == null) continue;
+
+                                    var excelCell = worksheet.Cells[rowIndex + 2, colIndex];
+                                    SetCellValue(excelCell, cell);
+                                    colIndex++;
+                                }
+                                exportedRows++;
+
+                                // 每100行更新一次进度
+                                if (rowIndex % 100 == 0)
+                                {
+                                    progressForm.SetProgress((int)((rowIndex + 1) * 100f / dataGridView.RowCount));
+                                    Application.DoEvents();
+                                }
+                            }
+
+                            // 自动调整列宽（基于内容）
+                            worksheet.Cells.AutoFitColumns();
+                        }
+                        catch (Exception ex)
+                        {
+                            MainForm.Instance?.logger?.LogError($"Excel导出出错: {ex.Message}", ex);
+                            throw;
+                        }
+                        finally
+                        {
+                            package.SaveAs(new FileInfo(saveDialog.FileName));
+                            stopwatch.Stop();
+
+                            progressForm.Close();
+                            progressForm.Dispose();
+                        }
+
+                        if (MessageBox.Show($"成功导出 {exportedRows} 行数据，耗时 {stopwatch.Elapsed.TotalSeconds:F2} 秒。\n是否立即打开文件？",
+                            "导出完成", MessageBoxButtons.YesNo, MessageBoxIcon.Information) == DialogResult.Yes)
+                        {
+                            Process.Start(new ProcessStartInfo(saveDialog.FileName) { UseShellExecute = true });
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"导出失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+
+        /// <summary>
+        /// 智能设置单元格值和格式
+        /// </summary>
+        private static void SetCellValue(ExcelRange excelCell, DataGridViewCell dataCell)
+        {
+            Type cellType = Common.CommonHelper.Instance.GetRealType(dataCell.ValueType);
+            object cellValue = dataCell.Value;
+            string formattedValue = dataCell.FormattedValue?.ToString();
+
+            if (cellType == typeof(DateTime))
+            {
+                excelCell.Value = DateTime.Parse(formattedValue);
+                excelCell.Style.Numberformat.Format = "yyyy-MM-dd HH:mm:ss";
+            }
+            else if (cellType == typeof(int) || cellType == typeof(long))
+            {
+                // 处理枚举值
+                if (!cellValue.ToString().Equals(formattedValue))
+                {
+                    excelCell.Value = formattedValue;
+                }
+                else
+                {
+                    excelCell.Value = Convert.ToInt64(cellValue);
+                }
+            }
+            else if (cellType == typeof(decimal) || cellType == typeof(double) || cellType == typeof(float))
+            {
+                excelCell.Value = Convert.ToDouble(cellValue);
+                excelCell.Style.Numberformat.Format = "#,##0.00";
+            }
+            else if (cellType == typeof(bool))
+            {
+                excelCell.Value = (bool)cellValue ? "是" : "否";
+            }
+            else
+            {
+                excelCell.Value = formattedValue ?? cellValue?.ToString();
+            }
+        }
+
 
     }
 }

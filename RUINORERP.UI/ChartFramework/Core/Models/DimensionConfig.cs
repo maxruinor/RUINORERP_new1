@@ -11,6 +11,10 @@ namespace RUINORERP.UI.ChartFramework.Core.Models
     /// </summary>
     public class DimensionConfig
     {
+        public DimensionConfig()
+        {
+
+        }
         public DimensionConfig(string fieldName, string displayName, DimensionType type)
         {
             FieldName = fieldName;
@@ -18,9 +22,11 @@ namespace RUINORERP.UI.ChartFramework.Core.Models
             Type = type;
         }
 
-        public string FieldName { get; }
-        public string DisplayName { get; }
-        public DimensionType Type { get; }
+        public string FieldName { get; set; }
+        public string DisplayName { get; set; }
+        public DimensionType Type { get; set; }
+
+        public bool IsTimeBased { get; set; }
     }
 
 }

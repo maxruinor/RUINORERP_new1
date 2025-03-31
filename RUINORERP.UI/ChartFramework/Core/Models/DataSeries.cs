@@ -134,6 +134,7 @@ namespace RUINORERP.UI.ChartFramework.Core.Models
         public double YValue { get; set; }
         public string Label { get; set; }
         public object RawValue { get; set; }
+        public object Tag { get; set; } // 扩展数据
     }
 }
 

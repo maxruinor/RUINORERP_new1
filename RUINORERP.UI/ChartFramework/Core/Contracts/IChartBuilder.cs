@@ -14,8 +14,14 @@ namespace RUINORERP.UI.ChartFramework.Core.Contracts
 {
     public interface IChartBuilder<TChart> where TChart : IChartView
     {
-        public  ChartControl BuildChart(ChartData data);
-        public IChartView BuildChartControl(ChartData data);
+        /// <summary>
+        /// 内置数据源
+        /// </summary>
+        /// <param name="request"></param>
+        /// <returns></returns>
+        public Task<ChartControl> BuildChart(DataRequest request);
+
+        public Task<IChartView> BuildChartControl();
         public void ApplyTheme(ChartTheme theme);
         public void UpdateData(ChartData newData);
 

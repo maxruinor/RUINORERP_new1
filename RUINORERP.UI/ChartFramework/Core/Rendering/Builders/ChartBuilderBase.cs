@@ -1,17 +1,22 @@
 ﻿using LiveChartsCore;
+using LiveChartsCore.Kernel;
 using LiveChartsCore.Kernel.Sketches;
 using LiveChartsCore.SkiaSharpView;
+using LiveChartsCore.SkiaSharpView.Drawing;
 using LiveChartsCore.SkiaSharpView.Painting;
 using LiveChartsCore.SkiaSharpView.VisualElements;
 using LiveChartsCore.SkiaSharpView.WinForms;
 using RUINORERP.UI.ChartAnalyzer;
+using RUINORERP.UI.ChartFramework.Adapters;
 using RUINORERP.UI.ChartFramework.Core.Contracts;
+using RUINORERP.UI.ChartFramework.Core.Models;
 using RUINORERP.UI.ChartFramework.Extensions.Theming;
 using RUINORERP.UI.ChartFramework.Models;
 using RUINORERP.UI.ChartFramework.Rendering.Controls;
 using SkiaSharp;
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -26,30 +31,14 @@ namespace RUINORERP.UI.ChartFramework.Core.Rendering.Builders
     {
         protected TChart Chart { get; private set; }
         protected ChartData CurrentData { get; private set; }
-        // 添加事件实现实现图表元素的交互功能（如高亮、工具提示等）
-        public event EventHandler<ChartInteractionEventArgs> OnInteraction;
- 
-        // 触发事件的方法
-        protected virtual void RaiseInteraction(ChartInteractionEventArgs e)
-        {
-            OnInteraction?.Invoke(this, e);
-        }
 
-
-        public abstract ChartControl BuildChart(ChartData data);
-        public abstract IChartView BuildChartControl(ChartData data);
-        public virtual void UpdateData(ChartData newData)
-        {
-            CurrentData = newData;
-            // 实现增量更新逻辑
-        }
-
-        protected readonly IDataProvider _dataSource;
         protected DataRequest _currentRequest;
         protected CartesianChart _chart;
-        public ChartBuilderBase(IDataProvider dataSource)
+        protected readonly IDataProvider _dataSource;
+        public ChartBuilderBase(DataRequest request, IDataProvider dataSource)
         {
             _dataSource = dataSource;
+            _currentRequest = request;
             InitializeChart();
         }
 
@@ -72,9 +61,81 @@ namespace RUINORERP.UI.ChartFramework.Core.Rendering.Builders
                 EasingFunction = EasingFunctions.QuadraticOut
             };
         }
+        // 添加事件实现实现图表元素的交互功能（如高亮、工具提示等）
+        public event EventHandler<ChartInteractionEventArgs> OnInteraction;
 
-        //public abstract Task<IChartView> BuildChartAsync(ChartDataSet data);
-  
+        // 触发事件的方法
+        protected virtual void RaiseInteraction(ChartInteractionEventArgs e)
+        {
+            OnInteraction?.Invoke(this, e);
+        }
+
+
+        public abstract Task<ChartControl> BuildChart(DataRequest data);
+        public abstract Task<IChartView> BuildChartControl();
+        public virtual void UpdateData(ChartData newData)
+        {
+            CurrentData = newData;
+            // 实现增量更新逻辑
+        }
+
+
+        // 在具体构建器中绑定图表事件
+        protected void BindChartEvents(TChart chart)
+        {
+            if (chart is CartesianChart cartesianChart)
+            {
+                cartesianChart.MouseDown += (sender, e) =>
+                {
+                    //var interactionType = GetInteractionType(e);
+                    //RaiseInteractionForChartPoint(e, interactionType);
+                };
+                cartesianChart.DataPointerDown += (sender, e) =>
+                {
+                    // var interactionType = GetInteractionType(e);
+                    //RaiseInteractionForChartPoint(e, interactionType);
+                };
+
+            }
+            else if (chart is PieChart pieChart)
+            {
+                pieChart.DataPointerDown += (sender, e) =>
+                {
+                    //RaiseInteractionForPiePoint(e);
+                };
+            }
+        }
+
+        private void RaiseInteractionForPiePoint(
+   ChartPoint e)
+        {
+            var chartPoint = e;
+            var dataPoint = new DataPoint
+            {
+                // XValue = chartPoint.SecondaryValue,
+                // YValue = chartPoint.PrimaryValue,
+                Label = chartPoint.Context.Series.Name ?? string.Empty,
+                Tag = chartPoint.Context.Series.Tag
+            };
+
+            var series = chartPoint.Context.Series;
+
+            //RaiseInteraction(new ChartInteractionEventArgs(
+            //    dataPoint,
+            //    series,
+            //    InteractionType.Click));
+
+        }
+        // 获取交互类型（简化版，实际可根据需要扩展）
+        private InteractionType GetInteractionType(ChartPoint e)
+        {
+            // 注意：LiveCharts2 2.0+版本中不直接提供按钮信息
+            // 可通过其他方式判断右键点击（如结合MouseDown事件）
+
+            return InteractionType.Click;
+        }
+
+
 
 
         /// <summary>
@@ -86,7 +147,7 @@ namespace RUINORERP.UI.ChartFramework.Core.Rendering.Builders
             {
             new Axis
             {
-                Labels = data.MetaData.CategoryLabels, // 使用MetaData中的分类标签
+                Labels = data.CategoryLabels, // 使用MetaData中的分类标签
                 LabelsRotation = 30,
                 TextSize = 12,
                 SeparatorsPaint = new SolidColorPaint(SKColors.LightGray.WithAlpha(100)),
@@ -102,22 +163,6 @@ namespace RUINORERP.UI.ChartFramework.Core.Rendering.Builders
             return new[] { new Axis { Labeler = value => value.ToString("N0") } };
         }
 
-        /// <summary>
-        /// 可重写的Y轴创建方法
-        /// </summary>
-        //protected virtual Axis[] CreateYAxes(ChartDataSet data)
-        //{
-        //    return new[]
-        //    {
-        //    new Axis
-        //    {
-        //        Labeler = value => FormatYValue(value),
-        //        ShowSeparatorLines = true,
-        //        SeparatorsPaint = new SolidColorPaint(SKColors.LightGray.WithAlpha(100)),
-        //        NamePaint = new SolidColorPaint(SKColors.DarkGray)
-        //    }
-        //};
-        //}
 
         /// <summary>
         /// 可扩展的Y轴数值格式化方法
@@ -137,9 +182,6 @@ namespace RUINORERP.UI.ChartFramework.Core.Rendering.Builders
         /// </summary>
         protected abstract IEnumerable<ISeries> CreateSeries(ChartData data);
 
- 
-
-        // Rendering/Abstract/ChartBuilderBase.cs
         protected virtual LabelVisual[] CreateVisualElements(ChartData data)
         {
             return new[]
@@ -165,7 +207,7 @@ namespace RUINORERP.UI.ChartFramework.Core.Rendering.Builders
             CurrentTheme = theme;
         }
 
-      
-     
+
+
     }
 }

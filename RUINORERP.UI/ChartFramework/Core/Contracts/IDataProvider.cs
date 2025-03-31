@@ -22,7 +22,7 @@ namespace RUINORERP.UI.ChartFramework.Core.Contracts
         /// </summary>
         /// <param name="request">图表请求参数</param>
         public Task<ChartData> GetDataAsync(DataRequest request);
-
+        
         /// <summary>
         /// 获取可用指标配置
         /// </summary>

@@ -18,12 +18,12 @@ namespace RUINORERP.UI.ChartFramework.Core.Rendering.Builders
             /// <summary>
             /// 交互的数据点
             /// </summary>
-            public DataPoint? DataPoint { get; }
+            public DataPoint DataPoint { get; }
 
             /// <summary>
             /// 交互的系列
             /// </summary>
-            public DataSeries? Series { get; }
+            public DataSeries Series { get; }
 
             /// <summary>
             /// 交互类型（点击、悬停等）
@@ -36,8 +36,8 @@ namespace RUINORERP.UI.ChartFramework.Core.Rendering.Builders
             public PointF? MousePosition { get; }
 
             public ChartInteractionEventArgs(
-                DataPoint? dataPoint,
-                DataSeries? series,
+                DataPoint dataPoint,
+                DataSeries series,
                 InteractionType interactionType,
                 PointF? mousePosition = null)
             {
@@ -48,16 +48,16 @@ namespace RUINORERP.UI.ChartFramework.Core.Rendering.Builders
             }
         }
 
-        /// <summary>
-        /// 交互类型枚举
-        /// </summary>
-        public enum InteractionType
-        {
-            Click,
-            Hover,
-            RightClick,
-            DoubleClick,
-            SelectionChanged
-        }
+    /// <summary>
+    /// 交互类型枚举
+    /// </summary>
+    public enum InteractionType
+    {
+        Click,          // 点击
+        Hover,          // 悬停
+        RightClick,     // 右键点击
+        DoubleClick,    // 双击
+        SelectionChanged // 选择变化
     }
+}
  

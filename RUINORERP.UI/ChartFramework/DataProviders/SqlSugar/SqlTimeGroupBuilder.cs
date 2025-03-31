@@ -36,7 +36,7 @@ namespace RUINORERP.UI.ChartFramework.DataProviders.SqlSugar
                 TimeRangeType.Daily => $"CONVERT(varchar(10), {TimeField}, 120)", // YYYY-MM-DD
                 TimeRangeType.Weekly => $"CONCAT(YEAR({TimeField}), '-', DATEPART(week, {TimeField}))",
                 TimeRangeType.Monthly => $"MONTH({TimeField})",
-                TimeRangeType.YearlyMonthly => $"YEAR({TimeField}), MONTH({TimeField})",
+               // TimeRangeType.YearlyMonthly => $"YEAR({TimeField}), MONTH({TimeField})",
                 TimeRangeType.Quarterly => $"CONCAT(YEAR({TimeField}), '-Q', DATEPART(quarter, {TimeField}))",
                 TimeRangeType.Yearly => $"YEAR({TimeField})",
                 _ => throw new ArgumentException("Unsupported time group type")

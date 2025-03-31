@@ -627,6 +627,12 @@
     <Compile Include="BaseForm\BaseList.Designer.cs">
       <DependentUpon>BaseList.cs</DependentUpon>
     </Compile>
+    <Compile Include="BaseForm\BaseChartReport.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="BaseForm\BaseChartReport.designer.cs">
+      <DependentUpon>BaseChartReport.cs</DependentUpon>
+    </Compile>
     <Compile Include="BaseForm\BaseListGeneric.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -1158,17 +1164,24 @@
     <Compile Include="ChartFramework\Core\Models\DimensionConfig.cs" />
     <Compile Include="ChartFramework\Core\Models\MetricConfig.cs" />
     <Compile Include="ChartFramework\Core\Rendering\Builders\ChartInteractionEventArgs.cs" />
+    <Compile Include="ChartFramework\Core\Rendering\Controls\ChartQueryPanel.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="ChartFramework\Core\Rendering\Controls\ChartQueryPanel.Designer.cs">
+      <DependentUpon>ChartQueryPanel.cs</DependentUpon>
+    </Compile>
+    <Compile Include="ChartFramework\DataProviders\Adapters\CRMDataAdapter.cs" />
     <Compile Include="ChartFramework\DataProviders\Adapters\CustomerDataAdapter.cs" />
     <Compile Include="ChartFramework\DataProviders\SqlSugar\SqlDataProviderBase.cs" />
     <Compile Include="ChartFramework\Core\Rendering\Utilities\ThreadSafeChartUpdater.cs" />
     <Compile Include="ChartFramework\DataProviders\SqlSugar\SqlBuilder.cs" />
     <Compile Include="ChartFramework\DataProviders\SqlSugar\SqlTimeGroupBuilder.cs" />
     <Compile Include="ChartFramework\Shared\Theming\ChartExtensions.cs" />
+    <Compile Include="ChartFramework\Shared\Utilities\DateTimeExtensions.cs" />
+    <Compile Include="ChartFramework\Shared\Utilities\ISOWeekHelper.cs" />
     <Compile Include="ChartFramework\Shared\Utilities\LabelGenerator.cs" />
     <Compile Include="ChartFramework\Shared\ChartPerfMonitor.cs" />
-    <Compile Include="ChartFramework\Core\Rendering\AxisBuilder.cs" />
     <Compile Include="ChartFramework\Core\Rendering\Builders\ChartBuilderFactory.cs" />
-    <Compile Include="ChartFramework\Core\Rendering\Builders\ChartTypeAdapter.cs" />
     <Compile Include="ChartFramework\Shared\Utilities\ChartHelper.cs" />
     <Compile Include="ChartFramework\Core\Rendering\Builders\ColumnChartBuilder.cs" />
     <Compile Include="ChartFramework\Core\Rendering\Builders\CustomerChartBuilder.cs" />
@@ -1195,6 +1208,7 @@
       <SubType>UserControl</SubType>
     </Compile>
     <Compile Include="ChartFramework\Shared\Extensions\UI\ChartDataService.cs" />
+    <Compile Include="ChartFramework\Shared\Utilities\ListToDataTable.cs" />
     <Compile Include="ClientCmdService\ClientCommandDispatcher.cs" />
     <Compile Include="ClientCmdService\ClientCommandRegistry.cs" />
     <Compile Include="ClientCmdService\DynamicEventManager.cs" />
@@ -1223,6 +1237,12 @@
     </Compile>
     <Compile Include="CommonUI\frmInputContent.Designer.cs">
       <DependentUpon>frmInputContent.cs</DependentUpon>
+    </Compile>
+    <Compile Include="CommonUI\ProgressForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="CommonUI\ProgressForm.Designer.cs">
+      <DependentUpon>ProgressForm.cs</DependentUpon>
     </Compile>
     <Compile Include="Common\GridViewDisplayHelper.cs" />
     <Compile Include="Common\GridViewDisplayNameResolver.cs" />
@@ -1256,6 +1276,12 @@
     </Compile>
     <Compile Include="CRM\UCCRMChart.Designer.cs">
       <DependentUpon>UCCRMChart.cs</DependentUpon>
+    </Compile>
+    <Compile Include="CRM\UCCRMChartReport.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="CRM\UCCRMChartReport.Designer.cs">
+      <DependentUpon>UCCRMChartReport.cs</DependentUpon>
     </Compile>
     <Compile Include="CRM\UCCRMConfig.cs">
       <SubType>UserControl</SubType>
@@ -2722,6 +2748,7 @@
     <Content Include="ResourceFile\人民币.png" />
     <None Include="Resources\lockbill.png" />
     <Content Include="SqlScript\地区省市.sql" />
+    <Content Include="SqlScript\内置函数支持.sql" />
     <Content Include="UpdateLog.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -2774,6 +2801,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="BaseForm\BaseList.resx">
       <DependentUpon>BaseList.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="BaseForm\BaseChartReport.resx">
+      <DependentUpon>BaseChartReport.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="BaseForm\BaseListGeneric.resx">
       <DependentUpon>BaseListGeneric.cs</DependentUpon>
@@ -3021,6 +3051,9 @@
     <EmbeddedResource Include="ChartFramework\Core\Rendering\Controls\ChartControl.resx">
       <DependentUpon>ChartControl.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="ChartFramework\Core\Rendering\Controls\ChartQueryPanel.resx">
+      <DependentUpon>ChartQueryPanel.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="CommonUI\frmInputObject.resx">
       <DependentUpon>frmInputObject.cs</DependentUpon>
     </EmbeddedResource>
@@ -3029,6 +3062,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="CommonUI\frmInputContent.resx">
       <DependentUpon>frmInputContent.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="CommonUI\ProgressForm.resx">
+      <DependentUpon>ProgressForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="CRM\DockUI\UCCRMContact.resx">
       <DependentUpon>UCCRMContact.cs</DependentUpon>
@@ -4187,7 +4223,6 @@
     <Folder Include="AM\" />
     <Folder Include="ChartAnalyzer\" />
     <Folder Include="ChartFramework\DataProviders\Caching\" />
-    <Folder Include="ChartFramework\Features\" />
     <Folder Include="ChartFramework\Shared\Extensions\Export\" />
     <Folder Include="ChartFramework\Shared\Extensions\SqlSugar\" />
     <Folder Include="IMResources\Icons\" />

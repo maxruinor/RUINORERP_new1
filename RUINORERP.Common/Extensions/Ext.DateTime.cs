@@ -48,7 +48,7 @@ namespace RUINORERP.Common.Extensions
         ///   </summary> 
         ///   <param name="dateTime"> 日期 </param> 
         ///   <returns> 该日期在该年中的周数 </returns> 
-        public static int GetWeekOfYear(this DateTime dateTime)
+        public static int GetWeeklyOfYear(this DateTime dateTime)
         {
             GregorianCalendar gc = new GregorianCalendar();
             return gc.GetWeekOfYear(dateTime, CalendarWeekRule.FirstDay, DayOfWeek.Monday);

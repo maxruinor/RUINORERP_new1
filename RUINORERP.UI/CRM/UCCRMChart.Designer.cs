@@ -73,10 +73,9 @@
             // 
             // flowLayoutPanel1
             // 
-            this.flowLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.flowLayoutPanel1.Location = new System.Drawing.Point(3, 3);
+            this.flowLayoutPanel1.Location = new System.Drawing.Point(3, 116);
             this.flowLayoutPanel1.Name = "flowLayoutPanel1";
-            this.flowLayoutPanel1.Size = new System.Drawing.Size(695, 441);
+            this.flowLayoutPanel1.Size = new System.Drawing.Size(695, 328);
             this.flowLayoutPanel1.TabIndex = 1;
             // 
             // tabPage2

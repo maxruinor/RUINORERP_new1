@@ -51,10 +51,16 @@ namespace RUINORERP.UI.ChartFramework.Core
         Min //最小
     }
 
+    public enum MetricUnit
+    {
+        笔, 
+        元, 
+        个,
+        人,
+    }
 
- 
 
- 
+
 
     public enum ValueType
     {
@@ -76,13 +82,13 @@ namespace RUINORERP.UI.ChartFramework.Core
         Daily,      // 按日
         Weekly,     // 按周
         Monthly,    // 按月
-        YearlyMonthly,     // 按年月
         Quarterly,  // 按季度
         Yearly,     // 按年
         Custom,      // 自定义
         None
     }
 
+    //按月，按年 是一个指标。 区间只是一个选择时间的算法
 
 
     public enum DimensionType

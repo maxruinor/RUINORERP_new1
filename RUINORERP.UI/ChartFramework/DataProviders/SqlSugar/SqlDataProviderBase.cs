@@ -13,18 +13,25 @@ namespace RUINORERP.UI.ChartFramework.Adapters
 {
     public abstract class SqlDataProviderBase : IDataProvider
     {
-
         public abstract IEnumerable<MetricConfig> GetMetrics();
         // 必须实现的抽象成员
         public abstract IEnumerable<DimensionConfig> GetDimensions();
 
         protected readonly ISqlSugarClient _db;
-
+        protected DataRequest _request;
         protected SqlDataProviderBase(ISqlSugarClient db)
         {
             _db = db;
         }
-
+        protected SqlDataProviderBase()
+        {
+            _db = MainForm.Instance.AppContext.Db;
+        }
+        protected SqlDataProviderBase(DataRequest request)
+        {
+            _db= MainForm.Instance.AppContext.Db;
+            _request = request;
+        }
 
         protected abstract string PrimaryTableName { get; }
         public abstract Task<ChartData> GetDataAsync(DataRequest request);

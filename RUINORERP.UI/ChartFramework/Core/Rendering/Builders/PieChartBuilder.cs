@@ -19,8 +19,9 @@ using SkiaSharp;
 namespace RUINORERP.UI.ChartFramework.Core.Rendering.Builders
 {
     public class PieChartBuilder : ChartBuilderBase<CartesianChart>
-    {
-        public PieChartBuilder(IDataProvider dataSource) : base(dataSource) { }
+    {    
+        public PieChartBuilder(DataRequest request, IDataProvider dataSource) : base(request, dataSource) { }
+ 
         //public override ChartControl Build(ChartDataSet data)
         //{
         //    var chart = new PieChart
@@ -36,34 +37,10 @@ namespace RUINORERP.UI.ChartFramework.Core.Rendering.Builders
         //        .WithPieContextMenu()
         //        .WithDonutOptions(data.MetaData.Is100PercentStack);
         //}
-        public override ChartControl BuildChart(ChartData data)
+        public override Task<ChartControl> BuildChart(DataRequest request)
         {
-            //CurrentData = data;
-
-            // 创建饼图实例
-            var pieChart = new PieChart
-            {
-                Series = CreateSeries(data).ToArray(),
-                Title = new LabelVisual
-                {
-                    Text = data.Title,
-                    TextSize = 16,
-                    Padding = new LiveChartsCore.Drawing.Padding(15),
-                    Paint = new SolidColorPaint(SKColors.DarkSlateGray),
-                    HorizontalAlignment = LiveChartsCore.Drawing.Align.Start,
-                    VerticalAlignment = LiveChartsCore.Drawing.Align.Start
-                },
-                InitialRotation = -15,
-                AnimationsSpeed = TimeSpan.FromSeconds(1),
-                VisualElements = CreateVisualElements(data)
-            };
-
-            // 应用当前主题
-            ApplyTheme(CurrentTheme);
-
-            return new ChartControl(pieChart, data);
+            throw new NotImplementedException();
         }
-
         public ChartControl BuildChart1(ChartData data)
         {
             var pieChart = new PieChart
@@ -139,7 +116,7 @@ namespace RUINORERP.UI.ChartFramework.Core.Rendering.Builders
 
         private string FormatValue(double value, ChartData data)
         {
-            return data.MetaData.ValueType switch
+            return data.ValueType switch
             {
                 Core.ValueType.Percentage => value.ToString("P1"),
                 Core.ValueType.Currency => value.ToString("C2"),
@@ -173,7 +150,7 @@ namespace RUINORERP.UI.ChartFramework.Core.Rendering.Builders
             return colors[index % colors.Length];
         }
 
-        public override IChartView BuildChartControl(ChartData data)
+        public override Task<IChartView> BuildChartControl()
         {
             throw new NotImplementedException();
         }

@@ -24,6 +24,7 @@ using RUINORERP.UI.ChartFramework.Core.Rendering.Builders;
 using Org.BouncyCastle.Asn1.Cms;
 using OfficeOpenXml.Drawing.Chart;
 using RUINORERP.UI.ChartFramework.Core.Contracts;
+using SourceGrid2.Win32;
 
 namespace RUINORERP.UI.CRM
 {
@@ -54,11 +55,56 @@ namespace RUINORERP.UI.CRM
 
         private async void UCCRMChart_Load(object sender, EventArgs e)
         {
+            flowLayoutPanel1.Controls.Clear();
+            //LoadOK();
+            var request = new DataRequest
+            {
+                TimeField = "Created_at",
+                RangeType = TimeRangeType.Weekly,
+                StartTime = DateTime.Now.AddDays(-10),
+                EndTime = DateTime.Now,
+                chartType = ChartType.Column
+            };
 
+            // 构建图表
+            var builder = ChartBuilderFactory.CreateBuilder(request, new CRMDataAdapter(request));
 
+            builder.OnInteraction += (sender, args) =>
+            {
+                if (args.InteractionType == InteractionType.Click && args.DataPoint != null)
+                {
+                    Console.WriteLine($"点击了数据点: {args.DataPoint.Label}, 值: {args.DataPoint.YValue}");
+                }
+                switch (args.InteractionType)
+                {
+                    case InteractionType.Click:
+                        Console.WriteLine($"点击了 {args.Series.Name} 系列的 {args.DataPoint.Label}");
+                        break;
+                    case InteractionType.RightClick:
+                        Console.WriteLine($"右键点击了 {args.Series.Name} 系列");
+                        break;
+                    case InteractionType.Hover:
+                        Console.WriteLine($"悬停在 {args.DataPoint.YValue} 值上");
+                        break;
+                }
+            };
 
+            //var chartControl = await builder.BuildChartControl();
+            //UserControl userControl = chartControl as UserControl;
+            //userControl.Width = 900;
+            //userControl.Height = 900;
+            ////userControl.Dock = DockStyle.Fill;
+            //flowLayoutPanel1.Controls.Add(userControl);
 
-            var db = MainForm.Instance.AppContext.Db; // 获取SqlSugar实例
+            var chartControl1 = await builder.BuildChart(request);
+            UserControl userControl1 = chartControl1 as UserControl;
+            userControl1.Width = 1900;
+            userControl1.Height = 850;
+            flowLayoutPanel1.Controls.Add(userControl1);
+        }
+
+        private async void LoadOK()
+        {
             var request = new DataRequest
             {
                 TimeField = "Created_at",
@@ -68,23 +114,38 @@ namespace RUINORERP.UI.CRM
                 chartType = ChartType.Column
             };
 
-            CustomerDataAdapter customerAdapter = new CustomerDataAdapter(MainForm.Instance.AppContext.Db);
-            //var dataSource = await customerAdapter.GetDataAsync(request);
             // 构建图表
-            var builder = ChartBuilderFactory.CreateBuilder(ChartType.Column, customerAdapter);
+            var builder = ChartBuilderFactory.CreateBuilder(request, new CustomerDataAdapter());
             builder.OnInteraction += (sender, args) =>
             {
                 if (args.InteractionType == InteractionType.Click && args.DataPoint != null)
                 {
                     Console.WriteLine($"点击了数据点: {args.DataPoint.Label}, 值: {args.DataPoint.YValue}");
                 }
+                switch (args.InteractionType)
+                {
+                    case InteractionType.Click:
+                        Console.WriteLine($"点击了 {args.Series.Name} 系列的 {args.DataPoint.Label}");
+                        break;
+                    case InteractionType.RightClick:
+                        Console.WriteLine($"右键点击了 {args.Series.Name} 系列");
+                        break;
+                    case InteractionType.Hover:
+                        Console.WriteLine($"悬停在 {args.DataPoint.YValue} 值上");
+                        break;
+                }
             };
-            var dataSource = await customerAdapter.GetDataAsync(request);
-            var chartControl = builder.BuildChartControl(dataSource);
-         
-            flowLayoutPanel1.Controls.Add(chartControl as CartesianChart);
-           // Load1();
-           // Load2();
+            var chartControl = await builder.BuildChartControl();
+            UserControl userControl = chartControl as UserControl;
+            userControl.Width = 400;
+            userControl.Height = 400;
+            flowLayoutPanel1.Controls.Add(userControl);
+
+            var chartControl1 = await builder.BuildChart(request);
+            UserControl userControl1 = chartControl1 as UserControl;
+            userControl1.Width = 400;
+            userControl1.Height = 400;
+            flowLayoutPanel1.Controls.Add(userControl1);
         }
 
         private async void Load2()
@@ -151,25 +212,11 @@ namespace RUINORERP.UI.CRM
         private void DisplayChartCreate(ChartData data, string title,
             ChartType chartType = ChartType.Line, int width = 400, int height = 400)
         {
-            // 根据chartType和data中的配置创建相应图表
-            switch (chartType)
-            {
-                case ChartType.Line:
-                    CreateLineChart(data, title);
-                    break;
-                case ChartType.Column:
-                    CreateColumnChart(data, title);
-                    break;
-                case ChartType.Pie:
-                    CreatePieChart(data, title);
-                    break;
-            }
-
 
             if (data == null) throw new ArgumentNullException(nameof(data));
             if (data.Series == null || !data.Series.Any()) return;
-            if (data.MetaData.CategoryLabels == null)
-                data.MetaData.CategoryLabels = new List<string>().ToArray();
+            if (data.CategoryLabels == null)
+                data.CategoryLabels = new List<string>().ToArray();
 
             // 确保在UI线程上执行
             if (flowLayoutPanel1.InvokeRequired)
@@ -194,7 +241,7 @@ namespace RUINORERP.UI.CRM
                         seriesCollection.Add(new LineSeries<double>
                         {
                             Name = series.Name,
-                            // Values = series.Values.ToArray(),
+                            Values = series.Values.ToArray(),
                             Fill = null,
                             IsVisibleAtLegend = true,
                             //XToolTipLabelFormatter = point => $"{point.Context.Series.Name}: {point.Coordinate.PrimaryValue}"
@@ -206,7 +253,7 @@ namespace RUINORERP.UI.CRM
                         seriesCollection.Add(new ColumnSeries<double>
                         {
                             Name = series.Name,
-                            //Values = series.Values.ToArray(),
+                            Values = series.Values.ToArray(),
                             IsVisibleAtLegend = true,
                             XToolTipLabelFormatter = point => $"{point.Context.Series.Name}: {point.Model:N2}"//如保留两位小数
                         });
@@ -216,7 +263,7 @@ namespace RUINORERP.UI.CRM
                         seriesCollection.Add(new PieSeries<double>
                         {
                             Name = series.Name,
-                            //Values = series.Values.ToArray(),
+                            Values = series.Values.ToArray(),
                             IsHoverable = true,
                             ToolTipLabelFormatter = point => $"{point.Context.Series.Name}: {point.StackedValue.Share}"
                         });
@@ -243,7 +290,7 @@ namespace RUINORERP.UI.CRM
             {
                 var cartesianChart = new CartesianChart();
                 cartesianChart.Series = seriesCollection.ToArray();
-                cartesianChart.XAxes = new[] { new Axis { Labels = data.MetaData.CategoryLabels.ToArray() } };
+                cartesianChart.XAxes = new[] { new Axis { Labels = data.CategoryLabels.ToArray() } };
                 cartesianChart.YAxes = new[] { new Axis() };
                 chart = cartesianChart;
             }
@@ -262,56 +309,15 @@ namespace RUINORERP.UI.CRM
             {
                 var cartesianChart = new CartesianChart();
                 cartesianChart.Series = seriesCollection.ToArray();
-                cartesianChart.XAxes = new[] { new Axis { Labels = data.MetaData.CategoryLabels.ToArray() } };
+                cartesianChart.XAxes = new[] { new Axis { Labels = data.CategoryLabels.ToArray() } };
                 cartesianChart.YAxes = new[] { new Axis() };
                 chartControl = cartesianChart;
             }
-
-            // 设置图表标题
-            var titleLabel = new Label
-            {
-                Text = title,
-                Font = new Font("Arial", 12, FontStyle.Bold),
-                AutoSize = true,
-                TextAlign = ContentAlignment.MiddleCenter
-            };
-
-            // 创建容器控制图表大小
-            var container = new Panel
-            {
-                Width = width,
-                Height = height,
-                BorderStyle = BorderStyle.FixedSingle
-            };
-
-            // 添加控件到容器
-            container.Controls.Add(chartControl);
-            chartControl.Dock = DockStyle.Fill;
-
+            chartControl.Width = 500;
+            chartControl.Height = 500;
             // 添加标题和图表到flowLayoutPanel
-            flowLayoutPanel1.Controls.Add(titleLabel);
-            flowLayoutPanel1.Controls.Add(container);
+            flowLayoutPanel1.Controls.Add(chartControl);
 
-        }
-
-        private void CreateLineChart(ChartData data, string title)
-        {
-            // 实现折线图创建逻辑
-            // 使用data.PrimaryLabels作为X轴
-            // 使用data.Series中的IsDashed等属性
-        }
-
-        private void CreateColumnChart(ChartData data, string title)
-        {
-            // 实现柱状图创建逻辑
-            // 处理堆叠情况(data.IsStacked)
-            // 使用data.SecondaryLabels进行分组
-        }
-
-        private void CreatePieChart(ChartData data, string title)
-        {
-            // 实现饼图创建逻辑
-            // 使用series.DataPointLabels作为扇形标签
         }
 
 
@@ -327,10 +333,7 @@ namespace RUINORERP.UI.CRM
                 StartTime = DateTime.Now.AddMonths(-6),
                 EndTime = DateTime.Now
             };
-
-            CustomerDataAdapter customerAdapter = new CustomerDataAdapter(MainForm.Instance.AppContext.Db);
-            var dataSource = await customerAdapter.GetDataAsync(request);
-            var builder = new ColumnChartBuilder(customerAdapter);
+            var builder = ChartBuilderFactory.CreateBuilder(request, new CustomerDataAdapter());
             builder.OnInteraction += (sender, args) =>
             {
                 if (args.InteractionType == InteractionType.Click && args.DataPoint != null)
@@ -338,18 +341,8 @@ namespace RUINORERP.UI.CRM
                     Console.WriteLine($"点击了数据点: {args.DataPoint.Label}, 值: {args.DataPoint.YValue}");
                 }
             };
-
-            //var chart = await builder.BuildChartAsync(dataSource);
-
-            //var chartControl = new CartesianChart
-            //{
-            //    Dock = DockStyle.Fill,
-            //    Series = chart.Series,
-            //    XAxes = chart.XAxes,
-            //    YAxes = chart.YAxes
-            //};
-            var chartControl = builder.Build(dataSource);
-            flowLayoutPanel1.Controls.Add(chartControl);
+            var chartControl = await builder.BuildChartControl();
+            flowLayoutPanel1.Controls.Add(chartControl as UserControl);
         }
     }
 }

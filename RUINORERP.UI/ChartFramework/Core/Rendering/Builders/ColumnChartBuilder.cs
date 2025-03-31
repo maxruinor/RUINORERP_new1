@@ -34,8 +34,7 @@ var pieChart = pieBuilder.Build(statusDistributionData)
      */
     public class ColumnChartBuilder : ChartBuilderBase<CartesianChart>
     {
-        public ColumnChartBuilder(IDataProvider dataSource) : base(dataSource) { }
-
+        public ColumnChartBuilder(DataRequest request, IDataProvider dataSource) : base(request, dataSource) { }
         public ChartControl Build(ChartData data)
         {
             var chart = new CartesianChart
@@ -49,7 +48,7 @@ var pieChart = pieBuilder.Build(statusDistributionData)
 
             return new ChartControl(chart, data)
                 .AddExportMenu()
-                .WithStackedOptions(data.MetaData.IsStacked);
+                .WithStackedOptions(data.IsStacked);
         }
 
         protected override IEnumerable<ISeries> CreateSeries(ChartData data)
@@ -58,7 +57,7 @@ var pieChart = pieBuilder.Build(statusDistributionData)
             {
                 Name = series.Name,
                 Values = series.Values.ToArray(),
-                Fill = new SolidColorPaint(series.Style.ColorHex.ToSKColor()),
+                Fill = new SolidColorPaint(series.ColorHex.ToSKColor()),
                 Stroke = null,
                 Rx = 3, // 圆角半径
                 Ry = 3,
@@ -75,18 +74,12 @@ var pieChart = pieBuilder.Build(statusDistributionData)
             {
             new Axis
             {
-                Labels = data.MetaData.PrimaryLabels,
+                Labels = data.CategoryLabels,
                 LabelsRotation = 45,
                 TextSize = 12
             }
         };
         }
-
-        //protected override Axis[] CreateXAxes(ChartDataSet data)
-        //{
-        //    return AxisBuilder.BuildAxes(data.MetaData);
-        //}
-
 
         protected override Axis[] CreateYAxes(ChartData data)
         {
@@ -95,13 +88,13 @@ var pieChart = pieBuilder.Build(statusDistributionData)
             new Axis
             {
                 Labeler = value => FormatLabel(value, data),
-                MinStep = data.MetaData.ValueType ==RUINORERP.UI.ChartFramework.Core.ValueType.Currency ? 100 : 1
+                MinStep = data.ValueType ==RUINORERP.UI.ChartFramework.Core.ValueType.Currency ? 100 : 1
             }
         };
         }
         private string FormatValue(double value, ChartData data)
         {
-            return data.MetaData.ValueType switch
+            return data.ValueType switch
             {
                 RUINORERP.UI.ChartFramework.Core.ValueType.Currency => value.ToString("C2"),
                 RUINORERP.UI.ChartFramework.Core.ValueType.Percentage => value.ToString("P1"),
@@ -111,7 +104,7 @@ var pieChart = pieBuilder.Build(statusDistributionData)
 
         private string FormatLabel(double value, ChartData data)
         {
-            return data.MetaData.ValueType switch
+            return data.ValueType switch
             {
                 Core.ValueType.Currency => (value / 1000).ToString("C0") + "K",
                 Core.ValueType.Percentage => value.ToString("P0"),
@@ -126,12 +119,13 @@ var pieChart = pieBuilder.Build(statusDistributionData)
                 Text = data.Title,
                 TextSize = 16,
                 Padding = new LiveChartsCore.Drawing.Padding(15),
-                Paint = new SolidColorPaint(SKColors.DarkSlateGray)
+                //Paint = new SolidColorPaint(SKColors.DarkSlateGray)
             };
         }
 
-        public override IChartView BuildChartControl(ChartData data)
+        public async override Task<IChartView> BuildChartControl()
         {
+            var data = await _dataSource.GetDataAsync(_currentRequest);
             // 参数校验
             if (data == null) throw new ArgumentNullException(nameof(data));
             if (data.Series == null || !data.Series.Any())
@@ -157,10 +151,10 @@ var pieChart = pieBuilder.Build(statusDistributionData)
             // 配置X轴
             var xAxis = new Axis
             {
-                Labels = data.MetaData?.CategoryLabels ?? data.Labels,
-                LabelsRotation = CalculateLabelRotation(data.MetaData?.CategoryLabels ?? data.Labels),
+                Labels = data?.CategoryLabels ?? data.CategoryLabels,
+                LabelsRotation = CalculateLabelRotation(data?.CategoryLabels ?? data.CategoryLabels),
                 TextSize = 12,
-                SeparatorsPaint = new SolidColorPaint(SKColors.LightGray.WithAlpha(100)),
+               // SeparatorsPaint = new SolidColorPaint(SKColors.LightGray.WithAlpha(100)),
                 Name = data.MetaData?.GetExtension<string>("XAxisName") ?? "分类"
             };
 
@@ -169,7 +163,7 @@ var pieChart = pieBuilder.Build(statusDistributionData)
             {
                 Labeler = value => FormatYValue(value, data.ValueType),
                 MinStep = GetMinStep(data.ValueType),
-                SeparatorsPaint = new SolidColorPaint(SKColors.LightGray.WithAlpha(100)),
+               // SeparatorsPaint = new SolidColorPaint(SKColors.LightGray.WithAlpha(100)),
                 Name = data.MetaData?.GetExtension<string>("YAxisName") ?? "数值"
             };
 
@@ -192,12 +186,13 @@ var pieChart = pieBuilder.Build(statusDistributionData)
             {
                 foreach (var series in cartesianChart.Series.Cast<ColumnSeries<double>>())
                 {
-                    series.DataLabelsPaint = new SolidColorPaint(SKColors.White);
+                  //  series.DataLabelsPaint = new SolidColorPaint(SKColors.White);
                     series.DataLabelsPosition = LiveChartsCore.Measure.DataLabelsPosition.Top;
                     series.DataLabelsFormatter = point => FormatDataLabel(point, data.ValueType);
                 }
             }
-
+            // 绑定交互事件
+            BindChartEvents(cartesianChart);
             return cartesianChart;
         }
 
@@ -210,7 +205,7 @@ var pieChart = pieBuilder.Build(statusDistributionData)
                 {
                     Name = series.Name,
                     Values = series.Values.ToArray(),
-                    Fill = new SolidColorPaint(series.ColorHex.ToSKColor()),
+                    // Fill = new SolidColorPaint(series.ColorHex.ToSKColor()),
                     Stroke = null,
                     Rx = 4, // 圆角半径X
                     Ry = 4, // 圆角半径Y
@@ -242,7 +237,7 @@ var pieChart = pieBuilder.Build(statusDistributionData)
                 Text = data.Title,
                 TextSize = 18,
                 Padding = new LiveChartsCore.Drawing.Padding(15),
-                Paint = new SolidColorPaint(SKColors.DarkSlateGray),
+                // Paint = new SolidColorPaint(SKColors.DarkSlateGray),
                 HorizontalAlignment = LiveChartsCore.Drawing.Align.Middle,
                 VerticalAlignment = LiveChartsCore.Drawing.Align.Start
             };
@@ -301,9 +296,40 @@ var pieChart = pieBuilder.Build(statusDistributionData)
             };
         }
 
-        public override ChartControl BuildChart(ChartData data)
+
+
+        public async override Task<ChartControl> BuildChart(DataRequest request)
         {
-            throw new NotImplementedException();
+            var data = await _dataSource.GetDataAsync(request);
+            var cartesianChart = new CartesianChart
+            {
+                Series = data.Series.Select(series => new LineSeries<double>
+                {
+                    Name = series.Name,
+                    Values = series.Values.ToArray(),
+                    Stroke = new SolidColorPaint(series.ColorHex.ToSKColor(), 2),
+                    Fill = null,
+                    GeometrySize = 8,
+                    // GeometryStroke = new SolidColorPaint(series.ColorHex.ToSKColor(), 2),
+                    // GeometryFill = new SolidColorPaint(SKColors.White)
+                }).ToArray(),
+
+                XAxes = new[] { new Axis { Labels = data.CategoryLabels } },
+                YAxes = new[] { new Axis() },
+
+                Title = new LabelVisual
+                {
+                    Text = data.Title,
+                    TextSize = 16,
+                    Padding = new LiveChartsCore.Drawing.Padding(15),
+                    //  Paint = new SolidColorPaint(SKColors.DarkSlateGray)
+                },
+
+                LegendPosition = LiveChartsCore.Measure.LegendPosition.Right
+            };
+            // 绑定交互事件
+            BindChartEvents(cartesianChart);
+            return new ChartControl(cartesianChart, data);
         }
     }
 

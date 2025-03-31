@@ -15,15 +15,13 @@ using RUINORERP.UI.ChartFramework.Core.Rendering.Builders;
 using LiveChartsCore.SkiaSharpView.WinForms;
 using LiveChartsCore.Kernel.Sketches;
 using RUINORERP.UI.ChartFramework.Rendering.Controls;
+using NPOI.POIFS.Crypt.Dsig;
 
 namespace RUINORERP.UI.ChartFramework.Core.Rendering.Builders
 {
     public class CustomerChartBuilder : ChartBuilderBase<CartesianChart>
     {
-        public CustomerChartBuilder(IDataProvider dataSource) : base(dataSource)
-        {
-        }
-
+        public CustomerChartBuilder(DataRequest request, IDataProvider dataSource) : base(request, dataSource) { }
         // 覆盖X轴创建方法...
         protected override Axis[] CreateXAxes(ChartData data)
         {
@@ -37,8 +35,7 @@ namespace RUINORERP.UI.ChartFramework.Core.Rendering.Builders
         {
             return $"{base.FormatYValue(value)} 家"; // 添加单位
         }
-
-        // 实现抽象方法...
+    
         protected override IEnumerable<ISeries> CreateSeries(ChartData data)
         {  // 这里需要确保data中有正确的数据
             // 假设data有一个名为"Count"的系列数据
@@ -52,8 +49,9 @@ namespace RUINORERP.UI.ChartFramework.Core.Rendering.Builders
             };
         }
 
-        public CartesianChart BuildChart1(ChartData data)
+        public async override Task<ChartControl> BuildChart(DataRequest request)
         {
+            var data = await _dataSource.GetDataAsync(request);
             var cartesianChart = new CartesianChart
             {
                 Series = data.Series.Select(series => new LineSeries<double>
@@ -63,44 +61,11 @@ namespace RUINORERP.UI.ChartFramework.Core.Rendering.Builders
                     Stroke = new SolidColorPaint(series.ColorHex.ToSKColor(), 2),
                     Fill = null,
                     GeometrySize = 8,
-                    GeometryStroke = new SolidColorPaint(series.ColorHex.ToSKColor(), 2),
-                    GeometryFill = new SolidColorPaint(SKColors.White)
+                    //GeometryStroke = new SolidColorPaint(series.ColorHex.ToSKColor(), 2),
+                   // GeometryFill = new SolidColorPaint(SKColors.White)
                 }).ToArray(),
 
-                XAxes = new[] { new Axis { Labels = data.MetaData.CategoryLabels } },
-                YAxes = new[] { new Axis() },
-
-                Title = new LabelVisual
-                {
-                    Text = data.Title,
-                    TextSize = 16,
-                    Padding = new LiveChartsCore.Drawing.Padding(15),
-                    Paint = new SolidColorPaint(SKColors.DarkSlateGray)
-                },
-
-                LegendPosition = LiveChartsCore.Measure.LegendPosition.Right
-            };
-
-            return cartesianChart;
-        }
-
- 
-        public override ChartControl BuildChart(ChartData data)
-        {
-            var cartesianChart = new CartesianChart
-            {
-                Series = data.Series.Select(series => new LineSeries<double>
-                {
-                    Name = series.Name,
-                    Values = series.Values.ToArray(),
-                    Stroke = new SolidColorPaint(series.ColorHex.ToSKColor(), 2),
-                    Fill = null,
-                    GeometrySize = 8,
-                    GeometryStroke = new SolidColorPaint(series.ColorHex.ToSKColor(), 2),
-                    GeometryFill = new SolidColorPaint(SKColors.White)
-                }).ToArray(),
-
-                XAxes = new[] { new Axis { Labels = data.MetaData.CategoryLabels } },
+                XAxes = new[] { new Axis { Labels = data.CategoryLabels } },
                 YAxes = new[] { new Axis() },
 
                 Title = new LabelVisual
@@ -117,9 +82,37 @@ namespace RUINORERP.UI.ChartFramework.Core.Rendering.Builders
             return new ChartControl(cartesianChart, data);
         }
 
-        public override IChartView BuildChartControl(ChartData data)
+        public async override Task<IChartView> BuildChartControl( )
         {
-            throw new NotImplementedException();
+            var data = await _dataSource.GetDataAsync(_currentRequest);
+            var cartesianChart = new CartesianChart
+            {
+                Series = data.Series.Select(series => new LineSeries<double>
+                {
+                    Name = series.Name,
+                    Values = series.Values.ToArray(),
+                    Stroke = new SolidColorPaint(series.ColorHex.ToSKColor(), 2),
+                    Fill = null,
+                    GeometrySize = 8,
+                    //GeometryStroke = new SolidColorPaint(series.ColorHex.ToSKColor(), 2),
+                    //GeometryFill = new SolidColorPaint(SKColors.White)
+                }).ToArray(),
+
+                XAxes = new[] { new Axis { Labels = data.CategoryLabels } },
+                YAxes = new[] { new Axis() },
+
+                Title = new LabelVisual
+                {
+                    Text = data.Title,
+                    TextSize = 16,
+                    Padding = new LiveChartsCore.Drawing.Padding(15),
+                    Paint = new SolidColorPaint(SKColors.DarkSlateGray)
+                },
+
+                LegendPosition = LiveChartsCore.Measure.LegendPosition.Right
+            };
+
+            return cartesianChart;
         }
     }
 }

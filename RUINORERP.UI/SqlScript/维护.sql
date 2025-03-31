@@ -1,4 +1,9 @@
-﻿--查出重复字段
+﻿CREATE INDEX IX_tb_CRM_Customer_Created_at ON tb_CRM_Customer(Created_at)
+--建索引优化
+
+
+
+--查出重复字段
 SELECT * from tb_P4Field bb WHERE FieldInfo_ID = 1740603351386689543
 
 (

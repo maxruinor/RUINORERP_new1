@@ -82,6 +82,7 @@ namespace RUINORERP.UI.PSI.INV
         public override void BuildInvisibleCols()
         {
             base.MasterInvisibleCols.Add(c => c.TotalCost);
+            base.MasterInvisibleCols.Add(c => c.BorrowID);
             base.ChildInvisibleCols.Add(c => c.Cost);
             base.ChildInvisibleCols.Add(c => c.SubtotalCostAmount);
         }

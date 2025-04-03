@@ -95,6 +95,7 @@ namespace RUINORERP.UI.ProductEAV
                                                Color.FromArgb(213, 206, 219), Color.FromArgb(244, 232, 204),
                                                Color.FromArgb(250, 252, 183), Color.FromArgb(218, 207, 239) };
         #endregion
+
         public frmProductEdit()
         {
             InitializeComponent();
@@ -1098,7 +1099,7 @@ namespace RUINORERP.UI.ProductEAV
         }
 
 
-        private Image SetImageToEntity(string pathName)
+        private Image SetImageToEntityOld(string pathName)
         {
             System.Drawing.Image img = System.Drawing.Image.FromFile(pathName);
             //将图像读入到字节数组
@@ -1119,7 +1120,7 @@ namespace RUINORERP.UI.ProductEAV
 
                 // 重新读取压缩后的图片
                 img = System.Drawing.Image.FromFile("compressed.jpg");
-                this.pictureBox1.Image = img;
+                //this.pictureBox1.Image = img;
 
                 MessageBox.Show("图片大小超过 200KB，已自动压缩。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 // 将压缩后的图片转换为 byte[] 数组
@@ -1134,7 +1135,54 @@ namespace RUINORERP.UI.ProductEAV
             }
             return img;
         }
+        private Image SetImageToEntity(string pathName)
+        {
+            // 先读取原始图片字节
+            byte[] originalBytes = File.ReadAllBytes(pathName);
 
+            Image img = null;
+            try
+            {
+                // 使用MemoryStream避免文件锁定
+                using (var ms = new MemoryStream(originalBytes))
+                {
+                    img = Image.FromStream(ms);
+
+                    // 检查大小是否超过200KB
+                    if (originalBytes.Length > 200 * 1024)
+                    {
+                        // 压缩图片（直接在内存中操作）
+                        using (var compressedImg = new Bitmap(img, new Size(800, 600)))
+                        using (var msOut = new MemoryStream())
+                        {
+                            ImageCodecInfo jpegCodec = GetEncoderInfo(ImageFormat.Jpeg);
+                            EncoderParameters encoderParams = new EncoderParameters(1);
+                            encoderParams.Param[0] = new EncoderParameter(System.Drawing.Imaging.Encoder.Quality, 50L);
+
+                            compressedImg.Save(msOut, jpegCodec, encoderParams);
+                            byte[] compressedBytes = msOut.ToArray();
+
+                            _EditEntity.Images = compressedBytes;
+                            //this.pictureBox1.Image = (Image)compressedImg.Clone();
+
+                            MessageBox.Show("图片大小超过200KB，已自动压缩。", "提示",
+                                           MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        }
+                    }
+                    else
+                    {
+                        _EditEntity.Images = originalBytes;
+                        //this.pictureBox1.Image = (Image)img.Clone();
+                    }
+
+                    return (Image)img.Clone();
+                }
+            }
+            finally
+            {
+                img?.Dispose();
+            }
+        }
 
         private ImageCodecInfo GetEncoderInfo(ImageFormat format)
         {

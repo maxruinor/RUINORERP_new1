@@ -1171,6 +1171,7 @@
       <DependentUpon>ChartQueryPanel.cs</DependentUpon>
     </Compile>
     <Compile Include="ChartFramework\DataProviders\Adapters\CRMDataAdapter.cs" />
+    <Compile Include="ChartFramework\DataProviders\Adapters\CRMPlanCompRateDataAdapter.cs" />
     <Compile Include="ChartFramework\DataProviders\Adapters\CustomerDataAdapter.cs" />
     <Compile Include="ChartFramework\DataProviders\SqlSugar\SqlDataProviderBase.cs" />
     <Compile Include="ChartFramework\Core\Rendering\Utilities\ThreadSafeChartUpdater.cs" />
@@ -1189,7 +1190,6 @@
     <Compile Include="ChartFramework\Core\Rendering\Builders\DefaultTooltip.cs" />
     <Compile Include="ChartFramework\Shared\Extensions\DynamicGroupingExtensions.cs" />
     <Compile Include="ChartFramework\Core\Models\Enums.cs" />
-    <Compile Include="ChartFramework\DataProviders\SqlSugar\SqlDynamicBuilder.cs" />
     <Compile Include="ChartFramework\Core\Contracts\IDataProvider.cs" />
     <Compile Include="ChartFramework\Shared\Extensions\DataProcessing\Pipeline.cs" />
     <Compile Include="ChartFramework\Shared\Theming\ChartTheme.cs" />
@@ -1250,7 +1250,6 @@
     <Compile Include="Common\GridViewDisplayTextResolver.cs" />
     <Compile Include="Common\UICRMRegionHelper.cs" />
     <Compile Include="Common\UIForKryptonHelper.cs" />
-    <Compile Include="Common\UIBaseTool.cs" />
     <Compile Include="Common\UIBizSrvice.cs" />
     <Compile Include="Common\Network.Ext.cs" />
     <Compile Include="CRM\DockUI\UCCRMContact.cs">
@@ -1597,18 +1596,6 @@
       <DependentUpon>NotificationBox.cs</DependentUpon>
     </Compile>
     <Compile Include="IM\NotificationService.cs" />
-    <Compile Include="IM\UCChatBox.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="IM\UCChatBox.Designer.cs">
-      <DependentUpon>UCChatBox.cs</DependentUpon>
-    </Compile>
-    <Compile Include="IM\UCMessager.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="IM\UCMessager.Designer.cs">
-      <DependentUpon>UCMessager.cs</DependentUpon>
-    </Compile>
     <Compile Include="IM\WidgetMessager.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -2212,6 +2199,7 @@
       <DependentUpon>UCPrintConfigQuery.cs</DependentUpon>
     </Compile>
     <Compile Include="Settings.cs" />
+    <Compile Include="SingleInstanceChecker.cs" />
     <Compile Include="SS\MenuInit.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -3078,6 +3066,9 @@
     <EmbeddedResource Include="CRM\UCCRMChart.resx">
       <DependentUpon>UCCRMChart.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="CRM\UCCRMChartReport.resx">
+      <DependentUpon>UCCRMChartReport.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="CRM\UCCRMConfig.resx">
       <DependentUpon>UCCRMConfig.cs</DependentUpon>
     </EmbeddedResource>
@@ -3206,12 +3197,6 @@
     </EmbeddedResource>
     <EmbeddedResource Include="IM\NotificationBox.resx">
       <DependentUpon>NotificationBox.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="IM\UCChatBox.resx">
-      <DependentUpon>UCChatBox.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="IM\UCMessager.resx">
-      <DependentUpon>UCMessager.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="IM\WidgetMessager.resx">
       <DependentUpon>WidgetMessager.cs</DependentUpon>

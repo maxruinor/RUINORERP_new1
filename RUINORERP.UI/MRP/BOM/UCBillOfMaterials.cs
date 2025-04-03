@@ -1451,6 +1451,7 @@ namespace RUINORERP.UI.MRP.BOM
             {
                 //计算总金额  这些逻辑是不是放到业务层？后面要优化
                 List<tb_BOM_SDetail> details = sgd.BindingSourceLines.DataSource as List<tb_BOM_SDetail>;
+                if (details == null) return;
                 details = details.Where(c => c.ProdDetailID > 0).ToList();
                 if (details.Count == 0)
                 {

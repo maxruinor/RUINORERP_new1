@@ -116,19 +116,19 @@ namespace RUINORERP.UI.ClientCmdService
                         var fromUserinfo = MainForm.Instance.UserInfos.FirstOrDefault(c => c.SessionId == fromSessionID);
                         if (fromUserinfo != null)
                         {
-                            MainForm.Instance.Invoke(new Action(() =>
-                            {
-                                KryptonPage page = IM.UCMessager.Instance.kryptonNavigator1.Pages.FirstOrDefault(c => c.Name == fromUserinfo.姓名);
-                                if (page == null)
-                                {
-                                    page = IM.UCMessager.Instance.AddTopPage(fromUserinfo);
-                                }
-                                if (page.Controls[0] is UCChatBox ucchatBox)
-                                {
-                                    ucchatBox.chatBox.addChatBubble(ChatBox.BubbleSide.LEFT, message, fromUserinfo.姓名, fromUserinfo.SessionId, @"IMResources\Profiles\face_default.jpg");
-                                }
+                            //MainForm.Instance.Invoke(new Action(() =>
+                            //{
+                            //    KryptonPage page = IM.UCMessager.Instance.kryptonNavigator1.Pages.FirstOrDefault(c => c.Name == fromUserinfo.姓名);
+                            //    if (page == null)
+                            //    {
+                            //        page = IM.UCMessager.Instance.AddTopPage(fromUserinfo);
+                            //    }
+                            //    if (page.Controls[0] is UCChatBox ucchatBox)
+                            //    {
+                            //        ucchatBox.chatBox.addChatBubble(ChatBox.BubbleSide.LEFT, message, fromUserinfo.姓名, fromUserinfo.SessionId, @"IMResources\Profiles\face_default.jpg");
+                            //    }
 
-                            }));
+                            //}));
                             //不用执行
                             if (MessageReceived != null)
                             {

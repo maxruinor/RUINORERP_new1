@@ -1320,7 +1320,7 @@ namespace RUINORERP.UI.SysConfig
                                                 if (rdb小计总计.Checked)
                                                 {
                                                     // Detail.Cost = child.Inv_Cost;
-                                                    Detail.SubtotalCostAmount = (Detail.Cost+Detail.CustomizedCost) * Detail.Quantity;
+                                                    Detail.SubtotalCostAmount = (Detail.Cost + Detail.CustomizedCost) * Detail.Quantity;
                                                     Detail.SubtotalTransAmount = Detail.TransactionPrice * Detail.Quantity;
                                                     if (Detail.TaxRate > 0)
                                                     {
@@ -2567,13 +2567,12 @@ namespace RUINORERP.UI.SysConfig
             if (dataGridViewInv.SelectedRows != null)
             {
                 List<tb_Inventory> inventories = new List<tb_Inventory>();
-                foreach (DataGridViewRow dr in dataGridViewInv.SelectedRows)
+
+                if (dataGridViewInv.CurrentRow != null && dataGridViewInv.CurrentRow.DataBoundItem is View_Inventory inventory)
                 {
-                    if (dr.DataBoundItem is View_Inventory inventory)
-                    {
-                        inventories.Add(inventory.tb_inventory);
-                    }
+                    inventories.Add(inventory.tb_inventory);
                 }
+
                 if (inventories.Count == 1)
                 {
                     await UpdateInventoryCost(inventories, txtUnitCost.Text.ToDecimal());
@@ -2581,7 +2580,7 @@ namespace RUINORERP.UI.SysConfig
                 else
                 {
                     //只能操作一行库存数据
-                    MessageBox.Show("一次只能操作一行库存数据", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    MessageBox.Show($"一次只能操作一行库存数据，目前操作数行数：{inventories.Count}", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
                 MainForm.Instance.ShowStatusText("库存成本更新为指定值完成。");
             }

@@ -53,34 +53,74 @@ using RUINORERP.UI.UserPersonalized;
 using RUINORERP.UI.UControls;
 using Newtonsoft.Json;
 using Fireasy.Common.Extensions;
-
-
+using FastReport.DevComponents.DotNetBar.Controls;
+using RUINORERP.UI.ChartFramework.Models;
 
 namespace RUINORERP.UI.BaseForm
 {
 
-    /// <summary>
-    /// 基本资料的列表，是否需要加一个标记来表示 在菜单中编辑 ，还是在 其他窗体时 关联编辑。看后面的业务情况。
-    /// </summary>
-    [PreCheckMustOverrideBaseClass]
     public partial class BaseChartReport : BaseUControl
     {
+        public BaseChartReport()
+        {
+            InitializeComponent();
+            if (System.ComponentModel.LicenseManager.UsageMode != System.ComponentModel.LicenseUsageMode.Designtime)
+            {
+                if (!this.DesignMode)
+                {
+                    //权限菜单
+                    if (CurMenuInfo == null || CurMenuInfo.ClassPath.IsNullOrEmpty())
+                    {
+                        CurMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble && m.FormName ==this.Name && m.ClassPath == this.ToString()).FirstOrDefault();
+                        if ((CurMenuInfo == null || CurMenuInfo.ClassPath.IsNullOrEmpty()) && !MainForm.Instance.AppContext.IsSuperUser)
+                        {
+                            MessageBox.Show(this.ToString() + "A菜单不能为空，请联系管理员。");
+                            return;
+                        }
+                    }
 
-        //public virtual ToolStripItem[] AddExtendButton()
-        //{
-        //    //返回空的数组
-        //    return new ToolStripItem[] { };
-        //}
+                    #region 绑定菜单事件
 
+                    foreach (var item in BaseToolStrip.Items)
+                    {
+                        if (item is ToolStripButton btnItem)
+                        {
+                            ToolStripButton subItem = item as ToolStripButton;
+                            subItem.Click += Item_Click;
+                            ControlButton(subItem);
+
+                        }
+                        if (item is ToolStripDropDownButton subItemDr)
+                        {
+                            ControlButton(subItemDr);
+                            subItemDr.Click += Item_Click;
+                            //下一级
+                            if (subItemDr.HasDropDownItems)
+                            {
+                                foreach (var sub in subItemDr.DropDownItems)
+                                {
+                                    ToolStripMenuItem subStripMenuItem = sub as ToolStripMenuItem;
+                                    ControlButton(subStripMenuItem);
+                                    subStripMenuItem.Click += Item_Click;
+                                }
+
+                            }
+                        }
+
+
+                    }
+
+                    #endregion
+                    Builder();
+                   // dataGridView1.CellFormatting -= DataGridView1_CellFormatting;
+                }
+            }
+        }
 
         /// <summary>
         /// 用来保存外键表名与外键主键列名  通过这个打到对应的名称。
         /// </summary>
         public static ConcurrentDictionary<string, string> FKValueColNameTBList = new ConcurrentDictionary<string, string>();
-
-
- 
- 
 
 
         //三级 还是两级呢。  反向来 一是 KEY VALUE  然后是列名
@@ -271,46 +311,7 @@ namespace RUINORERP.UI.BaseForm
             public string Msg { get; set; }
 
         }
-
-        private void BindingSourceList_ListChanged(object sender, ListChangedEventArgs e)
-        {
-            BaseEntity entity = new BaseEntity();
-            switch (e.ListChangedType)
-            {
-                case ListChangedType.Reset:
-                    break;
-                case ListChangedType.ItemAdded:
-                    //如果这里为空出错， 需要先查询一个空的。绑定一下数据源的类型。之前是默认查询了所有
-                    entity = bindingSourceList.List[e.NewIndex] as BaseEntity;
-                    entity.ActionStatus = ActionStatus.新增;
-                    break;
-                case ListChangedType.ItemDeleted:
-                    if (e.NewIndex < bindingSourceList.Count)
-                    {
-                        entity = bindingSourceList.List[e.NewIndex] as BaseEntity;
-                        entity.ActionStatus = ActionStatus.删除;
-                    }
-                    break;
-                case ListChangedType.ItemMoved:
-                    break;
-                case ListChangedType.ItemChanged:
-                    entity = bindingSourceList.List[e.NewIndex] as BaseEntity;
-                    if (entity.ActionStatus == ActionStatus.无操作)
-                    {
-                        entity.ActionStatus = ActionStatus.修改;
-                    }
-                    break;
-                case ListChangedType.PropertyDescriptorAdded:
-                    break;
-                case ListChangedType.PropertyDescriptorDeleted:
-                    break;
-                case ListChangedType.PropertyDescriptorChanged:
-                    break;
-                default:
-                    break;
-            }
-        }
-
+ 
 
         private Type _EditForm;
 
@@ -393,6 +394,16 @@ namespace RUINORERP.UI.BaseForm
  
     
 
+   
+  
+ 
+        /// 如果需要查询条件查询，就要在子类中重写这个方法
+        /// </summary>
+        public virtual void LimitQueryConditionsBuilder()
+        {
+
+        }
+
         private void Item_Click(object sender, EventArgs e)
         {
             MainForm.Instance.AppContext.log.ActionName = sender.ToString();
@@ -406,36 +417,6 @@ namespace RUINORERP.UI.BaseForm
             }
 
         }
-
-
-        public delegate void AdvQueryShowPageHandler<E>();
-
-        /// <summary>
-        /// 实现高级查询 有两步1）实际事件显示窗体，2）完成查询结果的显示 
-        /// 事件中调用基类方法 AdvStartQuery AdvStartQuery<tb_UserInfoQueryDto>(dto);
-        /// </summary>
-        [Browsable(true), Description("外部高级查询事件，为了显示查询窗体页")]
-        public event AdvQueryShowPageHandler<BaseEntityDto> AdvQueryShowPageEvent;
-
-
-        /// <summary>
-        /// 有些要限制显示内容，如果销售人员看不到供应商。
-        /// </summary>
-       // public Expression<Func<T, bool>> LimitQueryConditions { get; set; }
-
-        /// <summary>
-        /// 如果需要查询条件查询，就要在子类中重写这个方法
-        /// </summary>
-        public virtual void LimitQueryConditionsBuilder()
-        {
-
-        }
-
-        ///// <summary>
-        ///// 关联的菜单信息 实际是可以从点击时传入
-        ///// </summary>
-        //public tb_MenuInfo CurMenuInfo { get; set; }
-
 
         /// <summary>
         /// 控制功能按钮
@@ -552,25 +533,8 @@ namespace RUINORERP.UI.BaseForm
             //}
            // UIExcelHelper.ExportExcel(dataGridView1);
         }
-
-  
       
-     
-
-        KryptonPage AdvPage = null;
-
-
-
  
-
-        /// <summary>
-        /// 设置选中模式
-        /// </summary>
-        public override void SetSelect()
-        {
-            tsbtnSelected.Visible = true;
-        }
-
 
 
         public virtual void QueryConditionBuilder()
@@ -617,58 +581,6 @@ namespace RUINORERP.UI.BaseForm
         /// </summary>
         public HashSet<string> DefaultHideCols { get; set; } = new HashSet<string>();
 
-
-        /// <summary>
-        /// 默认不是模糊查询
-        /// </summary>
-        /// <param name="useLike"></param>
-        public BaseEntity LoadQueryConditionToUI(decimal QueryConditionShowColQty = 4)
-        {
-            //为了验证设置的属性
-            this.AutoValidate = AutoValidate.EnableAllowFocusChange;
-            //UIQueryHelper<T> uIQueryHelper = new UIQueryHelper<T>();
-            kryptonPanel条件生成容器.GetType().GetProperty("DoubleBuffered", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic).SetValue(kryptonPanel条件生成容器, true, null);
-            kryptonPanel条件生成容器.Visible = false;
-            kryptonPanel条件生成容器.Controls.Clear();
-            kryptonPanel条件生成容器.SuspendLayout();
-            if (MainForm.Instance.AppContext.CurrentUser_Role == null && MainForm.Instance.AppContext.IsSuperUser)
-            {
-             // QueryDtoProxy = UIGenerateHelper.CreateQueryUI(typeof(T), true, kryptonPanel条件生成容器, QueryConditionFilter, QueryConditionShowColQty);
-            }
-            else
-            {
-
-                //暂时默认了uselike
-               // tb_UIMenuPersonalization menuSetting = MainForm.Instance.AppContext.CurrentUser_Role_Personalized.tb_UIMenuPersonalizations.FirstOrDefault(c => c.MenuID == CurMenuInfo.MenuID);
-               // if (menuSetting != null)
-                //{
-                   // QueryDtoProxy = UIGenerateHelper.CreateQueryUI(typeof(T), true, kryptonPanel条件生成容器, QueryConditionFilter, menuSetting);
-               // }
-               // else
-               // {
-                  //  QueryDtoProxy = UIGenerateHelper.CreateQueryUI(typeof(T), true, kryptonPanel条件生成容器, QueryConditionFilter, QueryConditionShowColQty);
-               // }
-            }
-
-
-
-            kryptonPanel条件生成容器.ResumeLayout();
-            kryptonPanel条件生成容器.Visible = true;
-            if (InvisibleCols == null)
-            {
-                InvisibleCols = new HashSet<string>();
-            }
-           
-
-            //ControlSingleTableColumnsInvisible(InvisibleCols);
-
-            DefaultHideCols = new HashSet<string>();
-            UIHelper.ControlColumnsInvisible(CurMenuInfo, InvisibleCols, DefaultHideCols, false);
-
-      
-            return QueryDtoProxy;
-
-        }
 
 
      
@@ -906,51 +818,59 @@ namespace RUINORERP.UI.BaseForm
 
         }
 
-
-
-
-
-        private void bindingNavigatorMovePreviousItem_Click(object sender, EventArgs e)
-        {
-            ListDataSoure.MovePrevious();
-        }
-
-        private void bindingNavigatorMoveNextItem_Click(object sender, EventArgs e)
-        {
-            ListDataSoure.MoveNext();
-        }
-
-        private void bindingNavigatorMoveLastItem_Click(object sender, EventArgs e)
-        {
-            ListDataSoure.MoveLast();
-        }
-
-        private void bindingNavigatorMoveFirstItem_Click(object sender, EventArgs e)
-        {
-            ListDataSoure.MoveFirst();
-        }
-
+ 
 
      
         private   void BaseList_Load(object sender, EventArgs e)
         {
-
             if (System.ComponentModel.LicenseManager.UsageMode == System.ComponentModel.LicenseUsageMode.Designtime || this.DesignMode)
             {
                 return;
             }
-            //InitProcess();
-            
             if (!this.DesignMode)
             {
-                
                 QueryDtoProxy = LoadQueryConditionToUI(4);
-               
-
             }
         }
 
-    
+        /// <summary>
+        /// 默认不是模糊查询
+        /// </summary>
+        /// <param name="useLike"></param>
+        public BaseEntity LoadQueryConditionToUI(decimal QueryConditionShowColQty = 4)
+        {
+            //为了验证设置的属性
+            this.AutoValidate = AutoValidate.EnableAllowFocusChange;
+            //UIQueryHelper<T> uIQueryHelper = new UIQueryHelper<T>();
+            kryptonPanel条件生成容器.GetType().GetProperty("DoubleBuffered", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic).SetValue(kryptonPanel条件生成容器, true, null);
+            kryptonPanel条件生成容器.Visible = false;
+            kryptonPanel条件生成容器.Controls.Clear();
+            kryptonPanel条件生成容器.SuspendLayout();
+            QueryDtoProxy = UIGenerateHelper.CreateQueryUI(typeof(DataRequest), true, kryptonPanel条件生成容器, QueryConditionFilter, QueryConditionShowColQty);
+            //if (MainForm.Instance.AppContext.CurrentUser_Role == null && MainForm.Instance.AppContext.IsSuperUser)
+            //{
+            //   // QueryDtoProxy = UIGenerateHelper.CreateQueryUI(typeof(T), true, kryptonPanel条件生成容器, QueryConditionFilter, QueryConditionShowColQty);
+            //}
+            //else
+            //{
+            //    //暂时默认了uselike
+            //    tb_UIMenuPersonalization menuSetting = MainForm.Instance.AppContext.CurrentUser_Role_Personalized.tb_UIMenuPersonalizations.FirstOrDefault(c => c.MenuID == CurMenuInfo.MenuID);
+            //    if (menuSetting != null)
+            //    {
+            //       // QueryDtoProxy = UIGenerateHelper.CreateQueryUI(typeof(T), true, kryptonPanel条件生成容器, QueryConditionFilter, menuSetting);
+            //    }
+            //    else
+            //    {
+            //      //  QueryDtoProxy = UIGenerateHelper.CreateQueryUI(typeof(T), true, kryptonPanel条件生成容器, QueryConditionFilter, QueryConditionShowColQty);
+            //    }
+            //}
+
+            kryptonPanel条件生成容器.ResumeLayout();
+            kryptonPanel条件生成容器.Visible = true;
+           
+            return QueryDtoProxy;
+
+        }
 
         private void kryptonHeaderGroupTop_CollapsedChanged(object sender, EventArgs e)
         {

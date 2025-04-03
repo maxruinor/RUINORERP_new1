@@ -44,6 +44,12 @@ namespace RUINORERP.UI.AdvancedUIModule
     /// <typeparam name="T"></typeparam>
     public partial class UCAdvFilterGeneric<T> : UCAdvFilter where T : class
     {
+
+        /// <summary>
+        /// 在初始化这个高级查询的菜单时要提供的他上级业务窗体的所属模块
+        /// </summary>
+        public long ModuleID { get; set; }
+
         public UCAdvFilterGeneric()
         {
             InitializeComponent();
@@ -69,14 +75,27 @@ namespace RUINORERP.UI.AdvancedUIModule
             InitBaseValue();
             InitListData();
 
-            //这里是用来设置菜单的KEY ，并不是实际的菜单路径。只是继承了公共基类
-            //这里为空时。引出的。InitFilterForControlNew
-            if (CurMenuInfo == null)
-            {
-                CurMenuInfo = new tb_MenuInfo();
-                CurMenuInfo.ClassPath = typeof(T).Name + "UCAdvFilterGeneric";
-            }
+     
         }
+
+
+        private tb_MenuInfo InitCurMenuInfo(tb_MenuInfo CurMenuInfo)
+        {
+            CurMenuInfo = new tb_MenuInfo();
+            CurMenuInfo.FormName = this.Name;
+            CurMenuInfo.ClassPath = typeof(T).Name + "UCAdvFilterGeneric";
+            CurMenuInfo.IsVisble = true;
+            CurMenuInfo.IsEnabled = true;
+            CurMenuInfo.Created_at = DateTime.Now;
+            CurMenuInfo.ModuleID = ModuleID;//这个模块
+            CurMenuInfo.MenuType = "行为菜单";
+            CurMenuInfo.Sort = -99999;
+            CurMenuInfo.CaptionCN="高级查询";
+            CurMenuInfo.MenuName = "高级查询";
+            CurMenuInfo = MainForm.Instance.AppContext.Db.Insertable<tb_MenuInfo>(CurMenuInfo).ExecuteReturnEntity();
+            return CurMenuInfo;
+        }
+
 
         /// <summary>
         /// 用来显示用关联外键的类型
@@ -449,7 +468,7 @@ namespace RUINORERP.UI.AdvancedUIModule
                 }
             }
 
-          //  QueryDto = UIGenerateHelper.CreateQueryUI(typeof(T), true, PanelForQuery, QueryConditionFilter, QueryConditionShowColQty);
+            //  QueryDto = UIGenerateHelper.CreateQueryUI(typeof(T), true, PanelForQuery, QueryConditionFilter, QueryConditionShowColQty);
 
             PanelForQuery.ResumeLayout();
             PanelForQuery.Visible = true;
@@ -555,20 +574,43 @@ namespace RUINORERP.UI.AdvancedUIModule
         {
             if (!this.DesignMode)
             {
+                //这里是用来设置菜单的KEY ，并不是实际的菜单路径。只是继承了公共基类
+                //这里为空时。引出的。InitFilterForControlNew
+
+                //权限菜单  高级菜单
+                if (CurMenuInfo == null || CurMenuInfo.ClassPath.IsNullOrEmpty())
+                {
+                    //以这个特殊的类路径来找这个高级过滤菜单 如果没有就新建保存
+                    string menuKey = typeof(T).Name + "UCAdvFilterGeneric";
+
+                    CurMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble && m.FormName == this.Name && m.ClassPath == menuKey).FirstOrDefault();
+                    if (CurMenuInfo == null)
+                    {
+                        CurMenuInfo = InitCurMenuInfo(CurMenuInfo);
+                        if (!MainForm.Instance.MenuList.Contains(CurMenuInfo))
+                        {
+                            MainForm.Instance.MenuList.Add(CurMenuInfo);
+                        }
+                    }
+                }
+
                 tb_UIMenuPersonalization menuSetting = MainForm.Instance.AppContext.CurrentUser_Role_Personalized.tb_UIMenuPersonalizations.FirstOrDefault(c => c.MenuID == CurMenuInfo.MenuID);
                 if (menuSetting != null)
                 {
                     if (menuSetting.tb_UIQueryConditions != null && menuSetting.tb_UIQueryConditions.Count > 0)
                     {
-                        LoadQueryConditionToUI(menuSetting.QueryConditionCols); 
+                        LoadQueryConditionToUI(menuSetting.QueryConditionCols);
                     }
                     else
                     {
                         LoadQueryConditionToUI(4);
                     }
                 }
+                else
+                {
+                    LoadQueryConditionToUI(4);
+                }
 
-                   
                 #region 请求缓存
                 //通过表名获取需要缓存的关系表再判断是否存在。没有就从服务器请求。这种是全新的请求。后面还要设计更新式请求。
                 UIBizSrvice.RequestCache<T>();

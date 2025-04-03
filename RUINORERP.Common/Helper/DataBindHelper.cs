@@ -369,6 +369,8 @@ namespace RUINORERP.Common.Helper
             cmbBox.DataBindings.Add(depa);
         }
 
+        #region CheckBox
+
         public static void BindData4CheckBox(object entity, string key, CheckBox chkBox, bool SyncUI)
         {
             Binding binddata = null;
@@ -440,6 +442,11 @@ namespace RUINORERP.Common.Helper
             string key = mb.Name;
             BindData4CheckBox<T>(entity, key, chkBox, SyncUI);
         }
+
+
+        #endregion
+
+     
 
         public static void BindData4DataTime(object entity, object datetimeValue, string key, DateTimePicker dtp, bool SyncUI)
         {

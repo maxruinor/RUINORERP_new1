@@ -1044,9 +1044,11 @@ namespace CommonProcess.StringProcess
                 hd.LoadHtml(SourceString);
                 Thread pingTask = new Thread(new ThreadStart(delegate
                 {
+                    
                     //代码,线程要执行的代码
                     SartNode(SourceString);
                 }));
+                pingTask.IsBackground = true;
                 pingTask.Start();
 
             }

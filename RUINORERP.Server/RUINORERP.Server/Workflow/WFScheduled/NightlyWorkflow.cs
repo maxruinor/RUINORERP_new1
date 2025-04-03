@@ -94,16 +94,19 @@ namespace RUINORERP.Server.Workflow.WFScheduled
                     if (System.DateTime.Now.Hour == 23 && data.ExecutionFrequency == 2)
                     {
                         CRM_FollowUpPlansService followUpPlansService = Startup.GetFromFac<CRM_FollowUpPlansService>();
-                        followUpPlansService.AutoUdateCRMPlanStatus();
+                        int updatecount = await followUpPlansService.AutoUdateCRMPlanStatus();
+                        logger.LogInformation($"执行完自动更新任务{updatecount}" + subtext + System.DateTime.Now);
                     }
                     else
                     {
                         // data.ExecutionFrequency = 0;
                     }
 
+                    //更新计划状态
+
                     // 模拟耗时任务，例如等待 1 秒
                     await Task.Delay(1000);
-                    
+
                     frmMain.Instance.PrintInfoLog($"结束每日任务~~~。DailyTaskStep：GlobalScheduledData.ExecutionFrequency=> " + data.ExecutionFrequency.ToString());
                 }
                 catch (Exception ex)

@@ -262,6 +262,7 @@ namespace CommonProcess.StringProcess
                     {
                         download.ProxyUri = kv.Url.ToString();
                         Thread t = new Thread(new ParameterizedThreadStart(download.StartDownload));
+                        t.IsBackground = true;
                         t.Start(true);
                     }
                     catch (Exception ex)

@@ -385,16 +385,16 @@ namespace RUINORERP.UI
             return pageLog;
         }
 
-        private KryptonPage NewIMMsg()
-        {
-            ucMsg.Height = 30;
-            KryptonPage pageMsg = NewPage("通讯中心", 2, ucMsg);
-            //pageMsg.ClearFlags(KryptonPageFlags.All);
-            pageMsg.ClearFlags(KryptonPageFlags.DockingAllowClose);
-            pageMsg.ClearFlags(KryptonPageFlags.DockingAllowFloating);//控制托出的单独窗体是否能关掉
-            pageMsg.Height = 30;
-            return pageMsg;
-        }
+        //private KryptonPage NewIMMsg()
+        //{
+        //    ucMsg.Height = 30;
+        //    KryptonPage pageMsg = NewPage("通讯中心", 2, ucMsg);
+        //    //pageMsg.ClearFlags(KryptonPageFlags.All);
+        //    pageMsg.ClearFlags(KryptonPageFlags.DockingAllowClose);
+        //    pageMsg.ClearFlags(KryptonPageFlags.DockingAllowFloating);//控制托出的单独窗体是否能关掉
+        //    pageMsg.Height = 30;
+        //    return pageMsg;
+        //}
         private KryptonPage NewForm()
         {
             return NewPage("NewForm ", 1, new UserControl1());
@@ -425,7 +425,7 @@ namespace RUINORERP.UI
         }
 
         public UClog uclog = Startup.GetFromFac<UClog>();
-        public IM.UCMessager ucMsg = new IM.UCMessager();
+       // public IM.UCMessager ucMsg = new IM.UCMessager();
 
         private string version = string.Empty;
 
@@ -925,11 +925,11 @@ namespace RUINORERP.UI
                     //kryptonDockingManager1.MakeAutoHiddenRequest(myppages[1].UniqueName);   IMMMMMM
                 }
 
-                KryptonPage IMPage = NewIMMsg();
-                IMPage.AllowDrop = false;
-                IMPage.SetFlags(KryptonPageFlags.All);
-                kryptonDockingManager1.AddDockspace("Control", DockingEdge.Right, new KryptonPage[] { IMPage });
-                kryptonDockingManager1.MakeAutoHiddenRequest(IMPage.UniqueName);//默认加载时隐藏
+                //KryptonPage IMPage = NewIMMsg();
+                //IMPage.AllowDrop = false;
+                //IMPage.SetFlags(KryptonPageFlags.All);
+                //kryptonDockingManager1.AddDockspace("Control", DockingEdge.Right, new KryptonPage[] { IMPage });
+                //kryptonDockingManager1.MakeAutoHiddenRequest(IMPage.UniqueName);//默认加载时隐藏
 
                 InitCenterPages();
                 LoadDefaultSkinMenu();
@@ -1207,7 +1207,7 @@ namespace RUINORERP.UI
                 }
 
                 //记入审计日志
-                AuditLogHelper.Instance.CreateAuditLog("登陆", $"{System.Environment.MachineName}-成功登陆服务器");
+                //AuditLogHelper.Instance.CreateAuditLog("登陆", $"{System.Environment.MachineName}-成功登陆服务器");
                 if (MainForm.Instance.AppContext.CurUserInfo != null && MainForm.Instance.AppContext.CurUserInfo.UserInfo != null)
                 {
                     try
@@ -2137,9 +2137,10 @@ namespace RUINORERP.UI
             finally
             {
                 System.GC.Collect();
-                Application.Exit();
+                //Application.Exit();
+                Environment.Exit(0); // 强制终止进程
             }
-           
+
         }
 
         internal void PrintInfoLog(string msg, Color c)
@@ -2317,6 +2318,10 @@ namespace RUINORERP.UI
                 catch (Exception)
                 {
 
+                }
+                finally
+                {
+                    Application.Exit();
                 }
             }
         }

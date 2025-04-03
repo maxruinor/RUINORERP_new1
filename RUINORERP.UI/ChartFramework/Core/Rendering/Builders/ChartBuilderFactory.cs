@@ -21,12 +21,12 @@ namespace RUINORERP.UI.ChartFramework.Core.Rendering.Builders
     {
         public static IChartBuilder<CartesianChart> CreateBuilder(DataRequest request, SqlDataProviderBase sqlDataProvider)
         {
-            return request.chartType switch
+            return request.ChartType switch
             {
                 ChartType.Line => new LineChartBuilder(request,sqlDataProvider),
                 ChartType.Column => new ColumnChartBuilder(request, sqlDataProvider),
                 ChartType.Pie => new PieChartBuilder(request, sqlDataProvider),
-                _ => throw new NotSupportedException($"不支持的图表类型: {request.chartType}")
+                _ => throw new NotSupportedException($"不支持的图表类型: {request.ChartType}")
             };
         }
     }

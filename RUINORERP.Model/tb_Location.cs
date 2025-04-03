@@ -109,6 +109,21 @@ namespace RUINORERP.Model
                         }
         }
 
+        private string _Name;
+        /// <summary>
+        /// 仓库名称
+        /// </summary>
+        [AdvQueryAttribute(ColName = "Name", ColDesc = "仓库名称")]
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType = "String", ColumnName = "Name", Length = 50, IsNullable = false, ColumnDescription = "仓库名称")]
+        public string Name
+        {
+            get { return _Name; }
+            set
+            {
+                SetProperty(ref _Name, value);
+            }
+        }
+
         private string _Tel;
         /// <summary>
         /// 电话
@@ -123,18 +138,21 @@ namespace RUINORERP.Model
                         }
         }
 
-        private string _Name;
+
+
+        private int _Sort=0;
         /// <summary>
-        /// 仓库名称
+        /// 排序
         /// </summary>
-        [AdvQueryAttribute(ColName = "Name",ColDesc = "仓库名称")] 
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "Name" ,Length=50,IsNullable = false,ColumnDescription = "仓库名称" )]
-        public string Name
-        { 
-            get{return _Name;}
-            set{
-            SetProperty(ref _Name, value);
-                        }
+        [AdvQueryAttribute(ColName = "Sort", ColDesc = "排序")]
+        [SugarColumn(ColumnDataType = "int", SqlParameterDbType = "Int32", ColumnName = "Sort", DecimalDigits = 0, IsNullable = false, ColumnDescription = "排序")]
+        public int Sort
+        {
+            get { return _Sort; }
+            set
+            {
+                SetProperty(ref _Sort, value);
+            }
         }
 
         private string _Desc;

@@ -127,6 +127,17 @@ namespace RUINORERP.UI.PSI.INV
             DataBindingHelper.BindData4TextBox<tb_ProdBorrowing>(entity, t => t.Reason, txtReason, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4ControlByEnum<tb_ProdBorrowing>(entity, t => t.DataStatus, lblDataStatus, BindDataType4Enum.EnumName, typeof(Global.DataStatus));
             DataBindingHelper.BindData4ControlByEnum<tb_ProdBorrowing>(entity, t => t.ApprovalStatus, lblReview, BindDataType4Enum.EnumName, typeof(Global.ApprovalStatus));
+            DataBindingHelper.BindData4CheckBox<tb_ProdBorrowing>(entity, t => t.IsVendor, chkIsVendor, false);
+
+            if (entity.IsVendor)
+            {
+                InitLoadSupplierData(entity);
+            }
+            else
+            {
+                InitLoadCustomerData(entity);
+            }
+
             if (entity.tb_ProdBorrowingDetails != null && entity.tb_ProdBorrowingDetails.Count > 0)
             {
                 // details = entity.tb_ProdBorrowingDetails;
@@ -141,14 +152,25 @@ namespace RUINORERP.UI.PSI.INV
             entity.PropertyChanged += (sender, s2) =>
             {
                 //权限允许
-                if ((true && entity.DataStatus == (int)DataStatus.草稿) || (true && entity.DataStatus == (int)DataStatus.新建))
+                //数据状态变化会影响按钮变化
+                if (s2.PropertyName == entity.GetPropertyName<tb_ProdBorrowing>(c => c.DataStatus))
                 {
-
+                    ToolBarEnabledControl(entity);
                 }
                 if (entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改)
                 {
-                    base.InitRequiredToControl(MainForm.Instance.AppContext.GetRequiredService <tb_ProdBorrowingValidator> (), kryptonPanelMainInfo.Controls);
-                    // base.InitEditItemToControl(entity, kryptonPanelMainInfo.Controls);
+                    base.InitRequiredToControl(MainForm.Instance.AppContext.GetRequiredService<tb_ProdBorrowingValidator>(), kryptonPanelMainInfo.Controls);
+                    if (s2.PropertyName == entity.GetPropertyName<tb_ProdBorrowing>(c => c.IsVendor))
+                    {
+                        if (chkIsVendor.Checked)
+                        {
+                            InitLoadSupplierData(entity);
+                        }
+                        else
+                        {
+                            InitLoadCustomerData(entity);
+                        }
+                    }
                 }
                 //显示 打印状态 如果是草稿状态 不显示打印
                 if ((DataStatus)EditEntity.DataStatus != DataStatus.草稿)
@@ -170,45 +192,48 @@ namespace RUINORERP.UI.PSI.INV
                 }
             };
 
-            if (chkBysupplier.Checked)
-            {
-                //创建表达式
-                var lambdaSupplier = Expressionable.Create<tb_CustomerVendor>()
-                                .And(t => t.IsVendor == true)
-                                .AndIF(AuthorizeController.GetExclusiveLimitedAuth(MainForm.Instance.AppContext) && !AppContext.IsSuperUser, t => t.Employee_ID == AppContext.CurUserInfo.UserInfo.Employee_ID)//限制了销售只看到自己的客户
-                                .ToExpression();//注意 这一句 不能少
-
-                BaseProcessor baseProcessor = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_CustomerVendor).Name + "Processor");
-                QueryFilter queryFilterSupplier = baseProcessor.GetQueryFilter();
-                queryFilterSupplier.FilterLimitExpressions.Add(lambdaSupplier);
-                DataBindingHelper.BindData4Cmb<tb_CustomerVendor>(EditEntity, k => k.CustomerVendor_ID, v => v.CVName, cmbCustomerVendor_ID, queryFilterSupplier.GetFilterExpression<tb_CustomerVendor>(), true);
-                DataBindingHelper.InitFilterForControlByExp<tb_CustomerVendor>(EditEntity, cmbCustomerVendor_ID, c => c.CVName, queryFilterSupplier);
-            }
-            else
-            {
-                //创建表达式
-                var lambda = Expressionable.Create<tb_CustomerVendor>()
-                                .And(t => t.IsCustomer == true)
-                                .AndIF(AuthorizeController.GetSaleLimitedAuth(MainForm.Instance.AppContext) && !AppContext.IsSuperUser, t => t.Employee_ID == AppContext.CurUserInfo.UserInfo.Employee_ID)//限制了销售只看到自己的客户
-                                .ToExpression();//注意 这一句 不能少
-
-                BaseProcessor baseProcessor = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_CustomerVendor).Name + "Processor");
-                QueryFilter queryFilterC = baseProcessor.GetQueryFilter();
-                queryFilterC.FilterLimitExpressions.Add(lambda);
-                DataBindingHelper.BindData4Cmb<tb_CustomerVendor>(entity, k => k.CustomerVendor_ID, v => v.CVName, cmbCustomerVendor_ID, queryFilterC.GetFilterExpression<tb_CustomerVendor>(), true);
-                DataBindingHelper.InitFilterForControlByExp<tb_CustomerVendor>(entity, cmbCustomerVendor_ID, c => c.CVName, queryFilterC);
-
-
-            }
 
 
 
             if (entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改)
             {
-                base.InitRequiredToControl(MainForm.Instance.AppContext.GetRequiredService <tb_ProdBorrowingValidator> (), kryptonPanelMainInfo.Controls);
+                base.InitRequiredToControl(MainForm.Instance.AppContext.GetRequiredService<tb_ProdBorrowingValidator>(), kryptonPanelMainInfo.Controls);
             }
             base.BindData(entity);
         }
+
+
+        private void InitLoadSupplierData(tb_ProdBorrowing entity)
+        {
+            //创建表达式
+            var lambdaSupplier = Expressionable.Create<tb_CustomerVendor>()
+                            .And(t => t.IsVendor == true)
+                            .AndIF(AuthorizeController.GetExclusiveLimitedAuth(MainForm.Instance.AppContext) && !AppContext.IsSuperUser, t => t.Employee_ID == AppContext.CurUserInfo.UserInfo.Employee_ID)//限制了销售只看到自己的客户
+                            .ToExpression();//注意 这一句 不能少
+
+            BaseProcessor baseProcessor = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_CustomerVendor).Name + "Processor");
+            QueryFilter queryFilterSupplier = baseProcessor.GetQueryFilter();
+            queryFilterSupplier.FilterLimitExpressions.Add(lambdaSupplier);
+            DataBindingHelper.BindData4Cmb<tb_CustomerVendor>(EditEntity, k => k.CustomerVendor_ID, v => v.CVName, cmbCustomerVendor_ID, queryFilterSupplier.GetFilterExpression<tb_CustomerVendor>(), true);
+            DataBindingHelper.InitFilterForControlByExp<tb_CustomerVendor>(EditEntity, cmbCustomerVendor_ID, c => c.CVName, queryFilterSupplier);
+        }
+        private void InitLoadCustomerData(tb_ProdBorrowing entity)
+        {
+            //创建表达式
+            var lambda = Expressionable.Create<tb_CustomerVendor>()
+                            .And(t => t.IsCustomer == true)
+                            .AndIF(AuthorizeController.GetSaleLimitedAuth(MainForm.Instance.AppContext) && !AppContext.IsSuperUser, t => t.Employee_ID == AppContext.CurUserInfo.UserInfo.Employee_ID)//限制了销售只看到自己的客户
+                            .ToExpression();//注意 这一句 不能少
+
+            BaseProcessor baseProcessor = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_CustomerVendor).Name + "Processor");
+            QueryFilter queryFilterC = baseProcessor.GetQueryFilter();
+            queryFilterC.FilterLimitExpressions.Add(lambda);
+            DataBindingHelper.BindData4Cmb<tb_CustomerVendor>(entity, k => k.CustomerVendor_ID, v => v.CVName, cmbCustomerVendor_ID, queryFilterC.GetFilterExpression<tb_CustomerVendor>(), true);
+            DataBindingHelper.InitFilterForControlByExp<tb_CustomerVendor>(entity, cmbCustomerVendor_ID, c => c.CVName, queryFilterC);
+
+
+        }
+
 
 
         SourceGridDefine sgd = null;
@@ -242,7 +267,7 @@ namespace RUINORERP.UI.PSI.INV
             {
                 listCols.SetCol_ReadOnly<tb_ProdBorrowingDetail>(c => c.ReQty);
             }
-           
+
             //具体审核权限的人才显示
             /*
             if (!AppContext.CurUserInfo.UserButtonList.Where(c => c.BtnText == MenuItemEnums.审核.ToString()).Any())

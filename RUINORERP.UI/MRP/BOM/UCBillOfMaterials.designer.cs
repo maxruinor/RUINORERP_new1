@@ -605,7 +605,7 @@
             // 
             // dtpExpirationDate
             // 
-            this.dtpExpirationDate.CalendarTodayDate = new System.DateTime(2024, 1, 11, 0, 0, 0, 0);
+            this.dtpExpirationDate.CalendarTodayDate = new System.DateTime(((long)(0)));
             this.dtpExpirationDate.Location = new System.Drawing.Point(341, 142);
             this.dtpExpirationDate.Name = "dtpExpirationDate";
             this.dtpExpirationDate.ShowCheckBox = true;
@@ -688,7 +688,7 @@
             // 
             // dtpEffective_at
             // 
-            this.dtpEffective_at.CalendarTodayDate = new System.DateTime(2024, 1, 11, 0, 0, 0, 0);
+            this.dtpEffective_at.CalendarTodayDate = new System.DateTime(((long)(0)));
             this.dtpEffective_at.Location = new System.Drawing.Point(341, 118);
             this.dtpEffective_at.Name = "dtpEffective_at";
             this.dtpEffective_at.ShowCheckBox = true;

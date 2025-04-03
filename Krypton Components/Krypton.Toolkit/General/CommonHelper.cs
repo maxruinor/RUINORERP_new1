@@ -420,7 +420,7 @@ namespace Krypton.Toolkit
 
             // Create the actual thread and provide thread entry point
             var thread = new Thread(opThread.Run);
-
+            thread.IsBackground = true;
             // Kick off the thread action
             thread.Start();
 

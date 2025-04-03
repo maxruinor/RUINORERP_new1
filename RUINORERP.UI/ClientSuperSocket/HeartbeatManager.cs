@@ -11,20 +11,28 @@ using TransInstruction.DataPortal;
 
 namespace RUINORERP.UI.ClientSuperSocket
 {
-    public class HeartbeatManager
+    public class HeartbeatManager : IDisposable
     {
         private readonly object _lock = new object();
-        private bool _isRunning;
+        private volatile bool _isRunning;
         private Thread _heartbeatThread;
+        private CancellationTokenSource _cts;
+     
+        
 
         public void Start()
         {
             lock (_lock)
             {
+                if (_isRunning) return;
+
                 _isRunning = true;
+                _cts = new CancellationTokenSource();
                 _heartbeatThread = new Thread(HeartbeatLoop);
                 _heartbeatThread.Name = "Heartbeat Thread";
+                _heartbeatThread.IsBackground = true; // 关键！设置为后台线程
                 _heartbeatThread.Start();
+ 
             }
         }
 
@@ -32,32 +40,30 @@ namespace RUINORERP.UI.ClientSuperSocket
         {
             lock (_lock)
             {
+                if (!_isRunning) return;
+
                 _isRunning = false;
-                if (_heartbeatThread != null)
+                _cts?.Cancel(); // 触发取消
+
+                // 最多等待2秒（避免无限阻塞）
+                if (_heartbeatThread != null && _heartbeatThread.IsAlive)
                 {
-                    _heartbeatThread.Join(); // 等待线程结束
+                    _heartbeatThread.Join(2000);
                 }
+
+                _cts?.Dispose();
+                _cts = null;
+                _heartbeatThread = null;
+                
             }
         }
 
         private void HeartbeatLoop()
         {
-            while (true)
+            while (_isRunning && !_cts.IsCancellationRequested)
             {
-                bool isRunning;
-                lock (_lock)
-                {
-                    isRunning = _isRunning;
-                }
-
-                if (!isRunning)
-                {
-                    break;
-                }
-
                 try
                 {
-                    // 发送心跳包的逻辑
                     SendHeartbeat();
                 }
                 catch (Exception ex)
@@ -65,9 +71,36 @@ namespace RUINORERP.UI.ClientSuperSocket
                     Console.WriteLine($"Error sending heartbeat: {ex.Message}");
                 }
 
-                // 等待2秒
-                Thread.Sleep(2000);
+                // 使用Cancellation的WaitHandle替代Thread.Sleep
+                _cts.Token.WaitHandle.WaitOne(2000); // 可被取消的等待
             }
+
+            //while (true)
+            //{
+            //    bool isRunning;
+            //    lock (_lock)
+            //    {
+            //        isRunning = _isRunning;
+            //    }
+
+            //    if (!isRunning)
+            //    {
+            //        break;
+            //    }
+
+            //    try
+            //    {
+            //        // 发送心跳包的逻辑
+            //        SendHeartbeat();
+            //    }
+            //    catch (Exception ex)
+            //    {
+            //        Console.WriteLine($"Error sending heartbeat: {ex.Message}");
+            //    }
+
+            //    // 等待2秒
+            //    Thread.Sleep(2000);
+            //}
         }
 
         private void SendHeartbeat()
@@ -149,5 +182,9 @@ namespace RUINORERP.UI.ClientSuperSocket
             return gd;
         }
 
+        public void Dispose()
+        {
+            Stop();
+        }
     }
 }

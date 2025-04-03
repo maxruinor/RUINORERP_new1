@@ -405,6 +405,8 @@ namespace RUINORERP.Server
             return null; // 无其他实例运行
         }
         #endregion
+
+
         #region 调用Win32API,进程中已经有一个实例在运行,激活其窗口并显示在最前端
         private static void HandleRunningInstance(Process instance)
         {
@@ -414,6 +416,7 @@ namespace RUINORERP.Server
             SetForegroundWindow(instance.MainWindowHandle);//将窗口放置在最前端  
         }
         #endregion
+
         /// <summary>
         /// 该函数设置由不同线程产生的窗口的显示状态  
         /// </summary>  

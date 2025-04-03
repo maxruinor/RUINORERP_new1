@@ -43,6 +43,7 @@ namespace RUINORERP.Business.Processor
             queryFilter.SetQueryField<Logs>(c => c.Level);
             queryFilter.SetQueryField<Logs>(c => c.ActionName);
             queryFilter.SetQueryField<Logs>(c => c.MachineName);
+            queryFilter.SetQueryField<Logs>(c => c.IP);
             queryFilter.SetQueryField<Logs>(c => c.Message);
             queryFilter.SetQueryField<Logs>(c => c.Logger);
             queryFilter.SetQueryField<Logs>(c => c.Date);

@@ -132,21 +132,23 @@ namespace RUINORERP.UI.UserCenter.DataParts
                 if (menuItem.Owner is ContextMenuStrip contextMenu)
                 {
 
-                    if (kryptonTreeViewJobList.Tag is tb_WorkCenterConfig config)
-                    {
-                        BuilderToDoListTreeView(config);
-                    }
+                    //if (kryptonTreeViewJobList.Tag is tb_WorkCenterConfig config)
+                    //{
+                    BuilderToDoListTreeView();
+                    //}
 
                 }
             }
         }
 
-
+        /// <summary>
+        /// 推送一次
+        /// </summary>
         public void RefreshTreeData()
         {
-
+            BuilderToDoListTreeView();
         }
-
+        
 
         BizTypeMapper mapper = new BizTypeMapper();
 
@@ -154,13 +156,13 @@ namespace RUINORERP.UI.UserCenter.DataParts
         /// <summary>
         /// 待办事项
         /// </summary>
-        private void BuilderToDoListTreeView(tb_WorkCenterConfig centerConfig)
+        private void BuilderToDoListTreeView()
         {
             kryptonTreeViewJobList.Nodes.Clear();
             TreeNode nd = new TreeNode();
             nd.Text = "待办事项";
             nd.ImageIndex = 0;
-            nd.Tag = centerConfig;
+            //nd.Tag = centerConfig;
             //手动构造已提交未审核
             var conModel未审核 = new List<IConditionalModel>();
             conModel未审核.Add(new ConditionalModel { FieldName = "ApprovalStatus", ConditionalType = ConditionalType.Equal, FieldValue = "0", CSharpTypeName = "int" }); //设置类型 和C#名称一样常用的支持
@@ -248,9 +250,9 @@ namespace RUINORERP.UI.UserCenter.DataParts
 
 
             List<BizType> bizTypes = new List<BizType>();
-            if (centerConfig != null)
+            if (CenterConfig != null)
             {
-                List<string> ToDoItems = centerConfig.ToDoList.Split(',').ToList();
+                List<string> ToDoItems = CenterConfig.ToDoList.Split(',').ToList();
                 foreach (var item in ToDoItems)
                 {
                     if (string.IsNullOrEmpty(item))
@@ -512,6 +514,9 @@ namespace RUINORERP.UI.UserCenter.DataParts
             return value.Equals("False", StringComparison.OrdinalIgnoreCase);
 
         }
+
+
+        public tb_WorkCenterConfig CenterConfig { get; set; }
         private void UCTodoList_Load(object sender, EventArgs e)
         {
             if (this.DesignMode)
@@ -522,18 +527,18 @@ namespace RUINORERP.UI.UserCenter.DataParts
             tb_RoleInfo CurrentRole = MainForm.Instance.AppContext.CurrentRole;
             tb_UserInfo CurrentUser = MainForm.Instance.AppContext.CurUserInfo.UserInfo;
             //先取人，无人再取角色。
-            tb_WorkCenterConfig centerConfig = MainForm.Instance.AppContext.WorkCenterConfigList.FirstOrDefault(c => c.RoleID == CurrentRole.RoleID && c.User_ID == CurrentUser.User_ID);
-            if (centerConfig == null)
+            CenterConfig = MainForm.Instance.AppContext.WorkCenterConfigList.FirstOrDefault(c => c.RoleID == CurrentRole.RoleID && c.User_ID == CurrentUser.User_ID);
+            if (CenterConfig == null)
             {
-                centerConfig = MainForm.Instance.AppContext.WorkCenterConfigList.FirstOrDefault(c => c.RoleID == CurrentRole.RoleID);
+                CenterConfig = MainForm.Instance.AppContext.WorkCenterConfigList.FirstOrDefault(c => c.RoleID == CurrentRole.RoleID);
             }
-            if (string.IsNullOrEmpty(centerConfig.ToDoList))
+            if (string.IsNullOrEmpty(CenterConfig.ToDoList))
             {
-                centerConfig = MainForm.Instance.AppContext.WorkCenterConfigList.FirstOrDefault(c => c.RoleID == CurrentRole.RoleID);
+                CenterConfig = MainForm.Instance.AppContext.WorkCenterConfigList.FirstOrDefault(c => c.RoleID == CurrentRole.RoleID);
             }
-            BuilderToDoListTreeView(centerConfig);
+            BuilderToDoListTreeView();
             kryptonTreeViewJobList.ContextMenuStrip = contextMenuStrip1;
-            kryptonTreeViewJobList.Tag = centerConfig;
+            //kryptonTreeViewJobList.Tag = centerConfig;
         }
     }
 }

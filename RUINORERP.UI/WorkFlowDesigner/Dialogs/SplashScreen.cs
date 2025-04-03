@@ -156,7 +156,7 @@ using Microsoft.Win32;
 				return;
 			ms_oThread = new Thread( new ThreadStart(SplashScreen.ShowForm));
 			ms_oThread.IsBackground = true;
-			ms_oThread.ApartmentState = ApartmentState.STA;
+			ms_oThread.SetApartmentState(ApartmentState.STA);
 			ms_oThread.Start();
 			
 		}

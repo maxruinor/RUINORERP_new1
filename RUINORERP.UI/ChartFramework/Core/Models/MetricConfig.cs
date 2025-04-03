@@ -9,6 +9,7 @@ namespace RUINORERP.UI.ChartFramework.Core.Models
 {
     /// <summary>
     /// 指标配置
+    /// 金额，订单数。客户数
     /// </summary>
     public class MetricConfig
     {

@@ -84,8 +84,71 @@ namespace RUINORERP.UI.ChartFramework.Models
             // 实现转换逻辑...
             return dt;
         }
+
+        /// <summary>
+        /// 图表注解集合（用于饼图中心标签、自定义标注等）
+        /// </summary>
+        public IList<ChartAnnotation> Annotations { get; set; } = new List<ChartAnnotation>();
+
+        /// <summary>
+        /// 饼图专用配置
+        /// </summary>
+        public PieChartOptions PieOptions { get; set; } = new PieChartOptions();
+
+    
+
+    }
+    /// <summary>
+    /// 图表注解定义
+    /// </summary>
+    public class ChartAnnotation
+    {
+        /// <summary>注解文本</summary>
+        public string Text { get; set; }
+
+        /// <summary>显示位置</summary>
+        public AnnotationPosition Position { get; set; } = AnnotationPosition.Center;
+
+        /// <summary>字体大小</summary>
+        public double FontSize { get; set; } = 12;
+
+        /// <summary>字体颜色（十六进制）</summary>
+        public string ColorHex { get; set; } = "#333333";
     }
 
+    /// <summary>
+    /// 饼图专用配置项
+    /// </summary>
+    public class PieChartOptions
+    {
+        /// <summary>是否显示中心总数值</summary>
+        public bool ShowTotalInCenter { get; set; } = true;
+
+        /// <summary>中心标签格式（如"{Total}项\n{Percent}%"）</summary>
+        public string CenterLabelFormat { get; set; } = "{Total}";
+
+        /// <summary>饼图内半径（0-1，用于环形图）</summary>
+        public double InnerRadius { get; set; } = 0;
+
+        /// <summary>起始角度（0-360）</summary>
+        public double StartAngle { get; set; } = 0;
+    }
+
+    /// <summary>
+    /// 注解位置枚举
+    /// </summary>
+    public enum AnnotationPosition
+    {
+        Center,
+        Top,
+        Bottom,
+        Left,
+        Right,
+        TopLeft,
+        TopRight,
+        BottomLeft,
+        BottomRight
+    }
     /// <summary>
     /// 图表元数据容器
     /// </summary>

@@ -142,8 +142,6 @@ namespace RUINORERP.UI.Common
 
                             }
                             #endregion
-
-
                         }
                         catch (Exception ex)
                         {
@@ -155,24 +153,6 @@ namespace RUINORERP.UI.Common
                             System.IO.FileInfo fileInfo = new System.IO.FileInfo(selectedFile);
                             package.SaveAs(fileInfo);
                             MessageBox.Show($"成功导出{newSumDataGridViewMaster.RowCount}行数据！");
-                            /*
- *   ExcelWorksheet excelSheet = excelDoc.Workbook.Worksheets.Add("Sheet1");
-excelSheet.Cells[1, 1].Value = "这是第一行第一列的值";
-excelSheet.Cells[1, 2].Value = "这是第一行第二列的值";
-
-FileInfo fileInfo = new FileInfo("C:\\Temp\\ExportTest.xlsx");
-excelDoc.SaveAs(fileInfo);
- */
-                            //for (int row = 0; row < rowCount - 1; row++)
-                            //{
-                            //    RawData data = new RawData();
-                            //    data.id = (double)worksheet.Cells[row + 2, 1].Value;
-                            //    data.speed = (double)worksheet.Cells[row + 2, 2].Value;
-                            //    data.power = (double)worksheet.Cells[row + 2, 3].Value;
-                            //    data.fcrr = (double)worksheet.Cells[row + 2, 4].Value;
-                            //    DataList.Add(data);
-
-                            //}
                         }
                     }
                 }
@@ -190,9 +170,9 @@ excelDoc.SaveAs(fileInfo);
         /// 导出DataGridView数据到Excel（支持特殊绑定的数据源）
         /// </summary>
         /// <param name="dataGridView">NewSumDataGridView控件</param>
-        public static void ExportExcel(UControls.NewSumDataGridView dataGridView)
+        public static void ExportExcel(UControls.NewSumDataGridView newSumDataGridViewMaster)
         {
-            if (dataGridView == null || dataGridView.RowCount == 0)
+            if (newSumDataGridViewMaster == null || newSumDataGridViewMaster.RowCount == 0)
             {
                 MessageBox.Show("没有可导出的数据", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 return;
@@ -200,18 +180,18 @@ excelDoc.SaveAs(fileInfo);
 
             try
             {
-                using (SaveFileDialog saveDialog = new SaveFileDialog
+                using (SaveFileDialog saveDialog = new SaveFileDialog())
                 {
-                    Filter = "Excel文件 (*.xlsx)|*.xlsx|Excel 97-2003文件 (*.xls)|*.xls",
-                    FilterIndex = 1,
-                    Title = "导出Excel文件",
-                    FileName = $"导出数据_{DateTime.Now:yyyyMMddHHmmss}",
-                    RestoreDirectory = true
-                })
-                {
-                    if (saveDialog.ShowDialog() != DialogResult.OK) return;
+                    saveDialog.Filter = "Excel Files (*.xlsx; *.xls)|*.xlsx; *.xls";
+                    saveDialog.FilterIndex = 1;
+                    saveDialog.Title = "导出Excel文件";
+                    saveDialog.FileName = $"导出数据_{DateTime.Now:yyyyMMddHHmmss}";
+                    saveDialog.RestoreDirectory = true;
 
-                    ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
+                    if (saveDialog.ShowDialog() != DialogResult.OK)
+                        return;
+
+                    ExcelPackage.LicenseContext = OfficeOpenXml.LicenseContext.NonCommercial;
                     var stopwatch = Stopwatch.StartNew();
 
                     using (var progressForm = new ProgressForm("正在导出数据..."))
@@ -225,48 +205,77 @@ excelDoc.SaveAs(fileInfo);
 
                         try
                         {
-                            // 生成表头
+                            // Generate header
                             int colIndex = 1;
-                            var visibleColumns = dataGridView.Columns.Cast<DataGridViewColumn>()
-                                .Where(c => c.Visible && !string.IsNullOrEmpty(c.HeaderText))
-                                .ToList();
-
-                            foreach (var column in visibleColumns)
+                            for (int i = 0; i < newSumDataGridViewMaster.ColumnCount; i++)
                             {
-                                worksheet.Cells[1, colIndex].Value = column.HeaderText;
-                                worksheet.Column(colIndex).Width = column.Width / 7.5; // 更精确的列宽计算
-                                colIndex++;
+                                if (newSumDataGridViewMaster.Columns[i].Visible &&
+                                    !string.IsNullOrEmpty(newSumDataGridViewMaster.Columns[i].HeaderText))
+                                {
+                                    worksheet.Cells[1, colIndex].Value = newSumDataGridViewMaster.Columns[i].HeaderText;
+                                    worksheet.Column(colIndex).Width = newSumDataGridViewMaster.Columns[i].Width / 7.5;
+                                    colIndex++;
+                                }
                             }
 
-                            // 填充数据
-                            for (int rowIndex = 0; rowIndex < dataGridView.RowCount; rowIndex++)
+                            // Fill data
+                            for (int rowIndex = 0; rowIndex < newSumDataGridViewMaster.RowCount; rowIndex++)
                             {
                                 colIndex = 1;
-                                foreach (var column in visibleColumns)
+                                for (int col = 0; col < newSumDataGridViewMaster.ColumnCount; col++)
                                 {
-                                    var cell = dataGridView[column.Index, rowIndex];
-                                    if (cell.Value == null) continue;
+                                    if (newSumDataGridViewMaster.Columns[col].Visible &&
+                                        !string.IsNullOrEmpty(newSumDataGridViewMaster.Columns[col].HeaderText))
+                                    {
+                                        var cell = newSumDataGridViewMaster[col, rowIndex];
+                                        var excelCell = worksheet.Cells[rowIndex + 2, colIndex];
 
-                                    var excelCell = worksheet.Cells[rowIndex + 2, colIndex];
-                                    SetCellValue(excelCell, cell);
-                                    colIndex++;
+                                        if (Common.CommonHelper.Instance.GetRealType(cell.ValueType) == typeof(DateTime))
+                                        {
+                                            excelCell.Value = cell.FormattedValue.ToString();
+                                        }
+                                        else if (Common.CommonHelper.Instance.GetRealType(cell.ValueType) == typeof(string) ||
+                                                 Common.CommonHelper.Instance.GetRealType(cell.ValueType) == typeof(Int64))
+                                        {
+                                            if (cell.Value != null)
+                                            {
+                                                excelCell.Value = cell.FormattedValue.ToString();
+                                            }
+                                        }
+                                        else if (Common.CommonHelper.Instance.GetRealType(cell.ValueType) == typeof(Int32))
+                                        {
+                                            if (cell.Value != null && !cell.Value.ToString().Equals(cell.FormattedValue.ToString()))
+                                            {
+                                                excelCell.Value = cell.FormattedValue.ToString();
+                                            }
+                                            else
+                                            {
+                                                excelCell.Value = cell.Value;
+                                            }
+                                        }
+                                        else if (cell.Value != null)
+                                        {
+                                            excelCell.Value = Common.CommonHelper.Instance.GetRealValueByDataType(cell.ValueType, cell.Value);
+                                        }
+                                        colIndex++;
+                                    }
                                 }
                                 exportedRows++;
 
-                                // 每100行更新一次进度
+                                // Update progress every 100 rows
                                 if (rowIndex % 100 == 0)
                                 {
-                                    progressForm.SetProgress((int)((rowIndex + 1) * 100f / dataGridView.RowCount));
+                                    progressForm.SetProgress((int)((rowIndex + 1) * 100f / newSumDataGridViewMaster.RowCount));
                                     Application.DoEvents();
                                 }
                             }
 
-                            // 自动调整列宽（基于内容）
+                            // Auto-fit columns for better display
                             worksheet.Cells.AutoFitColumns();
                         }
                         catch (Exception ex)
                         {
-                            MainForm.Instance?.logger?.LogError($"Excel导出出错: {ex.Message}", ex);
+                            MainForm.Instance?.logger?.LogError("Excel导出时出错！", ex);
                             throw;
                         }
                         finally
@@ -275,7 +284,6 @@ excelDoc.SaveAs(fileInfo);
                             stopwatch.Stop();
 
                             progressForm.Close();
-                            progressForm.Dispose();
                         }
 
                         if (MessageBox.Show($"成功导出 {exportedRows} 行数据，耗时 {stopwatch.Elapsed.TotalSeconds:F2} 秒。\n是否立即打开文件？",
@@ -291,7 +299,6 @@ excelDoc.SaveAs(fileInfo);
                 MessageBox.Show($"导出失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
-
 
         /// <summary>
         /// 智能设置单元格值和格式

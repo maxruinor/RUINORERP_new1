@@ -106,7 +106,7 @@
             // 
             // dtpFollowUpDate
             // 
-            this.dtpFollowUpDate.CalendarTodayDate = new System.DateTime(2024, 12, 9, 0, 0, 0, 0);
+            this.dtpFollowUpDate.CalendarTodayDate = new System.DateTime(((long)(0)));
             this.dtpFollowUpDate.Location = new System.Drawing.Point(78, 2);
             this.dtpFollowUpDate.Name = "dtpFollowUpDate";
             this.dtpFollowUpDate.Size = new System.Drawing.Size(115, 21);

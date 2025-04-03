@@ -69,10 +69,10 @@ namespace RUINORERP.Server.Workflow.WFScheduled
                 
                 logger.LogInformation("开始每日任务" + subtext + System.DateTime.Now);
                 // 在这里编写你的耗时任务逻辑
-                frmMain.Instance.PrintInfoLog($"开始每日任务~~~。DailyTaskStep");
+                frmMain.Instance.PrintInfoLog($"开始每日任务~~~。DailyTaskStep 测试1");
                 // 模拟耗时任务，例如等待 5 秒
                 await Task.Delay(5000);
-                frmMain.Instance.PrintInfoLog($"结束每日任务~~~。DailyTaskStep");
+                frmMain.Instance.PrintInfoLog($"结束每日任务~~~测试1。DailyTaskStep");
             }
             catch (Exception ex)
             {

@@ -25,6 +25,8 @@ using static RUINOR.Runtime.InteropServices.APIs.APIsStructs;
 using System.Diagnostics;
 using RUINORERP.Global.Model;
 using RUINORERP.Business.Security;
+using RUINORERP.Business.Processor;
+using SqlSugar;
 
 namespace RUINORERP.UI.BI
 {
@@ -49,7 +51,7 @@ namespace RUINORERP.UI.BI
             _EditEntity = entity as tb_FM_PayeeInfo;
 
             DataBindingHelper.BindData4Cmb<tb_Employee>(entity, k => k.Employee_ID, v => v.Employee_Name, cmbEmployee_ID);
-            DataBindingHelper.BindData4Cmb<tb_CustomerVendor>(entity, k => k.CustomerVendor_ID, v => v.CVName, cmbCustomerVendor_ID);
+            DataBindingHelper.BindData4Cmb<tb_CustomerVendor>(entity, k => k.CustomerVendor_ID, v => v.CVName, cmbCustomerVendor_ID, c => c.IsVendor == true);
             DataBindingHelper.BindData4CmbByEnum<tb_FM_PayeeInfo>(entity, k => k.Account_type, typeof(AccountType), cmbAccount_type, false);
             DataBindingHelper.BindData4TextBox<tb_FM_PayeeInfo>(entity, t => t.Account_name, txtAccount_name, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_FM_PayeeInfo>(entity, t => t.Account_No, txtAccount_No, BindDataType4TextBox.Text, false);
@@ -64,7 +66,7 @@ namespace RUINORERP.UI.BI
             //后面这些依赖于控件绑定的数据源和字段。所以要在绑定后执行。
             if (entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改)
             {
-                base.InitRequiredToControl(MainForm.Instance.AppContext.GetRequiredService<tb_FM_PayeeInfoValidator>() , kryptonPanel1.Controls);
+                base.InitRequiredToControl(MainForm.Instance.AppContext.GetRequiredService<tb_FM_PayeeInfoValidator>(), kryptonPanel1.Controls);
                 base.InitEditItemToControl(entity, kryptonPanel1.Controls);
                 PicRowImage.Visible = true;
 
@@ -78,6 +80,10 @@ namespace RUINORERP.UI.BI
                 //限制只看到自己的
             }
 
+            if (entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改)
+            {
+                InitLoadSupplierData(_EditEntity);
+            }
 
             entity.PropertyChanged += (sender, s2) =>
             {
@@ -85,6 +91,7 @@ namespace RUINORERP.UI.BI
                 {
                     return;
                 }
+
                 if (_EditEntity.Employee_ID.HasValue && _EditEntity.Employee_ID.Value > 0 && s2.PropertyName == entity.GetPropertyName<tb_FM_PayeeInfo>(c => c.Employee_ID))
                 {
                     cmbCustomerVendor_ID.Visible = false;
@@ -116,7 +123,20 @@ namespace RUINORERP.UI.BI
             base.BindData(entity);
 
         }
+        private void InitLoadSupplierData(tb_FM_PayeeInfo entity)
+        {
+            //创建表达式
+            var lambdaSupplier = Expressionable.Create<tb_CustomerVendor>()
+                            .And(t => t.IsVendor == true)
+                            .AndIF(AuthorizeController.GetExclusiveLimitedAuth(MainForm.Instance.AppContext) && !MainForm.Instance.AppContext.IsSuperUser, t => t.Employee_ID == MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID)//限制了销售只看到自己的客户
+                            .ToExpression();//注意 这一句 不能少
 
+            BaseProcessor baseProcessor = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_CustomerVendor).Name + "Processor");
+            QueryFilter queryFilterSupplier = baseProcessor.GetQueryFilter();
+            queryFilterSupplier.FilterLimitExpressions.Add(lambdaSupplier);
+            DataBindingHelper.BindData4Cmb<tb_CustomerVendor>(entity, k => k.CustomerVendor_ID, v => v.CVName, cmbCustomerVendor_ID, queryFilterSupplier.GetFilterExpression<tb_CustomerVendor>(), true);
+            DataBindingHelper.InitFilterForControlByExp<tb_CustomerVendor>(entity, cmbCustomerVendor_ID, c => c.CVName, queryFilterSupplier);
+        }
         /// <summary>
         /// 下载图片显示到控件中
         /// </summary>

@@ -59,20 +59,6 @@ namespace RUINORERP.Business.Processor
 
 
 
-
-
-        /// <summary>
-        /// 过滤的限制条件，针对一个对象的结果全局限制比方往来单位中指定为供应商
-        /// </summary>
-        // public Expression<Func<dynamic, bool>> FieldLimitCondition { get; set; } = c => true;//注意这个默认值
-
-
-        ///过滤条件
-        //public LambdaExpression FilterLimitExpression { get; set; }
-
-
-
-
         //合并的时候要注意把参数统一 ,这里还是没有统一到。暂时没有处理。可以使用
         public LambdaExpression GetFilterLimitExpression(Type type)
         {
@@ -551,8 +537,6 @@ namespace RUINORERP.Business.Processor
                 throw new ArgumentNullException(nameof(queryFieldIDExp));
 
             QueryField queryField = new QueryField();
-            QueryTargetType = typeof(T);
-            queryField.QueryTargetType = QueryTargetType;
 
             string fieldID = RuinorExpressionHelper.ExpressionToString(queryFieldIDExp);
             queryField.QueryTargetType = typeof(T);

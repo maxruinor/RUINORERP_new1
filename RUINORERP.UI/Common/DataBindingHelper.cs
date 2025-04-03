@@ -42,6 +42,7 @@ using System.Windows.Documents;
 using static Google.Protobuf.Reflection.FeatureSet.Types;
 using System.Windows.Media.Animation;
 using Fireasy.Common.Extensions;
+using RUINORERP.UI.ChartFramework.Core;
 
 
 namespace RUINORERP.UI.Common
@@ -72,7 +73,28 @@ namespace RUINORERP.UI.Common
 
     public class DataBindingHelper
     {
+        public static List<EnumItem> GetTimeSelectTypeItems(Type enumType)
+        {
+            var items = new List<EnumItem>();
 
+
+            foreach (TimeSelectType value in Enum.GetValues(enumType))
+            {
+                var fieldInfo = enumType.GetField(value.ToString());
+                var descriptionAttribute = fieldInfo?
+                    .GetCustomAttributes(typeof(DescriptionAttribute), false)
+                    .FirstOrDefault() as DescriptionAttribute;
+
+                items.Add(new EnumItem
+                {
+                    Value = (int)value,
+                    Name = value.ToString(),
+                    Description = descriptionAttribute?.Description ?? value.ToString()
+                });
+            }
+
+            return items;
+        }
 
         /// <summary>
         /// 感叹号的快速查询功能
@@ -219,9 +241,11 @@ namespace RUINORERP.UI.Common
                                     UCAdvFilterGeneric<P> ucBaseListAdv = new UCAdvFilterGeneric<P>();
                                     ucBaseListAdv.QueryConditionFilter = queryFilter;
                                     ucBaseListAdv.KeyValueTypeForDgv = KeyValueTypeForDgv;
+                                    ucBaseListAdv.ModuleID = menuinfo.ModuleID.Value;
                                     ucBaseListAdv.control = item;
                                     ucBaseList = ucBaseListAdv;
                                 }
+
 
                                 ucBaseList.Runway = BaseListRunWay.选中模式;
                                 //从这里调用 就是来自于关联窗体，下面这个公共基类用于这个情况。暂时在那个里面来控制.Runway = BaseListRunWay.窗体;
@@ -353,6 +377,33 @@ namespace RUINORERP.UI.Common
                             //bsa.Click += BsaEdit_Click;
                             bsa.Click += (sender, e) =>
                             {
+                                //取外键表名的代码
+                                string fktableName = string.Empty;
+                                BindingSource bsFKName = new BindingSource();
+                                fktableName = ktb.DataBindings[0].DataSource.GetType().Name;//这个是对应的是主体实体
+                                //if (bsFKName.Current == null)
+                                //{
+                                //    fktableName = bsFKName.DataSource.GetType().GetGenericArguments()[0].Name;
+                                //}
+                                //else
+                                //{
+                                //    fktableName = bsFKName.Current.GetType().Name;//这个会出错，current 可能会为空。
+                                //}
+                                //这里调用权限判断
+                                //调用通用的查询编辑基础资料。
+                                //需要对应的类名，如果修改新增了数据要重新加载下拉数据
+                                if (fktableName.Contains("Proxy"))
+                                {
+                                    fktableName = fktableName.Replace("Proxy", "");
+                                }
+                                tb_MenuInfo menuinfo = MainForm.Instance.MenuList.FirstOrDefault(t => t.EntityName == fktableName.ToString());
+                                if (menuinfo == null)
+                                {
+                                    //MainForm.Instance.PrintInfoLog("菜单关联类型为空,或您没有执行此菜单的权限，或配置菜时参数不正确。请联系管理员。");
+                                    //没有权限就只能查询。有权限就可以新增？
+                                    CanEdit = false;
+                                }
+
                                 #region
                                 KryptonTextBox ktbTxt = bsa.Owner as KryptonTextBox;
                                 //暂时认为基础数据都是这个基类出来的 否则可以根据菜单中的基类类型来判断生成
@@ -361,6 +412,7 @@ namespace RUINORERP.UI.Common
                                 ucBaseList.QueryConditionFilter = queryFilter;
                                 ucBaseList.KeyValueTypeForDgv = KeyValueTypeForDgv;
                                 ucBaseList.control = item;
+                                ucBaseList.ModuleID = menuinfo.ModuleID.Value;
                                 ucBaseList.Runway = BaseListRunWay.选中模式;
                                 //从这里调用 就是来自于关联窗体，下面这个公共基类用于这个情况。暂时在那个里面来控制.Runway = BaseListRunWay.窗体;
                                 frmBaseEditList frmedit = new frmBaseEditList();
@@ -622,6 +674,23 @@ namespace RUINORERP.UI.Common
 
         }
 
+
+        /// <summary>
+        /// by watson 2025-4-3
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="entity"></param>
+        /// <param name="expkey"></param>
+        /// <param name="enumType"></param>
+        /// <param name="cmbBox"></param>
+        /// <param name="addSelect"></param>
+        public static void BindData4CmbByEnum<T>(object entity, Expression<Func<T, int>> expkey, Type enumType, KryptonComboBox cmbBox, bool addSelect)
+        {
+            cmbBox.DataBindings.Clear();
+            MemberInfo minfo = expkey.GetMemberInfo();
+            string key = minfo.Name;
+            BindData4CmbByEnum<T>(entity, key, enumType, cmbBox, addSelect);
+        }
 
         /// <summary>
         /// 绑定枚举类型
@@ -1997,9 +2066,24 @@ namespace RUINORERP.UI.Common
             {
                 object eobj = Activator.CreateInstance(newType);
                 currentValue = (int)e.Current;
-                currentName = e.Current.ToString();
                 eobj.SetPropertyValue(keyName, currentValue);
-                eobj.SetPropertyValue("Name", currentName);
+
+                currentName = e.Current.ToString();
+
+                
+                var fieldInfo = enumType.GetField(currentName);
+                var descriptionAttribute = fieldInfo?
+                    .GetCustomAttributes(typeof(DescriptionAttribute), false)
+                    .FirstOrDefault() as DescriptionAttribute;
+                string Description = descriptionAttribute?.Description ?? string.Empty;
+                if (!string.IsNullOrEmpty(Description))
+                {
+                    eobj.SetPropertyValue("Name", Description);
+                }
+                else
+                {
+                    eobj.SetPropertyValue("Name", currentName);
+                }
                 list.Add(eobj);
             }
             if (addSelect)
@@ -2572,5 +2656,11 @@ namespace RUINORERP.UI.Common
 
     }
 
+    public class EnumItem
+    {
+        public int Value { get; set; }
+        public string Name { get; set; }
+        public string Description { get; set; }
+    }
 
 }

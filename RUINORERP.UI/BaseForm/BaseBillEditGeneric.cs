@@ -72,6 +72,7 @@ using RUINORERP.UI.WorkFlowDesigner.Entities;
 using System.Windows.Controls.Primitives;
 using TransInstruction.DataModel;
 using RUINORERP.Common.LogHelper;
+using NPOI.SS.UserModel;
 
 namespace RUINORERP.UI.BaseForm
 {
@@ -482,7 +483,7 @@ namespace RUINORERP.UI.BaseForm
                             //自己就表达绿色
                             this.tsBtnLocked.Image = global::RUINORERP.UI.Properties.Resources.unlockbill;
 
-                     
+
 
                         }
                         else
@@ -618,7 +619,7 @@ namespace RUINORERP.UI.BaseForm
                                 //设置默认隐藏
                                 if (item.tb_fieldinfo.DefaultHide && item.tb_fieldinfo.IsChild)
                                 {
-                                    SGDefineColumnItem defineColumnItem = listCols.Where(w => w.ColName == item.tb_fieldinfo.FieldName 
+                                    SGDefineColumnItem defineColumnItem = listCols.Where(w => w.ColName == item.tb_fieldinfo.FieldName
                                     && !w.BelongingObjectType.Name.Contains("ProductSharePart")).FirstOrDefault();
                                     if (defineColumnItem != null)
                                     {
@@ -656,17 +657,48 @@ namespace RUINORERP.UI.BaseForm
                             {
                                 //主表时,列不可用或设置为不可见时
                                 //设置不可见
-                                if ((!item.tb_fieldinfo.IsEnabled || !item.IsVisble) && !item.tb_fieldinfo.IsChild)
+                                if (!item.tb_fieldinfo.IsChild)
                                 {
                                     KryptonTextBox txtTextBox = UIHelper.FindTextBox(this, item.tb_fieldinfo.FieldName);
                                     if (txtTextBox != null)
                                     {
-                                        txtTextBox.Visible = false;
+                                        if (!item.tb_fieldinfo.IsEnabled)
+                                        {
+                                            txtTextBox.Visible = false;
+                                        }
+                                        else
+                                        {
+                                            txtTextBox.Visible = item.IsVisble;
+                                        }
                                     }
                                     KryptonLabel lbl = UIHelper.FindLabel(this, item.tb_fieldinfo.FieldText, item.tb_fieldinfo.FieldName);
                                     if (lbl != null)
                                     {
-                                        lbl.Visible = false;
+                                        if (!item.tb_fieldinfo.IsEnabled)
+                                        {
+                                            lbl.Visible = false;
+                                        }
+                                        else
+                                        {
+                                            lbl.Visible = item.IsVisble;
+                                        }
+                                    }
+
+                                    if (txtTextBox != null && lbl != null)
+                                    {
+                                        continue;
+                                    }
+                                    KryptonCheckBox chk = UIHelper.FindKryptonCheckBox(this, item.tb_fieldinfo.FieldName);
+                                    if (chk != null)
+                                    {
+                                        if (!item.tb_fieldinfo.IsEnabled)
+                                        {
+                                            chk.Visible = false;
+                                        }
+                                        else
+                                        {
+                                            chk.Visible = item.IsVisble;
+                                        }
                                     }
                                 }
 
@@ -1203,7 +1235,7 @@ namespace RUINORERP.UI.BaseForm
             long pkid = (long)ReflectionHelper.GetPropertyValue(EditEntity, PKCol);
             if (pkid > 0)
             {
-               
+
                 var lockeduserid = MainForm.Instance.lockManager.GetLockedBy(pkid);
                 if (lockeduserid != userid)
                 {
@@ -1277,8 +1309,14 @@ namespace RUINORERP.UI.BaseForm
             //如果已经有锁定标记了。即使已经释放了锁。也要刷新数据后才可以保存。不然数据不会统一。
             if (tsBtnLocked.Tag != null && tsBtnLocked.Tag is LockInfo lockInfo)
             {
+
                 if (lockInfo.IsLocked && lockInfo.LockedByID != MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID)
                 {
+                    var LockInfoCheck = MainForm.Instance.lockManager.GetLockStatus(lockInfo.BillID);
+                    if (LockInfoCheck == null)
+                    {
+                        return false;
+                    }
                     //别人锁定了
                     string tipMsg = $"单据已被用户{lockInfo.LockedByName}锁定，请刷新后再试,或【点击已锁定】联系锁定人员解锁。";
                     MainForm.Instance.uclog.AddLog(tipMsg);
@@ -2208,8 +2246,8 @@ namespace RUINORERP.UI.BaseForm
                 //var resultContext = await next();
                 //sw.Stop();
 
-                //审计日志
-                AuditLogHelper.Instance.CreateAuditLog<T>("保存", rmr.ReturnObject);
+                //审计日志 保存
+                //AuditLogHelper.Instance.CreateAuditLog<T>("保存", rmr.ReturnObject);
             }
             else
             {
@@ -2360,6 +2398,10 @@ namespace RUINORERP.UI.BaseForm
                                         CloneHelper.SetValues<tb_SaleOrder>(EditEntity, oldobj);
                                     };
                                     BusinessHelper.Instance.ApproverEntity(EditEntity);
+                                    saleOrder.ApprovalResults = true;
+                                    saleOrder.ApprovalStatus = (int)ApprovalStatus.已审核;
+                                    saleOrder.ApprovalOpinions = "自动审核";
+                                    saleOrder.DataStatus = (int)DataStatus.确认;
                                     tb_SaleOrderController<tb_SaleOrder> ctrSO = Startup.GetFromFac<tb_SaleOrderController<tb_SaleOrder>>();
                                     ReturnResults<tb_SaleOrder> rmrs = await ctrSO.ApprovalAsync(saleOrder);
                                     if (rmrs.Succeeded)
@@ -2401,6 +2443,10 @@ namespace RUINORERP.UI.BaseForm
                                         //Undo操作会执行到的代码 意思是如果退审核，内存中审核的数据要变为空白（之前的样子）
                                         CloneHelper.SetValues<tb_PurOrder>(EditEntity, oldobj);
                                     };
+                                    purOrder.ApprovalResults = true;
+                                    purOrder.ApprovalStatus = (int)ApprovalStatus.已审核;
+                                    purOrder.ApprovalOpinions = "自动审核";
+                                    purOrder.DataStatus = (int)DataStatus.确认;
                                     BusinessHelper.Instance.ApproverEntity(EditEntity);
                                     tb_PurOrderController<tb_PurOrder> ctrSO = Startup.GetFromFac<tb_PurOrderController<tb_PurOrder>>();
                                     ReturnResults<tb_PurOrder> rmrs = await ctrSO.ApprovalAsync(purOrder);
@@ -2684,7 +2730,7 @@ namespace RUINORERP.UI.BaseForm
                         ClientLockManagerCmd cmd = new ClientLockManagerCmd(CmdOperation.Send);
 
                         cmd.lockCmd = LockCmd.RequestUnLock;
-                        
+
                         RequestUnLockInfo lockRequest = new RequestUnLockInfo();
                         lockRequest.RequestUserName = MainForm.Instance.AppContext.CurUserInfo.UserInfo.tb_employee.Employee_Name;
                         lockRequest.RequestUserID = userid;
@@ -2760,7 +2806,7 @@ namespace RUINORERP.UI.BaseForm
             MainForm.Instance.dispatcher.DispatchAsync(cmd, CancellationToken.None);
             if (AuthorizeController.GetShowDebugInfoAuthorization(MainForm.Instance.AppContext))
             {
-                MainForm.Instance.PrintInfoLog($"向服务器发送【业务类型】解锁{lockRequest.BillData.BizName }成功");
+                MainForm.Instance.PrintInfoLog($"向服务器发送【业务类型】解锁{lockRequest.BillData.BizName}成功");
             }
 
         }

@@ -30,6 +30,7 @@
         {
             this.kryptonSplitContainer1 = new Krypton.Toolkit.KryptonSplitContainer();
             this.kryptonPanelMainInfo = new Krypton.Toolkit.KryptonPanel();
+            this.chkIsCustomizedOrder = new Krypton.Toolkit.KryptonCheckBox();
             this.chk平台单 = new Krypton.Toolkit.KryptonCheckBox();
             this.lblDataStatus = new Krypton.Toolkit.KryptonLabel();
             this.txtShippingAddress = new Krypton.Toolkit.KryptonTextBox();
@@ -91,7 +92,6 @@
             this.lblApprovalOpinions = new Krypton.Toolkit.KryptonLabel();
             this.txtTrackNo = new Krypton.Toolkit.KryptonTextBox();
             this.lblTrackNo = new Krypton.Toolkit.KryptonLabel();
-            this.chkIsCustomizedOrder = new Krypton.Toolkit.KryptonCheckBox();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceSub)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1)).BeginInit();
@@ -188,6 +188,14 @@
             this.kryptonPanelMainInfo.Size = new System.Drawing.Size(1067, 250);
             this.kryptonPanelMainInfo.TabIndex = 100;
             // 
+            // chkIsCustomizedOrder
+            // 
+            this.chkIsCustomizedOrder.Location = new System.Drawing.Point(922, 188);
+            this.chkIsCustomizedOrder.Name = "chkIsCustomizedOrder";
+            this.chkIsCustomizedOrder.Size = new System.Drawing.Size(62, 20);
+            this.chkIsCustomizedOrder.TabIndex = 102;
+            this.chkIsCustomizedOrder.Values.Text = "定制单";
+            // 
             // chk平台单
             // 
             this.chk平台单.Checked = true;
@@ -275,6 +283,7 @@
             this.cmbPayStatus.Name = "cmbPayStatus";
             this.cmbPayStatus.Size = new System.Drawing.Size(137, 21);
             this.cmbPayStatus.TabIndex = 99;
+            this.cmbPayStatus.SelectedIndexChanged += new System.EventHandler(this.cmbPayStatus_SelectedIndexChanged);
             // 
             // lblOrderNo
             // 
@@ -714,14 +723,6 @@
             this.lblTrackNo.Size = new System.Drawing.Size(62, 20);
             this.lblTrackNo.TabIndex = 68;
             this.lblTrackNo.Values.Text = "物流单号";
-            // 
-            // chkIsCustomizedOrder
-            // 
-            this.chkIsCustomizedOrder.Location = new System.Drawing.Point(922, 188);
-            this.chkIsCustomizedOrder.Name = "chkIsCustomizedOrder";
-            this.chkIsCustomizedOrder.Size = new System.Drawing.Size(75, 20);
-            this.chkIsCustomizedOrder.TabIndex = 102;
-            this.chkIsCustomizedOrder.Values.Text = "定制单";
             // 
             // UCSaleOrder
             // 

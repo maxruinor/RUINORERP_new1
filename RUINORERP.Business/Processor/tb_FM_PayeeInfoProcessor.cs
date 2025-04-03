@@ -55,9 +55,16 @@ namespace RUINORERP.Business.Processor
             //可以根据关联外键自动加载条件，条件用公共虚方法
             queryFilter.SetQueryField<tb_FM_PayeeInfo>(c => c.BelongingBank);
             queryFilter.SetQueryField<tb_FM_PayeeInfo>(c => c.Employee_ID);
-            queryFilter.SetQueryField<tb_FM_PayeeInfo>(c => c.CustomerVendor_ID);
+            //queryFilter.SetQueryField<tb_FM_PayeeInfo>(c => c.CustomerVendor_ID);
+
+            var lambdaType = Expressionable.Create<tb_CustomerVendor>()
+           .And(t => t.IsVendor == true)
+           .And(t => t.isdeleted == false)
+           .ToExpression();
+            queryFilter.SetQueryField<tb_FM_PayeeInfo>(c => c.CustomerVendor_ID, typeof(tb_CustomerVendor), true, lambdaType);
+
             queryFilter.SetQueryField<tb_FM_PayeeInfo>(c => c.Account_No);
-            queryFilter.SetQueryField<tb_FM_PayeeInfo>(c => c.Account_name); 
+            queryFilter.SetQueryField<tb_FM_PayeeInfo>(c => c.Account_name);
             queryFilter.SetQueryField<tb_FM_PayeeInfo>(c => c.Account_type, QueryFieldType.CmbEnum, typeof(AccountType));
             queryFilter.SetQueryField<tb_FM_PayeeInfo>(c => c.Notes);
             return queryFilter;

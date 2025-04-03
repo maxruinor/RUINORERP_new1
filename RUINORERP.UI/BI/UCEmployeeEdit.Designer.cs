@@ -29,6 +29,7 @@
         private void InitializeComponent()
         {
             this.kryptonPanel1 = new Krypton.Toolkit.KryptonPanel();
+            this.btnAddPayeeInfo = new Krypton.Toolkit.KryptonButton();
             this.kryptonLabel1 = new Krypton.Toolkit.KryptonLabel();
             this.txtPhoneNumber = new Krypton.Toolkit.KryptonTextBox();
             this.dtpEndDate = new Krypton.Toolkit.KryptonDateTimePicker();
@@ -36,8 +37,6 @@
             this.txtStartDate = new Krypton.Toolkit.KryptonDateTimePicker();
             this.cmbDepartment = new Krypton.Toolkit.KryptonComboBox();
             this.kryptonGroupBox4 = new Krypton.Toolkit.KryptonGroupBox();
-            this.rdb女 = new RUINORERP.UI.UControls.RadioButtonBind();
-            this.rdb男 = new RUINORERP.UI.UControls.RadioButtonBind();
             this.kryptonGroupBox2 = new Krypton.Toolkit.KryptonGroupBox();
             this.rdbis_availableNo = new Krypton.Toolkit.KryptonRadioButton();
             this.rdbis_availableYes = new Krypton.Toolkit.KryptonRadioButton();
@@ -77,7 +76,8 @@
             this.lblIs_available = new Krypton.Toolkit.KryptonLabel();
             this.btnCancel = new Krypton.Toolkit.KryptonButton();
             this.btnOk = new Krypton.Toolkit.KryptonButton();
-            this.btnAddPayeeInfo = new Krypton.Toolkit.KryptonButton();
+            this.rdb女 = new RUINORERP.UI.UControls.RadioButtonBind();
+            this.rdb男 = new RUINORERP.UI.UControls.RadioButtonBind();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel1)).BeginInit();
             this.kryptonPanel1.SuspendLayout();
@@ -147,6 +147,15 @@
             this.kryptonPanel1.Size = new System.Drawing.Size(612, 513);
             this.kryptonPanel1.TabIndex = 2;
             // 
+            // btnAddPayeeInfo
+            // 
+            this.btnAddPayeeInfo.Location = new System.Drawing.Point(510, 479);
+            this.btnAddPayeeInfo.Name = "btnAddPayeeInfo";
+            this.btnAddPayeeInfo.Size = new System.Drawing.Size(90, 25);
+            this.btnAddPayeeInfo.TabIndex = 78;
+            this.btnAddPayeeInfo.Values.Text = "添加收款信息";
+            this.btnAddPayeeInfo.Click += new System.EventHandler(this.btnAddPayeeInfo_Click);
+            // 
             // kryptonLabel1
             // 
             this.kryptonLabel1.Location = new System.Drawing.Point(79, 122);
@@ -187,7 +196,6 @@
             // txtStartDate
             // 
             this.txtStartDate.AlwaysActive = false;
-            this.txtStartDate.CalendarTodayDate = new System.DateTime(2023, 2, 18, 0, 0, 0, 0);
             this.txtStartDate.Checked = false;
             this.txtStartDate.CustomNullText = "暂时为空";
             this.txtStartDate.Format = System.Windows.Forms.DateTimePickerFormat.Short;
@@ -219,24 +227,6 @@
             this.kryptonGroupBox4.Panel.Controls.Add(this.rdb男);
             this.kryptonGroupBox4.Size = new System.Drawing.Size(133, 37);
             this.kryptonGroupBox4.TabIndex = 70;
-            // 
-            // rdb女
-            // 
-            this.rdb女.Location = new System.Drawing.Point(59, 6);
-            this.rdb女.Name = "rdb女";
-            this.rdb女.SelectValue = "";
-            this.rdb女.Size = new System.Drawing.Size(35, 20);
-            this.rdb女.TabIndex = 69;
-            this.rdb女.Values.Text = "女";
-            // 
-            // rdb男
-            // 
-            this.rdb男.Location = new System.Drawing.Point(9, 6);
-            this.rdb男.Name = "rdb男";
-            this.rdb男.SelectValue = "";
-            this.rdb男.Size = new System.Drawing.Size(35, 20);
-            this.rdb男.TabIndex = 68;
-            this.rdb男.Values.Text = "男";
             // 
             // kryptonGroupBox2
             // 
@@ -552,14 +542,23 @@
             this.btnOk.Values.Text = "确定";
             this.btnOk.Click += new System.EventHandler(this.btnOk_Click);
             // 
-            // btnAddPayeeInfo
+            // rdb女
             // 
-            this.btnAddPayeeInfo.Location = new System.Drawing.Point(510, 479);
-            this.btnAddPayeeInfo.Name = "btnAddPayeeInfo";
-            this.btnAddPayeeInfo.Size = new System.Drawing.Size(90, 25);
-            this.btnAddPayeeInfo.TabIndex = 78;
-            this.btnAddPayeeInfo.Values.Text = "添加收款信息";
-            this.btnAddPayeeInfo.Click += new System.EventHandler(this.btnAddPayeeInfo_Click);
+            this.rdb女.Location = new System.Drawing.Point(59, 6);
+            this.rdb女.Name = "rdb女";
+            this.rdb女.SelectValue = "";
+            this.rdb女.Size = new System.Drawing.Size(35, 20);
+            this.rdb女.TabIndex = 69;
+            this.rdb女.Values.Text = "女";
+            // 
+            // rdb男
+            // 
+            this.rdb男.Location = new System.Drawing.Point(9, 6);
+            this.rdb男.Name = "rdb男";
+            this.rdb男.SelectValue = "";
+            this.rdb男.Size = new System.Drawing.Size(35, 20);
+            this.rdb男.TabIndex = 68;
+            this.rdb男.Values.Text = "男";
             // 
             // UCEmployeeEdit
             // 

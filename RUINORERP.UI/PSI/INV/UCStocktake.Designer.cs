@@ -197,7 +197,7 @@ namespace RUINORERP.UI.PSI.INV
             // 
             // dtpCarryingDate
             // 
-            this.dtpCarryingDate.CalendarTodayDate = new System.DateTime(2023, 10, 13, 0, 0, 0, 0);
+            this.dtpCarryingDate.CalendarTodayDate = new System.DateTime(((long)(0)));
             this.dtpCarryingDate.Location = new System.Drawing.Point(388, 71);
             this.dtpCarryingDate.Name = "dtpCarryingDate";
             this.dtpCarryingDate.Size = new System.Drawing.Size(137, 21);
@@ -311,7 +311,7 @@ namespace RUINORERP.UI.PSI.INV
             // 
             // dtpcheck_date
             // 
-            this.dtpcheck_date.CalendarTodayDate = new System.DateTime(2023, 10, 13, 0, 0, 0, 0);
+            this.dtpcheck_date.CalendarTodayDate = new System.DateTime(((long)(0)));
             this.dtpcheck_date.Location = new System.Drawing.Point(123, 72);
             this.dtpcheck_date.Name = "dtpcheck_date";
             this.dtpcheck_date.Size = new System.Drawing.Size(132, 21);

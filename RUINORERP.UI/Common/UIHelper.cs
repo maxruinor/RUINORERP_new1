@@ -34,6 +34,82 @@ namespace RUINORERP.UI.Common
     public static class UIHelper
     {
         #region 查找控件
+        public static KryptonCheckBox FindKryptonCheckBox(Control parentControl, string dataMember)
+        {
+            // 检查当前控件是否为 KryptonTextBox 并且具有匹配的 dataMember
+            if (parentControl is KryptonCheckBox textBox)
+            {
+                if (textBox.DataBindings.Count > 0)
+                {
+                    foreach (Binding binding in textBox.DataBindings)
+                    {
+                        if (binding.BindingMemberInfo.BindingMember == dataMember)
+                        {
+                            return textBox;
+                        }
+                    }
+                }
+                else
+                {
+                    //按名称来查找
+                    if (textBox.Name == "txt" + dataMember)
+                    {
+                        return textBox;
+                    }
+                }
+            }
+
+            // 递归检查所有子控件
+            KryptonCheckBox foundTextBox = FindKryptonCheckBoxControls(parentControl.Controls, dataMember);
+            if (foundTextBox != null)
+            {
+                return foundTextBox;
+            }
+
+            return null;
+        }
+
+        public static KryptonCheckBox FindKryptonCheckBoxControls(Control.ControlCollection controls, string dataMember)
+        {
+            foreach (Control control in controls)
+            {
+                // 检查当前控件是否为 KryptonTextBox 并且具有匹配的 dataMember
+                if (control is KryptonCheckBox textBox)
+                {
+                    if (textBox.DataBindings.Count > 0)
+                    {
+                        foreach (Binding binding in textBox.DataBindings)
+                        {
+                            if (binding.BindingMemberInfo.BindingMember == dataMember)
+                            {
+                                return textBox;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        //按名称来查找
+                        if (textBox.Name == "txt" + dataMember)
+                        {
+                            return textBox;
+                        }
+                    }
+                }
+
+                // 如果当前控件有子控件，继续递归检查
+                if (control.HasChildren)
+                {
+                    KryptonCheckBox foundTextBox = FindKryptonCheckBoxControls(control.Controls, dataMember);
+                    if (foundTextBox != null)
+                    {
+                        return foundTextBox;
+                    }
+                }
+            }
+            return null;
+        }
+
+
 
         public static KryptonTextBox FindTextBox(Control parentControl, string dataMember)
         {

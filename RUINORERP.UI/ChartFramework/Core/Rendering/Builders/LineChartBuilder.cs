@@ -27,7 +27,7 @@ namespace RUINORERP.UI.ChartFramework.Core.Rendering.Builders
     public class LineChartBuilder : ChartBuilderBase<CartesianChart>
     {
         public LineChartBuilder(DataRequest request, IDataProvider dataSource) : base(request, dataSource) { }
- 
+
         private ISeries CreateSeries(DataSeries series)
         {
             return new LineSeries<double>
@@ -60,7 +60,7 @@ namespace RUINORERP.UI.ChartFramework.Core.Rendering.Builders
                 _ => value.ToString("N0")
             };
         }
- 
+
 
         public async override Task<IChartView> BuildChartControl()
         {
@@ -92,12 +92,42 @@ namespace RUINORERP.UI.ChartFramework.Core.Rendering.Builders
                 LegendPosition = LiveChartsCore.Measure.LegendPosition.Right
             };
 
-            return  cartesianChart;
+            return cartesianChart;
         }
 
-        public override Task<ChartControl> BuildChart(DataRequest request)
+        public async override  Task<ChartControl> BuildChart(DataRequest request)
         {
-            throw new NotImplementedException();
+            var data = await _dataSource.GetDataAsync(_currentRequest);
+            var cartesianChart = new CartesianChart
+            {
+                Series = data.Series.Select(series => new LineSeries<double>
+                {
+                    Name = series.Name,
+                    Values = series.Values.ToArray(),
+                    Stroke = new SolidColorPaint(series.ColorHex.ToSKColor(), 2),
+                    Fill = null,
+                    GeometrySize = 8,
+                    GeometryStroke = new SolidColorPaint(series.ColorHex.ToSKColor(), 2),
+                    GeometryFill = new SolidColorPaint(SKColors.White)
+                }).ToArray(),
+
+                XAxes = new[] { new Axis { Labels = data.CategoryLabels } },
+                YAxes = new[] { new Axis() },
+
+                Title = new LabelVisual
+                {
+                    Text = data.Title,
+                    TextSize = 16,
+                    Padding = new LiveChartsCore.Drawing.Padding(15),
+                    Paint = new SolidColorPaint(SKColors.DarkSlateGray)
+                },
+
+                LegendPosition = LiveChartsCore.Measure.LegendPosition.Right
+            };
+
+            // 绑定交互事件
+            BindChartEvents(cartesianChart);
+            return new ChartControl(cartesianChart, data);
         }
     }
 }

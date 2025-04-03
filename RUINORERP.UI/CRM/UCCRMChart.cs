@@ -21,10 +21,12 @@ using RUINORERP.UI.ChartFramework.Core;
 using RUINORERP.UI.ChartFramework.Models;
 using RUINORERP.UI.ChartFramework.DataProviders.Adapters;
 using RUINORERP.UI.ChartFramework.Core.Rendering.Builders;
-using Org.BouncyCastle.Asn1.Cms;
-using OfficeOpenXml.Drawing.Chart;
-using RUINORERP.UI.ChartFramework.Core.Contracts;
-using SourceGrid2.Win32;
+using Netron.GraphLib;
+using RUINORERP.Business.Security;
+using ICSharpCode.SharpZipLib.Zip;
+using static RUINORERP.UI.ChartFramework.Models.DataRequest;
+using RUINORERP.Global;
+
 
 namespace RUINORERP.UI.CRM
 {
@@ -53,65 +55,50 @@ namespace RUINORERP.UI.CRM
 
         }
 
-        private async void UCCRMChart_Load(object sender, EventArgs e)
+        private void UCCRMChart_Load(object sender, EventArgs e)
         {
-            flowLayoutPanel1.Controls.Clear();
             //LoadOK();
-            var request = new DataRequest
+            request = new DataRequest
             {
                 TimeField = "Created_at",
-                RangeType = TimeRangeType.Weekly,
-                StartTime = DateTime.Now.AddDays(-10),
-                EndTime = DateTime.Now,
-                chartType = ChartType.Column
+                RangeType = TimeRangeType.Custom,
+                StartTime = DtpStart.Value,
+                EndTime = dtpEnd.Value,
+                ChartType = ChartType.Column
             };
 
-            // 构建图表
-            var builder = ChartBuilderFactory.CreateBuilder(request, new CRMDataAdapter(request));
-
-            builder.OnInteraction += (sender, args) =>
+            if (AuthorizeController.GetSaleLimitedAuth(MainForm.Instance.AppContext) && !MainForm.Instance.AppContext.IsSuperUser)
             {
-                if (args.InteractionType == InteractionType.Click && args.DataPoint != null)
-                {
-                    Console.WriteLine($"点击了数据点: {args.DataPoint.Label}, 值: {args.DataPoint.YValue}");
-                }
-                switch (args.InteractionType)
-                {
-                    case InteractionType.Click:
-                        Console.WriteLine($"点击了 {args.Series.Name} 系列的 {args.DataPoint.Label}");
-                        break;
-                    case InteractionType.RightClick:
-                        Console.WriteLine($"右键点击了 {args.Series.Name} 系列");
-                        break;
-                    case InteractionType.Hover:
-                        Console.WriteLine($"悬停在 {args.DataPoint.YValue} 值上");
-                        break;
-                }
-            };
+                request.Employee_ID = MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID;
+            }
+            else
+            {
+                lblEmployee.Visible = true;
+                cmbEmployee_ID.Visible = true;
+                DataBindingHelper.BindData4CmbByEntity<tb_Employee>(request, k => k.Employee_ID, cmbEmployee_ID);
+            }
 
-            //var chartControl = await builder.BuildChartControl();
-            //UserControl userControl = chartControl as UserControl;
-            //userControl.Width = 900;
-            //userControl.Height = 900;
-            ////userControl.Dock = DockStyle.Fill;
-            //flowLayoutPanel1.Controls.Add(userControl);
+            //var timeRangeOptions = DataBindingHelper.GetTimeSelectTypeItems(typeof(TimeSelectType));
+            //cmbTimeType.DataSource = timeRangeOptions;
+            //cmbTimeType.DisplayMember = "Description";
+            //cmbTimeType.ValueMember = "Value";
 
-            var chartControl1 = await builder.BuildChart(request);
-            UserControl userControl1 = chartControl1 as UserControl;
-            userControl1.Width = 1900;
-            userControl1.Height = 850;
-            flowLayoutPanel1.Controls.Add(userControl1);
+            DataBindingHelper.BindData4CmbByEnum<DataRequest>(request, t => (int)t.SelectedTimeRange, typeof(TimeSelectType), cmbTimeType, false);
+            DataBindingHelper.BindData4DataTime<DataRequest>(request, t => t.StartTime, DtpStart, false);
+            DataBindingHelper.BindData4DataTime<DataRequest>(request, t => t.EndTime, dtpEnd, false);
+
         }
 
+        DataRequest request;
         private async void LoadOK()
         {
-            var request = new DataRequest
+            request = new DataRequest
             {
                 TimeField = "Created_at",
                 RangeType = TimeRangeType.Monthly,
                 StartTime = DateTime.Now.AddMonths(-6),
                 EndTime = DateTime.Now,
-                chartType = ChartType.Column
+                ChartType = ChartType.Column
             };
 
             // 构建图表
@@ -151,15 +138,15 @@ namespace RUINORERP.UI.CRM
         private async void Load2()
         {
             // 示例1：按月统计
-            var monthlyRequest = new DataRequest
-            {
-                Dimensions = new List<string> { "Created_at", "Employee_ID" },
-                Metrics = new List<string> { MetricType.Count.ToString() },
-                //TimeRange = TimeGranularity.Yearly,
-                //TimeGroupType = TimeGranularity.Monthly,
-                StartTime = new DateTime(2025, 1, 1),
-                EndTime = new DateTime(2025, 12, 31)
-            };
+            //var monthlyRequest = new DataRequest
+            //{
+            //    Dimensions = new List<string> { "Created_at", "Employee_ID" },
+            //    Metrics = new List<string> { MetricType.Count.ToString() },
+            //    //TimeRange = TimeGranularity.Yearly,
+            //    //TimeGroupType = TimeGranularity.Monthly,
+            //    StartTime = new DateTime(2025, 1, 1),
+            //    EndTime = new DateTime(2025, 12, 31)
+            //};
 
             // 创建数据源和构建器
             //var dataSource = new CustomerDataSource();
@@ -343,6 +330,60 @@ namespace RUINORERP.UI.CRM
             };
             var chartControl = await builder.BuildChartControl();
             flowLayoutPanel1.Controls.Add(chartControl as UserControl);
+        }
+
+        private async void btnQuery_Click(object sender, EventArgs e)
+        {
+            flowLayoutPanel1.Controls.Clear();
+
+            request.ChartType = ChartType.Line;
+            // 构建图表
+            var builder = ChartBuilderFactory.CreateBuilder(request, new CRMDataAdapter(request));
+
+            builder.OnInteraction += (sender, args) =>
+            {
+                if (args.InteractionType == InteractionType.Click && args.DataPoint != null)
+                {
+                    Console.WriteLine($"点击了数据点: {args.DataPoint.Label}, 值: {args.DataPoint.YValue}");
+                }
+                switch (args.InteractionType)
+                {
+                    case InteractionType.Click:
+                        Console.WriteLine($"点击了 {args.Series.Name} 系列的 {args.DataPoint.Label}");
+                        break;
+                    case InteractionType.RightClick:
+                        Console.WriteLine($"右键点击了 {args.Series.Name} 系列");
+                        break;
+                    case InteractionType.Hover:
+                        Console.WriteLine($"悬停在 {args.DataPoint.YValue} 值上");
+                        break;
+                }
+            };
+
+            //var chartControl = await builder.BuildChartControl();
+            //UserControl userControl = chartControl as UserControl;
+            //userControl.Width = 900;
+            //userControl.Height = 900;
+            ////userControl.Dock = DockStyle.Fill;
+            //flowLayoutPanel1.Controls.Add(userControl);
+        
+            var chartControl1 = await builder.BuildChart(request);
+            UserControl userControl1 = chartControl1 as UserControl;
+            userControl1.Width = 624;
+            userControl1.Height = 500;
+            flowLayoutPanel1.Controls.Add(userControl1);
+
+
+            request.ChartType = ChartType.Pie;
+            // 构建图表
+            var PlanCompRatebuilder = ChartBuilderFactory.CreateBuilder(request, new CRMPlanCompRateDataAdapter(request));
+
+            var PlanCompRatechartControl = await PlanCompRatebuilder.BuildChart(request);
+            UserControl userControl2 = PlanCompRatechartControl as UserControl;
+            userControl2.Width = 624;
+            userControl2.Height = 500;
+            flowLayoutPanel1.Controls.Add(userControl2);
+
         }
     }
 }

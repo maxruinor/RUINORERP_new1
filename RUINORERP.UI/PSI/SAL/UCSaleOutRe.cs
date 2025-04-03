@@ -49,7 +49,7 @@ namespace RUINORERP.UI.PSI.SAL
         {
             InitializeComponent();
             //InitDataToCmbByEnumDynamicGeneratedDataSource<tb_SaleOutRe>(typeof(Priority), e => e.OrderPriority, cmbOrderPriority);
-            
+
 
         }
 
@@ -68,7 +68,7 @@ namespace RUINORERP.UI.PSI.SAL
         }
 
 
-        public override void BindData(tb_SaleOutRe entity, ActionStatus actionStatus=ActionStatus.无操作)
+        public override void BindData(tb_SaleOutRe entity, ActionStatus actionStatus = ActionStatus.无操作)
         {
             if (entity == null)
             {
@@ -173,6 +173,7 @@ namespace RUINORERP.UI.PSI.SAL
             var lambdaSO = Expressionable.Create<tb_SaleOut>()
                             .And(t => t.DataStatus == (int)DataStatus.确认)
                              .And(t => t.isdeleted == false)
+                             .AndIF(AuthorizeController.GetSaleLimitedAuth(MainForm.Instance.AppContext) && !AppContext.IsSuperUser, t => t.Employee_ID == AppContext.CurUserInfo.UserInfo.Employee_ID)//限制了销售只看到自己的
                             .ToExpression();//注意 这一句 不能少
             BaseProcessor baseProcessorSO = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_SaleOut).Name + "Processor");
             QueryFilter queryFilterSO = baseProcessorSO.GetQueryFilter();
@@ -186,14 +187,14 @@ namespace RUINORERP.UI.PSI.SAL
                 //权限允许
                 if ((true && entity.DataStatus == (int)DataStatus.草稿) || (true && entity.DataStatus == (int)DataStatus.新建))
                 {
-                    
+
                 }
                 //如果是销售订单引入变化则加载明细及相关数据
                 if ((entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改) && entity.SaleOut_MainID.HasValue && entity.SaleOut_MainID.Value > 0 && s2.PropertyName == entity.GetPropertyName<tb_SaleOutRe>(c => c.SaleOut_MainID))
                 {
                     LoadSaleOutBillData(entity.SaleOut_MainID);
                 }
-                
+
                 if (entity.CustomerVendor_ID > 0 && s2.PropertyName == entity.GetPropertyName<tb_SaleOrder>(c => c.CustomerVendor_ID))
                 {
                     var obj = BizCacheHelper.Instance.GetEntity<tb_CustomerVendor>(entity.CustomerVendor_ID);
@@ -583,7 +584,7 @@ namespace RUINORERP.UI.PSI.SAL
             return false;
         }
 
-     
+
 
         private void cmbCustomerVendor_ID_SelectedIndexChanged(object sender, EventArgs e)
         {

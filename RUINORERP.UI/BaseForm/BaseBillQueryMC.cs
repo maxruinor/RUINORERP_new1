@@ -964,11 +964,14 @@ namespace RUINORERP.UI.BaseForm
         protected frmFormProperty frm = new frmFormProperty();
         protected virtual void Property()
         {
+            if (frm == null || frm.IsDisposed)
+            {
+                frm = new frmFormProperty();
+            }
+
             if (frm.ShowDialog() == DialogResult.OK)
             {
                 //保存属性
-                // ToolBarEnabledControl(MenuItemEnums.属性);
-                //AuditLogHelper.Instance.CreateAuditLog<T>("属性", EditEntity);
             }
         }
 

@@ -32,7 +32,7 @@ using SqlSugar;
 namespace RUINORERP.Business.Processor
 {
     /// <summary>
-    /// 入库单 非生产领料/退料
+    /// 归还单
     /// </summary>
     public partial class tb_ProdReturningProcessor : BaseProcessor
     {

@@ -60,7 +60,7 @@ namespace RUINORERP.UI.ChartFramework.DataProviders.Adapters
 
 
             var query = MainForm.Instance.AppContext.Db.Queryable<tb_CRM_Customer>()
-                  .WhereIF(request.Employee_ID.HasValue, c => c.Employee_ID == request.Employee_ID.Value)
+                  .WhereIF(_request.Employee_ID.HasValue && _request.Employee_ID.Value > 0, c => c.Employee_ID == request.Employee_ID.Value)
                  .WhereIF(AuthorizeController.GetSaleLimitedAuth(MainForm.Instance.AppContext), t => t.Employee_ID == MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID)//限制了销售只看到自己的客户,采购不限制
                 .Where(c => c.Created_at >= request.StartTime && c.Created_at <= request.EndTime);
 
@@ -183,7 +183,7 @@ namespace RUINORERP.UI.ChartFramework.DataProviders.Adapters
                 ColorHex = "#34A853"
             };
 
-            if (request.chartType == ChartType.Column)
+            if (request.ChartType == ChartType.Column)
             {
                 var columnChartData = new ChartData
                 {

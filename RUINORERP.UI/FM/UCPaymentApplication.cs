@@ -213,6 +213,11 @@ namespace RUINORERP.UI.FM
                                     lblOpeningbank.Text = "";
                                 }
                             }
+                            else
+                            {
+                                //直接加载 不用缓存
+
+                            }
                         }
                     }
                 }

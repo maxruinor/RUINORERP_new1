@@ -70,6 +70,7 @@ namespace RUINORERP.UI.ChartFramework.DataProviders.Adapters
             // 获取员工列表
             var employees = await _db.Queryable<tb_Employee>()
                 .Select(e => new { e.Employee_ID, e.Employee_Name })
+                .WhereIF(_request.Employee_ID.HasValue && _request.Employee_ID.Value > 0, c => c.Employee_ID == _request.Employee_ID.Value)
                 .WhereIF(AuthorizeController.GetSaleLimitedAuth(MainForm.Instance.AppContext), t => t.Employee_ID == MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID)
                 .ToListAsync();
 
@@ -444,8 +445,8 @@ namespace RUINORERP.UI.ChartFramework.DataProviders.Adapters
             if (!stats.Any()) return new ChartData();
 
             // 获取统计的时间范围
-            var minDate = stats.Min(s => s.Date);
-            var maxDate = stats.Max(s => s.Date);
+            var minDate = _request.StartTime;
+            var maxDate = _request.EndTime;
 
             var chartData = new ChartData
             {
@@ -584,7 +585,7 @@ namespace RUINORERP.UI.ChartFramework.DataProviders.Adapters
                 ColorHex = "#34A853"
             };
 
-            if (request.chartType == ChartType.Column)
+            if (request.ChartType == ChartType.Column)
             {
                 var columnChartData = new ChartData
                 {

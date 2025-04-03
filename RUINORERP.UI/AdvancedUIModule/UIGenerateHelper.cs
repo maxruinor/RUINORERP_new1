@@ -93,7 +93,7 @@ namespace RUINORERP.UI.AdvancedUIModule
                         queryField.DiffDays2 = condition.DiffDays2;
                         queryField.Focused = condition.Focused;
                         queryField.UseLike = condition.UseLike;
-                        if (queryField.AdvQueryFieldType==AdvQueryProcessType.defaultSelect 
+                        if (queryField.AdvQueryFieldType == AdvQueryProcessType.defaultSelect
                             || queryField.AdvQueryFieldType == AdvQueryProcessType.CmbMultiChoice
                             || queryField.AdvQueryFieldType == AdvQueryProcessType.CmbMultiChoiceCanIgnore
                             )
@@ -108,7 +108,7 @@ namespace RUINORERP.UI.AdvancedUIModule
                                 //只有下拉等三种情况。才会显示是否多选
                                 queryField.AdvQueryFieldType = AdvQueryProcessType.defaultSelect;
                             }
-                           
+
                         }
                     }
                 }
@@ -130,7 +130,11 @@ namespace RUINORERP.UI.AdvancedUIModule
             //这里可以优化掉。保留的意义在于更新更多的相关信息
             List<BaseDtoField> baseDtoFields = UIHelper.GetDtoFieldNameList(newtype);
             //为了显示条件的顺序再一次修改，这样循环是利用这个查询参数的数组默认顺序
-
+            //如果实体没有初始信息，则以传入的queryFilter.QueryFields 字段为准
+            if (baseDtoFields.Count == 0)
+            {
+                //baseDtoFields.AddRange(queryFilter.QueryFields.Select(q => new BaseDtoField
+            }
             //这里更新一些信息，再对类型处理一下。很重要。
             foreach (BaseDtoField item in baseDtoFields)
             {
@@ -145,7 +149,7 @@ namespace RUINORERP.UI.AdvancedUIModule
                 queryField.Caption = item.Caption;
                 queryField.ColDataType = item.ColDataType.GetBaseType();
                 queryField.IsRelated = item.IsFKRelationAttribute;
-                
+
                 //不能覆盖设置的值
                 //queryField.UseLike = item.UseLike;
                 if (queryField.IsRelated)
@@ -207,7 +211,7 @@ namespace RUINORERP.UI.AdvancedUIModule
                             {
                                 queryField.AdvQueryFieldType = AdvQueryProcessType.stringEquals;
                             }
-                            
+
                             break;
                         default:
                             break;
@@ -858,7 +862,7 @@ namespace RUINORERP.UI.AdvancedUIModule
                     case EnumDataType.UInt64:
                     case EnumDataType.IntPtr:
                     case EnumDataType.UIntPtr:
-                   
+
                         if (queryField.AdvQueryFieldType == AdvQueryProcessType.CmbMultiChoiceCanIgnore)
                         {
                             //先成一个标记可忽略的属性
@@ -961,7 +965,7 @@ namespace RUINORERP.UI.AdvancedUIModule
                             PropertyBuilder newlikePropstring = AddProperty(tb, newlikeProNameString);
                             newlikePropstring.SetCustomAttribute(attrlikeBuilder1);
                         }
-                         
+
                         break;
                     case EnumDataType.DateTime:
 

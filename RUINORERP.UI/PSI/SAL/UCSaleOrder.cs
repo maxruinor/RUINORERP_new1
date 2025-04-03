@@ -1190,5 +1190,10 @@ namespace RUINORERP.UI.PSI.SAL
 
 
         #endregion
+
+        private void cmbPayStatus_SelectedIndexChanged(object sender, EventArgs e)
+        {
+
+        }
     }
 }

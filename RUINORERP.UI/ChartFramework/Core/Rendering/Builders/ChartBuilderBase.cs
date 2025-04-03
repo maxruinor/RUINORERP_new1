@@ -81,7 +81,7 @@ namespace RUINORERP.UI.ChartFramework.Core.Rendering.Builders
 
 
         // 在具体构建器中绑定图表事件
-        protected void BindChartEvents(TChart chart)
+        protected void BindChartEvents(IChartView chart)
         {
             if (chart is CartesianChart cartesianChart)
             {

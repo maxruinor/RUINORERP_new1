@@ -38,8 +38,6 @@ namespace RUINORERP.UI.BaseForm
         public BaseEntity QueryDtoProxy { get; set; }
 
 
-
-
         protected virtual void Refreshs()
         {
 

@@ -20,7 +20,7 @@ namespace RUINORERP.UI.Common
     {
         public tb_MenuInfo CurMenuInfo { get; set; }
 
-
+        /*
         #region  单据用
         /// <summary>
         /// 初始化编辑项:查询过滤器
@@ -169,7 +169,7 @@ namespace RUINORERP.UI.Common
             }
         }
         #endregion
-
+        */
         #region 可编辑及查询
 
         /// <summary>

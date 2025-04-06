@@ -556,18 +556,6 @@ ToList：
                         var itemToUpdate = oldlist.FirstOrDefault(n => n.GetPropertyValue(pair.Key).ToString() == Newid);
                         if (itemToUpdate != null)
                         {
-                            // 使用反射更新属性
-                            //这里也像下面一样。直接删除添加新的？
-                            //    然后要所有的缓存都看一下是不是都是List<JObject> 的类型
-                            //    存储和使用的时候都统一一下？
-                            //foreach (var property in newObj)
-                            //{
-                            //    var propInfo = elementType.GetProperty(property.Key);
-                            //    if (propInfo != null && propInfo.CanWrite)
-                            //    {
-                            //        propInfo.SetValue(itemToUpdate, property.Value.ToObject(propInfo.PropertyType));
-                            //    }
-                            //}
                             oldlist.Remove(itemToUpdate);
                         }
 

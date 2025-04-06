@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
@@ -27,10 +28,17 @@ namespace RUINORERP.Global.Model
         /// </summary>
         public string realName { get; set; }
 
-
+        // 将Image类型改为只处理字节数组或base64字符串
+        [JsonIgnore]
         public Image image { get; set; }
         public byte[] ImageBytes { get; set; }
 
+        [JsonIgnore]
+        public string ImageBase64
+        {
+            get => ImageBytes != null ? Convert.ToBase64String(ImageBytes) : null;
+            set => ImageBytes = value != null ? Convert.FromBase64String(value) : null;
+        }
 
 
 

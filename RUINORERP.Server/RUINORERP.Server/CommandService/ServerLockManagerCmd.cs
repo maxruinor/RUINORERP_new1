@@ -231,7 +231,7 @@ namespace RUINORERP.Server.CommandService
             }
             catch (Exception ex)
             {
-                Comm.CommService.ShowExceptionMsg("接收请求:" + ex.Message);
+                Comm.CommService.ShowExceptionMsg("接收请求4:" + ex.Message);
             }
             return rs;
         }

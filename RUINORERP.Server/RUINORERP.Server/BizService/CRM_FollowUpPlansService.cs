@@ -34,7 +34,9 @@ namespace RUINORERP.Server.BizService
             //
             List<tb_CRM_FollowUpPlans> followUpPlans = await _unitOfWorkManage.GetDbClient().Queryable<tb_CRM_FollowUpPlans>()
                 .Includes(c => c.tb_CRM_FollowUpRecordses)
-                .Where(c => c.PlanEndDate < System.DateTime.Today && (c.PlanStatus != (int)FollowUpPlanStatus.已完成 || c.PlanStatus == (int)FollowUpPlanStatus.未执行))
+                .Where(c => c.PlanEndDate < System.DateTime.Today && (c.PlanStatus == (int)FollowUpPlanStatus.未开始
+                || c.PlanStatus == (int)FollowUpPlanStatus.延期中
+                || c.PlanStatus == (int)FollowUpPlanStatus.进行中))
                 .ToListAsync();
 
             // 假设配置的延期天数存储在 DelayDays 变量中
@@ -51,16 +53,17 @@ namespace RUINORERP.Server.BizService
                 if (followUpPlans[i].tb_CRM_FollowUpRecordses.Count > 0)
                 {
                     //如果当前计划有跟进记录了，并且结束时间超过了当前时间。将这个计划设置为已经完成
-                    if (followUpPlans[i].PlanEndDate > System.DateTime.Today)
+                    if (followUpPlans[i].PlanEndDate <= System.DateTime.Today)
                     {
                         followUpPlans[i].PlanStatus = (int)FollowUpPlanStatus.已完成;
                         needUpdateList.Add(followUpPlans[i]);
                     }
-                    
+
                 }
                 else
                 {
-                    if (followUpPlans[i].PlanEndDate < System.DateTime.Today)
+                    //超过时间才处理。超过3天内延期中，否则未执行
+                    if (followUpPlans[i].PlanEndDate > System.DateTime.Today)
                     {
                         TimeSpan timeSinceEnd = System.DateTime.Today - followUpPlans[i].PlanEndDate;
                         if (timeSinceEnd.TotalDays <= DelayDays)
@@ -73,7 +76,6 @@ namespace RUINORERP.Server.BizService
                             followUpPlans[i].PlanStatus = (int)FollowUpPlanStatus.未执行;
                             needUpdateList.Add(followUpPlans[i]);
                         }
-
                         //发送消息给执行人。
                         //您要有执行计划已经超时
 

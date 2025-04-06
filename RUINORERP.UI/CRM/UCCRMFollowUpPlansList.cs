@@ -237,9 +237,16 @@ namespace RUINORERP.UI.CRM
                 {
                     //如果计划已取消  或计划未执行 则不能添加记录了。
                     //如果未开始  进行中  延期中 则能添加记录
-
                     if (plan.PlanStatus == (int)FollowUpPlanStatus.未开始 || plan.PlanStatus == (int)FollowUpPlanStatus.进行中 || plan.PlanStatus == (int)FollowUpPlanStatus.延期中)
                     {
+                        //如果计划开始时间，还没有到，则提醒是否提前跟进。
+                        if (plan.PlanStartDate > DateTime.Now)
+                        {
+                            if (MessageBox.Show("计划开始时间还没有到，是否提前跟进?", "提示", MessageBoxButtons.OKCancel, MessageBoxIcon.Information) == DialogResult.Cancel)
+                            {
+                                return;
+                            }
+                        }
                         object frm = Activator.CreateInstance(typeof(UCCRMFollowUpRecordsEdit));
                         if (frm.GetType().BaseType.Name.Contains("BaseEditGeneric"))
                         {

@@ -29,6 +29,9 @@ using RUINORERP.Business.CommService;
 using RUINORERP.Global.EnumExt;
 using RUINORERP.UI.SysConfig;
 using Fireasy.Common.Extensions;
+using FastReport.Table;
+using MathNet.Numerics.Optimization;
+using NPOI.SS.Formula.Functions;
 
 namespace RUINORERP.UI.FM
 {
@@ -118,9 +121,9 @@ namespace RUINORERP.UI.FM
             DataBindingHelper.BindData4TextBox<tb_FM_PaymentApplication>(entity, t => t.ApprovalOpinions, txtApprovalOpinions, BindDataType4TextBox.Text, false);
 
             // DataBindingHelper.BindData4CheckBox<tb_FM_PaymentApplication>(entity, t => t.ApprovalResults, chkApprovalResults, false);
-            DataBindingHelper.BindData4ControlByEnum<tb_PurEntry>(entity, t => t.DataStatus, lblDataStatus, BindDataType4Enum.EnumName, typeof(Global.DataStatus));
+            DataBindingHelper.BindData4ControlByEnum<tb_FM_PaymentApplication>(entity, t => t.DataStatus, lblDataStatus, BindDataType4Enum.EnumName, typeof(Global.DataStatus));
 
-            DataBindingHelper.BindData4ControlByEnum<tb_PurEntry>(entity, t => t.ApprovalStatus, lblReview, BindDataType4Enum.EnumName, typeof(Global.ApprovalStatus));
+            DataBindingHelper.BindData4ControlByEnum<tb_FM_PaymentApplication>(entity, t => t.ApprovalStatus, lblReview, BindDataType4Enum.EnumName, typeof(Global.ApprovalStatus));
             //显示 打印状态 如果是草稿状态 不显示打印
             ShowPrintStatus(lblPrintStatus, entity);
 
@@ -128,6 +131,7 @@ namespace RUINORERP.UI.FM
 
             //创建表达式
             var lambda = Expressionable.Create<tb_CustomerVendor>()
+                            .And(t => t.IsCustomer == false)//供应商和第三方
                             .And(t => t.isdeleted == false)
                             .And(t => t.Is_enabled == true)
                             .And(t => t.Is_available == true)
@@ -149,7 +153,7 @@ namespace RUINORERP.UI.FM
             }
 
 
-            entity.PropertyChanged += (sender, s2) =>
+            entity.PropertyChanged += async (sender, s2) =>
             {
                 if (s2.PropertyName == entity.GetPropertyName<tb_FM_PaymentApplication>(c => c.CustomerVendor_ID))
                 {
@@ -173,7 +177,6 @@ namespace RUINORERP.UI.FM
 
                     #endregion
                 }
-
                 //后面这些依赖于控件绑定的数据源和字段。所以要在绑定后执行。
                 if (entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改)
                 {
@@ -183,41 +186,45 @@ namespace RUINORERP.UI.FM
                         //加载收款信息
                         if (entity.PayeeInfoID > 0)
                         {
-                            //cmbPayeeInfoID.SelectedIndex = cmbPayeeInfoID.FindStringExact(emp.Account_name);
+                            tb_FM_PayeeInfo payeeInfo = null;
                             var obj = BizCacheHelper.Instance.GetEntity<tb_FM_PayeeInfo>(entity.PayeeInfoID);
                             if (obj != null && obj.ToString() != "System.Object")
                             {
                                 if (obj is tb_FM_PayeeInfo cv)
                                 {
-                                    DataBindingHelper.BindData4CmbByEnum<tb_FM_PayeeInfo>(cv, k => k.Account_type, typeof(AccountType), cmbAccount_type, false);
-                                    //添加收款信息。展示给财务看
-                                    entity.PayeeAccountNo = cv.Account_No;
-                                    lblBelongingBank.Text = cv.BelongingBank;
-                                    lblOpeningbank.Text = cv.OpeningBank;
-                                    cmbAccount_type.SelectedItem = cv.Account_type;
-                                    if (!string.IsNullOrEmpty(cv.PaymentCodeImagePath))
-                                    {
-                                        btnInfo.Tag = cv;
-                                        btnInfo.Visible = true;
-                                    }
-                                    else
-                                    {
-                                        btnInfo.Tag = string.Empty;
-                                        btnInfo.Visible = false;
-                                    }
-                                }
-                                else
-                                {
-                                    txtPayeeAccountNo.Text = "";
-                                    lblBelongingBank.Text = "";
-                                    lblOpeningbank.Text = "";
+                                    payeeInfo = cv;
                                 }
                             }
                             else
                             {
                                 //直接加载 不用缓存
-
+                                payeeInfo = await MainForm.Instance.AppContext.Db.Queryable<tb_FM_PayeeInfo>().Where(c => c.PayeeInfoID == entity.PayeeInfoID).FirstAsync();
                             }
+                            if (payeeInfo != null)
+                            {
+                                DataBindingHelper.BindData4CmbByEnum<tb_FM_PayeeInfo>(payeeInfo, k => k.Account_type, typeof(AccountType), cmbAccount_type, false);
+                                //添加收款信息。展示给财务看
+                                entity.PayeeAccountNo = payeeInfo.Account_No;
+                                lblBelongingBank.Text = payeeInfo.BelongingBank;
+                                lblOpeningbank.Text = payeeInfo.OpeningBank;
+                                cmbAccount_type.SelectedItem = payeeInfo.Account_type;
+                                if (!string.IsNullOrEmpty(payeeInfo.PaymentCodeImagePath))
+                                {
+                                    btnInfo.Tag = payeeInfo;
+                                    btnInfo.Visible = true;
+                                }
+                                else
+                                {
+                                    btnInfo.Tag = string.Empty;
+                                    btnInfo.Visible = false;
+                                }
+                            }
+                        }
+                        else
+                        {
+                            txtPayeeAccountNo.Text = "";
+                            lblBelongingBank.Text = "";
+                            lblOpeningbank.Text = "";
                         }
                     }
                 }
@@ -225,7 +232,6 @@ namespace RUINORERP.UI.FM
                 {
                     cmbPayeeInfoID.Enabled = false;
                 }
-
                 if (s2.PropertyName == entity.GetPropertyName<tb_FM_PaymentApplication>(c => c.TotalAmount))
                 {
                     entity.PamountInWords = entity.TotalAmount.Value.ToUpper();
@@ -329,7 +335,7 @@ namespace RUINORERP.UI.FM
                 if (NeedValidated)
                 {
                     //SaveResult = await base.UpdateSave(EditEntity);
-                   SaveResult = await base.Save(EditEntity);
+                    SaveResult = await base.Save(EditEntity);
                     if (SaveResult.Succeeded)
                     {
                         MainForm.Instance.PrintInfoLog($"保存成功,{EditEntity.ApplicationNo}。");

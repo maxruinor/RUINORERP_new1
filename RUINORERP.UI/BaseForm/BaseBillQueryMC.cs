@@ -1226,6 +1226,8 @@ namespace RUINORERP.UI.BaseForm
             //_UCBillChildQuery.SummaryCols = clist;
         }
 
+        public static string basePath = System.IO.Path.Combine(Directory.GetCurrentDirectory(), GlobalConstants.LayoutConfigDirectory);
+        string xmlfilepath = System.IO.Path.Combine(basePath, "QueryMC" + typeof(M).Name + "Persistence.xml");
 
         protected virtual async void Exit(object thisform)
         {
@@ -1246,7 +1248,8 @@ namespace RUINORERP.UI.BaseForm
                 settings.Encoding = new UTF8Encoding(false);
                 settings.NewLineChars = Environment.NewLine;
                 settings.Indent = true;
-                string xmlfilepath = System.IO.Path.Combine(Application.StartupPath, "QueryMC" + typeof(M).Name + "Persistence.xml");
+
+
                 if (ws != null)
                 {
                     using XmlWriter xmlWriter = XmlWriter.Create(xmlfilepath, settings);
@@ -1402,22 +1405,19 @@ namespace RUINORERP.UI.BaseForm
             //加载布局
             try
             {
-                //Location of XML file
-                string xmlFilePath = "QueryMC" + typeof(M).Name + "Persistence.xml";
-                if (System.IO.File.Exists(xmlFilePath) && AuthorizeController.GetQueryPageLayoutCustomize(MainForm.Instance.AppContext))
+                if (!Directory.Exists(basePath))
+                {
+                    Directory.CreateDirectory(basePath);
+                }
+                if (System.IO.File.Exists(xmlfilepath) && AuthorizeController.GetQueryPageLayoutCustomize(MainForm.Instance.AppContext))
                 {
                     #region load
                     // Create the XmlNodeReader object.
                     XmlDocument doc = new XmlDocument();
-                    doc.Load(xmlFilePath);
+                    doc.Load(xmlfilepath);
                     XmlNodeReader nodeReader = new XmlNodeReader(doc);
                     // Set the validation settings.
                     XmlReaderSettings settings = new XmlReaderSettings();
-                    //settings.ValidationType = ValidationType.Schema;
-                    //settings.Schemas.Add("urn:bookstore-schema", "books.xsd");
-                    //settings.ValidationEventHandler += new ValidationEventHandler(ValidationCallBack);
-                    //settings.NewLineChars = Environment.NewLine;
-                    //settings.Indent = true;
 
                     using (XmlReader reader = XmlReader.Create(nodeReader, settings))
                     {
@@ -1589,7 +1589,7 @@ namespace RUINORERP.UI.BaseForm
         private object _queryDto = new BaseEntity();
 
 
-        
+
         [Obsolete("//生成 加载查询条件时 LoadQueryConditionToUI 时 为什么 一会用这个。一会用 QueryDtoProxy TODO有问题哦。")]
         public object QueryDto { get => _queryDto; set => _queryDto = value; }
 

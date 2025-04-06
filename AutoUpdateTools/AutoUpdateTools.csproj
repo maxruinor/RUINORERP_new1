@@ -54,8 +54,12 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DataConfig.cs" />
+    <Compile Include="XmlCompare\BCompareXmlComparator.cs" />
+    <Compile Include="XmlCompare\DiffBlock.cs" />
+    <Compile Include="XmlCompare\Differ.cs" />
+    <Compile Include="XmlCompare\EnhancedXmlDiff.cs" />
+    <Compile Include="XmlCompare\XmlComparer.cs" />
     <Compile Include="XmlCompare\AdvancedDiff.cs" />
-    <Compile Include="XmlCompare\Diff.cs" />
     <Compile Include="FileHelper.cs" />
     <Compile Include="frmAULWriter.cs">
       <SubType>Form</SubType>
@@ -74,8 +78,15 @@
     <Compile Include="RichTextBoxExtensions.cs" />
     <Compile Include="SerializeXmlHelper.cs" />
     <Compile Include="XmlCompare\SafeScrollSynchronizer.cs" />
-    <Compile Include="XmlCompare\ScrollSynchronizer.cs" />
     <Compile Include="XmlCompare\Win32.cs" />
+    <Compile Include="XmlCompare\XmlDiffColorScheme.cs" />
+    <Compile Include="XmlCompare\XmlDiffOptions.cs" />
+    <Compile Include="XmlCompare\XmlDiffViewer.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="XmlCompare\XmlDiffViewer.Designer.cs">
+      <DependentUpon>XmlDiffViewer.cs</DependentUpon>
+    </Compile>
     <EmbeddedResource Include="frmAULWriter.resx">
       <DependentUpon>frmAULWriter.cs</DependentUpon>
     </EmbeddedResource>
@@ -92,6 +103,9 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
+    <EmbeddedResource Include="XmlCompare\XmlDiffViewer.resx">
+      <DependentUpon>XmlDiffViewer.cs</DependentUpon>
+    </EmbeddedResource>
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>

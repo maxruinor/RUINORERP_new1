@@ -2,7 +2,7 @@
 <AutoUpdater>
 	<Description>企业数字化集成ERP autoUpdate</Description>
 	<Updater>
-		<Url>http://fact.tpddns.cn:1688/updaterFiler/</Url>
+		<Url>http://247q61v763.qicp.vip:8848/updaterFiler/</Url>
 		<LastUpdateTime>2025-01-22</LastUpdateTime>
 	</Updater>
 	<Application applicationId="企业数字化集成ERP">

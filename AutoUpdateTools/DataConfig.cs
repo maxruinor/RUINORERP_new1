@@ -50,21 +50,15 @@ namespace AutoUpdateTools
         public string SavePath { get; set; }
 
 
-        public bool UseBaseVersion { get; set; }
+        public bool UseBaseExeVersion { get; set; }
 
         /// <summary>
         /// 基础版本号,格式为1.0.0.0,默认为1.0.0.0
         /// 用于生成事个软件的版本号会显示到版本UI上,但不用于生成更新包版本号
         /// </summary>
-        public  string BaseVersion { get; set; }
-
+        public  string BaseExeVersion { get; set; }
+          
    
-        public bool CustomVer { get; set; }
-        
-        /// <summary>
-        /// 自定义版本号,格式为1.0.0.0
-        /// </summary>
-        public string CustomVersion { get; set; }
     }
 
 }

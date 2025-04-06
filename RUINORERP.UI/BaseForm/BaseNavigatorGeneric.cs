@@ -29,6 +29,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
@@ -618,6 +619,8 @@ namespace RUINORERP.UI.BaseForm
             //_UCBillChildQuery.SummaryCols = clist;
         }
 
+        public static string basePath = System.IO.Path.Combine(Directory.GetCurrentDirectory(), GlobalConstants.LayoutConfigDirectory);
+        string xmlfilepath = System.IO.Path.Combine(basePath, "Navigator" + typeof(M).Name + "Persistence.xml");
 
         protected virtual async void Exit(object thisform)
         {
@@ -631,24 +634,9 @@ namespace RUINORERP.UI.BaseForm
             settings.Encoding = new UTF8Encoding(false);
             settings.NewLineChars = Environment.NewLine;
             settings.Indent = true;
-            string xmlfilepath = System.IO.Path.Combine(Application.StartupPath, "Navigator" + typeof(M).Name + "Persistence.xml");
+            
             using XmlWriter xmlWriter = XmlWriter.Create(xmlfilepath, settings);
             {
-                //xmlWriter.WriteStartDocument(true);
-                ////文档类型
-                //xmlWriter.WriteDocType("Html", null, null, "<!ENTITY h \"hardcover\">");
-
-                //xmlWriter.WriteStartElement("Html");
-                ////命名空间
-                //xmlWriter.WriteAttributeString("xmlns", "xsi", null, "http://www/XMLSchema-instance");
-                //xmlWriter.WriteAttributeString("xsi", "schemaLocation", null, @"http://.xsd");
-                ////指令
-                //String PItext = "type=\"text/xsl\" href=\"book.xsl\"";
-                //xmlWriter.WriteProcessingInstruction("xml-stylesheet", PItext);
-                ////注释
-                //xmlWriter.WriteComment("标题头");
-                ////cdata
-                //xmlWriter.WriteCData(@"<javasritpt><javasritpt>");
                 kryptonWorkspace1.SaveLayoutToXml(xmlWriter);
                 xmlWriter.Close();//要关闭，否则下面再用时会报错。
             }
@@ -809,12 +797,15 @@ namespace RUINORERP.UI.BaseForm
             try
             {
                 //Location of XML file
-                string xmlFilePath = "Navigator" + typeof(M).Name + "Persistence.xml";
-                if (System.IO.File.Exists(xmlFilePath) && AuthorizeController.GetQueryPageLayoutCustomize(MainForm.Instance.AppContext))
+                if (!Directory.Exists(basePath))
+                {
+                    Directory.CreateDirectory(basePath);
+                }
+                if (System.IO.File.Exists(xmlfilepath) && AuthorizeController.GetQueryPageLayoutCustomize(MainForm.Instance.AppContext))
                 {
                     // Create the XmlNodeReader object.
                     XmlDocument doc = new XmlDocument();
-                    doc.Load(xmlFilePath);
+                    doc.Load(xmlfilepath);
                     XmlNodeReader nodeReader = new XmlNodeReader(doc);
                     // Set the validation settings.
                     XmlReaderSettings settings = new XmlReaderSettings();

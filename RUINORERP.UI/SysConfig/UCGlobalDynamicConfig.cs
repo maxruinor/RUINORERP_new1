@@ -45,6 +45,7 @@ namespace RUINORERP.UI.SysConfig
     {
         private readonly CommandManager _commandManager;
         private readonly string basePath = System.IO.Path.Combine(Directory.GetCurrentDirectory(), GlobalConstants.DynamicConfigFileDirectory);
+
         private ConfigFileReceiver _configFileReceiver;
 
         public UCGlobalDynamicConfig()
@@ -101,7 +102,12 @@ namespace RUINORERP.UI.SysConfig
 
             // 读取文件内容
             // string json = File.ReadAllText("GlobalValidator.json");
-            string json = File.ReadAllText(System.IO.Path.Combine(Directory.GetCurrentDirectory(), GlobalConstants.DynamicConfigFileDirectory) + "/" + className + ".json");
+            string basePath = System.IO.Path.Combine(Directory.GetCurrentDirectory(), GlobalConstants.DynamicConfigFileDirectory);
+            if (!Directory.Exists(basePath))
+            {
+                Directory.CreateDirectory(basePath);
+            }
+            string json = File.ReadAllText(basePath + "/" + className + ".json");
 
             // 解析JSON，首先获取SystemGlobalConfig节点
             JObject configJson = JObject.Parse(json);
@@ -393,6 +399,12 @@ namespace RUINORERP.UI.SysConfig
                 return;
             }
             propertyGrid1.SelectedObject = treeView1.SelectedNode.Tag;
+
+            if (!Directory.Exists(basePath))
+            {
+                Directory.CreateDirectory(basePath);
+            }
+
             _configFileReceiver = new ConfigFileReceiver(basePath + "/" + propertyGrid1.SelectedObject.GetType().Name + ".json");
         }
 

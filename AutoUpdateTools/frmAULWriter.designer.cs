@@ -35,17 +35,19 @@
             this.panel1 = new System.Windows.Forms.Panel();
             this.label1 = new System.Windows.Forms.Label();
             this.panel2 = new System.Windows.Forms.Panel();
-            this.btnPreview = new System.Windows.Forms.Button();
+            this.btnDiff = new System.Windows.Forms.Button();
+            this.btnLoadPreCurrentVer = new System.Windows.Forms.Button();
             this.chk文件比较 = new System.Windows.Forms.CheckBox();
             this.button_save_config = new System.Windows.Forms.Button();
-            this.prbProd = new System.Windows.Forms.ProgressBar();
             this.btnrelease = new System.Windows.Forms.Button();
             this.btnProduce = new System.Windows.Forms.Button();
+            this.prbProd = new System.Windows.Forms.ProgressBar();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.tabControl1 = new System.Windows.Forms.TabControl();
             this.tbpBase = new System.Windows.Forms.TabPage();
+            this.txtAutoUpdateXmlSavePath = new System.Windows.Forms.TextBox();
             this.btnBaseDir = new System.Windows.Forms.Button();
-            this.txtBaseDir = new System.Windows.Forms.TextBox();
+            this.txtTargetDirectory = new System.Windows.Forms.TextBox();
             this.label7 = new System.Windows.Forms.Label();
             this.btnCompareSource = new System.Windows.Forms.Button();
             this.txtCompareSource = new System.Windows.Forms.TextBox();
@@ -57,33 +59,31 @@
             this.txtExpt = new System.Windows.Forms.TextBox();
             this.label4 = new System.Windows.Forms.Label();
             this.btnDest = new System.Windows.Forms.Button();
-            this.txtAutoUpdateXmlSavePath = new System.Windows.Forms.TextBox();
             this.label3 = new System.Windows.Forms.Label();
             this.btnSrc = new System.Windows.Forms.Button();
             this.txtMainExePath = new System.Windows.Forms.TextBox();
             this.label2 = new System.Windows.Forms.Label();
             this.tbpOpt = new System.Windows.Forms.TabPage();
             this.splitContainerOption = new System.Windows.Forms.SplitContainer();
-            this.txtUpdatedFiles = new System.Windows.Forms.TextBox();
+            this.txtPreVerUpdatedFiles = new System.Windows.Forms.TextBox();
             this.chkUseBaseVersion = new System.Windows.Forms.CheckBox();
-            this.txt指定版本 = new System.Windows.Forms.TextBox();
+            this.txtBaseExeVersion = new System.Windows.Forms.TextBox();
             this.chk目录转为明细 = new System.Windows.Forms.CheckBox();
             this.chkAppend = new System.Windows.Forms.CheckBox();
-            this.txtVerNo = new System.Windows.Forms.TextBox();
-            this.chk更新文件版本号 = new System.Windows.Forms.CheckBox();
             this.tbpDiffList = new System.Windows.Forms.TabPage();
             this.txtDiff = new System.Windows.Forms.RichTextBox();
             this.tbpLastXml = new System.Windows.Forms.TabPage();
             this.txtLastXml = new System.Windows.Forms.RichTextBox();
-            this.ofdSrc = new System.Windows.Forms.OpenFileDialog();
-            this.sfdDest = new System.Windows.Forms.SaveFileDialog();
-            this.ofdExpt = new System.Windows.Forms.OpenFileDialog();
-            this.folderBrowserDialogCompareSource = new System.Windows.Forms.FolderBrowserDialog();
             this.tabPageDiff = new System.Windows.Forms.TabPage();
             this.splitContainerDiff = new System.Windows.Forms.SplitContainer();
             this.rtbOld = new System.Windows.Forms.RichTextBox();
             this.rtbNew = new System.Windows.Forms.RichTextBox();
-            this.btnDiff = new System.Windows.Forms.Button();
+            this.tabUsedescribe = new System.Windows.Forms.TabPage();
+            this.txt使用说明 = new System.Windows.Forms.TextBox();
+            this.ofdSrc = new System.Windows.Forms.OpenFileDialog();
+            this.sfdDest = new System.Windows.Forms.SaveFileDialog();
+            this.ofdExpt = new System.Windows.Forms.OpenFileDialog();
+            this.folderBrowserDialogCompareSource = new System.Windows.Forms.FolderBrowserDialog();
             this.panel1.SuspendLayout();
             this.panel2.SuspendLayout();
             this.groupBox1.SuspendLayout();
@@ -101,6 +101,7 @@
             this.splitContainerDiff.Panel1.SuspendLayout();
             this.splitContainerDiff.Panel2.SuspendLayout();
             this.splitContainerDiff.SuspendLayout();
+            this.tabUsedescribe.SuspendLayout();
             this.SuspendLayout();
             // 
             // panel1
@@ -109,7 +110,7 @@
             this.panel1.Dock = System.Windows.Forms.DockStyle.Top;
             this.panel1.Location = new System.Drawing.Point(0, 0);
             this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(1041, 53);
+            this.panel1.Size = new System.Drawing.Size(1061, 53);
             this.panel1.TabIndex = 0;
             // 
             // label1
@@ -125,35 +126,44 @@
             // panel2
             // 
             this.panel2.Controls.Add(this.btnDiff);
-            this.panel2.Controls.Add(this.btnPreview);
+            this.panel2.Controls.Add(this.btnLoadPreCurrentVer);
             this.panel2.Controls.Add(this.chk文件比较);
             this.panel2.Controls.Add(this.button_save_config);
-            this.panel2.Controls.Add(this.prbProd);
             this.panel2.Controls.Add(this.btnrelease);
             this.panel2.Controls.Add(this.btnProduce);
+            this.panel2.Controls.Add(this.richTxtLog);
             this.panel2.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.panel2.Location = new System.Drawing.Point(0, 625);
+            this.panel2.Location = new System.Drawing.Point(0, 496);
             this.panel2.Name = "panel2";
-            this.panel2.Size = new System.Drawing.Size(1041, 40);
+            this.panel2.Size = new System.Drawing.Size(1061, 237);
             this.panel2.TabIndex = 1;
             // 
-            // btnPreview
+            // btnDiff
             // 
-            this.btnPreview.FlatStyle = System.Windows.Forms.FlatStyle.Popup;
-            this.btnPreview.Location = new System.Drawing.Point(262, 5);
-            this.btnPreview.Name = "btnPreview";
-            this.btnPreview.Size = new System.Drawing.Size(75, 23);
-            this.btnPreview.TabIndex = 7;
-            this.btnPreview.Text = "1)预览";
-            this.btnPreview.UseVisualStyleBackColor = true;
-            this.btnPreview.Click += new System.EventHandler(this.btnPreview_Click);
+            this.btnDiff.Location = new System.Drawing.Point(978, 12);
+            this.btnDiff.Name = "btnDiff";
+            this.btnDiff.Size = new System.Drawing.Size(51, 23);
+            this.btnDiff.TabIndex = 8;
+            this.btnDiff.Text = "比较";
+            this.btnDiff.UseVisualStyleBackColor = true;
+            this.btnDiff.Click += new System.EventHandler(this.btnDiff_Click);
+            // 
+            // btnLoadPreCurrentVer
+            // 
+            this.btnLoadPreCurrentVer.Location = new System.Drawing.Point(12, 9);
+            this.btnLoadPreCurrentVer.Name = "btnLoadPreCurrentVer";
+            this.btnLoadPreCurrentVer.Size = new System.Drawing.Size(74, 23);
+            this.btnLoadPreCurrentVer.TabIndex = 9;
+            this.btnLoadPreCurrentVer.Text = "加载清单";
+            this.btnLoadPreCurrentVer.UseVisualStyleBackColor = true;
+            this.btnLoadPreCurrentVer.Click += new System.EventHandler(this.btnLoadCurrentVer_Click);
             // 
             // chk文件比较
             // 
             this.chk文件比较.AutoSize = true;
             this.chk文件比较.Checked = true;
             this.chk文件比较.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.chk文件比较.Location = new System.Drawing.Point(355, 9);
+            this.chk文件比较.Location = new System.Drawing.Point(182, 12);
             this.chk文件比较.Name = "chk文件比较";
             this.chk文件比较.Size = new System.Drawing.Size(72, 16);
             this.chk文件比较.TabIndex = 4;
@@ -164,7 +174,7 @@
             // button_save_config
             // 
             this.button_save_config.FlatStyle = System.Windows.Forms.FlatStyle.Popup;
-            this.button_save_config.Location = new System.Drawing.Point(751, 6);
+            this.button_save_config.Location = new System.Drawing.Point(815, 11);
             this.button_save_config.Name = "button_save_config";
             this.button_save_config.Size = new System.Drawing.Size(101, 23);
             this.button_save_config.TabIndex = 3;
@@ -172,35 +182,36 @@
             this.button_save_config.UseVisualStyleBackColor = true;
             this.button_save_config.Click += new System.EventHandler(this.button_save_config_Click);
             // 
-            // prbProd
-            // 
-            this.prbProd.Location = new System.Drawing.Point(7, 5);
-            this.prbProd.Name = "prbProd";
-            this.prbProd.Size = new System.Drawing.Size(237, 23);
-            this.prbProd.TabIndex = 2;
-            this.prbProd.Visible = false;
-            // 
             // btnrelease
             // 
             this.btnrelease.FlatStyle = System.Windows.Forms.FlatStyle.Popup;
-            this.btnrelease.Location = new System.Drawing.Point(585, 5);
+            this.btnrelease.Location = new System.Drawing.Point(556, 10);
             this.btnrelease.Name = "btnrelease";
             this.btnrelease.Size = new System.Drawing.Size(113, 23);
             this.btnrelease.TabIndex = 1;
-            this.btnrelease.Text = "3)发布到保存位置";
+            this.btnrelease.Text = "2)发布到保存位置";
             this.btnrelease.UseVisualStyleBackColor = true;
             this.btnrelease.Click += new System.EventHandler(this.btnrelease_Click);
             // 
             // btnProduce
             // 
             this.btnProduce.FlatStyle = System.Windows.Forms.FlatStyle.Popup;
-            this.btnProduce.Location = new System.Drawing.Point(456, 6);
+            this.btnProduce.Location = new System.Drawing.Point(351, 9);
             this.btnProduce.Name = "btnProduce";
             this.btnProduce.Size = new System.Drawing.Size(75, 23);
             this.btnProduce.TabIndex = 0;
-            this.btnProduce.Text = "2)生成(&G)";
+            this.btnProduce.Text = "1)生成(&G)";
             this.btnProduce.UseVisualStyleBackColor = true;
             this.btnProduce.Click += new System.EventHandler(this.btnProduce_Click);
+            // 
+            // prbProd
+            // 
+            this.prbProd.Dock = System.Windows.Forms.DockStyle.Bottom;
+            this.prbProd.Location = new System.Drawing.Point(0, 733);
+            this.prbProd.Name = "prbProd";
+            this.prbProd.Size = new System.Drawing.Size(1061, 23);
+            this.prbProd.TabIndex = 2;
+            this.prbProd.Visible = false;
             // 
             // groupBox1
             // 
@@ -208,7 +219,7 @@
             this.groupBox1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.groupBox1.Location = new System.Drawing.Point(0, 53);
             this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(1041, 572);
+            this.groupBox1.Size = new System.Drawing.Size(1061, 443);
             this.groupBox1.TabIndex = 2;
             this.groupBox1.TabStop = false;
             // 
@@ -219,29 +230,29 @@
             this.tabControl1.Controls.Add(this.tbpDiffList);
             this.tabControl1.Controls.Add(this.tbpLastXml);
             this.tabControl1.Controls.Add(this.tabPageDiff);
+            this.tabControl1.Controls.Add(this.tabUsedescribe);
             this.tabControl1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tabControl1.Location = new System.Drawing.Point(3, 17);
             this.tabControl1.Name = "tabControl1";
             this.tabControl1.SelectedIndex = 0;
-            this.tabControl1.Size = new System.Drawing.Size(1035, 552);
+            this.tabControl1.Size = new System.Drawing.Size(1055, 423);
             this.tabControl1.TabIndex = 0;
             // 
             // tbpBase
             // 
+            this.tbpBase.Controls.Add(this.txtAutoUpdateXmlSavePath);
             this.tbpBase.Controls.Add(this.btnBaseDir);
-            this.tbpBase.Controls.Add(this.txtBaseDir);
+            this.tbpBase.Controls.Add(this.txtTargetDirectory);
             this.tbpBase.Controls.Add(this.label7);
             this.tbpBase.Controls.Add(this.btnCompareSource);
             this.tbpBase.Controls.Add(this.txtCompareSource);
             this.tbpBase.Controls.Add(this.label6);
-            this.tbpBase.Controls.Add(this.richTxtLog);
             this.tbpBase.Controls.Add(this.txtUrl);
             this.tbpBase.Controls.Add(this.label5);
             this.tbpBase.Controls.Add(this.btnExpt);
             this.tbpBase.Controls.Add(this.txtExpt);
             this.tbpBase.Controls.Add(this.label4);
             this.tbpBase.Controls.Add(this.btnDest);
-            this.tbpBase.Controls.Add(this.txtAutoUpdateXmlSavePath);
             this.tbpBase.Controls.Add(this.label3);
             this.tbpBase.Controls.Add(this.btnSrc);
             this.tbpBase.Controls.Add(this.txtMainExePath);
@@ -249,15 +260,22 @@
             this.tbpBase.Location = new System.Drawing.Point(4, 22);
             this.tbpBase.Name = "tbpBase";
             this.tbpBase.Padding = new System.Windows.Forms.Padding(3);
-            this.tbpBase.Size = new System.Drawing.Size(994, 552);
+            this.tbpBase.Size = new System.Drawing.Size(1047, 397);
             this.tbpBase.TabIndex = 0;
             this.tbpBase.Text = "※基本信息";
             this.tbpBase.UseVisualStyleBackColor = true;
             // 
+            // txtAutoUpdateXmlSavePath
+            // 
+            this.txtAutoUpdateXmlSavePath.Location = new System.Drawing.Point(105, 360);
+            this.txtAutoUpdateXmlSavePath.Name = "txtAutoUpdateXmlSavePath";
+            this.txtAutoUpdateXmlSavePath.Size = new System.Drawing.Size(468, 21);
+            this.txtAutoUpdateXmlSavePath.TabIndex = 4;
+            // 
             // btnBaseDir
             // 
             this.btnBaseDir.FlatStyle = System.Windows.Forms.FlatStyle.Popup;
-            this.btnBaseDir.Location = new System.Drawing.Point(683, 41);
+            this.btnBaseDir.Location = new System.Drawing.Point(719, 41);
             this.btnBaseDir.Name = "btnBaseDir";
             this.btnBaseDir.Size = new System.Drawing.Size(58, 21);
             this.btnBaseDir.TabIndex = 17;
@@ -265,28 +283,28 @@
             this.btnBaseDir.UseVisualStyleBackColor = true;
             this.btnBaseDir.Click += new System.EventHandler(this.btnBaseDir_Click);
             // 
-            // txtBaseDir
+            // txtTargetDirectory
             // 
-            this.txtBaseDir.AllowDrop = true;
-            this.txtBaseDir.Location = new System.Drawing.Point(70, 40);
-            this.txtBaseDir.Name = "txtBaseDir";
-            this.txtBaseDir.Size = new System.Drawing.Size(607, 21);
-            this.txtBaseDir.TabIndex = 16;
-            this.txtBaseDir.Text = "暂时没有完成，用哈希值比较，以上面主程序为基准用这个debug输出比较。有新的就加入";
+            this.txtTargetDirectory.AllowDrop = true;
+            this.txtTargetDirectory.Location = new System.Drawing.Point(106, 40);
+            this.txtTargetDirectory.Name = "txtTargetDirectory";
+            this.txtTargetDirectory.Size = new System.Drawing.Size(607, 21);
+            this.txtTargetDirectory.TabIndex = 16;
+            this.txtTargetDirectory.Text = "暂时没有完成，用哈希值比较，以上面主程序为基准用这个debug输出比较。有新的就加入";
             // 
             // label7
             // 
             this.label7.AutoSize = true;
-            this.label7.Location = new System.Drawing.Point(7, 45);
+            this.label7.Location = new System.Drawing.Point(48, 43);
             this.label7.Name = "label7";
             this.label7.Size = new System.Drawing.Size(59, 12);
             this.label7.TabIndex = 15;
-            this.label7.Text = "原始目录:";
+            this.label7.Text = "目标目录:";
             // 
             // btnCompareSource
             // 
             this.btnCompareSource.FlatStyle = System.Windows.Forms.FlatStyle.Popup;
-            this.btnCompareSource.Location = new System.Drawing.Point(683, 73);
+            this.btnCompareSource.Location = new System.Drawing.Point(719, 73);
             this.btnCompareSource.Name = "btnCompareSource";
             this.btnCompareSource.Size = new System.Drawing.Size(58, 21);
             this.btnCompareSource.TabIndex = 14;
@@ -297,7 +315,7 @@
             // txtCompareSource
             // 
             this.txtCompareSource.AllowDrop = true;
-            this.txtCompareSource.Location = new System.Drawing.Point(70, 72);
+            this.txtCompareSource.Location = new System.Drawing.Point(106, 72);
             this.txtCompareSource.Name = "txtCompareSource";
             this.txtCompareSource.Size = new System.Drawing.Size(607, 21);
             this.txtCompareSource.TabIndex = 13;
@@ -306,23 +324,24 @@
             // label6
             // 
             this.label6.AutoSize = true;
-            this.label6.Location = new System.Drawing.Point(7, 75);
+            this.label6.Location = new System.Drawing.Point(48, 74);
             this.label6.Name = "label6";
             this.label6.Size = new System.Drawing.Size(59, 12);
             this.label6.TabIndex = 12;
-            this.label6.Text = "更新来源:";
+            this.label6.Text = "来源目录:";
             // 
             // richTxtLog
             // 
-            this.richTxtLog.Location = new System.Drawing.Point(70, 387);
+            this.richTxtLog.Dock = System.Windows.Forms.DockStyle.Bottom;
+            this.richTxtLog.Location = new System.Drawing.Point(0, 49);
             this.richTxtLog.Name = "richTxtLog";
-            this.richTxtLog.Size = new System.Drawing.Size(468, 115);
+            this.richTxtLog.Size = new System.Drawing.Size(1061, 188);
             this.richTxtLog.TabIndex = 11;
             this.richTxtLog.Text = "";
             // 
             // txtUrl
             // 
-            this.txtUrl.Location = new System.Drawing.Point(70, 96);
+            this.txtUrl.Location = new System.Drawing.Point(106, 96);
             this.txtUrl.Name = "txtUrl";
             this.txtUrl.Size = new System.Drawing.Size(607, 21);
             this.txtUrl.TabIndex = 10;
@@ -330,7 +349,7 @@
             // label5
             // 
             this.label5.AutoSize = true;
-            this.label5.Location = new System.Drawing.Point(7, 99);
+            this.label5.Location = new System.Drawing.Point(48, 98);
             this.label5.Name = "label5";
             this.label5.Size = new System.Drawing.Size(59, 12);
             this.label5.TabIndex = 9;
@@ -339,7 +358,7 @@
             // btnExpt
             // 
             this.btnExpt.FlatStyle = System.Windows.Forms.FlatStyle.Popup;
-            this.btnExpt.Location = new System.Drawing.Point(882, 122);
+            this.btnExpt.Location = new System.Drawing.Point(917, 122);
             this.btnExpt.Name = "btnExpt";
             this.btnExpt.Size = new System.Drawing.Size(58, 21);
             this.btnExpt.TabIndex = 8;
@@ -350,7 +369,7 @@
             // txtExpt
             // 
             this.txtExpt.AllowDrop = true;
-            this.txtExpt.Location = new System.Drawing.Point(70, 122);
+            this.txtExpt.Location = new System.Drawing.Point(105, 122);
             this.txtExpt.Multiline = true;
             this.txtExpt.Name = "txtExpt";
             this.txtExpt.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
@@ -362,7 +381,7 @@
             // label4
             // 
             this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(7, 122);
+            this.label4.Location = new System.Drawing.Point(48, 121);
             this.label4.Name = "label4";
             this.label4.Size = new System.Drawing.Size(59, 12);
             this.label4.TabIndex = 6;
@@ -371,7 +390,7 @@
             // btnDest
             // 
             this.btnDest.FlatStyle = System.Windows.Forms.FlatStyle.Popup;
-            this.btnDest.Location = new System.Drawing.Point(552, 364);
+            this.btnDest.Location = new System.Drawing.Point(587, 361);
             this.btnDest.Name = "btnDest";
             this.btnDest.Size = new System.Drawing.Size(58, 21);
             this.btnDest.TabIndex = 5;
@@ -379,26 +398,19 @@
             this.btnDest.UseVisualStyleBackColor = true;
             this.btnDest.Click += new System.EventHandler(this.btnSearDes_Click);
             // 
-            // txtAutoUpdateXmlSavePath
-            // 
-            this.txtAutoUpdateXmlSavePath.Location = new System.Drawing.Point(70, 360);
-            this.txtAutoUpdateXmlSavePath.Name = "txtAutoUpdateXmlSavePath";
-            this.txtAutoUpdateXmlSavePath.Size = new System.Drawing.Size(468, 21);
-            this.txtAutoUpdateXmlSavePath.TabIndex = 4;
-            // 
             // label3
             // 
             this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(7, 364);
+            this.label3.Location = new System.Drawing.Point(0, 363);
             this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(59, 12);
+            this.label3.Size = new System.Drawing.Size(107, 12);
             this.label3.TabIndex = 3;
-            this.label3.Text = "保存位置:";
+            this.label3.Text = "目标清单保存位置:";
             // 
             // btnSrc
             // 
             this.btnSrc.FlatStyle = System.Windows.Forms.FlatStyle.Popup;
-            this.btnSrc.Location = new System.Drawing.Point(683, 12);
+            this.btnSrc.Location = new System.Drawing.Point(719, 12);
             this.btnSrc.Name = "btnSrc";
             this.btnSrc.Size = new System.Drawing.Size(58, 21);
             this.btnSrc.TabIndex = 2;
@@ -409,7 +421,7 @@
             // txtMainExePath
             // 
             this.txtMainExePath.AllowDrop = true;
-            this.txtMainExePath.Location = new System.Drawing.Point(70, 13);
+            this.txtMainExePath.Location = new System.Drawing.Point(106, 13);
             this.txtMainExePath.Name = "txtMainExePath";
             this.txtMainExePath.Size = new System.Drawing.Size(607, 21);
             this.txtMainExePath.TabIndex = 1;
@@ -419,11 +431,11 @@
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(19, 17);
+            this.label2.Location = new System.Drawing.Point(36, 16);
             this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(47, 12);
+            this.label2.Size = new System.Drawing.Size(71, 12);
             this.label2.TabIndex = 0;
-            this.label2.Text = "主程序:";
+            this.label2.Text = "目标主程序:";
             // 
             // tbpOpt
             // 
@@ -431,9 +443,9 @@
             this.tbpOpt.Location = new System.Drawing.Point(4, 22);
             this.tbpOpt.Name = "tbpOpt";
             this.tbpOpt.Padding = new System.Windows.Forms.Padding(3);
-            this.tbpOpt.Size = new System.Drawing.Size(1027, 526);
+            this.tbpOpt.Size = new System.Drawing.Size(1047, 397);
             this.tbpOpt.TabIndex = 1;
-            this.tbpOpt.Text = "※选项";
+            this.tbpOpt.Text = "※将要生成的清单";
             this.tbpOpt.UseVisualStyleBackColor = true;
             // 
             // splitContainerOption
@@ -444,50 +456,48 @@
             // 
             // splitContainerOption.Panel1
             // 
-            this.splitContainerOption.Panel1.Controls.Add(this.txtUpdatedFiles);
+            this.splitContainerOption.Panel1.Controls.Add(this.txtPreVerUpdatedFiles);
             // 
             // splitContainerOption.Panel2
             // 
             this.splitContainerOption.Panel2.Controls.Add(this.chkUseBaseVersion);
-            this.splitContainerOption.Panel2.Controls.Add(this.txt指定版本);
+            this.splitContainerOption.Panel2.Controls.Add(this.txtBaseExeVersion);
             this.splitContainerOption.Panel2.Controls.Add(this.chk目录转为明细);
             this.splitContainerOption.Panel2.Controls.Add(this.chkAppend);
-            this.splitContainerOption.Panel2.Controls.Add(this.txtVerNo);
-            this.splitContainerOption.Panel2.Controls.Add(this.chk更新文件版本号);
-            this.splitContainerOption.Size = new System.Drawing.Size(1021, 520);
-            this.splitContainerOption.SplitterDistance = 775;
+            this.splitContainerOption.Size = new System.Drawing.Size(1041, 391);
+            this.splitContainerOption.SplitterDistance = 715;
             this.splitContainerOption.TabIndex = 0;
             // 
-            // txtUpdatedFiles
+            // txtPreVerUpdatedFiles
             // 
-            this.txtUpdatedFiles.AllowDrop = true;
-            this.txtUpdatedFiles.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.txtUpdatedFiles.Location = new System.Drawing.Point(0, 0);
-            this.txtUpdatedFiles.Multiline = true;
-            this.txtUpdatedFiles.Name = "txtUpdatedFiles";
-            this.txtUpdatedFiles.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.txtUpdatedFiles.Size = new System.Drawing.Size(775, 520);
-            this.txtUpdatedFiles.TabIndex = 0;
-            this.txtUpdatedFiles.DragDrop += new System.Windows.Forms.DragEventHandler(this.txtUpdatedFiles_DragDrop);
-            this.txtUpdatedFiles.DragEnter += new System.Windows.Forms.DragEventHandler(this.txtUpdatedFiles_DragEnter);
+            this.txtPreVerUpdatedFiles.AllowDrop = true;
+            this.txtPreVerUpdatedFiles.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.txtPreVerUpdatedFiles.Location = new System.Drawing.Point(0, 0);
+            this.txtPreVerUpdatedFiles.Multiline = true;
+            this.txtPreVerUpdatedFiles.Name = "txtPreVerUpdatedFiles";
+            this.txtPreVerUpdatedFiles.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
+            this.txtPreVerUpdatedFiles.Size = new System.Drawing.Size(715, 391);
+            this.txtPreVerUpdatedFiles.TabIndex = 0;
+            this.txtPreVerUpdatedFiles.DragDrop += new System.Windows.Forms.DragEventHandler(this.txtUpdatedFiles_DragDrop);
+            this.txtPreVerUpdatedFiles.DragEnter += new System.Windows.Forms.DragEventHandler(this.txtUpdatedFiles_DragEnter);
             // 
             // chkUseBaseVersion
             // 
             this.chkUseBaseVersion.AutoSize = true;
             this.chkUseBaseVersion.Location = new System.Drawing.Point(19, 145);
             this.chkUseBaseVersion.Name = "chkUseBaseVersion";
-            this.chkUseBaseVersion.Size = new System.Drawing.Size(204, 16);
+            this.chkUseBaseVersion.Size = new System.Drawing.Size(222, 16);
             this.chkUseBaseVersion.TabIndex = 6;
-            this.chkUseBaseVersion.Text = "指定版本【不从文件属性中获取】";
+            this.chkUseBaseVersion.Text = "指定exe版本【不从文件属性中获取】";
             this.chkUseBaseVersion.UseVisualStyleBackColor = true;
             // 
-            // txt指定版本
+            // txtBaseExeVersion
             // 
-            this.txt指定版本.Location = new System.Drawing.Point(19, 179);
-            this.txt指定版本.Name = "txt指定版本";
-            this.txt指定版本.Size = new System.Drawing.Size(119, 21);
-            this.txt指定版本.TabIndex = 4;
-            this.txt指定版本.Text = "1.0.0.1";
+            this.txtBaseExeVersion.Location = new System.Drawing.Point(19, 179);
+            this.txtBaseExeVersion.Name = "txtBaseExeVersion";
+            this.txtBaseExeVersion.Size = new System.Drawing.Size(119, 21);
+            this.txtBaseExeVersion.TabIndex = 4;
+            this.txtBaseExeVersion.Text = "1.0.0.1";
             // 
             // chk目录转为明细
             // 
@@ -513,31 +523,13 @@
             this.chkAppend.Text = "追加模式";
             this.chkAppend.UseVisualStyleBackColor = true;
             // 
-            // txtVerNo
-            // 
-            this.txtVerNo.Location = new System.Drawing.Point(19, 294);
-            this.txtVerNo.Name = "txtVerNo";
-            this.txtVerNo.Size = new System.Drawing.Size(119, 21);
-            this.txtVerNo.TabIndex = 1;
-            // 
-            // chk更新文件版本号
-            // 
-            this.chk更新文件版本号.AutoSize = true;
-            this.chk更新文件版本号.Location = new System.Drawing.Point(19, 272);
-            this.chk更新文件版本号.Name = "chk更新文件版本号";
-            this.chk更新文件版本号.Size = new System.Drawing.Size(108, 16);
-            this.chk更新文件版本号.TabIndex = 0;
-            this.chk更新文件版本号.Text = "更新文件版本号";
-            this.chk更新文件版本号.UseVisualStyleBackColor = true;
-            this.chk更新文件版本号.CheckedChanged += new System.EventHandler(this.chkCustomVer_CheckedChanged);
-            // 
             // tbpDiffList
             // 
             this.tbpDiffList.Controls.Add(this.txtDiff);
             this.tbpDiffList.Location = new System.Drawing.Point(4, 22);
             this.tbpDiffList.Name = "tbpDiffList";
             this.tbpDiffList.Padding = new System.Windows.Forms.Padding(3);
-            this.tbpDiffList.Size = new System.Drawing.Size(1027, 526);
+            this.tbpDiffList.Size = new System.Drawing.Size(1047, 397);
             this.tbpDiffList.TabIndex = 2;
             this.tbpDiffList.Text = "※差异文件列表";
             this.tbpDiffList.UseVisualStyleBackColor = true;
@@ -547,7 +539,7 @@
             this.txtDiff.Dock = System.Windows.Forms.DockStyle.Fill;
             this.txtDiff.Location = new System.Drawing.Point(3, 3);
             this.txtDiff.Name = "txtDiff";
-            this.txtDiff.Size = new System.Drawing.Size(1021, 520);
+            this.txtDiff.Size = new System.Drawing.Size(1041, 391);
             this.txtDiff.TabIndex = 1;
             this.txtDiff.Text = "";
             // 
@@ -557,7 +549,7 @@
             this.tbpLastXml.Location = new System.Drawing.Point(4, 22);
             this.tbpLastXml.Name = "tbpLastXml";
             this.tbpLastXml.Padding = new System.Windows.Forms.Padding(3);
-            this.tbpLastXml.Size = new System.Drawing.Size(1027, 526);
+            this.tbpLastXml.Size = new System.Drawing.Size(1047, 397);
             this.tbpLastXml.TabIndex = 3;
             this.tbpLastXml.Text = "※结果";
             this.tbpLastXml.UseVisualStyleBackColor = true;
@@ -567,9 +559,80 @@
             this.txtLastXml.Dock = System.Windows.Forms.DockStyle.Fill;
             this.txtLastXml.Location = new System.Drawing.Point(3, 3);
             this.txtLastXml.Name = "txtLastXml";
-            this.txtLastXml.Size = new System.Drawing.Size(1021, 520);
+            this.txtLastXml.ReadOnly = true;
+            this.txtLastXml.Size = new System.Drawing.Size(1041, 391);
             this.txtLastXml.TabIndex = 0;
             this.txtLastXml.Text = "";
+            // 
+            // tabPageDiff
+            // 
+            this.tabPageDiff.Controls.Add(this.splitContainerDiff);
+            this.tabPageDiff.Location = new System.Drawing.Point(4, 22);
+            this.tabPageDiff.Name = "tabPageDiff";
+            this.tabPageDiff.Padding = new System.Windows.Forms.Padding(3);
+            this.tabPageDiff.Size = new System.Drawing.Size(1047, 397);
+            this.tabPageDiff.TabIndex = 4;
+            this.tabPageDiff.Text = "※新【右】-旧【左】版本差异比较";
+            this.tabPageDiff.UseVisualStyleBackColor = true;
+            // 
+            // splitContainerDiff
+            // 
+            this.splitContainerDiff.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.splitContainerDiff.Location = new System.Drawing.Point(3, 3);
+            this.splitContainerDiff.Name = "splitContainerDiff";
+            // 
+            // splitContainerDiff.Panel1
+            // 
+            this.splitContainerDiff.Panel1.Controls.Add(this.rtbOld);
+            // 
+            // splitContainerDiff.Panel2
+            // 
+            this.splitContainerDiff.Panel2.Controls.Add(this.rtbNew);
+            this.splitContainerDiff.Size = new System.Drawing.Size(1041, 391);
+            this.splitContainerDiff.SplitterDistance = 519;
+            this.splitContainerDiff.TabIndex = 0;
+            // 
+            // rtbOld
+            // 
+            this.rtbOld.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.rtbOld.Location = new System.Drawing.Point(0, 0);
+            this.rtbOld.Name = "rtbOld";
+            this.rtbOld.Size = new System.Drawing.Size(519, 391);
+            this.rtbOld.TabIndex = 0;
+            this.rtbOld.Text = "";
+            // 
+            // rtbNew
+            // 
+            this.rtbNew.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.rtbNew.Location = new System.Drawing.Point(0, 0);
+            this.rtbNew.Name = "rtbNew";
+            this.rtbNew.Size = new System.Drawing.Size(518, 391);
+            this.rtbNew.TabIndex = 0;
+            this.rtbNew.Text = "";
+            // 
+            // tabUsedescribe
+            // 
+            this.tabUsedescribe.Controls.Add(this.txt使用说明);
+            this.tabUsedescribe.Location = new System.Drawing.Point(4, 22);
+            this.tabUsedescribe.Name = "tabUsedescribe";
+            this.tabUsedescribe.Size = new System.Drawing.Size(1047, 397);
+            this.tabUsedescribe.TabIndex = 5;
+            this.tabUsedescribe.Text = "使用说明";
+            this.tabUsedescribe.UseVisualStyleBackColor = true;
+            // 
+            // txt使用说明
+            // 
+            this.txt使用说明.AllowDrop = true;
+            this.txt使用说明.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.txt使用说明.Location = new System.Drawing.Point(0, 0);
+            this.txt使用说明.Multiline = true;
+            this.txt使用说明.Name = "txt使用说明";
+            this.txt使用说明.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
+            this.txt使用说明.Size = new System.Drawing.Size(1047, 397);
+            this.txt使用说明.TabIndex = 1;
+            this.txt使用说明.Text = "1）如果没有旧版（旧版清单为空时），则以目标目录中的所有文件为标准全部更新。（执行排除清单）\r\n\r\n2）旧版清单中添加，实际目标中没有的。则版本号按前面规则（指定" +
+    "初始版本或或文件版本本身为标准）添加\r\n\r\n3）文件比较勾选：按文件修改时间和哈希比较后产生变化的才加入到更新清单中。\r\n\r\n4）新旧清单中对应项目增加1，如果" +
+    "没有对应的则按指定版本号或文件版本本身设置。\r\n\r\n";
             // 
             // ofdSrc
             // 
@@ -595,75 +658,20 @@
             this.ofdExpt.Title = "请选择主程序文件";
             this.ofdExpt.FileOk += new System.ComponentModel.CancelEventHandler(this.ofdExpt_FileOk);
             // 
-            // tabPageDiff
-            // 
-            this.tabPageDiff.Controls.Add(this.splitContainerDiff);
-            this.tabPageDiff.Location = new System.Drawing.Point(4, 22);
-            this.tabPageDiff.Name = "tabPageDiff";
-            this.tabPageDiff.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPageDiff.Size = new System.Drawing.Size(1027, 526);
-            this.tabPageDiff.TabIndex = 4;
-            this.tabPageDiff.Text = "※新旧版本差异比较";
-            this.tabPageDiff.UseVisualStyleBackColor = true;
-            // 
-            // splitContainerDiff
-            // 
-            this.splitContainerDiff.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.splitContainerDiff.Location = new System.Drawing.Point(3, 3);
-            this.splitContainerDiff.Name = "splitContainerDiff";
-            // 
-            // splitContainerDiff.Panel1
-            // 
-            this.splitContainerDiff.Panel1.Controls.Add(this.rtbOld);
-            // 
-            // splitContainerDiff.Panel2
-            // 
-            this.splitContainerDiff.Panel2.Controls.Add(this.rtbNew);
-            this.splitContainerDiff.Size = new System.Drawing.Size(1021, 520);
-            this.splitContainerDiff.SplitterDistance = 510;
-            this.splitContainerDiff.TabIndex = 0;
-            // 
-            // rtbOld
-            // 
-            this.rtbOld.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.rtbOld.Location = new System.Drawing.Point(0, 0);
-            this.rtbOld.Name = "rtbOld";
-            this.rtbOld.Size = new System.Drawing.Size(510, 520);
-            this.rtbOld.TabIndex = 0;
-            this.rtbOld.Text = "";
-            // 
-            // rtbNew
-            // 
-            this.rtbNew.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.rtbNew.Location = new System.Drawing.Point(0, 0);
-            this.rtbNew.Name = "rtbNew";
-            this.rtbNew.Size = new System.Drawing.Size(507, 520);
-            this.rtbNew.TabIndex = 0;
-            this.rtbNew.Text = "";
-            // 
-            // btnDiff
-            // 
-            this.btnDiff.Location = new System.Drawing.Point(945, 6);
-            this.btnDiff.Name = "btnDiff";
-            this.btnDiff.Size = new System.Drawing.Size(51, 23);
-            this.btnDiff.TabIndex = 8;
-            this.btnDiff.Text = "比较";
-            this.btnDiff.UseVisualStyleBackColor = true;
-            this.btnDiff.Click += new System.EventHandler(this.btnDiff_Click);
-            // 
             // frmAULWriter
             // 
             this.AllowDrop = true;
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1041, 665);
+            this.ClientSize = new System.Drawing.Size(1061, 756);
             this.Controls.Add(this.groupBox1);
             this.Controls.Add(this.panel2);
             this.Controls.Add(this.panel1);
+            this.Controls.Add(this.prbProd);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "frmAULWriter";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
-            this.Text = "AULWriter for AutoUpdater";
+            this.Text = "AULWriter for AutoUpdater【版本号增加才更新】";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.frmAULWriter_FormClosing);
             this.Load += new System.EventHandler(this.frmAULWriter_Load);
             this.panel1.ResumeLayout(false);
@@ -688,6 +696,8 @@
             this.splitContainerDiff.Panel2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.splitContainerDiff)).EndInit();
             this.splitContainerDiff.ResumeLayout(false);
+            this.tabUsedescribe.ResumeLayout(false);
+            this.tabUsedescribe.PerformLayout();
             this.ResumeLayout(false);
 
         }
@@ -721,9 +731,7 @@
         private System.Windows.Forms.Button button_save_config;
         private System.Windows.Forms.RichTextBox richTxtLog;
         private System.Windows.Forms.SplitContainer splitContainerOption;
-        private System.Windows.Forms.CheckBox chk更新文件版本号;
-        private System.Windows.Forms.TextBox txtVerNo;
-        private System.Windows.Forms.TextBox txtUpdatedFiles;
+        private System.Windows.Forms.TextBox txtPreVerUpdatedFiles;
         private System.Windows.Forms.CheckBox chkAppend;
         private System.Windows.Forms.CheckBox chk目录转为明细;
         private System.Windows.Forms.CheckBox chk文件比较;
@@ -735,17 +743,19 @@
         private System.Windows.Forms.RichTextBox txtLastXml;
         private System.Windows.Forms.RichTextBox txtDiff;
         private System.Windows.Forms.FolderBrowserDialog folderBrowserDialogCompareSource;
-        private System.Windows.Forms.TextBox txtBaseDir;
+        private System.Windows.Forms.TextBox txtTargetDirectory;
         private System.Windows.Forms.Label label7;
         private System.Windows.Forms.Button btnBaseDir;
-        private System.Windows.Forms.Button btnPreview;
-        private System.Windows.Forms.TextBox txt指定版本;
+        private System.Windows.Forms.TextBox txtBaseExeVersion;
         private System.Windows.Forms.CheckBox chkUseBaseVersion;
         private System.Windows.Forms.TabPage tabPageDiff;
         private System.Windows.Forms.SplitContainer splitContainerDiff;
         private System.Windows.Forms.RichTextBox rtbOld;
         private System.Windows.Forms.RichTextBox rtbNew;
         private System.Windows.Forms.Button btnDiff;
+        private System.Windows.Forms.Button btnLoadPreCurrentVer;
+        private System.Windows.Forms.TabPage tabUsedescribe;
+        private System.Windows.Forms.TextBox txt使用说明;
     }
 }
 

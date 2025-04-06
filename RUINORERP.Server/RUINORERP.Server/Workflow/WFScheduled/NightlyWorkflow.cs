@@ -91,7 +91,7 @@ namespace RUINORERP.Server.Workflow.WFScheduled
                     var data = context.Workflow.Data as GlobalScheduledData;
                     data.ExecutionFrequency++;
                     //要把执行过的标记传出步骤，按时间重置。等第二天执行
-                    if (System.DateTime.Now.Hour == 14 && data.ExecutionFrequency % 2 != 0)
+                    if (System.DateTime.Now.Hour == 1 && data.ExecutionFrequency % 2 != 0)
                     {
                         CRM_FollowUpPlansService followUpPlansService = Startup.GetFromFac<CRM_FollowUpPlansService>();
                         int updatecount = await followUpPlansService.AutoUdateCRMPlanStatus();

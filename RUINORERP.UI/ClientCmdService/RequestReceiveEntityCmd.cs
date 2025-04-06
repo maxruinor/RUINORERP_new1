@@ -64,6 +64,11 @@ namespace RUINORERP.UI.ClientCmdService
                 {
                     case EntityTransferCmdType.处理动态配置:
                         string basePath = System.IO.Path.Combine(Directory.GetCurrentDirectory(), GlobalConstants.DynamicConfigFileDirectory);
+                        if (!Directory.Exists(basePath))
+                        {
+                            Directory.CreateDirectory(basePath);
+                        }
+
                         ConfigFileReceiver _configFileReceiver = new ConfigFileReceiver(basePath + "/" + TransferObjectName + ".json");
 
                         // 创建一个新的JObject，并将SystemGlobalConfig作为根节点

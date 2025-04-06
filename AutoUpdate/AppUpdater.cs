@@ -246,6 +246,7 @@ version1 和 version2 的所有修订号都可以存储在 32 位整数 中
         /// <summary>
         /// 比较两个版本号https://blog.csdn.net/u011645307/article/details/131117996
         /// CompareVersion("1.0.0.2","1.0.0.11")=-1
+        /// 版本号增加才更新
         /// </summary>
         /// <param name="Old_Version"></param>
         /// <param name="New_Version"></param>

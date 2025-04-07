@@ -27,6 +27,7 @@ using RUINOR.Core;
 using RUINORERP.Common.Helper;
 using RUINORERP.Business.Security;
 using SqlSugar;
+using RUINORERP.Global;
 
 
 namespace RUINORERP.Business.Processor
@@ -58,6 +59,7 @@ namespace RUINORERP.Business.Processor
              .ToExpression();//注意 这一句 不能少
             queryFilter.SetQueryField<View_SaleOutReItems, tb_CustomerVendor>(c => c.CustomerVendor_ID, lambdacv);
             queryFilter.SetQueryField<View_SaleOutReItems>(c => c.Employee_ID,  typeof(tb_Employee));
+            queryFilter.SetQueryField<View_SaleOutReItems>(c => c.ProjectGroup_ID, true, AdvQueryProcessType.CmbMultiChoiceCanIgnore);
             queryFilter.SetQueryField<View_SaleOutReItems>(c => c.Location_ID,  typeof(tb_Location));
             queryFilter.SetQueryField<View_SaleOutReItems>(c => c.ProdDetailID,  typeof(View_ProdDetail));
             queryFilter.SetQueryField<View_SaleOutReItems>(c => c.property);

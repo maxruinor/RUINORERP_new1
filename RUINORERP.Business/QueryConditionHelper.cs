@@ -1,4 +1,5 @@
-﻿using Castle.DynamicProxy.Generators.Emitters.SimpleAST;
+﻿using Castle.Core.Logging;
+using Castle.DynamicProxy.Generators.Emitters.SimpleAST;
 using RUINORERP.Common.Extensions;
 using RUINORERP.Global.CustomAttribute;
 using SharpYaml.Tokens;
@@ -84,7 +85,6 @@ namespace RUINORERP.Business
             var groupedByProcessType = AdvExtList
                 .GroupBy(advAttr => advAttr.ProcessType)
                 .ToDictionary(group => group.Key, group => group.ToList());
-
             var sugarQueryableWhere = sugarQueryable;
 
             foreach (var group in groupedByProcessType)
@@ -111,7 +111,6 @@ namespace RUINORERP.Business
                         break;
                     case Global.AdvQueryProcessType.useYesOrNoToAll:
                         var YesNoDic = GetYesOrNoDictionary(whereObj, queryConditions, group.Value);
-
                         foreach (var item in YesNoDic)
                         {
                             sugarQueryableWhere = ApplyEqualCondition(sugarQueryableWhere, item.Key, item.Value);
@@ -119,7 +118,6 @@ namespace RUINORERP.Business
                         queryConditions = queryConditions.Except(YesNoDic.Keys).ToList();
                         break;
                     case Global.AdvQueryProcessType.defaultSelect:
-
                         if (group.Value.Count > 0)
                         {
                             var SelectEqualDic = GetEqualDictionary(whereObj, queryConditions, group.Value);
@@ -128,42 +126,43 @@ namespace RUINORERP.Business
                                 sugarQueryableWhere = ApplyEqualCondition(sugarQueryableWhere, item.Key, item.Value);
                             }
                             queryConditions = queryConditions.Except(SelectEqualDic.Keys).ToList();
-
                         }
-                        
                         break;
                     case Global.AdvQueryProcessType.CmbMultiChoice:
                     case Global.AdvQueryProcessType.CmbMultiChoiceCanIgnore:
-                        
                         //这个时。有一个前置条件如果有。则要判断前置条件是否满足
                         if (group.Value.Count > 0)
                         {
-                            var ColumnName = group.Value[0].RelatedFields;
-                            AdvExtQueryAttribute CanNotIgnore = AdvExtList.FirstOrDefault(c => c.RelatedFields == ColumnName && c.ProcessType == Global.AdvQueryProcessType.CmbMultiChoiceCanIgnore);
-                            if (CanNotIgnore != null)
+                            //两个条件都是多选择可选时
+                            foreach (var groupvalue in group.Value)
                             {
-                                bool NotIgnore = whereObj.GetPropertyValue(CanNotIgnore.ColName).ToBool();
-                                if (!NotIgnore)
+                                var ColumnName = groupvalue.RelatedFields;
+                                AdvExtQueryAttribute CanNotIgnore = AdvExtList.FirstOrDefault(c => c.RelatedFields == ColumnName && c.ProcessType == Global.AdvQueryProcessType.CmbMultiChoiceCanIgnore);
+                                if (CanNotIgnore != null)
                                 {
-                                    break;//不处理
+                                    bool NotIgnore = whereObj.GetPropertyValue(CanNotIgnore.ColName).ToBool();
+                                    if (!NotIgnore)
+                                    {
+                                        break;//不处理
+                                    }
+                                }
+                                AdvExtQueryAttribute AdvExtMultiChoiceResults = AdvExtList.FirstOrDefault(c => c.RelatedFields == ColumnName && c.ProcessType == Global.AdvQueryProcessType.CmbMultiChoice);
+
+                                var inDicResult = GetInDictionary(whereObj, queryConditions, AdvExtMultiChoiceResults);
+                                //一个ColumnName 只会有一组
+                                foreach (var item in inDicResult)
+                                {
+                                    if (item.Value.Count == 0)
+                                    { continue; }
+                                    sugarQueryableWhere = ApplyInCondition(sugarQueryableWhere, ColumnName, item.Value);
+                                    //条件用过的，就去掉排除,忽略属性判断时不能处理掉。因为有下一级的判断，多选结果
+                                    queryConditions = queryConditions.Except(new List<string> { ColumnName }).ToList();
                                 }
                             }
-                            AdvExtQueryAttribute AdvExtMultiChoiceResults = AdvExtList.FirstOrDefault(c => c.RelatedFields == ColumnName && c.ProcessType == Global.AdvQueryProcessType.CmbMultiChoice);
-
-                            var inDicResult = GetInDictionary(whereObj, queryConditions, AdvExtMultiChoiceResults);
-                            //一个ColumnName 只会有一组
-                            foreach (var item in inDicResult)
-                            {
-                                if (item.Value.Count == 0)
-                                { continue; }
-                                sugarQueryableWhere = ApplyInCondition(sugarQueryableWhere, ColumnName, item.Value);
-                                //条件用过的，就去掉排除,忽略属性判断时不能处理掉。因为有下一级的判断，多选结果
-                                queryConditions = queryConditions.Except(new List<string> { ColumnName }).ToList();
-                            }
-                            
                         }
                         break;
                     default:
+                        Console.WriteLine($"没有找到对应的处理类型{group.Key.ToString()}。");
                         break;
                 }
 
@@ -528,7 +527,7 @@ namespace RUINORERP.Business
 
         private static ISugarQueryable<T> ApplyEqualCondition(ISugarQueryable<T> sugarQueryable, string key, object value)
         {
-            if (value==null)
+            if (value == null)
             {
                 return sugarQueryable;
             }

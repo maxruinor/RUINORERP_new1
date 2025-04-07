@@ -1139,7 +1139,10 @@ namespace RUINORERP.UI.BaseForm
             {
                 QueryConditionFilter.FilterLimitExpressions = new List<LambdaExpression>();
             }
-            QueryConditionFilter.FilterLimitExpressions.Add(LimitQueryConditions);
+            if (!QueryConditionFilter.FilterLimitExpressions.Contains(LimitQueryConditions))
+            {
+                QueryConditionFilter.FilterLimitExpressions.Add(LimitQueryConditions);
+            }
             //list = await ctr.BaseQueryByAdvancedNavWithConditionsAsync(true, queryConditions, LimitQueryConditions, QueryDto, pageNum, pageSize) as List<M>;
             list = await ctr.BaseQueryByAdvancedNavWithConditionsAsync(true, QueryConditionFilter, QueryDto, pageNum, pageSize) as List<M>;
 

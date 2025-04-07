@@ -303,7 +303,10 @@ namespace RUINORERP.Business.Processor
             var whereExp = expConverter.ConvertToLambdaExpression<R>(expFieldLimitCondition);
             if (whereExp != null)
             {
-                FilterLimitExpressions.Add(whereExp);
+                if (!FilterLimitExpressions.Contains(whereExp))
+                {
+                    FilterLimitExpressions.Add(whereExp);
+                }
             }
         }
 

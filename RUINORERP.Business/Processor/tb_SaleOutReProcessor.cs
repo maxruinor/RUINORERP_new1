@@ -56,6 +56,7 @@ namespace RUINORERP.Business.Processor
             queryFilter.SetQueryField<tb_SaleOutRe>(c => c.ReturnNo);
             queryFilter.SetQueryField<tb_SaleOutRe, tb_SaleOut>(c => c.SaleOut_MainID, c => c.SaleOut_NO, t => t.SaleOutNo);
             queryFilter.SetQueryField<tb_SaleOutRe>(c => c.Employee_ID, true);
+            queryFilter.SetQueryField<tb_SaleOutRe>(c => c.ProjectGroup_ID, true, AdvQueryProcessType.CmbMultiChoiceCanIgnore);
             queryFilter.SetQueryField<tb_SaleOutRe>(c => c.PayStatus, QueryFieldType.CmbEnum, typeof(PayStatus));
             queryFilter.SetQueryField<tb_SaleOutRe>(c => c.PrintStatus, QueryFieldType.CmbEnum, typeof(PrintStatus));
             queryFilter.SetQueryField<tb_SaleOutRe>(c => c.ApprovalStatus, QueryFieldType.CmbEnum, typeof(ApprovalStatus));

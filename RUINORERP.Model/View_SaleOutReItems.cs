@@ -65,6 +65,22 @@ namespace RUINORERP.Model
             get{return _Employee_ID;}            set{                SetProperty(ref _Employee_ID, value);                }
         }
 
+        private long? _ProjectGroup_ID;
+        /// <summary>
+        /// 项目组
+        /// </summary>
+        [AdvQueryAttribute(ColName = "ProjectGroup_ID", ColDesc = "项目组")]
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType = "Int64", ColumnName = "ProjectGroup_ID", DecimalDigits = 0, IsNullable = true, ColumnDescription = "项目组")]
+        [FKRelationAttribute("tb_ProjectGroup", "ProjectGroup_ID")]
+        public long? ProjectGroup_ID
+        {
+            get { return _ProjectGroup_ID; }
+            set
+            {
+                SetProperty(ref _ProjectGroup_ID, value);
+            }
+        }
+
         private long? _CustomerVendor_ID;
         
         

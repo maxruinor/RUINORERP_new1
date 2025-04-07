@@ -110,7 +110,7 @@ namespace AULWriter
 
             // Display in RichTextBox controls
             DisplayDifferencesInRichTextBox(rtbOld, results, false);
-             DisplayDifferencesInRichTextBox(rtbNew, results, true);
+            DisplayDifferencesInRichTextBox(rtbNew, results, true);
         }
 
         #region 比较2025-04-06
@@ -208,15 +208,15 @@ namespace AULWriter
         }
 
         #endregion
-     
 
 
-   
- 
 
-   
 
-    
+
+
+
+
+
 
 
 
@@ -980,6 +980,19 @@ namespace AULWriter
             foreach (XElement fileElement in doc.Descendants("File"))
             {
                 string fileName = fileElement.Attribute("Name").Value;
+                if (list.Count > 0 && !list.Contains(fileName))
+                {
+                    // 如果文件不在新文件列表中，删除该文件
+                   // fileElement.Remove();
+                   //这个情况暂时是版本号不变。也就是不更新。
+                }
+                //如果文件在排除列表中也移除
+                if(ExcludeUnnecessaryFiles(fileName))
+                {
+                    //fileElement.Remove();
+                    //这个情况暂时是版本号不变。也就是不更新。  移除会导致xml文件结构破坏
+                }
+
                 if (FileComparison)
                 {
                     string sourceFilePath = Path.Combine(sourceFolder, fileName);
@@ -1045,6 +1058,11 @@ namespace AULWriter
 
             foreach (var item in list)
             {
+                //如果文件在排除列表中,忽略。不添加
+                if (ExcludeUnnecessaryFiles(item))
+                {
+                    continue;
+                }
                 //添加新的文件到这个xml的File节点下面
                 XElement newFileElement = new XElement("File");
                 newFileElement.SetAttributeValue("Ver", "1.0.0.0");
@@ -1177,7 +1195,21 @@ namespace AULWriter
             richTxtLog.AppendText("\r\n");
 
             // 将StringBuilder的内容写入文件
-            File.WriteAllText(this.txtAutoUpdateXmlSavePath.Text.Trim(), txtLastXml.Text.ToString(), System.Text.Encoding.GetEncoding("gb2312"));
+            //File.WriteAllText(this.txtAutoUpdateXmlSavePath.Text.Trim(), txtLastXml.Text.ToString(), System.Text.Encoding.GetEncoding("gb2312"));
+            XDocument newDoc = XDocument.Parse(txtLastXml.Text);
+            var tempPath = Path.Combine(Path.GetTempPath(), this.txtAutoUpdateXmlSavePath.Text.Trim());
+
+            // 创建带有gb2312编码的XML写入设置
+            XmlWriterSettings settings = new XmlWriterSettings();
+            settings.Encoding = System.Text.Encoding.GetEncoding("gb2312");
+            settings.Indent = true; // 保持缩进格式
+
+            // 使用XmlWriter保存文档
+            using (XmlWriter writer = XmlWriter.Create(tempPath, settings))
+            {
+                newDoc.Save(writer);
+            }
+
             MessageBox.Show(this, "自动更新文件生成成功:" + this.txtAutoUpdateXmlSavePath.Text.Trim(), "AutoUpdater", MessageBoxButtons.OK, MessageBoxIcon.Information);
 
             try
@@ -1213,7 +1245,7 @@ namespace AULWriter
                 rtbNew.Clear();
 
                 XDocument oldDoc = XDocument.Load(OldConfigPath);
-               
+
                 XDocument newDoc = XDocument.Parse(txtLastXml.Text);
 
                 // 比较XML文档
@@ -1225,7 +1257,7 @@ namespace AULWriter
                 //diffViewer.DisplayDifferences(diffBlocks);
                 try
                 {
-                    
+
                     var comparer1 = new XmlComparer();
                     var diffBlocks1 = comparer1.CompareXml(oldDoc, newDoc);
 
@@ -1245,10 +1277,10 @@ namespace AULWriter
                 diffViewer.Dock = DockStyle.Fill;
                 form.Show();
 
-              ShowXmlComparison(oldDoc, newDoc);
+                ShowXmlComparison(oldDoc, newDoc);
 
 
-             CompareXmlDocuments(oldDoc, newDoc);
+                CompareXmlDocuments(oldDoc, newDoc);
 
 
             }
@@ -1273,8 +1305,8 @@ namespace AULWriter
             form.Controls.Add(viewer);
             form.Show();
         }
-       
-        
+
+
         // 改进的内联差异检测算法
         private List<DiffSegment> ComputeEnhancedInlineDiff(string left, string right)
         {

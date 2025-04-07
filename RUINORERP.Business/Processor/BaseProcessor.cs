@@ -51,12 +51,13 @@ namespace RUINORERP.Business.Processor
         {
             QueryFilter queryFilter = new QueryFilter();
             queryFilter = GetQueryFilter();
-            //_logger.LogError(this.ToString() + "没有实现GetQueryFilter，请在Process.cs中实现");
             if (FilterFieldLimitExpression != null)
             {
-                queryFilter.FilterLimitExpressions.Add(FilterFieldLimitExpression);
+                if (!queryFilter.FilterLimitExpressions.Contains(FilterFieldLimitExpression))
+                {
+                    queryFilter.FilterLimitExpressions.Add(FilterFieldLimitExpression);
+                }
             }
-
             return queryFilter;
         }
 

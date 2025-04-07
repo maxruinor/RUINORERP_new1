@@ -265,7 +265,7 @@ namespace RUINORERP.UI.PSI.INV
 
 
 
-            ControlChildColumnsInvisible(listCols);
+            UIHelper.ControlChildColumnsInvisible(CurMenuInfo, listCols);
             ////实际在中间实体定义时加了只读属性，功能相同
             //listCols.SetCol_ReadOnly<ProductSharePart>(c => c.Unit_ID);
             //listCols.SetCol_ReadOnly<ProductSharePart>(c => c.Brand);
@@ -313,7 +313,7 @@ namespace RUINORERP.UI.PSI.INV
             sgh.OnCalculateColumnValue += Sgh_OnCalculateColumnValue;
             sgh.OnLoadRelevantFields += Sgh_OnLoadRelevantFields;
             grid1.Enter += Grid1_Enter;
-            base.ControlMasterColumnsInvisible();
+            UIHelper.ControlMasterColumnsInvisible(CurMenuInfo,this);
         }
 
         private void Sgh_OnLoadRelevantFields(object _View_ProdDetail, object rowObj, SourceGridDefine griddefine, Position Position)

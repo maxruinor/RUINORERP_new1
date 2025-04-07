@@ -83,7 +83,7 @@ namespace RUINORERP.UI.AdvancedUIModule
         {
             CurMenuInfo = new tb_MenuInfo();
             CurMenuInfo.FormName = this.Name;
-            CurMenuInfo.ClassPath = typeof(T).Name + "UCAdvFilterGeneric";
+            CurMenuInfo.ClassPath = menuKey;
             CurMenuInfo.IsVisble = true;
             CurMenuInfo.IsEnabled = true;
             CurMenuInfo.Created_at = DateTime.Now;
@@ -568,7 +568,8 @@ namespace RUINORERP.UI.AdvancedUIModule
         }
 
 
-
+        //以这个特殊的类路径来找这个高级过滤菜单 如果没有就新建保存
+        string menuKey = typeof(T).Name + "UCAdvFilterGeneric";
 
         private void UCAdvFilterGeneric_Load(object sender, EventArgs e)
         {
@@ -580,9 +581,6 @@ namespace RUINORERP.UI.AdvancedUIModule
                 //权限菜单  高级菜单
                 if (CurMenuInfo == null || CurMenuInfo.ClassPath.IsNullOrEmpty())
                 {
-                    //以这个特殊的类路径来找这个高级过滤菜单 如果没有就新建保存
-                    string menuKey = typeof(T).Name + "UCAdvFilterGeneric";
-
                     CurMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble && m.FormName == this.Name && m.ClassPath == menuKey).FirstOrDefault();
                     if (CurMenuInfo == null)
                     {

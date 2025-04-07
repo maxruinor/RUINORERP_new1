@@ -340,7 +340,7 @@ namespace RUINORERP.UI.ProductEAV
             base.ToolBarEnabledControl(MenuItemEnums.刷新);
             LoadGrid1();
             LoadGrid2();
-            base.ControlMasterColumnsInvisible();
+            UIHelper.ControlMasterColumnsInvisible(CurMenuInfo,this);
         }
 
         private void LoadGrid1()
@@ -370,7 +370,7 @@ namespace RUINORERP.UI.ProductEAV
             {
                 listCols1.SetCol_NeverVisible<ProductSharePart>(c => c.BarCode);
             }
-            ControlChildColumnsInvisible(listCols1);
+            UIHelper.ControlChildColumnsInvisible(CurMenuInfo, listCols1);
             //listCols.SetCol_DefaultValue<tb_PackingDetail>(a => a.TaxRate, 0.13m);//m =>decial d=>double
 
             //如果库位为只读  暂时只会显示 ID
@@ -378,7 +378,7 @@ namespace RUINORERP.UI.ProductEAV
 
             listCols1.SetCol_ReadOnly<tb_PackingDetail>(c => c.PackDetail_ID);
             listCols1.SetCol_ReadOnly<tb_PackingDetail>(c => c.property);
-            ControlChildColumnsInvisible(listCols1);
+           
             sgd1 = new SourceGridDefine(grid1, listCols1, true);
             sgd1.GridMasterData = EditEntity;
 
@@ -465,7 +465,7 @@ namespace RUINORERP.UI.ProductEAV
             listCols2.SetCol_AutoSizeMode<tb_BoxRules>(c => c.NetWeight, SourceGrid.AutoSizeMode.EnableAutoSizeView);
             listCols2.SetCol_AutoSizeMode<tb_BoxRules>(c => c.BoxRuleName, SourceGrid.AutoSizeMode.EnableAutoSizeView);
 
-            ControlChildColumnsInvisible(listCols2);
+            UIHelper.ControlChildColumnsInvisible(CurMenuInfo, listCols2);
             listCols2.SetCol_NeverVisible<ProductSharePart>(c => c.Location_ID);
             listCols2.SetCol_NeverVisible<ProductSharePart>(c => c.Rack_ID);
 

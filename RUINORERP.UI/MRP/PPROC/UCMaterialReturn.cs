@@ -296,14 +296,14 @@ namespace RUINORERP.UI.MRP.MP
             {
                 listCols.SetCol_NeverVisible<ProductSharePart>(c => c.BarCode);
             }
-            ControlChildColumnsInvisible(listCols);
+            UIHelper.ControlChildColumnsInvisible(CurMenuInfo, listCols);
             //listCols.SetCol_DefaultValue<tb_MaterialReturnDetail>(a => a.TaxRate, 0.13m);//m =>decial d=>double
 
             //如果库位为只读  暂时只会显示 ID
             //listCols.SetCol_ReadOnly<ProductSharePart>(c => c.Location_ID);
 
             listCols.SetCol_ReadOnly<tb_MaterialReturnDetail>(c => c.Cost);
-            ControlChildColumnsInvisible(listCols);
+            UIHelper.ControlChildColumnsInvisible(CurMenuInfo, listCols);
             sgd = new SourceGridDefine(grid1, listCols, true);
             sgd.GridMasterData = EditEntity;
 
@@ -356,7 +356,7 @@ namespace RUINORERP.UI.MRP.MP
             sgh.InitGrid(grid1, sgd, true, nameof(tb_MaterialReturnDetail));
             sgh.OnCalculateColumnValue += Sgh_OnCalculateColumnValue;
             sgh.OnLoadMultiRowData += Sgh_OnLoadMultiRowData;
-            base.ControlMasterColumnsInvisible();
+            UIHelper.ControlMasterColumnsInvisible(CurMenuInfo,this);
         }
 
 

@@ -85,11 +85,7 @@ namespace RUINORERP.UI.BI
             ColDisplayTypes.Add(typeof(tb_MenuInfo));
         }
 
-        public override void QueryConditionBuilder()
-        {
-            BaseProcessor baseProcessor = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_ButtonInfo).Name + "Processor");
-            QueryConditionFilter = baseProcessor.GetQueryFilter();
-        }
+ 
 
 
         //因为tb_P4Button中引用了按钮表中的信息，所以要使用导航删除。但是一定要细心

@@ -102,15 +102,7 @@ namespace RUINORERP.UI.ProductEAV
             }
         }
 
-        /// <summary>
-        /// 查询条件 但是这里结果显示的更适合于单据，应该要做一个基础数据的UI
-        /// </summary>
-        public override void QueryConditionBuilder()
-        {
-            BaseProcessor baseProcessor = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_Prod).Name + "Processor");
-            QueryConditionFilter = baseProcessor.GetQueryFilter();
-        }
-
+ 
         /// <summary>
         /// 扩展带条件查询
         /// 因为产品相关性多，重写这个方法用高级导航查询

@@ -228,35 +228,7 @@ namespace RUINORERP.UI.UCSourceGrid
                 }
             }
 
-
-
-            /*
-
-     
-
-            SourceGridDefineColumnItem tagcol = this.DefineColumns.FirstOrDefault(d => d.ColName == key);
-            //设置关联列。以及主要的目标列
-
-            DependColumn TargCol = new DependColumn();
-            TargCol.ColCaption = tagcol.ColCaption;
-            TargCol.ColName = tagcol.ColName;
-            TargCol.IsPrimaryKeyIdentityColumn = true;
-            TargCol.Visible = false;
-
-            DependencyQuery dq = new DependencyQuery();
-            dq.RelatedCols = dq.SetDependencys<Share>();
-            dq.RelatedCols.Add(TargCol);//添加目标列
-
-            dq.SourceList = new List<object>();// ((IEnumerable<dynamic>)list) as List<object>;
-            if (Productlist != null)
-            {
-                for (int i = 0; i < Productlist.Count; i++)
-                {
-                    dq.SourceList.Add(Productlist[i]);
-                }
-            }
-            DependQuery = dq;
-            */
+          
 
             return listCols;
         }

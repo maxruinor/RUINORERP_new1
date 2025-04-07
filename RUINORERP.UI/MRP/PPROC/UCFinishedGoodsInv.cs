@@ -104,7 +104,7 @@ namespace RUINORERP.UI.PSI.PUR
             DataBindingHelper.BindData4CheckBox<tb_FinishedGoodsInv>(entity, t => t.IsOutSourced, chkIsOutSourced, false);
             DataBindingHelper.BindData4Cmb<tb_Employee>(entity, k => k.Employee_ID, v => v.Employee_Name, cmbEmployee_ID);
             DataBindingHelper.BindData4Cmb<tb_Department>(entity, k => k.DepartmentID, v => v.DepartmentName, cmbDepartmentID);
-            
+
             //创建表达式 外发工厂
             var lambdaOut = Expressionable.Create<tb_CustomerVendor>()
                             .And(t => t.IsOther == true)
@@ -220,18 +220,18 @@ namespace RUINORERP.UI.PSI.PUR
             DataBindingHelper.BindData4TextBoxWithTagQuery<tb_FinishedGoodsInv>(entity, v => v.MOID, txtRef_BillNo, true);
             //if (entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改)
             //{
-                //创建表达式  草稿 结案 和没有提交的都不显示
-                var lambdaOrder = Expressionable.Create<tb_ManufacturingOrder>()
-                            .And(t => t.DataStatus == (int)DataStatus.确认)
-                             .And(t => t.isdeleted == false)
-                            .ToExpression();//注意 这一句 不能少
-                                            //base.InitFilterForControl<tb_PurOrder, tb_PurOrderQueryDto>(entity, txtPurOrderNO, c => c.PurOrderNo, lambdaOrder, ctrPurorder.GetQueryParameters());
+            //创建表达式  草稿 结案 和没有提交的都不显示
+            var lambdaOrder = Expressionable.Create<tb_ManufacturingOrder>()
+                        .And(t => t.DataStatus == (int)DataStatus.确认)
+                         .And(t => t.isdeleted == false)
+                        .ToExpression();//注意 这一句 不能少
+                                        //base.InitFilterForControl<tb_PurOrder, tb_PurOrderQueryDto>(entity, txtPurOrderNO, c => c.PurOrderNo, lambdaOrder, ctrPurorder.GetQueryParameters());
 
-                BaseProcessor basePro = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_ManufacturingOrder).Name + "Processor");
-                QueryFilter queryFilter = basePro.GetQueryFilter();
+            BaseProcessor basePro = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_ManufacturingOrder).Name + "Processor");
+            QueryFilter queryFilter = basePro.GetQueryFilter();
 
-                queryFilter.FilterLimitExpressions.Add(lambdaOrder);//意思是只有审核确认的。没有结案的。才能查询出来。
-                DataBindingHelper.InitFilterForControlByExp<tb_ManufacturingOrder>(entity, txtRef_BillNo, c => c.MONO, queryFilter, null, c => c.MOID);
+            queryFilter.FilterLimitExpressions.Add(lambdaOrder);//意思是只有审核确认的。没有结案的。才能查询出来。
+            DataBindingHelper.InitFilterForControlByExp<tb_ManufacturingOrder>(entity, txtRef_BillNo, c => c.MONO, queryFilter, null, c => c.MOID);
             //}
             ToolBarEnabledControl(entity);
         }
@@ -271,7 +271,7 @@ namespace RUINORERP.UI.PSI.PUR
             {
                 listCols.SetCol_NeverVisible<ProductSharePart>(c => c.BarCode);
             }
-            ControlChildColumnsInvisible(listCols);
+            UIHelper.ControlChildColumnsInvisible(CurMenuInfo, listCols);
 
             listCols.SetCol_ReadOnly<ProductSharePart>(c => c.Unit_ID);
             listCols.SetCol_ReadOnly<ProductSharePart>(c => c.Brand);
@@ -340,7 +340,7 @@ namespace RUINORERP.UI.PSI.PUR
             sgh.InitGrid(grid1, sgd, true, nameof(tb_FinishedGoodsInvDetail));
             sgh.OnCalculateColumnValue += Sgh_OnCalculateColumnValue;
             sgh.OnLoadMultiRowData += Sgh_OnLoadMultiRowData;
-            base.ControlMasterColumnsInvisible();
+            UIHelper.ControlMasterColumnsInvisible(CurMenuInfo, this);
         }
         private void Sgh_OnLoadMultiRowData(object rows, Position position)
         {
@@ -692,7 +692,7 @@ protected async override Task<ApprovalEntity> ReReview()
                 NewDetail.MaterialCost = decimal.Round(SourceBill.TotalMaterialCost / SourceBill.ManufacturingQty, 4);
                 NewDetail.ManuFee = decimal.Round(SourceBill.TotalManuFee / SourceBill.ManufacturingQty, 4);
                 NewDetail.ApportionedCost = decimal.Round(SourceBill.ApportionedCost / SourceBill.ManufacturingQty, 4);
-                NewDetail.UnitCost = NewDetail.MaterialCost+ NewDetail.ManuFee+ NewDetail.ApportionedCost;
+                NewDetail.UnitCost = NewDetail.MaterialCost + NewDetail.ManuFee + NewDetail.ApportionedCost;
                 NewDetail.ProductionAllCost = decimal.Round(NewDetail.UnitCost * NewDetail.Qty, 4);
                 #endregion
                 NewDetails.Add(NewDetail);

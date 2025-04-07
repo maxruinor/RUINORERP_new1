@@ -68,7 +68,7 @@ namespace RUINORERP.Model
             }
         }
 
-        private string _MenuName;
+        private string _MenuName = string.Empty;
         /// <summary>
         /// 菜单名称
         /// </summary>

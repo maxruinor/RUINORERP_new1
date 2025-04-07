@@ -317,7 +317,7 @@ namespace RUINORERP.UI.PSI.INV
             {
                 listCols.SetCol_NeverVisible<ProductSharePart>(c => c.BarCode);
             }
-            ControlChildColumnsInvisible(listCols);
+            UIHelper.ControlChildColumnsInvisible(CurMenuInfo, listCols);
 
             //如果选择了库位,则只会显示这个库位下面的货架 这个逻辑将来来处理
 
@@ -338,7 +338,7 @@ namespace RUINORERP.UI.PSI.INV
             //sgd.BindingSourceLines.ListChanged += BindingSourceLines_ListChanged;
             // bindingSourceSub.AddingNew += BindingSourceSub_AddingNew;
             //控件主表的字段显示权限
-             base.ControlMasterColumnsInvisible();
+            UIHelper.ControlMasterColumnsInvisible(CurMenuInfo, this);
         }
 
         private void InitLoadGrid()
@@ -709,7 +709,7 @@ namespace RUINORERP.UI.PSI.INV
             }
             else
             {
-                ControlChildColumnsInvisible(listCols);
+                UIHelper.ControlChildColumnsInvisible(CurMenuInfo, listCols);
 
                 //成本字段不可以修改
                 sgd.DefineColumns.SetCol_ReadOnly<tb_StocktakeDetail>(c => c.Cost);
@@ -746,7 +746,7 @@ namespace RUINORERP.UI.PSI.INV
             }
             else
             {
-                ControlChildColumnsInvisible(listCols);
+                UIHelper.ControlChildColumnsInvisible(CurMenuInfo, listCols);
                 InitLoadGrid();
                 //成本字段不可以修改
                 sgd.DefineColumns.SetCol_ReadOnly<tb_StocktakeDetail>(c => c.Cost);

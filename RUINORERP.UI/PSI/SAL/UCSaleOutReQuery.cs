@@ -69,10 +69,11 @@ namespace RUINORERP.UI.PSI.SAL
         /// </summary>
         public override void BuildQueryCondition()
         {
-            BaseProcessor baseProcessor = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_SaleOutRe).Name + "Processor");
-            QueryConditionFilter = baseProcessor.GetQueryFilter();
-
-
+            base.BuildQueryCondition();
+            var lambda = Expressionable.Create<tb_SaleOutRe>()
+            .AndIF(AuthorizeController.GetSaleLimitedAuth(MainForm.Instance.AppContext) && !MainForm.Instance.AppContext.IsSuperUser, t => t.Employee_ID == MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID)//限制了销售只看到自己的客户,采购不限制
+            .ToExpression();
+            QueryConditionFilter.FilterLimitExpressions.Add(lambda);
         }
 
         public override void BuildSummaryCols()

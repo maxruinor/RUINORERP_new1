@@ -250,7 +250,7 @@ namespace RUINORERP.UI.PSI.PUR
             {
                 listCols.SetCol_NeverVisible<ProductSharePart>(c => c.BarCode);
             }
-            ControlChildColumnsInvisible(listCols);
+            UIHelper.ControlChildColumnsInvisible(CurMenuInfo, listCols);
             listCols.SetCol_ReadOnly<ProductSharePart>(c => c.Unit_ID);
             listCols.SetCol_ReadOnly<ProductSharePart>(c => c.Brand);
             listCols.SetCol_ReadOnly<ProductSharePart>(c => c.prop);
@@ -287,7 +287,7 @@ namespace RUINORERP.UI.PSI.PUR
             sgh.OnLoadMultiRowData += Sgh_OnLoadMultiRowData;
             //Clear(sgd);
             ShowSelectedColumn();
-            base.ControlMasterColumnsInvisible();
+            UIHelper.ControlMasterColumnsInvisible(CurMenuInfo,this);
         }
 
         private void Sgh_OnLoadMultiRowData(object rows, Position position)

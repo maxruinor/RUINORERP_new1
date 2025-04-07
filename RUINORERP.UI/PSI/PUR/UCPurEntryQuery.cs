@@ -87,9 +87,11 @@ namespace RUINORERP.UI.PSI.PUR
         /// </summary>
         public override void BuildQueryCondition()
         {
-            BaseProcessor baseProcessor = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_PurEntry).Name + "Processor");
-            QueryConditionFilter = baseProcessor.GetQueryFilter();
-
+            base.BuildQueryCondition();
+            var lambda = Expressionable.Create<tb_PurEntry>()
+            .AndIF(AuthorizeController.GetPurBizLimitedAuth(MainForm.Instance.AppContext) && !MainForm.Instance.AppContext.IsSuperUser, t => t.Employee_ID == MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID)//限制了销售只看到自己的客户,采购不限制
+            .ToExpression();
+            QueryConditionFilter.FilterLimitExpressions.Add(lambda);
 
         }
 

@@ -56,9 +56,12 @@ namespace RUINORERP.UI.PSI.SAL
 
         public override void QueryConditionBuilder()
         {
-            BaseProcessor baseProcessor = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_SaleOutRe).Name + "Processor");
-            QueryConditionFilter = baseProcessor.GetQueryFilter();
-            return;
+            base.QueryConditionBuilder();
+            var lambda = Expressionable.Create<tb_SaleOutRe>()
+            .AndIF(AuthorizeController.GetSaleLimitedAuth(MainForm.Instance.AppContext) && !MainForm.Instance.AppContext.IsSuperUser, t => t.Employee_ID == MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID)//限制了销售只看到自己的客户,采购不限制
+            .ToExpression();
+            QueryConditionFilter.FilterLimitExpressions.Add(lambda);
+
         }
 
 
@@ -258,7 +261,7 @@ namespace RUINORERP.UI.PSI.SAL
             base.ToolBarEnabledControl(MenuItemEnums.刷新);
             LoadGrid1();
             LoadGrid2();
-            base.ControlMasterColumnsInvisible();
+            UIHelper.ControlMasterColumnsInvisible(CurMenuInfo,this);
         }
 
         private void LoadGrid1()
@@ -276,7 +279,7 @@ namespace RUINORERP.UI.PSI.SAL
             listCols.SetCol_NeverVisible<tb_SaleOutReDetail>(c => c.SaleOutRe_ID);
             listCols.SetCol_NeverVisible<tb_SaleOutReDetail>(c => c.SOutReturnDetail_ID);
             listCols.SetCol_NeverVisible<tb_SaleOutReDetail>(c => c.ProdDetailID);
-            ControlChildColumnsInvisible(listCols);
+            UIHelper.ControlChildColumnsInvisible(CurMenuInfo, listCols);
             listCols.SetCol_Format<tb_SaleOutReDetail>(c => c.TaxRate, CustomFormatType.PercentFormat);
             listCols.SetCol_NeverVisible<ProductSharePart>(c => c.Location_ID);
             listCols.SetCol_NeverVisible<ProductSharePart>(c => c.VendorModelCode);
@@ -351,7 +354,7 @@ namespace RUINORERP.UI.PSI.SAL
             listCols.SetCol_NeverVisible<tb_SaleOutReRefurbishedMaterialsDetail>(c => c.SaleOutRe_ID);
             listCols.SetCol_NeverVisible<tb_SaleOutReRefurbishedMaterialsDetail>(c => c.SOutReturnDetail_ID);
             listCols.SetCol_NeverVisible<tb_SaleOutReRefurbishedMaterialsDetail>(c => c.ProdDetailID);
-            ControlChildColumnsInvisible(listCols);
+            UIHelper.ControlChildColumnsInvisible(CurMenuInfo, listCols);
             listCols.SetCol_NeverVisible<ProductSharePart>(c => c.Location_ID);
             listCols.SetCol_NeverVisible<ProductSharePart>(c => c.Rack_ID);
             if (!AppContext.SysConfig.UseBarCode)

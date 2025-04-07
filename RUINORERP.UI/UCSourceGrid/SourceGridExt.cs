@@ -329,7 +329,7 @@ namespace RUINORERP.UI.UCSourceGrid
 
 
         /// <summary>
-        /// 指定只读的列
+        /// 指定只的列
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="cols"></param>

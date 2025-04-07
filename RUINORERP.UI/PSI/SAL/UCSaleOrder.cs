@@ -70,8 +70,16 @@ namespace RUINORERP.UI.PSI.SAL
         /// </summary>
         public override void QueryConditionBuilder()
         {
-            BaseProcessor baseProcessor = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_SaleOrder).Name + "Processor");
-            QueryConditionFilter = baseProcessor.GetQueryFilter();
+            //BaseProcessor baseProcessor = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_SaleOrder).Name + "Processor");
+            //QueryConditionFilter = baseProcessor.GetQueryFilter();
+            base.QueryConditionBuilder();
+            //创建表达式
+            var lambda = Expressionable.Create<tb_SaleOrder>()
+                             .And(t => t.isdeleted == false)
+                            //自己的只能查自己的
+                            .AndIF(AuthorizeController.GetSaleLimitedAuth(MainForm.Instance.AppContext), t => t.Employee_ID == MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID)//限制了销售只看到自己的客户,采购不限制
+                            .ToExpression();//注意 这一句 不能少
+            QueryConditionFilter.SetFieldLimitCondition(lambda);
         }
 
 
@@ -376,7 +384,7 @@ namespace RUINORERP.UI.PSI.SAL
                 listCols.SetCol_NeverVisible<ProductSharePart>(c => c.BarCode);
             }
             listCols.SetCol_DefaultValue<tb_SaleOrderDetail>(a => a.Discount, 1m);
-            ControlChildColumnsInvisible(listCols);
+            UIHelper.ControlChildColumnsInvisible(CurMenuInfo, listCols);
             //listCols.SetCol_DefaultValue<tb_SaleOrderDetail>(a => a.TaxRate, 0.13m);//m =>decial d=>double
 
             //如果库位为只读  暂时只会显示 ID
@@ -499,7 +507,7 @@ namespace RUINORERP.UI.PSI.SAL
             sw.Stop();
             MainForm.Instance.uclog.AddLog("加载数据耗时：" + sw.ElapsedMilliseconds + "毫秒");
 
-            base.ControlMasterColumnsInvisible();
+            UIHelper.ControlMasterColumnsInvisible(CurMenuInfo,this);
 
         }
 

@@ -84,11 +84,7 @@ namespace RUINORERP.UI.BI
             dataGridView1.DataSource = ListDataSoure;
         }
 
-        public override void QueryConditionBuilder()
-        {
-            BaseProcessor baseProcessor = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_FieldInfo).Name + "Processor");
-            QueryConditionFilter = baseProcessor.GetQueryFilter();
-        }
+ 
         public override void BuildRelatedDisplay()
         {
             //表格显示时DataGridView1_CellFormatting 取外键类型

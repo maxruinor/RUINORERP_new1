@@ -279,7 +279,7 @@ namespace RUINORERP.UI.MRP.PQC
             {
                 listCols.SetCol_NeverVisible<ProductSharePart>(c => c.BarCode);
             }
-            ControlChildColumnsInvisible(listCols);
+            UIHelper.ControlChildColumnsInvisible(CurMenuInfo, listCols);
 
             listCols.SetCol_ReadOnly<ProductSharePart>(c => c.Unit_ID);
             listCols.SetCol_ReadOnly<ProductSharePart>(c => c.Brand);
@@ -328,7 +328,7 @@ namespace RUINORERP.UI.MRP.PQC
             sgd.HasRowHeader = true;
             sgh.InitGrid(grid1, sgd, true, nameof(tb_MRP_ReworkEntryDetail));
             sgh.OnCalculateColumnValue += Sgh_OnCalculateColumnValue;
-            base.ControlMasterColumnsInvisible();
+            UIHelper.ControlMasterColumnsInvisible(CurMenuInfo,this);
         }
 
 

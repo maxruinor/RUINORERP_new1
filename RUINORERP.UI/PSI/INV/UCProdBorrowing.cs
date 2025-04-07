@@ -258,7 +258,7 @@ namespace RUINORERP.UI.PSI.INV
             listCols.SetCol_NeverVisible<tb_ProdBorrowingDetail>(c => c.ProdDetailID);
             listCols.SetCol_NeverVisible<tb_ProdBorrowingDetail>(c => c.BorrowDetaill_ID);
             listCols.SetCol_NeverVisible<tb_ProdBorrowingDetail>(c => c.BorrowID);
-            ControlChildColumnsInvisible(listCols);
+            UIHelper.ControlChildColumnsInvisible(CurMenuInfo, listCols);
             listCols.SetCol_ReadOnly<ProductSharePart>(c => c.Unit_ID);
             listCols.SetCol_ReadOnly<ProductSharePart>(c => c.Brand);
             listCols.SetCol_ReadOnly<ProductSharePart>(c => c.prop);

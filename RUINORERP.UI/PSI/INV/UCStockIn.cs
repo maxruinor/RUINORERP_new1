@@ -199,7 +199,7 @@ namespace RUINORERP.UI.PSI.INV
             listCols.SetCol_NeverVisible<tb_StockInDetail>(c => c.ProdDetailID);
             listCols.SetCol_NeverVisible<tb_StockInDetail>(c => c.Sub_ID);
             listCols.SetCol_NeverVisible<tb_StockInDetail>(c => c.MainID);
-            ControlChildColumnsInvisible(listCols);
+            UIHelper.ControlChildColumnsInvisible(CurMenuInfo, listCols);
             //实际在中间实体定义时加了只读属性，功能相同
             listCols.SetCol_ReadOnly<ProductSharePart>(c => c.Unit_ID);
             listCols.SetCol_ReadOnly<ProductSharePart>(c => c.Brand);
@@ -256,7 +256,7 @@ namespace RUINORERP.UI.PSI.INV
             sgh.InitGrid(grid1, sgd, true, nameof(tb_StockInDetail));
             sgh.OnCalculateColumnValue += Sgh_OnCalculateColumnValue;
             sgh.OnLoadMultiRowData += Sgh_OnLoadMultiRowData;
-            base.ControlMasterColumnsInvisible();
+            UIHelper.ControlMasterColumnsInvisible(CurMenuInfo,this);
         }
         private void Sgh_OnLoadMultiRowData(object rows, Position position)
         {

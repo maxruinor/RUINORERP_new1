@@ -40,6 +40,7 @@ using RUINORERP.Business.Processor;
 using RUINORERP.UI.PSI.SAL;
 using EnumsNET;
 using RUINORERP.UI.ToolForm;
+using RUINORERP.Business.Security;
 
 
 namespace RUINORERP.UI.PSI.PUR
@@ -74,8 +75,12 @@ namespace RUINORERP.UI.PSI.PUR
         }
         public override void QueryConditionBuilder()
         {
-            BaseProcessor baseProcessor = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_PurEntryRe).Name + "Processor");
-            QueryConditionFilter = baseProcessor.GetQueryFilter();
+ 
+            base.QueryConditionBuilder();
+            var lambda = Expressionable.Create<tb_PurEntryRe>()
+            .AndIF(AuthorizeController.GetPurBizLimitedAuth(MainForm.Instance.AppContext) && !MainForm.Instance.AppContext.IsSuperUser, t => t.Employee_ID == MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID)//限制了销售只看到自己的客户,采购不限制
+            .ToExpression();
+            QueryConditionFilter.FilterLimitExpressions.Add(lambda);
         }
         public override void BindData(tb_PurEntryRe entity, ActionStatus actionStatus = ActionStatus.无操作)
         {
@@ -252,7 +257,7 @@ namespace RUINORERP.UI.PSI.PUR
             {
                 listCols.SetCol_NeverVisible<ProductSharePart>(c => c.BarCode);
             }
-            ControlChildColumnsInvisible(listCols);
+            UIHelper.ControlChildColumnsInvisible(CurMenuInfo, listCols);
 
             listCols.SetCol_ReadOnly<ProductSharePart>(c => c.Unit_ID);
             listCols.SetCol_ReadOnly<ProductSharePart>(c => c.Brand);
@@ -298,7 +303,7 @@ namespace RUINORERP.UI.PSI.PUR
             sgd.HasRowHeader = true;
             sgh.InitGrid(grid1, sgd, true, nameof(tb_PurEntryReDetail));
             sgh.OnCalculateColumnValue += Sgh_OnCalculateColumnValue;
-            base.ControlMasterColumnsInvisible();
+            UIHelper.ControlMasterColumnsInvisible(CurMenuInfo,this);
         }
 
 

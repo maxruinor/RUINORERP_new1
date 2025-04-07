@@ -440,15 +440,15 @@ namespace RUINORERP.UI.MRP.MP
             {
                 listColsTarget.SetCol_NeverVisible<ProductSharePart>(c => c.BarCode);
             }
-            ControlChildColumnsInvisible(listColsTarget);
-
+          
 
             //如果库位为只读  暂时只会显示 ID
             //listCols.SetCol_ReadOnly<ProductSharePart>(c => c.Location_ID);
 
             //listCols.SetCol_ReadOnly<tb_ProductionDemandDetail>(c => c.CompletedQuantity);
+ 
+            UIHelper.ControlChildColumnsInvisible(CurMenuInfo,listColsTarget );
 
-            ControlChildColumnsInvisible(listColsTarget);
             sgdTarget = new SourceGridDefine(gridTargetItems, listColsTarget, true);
 
 
@@ -489,8 +489,8 @@ namespace RUINORERP.UI.MRP.MP
             //{
             //    listColsTarget.SetCol_NeverVisible<ProductSharePart>(c => c.BarCode);
             //}
-            ControlChildColumnsInvisible(listColsTarget);
-
+            
+            UIHelper.ControlChildColumnsInvisible(CurMenuInfo, listColsTarget);
             /*
             //具体审核权限的人才显示
             if (AppContext.CurUserInfo.UserButtonList.Where(c => c.BtnText == MenuItemEnums.审核.ToString()).Any())
@@ -562,7 +562,8 @@ namespace RUINORERP.UI.MRP.MP
             {
                 listColsPur.SetCol_NeverVisible<ProductSharePart>(c => c.BarCode);
             }
-            ControlChildColumnsInvisible(listColsPur);
+        
+            UIHelper.ControlChildColumnsInvisible(CurMenuInfo, listColsPur);
             //listCols.SetCol_DefaultValue<tb_ProductionPlanDetail>(a => a.TaxRate, 0.13m);//m =>decial d=>double
 
             //如果库位为只读  暂时只会显示 ID
@@ -656,7 +657,7 @@ namespace RUINORERP.UI.MRP.MP
             kryptonNavigator1.SelectedPage = KP分析目标;
 
             GridRelated.SetRelatedInfo<tb_ManufacturingOrder>(c => c.MONO);
-            base.ControlMasterColumnsInvisible();
+            UIHelper.ControlMasterColumnsInvisible(CurMenuInfo,this);
 
             kryptonTreeGridViewStockLess.CellPainting += KryptonTreeGridViewStockLess_CellPainting;
             kryptonTreeGridViewMaking.CellPainting += KryptonTreeGridViewMaking_CellPainting;

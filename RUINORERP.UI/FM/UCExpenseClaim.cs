@@ -375,7 +375,7 @@ namespace RUINORERP.UI.FM
             listCols = new List<SGDefineColumnItem>();
             //指定了关键字段ProdDetailID
             listCols = sgh.GetGridColumns<tb_FM_ExpenseClaimDetail>();
-
+            UIHelper.ControlChildColumnsInvisible(CurMenuInfo, listCols);
             listCols.SetCol_NeverVisible<tb_FM_ExpenseClaimDetail>(c => c.ClaimMainID);
             listCols.SetCol_NeverVisible<tb_FM_ExpenseClaimDetail>(c => c.ClaimSubID);
             listCols.SetCol_DefaultValue<tb_FM_ExpenseClaimDetail>(c => c.UntaxedAmount, 0.00M);
@@ -428,7 +428,7 @@ namespace RUINORERP.UI.FM
             sgh.InitGrid(grid1, sgd, true, nameof(tb_FM_ExpenseClaimDetail));
             sgh.OnCalculateColumnValue += Sgh_OnCalculateColumnValue;
             sgh.OnAddDataRow += Sgh_OnAddDataRow;
-            base.ControlMasterColumnsInvisible();
+            UIHelper.ControlMasterColumnsInvisible(CurMenuInfo,this);
         }
 
         private void Sgh_OnAddDataRow(object rowObj)

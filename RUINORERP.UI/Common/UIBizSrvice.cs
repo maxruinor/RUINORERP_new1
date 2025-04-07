@@ -1155,6 +1155,7 @@ namespace RUINORERP.UI.Common
                                 {
                                     c.Visible = true;
                                 }
+                           
                                 //如果字段表中已经设置默认啥的 这里初始化要以默认的为标准
                             }
 

@@ -318,8 +318,7 @@ namespace RUINORERP.UI.PSI.SAL
         /// </summary>
         public override void BuildQueryCondition()
         {
-            BaseProcessor baseProcessor = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_SaleOrder).Name + "Processor");
-            QueryConditionFilter = baseProcessor.GetQueryFilter();
+            base.BuildQueryCondition();
 
             //非超级用户时，只能查看自己的订单,如果设置的销售业务限制范围的话
             var lambda = Expressionable.Create<tb_SaleOrder>()

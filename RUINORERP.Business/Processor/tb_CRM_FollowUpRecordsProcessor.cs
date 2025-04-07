@@ -50,8 +50,24 @@ namespace RUINORERP.Business.Processor
                           .ToExpression();//注意 这一句 不能少
 
             queryFilter.FilterLimitExpressions.Add(lambda);
-            queryFilter.SetQueryField<tb_CRM_FollowUpRecords>(c => c.Customer_id, true);
-            queryFilter.SetQueryField<tb_CRM_FollowUpRecords>(c => c.Employee_ID, true);
+
+            var lambdaCustomer = Expressionable.Create<tb_CRM_Customer>()
+                        .AndIF(AuthorizeController.GetOwnershipControl(_appContext), t => t.Employee_ID == _appContext.CurUserInfo.UserInfo.Employee_ID)
+                        .And(t => t.isdeleted == false)
+                        .ToExpression();
+
+
+            queryFilter.SetQueryField<tb_CRM_FollowUpRecords>(c => c.Customer_id, typeof(tb_CRM_Customer), true, lambdaCustomer);
+
+            var lambdaEmp = Expressionable.Create<tb_Employee>()
+                   .AndIF(AuthorizeController.GetOwnershipControl(_appContext), t => t.Employee_ID == _appContext.CurUserInfo.UserInfo.Employee_ID)
+                   //.And(t => t.Is_enabled == false)
+                   .ToExpression();
+
+
+            queryFilter.SetQueryField<tb_CRM_FollowUpRecords>(c => c.Employee_ID, typeof(tb_Employee), true, lambdaEmp);
+
+ 
             queryFilter.SetQueryField<tb_CRM_FollowUpRecords>(c => c.LeadID, true);
             queryFilter.SetQueryField<tb_CRM_FollowUpRecords>(c => c.PlanID, true);
             queryFilter.SetQueryField<tb_CRM_FollowUpRecords>(c => c.FollowUpMethod, QueryFieldType.CmbEnum, typeof(FollowUpMethod));

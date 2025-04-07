@@ -67,8 +67,12 @@ namespace RUINORERP.UI.PSI.SAL
         /// </summary>
         public override void QueryConditionBuilder()
         {
-            BaseProcessor baseProcessor = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_SaleOut).Name + "Processor");
-            QueryConditionFilter = baseProcessor.GetQueryFilter();
+            base.QueryConditionBuilder();
+            var lambda = Expressionable.Create<tb_SaleOut>()
+           .AndIF(AuthorizeController.GetSaleLimitedAuth(MainForm.Instance.AppContext) && !MainForm.Instance.AppContext.IsSuperUser, t => t.Employee_ID == MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID)//限制了销售只看到自己的客户,采购不限制
+            .ToExpression();
+            QueryConditionFilter.FilterLimitExpressions.Add(lambda);
+
         }
 
 
@@ -312,7 +316,7 @@ namespace RUINORERP.UI.PSI.SAL
             listCols.SetCol_ReadOnly<tb_SaleOutDetail>(c => c.SubtotalCostAmount);
 
 
-            ControlChildColumnsInvisible(listCols);
+            UIHelper.ControlChildColumnsInvisible(CurMenuInfo, listCols);
             listCols.SetCol_Format<tb_SaleOutDetail>(c => c.Discount, CustomFormatType.PercentFormat);
             listCols.SetCol_Format<tb_SaleOutDetail>(c => c.TaxRate, CustomFormatType.PercentFormat);
             sgd = new SourceGridDefine(grid1, listCols, true);
@@ -362,7 +366,7 @@ namespace RUINORERP.UI.PSI.SAL
             sgh.InitGrid(grid1, sgd, true, nameof(tb_SaleOutDetail));
             sgh.OnCalculateColumnValue += Sgh_OnCalculateColumnValue;
             sgh.OnGetTransferDataHandler += Sgh_OnGetTransferDataHandler;
-            base.ControlMasterColumnsInvisible();
+            UIHelper.ControlMasterColumnsInvisible(CurMenuInfo, this);
         }
 
         private tb_ProdConversion Sgh_OnGetTransferDataHandler(ToolStripItem sender, object rowObj, SourceGridDefine CurrGridDefine)
@@ -769,7 +773,7 @@ namespace RUINORERP.UI.PSI.SAL
                     }
                     details[i].Quantity = details[i].Quantity - item.TotalDeliveredQty;// 减掉已经出库的数量
                     details[i].SubtotalTransAmount = details[i].TransactionPrice * details[i].Quantity;
-                    details[i].SubtotalCostAmount = (details[i].Cost+ details[i].CustomizedCost) * details[i].Quantity;
+                    details[i].SubtotalCostAmount = (details[i].Cost + details[i].CustomizedCost) * details[i].Quantity;
 
                     if (details[i].Quantity > 0)
                     {

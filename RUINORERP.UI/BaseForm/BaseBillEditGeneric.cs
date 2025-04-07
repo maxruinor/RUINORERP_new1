@@ -380,7 +380,7 @@ namespace RUINORERP.UI.BaseForm
         /// <param name="entity"></param>
         protected virtual void ToolBarEnabledControl(object entity)
         {
-            ControlMasterColumnsInvisible();
+           UIHelper. ControlMasterColumnsInvisible(CurMenuInfo,this);
             if (entity == null)
             {
                 return;
@@ -580,135 +580,6 @@ namespace RUINORERP.UI.BaseForm
         }
 
 
-        /// <summary>
-        /// 控制字段是否显示，添加到里面的是不显示的
-        /// </summary>
-        /// <param name="InvisibleCols"></param>
-        public void ControlChildColumnsInvisible(List<SGDefineColumnItem> listCols)
-        {
-            if (!MainForm.Instance.AppContext.IsSuperUser)
-            {
-                if (CurMenuInfo.tb_P4Fields != null)
-                {
-                    List<tb_P4Field> P4Fields =
-                    CurMenuInfo.tb_P4Fields
-                    .Where(p => p.RoleID == MainForm.Instance.AppContext.CurrentUser_Role.RoleID
-                    && p.tb_fieldinfo.IsChild).ToList();
-                    foreach (var item in P4Fields)
-                    {
-                        if (item != null)
-                        {
-
-                            //主表时,列不可用或设置为不可见时
-                            //设置不可见
-                            if (item.tb_fieldinfo != null)
-                            {
-                                //设置不可见
-                                //if (!item.IsVisble && item.tb_fieldinfo.IsChild)
-                                if ((!item.tb_fieldinfo.IsEnabled || !item.IsVisble) && item.tb_fieldinfo.IsChild)
-                                {
-                                    SGDefineColumnItem defineColumnItem = listCols.Where(w => w.ColName == item.tb_fieldinfo.FieldName
-                                    && !w.BelongingObjectType.Name.Contains("ProductSharePart")
-                                    ).FirstOrDefault();
-                                    if (defineColumnItem != null)
-                                    {
-                                        defineColumnItem.SetCol_NeverVisible(item.tb_fieldinfo.FieldName);
-                                    }
-                                }
-
-                                //设置默认隐藏
-                                if (item.tb_fieldinfo.DefaultHide && item.tb_fieldinfo.IsChild)
-                                {
-                                    SGDefineColumnItem defineColumnItem = listCols.Where(w => w.ColName == item.tb_fieldinfo.FieldName
-                                    && !w.BelongingObjectType.Name.Contains("ProductSharePart")).FirstOrDefault();
-                                    if (defineColumnItem != null)
-                                    {
-                                        defineColumnItem.SetCol_DefaultHide(item.tb_fieldinfo.FieldName);
-                                    }
-                                }
-                            }
-                        }
-
-                    }
-
-                }
-            }
-        }
-
-        /// <summary>
-        /// 设置主表字段是否显示
-        /// </summary>
-        /// <param name="kryptonPanelMainInfo"></param>
-        public void ControlMasterColumnsInvisible()
-        {
-            if (!MainForm.Instance.AppContext.IsSuperUser)
-            {
-                if (CurMenuInfo.tb_P4Fields != null)
-                {
-                    List<tb_P4Field> P4Fields =
-                   CurMenuInfo.tb_P4Fields
-                   .Where(p => p.RoleID == MainForm.Instance.AppContext.CurrentUser_Role.RoleID
-                   && !p.tb_fieldinfo.IsChild).ToList();
-                    foreach (var item in P4Fields)
-                    {
-                        if (item != null)
-                        {
-                            if (item.tb_fieldinfo != null)
-                            {
-                                //主表时,列不可用或设置为不可见时
-                                //设置不可见
-                                if (!item.tb_fieldinfo.IsChild)
-                                {
-                                    KryptonTextBox txtTextBox = UIHelper.FindTextBox(this, item.tb_fieldinfo.FieldName);
-                                    if (txtTextBox != null)
-                                    {
-                                        if (!item.tb_fieldinfo.IsEnabled)
-                                        {
-                                            txtTextBox.Visible = false;
-                                        }
-                                        else
-                                        {
-                                            txtTextBox.Visible = item.IsVisble;
-                                        }
-                                    }
-                                    KryptonLabel lbl = UIHelper.FindLabel(this, item.tb_fieldinfo.FieldText, item.tb_fieldinfo.FieldName);
-                                    if (lbl != null)
-                                    {
-                                        if (!item.tb_fieldinfo.IsEnabled)
-                                        {
-                                            lbl.Visible = false;
-                                        }
-                                        else
-                                        {
-                                            lbl.Visible = item.IsVisble;
-                                        }
-                                    }
-
-                                    if (txtTextBox != null && lbl != null)
-                                    {
-                                        continue;
-                                    }
-                                    KryptonCheckBox chk = UIHelper.FindKryptonCheckBox(this, item.tb_fieldinfo.FieldName);
-                                    if (chk != null)
-                                    {
-                                        if (!item.tb_fieldinfo.IsEnabled)
-                                        {
-                                            chk.Visible = false;
-                                        }
-                                        else
-                                        {
-                                            chk.Visible = item.IsVisble;
-                                        }
-                                    }
-                                }
-
-
-                            }
-                        }
-                    }
-                }
-            }
-        }
 
 
 
@@ -1981,7 +1852,7 @@ namespace RUINORERP.UI.BaseForm
 
             ToolBarEnabledControl(MenuItemEnums.新增);
             //bindingSourceEdit.CancelEdit();
-            ControlMasterColumnsInvisible();
+            UIHelper.ControlMasterColumnsInvisible(CurMenuInfo, this);
         }
 
         protected override void Modify()

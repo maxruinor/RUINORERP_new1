@@ -79,6 +79,11 @@ namespace RUINORERP.UI.FM
 
                     #endregion
                 }
+                else
+                {
+                    //清空
+                    cmbPayeeInfoID.DataBindings.Clear();
+                }
                 // entity.DataStatus = (int)DataStatus.确认;
                 //如果审核了，审核要灰色
             }
@@ -89,12 +94,8 @@ namespace RUINORERP.UI.FM
                 entity.ApplicationNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.付款申请单);
                 entity.InvoiceDate = System.DateTime.Now;
                 entity.Employee_ID = MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID.Value;
-
-                //if (entity.tb != null && entity.tb_PurOrderDetails.Count > 0)
-                //{
-                //    entity.tb_PurOrderDetails.ForEach(c => c.PurOrder_ID = 0);
-                //    entity.tb_PurOrderDetails.ForEach(c => c.PurOrder_ChildID = 0);
-                //}
+                //清空
+                cmbPayeeInfoID.DataBindings.Clear();
             }
 
             DataBindingHelper.BindData4Cmb<tb_Employee>(entity, k => k.Employee_ID, v => v.Employee_Name, cmbEmployee_ID);
@@ -131,7 +132,7 @@ namespace RUINORERP.UI.FM
 
             //创建表达式
             var lambda = Expressionable.Create<tb_CustomerVendor>()
-                            .And(t => t.IsCustomer == false)//供应商和第三方
+                            .And(t => t.IsVendor == true)//供应商和第三方
                             .And(t => t.isdeleted == false)
                             .And(t => t.Is_enabled == true)
                             .And(t => t.Is_available == true)
@@ -145,10 +146,10 @@ namespace RUINORERP.UI.FM
             DataBindingHelper.BindData4Cmb<tb_CustomerVendor>(entity, k => k.CustomerVendor_ID, v => v.CVName, cmbCustomerVendor_ID, queryFilterC.GetFilterExpression<tb_CustomerVendor>(), true);
             DataBindingHelper.InitFilterForControlByExp<tb_CustomerVendor>(entity, cmbCustomerVendor_ID, c => c.CVName, queryFilterC);
 
+
             //后面这些依赖于控件绑定的数据源和字段。所以要在绑定后执行。
             if (entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改)
             {
-
                 base.InitRequiredToControl(MainForm.Instance.AppContext.GetRequiredService<tb_FM_PaymentApplicationValidator>(), kryptonPanel1.Controls);
             }
 

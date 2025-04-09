@@ -122,7 +122,6 @@ namespace RUINORERP.UI.FM
             //DataBindingHelper.BindData4CehckBox<tb_FM_OtherExpense>(entity, t => t.EXPOrINC, chkEXPOrINC, false);
             //有默认值
             DataBindingHelper.BindData4CheckBox<tb_FM_OtherExpense>(entity, t => t.IncludeTax, chkIncludeTax, false);
-            DataBindingHelper.BindData4TextBox<tb_FM_OtherExpense>(entity, t => t.TaxRate.ToString(), txtTaxRate, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4TextBox<tb_FM_OtherExpense>(entity, t => t.UntaxedAmount.ToString(), txtUntaxedAmount, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4TextBox<tb_FM_OtherExpense>(entity, t => t.ApprovalOpinions, txtApprovalOpinions, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_FM_ExpenseClaim>(entity, t => t.CloseCaseOpinions, txtCloseCaseOpinions, BindDataType4TextBox.Text, false);

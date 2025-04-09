@@ -122,15 +122,13 @@ namespace RUINORERP.UI.Report
                     reportTemplate.BizType = (int)cbd.BizType;
                     reportTemplate.Template_Name = "新建" + reportTemplate.BizName;
                 }
-
             }
-
+            BusinessHelper.Instance.InitEntity(reportTemplate);
             reportTemplate.ActionStatus = ActionStatus.加载;
             reportTemplate.IsDefaultTemplate = true;
             byte[] dail = new byte[1];
             dail = null;
             reportTemplate.TemplateFileStream = dail;
-            reportTemplate.TemplateFileData = string.Empty;
             if (printConfig.tb_PrintTemplates == null)
             {
                 printConfig.tb_PrintTemplates = new List<tb_PrintTemplate>();
@@ -140,7 +138,6 @@ namespace RUINORERP.UI.Report
             bindingSourcePrintTemplate.Position++;
             //    }
             //}
-
 
             RptDesignForm frm = new RptDesignForm();
             //frm.printTemplate = bindingSourcePrintTemplate.Current as tb_PrintTemplate;

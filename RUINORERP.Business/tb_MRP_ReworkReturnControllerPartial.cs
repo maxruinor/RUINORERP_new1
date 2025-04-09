@@ -80,7 +80,7 @@ namespace RUINORERP.Business
                     //如果退的产品不在缴库单位明细中审核失败。
                     foreach (var child in entity.tb_MRP_ReworkReturnDetails)
                     {
-                        if (!entity.tb_finishedgoodsinv.tb_FinishedGoodsInvDetails.Any(c => c.ProdDetailID == child.ProdDetailID))
+                        if (!entity.tb_finishedgoodsinv.tb_FinishedGoodsInvDetails.Any(c => c.ProdDetailID == child.ProdDetailID && c.Location_ID == child.Location_ID))
                         {
                             rs.Succeeded = false;
                             _unitOfWorkManage.RollbackTran();
@@ -107,7 +107,7 @@ namespace RUINORERP.Business
                         string prodName = detail.tb_proddetail.tb_prod.CNName + detail.tb_proddetail.tb_prod.Specifications;
 
                         //一对一时
-                        var inQty = detailList.Where(c => c.ProdDetailID == detail.ProdDetailID).Sum(c => c.Quantity);
+                        var inQty = detailList.Where(c => c.ProdDetailID == detail.ProdDetailID && c.Location_ID == detail.Location_ID).Sum(c => c.Quantity);
                         if (inQty > detail.Qty)
                         {
                             string msg = $"返工退库:{entity.ReworkReturnNo}的【{prodName}】的数量不能大于缴款单中数量\r\n" + $"或存在针对当前缴单重复录入了返工退库单，审核失败！";

@@ -189,7 +189,8 @@ namespace RUINORERP.UI.PSI.INV
             //创建表达式  草稿 结案 和没有提交的都不显示
             var lambdaBorrow = Expressionable.Create<tb_ProdBorrowing>()
                             .And(t => t.DataStatus == (int)DataStatus.确认)
-                            .AndIF(AuthorizeController.GetOwnershipControl(MainForm.Instance.AppContext) && !MainForm.Instance.AppContext.IsSuperUser, t => t.Employee_ID == MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID)
+                            //是不是有开关来设置
+                            //.AndIF(AuthorizeController.GetOwnershipControl(MainForm.Instance.AppContext) && !MainForm.Instance.AppContext.IsSuperUser, t => t.Employee_ID == MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID)
                              .And(t => t.isdeleted == false)
                             .ToExpression();//注意 这一句 不能少
             BaseProcessor basePro = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_ProdBorrowing).Name + "Processor");

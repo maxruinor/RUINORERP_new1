@@ -2168,7 +2168,9 @@ protected async override Task<ApprovalEntity> ReReview()
                 else
                 {
                     tb_ProduceGoodsRecommendDetail target = MakingItems.FirstOrDefault();
-                    bool IsCreatectrMO = await ctrMO.IsExistAsync(c => c.PDID == EditEntity.PDID && c.ProdDetailID == target.ProdDetailID && c.PDCID == target.PDCID);
+                    bool IsCreatectrMO = await ctrMO.IsExistAsync(c => c.PDID == EditEntity.PDID
+                                    && c.Location_ID == target.Location_ID
+                    && c.ProdDetailID == target.ProdDetailID && c.PDCID == target.PDCID);
                     if (IsCreatectrMO)
                     {
                         MainForm.Instance.uclog.AddLog($"当前单据的制成品建议中，当前选中目标行产品，已经生成过制令单，无法重复生成", UILogType.警告);
@@ -2182,7 +2184,10 @@ protected async override Task<ApprovalEntity> ReReview()
                 //上层驱动模式
                 List<tb_ProduceGoodsRecommendDetail> MakingItemsByTop = EditEntity.tb_ProduceGoodsRecommendDetails.Where(c => c.Selected == true).ToList().OrderBy(c => c.ParentId).ToList();
                 tb_ProduceGoodsRecommendDetail target = MakingItems.FirstOrDefault();
-                bool IsCreatectrMO = await ctrMO.IsExistAsync(c => c.PDID == EditEntity.PDID && c.ProdDetailID == target.ProdDetailID && c.PDCID == target.PDCID);
+                bool IsCreatectrMO = await ctrMO.IsExistAsync(c => c.PDID == EditEntity.PDID 
+                && c.ProdDetailID == target.ProdDetailID && c.PDCID == target.PDCID
+                && c.Location_ID==target.Location_ID
+                );
                 if (IsCreatectrMO)
                 {
                     MainForm.Instance.uclog.AddLog($"当前单据的制成品建议中，当前选中目标行产品已经生成过制令单，无法重复生成", UILogType.警告);
@@ -2397,7 +2402,7 @@ protected async override Task<ApprovalEntity> ReReview()
                 decimal bomOutQty = Prow.tb_bom_s.OutputQty;
                 foreach (var item in EditEntity.tb_PurGoodsRecommendDetails)
                 {
-                    tb_BOM_SDetail sDetail = subBomDetails.FirstOrDefault(c => c.ProdDetailID == item.ProdDetailID);
+                    tb_BOM_SDetail sDetail = subBomDetails.FirstOrDefault(c => c.ProdDetailID == item.ProdDetailID );
                     if (sDetail != null)
                     {
                         decimal totalDiffQty = sDetail.UsedQty * DiffQty / bomOutQty;

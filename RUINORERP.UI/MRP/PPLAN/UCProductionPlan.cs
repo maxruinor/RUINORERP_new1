@@ -862,7 +862,7 @@ namespace RUINORERP.UI.MRP.MP
 
                 for (global::System.Int32 i = 0; i < details.Count; i++)
                 {
-                    tb_SaleOrderDetail _SaleOrderDetail = saleorder.tb_SaleOrderDetails.FirstOrDefault(c => c.ProdDetailID == details[i].ProdDetailID);
+                    tb_SaleOrderDetail _SaleOrderDetail = saleorder.tb_SaleOrderDetails.FirstOrDefault(c => c.ProdDetailID == details[i].ProdDetailID && c.Location_ID == details[i].Location_ID);
                     if (_SaleOrderDetail != null && _SaleOrderDetail.tb_proddetail.tb_bom_s != null)
                     {
                         details[i].BOM_ID = _SaleOrderDetail.tb_proddetail.tb_bom_s.BOM_ID;
@@ -880,7 +880,7 @@ namespace RUINORERP.UI.MRP.MP
                         //合并存在的。
                         if (aa.Count > 1)
                         {
-                            var newdetail = NewDetails.FirstOrDefault(c => c.ProdDetailID == details[i].ProdDetailID);
+                            var newdetail = NewDetails.FirstOrDefault(c => c.ProdDetailID == details[i].ProdDetailID && c.Location_ID == details[i].Location_ID);
                             if (newdetail != null)
                             {
                                 newdetail.Quantity += details[i].Quantity;

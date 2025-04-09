@@ -33,7 +33,6 @@ namespace RUINORERP.Business
             RuleFor(x => x.Account_name).NotNull().WithMessage("账户名称:不能为空。");
             RuleFor(x => x.Account_name).MinimumLength(2).WithMessage("账户名称:不能小于长度2。");
             RuleFor(x => x.Account_type).GreaterThan(0).WithMessage("账户类型：请选择正确的下拉值。");
-
             RuleFor(x => x.Employee_ID).
            Custom((contact, context) =>
            {

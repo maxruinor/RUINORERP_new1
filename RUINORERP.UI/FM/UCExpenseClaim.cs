@@ -191,7 +191,7 @@ namespace RUINORERP.UI.FM
                     //cmbPayeeInfoID.SelectedIndex = cmbPayeeInfoID.FindStringExact(emp.Account_name);
                     var obj = BizCacheHelper.Instance.GetEntity<tb_FM_PayeeInfo>(entity.PayeeInfoID);
                     if (obj != null && obj.ToString() != "System.Object")
-                    {
+                    {   
                         if (obj is tb_FM_PayeeInfo cv)
                         {
                             DataBindingHelper.BindData4CmbByEnum<tb_FM_PayeeInfo>(cv, k => k.Account_type, typeof(AccountType), cmbAccount_type, false);

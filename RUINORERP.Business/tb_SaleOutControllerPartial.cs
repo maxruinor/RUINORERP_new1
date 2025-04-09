@@ -163,7 +163,7 @@ namespace RUINORERP.Business
                     //如果明细中的产品。不存在于订单中。审核失败。
                     foreach (var child in entity.tb_SaleOutDetails)
                     {
-                        if (!entity.tb_saleorder.tb_SaleOrderDetails.Any(c => c.ProdDetailID == child.ProdDetailID))
+                        if (!entity.tb_saleorder.tb_SaleOrderDetails.Any(c => c.ProdDetailID == child.ProdDetailID && c.Location_ID == child.Location_ID))
                         {
                             rrs.Succeeded = false;
                             _unitOfWorkManage.RollbackTran();
@@ -176,6 +176,10 @@ namespace RUINORERP.Business
                         }
                     }
 
+                    // 如果成本为零时则会实时检测库存成本，以库存成本为基准。这种情况解决未知成本，提前销售的情况。
+                    //这里设置一个集合 用于保存特殊情况，后面统一更新
+                    List<tb_SaleOutDetail> UpdateSaleOutCostlist = new List<tb_SaleOutDetail>();
+                    List<tb_SaleOrderDetail> UpdateSaleOrderCostlist = new List<tb_SaleOrderDetail>();
                     foreach (var child in entity.tb_SaleOutDetails)
                     {
                         #region 库存表的更新 这里应该是必需有库存的数据，
@@ -208,11 +212,13 @@ namespace RUINORERP.Business
                         inv.LatestOutboundTime = System.DateTime.Now;
                         #endregion
 
-                        #region 更新销售价格
+                        #region 更新销售价格历史记录
                         //注意这里的人应该是业务员的ID。销售订单的录入人，不是审核人。也不是出库单的人。
                         // tb_PriceRecordController<tb_PriceRecord> ctrPriceRecord = _appContext.GetRequiredService<tb_PriceRecordController<tb_PriceRecord>>();
                         tb_PriceRecord priceRecord = _unitOfWorkManage.GetDbClient().Queryable<tb_PriceRecord>()
-                        .Where(c => c.Employee_ID == entity.tb_saleorder.Employee_ID.Value && c.ProdDetailID == child.ProdDetailID).First();
+                        .Where(c => c.Employee_ID == entity.tb_saleorder.Employee_ID.Value && c.ProdDetailID == child.ProdDetailID
+
+                        ).First();
                         //如果存在则更新，否则插入
                         if (priceRecord == null)
                         {
@@ -234,15 +240,27 @@ namespace RUINORERP.Business
                         //ReturnResults<tb_Inventory> rr = await ctrinv.SaveOrUpdate(inv);
                         //if (rr.Succeeded)
                         //{
-
                         //}
                         //else
                         //{
                         //    return rrs;
                         //}
+                        #region 如果成本为零时则会实时检测库存成本，以库存成本为基准。这种情况解决未知成本，提前销售的情况。
+                        if (child.Cost == 0 && inv.Inv_Cost > 0)
+                        {
+                            child.Cost = inv.Inv_Cost;
+                            UpdateSaleOutCostlist.Add(child);
+                        }
+                        #endregion
 
                     }
 
+
+                    int UpdateSaleOutCostCounter = await _unitOfWorkManage.GetDbClient().Updateable<tb_SaleOutDetail>(UpdateSaleOutCostlist).ExecuteCommandAsync();
+                    if (UpdateSaleOutCostCounter > 0)
+                    {
+
+                    }
 
                     #region 回写订单状态及明细数据
 
@@ -258,7 +276,10 @@ namespace RUINORERP.Business
                     {
                         //如果当前订单明细行，不存在于出库明细行。直接跳过。这种就是多行多品被删除时。不需要比较
                         decimal saleOutDetailCost = 0;
-                        var saleOutDetail = detailList.Where(c => c.ProdDetailID == entity.tb_saleorder.tb_SaleOrderDetails[i].ProdDetailID).FirstOrDefault();
+                        var saleOutDetail = detailList
+                            .Where(c => c.ProdDetailID == entity.tb_saleorder.tb_SaleOrderDetails[i].ProdDetailID
+                        && c.Location_ID == entity.tb_saleorder.tb_SaleOrderDetails[i].Location_ID
+                        ).FirstOrDefault();
                         if (saleOutDetail != null)
                         {
                             saleOutDetailCost = saleOutDetail.Cost;
@@ -282,7 +303,10 @@ namespace RUINORERP.Business
                             }
                             #endregion
 
-                            var inQty = detailList.Where(c => c.ProdDetailID == entity.tb_saleorder.tb_SaleOrderDetails[i].ProdDetailID && c.SaleOrderDetail_ID == entity.tb_saleorder.tb_SaleOrderDetails[i].SaleOrderDetail_ID).Sum(c => c.Quantity);
+                            var inQty = detailList.Where(c => c.ProdDetailID == entity.tb_saleorder.tb_SaleOrderDetails[i].ProdDetailID
+                            && c.SaleOrderDetail_ID == entity.tb_saleorder.tb_SaleOrderDetails[i].SaleOrderDetail_ID
+                              && c.Location_ID == entity.tb_saleorder.tb_SaleOrderDetails[i].Location_ID
+                            ).Sum(c => c.Quantity);
 
                             if (inQty > entity.tb_saleorder.tb_SaleOrderDetails[i].Quantity)
                             {
@@ -295,7 +319,11 @@ namespace RUINORERP.Business
                             }
                             else
                             {
-                                var RowQty = entity.tb_SaleOutDetails.Where(c => c.ProdDetailID == entity.tb_saleorder.tb_SaleOrderDetails[i].ProdDetailID && c.SaleOrderDetail_ID == entity.tb_saleorder.tb_SaleOrderDetails[i].SaleOrderDetail_ID).Sum(c => c.Quantity);
+                                var RowQty = entity.tb_SaleOutDetails
+                                    .Where(c => c.ProdDetailID == entity.tb_saleorder.tb_SaleOrderDetails[i].ProdDetailID
+                                    && c.SaleOrderDetail_ID == entity.tb_saleorder.tb_SaleOrderDetails[i].SaleOrderDetail_ID
+                                    && c.Location_ID == entity.tb_saleorder.tb_SaleOrderDetails[i].Location_ID
+                                    ).Sum(c => c.Quantity);
                                 //算出交付的数量
                                 entity.tb_saleorder.tb_SaleOrderDetails[i].TotalDeliveredQty += RowQty;
 
@@ -305,19 +333,23 @@ namespace RUINORERP.Business
                                     entity.tb_saleorder.tb_SaleOrderDetails[i].Cost = saleOutDetailCost;
                                     entity.tb_saleorder.tb_SaleOrderDetails[i].SubtotalCostAmount = saleOutDetailCost * entity.tb_saleorder.tb_SaleOrderDetails[i].Quantity;
                                 }
+
                                 //如果已交数据大于 订单数量 给出警告实际操作中 使用其他方式将备品入库
                                 if (entity.tb_saleorder.tb_SaleOrderDetails[i].TotalDeliveredQty > entity.tb_saleorder.tb_SaleOrderDetails[i].Quantity)
                                 {
                                     _unitOfWorkManage.RollbackTran();
-                                    throw new Exception($"销售出库单：{entity.SaleOutNo}审核时，对应的订单：{entity.tb_saleorder.SOrderNo}，入库总数量不能大于订单数量！");
+                                    string msg = $"销售出库单：{entity.SaleOutNo}审核时，对应的订单：{entity.tb_saleorder.SOrderNo}，入库总数量不能大于订单数量！";
+                                    return rrs;
+
                                 }
                             }
                         }
                         else
                         {
                             //一对一时，找到所有的出库明细数量总和
-                            var inQty = detailList.Where(c => c.ProdDetailID == entity.tb_saleorder.tb_SaleOrderDetails[i].ProdDetailID).Sum(c => c.Quantity);
-
+                            var inQty = detailList.Where(c => c.ProdDetailID == entity.tb_saleorder.tb_SaleOrderDetails[i].ProdDetailID
+                            && c.Location_ID == entity.tb_saleorder.tb_SaleOrderDetails[i].Location_ID
+                            ).Sum(c => c.Quantity);
                             if (inQty > entity.tb_saleorder.tb_SaleOrderDetails[i].Quantity)
                             {
 
@@ -331,7 +363,9 @@ namespace RUINORERP.Business
                             else
                             {
                                 //当前行累计到交付，只能是当前行所以重新找到当前出库单明细的的数量
-                                var RowQty = entity.tb_SaleOutDetails.Where(c => c.ProdDetailID == entity.tb_saleorder.tb_SaleOrderDetails[i].ProdDetailID).Sum(c => c.Quantity);
+                                var RowQty = entity.tb_SaleOutDetails.Where(c => c.ProdDetailID == entity.tb_saleorder.tb_SaleOrderDetails[i].ProdDetailID
+                                && c.Location_ID == entity.tb_saleorder.tb_SaleOrderDetails[i].Location_ID
+                                ).Sum(c => c.Quantity);
                                 entity.tb_saleorder.tb_SaleOrderDetails[i].TotalDeliveredQty += RowQty;
 
                                 //如果是业务员在没有成本数据（新品口头上问了采购）就录入了订单。后面入库后销售出库时成本是正确时。要更新回去
@@ -345,7 +379,9 @@ namespace RUINORERP.Business
                                 if (entity.tb_saleorder.tb_SaleOrderDetails[i].TotalDeliveredQty > entity.tb_saleorder.tb_SaleOrderDetails[i].Quantity)
                                 {
                                     _unitOfWorkManage.RollbackTran();
-                                    throw new Exception($"销售出库单：{entity.SaleOutNo}审核时，【{prodName}】的出库总数量不能大于订单数量！");
+                                    string msg = $"销售出库单：{entity.SaleOutNo}审核时，【{prodName}】的出库总数量不能大于订单数量！";
+                                    return rrs;
+
                                 }
                             }
                         }
@@ -355,7 +391,8 @@ namespace RUINORERP.Business
                     if (entity.tb_saleorder.tb_SaleOrderDetails.Sum(c => c.TotalDeliveredQty) > entity.tb_saleorder.TotalQty)
                     {
                         _unitOfWorkManage.RollbackTran();
-                        throw new Exception($"销售订单：{entity.tb_saleorder.SOrderNo}中，出库总交付数量不能大于订单数量！");
+                        string msg = $"销售订单：{entity.tb_saleorder.SOrderNo}中，出库总交付数量不能大于订单数量！";
+                        return rrs;
                     }
 
                     //更新已交数量
@@ -437,11 +474,11 @@ namespace RUINORERP.Business
 
                     //销售出库单，如果来自于销售订单，则要把出库数量累加到订单中的已交数量 并且如果数量够则自动结案
                     if (entity.tb_saleorder != null && entity.tb_saleorder.tb_SaleOrderDetails.Sum(c => c.TotalDeliveredQty) == entity.tb_saleorder.tb_SaleOrderDetails.Sum(c => c.Quantity)
-                        && entity.tb_saleorder.DataStatus==(int)DataStatus.确认)
+                        && entity.tb_saleorder.DataStatus == (int)DataStatus.确认)
                     {
                         entity.tb_saleorder.DataStatus = (int)DataStatus.完结;
                         entity.tb_saleorder.CloseCaseOpinions = "【系统自动结案】==》" + System.DateTime.Now.ToString() + _appContext.CurUserInfo.UserInfo.tb_employee.Employee_Name + "审核销售库单时:" + entity.SaleOutNo + "结案。"; ;
-                        entity.tb_saleorder.TotalCost = entity.tb_SaleOutDetails.Sum(c => (c.Cost+c.CustomizedCost) * c.Quantity);
+                        entity.tb_saleorder.TotalCost = entity.tb_SaleOutDetails.Sum(c => (c.Cost + c.CustomizedCost) * c.Quantity);
                         await _unitOfWorkManage.GetDbClient().Updateable(entity.tb_saleorder).UpdateColumns(t => new { t.DataStatus, t.CloseCaseOpinions, entity.tb_saleorder.TotalCost }).ExecuteCommandAsync();
                     }
 
@@ -600,7 +637,10 @@ namespace RUINORERP.Business
                         }
                         #endregion
 
-                        var inQty = detailList.Where(c => c.ProdDetailID == entity.tb_saleorder.tb_SaleOrderDetails[i].ProdDetailID && c.SaleOrderDetail_ID == entity.tb_saleorder.tb_SaleOrderDetails[i].SaleOrderDetail_ID).Sum(c => c.Quantity);
+                        var inQty = detailList.Where(c => c.ProdDetailID == entity.tb_saleorder.tb_SaleOrderDetails[i].ProdDetailID
+                        && c.SaleOrderDetail_ID == entity.tb_saleorder.tb_SaleOrderDetails[i].SaleOrderDetail_ID
+                         && c.Location_ID == entity.tb_saleorder.tb_SaleOrderDetails[i].Location_ID
+                        ).Sum(c => c.Quantity);
                         if (inQty > entity.tb_saleorder.tb_SaleOrderDetails[i].Quantity)
                         {
                             string msg = $"销售订单:{entity.tb_saleorder.SOrderNo}的【{prodName}】的出库数量不能大于订单中对应行的数量，审核失败！";
@@ -612,7 +652,9 @@ namespace RUINORERP.Business
                         else
                         {
                             var RowQty = entity.tb_SaleOutDetails.Where(c => c.ProdDetailID == entity.tb_saleorder.tb_SaleOrderDetails[i].ProdDetailID
-                            && c.SaleOrderDetail_ID == entity.tb_saleorder.tb_SaleOrderDetails[i].SaleOrderDetail_ID).Sum(c => c.Quantity);
+                            && c.SaleOrderDetail_ID == entity.tb_saleorder.tb_SaleOrderDetails[i].SaleOrderDetail_ID
+                              && c.Location_ID == entity.tb_saleorder.tb_SaleOrderDetails[i].Location_ID
+                            ).Sum(c => c.Quantity);
                             //算出交付的数量
                             entity.tb_saleorder.tb_SaleOrderDetails[i].TotalDeliveredQty -= RowQty;
                             //如果已交数据大于 订单数量 给出警告实际操作中 使用其他方式将备品入库
@@ -626,7 +668,9 @@ namespace RUINORERP.Business
                     else
                     {
                         //一对一时
-                        var inQty = detailList.Where(c => c.ProdDetailID == entity.tb_saleorder.tb_SaleOrderDetails[i].ProdDetailID).Sum(c => c.Quantity);
+                        var inQty = detailList.Where(c => c.ProdDetailID == entity.tb_saleorder.tb_SaleOrderDetails[i].ProdDetailID
+                        && c.Location_ID == entity.tb_saleorder.tb_SaleOrderDetails[i].Location_ID
+                        ).Sum(c => c.Quantity);
                         if (inQty > entity.tb_saleorder.tb_SaleOrderDetails[i].Quantity)
                         {
 
@@ -639,7 +683,10 @@ namespace RUINORERP.Business
                         else
                         {
                             //当前行累计到交付
-                            var RowQty = entity.tb_SaleOutDetails.Where(c => c.ProdDetailID == entity.tb_saleorder.tb_SaleOrderDetails[i].ProdDetailID).Sum(c => c.Quantity);
+                            var RowQty = entity.tb_SaleOutDetails
+                                .Where(c => c.ProdDetailID == entity.tb_saleorder.tb_SaleOrderDetails[i].ProdDetailID
+                                && c.Location_ID == entity.tb_saleorder.tb_SaleOrderDetails[i].Location_ID
+                                ).Sum(c => c.Quantity);
                             entity.tb_saleorder.tb_SaleOrderDetails[i].TotalDeliveredQty -= RowQty;
                             //如果已交数据大于 订单数量 给出警告实际操作中 使用其他方式将备品入库
                             if (entity.tb_saleorder.tb_SaleOrderDetails[i].TotalDeliveredQty < 0)

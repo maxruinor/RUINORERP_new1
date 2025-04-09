@@ -158,7 +158,8 @@ namespace RUINORERP.Business
 
                             foreach (var child in entity.tb_PurOrderDetails)
                             {
-                                var buyItem = buyingRequisition.tb_BuyingRequisitionDetails.FirstOrDefault(c => c.ProdDetailID == child.ProdDetailID);
+                                var buyItem = buyingRequisition.tb_BuyingRequisitionDetails
+                                    .FirstOrDefault(c => c.ProdDetailID == child.ProdDetailID );
                                 if (buyItem != null)//为空则是买的东西不在请购单明细中。
                                 {
                                     buyItem.Purchased = true;
@@ -265,7 +266,8 @@ namespace RUINORERP.Business
 
                             foreach (var child in entity.tb_PurOrderDetails)
                             {
-                                var buyItem = buyingRequisition.tb_BuyingRequisitionDetails.FirstOrDefault(c => c.ProdDetailID == child.ProdDetailID);
+                                var buyItem = buyingRequisition.tb_BuyingRequisitionDetails
+                                    .FirstOrDefault(c => c.ProdDetailID == child.ProdDetailID );
                                 buyItem.Purchased = false;
                             }
 

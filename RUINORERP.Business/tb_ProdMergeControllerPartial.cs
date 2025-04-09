@@ -312,9 +312,6 @@ namespace RUINORERP.Business
 
         public async override Task<List<T>> GetPrintDataSource(long ID)
         {
-            // var queryable = _appContext.Db.Queryable<tb_SaleOutDetail>();
-            // var list = _appContext.Db.Queryable(queryable).LeftJoin<View_ProdDetail>((o, d) => o.ProdDetailID == d.ProdDetailID).Select(o => o).ToList();
-
             List<tb_ProdMerge> list = await _appContext.Db.CopyNew().Queryable<tb_ProdMerge>().Where(m => m.MergeID == ID)
                              .Includes(a => a.tb_bom_s)
                             .Includes(a => a.tb_employee)

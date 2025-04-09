@@ -142,7 +142,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
                         var ProductionPlan = PURList.FirstOrDefault(p => p.PPNo == PPNo);
                         item.Tag = ProductionPlan;
                         item.Cells[0].Tag = "PPNo";
-                        
+
                         item.Cells[6].Value = "计划";
                         double processBarValue = 0d;
                         if (ProductionPlan.TotalQuantity == 0)
@@ -181,7 +181,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
                                 productType = UIBizSrvice.GetProdDetail<tb_ProductType>(prodDetail.Type_ID.Value);
                             }
                             project += $"{productType.TypeName}:{prodDetail.CNName}-{prodDetail.prop}" + ";";
-                            
+
                             //子级
                             KryptonTreeGridNodeRow PlanDetailsubrow = item.Nodes.Add(prodDetail.SKU);
                             PlanDetailsubrow.Cells[0].Tag = "PPNo";//保存列名 值对象=》tag(如果是明细则指向主表) 的列名。比方值是编号：则是PPNo
@@ -199,7 +199,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
                             {
                                 foreach (tb_ProductionDemand demand in demandList)
                                 {
-                                    foreach (tb_ProduceGoodsRecommendDetail ProduceDetail in demand.tb_ProduceGoodsRecommendDetails.Where(c => c.ProdDetailID == PlanDetail.ProdDetailID))
+                                    foreach (tb_ProduceGoodsRecommendDetail ProduceDetail in demand.tb_ProduceGoodsRecommendDetails.Where(c => c.ProdDetailID == PlanDetail.ProdDetailID && c.Location_ID == PlanDetail.Location_ID))
                                     {
                                         //子级
                                         KryptonTreeGridNodeRow ProduceDetailrow = PlanDetailsubrow.Nodes.Add(demand.PDNo.ToString());

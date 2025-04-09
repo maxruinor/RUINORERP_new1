@@ -753,7 +753,8 @@ namespace RUINORERP.UI.PSI.INV
                         {
                             tb_ProdMergeDetail bOM_SDetail = mapper.Map<tb_ProdMergeDetail>(item);
                             bOM_SDetail.Location_ID = EditEntity.Location_ID;
-                            bOM_SDetail.Qty = (RowDetails.FirstOrDefault(c => c.ProdDetailID == bOM_SDetail.ProdDetailID).UsedQty * EditEntity.MergeTargetQty).ToInt();
+                            bOM_SDetail.Qty = (RowDetails.FirstOrDefault(c => c.ProdDetailID == bOM_SDetail.ProdDetailID
+                            ).UsedQty * EditEntity.MergeTargetQty).ToInt();
                             details.Add(bOM_SDetail);
                         }
                         EditEntity.tb_ProdMergeDetails = details;

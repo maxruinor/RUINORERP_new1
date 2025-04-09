@@ -29,8 +29,11 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            RUINORERP.Global.Model.DataRowImage dataRowImage1 = new RUINORERP.Global.Model.DataRowImage();
+            RUINORERP.Global.Model.DataRowImage dataRowImage2 = new RUINORERP.Global.Model.DataRowImage();
             this.kryptonSplitContainer1 = new Krypton.Toolkit.KryptonSplitContainer();
+            this.txtCloseCaseOpinions = new Krypton.Toolkit.KryptonTextBox();
+            this.kryptonLabel2 = new Krypton.Toolkit.KryptonLabel();
+            this.magicPictureBox1 = new RUINOR.WinFormsUI.CustomPictureBox.MagicPictureBox();
             this.kryptonGroupBox4 = new Krypton.Toolkit.KryptonGroupBox();
             this.rdb支出 = new RUINORERP.UI.UControls.RadioButtonBind();
             this.rdb收入 = new RUINORERP.UI.UControls.RadioButtonBind();
@@ -39,8 +42,6 @@
             this.chkIncludeTax = new Krypton.Toolkit.KryptonCheckBox();
             this.lblTaxAmount = new Krypton.Toolkit.KryptonLabel();
             this.txtTaxAmount = new Krypton.Toolkit.KryptonTextBox();
-            this.lblTaxRate = new Krypton.Toolkit.KryptonLabel();
-            this.txtTaxRate = new Krypton.Toolkit.KryptonTextBox();
             this.lblUntaxedAmount = new Krypton.Toolkit.KryptonLabel();
             this.txtUntaxedAmount = new Krypton.Toolkit.KryptonTextBox();
             this.lblExpenseNo = new Krypton.Toolkit.KryptonLabel();
@@ -62,9 +63,6 @@
             this.lbl盘点单 = new Krypton.Toolkit.KryptonLabel();
             this.kryptonSplitContainer2 = new Krypton.Toolkit.KryptonSplitContainer();
             this.grid1 = new SourceGrid.Grid();
-            this.txtCloseCaseOpinions = new Krypton.Toolkit.KryptonTextBox();
-            this.kryptonLabel2 = new Krypton.Toolkit.KryptonLabel();
-            this.magicPictureBox1 = new RUINOR.WinFormsUI.CustomPictureBox.MagicPictureBox();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceSub)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1)).BeginInit();
@@ -73,6 +71,7 @@
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1.Panel2)).BeginInit();
             this.kryptonSplitContainer1.Panel2.SuspendLayout();
             this.kryptonSplitContainer1.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.magicPictureBox1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonGroupBox4)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonGroupBox4.Panel)).BeginInit();
             this.kryptonGroupBox4.Panel.SuspendLayout();
@@ -83,7 +82,6 @@
             this.kryptonSplitContainer2.Panel1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer2.Panel2)).BeginInit();
             this.kryptonSplitContainer2.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.magicPictureBox1)).BeginInit();
             this.SuspendLayout();
             // 
             // kryptonSplitContainer1
@@ -105,8 +103,6 @@
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.chkIncludeTax);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.lblTaxAmount);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.txtTaxAmount);
-            this.kryptonSplitContainer1.Panel1.Controls.Add(this.lblTaxRate);
-            this.kryptonSplitContainer1.Panel1.Controls.Add(this.txtTaxRate);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.lblUntaxedAmount);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.txtUntaxedAmount);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.lblExpenseNo);
@@ -133,6 +129,41 @@
             this.kryptonSplitContainer1.Size = new System.Drawing.Size(1133, 746);
             this.kryptonSplitContainer1.SplitterDistance = 197;
             this.kryptonSplitContainer1.TabIndex = 4;
+            // 
+            // txtCloseCaseOpinions
+            // 
+            this.txtCloseCaseOpinions.Location = new System.Drawing.Point(885, 126);
+            this.txtCloseCaseOpinions.Multiline = true;
+            this.txtCloseCaseOpinions.Name = "txtCloseCaseOpinions";
+            this.txtCloseCaseOpinions.Size = new System.Drawing.Size(131, 50);
+            this.txtCloseCaseOpinions.TabIndex = 167;
+            // 
+            // kryptonLabel2
+            // 
+            this.kryptonLabel2.Location = new System.Drawing.Point(816, 126);
+            this.kryptonLabel2.Name = "kryptonLabel2";
+            this.kryptonLabel2.Size = new System.Drawing.Size(62, 20);
+            this.kryptonLabel2.TabIndex = 166;
+            this.kryptonLabel2.Values.Text = "结案意见";
+            // 
+            // magicPictureBox1
+            // 
+            this.magicPictureBox1.AllowDrop = true;
+            this.magicPictureBox1.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.magicPictureBox1.Location = new System.Drawing.Point(1022, 123);
+            this.magicPictureBox1.Name = "magicPictureBox1";
+            dataRowImage2.Dir = null;
+            dataRowImage2.image = null;
+            dataRowImage2.ImageBase64 = null;
+            dataRowImage2.ImageBytes = null;
+            dataRowImage2.ImageFullName = null;
+            dataRowImage2.newhash = null;
+            dataRowImage2.oldhash = null;
+            dataRowImage2.realName = null;
+            this.magicPictureBox1.RowImage = dataRowImage2;
+            this.magicPictureBox1.Size = new System.Drawing.Size(108, 68);
+            this.magicPictureBox1.TabIndex = 168;
+            this.magicPictureBox1.TabStop = false;
             // 
             // kryptonGroupBox4
             // 
@@ -191,11 +222,11 @@
             // 
             // lblTaxAmount
             // 
-            this.lblTaxAmount.Location = new System.Drawing.Point(605, 69);
+            this.lblTaxAmount.Location = new System.Drawing.Point(591, 70);
             this.lblTaxAmount.Name = "lblTaxAmount";
-            this.lblTaxAmount.Size = new System.Drawing.Size(36, 20);
+            this.lblTaxAmount.Size = new System.Drawing.Size(49, 20);
             this.lblTaxAmount.TabIndex = 145;
-            this.lblTaxAmount.Values.Text = "税额";
+            this.lblTaxAmount.Values.Text = "总税额";
             // 
             // txtTaxAmount
             // 
@@ -203,21 +234,6 @@
             this.txtTaxAmount.Name = "txtTaxAmount";
             this.txtTaxAmount.Size = new System.Drawing.Size(146, 23);
             this.txtTaxAmount.TabIndex = 146;
-            // 
-            // lblTaxRate
-            // 
-            this.lblTaxRate.Location = new System.Drawing.Point(605, 94);
-            this.lblTaxRate.Name = "lblTaxRate";
-            this.lblTaxRate.Size = new System.Drawing.Size(36, 20);
-            this.lblTaxRate.TabIndex = 147;
-            this.lblTaxRate.Values.Text = "税率";
-            // 
-            // txtTaxRate
-            // 
-            this.txtTaxRate.Location = new System.Drawing.Point(646, 94);
-            this.txtTaxRate.Name = "txtTaxRate";
-            this.txtTaxRate.Size = new System.Drawing.Size(146, 23);
-            this.txtTaxRate.TabIndex = 148;
             // 
             // lblUntaxedAmount
             // 
@@ -403,40 +419,6 @@
             this.grid1.TabStop = true;
             this.grid1.ToolTipText = "";
             // 
-            // txtCloseCaseOpinions
-            // 
-            this.txtCloseCaseOpinions.Location = new System.Drawing.Point(885, 126);
-            this.txtCloseCaseOpinions.Multiline = true;
-            this.txtCloseCaseOpinions.Name = "txtCloseCaseOpinions";
-            this.txtCloseCaseOpinions.Size = new System.Drawing.Size(131, 50);
-            this.txtCloseCaseOpinions.TabIndex = 167;
-            // 
-            // kryptonLabel2
-            // 
-            this.kryptonLabel2.Location = new System.Drawing.Point(816, 126);
-            this.kryptonLabel2.Name = "kryptonLabel2";
-            this.kryptonLabel2.Size = new System.Drawing.Size(62, 20);
-            this.kryptonLabel2.TabIndex = 166;
-            this.kryptonLabel2.Values.Text = "结案意见";
-            // 
-            // magicPictureBox1
-            // 
-            this.magicPictureBox1.AllowDrop = true;
-            this.magicPictureBox1.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.magicPictureBox1.Location = new System.Drawing.Point(1022, 123);
-            this.magicPictureBox1.Name = "magicPictureBox1";
-            dataRowImage1.Dir = null;
-            dataRowImage1.image = null;
-            dataRowImage1.ImageBytes = null;
-            dataRowImage1.ImageFullName = null;
-            dataRowImage1.newhash = null;
-            dataRowImage1.oldhash = null;
-            dataRowImage1.realName = null;
-            this.magicPictureBox1.RowImage = dataRowImage1;
-            this.magicPictureBox1.Size = new System.Drawing.Size(108, 68);
-            this.magicPictureBox1.TabIndex = 168;
-            this.magicPictureBox1.TabStop = false;
-            // 
             // UCOtherExpenseINC
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
@@ -455,6 +437,7 @@
             this.kryptonSplitContainer1.Panel2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1)).EndInit();
             this.kryptonSplitContainer1.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.magicPictureBox1)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonGroupBox4.Panel)).EndInit();
             this.kryptonGroupBox4.Panel.ResumeLayout(false);
             this.kryptonGroupBox4.Panel.PerformLayout();
@@ -466,7 +449,6 @@
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer2.Panel2)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer2)).EndInit();
             this.kryptonSplitContainer2.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.magicPictureBox1)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -499,8 +481,6 @@
         private Krypton.Toolkit.KryptonCheckBox chkIncludeTax;
         private Krypton.Toolkit.KryptonLabel lblTaxAmount;
         private Krypton.Toolkit.KryptonTextBox txtTaxAmount;
-        private Krypton.Toolkit.KryptonLabel lblTaxRate;
-        private Krypton.Toolkit.KryptonTextBox txtTaxRate;
         private Krypton.Toolkit.KryptonLabel lblUntaxedAmount;
         private Krypton.Toolkit.KryptonTextBox txtUntaxedAmount;
         private Krypton.Toolkit.KryptonGroupBox kryptonGroupBox4;

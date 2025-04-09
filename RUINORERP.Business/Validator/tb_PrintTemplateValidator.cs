@@ -7,7 +7,7 @@
 // 时间：12/18/2024 17:45:29
 // **************************************
 using System;
-﻿using SqlSugar;
+using SqlSugar;
 using System.Collections.Generic;
 using RUINORERP.Model;
 using FluentValidation;
@@ -24,64 +24,53 @@ namespace RUINORERP.Business
     /// 打印模板验证类
     /// </summary>
     /*public partial class tb_PrintTemplateValidator:AbstractValidator<tb_PrintTemplate>*/
-    public partial class tb_PrintTemplateValidator:BaseValidatorGeneric<tb_PrintTemplate>
+    public partial class tb_PrintTemplateValidator : BaseValidatorGeneric<tb_PrintTemplate>
     {
-     
-     //配置全局参数
-     public readonly IOptionsMonitor<GlobalValidatorConfig> ValidatorConfig;
-    
-     public tb_PrintTemplateValidator(IOptionsMonitor<GlobalValidatorConfig> config)
-     {
-     
-        ValidatorConfig = config;
-        
- 
-        
-     
- RuleFor(tb_PrintTemplate =>tb_PrintTemplate.PrintConfigID).Must(CheckForeignKeyValueCanNull).WithMessage(":下拉选择值不正确。");
- RuleFor(tb_PrintTemplate =>tb_PrintTemplate.PrintConfigID).NotEmpty().When(x => x.PrintConfigID.HasValue);
 
- RuleFor(tb_PrintTemplate =>tb_PrintTemplate.Template_Name).MaximumLength(50).WithMessage("模板名称:不能超过最大长度,50.");
+        //配置全局参数
+        public readonly IOptionsMonitor<GlobalValidatorConfig> ValidatorConfig;
 
- RuleFor(tb_PrintTemplate =>tb_PrintTemplate.BizType).NotEmpty().When(x => x.BizType.HasValue);
-
- RuleFor(tb_PrintTemplate =>tb_PrintTemplate.BizName).MaximumLength(15).WithMessage("业务名称:不能超过最大长度,15.");
-
- RuleFor(tb_PrintTemplate =>tb_PrintTemplate.Templatet_Path).MaximumLength(100).WithMessage("模板路径:不能超过最大长度,100.");
-
- RuleFor(tb_PrintTemplate =>tb_PrintTemplate.Template_DataSource).MaximumLength(100).WithMessage("模板数据源:不能超过最大长度,100.");
-
- RuleFor(tb_PrintTemplate =>tb_PrintTemplate.TemplateFileData).NotEmpty().WithMessage("模板文件数据:不能为空。");
-
-
-
-
- RuleFor(tb_PrintTemplate =>tb_PrintTemplate.Created_by).NotEmpty().When(x => x.Created_by.HasValue);
-
-
- RuleFor(tb_PrintTemplate =>tb_PrintTemplate.Modified_by).NotEmpty().When(x => x.Modified_by.HasValue);
-
-
-           	        Initialize();
-     }
-
-
-
-
-
-
-
-    
-          private bool CheckForeignKeyValue(long ForeignKeyID)
+        public tb_PrintTemplateValidator(IOptionsMonitor<GlobalValidatorConfig> config)
         {
-            bool rs = true;    
+
+            ValidatorConfig = config;
+
+
+
+
+            RuleFor(tb_PrintTemplate => tb_PrintTemplate.PrintConfigID).Must(CheckForeignKeyValueCanNull).WithMessage(":下拉选择值不正确。");
+            RuleFor(tb_PrintTemplate => tb_PrintTemplate.PrintConfigID).NotEmpty().When(x => x.PrintConfigID.HasValue);
+
+            RuleFor(tb_PrintTemplate => tb_PrintTemplate.Template_Name).MaximumLength(50).WithMessage("模板名称:不能超过最大长度,50.");
+
+            RuleFor(tb_PrintTemplate => tb_PrintTemplate.BizType).NotEmpty().When(x => x.BizType.HasValue);
+            RuleFor(tb_PrintTemplate => tb_PrintTemplate.BizName).MaximumLength(15).WithMessage("业务名称:不能超过最大长度,15.");
+
+            RuleFor(tb_PrintTemplate => tb_PrintTemplate.Created_by).NotEmpty().When(x => x.Created_by.HasValue);
+
+            RuleFor(tb_PrintTemplate => tb_PrintTemplate.Modified_by).NotEmpty().When(x => x.Modified_by.HasValue);
+
+
+            Initialize();
+        }
+
+
+
+
+
+
+
+
+        private bool CheckForeignKeyValue(long ForeignKeyID)
+        {
+            bool rs = true;
             if (ForeignKeyID == 0 || ForeignKeyID == -1)
             {
                 return false;
             }
             return rs;
         }
-        
+
         private bool CheckForeignKeyValueCanNull(long? ForeignKeyID)
         {
             bool rs = true;
@@ -93,9 +82,9 @@ namespace RUINORERP.Business
                 }
             }
             return rs;
-        
+
+        }
     }
-}
 
 }
 

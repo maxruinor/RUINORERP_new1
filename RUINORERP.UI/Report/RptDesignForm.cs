@@ -16,6 +16,7 @@ using FastReport.Data;
 using FastReport;
 using RUINORERP.Model;
 using FastReport.Web;
+using RUINORERP.Business;
 
 namespace RUINORERP.UI.Report
 {
@@ -387,6 +388,7 @@ namespace RUINORERP.UI.Report
                     }
                     flag = pt.TemplateFileStream.Length;
                     pt.ActionStatus = ActionStatus.加载;
+                    BusinessHelper.Instance.EditEntity(pt);
                     return;
                     if (1 == 2)
                     {
@@ -460,13 +462,32 @@ namespace RUINORERP.UI.Report
             //报表控件注册数据
             TargetReport.RegisterData(currUserInfos, "currUserInfo");
             TargetReport.RegisterData(companyInfos, "companyInfo");
+            if (this.InvokeRequired)
+            {
+                this.Invoke(new Action(() =>
+                {
+                    // 在这里更新 UI
+                    designerControl1.Report = TargetReport;
+                    designerControl1.ShowMainMenu = true;
+                    // restore the design layout. Without this code, the designer tool windows will be unavailable
+                    designerControl1.UIStyle = FastReport.Utils.UIStyle.Office2010Blue;
+                    designerControl1.RefreshLayout();
+                    this.Text = "ERP系统-打印设计器----------" + printTemplate.Template_Name;// + string.Format("ReportTemplate\\{0}", ReportTemplateFile);
 
-            designerControl1.Report = TargetReport;
-            designerControl1.ShowMainMenu = true;
-            // restore the design layout. Without this code, the designer tool windows will be unavailable
-            designerControl1.UIStyle = FastReport.Utils.UIStyle.Office2010Blue;
-            designerControl1.RefreshLayout();
-            this.Text = "ERP系统-打印设计器----------" + printTemplate.Template_Name;// + string.Format("ReportTemplate\\{0}", ReportTemplateFile);
+
+                }));
+            }
+            else
+            {
+                // 直接更新 UI
+                designerControl1.Report = TargetReport;
+                designerControl1.ShowMainMenu = true;
+                // restore the design layout. Without this code, the designer tool windows will be unavailable
+                designerControl1.UIStyle = FastReport.Utils.UIStyle.Office2010Blue;
+                designerControl1.RefreshLayout();
+                this.Text = "ERP系统-打印设计器----------" + printTemplate.Template_Name;// + string.Format("ReportTemplate\\{0}", ReportTemplateFile);
+
+            }
 
 
 

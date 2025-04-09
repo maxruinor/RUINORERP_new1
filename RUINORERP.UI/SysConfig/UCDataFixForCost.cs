@@ -1203,7 +1203,7 @@ namespace RUINORERP.UI.SysConfig
                                 .Includes(b => b.tb_bom_s, c => c.tb_BOM_SDetails)
                                 .Includes(a => a.tb_ManufacturingOrderDetails)
 
-                                .Where(a => a.tb_ManufacturingOrderDetails.Any(c => c.ProdDetailID == child.ProdDetailID)).ToList();
+                                .Where(a => a.tb_ManufacturingOrderDetails.Any(c => c.ProdDetailID == child.ProdDetailID && c.Location_ID==child.Location_ID)).ToList();
 
 
                                     var distinctMObills = MOs
@@ -1448,7 +1448,7 @@ namespace RUINORERP.UI.SysConfig
                                     .Includes(a => a.tb_SaleOutDetails)
                                     .Includes(c => c.tb_SaleOutRes, d => d.tb_SaleOutReDetails)
                                     .WhereIF(rdb时间区间.Checked, a => a.OutDate >= ucAdvDateTimerPickerGroup1.dtp1.Value && a.OutDate <= ucAdvDateTimerPickerGroup1.dtp2.Value)
-                                    .Where(a => a.tb_SaleOutDetails.Any(c => c.ProdDetailID == child.ProdDetailID)).ToList();
+                                    .Where(a => a.tb_SaleOutDetails.Any(c => c.ProdDetailID == child.ProdDetailID && c.Location_ID == child.Location_ID)).ToList();
 
                                     var distinctSoutOrders = SOutorders
                                     .GroupBy(o => o.SaleOut_MainID)
@@ -1720,7 +1720,7 @@ namespace RUINORERP.UI.SysConfig
                                     .InnerJoin<tb_FinishedGoodsInvDetail>((a, b) => a.FG_ID == b.FG_ID)
                                     .Includes(a => a.tb_FinishedGoodsInvDetails, b => b.tb_proddetail, c => c.tb_Inventories)
                                     .WhereIF(rdb时间区间.Checked, a => a.DeliveryDate >= ucAdvDateTimerPickerGroup1.dtp1.Value && a.DeliveryDate <= ucAdvDateTimerPickerGroup1.dtp2.Value)
-                                    .Where(a => a.tb_FinishedGoodsInvDetails.Any(c => c.ProdDetailID == child.ProdDetailID)).ToList();
+                                    .Where(a => a.tb_FinishedGoodsInvDetails.Any(c => c.ProdDetailID == child.ProdDetailID && c.Location_ID == child.Location_ID)).ToList();
 
                                     var distinctbills = orders
                                     .GroupBy(o => o.FG_ID)
@@ -1894,7 +1894,7 @@ namespace RUINORERP.UI.SysConfig
                                    .Includes(a => a.tb_ProdBorrowingDetails)
                                    .Includes(a => a.tb_ProdReturnings, c => c.tb_ProdReturningDetails)
                                  .WhereIF(rdb时间区间.Checked, a => a.Out_date >= ucAdvDateTimerPickerGroup1.dtp1.Value && a.Out_date <= ucAdvDateTimerPickerGroup1.dtp2.Value)
-                                   .Where(a => a.tb_ProdBorrowingDetails.Any(c => c.ProdDetailID == child.ProdDetailID)).ToList();
+                                   .Where(a => a.tb_ProdBorrowingDetails.Any(c => c.ProdDetailID == child.ProdDetailID && c.Location_ID == child.Location_ID)).ToList();
 
                                     var distinctBRbills = Brorders
                                     .GroupBy(o => o.BorrowID)
@@ -2053,7 +2053,7 @@ namespace RUINORERP.UI.SysConfig
                                         .InnerJoin<tb_StockOutDetail>((a, b) => a.MainID == b.MainID)
                                         .Includes(a => a.tb_StockOutDetails)
                                       .WhereIF(rdb时间区间.Checked, a => a.Bill_Date >= ucAdvDateTimerPickerGroup1.dtp1.Value && a.Bill_Date <= ucAdvDateTimerPickerGroup1.dtp2.Value)
-                                        .Where(a => a.tb_StockOutDetails.Any(c => c.ProdDetailID == child.ProdDetailID)).ToList();
+                                        .Where(a => a.tb_StockOutDetails.Any(c => c.ProdDetailID == child.ProdDetailID && c.Location_ID == child.Location_ID)).ToList();
 
                                     var distinctStockOutbills = StockOutorders
                                     .GroupBy(o => o.MainID)
@@ -2146,7 +2146,7 @@ namespace RUINORERP.UI.SysConfig
                                   .InnerJoin<tb_MaterialRequisitionDetail>((a, b) => a.MR_ID == b.MR_ID)
                                   .Includes(a => a.tb_MaterialRequisitionDetails)
                                   .WhereIF(rdb时间区间.Checked, a => a.DeliveryDate >= ucAdvDateTimerPickerGroup1.dtp1.Value && a.DeliveryDate <= ucAdvDateTimerPickerGroup1.dtp2.Value)
-                                  .Where(a => a.tb_MaterialRequisitionDetails.Any(c => c.ProdDetailID == child.ProdDetailID)).ToList();
+                                  .Where(a => a.tb_MaterialRequisitionDetails.Any(c => c.ProdDetailID == child.ProdDetailID && c.Location_ID == child.Location_ID)).ToList();
                                     var distinctMRbills = MRorders
                                     .GroupBy(o => o.MR_ID)
                                     .Select(g => g.First())

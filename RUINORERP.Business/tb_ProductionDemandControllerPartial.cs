@@ -1125,7 +1125,7 @@ namespace RUINORERP.Business
             else
             {
                 //BOM不用带仓位
-                long[] _bomIDs = demand.tb_ProduceGoodsRecommendDetails.Where(c => c.BOM_ID.HasValue && MakingItem.ProdDetailID == c.ProdDetailID).ToList().Select(c => c.BOM_ID.Value).ToArray();
+                long[] _bomIDs = demand.tb_ProduceGoodsRecommendDetails.Where(c => c.BOM_ID.HasValue && MakingItem.ProdDetailID == c.ProdDetailID && c.Location_ID == MakingItem.Location_ID).ToList().Select(c => c.BOM_ID.Value).ToArray();
                 MediumBomInfoList = await _appContext.Db.CopyNew().Queryable<tb_BOM_S>()
                     .Includes(a => a.tb_proddetail, b => b.tb_Inventories)
                      .Includes(a => a.tb_BOM_SDetails, b => b.tb_bom_s)
@@ -1152,7 +1152,7 @@ namespace RUINORERP.Business
             if (MakingItem.tb_proddetail == null)
             {
                 var viewdetail = await _appContext.Db.CopyNew().Queryable<tb_ProdDetail>()
-                    .Where(c => c.ProdDetailID == MakingItem.ProdDetailID)
+                    .Where(c => c.ProdDetailID == MakingItem.ProdDetailID )
                     .Includes(c => c.tb_prod)
                     .FirstAsync();
                 MakingItem.tb_proddetail = viewdetail;
@@ -1193,7 +1193,8 @@ namespace RUINORERP.Business
                 ManufacturingOrder.Priority = demand.tb_productionplan.tb_saleorder.OrderPriority;
                 if (demand.tb_productionplan.tb_saleorder.tb_SaleOrderDetails != null)
                 {
-                    tb_SaleOrderDetail saleOrderDetail = demand.tb_productionplan.tb_saleorder.tb_SaleOrderDetails.FirstOrDefault(c => c.ProdDetailID == ManufacturingOrder.ProdDetailID);
+                    tb_SaleOrderDetail saleOrderDetail = demand.tb_productionplan.tb_saleorder.tb_SaleOrderDetails.FirstOrDefault(c => c.ProdDetailID == ManufacturingOrder.ProdDetailID
+                    && c.Location_ID==ManufacturingOrder.Location_ID);
                     if (saleOrderDetail != null)
                     {
                         ManufacturingOrder.CustomerPartNo = saleOrderDetail.CustomerPartNo;

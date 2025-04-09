@@ -74,7 +74,7 @@ namespace RUINORERP.Business
                     {
                         if (CheckMode.期初盘点 != cm)
                         {
-                            View_ProdDetail view_Prod = await _unitOfWorkManage.GetDbClient().Queryable<View_ProdDetail>().Where(c => c.ProdDetailID == child.ProdDetailID).FirstAsync();
+                            View_ProdDetail view_Prod = await _unitOfWorkManage.GetDbClient().Queryable<View_ProdDetail>().Where(c => c.ProdDetailID == child.ProdDetailID  && c.Location_ID==entity.Location_ID).FirstAsync();
                             _unitOfWorkManage.RollbackTran();
                             rmsr.ErrorMsg = $"{view_Prod.SKU}=> {view_Prod.CNName}\r\n当前盘点产品在当前仓库中，无库存数据。请使用【期初盘点】方式盘点。";
                             return rmsr;
@@ -83,7 +83,7 @@ namespace RUINORERP.Business
                         inv = new tb_Inventory();
                         if (child.Cost == 0)
                         {
-                            View_ProdDetail view_Prod = await _unitOfWorkManage.GetDbClient().Queryable<View_ProdDetail>().Where(c => c.ProdDetailID == child.ProdDetailID).FirstAsync();
+                            View_ProdDetail view_Prod = await _unitOfWorkManage.GetDbClient().Queryable<View_ProdDetail>().Where(c => c.ProdDetailID == child.ProdDetailID && c.Location_ID == entity.Location_ID).FirstAsync();
                             _unitOfWorkManage.RollbackTran();
                             rmsr.ErrorMsg = $"{view_Prod.SKU}=> {view_Prod.CNName}\r\n【期初盘点】时，必须输入正确的成本价格。";
                             return rmsr;

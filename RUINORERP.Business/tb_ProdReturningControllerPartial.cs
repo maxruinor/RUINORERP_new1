@@ -86,7 +86,7 @@ namespace RUINORERP.Business
                             {
                                 _logger.LogInformation(rs.ErrorMsg);
                             }
-                       
+
                             return rs;
                         }
                     }
@@ -107,7 +107,9 @@ namespace RUINORERP.Business
                                   entity.tb_prodborrowing.tb_ProdBorrowingDetails[i].tb_proddetail.tb_prod.Specifications;
 
                         //一对一时，找到所有的出库明细数量总和
-                        var inQty = detailList.Where(c => c.ProdDetailID == entity.tb_prodborrowing.tb_ProdBorrowingDetails[i].ProdDetailID).Sum(c => c.Qty);
+                        var inQty = detailList.Where(c => c.ProdDetailID == entity.tb_prodborrowing.tb_ProdBorrowingDetails[i].ProdDetailID
+                        && c.Location_ID == entity.tb_prodborrowing.tb_ProdBorrowingDetails[i].Location_ID
+                        ).Sum(c => c.Qty);
                         if (inQty > entity.tb_prodborrowing.tb_ProdBorrowingDetails[i].Qty)
                         {
 
@@ -121,7 +123,7 @@ namespace RUINORERP.Business
                         else
                         {
                             //当前行累计到交付，只能是当前行所以重新找到当前出库单明细的的数量
-                            var RowQty = entity.tb_ProdReturningDetails.Where(c => c.ProdDetailID == entity.tb_prodborrowing.tb_ProdBorrowingDetails[i].ProdDetailID).Sum(c => c.Qty);
+                            var RowQty = entity.tb_ProdReturningDetails.Where(c => c.ProdDetailID == entity.tb_prodborrowing.tb_ProdBorrowingDetails[i].ProdDetailID&& c.Location_ID==entity.tb_prodborrowing.tb_ProdBorrowingDetails[i].Location_ID).Sum(c => c.Qty);
                             entity.tb_prodborrowing.tb_ProdBorrowingDetails[i].ReQty += RowQty; //可以分多次还，所以累加
 
                             //如果已交数据大于 归还数量 给出警告实际操作中 
@@ -246,7 +248,7 @@ namespace RUINORERP.Business
             }
             catch (Exception ex)
             {
-          
+
                 _unitOfWorkManage.RollbackTran();
                 _logger.Error(ex);
                 rs.Succeeded = false;
@@ -308,7 +310,8 @@ namespace RUINORERP.Business
                                   entity.tb_prodborrowing.tb_ProdBorrowingDetails[i].tb_proddetail.tb_prod.Specifications;
 
                         //一对一时，找到所有的出库明细数量总和
-                        var inQty = detailList.Where(c => c.ProdDetailID == entity.tb_prodborrowing.tb_ProdBorrowingDetails[i].ProdDetailID).Sum(c => c.Qty);
+                        var inQty = detailList.Where(c => c.ProdDetailID == entity.tb_prodborrowing.tb_ProdBorrowingDetails[i].ProdDetailID
+                        && c.Location_ID==entity.tb_prodborrowing.tb_ProdBorrowingDetails[i].Location_ID).Sum(c => c.Qty);
                         if (inQty < 0)
                         {
                             string msg = $"归还单:{entity.tb_prodborrowing.BorrowNo}的【{prodName}】的归还数量不能于小于零，\r\n\" " +
@@ -321,7 +324,8 @@ namespace RUINORERP.Business
                         else
                         {
                             //当前行累计到交付，只能是当前行所以重新找到当前出库单明细的的数量
-                            var RowQty = entity.tb_ProdReturningDetails.Where(c => c.ProdDetailID == entity.tb_prodborrowing.tb_ProdBorrowingDetails[i].ProdDetailID).Sum(c => c.Qty);
+                            var RowQty = entity.tb_ProdReturningDetails.Where(c => c.ProdDetailID == entity.tb_prodborrowing.tb_ProdBorrowingDetails[i].ProdDetailID
+                            && c.Location_ID==entity.tb_prodborrowing.tb_ProdBorrowingDetails[i].Location_ID).Sum(c => c.Qty);
                             entity.tb_prodborrowing.tb_ProdBorrowingDetails[i].ReQty -= RowQty; //可以分多次还，所以累加
                         }
 
@@ -396,7 +400,7 @@ namespace RUINORERP.Business
             }
             catch (Exception ex)
             {
-           
+
                 _unitOfWorkManage.RollbackTran();
                 rs.Succeeded = false;
                 _logger.Error(ex);

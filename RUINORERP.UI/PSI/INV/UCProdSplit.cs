@@ -785,7 +785,9 @@ namespace RUINORERP.UI.PSI.INV
                         {
                             tb_ProdSplitDetail bOM_SDetail = mapper.Map<tb_ProdSplitDetail>(item);
                             bOM_SDetail.Location_ID = EditEntity.Location_ID;
-                            bOM_SDetail.Qty = (RowDetails.FirstOrDefault(c => c.ProdDetailID == bOM_SDetail.ProdDetailID).UsedQty * EditEntity.SplitParentQty / bomOutQty).ToInt();
+                            bOM_SDetail.Qty = (RowDetails.FirstOrDefault(c => c.ProdDetailID == bOM_SDetail.ProdDetailID
+                           
+                            ).UsedQty * EditEntity.SplitParentQty / bomOutQty).ToInt();
                             View_ProdDetail obj = BizCacheHelper.Instance.GetEntity<View_ProdDetail>(item.ProdDetailID);
                             if (obj != null)
                             {

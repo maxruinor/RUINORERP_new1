@@ -58,14 +58,30 @@ namespace RUINORERP.Business.AutoMapper
             CreateMap<tb_SaleOrder, tb_SaleOut>();
             CreateMap<tb_SaleOrderDetail, tb_SaleOutDetail>();
 
+            CreateMap<tb_MaterialRequisitionDetail, View_ProdDetail>();
+            CreateMap<View_ProdDetail, tb_MaterialRequisitionDetail>();
 
+            CreateMap<View_ProdDetail, tb_MaterialReturnDetail>();
+            CreateMap<View_ProdDetail, tb_PackingDetail>();
+            CreateMap<View_ProdDetail, tb_ProdBundleDetail>();
 
+            CreateMap<View_ProdDetail, tb_ProdBorrowingDetail>();
+
+            CreateMap<View_ProdDetail, tb_ProdReturningDetail>();
+
+            CreateMap<View_ProdDetail, tb_StockTransferDetail>();
+            CreateMap<View_ProdDetail, tb_PurEntryDetail>();
 
 
             CreateMap<tb_SaleOut, tb_SaleOutRe>();
             CreateMap<tb_SaleOutRe, tb_SaleOut>();
             CreateMap<tb_SaleOutDetail, tb_SaleOutReDetail>();
 
+            CreateMap<tb_ManufacturingOrderDetail, View_ProdDetail>();
+            CreateMap<View_ProdDetail, tb_ManufacturingOrderDetail>();
+
+            CreateMap<tb_FinishedGoodsInvDetail, View_ProdDetail>();
+            CreateMap<View_ProdDetail, tb_FinishedGoodsInvDetail>();
 
 
             CreateMap<tb_BOM_SDetail, View_ProdDetail>();
@@ -188,7 +204,8 @@ namespace RUINORERP.Business.AutoMapper
             CreateMap<tb_ProductionPlanDetail, View_ProdDetail>();
             CreateMap<View_ProdDetail, tb_ProductionPlanDetail>();
 
-
+            CreateMap<tb_ProductionDemandDetail, View_ProdDetail>();
+            CreateMap<View_ProdDetail, tb_ProductionDemandDetail>();
 
             CreateMap<View_ProdDetail, BaseProductInfo>();
 

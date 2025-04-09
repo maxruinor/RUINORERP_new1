@@ -171,7 +171,8 @@ namespace RUINORERP.Business
                     //因为要计算未发数量，所以要更新库存要在最后一步
                     foreach (var child in entity.tb_MaterialReturnDetails)
                     {
-                        var Detail = entity.tb_materialrequisition.tb_MaterialRequisitionDetails.FirstOrDefault(c => c.ProdDetailID == child.ProdDetailID);
+                        var Detail = entity.tb_materialrequisition.tb_MaterialRequisitionDetails.FirstOrDefault(c => c.ProdDetailID == child.ProdDetailID
+                        && c.Location_ID == child.Location_ID);
                         var prodInfo = Detail.tb_proddetail.tb_prod.CNName + Detail.tb_proddetail.tb_prod.Specifications;
                         #region 库存表的更新 这里应该是必需有库存的数据，
                         tb_Inventory inv = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == child.ProdDetailID && i.Location_ID == child.Location_ID);

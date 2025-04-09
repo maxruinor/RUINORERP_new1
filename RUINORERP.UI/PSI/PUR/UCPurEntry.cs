@@ -467,7 +467,10 @@ namespace RUINORERP.UI.PSI.PUR
                     if (aa.Count > 0 && details[i].PurOrder_ChildID > 0)
                     {
                         #region 产品ID可能大于1行，共用料号情况
-                        tb_PurOrderDetail item = purorder.tb_PurOrderDetails.FirstOrDefault(c => c.ProdDetailID == details[i].ProdDetailID && c.PurOrder_ChildID == details[i].PurOrder_ChildID);
+                        tb_PurOrderDetail item = purorder.tb_PurOrderDetails
+                            .FirstOrDefault(c => c.ProdDetailID == details[i].ProdDetailID 
+                            && c.Location_ID==details[i].Location_ID
+                            && c.PurOrder_ChildID == details[i].PurOrder_ChildID);
                         details[i].Quantity = item.Quantity - item.DeliveredQuantity;// 已经交数量去掉
                         details[i].SubtotalAmount = details[i].TransactionPrice * details[i].Quantity;
                         if (details[i].Quantity > 0)
@@ -485,7 +488,10 @@ namespace RUINORERP.UI.PSI.PUR
                     {
                         #region 每行产品ID唯一
 
-                        tb_PurOrderDetail item = purorder.tb_PurOrderDetails.FirstOrDefault(c => c.ProdDetailID == details[i].ProdDetailID);
+                        tb_PurOrderDetail item = purorder.tb_PurOrderDetails
+                            .FirstOrDefault(c => c.ProdDetailID == details[i].ProdDetailID
+                            && c.Location_ID==details[i].Location_ID
+                            );
                         details[i].Quantity = item.Quantity - item.DeliveredQuantity;// 已经交数量去掉
                         details[i].SubtotalAmount = details[i].TransactionPrice * details[i].Quantity;
                         if (details[i].Quantity > 0)

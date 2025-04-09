@@ -246,7 +246,9 @@ namespace RUINORERP.Business
                         {
 
                             #region 库存表的更新 ，
-                            tb_Inventory inv = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == entitys[m].tb_SaleOrderDetails[c].ProdDetailID);
+                            tb_Inventory inv = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == entitys[m].tb_SaleOrderDetails[c].ProdDetailID
+                            && i.Location_ID==entitys[m].tb_SaleOrderDetails[c].Location_ID
+                            );
                             if (inv == null)
                             {
                                 inv = new tb_Inventory();
@@ -336,7 +338,9 @@ namespace RUINORERP.Business
                         {
 
                             #region 库存表的更新 ，
-                            tb_Inventory inv = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == entitys[m].tb_SaleOrderDetails[c].ProdDetailID);
+                            tb_Inventory inv = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == entitys[m].tb_SaleOrderDetails[c].ProdDetailID
+                            && i.Location_ID == entitys[m].tb_SaleOrderDetails[c].Location_ID
+                            );
                             if (inv == null)
                             {
                                 inv = new tb_Inventory();

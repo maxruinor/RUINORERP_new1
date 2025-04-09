@@ -80,7 +80,7 @@ namespace RUINORERP.Business
                 //如果入库明细中的产品。不存在于订单中。审核失败。
                 foreach (var child in entity.tb_MRP_ReworkEntryDetails)
                 {
-                    if (!entity.tb_mrp_reworkreturn.tb_MRP_ReworkReturnDetails.Any(c => c.ProdDetailID == child.ProdDetailID))
+                    if (!entity.tb_mrp_reworkreturn.tb_MRP_ReworkReturnDetails.Any(c => c.ProdDetailID == child.ProdDetailID && c.Location_ID == child.Location_ID))
                     {
                         rs.Succeeded = false;
                         rs.ErrorMsg = $"返工入库明细中有产品不属于当前退库单!请检查数据后重试！";
@@ -105,7 +105,8 @@ namespace RUINORERP.Business
                               entity.tb_mrp_reworkreturn.tb_MRP_ReworkReturnDetails[i].tb_proddetail.tb_prod.Specifications;
 
                     //一对一时 查出入库单对应返工退货名下的所有其它入库的明细的和
-                    var inQty = detailList.Where(c => c.ProdDetailID == entity.tb_mrp_reworkreturn.tb_MRP_ReworkReturnDetails[i].ProdDetailID).Sum(c => c.Quantity);
+                    var inQty = detailList.Where(c => c.ProdDetailID == entity.tb_mrp_reworkreturn.tb_MRP_ReworkReturnDetails[i].ProdDetailID
+                    && c.Location_ID == entity.tb_mrp_reworkreturn.tb_MRP_ReworkReturnDetails[i].Location_ID).Sum(c => c.Quantity);
                     if (inQty > entity.tb_mrp_reworkreturn.tb_MRP_ReworkReturnDetails[i].Quantity)
                     {
                         string msg = $"返工退库:{entity.tb_mrp_reworkreturn.ReworkReturnNo}的【{prodName}】的入库数量不能大于返工退库单中对应行的数量\r\n" + $"或存在重复录入了返工入库单，审核失败！";
@@ -117,7 +118,7 @@ namespace RUINORERP.Business
                     else
                     {
                         //当前行累计到交付
-                        var RowQty = entity.tb_MRP_ReworkEntryDetails.Where(c => c.ProdDetailID == entity.tb_mrp_reworkreturn.tb_MRP_ReworkReturnDetails[i].ProdDetailID).Sum(c => c.Quantity);
+                        var RowQty = entity.tb_MRP_ReworkEntryDetails.Where(c => c.ProdDetailID == entity.tb_mrp_reworkreturn.tb_MRP_ReworkReturnDetails[i].ProdDetailID && c.Location_ID == entity.tb_mrp_reworkreturn.tb_MRP_ReworkReturnDetails[i].Location_ID).Sum(c => c.Quantity);
                         entity.tb_mrp_reworkreturn.tb_MRP_ReworkReturnDetails[i].DeliveredQuantity += RowQty;
                         //如果已交数据大于 订单数量 给出警告实际操作中 使用其他方式将备品入库
                         if (entity.tb_mrp_reworkreturn.tb_MRP_ReworkReturnDetails[i].DeliveredQuantity > entity.tb_mrp_reworkreturn.tb_MRP_ReworkReturnDetails[i].Quantity)
@@ -202,7 +203,7 @@ namespace RUINORERP.Business
 
                 //采购入库单，如果来自于采购订单，则要把入库数量累加到订单中的已交数量 TODO 销售也会有这种情况
                 if (entity.tb_mrp_reworkreturn != null && entity.tb_mrp_reworkreturn.DataStatus == (int)DataStatus.确认 &&
-                    (entity.TotalQty == entity.tb_mrp_reworkreturn.TotalQty || 
+                    (entity.TotalQty == entity.tb_mrp_reworkreturn.TotalQty ||
                     entity.tb_mrp_reworkreturn.tb_MRP_ReworkReturnDetails.Sum(c => c.DeliveredQuantity) == entity.tb_mrp_reworkreturn.TotalQty)
                     && entity.ApprovalStatus == (int)ApprovalStatus.已审核
                     )
@@ -324,7 +325,8 @@ namespace RUINORERP.Business
                                   entity.tb_mrp_reworkreturn.tb_MRP_ReworkReturnDetails[i].tb_proddetail.tb_prod.Specifications;
 
                         //一对一时
-                        var inQty = detailList.Where(c => c.ProdDetailID == entity.tb_mrp_reworkreturn.tb_MRP_ReworkReturnDetails[i].ProdDetailID).Sum(c => c.Quantity);
+                        var inQty = detailList.Where(c => c.ProdDetailID == entity.tb_mrp_reworkreturn.tb_MRP_ReworkReturnDetails[i].ProdDetailID
+                        && c.Location_ID == entity.tb_mrp_reworkreturn.tb_MRP_ReworkReturnDetails[i].Location_ID).Sum(c => c.Quantity);
                         if (inQty > entity.tb_mrp_reworkreturn.tb_MRP_ReworkReturnDetails[i].Quantity)
                         {
 
@@ -340,7 +342,8 @@ namespace RUINORERP.Business
                         else
                         {
                             //当前行累计到交付
-                            var RowQty = entity.tb_MRP_ReworkEntryDetails.Where(c => c.ProdDetailID == entity.tb_mrp_reworkreturn.tb_MRP_ReworkReturnDetails[i].ProdDetailID).Sum(c => c.Quantity);
+                            var RowQty = entity.tb_MRP_ReworkEntryDetails.Where(c => c.ProdDetailID == entity.tb_mrp_reworkreturn.tb_MRP_ReworkReturnDetails[i].ProdDetailID
+                            && c.Location_ID == entity.tb_mrp_reworkreturn.tb_MRP_ReworkReturnDetails[i].Location_ID).Sum(c => c.Quantity);
                             entity.tb_mrp_reworkreturn.tb_MRP_ReworkReturnDetails[i].DeliveredQuantity -= RowQty;
                             //如果已交数据大于 订单数量 给出警告实际操作中 使用其他方式将备品入库
                             if (entity.tb_mrp_reworkreturn.tb_MRP_ReworkReturnDetails[i].DeliveredQuantity < 0)

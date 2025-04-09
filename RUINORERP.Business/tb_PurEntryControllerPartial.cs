@@ -86,7 +86,7 @@ namespace RUINORERP.Business
                 //如果入库明细中的产品。不存在于订单中。审核失败。
                 foreach (var child in entity.tb_PurEntryDetails)
                 {
-                    if (!entity.tb_purorder.tb_PurOrderDetails.Any(c => c.ProdDetailID == child.ProdDetailID))
+                    if (!entity.tb_purorder.tb_PurOrderDetails.Any(c => c.ProdDetailID == child.ProdDetailID && c.Location_ID == child.Location_ID))
                     {
                         rs.Succeeded = false;
                         _unitOfWorkManage.RollbackTran();
@@ -125,6 +125,7 @@ namespace RUINORERP.Business
                         #endregion
 
                         var inQty = detailList.Where(c => c.ProdDetailID == entity.tb_purorder.tb_PurOrderDetails[i].ProdDetailID
+                        && c.Location_ID == entity.tb_purorder.tb_PurOrderDetails[i].Location_ID
                         //行数一致时，判断入库的数量是否大于订单数量。（费赠品）
                         && c.PurOrder_ChildID == entity.tb_purorder.tb_PurOrderDetails[i].PurOrder_ChildID).Where(c => c.IsGift.HasValue && !c.IsGift.Value).Sum(c => c.Quantity);
                         if (inQty > entity.tb_purorder.tb_PurOrderDetails[i].Quantity)
@@ -137,7 +138,9 @@ namespace RUINORERP.Business
                         }
                         else
                         {
-                            var RowQty = entity.tb_PurEntryDetails.Where(c => c.ProdDetailID == entity.tb_purorder.tb_PurOrderDetails[i].ProdDetailID && c.PurOrder_ChildID == entity.tb_purorder.tb_PurOrderDetails[i].PurOrder_ChildID).Sum(c => c.Quantity);
+                            var RowQty = entity.tb_PurEntryDetails.Where(c => c.ProdDetailID == entity.tb_purorder.tb_PurOrderDetails[i].ProdDetailID && c.PurOrder_ChildID == entity.tb_purorder.tb_PurOrderDetails[i].PurOrder_ChildID
+                            && c.Location_ID == entity.tb_purorder.tb_PurOrderDetails[i].Location_ID
+                            ).Sum(c => c.Quantity);
                             //算出交付的数量
                             entity.tb_purorder.tb_PurOrderDetails[i].DeliveredQuantity += RowQty;
                             //如果已交数据大于 订单数量 给出警告实际操作中 使用其他方式将备品入库
@@ -151,7 +154,8 @@ namespace RUINORERP.Business
                     else
                     {
                         //一对一时
-                        var inQty = detailList.Where(c => c.ProdDetailID == entity.tb_purorder.tb_PurOrderDetails[i].ProdDetailID).Where(c => c.IsGift.HasValue && !c.IsGift.Value).Sum(c => c.Quantity);
+                        var inQty = detailList.Where(c => c.ProdDetailID == entity.tb_purorder.tb_PurOrderDetails[i].ProdDetailID
+                        && c.Location_ID == entity.tb_purorder.tb_PurOrderDetails[i].Location_ID).Where(c => c.IsGift.HasValue && !c.IsGift.Value).Sum(c => c.Quantity);
                         if (inQty > entity.tb_purorder.tb_PurOrderDetails[i].Quantity)
                         {
 
@@ -164,7 +168,8 @@ namespace RUINORERP.Business
                         else
                         {
                             //当前行累计到交付
-                            var RowQty = entity.tb_PurEntryDetails.Where(c => c.ProdDetailID == entity.tb_purorder.tb_PurOrderDetails[i].ProdDetailID).Sum(c => c.Quantity);
+                            var RowQty = entity.tb_PurEntryDetails.Where(c => c.ProdDetailID == entity.tb_purorder.tb_PurOrderDetails[i].ProdDetailID
+                            && c.Location_ID == entity.tb_purorder.tb_PurOrderDetails[i].Location_ID).Sum(c => c.Quantity);
                             entity.tb_purorder.tb_PurOrderDetails[i].DeliveredQuantity += RowQty;
                             //如果已交数据大于 订单数量 给出警告实际操作中 使用其他方式将备品入库
                             if (entity.tb_purorder.tb_PurOrderDetails[i].DeliveredQuantity > entity.tb_purorder.tb_PurOrderDetails[i].Quantity)
@@ -538,7 +543,10 @@ namespace RUINORERP.Business
                             }
                             #endregion
 
-                            var inQty = detailList.Where(c => c.ProdDetailID == entity.tb_purorder.tb_PurOrderDetails[i].ProdDetailID && c.PurOrder_ChildID == entity.tb_purorder.tb_PurOrderDetails[i].PurOrder_ChildID).Sum(c => c.Quantity);
+                            var inQty = detailList.Where(c => c.ProdDetailID == entity.tb_purorder.tb_PurOrderDetails[i].ProdDetailID
+                            && c.PurOrder_ChildID == entity.tb_purorder.tb_PurOrderDetails[i].PurOrder_ChildID
+                            && c.Location_ID == entity.tb_purorder.tb_PurOrderDetails[i].Location_ID
+                            ).Sum(c => c.Quantity);
                             if (inQty > entity.tb_purorder.tb_PurOrderDetails[i].Quantity)
                             {
                                 string msg = $"采购订单:{entity.tb_purorder.PurOrderNo}的【{prodName}】的入库数量不能大于订单中对应行的数量，审核失败！";
@@ -552,7 +560,10 @@ namespace RUINORERP.Business
                             }
                             else
                             {
-                                var RowQty = entity.tb_PurEntryDetails.Where(c => c.ProdDetailID == entity.tb_purorder.tb_PurOrderDetails[i].ProdDetailID && c.PurOrder_ChildID == entity.tb_purorder.tb_PurOrderDetails[i].PurOrder_ChildID).Sum(c => c.Quantity);
+                                var RowQty = entity.tb_PurEntryDetails.Where(c => c.ProdDetailID == entity.tb_purorder.tb_PurOrderDetails[i].ProdDetailID
+                                && c.PurOrder_ChildID == entity.tb_purorder.tb_PurOrderDetails[i].PurOrder_ChildID
+                                && c.Location_ID == entity.tb_purorder.tb_PurOrderDetails[i].Location_ID
+                                ).Sum(c => c.Quantity);
                                 //算出交付的数量
                                 entity.tb_purorder.tb_PurOrderDetails[i].DeliveredQuantity -= RowQty;
                                 //如果已交数据大于 订单数量 给出警告实际操作中 使用其他方式将备品入库
@@ -566,7 +577,9 @@ namespace RUINORERP.Business
                         else
                         {
                             //一对一时
-                            var inQty = detailList.Where(c => c.ProdDetailID == entity.tb_purorder.tb_PurOrderDetails[i].ProdDetailID).Sum(c => c.Quantity);
+                            var inQty = detailList.Where(c => c.ProdDetailID == entity.tb_purorder.tb_PurOrderDetails[i].ProdDetailID
+                            && c.Location_ID == entity.tb_purorder.tb_PurOrderDetails[i].Location_ID
+                            ).Sum(c => c.Quantity);
                             if (inQty > entity.tb_purorder.tb_PurOrderDetails[i].Quantity)
                             {
 
@@ -582,7 +595,8 @@ namespace RUINORERP.Business
                             else
                             {
                                 //当前行累计到交付
-                                var RowQty = entity.tb_PurEntryDetails.Where(c => c.ProdDetailID == entity.tb_purorder.tb_PurOrderDetails[i].ProdDetailID).Sum(c => c.Quantity);
+                                var RowQty = entity.tb_PurEntryDetails.Where(c => c.ProdDetailID == entity.tb_purorder.tb_PurOrderDetails[i].ProdDetailID
+                                && c.Location_ID == entity.tb_purorder.tb_PurOrderDetails[i].Location_ID).Sum(c => c.Quantity);
                                 entity.tb_purorder.tb_PurOrderDetails[i].DeliveredQuantity -= RowQty;
                                 //如果已交数据大于 订单数量 给出警告实际操作中 使用其他方式将备品入库
                                 if (entity.tb_purorder.tb_PurOrderDetails[i].DeliveredQuantity < 0)

@@ -95,13 +95,13 @@ namespace RUINORERP.Model
                         }
         }
 
-        private int? _Account_type;
+        private int _Account_type;
         /// <summary>
         /// 账户类型
         /// </summary>
         [AdvQueryAttribute(ColName = "Account_type",ColDesc = "账户类型")] 
         [SugarColumn(ColumnDataType = "int", SqlParameterDbType ="Int32",  ColumnName = "Account_type" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "账户类型" )]
-        public int? Account_type
+        public int Account_type
         { 
             get{return _Account_type;}
             set{

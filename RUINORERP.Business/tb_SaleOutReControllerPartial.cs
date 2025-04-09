@@ -26,6 +26,7 @@ using System.Linq;
 using RUINORERP.Global;
 using RUINORERP.Model.CommonModel;
 using RUINORERP.Business.Security;
+using System.Windows.Interop;
 
 namespace RUINORERP.Business
 {
@@ -82,10 +83,11 @@ namespace RUINORERP.Business
                             // 如果退回单是引用了销售订单来的 则所退产品要在订单出库明细中。
                             foreach (var child in entity.tb_SaleOutReDetails)
                             {
-                                bool exist = entity.tb_saleout.tb_SaleOutDetails.Where(c => c.ProdDetailID == child.ProdDetailID).Any();
+                                bool exist = entity.tb_saleout.tb_SaleOutDetails.Where(c => c.ProdDetailID == child.ProdDetailID && c.Location_ID == child.Location_ID).Any();
                                 if (!exist)
                                 {
-                                    View_ProdDetail view_Prod = await _unitOfWorkManage.GetDbClient().Queryable<View_ProdDetail>().Where(w => w.ProdDetailID == child.ProdDetailID).FirstAsync();
+                                    View_ProdDetail view_Prod = await _unitOfWorkManage.GetDbClient().Queryable<View_ProdDetail>()
+                                        .Where(w => w.ProdDetailID == child.ProdDetailID && w.Location_ID == child.Location_ID).FirstAsync();
                                     string prodName = "【" + view_Prod.SKU + "】" + view_Prod.CNName;
                                     _unitOfWorkManage.RollbackTran();
                                     rrs.ErrorMsg = $"{prodName} ，不存在于对应销售出库的明细数据中!";
@@ -97,7 +99,10 @@ namespace RUINORERP.Business
 
                             foreach (var child in entity.tb_saleout.tb_SaleOutDetails)
                             {
-                                tb_SaleOutReDetail returnDetail = entity.tb_SaleOutReDetails.Where(c => c.ProdDetailID == child.ProdDetailID).FirstOrDefault();
+                                tb_SaleOutReDetail returnDetail = entity.tb_SaleOutReDetails
+                                    .Where(c => c.ProdDetailID == child.ProdDetailID
+                                    && c.Location_ID == child.Location_ID
+                                    ).FirstOrDefault();
                                 if (returnDetail == null)
                                 {
                                     continue;
@@ -482,7 +487,8 @@ namespace RUINORERP.Business
 
                 //更新销售订单和出库单。这两个可以通过销售出库单的导航查询得到
 
-                tb_SaleOut saleout = await _unitOfWorkManage.GetDbClient().Queryable<tb_SaleOut>().Where(w => w.SaleOut_MainID == entity.SaleOut_MainID)
+                tb_SaleOut saleout = await _unitOfWorkManage.GetDbClient().Queryable<tb_SaleOut>()
+                    .Where(w => w.SaleOut_MainID == entity.SaleOut_MainID)
                                 .Includes(t => t.tb_SaleOutDetails)
                                 .Includes(t => t.tb_saleorder, b => b.tb_SaleOrderDetails)
                         .FirstAsync();
@@ -495,7 +501,10 @@ namespace RUINORERP.Business
 
                     foreach (var child in saleout.tb_SaleOutDetails)
                     {
-                        tb_SaleOutReDetail returnDetail = entity.tb_SaleOutReDetails.Where(c => c.ProdDetailID == child.ProdDetailID).FirstOrDefault();
+                        tb_SaleOutReDetail returnDetail = entity.tb_SaleOutReDetails
+                            .Where(c => c.ProdDetailID == child.ProdDetailID
+                            && c.Location_ID == child.Location_ID
+                            ).FirstOrDefault();
                         if (returnDetail == null)
                         {
                             continue;
@@ -522,8 +531,10 @@ namespace RUINORERP.Business
                         tb_SaleOrderDetail orderDetail = saleout.tb_saleorder.tb_SaleOrderDetails[i];
                         //判断是否订单中也录入了多行。这个很重要
                         List<tb_SaleOrderDetail> orderDetailLines = new List<tb_SaleOrderDetail>();
-                        orderDetailLines = saleout.tb_saleorder.tb_SaleOrderDetails.Where(c => c.ProdDetailID == orderDetail.ProdDetailID).ToList();
-                        List<tb_SaleOutDetail> outDetails = saleout.tb_SaleOutDetails.Where(c => c.ProdDetailID == orderDetail.ProdDetailID && c.Location_ID == orderDetail.Location_ID).ToList();
+                        orderDetailLines = saleout.tb_saleorder.tb_SaleOrderDetails
+                            .Where(c => c.ProdDetailID == orderDetail.ProdDetailID && c.Location_ID == orderDetail.Location_ID).ToList();
+                        List<tb_SaleOutDetail> outDetails = saleout.tb_SaleOutDetails
+                            .Where(c => c.ProdDetailID == orderDetail.ProdDetailID && c.Location_ID == orderDetail.Location_ID).ToList();
                         if (outDetails == null || outDetails.Count == 0)
                         {
                             continue;

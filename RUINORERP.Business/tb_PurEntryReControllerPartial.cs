@@ -96,7 +96,7 @@ namespace RUINORERP.Business
 
                     foreach (var child in entity.tb_purentry.tb_PurEntryDetails)
                     {
-                        tb_PurEntryReDetail entryDetail = entity.tb_PurEntryReDetails.Where(c => c.ProdDetailID == child.ProdDetailID).FirstOrDefault();
+                        tb_PurEntryReDetail entryDetail = entity.tb_PurEntryReDetails.Where(c => c.ProdDetailID == child.ProdDetailID && c.Location_ID==child.Location_ID).FirstOrDefault();
                         if (entryDetail == null)
                         {
                             continue;
@@ -220,7 +220,8 @@ namespace RUINORERP.Business
 
                     foreach (var child in entity.tb_purentry.tb_PurEntryDetails)
                     {
-                        tb_PurEntryReDetail entryDetail = entity.tb_PurEntryReDetails.Where(c => c.ProdDetailID == child.ProdDetailID).FirstOrDefault();
+                        tb_PurEntryReDetail entryDetail = entity.tb_PurEntryReDetails
+                            .Where(c => c.ProdDetailID == child.ProdDetailID && c.Location_ID==child.Location_ID).FirstOrDefault();
                         if (entryDetail == null)
                         {
                             continue;

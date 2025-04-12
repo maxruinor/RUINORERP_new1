@@ -274,9 +274,19 @@ namespace RUINORERP.UI.PSI.SAL
 
                 if (entity.ShipCost > 0 && s2.PropertyName == entity.GetPropertyName<tb_SaleOrder>(c => c.ShipCost))
                 {
-                    EditEntity.TotalAmount = EditEntity.TotalAmount + EditEntity.ShipCost;
-                    EditEntity.TotalUntaxedAmount = EditEntity.TotalUntaxedAmount + EditEntity.ShipCost;
-                    EditEntity.CollectedMoney = EditEntity.TotalAmount;
+                    if (EditEntity.tb_SaleOrderDetails != null)
+                    {
+                        EditEntity.TotalTaxAmount = entity.tb_SaleOrderDetails.Sum(c => c.SubtotalTaxAmount);
+                        EditEntity.TotalUntaxedAmount = entity.tb_SaleOrderDetails.Sum(c => c.SubtotalUntaxedAmount);
+                        EditEntity.TotalAmount = entity.tb_SaleOrderDetails.Sum(c => c.TransactionPrice * c.Quantity);
+
+                        EditEntity.TotalAmount = EditEntity.TotalAmount + EditEntity.ShipCost;
+                        EditEntity.TotalUntaxedAmount = EditEntity.TotalUntaxedAmount + EditEntity.ShipCost;
+                        EditEntity.TotalTaxAmount = EditEntity.TotalTaxAmount + EditEntity.ShipCost;
+
+                        EditEntity.CollectedMoney = EditEntity.TotalAmount;
+                    }
+                    
 
                 }
 
@@ -375,7 +385,7 @@ namespace RUINORERP.UI.PSI.SAL
             listCols.SetCol_NeverVisible<tb_SaleOrderDetail>(c => c.ProdDetailID);
             listCols.SetCol_NeverVisible<ProductSharePart>(c => c.Rack_ID);
             listCols.SetCol_NeverVisible<ProductSharePart>(c => c.VendorModelCode);
-   
+
             if (!AppContext.SysConfig.UseBarCode)
             {
                 listCols.SetCol_NeverVisible<ProductSharePart>(c => c.BarCode);
@@ -437,39 +447,7 @@ namespace RUINORERP.UI.PSI.SAL
 
 
 
-            /*
-             
-        Mathos.Parser.MathParser parser = new Mathos.Parser.MathParser();
 
-        string expr = "(x+(2*x)/(1-x))"; // the expression
-
-        decimal result = 0; // the storage of the result
-
-        parser.LocalVariables.Add("x", 41); // 41 is the value of x
-
-        result = parser.Parse(expr); // parsing
-
-        Console.WriteLine(result); // 38.95
-             */
-
-            //if (CurMenuInfo.tb_P4Fields != null)
-            //{
-            //    List<tb_P4Field> P4Fields =
-            //        CurMenuInfo.tb_P4Fields
-            //        .Where(p => p.RoleID == MainForm.Instance.AppContext.CurrentUser_Role.RoleID
-            //        && p.tb_fieldinfo.IsChild && !p.IsVisble).ToList();
-            //    foreach (var item in P4Fields)
-            //    {
-            //        listCols.SetCol_NeverVisible(item.tb_fieldinfo.FieldName, typeof(tb_SaleOrderDetail));
-            //    }
-
-            //}
-            /*
-            //具体审核权限的人才显示
-            if (AppContext.CurUserInfo.UserButtonList.Where(c => c.BtnText == MenuItemEnums.审核.ToString()).Any())
-            {
-
-            }*/
 
             //公共到明细的映射 源 ，左边会隐藏
             sgh.SetPointToColumnPairs<ProductSharePart, tb_SaleOrderDetail>(sgd, f => f.Location_ID, t => t.Location_ID);
@@ -504,7 +482,7 @@ namespace RUINORERP.UI.PSI.SAL
             sw.Stop();
             MainForm.Instance.uclog.AddLog("加载数据耗时：" + sw.ElapsedMilliseconds + "毫秒");
 
-            UIHelper.ControlMasterColumnsInvisible(CurMenuInfo,this);
+            UIHelper.ControlMasterColumnsInvisible(CurMenuInfo, this);
 
         }
 
@@ -590,11 +568,12 @@ namespace RUINORERP.UI.PSI.SAL
                     return;
                 }
                 EditEntity.TotalQty = details.Sum(c => c.Quantity);
-                EditEntity.TotalCost = details.Sum(c => (c.Cost+c.CustomizedCost) * c.Quantity);
+                EditEntity.TotalCost = details.Sum(c => (c.Cost + c.CustomizedCost) * c.Quantity);
                 EditEntity.TotalTaxAmount = details.Sum(c => c.SubtotalTaxAmount);
                 EditEntity.TotalUntaxedAmount = details.Sum(c => c.SubtotalUntaxedAmount);
                 EditEntity.TotalAmount = details.Sum(c => c.TransactionPrice * c.Quantity);
                 EditEntity.TotalAmount = EditEntity.TotalAmount + EditEntity.ShipCost;
+                EditEntity.TotalUntaxedAmount = EditEntity.TotalUntaxedAmount + EditEntity.ShipCost;
                 EditEntity.CollectedMoney = EditEntity.TotalAmount;
             }
             catch (Exception ex)
@@ -656,12 +635,14 @@ namespace RUINORERP.UI.PSI.SAL
                 //产品ID有值才算有效值
                 details = detailentity.Where(t => t.ProdDetailID > 0).ToList();
                 EditEntity.TotalQty = details.Sum(c => c.Quantity);
-                EditEntity.TotalCost = details.Sum(c => (c.Cost+c.CustomizedCost) * c.Quantity);
+                EditEntity.TotalCost = details.Sum(c => (c.Cost + c.CustomizedCost) * c.Quantity);
                 EditEntity.TotalAmount = details.Sum(c => c.TransactionPrice * c.Quantity);
                 EditEntity.TotalTaxAmount = details.Sum(c => c.SubtotalTaxAmount);
                 EditEntity.TotalUntaxedAmount = details.Sum(c => c.SubtotalUntaxedAmount) + EditEntity.ShipCost;
                 EditEntity.CollectedMoney = EditEntity.TotalUntaxedAmount;
                 EditEntity.TotalAmount = EditEntity.TotalAmount + EditEntity.ShipCost;
+                //目前是总金额 和 未税总金额都包含了运费
+                EditEntity.TotalUntaxedAmount = EditEntity.TotalUntaxedAmount + EditEntity.ShipCost;
                 //如果没有有效的明细。直接提示
                 if (NeedValidated && details.Count == 0)
                 {

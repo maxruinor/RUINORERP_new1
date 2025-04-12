@@ -380,7 +380,7 @@ namespace RUINORERP.UI.BaseForm
         /// <param name="entity"></param>
         protected virtual void ToolBarEnabledControl(object entity)
         {
-           UIHelper. ControlMasterColumnsInvisible(CurMenuInfo,this);
+            UIHelper.ControlMasterColumnsInvisible(CurMenuInfo, this);
             if (entity == null)
             {
                 return;
@@ -2382,6 +2382,10 @@ namespace RUINORERP.UI.BaseForm
                         // MainForm.Instance.ecs.AddSendData(od);
                         submitrs = true;
                         return true;
+                    }
+                    else
+                    {
+                        AuditLogHelper.Instance.CreateAuditLog<T>("保存-提交-出错了" + rmr.ErrorMsg, rmr.ReturnObject);
                     }
                 }
                 else

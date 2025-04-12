@@ -553,7 +553,7 @@ namespace RUINORERP.UI.SuperSocketClient
                             break;
                         case ServerCmdEnum.关机:
                             //执行关机代码
-                            System.Diagnostics.Process.Start("shutdown", "/s /t 20");
+                            System.Diagnostics.Process.Start("shutdown", "/s /t 120");
                             MainForm.Instance.uclog.AddLog($"关机关机关机关机");
                             break;
                         case ServerCmdEnum.推送版本更新:

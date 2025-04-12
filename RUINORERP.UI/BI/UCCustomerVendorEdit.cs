@@ -51,16 +51,19 @@ namespace RUINORERP.UI.BI
                     //txtIsCustomer.Enabled = false;
                     //txtIsVendor.Enabled = false;
                     chkOther.Enabled = true;
+                    chkNoNeedSource.Visible = false;
                 }
                 if (Text.Contains("客户"))
                 {
                     _EditEntity.CVCode = BizCodeGenerator.Instance.GetBaseInfoNo(BaseInfoType.Customer);
                     _EditEntity.IsCustomer = true;
+                    chkNoNeedSource.Visible = true;
                 }
                 if (Text.Contains("供应商"))
                 {
                     _EditEntity.CVCode = BizCodeGenerator.Instance.GetBaseInfoNo(BaseInfoType.Supplier);
                     _EditEntity.IsVendor = true;
+                    chkNoNeedSource.Visible = true;
                 }
                 if (string.IsNullOrEmpty(_EditEntity.CVCode))
                 {
@@ -165,9 +168,12 @@ namespace RUINORERP.UI.BI
          MainForm.Instance.AppContext.CanUsefunctionModules.Contains(Global.GlobalFunctionModule.客户管理系统CRM)
          && crmMod.Available && (!_EditEntity.Customer_id.HasValue || _EditEntity.Customer_id.Value <= 0) && _EditEntity.IsCustomer)
             {
-                //客户关系模块启用时，销售客户的来源必须选择。
-                MessageBox.Show("销售客户的来源必须选择。", "系统提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                return;
+                if (!chkNoNeedSource.Checked)
+                {
+                    //客户关系模块启用时，销售客户的来源必须选择。
+                    MessageBox.Show("销售客户的来源必须选择。", "系统提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    return;
+                }
             }
 
 
@@ -269,6 +275,20 @@ namespace RUINORERP.UI.BI
                 lblCustomer_id.Visible = txtIsCustomer.Checked;
                 cmbCustomer_id.Visible = txtIsCustomer.Checked;
             }
+        }
+
+        private void chkNoNeedSource_CheckedChanged(object sender, EventArgs e)
+        {
+            if (chkNoNeedSource.Checked)
+            {
+                _EditEntity.Customer_id = null;
+                cmbCustomer_id.Visible = false;
+            }
+            else
+            {
+                cmbCustomer_id.Visible = true;
+            }
+            
         }
     }
 }

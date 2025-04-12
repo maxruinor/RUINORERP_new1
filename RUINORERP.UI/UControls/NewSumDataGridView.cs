@@ -358,7 +358,7 @@ namespace RUINORERP.UI.UControls
             this.SelectionChanged += dataGridView1_SelectionChanged;
         }
 
-     
+
 
         // 处理CurrentCellChanged事件，以更新当前单元格的背景色
         private void dataGridView1_CurrentCellChanged(object sender, EventArgs e)
@@ -376,19 +376,23 @@ namespace RUINORERP.UI.UControls
                     }
                 }
             }
-            
+
         }
 
         // 处理SelectionChanged事件，以更新其他选中单元格的背景色
         private void dataGridView1_SelectionChanged(object sender, EventArgs e)
         {
+            if (this.SelectedRows.Count > 200)
+            {
+                return;
+            }
             foreach (DataGridViewCell cell in this.SelectedCells)
             {
                 if (cell != this.CurrentCell)
                 {
                     // 设置其他选中单元格的背景色为默认颜色
                     //cell.Style.SelectionBackColor = this.DefaultCellStyle.BackColor;
-                    cell.Style.SelectionBackColor =Color.MistyRose;
+                    cell.Style.SelectionBackColor = Color.MistyRose;
 
                 }
             }
@@ -1687,7 +1691,7 @@ namespace RUINORERP.UI.UControls
 
         private void dataGridView1_CellStateChanged(object sender, DataGridViewCellStateChangedEventArgs e)
         {
-            if (e.StateChanged==DataGridViewElementStates.Selected)
+            if (e.StateChanged == DataGridViewElementStates.Selected)
             {
                 if (e.Cell == this.CurrentCell)
                 {

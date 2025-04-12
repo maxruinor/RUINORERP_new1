@@ -225,8 +225,9 @@ namespace RUINORERP.UI.Common
                                     //MainForm.Instance.PrintInfoLog("菜单关联类型为空,或您没有执行此菜单的权限，或配置菜时参数不正确。请联系管理员。");
                                     //没有权限就只能查询。有权限就可以新增？
                                     CanEdit = false;
+                                    MessageBox.Show("您没有执行此菜单的权限，或配置菜时参数不正确。请联系管理员。");
+                                    return;
                                 }
-
 
                                 //暂时认为基础数据都是这个基类出来的 否则可以根据菜单中的基类类型来判断生成
                                 BaseUControl ucBaseList = null;
@@ -241,7 +242,10 @@ namespace RUINORERP.UI.Common
                                     UCAdvFilterGeneric<P> ucBaseListAdv = new UCAdvFilterGeneric<P>();
                                     ucBaseListAdv.QueryConditionFilter = queryFilter;
                                     ucBaseListAdv.KeyValueTypeForDgv = KeyValueTypeForDgv;
-                                    ucBaseListAdv.ModuleID = menuinfo.ModuleID.Value;
+                                    if (menuinfo != null)
+                                    {
+                                        ucBaseListAdv.ModuleID = menuinfo.ModuleID.Value;
+                                    }
                                     ucBaseListAdv.control = item;
                                     ucBaseList = ucBaseListAdv;
                                 }
@@ -2070,7 +2074,7 @@ namespace RUINORERP.UI.Common
 
                 currentName = e.Current.ToString();
 
-                
+
                 var fieldInfo = enumType.GetField(currentName);
                 var descriptionAttribute = fieldInfo?
                     .GetCustomAttributes(typeof(DescriptionAttribute), false)

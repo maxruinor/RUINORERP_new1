@@ -1714,7 +1714,7 @@ namespace RUINORERP.UI.BaseForm
                     case ActionStatus.修改:
                         if (MainForm.Instance.AppContext.SysConfig.IsDebug)
                         {
-                            //MainForm.Instance.logger.LogInformation($"保存:{typeof(T).Name}");
+                            MainForm.Instance.logger.LogInformation($"保存:{typeof(T).Name}");
                         }
 
                         if (entity.PrimaryKeyID > 0)

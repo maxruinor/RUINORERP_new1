@@ -133,6 +133,7 @@ namespace RUINORERP.UI.PSI.SAL
             DataBindingHelper.BindData4TextBox<tb_SaleOut>(entity, t => t.ApprovalOpinions, txtApprovalOpinions, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4CheckBox<tb_SaleOut>(entity, t => t.ApprovalResults, chkApprovalResults, false);
             // DataBindingHelper.BindData4CehckBox<tb_SaleOut>(entity, t => t.IsIncludeTax, chkIsIncludeTax, false);
+            DataBindingHelper.BindData4CheckBox<tb_SaleOut>(entity, t => t.ReplaceOut, chk替代品出库, false);
             DataBindingHelper.BindData4TextBox<tb_SaleOut>(entity, t => t.Deposit.ToString(), txtDeposit, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4TextBox<tb_SaleOut>(entity, t => t.TotalCost.ToString(), txtTotalCost, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4TextBox<tb_SaleOut>(entity, t => t.TaxRate.ToString(), txtTaxRate, BindDataType4TextBox.Money, false);
@@ -698,8 +699,15 @@ namespace RUINORERP.UI.PSI.SAL
             //如果这个订单已经有出库单 则第二次运费为0
             if (saleorder.tb_SaleOuts != null && saleorder.tb_SaleOuts.Count > 0)
             {
-                tipsMsg.Add($"当前订单已经有出库记录，运费已经计入前面出库单，当前出库运费为零！");
-                entity.ShipCost = 0;
+                if (saleorder.ShipCost > 0)
+                {
+                    tipsMsg.Add($"当前订单已经有出库记录，运费已经计入前面出库单，当前出库运费为零！");
+                    entity.ShipCost = 0;
+                }
+                else
+                {
+                    tipsMsg.Add($"当前订单已经有出库记录！");
+                }
             }
 
             if (saleorder.DeliveryDate.HasValue)
@@ -817,5 +825,13 @@ namespace RUINORERP.UI.PSI.SAL
             return entity;
         }
 
+        private void chk替代品出库_CheckedChanged(object sender, EventArgs e)
+        {
+            if (chk替代品出库.Checked)
+            {
+                //提示 如果将当前订单以另一个产品替代出库时，将不会对订单进行数据检测更新。录入数据时，请仔细核对数据。
+                MessageBox.Show("将当前订单以其它产品替代出库时，将不会对订单进行数据检测更新。录入数据时，请仔细核对数据。");
+            }
+        }
     }
 }

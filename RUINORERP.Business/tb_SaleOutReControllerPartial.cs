@@ -27,6 +27,7 @@ using RUINORERP.Global;
 using RUINORERP.Model.CommonModel;
 using RUINORERP.Business.Security;
 using System.Windows.Interop;
+using SqlSugar;
 
 namespace RUINORERP.Business
 {
@@ -102,7 +103,15 @@ namespace RUINORERP.Business
                                 tb_SaleOutReDetail returnDetail = entity.tb_SaleOutReDetails
                                     .Where(c => c.ProdDetailID == child.ProdDetailID
                                     && c.Location_ID == child.Location_ID
+                                    && c.SaleOutDetail_ID == child.SaleOutDetail_ID
                                     ).FirstOrDefault();
+                                if (returnDetail == null) //这里主要 是因为 条件是后面加的前面退货明细中没有出库行号值
+                                {
+                                    returnDetail = entity.tb_SaleOutReDetails
+                                    .Where(c => c.ProdDetailID == child.ProdDetailID
+                                    && c.Location_ID == child.Location_ID
+                                    ).FirstOrDefault();
+                                }
                                 if (returnDetail == null)
                                 {
                                     continue;
@@ -504,7 +513,15 @@ namespace RUINORERP.Business
                         tb_SaleOutReDetail returnDetail = entity.tb_SaleOutReDetails
                             .Where(c => c.ProdDetailID == child.ProdDetailID
                             && c.Location_ID == child.Location_ID
+                            && c.SaleOutDetail_ID == child.SaleOutDetail_ID
                             ).FirstOrDefault();
+                        if (returnDetail == null) //这里主要 是因为 条件是后面加的前面退货明细中没有出库行号值
+                        {
+                            returnDetail = entity.tb_SaleOutReDetails
+                            .Where(c => c.ProdDetailID == child.ProdDetailID
+                            && c.Location_ID == child.Location_ID
+                            ).FirstOrDefault();
+                        }
                         if (returnDetail == null)
                         {
                             continue;

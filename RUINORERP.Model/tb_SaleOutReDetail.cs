@@ -326,6 +326,36 @@ namespace RUINORERP.Model
             }
         }
 
+        private string _SaleFlagCode;
+        /// <summary>
+        /// 标识代码
+        /// </summary>
+        [AdvQueryAttribute(ColName = "SaleFlagCode", ColDesc = "标识代码")]
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType = "String", ColumnName = "SaleFlagCode", Length = 50, IsNullable = true, ColumnDescription = "标识代码")]
+        public string SaleFlagCode
+        {
+            get { return _SaleFlagCode; }
+            set
+            {
+                SetProperty(ref _SaleFlagCode, value);
+            }
+        }
+
+        private long? _SaleOutDetail_ID;
+        /// <summary>
+        /// 出库行号
+        /// </summary>
+        [AdvQueryAttribute(ColName = "SaleOutDetail_ID", ColDesc = "")]
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType = "Int64", ColumnName = "SaleOutDetail_ID", DecimalDigits = 0, IsNullable = true, ColumnDescription = "")]
+        public long? SaleOutDetail_ID
+        {
+            get { return _SaleOutDetail_ID; }
+            set
+            {
+                SetProperty(ref _SaleOutDetail_ID, value);
+            }
+        }
+
         #endregion
 
         #region 扩展属性

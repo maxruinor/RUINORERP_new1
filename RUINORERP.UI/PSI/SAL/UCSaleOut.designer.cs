@@ -29,6 +29,7 @@
         private void InitializeComponent()
         {
             this.kryptonSplitContainer1 = new Krypton.Toolkit.KryptonSplitContainer();
+            this.chkIsCustomizedOrder = new Krypton.Toolkit.KryptonCheckBox();
             this.kryptonLabel3 = new Krypton.Toolkit.KryptonLabel();
             this.cmbPayStatus = new Krypton.Toolkit.KryptonComboBox();
             this.cmbPaytype_ID = new Krypton.Toolkit.KryptonComboBox();
@@ -93,7 +94,6 @@
             this.txtTaxAmount = new Krypton.Toolkit.KryptonTextBox();
             this.txtCollectedMoney = new Krypton.Toolkit.KryptonTextBox();
             this.lblCollectedMoney = new Krypton.Toolkit.KryptonLabel();
-            this.chkIsCustomizedOrder = new Krypton.Toolkit.KryptonCheckBox();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceSub)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1)).BeginInit();
@@ -175,6 +175,15 @@
             this.kryptonSplitContainer1.SplitterDistance = 194;
             this.kryptonSplitContainer1.TabIndex = 0;
             // 
+            // chkIsCustomizedOrder
+            // 
+            this.chkIsCustomizedOrder.Enabled = false;
+            this.chkIsCustomizedOrder.Location = new System.Drawing.Point(643, 115);
+            this.chkIsCustomizedOrder.Name = "chkIsCustomizedOrder";
+            this.chkIsCustomizedOrder.Size = new System.Drawing.Size(62, 20);
+            this.chkIsCustomizedOrder.TabIndex = 154;
+            this.chkIsCustomizedOrder.Values.Text = "定制单";
+            // 
             // kryptonLabel3
             // 
             this.kryptonLabel3.Location = new System.Drawing.Point(731, 140);
@@ -243,6 +252,7 @@
             this.chk替代品出库.Size = new System.Drawing.Size(88, 20);
             this.chk替代品出库.TabIndex = 146;
             this.chk替代品出库.Values.Text = "替代品出库";
+            this.chk替代品出库.CheckedChanged += new System.EventHandler(this.chk替代品出库_CheckedChanged);
             // 
             // lblDataStatus
             // 
@@ -723,15 +733,6 @@
             this.lblCollectedMoney.Size = new System.Drawing.Size(62, 20);
             this.lblCollectedMoney.TabIndex = 114;
             this.lblCollectedMoney.Values.Text = "实收金额";
-            // 
-            // chkIsCustomizedOrder
-            // 
-            this.chkIsCustomizedOrder.Enabled = false;
-            this.chkIsCustomizedOrder.Location = new System.Drawing.Point(643, 115);
-            this.chkIsCustomizedOrder.Name = "chkIsCustomizedOrder";
-            this.chkIsCustomizedOrder.Size = new System.Drawing.Size(75, 20);
-            this.chkIsCustomizedOrder.TabIndex = 154;
-            this.chkIsCustomizedOrder.Values.Text = "定制单";
             // 
             // UCSaleOut
             // 

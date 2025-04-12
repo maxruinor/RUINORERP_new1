@@ -70,6 +70,7 @@
             this.lblIsVendor = new Krypton.Toolkit.KryptonLabel();
             this.lblNotes = new Krypton.Toolkit.KryptonLabel();
             this.txtNotes = new Krypton.Toolkit.KryptonTextBox();
+            this.chkNoNeedSource = new Krypton.Toolkit.KryptonCheckBox();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel1)).BeginInit();
             this.kryptonPanel1.SuspendLayout();
@@ -106,6 +107,7 @@
             // 
             // kryptonPanel1
             // 
+            this.kryptonPanel1.Controls.Add(this.chkNoNeedSource);
             this.kryptonPanel1.Controls.Add(this.lblCustomer_id);
             this.kryptonPanel1.Controls.Add(this.cmbCustomer_id);
             this.kryptonPanel1.Controls.Add(this.btnAddPayeeInfo);
@@ -483,6 +485,15 @@
             this.txtNotes.Size = new System.Drawing.Size(355, 72);
             this.txtNotes.TabIndex = 32;
             // 
+            // chkNoNeedSource
+            // 
+            this.chkNoNeedSource.Location = new System.Drawing.Point(542, 53);
+            this.chkNoNeedSource.Name = "chkNoNeedSource";
+            this.chkNoNeedSource.Size = new System.Drawing.Size(62, 20);
+            this.chkNoNeedSource.TabIndex = 82;
+            this.chkNoNeedSource.Values.Text = "无来源";
+            this.chkNoNeedSource.CheckedChanged += new System.EventHandler(this.chkNoNeedSource_CheckedChanged);
+            // 
             // UCCustomerVendorEdit
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
@@ -556,5 +567,6 @@
         private Krypton.Toolkit.KryptonButton btnAddPayeeInfo;
         private Krypton.Toolkit.KryptonLabel lblCustomer_id;
         private Krypton.Toolkit.KryptonComboBox cmbCustomer_id;
+        private Krypton.Toolkit.KryptonCheckBox chkNoNeedSource;
     }
 }

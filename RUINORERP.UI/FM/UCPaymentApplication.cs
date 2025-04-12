@@ -95,7 +95,14 @@ namespace RUINORERP.UI.FM
                 entity.InvoiceDate = System.DateTime.Now;
                 entity.Employee_ID = MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID.Value;
                 //清空
+                // 清空 DataSource（如果适用）
+                cmbPayeeInfoID.DataSource = null;
                 cmbPayeeInfoID.DataBindings.Clear();
+                cmbPayeeInfoID.Items.Clear();
+                cmbAccount_type.DataSource = null;
+                cmbAccount_type.Items.Clear();
+                cmbAccount_type.DataBindings.Clear();
+                txtPayeeAccountNo.Text = "";
             }
 
             DataBindingHelper.BindData4Cmb<tb_Employee>(entity, k => k.Employee_ID, v => v.Employee_Name, cmbEmployee_ID);

@@ -515,7 +515,7 @@ namespace RUINORERP.UI.AdvancedUIModule
                         //如果个性化设置了默认值则这里加载
                         if (queryField.EnableDefault1.HasValue)
                         {
-                            if (queryField.EnableDefault1.Value)
+                            if (queryField.EnableDefault1.Value && queryField.Default1 != null)
                             {
                                 newDto.SetPropertyValue(queryField.FieldName, queryField.Default1.ToLong());
                             }

@@ -800,14 +800,7 @@ namespace RUINORERP.Server
                     {
                         SessionforBiz sessionforBiz = session as SessionforBiz;
                         sessionListBiz.TryAdd(session.SessionID, session as SessionforBiz);
-                        //if (frmusermange==null)
-                        //{
-                        //    frmusermange=Startup.GetFromFac<frmUserManage>();
-                        //}
-                        //sessionforBiz.User.PropertyChanged -= frmusermange.UserInfo_PropertyChanged;
-                        //sessionforBiz.User.PropertyChanged += frmusermange.UserInfo_PropertyChanged;
-                        //frmusermange.userInfos.Add(sessionforBiz.User);
-
+ 
                         if (frmUserList == null)
                         {
                             frmUserList = Startup.GetFromFac<frmUserListManage>();
@@ -821,8 +814,6 @@ namespace RUINORERP.Server
                                 frmUserList.userInfos.Add(sessionforBiz.User);
                             }));
                         }
-
-
 
 
                         if (sessionforBiz.User != null)

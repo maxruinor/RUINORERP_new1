@@ -31,6 +31,8 @@
             this.btnOk = new Krypton.Toolkit.KryptonButton();
             this.btnCancel = new Krypton.Toolkit.KryptonButton();
             this.kryptonPanel1 = new Krypton.Toolkit.KryptonPanel();
+            this.btnAddBillingInformation = new Krypton.Toolkit.KryptonButton();
+            this.chkNoNeedSource = new Krypton.Toolkit.KryptonCheckBox();
             this.lblCustomer_id = new Krypton.Toolkit.KryptonLabel();
             this.cmbCustomer_id = new Krypton.Toolkit.KryptonComboBox();
             this.btnAddPayeeInfo = new Krypton.Toolkit.KryptonButton();
@@ -70,7 +72,6 @@
             this.lblIsVendor = new Krypton.Toolkit.KryptonLabel();
             this.lblNotes = new Krypton.Toolkit.KryptonLabel();
             this.txtNotes = new Krypton.Toolkit.KryptonTextBox();
-            this.chkNoNeedSource = new Krypton.Toolkit.KryptonCheckBox();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel1)).BeginInit();
             this.kryptonPanel1.SuspendLayout();
@@ -89,7 +90,7 @@
             // 
             // btnOk
             // 
-            this.btnOk.Location = new System.Drawing.Point(193, 545);
+            this.btnOk.Location = new System.Drawing.Point(212, 606);
             this.btnOk.Name = "btnOk";
             this.btnOk.Size = new System.Drawing.Size(90, 25);
             this.btnOk.TabIndex = 0;
@@ -98,7 +99,7 @@
             // 
             // btnCancel
             // 
-            this.btnCancel.Location = new System.Drawing.Point(311, 545);
+            this.btnCancel.Location = new System.Drawing.Point(330, 606);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(90, 25);
             this.btnCancel.TabIndex = 1;
@@ -107,6 +108,7 @@
             // 
             // kryptonPanel1
             // 
+            this.kryptonPanel1.Controls.Add(this.btnAddBillingInformation);
             this.kryptonPanel1.Controls.Add(this.chkNoNeedSource);
             this.kryptonPanel1.Controls.Add(this.lblCustomer_id);
             this.kryptonPanel1.Controls.Add(this.cmbCustomer_id);
@@ -152,6 +154,24 @@
             this.kryptonPanel1.Size = new System.Drawing.Size(731, 657);
             this.kryptonPanel1.TabIndex = 2;
             // 
+            // btnAddBillingInformation
+            // 
+            this.btnAddBillingInformation.Location = new System.Drawing.Point(594, 606);
+            this.btnAddBillingInformation.Name = "btnAddBillingInformation";
+            this.btnAddBillingInformation.Size = new System.Drawing.Size(90, 25);
+            this.btnAddBillingInformation.TabIndex = 83;
+            this.btnAddBillingInformation.Values.Text = "添加开票信息";
+            this.btnAddBillingInformation.Click += new System.EventHandler(this.btnAddBillingInformation_Click);
+            // 
+            // chkNoNeedSource
+            // 
+            this.chkNoNeedSource.Location = new System.Drawing.Point(542, 53);
+            this.chkNoNeedSource.Name = "chkNoNeedSource";
+            this.chkNoNeedSource.Size = new System.Drawing.Size(62, 20);
+            this.chkNoNeedSource.TabIndex = 82;
+            this.chkNoNeedSource.Values.Text = "无来源";
+            this.chkNoNeedSource.CheckedChanged += new System.EventHandler(this.chkNoNeedSource_CheckedChanged);
+            // 
             // lblCustomer_id
             // 
             this.lblCustomer_id.Location = new System.Drawing.Point(196, 50);
@@ -171,7 +191,7 @@
             // 
             // btnAddPayeeInfo
             // 
-            this.btnAddPayeeInfo.Location = new System.Drawing.Point(446, 545);
+            this.btnAddPayeeInfo.Location = new System.Drawing.Point(475, 606);
             this.btnAddPayeeInfo.Name = "btnAddPayeeInfo";
             this.btnAddPayeeInfo.Size = new System.Drawing.Size(90, 25);
             this.btnAddPayeeInfo.TabIndex = 79;
@@ -485,15 +505,6 @@
             this.txtNotes.Size = new System.Drawing.Size(355, 72);
             this.txtNotes.TabIndex = 32;
             // 
-            // chkNoNeedSource
-            // 
-            this.chkNoNeedSource.Location = new System.Drawing.Point(542, 53);
-            this.chkNoNeedSource.Name = "chkNoNeedSource";
-            this.chkNoNeedSource.Size = new System.Drawing.Size(62, 20);
-            this.chkNoNeedSource.TabIndex = 82;
-            this.chkNoNeedSource.Values.Text = "无来源";
-            this.chkNoNeedSource.CheckedChanged += new System.EventHandler(this.chkNoNeedSource_CheckedChanged);
-            // 
             // UCCustomerVendorEdit
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
@@ -568,5 +579,6 @@
         private Krypton.Toolkit.KryptonLabel lblCustomer_id;
         private Krypton.Toolkit.KryptonComboBox cmbCustomer_id;
         private Krypton.Toolkit.KryptonCheckBox chkNoNeedSource;
+        private Krypton.Toolkit.KryptonButton btnAddBillingInformation;
     }
 }

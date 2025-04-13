@@ -3,6 +3,12 @@ using System.ComponentModel;
 
 namespace RUINORERP.UI.WorkFlowDesigner
 {
+    public enum ApprovalMode
+    {
+        Single,     // 单人审批
+        All,        // 会签（需所有人同意）
+        Any         // 或签（任意一人同意即可）
+    }
     public enum ConditionType
     {
         [Description("二元决策")]

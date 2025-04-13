@@ -778,7 +778,12 @@ namespace RUINORERP.UI.WorkFlowDesigner
                 if (graphControl.WorkflowData == null)
                 {
                     #region 设置流程数据
-                    this.GraphControl.WorkflowData = baseNodes.FirstOrDefault(c => c.NodeType == WFNodeType.Start).NodeStepPropertyValue;
+                    var node = baseNodes.FirstOrDefault(c => c.NodeType == WFNodeType.Start);
+                    if (node == null)
+                    {
+                        return;
+                    }
+                    this.GraphControl.WorkflowData = node.NodeStepPropertyValue;
                     #endregion
                 }
                 if (graphControl.WorkflowData != null)

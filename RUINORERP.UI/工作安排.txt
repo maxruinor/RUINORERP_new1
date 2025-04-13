@@ -2,6 +2,7 @@
 再看库存是提前 生成还是? 配合gpt确认
 试行一个单据,销售订单相对独立
 再审核打印等工作试行
+
 tips
 https://www.cnblogs.com/JuneZhang/archive/2011/04/02/2003315.html
 
@@ -74,9 +75,6 @@ https://blog.csdn.net/shuzhongke123/article/details/106091047
 
 目前，实体加开关 haschanged，快。
 
-将来，用csla，先只测试几个情况。
-
-整理一下代码。两情况前后。
 
 单据业务
 
@@ -137,3 +135,7 @@ https://blog.csdn.net/crystal_lz/article/details/117131080
 
 讨论：分仓是不是要有保存总库存？
 货架功能。要管到数量层级？ 
+
+
+ERP整体功能
+https://zhuanlan.zhihu.com/p/11170499315

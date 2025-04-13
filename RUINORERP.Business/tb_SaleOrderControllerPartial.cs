@@ -562,7 +562,59 @@ namespace RUINORERP.Business
             }
             return rmrs;
         }
+        /// <summary>
+        /// 更新付款状态，并且一次只能更新一个单据
+        /// 更新订单，更新出库单的付款状态， 付款状态，付款类型。付款日期？付款凭证？
+        /// </summary>
+        /// <param name="entity"></param>
+        /// <returns></returns>
+        public async virtual Task<ReturnResults<bool>> UpdateCustomizedCost(tb_SaleOrder entity)
+        {
+            ReturnResults<bool> rmrs = new ReturnResults<bool>();
+            try
+            {
+                // 开启事务，保证数据一致性
+                _unitOfWorkManage.BeginTran();
+                //判断是否需要财务更新
+                if (!entity.ApprovalResults.HasValue || (entity.DataStatus == (int)DataStatus.草稿 || entity.DataStatus == (int)DataStatus.新建) || entity.ApprovalResults.Value == false)
+                {
 
+                    rmrs.ErrorMsg = "只能更新已审核且通过的订单";
+                    _unitOfWorkManage.RollbackTran();
+                    rmrs.Succeeded = false;
+                    return rmrs;
+                }
+
+                if (entity.tb_SaleOuts == null)
+                {
+                    entity.tb_SaleOuts = await _unitOfWorkManage.GetDbClient().Queryable<tb_SaleOut>().Where(m => m.SOrder_ID == entity.SOrder_ID).ToListAsync();
+                }
+
+                entity.tb_SaleOuts.ForEach(c => c.PayStatus = entity.PayStatus);
+                entity.tb_SaleOuts.ForEach(c => c.ProjectGroup_ID = entity.ProjectGroup_ID);
+                entity.tb_SaleOuts.ForEach(c => c.Paytype_ID = entity.Paytype_ID);
+
+
+                //后面是不是要做一个审核历史记录表？
+
+                //只更新指定列
+                await _unitOfWorkManage.GetDbClient().Updateable<tb_SaleOrder>(entity).UpdateColumns(it => new { it.PayStatus, it.Paytype_ID, it.ProjectGroup_ID }).ExecuteCommandAsync();
+                await _unitOfWorkManage.GetDbClient().Updateable<tb_SaleOut>(entity.tb_SaleOuts).UpdateColumns(it => new { it.PayStatus, it.Paytype_ID, it.ProjectGroup_ID }).ExecuteCommandAsync();
+
+                // 注意信息的完整性
+                _unitOfWorkManage.CommitTran();
+                rmrs.Succeeded = true;
+            }
+            catch (Exception ex)
+            {
+                _unitOfWorkManage.RollbackTran();
+                BizTypeMapper mapper = new BizTypeMapper();
+                rmrs.ErrorMsg = mapper.GetBizType(typeof(tb_SaleOrder)).ToString() + "事务回滚=>" + ex.Message;
+                _logger.Error(ex);
+                rmrs.Succeeded = false;
+            }
+            return rmrs;
+        }
 
         /// <summary>
         /// 更新付款状态，并且一次只能更新一个单据

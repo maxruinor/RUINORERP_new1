@@ -199,7 +199,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
 
 
             var conModel待收款 = new List<IConditionalModel>();
-            conModel待收款.Add(new ConditionalModel { FieldName = "PayStatus", ConditionalType = ConditionalType.Equal, FieldValue = "1", CSharpTypeName = "int" });
+            conModel待收款.Add(new ConditionalModel { FieldName = "PayStatus", ConditionalType = ConditionalType.Equal,  FieldValue = "1", CSharpTypeName = "int" });
             conModel待收款.Add(new ConditionalModel { FieldName = "DataStatus", ConditionalType = ConditionalType.Equal, FieldValue = "4", CSharpTypeName = "int" });
             //如果限制
             if (AuthorizeController.GetSaleLimitedAuth(MainForm.Instance.AppContext))
@@ -426,7 +426,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
                     if (queryList待收款.Rows.Count > 0)
                     {
                         SubNode待收款.Text = "待收款【" + queryList待收款.Rows.Count + "】";
-                        SubNode待收款.Tag = conModel待收款;
+                        SubNode待收款.Tag = parameter;
                         if (!node.Nodes.Contains(SubNode待收款))
                         {
                             node.Nodes.Add(SubNode待收款);

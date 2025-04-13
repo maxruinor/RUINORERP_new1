@@ -53,6 +53,7 @@
             系统注册ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             statusStrip1 = new System.Windows.Forms.StatusStrip();
             tslblStatus = new System.Windows.Forms.ToolStripStatusLabel();
+            黑名单ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             menuStrip1.SuspendLayout();
             toolStrip1.SuspendLayout();
             menuStrip2.SuspendLayout();
@@ -228,7 +229,7 @@
             // 
             // menuStrip2
             // 
-            menuStrip2.Items.AddRange(new System.Windows.Forms.ToolStripItem[] { 系统注册ToolStripMenuItem });
+            menuStrip2.Items.AddRange(new System.Windows.Forms.ToolStripItem[] { 系统注册ToolStripMenuItem, 黑名单ToolStripMenuItem });
             menuStrip2.Location = new System.Drawing.Point(0, 0);
             menuStrip2.Name = "menuStrip2";
             menuStrip2.Size = new System.Drawing.Size(800, 25);
@@ -255,6 +256,13 @@
             // 
             tslblStatus.Name = "tslblStatus";
             tslblStatus.Size = new System.Drawing.Size(0, 17);
+            // 
+            // 黑名单ToolStripMenuItem
+            // 
+            黑名单ToolStripMenuItem.Name = "黑名单ToolStripMenuItem";
+            黑名单ToolStripMenuItem.Size = new System.Drawing.Size(56, 21);
+            黑名单ToolStripMenuItem.Text = "黑名单";
+            黑名单ToolStripMenuItem.Click += 黑名单ToolStripMenuItem_Click;
             // 
             // frmMain
             // 
@@ -312,6 +320,7 @@
         private System.Windows.Forms.StatusStrip statusStrip1;
         private System.Windows.Forms.ToolStripStatusLabel tslblStatus;
         private System.Windows.Forms.ToolStripButton tsbtn在线用户;
+        private System.Windows.Forms.ToolStripMenuItem 黑名单ToolStripMenuItem;
     }
 }
 

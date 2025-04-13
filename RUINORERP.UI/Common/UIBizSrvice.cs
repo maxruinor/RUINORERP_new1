@@ -150,7 +150,7 @@ namespace RUINORERP.UI.Common
             //                 select condition;
             //set.Conditions = conditions.ToList();
 
-            
+
 
             if (set.ShowDialog() == DialogResult.OK)
             {
@@ -815,18 +815,22 @@ namespace RUINORERP.UI.Common
                 {
                     //TODO等待完善
                     List<tb_FM_PayeeInfo> payeeInfos = new List<tb_FM_PayeeInfo>();
-                    if (payeeInfo.Employee_ID.HasValue)
+                    if (payeeInfo.Employee_ID.HasValue) //一个员工名下
                     {
                         payeeInfos = await ctrPayeeInfo.BaseQueryByWhereAsync(c => c.Employee_ID == payeeInfo.Employee_ID.Value);
                     }
-                    if (payeeInfo.CustomerVendor_ID.HasValue)
+                    if (payeeInfo.CustomerVendor_ID.HasValue) //一个单位名下
                     {
                         payeeInfos = await ctrPayeeInfo.BaseQueryByWhereAsync(c => c.CustomerVendor_ID == payeeInfo.CustomerVendor_ID.Value);
                     }
+
                     //排除自己后其他全默认为否
-                    payeeInfos = payeeInfos.Where(c => c.PayeeInfoID != payeeInfo.PayeeInfoID).ToList();
-                    payeeInfos.ForEach(c => c.IsDefault = false);
-                    await MainForm.Instance.AppContext.Db.Updateable<tb_FM_PayeeInfo>(payeeInfos).UpdateColumns(it => new { it.IsDefault }).ExecuteCommandAsync();
+                    if (payeeInfos.Count > 1)
+                    {
+                        payeeInfos = payeeInfos.Where(c => c.PayeeInfoID != payeeInfo.PayeeInfoID).ToList(); //排除自己
+                        payeeInfos.ForEach(c => c.IsDefault = false);
+                        await MainForm.Instance.AppContext.Db.Updateable<tb_FM_PayeeInfo>(payeeInfos).UpdateColumns(it => new { it.IsDefault }).ExecuteCommandAsync();
+                    }
                 }
 
 
@@ -847,6 +851,87 @@ namespace RUINORERP.UI.Common
                 }
             }
         }
+
+
+        /// <summary>
+        /// 保存开票信息
+        /// </summary>
+        /// <param name="BillingInformation"></param>
+        public static async void SaveBillingInformation(tb_BillingInformation Info)
+        {
+            BaseController<tb_BillingInformation> ctrInfo = Startup.GetFromFacByName<BaseController<tb_BillingInformation>>(typeof(tb_FM_PayeeInfo).Name + "Controller");
+            ReturnResults<tb_BillingInformation> result = await ctrInfo.BaseSaveOrUpdate(Info);
+
+            //保存图片   这段代码和员工添加时一样。可以重构为一个方法。
+            #region 
+            if (result.Succeeded && ReflectionHelper.ExistPropertyName<tb_BillingInformation>(nameof(result.ReturnObject.RowImage)) && result.ReturnObject.RowImage != null)
+            {
+                if (result.ReturnObject.RowImage.image != null)
+                {
+                    if (!result.ReturnObject.RowImage.oldhash.Equals(result.ReturnObject.RowImage.newhash, StringComparison.OrdinalIgnoreCase)
+                     && result.ReturnObject.GetPropertyValue("PaymentCodeImagePath").ToString() == result.ReturnObject.RowImage.ImageFullName)
+                    {
+                        HttpWebService httpWebService = Startup.GetFromFac<HttpWebService>();
+                        //如果服务器有旧文件 。可以先删除
+                        if (!string.IsNullOrEmpty(result.ReturnObject.RowImage.oldhash))
+                        {
+                            string oldfileName = result.ReturnObject.RowImage.Dir + result.ReturnObject.RowImage.realName + "-" + result.ReturnObject.RowImage.oldhash;
+                            string deleteRsult = await httpWebService.DeleteImageAsync(oldfileName, "delete123");
+                            MainForm.Instance.PrintInfoLog("DeleteImage:" + deleteRsult);
+                        }
+                        string newfileName = result.ReturnObject.RowImage.GetUploadfileName();
+                        ////上传新文件时要加后缀名
+                        string uploadRsult = await httpWebService.UploadImageAsync(newfileName + ".jpg", result.ReturnObject.RowImage.ImageBytes, "upload");
+                        if (uploadRsult.Contains("UploadSuccessful"))
+                        {
+                            //重要
+                            result.ReturnObject.RowImage.ImageFullName = result.ReturnObject.RowImage.UpdateImageName(result.ReturnObject.RowImage.newhash);
+                            result.ReturnObject.SetPropertyValue("PaymentCodeImagePath", result.ReturnObject.RowImage.ImageFullName);
+                            await ctrInfo.BaseSaveOrUpdate(result.ReturnObject);
+                            //成功后。旧文件名部分要和上传成功后新文件名部分一致。后面修改只修改新文件名部分。再对比
+                            MainForm.Instance.PrintInfoLog("UploadSuccessful for base List:" + newfileName);
+                        }
+                        else
+                        {
+                            MainForm.Instance.LoginWebServer();
+                        }
+                    }
+                }
+
+                //如果有默认值，则更新其他的为否  一个单位时 同时只能一个开票资料有效
+                if (true == Info.IsActive)
+                {
+                    List<tb_BillingInformation> Infos = new List<tb_BillingInformation>();
+                    Infos = await ctrInfo.BaseQueryByWhereAsync(c => c.CustomerVendor_ID == Info.CustomerVendor_ID);
+                    if (Infos.Count > 1)
+                    {
+                        //一个单位时 排除自己后其他全默认为否
+                        Infos = Infos.Where(c => c.CustomerVendor_ID != Info.CustomerVendor_ID).ToList();
+                        Infos.ForEach(c => c.IsActive = false);
+                        await MainForm.Instance.AppContext.Db.Updateable<tb_BillingInformation>(Infos).UpdateColumns(it => new { it.IsActive }).ExecuteCommandAsync();
+                    }
+
+                }
+
+
+            }
+            #endregion
+            if (result.Succeeded)
+            {
+
+                //根据要缓存的列表集合来判断是否需要上传到服务器。让服务器分发到其他客户端
+                KeyValuePair<string, string> pair = new KeyValuePair<string, string>();
+                //只处理需要缓存的表
+                if (BizCacheHelper.Manager.NewTableList.TryGetValue(typeof(tb_BillingInformation).Name, out pair))
+                {
+                    //如果有更新变动就上传到服务器再分发到所有客户端
+                    OriginalData odforCache = ActionForClient.更新缓存<tb_BillingInformation>(result.ReturnObject);
+                    byte[] buffer = CryptoProtocol.EncryptClientPackToServer(odforCache);
+                    MainForm.Instance.ecs.client.Send(buffer);
+                }
+            }
+        }
+
 
         public static void RequestCache<T>()
         {
@@ -1155,7 +1240,7 @@ namespace RUINORERP.UI.Common
                                 {
                                     c.Visible = true;
                                 }
-                           
+
                                 //如果字段表中已经设置默认啥的 这里初始化要以默认的为标准
                             }
 

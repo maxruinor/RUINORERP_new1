@@ -290,5 +290,28 @@ namespace RUINORERP.UI.BI
             }
             
         }
+
+        private void btnAddBillingInformation_Click(object sender, EventArgs e)
+        {
+            object frm = Activator.CreateInstance(typeof(UCBillingInformationEdit));
+            if (frm.GetType().BaseType.Name.Contains("BaseEditGeneric"))
+            {
+                BaseEditGeneric<tb_BillingInformation> frmaddg = frm as BaseEditGeneric<tb_BillingInformation>;
+                frmaddg.CurMenuInfo = this.CurMenuInfo;
+                frmaddg.Text = "开票资料编辑";
+                frmaddg.bindingSourceEdit.DataSource = new List<tb_BillingInformation>();
+                object obj = frmaddg.bindingSourceEdit.AddNew();
+                tb_BillingInformation Info = obj as tb_BillingInformation;
+                Info.CustomerVendor_ID = _EditEntity.CustomerVendor_ID;
+                BaseEntity bty = Info as BaseEntity;
+                bty.ActionStatus = ActionStatus.加载;
+                BusinessHelper.Instance.EditEntity(bty);
+                frmaddg.BindData(bty);
+                if (frmaddg.ShowDialog() == DialogResult.OK)
+                {
+                    UIBizSrvice.SaveBillingInformation(Info);
+                }
+            }
+        }
     }
 }

@@ -463,7 +463,7 @@ namespace RUINORERP.Business.CommService
             "tb_FM_PayeeInfo",
             "tb_Files",
             "tb_CRM_Customer",
-            "tb_CRM_FollowUpPlans",
+            //"tb_CRM_FollowUpPlans",
              "tb_CRM_Leads",
              "tb_CRM_Region",
              "tb_CRM_Contact",
@@ -493,9 +493,9 @@ namespace RUINORERP.Business.CommService
                 case "tb_CRM_Customer":
                     SetDictDataSource<tb_CRM_Customer>(k => k.Customer_id, v => v.CustomerName, LoadData);
                     break;
-                case "tb_CRM_FollowUpPlans":
-                    SetDictDataSource<tb_CRM_FollowUpPlans>(k => k.PlanID, v => v.PlanSubject, LoadData);
-                    break;
+                //case "tb_CRM_FollowUpPlans":
+                //    SetDictDataSource<tb_CRM_FollowUpPlans>(k => k.PlanID, v => v.PlanSubject, LoadData);
+                //    break;
                 case "tb_CRM_Leads":
                     SetDictDataSource<tb_CRM_Leads>(k => k.LeadID, v => v.CustomerName, LoadData);
                     break;

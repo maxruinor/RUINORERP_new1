@@ -303,6 +303,9 @@ namespace RUINORERP.Business
                 case BizType.付款申请单:
                     rule = "{S:PA}{D:yyMMdd}{redis:{S:付款申请单}{D:yyMM}/00}";
                     break;
+                case BizType.销售合同:
+                    rule = "{S:SC-}{D:yyMMdd}{redis:{S:销售合同}{D:yyMM}/00}";
+                    break;
                 default:
                     break;
             }

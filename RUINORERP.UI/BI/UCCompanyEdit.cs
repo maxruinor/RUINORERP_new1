@@ -47,6 +47,13 @@ namespace RUINORERP.UI.BI
             DataBindingHelper.BindData4TextBox<tb_Company>(entity, t => t.Website, txtWebsite, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_Company>(entity, t => t.Email, txtEmail, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_Company>(entity, t => t.Notes, txtNotes, BindDataType4TextBox.Text, false);
+            DataBindingHelper.BindData4TextBox<tb_Company>(entity, t => t.InvoiceTitle, txtInvoiceTitle, BindDataType4TextBox.Text, false);
+            DataBindingHelper.BindData4TextBox<tb_Company>(entity, t => t.InvoiceTaxNumber, txtInvoiceTaxNumber, BindDataType4TextBox.Text, false);
+            DataBindingHelper.BindData4TextBox<tb_Company>(entity, t => t.InvoiceAddress, txtInvoiceAddress, BindDataType4TextBox.Text, false);
+            DataBindingHelper.BindData4TextBox<tb_Company>(entity, t => t.InvoiceTEL, txtInvoiceTEL, BindDataType4TextBox.Text, false);
+            DataBindingHelper.BindData4TextBox<tb_Company>(entity, t => t.InvoiceBankAccount, txtInvoiceBankAccount, BindDataType4TextBox.Text, false);
+            DataBindingHelper.BindData4TextBox<tb_Company>(entity, t => t.InvoiceBankName, txtInvoiceBankName, BindDataType4TextBox.Text, false);
+
             if (entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改)
             {
                 base.InitRequiredToControl(MainForm.Instance.AppContext.GetRequiredService<tb_CompanyValidator>()  , kryptonPanel1.Controls);

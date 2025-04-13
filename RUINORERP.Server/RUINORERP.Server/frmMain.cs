@@ -798,9 +798,18 @@ namespace RUINORERP.Server
                     //注册用于处理连接、关闭的Session处理器
                     .UseSessionHandler(async (session) =>
                     {
+                        var remoteIp = session.RemoteEndPoint.ToString();
+
+                        // 检查IP是否被封禁
+                        if (BlacklistManager.IsIpBanned(remoteIp))
+                        {
+                            await session.CloseAsync(SuperSocket.Connection.CloseReason.ServerShutdown); // 立即关闭连接
+                            return;
+                        }
+
                         SessionforBiz sessionforBiz = session as SessionforBiz;
                         sessionListBiz.TryAdd(session.SessionID, session as SessionforBiz);
- 
+
                         if (frmUserList == null)
                         {
                             frmUserList = Startup.GetFromFac<frmUserListManage>();
@@ -815,7 +824,6 @@ namespace RUINORERP.Server
                             }));
                         }
 
-
                         if (sessionforBiz.User != null)
                         {
                             while (MessageList.Count > 0 && sessionforBiz.User.超级用户)
@@ -823,7 +831,6 @@ namespace RUINORERP.Server
                                 ReminderData MessageInfo = MessageList.Dequeue();
                                 SystemService.process请求协助处理(sessionforBiz, MessageInfo);
                             }
-
                         }
                         //广播出去
                         foreach (SessionforBiz PlayerSession in sessionListBiz.Values.ToArray())
@@ -1366,6 +1373,14 @@ namespace RUINORERP.Server
             frmUserList.MdiParent = this;
             frmUserList.Show();
             frmUserList.Activate();
+        }
+
+        private void 黑名单ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            frmBlacklist frmBlacklist = new frmBlacklist();
+            frmBlacklist.MdiParent = this;
+            frmBlacklist.Show();
+            frmBlacklist.Activate();
         }
     }
 }

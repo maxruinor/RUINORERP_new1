@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Options;
+using RUINORERP.Server.Comm;
 using SuperSocket;
 using SuperSocket.Connection;
 using SuperSocket.Server;
@@ -25,7 +27,17 @@ namespace RUINORERP.Server.ServerSession
         {
             _appSessions = new List<IAppSession>();
             _tokenSource = new CancellationTokenSource();
+
+            // 每5分钟清理一次连接记录
+            _cleanupTimer = new Timer(_ =>
+            {
+                _connectionAttempts.Clear();
+                BlacklistManager.CleanupExpiredBans();
+            }, null, TimeSpan.FromMinutes(5), TimeSpan.FromMinutes(5));
         }
+
+        private readonly ConcurrentDictionary<string, int> _connectionAttempts = new ConcurrentDictionary<string, int>();
+        private readonly Timer _cleanupTimer;
 
         protected override async ValueTask OnSessionConnectedAsync(IAppSession session)
         {
@@ -36,6 +48,20 @@ namespace RUINORERP.Server.ServerSession
             {
                 _appSessions.Add(session);
             }
+            #region
+            var ip = session.RemoteEndPoint.ToString();
+
+            // 记录断开次数
+            _connectionAttempts.AddOrUpdate(ip, 1, (_, count) => count + 1);
+
+            // 检查是否超过阈值（例如30秒内断开10次）
+            if (_connectionAttempts.TryGetValue(ip, out var attempts) && attempts >= 5)
+            {
+                BlacklistManager.BanIp(ip, TimeSpan.FromHours(1)); // 封禁1小时
+                _connectionAttempts.TryRemove(ip, out _); // 重置计数
+            }
+
+            #endregion
 
             await base.OnSessionConnectedAsync(session);
         }

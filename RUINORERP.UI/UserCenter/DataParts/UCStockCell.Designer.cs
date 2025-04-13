@@ -34,6 +34,7 @@
             this.kryptonHeaderGroup1 = new Krypton.Toolkit.KryptonHeaderGroup();
             this.buttonSpecHeaderGroup1 = new Krypton.Toolkit.ButtonSpecHeaderGroup();
             this.kryptonCommandRefresh = new Krypton.Toolkit.KryptonCommand();
+            this.buttonSpecHeaderGroup2 = new Krypton.Toolkit.ButtonSpecHeaderGroup();
             this.kryptonPanelSaleMain = new Krypton.Toolkit.KryptonPanel();
             this.kryptonGroupBox2 = new Krypton.Toolkit.KryptonGroupBox();
             this.kryptonTreeGridViewOtherIn = new Krypton.Toolkit.Suite.Extended.TreeGridView.KryptonTreeGridView();
@@ -46,7 +47,6 @@
             this.kryptonTreeGridView1 = new Krypton.Toolkit.Suite.Extended.TreeGridView.KryptonTreeGridView();
             this.订单状态 = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.数量 = new System.Windows.Forms.DataGridViewLinkColumn();
-            this.buttonSpecHeaderGroup2 = new Krypton.Toolkit.ButtonSpecHeaderGroup();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonHeaderGroup1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonHeaderGroup1.Panel)).BeginInit();
             this.kryptonHeaderGroup1.Panel.SuspendLayout();
@@ -98,6 +98,12 @@
             this.kryptonCommandRefresh.AssignedButtonSpec = this.buttonSpecHeaderGroup1;
             this.kryptonCommandRefresh.Text = "刷新";
             this.kryptonCommandRefresh.Execute += new System.EventHandler(this.kryptonCommand1_Execute);
+            // 
+            // buttonSpecHeaderGroup2
+            // 
+            this.buttonSpecHeaderGroup2.Checked = Krypton.Toolkit.ButtonCheckState.Unchecked;
+            this.buttonSpecHeaderGroup2.Type = Krypton.Toolkit.PaletteButtonSpecStyle.ArrowUp;
+            this.buttonSpecHeaderGroup2.UniqueName = "e135944788c145cfa57bb0f617ecb39a";
             // 
             // kryptonPanelSaleMain
             // 
@@ -254,12 +260,6 @@
             this.数量.Name = "数量";
             this.数量.ReadOnly = true;
             this.数量.Resizable = System.Windows.Forms.DataGridViewTriState.True;
-            // 
-            // buttonSpecHeaderGroup2
-            // 
-            this.buttonSpecHeaderGroup2.Checked = Krypton.Toolkit.ButtonCheckState.Unchecked;
-            this.buttonSpecHeaderGroup2.Type = Krypton.Toolkit.PaletteButtonSpecStyle.ArrowUp;
-            this.buttonSpecHeaderGroup2.UniqueName = "e135944788c145cfa57bb0f617ecb39a";
             // 
             // UCStockCell
             // 

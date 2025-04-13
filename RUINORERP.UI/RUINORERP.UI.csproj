@@ -735,11 +735,23 @@
     <Compile Include="BaseForm\UCQueryShow.Designer.cs">
       <DependentUpon>UCQueryShow.cs</DependentUpon>
     </Compile>
+    <Compile Include="BI\UCBillingInformationEdit.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="BI\UCBillingInformationEdit.Designer.cs">
+      <DependentUpon>UCBillingInformationEdit.cs</DependentUpon>
+    </Compile>
     <Compile Include="BI\UCCompanyEdit.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="BI\UCCompanyEdit.Designer.cs">
       <DependentUpon>UCCompanyEdit.cs</DependentUpon>
+    </Compile>
+    <Compile Include="BI\UCBillingInformationList.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="BI\UCBillingInformationList.Designer.cs">
+      <DependentUpon>UCBillingInformationList.cs</DependentUpon>
     </Compile>
     <Compile Include="BI\UCCompanyList.cs">
       <SubType>UserControl</SubType>
@@ -2452,17 +2464,11 @@
     <Compile Include="UCToolBar\DataEdit.Designer.cs">
       <DependentUpon>DataEdit.cs</DependentUpon>
     </Compile>
-    <Compile Include="UICreator\tb_FM_PaymentApplicationEdit.cs">
+    <Compile Include="UICreator\tb_BillingInformationEdit.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="UICreator\tb_FM_PaymentApplicationEdit.Designer.cs">
-      <DependentUpon>tb_FM_PaymentApplicationEdit.cs</DependentUpon>
-    </Compile>
-    <Compile Include="UICreator\tb_UIQueryConditionEdit.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="UICreator\tb_UIQueryConditionEdit.Designer.cs">
-      <DependentUpon>tb_UIQueryConditionEdit.cs</DependentUpon>
+    <Compile Include="UICreator\tb_BillingInformationEdit.Designer.cs">
+      <DependentUpon>tb_BillingInformationEdit.cs</DependentUpon>
     </Compile>
     <Compile Include="UserCenter\CentralConsole.cs" />
     <Compile Include="UserCenter\ControlCenterConfig.cs">
@@ -2826,8 +2832,14 @@
     <EmbeddedResource Include="BaseForm\UCQueryShow.resx">
       <DependentUpon>UCQueryShow.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="BI\UCBillingInformationEdit.resx">
+      <DependentUpon>UCBillingInformationEdit.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="BI\UCCompanyEdit.resx">
       <DependentUpon>UCCompanyEdit.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="BI\UCBillingInformationList.resx">
+      <DependentUpon>UCBillingInformationList.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="BI\UCCompanyList.resx">
       <DependentUpon>UCCompanyList.cs</DependentUpon>
@@ -3582,11 +3594,8 @@
     <EmbeddedResource Include="UCToolBar\DataEdit.resx">
       <DependentUpon>DataEdit.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="UICreator\tb_FM_PaymentApplicationEdit.resx">
-      <DependentUpon>tb_FM_PaymentApplicationEdit.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="UICreator\tb_UIQueryConditionEdit.resx">
-      <DependentUpon>tb_UIQueryConditionEdit.cs</DependentUpon>
+    <EmbeddedResource Include="UICreator\tb_BillingInformationEdit.resx">
+      <DependentUpon>tb_BillingInformationEdit.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="UserCenter\ControlCenterConfig.resx">
       <DependentUpon>ControlCenterConfig.cs</DependentUpon>

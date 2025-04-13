@@ -1113,12 +1113,24 @@ namespace RUINORERP.UI.PSI.SAL
 
         #region 付款调整
         ToolStripButton toolStripButton付款调整 = new System.Windows.Forms.ToolStripButton();
+        ToolStripButton toolStripButton定制成本确认 = new System.Windows.Forms.ToolStripButton();
+        
         /// <summary>
         /// 添加回收
         /// </summary>
         /// <returns></returns>
         public ToolStripItem[] AddExtendButton(tb_MenuInfo menuInfo)
         {
+            toolStripButton定制成本确认.Text = "定制成本确认";
+            toolStripButton定制成本确认.Image = global::RUINORERP.UI.Properties.Resources.Assignment;
+            toolStripButton定制成本确认.ImageTransparentColor = System.Drawing.Color.Magenta;
+            toolStripButton定制成本确认.Name = "定制成本确认";
+            toolStripButton定制成本确认.Visible = false;//默认隐藏
+            ControlButton(toolStripButton定制成本确认);
+            toolStripButton定制成本确认.ToolTipText = "定制订单时，产品的成本有变化，额外增加或减少的成本要在明细中体现，使用本功能。";
+            toolStripButton定制成本确认.Click += new System.EventHandler(this.toolStripButton定制成本确认_Click);
+
+
             toolStripButton付款调整.Text = "付款调整";
             toolStripButton付款调整.Image = global::RUINORERP.UI.Properties.Resources.Assignment;
             toolStripButton付款调整.ImageTransparentColor = System.Drawing.Color.Magenta;
@@ -1138,10 +1150,78 @@ namespace RUINORERP.UI.PSI.SAL
             toolStripButton反结案.ToolTipText = "结案错误，要上级特殊处理时，使用本功能。";
             toolStripButton反结案.Click += new System.EventHandler(this.toolStripButton反结案_Click);
 
-            System.Windows.Forms.ToolStripItem[] extendButtons = new System.Windows.Forms.ToolStripItem[] { toolStripButton付款调整, toolStripButton反结案 };
+            System.Windows.Forms.ToolStripItem[] extendButtons = new System.Windows.Forms.ToolStripItem[] 
+            { toolStripButton付款调整,
+                toolStripButton定制成本确认,
+                toolStripButton反结案 };
 
             this.BaseToolStrip.Items.AddRange(extendButtons);
             return extendButtons;
+        }
+
+        private void toolStripButton定制成本确认_Click(object sender, EventArgs e)
+        {
+            UpdateCustomizedCost();
+        }
+
+        private async void UpdateCustomizedCost()
+        {
+            if (EditEntity == null)
+            {
+                return;
+            }
+
+            //反审，要审核过，并且通过了，才能反审。
+            if (EditEntity.ApprovalStatus.Value == (int)ApprovalStatus.已审核 && !EditEntity.ApprovalResults.HasValue)
+            {
+                MainForm.Instance.uclog.AddLog("已经审核,且【同意】的单据才能更新付款状态。");
+                return;
+            }
+
+            RevertCommand command = new RevertCommand();
+            //缓存当前编辑的对象。如果撤销就回原来的值
+            tb_SaleOrder oldobj = CloneHelper.DeepCloneObject<tb_SaleOrder>(EditEntity);
+            command.UndoOperation = delegate ()
+            {
+                //Undo操作会执行到的代码 意思是如果退审核，内存中审核的数据要变为空白（之前的样子）
+                CloneHelper.SetValues<tb_SaleOrder>(EditEntity, oldobj);
+            };
+
+            tb_SaleOrderController<tb_SaleOrder> ctr = Startup.GetFromFac<tb_SaleOrderController<tb_SaleOrder>>();
+
+            if (MessageBox.Show("你确定要调整当前订单的付款状态吗？", "确认", MessageBoxButtons.OKCancel, MessageBoxIcon.Question) == DialogResult.Cancel)
+            {
+                return;
+            }
+
+            if (AppContext.IsSuperUser)
+            {
+                await Save(true);
+                await ctr.BaseSaveOrUpdate(EditEntity);
+                return;
+            }
+
+            ReturnResults<bool> rr = await ctr.UpdatePaymentStatus(EditEntity);
+            if (rr.Succeeded)
+            {
+                AuditLogHelper.Instance.CreateAuditLog<tb_SaleOrder>("付款调整", EditEntity);
+                //if (MainForm.Instance.WorkflowItemlist.ContainsKey(""))
+                //{
+
+                //}
+                //这里审核完了的话，如果这个单存在于工作流的集合队列中，则向服务器说明审核完成。
+                //这里推送到审核，启动工作流  队列应该有一个策略 比方优先级，桌面不动1 3 5分钟 
+                //OriginalData od = ActionForClient.工作流审批(pkid, (int)BizType.盘点单, ae.ApprovalResults, ae.ApprovalComments);
+                //MainForm.Instance.ecs.AddSendData(od);
+                base.ToolBarEnabledControl(MenuItemEnums.结案);
+            }
+            else
+            {
+                //付款调整失败 要恢复之前的值
+                command.Undo();
+                MainForm.Instance.PrintInfoLog($"{EditEntity.SOrderNo}付款调整失败{rr.ErrorMsg},请联系管理员！", Color.Red);
+            }
+
         }
 
         private void toolStripButton付款调整_Click(object sender, EventArgs e)

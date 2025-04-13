@@ -39,6 +39,10 @@ namespace RUINORERP.Business.CommService
 
         public List<T> GetBindSource<T>(string tableName) where T : class
         {
+            if (tableName == "tb_CRM_FollowUpPlans")
+            {
+
+            }
             BaseController<T> bdc = _appContext.GetRequiredServiceByName<BaseController<T>>(typeof(T).Name + "Controller");
             BaseProcessor baseProcessor = _appContext.GetRequiredServiceByName<BaseProcessor>(tableName + "Processor");
             QueryFilter queryFilter = baseProcessor.GetQueryFilter();
@@ -97,7 +101,7 @@ namespace RUINORERP.Business.CommService
 
                     // 注意信息的完整性
                     _unitOfWorkManage.CommitTran();
- 
+
                     rs = true;
                 }
                 catch (Exception ex)

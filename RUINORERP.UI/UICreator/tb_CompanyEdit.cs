@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/07/2025 21:48:19
+// 时间：04/12/2025 21:15:57
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -51,6 +51,12 @@ namespace RUINORERP.UI
         
         
         
+        
+        
+        
+        
+        
+        
 
          }
 /*
@@ -70,6 +76,12 @@ namespace RUINORERP.UI
                        entity.ENAddress = txtENAddress.Text ;
                        entity.Website = txtWebsite.Text ;
                        entity.Email = txtEmail.Text ;
+                       entity.InvoiceTitle = txtInvoiceTitle.Text ;
+                       entity.InvoiceTaxNumber = txtInvoiceTaxNumber.Text ;
+                       entity.InvoiceAddress = txtInvoiceAddress.Text ;
+                       entity.InvoiceTEL = txtInvoiceTEL.Text ;
+                       entity.InvoiceBankAccount = txtInvoiceBankAccount.Text ;
+                       entity.InvoiceBankName = txtInvoiceBankName.Text ;
                        entity.Created_at = DateTime.Parse(txtCreated_at.Text);
                         entity.Created_by = Int64.Parse(txtCreated_by.Text);
                         entity.Modified_at = DateTime.Parse(txtModified_at.Text);
@@ -97,6 +109,12 @@ namespace RUINORERP.UI
            DataBindingHelper.BindData4TextBox<tb_Company>(entity, t => t.ENAddress, txtENAddress, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_Company>(entity, t => t.Website, txtWebsite, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_Company>(entity, t => t.Email, txtEmail, BindDataType4TextBox.Text,false);
+           DataBindingHelper.BindData4TextBox<tb_Company>(entity, t => t.InvoiceTitle, txtInvoiceTitle, BindDataType4TextBox.Text,false);
+           DataBindingHelper.BindData4TextBox<tb_Company>(entity, t => t.InvoiceTaxNumber, txtInvoiceTaxNumber, BindDataType4TextBox.Text,false);
+           DataBindingHelper.BindData4TextBox<tb_Company>(entity, t => t.InvoiceAddress, txtInvoiceAddress, BindDataType4TextBox.Text,false);
+           DataBindingHelper.BindData4TextBox<tb_Company>(entity, t => t.InvoiceTEL, txtInvoiceTEL, BindDataType4TextBox.Text,false);
+           DataBindingHelper.BindData4TextBox<tb_Company>(entity, t => t.InvoiceBankAccount, txtInvoiceBankAccount, BindDataType4TextBox.Text,false);
+           DataBindingHelper.BindData4TextBox<tb_Company>(entity, t => t.InvoiceBankName, txtInvoiceBankName, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4DataTime<tb_Company>(entity, t => t.Created_at, dtpCreated_at,false);
            DataBindingHelper.BindData4TextBox<tb_Company>(entity, t => t.Created_by, txtCreated_by, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4DataTime<tb_Company>(entity, t => t.Modified_at, dtpModified_at,false);

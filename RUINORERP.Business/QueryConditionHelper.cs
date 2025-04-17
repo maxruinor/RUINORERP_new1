@@ -143,7 +143,7 @@ namespace RUINORERP.Business
                                     bool NotIgnore = whereObj.GetPropertyValue(CanNotIgnore.ColName).ToBool();
                                     if (!NotIgnore)
                                     {
-                                        break;//不处理
+                                        continue;//不处理 处理下一个
                                     }
                                 }
                                 AdvExtQueryAttribute AdvExtMultiChoiceResults = AdvExtList.FirstOrDefault(c => c.RelatedFields == ColumnName && c.ProcessType == Global.AdvQueryProcessType.CmbMultiChoice);

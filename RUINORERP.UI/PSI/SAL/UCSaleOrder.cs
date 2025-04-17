@@ -50,7 +50,7 @@ using NPOI.SS.Formula.Functions;
 namespace RUINORERP.UI.PSI.SAL
 {
     [MenuAttrAssemblyInfo("销售订单", ModuleMenuDefine.模块定义.进销存管理, ModuleMenuDefine.进销存管理.销售管理, BizType.销售订单)]
-    public partial class UCSaleOrder : BaseBillEditGeneric<tb_SaleOrder, tb_SaleOrderDetail>, IFormAuth
+    public partial class UCSaleOrder : BaseBillEditGeneric<tb_SaleOrder, tb_SaleOrderDetail>, IToolStripMenuInfoAuth
     {
         public UCSaleOrder()
         {
@@ -639,8 +639,8 @@ namespace RUINORERP.UI.PSI.SAL
                 EditEntity.TotalAmount = details.Sum(c => c.TransactionPrice * c.Quantity);
                 EditEntity.TotalTaxAmount = details.Sum(c => c.SubtotalTaxAmount);
                 EditEntity.TotalUntaxedAmount = details.Sum(c => c.SubtotalUntaxedAmount) + EditEntity.ShipCost;
-                EditEntity.CollectedMoney = EditEntity.TotalUntaxedAmount;
                 EditEntity.TotalAmount = EditEntity.TotalAmount + EditEntity.ShipCost;
+                EditEntity.CollectedMoney = EditEntity.TotalAmount;
                 //目前是总金额 和 未税总金额都包含了运费
                 EditEntity.TotalUntaxedAmount = EditEntity.TotalUntaxedAmount + EditEntity.ShipCost;
                 //如果没有有效的明细。直接提示

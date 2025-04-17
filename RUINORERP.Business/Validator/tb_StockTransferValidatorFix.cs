@@ -29,7 +29,23 @@ namespace RUINORERP.Business
             // 这里添加额外的初始化代码
             RuleFor(tb_StockTransfer => tb_StockTransfer.Location_ID_from).Must(CheckForeignKeyValue).WithMessage("调出仓库:下拉选择值不正确。");
             RuleFor(tb_StockTransfer => tb_StockTransfer.Location_ID_to).Must(CheckForeignKeyValue).WithMessage("调入仓库:下拉选择值不正确。");
-             
+            //来源和目标仓库不能相同
+            RuleFor(x => x.Location_ID_from)
+             .Custom((value, context) =>
+             {
+                 var entity = context.InstanceToValidate as tb_StockTransfer;
+
+                 // 确保实体不为null  并且是新增时才判断
+                 if (entity != null && entity.StockTransferID == 0)
+                 {
+                     string propertyName = context.PropertyName;
+
+                     if (entity.Location_ID_from == entity.Location_ID_to)
+                     {
+                         context.AddFailure("调出和调入仓库不能相同。");
+                     }
+                 }
+             });
         }
 
     }

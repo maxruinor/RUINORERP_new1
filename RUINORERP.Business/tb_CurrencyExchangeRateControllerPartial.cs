@@ -26,22 +26,37 @@ using System.Linq;
 using RUINOR.Core;
 using RUINORERP.Common.Helper;
 
-
-namespace RUINORERP.Business.Processor
+namespace RUINORERP.Business
 {
     /// <summary>
     /// 币别换算表
     /// </summary>
-    public partial class tb_CurrencyExchangeRateProcessor:BaseProcessor 
+    public partial class tb_CurrencyExchangeRateController<T> : BaseController<T> where T : class
     {
-       
-        public tb_CurrencyExchangeRateProcessor(ILogger<tb_CurrencyExchangeRateProcessor> logger, IUnitOfWorkManage unitOfWorkManage, ApplicationContext appContext = null): base(logger, unitOfWorkManage, appContext)
+        /// <summary>
+        /// 获取对应的汇率，无结果返回null
+        /// </summary>
+        /// <param name="fromCurrencyID"></param>
+        /// <param name="toCurrencyID"></param>
+        /// <returns></returns>
+        public async Task<T> GetExchangeRate(long fromCurrencyID, long toCurrencyID)
         {
-            _logger = logger;
-           _unitOfWorkManage = unitOfWorkManage;
-            _appContext = appContext;
+            tb_CurrencyExchangeRate rate = await _appContext.Db.CopyNew().Queryable<tb_CurrencyExchangeRate>()
+                        .Where(m => m.BaseCurrencyID == fromCurrencyID && m.TargetCurrencyID == toCurrencyID)
+                        .FirstAsync();
+            if (rate!=null)
+            {
+                return rate as T;
+            }
+            else
+            {
+                return null;
+            }
         }
-        
+
+
+
+
     }
 }
 

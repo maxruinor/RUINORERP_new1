@@ -7,7 +7,7 @@
 // 时间：02/08/2025 16:32:09
 // **************************************
 using System;
-﻿using SqlSugar;
+using SqlSugar;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
@@ -23,7 +23,7 @@ namespace RUINORERP.Model
     [Serializable()]
     [Description("付款方式 交易方式，后面扩展有关账期 账龄分析的字段")]
     [SugarTable("tb_PaymentMethod")]
-    public partial class tb_PaymentMethod: BaseEntity, ICloneable
+    public partial class tb_PaymentMethod : BaseEntity, ICloneable
     {
         public tb_PaymentMethod()
         {
@@ -40,13 +40,14 @@ namespace RUINORERP.Model
         /// <summary>
         /// 
         /// </summary>
- 
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Paytype_ID" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "" , IsPrimaryKey = true)]
+
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType = "Int64", ColumnName = "Paytype_ID", DecimalDigits = 0, IsNullable = false, ColumnDescription = "", IsPrimaryKey = true)]
         public long Paytype_ID
-        { 
-            get{return _Paytype_ID;}
-            set{
-            SetProperty(ref _Paytype_ID, value);
+        {
+            get { return _Paytype_ID; }
+            set
+            {
+                SetProperty(ref _Paytype_ID, value);
                 base.PrimaryKeyID = _Paytype_ID;
             }
         }
@@ -55,42 +56,60 @@ namespace RUINORERP.Model
         /// <summary>
         /// 付款方式
         /// </summary>
-        [AdvQueryAttribute(ColName = "Paytype_Name",ColDesc = "付款方式")] 
-        [SugarColumn(ColumnDataType = "nvarchar", SqlParameterDbType ="String",  ColumnName = "Paytype_Name" ,Length=50,IsNullable = true,ColumnDescription = "付款方式" )]
+        [AdvQueryAttribute(ColName = "Paytype_Name", ColDesc = "付款方式")]
+        [SugarColumn(ColumnDataType = "nvarchar", SqlParameterDbType = "String", ColumnName = "Paytype_Name", Length = 50, IsNullable = true, ColumnDescription = "付款方式")]
         public string Paytype_Name
-        { 
-            get{return _Paytype_Name;}
-            set{
-            SetProperty(ref _Paytype_Name, value);
-                        }
+        {
+            get { return _Paytype_Name; }
+            set
+            {
+                SetProperty(ref _Paytype_Name, value);
+            }
         }
 
         private string _Desc;
         /// <summary>
         /// 描述
         /// </summary>
-        [AdvQueryAttribute(ColName = "Desc",ColDesc = "描述")] 
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "Desc" ,Length=50,IsNullable = true,ColumnDescription = "描述" )]
+        [AdvQueryAttribute(ColName = "Desc", ColDesc = "描述")]
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType = "String", ColumnName = "Desc", Length = 50, IsNullable = true, ColumnDescription = "描述")]
         public string Desc
-        { 
-            get{return _Desc;}
-            set{
-            SetProperty(ref _Desc, value);
-                        }
+        {
+            get { return _Desc; }
+            set
+            {
+                SetProperty(ref _Desc, value);
+            }
         }
 
-        private bool? _Cash;
+        private int _Sort = 0;
         /// <summary>
-        /// 现金
+        /// 排序
         /// </summary>
-        [AdvQueryAttribute(ColName = "Cash",ColDesc = "现金")] 
-        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType ="Boolean",  ColumnName = "Cash" ,IsNullable = true,ColumnDescription = "现金" )]
-        public bool? Cash
-        { 
-            get{return _Cash;}
-            set{
-            SetProperty(ref _Cash, value);
-                        }
+        [AdvQueryAttribute(ColName = "Sort", ColDesc = "排序")]
+        [SugarColumn(ColumnDataType = "int", SqlParameterDbType = "Int32", ColumnName = "Sort", DecimalDigits = 0, IsNullable = false, ColumnDescription = "排序")]
+        public int Sort
+        {
+            get { return _Sort; }
+            set
+            {
+                SetProperty(ref _Sort, value);
+            }
+        }
+
+        private bool _Cash = false;
+        /// <summary>
+        /// 即时收付款
+        /// </summary>
+        [AdvQueryAttribute(ColName = "Cash", ColDesc = "即时收付款")]
+        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType = "Boolean", ColumnName = "Cash", IsNullable = false, ColumnDescription = "即时收付款")]
+        public bool Cash
+        {
+            get { return _Cash; }
+            set
+            {
+                SetProperty(ref _Cash, value);
+            }
         }
 
         #endregion
@@ -167,12 +186,12 @@ namespace RUINORERP.Model
 
 
 
-//如果为false,则不可以。
-private bool PK_FK_ID_Check()
-{
-  bool rs=true;
-return rs;
-}
+        //如果为false,则不可以。
+        private bool PK_FK_ID_Check()
+        {
+            bool rs = true;
+            return rs;
+        }
 
 
 
@@ -198,35 +217,35 @@ return rs;
                     fieldNameList = new ConcurrentDictionary<string, string>();
                     SugarColumn entityAttr;
                     Type type = typeof(tb_PaymentMethod);
-                    
-                       foreach (PropertyInfo field in type.GetProperties())
+
+                    foreach (PropertyInfo field in type.GetProperties())
+                    {
+                        foreach (Attribute attr in field.GetCustomAttributes(true))
+                        {
+                            entityAttr = attr as SugarColumn;
+                            if (null != entityAttr)
                             {
-                                foreach (Attribute attr in field.GetCustomAttributes(true))
+                                if (entityAttr.ColumnDescription == null)
                                 {
-                                    entityAttr = attr as SugarColumn;
-                                    if (null != entityAttr)
-                                    {
-                                        if (entityAttr.ColumnDescription == null)
-                                        {
-                                            continue;
-                                        }
-                                        if (entityAttr.IsIdentity)
-                                        {
-                                            continue;
-                                        }
-                                        if (entityAttr.IsPrimaryKey)
-                                        {
-                                            continue;
-                                        }
-                                        if (entityAttr.ColumnDescription.Trim().Length > 0)
-                                        {
-                                            fieldNameList.TryAdd(field.Name, entityAttr.ColumnDescription);
-                                        }
-                                    }
+                                    continue;
+                                }
+                                if (entityAttr.IsIdentity)
+                                {
+                                    continue;
+                                }
+                                if (entityAttr.IsPrimaryKey)
+                                {
+                                    continue;
+                                }
+                                if (entityAttr.ColumnDescription.Trim().Length > 0)
+                                {
+                                    fieldNameList.TryAdd(field.Name, entityAttr.ColumnDescription);
                                 }
                             }
+                        }
+                    }
                 }
-                
+
                 return fieldNameList;
             }
             set
@@ -236,7 +255,7 @@ return rs;
 
         }
         #endregion
-        
+
 
         public override object Clone()
         {

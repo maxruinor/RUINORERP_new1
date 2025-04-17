@@ -56,6 +56,7 @@ using System.Web.UI.WebControls;
 using System.Windows.Forms;
 using System.Xml;
 using CommonHelper = RUINORERP.UI.Common.CommonHelper;
+using ContextMenuController = RUINORERP.UI.UControls.ContextMenuController;
 using XmlDocument = System.Xml.XmlDocument;
 
 namespace RUINORERP.UI.BaseForm
@@ -554,7 +555,6 @@ namespace RUINORERP.UI.BaseForm
                     #endregion
                 }
             }
-
             return selectlist;
         }
 
@@ -1174,6 +1174,7 @@ namespace RUINORERP.UI.BaseForm
 
         public void Builder()
         {
+
             BuildInvisibleCols();
             BuildLimitQueryConditions();
             BuildColNameDataDictionary();
@@ -1195,6 +1196,14 @@ namespace RUINORERP.UI.BaseForm
             //添加默认全局的
             // base.QueryConditions.Add(c => c.Created_by);
             // List<string> slist = ExpressionHelper.ExpressionListToStringList(MasterSummaryCols);
+        }
+
+        /// <summary>
+        /// 创建右键菜单
+        /// </summary>
+        public virtual void BuildContextMenuController()
+        {
+            
         }
 
         /// <summary>
@@ -1586,6 +1595,9 @@ namespace RUINORERP.UI.BaseForm
             {
                 _UCBillChildQuery_Related.newSumDataGridViewChild.NeedSaveColumnsXml = false;
             }
+
+            //调用了_UCBillMasterQuery中的表格所以要放到后面不然为空
+            BuildContextMenuController();
         }
 
 

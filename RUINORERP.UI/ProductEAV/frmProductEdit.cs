@@ -883,7 +883,7 @@ namespace RUINORERP.UI.ProductEAV
             #endregion
 
             DataBindingHelper.BindData4Cmb<tb_Unit>(entity, k => k.Unit_ID, v => v.UnitName, txtUnitID);
-            DataBindingHelper.BindData4Cmb<tb_CustomerVendor>(entity, k => k.CustomerVendor_ID, v => v.CVName, cmbCustomerVendor_ID);
+            //DataBindingHelper.BindData4Cmb<tb_CustomerVendor>(entity, k => k.CustomerVendor_ID, v => v.CVName, cmbCustomerVendor_ID);
             DataBindingHelper.BindData4Cmb<tb_Location>(entity, k => k.Location_ID, v => v.Name, txtLocation_ID);
             DataBindingHelper.BindData4Cmb<tb_ProductType>(entity, k => k.Type_ID, v => v.TypeName, cmbType_ID);
             DataBindingHelper.BindData4CmbByEntity<tb_StorageRack>(entity, k => k.Rack_ID, cmbRack_ID);
@@ -918,7 +918,6 @@ namespace RUINORERP.UI.ProductEAV
             Task task_2 = Task.Run(task_Help);
             //task_2.Wait();  //注释打开则等待task_2延时，注释掉则不等待
 
-
             EditEntity.PropertyChanged += (sender, s2) =>
             {
                 if (EditEntity.Category_ID.HasValue && EditEntity.Category_ID.Value > 0 && s2.PropertyName == entity.GetPropertyName<tb_Prod>(c => c.Category_ID))
@@ -946,6 +945,17 @@ namespace RUINORERP.UI.ProductEAV
 
             };
 
+            DataBindingHelper.BindData4Cmb<tb_CustomerVendor>(entity, k => k.CustomerVendor_ID, v => v.CVName, cmbCustomerVendor_ID, c => c.IsVendor == true);
+
+            //创建表达式
+            var lambda = Expressionable.Create<tb_CustomerVendor>()
+                            .And(t => t.IsVendor == true)
+                            .ToExpression();//注意 这一句 不能少
+            BaseProcessor baseProcessor = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_CustomerVendor).Name + "Processor");
+            QueryFilter queryFilterC = baseProcessor.GetQueryFilter();
+            queryFilterC.FilterLimitExpressions.Add(lambda);
+
+            DataBindingHelper.InitFilterForControlByExp<tb_CustomerVendor>(entity, cmbCustomerVendor_ID, c => c.CVName, queryFilterC);
         }
 
         private void Img_Parse(object sender, ConvertEventArgs e)

@@ -459,6 +459,18 @@ namespace RUINORERP.UI.PSI.PUR
                 List<tb_PurEntryDetail> details = mapper.Map<List<tb_PurEntryDetail>>(purorder.tb_PurOrderDetails);
 
                 entity.EntryDate = System.DateTime.Now;
+                entity.ApprovalOpinions = "";
+                entity.ApprovalResults = null;
+                entity.DataStatus = (int)DataStatus.草稿;
+                entity.ApprovalStatus = (int)ApprovalStatus.未审核;
+                entity.Approver_at = null;
+                entity.Approver_by = null;
+                entity.PrintStatus = 0;
+                entity.ActionStatus = ActionStatus.新增;
+                entity.ApprovalOpinions = "";
+                entity.Modified_at = null;
+                entity.Modified_by = null;
+
                 List<tb_PurEntryDetail> NewDetails = new List<tb_PurEntryDetail>();
                 List<string> tipsMsg = new List<string>();
                 for (global::System.Int32 i = 0; i < details.Count; i++)
@@ -523,31 +535,9 @@ namespace RUINORERP.UI.PSI.PUR
                     MessageBox.Show(msg.ToString(), "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 }
 
-                entity.tb_PurEntryDetails = NewDetails;
-                entity.PurOrder_ID = purorder.PurOrder_ID;
-                entity.PurOrder_NO = purorder.PurOrderNo;
-                entity.TotalAmount = NewDetails.Sum(c => c.SubtotalAmount);
-                entity.TotalQty = NewDetails.Sum(c => c.Quantity);
-                entity.ActualAmount = entity.ShippingCost + entity.TotalAmount;
-
-                entity.DataStatus = (int)DataStatus.草稿;
-                entity.ApprovalStatus = (int)ApprovalStatus.未审核;
-                entity.ApprovalResults = null;
-                entity.ApprovalOpinions = "";
-                entity.Modified_at = null;
-                entity.Modified_by = null;
-                entity.Approver_at = null;
-                entity.Approver_by = null;
-                entity.PrintStatus = 0;
-                entity.ActionStatus = ActionStatus.新增;
-
-                if (entity.PurOrder_ID.HasValue && entity.PurOrder_ID > 0)
-                {
-                    //应该是上面映射时已经给值了。 TODO:by watson 
-                    //entity.CustomerVendor_ID = entity.tb_purorder.CustomerVendor_ID;
-                    entity.PurOrder_NO = entity.PurOrder_NO;
-                }
-                BusinessHelper.Instance.InitEntity(entity);
+               
+                
+              
        
                 ActionStatus actionStatus = ActionStatus.无操作;
                 BindData(entity, actionStatus);

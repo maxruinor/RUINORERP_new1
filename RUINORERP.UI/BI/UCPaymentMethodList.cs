@@ -15,19 +15,53 @@ using RUINORERP.Common.CollectionExtension;
 using RUINOR.Core;
 using RUINORERP.Common.Helper;
 using RUINORERP.Business;
+using RUINORERP.Global;
+using RUINORERP.Global.EnumExt;
 
 
 namespace RUINORERP.UI.BI
 {
 
-    [MenuAttrAssemblyInfo( "付款方式", ModuleMenuDefine.模块定义.基础资料, ModuleMenuDefine.基础资料.财务资料)]
+    [MenuAttrAssemblyInfo("付款方式", ModuleMenuDefine.模块定义.基础资料, ModuleMenuDefine.基础资料.财务资料)]
     public partial class UCPaymentMethodList : BaseForm.BaseListGeneric<tb_PaymentMethod>
     {
         public UCPaymentMethodList()
         {
             InitializeComponent();
             base.EditForm = typeof(UCPaymentMethodEdit);
-         
+
         }
+
+        protected override void Add()
+        {
+            if (ListDataSoure.Count == 0)
+            {
+                //第一次添加付款方式时，添加系统默认的值先
+                //循环枚举DefaultPaymentMethod中的值，添加到表中
+                List<tb_PaymentMethod> list = new List<tb_PaymentMethod>();
+                foreach (var item in Enum.GetValues(typeof(DefaultPaymentMethod)))
+                {
+                    list.Add(new tb_PaymentMethod() { Paytype_Name = item.ToString() });
+                }
+                MainForm.Instance.AppContext.Db.Insertable<tb_PaymentMethod>(list).ExecuteCommandAsync();
+                Query();
+                base.Add();
+                base.toolStripButtonModify.Enabled = false;
+            }
+            else
+            {
+                //非第一次添加付款方式时。正常处理
+                base.Add();
+                base.toolStripButtonModify.Enabled = false;
+            }
+        }
+
+
+
+
+
     }
+
+
+
 }

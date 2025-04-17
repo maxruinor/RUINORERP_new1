@@ -39,7 +39,7 @@ namespace RUINORERP.UI.CRM
 {
 
     [MenuAttrAssemblyInfo("目标客户", ModuleMenuDefine.模块定义.客户关系, ModuleMenuDefine.客户关系.客户管理)]
-    public partial class UCCRMCustomerList : BaseForm.BaseListGeneric<tb_CRM_Customer>, IFormAuth
+    public partial class UCCRMCustomerList : BaseForm.BaseListGeneric<tb_CRM_Customer>, IToolStripMenuInfoAuth
     {
         public UCCRMCustomerList()
         {

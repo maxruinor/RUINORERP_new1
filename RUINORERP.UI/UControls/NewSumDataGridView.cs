@@ -265,7 +265,7 @@ namespace RUINORERP.UI.UControls
         /// <summary>
         /// 因为暂时事件无法通过属性中的数据传输，先用名称再从这里搜索来匹配
         /// </summary>
-        private List<EventHandler> ContextClickList = new List<EventHandler>();
+        public List<EventHandler> ContextClickList = new List<EventHandler>();
 
 
         /// <summary>
@@ -1012,7 +1012,9 @@ namespace RUINORERP.UI.UControls
         /// 设置右键菜单，但是对不对参数进行设置。因为是引用的，会改变值
         /// </summary>
         /// <param name="_contextMenuStrip"></param>
-        public ContextMenuStrip GetContextMenu(ContextMenuStrip _contextMenuStrip = null)
+        public ContextMenuStrip GetContextMenu(ContextMenuStrip _contextMenuStrip = null,
+            List<EventHandler> AddContextClickList = null,
+            List<ContextMenuController> AddContextMenuController = null, bool IsInsertTop = true)
         {
             // 创建一个全新的右键菜单副本
             ContextMenuStrip newContextMenuStrip = new ContextMenuStrip();
@@ -1061,6 +1063,10 @@ namespace RUINORERP.UI.UControls
                 ContextClickList.Add(NewSumDataGridView_保存数据到DB);
                 ContextClickList.Add(NewSumDataGridView_自定义列);
                 ContextClickList.Add(NewSumDataGridView_SelectedAll);
+                if (AddContextClickList != null)
+                {
+                    ContextClickList.AddRange(AddContextClickList.ToArray());
+                }
                 // ContextClickList.Add(NewSumDataGridView_Test);
                 if (_ContextMenucCnfigurator == null)
                 {
@@ -1068,7 +1074,17 @@ namespace RUINORERP.UI.UControls
                 }
                 _ContextMenucCnfigurator.Clear();
                 //只是初始化不重复添加
-                if (_ContextMenucCnfigurator.Count == 0 && GetIsDesignMode())
+                if (AddContextMenuController != null && IsInsertTop == true)
+                {
+                    _ContextMenucCnfigurator.AddRange(AddContextMenuController.ToArray());
+                    if (Use是否使用内置右键功能)
+                    {
+                        _ContextMenucCnfigurator.Add(new ContextMenuController("【line】", true, true, ""));
+                    }
+                }
+
+                //if (_ContextMenucCnfigurator.Count == 0 && GetIsDesignMode())
+                if (GetIsDesignMode())
                 {
                     // _ContextMenucCnfigurator.Add(new ContextMenuController("【删除选中行】", true, false, "删除选中行"));
                     // _ContextMenucCnfigurator.Add(new ContextMenuController("【批量修改列值】", true, false, "NewSumDataGridView_批量修改列值"));
@@ -1081,10 +1097,17 @@ namespace RUINORERP.UI.UControls
                     _ContextMenucCnfigurator.Add(new ContextMenuController("【全选】", true, false, "NewSumDataGridView_SelectedAll"));
                     // _ContextMenucCnfigurator.Add(new ContextMenuController("【test】", true, false, "NewSumDataGridView_Test"));
                 }
-
+                if (AddContextMenuController != null && IsInsertTop == false)
+                {
+                    if (Use是否使用内置右键功能)
+                    {
+                        _ContextMenucCnfigurator.Add(new ContextMenuController("【line】", true, true, ""));
+                    }
+                    _ContextMenucCnfigurator.AddRange(AddContextMenuController.ToArray());
+                }
 
                 #endregion
-
+                internalMenu.Items.Clear();
                 foreach (var item in _ContextMenucCnfigurator)
                 {
                     if (!item.IsShow)
@@ -1175,7 +1198,7 @@ namespace RUINORERP.UI.UControls
         //代码生成器产生对象内容的代码，而不是对象本身的代码。
         //[DesignerSerializationVisibility(DesignerSerializationVisibility.Content), MergableProperty(false)]//设定序列化特性
         [Category("行为"), Description("右键菜单控制器，控制右键菜单的显示等")]
-        private List<ContextMenuController> ContextMenucCnfigurator
+        public List<ContextMenuController> ContextMenucCnfigurator
         {
             get
             {

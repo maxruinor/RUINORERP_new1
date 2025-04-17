@@ -298,7 +298,7 @@ namespace RUINORERP.UI
             }
         }
 
-         
+
 
         private static void ActivateExistingInstance()
         {
@@ -351,7 +351,7 @@ namespace RUINORERP.UI
             }
         }
 
-   
+
 
         [DllImport("user32.dll")]
         private static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
@@ -374,7 +374,7 @@ namespace RUINORERP.UI
         //{
         //    SingleInstanceChecker.Release();
         //}
-   
+
 
 
         private static void StartProgram(string[] args)
@@ -432,7 +432,7 @@ namespace RUINORERP.UI
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
             //公共类中的 先要执行
-        
+
 
 
             #region clsa 可用
@@ -507,7 +507,7 @@ namespace RUINORERP.UI
                    }
             */
             #endregion
- 
+
 
             try
             {
@@ -538,7 +538,7 @@ namespace RUINORERP.UI
                         logBuilder.AddProvider(new Log4NetProviderByCustomeDb("log4net.config", Program.AppContextData));
                     });
                     */
-                   
+
                     #region  启动工作流主机
 
 
@@ -599,7 +599,7 @@ namespace RUINORERP.UI
 
 
                     #endregion
-                    
+
 
                     var form1 = Startup.ServiceProvider.GetService<MainForm>();
                     Application.Run(form1);
@@ -662,9 +662,9 @@ namespace RUINORERP.UI
 
 
 
- 
 
-            
+
+
 
         }
         private static void BringExistingInstanceToFront()
@@ -774,7 +774,8 @@ namespace RUINORERP.UI
             List<string> IgnoreExceptionMsglist = new List<string>
             {
                 "执行 CreateHandle() 时无法调用值 Dispose()",
-                "所请求的剪贴板操作失败"
+                "所请求的剪贴板操作失败",
+                    "GDI+ 中发生一般性错误",
             };
 
             if (e.Exception != null)
@@ -784,6 +785,19 @@ namespace RUINORERP.UI
                 {
                     if (e.Exception.Message.Contains(item))
                     {
+                        string errorStrIgnore = string.Empty;
+                        Exception errorIgnore = e.Exception as Exception;
+                        if (errorIgnore != null)
+                        {
+                            errorStrIgnore = string.Format( "异常类型：{0}\r\n异常消息：{1}\r\n{2}\r\n",
+                               errorIgnore.GetType().Name, errorIgnore.Message, errorIgnore.StackTrace);
+                        }
+                        else
+                        {
+                            errorStrIgnore = string.Format("应用程序线程错误:{0}", e);
+                        }
+
+                        MainForm.Instance.logger.LogError("出现应用程序未处理的异常，客户端没显示！\r\n" + errorStrIgnore, errorIgnore);
                         return;
                     }
                 }

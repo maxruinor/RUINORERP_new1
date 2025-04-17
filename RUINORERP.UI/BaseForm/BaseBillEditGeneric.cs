@@ -1043,6 +1043,7 @@ namespace RUINORERP.UI.BaseForm
                     {
                         return;
                     }
+                    toolStripbtnReview.Enabled = false;
                     await Review();
                     break;
                 case MenuItemEnums.反审:
@@ -1489,6 +1490,12 @@ namespace RUINORERP.UI.BaseForm
                     MainForm.Instance.PrintInfoLog($"{ae.bizName}:{ae.BillNo}审核失败{rmr.ErrorMsg},请联系管理员！", Color.Red);
 
                 }
+
+                toolStripbtnReview.Enabled = false;
+            }
+            else
+            {
+                toolStripbtnReview.Enabled = true;
             }
             return ae;
         }
@@ -2361,6 +2368,7 @@ namespace RUINORERP.UI.BaseForm
                 bool rs = await this.Save(true);
                 if (rs)
                 {
+                    AuditLogHelper.Instance.CreateAuditLog<T>("提交前->保存", EditEntity);
                     if (ReflectionHelper.ExistPropertyName<T>(typeof(DataStatus).Name))
                     {
                         ReflectionHelper.SetPropertyValue(EditEntity, typeof(DataStatus).Name, (int)DataStatus.新建);
@@ -2376,7 +2384,7 @@ namespace RUINORERP.UI.BaseForm
                     if (rmr.Succeeded)
                     {
                         ToolBarEnabledControl(MenuItemEnums.提交);
-                        AuditLogHelper.Instance.CreateAuditLog<T>("保存-提交", rmr.ReturnObject);
+                        AuditLogHelper.Instance.CreateAuditLog<T>("保存后->提交", rmr.ReturnObject);
                         //这里推送到审核，启动工作流 后面优化
                         // OriginalData od = ActionForClient.工作流提交(pkid, (int)BizType.盘点单);
                         // MainForm.Instance.ecs.AddSendData(od);

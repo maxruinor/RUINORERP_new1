@@ -27,6 +27,7 @@ using RUINORERP.Global;
 using SqlSugar;
 using RUINORERP.Business.Security;
 using RUINORERP.Extensions;
+using AutoMapper;
 
 namespace RUINORERP.Business
 {
@@ -75,7 +76,7 @@ namespace RUINORERP.Business
                                     inv.Quantity = 0;
                                     inv.InitInventory = (int)inv.Quantity;
                                     inv.Notes = "采购订单创建";//后面修改数据库是不需要？
-                                                   //inv.LatestStorageTime = System.DateTime.Now;
+                                                         //inv.LatestStorageTime = System.DateTime.Now;
                                     BusinessHelper.Instance.InitEntity(inv);
                                 }
                                 //更新在途库存
@@ -159,7 +160,7 @@ namespace RUINORERP.Business
                             foreach (var child in entity.tb_PurOrderDetails)
                             {
                                 var buyItem = buyingRequisition.tb_BuyingRequisitionDetails
-                                    .FirstOrDefault(c => c.ProdDetailID == child.ProdDetailID );
+                                    .FirstOrDefault(c => c.ProdDetailID == child.ProdDetailID);
                                 if (buyItem != null)//为空则是买的东西不在请购单明细中。
                                 {
                                     buyItem.Purchased = true;
@@ -183,7 +184,7 @@ namespace RUINORERP.Business
                         inv.Quantity = 0;
                         inv.InitInventory = (int)inv.Quantity;
                         inv.Notes = "采购订单创建";//后面修改数据库是不需要？
-                                       //inv.LatestStorageTime = System.DateTime.Now;
+                                             //inv.LatestStorageTime = System.DateTime.Now;
                         BusinessHelper.Instance.InitEntity(inv);
                     }
                     //更新在途库存
@@ -267,7 +268,7 @@ namespace RUINORERP.Business
                             foreach (var child in entity.tb_PurOrderDetails)
                             {
                                 var buyItem = buyingRequisition.tb_BuyingRequisitionDetails
-                                    .FirstOrDefault(c => c.ProdDetailID == child.ProdDetailID );
+                                    .FirstOrDefault(c => c.ProdDetailID == child.ProdDetailID);
                                 buyItem.Purchased = false;
                             }
 
@@ -328,6 +329,140 @@ namespace RUINORERP.Business
         }
 
 
+        /// <summary>
+        /// 转换为采购入库单,注意一个订单可以多次转成入库单。
+        /// </summary>
+        /// <param name="order"></param>
+        public tb_PurEntry PurOrderTotb_PurEntry(tb_PurOrder order)
+        {
+            tb_PurEntry entity = new tb_PurEntry();
+            //转单
+            if (order != null)
+            {
+                IMapper mapper = RUINORERP.Business.AutoMapper.AutoMapperConfig.RegisterMappings().CreateMapper();
+
+                entity = mapper.Map<tb_PurEntry>(order);
+                List<tb_PurEntryDetail> details = mapper.Map<List<tb_PurEntryDetail>>(order.tb_PurOrderDetails);
+                //转单要TODO
+                //转换时，默认认为订单出库数量就等于这次出库数量，是否多个订单累计？，如果是UI录单。则只是默认这个数量。也可以手工修改
+                List<tb_PurEntryDetail> NewDetails = new List<tb_PurEntryDetail>();
+
+                List<string> tipsMsg = new List<string>();
+                for (global::System.Int32 i = 0; i < details.Count; i++)
+                {
+                    var aa = details.Select(c => c.ProdDetailID).ToList().GroupBy(x => x).Where(x => x.Count() > 1).Select(x => x.Key).ToList();
+                    if (aa.Count > 0 && details[i].PurOrder_ChildID > 0)
+                    {
+                        #region 产品ID可能大于1行，共用料号情况
+                        tb_PurOrderDetail item = order.tb_PurOrderDetails
+                            .FirstOrDefault(c => c.ProdDetailID == details[i].ProdDetailID
+                            && c.Location_ID == details[i].Location_ID
+                            && c.PurOrder_ChildID == details[i].PurOrder_ChildID);
+                        details[i].Quantity = item.Quantity - item.DeliveredQuantity;// 已经交数量去掉
+                        details[i].SubtotalAmount = details[i].TransactionPrice * details[i].Quantity;
+                        if (details[i].Quantity > 0)
+                        {
+                            NewDetails.Add(details[i]);
+                        }
+                        else
+                        {
+                            tipsMsg.Add($"订单{order.PurOrderNo}，{item.tb_proddetail.tb_prod.CNName + item.tb_proddetail.tb_prod.Specifications}已入库数为{item.DeliveredQuantity}，可入库数为{details[i].Quantity}，当前行数据忽略！");
+                        }
+
+                        #endregion
+                    }
+                    else
+                    {
+                        #region 每行产品ID唯一
+
+                        tb_PurOrderDetail item = order.tb_PurOrderDetails
+                            .FirstOrDefault(c => c.ProdDetailID == details[i].ProdDetailID
+                            && c.Location_ID == details[i].Location_ID
+                            );
+                        details[i].Quantity = item.Quantity - item.DeliveredQuantity;// 已经交数量去掉
+                        details[i].SubtotalAmount = details[i].TransactionPrice * details[i].Quantity;
+                        if (details[i].Quantity > 0)
+                        {
+                            NewDetails.Add(details[i]);
+                        }
+                        else
+                        {
+                            tipsMsg.Add($"订单{order.PurOrderNo}，{item.tb_proddetail.tb_prod.CNName}已入库数为{item.DeliveredQuantity}，可入库数为{details[i].Quantity}，当前行数据忽略！");
+                        }
+                        #endregion
+                    }
+
+                }
+
+                /*
+                foreach (tb_PurEntryDetail item in details)
+                {
+                    tb_PurOrderDetail orderDetail = new tb_PurOrderDetail();
+                    orderDetail = order.tb_PurOrderDetails.FirstOrDefault<tb_PurOrderDetail>(c => c.ProdDetailID == item.ProdDetailID);
+                    if (orderDetail != null)
+                    {
+                        //已经入库数量等于已经入库数量则认为这项全入库了，不再出
+                        if (orderDetail.DeliveredQuantity == item.Quantity)
+                        {
+                            continue;
+                        }
+                        else
+                        {
+                            item.Quantity = item.Quantity - orderDetail.DeliveredQuantity;
+                            NewDetails.Add(item);
+                        }
+                    }
+
+                }
+                */
+
+
+
+                entity.tb_PurEntryDetails = NewDetails;
+                entity.DataStatus = (int)DataStatus.草稿;
+                entity.ApprovalStatus = (int)ApprovalStatus.未审核;
+                entity.ApprovalResults = null;
+                entity.ApprovalOpinions = "";
+                entity.Modified_at = null;
+                entity.Modified_by = null;
+                entity.Approver_at = null;
+                entity.Approver_by = null;
+                entity.ActionStatus = ActionStatus.新增;
+
+                entity.TotalQty = NewDetails.Sum(c => c.Quantity);
+                entity.TotalAmount = NewDetails.Sum(c => c.TransactionPrice * c.Quantity);
+                entity.TotalTaxAmount = NewDetails.Sum(c => c.TaxAmount);
+                entity.ActualAmount = NewDetails.Sum(c => c.TransactionPrice * c.Quantity);
+                entity.tb_PurEntryDetails = NewDetails;
+                entity.PurOrder_ID = order.PurOrder_ID;
+                entity.PurOrder_NO = order.PurOrderNo;
+                entity.TotalAmount = entity.TotalAmount + entity.ShippingCost;
+                entity.ActualAmount = entity.ShippingCost + entity.TotalAmount;
+                entity.DiscountAmount=NewDetails.Sum(c=>c.DiscountAmount.Value);
+
+                //if (order.Arrival_date.HasValue)
+                //{
+                //    entity.EntryDate = order.Arrival_date.Value;
+                //}
+                //else
+                //{
+                entity.EntryDate = System.DateTime.Now;
+                //}
+
+                entity.PrintStatus = 0;
+                BusinessHelper.Instance.InitEntity(entity);
+
+                if (entity.PurOrder_ID.HasValue && entity.PurOrder_ID > 0)
+                {
+                    entity.CustomerVendor_ID = order.CustomerVendor_ID;
+                    entity.PurOrder_NO = order.PurOrderNo;
+                }
+                entity.PurEntryNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.采购入库单);
+                //保存到数据库
+                BusinessHelper.Instance.InitEntity(entity);
+            }
+            return entity;
+        }
         public async override Task<List<T>> GetPrintDataSource(long MainID)
         {
             //var queryable = _appContext.Db.Queryable<tb_SaleOrderDetail>();

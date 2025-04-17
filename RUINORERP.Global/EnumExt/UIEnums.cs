@@ -6,6 +6,25 @@ using System.Threading.Tasks;
 
 namespace RUINORERP.Global
 {
+    public enum ButtonType
+    {
+        /// <summary>
+        /// 上下文右键菜单
+        /// </summary>
+        ContextMenu = 1,
+
+
+        /// <summary>
+        /// 按钮
+        /// </summary>
+        Button,
+ 
+        /// <summary>
+        /// 链接
+        /// </summary>
+        Link,
+
+    }
 
     /// <summary>
     /// 数据类型

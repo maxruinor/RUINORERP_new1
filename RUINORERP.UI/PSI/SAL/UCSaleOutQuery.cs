@@ -20,12 +20,13 @@ using RUINORERP.Common.Extensions;
 using RUINORERP.Business.Security;
 using RUINORERP.Model.Base;
 using RUINORERP.Business.Processor;
-
+using RUINORERP.UI.UControls;
+using NPOI.SS.UserModel;
 namespace RUINORERP.UI.PSI.SAL
 {
 
     [MenuAttrAssemblyInfo("销售出库单查询", ModuleMenuDefine.模块定义.进销存管理, ModuleMenuDefine.进销存管理.销售管理, BizType.销售出库单)]
-    public partial class UCSaleOutQuery : BaseBillQueryMC<tb_SaleOut, tb_SaleOutDetail>
+    public partial class UCSaleOutQuery : BaseBillQueryMC<tb_SaleOut, tb_SaleOutDetail>, UI.AdvancedUIModule.IContextMenuInfoAuth
     {
         public UCSaleOutQuery()
         {
@@ -44,7 +45,72 @@ namespace RUINORERP.UI.PSI.SAL
             }
 
         }
+        public List<ContextMenuController> AddContextMenu()
+        {
+            List<EventHandler> ContextClickList = new List<EventHandler>();
+            ContextClickList.Add(NewSumDataGridView_转为退货单);
+            List<ContextMenuController> list = new List<ContextMenuController>();
+            list.Add(new ContextMenuController("【转为退货单】", true, false, "NewSumDataGridView_转为退货单"));
+            return list;
+        }
 
+        public override void BuildContextMenuController()
+        {
+            List<EventHandler> ContextClickList = new List<EventHandler>();
+            ContextClickList.Add(NewSumDataGridView_转为退货单);
+            List<ContextMenuController> list = new List<ContextMenuController>();
+            list = AddContextMenu();
+
+            UIHelper.ControlContextMenuInvisible(CurMenuInfo, list);
+
+            if (_UCBillMasterQuery != null)
+            {
+                //base.dataGridView1.Use是否使用内置右键功能 = false;
+                ContextMenuStrip newContextMenuStrip = _UCBillMasterQuery.newSumDataGridViewMaster.GetContextMenu(_UCBillMasterQuery.newSumDataGridViewMaster.ContextMenuStrip
+                    , ContextClickList, list, true
+                    );
+                _UCBillMasterQuery.newSumDataGridViewMaster.ContextMenuStrip = newContextMenuStrip;
+            }
+        }
+
+        private void NewSumDataGridView_转为退货单(object sender, EventArgs e)
+        {
+            List<tb_SaleOut> selectlist = GetSelectResult();
+            foreach (var item in selectlist)
+            {
+                //只有审核状态才可以转换为出库单
+                if (item.DataStatus == (int)DataStatus.确认 && item.ApprovalStatus == (int)ApprovalStatus.已审核 && item.ApprovalResults.HasValue && item.ApprovalResults.Value)
+                {
+                    if (item.tb_SaleOutRes != null && item.tb_SaleOutRes.Count > 0)
+                    {
+                        if (MessageBox.Show($"当前订单{item.SaleOutNo}：已经生成过退货单，\r\n确定再次生成吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Information) == DialogResult.Yes)
+                        {
+
+                        }
+                        else
+                        {
+                            continue;
+                        }
+                    }
+                    tb_SaleOutController<tb_SaleOut> ctr = Startup.GetFromFac<tb_SaleOutController<tb_SaleOut>>();
+                    tb_SaleOutRe saleOutre = ctr.SaleOutToSaleOutRe(item);
+ 
+                    MenuPowerHelper menuPowerHelper;
+                    menuPowerHelper = Startup.GetFromFac<MenuPowerHelper>();
+                    tb_MenuInfo RelatedMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble && m.EntityName == nameof(tb_SaleOutRe) && m.BIBaseForm == "BaseBillEditGeneric`2").FirstOrDefault();
+                    if (RelatedMenuInfo != null)
+                    {
+                        menuPowerHelper.ExecuteEvents(RelatedMenuInfo, saleOutre);
+                    }
+                    return;
+                }
+                else
+                {
+                    // 弹出提示窗口：没有审核的销售订单，无源转为出库单
+                    MessageBox.Show($"当前出库单{item.SaleOutNo}：未审核，无法生成入库单", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+            }
+        }
         public override void SetGridViewDisplayConfig()
         {
             //base.SetRelatedBillCols<tb_SaleOrder>(c => c.SOrderNo, r => r.SaleOrderNo);

@@ -38,12 +38,12 @@ using RulesEngine;
 using System.Linq.Dynamic.Core.CustomTypeProviders;
 using Fireasy.Common.Extensions;
 using Netron.NetronLight;
-
+using RUINORERP.UI.UControls;
 namespace RUINORERP.UI.PSI.SAL
 {
 
     [MenuAttrAssemblyInfo("销售订单查询", ModuleMenuDefine.模块定义.进销存管理, ModuleMenuDefine.进销存管理.销售管理, BizType.销售订单)]
-    public partial class UCSaleOrderQuery : BaseBillQueryMC<tb_SaleOrder, tb_SaleOrderDetail>
+    public partial class UCSaleOrderQuery : BaseBillQueryMC<tb_SaleOrder, tb_SaleOrderDetail>, UI.AdvancedUIModule.IContextMenuInfoAuth
     {
         public UCSaleOrderQuery()
         {
@@ -51,10 +51,37 @@ namespace RUINORERP.UI.PSI.SAL
             base.RelatedBillEditCol = (c => c.SOrderNo);
 
 
-
             //显示转出库单
             tsbtnBatchConversion.Visible = true;
-            //base._UCBillMasterQuery.ColDisplayType = typeof(tb_SaleOrder);
+
+        }
+
+        public List<ContextMenuController> AddContextMenu()
+        {
+            List<EventHandler> ContextClickList = new List<EventHandler>();
+            ContextClickList.Add(NewSumDataGridView_转为销售出库单);
+            List<ContextMenuController> list = new List<ContextMenuController>();
+            list.Add(new ContextMenuController("【转为出库单】", true, false, "NewSumDataGridView_转为销售出库单"));
+            return list;
+        }
+
+        public override void BuildContextMenuController()
+        {
+            List<EventHandler> ContextClickList = new List<EventHandler>();
+            ContextClickList.Add(NewSumDataGridView_转为销售出库单);
+            List<ContextMenuController> list = new List<ContextMenuController>();
+            list = AddContextMenu();
+
+            UIHelper.ControlContextMenuInvisible(CurMenuInfo, list);
+
+            if (_UCBillMasterQuery != null)
+            {
+                //base.dataGridView1.Use是否使用内置右键功能 = false;
+                ContextMenuStrip newContextMenuStrip = _UCBillMasterQuery.newSumDataGridViewMaster.GetContextMenu(_UCBillMasterQuery.newSumDataGridViewMaster.ContextMenuStrip
+                    , ContextClickList, list, true
+                    );
+                _UCBillMasterQuery.newSumDataGridViewMaster.ContextMenuStrip = newContextMenuStrip;
+            }
         }
 
         //public override void BuildLimitQueryConditions()
@@ -85,6 +112,59 @@ namespace RUINORERP.UI.PSI.SAL
                     r.Rule.Expression.Split(new[] { "=>" }, StringSplitOptions.RemoveEmptyEntries)[1].Trim().Trim('"')
                     : null
             }).ToList();
+        }
+
+
+
+
+        private void NewSumDataGridView_转为销售出库单(object sender, EventArgs e)
+        {
+            List<tb_SaleOrder> selectlist = GetSelectResult();
+            foreach (var item in selectlist)
+            {
+                //只有审核状态才可以转换为出库单
+                if (item.DataStatus == (int)DataStatus.确认 && item.ApprovalStatus == (int)ApprovalStatus.已审核 && item.ApprovalResults.HasValue && item.ApprovalResults.Value)
+                {
+                    if (item.tb_SaleOuts != null && item.tb_SaleOuts.Count > 0)
+                    {
+                        if (MessageBox.Show($"当前订单{item.SOrderNo}：已经生成过出库单，\r\n确定再次生成吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Information) == DialogResult.Yes)
+                        {
+
+                        }
+                        else
+                        {
+                            continue;
+                        }
+                    }
+
+                    tb_SaleOrderController<tb_SaleOrder> ctr = Startup.GetFromFac<tb_SaleOrderController<tb_SaleOrder>>();
+                    //tb_SaleOut saleOut = SaleOrderToSaleOut(item);
+                    tb_SaleOut saleOut = ctr.SaleOrderToSaleOut(item);
+                    MenuPowerHelper menuPowerHelper;
+                    menuPowerHelper = Startup.GetFromFac<MenuPowerHelper>();
+                    tb_MenuInfo RelatedMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble && m.EntityName == nameof(tb_SaleOut) && m.BIBaseForm == "BaseBillEditGeneric`2").FirstOrDefault();
+                    if (RelatedMenuInfo != null)
+                    {
+                        menuPowerHelper.ExecuteEvents(RelatedMenuInfo, saleOut);
+                    }
+                    return;
+                }
+                else
+                {
+                    if (item.DataStatus == (int)DataStatus.完结)
+                    {
+                        // 弹出提示窗口：没有审核的销售订单，无源转为出库单
+                        MessageBox.Show($"当前订单{item.SOrderNo}：已结案，无法生成出库单", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    }
+                    else if (item.DataStatus == (int)DataStatus.草稿 || item.DataStatus == (int)DataStatus.新建)
+                    {
+                        // 弹出提示窗口：没有审核的销售订单，无源转为出库单
+                        MessageBox.Show($"当前订单{item.SOrderNo}：未审核，无法生成出库单", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+
+                    }
+
+                }
+            }
         }
 
         /*
@@ -183,7 +263,7 @@ namespace RUINORERP.UI.PSI.SAL
                 var paramUser = Expression.Parameter(typeof(tb_UserInfo), "user");
                 var paramMenu = Expression.Parameter(typeof(tb_MenuInfo), "menu");
                 var paramT = Expression.Parameter(typeof(tb_SaleOrder), "t");
-          
+
                 var resolvedExpr1 = "t => t.Employee_ID == \"121\" && t.DepartmentId == \"121\"";
 
                 // 使用ParsingConfig放宽解析限制
@@ -312,7 +392,7 @@ namespace RUINORERP.UI.PSI.SAL
                 .Replace("@DepartmentId", t.tb_employee.tb_department.ID.ToString());
         }
 
-       
+
         /// <summary>
         /// 如果需要查询条件查询，就要在子类中重写这个方法
         /// </summary>
@@ -327,7 +407,7 @@ namespace RUINORERP.UI.PSI.SAL
 
             QueryConditionFilter.FilterLimitExpressions.Add(lambda);
         }
-        
+
 
         public override void BuildSummaryCols()
         {
@@ -383,7 +463,10 @@ namespace RUINORERP.UI.PSI.SAL
 
                     }
 
-                    tb_SaleOut saleOut = SaleOrderToSaleOut(item);
+                    // tb_SaleOut saleOut = SaleOrderToSaleOut(item);
+                    tb_SaleOrderController<tb_SaleOrder> ctrOrder = Startup.GetFromFac<tb_SaleOrderController<tb_SaleOrder>>();
+                    tb_SaleOut saleOut = ctrOrder.SaleOrderToSaleOut(item);
+
                     ReturnMainSubResults<tb_SaleOut> rsrs = await ctr.BaseSaveOrUpdateWithChild<tb_SaleOut>(saleOut);
                     if (rsrs.Succeeded)
                     {
@@ -405,6 +488,7 @@ namespace RUINORERP.UI.PSI.SAL
             MainForm.Instance.logger.LogInformation("转换完成,成功订单数量:" + conter);
         }
 
+        /* 放到了 订单的业务层 
         /// <summary>
         /// 转换为销售出库单
         /// </summary>
@@ -479,7 +563,7 @@ namespace RUINORERP.UI.PSI.SAL
             }
             return entity;
         }
-
+        */
 
         //public override List<tb_SaleOrder> GetPrintDatas(List<tb_SaleOrder> EditEntitys)
         //{

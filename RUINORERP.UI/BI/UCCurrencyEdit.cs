@@ -18,8 +18,6 @@ using RUINORERP.UI.Common;
 
 namespace RUINORERP.UI.BI
 {
-
-
     [MenuAttrAssemblyInfo("币别资料编辑", true, UIType.单表数据)]
     public partial class UCCurrencyEdit : BaseEditGeneric<tb_Currency>
     {
@@ -27,10 +25,6 @@ namespace RUINORERP.UI.BI
         {
             InitializeComponent();
         }
-
-
-
-
 
 
         public override void BindData(BaseEntity entity)
@@ -47,7 +41,7 @@ namespace RUINORERP.UI.BI
             DataBindingHelper.BindData4TextBox<tb_Currency>(entity, t => t.CurrencySymbol, txtCurrencySymbol, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4CheckBox<tb_Currency>(entity, t => t.Is_enabled, chkIs_enabled, false);
             //有默认值
-            DataBindingHelper.BindData4CheckBox<tb_Currency>(entity, t => t.Is_available, chkIs_available, false);
+           // DataBindingHelper.BindData4CheckBox<tb_Currency>(entity, t => t.Is_available, chkIs_available, false);
             //有默认值
             DataBindingHelper.BindData4CheckBox<tb_Currency>(entity, t => t.Is_BaseCurrency, chkIs_BaseCurrency, false);
             base.BindData(entity);

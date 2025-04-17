@@ -1131,15 +1131,7 @@ namespace RUINORERP.UI.BaseForm
             }
         }
 
-        //protected virtual void MenuPersonalizedSettings()
-        //{
-        //    UserCenter.frmMenuPersonalization frmMenu = new UserCenter.frmMenuPersonalization();
-        //    frmMenu.MenuPathKey = CurMenuInfo.ClassPath;
-        //    if (frmMenu.ShowDialog() == DialogResult.OK)
-        //    {
-        //        LoadQueryConditionToUI(frmMenu.QueryShowColQty.Value);
-        //    }
-        //}
+ 
         protected virtual void Modify(BaseEdit frmadd)
         {
             if (bindingSourceList.Current != null)
@@ -1379,8 +1371,13 @@ namespace RUINORERP.UI.BaseForm
         /// </summary>
         protected async virtual void ExtendedQuery(bool UseAutoNavQuery = false)
         {
+
             if (ValidationHelper.hasValidationErrors(this.Controls))
                 return;
+            if (QueryDtoProxy == null)
+            {
+                return;
+            }
 
             dataGridView1.ReadOnly = true;
 
@@ -1712,10 +1709,10 @@ namespace RUINORERP.UI.BaseForm
                         break;
                     case ActionStatus.新增:
                     case ActionStatus.修改:
-                        if (MainForm.Instance.AppContext.SysConfig.IsDebug)
-                        {
-                            MainForm.Instance.logger.LogInformation($"保存:{typeof(T).Name}");
-                        }
+                        //if (MainForm.Instance.AppContext.SysConfig.IsDebug)
+                        //{
+                        //    MainForm.Instance.logger.LogInformation($"保存:{typeof(T).Name}");
+                        //}
 
                         if (entity.PrimaryKeyID > 0)
                         {

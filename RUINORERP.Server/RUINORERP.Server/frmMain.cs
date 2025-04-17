@@ -53,6 +53,7 @@ using System.Data;
 using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
+using System.Net;
 using System.Net.NetworkInformation;
 using System.Numerics;
 using System.Reflection.Metadata;
@@ -681,6 +682,16 @@ namespace RUINORERP.Server
                     }
                 }
 
+                try
+                {
+
+                }
+                catch (Exception ex)
+                {
+                    //线程
+                    //frmMain.Instance.PrintInfoLog($"CheckAndRemoveExpiredSessions{ex.Message}。");
+                    Console.WriteLine($"CheckAndRemoveExpiredSessions: {ex.Message}");
+                }
 
             }
             catch (Exception ex)
@@ -798,14 +809,18 @@ namespace RUINORERP.Server
                     //注册用于处理连接、关闭的Session处理器
                     .UseSessionHandler(async (session) =>
                     {
-                        var remoteIp = session.RemoteEndPoint.ToString();
-
-                        // 检查IP是否被封禁
-                        if (BlacklistManager.IsIpBanned(remoteIp))
+                        if (session.RemoteEndPoint is IPEndPoint iP)
                         {
-                            await session.CloseAsync(SuperSocket.Connection.CloseReason.ServerShutdown); // 立即关闭连接
-                            return;
+                            var remoteIp = iP.Address.ToString();
+
+                            // 检查IP是否被封禁
+                            if (BlacklistManager.IsIpBanned(remoteIp))
+                            {
+                                await session.CloseAsync(SuperSocket.Connection.CloseReason.ServerShutdown); // 立即关闭连接
+                                return;
+                            }
                         }
+
 
                         SessionforBiz sessionforBiz = session as SessionforBiz;
                         sessionListBiz.TryAdd(session.SessionID, session as SessionforBiz);
@@ -863,20 +878,21 @@ namespace RUINORERP.Server
                                     frmUserList.userInfos.Remove(sg.User);
                                 }));
                             }
-
-                            PrintMsg($"{DateTime.Now} [SessionforBiz-主要程序]  {session.RemoteEndPoint} closed，原因：: {reason.Reason}");
+                            if (reason.Reason!=SuperSocket.Connection.CloseReason.ServerShutdown)
+                            {
+                                PrintMsg($"{DateTime.Now} [SessionforBiz-主要程序]  {session.RemoteEndPoint} closed，原因：: {reason.Reason}");
+                            }
                             sessionListBiz.Remove(sg.SessionID, out sg);
                             if (sg != null)
                             {
                                 PrintMsg(sg.User.用户名 + "断开连接");
-                                //frmusermange.userInfos.Remove(sg.User);
+                                //谁突然掉线或退出。服务器主动将他的锁在别人电脑上的单据释放
+                                //SystemService.process断开连接锁定释放(sg.User.UserID);
+
+                                //移除再广播出去 服务器主动将他的锁在别人电脑上的单据释放
+                                lockManager.RemoveLockByUserID(sg.User.UserID);
                             }
-
-                            //谁突然掉线或退出。服务器主动将他的锁在别人电脑上的单据释放
-                            //SystemService.process断开连接锁定释放(sg.User.UserID);
-
-                            //移除再广播出去 服务器主动将他的锁在别人电脑上的单据释放
-                            lockManager.RemoveLockByUserID(sg.User.UserID);
+                   
                             ServerLockManagerCmd cmd = new ServerLockManagerCmd(CmdOperation.Send);
                             cmd.BuildDataPacketBroadcastLockStatus();
 

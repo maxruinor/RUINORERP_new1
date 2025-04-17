@@ -536,7 +536,7 @@
     <Compile Include="AdvancedUIModule\Class1.cs" />
     <Compile Include="AdvancedUIModule\CustomComponentResourceManager.cs" />
     <Compile Include="AdvancedUIModule\DynamicInputParams.cs" />
-    <Compile Include="AdvancedUIModule\IFormAuth.cs" />
+    <Compile Include="AdvancedUIModule\IFormMenuInfoAuth.cs" />
     <Compile Include="AdvancedUIModule\UCAdvDateTimerPickerGroup.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -758,6 +758,18 @@
     </Compile>
     <Compile Include="BI\UCCompanyList.Designer.cs">
       <DependentUpon>UCCompanyList.cs</DependentUpon>
+    </Compile>
+    <Compile Include="BI\UCCurrencyExchangeRateEdit.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="BI\UCCurrencyExchangeRateEdit.Designer.cs">
+      <DependentUpon>UCCurrencyExchangeRateEdit.cs</DependentUpon>
+    </Compile>
+    <Compile Include="BI\UCCurrencyExchangeRateList.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="BI\UCCurrencyExchangeRateList.Designer.cs">
+      <DependentUpon>UCCurrencyExchangeRateList.cs</DependentUpon>
     </Compile>
     <Compile Include="BI\UCModuleDefinitionEdit.cs">
       <SubType>Form</SubType>
@@ -2470,6 +2482,12 @@
     <Compile Include="UICreator\tb_BillingInformationEdit.Designer.cs">
       <DependentUpon>tb_BillingInformationEdit.cs</DependentUpon>
     </Compile>
+    <Compile Include="UICreator\tb_CurrencyExchangeRateEdit.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="UICreator\tb_CurrencyExchangeRateEdit.Designer.cs">
+      <DependentUpon>tb_CurrencyExchangeRateEdit.cs</DependentUpon>
+    </Compile>
     <Compile Include="UserCenter\CentralConsole.cs" />
     <Compile Include="UserCenter\ControlCenterConfig.cs">
       <SubType>UserControl</SubType>
@@ -2843,6 +2861,12 @@
     </EmbeddedResource>
     <EmbeddedResource Include="BI\UCCompanyList.resx">
       <DependentUpon>UCCompanyList.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="BI\UCCurrencyExchangeRateEdit.resx">
+      <DependentUpon>UCCurrencyExchangeRateEdit.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="BI\UCCurrencyExchangeRateList.resx">
+      <DependentUpon>UCCurrencyExchangeRateList.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="BI\UCModuleDefinitionEdit.resx">
       <DependentUpon>UCModuleDefinitionEdit.cs</DependentUpon>
@@ -3596,6 +3620,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="UICreator\tb_BillingInformationEdit.resx">
       <DependentUpon>tb_BillingInformationEdit.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UICreator\tb_CurrencyExchangeRateEdit.resx">
+      <DependentUpon>tb_CurrencyExchangeRateEdit.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="UserCenter\ControlCenterConfig.resx">
       <DependentUpon>ControlCenterConfig.cs</DependentUpon>

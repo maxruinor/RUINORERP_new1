@@ -28,6 +28,9 @@ namespace RUINORERP.Business
         {
             // 这里添加额外的初始化代码
             RuleFor(x => x.Qty).GreaterThan(0).WithMessage("调拨数量:调拨数量要大于零。");
+            
+          
+
         }
     }
 

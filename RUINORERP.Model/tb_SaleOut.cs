@@ -179,10 +179,10 @@ namespace RUINORERP.Model
 
         private decimal _ShipCost = ((0));
         /// <summary>
-        /// 运费
+        /// 运费收入
         /// </summary>
-        [AdvQueryAttribute(ColName = "ShipCost", ColDesc = "运费")]
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType = "Decimal", ColumnName = "ShipCost", DecimalDigits = 4, IsNullable = false, ColumnDescription = "运费")]
+        [AdvQueryAttribute(ColName = "ShipCost", ColDesc = "运费收入")]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType = "Decimal", ColumnName = "ShipCost", DecimalDigits = 4, IsNullable = false, ColumnDescription = "运费收入")]
         public decimal ShipCost
         {
             get { return _ShipCost; }
@@ -191,6 +191,22 @@ namespace RUINORERP.Model
                 SetProperty(ref _ShipCost, value);
             }
         }
+
+        private decimal _FreightCost = ((0));
+        /// <summary>
+        /// 运费成本
+        /// </summary>
+        [AdvQueryAttribute(ColName = "FreightCost", ColDesc = "运费成本")]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType = "Decimal", ColumnName = "FreightCost", DecimalDigits = 4, IsNullable = false, ColumnDescription = "运费成本")]
+        public decimal FreightCost
+        {
+            get { return _FreightCost; }
+            set
+            {
+                SetProperty(ref _FreightCost, value);
+            }
+        }
+
 
         private int _TotalQty = ((0));
         /// <summary>
@@ -224,7 +240,7 @@ namespace RUINORERP.Model
 
         private DateTime _OutDate;
         /// <summary>
-        /// 出库日期
+        /// 出库日期-以这个日期为标准来计算回款时间 如果是账期时
         /// </summary>
         [AdvQueryAttribute(ColName = "OutDate", ColDesc = "出库日期")]
         [SugarColumn(ColumnDataType = "datetime", SqlParameterDbType = "DateTime", ColumnName = "OutDate", IsNullable = false, ColumnDescription = "出库日期")]
@@ -251,6 +267,23 @@ namespace RUINORERP.Model
                 SetProperty(ref _DeliveryDate, value);
             }
         }
+
+
+        private DateTime? _DueDate;
+        /// <summary>
+        /// 账期届满日
+        /// </summary>
+        [AdvQueryAttribute(ColName = "DueDate", ColDesc = "账期届满日")]
+        [SugarColumn(ColumnDataType = "datetime", SqlParameterDbType = "DateTime", ColumnName = "DueDate", IsNullable = true, ColumnDescription = "账期届满日")]
+        public DateTime? DueDate
+        {
+            get { return _DueDate; }
+            set
+            {
+                SetProperty(ref _DueDate, value);
+            }
+        }
+
 
         private string _ShippingAddress;
         /// <summary>

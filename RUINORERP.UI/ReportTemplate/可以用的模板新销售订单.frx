@@ -270,7 +270,6 @@ namespace FastReport
         <Column Name="Paytype_ID" DataType="System.Int64"/>
         <Column Name="Paytype_Name" DataType="System.String"/>
         <Column Name="Desc" DataType="System.String"/>
-        <Column Name="Cash" DataType="System.Nullable`1[[System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
         <Column Name="Selected" DataType="System.Nullable`1[[System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]" BindableControl="CheckBox"/>
         <BusinessObjectDataSource Name="BusinessObjectDataSource53" Alias="tb_PurOrders" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_PurOrder, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_PurOrders"/>
         <BusinessObjectDataSource Name="BusinessObjectDataSource54" Alias="tb_CustomerVendors" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_CustomerVendor, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_CustomerVendors"/>

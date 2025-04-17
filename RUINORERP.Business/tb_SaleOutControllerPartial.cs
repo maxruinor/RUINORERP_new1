@@ -30,6 +30,8 @@ using OfficeOpenXml.FormulaParsing.Excel.Functions.Text;
 using RUINORERP.Business.Security;
 using RUINORERP.Global.EnumExt.CRM;
 using System.Runtime.InteropServices.ComTypes;
+using RUINORERP.Business.CommService;
+using AutoMapper;
 
 
 namespace RUINORERP.Business
@@ -177,7 +179,7 @@ namespace RUINORERP.Business
                             }
                         }
                     }
-           
+
 
                     // 如果成本为零时则会实时检测库存成本，以库存成本为基准。这种情况解决未知成本，提前销售的情况。
                     //这里设置一个集合 用于保存特殊情况，后面统一更新
@@ -801,7 +803,161 @@ namespace RUINORERP.Business
         }
 
 
+        /// <summary>
+        /// 转换为销售退库单
+        /// </summary>
+        /// <param name="saleout"></param>
+        public tb_SaleOutRe SaleOutToSaleOutRe(tb_SaleOut saleout)
+        {
+            tb_SaleOutRe entity = new tb_SaleOutRe();
+            //转单
+            if (saleout != null)
+            {
 
+
+                IMapper mapper = RUINORERP.Business.AutoMapper.AutoMapperConfig.RegisterMappings().CreateMapper();
+                entity = mapper.Map<tb_SaleOutRe>(saleout);
+                entity.ApprovalOpinions = "快捷转单";
+                entity.ApprovalResults = null;
+                entity.DataStatus = (int)DataStatus.草稿;
+                entity.ApprovalStatus = (int)ApprovalStatus.未审核;
+                entity.Approver_at = null;
+                entity.Approver_by = null;
+                entity.PrintStatus = 0;
+                entity.ActionStatus = ActionStatus.新增;
+                entity.ApprovalOpinions = "";
+                entity.Modified_at = null;
+                entity.Modified_by = null;
+                List<string> tipsMsg = new List<string>();
+                List<tb_SaleOutReDetail> details = mapper.Map<List<tb_SaleOutReDetail>>(saleout.tb_SaleOutDetails);
+                List<tb_SaleOutReDetail> NewDetails = new List<tb_SaleOutReDetail>();
+
+                for (global::System.Int32 i = 0; i < details.Count; i++)
+                {
+                    var aa = details.Select(c => c.ProdDetailID).ToList().GroupBy(x => x).Where(x => x.Count() > 1).Select(x => x.Key).ToList();
+                    if (aa.Count > 0 && details[i].SaleOutDetail_ID > 0)
+                    {
+                        #region 产品ID可能大于1行，共用料号情况
+                        tb_SaleOutDetail item = saleout.tb_SaleOutDetails.FirstOrDefault(c => c.ProdDetailID == details[i].ProdDetailID
+                        && c.Location_ID == details[i].Location_ID
+                        && c.SaleOutDetail_ID == details[i].SaleOutDetail_ID);
+                        details[i].Cost = item.Cost;
+                        details[i].CustomizedCost = item.CustomizedCost;
+                        //这时有一种情况就是订单时没有成本。没有产品。出库前有类似采购入库确定的成本
+                        if (details[i].Cost == 0)
+                        {
+                            View_ProdDetail obj = BizCacheHelper.Instance.GetEntity<View_ProdDetail>(details[i].ProdDetailID);
+                            if (obj != null && obj.GetType().Name != "Object" && obj is View_ProdDetail prodDetail)
+                            {
+                                if (obj.Inv_Cost != null)
+                                {
+                                    details[i].Cost = obj.Inv_Cost.Value;
+                                }
+                            }
+                        }
+                        details[i].Quantity = item.Quantity - item.TotalReturnedQty;// 已经出数量去掉
+                        details[i].SubtotalTransAmount = details[i].TransactionPrice * details[i].Quantity;
+                        details[i].SubtotalCostAmount = (details[i].Cost + details[i].CustomizedCost) * details[i].Quantity;
+                        if (details[i].Quantity > 0)
+                        {
+                            NewDetails.Add(details[i]);
+                        }
+                        else
+                        {
+                            tipsMsg.Add($"销售出库单{saleout.SaleOutNo}，{item.tb_proddetail.tb_prod.CNName + item.tb_proddetail.tb_prod.Specifications}已退回数为{item.TotalReturnedQty}，可退库数为{details[i].Quantity}，当前行数据忽略！");
+                        }
+
+                        #endregion
+                    }
+                    else
+                    {
+                        #region 每行产品ID唯一
+                        tb_SaleOutDetail item = saleout.tb_SaleOutDetails.FirstOrDefault(c => c.ProdDetailID == details[i].ProdDetailID
+                          && c.Location_ID == details[i].Location_ID
+                        && c.SaleOutDetail_ID == details[i].SaleOutDetail_ID);
+                        details[i].Cost = item.Cost;
+                        details[i].CustomizedCost = item.CustomizedCost;
+                        //这时有一种情况就是订单时没有成本。没有产品。出库前有类似采购入库确定的成本
+                        if (details[i].Cost == 0)
+                        {
+                            View_ProdDetail obj = BizCacheHelper.Instance.GetEntity<View_ProdDetail>(details[i].ProdDetailID);
+                            if (obj != null && obj.GetType().Name != "Object" && obj is View_ProdDetail prodDetail)
+                            {
+                                if (obj.Inv_Cost == null)
+                                {
+                                    obj.Inv_Cost = 0;
+                                }
+                                details[i].Cost = obj.Inv_Cost.Value;
+                            }
+                        }
+                        details[i].Quantity = details[i].Quantity - item.TotalReturnedQty;// 减掉已经出库的数量
+                        details[i].SubtotalTransAmount = details[i].TransactionPrice * details[i].Quantity;
+                        details[i].SubtotalCostAmount = (details[i].Cost + details[i].CustomizedCost) * details[i].Quantity;
+
+                        if (details[i].Quantity > 0)
+                        {
+                            NewDetails.Add(details[i]);
+                        }
+                        else
+                        {
+                            tipsMsg.Add($"当前订单的SKU:{item.tb_proddetail.SKU}已出库数量为{details[i].Quantity}，当前行数据将不会加载到明细！");
+                        }
+                        #endregion
+                    }
+
+                }
+
+                if (NewDetails.Count == 0)
+                {
+                    tipsMsg.Add($"出库单:{entity.SaleOut_NO}已全部退库，请检查是否正在重复退库！");
+                }
+
+                entity.tb_SaleOutReDetails = NewDetails;
+
+                //如果这个订单已经有出库单 则第二次运费为0
+                if (saleout.tb_SaleOutRes != null && saleout.tb_SaleOutRes.Count > 0)
+                {
+                    if (saleout.ShipCost > 0)
+                    {
+                        tipsMsg.Add($"当前出库单已经有退库记录，运费收入退回已经计入前面退库单，当前退库运费收入退回为零！");
+                        entity.ShipCost = 0;
+                    }
+                    else
+                    {
+                        tipsMsg.Add($"当前出库单已经有退库记录！");
+                    }
+                }
+
+
+
+                entity.ReturnDate = System.DateTime.Now;
+
+
+
+                BusinessHelper.Instance.InitEntity(entity);
+
+                if (entity.SaleOut_MainID.HasValue && entity.SaleOut_MainID > 0)
+                {
+                    entity.CustomerVendor_ID = saleout.CustomerVendor_ID;
+                    entity.SaleOut_NO = saleout.SaleOutNo;
+                    entity.IsFromPlatform = saleout.IsFromPlatform;
+                }
+                entity.ReturnNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.销售退回单);
+
+                entity.tb_saleout = saleout;
+                entity.TotalQty = NewDetails.Sum(c => c.Quantity);
+            
+            
+                entity.TotalAmount = NewDetails.Sum(c => c.TransactionPrice * c.Quantity);
+                entity.TotalAmount = entity.TotalAmount + entity.ShipCost;
+                entity.ActualRefundAmount = entity.TotalAmount;
+                
+                BusinessHelper.Instance.InitEntity(entity);
+                //保存到数据库
+
+            }
+            return entity;
+        }
 
 
 

@@ -29,6 +29,7 @@ using System.Drawing.Drawing2D;
 using System.Drawing;
 using StackExchange.Redis;
 using RUINORERP.UI.UCSourceGrid;
+using System.Web.UI.WebControls;
 
 namespace RUINORERP.UI.Common
 {
@@ -257,7 +258,7 @@ namespace RUINORERP.UI.Common
         /// 控制字段是否显示，添加到里面的是不显示的
         /// </summary>
         /// <param name="InvisibleCols"></param>
-        public static void ControlChildColumnsInvisible(tb_MenuInfo CurMenuInfo,List<SGDefineColumnItem> listCols)
+        public static void ControlChildColumnsInvisible(tb_MenuInfo CurMenuInfo, List<SGDefineColumnItem> listCols)
         {
             if (!MainForm.Instance.AppContext.IsSuperUser)
             {
@@ -408,6 +409,55 @@ namespace RUINORERP.UI.Common
             }
         }
 
+        /// <summary>
+        /// 控制右键菜单
+        /// </summary>
+        /// <param name="kryptonPanelMainInfo"></param>
+        public static void ControlContextMenuInvisible(tb_MenuInfo CurMenuInfo, List<UControls.ContextMenuController> list)
+        {
+            if (!MainForm.Instance.AppContext.IsSuperUser)
+            {
+                if (CurMenuInfo != null && CurMenuInfo.tb_P4Buttons != null)
+                {
+                    List<tb_P4Button> P4Buttons =
+                   CurMenuInfo.tb_P4Buttons
+                   .Where(p => p.RoleID == MainForm.Instance.AppContext.CurrentUser_Role.RoleID
+                   && p.tb_buttoninfo.ButtonType == RUINORERP.Global.ButtonType.ContextMenu.ToString()).ToList();
+                    
+                    //如果没有配置这个权限。直接清空
+                    if (P4Buttons.Count==0)
+                    {
+                        list.Clear();
+                        return;
+                    }
+                    foreach (var item in P4Buttons)
+                    {
+                        if (item != null)
+                        {
+                            if (item.tb_buttoninfo != null)
+                            {
+                                //主表时,列不可用或设置为不可见时
+                                //设置不可见
+                                if (!string.IsNullOrEmpty(item.tb_buttoninfo.ButtonType) && !item.tb_buttoninfo.IsEnabled)
+                                {
+                                    list.RemoveWhere(c => c.MenuText == item.tb_buttoninfo.BtnText);
+                                }
+                                else
+                                {
+                                    if (!string.IsNullOrEmpty(item.tb_buttoninfo.ButtonType) && !item.IsVisble)
+                                    {
+                                        list.RemoveWhere(c => c.MenuText == item.tb_buttoninfo.BtnText);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    
+                }
+            }
+
+
+        }
 
 
         /// <summary>

@@ -111,7 +111,10 @@ namespace RUINORERP.UI.ProductEAV
         {
             if (ValidationHelper.hasValidationErrors(this.Controls))
                 return;
-
+            if (QueryDtoProxy==null)
+            {
+                return;
+            }
             dataGridView1.ReadOnly = true;
 
             //既然前台指定的查询哪些字段，到时可以配置。这里应该是 除软件删除外的。其他字段不需要

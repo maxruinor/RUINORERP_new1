@@ -481,9 +481,9 @@ namespace RUINORERP.UI.Common
 
                 }
             }
-            if (c is IFormAuth)
+            if (c is IToolStripMenuInfoAuth)
             {
-                IFormAuth formAuth = c as IFormAuth;
+                IToolStripMenuInfoAuth formAuth = c as IToolStripMenuInfoAuth;
                 if (formAuth != null)
                 {
                     ToolStripItem[] stripItems = formAuth.AddExtendButton(menuInfo);
@@ -499,6 +499,35 @@ namespace RUINORERP.UI.Common
                         btnInfoSub.IsEnabled = true;
                         //tb_ButtonInfo ExistBtnInfoSub = BtnController.IsExistEntity(it => it.ClassPath == info.ClassPath && it.BtnText == btnInfoSub.BtnText && it.MenuID == menuInfo.MenuID);
                         tb_ButtonInfo ExistBtnInfoSub = menuInfo.tb_ButtonInfos.FirstOrDefault(it => it.ClassPath == info.ClassPath && it.BtnText == btnInfoSub.BtnText && it.MenuID == menuInfo.MenuID);
+                        if (ExistBtnInfoSub == null)
+                        {
+                            tb_ButtonInfos.Add(btnInfoSub);
+                        }
+                    }
+                }
+            }
+
+            if (c is IContextMenuInfoAuth)
+            {
+                IContextMenuInfoAuth formAuth = c as IContextMenuInfoAuth;
+                if (formAuth != null)
+                {
+                    List<UI.UControls.ContextMenuController> ContextMenuItems = formAuth.AddContextMenu();
+                    foreach (var tsitem in ContextMenuItems)
+                    {
+                        //添加
+                        tb_ButtonInfo btnInfoSub = new tb_ButtonInfo();
+                        btnInfoSub.BtnName = tsitem.MenuText;
+                        btnInfoSub.BtnText = tsitem.MenuText;
+                        btnInfoSub.FormName = info.ClassName;
+                        btnInfoSub.ClassPath = info.ClassPath;
+                        btnInfoSub.MenuID = menuInfo.MenuID;
+                        btnInfoSub.ButtonType = ButtonType.ContextMenu.ToString();
+                        btnInfoSub.IsEnabled = true;
+                        //tb_ButtonInfo ExistBtnInfoSub = BtnController.IsExistEntity(it => it.ClassPath == info.ClassPath && it.BtnText == btnInfoSub.BtnText && it.MenuID == menuInfo.MenuID);
+                        tb_ButtonInfo ExistBtnInfoSub = menuInfo.tb_ButtonInfos.FirstOrDefault(it => it.ClassPath == info.ClassPath
+                        && it.ButtonType == ButtonType.ContextMenu.ToString()
+                        && it.BtnText == btnInfoSub.BtnText && it.MenuID == menuInfo.MenuID);
                         if (ExistBtnInfoSub == null)
                         {
                             tb_ButtonInfos.Add(btnInfoSub);

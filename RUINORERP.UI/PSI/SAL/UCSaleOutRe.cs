@@ -301,8 +301,10 @@ namespace RUINORERP.UI.PSI.SAL
             }*/
             listCols.SetCol_Summary<tb_SaleOutReDetail>(c => c.Quantity);
             listCols.SetCol_Summary<tb_SaleOutReDetail>(c => c.SubtotalTransAmount);
-
-
+            listCols.SetCol_Summary<tb_SaleOutReDetail>(c => c.CommissionAmount);
+            listCols.SetCol_Summary<tb_SaleOutReDetail>(c => c.SubtotalCostAmount);
+            listCols.SetCol_Summary<tb_SaleOutReDetail>(c => c.SubtotalUntaxedAmount);
+            listCols.SetCol_Summary<tb_SaleOutReDetail>(c => c.SubtotalTaxAmount);
 
             listCols.SetCol_Formula<tb_SaleOutReDetail>((a, b) => a.Cost * b.Quantity, c => c.SubtotalCostAmount);
             listCols.SetCol_Formula<tb_SaleOutReDetail>((a, b) => a.TransactionPrice * b.Quantity, c => c.SubtotalTransAmount);

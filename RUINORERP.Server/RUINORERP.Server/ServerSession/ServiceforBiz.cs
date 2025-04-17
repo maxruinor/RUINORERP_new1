@@ -54,7 +54,7 @@ namespace RUINORERP.Server.ServerSession
             // 记录断开次数
             _connectionAttempts.AddOrUpdate(ip, 1, (_, count) => count + 1);
 
-            // 检查是否超过阈值（例如30秒内断开10次）
+            // 检查是否超过阈值（例如30秒内断开5次）
             if (_connectionAttempts.TryGetValue(ip, out var attempts) && attempts >= 5)
             {
                 BlacklistManager.BanIp(ip, TimeSpan.FromHours(1)); // 封禁1小时

@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：02/19/2025 22:56:55
+// 时间：04/16/2025 12:02:51
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -18,10 +18,10 @@ using RUINORERP.Global.CustomAttribute;
 namespace RUINORERP.Model
 {
     /// <summary>
-    /// 币别换算表-暂时不使用如果ERP系统需要支持多币种，通常需要在所有涉及外币的业务单据和凭证中添加外币和本币两个字段来保存对应的金额
+    /// 币别换算表
     /// </summary>
     [Serializable()]
-    [Description("币别换算表-暂时不使用如果ERP系统需要支持多币种，通常需要在所有涉及外币的业务单据和凭证中添加外币和本币两个字段来保存对应的金额")]
+    [Description("币别换算表")]
     [SugarTable("tb_CurrencyExchangeRate")]
     public partial class tb_CurrencyExchangeRate: BaseEntity, ICloneable
     {
@@ -30,7 +30,7 @@ namespace RUINORERP.Model
             base.FieldNameList = fieldNameList;
             if (!PK_FK_ID_Check())
             {
-                throw new Exception("币别换算表-暂时不使用如果ERP系统需要支持多币种，通常需要在所有涉及外币的业务单据和凭证中添加外币和本币两个字段来保存对应的金额tb_CurrencyExchangeRate" + "外键ID与对应主主键名称不一致。请修改数据库");
+                throw new Exception("币别换算表tb_CurrencyExchangeRate" + "外键ID与对应主主键名称不一致。请修改数据库");
             }
         }
 
@@ -71,6 +71,7 @@ namespace RUINORERP.Model
         /// </summary>
         [AdvQueryAttribute(ColName = "BaseCurrencyID",ColDesc = "基本币别")] 
         [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "BaseCurrencyID" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "基本币别" )]
+        [FKRelationAttribute("tb_Currency","CurrencyID")]
         public long BaseCurrencyID
         { 
             get{return _BaseCurrencyID;}
@@ -85,6 +86,7 @@ namespace RUINORERP.Model
         /// </summary>
         [AdvQueryAttribute(ColName = "TargetCurrencyID",ColDesc = "目标币别")] 
         [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "TargetCurrencyID" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "目标币别" )]
+        [FKRelationAttribute("tb_Currency","CurrencyID")]
         public long TargetCurrencyID
         { 
             get{return _TargetCurrencyID;}
@@ -177,6 +179,23 @@ namespace RUINORERP.Model
                         }
         }
 
+
+        private string _Notes;
+        /// <summary>
+        /// 备注
+        /// </summary>
+        [AdvQueryAttribute(ColName = "Notes", ColDesc = "备注")]
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType = "String", ColumnName = "Notes", Length = 1500, IsNullable = true, ColumnDescription = "备注")]
+        public string Notes
+        {
+            get { return _Notes; }
+            set
+            {
+                SetProperty(ref _Notes, value);
+            }
+        }
+
+
         private DateTime? _Created_at;
         /// <summary>
         /// 创建时间
@@ -236,6 +255,16 @@ namespace RUINORERP.Model
         #endregion
 
         #region 扩展属性
+        [SugarColumn(IsIgnore = true)]
+        //[Browsable(false)] 打印报表时的数据源会不显示
+        [Navigate(NavigateType.OneToOne, nameof(BaseCurrencyID))]
+        public virtual tb_Currency tb_currencyBase { get; set; }
+
+        [SugarColumn(IsIgnore = true)]
+        //[Browsable(false)] 打印报表时的数据源会不显示
+        [Navigate(NavigateType.OneToOne, nameof(TargetCurrencyID))]
+        public virtual tb_Currency tb_currencyTarget { get; set; }
+
 
 
         #endregion
@@ -247,6 +276,14 @@ namespace RUINORERP.Model
 private bool PK_FK_ID_Check()
 {
   bool rs=true;
+         if("Currency_ID"!="BaseCurrencyID")
+        {
+        // rs=false;
+        }
+         if("Currency_ID"!="TargetCurrencyID")
+        {
+        // rs=false;
+        }
 return rs;
 }
 

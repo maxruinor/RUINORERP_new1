@@ -53,7 +53,9 @@ namespace RUINORERP.UI.PSI.SAL
             base.toolStripButton结案.Visible = true;
         }
 
-
+    
+       
+      
 
         internal override void LoadDataToUI(object Entity)
         {
@@ -122,6 +124,7 @@ namespace RUINORERP.UI.PSI.SAL
             DataBindingHelper.BindData4TextBox<tb_SaleOut>(entity, t => t.PlatformOrderNo, txtPlatformOrderNo, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_SaleOut>(entity, t => t.SaleOutNo, txtSaleOutNo, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_SaleOut>(entity, t => t.ShipCost.ToString(), txtShipCost, BindDataType4TextBox.Money, false);
+            DataBindingHelper.BindData4TextBox<tb_SaleOut>(entity, t => t.FreightCost.ToString(), txtFreightCost, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4TextBox<tb_SaleOut>(entity, t => t.TotalAmount.ToString(), txtTotalAmount, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4DataTime<tb_SaleOut>(entity, t => t.DeliveryDate, dtpDeliveryDate, false);
             DataBindingHelper.BindData4DataTime<tb_SaleOut>(entity, t => t.OutDate, dtpOutDate, false);
@@ -427,15 +430,18 @@ namespace RUINORERP.UI.PSI.SAL
                 }
                 EditEntity.TotalQty = details.Sum(c => c.Quantity);
                 EditEntity.TotalCost = details.Sum(c => c.Cost * c.Quantity);
-                EditEntity.TotalAmount = details.Sum(c => c.TransactionPrice * c.Quantity);
+                EditEntity.TotalCost = EditEntity.TotalCost + EditEntity.FreightCost;
 
-                EditEntity.TotalAmount = details.Sum(c => c.TransactionPrice * c.Quantity);
                 EditEntity.TotalTaxAmount = details.Sum(c => c.SubtotalTaxAmount);
                 EditEntity.TotalTaxAmount = EditEntity.TotalTaxAmount.ToRoundDecimalPlaces(MainForm.Instance.authorizeController.GetMoneyDataPrecision());
+
                 EditEntity.TotalUntaxedAmount = details.Sum(c => c.SubtotalUntaxedAmount);
-                EditEntity.CollectedMoney = EditEntity.TotalAmount;
                 EditEntity.TotalUntaxedAmount = EditEntity.TotalUntaxedAmount + EditEntity.ShipCost;
+
+                EditEntity.TotalAmount = details.Sum(c => c.TransactionPrice * c.Quantity);
                 EditEntity.TotalAmount = EditEntity.TotalAmount + EditEntity.ShipCost;
+
+                EditEntity.CollectedMoney = EditEntity.TotalAmount;
             }
             catch (Exception ex)
             {
@@ -665,7 +671,6 @@ namespace RUINORERP.UI.PSI.SAL
 
 
         string saleorderid = string.Empty;
-
         private async Task<tb_SaleOut> OrderToOutBill(long _sorderid)
         {
             tb_SaleOrder saleorder;
@@ -675,7 +680,28 @@ namespace RUINORERP.UI.PSI.SAL
                 return null;
             }
             //saleorder = bsa.Tag as tb_SaleOrder;
-
+            saleorder = await MainForm.Instance.AppContext.Db.Queryable<tb_SaleOrder>()
+            .Includes(a => a.tb_SaleOuts)
+            .Includes(a => a.tb_SaleOrderDetails, b => b.tb_proddetail, c => c.tb_prod)
+            .Where(c => c.SOrder_ID == _sorderid)
+            .SingleAsync();
+            tb_SaleOrderController<tb_SaleOrder> ctr = Startup.GetFromFac<tb_SaleOrderController<tb_SaleOrder>>();
+            //tb_SaleOut saleOut = SaleOrderToSaleOut(item);
+            tb_SaleOut saleOut = ctr.SaleOrderToSaleOut(saleorder);
+            ActionStatus actionStatus = ActionStatus.无操作;
+            BindData(saleOut, actionStatus);
+            return saleOut;
+        }
+        /*
+        private async Task<tb_SaleOut> OrderToOutBill(long _sorderid)
+        {
+            tb_SaleOrder saleorder;
+            ButtonSpecAny bsa = txtSaleOrder.ButtonSpecs.FirstOrDefault(c => c.UniqueName == "btnQuery");
+            if (bsa == null)
+            {
+                return null;
+            }
+            //saleorder = bsa.Tag as tb_SaleOrder;
             saleorder = await MainForm.Instance.AppContext.Db.Queryable<tb_SaleOrder>()
             .Includes(a => a.tb_SaleOuts)
             .Includes(a => a.tb_SaleOrderDetails, b => b.tb_proddetail, c => c.tb_prod)
@@ -701,7 +727,7 @@ namespace RUINORERP.UI.PSI.SAL
             {
                 if (saleorder.ShipCost > 0)
                 {
-                    tipsMsg.Add($"当前订单已经有出库记录，运费已经计入前面出库单，当前出库运费为零！");
+                    tipsMsg.Add($"当前订单已经有出库记录，运费收入已经计入前面出库单，当前出库运费收入为零！");
                     entity.ShipCost = 0;
                 }
                 else
@@ -738,7 +764,9 @@ namespace RUINORERP.UI.PSI.SAL
                 if (aa.Count > 0 && details[i].SaleOrderDetail_ID > 0)
                 {
                     #region 产品ID可能大于1行，共用料号情况
-                    tb_SaleOrderDetail item = saleorder.tb_SaleOrderDetails.FirstOrDefault(c => c.ProdDetailID == details[i].ProdDetailID && c.SaleOrderDetail_ID == details[i].SaleOrderDetail_ID);
+                    tb_SaleOrderDetail item = saleorder.tb_SaleOrderDetails.FirstOrDefault(c => c.ProdDetailID == details[i].ProdDetailID 
+                    && c.Location_ID==details[i].Location_ID
+                    && c.SaleOrderDetail_ID == details[i].SaleOrderDetail_ID);
                     details[i].Cost = item.Cost;
                     details[i].CustomizedCost = item.CustomizedCost;
                     //这时有一种情况就是订单时没有成本。没有产品。出库前有类似采购入库确定的成本
@@ -767,7 +795,9 @@ namespace RUINORERP.UI.PSI.SAL
                 else
                 {
                     #region 每行产品ID唯一
-                    tb_SaleOrderDetail item = saleorder.tb_SaleOrderDetails.FirstOrDefault(c => c.ProdDetailID == details[i].ProdDetailID);
+                    tb_SaleOrderDetail item = saleorder.tb_SaleOrderDetails.FirstOrDefault(c => c.ProdDetailID == details[i].ProdDetailID
+                      && c.Location_ID == details[i].Location_ID
+                    && c.SaleOrderDetail_ID == details[i].SaleOrderDetail_ID);
                     details[i].Cost = item.Cost;
                     details[i].CustomizedCost = item.CustomizedCost;
                     //这时有一种情况就是订单时没有成本。没有产品。出库前有类似采购入库确定的成本
@@ -776,6 +806,10 @@ namespace RUINORERP.UI.PSI.SAL
                         View_ProdDetail obj = BizCacheHelper.Instance.GetEntity<View_ProdDetail>(details[i].ProdDetailID);
                         if (obj != null && obj.GetType().Name != "Object" && obj is View_ProdDetail prodDetail)
                         {
+                            if (obj.Inv_Cost == null)
+                            {
+                                obj.Inv_Cost = 0;
+                            }
                             details[i].Cost = obj.Inv_Cost.Value;
                         }
                     }
@@ -802,9 +836,23 @@ namespace RUINORERP.UI.PSI.SAL
             }
 
             entity.tb_SaleOutDetails = NewDetails;
-            entity.TotalAmount = details.Sum(c => c.SubtotalTransAmount);
 
-            if (saleorder.tb_SaleOrderDetails.Sum(c => c.SubtotalTransAmount) != entity.TotalAmount)
+            entity.TotalQty = NewDetails.Sum(c => c.Quantity);
+            entity.TotalCost = NewDetails.Sum(c => c.Cost * c.Quantity);
+            entity.TotalCost = entity.TotalCost + entity.FreightCost;
+
+            entity.TotalTaxAmount = NewDetails.Sum(c => c.SubtotalTaxAmount);
+            entity.TotalTaxAmount = entity.TotalTaxAmount.ToRoundDecimalPlaces(MainForm.Instance.authorizeController.GetMoneyDataPrecision());
+
+            entity.TotalUntaxedAmount = NewDetails.Sum(c => c.SubtotalUntaxedAmount);
+            entity.TotalUntaxedAmount = entity.TotalUntaxedAmount + entity.ShipCost;
+
+            entity.TotalAmount = NewDetails.Sum(c => c.TransactionPrice * c.Quantity);
+            entity.TotalAmount = entity.TotalAmount + entity.ShipCost;
+            entity.CollectedMoney = entity.TotalAmount;
+
+            if (saleorder.tb_SaleOrderDetails.Sum(c => c.SubtotalTransAmount) != NewDetails.Sum(c => c.SubtotalTransAmount) &&
+                saleorder.tb_SaleOuts != null && saleorder.tb_SaleOuts.Count == 0)
             {
                 tipsMsg.Add($"当前引用订单:{entity.SaleOrderNo}与当前出库明细累计金额不同，请注意检查！");
             }
@@ -824,6 +872,8 @@ namespace RUINORERP.UI.PSI.SAL
             BindData(entity, actionStatus);
             return entity;
         }
+
+        */
 
         private void chk替代品出库_CheckedChanged(object sender, EventArgs e)
         {

@@ -1220,6 +1220,10 @@ namespace RUINORERP.UI.Common
             {
                 args.Value = args.Value == null ? new List<object>() : args.Value;
             };
+            cmbBox.CheckBoxCheckedChanged += (sender, e) =>
+            {
+                depa.WriteValue();
+            };
             cmbBox.DataBindings.Add(depa);
 
             #region 添加清除功能

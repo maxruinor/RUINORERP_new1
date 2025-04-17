@@ -39,10 +39,17 @@ namespace RUINORERP.Server
         private void RefreshDirtyItems(object state)
         {
             if (_dirtyIndexes.Count == 0) return;
+            try
+            {
+                int min = _dirtyIndexes.Min();
+                int max = _dirtyIndexes.Max();
+                SafeRedrawItems(min, max);
+            }
+            catch (Exception)
+            {
 
-            int min = _dirtyIndexes.Min();
-            int max = _dirtyIndexes.Max();
-            SafeRedrawItems(min, max);
+                
+            }
             _dirtyIndexes.Clear();
         }
 
@@ -60,7 +67,6 @@ namespace RUINORERP.Server
         public ObservableCollection<UserInfo> userInfos = new ObservableCollection<UserInfo>();
         private void frmUserManage_Load(object sender, EventArgs e)
         {
-
             // 订阅CollectionChanged事件
             userInfos.CollectionChanged -= UserInfos_CollectionChanged;
             userInfos.CollectionChanged += UserInfos_CollectionChanged;
@@ -381,11 +387,13 @@ namespace RUINORERP.Server
                 }
                 listView1.RedrawItems(startIndex, endIndex, true);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-
-
+                Console.WriteLine($"SafeRedrawItems: {ex.Message}");
+                Console.WriteLine($"userInfos: {userInfos.Count}");
+                Console.WriteLine($"listView1.Items: {listView1.Items.Count}");
             }
+           
 
         }
 

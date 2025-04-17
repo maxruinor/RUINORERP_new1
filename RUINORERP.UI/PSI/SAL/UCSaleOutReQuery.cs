@@ -44,7 +44,7 @@ namespace RUINORERP.UI.PSI.SAL
         {
             //引用的订单号ID不需要显示。因为有一个单号冗余显示了。
             base.MasterInvisibleCols.Add(c => c.SaleOut_MainID);
-            base.ChildInvisibleCols.Add(c => c.Cost);
+            base.ChildInvisibleCols.Add(c => c.SaleOutDetail_ID);
         }
 
 
@@ -53,13 +53,9 @@ namespace RUINORERP.UI.PSI.SAL
         {
             //创建表达式
             var lambda = Expressionable.Create<tb_SaleOutRe>()
-                             //.AndIF(CurMenuInfo.CaptionCN.Contains("客户"), t => t.IsCustomer == true)
                              // .AndIF(CurMenuInfo.CaptionCN.Contains("供应商"), t => t.IsVendor == true)
                              .And(t => t.isdeleted == false)
                                .AndIF(AuthorizeController.GetSaleLimitedAuth(MainForm.Instance.AppContext), t => t.Employee_ID == MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID)//限制了销售只看到自己的客户,采购不限制
-                                                                                                                                                                                                // .And(t => t.Is_enabled == true)
-                                                                                                                                                                                                //暂时不限制
-
                             .ToExpression();//注意 这一句 不能少
             base.LimitQueryConditions = lambda;
         }
@@ -80,15 +76,22 @@ namespace RUINORERP.UI.PSI.SAL
         {
             base.MasterSummaryCols.Add(c => c.TotalQty);
             base.MasterSummaryCols.Add(c => c.TotalAmount);
+            base.MasterSummaryCols.Add(c => c.ActualRefundAmount);
+            base.MasterSummaryCols.Add(c => c.ShipCost);
 
 
             base.ChildSummaryCols.Add(c => c.Quantity);
             base.ChildSummaryCols.Add(c => c.SubtotalUntaxedAmount);
-
+            base.ChildSummaryCols.Add(c => c.CustomizedCost);
+            base.ChildSummaryCols.Add(c => c.Cost);
+            base.ChildSummaryCols.Add(c => c.SubtotalTaxAmount);
+            base.ChildSummaryCols.Add(c => c.SubtotalTransAmount);
+            base.ChildSummaryCols.Add(c => c.SubtotalCostAmount);
+            base.ChildSummaryCols.Add(c => c.CommissionAmount);
 
         }
 
- 
+
 
     }
 

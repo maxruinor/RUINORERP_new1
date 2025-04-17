@@ -103,7 +103,9 @@ namespace RUINORERP.UI.MRP.PQC
 
 
             DataBindingHelper.BindData4TextBox<tb_MRP_ReworkReturn>(entity, t => t.ReworkReturnNo, txtReworkReturnNo, BindDataType4TextBox.Text, false);
-            DataBindingHelper.BindData4Cmb<tb_CustomerVendor>(entity, k => k.CustomerVendor_ID, v => v.CVName, cmbCustomerVendor_ID);
+            //DataBindingHelper.BindData4Cmb<tb_CustomerVendor>(entity, k => k.CustomerVendor_ID, v => v.CVName, cmbCustomerVendor_ID);
+
+
             DataBindingHelper.BindData4Cmb<tb_Department>(entity, k => k.DepartmentID, v => v.DepartmentName, cmbDepartmentID);
             DataBindingHelper.BindData4Cmb<tb_Employee>(entity, k => k.Employee_ID, v => v.Employee_Name, cmbEmployee_ID);
             DataBindingHelper.BindData4TextBox<tb_MRP_ReworkReturn>(entity, t => t.TotalQty, txtTotalQty, BindDataType4TextBox.Qty, false);
@@ -215,15 +217,28 @@ namespace RUINORERP.UI.MRP.PQC
 
 
             //创建表达式
+            //var lambda = Expressionable.Create<tb_CustomerVendor>()
+            //                .And(t => t.IsVendor == true)
+            //                .ToExpression();//注意 这一句 不能少
+            //BaseProcessor baseProcessor = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_CustomerVendor).Name + "Processor");
+            //QueryFilter queryFilterC = baseProcessor.GetQueryFilter();
+            //queryFilterC.FilterLimitExpressions.Add(lambda);
+            //DataBindingHelper.BindData4Cmb<tb_CustomerVendor>(entity, k => k.CustomerVendor_ID, v => v.CVName, cmbCustomerVendor_ID, queryFilterC.GetFilterExpression<tb_CustomerVendor>(), true);
+            //DataBindingHelper.InitFilterForControlByExp<tb_CustomerVendor>(entity, cmbCustomerVendor_ID, c => c.CVName, queryFilterC);
+
+
+            DataBindingHelper.BindData4Cmb<tb_CustomerVendor>(entity, k => k.CustomerVendor_ID, v => v.CVName, cmbCustomerVendor_ID, c => c.IsCustomer == false);
+
+            //返厂 只包含 加工厂和供应商非客户
+            //创建表达式
             var lambda = Expressionable.Create<tb_CustomerVendor>()
-                            .And(t => t.IsVendor == true)
+                            .And(t => t.IsCustomer == false)
                             .ToExpression();//注意 这一句 不能少
             BaseProcessor baseProcessor = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_CustomerVendor).Name + "Processor");
             QueryFilter queryFilterC = baseProcessor.GetQueryFilter();
             queryFilterC.FilterLimitExpressions.Add(lambda);
-            DataBindingHelper.BindData4Cmb<tb_CustomerVendor>(entity, k => k.CustomerVendor_ID, v => v.CVName, cmbCustomerVendor_ID, queryFilterC.GetFilterExpression<tb_CustomerVendor>(), true);
-            DataBindingHelper.InitFilterForControlByExp<tb_CustomerVendor>(entity, cmbCustomerVendor_ID, c => c.CVName, queryFilterC);
 
+            DataBindingHelper.InitFilterForControlByExp<tb_CustomerVendor>(entity, cmbCustomerVendor_ID, c => c.CVName, queryFilterC);
 
 
             //先绑定这个。InitFilterForControl 这个才生效

@@ -107,7 +107,7 @@ namespace RUINORERP.UI.PSI.SAL
         protected virtual void Query()
         {
             //var eer = errorProviderForAllInput.GetError(txtPDNo);
-
+            this.ValidateChildren(System.Windows.Forms.ValidationConstraints.None);
             if (ValidationHelper.hasValidationErrors(this.Controls))
                 return;
 
@@ -282,6 +282,8 @@ namespace RUINORERP.UI.PSI.SAL
             if (GroupByFields.Count == 0)
             {
                 GroupByFieldValue = "";
+                strProjectGroups="";
+                strEmployees="";
             }
             else if (GroupByFields.Count == 1)
             {

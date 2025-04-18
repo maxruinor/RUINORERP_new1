@@ -56,8 +56,32 @@ namespace RUINORERP.Global.EnumExt
     // 枚举定义
     public enum ContractStatus { Draft, Active, Completed, Terminated }
     public enum InvoiceType { Sales, Purchase }
-    public enum InvoiceStatus { Unsettled, PartiallySettled, Settled }
 
+    public enum InvoiceStatus {
+
+
+        /// <summary>
+        /// 发票未正式开具	编辑、删除
+        /// </summary>
+        草稿,
+
+
+        /// <summary>
+        /// 发票已提交税局	红冲、核销
+        /// </summary>
+        已开票,
+
+
+        /// <summary>
+        /// 发票已作废	不可修改
+        /// </summary>
+        已红冲,
+
+        /// <summary>
+        /// 发票金额已关联应收/应付	不可修改
+        /// </summary>
+        已核销,
+    }
     public enum PaymentType { Cash, BankTransfer, CreditCard, Other }
     public enum ARPType { Receivable, Payable }
     public enum PaymentStatus { Unpaid, PartiallyPaid, Paid }

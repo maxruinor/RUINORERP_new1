@@ -569,7 +569,6 @@ namespace RUINORERP.Business
          public virtual async Task<List<tb_Employee>> QueryByNavAsync()
         {
             List<tb_Employee> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_Employee>()
-                               .Includes(t => t.tb_bankaccount )
                                .Includes(t => t.tb_department )
                                             .Includes(t => t.tb_Stocktakes )
                                 .Includes(t => t.tb_Locations )
@@ -616,7 +615,6 @@ namespace RUINORERP.Business
          public virtual async Task<List<tb_Employee>> QueryByNavAsync(Expression<Func<tb_Employee, bool>> exp)
         {
             List<tb_Employee> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_Employee>().Where(exp)
-                               .Includes(t => t.tb_bankaccount )
                                .Includes(t => t.tb_department )
                                             .Includes(t => t.tb_Stocktakes )
                                 .Includes(t => t.tb_Locations )
@@ -668,7 +666,6 @@ namespace RUINORERP.Business
          public virtual List<tb_Employee> QueryByNav(Expression<Func<tb_Employee, bool>> exp)
         {
             List<tb_Employee> list = _unitOfWorkManage.GetDbClient().Queryable<tb_Employee>().Where(exp)
-                            .Includes(t => t.tb_bankaccount )
                             .Includes(t => t.tb_department )
                                         .Includes(t => t.tb_Stocktakes )
                             .Includes(t => t.tb_Locations )
@@ -719,7 +716,6 @@ namespace RUINORERP.Business
         public override async Task<T> BaseQueryByIdNavAsync(object id)
         {
             tb_Employee entity = await _unitOfWorkManage.GetDbClient().Queryable<tb_Employee>().Where(w => w.Employee_ID == (long)id)
-                             .Includes(t => t.tb_bankaccount )
                             .Includes(t => t.tb_department )
                                         .Includes(t => t.tb_Stocktakes )
                             .Includes(t => t.tb_Locations )

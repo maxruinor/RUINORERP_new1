@@ -84,9 +84,7 @@ namespace RUINORERP.Business
 //有默认值
 
 
- RuleFor(tb_CustomerVendor =>tb_CustomerVendor.BankAccount_id).Must(CheckForeignKeyValueCanNull).WithMessage(":下拉选择值不正确。");
- RuleFor(tb_CustomerVendor =>tb_CustomerVendor.BankAccount_id).NotEmpty().When(x => x.BankAccount_id.HasValue);
-
+ 
            	        Initialize();
      }
 

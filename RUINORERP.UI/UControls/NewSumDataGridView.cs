@@ -347,6 +347,7 @@ namespace RUINORERP.UI.UControls
             //合并 设置右键菜单 只执行一次
             if (!setContextMenu)
             {
+                //每个Gridview会初始化一个默认菜单
                 this.ContextMenuStrip = GetContextMenu();
             }
 
@@ -1008,6 +1009,8 @@ namespace RUINORERP.UI.UControls
 
         private bool setContextMenu = false;
 
+
+        /*
         /// <summary>
         /// 设置右键菜单，但是对不对参数进行设置。因为是引用的，会改变值
         /// </summary>
@@ -1043,7 +1046,6 @@ namespace RUINORERP.UI.UControls
 
                 internalMenu.Items.AddRange(ts);
 
-
             }
 
 
@@ -1051,19 +1053,24 @@ namespace RUINORERP.UI.UControls
             if (Use是否使用内置右键功能)
             {
                 #region 生成内置的右键菜单
-
                 if (ContextClickList == null)
                 {
                     ContextClickList = new List<EventHandler>();
                 }
                 ContextClickList.Clear();
+                //外部定义的优先
+                if (AddContextClickList != null && IsInsertTop == true)
+                {
+                    ContextClickList.AddRange(AddContextClickList.ToArray());
+                }
                 ContextClickList.Add(NewSumDataGridView_批量修改列值);
                 ContextClickList.Add(NewSumDataGridView_复制单元数据);
                 ContextClickList.Add(NewSumDataGridView_导出excel);
                 ContextClickList.Add(NewSumDataGridView_保存数据到DB);
                 ContextClickList.Add(NewSumDataGridView_自定义列);
                 ContextClickList.Add(NewSumDataGridView_SelectedAll);
-                if (AddContextClickList != null)
+                //外部定义的优先
+                if (AddContextClickList != null && IsInsertTop == false)
                 {
                     ContextClickList.AddRange(AddContextClickList.ToArray());
                 }
@@ -1107,7 +1114,11 @@ namespace RUINORERP.UI.UControls
                 }
 
                 #endregion
-                internalMenu.Items.Clear();
+
+                //不能清掉。 有两种情况会自定义添加右键菜单。一种是通过控件这种不会通过权限控制
+                //另一种是 代码生成代码功能 会通过权限控制
+                //internalMenu.Items.Clear();
+
                 foreach (var item in _ContextMenucCnfigurator)
                 {
                     if (!item.IsShow)
@@ -1117,19 +1128,19 @@ namespace RUINORERP.UI.UControls
 
                     if (item.IsSeparator)
                     {
+                        if (internalMenu.Items.Count > 0)
+                        {
+                            //如果他的上级是分隔线 就不再添加
+                            if (internalMenu.Items[internalMenu.Items.Count - 1].GetType() == typeof(ToolStripSeparator))
+                            {
+                                continue;
+                            }
+                        }
                         ToolStripSeparator ts1 = new ToolStripSeparator();
                         internalMenu.Items.Add(ts1);
                     }
                     else
                     {
-                        ////C#通过函数名字符串执行相应的函数
-                        //EventHandler eh = new EventHandler(NewSumDataGridView_自定义列);
-                        //Type t = typeof(NewSumDataGridView);//括号中的为所要使用的函数所在的类的类名。
-                        //MethodInfo mt = t.GetMethod(item.ClickEventName, BindingFlags.NonPublic);
-                        //if (mt == null)
-                        //{
-                        //    Console.WriteLine("没有获取到相应的函数！！");
-                        //}
                         EventHandler ehh = ContextClickList.Find(
                             delegate (EventHandler eh)
                             {
@@ -1140,7 +1151,13 @@ namespace RUINORERP.UI.UControls
                         {
                             ehh = 删除选中行;
                         }
-                        internalMenu.Items.Add(item.MenuText, null, ehh);
+                        //排除重复的
+                        if (!internalMenu.Items.ContainsKey(item.MenuText))
+                        {
+                            ToolStripItem toolStripItem = new ToolStripMenuItem(item.MenuText, null, ehh);
+                            toolStripItem.Name = item.MenuText;
+                            internalMenu.Items.Insert(0, toolStripItem);
+                        }
                     }
                 }
             }
@@ -1154,37 +1171,221 @@ namespace RUINORERP.UI.UControls
                 }
             }
 
+
+            //如果最后是分隔线 则移除
+            if (internalMenu.Items.Count > 0)
+            {
+                //如果他的上级是分隔线 就不再添加
+                if (internalMenu.Items[internalMenu.Items.Count - 1].GetType() == typeof(ToolStripSeparator))
+                {
+                    internalMenu.Items.RemoveAt(internalMenu.Items.Count - 1);
+                }
+            }
+
+
             newContextMenuStrip = internalMenu;
             // 设置最终的右键菜单
             ContextMenuStrip = newContextMenuStrip;
             return newContextMenuStrip;
-            /*
 
-            //意思是如果本身设置过了。就不重复设置
-            if (this.ContextMenuStrip != null)
+        }
+
+        */
+
+
+
+        #region 右键菜单控制器 合并等
+
+        //顺序还有问题。先不管
+        public ContextMenuStrip GetContextMenu(
+            ContextMenuStrip _contextMenuStrip = null,
+            List<EventHandler> AddContextClickList = null,
+            List<ContextMenuController> AddContextMenuController = null,
+            bool IsInsertTop = true)
+        {
+            // 创建新的上下文菜单
+            ContextMenuStrip newContextMenuStrip = new ContextMenuStrip();
+            newContextMenuStrip.BackColor = Color.FromArgb(192, 255, 255);
+
+            // 合并传入的菜单项
+            if (_contextMenuStrip != null && _contextMenuStrip.Items.Count > 0)
             {
-                if (_cMenus.Items.Count > 0)
-                {
-                    this.ContextMenuStrip.Tag = true;
-                    ToolStripSeparator tss = new ToolStripSeparator();
-                    this.ContextMenuStrip.Items.Add(tss);
-                    //合并外面的
-                    ToolStripItem[] ts = new ToolStripItem[_cMenus.Items.Count];
-                    _cMenus.Items.CopyTo(ts, 0);
-                    //item.DropDownItems //指下一级
-                    //这里同级添加
-                    this.ContextMenuStrip.Items.AddRange(ts);
-                }
+                MergeExternalMenuItems(newContextMenuStrip, _contextMenuStrip);
+            }
+
+            // 处理内置菜单项
+            if (Use是否使用内置右键功能)
+            {
+                InitializeContextClickList(AddContextClickList, IsInsertTop);
+                InitializeMenuConfigurator(AddContextMenuController, IsInsertTop);
+                BuildMenuItems(newContextMenuStrip);
             }
             else
             {
-
-              
-
-                ContextMenuStrip = _cMenus;
+                AddDeleteMenuItemIfNeeded(newContextMenuStrip);
             }
-            */
+
+            // 清理末尾的分隔符
+            CleanupTrailingSeparator(newContextMenuStrip);
+
+            // 设置最终的右键菜单
+            this.ContextMenuStrip = newContextMenuStrip;
+            return newContextMenuStrip;
         }
+
+        private void MergeExternalMenuItems(ContextMenuStrip target, ContextMenuStrip source)
+        {
+            // 深拷贝菜单项
+            var items = new ToolStripItem[source.Items.Count];
+            source.Items.CopyTo(items, 0);
+
+            // 添加分隔符（如果最后一个项不是分隔符）
+            if (items.Length > 0 && !(items.Last() is ToolStripSeparator))
+            {
+                target.Items.Add(new ToolStripSeparator());
+            }
+
+            target.Items.AddRange(items);
+        }
+
+        private void InitializeContextClickList(List<EventHandler> addList, bool insertTop)
+        {
+            ContextClickList.Clear();
+
+            if (addList != null && insertTop)
+            {
+                ContextClickList.AddRange(addList);
+            }
+
+            // 添加内置事件处理程序
+            ContextClickList.Add(NewSumDataGridView_批量修改列值);
+            ContextClickList.Add(NewSumDataGridView_复制单元数据);
+            ContextClickList.Add(NewSumDataGridView_导出excel);
+            ContextClickList.Add(NewSumDataGridView_保存数据到DB);
+            ContextClickList.Add(NewSumDataGridView_自定义列);
+            ContextClickList.Add(NewSumDataGridView_SelectedAll);
+
+            if (addList != null && !insertTop)
+            {
+                ContextClickList.AddRange(addList);
+            }
+        }
+
+        private void InitializeMenuConfigurator(List<ContextMenuController> addControllers, bool insertTop)
+        {
+            _ContextMenucCnfigurator.Clear();
+
+            if (addControllers != null && insertTop)
+            {
+                _ContextMenucCnfigurator.AddRange(addControllers);
+                if (Use是否使用内置右键功能)
+                {
+                    _ContextMenucCnfigurator.Add(new ContextMenuController("【line】", true, true, ""));
+                }
+            }
+
+            // 添加默认配置
+            if (GetIsDesignMode())
+            {
+                AddDefaultMenuConfigurations();
+            }
+
+            if (addControllers != null && !insertTop)
+            {
+                if (Use是否使用内置右键功能)
+                {
+                    _ContextMenucCnfigurator.Add(new ContextMenuController("【line】", true, true, ""));
+                }
+                _ContextMenucCnfigurator.AddRange(addControllers);
+            }
+        }
+
+        private void BuildMenuItems(ContextMenuStrip menu)
+        {
+            foreach (var config in _ContextMenucCnfigurator)
+            {
+                if (!config.IsShow) continue;
+
+                if (config.IsSeparator)
+                {
+                    AddSeparatorIfNeeded(menu);
+                }
+                else
+                {
+                    AddMenuItem(menu, config);
+                }
+            }
+        }
+
+        private void AddMenuItem(ContextMenuStrip menu, ContextMenuController config)
+        {
+            if (menu.Items.ContainsKey(config.MenuText)) return;
+
+            var item = new ToolStripMenuItem(config.MenuText)
+            {
+                Name = config.MenuText,
+                Tag = config.ClickEventName
+            };
+
+            // 绑定事件处理程序
+            if (!string.IsNullOrEmpty(config.ClickEventName))
+            {
+                var handler = FindEventHandler(config.ClickEventName);
+                if (handler != null)
+                {
+                    item.Click += handler;
+                }
+            }
+
+            menu.Items.Add(item);
+        }
+
+        private EventHandler FindEventHandler(string eventName)
+        {
+            return ContextClickList.FirstOrDefault(h =>
+                h.Method.Name.Equals(eventName, StringComparison.Ordinal)) ??
+                (eventName == "删除选中行" ? 删除选中行 : null);
+        }
+
+        private void AddSeparatorIfNeeded(ContextMenuStrip menu)
+        {
+            if (menu.Items.Count == 0) return;
+            if (menu.Items[menu.Items.Count - 1] is ToolStripSeparator) return;
+
+            menu.Items.Add(new ToolStripSeparator());
+        }
+
+        private void CleanupTrailingSeparator(ContextMenuStrip menu)
+        {
+            while (menu.Items.Count > 0 && menu.Items[menu.Items.Count - 1] is ToolStripSeparator)
+            {
+                menu.Items.RemoveAt(menu.Items.Count - 1);
+            }
+        }
+
+        private void AddDefaultMenuConfigurations()
+        {
+            _ContextMenucCnfigurator.AddRange(new[]
+            {
+        new ContextMenuController("【复制单元格数据】", true, false, nameof(NewSumDataGridView_复制单元数据)),
+        new ContextMenuController("【导出为Excel】", true, false, nameof(NewSumDataGridView_导出excel)),
+        new ContextMenuController("【line】", true, true, ""),
+        new ContextMenuController("【自定义显示列】", true, false, nameof(NewSumDataGridView_自定义列)),
+        new ContextMenuController("【line】", true, true, ""),
+        new ContextMenuController("【全选】", true, false, nameof(NewSumDataGridView_SelectedAll))
+    });
+        }
+
+        private void AddDeleteMenuItemIfNeeded(ContextMenuStrip menu)
+        {
+            if (删除选中行 != null)
+            {
+                var item = new ToolStripMenuItem("【删除选中行】", null, 删除选中行);
+                menu.Items.Add(item);
+            }
+        }
+
+        #endregion
 
 
 

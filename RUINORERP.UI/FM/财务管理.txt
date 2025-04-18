@@ -78,28 +78,30 @@ tb_BankAccount   这个表在 供应商和员工表被引用。暂时没有使�
 CREATE TABLE PaymentRecord (
     PaymentId INT PRIMARY KEY IDENTITY,
     ARPId INT NOT NULL,             -- 关联应收应付ID
+       ARPId BIGINT NULL,                  -- 关联应收应付ID（可空，如预收预付）
+
     Amount DECIMAL(18,2) NOT NULL,  -- 本次收付金额
     PaymentDate DATETIME NOT NULL,   -- 收付日期
     PaymentMethod TINYINT,          -- 1=现金,2=银行转账,3=支票
     ReferenceNumber VARCHAR(50),    -- 参考号（如银行流水号）
     PaymentType TINYINT NOT NULL,       -- 1=收款（应收）,2=付款（应付）
     IsPrepayment BIT DEFAULT 0      -- 是否为预付款
-
-      PaymentId BIGINT PRIMARY KEY IDENTITY,
+    PaymentId BIGINT PRIMARY KEY IDENTITY,
     PaymentType TINYINT NOT NULL,       -- 1=收款,2=付款,3=退款
-    ARPId BIGINT NULL,                  -- 关联应收应付ID（可空，如预收预付）
+ 
     BizOrderId BIGINT NULL,             -- 关联业务单号（如退款关联原订单）
     CurrencyCode VARCHAR(10) NOT NULL,
     OriginalAmount DECIMAL(18,4) NOT NULL,
     ExchangeRate DECIMAL(18,6) NOT NULL,
     LocalAmount DECIMAL(18,2) NOT NULL,
+
     PaymentMethod TINYINT NOT NULL,     -- 1=现金,2=银行转账...
-    PaymentDate DATETIME NOT NULL,      -- 实际收付日期
+  
     ReferenceNo VARCHAR(50) NULL,       -- 交易参考号（如银行流水号）
     Status TINYINT NOT NULL,            -- 0=草稿,1=已审核,2=已冲销
+
     CreatedBy BIGINT NOT NULL,
     CreatedTime DATETIME DEFAULT GETDATE()
-
 );
 
  

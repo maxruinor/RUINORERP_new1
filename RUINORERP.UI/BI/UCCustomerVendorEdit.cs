@@ -133,14 +133,16 @@ namespace RUINORERP.UI.BI
                 base.InitRequiredToControl(MainForm.Instance.AppContext.GetRequiredService<tb_CustomerVendorValidator>(), kryptonPanel1.Controls);
                 base.InitEditItemToControl(entity, kryptonPanel1.Controls);
             }
-
+            
             if (_EditEntity.CustomerVendor_ID > 0)
             {
                 btnAddPayeeInfo.Visible = true;
+                btnAddBillingInformation.Visible = true;
             }
             else
             {
                 btnAddPayeeInfo.Visible = false;
+                btnAddBillingInformation.Visible = false;
             }
 
             entity.PropertyChanged += async (sender, s2) =>
@@ -187,6 +189,11 @@ namespace RUINORERP.UI.BI
 
         private void btnAddPayeeInfo_Click(object sender, EventArgs e)
         {
+            if (_EditEntity.CustomerVendor_ID == 0)
+            {
+                MessageBox.Show("请先正确选择往来单位数据。");
+                return;
+            }
             object frm = Activator.CreateInstance(typeof(UCFMPayeeInfoEdit));
             if (frm.GetType().BaseType.Name.Contains("BaseEditGeneric"))
             {
@@ -288,11 +295,16 @@ namespace RUINORERP.UI.BI
             {
                 cmbCustomer_id.Visible = true;
             }
-            
+
         }
 
         private void btnAddBillingInformation_Click(object sender, EventArgs e)
         {
+            if (_EditEntity.CustomerVendor_ID == 0)
+            {
+                MessageBox.Show("请先正确选择往来单位数据。");
+                return;
+            }
             object frm = Activator.CreateInstance(typeof(UCBillingInformationEdit));
             if (frm.GetType().BaseType.Name.Contains("BaseEditGeneric"))
             {

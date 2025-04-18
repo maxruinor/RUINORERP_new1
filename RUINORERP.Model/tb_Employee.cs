@@ -402,28 +402,12 @@ namespace RUINORERP.Model
                         }
         }
 
-        private long? _BankAccount_id;
-        /// <summary>
-        /// 
-        /// </summary>
-        [AdvQueryAttribute(ColName = "BankAccount_id",ColDesc = "")] 
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "BankAccount_id" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "" )]
-        [FKRelationAttribute("tb_BankAccount","BankAccount_id")]
-        public long? BankAccount_id
-        { 
-            get{return _BankAccount_id;}
-            set{
-            SetProperty(ref _BankAccount_id, value);
-                        }
-        }
+
 
         #endregion
 
         #region 扩展属性
-        [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)] 打印报表时的数据源会不显示
-        [Navigate(NavigateType.OneToOne, nameof(BankAccount_id))]
-        public virtual tb_BankAccount tb_bankaccount { get; set; }
+
 
         [SugarColumn(IsIgnore = true)]
         //[Browsable(false)] 打印报表时的数据源会不显示

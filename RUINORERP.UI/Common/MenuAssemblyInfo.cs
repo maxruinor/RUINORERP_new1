@@ -36,6 +36,11 @@ namespace RUINORERP.UI.Common
         }
 
         /// <summary>
+        /// 借财务模块合并建表但是菜单分开时，用接口来标记在菜单子类中
+        /// </summary>
+        public string BizInterface { get; set; }
+
+        /// <summary>
         /// 框架性基类
         /// </summary>
         public string BIBaseForm { get; set; }
@@ -55,7 +60,7 @@ namespace RUINORERP.UI.Common
         /// </summary>
         public BizType? MenuBizType { get; set; }
 
-      
+
         /// <summary>
         /// 对应的实体名
         /// </summary>
@@ -231,7 +236,7 @@ namespace RUINORERP.UI.Common
             MenuPath = _menuName;
 
         }
-  
+
     }
 
 }

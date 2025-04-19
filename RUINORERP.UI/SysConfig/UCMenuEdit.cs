@@ -220,6 +220,7 @@ namespace RUINORERP.UI.SysConfig
             info.IsEnabled = chkEnable.Checked;
             info.BIBaseForm = txtBIBaseForm.Text.Trim();
             info.BIBizBaseForm = txtBIBizBaseform.Text.Trim();
+            info.BizInterface=txtBizInterface.Text.Trim();
             info.CaptionCN = txt_CaptonC.Text.Trim();
             info.CaptionEN = txt_CaptionE.Text.Trim();
             if (txtBizType.Tag != null)
@@ -788,6 +789,7 @@ namespace RUINORERP.UI.SysConfig
                         //txtSort.Text=menuInfo.Sort.ToString();
                         txtBIBaseForm.Text = menuInfo.BIBaseForm;
                         txtBIBizBaseform.Text = menuInfo.BIBizBaseForm;
+                        txtBizInterface.Text = menuInfo.BizInterface;
                         if (menuInfo.MenuBizType.HasValue)
                         {
                             txtBizType.Text = menuInfo.MenuBizType.ToString();
@@ -814,7 +816,7 @@ namespace RUINORERP.UI.SysConfig
                         }
                     }
                     txtEntityName.Text = menuInfo.EntityName;
-
+                    txtBizInterface.Text = menuInfo.BizInterface;
                     txtBIBaseForm.Text = menuInfo.BIBaseForm;
                     txtBIBizBaseform.Text = menuInfo.BIBizBaseForm;
                     txtClassPath.Text = menuInfo.ClassPath;

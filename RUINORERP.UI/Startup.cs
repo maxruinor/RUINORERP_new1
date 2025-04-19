@@ -55,6 +55,9 @@ using RUINORERP.UI.IM;
 using System.Net.Mail;
 using StackExchange.Redis;
 using RUINORERP.UI.ClientCmdService;
+using FastReport.DevComponents.DotNetBar;
+using RUINORERP.UI.FM;
+using RUINORERP.Global.EnumExt;
 
 
 namespace RUINORERP.UI
@@ -133,7 +136,7 @@ namespace RUINORERP.UI
             .AsImplementedInterfaces()
             .AsSelf();
 
-          
+
 
 
             //覆盖上面自动注册的？说是最后的才是
@@ -437,10 +440,18 @@ namespace RUINORERP.UI
                     if (attribute == null)
                         continue;
 
-                    if (attribute.Describe.Contains("盘点单查询"))
+                    if (type.Name.Contains("UCPrePaymentQuery"))
                     {
 
                     }
+
+                    // 【新增】优先处理实现业务类型接口的窗体（收/付业务）
+                    if (IsIFMBillBusinessTypeForm(type))
+                    {
+                        HandleBillBusinessTypeRegistration(_builder,  Assemblyobj ,type);
+                        continue; // 处理后跳过后续基类判断
+                    }
+
                     if (type.BaseType.IsGenericType)
                     {
 
@@ -449,28 +460,36 @@ namespace RUINORERP.UI
                             _builder.Register(c => Assemblyobj.CreateInstance(type.FullName)).Named<BaseBillEdit>(type.Name)
                           .PropertiesAutowired(new CustPropertyAutowiredSelector());//指定属性注入
                         }
-
+                        else
                         if (type.BaseType.Name.Contains("BaseEditGeneric"))
                         {
                             _builder.Register(c => Assemblyobj.CreateInstance(type.FullName)).Named<KryptonForm>(type.Name)
                           .PropertiesAutowired(new CustPropertyAutowiredSelector());//指定属性注入
                         }
+                        else
                         if (type.BaseType.Name.Contains("BaseListGeneric"))
                         {
                             _builder.Register(c => Assemblyobj.CreateInstance(type.FullName)).Named<BaseUControl>(type.Name)
                           .PropertiesAutowired(new CustPropertyAutowiredSelector());//指定属性注入
                         }
+                        else
                         //上面已经判断是泛型，则指定到他的基类，并指定属性注入。使用时也一样？
                         if (type.BaseType.Name.Contains("BaseListWithTree"))
                         {
                             _builder.Register(c => Assemblyobj.CreateInstance(type.FullName)).Named<BaseListWithTree>(type.Name)
                           .PropertiesAutowired(new CustPropertyAutowiredSelector());//指定属性注入
                         }
+                        else
                         if (type.BaseType.Name.Contains("BaseBillQueryMC"))
                         {
-                            _builder.Register(c => Assemblyobj.CreateInstance(type.FullName)).Named<BaseQuery>(type.Name)
+                            if (type.BaseType.IsGenericType)
+                            {
+                                _builder.Register(c => Assemblyobj.CreateInstance(type.FullName)).Named<BaseQuery>(type.Name)
                           .PropertiesAutowired(new CustPropertyAutowiredSelector());//指定属性注入
+                            }
+
                         }
+                        else
                         if (type.BaseType.Name.Contains("BaseNavigatorAnalysis") || type.BaseType.Name.Contains("BaseNavigatorPages") || type.BaseType.Name.Contains("BaseNavigatorGeneric") || type.BaseType.Name.Contains("BaseBillQueryGeneric") || type.BaseType.Name.Contains("BaseBillQueryMC") || type.BaseType.Name.Contains("BaseMasterQueryWithCondition"))
                         {
                             _builder.Register(c => Assemblyobj.CreateInstance(type.FullName)).Named<UserControl>(type.Name)
@@ -491,6 +510,12 @@ namespace RUINORERP.UI
                                     .InstancePerDependency()//默认模式，每次调用，都会重新实例化对象；每次请求都创建一个新的对象；
                                     .EnableInterfaceInterceptors();
                             */
+
+
+                        }
+                        else
+                        {
+                            //BY 2025-4-19 为了解决 合并表时 窗体类又要分开的情况 像 预收付单
 
 
                         }
@@ -529,23 +554,13 @@ namespace RUINORERP.UI
                         }
 
 
-
+                        if (type.BaseType.Name.Contains("KryptonForm"))
+                        {
+                            _builder.Register(c => Assemblyobj.CreateInstance(type.FullName)).Named<BaseQuery>(type.Name)
+                        .PropertiesAutowired(new CustPropertyAutowiredSelector());//指定属性注入
+                        }
                     }
 
-                    //if (type.BaseType == typeof(BaseUControl) || type.BaseType.FullName.Contains("BaseList") || type.BaseType.FullName.Contains("BaseBillEdit"))
-                    //{
-                    //    _builder.Register(c => Assemblyobj.CreateInstance(type.FullName)).Named<BaseUControl>(type.Name)
-                    //        .PropertiesAutowired(new CustPropertyAutowiredSelector());//指定属性注入
-
-                    //}
-
-
-                    //if (type.BaseType == typeof(UserControl) || type.BaseType.FullName.Contains("BaseList") || type.BaseType.FullName.Contains("BaseBillEdit"))
-                    //{
-                    //    _builder.Register(c => Assemblyobj.CreateInstance(type.FullName)).Named<UserControl>(type.Name)
-                    //   .PropertiesAutowired(new CustPropertyAutowiredSelector());//指定属性注入
-
-                    //}
 
                     if (type.Name == "frmSaleOrderQuery")
                     {
@@ -559,13 +574,58 @@ namespace RUINORERP.UI
                     //       .AsImplementedInterfaces().AsSelf();
                     // _builder.Register(c => new BI.UCLocation()).Named<UserControl>("UCLocation");
 
-
-
                 }
             }
         }
 
+        // 接口检测辅助方法
+        private static bool IsIFMBillBusinessTypeForm(Type type)
+        {
+            // 确保是具体类，且实现了IFMBillBusinessType接口
+            return type.IsClass && !type.IsAbstract &&
+                   typeof(IFMBillBusinessType).IsAssignableFrom(type);
+        }
 
+
+        // 接口类型注册处理
+        private static void HandleBillBusinessTypeRegistration(ContainerBuilder _builder, System.Reflection.Assembly Assemblyobj, Type type)
+        {
+            // 注册为BaseQuery子类（假设基类是BaseQuery）
+            //builder.Register(c => Activator.CreateInstance(type))
+            //       .Named<BaseQuery>(type.Name) // 保持原有命名规则
+            //       .PropertiesAutowired(new CustPropertyAutowiredSelector())
+            //       .AsSelf() // 同时支持按自身类型解析
+            //       .As(typeof(IFMBillBusinessType)); // 支持接口注入（可选）
+            
+            if (type.BaseType.BaseType.Name.Contains("BaseBillEditGeneric"))
+            {
+                //builder.RegisterType(type)
+                //          .As<BaseBillEdit>()
+                //          //.WithMetadata("BillType", "Payment") // 添加额外元数据
+                //          .PropertiesAutowired();
+                _builder.Register(c => Assemblyobj.CreateInstance(type.FullName)).Named<BaseBillEdit>(type.Name)
+                          .PropertiesAutowired(new CustPropertyAutowiredSelector());//指定属性注入
+            }
+            else if (type.BaseType.BaseType.Name.Contains("BaseBillQueryMC"))
+            {
+                //builder.RegisterType(type)
+                //          .As<BaseQuery>()
+                //          //.WithMetadata("BillType", "Payment") // 添加额外元数据
+                //          .PropertiesAutowired();
+
+                _builder.Register(c => Assemblyobj.CreateInstance(type.FullName)).Named<BaseQuery>(type.Name)
+                          .PropertiesAutowired(new CustPropertyAutowiredSelector());//指定属性注入
+            }
+            
+
+
+            // 【扩展】如果需要区分收/付业务，可添加额外元数据
+            //var businessType = (BillBusinessType)type.GetProperty("BusinessType").GetValue(null);
+            //builder.RegisterMetadata(registration =>
+            //{
+            //    registration.Add("BusinessType", businessType);
+            //});
+        }
 
         #endregion 注入窗体-结束
 

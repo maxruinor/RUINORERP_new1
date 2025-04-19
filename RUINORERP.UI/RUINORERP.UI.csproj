@@ -570,6 +570,7 @@
     <Compile Include="AdvancedUIModule\UIGenerateHelper.cs" />
     <Compile Include="AdvancedUIModule\UIQueryHelper.cs" />
     <Compile Include="ATechnologyStack\AOP\DbBizLogAOP.cs" />
+    <Compile Include="FM\IFMBillBusinessType.cs" />
     <Compile Include="ATechnologyStack\IValidationRule.cs" />
     <Compile Include="ATechnologyStack\ServiceRegister\AutofacServiceRegister.cs" />
     <Compile Include="AutoFacBootStrapper.cs" />

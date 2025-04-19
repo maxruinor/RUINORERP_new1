@@ -73,15 +73,17 @@ namespace RUINORERP.UI.SysConfig
             this.txtMenuName = new System.Windows.Forms.ToolStripTextBox();
             this.txtBizType = new System.Windows.Forms.TextBox();
             this.label7 = new System.Windows.Forms.Label();
+            this.txtBIBizBaseform = new System.Windows.Forms.TextBox();
             this.txtBIBaseForm = new System.Windows.Forms.TextBox();
+            this.label9 = new System.Windows.Forms.Label();
             this.label6 = new System.Windows.Forms.Label();
             this.chkOnlyNew = new System.Windows.Forms.CheckBox();
             this.txtEntityName = new System.Windows.Forms.TextBox();
             this.label5 = new System.Windows.Forms.Label();
             this.kryptonPanelQuery = new Krypton.Toolkit.KryptonPanel();
             this.groupLine1 = new WinLib.Line.GroupLine();
-            this.label9 = new System.Windows.Forms.Label();
-            this.txtBIBizBaseform = new System.Windows.Forms.TextBox();
+            this.txtBizInterface = new System.Windows.Forms.TextBox();
+            this.label10 = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1.Panel1)).BeginInit();
@@ -296,7 +298,7 @@ namespace RUINORERP.UI.SysConfig
             this.dataGridView1.ContextMenucCnfigurator = ((System.Collections.Generic.List<RUINORERP.UI.UControls.ContextMenuController>)(resources.GetObject("dataGridView1.ContextMenucCnfigurator")));
             this.dataGridView1.CustomRowNo = false;
             this.dataGridView1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.dataGridView1.FieldNameList = ((System.Collections.Concurrent.ConcurrentDictionary<string, System.Collections.Generic.KeyValuePair<string, bool>>)(resources.GetObject("dataGridView1.FieldNameList")));
+            this.dataGridView1.FieldNameList = null;
             this.dataGridView1.IsShowSumRow = false;
             this.dataGridView1.Location = new System.Drawing.Point(0, 0);
             this.dataGridView1.Name = "dataGridView1";
@@ -462,6 +464,8 @@ namespace RUINORERP.UI.SysConfig
             // 
             // kryptonSplitContainer3.Panel1
             // 
+            this.kryptonSplitContainer3.Panel1.Controls.Add(this.txtBizInterface);
+            this.kryptonSplitContainer3.Panel1.Controls.Add(this.label10);
             this.kryptonSplitContainer3.Panel1.Controls.Add(this.txtSort);
             this.kryptonSplitContainer3.Panel1.Controls.Add(this.label8);
             this.kryptonSplitContainer3.Panel1.Controls.Add(this.toolStrip1);
@@ -548,19 +552,26 @@ namespace RUINORERP.UI.SysConfig
             // 
             // txtBizType
             // 
-            this.txtBizType.Location = new System.Drawing.Point(384, 168);
+            this.txtBizType.Location = new System.Drawing.Point(85, 168);
             this.txtBizType.Name = "txtBizType";
-            this.txtBizType.Size = new System.Drawing.Size(174, 21);
+            this.txtBizType.Size = new System.Drawing.Size(167, 21);
             this.txtBizType.TabIndex = 53;
             // 
             // label7
             // 
             this.label7.AutoSize = true;
-            this.label7.Location = new System.Drawing.Point(325, 173);
+            this.label7.Location = new System.Drawing.Point(26, 173);
             this.label7.Name = "label7";
             this.label7.Size = new System.Drawing.Size(53, 12);
             this.label7.TabIndex = 52;
             this.label7.Text = "业务类型";
+            // 
+            // txtBIBizBaseform
+            // 
+            this.txtBIBizBaseform.Location = new System.Drawing.Point(616, 141);
+            this.txtBIBizBaseform.Name = "txtBIBizBaseform";
+            this.txtBIBizBaseform.Size = new System.Drawing.Size(174, 21);
+            this.txtBIBizBaseform.TabIndex = 51;
             // 
             // txtBIBaseForm
             // 
@@ -568,6 +579,15 @@ namespace RUINORERP.UI.SysConfig
             this.txtBIBaseForm.Name = "txtBIBaseForm";
             this.txtBIBaseForm.Size = new System.Drawing.Size(174, 21);
             this.txtBIBaseForm.TabIndex = 51;
+            // 
+            // label9
+            // 
+            this.label9.AutoSize = true;
+            this.label9.Location = new System.Drawing.Point(557, 147);
+            this.label9.Name = "label9";
+            this.label9.Size = new System.Drawing.Size(53, 12);
+            this.label9.TabIndex = 50;
+            this.label9.Text = "业务基类";
             // 
             // label6
             // 
@@ -623,21 +643,21 @@ namespace RUINORERP.UI.SysConfig
             this.groupLine1.Size = new System.Drawing.Size(844, 1);
             this.groupLine1.TabIndex = 2;
             // 
-            // label9
+            // txtBizInterface
             // 
-            this.label9.AutoSize = true;
-            this.label9.Location = new System.Drawing.Point(557, 147);
-            this.label9.Name = "label9";
-            this.label9.Size = new System.Drawing.Size(53, 12);
-            this.label9.TabIndex = 50;
-            this.label9.Text = "业务基类";
+            this.txtBizInterface.Location = new System.Drawing.Point(616, 168);
+            this.txtBizInterface.Name = "txtBizInterface";
+            this.txtBizInterface.Size = new System.Drawing.Size(174, 21);
+            this.txtBizInterface.TabIndex = 57;
             // 
-            // txtBIBizBaseform
+            // label10
             // 
-            this.txtBIBizBaseform.Location = new System.Drawing.Point(616, 141);
-            this.txtBIBizBaseform.Name = "txtBIBizBaseform";
-            this.txtBIBizBaseform.Size = new System.Drawing.Size(174, 21);
-            this.txtBIBizBaseform.TabIndex = 51;
+            this.label10.AutoSize = true;
+            this.label10.Location = new System.Drawing.Point(533, 173);
+            this.label10.Name = "label10";
+            this.label10.Size = new System.Drawing.Size(77, 12);
+            this.label10.TabIndex = 56;
+            this.label10.Text = "业务接口标识";
             // 
             // UCMenuEdit
             // 
@@ -726,5 +746,7 @@ namespace RUINORERP.UI.SysConfig
         private WinLib.Line.GroupLine groupLine1;
         private System.Windows.Forms.TextBox txtBIBizBaseform;
         private System.Windows.Forms.Label label9;
+        private System.Windows.Forms.TextBox txtBizInterface;
+        private System.Windows.Forms.Label label10;
     }
 }

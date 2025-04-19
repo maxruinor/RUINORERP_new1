@@ -98,6 +98,21 @@ namespace RUINORERP.Model
             }
         }
 
+        private string _BizInterface;
+        /// <summary>
+        /// 业务接口标识
+        /// </summary>
+        [AdvQueryAttribute(ColName = "BizInterface", ColDesc = "业务接口标识")]
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType = "String", ColumnName = "BizInterface", Length = 100, IsNullable = true, ColumnDescription = "业务接口标识")]
+        public string BizInterface
+        {
+            get { return _BizInterface; }
+            set
+            {
+                SetProperty(ref _BizInterface, value);
+            }
+        }
+
         private string _BIBizBaseForm;
         /// <summary>
         /// 注入业务基类
@@ -112,6 +127,7 @@ namespace RUINORERP.Model
                 SetProperty(ref _BIBizBaseForm, value);
             }
         }
+
 
         private string _BIBaseForm;
         /// <summary>

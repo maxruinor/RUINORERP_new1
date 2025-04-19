@@ -1903,6 +1903,11 @@ namespace RUINORERP.UI.Common
                     // 如果强制失败或者不需要注入的窗体跳过，进入下一个循环
                     if (attribute == null || !attribute.Enabled)
                         continue;
+
+
+
+
+
                     // 域注入
                     //Services.AddScoped(type);
                     MenuAttrAssemblyInfo info = new MenuAttrAssemblyInfo();
@@ -1918,6 +1923,19 @@ namespace RUINORERP.UI.Common
                         info.MenuBizType = attribute.MenuBizType.Value;
                     }
                     info.BIBaseForm = type.BaseType.Name;
+
+                    #region  判断是不是财务合并接口
+
+                    // 确保是具体类，且实现了IBillBusinessType接口
+                    if (type.IsClass && !type.IsAbstract &&
+                           typeof(IFMBillBusinessType).IsAssignableFrom(type))
+                    {
+                        info.BizInterface = nameof(IFMBillBusinessType);
+                    }
+
+                    #endregion
+
+
                     if (type.BaseType.IsGenericType)
                     {
                         Type[] paraTypes = type.BaseType.GetGenericArguments();

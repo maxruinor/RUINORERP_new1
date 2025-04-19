@@ -317,6 +317,7 @@ namespace RUINORERP.UI.Common
                 menu.Parent_id = ParentMenuInfo.MenuID;
                 menu.BIBaseForm = info.BIBaseForm;
                 menu.BIBizBaseForm = info.BIBizBaseForm;
+                menu.BizInterface = info.BizInterface;
                 if (info.MenuBizType.HasValue)
                 {
                     menu.BizType = (int)info.MenuBizType;

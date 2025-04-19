@@ -448,18 +448,8 @@ namespace RUINORERP.UI.Common
                                 else
                                 if (pr.BIBaseForm.Contains("BaseBillQueryMC"))
                                 {
-                                    //这里为了解决合并表 多了一层业务基类，特殊处理
-                                    if (!string.IsNullOrEmpty(pr.BIBizBaseForm))
-                                    {
-                                        var menu = Startup.GetFromFacByName<UCPreReceivedPaymentQuery>(pr.FormName);
-                                        page = NewPage(pr.CaptionCN, 1, menu);
-                                    }
-                                    else
-                                    {
-                                        var menu = Startup.GetFromFacByName<BaseQuery>(pr.FormName);
-                                        page = NewPage(pr.CaptionCN, 1, menu);
-                                    }
-                                    
+                                    var menu = Startup.GetFromFacByName<BaseQuery>(pr.FormName);
+                                    page = NewPage(pr.CaptionCN, 1, menu);
                                 }
                                 else
                                 if (pr.BIBaseForm.Contains("UCBaseClass"))
@@ -487,20 +477,6 @@ namespace RUINORERP.UI.Common
                             cell.Pages.Add(page);
                         }
 
-                        //传实体进去,具体在窗体那边判断    单据实体数据传入加载用
-                        //if (page.Controls[0].GetType().BaseType.Name.Contains("BaseBillEditGeneric"))
-                        //{
-                        //    var billEditGeneric = Startup.GetFromFacByName<BaseBillEdit>(pr.FormName);
-                        //    //billEdit.LoadDataToUI(entity);
-                        //    // 延迟后在 UI 线程上执行 BindData
-                        //    await Task.Delay(500);
-                        //    billEditGeneric.Invoke(new Action(() => billEditGeneric.LoadDataToUI(entity)));
-                        //    /* LoadDataToUI只能在UI线程中调用，所以需要使用Task.Run来切换到UI线程
-                        //    await Task.Delay(1000); // 2000 表示2秒，单位为毫秒
-
-                        //    // 延迟完成后执行 BindData 方法
-                        //    await Task.Run(() => billEdit.LoadDataToUI(entity));*/
-                        //}
 
                         //传实体进去,具体在窗体那边判断    单据实体数据传入加载用
                         if (page.Controls[0] is BaseBillEdit billEdit)
@@ -559,39 +535,16 @@ namespace RUINORERP.UI.Common
                             ucbaseQuery.LoadQueryParametersToUI(LoadItems);
                         }
 
-                        if (page.ButtonSpecs.Count == 0)
+                        if (page.ButtonSpecs.All(bs => bs.Type != PaletteButtonSpecStyle.Close))
                         {
                             ButtonSpecAny bs = new ButtonSpecAny();
                             bs.Type = PaletteButtonSpecStyle.Close;
+                            //bs.Image=
                             bs.Click += Bs_Click;
                             page.ButtonSpecs.Add(bs);
                         }
-
-                        //下面的代码没效果 哪里有问题？
-                        //page.ClearFlags(KryptonPageFlags.DockingAllowAutoHidden | KryptonPageFlags.DockingAllowDocked);
-                        //page.ClearFlags(KryptonPageFlags.All);
-                        //KryptonWorkspaceCell activeCcell = MainForm.Instance.kryptonDockableWorkspace1.ActiveCell;
-                        //if (activeCcell != null)
-                        //{
-                        //    activeCcell.Button.CloseButtonDisplay = ButtonDisplay.Hide;
-                        //}
-                        //cell.Button.CloseButtonDisplay = ButtonDisplay.Hide;
                         cell.SelectedPage = page;
                     }
-
-                    /*
-                    foreach (var item in cell.Pages)
-                    {
-                        if (item.Text == pr.CaptionCN)
-                        {
-                            cell.SelectedPage = item;
-                            return;
-                        }
-                    }
-                    */
-
-
-
 
                     break;
                 case "导航菜单":
@@ -615,6 +568,8 @@ namespace RUINORERP.UI.Common
                     break;
             }
         }
+
+
 
         /// <summary>
         /// 关闭的一个方法

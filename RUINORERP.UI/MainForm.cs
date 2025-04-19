@@ -88,6 +88,7 @@ using Netron.NetronLight;
 using Netron.Xeon;
 using RUINORERP.UI.WorkFlowDesigner.Entities;
 using static RUINORERP.Business.CommService.LockManager;
+using RUINORERP.UI.SS;
 
 
 
@@ -1733,6 +1734,7 @@ namespace RUINORERP.UI
                         menu.Parent_id = menuInfoparent.MenuID;
                         menu.BIBaseForm = it.BIBaseForm;
                         menu.BIBizBaseForm = it.BIBizBaseForm;
+                        menu.BizInterface = it.BizInterface;
                         menu.MenuType = "行为菜单";
                         menu.EntityName = it.EntityName;
                         menu.Created_at = System.DateTime.Now;

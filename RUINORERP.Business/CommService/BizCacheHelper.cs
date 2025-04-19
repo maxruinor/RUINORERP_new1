@@ -428,6 +428,7 @@ namespace RUINORERP.Business.CommService
         public string[] typeNames = {
             "tb_Company",
             "tb_Currency",
+            "tb_CurrencyExchangeRate",
             "tb_BOM_S",
             "tb_ProductType",
             "tb_PaymentMethod",

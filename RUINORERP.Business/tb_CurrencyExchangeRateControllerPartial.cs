@@ -33,30 +33,7 @@ namespace RUINORERP.Business
     /// </summary>
     public partial class tb_CurrencyExchangeRateController<T> : BaseController<T> where T : class
     {
-        /// <summary>
-        /// 获取对应的汇率，无结果返回null
-        /// </summary>
-        /// <param name="fromCurrencyID"></param>
-        /// <param name="toCurrencyID"></param>
-        /// <returns></returns>
-        public async Task<T> GetExchangeRate(long fromCurrencyID, long toCurrencyID)
-        {
-            tb_CurrencyExchangeRate rate = await _appContext.Db.CopyNew().Queryable<tb_CurrencyExchangeRate>()
-                        .Where(m => m.BaseCurrencyID == fromCurrencyID && m.TargetCurrencyID == toCurrencyID)
-                        .FirstAsync();
-            if (rate!=null)
-            {
-                return rate as T;
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-
-
-
+    
     }
 }
 

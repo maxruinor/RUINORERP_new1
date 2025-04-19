@@ -219,6 +219,7 @@ namespace RUINORERP.UI.SysConfig
             info.IsVisble = chkisview.Checked;
             info.IsEnabled = chkEnable.Checked;
             info.BIBaseForm = txtBIBaseForm.Text.Trim();
+            info.BIBizBaseForm = txtBIBizBaseform.Text.Trim();
             info.CaptionCN = txt_CaptonC.Text.Trim();
             info.CaptionEN = txt_CaptionE.Text.Trim();
             if (txtBizType.Tag != null)
@@ -348,6 +349,7 @@ namespace RUINORERP.UI.SysConfig
                 txtEntityName.Text = info.EntityName;
                 txtSort.Text = info.Sort.ToString();
                 txtBIBaseForm.Text = info.BIBaseForm;
+                txtBIBizBaseform.Text = info.BIBizBaseForm;
                 if (info.BizType.HasValue)
                 {
                     txtBizType.Text = info.BizType.ToString();
@@ -785,6 +787,7 @@ namespace RUINORERP.UI.SysConfig
                         txtEntityName.Text = menuInfo.EntityName;
                         //txtSort.Text=menuInfo.Sort.ToString();
                         txtBIBaseForm.Text = menuInfo.BIBaseForm;
+                        txtBIBizBaseform.Text = menuInfo.BIBizBaseForm;
                         if (menuInfo.MenuBizType.HasValue)
                         {
                             txtBizType.Text = menuInfo.MenuBizType.ToString();
@@ -813,6 +816,7 @@ namespace RUINORERP.UI.SysConfig
                     txtEntityName.Text = menuInfo.EntityName;
 
                     txtBIBaseForm.Text = menuInfo.BIBaseForm;
+                    txtBIBizBaseform.Text = menuInfo.BIBizBaseForm;
                     txtClassPath.Text = menuInfo.ClassPath;
                     txtFormName.Text = menuInfo.ClassName;
                     if (menuInfo.BIBaseForm.Trim().Length > 0)

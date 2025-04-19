@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：02/19/2025 22:58:10
+// 时间：04/18/2025 13:55:15
 // **************************************
 using AutoMapper;
 using RUINORERP.IRepository.Base;
@@ -20,12 +20,12 @@ using System.Collections.Generic;
 namespace RUINORERP.Services
 {
     /// <summary>
-    /// 预收款明细表
+    /// 预收付款单
     /// </summary>
-    public partial class tb_FM_PrePaymentReceiptDetailServices : BaseServices<tb_FM_PrePaymentReceiptDetail>, Itb_FM_PrePaymentReceiptDetailServices
+    public partial class tb_FM_PreReceivedPaymentServices : BaseServices<tb_FM_PreReceivedPayment>, Itb_FM_PreReceivedPaymentServices
     {
         IMapper _mapper;
-        public tb_FM_PrePaymentReceiptDetailServices(IMapper mapper, IBaseRepository<tb_FM_PrePaymentReceiptDetail> dal)
+        public tb_FM_PreReceivedPaymentServices(IMapper mapper, IBaseRepository<tb_FM_PreReceivedPayment> dal)
         {
             this._mapper = mapper;
             base.BaseDal = dal;

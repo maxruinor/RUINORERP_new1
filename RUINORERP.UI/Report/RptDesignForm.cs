@@ -485,7 +485,7 @@ namespace RUINORERP.UI.Report
                 // restore the design layout. Without this code, the designer tool windows will be unavailable
                 designerControl1.UIStyle = FastReport.Utils.UIStyle.Office2010Blue;
                 designerControl1.RefreshLayout();
-                this.Text = "ERP系统-打印设计器----------" + printTemplate.Template_Name;// + string.Format("ReportTemplate\\{0}", ReportTemplateFile);
+                //this.Text = "ERP系统-打印设计器----------" + printTemplate.Template_Name;// + string.Format("ReportTemplate\\{0}", ReportTemplateFile);
 
             }
 

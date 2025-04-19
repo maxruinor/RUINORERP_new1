@@ -32,22 +32,23 @@ using TransInstruction;
 using AutoUpdateTools;
 using RUINORERP.UI.BaseForm;
 using RUINORERP.Common.Extensions;
+using RUINORERP.Global.EnumExt;
 namespace RUINORERP.UI.FM
 {
-    [MenuAttrAssemblyInfo("付款申请单查询", ModuleMenuDefine.模块定义.财务管理, ModuleMenuDefine.财务管理.付款管理, BizType.付款申请单)]
-    public partial class UCPaymentApplicationQuery : BaseBillQueryMC<tb_FM_PaymentApplication, tb_FM_PaymentApplication>
+   
+    public partial class UCPreReceivedPaymentQuery : BaseBillQueryMC<tb_FM_PreReceivedPayment, tb_FM_PreReceivedPayment>
     {
-        public UCPaymentApplicationQuery()
+        public UCPreReceivedPaymentQuery()
         {
             InitializeComponent();
-            base.RelatedBillEditCol = (c => c.ApplicationNo);
+            base.RelatedBillEditCol = (c => c.PreRPNO);
             //标记没有明细子表
             HasChildData = false;
         }
-
+        public ReceivePaymentType PaymentType { get; set; }
         public override void BuildLimitQueryConditions()
         {
-            var lambda = Expressionable.Create<tb_FM_PaymentApplication>()
+            var lambda = Expressionable.Create<tb_FM_PreReceivedPayment>()
                               .And(t => t.isdeleted == false)
                             .AndIF(AuthorizeController.GetOwnershipControl(MainForm.Instance.AppContext),
                              t => t.Employee_ID == MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID)
@@ -60,20 +61,25 @@ namespace RUINORERP.UI.FM
 
         public override void BuildSummaryCols()
         {
-            base.MasterSummaryCols.Add(c => c.TotalAmount);
-            base.MasterSummaryCols.Add(c => c.OverpaymentAmount);
+            base.MasterSummaryCols.Add(c => c.LocalPrepaidAmount);
+            base.MasterSummaryCols.Add(c => c.LocalPaidAmount);
+            base.MasterSummaryCols.Add(c => c.LocalBalanceAmount);
+            base.MasterSummaryCols.Add(c => c.ForeignPrepaidAmount);
+            base.MasterSummaryCols.Add(c => c.ForeignPaidAmount);
+            base.MasterSummaryCols.Add(c => c.ForeignBalanceAmount);
+
         }
 
 
         public override void BuildInvisibleCols()
         {
-            base.MasterInvisibleCols.Add(c => c.PrePaymentBill_id);
+            base.MasterInvisibleCols.Add(c => c.SourceBill_ID);
             //base.ChildInvisibleCols.Add(c => c.SubtotalCostAmount);
         }
 
 
 
-        protected async override void Delete(List<tb_FM_PaymentApplication> Datas)
+        protected async override void Delete(List<tb_FM_PreReceivedPayment> Datas)
         {
             if (Datas == null || Datas.Count == 0)
             {
@@ -91,7 +97,7 @@ namespace RUINORERP.UI.FM
                     var dataStatus = (DataStatus)(item.GetPropertyValue(typeof(DataStatus).Name).ToInt());
                     if (dataStatus == DataStatus.新建 || dataStatus == DataStatus.草稿)
                     {
-                        BaseController<tb_FM_PaymentApplication> ctr = Startup.GetFromFacByName<BaseController<tb_FM_PaymentApplication>>(typeof(tb_FM_PaymentApplication).Name + "Controller");
+                        BaseController<tb_FM_PreReceivedPayment> ctr = Startup.GetFromFacByName<BaseController<tb_FM_PreReceivedPayment>>(typeof(tb_FM_PreReceivedPayment).Name + "Controller");
                         bool rs = await ctr.BaseDeleteAsync(item);
                         if (rs)
                         {

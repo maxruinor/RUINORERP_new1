@@ -31,6 +31,8 @@
             this.btnOk = new Krypton.Toolkit.KryptonButton();
             this.btnCancel = new Krypton.Toolkit.KryptonButton();
             this.kryptonPanel1 = new Krypton.Toolkit.KryptonPanel();
+            this.kryptonLabel1 = new Krypton.Toolkit.KryptonLabel();
+            this.chkCash = new Krypton.Toolkit.KryptonCheckBox();
             this.lblPaytype_Name = new Krypton.Toolkit.KryptonLabel();
             this.txtPaytype_Name = new Krypton.Toolkit.KryptonTextBox();
             this.lblDesc = new Krypton.Toolkit.KryptonLabel();
@@ -42,7 +44,7 @@
             // 
             // btnOk
             // 
-            this.btnOk.Location = new System.Drawing.Point(89, 243);
+            this.btnOk.Location = new System.Drawing.Point(97, 263);
             this.btnOk.Name = "btnOk";
             this.btnOk.Size = new System.Drawing.Size(90, 25);
             this.btnOk.TabIndex = 0;
@@ -51,7 +53,7 @@
             // 
             // btnCancel
             // 
-            this.btnCancel.Location = new System.Drawing.Point(207, 243);
+            this.btnCancel.Location = new System.Drawing.Point(215, 263);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(90, 25);
             this.btnCancel.TabIndex = 1;
@@ -60,6 +62,8 @@
             // 
             // kryptonPanel1
             // 
+            this.kryptonPanel1.Controls.Add(this.kryptonLabel1);
+            this.kryptonPanel1.Controls.Add(this.chkCash);
             this.kryptonPanel1.Controls.Add(this.lblPaytype_Name);
             this.kryptonPanel1.Controls.Add(this.txtPaytype_Name);
             this.kryptonPanel1.Controls.Add(this.lblDesc);
@@ -72,11 +76,27 @@
             this.kryptonPanel1.Size = new System.Drawing.Size(404, 300);
             this.kryptonPanel1.TabIndex = 2;
             // 
+            // kryptonLabel1
+            // 
+            this.kryptonLabel1.Location = new System.Drawing.Point(47, 217);
+            this.kryptonLabel1.Name = "kryptonLabel1";
+            this.kryptonLabel1.Size = new System.Drawing.Size(347, 20);
+            this.kryptonLabel1.TabIndex = 84;
+            this.kryptonLabel1.Values.Text = "（除账期外的，现金，银行卡，网络支付等都为即时到账）";
+            // 
+            // chkCash
+            // 
+            this.chkCash.Location = new System.Drawing.Point(83, 185);
+            this.chkCash.Name = "chkCash";
+            this.chkCash.Size = new System.Drawing.Size(101, 20);
+            this.chkCash.TabIndex = 83;
+            this.chkCash.Values.Text = "即时到账方式";
+            // 
             // lblPaytype_Name
             // 
             this.lblPaytype_Name.Location = new System.Drawing.Point(12, 12);
             this.lblPaytype_Name.Name = "lblPaytype_Name";
-            this.lblPaytype_Name.Size = new System.Drawing.Size(60, 20);
+            this.lblPaytype_Name.Size = new System.Drawing.Size(62, 20);
             this.lblPaytype_Name.TabIndex = 3;
             this.lblPaytype_Name.Values.Text = "付款方式";
             // 
@@ -84,14 +104,14 @@
             // 
             this.txtPaytype_Name.Location = new System.Drawing.Point(83, 12);
             this.txtPaytype_Name.Name = "txtPaytype_Name";
-            this.txtPaytype_Name.Size = new System.Drawing.Size(251, 20);
+            this.txtPaytype_Name.Size = new System.Drawing.Size(251, 23);
             this.txtPaytype_Name.TabIndex = 4;
             // 
             // lblDesc
             // 
             this.lblDesc.Location = new System.Drawing.Point(37, 61);
             this.lblDesc.Name = "lblDesc";
-            this.lblDesc.Size = new System.Drawing.Size(35, 20);
+            this.lblDesc.Size = new System.Drawing.Size(36, 20);
             this.lblDesc.TabIndex = 5;
             this.lblDesc.Values.Text = "描述";
             // 
@@ -127,5 +147,7 @@
         private Krypton.Toolkit.KryptonTextBox txtPaytype_Name;
         private Krypton.Toolkit.KryptonLabel lblDesc;
         private Krypton.Toolkit.KryptonTextBox txtDesc;
+        private Krypton.Toolkit.KryptonLabel kryptonLabel1;
+        private Krypton.Toolkit.KryptonCheckBox chkCash;
     }
 }

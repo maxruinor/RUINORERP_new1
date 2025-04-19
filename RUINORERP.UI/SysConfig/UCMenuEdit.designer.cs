@@ -68,6 +68,9 @@ namespace RUINORERP.UI.SysConfig
             this.kryptonSplitContainer3 = new Krypton.Toolkit.KryptonSplitContainer();
             this.txtSort = new System.Windows.Forms.TextBox();
             this.label8 = new System.Windows.Forms.Label();
+            this.toolStrip1 = new System.Windows.Forms.ToolStrip();
+            this.toolStripLabel1 = new System.Windows.Forms.ToolStripLabel();
+            this.txtMenuName = new System.Windows.Forms.ToolStripTextBox();
             this.txtBizType = new System.Windows.Forms.TextBox();
             this.label7 = new System.Windows.Forms.Label();
             this.txtBIBaseForm = new System.Windows.Forms.TextBox();
@@ -75,11 +78,10 @@ namespace RUINORERP.UI.SysConfig
             this.chkOnlyNew = new System.Windows.Forms.CheckBox();
             this.txtEntityName = new System.Windows.Forms.TextBox();
             this.label5 = new System.Windows.Forms.Label();
-            this.toolStrip1 = new System.Windows.Forms.ToolStrip();
-            this.toolStripLabel1 = new System.Windows.Forms.ToolStripLabel();
-            this.txtMenuName = new System.Windows.Forms.ToolStripTextBox();
             this.kryptonPanelQuery = new Krypton.Toolkit.KryptonPanel();
             this.groupLine1 = new WinLib.Line.GroupLine();
+            this.label9 = new System.Windows.Forms.Label();
+            this.txtBIBizBaseform = new System.Windows.Forms.TextBox();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1.Panel1)).BeginInit();
@@ -233,7 +235,7 @@ namespace RUINORERP.UI.SysConfig
             this.chkisview.AutoSize = true;
             this.chkisview.Checked = true;
             this.chkisview.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.chkisview.Location = new System.Drawing.Point(382, 150);
+            this.chkisview.Location = new System.Drawing.Point(383, 146);
             this.chkisview.Name = "chkisview";
             this.chkisview.Size = new System.Drawing.Size(72, 16);
             this.chkisview.TabIndex = 12;
@@ -245,7 +247,7 @@ namespace RUINORERP.UI.SysConfig
             this.chkEnable.AutoSize = true;
             this.chkEnable.Checked = true;
             this.chkEnable.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.chkEnable.Location = new System.Drawing.Point(476, 150);
+            this.chkEnable.Location = new System.Drawing.Point(476, 146);
             this.chkEnable.Name = "chkEnable";
             this.chkEnable.Size = new System.Drawing.Size(72, 16);
             this.chkEnable.TabIndex = 14;
@@ -291,12 +293,14 @@ namespace RUINORERP.UI.SysConfig
             this.dataGridView1.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill;
             this.dataGridView1.BorderStyle = System.Windows.Forms.BorderStyle.None;
             this.dataGridView1.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.dataGridView1.ContextMenucCnfigurator = ((System.Collections.Generic.List<RUINORERP.UI.UControls.ContextMenuController>)(resources.GetObject("dataGridView1.ContextMenucCnfigurator")));
             this.dataGridView1.CustomRowNo = false;
             this.dataGridView1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.dataGridView1.FieldNameList = ((System.Collections.Concurrent.ConcurrentDictionary<string, System.Collections.Generic.KeyValuePair<string, bool>>)(resources.GetObject("dataGridView1.FieldNameList")));
             this.dataGridView1.IsShowSumRow = false;
             this.dataGridView1.Location = new System.Drawing.Point(0, 0);
             this.dataGridView1.Name = "dataGridView1";
+            this.dataGridView1.NeedSaveColumnsXml = true;
             this.dataGridView1.ReadOnly = true;
             this.dataGridView1.RowTemplate.Height = 23;
             this.dataGridView1.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
@@ -329,7 +333,7 @@ namespace RUINORERP.UI.SysConfig
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(26, 177);
+            this.label2.Location = new System.Drawing.Point(26, 191);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(53, 12);
             this.label2.TabIndex = 35;
@@ -337,7 +341,7 @@ namespace RUINORERP.UI.SysConfig
             // 
             // txtClassPath
             // 
-            this.txtClassPath.Location = new System.Drawing.Point(85, 177);
+            this.txtClassPath.Location = new System.Drawing.Point(85, 191);
             this.txtClassPath.Name = "txtClassPath";
             this.txtClassPath.Size = new System.Drawing.Size(705, 21);
             this.txtClassPath.TabIndex = 36;
@@ -464,7 +468,9 @@ namespace RUINORERP.UI.SysConfig
             this.kryptonSplitContainer3.Panel1.Controls.Add(this.txtBizType);
             this.kryptonSplitContainer3.Panel1.Controls.Add(this.label7);
             this.kryptonSplitContainer3.Panel1.Controls.Add(this.lblDiscription);
+            this.kryptonSplitContainer3.Panel1.Controls.Add(this.txtBIBizBaseform);
             this.kryptonSplitContainer3.Panel1.Controls.Add(this.txtBIBaseForm);
+            this.kryptonSplitContainer3.Panel1.Controls.Add(this.label9);
             this.kryptonSplitContainer3.Panel1.Controls.Add(this.txtDiscription);
             this.kryptonSplitContainer3.Panel1.Controls.Add(this.label6);
             this.kryptonSplitContainer3.Panel1.Controls.Add(this.btnLoad);
@@ -514,9 +520,35 @@ namespace RUINORERP.UI.SysConfig
             this.label8.TabIndex = 54;
             this.label8.Text = "排序";
             // 
+            // toolStrip1
+            // 
+            this.toolStrip1.Dock = System.Windows.Forms.DockStyle.Bottom;
+            this.toolStrip1.Font = new System.Drawing.Font("Segoe UI", 9F);
+            this.toolStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.toolStripLabel1,
+            this.txtMenuName});
+            this.toolStrip1.Location = new System.Drawing.Point(0, 275);
+            this.toolStrip1.Name = "toolStrip1";
+            this.toolStrip1.Size = new System.Drawing.Size(844, 25);
+            this.toolStrip1.TabIndex = 31;
+            this.toolStrip1.Text = "toolStrip1";
+            // 
+            // toolStripLabel1
+            // 
+            this.toolStripLabel1.Name = "toolStripLabel1";
+            this.toolStripLabel1.Size = new System.Drawing.Size(46, 22);
+            this.toolStripLabel1.Text = "菜单名";
+            // 
+            // txtMenuName
+            // 
+            this.txtMenuName.Font = new System.Drawing.Font("Microsoft YaHei UI", 9F);
+            this.txtMenuName.Name = "txtMenuName";
+            this.txtMenuName.Size = new System.Drawing.Size(200, 25);
+            this.txtMenuName.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.txtMenuName_KeyPress);
+            // 
             // txtBizType
             // 
-            this.txtBizType.Location = new System.Drawing.Point(616, 141);
+            this.txtBizType.Location = new System.Drawing.Point(384, 168);
             this.txtBizType.Name = "txtBizType";
             this.txtBizType.Size = new System.Drawing.Size(174, 21);
             this.txtBizType.TabIndex = 53;
@@ -524,7 +556,7 @@ namespace RUINORERP.UI.SysConfig
             // label7
             // 
             this.label7.AutoSize = true;
-            this.label7.Location = new System.Drawing.Point(559, 150);
+            this.label7.Location = new System.Drawing.Point(325, 173);
             this.label7.Name = "label7";
             this.label7.Size = new System.Drawing.Size(53, 12);
             this.label7.TabIndex = 52;
@@ -540,11 +572,11 @@ namespace RUINORERP.UI.SysConfig
             // label6
             // 
             this.label6.AutoSize = true;
-            this.label6.Location = new System.Drawing.Point(569, 114);
+            this.label6.Location = new System.Drawing.Point(557, 114);
             this.label6.Name = "label6";
-            this.label6.Size = new System.Drawing.Size(41, 12);
+            this.label6.Size = new System.Drawing.Size(53, 12);
             this.label6.TabIndex = 50;
-            this.label6.Text = "基类名";
+            this.label6.Text = "框架基类";
             // 
             // chkOnlyNew
             // 
@@ -573,32 +605,6 @@ namespace RUINORERP.UI.SysConfig
             this.label5.TabIndex = 43;
             this.label5.Text = "实体名称";
             // 
-            // toolStrip1
-            // 
-            this.toolStrip1.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.toolStrip1.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.toolStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.toolStripLabel1,
-            this.txtMenuName});
-            this.toolStrip1.Location = new System.Drawing.Point(0, 275);
-            this.toolStrip1.Name = "toolStrip1";
-            this.toolStrip1.Size = new System.Drawing.Size(844, 25);
-            this.toolStrip1.TabIndex = 31;
-            this.toolStrip1.Text = "toolStrip1";
-            // 
-            // toolStripLabel1
-            // 
-            this.toolStripLabel1.Name = "toolStripLabel1";
-            this.toolStripLabel1.Size = new System.Drawing.Size(46, 22);
-            this.toolStripLabel1.Text = "菜单名";
-            // 
-            // txtMenuName
-            // 
-            this.txtMenuName.Font = new System.Drawing.Font("Microsoft YaHei UI", 9F);
-            this.txtMenuName.Name = "txtMenuName";
-            this.txtMenuName.Size = new System.Drawing.Size(200, 25);
-            this.txtMenuName.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.txtMenuName_KeyPress);
-            // 
             // kryptonPanelQuery
             // 
             this.kryptonPanelQuery.Controls.Add(this.groupLine1);
@@ -616,6 +622,22 @@ namespace RUINORERP.UI.SysConfig
             this.groupLine1.Name = "groupLine1";
             this.groupLine1.Size = new System.Drawing.Size(844, 1);
             this.groupLine1.TabIndex = 2;
+            // 
+            // label9
+            // 
+            this.label9.AutoSize = true;
+            this.label9.Location = new System.Drawing.Point(557, 147);
+            this.label9.Name = "label9";
+            this.label9.Size = new System.Drawing.Size(53, 12);
+            this.label9.TabIndex = 50;
+            this.label9.Text = "业务基类";
+            // 
+            // txtBIBizBaseform
+            // 
+            this.txtBIBizBaseform.Location = new System.Drawing.Point(616, 141);
+            this.txtBIBizBaseform.Name = "txtBIBizBaseform";
+            this.txtBIBizBaseform.Size = new System.Drawing.Size(174, 21);
+            this.txtBIBizBaseform.TabIndex = 51;
             // 
             // UCMenuEdit
             // 
@@ -702,5 +724,7 @@ namespace RUINORERP.UI.SysConfig
         private System.Windows.Forms.ToolStripTextBox txtMenuName;
         internal Krypton.Toolkit.KryptonPanel kryptonPanelQuery;
         private WinLib.Line.GroupLine groupLine1;
+        private System.Windows.Forms.TextBox txtBIBizBaseform;
+        private System.Windows.Forms.Label label9;
     }
 }

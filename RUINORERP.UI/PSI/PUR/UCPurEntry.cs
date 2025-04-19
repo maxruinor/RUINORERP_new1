@@ -35,9 +35,9 @@ namespace RUINORERP.UI.PSI.PUR
         public UCPurEntry()
         {
             InitializeComponent();
-            
+
         }
-   
+
 
         /// <summary>
         /// 用于其他UI传入的数据载入。并不是刷新数据
@@ -147,7 +147,7 @@ namespace RUINORERP.UI.PSI.PUR
                 //权限允许
                 if ((true && entity.DataStatus == (int)DataStatus.草稿) || (true && entity.DataStatus == (int)DataStatus.新建))
                 {
-                    
+
                 }
                 //如果是销售订单引入变化则加载明细及相关数据
                 if ((entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改) && entity.PurOrder_ID.HasValue && entity.PurOrder_ID.Value > 0 && s2.PropertyName == entity.GetPropertyName<tb_PurEntry>(c => c.PurOrder_ID))
@@ -170,7 +170,7 @@ namespace RUINORERP.UI.PSI.PUR
             //后面这些依赖于控件绑定的数据源和字段。所以要在绑定后执行。
             if (entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改)
             {
-                base.InitRequiredToControl(MainForm.Instance.AppContext.GetRequiredService <tb_PurEntryValidator> (), kryptonSplitContainer1.Panel1.Controls);
+                base.InitRequiredToControl(MainForm.Instance.AppContext.GetRequiredService<tb_PurEntryValidator>(), kryptonSplitContainer1.Panel1.Controls);
             }
             ShowPrintStatus(lblPrintStatus, EditEntity);
 
@@ -185,7 +185,7 @@ namespace RUINORERP.UI.PSI.PUR
             queryFilterC.FilterLimitExpressions.Add(lambda);
             DataBindingHelper.BindData4Cmb<tb_CustomerVendor>(entity, k => k.CustomerVendor_ID, v => v.CVName, cmbCustomerVendor_ID, queryFilterC.GetFilterExpression<tb_CustomerVendor>(), true);
             DataBindingHelper.InitFilterForControlByExp<tb_CustomerVendor>(entity, cmbCustomerVendor_ID, c => c.CVName, queryFilterC);
-  
+
             //先绑定这个。InitFilterForControl 这个才生效
             DataBindingHelper.BindData4TextBox<tb_PurEntry>(entity, v => v.PurOrder_NO, txtPurOrderNO, BindDataType4TextBox.Text, true);
             DataBindingHelper.BindData4TextBoxWithTagQuery<tb_PurEntry>(entity, v => v.PurOrder_ID, txtPurOrderNO, true);
@@ -210,7 +210,7 @@ namespace RUINORERP.UI.PSI.PUR
 
         SourceGridDefine sgd = null;
         SourceGridHelper sgh = new SourceGridHelper();
-        
+
         private void UCStockIn_Load(object sender, EventArgs e)
         {
 
@@ -280,14 +280,14 @@ namespace RUINORERP.UI.PSI.PUR
             List<tb_PurEntryDetail> lines = new List<tb_PurEntryDetail>();
             bindingSourceSub.DataSource = lines;
             sgd.BindingSourceLines = bindingSourceSub;
-      
+
             sgd.SetDependencyObject<ProductSharePart, tb_PurEntryDetail>(MainForm.Instance.list);
 
             sgd.HasRowHeader = true;
             sgh.InitGrid(grid1, sgd, true, nameof(tb_PurEntryDetail));
             sgh.OnCalculateColumnValue += Sgh_OnCalculateColumnValue;
             sgh.OnLoadMultiRowData += Sgh_OnLoadMultiRowData;
-            UIHelper.ControlMasterColumnsInvisible(CurMenuInfo,this);
+            UIHelper.ControlMasterColumnsInvisible(CurMenuInfo, this);
         }
         private void Sgh_OnLoadMultiRowData(object rows, Position position)
         {
@@ -431,7 +431,7 @@ namespace RUINORERP.UI.PSI.PUR
             }
             return false;
         }
- 
+
 
 
 
@@ -480,8 +480,8 @@ namespace RUINORERP.UI.PSI.PUR
                     {
                         #region 产品ID可能大于1行，共用料号情况
                         tb_PurOrderDetail item = purorder.tb_PurOrderDetails
-                            .FirstOrDefault(c => c.ProdDetailID == details[i].ProdDetailID 
-                            && c.Location_ID==details[i].Location_ID
+                            .FirstOrDefault(c => c.ProdDetailID == details[i].ProdDetailID
+                            && c.Location_ID == details[i].Location_ID
                             && c.PurOrder_ChildID == details[i].PurOrder_ChildID);
                         details[i].Quantity = item.Quantity - item.DeliveredQuantity;// 已经交数量去掉
                         details[i].SubtotalAmount = details[i].TransactionPrice * details[i].Quantity;
@@ -502,7 +502,7 @@ namespace RUINORERP.UI.PSI.PUR
 
                         tb_PurOrderDetail item = purorder.tb_PurOrderDetails
                             .FirstOrDefault(c => c.ProdDetailID == details[i].ProdDetailID
-                            && c.Location_ID==details[i].Location_ID
+                            && c.Location_ID == details[i].Location_ID
                             );
                         details[i].Quantity = item.Quantity - item.DeliveredQuantity;// 已经交数量去掉
                         details[i].SubtotalAmount = details[i].TransactionPrice * details[i].Quantity;
@@ -535,10 +535,8 @@ namespace RUINORERP.UI.PSI.PUR
                     MessageBox.Show(msg.ToString(), "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 }
 
-               
-                
-              
-       
+                entity.tb_PurEntryDetails = NewDetails;
+
                 ActionStatus actionStatus = ActionStatus.无操作;
                 BindData(entity, actionStatus);
             }

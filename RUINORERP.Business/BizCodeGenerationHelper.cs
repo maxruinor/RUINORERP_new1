@@ -2,6 +2,7 @@
 using RUINORERP.Common.CustomAttribute;
 using RUINORERP.Extensions.Redis;
 using RUINORERP.Global;
+using RUINORERP.Global.EnumExt;
 using RUINORERP.Model;
 using StackExchange.Redis;
 using System;
@@ -161,7 +162,7 @@ namespace RUINORERP.Business
             switch (BIT)
             {
                 case BaseInfoType.BusinessPartner:
-                    break; 
+                    break;
                 case BaseInfoType.ProductNo:
                     break;
                 case BaseInfoType.FMSubject:
@@ -206,7 +207,7 @@ namespace RUINORERP.Business
         /// </summary>
         /// <param name="bt"></param>
         /// <returns></returns>
-        public string GetBizBillNo(BizType bt)
+        public string GetBizBillNo(BizType bt, BizCodeParameter bizCodePara = null)
         {
             string rule = "{S:NO}{D:yy}{redis:{S:ORDER}{D:dd}/0000}{redis:{S:ORDER_SUB}{CN:广州}{D:yyyyMM}/00000000}";
             string BizCode = string.Empty;
@@ -239,7 +240,7 @@ namespace RUINORERP.Business
                 case BizType.其他出库单:
                     rule = "{S:OQD}{D:yyMMdd}{redis:{S:其他出库单}{D:yyMM}/000}";
                     break;
-              
+
                 case BizType.盘点单:
                     rule = "{S:CS}{D:yyMMdd}{redis:{S:盘点单}{D:yyMM}/000}";
                     break;
@@ -306,6 +307,12 @@ namespace RUINORERP.Business
                 case BizType.销售合同:
                     rule = "{S:SC-}{D:yyMMdd}{redis:{S:销售合同}{D:yyMM}/00}";
                     break;
+                case BizType.预付款单:
+                    rule = "{S:YF}{D:yyMMdd}{redis:{S:预付款单}{D:yyMM}/00}";
+                    break;
+                case BizType.预收款单:
+                    rule = "{S:YS}{D:yyMMdd}{redis:{S:预收款单}{D:yyMM}/00}";
+                    break;
                 default:
                     break;
             }
@@ -367,4 +374,18 @@ namespace RUINORERP.Business
             return barcode;
         }
     }
+
+    /// <summary>
+    /// 合表时根据这个参考生成对应的业务编号
+    /// 如：预收付款表。
+    /// 是预收 还是预付通过这个参数来定
+    /// </summary>
+    public class BizCodeParameter
+    {
+        //财务用
+        public ReceivePaymentType PaymentType = ReceivePaymentType.收款;
+
+
+    }
+
 }

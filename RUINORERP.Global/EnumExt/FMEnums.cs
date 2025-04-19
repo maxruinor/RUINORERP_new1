@@ -151,6 +151,15 @@ namespace RUINORERP.Global.EnumExt
         已审核,
     }
 
+    /// <summary>
+    /// 默认币种
+    /// 在币种管理时 第一次系统自动检测后添加
+    /// </summary>
+    public enum DefaultCurrency
+    {
+        RMB = 1,
+        USD = 2,
+    }
 
     /// <summary>
     /// 默认付款方式

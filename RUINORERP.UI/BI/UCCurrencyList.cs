@@ -17,6 +17,7 @@ using RUINORERP.Common.Helper;
 using RUINORERP.Business;
 using System.Linq.Expressions;
 using RUINORERP.Common.Extensions;
+using RUINORERP.Global.EnumExt;
 
 namespace RUINORERP.UI.BI
 {
@@ -40,6 +41,48 @@ namespace RUINORERP.UI.BI
             string colName2 = expr2.GetMemberInfo().Name;
             base.ColNameDataDictionary.TryAdd(colName1, kvlist);
             base.ColNameDataDictionary.TryAdd(colName2, kvlist);*/
+        }
+        protected override void Add()
+        {
+            if (ListDataSoure.Count == 0)
+            {
+                //第一次添加付款方式时，添加系统默认的值  优化
+                //循环枚举DefaultPaymentMethod中的值，添加到表中
+                List<tb_Currency> list = new List<tb_Currency>();
+                foreach (var item in Enum.GetValues(typeof(DefaultCurrency)))
+                { 
+                    tb_Currency currency = new tb_Currency();
+                    currency.Is_enabled = true;
+                    currency.CurrencyCode = item.ToString();
+                    DefaultCurrency defaultCurrency= (DefaultCurrency)item;
+                    switch (defaultCurrency)
+                    {
+                        case DefaultCurrency.RMB:
+                            currency.CurrencyName = "中国";
+                            currency.CurrencySymbol = "￥";
+                            currency.Is_BaseCurrency=true;
+                            break;
+                        case DefaultCurrency.USD:
+                            currency.CurrencyName = "美国";
+                            currency.CurrencySymbol = "$";
+                            currency.Is_BaseCurrency = false;
+                            break;
+                        default:
+                            break;
+                    }
+                    list.Add(currency);
+                }
+                MainForm.Instance.AppContext.Db.Insertable<tb_PaymentMethod>(list).ExecuteCommandAsync();
+                Query();
+                base.Add();
+                base.toolStripButtonModify.Enabled = false;
+            }
+            else
+            {
+                //非第一次添加付款方式时。正常处理
+                base.Add();
+                base.toolStripButtonModify.Enabled = false;
+            }
         }
 
 

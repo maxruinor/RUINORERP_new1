@@ -98,12 +98,27 @@ namespace RUINORERP.Model
             }
         }
 
+        private string _BIBizBaseForm;
+        /// <summary>
+        /// 注入业务基类
+        /// </summary>
+        [AdvQueryAttribute(ColName = "BIBizBaseForm", ColDesc = "注入业务基类")]
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType = "String", ColumnName = "BIBizBaseForm", Length = 100, IsNullable = true, ColumnDescription = "注入业务基类")]
+        public string BIBizBaseForm
+        {
+            get { return _BIBizBaseForm; }
+            set
+            {
+                SetProperty(ref _BIBizBaseForm, value);
+            }
+        }
+
         private string _BIBaseForm;
         /// <summary>
-        /// 注入基类
+        /// 注入框架基类
         /// </summary>
-        [AdvQueryAttribute(ColName = "BIBaseForm", ColDesc = "注入基类")]
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType = "String", ColumnName = "BIBaseForm", Length = 100, IsNullable = true, ColumnDescription = "注入基类")]
+        [AdvQueryAttribute(ColName = "BIBaseForm", ColDesc = "注入框架基类")]
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType = "String", ColumnName = "BIBaseForm", Length = 100, IsNullable = true, ColumnDescription = "注入框架基类")]
         public string BIBaseForm
         {
             get { return _BIBaseForm; }
@@ -112,6 +127,8 @@ namespace RUINORERP.Model
                 SetProperty(ref _BIBaseForm, value);
             }
         }
+
+
 
         private int? _BizType;
         /// <summary>

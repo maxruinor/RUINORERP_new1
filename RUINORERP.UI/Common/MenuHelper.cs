@@ -17,6 +17,7 @@ using RUINORERP.Business.Processor;
 using RUINORERP.Common.Helper;
 using RUINORERP.Model;
 using RUINORERP.UI.BaseForm;
+using RUINORERP.UI.FM;
 using RUINORERP.UI.PSI.SAL;
 using RUINORERP.UI.UserCenter;
 
@@ -447,8 +448,18 @@ namespace RUINORERP.UI.Common
                                 else
                                 if (pr.BIBaseForm.Contains("BaseBillQueryMC"))
                                 {
-                                    var menu = Startup.GetFromFacByName<BaseQuery>(pr.FormName);
-                                    page = NewPage(pr.CaptionCN, 1, menu);
+                                    //这里为了解决合并表 多了一层业务基类，特殊处理
+                                    if (!string.IsNullOrEmpty(pr.BIBizBaseForm))
+                                    {
+                                        var menu = Startup.GetFromFacByName<UCPreReceivedPaymentQuery>(pr.FormName);
+                                        page = NewPage(pr.CaptionCN, 1, menu);
+                                    }
+                                    else
+                                    {
+                                        var menu = Startup.GetFromFacByName<BaseQuery>(pr.FormName);
+                                        page = NewPage(pr.CaptionCN, 1, menu);
+                                    }
+                                    
                                 }
                                 else
                                 if (pr.BIBaseForm.Contains("UCBaseClass"))

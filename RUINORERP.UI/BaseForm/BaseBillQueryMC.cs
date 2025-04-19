@@ -121,14 +121,23 @@ namespace RUINORERP.UI.BaseForm
             {
                 if (!this.DesignMode)
                 {
+                    if (frm == null)
+                    {
+                        frm = new frmFormProperty();
+                    }
+
                     //权限菜单
                     if (CurMenuInfo == null || CurMenuInfo.ClassPath.IsNullOrEmpty())
                     {
                         CurMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble && m.EntityName == typeof(M).Name && m.ClassPath == this.ToString()).FirstOrDefault();
-                        if (CurMenuInfo == null && !MainForm.Instance.AppContext.IsSuperUser)
+                        if (CurMenuInfo == null)
                         {
-                            MessageBox.Show(this.ToString() + "A菜单不能为空，请联系管理员。");
-                            return;
+                            CurMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble && m.FormName == this.Name && m.ClassPath == this.ToString()).FirstOrDefault();
+                            if (CurMenuInfo == null)
+                            {
+                                MessageBox.Show(this.ToString() + "当前菜单不能为空，或无操作权限，请联系管理员。");
+                                return;
+                            }
                         }
                     }
                     MainForm.Instance.AppContext.log.ActionName = "BaseBillQueryMC()";
@@ -961,7 +970,7 @@ namespace RUINORERP.UI.BaseForm
 
         }
 
-        protected frmFormProperty frm = new frmFormProperty();
+        protected frmFormProperty frm = null;
         protected virtual void Property()
         {
             if (frm == null || frm.IsDisposed)
@@ -1203,7 +1212,7 @@ namespace RUINORERP.UI.BaseForm
         /// </summary>
         public virtual void BuildContextMenuController()
         {
-            
+
         }
 
         /// <summary>
@@ -1730,19 +1739,27 @@ namespace RUINORERP.UI.BaseForm
             }
             else
             {
-                if (MainForm.Instance.AppContext.CurrentUser_Role_Personalized.tb_UIMenuPersonalizations == null)
+                if (CurMenuInfo == null)
                 {
-                    MainForm.Instance.AppContext.CurrentUser_Role_Personalized.tb_UIMenuPersonalizations = new List<tb_UIMenuPersonalization>();
-                }
-                tb_UIMenuPersonalization menuSetting = MainForm.Instance.AppContext.CurrentUser_Role_Personalized.tb_UIMenuPersonalizations.FirstOrDefault(c => c.MenuID == CurMenuInfo.MenuID);
-                if (menuSetting != null)
-                {
-                    QueryDto = UIGenerateHelper.CreateQueryUI(typeof(M), true, kryptonPanel条件生成容器, QueryConditionFilter, menuSetting);
+                    MessageBox.Show(this.ToString() + "当前菜单不能为空，或无操作权限，请联系管理员。");
                 }
                 else
                 {
-                    QueryDto = UIGenerateHelper.CreateQueryUI(typeof(M), true, kryptonPanel条件生成容器, QueryConditionFilter, QueryConditionShowColQty);
+                    if (MainForm.Instance.AppContext.CurrentUser_Role_Personalized.tb_UIMenuPersonalizations == null)
+                    {
+                        MainForm.Instance.AppContext.CurrentUser_Role_Personalized.tb_UIMenuPersonalizations = new List<tb_UIMenuPersonalization>();
+                    }
+                    tb_UIMenuPersonalization menuSetting = MainForm.Instance.AppContext.CurrentUser_Role_Personalized.tb_UIMenuPersonalizations.FirstOrDefault(c => c.MenuID == CurMenuInfo.MenuID);
+                    if (menuSetting != null)
+                    {
+                        QueryDto = UIGenerateHelper.CreateQueryUI(typeof(M), true, kryptonPanel条件生成容器, QueryConditionFilter, menuSetting);
+                    }
+                    else
+                    {
+                        QueryDto = UIGenerateHelper.CreateQueryUI(typeof(M), true, kryptonPanel条件生成容器, QueryConditionFilter, QueryConditionShowColQty);
+                    }
                 }
+                
             }
 
 

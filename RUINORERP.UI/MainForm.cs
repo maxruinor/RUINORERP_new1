@@ -1732,6 +1732,7 @@ namespace RUINORERP.UI
                         menu.FormName = it.ClassName;
                         menu.Parent_id = menuInfoparent.MenuID;
                         menu.BIBaseForm = it.BIBaseForm;
+                        menu.BIBizBaseForm = it.BIBizBaseForm;
                         menu.MenuType = "行为菜单";
                         menu.EntityName = it.EntityName;
                         menu.Created_at = System.DateTime.Now;

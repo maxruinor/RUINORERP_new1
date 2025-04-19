@@ -30,11 +30,55 @@ using System.Drawing;
 using StackExchange.Redis;
 using RUINORERP.UI.UCSourceGrid;
 using System.Web.UI.WebControls;
+using RUINORERP.UI.FM;
 
 namespace RUINORERP.UI.Common
 {
     public static class UIHelper
     {
+
+
+        #region 控制外币相关字段是否显示（单表时）
+
+
+        /// <summary>
+        /// 设置主表字段是否显示
+        /// </summary>
+        /// <param name="CurMenuInfo"></param>
+        /// <param name="FormControl"></param>
+        public static void ControlForeignFieldInvisible<T>(Control FormControl, bool ShowForeignField)
+        {
+            ConcurrentDictionary<string, string> FieldNameList = GetFieldNameList<T>(false);
+
+            foreach (var item in FieldNameList.Values)
+            {
+                if (item != null)
+                {
+                    //主表时，字段不可用或设置为不可见时  如果是金额还可以  再增加money类型
+                    if (!item.Contains("Foreign"))
+                    {
+                        KryptonTextBox txtTextBox = UIHelper.FindTextBox(FormControl, item);
+                        if (txtTextBox != null)
+                        {
+                            txtTextBox.Visible = ShowForeignField;
+                        }
+                        KryptonLabel lbl = UIHelper.FindLabel(FormControl, item, item);
+                        if (lbl != null)
+                        {
+                            lbl.Visible = ShowForeignField;
+                        }
+                        if (txtTextBox != null && lbl != null)
+                        {
+                            continue;
+                        }
+                    }
+                }
+            }
+        }
+
+
+        #endregion
+
         #region 查找控件
         public static KryptonCheckBox FindKryptonCheckBox(Control parentControl, string dataMember)
         {
@@ -423,9 +467,9 @@ namespace RUINORERP.UI.Common
                    CurMenuInfo.tb_P4Buttons
                    .Where(p => p.RoleID == MainForm.Instance.AppContext.CurrentUser_Role.RoleID
                    && p.tb_buttoninfo.ButtonType == RUINORERP.Global.ButtonType.ContextMenu.ToString()).ToList();
-                    
+
                     //如果没有配置这个权限。直接清空
-                    if (P4Buttons.Count==0)
+                    if (P4Buttons.Count == 0)
                     {
                         list.Clear();
                         return;
@@ -452,7 +496,7 @@ namespace RUINORERP.UI.Common
                             }
                         }
                     }
-                    
+
                 }
             }
 
@@ -1885,6 +1929,16 @@ namespace RUINORERP.UI.Common
                     }
                     else
                     {
+
+                        if (type.BaseType.FullName == "System.Windows.Forms.UserControl")
+                        {
+
+                        }
+                        else
+                        {
+
+                        }
+
                         //UserControl 都是这个类型
                         if (type.BaseType.FullName == "RUINORERP.UI.BaseForm.BaseList")
                         {
@@ -1893,10 +1947,31 @@ namespace RUINORERP.UI.Common
                             //var menu=Startup.GetFromFac<UI.BI.UCLocationTypeList>();
                             //获取关联实体名
                         }
-                        //if (type.BaseType.Name == "BaseListWithTree")
-                        //{
-                        //    info.EntityName = typeof(tb_ProdCategories).Name;
-                        //}
+
+                        if (type.BaseType.IsGenericType)
+                        {
+                            Type[] paraTypes = type.BaseType.GetGenericArguments();
+                            if (paraTypes.Length > 0)
+                            {
+                                info.EntityName = paraTypes[0].Name;
+                                info.BIBaseForm = type.BaseType.Name;
+                            }
+                        }
+                        else
+                        {
+                            //再找上一级的父类    预收付款查询  暂时两级吧。主要是合并表 分开菜单好控制
+                            if (type.BaseType.BaseType.IsGenericType)
+                            {
+                                Type[] paraTypes = type.BaseType.BaseType.GetGenericArguments();
+                                if (paraTypes.Length > 0)
+                                {
+                                    info.EntityName = paraTypes[0].Name;
+                                    info.BIBaseForm = type.BaseType.BaseType.Name;
+                                }
+                            }
+                            info.BIBizBaseForm = type.BaseType.Name;
+                        }
+
                         // Console.WriteLine($"注入：{attribute.FormType.Namespace}.{attribute.FormType.Name},{attribute.Describe}");
                     }
 
@@ -1919,108 +1994,6 @@ namespace RUINORERP.UI.Common
         }
         #endregion 注入窗体-结束
 
-
-        #region 注入窗体-开始  新2023
-
-
-        /// <summary>
-        /// 获取对应的窗体用于首次自动生成菜单
-        /// </summary>
-        /// <returns></returns>
-        public static List<MenuAttrAssemblyInfo> RegisterFormNew(string assemblyPath)
-        {
-            List<MenuAttrAssemblyInfo> infolist = new List<MenuAttrAssemblyInfo>();
-            Type[] types = null;
-            if (string.IsNullOrEmpty(assemblyPath))
-            {
-                types = Assembly.GetExecutingAssembly()?.GetExportedTypes();
-            }
-            else
-            {
-                types = Assembly.LoadFrom(assemblyPath).GetExportedTypes();
-            }
-            //  Type[]? types = Assembly.GetExecutingAssembly()?.GetExportedTypes();
-
-            if (types != null)
-            {
-                var descType = typeof(MenuAttrAssemblyInfo);
-                var form = typeof(Form);
-                foreach (Type type in types)
-                {
-                    // 类型是否为窗体，否则跳过，进入下一个循环
-                    //if (type.GetTypeInfo != form)
-                    //    continue;
-
-                    // 是否为自定义特性，否则跳过，进入下一个循环
-                    if (!type.IsDefined(descType, false))
-                        continue;
-                    // 强制为自定义特性
-                    MenuAttrAssemblyInfo? attribute = type.GetCustomAttribute(descType, false) as MenuAttrAssemblyInfo;
-                    // 如果强制失败或者不需要注入的窗体跳过，进入下一个循环
-                    if (attribute == null || !attribute.Enabled)
-                        continue;
-                    // 域注入
-                    //Services.AddScoped(type);
-                    MenuAttrAssemblyInfo info = new MenuAttrAssemblyInfo();
-                    info.ClassName = type.Name;
-                    info.ClassPath = type.FullName;
-                    info.Caption = attribute.Describe;
-                    info.MenuPath = attribute.MenuPath;
-                    info.UiType = attribute.UiType;
-                    if (attribute.MenuBizType.HasValue)
-                    {
-                        info.MenuBizType = attribute.MenuBizType.Value;
-                    }
-                    info.BIBaseForm = type.BaseType.Name;
-                    if (type.BaseType.IsGenericType)
-                    {
-
-
-
-
-
-                        Type[] paraTypes = type.BaseType.GetGenericArguments();
-                        if (paraTypes.Length > 0)
-                        {
-                            info.EntityName = paraTypes[0].Name;
-                        }
-                        //如果类型是例如此代码可为空，返回int部分(底层类型)。如果只需要将对象转换为特定类型，则可以使用System.Convert.ChangeType方法。
-                    }
-                    else
-                    {
-                        //UserControl 都是这个类型
-                        if (type.BaseType.FullName == "RUINORERP.UI.BaseForm.BaseList")
-                        {
-                            //这个实例化过程 到UCUnitList时居然会执行里面的Query方法 导致 出错。只是会在init菜单时
-                            var RelatedForms = Startup.GetFromFacByName<UserControl>(type.Name);
-                            //var menu=Startup.GetFromFac<UI.BI.UCLocationTypeList>();
-                            //获取关联实体名
-                        }
-                        //if (type.BaseType.Name == "BaseListWithTree")
-                        //{
-                        //    info.EntityName = typeof(tb_ProdCategories).Name;
-                        //}
-                        // Console.WriteLine($"注入：{attribute.FormType.Namespace}.{attribute.FormType.Name},{attribute.Describe}");
-                    }
-
-                    //特性标记
-                    if (!string.IsNullOrEmpty(info.MenuPath))
-                    {
-                        infolist.Add(info);
-                    }
-
-                }
-            }
-
-
-            return infolist;
-        }
-
-        public static List<MenuAttrAssemblyInfo> RegisterFormNew()
-        {
-            return RegisterForm("");
-        }
-        #endregion 注入窗体-结束
 
 
 

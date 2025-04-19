@@ -1,5 +1,7 @@
 ﻿using RUINORERP.Common;
 using RUINORERP.Global;
+using RUINORERP.Global.CustomAttribute;
+using SqlSugar;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -33,8 +35,15 @@ namespace RUINORERP.UI.Common
             get => _menuPath; set => _menuPath = value;
         }
 
-
+        /// <summary>
+        /// 框架性基类
+        /// </summary>
         public string BIBaseForm { get; set; }
+
+        /// <summary>
+        /// 业务性基类
+        /// </summary>
+        public string BIBizBaseForm { get; set; }
 
         /// <summary>
         /// 标识是什么样的类型与业务有关系

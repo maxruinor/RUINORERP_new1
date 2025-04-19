@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：02/19/2025 22:58:04
+// 时间：04/18/2025 13:55:15
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -16,9 +16,9 @@ using RUINORERP.Model;
 namespace RUINORERP.IServices
 {
     /// <summary>
-    /// 应收款单
+    /// 预收付款单
     /// </summary>
-    public partial interface Itb_FM_PaymentReceivableServices : IBaseServices<tb_FM_PaymentReceivable>
+    public partial interface Itb_FM_PreReceivedPaymentServices : IBaseServices<tb_FM_PreReceivedPayment>
     {
       
     }

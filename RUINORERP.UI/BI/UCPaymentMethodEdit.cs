@@ -22,7 +22,7 @@ namespace RUINORERP.UI.BI
     /// 最新的基本资料 单表的处理 2023-10-12
     /// </summary>
 
-    [MenuAttrAssemblyInfo("付款方式数据编辑",  true, UIType.单表数据)]
+    [MenuAttrAssemblyInfo("付款方式数据编辑", true, UIType.单表数据)]
     public partial class UCPaymentMethodEdit : BaseEditGeneric<tb_PaymentMethod>
     {
         public UCPaymentMethodEdit()
@@ -34,6 +34,7 @@ namespace RUINORERP.UI.BI
         {
             DataBindingHelper.BindData4TextBox<tb_PaymentMethod>(entity, t => t.Paytype_Name, txtPaytype_Name, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_PaymentMethod>(entity, t => t.Desc, txtDesc, BindDataType4TextBox.Text, false);
+            DataBindingHelper.BindData4CheckBox<tb_PaymentMethod>(entity, t => t.Cash, chkCash, false);
             base.BindData(entity);
         }
 

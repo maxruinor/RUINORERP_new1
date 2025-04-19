@@ -211,6 +211,7 @@ namespace RUINORERP.UI.BaseForm
                 return;
             }
             InitializeComponent();
+            frm = new frmFormProperty();
             if (System.ComponentModel.LicenseManager.UsageMode != System.ComponentModel.LicenseUsageMode.Designtime)
             {
                 if (!this.DesignMode)
@@ -536,7 +537,7 @@ namespace RUINORERP.UI.BaseForm
 
         }
 
-        protected frmFormProperty frm = new frmFormProperty();
+        protected frmFormProperty frm =null;
         protected virtual void Property()
         {
             if (frm.ShowDialog() == DialogResult.OK)

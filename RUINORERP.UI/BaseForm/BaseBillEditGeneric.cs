@@ -85,11 +85,12 @@ namespace RUINORERP.UI.BaseForm
         public BaseBillEditGeneric()
         {
             InitializeComponent();
-
+          
             if (System.ComponentModel.LicenseManager.UsageMode != System.ComponentModel.LicenseUsageMode.Designtime)
             {
                 if (!this.DesignMode)
                 {
+                    frm = new frmFormProperty();
                     QueryConditionBuilder();
                 }
             }
@@ -1666,7 +1667,7 @@ namespace RUINORERP.UI.BaseForm
 
         }
 
-        frmFormProperty frm = new frmFormProperty();
+        frmFormProperty frm = null  ;
         protected override void Property()
         {
             if (frm.ShowDialog() == DialogResult.OK)

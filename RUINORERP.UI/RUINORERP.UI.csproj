@@ -1268,6 +1268,7 @@
     <Compile Include="CommonUI\ProgressForm.Designer.cs">
       <DependentUpon>ProgressForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="Common\BizService.cs" />
     <Compile Include="Common\GridViewDisplayHelper.cs" />
     <Compile Include="Common\GridViewDisplayNameResolver.cs" />
     <Compile Include="Common\GridViewDisplayTextResolverGeneric.cs" />
@@ -1402,11 +1403,41 @@
     <Compile Include="CRM\UCLeadsList.Designer.cs">
       <DependentUpon>UCLeadsList.cs</DependentUpon>
     </Compile>
+    <Compile Include="FM\UCPrePayment.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="FM\UCPrePayment.Designer.cs">
+      <DependentUpon>UCPrePayment.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FM\UCPrePaymentQuery.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="FM\UCPrePaymentQuery.Designer.cs">
+      <DependentUpon>UCPrePaymentQuery.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FM\UCPreReceived.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="FM\UCPreReceived.Designer.cs">
+      <DependentUpon>UCPreReceived.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FM\UCPreReceivedPayment.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="FM\UCPreReceivedPayment.Designer.cs">
+      <DependentUpon>UCPreReceivedPayment.cs</DependentUpon>
+    </Compile>
     <Compile Include="FM\UCPaymentApplication.cs">
       <SubType>UserControl</SubType>
     </Compile>
     <Compile Include="FM\UCPaymentApplication.Designer.cs">
       <DependentUpon>UCPaymentApplication.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FM\UCPreReceivedPaymentQuery.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="FM\UCPreReceivedPaymentQuery.Designer.cs">
+      <DependentUpon>UCPreReceivedPaymentQuery.cs</DependentUpon>
     </Compile>
     <Compile Include="FM\UCPaymentApplicationQuery.cs">
       <SubType>UserControl</SubType>
@@ -1425,6 +1456,12 @@
     </Compile>
     <Compile Include="FM\UCExpenseClaimStatistics.Designer.cs">
       <DependentUpon>UCExpenseClaimStatistics.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FM\UCPreReceivedQuery.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="FM\UCPreReceivedQuery.Designer.cs">
+      <DependentUpon>UCPreReceivedQuery.cs</DependentUpon>
     </Compile>
     <Compile Include="FormProperty\frmFormProperty.cs">
       <SubType>Form</SubType>
@@ -3153,8 +3190,17 @@
     <EmbeddedResource Include="CRM\UCLeadsList.resx">
       <DependentUpon>UCLeadsList.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="FM\UCPreReceived.resx">
+      <DependentUpon>UCPreReceived.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FM\UCPreReceivedPayment.resx">
+      <DependentUpon>UCPreReceivedPayment.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="FM\UCPaymentApplication.resx">
       <DependentUpon>UCPaymentApplication.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FM\UCPreReceivedPaymentQuery.resx">
+      <DependentUpon>UCPreReceivedPaymentQuery.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="FM\UCPaymentApplicationQuery.resx">
       <DependentUpon>UCPaymentApplicationQuery.cs</DependentUpon>
@@ -3572,6 +3618,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="SysConfig\UCMenuEdit.resx">
       <DependentUpon>UCMenuEdit.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="SysConfig\UCGlobalDynamicConfig.resx">
       <DependentUpon>UCGlobalDynamicConfig.cs</DependentUpon>

@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：02/19/2025 22:58:04
+// 时间：04/18/2025 13:55:15
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -30,12 +30,12 @@ using RUINORERP.Common.Helper;
 namespace RUINORERP.Business.Processor
 {
     /// <summary>
-    /// 应收款单
+    /// 预收付款单
     /// </summary>
-    public partial class tb_FM_PaymentReceivableProcessor:BaseProcessor 
+    public partial class tb_FM_PreReceivedPaymentProcessor:BaseProcessor 
     {
        
-        public tb_FM_PaymentReceivableProcessor(ILogger<tb_FM_PaymentReceivableProcessor> logger, IUnitOfWorkManage unitOfWorkManage, ApplicationContext appContext = null): base(logger, unitOfWorkManage, appContext)
+        public tb_FM_PreReceivedPaymentProcessor(ILogger<tb_FM_PreReceivedPaymentProcessor> logger, IUnitOfWorkManage unitOfWorkManage, ApplicationContext appContext = null): base(logger, unitOfWorkManage, appContext)
         {
             _logger = logger;
            _unitOfWorkManage = unitOfWorkManage;

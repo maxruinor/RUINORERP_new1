@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：03/30/2025 15:54:06
+// 时间：04/20/2025 22:58:12
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -250,7 +250,7 @@ namespace RUINORERP.Business
                              rs = await _unitOfWorkManage.GetDbClient().UpdateNav<tb_UIMenuPersonalization>(entity as tb_UIMenuPersonalization)
                         .Include(m => m.tb_UIQueryConditions)
                     .Include(m => m.tb_UIGridSettings)
-                    .Include(m => m.tb_UIDataFieldSettings)
+                    .Include(m => m.tb_UIInputDataFields)
                     .ExecuteCommandAsync();
                  }
         else    
@@ -258,7 +258,7 @@ namespace RUINORERP.Business
                         rs = await _unitOfWorkManage.GetDbClient().InsertNav<tb_UIMenuPersonalization>(entity as tb_UIMenuPersonalization)
                 .Include(m => m.tb_UIQueryConditions)
                 .Include(m => m.tb_UIGridSettings)
-                .Include(m => m.tb_UIDataFieldSettings)
+                .Include(m => m.tb_UIInputDataFields)
          
                 .ExecuteCommandAsync();
                                           
@@ -294,7 +294,7 @@ namespace RUINORERP.Business
             var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<tb_UIMenuPersonalization>()
                                 .Includes(m => m.tb_UIQueryConditions)
                         .Includes(m => m.tb_UIGridSettings)
-                        .Includes(m => m.tb_UIDataFieldSettings)
+                        .Includes(m => m.tb_UIInputDataFields)
                                         .Where(useLike, dto);
             return await querySqlQueryable.ToListAsync()as List<T>;
         }
@@ -306,7 +306,7 @@ namespace RUINORERP.Business
              bool rs = await _unitOfWorkManage.GetDbClient().DeleteNav<tb_UIMenuPersonalization>(m => m.UIMenuPID== entity.UIMenuPID)
                                 .Include(m => m.tb_UIQueryConditions)
                         .Include(m => m.tb_UIGridSettings)
-                        .Include(m => m.tb_UIDataFieldSettings)
+                        .Include(m => m.tb_UIInputDataFields)
                                         .ExecuteCommandAsync();
             if (rs)
             {
@@ -473,7 +473,7 @@ namespace RUINORERP.Business
                                .Includes(t => t.tb_userpersonalized )
                                             .Includes(t => t.tb_UIQueryConditions )
                                 .Includes(t => t.tb_UIGridSettings )
-                                .Includes(t => t.tb_UIDataFieldSettings )
+                                .Includes(t => t.tb_UIInputDataFields )
                         .ToListAsync();
             
             foreach (var item in list)
@@ -497,7 +497,7 @@ namespace RUINORERP.Business
                                .Includes(t => t.tb_userpersonalized )
                                             .Includes(t => t.tb_UIQueryConditions )
                                 .Includes(t => t.tb_UIGridSettings )
-                                .Includes(t => t.tb_UIDataFieldSettings )
+                                .Includes(t => t.tb_UIInputDataFields )
                         .ToListAsync();
             
             foreach (var item in list)
@@ -521,7 +521,7 @@ namespace RUINORERP.Business
                             .Includes(t => t.tb_userpersonalized )
                                         .Includes(t => t.tb_UIQueryConditions )
                             .Includes(t => t.tb_UIGridSettings )
-                            .Includes(t => t.tb_UIDataFieldSettings )
+                            .Includes(t => t.tb_UIInputDataFields )
                         .ToList();
             
             foreach (var item in list)
@@ -562,7 +562,7 @@ namespace RUINORERP.Business
                             .Includes(t => t.tb_userpersonalized )
                                         .Includes(t => t.tb_UIQueryConditions )
                             .Includes(t => t.tb_UIGridSettings )
-                            .Includes(t => t.tb_UIDataFieldSettings )
+                            .Includes(t => t.tb_UIInputDataFields )
                         .FirstAsync();
             if(entity!=null)
             {

@@ -64,11 +64,6 @@ namespace RUINORERP.Business
 
  RuleFor(x => x.SubtotalCostAmount).PrecisionScale(19,4,true).WithMessage("成本小计:小数位不能超过4。");
 
-//***** 
- RuleFor(tb_SaleOutReRefurbishedMaterialsDetail =>tb_SaleOutReRefurbishedMaterialsDetail.TotalDeliveredQty).NotNull().WithMessage("订单出库数:不能为空。");
-
-//***** 
- RuleFor(tb_SaleOutReRefurbishedMaterialsDetail =>tb_SaleOutReRefurbishedMaterialsDetail.TotalReturnedQty).NotNull().WithMessage("订单退回数:不能为空。");
 
  RuleFor(x => x.TaxRate).PrecisionScale(5,2,true).WithMessage("税率:小数位不能超过2。");
 

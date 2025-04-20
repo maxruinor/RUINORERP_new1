@@ -502,13 +502,7 @@ namespace RUINORERP.Model
         //ProdDetailID.FK_PRODRetruningdetail_REF_PRODDe)
         //tb_ProdDetail.ProdDetailID)
 
-        //[Browsable(false)]打印报表时的数据源会不显示
-        [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_ReturnDetail.ProdDetailID))]
-        public virtual List<tb_ReturnDetail> tb_ReturnDetails { get; set; }
-        //tb_ReturnDetail.ProdDetailID)
-        //ProdDetailID.FK_RETURNDETAIL_PRODDETAIL)
-        //tb_ProdDetail.ProdDetailID)
+       
 
         //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]

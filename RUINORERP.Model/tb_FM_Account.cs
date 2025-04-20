@@ -223,30 +223,9 @@ namespace RUINORERP.Model
         //Account_id.FK_EXPENSECLAIMDETAIL_REF_ACCOUNT)
         //tb_FM_Account.Account_id)
 
-        //[Browsable(false)]打印报表时的数据源会不显示
-        [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_FM_Initial_PayAndReceivable.account_id))]
-        public virtual List<tb_FM_Initial_PayAndReceivable> tb_FM_Initial_PayAndReceivables { get; set; }
-        //tb_FM_Initial_PayAndReceivable.Account_id)
-        //Account_id.FK_TB_FM_IN_REFERENCE_TB_FM_AC)
-        //tb_FM_Account.account_id)
+        
 
-        //[Browsable(false)]打印报表时的数据源会不显示
-        [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_FM_PaymentBill.account_id))]
-        public virtual List<tb_FM_PaymentBill> tb_FM_PaymentBills { get; set; }
-        //tb_FM_PaymentBill.Account_id)
-        //Account_id.FK_FM_PAYMENTBILL_REF_ACCOUNTS)
-        //tb_FM_Account.account_id)
-
-        //[Browsable(false)]打印报表时的数据源会不显示
-        [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_FM_PrePaymentBillDetail.account_id))]
-        public virtual List<tb_FM_PrePaymentBillDetail> tb_FM_PrePaymentBillDetails { get; set; }
-        //tb_FM_PrePaymentBillDetail.Account_id)
-        //Account_id.FK_PREPAYMENTBILLDETAIL_R_ACCOUNTS)
-        //tb_FM_Account.account_id)
-
+      
 
         #endregion
 

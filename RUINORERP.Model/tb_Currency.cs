@@ -221,13 +221,7 @@ namespace RUINORERP.Model
         //Currency_ID.FK_FM_GE_REFERENCEDGER_TB_CURRENCY)
         //tb_Currency.Currency_ID)
 
-        //[Browsable(false)]打印报表时的数据源会不显示
-        [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_FM_PaymentBill.Currency_ID))]
-        public virtual List<tb_FM_PaymentBill> tb_FM_PaymentBills { get; set; }
-        //tb_FM_PaymentBill.Currency_ID)
-        //Currency_ID.FK_FM_PAYMENTBILL_REF_CURRENCY)
-        //tb_Currency.Currency_ID)
+      
 
         //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
@@ -237,13 +231,7 @@ namespace RUINORERP.Model
         //Currency_ID.FK_FM_PAYMENTRECEIPT_REF_CURREncy)
         //tb_Currency.Currency_ID)
 
-        //[Browsable(false)]打印报表时的数据源会不显示
-        [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_FM_PrePaymentBillDetail.Currency_ID))]
-        public virtual List<tb_FM_PrePaymentBillDetail> tb_FM_PrePaymentBillDetails { get; set; }
-        //tb_FM_PrePaymentBillDetail.Currency_ID)
-        //Currency_ID.FK_FM_PREPAYMENTDETAIL_REF_CURRENCY)
-        //tb_Currency.Currency_ID)
+       
 
         //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]

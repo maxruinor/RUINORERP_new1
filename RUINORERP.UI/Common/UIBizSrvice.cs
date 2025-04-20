@@ -6,6 +6,8 @@ using Netron.GraphLib;
 using Netron.Neon.HtmlHelp;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using NPOI.POIFS.Crypt.Dsig;
+using NPOI.SS.Formula.Functions;
 using RUINORERP.Business;
 using RUINORERP.Business.CommService;
 using RUINORERP.Business.Processor;
@@ -14,6 +16,7 @@ using RUINORERP.Common.Extensions;
 using RUINORERP.Common.Helper;
 using RUINORERP.Extensions.Middlewares;
 using RUINORERP.Global;
+using RUINORERP.Global.CustomAttribute;
 using RUINORERP.Model;
 using RUINORERP.Model.TransModel;
 using RUINORERP.UI.BaseForm;
@@ -22,6 +25,7 @@ using RUINORERP.UI.UControls;
 using RUINORERP.UI.UCSourceGrid;
 using RUINORERP.UI.UserPersonalized;
 using SHControls.DataGrid;
+using SqlSugar;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -41,6 +45,8 @@ namespace RUINORERP.UI.Common
 {
     public static class UIBizSrvice
     {
+        #region 录入数据预设模板
+
         /// <summary>
         /// 设置查询条件的个性化参数
         /// </summary>
@@ -48,7 +54,247 @@ namespace RUINORERP.UI.Common
         /// <param name="QueryConditionFilter"></param>
         /// <param name="QueryDto"></param>
         /// <returns></returns>
-        public static async Task<bool> SetQueryConditionsAsync(tb_MenuInfo CurMenuInfo, QueryFilter QueryConditionFilter, BaseEntity QueryDto)
+        public static async Task<bool> SetInputDataAsync<T>(tb_MenuInfo CurMenuInfo, T Dto)
+        {
+            bool SetResults = false;
+            tb_UIMenuPersonalizationController<tb_UIMenuPersonalization> ctr = Startup.GetFromFac<tb_UIMenuPersonalizationController<tb_UIMenuPersonalization>>();
+
+            //用户登陆后会有对应的角色下的个性化配置数据。如果没有则给一个默认的（登陆验证时已经实现）。
+            tb_UserPersonalized userPersonalized = MainForm.Instance.AppContext.CurrentUser_Role_Personalized;
+            if (userPersonalized.tb_UIMenuPersonalizations == null)
+            {
+                userPersonalized.tb_UIMenuPersonalizations = new();
+            }
+
+            tb_UIMenuPersonalization menuPersonalization = userPersonalized.tb_UIMenuPersonalizations.FirstOrDefault(t => t.MenuID == CurMenuInfo.MenuID && t.UserPersonalizedID == userPersonalized.UserPersonalizedID);
+            if (menuPersonalization == null)
+            {
+                menuPersonalization = new tb_UIMenuPersonalization();
+                menuPersonalization.MenuID = CurMenuInfo.MenuID;
+                menuPersonalization.UserPersonalizedID = userPersonalized.UserPersonalizedID;
+                menuPersonalization.QueryConditionCols = 4;//查询条件显示的列数 默认值
+                userPersonalized.tb_UIMenuPersonalizations.Add(menuPersonalization);
+                //QueryConditionCols UI上设置
+                //MainForm.Instance.AppContext.Db.Insertable(MainForm.Instance.AppContext.CurrentUser_Role.tb_userpersonalized.tb_uimenupersonalization).ExecuteReturnSnowflakeIdAsync();
+                ReturnResults<tb_UIMenuPersonalization> rs = await ctr.SaveOrUpdate(menuPersonalization);
+                if (!rs.Succeeded)
+                {
+                    return false;
+                }
+            }
+
+
+            frmInputDataColSetting set = new frmInputDataColSetting();
+
+            //这里是列的控制情况 
+            //但是这个是grid列的显示控制的。这里是处理查询条件的，默认值，是否显示参与查询
+            //应该要实体绑定，再与查询参数生成条件时都关联起来。
+
+            // 假设menuPersonalization.tb_UIQueryConditions已经存在
+            if (menuPersonalization.tb_UIInputDataFields == null)
+            {
+                menuPersonalization.tb_UIInputDataFields = new List<tb_UIInputDataField>();
+            }
+
+            List<tb_UIInputDataField> InputFields = menuPersonalization.tb_UIInputDataFields;
+
+            //这里如果是初始化时以硬编码的过滤条件为标准生成一组条件。如果已经有了。则按数据库中与这个比较。硬编码条件为标准增量？
+            List<tb_UIInputDataField> DefaultInputFields = new List<tb_UIInputDataField>();
+            DefaultInputFields = GetInputDataField<T>(Dto);
+            if (DefaultInputFields != null)
+            {
+                foreach (var item in DefaultInputFields)
+                {
+                    tb_UIInputDataField condition = new tb_UIInputDataField();
+                    condition.FieldName = item.FieldName;
+                    //时间区间排最后
+                    //if (item.AdvQueryFieldType == AdvQueryProcessType.datetimeRange && condition.Sort == 0)
+                    //{
+                    //    condition.Sort = 100;
+                    //}
+                    condition.IsVisble = true;
+                    condition.Caption = item.Caption;
+                    //if (item.ColDataType != null)
+                    //{
+                    //    condition.ValueType = item.ColDataType.Name;
+                    //}
+                    condition.UIMenuPID = menuPersonalization.UIMenuPID;
+                    InputFields.Add(condition);
+                }
+            }
+
+            // 检查并添加条件
+            foreach (var condition in InputFields)
+            {
+                // 检查existingConditions中是否已经存在相同的条件
+                if (!InputFields.Any(ec => ec.FieldName == condition.FieldName && ec.UIMenuPID == condition.UIMenuPID))
+                {
+                    // 如果不存在，则添加到existingConditions中
+                    InputFields.Add(condition);
+                }
+                else
+                {
+                    //更新一下标题
+                    InputFields.FirstOrDefault(ec => ec.FieldName == condition.FieldName && ec.UIMenuPID == condition.UIMenuPID).Caption = condition.Caption.Trim();
+                }
+
+            }
+
+
+            // 更新set.Conditions
+            set.InputFields = InputFields.OrderBy(c => c.Sort).ToList();
+            set.Entity = Dto;
+            //set.QueryFields = QueryConditionFilter.QueryFields;
+
+            //var conditions = from tb_UIQueryCondition condition in queryConditions
+            //                 orderby condition.Sort
+            //                 select condition;
+            //set.Conditions = conditions.ToList();
+
+
+
+            if (set.ShowDialog() == DialogResult.OK)
+            {
+                await MainForm.Instance.AppContext.Db.Insertable(set.InputFields.Where(c => c.PresetValueID == 0).ToList()).ExecuteReturnSnowflakeIdListAsync();
+                await MainForm.Instance.AppContext.Db.Updateable(set.InputFields.Where(c => c.PresetValueID > 0).ToList()).ExecuteCommandAsync();
+                if (menuPersonalization.tb_UIInputDataFields.Count == 0)
+                {
+                    menuPersonalization.tb_UIInputDataFields = set.InputFields;
+                }
+                await MainForm.Instance.AppContext.Db.Updateable(menuPersonalization).ExecuteCommandAsync();
+                SetResults = true;
+
+            }
+            return SetResults;
+        }
+
+        /// <summary>
+        /// 根据不同的类型返回可以设置默认值的列
+        /// </summary>
+        public static List<tb_UIInputDataField> GetInputDataField<T>(T Dto)
+        {
+            return GetInputDataField(typeof(T));
+        }
+
+        public static List<tb_UIInputDataField> GetInputDataField(Type  DtoType)
+        {
+            List<tb_UIInputDataField> cols = new List<tb_UIInputDataField>();
+            foreach (PropertyInfo field in DtoType.GetProperties())
+            {
+
+                //获取指定类型的自定义特性
+                object[] attrs = field.GetCustomAttributes(false);
+                foreach (var attr in attrs)
+                {
+                    //用于是否为外键，是的话，编辑时生成下拉控件
+                    if (attr is FKRelationAttribute)
+                    {
+                        FKRelationAttribute FKAttribute = attr as FKRelationAttribute;
+
+                        //如果子表中引用的主表主键,则不显示
+                        if (typeof(T).Name.Contains(FKAttribute.FKTableName) && typeof(T).Name.Replace("Detail", "") == FKAttribute.FKTableName)
+                        {
+
+                        }
+                        else
+                        {
+
+                        }
+                    }
+
+                    if (attr is SubtotalResultAttribute)
+                    {
+                        SubtotalResultAttribute subtotalResultAttribute = attr as SubtotalResultAttribute;
+                    }
+
+                    //if (attr is SubtotalAttribute)
+                    //{
+                    //    SubtotalAttribute subtotalAttribute = attr as SubtotalAttribute;
+                    //    col.Subtotal = true;
+                    //}
+                    if (attr is SummaryAttribute)
+                    {
+                        SummaryAttribute summaryAttribute = attr as SummaryAttribute;
+                    }
+                    if (attr is ToolTipAttribute)
+                    {
+                        ToolTipAttribute toolTipAttribute = attr as ToolTipAttribute;
+                    }
+                    if (attr is ReadOnlyAttribute)//图片只读
+                    {
+                        ReadOnlyAttribute readOnlyAttribute = attr as ReadOnlyAttribute;
+                        continue;
+                    }
+                    if (attr is VisibleAttribute)//明细的产品ID隐藏
+                    {
+                        VisibleAttribute visibleAttribute = attr as VisibleAttribute;
+                        continue;
+                    }
+
+                    if (attr is SugarColumn)
+                    {
+                        tb_UIInputDataField col = new tb_UIInputDataField();
+                        SugarColumn sugarColumn = attr as SugarColumn;
+                        if (string.IsNullOrEmpty(sugarColumn.ColumnDescription))
+                        {
+                            continue;
+                        }
+
+                        col.Caption = sugarColumn.ColumnDescription;
+
+                        if (sugarColumn.IsIdentity)
+                        {
+                            continue;
+                        }
+                        //明细中的主键不用显示
+                        if (sugarColumn.IsPrimaryKey)
+                        {
+                            continue;
+                        }
+                        if (sugarColumn != null && sugarColumn.ColumnDataType != null)
+                        {
+                            switch (sugarColumn.ColumnDataType)
+                            {
+                                case "datetime":
+                                    // _editor = new SourceGrid.Cells.Editors.TextBoxUITypeEditor(typeof(DateTime));
+                                    break;
+                                case "money"://金额不能有预设值
+                                    continue;
+                                case "bit":
+
+                                    break;
+                                case "decimal":
+                                    break;
+                                case "image":
+                                    continue;
+                            }
+                        }
+
+                        if (field.Name == "Selected")
+                        {
+                            continue;
+                        }
+                        col.FieldName = field.Name;
+                        col.ValueType = field.PropertyType.Name;
+                        col.BelongingObjectType = typeof(T).Name;
+                        cols.Add(col);
+                    }
+                }
+            }
+            return cols;
+
+        }
+            #endregion
+
+
+            /// <summary>
+            /// 设置查询条件的个性化参数
+            /// </summary>
+            /// <param name="CurMenuInfo"></param>
+            /// <param name="QueryConditionFilter"></param>
+            /// <param name="QueryDto"></param>
+            /// <returns></returns>
+            public static async Task<bool> SetQueryConditionsAsync(tb_MenuInfo CurMenuInfo, QueryFilter QueryConditionFilter, BaseEntity QueryDto)
 
         {
             bool SetResults = false;
@@ -359,6 +605,52 @@ namespace RUINORERP.UI.Common
         }
 
 
+        /// <summary>
+        /// 保存录入数据字段的预设值
+        /// </summary>
+        /// <param name="CurMenuInfo"></param>
+        /// <param name="InputDataFields"></param>
+        public static async void SaveInputDataPresetValues(tb_MenuInfo CurMenuInfo,
+            List<tb_UIInputDataField> InputDataFields)
+        {
+
+            tb_UserPersonalized userPersonalized = MainForm.Instance.AppContext.CurrentUser_Role_Personalized;
+            if (userPersonalized == null)
+            {
+                return;
+            }
+            if (userPersonalized.tb_UIMenuPersonalizations == null)
+            {
+                return;
+            }
+
+            tb_UIMenuPersonalization menuPersonalization = userPersonalized.tb_UIMenuPersonalizations.FirstOrDefault(t => t.MenuID == CurMenuInfo.MenuID && t.UserPersonalizedID == userPersonalized.UserPersonalizedID);
+            if (menuPersonalization == null)
+            {
+                return;
+            }
+            if (menuPersonalization.tb_UIInputDataFields == null)
+            {
+                menuPersonalization.tb_UIInputDataFields = new List<tb_UIInputDataField>();
+            }
+            for (int i = 0; i < InputDataFields.Count; i++)
+            {
+                if (InputDataFields[i].PresetValueID > 0)
+                {
+                    RUINORERP.Business.BusinessHelper.Instance.EditEntity(InputDataFields[i]);
+                }
+                else
+                {
+                    RUINORERP.Business.BusinessHelper.Instance.InitEntity(InputDataFields[i]);
+                }
+            }
+            menuPersonalization.tb_UIInputDataFields = InputDataFields;
+
+
+            await MainForm.Instance.AppContext.Db.Insertable(menuPersonalization.tb_UIInputDataFields.Where(c => c.PresetValueID == 0).ToList()).ExecuteReturnSnowflakeIdListAsync();
+            await MainForm.Instance.AppContext.Db.Updateable(menuPersonalization.tb_UIInputDataFields.Where(c => c.PresetValueID > 0).ToList()).ExecuteCommandAsync();
+        }
+
 
         public static async void SaveGridSettingData(tb_MenuInfo CurMenuInfo, NewSumDataGridView dataGridView, Type datasourceType = null)
         {
@@ -491,6 +783,18 @@ namespace RUINORERP.UI.Common
 
                 }
             }
+        }
+
+
+        public static List<tb_UIInputDataField> InitInputDataFields(List<tb_UIInputDataField> ColumnDisplays,object Dto
+         , tb_MenuInfo CurMenuInfo)
+        {
+
+            List<tb_UIInputDataField> allInitCols = new List<tb_UIInputDataField>();
+            allInitCols = GetInputDataField(Dto.GetType());
+            return allInitCols;
+
+
         }
 
 

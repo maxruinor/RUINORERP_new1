@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/13/2025 18:30:17
+// 时间：04/20/2025 22:58:11
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -42,6 +42,8 @@ namespace RUINORERP.UI
         
         
         
+        
+        
 
          }
 /*
@@ -52,8 +54,10 @@ namespace RUINORERP.UI
                      entity.MenuID = Int64.Parse(txtMenuID.Text);
                         entity.UserPersonalizedID = Int64.Parse(txtUserPersonalizedID.Text);
                         entity.QueryConditionCols = Int32.Parse(txtQueryConditionCols.Text);
-                        entity.IsRelatedQuerySettings = Boolean.Parse(txtIsRelatedQuerySettings.Text);
+                        entity.EnableQuerySettings = Boolean.Parse(txtEnableQuerySettings.Text);
+                        entity.EnableInputPresetValue = Boolean.Parse(txtEnableInputPresetValue.Text);
                         entity.FavoritesMenu = SByte.Parse(txtFavoritesMenu.Text);
+                        entity.BaseWidth = Int32.Parse(txtBaseWidth.Text);
                         entity.Sort = Int32.Parse(txtSort.Text);
                         entity.DefaultLayout = txtDefaultLayout.Text ;
                        entity.DefaultLayout2 = txtDefaultLayout2.Text ;
@@ -70,8 +74,10 @@ namespace RUINORERP.UI
                        // DataBindingHelper.BindData4Cmb<tb_MenuInfo>(entity, k => k.MenuID, v=>v.XXNAME, cmbMenuID);
           // DataBindingHelper.BindData4Cmb<tb_UserPersonalized>(entity, k => k.UserPersonalizedID, v=>v.XXNAME, cmbUserPersonalizedID);
            DataBindingHelper.BindData4TextBox<tb_UIMenuPersonalization>(entity, t => t.QueryConditionCols, txtQueryConditionCols, BindDataType4TextBox.Qty,false);
-           DataBindingHelper.BindData4CheckBox<tb_UIMenuPersonalization>(entity, t => t.IsRelatedQuerySettings, chkIsRelatedQuerySettings, false);
+           DataBindingHelper.BindData4CheckBox<tb_UIMenuPersonalization>(entity, t => t.EnableQuerySettings, chkEnableQuerySettings, false);
+           DataBindingHelper.BindData4CheckBox<tb_UIMenuPersonalization>(entity, t => t.EnableInputPresetValue, chkEnableInputPresetValue, false);
            //default  DataBindingHelper.BindData4TextBox<tb_UIMenuPersonalization>(entity, t => t.FavoritesMenu.ToString(), txtFavoritesMenu, BindDataType4TextBox.Money,false);
+           DataBindingHelper.BindData4TextBox<tb_UIMenuPersonalization>(entity, t => t.BaseWidth, txtBaseWidth, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4TextBox<tb_UIMenuPersonalization>(entity, t => t.Sort, txtSort, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4TextBox<tb_UIMenuPersonalization>(entity, t => t.DefaultLayout, txtDefaultLayout, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_UIMenuPersonalization>(entity, t => t.DefaultLayout2, txtDefaultLayout2, BindDataType4TextBox.Text,false);

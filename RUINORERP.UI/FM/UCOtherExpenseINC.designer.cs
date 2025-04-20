@@ -29,7 +29,7 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            RUINORERP.Global.Model.DataRowImage dataRowImage2 = new RUINORERP.Global.Model.DataRowImage();
+            RUINORERP.Global.Model.DataRowImage dataRowImage1 = new RUINORERP.Global.Model.DataRowImage();
             this.kryptonSplitContainer1 = new Krypton.Toolkit.KryptonSplitContainer();
             this.txtCloseCaseOpinions = new Krypton.Toolkit.KryptonTextBox();
             this.kryptonLabel2 = new Krypton.Toolkit.KryptonLabel();
@@ -38,8 +38,6 @@
             this.rdb支出 = new RUINORERP.UI.UControls.RadioButtonBind();
             this.rdb收入 = new RUINORERP.UI.UControls.RadioButtonBind();
             this.lblEXPOrINC = new Krypton.Toolkit.KryptonLabel();
-            this.lblIncludeTax = new Krypton.Toolkit.KryptonLabel();
-            this.chkIncludeTax = new Krypton.Toolkit.KryptonCheckBox();
             this.lblTaxAmount = new Krypton.Toolkit.KryptonLabel();
             this.txtTaxAmount = new Krypton.Toolkit.KryptonTextBox();
             this.lblUntaxedAmount = new Krypton.Toolkit.KryptonLabel();
@@ -99,8 +97,6 @@
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.magicPictureBox1);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.kryptonGroupBox4);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.lblEXPOrINC);
-            this.kryptonSplitContainer1.Panel1.Controls.Add(this.lblIncludeTax);
-            this.kryptonSplitContainer1.Panel1.Controls.Add(this.chkIncludeTax);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.lblTaxAmount);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.txtTaxAmount);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.lblUntaxedAmount);
@@ -152,15 +148,15 @@
             this.magicPictureBox1.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.magicPictureBox1.Location = new System.Drawing.Point(1022, 123);
             this.magicPictureBox1.Name = "magicPictureBox1";
-            dataRowImage2.Dir = null;
-            dataRowImage2.image = null;
-            dataRowImage2.ImageBase64 = null;
-            dataRowImage2.ImageBytes = null;
-            dataRowImage2.ImageFullName = null;
-            dataRowImage2.newhash = null;
-            dataRowImage2.oldhash = null;
-            dataRowImage2.realName = null;
-            this.magicPictureBox1.RowImage = dataRowImage2;
+            dataRowImage1.Dir = null;
+            dataRowImage1.image = null;
+            dataRowImage1.ImageBase64 = null;
+            dataRowImage1.ImageBytes = null;
+            dataRowImage1.ImageFullName = null;
+            dataRowImage1.newhash = null;
+            dataRowImage1.oldhash = null;
+            dataRowImage1.realName = null;
+            this.magicPictureBox1.RowImage = dataRowImage1;
             this.magicPictureBox1.Size = new System.Drawing.Size(108, 68);
             this.magicPictureBox1.TabIndex = 168;
             this.magicPictureBox1.TabStop = false;
@@ -203,22 +199,6 @@
             this.lblEXPOrINC.Size = new System.Drawing.Size(62, 20);
             this.lblEXPOrINC.TabIndex = 141;
             this.lblEXPOrINC.Values.Text = "收支标识";
-            // 
-            // lblIncludeTax
-            // 
-            this.lblIncludeTax.Location = new System.Drawing.Point(605, 44);
-            this.lblIncludeTax.Name = "lblIncludeTax";
-            this.lblIncludeTax.Size = new System.Drawing.Size(36, 20);
-            this.lblIncludeTax.TabIndex = 143;
-            this.lblIncludeTax.Values.Text = "含税";
-            // 
-            // chkIncludeTax
-            // 
-            this.chkIncludeTax.Location = new System.Drawing.Point(646, 46);
-            this.chkIncludeTax.Name = "chkIncludeTax";
-            this.chkIncludeTax.Size = new System.Drawing.Size(19, 13);
-            this.chkIncludeTax.TabIndex = 144;
-            this.chkIncludeTax.Values.Text = "";
             // 
             // lblTaxAmount
             // 
@@ -477,8 +457,6 @@
         private Krypton.Toolkit.KryptonLabel kryptonLabel1;
         private Krypton.Toolkit.KryptonTextBox txtTotalAmount;
         private Krypton.Toolkit.KryptonLabel lblEXPOrINC;
-        private Krypton.Toolkit.KryptonLabel lblIncludeTax;
-        private Krypton.Toolkit.KryptonCheckBox chkIncludeTax;
         private Krypton.Toolkit.KryptonLabel lblTaxAmount;
         private Krypton.Toolkit.KryptonTextBox txtTaxAmount;
         private Krypton.Toolkit.KryptonLabel lblUntaxedAmount;

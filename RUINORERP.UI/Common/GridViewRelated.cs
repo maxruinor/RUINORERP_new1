@@ -4,8 +4,10 @@ using Pipelines.Sockets.Unofficial.Arenas;
 using RUINORERP.Business;
 using RUINORERP.Business.Processor;
 using RUINORERP.Common.Extensions;
+using RUINORERP.Global.EnumExt;
 using RUINORERP.Global.Model;
 using RUINORERP.Model;
+using RUINORERP.UI.FM;
 using RUINORERP.UI.PSI.INV;
 using SourceGrid2.Win32;
 using SqlSugar;
@@ -377,7 +379,35 @@ namespace RUINORERP.UI.Common
             RelatedInfo relatedRelationship = RelatedInfoList.FirstOrDefault(c => c.SourceUniqueField == GridViewColumnFieldName);
             if (relatedRelationship != null)
             {
-                RelatedMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble && m.EntityName == relatedRelationship.TargetTableName.Key && m.BIBaseForm == "BaseBillEditGeneric`2").FirstOrDefault();
+
+                //先判断是否多个，合并时会有两个再来根据属性标识去找正确的
+                List<tb_MenuInfo> TargetMenus = MainForm.Instance.MenuList.Where(m => m.IsVisble && m.EntityName == relatedRelationship.TargetTableName.Key
+                && m.BIBaseForm == "BaseBillEditGeneric`2").ToList();
+                if (TargetMenus.Count > 1)
+                {
+                    if (!string.IsNullOrEmpty(TargetMenus[0].BizInterface) && !string.IsNullOrEmpty(TargetMenus[1].BizInterface))
+                    {
+                        if (TargetMenus[0].BizInterface == TargetMenus[1].BizInterface
+                            && TargetMenus[0].BizInterface == nameof(IFMBillBusinessType))
+                        {
+                            int flag = CurrentRow.DataBoundItem.GetPropertyValue(nameof(ReceivePaymentType)).ToInt();
+                            ReceivePaymentType paymentType = (ReceivePaymentType)flag;
+                            var sss = CurrentRow.DataBoundItem.GetPropertyInfo(nameof(ReceivePaymentType));
+                            RelatedMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble
+                             && m.EntityName == relatedRelationship.TargetTableName.Key
+                             && m.BIBaseForm == "BaseBillEditGeneric`2"
+                             && m.UIPropertyIdentifier == paymentType.ToString()
+                       ).FirstOrDefault();
+                        }
+
+                    }
+
+                }
+                else
+                {
+                    RelatedMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble && m.EntityName == relatedRelationship.TargetTableName.Key
+                     && m.BIBaseForm == "BaseBillEditGeneric`2").FirstOrDefault();
+                }
                 if (CurrentRow.DataBoundItem is RUINORERP.Model.BaseEntity entity
                     && relatedRelationship.TargetTableName.Key == relatedRelationship.SourceTableName
                     && !CurrentRow.DataBoundItem.GetType().Name.Contains("View_")//排除视图
@@ -666,6 +696,7 @@ namespace RUINORERP.UI.Common
                     .Single();
                 menuPowerHelper.ExecuteEvents(RelatedMenuInfo, obj);
             }
+
 
             if (tableName == typeof(tb_MRP_ReworkReturn).Name)
             {

@@ -98,6 +98,21 @@ namespace RUINORERP.Model
             }
         }
 
+        private string _UIPropertyIdentifier;
+        /// <summary>
+        /// 属性标识
+        /// </summary>
+        [AdvQueryAttribute(ColName = "UIPropertyIdentifier", ColDesc = "属性标识")]
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType = "String", ColumnName = "UIPropertyIdentifier", Length = 100, IsNullable = true, ColumnDescription = "属性标识")]
+        public string UIPropertyIdentifier
+        {
+            get { return _UIPropertyIdentifier; }
+            set
+            {
+                SetProperty(ref _UIPropertyIdentifier, value);
+            }
+        }
+
         private string _BizInterface;
         /// <summary>
         /// 业务接口标识

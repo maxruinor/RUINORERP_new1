@@ -66,6 +66,8 @@ namespace RUINORERP.UI.SysConfig
             this.kryptonSplitContainer1 = new Krypton.Toolkit.KryptonSplitContainer();
             this.kryptonSplitContainer2 = new Krypton.Toolkit.KryptonSplitContainer();
             this.kryptonSplitContainer3 = new Krypton.Toolkit.KryptonSplitContainer();
+            this.txtBizInterface = new System.Windows.Forms.TextBox();
+            this.label10 = new System.Windows.Forms.Label();
             this.txtSort = new System.Windows.Forms.TextBox();
             this.label8 = new System.Windows.Forms.Label();
             this.toolStrip1 = new System.Windows.Forms.ToolStrip();
@@ -82,8 +84,8 @@ namespace RUINORERP.UI.SysConfig
             this.label5 = new System.Windows.Forms.Label();
             this.kryptonPanelQuery = new Krypton.Toolkit.KryptonPanel();
             this.groupLine1 = new WinLib.Line.GroupLine();
-            this.txtBizInterface = new System.Windows.Forms.TextBox();
-            this.label10 = new System.Windows.Forms.Label();
+            this.txtUIPropertyIdentifier = new System.Windows.Forms.TextBox();
+            this.label11 = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1.Panel1)).BeginInit();
@@ -205,7 +207,7 @@ namespace RUINORERP.UI.SysConfig
             // lblCaption_E
             // 
             this.lblCaption_E.AutoSize = true;
-            this.lblCaption_E.Location = new System.Drawing.Point(287, 114);
+            this.lblCaption_E.Location = new System.Drawing.Point(258, 115);
             this.lblCaption_E.Name = "lblCaption_E";
             this.lblCaption_E.Size = new System.Drawing.Size(89, 12);
             this.lblCaption_E.TabIndex = 7;
@@ -220,7 +222,7 @@ namespace RUINORERP.UI.SysConfig
             // 
             // txt_CaptionE
             // 
-            this.txt_CaptionE.Location = new System.Drawing.Point(384, 105);
+            this.txt_CaptionE.Location = new System.Drawing.Point(355, 106);
             this.txt_CaptionE.Name = "txt_CaptionE";
             this.txt_CaptionE.Size = new System.Drawing.Size(167, 21);
             this.txt_CaptionE.TabIndex = 8;
@@ -237,7 +239,7 @@ namespace RUINORERP.UI.SysConfig
             this.chkisview.AutoSize = true;
             this.chkisview.Checked = true;
             this.chkisview.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.chkisview.Location = new System.Drawing.Point(383, 146);
+            this.chkisview.Location = new System.Drawing.Point(354, 133);
             this.chkisview.Name = "chkisview";
             this.chkisview.Size = new System.Drawing.Size(72, 16);
             this.chkisview.TabIndex = 12;
@@ -249,7 +251,7 @@ namespace RUINORERP.UI.SysConfig
             this.chkEnable.AutoSize = true;
             this.chkEnable.Checked = true;
             this.chkEnable.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.chkEnable.Location = new System.Drawing.Point(476, 146);
+            this.chkEnable.Location = new System.Drawing.Point(447, 133);
             this.chkEnable.Name = "chkEnable";
             this.chkEnable.Size = new System.Drawing.Size(72, 16);
             this.chkEnable.TabIndex = 14;
@@ -368,7 +370,7 @@ namespace RUINORERP.UI.SysConfig
             // 
             // txtFormName
             // 
-            this.txtFormName.Location = new System.Drawing.Point(384, 77);
+            this.txtFormName.Location = new System.Drawing.Point(355, 78);
             this.txtFormName.Name = "txtFormName";
             this.txtFormName.Size = new System.Drawing.Size(167, 21);
             this.txtFormName.TabIndex = 44;
@@ -376,7 +378,7 @@ namespace RUINORERP.UI.SysConfig
             // label3
             // 
             this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(323, 80);
+            this.label3.Location = new System.Drawing.Point(294, 81);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(53, 12);
             this.label3.TabIndex = 43;
@@ -389,7 +391,7 @@ namespace RUINORERP.UI.SysConfig
             "行为菜单",
             "导航菜单",
             "直接操作"});
-            this.cmbMenuType.Location = new System.Drawing.Point(85, 142);
+            this.cmbMenuType.Location = new System.Drawing.Point(85, 138);
             this.cmbMenuType.Name = "cmbMenuType";
             this.cmbMenuType.Size = new System.Drawing.Size(165, 20);
             this.cmbMenuType.TabIndex = 45;
@@ -397,7 +399,7 @@ namespace RUINORERP.UI.SysConfig
             // label4
             // 
             this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(26, 150);
+            this.label4.Location = new System.Drawing.Point(26, 142);
             this.label4.Name = "label4";
             this.label4.Size = new System.Drawing.Size(53, 12);
             this.label4.TabIndex = 46;
@@ -464,6 +466,8 @@ namespace RUINORERP.UI.SysConfig
             // 
             // kryptonSplitContainer3.Panel1
             // 
+            this.kryptonSplitContainer3.Panel1.Controls.Add(this.txtUIPropertyIdentifier);
+            this.kryptonSplitContainer3.Panel1.Controls.Add(this.label11);
             this.kryptonSplitContainer3.Panel1.Controls.Add(this.txtBizInterface);
             this.kryptonSplitContainer3.Panel1.Controls.Add(this.label10);
             this.kryptonSplitContainer3.Panel1.Controls.Add(this.txtSort);
@@ -507,6 +511,22 @@ namespace RUINORERP.UI.SysConfig
             this.kryptonSplitContainer3.SplitterDistance = 300;
             this.kryptonSplitContainer3.SplitterWidth = 2;
             this.kryptonSplitContainer3.TabIndex = 52;
+            // 
+            // txtBizInterface
+            // 
+            this.txtBizInterface.Location = new System.Drawing.Point(354, 164);
+            this.txtBizInterface.Name = "txtBizInterface";
+            this.txtBizInterface.Size = new System.Drawing.Size(174, 21);
+            this.txtBizInterface.TabIndex = 57;
+            // 
+            // label10
+            // 
+            this.label10.AutoSize = true;
+            this.label10.Location = new System.Drawing.Point(271, 168);
+            this.label10.Name = "label10";
+            this.label10.Size = new System.Drawing.Size(77, 12);
+            this.label10.TabIndex = 56;
+            this.label10.Text = "业务接口标识";
             // 
             // txtSort
             // 
@@ -552,7 +572,7 @@ namespace RUINORERP.UI.SysConfig
             // 
             // txtBizType
             // 
-            this.txtBizType.Location = new System.Drawing.Point(85, 168);
+            this.txtBizType.Location = new System.Drawing.Point(85, 164);
             this.txtBizType.Name = "txtBizType";
             this.txtBizType.Size = new System.Drawing.Size(167, 21);
             this.txtBizType.TabIndex = 53;
@@ -560,7 +580,7 @@ namespace RUINORERP.UI.SysConfig
             // label7
             // 
             this.label7.AutoSize = true;
-            this.label7.Location = new System.Drawing.Point(26, 173);
+            this.label7.Location = new System.Drawing.Point(26, 168);
             this.label7.Name = "label7";
             this.label7.Size = new System.Drawing.Size(53, 12);
             this.label7.TabIndex = 52;
@@ -568,7 +588,7 @@ namespace RUINORERP.UI.SysConfig
             // 
             // txtBIBizBaseform
             // 
-            this.txtBIBizBaseform.Location = new System.Drawing.Point(616, 141);
+            this.txtBIBizBaseform.Location = new System.Drawing.Point(616, 137);
             this.txtBIBizBaseform.Name = "txtBIBizBaseform";
             this.txtBIBizBaseform.Size = new System.Drawing.Size(174, 21);
             this.txtBIBizBaseform.TabIndex = 51;
@@ -583,7 +603,7 @@ namespace RUINORERP.UI.SysConfig
             // label9
             // 
             this.label9.AutoSize = true;
-            this.label9.Location = new System.Drawing.Point(557, 147);
+            this.label9.Location = new System.Drawing.Point(557, 143);
             this.label9.Name = "label9";
             this.label9.Size = new System.Drawing.Size(53, 12);
             this.label9.TabIndex = 50;
@@ -643,21 +663,21 @@ namespace RUINORERP.UI.SysConfig
             this.groupLine1.Size = new System.Drawing.Size(844, 1);
             this.groupLine1.TabIndex = 2;
             // 
-            // txtBizInterface
+            // txtUIPropertyIdentifier
             // 
-            this.txtBizInterface.Location = new System.Drawing.Point(616, 168);
-            this.txtBizInterface.Name = "txtBizInterface";
-            this.txtBizInterface.Size = new System.Drawing.Size(174, 21);
-            this.txtBizInterface.TabIndex = 57;
+            this.txtUIPropertyIdentifier.Location = new System.Drawing.Point(616, 164);
+            this.txtUIPropertyIdentifier.Name = "txtUIPropertyIdentifier";
+            this.txtUIPropertyIdentifier.Size = new System.Drawing.Size(174, 21);
+            this.txtUIPropertyIdentifier.TabIndex = 59;
             // 
-            // label10
+            // label11
             // 
-            this.label10.AutoSize = true;
-            this.label10.Location = new System.Drawing.Point(533, 173);
-            this.label10.Name = "label10";
-            this.label10.Size = new System.Drawing.Size(77, 12);
-            this.label10.TabIndex = 56;
-            this.label10.Text = "业务接口标识";
+            this.label11.AutoSize = true;
+            this.label11.Location = new System.Drawing.Point(545, 168);
+            this.label11.Name = "label11";
+            this.label11.Size = new System.Drawing.Size(65, 12);
+            this.label11.TabIndex = 58;
+            this.label11.Text = "UI属性标识";
             // 
             // UCMenuEdit
             // 
@@ -748,5 +768,7 @@ namespace RUINORERP.UI.SysConfig
         private System.Windows.Forms.Label label9;
         private System.Windows.Forms.TextBox txtBizInterface;
         private System.Windows.Forms.Label label10;
+        private System.Windows.Forms.TextBox txtUIPropertyIdentifier;
+        private System.Windows.Forms.Label label11;
     }
 }

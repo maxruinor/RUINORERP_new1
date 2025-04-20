@@ -1393,10 +1393,11 @@ namespace RUINORERP.UI.UControls
 
 
         // [DesignerSerializationVisibility(DesignerSerializationVisibility.Content)]
-        [Browsable(true)]
+        [Browsable(false)]
         //[TypeConverter(typeof(System.ComponentModel.CollectionConverter))]//指定编辑器特性
         [TypeConverter(typeof(RUINORERP.UI.UControls.MenuControllerConverter))]
         //代码生成器产生对象内容的代码，而不是对象本身的代码。
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         //[DesignerSerializationVisibility(DesignerSerializationVisibility.Content), MergableProperty(false)]//设定序列化特性
         [Category("行为"), Description("右键菜单控制器，控制右键菜单的显示等")]
         public List<ContextMenuController> ContextMenucCnfigurator

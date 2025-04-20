@@ -58,6 +58,7 @@ using FastReport.Table;
 using Newtonsoft.Json.Linq;
 using FastReport.DevComponents.DotNetBar;
 using System.Runtime.InteropServices;
+using RUINORERP.Global.EnumExt;
 
 namespace RUINORERP.UI.Common
 {
@@ -122,9 +123,9 @@ namespace RUINORERP.UI.Common
                 {
                     FixedDictionaryMappings.Add(new FixedDictionaryMapping(_type.Name, nameof(GoodsSource), Common.CommonHelper.Instance.GetKeyValuePairs(typeof(GoodsSource))));
                 }
-                else if (prop.Name == nameof(PurReProcessWay))
+                else if (prop.Name == nameof(FMPaymentStatus))
                 {
-                    FixedDictionaryMappings.Add(new FixedDictionaryMapping(_type.Name, nameof(PurReProcessWay), Common.CommonHelper.Instance.GetKeyValuePairs(typeof(PurReProcessWay))));
+                    FixedDictionaryMappings.Add(new FixedDictionaryMapping(_type.Name, nameof(FMPaymentStatus), Common.CommonHelper.Instance.GetKeyValuePairs(typeof(FMPaymentStatus))));
                 }
                 
                 else if (prop.Name == "ApprovalResults")

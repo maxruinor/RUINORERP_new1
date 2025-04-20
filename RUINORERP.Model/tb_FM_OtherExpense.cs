@@ -122,33 +122,8 @@ namespace RUINORERP.Model
                         }
         }
 
-        private bool _IncludeTax= false;
-        /// <summary>
-        /// 含税
-        /// </summary>
-        [AdvQueryAttribute(ColName = "IncludeTax",ColDesc = "含税")] 
-        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType ="Boolean",  ColumnName = "IncludeTax" ,IsNullable = false,ColumnDescription = "含税" )]
-        public bool IncludeTax
-        { 
-            get{return _IncludeTax;}
-            set{
-            SetProperty(ref _IncludeTax, value);
-                        }
-        }
+ 
 
-        private string _Notes;
-        /// <summary>
-        /// 备注
-        /// </summary>
-        [AdvQueryAttribute(ColName = "Notes",ColDesc = "备注")] 
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "Notes" ,Length=1000,IsNullable = true,ColumnDescription = "备注" )]
-        public string Notes
-        { 
-            get{return _Notes;}
-            set{
-            SetProperty(ref _Notes, value);
-                        }
-        }
 
         private decimal? _TaxAmount;
         /// <summary>
@@ -180,6 +155,20 @@ namespace RUINORERP.Model
                         }
         }
 
+        private string _Notes;
+        /// <summary>
+        /// 备注
+        /// </summary>
+        [AdvQueryAttribute(ColName = "Notes", ColDesc = "备注")]
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType = "String", ColumnName = "Notes", Length = 1000, IsNullable = true, ColumnDescription = "备注")]
+        public string Notes
+        {
+            get { return _Notes; }
+            set
+            {
+                SetProperty(ref _Notes, value);
+            }
+        }
         private DateTime? _Created_at;
         /// <summary>
         /// 创建时间

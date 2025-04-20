@@ -1,0 +1,136 @@
+﻿
+// **************************************
+// 生成：CodeBuilder (http://www.fireasy.cn/codebuilder)
+// 项目：信息系统
+// 版权：Copyright RUINOR
+// 作者：Watson
+// 时间：04/20/2025 18:12:16
+// **************************************
+using System;
+﻿using SqlSugar;
+using System.Collections.Generic;
+using FluentValidation;
+using System.ComponentModel;
+using System.Drawing;
+using System.Data;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+using RUINORERP.Common;
+using RUINORERP.Model;
+using RUINORERP.UI.Common;
+
+namespace RUINORERP.UI
+{
+    /// <summary>
+    /// 应收应付明细数据编辑
+    /// </summary>
+     [MenuAttrAssemblyInfo( "库位编辑", true, UIType.单表数据)]
+    public partial class tb_FM_ReceivablePayableDetailEdit:UserControl
+    {
+     public tb_FM_ReceivablePayableDetailEdit() {
+     
+             
+                    InitializeComponent();
+      
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+
+         }
+/*
+        
+        tb_FM_ReceivablePayableDetail UIToEntity()
+        {
+        tb_FM_ReceivablePayableDetail entity = new tb_FM_ReceivablePayableDetail();
+                     entity.ARAPId = Int64.Parse(txtARAPId.Text);
+                        entity.SourceBill_BizType = Int32.Parse(txtSourceBill_BizType.Text);
+                        entity.SourceBill_ID = Int64.Parse(txtSourceBill_ID.Text);
+                        entity.SourceBillNO = txtSourceBillNO.Text ;
+                       entity.ItemType = Int32.Parse(txtItemType.Text);
+                        entity.ProdDetailID = Int64.Parse(txtProdDetailID.Text);
+                        entity.property = txtproperty.Text ;
+                       entity.Specifications = txtSpecifications.Text ;
+                       entity.Unit_ID = Int64.Parse(txtUnit_ID.Text);
+                        entity.IsIncludeTax = Boolean.Parse(txtIsIncludeTax.Text);
+                        entity.ExchangeRate = Decimal.Parse(txtExchangeRate.Text);
+                        entity.UnitPrice = Decimal.Parse(txtUnitPrice.Text);
+                        entity.Quantity = Decimal.Parse(txtQuantity.Text);
+                        entity.CustomerPartNo = txtCustomerPartNo.Text ;
+                       entity.Description = txtDescription.Text ;
+                       entity.TaxRate = Decimal.Parse(txtTaxRate.Text);
+                        entity.TaxLocalAmount = Decimal.Parse(txtTaxLocalAmount.Text);
+                        entity.ForeignPrepaidAmount = Decimal.Parse(txtForeignPrepaidAmount.Text);
+                        entity.LocalPrepaidAmount = Decimal.Parse(txtLocalPrepaidAmount.Text);
+                        entity.Summary = txtSummary.Text ;
+                               return entity;
+}
+        */
+
+        
+        private tb_FM_ReceivablePayableDetail _EditEntity;
+        public tb_FM_ReceivablePayableDetail EditEntity { get => _EditEntity; set => _EditEntity = value; }
+        public void BindData(tb_FM_ReceivablePayableDetail entity)
+        {
+        _EditEntity = entity;
+                       // DataBindingHelper.BindData4Cmb<tb_FM_ReceivablePayable>(entity, k => k.ARAPId, v=>v.XXNAME, cmbARAPId);
+           DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayableDetail>(entity, t => t.SourceBill_BizType, txtSourceBill_BizType, BindDataType4TextBox.Qty,false);
+           DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayableDetail>(entity, t => t.SourceBill_ID, txtSourceBill_ID, BindDataType4TextBox.Qty,false);
+           DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayableDetail>(entity, t => t.SourceBillNO, txtSourceBillNO, BindDataType4TextBox.Text,false);
+           DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayableDetail>(entity, t => t.ItemType, txtItemType, BindDataType4TextBox.Qty,false);
+          // DataBindingHelper.BindData4Cmb<tb_ProdDetail>(entity, k => k.ProdDetailID, v=>v.XXNAME, cmbProdDetailID);
+           DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayableDetail>(entity, t => t.property, txtproperty, BindDataType4TextBox.Text,false);
+           DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayableDetail>(entity, t => t.Specifications, txtSpecifications, BindDataType4TextBox.Text,false);
+          // DataBindingHelper.BindData4Cmb<tb_Unit>(entity, k => k.Unit_ID, v=>v.XXNAME, cmbUnit_ID);
+           DataBindingHelper.BindData4CheckBox<tb_FM_ReceivablePayableDetail>(entity, t => t.IsIncludeTax, chkIsIncludeTax, false);
+           DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayableDetail>(entity, t => t.ExchangeRate.ToString(), txtExchangeRate, BindDataType4TextBox.Money,false);
+           DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayableDetail>(entity, t => t.UnitPrice.ToString(), txtUnitPrice, BindDataType4TextBox.Money,false);
+           DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayableDetail>(entity, t => t.Quantity.ToString(), txtQuantity, BindDataType4TextBox.Money,false);
+           DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayableDetail>(entity, t => t.CustomerPartNo, txtCustomerPartNo, BindDataType4TextBox.Text,false);
+           DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayableDetail>(entity, t => t.Description, txtDescription, BindDataType4TextBox.Text,false);
+           DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayableDetail>(entity, t => t.TaxRate.ToString(), txtTaxRate, BindDataType4TextBox.Money,false);
+           DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayableDetail>(entity, t => t.TaxLocalAmount.ToString(), txtTaxLocalAmount, BindDataType4TextBox.Money,false);
+           DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayableDetail>(entity, t => t.ForeignPrepaidAmount.ToString(), txtForeignPrepaidAmount, BindDataType4TextBox.Money,false);
+           DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayableDetail>(entity, t => t.LocalPrepaidAmount.ToString(), txtLocalPrepaidAmount, BindDataType4TextBox.Money,false);
+           DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayableDetail>(entity, t => t.Summary, txtSummary, BindDataType4TextBox.Text,false);
+}
+
+
+
+
+        private void btnOk_Click(object sender, EventArgs e)
+        {
+        
+        }
+
+        private void btnCancel_Click(object sender, EventArgs e)
+        {
+        
+        }
+
+
+
+
+    }
+}
+
+
+

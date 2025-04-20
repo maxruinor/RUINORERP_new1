@@ -518,6 +518,9 @@ namespace RUINORERP.Business.CommService
                 case "tb_Currency":
                     SetDictDataSource<tb_Currency>(k => k.Currency_ID, v => v.CurrencyName, LoadData);
                     break;
+                case "tb_CurrencyExchangeRate":
+                    SetDictDataSource<tb_CurrencyExchangeRate>(k => k.ExchangeRateID, v => v.ConversionName, LoadData);
+                    break;
                 case "tb_BOM_S":
                     SetDictDataSource<tb_BOM_S>(k => k.BOM_ID, v => v.BOM_Name, LoadData);
                     break;

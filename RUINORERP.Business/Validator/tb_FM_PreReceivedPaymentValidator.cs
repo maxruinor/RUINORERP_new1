@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：04/18/2025 13:55:17
+// 时间：04/20/2025 18:12:15
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -38,10 +38,18 @@ namespace RUINORERP.Business
  
         
      
+ RuleFor(tb_FM_PreReceivedPayment =>tb_FM_PreReceivedPayment.PreRPNO).MaximumLength(15).WithMessage("单据编号:不能超过最大长度,15.");
+ RuleFor(tb_FM_PreReceivedPayment =>tb_FM_PreReceivedPayment.PreRPNO).NotEmpty().WithMessage("单据编号:不能为空。");
+
  RuleFor(tb_FM_PreReceivedPayment =>tb_FM_PreReceivedPayment.Account_id).Must(CheckForeignKeyValueCanNull).WithMessage("收付款账户:下拉选择值不正确。");
  RuleFor(tb_FM_PreReceivedPayment =>tb_FM_PreReceivedPayment.Account_id).NotEmpty().When(x => x.Account_id.HasValue);
 
  RuleFor(tb_FM_PreReceivedPayment =>tb_FM_PreReceivedPayment.CustomerVendor_ID).Must(CheckForeignKeyValue).WithMessage("往来单位:下拉选择值不正确。");
+
+ RuleFor(tb_FM_PreReceivedPayment =>tb_FM_PreReceivedPayment.PayeeInfoID).Must(CheckForeignKeyValueCanNull).WithMessage("收款信息:下拉选择值不正确。");
+ RuleFor(tb_FM_PreReceivedPayment =>tb_FM_PreReceivedPayment.PayeeInfoID).NotEmpty().When(x => x.PayeeInfoID.HasValue);
+
+ RuleFor(tb_FM_PreReceivedPayment =>tb_FM_PreReceivedPayment.PayeeAccountNo).MaximumLength(50).WithMessage("收款账号:不能超过最大长度,50.");
 
  RuleFor(tb_FM_PreReceivedPayment =>tb_FM_PreReceivedPayment.Employee_ID).Must(CheckForeignKeyValueCanNull).WithMessage("经办人:下拉选择值不正确。");
  RuleFor(tb_FM_PreReceivedPayment =>tb_FM_PreReceivedPayment.Employee_ID).NotEmpty().When(x => x.Employee_ID.HasValue);

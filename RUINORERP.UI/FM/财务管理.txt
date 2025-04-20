@@ -105,3 +105,12 @@ CREATE TABLE PaymentRecord (
 );
 
  
+
+ ---
+ 1. 预付场景（预付款给供应商）
+步骤	业务数据生成	财务数据生成	审核步骤	核销状态更新
+1. 创建预付单	- 手动录入：采购部门创建预付单（预付金额、供应商、币种）
+- 自动生成：合同约定预付款时自动生成预付单	生成 AdvanceMaster（预付主表）和 AdvanceDetail（预付明细表）	预付单状态：草稿 → 采购经理审核 → 状态变为已审核	预付单 RemainAmount = 预付总金额
+2. 生成付款单	- 自动生成：预付单审核后自动生成付款申请单	生成 PaymentMaster（付款主表）和 PaymentDetail（付款明细表，关联资金账户）	付款单状态：草稿 → 财务确认付款 → 状态变为已支付	预付单 RemainAmount 不变，等待后续核销
+3. 采购入库核销预付	- 自动生成：采购入库单审核时生成应付单（ARAPMaster）	应付单关联预付单，生成 SettlementRecord（核销记录）	应付单状态：草稿 → 财务审核 → 状态变为已审核	预付单 RemainAmount 减少核销金额
+应付单 SettlementStatus 更新为部分结清/已结清

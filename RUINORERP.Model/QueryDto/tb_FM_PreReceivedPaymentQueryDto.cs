@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：04/18/2025 13:55:16
+// 时间：04/20/2025 18:12:14
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -33,6 +33,19 @@ namespace RUINORERP.Model.QueryDto
     
      
 
+        private string _PreRPNO;
+        /// <summary>
+        /// 单据编号
+        /// </summary>
+        [AdvQueryAttribute(ColName = "PreRPNO",ColDesc = "单据编号")]
+        [SugarColumn(ColumnDataType = "varchar",SqlParameterDbType ="String",ColumnName = "PreRPNO",Length=30,IsNullable = false,ColumnDescription = "单据编号" )]
+        public string PreRPNO 
+        { 
+            get{return _PreRPNO;}
+            set{SetProperty(ref _PreRPNO, value);}
+        }
+     
+
         private long? _Account_id;
         /// <summary>
         /// 收付款账户
@@ -58,6 +71,33 @@ namespace RUINORERP.Model.QueryDto
         { 
             get{return _CustomerVendor_ID;}
             set{SetProperty(ref _CustomerVendor_ID, value);}
+        }
+     
+
+        private long? _PayeeInfoID;
+        /// <summary>
+        /// 收款信息
+        /// </summary>
+        [AdvQueryAttribute(ColName = "PayeeInfoID",ColDesc = "收款信息")]
+        [SugarColumn(ColumnDataType = "bigint",SqlParameterDbType ="Int64",ColumnName = "PayeeInfoID",IsNullable = true,ColumnDescription = "收款信息" )]
+        [FKRelationAttribute("tb_FM_PayeeInfo","PayeeInfoID")]
+        public long? PayeeInfoID 
+        { 
+            get{return _PayeeInfoID;}
+            set{SetProperty(ref _PayeeInfoID, value);}
+        }
+     
+
+        private string _PayeeAccountNo;
+        /// <summary>
+        /// 收款账号
+        /// </summary>
+        [AdvQueryAttribute(ColName = "PayeeAccountNo",ColDesc = "收款账号")]
+        [SugarColumn(ColumnDataType = "varchar",SqlParameterDbType ="String",ColumnName = "PayeeAccountNo",Length=100,IsNullable = true,ColumnDescription = "收款账号" )]
+        public string PayeeAccountNo 
+        { 
+            get{return _PayeeAccountNo;}
+            set{SetProperty(ref _PayeeAccountNo, value);}
         }
      
 
@@ -119,10 +159,10 @@ namespace RUINORERP.Model.QueryDto
 
         private long? _Currency_ID;
         /// <summary>
-        /// 外币币别
+        /// 币别
         /// </summary>
-        [AdvQueryAttribute(ColName = "Currency_ID",ColDesc = "外币币别")]
-        [SugarColumn(ColumnDataType = "bigint",SqlParameterDbType ="Int64",ColumnName = "Currency_ID",IsNullable = true,ColumnDescription = "外币币别" )]
+        [AdvQueryAttribute(ColName = "Currency_ID",ColDesc = "币别")]
+        [SugarColumn(ColumnDataType = "bigint",SqlParameterDbType ="Int64",ColumnName = "Currency_ID",IsNullable = true,ColumnDescription = "币别" )]
         [FKRelationAttribute("tb_Currency","Currency_ID")]
         public long? Currency_ID 
         { 

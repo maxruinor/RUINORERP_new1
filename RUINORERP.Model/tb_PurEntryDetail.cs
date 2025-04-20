@@ -264,19 +264,7 @@ namespace RUINORERP.Model
                         }
         }
 
-        private decimal? _DiscountAmount= ((0));
-        /// <summary>
-        /// 优惠金额
-        /// </summary>
-        [AdvQueryAttribute(ColName = "DiscountAmount",ColDesc = "优惠金额")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "DiscountAmount" , DecimalDigits = 4,IsNullable = true,ColumnDescription = "优惠金额" )]
-        public decimal? DiscountAmount
-        { 
-            get{return _DiscountAmount;}
-            set{
-            SetProperty(ref _DiscountAmount, value);
-                        }
-        }
+
 
         private bool? _IsIncludeTax= false;
         /// <summary>

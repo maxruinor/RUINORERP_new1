@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：04/18/2025 13:55:13
+// 时间：04/20/2025 18:12:13
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -69,6 +69,9 @@ namespace RUINORERP.UI
         
         
         
+        
+        
+        
 
          }
 /*
@@ -76,9 +79,12 @@ namespace RUINORERP.UI
         tb_FM_PreReceivedPayment UIToEntity()
         {
         tb_FM_PreReceivedPayment entity = new tb_FM_PreReceivedPayment();
-                     entity.Account_id = Int64.Parse(txtAccount_id.Text);
+                     entity.PreRPNO = txtPreRPNO.Text ;
+                       entity.Account_id = Int64.Parse(txtAccount_id.Text);
                         entity.CustomerVendor_ID = Int64.Parse(txtCustomerVendor_ID.Text);
-                        entity.Employee_ID = Int64.Parse(txtEmployee_ID.Text);
+                        entity.PayeeInfoID = Int64.Parse(txtPayeeInfoID.Text);
+                        entity.PayeeAccountNo = txtPayeeAccountNo.Text ;
+                       entity.Employee_ID = Int64.Parse(txtEmployee_ID.Text);
                         entity.DepartmentID = Int64.Parse(txtDepartmentID.Text);
                         entity.ProjectGroup_ID = Int64.Parse(txtProjectGroup_ID.Text);
                         entity.Paytype_ID = Int64.Parse(txtPaytype_ID.Text);
@@ -121,8 +127,11 @@ namespace RUINORERP.UI
         public void BindData(tb_FM_PreReceivedPayment entity)
         {
         _EditEntity = entity;
-                       // DataBindingHelper.BindData4Cmb<tb_FM_Account>(entity, k => k.Account_id, v=>v.XXNAME, cmbAccount_id);
+                        DataBindingHelper.BindData4TextBox<tb_FM_PreReceivedPayment>(entity, t => t.PreRPNO, txtPreRPNO, BindDataType4TextBox.Text,false);
+          // DataBindingHelper.BindData4Cmb<tb_FM_Account>(entity, k => k.Account_id, v=>v.XXNAME, cmbAccount_id);
           // DataBindingHelper.BindData4Cmb<tb_CustomerVendor>(entity, k => k.CustomerVendor_ID, v=>v.XXNAME, cmbCustomerVendor_ID);
+          // DataBindingHelper.BindData4Cmb<tb_FM_PayeeInfo>(entity, k => k.PayeeInfoID, v=>v.XXNAME, cmbPayeeInfoID);
+           DataBindingHelper.BindData4TextBox<tb_FM_PreReceivedPayment>(entity, t => t.PayeeAccountNo, txtPayeeAccountNo, BindDataType4TextBox.Text,false);
           // DataBindingHelper.BindData4Cmb<tb_Employee>(entity, k => k.Employee_ID, v=>v.XXNAME, cmbEmployee_ID);
           // DataBindingHelper.BindData4Cmb<tb_Department>(entity, k => k.DepartmentID, v=>v.XXNAME, cmbDepartmentID);
           // DataBindingHelper.BindData4Cmb<tb_ProjectGroup>(entity, k => k.ProjectGroup_ID, v=>v.XXNAME, cmbProjectGroup_ID);
@@ -145,7 +154,10 @@ namespace RUINORERP.UI
            DataBindingHelper.BindData4TextBox<tb_FM_PreReceivedPayment>(entity, t => t.ReceivePaymentType, txtReceivePaymentType, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4TextBox<tb_FM_PreReceivedPayment>(entity, t => t.PaymentImagePath, txtPaymentImagePath, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_FM_PreReceivedPayment>(entity, t => t.Remark, txtRemark, BindDataType4TextBox.Text,false);
-         
+           DataBindingHelper.BindData4DataTime<tb_FM_PreReceivedPayment>(entity, t => t.Created_at, dtpCreated_at,false);
+           DataBindingHelper.BindData4TextBox<tb_FM_PreReceivedPayment>(entity, t => t.Created_by, txtCreated_by, BindDataType4TextBox.Qty,false);
+           DataBindingHelper.BindData4DataTime<tb_FM_PreReceivedPayment>(entity, t => t.Modified_at, dtpModified_at,false);
+           DataBindingHelper.BindData4TextBox<tb_FM_PreReceivedPayment>(entity, t => t.Modified_by, txtModified_by, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4CheckBox<tb_FM_PreReceivedPayment>(entity, t => t.isdeleted, chkisdeleted, false);
            DataBindingHelper.BindData4TextBox<tb_FM_PreReceivedPayment>(entity, t => t.ApprovalOpinions, txtApprovalOpinions, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_FM_PreReceivedPayment>(entity, t => t.Approver_by, txtApprover_by, BindDataType4TextBox.Qty,false);
@@ -168,10 +180,9 @@ namespace RUINORERP.UI
         
         }
 
-        private void tb_FM_PreReceivedPaymentEdit_Load(object sender, EventArgs e)
-        {
 
-        }
+
+
     }
 }
 

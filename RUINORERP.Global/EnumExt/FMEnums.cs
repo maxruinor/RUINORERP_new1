@@ -12,35 +12,26 @@ namespace RUINORERP.Global.EnumExt
     /// </summary>
     public enum FMPaymentStatus
     {
-        /// <summary>
-        /// 数据未提交审核（预收付、应收付、收付款、核销单均适用）
-        /// </summary>
-        草稿 = 0,
+        /// <summary>未提交（无任何有效状态）</summary>
+        草稿 = 0,       // 0b0000（默认值，标志位全0）
 
-        /// <summary>
-        /// 数据生效可执行后续操作
-        /// </summary>
-        已审核 = 1,
+        /// <summary>已提交审核</summary>
+        提交 = 1,       // 0b0001（2^0）
 
-        /// <summary>
-        /// 预收预付部分核销、应收应付部分结清
-        /// </summary>
-        部分生效 = 2,
+        /// <summary>财务审核通过</summary>
+        已审核 = 2,     // 0b0010（2^1）
 
-        /// <summary>
-        /// 预收预付完全核销、应收应付全额结清
-        /// </summary>
-        全部生效 = 3,
+        /// <summary>部分生效（如部分核销/结清）</summary>
+        部分核销 = 4,   // 0b0100（2^2）
 
-        /// <summary>
-        /// 数据被反向操作撤销（退款、错误修正）
-        /// </summary>
-        已冲销 = 4,
+        /// <summary>全部生效（全额核销/结清）</summary>
+        全额核销 = 8,   // 0b1000（2^3）
 
-        ///// <summary>
-        ///// 已冲销，预收付款记录已冲销，通常用于取消或调整
-        ///// </summary>
-        //WrittenOff = 5
+        /// <summary>数据被冲销（反向操作）</summary>
+        已冲销 = 16,    // 0b10000（2^4，新增无冲突的2的幂）
+
+        /// <summary>单据关闭）</summary>
+        已取消 = 32,    // 0b10000（2^4，新增无冲突的2的幂）
     }
 
 

@@ -356,23 +356,9 @@ namespace RUINORERP.Model
         //tb_FM_Account.DepartmentID)
         //DepartmentID.FK_ACCOUNTS_RE_DEPARTMENT)
         //tb_Department.DepartmentID)
+ 
 
-        //[Browsable(false)]打印报表时的数据源会不显示
-        [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_FM_Initial_PayAndReceivable.DepartmentID))]
-        public virtual List<tb_FM_Initial_PayAndReceivable> tb_FM_Initial_PayAndReceivables { get; set; }
-        //tb_FM_Initial_PayAndReceivable.DepartmentID)
-        //DepartmentID.FK_FM_INITPR_RE_DEPARTMENT)
-        //tb_Department.DepartmentID)
-
-        //[Browsable(false)]打印报表时的数据源会不显示
-        [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_FM_PaymentBill.DepartmentID))]
-        public virtual List<tb_FM_PaymentBill> tb_FM_PaymentBills { get; set; }
-        //tb_FM_PaymentBill.DepartmentID)
-        //DepartmentID.FK_FM_PAYMENTBILL_RE_DEPARMENT)
-        //tb_Department.DepartmentID)
-
+      
         //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_CRM_Customer.DepartmentID))]
@@ -381,13 +367,7 @@ namespace RUINORERP.Model
         //DepartmentID.FK_CUSTOMER_REF_DEPARTMENT)
         //tb_Department.DepartmentID)
 
-        //[Browsable(false)]打印报表时的数据源会不显示
-        [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_FM_PrePaymentBill.DepartmentID))]
-        public virtual List<tb_FM_PrePaymentBill> tb_FM_PrePaymentBills { get; set; }
-        //tb_FM_PrePaymentBill.DepartmentID)
-        //DepartmentID.FK_FM_PREPAYMENTBILL_DEPARTMENT)
-        //tb_Department.DepartmentID)
+        
 
         //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]

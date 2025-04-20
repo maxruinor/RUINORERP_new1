@@ -3,7 +3,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/13/2025 18:30:16
+// 时间：04/20/2025 22:58:08
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -68,6 +68,18 @@ this.txtGridType = new Krypton.Toolkit.KryptonTextBox();
 
 this.lblColumnsMode = new Krypton.Toolkit.KryptonLabel();
 this.txtColumnsMode = new Krypton.Toolkit.KryptonTextBox();
+
+this.lblCreated_at = new Krypton.Toolkit.KryptonLabel();
+this.dtpCreated_at = new Krypton.Toolkit.KryptonDateTimePicker();
+
+this.lblCreated_by = new Krypton.Toolkit.KryptonLabel();
+this.txtCreated_by = new Krypton.Toolkit.KryptonTextBox();
+
+this.lblModified_at = new Krypton.Toolkit.KryptonLabel();
+this.dtpModified_at = new Krypton.Toolkit.KryptonDateTimePicker();
+
+this.lblModified_by = new Krypton.Toolkit.KryptonLabel();
+this.txtModified_by = new Krypton.Toolkit.KryptonTextBox();
 
     
     //for end
@@ -170,6 +182,68 @@ this.txtColumnsMode.TabIndex = 5;
 this.Controls.Add(this.lblColumnsMode);
 this.Controls.Add(this.txtColumnsMode);
 
+           //#####Created_at###DateTime
+this.lblCreated_at.AutoSize = true;
+this.lblCreated_at.Location = new System.Drawing.Point(100,150);
+this.lblCreated_at.Name = "lblCreated_at";
+this.lblCreated_at.Size = new System.Drawing.Size(41, 12);
+this.lblCreated_at.TabIndex = 6;
+this.lblCreated_at.Text = "创建时间";
+//111======150
+this.dtpCreated_at.Location = new System.Drawing.Point(173,146);
+this.dtpCreated_at.Name ="dtpCreated_at";
+this.dtpCreated_at.ShowCheckBox =true;
+this.dtpCreated_at.Size = new System.Drawing.Size(100, 21);
+this.dtpCreated_at.TabIndex = 6;
+this.Controls.Add(this.lblCreated_at);
+this.Controls.Add(this.dtpCreated_at);
+
+           //#####Created_by###Int64
+//属性测试175Created_by
+this.lblCreated_by.AutoSize = true;
+this.lblCreated_by.Location = new System.Drawing.Point(100,175);
+this.lblCreated_by.Name = "lblCreated_by";
+this.lblCreated_by.Size = new System.Drawing.Size(41, 12);
+this.lblCreated_by.TabIndex = 7;
+this.lblCreated_by.Text = "创建人";
+this.txtCreated_by.Location = new System.Drawing.Point(173,171);
+this.txtCreated_by.Name = "txtCreated_by";
+this.txtCreated_by.Size = new System.Drawing.Size(100, 21);
+this.txtCreated_by.TabIndex = 7;
+this.Controls.Add(this.lblCreated_by);
+this.Controls.Add(this.txtCreated_by);
+
+           //#####Modified_at###DateTime
+this.lblModified_at.AutoSize = true;
+this.lblModified_at.Location = new System.Drawing.Point(100,200);
+this.lblModified_at.Name = "lblModified_at";
+this.lblModified_at.Size = new System.Drawing.Size(41, 12);
+this.lblModified_at.TabIndex = 8;
+this.lblModified_at.Text = "修改时间";
+//111======200
+this.dtpModified_at.Location = new System.Drawing.Point(173,196);
+this.dtpModified_at.Name ="dtpModified_at";
+this.dtpModified_at.ShowCheckBox =true;
+this.dtpModified_at.Size = new System.Drawing.Size(100, 21);
+this.dtpModified_at.TabIndex = 8;
+this.Controls.Add(this.lblModified_at);
+this.Controls.Add(this.dtpModified_at);
+
+           //#####Modified_by###Int64
+//属性测试225Modified_by
+this.lblModified_by.AutoSize = true;
+this.lblModified_by.Location = new System.Drawing.Point(100,225);
+this.lblModified_by.Name = "lblModified_by";
+this.lblModified_by.Size = new System.Drawing.Size(41, 12);
+this.lblModified_by.TabIndex = 9;
+this.lblModified_by.Text = "修改人";
+this.txtModified_by.Location = new System.Drawing.Point(173,221);
+this.txtModified_by.Name = "txtModified_by";
+this.txtModified_by.Size = new System.Drawing.Size(100, 21);
+this.txtModified_by.TabIndex = 9;
+this.Controls.Add(this.lblModified_by);
+this.Controls.Add(this.txtModified_by);
+
         //for 加入到容器
             //components = new System.ComponentModel.Container();
            
@@ -184,7 +258,7 @@ this.Controls.Add(this.txtColumnsMode);
             //this.kryptonPanel1.Location = new System.Drawing.Point(0, 0);
            // this.kryptonPanel1.Name = "kryptonPanel1";
            // this.kryptonPanel1.Size = new System.Drawing.Size(404, 300);
-           // this.kryptonPanel1.TabIndex = 5;
+           // this.kryptonPanel1.TabIndex = 9;
 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
@@ -202,6 +276,18 @@ this.Controls.Add(this.txtGridType );
 
                 this.Controls.Add(this.lblColumnsMode );
 this.Controls.Add(this.txtColumnsMode );
+
+                this.Controls.Add(this.lblCreated_at );
+this.Controls.Add(this.dtpCreated_at );
+
+                this.Controls.Add(this.lblCreated_by );
+this.Controls.Add(this.txtCreated_by );
+
+                this.Controls.Add(this.lblModified_at );
+this.Controls.Add(this.dtpModified_at );
+
+                this.Controls.Add(this.lblModified_by );
+this.Controls.Add(this.txtModified_by );
 
                             // 
             // "tb_UIGridSettingEdit"
@@ -249,6 +335,26 @@ private Krypton.Toolkit.KryptonTextBox txtGridType;
         
               private Krypton.Toolkit.KryptonLabel lblColumnsMode;
 private Krypton.Toolkit.KryptonTextBox txtColumnsMode;
+
+    
+        
+              private Krypton.Toolkit.KryptonLabel lblCreated_at;
+private Krypton.Toolkit.KryptonDateTimePicker dtpCreated_at;
+
+    
+        
+              private Krypton.Toolkit.KryptonLabel lblCreated_by;
+private Krypton.Toolkit.KryptonTextBox txtCreated_by;
+
+    
+        
+              private Krypton.Toolkit.KryptonLabel lblModified_at;
+private Krypton.Toolkit.KryptonDateTimePicker dtpModified_at;
+
+    
+        
+              private Krypton.Toolkit.KryptonLabel lblModified_by;
+private Krypton.Toolkit.KryptonTextBox txtModified_by;
 
     
             //private ComponentFactory.Krypton.Toolkit.KryptonButton btnOk;

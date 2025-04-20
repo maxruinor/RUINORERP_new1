@@ -33,7 +33,6 @@
             this.kryptonPanel1 = new Krypton.Toolkit.KryptonPanel();
             this.magicPictureBox1 = new RUINOR.WinFormsUI.CustomPictureBox.MagicPictureBox();
             this.kryptonGroupBox1 = new Krypton.Toolkit.KryptonGroupBox();
-            this.lblPayeeAccountName = new Krypton.Toolkit.KryptonLabel();
             this.txtPayeeAccountNo = new Krypton.Toolkit.KryptonTextBox();
             this.lblPayeeAccountNo = new Krypton.Toolkit.KryptonLabel();
             this.cmbAccount_type = new Krypton.Toolkit.KryptonComboBox();
@@ -155,6 +154,7 @@
             this.magicPictureBox1.Name = "magicPictureBox1";
             dataRowImage1.Dir = null;
             dataRowImage1.image = null;
+            dataRowImage1.ImageBase64 = null;
             dataRowImage1.ImageBytes = null;
             dataRowImage1.ImageFullName = null;
             dataRowImage1.newhash = null;
@@ -172,24 +172,15 @@
             // 
             // kryptonGroupBox1.Panel
             // 
-            this.kryptonGroupBox1.Panel.Controls.Add(this.lblPayeeAccountName);
             this.kryptonGroupBox1.Panel.Controls.Add(this.txtPayeeAccountNo);
             this.kryptonGroupBox1.Panel.Controls.Add(this.lblPayeeAccountNo);
             this.kryptonGroupBox1.Panel.Controls.Add(this.cmbAccount_type);
             this.kryptonGroupBox1.Panel.Controls.Add(this.lblBelongingBank);
             this.kryptonGroupBox1.Panel.Controls.Add(this.lblAccount_type);
             this.kryptonGroupBox1.Panel.Controls.Add(this.lblOpeningbank);
-            this.kryptonGroupBox1.Size = new System.Drawing.Size(943, 99);
+            this.kryptonGroupBox1.Size = new System.Drawing.Size(745, 99);
             this.kryptonGroupBox1.TabIndex = 179;
             this.kryptonGroupBox1.Values.Heading = "收款信息";
-            // 
-            // lblPayeeAccountName
-            // 
-            this.lblPayeeAccountName.Location = new System.Drawing.Point(749, 18);
-            this.lblPayeeAccountName.Name = "lblPayeeAccountName";
-            this.lblPayeeAccountName.Size = new System.Drawing.Size(6, 2);
-            this.lblPayeeAccountName.TabIndex = 177;
-            this.lblPayeeAccountName.Values.Text = "";
             // 
             // txtPayeeAccountNo
             // 
@@ -578,12 +569,12 @@
             this.txtNotes.Size = new System.Drawing.Size(294, 72);
             this.txtNotes.TabIndex = 32;
             // 
-            // UCPaymentApplicationEdit
+            // UCPaymentApplication
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.Controls.Add(this.kryptonPanel1);
-            this.Name = "UCPaymentApplicationEdit";
+            this.Name = "UCPaymentApplication";
             this.Size = new System.Drawing.Size(1063, 669);
             this.Load += new System.EventHandler(this.UCCustomerVendorEdit_Load);
             this.Controls.SetChildIndex(this.kryptonPanel1, 0);
@@ -659,6 +650,5 @@
         private Krypton.Toolkit.KryptonGroupBox kryptonGroupBox1;
         private Krypton.Toolkit.KryptonLabel lblInvoiceDate;
         private RUINOR.WinFormsUI.CustomPictureBox.MagicPictureBox magicPictureBox1;
-        private Krypton.Toolkit.KryptonLabel lblPayeeAccountName;
     }
 }

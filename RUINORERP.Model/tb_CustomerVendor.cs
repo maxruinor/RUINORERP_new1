@@ -453,14 +453,6 @@ namespace RUINORERP.Model
 
         //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_Return.CustomerVendor_ID))]
-        public virtual List<tb_Return> tb_Returns { get; set; }
-        //tb_Return.CustomerVendor_ID)
-        //CustomerVendor_ID.FK_RETURN_RE_CUSTOVENDOR)
-        //tb_CustomerVendor.CustomerVendor_ID)
-
-        //[Browsable(false)]打印报表时的数据源会不显示
-        [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_SaleOut.CustomerVendor_ID))]
         public virtual List<tb_SaleOut> tb_SaleOuts { get; set; }
         //tb_SaleOut.CustomerVendor_ID)
@@ -572,13 +564,7 @@ namespace RUINORERP.Model
         //CustomerVendor_ID.FK_TB_SOOUTRE_RE_CUSTOVENDOR)
         //tb_CustomerVendor.CustomerVendor_ID)
 
-        //[Browsable(false)]打印报表时的数据源会不显示
-        [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_FM_Initial_PayAndReceivable.CustomerVendor_ID))]
-        public virtual List<tb_FM_Initial_PayAndReceivable> tb_FM_Initial_PayAndReceivables { get; set; }
-        //tb_FM_Initial_PayAndReceivable.CustomerVendor_ID)
-        //CustomerVendor_ID.FK_TB_FM_INITPRBLE_RE_CUSTOVENDOR)
-        //tb_CustomerVendor.CustomerVendor_ID)
+    
 
         //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
@@ -588,13 +574,7 @@ namespace RUINORERP.Model
         //CustomerVendor_ID.FK_TB_FM_PA_REFERENCE_TB_CUSTO)
         //tb_CustomerVendor.CustomerVendor_ID)
 
-        //[Browsable(false)]打印报表时的数据源会不显示
-        [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_FM_PaymentBill.CustomerVendor_ID))]
-        public virtual List<tb_FM_PaymentBill> tb_FM_PaymentBills { get; set; }
-        //tb_FM_PaymentBill.CustomerVendor_ID)
-        //CustomerVendor_ID.FK_FM_PAYMENTBILL_REF_CUSTOMERVENDOR)
-        //tb_CustomerVendor.CustomerVendor_ID)
+     
 
         //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
@@ -612,13 +592,7 @@ namespace RUINORERP.Model
         //CustomerVendor_ID.FK_PURENRE_CUSTOVENDOR)
         //tb_CustomerVendor.CustomerVendor_ID)
 
-        //[Browsable(false)]打印报表时的数据源会不显示
-        [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_FM_PrePaymentBillDetail.CustomerVendor_ID))]
-        public virtual List<tb_FM_PrePaymentBillDetail> tb_FM_PrePaymentBillDetails { get; set; }
-        //tb_FM_PrePaymentBillDetail.CustomerVendor_ID)
-        //CustomerVendor_ID.FK_FM_PREPaymentBDEtail_CUSTOVENDOR)
-        //tb_CustomerVendor.CustomerVendor_ID)
+        
 
         //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]

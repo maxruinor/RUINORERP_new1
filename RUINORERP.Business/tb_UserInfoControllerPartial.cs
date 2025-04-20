@@ -46,7 +46,7 @@ namespace RUINORERP.Business
                             .AsNavQueryable()
                             .Includes(a => a.tb_User_Roles, b => b.tb_UserPersonalizeds, c => c.tb_UIMenuPersonalizations, d => d.tb_UIQueryConditions)
                               .AsNavQueryable()
-                            .Includes(a => a.tb_User_Roles, b => b.tb_UserPersonalizeds, c => c.tb_UIMenuPersonalizations, d => d.tb_UIDataFieldSettings)
+                            .Includes(a => a.tb_User_Roles, b => b.tb_UserPersonalizeds, c => c.tb_UIMenuPersonalizations, d => d.tb_UIInputDataFields)
                             .ToList();
 
             foreach (var item in list)

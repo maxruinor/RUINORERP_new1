@@ -67,8 +67,7 @@ namespace RUINORERP.Business
 
  RuleFor(tb_PurEntryDetail =>tb_PurEntryDetail.Summary).MaximumLength(500).WithMessage("摘要:不能超过最大长度,500.");
 
- RuleFor(x => x.DiscountAmount).PrecisionScale(19,4,true).WithMessage("优惠金额:小数位不能超过4。");
-
+ 
 
 //***** 
  RuleFor(tb_PurEntryDetail =>tb_PurEntryDetail.ReturnedQty).NotNull().WithMessage("退回数:不能为空。");

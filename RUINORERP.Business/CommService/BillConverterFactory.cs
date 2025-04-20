@@ -5,6 +5,7 @@ using System.Text;
 using Microsoft.Extensions.Logging;
 using RUINORERP.Business;
 using RUINORERP.Global;
+using RUINORERP.Global.EnumExt;
 using RUINORERP.Model;
 using RUINORERP.Model.CommonModel;
 using RUINORERP.Model.Context;
@@ -309,32 +310,41 @@ namespace RUINORERP.Business.CommService
                     cbd.BillID = StockTransfer.StockTransferID;
                     cbd.BillNo = StockTransfer.StockTransferNo;
                     break;
+
+                case BizType.预付款单:
+                case BizType.预收款单:
+                    var PreReceivedPayment = Entity as tb_FM_PreReceivedPayment;
+                    if (PreReceivedPayment != null)
+                    {
+                        if (PreReceivedPayment.ReceivePaymentType == (int)ReceivePaymentType.付款)
+                        {
+                            
+                        }
+                        else
+                        {
+                        }
+
+                        cbd.BillID = PreReceivedPayment.PreRPID;
+                        cbd.BillNo = PreReceivedPayment.PreRPNO;
+                    }
+                    break;
+
                 /*
-            case BizType.托外加工单:
-                var Return = Entity as tb_Return;
-                cbd.BillID = Return.MainID;
-                cbd.BillNo = Return.ReturnNo;
-                break;
-            case BizType.托外领料单:
-                var Return = Entity as tb_Return;
-                cbd.BillID = Return.MainID;
-                cbd.BillNo = Return.ReturnNo;
-                break;
-            case BizType.托外退料单:
-                var Return = Entity as tb_Return;
-                cbd.BillID = Return.MainID;
-                cbd.BillNo = Return.ReturnNo;
-                break;
-            case BizType.托外补料单:
-                var Return = Entity as tb_Return;
-                cbd.BillID = Return.MainID;
-                cbd.BillNo = Return.ReturnNo;
-                break;
-            case BizType.托外加工缴回单:
-                var Return = Entity as tb_Return;
-                cbd.BillID = Return.MainID;
-                cbd.BillNo = Return.ReturnNo;
-                break;*/
+        case BizType.托外退料单:
+            var Return = Entity as tb_Return;
+            cbd.BillID = Return.MainID;
+            cbd.BillNo = Return.ReturnNo;
+            break;
+        case BizType.托外补料单:
+            var Return = Entity as tb_Return;
+            cbd.BillID = Return.MainID;
+            cbd.BillNo = Return.ReturnNo;
+            break;
+        case BizType.托外加工缴回单:
+            var Return = Entity as tb_Return;
+            cbd.BillID = Return.MainID;
+            cbd.BillNo = Return.ReturnNo;
+            break;*/
                 case BizType.采购入库统计:
                     var PurEntryStatistics = Entity as View_PurEntryItems;
                     //cbd.BillID = PurEntryStatistics.id;

@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：03/30/2025 15:54:07
+// 时间：04/20/2025 22:58:12
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -74,16 +74,29 @@ namespace RUINORERP.Model.QueryDto
         }
      
 
-        private bool? _IsRelatedQuerySettings= false;
+        private bool? _EnableQuerySettings= false;
         /// <summary>
-        /// 是关联查询设置
+        /// 启用查询预设值
         /// </summary>
-        [AdvQueryAttribute(ColName = "IsRelatedQuerySettings",ColDesc = "是关联查询设置")]
-        [SugarColumn(ColumnDataType = "bit",SqlParameterDbType ="Boolean",ColumnName = "IsRelatedQuerySettings",IsNullable = true,ColumnDescription = "是关联查询设置" )]
-        public bool? IsRelatedQuerySettings 
+        [AdvQueryAttribute(ColName = "EnableQuerySettings",ColDesc = "启用查询预设值")]
+        [SugarColumn(ColumnDataType = "bit",SqlParameterDbType ="Boolean",ColumnName = "EnableQuerySettings",IsNullable = true,ColumnDescription = "启用查询预设值" )]
+        public bool? EnableQuerySettings 
         { 
-            get{return _IsRelatedQuerySettings;}
-            set{SetProperty(ref _IsRelatedQuerySettings, value);}
+            get{return _EnableQuerySettings;}
+            set{SetProperty(ref _EnableQuerySettings, value);}
+        }
+     
+
+        private bool? _EnableInputPresetValue= false;
+        /// <summary>
+        /// 启用录入预设值
+        /// </summary>
+        [AdvQueryAttribute(ColName = "EnableInputPresetValue",ColDesc = "启用录入预设值")]
+        [SugarColumn(ColumnDataType = "bit",SqlParameterDbType ="Boolean",ColumnName = "EnableInputPresetValue",IsNullable = true,ColumnDescription = "启用录入预设值" )]
+        public bool? EnableInputPresetValue 
+        { 
+            get{return _EnableInputPresetValue;}
+            set{SetProperty(ref _EnableInputPresetValue, value);}
         }
      
 

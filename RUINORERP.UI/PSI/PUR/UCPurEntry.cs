@@ -448,6 +448,7 @@ namespace RUINORERP.UI.PSI.PUR
             var purorder = bsa.Tag as tb_PurOrder;
             purorder = await MainForm.Instance.AppContext.Db.Queryable<tb_PurOrder>().Where(c => c.PurOrder_ID == purOrderID)
              .Includes(a => a.tb_PurOrderDetails, b => b.tb_proddetail, c => c.tb_prod)
+             .Includes(a => a.tb_PurEntries)
             .SingleAsync();
             _purorder = purorder;
             //新增时才可以转单

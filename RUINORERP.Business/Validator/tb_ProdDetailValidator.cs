@@ -207,16 +207,6 @@ namespace RUINORERP.Business
         }
         
 
-        private bool DetailedRecordsNotEmpty(List<tb_ReturnDetail> details)
-        {
-            bool rs = true;
-            if (details == null || details.Count == 0)
-            {
-                return false;
-            }
-            return rs;
-        }
-        
 
         private bool DetailedRecordsNotEmpty(List<tb_StocktakeDetail> details)
         {

@@ -2520,12 +2520,6 @@
     <Compile Include="UICreator\tb_BillingInformationEdit.Designer.cs">
       <DependentUpon>tb_BillingInformationEdit.cs</DependentUpon>
     </Compile>
-    <Compile Include="UICreator\tb_CurrencyExchangeRateEdit.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="UICreator\tb_CurrencyExchangeRateEdit.Designer.cs">
-      <DependentUpon>tb_CurrencyExchangeRateEdit.cs</DependentUpon>
-    </Compile>
     <Compile Include="UserCenter\CentralConsole.cs" />
     <Compile Include="UserCenter\ControlCenterConfig.cs">
       <SubType>UserControl</SubType>
@@ -2629,6 +2623,12 @@
     </Compile>
     <Compile Include="UserCenter\WorkCenterHelper.cs" />
     <Compile Include="UserGlobalConfig.cs" />
+    <Compile Include="UserPersonalized\frmInputDataColSetting.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UserPersonalized\frmInputDataColSetting.Designer.cs">
+      <DependentUpon>frmInputDataColSetting.cs</DependentUpon>
+    </Compile>
     <Compile Include="UserPersonalized\frmGridViewColSetting.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -2646,6 +2646,12 @@
     </Compile>
     <Compile Include="UserPersonalized\UCGridColSetting.Designer.cs">
       <DependentUpon>UCGridColSetting.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UserPersonalized\UCInputDataCol.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UserPersonalized\UCInputDataCol.Designer.cs">
+      <DependentUpon>UCInputDataCol.cs</DependentUpon>
     </Compile>
     <Compile Include="UserPersonalized\UCQueryCondition.cs">
       <SubType>Form</SubType>
@@ -3669,9 +3675,6 @@
     <EmbeddedResource Include="UICreator\tb_BillingInformationEdit.resx">
       <DependentUpon>tb_BillingInformationEdit.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="UICreator\tb_CurrencyExchangeRateEdit.resx">
-      <DependentUpon>tb_CurrencyExchangeRateEdit.cs</DependentUpon>
-    </EmbeddedResource>
     <EmbeddedResource Include="UserCenter\ControlCenterConfig.resx">
       <DependentUpon>ControlCenterConfig.cs</DependentUpon>
     </EmbeddedResource>
@@ -3723,6 +3726,9 @@
     <EmbeddedResource Include="UserCenter\UCWorkbenches.resx">
       <DependentUpon>UCWorkbenches.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="UserPersonalized\frmInputDataColSetting.resx">
+      <DependentUpon>frmInputDataColSetting.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="UserPersonalized\frmGridViewColSetting.resx">
       <DependentUpon>frmGridViewColSetting.cs</DependentUpon>
     </EmbeddedResource>
@@ -3731,6 +3737,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="UserPersonalized\UCGridColSetting.resx">
       <DependentUpon>UCGridColSetting.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UserPersonalized\UCInputDataCol.resx">
+      <DependentUpon>UCInputDataCol.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="UserPersonalized\UCQueryCondition.resx">
       <DependentUpon>UCQueryCondition.cs</DependentUpon>

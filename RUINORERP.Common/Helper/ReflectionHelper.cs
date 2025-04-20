@@ -59,6 +59,10 @@ namespace RUINORERP.Common.Helper
         /// <returns></returns>
         public static string GetModelValue(string FieldName, object obj)
         {
+            if (obj==null)
+            {
+                return null;
+            }
             try
             {
                 Type Ts = obj.GetType();

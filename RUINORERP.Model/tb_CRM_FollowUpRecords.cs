@@ -186,7 +186,7 @@ namespace RUINORERP.Model
         /// 跟进结果
         /// </summary>
         [AdvQueryAttribute(ColName = "FollowUpResult",ColDesc = "跟进结果")] 
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "FollowUpResult" ,Length=100,IsNullable = true,ColumnDescription = "跟进结果")]
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "FollowUpResult" ,Length=500,IsNullable = true,ColumnDescription = "跟进结果")]
         public string FollowUpResult
         { 
             get{return _FollowUpResult;}
@@ -200,7 +200,7 @@ namespace RUINORERP.Model
         /// 备注
         /// </summary>
         [AdvQueryAttribute(ColName = "Notes",ColDesc = "备注")] 
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "Notes" ,Length=255,IsNullable = true,ColumnDescription = "备注")]
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "Notes" ,Length=1000,IsNullable = true,ColumnDescription = "备注")]
         public string Notes
         { 
             get{return _Notes;}

@@ -40,6 +40,8 @@ namespace RUINORERP.UI.Common
         /// </summary>
         public string BizInterface { get; set; }
 
+
+        public string UIPropertyIdentifier { get; set; }
         /// <summary>
         /// 框架性基类
         /// </summary>

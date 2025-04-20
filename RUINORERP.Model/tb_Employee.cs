@@ -623,13 +623,7 @@ namespace RUINORERP.Model
         //Employee_ID.FK_TB_SARE_REF_TB_EMPLO)
         //tb_Employee.Employee_ID)
 
-        //[Browsable(false)]打印报表时的数据源会不显示
-        [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_FM_Initial_PayAndReceivable.Employee_ID))]
-        public virtual List<tb_FM_Initial_PayAndReceivable> tb_FM_Initial_PayAndReceivables { get; set; }
-        //tb_FM_Initial_PayAndReceivable.Employee_ID)
-        //Employee_ID.FK_TB_FM_INITPR_EMPLOYEE)
-        //tb_Employee.Employee_ID)
+     
 
         //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
@@ -670,14 +664,7 @@ namespace RUINORERP.Model
         //tb_CRM_FollowUpRecords.Employee_ID)
         //Employee_ID.FK_FOLLOWUPRECORDS_REF_EMPLOYEE)
         //tb_Employee.Employee_ID)
-
-        //[Browsable(false)]打印报表时的数据源会不显示
-        [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_FM_PaymentBill.Employee_ID))]
-        public virtual List<tb_FM_PaymentBill> tb_FM_PaymentBills { get; set; }
-        //tb_FM_PaymentBill.Employee_ID)
-        //Employee_ID.FK_TB_FM_PAYMENTBILL_RE_EMPLOYEE)
-        //tb_Employee.Employee_ID)
+ 
 
         //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
@@ -686,14 +673,7 @@ namespace RUINORERP.Model
         //tb_CRM_Customer.Employee_ID)
         //Employee_ID.FK_TB_CRM_C_REFERENCE_TB_EMPLO)
         //tb_Employee.Employee_ID)
-
-        //[Browsable(false)]打印报表时的数据源会不显示
-        [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_FM_PrePaymentBill.Employee_ID))]
-        public virtual List<tb_FM_PrePaymentBill> tb_FM_PrePaymentBills { get; set; }
-        //tb_FM_PrePaymentBill.Employee_ID)
-        //Employee_ID.FK_PREPAYMENTBILL_RE_EMPLOYEE)
-        //tb_Employee.Employee_ID)
+ 
 
         //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]

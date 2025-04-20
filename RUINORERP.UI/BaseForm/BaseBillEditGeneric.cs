@@ -73,6 +73,7 @@ using System.Windows.Controls.Primitives;
 using TransInstruction.DataModel;
 using RUINORERP.Common.LogHelper;
 using NPOI.SS.UserModel;
+using RUINORERP.Global.EnumExt;
 
 namespace RUINORERP.UI.BaseForm
 {
@@ -85,61 +86,82 @@ namespace RUINORERP.UI.BaseForm
         public BaseBillEditGeneric()
         {
             InitializeComponent();
-          
+
             if (System.ComponentModel.LicenseManager.UsageMode != System.ComponentModel.LicenseUsageMode.Designtime)
             {
                 if (!this.DesignMode)
                 {
                     frm = new frmFormProperty();
                     QueryConditionBuilder();
-                }
-            }
-            this.OnBindDataToUIEvent += BindData;
+                    this.OnBindDataToUIEvent += BindData;
 
-            KryptonButton button保存当前单据 = new KryptonButton();
-            button保存当前单据.Text = "保存当前单据";
-            button保存当前单据.Click += button保存当前单据_Click;
-            frm.flowLayoutPanelButtonsArea.Controls.Add(button保存当前单据);
+                    KryptonButton button保存当前单据 = new KryptonButton();
+                    button保存当前单据.Text = "保存当前单据";
+                    button保存当前单据.Click += button保存当前单据_Click;
+                    frm.flowLayoutPanelButtonsArea.Controls.Add(button保存当前单据);
 
-            KryptonContextMenu kcm加载最新数据 = new KryptonContextMenu();
-            KryptonContextMenuItem menuItem选择要加载的数据 = new KryptonContextMenuItem("选择数据");
-            menuItem选择要加载的数据.Text = "选择数据";
-            menuItem选择要加载的数据.Click += MenuItem选择要加载的数据_Click;
+                    KryptonContextMenu kcm加载最新数据 = new KryptonContextMenu();
+                    KryptonContextMenuItem menuItem选择要加载的数据 = new KryptonContextMenuItem("选择数据");
+                    menuItem选择要加载的数据.Text = "选择数据";
+                    menuItem选择要加载的数据.Click += MenuItem选择要加载的数据_Click;
 
-            KryptonContextMenuItems kryptonContextMenuItems1 = new KryptonContextMenuItems();
+                    KryptonContextMenuItems kryptonContextMenuItems1 = new KryptonContextMenuItems();
 
-            kcm加载最新数据.Items.AddRange(new KryptonContextMenuItemBase[] {
+                    kcm加载最新数据.Items.AddRange(new KryptonContextMenuItemBase[] {
             kryptonContextMenuItems1});
 
-            kryptonContextMenuItems1.Items.AddRange(new KryptonContextMenuItemBase[] {
+                    kryptonContextMenuItems1.Items.AddRange(new KryptonContextMenuItemBase[] {
             menuItem选择要加载的数据});
 
-            KryptonDropButton button加载最新数据 = new KryptonDropButton();
-            button加载最新数据.Text = "加载数据";
-            button加载最新数据.Click += button加载最新数据_Click;
-            button加载最新数据.KryptonContextMenu = kcm加载最新数据;
-            frm.flowLayoutPanelButtonsArea.Controls.Add(button加载最新数据);
+                    KryptonDropButton button加载最新数据 = new KryptonDropButton();
+                    button加载最新数据.Text = "加载数据";
+                    button加载最新数据.Click += button加载最新数据_Click;
+                    button加载最新数据.KryptonContextMenu = kcm加载最新数据;
+                    frm.flowLayoutPanelButtonsArea.Controls.Add(button加载最新数据);
 
-            KryptonButton button快速录入数据 = new KryptonButton();
+                    KryptonButton button快速录入数据 = new KryptonButton();
 
-            button快速录入数据.Text = "快速录入数据";
-            button快速录入数据.Click += button快速录入数据_Click;
+                    button快速录入数据.Text = "快速录入数据";
+                    button快速录入数据.Click += button快速录入数据_Click;
 
-            frm.flowLayoutPanelButtonsArea.Controls.Add(button快速录入数据);
+                    frm.flowLayoutPanelButtonsArea.Controls.Add(button快速录入数据);
 
-            KryptonButton button请求协助处理 = new KryptonButton();
-            button请求协助处理.Text = "请求协助处理";
-            button请求协助处理.Click += button请求协助处理_Click;
+                    KryptonButton button请求协助处理 = new KryptonButton();
+                    button请求协助处理.Text = "请求协助处理";
+                    button请求协助处理.Click += button请求协助处理_Click;
 
-            frm.flowLayoutPanelButtonsArea.Controls.Add(button请求协助处理);
+                    frm.flowLayoutPanelButtonsArea.Controls.Add(button请求协助处理);
 
-            BizTypeMapper mapper = new BizTypeMapper();
-            CurrentBizType = mapper.GetBizType(typeof(T).Name);
-            CurrentBizTypeName = CurrentBizType.ToString();
+
+                    Krypton.Toolkit.KryptonButton button录入数据预设 = new Krypton.Toolkit.KryptonButton();
+                    button录入数据预设.Text = "录入数据预设";
+                    button录入数据预设.ToolTipValues.Description = "对单据，资料等数据进行预设，并且可以提供多个预设模板，提高录入速度。";
+                    button录入数据预设.ToolTipValues.EnableToolTips = true;
+                    button录入数据预设.ToolTipValues.Heading = "提示";
+                    button录入数据预设.Click += button录入数据预设_Click;
+                    button录入数据预设.Width = 120;
+                    frm.flowLayoutPanelButtonsArea.Controls.Add(button录入数据预设);
+
+
+                    BizTypeMapper mapper = new BizTypeMapper();
+                    CurrentBizType = mapper.GetBizType(typeof(T).Name);
+                    CurrentBizTypeName = CurrentBizType.ToString();
+                }
+            }
+
 
 
         }
 
+
+        private async void button录入数据预设_Click(object sender, EventArgs e)
+        {
+            bool rs = await UIBizSrvice.SetInputDataAsync<T>(CurMenuInfo, EditEntity);
+            if (rs)
+            {
+               // EditEntity = LoadQueryConditionToUI();
+            }
+        }
 
         //public event ColumnDisplayControlHandler SetColumnDisplayControl;
         //public delegate void ColumnDisplayControlHandler(Type GridSourceType);
@@ -578,6 +600,204 @@ namespace RUINORERP.UI.BaseForm
                 }
                 #endregion
             }
+
+            #region 财务模块的单据状态不一样
+
+            //可以修改
+            if (entity.ContainsProperty(typeof(FMPaymentStatus).Name))
+            {
+                FMPaymentStatus dataStatus = (FMPaymentStatus)int.Parse(entity.GetPropertyValue(typeof(FMPaymentStatus).Name).ToString());
+                ActionStatus actionStatus = (ActionStatus)(Enum.Parse(typeof(ActionStatus), entity.GetPropertyValue(typeof(ActionStatus).Name).ToString()));
+                switch (dataStatus)
+                {
+                    //点新增
+                    case FMPaymentStatus.草稿:
+                        toolStripbtnAdd.Enabled = false;
+                        toolStripBtnCancel.Visible = true;
+                        toolStripbtnModify.Enabled = true;
+                        toolStripbtnSubmit.Enabled = true;
+                        toolStripbtnReview.Enabled = false;
+                        if (actionStatus == ActionStatus.新增)
+                        {
+                            toolStripButtonSave.Enabled = true;
+                            toolStripbtnModify.Enabled = false;
+                        }
+                        else
+                        {
+                            toolStripButtonSave.Enabled = false;
+                        }
+
+                        toolStripBtnReverseReview.Enabled = false;
+                        toolStripbtnPrint.Enabled = false;
+                        toolStripbtnDelete.Enabled = true;
+                        toolStripButton结案.Enabled = false;
+                        break;
+                    case FMPaymentStatus.提交:
+                        toolStripbtnAdd.Enabled = false;
+                        toolStripBtnCancel.Visible = true;
+                        toolStripbtnModify.Enabled = true;
+                        toolStripbtnSubmit.Enabled = false;
+                        toolStripBtnReverseReview.Enabled = false;
+                        toolStripbtnReview.Enabled = true;
+                        toolStripButtonSave.Enabled = true;
+                        toolStripbtnDelete.Enabled = true;
+                        toolStripbtnPrint.Enabled = true;
+                        toolStripButton结案.Enabled = false;
+                        break;
+                    case FMPaymentStatus.全额核销:
+                        toolStripbtnModify.Enabled = false;
+                        toolStripbtnSubmit.Enabled = false;
+                        toolStripBtnReverseReview.Enabled = true;
+                        toolStripbtnReview.Enabled = false;
+                        toolStripButtonSave.Enabled = false;
+                        toolStripbtnPrint.Enabled = true;
+                        toolStripButton结案.Enabled = true;
+                        toolStripbtnDelete.Enabled = false;
+                        break;
+                    case FMPaymentStatus.已取消:
+                    case FMPaymentStatus.已冲销:
+                        //
+                        toolStripbtnModify.Enabled = false;
+                        toolStripbtnSubmit.Enabled = false;
+                        toolStripbtnReview.Enabled = false;
+                        toolStripButtonSave.Enabled = false;
+                        toolStripBtnReverseReview.Enabled = false;
+                        toolStripbtnPrint.Enabled = true;
+                        toolStripButton结案.Enabled = false;
+                        toolStripBtnCancel.Enabled = false;
+                        toolStripbtnDelete.Enabled = false;
+                        break;
+                    default:
+                        break;
+                }
+
+                //单据被锁定时。显示锁定图标。并且提示无法操作？
+                string PKCol = BaseUIHelper.GetEntityPrimaryKey<T>();
+                long pkid = (long)ReflectionHelper.GetPropertyValue(entity, PKCol);
+                if (pkid > 0)
+                {
+                    //如果要锁这个单 看这个单是不是已经被其它人锁，如果没有人锁则我可以锁
+                    //TODO 注意 同一个人，同一个业务单据。只能锁定一张单。所以在锁新单时。清除所有旧单。
+                    //关闭时会解锁，查询的方式不停加载也要解锁前面的
+                    long userid = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID;
+
+                    //解锁这个业务的自己名下的其它单
+                    UNLockByBizName(userid);
+
+                    if (MainForm.Instance.lockManager.GetLockedBy(pkid) > 0)
+                    {
+                        var lockinfo = MainForm.Instance.lockManager.GetLockStatus(pkid);
+                        if (lockinfo.LockedByID == userid)
+                        {
+                            //得到了锁 就是自己。得不到就是
+                            tsBtnLocked.AutoToolTip = false;
+                            tsBtnLocked.ToolTipText = string.Empty;
+                            //别人锁定了
+                            string tipMsg = $"您锁定了当前单据。";
+                            MainForm.Instance.uclog.AddLog(tipMsg);
+                            tsBtnLocked.AutoToolTip = true;
+                            tsBtnLocked.ToolTipText = tipMsg;
+                            tsBtnLocked.Visible = true;
+                            tsBtnLocked.Tag = lockinfo;
+                            //自己就表达绿色
+                            this.tsBtnLocked.Image = global::RUINORERP.UI.Properties.Resources.unlockbill;
+
+
+
+                        }
+                        else
+                        {
+                            //别人锁定了
+                            string tipMsg = $"单据已被用户【{lockinfo.LockedByName}】锁定，请刷新后再试,或点击【已锁定】联系锁定人员解锁。";
+                            MainForm.Instance.uclog.AddLog(tipMsg);
+                            tsBtnLocked.AutoToolTip = true;
+                            tsBtnLocked.ToolTipText = tipMsg;
+                            tsBtnLocked.Visible = true;
+                            tsBtnLocked.Tag = lockinfo;
+                            this.tsBtnLocked.Image = global::RUINORERP.UI.Properties.Resources.Lockbill;
+                            toolStripBtnCancel.Visible = true;
+                            toolStripbtnModify.Enabled = false;
+                            toolStripbtnSubmit.Enabled = false;
+                            toolStripBtnReverseReview.Enabled = false;
+                            toolStripbtnReview.Enabled = false;
+                            toolStripButtonSave.Enabled = false;
+                            toolStripbtnDelete.Enabled = false;
+                            toolStripbtnPrint.Enabled = false;
+                            toolStripButton结案.Enabled = false;
+                        }
+                    }
+                    else
+                    {
+                        //没人锁定
+                        tsBtnLocked.AutoToolTip = false;
+                        tsBtnLocked.ToolTipText = string.Empty;
+                        tsBtnLocked.Visible = false;
+                        tsBtnLocked.Tag = null;
+                    }
+                }
+
+                #region 数据状态修改时也会影响到按钮
+                if (entity is BaseEntity baseEntity)
+                {
+                    //为了不重复执行
+                    // 定义一个局部变量来存储事件处理程序
+                    EventHandler<ActionStatusChangedEventArgs> eventHandler = (sender, s2) =>
+                    {
+                        if (s2.OldValue != ActionStatus.修改 && s2.NewValue == ActionStatus.修改)
+                        {
+                            LockBill();
+                        }
+                    };
+
+                    // 先移除之前可能添加的处理程序
+                    baseEntity.ActionStatusChanged -= eventHandler;
+                    // 再添加处理程序
+                    baseEntity.ActionStatusChanged += eventHandler;
+
+
+                    //如果属性变化 则状态为修改
+                    baseEntity.PropertyChanged += (sender, s2) =>
+                    {
+                        //权限允许
+                        if ((true && dataStatus == FMPaymentStatus.草稿) || (true && dataStatus == FMPaymentStatus.提交))
+                        {
+                            baseEntity.ActionStatus = ActionStatus.修改;
+                            ToolBarEnabledControl(MenuItemEnums.修改);
+                        }
+
+                        //数据状态变化会影响按钮变化
+                        if (s2.PropertyName == "FMPaymentStatus")
+                        {
+                            if (dataStatus == FMPaymentStatus.草稿)
+                            {
+                                ToolBarEnabledControl(MenuItemEnums.新增);
+                            }
+                            if (dataStatus == FMPaymentStatus.提交)
+                            {
+                                ToolBarEnabledControl(MenuItemEnums.新增);
+                            }
+                            if (dataStatus == FMPaymentStatus.已审核)
+                            {
+                                ToolBarEnabledControl(MenuItemEnums.审核);
+                            }
+
+                            if (dataStatus == FMPaymentStatus.已冲销 || dataStatus == FMPaymentStatus.已取消)
+                            {
+                                ToolBarEnabledControl(MenuItemEnums.结案);
+                            }
+
+                        }
+
+                    };
+
+
+
+
+                }
+                #endregion
+            }
+
+            #endregion
         }
 
 
@@ -1667,7 +1887,7 @@ namespace RUINORERP.UI.BaseForm
 
         }
 
-        frmFormProperty frm = null  ;
+        frmFormProperty frm = null;
         protected override void Property()
         {
             if (frm.ShowDialog() == DialogResult.OK)

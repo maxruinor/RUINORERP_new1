@@ -220,7 +220,8 @@ namespace RUINORERP.UI.SysConfig
             info.IsEnabled = chkEnable.Checked;
             info.BIBaseForm = txtBIBaseForm.Text.Trim();
             info.BIBizBaseForm = txtBIBizBaseform.Text.Trim();
-            info.BizInterface=txtBizInterface.Text.Trim();
+            info.BizInterface = txtBizInterface.Text.Trim();
+            info.UIPropertyIdentifier = txtUIPropertyIdentifier.Text.Trim();
             info.CaptionCN = txt_CaptonC.Text.Trim();
             info.CaptionEN = txt_CaptionE.Text.Trim();
             if (txtBizType.Tag != null)
@@ -404,7 +405,7 @@ namespace RUINORERP.UI.SysConfig
                 if (StartNode.Name.ToLower().Contains(SearchText.ToLower()))
                 {
                     treeView1.SelectedNode = StartNode;
-                    comboBoxTreeView1.Text= StartNode.Text;
+                    comboBoxTreeView1.Text = StartNode.Text;
                     treeView1.SelectedNode.Expand();
                     comboBoxTreeView1.SelectedItem = StartNode;
                     treeView1.Select();
@@ -790,6 +791,7 @@ namespace RUINORERP.UI.SysConfig
                         txtBIBaseForm.Text = menuInfo.BIBaseForm;
                         txtBIBizBaseform.Text = menuInfo.BIBizBaseForm;
                         txtBizInterface.Text = menuInfo.BizInterface;
+                        txtUIPropertyIdentifier.Text = menuInfo.UIPropertyIdentifier;
                         if (menuInfo.MenuBizType.HasValue)
                         {
                             txtBizType.Text = menuInfo.MenuBizType.ToString();
@@ -816,6 +818,7 @@ namespace RUINORERP.UI.SysConfig
                         }
                     }
                     txtEntityName.Text = menuInfo.EntityName;
+                    txtUIPropertyIdentifier.Text = menuInfo.UIPropertyIdentifier;
                     txtBizInterface.Text = menuInfo.BizInterface;
                     txtBIBaseForm.Text = menuInfo.BIBaseForm;
                     txtBIBizBaseform.Text = menuInfo.BIBizBaseForm;
@@ -940,7 +943,7 @@ namespace RUINORERP.UI.SysConfig
 
         private void txtMenuName_KeyPress(object sender, KeyPressEventArgs e)
         {
-           
+
         }
     }
 }

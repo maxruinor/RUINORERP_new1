@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/13/2025 18:30:15
+// 时间：04/20/2025 22:58:08
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -39,6 +39,10 @@ namespace RUINORERP.UI
         
         
         
+        
+        
+        
+        
 
          }
 /*
@@ -51,6 +55,10 @@ namespace RUINORERP.UI
                        entity.ColsSetting = txtColsSetting.Text ;
                        entity.GridType = txtGridType.Text ;
                        entity.ColumnsMode = Int32.Parse(txtColumnsMode.Text);
+                        entity.Created_at = DateTime.Parse(txtCreated_at.Text);
+                        entity.Created_by = Int64.Parse(txtCreated_by.Text);
+                        entity.Modified_at = DateTime.Parse(txtModified_at.Text);
+                        entity.Modified_by = Int64.Parse(txtModified_by.Text);
                                 return entity;
 }
         */
@@ -66,6 +74,10 @@ namespace RUINORERP.UI
            DataBindingHelper.BindData4TextBox<tb_UIGridSetting>(entity, t => t.ColsSetting, txtColsSetting, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_UIGridSetting>(entity, t => t.GridType, txtGridType, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_UIGridSetting>(entity, t => t.ColumnsMode, txtColumnsMode, BindDataType4TextBox.Qty,false);
+           DataBindingHelper.BindData4DataTime<tb_UIGridSetting>(entity, t => t.Created_at, dtpCreated_at,false);
+           DataBindingHelper.BindData4TextBox<tb_UIGridSetting>(entity, t => t.Created_by, txtCreated_by, BindDataType4TextBox.Qty,false);
+           DataBindingHelper.BindData4DataTime<tb_UIGridSetting>(entity, t => t.Modified_at, dtpModified_at,false);
+           DataBindingHelper.BindData4TextBox<tb_UIGridSetting>(entity, t => t.Modified_by, txtModified_by, BindDataType4TextBox.Qty,false);
 }
 
 

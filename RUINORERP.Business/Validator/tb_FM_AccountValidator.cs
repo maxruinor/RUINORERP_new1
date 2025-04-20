@@ -86,16 +86,6 @@ namespace RUINORERP.Business
         }
         
 
-        private bool DetailedRecordsNotEmpty(List<tb_FM_PrePaymentBillDetail> details)
-        {
-            bool rs = true;
-            if (details == null || details.Count == 0)
-            {
-                return false;
-            }
-            return rs;
-        }
-        
 
 
 

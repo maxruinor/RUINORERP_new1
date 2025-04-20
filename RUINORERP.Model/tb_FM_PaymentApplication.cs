@@ -156,10 +156,10 @@ namespace RUINORERP.Model
 
         private long? _Account_id;
         /// <summary>
-        /// 付款账户
+        /// 公司账号
         /// </summary>
-        [AdvQueryAttribute(ColName = "Account_id",ColDesc = "付款账户")] 
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Account_id" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "付款账户" )]
+        [AdvQueryAttribute(ColName = "Account_id",ColDesc = "公司账号")] 
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Account_id" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "公司账号")]
         [FKRelationAttribute("tb_FM_Account","Account_id")]
         public long? Account_id
         { 

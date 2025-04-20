@@ -31,6 +31,8 @@
             this.btnOk = new Krypton.Toolkit.KryptonButton();
             this.btnCancel = new Krypton.Toolkit.KryptonButton();
             this.kryptonPanel1 = new Krypton.Toolkit.KryptonPanel();
+            this.cmbTargetCurrencyID = new Krypton.Toolkit.KryptonComboBox();
+            this.cmbBaseCurrencyID = new Krypton.Toolkit.KryptonComboBox();
             this.kryptonLabel1 = new Krypton.Toolkit.KryptonLabel();
             this.lblConversionName = new Krypton.Toolkit.KryptonLabel();
             this.txtConversionName = new Krypton.Toolkit.KryptonTextBox();
@@ -46,17 +48,13 @@
             this.txtExecuteExchRate = new Krypton.Toolkit.KryptonTextBox();
             this.lblIs_enabled = new Krypton.Toolkit.KryptonLabel();
             this.chkIs_enabled = new Krypton.Toolkit.KryptonCheckBox();
-            this.lblIs_available = new Krypton.Toolkit.KryptonLabel();
-            this.chkIs_available = new Krypton.Toolkit.KryptonCheckBox();
             this.lblNotes = new Krypton.Toolkit.KryptonLabel();
             this.txtNotes = new Krypton.Toolkit.KryptonTextBox();
-            this.cmbBaseCurrencyID = new Krypton.Toolkit.KryptonComboBox();
-            this.cmbTargetCurrencyID = new Krypton.Toolkit.KryptonComboBox();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel1)).BeginInit();
             this.kryptonPanel1.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.cmbBaseCurrencyID)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmbTargetCurrencyID)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.cmbBaseCurrencyID)).BeginInit();
             this.SuspendLayout();
             // 
             // btnOk
@@ -96,8 +94,6 @@
             this.kryptonPanel1.Controls.Add(this.txtExecuteExchRate);
             this.kryptonPanel1.Controls.Add(this.lblIs_enabled);
             this.kryptonPanel1.Controls.Add(this.chkIs_enabled);
-            this.kryptonPanel1.Controls.Add(this.lblIs_available);
-            this.kryptonPanel1.Controls.Add(this.chkIs_available);
             this.kryptonPanel1.Controls.Add(this.lblNotes);
             this.kryptonPanel1.Controls.Add(this.txtNotes);
             this.kryptonPanel1.Controls.Add(this.btnCancel);
@@ -107,6 +103,24 @@
             this.kryptonPanel1.Name = "kryptonPanel1";
             this.kryptonPanel1.Size = new System.Drawing.Size(590, 426);
             this.kryptonPanel1.TabIndex = 2;
+            // 
+            // cmbTargetCurrencyID
+            // 
+            this.cmbTargetCurrencyID.DropDownWidth = 100;
+            this.cmbTargetCurrencyID.IntegralHeight = false;
+            this.cmbTargetCurrencyID.Location = new System.Drawing.Point(140, 77);
+            this.cmbTargetCurrencyID.Name = "cmbTargetCurrencyID";
+            this.cmbTargetCurrencyID.Size = new System.Drawing.Size(305, 21);
+            this.cmbTargetCurrencyID.TabIndex = 73;
+            // 
+            // cmbBaseCurrencyID
+            // 
+            this.cmbBaseCurrencyID.DropDownWidth = 100;
+            this.cmbBaseCurrencyID.IntegralHeight = false;
+            this.cmbBaseCurrencyID.Location = new System.Drawing.Point(140, 53);
+            this.cmbBaseCurrencyID.Name = "cmbBaseCurrencyID";
+            this.cmbBaseCurrencyID.Size = new System.Drawing.Size(305, 21);
+            this.cmbBaseCurrencyID.TabIndex = 72;
             // 
             // kryptonLabel1
             // 
@@ -226,24 +240,6 @@
             this.chkIs_enabled.TabIndex = 68;
             this.chkIs_enabled.Values.Text = "";
             // 
-            // lblIs_available
-            // 
-            this.lblIs_available.Location = new System.Drawing.Point(356, 249);
-            this.lblIs_available.Name = "lblIs_available";
-            this.lblIs_available.Size = new System.Drawing.Size(62, 20);
-            this.lblIs_available.TabIndex = 69;
-            this.lblIs_available.Values.Text = "是否可用";
-            // 
-            // chkIs_available
-            // 
-            this.chkIs_available.Checked = true;
-            this.chkIs_available.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.chkIs_available.Location = new System.Drawing.Point(419, 250);
-            this.chkIs_available.Name = "chkIs_available";
-            this.chkIs_available.Size = new System.Drawing.Size(19, 13);
-            this.chkIs_available.TabIndex = 70;
-            this.chkIs_available.Values.Text = "";
-            // 
             // lblNotes
             // 
             this.lblNotes.Location = new System.Drawing.Point(94, 275);
@@ -260,24 +256,6 @@
             this.txtNotes.Size = new System.Drawing.Size(307, 96);
             this.txtNotes.TabIndex = 52;
             // 
-            // cmbBaseCurrencyID
-            // 
-            this.cmbBaseCurrencyID.DropDownWidth = 100;
-            this.cmbBaseCurrencyID.IntegralHeight = false;
-            this.cmbBaseCurrencyID.Location = new System.Drawing.Point(140, 53);
-            this.cmbBaseCurrencyID.Name = "cmbBaseCurrencyID";
-            this.cmbBaseCurrencyID.Size = new System.Drawing.Size(305, 21);
-            this.cmbBaseCurrencyID.TabIndex = 72;
-            // 
-            // cmbTargetCurrencyID
-            // 
-            this.cmbTargetCurrencyID.DropDownWidth = 100;
-            this.cmbTargetCurrencyID.IntegralHeight = false;
-            this.cmbTargetCurrencyID.Location = new System.Drawing.Point(140, 77);
-            this.cmbTargetCurrencyID.Name = "cmbTargetCurrencyID";
-            this.cmbTargetCurrencyID.Size = new System.Drawing.Size(305, 21);
-            this.cmbTargetCurrencyID.TabIndex = 73;
-            // 
             // UCCurrencyExchangeRateEdit
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
@@ -290,8 +268,8 @@
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel1)).EndInit();
             this.kryptonPanel1.ResumeLayout(false);
             this.kryptonPanel1.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.cmbBaseCurrencyID)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmbTargetCurrencyID)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.cmbBaseCurrencyID)).EndInit();
             this.ResumeLayout(false);
 
         }
@@ -317,8 +295,6 @@
         private Krypton.Toolkit.KryptonTextBox txtExecuteExchRate;
         private Krypton.Toolkit.KryptonLabel lblIs_enabled;
         private Krypton.Toolkit.KryptonCheckBox chkIs_enabled;
-        private Krypton.Toolkit.KryptonLabel lblIs_available;
-        private Krypton.Toolkit.KryptonCheckBox chkIs_available;
         private Krypton.Toolkit.KryptonLabel kryptonLabel1;
         private Krypton.Toolkit.KryptonComboBox cmbTargetCurrencyID;
         private Krypton.Toolkit.KryptonComboBox cmbBaseCurrencyID;

@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：03/30/2025 15:54:07
+// 时间：04/20/2025 22:58:12
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -45,6 +45,7 @@ namespace RUINORERP.Business
 
 //***** 
  RuleFor(tb_UIMenuPersonalization =>tb_UIMenuPersonalization.QueryConditionCols).NotNull().WithMessage("条件显示列数量:不能为空。");
+
 
 
 

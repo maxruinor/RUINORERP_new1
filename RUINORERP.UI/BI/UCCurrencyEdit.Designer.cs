@@ -33,7 +33,6 @@
             this.kryptonPanel1 = new Krypton.Toolkit.KryptonPanel();
             this.chkIs_BaseCurrency = new Krypton.Toolkit.KryptonCheckBox();
             this.kryptonLabel1 = new Krypton.Toolkit.KryptonLabel();
-            this.chkIs_available = new Krypton.Toolkit.KryptonCheckBox();
             this.chkIs_enabled = new Krypton.Toolkit.KryptonCheckBox();
             this.lblCountry = new Krypton.Toolkit.KryptonLabel();
             this.txtCountry = new Krypton.Toolkit.KryptonTextBox();
@@ -44,7 +43,6 @@
             this.lblCurrencySymbol = new Krypton.Toolkit.KryptonLabel();
             this.txtCurrencySymbol = new Krypton.Toolkit.KryptonTextBox();
             this.lblIs_enabled = new Krypton.Toolkit.KryptonLabel();
-            this.lblIs_available = new Krypton.Toolkit.KryptonLabel();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel1)).BeginInit();
             this.kryptonPanel1.SuspendLayout();
@@ -72,7 +70,6 @@
             // 
             this.kryptonPanel1.Controls.Add(this.chkIs_BaseCurrency);
             this.kryptonPanel1.Controls.Add(this.kryptonLabel1);
-            this.kryptonPanel1.Controls.Add(this.chkIs_available);
             this.kryptonPanel1.Controls.Add(this.chkIs_enabled);
             this.kryptonPanel1.Controls.Add(this.lblCountry);
             this.kryptonPanel1.Controls.Add(this.txtCountry);
@@ -83,7 +80,6 @@
             this.kryptonPanel1.Controls.Add(this.lblCurrencySymbol);
             this.kryptonPanel1.Controls.Add(this.txtCurrencySymbol);
             this.kryptonPanel1.Controls.Add(this.lblIs_enabled);
-            this.kryptonPanel1.Controls.Add(this.lblIs_available);
             this.kryptonPanel1.Controls.Add(this.btnCancel);
             this.kryptonPanel1.Controls.Add(this.btnOk);
             this.kryptonPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
@@ -107,14 +103,6 @@
             this.kryptonLabel1.Size = new System.Drawing.Size(62, 20);
             this.kryptonLabel1.TabIndex = 75;
             this.kryptonLabel1.Values.Text = "为本位币";
-            // 
-            // chkIs_available
-            // 
-            this.chkIs_available.Location = new System.Drawing.Point(391, 198);
-            this.chkIs_available.Name = "chkIs_available";
-            this.chkIs_available.Size = new System.Drawing.Size(19, 13);
-            this.chkIs_available.TabIndex = 74;
-            this.chkIs_available.Values.Text = "";
             // 
             // chkIs_enabled
             // 
@@ -192,14 +180,6 @@
             this.lblIs_enabled.TabIndex = 69;
             this.lblIs_enabled.Values.Text = "是否启用";
             // 
-            // lblIs_available
-            // 
-            this.lblIs_available.Location = new System.Drawing.Point(326, 194);
-            this.lblIs_available.Name = "lblIs_available";
-            this.lblIs_available.Size = new System.Drawing.Size(62, 20);
-            this.lblIs_available.TabIndex = 71;
-            this.lblIs_available.Values.Text = "是否可用";
-            // 
             // UCCurrencyEdit
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
@@ -230,9 +210,7 @@
         private Krypton.Toolkit.KryptonLabel lblCurrencySymbol;
         private Krypton.Toolkit.KryptonTextBox txtCurrencySymbol;
         private Krypton.Toolkit.KryptonLabel lblIs_enabled;
-        private Krypton.Toolkit.KryptonLabel lblIs_available;
         private Krypton.Toolkit.KryptonCheckBox chkIs_enabled;
-        private Krypton.Toolkit.KryptonCheckBox chkIs_available;
         private Krypton.Toolkit.KryptonCheckBox chkIs_BaseCurrency;
         private Krypton.Toolkit.KryptonLabel kryptonLabel1;
     }

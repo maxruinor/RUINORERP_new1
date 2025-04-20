@@ -71,7 +71,7 @@ namespace RUINORERP.Model
         /// </summary>
         [AdvQueryAttribute(ColName = "BaseCurrencyID",ColDesc = "基本币别")] 
         [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "BaseCurrencyID" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "基本币别" )]
-        [FKRelationAttribute("tb_Currency","CurrencyID")]
+        [FKRelationAttribute("tb_Currency", "BaseCurrencyID")]
         public long BaseCurrencyID
         { 
             get{return _BaseCurrencyID;}
@@ -86,7 +86,7 @@ namespace RUINORERP.Model
         /// </summary>
         [AdvQueryAttribute(ColName = "TargetCurrencyID",ColDesc = "目标币别")] 
         [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "TargetCurrencyID" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "目标币别" )]
-        [FKRelationAttribute("tb_Currency","CurrencyID")]
+        [FKRelationAttribute("tb_Currency", "TargetCurrencyID")]
         public long TargetCurrencyID
         { 
             get{return _TargetCurrencyID;}
@@ -162,20 +162,6 @@ namespace RUINORERP.Model
             get{return _Is_enabled;}
             set{
             SetProperty(ref _Is_enabled, value);
-                        }
-        }
-
-        private bool? _Is_available= true;
-        /// <summary>
-        /// 是否可用
-        /// </summary>
-        [AdvQueryAttribute(ColName = "Is_available",ColDesc = "是否可用")] 
-        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType ="Boolean",  ColumnName = "Is_available" ,IsNullable = true,ColumnDescription = "是否可用" )]
-        public bool? Is_available
-        { 
-            get{return _Is_available;}
-            set{
-            SetProperty(ref _Is_available, value);
                         }
         }
 

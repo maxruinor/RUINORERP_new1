@@ -260,7 +260,7 @@ namespace RUINORERP.Business
                     .Include(m => m.tb_ProductionDemandDetails)
                     .Include(m => m.tb_ProdMergeDetails)
                     .Include(m => m.tb_ProdReturningDetails)
-                    .Include(m => m.tb_ReturnDetails)
+              
                     .Include(m => m.tb_SaleOutDetails)
                     .Include(m => m.tb_PriceRecords)
                     .Include(m => m.tb_StocktakeDetails)
@@ -302,7 +302,6 @@ namespace RUINORERP.Business
                 .Include(m => m.tb_ProductionDemandDetails)
                 .Include(m => m.tb_ProdMergeDetails)
                 .Include(m => m.tb_ProdReturningDetails)
-                .Include(m => m.tb_ReturnDetails)
                 .Include(m => m.tb_SaleOutDetails)
                 .Include(m => m.tb_PriceRecords)
                 .Include(m => m.tb_StocktakeDetails)
@@ -361,7 +360,7 @@ namespace RUINORERP.Business
                         .Includes(m => m.tb_ProductionDemandDetails)
                         .Includes(m => m.tb_ProdMergeDetails)
                         .Includes(m => m.tb_ProdReturningDetails)
-                        .Includes(m => m.tb_ReturnDetails)
+               
                         .Includes(m => m.tb_SaleOutDetails)
                         .Includes(m => m.tb_PriceRecords)
                         .Includes(m => m.tb_StocktakeDetails)
@@ -407,7 +406,7 @@ namespace RUINORERP.Business
                         .Include(m => m.tb_ProductionDemandDetails)
                         .Include(m => m.tb_ProdMergeDetails)
                         .Include(m => m.tb_ProdReturningDetails)
-                        .Include(m => m.tb_ReturnDetails)
+        
                         .Include(m => m.tb_SaleOutDetails)
                         .Include(m => m.tb_PriceRecords)
                         .Include(m => m.tb_StocktakeDetails)
@@ -605,7 +604,7 @@ namespace RUINORERP.Business
                                 .Includes(t => t.tb_ProductionDemandDetails )
                                 .Includes(t => t.tb_ProdMergeDetails )
                                 .Includes(t => t.tb_ProdReturningDetails )
-                                .Includes(t => t.tb_ReturnDetails )
+               
                                 .Includes(t => t.tb_SaleOutDetails )
                                 .Includes(t => t.tb_PriceRecords )
                                 .Includes(t => t.tb_StocktakeDetails )
@@ -661,7 +660,7 @@ namespace RUINORERP.Business
                                 .Includes(t => t.tb_ProductionDemandDetails )
                                 .Includes(t => t.tb_ProdMergeDetails )
                                 .Includes(t => t.tb_ProdReturningDetails )
-                                .Includes(t => t.tb_ReturnDetails )
+                      
                                 .Includes(t => t.tb_SaleOutDetails )
                                 .Includes(t => t.tb_PriceRecords )
                                 .Includes(t => t.tb_StocktakeDetails )
@@ -718,7 +717,7 @@ namespace RUINORERP.Business
                             .Includes(t => t.tb_ProductionDemandDetails )
                             .Includes(t => t.tb_ProdMergeDetails )
                             .Includes(t => t.tb_ProdReturningDetails )
-                            .Includes(t => t.tb_ReturnDetails )
+                 
                             .Includes(t => t.tb_SaleOutDetails )
                             .Includes(t => t.tb_PriceRecords )
                             .Includes(t => t.tb_StocktakeDetails )
@@ -795,7 +794,7 @@ namespace RUINORERP.Business
                             .Includes(t => t.tb_ProductionDemandDetails )
                             .Includes(t => t.tb_ProdMergeDetails )
                             .Includes(t => t.tb_ProdReturningDetails )
-                            .Includes(t => t.tb_ReturnDetails )
+             
                             .Includes(t => t.tb_SaleOutDetails )
                             .Includes(t => t.tb_PriceRecords )
                             .Includes(t => t.tb_StocktakeDetails )

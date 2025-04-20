@@ -222,33 +222,7 @@ namespace RUINORERP.Model
                         }
         }
 
-        private int _TotalDeliveredQty= ((0));
-        /// <summary>
-        /// 订单出库数
-        /// </summary>
-        [AdvQueryAttribute(ColName = "TotalDeliveredQty",ColDesc = "订单出库数")] 
-        [SugarColumn(ColumnDataType = "int", SqlParameterDbType ="Int32",  ColumnName = "TotalDeliveredQty" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "订单出库数" )]
-        public int TotalDeliveredQty
-        { 
-            get{return _TotalDeliveredQty;}
-            set{
-            SetProperty(ref _TotalDeliveredQty, value);
-                        }
-        }
-
-        private int _TotalReturnedQty= ((0));
-        /// <summary>
-        /// 订单退回数
-        /// </summary>
-        [AdvQueryAttribute(ColName = "TotalReturnedQty",ColDesc = "订单退回数")] 
-        [SugarColumn(ColumnDataType = "int", SqlParameterDbType ="Int32",  ColumnName = "TotalReturnedQty" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "订单退回数" )]
-        public int TotalReturnedQty
-        { 
-            get{return _TotalReturnedQty;}
-            set{
-            SetProperty(ref _TotalReturnedQty, value);
-                        }
-        }
+       
 
         private decimal _TaxRate= ((0));
         /// <summary>

@@ -301,12 +301,7 @@ namespace RUINORERP.Model
         //tb_FM_Subject.subject_id)
 
 
-        [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_FM_Initial_PayAndReceivable.subject_id))]
-        public virtual List<tb_FM_Initial_PayAndReceivable> tb_FM_Initial_PayAndReceivables { get; set; }
-        //tb_FM_Initial_PayAndReceivable.Subject_id)
-        //Subject_id.FK_TB_FM_IN_REFERENCE_TB_FM_SU)
-        //tb_FM_Subject.Subject_id)
+   
 
         //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]

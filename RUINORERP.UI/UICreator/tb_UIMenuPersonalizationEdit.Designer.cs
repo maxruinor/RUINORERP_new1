@@ -3,7 +3,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/13/2025 18:30:17
+// 时间：04/20/2025 22:58:11
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -61,10 +61,17 @@ this.cmbUserPersonalizedID = new Krypton.Toolkit.KryptonComboBox();
 this.lblQueryConditionCols = new Krypton.Toolkit.KryptonLabel();
 this.txtQueryConditionCols = new Krypton.Toolkit.KryptonTextBox();
 
-this.lblIsRelatedQuerySettings = new Krypton.Toolkit.KryptonLabel();
-this.chkIsRelatedQuerySettings = new Krypton.Toolkit.KryptonCheckBox();
-this.chkIsRelatedQuerySettings.Values.Text ="";
+this.lblEnableQuerySettings = new Krypton.Toolkit.KryptonLabel();
+this.chkEnableQuerySettings = new Krypton.Toolkit.KryptonCheckBox();
+this.chkEnableQuerySettings.Values.Text ="";
 
+this.lblEnableInputPresetValue = new Krypton.Toolkit.KryptonLabel();
+this.chkEnableInputPresetValue = new Krypton.Toolkit.KryptonCheckBox();
+this.chkEnableInputPresetValue.Values.Text ="";
+
+
+this.lblBaseWidth = new Krypton.Toolkit.KryptonLabel();
+this.txtBaseWidth = new Krypton.Toolkit.KryptonTextBox();
 
 this.lblSort = new Krypton.Toolkit.KryptonLabel();
 this.txtSort = new Krypton.Toolkit.KryptonTextBox();
@@ -153,64 +160,94 @@ this.txtQueryConditionCols.TabIndex = 3;
 this.Controls.Add(this.lblQueryConditionCols);
 this.Controls.Add(this.txtQueryConditionCols);
 
-           //#####IsRelatedQuerySettings###Boolean
-this.lblIsRelatedQuerySettings.AutoSize = true;
-this.lblIsRelatedQuerySettings.Location = new System.Drawing.Point(100,100);
-this.lblIsRelatedQuerySettings.Name = "lblIsRelatedQuerySettings";
-this.lblIsRelatedQuerySettings.Size = new System.Drawing.Size(41, 12);
-this.lblIsRelatedQuerySettings.TabIndex = 4;
-this.lblIsRelatedQuerySettings.Text = "是关联查询设置";
-this.chkIsRelatedQuerySettings.Location = new System.Drawing.Point(173,96);
-this.chkIsRelatedQuerySettings.Name = "chkIsRelatedQuerySettings";
-this.chkIsRelatedQuerySettings.Size = new System.Drawing.Size(100, 21);
-this.chkIsRelatedQuerySettings.TabIndex = 4;
-this.Controls.Add(this.lblIsRelatedQuerySettings);
-this.Controls.Add(this.chkIsRelatedQuerySettings);
+           //#####EnableQuerySettings###Boolean
+this.lblEnableQuerySettings.AutoSize = true;
+this.lblEnableQuerySettings.Location = new System.Drawing.Point(100,100);
+this.lblEnableQuerySettings.Name = "lblEnableQuerySettings";
+this.lblEnableQuerySettings.Size = new System.Drawing.Size(41, 12);
+this.lblEnableQuerySettings.TabIndex = 4;
+this.lblEnableQuerySettings.Text = "启用查询预设值";
+this.chkEnableQuerySettings.Location = new System.Drawing.Point(173,96);
+this.chkEnableQuerySettings.Name = "chkEnableQuerySettings";
+this.chkEnableQuerySettings.Size = new System.Drawing.Size(100, 21);
+this.chkEnableQuerySettings.TabIndex = 4;
+this.Controls.Add(this.lblEnableQuerySettings);
+this.Controls.Add(this.chkEnableQuerySettings);
+
+           //#####EnableInputPresetValue###Boolean
+this.lblEnableInputPresetValue.AutoSize = true;
+this.lblEnableInputPresetValue.Location = new System.Drawing.Point(100,125);
+this.lblEnableInputPresetValue.Name = "lblEnableInputPresetValue";
+this.lblEnableInputPresetValue.Size = new System.Drawing.Size(41, 12);
+this.lblEnableInputPresetValue.TabIndex = 5;
+this.lblEnableInputPresetValue.Text = "启用录入预设值";
+this.chkEnableInputPresetValue.Location = new System.Drawing.Point(173,121);
+this.chkEnableInputPresetValue.Name = "chkEnableInputPresetValue";
+this.chkEnableInputPresetValue.Size = new System.Drawing.Size(100, 21);
+this.chkEnableInputPresetValue.TabIndex = 5;
+this.Controls.Add(this.lblEnableInputPresetValue);
+this.Controls.Add(this.chkEnableInputPresetValue);
 
            //#####FavoritesMenu###SByte
 
+           //#####BaseWidth###Int32
+//属性测试175BaseWidth
+//属性测试175BaseWidth
+this.lblBaseWidth.AutoSize = true;
+this.lblBaseWidth.Location = new System.Drawing.Point(100,175);
+this.lblBaseWidth.Name = "lblBaseWidth";
+this.lblBaseWidth.Size = new System.Drawing.Size(41, 12);
+this.lblBaseWidth.TabIndex = 7;
+this.lblBaseWidth.Text = "排序";
+this.txtBaseWidth.Location = new System.Drawing.Point(173,171);
+this.txtBaseWidth.Name = "txtBaseWidth";
+this.txtBaseWidth.Size = new System.Drawing.Size(100, 21);
+this.txtBaseWidth.TabIndex = 7;
+this.Controls.Add(this.lblBaseWidth);
+this.Controls.Add(this.txtBaseWidth);
+
            //#####Sort###Int32
-//属性测试150Sort
-//属性测试150Sort
+//属性测试200Sort
+//属性测试200Sort
 this.lblSort.AutoSize = true;
-this.lblSort.Location = new System.Drawing.Point(100,150);
+this.lblSort.Location = new System.Drawing.Point(100,200);
 this.lblSort.Name = "lblSort";
 this.lblSort.Size = new System.Drawing.Size(41, 12);
-this.lblSort.TabIndex = 6;
-this.lblSort.Text = "排序";
-this.txtSort.Location = new System.Drawing.Point(173,146);
+this.lblSort.TabIndex = 8;
+this.lblSort.Text = "基准宽度";
+this.txtSort.Location = new System.Drawing.Point(173,196);
 this.txtSort.Name = "txtSort";
 this.txtSort.Size = new System.Drawing.Size(100, 21);
-this.txtSort.TabIndex = 6;
+this.txtSort.TabIndex = 8;
 this.Controls.Add(this.lblSort);
 this.Controls.Add(this.txtSort);
 
            //#####2147483647DefaultLayout###String
 this.lblDefaultLayout.AutoSize = true;
-this.lblDefaultLayout.Location = new System.Drawing.Point(100,175);
+this.lblDefaultLayout.Location = new System.Drawing.Point(100,225);
 this.lblDefaultLayout.Name = "lblDefaultLayout";
 this.lblDefaultLayout.Size = new System.Drawing.Size(41, 12);
-this.lblDefaultLayout.TabIndex = 7;
+this.lblDefaultLayout.TabIndex = 9;
 this.lblDefaultLayout.Text = "默认布局";
-this.txtDefaultLayout.Location = new System.Drawing.Point(173,171);
+this.txtDefaultLayout.Location = new System.Drawing.Point(173,221);
 this.txtDefaultLayout.Name = "txtDefaultLayout";
 this.txtDefaultLayout.Size = new System.Drawing.Size(100, 21);
-this.txtDefaultLayout.TabIndex = 7;
+this.txtDefaultLayout.TabIndex = 9;
 this.txtDefaultLayout.Multiline = true;
 this.Controls.Add(this.lblDefaultLayout);
 this.Controls.Add(this.txtDefaultLayout);
 
            //#####2147483647DefaultLayout2###String
 this.lblDefaultLayout2.AutoSize = true;
-this.lblDefaultLayout2.Location = new System.Drawing.Point(100,200);
+this.lblDefaultLayout2.Location = new System.Drawing.Point(100,250);
 this.lblDefaultLayout2.Name = "lblDefaultLayout2";
 this.lblDefaultLayout2.Size = new System.Drawing.Size(41, 12);
-this.lblDefaultLayout2.TabIndex = 8;
+this.lblDefaultLayout2.TabIndex = 10;
 this.lblDefaultLayout2.Text = "默认布局";
-this.txtDefaultLayout2.Location = new System.Drawing.Point(173,196);
+this.txtDefaultLayout2.Location = new System.Drawing.Point(173,246);
 this.txtDefaultLayout2.Name = "txtDefaultLayout2";
 this.txtDefaultLayout2.Size = new System.Drawing.Size(100, 21);
-this.txtDefaultLayout2.TabIndex = 8;
+this.txtDefaultLayout2.TabIndex = 10;
 this.txtDefaultLayout2.Multiline = true;
 this.Controls.Add(this.lblDefaultLayout2);
 this.Controls.Add(this.txtDefaultLayout2);
@@ -229,7 +266,7 @@ this.Controls.Add(this.txtDefaultLayout2);
             //this.kryptonPanel1.Location = new System.Drawing.Point(0, 0);
            // this.kryptonPanel1.Name = "kryptonPanel1";
            // this.kryptonPanel1.Size = new System.Drawing.Size(404, 300);
-           // this.kryptonPanel1.TabIndex = 8;
+           // this.kryptonPanel1.TabIndex = 10;
 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
@@ -242,10 +279,16 @@ this.Controls.Add(this.cmbUserPersonalizedID );
                 this.Controls.Add(this.lblQueryConditionCols );
 this.Controls.Add(this.txtQueryConditionCols );
 
-                this.Controls.Add(this.lblIsRelatedQuerySettings );
-this.Controls.Add(this.chkIsRelatedQuerySettings );
+                this.Controls.Add(this.lblEnableQuerySettings );
+this.Controls.Add(this.chkEnableQuerySettings );
+
+                this.Controls.Add(this.lblEnableInputPresetValue );
+this.Controls.Add(this.chkEnableInputPresetValue );
 
                 
+                this.Controls.Add(this.lblBaseWidth );
+this.Controls.Add(this.txtBaseWidth );
+
                 this.Controls.Add(this.lblSort );
 this.Controls.Add(this.txtSort );
 
@@ -294,12 +337,22 @@ private Krypton.Toolkit.KryptonTextBox txtQueryConditionCols;
 
     
         
-              private Krypton.Toolkit.KryptonLabel lblIsRelatedQuerySettings;
-private Krypton.Toolkit.KryptonCheckBox chkIsRelatedQuerySettings;
+              private Krypton.Toolkit.KryptonLabel lblEnableQuerySettings;
+private Krypton.Toolkit.KryptonCheckBox chkEnableQuerySettings;
+
+    
+        
+              private Krypton.Toolkit.KryptonLabel lblEnableInputPresetValue;
+private Krypton.Toolkit.KryptonCheckBox chkEnableInputPresetValue;
 
     
         
               
+    
+        
+              private Krypton.Toolkit.KryptonLabel lblBaseWidth;
+private Krypton.Toolkit.KryptonTextBox txtBaseWidth;
+
     
         
               private Krypton.Toolkit.KryptonLabel lblSort;

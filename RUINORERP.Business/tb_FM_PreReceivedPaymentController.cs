@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：04/18/2025 13:55:15
+// 时间：04/20/2025 18:12:14
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -247,22 +247,17 @@ namespace RUINORERP.Business
             if (entity.PreRPID > 0)
             {
             
-                                 var result= await _unitOfWorkManage.GetDbClient().Updateable<tb_FM_PreReceivedPayment>(entity as tb_FM_PreReceivedPayment)
+                             rs = await _unitOfWorkManage.GetDbClient().UpdateNav<tb_FM_PreReceivedPayment>(entity as tb_FM_PreReceivedPayment)
+                        .Include(m => m.tb_FM_ReceivablePayables)
                     .ExecuteCommandAsync();
-                    if (result > 0)
-                    {
-                        rs = true;
-                    }
-            }
+                 }
         else    
         {
-                                  var result= await _unitOfWorkManage.GetDbClient().Insertable<tb_FM_PreReceivedPayment>(entity as tb_FM_PreReceivedPayment)
-                    .ExecuteReturnSnowflakeIdAsync();
-                    if (result > 0)
-                    {
-                        rs = true;
-                    }
-                                              
+                        rs = await _unitOfWorkManage.GetDbClient().InsertNav<tb_FM_PreReceivedPayment>(entity as tb_FM_PreReceivedPayment)
+                .Include(m => m.tb_FM_ReceivablePayables)
+         
+                .ExecuteCommandAsync();
+                                          
                      
         }
         
@@ -293,9 +288,8 @@ namespace RUINORERP.Business
         public async override Task<List<T>> BaseQueryByAdvancedNavAsync(bool useLike, object dto)
         {
             var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<tb_FM_PreReceivedPayment>()
-                                //这里一般是子表，或没有一对多外键的情况 ，用自动的只是为了语法正常一般不会调用这个方法
-                .IncludesAllFirstLayer()//自动更新导航 只能两层。这里项目中有时会失效，具体看文档
-                                .Where(useLike, dto);
+                                .Includes(m => m.tb_FM_ReceivablePayables)
+                                        .Where(useLike, dto);
             return await querySqlQueryable.ToListAsync()as List<T>;
         }
 
@@ -304,9 +298,8 @@ namespace RUINORERP.Business
         {
             tb_FM_PreReceivedPayment entity = model as tb_FM_PreReceivedPayment;
              bool rs = await _unitOfWorkManage.GetDbClient().DeleteNav<tb_FM_PreReceivedPayment>(m => m.PreRPID== entity.PreRPID)
-                                //这里一般是子表，或没有一对多外键的情况 ，用自动的只是为了语法正常一般不会调用这个方法
-                .IncludesAllFirstLayer()//自动更新导航 只能两层。这里项目中有时会失效，具体看文档
-                                .ExecuteCommandAsync();
+                                .Include(m => m.tb_FM_ReceivablePayables)
+                                        .ExecuteCommandAsync();
             if (rs)
             {
                 //////生成时暂时只考虑了一个主键的情况
@@ -470,12 +463,14 @@ namespace RUINORERP.Business
             List<tb_FM_PreReceivedPayment> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_FM_PreReceivedPayment>()
                                .Includes(t => t.tb_currency )
                                .Includes(t => t.tb_fm_account )
+                               .Includes(t => t.tb_fm_payeeinfo )
                                .Includes(t => t.tb_paymentmethod )
                                .Includes(t => t.tb_projectgroup )
                                .Includes(t => t.tb_customervendor )
                                .Includes(t => t.tb_department )
                                .Includes(t => t.tb_employee )
-                                    .ToListAsync();
+                                            .Includes(t => t.tb_FM_ReceivablePayables )
+                        .ToListAsync();
             
             foreach (var item in list)
             {
@@ -496,12 +491,14 @@ namespace RUINORERP.Business
             List<tb_FM_PreReceivedPayment> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_FM_PreReceivedPayment>().Where(exp)
                                .Includes(t => t.tb_currency )
                                .Includes(t => t.tb_fm_account )
+                               .Includes(t => t.tb_fm_payeeinfo )
                                .Includes(t => t.tb_paymentmethod )
                                .Includes(t => t.tb_projectgroup )
                                .Includes(t => t.tb_customervendor )
                                .Includes(t => t.tb_department )
                                .Includes(t => t.tb_employee )
-                                    .ToListAsync();
+                                            .Includes(t => t.tb_FM_ReceivablePayables )
+                        .ToListAsync();
             
             foreach (var item in list)
             {
@@ -522,12 +519,14 @@ namespace RUINORERP.Business
             List<tb_FM_PreReceivedPayment> list = _unitOfWorkManage.GetDbClient().Queryable<tb_FM_PreReceivedPayment>().Where(exp)
                             .Includes(t => t.tb_currency )
                             .Includes(t => t.tb_fm_account )
+                            .Includes(t => t.tb_fm_payeeinfo )
                             .Includes(t => t.tb_paymentmethod )
                             .Includes(t => t.tb_projectgroup )
                             .Includes(t => t.tb_customervendor )
                             .Includes(t => t.tb_department )
                             .Includes(t => t.tb_employee )
-                                    .ToList();
+                                        .Includes(t => t.tb_FM_ReceivablePayables )
+                        .ToList();
             
             foreach (var item in list)
             {
@@ -565,12 +564,14 @@ namespace RUINORERP.Business
             tb_FM_PreReceivedPayment entity = await _unitOfWorkManage.GetDbClient().Queryable<tb_FM_PreReceivedPayment>().Where(w => w.PreRPID == (long)id)
                              .Includes(t => t.tb_currency )
                             .Includes(t => t.tb_fm_account )
+                            .Includes(t => t.tb_fm_payeeinfo )
                             .Includes(t => t.tb_paymentmethod )
                             .Includes(t => t.tb_projectgroup )
                             .Includes(t => t.tb_customervendor )
                             .Includes(t => t.tb_department )
                             .Includes(t => t.tb_employee )
-                                    .FirstAsync();
+                                        .Includes(t => t.tb_FM_ReceivablePayables )
+                        .FirstAsync();
             if(entity!=null)
             {
                 entity.HasChanged = false;

@@ -1,0 +1,133 @@
+﻿
+// **************************************
+// 生成：CodeBuilder (http://www.fireasy.cn/codebuilder)
+// 项目：信息系统
+// 版权：Copyright RUINOR
+// 作者：Watson
+// 时间：04/20/2025 22:58:10
+// **************************************
+using System;
+﻿using SqlSugar;
+using System.Collections.Generic;
+using FluentValidation;
+using System.ComponentModel;
+using System.Drawing;
+using System.Data;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+using RUINORERP.Common;
+using RUINORERP.Model;
+using RUINORERP.UI.Common;
+
+namespace RUINORERP.UI
+{
+    /// <summary>
+    /// UI录入数据预设值表数据编辑
+    /// </summary>
+     [MenuAttrAssemblyInfo( "库位编辑", true, UIType.单表数据)]
+    public partial class tb_UIInputDataFieldEdit:UserControl
+    {
+     public tb_UIInputDataFieldEdit() {
+     
+                         InitializeComponent();
+      
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+
+         }
+/*
+        
+        tb_UIInputDataField UIToEntity()
+        {
+        tb_UIInputDataField entity = new tb_UIInputDataField();
+                     entity.UIMenuPID = Int64.Parse(txtUIMenuPID.Text);
+                        entity.Caption = txtCaption.Text ;
+                       entity.FieldName = txtFieldName.Text ;
+                       entity.BelongingObjectType = txtBelongingObjectType.Text ;
+                       entity.ValueType = txtValueType.Text ;
+                       entity.ControlWidth = Int32.Parse(txtControlWidth.Text);
+                        entity.Sort = Int32.Parse(txtSort.Text);
+                        entity.IsVisble = Boolean.Parse(txtIsVisble.Text);
+                        entity.Default1 = txtDefault1.Text ;
+                       entity.Default2 = txtDefault2.Text ;
+                       entity.EnableDefault1 = Boolean.Parse(txtEnableDefault1.Text);
+                        entity.EnableDefault2 = Boolean.Parse(txtEnableDefault2.Text);
+                        entity.Focused = Boolean.Parse(txtFocused.Text);
+                        entity.DiffDays1 = Int32.Parse(txtDiffDays1.Text);
+                        entity.DiffDays2 = Int32.Parse(txtDiffDays2.Text);
+                        entity.Created_at = DateTime.Parse(txtCreated_at.Text);
+                        entity.Created_by = Int64.Parse(txtCreated_by.Text);
+                        entity.Modified_at = DateTime.Parse(txtModified_at.Text);
+                        entity.Modified_by = Int64.Parse(txtModified_by.Text);
+                                return entity;
+}
+        */
+
+        
+        private tb_UIInputDataField _EditEntity;
+        public tb_UIInputDataField EditEntity { get => _EditEntity; set => _EditEntity = value; }
+        public void BindData(tb_UIInputDataField entity)
+        {
+        _EditEntity = entity;
+                       // DataBindingHelper.BindData4Cmb<tb_UIMenuPersonalization>(entity, k => k.UIMenuPID, v=>v.XXNAME, cmbUIMenuPID);
+           DataBindingHelper.BindData4TextBox<tb_UIInputDataField>(entity, t => t.Caption, txtCaption, BindDataType4TextBox.Text,false);
+           DataBindingHelper.BindData4TextBox<tb_UIInputDataField>(entity, t => t.FieldName, txtFieldName, BindDataType4TextBox.Text,false);
+           DataBindingHelper.BindData4TextBox<tb_UIInputDataField>(entity, t => t.BelongingObjectType, txtBelongingObjectType, BindDataType4TextBox.Text,false);
+           DataBindingHelper.BindData4TextBox<tb_UIInputDataField>(entity, t => t.ValueType, txtValueType, BindDataType4TextBox.Text,false);
+           DataBindingHelper.BindData4TextBox<tb_UIInputDataField>(entity, t => t.ControlWidth, txtControlWidth, BindDataType4TextBox.Qty,false);
+           DataBindingHelper.BindData4TextBox<tb_UIInputDataField>(entity, t => t.Sort, txtSort, BindDataType4TextBox.Qty,false);
+           DataBindingHelper.BindData4CheckBox<tb_UIInputDataField>(entity, t => t.IsVisble, chkIsVisble, false);
+           DataBindingHelper.BindData4TextBox<tb_UIInputDataField>(entity, t => t.Default1, txtDefault1, BindDataType4TextBox.Text,false);
+           DataBindingHelper.BindData4TextBox<tb_UIInputDataField>(entity, t => t.Default2, txtDefault2, BindDataType4TextBox.Text,false);
+           DataBindingHelper.BindData4CheckBox<tb_UIInputDataField>(entity, t => t.EnableDefault1, chkEnableDefault1, false);
+           DataBindingHelper.BindData4CheckBox<tb_UIInputDataField>(entity, t => t.EnableDefault2, chkEnableDefault2, false);
+           DataBindingHelper.BindData4CheckBox<tb_UIInputDataField>(entity, t => t.Focused, chkFocused, false);
+           DataBindingHelper.BindData4TextBox<tb_UIInputDataField>(entity, t => t.DiffDays1, txtDiffDays1, BindDataType4TextBox.Qty,false);
+           DataBindingHelper.BindData4TextBox<tb_UIInputDataField>(entity, t => t.DiffDays2, txtDiffDays2, BindDataType4TextBox.Qty,false);
+           DataBindingHelper.BindData4DataTime<tb_UIInputDataField>(entity, t => t.Created_at, dtpCreated_at,false);
+           DataBindingHelper.BindData4TextBox<tb_UIInputDataField>(entity, t => t.Created_by, txtCreated_by, BindDataType4TextBox.Qty,false);
+           DataBindingHelper.BindData4DataTime<tb_UIInputDataField>(entity, t => t.Modified_at, dtpModified_at,false);
+           DataBindingHelper.BindData4TextBox<tb_UIInputDataField>(entity, t => t.Modified_by, txtModified_by, BindDataType4TextBox.Qty,false);
+}
+
+
+
+
+        private void btnOk_Click(object sender, EventArgs e)
+        {
+        
+        }
+
+        private void btnCancel_Click(object sender, EventArgs e)
+        {
+        
+        }
+
+
+
+
+    }
+}
+
+
+

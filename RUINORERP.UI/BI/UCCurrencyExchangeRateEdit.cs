@@ -49,7 +49,7 @@ namespace RUINORERP.UI.BI
             DataBindingHelper.BindData4TextBox<tb_CurrencyExchangeRate>(currency, t => t.DefaultExchRate.ToString(), txtDefaultExchRate, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4TextBox<tb_CurrencyExchangeRate>(currency, t => t.ExecuteExchRate.ToString(), txtExecuteExchRate, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4CheckBox<tb_CurrencyExchangeRate>(currency, t => t.Is_enabled, chkIs_enabled, false);
-            DataBindingHelper.BindData4CheckBox<tb_CurrencyExchangeRate>(currency, t => t.Is_available, chkIs_available, false);
+            
             base.BindData(currency);
         }
 

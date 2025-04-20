@@ -426,7 +426,7 @@ namespace RUINORERP.UI
         }
 
         public UClog uclog = Startup.GetFromFac<UClog>();
-       // public IM.UCMessager ucMsg = new IM.UCMessager();
+        // public IM.UCMessager ucMsg = new IM.UCMessager();
 
         private string version = string.Empty;
 
@@ -1735,6 +1735,12 @@ namespace RUINORERP.UI
                         menu.BIBaseForm = it.BIBaseForm;
                         menu.BIBizBaseForm = it.BIBizBaseForm;
                         menu.BizInterface = it.BizInterface;
+                        menu.UIPropertyIdentifier = it.UIPropertyIdentifier;
+                        if (it.MenuBizType.HasValue)
+                        {
+                            menu.BizType = (int)it.MenuBizType.Value;
+                        }
+
                         menu.MenuType = "行为菜单";
                         menu.EntityName = it.EntityName;
                         menu.Created_at = System.DateTime.Now;

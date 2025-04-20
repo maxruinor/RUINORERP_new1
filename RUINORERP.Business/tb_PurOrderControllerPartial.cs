@@ -438,7 +438,6 @@ namespace RUINORERP.Business
                 entity.PurOrder_NO = order.PurOrderNo;
                 entity.TotalAmount = entity.TotalAmount + entity.ShippingCost;
                 entity.ActualAmount = entity.ShippingCost + entity.TotalAmount;
-                entity.DiscountAmount=NewDetails.Sum(c=>c.DiscountAmount.Value);
 
                 //if (order.Arrival_date.HasValue)
                 //{

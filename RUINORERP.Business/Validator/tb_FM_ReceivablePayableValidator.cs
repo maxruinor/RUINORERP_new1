@@ -1,0 +1,152 @@
+﻿
+// **************************************
+// 生成：CodeBuilder (http://www.fireasy.cn/codebuilder)
+// 项目：信息系统
+// 版权：Copyright RUINOR
+// 作者：Watson
+// 时间：04/20/2025 18:12:16
+// **************************************
+using System;
+﻿using SqlSugar;
+using System.Collections.Generic;
+using RUINORERP.Model;
+using FluentValidation;
+using RUINORERP.Model.ConfigModel;
+using Microsoft.Extensions.Options;
+
+//https://github.com/FluentValidation/FluentValidation 使用实例
+//https://blog.csdn.net/WuLex/article/details/127985756 中文教程
+//https://www.nhooo.com/note/qa3k5f.html  智能化验证
+//http://cn.voidcc.com/question/p-qunoezdb-bkh.html
+namespace RUINORERP.Business
+{
+    /// <summary>
+    /// 应收应付表验证类
+    /// </summary>
+    /*public partial class tb_FM_ReceivablePayableValidator:AbstractValidator<tb_FM_ReceivablePayable>*/
+    public partial class tb_FM_ReceivablePayableValidator:BaseValidatorGeneric<tb_FM_ReceivablePayable>
+    {
+     
+     //配置全局参数
+     public readonly IOptionsMonitor<GlobalValidatorConfig> ValidatorConfig;
+    
+     public tb_FM_ReceivablePayableValidator(IOptionsMonitor<GlobalValidatorConfig> config)
+     {
+     
+        ValidatorConfig = config;
+        
+ 
+        
+     
+ RuleFor(tb_FM_ReceivablePayable =>tb_FM_ReceivablePayable.ARAPNo).NotEmpty().When(x => x.ARAPNo.HasValue);
+
+ RuleFor(tb_FM_ReceivablePayable =>tb_FM_ReceivablePayable.PreRPID).Must(CheckForeignKeyValueCanNull).WithMessage("预收付款单:下拉选择值不正确。");
+ RuleFor(tb_FM_ReceivablePayable =>tb_FM_ReceivablePayable.PreRPID).NotEmpty().When(x => x.PreRPID.HasValue);
+
+ RuleFor(tb_FM_ReceivablePayable =>tb_FM_ReceivablePayable.CustomerVendor_ID).Must(CheckForeignKeyValue).WithMessage("往来单位:下拉选择值不正确。");
+
+ RuleFor(tb_FM_ReceivablePayable =>tb_FM_ReceivablePayable.Currency_ID).Must(CheckForeignKeyValue).WithMessage("币别:下拉选择值不正确。");
+
+ RuleFor(x => x.ExchangeRate).PrecisionScale(10,4,true).WithMessage("汇率:小数位不能超过4。");
+
+ RuleFor(tb_FM_ReceivablePayable =>tb_FM_ReceivablePayable.ReceivePaymentType).NotEmpty().When(x => x.ReceivePaymentType.HasValue);
+
+ RuleFor(x => x.TotalForeignAmount).PrecisionScale(19,4,true).WithMessage("总金额外币:小数位不能超过4。");
+
+ RuleFor(x => x.TotalLocalAmount).PrecisionScale(19,4,true).WithMessage("总金额本币:小数位不能超过4。");
+
+ RuleFor(x => x.ForeignPaidAmount).PrecisionScale(19,4,true).WithMessage("已核销外币:小数位不能超过4。");
+
+ RuleFor(x => x.LocalPaidAmount).PrecisionScale(19,4,true).WithMessage("已核销本币:小数位不能超过4。");
+
+ RuleFor(x => x.ForeignBalanceAmount).PrecisionScale(19,4,true).WithMessage("未核销外币:小数位不能超过4。");
+
+ RuleFor(x => x.LocalBalanceAmount).PrecisionScale(19,4,true).WithMessage("未核销本币:小数位不能超过4。");
+
+
+
+ RuleFor(tb_FM_ReceivablePayable =>tb_FM_ReceivablePayable.Employee_ID).NotEmpty().When(x => x.Employee_ID.HasValue);
+
+ RuleFor(tb_FM_ReceivablePayable =>tb_FM_ReceivablePayable.DepartmentID).NotEmpty().When(x => x.DepartmentID.HasValue);
+
+ RuleFor(tb_FM_ReceivablePayable =>tb_FM_ReceivablePayable.ProjectGroup_ID).NotEmpty().When(x => x.ProjectGroup_ID.HasValue);
+
+
+ RuleFor(x => x.TaxTotalAmount).PrecisionScale(19,4,true).WithMessage("税额总计:小数位不能超过4。");
+
+ RuleFor(x => x.UntaxedTotalAmont).PrecisionScale(19,4,true).WithMessage("未税总计:小数位不能超过4。");
+
+ RuleFor(tb_FM_ReceivablePayable =>tb_FM_ReceivablePayable.FMPaymentStatus).NotEmpty().When(x => x.FMPaymentStatus.HasValue);
+
+ RuleFor(tb_FM_ReceivablePayable =>tb_FM_ReceivablePayable.Remark).MaximumLength(150).WithMessage("备注:不能超过最大长度,150.");
+
+
+ RuleFor(tb_FM_ReceivablePayable =>tb_FM_ReceivablePayable.Created_by).NotEmpty().When(x => x.Created_by.HasValue);
+
+
+ RuleFor(tb_FM_ReceivablePayable =>tb_FM_ReceivablePayable.Modified_by).NotEmpty().When(x => x.Modified_by.HasValue);
+
+
+ RuleFor(tb_FM_ReceivablePayable =>tb_FM_ReceivablePayable.ApprovalOpinions).MaximumLength(127).WithMessage("审批意见:不能超过最大长度,127.");
+
+ RuleFor(tb_FM_ReceivablePayable =>tb_FM_ReceivablePayable.Approver_by).NotEmpty().When(x => x.Approver_by.HasValue);
+
+
+
+
+           	                //long?
+                //ARAPId
+                //tb_FM_ReceivablePayableDetail
+                //RuleFor(x => x.tb_FM_ReceivablePayableDetails).Must(DetailedRecordsNotEmpty).WithMessage("明细不能为空");
+               //视图不需要验证，目前认为无编辑新增操作
+                //RuleFor(c => c.tb_FM_ReceivablePayableDetails).NotNull();
+                //RuleForEach(x => x.tb_FM_ReceivablePayableDetails).NotNull();
+                //RuleFor(x => x.tb_FM_ReceivablePayableDetails).Must(DetailedRecordsNotEmpty).WithMessage("明细不能为空");
+                    Initialize();
+     }
+
+
+
+
+        private bool DetailedRecordsNotEmpty(List<tb_FM_ReceivablePayableDetail> details)
+        {
+            bool rs = true;
+            if (details == null || details.Count == 0)
+            {
+                return false;
+            }
+            return rs;
+        }
+        
+
+
+
+
+    
+          private bool CheckForeignKeyValue(long ForeignKeyID)
+        {
+            bool rs = true;    
+            if (ForeignKeyID == 0 || ForeignKeyID == -1)
+            {
+                return false;
+            }
+            return rs;
+        }
+        
+        private bool CheckForeignKeyValueCanNull(long? ForeignKeyID)
+        {
+            bool rs = true;
+            if (ForeignKeyID.HasValue)
+            {
+                if (ForeignKeyID == 0 || ForeignKeyID == -1)
+                {
+                    return false;
+                }
+            }
+            return rs;
+        
+    }
+}
+
+}
+

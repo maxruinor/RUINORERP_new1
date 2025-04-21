@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：04/20/2025 18:12:17
+// 时间：04/21/2025 20:12:38
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -257,29 +257,29 @@ namespace RUINORERP.Model.QueryDto
         }
      
 
-        private decimal _ForeignPrepaidAmount= ((0));
+        private decimal _ForeignPayableAmount= ((0));
         /// <summary>
         /// 金额外币
         /// </summary>
-        [AdvQueryAttribute(ColName = "ForeignPrepaidAmount",ColDesc = "金额外币")]
-        [SugarColumn(ColumnDataType = "money",SqlParameterDbType ="Decimal",ColumnName = "ForeignPrepaidAmount",IsNullable = false,ColumnDescription = "金额外币" )]
-        public decimal ForeignPrepaidAmount 
+        [AdvQueryAttribute(ColName = "ForeignPayableAmount",ColDesc = "金额外币")]
+        [SugarColumn(ColumnDataType = "money",SqlParameterDbType ="Decimal",ColumnName = "ForeignPayableAmount",IsNullable = false,ColumnDescription = "金额外币" )]
+        public decimal ForeignPayableAmount 
         { 
-            get{return _ForeignPrepaidAmount;}
-            set{SetProperty(ref _ForeignPrepaidAmount, value);}
+            get{return _ForeignPayableAmount;}
+            set{SetProperty(ref _ForeignPayableAmount, value);}
         }
      
 
-        private decimal _LocalPrepaidAmount= ((0));
+        private decimal _LocalPayableAmount= ((0));
         /// <summary>
         /// 金额本币
         /// </summary>
-        [AdvQueryAttribute(ColName = "LocalPrepaidAmount",ColDesc = "金额本币")]
-        [SugarColumn(ColumnDataType = "money",SqlParameterDbType ="Decimal",ColumnName = "LocalPrepaidAmount",IsNullable = false,ColumnDescription = "金额本币" )]
-        public decimal LocalPrepaidAmount 
+        [AdvQueryAttribute(ColName = "LocalPayableAmount",ColDesc = "金额本币")]
+        [SugarColumn(ColumnDataType = "money",SqlParameterDbType ="Decimal",ColumnName = "LocalPayableAmount",IsNullable = false,ColumnDescription = "金额本币" )]
+        public decimal LocalPayableAmount 
         { 
-            get{return _LocalPrepaidAmount;}
-            set{SetProperty(ref _LocalPrepaidAmount, value);}
+            get{return _LocalPayableAmount;}
+            set{SetProperty(ref _LocalPayableAmount, value);}
         }
      
 

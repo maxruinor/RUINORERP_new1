@@ -3,7 +3,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：04/20/2025 18:12:16
+// 时间：04/21/2025 20:12:38
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -107,11 +107,11 @@ this.txtTaxRate = new Krypton.Toolkit.KryptonTextBox();
 this.lblTaxLocalAmount = new Krypton.Toolkit.KryptonLabel();
 this.txtTaxLocalAmount = new Krypton.Toolkit.KryptonTextBox();
 
-this.lblForeignPrepaidAmount = new Krypton.Toolkit.KryptonLabel();
-this.txtForeignPrepaidAmount = new Krypton.Toolkit.KryptonTextBox();
+this.lblForeignPayableAmount = new Krypton.Toolkit.KryptonLabel();
+this.txtForeignPayableAmount = new Krypton.Toolkit.KryptonTextBox();
 
-this.lblLocalPrepaidAmount = new Krypton.Toolkit.KryptonLabel();
-this.txtLocalPrepaidAmount = new Krypton.Toolkit.KryptonTextBox();
+this.lblLocalPayableAmount = new Krypton.Toolkit.KryptonLabel();
+this.txtLocalPayableAmount = new Krypton.Toolkit.KryptonTextBox();
 
 this.lblSummary = new Krypton.Toolkit.KryptonLabel();
 this.txtSummary = new Krypton.Toolkit.KryptonTextBox();
@@ -405,35 +405,35 @@ this.txtTaxLocalAmount.TabIndex = 17;
 this.Controls.Add(this.lblTaxLocalAmount);
 this.Controls.Add(this.txtTaxLocalAmount);
 
-           //#####ForeignPrepaidAmount###Decimal
-this.lblForeignPrepaidAmount.AutoSize = true;
-this.lblForeignPrepaidAmount.Location = new System.Drawing.Point(100,450);
-this.lblForeignPrepaidAmount.Name = "lblForeignPrepaidAmount";
-this.lblForeignPrepaidAmount.Size = new System.Drawing.Size(41, 12);
-this.lblForeignPrepaidAmount.TabIndex = 18;
-this.lblForeignPrepaidAmount.Text = "金额外币";
+           //#####ForeignPayableAmount###Decimal
+this.lblForeignPayableAmount.AutoSize = true;
+this.lblForeignPayableAmount.Location = new System.Drawing.Point(100,450);
+this.lblForeignPayableAmount.Name = "lblForeignPayableAmount";
+this.lblForeignPayableAmount.Size = new System.Drawing.Size(41, 12);
+this.lblForeignPayableAmount.TabIndex = 18;
+this.lblForeignPayableAmount.Text = "金额外币";
 //111======450
-this.txtForeignPrepaidAmount.Location = new System.Drawing.Point(173,446);
-this.txtForeignPrepaidAmount.Name ="txtForeignPrepaidAmount";
-this.txtForeignPrepaidAmount.Size = new System.Drawing.Size(100, 21);
-this.txtForeignPrepaidAmount.TabIndex = 18;
-this.Controls.Add(this.lblForeignPrepaidAmount);
-this.Controls.Add(this.txtForeignPrepaidAmount);
+this.txtForeignPayableAmount.Location = new System.Drawing.Point(173,446);
+this.txtForeignPayableAmount.Name ="txtForeignPayableAmount";
+this.txtForeignPayableAmount.Size = new System.Drawing.Size(100, 21);
+this.txtForeignPayableAmount.TabIndex = 18;
+this.Controls.Add(this.lblForeignPayableAmount);
+this.Controls.Add(this.txtForeignPayableAmount);
 
-           //#####LocalPrepaidAmount###Decimal
-this.lblLocalPrepaidAmount.AutoSize = true;
-this.lblLocalPrepaidAmount.Location = new System.Drawing.Point(100,475);
-this.lblLocalPrepaidAmount.Name = "lblLocalPrepaidAmount";
-this.lblLocalPrepaidAmount.Size = new System.Drawing.Size(41, 12);
-this.lblLocalPrepaidAmount.TabIndex = 19;
-this.lblLocalPrepaidAmount.Text = "金额本币";
+           //#####LocalPayableAmount###Decimal
+this.lblLocalPayableAmount.AutoSize = true;
+this.lblLocalPayableAmount.Location = new System.Drawing.Point(100,475);
+this.lblLocalPayableAmount.Name = "lblLocalPayableAmount";
+this.lblLocalPayableAmount.Size = new System.Drawing.Size(41, 12);
+this.lblLocalPayableAmount.TabIndex = 19;
+this.lblLocalPayableAmount.Text = "金额本币";
 //111======475
-this.txtLocalPrepaidAmount.Location = new System.Drawing.Point(173,471);
-this.txtLocalPrepaidAmount.Name ="txtLocalPrepaidAmount";
-this.txtLocalPrepaidAmount.Size = new System.Drawing.Size(100, 21);
-this.txtLocalPrepaidAmount.TabIndex = 19;
-this.Controls.Add(this.lblLocalPrepaidAmount);
-this.Controls.Add(this.txtLocalPrepaidAmount);
+this.txtLocalPayableAmount.Location = new System.Drawing.Point(173,471);
+this.txtLocalPayableAmount.Name ="txtLocalPayableAmount";
+this.txtLocalPayableAmount.Size = new System.Drawing.Size(100, 21);
+this.txtLocalPayableAmount.TabIndex = 19;
+this.Controls.Add(this.lblLocalPayableAmount);
+this.Controls.Add(this.txtLocalPayableAmount);
 
            //#####300Summary###String
 this.lblSummary.AutoSize = true;
@@ -518,11 +518,11 @@ this.Controls.Add(this.txtTaxRate );
                 this.Controls.Add(this.lblTaxLocalAmount );
 this.Controls.Add(this.txtTaxLocalAmount );
 
-                this.Controls.Add(this.lblForeignPrepaidAmount );
-this.Controls.Add(this.txtForeignPrepaidAmount );
+                this.Controls.Add(this.lblForeignPayableAmount );
+this.Controls.Add(this.txtForeignPayableAmount );
 
-                this.Controls.Add(this.lblLocalPrepaidAmount );
-this.Controls.Add(this.txtLocalPrepaidAmount );
+                this.Controls.Add(this.lblLocalPayableAmount );
+this.Controls.Add(this.txtLocalPayableAmount );
 
                 this.Controls.Add(this.lblSummary );
 this.Controls.Add(this.txtSummary );
@@ -636,13 +636,13 @@ private Krypton.Toolkit.KryptonTextBox txtTaxLocalAmount;
 
     
         
-              private Krypton.Toolkit.KryptonLabel lblForeignPrepaidAmount;
-private Krypton.Toolkit.KryptonTextBox txtForeignPrepaidAmount;
+              private Krypton.Toolkit.KryptonLabel lblForeignPayableAmount;
+private Krypton.Toolkit.KryptonTextBox txtForeignPayableAmount;
 
     
         
-              private Krypton.Toolkit.KryptonLabel lblLocalPrepaidAmount;
-private Krypton.Toolkit.KryptonTextBox txtLocalPrepaidAmount;
+              private Krypton.Toolkit.KryptonLabel lblLocalPayableAmount;
+private Krypton.Toolkit.KryptonTextBox txtLocalPayableAmount;
 
     
         

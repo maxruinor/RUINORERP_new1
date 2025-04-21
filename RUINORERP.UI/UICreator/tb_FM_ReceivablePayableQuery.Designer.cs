@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：04/20/2025 18:12:15
+// 时间：04/21/2025 20:12:35
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -50,7 +50,9 @@ namespace RUINORERP.UI
         
      //for start
      
-     
+     this.lblARAPNo = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
+this.txtARAPNo = new ComponentFactory.Krypton.Toolkit.KryptonTextBox();
+
 this.lblPreRPID = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
 this.cmbPreRPID = new ComponentFactory.Krypton.Toolkit.KryptonComboBox();
 
@@ -64,11 +66,11 @@ this.lblExchangeRate = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
 this.txtExchangeRate = new ComponentFactory.Krypton.Toolkit.KryptonTextBox();
 
 
-this.lblTotalForeignAmount = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
-this.txtTotalForeignAmount = new ComponentFactory.Krypton.Toolkit.KryptonTextBox();
+this.lblTotalForeignPayableAmount = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
+this.txtTotalForeignPayableAmount = new ComponentFactory.Krypton.Toolkit.KryptonTextBox();
 
-this.lblTotalLocalAmount = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
-this.txtTotalLocalAmount = new ComponentFactory.Krypton.Toolkit.KryptonTextBox();
+this.lblTotalLocalPayableAmount = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
+this.txtTotalLocalPayableAmount = new ComponentFactory.Krypton.Toolkit.KryptonTextBox();
 
 this.lblForeignPaidAmount = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
 this.txtForeignPaidAmount = new ComponentFactory.Krypton.Toolkit.KryptonTextBox();
@@ -135,10 +137,19 @@ this.chkApprovalResults.Values.Text ="";
     this.SuspendLayout();
     
          //for start
-                 //#####ARAPNo###Int64
-//属性测试25ARAPNo
-//属性测试25ARAPNo
-//属性测试25ARAPNo
+                 //#####30ARAPNo###String
+this.lblARAPNo.AutoSize = true;
+this.lblARAPNo.Location = new System.Drawing.Point(100,25);
+this.lblARAPNo.Name = "lblARAPNo";
+this.lblARAPNo.Size = new System.Drawing.Size(41, 12);
+this.lblARAPNo.TabIndex = 1;
+this.lblARAPNo.Text = "单据编号";
+this.txtARAPNo.Location = new System.Drawing.Point(173,21);
+this.txtARAPNo.Name = "txtARAPNo";
+this.txtARAPNo.Size = new System.Drawing.Size(100, 21);
+this.txtARAPNo.TabIndex = 1;
+this.Controls.Add(this.lblARAPNo);
+this.Controls.Add(this.txtARAPNo);
 
            //#####PreRPID###Int64
 //属性测试50PreRPID
@@ -211,35 +222,35 @@ this.Controls.Add(this.txtExchangeRate);
 //属性测试150ReceivePaymentType
 //属性测试150ReceivePaymentType
 
-           //#####TotalForeignAmount###Decimal
-this.lblTotalForeignAmount.AutoSize = true;
-this.lblTotalForeignAmount.Location = new System.Drawing.Point(100,175);
-this.lblTotalForeignAmount.Name = "lblTotalForeignAmount";
-this.lblTotalForeignAmount.Size = new System.Drawing.Size(41, 12);
-this.lblTotalForeignAmount.TabIndex = 7;
-this.lblTotalForeignAmount.Text = "总金额外币";
+           //#####TotalForeignPayableAmount###Decimal
+this.lblTotalForeignPayableAmount.AutoSize = true;
+this.lblTotalForeignPayableAmount.Location = new System.Drawing.Point(100,175);
+this.lblTotalForeignPayableAmount.Name = "lblTotalForeignPayableAmount";
+this.lblTotalForeignPayableAmount.Size = new System.Drawing.Size(41, 12);
+this.lblTotalForeignPayableAmount.TabIndex = 7;
+this.lblTotalForeignPayableAmount.Text = "总金额外币";
 //111======175
-this.txtTotalForeignAmount.Location = new System.Drawing.Point(173,171);
-this.txtTotalForeignAmount.Name ="txtTotalForeignAmount";
-this.txtTotalForeignAmount.Size = new System.Drawing.Size(100, 21);
-this.txtTotalForeignAmount.TabIndex = 7;
-this.Controls.Add(this.lblTotalForeignAmount);
-this.Controls.Add(this.txtTotalForeignAmount);
+this.txtTotalForeignPayableAmount.Location = new System.Drawing.Point(173,171);
+this.txtTotalForeignPayableAmount.Name ="txtTotalForeignPayableAmount";
+this.txtTotalForeignPayableAmount.Size = new System.Drawing.Size(100, 21);
+this.txtTotalForeignPayableAmount.TabIndex = 7;
+this.Controls.Add(this.lblTotalForeignPayableAmount);
+this.Controls.Add(this.txtTotalForeignPayableAmount);
 
-           //#####TotalLocalAmount###Decimal
-this.lblTotalLocalAmount.AutoSize = true;
-this.lblTotalLocalAmount.Location = new System.Drawing.Point(100,200);
-this.lblTotalLocalAmount.Name = "lblTotalLocalAmount";
-this.lblTotalLocalAmount.Size = new System.Drawing.Size(41, 12);
-this.lblTotalLocalAmount.TabIndex = 8;
-this.lblTotalLocalAmount.Text = "总金额本币";
+           //#####TotalLocalPayableAmount###Decimal
+this.lblTotalLocalPayableAmount.AutoSize = true;
+this.lblTotalLocalPayableAmount.Location = new System.Drawing.Point(100,200);
+this.lblTotalLocalPayableAmount.Name = "lblTotalLocalPayableAmount";
+this.lblTotalLocalPayableAmount.Size = new System.Drawing.Size(41, 12);
+this.lblTotalLocalPayableAmount.TabIndex = 8;
+this.lblTotalLocalPayableAmount.Text = "总金额本币";
 //111======200
-this.txtTotalLocalAmount.Location = new System.Drawing.Point(173,196);
-this.txtTotalLocalAmount.Name ="txtTotalLocalAmount";
-this.txtTotalLocalAmount.Size = new System.Drawing.Size(100, 21);
-this.txtTotalLocalAmount.TabIndex = 8;
-this.Controls.Add(this.lblTotalLocalAmount);
-this.Controls.Add(this.txtTotalLocalAmount);
+this.txtTotalLocalPayableAmount.Location = new System.Drawing.Point(173,196);
+this.txtTotalLocalPayableAmount.Name ="txtTotalLocalPayableAmount";
+this.txtTotalLocalPayableAmount.Size = new System.Drawing.Size(100, 21);
+this.txtTotalLocalPayableAmount.TabIndex = 8;
+this.Controls.Add(this.lblTotalLocalPayableAmount);
+this.Controls.Add(this.txtTotalLocalPayableAmount);
 
            //#####ForeignPaidAmount###Decimal
 this.lblForeignPaidAmount.AutoSize = true;
@@ -526,7 +537,9 @@ this.Controls.Add(this.chkApprovalResults);
             
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-                
+                this.Controls.Add(this.lblARAPNo );
+this.Controls.Add(this.txtARAPNo );
+
                 this.Controls.Add(this.lblPreRPID );
 this.Controls.Add(this.cmbPreRPID );
 
@@ -540,11 +553,11 @@ this.Controls.Add(this.cmbCurrency_ID );
 this.Controls.Add(this.txtExchangeRate );
 
                 
-                this.Controls.Add(this.lblTotalForeignAmount );
-this.Controls.Add(this.txtTotalForeignAmount );
+                this.Controls.Add(this.lblTotalForeignPayableAmount );
+this.Controls.Add(this.txtTotalForeignPayableAmount );
 
-                this.Controls.Add(this.lblTotalLocalAmount );
-this.Controls.Add(this.txtTotalLocalAmount );
+                this.Controls.Add(this.lblTotalLocalPayableAmount );
+this.Controls.Add(this.txtTotalLocalPayableAmount );
 
                 this.Controls.Add(this.lblForeignPaidAmount );
 this.Controls.Add(this.txtForeignPaidAmount );
@@ -614,7 +627,9 @@ this.Controls.Add(this.chkApprovalResults );
      //for start
      
          
-              
+              private ComponentFactory.Krypton.Toolkit.KryptonLabel lblARAPNo;
+private ComponentFactory.Krypton.Toolkit.KryptonTextBox txtARAPNo;
+
     
         
               private ComponentFactory.Krypton.Toolkit.KryptonLabel lblPreRPID;
@@ -640,13 +655,13 @@ private ComponentFactory.Krypton.Toolkit.KryptonTextBox txtExchangeRate;
               
     
         
-              private ComponentFactory.Krypton.Toolkit.KryptonLabel lblTotalForeignAmount;
-private ComponentFactory.Krypton.Toolkit.KryptonTextBox txtTotalForeignAmount;
+              private ComponentFactory.Krypton.Toolkit.KryptonLabel lblTotalForeignPayableAmount;
+private ComponentFactory.Krypton.Toolkit.KryptonTextBox txtTotalForeignPayableAmount;
 
     
         
-              private ComponentFactory.Krypton.Toolkit.KryptonLabel lblTotalLocalAmount;
-private ComponentFactory.Krypton.Toolkit.KryptonTextBox txtTotalLocalAmount;
+              private ComponentFactory.Krypton.Toolkit.KryptonLabel lblTotalLocalPayableAmount;
+private ComponentFactory.Krypton.Toolkit.KryptonTextBox txtTotalLocalPayableAmount;
 
     
         

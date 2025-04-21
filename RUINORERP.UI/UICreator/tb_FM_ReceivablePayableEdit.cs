@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：04/20/2025 18:12:15
+// 时间：04/21/2025 20:12:34
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -73,14 +73,14 @@ namespace RUINORERP.UI
         tb_FM_ReceivablePayable UIToEntity()
         {
         tb_FM_ReceivablePayable entity = new tb_FM_ReceivablePayable();
-                     entity.ARAPNo = Int64.Parse(txtARAPNo.Text);
-                        entity.PreRPID = Int64.Parse(txtPreRPID.Text);
+                     entity.ARAPNo = txtARAPNo.Text ;
+                       entity.PreRPID = Int64.Parse(txtPreRPID.Text);
                         entity.CustomerVendor_ID = Int64.Parse(txtCustomerVendor_ID.Text);
                         entity.Currency_ID = Int64.Parse(txtCurrency_ID.Text);
                         entity.ExchangeRate = Decimal.Parse(txtExchangeRate.Text);
                         entity.ReceivePaymentType = Int64.Parse(txtReceivePaymentType.Text);
-                        entity.TotalForeignAmount = Decimal.Parse(txtTotalForeignAmount.Text);
-                        entity.TotalLocalAmount = Decimal.Parse(txtTotalLocalAmount.Text);
+                        entity.TotalForeignPayableAmount = Decimal.Parse(txtTotalForeignPayableAmount.Text);
+                        entity.TotalLocalPayableAmount = Decimal.Parse(txtTotalLocalPayableAmount.Text);
                         entity.ForeignPaidAmount = Decimal.Parse(txtForeignPaidAmount.Text);
                         entity.LocalPaidAmount = Decimal.Parse(txtLocalPaidAmount.Text);
                         entity.ForeignBalanceAmount = Decimal.Parse(txtForeignBalanceAmount.Text);
@@ -115,14 +115,14 @@ namespace RUINORERP.UI
         public void BindData(tb_FM_ReceivablePayable entity)
         {
         _EditEntity = entity;
-                        DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayable>(entity, t => t.ARAPNo, txtARAPNo, BindDataType4TextBox.Qty,false);
+                        DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayable>(entity, t => t.ARAPNo, txtARAPNo, BindDataType4TextBox.Text,false);
           // DataBindingHelper.BindData4Cmb<tb_FM_PreReceivedPayment>(entity, k => k.PreRPID, v=>v.XXNAME, cmbPreRPID);
           // DataBindingHelper.BindData4Cmb<tb_CustomerVendor>(entity, k => k.CustomerVendor_ID, v=>v.XXNAME, cmbCustomerVendor_ID);
           // DataBindingHelper.BindData4Cmb<tb_Currency>(entity, k => k.Currency_ID, v=>v.XXNAME, cmbCurrency_ID);
            DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayable>(entity, t => t.ExchangeRate.ToString(), txtExchangeRate, BindDataType4TextBox.Money,false);
            DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayable>(entity, t => t.ReceivePaymentType, txtReceivePaymentType, BindDataType4TextBox.Qty,false);
-           DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayable>(entity, t => t.TotalForeignAmount.ToString(), txtTotalForeignAmount, BindDataType4TextBox.Money,false);
-           DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayable>(entity, t => t.TotalLocalAmount.ToString(), txtTotalLocalAmount, BindDataType4TextBox.Money,false);
+           DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayable>(entity, t => t.TotalForeignPayableAmount.ToString(), txtTotalForeignPayableAmount, BindDataType4TextBox.Money,false);
+           DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayable>(entity, t => t.TotalLocalPayableAmount.ToString(), txtTotalLocalPayableAmount, BindDataType4TextBox.Money,false);
            DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayable>(entity, t => t.ForeignPaidAmount.ToString(), txtForeignPaidAmount, BindDataType4TextBox.Money,false);
            DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayable>(entity, t => t.LocalPaidAmount.ToString(), txtLocalPaidAmount, BindDataType4TextBox.Money,false);
            DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayable>(entity, t => t.ForeignBalanceAmount.ToString(), txtForeignBalanceAmount, BindDataType4TextBox.Money,false);

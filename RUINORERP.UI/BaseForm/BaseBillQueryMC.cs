@@ -133,7 +133,7 @@ namespace RUINORERP.UI.BaseForm
                         if (CurMenuInfo == null)
                         {
                             CurMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble && m.FormName == this.Name && m.ClassPath == this.ToString()).FirstOrDefault();
-                            if (CurMenuInfo == null)
+                            if (CurMenuInfo == null && !MainForm.Instance.AppContext.IsSuperUser)
                             {
                                 MessageBox.Show(this.ToString() + "当前菜单不能为空，或无操作权限，请联系管理员。");
                                 return;
@@ -1759,7 +1759,7 @@ namespace RUINORERP.UI.BaseForm
                         QueryDto = UIGenerateHelper.CreateQueryUI(typeof(M), true, kryptonPanel条件生成容器, QueryConditionFilter, QueryConditionShowColQty);
                     }
                 }
-                
+
             }
 
 

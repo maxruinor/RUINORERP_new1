@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：04/20/2025 18:12:16
+// 时间：04/21/2025 20:12:38
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -78,8 +78,8 @@ namespace RUINORERP.UI
                        entity.Description = txtDescription.Text ;
                        entity.TaxRate = Decimal.Parse(txtTaxRate.Text);
                         entity.TaxLocalAmount = Decimal.Parse(txtTaxLocalAmount.Text);
-                        entity.ForeignPrepaidAmount = Decimal.Parse(txtForeignPrepaidAmount.Text);
-                        entity.LocalPrepaidAmount = Decimal.Parse(txtLocalPrepaidAmount.Text);
+                        entity.ForeignPayableAmount = Decimal.Parse(txtForeignPayableAmount.Text);
+                        entity.LocalPayableAmount = Decimal.Parse(txtLocalPayableAmount.Text);
                         entity.Summary = txtSummary.Text ;
                                return entity;
 }
@@ -108,8 +108,8 @@ namespace RUINORERP.UI
            DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayableDetail>(entity, t => t.Description, txtDescription, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayableDetail>(entity, t => t.TaxRate.ToString(), txtTaxRate, BindDataType4TextBox.Money,false);
            DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayableDetail>(entity, t => t.TaxLocalAmount.ToString(), txtTaxLocalAmount, BindDataType4TextBox.Money,false);
-           DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayableDetail>(entity, t => t.ForeignPrepaidAmount.ToString(), txtForeignPrepaidAmount, BindDataType4TextBox.Money,false);
-           DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayableDetail>(entity, t => t.LocalPrepaidAmount.ToString(), txtLocalPrepaidAmount, BindDataType4TextBox.Money,false);
+           DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayableDetail>(entity, t => t.ForeignPayableAmount.ToString(), txtForeignPayableAmount, BindDataType4TextBox.Money,false);
+           DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayableDetail>(entity, t => t.LocalPayableAmount.ToString(), txtLocalPayableAmount, BindDataType4TextBox.Money,false);
            DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayableDetail>(entity, t => t.Summary, txtSummary, BindDataType4TextBox.Text,false);
 }
 

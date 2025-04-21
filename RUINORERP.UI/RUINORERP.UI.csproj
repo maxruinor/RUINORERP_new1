@@ -570,6 +570,18 @@
     <Compile Include="AdvancedUIModule\UIGenerateHelper.cs" />
     <Compile Include="AdvancedUIModule\UIQueryHelper.cs" />
     <Compile Include="ATechnologyStack\AOP\DbBizLogAOP.cs" />
+    <Compile Include="FM\FMBase\UCReceivablePayableQuery.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="FM\FMBase\UCReceivablePayableQuery.Designer.cs">
+      <DependentUpon>UCReceivablePayableQuery.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FM\FMBase\UCReceivablePayable.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="FM\FMBase\UCReceivablePayable.designer.cs">
+      <DependentUpon>UCReceivablePayable.cs</DependentUpon>
+    </Compile>
     <Compile Include="FM\IFMBillBusinessType.cs" />
     <Compile Include="ATechnologyStack\IValidationRule.cs" />
     <Compile Include="ATechnologyStack\ServiceRegister\AutofacServiceRegister.cs" />
@@ -1404,11 +1416,65 @@
     <Compile Include="CRM\UCLeadsList.Designer.cs">
       <DependentUpon>UCLeadsList.cs</DependentUpon>
     </Compile>
+    <Compile Include="FM\UCFMPaymentRecordQuery.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="FM\UCFMPaymentRecordQuery.Designer.cs">
+      <DependentUpon>UCFMPaymentRecordQuery.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FM\UCFMReceivedRecordQuery.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="FM\UCFMReceivedRecordQuery.Designer.cs">
+      <DependentUpon>UCFMReceivedRecordQuery.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FM\UCFMPaymentRecord.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="FM\UCFMPaymentRecord.Designer.cs">
+      <DependentUpon>UCFMPaymentRecord.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FM\UCReceivable.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="FM\UCReceivable.Designer.cs">
+      <DependentUpon>UCReceivable.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FM\UCPayable.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="FM\UCPayable.Designer.cs">
+      <DependentUpon>UCPayable.cs</DependentUpon>
+    </Compile>
     <Compile Include="FM\UCPrePayment.cs">
       <SubType>UserControl</SubType>
     </Compile>
     <Compile Include="FM\UCPrePayment.Designer.cs">
       <DependentUpon>UCPrePayment.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FM\UCPayableQuery.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="FM\UCPayableQuery.Designer.cs">
+      <DependentUpon>UCPayableQuery.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FM\UCReceivableQuery.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="FM\UCReceivableQuery.Designer.cs">
+      <DependentUpon>UCReceivableQuery.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FM\UCReceivedSettledQuery.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="FM\UCReceivedSettledQuery.Designer.cs">
+      <DependentUpon>UCReceivedSettledQuery.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FM\UCPaymentSettledQuery.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="FM\UCPaymentSettledQuery.Designer.cs">
+      <DependentUpon>UCPaymentSettledQuery.cs</DependentUpon>
     </Compile>
     <Compile Include="FM\UCPrePaymentQuery.cs">
       <SubType>UserControl</SubType>
@@ -1416,16 +1482,28 @@
     <Compile Include="FM\UCPrePaymentQuery.Designer.cs">
       <DependentUpon>UCPrePaymentQuery.cs</DependentUpon>
     </Compile>
+    <Compile Include="FM\UCFMReceivedRecord.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="FM\UCFMReceivedRecord.Designer.cs">
+      <DependentUpon>UCFMReceivedRecord.cs</DependentUpon>
+    </Compile>
     <Compile Include="FM\UCPreReceived.cs">
       <SubType>UserControl</SubType>
     </Compile>
     <Compile Include="FM\UCPreReceived.Designer.cs">
       <DependentUpon>UCPreReceived.cs</DependentUpon>
     </Compile>
-    <Compile Include="FM\UCPreReceivedPayment.cs">
+    <Compile Include="FM\FMBase\UCPaymentRecord.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="FM\UCPreReceivedPayment.Designer.cs">
+    <Compile Include="FM\FMBase\UCPaymentRecord.Designer.cs">
+      <DependentUpon>UCPaymentRecord.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FM\FMBase\UCPreReceivedPayment.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="FM\FMBase\UCPreReceivedPayment.Designer.cs">
       <DependentUpon>UCPreReceivedPayment.cs</DependentUpon>
     </Compile>
     <Compile Include="FM\UCPaymentApplication.cs">
@@ -1434,10 +1512,22 @@
     <Compile Include="FM\UCPaymentApplication.Designer.cs">
       <DependentUpon>UCPaymentApplication.cs</DependentUpon>
     </Compile>
-    <Compile Include="FM\UCPreReceivedPaymentQuery.cs">
+    <Compile Include="FM\FMBase\UCPaymentRecordQuery.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="FM\UCPreReceivedPaymentQuery.Designer.cs">
+    <Compile Include="FM\FMBase\UCPaymentRecordQuery.Designer.cs">
+      <DependentUpon>UCPaymentRecordQuery.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FM\FMBase\UCPaymentSettlementQuery.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="FM\FMBase\UCPaymentSettlementQuery.Designer.cs">
+      <DependentUpon>UCPaymentSettlementQuery.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FM\FMBase\UCPreReceivedPaymentQuery.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="FM\FMBase\UCPreReceivedPaymentQuery.Designer.cs">
       <DependentUpon>UCPreReceivedPaymentQuery.cs</DependentUpon>
     </Compile>
     <Compile Include="FM\UCPaymentApplicationQuery.cs">
@@ -3197,16 +3287,40 @@
     <EmbeddedResource Include="CRM\UCLeadsList.resx">
       <DependentUpon>UCLeadsList.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="FM\FMBase\UCReceivablePayableQuery.resx">
+      <DependentUpon>UCReceivablePayableQuery.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FM\FMBase\UCReceivablePayable.resx">
+      <DependentUpon>UCReceivablePayable.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FM\UCFMPaymentRecordQuery.resx">
+      <DependentUpon>UCFMPaymentRecordQuery.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FM\UCFMReceivedRecordQuery.resx">
+      <DependentUpon>UCFMReceivedRecordQuery.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FM\UCFMReceivedRecord.resx">
+      <DependentUpon>UCFMReceivedRecord.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="FM\UCPreReceived.resx">
       <DependentUpon>UCPreReceived.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="FM\UCPreReceivedPayment.resx">
+    <EmbeddedResource Include="FM\FMBase\UCPaymentRecord.resx">
+      <DependentUpon>UCPaymentRecord.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FM\FMBase\UCPreReceivedPayment.resx">
       <DependentUpon>UCPreReceivedPayment.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="FM\UCPaymentApplication.resx">
       <DependentUpon>UCPaymentApplication.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="FM\UCPreReceivedPaymentQuery.resx">
+    <EmbeddedResource Include="FM\FMBase\UCPaymentRecordQuery.resx">
+      <DependentUpon>UCPaymentRecordQuery.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FM\FMBase\UCPaymentSettlementQuery.resx">
+      <DependentUpon>UCPaymentSettlementQuery.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FM\FMBase\UCPreReceivedPaymentQuery.resx">
       <DependentUpon>UCPreReceivedPaymentQuery.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="FM\UCPaymentApplicationQuery.resx">

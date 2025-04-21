@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：04/20/2025 18:12:16
+// 时间：04/21/2025 20:12:38
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -38,7 +38,7 @@ namespace RUINORERP.Business
  
         
      
- RuleFor(tb_FM_ReceivablePayable =>tb_FM_ReceivablePayable.ARAPNo).NotEmpty().When(x => x.ARAPNo.HasValue);
+ RuleFor(tb_FM_ReceivablePayable =>tb_FM_ReceivablePayable.ARAPNo).MaximumLength(15).WithMessage("单据编号:不能超过最大长度,15.");
 
  RuleFor(tb_FM_ReceivablePayable =>tb_FM_ReceivablePayable.PreRPID).Must(CheckForeignKeyValueCanNull).WithMessage("预收付款单:下拉选择值不正确。");
  RuleFor(tb_FM_ReceivablePayable =>tb_FM_ReceivablePayable.PreRPID).NotEmpty().When(x => x.PreRPID.HasValue);
@@ -51,9 +51,9 @@ namespace RUINORERP.Business
 
  RuleFor(tb_FM_ReceivablePayable =>tb_FM_ReceivablePayable.ReceivePaymentType).NotEmpty().When(x => x.ReceivePaymentType.HasValue);
 
- RuleFor(x => x.TotalForeignAmount).PrecisionScale(19,4,true).WithMessage("总金额外币:小数位不能超过4。");
+ RuleFor(x => x.TotalForeignPayableAmount).PrecisionScale(19,4,true).WithMessage("总金额外币:小数位不能超过4。");
 
- RuleFor(x => x.TotalLocalAmount).PrecisionScale(19,4,true).WithMessage("总金额本币:小数位不能超过4。");
+ RuleFor(x => x.TotalLocalPayableAmount).PrecisionScale(19,4,true).WithMessage("总金额本币:小数位不能超过4。");
 
  RuleFor(x => x.ForeignPaidAmount).PrecisionScale(19,4,true).WithMessage("已核销外币:小数位不能超过4。");
 

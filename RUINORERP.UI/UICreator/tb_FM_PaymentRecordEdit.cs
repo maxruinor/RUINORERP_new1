@@ -131,11 +131,6 @@ namespace RUINORERP.UI
            DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.FMPaymentStatus, txtFMPaymentStatus, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.ReferenceNo, txtReferenceNo, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.Remark, txtRemark, BindDataType4TextBox.Text,false);
-           DataBindingHelper.BindData4DataTime<tb_FM_PaymentRecord>(entity, t => t.Created_at, dtpCreated_at,false);
-           DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.Created_by, txtCreated_by, BindDataType4TextBox.Qty,false);
-           DataBindingHelper.BindData4DataTime<tb_FM_PaymentRecord>(entity, t => t.Modified_at, dtpModified_at,false);
-           DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.Modified_by, txtModified_by, BindDataType4TextBox.Qty,false);
-           DataBindingHelper.BindData4CheckBox<tb_FM_PaymentRecord>(entity, t => t.isdeleted, chkisdeleted, false);
            DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.ApprovalOpinions, txtApprovalOpinions, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.Approver_by, txtApprover_by, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4DataTime<tb_FM_PaymentRecord>(entity, t => t.Approver_at, dtpApprover_at,false);

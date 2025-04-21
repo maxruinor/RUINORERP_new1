@@ -177,8 +177,8 @@ namespace RUINORERP.UI.UserPersonalized
                         kdp.Name = queryField.FieldName;
                         object datetimeValue = ReflectionHelper.GetPropertyValue(TargetEntityDto, queryField.FieldName);
                         DataBindingHelper.BindData4DataTime(TargetEntityDto, datetimeValue, queryField.FieldName, kdp, true);
-                        kdp.Checked = true;
                         kdp.Value = System.DateTime.Now;
+                        kdp.Checked = true;
                         //时间控件更长为260px，这里要特殊处理
                         kdp.Location = new System.Drawing.Point(txtDefault1.Location.X, txtDefault1.Location.Y);
                         kdp.Size = new System.Drawing.Size(160, 100);

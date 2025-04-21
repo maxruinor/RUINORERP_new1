@@ -28,6 +28,7 @@ using RUINORERP.Common.Helper;
 using RUINORERP.Global;
 using RUINORERP.Business.Security;
 using RUINORERP.Global.EnumExt;
+using AutoMapper;
 
 namespace RUINORERP.Business
 {
@@ -85,7 +86,25 @@ namespace RUINORERP.Business
             {
                 // 开启事务，保证数据一致性
                 _unitOfWorkManage.BeginTran();
-                //这部分是否能提出到上一级公共部分？
+
+                //预收付款单 审核时 自动生成 收付款记录
+                IMapper mapper = RUINORERP.Business.AutoMapper.AutoMapperConfig.RegisterMappings().CreateMapper();
+                tb_FM_PaymentRecord paymentRecord = new tb_FM_PaymentRecord();
+                paymentRecord = mapper.Map<tb_FM_PaymentRecord>(entity);
+
+                //自动提交
+                paymentRecord.FMPaymentStatus = (int)FMPaymentStatus.提交;
+                BusinessHelper.Instance.InitEntity(paymentRecord);
+                long id = await _unitOfWorkManage.GetDbClient().Insertable<tb_FM_PaymentRecord>(paymentRecord).ExecuteReturnSnowflakeIdAsync();
+                if (id > 0)
+                {
+
+                }
+                if (entity.ReceivePaymentType == (int)ReceivePaymentType.付款)
+                {
+
+                }
+
                 entity.FMPaymentStatus = (int)FMPaymentStatus.已审核;
                 entity.ApprovalStatus = (int)ApprovalStatus.已审核;
                 BusinessHelper.Instance.ApproverEntity(entity);

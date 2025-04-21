@@ -51,6 +51,22 @@ namespace RUINORERP.Model
             }
         }
 
+        private string _PaymentNo;
+        /// <summary>
+        /// 支付单号
+        /// </summary>
+        [AdvQueryAttribute(ColName = "PaymentNo", ColDesc = "支付单号")]
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType = "String", ColumnName = "PaymentNo", Length = 300, IsNullable = true, ColumnDescription = "支付单号")]
+        public string PaymentNo
+        {
+            get { return _PaymentNo; }
+            set
+            {
+                SetProperty(ref _PaymentNo, value);
+            }
+        }
+
+
         private int? _BizType;
         /// <summary>
         /// 来源业务
@@ -236,7 +252,20 @@ namespace RUINORERP.Model
             SetProperty(ref _PaymentDate, value);
                         }
         }
-
+        private string _PaymentImagePath;
+        /// <summary>
+        /// 付款凭证
+        /// </summary>
+        [AdvQueryAttribute(ColName = "PaymentImagePath", ColDesc = "付款凭证")]
+        [SugarColumn(ColumnDataType = "nvarchar", SqlParameterDbType = "String", ColumnName = "PaymentImagePath", Length = 300, IsNullable = true, ColumnDescription = "付款凭证")]
+        public string PaymentImagePath
+        {
+            get { return _PaymentImagePath; }
+            set
+            {
+                SetProperty(ref _PaymentImagePath, value);
+            }
+        }
         private long? _Employee_ID;
         /// <summary>
         /// 经办人
@@ -310,7 +339,20 @@ namespace RUINORERP.Model
             SetProperty(ref _FMPaymentStatus, value);
                         }
         }
-
+        private int _PrintStatus = ((0));
+        /// <summary>
+        /// 打印状态
+        /// </summary>
+        [AdvQueryAttribute(ColName = "PrintStatus", ColDesc = "打印状态")]
+        [SugarColumn(ColumnDataType = "int", SqlParameterDbType = "Int32", ColumnName = "PrintStatus", DecimalDigits = 0, IsNullable = false, ColumnDescription = "打印状态")]
+        public int PrintStatus
+        {
+            get { return _PrintStatus; }
+            set
+            {
+                SetProperty(ref _PrintStatus, value);
+            }
+        }
         private string _ReferenceNo;
         /// <summary>
         /// 交易参考号

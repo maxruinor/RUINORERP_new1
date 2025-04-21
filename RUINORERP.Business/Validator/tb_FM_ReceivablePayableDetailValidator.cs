@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：04/20/2025 18:12:17
+// 时间：04/21/2025 20:12:39
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -73,9 +73,9 @@ namespace RUINORERP.Business
 
  RuleFor(x => x.TaxLocalAmount).PrecisionScale(19,4,true).WithMessage("税额:小数位不能超过4。");
 
- RuleFor(x => x.ForeignPrepaidAmount).PrecisionScale(19,4,true).WithMessage("金额外币:小数位不能超过4。");
+ RuleFor(x => x.ForeignPayableAmount).PrecisionScale(19,4,true).WithMessage("金额外币:小数位不能超过4。");
 
- RuleFor(x => x.LocalPrepaidAmount).PrecisionScale(19,4,true).WithMessage("金额本币:小数位不能超过4。");
+ RuleFor(x => x.LocalPayableAmount).PrecisionScale(19,4,true).WithMessage("金额本币:小数位不能超过4。");
 
  RuleFor(tb_FM_ReceivablePayableDetail =>tb_FM_ReceivablePayableDetail.Summary).MaximumLength(150).WithMessage("摘要:不能超过最大长度,150.");
 

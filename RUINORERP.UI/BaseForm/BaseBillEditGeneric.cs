@@ -2072,7 +2072,7 @@ namespace RUINORERP.UI.BaseForm
                     MainForm.Instance.AppContext.CurrentUser_Role_Personalized.tb_UIMenuPersonalizations = new List<tb_UIMenuPersonalization>();
                 }
                 tb_UIMenuPersonalization menuSetting = MainForm.Instance.AppContext.CurrentUser_Role_Personalized.tb_UIMenuPersonalizations.FirstOrDefault(c => c.MenuID == CurMenuInfo.MenuID);
-                if (menuSetting != null)
+                if (menuSetting != null && menuSetting.tb_UIInputDataFields != null)
                 {
                     List<QueryField> fields = new List<QueryField>();
                     UIBizSrvice.GetInputDataField(typeof(T), fields);

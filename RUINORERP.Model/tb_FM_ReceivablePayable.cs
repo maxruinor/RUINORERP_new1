@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：04/20/2025 18:12:16
+// 时间：04/21/2025 20:12:37
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -51,13 +51,13 @@ namespace RUINORERP.Model
             }
         }
 
-        private long? _ARAPNo;
+        private string _ARAPNo;
         /// <summary>
         /// 单据编号
         /// </summary>
         [AdvQueryAttribute(ColName = "ARAPNo",ColDesc = "单据编号")] 
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "ARAPNo" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "单据编号" )]
-        public long? ARAPNo
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "ARAPNo" ,Length=30,IsNullable = true,ColumnDescription = "单据编号" )]
+        public string ARAPNo
         { 
             get{return _ARAPNo;}
             set{
@@ -138,31 +138,31 @@ namespace RUINORERP.Model
                         }
         }
 
-        private decimal _TotalForeignAmount= ((0));
+        private decimal _TotalForeignPayableAmount= ((0));
         /// <summary>
         /// 总金额外币
         /// </summary>
-        [AdvQueryAttribute(ColName = "TotalForeignAmount",ColDesc = "总金额外币")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "TotalForeignAmount" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "总金额外币" )]
-        public decimal TotalForeignAmount
+        [AdvQueryAttribute(ColName = "TotalForeignPayableAmount",ColDesc = "总金额外币")] 
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "TotalForeignPayableAmount" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "总金额外币" )]
+        public decimal TotalForeignPayableAmount
         { 
-            get{return _TotalForeignAmount;}
+            get{return _TotalForeignPayableAmount;}
             set{
-            SetProperty(ref _TotalForeignAmount, value);
+            SetProperty(ref _TotalForeignPayableAmount, value);
                         }
         }
 
-        private decimal _TotalLocalAmount= ((0));
+        private decimal _TotalLocalPayableAmount= ((0));
         /// <summary>
         /// 总金额本币
         /// </summary>
-        [AdvQueryAttribute(ColName = "TotalLocalAmount",ColDesc = "总金额本币")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "TotalLocalAmount" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "总金额本币" )]
-        public decimal TotalLocalAmount
+        [AdvQueryAttribute(ColName = "TotalLocalPayableAmount",ColDesc = "总金额本币")] 
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "TotalLocalPayableAmount" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "总金额本币" )]
+        public decimal TotalLocalPayableAmount
         { 
-            get{return _TotalLocalAmount;}
+            get{return _TotalLocalPayableAmount;}
             set{
-            SetProperty(ref _TotalLocalAmount, value);
+            SetProperty(ref _TotalLocalPayableAmount, value);
                         }
         }
 
@@ -502,7 +502,20 @@ namespace RUINORERP.Model
             SetProperty(ref _ApprovalResults, value);
                         }
         }
-
+        private int _PrintStatus = ((0));
+        /// <summary>
+        /// 打印状态
+        /// </summary>
+        [AdvQueryAttribute(ColName = "PrintStatus", ColDesc = "打印状态")]
+        [SugarColumn(ColumnDataType = "int", SqlParameterDbType = "Int32", ColumnName = "PrintStatus", DecimalDigits = 0, IsNullable = false, ColumnDescription = "打印状态")]
+        public int PrintStatus
+        {
+            get { return _PrintStatus; }
+            set
+            {
+                SetProperty(ref _PrintStatus, value);
+            }
+        }
         #endregion
 
         #region 扩展属性

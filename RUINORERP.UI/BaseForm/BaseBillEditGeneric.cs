@@ -72,8 +72,8 @@ using RUINORERP.UI.WorkFlowDesigner.Entities;
 using System.Windows.Controls.Primitives;
 using TransInstruction.DataModel;
 using RUINORERP.Common.LogHelper;
-using NPOI.SS.UserModel;
 using RUINORERP.Global.EnumExt;
+
 
 namespace RUINORERP.UI.BaseForm
 {
@@ -156,19 +156,17 @@ namespace RUINORERP.UI.BaseForm
 
         private async void button录入数据预设_Click(object sender, EventArgs e)
         {
+            if (EditEntity == null)
+            {
+                EditEntity = Activator.CreateInstance(typeof(T)) as T;
+            }
             bool rs = await UIBizSrvice.SetInputDataAsync<T>(CurMenuInfo, EditEntity);
             if (rs)
             {
-               // EditEntity = LoadQueryConditionToUI();
+                // EditEntity = LoadQueryConditionToUI();
             }
         }
 
-        //public event ColumnDisplayControlHandler SetColumnDisplayControl;
-        //public delegate void ColumnDisplayControlHandler(Type GridSourceType);
-        //protected  virtual void SetGridViewAsync()
-        //{
-        //    if (SetColumnDisplayControl != null) SetColumnDisplayControl(typeof(C));
-        //}
 
         #region 单据 主表公共信息 如类型：名称
 
@@ -2065,6 +2063,41 @@ namespace RUINORERP.UI.BaseForm
         {
             List<T> list = new List<T>();
             EditEntity = Activator.CreateInstance(typeof(T)) as T;
+
+            try
+            {
+                //将预设值写入到新增的实体中
+                if (MainForm.Instance.AppContext.CurrentUser_Role_Personalized.tb_UIMenuPersonalizations == null)
+                {
+                    MainForm.Instance.AppContext.CurrentUser_Role_Personalized.tb_UIMenuPersonalizations = new List<tb_UIMenuPersonalization>();
+                }
+                tb_UIMenuPersonalization menuSetting = MainForm.Instance.AppContext.CurrentUser_Role_Personalized.tb_UIMenuPersonalizations.FirstOrDefault(c => c.MenuID == CurMenuInfo.MenuID);
+                if (menuSetting != null)
+                {
+                    List<QueryField> fields = new List<QueryField>();
+                    UIBizSrvice.GetInputDataField(typeof(T), fields);
+                    foreach (var item in menuSetting.tb_UIInputDataFields)
+                    {
+                        if (item.EnableDefault1.HasValue && item.EnableDefault1.Value)
+                        {
+                            // 进行类型转换 后设置为默认值
+                            var queryField = fields.FirstOrDefault(c => c.FieldName == item.FieldName);
+                            if (queryField != null)
+                            {
+                                object convertedValue = Convert.ChangeType(item.Default1, queryField.ColDataType);
+                                EditEntity.SetPropertyValue(item.FieldName, convertedValue);
+                            }
+                        }
+                    }
+                }
+
+            }
+            catch (Exception)
+            {
+
+
+            }
+
             BusinessHelper.Instance.InitEntity(EditEntity);
             BusinessHelper.Instance.InitStatusEntity(EditEntity);
             if (OnBindDataToUIEvent != null)

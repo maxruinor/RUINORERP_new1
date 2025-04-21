@@ -34,12 +34,9 @@
             this.txtValueType = new Krypton.Toolkit.KryptonTextBox();
             this.lblDefault1 = new Krypton.Toolkit.KryptonLabel();
             this.txtDefault1 = new Krypton.Toolkit.KryptonTextBox();
-            this.lblDefault2 = new Krypton.Toolkit.KryptonLabel();
-            this.txtDefault2 = new Krypton.Toolkit.KryptonTextBox();
             this.lblFocused = new Krypton.Toolkit.KryptonLabel();
             this.chkFocused = new Krypton.Toolkit.KryptonCheckBox();
             this.chkEnableDefault1 = new Krypton.Toolkit.KryptonCheckBox();
-            this.chkEnableDefault2 = new Krypton.Toolkit.KryptonCheckBox();
             this.lblVisble = new Krypton.Toolkit.KryptonLabel();
             this.chkVisble = new Krypton.Toolkit.KryptonCheckBox();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).BeginInit();
@@ -91,25 +88,9 @@
             this.txtDefault1.Size = new System.Drawing.Size(172, 21);
             this.txtDefault1.TabIndex = 26;
             // 
-            // lblDefault2
-            // 
-            this.lblDefault2.Location = new System.Drawing.Point(41, 121);
-            this.lblDefault2.Name = "lblDefault2";
-            this.lblDefault2.Size = new System.Drawing.Size(56, 20);
-            this.lblDefault2.TabIndex = 27;
-            this.lblDefault2.Values.Text = "默认值2";
-            // 
-            // txtDefault2
-            // 
-            this.txtDefault2.Location = new System.Drawing.Point(136, 121);
-            this.txtDefault2.Multiline = true;
-            this.txtDefault2.Name = "txtDefault2";
-            this.txtDefault2.Size = new System.Drawing.Size(172, 21);
-            this.txtDefault2.TabIndex = 28;
-            // 
             // lblFocused
             // 
-            this.lblFocused.Location = new System.Drawing.Point(35, 152);
+            this.lblFocused.Location = new System.Drawing.Point(35, 135);
             this.lblFocused.Name = "lblFocused";
             this.lblFocused.Size = new System.Drawing.Size(62, 20);
             this.lblFocused.TabIndex = 35;
@@ -117,7 +98,7 @@
             // 
             // chkFocused
             // 
-            this.chkFocused.Location = new System.Drawing.Point(113, 157);
+            this.chkFocused.Location = new System.Drawing.Point(113, 140);
             this.chkFocused.Name = "chkFocused";
             this.chkFocused.Size = new System.Drawing.Size(19, 13);
             this.chkFocused.TabIndex = 36;
@@ -132,14 +113,6 @@
             this.chkEnableDefault1.Size = new System.Drawing.Size(19, 13);
             this.chkEnableDefault1.TabIndex = 37;
             this.chkEnableDefault1.Values.Text = "";
-            // 
-            // chkEnableDefault2
-            // 
-            this.chkEnableDefault2.Location = new System.Drawing.Point(113, 125);
-            this.chkEnableDefault2.Name = "chkEnableDefault2";
-            this.chkEnableDefault2.Size = new System.Drawing.Size(19, 13);
-            this.chkEnableDefault2.TabIndex = 38;
-            this.chkEnableDefault2.Values.Text = "";
             // 
             // lblVisble
             // 
@@ -166,15 +139,12 @@
             this.Controls.Add(this.lblVisble);
             this.Controls.Add(this.chkVisble);
             this.Controls.Add(this.chkEnableDefault1);
-            this.Controls.Add(this.chkEnableDefault2);
             this.Controls.Add(this.lblCaption);
             this.Controls.Add(this.txtCaption);
             this.Controls.Add(this.lblValueType);
             this.Controls.Add(this.txtValueType);
             this.Controls.Add(this.lblDefault1);
             this.Controls.Add(this.txtDefault1);
-            this.Controls.Add(this.lblDefault2);
-            this.Controls.Add(this.txtDefault2);
             this.Controls.Add(this.lblFocused);
             this.Controls.Add(this.chkFocused);
             this.Name = "UCInputDataCol";
@@ -192,12 +162,9 @@
         private Krypton.Toolkit.KryptonTextBox txtValueType;
         private Krypton.Toolkit.KryptonLabel lblDefault1;
         private Krypton.Toolkit.KryptonTextBox txtDefault1;
-        private Krypton.Toolkit.KryptonLabel lblDefault2;
-        private Krypton.Toolkit.KryptonTextBox txtDefault2;
         private Krypton.Toolkit.KryptonLabel lblFocused;
         private Krypton.Toolkit.KryptonCheckBox chkFocused;
         private Krypton.Toolkit.KryptonCheckBox chkEnableDefault1;
-        private Krypton.Toolkit.KryptonCheckBox chkEnableDefault2;
         private Krypton.Toolkit.KryptonLabel lblVisble;
         private Krypton.Toolkit.KryptonCheckBox chkVisble;
     }

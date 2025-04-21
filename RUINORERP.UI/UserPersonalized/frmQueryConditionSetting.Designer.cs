@@ -37,6 +37,7 @@
             this.chkReverseSelection = new Krypton.Toolkit.KryptonCheckBox();
             this.chkAll = new Krypton.Toolkit.KryptonCheckBox();
             this.listView1 = new System.Windows.Forms.ListView();
+            this.chkEnableQuerySettings = new Krypton.Toolkit.KryptonCheckBox();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel1)).BeginInit();
             this.kryptonPanel1.SuspendLayout();
             this.SuspendLayout();
@@ -99,6 +100,7 @@
             // 
             // kryptonPanel1
             // 
+            this.kryptonPanel1.Controls.Add(this.chkEnableQuerySettings);
             this.kryptonPanel1.Controls.Add(this.panelConditionEdit);
             this.kryptonPanel1.Controls.Add(this.chkReverseSelection);
             this.kryptonPanel1.Controls.Add(this.chkAll);
@@ -151,6 +153,14 @@
             this.listView1.View = System.Windows.Forms.View.Details;
             this.listView1.SelectedIndexChanged += new System.EventHandler(this.listView1_SelectedIndexChanged);
             // 
+            // chkEnableQuerySettings
+            // 
+            this.chkEnableQuerySettings.Location = new System.Drawing.Point(603, 16);
+            this.chkEnableQuerySettings.Name = "chkEnableQuerySettings";
+            this.chkEnableQuerySettings.Size = new System.Drawing.Size(114, 20);
+            this.chkEnableQuerySettings.TabIndex = 22;
+            this.chkEnableQuerySettings.Values.Text = "启用查询预设值";
+            // 
             // frmQueryConditionSetting
             // 
             this.AcceptButton = this.btnOk;
@@ -179,5 +189,6 @@
         private Krypton.Toolkit.KryptonCheckBox chkReverseSelection;
         private Krypton.Toolkit.KryptonCheckBox chkAll;
         public System.Windows.Forms.Panel panelConditionEdit;
+        private Krypton.Toolkit.KryptonCheckBox chkEnableQuerySettings;
     }
 }

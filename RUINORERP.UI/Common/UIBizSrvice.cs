@@ -32,6 +32,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -83,9 +84,8 @@ namespace RUINORERP.UI.Common
                 }
             }
 
-
             frmInputDataColSetting set = new frmInputDataColSetting();
-
+            set.MenuPersonSetting = menuPersonalization;
             //这里是列的控制情况 
             //但是这个是grid列的显示控制的。这里是处理查询条件的，默认值，是否显示参与查询
             //应该要实体绑定，再与查询参数生成条件时都关联起来。
@@ -97,62 +97,18 @@ namespace RUINORERP.UI.Common
             }
 
             List<tb_UIInputDataField> InputFields = menuPersonalization.tb_UIInputDataFields;
-
-            //这里如果是初始化时以硬编码的过滤条件为标准生成一组条件。如果已经有了。则按数据库中与这个比较。硬编码条件为标准增量？
+            List<QueryField> fields = new List<QueryField>();
             List<tb_UIInputDataField> DefaultInputFields = new List<tb_UIInputDataField>();
-            DefaultInputFields = GetInputDataField<T>(Dto);
-            if (DefaultInputFields != null)
+            DefaultInputFields = GetInputDataField<T>(Dto, fields);
+            DefaultInputFields.ForEach(c => c.UIMenuPID = menuPersonalization.UIMenuPID);
+            if (InputFields.Count == 0)
             {
-                foreach (var item in DefaultInputFields)
-                {
-                    tb_UIInputDataField condition = new tb_UIInputDataField();
-                    condition.FieldName = item.FieldName;
-                    //时间区间排最后
-                    //if (item.AdvQueryFieldType == AdvQueryProcessType.datetimeRange && condition.Sort == 0)
-                    //{
-                    //    condition.Sort = 100;
-                    //}
-                    condition.IsVisble = true;
-                    condition.Caption = item.Caption;
-                    //if (item.ColDataType != null)
-                    //{
-                    //    condition.ValueType = item.ColDataType.Name;
-                    //}
-                    condition.UIMenuPID = menuPersonalization.UIMenuPID;
-                    InputFields.Add(condition);
-                }
+                InputFields = DefaultInputFields;
             }
-
-            // 检查并添加条件
-            foreach (var condition in InputFields)
-            {
-                // 检查existingConditions中是否已经存在相同的条件
-                if (!InputFields.Any(ec => ec.FieldName == condition.FieldName && ec.UIMenuPID == condition.UIMenuPID))
-                {
-                    // 如果不存在，则添加到existingConditions中
-                    InputFields.Add(condition);
-                }
-                else
-                {
-                    //更新一下标题
-                    InputFields.FirstOrDefault(ec => ec.FieldName == condition.FieldName && ec.UIMenuPID == condition.UIMenuPID).Caption = condition.Caption.Trim();
-                }
-
-            }
-
-
-            // 更新set.Conditions
+            set.QueryFields = fields;
             set.InputFields = InputFields.OrderBy(c => c.Sort).ToList();
-            set.Entity = Dto;
-            //set.QueryFields = QueryConditionFilter.QueryFields;
-
-            //var conditions = from tb_UIQueryCondition condition in queryConditions
-            //                 orderby condition.Sort
-            //                 select condition;
-            //set.Conditions = conditions.ToList();
-
-
-
+            set.TargetEntityDto = Dto;
+            set.CurMenuInfo = CurMenuInfo;
             if (set.ShowDialog() == DialogResult.OK)
             {
                 await MainForm.Instance.AppContext.Db.Insertable(set.InputFields.Where(c => c.PresetValueID == 0).ToList()).ExecuteReturnSnowflakeIdListAsync();
@@ -171,26 +127,46 @@ namespace RUINORERP.UI.Common
         /// <summary>
         /// 根据不同的类型返回可以设置默认值的列
         /// </summary>
-        public static List<tb_UIInputDataField> GetInputDataField<T>(T Dto)
+        public static List<tb_UIInputDataField> GetInputDataField<T>(T Dto, List<QueryField> fields = null)
         {
-            return GetInputDataField(typeof(T));
+            return GetInputDataField(typeof(T), fields);
         }
 
-        public static List<tb_UIInputDataField> GetInputDataField(Type  DtoType)
+        public static List<tb_UIInputDataField> GetInputDataField(Type DtoType, List<QueryField> fields = null)
         {
+
             List<tb_UIInputDataField> cols = new List<tb_UIInputDataField>();
             foreach (PropertyInfo field in DtoType.GetProperties())
             {
-
                 //获取指定类型的自定义特性
                 object[] attrs = field.GetCustomAttributes(false);
-                foreach (var attr in attrs)
+                if (attrs.Length == 0)
+                {
+                    continue;
+                }
+                if (!field.CanWrite)
+                {
+                    continue;
+                }
+                //查询字段才可能是录入的数据
+                if (attrs.FirstOrDefault(c => c.GetType().Name == typeof(AdvQueryAttribute).Name) == null)
+                {
+                    continue;
+                }
+
+                QueryField queryField = new QueryField();
+                queryField.QueryTargetType = DtoType;
+                tb_UIInputDataField col = new tb_UIInputDataField();
+
+                //SugarColumn排最后！！这样判断的前置条件才先生效
+                List<object> attrs1 = attrs.OrderBy(c => c.GetType().Name).ToList();
+
+                foreach (var attr in attrs1)
                 {
                     //用于是否为外键，是的话，编辑时生成下拉控件
                     if (attr is FKRelationAttribute)
                     {
                         FKRelationAttribute FKAttribute = attr as FKRelationAttribute;
-
                         //如果子表中引用的主表主键,则不显示
                         if (typeof(T).Name.Contains(FKAttribute.FKTableName) && typeof(T).Name.Replace("Detail", "") == FKAttribute.FKTableName)
                         {
@@ -200,6 +176,10 @@ namespace RUINORERP.UI.Common
                         {
 
                         }
+                        queryField.fKRelationAttribute = FKAttribute;
+                        queryField.FKTableName = FKAttribute.FKTableName;
+                        queryField.SubQueryTargetType = Assembly.LoadFrom("RUINORERP.Model.dll").GetType("RUINORERP.Model." + FKAttribute.FKTableName);
+                        queryField.SubFilter.QueryTargetType = Assembly.LoadFrom("RUINORERP.Model.dll").GetType("RUINORERP.Model." + FKAttribute.FKTableName);
                     }
 
                     if (attr is SubtotalResultAttribute)
@@ -233,7 +213,7 @@ namespace RUINORERP.UI.Common
 
                     if (attr is SugarColumn)
                     {
-                        tb_UIInputDataField col = new tb_UIInputDataField();
+
                         SugarColumn sugarColumn = attr as SugarColumn;
                         if (string.IsNullOrEmpty(sugarColumn.ColumnDescription))
                         {
@@ -256,17 +236,31 @@ namespace RUINORERP.UI.Common
                             switch (sugarColumn.ColumnDataType)
                             {
                                 case "datetime":
-                                    // _editor = new SourceGrid.Cells.Editors.TextBoxUITypeEditor(typeof(DateTime));
+                                    queryField.AdvQueryFieldType = AdvQueryProcessType.datetime;
                                     break;
                                 case "money"://金额不能有预设值
                                     continue;
                                 case "bit":
 
                                     break;
+                                case "bigint":
+                                    if (!string.IsNullOrEmpty(queryField.FKTableName))
+                                    {
+                                        queryField.AdvQueryFieldType = AdvQueryProcessType.defaultSelect;
+                                    }
+                                    break;
                                 case "decimal":
+                                    break;
+                                case "varchar":
+                                    queryField.AdvQueryFieldType = AdvQueryProcessType.TextSelect;
                                     break;
                                 case "image":
                                     continue;
+                            }
+
+                            if (sugarColumn.IsNullable == true)
+                            {
+                                col.IsVisble = false;
                             }
                         }
 
@@ -274,27 +268,97 @@ namespace RUINORERP.UI.Common
                         {
                             continue;
                         }
-                        col.FieldName = field.Name;
+
+                        queryField.FieldName = field.Name;
+                        queryField.FieldPropertyInfo = field;
+
                         col.ValueType = field.PropertyType.Name;
-                        col.BelongingObjectType = typeof(T).Name;
-                        cols.Add(col);
+
                     }
                 }
+                //硬编码排除一些不能设置录入数据预设值的字段
+                if (field.Name.Contains("Modified_at"))
+                    continue;
+                if (field.Name.Contains("Modified_by"))
+                    continue;
+                if (field.Name.Contains("Created_at"))
+                    continue;
+                if (field.Name.Contains("UpdateTime"))
+                    continue;
+                if (field.Name.Contains("Created_by"))
+                    continue;
+                if (field.Name.Contains("isdeleted"))
+                    continue;
+                if (field.Name.Contains("DataStatus"))
+                    continue;
+                if (field.Name.Contains("ApprovalOpinions"))
+                    continue;
+                if (field.Name.Contains("PrintStatus"))
+                    continue;
+                if (field.Name.Contains("ApprovalResults"))
+                    continue;
+                if (field.Name.Contains("ApprovalStatus"))
+                    continue;
+                if (field.Name.Contains("Approver_by"))
+                    continue;
+                if (field.Name.Contains("Approver_at"))
+                    continue;
+                if (field.Name.Contains("Approver_at"))
+                    continue;
+                if (field.Name.Contains("CloseCaseOpinions"))
+                    continue;
+                if (field.Name.Contains("CloseCase"))
+                    continue;
+                if (field.Name.ToLower().Contains("amount"))
+                    continue;
+                if (col.Caption.Contains("引用"))
+                    continue;
+                if (col.Caption.Contains("编号"))
+                    continue;
+                if (col.Caption.Contains("单号"))
+                    continue;
+                if (col.Caption.Contains("金额"))
+                    continue;
+                if (col.Caption.Contains("小计"))
+                    continue;
+                if (col.Caption.Contains("总计"))
+                    continue;
+                if (col.Caption.Contains("合计"))
+                    continue;
+                if (col.Caption.Contains("运费"))
+                    continue;
+                if (col.Caption.Contains("税额"))
+                    continue;
+                Type propertyType = null;
+                if (field.PropertyType.IsGenericType && field.PropertyType.GetGenericTypeDefinition() == typeof(Nullable<>))
+                {
+                    propertyType = field.PropertyType.GenericTypeArguments[0];
+                }
+                else
+                {
+                    propertyType = field.PropertyType;
+                }
+
+                queryField.ColDataType = propertyType;
+                col.FieldName = field.Name;
+                col.BelongingObjectType = DtoType.Name;
+                fields.Add(queryField);
+                cols.Add(col);
             }
             return cols;
 
         }
-            #endregion
+        #endregion
 
 
-            /// <summary>
-            /// 设置查询条件的个性化参数
-            /// </summary>
-            /// <param name="CurMenuInfo"></param>
-            /// <param name="QueryConditionFilter"></param>
-            /// <param name="QueryDto"></param>
-            /// <returns></returns>
-            public static async Task<bool> SetQueryConditionsAsync(tb_MenuInfo CurMenuInfo, QueryFilter QueryConditionFilter, BaseEntity QueryDto)
+        /// <summary>
+        /// 设置查询条件的个性化参数
+        /// </summary>
+        /// <param name="CurMenuInfo"></param>
+        /// <param name="QueryConditionFilter"></param>
+        /// <param name="QueryDto"></param>
+        /// <returns></returns>
+        public static async Task<bool> SetQueryConditionsAsync(tb_MenuInfo CurMenuInfo, QueryFilter QueryConditionFilter, BaseEntity QueryDto)
 
         {
             bool SetResults = false;
@@ -329,7 +393,7 @@ namespace RUINORERP.UI.Common
             //MenuPersonalizedSettings();
             frmQueryConditionSetting set = new frmQueryConditionSetting();
             //为了显示传入带中文的集合
-
+            set.Personalization = menuPersonalization;
             set.QueryShowColQty.Value = menuPersonalization.QueryConditionCols;
             //这里是列的控制情况 
             //但是这个是grid列的显示控制的。这里是处理查询条件的，默认值，是否显示参与查询
@@ -646,7 +710,6 @@ namespace RUINORERP.UI.Common
             }
             menuPersonalization.tb_UIInputDataFields = InputDataFields;
 
-
             await MainForm.Instance.AppContext.Db.Insertable(menuPersonalization.tb_UIInputDataFields.Where(c => c.PresetValueID == 0).ToList()).ExecuteReturnSnowflakeIdListAsync();
             await MainForm.Instance.AppContext.Db.Updateable(menuPersonalization.tb_UIInputDataFields.Where(c => c.PresetValueID > 0).ToList()).ExecuteCommandAsync();
         }
@@ -785,16 +848,19 @@ namespace RUINORERP.UI.Common
             }
         }
 
-
-        public static List<tb_UIInputDataField> InitInputDataFields(List<tb_UIInputDataField> ColumnDisplays,object Dto
-         , tb_MenuInfo CurMenuInfo)
+        public static List<tb_UIInputDataField> InitInputDataFields(List<tb_UIInputDataField> ColumnDisplays, object Dto
+         , tb_MenuInfo CurMenuInfo, List<QueryField> fields)
         {
-
             List<tb_UIInputDataField> allInitCols = new List<tb_UIInputDataField>();
-            allInitCols = GetInputDataField(Dto.GetType());
+            if (Dto != null)
+            {
+                allInitCols = GetInputDataField(Dto.GetType(), fields);
+            }
+            else
+            {
+                MessageBox.Show("预设值的对象不能为空。");
+            }
             return allInitCols;
-
-
         }
 
 

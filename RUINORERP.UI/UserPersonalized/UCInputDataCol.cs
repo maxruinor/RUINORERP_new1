@@ -36,13 +36,11 @@ namespace RUINORERP.UI.UserPersonalized
         }
 
 
-        public BaseEntity QueryDto { get; set; }
+        public object TargetEntityDto { get; set; }
         /// <summary>
         /// 录入字段的集合 根据这个来生成绑定。选择默认值
         /// </summary>
         public List<QueryField> QueryFields { get; set; }
-
-        //添加一个事件。如果同步选中和标题
 
 
         public tb_UIInputDataField EditEntity { get; set; }
@@ -58,12 +56,12 @@ namespace RUINORERP.UI.UserPersonalized
             DataBindingHelper.BindData4TextBox<tb_UIInputDataField>(entity, t => t.Caption, txtCaption, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_UIInputDataField>(entity, t => t.ValueType, txtValueType, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4CheckBox<tb_UIInputDataField>(entity, t => t.IsVisble, chkVisble, false);
+
             DataBindingHelper.BindData4TextBox<tb_UIInputDataField>(entity, t => t.Default1, txtDefault1, BindDataType4TextBox.Text, false);
-            DataBindingHelper.BindData4TextBox<tb_UIInputDataField>(entity, t => t.Default2, txtDefault2, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4CheckBox<tb_UIInputDataField>(entity, t => t.EnableDefault1, chkEnableDefault1, false);
-            DataBindingHelper.BindData4CheckBox<tb_UIInputDataField>(entity, t => t.EnableDefault2, chkEnableDefault2, false);
             DataBindingHelper.BindData4CheckBox<tb_UIInputDataField>(entity, t => t.Focused, chkFocused, false);
-          
+
+
             var queryField = QueryFields.FirstOrDefault(c => c.FieldName == entity.FieldName);
             if (queryField != null)
             {
@@ -72,12 +70,9 @@ namespace RUINORERP.UI.UserPersonalized
 
                     case AdvQueryProcessType.defaultSelect:
                         txtDefault1.Visible = false;
-                        txtDefault2.Visible = false;
-                        lblDefault2.Visible = false;
                         chkEnableDefault1.Visible = true;
-                        chkEnableDefault2.Visible = false;
-                        #region     单选下拉
 
+                        #region     单选下拉
 
                         DefaultCmb.Name = queryField.FieldName;
                         DefaultCmb.Text = "";
@@ -97,7 +92,7 @@ namespace RUINORERP.UI.UserPersonalized
                                     if (mytype != null)
                                     {
                                         MethodInfo mf = dbh.GetType().GetMethod("BindData4CmbRef").MakeGenericMethod(new Type[] { mytype });
-                                        object[] args = new object[5] { QueryDto, pair.Key, pair.Value, queryField.FKTableName, DefaultCmb };
+                                        object[] args = new object[5] { TargetEntityDto, pair.Key, pair.Value, queryField.FKTableName, DefaultCmb };
                                         mf.Invoke(dbh, args);
                                     }
                                     else
@@ -119,14 +114,14 @@ namespace RUINORERP.UI.UserPersonalized
                                     if (pair.Key == queryField.FieldName)
                                     {
                                         MethodInfo mf1 = dbh.GetType().GetMethod("BindData4CmbRefWithLimited").MakeGenericMethod(new Type[] { mytype });
-                                        object[] args1 = new object[6] { QueryDto, pair.Key, pair.Value, queryField.FKTableName, DefaultCmb, whereExp };
+                                        object[] args1 = new object[6] { TargetEntityDto, pair.Key, pair.Value, queryField.FKTableName, DefaultCmb, whereExp };
                                         mf1.Invoke(dbh, args1);
                                     }
                                     else
                                     {
                                         MethodInfo mf1 = dbh.GetType().GetMethod("BindData4CmbRefWithLimitedByAlias").MakeGenericMethod(new Type[] { mytype });
                                         //注意这样
-                                        object[] args1 = new object[7] { QueryDto, pair.Key, queryField.FieldName, pair.Value, queryField.FKTableName, DefaultCmb, whereExp };
+                                        object[] args1 = new object[7] { TargetEntityDto, pair.Key, queryField.FieldName, pair.Value, queryField.FKTableName, DefaultCmb, whereExp };
                                         mf1.Invoke(dbh, args1);
                                     }
 
@@ -140,6 +135,8 @@ namespace RUINORERP.UI.UserPersonalized
                             }
                         }
 
+             
+
                         DefaultCmb.Location = new System.Drawing.Point(txtDefault1.Location.X, txtDefault1.Location.Y);
                         this.Controls.Add(DefaultCmb);
                         #endregion
@@ -147,21 +144,20 @@ namespace RUINORERP.UI.UserPersonalized
 
                     case AdvQueryProcessType.datetimeRange:
                         txtDefault1.Visible = false;
-                        txtDefault2.Visible = false;
-                        lblDefault2.Visible = false;
+
                         chkEnableDefault1.Visible = false;
-                        chkEnableDefault2.Visible = false;
+
                         //重新生成日期类型的
                         #region
                         dtpgroup.Name = queryField.FieldName;
                         dtpgroup.dtp1.Name = queryField.ExtendedAttribute[0].ColName;
-                        object datetimeValue1 = ReflectionHelper.GetPropertyValue(QueryDto, queryField.ExtendedAttribute[0].ColName);
-                        DataBindingHelper.BindData4DataTime(QueryDto, datetimeValue1, queryField.ExtendedAttribute[0].ColName, dtpgroup.dtp1, true);
+                        object datetimeValue1 = ReflectionHelper.GetPropertyValue(TargetEntityDto, queryField.ExtendedAttribute[0].ColName);
+                        DataBindingHelper.BindData4DataTime(TargetEntityDto, datetimeValue1, queryField.ExtendedAttribute[0].ColName, dtpgroup.dtp1, true);
                         dtpgroup.dtp1.Checked = true;
 
                         dtpgroup.dtp2.Name = queryField.ExtendedAttribute[1].ColName;
-                        object datetimeValue2 = ReflectionHelper.GetPropertyValue(QueryDto, queryField.ExtendedAttribute[1].ColName);
-                        DataBindingHelper.BindData4DataTime(QueryDto, datetimeValue2, queryField.ExtendedAttribute[1].ColName, dtpgroup.dtp2, true);
+                        object datetimeValue2 = ReflectionHelper.GetPropertyValue(TargetEntityDto, queryField.ExtendedAttribute[1].ColName);
+                        DataBindingHelper.BindData4DataTime(TargetEntityDto, datetimeValue2, queryField.ExtendedAttribute[1].ColName, dtpgroup.dtp2, true);
                         dtpgroup.dtp2.Checked = true;
                         //时间控件更长为260px，这里要特殊处理
                         dtpgroup.Location = new System.Drawing.Point(txtDefault1.Location.X, txtDefault1.Location.Y);
@@ -170,49 +166,97 @@ namespace RUINORERP.UI.UserPersonalized
 
                         #endregion
                         break;
+                    case AdvQueryProcessType.datetime:
+                        txtDefault1.Visible = false;
 
+                        //重新生成日期类型的
+                        #region
+
+                        chkEnableDefault1.Visible = true;
+                        KryptonDateTimePicker kdp = new KryptonDateTimePicker();
+                        kdp.Name = queryField.FieldName;
+                        object datetimeValue = ReflectionHelper.GetPropertyValue(TargetEntityDto, queryField.FieldName);
+                        DataBindingHelper.BindData4DataTime(TargetEntityDto, datetimeValue, queryField.FieldName, kdp, true);
+                        kdp.Checked = true;
+                        kdp.Value = System.DateTime.Now;
+                        //时间控件更长为260px，这里要特殊处理
+                        kdp.Location = new System.Drawing.Point(txtDefault1.Location.X, txtDefault1.Location.Y);
+                        kdp.Size = new System.Drawing.Size(160, 100);
+                        this.Controls.Add(kdp);
+
+                        #endregion
+                        break;
                     default:
                         txtDefault1.Visible = false;
-                        txtDefault2.Visible = false;
                         lblDefault1.Visible = false;
-                        lblDefault2.Visible = false;
                         chkEnableDefault1.Visible = false;
-                        chkEnableDefault2.Visible = false;
                         break;
                 }
 
                 if (queryField.SugarCol != null)
                 {
-                    //可空才能不可见
-                    if (queryField.SugarCol.IsNullable)
+                    if (queryField.SugarCol.SqlParameterDbType != null)
                     {
-                        lblVisble.Visible = true;
-                        chkVisble.Visible = true;
+                        //字符串才启用模糊查询
+                        if (queryField.SugarCol.SqlParameterDbType.ToString() == "String")
+                        {
+
+                        }
+                        else
+                        {
+
+
+                        }
+
+
+                        //下拉才可能多选
+                        if (queryField.SugarCol.SqlParameterDbType.ToString() == "Int64")
+                        {
+
+                        }
+                        else
+                        {
+
+                        }
+
                     }
                     else
                     {
-                        lblVisble.Visible = false;
-                        chkVisble.Visible = false;
-                        entity.IsVisble = true;
-                    }
+                        #region 用其它方式判断
+                        //字符串才启用模糊查询
+                        if (queryField.FieldPropertyInfo != null && queryField.FieldPropertyInfo.PropertyType.ToString() == "System.String")
+                        {
 
-                    DataBindingHelper.BindData4CheckBox<tb_UIInputDataField>(entity, c => c.IsVisble, chkVisble, false);
+                        }
+                        else
+                        {
+                        }
+                        #endregion
 
-                    if (queryField.SugarCol.SqlParameterDbType!=null)
-                    {
-                       
+                        #region 用其它方式判断是否能多选
+                        //字符串才启用模糊查询
+                        if (queryField.FieldPropertyInfo != null && queryField.FieldPropertyInfo.PropertyType.ToString() == "System.Int64")
+                        {
 
+                        }
+                        else
+                        {
 
-
-                    }
-                    else
-                    {
-                       
-
+                        }
+                        #endregion
                     }
 
                 }
 
+            }
+
+            if (entity.EnableDefault1.HasValue && entity.EnableDefault1.Value)
+            {
+                //object defaultValue = queryField.FieldPropertyInfo
+                // 进行类型转换
+                object convertedValue = Convert.ChangeType(entity.Default1, queryField.ColDataType);
+
+                TargetEntityDto.SetPropertyValue(entity.FieldName, convertedValue);
             }
 
             entity.PropertyChanged += (sender, s2) =>
@@ -254,7 +298,7 @@ namespace RUINORERP.UI.UserPersonalized
                     if (EditEntity.EnableDefault1.Value)
                     {
                         //变化时算时天数差值
-                        EditEntity.DiffDays1 = (ReflectionHelper.GetPropertyValue(QueryDto, queryField.ExtendedAttribute[0].ColName).ToDateTime() - System.DateTime.Now).Days;
+                        EditEntity.DiffDays1 = (ReflectionHelper.GetPropertyValue(TargetEntityDto, queryField.ExtendedAttribute[0].ColName).ToDateTime() - System.DateTime.Now).Days;
                         if (EditEntity.DiffDays1 < -3650)
                         {
                             EditEntity.DiffDays1 = -3650;
@@ -265,19 +309,6 @@ namespace RUINORERP.UI.UserPersonalized
                         EditEntity.DiffDays1 = 0;
                     }
 
-                    EditEntity.EnableDefault2 = dtpgroup.dtp2.Checked;
-                    if (EditEntity.EnableDefault2.Value)
-                    {
-                        EditEntity.DiffDays2 = (ReflectionHelper.GetPropertyValue(QueryDto, queryField.ExtendedAttribute[1].ColName).ToDateTime() - System.DateTime.Now).Days;
-                        if (EditEntity.DiffDays2 < -3650)
-                        {
-                            EditEntity.DiffDays2 = -3650;
-                        }
-                    }
-                    else
-                    {
-                        EditEntity.DiffDays2 = 0;
-                    }
 
                 }
 

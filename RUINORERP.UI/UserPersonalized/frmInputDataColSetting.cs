@@ -34,11 +34,15 @@ namespace RUINORERP.UI.UserPersonalized
             this.StartPosition = FormStartPosition.CenterParent;
         }
 
-        public List<tb_UIInputDataField> InputFields { get; set; }
 
-        public List<tb_UIInputDataField> ColumnDisplays { get; set; } = new List<tb_UIInputDataField>();
+        public List<tb_UIInputDataField> InputFields { get; set; } = new List<tb_UIInputDataField>();
 
         public tb_UIInputDataField[] oldColumnDisplays;
+
+        /// <summary>
+        /// 查询条件 根据这个来生成绑定。选择默认值
+        /// </summary>
+        public List<QueryField> QueryFields { get; set; }
 
         ContextMenuStrip contentMenu1;
         public tb_MenuInfo CurMenuInfo { get; set; }
@@ -46,7 +50,7 @@ namespace RUINORERP.UI.UserPersonalized
         /// <summary>
         /// 要录入的单据实体对象实例
         /// </summary>
-        public Object Entity { get; set; }
+        public Object TargetEntityDto { get; set; }
         private void btnOk_Click(object sender, EventArgs e)
         {
             string shou = string.Empty;
@@ -72,8 +76,8 @@ namespace RUINORERP.UI.UserPersonalized
                 {
                     if (columnDisplays != null)
                     {
-                        tb_UIInputDataField cdc = ColumnDisplays.Where(c => c.FieldName == columnDisplays.FieldName).FirstOrDefault();
-                        
+                        tb_UIInputDataField cdc = InputFields.Where(c => c.FieldName == columnDisplays.FieldName).FirstOrDefault();
+
                     }
                 }
                 if (string.IsNullOrEmpty(item.Text))
@@ -100,9 +104,6 @@ namespace RUINORERP.UI.UserPersonalized
 
         private async void frmMenuPersonalization_Load(object sender, EventArgs e)
         {
-         
-
-
             listView1.AllowDrop = true;
             if (dataGridView != null)
             {
@@ -173,18 +174,20 @@ namespace RUINORERP.UI.UserPersonalized
             listView1.Columns.Add("显示列名");
             listView1.Columns[0].TextAlign = HorizontalAlignment.Center;
             listView1.Columns[0].Width = -2; //-1 -2 
+            //显示列名这一列 颜色背景突出显示
+            //listView1.Columns[0].BackColor = Color.LightGray
 
-            oldColumnDisplays = new tb_UIInputDataField[ColumnDisplays.Count];
-            ColumnDisplays.CopyTo(oldColumnDisplays);
-
+            //listView1.Columns[0].cor
+            oldColumnDisplays = new tb_UIInputDataField[InputFields.Count];
+            InputFields.CopyTo(oldColumnDisplays);
 
             //重新得到一个集合的方法
             // 对 ColumnDisplays 按 ColDisplayIndex 排序（升序，小的排在前面）OrderBy / 降序OrderByDescending
             //ColumnDisplays = ColumnDisplays.OrderBy(c => c.ColDisplayIndex).ToList();
             //对原始集合排序
-            ColumnDisplays.Sort((x, y) => x.Sort.CompareTo(y.Sort));
+            InputFields.Sort((x, y) => x.Sort.CompareTo(y.Sort));
 
-            foreach (tb_UIInputDataField keyValue in ColumnDisplays)
+            foreach (tb_UIInputDataField keyValue in InputFields)
             {
                 //listView1.Items.Insert(0, new ListViewItem(item.Key.ToString()));
                 ListViewItem lvi = new ListViewItem();
@@ -291,32 +294,32 @@ namespace RUINORERP.UI.UserPersonalized
             //提前统一加载就不闪屏？
             if (listView1.SelectedItems != null && listView1.SelectedItems.Count > 0)
             {
-                var entity = listView1.SelectedItems[0].Tag as ColDisplayController;
-                if (panelConditionEdit.Controls.ContainsKey(entity.ColName.ToString()))
+                var entity = listView1.SelectedItems[0].Tag as tb_UIInputDataField;
+                if (panelConditionEdit.Controls.ContainsKey(entity.FieldName.ToString()))
                 {
-                    var uCQuery = panelConditionEdit.Controls.CastToList<Control>().FirstOrDefault(c => c.Name == entity.ColName.ToString());
+                    var uCQuery = panelConditionEdit.Controls.CastToList<Control>().FirstOrDefault(c => c.Name == entity.FieldName.ToString());
                     if (uCQuery != null)
                     {
                         uCQuery.Visible = true;
                     }
                     //其它隐藏
-                    panelConditionEdit.Controls.CastToList<Control>().Where(c => c.Name != entity.ColName.ToString()).ToList().ForEach(c => c.Visible = false);
+                    panelConditionEdit.Controls.CastToList<Control>().Where(c => c.Name != entity.FieldName.ToString()).ToList().ForEach(c => c.Visible = false);
                 }
                 else
                 {
                     //有些闪屏。后面优化是不是加载时就全部加进去 
-                    UCGridColSetting uCGridColSet = new UCGridColSetting();
-                    uCGridColSet.Name = entity.ColName;
-                    uCGridColSet.dataGridView = dataGridView;
+                    UCInputDataCol uCGridColSet = new UCInputDataCol();
+                    uCGridColSet.Name = entity.FieldName;
+                    uCGridColSet.TargetEntityDto = TargetEntityDto;
+                    uCGridColSet.QueryFields = QueryFields;
                     uCGridColSet.BindData(entity);
                     uCGridColSet.OnSynchronizeUI += UCQuery_OnSynchronizeUI;
-
                     uCGridColSet.Visible = true;//这里是当前编辑的字段显示
                     uCGridColSet.TopLevel = false;
                     uCGridColSet.Dock = DockStyle.Fill;
                     panelConditionEdit.Controls.Add(uCGridColSet as Control);
                     //其它隐藏
-                    panelConditionEdit.Controls.CastToList<Control>().Where(c => c.Name != entity.ColName.ToString()).ToList().ForEach(c => c.Visible = false);
+                    panelConditionEdit.Controls.CastToList<Control>().Where(c => c.Name != entity.FieldName.ToString()).ToList().ForEach(c => c.Visible = false);
                 }
 
             }
@@ -334,31 +337,32 @@ namespace RUINORERP.UI.UserPersonalized
             {
                 for (int i = 0; i < listView1.SelectedItems.Count; i++)
                 {
-                    var entity = listView1.SelectedItems[i].Tag as ColDisplayController;
-                    if (panelConditionEdit.Controls.ContainsKey(entity.ColName.ToString()))
+                    var entity = listView1.SelectedItems[i].Tag as tb_UIInputDataField;
+                    if (panelConditionEdit.Controls.ContainsKey(entity.FieldName.ToString()))
                     {
-                        var uCQuery = panelConditionEdit.Controls.CastToList<Control>().FirstOrDefault(c => c.Name == entity.ColName.ToString());
+                        var uCQuery = panelConditionEdit.Controls.CastToList<Control>().FirstOrDefault(c => c.Name == entity.FieldName.ToString());
                         if (uCQuery != null)
                         {
                             uCQuery.Visible = true;
                         }
                         //其它隐藏
-                        panelConditionEdit.Controls.CastToList<Control>().Where(c => c.Name != entity.ColName.ToString()).ToList().ForEach(c => c.Visible = false);
+                        panelConditionEdit.Controls.CastToList<Control>().Where(c => c.Name != entity.FieldName.ToString()).ToList().ForEach(c => c.Visible = false);
                     }
                     else
                     {
                         //有些闪屏。后面优化是不是加载时就全部加进去 
-                        UCGridColSetting uCGridColSet = new UCGridColSetting();
-                        uCGridColSet.Name = entity.ColName;
-                        uCGridColSet.dataGridView = dataGridView;
+                        UCInputDataCol uCGridColSet = new UCInputDataCol();
+                        uCGridColSet.Name = entity.FieldName;
                         uCGridColSet.OnSynchronizeUI += UCQuery_OnSynchronizeUI;
+                        uCGridColSet.TargetEntityDto = TargetEntityDto;
+                        uCGridColSet.QueryFields = QueryFields;
                         uCGridColSet.BindData(entity);
                         uCGridColSet.Visible = true;//这里是当前编辑的字段显示
                         uCGridColSet.TopLevel = false;
                         uCGridColSet.Dock = DockStyle.Fill;
                         panelConditionEdit.Controls.Add(uCGridColSet as Control);
                         //其它隐藏
-                        panelConditionEdit.Controls.CastToList<Control>().Where(c => c.Name != entity.ColName.ToString()).ToList().ForEach(c => c.Visible = false);
+                        panelConditionEdit.Controls.CastToList<Control>().Where(c => c.Name != entity.FieldName.ToString()).ToList().ForEach(c => c.Visible = false);
                     }
                 }
             }
@@ -421,16 +425,16 @@ namespace RUINORERP.UI.UserPersonalized
         /// <param name="e"></param>
         private void UCQuery_OnSynchronizeUI(object sender, object e)
         {
-            if (sender is ColDisplayController target)
+            if (sender is tb_UIInputDataField target)
             {
                 foreach (ListViewItem item in listView1.Items)
                 {
-                    if (item.Tag is ColDisplayController column)
+                    if (item.Tag is tb_UIInputDataField column)
                     {
-                        if (column.ColName == target.ColName)
+                        if (column.FieldName == target.FieldName)
                         {
                             item.Tag = target;
-                            item.Checked = target.Visible;
+                            item.Checked = target.IsVisble;
                             break;
                         }
                     }
@@ -455,7 +459,7 @@ namespace RUINORERP.UI.UserPersonalized
         {
             //ColumnDisplays
             //这里初始化时，注意要以显示到可以操作的列为基准。（比方有些列BuildInvisibleCols在这个方法硬编码不显示，则默认这里也不会显示）
-            InputFields = UIBizSrvice.InitInputDataFields(ColumnDisplays,Entity , CurMenuInfo);
+            InputFields = UIBizSrvice.InitInputDataFields(InputFields, TargetEntityDto, CurMenuInfo, QueryFields);
             LoadColumnDisplayList();
         }
 
@@ -466,9 +470,9 @@ namespace RUINORERP.UI.UserPersonalized
             //只有他有焦点人点时才生效。或全选 全不选
             if ((sender is ListView target && listView1.Focused) || (chkAll.Checked || chkReverseSelection.Checked))
             {
-                if (e.Item.Tag is ColDisplayController column)
+                if (e.Item.Tag is tb_UIInputDataField column)
                 {
-                    column.Visible = e.Item.Checked;
+                    column.IsVisble = e.Item.Checked;
                 }
             }
         }

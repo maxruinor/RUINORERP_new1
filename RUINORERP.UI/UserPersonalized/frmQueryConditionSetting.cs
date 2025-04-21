@@ -3,6 +3,7 @@ using RUINORERP.Business.Processor;
 using RUINORERP.Common.Extensions;
 using RUINORERP.Model;
 using RUINORERP.Model.Models;
+using RUINORERP.UI.Common;
 using RUINORERP.UI.UControls;
 using System;
 using System.Collections.Generic;
@@ -31,10 +32,9 @@ namespace RUINORERP.UI.UserPersonalized
 
         public tb_UIQueryCondition[] oldConditions;
 
+        public tb_UIMenuPersonalization Personalization { get; set; }
 
         ContextMenuStrip contentMenu1;
-
-
 
         private void btnOk_Click(object sender, EventArgs e)
         {
@@ -100,7 +100,7 @@ namespace RUINORERP.UI.UserPersonalized
 
         private void frmMenuPersonalization_Load(object sender, EventArgs e)
         {
-
+            DataBindingHelper.BindData4CheckBox<tb_UIMenuPersonalization>(Personalization, k => k.EnableQuerySettings, chkEnableQuerySettings, false);
             listView1.AllowDrop = true;
             listView1.ItemDrag += ListView1_ItemDrag;
             listView1.DragEnter += listView1_DragEnter;

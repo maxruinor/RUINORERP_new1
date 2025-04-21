@@ -42,6 +42,7 @@ namespace RUINORERP.Business
                .Includes(t => t.tb_roleinfo)
                .Includes(t => t.tb_UserPersonalizeds,w=>w.tb_UIMenuPersonalizations,v=>v.tb_UIGridSettings)
                .Includes(t => t.tb_UserPersonalizeds, w => w.tb_UIMenuPersonalizations, v => v.tb_UIQueryConditions)
+               .Includes(t => t.tb_UserPersonalizeds, w => w.tb_UIMenuPersonalizations, v => v.tb_UIInputDataFields)
                .Includes(t => t.tb_userinfo)
                .ToListAsync();
                 foreach (var item in list)

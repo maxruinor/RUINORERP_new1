@@ -64,8 +64,12 @@ namespace RUINORERP.UI.BaseForm
         {
             //公共方法
             string PrimaryKeyColName = UIHelper.GetPrimaryKeyColName(typeof(T));
-            entity.PrimaryKeyID = (long)ReflectionHelper.GetPropertyValue(entity, PrimaryKeyColName);
-            //ToolBarEnabledControl(entity);
+            if (!string.IsNullOrEmpty(PrimaryKeyColName))
+            {
+                entity.PrimaryKeyID = (long)ReflectionHelper.GetPropertyValue(entity, PrimaryKeyColName);
+                //ToolBarEnabledControl(entity);
+            }
+
         }
 
         //public virtual void BindData(T entity, ActionStatus actionStatus = ActionStatus.无操作)

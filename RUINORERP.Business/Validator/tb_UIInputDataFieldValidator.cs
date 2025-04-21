@@ -58,14 +58,9 @@ namespace RUINORERP.Business
 
  RuleFor(tb_UIInputDataField =>tb_UIInputDataField.Default1).MaximumLength(127).WithMessage("默认值1:不能超过最大长度,127.");
 
- RuleFor(tb_UIInputDataField =>tb_UIInputDataField.Default2).MaximumLength(127).WithMessage("默认值2:不能超过最大长度,127.");
-
-
 
 
  RuleFor(tb_UIInputDataField =>tb_UIInputDataField.DiffDays1).NotEmpty().When(x => x.DiffDays1.HasValue);
-
- RuleFor(tb_UIInputDataField =>tb_UIInputDataField.DiffDays2).NotEmpty().When(x => x.DiffDays2.HasValue);
 
 
  RuleFor(tb_UIInputDataField =>tb_UIInputDataField.Created_by).NotEmpty().When(x => x.Created_by.HasValue);

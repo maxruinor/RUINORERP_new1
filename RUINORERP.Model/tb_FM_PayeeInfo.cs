@@ -253,13 +253,7 @@ namespace RUINORERP.Model
         //PayeeInfoID.FK_FM_PRereceivedpayment_REF_FM_PAyeeinfo)
         //tb_FM_PayeeInfo.PayeeInfoID)
 
-        //[Browsable(false)]打印报表时的数据源会不显示
-        [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_FM_Payment.PayeeInfoID))]
-        public virtual List<tb_FM_Payment> tb_FM_Payments { get; set; }
-        //tb_FM_Payment.PayeeInfoID)
-        //PayeeInfoID.FK_FM_PAYMENTREQUEST_REF_FM_PAYEEINFO)
-        //tb_FM_PayeeInfo.PayeeInfoID)
+      
 
         //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]

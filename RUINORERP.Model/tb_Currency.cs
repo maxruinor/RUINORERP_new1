@@ -248,14 +248,7 @@ namespace RUINORERP.Model
         //tb_FM_PaymentApplication.Currency_ID)
         //Currency_ID.FK_PAYMENTAPPLICATION_REF_CURRENCY)
         //tb_Currency.Currency_ID)
-
-        //[Browsable(false)]打印报表时的数据源会不显示
-        [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_FM_Payment.Currency_ID))]
-        public virtual List<tb_FM_Payment> tb_FM_Payments { get; set; }
-        //tb_FM_Payment.Currency_ID)
-        //Currency_ID.FK_PAYMENTREQuest_REF_CURRENCY)
-        //tb_Currency.Currency_ID)
+ 
 
 
         #endregion

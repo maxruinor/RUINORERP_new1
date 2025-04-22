@@ -251,7 +251,6 @@ namespace RUINORERP.Business
                         .Include(m => m.tb_FM_PaymentApplications)
                     .Include(m => m.tb_FM_Accounts)
                     .Include(m => m.tb_FM_ExpenseClaims)
-                    .Include(m => m.tb_FM_Payments)
                     .Include(m => m.tb_FM_OtherExpenses)
                     .ExecuteCommandAsync();
                  }
@@ -261,7 +260,6 @@ namespace RUINORERP.Business
                 .Include(m => m.tb_FM_PaymentApplications)
                 .Include(m => m.tb_FM_Accounts)
                 .Include(m => m.tb_FM_ExpenseClaims)
-                .Include(m => m.tb_FM_Payments)
                 .Include(m => m.tb_FM_OtherExpenses)
          
                 .ExecuteCommandAsync();
@@ -299,7 +297,6 @@ namespace RUINORERP.Business
                                 .Includes(m => m.tb_FM_PaymentApplications)
                         .Includes(m => m.tb_FM_Accounts)
                         .Includes(m => m.tb_FM_ExpenseClaims)
-                        .Includes(m => m.tb_FM_Payments)
                         .Includes(m => m.tb_FM_OtherExpenses)
                                         .Where(useLike, dto);
             return await querySqlQueryable.ToListAsync()as List<T>;
@@ -313,7 +310,6 @@ namespace RUINORERP.Business
                                 .Include(m => m.tb_FM_PaymentApplications)
                         .Include(m => m.tb_FM_Accounts)
                         .Include(m => m.tb_FM_ExpenseClaims)
-                        .Include(m => m.tb_FM_Payments)
                         .Include(m => m.tb_FM_OtherExpenses)
                                         .ExecuteCommandAsync();
             if (rs)
@@ -480,7 +476,6 @@ namespace RUINORERP.Business
                                             .Includes(t => t.tb_FM_PaymentApplications )
                                 .Includes(t => t.tb_FM_Accounts )
                                 .Includes(t => t.tb_FM_ExpenseClaims )
-                                .Includes(t => t.tb_FM_Payments )
                                 .Includes(t => t.tb_FM_OtherExpenses )
                         .ToListAsync();
             
@@ -567,7 +562,6 @@ namespace RUINORERP.Business
                                          .Includes(t => t.tb_FM_PaymentApplications )
                             .Includes(t => t.tb_FM_Accounts )
                             .Includes(t => t.tb_FM_ExpenseClaims )
-                            .Includes(t => t.tb_FM_Payments )
                             .Includes(t => t.tb_FM_OtherExpenses )
                         .FirstAsync();
             if(entity!=null)

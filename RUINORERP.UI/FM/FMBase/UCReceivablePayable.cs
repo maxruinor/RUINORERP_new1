@@ -152,7 +152,6 @@ namespace RUINORERP.UI.FM
             DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayable>(entity, t => t.LocalPaidAmount.ToString(), txtLocalPaidAmount, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayable>(entity, t => t.ForeignBalanceAmount.ToString(), txtForeignBalanceAmount, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayable>(entity, t => t.LocalBalanceAmount.ToString(), txtLocalBalanceAmount, BindDataType4TextBox.Money, false);
-            DataBindingHelper.BindData4DataTime<tb_FM_ReceivablePayable>(entity, t => t.PaymentDate, dtpPaymentDate, false);
             DataBindingHelper.BindData4DataTime<tb_FM_ReceivablePayable>(entity, t => t.DueDate, dtpDueDate, false);
             DataBindingHelper.BindData4Cmb<tb_Department>(entity, k => k.DepartmentID, v => v.DepartmentName, cmbDepartmentID);
             DataBindingHelper.BindData4Cmb<tb_ProjectGroup>(entity, k => k.ProjectGroup_ID, v => v.ProjectGroupName, cmbProjectGroup_ID);
@@ -347,19 +346,14 @@ namespace RUINORERP.UI.FM
                 case ReceivePaymentType.收款:
                     lblBillText.Text = "预收款单";
                     lblAccount_id.Text = "收款账号";
-                    lblPrePayDate.Text = "收款日期";
-                    lblPrePaymentReason.Text = "收款事由";
                     lblCustomerVendor_ID.Text = "付款单位";
                     btnInfo.Visible = false;
                     cmbPayeeInfoID.Visible = false;
-            
 
                     break;
                 case ReceivePaymentType.付款:
                     lblBillText.Text = "预付款单";
                     lblAccount_id.Text = "付款账号";
-                    lblPrePayDate.Text = "付款日期";
-                    lblPrePaymentReason.Text = "付款事由";
                     lblCustomerVendor_ID.Text = "收款单位";
                     break;
                 default:

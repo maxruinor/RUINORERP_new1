@@ -30,6 +30,8 @@
         {
             this.kryptonSplitContainer1 = new Krypton.Toolkit.KryptonSplitContainer();
             this.kryptonPanel1 = new Krypton.Toolkit.KryptonPanel();
+            this.lblAccount_id = new Krypton.Toolkit.KryptonLabel();
+            this.cmbAccount_id = new Krypton.Toolkit.KryptonComboBox();
             this.txtPayeeAccountNo = new Krypton.Toolkit.KryptonTextBox();
             this.lblPayeeAccountNo = new Krypton.Toolkit.KryptonLabel();
             this.lblProjectGroup_ID = new Krypton.Toolkit.KryptonLabel();
@@ -39,8 +41,6 @@
             this.lblEmployee_ID = new Krypton.Toolkit.KryptonLabel();
             this.lblDueDate = new Krypton.Toolkit.KryptonLabel();
             this.dtpDueDate = new Krypton.Toolkit.KryptonDateTimePicker();
-            this.lblPaymentDate = new Krypton.Toolkit.KryptonLabel();
-            this.dtpPaymentDate = new Krypton.Toolkit.KryptonDateTimePicker();
             this.lblTaxTotalAmount = new Krypton.Toolkit.KryptonLabel();
             this.txtTaxTotalAmount = new Krypton.Toolkit.KryptonTextBox();
             this.lblUntaxedTotalAmont = new Krypton.Toolkit.KryptonLabel();
@@ -87,8 +87,6 @@
             this.lblLocalPaidAmount = new Krypton.Toolkit.KryptonLabel();
             this.txtLocalBalanceAmount = new Krypton.Toolkit.KryptonTextBox();
             this.lblLocalBalanceAmount = new Krypton.Toolkit.KryptonLabel();
-            this.lblAccount_id = new Krypton.Toolkit.KryptonLabel();
-            this.cmbAccount_id = new Krypton.Toolkit.KryptonComboBox();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceSub)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1)).BeginInit();
@@ -99,6 +97,7 @@
             this.kryptonSplitContainer1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel1)).BeginInit();
             this.kryptonPanel1.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.cmbAccount_id)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmbProjectGroup_ID)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmbDepartmentID)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmbPreRPID)).BeginInit();
@@ -113,7 +112,6 @@
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer2.Panel2)).BeginInit();
             this.kryptonSplitContainer2.Panel2.SuspendLayout();
             this.kryptonSplitContainer2.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.cmbAccount_id)).BeginInit();
             this.SuspendLayout();
             // 
             // kryptonSplitContainer1
@@ -148,8 +146,6 @@
             this.kryptonPanel1.Controls.Add(this.lblEmployee_ID);
             this.kryptonPanel1.Controls.Add(this.lblDueDate);
             this.kryptonPanel1.Controls.Add(this.dtpDueDate);
-            this.kryptonPanel1.Controls.Add(this.lblPaymentDate);
-            this.kryptonPanel1.Controls.Add(this.dtpPaymentDate);
             this.kryptonPanel1.Controls.Add(this.lblTaxTotalAmount);
             this.kryptonPanel1.Controls.Add(this.txtTaxTotalAmount);
             this.kryptonPanel1.Controls.Add(this.lblUntaxedTotalAmont);
@@ -187,6 +183,23 @@
             this.kryptonPanel1.Name = "kryptonPanel1";
             this.kryptonPanel1.Size = new System.Drawing.Size(1133, 271);
             this.kryptonPanel1.TabIndex = 4;
+            // 
+            // lblAccount_id
+            // 
+            this.lblAccount_id.Location = new System.Drawing.Point(511, 155);
+            this.lblAccount_id.Name = "lblAccount_id";
+            this.lblAccount_id.Size = new System.Drawing.Size(75, 20);
+            this.lblAccount_id.TabIndex = 202;
+            this.lblAccount_id.Values.Text = "收付款账户";
+            // 
+            // cmbAccount_id
+            // 
+            this.cmbAccount_id.DropDownWidth = 100;
+            this.cmbAccount_id.IntegralHeight = false;
+            this.cmbAccount_id.Location = new System.Drawing.Point(592, 153);
+            this.cmbAccount_id.Name = "cmbAccount_id";
+            this.cmbAccount_id.Size = new System.Drawing.Size(167, 21);
+            this.cmbAccount_id.TabIndex = 203;
             // 
             // txtPayeeAccountNo
             // 
@@ -240,7 +253,7 @@
             // 
             // lblEmployee_ID
             // 
-            this.lblEmployee_ID.Location = new System.Drawing.Point(676, 221);
+            this.lblEmployee_ID.Location = new System.Drawing.Point(537, 176);
             this.lblEmployee_ID.Name = "lblEmployee_ID";
             this.lblEmployee_ID.Size = new System.Drawing.Size(49, 20);
             this.lblEmployee_ID.TabIndex = 195;
@@ -248,7 +261,7 @@
             // 
             // lblDueDate
             // 
-            this.lblDueDate.Location = new System.Drawing.Point(867, 149);
+            this.lblDueDate.Location = new System.Drawing.Point(530, 64);
             this.lblDueDate.Name = "lblDueDate";
             this.lblDueDate.Size = new System.Drawing.Size(49, 20);
             this.lblDueDate.TabIndex = 193;
@@ -256,27 +269,11 @@
             // 
             // dtpDueDate
             // 
-            this.dtpDueDate.Location = new System.Drawing.Point(929, 148);
+            this.dtpDueDate.Location = new System.Drawing.Point(592, 63);
             this.dtpDueDate.Name = "dtpDueDate";
             this.dtpDueDate.ShowCheckBox = true;
-            this.dtpDueDate.Size = new System.Drawing.Size(139, 21);
+            this.dtpDueDate.Size = new System.Drawing.Size(167, 21);
             this.dtpDueDate.TabIndex = 194;
-            // 
-            // lblPaymentDate
-            // 
-            this.lblPaymentDate.Location = new System.Drawing.Point(524, 67);
-            this.lblPaymentDate.Name = "lblPaymentDate";
-            this.lblPaymentDate.Size = new System.Drawing.Size(62, 20);
-            this.lblPaymentDate.TabIndex = 191;
-            this.lblPaymentDate.Values.Text = "支付日期";
-            // 
-            // dtpPaymentDate
-            // 
-            this.dtpPaymentDate.Location = new System.Drawing.Point(592, 67);
-            this.dtpPaymentDate.Name = "dtpPaymentDate";
-            this.dtpPaymentDate.ShowCheckBox = true;
-            this.dtpPaymentDate.Size = new System.Drawing.Size(167, 21);
-            this.dtpPaymentDate.TabIndex = 192;
             // 
             // lblTaxTotalAmount
             // 
@@ -433,7 +430,7 @@
             // 
             this.cmbEmployee_ID.DropDownWidth = 100;
             this.cmbEmployee_ID.IntegralHeight = false;
-            this.cmbEmployee_ID.Location = new System.Drawing.Point(731, 221);
+            this.cmbEmployee_ID.Location = new System.Drawing.Point(592, 176);
             this.cmbEmployee_ID.Name = "cmbEmployee_ID";
             this.cmbEmployee_ID.Size = new System.Drawing.Size(167, 21);
             this.cmbEmployee_ID.TabIndex = 138;
@@ -683,23 +680,6 @@
             this.lblLocalBalanceAmount.TabIndex = 206;
             this.lblLocalBalanceAmount.Values.Text = "未核销本币";
             // 
-            // lblAccount_id
-            // 
-            this.lblAccount_id.Location = new System.Drawing.Point(511, 155);
-            this.lblAccount_id.Name = "lblAccount_id";
-            this.lblAccount_id.Size = new System.Drawing.Size(75, 20);
-            this.lblAccount_id.TabIndex = 202;
-            this.lblAccount_id.Values.Text = "收付款账户";
-            // 
-            // cmbAccount_id
-            // 
-            this.cmbAccount_id.DropDownWidth = 100;
-            this.cmbAccount_id.IntegralHeight = false;
-            this.cmbAccount_id.Location = new System.Drawing.Point(592, 153);
-            this.cmbAccount_id.Name = "cmbAccount_id";
-            this.cmbAccount_id.Size = new System.Drawing.Size(167, 21);
-            this.cmbAccount_id.TabIndex = 203;
-            // 
             // UCReceivablePayable
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
@@ -720,6 +700,7 @@
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel1)).EndInit();
             this.kryptonPanel1.ResumeLayout(false);
             this.kryptonPanel1.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.cmbAccount_id)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmbProjectGroup_ID)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmbDepartmentID)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmbPreRPID)).EndInit();
@@ -735,7 +716,6 @@
             this.kryptonSplitContainer2.Panel2.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer2)).EndInit();
             this.kryptonSplitContainer2.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.cmbAccount_id)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -779,8 +759,6 @@
         private Krypton.Toolkit.KryptonTextBox txtTaxTotalAmount;
         private Krypton.Toolkit.KryptonLabel lblUntaxedTotalAmont;
         private Krypton.Toolkit.KryptonTextBox txtUntaxedTotalAmont;
-        private Krypton.Toolkit.KryptonLabel lblPaymentDate;
-        private Krypton.Toolkit.KryptonDateTimePicker dtpPaymentDate;
         private Krypton.Toolkit.KryptonLabel lblDueDate;
         private Krypton.Toolkit.KryptonDateTimePicker dtpDueDate;
         private Krypton.Toolkit.KryptonLabel lblEmployee_ID;

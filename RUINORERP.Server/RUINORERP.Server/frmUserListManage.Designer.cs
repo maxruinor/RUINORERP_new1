@@ -38,19 +38,20 @@
             toolStripMenuItem6 = new System.Windows.Forms.ToolStripMenuItem();
             推送版本更新ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             推送缓存数据ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            切换服务器ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             listView1 = new System.Windows.Forms.ListView();
             toolStrip1 = new System.Windows.Forms.ToolStrip();
             tsbtn刷新 = new System.Windows.Forms.ToolStripButton();
-            切换服务器ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            全部切换服务器ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             contextMenuStrip1.SuspendLayout();
             toolStrip1.SuspendLayout();
             SuspendLayout();
             // 
             // contextMenuStrip1
             // 
-            contextMenuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] { toolStripMenuItem1, toolStripMenuItem2, toolStripMenuItem4, toolStripMenuItem5, toolStripMenuItem6, 推送版本更新ToolStripMenuItem, 推送缓存数据ToolStripMenuItem, 切换服务器ToolStripMenuItem });
+            contextMenuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] { toolStripMenuItem1, toolStripMenuItem2, toolStripMenuItem4, toolStripMenuItem5, toolStripMenuItem6, 推送版本更新ToolStripMenuItem, 推送缓存数据ToolStripMenuItem, 切换服务器ToolStripMenuItem, 全部切换服务器ToolStripMenuItem });
             contextMenuStrip1.Name = "contextMenuStrip1";
-            contextMenuStrip1.Size = new System.Drawing.Size(161, 180);
+            contextMenuStrip1.Size = new System.Drawing.Size(161, 202);
             contextMenuStrip1.ItemClicked += contextMenuStrip1_ItemClicked;
             // 
             // toolStripMenuItem1
@@ -95,6 +96,12 @@
             推送缓存数据ToolStripMenuItem.Size = new System.Drawing.Size(160, 22);
             推送缓存数据ToolStripMenuItem.Text = "推送缓存数据";
             // 
+            // 切换服务器ToolStripMenuItem
+            // 
+            切换服务器ToolStripMenuItem.Name = "切换服务器ToolStripMenuItem";
+            切换服务器ToolStripMenuItem.Size = new System.Drawing.Size(160, 22);
+            切换服务器ToolStripMenuItem.Text = "切换服务器";
+            // 
             // listView1
             // 
             listView1.ContextMenuStrip = contextMenuStrip1;
@@ -128,11 +135,11 @@
             tsbtn刷新.Text = "刷新";
             tsbtn刷新.Click += tsbtn刷新_Click;
             // 
-            // 切换服务器ToolStripMenuItem
+            // 全部切换服务器ToolStripMenuItem
             // 
-            切换服务器ToolStripMenuItem.Name = "切换服务器ToolStripMenuItem";
-            切换服务器ToolStripMenuItem.Size = new System.Drawing.Size(160, 22);
-            切换服务器ToolStripMenuItem.Text = "切换服务器";
+            全部切换服务器ToolStripMenuItem.Name = "全部切换服务器ToolStripMenuItem";
+            全部切换服务器ToolStripMenuItem.Size = new System.Drawing.Size(160, 22);
+            全部切换服务器ToolStripMenuItem.Text = "全部切换服务器";
             // 
             // frmUserListManage
             // 
@@ -168,5 +175,6 @@
         private System.Windows.Forms.ToolStrip toolStrip1;
         private System.Windows.Forms.ToolStripButton tsbtn刷新;
         private System.Windows.Forms.ToolStripMenuItem 切换服务器ToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem 全部切换服务器ToolStripMenuItem;
     }
 }

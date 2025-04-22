@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：10/22/2024 16:24:08
+// 时间：04/22/2025 12:16:03
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -30,7 +30,7 @@ using RUINORERP.Common.Helper;
 namespace RUINORERP.Business.Processor
 {
     /// <summary>
-    /// 账户管理，财务系统中使用
+    /// 付款账号管理
     /// </summary>
     public partial class tb_FM_AccountProcessor:BaseProcessor 
     {

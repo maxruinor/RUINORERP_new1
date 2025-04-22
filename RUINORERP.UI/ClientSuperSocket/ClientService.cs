@@ -527,6 +527,10 @@ namespace RUINORERP.UI.SuperSocketClient
         public static string 接收服务器弹窗消息(OriginalData gd)
         {
             string Message = "";
+            if (gd.Two == null)
+            {
+                return Message;
+            }
             try
             {
                 int index = 0;
@@ -603,7 +607,7 @@ namespace RUINORERP.UI.SuperSocketClient
                 string BillType = ByteDataAnalysis.GetString(gd.Two, ref index);
                 string BillData = ByteDataAnalysis.GetString(gd.Two, ref index);
                 var userinfo = MainForm.Instance.UserInfos.FirstOrDefault(c => c.UserID == RequestUserID);
-                if (userinfo==null)
+                if (userinfo == null)
                 {
                     userinfo = new();
                     userinfo.姓名 = RequestEmpName;

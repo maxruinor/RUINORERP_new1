@@ -175,8 +175,8 @@ namespace RUINORERP.Server
             ServerStart = true;
             try
             {
-                _logger.Error("ErrorError11");
-                _logger.LogError("LogErrorLogError11");
+                _logger.Error("StartServerUI启动ERP服务");
+                //_logger.LogError("LogErrorLogError11");
                 PrintInfoLog("开始启动服务器");
                 _logger.LogInformation("开始启动socket服务器");
                 // BaseKXGame.Instance.Initinal();
@@ -371,12 +371,10 @@ namespace RUINORERP.Server
 
                 #endregion
 
-                _logger.Error("ErrorError2233");
-
                 // var logger = new LoggerFactory().AddLog4Net().CreateLogger("logs");
                 //logger.LogError($"{DateTime.Now} LogError 日志");
 
-                _logger.LogError("启动了服务器123");
+                _logger.LogError("加载了ERP服务器窗体：frmMain_Load");
                 this.IsMdiContainer = true; // 设置父窗体为MDI容器
                 menuStrip1.MdiWindowListItem = 窗口ToolStripMenuItem;
                 //InitAll();

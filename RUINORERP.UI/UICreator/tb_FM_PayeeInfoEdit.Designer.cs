@@ -3,7 +3,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：10/22/2024 18:15:10
+// 时间：04/22/2025 12:16:05
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -69,6 +69,7 @@ this.txtAccount_No = new Krypton.Toolkit.KryptonTextBox();
 
 this.lblPaymentCodeImagePath = new Krypton.Toolkit.KryptonLabel();
 this.txtPaymentCodeImagePath = new Krypton.Toolkit.KryptonTextBox();
+this.txtPaymentCodeImagePath.Multiline = true;
 
 this.lblBelongingBank = new Krypton.Toolkit.KryptonLabel();
 this.txtBelongingBank = new Krypton.Toolkit.KryptonTextBox();
@@ -78,6 +79,16 @@ this.txtOpeningBank = new Krypton.Toolkit.KryptonTextBox();
 
 this.lblNotes = new Krypton.Toolkit.KryptonLabel();
 this.txtNotes = new Krypton.Toolkit.KryptonTextBox();
+
+this.lblIsDefault = new Krypton.Toolkit.KryptonLabel();
+this.chkIsDefault = new Krypton.Toolkit.KryptonCheckBox();
+this.chkIsDefault.Values.Text ="";
+
+this.lblIs_enabled = new Krypton.Toolkit.KryptonLabel();
+this.chkIs_enabled = new Krypton.Toolkit.KryptonCheckBox();
+this.chkIs_enabled.Values.Text ="";
+this.chkIs_enabled.Checked = true;
+this.chkIs_enabled.CheckState = System.Windows.Forms.CheckState.Checked;
 
     
     //for end
@@ -183,7 +194,7 @@ this.txtAccount_No.TabIndex = 5;
 this.Controls.Add(this.lblAccount_No);
 this.Controls.Add(this.txtAccount_No);
 
-           //#####100PaymentCodeImagePath###String
+           //#####300PaymentCodeImagePath###String
 this.lblPaymentCodeImagePath.AutoSize = true;
 this.lblPaymentCodeImagePath.Location = new System.Drawing.Point(100,150);
 this.lblPaymentCodeImagePath.Name = "lblPaymentCodeImagePath";
@@ -239,6 +250,34 @@ this.txtNotes.TabIndex = 9;
 this.Controls.Add(this.lblNotes);
 this.Controls.Add(this.txtNotes);
 
+           //#####IsDefault###Boolean
+this.lblIsDefault.AutoSize = true;
+this.lblIsDefault.Location = new System.Drawing.Point(100,250);
+this.lblIsDefault.Name = "lblIsDefault";
+this.lblIsDefault.Size = new System.Drawing.Size(41, 12);
+this.lblIsDefault.TabIndex = 10;
+this.lblIsDefault.Text = "默认账号";
+this.chkIsDefault.Location = new System.Drawing.Point(173,246);
+this.chkIsDefault.Name = "chkIsDefault";
+this.chkIsDefault.Size = new System.Drawing.Size(100, 21);
+this.chkIsDefault.TabIndex = 10;
+this.Controls.Add(this.lblIsDefault);
+this.Controls.Add(this.chkIsDefault);
+
+           //#####Is_enabled###Boolean
+this.lblIs_enabled.AutoSize = true;
+this.lblIs_enabled.Location = new System.Drawing.Point(100,275);
+this.lblIs_enabled.Name = "lblIs_enabled";
+this.lblIs_enabled.Size = new System.Drawing.Size(41, 12);
+this.lblIs_enabled.TabIndex = 11;
+this.lblIs_enabled.Text = "是否启用";
+this.chkIs_enabled.Location = new System.Drawing.Point(173,271);
+this.chkIs_enabled.Name = "chkIs_enabled";
+this.chkIs_enabled.Size = new System.Drawing.Size(100, 21);
+this.chkIs_enabled.TabIndex = 11;
+this.Controls.Add(this.lblIs_enabled);
+this.Controls.Add(this.chkIs_enabled);
+
         //for 加入到容器
             //components = new System.ComponentModel.Container();
            
@@ -253,7 +292,7 @@ this.Controls.Add(this.txtNotes);
             //this.kryptonPanel1.Location = new System.Drawing.Point(0, 0);
            // this.kryptonPanel1.Name = "kryptonPanel1";
            // this.kryptonPanel1.Size = new System.Drawing.Size(404, 300);
-           // this.kryptonPanel1.TabIndex = 9;
+           // this.kryptonPanel1.TabIndex = 11;
 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
@@ -283,6 +322,12 @@ this.Controls.Add(this.txtOpeningBank );
 
                 this.Controls.Add(this.lblNotes );
 this.Controls.Add(this.txtNotes );
+
+                this.Controls.Add(this.lblIsDefault );
+this.Controls.Add(this.chkIsDefault );
+
+                this.Controls.Add(this.lblIs_enabled );
+this.Controls.Add(this.chkIs_enabled );
 
                             // 
             // "tb_FM_PayeeInfoEdit"
@@ -350,6 +395,16 @@ private Krypton.Toolkit.KryptonTextBox txtOpeningBank;
         
               private Krypton.Toolkit.KryptonLabel lblNotes;
 private Krypton.Toolkit.KryptonTextBox txtNotes;
+
+    
+        
+              private Krypton.Toolkit.KryptonLabel lblIsDefault;
+private Krypton.Toolkit.KryptonCheckBox chkIsDefault;
+
+    
+        
+              private Krypton.Toolkit.KryptonLabel lblIs_enabled;
+private Krypton.Toolkit.KryptonCheckBox chkIs_enabled;
 
     
             //private ComponentFactory.Krypton.Toolkit.KryptonButton btnOk;

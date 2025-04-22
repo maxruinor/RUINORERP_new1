@@ -48,7 +48,7 @@ namespace RUINORERP.Server
             catch (Exception)
             {
 
-                
+
             }
             _dirtyIndexes.Clear();
         }
@@ -393,7 +393,7 @@ namespace RUINORERP.Server
                 Console.WriteLine($"userInfos: {userInfos.Count}");
                 Console.WriteLine($"listView1.Items: {listView1.Items.Count}");
             }
-           
+
 
         }
 
@@ -439,25 +439,42 @@ namespace RUINORERP.Server
                 case "切换服务器":
                     HandleSwitchServer(user);
                     break;
+                case "全部切换服务器":
+                    HandleSwitchServer();
+                    break;
                 default:
                     break;
             }
         }
 
-        private void HandleSwitchServer(UserInfo user)
+        private void HandleSwitchServer(UserInfo user = null)
         {
             frmInput frmInput = new frmInput();
             frmInput.Text = "请输入服务器IP和端口，格式为 IP:端口";
             frmInput.txtInputContent.Text = "192.168.0.254:3001";
             if (frmInput.ShowDialog() == DialogResult.OK)
             {
-                if (frmMain.Instance.sessionListBiz.TryGetValue(user.SessionId, out SessionforBiz sb))
+                if (user == null)
                 {
-                    if (sb.State == SessionState.Connected)
+                    foreach (var sb in frmMain.Instance.sessionListBiz)
                     {
-                        UserService.切换服务器(sb, frmInput.InputContent);
+                        if (sb.Value.State == SessionState.Connected)
+                        {
+                            UserService.切换服务器(sb.Value, frmInput.InputContent);
+                        }
                     }
                 }
+                else
+                {
+                    if (frmMain.Instance.sessionListBiz.TryGetValue(user.SessionId, out SessionforBiz sb))
+                    {
+                        if (sb.State == SessionState.Connected)
+                        {
+                            UserService.切换服务器(sb, frmInput.InputContent);
+                        }
+                    }
+                }
+
             }
 
 

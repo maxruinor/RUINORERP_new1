@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：10/22/2024 18:15:10
+// 时间：04/22/2025 12:16:05
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -65,6 +65,7 @@ this.txtAccount_No = new ComponentFactory.Krypton.Toolkit.KryptonTextBox();
 
 this.lblPaymentCodeImagePath = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
 this.txtPaymentCodeImagePath = new ComponentFactory.Krypton.Toolkit.KryptonTextBox();
+this.txtPaymentCodeImagePath.Multiline = true;
 
 this.lblBelongingBank = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
 this.txtBelongingBank = new ComponentFactory.Krypton.Toolkit.KryptonTextBox();
@@ -74,6 +75,16 @@ this.txtOpeningBank = new ComponentFactory.Krypton.Toolkit.KryptonTextBox();
 
 this.lblNotes = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
 this.txtNotes = new ComponentFactory.Krypton.Toolkit.KryptonTextBox();
+
+this.lblIsDefault = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
+this.chkIsDefault = new ComponentFactory.Krypton.Toolkit.KryptonCheckBox();
+this.chkIsDefault.Values.Text ="";
+
+this.lblIs_enabled = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
+this.chkIs_enabled = new ComponentFactory.Krypton.Toolkit.KryptonCheckBox();
+this.chkIs_enabled.Values.Text ="";
+this.chkIs_enabled.Checked = true;
+this.chkIs_enabled.CheckState = System.Windows.Forms.CheckState.Checked;
 
     //for end
     this.SuspendLayout();
@@ -144,7 +155,7 @@ this.txtAccount_No.TabIndex = 5;
 this.Controls.Add(this.lblAccount_No);
 this.Controls.Add(this.txtAccount_No);
 
-           //#####100PaymentCodeImagePath###String
+           //#####300PaymentCodeImagePath###String
 this.lblPaymentCodeImagePath.AutoSize = true;
 this.lblPaymentCodeImagePath.Location = new System.Drawing.Point(100,150);
 this.lblPaymentCodeImagePath.Name = "lblPaymentCodeImagePath";
@@ -200,6 +211,34 @@ this.txtNotes.TabIndex = 9;
 this.Controls.Add(this.lblNotes);
 this.Controls.Add(this.txtNotes);
 
+           //#####IsDefault###Boolean
+this.lblIsDefault.AutoSize = true;
+this.lblIsDefault.Location = new System.Drawing.Point(100,250);
+this.lblIsDefault.Name = "lblIsDefault";
+this.lblIsDefault.Size = new System.Drawing.Size(41, 12);
+this.lblIsDefault.TabIndex = 10;
+this.lblIsDefault.Text = "默认账号";
+this.chkIsDefault.Location = new System.Drawing.Point(173,246);
+this.chkIsDefault.Name = "chkIsDefault";
+this.chkIsDefault.Size = new System.Drawing.Size(100, 21);
+this.chkIsDefault.TabIndex = 10;
+this.Controls.Add(this.lblIsDefault);
+this.Controls.Add(this.chkIsDefault);
+
+           //#####Is_enabled###Boolean
+this.lblIs_enabled.AutoSize = true;
+this.lblIs_enabled.Location = new System.Drawing.Point(100,275);
+this.lblIs_enabled.Name = "lblIs_enabled";
+this.lblIs_enabled.Size = new System.Drawing.Size(41, 12);
+this.lblIs_enabled.TabIndex = 11;
+this.lblIs_enabled.Text = "是否启用";
+this.chkIs_enabled.Location = new System.Drawing.Point(173,271);
+this.chkIs_enabled.Name = "chkIs_enabled";
+this.chkIs_enabled.Size = new System.Drawing.Size(100, 21);
+this.chkIs_enabled.TabIndex = 11;
+this.Controls.Add(this.lblIs_enabled);
+this.Controls.Add(this.chkIs_enabled);
+
           
     //for end
 
@@ -232,6 +271,12 @@ this.Controls.Add(this.txtOpeningBank );
 
                 this.Controls.Add(this.lblNotes );
 this.Controls.Add(this.txtNotes );
+
+                this.Controls.Add(this.lblIsDefault );
+this.Controls.Add(this.chkIsDefault );
+
+                this.Controls.Add(this.lblIs_enabled );
+this.Controls.Add(this.chkIs_enabled );
 
                     
             this.Name = "tb_FM_PayeeInfoQuery";
@@ -285,6 +330,16 @@ private ComponentFactory.Krypton.Toolkit.KryptonTextBox txtOpeningBank;
         
               private ComponentFactory.Krypton.Toolkit.KryptonLabel lblNotes;
 private ComponentFactory.Krypton.Toolkit.KryptonTextBox txtNotes;
+
+    
+        
+              private ComponentFactory.Krypton.Toolkit.KryptonLabel lblIsDefault;
+private ComponentFactory.Krypton.Toolkit.KryptonCheckBox chkIsDefault;
+
+    
+        
+              private ComponentFactory.Krypton.Toolkit.KryptonLabel lblIs_enabled;
+private ComponentFactory.Krypton.Toolkit.KryptonCheckBox chkIs_enabled;
 
     
     

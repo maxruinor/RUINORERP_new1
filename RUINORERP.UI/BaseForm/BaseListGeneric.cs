@@ -182,8 +182,7 @@ namespace RUINORERP.UI.BaseForm
         /// 手动设置的。优化级比较自动的FKValueColNameTBList高
         /// </summary>
         public List<Type> ColDisplayTypes { get; set; } = new List<Type>();
-
-        UITools iTools = new UITools();
+ 
         private void DataGridView1_CellFormatting(object sender, DataGridViewCellFormattingEventArgs e)
         {
             //如果列是隐藏的是不是可以不需要控制显示了呢? 后面看是否是导出这块需要不需要 不然可以隐藏的直接跳过
@@ -210,7 +209,7 @@ namespace RUINORERP.UI.BaseForm
                     if (image != null)
                     {
                         //缩略图 这里用缓存 ?
-                        System.Drawing.Image thumbnailthumbnail = iTools.CreateThumbnail(image, 100, 100);
+                        System.Drawing.Image thumbnailthumbnail = UITools.CreateThumbnail(image, 100, 100);
                         e.Value = thumbnailthumbnail;
                         return;
                     }

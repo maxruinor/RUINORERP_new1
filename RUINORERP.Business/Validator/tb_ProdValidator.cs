@@ -66,8 +66,6 @@ namespace RUINORERP.Business
             RuleFor(tb_Prod => tb_Prod.Category_ID).Must(CheckForeignKeyValueCanNull).WithMessage("类别:下拉选择值不正确。");
             RuleFor(tb_Prod => tb_Prod.Category_ID).NotEmpty().When(x => x.Category_ID.HasValue);
 
-            RuleFor(tb_Prod => tb_Prod.Type_ID).Must(CheckForeignKeyValue).WithMessage("货品类型:下拉选择值不正确。");
-
             RuleFor(tb_Prod => tb_Prod.CustomerVendor_ID).Must(CheckForeignKeyValueCanNull).WithMessage("厂商:下拉选择值不正确。");
             RuleFor(tb_Prod => tb_Prod.CustomerVendor_ID).NotEmpty().When(x => x.CustomerVendor_ID.HasValue);
 

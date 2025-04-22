@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：02/19/2025 22:58:03
+// 时间：04/22/2025 12:16:09
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -93,6 +93,21 @@ namespace RUINORERP.Model
             get{return _DepartmentID;}
             set{
             SetProperty(ref _DepartmentID, value);
+                        }
+        }
+
+        private long? _tb__DepartmentID;
+        /// <summary>
+        /// 部门
+        /// </summary>
+        [AdvQueryAttribute(ColName = "tb__DepartmentID",ColDesc = "部门")] 
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "tb__DepartmentID" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "部门" )]
+        [FKRelationAttribute("tb_Department","tb__DepartmentID")]
+        public long? tb__DepartmentID
+        { 
+            get{return _tb__DepartmentID;}
+            set{
+            SetProperty(ref _tb__DepartmentID, value);
                         }
         }
 
@@ -269,13 +284,18 @@ namespace RUINORERP.Model
         #region 扩展属性
         [SugarColumn(IsIgnore = true)]
         //[Browsable(false)] 打印报表时的数据源会不显示
-        [Navigate(NavigateType.OneToOne, nameof(DepartmentID))]
+        [Navigate(NavigateType.OneToOne, nameof(tb__DepartmentID))]
         public virtual tb_Department tb_department { get; set; }
 
         [SugarColumn(IsIgnore = true)]
         //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(PaymentID))]
         public virtual tb_FM_Payment tb_fm_payment { get; set; }
+
+        [SugarColumn(IsIgnore = true)]
+        //[Browsable(false)] 打印报表时的数据源会不显示
+        [Navigate(NavigateType.OneToOne, nameof(DepartmentID))]
+        public virtual tb_Department tb_department { get; set; }
 
         [SugarColumn(IsIgnore = true)]
         //[Browsable(false)] 打印报表时的数据源会不显示
@@ -293,6 +313,10 @@ namespace RUINORERP.Model
 private bool PK_FK_ID_Check()
 {
   bool rs=true;
+         if("DepartmentID"!="tb__DepartmentID")
+        {
+        // rs=false;
+        }
 return rs;
 }
 

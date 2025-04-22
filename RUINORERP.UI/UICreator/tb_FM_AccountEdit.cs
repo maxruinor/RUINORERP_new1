@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：10/19/2024 00:39:06
+// 时间：04/22/2025 12:16:02
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -24,7 +24,7 @@ using RUINORERP.UI.Common;
 namespace RUINORERP.UI
 {
     /// <summary>
-    /// 账户管理，财务系统中使用数据编辑
+    /// 付款账号管理数据编辑
     /// </summary>
      [MenuAttrAssemblyInfo( "库位编辑", true, UIType.单表数据)]
     public partial class tb_FM_AccountEdit:UserControl
@@ -70,11 +70,11 @@ namespace RUINORERP.UI
         {
         _EditEntity = entity;
                        // DataBindingHelper.BindData4Cmb<tb_Department>(entity, k => k.DepartmentID, v=>v.XXNAME, cmbDepartmentID);
-Subject_id主外字段不一致。          Subject_id主外字段不一致。 DataBindingHelper.BindData4TextBox<tb_FM_Account>(entity, t => t.Subject_id, txtSubject_id, BindDataType4TextBox.Qty,false);
+          // DataBindingHelper.BindData4Cmb<tb_FM_Subject>(entity, k => k.Subject_id, v=>v.XXNAME, cmbSubject_id);
           // DataBindingHelper.BindData4Cmb<tb_Currency>(entity, k => k.Currency_ID, v=>v.XXNAME, cmbCurrency_ID);
-Subject_id主外字段不一致。           DataBindingHelper.BindData4TextBox<tb_FM_Account>(entity, t => t.Account_name, txtAccount_name, BindDataType4TextBox.Text,false);
+           DataBindingHelper.BindData4TextBox<tb_FM_Account>(entity, t => t.Account_name, txtAccount_name, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_FM_Account>(entity, t => t.Account_No, txtAccount_No, BindDataType4TextBox.Text,false);
-          Subject_id主外字段不一致。 DataBindingHelper.BindData4TextBox<tb_FM_Account>(entity, t => t.Account_type, txtAccount_type, BindDataType4TextBox.Qty,false);
+           DataBindingHelper.BindData4TextBox<tb_FM_Account>(entity, t => t.Account_type, txtAccount_type, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4TextBox<tb_FM_Account>(entity, t => t.Bank, txtBank, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_FM_Account>(entity, t => t.OpeningBalance.ToString(), txtOpeningBalance, BindDataType4TextBox.Money,false);
            DataBindingHelper.BindData4TextBox<tb_FM_Account>(entity, t => t.CurrentBalance.ToString(), txtCurrentBalance, BindDataType4TextBox.Money,false);

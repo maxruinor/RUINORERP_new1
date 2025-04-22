@@ -101,6 +101,10 @@ namespace RUINORERP.UI.SuperSocketClient
         public static bool 接收工作流数据(OriginalData gd)
         {
             bool rs = false;
+            if (gd.Two==null)
+            {
+                return false;
+            }
             try
             {
                 int index = 0;

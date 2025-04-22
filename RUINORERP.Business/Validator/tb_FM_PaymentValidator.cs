@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：02/19/2025 22:58:00
+// 时间：04/22/2025 12:16:07
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,7 +21,7 @@ using Microsoft.Extensions.Options;
 namespace RUINORERP.Business
 {
     /// <summary>
-    /// 付款单是付款的执行不需要审核只需要一个付款状态验证类
+    /// 付款申请单-即为付款单验证类
     /// </summary>
     /*public partial class tb_FM_PaymentValidator:AbstractValidator<tb_FM_Payment>*/
     public partial class tb_FM_PaymentValidator:BaseValidatorGeneric<tb_FM_Payment>

@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：04/21/2025 20:12:36
+// 时间：04/22/2025 12:16:16
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -57,6 +57,47 @@ namespace RUINORERP.Model.QueryDto
         { 
             get{return _PreRPID;}
             set{SetProperty(ref _PreRPID, value);}
+        }
+     
+
+        private long? _PayeeInfoID;
+        /// <summary>
+        /// 收款信息
+        /// </summary>
+        [AdvQueryAttribute(ColName = "PayeeInfoID",ColDesc = "收款信息")]
+        [SugarColumn(ColumnDataType = "bigint",SqlParameterDbType ="Int64",ColumnName = "PayeeInfoID",IsNullable = true,ColumnDescription = "收款信息" )]
+        [FKRelationAttribute("tb_FM_PayeeInfo","PayeeInfoID")]
+        public long? PayeeInfoID 
+        { 
+            get{return _PayeeInfoID;}
+            set{SetProperty(ref _PayeeInfoID, value);}
+        }
+     
+
+        private string _PayeeAccountNo;
+        /// <summary>
+        /// 收款账号
+        /// </summary>
+        [AdvQueryAttribute(ColName = "PayeeAccountNo",ColDesc = "收款账号")]
+        [SugarColumn(ColumnDataType = "varchar",SqlParameterDbType ="String",ColumnName = "PayeeAccountNo",Length=100,IsNullable = false,ColumnDescription = "收款账号" )]
+        public string PayeeAccountNo 
+        { 
+            get{return _PayeeAccountNo;}
+            set{SetProperty(ref _PayeeAccountNo, value);}
+        }
+     
+
+        private long? _Account_id;
+        /// <summary>
+        /// 付款账户
+        /// </summary>
+        [AdvQueryAttribute(ColName = "Account_id",ColDesc = "付款账户")]
+        [SugarColumn(ColumnDataType = "bigint",SqlParameterDbType ="Int64",ColumnName = "Account_id",IsNullable = true,ColumnDescription = "付款账户" )]
+        [FKRelationAttribute("tb_FM_Account","Account_id")]
+        public long? Account_id 
+        { 
+            get{return _Account_id;}
+            set{SetProperty(ref _Account_id, value);}
         }
      
 
@@ -449,6 +490,19 @@ namespace RUINORERP.Model.QueryDto
         { 
             get{return _ApprovalResults;}
             set{SetProperty(ref _ApprovalResults, value);}
+        }
+     
+
+        private int _PrintStatus= ((0));
+        /// <summary>
+        /// 打印状态
+        /// </summary>
+        [AdvQueryAttribute(ColName = "PrintStatus",ColDesc = "打印状态")]
+        [SugarColumn(ColumnDataType = "int",SqlParameterDbType ="Int32",ColumnName = "PrintStatus",IsNullable = false,ColumnDescription = "打印状态" )]
+        public int PrintStatus 
+        { 
+            get{return _PrintStatus;}
+            set{SetProperty(ref _PrintStatus, value);}
         }
 
 

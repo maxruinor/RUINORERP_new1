@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：02/19/2025 22:58:01
+// 时间：04/22/2025 12:16:08
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -156,10 +156,10 @@ namespace RUINORERP.Model
 
         private long? _Account_id;
         /// <summary>
-        /// 公司账号
+        /// 付款账户
         /// </summary>
-        [AdvQueryAttribute(ColName = "Account_id",ColDesc = "公司账号")] 
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Account_id" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "公司账号")]
+        [AdvQueryAttribute(ColName = "Account_id",ColDesc = "付款账户")] 
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Account_id" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "付款账户" )]
         [FKRelationAttribute("tb_FM_Account","Account_id")]
         public long? Account_id
         { 

@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：04/21/2025 20:12:34
+// 时间：04/22/2025 12:16:15
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -66,6 +66,10 @@ namespace RUINORERP.UI
         
         
         
+        
+        
+        
+        
 
          }
 /*
@@ -75,6 +79,9 @@ namespace RUINORERP.UI
         tb_FM_ReceivablePayable entity = new tb_FM_ReceivablePayable();
                      entity.ARAPNo = txtARAPNo.Text ;
                        entity.PreRPID = Int64.Parse(txtPreRPID.Text);
+                        entity.PayeeInfoID = Int64.Parse(txtPayeeInfoID.Text);
+                        entity.PayeeAccountNo = txtPayeeAccountNo.Text ;
+                       entity.Account_id = Int64.Parse(txtAccount_id.Text);
                         entity.CustomerVendor_ID = Int64.Parse(txtCustomerVendor_ID.Text);
                         entity.Currency_ID = Int64.Parse(txtCurrency_ID.Text);
                         entity.ExchangeRate = Decimal.Parse(txtExchangeRate.Text);
@@ -105,6 +112,7 @@ namespace RUINORERP.UI
                         entity.Approver_at = DateTime.Parse(txtApprover_at.Text);
                         entity.ApprovalStatus = SByte.Parse(txtApprovalStatus.Text);
                         entity.ApprovalResults = Boolean.Parse(txtApprovalResults.Text);
+                        entity.PrintStatus = Int32.Parse(txtPrintStatus.Text);
                                 return entity;
 }
         */
@@ -117,6 +125,9 @@ namespace RUINORERP.UI
         _EditEntity = entity;
                         DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayable>(entity, t => t.ARAPNo, txtARAPNo, BindDataType4TextBox.Text,false);
           // DataBindingHelper.BindData4Cmb<tb_FM_PreReceivedPayment>(entity, k => k.PreRPID, v=>v.XXNAME, cmbPreRPID);
+          // DataBindingHelper.BindData4Cmb<tb_FM_PayeeInfo>(entity, k => k.PayeeInfoID, v=>v.XXNAME, cmbPayeeInfoID);
+           DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayable>(entity, t => t.PayeeAccountNo, txtPayeeAccountNo, BindDataType4TextBox.Text,false);
+          // DataBindingHelper.BindData4Cmb<tb_FM_Account>(entity, k => k.Account_id, v=>v.XXNAME, cmbAccount_id);
           // DataBindingHelper.BindData4Cmb<tb_CustomerVendor>(entity, k => k.CustomerVendor_ID, v=>v.XXNAME, cmbCustomerVendor_ID);
           // DataBindingHelper.BindData4Cmb<tb_Currency>(entity, k => k.Currency_ID, v=>v.XXNAME, cmbCurrency_ID);
            DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayable>(entity, t => t.ExchangeRate.ToString(), txtExchangeRate, BindDataType4TextBox.Money,false);
@@ -147,6 +158,7 @@ namespace RUINORERP.UI
            DataBindingHelper.BindData4DataTime<tb_FM_ReceivablePayable>(entity, t => t.Approver_at, dtpApprover_at,false);
            //default  DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayable>(entity, t => t.ApprovalStatus.ToString(), txtApprovalStatus, BindDataType4TextBox.Money,false);
            DataBindingHelper.BindData4CheckBox<tb_FM_ReceivablePayable>(entity, t => t.ApprovalResults, chkApprovalResults, false);
+           DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayable>(entity, t => t.PrintStatus, txtPrintStatus, BindDataType4TextBox.Qty,false);
 }
 
 

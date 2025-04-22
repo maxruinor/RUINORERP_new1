@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：04/20/2025 18:12:07
+// 时间：04/22/2025 12:16:10
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -64,6 +64,9 @@ namespace RUINORERP.UI
         
         
         
+        
+        
+        
 
          }
 /*
@@ -71,7 +74,8 @@ namespace RUINORERP.UI
         tb_FM_PaymentRecord UIToEntity()
         {
         tb_FM_PaymentRecord entity = new tb_FM_PaymentRecord();
-                     entity.BizType = Int32.Parse(txtBizType.Text);
+                     entity.PaymentNo = txtPaymentNo.Text ;
+                       entity.BizType = Int32.Parse(txtBizType.Text);
                         entity.SourceBilllID = Int64.Parse(txtSourceBilllID.Text);
                         entity.SourceBillNO = txtSourceBillNO.Text ;
                        entity.ReceivePaymentType = Int64.Parse(txtReceivePaymentType.Text);
@@ -101,6 +105,8 @@ namespace RUINORERP.UI
                         entity.Approver_at = DateTime.Parse(txtApprover_at.Text);
                         entity.ApprovalStatus = SByte.Parse(txtApprovalStatus.Text);
                         entity.ApprovalResults = Boolean.Parse(txtApprovalResults.Text);
+                        entity.PaymentImagePath = txtPaymentImagePath.Text ;
+                       entity.PrintStatus = Int32.Parse(txtPrintStatus.Text);
                                 return entity;
 }
         */
@@ -111,7 +117,8 @@ namespace RUINORERP.UI
         public void BindData(tb_FM_PaymentRecord entity)
         {
         _EditEntity = entity;
-                        DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.BizType, txtBizType, BindDataType4TextBox.Qty,false);
+                        DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.PaymentNo, txtPaymentNo, BindDataType4TextBox.Text,false);
+           DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.BizType, txtBizType, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.SourceBilllID, txtSourceBilllID, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.SourceBillNO, txtSourceBillNO, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.ReceivePaymentType, txtReceivePaymentType, BindDataType4TextBox.Qty,false);
@@ -131,11 +138,18 @@ namespace RUINORERP.UI
            DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.FMPaymentStatus, txtFMPaymentStatus, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.ReferenceNo, txtReferenceNo, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.Remark, txtRemark, BindDataType4TextBox.Text,false);
+           DataBindingHelper.BindData4DataTime<tb_FM_PaymentRecord>(entity, t => t.Created_at, dtpCreated_at,false);
+           DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.Created_by, txtCreated_by, BindDataType4TextBox.Qty,false);
+           DataBindingHelper.BindData4DataTime<tb_FM_PaymentRecord>(entity, t => t.Modified_at, dtpModified_at,false);
+           DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.Modified_by, txtModified_by, BindDataType4TextBox.Qty,false);
+           DataBindingHelper.BindData4CheckBox<tb_FM_PaymentRecord>(entity, t => t.isdeleted, chkisdeleted, false);
            DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.ApprovalOpinions, txtApprovalOpinions, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.Approver_by, txtApprover_by, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4DataTime<tb_FM_PaymentRecord>(entity, t => t.Approver_at, dtpApprover_at,false);
            //default  DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.ApprovalStatus.ToString(), txtApprovalStatus, BindDataType4TextBox.Money,false);
            DataBindingHelper.BindData4CheckBox<tb_FM_PaymentRecord>(entity, t => t.ApprovalResults, chkApprovalResults, false);
+           DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.PaymentImagePath, txtPaymentImagePath, BindDataType4TextBox.Text,false);
+           DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.PrintStatus, txtPrintStatus, BindDataType4TextBox.Qty,false);
 }
 
 

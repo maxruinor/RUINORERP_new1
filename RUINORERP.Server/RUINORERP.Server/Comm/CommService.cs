@@ -18,7 +18,7 @@ namespace RUINORERP.Server.Comm
         public static void ShowExceptionMsg(string msg)
         {
             Console.WriteLine(GetTime() + " > " + msg);
-            frmMain.Instance._logger.Error(msg);
+            frmMain.Instance._logger.Error("ShowExceptionMsg:"+msg);
         }
 
         public static void ShowExceptionMsg(string msg, Exception ex)

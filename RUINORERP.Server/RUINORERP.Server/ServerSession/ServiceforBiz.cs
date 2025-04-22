@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Net;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -28,12 +29,12 @@ namespace RUINORERP.Server.ServerSession
             _appSessions = new List<IAppSession>();
             _tokenSource = new CancellationTokenSource();
 
-            // 每5分钟清理一次连接记录
+            // 每2分钟清理一次连接记录
             _cleanupTimer = new Timer(_ =>
             {
                 _connectionAttempts.Clear();
                 BlacklistManager.CleanupExpiredBans();
-            }, null, TimeSpan.FromMinutes(5), TimeSpan.FromMinutes(5));
+            }, null, TimeSpan.FromMinutes(2), TimeSpan.FromMinutes(2));
         }
 
         private readonly ConcurrentDictionary<string, int> _connectionAttempts = new ConcurrentDictionary<string, int>();
@@ -49,18 +50,21 @@ namespace RUINORERP.Server.ServerSession
                 _appSessions.Add(session);
             }
             #region
-            var ip = session.RemoteEndPoint.ToString();
-
-            // 记录断开次数
-            _connectionAttempts.AddOrUpdate(ip, 1, (_, count) => count + 1);
-
-            // 检查是否超过阈值（例如30秒内断开5次）
-            if (_connectionAttempts.TryGetValue(ip, out var attempts) && attempts >= 5)
+            
+            if (session.RemoteEndPoint is IPEndPoint iP)
             {
-                BlacklistManager.BanIp(ip, TimeSpan.FromHours(1)); // 封禁1小时
-                _connectionAttempts.TryRemove(ip, out _); // 重置计数
-            }
+                var ip = iP.Address.ToString();
+                // 记录断开次数
+                _connectionAttempts.AddOrUpdate(ip, 1, (_, count) => count + 1);
 
+                // 检查是否超过阈值（例如60秒2分钟内断开5次）
+                if (_connectionAttempts.TryGetValue(ip, out var attempts) && attempts >= 5)
+                {
+                    BlacklistManager.BanIp(ip, TimeSpan.FromHours(1)); // 封禁1小时
+                    _connectionAttempts.TryRemove(ip, out _); // 重置计数
+                }
+
+            }
             #endregion
 
             await base.OnSessionConnectedAsync(session);

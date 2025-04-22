@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：02/19/2025 22:57:59
+// 时间：04/22/2025 12:16:06
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -61,26 +61,13 @@ namespace RUINORERP.Model.QueryDto
         }
      
 
-        private bool? _IsDefault= false;
-        /// <summary>
-        /// 默认账号
-        /// </summary>
-        [AdvQueryAttribute(ColName = "IsDefault",ColDesc = "默认账号")]
-        [SugarColumn(ColumnDataType = "bit",SqlParameterDbType ="Boolean",ColumnName = "IsDefault",IsNullable = true,ColumnDescription = "默认账号" )]
-        public bool? IsDefault 
-        { 
-            get{return _IsDefault;}
-            set{SetProperty(ref _IsDefault, value);}
-        }
-     
-
-        private int? _Account_type;
+        private int _Account_type;
         /// <summary>
         /// 账户类型
         /// </summary>
         [AdvQueryAttribute(ColName = "Account_type",ColDesc = "账户类型")]
-        [SugarColumn(ColumnDataType = "int",SqlParameterDbType ="Int32",ColumnName = "Account_type",IsNullable = true,ColumnDescription = "账户类型" )]
-        public int? Account_type 
+        [SugarColumn(ColumnDataType = "int",SqlParameterDbType ="Int32",ColumnName = "Account_type",IsNullable = false,ColumnDescription = "账户类型" )]
+        public int Account_type 
         { 
             get{return _Account_type;}
             set{SetProperty(ref _Account_type, value);}
@@ -92,7 +79,7 @@ namespace RUINORERP.Model.QueryDto
         /// 账户名称
         /// </summary>
         [AdvQueryAttribute(ColName = "Account_name",ColDesc = "账户名称")]
-        [SugarColumn(ColumnDataType = "varchar",SqlParameterDbType ="String",ColumnName = "Account_name",Length=50,IsNullable = false,ColumnDescription = "账户名称" )]
+        [SugarColumn(ColumnDataType = "varchar",SqlParameterDbType ="String",ColumnName = "Account_name",Length=50,IsNullable = true,ColumnDescription = "账户名称" )]
         public string Account_name 
         { 
             get{return _Account_name;}
@@ -165,13 +152,26 @@ namespace RUINORERP.Model.QueryDto
         }
      
 
-        private bool? _Is_enabled= true;
+        private bool _IsDefault= false;
+        /// <summary>
+        /// 默认账号
+        /// </summary>
+        [AdvQueryAttribute(ColName = "IsDefault",ColDesc = "默认账号")]
+        [SugarColumn(ColumnDataType = "bit",SqlParameterDbType ="Boolean",ColumnName = "IsDefault",IsNullable = false,ColumnDescription = "默认账号" )]
+        public bool IsDefault 
+        { 
+            get{return _IsDefault;}
+            set{SetProperty(ref _IsDefault, value);}
+        }
+     
+
+        private bool _Is_enabled= true;
         /// <summary>
         /// 是否启用
         /// </summary>
         [AdvQueryAttribute(ColName = "Is_enabled",ColDesc = "是否启用")]
-        [SugarColumn(ColumnDataType = "bit",SqlParameterDbType ="Boolean",ColumnName = "Is_enabled",IsNullable = true,ColumnDescription = "是否启用" )]
-        public bool? Is_enabled 
+        [SugarColumn(ColumnDataType = "bit",SqlParameterDbType ="Boolean",ColumnName = "Is_enabled",IsNullable = false,ColumnDescription = "是否启用" )]
+        public bool Is_enabled 
         { 
             get{return _Is_enabled;}
             set{SetProperty(ref _Is_enabled, value);}

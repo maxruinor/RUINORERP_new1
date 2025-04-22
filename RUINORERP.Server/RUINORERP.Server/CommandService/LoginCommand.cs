@@ -9,6 +9,7 @@ using RUINORERP.Server.ServerSession;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Numerics;
 using System.Text;
 using System.Threading;
@@ -110,16 +111,48 @@ namespace RUINORERP.Server.CommandService
                                                 await message.ExecuteAsync(CancellationToken.None);
                                                 // 等待 5 秒
                                                 await Task.Delay(5000);
-
                                                 UserService.强制用户退出(item);
                                                 break;
                                             }
 
 
+                                            
+
+
                                         }
 
+                                  
+                              
 
                                     }
+
+
+                                    #region 如果加入了黑名单时登陆也提示
+                                    if (RequestSession.RemoteEndPoint is IPEndPoint iP)
+                                    {
+                                        var remoteIp = iP.Address.ToString();
+                                        // 检查IP是否被封禁
+                                        if (BlacklistManager.IsIpBanned(remoteIp))
+                                        {
+                                            //发送通知:您被加入了黑名单，请联系管理员。
+                                            // 创建一个命令实例 
+                                            var message = new ReceiveResponseMessageCmd(CmdOperation.Send, null, RequestSession);
+                                            message.messageType = MessageType.Prompt;
+                                            message.MessageContent = "您被加入了黑名单，请联系管理员。";
+                                            message.promptType = PromptType.确认窗口;
+                                            message.ToSession = RequestSession;
+                                            await message.ExecuteAsync(CancellationToken.None);
+                                            // 等待 3 秒
+                                            await Task.Delay(3000);
+
+                                            UserService.强制用户退出(RequestSession);
+                                            //延后3秒关闭sokcet连接
+                                            //await RequestSession.CloseAsync(SuperSocket.Connection.CloseReason.ServerShutdown); // 立即关闭连接
+                                            return;
+                                        }
+                                    }
+                                    #endregion
+
 
                                     //确定成功时统一分发加载配置
                                     ReceiveEntityTransferCmd entityTransferCmd = new ReceiveEntityTransferCmd(CmdOperation.Send);

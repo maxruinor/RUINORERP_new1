@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：10/22/2024 18:15:09
+// 时间：04/22/2025 12:16:05
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -43,6 +43,8 @@ namespace RUINORERP.UI
         
         
         
+        
+        
 
          }
 /*
@@ -59,7 +61,9 @@ namespace RUINORERP.UI
                        entity.BelongingBank = txtBelongingBank.Text ;
                        entity.OpeningBank = txtOpeningBank.Text ;
                        entity.Notes = txtNotes.Text ;
-                               return entity;
+                       entity.IsDefault = Boolean.Parse(txtIsDefault.Text);
+                        entity.Is_enabled = Boolean.Parse(txtIs_enabled.Text);
+                                return entity;
 }
         */
 
@@ -78,6 +82,9 @@ namespace RUINORERP.UI
            DataBindingHelper.BindData4TextBox<tb_FM_PayeeInfo>(entity, t => t.BelongingBank, txtBelongingBank, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_FM_PayeeInfo>(entity, t => t.OpeningBank, txtOpeningBank, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_FM_PayeeInfo>(entity, t => t.Notes, txtNotes, BindDataType4TextBox.Text,false);
+           DataBindingHelper.BindData4CheckBox<tb_FM_PayeeInfo>(entity, t => t.IsDefault, chkIsDefault, false);
+           DataBindingHelper.BindData4CheckBox<tb_FM_PayeeInfo>(entity, t => t.Is_enabled, chkIs_enabled, false);
+//有默认值
 }
 
 

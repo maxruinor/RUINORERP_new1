@@ -345,9 +345,6 @@ namespace RUINORERP.Server.Commands
                             exMsg += "========要处理的其它指令=========" + exMsg;
                             Comm.CommService.ShowExceptionMsg(exMsg);
                             _logger.Error(exMsg);
-                            // _logger.LogError("LogErrorLogError");
-
-                            // frmMain.Instance._logger.Error("启动了服务器556677889999");
                             break;
                     }
                 }

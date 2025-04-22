@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：02/19/2025 22:58:00
+// 时间：04/22/2025 12:16:07
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -18,10 +18,10 @@ using RUINORERP.Global.CustomAttribute;
 namespace RUINORERP.Model
 {
     /// <summary>
-    /// 付款单是付款的执行不需要审核只需要一个付款状态
+    /// 付款申请单-即为付款单
     /// </summary>
     [Serializable()]
-    [Description("付款单是付款的执行不需要审核只需要一个付款状态")]
+    [Description("付款申请单-即为付款单")]
     [SugarTable("tb_FM_Payment")]
     public partial class tb_FM_Payment: BaseEntity, ICloneable
     {
@@ -30,7 +30,7 @@ namespace RUINORERP.Model
             base.FieldNameList = fieldNameList;
             if (!PK_FK_ID_Check())
             {
-                throw new Exception("付款单是付款的执行不需要审核只需要一个付款状态tb_FM_Payment" + "外键ID与对应主主键名称不一致。请修改数据库");
+                throw new Exception("付款申请单-即为付款单tb_FM_Payment" + "外键ID与对应主主键名称不一致。请修改数据库");
             }
         }
 

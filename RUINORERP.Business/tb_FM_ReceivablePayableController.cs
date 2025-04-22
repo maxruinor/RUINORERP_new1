@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：04/21/2025 20:12:36
+// 时间：04/22/2025 12:16:16
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -462,6 +462,8 @@ namespace RUINORERP.Business
         {
             List<tb_FM_ReceivablePayable> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_FM_ReceivablePayable>()
                                .Includes(t => t.tb_currency )
+                               .Includes(t => t.tb_fm_account )
+                               .Includes(t => t.tb_fm_payeeinfo )
                                .Includes(t => t.tb_customervendor )
                                .Includes(t => t.tb_fm_prereceivedpayment )
                                             .Includes(t => t.tb_FM_ReceivablePayableDetails )
@@ -485,6 +487,8 @@ namespace RUINORERP.Business
         {
             List<tb_FM_ReceivablePayable> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_FM_ReceivablePayable>().Where(exp)
                                .Includes(t => t.tb_currency )
+                               .Includes(t => t.tb_fm_account )
+                               .Includes(t => t.tb_fm_payeeinfo )
                                .Includes(t => t.tb_customervendor )
                                .Includes(t => t.tb_fm_prereceivedpayment )
                                             .Includes(t => t.tb_FM_ReceivablePayableDetails )
@@ -508,6 +512,8 @@ namespace RUINORERP.Business
         {
             List<tb_FM_ReceivablePayable> list = _unitOfWorkManage.GetDbClient().Queryable<tb_FM_ReceivablePayable>().Where(exp)
                             .Includes(t => t.tb_currency )
+                            .Includes(t => t.tb_fm_account )
+                            .Includes(t => t.tb_fm_payeeinfo )
                             .Includes(t => t.tb_customervendor )
                             .Includes(t => t.tb_fm_prereceivedpayment )
                                         .Includes(t => t.tb_FM_ReceivablePayableDetails )
@@ -548,6 +554,8 @@ namespace RUINORERP.Business
         {
             tb_FM_ReceivablePayable entity = await _unitOfWorkManage.GetDbClient().Queryable<tb_FM_ReceivablePayable>().Where(w => w.ARAPId == (long)id)
                              .Includes(t => t.tb_currency )
+                            .Includes(t => t.tb_fm_account )
+                            .Includes(t => t.tb_fm_payeeinfo )
                             .Includes(t => t.tb_customervendor )
                             .Includes(t => t.tb_fm_prereceivedpayment )
                                         .Includes(t => t.tb_FM_ReceivablePayableDetails )

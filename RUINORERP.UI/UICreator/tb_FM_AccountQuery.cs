@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：10/19/2024 00:39:07
+// 时间：04/22/2025 12:16:03
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -24,9 +24,9 @@ using RUINORERP.UI.Common;
 namespace RUINORERP.UI
 {
     /// <summary>
-    /// 账户管理，财务系统中使用数据查询
+    /// 付款账号管理数据查询
     /// </summary>
-     [MenuAttribute(typeof(tb_FM_AccountQuery), "账户管理，财务系统中使用数据查询", true)]
+     [MenuAttribute(typeof(tb_FM_AccountQuery), "付款账号管理数据查询", true)]
     public partial class tb_FM_AccountQuery:UserControl
     {
      public tb_FM_AccountQuery() {
@@ -73,8 +73,8 @@ namespace RUINORERP.UI
         public void LoadDroplistData()
         {
           // DataBindingHelper.InitDataToCmb<tb_Department>(k => k.DepartmentID, v=>v.XXNAME, cmbDepartmentID);
-Subject_id主外字段不一致。          // DataBindingHelper.InitDataToCmb<tb_Currency>(k => k.Currency_ID, v=>v.XXNAME, cmbCurrency_ID);
-Subject_id主外字段不一致。          Subject_id主外字段不一致。// DataBindingHelper.InitDataToCmb<tb_FM_Subject>(k => k.subject_id, v=>v.XXNAME, cmbsubject_id);
+          // DataBindingHelper.InitDataToCmb<tb_Currency>(k => k.Currency_ID, v=>v.XXNAME, cmbCurrency_ID);
+          // DataBindingHelper.InitDataToCmb<tb_FM_Subject>(k => k.Subject_id, v=>v.XXNAME, cmbSubject_id);
         }
         
 

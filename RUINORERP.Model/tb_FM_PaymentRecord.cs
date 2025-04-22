@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：04/20/2025 18:12:10
+// 时间：04/22/2025 12:16:11
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -38,10 +38,10 @@ namespace RUINORERP.Model
         #region 属性
         private long _PaymentId;
         /// <summary>
-        /// 收付款单
+        /// 支付记录
         /// </summary>
  
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "PaymentId" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "收付款单" , IsPrimaryKey = true)]
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "PaymentId" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "支付记录" , IsPrimaryKey = true)]
         public long PaymentId
         { 
             get{return _PaymentId;}
@@ -55,17 +55,15 @@ namespace RUINORERP.Model
         /// <summary>
         /// 支付单号
         /// </summary>
-        [AdvQueryAttribute(ColName = "PaymentNo", ColDesc = "支付单号")]
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType = "String", ColumnName = "PaymentNo", Length = 300, IsNullable = true, ColumnDescription = "支付单号")]
+        [AdvQueryAttribute(ColName = "PaymentNo",ColDesc = "支付单号")] 
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "PaymentNo" ,Length=30,IsNullable = true,ColumnDescription = "支付单号" )]
         public string PaymentNo
-        {
-            get { return _PaymentNo; }
-            set
-            {
-                SetProperty(ref _PaymentNo, value);
-            }
+        { 
+            get{return _PaymentNo;}
+            set{
+            SetProperty(ref _PaymentNo, value);
+                        }
         }
-
 
         private int? _BizType;
         /// <summary>
@@ -252,20 +250,7 @@ namespace RUINORERP.Model
             SetProperty(ref _PaymentDate, value);
                         }
         }
-        private string _PaymentImagePath;
-        /// <summary>
-        /// 付款凭证
-        /// </summary>
-        [AdvQueryAttribute(ColName = "PaymentImagePath", ColDesc = "付款凭证")]
-        [SugarColumn(ColumnDataType = "nvarchar", SqlParameterDbType = "String", ColumnName = "PaymentImagePath", Length = 300, IsNullable = true, ColumnDescription = "付款凭证")]
-        public string PaymentImagePath
-        {
-            get { return _PaymentImagePath; }
-            set
-            {
-                SetProperty(ref _PaymentImagePath, value);
-            }
-        }
+
         private long? _Employee_ID;
         /// <summary>
         /// 经办人
@@ -339,20 +324,7 @@ namespace RUINORERP.Model
             SetProperty(ref _FMPaymentStatus, value);
                         }
         }
-        private int _PrintStatus = ((0));
-        /// <summary>
-        /// 打印状态
-        /// </summary>
-        [AdvQueryAttribute(ColName = "PrintStatus", ColDesc = "打印状态")]
-        [SugarColumn(ColumnDataType = "int", SqlParameterDbType = "Int32", ColumnName = "PrintStatus", DecimalDigits = 0, IsNullable = false, ColumnDescription = "打印状态")]
-        public int PrintStatus
-        {
-            get { return _PrintStatus; }
-            set
-            {
-                SetProperty(ref _PrintStatus, value);
-            }
-        }
+
         private string _ReferenceNo;
         /// <summary>
         /// 交易参考号
@@ -519,6 +491,34 @@ namespace RUINORERP.Model
             get{return _ApprovalResults;}
             set{
             SetProperty(ref _ApprovalResults, value);
+                        }
+        }
+
+        private string _PaymentImagePath;
+        /// <summary>
+        /// 付款凭证
+        /// </summary>
+        [AdvQueryAttribute(ColName = "PaymentImagePath",ColDesc = "付款凭证")] 
+        [SugarColumn(ColumnDataType = "nvarchar", SqlParameterDbType ="String",  ColumnName = "PaymentImagePath" ,Length=300,IsNullable = true,ColumnDescription = "付款凭证" )]
+        public string PaymentImagePath
+        { 
+            get{return _PaymentImagePath;}
+            set{
+            SetProperty(ref _PaymentImagePath, value);
+                        }
+        }
+
+        private int _PrintStatus= ((0));
+        /// <summary>
+        /// 打印状态
+        /// </summary>
+        [AdvQueryAttribute(ColName = "PrintStatus",ColDesc = "打印状态")] 
+        [SugarColumn(ColumnDataType = "int", SqlParameterDbType ="Int32",  ColumnName = "PrintStatus" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "打印状态" )]
+        public int PrintStatus
+        { 
+            get{return _PrintStatus;}
+            set{
+            SetProperty(ref _PrintStatus, value);
                         }
         }
 

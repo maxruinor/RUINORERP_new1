@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/06/2025 12:07:31
+// 时间：04/22/2025 12:16:08
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -50,7 +50,11 @@ namespace RUINORERP.UI
         
      //for start
      
-     
+     this.lblApplicationNo = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
+this.txtApplicationNo = new ComponentFactory.Krypton.Toolkit.KryptonTextBox();
+
+this.lblDepartmentID = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
+this.cmbDepartmentID = new ComponentFactory.Krypton.Toolkit.KryptonComboBox();
 
 this.lblEmployee_ID = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
 this.cmbEmployee_ID = new ComponentFactory.Krypton.Toolkit.KryptonComboBox();
@@ -82,15 +86,15 @@ this.txtPayReasonItems.Multiline = true;
 this.lblInvoiceDate = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
 this.dtpInvoiceDate = new ComponentFactory.Krypton.Toolkit.KryptonDateTimePicker();
 
-this.lblPaymentDate = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
-this.dtpPaymentDate = new ComponentFactory.Krypton.Toolkit.KryptonDateTimePicker();
-
 this.lblNotes = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
 this.txtNotes = new ComponentFactory.Krypton.Toolkit.KryptonTextBox();
 this.txtNotes.Multiline = true;
 
 this.lblTotalAmount = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
 this.txtTotalAmount = new ComponentFactory.Krypton.Toolkit.KryptonTextBox();
+
+this.lblPamountInWords = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
+this.txtPamountInWords = new ComponentFactory.Krypton.Toolkit.KryptonTextBox();
 
 this.lblOverpaymentAmount = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
 this.txtOverpaymentAmount = new ComponentFactory.Krypton.Toolkit.KryptonTextBox();
@@ -133,21 +137,41 @@ this.txtCloseCaseOpinions = new ComponentFactory.Krypton.Toolkit.KryptonTextBox(
     this.SuspendLayout();
     
          //for start
-                 //#####ApplicationNo###Int64
-//属性测试25ApplicationNo
-//属性测试25ApplicationNo
-//属性测试25ApplicationNo
-//属性测试25ApplicationNo
-//属性测试25ApplicationNo
+                 //#####30ApplicationNo###String
+this.lblApplicationNo.AutoSize = true;
+this.lblApplicationNo.Location = new System.Drawing.Point(100,25);
+this.lblApplicationNo.Name = "lblApplicationNo";
+this.lblApplicationNo.Size = new System.Drawing.Size(41, 12);
+this.lblApplicationNo.TabIndex = 1;
+this.lblApplicationNo.Text = "申请单号";
+this.txtApplicationNo.Location = new System.Drawing.Point(173,21);
+this.txtApplicationNo.Name = "txtApplicationNo";
+this.txtApplicationNo.Size = new System.Drawing.Size(100, 21);
+this.txtApplicationNo.TabIndex = 1;
+this.Controls.Add(this.lblApplicationNo);
+this.Controls.Add(this.txtApplicationNo);
 
            //#####DepartmentID###Int64
 //属性测试50DepartmentID
 //属性测试50DepartmentID
 //属性测试50DepartmentID
 //属性测试50DepartmentID
-//属性测试50DepartmentID
+this.lblDepartmentID.AutoSize = true;
+this.lblDepartmentID.Location = new System.Drawing.Point(100,50);
+this.lblDepartmentID.Name = "lblDepartmentID";
+this.lblDepartmentID.Size = new System.Drawing.Size(41, 12);
+this.lblDepartmentID.TabIndex = 2;
+this.lblDepartmentID.Text = "部门";
+//111======50
+this.cmbDepartmentID.Location = new System.Drawing.Point(173,46);
+this.cmbDepartmentID.Name ="cmbDepartmentID";
+this.cmbDepartmentID.Size = new System.Drawing.Size(100, 21);
+this.cmbDepartmentID.TabIndex = 2;
+this.Controls.Add(this.lblDepartmentID);
+this.Controls.Add(this.cmbDepartmentID);
 
            //#####Employee_ID###Int64
+//属性测试75Employee_ID
 //属性测试75Employee_ID
 //属性测试75Employee_ID
 //属性测试75Employee_ID
@@ -157,7 +181,7 @@ this.lblEmployee_ID.Location = new System.Drawing.Point(100,75);
 this.lblEmployee_ID.Name = "lblEmployee_ID";
 this.lblEmployee_ID.Size = new System.Drawing.Size(41, 12);
 this.lblEmployee_ID.TabIndex = 3;
-this.lblEmployee_ID.Text = "申请人";
+this.lblEmployee_ID.Text = "制单人";
 //111======75
 this.cmbEmployee_ID.Location = new System.Drawing.Point(173,71);
 this.cmbEmployee_ID.Name ="cmbEmployee_ID";
@@ -190,6 +214,7 @@ this.Controls.Add(this.cmbCustomerVendor_ID);
 //属性测试125PayeeInfoID
 //属性测试125PayeeInfoID
 //属性测试125PayeeInfoID
+//属性测试125PayeeInfoID
 this.lblPayeeInfoID.AutoSize = true;
 this.lblPayeeInfoID.Location = new System.Drawing.Point(100,125);
 this.lblPayeeInfoID.Name = "lblPayeeInfoID";
@@ -204,7 +229,7 @@ this.cmbPayeeInfoID.TabIndex = 5;
 this.Controls.Add(this.lblPayeeInfoID);
 this.Controls.Add(this.cmbPayeeInfoID);
 
-           //#####30PayeeAccountNo###String
+           //#####100PayeeAccountNo###String
 this.lblPayeeAccountNo.AutoSize = true;
 this.lblPayeeAccountNo.Location = new System.Drawing.Point(100,150);
 this.lblPayeeAccountNo.Name = "lblPayeeAccountNo";
@@ -271,6 +296,7 @@ this.Controls.Add(this.chkIsAdvancePayment);
 //属性测试250PrePaymentBill_id
 //属性测试250PrePaymentBill_id
 //属性测试250PrePaymentBill_id
+//属性测试250PrePaymentBill_id
 
            //#####1000PayReasonItems###String
 this.lblPayReasonItems.AutoSize = true;
@@ -278,7 +304,7 @@ this.lblPayReasonItems.Location = new System.Drawing.Point(100,275);
 this.lblPayReasonItems.Name = "lblPayReasonItems";
 this.lblPayReasonItems.Size = new System.Drawing.Size(41, 12);
 this.lblPayReasonItems.TabIndex = 11;
-this.lblPayReasonItems.Text = "付款项目";
+this.lblPayReasonItems.Text = "付款项目/原因";
 this.txtPayReasonItems.Location = new System.Drawing.Point(173,271);
 this.txtPayReasonItems.Name = "txtPayReasonItems";
 this.txtPayReasonItems.Size = new System.Drawing.Size(100, 21);
@@ -292,60 +318,57 @@ this.lblInvoiceDate.Location = new System.Drawing.Point(100,300);
 this.lblInvoiceDate.Name = "lblInvoiceDate";
 this.lblInvoiceDate.Size = new System.Drawing.Size(41, 12);
 this.lblInvoiceDate.TabIndex = 12;
-this.lblInvoiceDate.Text = "对账日期";
+this.lblInvoiceDate.Text = "制单日期";
 //111======300
 this.dtpInvoiceDate.Location = new System.Drawing.Point(173,296);
 this.dtpInvoiceDate.Name ="dtpInvoiceDate";
-this.dtpInvoiceDate.ShowCheckBox =true;
 this.dtpInvoiceDate.Size = new System.Drawing.Size(100, 21);
 this.dtpInvoiceDate.TabIndex = 12;
 this.Controls.Add(this.lblInvoiceDate);
 this.Controls.Add(this.dtpInvoiceDate);
 
-           //#####PaymentDate###DateTime
-this.lblPaymentDate.AutoSize = true;
-this.lblPaymentDate.Location = new System.Drawing.Point(100,325);
-this.lblPaymentDate.Name = "lblPaymentDate";
-this.lblPaymentDate.Size = new System.Drawing.Size(41, 12);
-this.lblPaymentDate.TabIndex = 13;
-this.lblPaymentDate.Text = "付款日期";
-//111======325
-this.dtpPaymentDate.Location = new System.Drawing.Point(173,321);
-this.dtpPaymentDate.Name ="dtpPaymentDate";
-this.dtpPaymentDate.ShowCheckBox =true;
-this.dtpPaymentDate.Size = new System.Drawing.Size(100, 21);
-this.dtpPaymentDate.TabIndex = 13;
-this.Controls.Add(this.lblPaymentDate);
-this.Controls.Add(this.dtpPaymentDate);
-
            //#####300Notes###String
 this.lblNotes.AutoSize = true;
-this.lblNotes.Location = new System.Drawing.Point(100,350);
+this.lblNotes.Location = new System.Drawing.Point(100,325);
 this.lblNotes.Name = "lblNotes";
 this.lblNotes.Size = new System.Drawing.Size(41, 12);
-this.lblNotes.TabIndex = 14;
+this.lblNotes.TabIndex = 13;
 this.lblNotes.Text = "备注";
-this.txtNotes.Location = new System.Drawing.Point(173,346);
+this.txtNotes.Location = new System.Drawing.Point(173,321);
 this.txtNotes.Name = "txtNotes";
 this.txtNotes.Size = new System.Drawing.Size(100, 21);
-this.txtNotes.TabIndex = 14;
+this.txtNotes.TabIndex = 13;
 this.Controls.Add(this.lblNotes);
 this.Controls.Add(this.txtNotes);
 
            //#####TotalAmount###Decimal
 this.lblTotalAmount.AutoSize = true;
-this.lblTotalAmount.Location = new System.Drawing.Point(100,375);
+this.lblTotalAmount.Location = new System.Drawing.Point(100,350);
 this.lblTotalAmount.Name = "lblTotalAmount";
 this.lblTotalAmount.Size = new System.Drawing.Size(41, 12);
-this.lblTotalAmount.TabIndex = 15;
+this.lblTotalAmount.TabIndex = 14;
 this.lblTotalAmount.Text = "付款金额";
-//111======375
-this.txtTotalAmount.Location = new System.Drawing.Point(173,371);
+//111======350
+this.txtTotalAmount.Location = new System.Drawing.Point(173,346);
 this.txtTotalAmount.Name ="txtTotalAmount";
 this.txtTotalAmount.Size = new System.Drawing.Size(100, 21);
-this.txtTotalAmount.TabIndex = 15;
+this.txtTotalAmount.TabIndex = 14;
 this.Controls.Add(this.lblTotalAmount);
 this.Controls.Add(this.txtTotalAmount);
+
+           //#####100PamountInWords###String
+this.lblPamountInWords.AutoSize = true;
+this.lblPamountInWords.Location = new System.Drawing.Point(100,375);
+this.lblPamountInWords.Name = "lblPamountInWords";
+this.lblPamountInWords.Size = new System.Drawing.Size(41, 12);
+this.lblPamountInWords.TabIndex = 15;
+this.lblPamountInWords.Text = "大写金额";
+this.txtPamountInWords.Location = new System.Drawing.Point(173,371);
+this.txtPamountInWords.Name = "txtPamountInWords";
+this.txtPamountInWords.Size = new System.Drawing.Size(100, 21);
+this.txtPamountInWords.TabIndex = 15;
+this.Controls.Add(this.lblPamountInWords);
+this.Controls.Add(this.txtPamountInWords);
 
            //#####OverpaymentAmount###Decimal
 this.lblOverpaymentAmount.AutoSize = true;
@@ -384,6 +407,7 @@ this.Controls.Add(this.dtpCreated_at);
 //属性测试450Created_by
 //属性测试450Created_by
 //属性测试450Created_by
+//属性测试450Created_by
 
            //#####Modified_at###DateTime
 this.lblModified_at.AutoSize = true;
@@ -402,6 +426,7 @@ this.Controls.Add(this.lblModified_at);
 this.Controls.Add(this.dtpModified_at);
 
            //#####Modified_by###Int64
+//属性测试500Modified_by
 //属性测试500Modified_by
 //属性测试500Modified_by
 //属性测试500Modified_by
@@ -437,6 +462,7 @@ this.Controls.Add(this.lblApprovalOpinions);
 this.Controls.Add(this.txtApprovalOpinions);
 
            //#####Approver_by###Int64
+//属性测试575Approver_by
 //属性测试575Approver_by
 //属性测试575Approver_by
 //属性测试575Approver_by
@@ -481,8 +507,10 @@ this.Controls.Add(this.chkApprovalResults);
 //属性测试675DataStatus
 //属性测试675DataStatus
 //属性测试675DataStatus
+//属性测试675DataStatus
 
            //#####PrintStatus###Int32
+//属性测试700PrintStatus
 //属性测试700PrintStatus
 //属性测试700PrintStatus
 //属性测试700PrintStatus
@@ -525,8 +553,12 @@ this.Controls.Add(this.txtCloseCaseOpinions);
             
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-                
-                
+                this.Controls.Add(this.lblApplicationNo );
+this.Controls.Add(this.txtApplicationNo );
+
+                this.Controls.Add(this.lblDepartmentID );
+this.Controls.Add(this.cmbDepartmentID );
+
                 this.Controls.Add(this.lblEmployee_ID );
 this.Controls.Add(this.cmbEmployee_ID );
 
@@ -555,14 +587,14 @@ this.Controls.Add(this.txtPayReasonItems );
                 this.Controls.Add(this.lblInvoiceDate );
 this.Controls.Add(this.dtpInvoiceDate );
 
-                this.Controls.Add(this.lblPaymentDate );
-this.Controls.Add(this.dtpPaymentDate );
-
                 this.Controls.Add(this.lblNotes );
 this.Controls.Add(this.txtNotes );
 
                 this.Controls.Add(this.lblTotalAmount );
 this.Controls.Add(this.txtTotalAmount );
+
+                this.Controls.Add(this.lblPamountInWords );
+this.Controls.Add(this.txtPamountInWords );
 
                 this.Controls.Add(this.lblOverpaymentAmount );
 this.Controls.Add(this.txtOverpaymentAmount );
@@ -609,10 +641,14 @@ this.Controls.Add(this.txtCloseCaseOpinions );
      //for start
      
          
-              
+              private ComponentFactory.Krypton.Toolkit.KryptonLabel lblApplicationNo;
+private ComponentFactory.Krypton.Toolkit.KryptonTextBox txtApplicationNo;
+
     
         
-              
+              private ComponentFactory.Krypton.Toolkit.KryptonLabel lblDepartmentID;
+private ComponentFactory.Krypton.Toolkit.KryptonComboBox cmbDepartmentID;
+
     
         
               private ComponentFactory.Krypton.Toolkit.KryptonLabel lblEmployee_ID;
@@ -663,11 +699,6 @@ private ComponentFactory.Krypton.Toolkit.KryptonDateTimePicker dtpInvoiceDate;
 
     
         
-              private ComponentFactory.Krypton.Toolkit.KryptonLabel lblPaymentDate;
-private ComponentFactory.Krypton.Toolkit.KryptonDateTimePicker dtpPaymentDate;
-
-    
-        
               private ComponentFactory.Krypton.Toolkit.KryptonLabel lblNotes;
 private ComponentFactory.Krypton.Toolkit.KryptonTextBox txtNotes;
 
@@ -675,6 +706,11 @@ private ComponentFactory.Krypton.Toolkit.KryptonTextBox txtNotes;
         
               private ComponentFactory.Krypton.Toolkit.KryptonLabel lblTotalAmount;
 private ComponentFactory.Krypton.Toolkit.KryptonTextBox txtTotalAmount;
+
+    
+        
+              private ComponentFactory.Krypton.Toolkit.KryptonLabel lblPamountInWords;
+private ComponentFactory.Krypton.Toolkit.KryptonTextBox txtPamountInWords;
 
     
         

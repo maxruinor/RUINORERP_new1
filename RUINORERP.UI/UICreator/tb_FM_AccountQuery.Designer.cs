@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：10/19/2024 00:39:07
+// 时间：04/22/2025 12:16:03
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -15,7 +15,7 @@ using FluentValidation;
 namespace RUINORERP.UI
 {
     /// <summary>
-    /// 账户管理，财务系统中使用
+    /// 付款账号管理
     /// </summary>
     partial class tb_FM_AccountQuery
     {
@@ -52,18 +52,20 @@ namespace RUINORERP.UI
      
      this.lblDepartmentID = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
 this.cmbDepartmentID = new ComponentFactory.Krypton.Toolkit.KryptonComboBox();
-Subject_id主外字段不一致。
-Subject_id主外字段不一致。
+
+this.lblSubject_id = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
+this.cmbSubject_id = new ComponentFactory.Krypton.Toolkit.KryptonComboBox();
+
 this.lblCurrency_ID = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
 this.cmbCurrency_ID = new ComponentFactory.Krypton.Toolkit.KryptonComboBox();
-Subject_id主外字段不一致。
+
 this.lblAccount_name = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
 this.txtAccount_name = new ComponentFactory.Krypton.Toolkit.KryptonTextBox();
 
 this.lblAccount_No = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
 this.txtAccount_No = new ComponentFactory.Krypton.Toolkit.KryptonTextBox();
 
-Subject_id主外字段不一致。
+
 this.lblBank = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
 this.txtBank = new ComponentFactory.Krypton.Toolkit.KryptonTextBox();
 
@@ -97,7 +99,20 @@ this.Controls.Add(this.cmbDepartmentID);
 //属性测试50Subject_id
 //属性测试50Subject_id
 //属性测试50Subject_id
-Subject_id主外字段不一致。
+this.lblSubject_id.AutoSize = true;
+this.lblSubject_id.Location = new System.Drawing.Point(100,50);
+this.lblSubject_id.Name = "lblSubject_id";
+this.lblSubject_id.Size = new System.Drawing.Size(41, 12);
+this.lblSubject_id.TabIndex = 2;
+this.lblSubject_id.Text = "会计科目";
+//111======50
+this.cmbSubject_id.Location = new System.Drawing.Point(173,46);
+this.cmbSubject_id.Name ="cmbSubject_id";
+this.cmbSubject_id.Size = new System.Drawing.Size(100, 21);
+this.cmbSubject_id.TabIndex = 2;
+this.Controls.Add(this.lblSubject_id);
+this.Controls.Add(this.cmbSubject_id);
+
            //#####Currency_ID###Int64
 //属性测试75Currency_ID
 //属性测试75Currency_ID
@@ -147,7 +162,7 @@ this.Controls.Add(this.txtAccount_No);
 //属性测试150Account_type
 //属性测试150Account_type
 //属性测试150Account_type
-Subject_id主外字段不一致。
+
            //#####30Bank###String
 this.lblBank.AutoSize = true;
 this.lblBank.Location = new System.Drawing.Point(100,175);
@@ -203,7 +218,9 @@ this.Controls.Add(this.txtCurrentBalance);
                 this.Controls.Add(this.lblDepartmentID );
 this.Controls.Add(this.cmbDepartmentID );
 
-                Subject_id主外字段不一致。
+                this.Controls.Add(this.lblSubject_id );
+this.Controls.Add(this.cmbSubject_id );
+
                 this.Controls.Add(this.lblCurrency_ID );
 this.Controls.Add(this.cmbCurrency_ID );
 
@@ -213,7 +230,7 @@ this.Controls.Add(this.txtAccount_name );
                 this.Controls.Add(this.lblAccount_No );
 this.Controls.Add(this.txtAccount_No );
 
-                Subject_id主外字段不一致。
+                
                 this.Controls.Add(this.lblBank );
 this.Controls.Add(this.txtBank );
 
@@ -237,15 +254,17 @@ this.Controls.Add(this.txtCurrentBalance );
          
               private ComponentFactory.Krypton.Toolkit.KryptonLabel lblDepartmentID;
 private ComponentFactory.Krypton.Toolkit.KryptonComboBox cmbDepartmentID;
-Subject_id主外字段不一致。
+
     
         
-              Subject_id主外字段不一致。
+              private ComponentFactory.Krypton.Toolkit.KryptonLabel lblSubject_id;
+private ComponentFactory.Krypton.Toolkit.KryptonComboBox cmbSubject_id;
+
     
         
               private ComponentFactory.Krypton.Toolkit.KryptonLabel lblCurrency_ID;
 private ComponentFactory.Krypton.Toolkit.KryptonComboBox cmbCurrency_ID;
-Subject_id主外字段不一致。
+
     
         
               private ComponentFactory.Krypton.Toolkit.KryptonLabel lblAccount_name;
@@ -258,7 +277,7 @@ private ComponentFactory.Krypton.Toolkit.KryptonTextBox txtAccount_No;
 
     
         
-              Subject_id主外字段不一致。
+              
     
         
               private ComponentFactory.Krypton.Toolkit.KryptonLabel lblBank;

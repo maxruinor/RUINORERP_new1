@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：10/22/2024 16:24:09
+// 时间：04/22/2025 12:16:04
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -19,7 +19,7 @@ using RUINORERP.Model.Base;
 namespace RUINORERP.Model.QueryDto
 {
     /// <summary>
-    /// 账户管理，财务系统中使用
+    /// 付款账号管理
     /// </summary>
     [Serializable()]
     [SugarTable("tb_FM_Account")]

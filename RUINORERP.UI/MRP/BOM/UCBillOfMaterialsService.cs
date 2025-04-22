@@ -265,7 +265,7 @@ namespace RUINORERP.UI.MRP.BOM
                     if (image != null)
                     {
                         //缩略图 这里用缓存 ?
-                        Image thumbnailthumbnail = uITools.CreateThumbnail(image, 100, 100);
+                        Image thumbnailthumbnail = UITools.CreateThumbnail(image, 100, 100);
                         e.Value = thumbnailthumbnail;
                     }
 
@@ -901,7 +901,7 @@ namespace RUINORERP.UI.MRP.BOM
                     if (image != null)
                     {
                         //缩略图 这里用缓存 ?
-                        Image thumbnailthumbnail = uITools.CreateThumbnail(image, 100, 100);
+                        Image thumbnailthumbnail = UITools.CreateThumbnail(image, 100, 100);
                         e.Value = thumbnailthumbnail;
                     }
                 }

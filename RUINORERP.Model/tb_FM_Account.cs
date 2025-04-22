@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：02/08/2025 16:31:59
+// 时间：04/22/2025 12:16:05
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -38,10 +38,10 @@ namespace RUINORERP.Model
         #region 属性
         private long _Account_id;
         /// <summary>
-        /// 账户
+        /// 公司账户
         /// </summary>
  
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Account_id" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "账户" , IsPrimaryKey = true)]
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Account_id" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "公司账户" , IsPrimaryKey = true)]
         public long Account_id
         { 
             get{return _Account_id;}
@@ -209,6 +209,14 @@ namespace RUINORERP.Model
 
         //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_FM_PaymentRecord.Account_id))]
+        public virtual List<tb_FM_PaymentRecord> tb_FM_PaymentRecords { get; set; }
+        //tb_FM_PaymentRecord.Account_id)
+        //Account_id.FK_TB_FM_PA_REFERENCE_TB_FM_AC)
+        //tb_FM_Account.Account_id)
+
+        //[Browsable(false)]打印报表时的数据源会不显示
+        [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_FM_PaymentApplication.Account_id))]
         public virtual List<tb_FM_PaymentApplication> tb_FM_PaymentApplications { get; set; }
         //tb_FM_PaymentApplication.Account_id)
@@ -223,9 +231,30 @@ namespace RUINORERP.Model
         //Account_id.FK_EXPENSECLAIMDETAIL_REF_ACCOUNT)
         //tb_FM_Account.Account_id)
 
-        
+        //[Browsable(false)]打印报表时的数据源会不显示
+        [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_FM_PreReceivedPayment.Account_id))]
+        public virtual List<tb_FM_PreReceivedPayment> tb_FM_PreReceivedPayments { get; set; }
+        //tb_FM_PreReceivedPayment.Account_id)
+        //Account_id.FK_FM_PRERECEIVEDPAYMENT_REF_FM_ACCOUNT)
+        //tb_FM_Account.Account_id)
 
-      
+        //[Browsable(false)]打印报表时的数据源会不显示
+        [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_FM_Payment.Account_id))]
+        public virtual List<tb_FM_Payment> tb_FM_Payments { get; set; }
+        //tb_FM_Payment.Account_id)
+        //Account_id.FK_FM_PAYMENTREQUEST_REF_ACCOUNT)
+        //tb_FM_Account.Account_id)
+
+        //[Browsable(false)]打印报表时的数据源会不显示
+        [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_FM_ReceivablePayable.Account_id))]
+        public virtual List<tb_FM_ReceivablePayable> tb_FM_ReceivablePayables { get; set; }
+        //tb_FM_ReceivablePayable.Account_id)
+        //Account_id.FK_FM_RECEIVABLEPAYABLE_REF_FM_ACCOUNT)
+        //tb_FM_Account.Account_id)
+
 
         #endregion
 
@@ -236,10 +265,6 @@ namespace RUINORERP.Model
 private bool PK_FK_ID_Check()
 {
   bool rs=true;
-         if("subject_id"!="Subject_id")
-        {
-        // rs=false;
-        }
 return rs;
 }
 

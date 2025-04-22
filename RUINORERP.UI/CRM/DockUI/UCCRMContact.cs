@@ -121,7 +121,7 @@ namespace RUINORERP.UI.CRM.DockUI
                     if (image != null)
                     {
                         //缩略图 这里用缓存 ?
-                        System.Drawing.Image thumbnailthumbnail = iTools.CreateThumbnail(image, 100, 100);
+                        System.Drawing.Image thumbnailthumbnail = UITools.CreateThumbnail(image, 100, 100);
                         e.Value = thumbnailthumbnail;
                         return;
                     }

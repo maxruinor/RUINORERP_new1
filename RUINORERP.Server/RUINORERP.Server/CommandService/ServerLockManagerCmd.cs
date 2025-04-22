@@ -2,6 +2,7 @@
 using Azure.Core;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using Microsoft.Extensions.Logging;
 using Microsoft.VisualBasic.ApplicationServices;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -129,12 +130,12 @@ namespace RUINORERP.Server.CommandService
                         json = ByteDataAnalysis.GetString(gd.Two, ref index);
                         obj = JObject.Parse(json);
                         UnLockInfo unLockInfoBizName = obj.ToObject<UnLockInfo>();
-                        var isUnlockedBizName = frmMain.Instance.lockManager.RemoveLockByBizName( unLockInfoBizName.LockedUserID, unLockInfoBizName.BillData.BizName);
+                        var isUnlockedBizName = frmMain.Instance.lockManager.RemoveLockByBizName(unLockInfoBizName.LockedUserID, unLockInfoBizName.BillData.BizName);
                         if (isUnlockedBizName)
                         {
                             if (frmMain.Instance.IsDebug)
                             {
-                                frmMain.Instance.PrintInfoLog($"服务器解锁业务类型{unLockInfoBizName.BillData.BizName }成功");
+                                frmMain.Instance.PrintInfoLog($"服务器解锁业务类型{unLockInfoBizName.BillData.BizName}成功");
                             }
                             //通知所有人。这个类型的单被解锁了， 包含锁单本人
                             ResponseToClient(isUnlockedBizName, unLockInfoBizName);
@@ -231,7 +232,17 @@ namespace RUINORERP.Server.CommandService
             }
             catch (Exception ex)
             {
-                Comm.CommService.ShowExceptionMsg("接收请求4:" + ex.Message);
+                if (FromSession != null)
+                {
+                    string userMsg = FromSession.User.用户名 + FromSession.User.客户端IP;
+                    frmMain.Instance._logger.LogError("ShowExceptionMsg:"+ userMsg, ex);
+                    Comm.CommService.ShowExceptionMsg("##接收请求##:" + userMsg + ex.Message);
+                }
+                else
+                {
+                    Comm.CommService.ShowExceptionMsg("接收请求4:" + ex.Message);
+                }
+
             }
             return rs;
         }

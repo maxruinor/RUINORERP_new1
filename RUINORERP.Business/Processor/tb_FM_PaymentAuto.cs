@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：02/19/2025 22:57:59
+// 时间：04/22/2025 12:16:07
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -30,7 +30,7 @@ using RUINORERP.Common.Helper;
 namespace RUINORERP.Business.Processor
 {
     /// <summary>
-    /// 付款单是付款的执行不需要审核只需要一个付款状态
+    /// 付款申请单-即为付款单
     /// </summary>
     public partial class tb_FM_PaymentProcessor:BaseProcessor 
     {

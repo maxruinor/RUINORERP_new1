@@ -41,7 +41,7 @@ namespace RUINORERP.UI.FM
         public UCReceivablePayableQuery()
         {
             InitializeComponent();
-            //base.RelatedBillEditCol = (c => c.no);
+            base.RelatedBillEditCol = (c => c.ARAPNo);
             //标记没有明细子表
             HasChildData = false;
         }

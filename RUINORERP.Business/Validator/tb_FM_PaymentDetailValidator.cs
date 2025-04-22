@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：02/19/2025 22:58:03
+// 时间：04/22/2025 12:16:10
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -45,6 +45,8 @@ namespace RUINORERP.Business
 
  RuleFor(tb_FM_PaymentDetail =>tb_FM_PaymentDetail.DepartmentID).Must(CheckForeignKeyValueCanNull).WithMessage("部门:下拉选择值不正确。");
  RuleFor(tb_FM_PaymentDetail =>tb_FM_PaymentDetail.DepartmentID).NotEmpty().When(x => x.DepartmentID.HasValue);
+
+ RuleFor(tb_FM_PaymentDetail =>tb_FM_PaymentDetail.tb__DepartmentID).NotEmpty().When(x => x.tb__DepartmentID.HasValue);
 
  RuleFor(tb_FM_PaymentDetail =>tb_FM_PaymentDetail.SourceBill_BizType).NotEmpty().When(x => x.SourceBill_BizType.HasValue);
 

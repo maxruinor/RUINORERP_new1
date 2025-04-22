@@ -331,7 +331,7 @@ namespace RUINORERP.UI.ProductEAV
                     if (image != null)
                     {
                         //缩略图 这里用缓存 ?
-                        Image thumbnailthumbnail = uiTools.CreateThumbnail(image, 100, 100);
+                        Image thumbnailthumbnail = UITools.CreateThumbnail(image, 100, 100);
                         e.Value = thumbnailthumbnail;
                         return;
                     }
@@ -1620,7 +1620,7 @@ namespace RUINORERP.UI.ProductEAV
                     if (image != null)
                     {
                         //缩略图 这里用缓存 ?
-                        Image thumbnailthumbnail = uiTools.CreateThumbnail(image, 100, 100);
+                        Image thumbnailthumbnail = UITools.CreateThumbnail(image, 100, 100);
                         e.Value = thumbnailthumbnail;
                     }
 

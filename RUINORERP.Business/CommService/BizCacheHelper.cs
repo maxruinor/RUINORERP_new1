@@ -22,6 +22,7 @@ using Microsoft.Extensions.Caching.Memory;
 using Newtonsoft.Json.Linq;
 using RUINORERP.Common.Helper;
 using Fireasy.Common.Extensions;
+using Castle.Core.Internal;
 
 namespace RUINORERP.Business.CommService
 {
@@ -416,6 +417,10 @@ namespace RUINORERP.Business.CommService
             // 遍历类型名称数组
             foreach (string typeName in typeNames)
             {
+                if (typeName.IsNullOrEmpty())
+                {
+                    continue;
+                }
                 SetDictDataSource(typeName, LoadData);
 
             }

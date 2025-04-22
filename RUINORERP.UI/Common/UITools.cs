@@ -30,7 +30,7 @@ namespace RUINORERP.UI.Common
         /// <param name="width"></param>
         /// <param name="height"></param>
         /// <returns></returns>
-        public Image CreateThumbnail(Image image, int width, int height)
+        public static Image CreateThumbnail(Image image, int width, int height)
         {
             // 创建缩略图的新图像
             Bitmap thumbnail = new Bitmap(width, height);

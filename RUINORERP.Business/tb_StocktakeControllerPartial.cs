@@ -204,7 +204,7 @@ namespace RUINORERP.Business
 
                 _unitOfWorkManage.RollbackTran();
 
-                _logger.Error(ex, "事务回滚");
+                _logger.Error(ex, "事务回滚" + ex.Message);
 
                 rmsr.ErrorMsg = "事务回滚=>" + ex.Message;
                 return rmsr;
@@ -355,7 +355,7 @@ namespace RUINORERP.Business
 
                 _unitOfWorkManage.RollbackTran();
                 rmsr.ErrorMsg = ex.Message;
-                _logger.Error(ex, "事务回滚");
+                _logger.Error(ex, "事务回滚" + ex.Message);
                 //  _logger.Error(approvalEntity.bizName +);
                 return rmsr;
             }

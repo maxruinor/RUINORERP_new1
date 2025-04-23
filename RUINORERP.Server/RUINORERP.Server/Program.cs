@@ -129,9 +129,9 @@ namespace RUINORERP.Server
                     Startup starter = new Startup();
                     IHost myhost = starter.CslaDIPort();
                     // IHostBuilder  myhost = starter.CslaDIPort();
-                   
+
                     IServiceProvider services = myhost.Services;
-                    
+
                     //https://github.com/autofac/Autofac.Extensions.DependencyInjection/releases
                     //给上下文服务源
                     Startup.ServiceProvider = services;
@@ -139,7 +139,7 @@ namespace RUINORERP.Server
                     Startup.AutofacContainerScope = services.GetAutofacRoot();
                     AppContextData.SetAutofacContainerScope(Startup.AutofacContainerScope);
                     BusinessHelper.Instance.SetContext(AppContextData);
-                    
+
                     //Program.AppContextData.SetServiceProvider(services);
                     //Program.AppContextData.Status = "init";
 
@@ -463,8 +463,7 @@ namespace RUINORERP.Server
                 AppContextData.log = new Logs();
             }
             AppContextData.log.IP = "server";
-
-
+            AppContextData.log.MachineName = System.Environment.MachineName + "-" + System.Environment.UserName;
             AppContextData.SysConfig = new tb_SystemConfig();
 
         }

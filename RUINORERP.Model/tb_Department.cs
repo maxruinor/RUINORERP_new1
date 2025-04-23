@@ -71,7 +71,7 @@ namespace RUINORERP.Model
         /// 部门代号
         /// </summary>
         [AdvQueryAttribute(ColName = "DepartmentCode",ColDesc = "部门代号")] 
-        [SugarColumn(ColumnDataType = "char", SqlParameterDbType ="String",  ColumnName = "DepartmentCode" ,Length=20,IsNullable = false,ColumnDescription = "部门代号" )]
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "DepartmentCode" ,Length=20,IsNullable = false,ColumnDescription = "部门代号" )]
         public string DepartmentCode
         { 
             get{return _DepartmentCode;}

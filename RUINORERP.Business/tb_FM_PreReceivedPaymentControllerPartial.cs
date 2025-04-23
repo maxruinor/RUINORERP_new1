@@ -32,11 +32,11 @@ using AutoMapper;
 
 namespace RUINORERP.Business
 {
-
+    /// <summary>
+    /// 预收付款单
+    /// </summary>
     public partial class tb_FM_PreReceivedPaymentController<T> : BaseController<T> where T : class
     {
-
-
         public async override Task<ReturnResults<T>> AntiApprovalAsync(T ObjectEntity)
         {
             ReturnResults<T> rmrs = new ReturnResults<T>();
@@ -64,13 +64,13 @@ namespace RUINORERP.Business
             catch (Exception ex)
             {
                 _unitOfWorkManage.RollbackTran();
-                _logger.Error(ex, "事务回滚");
+                _logger.Error(ex, "事务回滚" + ex.Message);
                 rmrs.ErrorMsg = ex.Message;
                 return rmrs;
             }
 
         }
-
+        
         /// <summary>
         /// 审核通过时 自动生成付款单
         /// </summary>
@@ -121,7 +121,7 @@ namespace RUINORERP.Business
             {
 
                 _unitOfWorkManage.RollbackTran();
-                _logger.Error(ex, "事务回滚");
+                _logger.Error(ex, "事务回滚" + ex.Message);
                 rmrs.ErrorMsg = ex.Message;
                 return rmrs;
             }

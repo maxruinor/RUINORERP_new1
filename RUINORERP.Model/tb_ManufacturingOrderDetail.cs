@@ -325,7 +325,7 @@ namespace RUINORERP.Model
         /// 替代品
         /// </summary>
         [AdvQueryAttribute(ColName = "AlternativeProducts",ColDesc = "替代品")] 
-        [SugarColumn(ColumnDataType = "char", SqlParameterDbType ="String",  ColumnName = "AlternativeProducts" ,Length=10,IsNullable = true,ColumnDescription = "替代品" )]
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "AlternativeProducts" ,Length=10,IsNullable = true,ColumnDescription = "替代品" )]
         public string AlternativeProducts
         { 
             get{return _AlternativeProducts;}

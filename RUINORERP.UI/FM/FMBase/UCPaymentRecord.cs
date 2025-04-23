@@ -284,7 +284,7 @@ namespace RUINORERP.UI.FM
                                         //显示外币相关
                                         UIHelper.ControlForeignFieldInvisible<tb_FM_PaymentRecord>(this, true);
                                         //需要有一个方法。通过外币代码得到换人民币的汇率
-                                        entity.ExchangeRate = BizService.GetExchangeRateFromCache(cv.CurrencyCode, DefaultCurrency.RMB.ToString());
+                                        entity.ExchangeRate = BizService.GetExchangeRateFromCache(cv.Currency_ID, AppContext.BaseCurrency.Currency_ID);
                                     }
                                     else
                                     {

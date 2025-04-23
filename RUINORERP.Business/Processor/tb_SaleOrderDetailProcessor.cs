@@ -38,7 +38,6 @@ namespace RUINORERP.Business.Processor
         {
             List<Expression<Func<tb_SaleOrderDetail, object>>> SummaryCols = new List<Expression<Func<tb_SaleOrderDetail, object>>>();
             SummaryCols.Add(c => c.Quantity);
-            SummaryCols.Add(c => c.SubtotalUntaxedAmount);
             SummaryCols.Add(c => c.CommissionAmount);
             SummaryCols.Add(c => c.SubtotalTaxAmount);
             SummaryCols.Add(c => c.SubtotalCostAmount);

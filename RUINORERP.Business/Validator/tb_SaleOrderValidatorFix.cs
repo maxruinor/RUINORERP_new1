@@ -36,6 +36,7 @@ namespace RUINORERP.Business
             RuleFor(x => x.PayStatus).GreaterThan(0).WithMessage("付款状态:不能为空。");
             RuleFor(x => x.Paytype_ID).GreaterThan(0).When(c => c.PayStatus != (int)PayStatus.未付款).WithMessage("付款类型:有付款的情况下，付款类型不能为空。");
             RuleFor(x => x.Notes).MinimumLength(5).When(c => c.IsCustomizedOrder == true).WithMessage("备注:定制单时下，备注内容长度必须超过5。");
+            RuleFor(x => x.ExchangeRate).GreaterThan(0).When(c => c.ExchangeRate.HasValue).WithMessage("汇率:必须大于零。");
         }
     }
 }

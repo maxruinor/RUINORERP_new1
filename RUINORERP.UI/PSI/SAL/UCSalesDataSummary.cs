@@ -135,10 +135,8 @@ namespace RUINORERP.UI.PSI.SAL
                             {
                                 queryMaster.newSumDataGridViewMaster.NeedSaveColumnsXml = true;
                                 GetSaleOrderDataListFromProc(queryMaster);
-
                             }
                         }
-
 
                         //带有output的存储过程 
                         /*
@@ -209,7 +207,6 @@ namespace RUINORERP.UI.PSI.SAL
                         */
 
                         #endregion
-
 
 
                         break;

@@ -56,7 +56,7 @@ namespace RUINORERP.Model
         /// 模块编号
         /// </summary>
         [AdvQueryAttribute(ColName = "ModuleNo",ColDesc = "模块编号")] 
-        [SugarColumn(ColumnDataType = "char", SqlParameterDbType ="String",  ColumnName = "ModuleNo" ,Length=50,IsNullable = false,ColumnDescription = "模块编号" )]
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "ModuleNo" ,Length=50,IsNullable = false,ColumnDescription = "模块编号" )]
         public string ModuleNo
         { 
             get{return _ModuleNo;}

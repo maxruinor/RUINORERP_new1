@@ -3,6 +3,7 @@ using FastReport.Table;
 using Force.DeepCloner;
 using Krypton.Navigator;
 using LightTalkChatBox;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NPOI.POIFS.Crypt.Dsig;
@@ -332,6 +333,11 @@ namespace RUINORERP.UI.ClientCmdService
 
         public void BuildDataPacket(object request)
         {
+            if (request == null)
+            {
+                //请求为空：1
+                MainForm.Instance.logger.LogError("请求为空");
+            }
 
             OriginalData gd = new OriginalData();
             try
@@ -340,12 +346,12 @@ namespace RUINORERP.UI.ClientCmdService
                 string sendtime = System.DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
                 tx.PushString(sendtime);
                 tx.PushInt((int)lockCmd);
-
+                string json = string.Empty;
                 switch (lockCmd)
                 {
                     case LockCmd.LOCK:
                         LockedInfo lockInfo = request as LockedInfo;
-                        string json = JsonConvert.SerializeObject(lockInfo,
+                        json = JsonConvert.SerializeObject(lockInfo,
                        new JsonSerializerSettings
                        {
                            ReferenceLoopHandling = ReferenceLoopHandling.Ignore // 或 ReferenceLoopHandling.Serialize
@@ -394,7 +400,10 @@ namespace RUINORERP.UI.ClientCmdService
                     default:
                         break;
                 }
-
+                if (string.IsNullOrEmpty(json) || json == "null")
+                {
+                    MainForm.Instance.logger.LogError("BuildDataPacket:锁单时，请求数据为空。=>" + lockCmd.ToString() + request.ToString());
+                }
 
                 //将来再加上提醒配置规则,或加在请求实体中
                 gd.cmd = (byte)ClientCmdEnum.复合型锁单处理;

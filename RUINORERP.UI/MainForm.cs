@@ -701,6 +701,48 @@ namespace RUINORERP.UI
             MainForm.Instance.kryptonDockingManager1.DockspaceRemoved += KryptonDockingManager1_DockspaceRemoved;
 
 
+            // 异步延迟3秒执行本位币别查询事件，不会阻止UI线程
+            _ = Task.Run(async () =>
+            {
+                await Task.Delay(3000);
+                #region 本位币别
+
+                PrintInfoLog("正在查询本位币别...");
+
+                List<tb_Currency> currencies = new List<tb_Currency>();
+
+                var rslist = BizCacheHelper.Manager.CacheEntityList.Get(nameof(tb_Currency));
+                if (rslist != null)
+                {
+                    List<object> objlist = rslist as List<object>;
+                    foreach (var item in objlist)
+                    {
+                        if (item is tb_Currency ra)
+                        {
+                            currencies.Add(ra);
+                        }
+                    }
+                }
+                tb_Currency currency = currencies.Where(m => m.Is_BaseCurrency.HasValue && m.Is_BaseCurrency.Value == true).FirstOrDefault();
+                if (currency != null)
+                {
+                    MainForm.Instance.AppContext.BaseCurrency = currency;
+                }
+                else
+                {
+                    MainForm.Instance.AppContext.BaseCurrency = await MainForm.Instance.AppContext.Db.CopyNew().Queryable<tb_Currency>().Where(c => c.Is_BaseCurrency.HasValue && c.Is_BaseCurrency.Value == true).SingleAsync();
+                    if (MainForm.Instance.AppContext.BaseCurrency == null)
+                    {
+                        MessageBox.Show("请在基础设置中配置本位币别。");
+                    }
+                }
+
+                PrintInfoLog("本位币别查询完成。");
+
+                #endregion
+
+            });
+
         }
 
         private void KryptonDockingManager1_DockspaceRemoved(object sender, DockspaceEventArgs e)

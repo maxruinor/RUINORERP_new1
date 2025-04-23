@@ -20,6 +20,10 @@ namespace RUINORERP.Model.Context
     /// </summary>
     public class ApplicationContext
     {
+        /// <summary>
+        /// 系统运行的基本币别-取自币别表中的本位币
+        /// </summary>
+        public tb_Currency BaseCurrency { get; set; }
 
         //BillConverterFactory 中会用到这个。UI层才有缓存。单例模式没有作用到。暂时没有处理用。用这个属性来传值。
         public List<tb_MenuInfo> UserMenuList;

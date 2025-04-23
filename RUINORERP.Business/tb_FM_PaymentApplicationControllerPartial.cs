@@ -61,7 +61,7 @@ namespace RUINORERP.Business
             catch (Exception ex)
             {
                 _unitOfWorkManage.RollbackTran();
-                _logger.Error(ex, "事务回滚");
+                _logger.Error(ex, "事务回滚" + ex.Message);
                 rmrs.ErrorMsg = ex.Message;
                 return rmrs;
             }
@@ -95,7 +95,7 @@ namespace RUINORERP.Business
             {
 
                 _unitOfWorkManage.RollbackTran();
-                _logger.Error(ex, "事务回滚");
+                _logger.Error(ex, "事务回滚" + ex.Message);
                 rmrs.ErrorMsg = ex.Message;
                 return rmrs;
             }

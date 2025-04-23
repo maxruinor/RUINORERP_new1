@@ -1,4 +1,5 @@
 ﻿using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.VisualBasic;
 using Microsoft.VisualBasic.ApplicationServices;
 using RUINORERP.Business.CommService;
 using RUINORERP.Common.Extensions;
@@ -447,7 +448,7 @@ namespace RUINORERP.Server
             }
         }
 
-        private void HandleSwitchServer(UserInfo user = null)
+        private async void HandleSwitchServer(UserInfo user = null)
         {
             frmInput frmInput = new frmInput();
             frmInput.Text = "请输入服务器IP和端口，格式为 IP:端口";
@@ -456,11 +457,14 @@ namespace RUINORERP.Server
             {
                 if (user == null)
                 {
-                    foreach (var sb in frmMain.Instance.sessionListBiz)
+                    List<SessionforBiz> sbList = new List<SessionforBiz>();
+                    sbList = frmMain.Instance.sessionListBiz.Values.ToList();
+                    for (int i = 0; i < sbList.Count; i++)
                     {
-                        if (sb.Value.State == SessionState.Connected)
+                        if (sbList[i].State == SessionState.Connected)
                         {
-                            UserService.切换服务器(sb.Value, frmInput.InputContent);
+                            await Task.Delay(500);
+                            UserService.切换服务器(sbList[i], frmInput.InputContent);
                         }
                     }
                 }

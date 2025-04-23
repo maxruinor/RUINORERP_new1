@@ -92,6 +92,10 @@ namespace RUINORERP.Server.CommandService
                 {
                     case LockCmd.LOCK:
                         string json = ByteDataAnalysis.GetString(gd.Two, ref index);
+                        if (json == "null")
+                        {
+                            return false;
+                        }
                         JObject obj = JObject.Parse(json);
                         LockedInfo lockRequest = obj.ToObject<LockedInfo>();
                         var isLocked = frmMain.Instance.lockManager.TryLock(lockRequest.BillID,
@@ -235,8 +239,7 @@ namespace RUINORERP.Server.CommandService
                 if (FromSession != null)
                 {
                     string userMsg = FromSession.User.用户名 + FromSession.User.客户端IP;
-                    frmMain.Instance._logger.LogError("ShowExceptionMsg:"+ userMsg, ex);
-                    Comm.CommService.ShowExceptionMsg("##接收请求##:" + userMsg + ex.Message);
+                    frmMain.Instance._logger.LogError("ShowExceptionMsg:" + userMsg, ex);
                 }
                 else
                 {

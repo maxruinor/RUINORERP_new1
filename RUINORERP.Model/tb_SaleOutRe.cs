@@ -274,7 +274,7 @@ namespace RUINORERP.Model
         /// 物流单号
         /// </summary>
         [AdvQueryAttribute(ColName = "TrackNo",ColDesc = "物流单号")] 
-        [SugarColumn(ColumnDataType = "char", SqlParameterDbType ="String",  ColumnName = "TrackNo" ,Length=50,IsNullable = true,ColumnDescription = "物流单号" )]
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "TrackNo" ,Length=50,IsNullable = true,ColumnDescription = "物流单号" )]
         public string TrackNo
         { 
             get{return _TrackNo;}

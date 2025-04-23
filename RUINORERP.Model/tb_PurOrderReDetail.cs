@@ -185,7 +185,7 @@ namespace RUINORERP.Model
         /// 客户型号
         /// </summary>
         [AdvQueryAttribute(ColName = "CustomerType",ColDesc = "客户型号")] 
-        [SugarColumn(ColumnDataType = "char", SqlParameterDbType ="String",  ColumnName = "CustomerType" ,Length=100,IsNullable = true,ColumnDescription = "客户型号" )]
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "CustomerType" ,Length=100,IsNullable = true,ColumnDescription = "客户型号" )]
         public string CustomerType
         { 
             get{return _CustomerType;}

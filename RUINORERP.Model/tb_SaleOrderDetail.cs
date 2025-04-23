@@ -279,20 +279,7 @@ namespace RUINORERP.Model
             SetProperty(ref _SubtotalTaxAmount, value);
                         }
         }
-
-        private decimal _SubtotalUntaxedAmount= ((0));
-        /// <summary>
-        /// 未税本位币
-        /// </summary>
-        [AdvQueryAttribute(ColName = "SubtotalUntaxedAmount",ColDesc = "未税本位币")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "SubtotalUntaxedAmount" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "未税本位币" )]
-        public decimal SubtotalUntaxedAmount
-        { 
-            get{return _SubtotalUntaxedAmount;}
-            set{
-            SetProperty(ref _SubtotalUntaxedAmount, value);
-                        }
-        }
+      
 
         private string _Summary;
         /// <summary>

@@ -57,7 +57,7 @@ namespace RUINORERP.Model
         /// 大小
         /// </summary>
         [AdvQueryAttribute(ColName = "PointToString1",ColDesc = "大小")] 
-        [SugarColumn(ColumnDataType = "char", SqlParameterDbType ="String",  ColumnName = "PointToString1" ,Length=100,IsNullable = true,ColumnDescription = "大小" )]
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "PointToString1" ,Length=100,IsNullable = true,ColumnDescription = "大小" )]
         public string PointToString1
         { 
             get{return _PointToString1;}
@@ -71,7 +71,7 @@ namespace RUINORERP.Model
         /// 位置
         /// </summary>
         [AdvQueryAttribute(ColName = "PointToString2",ColDesc = "位置")] 
-        [SugarColumn(ColumnDataType = "char", SqlParameterDbType ="String",  ColumnName = "PointToString2" ,Length=100,IsNullable = true,ColumnDescription = "位置" )]
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "PointToString2" ,Length=100,IsNullable = true,ColumnDescription = "位置" )]
         public string PointToString2
         { 
             get{return _PointToString2;}

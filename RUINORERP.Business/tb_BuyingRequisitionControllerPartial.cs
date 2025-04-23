@@ -131,7 +131,7 @@ namespace RUINORERP.Business
             {
                 _unitOfWorkManage.RollbackTran();
                 rmrs.ErrorMsg = ex.Message;
-                _logger.Error(ex, "事务回滚");
+                _logger.Error(ex, "事务回滚" + ex.Message);
                 return rmrs;
             }
 

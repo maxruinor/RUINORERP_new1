@@ -245,17 +245,12 @@ namespace RUINORERP.UI.ProductEAV
                     default:
                         break;
                 }
-                 
-
-
                 entity.HasChanged = false;
             }
 
             base.toolStripButtonModify.Enabled = true;
             return list;
         }
-
-
 
         private void newSumDataGridView产品组合_CellFormatting(object sender, DataGridViewCellFormattingEventArgs e)
         {
@@ -313,9 +308,6 @@ namespace RUINORERP.UI.ProductEAV
 
                 }
             }
-
         }
-
-
     }
 }

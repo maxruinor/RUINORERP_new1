@@ -308,20 +308,7 @@ namespace RUINORERP.Model
             SetProperty(ref _KeepAccountsType, value);
                         }
         }
-
-        private decimal _PrePayMoney;
-        /// <summary>
-        /// 预付款
-        /// </summary>
-        [AdvQueryAttribute(ColName = "PrePayMoney",ColDesc = "预付款")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "PrePayMoney" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "预付款" )]
-        public decimal PrePayMoney
-        { 
-            get{return _PrePayMoney;}
-            set{
-            SetProperty(ref _PrePayMoney, value);
-                        }
-        }
+ 
 
         private decimal _Deposit;
         /// <summary>

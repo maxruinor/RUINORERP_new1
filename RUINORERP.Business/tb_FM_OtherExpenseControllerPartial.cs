@@ -76,7 +76,7 @@ namespace RUINORERP.Business
             {
          
                 _unitOfWorkManage.RollbackTran();
-                _logger.Error(ex, "事务回滚");
+                _logger.Error(ex, "事务回滚" + ex.Message);
                 rrs.ErrorMsg = ex.Message;
                 rrs.Succeeded = false;
                 return rrs;

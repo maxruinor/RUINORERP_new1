@@ -71,7 +71,6 @@ namespace RUINORERP.Business
 
  RuleFor(x => x.SubtotalTaxAmount).PrecisionScale(19,4,true).WithMessage("税额:小数位不能超过4。");
 
- RuleFor(x => x.SubtotalUntaxedAmount).PrecisionScale(19,4,true).WithMessage("未税本位币:小数位不能超过4。");
 
  RuleFor(tb_SaleOrderDetail =>tb_SaleOrderDetail.Summary).MaximumLength(500).WithMessage("摘要:不能超过最大长度,500.");
 

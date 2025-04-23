@@ -57,7 +57,7 @@ namespace RUINORERP.Model
         /// 
         /// </summary>
         [AdvQueryAttribute(ColName = "IconFile_Path",ColDesc = "")] 
-        [SugarColumn(ColumnDataType = "char", SqlParameterDbType ="String",  ColumnName = "IconFile_Path" ,Length=500,IsNullable = true,ColumnDescription = "" )]
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "IconFile_Path" ,Length=500,IsNullable = true,ColumnDescription = "" )]
         public string IconFile_Path
         { 
             get{return _IconFile_Path;}
@@ -71,7 +71,7 @@ namespace RUINORERP.Model
         /// 标题
         /// </summary>
         [AdvQueryAttribute(ColName = "Title",ColDesc = "标题")] 
-        [SugarColumn(ColumnDataType = "char", SqlParameterDbType ="String",  ColumnName = "Title" ,Length=100,IsNullable = true,ColumnDescription = "标题" )]
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "Title" ,Length=100,IsNullable = true,ColumnDescription = "标题" )]
         public string Title
         { 
             get{return _Title;}
@@ -85,7 +85,7 @@ namespace RUINORERP.Model
         /// 大小
         /// </summary>
         [AdvQueryAttribute(ColName = "SizeString",ColDesc = "大小")] 
-        [SugarColumn(ColumnDataType = "char", SqlParameterDbType ="String",  ColumnName = "SizeString" ,Length=100,IsNullable = true,ColumnDescription = "大小" )]
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "SizeString" ,Length=100,IsNullable = true,ColumnDescription = "大小" )]
         public string SizeString
         { 
             get{return _SizeString;}
@@ -99,7 +99,7 @@ namespace RUINORERP.Model
         /// 位置
         /// </summary>
         [AdvQueryAttribute(ColName = "PointToString",ColDesc = "位置")] 
-        [SugarColumn(ColumnDataType = "char", SqlParameterDbType ="String",  ColumnName = "PointToString" ,Length=100,IsNullable = true,ColumnDescription = "位置" )]
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "PointToString" ,Length=100,IsNullable = true,ColumnDescription = "位置" )]
         public string PointToString
         { 
             get{return _PointToString;}

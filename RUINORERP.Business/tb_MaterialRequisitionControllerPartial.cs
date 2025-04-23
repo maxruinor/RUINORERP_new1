@@ -340,7 +340,7 @@ namespace RUINORERP.Business
                 _unitOfWorkManage.RollbackTran();
 
                 rrs.ErrorMsg = "事务回滚=>" + ex.Message;
-                _logger.Error(ex, "事务回滚");
+                _logger.Error(ex, "事务回滚" + ex.Message);
                 return rrs;
             }
 

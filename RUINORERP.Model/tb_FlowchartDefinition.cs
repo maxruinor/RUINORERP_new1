@@ -71,7 +71,7 @@ namespace RUINORERP.Model
         /// 流程图编号
         /// </summary>
         [AdvQueryAttribute(ColName = "FlowchartNo",ColDesc = "流程图编号")] 
-        [SugarColumn(ColumnDataType = "char", SqlParameterDbType ="String",  ColumnName = "FlowchartNo" ,Length=50,IsNullable = false,ColumnDescription = "流程图编号" )]
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "FlowchartNo" ,Length=50,IsNullable = false,ColumnDescription = "流程图编号" )]
         public string FlowchartNo
         { 
             get{return _FlowchartNo;}

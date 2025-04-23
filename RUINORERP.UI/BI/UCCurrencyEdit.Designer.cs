@@ -43,6 +43,7 @@
             this.lblCurrencySymbol = new Krypton.Toolkit.KryptonLabel();
             this.txtCurrencySymbol = new Krypton.Toolkit.KryptonTextBox();
             this.lblIs_enabled = new Krypton.Toolkit.KryptonLabel();
+            this.kryptonLabel2 = new Krypton.Toolkit.KryptonLabel();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel1)).BeginInit();
             this.kryptonPanel1.SuspendLayout();
@@ -68,6 +69,7 @@
             // 
             // kryptonPanel1
             // 
+            this.kryptonPanel1.Controls.Add(this.kryptonLabel2);
             this.kryptonPanel1.Controls.Add(this.chkIs_BaseCurrency);
             this.kryptonPanel1.Controls.Add(this.kryptonLabel1);
             this.kryptonPanel1.Controls.Add(this.chkIs_enabled);
@@ -180,6 +182,14 @@
             this.lblIs_enabled.TabIndex = 69;
             this.lblIs_enabled.Values.Text = "是否启用";
             // 
+            // kryptonLabel2
+            // 
+            this.kryptonLabel2.Location = new System.Drawing.Point(149, 157);
+            this.kryptonLabel2.Name = "kryptonLabel2";
+            this.kryptonLabel2.Size = new System.Drawing.Size(295, 20);
+            this.kryptonLabel2.TabIndex = 77;
+            this.kryptonLabel2.Values.Text = "本位币是系统结算基本币，只有一个币种为本位币";
+            // 
             // UCCurrencyEdit
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
@@ -213,5 +223,6 @@
         private Krypton.Toolkit.KryptonCheckBox chkIs_enabled;
         private Krypton.Toolkit.KryptonCheckBox chkIs_BaseCurrency;
         private Krypton.Toolkit.KryptonLabel kryptonLabel1;
+        private Krypton.Toolkit.KryptonLabel kryptonLabel2;
     }
 }

@@ -31,22 +31,43 @@ namespace RUINORERP.UI.Common
             }
         }
 
-        public static decimal GetExchangeRateFromCache(string fromCurrencyCode, string toCurrencyCode)
-        {
-           var rslist = BizCacheHelper.Manager.CacheEntityList.Get("tb_CurrencyExchangeRate");
 
-            //tb_CurrencyExchangeRate rate = await _appContext.Db.CopyNew().Queryable<tb_CurrencyExchangeRate>()
-            //            .Where(m => m.BaseCurrencyID == fromCurrencyID && m.TargetCurrencyID == toCurrencyID)
-            //            .FirstAsync();
-            //if (rate != null)
-            //{
-            //    return rate as T;
-            //}
-            //else
-            //{
-            //    return null;
-            //}
-            return 0;
+        /// <summary>
+        /// 将外币换为人民币
+        /// </summary>
+        /// <param name="fromCurrencyID">外币</param>
+        /// <param name="toCurrencyID">人民币</param>
+        /// <returns></returns>
+        public static decimal? GetExchangeRateFromCache(long fromCurrencyID, long toCurrencyID)
+        {
+            List<tb_CurrencyExchangeRate> rates = new List<tb_CurrencyExchangeRate>();
+
+            var rslist = BizCacheHelper.Manager.CacheEntityList.Get("tb_CurrencyExchangeRate");
+            if (rslist == null)
+            {
+                rslist = MainForm.Instance.AppContext.Db.CopyNew().Queryable<tb_CurrencyExchangeRate>().ToList();
+            }
+            else
+            {
+                List<object> objlist = rslist as List<object>;
+                foreach (var item in objlist)
+                {
+                    if (item is tb_CurrencyExchangeRate ra)
+                    {
+                        rates.Add(ra);
+                    }
+                }
+
+            }
+            tb_CurrencyExchangeRate rate = rates.Where(m => m.BaseCurrencyID == fromCurrencyID && m.TargetCurrencyID == toCurrencyID).FirstOrDefault();
+            if (rate == null)
+            {
+                return null;
+            }
+            else
+            {
+                return rate.ExecuteExchRate.Value;
+            }
         }
 
 

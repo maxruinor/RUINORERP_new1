@@ -70,7 +70,7 @@ namespace RUINORERP.Model
         /// 币别代码
         /// </summary>
         [AdvQueryAttribute(ColName = "CurrencyCode",ColDesc = "币别代码")] 
-        [SugarColumn(ColumnDataType = "char", SqlParameterDbType ="String",  ColumnName = "CurrencyCode" ,Length=10,IsNullable = true,ColumnDescription = "币别代码" )]
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "CurrencyCode" ,Length=10,IsNullable = true,ColumnDescription = "币别代码" )]
         public string CurrencyCode
         { 
             get{return _CurrencyCode;}

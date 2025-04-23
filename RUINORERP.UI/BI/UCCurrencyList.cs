@@ -18,6 +18,11 @@ using RUINORERP.Business;
 using System.Linq.Expressions;
 using RUINORERP.Common.Extensions;
 using RUINORERP.Global.EnumExt;
+using RUINORERP.Business.CommService;
+using TransInstruction;
+using System.Web.UI;
+using System.Windows.Documents;
+using SourceGrid2.Win32;
 
 namespace RUINORERP.UI.BI
 {
@@ -50,17 +55,17 @@ namespace RUINORERP.UI.BI
                 //循环枚举DefaultPaymentMethod中的值，添加到表中
                 List<tb_Currency> list = new List<tb_Currency>();
                 foreach (var item in Enum.GetValues(typeof(DefaultCurrency)))
-                { 
+                {
                     tb_Currency currency = new tb_Currency();
                     currency.Is_enabled = true;
                     currency.CurrencyCode = item.ToString();
-                    DefaultCurrency defaultCurrency= (DefaultCurrency)item;
+                    DefaultCurrency defaultCurrency = (DefaultCurrency)item;
                     switch (defaultCurrency)
                     {
                         case DefaultCurrency.RMB:
                             currency.CurrencyName = "中国";
                             currency.CurrencySymbol = "￥";
-                            currency.Is_BaseCurrency=true;
+                            currency.Is_BaseCurrency = true;
                             break;
                         case DefaultCurrency.USD:
                             currency.CurrencyName = "美国";
@@ -85,7 +90,74 @@ namespace RUINORERP.UI.BI
             }
         }
 
+        /// <summary>
+        /// 特殊 处理
+        /// 本位币只能一行一个币种有效
+        /// </summary>
+        public async override Task<List<tb_Currency>> Save()
+        {
+            tb_Currency currency = new tb_Currency();
+            tb_CurrencyController<tb_Currency> pctr = Startup.GetFromFac<tb_CurrencyController<tb_Currency>>();
+            //这里是否要用保存列表来处理
+            foreach (var item in bindingSourceList.List)
+            {
+                var entity = item as tb_Currency;
+                switch (entity.ActionStatus)
+                {
+                    case ActionStatus.无操作:
+                        break;
+                    case ActionStatus.新增:
+                    case ActionStatus.修改:
 
+                        ReturnResults<tb_Currency> rr = new ReturnResults<tb_Currency>();
+                        rr = await pctr.SaveOrUpdate(entity);
+                        if (rr.Succeeded)
+                        {
+                            currency = rr.ReturnObject;
+                            ToolBarEnabledControl(MenuItemEnums.保存);
+                            //根据要缓存的列表集合来判断是否需要上传到服务器。让服务器分发到其他客户端
+                            KeyValuePair<string, string> pair = new KeyValuePair<string, string>();
+                            //只处理需要缓存的表
+                            if (BizCacheHelper.Manager.NewTableList.TryGetValue(typeof(tb_Currency).Name, out pair))
+                            {
+                                //如果有更新变动就上传到服务器再分发到所有客户端
+                                OriginalData odforCache = ActionForClient.更新缓存<tb_Currency>(rr.ReturnObject);
+                                byte[] buffer = CryptoProtocol.EncryptClientPackToServer(odforCache);
+                                MainForm.Instance.ecs.client.Send(buffer);
+                            }
+                        }
+                        else
+                        {
+                            MainForm.Instance.uclog.AddLog(rr.ErrorMsg, Global.UILogType.错误);
+                        }
+                        break;
+                    case ActionStatus.删除:
+                        break;
+                    default:
+                        break;
+                }
+
+                entity.HasChanged = false;
+            }
+
+            base.toolStripButtonModify.Enabled = true;
+
+            List<tb_Currency> list = new List<tb_Currency>();
+            foreach (var item in bindingSourceList.List)
+            {
+                var entity = item as tb_Currency;
+                list.Add(entity);
+            }
+            if (currency.Is_BaseCurrency.HasValue && currency.Is_BaseCurrency.Value)
+            {
+                //其他行是否
+                list.Where(t => t.Currency_ID != currency.Currency_ID).ToList().ForEach(w => w.Is_BaseCurrency = false);
+                //保存
+                await MainForm.Instance.AppContext.Db.Updateable<tb_Currency>(list).ExecuteCommandAsync();
+            }
+
+            return list;
+        }
 
         /*
 protected override void Add()

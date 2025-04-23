@@ -1372,8 +1372,6 @@ namespace RUINORERP.UI.SysConfig
                                         {
                                             Detail.SubtotalTaxAmount = Detail.SubtotalTransAmount / (1 + Detail.TaxRate) * Detail.TaxRate;
                                         }
-                                        Detail.SubtotalUntaxedAmount = Detail.SubtotalTransAmount - Detail.SubtotalTaxAmount;
-
                                     }
                                 }
                             }
@@ -1381,7 +1379,6 @@ namespace RUINORERP.UI.SysConfig
                             order.TotalAmount = order.tb_SaleOrderDetails.Sum(c => c.SubtotalTransAmount);
                             order.TotalQty = order.tb_SaleOrderDetails.Sum(c => c.Quantity);
                             order.TotalTaxAmount = order.tb_SaleOrderDetails.Sum(c => c.SubtotalTaxAmount);
-                            order.TotalUntaxedAmount = order.tb_SaleOrderDetails.Sum(c => c.SubtotalUntaxedAmount);
                             richTextBoxLog.AppendText($"销售订单{order.SOrderNo}总金额：{order.TotalCost} " + "\r\n");
 
                             if (!chkTestMode.Checked)

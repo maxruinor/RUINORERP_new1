@@ -71,9 +71,7 @@
             this.txtShippingCost = new Krypton.Toolkit.KryptonTextBox();
             this.txtTotalAmount = new Krypton.Toolkit.KryptonTextBox();
             this.kryptonLabel2 = new Krypton.Toolkit.KryptonLabel();
-            this.txtPrePayMoney = new Krypton.Toolkit.KryptonTextBox();
             this.txtDeposit = new Krypton.Toolkit.KryptonTextBox();
-            this.lblPrePayMoney = new Krypton.Toolkit.KryptonLabel();
             this.lblDeposit = new Krypton.Toolkit.KryptonLabel();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceSub)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).BeginInit();
@@ -117,6 +115,8 @@
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.lblRefNO);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.txtRefNO);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.lblPaytype_ID);
+            this.kryptonSplitContainer1.Panel1.Controls.Add(this.txtDeposit);
+            this.kryptonSplitContainer1.Panel1.Controls.Add(this.lblDeposit);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.cmbPaytype_ID);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.lblOrder_ID);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.cmbOrder_ID);
@@ -422,10 +422,6 @@
             this.kryptonSplitContainer2.Panel2.Controls.Add(this.txtShippingCost);
             this.kryptonSplitContainer2.Panel2.Controls.Add(this.txtTotalAmount);
             this.kryptonSplitContainer2.Panel2.Controls.Add(this.kryptonLabel2);
-            this.kryptonSplitContainer2.Panel2.Controls.Add(this.txtPrePayMoney);
-            this.kryptonSplitContainer2.Panel2.Controls.Add(this.txtDeposit);
-            this.kryptonSplitContainer2.Panel2.Controls.Add(this.lblPrePayMoney);
-            this.kryptonSplitContainer2.Panel2.Controls.Add(this.lblDeposit);
             this.kryptonSplitContainer2.Size = new System.Drawing.Size(1197, 485);
             this.kryptonSplitContainer2.SplitterDistance = 401;
             this.kryptonSplitContainer2.TabIndex = 2;
@@ -461,22 +457,22 @@
             // 
             // txtTotalTaxAmount
             // 
-            this.txtTotalTaxAmount.Location = new System.Drawing.Point(918, 16);
+            this.txtTotalTaxAmount.Location = new System.Drawing.Point(592, 16);
             this.txtTotalTaxAmount.Name = "txtTotalTaxAmount";
             this.txtTotalTaxAmount.Size = new System.Drawing.Size(100, 23);
             this.txtTotalTaxAmount.TabIndex = 122;
             // 
             // lblShippingCost
             // 
-            this.lblShippingCost.Location = new System.Drawing.Point(289, 16);
+            this.lblShippingCost.Location = new System.Drawing.Point(257, 16);
             this.lblShippingCost.Name = "lblShippingCost";
-            this.lblShippingCost.Size = new System.Drawing.Size(36, 20);
+            this.lblShippingCost.Size = new System.Drawing.Size(62, 20);
             this.lblShippingCost.TabIndex = 115;
-            this.lblShippingCost.Values.Text = "运费";
+            this.lblShippingCost.Values.Text = "所付运费";
             // 
             // kryptonLabel3
             // 
-            this.kryptonLabel3.Location = new System.Drawing.Point(858, 16);
+            this.kryptonLabel3.Location = new System.Drawing.Point(532, 16);
             this.kryptonLabel3.Name = "kryptonLabel3";
             this.kryptonLabel3.Size = new System.Drawing.Size(49, 20);
             this.kryptonLabel3.TabIndex = 121;
@@ -519,31 +515,16 @@
             this.kryptonLabel2.TabIndex = 117;
             this.kryptonLabel2.Values.Text = "总货款";
             // 
-            // txtPrePayMoney
-            // 
-            this.txtPrePayMoney.Location = new System.Drawing.Point(620, 16);
-            this.txtPrePayMoney.Name = "txtPrePayMoney";
-            this.txtPrePayMoney.Size = new System.Drawing.Size(100, 23);
-            this.txtPrePayMoney.TabIndex = 108;
-            // 
             // txtDeposit
             // 
-            this.txtDeposit.Location = new System.Drawing.Point(620, 41);
+            this.txtDeposit.Location = new System.Drawing.Point(893, 124);
             this.txtDeposit.Name = "txtDeposit";
-            this.txtDeposit.Size = new System.Drawing.Size(100, 23);
+            this.txtDeposit.Size = new System.Drawing.Size(131, 23);
             this.txtDeposit.TabIndex = 110;
-            // 
-            // lblPrePayMoney
-            // 
-            this.lblPrePayMoney.Location = new System.Drawing.Point(547, 20);
-            this.lblPrePayMoney.Name = "lblPrePayMoney";
-            this.lblPrePayMoney.Size = new System.Drawing.Size(49, 20);
-            this.lblPrePayMoney.TabIndex = 107;
-            this.lblPrePayMoney.Values.Text = "预付款";
             // 
             // lblDeposit
             // 
-            this.lblDeposit.Location = new System.Drawing.Point(547, 45);
+            this.lblDeposit.Location = new System.Drawing.Point(848, 127);
             this.lblDeposit.Name = "lblDeposit";
             this.lblDeposit.Size = new System.Drawing.Size(36, 20);
             this.lblDeposit.TabIndex = 109;
@@ -610,8 +591,6 @@
         private Krypton.Toolkit.KryptonDateTimePicker dtpPurDate;
         private Krypton.Toolkit.KryptonLabel lblPreDeliveryDate;
         private Krypton.Toolkit.KryptonDateTimePicker dtpPreDeliveryDate;
-        private Krypton.Toolkit.KryptonLabel lblPrePayMoney;
-        private Krypton.Toolkit.KryptonTextBox txtPrePayMoney;
         private Krypton.Toolkit.KryptonLabel lblDeposit;
         private Krypton.Toolkit.KryptonTextBox txtDeposit;
         private Krypton.Toolkit.KryptonLabel lblApprovalOpinions;

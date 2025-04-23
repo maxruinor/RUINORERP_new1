@@ -84,7 +84,7 @@ namespace RUINORERP.Business
                 _unitOfWorkManage.RollbackTran();
                 rs.Succeeded = false;
                 rs.ErrorMsg = "事务回滚=>" + ex.Message;
-                _logger.Error(ex, "事务回滚");
+                _logger.Error(ex, "事务回滚" + ex.Message);
                 return rs;
             }
 

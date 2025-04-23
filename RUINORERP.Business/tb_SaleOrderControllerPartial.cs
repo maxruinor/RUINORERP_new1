@@ -23,6 +23,7 @@ using RUINORERP.Common.Helper;
 using System.Security.Policy;
 using AutoMapper;
 using System.Windows.Forms;
+using RUINORERP.Global.EnumExt;
 
 namespace RUINORERP.Business
 {
@@ -45,6 +46,8 @@ namespace RUINORERP.Business
 
         /// <summary>
         /// 库存中的拟销售量增加，同时检查数量和金额，总数量和总金额不能小于明细小计的和
+        /// 财务业务模板：如果账期，则是在销售出库时生成应收。
+        /// 销售订单审核时，非账期，即时收款时，生成预收款
         /// </summary>
         /// <param name="entity"></param>
         /// <returns></returns>
@@ -52,7 +55,6 @@ namespace RUINORERP.Business
         {
             ReturnResults<T> rmrs = new ReturnResults<T>();
             tb_SaleOrder entity = ObjectEntity as tb_SaleOrder;
-
             try
             {
                 // 开启事务，保证数据一致性
@@ -60,9 +62,7 @@ namespace RUINORERP.Business
                 tb_OpeningInventoryController<tb_OpeningInventory> ctrOPinv = _appContext.GetRequiredService<tb_OpeningInventoryController<tb_OpeningInventory>>();
                 tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
 
-
                 //更新拟销售量
-
                 foreach (var child in entity.tb_SaleOrderDetails)
                 {
                     #region 库存表的更新 ，
@@ -92,6 +92,76 @@ namespace RUINORERP.Business
                     }
                 }
 
+                try
+                {
+                    #region 生成预收款
+                    if (entity.tb_paymentmethod == null)
+                    {
+                        var obj = BizCacheHelper.Instance.GetEntity<tb_PaymentMethod>(entity.Paytype_ID.Value);
+                        if (obj != null && obj.ToString() != "System.Object")
+                        {
+                            entity.tb_paymentmethod = obj as tb_PaymentMethod;
+                        }
+                    }
+                    //销售订单审核时，非账期，即时收款时，生成预收款。 订金，部分收款
+                    if (entity.tb_paymentmethod.Paytype_Name != DefaultPaymentMethod.账期.ToString())
+                    {
+                        tb_FM_PreReceivedPaymentController<tb_FM_PreReceivedPayment> ctrpay = _appContext.GetRequiredService<tb_FM_PreReceivedPaymentController<tb_FM_PreReceivedPayment>>();
+                        tb_FM_PreReceivedPayment payable = new tb_FM_PreReceivedPayment();
+                        payable.ReceivePaymentType = (int)ReceivePaymentType.付款;
+                        payable.SourceBillNO = entity.SOrderNo;
+                        payable.SourceBill_ID = entity.SOrder_ID;
+                        payable.Currency_ID = entity.Currency_ID;
+                        payable.ExchangeRate = entity.ExchangeRate;
+                        payable.SourceBill_BizType = (int)BizType.销售订单;
+                        //如果是外币时，则由外币算出本币
+                        if (entity.PayStatus == (int)PayStatus.全部付款)
+                        {
+                            //外币时
+                            if (entity.Currency_ID.HasValue && _appContext.BaseCurrency.Currency_ID != entity.Currency_ID.Value)
+                            {
+                                if (payable.Currency_ID.HasValue && payable.ExchangeRate.HasValue)
+                                {
+
+                                }
+                                payable.ForeignBalanceAmount = 0;
+                                payable.ForeignPaidAmount = 0;
+                                payable.ForeignPrepaidAmount = entity.TotalAmount;
+                                payable.LocalPaidAmount = 0;
+                                payable.LocalBalanceAmount = 0;
+                                payable.LocalPrepaidAmount = entity.TotalAmount;
+                            }
+                            else
+                            {
+                                //本币时
+                                payable.LocalPaidAmount = 0;
+                                payable.LocalBalanceAmount = 0;
+                                payable.LocalPrepaidAmount = entity.TotalAmount;
+                            }
+
+
+
+
+                            //payable.TotalUntaxedAmount = entity.TotalUntaxedAmount;
+                            //payable.TotalTaxAmount = entity.TotalTaxAmount;
+
+                        }
+                        if (entity.PayStatus == (int)PayStatus.部分付款)
+                        {
+
+                        }
+
+                        payable.FMPaymentStatus = (int)FMPaymentStatus.提交;
+                    }
+
+                    #endregion
+
+                }
+                catch (Exception exx)
+                {
+                    _logger.Error(exx, "生成预收款");
+                }
+
                 //这部分是否能提出到上一级公共部分？
                 entity.DataStatus = (int)DataStatus.确认;
                 entity.ApprovalStatus = (int)ApprovalStatus.已审核;
@@ -108,7 +178,7 @@ namespace RUINORERP.Business
             catch (Exception ex)
             {
                 _unitOfWorkManage.RollbackTran();
-                _logger.Error(ex, "事务回滚");
+                _logger.Error(ex, "事务回滚" + ex.Message);
                 rmrs.ErrorMsg = "事务回滚=>" + ex.Message;
                 rmrs.Succeeded = false;
                 return rmrs;

@@ -56,7 +56,7 @@ namespace RUINORERP.Model
         /// 
         /// </summary>
         [AdvQueryAttribute(ColName = "badgenumber",ColDesc = "")] 
-        [SugarColumn(ColumnDataType = "char", SqlParameterDbType ="String",  ColumnName = "badgenumber" ,Length=30,IsNullable = true,ColumnDescription = "" )]
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "badgenumber" ,Length=30,IsNullable = true,ColumnDescription = "" )]
         public string badgenumber
         { 
             get{return _badgenumber;}
@@ -70,7 +70,7 @@ namespace RUINORERP.Model
         /// 姓名
         /// </summary>
         [AdvQueryAttribute(ColName = "username",ColDesc = "姓名")] 
-        [SugarColumn(ColumnDataType = "char", SqlParameterDbType ="String",  ColumnName = "username" ,Length=50,IsNullable = true,ColumnDescription = "姓名" )]
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "username" ,Length=50,IsNullable = true,ColumnDescription = "姓名" )]
         public string username
         { 
             get{return _username;}
@@ -84,7 +84,7 @@ namespace RUINORERP.Model
         /// 部门
         /// </summary>
         [AdvQueryAttribute(ColName = "deptname",ColDesc = "部门")] 
-        [SugarColumn(ColumnDataType = "char", SqlParameterDbType ="String",  ColumnName = "deptname" ,Length=60,IsNullable = true,ColumnDescription = "部门" )]
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "deptname" ,Length=60,IsNullable = true,ColumnDescription = "部门" )]
         public string deptname
         { 
             get{return _deptname;}
@@ -98,7 +98,7 @@ namespace RUINORERP.Model
         /// 开始时间
         /// </summary>
         [AdvQueryAttribute(ColName = "sDate",ColDesc = "开始时间")] 
-        [SugarColumn(ColumnDataType = "char", SqlParameterDbType ="String",  ColumnName = "sDate" ,Length=100,IsNullable = true,ColumnDescription = "开始时间" )]
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "sDate" ,Length=100,IsNullable = true,ColumnDescription = "开始时间" )]
         public string sDate
         { 
             get{return _sDate;}
@@ -112,7 +112,7 @@ namespace RUINORERP.Model
         /// 时间组
         /// </summary>
         [AdvQueryAttribute(ColName = "stime",ColDesc = "时间组")] 
-        [SugarColumn(ColumnDataType = "char", SqlParameterDbType ="String",  ColumnName = "stime" ,Length=255,IsNullable = true,ColumnDescription = "时间组" )]
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "stime" ,Length=255,IsNullable = true,ColumnDescription = "时间组" )]
         public string stime
         { 
             get{return _stime;}

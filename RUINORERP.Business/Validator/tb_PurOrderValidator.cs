@@ -80,8 +80,6 @@ namespace RUINORERP.Business
 
             RuleFor(tb_PurOrder => tb_PurOrder.KeepAccountsType).NotEmpty().When(x => x.KeepAccountsType.HasValue);
 
-            RuleFor(x => x.PrePayMoney).PrecisionScale(19, 4, true).WithMessage("预付款:小数位不能超过4。");
-
             RuleFor(x => x.Deposit).PrecisionScale(19, 4, true).WithMessage("订金:小数位不能超过4。");
 
             RuleFor(tb_PurOrder => tb_PurOrder.TaxDeductionType).NotEmpty().When(x => x.TaxDeductionType.HasValue);

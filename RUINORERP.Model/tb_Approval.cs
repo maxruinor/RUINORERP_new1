@@ -56,7 +56,7 @@ namespace RUINORERP.Model
         /// 单据类型
         /// </summary>
         [AdvQueryAttribute(ColName = "BillType",ColDesc = "单据类型")] 
-        [SugarColumn(ColumnDataType = "char", SqlParameterDbType ="String",  ColumnName = "BillType" ,Length=50,IsNullable = true,ColumnDescription = "单据类型" )]
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "BillType" ,Length=50,IsNullable = true,ColumnDescription = "单据类型" )]
         public string BillType
         { 
             get{return _BillType;}
@@ -70,7 +70,7 @@ namespace RUINORERP.Model
         /// 单据名称
         /// </summary>
         [AdvQueryAttribute(ColName = "BillName",ColDesc = "单据名称")] 
-        [SugarColumn(ColumnDataType = "char", SqlParameterDbType ="String",  ColumnName = "BillName" ,Length=100,IsNullable = true,ColumnDescription = "单据名称" )]
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "BillName" ,Length=100,IsNullable = true,ColumnDescription = "单据名称" )]
         public string BillName
         { 
             get{return _BillName;}
@@ -84,7 +84,7 @@ namespace RUINORERP.Model
         /// 
         /// </summary>
         [AdvQueryAttribute(ColName = "BillEntityClassName",ColDesc = "")] 
-        [SugarColumn(ColumnDataType = "char", SqlParameterDbType ="String",  ColumnName = "BillEntityClassName" ,Length=50,IsNullable = true,ColumnDescription = "" )]
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "BillEntityClassName" ,Length=50,IsNullable = true,ColumnDescription = "" )]
         public string BillEntityClassName
         { 
             get{return _BillEntityClassName;}

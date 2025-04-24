@@ -106,11 +106,15 @@ namespace RUINORERP.UI.FM
                             {
                                 //显示外币相关
                                 UIHelper.ControlForeignFieldInvisible<tb_FM_PreReceivedPayment>(this, true);
+                                lblExchangeRate.Visible = true;
+                                txtExchangeRate.Visible = true;
                             }
                             else
                             {
                                 //隐藏外币相关
                                 UIHelper.ControlForeignFieldInvisible<tb_FM_PreReceivedPayment>(this, false);
+                                lblExchangeRate.Visible = false;
+                                txtExchangeRate.Visible = false;
                             }
                         }
 
@@ -143,6 +147,7 @@ namespace RUINORERP.UI.FM
                 cmbAccount_type.Items.Clear();
                 cmbAccount_type.DataBindings.Clear();
                 txtPayeeAccountNo.Text = "";
+                lblExchangeRate.Visible = false;
 
             }
 
@@ -161,7 +166,7 @@ namespace RUINORERP.UI.FM
             // DataBindingHelper.BindData4CheckBox<tb_FM_PreReceivedPayment>(entity, t => t.ApprovalResults, chkApprovalResults, false);
 
             DataBindingHelper.BindData4ControlByEnum<tb_FM_PreReceivedPayment>(entity, t => t.ApprovalStatus, lblReview, BindDataType4Enum.EnumName, typeof(Global.ApprovalStatus));
-            
+
             DataBindingHelper.BindData4TextBox<tb_FM_PreReceivedPayment>(entity, t => t.ExchangeRate.ToString(), txtExchangeRate, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4DataTime<tb_FM_PreReceivedPayment>(entity, t => t.PrePayDate, dtpPrePayDate, false);
             DataBindingHelper.BindData4TextBox<tb_FM_PreReceivedPayment>(entity, t => t.PrePaymentReason, txtPrePaymentReason, BindDataType4TextBox.Text, false);
@@ -186,7 +191,8 @@ namespace RUINORERP.UI.FM
 
             //创建表达式
             var lambda = Expressionable.Create<tb_CustomerVendor>()
-                            .And(t => t.IsVendor == true)//供应商和第三方
+                            .AndIF(PaymentType == ReceivePaymentType.收款, t => t.IsCustomer == true)//供应商和第三方
+                            .AndIF(PaymentType == ReceivePaymentType.付款, t => t.IsVendor == true)//供应商和第三方
                             .And(t => t.isdeleted == false)
                             .And(t => t.Is_enabled == true)
                             .And(t => t.Is_available == true)
@@ -298,11 +304,15 @@ namespace RUINORERP.UI.FM
                                         UIHelper.ControlForeignFieldInvisible<tb_FM_PreReceivedPayment>(this, true);
                                         //需要有一个方法。通过外币代码得到换人民币的汇率
                                         entity.ExchangeRate = BizService.GetExchangeRateFromCache(cv.Currency_ID, AppContext.BaseCurrency.Currency_ID);
+                                        lblExchangeRate.Visible = true;
+                                        txtExchangeRate.Visible = true;
                                     }
                                     else
                                     {
                                         //隐藏外币相关
                                         UIHelper.ControlForeignFieldInvisible<tb_FM_PreReceivedPayment>(this, false);
+                                        lblExchangeRate.Visible = false;
+                                        txtExchangeRate.Visible = false;
                                     }
                                 }
                             }
@@ -530,7 +540,6 @@ namespace RUINORERP.UI.FM
 
         private void UCCustomerVendorEdit_Load(object sender, EventArgs e)
         {
-
             switch (PaymentType)
             {
                 case ReceivePaymentType.收款:
@@ -554,8 +563,6 @@ namespace RUINORERP.UI.FM
                 default:
                     break;
             }
-            lblReceivePaymentType.Text = PaymentType.ToString();
-
         }
 
         private void btnInfo_Click(object sender, EventArgs e)

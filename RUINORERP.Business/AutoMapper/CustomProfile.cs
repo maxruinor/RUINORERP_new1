@@ -20,6 +20,12 @@ namespace RUINORERP.Business.AutoMapper
         /// </summary>
         public CustomProfile()
         {
+            #region 财务模块
+            //生成预收单
+            CreateMap<tb_SaleOrder, tb_FM_PreReceivedPayment>();
+
+            #endregion
+
 
             //返工退库引用到返工入库的主单和明细中
             CreateMap<tb_MRP_ReworkReturn, tb_MRP_ReworkEntry>();

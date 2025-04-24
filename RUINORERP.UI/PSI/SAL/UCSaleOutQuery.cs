@@ -141,15 +141,14 @@ namespace RUINORERP.UI.PSI.SAL
             base.MasterSummaryCols.Add(c => c.TotalQty);
             base.MasterSummaryCols.Add(c => c.TotalAmount);
             base.MasterSummaryCols.Add(c => c.TotalTaxAmount);
-            base.MasterSummaryCols.Add(c => c.TotalUntaxedAmount);
+            base.MasterSummaryCols.Add(c => c.ForeignTotalAmount);
             base.MasterSummaryCols.Add(c => c.TotalCost);
             base.MasterSummaryCols.Add(c => c.ShipCost);
-            base.MasterSummaryCols.Add(c => c.CollectedMoney);
-            base.MasterSummaryCols.Add(c => c.PrePayMoney);
+            base.MasterSummaryCols.Add(c => c.FreightCost);
             base.MasterSummaryCols.Add(c => c.Deposit);
 
             base.ChildSummaryCols.Add(c => c.Quantity);
-            base.ChildSummaryCols.Add(c => c.SubtotalUntaxedAmount);
+            
             base.ChildSummaryCols.Add(c => c.CommissionAmount);
             base.ChildSummaryCols.Add(c => c.SubtotalTaxAmount);
             base.ChildSummaryCols.Add(c => c.SubtotalCostAmount);

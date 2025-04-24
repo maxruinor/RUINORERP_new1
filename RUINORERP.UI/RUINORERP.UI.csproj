@@ -570,6 +570,42 @@
     <Compile Include="AdvancedUIModule\UIGenerateHelper.cs" />
     <Compile Include="AdvancedUIModule\UIQueryHelper.cs" />
     <Compile Include="ATechnologyStack\AOP\DbBizLogAOP.cs" />
+    <Compile Include="BI\UCProjectGroupAccountMapperEdit.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="BI\UCProjectGroupAccountMapperEdit.designer.cs">
+      <DependentUpon>UCProjectGroupAccountMapperEdit.cs</DependentUpon>
+    </Compile>
+    <Compile Include="BI\UCPayMethodAccountMapperEdit.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="BI\UCPayMethodAccountMapperEdit.designer.cs">
+      <DependentUpon>UCPayMethodAccountMapperEdit.cs</DependentUpon>
+    </Compile>
+    <Compile Include="BI\UCProjectGroupAccountMapperList.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="BI\UCProjectGroupAccountMapperList.designer.cs">
+      <DependentUpon>UCProjectGroupAccountMapperList.cs</DependentUpon>
+    </Compile>
+    <Compile Include="BI\UCPayMethodAccountMapperList.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="BI\UCPayMethodAccountMapperList.designer.cs">
+      <DependentUpon>UCPayMethodAccountMapperList.cs</DependentUpon>
+    </Compile>
+    <Compile Include="BI\UCGroupEmployeesAssignee.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="BI\UCGroupEmployeesAssignee.Designer.cs">
+      <DependentUpon>UCGroupEmployeesAssignee.cs</DependentUpon>
+    </Compile>
+    <Compile Include="BI\UCProjectGroupAssigneeEmployees.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="BI\UCProjectGroupAssigneeEmployees.Designer.cs">
+      <DependentUpon>UCProjectGroupAssigneeEmployees.cs</DependentUpon>
+    </Compile>
     <Compile Include="FM\FMBase\UCReceivablePayableQuery.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -2604,12 +2640,6 @@
     <Compile Include="UCToolBar\DataEdit.Designer.cs">
       <DependentUpon>DataEdit.cs</DependentUpon>
     </Compile>
-    <Compile Include="UICreator\tb_BillingInformationEdit.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="UICreator\tb_BillingInformationEdit.Designer.cs">
-      <DependentUpon>tb_BillingInformationEdit.cs</DependentUpon>
-    </Compile>
     <Compile Include="UserCenter\CentralConsole.cs" />
     <Compile Include="UserCenter\ControlCenterConfig.cs">
       <SubType>UserControl</SubType>
@@ -3002,6 +3032,18 @@
     <EmbeddedResource Include="BI\UCCurrencyExchangeRateList.resx">
       <DependentUpon>UCCurrencyExchangeRateList.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="BI\UCProjectGroupAccountMapperEdit.resx">
+      <DependentUpon>UCProjectGroupAccountMapperEdit.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="BI\UCPayMethodAccountMapperEdit.resx">
+      <DependentUpon>UCPayMethodAccountMapperEdit.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="BI\UCProjectGroupAccountMapperList.resx">
+      <DependentUpon>UCProjectGroupAccountMapperList.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="BI\UCPayMethodAccountMapperList.resx">
+      <DependentUpon>UCPayMethodAccountMapperList.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="BI\UCModuleDefinitionEdit.resx">
       <DependentUpon>UCModuleDefinitionEdit.cs</DependentUpon>
     </EmbeddedResource>
@@ -3085,6 +3127,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="BI\UCLocationTypeList.resx">
       <DependentUpon>UCLocationTypeList.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="BI\UCGroupEmployeesAssignee.resx">
+      <DependentUpon>UCGroupEmployeesAssignee.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="BI\UCSysGlobalDynamicConfigEdit.resx">
       <DependentUpon>UCSysGlobalDynamicConfigEdit.cs</DependentUpon>
@@ -3196,6 +3241,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="BI\UCUnitList.resx">
       <DependentUpon>UCUnitList.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="BI\UCProjectGroupAssigneeEmployees.resx">
+      <DependentUpon>UCProjectGroupAssigneeEmployees.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="BI\UCUserInfoEdit.resx">
       <DependentUpon>UCUserInfoEdit.cs</DependentUpon>
@@ -3785,9 +3833,6 @@
     </EmbeddedResource>
     <EmbeddedResource Include="UCToolBar\DataEdit.resx">
       <DependentUpon>DataEdit.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="UICreator\tb_BillingInformationEdit.resx">
-      <DependentUpon>tb_BillingInformationEdit.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="UserCenter\ControlCenterConfig.resx">
       <DependentUpon>ControlCenterConfig.cs</DependentUpon>
@@ -4425,6 +4470,7 @@
     <Folder Include="RM\" />
     <Folder Include="UCForm\" />
     <Folder Include="UControls\TreeGridView\" />
+    <Folder Include="UICreator\" />
     <Folder Include="WorkFlowDesigner\Nodes\editor\" />
     <Folder Include="WorkFlowDesigner\UI\" />
   </ItemGroup>

@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：02/08/2025 16:32:20
+// 时间：04/24/2025 14:14:54
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -245,6 +245,14 @@ namespace RUINORERP.Model
 
         //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_ProjectGroupEmployees.ProjectGroup_ID))]
+        public virtual List<tb_ProjectGroupEmployees> tb_ProjectGroupEmployeeses { get; set; }
+        //tb_ProjectGroupEmployees.ProjectGroup_ID)
+        //ProjectGroup_ID.FK_PROJECTGROUPEMPLYEES_REF_PROJECTGROUP)
+        //tb_ProjectGroup.ProjectGroup_ID)
+
+        //[Browsable(false)]打印报表时的数据源会不显示
+        [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_FM_OtherExpenseDetail.ProjectGroup_ID))]
         public virtual List<tb_FM_OtherExpenseDetail> tb_FM_OtherExpenseDetails { get; set; }
         //tb_FM_OtherExpenseDetail.ProjectGroup_ID)
@@ -253,18 +261,18 @@ namespace RUINORERP.Model
 
         //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_MaterialRequisition.ProjectGroup_ID))]
-        public virtual List<tb_MaterialRequisition> tb_MaterialRequisitions { get; set; }
-        //tb_MaterialRequisition.ProjectGroup_ID)
-        //ProjectGroup_ID.FK_MATEREQUISITIONS_REF_PROJECTGROUP)
+        [Navigate(NavigateType.OneToMany, nameof(tb_SaleOrder.ProjectGroup_ID))]
+        public virtual List<tb_SaleOrder> tb_SaleOrders { get; set; }
+        //tb_SaleOrder.ProjectGroup_ID)
+        //ProjectGroup_ID.FK_SALEORDER_REF_PROJECTGROUP)
         //tb_ProjectGroup.ProjectGroup_ID)
 
         //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_SaleOut.ProjectGroup_ID))]
-        public virtual List<tb_SaleOut> tb_SaleOuts { get; set; }
-        //tb_SaleOut.ProjectGroup_ID)
-        //ProjectGroup_ID.FK_TB_SALEOUT_REF_PROJECTGROUP)
+        [Navigate(NavigateType.OneToMany, nameof(tb_FM_PaymentRecord.ProjectGroup_ID))]
+        public virtual List<tb_FM_PaymentRecord> tb_FM_PaymentRecords { get; set; }
+        //tb_FM_PaymentRecord.ProjectGroup_ID)
+        //ProjectGroup_ID.FK_FM_PAYMENTRECORD_REF_PROJECTGROUP)
         //tb_ProjectGroup.ProjectGroup_ID)
 
         //[Browsable(false)]打印报表时的数据源会不显示
@@ -285,10 +293,18 @@ namespace RUINORERP.Model
 
         //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_SaleOrder.ProjectGroup_ID))]
-        public virtual List<tb_SaleOrder> tb_SaleOrders { get; set; }
-        //tb_SaleOrder.ProjectGroup_ID)
-        //ProjectGroup_ID.FK_SALEORDER_REF_PROJECTGROUP)
+        [Navigate(NavigateType.OneToMany, nameof(tb_ProjectGroupAccountMapper.ProjectGroup_ID))]
+        public virtual List<tb_ProjectGroupAccountMapper> tb_ProjectGroupAccountMappers { get; set; }
+        //tb_ProjectGroupAccountMapper.ProjectGroup_ID)
+        //ProjectGroup_ID.FK_PROJECTGROUPACCOUNTMAPPER_REF_PROJECTGROUP)
+        //tb_ProjectGroup.ProjectGroup_ID)
+
+        //[Browsable(false)]打印报表时的数据源会不显示
+        [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_FM_PreReceivedPayment.ProjectGroup_ID))]
+        public virtual List<tb_FM_PreReceivedPayment> tb_FM_PreReceivedPayments { get; set; }
+        //tb_FM_PreReceivedPayment.ProjectGroup_ID)
+        //ProjectGroup_ID.FK_TB_FM_PRERECEIVEDPAYMNET_RE_TB_PROJECTGROUP)
         //tb_ProjectGroup.ProjectGroup_ID)
 
         //[Browsable(false)]打印报表时的数据源会不显示

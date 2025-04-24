@@ -202,8 +202,31 @@ namespace RUINORERP.UI.PSI.SAL
             EditEntity = entity;
             DataBindingHelper.BindData4TextBox<tb_SaleOrder>(entity, t => t.SOrderNo, txtOrderNo, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4Cmb<tb_PaymentMethod>(entity, k => k.Paytype_ID, v => v.Paytype_Name, cmbPaytype_ID);
+            DataBindingHelper.BindData4Cmb<tb_FM_Account>(entity, k => k.Account_id, v => v.Account_name, cmbAccount_id);
             DataBindingHelper.BindData4Cmb<tb_Employee>(entity, k => k.Employee_ID, v => v.Employee_Name, cmbEmployee_ID, true);
-            DataBindingHelper.BindData4Cmb<tb_ProjectGroup>(entity, k => k.ProjectGroup_ID, v => v.ProjectGroupName, cmbProjectGroup);
+            if (AppContext.projectGroups != null && AppContext.projectGroups.Count > 0)
+            {
+                #region 项目组
+                cmbProjectGroup.DataSource = null;
+                cmbProjectGroup.DataBindings.Clear();
+                BindingSource bs = new BindingSource();
+                bs.DataSource = AppContext.projectGroups;
+                ComboBoxHelper.InitDropList(bs, cmbProjectGroup, "ProjectGroup_ID", "ProjectGroupName", ComboBoxStyle.DropDownList, false);
+                var depa = new Binding("SelectedValue", entity, "ProjectGroup_ID", true, DataSourceUpdateMode.OnValidation);
+                //数据源的数据类型转换为控件要求的数据类型。
+                depa.Format += (s, args) => args.Value = args.Value == null ? -1 : args.Value;
+                //将控件的数据类型转换为数据源要求的数据类型。
+                depa.Parse += (s, args) => args.Value = args.Value == null ? -1 : args.Value;
+                cmbProjectGroup.DataBindings.Add(depa);
+                #endregion
+            }
+            else
+            {
+                DataBindingHelper.BindData4Cmb<tb_ProjectGroup>(entity, k => k.ProjectGroup_ID, v => v.ProjectGroupName, cmbProjectGroup);
+            }
+
+
+
             DataBindingHelper.BindData4Cmb<tb_CustomerVendor>(entity, k => k.CustomerVendor_ID, v => v.CVName, cmbCustomerVendor_ID, true);
             DataBindingHelper.BindData4Cmb<tb_Currency>(entity, k => k.Currency_ID, v => v.CurrencyName, cmbCurrency_ID);
             DataBindingHelper.BindData4CmbByEnum<tb_SaleOrder>(entity, k => k.PayStatus, typeof(PayStatus), cmbPayStatus, false);
@@ -217,6 +240,7 @@ namespace RUINORERP.UI.PSI.SAL
             DataBindingHelper.BindData4TextBox<tb_SaleOrder>(entity, t => t.ShippingWay, txtshippingWay, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_SaleOrder>(entity, t => t.TrackNo, txtTrackNo, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_SaleOrder>(entity, t => t.ForeignTotalAmount.ToString(), txtForeignTotalAmount, BindDataType4TextBox.Money, false);
+            DataBindingHelper.BindData4TextBox<tb_SaleOrder>(entity, t => t.ForeignDeposit.ToString(), txtForeignDeposit, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4TextBox<tb_SaleOrder>(entity, t => t.Notes, txtNotes, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_SaleOrder>(entity, t => t.ApprovalOpinions, txtApprovalOpinions, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4CmbByEnum<tb_SaleOrder>(entity, k => k.OrderPriority, typeof(Priority), cmbOrderPriority, true);
@@ -307,6 +331,18 @@ namespace RUINORERP.UI.PSI.SAL
                         }
                     }
 
+                    if (s2.PropertyName == entity.GetPropertyName<tb_SaleOrder>(c => c.ProjectGroup_ID) && entity.ProjectGroup_ID.HasValue && entity.ProjectGroup_ID > 0)
+                    {
+                        if (cmbProjectGroup.SelectedItem is tb_ProjectGroup ProjectGroup)
+                        {
+                            if (ProjectGroup.tb_ProjectGroupAccountMappers != null && ProjectGroup.tb_ProjectGroupAccountMappers.Count > 0)
+                            {
+                                EditEntity.Account_id = ProjectGroup.tb_ProjectGroupAccountMappers[0].tb_fm_account.Account_id;
+                                EditEntity.tb_fm_account = ProjectGroup.tb_ProjectGroupAccountMappers[0].tb_fm_account;
+                                EditEntity.tb_projectgroup= ProjectGroup;
+                            }
+                        }
+                    }
                 }
 
                 //数据状态变化会影响按钮变化
@@ -641,8 +677,6 @@ namespace RUINORERP.UI.PSI.SAL
             }
         }
 
-
-
         List<tb_SaleOrderDetail> details = new List<tb_SaleOrderDetail>();
         /// <summary>
         /// 查询结果 选中行的变化事件
@@ -680,11 +714,22 @@ namespace RUINORERP.UI.PSI.SAL
                                 MessageBox.Show("未付款时，付款方式错误,请选择【账期】。");
                                 return false;
                             }
-
+                        }
+                    }
+                }
+                else
+                {
+                    //付过时不能选账期  要选部分付款时使用的方式
+                    var paytype = EditEntity.Paytype_ID.Value;
+                    var paymethod = BizCacheHelper.Instance.GetEntity<tb_PaymentMethod>(EditEntity.Paytype_ID.Value);
+                    if (paymethod != null && paymethod.ToString() != "System.Object")
+                    {
+                        if (paymethod is tb_PaymentMethod pm)
+                        {
                             //如果付款方式是即实到账，但是又选择的是未付款
                             if (pm.Cash && pm.Paytype_Name == DefaultPaymentMethod.账期.ToString())
                             {
-                                MessageBox.Show("已付款时，付款方式错误,请选择非账期方式。");
+                                MessageBox.Show("付款方式错误,请选择付款时使用的方式。");
                                 return false;
                             }
                         }

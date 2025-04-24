@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/07/2025 21:48:21
+// 时间：04/23/2025 23:00:49
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -54,13 +54,25 @@ namespace RUINORERP.Business
 
  RuleFor(tb_Company =>tb_Company.Phone).MaximumLength(50).WithMessage("电话:不能超过最大长度,50.");
 
- RuleFor(tb_Company =>tb_Company.Address).MaximumLength(127).WithMessage("地址:不能超过最大长度,127.");
+ RuleFor(tb_Company =>tb_Company.Address).MaximumLength(127).WithMessage("营业地址:不能超过最大长度,127.");
 
  RuleFor(tb_Company =>tb_Company.ENAddress).MaximumLength(127).WithMessage("英文地址:不能超过最大长度,127.");
 
  RuleFor(tb_Company =>tb_Company.Website).MaximumLength(127).WithMessage("网址:不能超过最大长度,127.");
 
  RuleFor(tb_Company =>tb_Company.Email).MaximumLength(50).WithMessage("电子邮件:不能超过最大长度,50.");
+
+ RuleFor(tb_Company =>tb_Company.InvoiceTitle).MaximumLength(100).WithMessage("发票抬头:不能超过最大长度,100.");
+
+ RuleFor(tb_Company =>tb_Company.InvoiceTaxNumber).MaximumLength(100).WithMessage("纳税人识别号:不能超过最大长度,100.");
+
+ RuleFor(tb_Company =>tb_Company.InvoiceAddress).MaximumLength(100).WithMessage("发票地址:不能超过最大长度,100.");
+
+ RuleFor(tb_Company =>tb_Company.InvoiceTEL).MaximumLength(25).WithMessage("发票电话:不能超过最大长度,25.");
+
+ RuleFor(tb_Company =>tb_Company.InvoiceBankAccount).MaximumLength(75).WithMessage("银行账号:不能超过最大长度,75.");
+
+ RuleFor(tb_Company =>tb_Company.InvoiceBankName).MaximumLength(50).WithMessage("开户行:不能超过最大长度,50.");
 
 
  RuleFor(tb_Company =>tb_Company.Created_by).NotEmpty().When(x => x.Created_by.HasValue);

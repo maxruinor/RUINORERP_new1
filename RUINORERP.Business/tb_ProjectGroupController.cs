@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：03/14/2025 20:39:50
+// 时间：04/24/2025 14:14:54
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -248,21 +248,29 @@ namespace RUINORERP.Business
             {
             
                              rs = await _unitOfWorkManage.GetDbClient().UpdateNav<tb_ProjectGroup>(entity as tb_ProjectGroup)
-                        .Include(m => m.tb_FM_OtherExpenseDetails)
+                        .Include(m => m.tb_ProjectGroupEmployeeses)
+                    .Include(m => m.tb_FM_OtherExpenseDetails)
+                    .Include(m => m.tb_SaleOrders)
+                    .Include(m => m.tb_FM_PaymentRecords)
                     .Include(m => m.tb_ProductionPlans)
                     .Include(m => m.tb_FM_ExpenseClaimDetails)
+                    .Include(m => m.tb_ProjectGroupAccountMappers)
+                    .Include(m => m.tb_FM_PreReceivedPayments)
                     .Include(m => m.tb_SaleOutRes)
-                    .Include(m => m.tb_SaleOrders)
                     .ExecuteCommandAsync();
                  }
         else    
         {
                         rs = await _unitOfWorkManage.GetDbClient().InsertNav<tb_ProjectGroup>(entity as tb_ProjectGroup)
+                .Include(m => m.tb_ProjectGroupEmployeeses)
                 .Include(m => m.tb_FM_OtherExpenseDetails)
+                .Include(m => m.tb_SaleOrders)
+                .Include(m => m.tb_FM_PaymentRecords)
                 .Include(m => m.tb_ProductionPlans)
                 .Include(m => m.tb_FM_ExpenseClaimDetails)
+                .Include(m => m.tb_ProjectGroupAccountMappers)
+                .Include(m => m.tb_FM_PreReceivedPayments)
                 .Include(m => m.tb_SaleOutRes)
-                .Include(m => m.tb_SaleOrders)
          
                 .ExecuteCommandAsync();
                                           
@@ -296,11 +304,15 @@ namespace RUINORERP.Business
         public async override Task<List<T>> BaseQueryByAdvancedNavAsync(bool useLike, object dto)
         {
             var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<tb_ProjectGroup>()
-                                .Includes(m => m.tb_FM_OtherExpenseDetails)
+                                .Includes(m => m.tb_ProjectGroupEmployeeses)
+                        .Includes(m => m.tb_FM_OtherExpenseDetails)
+                        .Includes(m => m.tb_SaleOrders)
+                        .Includes(m => m.tb_FM_PaymentRecords)
                         .Includes(m => m.tb_ProductionPlans)
                         .Includes(m => m.tb_FM_ExpenseClaimDetails)
+                        .Includes(m => m.tb_ProjectGroupAccountMappers)
+                        .Includes(m => m.tb_FM_PreReceivedPayments)
                         .Includes(m => m.tb_SaleOutRes)
-                        .Includes(m => m.tb_SaleOrders)
                                         .Where(useLike, dto);
             return await querySqlQueryable.ToListAsync()as List<T>;
         }
@@ -310,11 +322,15 @@ namespace RUINORERP.Business
         {
             tb_ProjectGroup entity = model as tb_ProjectGroup;
              bool rs = await _unitOfWorkManage.GetDbClient().DeleteNav<tb_ProjectGroup>(m => m.ProjectGroup_ID== entity.ProjectGroup_ID)
-                                .Include(m => m.tb_FM_OtherExpenseDetails)
+                                .Include(m => m.tb_ProjectGroupEmployeeses)
+                        .Include(m => m.tb_FM_OtherExpenseDetails)
+                        .Include(m => m.tb_SaleOrders)
+                        .Include(m => m.tb_FM_PaymentRecords)
                         .Include(m => m.tb_ProductionPlans)
                         .Include(m => m.tb_FM_ExpenseClaimDetails)
+                        .Include(m => m.tb_ProjectGroupAccountMappers)
+                        .Include(m => m.tb_FM_PreReceivedPayments)
                         .Include(m => m.tb_SaleOutRes)
-                        .Include(m => m.tb_SaleOrders)
                                         .ExecuteCommandAsync();
             if (rs)
             {
@@ -478,11 +494,15 @@ namespace RUINORERP.Business
         {
             List<tb_ProjectGroup> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_ProjectGroup>()
                                .Includes(t => t.tb_department )
-                                            .Includes(t => t.tb_FM_OtherExpenseDetails )
+                                            .Includes(t => t.tb_ProjectGroupEmployeeses )
+                                .Includes(t => t.tb_FM_OtherExpenseDetails )
+                                .Includes(t => t.tb_SaleOrders )
+                                .Includes(t => t.tb_FM_PaymentRecords )
                                 .Includes(t => t.tb_ProductionPlans )
                                 .Includes(t => t.tb_FM_ExpenseClaimDetails )
+                                .Includes(t => t.tb_ProjectGroupAccountMappers )
+                                .Includes(t => t.tb_FM_PreReceivedPayments )
                                 .Includes(t => t.tb_SaleOutRes )
-                                .Includes(t => t.tb_SaleOrders )
                         .ToListAsync();
             
             foreach (var item in list)
@@ -503,11 +523,15 @@ namespace RUINORERP.Business
         {
             List<tb_ProjectGroup> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_ProjectGroup>().Where(exp)
                                .Includes(t => t.tb_department )
-                                            .Includes(t => t.tb_FM_OtherExpenseDetails )
+                                .Includes(t => t.tb_ProjectGroupEmployeeses )
+                                .Includes(t => t.tb_FM_OtherExpenseDetails )
+                                .Includes(t => t.tb_SaleOrders )
+                                .Includes(t => t.tb_FM_PaymentRecords )
                                 .Includes(t => t.tb_ProductionPlans )
                                 .Includes(t => t.tb_FM_ExpenseClaimDetails )
+                                .Includes(t => t.tb_ProjectGroupAccountMappers )
+                                .Includes(t => t.tb_FM_PreReceivedPayments )
                                 .Includes(t => t.tb_SaleOutRes )
-                                .Includes(t => t.tb_SaleOrders )
                         .ToListAsync();
             
             foreach (var item in list)
@@ -528,11 +552,15 @@ namespace RUINORERP.Business
         {
             List<tb_ProjectGroup> list = _unitOfWorkManage.GetDbClient().Queryable<tb_ProjectGroup>().Where(exp)
                             .Includes(t => t.tb_department )
-                                        .Includes(t => t.tb_FM_OtherExpenseDetails )
+                                        .Includes(t => t.tb_ProjectGroupEmployeeses )
+                            .Includes(t => t.tb_FM_OtherExpenseDetails )
+                            .Includes(t => t.tb_SaleOrders )
+                            .Includes(t => t.tb_FM_PaymentRecords )
                             .Includes(t => t.tb_ProductionPlans )
                             .Includes(t => t.tb_FM_ExpenseClaimDetails )
+                            .Includes(t => t.tb_ProjectGroupAccountMappers )
+                            .Includes(t => t.tb_FM_PreReceivedPayments )
                             .Includes(t => t.tb_SaleOutRes )
-                            .Includes(t => t.tb_SaleOrders )
                         .ToList();
             
             foreach (var item in list)
@@ -570,11 +598,15 @@ namespace RUINORERP.Business
         {
             tb_ProjectGroup entity = await _unitOfWorkManage.GetDbClient().Queryable<tb_ProjectGroup>().Where(w => w.ProjectGroup_ID == (long)id)
                              .Includes(t => t.tb_department )
-                                        .Includes(t => t.tb_FM_OtherExpenseDetails )
+                                        .Includes(t => t.tb_ProjectGroupEmployeeses )
+                            .Includes(t => t.tb_FM_OtherExpenseDetails )
+                            .Includes(t => t.tb_SaleOrders )
+                            .Includes(t => t.tb_FM_PaymentRecords )
                             .Includes(t => t.tb_ProductionPlans )
                             .Includes(t => t.tb_FM_ExpenseClaimDetails )
+                            .Includes(t => t.tb_ProjectGroupAccountMappers )
+                            .Includes(t => t.tb_FM_PreReceivedPayments )
                             .Includes(t => t.tb_SaleOutRes )
-                            .Includes(t => t.tb_SaleOrders )
                         .FirstAsync();
             if(entity!=null)
             {

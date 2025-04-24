@@ -707,6 +707,22 @@ namespace RUINORERP.UI
                 await Task.Delay(3000);
                 #region 本位币别
 
+
+                #region 查询对应的项目组
+
+                PrintInfoLog("正在查询项目组...");
+                //todo 后面再优化为缓存级吧
+                List<tb_ProjectGroup> projectGroups = new List<tb_ProjectGroup>();
+                List<tb_ProjectGroupEmployees> groupEmployees = new List<tb_ProjectGroupEmployees>();
+                groupEmployees = MainForm.Instance.AppContext.Db.CopyNew()
+                .Queryable<tb_ProjectGroupEmployees>()
+                .Includes(a => a.tb_projectgroup, b => b.tb_department)
+                .Includes(c => c.tb_projectgroup, d => d.tb_ProjectGroupAccountMappers, e => e.tb_fm_account)
+                .Where(c => c.Employee_ID == MainForm.Instance.AppContext.CurUserInfo.Id).ToList();
+                MainForm.Instance.AppContext.projectGroups = groupEmployees.Select(c => c.tb_projectgroup).ToList();
+                #endregion
+
+
                 PrintInfoLog("正在查询本位币别...");
 
                 List<tb_Currency> currencies = new List<tb_Currency>();
@@ -730,7 +746,8 @@ namespace RUINORERP.UI
                 }
                 else
                 {
-                    MainForm.Instance.AppContext.BaseCurrency = await MainForm.Instance.AppContext.Db.CopyNew().Queryable<tb_Currency>().Where(c => c.Is_BaseCurrency.HasValue && c.Is_BaseCurrency.Value == true).SingleAsync();
+                    MainForm.Instance.AppContext.BaseCurrency =  MainForm.Instance.AppContext.Db.CopyNew().Queryable<tb_Currency>()
+                    .Where(c => c.Is_BaseCurrency.HasValue && c.Is_BaseCurrency.Value == true).Single();
                     if (MainForm.Instance.AppContext.BaseCurrency == null)
                     {
                         MessageBox.Show("请在基础设置中配置本位币别。");

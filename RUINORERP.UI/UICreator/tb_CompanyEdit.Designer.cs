@@ -3,7 +3,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：04/12/2025 21:15:58
+// 时间：04/23/2025 23:00:46
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -46,460 +46,543 @@ namespace RUINORERP.UI
         /// </summary>
         private void InitializeComponent()
         {
-            this.lblCompanyCode = new Krypton.Toolkit.KryptonLabel();
-            this.txtCompanyCode = new Krypton.Toolkit.KryptonTextBox();
-            this.lblCNName = new Krypton.Toolkit.KryptonLabel();
-            this.txtCNName = new Krypton.Toolkit.KryptonTextBox();
-            this.lblENName = new Krypton.Toolkit.KryptonLabel();
-            this.txtENName = new Krypton.Toolkit.KryptonTextBox();
-            this.lblShortName = new Krypton.Toolkit.KryptonLabel();
-            this.txtShortName = new Krypton.Toolkit.KryptonTextBox();
-            this.lblLegalPersonName = new Krypton.Toolkit.KryptonLabel();
-            this.txtLegalPersonName = new Krypton.Toolkit.KryptonTextBox();
-            this.lblUnifiedSocialCreditIdentifier = new Krypton.Toolkit.KryptonLabel();
-            this.txtUnifiedSocialCreditIdentifier = new Krypton.Toolkit.KryptonTextBox();
-            this.lblContact = new Krypton.Toolkit.KryptonLabel();
-            this.txtContact = new Krypton.Toolkit.KryptonTextBox();
-            this.lblPhone = new Krypton.Toolkit.KryptonLabel();
-            this.txtPhone = new Krypton.Toolkit.KryptonTextBox();
-            this.lblAddress = new Krypton.Toolkit.KryptonLabel();
-            this.txtAddress = new Krypton.Toolkit.KryptonTextBox();
-            this.lblENAddress = new Krypton.Toolkit.KryptonLabel();
-            this.txtENAddress = new Krypton.Toolkit.KryptonTextBox();
-            this.lblWebsite = new Krypton.Toolkit.KryptonLabel();
-            this.txtWebsite = new Krypton.Toolkit.KryptonTextBox();
-            this.lblEmail = new Krypton.Toolkit.KryptonLabel();
-            this.txtEmail = new Krypton.Toolkit.KryptonTextBox();
-            this.lblInvoiceTitle = new Krypton.Toolkit.KryptonLabel();
-            this.txtInvoiceTitle = new Krypton.Toolkit.KryptonTextBox();
-            this.lblInvoiceTaxNumber = new Krypton.Toolkit.KryptonLabel();
-            this.txtInvoiceTaxNumber = new Krypton.Toolkit.KryptonTextBox();
-            this.lblInvoiceAddress = new Krypton.Toolkit.KryptonLabel();
-            this.txtInvoiceAddress = new Krypton.Toolkit.KryptonTextBox();
-            this.lblInvoiceTEL = new Krypton.Toolkit.KryptonLabel();
-            this.txtInvoiceTEL = new Krypton.Toolkit.KryptonTextBox();
-            this.lblInvoiceBankAccount = new Krypton.Toolkit.KryptonLabel();
-            this.txtInvoiceBankAccount = new Krypton.Toolkit.KryptonTextBox();
-            this.lblInvoiceBankName = new Krypton.Toolkit.KryptonLabel();
-            this.txtInvoiceBankName = new Krypton.Toolkit.KryptonTextBox();
-            this.lblCreated_at = new Krypton.Toolkit.KryptonLabel();
-            this.dtpCreated_at = new Krypton.Toolkit.KryptonDateTimePicker();
-            this.lblCreated_by = new Krypton.Toolkit.KryptonLabel();
-            this.txtCreated_by = new Krypton.Toolkit.KryptonTextBox();
-            this.lblModified_at = new Krypton.Toolkit.KryptonLabel();
-            this.dtpModified_at = new Krypton.Toolkit.KryptonDateTimePicker();
-            this.lblModified_by = new Krypton.Toolkit.KryptonLabel();
-            this.txtModified_by = new Krypton.Toolkit.KryptonTextBox();
-            this.lblNotes = new Krypton.Toolkit.KryptonLabel();
-            this.txtNotes = new Krypton.Toolkit.KryptonTextBox();
-            this.SuspendLayout();
-            // 
-            // lblCompanyCode
-            // 
-            this.lblCompanyCode.Location = new System.Drawing.Point(100, 25);
-            this.lblCompanyCode.Name = "lblCompanyCode";
-            this.lblCompanyCode.Size = new System.Drawing.Size(62, 20);
-            this.lblCompanyCode.TabIndex = 1;
-            this.lblCompanyCode.Values.Text = "公司代号";
-            // 
-            // txtCompanyCode
-            // 
-            this.txtCompanyCode.Location = new System.Drawing.Point(173, 21);
-            this.txtCompanyCode.Name = "txtCompanyCode";
-            this.txtCompanyCode.Size = new System.Drawing.Size(100, 23);
-            this.txtCompanyCode.TabIndex = 1;
-            // 
-            // lblCNName
-            // 
-            this.lblCNName.Location = new System.Drawing.Point(100, 50);
-            this.lblCNName.Name = "lblCNName";
-            this.lblCNName.Size = new System.Drawing.Size(36, 20);
-            this.lblCNName.TabIndex = 2;
-            this.lblCNName.Values.Text = "名称";
-            // 
-            // txtCNName
-            // 
-            this.txtCNName.Location = new System.Drawing.Point(173, 46);
-            this.txtCNName.Name = "txtCNName";
-            this.txtCNName.Size = new System.Drawing.Size(100, 23);
-            this.txtCNName.TabIndex = 2;
-            // 
-            // lblENName
-            // 
-            this.lblENName.Location = new System.Drawing.Point(100, 75);
-            this.lblENName.Name = "lblENName";
-            this.lblENName.Size = new System.Drawing.Size(62, 20);
-            this.lblENName.TabIndex = 3;
-            this.lblENName.Values.Text = "英语名称";
-            // 
-            // txtENName
-            // 
-            this.txtENName.Location = new System.Drawing.Point(173, 71);
-            this.txtENName.Name = "txtENName";
-            this.txtENName.Size = new System.Drawing.Size(100, 23);
-            this.txtENName.TabIndex = 3;
-            // 
-            // lblShortName
-            // 
-            this.lblShortName.Location = new System.Drawing.Point(100, 100);
-            this.lblShortName.Name = "lblShortName";
-            this.lblShortName.Size = new System.Drawing.Size(36, 20);
-            this.lblShortName.TabIndex = 4;
-            this.lblShortName.Values.Text = "简称";
-            // 
-            // txtShortName
-            // 
-            this.txtShortName.Location = new System.Drawing.Point(173, 96);
-            this.txtShortName.Name = "txtShortName";
-            this.txtShortName.Size = new System.Drawing.Size(100, 23);
-            this.txtShortName.TabIndex = 4;
-            // 
-            // lblLegalPersonName
-            // 
-            this.lblLegalPersonName.Location = new System.Drawing.Point(100, 125);
-            this.lblLegalPersonName.Name = "lblLegalPersonName";
-            this.lblLegalPersonName.Size = new System.Drawing.Size(62, 20);
-            this.lblLegalPersonName.TabIndex = 5;
-            this.lblLegalPersonName.Values.Text = "法人姓名";
-            // 
-            // txtLegalPersonName
-            // 
-            this.txtLegalPersonName.Location = new System.Drawing.Point(173, 121);
-            this.txtLegalPersonName.Name = "txtLegalPersonName";
-            this.txtLegalPersonName.Size = new System.Drawing.Size(100, 23);
-            this.txtLegalPersonName.TabIndex = 5;
-            // 
-            // lblUnifiedSocialCreditIdentifier
-            // 
-            this.lblUnifiedSocialCreditIdentifier.Location = new System.Drawing.Point(100, 150);
-            this.lblUnifiedSocialCreditIdentifier.Name = "lblUnifiedSocialCreditIdentifier";
-            this.lblUnifiedSocialCreditIdentifier.Size = new System.Drawing.Size(88, 20);
-            this.lblUnifiedSocialCreditIdentifier.TabIndex = 6;
-            this.lblUnifiedSocialCreditIdentifier.Values.Text = "公司执照代码";
-            // 
-            // txtUnifiedSocialCreditIdentifier
-            // 
-            this.txtUnifiedSocialCreditIdentifier.Location = new System.Drawing.Point(173, 146);
-            this.txtUnifiedSocialCreditIdentifier.Name = "txtUnifiedSocialCreditIdentifier";
-            this.txtUnifiedSocialCreditIdentifier.Size = new System.Drawing.Size(100, 23);
-            this.txtUnifiedSocialCreditIdentifier.TabIndex = 6;
-            // 
-            // lblContact
-            // 
-            this.lblContact.Location = new System.Drawing.Point(100, 175);
-            this.lblContact.Name = "lblContact";
-            this.lblContact.Size = new System.Drawing.Size(49, 20);
-            this.lblContact.TabIndex = 7;
-            this.lblContact.Values.Text = "联系人";
-            // 
-            // txtContact
-            // 
-            this.txtContact.Location = new System.Drawing.Point(173, 171);
-            this.txtContact.Name = "txtContact";
-            this.txtContact.Size = new System.Drawing.Size(100, 23);
-            this.txtContact.TabIndex = 7;
-            // 
-            // lblPhone
-            // 
-            this.lblPhone.Location = new System.Drawing.Point(100, 200);
-            this.lblPhone.Name = "lblPhone";
-            this.lblPhone.Size = new System.Drawing.Size(36, 20);
-            this.lblPhone.TabIndex = 8;
-            this.lblPhone.Values.Text = "电话";
-            // 
-            // txtPhone
-            // 
-            this.txtPhone.Location = new System.Drawing.Point(173, 196);
-            this.txtPhone.Name = "txtPhone";
-            this.txtPhone.Size = new System.Drawing.Size(100, 23);
-            this.txtPhone.TabIndex = 8;
-            // 
-            // lblAddress
-            // 
-            this.lblAddress.Location = new System.Drawing.Point(100, 225);
-            this.lblAddress.Name = "lblAddress";
-            this.lblAddress.Size = new System.Drawing.Size(62, 20);
-            this.lblAddress.TabIndex = 9;
-            this.lblAddress.Values.Text = "营业地址";
-            // 
-            // txtAddress
-            // 
-            this.txtAddress.Location = new System.Drawing.Point(173, 221);
-            this.txtAddress.Multiline = true;
-            this.txtAddress.Name = "txtAddress";
-            this.txtAddress.Size = new System.Drawing.Size(100, 21);
-            this.txtAddress.TabIndex = 9;
-            // 
-            // lblENAddress
-            // 
-            this.lblENAddress.Location = new System.Drawing.Point(100, 250);
-            this.lblENAddress.Name = "lblENAddress";
-            this.lblENAddress.Size = new System.Drawing.Size(62, 20);
-            this.lblENAddress.TabIndex = 10;
-            this.lblENAddress.Values.Text = "英文地址";
-            // 
-            // txtENAddress
-            // 
-            this.txtENAddress.Location = new System.Drawing.Point(173, 246);
-            this.txtENAddress.Multiline = true;
-            this.txtENAddress.Name = "txtENAddress";
-            this.txtENAddress.Size = new System.Drawing.Size(100, 21);
-            this.txtENAddress.TabIndex = 10;
-            // 
-            // lblWebsite
-            // 
-            this.lblWebsite.Location = new System.Drawing.Point(100, 275);
-            this.lblWebsite.Name = "lblWebsite";
-            this.lblWebsite.Size = new System.Drawing.Size(36, 20);
-            this.lblWebsite.TabIndex = 11;
-            this.lblWebsite.Values.Text = "网址";
-            // 
-            // txtWebsite
-            // 
-            this.txtWebsite.Location = new System.Drawing.Point(173, 271);
-            this.txtWebsite.Multiline = true;
-            this.txtWebsite.Name = "txtWebsite";
-            this.txtWebsite.Size = new System.Drawing.Size(100, 21);
-            this.txtWebsite.TabIndex = 11;
-            // 
-            // lblEmail
-            // 
-            this.lblEmail.Location = new System.Drawing.Point(100, 300);
-            this.lblEmail.Name = "lblEmail";
-            this.lblEmail.Size = new System.Drawing.Size(62, 20);
-            this.lblEmail.TabIndex = 12;
-            this.lblEmail.Values.Text = "电子邮件";
-            // 
-            // txtEmail
-            // 
-            this.txtEmail.Location = new System.Drawing.Point(173, 296);
-            this.txtEmail.Name = "txtEmail";
-            this.txtEmail.Size = new System.Drawing.Size(100, 23);
-            this.txtEmail.TabIndex = 12;
-            // 
-            // lblInvoiceTitle
-            // 
-            this.lblInvoiceTitle.Location = new System.Drawing.Point(100, 325);
-            this.lblInvoiceTitle.Name = "lblInvoiceTitle";
-            this.lblInvoiceTitle.Size = new System.Drawing.Size(62, 20);
-            this.lblInvoiceTitle.TabIndex = 13;
-            this.lblInvoiceTitle.Values.Text = "发票抬头";
-            // 
-            // txtInvoiceTitle
-            // 
-            this.txtInvoiceTitle.Location = new System.Drawing.Point(173, 321);
-            this.txtInvoiceTitle.Name = "txtInvoiceTitle";
-            this.txtInvoiceTitle.Size = new System.Drawing.Size(100, 23);
-            this.txtInvoiceTitle.TabIndex = 13;
-            // 
-            // lblInvoiceTaxNumber
-            // 
-            this.lblInvoiceTaxNumber.Location = new System.Drawing.Point(100, 350);
-            this.lblInvoiceTaxNumber.Name = "lblInvoiceTaxNumber";
-            this.lblInvoiceTaxNumber.Size = new System.Drawing.Size(88, 20);
-            this.lblInvoiceTaxNumber.TabIndex = 14;
-            this.lblInvoiceTaxNumber.Values.Text = "纳税人识别号";
-            // 
-            // txtInvoiceTaxNumber
-            // 
-            this.txtInvoiceTaxNumber.Location = new System.Drawing.Point(173, 346);
-            this.txtInvoiceTaxNumber.Name = "txtInvoiceTaxNumber";
-            this.txtInvoiceTaxNumber.Size = new System.Drawing.Size(100, 23);
-            this.txtInvoiceTaxNumber.TabIndex = 14;
-            // 
-            // lblInvoiceAddress
-            // 
-            this.lblInvoiceAddress.Location = new System.Drawing.Point(100, 375);
-            this.lblInvoiceAddress.Name = "lblInvoiceAddress";
-            this.lblInvoiceAddress.Size = new System.Drawing.Size(62, 20);
-            this.lblInvoiceAddress.TabIndex = 15;
-            this.lblInvoiceAddress.Values.Text = "发票地址";
-            // 
-            // txtInvoiceAddress
-            // 
-            this.txtInvoiceAddress.Location = new System.Drawing.Point(173, 371);
-            this.txtInvoiceAddress.Name = "txtInvoiceAddress";
-            this.txtInvoiceAddress.Size = new System.Drawing.Size(100, 23);
-            this.txtInvoiceAddress.TabIndex = 15;
-            // 
-            // lblInvoiceTEL
-            // 
-            this.lblInvoiceTEL.Location = new System.Drawing.Point(100, 400);
-            this.lblInvoiceTEL.Name = "lblInvoiceTEL";
-            this.lblInvoiceTEL.Size = new System.Drawing.Size(62, 20);
-            this.lblInvoiceTEL.TabIndex = 16;
-            this.lblInvoiceTEL.Values.Text = "发票电话";
-            // 
-            // txtInvoiceTEL
-            // 
-            this.txtInvoiceTEL.Location = new System.Drawing.Point(173, 396);
-            this.txtInvoiceTEL.Name = "txtInvoiceTEL";
-            this.txtInvoiceTEL.Size = new System.Drawing.Size(100, 23);
-            this.txtInvoiceTEL.TabIndex = 16;
-            // 
-            // lblInvoiceBankAccount
-            // 
-            this.lblInvoiceBankAccount.Location = new System.Drawing.Point(100, 425);
-            this.lblInvoiceBankAccount.Name = "lblInvoiceBankAccount";
-            this.lblInvoiceBankAccount.Size = new System.Drawing.Size(62, 20);
-            this.lblInvoiceBankAccount.TabIndex = 17;
-            this.lblInvoiceBankAccount.Values.Text = "银行账号";
-            // 
-            // txtInvoiceBankAccount
-            // 
-            this.txtInvoiceBankAccount.Location = new System.Drawing.Point(173, 421);
-            this.txtInvoiceBankAccount.Name = "txtInvoiceBankAccount";
-            this.txtInvoiceBankAccount.Size = new System.Drawing.Size(100, 23);
-            this.txtInvoiceBankAccount.TabIndex = 17;
-            // 
-            // lblInvoiceBankName
-            // 
-            this.lblInvoiceBankName.Location = new System.Drawing.Point(100, 450);
-            this.lblInvoiceBankName.Name = "lblInvoiceBankName";
-            this.lblInvoiceBankName.Size = new System.Drawing.Size(49, 20);
-            this.lblInvoiceBankName.TabIndex = 18;
-            this.lblInvoiceBankName.Values.Text = "开户行";
-            // 
-            // txtInvoiceBankName
-            // 
-            this.txtInvoiceBankName.Location = new System.Drawing.Point(173, 446);
-            this.txtInvoiceBankName.Name = "txtInvoiceBankName";
-            this.txtInvoiceBankName.Size = new System.Drawing.Size(100, 23);
-            this.txtInvoiceBankName.TabIndex = 18;
-            // 
-            // lblCreated_at
-            // 
-            this.lblCreated_at.Location = new System.Drawing.Point(100, 475);
-            this.lblCreated_at.Name = "lblCreated_at";
-            this.lblCreated_at.Size = new System.Drawing.Size(62, 20);
-            this.lblCreated_at.TabIndex = 19;
-            this.lblCreated_at.Values.Text = "创建时间";
-            // 
-            // dtpCreated_at
-            // 
-            this.dtpCreated_at.Location = new System.Drawing.Point(173, 471);
-            this.dtpCreated_at.Name = "dtpCreated_at";
-            this.dtpCreated_at.ShowCheckBox = true;
-            this.dtpCreated_at.Size = new System.Drawing.Size(100, 21);
-            this.dtpCreated_at.TabIndex = 19;
-            // 
-            // lblCreated_by
-            // 
-            this.lblCreated_by.Location = new System.Drawing.Point(100, 500);
-            this.lblCreated_by.Name = "lblCreated_by";
-            this.lblCreated_by.Size = new System.Drawing.Size(49, 20);
-            this.lblCreated_by.TabIndex = 20;
-            this.lblCreated_by.Values.Text = "创建人";
-            // 
-            // txtCreated_by
-            // 
-            this.txtCreated_by.Location = new System.Drawing.Point(173, 496);
-            this.txtCreated_by.Name = "txtCreated_by";
-            this.txtCreated_by.Size = new System.Drawing.Size(100, 23);
-            this.txtCreated_by.TabIndex = 20;
-            // 
-            // lblModified_at
-            // 
-            this.lblModified_at.Location = new System.Drawing.Point(100, 525);
-            this.lblModified_at.Name = "lblModified_at";
-            this.lblModified_at.Size = new System.Drawing.Size(62, 20);
-            this.lblModified_at.TabIndex = 21;
-            this.lblModified_at.Values.Text = "修改时间";
-            // 
-            // dtpModified_at
-            // 
-            this.dtpModified_at.Location = new System.Drawing.Point(173, 521);
-            this.dtpModified_at.Name = "dtpModified_at";
-            this.dtpModified_at.ShowCheckBox = true;
-            this.dtpModified_at.Size = new System.Drawing.Size(100, 21);
-            this.dtpModified_at.TabIndex = 21;
-            // 
-            // lblModified_by
-            // 
-            this.lblModified_by.Location = new System.Drawing.Point(100, 550);
-            this.lblModified_by.Name = "lblModified_by";
-            this.lblModified_by.Size = new System.Drawing.Size(49, 20);
-            this.lblModified_by.TabIndex = 22;
-            this.lblModified_by.Values.Text = "修改人";
-            // 
-            // txtModified_by
-            // 
-            this.txtModified_by.Location = new System.Drawing.Point(173, 546);
-            this.txtModified_by.Name = "txtModified_by";
-            this.txtModified_by.Size = new System.Drawing.Size(100, 23);
-            this.txtModified_by.TabIndex = 22;
-            // 
-            // lblNotes
-            // 
-            this.lblNotes.Location = new System.Drawing.Point(100, 575);
-            this.lblNotes.Name = "lblNotes";
-            this.lblNotes.Size = new System.Drawing.Size(36, 20);
-            this.lblNotes.TabIndex = 23;
-            this.lblNotes.Values.Text = "备注";
-            // 
-            // txtNotes
-            // 
-            this.txtNotes.Location = new System.Drawing.Point(173, 571);
-            this.txtNotes.Multiline = true;
-            this.txtNotes.Name = "txtNotes";
-            this.txtNotes.Size = new System.Drawing.Size(100, 21);
-            this.txtNotes.TabIndex = 23;
-            // 
-            // tb_CompanyEdit
+        
+     //for definition
+     // this.btnOk = new ComponentFactory.Krypton.Toolkit.KryptonButton();
+     // this.btnCancel = new ComponentFactory.Krypton.Toolkit.KryptonButton();
+      //this.kryptonPanel1 = new ComponentFactory.Krypton.Toolkit.KryptonPanel();
+      //for definition
+     this.lblCompanyCode = new Krypton.Toolkit.KryptonLabel();
+this.txtCompanyCode = new Krypton.Toolkit.KryptonTextBox();
+
+this.lblCNName = new Krypton.Toolkit.KryptonLabel();
+this.txtCNName = new Krypton.Toolkit.KryptonTextBox();
+
+this.lblENName = new Krypton.Toolkit.KryptonLabel();
+this.txtENName = new Krypton.Toolkit.KryptonTextBox();
+
+this.lblShortName = new Krypton.Toolkit.KryptonLabel();
+this.txtShortName = new Krypton.Toolkit.KryptonTextBox();
+
+this.lblLegalPersonName = new Krypton.Toolkit.KryptonLabel();
+this.txtLegalPersonName = new Krypton.Toolkit.KryptonTextBox();
+
+this.lblUnifiedSocialCreditIdentifier = new Krypton.Toolkit.KryptonLabel();
+this.txtUnifiedSocialCreditIdentifier = new Krypton.Toolkit.KryptonTextBox();
+
+this.lblContact = new Krypton.Toolkit.KryptonLabel();
+this.txtContact = new Krypton.Toolkit.KryptonTextBox();
+
+this.lblPhone = new Krypton.Toolkit.KryptonLabel();
+this.txtPhone = new Krypton.Toolkit.KryptonTextBox();
+
+this.lblAddress = new Krypton.Toolkit.KryptonLabel();
+this.txtAddress = new Krypton.Toolkit.KryptonTextBox();
+this.txtAddress.Multiline = true;
+
+this.lblENAddress = new Krypton.Toolkit.KryptonLabel();
+this.txtENAddress = new Krypton.Toolkit.KryptonTextBox();
+this.txtENAddress.Multiline = true;
+
+this.lblWebsite = new Krypton.Toolkit.KryptonLabel();
+this.txtWebsite = new Krypton.Toolkit.KryptonTextBox();
+this.txtWebsite.Multiline = true;
+
+this.lblEmail = new Krypton.Toolkit.KryptonLabel();
+this.txtEmail = new Krypton.Toolkit.KryptonTextBox();
+
+this.lblInvoiceTitle = new Krypton.Toolkit.KryptonLabel();
+this.txtInvoiceTitle = new Krypton.Toolkit.KryptonTextBox();
+
+this.lblInvoiceTaxNumber = new Krypton.Toolkit.KryptonLabel();
+this.txtInvoiceTaxNumber = new Krypton.Toolkit.KryptonTextBox();
+
+this.lblInvoiceAddress = new Krypton.Toolkit.KryptonLabel();
+this.txtInvoiceAddress = new Krypton.Toolkit.KryptonTextBox();
+
+this.lblInvoiceTEL = new Krypton.Toolkit.KryptonLabel();
+this.txtInvoiceTEL = new Krypton.Toolkit.KryptonTextBox();
+
+this.lblInvoiceBankAccount = new Krypton.Toolkit.KryptonLabel();
+this.txtInvoiceBankAccount = new Krypton.Toolkit.KryptonTextBox();
+
+this.lblInvoiceBankName = new Krypton.Toolkit.KryptonLabel();
+this.txtInvoiceBankName = new Krypton.Toolkit.KryptonTextBox();
+
+this.lblCreated_at = new Krypton.Toolkit.KryptonLabel();
+this.dtpCreated_at = new Krypton.Toolkit.KryptonDateTimePicker();
+
+this.lblCreated_by = new Krypton.Toolkit.KryptonLabel();
+this.txtCreated_by = new Krypton.Toolkit.KryptonTextBox();
+
+this.lblModified_at = new Krypton.Toolkit.KryptonLabel();
+this.dtpModified_at = new Krypton.Toolkit.KryptonDateTimePicker();
+
+this.lblModified_by = new Krypton.Toolkit.KryptonLabel();
+this.txtModified_by = new Krypton.Toolkit.KryptonTextBox();
+
+this.lblNotes = new Krypton.Toolkit.KryptonLabel();
+this.txtNotes = new Krypton.Toolkit.KryptonTextBox();
+this.txtNotes.Multiline = true;
+
+    
+    //for end
+   // ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel1)).BeginInit();
+   // this.kryptonPanel1.SuspendLayout();
+    this.SuspendLayout();
+    
+            // 
+            // btnOk
+            // 
+            //this.btnOk.Location = new System.Drawing.Point(126, 355);
+            //this.btnOk.Name = "btnOk";
+            //this.btnOk.Size = new System.Drawing.Size(90, 25);
+            //this.btnOk.TabIndex = 0;
+           // this.btnOk.Values.Text = "确定";
+            //this.btnOk.Click += new System.EventHandler(this.btnOk_Click);
+            // 
+            // btnCancel
+            // 
+           // this.btnCancel.Location = new System.Drawing.Point(244, 355);
+            //this.btnCancel.Name = "btnCancel";
+            //this.btnCancel.Size = new System.Drawing.Size(90, 25);
+            //this.btnCancel.TabIndex = 1;
+            //this.btnCancel.Values.Text = "取消";
+           // this.btnCancel.Click += new System.EventHandler(this.btnCancel_Click);
+            
+         //for size
+     
+            //#####30CompanyCode###String
+this.lblCompanyCode.AutoSize = true;
+this.lblCompanyCode.Location = new System.Drawing.Point(100,25);
+this.lblCompanyCode.Name = "lblCompanyCode";
+this.lblCompanyCode.Size = new System.Drawing.Size(41, 12);
+this.lblCompanyCode.TabIndex = 1;
+this.lblCompanyCode.Text = "公司代号";
+this.txtCompanyCode.Location = new System.Drawing.Point(173,21);
+this.txtCompanyCode.Name = "txtCompanyCode";
+this.txtCompanyCode.Size = new System.Drawing.Size(100, 21);
+this.txtCompanyCode.TabIndex = 1;
+this.Controls.Add(this.lblCompanyCode);
+this.Controls.Add(this.txtCompanyCode);
+
+           //#####100CNName###String
+this.lblCNName.AutoSize = true;
+this.lblCNName.Location = new System.Drawing.Point(100,50);
+this.lblCNName.Name = "lblCNName";
+this.lblCNName.Size = new System.Drawing.Size(41, 12);
+this.lblCNName.TabIndex = 2;
+this.lblCNName.Text = "名称";
+this.txtCNName.Location = new System.Drawing.Point(173,46);
+this.txtCNName.Name = "txtCNName";
+this.txtCNName.Size = new System.Drawing.Size(100, 21);
+this.txtCNName.TabIndex = 2;
+this.Controls.Add(this.lblCNName);
+this.Controls.Add(this.txtCNName);
+
+           //#####100ENName###String
+this.lblENName.AutoSize = true;
+this.lblENName.Location = new System.Drawing.Point(100,75);
+this.lblENName.Name = "lblENName";
+this.lblENName.Size = new System.Drawing.Size(41, 12);
+this.lblENName.TabIndex = 3;
+this.lblENName.Text = "英语名称";
+this.txtENName.Location = new System.Drawing.Point(173,71);
+this.txtENName.Name = "txtENName";
+this.txtENName.Size = new System.Drawing.Size(100, 21);
+this.txtENName.TabIndex = 3;
+this.Controls.Add(this.lblENName);
+this.Controls.Add(this.txtENName);
+
+           //#####50ShortName###String
+this.lblShortName.AutoSize = true;
+this.lblShortName.Location = new System.Drawing.Point(100,100);
+this.lblShortName.Name = "lblShortName";
+this.lblShortName.Size = new System.Drawing.Size(41, 12);
+this.lblShortName.TabIndex = 4;
+this.lblShortName.Text = "简称";
+this.txtShortName.Location = new System.Drawing.Point(173,96);
+this.txtShortName.Name = "txtShortName";
+this.txtShortName.Size = new System.Drawing.Size(100, 21);
+this.txtShortName.TabIndex = 4;
+this.Controls.Add(this.lblShortName);
+this.Controls.Add(this.txtShortName);
+
+           //#####50LegalPersonName###String
+this.lblLegalPersonName.AutoSize = true;
+this.lblLegalPersonName.Location = new System.Drawing.Point(100,125);
+this.lblLegalPersonName.Name = "lblLegalPersonName";
+this.lblLegalPersonName.Size = new System.Drawing.Size(41, 12);
+this.lblLegalPersonName.TabIndex = 5;
+this.lblLegalPersonName.Text = "法人姓名";
+this.txtLegalPersonName.Location = new System.Drawing.Point(173,121);
+this.txtLegalPersonName.Name = "txtLegalPersonName";
+this.txtLegalPersonName.Size = new System.Drawing.Size(100, 21);
+this.txtLegalPersonName.TabIndex = 5;
+this.Controls.Add(this.lblLegalPersonName);
+this.Controls.Add(this.txtLegalPersonName);
+
+           //#####50UnifiedSocialCreditIdentifier###String
+this.lblUnifiedSocialCreditIdentifier.AutoSize = true;
+this.lblUnifiedSocialCreditIdentifier.Location = new System.Drawing.Point(100,150);
+this.lblUnifiedSocialCreditIdentifier.Name = "lblUnifiedSocialCreditIdentifier";
+this.lblUnifiedSocialCreditIdentifier.Size = new System.Drawing.Size(41, 12);
+this.lblUnifiedSocialCreditIdentifier.TabIndex = 6;
+this.lblUnifiedSocialCreditIdentifier.Text = "公司执照代码";
+this.txtUnifiedSocialCreditIdentifier.Location = new System.Drawing.Point(173,146);
+this.txtUnifiedSocialCreditIdentifier.Name = "txtUnifiedSocialCreditIdentifier";
+this.txtUnifiedSocialCreditIdentifier.Size = new System.Drawing.Size(100, 21);
+this.txtUnifiedSocialCreditIdentifier.TabIndex = 6;
+this.Controls.Add(this.lblUnifiedSocialCreditIdentifier);
+this.Controls.Add(this.txtUnifiedSocialCreditIdentifier);
+
+           //#####100Contact###String
+this.lblContact.AutoSize = true;
+this.lblContact.Location = new System.Drawing.Point(100,175);
+this.lblContact.Name = "lblContact";
+this.lblContact.Size = new System.Drawing.Size(41, 12);
+this.lblContact.TabIndex = 7;
+this.lblContact.Text = "联系人";
+this.txtContact.Location = new System.Drawing.Point(173,171);
+this.txtContact.Name = "txtContact";
+this.txtContact.Size = new System.Drawing.Size(100, 21);
+this.txtContact.TabIndex = 7;
+this.Controls.Add(this.lblContact);
+this.Controls.Add(this.txtContact);
+
+           //#####100Phone###String
+this.lblPhone.AutoSize = true;
+this.lblPhone.Location = new System.Drawing.Point(100,200);
+this.lblPhone.Name = "lblPhone";
+this.lblPhone.Size = new System.Drawing.Size(41, 12);
+this.lblPhone.TabIndex = 8;
+this.lblPhone.Text = "电话";
+this.txtPhone.Location = new System.Drawing.Point(173,196);
+this.txtPhone.Name = "txtPhone";
+this.txtPhone.Size = new System.Drawing.Size(100, 21);
+this.txtPhone.TabIndex = 8;
+this.Controls.Add(this.lblPhone);
+this.Controls.Add(this.txtPhone);
+
+           //#####255Address###String
+this.lblAddress.AutoSize = true;
+this.lblAddress.Location = new System.Drawing.Point(100,225);
+this.lblAddress.Name = "lblAddress";
+this.lblAddress.Size = new System.Drawing.Size(41, 12);
+this.lblAddress.TabIndex = 9;
+this.lblAddress.Text = "营业地址";
+this.txtAddress.Location = new System.Drawing.Point(173,221);
+this.txtAddress.Name = "txtAddress";
+this.txtAddress.Size = new System.Drawing.Size(100, 21);
+this.txtAddress.TabIndex = 9;
+this.Controls.Add(this.lblAddress);
+this.Controls.Add(this.txtAddress);
+
+           //#####255ENAddress###String
+this.lblENAddress.AutoSize = true;
+this.lblENAddress.Location = new System.Drawing.Point(100,250);
+this.lblENAddress.Name = "lblENAddress";
+this.lblENAddress.Size = new System.Drawing.Size(41, 12);
+this.lblENAddress.TabIndex = 10;
+this.lblENAddress.Text = "英文地址";
+this.txtENAddress.Location = new System.Drawing.Point(173,246);
+this.txtENAddress.Name = "txtENAddress";
+this.txtENAddress.Size = new System.Drawing.Size(100, 21);
+this.txtENAddress.TabIndex = 10;
+this.Controls.Add(this.lblENAddress);
+this.Controls.Add(this.txtENAddress);
+
+           //#####255Website###String
+this.lblWebsite.AutoSize = true;
+this.lblWebsite.Location = new System.Drawing.Point(100,275);
+this.lblWebsite.Name = "lblWebsite";
+this.lblWebsite.Size = new System.Drawing.Size(41, 12);
+this.lblWebsite.TabIndex = 11;
+this.lblWebsite.Text = "网址";
+this.txtWebsite.Location = new System.Drawing.Point(173,271);
+this.txtWebsite.Name = "txtWebsite";
+this.txtWebsite.Size = new System.Drawing.Size(100, 21);
+this.txtWebsite.TabIndex = 11;
+this.Controls.Add(this.lblWebsite);
+this.Controls.Add(this.txtWebsite);
+
+           //#####100Email###String
+this.lblEmail.AutoSize = true;
+this.lblEmail.Location = new System.Drawing.Point(100,300);
+this.lblEmail.Name = "lblEmail";
+this.lblEmail.Size = new System.Drawing.Size(41, 12);
+this.lblEmail.TabIndex = 12;
+this.lblEmail.Text = "电子邮件";
+this.txtEmail.Location = new System.Drawing.Point(173,296);
+this.txtEmail.Name = "txtEmail";
+this.txtEmail.Size = new System.Drawing.Size(100, 21);
+this.txtEmail.TabIndex = 12;
+this.Controls.Add(this.lblEmail);
+this.Controls.Add(this.txtEmail);
+
+           //#####200InvoiceTitle###String
+this.lblInvoiceTitle.AutoSize = true;
+this.lblInvoiceTitle.Location = new System.Drawing.Point(100,325);
+this.lblInvoiceTitle.Name = "lblInvoiceTitle";
+this.lblInvoiceTitle.Size = new System.Drawing.Size(41, 12);
+this.lblInvoiceTitle.TabIndex = 13;
+this.lblInvoiceTitle.Text = "发票抬头";
+this.txtInvoiceTitle.Location = new System.Drawing.Point(173,321);
+this.txtInvoiceTitle.Name = "txtInvoiceTitle";
+this.txtInvoiceTitle.Size = new System.Drawing.Size(100, 21);
+this.txtInvoiceTitle.TabIndex = 13;
+this.Controls.Add(this.lblInvoiceTitle);
+this.Controls.Add(this.txtInvoiceTitle);
+
+           //#####200InvoiceTaxNumber###String
+this.lblInvoiceTaxNumber.AutoSize = true;
+this.lblInvoiceTaxNumber.Location = new System.Drawing.Point(100,350);
+this.lblInvoiceTaxNumber.Name = "lblInvoiceTaxNumber";
+this.lblInvoiceTaxNumber.Size = new System.Drawing.Size(41, 12);
+this.lblInvoiceTaxNumber.TabIndex = 14;
+this.lblInvoiceTaxNumber.Text = "纳税人识别号";
+this.txtInvoiceTaxNumber.Location = new System.Drawing.Point(173,346);
+this.txtInvoiceTaxNumber.Name = "txtInvoiceTaxNumber";
+this.txtInvoiceTaxNumber.Size = new System.Drawing.Size(100, 21);
+this.txtInvoiceTaxNumber.TabIndex = 14;
+this.Controls.Add(this.lblInvoiceTaxNumber);
+this.Controls.Add(this.txtInvoiceTaxNumber);
+
+           //#####200InvoiceAddress###String
+this.lblInvoiceAddress.AutoSize = true;
+this.lblInvoiceAddress.Location = new System.Drawing.Point(100,375);
+this.lblInvoiceAddress.Name = "lblInvoiceAddress";
+this.lblInvoiceAddress.Size = new System.Drawing.Size(41, 12);
+this.lblInvoiceAddress.TabIndex = 15;
+this.lblInvoiceAddress.Text = "发票地址";
+this.txtInvoiceAddress.Location = new System.Drawing.Point(173,371);
+this.txtInvoiceAddress.Name = "txtInvoiceAddress";
+this.txtInvoiceAddress.Size = new System.Drawing.Size(100, 21);
+this.txtInvoiceAddress.TabIndex = 15;
+this.Controls.Add(this.lblInvoiceAddress);
+this.Controls.Add(this.txtInvoiceAddress);
+
+           //#####50InvoiceTEL###String
+this.lblInvoiceTEL.AutoSize = true;
+this.lblInvoiceTEL.Location = new System.Drawing.Point(100,400);
+this.lblInvoiceTEL.Name = "lblInvoiceTEL";
+this.lblInvoiceTEL.Size = new System.Drawing.Size(41, 12);
+this.lblInvoiceTEL.TabIndex = 16;
+this.lblInvoiceTEL.Text = "发票电话";
+this.txtInvoiceTEL.Location = new System.Drawing.Point(173,396);
+this.txtInvoiceTEL.Name = "txtInvoiceTEL";
+this.txtInvoiceTEL.Size = new System.Drawing.Size(100, 21);
+this.txtInvoiceTEL.TabIndex = 16;
+this.Controls.Add(this.lblInvoiceTEL);
+this.Controls.Add(this.txtInvoiceTEL);
+
+           //#####150InvoiceBankAccount###String
+this.lblInvoiceBankAccount.AutoSize = true;
+this.lblInvoiceBankAccount.Location = new System.Drawing.Point(100,425);
+this.lblInvoiceBankAccount.Name = "lblInvoiceBankAccount";
+this.lblInvoiceBankAccount.Size = new System.Drawing.Size(41, 12);
+this.lblInvoiceBankAccount.TabIndex = 17;
+this.lblInvoiceBankAccount.Text = "银行账号";
+this.txtInvoiceBankAccount.Location = new System.Drawing.Point(173,421);
+this.txtInvoiceBankAccount.Name = "txtInvoiceBankAccount";
+this.txtInvoiceBankAccount.Size = new System.Drawing.Size(100, 21);
+this.txtInvoiceBankAccount.TabIndex = 17;
+this.Controls.Add(this.lblInvoiceBankAccount);
+this.Controls.Add(this.txtInvoiceBankAccount);
+
+           //#####100InvoiceBankName###String
+this.lblInvoiceBankName.AutoSize = true;
+this.lblInvoiceBankName.Location = new System.Drawing.Point(100,450);
+this.lblInvoiceBankName.Name = "lblInvoiceBankName";
+this.lblInvoiceBankName.Size = new System.Drawing.Size(41, 12);
+this.lblInvoiceBankName.TabIndex = 18;
+this.lblInvoiceBankName.Text = "开户行";
+this.txtInvoiceBankName.Location = new System.Drawing.Point(173,446);
+this.txtInvoiceBankName.Name = "txtInvoiceBankName";
+this.txtInvoiceBankName.Size = new System.Drawing.Size(100, 21);
+this.txtInvoiceBankName.TabIndex = 18;
+this.Controls.Add(this.lblInvoiceBankName);
+this.Controls.Add(this.txtInvoiceBankName);
+
+           //#####Created_at###DateTime
+this.lblCreated_at.AutoSize = true;
+this.lblCreated_at.Location = new System.Drawing.Point(100,475);
+this.lblCreated_at.Name = "lblCreated_at";
+this.lblCreated_at.Size = new System.Drawing.Size(41, 12);
+this.lblCreated_at.TabIndex = 19;
+this.lblCreated_at.Text = "创建时间";
+//111======475
+this.dtpCreated_at.Location = new System.Drawing.Point(173,471);
+this.dtpCreated_at.Name ="dtpCreated_at";
+this.dtpCreated_at.ShowCheckBox =true;
+this.dtpCreated_at.Size = new System.Drawing.Size(100, 21);
+this.dtpCreated_at.TabIndex = 19;
+this.Controls.Add(this.lblCreated_at);
+this.Controls.Add(this.dtpCreated_at);
+
+           //#####Created_by###Int64
+this.lblCreated_by.AutoSize = true;
+this.lblCreated_by.Location = new System.Drawing.Point(100,500);
+this.lblCreated_by.Name = "lblCreated_by";
+this.lblCreated_by.Size = new System.Drawing.Size(41, 12);
+this.lblCreated_by.TabIndex = 20;
+this.lblCreated_by.Text = "创建人";
+this.txtCreated_by.Location = new System.Drawing.Point(173,496);
+this.txtCreated_by.Name = "txtCreated_by";
+this.txtCreated_by.Size = new System.Drawing.Size(100, 21);
+this.txtCreated_by.TabIndex = 20;
+this.Controls.Add(this.lblCreated_by);
+this.Controls.Add(this.txtCreated_by);
+
+           //#####Modified_at###DateTime
+this.lblModified_at.AutoSize = true;
+this.lblModified_at.Location = new System.Drawing.Point(100,525);
+this.lblModified_at.Name = "lblModified_at";
+this.lblModified_at.Size = new System.Drawing.Size(41, 12);
+this.lblModified_at.TabIndex = 21;
+this.lblModified_at.Text = "修改时间";
+//111======525
+this.dtpModified_at.Location = new System.Drawing.Point(173,521);
+this.dtpModified_at.Name ="dtpModified_at";
+this.dtpModified_at.ShowCheckBox =true;
+this.dtpModified_at.Size = new System.Drawing.Size(100, 21);
+this.dtpModified_at.TabIndex = 21;
+this.Controls.Add(this.lblModified_at);
+this.Controls.Add(this.dtpModified_at);
+
+           //#####Modified_by###Int64
+this.lblModified_by.AutoSize = true;
+this.lblModified_by.Location = new System.Drawing.Point(100,550);
+this.lblModified_by.Name = "lblModified_by";
+this.lblModified_by.Size = new System.Drawing.Size(41, 12);
+this.lblModified_by.TabIndex = 22;
+this.lblModified_by.Text = "修改人";
+this.txtModified_by.Location = new System.Drawing.Point(173,546);
+this.txtModified_by.Name = "txtModified_by";
+this.txtModified_by.Size = new System.Drawing.Size(100, 21);
+this.txtModified_by.TabIndex = 22;
+this.Controls.Add(this.lblModified_by);
+this.Controls.Add(this.txtModified_by);
+
+           //#####255Notes###String
+this.lblNotes.AutoSize = true;
+this.lblNotes.Location = new System.Drawing.Point(100,575);
+this.lblNotes.Name = "lblNotes";
+this.lblNotes.Size = new System.Drawing.Size(41, 12);
+this.lblNotes.TabIndex = 23;
+this.lblNotes.Text = "备注";
+this.txtNotes.Location = new System.Drawing.Point(173,571);
+this.txtNotes.Name = "txtNotes";
+this.txtNotes.Size = new System.Drawing.Size(100, 21);
+this.txtNotes.TabIndex = 23;
+this.Controls.Add(this.lblNotes);
+this.Controls.Add(this.txtNotes);
+
+        //for 加入到容器
+            //components = new System.ComponentModel.Container();
+           
+            //this.Controls.Add(this.btnCancel);
+            //this.Controls.Add(this.btnOk);
+            // 
+            // kryptonPanel1
+            // 
+          //  this.kryptonPanel1.Controls.Add(this.btnCancel);
+         //   this.kryptonPanel1.Controls.Add(this.btnOk);
+           // this.kryptonPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
+            //this.kryptonPanel1.Location = new System.Drawing.Point(0, 0);
+           // this.kryptonPanel1.Name = "kryptonPanel1";
+           // this.kryptonPanel1.Size = new System.Drawing.Size(404, 300);
+           // this.kryptonPanel1.TabIndex = 23;
+
+            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
+            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+                this.Controls.Add(this.lblCompanyCode );
+this.Controls.Add(this.txtCompanyCode );
+
+                this.Controls.Add(this.lblCNName );
+this.Controls.Add(this.txtCNName );
+
+                this.Controls.Add(this.lblENName );
+this.Controls.Add(this.txtENName );
+
+                this.Controls.Add(this.lblShortName );
+this.Controls.Add(this.txtShortName );
+
+                this.Controls.Add(this.lblLegalPersonName );
+this.Controls.Add(this.txtLegalPersonName );
+
+                this.Controls.Add(this.lblUnifiedSocialCreditIdentifier );
+this.Controls.Add(this.txtUnifiedSocialCreditIdentifier );
+
+                this.Controls.Add(this.lblContact );
+this.Controls.Add(this.txtContact );
+
+                this.Controls.Add(this.lblPhone );
+this.Controls.Add(this.txtPhone );
+
+                this.Controls.Add(this.lblAddress );
+this.Controls.Add(this.txtAddress );
+
+                this.Controls.Add(this.lblENAddress );
+this.Controls.Add(this.txtENAddress );
+
+                this.Controls.Add(this.lblWebsite );
+this.Controls.Add(this.txtWebsite );
+
+                this.Controls.Add(this.lblEmail );
+this.Controls.Add(this.txtEmail );
+
+                this.Controls.Add(this.lblInvoiceTitle );
+this.Controls.Add(this.txtInvoiceTitle );
+
+                this.Controls.Add(this.lblInvoiceTaxNumber );
+this.Controls.Add(this.txtInvoiceTaxNumber );
+
+                this.Controls.Add(this.lblInvoiceAddress );
+this.Controls.Add(this.txtInvoiceAddress );
+
+                this.Controls.Add(this.lblInvoiceTEL );
+this.Controls.Add(this.txtInvoiceTEL );
+
+                this.Controls.Add(this.lblInvoiceBankAccount );
+this.Controls.Add(this.txtInvoiceBankAccount );
+
+                this.Controls.Add(this.lblInvoiceBankName );
+this.Controls.Add(this.txtInvoiceBankName );
+
+                this.Controls.Add(this.lblCreated_at );
+this.Controls.Add(this.dtpCreated_at );
+
+                this.Controls.Add(this.lblCreated_by );
+this.Controls.Add(this.txtCreated_by );
+
+                this.Controls.Add(this.lblModified_at );
+this.Controls.Add(this.dtpModified_at );
+
+                this.Controls.Add(this.lblModified_by );
+this.Controls.Add(this.txtModified_by );
+
+                this.Controls.Add(this.lblNotes );
+this.Controls.Add(this.txtNotes );
+
+                            // 
+            // "tb_CompanyEdit"
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.Controls.Add(this.lblCompanyCode);
-            this.Controls.Add(this.txtCompanyCode);
-            this.Controls.Add(this.lblCNName);
-            this.Controls.Add(this.txtCNName);
-            this.Controls.Add(this.lblENName);
-            this.Controls.Add(this.txtENName);
-            this.Controls.Add(this.lblShortName);
-            this.Controls.Add(this.txtShortName);
-            this.Controls.Add(this.lblLegalPersonName);
-            this.Controls.Add(this.txtLegalPersonName);
-            this.Controls.Add(this.lblUnifiedSocialCreditIdentifier);
-            this.Controls.Add(this.txtUnifiedSocialCreditIdentifier);
-            this.Controls.Add(this.lblContact);
-            this.Controls.Add(this.txtContact);
-            this.Controls.Add(this.lblPhone);
-            this.Controls.Add(this.txtPhone);
-            this.Controls.Add(this.lblAddress);
-            this.Controls.Add(this.txtAddress);
-            this.Controls.Add(this.lblENAddress);
-            this.Controls.Add(this.txtENAddress);
-            this.Controls.Add(this.lblWebsite);
-            this.Controls.Add(this.txtWebsite);
-            this.Controls.Add(this.lblEmail);
-            this.Controls.Add(this.txtEmail);
-            this.Controls.Add(this.lblInvoiceTitle);
-            this.Controls.Add(this.txtInvoiceTitle);
-            this.Controls.Add(this.lblInvoiceTaxNumber);
-            this.Controls.Add(this.txtInvoiceTaxNumber);
-            this.Controls.Add(this.lblInvoiceAddress);
-            this.Controls.Add(this.txtInvoiceAddress);
-            this.Controls.Add(this.lblInvoiceTEL);
-            this.Controls.Add(this.txtInvoiceTEL);
-            this.Controls.Add(this.lblInvoiceBankAccount);
-            this.Controls.Add(this.txtInvoiceBankAccount);
-            this.Controls.Add(this.lblInvoiceBankName);
-            this.Controls.Add(this.txtInvoiceBankName);
-            this.Controls.Add(this.lblCreated_at);
-            this.Controls.Add(this.dtpCreated_at);
-            this.Controls.Add(this.lblCreated_by);
-            this.Controls.Add(this.txtCreated_by);
-            this.Controls.Add(this.lblModified_at);
-            this.Controls.Add(this.dtpModified_at);
-            this.Controls.Add(this.lblModified_by);
-            this.Controls.Add(this.txtModified_by);
-            this.Controls.Add(this.lblNotes);
-            this.Controls.Add(this.txtNotes);
+            this.ClientSize = new System.Drawing.Size(404, 300);
+            //this.Controls.Add(this.kryptonPanel1);
+            
             this.Name = "tb_CompanyEdit";
-            this.Size = new System.Drawing.Size(911, 684);
+            this.Size = new System.Drawing.Size(911, 490);
+          
+            
+            //((System.ComponentModel.ISupportInitialize)(this.kryptonPanel1)).EndInit();
+           // this.kryptonPanel1.ResumeLayout(false);
+           // this.kryptonPanel1.PerformLayout();
             this.ResumeLayout(false);
-            this.PerformLayout();
-
+            //this.PerformLayout();
+            
         }
 
         #endregion

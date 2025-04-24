@@ -40,6 +40,7 @@ using RUINORERP.Business.CommService;
 using RUINORERP.Common.Extensions;
 using RUINORERP.Business.Security;
 using NPOI.SS.Formula.Functions;
+using RUINORERP.Global.EnumExt;
 namespace RUINORERP.UI.PSI.SAL
 {
     [MenuAttrAssemblyInfo("销售出库单", ModuleMenuDefine.模块定义.进销存管理, ModuleMenuDefine.进销存管理.销售管理, BizType.销售出库单)]
@@ -92,6 +93,19 @@ namespace RUINORERP.UI.PSI.SAL
                 {
                     entity.PrimaryKeyID = entity.SaleOut_MainID;
                     entity.ActionStatus = ActionStatus.加载;
+                    if (entity.Currency_ID.HasValue && entity.Currency_ID != AppContext.BaseCurrency.Currency_ID && entity.ExchangeRate.HasValue)
+                    {
+                        lblExchangeRate.Visible = true;
+                        txtExchangeRate.Visible = true;
+                        UIHelper.ControlForeignFieldInvisible<tb_SaleOrder>(this, true);
+
+                    }
+                    else
+                    {
+                        lblExchangeRate.Visible = false;
+                        txtExchangeRate.Visible = false;
+                        UIHelper.ControlForeignFieldInvisible<tb_SaleOrder>(this, false);
+                    }
                     //entity.DataStatus = (int)DataStatus.确认;
                     //如果审核了，审核要灰色
 
@@ -107,6 +121,9 @@ namespace RUINORERP.UI.PSI.SAL
                         entity.tb_SaleOutDetails.ForEach(c => c.SaleOut_MainID = 0);
                         entity.tb_SaleOutDetails.ForEach(c => c.SaleOutDetail_ID = 0);
                     }
+                    entity.Currency_ID = AppContext.BaseCurrency.Currency_ID;
+                    lblExchangeRate.Visible = false;
+                    txtExchangeRate.Visible = false;
                 }
             }
             if (entity.ApprovalStatus.HasValue)
@@ -116,7 +133,7 @@ namespace RUINORERP.UI.PSI.SAL
             EditEntity = entity;
             DataBindingHelper.BindData4Cmb<tb_Employee>(entity, k => k.Employee_ID, v => v.Employee_Name, cmbEmployee_ID);
             DataBindingHelper.BindData4Cmb<tb_CustomerVendor>(entity, k => k.CustomerVendor_ID, v => v.CVName, cmbCustomerVendor_ID, c => c.IsCustomer == true);
-
+            DataBindingHelper.BindData4Cmb<tb_Currency>(entity, k => k.Currency_ID, v => v.CurrencyName, cmbCurrency_ID);
             //DataBindingHelper.BindData4Cmb<tb_SaleOrder>(entity, k => k.SOrder_ID, v => v.SOrderNo, cmbOrder_ID);
             DataBindingHelper.BindData4CmbByEnum<tb_SaleOut>(entity, k => k.PayStatus, typeof(PayStatus), cmbPayStatus, false);
             DataBindingHelper.BindData4Cmb<tb_PaymentMethod>(entity, k => k.Paytype_ID, v => v.Paytype_Name, cmbPaytype_ID);
@@ -126,26 +143,23 @@ namespace RUINORERP.UI.PSI.SAL
             DataBindingHelper.BindData4TextBox<tb_SaleOut>(entity, t => t.ShipCost.ToString(), txtShipCost, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4TextBox<tb_SaleOut>(entity, t => t.FreightCost.ToString(), txtFreightCost, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4TextBox<tb_SaleOut>(entity, t => t.TotalAmount.ToString(), txtTotalAmount, BindDataType4TextBox.Money, false);
+            DataBindingHelper.BindData4TextBox<tb_SaleOrder>(entity, t => t.ExchangeRate.ToString(), txtExchangeRate, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4DataTime<tb_SaleOut>(entity, t => t.DeliveryDate, dtpDeliveryDate, false);
             DataBindingHelper.BindData4DataTime<tb_SaleOut>(entity, t => t.OutDate, dtpOutDate, false);
             DataBindingHelper.BindData4TextBox<tb_SaleOut>(entity, t => t.ShippingAddress, txtShippingAddress, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_SaleOut>(entity, t => t.ShippingWay, txtShippingWay, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_SaleOut>(entity, t => t.TrackNo, txtTrackNo, BindDataType4TextBox.Text, false);
-            DataBindingHelper.BindData4TextBox<tb_SaleOut>(entity, t => t.CollectedMoney.ToString(), txtCollectedMoney, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4TextBox<tb_SaleOut>(entity, t => t.Notes, txtNotes, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_SaleOut>(entity, t => t.ApprovalOpinions, txtApprovalOpinions, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4CheckBox<tb_SaleOut>(entity, t => t.ApprovalResults, chkApprovalResults, false);
-            // DataBindingHelper.BindData4CehckBox<tb_SaleOut>(entity, t => t.IsIncludeTax, chkIsIncludeTax, false);
             DataBindingHelper.BindData4CheckBox<tb_SaleOut>(entity, t => t.ReplaceOut, chk替代品出库, false);
             DataBindingHelper.BindData4TextBox<tb_SaleOut>(entity, t => t.Deposit.ToString(), txtDeposit, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4TextBox<tb_SaleOut>(entity, t => t.TotalCost.ToString(), txtTotalCost, BindDataType4TextBox.Money, false);
-            DataBindingHelper.BindData4TextBox<tb_SaleOut>(entity, t => t.TaxRate.ToString(), txtTaxRate, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4TextBox<tb_SaleOut>(entity, t => t.TotalTaxAmount.ToString(), txtTaxAmount, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4TextBox<tb_SaleOut>(entity, t => t.TotalQty.ToString(), txtTotalQty, BindDataType4TextBox.Qty, false);
-            DataBindingHelper.BindData4TextBox<tb_SaleOut>(entity, t => t.TotalUntaxedAmount.ToString(), txtUntaxedAmount, BindDataType4TextBox.Money, false);
+            DataBindingHelper.BindData4TextBox<tb_SaleOut>(entity, t => t.ForeignTotalAmount.ToString(), txtForeignTotalAmount, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4CheckBox<tb_SaleOut>(entity, t => t.GenerateVouchers, chkGenerateVouchers, false);
             DataBindingHelper.BindData4TextBox<tb_SaleOut>(entity, t => t.DiscountAmount.ToString(), txtDiscountAmount, BindDataType4TextBox.Money, false);
-            DataBindingHelper.BindData4TextBox<tb_SaleOut>(entity, t => t.PrePayMoney.ToString(), txtPrePayMoney, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4CheckBox<tb_SaleOut>(entity, t => t.IsCustomizedOrder, chkIsCustomizedOrder, false);
 
             base.errorProviderForAllInput.DataSource = entity;
@@ -182,9 +196,47 @@ namespace RUINORERP.UI.PSI.SAL
                 //权限允许
                 if ((true && entity.DataStatus == (int)DataStatus.草稿) || (true && entity.DataStatus == (int)DataStatus.新建))
                 {
+                    if (s2.PropertyName == entity.GetPropertyName<tb_SaleOrder>(c => c.Currency_ID) && entity.Currency_ID > 0)
+                    {
+                        
+                        if (cmbCurrency_ID.SelectedItem is tb_Currency cv)
+                        {
+                            if (cv.CurrencyCode.Trim() != DefaultCurrency.RMB.ToString())
+                            {
+                                //显示外币相关
+                                UIHelper.ControlForeignFieldInvisible<tb_SaleOrder>(this, true);
+                                entity.ExchangeRate = BizService.GetExchangeRateFromCache(cv.Currency_ID, AppContext.BaseCurrency.Currency_ID);
+                                if (EditEntity.Currency_ID != AppContext.BaseCurrency.Currency_ID && EditEntity.ExchangeRate.HasValue)
+                                {
+                                    EditEntity.ForeignTotalAmount = EditEntity.TotalAmount / EditEntity.ExchangeRate.Value;
+                                    //
+                                    EditEntity.ForeignTotalAmount = Math.Round(EditEntity.ForeignTotalAmount, 2); // 四舍五入到 2 位小数
+                                }
+                                lblExchangeRate.Visible = true;
+                                txtExchangeRate.Visible = true;
+                                lblForeignTotalAmount.Text = $"金额({cv.CurrencyCode})";
+                            }
+                            else
+                            {
+                                //隐藏外币相关
+                                UIHelper.ControlForeignFieldInvisible<tb_SaleOrder>(this, false);
+                                lblExchangeRate.Visible = false;
+                                txtExchangeRate.Visible = false;
+                                entity.ExchangeRate = null;
+                                entity.ForeignTotalAmount = 0;
+                            }
+                        }
+                        
+                    }
 
+                    if (s2.PropertyName == entity.GetPropertyName<tb_SaleOrder>(c => c.Paytype_ID) && entity.Paytype_ID.HasValue && entity.Paytype_ID > 0)
+                    {
+                        if (cmbPaytype_ID.SelectedItem is tb_PaymentMethod paymentMethod)
+                        {
+                            EditEntity.tb_paymentmethod = paymentMethod;
+                        }
+                    }
                 }
-
 
 
                 if (entity.CustomerVendor_ID.HasValue && entity.CustomerVendor_ID > 0 && s2.PropertyName == entity.GetPropertyName<tb_SaleOut>(c => c.CustomerVendor_ID))
@@ -198,10 +250,6 @@ namespace RUINORERP.UI.PSI.SAL
                         }
                     }
                 }
-
-
-
-
 
                 //显示 打印状态 如果是草稿状态 不显示打印
                 if ((DataStatus)entity.DataStatus != DataStatus.草稿)
@@ -338,7 +386,6 @@ namespace RUINORERP.UI.PSI.SAL
             listCols.SetCol_Formula<tb_SaleOutDetail>((a, b) => (a.Cost + a.CustomizedCost) * b.Quantity, c => c.SubtotalCostAmount);
             listCols.SetCol_Formula<tb_SaleOutDetail>((a, b) => a.TransactionPrice * b.Quantity, c => c.SubtotalTransAmount);
             listCols.SetCol_Formula<tb_SaleOutDetail>((a, b, c) => a.SubtotalTransAmount / (1 + b.TaxRate) * c.TaxRate, d => d.SubtotalTaxAmount);
-            listCols.SetCol_Formula<tb_SaleOutDetail>((a, b, c) => a.TransactionPrice * b.Quantity - c.SubtotalTaxAmount, d => d.SubtotalUntaxedAmount);
             //将数量默认为已出库数量  这个逻辑不对这个是订单累计 的出库数量只能是在出库审核时才累计数据，这里最多只读
             //listCols.SetCol_Formula<tb_SaleOutDetail>((a, b) => a.Quantity, c => c.TotalDeliveredQty);
 
@@ -434,14 +481,16 @@ namespace RUINORERP.UI.PSI.SAL
 
                 EditEntity.TotalTaxAmount = details.Sum(c => c.SubtotalTaxAmount);
                 EditEntity.TotalTaxAmount = EditEntity.TotalTaxAmount.ToRoundDecimalPlaces(MainForm.Instance.authorizeController.GetMoneyDataPrecision());
-
-                EditEntity.TotalUntaxedAmount = details.Sum(c => c.SubtotalUntaxedAmount);
-                EditEntity.TotalUntaxedAmount = EditEntity.TotalUntaxedAmount + EditEntity.ShipCost;
-
+          
                 EditEntity.TotalAmount = details.Sum(c => c.TransactionPrice * c.Quantity);
                 EditEntity.TotalAmount = EditEntity.TotalAmount + EditEntity.ShipCost;
+                if (EditEntity.Currency_ID.HasValue && EditEntity.Currency_ID != AppContext.BaseCurrency.Currency_ID && EditEntity.ExchangeRate.HasValue)
+                {
+                    EditEntity.ForeignTotalAmount = EditEntity.TotalAmount / EditEntity.ExchangeRate.Value;
+                    //
+                    EditEntity.ForeignTotalAmount = Math.Round(EditEntity.ForeignTotalAmount, 2); // 四舍五入到 2 位小数
+                }
 
-                EditEntity.CollectedMoney = EditEntity.TotalAmount;
             }
             catch (Exception ex)
             {

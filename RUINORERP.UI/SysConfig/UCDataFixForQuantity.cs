@@ -1548,7 +1548,6 @@ namespace RUINORERP.UI.SysConfig
                                                     {
                                                         saleoutdetails.SubtotalTaxAmount = saleoutdetails.SubtotalTransAmount / (1 + saleoutdetails.TaxRate) * saleoutdetails.TaxRate;
                                                     }
-                                                    saleoutdetails.SubtotalUntaxedAmount = saleoutdetails.SubtotalTransAmount - saleoutdetails.SubtotalTaxAmount;
                                                     needupdateOut = true;
                                                 }
                                                 if (rdb成本为0的才修复.Checked && saleoutdetails.Cost == 0)
@@ -1561,7 +1560,6 @@ namespace RUINORERP.UI.SysConfig
                                                     {
                                                         saleoutdetails.SubtotalTaxAmount = saleoutdetails.SubtotalTransAmount / (1 + saleoutdetails.TaxRate) * saleoutdetails.TaxRate;
                                                     }
-                                                    saleoutdetails.SubtotalUntaxedAmount = saleoutdetails.SubtotalTransAmount - saleoutdetails.SubtotalTaxAmount;
                                                     needupdateOut = true;
                                                 }
                                                 if (rdb小于指定成本.Checked && saleoutdetails.Cost != 0)
@@ -1576,7 +1574,6 @@ namespace RUINORERP.UI.SysConfig
                                                         {
                                                             saleoutdetails.SubtotalTaxAmount = saleoutdetails.SubtotalTransAmount / (1 + saleoutdetails.TaxRate) * saleoutdetails.TaxRate;
                                                         }
-                                                        saleoutdetails.SubtotalUntaxedAmount = saleoutdetails.SubtotalTransAmount - saleoutdetails.SubtotalTaxAmount;
                                                         needupdateOut = true;
                                                     }
                                                 }
@@ -1592,7 +1589,6 @@ namespace RUINORERP.UI.SysConfig
                                                         {
                                                             saleoutdetails.SubtotalTaxAmount = saleoutdetails.SubtotalTransAmount / (1 + saleoutdetails.TaxRate) * saleoutdetails.TaxRate;
                                                         }
-                                                        saleoutdetails.SubtotalUntaxedAmount = saleoutdetails.SubtotalTransAmount - saleoutdetails.SubtotalTaxAmount;
                                                         needupdateOut = true;
                                                     }
                                                 }
@@ -1606,7 +1602,6 @@ namespace RUINORERP.UI.SysConfig
                                                     {
                                                         saleoutdetails.SubtotalTaxAmount = saleoutdetails.SubtotalTransAmount / (1 + saleoutdetails.TaxRate) * saleoutdetails.TaxRate;
                                                     }
-                                                    saleoutdetails.SubtotalUntaxedAmount = saleoutdetails.SubtotalTransAmount - saleoutdetails.SubtotalTaxAmount;
                                                     needupdateOut = true;
                                                 }
                                             }
@@ -1618,7 +1613,6 @@ namespace RUINORERP.UI.SysConfig
                                             SaleOut.TotalAmount = SaleOut.tb_SaleOutDetails.Sum(c => c.SubtotalTransAmount);
                                             SaleOut.TotalQty = SaleOut.tb_SaleOutDetails.Sum(c => c.Quantity);
                                             SaleOut.TotalTaxAmount = SaleOut.tb_SaleOutDetails.Sum(c => c.SubtotalTaxAmount);
-                                            SaleOut.TotalUntaxedAmount = SaleOut.tb_SaleOutDetails.Sum(c => c.SubtotalUntaxedAmount);
 
                                             richTextBoxLog.AppendText($"销售出库{SaleOut.SaleOutNo}总金额：{SaleOut.TotalCost} " + "\r\n");
                                         }

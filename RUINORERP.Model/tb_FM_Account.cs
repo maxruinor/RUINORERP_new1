@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：04/22/2025 12:16:05
+// 时间：04/23/2025 23:00:50
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -78,6 +78,21 @@ namespace RUINORERP.Model
             get{return _Subject_id;}
             set{
             SetProperty(ref _Subject_id, value);
+                        }
+        }
+
+        private long _ID;
+        /// <summary>
+        /// 所属公司
+        /// </summary>
+        [AdvQueryAttribute(ColName = "ID",ColDesc = "所属公司")] 
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "ID" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "所属公司" )]
+        [FKRelationAttribute("tb_Company","ID")]
+        public long ID
+        { 
+            get{return _ID;}
+            set{
+            SetProperty(ref _ID, value);
                         }
         }
 
@@ -195,6 +210,11 @@ namespace RUINORERP.Model
 
         [SugarColumn(IsIgnore = true)]
         //[Browsable(false)] 打印报表时的数据源会不显示
+        [Navigate(NavigateType.OneToOne, nameof(ID))]
+        public virtual tb_Company tb_company { get; set; }
+
+        [SugarColumn(IsIgnore = true)]
+        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(Subject_id))]
         public virtual tb_FM_Subject tb_fm_subject { get; set; }
 
@@ -239,7 +259,15 @@ namespace RUINORERP.Model
         //Account_id.FK_FM_PRERECEIVEDPAYMENT_REF_FM_ACCOUNT)
         //tb_FM_Account.Account_id)
 
-         
+        //[Browsable(false)]打印报表时的数据源会不显示
+        [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_PayMethodAccountMapper.Account_id))]
+        public virtual List<tb_PayMethodAccountMapper> tb_PayMethodAccountMappers { get; set; }
+        //tb_PayMethodAccountMapper.Account_id)
+        //Account_id.FK_PAYMETHODACCOUNTMAPPER_REF_FM_ACCOUNT)
+        //tb_FM_Account.Account_id)
+
+        
 
         //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]

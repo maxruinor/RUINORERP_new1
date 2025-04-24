@@ -31,6 +31,8 @@
             this.btnOk = new Krypton.Toolkit.KryptonButton();
             this.btnCancel = new Krypton.Toolkit.KryptonButton();
             this.kryptonPanel1 = new Krypton.Toolkit.KryptonPanel();
+            this.cmbDepartment = new Krypton.Toolkit.KryptonComboBox();
+            this.lblDepartmentID = new Krypton.Toolkit.KryptonLabel();
             this.lblProjectGroupCode = new Krypton.Toolkit.KryptonLabel();
             this.txtProjectGroupCode = new Krypton.Toolkit.KryptonTextBox();
             this.lblProjectGroupName = new Krypton.Toolkit.KryptonLabel();
@@ -47,8 +49,7 @@
             this.dtpEndDate = new Krypton.Toolkit.KryptonDateTimePicker();
             this.lblNotes = new Krypton.Toolkit.KryptonLabel();
             this.txtNotes = new Krypton.Toolkit.KryptonTextBox();
-            this.cmbDepartment = new Krypton.Toolkit.KryptonComboBox();
-            this.lblDepartmentID = new Krypton.Toolkit.KryptonLabel();
+            this.btnAssigneeEmployee = new Krypton.Toolkit.KryptonButton();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel1)).BeginInit();
             this.kryptonPanel1.SuspendLayout();
@@ -57,7 +58,7 @@
             // 
             // btnOk
             // 
-            this.btnOk.Location = new System.Drawing.Point(120, 402);
+            this.btnOk.Location = new System.Drawing.Point(95, 402);
             this.btnOk.Name = "btnOk";
             this.btnOk.Size = new System.Drawing.Size(90, 25);
             this.btnOk.TabIndex = 0;
@@ -75,6 +76,7 @@
             // 
             // kryptonPanel1
             // 
+            this.kryptonPanel1.Controls.Add(this.btnAssigneeEmployee);
             this.kryptonPanel1.Controls.Add(this.cmbDepartment);
             this.kryptonPanel1.Controls.Add(this.lblDepartmentID);
             this.kryptonPanel1.Controls.Add(this.lblProjectGroupCode);
@@ -100,6 +102,23 @@
             this.kryptonPanel1.Name = "kryptonPanel1";
             this.kryptonPanel1.Size = new System.Drawing.Size(492, 460);
             this.kryptonPanel1.TabIndex = 2;
+            // 
+            // cmbDepartment
+            // 
+            this.cmbDepartment.DropDownWidth = 100;
+            this.cmbDepartment.IntegralHeight = false;
+            this.cmbDepartment.Location = new System.Drawing.Point(120, 41);
+            this.cmbDepartment.Name = "cmbDepartment";
+            this.cmbDepartment.Size = new System.Drawing.Size(243, 21);
+            this.cmbDepartment.TabIndex = 73;
+            // 
+            // lblDepartmentID
+            // 
+            this.lblDepartmentID.Location = new System.Drawing.Point(52, 41);
+            this.lblDepartmentID.Name = "lblDepartmentID";
+            this.lblDepartmentID.Size = new System.Drawing.Size(62, 20);
+            this.lblDepartmentID.TabIndex = 72;
+            this.lblDepartmentID.Values.Text = "所属部门";
             // 
             // lblProjectGroupCode
             // 
@@ -228,22 +247,14 @@
             this.txtNotes.Size = new System.Drawing.Size(243, 105);
             this.txtNotes.TabIndex = 9;
             // 
-            // cmbDepartment
+            // btnAssigneeEmployee
             // 
-            this.cmbDepartment.DropDownWidth = 100;
-            this.cmbDepartment.IntegralHeight = false;
-            this.cmbDepartment.Location = new System.Drawing.Point(120, 41);
-            this.cmbDepartment.Name = "cmbDepartment";
-            this.cmbDepartment.Size = new System.Drawing.Size(243, 21);
-            this.cmbDepartment.TabIndex = 73;
-            // 
-            // lblDepartmentID
-            // 
-            this.lblDepartmentID.Location = new System.Drawing.Point(79, 40);
-            this.lblDepartmentID.Name = "lblDepartmentID";
-            this.lblDepartmentID.Size = new System.Drawing.Size(36, 20);
-            this.lblDepartmentID.TabIndex = 72;
-            this.lblDepartmentID.Values.Text = "部门";
+            this.btnAssigneeEmployee.Location = new System.Drawing.Point(390, 402);
+            this.btnAssigneeEmployee.Name = "btnAssigneeEmployee";
+            this.btnAssigneeEmployee.Size = new System.Drawing.Size(90, 25);
+            this.btnAssigneeEmployee.TabIndex = 74;
+            this.btnAssigneeEmployee.Values.Text = "分配组员";
+            this.btnAssigneeEmployee.Click += new System.EventHandler(this.btnAssigneeEmployee_Click);
             // 
             // UCProjectGroupEdit
             // 
@@ -294,5 +305,6 @@
         private Krypton.Toolkit.KryptonDateTimePicker dtpEndDate;
         private Krypton.Toolkit.KryptonComboBox cmbDepartment;
         private Krypton.Toolkit.KryptonLabel lblDepartmentID;
+        private Krypton.Toolkit.KryptonButton btnAssigneeEmployee;
     }
 }

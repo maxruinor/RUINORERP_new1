@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：04/22/2025 12:16:02
+// 时间：04/23/2025 23:00:49
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -43,6 +43,7 @@ namespace RUINORERP.UI
         
         
         
+        
 
          }
 /*
@@ -52,6 +53,7 @@ namespace RUINORERP.UI
         tb_FM_Account entity = new tb_FM_Account();
                      entity.DepartmentID = Int64.Parse(txtDepartmentID.Text);
                         entity.Subject_id = Int64.Parse(txtSubject_id.Text);
+                        entity.ID = Int64.Parse(txtID.Text);
                         entity.Currency_ID = Int64.Parse(txtCurrency_ID.Text);
                         entity.Account_name = txtAccount_name.Text ;
                        entity.Account_No = txtAccount_No.Text ;
@@ -71,6 +73,7 @@ namespace RUINORERP.UI
         _EditEntity = entity;
                        // DataBindingHelper.BindData4Cmb<tb_Department>(entity, k => k.DepartmentID, v=>v.XXNAME, cmbDepartmentID);
           // DataBindingHelper.BindData4Cmb<tb_FM_Subject>(entity, k => k.Subject_id, v=>v.XXNAME, cmbSubject_id);
+          // DataBindingHelper.BindData4Cmb<tb_Company>(entity, k => k.ID, v=>v.XXNAME, cmbID);
           // DataBindingHelper.BindData4Cmb<tb_Currency>(entity, k => k.Currency_ID, v=>v.XXNAME, cmbCurrency_ID);
            DataBindingHelper.BindData4TextBox<tb_FM_Account>(entity, t => t.Account_name, txtAccount_name, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_FM_Account>(entity, t => t.Account_No, txtAccount_No, BindDataType4TextBox.Text,false);

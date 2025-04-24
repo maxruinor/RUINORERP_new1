@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：03/14/2025 20:39:38
+// 时间：04/23/2025 23:00:47
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -248,13 +248,19 @@ namespace RUINORERP.Business
             {
             
                              rs = await _unitOfWorkManage.GetDbClient().UpdateNav<tb_Company>(entity as tb_Company)
-                        .Include(m => m.tb_Departments)
+              
+                    .Include(m => m.tb_Departments)
+                   
+                    .Include(m => m.tb_FM_Accounts)
                     .ExecuteCommandAsync();
                  }
         else    
         {
                         rs = await _unitOfWorkManage.GetDbClient().InsertNav<tb_Company>(entity as tb_Company)
+             
                 .Include(m => m.tb_Departments)
+              
+                .Include(m => m.tb_FM_Accounts)
          
                 .ExecuteCommandAsync();
                                           
@@ -288,7 +294,10 @@ namespace RUINORERP.Business
         public async override Task<List<T>> BaseQueryByAdvancedNavAsync(bool useLike, object dto)
         {
             var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<tb_Company>()
-                                .Includes(m => m.tb_Departments)
+                      
+                        .Includes(m => m.tb_Departments)
+                      
+                        .Includes(m => m.tb_FM_Accounts)
                                         .Where(useLike, dto);
             return await querySqlQueryable.ToListAsync()as List<T>;
         }
@@ -298,7 +307,10 @@ namespace RUINORERP.Business
         {
             tb_Company entity = model as tb_Company;
              bool rs = await _unitOfWorkManage.GetDbClient().DeleteNav<tb_Company>(m => m.ID== entity.ID)
-                                .Include(m => m.tb_Departments)
+                            
+                        .Include(m => m.tb_Departments)
+                 
+                        .Include(m => m.tb_FM_Accounts)
                                         .ExecuteCommandAsync();
             if (rs)
             {
@@ -461,7 +473,10 @@ namespace RUINORERP.Business
          public virtual async Task<List<tb_Company>> QueryByNavAsync()
         {
             List<tb_Company> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_Company>()
-                                            .Includes(t => t.tb_Departments )
+                                       
+                                .Includes(t => t.tb_Departments )
+                             
+                                .Includes(t => t.tb_FM_Accounts )
                         .ToListAsync();
             
             foreach (var item in list)
@@ -481,7 +496,10 @@ namespace RUINORERP.Business
          public virtual async Task<List<tb_Company>> QueryByNavAsync(Expression<Func<tb_Company, bool>> exp)
         {
             List<tb_Company> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_Company>().Where(exp)
-                                            .Includes(t => t.tb_Departments )
+                                      
+                                .Includes(t => t.tb_Departments )
+                               
+                                .Includes(t => t.tb_FM_Accounts )
                         .ToListAsync();
             
             foreach (var item in list)
@@ -501,7 +519,10 @@ namespace RUINORERP.Business
          public virtual List<tb_Company> QueryByNav(Expression<Func<tb_Company, bool>> exp)
         {
             List<tb_Company> list = _unitOfWorkManage.GetDbClient().Queryable<tb_Company>().Where(exp)
-                                        .Includes(t => t.tb_Departments )
+                             
+                            .Includes(t => t.tb_Departments )
+                            
+                            .Includes(t => t.tb_FM_Accounts )
                         .ToList();
             
             foreach (var item in list)
@@ -538,7 +559,10 @@ namespace RUINORERP.Business
         public override async Task<T> BaseQueryByIdNavAsync(object id)
         {
             tb_Company entity = await _unitOfWorkManage.GetDbClient().Queryable<tb_Company>().Where(w => w.ID == (long)id)
-                                         .Includes(t => t.tb_Departments )
+                                      
+                            .Includes(t => t.tb_Departments )
+                         
+                            .Includes(t => t.tb_FM_Accounts )
                         .FirstAsync();
             if(entity!=null)
             {

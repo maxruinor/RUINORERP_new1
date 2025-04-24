@@ -37,9 +37,8 @@
             this.txtStartDate = new Krypton.Toolkit.KryptonDateTimePicker();
             this.cmbDepartment = new Krypton.Toolkit.KryptonComboBox();
             this.kryptonGroupBox4 = new Krypton.Toolkit.KryptonGroupBox();
-            this.kryptonGroupBox2 = new Krypton.Toolkit.KryptonGroupBox();
-            this.rdbis_availableNo = new Krypton.Toolkit.KryptonRadioButton();
-            this.rdbis_availableYes = new Krypton.Toolkit.KryptonRadioButton();
+            this.rdb女 = new RUINORERP.UI.UControls.RadioButtonBind();
+            this.rdb男 = new RUINORERP.UI.UControls.RadioButtonBind();
             this.kryptonGroupBox1 = new Krypton.Toolkit.KryptonGroupBox();
             this.rdbis_enabledNo = new Krypton.Toolkit.KryptonRadioButton();
             this.rdbis_enabledYes = new Krypton.Toolkit.KryptonRadioButton();
@@ -73,11 +72,8 @@
             this.txtIDNumber = new Krypton.Toolkit.KryptonTextBox();
             this.lblEndDate = new Krypton.Toolkit.KryptonLabel();
             this.lblIs_enabled = new Krypton.Toolkit.KryptonLabel();
-            this.lblIs_available = new Krypton.Toolkit.KryptonLabel();
             this.btnCancel = new Krypton.Toolkit.KryptonButton();
             this.btnOk = new Krypton.Toolkit.KryptonButton();
-            this.rdb女 = new RUINORERP.UI.UControls.RadioButtonBind();
-            this.rdb男 = new RUINORERP.UI.UControls.RadioButtonBind();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel1)).BeginInit();
             this.kryptonPanel1.SuspendLayout();
@@ -86,10 +82,6 @@
             ((System.ComponentModel.ISupportInitialize)(this.kryptonGroupBox4.Panel)).BeginInit();
             this.kryptonGroupBox4.Panel.SuspendLayout();
             this.kryptonGroupBox4.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.kryptonGroupBox2)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.kryptonGroupBox2.Panel)).BeginInit();
-            this.kryptonGroupBox2.Panel.SuspendLayout();
-            this.kryptonGroupBox2.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonGroupBox1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonGroupBox1.Panel)).BeginInit();
             this.kryptonGroupBox1.Panel.SuspendLayout();
@@ -106,7 +98,6 @@
             this.kryptonPanel1.Controls.Add(this.txtStartDate);
             this.kryptonPanel1.Controls.Add(this.cmbDepartment);
             this.kryptonPanel1.Controls.Add(this.kryptonGroupBox4);
-            this.kryptonPanel1.Controls.Add(this.kryptonGroupBox2);
             this.kryptonPanel1.Controls.Add(this.kryptonGroupBox1);
             this.kryptonPanel1.Controls.Add(this.lblNotes);
             this.kryptonPanel1.Controls.Add(this.txtNotes);
@@ -138,7 +129,6 @@
             this.kryptonPanel1.Controls.Add(this.txtIDNumber);
             this.kryptonPanel1.Controls.Add(this.lblEndDate);
             this.kryptonPanel1.Controls.Add(this.lblIs_enabled);
-            this.kryptonPanel1.Controls.Add(this.lblIs_available);
             this.kryptonPanel1.Controls.Add(this.btnCancel);
             this.kryptonPanel1.Controls.Add(this.btnOk);
             this.kryptonPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
@@ -228,34 +218,23 @@
             this.kryptonGroupBox4.Size = new System.Drawing.Size(133, 37);
             this.kryptonGroupBox4.TabIndex = 70;
             // 
-            // kryptonGroupBox2
+            // rdb女
             // 
-            this.kryptonGroupBox2.CaptionVisible = false;
-            this.kryptonGroupBox2.Location = new System.Drawing.Point(377, 151);
-            this.kryptonGroupBox2.Name = "kryptonGroupBox2";
+            this.rdb女.Location = new System.Drawing.Point(59, 6);
+            this.rdb女.Name = "rdb女";
+            this.rdb女.SelectValue = "";
+            this.rdb女.Size = new System.Drawing.Size(35, 20);
+            this.rdb女.TabIndex = 69;
+            this.rdb女.Values.Text = "女";
             // 
-            // kryptonGroupBox2.Panel
+            // rdb男
             // 
-            this.kryptonGroupBox2.Panel.Controls.Add(this.rdbis_availableNo);
-            this.kryptonGroupBox2.Panel.Controls.Add(this.rdbis_availableYes);
-            this.kryptonGroupBox2.Size = new System.Drawing.Size(136, 40);
-            this.kryptonGroupBox2.TabIndex = 64;
-            // 
-            // rdbis_availableNo
-            // 
-            this.rdbis_availableNo.Location = new System.Drawing.Point(58, 10);
-            this.rdbis_availableNo.Name = "rdbis_availableNo";
-            this.rdbis_availableNo.Size = new System.Drawing.Size(35, 20);
-            this.rdbis_availableNo.TabIndex = 3;
-            this.rdbis_availableNo.Values.Text = "否";
-            // 
-            // rdbis_availableYes
-            // 
-            this.rdbis_availableYes.Location = new System.Drawing.Point(10, 10);
-            this.rdbis_availableYes.Name = "rdbis_availableYes";
-            this.rdbis_availableYes.Size = new System.Drawing.Size(35, 20);
-            this.rdbis_availableYes.TabIndex = 2;
-            this.rdbis_availableYes.Values.Text = "是";
+            this.rdb男.Location = new System.Drawing.Point(9, 6);
+            this.rdb男.Name = "rdb男";
+            this.rdb男.SelectValue = "";
+            this.rdb男.Size = new System.Drawing.Size(35, 20);
+            this.rdb男.TabIndex = 68;
+            this.rdb男.Values.Text = "男";
             // 
             // kryptonGroupBox1
             // 
@@ -516,14 +495,6 @@
             this.lblIs_enabled.TabIndex = 57;
             this.lblIs_enabled.Values.Text = "是否启用";
             // 
-            // lblIs_available
-            // 
-            this.lblIs_available.Location = new System.Drawing.Point(301, 161);
-            this.lblIs_available.Name = "lblIs_available";
-            this.lblIs_available.Size = new System.Drawing.Size(62, 20);
-            this.lblIs_available.TabIndex = 59;
-            this.lblIs_available.Values.Text = "是否可用";
-            // 
             // btnCancel
             // 
             this.btnCancel.Location = new System.Drawing.Point(333, 479);
@@ -541,24 +512,6 @@
             this.btnOk.TabIndex = 0;
             this.btnOk.Values.Text = "确定";
             this.btnOk.Click += new System.EventHandler(this.btnOk_Click);
-            // 
-            // rdb女
-            // 
-            this.rdb女.Location = new System.Drawing.Point(59, 6);
-            this.rdb女.Name = "rdb女";
-            this.rdb女.SelectValue = "";
-            this.rdb女.Size = new System.Drawing.Size(35, 20);
-            this.rdb女.TabIndex = 69;
-            this.rdb女.Values.Text = "女";
-            // 
-            // rdb男
-            // 
-            this.rdb男.Location = new System.Drawing.Point(9, 6);
-            this.rdb男.Name = "rdb男";
-            this.rdb男.SelectValue = "";
-            this.rdb男.Size = new System.Drawing.Size(35, 20);
-            this.rdb男.TabIndex = 68;
-            this.rdb男.Values.Text = "男";
             // 
             // UCEmployeeEdit
             // 
@@ -578,11 +531,6 @@
             this.kryptonGroupBox4.Panel.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonGroupBox4)).EndInit();
             this.kryptonGroupBox4.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.kryptonGroupBox2.Panel)).EndInit();
-            this.kryptonGroupBox2.Panel.ResumeLayout(false);
-            this.kryptonGroupBox2.Panel.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.kryptonGroupBox2)).EndInit();
-            this.kryptonGroupBox2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.kryptonGroupBox1.Panel)).EndInit();
             this.kryptonGroupBox1.Panel.ResumeLayout(false);
             this.kryptonGroupBox1.Panel.PerformLayout();
@@ -625,12 +573,8 @@
         private Krypton.Toolkit.KryptonTextBox txtIDNumber;
         private Krypton.Toolkit.KryptonLabel lblEndDate;
         private Krypton.Toolkit.KryptonLabel lblIs_enabled;
-        private Krypton.Toolkit.KryptonLabel lblIs_available;
         private Krypton.Toolkit.KryptonLabel lblNotes;
         private Krypton.Toolkit.KryptonTextBox txtNotes;
-        private Krypton.Toolkit.KryptonGroupBox kryptonGroupBox2;
-        private Krypton.Toolkit.KryptonRadioButton rdbis_availableNo;
-        private Krypton.Toolkit.KryptonRadioButton rdbis_availableYes;
         private Krypton.Toolkit.KryptonGroupBox kryptonGroupBox1;
         private Krypton.Toolkit.KryptonRadioButton rdbis_enabledNo;
         private Krypton.Toolkit.KryptonRadioButton rdbis_enabledYes;

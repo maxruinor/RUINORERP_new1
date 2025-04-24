@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：04/22/2025 12:16:04
+// 时间：04/23/2025 23:00:49
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -31,7 +31,7 @@ namespace RUINORERP.Business
     /// <summary>
     /// 付款账号管理
     /// </summary>
-    public partial class tb_FM_AccountController<T>:BaseController<T> where T : class
+    public partial class tb_FM_AccountController<T> : BaseController<T> where T : class
     {
         /// <summary>
         /// 本为私有修改为公有，暴露出来方便使用
@@ -39,28 +39,28 @@ namespace RUINORERP.Business
         //public readonly IUnitOfWorkManage _unitOfWorkManage;
         //public readonly ILogger<BaseController<T>> _logger;
         public Itb_FM_AccountServices _tb_FM_AccountServices { get; set; }
-       // private readonly ApplicationContext _appContext;
-       
-        public tb_FM_AccountController(ILogger<tb_FM_AccountController<T>> logger, IUnitOfWorkManage unitOfWorkManage,tb_FM_AccountServices tb_FM_AccountServices , ApplicationContext appContext = null): base(logger, unitOfWorkManage, appContext)
+        // private readonly ApplicationContext _appContext;
+
+        public tb_FM_AccountController(ILogger<tb_FM_AccountController<T>> logger, IUnitOfWorkManage unitOfWorkManage, tb_FM_AccountServices tb_FM_AccountServices, ApplicationContext appContext = null) : base(logger, unitOfWorkManage, appContext)
         {
             _logger = logger;
-           _unitOfWorkManage = unitOfWorkManage;
-           _tb_FM_AccountServices = tb_FM_AccountServices;
+            _unitOfWorkManage = unitOfWorkManage;
+            _tb_FM_AccountServices = tb_FM_AccountServices;
             _appContext = appContext;
         }
-      
-        
+
+
         public ValidationResult Validator(tb_FM_Account info)
         {
 
-           // tb_FM_AccountValidator validator = new tb_FM_AccountValidator();
-           tb_FM_AccountValidator validator = _appContext.GetRequiredService<tb_FM_AccountValidator>();
+            // tb_FM_AccountValidator validator = new tb_FM_AccountValidator();
+            tb_FM_AccountValidator validator = _appContext.GetRequiredService<tb_FM_AccountValidator>();
             ValidationResult results = validator.Validate(info);
             return results;
         }
-        
+
         #region 扩展方法
-        
+
         /// <summary>
         /// 某字段是否存在
         /// </summary>
@@ -70,8 +70,8 @@ namespace RUINORERP.Business
         {
             return _unitOfWorkManage.GetDbClient().Queryable<T>().Where(exp).Any();
         }
-      
-        
+
+
         /// <summary>
         /// 雪花ID模式下的新增和修改
         /// </summary>
@@ -110,14 +110,14 @@ namespace RUINORERP.Business
             }
             return rr;
         }
-        
-        
+
+
         /// <summary>
         /// 雪花ID模式下的新增和修改
         /// </summary>
         /// <param name="entity"></param>
         /// <returns></returns>
-        public async override Task<ReturnResults<T>>  BaseSaveOrUpdate(T model)
+        public async override Task<ReturnResults<T>> BaseSaveOrUpdate(T model)
         {
             ReturnResults<T> rr = new ReturnResults<T>();
             tb_FM_Account entity = model as tb_FM_Account;
@@ -136,7 +136,7 @@ namespace RUINORERP.Business
                 }
                 else
                 {
-                    Returnobj = await _tb_FM_AccountServices.AddReEntityAsync(entity) as T ;
+                    Returnobj = await _tb_FM_AccountServices.AddReEntityAsync(entity) as T;
                     MyCacheManager.Instance.UpdateEntityList<tb_FM_Account>(entity);
                 }
 
@@ -151,8 +151,8 @@ namespace RUINORERP.Business
             }
             return rr;
         }
-        
-        public async override Task<List<T>> BaseQueryAsync(string wheresql) 
+
+        public async override Task<List<T>> BaseQueryAsync(string wheresql)
         {
             List<T> list = await _tb_FM_AccountServices.QueryAsync(wheresql) as List<T>;
             foreach (var item in list)
@@ -163,11 +163,11 @@ namespace RUINORERP.Business
             if (list != null)
             {
                 MyCacheManager.Instance.UpdateEntityList<List<T>>(list);
-             }
+            }
             return list;
         }
-        
-        public async override Task<List<T>> BaseQueryAsync() 
+
+        public async override Task<List<T>> BaseQueryAsync()
         {
             List<T> list = await _tb_FM_AccountServices.QueryAsync() as List<T>;
             foreach (var item in list)
@@ -178,11 +178,11 @@ namespace RUINORERP.Business
             if (list != null)
             {
                 MyCacheManager.Instance.UpdateEntityList<List<T>>(list);
-             }
+            }
             return list;
         }
-        
-        
+
+
         public async override Task<bool> BaseDeleteAsync(T model)
         {
             tb_FM_Account entity = model as tb_FM_Account;
@@ -194,44 +194,44 @@ namespace RUINORERP.Business
             }
             return rs;
         }
-        
+
         public async override Task<bool> BaseDeleteAsync(List<T> models)
         {
-            bool rs=false;
+            bool rs = false;
             List<tb_FM_Account> entitys = models as List<tb_FM_Account>;
             int c = await _unitOfWorkManage.GetDbClient().Deleteable<tb_FM_Account>(entitys).ExecuteCommandAsync();
-            if (c>0)
+            if (c > 0)
             {
-                rs=true;
+                rs = true;
                 ////生成时暂时只考虑了一个主键的情况
-                 long[] result = entitys.Select(e => e.Account_id).ToArray();
+                long[] result = entitys.Select(e => e.Account_id).ToArray();
                 MyCacheManager.Instance.DeleteEntityList<tb_FM_Account>(result);
             }
             return rs;
         }
-        
+
         public override ValidationResult BaseValidator(T info)
         {
             //tb_FM_AccountValidator validator = new tb_FM_AccountValidator();
-           tb_FM_AccountValidator validator = _appContext.GetRequiredService<tb_FM_AccountValidator>();
+            tb_FM_AccountValidator validator = _appContext.GetRequiredService<tb_FM_AccountValidator>();
             ValidationResult results = validator.Validate(info as tb_FM_Account);
             return results;
         }
-        
-        
-        public async override Task<List<T>> BaseQueryByAdvancedAsync(bool useLike,object dto) 
+
+
+        public async override Task<List<T>> BaseQueryByAdvancedAsync(bool useLike, object dto)
         {
-            var  querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<T>().Where(useLike,dto);
+            var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<T>().Where(useLike, dto);
             return await querySqlQueryable.ToListAsync();
         }
-        
+
         public async override Task<ReturnMainSubResults<T>> BaseSaveOrUpdateWithChild<C>(T model) where C : class
         {
             bool rs = false;
             RevertCommand command = new RevertCommand();
             ReturnMainSubResults<T> rsms = new ReturnMainSubResults<T>();
-                             //缓存当前编辑的对象。如果撤销就回原来的值
-                T oldobj = CloneHelper.DeepCloneObject<T>((T)model);
+            //缓存当前编辑的对象。如果撤销就回原来的值
+            T oldobj = CloneHelper.DeepCloneObject<T>((T)model);
             try
             {
 
@@ -241,39 +241,43 @@ namespace RUINORERP.Business
                     //Undo操作会执行到的代码
                     CloneHelper.SetValues<T>(entity, oldobj);
                 };
-                       // 开启事务，保证数据一致性
+                // 开启事务，保证数据一致性
                 _unitOfWorkManage.BeginTran();
-                
-            if (entity.Account_id > 0)
-            {
-            
-                             rs = await _unitOfWorkManage.GetDbClient().UpdateNav<tb_FM_Account>(entity as tb_FM_Account)
-                        .Include(m => m.tb_FM_OtherExpenseDetails)
-                    .Include(m => m.tb_FM_PaymentRecords)
-                    .Include(m => m.tb_FM_PaymentApplications)
-                    .Include(m => m.tb_FM_ExpenseClaimDetails)
-                    .Include(m => m.tb_FM_PreReceivedPayments)
-                    .Include(m => m.tb_FM_ReceivablePayables)
-                    .ExecuteCommandAsync();
-                 }
-        else    
-        {
-                        rs = await _unitOfWorkManage.GetDbClient().InsertNav<tb_FM_Account>(entity as tb_FM_Account)
-                .Include(m => m.tb_FM_OtherExpenseDetails)
-                .Include(m => m.tb_FM_PaymentRecords)
-                .Include(m => m.tb_FM_PaymentApplications)
-                .Include(m => m.tb_FM_ExpenseClaimDetails)
-                .Include(m => m.tb_FM_PreReceivedPayments)
-                .Include(m => m.tb_FM_ReceivablePayables)
-         
-                .ExecuteCommandAsync();
-                                          
-                     
-        }
+
+                if (entity.Account_id > 0)
+                {
+
+                    rs = await _unitOfWorkManage.GetDbClient().UpdateNav<tb_FM_Account>(entity as tb_FM_Account)
+               .Include(m => m.tb_FM_OtherExpenseDetails)
+           .Include(m => m.tb_FM_PaymentRecords)
+           .Include(m => m.tb_FM_PaymentApplications)
+           .Include(m => m.tb_FM_ExpenseClaimDetails)
+           .Include(m => m.tb_FM_PreReceivedPayments)
+           .Include(m => m.tb_PayMethodAccountMappers)
         
+           .Include(m => m.tb_FM_ReceivablePayables)
+           .ExecuteCommandAsync();
+                }
+                else
+                {
+                    rs = await _unitOfWorkManage.GetDbClient().InsertNav<tb_FM_Account>(entity as tb_FM_Account)
+            .Include(m => m.tb_FM_OtherExpenseDetails)
+            .Include(m => m.tb_FM_PaymentRecords)
+            .Include(m => m.tb_FM_PaymentApplications)
+            .Include(m => m.tb_FM_ExpenseClaimDetails)
+            .Include(m => m.tb_FM_PreReceivedPayments)
+            .Include(m => m.tb_PayMethodAccountMappers)
+          
+            .Include(m => m.tb_FM_ReceivablePayables)
+
+            .ExecuteCommandAsync();
+
+
+                }
+
                 // 注意信息的完整性
                 _unitOfWorkManage.CommitTran();
-                rsms.ReturnObject = entity as T ;
+                rsms.ReturnObject = entity as T;
                 entity.PrimaryKeyID = entity.Account_id;
                 rsms.Succeeded = rs;
             }
@@ -289,10 +293,10 @@ namespace RUINORERP.Business
 
             return rsms;
         }
-        
+
         #endregion
-        
-        
+
+
         #region override mothed
 
         public async override Task<List<T>> BaseQueryByAdvancedNavAsync(bool useLike, object dto)
@@ -303,23 +307,27 @@ namespace RUINORERP.Business
                         .Includes(m => m.tb_FM_PaymentApplications)
                         .Includes(m => m.tb_FM_ExpenseClaimDetails)
                         .Includes(m => m.tb_FM_PreReceivedPayments)
+                        .Includes(m => m.tb_PayMethodAccountMappers)
+        
                         .Includes(m => m.tb_FM_ReceivablePayables)
                                         .Where(useLike, dto);
-            return await querySqlQueryable.ToListAsync()as List<T>;
+            return await querySqlQueryable.ToListAsync() as List<T>;
         }
 
 
-        public async override Task<bool> BaseDeleteByNavAsync(T model) 
+        public async override Task<bool> BaseDeleteByNavAsync(T model)
         {
             tb_FM_Account entity = model as tb_FM_Account;
-             bool rs = await _unitOfWorkManage.GetDbClient().DeleteNav<tb_FM_Account>(m => m.Account_id== entity.Account_id)
-                                .Include(m => m.tb_FM_OtherExpenseDetails)
-                        .Include(m => m.tb_FM_PaymentRecords)
-                        .Include(m => m.tb_FM_PaymentApplications)
-                        .Include(m => m.tb_FM_ExpenseClaimDetails)
-                        .Include(m => m.tb_FM_PreReceivedPayments)
-                        .Include(m => m.tb_FM_ReceivablePayables)
-                                        .ExecuteCommandAsync();
+            bool rs = await _unitOfWorkManage.GetDbClient().DeleteNav<tb_FM_Account>(m => m.Account_id == entity.Account_id)
+                               .Include(m => m.tb_FM_OtherExpenseDetails)
+                       .Include(m => m.tb_FM_PaymentRecords)
+                       .Include(m => m.tb_FM_PaymentApplications)
+                       .Include(m => m.tb_FM_ExpenseClaimDetails)
+                       .Include(m => m.tb_FM_PreReceivedPayments)
+                       .Include(m => m.tb_PayMethodAccountMappers)
+            
+                       .Include(m => m.tb_FM_ReceivablePayables)
+                                       .ExecuteCommandAsync();
             if (rs)
             {
                 //////生成时暂时只考虑了一个主键的情况
@@ -328,68 +336,68 @@ namespace RUINORERP.Business
             return rs;
         }
         #endregion
-        
-        
-        
+
+
+
         public tb_FM_Account AddReEntity(tb_FM_Account entity)
         {
-            tb_FM_Account AddEntity =  _tb_FM_AccountServices.AddReEntity(entity);
+            tb_FM_Account AddEntity = _tb_FM_AccountServices.AddReEntity(entity);
             MyCacheManager.Instance.UpdateEntityList<tb_FM_Account>(AddEntity);
             entity.ActionStatus = ActionStatus.无操作;
             return AddEntity;
         }
-        
-         public async Task<tb_FM_Account> AddReEntityAsync(tb_FM_Account entity)
+
+        public async Task<tb_FM_Account> AddReEntityAsync(tb_FM_Account entity)
         {
             tb_FM_Account AddEntity = await _tb_FM_AccountServices.AddReEntityAsync(entity);
             MyCacheManager.Instance.UpdateEntityList<tb_FM_Account>(AddEntity);
             entity.ActionStatus = ActionStatus.无操作;
             return AddEntity;
         }
-        
+
         public async Task<long> AddAsync(tb_FM_Account entity)
         {
             long id = await _tb_FM_AccountServices.Add(entity);
-            if(id>0)
+            if (id > 0)
             {
-                 MyCacheManager.Instance.UpdateEntityList<tb_FM_Account>(entity);
+                MyCacheManager.Instance.UpdateEntityList<tb_FM_Account>(entity);
             }
             return id;
         }
-        
+
         public async Task<List<long>> AddAsync(List<tb_FM_Account> infos)
         {
             List<long> ids = await _tb_FM_AccountServices.Add(infos);
-            if(ids.Count>0)//成功的个数 这里缓存 对不对呢？
+            if (ids.Count > 0)//成功的个数 这里缓存 对不对呢？
             {
-                 MyCacheManager.Instance.UpdateEntityList<tb_FM_Account>(infos);
+                MyCacheManager.Instance.UpdateEntityList<tb_FM_Account>(infos);
             }
             return ids;
         }
-        
-        
+
+
         public async Task<bool> DeleteAsync(tb_FM_Account entity)
         {
             bool rs = await _tb_FM_AccountServices.Delete(entity);
             if (rs)
             {
                 MyCacheManager.Instance.DeleteEntityList<tb_FM_Account>(entity);
-                
+
             }
             return rs;
         }
-        
+
         public async Task<bool> UpdateAsync(tb_FM_Account entity)
         {
             bool rs = await _tb_FM_AccountServices.Update(entity);
             if (rs)
             {
-                 MyCacheManager.Instance.UpdateEntityList<tb_FM_Account>(entity);
+                MyCacheManager.Instance.UpdateEntityList<tb_FM_Account>(entity);
                 entity.ActionStatus = ActionStatus.无操作;
             }
             return rs;
         }
-        
+
         public async Task<bool> DeleteAsync(long id)
         {
             bool rs = await _tb_FM_AccountServices.DeleteById(id);
@@ -399,8 +407,8 @@ namespace RUINORERP.Business
             }
             return rs;
         }
-        
-         public async Task<bool> DeleteAsync(long[] ids)
+
+        public async Task<bool> DeleteAsync(long[] ids)
         {
             bool rs = await _tb_FM_AccountServices.DeleteByIds(ids);
             if (rs)
@@ -409,10 +417,10 @@ namespace RUINORERP.Business
             }
             return rs;
         }
-        
+
         public virtual async Task<List<tb_FM_Account>> QueryAsync()
         {
-            List<tb_FM_Account> list = await  _tb_FM_AccountServices.QueryAsync();
+            List<tb_FM_Account> list = await _tb_FM_AccountServices.QueryAsync();
             foreach (var item in list)
             {
                 item.HasChanged = false;
@@ -420,10 +428,10 @@ namespace RUINORERP.Business
             MyCacheManager.Instance.UpdateEntityList<tb_FM_Account>(list);
             return list;
         }
-        
+
         public virtual List<tb_FM_Account> Query()
         {
-            List<tb_FM_Account> list =  _tb_FM_AccountServices.Query();
+            List<tb_FM_Account> list = _tb_FM_AccountServices.Query();
             foreach (var item in list)
             {
                 item.HasChanged = false;
@@ -431,10 +439,10 @@ namespace RUINORERP.Business
             MyCacheManager.Instance.UpdateEntityList<tb_FM_Account>(list);
             return list;
         }
-        
+
         public virtual List<tb_FM_Account> Query(string wheresql)
         {
-            List<tb_FM_Account> list =  _tb_FM_AccountServices.Query(wheresql);
+            List<tb_FM_Account> list = _tb_FM_AccountServices.Query(wheresql);
             foreach (var item in list)
             {
                 item.HasChanged = false;
@@ -442,8 +450,8 @@ namespace RUINORERP.Business
             MyCacheManager.Instance.UpdateEntityList<tb_FM_Account>(list);
             return list;
         }
-        
-        public virtual async Task<List<tb_FM_Account>> QueryAsync(string wheresql) 
+
+        public virtual async Task<List<tb_FM_Account>> QueryAsync(string wheresql)
         {
             List<tb_FM_Account> list = await _tb_FM_AccountServices.QueryAsync(wheresql);
             foreach (var item in list)
@@ -453,7 +461,7 @@ namespace RUINORERP.Business
             MyCacheManager.Instance.UpdateEntityList<tb_FM_Account>(list);
             return list;
         }
-        
+
 
 
         /// <summary>
@@ -471,32 +479,35 @@ namespace RUINORERP.Business
             MyCacheManager.Instance.UpdateEntityList<tb_FM_Account>(list);
             return list;
         }
-        
-        
-        
+
+
+
         /// <summary>
         /// 无参数异步导航查询
         /// </summary>
         /// <returns>数据列表</returns>
-         public virtual async Task<List<tb_FM_Account>> QueryByNavAsync()
+        public virtual async Task<List<tb_FM_Account>> QueryByNavAsync()
         {
             List<tb_FM_Account> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_FM_Account>()
-                               .Includes(t => t.tb_department )
-                               .Includes(t => t.tb_currency )
-                               .Includes(t => t.tb_fm_subject )
-                                            .Includes(t => t.tb_FM_OtherExpenseDetails )
-                                .Includes(t => t.tb_FM_PaymentRecords )
-                                .Includes(t => t.tb_FM_PaymentApplications )
-                                .Includes(t => t.tb_FM_ExpenseClaimDetails )
-                                .Includes(t => t.tb_FM_PreReceivedPayments )
-                                .Includes(t => t.tb_FM_ReceivablePayables )
+                               .Includes(t => t.tb_department)
+                               .Includes(t => t.tb_currency)
+                               .Includes(t => t.tb_company)
+                               .Includes(t => t.tb_fm_subject)
+                                            .Includes(t => t.tb_FM_OtherExpenseDetails)
+                                .Includes(t => t.tb_FM_PaymentRecords)
+                                .Includes(t => t.tb_FM_PaymentApplications)
+                                .Includes(t => t.tb_FM_ExpenseClaimDetails)
+                                .Includes(t => t.tb_FM_PreReceivedPayments)
+                                .Includes(t => t.tb_PayMethodAccountMappers)
+                        
+                                .Includes(t => t.tb_FM_ReceivablePayables)
                         .ToListAsync();
-            
+
             foreach (var item in list)
             {
                 item.HasChanged = false;
             }
-            
+
             MyCacheManager.Instance.UpdateEntityList<tb_FM_Account>(list);
             return list;
         }
@@ -506,66 +517,72 @@ namespace RUINORERP.Business
         /// 带参数异步导航查询
         /// </summary>
         /// <returns>数据列表</returns>
-         public virtual async Task<List<tb_FM_Account>> QueryByNavAsync(Expression<Func<tb_FM_Account, bool>> exp)
+        public virtual async Task<List<tb_FM_Account>> QueryByNavAsync(Expression<Func<tb_FM_Account, bool>> exp)
         {
             List<tb_FM_Account> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_FM_Account>().Where(exp)
-                               .Includes(t => t.tb_department )
-                               .Includes(t => t.tb_currency )
-                               .Includes(t => t.tb_fm_subject )
-                                            .Includes(t => t.tb_FM_OtherExpenseDetails )
-                                .Includes(t => t.tb_FM_PaymentRecords )
-                                .Includes(t => t.tb_FM_PaymentApplications )
-                                .Includes(t => t.tb_FM_ExpenseClaimDetails )
-                                .Includes(t => t.tb_FM_PreReceivedPayments )
-                                .Includes(t => t.tb_FM_ReceivablePayables )
+                               .Includes(t => t.tb_department)
+                               .Includes(t => t.tb_currency)
+                               .Includes(t => t.tb_company)
+                               .Includes(t => t.tb_fm_subject)
+                                            .Includes(t => t.tb_FM_OtherExpenseDetails)
+                                .Includes(t => t.tb_FM_PaymentRecords)
+                                .Includes(t => t.tb_FM_PaymentApplications)
+                                .Includes(t => t.tb_FM_ExpenseClaimDetails)
+                                .Includes(t => t.tb_FM_PreReceivedPayments)
+                                .Includes(t => t.tb_PayMethodAccountMappers)
+                    
+                                .Includes(t => t.tb_FM_ReceivablePayables)
                         .ToListAsync();
-            
+
             foreach (var item in list)
             {
                 item.HasChanged = false;
             }
-            
+
             MyCacheManager.Instance.UpdateEntityList<tb_FM_Account>(list);
             return list;
         }
-        
-        
+
+
         /// <summary>
         /// 带参数异步导航查询
         /// </summary>
         /// <returns>数据列表</returns>
-         public virtual List<tb_FM_Account> QueryByNav(Expression<Func<tb_FM_Account, bool>> exp)
+        public virtual List<tb_FM_Account> QueryByNav(Expression<Func<tb_FM_Account, bool>> exp)
         {
             List<tb_FM_Account> list = _unitOfWorkManage.GetDbClient().Queryable<tb_FM_Account>().Where(exp)
-                            .Includes(t => t.tb_department )
-                            .Includes(t => t.tb_currency )
-                            .Includes(t => t.tb_fm_subject )
-                                        .Includes(t => t.tb_FM_OtherExpenseDetails )
-                            .Includes(t => t.tb_FM_PaymentRecords )
-                            .Includes(t => t.tb_FM_PaymentApplications )
-                            .Includes(t => t.tb_FM_ExpenseClaimDetails )
-                            .Includes(t => t.tb_FM_PreReceivedPayments )
-                            .Includes(t => t.tb_FM_ReceivablePayables )
+                            .Includes(t => t.tb_department)
+                            .Includes(t => t.tb_currency)
+                            .Includes(t => t.tb_company)
+                            .Includes(t => t.tb_fm_subject)
+                                        .Includes(t => t.tb_FM_OtherExpenseDetails)
+                            .Includes(t => t.tb_FM_PaymentRecords)
+                            .Includes(t => t.tb_FM_PaymentApplications)
+                            .Includes(t => t.tb_FM_ExpenseClaimDetails)
+                            .Includes(t => t.tb_FM_PreReceivedPayments)
+                            .Includes(t => t.tb_PayMethodAccountMappers)
+                     
+                            .Includes(t => t.tb_FM_ReceivablePayables)
                         .ToList();
-            
+
             foreach (var item in list)
             {
                 item.HasChanged = false;
             }
-            
+
             MyCacheManager.Instance.UpdateEntityList<tb_FM_Account>(list);
             return list;
         }
-        
-        
+
+
 
         /// <summary>
         /// 高级查询
         /// </summary>
         /// <returns></returns>
-        public async Task<List<tb_FM_Account>> QueryByAdvancedAsync(bool useLike,object dto)
+        public async Task<List<tb_FM_Account>> QueryByAdvancedAsync(bool useLike, object dto)
         {
-            var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<tb_FM_Account>().Where(useLike,dto);
+            var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<tb_FM_Account>().Where(useLike, dto);
             return await querySqlQueryable.ToListAsync();
         }
 
@@ -576,23 +593,26 @@ namespace RUINORERP.Business
             T entity = await _tb_FM_AccountServices.QueryByIdAsync(id) as T;
             return entity;
         }
-        
-        
-        
+
+
+
         public override async Task<T> BaseQueryByIdNavAsync(object id)
         {
             tb_FM_Account entity = await _unitOfWorkManage.GetDbClient().Queryable<tb_FM_Account>().Where(w => w.Account_id == (long)id)
-                             .Includes(t => t.tb_department )
-                            .Includes(t => t.tb_currency )
-                            .Includes(t => t.tb_fm_subject )
-                                        .Includes(t => t.tb_FM_OtherExpenseDetails )
-                            .Includes(t => t.tb_FM_PaymentRecords )
-                            .Includes(t => t.tb_FM_PaymentApplications )
-                            .Includes(t => t.tb_FM_ExpenseClaimDetails )
-                            .Includes(t => t.tb_FM_PreReceivedPayments )
-                            .Includes(t => t.tb_FM_ReceivablePayables )
+                             .Includes(t => t.tb_department)
+                            .Includes(t => t.tb_currency)
+                            .Includes(t => t.tb_company)
+                            .Includes(t => t.tb_fm_subject)
+                                        .Includes(t => t.tb_FM_OtherExpenseDetails)
+                            .Includes(t => t.tb_FM_PaymentRecords)
+                            .Includes(t => t.tb_FM_PaymentApplications)
+                            .Includes(t => t.tb_FM_ExpenseClaimDetails)
+                            .Includes(t => t.tb_FM_PreReceivedPayments)
+                            .Includes(t => t.tb_PayMethodAccountMappers)
+              
+                            .Includes(t => t.tb_FM_ReceivablePayables)
                         .FirstAsync();
-            if(entity!=null)
+            if (entity != null)
             {
                 entity.HasChanged = false;
             }
@@ -600,12 +620,12 @@ namespace RUINORERP.Business
             MyCacheManager.Instance.UpdateEntityList<tb_FM_Account>(entity);
             return entity as T;
         }
-        
-        
-        
-        
-        
-        
+
+
+
+
+
+
     }
 }
 

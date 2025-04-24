@@ -90,13 +90,12 @@ namespace RUINORERP.UI.MRP.BOM
             List<KeyValuePair<object, string>> kvlist1 = new List<KeyValuePair<object, string>>();
             kvlist1.Add(new KeyValuePair<object, string>(true, "是"));
             kvlist1.Add(new KeyValuePair<object, string>(false, "否"));
-            System.Linq.Expressions.Expression<Func<tb_Employee, bool?>> expr1;
-            expr1 = (p) => p.Is_available;// == name;
+    
             System.Linq.Expressions.Expression<Func<tb_Employee, bool?>> expr2;
             expr2 = (p) => p.Is_enabled;// == name;
-            string colName1 = expr1.GetMemberInfo().Name;
+ 
             string colName2 = expr2.GetMemberInfo().Name;
-            ColNameDataDictionary.TryAdd(colName1, kvlist1);
+            ColNameDataDictionary.TryAdd(colName2, kvlist1);
 
 
             List<tb_BOM_S> bomlist = new List<tb_BOM_S>();

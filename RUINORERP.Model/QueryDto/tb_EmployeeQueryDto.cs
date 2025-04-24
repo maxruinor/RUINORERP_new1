@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：11/29/2024 23:20:19
+// 时间：04/24/2025 14:14:52
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -356,19 +356,6 @@ namespace RUINORERP.Model.QueryDto
         { 
             get{return _PhoneNumber;}
             set{SetProperty(ref _PhoneNumber, value);}
-        }
-     
-
-        private long? _BankAccount_id;
-        /// <summary>
-        /// 
-        /// </summary>
-        [AdvQueryAttribute(ColName = "BankAccount_id",ColDesc = "")]
-        [SugarColumn(ColumnDataType = "bigint",SqlParameterDbType ="Int64",ColumnName = "BankAccount_id",IsNullable = true,ColumnDescription = "" )]
-        public long? BankAccount_id 
-        { 
-            get{return _BankAccount_id;}
-            set{SetProperty(ref _BankAccount_id, value);}
         }
 
 

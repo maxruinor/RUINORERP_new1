@@ -926,12 +926,11 @@ namespace RUINORERP.Business
                     {
                         tipsMsg.Add($"当前出库单已经有退库记录！");
                     }
+
+                    //订金 及订金外币 要如何退? TODO
                 }
 
-
-
                 entity.ReturnDate = System.DateTime.Now;
-
 
 
                 BusinessHelper.Instance.InitEntity(entity);

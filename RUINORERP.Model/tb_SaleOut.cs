@@ -223,6 +223,38 @@ namespace RUINORERP.Model
             }
         }
 
+        private long? _Currency_ID;
+        /// <summary>
+        /// 币别
+        /// </summary>
+        [AdvQueryAttribute(ColName = "Currency_ID", ColDesc = "币别")]
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType = "Int64", ColumnName = "Currency_ID", DecimalDigits = 0, IsNullable = true, ColumnDescription = "币别")]
+        [FKRelationAttribute("tb_Currency", "Currency_ID")]
+        public long? Currency_ID
+        {
+            get { return _Currency_ID; }
+            set
+            {
+                SetProperty(ref _Currency_ID, value);
+            }
+        }
+
+        private decimal? _ExchangeRate = 1;
+        /// <summary>
+        /// 汇率
+        /// </summary>
+        [AdvQueryAttribute(ColName = "ExchangeRate", ColDesc = "汇率")]
+        [SugarColumn(ColumnDataType = "decimal", SqlParameterDbType = "Decimal", ColumnName = "ExchangeRate", DecimalDigits = 4, IsNullable = true, ColumnDescription = "汇率")]
+        public decimal? ExchangeRate
+        {
+            get { return _ExchangeRate; }
+            set
+            {
+                SetProperty(ref _ExchangeRate, value);
+            }
+        }
+
+
         private decimal _TotalAmount = ((0));
         /// <summary>
         /// 总金额
@@ -373,21 +405,7 @@ namespace RUINORERP.Model
             }
         }
 
-        private decimal? _CollectedMoney = ((0));
-        /// <summary>
-        /// 实收金额
-        /// </summary>
-        [AdvQueryAttribute(ColName = "CollectedMoney", ColDesc = "实收金额")]
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType = "Decimal", ColumnName = "CollectedMoney", DecimalDigits = 4, IsNullable = true, ColumnDescription = "实收金额")]
-        public decimal? CollectedMoney
-        {
-            get { return _CollectedMoney; }
-            set
-            {
-                SetProperty(ref _CollectedMoney, value);
-            }
-        }
-
+ 
         private bool _isdeleted = false;
         /// <summary>
         /// 逻辑删除
@@ -584,6 +602,21 @@ namespace RUINORERP.Model
             }
         }
 
+        private decimal _ForeignDeposit = ((0));
+        /// <summary>
+        /// 订金外币-只是显示，并且和运费收入一样，多次出库时会只算第一次
+        /// </summary>
+        [AdvQueryAttribute(ColName = "ForeignDeposit", ColDesc = "订金外币")]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType = "Decimal", ColumnName = "ForeignDeposit", DecimalDigits = 4, IsNullable = false, ColumnDescription = "订金外币")]
+        public decimal ForeignDeposit
+        {
+            get { return _ForeignDeposit; }
+            set
+            {
+                SetProperty(ref _ForeignDeposit, value);
+            }
+        }
+
         private int? _TaxDeductionType;
         /// <summary>
         /// 扣税类型
@@ -674,18 +707,18 @@ namespace RUINORERP.Model
             }
         }
 
-        private decimal _TotalUntaxedAmount;
+        private decimal _ForeignTotalAmount = ((0));
         /// <summary>
-        /// 未税本位币
+        /// 总金额外币
         /// </summary>
-        [AdvQueryAttribute(ColName = "TotalUntaxedAmount", ColDesc = "未税本位币")]
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType = "Decimal", ColumnName = "TotalUntaxedAmount", DecimalDigits = 4, IsNullable = false, ColumnDescription = "未税本位币")]
-        public decimal TotalUntaxedAmount
+        [AdvQueryAttribute(ColName = "ForeignTotalAmount", ColDesc = "总金额外币")]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType = "Decimal", ColumnName = "ForeignTotalAmount", DecimalDigits = 4, IsNullable = false, ColumnDescription = "总金额外币")]
+        public decimal ForeignTotalAmount
         {
-            get { return _TotalUntaxedAmount; }
+            get { return _ForeignTotalAmount; }
             set
             {
-                SetProperty(ref _TotalUntaxedAmount, value);
+                SetProperty(ref _ForeignTotalAmount, value);
             }
         }
 
@@ -718,21 +751,7 @@ namespace RUINORERP.Model
                 SetProperty(ref _DiscountAmount, value);
             }
         }
-
-        private decimal _PrePayMoney;
-        /// <summary>
-        /// 预收款
-        /// </summary>
-        [AdvQueryAttribute(ColName = "PrePayMoney", ColDesc = "预收款")]
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType = "Decimal", ColumnName = "PrePayMoney", DecimalDigits = 4, IsNullable = false, ColumnDescription = "预收款")]
-        public decimal PrePayMoney
-        {
-            get { return _PrePayMoney; }
-            set
-            {
-                SetProperty(ref _PrePayMoney, value);
-            }
-        }
+ 
 
         private bool _ReplaceOut = false;
         /// <summary>

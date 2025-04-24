@@ -34,8 +34,6 @@
             this.cmbAccount_type = new Krypton.Toolkit.KryptonComboBox();
             this.lblDepartmentID = new Krypton.Toolkit.KryptonLabel();
             this.cmbDepartmentID = new Krypton.Toolkit.KryptonComboBox();
-            this.lblsubject_id = new Krypton.Toolkit.KryptonLabel();
-            this.cmbsubject_id = new Krypton.Toolkit.KryptonComboBox();
             this.lblCurrency_ID = new Krypton.Toolkit.KryptonLabel();
             this.cmbCurrency_ID = new Krypton.Toolkit.KryptonComboBox();
             this.lblaccount_name = new Krypton.Toolkit.KryptonLabel();
@@ -49,13 +47,15 @@
             this.txtOpeningBalance = new Krypton.Toolkit.KryptonTextBox();
             this.lblCurrentBalance = new Krypton.Toolkit.KryptonLabel();
             this.txtCurrentBalance = new Krypton.Toolkit.KryptonTextBox();
+            this.kryptonLabel1 = new Krypton.Toolkit.KryptonLabel();
+            this.cmbCompany = new Krypton.Toolkit.KryptonComboBox();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel1)).BeginInit();
             this.kryptonPanel1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.cmbAccount_type)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmbDepartmentID)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.cmbsubject_id)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmbCurrency_ID)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.cmbCompany)).BeginInit();
             this.SuspendLayout();
             // 
             // btnOk
@@ -78,11 +78,11 @@
             // 
             // kryptonPanel1
             // 
+            this.kryptonPanel1.Controls.Add(this.kryptonLabel1);
+            this.kryptonPanel1.Controls.Add(this.cmbCompany);
             this.kryptonPanel1.Controls.Add(this.cmbAccount_type);
             this.kryptonPanel1.Controls.Add(this.lblDepartmentID);
             this.kryptonPanel1.Controls.Add(this.cmbDepartmentID);
-            this.kryptonPanel1.Controls.Add(this.lblsubject_id);
-            this.kryptonPanel1.Controls.Add(this.cmbsubject_id);
             this.kryptonPanel1.Controls.Add(this.lblCurrency_ID);
             this.kryptonPanel1.Controls.Add(this.cmbCurrency_ID);
             this.kryptonPanel1.Controls.Add(this.lblaccount_name);
@@ -115,7 +115,7 @@
             // 
             // lblDepartmentID
             // 
-            this.lblDepartmentID.Location = new System.Drawing.Point(103, 43);
+            this.lblDepartmentID.Location = new System.Drawing.Point(103, 65);
             this.lblDepartmentID.Name = "lblDepartmentID";
             this.lblDepartmentID.Size = new System.Drawing.Size(36, 20);
             this.lblDepartmentID.TabIndex = 10;
@@ -125,27 +125,10 @@
             // 
             this.cmbDepartmentID.DropDownWidth = 100;
             this.cmbDepartmentID.IntegralHeight = false;
-            this.cmbDepartmentID.Location = new System.Drawing.Point(144, 42);
+            this.cmbDepartmentID.Location = new System.Drawing.Point(144, 64);
             this.cmbDepartmentID.Name = "cmbDepartmentID";
             this.cmbDepartmentID.Size = new System.Drawing.Size(295, 21);
             this.cmbDepartmentID.TabIndex = 11;
-            // 
-            // lblsubject_id
-            // 
-            this.lblsubject_id.Location = new System.Drawing.Point(78, 84);
-            this.lblsubject_id.Name = "lblsubject_id";
-            this.lblsubject_id.Size = new System.Drawing.Size(62, 20);
-            this.lblsubject_id.TabIndex = 12;
-            this.lblsubject_id.Values.Text = "会计科目";
-            // 
-            // cmbsubject_id
-            // 
-            this.cmbsubject_id.DropDownWidth = 100;
-            this.cmbsubject_id.IntegralHeight = false;
-            this.cmbsubject_id.Location = new System.Drawing.Point(144, 83);
-            this.cmbsubject_id.Name = "cmbsubject_id";
-            this.cmbsubject_id.Size = new System.Drawing.Size(295, 21);
-            this.cmbsubject_id.TabIndex = 13;
             // 
             // lblCurrency_ID
             // 
@@ -247,6 +230,23 @@
             this.txtCurrentBalance.Size = new System.Drawing.Size(295, 23);
             this.txtCurrentBalance.TabIndex = 27;
             // 
+            // kryptonLabel1
+            // 
+            this.kryptonLabel1.Location = new System.Drawing.Point(78, 13);
+            this.kryptonLabel1.Name = "kryptonLabel1";
+            this.kryptonLabel1.Size = new System.Drawing.Size(62, 20);
+            this.kryptonLabel1.TabIndex = 29;
+            this.kryptonLabel1.Values.Text = "所属公司";
+            // 
+            // cmbCompany
+            // 
+            this.cmbCompany.DropDownWidth = 100;
+            this.cmbCompany.IntegralHeight = false;
+            this.cmbCompany.Location = new System.Drawing.Point(144, 12);
+            this.cmbCompany.Name = "cmbCompany";
+            this.cmbCompany.Size = new System.Drawing.Size(295, 21);
+            this.cmbCompany.TabIndex = 30;
+            // 
             // UCFMAccountEdit
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
@@ -260,8 +260,8 @@
             this.kryptonPanel1.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.cmbAccount_type)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmbDepartmentID)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.cmbsubject_id)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmbCurrency_ID)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.cmbCompany)).EndInit();
             this.ResumeLayout(false);
 
         }
@@ -273,8 +273,6 @@
         private Krypton.Toolkit.KryptonPanel kryptonPanel1;
         private Krypton.Toolkit.KryptonLabel lblDepartmentID;
         private Krypton.Toolkit.KryptonComboBox cmbDepartmentID;
-        private Krypton.Toolkit.KryptonLabel lblsubject_id;
-        private Krypton.Toolkit.KryptonComboBox cmbsubject_id;
         private Krypton.Toolkit.KryptonLabel lblCurrency_ID;
         private Krypton.Toolkit.KryptonComboBox cmbCurrency_ID;
         private Krypton.Toolkit.KryptonLabel lblaccount_name;
@@ -289,5 +287,7 @@
         private Krypton.Toolkit.KryptonLabel lblCurrentBalance;
         private Krypton.Toolkit.KryptonTextBox txtCurrentBalance;
         private Krypton.Toolkit.KryptonComboBox cmbAccount_type;
+        private Krypton.Toolkit.KryptonLabel kryptonLabel1;
+        private Krypton.Toolkit.KryptonComboBox cmbCompany;
     }
 }

@@ -73,9 +73,9 @@ namespace RUINORERP.Business
 
 
 
-            RuleFor(x => x.CollectedMoney).PrecisionScale(19, 4, true).WithMessage("实收金额:小数位不能超过4。");
+            RuleFor(x => x.FreightCost).PrecisionScale(19, 4, true).WithMessage("运费成本:小数位不能超过4。");
 
-
+            RuleFor(x => x.ForeignTotalAmount).PrecisionScale(19, 4, true).WithMessage("总金额外币:小数位不能超过4。");
 
             RuleFor(tb_SaleOut => tb_SaleOut.Created_by).NotEmpty().When(x => x.Created_by.HasValue);
 
@@ -107,12 +107,10 @@ namespace RUINORERP.Business
 
             RuleFor(x => x.TotalTaxAmount).PrecisionScale(19, 4, true).WithMessage("总税额:小数位不能超过4。");
 
-            RuleFor(x => x.TotalUntaxedAmount).PrecisionScale(19, 4, true).WithMessage("未税本位币:小数位不能超过4。");
-
-
+       
             RuleFor(x => x.DiscountAmount).PrecisionScale(19, 4, true).WithMessage("优惠金额:小数位不能超过4。");
 
-            RuleFor(x => x.PrePayMoney).PrecisionScale(19, 4, true).WithMessage("预收款:小数位不能超过4。");
+        
 
             //long
             //SaleOut_MainID

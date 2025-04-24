@@ -250,7 +250,7 @@ namespace RUINORERP.Business
                              rs = await _unitOfWorkManage.GetDbClient().UpdateNav<tb_FM_Subject>(entity as tb_FM_Subject)
                         .Include(m => m.tb_FM_OtherExpenseDetails)
                     .Include(m => m.tb_FM_ExpenseClaimDetails)
-                    .Include(m => m.tb_FM_Accounts)
+
                     .Include(m => m.tb_FM_ExpenseTypes)
                     .ExecuteCommandAsync();
                  }
@@ -259,7 +259,7 @@ namespace RUINORERP.Business
                         rs = await _unitOfWorkManage.GetDbClient().InsertNav<tb_FM_Subject>(entity as tb_FM_Subject)
                 .Include(m => m.tb_FM_OtherExpenseDetails)
                 .Include(m => m.tb_FM_ExpenseClaimDetails)
-                .Include(m => m.tb_FM_Accounts)
+   
                 .Include(m => m.tb_FM_ExpenseTypes)
          
                 .ExecuteCommandAsync();
@@ -296,7 +296,7 @@ namespace RUINORERP.Business
             var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<tb_FM_Subject>()
                                 .Includes(m => m.tb_FM_OtherExpenseDetails)
                         .Includes(m => m.tb_FM_ExpenseClaimDetails)
-                        .Includes(m => m.tb_FM_Accounts)
+            
                         .Includes(m => m.tb_FM_ExpenseTypes)
                                         .Where(useLike, dto);
             return await querySqlQueryable.ToListAsync()as List<T>;
@@ -309,7 +309,7 @@ namespace RUINORERP.Business
              bool rs = await _unitOfWorkManage.GetDbClient().DeleteNav<tb_FM_Subject>(m => m.Subject_id == entity.Subject_id)
                                 .Include(m => m.tb_FM_OtherExpenseDetails)
                         .Include(m => m.tb_FM_ExpenseClaimDetails)
-                        .Include(m => m.tb_FM_Accounts)
+               
                         .Include(m => m.tb_FM_ExpenseTypes)
                                         .ExecuteCommandAsync();
             if (rs)
@@ -475,7 +475,7 @@ namespace RUINORERP.Business
             List<tb_FM_Subject> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_FM_Subject>()
                                             .Includes(t => t.tb_FM_OtherExpenseDetails )
                                 .Includes(t => t.tb_FM_ExpenseClaimDetails )
-                                .Includes(t => t.tb_FM_Accounts )
+                    
                                 .Includes(t => t.tb_FM_ExpenseTypes )
                         .ToListAsync();
             
@@ -498,7 +498,7 @@ namespace RUINORERP.Business
             List<tb_FM_Subject> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_FM_Subject>().Where(exp)
                                             .Includes(t => t.tb_FM_OtherExpenseDetails )
                                 .Includes(t => t.tb_FM_ExpenseClaimDetails )
-                                .Includes(t => t.tb_FM_Accounts )
+                      
                                 .Includes(t => t.tb_FM_ExpenseTypes )
                         .ToListAsync();
             
@@ -521,7 +521,7 @@ namespace RUINORERP.Business
             List<tb_FM_Subject> list = _unitOfWorkManage.GetDbClient().Queryable<tb_FM_Subject>().Where(exp)
                                         .Includes(t => t.tb_FM_OtherExpenseDetails )
                             .Includes(t => t.tb_FM_ExpenseClaimDetails )
-                            .Includes(t => t.tb_FM_Accounts )
+               
                             .Includes(t => t.tb_FM_ExpenseTypes )
                         .ToList();
             
@@ -561,7 +561,7 @@ namespace RUINORERP.Business
             tb_FM_Subject entity = await _unitOfWorkManage.GetDbClient().Queryable<tb_FM_Subject>().Where(w => w.Subject_id == (long)id)
                                          .Includes(t => t.tb_FM_OtherExpenseDetails )
                             .Includes(t => t.tb_FM_ExpenseClaimDetails )
-                            .Includes(t => t.tb_FM_Accounts )
+                     
                             .Includes(t => t.tb_FM_ExpenseTypes )
                         .FirstAsync();
             if(entity!=null)

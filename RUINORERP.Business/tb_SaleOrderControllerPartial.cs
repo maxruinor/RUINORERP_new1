@@ -24,6 +24,7 @@ using System.Security.Policy;
 using AutoMapper;
 using System.Windows.Forms;
 using RUINORERP.Global.EnumExt;
+using Fireasy.Common.Extensions;
 
 namespace RUINORERP.Business
 {
@@ -107,13 +108,34 @@ namespace RUINORERP.Business
                     if (entity.tb_paymentmethod.Paytype_Name != DefaultPaymentMethod.账期.ToString())
                     {
                         tb_FM_PreReceivedPaymentController<tb_FM_PreReceivedPayment> ctrpay = _appContext.GetRequiredService<tb_FM_PreReceivedPaymentController<tb_FM_PreReceivedPayment>>();
+
                         tb_FM_PreReceivedPayment payable = new tb_FM_PreReceivedPayment();
-                        payable.ReceivePaymentType = (int)ReceivePaymentType.付款;
+                        IMapper mapper = RUINORERP.Business.AutoMapper.AutoMapperConfig.RegisterMappings().CreateMapper();
+                        payable = mapper.Map<tb_FM_PreReceivedPayment>(entity);
+                        payable.ApprovalOpinions = "快捷转单";
+                        payable.ApprovalResults = null;
+                        payable.ApprovalStatus = (int)ApprovalStatus.未审核;
+                        payable.Approver_at = null;
+                        payable.Approver_by = null;
+                        payable.PrintStatus = 0;
+                        payable.ActionStatus = ActionStatus.新增;
+                        payable.ApprovalOpinions = "";
+                        payable.Modified_at = null;
+                        payable.Modified_by = null;
+                        if (entity.tb_projectgroup != null && entity.tb_projectgroup.tb_department != null)
+                        {
+                            payable.DepartmentID = entity.tb_projectgroup.tb_department.DepartmentID;
+                        }
+                        payable.ReceivePaymentType = (int)ReceivePaymentType.收款;
+                        payable.PreRPNO = BizCodeGenerator.Instance.GetBizBillNo(BizType.预收款单);
                         payable.SourceBillNO = entity.SOrderNo;
                         payable.SourceBill_ID = entity.SOrder_ID;
                         payable.Currency_ID = entity.Currency_ID;
+                        payable.PrePayDate = entity.SaleDate;
                         payable.ExchangeRate = entity.ExchangeRate;
                         payable.SourceBill_BizType = (int)BizType.销售订单;
+                        payable.LocalPrepaidAmountInWords = string.Empty;
+                        payable.Account_id = entity.Account_id;
                         //如果是外币时，则由外币算出本币
                         if (entity.PayStatus == (int)PayStatus.全部付款)
                         {
@@ -124,34 +146,44 @@ namespace RUINORERP.Business
                                 {
 
                                 }
-                                payable.ForeignBalanceAmount = 0;
-                                payable.ForeignPaidAmount = 0;
-                                payable.ForeignPrepaidAmount = entity.TotalAmount;
-                                payable.LocalPaidAmount = 0;
-                                payable.LocalBalanceAmount = 0;
-                                payable.LocalPrepaidAmount = entity.TotalAmount;
+                                payable.ForeignPrepaidAmount = entity.ForeignTotalAmount;
+
                             }
                             else
                             {
                                 //本币时
-                                payable.LocalPaidAmount = 0;
-                                payable.LocalBalanceAmount = 0;
                                 payable.LocalPrepaidAmount = entity.TotalAmount;
                             }
 
-
-
-
-                            //payable.TotalUntaxedAmount = entity.TotalUntaxedAmount;
-                            //payable.TotalTaxAmount = entity.TotalTaxAmount;
-
                         }
+                        //来自于订金
                         if (entity.PayStatus == (int)PayStatus.部分付款)
+                        {//外币时
+                            if (entity.Currency_ID.HasValue && _appContext.BaseCurrency.Currency_ID != entity.Currency_ID.Value)
+                            {
+
+                                payable.ForeignPrepaidAmount = entity.ForeignDeposit;
+                                payable.LocalPrepaidAmountInWords = payable.ForeignPrepaidAmount.ToUpper();
+                            }
+                            else
+                            {
+                                payable.LocalPrepaidAmount = entity.Deposit;
+                                payable.LocalPrepaidAmountInWords = payable.LocalPrepaidAmount.ToUpper();
+                            }
+                        }
+
+                        payable.PrePaymentReason = $"销售订单{entity.SOrderNo}的预收款";
+                        Business.BusinessHelper.Instance.InitEntity(payable);
+                        payable.FMPaymentStatus = (int)FMPaymentStatus.提交;
+                        ReturnResults<tb_FM_PreReceivedPayment> rmpay = await ctrpay.SaveOrUpdate(payable);
+                        if (rmpay.Succeeded)
                         {
 
                         }
+                        else
+                        {
 
-                        payable.FMPaymentStatus = (int)FMPaymentStatus.提交;
+                        }
                     }
 
                     #endregion
@@ -933,13 +965,10 @@ namespace RUINORERP.Business
 
                 entity.TotalTaxAmount = entity.TotalTaxAmount.ToRoundDecimalPlaces(authorizeController.GetMoneyDataPrecision());
 
-                entity.TotalUntaxedAmount = NewDetails.Sum(c => c.SubtotalUntaxedAmount);
-                entity.TotalUntaxedAmount = entity.TotalUntaxedAmount + entity.ShipCost;
-
                 entity.TotalAmount = NewDetails.Sum(c => c.TransactionPrice * c.Quantity);
                 entity.TotalAmount = entity.TotalAmount + entity.ShipCost;
 
-                entity.CollectedMoney = entity.TotalAmount;
+
                 BusinessHelper.Instance.InitEntity(entity);
                 //保存到数据库
 

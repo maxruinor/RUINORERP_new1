@@ -27,7 +27,6 @@ namespace RUINORERP.Business.Processor
 
             //内部的公共部分，外部是特殊情况
             var lambda = Expressionable.Create<tb_Employee>()
-                            .And(t => t.Is_available == true)
                             .And(t => t.Is_enabled == true)
                           .ToExpression();//注意 这一句 不能少
             //这个因为供应商和客户混在一起。限制条件在外面 调用时确定 

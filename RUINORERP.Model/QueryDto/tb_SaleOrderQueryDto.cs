@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/13/2024 18:44:27
+// 时间：04/24/2025 10:38:00
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -87,6 +87,47 @@ namespace RUINORERP.Model.QueryDto
         }
      
 
+        private long? _Account_id;
+        /// <summary>
+        /// 收款账户
+        /// </summary>
+        [AdvQueryAttribute(ColName = "Account_id",ColDesc = "收款账户")]
+        [SugarColumn(ColumnDataType = "bigint",SqlParameterDbType ="Int64",ColumnName = "Account_id",IsNullable = true,ColumnDescription = "收款账户" )]
+        [FKRelationAttribute("tb_FM_Account","Account_id")]
+        public long? Account_id 
+        { 
+            get{return _Account_id;}
+            set{SetProperty(ref _Account_id, value);}
+        }
+     
+
+        private long? _Currency_ID;
+        /// <summary>
+        /// 币别
+        /// </summary>
+        [AdvQueryAttribute(ColName = "Currency_ID",ColDesc = "币别")]
+        [SugarColumn(ColumnDataType = "bigint",SqlParameterDbType ="Int64",ColumnName = "Currency_ID",IsNullable = true,ColumnDescription = "币别" )]
+        [FKRelationAttribute("tb_Currency","Currency_ID")]
+        public long? Currency_ID 
+        { 
+            get{return _Currency_ID;}
+            set{SetProperty(ref _Currency_ID, value);}
+        }
+     
+
+        private decimal? _ExchangeRate= ((1));
+        /// <summary>
+        /// 汇率
+        /// </summary>
+        [AdvQueryAttribute(ColName = "ExchangeRate",ColDesc = "汇率")]
+        [SugarColumn(ColumnDataType = "decimal",SqlParameterDbType ="Decimal",ColumnName = "ExchangeRate",IsNullable = true,ColumnDescription = "汇率" )]
+        public decimal? ExchangeRate 
+        { 
+            get{return _ExchangeRate;}
+            set{SetProperty(ref _ExchangeRate, value);}
+        }
+     
+
         private long? _Employee_ID;
         /// <summary>
         /// 业务员
@@ -117,10 +158,10 @@ namespace RUINORERP.Model.QueryDto
 
         private decimal _ShipCost= ((0));
         /// <summary>
-        /// 运费
+        /// 运费收入
         /// </summary>
-        [AdvQueryAttribute(ColName = "ShipCost",ColDesc = "运费")]
-        [SugarColumn(ColumnDataType = "money",SqlParameterDbType ="Decimal",ColumnName = "ShipCost",IsNullable = false,ColumnDescription = "运费" )]
+        [AdvQueryAttribute(ColName = "ShipCost",ColDesc = "运费收入")]
+        [SugarColumn(ColumnDataType = "money",SqlParameterDbType ="Decimal",ColumnName = "ShipCost",IsNullable = false,ColumnDescription = "运费收入" )]
         public decimal ShipCost 
         { 
             get{return _ShipCost;}
@@ -221,10 +262,10 @@ namespace RUINORERP.Model.QueryDto
 
         private string _ShippingAddress;
         /// <summary>
-        /// 发货地址
+        /// 收货地址
         /// </summary>
-        [AdvQueryAttribute(ColName = "ShippingAddress",ColDesc = "发货地址")]
-        [SugarColumn(ColumnDataType = "varchar",SqlParameterDbType ="String",ColumnName = "ShippingAddress",Length=500,IsNullable = true,ColumnDescription = "发货地址" )]
+        [AdvQueryAttribute(ColName = "ShippingAddress",ColDesc = "收货地址")]
+        [SugarColumn(ColumnDataType = "varchar",SqlParameterDbType ="String",ColumnName = "ShippingAddress",Length=500,IsNullable = true,ColumnDescription = "收货地址" )]
         public string ShippingAddress 
         { 
             get{return _ShippingAddress;}
@@ -250,11 +291,24 @@ namespace RUINORERP.Model.QueryDto
         /// 物流单号
         /// </summary>
         [AdvQueryAttribute(ColName = "TrackNo",ColDesc = "物流单号")]
-        [SugarColumn(ColumnDataType = "char",SqlParameterDbType ="String",ColumnName = "TrackNo",Length=50,IsNullable = true,ColumnDescription = "物流单号" )]
+        [SugarColumn(ColumnDataType = "varchar",SqlParameterDbType ="String",ColumnName = "TrackNo",Length=50,IsNullable = true,ColumnDescription = "物流单号" )]
         public string TrackNo 
         { 
             get{return _TrackNo;}
             set{SetProperty(ref _TrackNo, value);}
+        }
+     
+
+        private decimal _ForeignTotalAmount= ((0));
+        /// <summary>
+        /// 金额外币
+        /// </summary>
+        [AdvQueryAttribute(ColName = "ForeignTotalAmount",ColDesc = "金额外币")]
+        [SugarColumn(ColumnDataType = "money",SqlParameterDbType ="Decimal",ColumnName = "ForeignTotalAmount",IsNullable = false,ColumnDescription = "金额外币" )]
+        public decimal ForeignTotalAmount 
+        { 
+            get{return _ForeignTotalAmount;}
+            set{SetProperty(ref _ForeignTotalAmount, value);}
         }
      
 
@@ -281,6 +335,19 @@ namespace RUINORERP.Model.QueryDto
         { 
             get{return _PrePayMoney;}
             set{SetProperty(ref _PrePayMoney, value);}
+        }
+     
+
+        private decimal _ForeignDeposit= ((0));
+        /// <summary>
+        /// 订金外币
+        /// </summary>
+        [AdvQueryAttribute(ColName = "ForeignDeposit",ColDesc = "订金外币")]
+        [SugarColumn(ColumnDataType = "money",SqlParameterDbType ="Decimal",ColumnName = "ForeignDeposit",IsNullable = false,ColumnDescription = "订金外币" )]
+        public decimal ForeignDeposit 
+        { 
+            get{return _ForeignDeposit;}
+            set{SetProperty(ref _ForeignDeposit, value);}
         }
      
 
@@ -390,10 +457,10 @@ namespace RUINORERP.Model.QueryDto
 
         private string _CloseCaseOpinions;
         /// <summary>
-        /// 审批意见
+        /// 结案意见
         /// </summary>
-        [AdvQueryAttribute(ColName = "CloseCaseOpinions",ColDesc = "审批意见")]
-        [SugarColumn(ColumnDataType = "varchar",SqlParameterDbType ="String",ColumnName = "CloseCaseOpinions",Length=200,IsNullable = true,ColumnDescription = "审批意见" )]
+        [AdvQueryAttribute(ColName = "CloseCaseOpinions",ColDesc = "结案意见")]
+        [SugarColumn(ColumnDataType = "varchar",SqlParameterDbType ="String",ColumnName = "CloseCaseOpinions",Length=200,IsNullable = true,ColumnDescription = "结案意见" )]
         public string CloseCaseOpinions 
         { 
             get{return _CloseCaseOpinions;}
@@ -411,6 +478,19 @@ namespace RUINORERP.Model.QueryDto
         { 
             get{return _Notes;}
             set{SetProperty(ref _Notes, value);}
+        }
+     
+
+        private bool _IsCustomizedOrder= false;
+        /// <summary>
+        /// 定制单
+        /// </summary>
+        [AdvQueryAttribute(ColName = "IsCustomizedOrder",ColDesc = "定制单")]
+        [SugarColumn(ColumnDataType = "bit",SqlParameterDbType ="Boolean",ColumnName = "IsCustomizedOrder",IsNullable = false,ColumnDescription = "定制单" )]
+        public bool IsCustomizedOrder 
+        { 
+            get{return _IsCustomizedOrder;}
+            set{SetProperty(ref _IsCustomizedOrder, value);}
         }
      
 

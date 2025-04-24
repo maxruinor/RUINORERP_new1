@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：03/14/2025 20:39:52
+// 时间：04/24/2025 10:37:59
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -249,6 +249,7 @@ namespace RUINORERP.Business
             
                              rs = await _unitOfWorkManage.GetDbClient().UpdateNav<tb_SaleOrder>(entity as tb_SaleOrder)
                         .Include(m => m.tb_SaleOrderDetails)
+                    .Include(m => m.tb_SaleOuts)
                     .Include(m => m.tb_ProductionPlans)
                     .Include(m => m.tb_OrderPackings)
                     .Include(m => m.tb_PurOrders)
@@ -258,6 +259,7 @@ namespace RUINORERP.Business
         {
                         rs = await _unitOfWorkManage.GetDbClient().InsertNav<tb_SaleOrder>(entity as tb_SaleOrder)
                 .Include(m => m.tb_SaleOrderDetails)
+                .Include(m => m.tb_SaleOuts)
                 .Include(m => m.tb_ProductionPlans)
                 .Include(m => m.tb_OrderPackings)
                 .Include(m => m.tb_PurOrders)
@@ -295,6 +297,7 @@ namespace RUINORERP.Business
         {
             var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<tb_SaleOrder>()
                                 .Includes(m => m.tb_SaleOrderDetails)
+                        .Includes(m => m.tb_SaleOuts)
                         .Includes(m => m.tb_ProductionPlans)
                         .Includes(m => m.tb_OrderPackings)
                         .Includes(m => m.tb_PurOrders)
@@ -308,6 +311,7 @@ namespace RUINORERP.Business
             tb_SaleOrder entity = model as tb_SaleOrder;
              bool rs = await _unitOfWorkManage.GetDbClient().DeleteNav<tb_SaleOrder>(m => m.SOrder_ID== entity.SOrder_ID)
                                 .Include(m => m.tb_SaleOrderDetails)
+                        .Include(m => m.tb_SaleOuts)
                         .Include(m => m.tb_ProductionPlans)
                         .Include(m => m.tb_OrderPackings)
                         .Include(m => m.tb_PurOrders)
@@ -473,11 +477,14 @@ namespace RUINORERP.Business
          public virtual async Task<List<tb_SaleOrder>> QueryByNavAsync()
         {
             List<tb_SaleOrder> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_SaleOrder>()
+                               .Includes(t => t.tb_currency )
+                               .Includes(t => t.tb_fm_account )
                                .Includes(t => t.tb_projectgroup )
                                .Includes(t => t.tb_customervendor )
                                .Includes(t => t.tb_employee )
                                .Includes(t => t.tb_paymentmethod )
                                             .Includes(t => t.tb_SaleOrderDetails )
+                                .Includes(t => t.tb_SaleOuts )
                                 .Includes(t => t.tb_ProductionPlans )
                                 .Includes(t => t.tb_OrderPackings )
                                 .Includes(t => t.tb_PurOrders )
@@ -500,11 +507,14 @@ namespace RUINORERP.Business
          public virtual async Task<List<tb_SaleOrder>> QueryByNavAsync(Expression<Func<tb_SaleOrder, bool>> exp)
         {
             List<tb_SaleOrder> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_SaleOrder>().Where(exp)
+                               .Includes(t => t.tb_currency )
+                               .Includes(t => t.tb_fm_account )
                                .Includes(t => t.tb_projectgroup )
                                .Includes(t => t.tb_customervendor )
                                .Includes(t => t.tb_employee )
                                .Includes(t => t.tb_paymentmethod )
                                             .Includes(t => t.tb_SaleOrderDetails )
+                                .Includes(t => t.tb_SaleOuts )
                                 .Includes(t => t.tb_ProductionPlans )
                                 .Includes(t => t.tb_OrderPackings )
                                 .Includes(t => t.tb_PurOrders )
@@ -527,11 +537,14 @@ namespace RUINORERP.Business
          public virtual List<tb_SaleOrder> QueryByNav(Expression<Func<tb_SaleOrder, bool>> exp)
         {
             List<tb_SaleOrder> list = _unitOfWorkManage.GetDbClient().Queryable<tb_SaleOrder>().Where(exp)
+                            .Includes(t => t.tb_currency )
+                            .Includes(t => t.tb_fm_account )
                             .Includes(t => t.tb_projectgroup )
                             .Includes(t => t.tb_customervendor )
                             .Includes(t => t.tb_employee )
                             .Includes(t => t.tb_paymentmethod )
                                         .Includes(t => t.tb_SaleOrderDetails )
+                            .Includes(t => t.tb_SaleOuts )
                             .Includes(t => t.tb_ProductionPlans )
                             .Includes(t => t.tb_OrderPackings )
                             .Includes(t => t.tb_PurOrders )
@@ -571,11 +584,14 @@ namespace RUINORERP.Business
         public override async Task<T> BaseQueryByIdNavAsync(object id)
         {
             tb_SaleOrder entity = await _unitOfWorkManage.GetDbClient().Queryable<tb_SaleOrder>().Where(w => w.SOrder_ID == (long)id)
-                             .Includes(t => t.tb_projectgroup )
+                             .Includes(t => t.tb_currency )
+                            .Includes(t => t.tb_fm_account )
+                            .Includes(t => t.tb_projectgroup )
                             .Includes(t => t.tb_customervendor )
                             .Includes(t => t.tb_employee )
                             .Includes(t => t.tb_paymentmethod )
                                         .Includes(t => t.tb_SaleOrderDetails )
+                            .Includes(t => t.tb_SaleOuts )
                             .Includes(t => t.tb_ProductionPlans )
                             .Includes(t => t.tb_OrderPackings )
                             .Includes(t => t.tb_PurOrders )

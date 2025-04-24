@@ -42,24 +42,19 @@ namespace RUINORERP.Business
         {
             ReturnResults<T> rsms = new ReturnResults<T>();
             tb_StockOut entity = ObjectEntity as tb_StockOut;
-
             try
             {
                 // 开启事务，保证数据一致性
                 _unitOfWorkManage.BeginTran();
                 tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
-
-
                 foreach (var child in entity.tb_StockOutDetails)
                 {
-
                     #region 库存表的更新 这里应该是必需有库存的数据，
                     tb_Inventory inv = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == child.ProdDetailID && i.Location_ID == child.Location_ID);
                     if (inv != null)
                     {
                         if (!_appContext.SysConfig.CheckNegativeInventory && (inv.Quantity - child.Qty) < 0)
                         {
-                            
                             rsms.ErrorMsg = "系统设置不允许负库存，请检查物料出库数量与库存相关数据";
                             _unitOfWorkManage.RollbackTran();
                             rsms.Succeeded = false;
@@ -67,7 +62,6 @@ namespace RUINORERP.Business
                         }
                         //更新库存
                         inv.Quantity = inv.Quantity - child.Qty;
-
                         BusinessHelper.Instance.EditEntity(inv);
                     }
                     else

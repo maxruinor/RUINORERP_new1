@@ -46,7 +46,7 @@ namespace RUINORERP.Business
         public virtual List<tb_Employee> GetEmployeeall()
         {
             List<tb_Employee> entity = _unitOfWorkManage.GetDbClient().Queryable<tb_Employee>()
-                .Where(e => e.Is_available == true).ToList();
+                .Where(e => e.Is_enabled == true).ToList();
             return entity;
         }
     }

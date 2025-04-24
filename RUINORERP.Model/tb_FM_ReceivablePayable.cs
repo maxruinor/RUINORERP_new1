@@ -266,19 +266,7 @@ namespace RUINORERP.Model
                         }
         }
 
-        private DateTime? _PaymentDate;
-        /// <summary>
-        /// 支付日期
-        /// </summary>
-        [AdvQueryAttribute(ColName = "PaymentDate",ColDesc = "支付日期")] 
-        [SugarColumn(ColumnDataType = "datetime", SqlParameterDbType ="DateTime",  ColumnName = "PaymentDate" ,IsNullable = true,ColumnDescription = "支付日期" )]
-        public DateTime? PaymentDate
-        { 
-            get{return _PaymentDate;}
-            set{
-            SetProperty(ref _PaymentDate, value);
-                        }
-        }
+ 
 
         private DateTime? _DueDate;
         /// <summary>

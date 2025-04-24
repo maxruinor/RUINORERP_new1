@@ -16,11 +16,12 @@ using RUINORERP.Business.LogicaService;
 using RUINORERP.UI.Common;
 using RUINORERP.Business;
 using RUINORERP.Global;
+using RUINORERP.UI.SysConfig;
 
 namespace RUINORERP.UI.BI
 {
     [MenuAttrAssemblyInfo("项目组编辑", true, UIType.单表数据)]
-    public partial class UCProjectGroupEdit: BaseEditGeneric<tb_ProjectGroup>
+    public partial class UCProjectGroupEdit : BaseEditGeneric<tb_ProjectGroup>
     {
         public UCProjectGroupEdit()
         {
@@ -36,6 +37,7 @@ namespace RUINORERP.UI.BI
             if (_EditEntity.ProjectGroup_ID == 0)
             {
                 _EditEntity.ProjectGroupCode = BizCodeGenerator.Instance.GetBaseInfoNo(BaseInfoType.ProjectGroupCode);
+                btnAssigneeEmployee.Visible = false;
             }
             DataBindingHelper.BindData4TextBox<tb_ProjectGroup>(entity, t => t.ProjectGroupCode, txtProjectGroupCode, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_ProjectGroup>(entity, t => t.ProjectGroupName, txtProjectGroupName, BindDataType4TextBox.Text, false);
@@ -52,12 +54,12 @@ namespace RUINORERP.UI.BI
             //后面这些依赖于控件绑定的数据源和字段。所以要在绑定后执行。
             if (entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改)
             {
-                base.InitRequiredToControl(MainForm.Instance.AppContext.GetRequiredService<tb_ProjectGroupValidator> (), kryptonPanel1.Controls);
+                base.InitRequiredToControl(MainForm.Instance.AppContext.GetRequiredService<tb_ProjectGroupValidator>(), kryptonPanel1.Controls);
                 base.InitEditItemToControl(entity, kryptonPanel1.Controls);
             }
             base.BindData(entity);
         }
-     
+
         private void btnCancel_Click(object sender, EventArgs e)
         {
             bindingSourceEdit.CancelEdit();
@@ -65,7 +67,7 @@ namespace RUINORERP.UI.BI
             this.Close();
         }
 
-       
+
         private void btnOk_Click(object sender, EventArgs e)
         {
             if (base.Validator())
@@ -76,7 +78,19 @@ namespace RUINORERP.UI.BI
             }
         }
 
+        private void btnAssigneeEmployee_Click(object sender, EventArgs e)
+        {
+            if (_EditEntity.ProjectGroup_ID > 0)
+            {
+                UCGroupEmployeesAssignee assignee = new UCGroupEmployeesAssignee();
+                assignee.ProjectGroupID = _EditEntity.ProjectGroup_ID;
+                assignee.ShowDialog();
+            }
+            else
+            {
+                MessageBox.Show("请保存项目组后再分配组员。");
+            }
 
-
+        }
     }
 }

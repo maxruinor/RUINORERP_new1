@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：04/22/2025 12:16:03
+// 时间：04/23/2025 23:00:49
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -61,6 +61,8 @@ namespace RUINORERP.UI
         
     
         
+    
+        
 
   
    
@@ -74,6 +76,7 @@ namespace RUINORERP.UI
         {
           // DataBindingHelper.InitDataToCmb<tb_Department>(k => k.DepartmentID, v=>v.XXNAME, cmbDepartmentID);
           // DataBindingHelper.InitDataToCmb<tb_Currency>(k => k.Currency_ID, v=>v.XXNAME, cmbCurrency_ID);
+          // DataBindingHelper.InitDataToCmb<tb_Company>(k => k.ID, v=>v.XXNAME, cmbID);
           // DataBindingHelper.InitDataToCmb<tb_FM_Subject>(k => k.Subject_id, v=>v.XXNAME, cmbSubject_id);
         }
         

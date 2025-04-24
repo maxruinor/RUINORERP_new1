@@ -75,7 +75,7 @@ namespace RUINORERP.UI.FM
         //}
         public override void BindData(tb_FM_ReceivablePayable entity, ActionStatus actionStatus)
         {
-           
+
             if (entity == null)
             {
                 return;
@@ -119,7 +119,11 @@ namespace RUINORERP.UI.FM
                 entity.FMPaymentStatus = (int)FMPaymentStatus.草稿;
                 entity.ReceivePaymentType = (int)PaymentType;
                 entity.ActionStatus = ActionStatus.新增;
-                entity.PaymentDate = System.DateTime.Now;
+
+                //到期日期应该是根据对应客户的账期的天数来算
+
+                //entity.DueDate = System.DateTime.Now;
+
                 if (PaymentType == ReceivePaymentType.付款)
                 {
                     entity.ARAPNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.应收单);
@@ -129,7 +133,7 @@ namespace RUINORERP.UI.FM
                     entity.ARAPNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.应付单);
                 }
                 //entity.InvoiceDate = System.DateTime.Now;
-                
+
                 if (MainForm.Instance.AppContext.CurUserInfo.UserInfo.tb_employee != null)
                 {
                     entity.Employee_ID = MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID.Value;
@@ -161,11 +165,11 @@ namespace RUINORERP.UI.FM
             DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayable>(entity, t => t.UntaxedTotalAmont.ToString(), txtUntaxedTotalAmont, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayable>(entity, t => t.ApprovalOpinions, txtApprovalOpinions, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4Cmb<tb_Currency>(entity, k => k.Currency_ID, v => v.CurrencyName, cmbCurrency_ID);
-            
+
             DataBindingHelper.BindData4Cmb<tb_Employee>(entity, k => k.Employee_ID, v => v.Employee_Name, cmbEmployee_ID);
             cmbCurrency_ID.SelectedIndex = 1;//默认第一个人民币
             DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayable>(entity, t => t.Remark, txtRemark, BindDataType4TextBox.Text, false);
-       
+
             DataBindingHelper.BindData4CheckBox<tb_FM_ReceivablePayable>(entity, t => t.ApprovalResults, chkApprovalResults, false);
             DataBindingHelper.BindData4Cmb<tb_FM_PayeeInfo>(entity, k => k.PayeeInfoID, v => v.Account_name, cmbPayeeInfoID, c => c.CustomerVendor_ID.HasValue && c.CustomerVendor_ID.Value == entity.CustomerVendor_ID);
             DataBindingHelper.BindData4ControlByEnum<tb_FM_ReceivablePayable>(entity, t => t.FMPaymentStatus, lblDataStatus, BindDataType4Enum.EnumName, typeof(FMPaymentStatus));
@@ -188,11 +192,11 @@ namespace RUINORERP.UI.FM
             //带过滤的下拉绑定要这样
             DataBindingHelper.BindData4Cmb<tb_CustomerVendor>(entity, k => k.CustomerVendor_ID, v => v.CVName, cmbCustomerVendor_ID, queryFilterC.GetFilterExpression<tb_CustomerVendor>(), true);
             DataBindingHelper.InitFilterForControlByExp<tb_CustomerVendor>(entity, cmbCustomerVendor_ID, c => c.CVName, queryFilterC);
-            
+
             //后面这些依赖于控件绑定的数据源和字段。所以要在绑定后执行。
             if (entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改)
             {
-                base.InitRequiredToControl(MainForm.Instance.AppContext.GetRequiredService <tb_FM_ReceivablePayableValidator> (), kryptonPanel1.Controls);
+                base.InitRequiredToControl(MainForm.Instance.AppContext.GetRequiredService<tb_FM_ReceivablePayableValidator>(), kryptonPanel1.Controls);
                 //UIBaseTool uIBaseTool = new();
                 //uIBaseTool.CurMenuInfo = CurMenuInfo;
                 //uIBaseTool.AddEditableQueryControl<tb_Employee>(cmbEmployee_ID, false);
@@ -208,23 +212,23 @@ namespace RUINORERP.UI.FM
                 BaseProcessor baseProcessorPayeeInfo = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_FM_PayeeInfo).Name + "Processor");
                 QueryFilter queryFilterPayeeInfo = baseProcessorPayeeInfo.GetQueryFilter();
                 queryFilterPayeeInfo.FilterLimitExpressions.Add(lambdaPayeeInfo);
-             
+
                 DataBindingHelper.InitFilterForControlByExpCanEdit<tb_FM_PayeeInfo>(entity, cmbPayeeInfoID, c => c.Account_name, queryFilterPayeeInfo, true);
 
                 #endregion
 
- 
+
             }
-            
+
             if (entity.tb_FM_ReceivablePayableDetails != null && entity.tb_FM_ReceivablePayableDetails.Count > 0)
             {
                 //新建和草稿时子表编辑也可以保存。
-                foreach (   var item in entity.tb_FM_ReceivablePayableDetails)
+                foreach (var item in entity.tb_FM_ReceivablePayableDetails)
                 {
                     item.PropertyChanged += (sender, s1) =>
                     {
                         //权限允许
-                        if ((true && entity.FMPaymentStatus == (int)FMPaymentStatus.草稿) || 
+                        if ((true && entity.FMPaymentStatus == (int)FMPaymentStatus.草稿) ||
                         (true && entity.FMPaymentStatus == (int)FMPaymentStatus.提交))
                         {
                             EditEntity.ActionStatus = ActionStatus.修改;
@@ -244,11 +248,27 @@ namespace RUINORERP.UI.FM
             entity.PropertyChanged += (sender, s2) =>
             {
                 //权限允许
-                if ((true && entity.FMPaymentStatus == (int)FMPaymentStatus.草稿) 
+                if ((true && entity.FMPaymentStatus == (int)FMPaymentStatus.草稿)
                 || (true && entity.FMPaymentStatus == (int)FMPaymentStatus.提交))
                 {
                     EditEntity.ActionStatus = ActionStatus.修改;
                 }
+
+                //到期日期应该是根据对应客户的账期的天数来算
+                if (entity.CustomerVendor_ID > 0 && s2.PropertyName == entity.GetPropertyName<tb_FM_ReceivablePayable>(c => c.CustomerVendor_ID))
+                {
+                    var obj = BizCacheHelper.Instance.GetEntity<tb_CustomerVendor>(entity.CustomerVendor_ID);
+                    if (obj != null && obj.ToString() != "System.Object")
+                    {
+                        if (obj is tb_CustomerVendor cv)
+                        {
+                            // entity.DueDate = System.DateTime.Now.AddDays(cv.CreditDays);
+                        }
+                    }
+                     //entity.DueDate = System.DateTime.Now;
+                }
+
+
                 //如果报销人有变化，带出对应的收款方式
                 //if (entity.PayeeInfoID > 0 && s2.PropertyName == entity.GetPropertyName<tb_FM_ReceivablePayable>(c => c.pay))
                 //{
@@ -302,10 +322,10 @@ namespace RUINORERP.UI.FM
             {
                 toolStripbtnPrint.Enabled = false;
             }
-         
+
             base.BindData(entity);
         }
-       
+
 
         /// <summary>
         /// 如果需要查询条件查询，就要在子类中重写这个方法
@@ -359,7 +379,7 @@ namespace RUINORERP.UI.FM
                 default:
                     break;
             }
-  
+
             #endregion
 
             MainForm.Instance.LoginWebServer();
@@ -387,7 +407,7 @@ namespace RUINORERP.UI.FM
             listCols.SetCol_Format<tb_FM_ReceivablePayableDetail>(c => c.LocalPayableAmount, CustomFormatType.CurrencyFormat);
             listCols.SetCol_Format<tb_FM_ReceivablePayableDetail>(c => c.TaxLocalAmount, CustomFormatType.CurrencyFormat);
             listCols.SetCol_Format<tb_FM_ReceivablePayableDetail>(c => c.ForeignPayableAmount, CustomFormatType.CurrencyFormat);
-           
+
             sgd = new SourceGridDefine(grid1, listCols, true);
 
             sgd.GridMasterData = EditEntity;
@@ -428,7 +448,7 @@ namespace RUINORERP.UI.FM
             sgh.InitGrid(grid1, sgd, true, nameof(tb_FM_ReceivablePayableDetail));
             sgh.OnCalculateColumnValue += Sgh_OnCalculateColumnValue;
             sgh.OnAddDataRow += Sgh_OnAddDataRow;
-            UIHelper.ControlMasterColumnsInvisible(CurMenuInfo,this);
+            UIHelper.ControlMasterColumnsInvisible(CurMenuInfo, this);
         }
 
         private void Sgh_OnAddDataRow(object rowObj)
@@ -566,7 +586,7 @@ namespace RUINORERP.UI.FM
             {
                 return false;
             }
-           
+
             var eer = errorProviderForAllInput.GetError(txtLocalBalanceAmount);
             bindingSourceSub.EndEdit();
             List<tb_FM_ReceivablePayableDetail> detailentity = bindingSourceSub.DataSource as List<tb_FM_ReceivablePayableDetail>;
@@ -677,7 +697,7 @@ namespace RUINORERP.UI.FM
             return true;
         }
 
-    
+
         protected async override Task<ReturnResults<tb_FM_ReceivablePayable>> Delete()
         {
             ReturnResults<tb_FM_ReceivablePayable> rss = new ReturnResults<tb_FM_ReceivablePayable>();

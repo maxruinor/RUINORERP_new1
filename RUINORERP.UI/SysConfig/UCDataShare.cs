@@ -985,6 +985,10 @@ namespace RUINORERP.UI.SysConfig
 
                 if (SaveData)
                 {
+                    // ExecuteReturnSnowflakeIdList
+
+                   
+
 
                     var units = MainForm.Instance.AppContext.Db.Storageable(unitList).ToStorage();
                     units.AsInsertable.ExecuteCommand();//不存在插入

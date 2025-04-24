@@ -218,6 +218,7 @@ namespace RUINORERP.Business.Security
                 throw new Exception("您使用的账号没有所属员工。");
             }
             appcontext.CurUserInfo.Id = user.tb_employee.Employee_ID;
+            appcontext.CurrentUser.Employee_ID= user.tb_employee.Employee_ID;
             appcontext.CurUserInfo.Name = user.tb_employee.Employee_Name;
             appcontext.CurrentUser.登陆时间 = System.DateTime.Now;
             appcontext.CompanyInfo = user.tb_employee.tb_department.tb_company;

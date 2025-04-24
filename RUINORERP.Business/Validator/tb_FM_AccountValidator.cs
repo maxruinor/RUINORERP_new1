@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：04/22/2025 12:16:05
+// 时间：04/23/2025 23:00:50
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -43,6 +43,8 @@ namespace RUINORERP.Business
 
  RuleFor(tb_FM_Account =>tb_FM_Account.Subject_id).Must(CheckForeignKeyValueCanNull).WithMessage("会计科目:下拉选择值不正确。");
  RuleFor(tb_FM_Account =>tb_FM_Account.Subject_id).NotEmpty().When(x => x.Subject_id.HasValue);
+
+ RuleFor(tb_FM_Account =>tb_FM_Account.ID).Must(CheckForeignKeyValue).WithMessage("所属公司:下拉选择值不正确。");
 
  RuleFor(tb_FM_Account =>tb_FM_Account.Currency_ID).Must(CheckForeignKeyValueCanNull).WithMessage("币种:下拉选择值不正确。");
  RuleFor(tb_FM_Account =>tb_FM_Account.Currency_ID).NotEmpty().When(x => x.Currency_ID.HasValue);

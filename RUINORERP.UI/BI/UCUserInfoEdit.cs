@@ -41,7 +41,6 @@ namespace RUINORERP.UI.BI
             BindingSource bs = new BindingSource();
             bs.DataSource = await de.QueryInUse();
             ComboBoxHelper.InitDropList(bs, cmbEmployee, "Employee_ID", "Employee_Name", ComboBoxStyle.DropDownList, false);
-
             var depa = new Binding("SelectedValue", entity, "Employee_ID", true, DataSourceUpdateMode.OnValidation);
             //数据源的数据类型转换为控件要求的数据类型。
             depa.Format += (s, args) => args.Value = args.Value == null ? -1 : args.Value;

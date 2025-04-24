@@ -20,6 +20,15 @@ namespace RUINORERP.Model.Context
     /// </summary>
     public class ApplicationContext
     {
+
+        #region 业务缓存数据  所属项目级
+
+        /// <summary>
+        /// 通过项目组分配功能，得到对应的项目组
+        /// </summary>
+        public List<tb_ProjectGroup> projectGroups { get; set; }
+
+        #endregion
         /// <summary>
         /// 系统运行的基本币别-取自币别表中的本位币
         /// </summary>

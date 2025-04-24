@@ -51,7 +51,7 @@ namespace RUINORERP.UI.SysConfig
                 if (item.tb_employee != null)
                 {
                     //如果是禁用或者删除状态，则不显示
-                    if (item.tb_employee.Is_available == false || item.tb_employee.Is_enabled == false)
+                    if (item.tb_employee.Is_enabled == false)
                     {
                         continue;
                     }

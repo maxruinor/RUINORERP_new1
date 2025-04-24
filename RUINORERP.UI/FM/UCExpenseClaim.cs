@@ -440,7 +440,6 @@ namespace RUINORERP.UI.FM
 
         private void Sgh_OnCalculateColumnValue(object _rowObj, SourceGridDefine myGridDefine, SourceGrid.Position position)
         {
-
             if (EditEntity == null)
             {
                 //都不是正常状态
@@ -460,9 +459,8 @@ namespace RUINORERP.UI.FM
                 }
                 EditEntity.TaxAmount = details.Sum(c => c.TaxAmount);
                 EditEntity.ClaimAmount = details.Sum(c => c.TotalAmount);
-                EditEntity.ApprovedAmount = EditEntity.ClaimAmount;
                 EditEntity.UntaxedAmount = details.Sum(C => C.UntaxedAmount);
-
+                EditEntity.ApprovedAmount = EditEntity.ClaimAmount;
             }
             catch (Exception ex)
             {
@@ -585,6 +583,10 @@ namespace RUINORERP.UI.FM
                 }
 
                 EditEntity.tb_FM_ExpenseClaimDetails = details;
+
+                EditEntity.TaxAmount = details.Sum(c => c.TaxAmount);
+                EditEntity.ClaimAmount = details.Sum(c => c.TotalAmount);
+                EditEntity.UntaxedAmount = details.Sum(C => C.UntaxedAmount);
 
                 //如果主表的总金额和明细金额加总后不相等，则提示
                 if (NeedValidated && EditEntity.ClaimAmount != details.Sum(c => c.TotalAmount))

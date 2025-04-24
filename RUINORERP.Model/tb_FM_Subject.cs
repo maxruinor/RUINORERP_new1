@@ -284,13 +284,7 @@ namespace RUINORERP.Model
         //Subject_id.FK_FM_GENERALLEDGER_REF_FM_SUBJECT)
         //tb_FM_Subject.Subject_id)
 
-        //[Browsable(false)]打印报表时的数据源会不显示
-        [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_FM_Account.Subject_id))]
-        public virtual List<tb_FM_Account> tb_FM_Accounts { get; set; }
-        //tb_FM_Account.Subject_id)
-        //Subject_id.FK_TB_FM_AC_REFERENCE_TB_FM_SU)
-        //tb_FM_Subject.Subject_id)
+       
 
         //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]

@@ -72,7 +72,6 @@ namespace RUINORERP.Business
 
             RuleFor(x => x.Discount).PrecisionScale(5, 3, true).WithMessage("折扣:小数位不能超过3。");
 
-            RuleFor(x => x.SubtotalUntaxedAmount).PrecisionScale(19, 4, true).WithMessage("未税本位币:小数位不能超过4。");
 
             RuleFor(x => x.CommissionAmount).PrecisionScale(19, 4, true).WithMessage("抽成返点:小数位不能超过4。");
 

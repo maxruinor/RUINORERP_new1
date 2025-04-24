@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/07/2025 21:48:20
+// 时间：04/23/2025 23:00:48
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -139,10 +139,10 @@ namespace RUINORERP.Model.QueryDto
 
         private string _Address;
         /// <summary>
-        /// 地址
+        /// 营业地址
         /// </summary>
-        [AdvQueryAttribute(ColName = "Address",ColDesc = "地址")]
-        [SugarColumn(ColumnDataType = "varchar",SqlParameterDbType ="String",ColumnName = "Address",Length=255,IsNullable = true,ColumnDescription = "地址" )]
+        [AdvQueryAttribute(ColName = "Address",ColDesc = "营业地址")]
+        [SugarColumn(ColumnDataType = "varchar",SqlParameterDbType ="String",ColumnName = "Address",Length=255,IsNullable = true,ColumnDescription = "营业地址" )]
         public string Address 
         { 
             get{return _Address;}
@@ -186,6 +186,84 @@ namespace RUINORERP.Model.QueryDto
         { 
             get{return _Email;}
             set{SetProperty(ref _Email, value);}
+        }
+     
+
+        private string _InvoiceTitle;
+        /// <summary>
+        /// 发票抬头
+        /// </summary>
+        [AdvQueryAttribute(ColName = "InvoiceTitle",ColDesc = "发票抬头")]
+        [SugarColumn(ColumnDataType = "varchar",SqlParameterDbType ="String",ColumnName = "InvoiceTitle",Length=200,IsNullable = true,ColumnDescription = "发票抬头" )]
+        public string InvoiceTitle 
+        { 
+            get{return _InvoiceTitle;}
+            set{SetProperty(ref _InvoiceTitle, value);}
+        }
+     
+
+        private string _InvoiceTaxNumber;
+        /// <summary>
+        /// 纳税人识别号
+        /// </summary>
+        [AdvQueryAttribute(ColName = "InvoiceTaxNumber",ColDesc = "纳税人识别号")]
+        [SugarColumn(ColumnDataType = "varchar",SqlParameterDbType ="String",ColumnName = "InvoiceTaxNumber",Length=200,IsNullable = true,ColumnDescription = "纳税人识别号" )]
+        public string InvoiceTaxNumber 
+        { 
+            get{return _InvoiceTaxNumber;}
+            set{SetProperty(ref _InvoiceTaxNumber, value);}
+        }
+     
+
+        private string _InvoiceAddress;
+        /// <summary>
+        /// 发票地址
+        /// </summary>
+        [AdvQueryAttribute(ColName = "InvoiceAddress",ColDesc = "发票地址")]
+        [SugarColumn(ColumnDataType = "varchar",SqlParameterDbType ="String",ColumnName = "InvoiceAddress",Length=200,IsNullable = true,ColumnDescription = "发票地址" )]
+        public string InvoiceAddress 
+        { 
+            get{return _InvoiceAddress;}
+            set{SetProperty(ref _InvoiceAddress, value);}
+        }
+     
+
+        private string _InvoiceTEL;
+        /// <summary>
+        /// 发票电话
+        /// </summary>
+        [AdvQueryAttribute(ColName = "InvoiceTEL",ColDesc = "发票电话")]
+        [SugarColumn(ColumnDataType = "varchar",SqlParameterDbType ="String",ColumnName = "InvoiceTEL",Length=50,IsNullable = true,ColumnDescription = "发票电话" )]
+        public string InvoiceTEL 
+        { 
+            get{return _InvoiceTEL;}
+            set{SetProperty(ref _InvoiceTEL, value);}
+        }
+     
+
+        private string _InvoiceBankAccount;
+        /// <summary>
+        /// 银行账号
+        /// </summary>
+        [AdvQueryAttribute(ColName = "InvoiceBankAccount",ColDesc = "银行账号")]
+        [SugarColumn(ColumnDataType = "varchar",SqlParameterDbType ="String",ColumnName = "InvoiceBankAccount",Length=150,IsNullable = true,ColumnDescription = "银行账号" )]
+        public string InvoiceBankAccount 
+        { 
+            get{return _InvoiceBankAccount;}
+            set{SetProperty(ref _InvoiceBankAccount, value);}
+        }
+     
+
+        private string _InvoiceBankName;
+        /// <summary>
+        /// 开户行
+        /// </summary>
+        [AdvQueryAttribute(ColName = "InvoiceBankName",ColDesc = "开户行")]
+        [SugarColumn(ColumnDataType = "varchar",SqlParameterDbType ="String",ColumnName = "InvoiceBankName",Length=100,IsNullable = true,ColumnDescription = "开户行" )]
+        public string InvoiceBankName 
+        { 
+            get{return _InvoiceBankName;}
+            set{SetProperty(ref _InvoiceBankName, value);}
         }
      
 

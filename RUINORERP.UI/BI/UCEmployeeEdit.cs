@@ -45,7 +45,6 @@ namespace RUINORERP.UI.BI
             if (_EditEntity.Employee_ID == 0)
             {
                 _EditEntity.Employee_NO = BizCodeGenerator.Instance.GetBaseInfoNo(BaseInfoType.Employee);
-                _EditEntity.Is_available = true;
                 _EditEntity.Is_enabled = true;
             }
 
@@ -66,8 +65,7 @@ namespace RUINORERP.UI.BI
             DataBindingHelper.BindData4TextBox<tb_Employee>(entity, t => t.IDNumber, txtIDNumber, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4DataTime<tb_Employee>(entity, t => t.EndDate, dtpEndDate, false);
             DataBindingHelper.BindData4RadioGroupTrueFalse<tb_Employee>(entity, t => t.Is_enabled, rdbis_enabledYes, rdbis_enabledNo);
-            //有默认值
-            DataBindingHelper.BindData4RadioGroupTrueFalse<tb_Employee>(entity, t => t.Is_available, rdbis_availableYes, rdbis_availableNo);
+ 
             //有默认值
             DataBindingHelper.BindData4TextBox<tb_Employee>(entity, t => t.Notes, txtNotes, BindDataType4TextBox.Text, false);
             //DataBindingHelper.BindData4TextBox<tb_Employee>(entity, t => t.salary.ToString(),txts txtsalary, BindDataType4TextBox.Money, false);

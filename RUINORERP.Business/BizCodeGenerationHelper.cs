@@ -314,10 +314,10 @@ namespace RUINORERP.Business
                     rule = "{S:YS}{D:yyMMdd}{redis:{S:预收款单}{D:yyMM}/000}";
                     break;
                 case BizType.付款单:
-                    rule = "{S:F}{D:yyMMdd}{redis:{S:付款单}{D:yyMM}/000}";
+                    rule = "{S:FK}{D:yyMMdd}{redis:{S:付款单}{D:yyMM}/000}";
                     break;
                 case BizType.收款单:
-                    rule = "{S:S}{D:yyMMdd}{redis:{S:收款单}{D:yyMM}/000}";
+                    rule = "{S:SK}{D:yyMMdd}{redis:{S:收款单}{D:yyMM}/000}";
                     break;
                 case BizType.应付单:
                     rule = "{S:YGF}{D:yyMMdd}{redis:{S:付款单}{D:yyMM}/000}";

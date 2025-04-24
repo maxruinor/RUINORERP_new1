@@ -55,6 +55,7 @@ namespace RUINORERP.Business.Processor
             queryFilter.SetQueryField<tb_ProdBorrowing>(c => c.BorrowNo);
             queryFilter.SetQueryField<tb_ProdBorrowing>(c => c.Employee_ID, true);
             queryFilter.SetQueryField<tb_ProdBorrowing>(c => c.Out_date);
+            queryFilter.SetQueryField<tb_ProdBorrowing>(c => c.DueDate);
             queryFilter.SetQueryField<tb_ProdBorrowing>(c => c.PrintStatus, QueryFieldType.CmbEnum, typeof(PrintStatus));
             queryFilter.SetQueryField<tb_ProdBorrowing>(c => c.ApprovalStatus, QueryFieldType.CmbEnum, typeof(ApprovalStatus));
             queryFilter.SetQueryField<tb_ProdBorrowing>(c => c.DataStatus, QueryFieldType.CmbEnum, typeof(DataStatus));

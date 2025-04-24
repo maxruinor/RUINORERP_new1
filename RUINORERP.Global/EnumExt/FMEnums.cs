@@ -40,7 +40,8 @@ namespace RUINORERP.Global.EnumExt
     /// </summary>
     public enum ReceivePaymentType
     {
-        收款 = 1,        付款 = 2,
+        收款 = 1,     
+        付款 = 2,
     }
 
 

@@ -93,106 +93,103 @@ namespace RUINORERP.Business
                     }
                 }
 
-                try
+
+                #region 生成预收款
+                if (entity.tb_paymentmethod == null)
                 {
-                    #region 生成预收款
-                    if (entity.tb_paymentmethod == null)
+                    var obj = BizCacheHelper.Instance.GetEntity<tb_PaymentMethod>(entity.Paytype_ID.Value);
+                    if (obj != null && obj.ToString() != "System.Object")
                     {
-                        var obj = BizCacheHelper.Instance.GetEntity<tb_PaymentMethod>(entity.Paytype_ID.Value);
-                        if (obj != null && obj.ToString() != "System.Object")
-                        {
-                            entity.tb_paymentmethod = obj as tb_PaymentMethod;
-                        }
+                        entity.tb_paymentmethod = obj as tb_PaymentMethod;
                     }
-                    //销售订单审核时，非账期，即时收款时，生成预收款。 订金，部分收款
-                    if (entity.tb_paymentmethod.Paytype_Name != DefaultPaymentMethod.账期.ToString())
+                }
+                //销售订单审核时，非账期，即时收款时，生成预收款。 订金，部分收款
+                if (entity.tb_paymentmethod.Paytype_Name != DefaultPaymentMethod.账期.ToString())
+                {
+                    tb_FM_PreReceivedPaymentController<tb_FM_PreReceivedPayment> ctrpay = _appContext.GetRequiredService<tb_FM_PreReceivedPaymentController<tb_FM_PreReceivedPayment>>();
+
+                    tb_FM_PreReceivedPayment payable = new tb_FM_PreReceivedPayment();
+                    IMapper mapper = RUINORERP.Business.AutoMapper.AutoMapperConfig.RegisterMappings().CreateMapper();
+                    payable = mapper.Map<tb_FM_PreReceivedPayment>(entity);
+                    payable.ApprovalResults = null;
+                    payable.ApprovalStatus = (int)ApprovalStatus.未审核;
+                    payable.Approver_at = null;
+                    payable.Approver_by = null;
+                    payable.PrintStatus = 0;
+                    payable.ActionStatus = ActionStatus.新增;
+                    payable.ApprovalOpinions = "";
+                    payable.Modified_at = null;
+                    payable.Modified_by = null;
+                    if (entity.tb_projectgroup != null && entity.tb_projectgroup.tb_department != null)
                     {
-                        tb_FM_PreReceivedPaymentController<tb_FM_PreReceivedPayment> ctrpay = _appContext.GetRequiredService<tb_FM_PreReceivedPaymentController<tb_FM_PreReceivedPayment>>();
+                        payable.DepartmentID = entity.tb_projectgroup.tb_department.DepartmentID;
+                    }
+                    //销售就是收款
+                    payable.ReceivePaymentType = (int)ReceivePaymentType.收款;
 
-                        tb_FM_PreReceivedPayment payable = new tb_FM_PreReceivedPayment();
-                        IMapper mapper = RUINORERP.Business.AutoMapper.AutoMapperConfig.RegisterMappings().CreateMapper();
-                        payable = mapper.Map<tb_FM_PreReceivedPayment>(entity);
-                        payable.ApprovalOpinions = "快捷转单";
-                        payable.ApprovalResults = null;
-                        payable.ApprovalStatus = (int)ApprovalStatus.未审核;
-                        payable.Approver_at = null;
-                        payable.Approver_by = null;
-                        payable.PrintStatus = 0;
-                        payable.ActionStatus = ActionStatus.新增;
-                        payable.ApprovalOpinions = "";
-                        payable.Modified_at = null;
-                        payable.Modified_by = null;
-                        if (entity.tb_projectgroup != null && entity.tb_projectgroup.tb_department != null)
+                    payable.PreRPNO = BizCodeGenerator.Instance.GetBizBillNo(BizType.预收款单);
+                    payable.SourceBill_BizType = (int)BizType.销售订单;
+                    payable.SourceBillNO = entity.SOrderNo;
+                    payable.SourceBill_ID = entity.SOrder_ID;
+                    payable.Currency_ID = entity.Currency_ID;
+                    payable.PrePayDate = entity.SaleDate;
+                    payable.ExchangeRate = entity.ExchangeRate;
+                   
+                    payable.LocalPrepaidAmountInWords = string.Empty;
+                    payable.Account_id = entity.Account_id;
+                    //如果是外币时，则由外币算出本币
+                    if (entity.PayStatus == (int)PayStatus.全部付款)
+                    {
+                        //外币时
+                        if (entity.Currency_ID.HasValue && _appContext.BaseCurrency.Currency_ID != entity.Currency_ID.Value)
                         {
-                            payable.DepartmentID = entity.tb_projectgroup.tb_department.DepartmentID;
-                        }
-                        payable.ReceivePaymentType = (int)ReceivePaymentType.收款;
-                        payable.PreRPNO = BizCodeGenerator.Instance.GetBizBillNo(BizType.预收款单);
-                        payable.SourceBillNO = entity.SOrderNo;
-                        payable.SourceBill_ID = entity.SOrder_ID;
-                        payable.Currency_ID = entity.Currency_ID;
-                        payable.PrePayDate = entity.SaleDate;
-                        payable.ExchangeRate = entity.ExchangeRate;
-                        payable.SourceBill_BizType = (int)BizType.销售订单;
-                        payable.LocalPrepaidAmountInWords = string.Empty;
-                        payable.Account_id = entity.Account_id;
-                        //如果是外币时，则由外币算出本币
-                        if (entity.PayStatus == (int)PayStatus.全部付款)
-                        {
-                            //外币时
-                            if (entity.Currency_ID.HasValue && _appContext.BaseCurrency.Currency_ID != entity.Currency_ID.Value)
-                            {
-                                if (payable.Currency_ID.HasValue && payable.ExchangeRate.HasValue)
-                                {
-
-                                }
-                                payable.ForeignPrepaidAmount = entity.ForeignTotalAmount;
-
-                            }
-                            else
-                            {
-                                //本币时
-                                payable.LocalPrepaidAmount = entity.TotalAmount;
-                            }
-
-                        }
-                        //来自于订金
-                        if (entity.PayStatus == (int)PayStatus.部分付款)
-                        {//外币时
-                            if (entity.Currency_ID.HasValue && _appContext.BaseCurrency.Currency_ID != entity.Currency_ID.Value)
+                            if (payable.Currency_ID.HasValue && payable.ExchangeRate.HasValue)
                             {
 
-                                payable.ForeignPrepaidAmount = entity.ForeignDeposit;
-                                payable.LocalPrepaidAmountInWords = payable.ForeignPrepaidAmount.ToUpper();
                             }
-                            else
-                            {
-                                payable.LocalPrepaidAmount = entity.Deposit;
-                                payable.LocalPrepaidAmountInWords = payable.LocalPrepaidAmount.ToUpper();
-                            }
-                        }
-
-                        payable.PrePaymentReason = $"销售订单{entity.SOrderNo}的预收款";
-                        Business.BusinessHelper.Instance.InitEntity(payable);
-                        payable.FMPaymentStatus = (int)FMPaymentStatus.提交;
-                        ReturnResults<tb_FM_PreReceivedPayment> rmpay = await ctrpay.SaveOrUpdate(payable);
-                        if (rmpay.Succeeded)
-                        {
+                            payable.ForeignPrepaidAmount = entity.ForeignTotalAmount;
 
                         }
                         else
                         {
+                            //本币时
+                            payable.LocalPrepaidAmount = entity.TotalAmount;
+                        }
 
+                    }
+                    //来自于订金
+                    if (entity.PayStatus == (int)PayStatus.部分付款)
+                    {//外币时
+                        if (entity.Currency_ID.HasValue && _appContext.BaseCurrency.Currency_ID != entity.Currency_ID.Value)
+                        {
+
+                            payable.ForeignPrepaidAmount = entity.ForeignDeposit;
+                            payable.LocalPrepaidAmountInWords = payable.ForeignPrepaidAmount.ToUpper();
+                        }
+                        else
+                        {
+                            payable.LocalPrepaidAmount = entity.Deposit;
+                            payable.LocalPrepaidAmountInWords = payable.LocalPrepaidAmount.ToUpper();
                         }
                     }
 
-                    #endregion
+                    payable.PrePaymentReason = $"销售订单{entity.SOrderNo}的预收款";
+                    Business.BusinessHelper.Instance.InitEntity(payable);
+                    payable.FMPaymentStatus = (int)FMPaymentStatus.提交;
+                    ReturnResults<tb_FM_PreReceivedPayment> rmpay = await ctrpay.SaveOrUpdate(payable);
+                    if (rmpay.Succeeded)
+                    {
 
+                    }
+                    else
+                    {
+
+                    }
                 }
-                catch (Exception exx)
-                {
-                    _logger.Error(exx, "生成预收款");
-                }
+
+                #endregion
+
+
 
                 //这部分是否能提出到上一级公共部分？
                 entity.DataStatus = (int)DataStatus.确认;
@@ -637,6 +634,17 @@ namespace RUINORERP.Business
 
                     }
                 }
+
+                #region  预收款单处理
+
+                tb_FM_PreReceivedPaymentController<tb_FM_PreReceivedPayment> ctrpay = _appContext.GetRequiredService<tb_FM_PreReceivedPaymentController<tb_FM_PreReceivedPayment>>();
+                var pay = await ctrpay.IsExistEntityAsync(p => p.SourceBill_ID == entity.SOrder_ID);
+                if (pay != null)
+                {
+                    await ctrpay.DeleteAsync(pay);
+                }
+
+                #endregion
 
                 //这部分是否能提出到上一级公共部分？
                 entity.DataStatus = (int)DataStatus.新建;

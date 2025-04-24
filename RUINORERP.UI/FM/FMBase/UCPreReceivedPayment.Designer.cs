@@ -29,7 +29,7 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            RUINORERP.Global.Model.DataRowImage dataRowImage2 = new RUINORERP.Global.Model.DataRowImage();
+            RUINORERP.Global.Model.DataRowImage dataRowImage1 = new RUINORERP.Global.Model.DataRowImage();
             this.kryptonPanel1 = new Krypton.Toolkit.KryptonPanel();
             this.lblPayeeInfoID = new Krypton.Toolkit.KryptonLabel();
             this.cmbPayeeInfoID = new Krypton.Toolkit.KryptonComboBox();
@@ -59,7 +59,6 @@
             this.lblLocalBalanceAmount = new Krypton.Toolkit.KryptonLabel();
             this.txtLocalBalanceAmount = new Krypton.Toolkit.KryptonTextBox();
             this.lblPaymentImagePath = new Krypton.Toolkit.KryptonLabel();
-            this.txtPaymentImagePath = new Krypton.Toolkit.KryptonTextBox();
             this.lblLocalPrepaidAmount = new Krypton.Toolkit.KryptonLabel();
             this.txtLocalPrepaidAmount = new Krypton.Toolkit.KryptonTextBox();
             this.lblProjectGroup_ID = new Krypton.Toolkit.KryptonLabel();
@@ -74,7 +73,7 @@
             this.cmbAccount_id = new Krypton.Toolkit.KryptonComboBox();
             this.lblPrePayDate = new Krypton.Toolkit.KryptonLabel();
             this.dtpPrePayDate = new Krypton.Toolkit.KryptonDateTimePicker();
-            this.magicPictureBox1 = new RUINOR.WinFormsUI.CustomPictureBox.MagicPictureBox();
+            this.PaymentImage = new RUINOR.WinFormsUI.CustomPictureBox.MagicPictureBox();
             this.kryptonLabel3 = new Krypton.Toolkit.KryptonLabel();
             this.lblLocalPrepaidAmountInWords = new Krypton.Toolkit.KryptonLabel();
             this.lblBillText = new Krypton.Toolkit.KryptonLabel();
@@ -109,7 +108,7 @@
             ((System.ComponentModel.ISupportInitialize)(this.cmbPaytype_ID)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmbEmployee_ID)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmbAccount_id)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.magicPictureBox1)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.PaymentImage)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmbCurrency_ID)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmbDepartmentID)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmbCustomerVendor_ID)).BeginInit();
@@ -138,7 +137,6 @@
             this.kryptonPanel1.Controls.Add(this.lblLocalBalanceAmount);
             this.kryptonPanel1.Controls.Add(this.txtLocalBalanceAmount);
             this.kryptonPanel1.Controls.Add(this.lblPaymentImagePath);
-            this.kryptonPanel1.Controls.Add(this.txtPaymentImagePath);
             this.kryptonPanel1.Controls.Add(this.lblLocalPrepaidAmount);
             this.kryptonPanel1.Controls.Add(this.txtLocalPrepaidAmount);
             this.kryptonPanel1.Controls.Add(this.lblProjectGroup_ID);
@@ -153,7 +151,7 @@
             this.kryptonPanel1.Controls.Add(this.cmbAccount_id);
             this.kryptonPanel1.Controls.Add(this.lblPrePayDate);
             this.kryptonPanel1.Controls.Add(this.dtpPrePayDate);
-            this.kryptonPanel1.Controls.Add(this.magicPictureBox1);
+            this.kryptonPanel1.Controls.Add(this.PaymentImage);
             this.kryptonPanel1.Controls.Add(this.kryptonLabel3);
             this.kryptonPanel1.Controls.Add(this.lblLocalPrepaidAmountInWords);
             this.kryptonPanel1.Controls.Add(this.lblBillText);
@@ -348,7 +346,7 @@
             // 
             // lblForeignPaidAmount
             // 
-            this.lblForeignPaidAmount.Location = new System.Drawing.Point(808, 593);
+            this.lblForeignPaidAmount.Location = new System.Drawing.Point(808, 513);
             this.lblForeignPaidAmount.Name = "lblForeignPaidAmount";
             this.lblForeignPaidAmount.Size = new System.Drawing.Size(88, 20);
             this.lblForeignPaidAmount.TabIndex = 198;
@@ -356,14 +354,14 @@
             // 
             // txtForeignPaidAmount
             // 
-            this.txtForeignPaidAmount.Location = new System.Drawing.Point(902, 591);
+            this.txtForeignPaidAmount.Location = new System.Drawing.Point(902, 511);
             this.txtForeignPaidAmount.Name = "txtForeignPaidAmount";
             this.txtForeignPaidAmount.Size = new System.Drawing.Size(172, 23);
             this.txtForeignPaidAmount.TabIndex = 199;
             // 
             // lblLocalPaidAmount
             // 
-            this.lblLocalPaidAmount.Location = new System.Drawing.Point(808, 656);
+            this.lblLocalPaidAmount.Location = new System.Drawing.Point(808, 576);
             this.lblLocalPaidAmount.Name = "lblLocalPaidAmount";
             this.lblLocalPaidAmount.Size = new System.Drawing.Size(88, 20);
             this.lblLocalPaidAmount.TabIndex = 200;
@@ -371,14 +369,14 @@
             // 
             // txtLocalPaidAmount
             // 
-            this.txtLocalPaidAmount.Location = new System.Drawing.Point(902, 654);
+            this.txtLocalPaidAmount.Location = new System.Drawing.Point(902, 574);
             this.txtLocalPaidAmount.Name = "txtLocalPaidAmount";
             this.txtLocalPaidAmount.Size = new System.Drawing.Size(172, 23);
             this.txtLocalPaidAmount.TabIndex = 201;
             // 
             // lblForeignBalanceAmount
             // 
-            this.lblForeignBalanceAmount.Location = new System.Drawing.Point(834, 565);
+            this.lblForeignBalanceAmount.Location = new System.Drawing.Point(834, 485);
             this.lblForeignBalanceAmount.Name = "lblForeignBalanceAmount";
             this.lblForeignBalanceAmount.Size = new System.Drawing.Size(62, 20);
             this.lblForeignBalanceAmount.TabIndex = 202;
@@ -386,14 +384,14 @@
             // 
             // txtForeignBalanceAmount
             // 
-            this.txtForeignBalanceAmount.Location = new System.Drawing.Point(902, 562);
+            this.txtForeignBalanceAmount.Location = new System.Drawing.Point(902, 482);
             this.txtForeignBalanceAmount.Name = "txtForeignBalanceAmount";
             this.txtForeignBalanceAmount.Size = new System.Drawing.Size(172, 23);
             this.txtForeignBalanceAmount.TabIndex = 203;
             // 
             // lblLocalBalanceAmount
             // 
-            this.lblLocalBalanceAmount.Location = new System.Drawing.Point(834, 629);
+            this.lblLocalBalanceAmount.Location = new System.Drawing.Point(834, 549);
             this.lblLocalBalanceAmount.Name = "lblLocalBalanceAmount";
             this.lblLocalBalanceAmount.Size = new System.Drawing.Size(62, 20);
             this.lblLocalBalanceAmount.TabIndex = 204;
@@ -401,26 +399,18 @@
             // 
             // txtLocalBalanceAmount
             // 
-            this.txtLocalBalanceAmount.Location = new System.Drawing.Point(902, 626);
+            this.txtLocalBalanceAmount.Location = new System.Drawing.Point(902, 546);
             this.txtLocalBalanceAmount.Name = "txtLocalBalanceAmount";
             this.txtLocalBalanceAmount.Size = new System.Drawing.Size(172, 23);
             this.txtLocalBalanceAmount.TabIndex = 205;
             // 
             // lblPaymentImagePath
             // 
-            this.lblPaymentImagePath.Location = new System.Drawing.Point(6, 457);
+            this.lblPaymentImagePath.Location = new System.Drawing.Point(814, 246);
             this.lblPaymentImagePath.Name = "lblPaymentImagePath";
-            this.lblPaymentImagePath.Size = new System.Drawing.Size(93, 20);
+            this.lblPaymentImagePath.Size = new System.Drawing.Size(62, 20);
             this.lblPaymentImagePath.TabIndex = 196;
-            this.lblPaymentImagePath.Values.Text = "凭证号/水单号";
-            // 
-            // txtPaymentImagePath
-            // 
-            this.txtPaymentImagePath.Location = new System.Drawing.Point(105, 457);
-            this.txtPaymentImagePath.Multiline = true;
-            this.txtPaymentImagePath.Name = "txtPaymentImagePath";
-            this.txtPaymentImagePath.Size = new System.Drawing.Size(389, 21);
-            this.txtPaymentImagePath.TabIndex = 197;
+            this.lblPaymentImagePath.Values.Text = "付款凭证";
             // 
             // lblLocalPrepaidAmount
             // 
@@ -535,24 +525,24 @@
             this.dtpPrePayDate.Size = new System.Drawing.Size(162, 21);
             this.dtpPrePayDate.TabIndex = 182;
             // 
-            // magicPictureBox1
+            // PaymentImage
             // 
-            this.magicPictureBox1.AllowDrop = true;
-            this.magicPictureBox1.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.magicPictureBox1.Location = new System.Drawing.Point(800, 274);
-            this.magicPictureBox1.Name = "magicPictureBox1";
-            dataRowImage2.Dir = null;
-            dataRowImage2.image = null;
-            dataRowImage2.ImageBase64 = null;
-            dataRowImage2.ImageBytes = null;
-            dataRowImage2.ImageFullName = null;
-            dataRowImage2.newhash = null;
-            dataRowImage2.oldhash = null;
-            dataRowImage2.realName = null;
-            this.magicPictureBox1.RowImage = dataRowImage2;
-            this.magicPictureBox1.Size = new System.Drawing.Size(274, 270);
-            this.magicPictureBox1.TabIndex = 180;
-            this.magicPictureBox1.TabStop = false;
+            this.PaymentImage.AllowDrop = true;
+            this.PaymentImage.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.PaymentImage.Location = new System.Drawing.Point(882, 246);
+            this.PaymentImage.Name = "PaymentImage";
+            dataRowImage1.Dir = null;
+            dataRowImage1.image = null;
+            dataRowImage1.ImageBase64 = null;
+            dataRowImage1.ImageBytes = null;
+            dataRowImage1.ImageFullName = null;
+            dataRowImage1.newhash = null;
+            dataRowImage1.oldhash = null;
+            dataRowImage1.realName = null;
+            this.PaymentImage.RowImage = dataRowImage1;
+            this.PaymentImage.Size = new System.Drawing.Size(238, 216);
+            this.PaymentImage.TabIndex = 180;
+            this.PaymentImage.TabStop = false;
             // 
             // kryptonLabel3
             // 
@@ -758,7 +748,7 @@
             ((System.ComponentModel.ISupportInitialize)(this.cmbPaytype_ID)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmbEmployee_ID)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmbAccount_id)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.magicPictureBox1)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.PaymentImage)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmbCurrency_ID)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmbDepartmentID)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmbCustomerVendor_ID)).EndInit();
@@ -789,7 +779,7 @@
         private Krypton.Toolkit.KryptonLabel lblBillText;
         private Krypton.Toolkit.KryptonLabel kryptonLabel3;
         private Krypton.Toolkit.KryptonLabel lblLocalPrepaidAmountInWords;
-        private RUINOR.WinFormsUI.CustomPictureBox.MagicPictureBox magicPictureBox1;
+        private RUINOR.WinFormsUI.CustomPictureBox.MagicPictureBox PaymentImage;
         private Krypton.Toolkit.KryptonLabel lblPrePayDate;
         private Krypton.Toolkit.KryptonDateTimePicker dtpPrePayDate;
         private Krypton.Toolkit.KryptonLabel lblAccount_id;
@@ -805,7 +795,6 @@
         private Krypton.Toolkit.KryptonLabel lblLocalPrepaidAmount;
         private Krypton.Toolkit.KryptonTextBox txtLocalPrepaidAmount;
         private Krypton.Toolkit.KryptonLabel lblPaymentImagePath;
-        private Krypton.Toolkit.KryptonTextBox txtPaymentImagePath;
         private Krypton.Toolkit.KryptonLabel lblForeignPaidAmount;
         private Krypton.Toolkit.KryptonTextBox txtForeignPaidAmount;
         private Krypton.Toolkit.KryptonLabel lblLocalPaidAmount;

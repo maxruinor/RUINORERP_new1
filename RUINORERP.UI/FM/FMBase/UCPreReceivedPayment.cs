@@ -153,7 +153,7 @@ namespace RUINORERP.UI.FM
 
             DataBindingHelper.BindData4Cmb<tb_ProjectGroup>(entity, k => k.ProjectGroup_ID, v => v.ProjectGroupName, cmbProjectGroup_ID);
             DataBindingHelper.BindData4Cmb<tb_PaymentMethod>(entity, k => k.Paytype_ID, v => v.Paytype_Name, cmbPaytype_ID, c => c.Cash == true);
-
+          
             DataBindingHelper.BindData4Cmb<tb_Employee>(entity, k => k.Employee_ID, v => v.Employee_Name, cmbEmployee_ID);
             DataBindingHelper.BindData4Cmb<tb_Department>(entity, k => k.DepartmentID, v => v.DepartmentName, cmbDepartmentID);
 
@@ -179,7 +179,6 @@ namespace RUINORERP.UI.FM
             DataBindingHelper.BindData4TextBox<tb_FM_PreReceivedPayment>(entity, t => t.LocalPaidAmount.ToString(), txtLocalPaidAmount, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4TextBox<tb_FM_PreReceivedPayment>(entity, t => t.ForeignBalanceAmount.ToString(), txtForeignBalanceAmount, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4TextBox<tb_FM_PreReceivedPayment>(entity, t => t.LocalBalanceAmount.ToString(), txtLocalBalanceAmount, BindDataType4TextBox.Money, false);
-            DataBindingHelper.BindData4TextBox<tb_FM_PreReceivedPayment>(entity, t => t.PaymentImagePath, txtPaymentImagePath, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_FM_PreReceivedPayment>(entity, t => t.Remark, txtRemark, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_FM_PreReceivedPayment>(entity, t => t.ApprovalOpinions, txtApprovalOpinions, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4Label<tb_FM_PreReceivedPayment>(entity, k => k.LocalPrepaidAmountInWords, lblLocalPrepaidAmountInWords, BindDataType4TextBox.Text, true);
@@ -369,16 +368,16 @@ namespace RUINORERP.UI.FM
 
 
 
-        private async void LoadImageData(string CloseCaseImagePath)
+        private async void LoadImageData(string ImagePath)
         {
-            if (!string.IsNullOrWhiteSpace(CloseCaseImagePath))
+            if (!string.IsNullOrWhiteSpace(ImagePath))
             {
                 HttpWebService httpWebService = Startup.GetFromFac<HttpWebService>();
                 try
                 {
-                    byte[] img = await httpWebService.DownloadImgFileAsync(CloseCaseImagePath);
-                    magicPictureBox1.Image = UI.Common.ImageHelper.byteArrayToImage(img);
-                    magicPictureBox1.Visible = true;
+                    byte[] img = await httpWebService.DownloadImgFileAsync(ImagePath);
+                    PaymentImage.Image = UI.Common.ImageHelper.byteArrayToImage(img);
+                    PaymentImage.Visible = true;
                 }
                 catch (Exception ex)
                 {
@@ -387,8 +386,17 @@ namespace RUINORERP.UI.FM
             }
             else
             {
-                magicPictureBox1.Visible = false;
+                PaymentImage.Visible = true;
             }
+        }
+
+
+        private void SetValueToRowImage()
+        {
+            PaymentImage.RowImage.image = PaymentImage.Image;
+            PaymentImage.RowImage.ImageBytes = PaymentImage.Image.ToBytes();
+            EditEntity.RowImage = PaymentImage.RowImage;
+            EditEntity.PaymentImagePath = EditEntity.RowImage.ImageFullName;
         }
 
         protected async override Task<bool> Save(bool NeedValidated)
@@ -397,9 +405,13 @@ namespace RUINORERP.UI.FM
             {
                 return false;
             }
-
+            if (PaymentImage.Image != null)
+            {
+                //还要处理更新的情况。是不是命名类似于grid
+                SetValueToRowImage();
+            }
             var eer = errorProviderForAllInput.GetError(txtLocalPrepaidAmount);
-
+         
             if (EditEntity.ActionStatus == ActionStatus.新增 || EditEntity.ActionStatus == ActionStatus.修改)
             {
 
@@ -424,7 +436,47 @@ namespace RUINORERP.UI.FM
                 ReturnMainSubResults<tb_FM_PreReceivedPayment> SaveResult = new ReturnMainSubResults<tb_FM_PreReceivedPayment>();
                 if (NeedValidated)
                 {
-                    //SaveResult = await base.UpdateSave(EditEntity);
+
+                    //保存图片
+                    #region 
+
+                    if (ReflectionHelper.ExistPropertyName<tb_FM_PreReceivedPayment>(nameof(EditEntity.RowImage)) && EditEntity.RowImage != null)
+                    {
+                        if (EditEntity.RowImage.image != null)
+                        {
+                            if (!EditEntity.RowImage.oldhash.Equals(EditEntity.RowImage.newhash, StringComparison.OrdinalIgnoreCase)
+                             && EditEntity.PaymentImagePath == EditEntity.RowImage.ImageFullName)
+                            {
+                                HttpWebService httpWebService = Startup.GetFromFac<HttpWebService>();
+                                //如果服务器有旧文件 。可以先删除
+                                if (!string.IsNullOrEmpty(EditEntity.RowImage.oldhash))
+                                {
+                                    string oldfileName = EditEntity.RowImage.Dir + EditEntity.RowImage.realName + "-" + EditEntity.RowImage.oldhash;
+                                    string deleteRsult = await httpWebService.DeleteImageAsync(oldfileName, "delete123");
+                                    MainForm.Instance.PrintInfoLog("DeleteImage:" + deleteRsult);
+                                }
+                                string newfileName = EditEntity.RowImage.GetUploadfileName();
+                                ////上传新文件时要加后缀名
+                                string uploadRsult = await httpWebService.UploadImageAsync(newfileName + ".jpg", EditEntity.RowImage.ImageBytes, "upload");
+                                if (uploadRsult.Contains("UploadSuccessful"))
+                                {
+                                    //重要
+                                    EditEntity.RowImage.ImageFullName = EditEntity.RowImage.UpdateImageName(EditEntity.RowImage.newhash);
+                                    EditEntity.PaymentImagePath= EditEntity.RowImage.ImageFullName;
+                                
+                                    //成功后。旧文件名部分要和上传成功后新文件名部分一致。后面修改只修改新文件名部分。再对比
+                                    MainForm.Instance.PrintInfoLog("UploadSuccessful for base List:" + newfileName);
+                                }
+                                else
+                                {
+                                    MainForm.Instance.LoginWebServer();
+                                }
+                            }
+                        }
+                    }
+                    #endregion
+                    //保存路径
+
                     SaveResult = await base.Save(EditEntity);
                     if (SaveResult.Succeeded)
                     {
@@ -490,11 +542,11 @@ namespace RUINORERP.UI.FM
             if (MessageBox.Show("系统不建议删除单据资料\r\n确定删除吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Information) == DialogResult.Yes)
             {
                 //https://www.runoob.com/w3cnote/csharp-enum.html
-                var dataStatus = (DataStatus)(EditEntity.GetPropertyValue(typeof(DataStatus).Name).ToInt());
-                if (dataStatus == DataStatus.新建 || dataStatus == DataStatus.草稿)
+                var dataStatus = (FMPaymentStatus)(EditEntity.GetPropertyValue(typeof(FMPaymentStatus).Name).ToInt());
+                if (dataStatus == FMPaymentStatus.提交 || dataStatus == FMPaymentStatus.草稿)
                 {
                     //如果草稿。都可以删除。如果是新建，则提交过了。要创建人或超级管理员才能删除
-                    if (dataStatus == DataStatus.新建 && !AppContext.IsSuperUser)
+                    if (dataStatus == FMPaymentStatus.提交 && !AppContext.IsSuperUser)
                     {
                         if (EditEntity.Created_by.Value != AppContext.CurUserInfo.Id)
                         {
@@ -509,13 +561,7 @@ namespace RUINORERP.UI.FM
                     bool rs = await ctr.BaseDeleteAsync(EditEntity as tb_FM_PreReceivedPayment);
                     if (rs)
                     {
-                        //AuditLogHelper.Instance.CreateAuditLog<T>("删除", EditEntity);
-                        //if (MainForm.Instance.AppContext.SysConfig.IsDebug)
-                        //{
-                        //    //MainForm.Instance.logger.Debug($"单据显示中删除:{typeof(T).Name}，主键值：{PKValue.ToString()} "); //如果要生效 要将配置文件中 <add key="log4net.Internal.Debug" value="true " /> 也许是：logn4net.config <log4net debug="false"> 改为true
-                        //}
-                        // bindingSourceSub.Clear();
-
+                        
                         ////删除远程图片及本地图片
                         await DeleteRemoteImages();
 

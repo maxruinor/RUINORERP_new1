@@ -183,8 +183,6 @@ namespace RUINORERP.UI.BI
                 {
                     //还要处理更新的情况。是不是命名类似于grid
                     SetValueToRowImage();
-
-
                 }
                 bindingSourceEdit.EndEdit();
                 this.DialogResult = DialogResult.OK;

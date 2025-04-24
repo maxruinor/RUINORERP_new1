@@ -338,7 +338,6 @@ namespace RUINORERP.UI.ClientCmdService
                 //请求为空：1
                 MainForm.Instance.logger.LogError("请求为空");
             }
-
             OriginalData gd = new OriginalData();
             try
             {
@@ -403,6 +402,7 @@ namespace RUINORERP.UI.ClientCmdService
                 if (string.IsNullOrEmpty(json) || json == "null")
                 {
                     MainForm.Instance.logger.LogError("BuildDataPacket:锁单时，请求数据为空。=>" + lockCmd.ToString() + request.ToString());
+                    return;
                 }
 
                 //将来再加上提醒配置规则,或加在请求实体中

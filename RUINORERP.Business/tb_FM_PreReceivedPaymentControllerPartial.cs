@@ -91,7 +91,29 @@ namespace RUINORERP.Business
                 IMapper mapper = RUINORERP.Business.AutoMapper.AutoMapperConfig.RegisterMappings().CreateMapper();
                 tb_FM_PaymentRecord paymentRecord = new tb_FM_PaymentRecord();
                 paymentRecord = mapper.Map<tb_FM_PaymentRecord>(entity);
-
+                paymentRecord.ApprovalResults = null;
+                paymentRecord.ApprovalStatus = (int)ApprovalStatus.未审核;
+                paymentRecord.Approver_at = null;
+                paymentRecord.Approver_by = null;
+                paymentRecord.PrintStatus = 0;
+                paymentRecord.ActionStatus = ActionStatus.新增;
+                paymentRecord.ApprovalOpinions = "";
+                paymentRecord.Modified_at = null;
+                paymentRecord.Modified_by = null;
+                paymentRecord.ReceivePaymentType = entity.ReceivePaymentType;
+                if (entity.ReceivePaymentType == (int)ReceivePaymentType.收款)
+                {
+                    paymentRecord.PaymentNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.收款单);
+                }
+                else
+                {
+                    paymentRecord.PaymentNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.付款单);
+                }
+                paymentRecord.BizType = (int)BizType.预收款单;
+                paymentRecord.SourceBillNO = entity.PreRPNO;
+                paymentRecord.SourceBilllID = entity.PreRPID;
+                paymentRecord.PaymentDate = entity.PrePayDate;
+               // paymentRecord.ReferenceNo=entity.no
                 //自动提交
                 paymentRecord.FMPaymentStatus = (int)FMPaymentStatus.提交;
                 BusinessHelper.Instance.InitEntity(paymentRecord);
@@ -100,10 +122,7 @@ namespace RUINORERP.Business
                 {
 
                 }
-                if (entity.ReceivePaymentType == (int)ReceivePaymentType.付款)
-                {
-
-                }
+           
 
                 entity.FMPaymentStatus = (int)FMPaymentStatus.已审核;
                 entity.ApprovalStatus = (int)ApprovalStatus.已审核;

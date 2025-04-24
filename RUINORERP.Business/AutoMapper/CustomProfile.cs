@@ -24,6 +24,8 @@ namespace RUINORERP.Business.AutoMapper
             //生成预收单
             CreateMap<tb_SaleOrder, tb_FM_PreReceivedPayment>();
 
+            //预收单生成收款记录表
+            CreateMap<tb_FM_PreReceivedPayment, tb_FM_PaymentRecord>();
             #endregion
 
 

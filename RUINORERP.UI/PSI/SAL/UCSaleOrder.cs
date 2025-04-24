@@ -726,10 +726,10 @@ namespace RUINORERP.UI.PSI.SAL
                     {
                         if (paymethod is tb_PaymentMethod pm)
                         {
-                            //如果付款方式是即实到账，但是又选择的是未付款
-                            if (pm.Cash && pm.Paytype_Name == DefaultPaymentMethod.账期.ToString())
+                            //如果是账期，但是又选择的是非 未付款
+                            if (pm.Paytype_Name == DefaultPaymentMethod.账期.ToString())
                             {
-                                MessageBox.Show("付款方式错误,请选择付款时使用的方式。");
+                                MessageBox.Show("付款方式错误,全部付款或部分付款时，请选择付款时使用的方式。");
                                 return false;
                             }
                         }

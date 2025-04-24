@@ -871,8 +871,16 @@ namespace RUINORERP.UI.Common
             {
                 return;
             }
+            ColumnDisplays.Clear();
             List<ColDisplayController> allInitCols = new List<ColDisplayController>();
             allInitCols = UIHelper.GetColumnDisplayList(GridSourceType);
+            //如果功能变化 新增加了列则会显示到allInitCols,这时要把多出来的也显示到ColumnDisplays
+            foreach (var col in allInitCols.Except(ColumnDisplays))
+            {
+                col.Visible = true;
+                ColumnDisplays.Add(col);
+            }
+
             // 获取Graphics对象
             Graphics graphics = dataGridView.CreateGraphics();
             ColumnDisplays.ForEach(c =>
@@ -898,12 +906,7 @@ namespace RUINORERP.UI.Common
 
             });
 
-            //如果功能变化 新增加了列则会显示到allInitCols,这时要把多出来的也显示到ColumnDisplays
-            foreach (var col in allInitCols.Except(ColumnDisplays))
-            {
-                col.Visible = true;
-                ColumnDisplays.Add(col);
-            }
+    
 
             //权限限制，默认值等
             ColumnDisplays.ForEach(c =>

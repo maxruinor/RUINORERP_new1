@@ -1272,27 +1272,39 @@ namespace RUINORERP.UI.Common
             {
                 foreach (PropertyInfo field in type.GetProperties())
                 {
+                    ColDisplayController col = new ColDisplayController();
+
                     bool Browsable = true;
                     var attributes = field.GetCustomAttributes(true);
                     if (attributes.Contains(new BrowsableAttribute(false)))
                     {
                         Browsable = false;
+                        continue;
                         // Checks to see if the value of the BrowsableAttribute is Yes.
                         //if (attributes[typeof(BrowsableAttribute)].Equals(BrowsableAttribute.No))
                         //{
                         //    brow = false;
                         //}
                     }
-                    foreach (Attribute attr in field.GetCustomAttributes(true))
+
+
+                    var objects = attributes.Where(x => x is SugarColumn).ToArray();
+                    if (objects.Length == 0)
                     {
-                        //if (attr is BrowsableAttribute)
-                        //{
-                        //    BrowsableAttribute browAttr = attr as BrowsableAttribute;
-                        //    if (!browAttr.Browsable)
-                        //    {
-                        //        brow = false;
-                        //    }
-                        //}
+                        continue;
+                    }
+                    else
+                    {
+                        SugarColumn sugarColumn = new SugarColumn();
+                        sugarColumn.IsIgnore = true;
+                        if (attributes.Contains(sugarColumn))
+                        {
+                            continue;
+                        }
+                    }
+                    //foreach (Attribute attr in field.GetCustomAttributes(true))
+                    foreach (Attribute attr in objects)
+                    {
 
                         entityAttr = attr as SugarColumn;
                         if (null != entityAttr)
@@ -1300,7 +1312,7 @@ namespace RUINORERP.UI.Common
                             //类型
                             if (entityAttr.ColumnDescription == null)
                             {
-                                ColDisplayController col = new ColDisplayController();
+
                                 col.ColDisplayIndex = 0;
                                 col.Visible = false;//默认不显示主键
                                 col.ColName = field.Name;
@@ -1310,7 +1322,7 @@ namespace RUINORERP.UI.Common
                             }
                             if (entityAttr.IsIgnore)
                             {
-                                ColDisplayController col = new ColDisplayController();
+
                                 col.ColDisplayText = entityAttr.ColumnDescription;
                                 col.ColDisplayIndex = columnDisplayControllers.Count;
                                 col.Visible = false;//默认不显示主键
@@ -1322,7 +1334,7 @@ namespace RUINORERP.UI.Common
 
                             if (entityAttr.IsIdentity)
                             {
-                                ColDisplayController col = new ColDisplayController();
+
                                 col.ColDisplayText = entityAttr.ColumnDescription;
                                 col.ColDisplayIndex = columnDisplayControllers.Count;
                                 col.Visible = (entityAttr.ColumnDescription.Trim().Length > 0) ? true : false;
@@ -1333,7 +1345,7 @@ namespace RUINORERP.UI.Common
                             }
                             if (entityAttr.IsPrimaryKey)
                             {   //逻辑处理时可能要主键
-                                ColDisplayController col = new ColDisplayController();
+
                                 col.ColDisplayText = entityAttr.ColumnDescription;
                                 col.ColDisplayIndex = columnDisplayControllers.Count;
                                 col.Visible = false;//默认不显示主键
@@ -1345,7 +1357,7 @@ namespace RUINORERP.UI.Common
 
                             if (entityAttr.ColumnDescription.Trim().Length > 0 && Browsable)
                             {
-                                ColDisplayController col = new ColDisplayController();
+
                                 col.ColDisplayText = entityAttr.ColumnDescription;
                                 col.ColDisplayIndex = columnDisplayControllers.Count;
                                 col.Visible = true;
@@ -1355,7 +1367,7 @@ namespace RUINORERP.UI.Common
                             else
                             {
                                 //逻辑处理时可能要主键
-                                ColDisplayController col = new ColDisplayController();
+
                                 col.ColDisplayText = entityAttr.ColumnDescription;
                                 col.ColDisplayIndex = columnDisplayControllers.Count;
                                 col.Visible = (entityAttr.ColumnDescription.Trim().Length > 0) ? true : false;

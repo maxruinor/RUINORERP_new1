@@ -144,7 +144,7 @@ namespace RUINORERP.UI.FM
                 cmbAccount_type.DataBindings.Clear();
                 txtPayeeAccountNo.Text = "";
             }
-
+            DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.PaymentNo, txtPaymentNo, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4Cmb<tb_ProjectGroup>(entity, k => k.ProjectGroup_ID, v => v.ProjectGroupName, cmbProjectGroup_ID);
             DataBindingHelper.BindData4Cmb<tb_PaymentMethod>(entity, k => k.Paytype_ID, v => v.Paytype_Name, cmbPaytype_ID, c => c.Cash == true);
             DataBindingHelper.BindData4Cmb<tb_Employee>(entity, k => k.Employee_ID, v => v.Employee_Name, cmbEmployee_ID);
@@ -535,7 +535,6 @@ namespace RUINORERP.UI.FM
                 default:
                     break;
             }
-            lblReceivePaymentType.Text = PaymentType.ToString();
 
         }
 

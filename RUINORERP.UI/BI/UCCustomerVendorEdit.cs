@@ -70,12 +70,12 @@ namespace RUINORERP.UI.BI
                     _EditEntity.CVCode = BizCodeGenerator.Instance.GetBaseInfoNo(BaseInfoType.BusinessPartner);
                 }
                 //新建时默认启用
-                _EditEntity.Is_available = true;
                 _EditEntity.Is_enabled = true;
             }
 
             DataBindingHelper.BindData4Cmb<tb_CustomerVendorType>(entity, k => k.Type_ID, v => v.TypeName, txtType_ID);
-
+            DataBindingHelper.BindData4TextBox<tb_CustomerVendor>(entity, t => t.CreditLimit.ToString(), txtCreditLimit, BindDataType4TextBox.Money, false);
+            DataBindingHelper.BindData4TextBox<tb_CustomerVendor>(entity, t => t.CreditDays, txtCreditDays, BindDataType4TextBox.Qty, false);
             DataBindingHelper.BindData4TextBox<tb_CustomerVendor>(entity, t => t.CVName, txtCVName, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_CustomerVendor>(entity, t => t.Contact, txtContact, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_CustomerVendor>(entity, t => t.Phone, txtPhone, BindDataType4TextBox.Text, false);
@@ -90,8 +90,8 @@ namespace RUINORERP.UI.BI
             DataBindingHelper.BindData4Cmb<tb_Employee>(entity, k => k.Employee_ID, v => v.Employee_Name, cmbEmployee_ID);
             DataBindingHelper.BindData4TextBox<tb_CustomerVendor>(entity, t => t.Notes, txtNotes, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4RadioGroupTrueFalse<tb_CustomerVendor>(entity, t => t.Is_enabled, rdbis_enabledYes, rdbis_enabledNo);
-            //有默认值
-            DataBindingHelper.BindData4RadioGroupTrueFalse<tb_CustomerVendor>(entity, t => t.Is_available, rdbis_availableYes, rdbis_availableNo);
+            
+            
             //有默认值
             //如果在模块定义中客户关系是启用时，就必须录入来源的目标客户。
             crmMod = await MainForm.Instance.AppContext.Db.Queryable<tb_ModuleDefinition>().Where(c => c.ModuleName == nameof(ModuleMenuDefine.客户关系)).FirstAsync();

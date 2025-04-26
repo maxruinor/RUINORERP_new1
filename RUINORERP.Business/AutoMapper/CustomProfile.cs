@@ -21,11 +21,36 @@ namespace RUINORERP.Business.AutoMapper
         public CustomProfile()
         {
             #region 财务模块
+
             //生成预收单
             CreateMap<tb_SaleOrder, tb_FM_PreReceivedPayment>();
 
             //预收单生成收款记录表
             CreateMap<tb_FM_PreReceivedPayment, tb_FM_PaymentRecord>();
+
+            //生成核销表
+            CreateMap<tb_FM_PaymentRecord, tb_FM_PaymentSettlement>();
+
+            //生成应收及明细
+            CreateMap<tb_SaleOut, tb_FM_ReceivablePayable>();
+            CreateMap<tb_SaleOutDetail, tb_FM_ReceivablePayableDetail>()
+            .ForMember(a => a.UnitPrice, o => o.MapFrom(d => d.TransactionPrice))
+            .ForMember(a => a.Quantity, o => o.MapFrom(d => d.Quantity))
+            .ForMember(a => a.ProdDetailID, o => o.MapFrom(d => d.ProdDetailID))
+            .ForMember(a => a.property, o => o.MapFrom(d => d.property))
+            .ForMember(a => a.IncludeTax, o => o.MapFrom(d => d.IncludingTax))
+            .ForMember(a => a.CustomerPartNo, o => o.MapFrom(d => d.CustomerPartNo))
+            .ForMember(a => a.TaxRate, o => o.MapFrom(d => d.TaxRate))
+            .ForMember(a => a.TaxLocalAmount, o => o.MapFrom(d => d.SubtotalTaxAmount))
+            .ForMember(a => a.LocalPayableAmount, o => o.MapFrom(d => d.SubtotalTransAmount))
+            .ForMember(a => a.Summary, o => o.MapFrom(d => d.Summary));
+
+
+
+            //生成应付及明细
+            CreateMap<tb_PurEntry, tb_FM_ReceivablePayable>();
+            CreateMap<tb_PurEntryDetail, tb_FM_ReceivablePayableDetail>();
+
             #endregion
 
 

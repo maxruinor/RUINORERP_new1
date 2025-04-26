@@ -7,8 +7,20 @@ using System.Threading.Tasks;
 namespace RUINORERP.Global.EnumExt
 {
 
+    public enum FMItemType
+    {
+        /// <summary>
+        /// 产品
+        /// </summary>
+        产品 = 1,
+        /// <summary>
+        /// 服务
+        /// </summary>
+        服务 = 2
+    }
+
     /// <summary>
-    /// 付款状态
+    /// 支付状态
     /// </summary>
     public enum FMPaymentStatus
     {
@@ -34,13 +46,26 @@ namespace RUINORERP.Global.EnumExt
         已取消 = 32,    // 0b10000（2^4，新增无冲突的2的幂）
     }
 
+    /// <summary>
+    /// 核销类型
+    /// </summary>
+    public enum SettlementType
+    {
+        收款核销 = 1,
+        付款核销 = 2,
+        预收冲应收 = 3,
+        预付冲应付 = 4,
+        退款红冲 = 5,
+ 
+
+    }
 
     /// <summary>
     /// 收付款类型
     /// </summary>
     public enum ReceivePaymentType
     {
-        收款 = 1,     
+        收款 = 1,
         付款 = 2,
     }
 
@@ -49,7 +74,8 @@ namespace RUINORERP.Global.EnumExt
     public enum ContractStatus { Draft, Active, Completed, Terminated }
     public enum InvoiceType { Sales, Purchase }
 
-    public enum InvoiceStatus {
+    public enum InvoiceStatus
+    {
 
 
         /// <summary>
@@ -74,6 +100,7 @@ namespace RUINORERP.Global.EnumExt
         /// </summary>
         已核销,
     }
+
     public enum PaymentType { Cash, BankTransfer, CreditCard, Other }
     public enum ARPType { Receivable, Payable }
     public enum PaymentStatus { Unpaid, PartiallyPaid, Paid }

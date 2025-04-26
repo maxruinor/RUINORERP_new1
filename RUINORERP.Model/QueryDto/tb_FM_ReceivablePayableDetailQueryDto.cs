@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：04/22/2025 12:16:17
+// 时间：04/25/2025 19:03:38
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -47,16 +47,16 @@ namespace RUINORERP.Model.QueryDto
         }
      
 
-        private int? _SourceBill_BizType;
+        private int? _BizType;
         /// <summary>
         /// 来源业务
         /// </summary>
-        [AdvQueryAttribute(ColName = "SourceBill_BizType",ColDesc = "来源业务")]
-        [SugarColumn(ColumnDataType = "int",SqlParameterDbType ="Int32",ColumnName = "SourceBill_BizType",IsNullable = true,ColumnDescription = "来源业务" )]
-        public int? SourceBill_BizType 
+        [AdvQueryAttribute(ColName = "BizType",ColDesc = "来源业务")]
+        [SugarColumn(ColumnDataType = "int",SqlParameterDbType ="Int32",ColumnName = "BizType",IsNullable = true,ColumnDescription = "来源业务" )]
+        public int? BizType 
         { 
-            get{return _SourceBill_BizType;}
-            set{SetProperty(ref _SourceBill_BizType, value);}
+            get{return _BizType;}
+            set{SetProperty(ref _BizType, value);}
         }
      
 
@@ -83,19 +83,6 @@ namespace RUINORERP.Model.QueryDto
         { 
             get{return _SourceBillNO;}
             set{SetProperty(ref _SourceBillNO, value);}
-        }
-     
-
-        private int? _ItemType;
-        /// <summary>
-        /// 项目类型
-        /// </summary>
-        [AdvQueryAttribute(ColName = "ItemType",ColDesc = "项目类型")]
-        [SugarColumn(ColumnDataType = "int",SqlParameterDbType ="Int32",ColumnName = "ItemType",IsNullable = true,ColumnDescription = "项目类型" )]
-        public int? ItemType 
-        { 
-            get{return _ItemType;}
-            set{SetProperty(ref _ItemType, value);}
         }
      
 
@@ -153,16 +140,16 @@ namespace RUINORERP.Model.QueryDto
         }
      
 
-        private bool _IsIncludeTax= false;
+        private bool _IncludeTax= false;
         /// <summary>
         /// 含税
         /// </summary>
-        [AdvQueryAttribute(ColName = "IsIncludeTax",ColDesc = "含税")]
-        [SugarColumn(ColumnDataType = "bit",SqlParameterDbType ="Boolean",ColumnName = "IsIncludeTax",IsNullable = false,ColumnDescription = "含税" )]
-        public bool IsIncludeTax 
+        [AdvQueryAttribute(ColName = "IncludeTax",ColDesc = "含税")]
+        [SugarColumn(ColumnDataType = "bit",SqlParameterDbType ="Boolean",ColumnName = "IncludeTax",IsNullable = false,ColumnDescription = "含税" )]
+        public bool IncludeTax 
         { 
-            get{return _IsIncludeTax;}
-            set{SetProperty(ref _IsIncludeTax, value);}
+            get{return _IncludeTax;}
+            set{SetProperty(ref _IncludeTax, value);}
         }
      
 
@@ -257,25 +244,12 @@ namespace RUINORERP.Model.QueryDto
         }
      
 
-        private decimal _ForeignPayableAmount= ((0));
-        /// <summary>
-        /// 金额外币
-        /// </summary>
-        [AdvQueryAttribute(ColName = "ForeignPayableAmount",ColDesc = "金额外币")]
-        [SugarColumn(ColumnDataType = "money",SqlParameterDbType ="Decimal",ColumnName = "ForeignPayableAmount",IsNullable = false,ColumnDescription = "金额外币" )]
-        public decimal ForeignPayableAmount 
-        { 
-            get{return _ForeignPayableAmount;}
-            set{SetProperty(ref _ForeignPayableAmount, value);}
-        }
-     
-
         private decimal _LocalPayableAmount= ((0));
         /// <summary>
-        /// 金额本币
+        /// 金额小计
         /// </summary>
-        [AdvQueryAttribute(ColName = "LocalPayableAmount",ColDesc = "金额本币")]
-        [SugarColumn(ColumnDataType = "money",SqlParameterDbType ="Decimal",ColumnName = "LocalPayableAmount",IsNullable = false,ColumnDescription = "金额本币" )]
+        [AdvQueryAttribute(ColName = "LocalPayableAmount",ColDesc = "金额小计")]
+        [SugarColumn(ColumnDataType = "money",SqlParameterDbType ="Decimal",ColumnName = "LocalPayableAmount",IsNullable = false,ColumnDescription = "金额小计" )]
         public decimal LocalPayableAmount 
         { 
             get{return _LocalPayableAmount;}

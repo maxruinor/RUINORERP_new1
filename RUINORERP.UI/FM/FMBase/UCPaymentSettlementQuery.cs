@@ -49,7 +49,6 @@ namespace RUINORERP.UI.FM
         public override void BuildLimitQueryConditions()
         {
             var lambda = Expressionable.Create<tb_FM_PaymentSettlement>()
-                              .And(t => t.isdeleted == false)
                              .And(t => t.ReceivePaymentType == (int)PaymentType)
                             .AndIF(AuthorizeController.GetOwnershipControl(MainForm.Instance.AppContext),
                              t => t.Employee_ID == MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID)

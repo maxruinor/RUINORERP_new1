@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：04/22/2025 12:16:12
+// 时间：04/26/2025 22:26:18
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -24,7 +24,7 @@ using RUINORERP.UI.Common;
 namespace RUINORERP.UI
 {
     /// <summary>
-    /// 记录收款 与应收的匹配，核销表-支持多对多、行项级核销 数据编辑
+    /// 记录收款 与应收的匹配，核销表数据编辑
     /// </summary>
      [MenuAttrAssemblyInfo( "库位编辑", true, UIType.单表数据)]
     public partial class tb_FM_PaymentSettlementEdit:UserControl
@@ -60,9 +60,6 @@ namespace RUINORERP.UI
         
         
         
-        
-        
-        
 
          }
 /*
@@ -70,35 +67,32 @@ namespace RUINORERP.UI
         tb_FM_PaymentSettlement UIToEntity()
         {
         tb_FM_PaymentSettlement entity = new tb_FM_PaymentSettlement();
-                     entity.PaymentId = Int64.Parse(txtPaymentId.Text);
-                        entity.BizType = Int32.Parse(txtBizType.Text);
-                        entity.SourceBilllID = Int64.Parse(txtSourceBilllID.Text);
-                        entity.SourceBillDetailID = Int64.Parse(txtSourceBillDetailID.Text);
+                     entity.SettlementNo = txtSettlementNo.Text ;
+                       entity.BizType = Int32.Parse(txtBizType.Text);
+                        entity.SourceBillID = Int64.Parse(txtSourceBillID.Text);
                         entity.SourceBillNO = txtSourceBillNO.Text ;
-                       entity.ReceivePaymentType = Int64.Parse(txtReceivePaymentType.Text);
+                       entity.SourceBizType = Int32.Parse(txtSourceBizType.Text);
+                        entity.SourceCurrencyID = Int64.Parse(txtSourceCurrencyID.Text);
+                        entity.SourceExchangeRate = Decimal.Parse(txtSourceExchangeRate.Text);
+                        entity.TargetBizType = Int32.Parse(txtTargetBizType.Text);
+                        entity.TargetBillID = Int64.Parse(txtTargetBillID.Text);
+                        entity.TargetBillNO = txtTargetBillNO.Text ;
+                       entity.TargetCurrencyID = Int64.Parse(txtTargetCurrencyID.Text);
+                        entity.TargetExchangeRate = Decimal.Parse(txtTargetExchangeRate.Text);
+                        entity.ReceivePaymentType = Int64.Parse(txtReceivePaymentType.Text);
                         entity.Account_id = Int64.Parse(txtAccount_id.Text);
-                        entity.Employee_ID = Int64.Parse(txtEmployee_ID.Text);
                         entity.CustomerVendor_ID = Int64.Parse(txtCustomerVendor_ID.Text);
-                        entity.Currency_ID = Int64.Parse(txtCurrency_ID.Text);
-                        entity.ExchangeRate = Decimal.Parse(txtExchangeRate.Text);
                         entity.SettledForeignAmount = Decimal.Parse(txtSettledForeignAmount.Text);
                         entity.SettledLocalAmount = Decimal.Parse(txtSettledLocalAmount.Text);
-                        entity.PamountInWords = txtPamountInWords.Text ;
-                       entity.SettleDate = DateTime.Parse(txtSettleDate.Text);
+                        entity.IsAutoSettlement = Boolean.Parse(txtIsAutoSettlement.Text);
+                        entity.IsReversed = Boolean.Parse(txtIsReversed.Text);
+                        entity.ReversedSettlementID = Int64.Parse(txtReversedSettlementID.Text);
+                        entity.SettleDate = DateTime.Parse(txtSettleDate.Text);
                         entity.Notes = txtNotes.Text ;
                        entity.SettlementType = Int32.Parse(txtSettlementType.Text);
                         entity.EvidenceImagePath = txtEvidenceImagePath.Text ;
                        entity.Created_at = DateTime.Parse(txtCreated_at.Text);
                         entity.Created_by = Int64.Parse(txtCreated_by.Text);
-                        entity.Modified_at = DateTime.Parse(txtModified_at.Text);
-                        entity.Modified_by = Int64.Parse(txtModified_by.Text);
-                        entity.isdeleted = Boolean.Parse(txtisdeleted.Text);
-                        entity.ApprovalOpinions = txtApprovalOpinions.Text ;
-                       entity.Approver_by = Int64.Parse(txtApprover_by.Text);
-                        entity.Approver_at = DateTime.Parse(txtApprover_at.Text);
-                        entity.ApprovalStatus = SByte.Parse(txtApprovalStatus.Text);
-                        entity.ApprovalResults = Boolean.Parse(txtApprovalResults.Text);
-                        entity.PrintStatus = Int32.Parse(txtPrintStatus.Text);
                                 return entity;
 }
         */
@@ -109,35 +103,32 @@ namespace RUINORERP.UI
         public void BindData(tb_FM_PaymentSettlement entity)
         {
         _EditEntity = entity;
-                       // DataBindingHelper.BindData4Cmb<tb_FM_PaymentRecord>(entity, k => k.PaymentId, v=>v.XXNAME, cmbPaymentId);
-           DataBindingHelper.BindData4TextBox<tb_FM_PaymentSettlement>(entity, t => t.BizType, txtBizType, BindDataType4TextBox.Qty,false);
-           DataBindingHelper.BindData4TextBox<tb_FM_PaymentSettlement>(entity, t => t.SourceBilllID, txtSourceBilllID, BindDataType4TextBox.Qty,false);
-           DataBindingHelper.BindData4TextBox<tb_FM_PaymentSettlement>(entity, t => t.SourceBillDetailID, txtSourceBillDetailID, BindDataType4TextBox.Qty,false);
+                        DataBindingHelper.BindData4TextBox<tb_FM_PaymentSettlement>(entity, t => t.SettlementNo, txtSettlementNo, BindDataType4TextBox.Text,false);
+          ReversedSettlementID主外字段不一致。 DataBindingHelper.BindData4TextBox<tb_FM_PaymentSettlement>(entity, t => t.BizType, txtBizType, BindDataType4TextBox.Qty,false);
+          ReversedSettlementID主外字段不一致。 DataBindingHelper.BindData4TextBox<tb_FM_PaymentSettlement>(entity, t => t.SourceBillID, txtSourceBillID, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4TextBox<tb_FM_PaymentSettlement>(entity, t => t.SourceBillNO, txtSourceBillNO, BindDataType4TextBox.Text,false);
-           DataBindingHelper.BindData4TextBox<tb_FM_PaymentSettlement>(entity, t => t.ReceivePaymentType, txtReceivePaymentType, BindDataType4TextBox.Qty,false);
-           DataBindingHelper.BindData4TextBox<tb_FM_PaymentSettlement>(entity, t => t.Account_id, txtAccount_id, BindDataType4TextBox.Qty,false);
-           DataBindingHelper.BindData4TextBox<tb_FM_PaymentSettlement>(entity, t => t.Employee_ID, txtEmployee_ID, BindDataType4TextBox.Qty,false);
-           DataBindingHelper.BindData4TextBox<tb_FM_PaymentSettlement>(entity, t => t.CustomerVendor_ID, txtCustomerVendor_ID, BindDataType4TextBox.Qty,false);
-           DataBindingHelper.BindData4TextBox<tb_FM_PaymentSettlement>(entity, t => t.Currency_ID, txtCurrency_ID, BindDataType4TextBox.Qty,false);
-           DataBindingHelper.BindData4TextBox<tb_FM_PaymentSettlement>(entity, t => t.ExchangeRate.ToString(), txtExchangeRate, BindDataType4TextBox.Money,false);
+          ReversedSettlementID主外字段不一致。 DataBindingHelper.BindData4TextBox<tb_FM_PaymentSettlement>(entity, t => t.SourceBizType, txtSourceBizType, BindDataType4TextBox.Qty,false);
+          ReversedSettlementID主外字段不一致。 DataBindingHelper.BindData4TextBox<tb_FM_PaymentSettlement>(entity, t => t.SourceCurrencyID, txtSourceCurrencyID, BindDataType4TextBox.Qty,false);
+           DataBindingHelper.BindData4TextBox<tb_FM_PaymentSettlement>(entity, t => t.SourceExchangeRate.ToString(), txtSourceExchangeRate, BindDataType4TextBox.Money,false);
+          ReversedSettlementID主外字段不一致。 DataBindingHelper.BindData4TextBox<tb_FM_PaymentSettlement>(entity, t => t.TargetBizType, txtTargetBizType, BindDataType4TextBox.Qty,false);
+          ReversedSettlementID主外字段不一致。 DataBindingHelper.BindData4TextBox<tb_FM_PaymentSettlement>(entity, t => t.TargetBillID, txtTargetBillID, BindDataType4TextBox.Qty,false);
+           DataBindingHelper.BindData4TextBox<tb_FM_PaymentSettlement>(entity, t => t.TargetBillNO, txtTargetBillNO, BindDataType4TextBox.Text,false);
+          ReversedSettlementID主外字段不一致。 DataBindingHelper.BindData4TextBox<tb_FM_PaymentSettlement>(entity, t => t.TargetCurrencyID, txtTargetCurrencyID, BindDataType4TextBox.Qty,false);
+           DataBindingHelper.BindData4TextBox<tb_FM_PaymentSettlement>(entity, t => t.TargetExchangeRate.ToString(), txtTargetExchangeRate, BindDataType4TextBox.Money,false);
+          ReversedSettlementID主外字段不一致。 DataBindingHelper.BindData4TextBox<tb_FM_PaymentSettlement>(entity, t => t.ReceivePaymentType, txtReceivePaymentType, BindDataType4TextBox.Qty,false);
+          ReversedSettlementID主外字段不一致。 DataBindingHelper.BindData4TextBox<tb_FM_PaymentSettlement>(entity, t => t.Account_id, txtAccount_id, BindDataType4TextBox.Qty,false);
+          ReversedSettlementID主外字段不一致。 DataBindingHelper.BindData4TextBox<tb_FM_PaymentSettlement>(entity, t => t.CustomerVendor_ID, txtCustomerVendor_ID, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4TextBox<tb_FM_PaymentSettlement>(entity, t => t.SettledForeignAmount.ToString(), txtSettledForeignAmount, BindDataType4TextBox.Money,false);
            DataBindingHelper.BindData4TextBox<tb_FM_PaymentSettlement>(entity, t => t.SettledLocalAmount.ToString(), txtSettledLocalAmount, BindDataType4TextBox.Money,false);
-           DataBindingHelper.BindData4TextBox<tb_FM_PaymentSettlement>(entity, t => t.PamountInWords, txtPamountInWords, BindDataType4TextBox.Text,false);
+           DataBindingHelper.BindData4CheckBox<tb_FM_PaymentSettlement>(entity, t => t.IsAutoSettlement, chkIsAutoSettlement, false);
+           DataBindingHelper.BindData4CheckBox<tb_FM_PaymentSettlement>(entity, t => t.IsReversed, chkIsReversed, false);
+          ReversedSettlementID主外字段不一致。 DataBindingHelper.BindData4TextBox<tb_FM_PaymentSettlement>(entity, t => t.ReversedSettlementID, txtReversedSettlementID, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4DataTime<tb_FM_PaymentSettlement>(entity, t => t.SettleDate, dtpSettleDate,false);
            DataBindingHelper.BindData4TextBox<tb_FM_PaymentSettlement>(entity, t => t.Notes, txtNotes, BindDataType4TextBox.Text,false);
-           DataBindingHelper.BindData4TextBox<tb_FM_PaymentSettlement>(entity, t => t.SettlementType, txtSettlementType, BindDataType4TextBox.Qty,false);
+          ReversedSettlementID主外字段不一致。 DataBindingHelper.BindData4TextBox<tb_FM_PaymentSettlement>(entity, t => t.SettlementType, txtSettlementType, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4TextBox<tb_FM_PaymentSettlement>(entity, t => t.EvidenceImagePath, txtEvidenceImagePath, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4DataTime<tb_FM_PaymentSettlement>(entity, t => t.Created_at, dtpCreated_at,false);
-           DataBindingHelper.BindData4TextBox<tb_FM_PaymentSettlement>(entity, t => t.Created_by, txtCreated_by, BindDataType4TextBox.Qty,false);
-           DataBindingHelper.BindData4DataTime<tb_FM_PaymentSettlement>(entity, t => t.Modified_at, dtpModified_at,false);
-           DataBindingHelper.BindData4TextBox<tb_FM_PaymentSettlement>(entity, t => t.Modified_by, txtModified_by, BindDataType4TextBox.Qty,false);
-           DataBindingHelper.BindData4CheckBox<tb_FM_PaymentSettlement>(entity, t => t.isdeleted, chkisdeleted, false);
-           DataBindingHelper.BindData4TextBox<tb_FM_PaymentSettlement>(entity, t => t.ApprovalOpinions, txtApprovalOpinions, BindDataType4TextBox.Text,false);
-           DataBindingHelper.BindData4TextBox<tb_FM_PaymentSettlement>(entity, t => t.Approver_by, txtApprover_by, BindDataType4TextBox.Qty,false);
-           DataBindingHelper.BindData4DataTime<tb_FM_PaymentSettlement>(entity, t => t.Approver_at, dtpApprover_at,false);
-           //default  DataBindingHelper.BindData4TextBox<tb_FM_PaymentSettlement>(entity, t => t.ApprovalStatus.ToString(), txtApprovalStatus, BindDataType4TextBox.Money,false);
-           DataBindingHelper.BindData4CheckBox<tb_FM_PaymentSettlement>(entity, t => t.ApprovalResults, chkApprovalResults, false);
-           DataBindingHelper.BindData4TextBox<tb_FM_PaymentSettlement>(entity, t => t.PrintStatus, txtPrintStatus, BindDataType4TextBox.Qty,false);
+          ReversedSettlementID主外字段不一致。 DataBindingHelper.BindData4TextBox<tb_FM_PaymentSettlement>(entity, t => t.Created_by, txtCreated_by, BindDataType4TextBox.Qty,false);
 }
 
 

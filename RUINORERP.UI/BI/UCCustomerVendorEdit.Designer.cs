@@ -31,6 +31,10 @@
             this.btnOk = new Krypton.Toolkit.KryptonButton();
             this.btnCancel = new Krypton.Toolkit.KryptonButton();
             this.kryptonPanel1 = new Krypton.Toolkit.KryptonPanel();
+            this.lblCreditLimit = new Krypton.Toolkit.KryptonLabel();
+            this.txtCreditLimit = new Krypton.Toolkit.KryptonTextBox();
+            this.lblCreditDays = new Krypton.Toolkit.KryptonLabel();
+            this.txtCreditDays = new Krypton.Toolkit.KryptonTextBox();
             this.btnAddBillingInformation = new Krypton.Toolkit.KryptonButton();
             this.chkNoNeedSource = new Krypton.Toolkit.KryptonCheckBox();
             this.lblCustomer_id = new Krypton.Toolkit.KryptonLabel();
@@ -38,14 +42,10 @@
             this.btnAddPayeeInfo = new Krypton.Toolkit.KryptonButton();
             this.chkOther = new Krypton.Toolkit.KryptonCheckBox();
             this.kryptonLabel3 = new Krypton.Toolkit.KryptonLabel();
-            this.kryptonGroupBox2 = new Krypton.Toolkit.KryptonGroupBox();
-            this.rdbis_availableNo = new Krypton.Toolkit.KryptonRadioButton();
-            this.rdbis_availableYes = new Krypton.Toolkit.KryptonRadioButton();
             this.kryptonGroupBox1 = new Krypton.Toolkit.KryptonGroupBox();
             this.rdbis_enabledNo = new Krypton.Toolkit.KryptonRadioButton();
             this.rdbis_enabledYes = new Krypton.Toolkit.KryptonRadioButton();
             this.lblIs_enabled = new Krypton.Toolkit.KryptonLabel();
-            this.lblIs_available = new Krypton.Toolkit.KryptonLabel();
             this.chk责任人专属 = new Krypton.Toolkit.KryptonCheckBox();
             this.lbl责任人专属 = new Krypton.Toolkit.KryptonLabel();
             this.kryptonLabel2 = new Krypton.Toolkit.KryptonLabel();
@@ -76,10 +76,6 @@
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel1)).BeginInit();
             this.kryptonPanel1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.cmbCustomer_id)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.kryptonGroupBox2)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.kryptonGroupBox2.Panel)).BeginInit();
-            this.kryptonGroupBox2.Panel.SuspendLayout();
-            this.kryptonGroupBox2.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonGroupBox1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonGroupBox1.Panel)).BeginInit();
             this.kryptonGroupBox1.Panel.SuspendLayout();
@@ -108,6 +104,10 @@
             // 
             // kryptonPanel1
             // 
+            this.kryptonPanel1.Controls.Add(this.lblCreditLimit);
+            this.kryptonPanel1.Controls.Add(this.txtCreditLimit);
+            this.kryptonPanel1.Controls.Add(this.lblCreditDays);
+            this.kryptonPanel1.Controls.Add(this.txtCreditDays);
             this.kryptonPanel1.Controls.Add(this.btnAddBillingInformation);
             this.kryptonPanel1.Controls.Add(this.chkNoNeedSource);
             this.kryptonPanel1.Controls.Add(this.lblCustomer_id);
@@ -115,10 +115,8 @@
             this.kryptonPanel1.Controls.Add(this.btnAddPayeeInfo);
             this.kryptonPanel1.Controls.Add(this.chkOther);
             this.kryptonPanel1.Controls.Add(this.kryptonLabel3);
-            this.kryptonPanel1.Controls.Add(this.kryptonGroupBox2);
             this.kryptonPanel1.Controls.Add(this.kryptonGroupBox1);
             this.kryptonPanel1.Controls.Add(this.lblIs_enabled);
-            this.kryptonPanel1.Controls.Add(this.lblIs_available);
             this.kryptonPanel1.Controls.Add(this.chk责任人专属);
             this.kryptonPanel1.Controls.Add(this.lbl责任人专属);
             this.kryptonPanel1.Controls.Add(this.kryptonLabel2);
@@ -153,6 +151,36 @@
             this.kryptonPanel1.PaletteMode = Krypton.Toolkit.PaletteMode.Office2007Blue;
             this.kryptonPanel1.Size = new System.Drawing.Size(731, 657);
             this.kryptonPanel1.TabIndex = 2;
+            // 
+            // lblCreditLimit
+            // 
+            this.lblCreditLimit.Location = new System.Drawing.Point(104, 440);
+            this.lblCreditLimit.Name = "lblCreditLimit";
+            this.lblCreditLimit.Size = new System.Drawing.Size(62, 20);
+            this.lblCreditLimit.TabIndex = 84;
+            this.lblCreditLimit.Values.Text = "信用额度";
+            // 
+            // txtCreditLimit
+            // 
+            this.txtCreditLimit.Location = new System.Drawing.Point(177, 436);
+            this.txtCreditLimit.Name = "txtCreditLimit";
+            this.txtCreditLimit.Size = new System.Drawing.Size(100, 23);
+            this.txtCreditLimit.TabIndex = 85;
+            // 
+            // lblCreditDays
+            // 
+            this.lblCreditDays.Location = new System.Drawing.Point(104, 471);
+            this.lblCreditDays.Name = "lblCreditDays";
+            this.lblCreditDays.Size = new System.Drawing.Size(62, 20);
+            this.lblCreditDays.TabIndex = 86;
+            this.lblCreditDays.Values.Text = "账期天数";
+            // 
+            // txtCreditDays
+            // 
+            this.txtCreditDays.Location = new System.Drawing.Point(177, 467);
+            this.txtCreditDays.Name = "txtCreditDays";
+            this.txtCreditDays.Size = new System.Drawing.Size(100, 23);
+            this.txtCreditDays.TabIndex = 87;
             // 
             // btnAddBillingInformation
             // 
@@ -214,39 +242,10 @@
             this.kryptonLabel3.TabIndex = 69;
             this.kryptonLabel3.Values.Text = "是否为其他";
             // 
-            // kryptonGroupBox2
-            // 
-            this.kryptonGroupBox2.CaptionVisible = false;
-            this.kryptonGroupBox2.Location = new System.Drawing.Point(373, 464);
-            this.kryptonGroupBox2.Name = "kryptonGroupBox2";
-            // 
-            // kryptonGroupBox2.Panel
-            // 
-            this.kryptonGroupBox2.Panel.Controls.Add(this.rdbis_availableNo);
-            this.kryptonGroupBox2.Panel.Controls.Add(this.rdbis_availableYes);
-            this.kryptonGroupBox2.Size = new System.Drawing.Size(104, 40);
-            this.kryptonGroupBox2.TabIndex = 68;
-            // 
-            // rdbis_availableNo
-            // 
-            this.rdbis_availableNo.Location = new System.Drawing.Point(58, 10);
-            this.rdbis_availableNo.Name = "rdbis_availableNo";
-            this.rdbis_availableNo.Size = new System.Drawing.Size(35, 20);
-            this.rdbis_availableNo.TabIndex = 3;
-            this.rdbis_availableNo.Values.Text = "否";
-            // 
-            // rdbis_availableYes
-            // 
-            this.rdbis_availableYes.Location = new System.Drawing.Point(10, 10);
-            this.rdbis_availableYes.Name = "rdbis_availableYes";
-            this.rdbis_availableYes.Size = new System.Drawing.Size(35, 20);
-            this.rdbis_availableYes.TabIndex = 2;
-            this.rdbis_availableYes.Values.Text = "是";
-            // 
             // kryptonGroupBox1
             // 
             this.kryptonGroupBox1.CaptionVisible = false;
-            this.kryptonGroupBox1.Location = new System.Drawing.Point(177, 464);
+            this.kryptonGroupBox1.Location = new System.Drawing.Point(177, 505);
             this.kryptonGroupBox1.Name = "kryptonGroupBox1";
             // 
             // kryptonGroupBox1.Panel
@@ -275,19 +274,11 @@
             // 
             // lblIs_enabled
             // 
-            this.lblIs_enabled.Location = new System.Drawing.Point(111, 474);
+            this.lblIs_enabled.Location = new System.Drawing.Point(111, 515);
             this.lblIs_enabled.Name = "lblIs_enabled";
             this.lblIs_enabled.Size = new System.Drawing.Size(62, 20);
             this.lblIs_enabled.TabIndex = 65;
             this.lblIs_enabled.Values.Text = "是否启用";
-            // 
-            // lblIs_available
-            // 
-            this.lblIs_available.Location = new System.Drawing.Point(312, 474);
-            this.lblIs_available.Name = "lblIs_available";
-            this.lblIs_available.Size = new System.Drawing.Size(62, 20);
-            this.lblIs_available.TabIndex = 66;
-            this.lblIs_available.Values.Text = "是否可用";
             // 
             // chk责任人专属
             // 
@@ -518,11 +509,6 @@
             this.kryptonPanel1.ResumeLayout(false);
             this.kryptonPanel1.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.cmbCustomer_id)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.kryptonGroupBox2.Panel)).EndInit();
-            this.kryptonGroupBox2.Panel.ResumeLayout(false);
-            this.kryptonGroupBox2.Panel.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.kryptonGroupBox2)).EndInit();
-            this.kryptonGroupBox2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.kryptonGroupBox1.Panel)).EndInit();
             this.kryptonGroupBox1.Panel.ResumeLayout(false);
             this.kryptonGroupBox1.Panel.PerformLayout();
@@ -565,14 +551,10 @@
         private Krypton.Toolkit.KryptonTextBox txtShortName;
         private Krypton.Toolkit.KryptonCheckBox chk责任人专属;
         private Krypton.Toolkit.KryptonLabel lbl责任人专属;
-        private Krypton.Toolkit.KryptonGroupBox kryptonGroupBox2;
-        private Krypton.Toolkit.KryptonRadioButton rdbis_availableNo;
-        private Krypton.Toolkit.KryptonRadioButton rdbis_availableYes;
         private Krypton.Toolkit.KryptonGroupBox kryptonGroupBox1;
         private Krypton.Toolkit.KryptonRadioButton rdbis_enabledNo;
         private Krypton.Toolkit.KryptonRadioButton rdbis_enabledYes;
         private Krypton.Toolkit.KryptonLabel lblIs_enabled;
-        private Krypton.Toolkit.KryptonLabel lblIs_available;
         private Krypton.Toolkit.KryptonCheckBox chkOther;
         private Krypton.Toolkit.KryptonLabel kryptonLabel3;
         private Krypton.Toolkit.KryptonButton btnAddPayeeInfo;
@@ -580,5 +562,9 @@
         private Krypton.Toolkit.KryptonComboBox cmbCustomer_id;
         private Krypton.Toolkit.KryptonCheckBox chkNoNeedSource;
         private Krypton.Toolkit.KryptonButton btnAddBillingInformation;
+        private Krypton.Toolkit.KryptonLabel lblCreditLimit;
+        private Krypton.Toolkit.KryptonTextBox txtCreditLimit;
+        private Krypton.Toolkit.KryptonLabel lblCreditDays;
+        private Krypton.Toolkit.KryptonTextBox txtCreditDays;
     }
 }

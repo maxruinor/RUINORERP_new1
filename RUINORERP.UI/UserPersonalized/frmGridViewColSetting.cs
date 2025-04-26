@@ -175,7 +175,6 @@ namespace RUINORERP.UI.UserPersonalized
             listView1.Columns.Clear();
             listView1.Items.Clear();
 
-
             listView1.Columns.Add("显示列名");
             listView1.Columns[0].TextAlign = HorizontalAlignment.Center;
             listView1.Columns[0].Width = -2; //-1 -2 

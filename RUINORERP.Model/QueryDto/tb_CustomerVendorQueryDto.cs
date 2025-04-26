@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/13/2024 18:43:33
+// 时间：04/25/2025 10:38:53
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -102,10 +102,10 @@ namespace RUINORERP.Model.QueryDto
 
         private bool _IsExclusive= true;
         /// <summary>
-        /// 是否可用
+        /// 责任人专属
         /// </summary>
-        [AdvQueryAttribute(ColName = "IsExclusive",ColDesc = "是否可用")]
-        [SugarColumn(ColumnDataType = "bit",SqlParameterDbType ="Boolean",ColumnName = "IsExclusive",IsNullable = false,ColumnDescription = "是否可用" )]
+        [AdvQueryAttribute(ColName = "IsExclusive",ColDesc = "责任人专属")]
+        [SugarColumn(ColumnDataType = "bit",SqlParameterDbType ="Boolean",ColumnName = "IsExclusive",IsNullable = false,ColumnDescription = "责任人专属" )]
         public bool IsExclusive 
         { 
             get{return _IsExclusive;}
@@ -129,11 +129,10 @@ namespace RUINORERP.Model.QueryDto
 
         private long? _Customer_id;
         /// <summary>
-        /// 
+        /// 目标客户
         /// </summary>
-        [AdvQueryAttribute(ColName = "Customer_id",ColDesc = "")]
-        [SugarColumn(ColumnDataType = "bigint",SqlParameterDbType ="Int64",ColumnName = "Customer_id",IsNullable = true,ColumnDescription = "" )]
-        [FKRelationAttribute("tb_Customer","Customer_id")]
+        [AdvQueryAttribute(ColName = "Customer_id",ColDesc = "目标客户")]
+        [SugarColumn(ColumnDataType = "bigint",SqlParameterDbType ="Int64",ColumnName = "Customer_id",IsNullable = true,ColumnDescription = "目标客户" )]
         public long? Customer_id 
         { 
             get{return _Customer_id;}
@@ -206,6 +205,32 @@ namespace RUINORERP.Model.QueryDto
         }
      
 
+        private decimal? _CreditLimit= ((0));
+        /// <summary>
+        /// 信用额度
+        /// </summary>
+        [AdvQueryAttribute(ColName = "CreditLimit",ColDesc = "信用额度")]
+        [SugarColumn(ColumnDataType = "decimal",SqlParameterDbType ="Decimal",ColumnName = "CreditLimit",IsNullable = true,ColumnDescription = "信用额度" )]
+        public decimal? CreditLimit 
+        { 
+            get{return _CreditLimit;}
+            set{SetProperty(ref _CreditLimit, value);}
+        }
+     
+
+        private int? _CreditDays= ((0));
+        /// <summary>
+        /// 账期天数
+        /// </summary>
+        [AdvQueryAttribute(ColName = "CreditDays",ColDesc = "账期天数")]
+        [SugarColumn(ColumnDataType = "int",SqlParameterDbType ="Int32",ColumnName = "CreditDays",IsNullable = true,ColumnDescription = "账期天数" )]
+        public int? CreditDays 
+        { 
+            get{return _CreditDays;}
+            set{SetProperty(ref _CreditDays, value);}
+        }
+     
+
         private bool _IsCustomer= false;
         /// <summary>
         /// 是客户
@@ -229,6 +254,19 @@ namespace RUINORERP.Model.QueryDto
         { 
             get{return _IsVendor;}
             set{SetProperty(ref _IsVendor, value);}
+        }
+     
+
+        private bool _IsOther= false;
+        /// <summary>
+        /// 是其他
+        /// </summary>
+        [AdvQueryAttribute(ColName = "IsOther",ColDesc = "是其他")]
+        [SugarColumn(ColumnDataType = "bit",SqlParameterDbType ="Boolean",ColumnName = "IsOther",IsNullable = false,ColumnDescription = "是其他" )]
+        public bool IsOther 
+        { 
+            get{return _IsOther;}
+            set{SetProperty(ref _IsOther, value);}
         }
      
 
@@ -333,20 +371,6 @@ namespace RUINORERP.Model.QueryDto
         { 
             get{return _isdeleted;}
             set{SetProperty(ref _isdeleted, value);}
-        }
-     
-
-        private long? _BankAccount_id;
-        /// <summary>
-        /// 
-        /// </summary>
-        [AdvQueryAttribute(ColName = "BankAccount_id",ColDesc = "")]
-        [SugarColumn(ColumnDataType = "bigint",SqlParameterDbType ="Int64",ColumnName = "BankAccount_id",IsNullable = true,ColumnDescription = "" )]
-        [FKRelationAttribute("tb_BankAccount","BankAccount_id")]
-        public long? BankAccount_id 
-        { 
-            get{return _BankAccount_id;}
-            set{SetProperty(ref _BankAccount_id, value);}
         }
 
 

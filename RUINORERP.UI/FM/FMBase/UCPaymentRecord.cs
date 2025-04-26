@@ -106,11 +106,15 @@ namespace RUINORERP.UI.FM
                             {
                                 //显示外币相关
                                 UIHelper.ControlForeignFieldInvisible<tb_FM_PaymentRecord>(this, true);
+                                lblExchangeRate.Visible = true;
+                                txtExchangeRate.Visible = true;
                             }
                             else
                             {
                                 //隐藏外币相关
                                 UIHelper.ControlForeignFieldInvisible<tb_FM_PaymentRecord>(this, false);
+                                lblExchangeRate.Visible = false;
+                                txtExchangeRate.Visible = false;
                             }
                         }
 
@@ -160,7 +164,7 @@ namespace RUINORERP.UI.FM
             DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.PayeeAccountNo, txtPayeeAccountNo, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4ControlByEnum<tb_FM_PaymentRecord>(entity, t => t.FMPaymentStatus, lblDataStatus, BindDataType4Enum.EnumName, typeof(FMPaymentStatus));
             DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.BizType, txtBizType, BindDataType4TextBox.Qty, false);
-            DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.SourceBilllID, txtSourceBilllID, BindDataType4TextBox.Qty, false);
+            //DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.SourceBilllID, txtSourceBilllID, BindDataType4TextBox.Qty, false);
             DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.SourceBillNO, txtSourceBillNO, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4DataTime<tb_FM_PaymentRecord>(entity, t => t.PaymentDate, dtpPaymentDate, false);
             DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.ReferenceNo, txtReferenceNo, BindDataType4TextBox.Text, false);
@@ -176,7 +180,6 @@ namespace RUINORERP.UI.FM
                             .And(t => t.IsVendor == true)//供应商和第三方
                             .And(t => t.isdeleted == false)
                             .And(t => t.Is_enabled == true)
-                            .And(t => t.Is_available == true)
                             .ToExpression();//注意 这一句 不能少
 
             BaseProcessor baseProcessor = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_CustomerVendor).Name + "Processor");
@@ -285,11 +288,15 @@ namespace RUINORERP.UI.FM
                                         UIHelper.ControlForeignFieldInvisible<tb_FM_PaymentRecord>(this, true);
                                         //需要有一个方法。通过外币代码得到换人民币的汇率
                                         entity.ExchangeRate = BizService.GetExchangeRateFromCache(cv.Currency_ID, AppContext.BaseCurrency.Currency_ID);
+                                        lblExchangeRate.Visible = true;
+                                        txtExchangeRate.Visible = true;
                                     }
                                     else
                                     {
                                         //隐藏外币相关
                                         UIHelper.ControlForeignFieldInvisible<tb_FM_PaymentRecord>(this, false);
+                                        lblExchangeRate.Visible = false;
+                                        txtExchangeRate.Visible = false;
                                     }
                                 }
                             }
@@ -522,6 +529,7 @@ namespace RUINORERP.UI.FM
                     lblPaymentDate.Text = "收款日期";
                     lblCustomerVendor_ID.Text = "付款单位";
                     btnInfo.Visible = false;
+                    lblPayeeInfoID.Visible = false;
                     cmbPayeeInfoID.Visible = false;
                     kryptonGroupBox收款账号信息.Visible = false;
 
@@ -531,6 +539,10 @@ namespace RUINORERP.UI.FM
                     lblAccount_id.Text = "付款账号";
                     lblPaymentDate.Text = "付款日期";
                     lblCustomerVendor_ID.Text = "收款单位";
+                    btnInfo.Visible = true;
+                    lblPayeeInfoID.Visible = true;
+                    cmbPayeeInfoID.Visible = true;
+                    kryptonGroupBox收款账号信息.Visible = true;
                     break;
                 default:
                     break;

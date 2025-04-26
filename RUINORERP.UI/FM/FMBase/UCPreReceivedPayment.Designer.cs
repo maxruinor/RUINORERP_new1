@@ -29,7 +29,7 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            RUINORERP.Global.Model.DataRowImage dataRowImage1 = new RUINORERP.Global.Model.DataRowImage();
+            RUINORERP.Global.Model.DataRowImage dataRowImage2 = new RUINORERP.Global.Model.DataRowImage();
             this.kryptonPanel1 = new Krypton.Toolkit.KryptonPanel();
             this.lblPayeeInfoID = new Krypton.Toolkit.KryptonLabel();
             this.cmbPayeeInfoID = new Krypton.Toolkit.KryptonComboBox();
@@ -43,7 +43,7 @@
             this.lblAccount_type = new Krypton.Toolkit.KryptonLabel();
             this.lblOpeningbank = new Krypton.Toolkit.KryptonLabel();
             this.lblSourceBill_BizType = new Krypton.Toolkit.KryptonLabel();
-            this.txtSourceBill_BizType = new Krypton.Toolkit.KryptonTextBox();
+            this.txtBizType = new Krypton.Toolkit.KryptonTextBox();
             this.lblSourceBill_ID = new Krypton.Toolkit.KryptonLabel();
             this.txtSourceBill_ID = new Krypton.Toolkit.KryptonTextBox();
             this.lblSourceBillNO = new Krypton.Toolkit.KryptonLabel();
@@ -94,6 +94,9 @@
             this.cmbCustomerVendor_ID = new Krypton.Toolkit.KryptonComboBox();
             this.lblRemark = new Krypton.Toolkit.KryptonLabel();
             this.txtRemark = new Krypton.Toolkit.KryptonTextBox();
+            this.lblIsAvailable = new Krypton.Toolkit.KryptonLabel();
+            this.chkIsAvailable = new Krypton.Toolkit.KryptonCheckBox();
+            this.kryptonLabel1 = new Krypton.Toolkit.KryptonLabel();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceSub)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel1)).BeginInit();
@@ -116,12 +119,15 @@
             // 
             // kryptonPanel1
             // 
+            this.kryptonPanel1.Controls.Add(this.kryptonLabel1);
+            this.kryptonPanel1.Controls.Add(this.lblIsAvailable);
+            this.kryptonPanel1.Controls.Add(this.chkIsAvailable);
             this.kryptonPanel1.Controls.Add(this.lblPayeeInfoID);
             this.kryptonPanel1.Controls.Add(this.cmbPayeeInfoID);
             this.kryptonPanel1.Controls.Add(this.btnInfo);
             this.kryptonPanel1.Controls.Add(this.kryptonGroupBox收款账号信息);
             this.kryptonPanel1.Controls.Add(this.lblSourceBill_BizType);
-            this.kryptonPanel1.Controls.Add(this.txtSourceBill_BizType);
+            this.kryptonPanel1.Controls.Add(this.txtBizType);
             this.kryptonPanel1.Controls.Add(this.lblSourceBill_ID);
             this.kryptonPanel1.Controls.Add(this.txtSourceBill_ID);
             this.kryptonPanel1.Controls.Add(this.lblSourceBillNO);
@@ -292,12 +298,12 @@
             this.lblSourceBill_BizType.TabIndex = 210;
             this.lblSourceBill_BizType.Values.Text = "来源业务";
             // 
-            // txtSourceBill_BizType
+            // txtBizType
             // 
-            this.txtSourceBill_BizType.Location = new System.Drawing.Point(882, 166);
-            this.txtSourceBill_BizType.Name = "txtSourceBill_BizType";
-            this.txtSourceBill_BizType.Size = new System.Drawing.Size(156, 23);
-            this.txtSourceBill_BizType.TabIndex = 211;
+            this.txtBizType.Location = new System.Drawing.Point(882, 166);
+            this.txtBizType.Name = "txtBizType";
+            this.txtBizType.Size = new System.Drawing.Size(156, 23);
+            this.txtBizType.TabIndex = 211;
             // 
             // lblSourceBill_ID
             // 
@@ -531,15 +537,15 @@
             this.PaymentImage.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.PaymentImage.Location = new System.Drawing.Point(882, 246);
             this.PaymentImage.Name = "PaymentImage";
-            dataRowImage1.Dir = null;
-            dataRowImage1.image = null;
-            dataRowImage1.ImageBase64 = null;
-            dataRowImage1.ImageBytes = null;
-            dataRowImage1.ImageFullName = null;
-            dataRowImage1.newhash = null;
-            dataRowImage1.oldhash = null;
-            dataRowImage1.realName = null;
-            this.PaymentImage.RowImage = dataRowImage1;
+            dataRowImage2.Dir = null;
+            dataRowImage2.image = null;
+            dataRowImage2.ImageBase64 = null;
+            dataRowImage2.ImageBytes = null;
+            dataRowImage2.ImageFullName = null;
+            dataRowImage2.newhash = null;
+            dataRowImage2.oldhash = null;
+            dataRowImage2.realName = null;
+            this.PaymentImage.RowImage = dataRowImage2;
             this.PaymentImage.Size = new System.Drawing.Size(238, 216);
             this.PaymentImage.TabIndex = 180;
             this.PaymentImage.TabStop = false;
@@ -576,7 +582,7 @@
             this.lblBillText.StateCommon.LongText.Color1 = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(192)))), ((int)(((byte)(192)))));
             this.lblBillText.StateCommon.LongText.Color2 = System.Drawing.Color.Lime;
             this.lblBillText.TabIndex = 131;
-            this.lblBillText.Values.Text = "付款申请单";
+            this.lblBillText.Values.Text = "预收付款单";
             // 
             // lblDataStatus
             // 
@@ -610,7 +616,7 @@
             // 
             // lblApprovalOpinions
             // 
-            this.lblApprovalOpinions.Location = new System.Drawing.Point(424, 485);
+            this.lblApprovalOpinions.Location = new System.Drawing.Point(422, 512);
             this.lblApprovalOpinions.Name = "lblApprovalOpinions";
             this.lblApprovalOpinions.Size = new System.Drawing.Size(62, 20);
             this.lblApprovalOpinions.TabIndex = 112;
@@ -618,10 +624,10 @@
             // 
             // txtApprovalOpinions
             // 
-            this.txtApprovalOpinions.Location = new System.Drawing.Point(492, 484);
+            this.txtApprovalOpinions.Location = new System.Drawing.Point(490, 511);
             this.txtApprovalOpinions.Multiline = true;
             this.txtApprovalOpinions.Name = "txtApprovalOpinions";
-            this.txtApprovalOpinions.Size = new System.Drawing.Size(221, 115);
+            this.txtApprovalOpinions.Size = new System.Drawing.Size(221, 85);
             this.txtApprovalOpinions.TabIndex = 113;
             // 
             // lblCurrency_ID
@@ -723,6 +729,30 @@
             this.txtRemark.Size = new System.Drawing.Size(294, 114);
             this.txtRemark.TabIndex = 32;
             // 
+            // lblIsAvailable
+            // 
+            this.lblIsAvailable.Location = new System.Drawing.Point(422, 482);
+            this.lblIsAvailable.Name = "lblIsAvailable";
+            this.lblIsAvailable.Size = new System.Drawing.Size(62, 20);
+            this.lblIsAvailable.TabIndex = 220;
+            this.lblIsAvailable.Values.Text = "是否可用";
+            // 
+            // chkIsAvailable
+            // 
+            this.chkIsAvailable.Location = new System.Drawing.Point(490, 485);
+            this.chkIsAvailable.Name = "chkIsAvailable";
+            this.chkIsAvailable.Size = new System.Drawing.Size(19, 13);
+            this.chkIsAvailable.TabIndex = 221;
+            this.chkIsAvailable.Values.Text = "";
+            // 
+            // kryptonLabel1
+            // 
+            this.kryptonLabel1.Location = new System.Drawing.Point(506, 482);
+            this.kryptonLabel1.Name = "kryptonLabel1";
+            this.kryptonLabel1.Size = new System.Drawing.Size(290, 20);
+            this.kryptonLabel1.TabIndex = 222;
+            this.kryptonLabel1.Values.Text = "(如果款项需要留给指定订单使用，则先设不可用)";
+            // 
             // UCPreReceivedPayment
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
@@ -806,7 +836,7 @@
         private Krypton.Toolkit.KryptonLabel lblForeignPrepaidAmount;
         private Krypton.Toolkit.KryptonTextBox txtForeignPrepaidAmount;
         private Krypton.Toolkit.KryptonLabel lblSourceBill_BizType;
-        private Krypton.Toolkit.KryptonTextBox txtSourceBill_BizType;
+        private Krypton.Toolkit.KryptonTextBox txtBizType;
         private Krypton.Toolkit.KryptonLabel lblSourceBill_ID;
         private Krypton.Toolkit.KryptonTextBox txtSourceBill_ID;
         private Krypton.Toolkit.KryptonLabel lblSourceBillNO;
@@ -822,5 +852,8 @@
         private Krypton.Toolkit.KryptonButton btnInfo;
         private Krypton.Toolkit.KryptonLabel lblPayeeInfoID;
         private Krypton.Toolkit.KryptonComboBox cmbPayeeInfoID;
+        private Krypton.Toolkit.KryptonLabel lblIsAvailable;
+        private Krypton.Toolkit.KryptonCheckBox chkIsAvailable;
+        private Krypton.Toolkit.KryptonLabel kryptonLabel1;
     }
 }

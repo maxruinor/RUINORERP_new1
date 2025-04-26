@@ -652,12 +652,27 @@ namespace RUINORERP.UI.UControls
 
             }
 
+            //如果
+            if (this.Columns.Count != ColumnDisplays.Count && this.Columns.Count > 5)
+            {
+                //ColumnDisplays中不存在的列，但是this.Columns中存在，则设置为隐藏
+                foreach (DataGridViewColumn col in this.Columns)
+                {
+                    if (!ColumnDisplays.Any(c => c.ColName == col.Name))
+                    {
+                        col.Visible = false;
+                    }
+                }
+            }
 
             BindColumnStyleFordgvSum();
 
 
         }
 
+        /// <summary>
+        /// 求和列
+        /// </summary>
         private void BindColumnStyleFordgvSum()
         {
             if (_dgvSumRow == null)

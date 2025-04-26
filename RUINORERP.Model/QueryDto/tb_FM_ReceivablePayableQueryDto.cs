@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：04/22/2025 12:16:16
+// 时间：04/25/2025 19:03:36
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -233,19 +233,6 @@ namespace RUINORERP.Model.QueryDto
         }
      
 
-        private DateTime? _PaymentDate;
-        /// <summary>
-        /// 支付日期
-        /// </summary>
-        [AdvQueryAttribute(ColName = "PaymentDate",ColDesc = "支付日期")]
-        [SugarColumn(ColumnDataType = "datetime",SqlParameterDbType ="DateTime",ColumnName = "PaymentDate",IsNullable = true,ColumnDescription = "支付日期" )]
-        public DateTime? PaymentDate 
-        { 
-            get{return _PaymentDate;}
-            set{SetProperty(ref _PaymentDate, value);}
-        }
-     
-
         private DateTime? _DueDate;
         /// <summary>
         /// 到期日
@@ -339,10 +326,10 @@ namespace RUINORERP.Model.QueryDto
 
         private int? _FMPaymentStatus;
         /// <summary>
-        /// 付款状态
+        /// 支付状态
         /// </summary>
-        [AdvQueryAttribute(ColName = "FMPaymentStatus",ColDesc = "付款状态")]
-        [SugarColumn(ColumnDataType = "int",SqlParameterDbType ="Int32",ColumnName = "FMPaymentStatus",IsNullable = true,ColumnDescription = "付款状态" )]
+        [AdvQueryAttribute(ColName = "FMPaymentStatus",ColDesc = "支付状态")]
+        [SugarColumn(ColumnDataType = "int",SqlParameterDbType ="Int32",ColumnName = "FMPaymentStatus",IsNullable = true,ColumnDescription = "支付状态" )]
         public int? FMPaymentStatus 
         { 
             get{return _FMPaymentStatus;}

@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：04/22/2025 12:16:16
+// 时间：04/25/2025 19:03:36
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -266,8 +266,6 @@ namespace RUINORERP.Model
                         }
         }
 
- 
-
         private DateTime? _DueDate;
         /// <summary>
         /// 到期日
@@ -366,20 +364,33 @@ namespace RUINORERP.Model
                         }
         }
 
-        private int? _FMPaymentStatus;
+        private int _FMPaymentStatus;
         /// <summary>
-        /// 付款状态
+        /// 支付状态
         /// </summary>
-        [AdvQueryAttribute(ColName = "FMPaymentStatus",ColDesc = "付款状态")] 
-        [SugarColumn(ColumnDataType = "int", SqlParameterDbType ="Int32",  ColumnName = "FMPaymentStatus" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "付款状态" )]
-        public int? FMPaymentStatus
+        [AdvQueryAttribute(ColName = "FMPaymentStatus",ColDesc = "支付状态")] 
+        [SugarColumn(ColumnDataType = "int", SqlParameterDbType ="Int32",  ColumnName = "FMPaymentStatus" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "支付状态" )]
+        public int FMPaymentStatus
         { 
             get{return _FMPaymentStatus;}
             set{
             SetProperty(ref _FMPaymentStatus, value);
                         }
         }
-
+        private bool _IsAvailable;
+        /// <summary>
+        /// 是否可用
+        /// </summary>
+        [AdvQueryAttribute(ColName = "IsAvailable", ColDesc = "是否可用")]
+        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType = "Boolean", ColumnName = "IsAvailable", IsNullable = true, ColumnDescription = "是否可用")]
+        public bool IsAvailable
+        {
+            get { return _IsAvailable; }
+            set
+            {
+                SetProperty(ref _IsAvailable, value);
+            }
+        }
         private string _Remark;
         /// <summary>
         /// 备注

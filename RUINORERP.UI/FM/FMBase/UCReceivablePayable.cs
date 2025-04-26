@@ -182,7 +182,6 @@ namespace RUINORERP.UI.FM
                             .And(t => t.IsVendor == true)//供应商和第三方
                             .And(t => t.isdeleted == false)
                             .And(t => t.Is_enabled == true)
-                            .And(t => t.Is_available == true)
                             .ToExpression();//注意 这一句 不能少
 
             BaseProcessor baseProcessor = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_CustomerVendor).Name + "Processor");
@@ -399,14 +398,14 @@ namespace RUINORERP.UI.FM
             UIHelper.ControlChildColumnsInvisible(CurMenuInfo, listCols);
             listCols.SetCol_NeverVisible<tb_FM_ReceivablePayableDetail>(c => c.ARAPDetailID);
             listCols.SetCol_NeverVisible<tb_FM_ReceivablePayableDetail>(c => c.SourceBill_ID);
-            listCols.SetCol_DefaultValue<tb_FM_ReceivablePayableDetail>(c => c.ForeignPayableAmount, 0.00M);
+            //listCols.SetCol_DefaultValue<tb_FM_ReceivablePayableDetail>(c => c.ForeignPayableAmount, 0.00M);
 
             //listCols.SetCol_ReadOnly<tb_FM_OtherExpenseDetail>(c => c.CNName);
 
             listCols.SetCol_Format<tb_FM_ReceivablePayableDetail>(c => c.TaxRate, CustomFormatType.PercentFormat);
             listCols.SetCol_Format<tb_FM_ReceivablePayableDetail>(c => c.LocalPayableAmount, CustomFormatType.CurrencyFormat);
             listCols.SetCol_Format<tb_FM_ReceivablePayableDetail>(c => c.TaxLocalAmount, CustomFormatType.CurrencyFormat);
-            listCols.SetCol_Format<tb_FM_ReceivablePayableDetail>(c => c.ForeignPayableAmount, CustomFormatType.CurrencyFormat);
+            //listCols.SetCol_Format<tb_FM_ReceivablePayableDetail>(c => c.ForeignPayableAmount, CustomFormatType.CurrencyFormat);
 
             sgd = new SourceGridDefine(grid1, listCols, true);
 
@@ -422,7 +421,7 @@ namespace RUINORERP.UI.FM
 
 
             //listCols.SetCol_NeverVisible<tb_FM_ReceivablePayableDetail>(c => c.EvidenceImage);//后面会删除这一列
-            listCols.SetCol_Summary<tb_FM_ReceivablePayableDetail>(c => c.ForeignPayableAmount);
+            //listCols.SetCol_Summary<tb_FM_ReceivablePayableDetail>(c => c.ForeignPayableAmount);
             listCols.SetCol_Summary<tb_FM_ReceivablePayableDetail>(c => c.LocalPayableAmount);
             listCols.SetCol_Summary<tb_FM_ReceivablePayableDetail>(c => c.TaxLocalAmount);
 
@@ -478,7 +477,7 @@ namespace RUINORERP.UI.FM
                     MainForm.Instance.uclog.AddLog("金额必须大于0");
                     return;
                 }
-                EditEntity.TotalForeignPayableAmount = details.Sum(c => c.ForeignPayableAmount);
+                //EditEntity.TotalForeignPayableAmount = details.Sum(c => c.ForeignPayableAmount);
                 EditEntity.TotalLocalPayableAmount = details.Sum(c => c.LocalPayableAmount);
             }
             catch (Exception ex)

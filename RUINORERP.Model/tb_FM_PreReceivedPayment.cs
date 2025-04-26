@@ -241,17 +241,17 @@ namespace RUINORERP.Model
                         }
         }
 
-        private int? _SourceBill_BizType;
+        private int? _BizType;
         /// <summary>
         /// 来源业务
         /// </summary>
-        [AdvQueryAttribute(ColName = "SourceBill_BizType",ColDesc = "来源业务")] 
-        [SugarColumn(ColumnDataType = "int", SqlParameterDbType ="Int32",  ColumnName = "SourceBill_BizType" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "来源业务" )]
-        public int? SourceBill_BizType
+        [AdvQueryAttribute(ColName = "BizType",ColDesc = "来源业务")] 
+        [SugarColumn(ColumnDataType = "int", SqlParameterDbType ="Int32",  ColumnName = "BizType" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "来源业务" )]
+        public int? BizType
         { 
-            get{return _SourceBill_BizType;}
+            get{return _BizType;}
             set{
-            SetProperty(ref _SourceBill_BizType, value);
+            SetProperty(ref _BizType, value);
                         }
         }
 
@@ -283,13 +283,13 @@ namespace RUINORERP.Model
                         }
         }
 
-        private int? _FMPaymentStatus;
+        private int _FMPaymentStatus;
         /// <summary>
-        /// 数据状态
+        /// 支付状态
         /// </summary>
-        [AdvQueryAttribute(ColName = "FMPaymentStatus",ColDesc = "数据状态")] 
-        [SugarColumn(ColumnDataType = "int", SqlParameterDbType ="Int32",  ColumnName = "FMPaymentStatus" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "数据状态" )]
-        public int? FMPaymentStatus
+        [AdvQueryAttribute(ColName = "FMPaymentStatus",ColDesc = "支付状态")] 
+        [SugarColumn(ColumnDataType = "int", SqlParameterDbType ="Int32",  ColumnName = "FMPaymentStatus" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "支付状态")]
+        public int FMPaymentStatus
         { 
             get{return _FMPaymentStatus;}
             set{
@@ -422,7 +422,20 @@ namespace RUINORERP.Model
             SetProperty(ref _PaymentImagePath, value);
                         }
         }
-
+        private bool _IsAvailable;
+        /// <summary>
+        /// 是否可用
+        /// </summary>
+        [AdvQueryAttribute(ColName = "IsAvailable", ColDesc = "是否可用")]
+        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType = "Boolean", ColumnName = "IsAvailable", IsNullable = true, ColumnDescription = "是否可用")]
+        public bool IsAvailable
+        {
+            get { return _IsAvailable; }
+            set
+            {
+                SetProperty(ref _IsAvailable, value);
+            }
+        }
         private string _Remark;
         /// <summary>
         /// 备注

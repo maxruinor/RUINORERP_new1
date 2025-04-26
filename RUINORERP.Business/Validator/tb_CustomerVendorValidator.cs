@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/18/2024 17:45:26
+// 时间：04/25/2025 10:38:55
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -68,6 +68,10 @@ namespace RUINORERP.Business
 
  RuleFor(tb_CustomerVendor =>tb_CustomerVendor.Website).MaximumLength(127).WithMessage("网址:不能超过最大长度,127.");
 
+ RuleFor(x => x.CreditLimit).PrecisionScale(12,2,true).WithMessage("信用额度:小数位不能超过2。");
+
+ RuleFor(tb_CustomerVendor =>tb_CustomerVendor.CreditDays).NotEmpty().When(x => x.CreditDays.HasValue);
+
 
 
 
@@ -84,7 +88,6 @@ namespace RUINORERP.Business
 //有默认值
 
 
- 
            	        Initialize();
      }
 
@@ -101,8 +104,6 @@ namespace RUINORERP.Business
             return rs;
         }
         
-
-      
 
         private bool DetailedRecordsNotEmpty(List<tb_PurGoodsRecommendDetail> details)
         {

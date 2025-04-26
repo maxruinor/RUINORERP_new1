@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：04/22/2025 12:16:18
+// 时间：04/25/2025 19:03:38
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -40,13 +40,11 @@ namespace RUINORERP.Business
       RuleFor(tb_FM_ReceivablePayableDetail =>tb_FM_ReceivablePayableDetail.ARAPId).NotEmpty().When(x => x.ARAPId.HasValue);
 
 
- RuleFor(tb_FM_ReceivablePayableDetail =>tb_FM_ReceivablePayableDetail.SourceBill_BizType).NotEmpty().When(x => x.SourceBill_BizType.HasValue);
+ RuleFor(tb_FM_ReceivablePayableDetail =>tb_FM_ReceivablePayableDetail.BizType).NotEmpty().When(x => x.BizType.HasValue);
 
  RuleFor(tb_FM_ReceivablePayableDetail =>tb_FM_ReceivablePayableDetail.SourceBill_ID).NotEmpty().When(x => x.SourceBill_ID.HasValue);
 
  RuleFor(tb_FM_ReceivablePayableDetail =>tb_FM_ReceivablePayableDetail.SourceBillNO).MaximumLength(15).WithMessage("来源单号:不能超过最大长度,15.");
-
- RuleFor(tb_FM_ReceivablePayableDetail =>tb_FM_ReceivablePayableDetail.ItemType).NotEmpty().When(x => x.ItemType.HasValue);
 
  RuleFor(tb_FM_ReceivablePayableDetail =>tb_FM_ReceivablePayableDetail.ProdDetailID).Must(CheckForeignKeyValueCanNull).WithMessage("产品:下拉选择值不正确。");
  RuleFor(tb_FM_ReceivablePayableDetail =>tb_FM_ReceivablePayableDetail.ProdDetailID).NotEmpty().When(x => x.ProdDetailID.HasValue);
@@ -73,9 +71,7 @@ namespace RUINORERP.Business
 
  RuleFor(x => x.TaxLocalAmount).PrecisionScale(19,4,true).WithMessage("税额:小数位不能超过4。");
 
- RuleFor(x => x.ForeignPayableAmount).PrecisionScale(19,4,true).WithMessage("金额外币:小数位不能超过4。");
-
- RuleFor(x => x.LocalPayableAmount).PrecisionScale(19,4,true).WithMessage("金额本币:小数位不能超过4。");
+ RuleFor(x => x.LocalPayableAmount).PrecisionScale(19,4,true).WithMessage("金额小计:小数位不能超过4。");
 
  RuleFor(tb_FM_ReceivablePayableDetail =>tb_FM_ReceivablePayableDetail.Summary).MaximumLength(150).WithMessage("摘要:不能超过最大长度,150.");
 

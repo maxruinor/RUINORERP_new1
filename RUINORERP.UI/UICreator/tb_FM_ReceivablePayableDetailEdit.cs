@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：04/22/2025 12:16:17
+// 时间：04/25/2025 19:03:37
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -52,8 +52,6 @@ namespace RUINORERP.UI
         
         
         
-        
-        
 
          }
 /*
@@ -62,15 +60,14 @@ namespace RUINORERP.UI
         {
         tb_FM_ReceivablePayableDetail entity = new tb_FM_ReceivablePayableDetail();
                      entity.ARAPId = Int64.Parse(txtARAPId.Text);
-                        entity.SourceBill_BizType = Int32.Parse(txtSourceBill_BizType.Text);
+                        entity.BizType = Int32.Parse(txtBizType.Text);
                         entity.SourceBill_ID = Int64.Parse(txtSourceBill_ID.Text);
                         entity.SourceBillNO = txtSourceBillNO.Text ;
-                       entity.ItemType = Int32.Parse(txtItemType.Text);
-                        entity.ProdDetailID = Int64.Parse(txtProdDetailID.Text);
+                       entity.ProdDetailID = Int64.Parse(txtProdDetailID.Text);
                         entity.property = txtproperty.Text ;
                        entity.Specifications = txtSpecifications.Text ;
                        entity.Unit_ID = Int64.Parse(txtUnit_ID.Text);
-                        entity.IsIncludeTax = Boolean.Parse(txtIsIncludeTax.Text);
+                        entity.IncludeTax = Boolean.Parse(txtIncludeTax.Text);
                         entity.ExchangeRate = Decimal.Parse(txtExchangeRate.Text);
                         entity.UnitPrice = Decimal.Parse(txtUnitPrice.Text);
                         entity.Quantity = Decimal.Parse(txtQuantity.Text);
@@ -78,7 +75,6 @@ namespace RUINORERP.UI
                        entity.Description = txtDescription.Text ;
                        entity.TaxRate = Decimal.Parse(txtTaxRate.Text);
                         entity.TaxLocalAmount = Decimal.Parse(txtTaxLocalAmount.Text);
-                        entity.ForeignPayableAmount = Decimal.Parse(txtForeignPayableAmount.Text);
                         entity.LocalPayableAmount = Decimal.Parse(txtLocalPayableAmount.Text);
                         entity.Summary = txtSummary.Text ;
                                return entity;
@@ -92,15 +88,14 @@ namespace RUINORERP.UI
         {
         _EditEntity = entity;
                        // DataBindingHelper.BindData4Cmb<tb_FM_ReceivablePayable>(entity, k => k.ARAPId, v=>v.XXNAME, cmbARAPId);
-           DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayableDetail>(entity, t => t.SourceBill_BizType, txtSourceBill_BizType, BindDataType4TextBox.Qty,false);
+           DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayableDetail>(entity, t => t.BizType, txtBizType, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayableDetail>(entity, t => t.SourceBill_ID, txtSourceBill_ID, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayableDetail>(entity, t => t.SourceBillNO, txtSourceBillNO, BindDataType4TextBox.Text,false);
-           DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayableDetail>(entity, t => t.ItemType, txtItemType, BindDataType4TextBox.Qty,false);
           // DataBindingHelper.BindData4Cmb<tb_ProdDetail>(entity, k => k.ProdDetailID, v=>v.XXNAME, cmbProdDetailID);
            DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayableDetail>(entity, t => t.property, txtproperty, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayableDetail>(entity, t => t.Specifications, txtSpecifications, BindDataType4TextBox.Text,false);
           // DataBindingHelper.BindData4Cmb<tb_Unit>(entity, k => k.Unit_ID, v=>v.XXNAME, cmbUnit_ID);
-           DataBindingHelper.BindData4CheckBox<tb_FM_ReceivablePayableDetail>(entity, t => t.IsIncludeTax, chkIsIncludeTax, false);
+           DataBindingHelper.BindData4CheckBox<tb_FM_ReceivablePayableDetail>(entity, t => t.IncludeTax, chkIncludeTax, false);
            DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayableDetail>(entity, t => t.ExchangeRate.ToString(), txtExchangeRate, BindDataType4TextBox.Money,false);
            DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayableDetail>(entity, t => t.UnitPrice.ToString(), txtUnitPrice, BindDataType4TextBox.Money,false);
            DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayableDetail>(entity, t => t.Quantity.ToString(), txtQuantity, BindDataType4TextBox.Money,false);
@@ -108,7 +103,6 @@ namespace RUINORERP.UI
            DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayableDetail>(entity, t => t.Description, txtDescription, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayableDetail>(entity, t => t.TaxRate.ToString(), txtTaxRate, BindDataType4TextBox.Money,false);
            DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayableDetail>(entity, t => t.TaxLocalAmount.ToString(), txtTaxLocalAmount, BindDataType4TextBox.Money,false);
-           DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayableDetail>(entity, t => t.ForeignPayableAmount.ToString(), txtForeignPayableAmount, BindDataType4TextBox.Money,false);
            DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayableDetail>(entity, t => t.LocalPayableAmount.ToString(), txtLocalPayableAmount, BindDataType4TextBox.Money,false);
            DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayableDetail>(entity, t => t.Summary, txtSummary, BindDataType4TextBox.Text,false);
 }

@@ -328,7 +328,40 @@ namespace RUINORERP.Business.CommService
                         cbd.BillNo = PreReceivedPayment.PreRPNO;
                     }
                     break;
+                case BizType.付款单:
+                case BizType.收款单:
+                    var Paymentrecord = Entity as tb_FM_PaymentRecord;
+                    if (Paymentrecord != null)
+                    {
+                        if (Paymentrecord.ReceivePaymentType == (int)ReceivePaymentType.付款)
+                        {
 
+                        }
+                        else
+                        {
+                        }
+
+                        cbd.BillID = Paymentrecord.PaymentId;
+                        cbd.BillNo = Paymentrecord.PaymentNo;
+                    }
+                    break;
+                case BizType.应付单:
+                case BizType.应收单:
+                    var ReceivablePayable = Entity as tb_FM_ReceivablePayable;
+                    if (ReceivablePayable != null)
+                    {
+                        if (ReceivablePayable.ReceivePaymentType == (int)ReceivePaymentType.付款)
+                        {
+
+                        }
+                        else
+                        {
+                        }
+
+                        cbd.BillID = ReceivablePayable.ARAPId;
+                        cbd.BillNo = ReceivablePayable.ARAPNo;
+                    }
+                    break;
                 /*
         case BizType.托外退料单:
             var Return = Entity as tb_Return;

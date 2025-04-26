@@ -142,7 +142,6 @@ namespace RUINORERP.UI.FM
                             .And(t => t.IsVendor == true)//供应商和第三方
                             .And(t => t.isdeleted == false)
                             .And(t => t.Is_enabled == true)
-                            .And(t => t.Is_available == true)
                             .ToExpression();//注意 这一句 不能少
 
             BaseProcessor baseProcessor = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_CustomerVendor).Name + "Processor");

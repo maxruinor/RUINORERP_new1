@@ -35,24 +35,23 @@ namespace RUINORERP.Business
     /// <summary>
     /// 预收付款单
     /// </summary>
-    public partial class tb_FM_PreReceivedPaymentController<T> : BaseController<T> where T : class
+    public partial class tb_FM_PaymentRecordController<T> : BaseController<T> where T : class
     {
         public async override Task<ReturnResults<T>> AntiApprovalAsync(T ObjectEntity)
         {
             ReturnResults<T> rmrs = new ReturnResults<T>();
-            tb_FM_PreReceivedPayment entity = ObjectEntity as tb_FM_PreReceivedPayment;
-
+            tb_FM_PaymentRecord entity = ObjectEntity as tb_FM_PaymentRecord;
 
             try
             {
                 // 开启事务，保证数据一致性
                 _unitOfWorkManage.BeginTran();
-                entity.FMPaymentStatus = (int)FMPaymentStatus.草稿;
+                //entity.FMPaymentStatus = (int)FMPaymentStatus.草稿;
                 entity.ApprovalResults = false;
-                entity.ApprovalStatus = (int)ApprovalStatus.未审核;
+                entity.ApprovalStatus = (int)ApprovalStatus.已审核;
                 BusinessHelper.Instance.ApproverEntity(entity);
                 //只更新指定列
-                await _unitOfWorkManage.GetDbClient().Updateable<tb_FM_PreReceivedPayment>(entity).ExecuteCommandAsync();
+                await _unitOfWorkManage.GetDbClient().Updateable<tb_FM_PaymentRecord>(entity).ExecuteCommandAsync();
                 //rmr = await ctr.BaseSaveOrUpdate(EditEntity);
                 // 注意信息的完整性
                 _unitOfWorkManage.CommitTran();
@@ -79,25 +78,24 @@ namespace RUINORERP.Business
         public async override Task<ReturnResults<T>> ApprovalAsync(T ObjectEntity)
         {
             ReturnResults<T> rmrs = new ReturnResults<T>();
-            tb_FM_PreReceivedPayment entity = ObjectEntity as tb_FM_PreReceivedPayment;
+            tb_FM_PaymentRecord entity = ObjectEntity as tb_FM_PaymentRecord;
+
+
             try
             {
                 // 开启事务，保证数据一致性
                 _unitOfWorkManage.BeginTran();
-                tb_FM_PaymentRecordController<tb_FM_PaymentRecord> settlementController = _appContext.GetRequiredService<tb_FM_PaymentRecordController<tb_FM_PaymentRecord>>();
-                tb_FM_PaymentRecord paymentRecord = await settlementController.CreatePaymentRecord(entity);
-                if (paymentRecord.PaymentId > 0)
-                {
-                    entity.ForeignBalanceAmount = entity.ForeignPrepaidAmount;
-                    entity.LocalBalanceAmount = entity.LocalPrepaidAmount;
-                }
+
+                //收到列，付了钱。审核就会生成一笔核销记录
+                tb_FM_PaymentSettlementController<tb_FM_PaymentSettlement> settlementController = _appContext.GetRequiredService<tb_FM_PaymentSettlementController<tb_FM_PaymentSettlement>>();
+                await settlementController.GenerateSettlement(entity);
 
                 entity.FMPaymentStatus = (int)FMPaymentStatus.已审核;
                 entity.ApprovalStatus = (int)ApprovalStatus.已审核;
                 BusinessHelper.Instance.ApproverEntity(entity);
                 //只更新指定列
                 // var result = _unitOfWorkManage.GetDbClient().Updateable<tb_Stocktake>(entity).UpdateColumns(it => new { it.FMPaymentStatus, it.ApprovalOpinions }).ExecuteCommand();
-                await _unitOfWorkManage.GetDbClient().Updateable<tb_FM_PreReceivedPayment>(entity).ExecuteCommandAsync();
+                await _unitOfWorkManage.GetDbClient().Updateable<tb_FM_PaymentRecord>(entity).ExecuteCommandAsync();
                 // 注意信息的完整性
                 _unitOfWorkManage.CommitTran();
                 rmrs.Succeeded = true;
@@ -115,16 +113,68 @@ namespace RUINORERP.Business
 
         }
 
-        public async Task<bool> BaseLogicDeleteAsync(tb_FM_PreReceivedPayment ObjectEntity)
+
+        // 生成收付款记录表
+        public async Task<tb_FM_PaymentRecord> CreatePaymentRecord(tb_FM_PreReceivedPayment entity)
         {
-            //  ReturnResults<tb_FM_PreReceivedPaymentController> rrs = new Business.ReturnResults<tb_FM_PreReceivedPaymentController>();
-            int count = await _unitOfWorkManage.GetDbClient().Deleteable<tb_FM_PreReceivedPayment>(ObjectEntity).IsLogic().ExecuteCommandAsync();
+            //预收付款单 审核时 自动生成 收付款记录
+            IMapper mapper = RUINORERP.Business.AutoMapper.AutoMapperConfig.RegisterMappings().CreateMapper();
+            tb_FM_PaymentRecord paymentRecord = new tb_FM_PaymentRecord();
+            paymentRecord = mapper.Map<tb_FM_PaymentRecord>(entity);
+            paymentRecord.ApprovalResults = null;
+            paymentRecord.ApprovalStatus = (int)ApprovalStatus.未审核;
+            paymentRecord.Approver_at = null;
+            paymentRecord.Approver_by = null;
+            paymentRecord.PrintStatus = 0;
+            paymentRecord.ActionStatus = ActionStatus.新增;
+            paymentRecord.ApprovalOpinions = "";
+            paymentRecord.Modified_at = null;
+            paymentRecord.Modified_by = null;
+            paymentRecord.ReceivePaymentType = entity.ReceivePaymentType;
+            if (entity.ReceivePaymentType == (int)ReceivePaymentType.收款)
+            {
+                paymentRecord.PaymentNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.收款单);
+            }
+            else
+            {
+                paymentRecord.PaymentNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.付款单);
+            }
+            paymentRecord.BizType = (int)BizType.预收款单;
+            paymentRecord.SourceBillNO = entity.PreRPNO;
+            paymentRecord.SourceBilllID = entity.PreRPID;
+            paymentRecord.PaymentDate = entity.PrePayDate;
+            paymentRecord.Currency_ID = paymentRecord.Currency_ID;
+            paymentRecord.ForeignPaidAmount = entity.ForeignPrepaidAmount;
+            paymentRecord.LocalPaidAmount = entity.LocalPrepaidAmount;
+            paymentRecord.PayeeInfoID = entity.PayeeInfoID;
+            paymentRecord.PaymentImagePath = entity.PaymentImagePath;
+            paymentRecord.PayeeAccountNo = entity.PayeeAccountNo;
+            paymentRecord.ExchangeRate = entity.ExchangeRate;
+
+            // paymentRecord.ReferenceNo=entity.no
+            //自动提交
+            paymentRecord.FMPaymentStatus = (int)FMPaymentStatus.提交;
+            BusinessHelper.Instance.InitEntity(paymentRecord);
+            long id = await _unitOfWorkManage.GetDbClient().Insertable<tb_FM_PaymentRecord>(paymentRecord).ExecuteReturnSnowflakeIdAsync();
+            if (id > 0)
+            {
+                 
+            }
+            return paymentRecord;
+        }
+
+      
+
+        public async Task<bool> BaseLogicDeleteAsync(tb_FM_PaymentRecord ObjectEntity)
+        {
+            //  ReturnResults<tb_FM_PaymentRecordController> rrs = new Business.ReturnResults<tb_FM_PaymentRecordController>();
+            int count = await _unitOfWorkManage.GetDbClient().Deleteable<tb_FM_PaymentRecord>(ObjectEntity).IsLogic().ExecuteCommandAsync();
             if (count > 0)
             {
                 //rrs.Succeeded = true;
                 return true;
                 ////生成时暂时只考虑了一个主键的情况
-                // MyCacheManager.Instance.DeleteEntityList<tb_FM_PreReceivedPaymentController>(entity);
+                // MyCacheManager.Instance.DeleteEntityList<tb_FM_PaymentRecordController>(entity);
             }
             return false;
         }
@@ -134,7 +184,7 @@ namespace RUINORERP.Business
         /// </summary>
         /// <param name="entitys"></param>
         /// <returns></returns>
-        public async virtual Task<bool> BatchApproval(List<tb_FM_PreReceivedPayment> entitys, ApprovalEntity approvalEntity)
+        public async virtual Task<bool> BatchApproval(List<tb_FM_PaymentRecord> entitys, ApprovalEntity approvalEntity)
         {
             try
             {
@@ -160,7 +210,7 @@ namespace RUINORERP.Business
                         BusinessHelper.Instance.ApproverEntity(entity);
                         //只更新指定列
                         // var result = _unitOfWorkManage.GetDbClient().Updateable<tb_Stocktake>(entity).UpdateColumns(it => new { it.FMPaymentStatus, it.ApprovalOpinions }).ExecuteCommand();
-                        await _unitOfWorkManage.GetDbClient().Updateable<tb_FM_PreReceivedPayment>(entity).ExecuteCommandAsync();
+                        await _unitOfWorkManage.GetDbClient().Updateable<tb_FM_PaymentRecord>(entity).ExecuteCommandAsync();
                     }
                 }
                 // 注意信息的完整性
@@ -188,8 +238,8 @@ namespace RUINORERP.Business
         /// <returns></returns>
         public async override Task<ReturnResults<bool>> BatchCloseCaseAsync(List<T> NeedCloseCaseList)
         {
-            List<tb_FM_PreReceivedPayment> entitys = new List<tb_FM_PreReceivedPayment>();
-            entitys = NeedCloseCaseList as List<tb_FM_PreReceivedPayment>;
+            List<tb_FM_PaymentRecord> entitys = new List<tb_FM_PaymentRecord>();
+            entitys = NeedCloseCaseList as List<tb_FM_PaymentRecord>;
 
             ReturnResults<bool> rs = new ReturnResults<bool>();
             try
@@ -211,7 +261,7 @@ namespace RUINORERP.Business
                     BusinessHelper.Instance.EditEntity(entitys[m]);
                     //只更新指定列
                     var affectedRows = await _unitOfWorkManage.GetDbClient()
-                        .Updateable<tb_FM_PreReceivedPayment>(entitys[m])
+                        .Updateable<tb_FM_PaymentRecord>(entitys[m])
                         .UpdateColumns(it => new
                         {
                             it.FMPaymentStatus,
@@ -243,8 +293,8 @@ namespace RUINORERP.Business
 
         public async override Task<List<T>> GetPrintDataSource(long ID)
         {
-            List<tb_FM_PreReceivedPayment> list = await _appContext.Db.CopyNew().Queryable<tb_FM_PreReceivedPayment>()
-                .Where(m => m.PreRPID == ID)
+            List<tb_FM_PaymentRecord> list = await _appContext.Db.CopyNew().Queryable<tb_FM_PaymentRecord>()
+                .Where(m => m.PaymentId == ID)
                             .Includes(a => a.tb_employee)
                             .Includes(a => a.tb_currency)
                             .Includes(a => a.tb_paymentmethod)

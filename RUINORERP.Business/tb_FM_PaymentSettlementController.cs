@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：04/22/2025 12:16:12
+// 时间：04/26/2025 22:26:20
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -29,7 +29,7 @@ using RUINORERP.Common.Helper;
 namespace RUINORERP.Business
 {
     /// <summary>
-    /// 记录收款 与应收的匹配，核销表-支持多对多、行项级核销 
+    /// 记录收款 与应收的匹配，核销表
     /// </summary>
     public partial class tb_FM_PaymentSettlementController<T>:BaseController<T> where T : class
     {
@@ -247,22 +247,17 @@ namespace RUINORERP.Business
             if (entity.SettlementId > 0)
             {
             
-                                 var result= await _unitOfWorkManage.GetDbClient().Updateable<tb_FM_PaymentSettlement>(entity as tb_FM_PaymentSettlement)
+                             rs = await _unitOfWorkManage.GetDbClient().UpdateNav<tb_FM_PaymentSettlement>(entity as tb_FM_PaymentSettlement)
+                        .Include(m => m.tb_FM_PaymentSettlements)
                     .ExecuteCommandAsync();
-                    if (result > 0)
-                    {
-                        rs = true;
-                    }
-            }
+                 }
         else    
         {
-                                  var result= await _unitOfWorkManage.GetDbClient().Insertable<tb_FM_PaymentSettlement>(entity as tb_FM_PaymentSettlement)
-                    .ExecuteReturnSnowflakeIdAsync();
-                    if (result > 0)
-                    {
-                        rs = true;
-                    }
-                                              
+                        rs = await _unitOfWorkManage.GetDbClient().InsertNav<tb_FM_PaymentSettlement>(entity as tb_FM_PaymentSettlement)
+                .Include(m => m.tb_FM_PaymentSettlements)
+         
+                .ExecuteCommandAsync();
+                                          
                      
         }
         
@@ -293,9 +288,8 @@ namespace RUINORERP.Business
         public async override Task<List<T>> BaseQueryByAdvancedNavAsync(bool useLike, object dto)
         {
             var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<tb_FM_PaymentSettlement>()
-                                //这里一般是子表，或没有一对多外键的情况 ，用自动的只是为了语法正常一般不会调用这个方法
-                .IncludesAllFirstLayer()//自动更新导航 只能两层。这里项目中有时会失效，具体看文档
-                                .Where(useLike, dto);
+                                .Includes(m => m.tb_FM_PaymentSettlements)
+                                        .Where(useLike, dto);
             return await querySqlQueryable.ToListAsync()as List<T>;
         }
 
@@ -304,9 +298,8 @@ namespace RUINORERP.Business
         {
             tb_FM_PaymentSettlement entity = model as tb_FM_PaymentSettlement;
              bool rs = await _unitOfWorkManage.GetDbClient().DeleteNav<tb_FM_PaymentSettlement>(m => m.SettlementId== entity.SettlementId)
-                                //这里一般是子表，或没有一对多外键的情况 ，用自动的只是为了语法正常一般不会调用这个方法
-                .IncludesAllFirstLayer()//自动更新导航 只能两层。这里项目中有时会失效，具体看文档
-                                .ExecuteCommandAsync();
+                                .Include(m => m.tb_FM_PaymentSettlements)
+                                        .ExecuteCommandAsync();
             if (rs)
             {
                 //////生成时暂时只考虑了一个主键的情况
@@ -468,8 +461,9 @@ namespace RUINORERP.Business
          public virtual async Task<List<tb_FM_PaymentSettlement>> QueryByNavAsync()
         {
             List<tb_FM_PaymentSettlement> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_FM_PaymentSettlement>()
-                               .Includes(t => t.tb_fm_paymentrecord )
-                                    .ToListAsync();
+                               .Includes(t => t.tb_fm_paymentsettlement )
+                                            .Includes(t => t.tb_FM_PaymentSettlements )
+                        .ToListAsync();
             
             foreach (var item in list)
             {
@@ -488,8 +482,9 @@ namespace RUINORERP.Business
          public virtual async Task<List<tb_FM_PaymentSettlement>> QueryByNavAsync(Expression<Func<tb_FM_PaymentSettlement, bool>> exp)
         {
             List<tb_FM_PaymentSettlement> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_FM_PaymentSettlement>().Where(exp)
-                               .Includes(t => t.tb_fm_paymentrecord )
-                                    .ToListAsync();
+                               .Includes(t => t.tb_fm_paymentsettlement )
+                                            .Includes(t => t.tb_FM_PaymentSettlements )
+                        .ToListAsync();
             
             foreach (var item in list)
             {
@@ -508,8 +503,9 @@ namespace RUINORERP.Business
          public virtual List<tb_FM_PaymentSettlement> QueryByNav(Expression<Func<tb_FM_PaymentSettlement, bool>> exp)
         {
             List<tb_FM_PaymentSettlement> list = _unitOfWorkManage.GetDbClient().Queryable<tb_FM_PaymentSettlement>().Where(exp)
-                            .Includes(t => t.tb_fm_paymentrecord )
-                                    .ToList();
+                            .Includes(t => t.tb_fm_paymentsettlement )
+                                        .Includes(t => t.tb_FM_PaymentSettlements )
+                        .ToList();
             
             foreach (var item in list)
             {
@@ -545,8 +541,9 @@ namespace RUINORERP.Business
         public override async Task<T> BaseQueryByIdNavAsync(object id)
         {
             tb_FM_PaymentSettlement entity = await _unitOfWorkManage.GetDbClient().Queryable<tb_FM_PaymentSettlement>().Where(w => w.SettlementId == (long)id)
-                             .Includes(t => t.tb_fm_paymentrecord )
-                                    .FirstAsync();
+                             .Includes(t => t.tb_fm_paymentsettlement )
+                                        .Includes(t => t.tb_FM_PaymentSettlements )
+                        .FirstAsync();
             if(entity!=null)
             {
                 entity.HasChanged = false;

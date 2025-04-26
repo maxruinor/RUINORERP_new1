@@ -44,7 +44,6 @@ namespace RUINORERP.Business.Processor
             queryFilter.SetQueryField<tb_CustomerVendor>(c => c.IsCustomer);
             queryFilter.SetQueryField<tb_CustomerVendor>(c => c.IsVendor);
             queryFilter.SetQueryField<tb_CustomerVendor>(c => c.IsOther);
-            queryFilter.SetQueryField<tb_CustomerVendor>(c => c.Is_available);//是不是做一个功能可以设置默认值 TODO:by watson
             queryFilter.SetQueryField<tb_CustomerVendor>(c => c.Is_enabled);
             queryFilter.SetQueryField<tb_CustomerVendor>(c => c.CVCode);
             queryFilter.SetQueryField<tb_CustomerVendor>(c => c.Contact);

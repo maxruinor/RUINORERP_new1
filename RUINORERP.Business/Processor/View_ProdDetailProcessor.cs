@@ -44,7 +44,6 @@ namespace RUINORERP.Business.Processor
 
             var lambda = Expressionable.Create<tb_CustomerVendor>()
                        .And(t => t.isdeleted == false)
-                       .And(t => t.Is_available == true)
                           .And(t => t.IsVendor == true)
                        .And(t => t.Is_enabled == true)
                        .ToExpression();//注意 这一句 不能少

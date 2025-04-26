@@ -311,6 +311,10 @@ namespace RUINORERP.UI.Common
                     continue;
                 if (field.Name.ToLower().Contains("amount"))
                     continue;
+                if (col.Caption == null)
+                {
+                    continue;
+                }
                 if (col.Caption.Contains("引用"))
                     continue;
                 if (col.Caption.Contains("编号"))
@@ -906,7 +910,7 @@ namespace RUINORERP.UI.Common
 
             });
 
-    
+
 
             //权限限制，默认值等
             ColumnDisplays.ForEach(c =>
@@ -1232,7 +1236,7 @@ namespace RUINORERP.UI.Common
         /// <param name="BillingInformation"></param>
         public static async void SaveBillingInformation(tb_BillingInformation Info)
         {
-            BaseController<tb_BillingInformation> ctrInfo = Startup.GetFromFacByName<BaseController<tb_BillingInformation>>(typeof(tb_FM_PayeeInfo).Name + "Controller");
+            BaseController<tb_BillingInformation> ctrInfo = Startup.GetFromFacByName<BaseController<tb_BillingInformation>>(typeof(tb_BillingInformation).Name + "Controller");
             ReturnResults<tb_BillingInformation> result = await ctrInfo.BaseSaveOrUpdate(Info);
 
             //保存图片   这段代码和员工添加时一样。可以重构为一个方法。

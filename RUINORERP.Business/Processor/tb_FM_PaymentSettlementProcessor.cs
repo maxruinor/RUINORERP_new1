@@ -44,7 +44,6 @@ namespace RUINORERP.Business.Processor
 
             var lambda = Expressionable.Create<tb_CustomerVendor>()
                        .And(t => t.isdeleted == false)
-                       .And(t => t.Is_available == true)
                        .And(t => t.Is_enabled == true)
                        .ToExpression();
             queryFilter.SetQueryField<tb_FM_PaymentSettlement, tb_CustomerVendor>(c => c.CustomerVendor_ID, lambda);
@@ -54,8 +53,6 @@ namespace RUINORERP.Business.Processor
             queryFilter.SetQueryField<tb_FM_PaymentSettlement>(c => c.Employee_ID);
             queryFilter.SetQueryField<tb_FM_PaymentSettlement>(c => c.Currency_ID);
             queryFilter.SetQueryField<tb_FM_PaymentSettlement>(c => c.SettleDate, false);
-            queryFilter.SetQueryField<tb_FM_PaymentSettlement>(c => c.ApprovalStatus, QueryFieldType.CmbEnum, typeof(ApprovalStatus));
-            queryFilter.SetQueryField<tb_FM_PaymentSettlement>(c => c.PrintStatus, QueryFieldType.CmbEnum, typeof(PrintStatus));
 
             return queryFilter;
         }

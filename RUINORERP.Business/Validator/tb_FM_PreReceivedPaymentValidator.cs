@@ -72,13 +72,13 @@ namespace RUINORERP.Business
  RuleFor(tb_FM_PreReceivedPayment =>tb_FM_PreReceivedPayment.PrePaymentReason).MaximumLength(100).WithMessage("事由:不能超过最大长度,100.");
  RuleFor(tb_FM_PreReceivedPayment =>tb_FM_PreReceivedPayment.PrePaymentReason).NotEmpty().WithMessage("事由:不能为空。");
 
- RuleFor(tb_FM_PreReceivedPayment =>tb_FM_PreReceivedPayment.SourceBill_BizType).NotEmpty().When(x => x.SourceBill_BizType.HasValue);
+ RuleFor(tb_FM_PreReceivedPayment =>tb_FM_PreReceivedPayment.BizType).NotEmpty().When(x => x.BizType.HasValue);
 
  RuleFor(tb_FM_PreReceivedPayment =>tb_FM_PreReceivedPayment.SourceBill_ID).NotEmpty().When(x => x.SourceBill_ID.HasValue);
 
  RuleFor(tb_FM_PreReceivedPayment =>tb_FM_PreReceivedPayment.SourceBillNO).MaximumLength(15).WithMessage("来源单号:不能超过最大长度,15.");
 
- RuleFor(tb_FM_PreReceivedPayment =>tb_FM_PreReceivedPayment.FMPaymentStatus).NotEmpty().When(x => x.FMPaymentStatus.HasValue);
+
 
  RuleFor(x => x.ForeignPrepaidAmount).PrecisionScale(19,4,true).WithMessage("预定金额外币:小数位不能超过4。");
 

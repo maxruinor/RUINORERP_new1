@@ -44,7 +44,6 @@ namespace RUINORERP.Business.Processor
 
             var lambda = Expressionable.Create<tb_CustomerVendor>()
                        .And(t => t.isdeleted == false)
-                       .And(t => t.Is_available == true)
                        .And(t => t.Is_enabled == true)
                        .ToExpression();
             queryFilter.SetQueryField<tb_FM_PaymentRecord, tb_CustomerVendor>(c => c.CustomerVendor_ID, lambda);

@@ -58,6 +58,9 @@ namespace RUINORERP.Business
             tb_SaleOrder entity = ObjectEntity as tb_SaleOrder;
             try
             {
+
+
+
                 // 开启事务，保证数据一致性
                 _unitOfWorkManage.BeginTran();
                 tb_OpeningInventoryController<tb_OpeningInventory> ctrOPinv = _appContext.GetRequiredService<tb_OpeningInventoryController<tb_OpeningInventory>>();
@@ -102,7 +105,44 @@ namespace RUINORERP.Business
                     {
                         entity.tb_paymentmethod = obj as tb_PaymentMethod;
                     }
+                    if (entity.tb_paymentmethod == null)
+                    {
+                        entity.tb_paymentmethod = await _appContext.Db.Queryable<tb_PaymentMethod>().Where(c => c.Paytype_ID == entity.Paytype_ID).FirstAsync();
+                    }
                 }
+
+                //如果是账期必须是未付款
+                if (entity.tb_paymentmethod.Paytype_Name == DefaultPaymentMethod.账期.ToString())
+                {
+                    if (entity.PayStatus != (int)PayStatus.未付款)
+                    {
+                        rmrs.Succeeded = false;
+                        _unitOfWorkManage.RollbackTran();
+                        rmrs.ErrorMsg = $"付款方式为账期的订单必须是未付款！审核失败。";
+                        if (_appContext.SysConfig.ShowDebugInfo)
+                        {
+                            _logger.LogInformation(rmrs.ErrorMsg);
+                        }
+                        return rmrs;
+                    }
+                }
+
+                if (entity.PayStatus == (int)PayStatus.未付款)
+                {
+                    if (entity.tb_paymentmethod.Paytype_Name != DefaultPaymentMethod.账期.ToString())
+                    {
+                        rmrs.Succeeded = false;
+                        _unitOfWorkManage.RollbackTran();
+                        rmrs.ErrorMsg = $"未付款订单的付款方式必须是账期！审核失败。";
+                        if (_appContext.SysConfig.ShowDebugInfo)
+                        {
+                            _logger.LogInformation(rmrs.ErrorMsg);
+                        }
+                        return rmrs;
+                    }
+                }
+
+
                 //销售订单审核时，非账期，即时收款时，生成预收款。 订金，部分收款
                 if (entity.tb_paymentmethod.Paytype_Name != DefaultPaymentMethod.账期.ToString())
                 {
@@ -116,6 +156,7 @@ namespace RUINORERP.Business
                     payable.Approver_at = null;
                     payable.Approver_by = null;
                     payable.PrintStatus = 0;
+                    payable.IsAvailable = true;
                     payable.ActionStatus = ActionStatus.新增;
                     payable.ApprovalOpinions = "";
                     payable.Modified_at = null;
@@ -128,49 +169,55 @@ namespace RUINORERP.Business
                     payable.ReceivePaymentType = (int)ReceivePaymentType.收款;
 
                     payable.PreRPNO = BizCodeGenerator.Instance.GetBizBillNo(BizType.预收款单);
-                    payable.SourceBill_BizType = (int)BizType.销售订单;
+                    payable.BizType = (int)BizType.销售订单;
                     payable.SourceBillNO = entity.SOrderNo;
                     payable.SourceBill_ID = entity.SOrder_ID;
                     payable.Currency_ID = entity.Currency_ID;
                     payable.PrePayDate = entity.SaleDate;
                     payable.ExchangeRate = entity.ExchangeRate;
-                   
+                    
                     payable.LocalPrepaidAmountInWords = string.Empty;
                     payable.Account_id = entity.Account_id;
                     //如果是外币时，则由外币算出本币
                     if (entity.PayStatus == (int)PayStatus.全部付款)
                     {
                         //外币时
-                        if (entity.Currency_ID.HasValue && _appContext.BaseCurrency.Currency_ID != entity.Currency_ID.Value)
-                        {
-                            if (payable.Currency_ID.HasValue && payable.ExchangeRate.HasValue)
-                            {
+                        //if (entity.Currency_ID.HasValue && _appContext.BaseCurrency.Currency_ID != entity.Currency_ID.Value)
+                        //{
+                        //    if (payable.Currency_ID.HasValue && payable.ExchangeRate.HasValue)
+                        //    {
 
-                            }
-                            payable.ForeignPrepaidAmount = entity.ForeignTotalAmount;
+                        //    }
+                        //    payable.ForeignPrepaidAmount = entity.ForeignTotalAmount;
 
-                        }
-                        else
-                        {
-                            //本币时
-                            payable.LocalPrepaidAmount = entity.TotalAmount;
-                        }
+                        //}
+                        //else
+                        //{
+                        //    //本币时
+                        //    payable.LocalPrepaidAmount = entity.TotalAmount;
+                        //}
 
+                        payable.ForeignPrepaidAmount = entity.ForeignDeposit;
+                        payable.LocalPrepaidAmount = entity.Deposit;
                     }
                     //来自于订金
                     if (entity.PayStatus == (int)PayStatus.部分付款)
-                    {//外币时
-                        if (entity.Currency_ID.HasValue && _appContext.BaseCurrency.Currency_ID != entity.Currency_ID.Value)
-                        {
+                    {  
+                        //外币时
+                        //if (entity.Currency_ID.HasValue && _appContext.BaseCurrency.Currency_ID != entity.Currency_ID.Value)
+                        //{
+                        //    payable.ForeignPrepaidAmount = entity.ForeignDeposit;
+                        //   // payable.LocalPrepaidAmount = payable.ForeignPrepaidAmount*payable.ExchangeRate.Value;
+                        //   // payable.LocalPrepaidAmountInWords = payable.LocalPrepaidAmount.ToUpper();
+                        //}
+                        //else
+                        //{
+                            
+                        //}
 
-                            payable.ForeignPrepaidAmount = entity.ForeignDeposit;
-                            payable.LocalPrepaidAmountInWords = payable.ForeignPrepaidAmount.ToUpper();
-                        }
-                        else
-                        {
-                            payable.LocalPrepaidAmount = entity.Deposit;
-                            payable.LocalPrepaidAmountInWords = payable.LocalPrepaidAmount.ToUpper();
-                        }
+                        payable.ForeignPrepaidAmount = entity.ForeignDeposit;
+                        payable.LocalPrepaidAmount = entity.Deposit;
+                        payable.LocalPrepaidAmountInWords = payable.LocalPrepaidAmount.ToUpper();
                     }
 
                     payable.PrePaymentReason = $"销售订单{entity.SOrderNo}的预收款";

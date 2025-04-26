@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：04/22/2025 12:16:15
+// 时间：04/25/2025 19:03:33
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -69,7 +69,6 @@ namespace RUINORERP.UI
         
         
         
-        
 
          }
 /*
@@ -92,7 +91,6 @@ namespace RUINORERP.UI
                         entity.LocalPaidAmount = Decimal.Parse(txtLocalPaidAmount.Text);
                         entity.ForeignBalanceAmount = Decimal.Parse(txtForeignBalanceAmount.Text);
                         entity.LocalBalanceAmount = Decimal.Parse(txtLocalBalanceAmount.Text);
-                        entity.PaymentDate = DateTime.Parse(txtPaymentDate.Text);
                         entity.DueDate = DateTime.Parse(txtDueDate.Text);
                         entity.Employee_ID = Int64.Parse(txtEmployee_ID.Text);
                         entity.DepartmentID = Int64.Parse(txtDepartmentID.Text);
@@ -138,7 +136,6 @@ namespace RUINORERP.UI
            DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayable>(entity, t => t.LocalPaidAmount.ToString(), txtLocalPaidAmount, BindDataType4TextBox.Money,false);
            DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayable>(entity, t => t.ForeignBalanceAmount.ToString(), txtForeignBalanceAmount, BindDataType4TextBox.Money,false);
            DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayable>(entity, t => t.LocalBalanceAmount.ToString(), txtLocalBalanceAmount, BindDataType4TextBox.Money,false);
-           DataBindingHelper.BindData4DataTime<tb_FM_ReceivablePayable>(entity, t => t.PaymentDate, dtpPaymentDate,false);
            DataBindingHelper.BindData4DataTime<tb_FM_ReceivablePayable>(entity, t => t.DueDate, dtpDueDate,false);
            DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayable>(entity, t => t.Employee_ID, txtEmployee_ID, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayable>(entity, t => t.DepartmentID, txtDepartmentID, BindDataType4TextBox.Qty,false);

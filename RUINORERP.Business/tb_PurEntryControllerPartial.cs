@@ -254,9 +254,11 @@ namespace RUINORERP.Business
 
                         #endregion
                     }
+
                     inv.Quantity = inv.Quantity + child.Quantity;
                     inv.Inv_SubtotalCostMoney = inv.Inv_Cost * inv.Quantity;
                     inv.LatestStorageTime = System.DateTime.Now;
+
                     #endregion
 
                     if (child.IsGift.HasValue && child.IsGift == false)

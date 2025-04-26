@@ -48,7 +48,6 @@ namespace RUINORERP.Business.Processor
 
             var lambdacv = Expressionable.Create<tb_CustomerVendor>()
              .And(t => t.isdeleted == false)
-             .And(t => t.Is_available == true)
              .And(t => t.IsVendor == true)
              .And(t => t.Is_enabled == true)
              //.AndIF(AuthorizeController.GetSaleLimitedAuth(_appContext), t => t.Employee_ID == _appContext.CurUserInfo.UserInfo.Employee_ID)//限制了销售只看到自己的客户,采购不限制

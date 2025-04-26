@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：04/26/2025 22:26:19
+// 时间：04/25/2025 10:38:51
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -24,12 +24,12 @@ using RUINORERP.UI.Common;
 namespace RUINORERP.UI
 {
     /// <summary>
-    /// 记录收款 与应收的匹配，核销表数据查询
+    /// 客户厂商表 开票资料这种与财务有关另外开表数据查询
     /// </summary>
-     [MenuAttribute(typeof(tb_FM_PaymentSettlementQuery), "记录收款 与应收的匹配，核销表数据查询", true)]
-    public partial class tb_FM_PaymentSettlementQuery:UserControl
+     [MenuAttribute(typeof(tb_CustomerVendorQuery), "客户厂商表 开票资料这种与财务有关另外开表数据查询", true)]
+    public partial class tb_CustomerVendorQuery:UserControl
     {
-     public tb_FM_PaymentSettlementQuery() {
+     public tb_CustomerVendorQuery() {
      
          
                 
@@ -37,7 +37,7 @@ namespace RUINORERP.UI
 
             InitializeComponent();
 
-       // RuleFor(tb_FM_PaymentSettlement => tb_FM_PaymentSettlement.SettlementId).NotEmpty();
+       // RuleFor(tb_CustomerVendor => tb_CustomerVendor.CustomerVendor_ID).NotEmpty();
        
        
        //===============
@@ -106,7 +106,9 @@ namespace RUINORERP.UI
 
         public void LoadDroplistData()
         {
-          ReversedSettlementID主外字段不一致。// DataBindingHelper.InitDataToCmb<tb_FM_PaymentSettlement>(k => k.SettlementId, v=>v.XXNAME, cmbSettlementId);
+          // DataBindingHelper.InitDataToCmb<tb_Employee>(k => k.Employee_ID, v=>v.XXNAME, cmbEmployee_ID);
+          // DataBindingHelper.InitDataToCmb<tb_CustomerVendorType>(k => k.Type_ID, v=>v.XXNAME, cmbType_ID);
+          // DataBindingHelper.InitDataToCmb<tb_PaymentMethod>(k => k.Paytype_ID, v=>v.XXNAME, cmbPaytype_ID);
         }
         
 

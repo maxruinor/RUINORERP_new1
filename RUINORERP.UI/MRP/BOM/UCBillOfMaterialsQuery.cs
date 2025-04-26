@@ -31,6 +31,10 @@ namespace RUINORERP.UI.MRP.BOM
             //设置双击列指向哪个业务的单据。打开单据编辑界面，视图用SetRelatedInfo
             //base.RelatedBillEditCol = (c => c.BOM_No);
             this.Load += UCInventoryQuery_Load;
+            //bom没有结案的情况
+            toolStripButton结案.Visible = false;
+            //TODO 后面优化 一个手动添加忽略的按钮方法。
+
         }
 
         private void UCInventoryQuery_Load(object sender, EventArgs e)

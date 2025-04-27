@@ -47,10 +47,15 @@ using Netron.GraphLib;
 using FileInfo = System.IO.FileInfo;
 using System.Windows.Documents;
 using RUINORERP.Global.EnumExt;
+using System.Diagnostics;
+using NPOI.SS.Formula.Functions;
+
 
 
 namespace RUINORERP.UI.MRP.BOM
 {
+
+
 
     /*
     直接材料成本：用于生产产品的直接原材料、零部件、组件等的成本。
@@ -81,26 +86,444 @@ namespace RUINORERP.UI.MRP.BOM
                 //如果展开
 
                 //如果收起时，kryptonTreeGridViewBOMDetail.rows.count是对的。否则是错的。
+                //先刷新一下
+                if (kryptonTreeGridViewBOMDetail.Rows.Count == 0)
+                {
+                    Refreshs();
+                }
+                if (kryptonTreeGridViewBOMDetail.Rows.Count > 0)
+                {
+                    //如果明细中没有值的列。不显示
+                }
                 ExportExcel(dt);
             }
         }
 
+        #region BOM配方导出
+        // 确保颜色数组包含足够多的颜色
+        //        private static readonly Color[] BomBackColors =
+        //        {
+        //    Color.LightBlue,    // Level 0
+        //    Color.LightGreen,  // Level 1
+        //    Color.LightYellow, // Level 2
+        //    Color.LightPink    // Level 3
+        //};
+
+        public bool ExportExcelNew(DataTable dt = null)
+        {
+            if (EditEntity == null)
+            {
+                MessageBox.Show("没有可导出的数据", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return false;
+            }
+
+            bool rs = false;
+            string selectedFile = string.Empty;
+            Stopwatch stopwatch = null;
+
+            try
+            {
+                using (SaveFileDialog saveFileDialog = new SaveFileDialog())
+                {
+                    saveFileDialog.Filter = "Excel Files (*.xlsx; *.xls)|*.xlsx; *.xls";
+                    if (saveFileDialog.ShowDialog() != DialogResult.OK) return false;
+
+                    selectedFile = saveFileDialog.FileName;
+                    stopwatch = Stopwatch.StartNew();
+
+                    OfficeOpenXml.ExcelPackage.LicenseContext = OfficeOpenXml.LicenseContext.NonCommercial;
+                    FileInfo fileInfo = new FileInfo(selectedFile);
+
+                    using (var package = new ExcelPackage(fileInfo))
+                    {
+                        ExcelWorksheet worksheet = GetOrCreateWorksheet(package, "Sheet1");
+                        worksheet.Cells.Clear();
+
+                        // 写入主标题
+                        CreateMainTitle(worksheet, dt != null);
+
+                        // 添加主表汇总数据
+                        AddSummaryInfo(worksheet);
+
+                        if (dt != null)
+                        {
+                            ExportExpandedData(worksheet, dt);
+                        }
+                        else
+                        {
+                            ExportCollapsedData(worksheet);
+                        }
+                        //第一列 品名 设置宽点
+                        worksheet.Column(1).Width = 30;
+                        package.Save();
+                    }
+                }
+
+                stopwatch?.Stop();
+                ShowExportResult(stopwatch?.Elapsed, selectedFile);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance.logger.LogError("Excel导出错误", ex);
+                MessageBox.Show($"导出失败：{ex.Message}");
+                return false;
+            }
+        }
+
+        private void ExportCollapsedData(ExcelWorksheet worksheet)
+        {
+            // 列头从第4行开始（主标题1行 + 汇总信息2行）
+            CreateColumnHeaders(worksheet, 4);
+
+            // 数据从第5行开始
+            int currentRow = 5;
+            var visibleColumns = GetVisibleColumns().ToList();
+
+            // 遍历根节点
+            foreach (KryptonTreeGridNodeRow rootRow in kryptonTreeGridViewBOMDetail.Rows
+                .Cast<KryptonTreeGridNodeRow>()
+                .Where(r => r.Parent == null))
+            {
+                // 写入父节点
+                currentRow = WriteCollapsedRow(worksheet, rootRow, currentRow, visibleColumns, 0);
+
+                // 如果节点展开则处理子节点
+                if (rootRow.IsExpanded)
+                {
+                    currentRow = ProcessChildNodes(worksheet, rootRow, currentRow, visibleColumns, 1);
+                }
+            }
+
+            // 自动调整所有列宽
+            worksheet.Cells[worksheet.Dimension.Address].AutoFitColumns();
+        }
+
+        private int WriteCollapsedRow(ExcelWorksheet worksheet,
+                                    KryptonTreeGridNodeRow gridRow,
+                                    int currentRow,
+                                    List<DataGridViewColumn> visibleColumns,
+                                    int indentLevel)
+        {
+
+            // 增加缩进量（每级4个空格+竖线）
+            string indentPrefix = new string(' ', indentLevel * 4);
+            if (indentLevel > 0)
+            {
+                indentPrefix = new string('│', indentLevel) + " ";
+            }
 
 
-        /*导出多级的BOM时按级给不同的背景色，固定的*/
 
-        //// 8 colors for when the tab is not selected
-        //private Color[] _normal = new Color[]{ Color.FromArgb(156, 193, 182), Color.FromArgb(247, 184, 134),
-        //                                       Color.FromArgb(217, 173, 194), Color.FromArgb(165, 194, 215),
-        //                                       Color.FromArgb(179, 166, 190), Color.FromArgb(234, 214, 163),
-        //                                       Color.FromArgb(246, 250, 125), Color.FromArgb(188, 168, 225) };
+            // 设置行高
+            worksheet.Row(currentRow).Height = 20;
 
-        //// 8 colors for when the tab is selected
-        //private Color[] _select = new Color[]{ Color.FromArgb(200, 221, 215), Color.FromArgb(251, 216, 188),
-        //                                       Color.FromArgb(234, 210, 221), Color.FromArgb(205, 221, 233),
-        //                                       Color.FromArgb(213, 206, 219), Color.FromArgb(244, 232, 204),
-        //                                       Color.FromArgb(250, 252, 183), Color.FromArgb(218, 207, 239) };
+            // 设置背景色
+            worksheet.Row(currentRow).Style.Fill.PatternType = ExcelFillStyle.Solid;
+            worksheet.Row(currentRow).Style.Fill.BackgroundColor.SetColor(BomBackColors[indentLevel % BomBackColors.Length]);
 
+            // 写入单元格数据
+            int colIndex = 1;
+            foreach (DataGridViewColumn col in visibleColumns)
+            {
+                var cell = worksheet.Cells[currentRow, colIndex];
+                var gridCell = gridRow.Cells[col.Index];
+
+                // 第一列添加树形缩进
+                if (colIndex == 1)
+                {
+                    cell.Value = indentPrefix + GetCellDisplayValue(gridCell);
+                }
+                else
+                {
+                    cell.Value = GetCellDisplayValue(gridCell);
+                }
+
+                // 设置数值格式
+                if (IsNumericColumn(col))
+                {
+                    cell.Style.Numberformat.Format = "#,##0.00";
+                    cell.Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
+                }
+
+                colIndex++;
+            }
+
+            return currentRow + 1;
+        }
+
+        private int ProcessChildNodes(ExcelWorksheet worksheet,
+                                    KryptonTreeGridNodeRow parentRow,
+                                    int currentRow,
+                                    List<DataGridViewColumn> visibleColumns,
+                                    int indentLevel)
+        {
+            foreach (KryptonTreeGridNodeRow childRow in parentRow.Nodes)
+            {
+                currentRow = WriteCollapsedRow(worksheet, childRow, currentRow, visibleColumns, indentLevel);
+
+                // 递归处理子节点
+                if (childRow.IsExpanded && childRow.Nodes.Count > 0)
+                {
+                    currentRow = ProcessChildNodes(worksheet, childRow, currentRow, visibleColumns, indentLevel + 1);
+                }
+            }
+            return currentRow;
+        }
+
+        private string GetCellDisplayValue(DataGridViewCell cell)
+        {
+            return cell.FormattedValue?.ToString()
+                ?? cell.Value?.ToString()
+                ?? string.Empty;
+        }
+
+        // 完整的FillCellsloop实现（原代码中的递归方法）
+        private int FillCellsloopNew(ExcelWorksheet worksheet,
+                                int startRow,
+                                KryptonTreeGridNodeRow parentRow,
+                                int indentLevel)
+        {
+            int currentRow = startRow;
+            foreach (KryptonTreeGridNodeRow childRow in parentRow.Nodes)
+            {
+                currentRow = WriteCollapsedRow(worksheet, childRow, currentRow, GetVisibleColumns().ToList(), indentLevel);
+
+                // 递归处理子节点
+                if (childRow.Nodes.Count > 0)
+                {
+                    currentRow = FillCellsloopNew(worksheet, currentRow, childRow, indentLevel + 1);
+                }
+            }
+            return currentRow;
+        }
+
+        private ExcelWorksheet GetOrCreateWorksheet(ExcelPackage package, string sheetName)
+        {
+            var worksheet = package.Workbook.Worksheets.FirstOrDefault(ws => ws.Name == sheetName);
+            return worksheet ?? package.Workbook.Worksheets.Add(sheetName);
+        }
+
+        private void CreateMainTitle(ExcelWorksheet worksheet, bool isExpanded)
+        {
+
+
+            // //第一行开始写BOM主表内容。
+
+            //// 合并指定单元格
+            //excelSheet.Cells[1, 1, 1, kryptonTreeGridViewBOMDetail.ColumnCount].Merge = true;
+
+            //// 设置合并后单元格的内容
+            //excelSheet.Cells[1, 1].Value = $"BOM清单：【sku:{EditEntity.SKU}】 " + EditEntity.BOM_Name;
+            //// 获取指定单元格
+            //var cellTitle = excelSheet.Cells[1, 1];
+
+            //// 设置单元格内容为加粗
+            //cellTitle.Style.Font.Bold = true;
+            //// 设置单元格内容的字体大小
+            //cellTitle.Style.Font.Size = 28;
+            //// 设置单元格内容居中对齐
+            //cellTitle.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+
+
+            //cellTitle.Style.VerticalAlignment = ExcelVerticalAlignment.Center;
+
+            int visibleColumnCount = GetVisibleColumns().Count();
+            var titleCell = worksheet.Cells[1, 1, 1, visibleColumnCount]; // 根据可见列数量合并
+            //var titleCell = worksheet.Cells[1, 1, 1, kryptonTreeGridViewBOMDetail.ColumnCount];
+            titleCell.Merge = true;
+            worksheet.Cells[1, 1].Value = isExpanded
+                ? $"BOM清单：【sku:{EditEntity.SKU}】{EditEntity.BOM_Name}"
+                : $"{EditEntity.BOM_Name}BOM清单：";
+
+            titleCell.Style.SetTitleStyle();
+        }
+
+        private void AddSummaryInfo(ExcelWorksheet worksheet, int StartRowIndex = 2)
+        {
+            int visibleColumnCount = GetVisibleColumns().Count();
+            //// 第二行：总材料数量
+            //worksheet.Cells[2, 1].Value = $"总材料数量：{EditEntity.TotalMaterialQty}";
+            //worksheet.Cells[2, 1, 2, visibleColumnCount].Merge = true;
+            //worksheet.Cells[2, 1].Style.SetSummaryStyle();
+
+            //// 第三行：其他汇总信息（优化合并方式）
+            //worksheet.Cells[3, 1].Value = $"自产分摊费用：{EditEntity.SelfApportionedCost}";
+            //worksheet.Cells[3, 1, 3, 2].Merge = true;
+
+            //worksheet.Cells[3, 3].Value = $"外发分摊费用：{EditEntity.OutApportionedCost}";
+            //worksheet.Cells[3, 3, 3, 4].Merge = true;
+
+            //worksheet.Cells[3, 5].Value = $"自产总成本：{EditEntity.SelfProductionAllCosts}";
+            //worksheet.Cells[3, 5, 3, 6].Merge = true;
+
+            //worksheet.Cells[3, 7].Value = $"外发总成本：{EditEntity.OutProductionAllCosts}";
+            //worksheet.Cells[3, 7, 3, 8].Merge = true;
+
+            //// 设置样式
+            //Enumerable.Range(1, 7).Where(i => i % 2 == 1).ForEach(col =>
+            //{
+            //    worksheet.Cells[3, col].Style.SetSummaryStyle();
+            //});
+
+            //以单位成本为文本截止靠右： 成本小计显示数值。加总.
+            int costIndex = GetVisibleColumns().ToList().FirstOrDefault(c => c.HeaderText == "单位成本").Index;
+
+            // 第StartRowIndex行：总材料数量
+            worksheet.Cells[StartRowIndex, 1].Value = $"自产分摊费用：";
+            worksheet.Cells[StartRowIndex, 1, StartRowIndex, costIndex].Merge = true;
+            worksheet.Cells[StartRowIndex, 1].Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
+            worksheet.Cells[StartRowIndex, costIndex + 1].Value = EditEntity.SelfApportionedCost;
+
+            worksheet.Cells[StartRowIndex + 1, 1].Value = $"外发分摊费用：";
+            worksheet.Cells[StartRowIndex + 1, 1, StartRowIndex + 1, costIndex].Merge = true;
+            worksheet.Cells[StartRowIndex + 1, 1].Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
+            worksheet.Cells[StartRowIndex + 1, costIndex + 1].Value = EditEntity.OutApportionedCost;
+
+            worksheet.Cells[StartRowIndex + 2, 1].Value = $"自产总成本：";
+            worksheet.Cells[StartRowIndex + 2, 1, StartRowIndex + 2, costIndex].Merge = true;
+            worksheet.Cells[StartRowIndex + 2, 1].Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
+            worksheet.Cells[StartRowIndex + 2, costIndex + 1].Value = EditEntity.SelfProductionAllCosts;
+
+            worksheet.Cells[StartRowIndex + 3, 1].Value = $"外发总成本：";
+            worksheet.Cells[StartRowIndex + 3, 1, StartRowIndex + 3, costIndex].Merge = true;
+            worksheet.Cells[StartRowIndex + 3, 1].Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
+            worksheet.Cells[StartRowIndex + 3, costIndex + 1].Value = EditEntity.OutProductionAllCosts;
+
+
+            #region    导出日期
+
+            worksheet.Cells[StartRowIndex + 4, 1].Value = $"导出时间：" + System.DateTime.Now.ToString();
+            worksheet.Cells[StartRowIndex + 4, 1, StartRowIndex + 4, visibleColumnCount].Merge = true;
+            worksheet.Cells[StartRowIndex + 4, 1].Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
+            worksheet.Cells[StartRowIndex + 4, visibleColumnCount].Style.Font.Size = 20;
+            // 设置单元格内容居中对齐
+            worksheet.Cells[StartRowIndex + 4, visibleColumnCount].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+            worksheet.Cells[StartRowIndex + 4, visibleColumnCount].Style.VerticalAlignment = ExcelVerticalAlignment.Center;
+            worksheet.Cells[StartRowIndex + 4, visibleColumnCount].Style.Font.Bold = false;
+
+            #endregion
+
+            // 设置样式
+            //Enumerable.Range(StartRowIndex, 1).Where(i => i % 2 == 1).ForEach(col =>
+            //{
+            //    worksheet.Cells[StartRowIndex, col].Style.SetSummaryStyle();
+            //});
+
+            //5行设置一个背景色
+
+            for (int i = 0; i < 4; i++)
+            {
+                worksheet.Cells[StartRowIndex + i, 2].Style.SetSummaryStyle();
+            }
+
+
+
+
+        }
+
+        private void ExportExpandedData(ExcelWorksheet worksheet, DataTable dt)
+        {
+            // 列头从第4行开始
+            CreateColumnHeaders(worksheet, 4);
+
+            // 数据从第5行开始
+            int currentRow = 5;
+            var visibleColumns = GetVisibleColumns().ToList();
+
+            // 生成数据行（已优化树形结构处理）
+            foreach (KryptonTreeGridNodeRow row in kryptonTreeGridViewBOMDetail.Rows)
+            {
+                var dataRow = worksheet.Row(currentRow);
+                dataRow.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                dataRow.Style.Fill.BackgroundColor.SetColor(BomBackColors[row.Level]);
+
+                int colIndex = 1;
+                foreach (DataGridViewColumn col in visibleColumns)
+                {
+                    var cell = worksheet.Cells[currentRow, colIndex];
+                    FormatCell(cell, row.Cells[col.Index], colIndex == 1 ? row.Level : 0);
+                    colIndex++;
+                }
+
+                currentRow++;
+            }
+
+
+        }
+        // 在类内添加这个方法
+        private void CreateColumnHeaders(ExcelWorksheet worksheet, int startRow)
+        {
+            List<DataGridViewColumn> visibleColumns = GetVisibleColumns().ToList();
+
+            int colIndex = 1;
+            foreach (DataGridViewColumn column in visibleColumns)
+            {
+                var headerCell = worksheet.Cells[startRow, colIndex];
+                headerCell.Value = column.HeaderText;
+
+                // 设置列头样式
+                headerCell.Style.Font.Bold = true;
+                headerCell.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+
+                // 根据标题长度设置初始列宽（每个字符7像素）
+                // 基础宽度 = 字符数 * 2像素 + 5像素边距
+                double baseWidth = column.HeaderText.Length * 2 + 5;
+                worksheet.Column(colIndex).Width = baseWidth;
+
+                // 根据数据类型设置对齐方式
+                // 数值列额外增加宽度
+                if (IsNumericColumn(column))
+                {
+                    headerCell.Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
+                    // 数值列额外增加宽度
+                    worksheet.Column(colIndex).Width += 5;
+                }
+                colIndex++;
+            }
+
+            // 自动调整列宽（在初始宽度基础上自动调整）
+            // 最后自动调整
+            //  worksheet.Cells[worksheet.Dimension.Address].AutoFitColumns();
+        }
+
+
+        // 辅助方法：获取可见列
+        private IEnumerable<DataGridViewColumn> GetVisibleColumns()
+        {
+            return kryptonTreeGridViewBOMDetail.Columns
+                .Cast<DataGridViewColumn>()
+                .Where(c => c.Visible && !string.IsNullOrEmpty(c.HeaderText));
+        }
+
+        // 辅助方法：判断是否是数值列
+        private bool IsNumericColumn(DataGridViewColumn column)
+        {
+            return column.ValueType == typeof(decimal)
+                || column.ValueType == typeof(int)
+                || column.ValueType == typeof(double);
+        }
+        private void FormatCell(ExcelRange excelCell, DataGridViewCell gridCell, int indentLevel)
+        {
+            var indent = new string(' ', indentLevel * 3);
+            excelCell.Value = indent + (gridCell.FormattedValue ?? gridCell.Value);
+
+            if (gridCell.OwningColumn.ValueType == typeof(decimal))
+            {
+                excelCell.Style.Numberformat.Format = "#,##0.00";
+                excelCell.Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
+            }
+        }
+
+
+        private void ShowExportResult(TimeSpan? elapsed, string filePath)
+        {
+            var message = $"成功导出 BOM数据，耗时 {elapsed?.TotalSeconds:F2} 秒。\n是否立即打开文件？";
+            if (MessageBox.Show(message, "导出完成", MessageBoxButtons.YesNo) == DialogResult.Yes)
+            {
+                Process.Start(new ProcessStartInfo(filePath) { UseShellExecute = true });
+            }
+        }
 
         // 8 colors  
         private Color[] BomBackColors = new Color[]{ Color.FromArgb(91, 155, 213), Color.FromArgb(221, 235, 247),
@@ -119,7 +542,11 @@ namespace RUINORERP.UI.MRP.BOM
         /// <returns></returns>
         public bool ExportExcel(DataTable dt = null)
         {
-
+            if (EditEntity == null)
+            {
+                MessageBox.Show("没有可导出的数据", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return false;
+            }
             List<System.Data.DataColumn> columns = dt.Columns.CastToList<System.Data.DataColumn>();
             bool rs = false;
             string selectedFile = string.Empty;
@@ -128,8 +555,10 @@ namespace RUINORERP.UI.MRP.BOM
                 SaveFileDialog openFileDialog = new SaveFileDialog();
                 openFileDialog.Filter = "Excel Files (*.xlsx; *.xls)|*.xlsx; *.xls";
                 openFileDialog.FilterIndex = 1;
+                openFileDialog.FileName = EditEntity.BOM_Name + "_" + EditEntity.SKU + "_BOM清单";
                 if (openFileDialog.ShowDialog() == DialogResult.OK)
                 {
+                    var stopwatch = Stopwatch.StartNew();
                     selectedFile = openFileDialog.FileName;
                     // MessageBox.Show($"您选中的文件路径为：{selectedFile}");
                     OfficeOpenXml.ExcelPackage.LicenseContext = OfficeOpenXml.LicenseContext.NonCommercial;
@@ -154,7 +583,6 @@ namespace RUINORERP.UI.MRP.BOM
                             {
 
                                 // //第一行开始写BOM主表内容。
-
                                 // 合并指定单元格
                                 excelSheet.Cells[1, 1, 1, kryptonTreeGridViewBOMDetail.ColumnCount].Merge = true;
 
@@ -174,6 +602,8 @@ namespace RUINORERP.UI.MRP.BOM
                                 #region
 
 
+                                //第三行开始给数据
+                                int startRowIndexForData = 2;
 
                                 //生成字段名称
                                 int k = 0;
@@ -182,9 +612,9 @@ namespace RUINORERP.UI.MRP.BOM
                                     if (kryptonTreeGridViewBOMDetail.Columns[i].Visible && !string.IsNullOrEmpty(kryptonTreeGridViewBOMDetail.Columns[i].HeaderText)) //不导出隐藏的列
                                     {
                                         //第二行开始写列名。
-                                        excelSheet.Cells[2, k + 1].Value = kryptonTreeGridViewBOMDetail.Columns[i].HeaderText;
+                                        excelSheet.Cells[startRowIndexForData, k + 1].Value = kryptonTreeGridViewBOMDetail.Columns[i].HeaderText;
                                         // 获取指定单元格
-                                        var cellHeader = excelSheet.Cells[2, k + 1];
+                                        var cellHeader = excelSheet.Cells[startRowIndexForData, k + 1];
                                         // 设置单元格内容为加粗
                                         cellHeader.Style.Font.Bold = true;
                                         cellHeader.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
@@ -198,9 +628,9 @@ namespace RUINORERP.UI.MRP.BOM
                                     }
                                 }
 
-                                int currentRow = 2;//这里空出2行，
-                                                   //填充数据
-                                                   //这里行数直接算到数据行数，因为是树形结构
+                                int currentRow = startRowIndexForData;//这里空出2行，
+                                                                      //填充数据
+                                                                      //这里行数直接算到数据行数，因为是树形结构
 
                                 List<int> MaxLevelList = new List<int>();//最大层级
                                 int bomLevel = 0;//层级
@@ -220,9 +650,9 @@ namespace RUINORERP.UI.MRP.BOM
                                         {
                                             bomLevel = kryptonTreeGridNodeRow.Level;
                                             MaxLevelList.Add(bomLevel);//最大层级
-                                            //// 设置行的背景色
-                                            //row.Style.Fill.PatternType = ExcelFillStyle.Solid;
-                                            //row.Style.Fill.BackgroundColor.SetColor(Color.GreenYellow);
+                                                                       //// 设置行的背景色
+                                                                       //row.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                                                                       //row.Style.Fill.BackgroundColor.SetColor(Color.GreenYellow);
 
                                         }
 
@@ -290,6 +720,12 @@ namespace RUINORERP.UI.MRP.BOM
                                     }
                                 }
 
+
+
+                                // 添加主表汇总数据 占用了两行
+                                AddSummaryInfo(excelSheet, currentRow+1);
+
+
                                 // 获取指定列,第一列设置宽一些
                                 var column = excelSheet.Column(1);
                                 if (MaxLevelList.Count > 0)
@@ -313,7 +749,8 @@ namespace RUINORERP.UI.MRP.BOM
                             {
                                 FileInfo fileInfo = new FileInfo(selectedFile);
                                 package.SaveAs(fileInfo);
-                                MessageBox.Show("导出数据成功！！！");
+                                stopwatch.Stop();
+                                // MessageBox.Show("导出数据成功！！！");
                             }
 
                             #endregion
@@ -440,15 +877,19 @@ namespace RUINORERP.UI.MRP.BOM
                             {
                                 FileInfo fileInfo = new FileInfo(selectedFile);
                                 package.SaveAs(fileInfo);
-                                MessageBox.Show("导出数据成功！！！");
+                                // MessageBox.Show("导出数据成功！！！");
+
                             }
 
                             #endregion
 
                         }
+                    }
 
-
-
+                    if (MessageBox.Show($"成功导出 BOM数据，耗时 {stopwatch.Elapsed.TotalSeconds:F2} 秒。\n是否立即打开文件？",
+                            "导出完成", MessageBoxButtons.YesNo, MessageBoxIcon.Information) == DialogResult.Yes)
+                    {
+                        Process.Start(new ProcessStartInfo(selectedFile) { UseShellExecute = true });
                     }
                 }
             }
@@ -460,6 +901,34 @@ namespace RUINORERP.UI.MRP.BOM
 
             return rs;
         }
+
+
+        #endregion
+
+        /*导出多级的BOM时按级给不同的背景色，固定的*/
+
+        //// 8 colors for when the tab is not selected
+        //private Color[] _normal = new Color[]{ Color.FromArgb(156, 193, 182), Color.FromArgb(247, 184, 134),
+        //                                       Color.FromArgb(217, 173, 194), Color.FromArgb(165, 194, 215),
+        //                                       Color.FromArgb(179, 166, 190), Color.FromArgb(234, 214, 163),
+        //                                       Color.FromArgb(246, 250, 125), Color.FromArgb(188, 168, 225) };
+
+        //// 8 colors for when the tab is selected
+        //private Color[] _select = new Color[]{ Color.FromArgb(200, 221, 215), Color.FromArgb(251, 216, 188),
+        //                                       Color.FromArgb(234, 210, 221), Color.FromArgb(205, 221, 233),
+        //                                       Color.FromArgb(213, 206, 219), Color.FromArgb(244, 232, 204),
+        //                                       Color.FromArgb(250, 252, 183), Color.FromArgb(218, 207, 239) };
+
+
+
+
+
+
+
+
+
+
+
 
         /// <summary>
         /// 子集中，比方类型，在上级是用grid formating事件查出来的，这里需要递归填充
@@ -564,7 +1033,7 @@ namespace RUINORERP.UI.MRP.BOM
                     // 设置行的背景色
                     row.Style.Fill.PatternType = ExcelFillStyle.Solid;
                     row.Style.Fill.BackgroundColor.SetColor(Color.HotPink);
-                    currentRow = FillCellsloop(excelSheet, currentRow, node, bomLevel);
+                    currentRow = FillCellsloopNew(excelSheet, currentRow, node, bomLevel);
                 }
             }
             return currentRow;
@@ -925,10 +1394,10 @@ namespace RUINORERP.UI.MRP.BOM
                     }
                 }
 
-              
-                    EditEntity.OutProductionAllCosts = EditEntity.TotalMaterialCost + EditEntity.TotalOutManuCost + EditEntity.OutApportionedCost;
-                    EditEntity.SelfProductionAllCosts = EditEntity.TotalMaterialCost + EditEntity.TotalSelfManuCost + EditEntity.SelfApportionedCost;
-           
+
+                EditEntity.OutProductionAllCosts = EditEntity.TotalMaterialCost + EditEntity.TotalOutManuCost + EditEntity.OutApportionedCost;
+                EditEntity.SelfProductionAllCosts = EditEntity.TotalMaterialCost + EditEntity.TotalSelfManuCost + EditEntity.SelfApportionedCost;
+
                 //数据状态变化会影响按钮变化
                 if (s2.PropertyName == entity.GetPropertyName<tb_BOM_S>(c => c.DataStatus))
                 {

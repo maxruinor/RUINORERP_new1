@@ -1809,6 +1809,7 @@
     <Compile Include="MainForm.Designer.cs">
       <DependentUpon>MainForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="MRP\BOM\ExcelStyleExtensions.cs" />
     <Compile Include="MRP\PPLAN\UCProductionPlanStatistics.cs">
       <SubType>UserControl</SubType>
     </Compile>

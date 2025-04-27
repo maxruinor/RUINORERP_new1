@@ -79,15 +79,11 @@ namespace RUINORERP.Business
         {
             ReturnResults<T> rmrs = new ReturnResults<T>();
             tb_FM_PaymentRecord entity = ObjectEntity as tb_FM_PaymentRecord;
-
             try
             {
                 // 开启事务，保证数据一致性
                 _unitOfWorkManage.BeginTran();
 
-                //收到列，付了钱。审核就会生成一笔核销记录  收款抵扣应收
-                tb_FM_PaymentSettlementController<tb_FM_PaymentSettlement> settlementController = _appContext.GetRequiredService<tb_FM_PaymentSettlementController<tb_FM_PaymentSettlement>>();
-                await settlementController.GenerateSettlement(entity);
 
                 //收款单审核时。除了保存核销记录，还要来源的 如 应收中的 余额这种更新
                 if (entity.BizType == (int)BizType.应收单 || entity.BizType == (int)BizType.应付单)
@@ -126,6 +122,15 @@ namespace RUINORERP.Business
                     }
                     #endregion
                 }
+                if (entity.BizType == (int)BizType.预收款单 || entity.BizType == (int)BizType.预付款单)
+                {
+
+                }
+
+                //收到列，付了钱。审核就会生成一笔核销记录  收款抵扣应收
+                tb_FM_PaymentSettlementController<tb_FM_PaymentSettlement> settlementController = _appContext.GetRequiredService<tb_FM_PaymentSettlementController<tb_FM_PaymentSettlement>>();
+                await settlementController.GenerateSettlement(entity);
+
 
                 entity.FMPaymentStatus = (int)FMPaymentStatus.已审核;
                 entity.ApprovalStatus = (int)ApprovalStatus.已审核;

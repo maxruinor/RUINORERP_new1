@@ -282,7 +282,6 @@ namespace RUINORERP.UI.Common
                         {
                             package.SaveAs(new FileInfo(saveDialog.FileName));
                             stopwatch.Stop();
-
                             progressForm.Close();
                         }
 

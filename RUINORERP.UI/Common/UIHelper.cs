@@ -1505,6 +1505,10 @@ namespace RUINORERP.UI.Common
         /// <param name="btnItem"></param>
         public static void ControlButton<T>(tb_MenuInfo CurMenuInfo, T btnItem) where T : ToolStripItem
         {
+            if (MainForm.Instance.AppContext.IsSuperUser)
+            {
+                return;
+            }
             if (CurMenuInfo.tb_P4Buttons == null)
             {
                 btnItem.Visible = false;

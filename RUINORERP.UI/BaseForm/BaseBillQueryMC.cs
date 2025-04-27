@@ -163,11 +163,11 @@ namespace RUINORERP.UI.BaseForm
                         {
                             ToolStripButton subItem = item as ToolStripButton;
                             subItem.Click += Item_Click;
-                            UIHelper.ControlButton(CurMenuInfo, subItem);
+                            UIHelper.ControlButton<ToolStripButton>(CurMenuInfo, subItem);
                         }
                         else if (item is ToolStripDropDownButton subItemDr)
                         {
-                            UIHelper.ControlButton(CurMenuInfo, subItemDr);
+                            UIHelper.ControlButton<ToolStripDropDownButton>(CurMenuInfo, subItemDr);
                             subItemDr.Click += Item_Click;
                             //下一级
                             if (subItemDr.HasDropDownItems)
@@ -175,7 +175,7 @@ namespace RUINORERP.UI.BaseForm
                                 foreach (var sub in subItemDr.DropDownItems)
                                 {
                                     ToolStripMenuItem subStripMenuItem = sub as ToolStripMenuItem;
-                                    UIHelper.ControlButton(CurMenuInfo, subStripMenuItem);
+                                    UIHelper.ControlButton<ToolStripMenuItem>(CurMenuInfo, subStripMenuItem);
                                     subStripMenuItem.Click += Item_Click;
                                 }
                             }

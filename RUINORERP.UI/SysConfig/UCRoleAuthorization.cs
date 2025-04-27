@@ -46,8 +46,6 @@ namespace RUINORERP.UI.SysConfig
             DataBindingHelper.InitCmb<tb_RoleInfo>(k => k.RoleID, v => v.RoleName, cmRoleInfo.ComboBox, true);
             LoadTreeView();
 
-
-
             InitListData();
             dataGridView1.NeedSaveColumnsXml = true;
             dataGridView2.NeedSaveColumnsXml = true;
@@ -57,11 +55,6 @@ namespace RUINORERP.UI.SysConfig
             // dataGridView2.ContextMenuStrip = contextMenuStrip1;
             dataGridView1.CellMouseDown += new DataGridViewCellMouseEventHandler(dataGridView1_CellMouseDown);
             dataGridView2.CellMouseDown += new DataGridViewCellMouseEventHandler(dataGridView2_CellMouseDown);
-
-
-
-
-
 
         }
 
@@ -706,7 +699,12 @@ namespace RUINORERP.UI.SysConfig
             // var ids = await MainForm.Instance.AppContext.Db.Insertable(pblist).ExecuteReturnSnowflakeIdListAsync();
         }
 
-
+        /// <summary>
+        /// 根据权限初始化字段
+        /// </summary>
+        /// <param name="role"></param>
+        /// <param name="menuInfo"></param>
+        /// <returns></returns>
         public async Task<bool> InitFiledByRole(tb_RoleInfo role, tb_MenuInfo menuInfo)
         {
             List<tb_FieldInfo> objlist = new List<tb_FieldInfo>();

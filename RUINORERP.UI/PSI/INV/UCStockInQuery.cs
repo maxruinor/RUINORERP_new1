@@ -32,7 +32,7 @@ namespace RUINORERP.UI.PSI.INV
             InitializeComponent();
             base.RelatedBillEditCol = (c => c.BillNo);
             base.tsbtnAntiApproval.Visible = false;
-            base.tsbtnBatchConversion.Visible = false;
+    
 
         }
          

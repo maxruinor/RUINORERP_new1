@@ -126,6 +126,20 @@ namespace RUINORERP.UI.BaseForm
                         frm = new frmFormProperty();
                     }
 
+                    //提前统一插入批量处理的菜单按钮
+
+                    cbbatch.Text = "批量处理";
+                    cbbatch.CheckStateChanged += (s, ex) =>
+                    {
+                        //this.Text = cb.CheckState.ToString();
+                        //kryptonNavigator1.Button.CloseButtonDisplay = ButtonDisplay.Hide;
+                        _UCBillMasterQuery.newSumDataGridViewMaster.MultiSelect = cbbatch.Checked;
+                        _UCBillMasterQuery.newSumDataGridViewMaster.UseSelectedColumn = cbbatch.Checked;
+                    };
+                    ToolStripControlHost host = new ToolStripControlHost(cbbatch);
+                    BaseToolStrip.Items.Insert(0, host);
+
+
                     //权限菜单
                     if (CurMenuInfo == null || CurMenuInfo.ClassPath.IsNullOrEmpty())
                     {
@@ -151,7 +165,7 @@ namespace RUINORERP.UI.BaseForm
                             subItem.Click += Item_Click;
                             UIHelper.ControlButton(CurMenuInfo, subItem);
                         }
-                        if (item is ToolStripDropDownButton subItemDr)
+                        else if (item is ToolStripDropDownButton subItemDr)
                         {
                             UIHelper.ControlButton(CurMenuInfo, subItemDr);
                             subItemDr.Click += Item_Click;
@@ -166,11 +180,11 @@ namespace RUINORERP.UI.BaseForm
                                 }
                             }
                         }
-                        if (item is ToolStripSplitButton)
+                        else if(item is ToolStripSplitButton)
                         {
                             ToolStripSplitButton subItem = item as ToolStripSplitButton;
                             subItem.Click += Item_Click;
-                            UIHelper.ControlButton(CurMenuInfo, subItem);
+                            UIHelper.ControlButton<ToolStripSplitButton>(CurMenuInfo, subItem);
                             //下一级
                             if (subItem.HasDropDownItems)
                             {
@@ -180,6 +194,10 @@ namespace RUINORERP.UI.BaseForm
                                     subStripMenuItem.Click += Item_Click;
                                 }
                             }
+                        }
+                        else if (item is ToolStripControlHost tsc)
+                        {
+                            UIHelper.ControlButton(CurMenuInfo, tsc);
                         }
                     }
 
@@ -331,7 +349,6 @@ namespace RUINORERP.UI.BaseForm
 
                 case MenuItemEnums.查询:
                     Query(QueryDto);
-                    tsbtnBatchConversion.Enabled = true;
                     toolStripSplitButtonPrint.Enabled = true;
                     break;
                 case MenuItemEnums.复制性新增:
@@ -379,14 +396,7 @@ namespace RUINORERP.UI.BaseForm
                         }
                     }
                     break;
-                case MenuItemEnums.转出库单:
-                    BatchConversion();
-                    tsbtnBatchConversion.Enabled = false;
-                    break;
-                case MenuItemEnums.转入库单:
-                    BatchConversion();
-                    tsbtnBatchConversion.Enabled = false;
-                    break;
+                 
                 case MenuItemEnums.打印:
                     Print(RptMode.PRINT);
                     break;
@@ -952,23 +962,6 @@ namespace RUINORERP.UI.BaseForm
         }
 
 
-        /// <summary>
-        /// 转换为目标类型的单据
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        public virtual void BatchConversion()
-        {
-
-        }
-
-        /// <summary>
-        /// 转换为目标类型的单据
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        public virtual void BatchConversion<T>()
-        {
-
-        }
 
         protected frmFormProperty frm = null;
         protected virtual void Property()
@@ -1361,7 +1354,6 @@ namespace RUINORERP.UI.BaseForm
                         break;
                     case Keys.Enter:
                         Query(QueryDto);
-                        tsbtnBatchConversion.Enabled = true;
                         toolStripSplitButtonPrint.Enabled = true;
                         break;
                 }
@@ -1530,16 +1522,7 @@ namespace RUINORERP.UI.BaseForm
             kryptonDockingManagerQuery.AddToWorkspace("Workspace", new KryptonPage[] { MasterQuery() });
             */
 
-            cbbatch.Text = "批量处理";
-            cbbatch.CheckStateChanged += (s, ex) =>
-            {
-                //this.Text = cb.CheckState.ToString();
-                //kryptonNavigator1.Button.CloseButtonDisplay = ButtonDisplay.Hide;
-                _UCBillMasterQuery.newSumDataGridViewMaster.MultiSelect = cbbatch.Checked;
-                _UCBillMasterQuery.newSumDataGridViewMaster.UseSelectedColumn = cbbatch.Checked;
-            };
-            ToolStripControlHost host = new ToolStripControlHost(cbbatch);
-            BaseToolStrip.Items.Insert(0, host);
+
 
 
             List<M> list = new List<M>();
@@ -1607,6 +1590,10 @@ namespace RUINORERP.UI.BaseForm
 
             //调用了_UCBillMasterQuery中的表格所以要放到后面不然为空
             BuildContextMenuController();
+
+            //查询不会有
+            AddExcludeMenuList(MenuItemEnums.复制性新增);
+
         }
 
 

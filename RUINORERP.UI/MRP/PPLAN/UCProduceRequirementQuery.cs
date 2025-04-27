@@ -36,8 +36,6 @@ namespace RUINORERP.UI.MRP.MP
             base.RelatedBillEditCol = (c => c.PDNo);
             base.ChildRelatedEntityType = typeof(tb_ProductionDemandTargetDetail);
             base.OnQueryRelatedChild += UCPurEntryQuery_OnQueryRelatedChild;
-            //显示转出库单
-            tsbtnBatchConversion.Visible = false;
             //base._UCBillMasterQuery.ColDisplayType = typeof(tb_ProductionDemand);
         }
         private async void UCPurEntryQuery_OnQueryRelatedChild(object obj, BindingSource bindingSource)

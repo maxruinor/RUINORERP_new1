@@ -34,8 +34,7 @@ namespace RUINORERP.UI.MRP.MP
         {
             InitializeComponent();
             base.RelatedBillEditCol = (c => c.BillNo);
-            //显示转出库单
-            tsbtnBatchConversion.Visible = false;
+         
             //base._UCBillMasterQuery.ColDisplayType = typeof(tb_MaterialReturn);
         }
 

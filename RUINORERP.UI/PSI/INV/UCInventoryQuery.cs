@@ -78,7 +78,6 @@ namespace RUINORERP.UI.PSI.INV
             toolStripButton成本确认.ToolTipText = "快速确认成本。";
             toolStripButton成本确认.Click += new System.EventHandler(this.toolStripButton成本确认_Click);
 
-
             System.Windows.Forms.ToolStripItem[] extendButtons = new System.Windows.Forms.ToolStripItem[] { toolStripButton成本确认 };
             this.BaseToolStrip.Items.AddRange(extendButtons);
             return extendButtons;

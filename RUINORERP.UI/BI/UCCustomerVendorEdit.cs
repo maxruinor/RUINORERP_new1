@@ -89,8 +89,48 @@ namespace RUINORERP.UI.BI
                 {
                     _EditEntity.CVCode = BizCodeGenerator.Instance.GetBaseInfoNo(BaseInfoType.BusinessPartner);
                 }
+
                 //新建时默认启用
                 _EditEntity.Is_enabled = true;
+            }
+
+
+            if (_EditEntity.CustomerVendor_ID > 0)
+            {
+                if (Text.Contains("其他"))
+                {
+                    chkOther.Enabled = true;
+                    chkNoNeedSource.Visible = false;
+                }
+                if (Text.Contains("客户"))
+                {
+                    chkNoNeedSource.Visible = true;
+                    lblCustomerCreditDays.Visible = true;
+                    txtCustomerCreditDays.Visible = true;
+                    lblCustomerCreditLimit.Visible = true;
+                    txtCustomerCreditLimit.Visible = true;
+
+                    lblSupplierCreditDays.Visible = false;
+                    txtSupplierCreditDays.Visible = false;
+                    lblSupplierCreditLimit.Visible = false;
+                    txtSupplierCreditLimit.Visible = false;
+
+                }
+                if (Text.Contains("供应商"))
+                {
+                 
+                    chkNoNeedSource.Visible = true;
+                    lblCustomerCreditDays.Visible = false;
+                    txtCustomerCreditDays.Visible = false;
+                    lblCustomerCreditLimit.Visible = false;
+                    txtCustomerCreditLimit.Visible = false;
+
+                    lblSupplierCreditDays.Visible = true;
+                    txtSupplierCreditDays.Visible = true;
+                    lblSupplierCreditLimit.Visible = true;
+                    txtSupplierCreditLimit.Visible = true;
+
+                }
             }
 
             DataBindingHelper.BindData4Cmb<tb_CustomerVendorType>(entity, k => k.Type_ID, v => v.TypeName, txtType_ID);

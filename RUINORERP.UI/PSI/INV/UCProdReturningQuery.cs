@@ -31,9 +31,6 @@ namespace RUINORERP.UI.PSI.INV
         {
             InitializeComponent();
             base.RelatedBillEditCol = (c => c.ReturnNo);
-            base.tsbtnAntiApproval.Visible = false;
-            base.tsbtnBatchConversion.Visible = false;
-
         }
         public override void SetGridViewDisplayConfig()
         {

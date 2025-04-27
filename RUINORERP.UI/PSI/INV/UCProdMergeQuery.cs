@@ -31,9 +31,6 @@ namespace RUINORERP.UI.PSI.INV
         {
             InitializeComponent();
             base.RelatedBillEditCol = (c => c.MergeNo);
-            base.tsbtnAntiApproval.Visible = false;
-            base.tsbtnBatchConversion.Visible = false;
-
         }
 
         /*

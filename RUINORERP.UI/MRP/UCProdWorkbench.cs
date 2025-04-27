@@ -519,9 +519,7 @@ namespace RUINORERP.UI.MRP
 
                     break;
 
-                case MenuItemEnums.转入库单:
-
-                    break;
+              
                 case MenuItemEnums.打印:
 
                     break;

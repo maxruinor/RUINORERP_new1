@@ -166,7 +166,7 @@
             this.lblCustomerCreditLimit.Name = "lblCustomerCreditLimit";
             this.lblCustomerCreditLimit.Size = new System.Drawing.Size(62, 20);
             this.lblCustomerCreditLimit.TabIndex = 84;
-            this.lblCustomerCreditLimit.Values.Text = "信用额度";
+            this.lblCustomerCreditLimit.Values.Text = "客户信用额度";
             // 
             // txtCustomerCreditLimit
             // 
@@ -181,7 +181,7 @@
             this.lblCustomerCreditDays.Name = "lblCustomerCreditDays";
             this.lblCustomerCreditDays.Size = new System.Drawing.Size(62, 20);
             this.lblCustomerCreditDays.TabIndex = 86;
-            this.lblCustomerCreditDays.Values.Text = "账期天数";
+            this.lblCustomerCreditDays.Values.Text = "客户账期天数";
             // 
             // txtCustomerCreditDays
             // 
@@ -510,7 +510,7 @@
             this.lblSupplierCreditLimit.Name = "lblSupplierCreditLimit";
             this.lblSupplierCreditLimit.Size = new System.Drawing.Size(62, 20);
             this.lblSupplierCreditLimit.TabIndex = 88;
-            this.lblSupplierCreditLimit.Values.Text = "信用额度";
+            this.lblSupplierCreditLimit.Values.Text = "供应商信用额度";
             // 
             // txtSupplierCreditLimit
             // 
@@ -525,7 +525,7 @@
             this.lblSupplierCreditDays.Name = "lblSupplierCreditDays";
             this.lblSupplierCreditDays.Size = new System.Drawing.Size(62, 20);
             this.lblSupplierCreditDays.TabIndex = 90;
-            this.lblSupplierCreditDays.Values.Text = "账期天数";
+            this.lblSupplierCreditDays.Values.Text = "供应商账期天数";
             // 
             // txtSupplierCreditDays
             // 

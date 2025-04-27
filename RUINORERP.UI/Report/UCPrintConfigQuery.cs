@@ -34,13 +34,7 @@ namespace RUINORERP.UI.Report
         public UCPrintConfigQuery()
         {
             InitializeComponent();
-
-            //显示转出库单
-            tsbtnBatchConversion.Visible = false;
-            toolStripButton结案.Visible = false;
-            toolStripbtnSubmit.Visible = false;
-            toolStripbtnApprove.Visible = false;
-            tsbtnAntiApproval.Visible = false;
+      
 
         }
 
@@ -110,7 +104,19 @@ namespace RUINORERP.UI.Report
 
         }
 
-
+        public override void AddExcludeMenuList()
+        {
+            toolStripButton结案.Visible = false;
+            toolStripbtnSubmit.Visible = false;
+            toolStripbtnApprove.Visible = false;
+            tsbtnAntiApproval.Visible = false;
+            AddExcludeMenuList(MenuItemEnums.反结案);
+            AddExcludeMenuList(MenuItemEnums.反审);
+            AddExcludeMenuList(MenuItemEnums.审核);
+            AddExcludeMenuList(MenuItemEnums.导入);
+            AddExcludeMenuList(MenuItemEnums.结案);
+            base.AddExcludeMenuList();
+        }
 
 
 

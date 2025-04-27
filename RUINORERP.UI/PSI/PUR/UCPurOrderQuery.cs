@@ -38,9 +38,6 @@ namespace RUINORERP.UI.PSI.PUR
         {
             InitializeComponent();
             base.RelatedBillEditCol = (c => c.PurOrderNo);
-            //显示转出库单
-            tsbtnBatchConversion.Visible = true;
-            tsbtnBatchConversion.Text = MenuItemEnums.转入库单.ToString();
         }
 
         public List<ContextMenuController> AddContextMenu()
@@ -154,7 +151,7 @@ namespace RUINORERP.UI.PSI.PUR
         /// <summary>
         /// 批量转换为采购入库单
         /// </summary>
-        public async override void BatchConversion()
+        public async  void BatchConversion()
         {
             tb_PurEntryController<tb_PurEntry> ctr = Startup.GetFromFac<tb_PurEntryController<tb_PurEntry>>();
             List<tb_PurOrder> selectlist = GetSelectResult();

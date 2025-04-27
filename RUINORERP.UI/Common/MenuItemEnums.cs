@@ -44,18 +44,7 @@ namespace RUINORERP.UI
         属性,
         审核,
         反审,
-        /// <summary>
-        /// 转销售出库单
-        /// </summary>
-        转出库单,
-
-        /// <summary>
-        /// 转采购入库单
-        /// </summary>
-        转入库单,
-
         帮助,
-        付款调整,
         已锁定,
     }
 

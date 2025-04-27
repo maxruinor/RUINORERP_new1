@@ -34,8 +34,6 @@ namespace RUINORERP.UI.MRP.MP
         {
             InitializeComponent();
             base.RelatedBillEditCol = (c => c.MaterialRequisitionNO);
-            //显示转出库单
-            tsbtnBatchConversion.Visible = false;
             //base._UCBillMasterQuery.ColDisplayType = typeof(tb_MaterialRequisition);
         }
         public override void SetGridViewDisplayConfig()

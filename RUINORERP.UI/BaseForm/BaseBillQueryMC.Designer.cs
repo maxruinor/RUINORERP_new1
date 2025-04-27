@@ -30,7 +30,6 @@
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(BaseBillQuery));
             this.BaseToolStrip = new System.Windows.Forms.ToolStrip();
-            this.tsbtnBatchConversion = new System.Windows.Forms.ToolStripButton();
             this.toolStripButton4 = new System.Windows.Forms.ToolStripButton();
             this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
             this.toolStripbtnSubmit = new System.Windows.Forms.ToolStripButton();
@@ -73,7 +72,6 @@
             // 
             this.BaseToolStrip.Font = new System.Drawing.Font("Segoe UI", 9F);
             this.BaseToolStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.tsbtnBatchConversion,
             this.toolStripButton4,
             this.toolStripSeparator2,
             this.toolStripbtnSubmit,
@@ -95,15 +93,6 @@
             this.BaseToolStrip.Size = new System.Drawing.Size(1110, 25);
             this.BaseToolStrip.TabIndex = 3;
             this.BaseToolStrip.Text = "toolStrip1";
-            // 
-            // tsbtnBatchConversion
-            // 
-            this.tsbtnBatchConversion.Image = global::RUINORERP.UI.Properties.Resources.Synchronize;
-            this.tsbtnBatchConversion.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.tsbtnBatchConversion.Name = "tsbtnBatchConversion";
-            this.tsbtnBatchConversion.Size = new System.Drawing.Size(79, 22);
-            this.tsbtnBatchConversion.Text = "转出库单";
-            this.tsbtnBatchConversion.Visible = false;
             // 
             // toolStripButton4
             // 
@@ -368,7 +357,6 @@
         private System.Windows.Forms.ToolStripSplitButton toolStripSplitButtonPrint;
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem1;
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem2;
-        internal System.Windows.Forms.ToolStripButton tsbtnBatchConversion;
         public System.Windows.Forms.ToolStripButton toolStripButtonDelete;
         public System.Windows.Forms.ToolStripButton toolStripButton结案;
         public System.Windows.Forms.ToolStripTextBox txtMaxRow;

@@ -31,8 +31,7 @@ namespace RUINORERP.UI.ProductEAV
         {
             InitializeComponent();
             base.RelatedBillEditCol = (c => c.BundleName);
-            base.tsbtnAntiApproval.Visible = false;
-            base.tsbtnBatchConversion.Visible = false;
+  
 
         }
 

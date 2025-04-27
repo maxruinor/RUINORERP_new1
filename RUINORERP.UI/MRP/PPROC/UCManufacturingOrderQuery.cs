@@ -34,8 +34,6 @@ namespace RUINORERP.UI.MRP.MP
         {
             InitializeComponent();
             base.RelatedBillEditCol = (c => c.MONO);
-            //显示转出库单
-            tsbtnBatchConversion.Visible = false;
             //base._UCBillMasterQuery.ColDisplayType = typeof(tb_ManufacturingOrder);
             //删除不显示在查询中。要打开确认后删除。因为这个是弱引用。删除要被引用的也删除先。
             base.toolStripButtonDelete.Visible = false;

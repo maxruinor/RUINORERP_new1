@@ -32,17 +32,7 @@ namespace RUINORERP.UI.PSI.SAL
         {
             InitializeComponent();
             base.RelatedBillEditCol = (c => c.SaleOutNo);
-
-            //出库单本身不用显示
-            tsbtnBatchConversion.Enabled = false;
-            if (MainForm.Instance.AppContext.IsSuperUser)
-            {
-                base.tsbtnAntiApproval.Visible = true;
-            }
-            else
-            {
-                base.tsbtnAntiApproval.Visible = false;
-            }
+       
 
         }
         public List<ContextMenuController> AddContextMenu()

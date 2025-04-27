@@ -49,11 +49,6 @@ namespace RUINORERP.UI.PSI.SAL
         {
             InitializeComponent();
             base.RelatedBillEditCol = (c => c.SOrderNo);
-
-
-            //显示转出库单
-            tsbtnBatchConversion.Visible = true;
-
         }
 
         public List<ContextMenuController> AddContextMenu()
@@ -437,7 +432,7 @@ namespace RUINORERP.UI.PSI.SAL
         /// <summary>
         /// 批量转换为销售出库单
         /// </summary>
-        public async override void BatchConversion()
+        public async void BatchConversion()
         {
             tb_SaleOutController<tb_SaleOut> ctr = Startup.GetFromFac<tb_SaleOutController<tb_SaleOut>>();
             List<tb_SaleOrder> selectlist = GetSelectResult();

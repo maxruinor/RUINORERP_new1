@@ -34,8 +34,6 @@ namespace RUINORERP.UI.MRP.PQC
         {
             InitializeComponent();
             base.RelatedBillEditCol = (c => c.ReworkEntryNo);
-            //显示转出库单
-            tsbtnBatchConversion.Visible = false;
             //base._UCBillMasterQuery.ColDisplayType = typeof(tb_MRP_ReworkEntry);
         }
 

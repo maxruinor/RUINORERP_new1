@@ -477,7 +477,7 @@ namespace RUINORERP.UI.PSI.PUR
 
             //如果订单 选择了未付款，但是又选择了非账期的即实收账方式。则审核不通过。
             //如果订单选择了 非未付款，但又选择了账期也不能通过。
-            if (EditEntity.Paytype_ID.HasValue)
+            if (NeedValidated && EditEntity.Paytype_ID.HasValue)
             {
                 if (EditEntity.PayStatus == (int)PayStatus.未付款)
                 {

@@ -35,7 +35,9 @@ using RUINORERP.Common.Extensions;
 using RUINORERP.Global.EnumExt;
 namespace RUINORERP.UI.FM
 {
-
+    /// <summary>
+    /// 核销单查询
+    /// </summary>
     public partial class UCPaymentSettlementQuery : BaseBillQueryMC<tb_FM_PaymentSettlement, tb_FM_PaymentSettlement>
     {
         public UCPaymentSettlementQuery()
@@ -59,12 +61,29 @@ namespace RUINORERP.UI.FM
             base.LimitQueryConditions = lambda;
         }
 
+        public override void AddExcludeMenuList()
+        {
+            base.AddExcludeMenuList("批量处理");
+            base.AddExcludeMenuList(MenuItemEnums.反结案);
+            base.AddExcludeMenuList(MenuItemEnums.反审);
+            base.AddExcludeMenuList(MenuItemEnums.复制性新增);
+            base.AddExcludeMenuList(MenuItemEnums.数据特殊修正);
+            base.AddExcludeMenuList(MenuItemEnums.结案);
+            base.AddExcludeMenuList(MenuItemEnums.删除);
+            base.AddExcludeMenuList(MenuItemEnums.审核);
+            base.AddExcludeMenuList(MenuItemEnums.提交);
+            base.AddExcludeMenuList(MenuItemEnums.新增);
+            base.AddExcludeMenuList(MenuItemEnums.导入);
+            base.AddExcludeMenuList(MenuItemEnums.修改);
+            base.AddExcludeMenuList(MenuItemEnums.保存);
+        }
+
+
         public override void BuildSummaryCols()
         {
             base.MasterSummaryCols.Add(c => c.SettledForeignAmount);
             base.MasterSummaryCols.Add(c => c.SettledLocalAmount);
         }
-
 
         public override void BuildInvisibleCols()
         {

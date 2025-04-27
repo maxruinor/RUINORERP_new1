@@ -140,7 +140,7 @@ namespace RUINORERP.UI.PSI.PUR
         {
             base.MasterSummaryCols.Add(e => e.TotalQty);
             base.MasterSummaryCols.Add(e => e.TotalAmount);
-            base.MasterSummaryCols.Add(e => e.ActualAmount);
+            base.MasterSummaryCols.Add(e => e.ForeignTotalAmount);
             base.MasterSummaryCols.Add(e => e.TotalTaxAmount);
 
             base.ChildSummaryCols.Add(e => e.Quantity);

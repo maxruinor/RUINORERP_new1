@@ -58,7 +58,7 @@ namespace RUINORERP.Business
 
  RuleFor(x => x.ExchangeRate).PrecisionScale(10,4,true).WithMessage("汇率:小数位不能超过4。");
 
- RuleFor(tb_FM_ReceivablePayable =>tb_FM_ReceivablePayable.ReceivePaymentType).NotEmpty().When(x => x.ReceivePaymentType.HasValue);
+
 
  RuleFor(x => x.TotalForeignPayableAmount).PrecisionScale(19,4,true).WithMessage("总金额外币:小数位不能超过4。");
 

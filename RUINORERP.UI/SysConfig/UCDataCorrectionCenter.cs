@@ -244,7 +244,7 @@ namespace RUINORERP.UI.SysConfig
                             if (PurOrderDetails[i].tb_purorder.tb_PurOrderDetails.Count == 1)
                             {
                                 PurOrderDetails[i].tb_purorder.TotalAmount = PurOrderDetails[i].SubtotalAmount;
-                                PurOrderDetails[i].tb_purorder.ActualAmount = PurOrderDetails[i].SubtotalAmount + PurOrderDetails[i].tb_purorder.ShippingCost;
+                                PurOrderDetails[i].tb_purorder.TotalAmount = PurOrderDetails[i].SubtotalAmount + PurOrderDetails[i].tb_purorder.ShippingCost;
                             }
                             else
                             {
@@ -278,7 +278,7 @@ namespace RUINORERP.UI.SysConfig
                             if (PurOrderDetails1[i].tb_purorder.tb_PurOrderDetails.Count == 1)
                             {
                                 PurOrderDetails1[i].tb_purorder.TotalAmount = PurOrderDetails1[i].SubtotalAmount;
-                                PurOrderDetails1[i].tb_purorder.ActualAmount = PurOrderDetails1[i].SubtotalAmount + PurOrderDetails1[i].tb_purorder.ShippingCost;
+                                PurOrderDetails1[i].tb_purorder.TotalAmount = PurOrderDetails1[i].SubtotalAmount + PurOrderDetails1[i].tb_purorder.ShippingCost;
                             }
                             else
                             {
@@ -317,7 +317,7 @@ namespace RUINORERP.UI.SysConfig
                             if (PurOrderDetails[i].tb_purorder.tb_PurOrderDetails.Count == 1)
                             {
                                 PurOrderDetails[i].tb_purorder.TotalAmount = PurOrderDetails[i].SubtotalAmount;
-                                PurOrderDetails[i].tb_purorder.ActualAmount = PurOrderDetails[i].SubtotalAmount + PurOrderDetails[i].tb_purorder.ShippingCost;
+                                PurOrderDetails[i].tb_purorder.TotalAmount = PurOrderDetails[i].SubtotalAmount + PurOrderDetails[i].tb_purorder.ShippingCost;
                             }
                             else
                             {
@@ -381,8 +381,8 @@ namespace RUINORERP.UI.SysConfig
                                 else
                                 {
                                     PurOrders[i].TotalAmount = PurOrders[i].tb_PurOrderDetails.Sum(c => c.SubtotalAmount);
-                                    PurOrders[i].ActualAmount = PurOrders[i].TotalAmount + PurOrders[i].ShippingCost;
-                                    int totalamountCounter = await MainForm.Instance.AppContext.Db.Updateable(PurOrders[i]).UpdateColumns(t => new { t.TotalAmount, t.ActualAmount }).ExecuteCommandAsync();
+                                    PurOrders[i].TotalAmount = PurOrders[i].TotalAmount + PurOrders[i].ShippingCost;
+                                    int totalamountCounter = await MainForm.Instance.AppContext.Db.Updateable(PurOrders[i]).UpdateColumns(t => new { t.TotalAmount }).ExecuteCommandAsync();
                                     richTextBoxLog.AppendText($"采购订单{PurOrders[i].PurOrderNo}的总金额修复成功：{totalamountCounter} " + "\r\n");
                                 }
                             }

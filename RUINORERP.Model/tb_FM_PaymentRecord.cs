@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：04/25/2025 17:33:33
+// 时间：04/27/2025 15:20:54
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -65,13 +65,13 @@ namespace RUINORERP.Model
                         }
         }
 
-        private int? _BizType;
+        private int _BizType;
         /// <summary>
         /// 来源业务
         /// </summary>
         [AdvQueryAttribute(ColName = "BizType",ColDesc = "来源业务")] 
-        [SugarColumn(ColumnDataType = "int", SqlParameterDbType ="Int32",  ColumnName = "BizType" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "来源业务" )]
-        public int? BizType
+        [SugarColumn(ColumnDataType = "int", SqlParameterDbType ="Int32",  ColumnName = "BizType" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "来源业务" )]
+        public int BizType
         { 
             get{return _BizType;}
             set{
@@ -79,13 +79,13 @@ namespace RUINORERP.Model
                         }
         }
 
-        private long? _SourceBilllID;
+        private long _SourceBilllID;
         /// <summary>
         /// 来源单据
         /// </summary>
         [AdvQueryAttribute(ColName = "SourceBilllID",ColDesc = "来源单据")] 
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "SourceBilllID" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "来源单据" )]
-        public long? SourceBilllID
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "SourceBilllID" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "来源单据" )]
+        public long SourceBilllID
         { 
             get{return _SourceBilllID;}
             set{
@@ -98,7 +98,7 @@ namespace RUINORERP.Model
         /// 来源单号
         /// </summary>
         [AdvQueryAttribute(ColName = "SourceBillNO",ColDesc = "来源单号")] 
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "SourceBillNO" ,Length=30,IsNullable = true,ColumnDescription = "来源单号" )]
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "SourceBillNO" ,Length=30,IsNullable = false,ColumnDescription = "来源单号" )]
         public string SourceBillNO
         { 
             get{return _SourceBillNO;}
@@ -107,13 +107,13 @@ namespace RUINORERP.Model
                         }
         }
 
-        private long? _ReceivePaymentType;
+        private long _ReceivePaymentType;
         /// <summary>
         /// 收付类型
         /// </summary>
         [AdvQueryAttribute(ColName = "ReceivePaymentType",ColDesc = "收付类型")] 
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "ReceivePaymentType" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "收付类型" )]
-        public long? ReceivePaymentType
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "ReceivePaymentType" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "收付类型" )]
+        public long ReceivePaymentType
         { 
             get{return _ReceivePaymentType;}
             set{
@@ -311,17 +311,31 @@ namespace RUINORERP.Model
                         }
         }
 
-        private int _FMPaymentStatus;
+        private int? _FMPaymentStatus;
         /// <summary>
         /// 支付状态
         /// </summary>
         [AdvQueryAttribute(ColName = "FMPaymentStatus",ColDesc = "支付状态")] 
-        [SugarColumn(ColumnDataType = "int", SqlParameterDbType ="Int32",  ColumnName = "FMPaymentStatus" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "支付状态")]
-        public int FMPaymentStatus
+        [SugarColumn(ColumnDataType = "int", SqlParameterDbType ="Int32",  ColumnName = "FMPaymentStatus" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "支付状态" )]
+        public int? FMPaymentStatus
         { 
             get{return _FMPaymentStatus;}
             set{
             SetProperty(ref _FMPaymentStatus, value);
+                        }
+        }
+
+        private string _PaymentImagePath;
+        /// <summary>
+        /// 付款凭证
+        /// </summary>
+        [AdvQueryAttribute(ColName = "PaymentImagePath",ColDesc = "付款凭证")] 
+        [SugarColumn(ColumnDataType = "nvarchar", SqlParameterDbType ="String",  ColumnName = "PaymentImagePath" ,Length=300,IsNullable = true,ColumnDescription = "付款凭证" )]
+        public string PaymentImagePath
+        { 
+            get{return _PaymentImagePath;}
+            set{
+            SetProperty(ref _PaymentImagePath, value);
                         }
         }
 
@@ -494,20 +508,6 @@ namespace RUINORERP.Model
                         }
         }
 
-        private string _PaymentImagePath;
-        /// <summary>
-        /// 付款凭证
-        /// </summary>
-        [AdvQueryAttribute(ColName = "PaymentImagePath",ColDesc = "付款凭证")] 
-        [SugarColumn(ColumnDataType = "nvarchar", SqlParameterDbType ="String",  ColumnName = "PaymentImagePath" ,Length=300,IsNullable = true,ColumnDescription = "付款凭证" )]
-        public string PaymentImagePath
-        { 
-            get{return _PaymentImagePath;}
-            set{
-            SetProperty(ref _PaymentImagePath, value);
-                        }
-        }
-
         private int _PrintStatus= ((0));
         /// <summary>
         /// 打印状态
@@ -565,8 +565,6 @@ namespace RUINORERP.Model
         [Navigate(NavigateType.OneToOne, nameof(Account_id))]
         public virtual tb_FM_Account tb_fm_account { get; set; }
 
-
-       
 
 
         #endregion

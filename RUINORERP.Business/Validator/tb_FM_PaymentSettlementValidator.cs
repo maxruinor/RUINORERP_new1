@@ -62,7 +62,7 @@ namespace RUINORERP.Business
 
  RuleFor(x => x.TargetExchangeRate).PrecisionScale(18,6,true).WithMessage("目标汇率:小数位不能超过6。");
 
- RuleFor(tb_FM_PaymentSettlement =>tb_FM_PaymentSettlement.ReceivePaymentType).NotEmpty().When(x => x.ReceivePaymentType.HasValue);
+
 
  RuleFor(tb_FM_PaymentSettlement =>tb_FM_PaymentSettlement.Account_id).NotEmpty().When(x => x.Account_id.HasValue);
 

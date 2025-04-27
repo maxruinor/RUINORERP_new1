@@ -64,7 +64,7 @@ namespace RUINORERP.UI.PSI.PUR
         /// </summary>
         public override void QueryConditionBuilder()
         {
- 
+
             base.QueryConditionBuilder();
             var lambda = Expressionable.Create<tb_PurOrder>()
             .AndIF(AuthorizeController.GetPurBizLimitedAuth(MainForm.Instance.AppContext) && !MainForm.Instance.AppContext.IsSuperUser, t => t.Employee_ID == MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID)//限制了销售只看到自己的客户,采购不限制
@@ -97,8 +97,19 @@ namespace RUINORERP.UI.PSI.PUR
             {
                 entity.PrimaryKeyID = entity.PurOrder_ID;
                 entity.ActionStatus = ActionStatus.加载;
-                // entity.DataStatus = (int)DataStatus.确认;
-                //如果审核了，审核要灰色
+                if (entity.Currency_ID.HasValue && entity.Currency_ID != AppContext.BaseCurrency.Currency_ID && entity.ExchangeRate.HasValue)
+                {
+                    lblExchangeRate.Visible = true;
+                    txtExchangeRate.Visible = true;
+                    UIHelper.ControlForeignFieldInvisible<tb_PurOrder>(this, true);
+
+                }
+                else
+                {
+                    lblExchangeRate.Visible = false;
+                    txtExchangeRate.Visible = false;
+                    UIHelper.ControlForeignFieldInvisible<tb_PurOrder>(this, false);
+                }
             }
             else
             {
@@ -112,25 +123,52 @@ namespace RUINORERP.UI.PSI.PUR
                     entity.tb_PurOrderDetails.ForEach(c => c.PurOrder_ID = 0);
                     entity.tb_PurOrderDetails.ForEach(c => c.PurOrder_ChildID = 0);
                 }
+                entity.Currency_ID = AppContext.BaseCurrency.Currency_ID;
+                lblExchangeRate.Visible = false;
+                txtExchangeRate.Visible = false;
+                UIHelper.ControlForeignFieldInvisible<tb_PurOrder>(this, false);
             }
-
+            DataBindingHelper.BindData4CmbByEnum<tb_PurOrder>(entity, k => k.PayStatus, typeof(PayStatus), cmbPayStatus, false);
             DataBindingHelper.BindData4Cmb<tb_CustomerVendor>(entity, k => k.CustomerVendor_ID, v => v.CVName, cmbCustomerVendor_ID, c => c.IsVendor == true);
             DataBindingHelper.BindData4Cmb<tb_Employee>(entity, k => k.Employee_ID, v => v.Employee_Name, cmbEmployee_ID);
             DataBindingHelper.BindData4Cmb<tb_Department>(entity, k => k.DepartmentID, v => v.DepartmentName, cmbDepartmentID);
             DataBindingHelper.BindData4Cmb<tb_PaymentMethod>(entity, k => k.Paytype_ID, v => v.Paytype_Name, cmbPaytype_ID);
+            DataBindingHelper.BindData4Cmb<tb_Currency>(entity, k => k.Currency_ID, v => v.CurrencyName, cmbCurrency_ID);
+            //不是业务，不用指定组
+            //if (AppContext.projectGroups != null && AppContext.projectGroups.Count > 0)
+            //{
+            //    #region 项目组
+            //    cmbProjectGroup.DataSource = null;
+            //    cmbProjectGroup.DataBindings.Clear();
+            //    BindingSource bs = new BindingSource();
+            //    bs.DataSource = AppContext.projectGroups;
+            //    ComboBoxHelper.InitDropList(bs, cmbProjectGroup, "ProjectGroup_ID", "ProjectGroupName", ComboBoxStyle.DropDownList, false);
+            //    var depa = new Binding("SelectedValue", entity, "ProjectGroup_ID", true, DataSourceUpdateMode.OnValidation);
+            //    //数据源的数据类型转换为控件要求的数据类型。
+            //    depa.Format += (s, args) => args.Value = args.Value == null ? -1 : args.Value;
+            //    //将控件的数据类型转换为数据源要求的数据类型。
+            //    depa.Parse += (s, args) => args.Value = args.Value == null ? -1 : args.Value;
+            //    cmbProjectGroup.DataBindings.Add(depa);
+            //    #endregion
+            //}
+            //else
+            //{
+            DataBindingHelper.BindData4Cmb<tb_ProjectGroup>(entity, k => k.ProjectGroup_ID, v => v.ProjectGroupName, cmbProjectGroup);
+            //}
 
             DataBindingHelper.BindData4TextBox<tb_PurOrder>(entity, t => t.PurOrderNo, txtPurOrderNo, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4DataTime<tb_PurOrder>(entity, t => t.PurDate, dtpPurDate, false);
             DataBindingHelper.BindData4DataTime<tb_PurOrder>(entity, t => t.PreDeliveryDate, dtpPreDeliveryDate, false);
             DataBindingHelper.BindData4TextBox<tb_PurOrder>(entity, t => t.ShippingCost.ToString(), txtShippingCost, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4TextBox<tb_PurOrder>(entity, t => t.TotalAmount.ToString(), txtTotalAmount, BindDataType4TextBox.Money, false);
-            DataBindingHelper.BindData4TextBox<tb_PurOrder>(entity, t => t.ActualAmount.ToString(), txtActualAmount, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4TextBox<tb_PurOrder>(entity, t => t.TotalQty.ToString(), txtTotalQty, BindDataType4TextBox.Qty, false);
 
             //到货日期 是入库单的时间写回 逻辑后面再定
             //            DataBindingHelper.BindData4DataTime<tb_PurOrder>(entity, t => t.Arrival_date, dtpArrival_date, false);
             DataBindingHelper.BindData4TextBox<tb_PurOrder>(entity, t => t.Notes, txtNotes, BindDataType4TextBox.Text, false);
-            DataBindingHelper.BindData4CheckBox<tb_PurOrder>(entity, t => t.IsIncludeTax, chkIsIncludeTax, false);
+            //DataBindingHelper.BindData4CheckBox<tb_PurOrder>(entity, t => t.IsIncludeTax, chkIsIncludeTax, false);
+            DataBindingHelper.BindData4TextBox<tb_PurOrder>(entity, t => t.ForeignTotalAmount.ToString(), txtForeignTotalAmount, BindDataType4TextBox.Money, false);
+            DataBindingHelper.BindData4TextBox<tb_PurOrder>(entity, t => t.ForeignDeposit.ToString(), txtForeignDeposit, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4TextBox<tb_PurOrder>(entity, t => t.Deposit.ToString(), txtDeposit, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4TextBox<tb_PurOrder>(entity, t => t.ApprovalOpinions, txtApprovalOpinions, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_PurOrder>(entity, t => t.RefNO, txtRefNO, BindDataType4TextBox.Text, false);
@@ -155,7 +193,54 @@ namespace RUINORERP.UI.PSI.PUR
                 //权限允许
                 if ((true && entity.DataStatus == (int)DataStatus.草稿) || (true && entity.DataStatus == (int)DataStatus.新建))
                 {
+                    //根据币别如果是外币才显示外币相关的字段
+                    if (s2.PropertyName == entity.GetPropertyName<tb_PurOrder>(c => c.Currency_ID) && entity.Currency_ID > 0)
+                    {
+                        if (cmbCurrency_ID.SelectedItem is tb_Currency cv)
+                        {
+                            if (cv.CurrencyCode.Trim() != DefaultCurrency.RMB.ToString())
+                            {
+                                //显示外币相关
+                                UIHelper.ControlForeignFieldInvisible<tb_PurOrder>(this, true);
+                                entity.ExchangeRate = BizService.GetExchangeRateFromCache(cv.Currency_ID, AppContext.BaseCurrency.Currency_ID);
+                                if (EditEntity.Currency_ID != AppContext.BaseCurrency.Currency_ID && EditEntity.ExchangeRate.HasValue)
+                                {
+                                    EditEntity.ForeignTotalAmount = EditEntity.TotalAmount / EditEntity.ExchangeRate.Value;
+                                    //
+                                    EditEntity.ForeignTotalAmount = Math.Round(EditEntity.ForeignTotalAmount, 2); // 四舍五入到 2 位小数
+                                }
+                                lblExchangeRate.Visible = true;
+                                txtExchangeRate.Visible = true;
+                                lblForeignTotalAmount.Text = $"金额({cv.CurrencyCode})";
+                            }
+                            else
+                            {
+                                //隐藏外币相关
+                                UIHelper.ControlForeignFieldInvisible<tb_PurOrder>(this, false);
+                                lblExchangeRate.Visible = false;
+                                txtExchangeRate.Visible = false;
+                                entity.ExchangeRate = null;
+                                entity.ForeignTotalAmount = 0;
+                            }
+                        }
 
+                    }
+
+                    if (s2.PropertyName == entity.GetPropertyName<tb_PurOrder>(c => c.Paytype_ID) && entity.Paytype_ID.HasValue && entity.Paytype_ID > 0)
+                    {
+                        if (cmbPaytype_ID.SelectedItem is tb_PaymentMethod paymentMethod)
+                        {
+                            EditEntity.tb_paymentmethod = paymentMethod;
+                        }
+                    }
+
+                    if (s2.PropertyName == entity.GetPropertyName<tb_PurOrder>(c => c.ProjectGroup_ID) && entity.ProjectGroup_ID.HasValue && entity.ProjectGroup_ID > 0)
+                    {
+                        if (cmbProjectGroup.SelectedItem is tb_ProjectGroup ProjectGroup)
+                        {
+                            EditEntity.tb_projectgroup = ProjectGroup;
+                        }
+                    }
                 }
 
                 if (s2.PropertyName == entity.GetPropertyName<tb_PurOrder>(c => c.PreDeliveryDate))
@@ -175,7 +260,14 @@ namespace RUINORERP.UI.PSI.PUR
 
                 if (s2.PropertyName == entity.GetPropertyName<tb_PurOrder>(c => c.ShippingCost))
                 {
-                    EditEntity.ActualAmount = EditEntity.TotalAmount + EditEntity.ShippingCost;
+                    EditEntity.TotalAmount = EditEntity.TotalAmount + EditEntity.ShippingCost;
+
+                    if (EditEntity.Currency_ID != AppContext.BaseCurrency.Currency_ID && EditEntity.ExchangeRate.HasValue)
+                    {
+                        EditEntity.ForeignTotalAmount = EditEntity.TotalAmount / EditEntity.ExchangeRate.Value;
+                        //
+                        EditEntity.ForeignTotalAmount = Math.Round(EditEntity.ForeignTotalAmount, 2); // 四舍五入到 2 位小数
+                    }
                 }
 
                 //如果客户有变化，带出对应有业务员
@@ -338,7 +430,10 @@ namespace RUINORERP.UI.PSI.PUR
             sgh.OnCalculateColumnValue += Sgh_OnCalculateColumnValue;
             sgh.OnLoadMultiRowData += Sgh_OnLoadMultiRowData;
             sgh.OnLoadRelevantFields += Sgh_OnLoadRelevantFields;
-            UIHelper.ControlMasterColumnsInvisible(CurMenuInfo,this);
+            UIHelper.ControlMasterColumnsInvisible(CurMenuInfo, this);
+            UIHelper.ControlForeignFieldInvisible<tb_PurOrder>(this, false);
+            lblExchangeRate.Visible = false;
+            txtExchangeRate.Visible = false;
         }
 
         /// <summary>
@@ -454,7 +549,13 @@ namespace RUINORERP.UI.PSI.PUR
                 EditEntity.TotalQty = details.Sum(c => c.Quantity);
                 //EditEntity.TotalAmount = details.Sum(c => c.TransactionPrice * c.Quantity);
                 EditEntity.TotalAmount = details.Sum(c => c.SubtotalAmount);
-                EditEntity.ActualAmount = EditEntity.TotalAmount + EditEntity.ShippingCost;
+                EditEntity.TotalAmount = EditEntity.TotalAmount + EditEntity.ShippingCost;
+                if (EditEntity.Currency_ID.HasValue && EditEntity.Currency_ID != AppContext.BaseCurrency.Currency_ID && EditEntity.ExchangeRate.HasValue)
+                {
+                    EditEntity.ForeignTotalAmount = EditEntity.TotalAmount / EditEntity.ExchangeRate.Value;
+                    //
+                    EditEntity.ForeignTotalAmount = Math.Round(EditEntity.ForeignTotalAmount, 2); // 四舍五入到 2 位小数
+                }
             }
             catch (Exception ex)
             {
@@ -559,7 +660,7 @@ namespace RUINORERP.UI.PSI.PUR
                 }
                 EditEntity.TotalQty = details.Sum(c => c.Quantity);
                 EditEntity.TotalAmount = details.Sum(c => c.SubtotalAmount);
-                EditEntity.ActualAmount = EditEntity.TotalAmount + EditEntity.ShippingCost;
+                EditEntity.TotalAmount = EditEntity.TotalAmount + EditEntity.ShippingCost;
 
                 if (NeedValidated && EditEntity.TotalQty != details.Sum(c => c.Quantity))
                 {
@@ -579,6 +680,15 @@ namespace RUINORERP.UI.PSI.PUR
                 ReturnMainSubResults<tb_PurOrder> SaveResult = new ReturnMainSubResults<tb_PurOrder>();
                 if (NeedValidated)
                 {
+                    if (EditEntity.TotalTaxAmount > 0)
+                    {
+                        EditEntity.IsIncludeTax = true;
+                    }
+                    else
+                    {
+                        EditEntity.IsIncludeTax = false;
+                    }
+
                     SaveResult = await base.Save(EditEntity);
                     if (SaveResult.Succeeded)
                     {

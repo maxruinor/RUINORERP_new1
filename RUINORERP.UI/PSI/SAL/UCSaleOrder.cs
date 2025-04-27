@@ -192,6 +192,7 @@ namespace RUINORERP.UI.PSI.SAL
                     entity.Currency_ID = AppContext.BaseCurrency.Currency_ID;
                     lblExchangeRate.Visible = false;
                     txtExchangeRate.Visible = false;
+                    UIHelper.ControlForeignFieldInvisible<tb_SaleOrder>(this, false);
                 }
             }
 
@@ -227,7 +228,7 @@ namespace RUINORERP.UI.PSI.SAL
 
 
 
-            DataBindingHelper.BindData4Cmb<tb_CustomerVendor>(entity, k => k.CustomerVendor_ID, v => v.CVName, cmbCustomerVendor_ID, true);
+            //DataBindingHelper.BindData4Cmb<tb_CustomerVendor>(entity, k => k.CustomerVendor_ID, v => v.CVName, cmbCustomerVendor_ID, true);
             DataBindingHelper.BindData4Cmb<tb_Currency>(entity, k => k.Currency_ID, v => v.CurrencyName, cmbCurrency_ID);
             DataBindingHelper.BindData4CmbByEnum<tb_SaleOrder>(entity, k => k.PayStatus, typeof(PayStatus), cmbPayStatus, false);
             DataBindingHelper.BindData4TextBox<tb_SaleOrder>(entity, t => t.ShipCost.ToString(), txtShipCost, BindDataType4TextBox.Money, false);
@@ -235,7 +236,6 @@ namespace RUINORERP.UI.PSI.SAL
             DataBindingHelper.BindData4TextBox<tb_SaleOrder>(entity, t => t.ExchangeRate.ToString(), txtExchangeRate, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4DataTime<tb_SaleOrder>(entity, t => t.PreDeliveryDate, dtpPreDeliveryDate, false);
             DataBindingHelper.BindData4DataTime<tb_SaleOrder>(entity, t => t.SaleDate, dtpSaleDate, false);
-            DataBindingHelper.BindData4DataTime<tb_SaleOrder>(entity, t => t.DeliveryDate, dtpDeliveryDate, false);
             DataBindingHelper.BindData4TextBox<tb_SaleOrder>(entity, t => t.ShippingAddress, txtShippingAddress, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_SaleOrder>(entity, t => t.ShippingWay, txtshippingWay, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_SaleOrder>(entity, t => t.TrackNo, txtTrackNo, BindDataType4TextBox.Text, false);
@@ -308,6 +308,8 @@ namespace RUINORERP.UI.PSI.SAL
                                 }
                                 lblExchangeRate.Visible = true;
                                 txtExchangeRate.Visible = true;
+
+
                                 lblForeignTotalAmount.Text = $"金额({cv.CurrencyCode})";
                             }
                             else
@@ -536,18 +538,11 @@ namespace RUINORERP.UI.PSI.SAL
 
 
 
-
-
-
             //公共到明细的映射 源 ，左边会隐藏
             sgh.SetPointToColumnPairs<ProductSharePart, tb_SaleOrderDetail>(sgd, f => f.Location_ID, t => t.Location_ID);
             sgh.SetPointToColumnPairs<ProductSharePart, tb_SaleOrderDetail>(sgd, f => f.Inv_Cost, t => t.Cost);
             sgh.SetPointToColumnPairs<ProductSharePart, tb_SaleOrderDetail>(sgd, f => f.Standard_Price, t => t.UnitPrice);
             sgh.SetPointToColumnPairs<ProductSharePart, tb_SaleOrderDetail>(sgd, f => f.prop, t => t.property);
-
-
-
-
 
 
             //应该只提供一个结构
@@ -573,7 +568,9 @@ namespace RUINORERP.UI.PSI.SAL
             MainForm.Instance.uclog.AddLog("加载数据耗时：" + sw.ElapsedMilliseconds + "毫秒");
 
             UIHelper.ControlMasterColumnsInvisible(CurMenuInfo, this);
-
+            UIHelper.ControlForeignFieldInvisible<tb_SaleOrder>(this, false);
+            lblExchangeRate.Visible = false;
+            txtExchangeRate.Visible = false;
         }
 
         /// <summary>

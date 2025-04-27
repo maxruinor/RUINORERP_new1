@@ -66,8 +66,8 @@ namespace RUINORERP.UI.FM
 
         public List<ContextMenuController> AddContextMenu()
         {
-            List<EventHandler> ContextClickList = new List<EventHandler>();
-            ContextClickList.Add(NewSumDataGridView_转为收付款单);
+            //List<EventHandler> ContextClickList = new List<EventHandler>();
+            //ContextClickList.Add(NewSumDataGridView_转为收付款单);
             List<ContextMenuController> list = new List<ContextMenuController>();
             if (PaymentType==ReceivePaymentType.收款)
             {
@@ -107,7 +107,6 @@ namespace RUINORERP.UI.FM
                 bool canConvert = item.FMPaymentStatus == (int)FMPaymentStatus.已审核 && item.ApprovalStatus == (int)ApprovalStatus.已审核 && item.ApprovalResults.HasValue && item.ApprovalResults.Value;
                 if (canConvert||item.FMPaymentStatus == (int)FMPaymentStatus.部分核销)
                 {
-
                     tb_FM_PaymentRecordController<tb_FM_PaymentRecord> paymentController = MainForm.Instance.AppContext.GetRequiredService<tb_FM_PaymentRecordController<tb_FM_PaymentRecord>>();
                     tb_FM_PaymentRecord paymentRecord = await paymentController.CreatePaymentRecord(item,false);
                     MenuPowerHelper menuPowerHelper;

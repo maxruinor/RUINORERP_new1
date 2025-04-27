@@ -63,8 +63,6 @@ namespace RUINORERP.Business
 
  RuleFor(x => x.TotalTaxAmount).PrecisionScale(19,4,true).WithMessage("合计税额:小数位不能超过4。");
 
- RuleFor(x => x.DiscountAmount).PrecisionScale(19,4,true).WithMessage("折扣金额总计:小数位不能超过4。");
-
 
  RuleFor(tb_PurEntry =>tb_PurEntry.Notes).MaximumLength(750).WithMessage("备注:不能超过最大长度,750.");
 
@@ -91,7 +89,7 @@ namespace RUINORERP.Business
 
  RuleFor(tb_PurEntry =>tb_PurEntry.KeepAccountsType).NotEmpty().When(x => x.KeepAccountsType.HasValue);
 
- RuleFor(x => x.Deposit).PrecisionScale(19,4,true).WithMessage("订金:小数位不能超过4。");
+ 
 
  RuleFor(tb_PurEntry =>tb_PurEntry.TaxDeductionType).NotEmpty().When(x => x.TaxDeductionType.HasValue);
 

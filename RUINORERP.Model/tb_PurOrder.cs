@@ -314,19 +314,7 @@ namespace RUINORERP.Model
                         }
         }
 
-        private decimal _ActualAmount;
-        /// <summary>
-        /// 实付金额
-        /// </summary>
-        [AdvQueryAttribute(ColName = "ActualAmount",ColDesc = "实付金额")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "ActualAmount" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "实付金额" )]
-        public decimal ActualAmount
-        { 
-            get{return _ActualAmount;}
-            set{
-            SetProperty(ref _ActualAmount, value);
-                        }
-        }
+
 
         private DateTime? _Arrival_date;
         /// <summary>

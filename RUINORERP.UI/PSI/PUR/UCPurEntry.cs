@@ -107,22 +107,21 @@ namespace RUINORERP.UI.PSI.PUR
                 }
             }
             DataBindingHelper.BindData4TextBox<tb_PurEntry>(entity, t => t.PurEntryNo, txtPurEntryNo, BindDataType4TextBox.Text, false);
-            DataBindingHelper.BindData4TextBox<tb_PurOrder>(entity, t => t.ShippingCost.ToString(), txtShippingCost, BindDataType4TextBox.Money, false);
+            DataBindingHelper.BindData4TextBox<tb_PurEntry>(entity, t => t.ShippingCost.ToString(), txtShippingCost, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4Cmb<tb_Department>(entity, k => k.DepartmentID, v => v.DepartmentName, cmbDepartmentID);
             DataBindingHelper.BindData4Cmb<tb_Employee>(entity, k => k.Employee_ID, v => v.Employee_Name, cmbEmployee_ID);
             DataBindingHelper.BindData4Cmb<tb_PaymentMethod>(entity, k => k.Paytype_ID, v => v.Paytype_Name, cmbPaytype_ID);
-
+            DataBindingHelper.BindData4Cmb<tb_ProjectGroup>(entity, k => k.ProjectGroup_ID, v => v.ProjectGroupName, cmbProjectGroup);
 
 
             DataBindingHelper.BindData4TextBox<tb_PurEntry>(entity, t => t.TotalQty.ToString(), txtTotalQty, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4TextBox<tb_PurEntry>(entity, t => t.TotalAmount.ToString(), txtTotalAmount, BindDataType4TextBox.Money, false);
-            DataBindingHelper.BindData4TextBox<tb_PurEntry>(entity, t => t.ActualAmount.ToString(), txtActualAmount, BindDataType4TextBox.Money, false);
+ 
             DataBindingHelper.BindData4DataTime<tb_PurEntry>(entity, t => t.EntryDate, dtpEntryDate, false);
             DataBindingHelper.BindData4TextBox<tb_PurEntry>(entity, t => t.Notes, txtNotes, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_PurEntry>(entity, t => t.ApprovalOpinions, txtApprovalOpinions, BindDataType4TextBox.Text, false);
-            DataBindingHelper.BindData4CheckBox<tb_PurEntry>(entity, t => t.IsIncludeTax, chkIsIncludeTax, false);
-            DataBindingHelper.BindData4TextBox<tb_PurEntry>(entity, t => t.Deposit.ToString(), txtDeposit, BindDataType4TextBox.Money, false);
-            DataBindingHelper.BindData4TextBox<tb_PurEntry>(entity, t => t.DiscountAmount.ToString(), txtDiscountAmount, BindDataType4TextBox.Money, false);
+          
+    
             DataBindingHelper.BindData4CheckBox<tb_PurEntry>(entity, t => t.ReceiptInvoiceClosed, chkReceiptInvoiceClosed, false);
             DataBindingHelper.BindData4CheckBox<tb_PurEntry>(entity, t => t.GenerateVouchers, chkGenerateVouchers, false);
             DataBindingHelper.BindData4TextBox<tb_PurEntry>(entity, t => t.VoucherNO, txtVoucherNO, BindDataType4TextBox.Text, false);
@@ -397,6 +396,16 @@ namespace RUINORERP.UI.PSI.PUR
                 EditEntity.TotalQty = details.Sum(c => c.Quantity);
                 EditEntity.TotalAmount = details.Sum(c => c.SubtotalAmount);
                 EditEntity.ActualAmount = EditEntity.TotalAmount + EditEntity.ShippingCost;
+
+                if (EditEntity.TotalTaxAmount>0)
+                {
+                    EditEntity.IsIncludeTax = true;
+                }
+                else
+                {
+                    EditEntity.IsIncludeTax = false;
+                }
+
                 if (NeedValidated && !base.Validator<tb_PurEntryDetail>(details))
                 {
                     return false;
@@ -543,7 +552,14 @@ namespace RUINORERP.UI.PSI.PUR
             }
         }
 
+        private void lblIsIncludeTax_Click(object sender, EventArgs e)
+        {
 
+        }
 
+        private void kryptonSplitContainer1_Panel1_Paint(object sender, PaintEventArgs e)
+        {
+
+        }
     }
 }

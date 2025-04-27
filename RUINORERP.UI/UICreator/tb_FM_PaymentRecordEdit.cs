@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：04/25/2025 17:33:29
+// 时间：04/27/2025 15:20:51
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -93,7 +93,8 @@ namespace RUINORERP.UI
                         entity.ProjectGroup_ID = Int64.Parse(txtProjectGroup_ID.Text);
                         entity.Paytype_ID = Int64.Parse(txtPaytype_ID.Text);
                         entity.FMPaymentStatus = Int32.Parse(txtFMPaymentStatus.Text);
-                        entity.ReferenceNo = txtReferenceNo.Text ;
+                        entity.PaymentImagePath = txtPaymentImagePath.Text ;
+                       entity.ReferenceNo = txtReferenceNo.Text ;
                        entity.Remark = txtRemark.Text ;
                        entity.Created_at = DateTime.Parse(txtCreated_at.Text);
                         entity.Created_by = Int64.Parse(txtCreated_by.Text);
@@ -105,8 +106,7 @@ namespace RUINORERP.UI
                         entity.Approver_at = DateTime.Parse(txtApprover_at.Text);
                         entity.ApprovalStatus = SByte.Parse(txtApprovalStatus.Text);
                         entity.ApprovalResults = Boolean.Parse(txtApprovalResults.Text);
-                        entity.PaymentImagePath = txtPaymentImagePath.Text ;
-                       entity.PrintStatus = Int32.Parse(txtPrintStatus.Text);
+                        entity.PrintStatus = Int32.Parse(txtPrintStatus.Text);
                                 return entity;
 }
         */
@@ -136,6 +136,7 @@ namespace RUINORERP.UI
           // DataBindingHelper.BindData4Cmb<tb_ProjectGroup>(entity, k => k.ProjectGroup_ID, v=>v.XXNAME, cmbProjectGroup_ID);
           // DataBindingHelper.BindData4Cmb<tb_PaymentMethod>(entity, k => k.Paytype_ID, v=>v.XXNAME, cmbPaytype_ID);
            DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.FMPaymentStatus, txtFMPaymentStatus, BindDataType4TextBox.Qty,false);
+           DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.PaymentImagePath, txtPaymentImagePath, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.ReferenceNo, txtReferenceNo, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.Remark, txtRemark, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4DataTime<tb_FM_PaymentRecord>(entity, t => t.Created_at, dtpCreated_at,false);
@@ -148,7 +149,6 @@ namespace RUINORERP.UI
            DataBindingHelper.BindData4DataTime<tb_FM_PaymentRecord>(entity, t => t.Approver_at, dtpApprover_at,false);
            //default  DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.ApprovalStatus.ToString(), txtApprovalStatus, BindDataType4TextBox.Money,false);
            DataBindingHelper.BindData4CheckBox<tb_FM_PaymentRecord>(entity, t => t.ApprovalResults, chkApprovalResults, false);
-           DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.PaymentImagePath, txtPaymentImagePath, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.PrintStatus, txtPrintStatus, BindDataType4TextBox.Qty,false);
 }
 

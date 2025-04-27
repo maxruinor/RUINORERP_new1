@@ -72,7 +72,6 @@ namespace RUINORERP.Business
 
             RuleFor(x => x.TotalAmount).PrecisionScale(19, 4, true).WithMessage("货款金额:小数位不能超过4。");
 
-            RuleFor(x => x.ActualAmount).PrecisionScale(19, 4, true).WithMessage("实付金额:小数位不能超过4。");
 
 
             RuleFor(tb_PurOrder => tb_PurOrder.Notes).MaximumLength(750).WithMessage("备注:不能超过最大长度,750.");

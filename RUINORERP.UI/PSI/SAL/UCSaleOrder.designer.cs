@@ -58,8 +58,6 @@
             this.dtpSaleDate = new Krypton.Toolkit.KryptonDateTimePicker();
             this.cmbOrderPriority = new Krypton.Toolkit.KryptonComboBox();
             this.lbl销售订单 = new Krypton.Toolkit.KryptonLabel();
-            this.dtpDeliveryDate = new Krypton.Toolkit.KryptonDateTimePicker();
-            this.lblDeliveryDate = new Krypton.Toolkit.KryptonLabel();
             this.dtpPreDeliveryDate = new Krypton.Toolkit.KryptonDateTimePicker();
             this.lblPriority = new Krypton.Toolkit.KryptonLabel();
             this.lblPreDeliveryDate = new Krypton.Toolkit.KryptonLabel();
@@ -170,8 +168,6 @@
             this.kryptonPanelMainInfo.Controls.Add(this.dtpSaleDate);
             this.kryptonPanelMainInfo.Controls.Add(this.cmbOrderPriority);
             this.kryptonPanelMainInfo.Controls.Add(this.lbl销售订单);
-            this.kryptonPanelMainInfo.Controls.Add(this.dtpDeliveryDate);
-            this.kryptonPanelMainInfo.Controls.Add(this.lblDeliveryDate);
             this.kryptonPanelMainInfo.Controls.Add(this.dtpPreDeliveryDate);
             this.kryptonPanelMainInfo.Controls.Add(this.lblPriority);
             this.kryptonPanelMainInfo.Controls.Add(this.lblPreDeliveryDate);
@@ -433,22 +429,6 @@
             this.lbl销售订单.StateCommon.LongText.Color2 = System.Drawing.Color.Lime;
             this.lbl销售订单.TabIndex = 43;
             this.lbl销售订单.Values.Text = "销售订单";
-            // 
-            // dtpDeliveryDate
-            // 
-            this.dtpDeliveryDate.Location = new System.Drawing.Point(907, 80);
-            this.dtpDeliveryDate.Name = "dtpDeliveryDate";
-            this.dtpDeliveryDate.ShowCheckBox = true;
-            this.dtpDeliveryDate.Size = new System.Drawing.Size(140, 21);
-            this.dtpDeliveryDate.TabIndex = 63;
-            // 
-            // lblDeliveryDate
-            // 
-            this.lblDeliveryDate.Location = new System.Drawing.Point(841, 80);
-            this.lblDeliveryDate.Name = "lblDeliveryDate";
-            this.lblDeliveryDate.Size = new System.Drawing.Size(62, 20);
-            this.lblDeliveryDate.TabIndex = 62;
-            this.lblDeliveryDate.Values.Text = "发货日期";
             // 
             // dtpPreDeliveryDate
             // 
@@ -812,8 +792,6 @@
         private Krypton.Toolkit.KryptonDateTimePicker dtpPreDeliveryDate;
         private Krypton.Toolkit.KryptonLabel lblSaleDate;
         private Krypton.Toolkit.KryptonDateTimePicker dtpSaleDate;
-        private Krypton.Toolkit.KryptonLabel lblDeliveryDate;
-        private Krypton.Toolkit.KryptonDateTimePicker dtpDeliveryDate;
         private Krypton.Toolkit.KryptonLabel lblShippingAddress;
         private Krypton.Toolkit.KryptonTextBox txtShippingAddress;
         private Krypton.Toolkit.KryptonLabel lblshippingWay;

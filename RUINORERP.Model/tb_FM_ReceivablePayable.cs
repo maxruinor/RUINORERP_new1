@@ -168,13 +168,13 @@ namespace RUINORERP.Model
                         }
         }
 
-        private long? _ReceivePaymentType;
+        private long _ReceivePaymentType;
         /// <summary>
         /// 收付类型
         /// </summary>
         [AdvQueryAttribute(ColName = "ReceivePaymentType",ColDesc = "收付类型")] 
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "ReceivePaymentType" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "收付类型" )]
-        public long? ReceivePaymentType
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "ReceivePaymentType" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "收付类型" )]
+        public long ReceivePaymentType
         { 
             get{return _ReceivePaymentType;}
             set{

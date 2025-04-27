@@ -324,8 +324,6 @@ namespace RUINORERP.Business
 
                 //入库时，全部生成应付，账期的。就加上到期日
                 //有付款过的。就去预付中抵扣，不够的金额及状态标识出来生成对账单
-
-                
                 tb_FM_ReceivablePayable payable = new tb_FM_ReceivablePayable();
                 IMapper mapper = RUINORERP.Business.AutoMapper.AutoMapperConfig.RegisterMappings().CreateMapper();
                 payable = mapper.Map<tb_FM_ReceivablePayable>(entity);

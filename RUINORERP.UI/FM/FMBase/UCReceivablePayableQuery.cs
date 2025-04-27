@@ -33,10 +33,14 @@ using AutoUpdateTools;
 using RUINORERP.UI.BaseForm;
 using RUINORERP.Common.Extensions;
 using RUINORERP.Global.EnumExt;
+using RUINORERP.UI.UControls;
+using LiveChartsCore.Geo;
+using Netron.GraphLib;
+
 namespace RUINORERP.UI.FM
 {
-
-    public partial class UCReceivablePayableQuery : BaseBillQueryMC<tb_FM_ReceivablePayable, tb_FM_ReceivablePayableDetail>
+    //应收应付查询
+    public partial class UCReceivablePayableQuery : BaseBillQueryMC<tb_FM_ReceivablePayable, tb_FM_ReceivablePayableDetail>, UI.AdvancedUIModule.IContextMenuInfoAuth
     {
         public UCReceivablePayableQuery()
         {
@@ -58,6 +62,76 @@ namespace RUINORERP.UI.FM
             QueryConditionFilter.FilterLimitExpressions.Add(lambda);
 
             base.LimitQueryConditions = lambda;
+        }
+
+        public List<ContextMenuController> AddContextMenu()
+        {
+            List<EventHandler> ContextClickList = new List<EventHandler>();
+            ContextClickList.Add(NewSumDataGridView_转为收付款单);
+            List<ContextMenuController> list = new List<ContextMenuController>();
+            if (PaymentType==ReceivePaymentType.收款)
+            {
+                list.Add(new ContextMenuController("【转为收款单】", true, false, "NewSumDataGridView_转为收付款单"));
+            }
+            else
+            {
+                list.Add(new ContextMenuController("【转为付款单】", true, false, "NewSumDataGridView_转为收付款单"));
+            }
+           
+            return list;
+        }
+        public override void BuildContextMenuController()
+        {
+            List<EventHandler> ContextClickList = new List<EventHandler>();
+            ContextClickList.Add(NewSumDataGridView_转为收付款单);
+            List<ContextMenuController> list = new List<ContextMenuController>();
+            list = AddContextMenu();
+
+            UIHelper.ControlContextMenuInvisible(CurMenuInfo, list);
+
+            if (_UCBillMasterQuery != null)
+            {
+                //base.dataGridView1.Use是否使用内置右键功能 = false;
+                ContextMenuStrip newContextMenuStrip = _UCBillMasterQuery.newSumDataGridViewMaster.GetContextMenu(_UCBillMasterQuery.newSumDataGridViewMaster.ContextMenuStrip
+                    , ContextClickList, list, true
+                    );
+                _UCBillMasterQuery.newSumDataGridViewMaster.ContextMenuStrip = newContextMenuStrip;
+            }
+        }
+        private async void NewSumDataGridView_转为收付款单(object sender, EventArgs e)
+        {
+            List<tb_FM_ReceivablePayable> selectlist = GetSelectResult();
+            foreach (var item in selectlist)
+            {
+                //只有审核状态才可以转换为出库单
+                bool canConvert = item.FMPaymentStatus == (int)FMPaymentStatus.已审核 && item.ApprovalStatus == (int)ApprovalStatus.已审核 && item.ApprovalResults.HasValue && item.ApprovalResults.Value;
+                if (canConvert||item.FMPaymentStatus == (int)FMPaymentStatus.部分核销)
+                {
+
+                    tb_FM_PaymentRecordController<tb_FM_PaymentRecord> paymentController = MainForm.Instance.AppContext.GetRequiredService<tb_FM_PaymentRecordController<tb_FM_PaymentRecord>>();
+                    tb_FM_PaymentRecord paymentRecord = await paymentController.CreatePaymentRecord(item,false);
+                    MenuPowerHelper menuPowerHelper;
+                    menuPowerHelper = Startup.GetFromFac<MenuPowerHelper>();
+                    tb_MenuInfo RelatedMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble && m.EntityName == nameof(tb_SaleOutRe) && m.BIBaseForm == "BaseBillEditGeneric`2").FirstOrDefault();
+                    if (RelatedMenuInfo != null)
+                    {
+                        menuPowerHelper.ExecuteEvents(RelatedMenuInfo, paymentRecord);
+                    }
+                    return;
+                }
+                else
+                {
+                    if (PaymentType == ReceivePaymentType.收款)
+                    {
+                        MessageBox.Show($"当前应收款单 {item.ARAPNo} 无法生成收款单，请查询单据状态是否正确。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    }
+                    else
+                    {
+                        MessageBox.Show($"当前应付款单 {item.ARAPNo} 无法生成收款单，请查询单据状态是否正确。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    }
+                        
+                }
+            }
         }
 
         public override void BuildSummaryCols()

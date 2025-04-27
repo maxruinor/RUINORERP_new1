@@ -58,12 +58,32 @@ namespace RUINORERP.UI.BI
                     _EditEntity.CVCode = BizCodeGenerator.Instance.GetBaseInfoNo(BaseInfoType.Customer);
                     _EditEntity.IsCustomer = true;
                     chkNoNeedSource.Visible = true;
+                    lblCustomerCreditDays.Visible = true;
+                    txtCustomerCreditDays.Visible = true;
+                    lblCustomerCreditLimit.Visible = true;
+                    txtCustomerCreditLimit.Visible = true;
+
+                    lblSupplierCreditDays.Visible = false;
+                    txtSupplierCreditDays.Visible = false;
+                    lblSupplierCreditLimit.Visible = false;
+                    txtSupplierCreditLimit.Visible = false;
+
                 }
                 if (Text.Contains("供应商"))
                 {
                     _EditEntity.CVCode = BizCodeGenerator.Instance.GetBaseInfoNo(BaseInfoType.Supplier);
                     _EditEntity.IsVendor = true;
                     chkNoNeedSource.Visible = true;
+                    lblCustomerCreditDays.Visible = false;
+                    txtCustomerCreditDays.Visible = false;
+                    lblCustomerCreditLimit.Visible = false;
+                    txtCustomerCreditLimit.Visible = false;
+
+                    lblSupplierCreditDays.Visible = true;
+                    txtSupplierCreditDays.Visible = true;
+                    lblSupplierCreditLimit.Visible = true;
+                    txtSupplierCreditLimit.Visible = true;
+
                 }
                 if (string.IsNullOrEmpty(_EditEntity.CVCode))
                 {
@@ -74,8 +94,12 @@ namespace RUINORERP.UI.BI
             }
 
             DataBindingHelper.BindData4Cmb<tb_CustomerVendorType>(entity, k => k.Type_ID, v => v.TypeName, txtType_ID);
-            DataBindingHelper.BindData4TextBox<tb_CustomerVendor>(entity, t => t.CreditLimit.ToString(), txtCreditLimit, BindDataType4TextBox.Money, false);
-            DataBindingHelper.BindData4TextBox<tb_CustomerVendor>(entity, t => t.CreditDays, txtCreditDays, BindDataType4TextBox.Qty, false);
+
+            DataBindingHelper.BindData4TextBox<tb_CustomerVendor>(entity, t => t.CustomerCreditLimit.ToString(), txtCustomerCreditLimit, BindDataType4TextBox.Money, false);
+            DataBindingHelper.BindData4TextBox<tb_CustomerVendor>(entity, t => t.CustomerCreditDays, txtCustomerCreditDays, BindDataType4TextBox.Qty, false);
+            DataBindingHelper.BindData4TextBox<tb_CustomerVendor>(entity, t => t.SupplierCreditLimit.ToString(), txtSupplierCreditLimit, BindDataType4TextBox.Money, false);
+            DataBindingHelper.BindData4TextBox<tb_CustomerVendor>(entity, t => t.SupplierCreditDays, txtSupplierCreditDays, BindDataType4TextBox.Qty, false);
+
             DataBindingHelper.BindData4TextBox<tb_CustomerVendor>(entity, t => t.CVName, txtCVName, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_CustomerVendor>(entity, t => t.Contact, txtContact, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_CustomerVendor>(entity, t => t.Phone, txtPhone, BindDataType4TextBox.Text, false);
@@ -90,8 +114,8 @@ namespace RUINORERP.UI.BI
             DataBindingHelper.BindData4Cmb<tb_Employee>(entity, k => k.Employee_ID, v => v.Employee_Name, cmbEmployee_ID);
             DataBindingHelper.BindData4TextBox<tb_CustomerVendor>(entity, t => t.Notes, txtNotes, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4RadioGroupTrueFalse<tb_CustomerVendor>(entity, t => t.Is_enabled, rdbis_enabledYes, rdbis_enabledNo);
-            
-            
+
+
             //有默认值
             //如果在模块定义中客户关系是启用时，就必须录入来源的目标客户。
             crmMod = await MainForm.Instance.AppContext.Db.Queryable<tb_ModuleDefinition>().Where(c => c.ModuleName == nameof(ModuleMenuDefine.客户关系)).FirstAsync();
@@ -133,7 +157,7 @@ namespace RUINORERP.UI.BI
                 base.InitRequiredToControl(MainForm.Instance.AppContext.GetRequiredService<tb_CustomerVendorValidator>(), kryptonPanel1.Controls);
                 base.InitEditItemToControl(entity, kryptonPanel1.Controls);
             }
-            
+
             if (_EditEntity.CustomerVendor_ID > 0)
             {
                 btnAddPayeeInfo.Visible = true;

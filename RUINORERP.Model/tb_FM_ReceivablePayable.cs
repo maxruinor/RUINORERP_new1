@@ -377,20 +377,20 @@ namespace RUINORERP.Model
             SetProperty(ref _FMPaymentStatus, value);
                         }
         }
-        private bool _IsAvailable;
-        /// <summary>
-        /// 是否可用
-        /// </summary>
-        [AdvQueryAttribute(ColName = "IsAvailable", ColDesc = "是否可用")]
-        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType = "Boolean", ColumnName = "IsAvailable", IsNullable = true, ColumnDescription = "是否可用")]
-        public bool IsAvailable
-        {
-            get { return _IsAvailable; }
-            set
-            {
-                SetProperty(ref _IsAvailable, value);
-            }
-        }
+        //private bool _IsAvailable;
+        ///// <summary>
+        ///// 是否可用
+        ///// </summary>
+        //[AdvQueryAttribute(ColName = "IsAvailable", ColDesc = "是否可用")]
+        //[SugarColumn(ColumnDataType = "bit", SqlParameterDbType = "Boolean", ColumnName = "IsAvailable", IsNullable = true, ColumnDescription = "是否可用")]
+        //public bool IsAvailable
+        //{
+        //    get { return _IsAvailable; }
+        //    set
+        //    {
+        //        SetProperty(ref _IsAvailable, value);
+        //    }
+        //}
         private string _Remark;
         /// <summary>
         /// 备注

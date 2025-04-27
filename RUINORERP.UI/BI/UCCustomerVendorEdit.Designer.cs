@@ -31,10 +31,10 @@
             this.btnOk = new Krypton.Toolkit.KryptonButton();
             this.btnCancel = new Krypton.Toolkit.KryptonButton();
             this.kryptonPanel1 = new Krypton.Toolkit.KryptonPanel();
-            this.lblCreditLimit = new Krypton.Toolkit.KryptonLabel();
-            this.txtCreditLimit = new Krypton.Toolkit.KryptonTextBox();
-            this.lblCreditDays = new Krypton.Toolkit.KryptonLabel();
-            this.txtCreditDays = new Krypton.Toolkit.KryptonTextBox();
+            this.lblCustomerCreditLimit = new Krypton.Toolkit.KryptonLabel();
+            this.txtCustomerCreditLimit = new Krypton.Toolkit.KryptonTextBox();
+            this.lblCustomerCreditDays = new Krypton.Toolkit.KryptonLabel();
+            this.txtCustomerCreditDays = new Krypton.Toolkit.KryptonTextBox();
             this.btnAddBillingInformation = new Krypton.Toolkit.KryptonButton();
             this.chkNoNeedSource = new Krypton.Toolkit.KryptonCheckBox();
             this.lblCustomer_id = new Krypton.Toolkit.KryptonLabel();
@@ -72,6 +72,10 @@
             this.lblIsVendor = new Krypton.Toolkit.KryptonLabel();
             this.lblNotes = new Krypton.Toolkit.KryptonLabel();
             this.txtNotes = new Krypton.Toolkit.KryptonTextBox();
+            this.lblSupplierCreditLimit = new Krypton.Toolkit.KryptonLabel();
+            this.txtSupplierCreditLimit = new Krypton.Toolkit.KryptonTextBox();
+            this.lblSupplierCreditDays = new Krypton.Toolkit.KryptonLabel();
+            this.txtSupplierCreditDays = new Krypton.Toolkit.KryptonTextBox();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel1)).BeginInit();
             this.kryptonPanel1.SuspendLayout();
@@ -104,10 +108,14 @@
             // 
             // kryptonPanel1
             // 
-            this.kryptonPanel1.Controls.Add(this.lblCreditLimit);
-            this.kryptonPanel1.Controls.Add(this.txtCreditLimit);
-            this.kryptonPanel1.Controls.Add(this.lblCreditDays);
-            this.kryptonPanel1.Controls.Add(this.txtCreditDays);
+            this.kryptonPanel1.Controls.Add(this.lblSupplierCreditLimit);
+            this.kryptonPanel1.Controls.Add(this.txtSupplierCreditLimit);
+            this.kryptonPanel1.Controls.Add(this.lblSupplierCreditDays);
+            this.kryptonPanel1.Controls.Add(this.txtSupplierCreditDays);
+            this.kryptonPanel1.Controls.Add(this.lblCustomerCreditLimit);
+            this.kryptonPanel1.Controls.Add(this.txtCustomerCreditLimit);
+            this.kryptonPanel1.Controls.Add(this.lblCustomerCreditDays);
+            this.kryptonPanel1.Controls.Add(this.txtCustomerCreditDays);
             this.kryptonPanel1.Controls.Add(this.btnAddBillingInformation);
             this.kryptonPanel1.Controls.Add(this.chkNoNeedSource);
             this.kryptonPanel1.Controls.Add(this.lblCustomer_id);
@@ -152,35 +160,35 @@
             this.kryptonPanel1.Size = new System.Drawing.Size(731, 657);
             this.kryptonPanel1.TabIndex = 2;
             // 
-            // lblCreditLimit
+            // lblCustomerCreditLimit
             // 
-            this.lblCreditLimit.Location = new System.Drawing.Point(104, 440);
-            this.lblCreditLimit.Name = "lblCreditLimit";
-            this.lblCreditLimit.Size = new System.Drawing.Size(62, 20);
-            this.lblCreditLimit.TabIndex = 84;
-            this.lblCreditLimit.Values.Text = "信用额度";
+            this.lblCustomerCreditLimit.Location = new System.Drawing.Point(104, 440);
+            this.lblCustomerCreditLimit.Name = "lblCustomerCreditLimit";
+            this.lblCustomerCreditLimit.Size = new System.Drawing.Size(62, 20);
+            this.lblCustomerCreditLimit.TabIndex = 84;
+            this.lblCustomerCreditLimit.Values.Text = "信用额度";
             // 
-            // txtCreditLimit
+            // txtCustomerCreditLimit
             // 
-            this.txtCreditLimit.Location = new System.Drawing.Point(177, 436);
-            this.txtCreditLimit.Name = "txtCreditLimit";
-            this.txtCreditLimit.Size = new System.Drawing.Size(100, 23);
-            this.txtCreditLimit.TabIndex = 85;
+            this.txtCustomerCreditLimit.Location = new System.Drawing.Point(177, 436);
+            this.txtCustomerCreditLimit.Name = "txtCustomerCreditLimit";
+            this.txtCustomerCreditLimit.Size = new System.Drawing.Size(100, 23);
+            this.txtCustomerCreditLimit.TabIndex = 85;
             // 
-            // lblCreditDays
+            // lblCustomerCreditDays
             // 
-            this.lblCreditDays.Location = new System.Drawing.Point(104, 471);
-            this.lblCreditDays.Name = "lblCreditDays";
-            this.lblCreditDays.Size = new System.Drawing.Size(62, 20);
-            this.lblCreditDays.TabIndex = 86;
-            this.lblCreditDays.Values.Text = "账期天数";
+            this.lblCustomerCreditDays.Location = new System.Drawing.Point(358, 441);
+            this.lblCustomerCreditDays.Name = "lblCustomerCreditDays";
+            this.lblCustomerCreditDays.Size = new System.Drawing.Size(62, 20);
+            this.lblCustomerCreditDays.TabIndex = 86;
+            this.lblCustomerCreditDays.Values.Text = "账期天数";
             // 
-            // txtCreditDays
+            // txtCustomerCreditDays
             // 
-            this.txtCreditDays.Location = new System.Drawing.Point(177, 467);
-            this.txtCreditDays.Name = "txtCreditDays";
-            this.txtCreditDays.Size = new System.Drawing.Size(100, 23);
-            this.txtCreditDays.TabIndex = 87;
+            this.txtCustomerCreditDays.Location = new System.Drawing.Point(431, 437);
+            this.txtCustomerCreditDays.Name = "txtCustomerCreditDays";
+            this.txtCustomerCreditDays.Size = new System.Drawing.Size(100, 23);
+            this.txtCustomerCreditDays.TabIndex = 87;
             // 
             // btnAddBillingInformation
             // 
@@ -245,7 +253,7 @@
             // kryptonGroupBox1
             // 
             this.kryptonGroupBox1.CaptionVisible = false;
-            this.kryptonGroupBox1.Location = new System.Drawing.Point(177, 505);
+            this.kryptonGroupBox1.Location = new System.Drawing.Point(177, 534);
             this.kryptonGroupBox1.Name = "kryptonGroupBox1";
             // 
             // kryptonGroupBox1.Panel
@@ -274,7 +282,7 @@
             // 
             // lblIs_enabled
             // 
-            this.lblIs_enabled.Location = new System.Drawing.Point(111, 515);
+            this.lblIs_enabled.Location = new System.Drawing.Point(111, 544);
             this.lblIs_enabled.Name = "lblIs_enabled";
             this.lblIs_enabled.Size = new System.Drawing.Size(62, 20);
             this.lblIs_enabled.TabIndex = 65;
@@ -496,6 +504,36 @@
             this.txtNotes.Size = new System.Drawing.Size(355, 72);
             this.txtNotes.TabIndex = 32;
             // 
+            // lblSupplierCreditLimit
+            // 
+            this.lblSupplierCreditLimit.Location = new System.Drawing.Point(104, 469);
+            this.lblSupplierCreditLimit.Name = "lblSupplierCreditLimit";
+            this.lblSupplierCreditLimit.Size = new System.Drawing.Size(62, 20);
+            this.lblSupplierCreditLimit.TabIndex = 88;
+            this.lblSupplierCreditLimit.Values.Text = "信用额度";
+            // 
+            // txtSupplierCreditLimit
+            // 
+            this.txtSupplierCreditLimit.Location = new System.Drawing.Point(177, 465);
+            this.txtSupplierCreditLimit.Name = "txtSupplierCreditLimit";
+            this.txtSupplierCreditLimit.Size = new System.Drawing.Size(100, 23);
+            this.txtSupplierCreditLimit.TabIndex = 89;
+            // 
+            // lblSupplierCreditDays
+            // 
+            this.lblSupplierCreditDays.Location = new System.Drawing.Point(358, 473);
+            this.lblSupplierCreditDays.Name = "lblSupplierCreditDays";
+            this.lblSupplierCreditDays.Size = new System.Drawing.Size(62, 20);
+            this.lblSupplierCreditDays.TabIndex = 90;
+            this.lblSupplierCreditDays.Values.Text = "账期天数";
+            // 
+            // txtSupplierCreditDays
+            // 
+            this.txtSupplierCreditDays.Location = new System.Drawing.Point(431, 469);
+            this.txtSupplierCreditDays.Name = "txtSupplierCreditDays";
+            this.txtSupplierCreditDays.Size = new System.Drawing.Size(100, 23);
+            this.txtSupplierCreditDays.TabIndex = 91;
+            // 
             // UCCustomerVendorEdit
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
@@ -562,9 +600,13 @@
         private Krypton.Toolkit.KryptonComboBox cmbCustomer_id;
         private Krypton.Toolkit.KryptonCheckBox chkNoNeedSource;
         private Krypton.Toolkit.KryptonButton btnAddBillingInformation;
-        private Krypton.Toolkit.KryptonLabel lblCreditLimit;
-        private Krypton.Toolkit.KryptonTextBox txtCreditLimit;
-        private Krypton.Toolkit.KryptonLabel lblCreditDays;
-        private Krypton.Toolkit.KryptonTextBox txtCreditDays;
+        private Krypton.Toolkit.KryptonLabel lblCustomerCreditLimit;
+        private Krypton.Toolkit.KryptonTextBox txtCustomerCreditLimit;
+        private Krypton.Toolkit.KryptonLabel lblCustomerCreditDays;
+        private Krypton.Toolkit.KryptonTextBox txtCustomerCreditDays;
+        private Krypton.Toolkit.KryptonLabel lblSupplierCreditLimit;
+        private Krypton.Toolkit.KryptonTextBox txtSupplierCreditLimit;
+        private Krypton.Toolkit.KryptonLabel lblSupplierCreditDays;
+        private Krypton.Toolkit.KryptonTextBox txtSupplierCreditDays;
     }
 }

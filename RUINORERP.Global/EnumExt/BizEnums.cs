@@ -469,7 +469,7 @@ var description = typeof(BoxRuleBasis)
      */
 
     /// <summary>
-    /// 付款状态
+    /// 付款状态，PO是后加的 随便设置为5 为了不为空
     /// </summary>
     public enum PayStatus
     {

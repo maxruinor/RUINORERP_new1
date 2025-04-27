@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：04/20/2025 18:12:12
+// 时间：03/29/2024 13:46:09
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -25,17 +25,18 @@ using RUINORERP.Model.Context;
 using System.Linq;
 using RUINOR.Core;
 using RUINORERP.Common.Helper;
-using RUINORERP.Global.EnumExt;
+using RUINORERP.Business.Security;
 using RUINORERP.Global;
 using SqlSugar;
+using RUINORERP.Global.EnumExt;
 
 
 namespace RUINORERP.Business.Processor
 {
     /// <summary>
-    /// 记录收款 与应收的匹配，核销表-支持多对多、行项级核销 
+    /// 费用报销单
     /// </summary>
-    public partial class tb_FM_PaymentSettlementProcessor:BaseProcessor 
+    public partial class tb_FM_ReceivablePayableProcessor : BaseProcessor
     {
 
         public override QueryFilter GetQueryFilter()
@@ -44,28 +45,24 @@ namespace RUINORERP.Business.Processor
 
             var lambda = Expressionable.Create<tb_CustomerVendor>()
                        .And(t => t.isdeleted == false)
+                       .And(t => t.IsCustomer == false)
                        .And(t => t.Is_enabled == true)
                        .ToExpression();
-            queryFilter.SetQueryField<tb_FM_PaymentSettlement, tb_CustomerVendor>(c => c.CustomerVendor_ID, lambda);
+            queryFilter.SetQueryField<tb_FM_ReceivablePayable, tb_CustomerVendor>(c => c.CustomerVendor_ID, lambda);
             //可以根据关联外键自动加载条件，条件用公共虚方法
-     
-            queryFilter.SetQueryField<tb_FM_PaymentSettlement>(c => c.SourceBillNO);
-  
-            queryFilter.SetQueryField<tb_FM_PaymentSettlement>(c => c.BizType, QueryFieldType.CmbEnum, typeof(BizType));
-            queryFilter.SetQueryField<tb_FM_PaymentSettlement>(c => c.SourceBizType, QueryFieldType.CmbEnum, typeof(BizType));
-            queryFilter.SetQueryField<tb_FM_PaymentSettlement>(c => c.TargetBizType, QueryFieldType.CmbEnum, typeof(BizType));
-    
-            queryFilter.SetQueryField<tb_FM_PaymentSettlement>(c => c.Account_id);
-
-
-            queryFilter.SetQueryFieldByAlias<tb_FM_PaymentSettlement, tb_Currency>(a => a.TargetCurrencyID, null, b => b.Currency_ID, b => b.CurrencyName);
-            queryFilter.SetQueryFieldByAlias<tb_FM_PaymentSettlement, tb_Currency>(a => a.SourceCurrencyID, null, b => b.Currency_ID, b => b.CurrencyName);
-
-
-            queryFilter.SetQueryField<tb_FM_PaymentSettlement>(c => c.SettleDate, false);
+            queryFilter.SetQueryField<tb_FM_ReceivablePayable>(c => c.ARAPNo);
+            queryFilter.SetQueryField<tb_FM_ReceivablePayable>(c => c.Employee_ID);
+            queryFilter.SetQueryField<tb_FM_ReceivablePayable>(c => c.Currency_ID);
+            queryFilter.SetQueryField<tb_FM_ReceivablePayable>(c => c.DepartmentID);
+            queryFilter.SetQueryField<tb_FM_ReceivablePayable>(c => c.ProjectGroup_ID);
+            queryFilter.SetQueryField<tb_FM_ReceivablePayable>(c => c.DueDate, false);
+            queryFilter.SetQueryField<tb_FM_ReceivablePayable>(c => c.FMPaymentStatus, QueryFieldType.CmbEnum, typeof(FMPaymentStatus));
+            queryFilter.SetQueryField<tb_FM_ReceivablePayable>(c => c.ApprovalStatus, QueryFieldType.CmbEnum, typeof(ApprovalStatus));
+            queryFilter.SetQueryField<tb_FM_ReceivablePayable>(c => c.Remark);
 
             return queryFilter;
         }
+
 
 
 

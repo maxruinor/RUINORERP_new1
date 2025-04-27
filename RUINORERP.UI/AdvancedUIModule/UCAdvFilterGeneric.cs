@@ -543,6 +543,10 @@ namespace RUINORERP.UI.AdvancedUIModule
                 {
                     QueryConditionFilter.InvisibleCols.Add("MR_ID");
                 }
+                if (typeof(T).Name == typeof(tb_CRM_Customer).Name)
+                {
+                    QueryConditionFilter.InvisibleCols.Add("Customer_id");
+                }
 
                 //这里设置了指定列不可见
                 foreach (var item in QueryConditionFilter.InvisibleCols)

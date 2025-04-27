@@ -23,5 +23,8 @@ namespace RUINORERP.UI.FM
             InitializeComponent(); 
             base.PaymentType = Global.EnumExt.ReceivePaymentType.收款;
         }
+
+       
+
     }
 }

@@ -51,7 +51,7 @@ namespace RUINORERP.UI.FM
             var lambda = Expressionable.Create<tb_FM_PaymentSettlement>()
                              .And(t => t.ReceivePaymentType == (int)PaymentType)
                             .AndIF(AuthorizeController.GetOwnershipControl(MainForm.Instance.AppContext),
-                             t => t.Employee_ID == MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID)
+                             t => t.Created_by.Value == MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID)
                          .ToExpression();//注意 这一句 不能少
 
             QueryConditionFilter.FilterLimitExpressions.Add(lambda);

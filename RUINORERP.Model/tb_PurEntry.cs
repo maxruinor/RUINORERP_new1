@@ -95,6 +95,22 @@ namespace RUINORERP.Model
                         }
         }
 
+        private long? _ProjectGroup_ID;
+        /// <summary>
+        /// 项目组
+        /// </summary>
+        [AdvQueryAttribute(ColName = "ProjectGroup_ID", ColDesc = "项目组")]
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType = "Int64", ColumnName = "ProjectGroup_ID", DecimalDigits = 0, IsNullable = true, ColumnDescription = "项目组")]
+        [FKRelationAttribute("tb_ProjectGroup", "ProjectGroup_ID")]
+        public long? ProjectGroup_ID
+        {
+            get { return _ProjectGroup_ID; }
+            set
+            {
+                SetProperty(ref _ProjectGroup_ID, value);
+            }
+        }
+
         private long? _Employee_ID;
         /// <summary>
         /// 经办人
@@ -108,6 +124,37 @@ namespace RUINORERP.Model
             set{
             SetProperty(ref _Employee_ID, value);
                         }
+        }
+       
+        private long? _Currency_ID;
+        /// <summary>
+        /// 币别
+        /// </summary>
+        [AdvQueryAttribute(ColName = "Currency_ID", ColDesc = "币别")]
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType = "Int64", ColumnName = "Currency_ID", DecimalDigits = 0, IsNullable = true, ColumnDescription = "币别")]
+        [FKRelationAttribute("tb_Currency", "Currency_ID")]
+        public long? Currency_ID
+        {
+            get { return _Currency_ID; }
+            set
+            {
+                SetProperty(ref _Currency_ID, value);
+            }
+        }
+
+        private decimal? _ExchangeRate = ((1));
+        /// <summary>
+        /// 汇率
+        /// </summary>
+        [AdvQueryAttribute(ColName = "ExchangeRate", ColDesc = "汇率")]
+        [SugarColumn(ColumnDataType = "decimal", SqlParameterDbType = "Decimal", ColumnName = "ExchangeRate", DecimalDigits = 4, IsNullable = true, ColumnDescription = "汇率")]
+        public decimal? ExchangeRate
+        {
+            get { return _ExchangeRate; }
+            set
+            {
+                SetProperty(ref _ExchangeRate, value);
+            }
         }
 
         private long? _Paytype_ID;
@@ -194,6 +241,34 @@ namespace RUINORERP.Model
             set{
             SetProperty(ref _ActualAmount, value);
                         }
+        }
+        private int _PayStatus;
+        /// <summary>
+        /// 付款状态
+        /// </summary>
+        [AdvQueryAttribute(ColName = "PayStatus", ColDesc = "付款状态")]
+        [SugarColumn(ColumnDataType = "int", SqlParameterDbType = "Int32", ColumnName = "PayStatus", DecimalDigits = 0, IsNullable = false, ColumnDescription = "付款状态")]
+        public int PayStatus
+        {
+            get { return _PayStatus; }
+            set
+            {
+                SetProperty(ref _PayStatus, value);
+            }
+        }
+        private decimal _ForeignTotalAmount = ((0));
+        /// <summary>
+        /// 金额外币
+        /// </summary>
+        [AdvQueryAttribute(ColName = "ForeignTotalAmount", ColDesc = "金额外币")]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType = "Decimal", ColumnName = "ForeignTotalAmount", DecimalDigits = 4, IsNullable = false, ColumnDescription = "金额外币")]
+        public decimal ForeignTotalAmount
+        {
+            get { return _ForeignTotalAmount; }
+            set
+            {
+                SetProperty(ref _ForeignTotalAmount, value);
+            }
         }
 
         private decimal _TotalTaxAmount= ((0));
@@ -560,6 +635,11 @@ namespace RUINORERP.Model
         //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(PurOrder_ID))]
         public virtual tb_PurOrder tb_purorder { get; set; }
+
+        [SugarColumn(IsIgnore = true)]
+        //[Browsable(false)] 打印报表时的数据源会不显示
+        [Navigate(NavigateType.OneToOne, nameof(ProjectGroup_ID))]
+        public virtual tb_ProjectGroup tb_projectgroup { get; set; }
 
 
         //[Browsable(false)]打印报表时的数据源会不显示

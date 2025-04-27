@@ -526,10 +526,10 @@ namespace RUINORERP.Business
                     }
                     if (entity.tb_saleorder.tb_paymentmethod.Paytype_Name == DefaultPaymentMethod.账期.ToString())
                     {
-                        if (entity.tb_customervendor.CreditDays.HasValue)
+                        if (entity.tb_customervendor.CustomerCreditDays.HasValue)
                         {
                             // 从销售出库日期开始计算到期日
-                            payable.DueDate = entity.OutDate.Date.AddDays(entity.tb_customervendor.CreditDays.Value).AddDays(1).AddTicks(-1);
+                            payable.DueDate = entity.OutDate.Date.AddDays(entity.tb_customervendor.CustomerCreditDays.Value).AddDays(1).AddTicks(-1);
                         }
                     }
                     payable.ExchangeRate = entity.ExchangeRate;

@@ -8,6 +8,11 @@ using System.Windows.Forms;
 
 namespace RUINORERP.UI.AdvancedUIModule
 {
+
+    //通过两个接口来 额外定义菜单，一个是工具栏的，一个是右键上下文的，分别对应编辑和查询
+
+
+
     /// <summary>
     /// 给窗体添加一些特殊的权限控制等
     /// </summary>

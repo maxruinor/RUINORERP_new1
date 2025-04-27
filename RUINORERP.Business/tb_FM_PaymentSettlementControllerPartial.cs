@@ -29,6 +29,7 @@ using RUINORERP.Global;
 using RUINORERP.Business.Security;
 using RUINORERP.Global.EnumExt;
 using AutoMapper;
+using FluentValidation;
 
 namespace RUINORERP.Business
 {
@@ -65,7 +66,7 @@ namespace RUINORERP.Business
             SettlementRecord.SourceBillNO = entity.SourceBillNO;
             SettlementRecord.SourceBillID = entity.SourceBilllID;
             //SourceBillDetailID 应收时 可以按明细核销？
-            SettlementRecord.SettleDate = entity.Approver_at.Value;
+            SettlementRecord.SettleDate = System.DateTime.Now;
             if (SettlementRecord.SettledLocalAmount < 0)
             {
                 SettlementRecord.SettlementType = (int)SettlementType.退款红冲;

@@ -40,6 +40,7 @@ using RUINORERP.Model.CommonModel;
 using RUINORERP.Business.CommService;
 using ZXing.Common;
 using RUINORERP.Business.Security;
+using RUINORERP.Global.EnumExt;
 
 namespace RUINORERP.UI.PSI.PUR
 {
@@ -473,6 +474,48 @@ namespace RUINORERP.UI.PSI.PUR
             List<tb_PurOrderDetail> details = new List<tb_PurOrderDetail>();
             var eer = errorProviderForAllInput.GetError(txtTotalAmount);
             bindingSourceSub.EndEdit();
+
+            //如果订单 选择了未付款，但是又选择了非账期的即实收账方式。则审核不通过。
+            //如果订单选择了 非未付款，但又选择了账期也不能通过。
+            if (EditEntity.Paytype_ID.HasValue)
+            {
+                if (EditEntity.PayStatus == (int)PayStatus.未付款)
+                {
+                    var paytype = EditEntity.Paytype_ID.Value;
+                    var paymethod = BizCacheHelper.Instance.GetEntity<tb_PaymentMethod>(EditEntity.Paytype_ID.Value);
+                    if (paymethod != null && paymethod.ToString() != "System.Object")
+                    {
+                        if (paymethod is tb_PaymentMethod pm)
+                        {
+
+                            if (pm.Cash || pm.Paytype_Name != DefaultPaymentMethod.账期.ToString())
+                            {
+                                MessageBox.Show("未付款时，付款方式错误,请选择【账期】。");
+                                return false;
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    //付过时不能选账期  要选部分付款时使用的方式
+                    var paytype = EditEntity.Paytype_ID.Value;
+                    var paymethod = BizCacheHelper.Instance.GetEntity<tb_PaymentMethod>(EditEntity.Paytype_ID.Value);
+                    if (paymethod != null && paymethod.ToString() != "System.Object")
+                    {
+                        if (paymethod is tb_PaymentMethod pm)
+                        {
+                            //如果是账期，但是又选择的是非 未付款
+                            if (pm.Paytype_Name == DefaultPaymentMethod.账期.ToString())
+                            {
+                                MessageBox.Show("付款方式错误,全部付款或部分付款时，请选择付款时使用的方式。");
+                                return false;
+                            }
+                        }
+                    }
+                }
+            }
+
             List<tb_PurOrderDetail> detailentity = bindingSourceSub.DataSource as List<tb_PurOrderDetail>;
             if (EditEntity.ActionStatus == ActionStatus.新增 || EditEntity.ActionStatus == ActionStatus.修改)
             {

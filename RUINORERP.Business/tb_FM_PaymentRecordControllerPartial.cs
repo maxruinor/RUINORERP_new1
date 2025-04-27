@@ -163,7 +163,61 @@ namespace RUINORERP.Business
             return paymentRecord;
         }
 
-      
+        // 生成收付款记录表
+        public async Task<tb_FM_PaymentRecord> CreatePaymentRecord(tb_FM_ReceivablePayable entity, bool SaveToDb=false)
+        {
+            //预收付款单 审核时 自动生成 收付款记录
+            IMapper mapper = RUINORERP.Business.AutoMapper.AutoMapperConfig.RegisterMappings().CreateMapper();
+            tb_FM_PaymentRecord paymentRecord = new tb_FM_PaymentRecord();
+            paymentRecord = mapper.Map<tb_FM_PaymentRecord>(entity);
+            paymentRecord.ApprovalResults = null;
+            paymentRecord.ApprovalStatus = (int)ApprovalStatus.未审核;
+            paymentRecord.Approver_at = null;
+            paymentRecord.Approver_by = null;
+            paymentRecord.PrintStatus = 0;
+            paymentRecord.ActionStatus = ActionStatus.新增;
+            paymentRecord.ApprovalOpinions = "";
+            paymentRecord.Modified_at = null;
+            paymentRecord.Modified_by = null;
+            paymentRecord.ReceivePaymentType = entity.ReceivePaymentType;
+            if (entity.ReceivePaymentType == (int)ReceivePaymentType.收款)
+            {
+                paymentRecord.PaymentNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.收款单);
+            }
+            else
+            {
+                paymentRecord.PaymentNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.付款单);
+            }
+           
+            //paymentRecord.SourceBillNO = entity;
+            //paymentRecord.SourceBilllID = entity.PreRPID;
+            paymentRecord.PaymentDate = System.DateTime.Now;
+            paymentRecord.Currency_ID = paymentRecord.Currency_ID;
+            paymentRecord.ForeignPaidAmount = entity.TotalForeignPayableAmount;
+            paymentRecord.LocalPaidAmount = entity.LocalPaidAmount;
+            paymentRecord.PayeeInfoID = entity.PayeeInfoID;
+            paymentRecord.PayeeAccountNo = entity.PayeeAccountNo;
+            paymentRecord.ExchangeRate = entity.ExchangeRate;
+            BusinessHelper.Instance.InitEntity(paymentRecord);
+            // paymentRecord.ReferenceNo=entity.no
+            if (SaveToDb)
+            {
+                //自动提交
+                paymentRecord.FMPaymentStatus = (int)FMPaymentStatus.提交;
+                long id = await _unitOfWorkManage.GetDbClient().Insertable<tb_FM_PaymentRecord>(paymentRecord).ExecuteReturnSnowflakeIdAsync();
+                if (id > 0)
+                {
+
+                }
+            }
+            else
+            {
+                paymentRecord.FMPaymentStatus = (int)FMPaymentStatus.草稿;
+            }
+            
+            return paymentRecord;
+        }
+
 
         public async Task<bool> BaseLogicDeleteAsync(tb_FM_PaymentRecord ObjectEntity)
         {

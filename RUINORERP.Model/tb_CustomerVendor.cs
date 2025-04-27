@@ -250,35 +250,66 @@ namespace RUINORERP.Model
             }
         }
 
-        private decimal? _CreditLimit = ((0));
+        private decimal? _CustomerCreditLimit = ((0));
         /// <summary>
-        /// 信用额度
+        /// 客户信用额度
         /// </summary>
-        [AdvQueryAttribute(ColName = "CreditLimit", ColDesc = "信用额度")]
-        [SugarColumn(ColumnDataType = "decimal", SqlParameterDbType = "Decimal", ColumnName = "CreditLimit", DecimalDigits = 2, IsNullable = true, ColumnDescription = "信用额度")]
-        public decimal? CreditLimit
+        [AdvQueryAttribute(ColName = "CustomerCreditLimit", ColDesc = "客户信用额度")]
+        [SugarColumn(ColumnDataType = "decimal", SqlParameterDbType = "Decimal", ColumnName = "CustomerCreditLimit", DecimalDigits = 2, IsNullable = true, ColumnDescription = "客户信用额度")]
+        public decimal? CustomerCreditLimit
         {
-            get { return _CreditLimit; }
+            get { return _CustomerCreditLimit; }
             set
             {
-                SetProperty(ref _CreditLimit, value);
+                SetProperty(ref _CustomerCreditLimit, value);
             }
         }
 
-        private int? _CreditDays = ((0));
+        private int? _CustomerCreditDays = ((0));
         /// <summary>
-        /// 账期天数
+        /// 客户账期天数
         /// </summary>
-        [AdvQueryAttribute(ColName = "CreditDays", ColDesc = "账期天数")]
-        [SugarColumn(ColumnDataType = "int", SqlParameterDbType = "Int32", ColumnName = "CreditDays", DecimalDigits = 0, IsNullable = true, ColumnDescription = "账期天数")]
-        public int? CreditDays
+        [AdvQueryAttribute(ColName = "CustomerCreditDays", ColDesc = "客户账期天数")]
+        [SugarColumn(ColumnDataType = "int", SqlParameterDbType = "Int32", ColumnName = "CustomerCreditDays", DecimalDigits = 0, IsNullable = true, ColumnDescription = "客户账期天数")]
+        public int? CustomerCreditDays
         {
-            get { return _CreditDays; }
+            get { return _CustomerCreditDays; }
             set
             {
-                SetProperty(ref _CreditDays, value);
+                SetProperty(ref _CustomerCreditDays, value);
             }
         }
+
+        private decimal? _SupplierCreditLimit = ((0));
+        /// <summary>
+        /// 供应商信用额度
+        /// </summary>
+        [AdvQueryAttribute(ColName = "SupplierCreditLimit", ColDesc = "供应商信用额度")]
+        [SugarColumn(ColumnDataType = "decimal", SqlParameterDbType = "Decimal", ColumnName = "SupplierCreditLimit", DecimalDigits = 2, IsNullable = true, ColumnDescription = "供应商信用额度")]
+        public decimal? SupplierCreditLimit
+        {
+            get { return _SupplierCreditLimit; }
+            set
+            {
+                SetProperty(ref _SupplierCreditLimit, value);
+            }
+        }
+
+        private int? _SupplierCreditDays = ((0));
+        /// <summary>
+        /// 供应商账期天数
+        /// </summary>
+        [AdvQueryAttribute(ColName = "SupplierCreditDays", ColDesc = "供应商账期天数")]
+        [SugarColumn(ColumnDataType = "int", SqlParameterDbType = "Int32", ColumnName = "SupplierCreditDays", DecimalDigits = 0, IsNullable = true, ColumnDescription = "供应商账期天数")]
+        public int? SupplierCreditDays
+        {
+            get { return _SupplierCreditDays; }
+            set
+            {
+                SetProperty(ref _SupplierCreditDays, value);
+            }
+        }
+
 
         private bool _IsCustomer = false;
         /// <summary>

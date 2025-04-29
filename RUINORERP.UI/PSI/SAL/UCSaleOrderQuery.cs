@@ -39,6 +39,7 @@ using System.Linq.Dynamic.Core.CustomTypeProviders;
 using Fireasy.Common.Extensions;
 using Netron.NetronLight;
 using RUINORERP.UI.UControls;
+using NPOI.SS.Formula.Functions;
 namespace RUINORERP.UI.PSI.SAL
 {
 
@@ -55,8 +56,10 @@ namespace RUINORERP.UI.PSI.SAL
         {
             List<EventHandler> ContextClickList = new List<EventHandler>();
             ContextClickList.Add(NewSumDataGridView_转为销售出库单);
+            ContextClickList.Add(NewSumDataGridView_取消订单);
             List<ContextMenuController> list = new List<ContextMenuController>();
             list.Add(new ContextMenuController("【转为出库单】", true, false, "NewSumDataGridView_转为销售出库单"));
+            list.Add(new ContextMenuController("【取消订单】", true, false, "NewSumDataGridView_取消订单"));
             return list;
         }
 
@@ -64,6 +67,9 @@ namespace RUINORERP.UI.PSI.SAL
         {
             List<EventHandler> ContextClickList = new List<EventHandler>();
             ContextClickList.Add(NewSumDataGridView_转为销售出库单);
+
+            ContextClickList.Add(NewSumDataGridView_取消订单);
+
             List<ContextMenuController> list = new List<ContextMenuController>();
             list = AddContextMenu();
 
@@ -161,6 +167,53 @@ namespace RUINORERP.UI.PSI.SAL
                 }
             }
         }
+
+
+        private async void NewSumDataGridView_取消订单(object sender, EventArgs e)
+        {
+            List<tb_SaleOrder> selectlist = GetSelectResult();
+            foreach (var item in selectlist)
+            {
+                //订单已结案，无法取消，订单已经出库无法直接取消
+                //只有审核状态才可以转换为出库单
+                if (item.DataStatus != (int)DataStatus.完结 && item.ApprovalStatus == (int)ApprovalStatus.已审核 && item.ApprovalResults.HasValue && item.ApprovalResults.Value)
+                {
+                    if (item.tb_SaleOuts != null && item.tb_SaleOuts.Count > 0)
+                    {
+                        MessageBox.Show($"当前订单：{item.SOrderNo},已经生成过出库单，\r\n无法取消！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    }
+
+                    tb_SaleOrderController<tb_SaleOrder> ctr = Startup.GetFromFac<tb_SaleOrderController<tb_SaleOrder>>();
+                    //审核状态时取消订单
+                    ReturnResults<tb_SaleOrder> rmrs =await ctr.CancelOrder(item);
+                    //if (result)
+                    //{
+
+                    //}
+                    //else
+                    //{
+
+                    //}
+                     
+                }
+                else
+                {
+                    if (item.DataStatus == (int)DataStatus.完结)
+                    {
+                        // 弹出提示窗口：没有审核的销售订单， 
+                        MessageBox.Show($"当前订单{item.SOrderNo}：已结案，无法直接取消订单", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    }
+                    else if (item.DataStatus == (int)DataStatus.草稿 || item.DataStatus == (int)DataStatus.新建)
+                    {
+                        // 弹出提示窗口：没有审核的销售订单， 
+                        MessageBox.Show($"当前订单{item.SOrderNo}：未审核，可以直接删除", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+
+                    }
+
+                }
+            }
+        }
+
 
         /*
         public override void BuildLimitQueryConditions()

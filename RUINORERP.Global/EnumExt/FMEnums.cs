@@ -87,12 +87,18 @@ namespace RUINORERP.Global.EnumExt
         草稿 = BaseFMPaymentStatus.草稿,
         待审核 = BaseFMPaymentStatus.待审核,
         已取消 = BaseFMPaymentStatus.已取消,
-        已生效 = BaseFMPaymentStatus.已生效,
+
+        ///// <summary>
+        ///// 表示收款单或付款单已通过审核，可以进行后续操作（如支付或收款）。
+        ///// </summary>
+        //已生效 = BaseFMPaymentStatus.已生效,
+        // 专属状态 审核就是已支付
+        [Description("已支付")]
+        已支付 = 1 << 30,
+
         已冲销 = BaseFMPaymentStatus.已冲销,
 
-        // 专属状态
-        [Description("已核销")]
-        已核销 = 1 << 30
+
     }
     #endregion
 
@@ -129,6 +135,10 @@ namespace RUINORERP.Global.EnumExt
 
     /// <summary>
     /// 核销类型
+    /// 需核销的场景
+    /// 预收款抵扣应收款
+    /// 收款单直接核销应收款
+    /// 预付冲应付
     /// </summary>
     public enum SettlementType
     {

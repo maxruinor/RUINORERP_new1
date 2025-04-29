@@ -703,6 +703,35 @@ namespace RUINORERP.UI.Common
                     .Single();
                 menuPowerHelper.ExecuteEvents(RelatedMenuInfo, obj);
             }
+            if (tableName == typeof(tb_FM_PreReceivedPayment).Name)
+            {
+                var obj = MainForm.Instance.AppContext.Db.Queryable<tb_FM_PreReceivedPayment>()
+                    .WhereIF(billno.GetType() == typeof(long), c => c.PreRPID == billno.ToLong())
+                    .WhereIF(billno.GetType() == typeof(string), c => c.PreRPNO == billno.ToString())
+                    .Single();
+                menuPowerHelper.ExecuteEvents(RelatedMenuInfo, obj);
+            }
+
+            if (tableName == typeof(tb_FM_ReceivablePayable).Name)
+            {
+                var obj = MainForm.Instance.AppContext.Db.Queryable<tb_FM_ReceivablePayable>()
+                    .Includes(c => c.tb_FM_ReceivablePayableDetails)
+                    .WhereIF(billno.GetType() == typeof(long), c => c.ARAPId == billno.ToLong())
+                    .WhereIF(billno.GetType() == typeof(string), c => c.ARAPNo == billno.ToString())
+                    .Single();
+                menuPowerHelper.ExecuteEvents(RelatedMenuInfo, obj);
+            }
+
+
+            if (tableName == typeof(tb_FM_PaymentRecord).Name)
+            {
+                var obj = MainForm.Instance.AppContext.Db.Queryable<tb_FM_PaymentRecord>()
+                    .WhereIF(billno.GetType() == typeof(long), c => c.PaymentId == billno.ToLong())
+                    .WhereIF(billno.GetType() == typeof(string), c => c.PaymentNo == billno.ToString())
+                    .Single();
+                menuPowerHelper.ExecuteEvents(RelatedMenuInfo, obj);
+            }
+
 
 
             if (tableName == typeof(tb_MRP_ReworkReturn).Name)

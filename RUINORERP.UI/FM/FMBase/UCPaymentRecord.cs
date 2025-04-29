@@ -190,21 +190,41 @@ namespace RUINORERP.UI.FM
             //显示 打印状态 如果是草稿状态 不显示打印
             ShowPrintStatus(lblPrintStatus, entity);
 
+            if (entity.ReceivePaymentType == (long)ReceivePaymentType.收款)
+            {
+                //收客户的款
+                var lambda = Expressionable.Create<tb_CustomerVendor>()
+                                .And(t => t.IsCustomer == true)//供应商和第三方
+                                .And(t => t.isdeleted == false)
+                                .And(t => t.Is_enabled == true)
+                                .ToExpression();//注意 这一句 不能少
 
-            //创建表达式
-            var lambda = Expressionable.Create<tb_CustomerVendor>()
-                            .And(t => t.IsVendor == true)//供应商和第三方
-                            .And(t => t.isdeleted == false)
-                            .And(t => t.Is_enabled == true)
-                            .ToExpression();//注意 这一句 不能少
+                BaseProcessor baseProcessor = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_CustomerVendor).Name + "Processor");
+                QueryFilter queryFilterC = baseProcessor.GetQueryFilter();
+                queryFilterC.FilterLimitExpressions.Add(lambda);
 
-            BaseProcessor baseProcessor = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_CustomerVendor).Name + "Processor");
-            QueryFilter queryFilterC = baseProcessor.GetQueryFilter();
-            queryFilterC.FilterLimitExpressions.Add(lambda);
+                //带过滤的下拉绑定要这样
+                DataBindingHelper.BindData4Cmb<tb_CustomerVendor>(entity, k => k.CustomerVendor_ID, v => v.CVName, cmbCustomerVendor_ID, queryFilterC.GetFilterExpression<tb_CustomerVendor>(), true);
+                DataBindingHelper.InitFilterForControlByExp<tb_CustomerVendor>(entity, cmbCustomerVendor_ID, c => c.CVName, queryFilterC);
+            }
+            else
+            {
+                //创建表达式
+                var lambda = Expressionable.Create<tb_CustomerVendor>()
+                                .And(t => t.IsCustomer == false)//供应商和第三方
+                                .And(t => t.isdeleted == false)
+                                .And(t => t.Is_enabled == true)
+                                .ToExpression();//注意 这一句 不能少
 
-            //带过滤的下拉绑定要这样
-            DataBindingHelper.BindData4Cmb<tb_CustomerVendor>(entity, k => k.CustomerVendor_ID, v => v.CVName, cmbCustomerVendor_ID, queryFilterC.GetFilterExpression<tb_CustomerVendor>(), true);
-            DataBindingHelper.InitFilterForControlByExp<tb_CustomerVendor>(entity, cmbCustomerVendor_ID, c => c.CVName, queryFilterC);
+                BaseProcessor baseProcessor = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_CustomerVendor).Name + "Processor");
+                QueryFilter queryFilterC = baseProcessor.GetQueryFilter();
+                queryFilterC.FilterLimitExpressions.Add(lambda);
+
+                //带过滤的下拉绑定要这样
+                DataBindingHelper.BindData4Cmb<tb_CustomerVendor>(entity, k => k.CustomerVendor_ID, v => v.CVName, cmbCustomerVendor_ID, queryFilterC.GetFilterExpression<tb_CustomerVendor>(), true);
+                DataBindingHelper.InitFilterForControlByExp<tb_CustomerVendor>(entity, cmbCustomerVendor_ID, c => c.CVName, queryFilterC);
+            }
+
 
 
             //后面这些依赖于控件绑定的数据源和字段。所以要在绑定后执行。
@@ -318,7 +338,7 @@ namespace RUINORERP.UI.FM
                             }
                         }
                     }
-                     
+
 
                 }
             };
@@ -571,7 +591,7 @@ namespace RUINORERP.UI.FM
 
         }
 
- 
+
 
         private void btnInfo_Click_1(object sender, EventArgs e)
         {

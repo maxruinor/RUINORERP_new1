@@ -320,88 +320,17 @@ namespace RUINORERP.Business
                 }
 
 
-                #region 生成应付,应付从预付中抵扣 同时 核销
+              
+                #region 生成应付 ,应付从预付中抵扣 同时 核销
 
-                //入库时，全部生成应付，账期的。就加上到期日
-                //有付款过的。就去预付中抵扣，不够的金额及状态标识出来生成对账单
-                tb_FM_ReceivablePayable payable = new tb_FM_ReceivablePayable();
-                IMapper mapper = RUINORERP.Business.AutoMapper.AutoMapperConfig.RegisterMappings().CreateMapper();
-                payable = mapper.Map<tb_FM_ReceivablePayable>(entity);
-                payable.ApprovalResults = null;
-                payable.ApprovalStatus = (int)ApprovalStatus.未审核;
-                payable.Approver_at = null;
-                payable.Approver_by = null;
-                payable.PrintStatus = 0;
-                payable.ActionStatus = ActionStatus.新增;
-                payable.ApprovalOpinions = "";
-                payable.Modified_at = null;
-                payable.Modified_by = null;
-                if (entity.tb_projectgroup != null && entity.tb_projectgroup.tb_department != null)
-                {
-                    payable.DepartmentID = entity.tb_projectgroup.tb_department.DepartmentID;
-                }
-                //采购就是付款
-                payable.ReceivePaymentType = (int)ReceivePaymentType.付款;
+                var ctrpayable = _appContext.GetRequiredService<tb_FM_ReceivablePayableController<tb_FM_ReceivablePayable>>();
 
-                payable.ARAPNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.应付单);
-                if (entity.Currency_ID.HasValue)
+                //出库时，全部生成应收，账期的。就加上到期日
+                //有付款过的。就去预收中抵扣，不够的金额及状态标识出来生成对账单
+                ReturnMainSubResults<tb_FM_ReceivablePayable> results = await ctrpayable.CreateReceivablePayable(entity,false);
+                if (results.Succeeded)
                 {
-                    payable.Currency_ID = entity.Currency_ID.Value;
-                }
-                if (entity.tb_purorder.tb_paymentmethod.Paytype_Name == DefaultPaymentMethod.账期.ToString())
-                {
-                    if (entity.tb_customervendor.SupplierCreditDays.HasValue)
-                    {
-                        // 从采购入库日期开始计算到期日
-                        payable.DueDate = entity.EntryDate.Date.AddDays(entity.tb_customervendor.SupplierCreditDays.Value).AddDays(1).AddTicks(-1);
-                    }
-                }
-                payable.ExchangeRate = entity.ExchangeRate;
-
-                List<tb_FM_ReceivablePayableDetail> details = mapper.Map<List<tb_FM_ReceivablePayableDetail>>(entity.tb_PurEntryDetails);
-
-                for (global::System.Int32 i = 0; i < details.Count; i++)
-                {
-                    details[i].SourceBillNO = entity.PurEntryNo;
-                    details[i].SourceBill_ID = entity.PurEntryID;
-                    details[i].ExchangeRate = entity.ExchangeRate;
-                    details[i].ActionStatus = ActionStatus.新增;
-                    details[i].BizType = (int)BizType.销售出库单;
-                    View_ProdDetail obj = BizCacheHelper.Instance.GetEntity<View_ProdDetail>(details[i].ProdDetailID);
-                    if (obj != null && obj.GetType().Name != "Object" && obj is View_ProdDetail prodDetail)
-                    {
-                        if (prodDetail != null && obj.Unit_ID != null && obj.Unit_ID.HasValue)
-                        {
-                            details[i].Unit_ID = obj.Unit_ID.Value;
-                        }
-                    }
-                }
-                payable.tb_FM_ReceivablePayableDetails = details;
-                //如果是外币时，则由外币算出本币
-
-                //外币时
-                if (entity.Currency_ID.HasValue && _appContext.BaseCurrency.Currency_ID != entity.Currency_ID.Value)
-                {
-                    payable.ForeignBalanceAmount = entity.ForeignTotalAmount;
-                    payable.ForeignPaidAmount = 0;
-                    payable.TotalForeignPayableAmount = entity.ForeignTotalAmount;
-                }
-                else
-                {
-                    //本币时
-                    payable.LocalBalanceAmount = entity.TotalAmount;
-                    payable.LocalPaidAmount = 0;
-                    payable.TotalLocalPayableAmount = entity.TotalAmount;
-                }
-
-
-                //payable.Remark = $"销售出库单：{entity.SaleOutNo}的应付款";
-                Business.BusinessHelper.Instance.InitEntity(payable);
-                payable.ARAPStatus = (long)ARAPStatus.待审核;
-                BaseController<tb_FM_ReceivablePayable> ctrpay = _appContext.GetRequiredServiceByName<BaseController<tb_FM_ReceivablePayable>>(typeof(T).Name + "Controller");
-                ReturnMainSubResults<tb_FM_ReceivablePayable> rmr = await ctrpay.BaseSaveOrUpdateWithChild<tb_FM_ReceivablePayable>(payable);
-                if (rmr.Succeeded)
-                {
+                    tb_FM_ReceivablePayable payable= results.ReturnObject;
                     if (entity.PayStatus != (int)PayStatus.未付款)
                     {
                         #region 去预付中抵扣相同币种的情况下的预付款，生成付款单，并且生成核销记录

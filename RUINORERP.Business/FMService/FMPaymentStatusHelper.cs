@@ -1,6 +1,7 @@
 ﻿using RUINORERP.Global.EnumExt;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -28,10 +29,33 @@ namespace RUINORERP.Business.FMService
                    (statusValue & (long)ARAPStatus.坏账) != 0;
         }
 
-        /// <summary>是否可编辑（草稿或流程终止前）</summary>
+        /// <summary>
+        /// 是否可编辑（草稿或流程终止前）
+        /// </summary>
         public static bool IsEditable(this Enum status)
-            => status.HasFlag(BaseFMPaymentStatus.草稿) &&
-               !status.IsFinalStatus();
+        {
+            // 根据不同类型判断
+            switch (status)
+            {
+                case BaseFMPaymentStatus baseStatus:
+                    return baseStatus.HasFlag(BaseFMPaymentStatus.草稿) ||
+                           baseStatus.HasFlag(BaseFMPaymentStatus.待审核);
+
+                case PrePaymentStatus preStatus:
+                    return !preStatus.IsFinalStatus();
+
+                case ARAPStatus arapStatus:
+                    return !arapStatus.IsFinalStatus() &&
+                           !arapStatus.HasFlag(ARAPStatus.部分支付) &&
+                           !arapStatus.HasFlag(ARAPStatus.坏账);
+
+                case PaymentStatus payStatus:
+                    return !payStatus.IsFinalStatus();
+
+                default:
+                    throw new ArgumentException("未知状态类型");
+            }
+        }
 
         // 新增：判断支付记录能否取消
         /// <summary>是否允许取消操作</summary>
@@ -56,7 +80,7 @@ namespace RUINORERP.Business.FMService
                            !arapStatus.HasFlag(ARAPStatus.坏账);
 
                 case PaymentStatus payStatus:
-                    return !payStatus.HasFlag(PaymentStatus.已核销) &&
+                    return !payStatus.HasFlag(PaymentStatus.已支付) &&
                            !hasRelatedRecords;
 
                 default:
@@ -101,12 +125,12 @@ namespace RUINORERP.Business.FMService
         /// <summary>是否可关联核销单（生效未核销）</summary>
         public static bool CanSettlePayment(this PaymentStatus status)
             => status.HasFlag(BaseFMPaymentStatus.已生效) &&
-               !status.HasFlag(PaymentStatus.已核销);
+               !status.HasFlag(PaymentStatus.已支付);
 
         /// <summary>是否允许修改金额（未关联核销单）</summary>
         public static bool AllowAmountChange(this PaymentStatus status)
             => status.HasFlag(BaseFMPaymentStatus.已生效) &&
-               !status.HasFlag(PaymentStatus.已核销);
+               !status.HasFlag(PaymentStatus.已支付);
 
         // 复合状态判断 ------------------------------------
         /// <summary>是否处于中间流程状态（非开始非结束）</summary>
@@ -125,7 +149,7 @@ namespace RUINORERP.Business.FMService
                 ARAPStatus s => s.HasFlag(BaseFMPaymentStatus.已生效) &&
                                !s.HasFlag(ARAPStatus.已结清),
                 PaymentStatus s => s.HasFlag(BaseFMPaymentStatus.已生效) &&
-                                   !s.HasFlag(PaymentStatus.已核销),
+                                   !s.HasFlag(PaymentStatus.已支付),
                 _ => false
             };
         }
@@ -163,8 +187,8 @@ namespace RUINORERP.Business.FMService
                     break;
 
                 case PaymentStatus payCurrent when target is PaymentStatus payTarget:
-                    if (payCurrent.HasFlag(PaymentStatus.已核销) &&
-                        !payTarget.HasFlag(PaymentStatus.已核销))
+                    if (payCurrent.HasFlag(PaymentStatus.已支付) &&
+                        !payTarget.HasFlag(PaymentStatus.已支付))
                         throw new InvalidOperationException("已核销状态不可逆");
                     break;
             }
@@ -202,7 +226,7 @@ namespace RUINORERP.Business.FMService
 
                 case PaymentStatus pay:
                     if (pay.HasFlag(PaymentStatus.已冲销) &&
-                        pay.HasFlag(PaymentStatus.已核销))
+                        pay.HasFlag(PaymentStatus.已支付))
                         throw new InvalidDataException("冲销与核销状态冲突");
                     break;
             }
@@ -218,6 +242,16 @@ namespace RUINORERP.Business.FMService
                 value &= value - 1; // 清除最低位的1
             }
             return count;
+        }
+
+        // 获取状态描述
+        public static string GetDescription(this Enum status)
+        {
+            var field = status.GetType().GetField(status.ToString());
+            var attribute = field.GetCustomAttributes(typeof(DescriptionAttribute), false)
+                                 .Cast<DescriptionAttribute>()
+                                 .FirstOrDefault();
+            return attribute?.Description ?? status.ToString();
         }
     }
 }

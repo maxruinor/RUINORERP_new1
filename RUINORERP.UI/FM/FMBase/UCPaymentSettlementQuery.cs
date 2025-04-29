@@ -39,6 +39,9 @@ namespace RUINORERP.UI.FM
 {
     /// <summary>
     /// 核销单查询
+    /// 需要生成核销记录：资金与业务单据（应收/应付）直接冲抵时。
+    /// 不需要生成核销记录：单纯记录资金流动（收付款）且未关联业务单据时。
+    /// 设计核心：通过核销记录建立资金与业务的关联，确保财务数据可追溯，同时避免冗余记录。
     /// </summary>
     public partial class UCPaymentSettlementQuery : BaseBillQueryMC<tb_FM_PaymentSettlement, tb_FM_PaymentSettlement>
     {

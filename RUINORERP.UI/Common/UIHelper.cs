@@ -1349,6 +1349,7 @@ namespace RUINORERP.UI.Common
                                 col.ColDisplayText = entityAttr.ColumnDescription;
                                 col.ColDisplayIndex = columnDisplayControllers.Count;
                                 col.Visible = false;//默认不显示主键
+                                col.IsPrimaryKey = true;
                                 col.ColName = field.Name;
                                 col.Disable = (entityAttr.ColumnDescription.Trim().Length > 0) ? false : true;
                                 columnDisplayControllers.Add(col);

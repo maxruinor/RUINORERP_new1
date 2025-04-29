@@ -306,12 +306,12 @@ namespace RUINORERP.Global
 
         付款单 = 88,
         收款单 = 89,
-    
+
 
 
         收款核销 = 90,
         付款核销 = 91,
-   
+
         销售合同 = 150,
 
         营销活动 = 300,
@@ -394,8 +394,10 @@ namespace RUINORERP.Global
         /// close
         /// </summary>
         //结案
-        完结 = 8
+        完结 = 8,
 
+        [Description("取消")]
+        已取消 = 16
     }
 
 

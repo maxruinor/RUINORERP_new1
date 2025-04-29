@@ -41,15 +41,10 @@ namespace RUINORERP.Business
     {
 
         /// <summary>
-        /// 客户取消订单时
-        /// 生成退款单到 tb_FM_PaymentRecord
-        /// 客户取消订单时，需要在 tb_FM_PaymentRecord 生成退款单并生成 tb_FM_PaymentSettlement
-        /// 预收款单（BizType=84）和预付款单（BizType=85）审核后同样代表资金已实际收付（预收款已到账、预付款已支付），不可直接反审核，需通过红冲机制处理。
-        /// 所以这里由销售订单取消时调用。UI上没有反审核了。
+        /// 客户取消订单时，如果有订单，如果财务没有在他对应的收付单里审核前是可以反审的。否则只能通过红冲机制处理。
         /// </summary>
         /// <param name="ObjectEntity"></param>
         /// <returns></returns>
-        [Obsolete]
         public async override Task<ReturnResults<T>> AntiApprovalAsync(T ObjectEntity)
         {
             ReturnResults<T> rmrs = new ReturnResults<T>();
@@ -57,15 +52,37 @@ namespace RUINORERP.Business
 
             try
             {
+                //只有生效状态的才允许反审，其它不能也不需要，有可能可删除。也可能只能红冲
+                if (entity.PrePaymentStatus != (long)PrePaymentStatus.已生效)
+                {
+                    if (entity.ReceivePaymentType == (int)ReceivePaymentType.收款)
+                    {
+                        rmrs.ErrorMsg = "只有【已生效】状态的预收款单才可以反审";
+                    }
+                    else
+                    {
+                        rmrs.ErrorMsg = "只有【已生效】状态的预付款单才可以反审";
+                    }
+
+                    return rmrs;
+                }
+
                 // 开启事务，保证数据一致性
                 _unitOfWorkManage.BeginTran();
-                //审核就是收款 或 付款了 ，则生成退款单  （负数的收款单）
-                bool isRefund = true;
-                tb_FM_PaymentRecordController<tb_FM_PaymentRecord> settlementController = _appContext.GetRequiredService<tb_FM_PaymentRecordController<tb_FM_PaymentRecord>>();
-                tb_FM_PaymentRecord paymentRecord = await settlementController.CreatePaymentRecord(entity, isRefund);
-                //这个状态要退款单审核后回写
-                //entity.FMPaymentStatus = (int)FMPaymentStatus.已冲销;//退款  余额有多少退多少。
 
+                //注意，反审是将只有收款单没有审核前，删除
+                //删除
+                if (entity.ReceivePaymentType == (int)ReceivePaymentType.收款)
+                {
+                    await _appContext.Db.Deleteable<tb_FM_PaymentRecord>().Where(c => c.SourceBilllID == entity.PreRPID && c.BizType == (int)BizType.预收款单).ExecuteCommandAsync();
+                }
+                else
+                {
+                    await _appContext.Db.Deleteable<tb_FM_PaymentRecord>().Where(c => c.SourceBilllID == entity.PreRPID && c.BizType == (int)BizType.预付款单).ExecuteCommandAsync();
+                }
+                entity.PrePaymentStatus = (long)PrePaymentStatus.草稿;
+                entity.ApprovalResults = false;
+                entity.ApprovalStatus = (int)ApprovalStatus.未审核;
                 BusinessHelper.Instance.ApproverEntity(entity);
                 //只更新指定列
                 await _unitOfWorkManage.GetDbClient().Updateable<tb_FM_PreReceivedPayment>(entity).ExecuteCommandAsync();
@@ -89,7 +106,7 @@ namespace RUINORERP.Business
 
 
         /// <summary>
-        /// 这个审核可以由业务来审。后面还会有财务来定是否真实收付
+        /// 这个审核可以由业务来审。后面还会有财务来定是否真实收付，这财务审核收款单前，还是可以反审的
         /// 审核通过时
         /// 预收款单本身是「收款」的一种业务类型，要生成收款单，通过 BizType 标记其业务属性为预收款。
         /// tb_FM_PaymentSettlement 不需要立即生成，但需在后续触发核销时生成（抵扣时生成）。
@@ -104,12 +121,9 @@ namespace RUINORERP.Business
             {
                 // 开启事务，保证数据一致性
                 _unitOfWorkManage.BeginTran();
-
-
                 tb_FM_PaymentRecordController<tb_FM_PaymentRecord> settlementController = _appContext.GetRequiredService<tb_FM_PaymentRecordController<tb_FM_PaymentRecord>>();
-
                 tb_FM_PaymentRecord paymentRecord = await settlementController.CreatePaymentRecord(entity, false);
-                //确认收到款  应该是收款审核时 反写回来
+                //确认收到款  应该是收款审核时 反写回来 成 【待核销】
                 //if (paymentRecord.PaymentId > 0)
                 //{
                 //    entity.ForeignBalanceAmount = entity.ForeignPrepaidAmount;

@@ -114,7 +114,6 @@ namespace RUINORERP.UI.PSI.SAL
             DataBindingHelper.BindData4TextBox<tb_SaleOutRe>(entity, v => v.SaleOut_NO, txtSaleOutNo, BindDataType4TextBox.Text, true);
             DataBindingHelper.BindData4TextBox<tb_SaleOutRe>(entity, t => t.TotalAmount.ToString(), txtTotalAmount, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4TextBox<tb_SaleOutRe>(entity, t => t.ShipCost.ToString(), txtShipcost, BindDataType4TextBox.Money, false);
-            DataBindingHelper.BindData4TextBox<tb_SaleOutRe>(entity, t => t.ActualRefundAmount.ToString(), txtActualRefundAmount, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4TextBox<tb_SaleOutRe>(entity, t => t.TotalQty, txtTotalQty, BindDataType4TextBox.Qty, false);
             DataBindingHelper.BindData4DataTime<tb_SaleOutRe>(entity, t => t.ReturnDate, dtpDeliveryDate, false);
             DataBindingHelper.BindData4TextBox<tb_SaleOutRe>(entity, t => t.TrackNo, txtTrackNo, BindDataType4TextBox.Text, false);
@@ -479,8 +478,6 @@ namespace RUINORERP.UI.PSI.SAL
                 }
                 EditEntity.TotalQty = details.Sum(c => c.Quantity);
                 EditEntity.TotalAmount = details.Sum(c => c.TransactionPrice * c.Quantity) + EditEntity.ShipCost;
-                EditEntity.ActualRefundAmount = EditEntity.TotalAmount;
-
             }
             catch (Exception ex)
             {

@@ -51,7 +51,6 @@ namespace RUINORERP.UI.FM
         public override void AddExcludeMenuList()
         {
             base.AddExcludeMenuList(MenuItemEnums.反结案);
-            base.AddExcludeMenuList(MenuItemEnums.反审);
             base.AddExcludeMenuList(MenuItemEnums.结案);
         }
 
@@ -92,7 +91,6 @@ namespace RUINORERP.UI.FM
 
                         DataBindingHelper.BindData4Cmb<tb_FM_PayeeInfo>(entity, k => k.PayeeInfoID, v => v.Account_name, cmbPayeeInfoID, queryFilterPayeeInfo.GetFilterExpression<tb_FM_PayeeInfo>(), true);
                         DataBindingHelper.InitFilterForControlByExpCanEdit<tb_FM_PayeeInfo>(entity, cmbPayeeInfoID, c => c.Account_name, queryFilterPayeeInfo, true);
-
 
                         #endregion
 
@@ -179,7 +177,7 @@ namespace RUINORERP.UI.FM
             DataBindingHelper.BindData4TextBox<tb_FM_PreReceivedPayment>(entity, t => t.PreRPNO, txtPreRPNO, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_FM_PreReceivedPayment>(entity, t => t.ApprovalOpinions, txtApprovalOpinions, BindDataType4TextBox.Text, false);
 
-            // DataBindingHelper.BindData4CheckBox<tb_FM_PreReceivedPayment>(entity, t => t.ApprovalResults, chkApprovalResults, false);
+             DataBindingHelper.BindData4CheckBox<tb_FM_PreReceivedPayment>(entity, t => t.IsAvailable, chkIsAvailable, false);
 
             DataBindingHelper.BindData4ControlByEnum<tb_FM_PreReceivedPayment>(entity, t => t.ApprovalStatus, lblReview, BindDataType4Enum.EnumName, typeof(Global.ApprovalStatus));
 

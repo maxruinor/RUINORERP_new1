@@ -189,11 +189,11 @@ namespace RUINORERP.Business
                     //如果是外币时，则由外币算出本币
                     if (entity.PayStatus == (int)PayStatus.全部付款)
                     {
-                        //外币时
+                        //外币时 全部付款，则外币金额=本币金额/汇率 在UI中显示出来。
                         if (entity.Currency_ID.HasValue && _appContext.BaseCurrency.Currency_ID != entity.Currency_ID.Value)
                         {
                             payable.ForeignPrepaidAmount = entity.ForeignTotalAmount;
-                            payable.LocalPrepaidAmount = payable.ForeignPrepaidAmount * exchangeRate;
+                            //payable.LocalPrepaidAmount = payable.ForeignPrepaidAmount * exchangeRate;
                         }
                         else
                         {
@@ -208,14 +208,14 @@ namespace RUINORERP.Business
                         if (entity.Currency_ID.HasValue && _appContext.BaseCurrency.Currency_ID != entity.Currency_ID.Value)
                         {
                             payable.ForeignPrepaidAmount = entity.ForeignDeposit;
-                            payable.LocalPrepaidAmount = payable.ForeignPrepaidAmount * exchangeRate;
+                            // payable.LocalPrepaidAmount = payable.ForeignPrepaidAmount * exchangeRate;
                         }
                         else
                         {
                             payable.LocalPrepaidAmount = entity.Deposit;
                         }
 
-                        
+
                     }
                     //payable.LocalPrepaidAmountInWords = payable.LocalPrepaidAmount.ToString("C");
                     payable.LocalPrepaidAmountInWords = payable.LocalPrepaidAmount.ToUpper();
@@ -649,7 +649,7 @@ namespace RUINORERP.Business
                 if (entity.tb_SaleOuts != null
                     && (entity.tb_SaleOuts.Any(c => c.DataStatus == (int)DataStatus.确认 || c.DataStatus == (int)DataStatus.完结) && entity.tb_SaleOuts.Any(c => c.ApprovalStatus == (int)ApprovalStatus.已审核)))
                 {
-                    rmrs.ErrorMsg = "存在已确认或已完结，或已审核的销售出库单，不能反审核,请退回处理。"; 
+                    rmrs.ErrorMsg = "存在已确认或已完结，或已审核的销售出库单，不能反审核,请退回处理。";
                     _unitOfWorkManage.RollbackTran();
                     rmrs.Succeeded = false;
                     return rmrs;
@@ -703,6 +703,8 @@ namespace RUINORERP.Business
                     }
                     else
                     {
+                        //订单反审核  只是用来修改，还是真实取消订单。取消的话。则要退款。修改的话。则不需要退款。
+
                         //如果没有出库，则生成红冲单  ，已冲销  已取消，先用取消标记
                         //如果是要退款，则在预收款查询这，生成退款单。
 
@@ -1054,6 +1056,137 @@ namespace RUINORERP.Business
             return entity;
         }
 
+
+        public async Task<ReturnResults<tb_SaleOrder>> CancelOrder(tb_SaleOrder ObjectEntity)
+        {
+            ReturnResults<tb_SaleOrder> rmrs = new ReturnResults<tb_SaleOrder>();
+            tb_SaleOrder entity = ObjectEntity as tb_SaleOrder;
+            try
+            {
+                // 开启事务，保证数据一致性
+                _unitOfWorkManage.BeginTran();
+                tb_OpeningInventoryController<tb_OpeningInventory> ctrOPinv = _appContext.GetRequiredService<tb_OpeningInventoryController<tb_OpeningInventory>>();
+                tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
+                //更新拟销售量减少
+
+
+                //判断是否能反审?
+                if (entity.tb_SaleOuts != null
+                    && (entity.tb_SaleOuts.Any(c => c.DataStatus == (int)DataStatus.确认 || c.DataStatus == (int)DataStatus.完结) && entity.tb_SaleOuts.Any(c => c.ApprovalStatus == (int)ApprovalStatus.已审核)))
+                {
+                    rmrs.ErrorMsg = "存在已确认或已完结，或已审核的销售出库单，不能直接取消订单,请进行退货退款处理。";
+                    _unitOfWorkManage.RollbackTran();
+                    rmrs.Succeeded = false;
+                    return rmrs;
+                }
+
+                foreach (var child in entity.tb_SaleOrderDetails)
+                {
+                    #region 库存表的更新 ，
+                    tb_Inventory inv = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == child.ProdDetailID && i.Location_ID == child.Location_ID);
+                    if (inv == null)
+                    {
+                        inv = new tb_Inventory();
+                        inv.ProdDetailID = child.ProdDetailID;
+                        inv.Location_ID = child.Location_ID;
+                        inv.Quantity = 0;
+                        inv.InitInventory = (int)inv.Quantity;
+                        inv.Notes = "";//后面修改数据库是不需要？
+                        //inv.LatestStorageTime = System.DateTime.Now;
+                        BusinessHelper.Instance.InitEntity(inv);
+                    }
+                    //更新在途库存
+                    inv.Sale_Qty = inv.Sale_Qty - child.Quantity;
+                    BusinessHelper.Instance.EditEntity(inv);
+                    #endregion
+                    ReturnResults<tb_Inventory> rr = await ctrinv.SaveOrUpdate(inv);
+                    if (rr.Succeeded)
+                    {
+
+                    }
+                }
+
+                #region  预收款单处理
+
+                tb_FM_PreReceivedPaymentController<tb_FM_PreReceivedPayment> ctrpay = _appContext.GetRequiredService<tb_FM_PreReceivedPaymentController<tb_FM_PreReceivedPayment>>();
+                var pay = await ctrpay.IsExistEntityAsync(p => p.SourceBill_ID == entity.SOrder_ID && p.PrePaymentStatus == (long)PrePaymentStatus.待核销);
+                if (pay != null)
+                {
+                    if (pay.PrePaymentStatus == (long)PrePaymentStatus.待核销)
+                    {
+                        //预收款未核销：全额退款，生成退款单。  让财务退款
+                        if (pay.ForeignBalanceAmount > 0 || pay.LocalBalanceAmount > 0)
+                        {
+                            tb_FM_PaymentRecordController<tb_FM_PaymentRecord> paymentController = _appContext.GetRequiredService<tb_FM_PaymentRecordController<tb_FM_PaymentRecord>>();
+                            bool isRefund = true;
+                            tb_FM_PaymentRecord paymentRecord = await paymentController.CreatePaymentRecord(pay, isRefund);
+                        }
+                        //推送到财务 ，告诉要退款 TODO
+
+                    }
+                    else if (pay.PrePaymentStatus == (long)PrePaymentStatus.部分核销)
+                    {
+                        //预收款已核销：冲销原核销记录，释放应收单金额，再退款
+                        rmrs.ErrorMsg = $"部分核销的预收款单不能直接取消订单。";
+                        _unitOfWorkManage.RollbackTran();
+                        rmrs.Succeeded = false;
+                        return rmrs;
+                    }
+                    else if (pay.PrePaymentStatus == (long)PrePaymentStatus.全额核销)
+                    {
+                        //预收款已核销：冲销原核销记录，释放应收单金额，再退款
+
+                        rmrs.ErrorMsg = $"全额核销的预收款单不能直接取消订单。";
+                        _unitOfWorkManage.RollbackTran();
+                        rmrs.Succeeded = false;
+                        return rmrs;
+                    }
+                    else if (pay.PrePaymentStatus == (long)PrePaymentStatus.已冲销)
+                    {
+                        //预收款已核销：冲销原核销记录，释放应收单金额，再退款
+                        rmrs.ErrorMsg = $"已冲销的预收款单不能直接取消订单。";
+                        _unitOfWorkManage.RollbackTran();
+                        rmrs.Succeeded = false;
+                        return rmrs;
+                    }
+                    else
+                    {
+                        await ctrpay.DeleteAsync(pay);
+                    }
+                }
+
+                #endregion
+                entity.DataStatus = (int)DataStatus.已取消;
+                BusinessHelper.Instance.EditEntity(entity);
+
+                //只更新指定列
+                var result = _unitOfWorkManage.GetDbClient().Updateable<tb_SaleOrder>(entity).UpdateColumns(it => new { it.DataStatus }).ExecuteCommand();
+
+                if (result > 0)
+                {
+                    // 注意信息的完整性
+                    _unitOfWorkManage.CommitTran();
+                    rmrs.ReturnObject = entity;
+                    rmrs.Succeeded = true;
+                }
+                else
+                {
+                    _unitOfWorkManage.RollbackTran();
+                    BizTypeMapper mapper = new BizTypeMapper();
+                    rmrs.ErrorMsg = mapper.GetBizType(typeof(tb_SaleOrder)).ToString() + "事务回滚=> 订单取消失败";
+                    rmrs.Succeeded = false;
+                }
+            }
+            catch (Exception ex)
+            {
+                _unitOfWorkManage.RollbackTran();
+                _logger.Error(ex);
+                BizTypeMapper mapper = new BizTypeMapper();
+                rmrs.ErrorMsg = mapper.GetBizType(typeof(tb_SaleOrder)).ToString() + "事务回滚=>" + ex.Message;
+                rmrs.Succeeded = false;
+            }
+            return rmrs;
+        }
 
 
         /*

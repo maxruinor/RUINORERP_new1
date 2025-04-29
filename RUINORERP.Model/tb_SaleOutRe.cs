@@ -198,6 +198,50 @@ namespace RUINORERP.Model
             SetProperty(ref _SaleOut_NO, value);
                         }
         }
+        private long? _Currency_ID;
+        /// <summary>
+        /// 币别
+        /// </summary>
+        [AdvQueryAttribute(ColName = "Currency_ID", ColDesc = "币别")]
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType = "Int64", ColumnName = "Currency_ID", DecimalDigits = 0, IsNullable = true, ColumnDescription = "币别")]
+        [FKRelationAttribute("tb_Currency", "Currency_ID")]
+        public long? Currency_ID
+        {
+            get { return _Currency_ID; }
+            set
+            {
+                SetProperty(ref _Currency_ID, value);
+            }
+        }
+
+        private decimal? _ExchangeRate = 1;
+        /// <summary>
+        /// 汇率
+        /// </summary>
+        [AdvQueryAttribute(ColName = "ExchangeRate", ColDesc = "汇率")]
+        [SugarColumn(ColumnDataType = "decimal", SqlParameterDbType = "Decimal", ColumnName = "ExchangeRate", DecimalDigits = 4, IsNullable = true, ColumnDescription = "汇率")]
+        public decimal? ExchangeRate
+        {
+            get { return _ExchangeRate; }
+            set
+            {
+                SetProperty(ref _ExchangeRate, value);
+            }
+        }
+        private decimal _ForeignTotalAmount = ((0));
+        /// <summary>
+        /// 总金额外币
+        /// </summary>
+        [AdvQueryAttribute(ColName = "ForeignTotalAmount", ColDesc = "总金额外币")]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType = "Decimal", ColumnName = "ForeignTotalAmount", DecimalDigits = 4, IsNullable = false, ColumnDescription = "总金额外币")]
+        public decimal ForeignTotalAmount
+        {
+            get { return _ForeignTotalAmount; }
+            set
+            {
+                SetProperty(ref _ForeignTotalAmount, value);
+            }
+        }
 
         private int _TotalQty= ((0));
         /// <summary>
@@ -213,20 +257,7 @@ namespace RUINORERP.Model
                         }
         }
 
-        private decimal _ActualRefundAmount= ((0));
-        /// <summary>
-        /// 实际退款金额
-        /// </summary>
-        [AdvQueryAttribute(ColName = "ActualRefundAmount",ColDesc = "实际退款金额")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "ActualRefundAmount" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "实际退款金额" )]
-        public decimal ActualRefundAmount
-        { 
-            get{return _ActualRefundAmount;}
-            set{
-            SetProperty(ref _ActualRefundAmount, value);
-                        }
-        }
-
+        
         private decimal _TotalAmount= ((0));
         /// <summary>
         /// 退款金额合计
@@ -454,10 +485,10 @@ namespace RUINORERP.Model
 
         private bool _RefundOnly;
         /// <summary>
-        /// 含税
+        /// 仅退款
         /// </summary>
-        [AdvQueryAttribute(ColName = "RefundOnly",ColDesc = "含税")] 
-        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType ="Boolean",  ColumnName = "RefundOnly" ,IsNullable = false,ColumnDescription = "含税" )]
+        [AdvQueryAttribute(ColName = "RefundOnly",ColDesc = "仅退款")] 
+        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType ="Boolean",  ColumnName = "RefundOnly" ,IsNullable = false,ColumnDescription = "仅退款")]
         public bool RefundOnly
         { 
             get{return _RefundOnly;}
@@ -468,10 +499,10 @@ namespace RUINORERP.Model
 
         private bool? _IsIncludeTax= false;
         /// <summary>
-        /// 仅退款
+        /// 含税
         /// </summary>
-        [AdvQueryAttribute(ColName = "IsIncludeTax",ColDesc = "仅退款")] 
-        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType ="Boolean",  ColumnName = "IsIncludeTax" ,IsNullable = true,ColumnDescription = "仅退款" )]
+        [AdvQueryAttribute(ColName = "IsIncludeTax",ColDesc = "含税")] 
+        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType ="Boolean",  ColumnName = "IsIncludeTax" ,IsNullable = true,ColumnDescription = "含税")]
         public bool? IsIncludeTax
         { 
             get{return _IsIncludeTax;}

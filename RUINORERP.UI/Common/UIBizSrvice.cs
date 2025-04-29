@@ -881,7 +881,14 @@ namespace RUINORERP.UI.Common
             //如果功能变化 新增加了列则会显示到allInitCols,这时要把多出来的也显示到ColumnDisplays
             foreach (var col in allInitCols.Except(ColumnDisplays))
             {
-                col.Visible = true;
+                if (col.IsPrimaryKey)
+                {
+                    col.Visible = false;
+                }
+                else
+                {
+                    col.Visible = true;
+                }
                 ColumnDisplays.Add(col);
             }
 

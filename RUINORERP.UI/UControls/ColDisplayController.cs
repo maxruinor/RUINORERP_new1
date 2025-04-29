@@ -20,6 +20,8 @@ namespace RUINORERP.UI.UControls
     public class ColDisplayController : INotifyPropertyChanged, IEquatable<ColDisplayController>
     {
         //public string ColKeName { get; set; } = Guid.NewGuid().ToString();
+        private bool isPrimaryKey = false;
+
         private string colDisplayText = string.Empty;
         private bool isFixed = false;
         private int colDisplayIndex = 0;
@@ -134,6 +136,8 @@ namespace RUINORERP.UI.UControls
         [Browsable(false)]
         [JsonIgnore]
         public bool SuppressNotifyPropertyChanged { get; set; }
+        public bool IsPrimaryKey { get => isPrimaryKey; set => isPrimaryKey = value; }
+
         protected virtual void OnPropertyChanged(string propertyName)
         {
             if (this.PropertyChanged != null && !SuppressNotifyPropertyChanged)

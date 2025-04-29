@@ -39,7 +39,12 @@ namespace RUINORERP.Business
     public partial class tb_FM_PaymentSettlementController<T> : BaseController<T> where T : class
     {
 
-        //生成核销记录
+        /// <summary>
+        /// 退款或红冲时，生成反向核销记录（IsReversed=1），并关联原记录。
+        /// 正向不用。反向用？
+        /// </summary>
+        /// <param name="entity"></param>
+        /// <returns></returns>
         public async Task<tb_FM_PaymentSettlement> GenerateSettlement(tb_FM_PaymentRecord entity)
         {
             //预收付款单 审核时 自动生成 收付款记录
@@ -56,7 +61,10 @@ namespace RUINORERP.Business
                 SettlementRecord.SettlementType = (int)SettlementType.收款核销;
                 if (entity.ForeignPaidAmount < 0 || entity.ForeignPaidAmount < 0)
                 {
-                    SettlementRecord.SettlementType= (int)SettlementType.红冲核销;
+                    SettlementRecord.SettlementType = (int)SettlementType.红冲核销;
+                    SettlementRecord.IsReversed = true;
+                    SettlementRecord.SettledForeignAmount = entity.ForeignPaidAmount;
+                    SettlementRecord.SettledLocalAmount = entity.LocalPaidAmount;
                 }
             }
             else
@@ -100,14 +108,12 @@ namespace RUINORERP.Business
             }
             SettlementRecord.SourceBizType = entity.BizType;
 
-
             SettlementRecord.BizType = entity.BizType;
             SettlementRecord.SettledForeignAmount = entity.ForeignPaidAmount;
             SettlementRecord.SettledLocalAmount = entity.LocalPaidAmount;
 
-
             BusinessHelper.Instance.InitEntity(SettlementRecord);
-            long id = await _unitOfWorkManage.GetDbClient().Insertable<tb_FM_PaymentRecord>(SettlementRecord).ExecuteReturnSnowflakeIdAsync();
+            long id = await _unitOfWorkManage.GetDbClient().Insertable<tb_FM_PaymentSettlement>(SettlementRecord).ExecuteReturnSnowflakeIdAsync();
             if (id > 0)
             {
 
@@ -115,7 +121,6 @@ namespace RUINORERP.Business
 
             return SettlementRecord;
         }
-
 
 
     }

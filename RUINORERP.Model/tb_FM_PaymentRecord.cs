@@ -56,7 +56,7 @@ namespace RUINORERP.Model
         /// 支付单号
         /// </summary>
         [AdvQueryAttribute(ColName = "PaymentNo",ColDesc = "支付单号")] 
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "PaymentNo" ,Length=30,IsNullable = true,ColumnDescription = "支付单号" )]
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "PaymentNo" ,Length=30,IsNullable = false,ColumnDescription = "支付单号" )]
         public string PaymentNo
         { 
             get{return _PaymentNo;}
@@ -351,6 +351,52 @@ namespace RUINORERP.Model
             set{
             SetProperty(ref _ReferenceNo, value);
                         }
+        }
+
+        private bool _IsReversed = false;
+        /// <summary>
+        /// 是否冲销
+        /// </summary>
+        [AdvQueryAttribute(ColName = "IsReversed", ColDesc = "是否冲销")]
+        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType = "Boolean", ColumnName = "IsReversed", IsNullable = false, ColumnDescription = "是否冲销")]
+        [Browsable(false)]
+        public bool IsReversed
+        {
+            get { return _IsReversed; }
+            set
+            {
+                SetProperty(ref _IsReversed, value);
+            }
+        }
+
+        private long _ReversedPaymentId;
+        /// <summary>
+        /// 冲销记录
+        /// </summary>
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType = "Int64", ColumnName = "ReversedPaymentId", DecimalDigits = 0, IsNullable = false, ColumnDescription = "冲销记录")]
+        public long ReversedPaymentId
+        {
+            get { return _ReversedPaymentId; }
+            set
+            {
+                SetProperty(ref _ReversedPaymentId, value);
+                base.PrimaryKeyID = _ReversedPaymentId;
+            }
+        }
+
+        private string _ReversedPaymentNo;
+        /// <summary>
+        /// 冲销单号
+        /// </summary>
+        [AdvQueryAttribute(ColName = "ReversedPaymentNo", ColDesc = "冲销单号")]
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType = "String", ColumnName = "ReversedPaymentNo", Length = 30, IsNullable = false, ColumnDescription = "冲销单号")]
+        public string ReversedPaymentNo
+        {
+            get { return _ReversedPaymentNo; }
+            set
+            {
+                SetProperty(ref _ReversedPaymentNo, value);
+            }
         }
 
         private string _Remark;

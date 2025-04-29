@@ -195,9 +195,17 @@ namespace RUINORERP.UI.BaseForm
                                 }
                             }
                         }
+                        else if (item is ToolStripTextBox txt)
+                        {
+                            //UIHelper.ControlButton(CurMenuInfo, tsc); 最大行数 要显示
+                        }
                         else if (item is ToolStripControlHost tsc)
                         {
                             UIHelper.ControlButton(CurMenuInfo, tsc);
+                        }
+                        else
+                        {
+
                         }
                     }
 

@@ -295,6 +295,15 @@ namespace RUINORERP.UI.PSI.SAL
                         //{
                         if (cmbCurrency_ID.SelectedItem is tb_Currency cv)
                         {
+                            if (entity.Account_id.HasValue && entity.Account_id.Value > 0)
+                            {
+                                if (entity.tb_fm_account.Currency_ID.HasValue && entity.tb_fm_account.Currency_ID.Value != cv.Currency_ID)
+                                {
+                                    MessageBox.Show("当前收款账户的币别与选择的币别不一致。请联系管理员或财务确认后操作。");
+                                    return;
+                                }
+                            }
+
                             if (cv.CurrencyCode.Trim() != DefaultCurrency.RMB.ToString())
                             {
                                 //显示外币相关
@@ -341,7 +350,7 @@ namespace RUINORERP.UI.PSI.SAL
                             {
                                 EditEntity.Account_id = ProjectGroup.tb_ProjectGroupAccountMappers[0].tb_fm_account.Account_id;
                                 EditEntity.tb_fm_account = ProjectGroup.tb_ProjectGroupAccountMappers[0].tb_fm_account;
-                                EditEntity.tb_projectgroup= ProjectGroup;
+                                EditEntity.tb_projectgroup = ProjectGroup;
                             }
                         }
                     }

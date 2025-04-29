@@ -59,7 +59,6 @@ namespace RUINORERP.UI.FM
         public override void AddExcludeMenuList()
         {
             base.AddExcludeMenuList(MenuItemEnums.反结案);
-            base.AddExcludeMenuList(MenuItemEnums.反审);
             base.AddExcludeMenuList(MenuItemEnums.结案);
         }
 
@@ -112,20 +111,32 @@ namespace RUINORERP.UI.FM
             List<tb_FM_PreReceivedPayment> selectlist = GetSelectResult();
             foreach (var item in selectlist)
             {
-                bool canConvert = item.PrePaymentStatus == (long)PrePaymentStatus.已生效 && item.ApprovalStatus == (int)ApprovalStatus.已审核 && item.ApprovalResults.HasValue && item.ApprovalResults.Value;
+                bool canConvert = item.PrePaymentStatus == (long)PrePaymentStatus.待核销 && item.ApprovalStatus == (int)ApprovalStatus.已审核 && item.ApprovalResults.HasValue && item.ApprovalResults.Value;
                 if (canConvert || item.PrePaymentStatus == (long)PrePaymentStatus.部分核销)
                 {
-                    tb_FM_PaymentRecordController<tb_FM_PaymentRecord> paymentController = MainForm.Instance.AppContext.GetRequiredService<tb_FM_PaymentRecordController<tb_FM_PaymentRecord>>();
-                    bool isRefund = true;
-                    tb_FM_PaymentRecord paymentRecord = await paymentController.CreatePaymentRecord(item, isRefund);
-                    MenuPowerHelper menuPowerHelper;
-                    menuPowerHelper = Startup.GetFromFac<MenuPowerHelper>();
-                    tb_MenuInfo RelatedMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble && m.EntityName == nameof(tb_SaleOutRe) && m.BIBaseForm == "BaseBillEditGeneric`2").FirstOrDefault();
-                    if (RelatedMenuInfo != null)
+                    //审核就是收款 或 付款了 ，则生成退款单  （负数的收款单）
+                    //这个状态要退款单审核后回写
+                    //entity.FMPaymentStatus = (int)FMPaymentStatus.已冲销;//退款  余额有多少退多少。
+                    if (item.ForeignBalanceAmount > 0 || item.LocalBalanceAmount > 0)
                     {
-                        menuPowerHelper.ExecuteEvents(RelatedMenuInfo, paymentRecord);
+                        tb_FM_PaymentRecordController<tb_FM_PaymentRecord> paymentController = MainForm.Instance.AppContext.GetRequiredService<tb_FM_PaymentRecordController<tb_FM_PaymentRecord>>();
+                        bool isRefund = true;
+                        tb_FM_PaymentRecord paymentRecord = await paymentController.CreatePaymentRecord(item, isRefund);
+                        MenuPowerHelper menuPowerHelper;
+                        menuPowerHelper = Startup.GetFromFac<MenuPowerHelper>();
+                        tb_MenuInfo RelatedMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble && m.EntityName == nameof(tb_FM_PaymentRecord) && m.BIBaseForm == "BaseBillEditGeneric`2").FirstOrDefault();
+                        if (RelatedMenuInfo != null)
+                        {
+                            menuPowerHelper.ExecuteEvents(RelatedMenuInfo, paymentRecord);
+                        }
+                        return;
                     }
-                    return;
+                    else
+                    {
+                        //没有金额可退。
+                        
+                    }
+                   
                 }
                 else
                 {
@@ -207,7 +218,7 @@ namespace RUINORERP.UI.FM
 
         private void UCPreReceivedPaymentQuery_Load(object sender, EventArgs e)
         {
-            if (base._UCBillMasterQuery==null)
+            if (base._UCBillMasterQuery == null)
             {
                 return;
             }

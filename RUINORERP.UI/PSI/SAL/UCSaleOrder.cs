@@ -318,7 +318,7 @@ namespace RUINORERP.UI.PSI.SAL
                                 UIHelper.ControlForeignFieldInvisible<tb_SaleOrder>(this, false);
                                 lblExchangeRate.Visible = false;
                                 txtExchangeRate.Visible = false;
-                                entity.ExchangeRate = null;
+                                entity.ExchangeRate = 1;
                                 entity.ForeignTotalAmount = 0;
                             }
                         }

@@ -48,18 +48,25 @@ namespace RUINORERP.Business
             SettlementRecord = mapper.Map<tb_FM_PaymentSettlement>(entity);
 
             SettlementRecord.ActionStatus = ActionStatus.新增;
-         
+
             SettlementRecord.ReceivePaymentType = entity.ReceivePaymentType;
             if (entity.ReceivePaymentType == (int)ReceivePaymentType.收款)
             {
                 SettlementRecord.SettlementNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.收款核销);
                 SettlementRecord.SettlementType = (int)SettlementType.收款核销;
-               
+                if (entity.ForeignPaidAmount < 0 || entity.ForeignPaidAmount < 0)
+                {
+                    SettlementRecord.SettlementType= (int)SettlementType.红冲核销;
+                }
             }
             else
             {
                 SettlementRecord.SettlementNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.付款核销);
                 SettlementRecord.SettlementType = (int)SettlementType.付款核销;
+                if (entity.ForeignPaidAmount < 0 || entity.ForeignPaidAmount < 0)
+                {
+                    SettlementRecord.SettlementType = (int)SettlementType.红冲核销;
+                }
             }
 
             SettlementRecord.BizType = entity.BizType;
@@ -69,7 +76,7 @@ namespace RUINORERP.Business
             SettlementRecord.SettleDate = System.DateTime.Now;
             if (SettlementRecord.SettledLocalAmount < 0)
             {
-                SettlementRecord.SettlementType = (int)SettlementType.退款红冲;
+                SettlementRecord.SettlementType = (int)SettlementType.红冲核销;
             }
             switch (entity.BizType)
             {
@@ -82,22 +89,22 @@ namespace RUINORERP.Business
                 default:
                     break;
             }
-           if( entity.Currency_ID.HasValue)
+            if (entity.Currency_ID.HasValue)
             {
                 SettlementRecord.SourceCurrencyID = entity.Currency_ID.Value;
             }
-            SettlementRecord.SourceExchangeRate = entity.ExchangeRate;
+            SettlementRecord.ExchangeRate = entity.ExchangeRate;
             if (true)
             {
 
             }
-            SettlementRecord.SourceBizType= entity.BizType;
+            SettlementRecord.SourceBizType = entity.BizType;
 
 
             SettlementRecord.BizType = entity.BizType;
             SettlementRecord.SettledForeignAmount = entity.ForeignPaidAmount;
             SettlementRecord.SettledLocalAmount = entity.LocalPaidAmount;
-          
+
 
             BusinessHelper.Instance.InitEntity(SettlementRecord);
             long id = await _unitOfWorkManage.GetDbClient().Insertable<tb_FM_PaymentRecord>(SettlementRecord).ExecuteReturnSnowflakeIdAsync();

@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：04/27/2025 15:20:54
+// 时间：04/29/2025 11:22:24
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -275,16 +275,16 @@ namespace RUINORERP.Model.QueryDto
         }
      
 
-        private int? _FMPaymentStatus;
+        private long? _PaymentStatus;
         /// <summary>
         /// 支付状态
         /// </summary>
-        [AdvQueryAttribute(ColName = "FMPaymentStatus",ColDesc = "支付状态")]
-        [SugarColumn(ColumnDataType = "int",SqlParameterDbType ="Int32",ColumnName = "FMPaymentStatus",IsNullable = true,ColumnDescription = "支付状态" )]
-        public int? FMPaymentStatus 
+        [AdvQueryAttribute(ColName = "PaymentStatus",ColDesc = "支付状态")]
+        [SugarColumn(ColumnDataType = "bigint",SqlParameterDbType ="Int64",ColumnName = "PaymentStatus",IsNullable = true,ColumnDescription = "支付状态" )]
+        public long? PaymentStatus 
         { 
-            get{return _FMPaymentStatus;}
-            set{SetProperty(ref _FMPaymentStatus, value);}
+            get{return _PaymentStatus;}
+            set{SetProperty(ref _PaymentStatus, value);}
         }
      
 

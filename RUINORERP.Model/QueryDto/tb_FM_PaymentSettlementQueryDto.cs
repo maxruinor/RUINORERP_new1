@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：04/26/2025 22:26:20
+// 时间：04/29/2025 11:22:26
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -111,16 +111,16 @@ namespace RUINORERP.Model.QueryDto
         }
      
 
-        private decimal? _SourceExchangeRate;
+        private decimal? _ExchangeRate;
         /// <summary>
-        /// 来源汇率
+        /// 汇率
         /// </summary>
-        [AdvQueryAttribute(ColName = "SourceExchangeRate",ColDesc = "来源汇率")]
-        [SugarColumn(ColumnDataType = "decimal",SqlParameterDbType ="Decimal",ColumnName = "SourceExchangeRate",IsNullable = true,ColumnDescription = "来源汇率" )]
-        public decimal? SourceExchangeRate 
+        [AdvQueryAttribute(ColName = "ExchangeRate",ColDesc = "汇率")]
+        [SugarColumn(ColumnDataType = "decimal",SqlParameterDbType ="Decimal",ColumnName = "ExchangeRate",IsNullable = true,ColumnDescription = "汇率" )]
+        public decimal? ExchangeRate 
         { 
-            get{return _SourceExchangeRate;}
-            set{SetProperty(ref _SourceExchangeRate, value);}
+            get{return _ExchangeRate;}
+            set{SetProperty(ref _ExchangeRate, value);}
         }
      
 
@@ -176,26 +176,13 @@ namespace RUINORERP.Model.QueryDto
         }
      
 
-        private decimal? _TargetExchangeRate;
-        /// <summary>
-        /// 目标汇率
-        /// </summary>
-        [AdvQueryAttribute(ColName = "TargetExchangeRate",ColDesc = "目标汇率")]
-        [SugarColumn(ColumnDataType = "decimal",SqlParameterDbType ="Decimal",ColumnName = "TargetExchangeRate",IsNullable = true,ColumnDescription = "目标汇率" )]
-        public decimal? TargetExchangeRate 
-        { 
-            get{return _TargetExchangeRate;}
-            set{SetProperty(ref _TargetExchangeRate, value);}
-        }
-     
-
-        private long? _ReceivePaymentType;
+        private long _ReceivePaymentType;
         /// <summary>
         /// 收付类型
         /// </summary>
         [AdvQueryAttribute(ColName = "ReceivePaymentType",ColDesc = "收付类型")]
-        [SugarColumn(ColumnDataType = "bigint",SqlParameterDbType ="Int64",ColumnName = "ReceivePaymentType",IsNullable = true,ColumnDescription = "收付类型" )]
-        public long? ReceivePaymentType 
+        [SugarColumn(ColumnDataType = "bigint",SqlParameterDbType ="Int64",ColumnName = "ReceivePaymentType",IsNullable = false,ColumnDescription = "收付类型" )]
+        public long ReceivePaymentType 
         { 
             get{return _ReceivePaymentType;}
             set{SetProperty(ref _ReceivePaymentType, value);}

@@ -81,6 +81,10 @@ namespace RUINORERP.UI.MRP.BOM
 
         private void ExportExcel_Click(object sender, EventArgs e)
         {
+            //// 数据更新后强制刷新滚动条
+            //grid1.AutoStretchRowsToFitHeight = false;
+            //grid1.VScrollBar.Maximum = grid1.Rows.Count * 1;
+            //grid1.Invalidate();
             if (kryptonTreeGridViewBOMDetail.DataSource is DataTable dt)
             {
                 //如果展开
@@ -723,7 +727,7 @@ namespace RUINORERP.UI.MRP.BOM
 
 
                                 // 添加主表汇总数据 占用了两行
-                                AddSummaryInfo(excelSheet, currentRow+1);
+                                AddSummaryInfo(excelSheet, currentRow + 1);
 
 
                                 // 获取指定列,第一列设置宽一些
@@ -1673,7 +1677,6 @@ namespace RUINORERP.UI.MRP.BOM
             sgh.OnCalculateColumnValue += Sgh_OnCalculateColumnValue;
             sgh.OnLoadMultiRowData += Sgh_OnLoadMultiRowData;
             sgh.OnLoadRelevantFields += Sgh_OnLoadRelevantFields;
-
         }
 
         private void Sgh_OnAddRightClick(PopupMenuCustomize pmc, Position position)

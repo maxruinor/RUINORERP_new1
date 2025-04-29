@@ -51,12 +51,11 @@ namespace RUINORERP.Business.Processor
             queryFilter.SetQueryField<tb_FM_ReceivablePayable, tb_CustomerVendor>(c => c.CustomerVendor_ID, lambda);
             //可以根据关联外键自动加载条件，条件用公共虚方法
             queryFilter.SetQueryField<tb_FM_ReceivablePayable>(c => c.ARAPNo);
-            queryFilter.SetQueryField<tb_FM_ReceivablePayable>(c => c.Employee_ID);
             queryFilter.SetQueryField<tb_FM_ReceivablePayable>(c => c.Currency_ID);
             queryFilter.SetQueryField<tb_FM_ReceivablePayable>(c => c.DepartmentID);
             queryFilter.SetQueryField<tb_FM_ReceivablePayable>(c => c.ProjectGroup_ID);
             queryFilter.SetQueryField<tb_FM_ReceivablePayable>(c => c.DueDate, false);
-            queryFilter.SetQueryField<tb_FM_ReceivablePayable>(c => c.FMPaymentStatus, QueryFieldType.CmbEnum, typeof(FMPaymentStatus));
+            queryFilter.SetQueryField<tb_FM_ReceivablePayable>(c => c.ARAPStatus, QueryFieldType.CmbEnum, typeof(ARAPStatus));
             queryFilter.SetQueryField<tb_FM_ReceivablePayable>(c => c.ApprovalStatus, QueryFieldType.CmbEnum, typeof(ApprovalStatus));
             queryFilter.SetQueryField<tb_FM_ReceivablePayable>(c => c.Remark);
 

@@ -605,13 +605,21 @@ namespace RUINORERP.UI.AdvancedUIModule
                             {
                                 if (queryField.QueryFieldDataPara is QueryFieldEnumData enumData)
                                 {
-
+                                    // 获取枚举的基础类型
+                                    Type underlyingType = Enum.GetUnderlyingType(enumData.EnumType);
                                     //绑定下拉值
 
                                     //绑定实体值 这里没有指定 过滤
                                     //枚举的值 默认为-1，则指定为请选择
+                                    if (underlyingType == typeof(int))
+                                    {
+                                        newDto.SetPropertyValue(eNumCmb.Name, -1);
+                                    }
+                                    if (underlyingType == typeof(long))
+                                    {
+                                        newDto.SetPropertyValue(eNumCmb.Name, -1L);
+                                    }
 
-                                    newDto.SetPropertyValue(eNumCmb.Name, -1);
                                     DataBindingHelper.BindData4CmbByEnumRef(newDto, enumData.EnumValueColName, enumData.EnumType, eNumCmb, enumData.AddSelectItem);
 
 

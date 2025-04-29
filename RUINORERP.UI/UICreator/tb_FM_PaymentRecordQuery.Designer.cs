@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：04/27/2025 15:20:52
+// 时间：04/29/2025 11:22:24
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -430,15 +430,15 @@ this.cmbPaytype_ID.TabIndex = 18;
 this.Controls.Add(this.lblPaytype_ID);
 this.Controls.Add(this.cmbPaytype_ID);
 
-           //#####FMPaymentStatus###Int32
-//属性测试475FMPaymentStatus
-//属性测试475FMPaymentStatus
-//属性测试475FMPaymentStatus
-//属性测试475FMPaymentStatus
-//属性测试475FMPaymentStatus
-//属性测试475FMPaymentStatus
-//属性测试475FMPaymentStatus
-//属性测试475FMPaymentStatus
+           //#####PaymentStatus###Int64
+//属性测试475PaymentStatus
+//属性测试475PaymentStatus
+//属性测试475PaymentStatus
+//属性测试475PaymentStatus
+//属性测试475PaymentStatus
+//属性测试475PaymentStatus
+//属性测试475PaymentStatus
+//属性测试475PaymentStatus
 
            //#####300PaymentImagePath###String
 this.lblPaymentImagePath.AutoSize = true;

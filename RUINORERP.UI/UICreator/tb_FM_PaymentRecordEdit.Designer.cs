@@ -3,7 +3,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：04/27/2025 15:20:51
+// 时间：04/29/2025 11:22:23
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -106,8 +106,8 @@ this.cmbProjectGroup_ID = new Krypton.Toolkit.KryptonComboBox();
 this.lblPaytype_ID = new Krypton.Toolkit.KryptonLabel();
 this.cmbPaytype_ID = new Krypton.Toolkit.KryptonComboBox();
 
-this.lblFMPaymentStatus = new Krypton.Toolkit.KryptonLabel();
-this.txtFMPaymentStatus = new Krypton.Toolkit.KryptonTextBox();
+this.lblPaymentStatus = new Krypton.Toolkit.KryptonLabel();
+this.txtPaymentStatus = new Krypton.Toolkit.KryptonTextBox();
 
 this.lblPaymentImagePath = new Krypton.Toolkit.KryptonLabel();
 this.txtPaymentImagePath = new Krypton.Toolkit.KryptonTextBox();
@@ -507,27 +507,27 @@ this.cmbPaytype_ID.TabIndex = 18;
 this.Controls.Add(this.lblPaytype_ID);
 this.Controls.Add(this.cmbPaytype_ID);
 
-           //#####FMPaymentStatus###Int32
-//属性测试475FMPaymentStatus
-//属性测试475FMPaymentStatus
-//属性测试475FMPaymentStatus
-//属性测试475FMPaymentStatus
-//属性测试475FMPaymentStatus
-//属性测试475FMPaymentStatus
-//属性测试475FMPaymentStatus
-//属性测试475FMPaymentStatus
-this.lblFMPaymentStatus.AutoSize = true;
-this.lblFMPaymentStatus.Location = new System.Drawing.Point(100,475);
-this.lblFMPaymentStatus.Name = "lblFMPaymentStatus";
-this.lblFMPaymentStatus.Size = new System.Drawing.Size(41, 12);
-this.lblFMPaymentStatus.TabIndex = 19;
-this.lblFMPaymentStatus.Text = "支付状态";
-this.txtFMPaymentStatus.Location = new System.Drawing.Point(173,471);
-this.txtFMPaymentStatus.Name = "txtFMPaymentStatus";
-this.txtFMPaymentStatus.Size = new System.Drawing.Size(100, 21);
-this.txtFMPaymentStatus.TabIndex = 19;
-this.Controls.Add(this.lblFMPaymentStatus);
-this.Controls.Add(this.txtFMPaymentStatus);
+           //#####PaymentStatus###Int64
+//属性测试475PaymentStatus
+//属性测试475PaymentStatus
+//属性测试475PaymentStatus
+//属性测试475PaymentStatus
+//属性测试475PaymentStatus
+//属性测试475PaymentStatus
+//属性测试475PaymentStatus
+//属性测试475PaymentStatus
+this.lblPaymentStatus.AutoSize = true;
+this.lblPaymentStatus.Location = new System.Drawing.Point(100,475);
+this.lblPaymentStatus.Name = "lblPaymentStatus";
+this.lblPaymentStatus.Size = new System.Drawing.Size(41, 12);
+this.lblPaymentStatus.TabIndex = 19;
+this.lblPaymentStatus.Text = "支付状态";
+this.txtPaymentStatus.Location = new System.Drawing.Point(173,471);
+this.txtPaymentStatus.Name = "txtPaymentStatus";
+this.txtPaymentStatus.Size = new System.Drawing.Size(100, 21);
+this.txtPaymentStatus.TabIndex = 19;
+this.Controls.Add(this.lblPaymentStatus);
+this.Controls.Add(this.txtPaymentStatus);
 
            //#####300PaymentImagePath###String
 this.lblPaymentImagePath.AutoSize = true;
@@ -823,8 +823,8 @@ this.Controls.Add(this.cmbProjectGroup_ID );
                 this.Controls.Add(this.lblPaytype_ID );
 this.Controls.Add(this.cmbPaytype_ID );
 
-                this.Controls.Add(this.lblFMPaymentStatus );
-this.Controls.Add(this.txtFMPaymentStatus );
+                this.Controls.Add(this.lblPaymentStatus );
+this.Controls.Add(this.txtPaymentStatus );
 
                 this.Controls.Add(this.lblPaymentImagePath );
 this.Controls.Add(this.txtPaymentImagePath );
@@ -980,8 +980,8 @@ private Krypton.Toolkit.KryptonComboBox cmbPaytype_ID;
 
     
         
-              private Krypton.Toolkit.KryptonLabel lblFMPaymentStatus;
-private Krypton.Toolkit.KryptonTextBox txtFMPaymentStatus;
+              private Krypton.Toolkit.KryptonLabel lblPaymentStatus;
+private Krypton.Toolkit.KryptonTextBox txtPaymentStatus;
 
     
         

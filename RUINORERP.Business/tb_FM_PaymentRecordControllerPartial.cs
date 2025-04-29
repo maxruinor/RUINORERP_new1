@@ -29,6 +29,7 @@ using RUINORERP.Global;
 using RUINORERP.Business.Security;
 using RUINORERP.Global.EnumExt;
 using AutoMapper;
+using RUINORERP.Business.FMService;
 
 namespace RUINORERP.Business
 {
@@ -37,6 +38,16 @@ namespace RUINORERP.Business
     /// </summary>
     public partial class tb_FM_PaymentRecordController<T> : BaseController<T> where T : class
     {
+
+        /// <summary>
+        /// 审核了就不能反审了。只能冲销
+        /// </summary>
+        /// <param name="ObjectEntity"></param>
+        /// <returns></returns>
+        /// </summary>
+        /// <param name="ObjectEntity"></param>
+        /// <returns></returns>
+        [Obsolete]
         public async override Task<ReturnResults<T>> AntiApprovalAsync(T ObjectEntity)
         {
             ReturnResults<T> rmrs = new ReturnResults<T>();
@@ -84,55 +95,117 @@ namespace RUINORERP.Business
                 // 开启事务，保证数据一致性
                 _unitOfWorkManage.BeginTran();
 
-
-                //收款单审核时。除了保存核销记录，还要来源的 如 应收中的 余额这种更新
-                if (entity.BizType == (int)BizType.应收单 || entity.BizType == (int)BizType.应付单)
+                //收付款记录中，如果金额为负数则是 退款红冲
+                if (entity.LocalPaidAmount > 0 || entity.ForeignPaidAmount > 0)
                 {
-                    #region 应收单余额更新
-                    tb_FM_ReceivablePayable receivablePayable = await _appContext.Db.Queryable<tb_FM_ReceivablePayable>()
-                        .Where(c => c.ARAPId == entity.SourceBilllID).FirstAsync();
-                    if (receivablePayable != null)
+                    #region 正向收付款
+                    //收款单审核时。除了保存核销记录，还要来源的 如 应收中的 余额这种更新
+                    if (entity.BizType == (int)BizType.应收单 || entity.BizType == (int)BizType.应付单)
                     {
-                        receivablePayable.ForeignPaidAmount += entity.ForeignPaidAmount;
-                        receivablePayable.LocalPaidAmount += entity.LocalPaidAmount;
-
-                        receivablePayable.ForeignBalanceAmount -= entity.ForeignPaidAmount;
-                        receivablePayable.LocalBalanceAmount -= entity.LocalPaidAmount;
-
-                        if (receivablePayable.ForeignBalanceAmount == 0 || receivablePayable.LocalBalanceAmount == 0)
+                        #region 应收单余额更新
+                        tb_FM_ReceivablePayable receivablePayable = await _appContext.Db.Queryable<tb_FM_ReceivablePayable>()
+                            .Where(c => c.ARAPId == entity.SourceBilllID).FirstAsync();
+                        if (receivablePayable != null)
                         {
-                            receivablePayable.FMPaymentStatus = (int)FMPaymentStatus.全额核销;
+                            receivablePayable.ForeignPaidAmount += entity.ForeignPaidAmount;
+                            receivablePayable.LocalPaidAmount += entity.LocalPaidAmount;
+
+                            receivablePayable.ForeignBalanceAmount -= entity.ForeignPaidAmount;
+                            receivablePayable.LocalBalanceAmount -= entity.LocalPaidAmount;
+
+                            if (receivablePayable.ForeignBalanceAmount == 0 || receivablePayable.LocalBalanceAmount == 0)
+                            {
+                                receivablePayable.ARAPStatus = (long)ARAPStatus.已结清;
+                            }
+                            //付过，没付结清
+                            if ((receivablePayable.ForeignBalanceAmount > 0 && receivablePayable.ForeignPaidAmount > 0)
+                                || (receivablePayable.LocalBalanceAmount > 0 && receivablePayable.LocalPaidAmount > 0))
+                            {
+                                receivablePayable.ARAPStatus = (long)ARAPStatus.部分支付;
+                            }
+
+                            var r = await _unitOfWorkManage.GetDbClient().Updateable<tb_FM_ReceivablePayable>(receivablePayable).UpdateColumns(it => new
+                            {
+                                it.ARAPStatus,
+                                it.ForeignPaidAmount,
+                                it.LocalPaidAmount,
+                                it.ForeignBalanceAmount,
+                                it.LocalBalanceAmount
+                            }).ExecuteCommandAsync();
+                            if (r > 0)
+                            {
+                                //收到列，付了钱。审核就会生成一笔核销记录  收款抵扣应收
+                                tb_FM_PaymentSettlementController<tb_FM_PaymentSettlement> settlementController = _appContext.GetRequiredService<tb_FM_PaymentSettlementController<tb_FM_PaymentSettlement>>();
+                                await settlementController.GenerateSettlement(entity);
+                            }
                         }
-                        //付过，没付结清
-                        if ((receivablePayable.ForeignBalanceAmount > 0 && receivablePayable.ForeignPaidAmount > 0)
-                            || (receivablePayable.LocalBalanceAmount > 0 && receivablePayable.LocalPaidAmount > 0))
-                        {
-                            receivablePayable.FMPaymentStatus = (int)FMPaymentStatus.部分核销;
-                        }
+                        #endregion
 
-                        await _unitOfWorkManage.GetDbClient().Updateable<tb_FM_ReceivablePayable>(receivablePayable).UpdateColumns(it => new
+
+                    }
+
+                    if (entity.BizType == (int)BizType.预收款单 || entity.BizType == (int)BizType.预付款单)
+                    {
+                        //TODO
+                        //回写 预收付金额
+
+                        //if (paymentRecord.PaymentId > 0)
+                        //{
+                        //    entity.ForeignBalanceAmount = entity.ForeignPrepaidAmount;
+                        //    entity.LocalBalanceAmount = entity.LocalPrepaidAmount;
+                        //}
+
+                        var prePayment = await _unitOfWorkManage.GetDbClient().Queryable<tb_FM_PreReceivedPayment>().Where(c => c.PreRPID == entity.SourceBilllID).FirstAsync();
+                        if (prePayment != null)
                         {
-                            it.FMPaymentStatus,
-                            it.ForeignPaidAmount,
-                            it.LocalPaidAmount,
-                            it.ForeignBalanceAmount,
-                            it.LocalBalanceAmount
-                        }).ExecuteCommandAsync();
+                            prePayment.PrePaymentStatus = (long)PrePaymentStatus.已生效;
+                            
+                            prePayment.ForeignBalanceAmount = prePayment.ForeignPrepaidAmount;
+                            prePayment.LocalBalanceAmount = prePayment.LocalPrepaidAmount;
+                            //prePayment.ForeignPaidAmount = 0;
+                            //prePayment.LocalPaidAmount = 0;
+                            _unitOfWorkManage.GetDbClient().Updateable<tb_FM_PreReceivedPayment>(entity).UpdateColumns(it => 
+                            new { 
+                                it.PrePaymentStatus,
+                                it.ForeignBalanceAmount,
+                                it.LocalBalanceAmount,
+                            }).ExecuteCommand();
+                        }
 
                     }
                     #endregion
+
                 }
-                if (entity.BizType == (int)BizType.预收款单 || entity.BizType == (int)BizType.预付款单)
+                else
                 {
+                    //退款时写回上级预收付款单 状态为 已冲销
+                    //负数时
+                    if (entity.BizType == (int)BizType.预收款单 || entity.BizType == (int)BizType.预付款单)
+                    {
+                        //var prePayment = await _unitOfWorkManage.GetDbClient().Queryable<tb_FM_PreReceivedPayment>().Where(c => c.PreRPID == entity.SourceBilllID).FirstAsync();
+                        //if (true)
+                        //{
+                        //    _unitOfWorkManage.GetDbClient().Updateable<tb_FM_PreReceivedPayment>(entity).UpdateColumns(it => new { it.FMPaymentStatus, it.ApprovalOpinions }).ExecuteCommand();
+                        //}
+                        var result = _unitOfWorkManage.GetDbClient().Updateable<tb_FM_PreReceivedPayment>()
+                                .SetColumns(it => it.PrePaymentStatus == (long)PrePaymentStatus.已冲销)//SetColumns是可以叠加的 写2个就2个字段赋值
+                                .Where(it => it.PreRPID == entity.SourceBilllID)
+                                .ExecuteCommand();
+                        if (result > 0)
+                        {
+                            //生成核销记录
+                            //收到列，付了钱。审核就会生成一笔核销记录  收款抵扣应收
+                            tb_FM_PaymentSettlementController<tb_FM_PaymentSettlement> settlementController = _appContext.GetRequiredService<tb_FM_PaymentSettlementController<tb_FM_PaymentSettlement>>();
+                            await settlementController.GenerateSettlement(entity);
+                        }
+
+                    }
 
                 }
 
-                //收到列，付了钱。审核就会生成一笔核销记录  收款抵扣应收
-                tb_FM_PaymentSettlementController<tb_FM_PaymentSettlement> settlementController = _appContext.GetRequiredService<tb_FM_PaymentSettlementController<tb_FM_PaymentSettlement>>();
-                await settlementController.GenerateSettlement(entity);
 
 
-                entity.FMPaymentStatus = (int)FMPaymentStatus.已审核;
+                entity.PaymentStatus = (long)PaymentStatus.已生效;
                 entity.ApprovalStatus = (int)ApprovalStatus.已审核;
                 BusinessHelper.Instance.ApproverEntity(entity);
                 //只更新指定列
@@ -157,7 +230,13 @@ namespace RUINORERP.Business
 
 
         // 生成收付款记录表
-        public async Task<tb_FM_PaymentRecord> CreatePaymentRecord(tb_FM_PreReceivedPayment entity)
+        /// <summary>
+        /// 生成收付款记录表
+        /// </summary>
+        /// <param name="entity">预收付表</param>
+        /// <param name="isRefund">true 如果是退款时 金额为负，SettlementType=退款红冲</param>
+        /// <returns></returns>
+        public async Task<tb_FM_PaymentRecord> CreatePaymentRecord(tb_FM_PreReceivedPayment entity, bool isRefund)
         {
             //预收付款单 审核时 自动生成 收付款记录
             IMapper mapper = RUINORERP.Business.AutoMapper.AutoMapperConfig.RegisterMappings().CreateMapper();
@@ -183,12 +262,23 @@ namespace RUINORERP.Business
                 paymentRecord.PaymentNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.付款单);
                 paymentRecord.BizType = (int)BizType.预付款单;
             }
+
+            if (isRefund)
+            {
+                paymentRecord.ForeignPaidAmount = -entity.ForeignPrepaidAmount;
+                paymentRecord.LocalPaidAmount = -entity.LocalPrepaidAmount;
+            }
+            else
+            {
+                paymentRecord.ForeignPaidAmount = entity.ForeignPrepaidAmount;
+                paymentRecord.LocalPaidAmount = entity.LocalPrepaidAmount;
+            }
             paymentRecord.SourceBillNO = entity.PreRPNO;
             paymentRecord.SourceBilllID = entity.PreRPID;
             paymentRecord.PaymentDate = entity.PrePayDate;
-            paymentRecord.Currency_ID = paymentRecord.Currency_ID;
-            paymentRecord.ForeignPaidAmount = entity.ForeignPrepaidAmount;
-            paymentRecord.LocalPaidAmount = entity.LocalPrepaidAmount;
+            paymentRecord.Currency_ID = entity.Currency_ID;
+            paymentRecord.CustomerVendor_ID = entity.CustomerVendor_ID;
+
             paymentRecord.PayeeInfoID = entity.PayeeInfoID;
             paymentRecord.PaymentImagePath = entity.PaymentImagePath;
             paymentRecord.PayeeAccountNo = entity.PayeeAccountNo;
@@ -196,7 +286,7 @@ namespace RUINORERP.Business
 
             // paymentRecord.ReferenceNo=entity.no
             //自动提交
-            paymentRecord.FMPaymentStatus = (int)FMPaymentStatus.提交;
+            paymentRecord.PaymentStatus = (long)PaymentStatus.待审核;
             BusinessHelper.Instance.InitEntity(paymentRecord);
             long id = await _unitOfWorkManage.GetDbClient().Insertable<tb_FM_PaymentRecord>(paymentRecord).ExecuteReturnSnowflakeIdAsync();
             if (id > 0)
@@ -241,14 +331,15 @@ namespace RUINORERP.Business
             paymentRecord.ForeignPaidAmount = entity.TotalForeignPayableAmount;
             paymentRecord.LocalPaidAmount = entity.LocalPaidAmount;
             paymentRecord.PayeeInfoID = entity.PayeeInfoID;
+            paymentRecord.CustomerVendor_ID=entity.CustomerVendor_ID;
             paymentRecord.PayeeAccountNo = entity.PayeeAccountNo;
             paymentRecord.ExchangeRate = entity.ExchangeRate;
             BusinessHelper.Instance.InitEntity(paymentRecord);
-//            paymentRecord.ReferenceNo=entity.no 流水
+            //            paymentRecord.ReferenceNo=entity.no 流水
             if (SaveToDb)
             {
                 //自动提交
-                paymentRecord.FMPaymentStatus = (int)FMPaymentStatus.提交;
+                paymentRecord.PaymentStatus = (long)PaymentStatus.待审核;
                 long id = await _unitOfWorkManage.GetDbClient().Insertable<tb_FM_PaymentRecord>(paymentRecord).ExecuteReturnSnowflakeIdAsync();
                 if (id > 0)
                 {
@@ -257,7 +348,7 @@ namespace RUINORERP.Business
             }
             else
             {
-                paymentRecord.FMPaymentStatus = (int)FMPaymentStatus.草稿;
+                paymentRecord.PaymentStatus = (long)PaymentStatus.草稿;
             }
 
             return paymentRecord;
@@ -301,7 +392,7 @@ namespace RUINORERP.Business
                     foreach (var entity in entitys)
                     {
                         //这部分是否能提出到上一级公共部分？
-                        entity.FMPaymentStatus = (int)FMPaymentStatus.已审核;
+                        entity.PaymentStatus = (long)PaymentStatus.待审核;
                         entity.ApprovalOpinions = approvalEntity.ApprovalOpinions;
                         //后面已经修改为
                         entity.ApprovalResults = approvalEntity.ApprovalResults;
@@ -349,21 +440,28 @@ namespace RUINORERP.Business
                 //更新拟销售量  减少
                 for (int m = 0; m < entitys.Count; m++)
                 {
-                    //判断 能结案的 是确认审核过的。
-                    if (entitys[m].FMPaymentStatus != (int)FMPaymentStatus.已冲销 || !entitys[m].ApprovalResults.HasValue)
+                    //判断 能结案的 是关闭的意思。就是没有收到款 作废
+                    // 检查预付款取消
+                    var preStatus = PrePaymentStatus.已生效 | PrePaymentStatus.部分核销;
+                    bool hasRelated = true; // 存在核销单
+                    bool canCancel = preStatus.CanCancel(hasRelated); // 返回false
+
+                  
+
+                    if (entitys[m].PaymentStatus == (long)PaymentStatus.已冲销 || !entitys[m].ApprovalResults.HasValue)
                     {
                         //return false;
                         continue;
                     }
-                    //这部分是否能提出到上一级公共部分？
-                    entitys[m].FMPaymentStatus = (int)FMPaymentStatus.已冲销;
+            
+                    entitys[m].PaymentStatus = (long)PaymentStatus.已取消;
                     BusinessHelper.Instance.EditEntity(entitys[m]);
                     //只更新指定列
                     var affectedRows = await _unitOfWorkManage.GetDbClient()
                         .Updateable<tb_FM_PaymentRecord>(entitys[m])
                         .UpdateColumns(it => new
                         {
-                            it.FMPaymentStatus,
+                            it.PaymentStatus,
                             it.ApprovalStatus,
                             it.ApprovalResults,
                             it.ApprovalOpinions,

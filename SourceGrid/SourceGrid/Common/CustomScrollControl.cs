@@ -21,6 +21,10 @@ namespace SourceGrid
 	//If there are no focusable cells below, the algorithm does not know what to do.
 	//Same thing when one cell is spread over a few cells in other row (sample 3, "editors and types", all blue titles are examples of these). If the focus is on the cell "Single Image", there is no scrolling or acrolling is inapropriate (because Selection.MoveActiveCell(-1, 0); is done instead scrolling).
 
+
+	//by watson 这个滚动条的类 有问题，导致无法上下滚动到 最后一行。在deepseek帮助下 修复。2025-04-28
+	//
+
 	/// <summary>
 	/// A control with a custom implementation of a scrollable area
 	/// </summary>
@@ -284,14 +288,21 @@ namespace SourceGrid
 						mHScrollBar.Value = 0;
 				}
 
-				if (VScrollBarVisible)
+                //越界风险：直接设置 Value 可能超过 Maximum，导致最后一行无法显示。
+                if (VScrollBarVisible)
 				{
-					if (mVScrollBar.Maximum < value.Y)
+           
+
+                    if (mVScrollBar.Maximum < value.Y)
 						return;
 					if (value.Y > 0)
 						mVScrollBar.Value = value.Y;
 					else
 						mVScrollBar.Value = 0;
+					//加了这两行
+                    //int maxValue = Math.Max(MaximumVScroll, 0);
+                    //mVScrollBar.Value = Math.Min(value.Y, maxValue);
+                
 				}
 			}
 		}
@@ -368,7 +379,10 @@ namespace SourceGrid
 		*/
 
 
-
+		/// <summary>
+		/// 重新计算上下滚动位置
+		/// </summary>
+		/// <param name="rows"></param>
         private void RecalcVScrollBar(int rows)
         {
             if (VScrollBarVisible == false)
@@ -378,7 +392,7 @@ namespace SourceGrid
             rows = Math.Max(rows, 0);
 
             // 解除事件处理以避免递归
-            mVScrollBar.ValueChanged -= new EventHandler(HScroll_Change);
+            mVScrollBar.ValueChanged -= new EventHandler(VScroll_Change);
 
             try
             {
@@ -387,10 +401,18 @@ namespace SourceGrid
                 int max = Math.Max(rows - 1, 0);
                 mVScrollBar.Maximum = max;
 
-                // 计算LargeChange，确保不超过可滚动范围
-                int largeChange = Math.Max(VerticalPage, 1);
-                largeChange = Math.Min(largeChange, max + 1); // max+1即rows，因max=rows-1
+                //// 计算LargeChange，确保不超过可滚动范围
+                //int largeChange = Math.Max(VerticalPage, 1);
+                //largeChange = Math.Min(largeChange, max + 1); // max+1即rows，因max=rows-1
+                //mVScrollBar.LargeChange = largeChange;
+
+        
+                // 动态调整 LargeChange 避免越界
+                int largeChange = Math.Min(VerticalPage, max + 1); // max+1=总行数
                 mVScrollBar.LargeChange = largeChange;
+
+                // 限制当前 Value 不超过有效范围
+                mVScrollBar.Value = Math.Min(mVScrollBar.Value, max - largeChange + 1);
 
                 // 计算允许的最大Value
                 int maxValue = Math.Max(max - largeChange + 1, 0);
@@ -400,7 +422,7 @@ namespace SourceGrid
             finally
             {
                 // 重新绑定事件处理
-                mVScrollBar.ValueChanged += new EventHandler(HScroll_Change);
+                mVScrollBar.ValueChanged += new EventHandler(VScroll_Change);
             }
 
             // 可选：确保SmallChange合理

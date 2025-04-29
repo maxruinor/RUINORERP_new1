@@ -36,6 +36,8 @@ using RUINORERP.Global.EnumExt;
 using RUINORERP.UI.UControls;
 using LiveChartsCore.Geo;
 using Netron.GraphLib;
+using RUINORERP.Business.CommService;
+using RUINORERP.Global.Model;
 
 namespace RUINORERP.UI.FM
 {
@@ -56,7 +58,7 @@ namespace RUINORERP.UI.FM
                               .And(t => t.isdeleted == false)
                              .And(t => t.ReceivePaymentType == (int)PaymentType)
                             .AndIF(AuthorizeController.GetOwnershipControl(MainForm.Instance.AppContext),
-                             t => t.Employee_ID == MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID)
+                             t => t.Created_by == MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID)
                          .ToExpression();//注意 这一句 不能少
 
             QueryConditionFilter.FilterLimitExpressions.Add(lambda);
@@ -104,8 +106,8 @@ namespace RUINORERP.UI.FM
             foreach (var item in selectlist)
             {
                 //只有审核状态才可以转换为出库单
-                bool canConvert = item.FMPaymentStatus == (int)FMPaymentStatus.已审核 && item.ApprovalStatus == (int)ApprovalStatus.已审核 && item.ApprovalResults.HasValue && item.ApprovalResults.Value;
-                if (canConvert||item.FMPaymentStatus == (int)FMPaymentStatus.部分核销)
+                bool canConvert = item.ARAPStatus == (long)ARAPStatus.已生效 && item.ApprovalStatus == (int)ApprovalStatus.已审核 && item.ApprovalResults.HasValue && item.ApprovalResults.Value;
+                if (canConvert||item.ARAPStatus == (long)ARAPStatus.部分支付)
                 {
                     tb_FM_PaymentRecordController<tb_FM_PaymentRecord> paymentController = MainForm.Instance.AppContext.GetRequiredService<tb_FM_PaymentRecordController<tb_FM_PaymentRecord>>();
                     tb_FM_PaymentRecord paymentRecord = await paymentController.CreatePaymentRecord(item,false);
@@ -162,5 +164,29 @@ namespace RUINORERP.UI.FM
             return;
         }
 
+        private void UCReceivablePayableQuery_Load(object sender, EventArgs e)
+        {
+            /*
+            #region 双击单号后按业务类型查询显示对应业务窗体
+            base._UCBillChildQuery.GridRelated.ComplexType = true;
+            //由这个列来决定单号显示哪个的业务窗体
+            base._UCBillChildQuery.GridRelated.SetComplexTargetField<tb_FM_ReceivablePayableDetail>(c => c.BizType);
+            BizTypeMapper mapper = new BizTypeMapper();
+            //将枚举中的值循环
+            foreach (var biztype in Enum.GetValues(typeof(BizType)))
+            {
+                var tableName = mapper.GetTableType((BizType)biztype);
+                if (tableName == null)
+                {
+                    continue;
+                }
+                ////这个参数中指定要双击的列单号。是来自另一组  一对一的指向关系
+                //因为后面代码去查找时，直接用的 从一个对象中找这个列的值。但是枚举显示的是名称。所以这里直接传入枚举的值。
+                KeyNamePair keyNamePair = new KeyNamePair(((int)((BizType)biztype)).ToString(), tableName.Name);
+                base._UCBillChildQuery.GridRelated.SetRelatedInfo<tb_FM_ReceivablePayableDetail>(c => c.SourceBillNO, keyNamePair);
+            }
+            #endregion
+            */
+        }
     }
 }

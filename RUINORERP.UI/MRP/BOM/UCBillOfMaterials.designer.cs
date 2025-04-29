@@ -32,6 +32,8 @@
             System.Windows.Forms.TreeListViewItemCollection.TreeListViewItemCollectionComparer treeListViewItemCollectionComparer1 = new System.Windows.Forms.TreeListViewItemCollection.TreeListViewItemCollectionComparer();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(UCBillOfMaterials));
             this.kryptonSplitContainer1 = new Krypton.Toolkit.KryptonSplitContainer();
+            this.kryptonLabel6 = new Krypton.Toolkit.KryptonLabel();
+            this.cmbEmployee = new Krypton.Toolkit.KryptonComboBox();
             this.kryptonLabel1 = new Krypton.Toolkit.KryptonLabel();
             this.lblDataStatus = new Krypton.Toolkit.KryptonLabel();
             this.lblReview = new Krypton.Toolkit.KryptonLabel();
@@ -117,8 +119,6 @@
             this.kryptonTreeView1 = new Krypton.Toolkit.KryptonTreeView();
             this.kryptonDockingManager1 = new Krypton.Docking.KryptonDockingManager();
             this.BsSubstituteMaterial = new System.Windows.Forms.BindingSource(this.components);
-            this.kryptonLabel6 = new Krypton.Toolkit.KryptonLabel();
-            this.cmbEmployee = new Krypton.Toolkit.KryptonComboBox();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceSub)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1)).BeginInit();
@@ -127,6 +127,7 @@
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1.Panel2)).BeginInit();
             this.kryptonSplitContainer1.Panel2.SuspendLayout();
             this.kryptonSplitContainer1.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.cmbEmployee)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmbType)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonGroupBox2)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonGroupBox2.Panel)).BeginInit();
@@ -166,7 +167,6 @@
             this.tabPageTree.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonTreeGridViewBOMDetail)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.BsSubstituteMaterial)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.cmbEmployee)).BeginInit();
             this.SuspendLayout();
             // 
             // kryptonSplitContainer1
@@ -237,6 +237,23 @@
             this.kryptonSplitContainer1.Size = new System.Drawing.Size(909, 746);
             this.kryptonSplitContainer1.SplitterDistance = 261;
             this.kryptonSplitContainer1.TabIndex = 4;
+            // 
+            // kryptonLabel6
+            // 
+            this.kryptonLabel6.Location = new System.Drawing.Point(258, 170);
+            this.kryptonLabel6.Name = "kryptonLabel6";
+            this.kryptonLabel6.Size = new System.Drawing.Size(77, 20);
+            this.kryptonLabel6.TabIndex = 147;
+            this.kryptonLabel6.Values.Text = "BOM工程师";
+            // 
+            // cmbEmployee
+            // 
+            this.cmbEmployee.DropDownWidth = 100;
+            this.cmbEmployee.IntegralHeight = false;
+            this.cmbEmployee.Location = new System.Drawing.Point(340, 170);
+            this.cmbEmployee.Name = "cmbEmployee";
+            this.cmbEmployee.Size = new System.Drawing.Size(131, 21);
+            this.cmbEmployee.TabIndex = 148;
             // 
             // kryptonLabel1
             // 
@@ -795,6 +812,7 @@
             // 
             // grid1
             // 
+            this.grid1.AutoSize = true;
             this.grid1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.grid1.EnableSort = true;
             this.grid1.HasSummary = true;
@@ -1025,23 +1043,6 @@
             this.kryptonTreeView1.Sorted = true;
             this.kryptonTreeView1.TabIndex = 3;
             // 
-            // kryptonLabel6
-            // 
-            this.kryptonLabel6.Location = new System.Drawing.Point(258, 170);
-            this.kryptonLabel6.Name = "kryptonLabel6";
-            this.kryptonLabel6.Size = new System.Drawing.Size(77, 20);
-            this.kryptonLabel6.TabIndex = 147;
-            this.kryptonLabel6.Values.Text = "BOM工程师";
-            // 
-            // cmbEmployee
-            // 
-            this.cmbEmployee.DropDownWidth = 100;
-            this.cmbEmployee.IntegralHeight = false;
-            this.cmbEmployee.Location = new System.Drawing.Point(340, 170);
-            this.cmbEmployee.Name = "cmbEmployee";
-            this.cmbEmployee.Size = new System.Drawing.Size(131, 21);
-            this.cmbEmployee.TabIndex = 148;
-            // 
             // UCBillOfMaterials
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
@@ -1060,6 +1061,7 @@
             this.kryptonSplitContainer1.Panel2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1)).EndInit();
             this.kryptonSplitContainer1.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.cmbEmployee)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmbType)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonGroupBox2.Panel)).EndInit();
             this.kryptonGroupBox2.Panel.ResumeLayout(false);
@@ -1084,6 +1086,7 @@
             this.kryptonDockableNavigator1.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPage1)).EndInit();
             this.kryptonPage1.ResumeLayout(false);
+            this.kryptonPage1.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPage2)).EndInit();
             this.kryptonPage2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.kryptonHeaderGroup1.Panel)).EndInit();
@@ -1101,7 +1104,6 @@
             this.tabPageTree.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.kryptonTreeGridViewBOMDetail)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.BsSubstituteMaterial)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.cmbEmployee)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 

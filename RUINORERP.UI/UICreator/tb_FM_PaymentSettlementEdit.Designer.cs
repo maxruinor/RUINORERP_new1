@@ -3,7 +3,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：04/26/2025 22:26:18
+// 时间：04/29/2025 11:22:25
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -70,8 +70,8 @@ this.txtSourceBizType = new Krypton.Toolkit.KryptonTextBox();
 ReversedSettlementID主外字段不一致。this.lblSourceCurrencyID = new Krypton.Toolkit.KryptonLabel();
 this.txtSourceCurrencyID = new Krypton.Toolkit.KryptonTextBox();
 
-this.lblSourceExchangeRate = new Krypton.Toolkit.KryptonLabel();
-this.txtSourceExchangeRate = new Krypton.Toolkit.KryptonTextBox();
+this.lblExchangeRate = new Krypton.Toolkit.KryptonLabel();
+this.txtExchangeRate = new Krypton.Toolkit.KryptonTextBox();
 
 ReversedSettlementID主外字段不一致。this.lblTargetBizType = new Krypton.Toolkit.KryptonLabel();
 this.txtTargetBizType = new Krypton.Toolkit.KryptonTextBox();
@@ -84,9 +84,6 @@ this.txtTargetBillNO = new Krypton.Toolkit.KryptonTextBox();
 
 ReversedSettlementID主外字段不一致。this.lblTargetCurrencyID = new Krypton.Toolkit.KryptonLabel();
 this.txtTargetCurrencyID = new Krypton.Toolkit.KryptonTextBox();
-
-this.lblTargetExchangeRate = new Krypton.Toolkit.KryptonLabel();
-this.txtTargetExchangeRate = new Krypton.Toolkit.KryptonTextBox();
 
 ReversedSettlementID主外字段不一致。this.lblReceivePaymentType = new Krypton.Toolkit.KryptonLabel();
 this.txtReceivePaymentType = new Krypton.Toolkit.KryptonTextBox();
@@ -249,20 +246,20 @@ this.txtSourceCurrencyID.TabIndex = 6;
 this.Controls.Add(this.lblSourceCurrencyID);
 this.Controls.Add(this.txtSourceCurrencyID);
 
-           //#####SourceExchangeRate###Decimal
-this.lblSourceExchangeRate.AutoSize = true;
-this.lblSourceExchangeRate.Location = new System.Drawing.Point(100,175);
-this.lblSourceExchangeRate.Name = "lblSourceExchangeRate";
-this.lblSourceExchangeRate.Size = new System.Drawing.Size(41, 12);
-this.lblSourceExchangeRate.TabIndex = 7;
-this.lblSourceExchangeRate.Text = "来源汇率";
+           //#####ExchangeRate###Decimal
+this.lblExchangeRate.AutoSize = true;
+this.lblExchangeRate.Location = new System.Drawing.Point(100,175);
+this.lblExchangeRate.Name = "lblExchangeRate";
+this.lblExchangeRate.Size = new System.Drawing.Size(41, 12);
+this.lblExchangeRate.TabIndex = 7;
+this.lblExchangeRate.Text = "汇率";
 //111======175
-this.txtSourceExchangeRate.Location = new System.Drawing.Point(173,171);
-this.txtSourceExchangeRate.Name ="txtSourceExchangeRate";
-this.txtSourceExchangeRate.Size = new System.Drawing.Size(100, 21);
-this.txtSourceExchangeRate.TabIndex = 7;
-this.Controls.Add(this.lblSourceExchangeRate);
-this.Controls.Add(this.txtSourceExchangeRate);
+this.txtExchangeRate.Location = new System.Drawing.Point(173,171);
+this.txtExchangeRate.Name ="txtExchangeRate";
+this.txtExchangeRate.Size = new System.Drawing.Size(100, 21);
+this.txtExchangeRate.TabIndex = 7;
+this.Controls.Add(this.lblExchangeRate);
+this.Controls.Add(this.txtExchangeRate);
 
            //#####TargetBizType###Int32
 //属性测试200TargetBizType
@@ -323,225 +320,210 @@ this.txtTargetCurrencyID.TabIndex = 11;
 this.Controls.Add(this.lblTargetCurrencyID);
 this.Controls.Add(this.txtTargetCurrencyID);
 
-           //#####TargetExchangeRate###Decimal
-this.lblTargetExchangeRate.AutoSize = true;
-this.lblTargetExchangeRate.Location = new System.Drawing.Point(100,300);
-this.lblTargetExchangeRate.Name = "lblTargetExchangeRate";
-this.lblTargetExchangeRate.Size = new System.Drawing.Size(41, 12);
-this.lblTargetExchangeRate.TabIndex = 12;
-this.lblTargetExchangeRate.Text = "目标汇率";
-//111======300
-this.txtTargetExchangeRate.Location = new System.Drawing.Point(173,296);
-this.txtTargetExchangeRate.Name ="txtTargetExchangeRate";
-this.txtTargetExchangeRate.Size = new System.Drawing.Size(100, 21);
-this.txtTargetExchangeRate.TabIndex = 12;
-this.Controls.Add(this.lblTargetExchangeRate);
-this.Controls.Add(this.txtTargetExchangeRate);
-
            //#####ReceivePaymentType###Int64
-//属性测试325ReceivePaymentType
+//属性测试300ReceivePaymentType
 ReversedSettlementID主外字段不一致。this.lblReceivePaymentType.AutoSize = true;
-this.lblReceivePaymentType.Location = new System.Drawing.Point(100,325);
+this.lblReceivePaymentType.Location = new System.Drawing.Point(100,300);
 this.lblReceivePaymentType.Name = "lblReceivePaymentType";
 this.lblReceivePaymentType.Size = new System.Drawing.Size(41, 12);
-this.lblReceivePaymentType.TabIndex = 13;
+this.lblReceivePaymentType.TabIndex = 12;
 this.lblReceivePaymentType.Text = "收付类型";
-this.txtReceivePaymentType.Location = new System.Drawing.Point(173,321);
+this.txtReceivePaymentType.Location = new System.Drawing.Point(173,296);
 this.txtReceivePaymentType.Name = "txtReceivePaymentType";
 this.txtReceivePaymentType.Size = new System.Drawing.Size(100, 21);
-this.txtReceivePaymentType.TabIndex = 13;
+this.txtReceivePaymentType.TabIndex = 12;
 this.Controls.Add(this.lblReceivePaymentType);
 this.Controls.Add(this.txtReceivePaymentType);
 
            //#####Account_id###Int64
-//属性测试350Account_id
+//属性测试325Account_id
 ReversedSettlementID主外字段不一致。this.lblAccount_id.AutoSize = true;
-this.lblAccount_id.Location = new System.Drawing.Point(100,350);
+this.lblAccount_id.Location = new System.Drawing.Point(100,325);
 this.lblAccount_id.Name = "lblAccount_id";
 this.lblAccount_id.Size = new System.Drawing.Size(41, 12);
-this.lblAccount_id.TabIndex = 14;
+this.lblAccount_id.TabIndex = 13;
 this.lblAccount_id.Text = "公司账户";
-this.txtAccount_id.Location = new System.Drawing.Point(173,346);
+this.txtAccount_id.Location = new System.Drawing.Point(173,321);
 this.txtAccount_id.Name = "txtAccount_id";
 this.txtAccount_id.Size = new System.Drawing.Size(100, 21);
-this.txtAccount_id.TabIndex = 14;
+this.txtAccount_id.TabIndex = 13;
 this.Controls.Add(this.lblAccount_id);
 this.Controls.Add(this.txtAccount_id);
 
            //#####CustomerVendor_ID###Int64
-//属性测试375CustomerVendor_ID
+//属性测试350CustomerVendor_ID
 ReversedSettlementID主外字段不一致。this.lblCustomerVendor_ID.AutoSize = true;
-this.lblCustomerVendor_ID.Location = new System.Drawing.Point(100,375);
+this.lblCustomerVendor_ID.Location = new System.Drawing.Point(100,350);
 this.lblCustomerVendor_ID.Name = "lblCustomerVendor_ID";
 this.lblCustomerVendor_ID.Size = new System.Drawing.Size(41, 12);
-this.lblCustomerVendor_ID.TabIndex = 15;
+this.lblCustomerVendor_ID.TabIndex = 14;
 this.lblCustomerVendor_ID.Text = "往来单位";
-this.txtCustomerVendor_ID.Location = new System.Drawing.Point(173,371);
+this.txtCustomerVendor_ID.Location = new System.Drawing.Point(173,346);
 this.txtCustomerVendor_ID.Name = "txtCustomerVendor_ID";
 this.txtCustomerVendor_ID.Size = new System.Drawing.Size(100, 21);
-this.txtCustomerVendor_ID.TabIndex = 15;
+this.txtCustomerVendor_ID.TabIndex = 14;
 this.Controls.Add(this.lblCustomerVendor_ID);
 this.Controls.Add(this.txtCustomerVendor_ID);
 
            //#####SettledForeignAmount###Decimal
 this.lblSettledForeignAmount.AutoSize = true;
-this.lblSettledForeignAmount.Location = new System.Drawing.Point(100,400);
+this.lblSettledForeignAmount.Location = new System.Drawing.Point(100,375);
 this.lblSettledForeignAmount.Name = "lblSettledForeignAmount";
 this.lblSettledForeignAmount.Size = new System.Drawing.Size(41, 12);
-this.lblSettledForeignAmount.TabIndex = 16;
+this.lblSettledForeignAmount.TabIndex = 15;
 this.lblSettledForeignAmount.Text = "核销金额外币";
-//111======400
-this.txtSettledForeignAmount.Location = new System.Drawing.Point(173,396);
+//111======375
+this.txtSettledForeignAmount.Location = new System.Drawing.Point(173,371);
 this.txtSettledForeignAmount.Name ="txtSettledForeignAmount";
 this.txtSettledForeignAmount.Size = new System.Drawing.Size(100, 21);
-this.txtSettledForeignAmount.TabIndex = 16;
+this.txtSettledForeignAmount.TabIndex = 15;
 this.Controls.Add(this.lblSettledForeignAmount);
 this.Controls.Add(this.txtSettledForeignAmount);
 
            //#####SettledLocalAmount###Decimal
 this.lblSettledLocalAmount.AutoSize = true;
-this.lblSettledLocalAmount.Location = new System.Drawing.Point(100,425);
+this.lblSettledLocalAmount.Location = new System.Drawing.Point(100,400);
 this.lblSettledLocalAmount.Name = "lblSettledLocalAmount";
 this.lblSettledLocalAmount.Size = new System.Drawing.Size(41, 12);
-this.lblSettledLocalAmount.TabIndex = 17;
+this.lblSettledLocalAmount.TabIndex = 16;
 this.lblSettledLocalAmount.Text = "核销金额本币";
-//111======425
-this.txtSettledLocalAmount.Location = new System.Drawing.Point(173,421);
+//111======400
+this.txtSettledLocalAmount.Location = new System.Drawing.Point(173,396);
 this.txtSettledLocalAmount.Name ="txtSettledLocalAmount";
 this.txtSettledLocalAmount.Size = new System.Drawing.Size(100, 21);
-this.txtSettledLocalAmount.TabIndex = 17;
+this.txtSettledLocalAmount.TabIndex = 16;
 this.Controls.Add(this.lblSettledLocalAmount);
 this.Controls.Add(this.txtSettledLocalAmount);
 
            //#####IsAutoSettlement###Boolean
 this.lblIsAutoSettlement.AutoSize = true;
-this.lblIsAutoSettlement.Location = new System.Drawing.Point(100,450);
+this.lblIsAutoSettlement.Location = new System.Drawing.Point(100,425);
 this.lblIsAutoSettlement.Name = "lblIsAutoSettlement";
 this.lblIsAutoSettlement.Size = new System.Drawing.Size(41, 12);
-this.lblIsAutoSettlement.TabIndex = 18;
+this.lblIsAutoSettlement.TabIndex = 17;
 this.lblIsAutoSettlement.Text = "是否自动核销";
-this.chkIsAutoSettlement.Location = new System.Drawing.Point(173,446);
+this.chkIsAutoSettlement.Location = new System.Drawing.Point(173,421);
 this.chkIsAutoSettlement.Name = "chkIsAutoSettlement";
 this.chkIsAutoSettlement.Size = new System.Drawing.Size(100, 21);
-this.chkIsAutoSettlement.TabIndex = 18;
+this.chkIsAutoSettlement.TabIndex = 17;
 this.Controls.Add(this.lblIsAutoSettlement);
 this.Controls.Add(this.chkIsAutoSettlement);
 
            //#####IsReversed###Boolean
 this.lblIsReversed.AutoSize = true;
-this.lblIsReversed.Location = new System.Drawing.Point(100,475);
+this.lblIsReversed.Location = new System.Drawing.Point(100,450);
 this.lblIsReversed.Name = "lblIsReversed";
 this.lblIsReversed.Size = new System.Drawing.Size(41, 12);
-this.lblIsReversed.TabIndex = 19;
+this.lblIsReversed.TabIndex = 18;
 this.lblIsReversed.Text = "是否冲销";
-this.chkIsReversed.Location = new System.Drawing.Point(173,471);
+this.chkIsReversed.Location = new System.Drawing.Point(173,446);
 this.chkIsReversed.Name = "chkIsReversed";
 this.chkIsReversed.Size = new System.Drawing.Size(100, 21);
-this.chkIsReversed.TabIndex = 19;
+this.chkIsReversed.TabIndex = 18;
 this.Controls.Add(this.lblIsReversed);
 this.Controls.Add(this.chkIsReversed);
 
            //#####ReversedSettlementID###Int64
-//属性测试500ReversedSettlementID
+//属性测试475ReversedSettlementID
 ReversedSettlementID主外字段不一致。this.lblReversedSettlementID.AutoSize = true;
-this.lblReversedSettlementID.Location = new System.Drawing.Point(100,500);
+this.lblReversedSettlementID.Location = new System.Drawing.Point(100,475);
 this.lblReversedSettlementID.Name = "lblReversedSettlementID";
 this.lblReversedSettlementID.Size = new System.Drawing.Size(41, 12);
-this.lblReversedSettlementID.TabIndex = 20;
+this.lblReversedSettlementID.TabIndex = 19;
 this.lblReversedSettlementID.Text = "对冲记录";
-this.txtReversedSettlementID.Location = new System.Drawing.Point(173,496);
+this.txtReversedSettlementID.Location = new System.Drawing.Point(173,471);
 this.txtReversedSettlementID.Name = "txtReversedSettlementID";
 this.txtReversedSettlementID.Size = new System.Drawing.Size(100, 21);
-this.txtReversedSettlementID.TabIndex = 20;
+this.txtReversedSettlementID.TabIndex = 19;
 this.Controls.Add(this.lblReversedSettlementID);
 this.Controls.Add(this.txtReversedSettlementID);
 
            //#####SettleDate###DateTime
 this.lblSettleDate.AutoSize = true;
-this.lblSettleDate.Location = new System.Drawing.Point(100,525);
+this.lblSettleDate.Location = new System.Drawing.Point(100,500);
 this.lblSettleDate.Name = "lblSettleDate";
 this.lblSettleDate.Size = new System.Drawing.Size(41, 12);
-this.lblSettleDate.TabIndex = 21;
+this.lblSettleDate.TabIndex = 20;
 this.lblSettleDate.Text = "核销日期";
-//111======525
-this.dtpSettleDate.Location = new System.Drawing.Point(173,521);
+//111======500
+this.dtpSettleDate.Location = new System.Drawing.Point(173,496);
 this.dtpSettleDate.Name ="dtpSettleDate";
 this.dtpSettleDate.Size = new System.Drawing.Size(100, 21);
-this.dtpSettleDate.TabIndex = 21;
+this.dtpSettleDate.TabIndex = 20;
 this.Controls.Add(this.lblSettleDate);
 this.Controls.Add(this.dtpSettleDate);
 
            //#####300Notes###String
 this.lblNotes.AutoSize = true;
-this.lblNotes.Location = new System.Drawing.Point(100,550);
+this.lblNotes.Location = new System.Drawing.Point(100,525);
 this.lblNotes.Name = "lblNotes";
 this.lblNotes.Size = new System.Drawing.Size(41, 12);
-this.lblNotes.TabIndex = 22;
+this.lblNotes.TabIndex = 21;
 this.lblNotes.Text = "备注";
-this.txtNotes.Location = new System.Drawing.Point(173,546);
+this.txtNotes.Location = new System.Drawing.Point(173,521);
 this.txtNotes.Name = "txtNotes";
 this.txtNotes.Size = new System.Drawing.Size(100, 21);
-this.txtNotes.TabIndex = 22;
+this.txtNotes.TabIndex = 21;
 this.Controls.Add(this.lblNotes);
 this.Controls.Add(this.txtNotes);
 
            //#####SettlementType###Int32
-//属性测试575SettlementType
+//属性测试550SettlementType
 ReversedSettlementID主外字段不一致。this.lblSettlementType.AutoSize = true;
-this.lblSettlementType.Location = new System.Drawing.Point(100,575);
+this.lblSettlementType.Location = new System.Drawing.Point(100,550);
 this.lblSettlementType.Name = "lblSettlementType";
 this.lblSettlementType.Size = new System.Drawing.Size(41, 12);
-this.lblSettlementType.TabIndex = 23;
+this.lblSettlementType.TabIndex = 22;
 this.lblSettlementType.Text = "核销状态";
-this.txtSettlementType.Location = new System.Drawing.Point(173,571);
+this.txtSettlementType.Location = new System.Drawing.Point(173,546);
 this.txtSettlementType.Name = "txtSettlementType";
 this.txtSettlementType.Size = new System.Drawing.Size(100, 21);
-this.txtSettlementType.TabIndex = 23;
+this.txtSettlementType.TabIndex = 22;
 this.Controls.Add(this.lblSettlementType);
 this.Controls.Add(this.txtSettlementType);
 
            //#####300EvidenceImagePath###String
 this.lblEvidenceImagePath.AutoSize = true;
-this.lblEvidenceImagePath.Location = new System.Drawing.Point(100,600);
+this.lblEvidenceImagePath.Location = new System.Drawing.Point(100,575);
 this.lblEvidenceImagePath.Name = "lblEvidenceImagePath";
 this.lblEvidenceImagePath.Size = new System.Drawing.Size(41, 12);
-this.lblEvidenceImagePath.TabIndex = 24;
+this.lblEvidenceImagePath.TabIndex = 23;
 this.lblEvidenceImagePath.Text = "凭证图";
-this.txtEvidenceImagePath.Location = new System.Drawing.Point(173,596);
+this.txtEvidenceImagePath.Location = new System.Drawing.Point(173,571);
 this.txtEvidenceImagePath.Name = "txtEvidenceImagePath";
 this.txtEvidenceImagePath.Size = new System.Drawing.Size(100, 21);
-this.txtEvidenceImagePath.TabIndex = 24;
+this.txtEvidenceImagePath.TabIndex = 23;
 this.Controls.Add(this.lblEvidenceImagePath);
 this.Controls.Add(this.txtEvidenceImagePath);
 
            //#####Created_at###DateTime
 this.lblCreated_at.AutoSize = true;
-this.lblCreated_at.Location = new System.Drawing.Point(100,625);
+this.lblCreated_at.Location = new System.Drawing.Point(100,600);
 this.lblCreated_at.Name = "lblCreated_at";
 this.lblCreated_at.Size = new System.Drawing.Size(41, 12);
-this.lblCreated_at.TabIndex = 25;
+this.lblCreated_at.TabIndex = 24;
 this.lblCreated_at.Text = "创建时间";
-//111======625
-this.dtpCreated_at.Location = new System.Drawing.Point(173,621);
+//111======600
+this.dtpCreated_at.Location = new System.Drawing.Point(173,596);
 this.dtpCreated_at.Name ="dtpCreated_at";
 this.dtpCreated_at.ShowCheckBox =true;
 this.dtpCreated_at.Size = new System.Drawing.Size(100, 21);
-this.dtpCreated_at.TabIndex = 25;
+this.dtpCreated_at.TabIndex = 24;
 this.Controls.Add(this.lblCreated_at);
 this.Controls.Add(this.dtpCreated_at);
 
            //#####Created_by###Int64
-//属性测试650Created_by
+//属性测试625Created_by
 ReversedSettlementID主外字段不一致。this.lblCreated_by.AutoSize = true;
-this.lblCreated_by.Location = new System.Drawing.Point(100,650);
+this.lblCreated_by.Location = new System.Drawing.Point(100,625);
 this.lblCreated_by.Name = "lblCreated_by";
 this.lblCreated_by.Size = new System.Drawing.Size(41, 12);
-this.lblCreated_by.TabIndex = 26;
+this.lblCreated_by.TabIndex = 25;
 this.lblCreated_by.Text = "创建人";
-this.txtCreated_by.Location = new System.Drawing.Point(173,646);
+this.txtCreated_by.Location = new System.Drawing.Point(173,621);
 this.txtCreated_by.Name = "txtCreated_by";
 this.txtCreated_by.Size = new System.Drawing.Size(100, 21);
-this.txtCreated_by.TabIndex = 26;
+this.txtCreated_by.TabIndex = 25;
 this.Controls.Add(this.lblCreated_by);
 this.Controls.Add(this.txtCreated_by);
 
@@ -559,7 +541,7 @@ this.Controls.Add(this.txtCreated_by);
             //this.kryptonPanel1.Location = new System.Drawing.Point(0, 0);
            // this.kryptonPanel1.Name = "kryptonPanel1";
            // this.kryptonPanel1.Size = new System.Drawing.Size(404, 300);
-           // this.kryptonPanel1.TabIndex = 26;
+           // this.kryptonPanel1.TabIndex = 25;
 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
@@ -581,8 +563,8 @@ this.Controls.Add(this.txtSourceBizType );
                 ReversedSettlementID主外字段不一致。this.Controls.Add(this.lblSourceCurrencyID );
 this.Controls.Add(this.txtSourceCurrencyID );
 
-                this.Controls.Add(this.lblSourceExchangeRate );
-this.Controls.Add(this.txtSourceExchangeRate );
+                this.Controls.Add(this.lblExchangeRate );
+this.Controls.Add(this.txtExchangeRate );
 
                 ReversedSettlementID主外字段不一致。this.Controls.Add(this.lblTargetBizType );
 this.Controls.Add(this.txtTargetBizType );
@@ -595,9 +577,6 @@ this.Controls.Add(this.txtTargetBillNO );
 
                 ReversedSettlementID主外字段不一致。this.Controls.Add(this.lblTargetCurrencyID );
 this.Controls.Add(this.txtTargetCurrencyID );
-
-                this.Controls.Add(this.lblTargetExchangeRate );
-this.Controls.Add(this.txtTargetExchangeRate );
 
                 ReversedSettlementID主外字段不一致。this.Controls.Add(this.lblReceivePaymentType );
 this.Controls.Add(this.txtReceivePaymentType );
@@ -695,8 +674,8 @@ private Krypton.Toolkit.KryptonTextBox txtSourceCurrencyID;
 
     
         
-              private Krypton.Toolkit.KryptonLabel lblSourceExchangeRate;
-private Krypton.Toolkit.KryptonTextBox txtSourceExchangeRate;
+              private Krypton.Toolkit.KryptonLabel lblExchangeRate;
+private Krypton.Toolkit.KryptonTextBox txtExchangeRate;
 
     
         
@@ -717,11 +696,6 @@ private Krypton.Toolkit.KryptonTextBox txtTargetBillNO;
         
               ReversedSettlementID主外字段不一致。private Krypton.Toolkit.KryptonLabel lblTargetCurrencyID;
 private Krypton.Toolkit.KryptonTextBox txtTargetCurrencyID;
-
-    
-        
-              private Krypton.Toolkit.KryptonLabel lblTargetExchangeRate;
-private Krypton.Toolkit.KryptonTextBox txtTargetExchangeRate;
 
     
         

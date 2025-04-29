@@ -63,7 +63,24 @@ namespace RUINORERP.Business.CommService
             Mapping.Add(BizType.CRM跟进记录, typeof(tb_CRM_FollowUpRecords));
             Mapping.Add(BizType.返工退库单, typeof(tb_MRP_ReworkReturn));
             Mapping.Add(BizType.返工入库单, typeof(tb_MRP_ReworkEntry));
+
             Mapping.Add(BizType.付款申请单, typeof(tb_FM_PaymentApplication));
+
+            Mapping.Add(BizType.预付款单, typeof(tb_FM_PreReceivedPayment));
+            Mapping.Add(BizType.预收款单, typeof(tb_FM_PreReceivedPayment));
+
+            Mapping.Add(BizType.付款单, typeof(tb_FM_PaymentRecord));
+            Mapping.Add(BizType.收款单, typeof(tb_FM_PaymentRecord));
+
+            Mapping.Add(BizType.应付单, typeof(tb_FM_ReceivablePayable));
+            Mapping.Add(BizType.应收单, typeof(tb_FM_ReceivablePayable));
+
+
+            Mapping.Add(BizType.收款核销, typeof(tb_FM_PaymentSettlement));
+            Mapping.Add(BizType.付款核销, typeof(tb_FM_PaymentSettlement));
+
+
+
             //mapping.Add(BizType.退料单, typeof(tb_Return));
             // 省略其他枚举值与表名的对应关系
         }
@@ -74,7 +91,16 @@ namespace RUINORERP.Business.CommService
             {
                 return Mapping[bizType];
             }
-            throw new ArgumentException("无效的业务类型", nameof(bizType));
+            else
+            {
+                if (true)
+                {
+
+                }
+                return null;
+            }
+
+            //throw new ArgumentException("无效的业务类型", nameof(bizType));
         }
 
 

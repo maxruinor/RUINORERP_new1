@@ -494,32 +494,84 @@ namespace SourceGrid
 		/// </summary>
 		protected override int GetScrollRows(int displayHeight)
 		{
-			if (displayHeight < 0)
-				return 0;
-			
-			int currentHeight = 0;
-			int scrollRows = 0;
+			 return Rows.Count;
 
-			//Remove the fixed rows from the scrollable area
-			for (int f = 0; f < ActualFixedRows; f++)
+
+
+
+            if (displayHeight <= 0 || Rows.Count <= ActualFixedRows)
+                return 0;
+
+            int currentHeight = 0;
+            int scrollableRows = 0;
+
+            //扣除固定行高度
+            for (int f = 0; f < ActualFixedRows; f++)
 				displayHeight -= Rows.GetHeight(f);
+            if (displayHeight < 0)
+                displayHeight = 0; // 防止负数
 
-			//Calculate the rows to be scrolled
-			for (int r = Rows.Count - 1; r >= ActualFixedRows; r--)
-			{
-				if (Rows.IsRowVisible(r) == false)
-					continue;
-				currentHeight += Rows.GetHeight(r);
+			////Calculate the rows to be scrolled
+			//for (int r = Rows.Count - 1; r >= ActualFixedRows; r--)
+			//{
+			//	if (Rows.IsRowVisible(r) == false)
+			//		continue;
+			//	currentHeight += Rows.GetHeight(r);
 
-				if (currentHeight > displayHeight)
-					return Rows.Count - scrollRows - GetTotalHiddenRows(r);
+			//	if (currentHeight > displayHeight)
+			//		return Rows.Count - scrollRows - GetTotalHiddenRows(r);
 
-				scrollRows++;
-			}
+			//	scrollRows++;
+			//}
 
-			return 0;
-		}
-		
+            // 从底部向上遍历，计算可见行的高度总和
+            for (int r = Rows.Count - 1; r >= ActualFixedRows; r--)
+            {
+                if (!Rows.IsRowVisible(r))
+                    continue; // 跳过隐藏的行
+
+                int rowHeight = Rows.GetHeight(r);
+                displayHeight -= rowHeight;
+
+                if (displayHeight < 0)
+                {
+                    // 当前行的高度已超过剩余可见区域，返回已累加的行数
+                    return scrollableRows + 1; // 包括当前行
+                }
+
+                scrollableRows++;
+            }
+
+            // 如果所有可见行的高度总和小于等于 displayHeight，则不需要滚动条
+            return 0;
+
+
+
+            // 正序计算可滚动行
+            //for (int r = ActualFixedRows; r < Rows.Count; r++)
+            //         {
+            //             if (!Rows.IsRowVisible(r))
+            //             {
+            //                 scrollableRows++; // 隐藏行仍计数
+            //                 continue;
+            //             }
+
+            //             currentHeight += Rows.GetHeight(r);
+            //             scrollableRows++;
+
+            //             // 超过显示高度时，返回当前行之前的行数
+            //             if (currentHeight >= displayHeight)
+            //                 return scrollableRows;
+            //         }
+            //         // 所有行总高度不足时，返回全部可滚动行（排除隐藏行）
+            //         //return Rows.Count - ActualFixedRows - GetTotalHiddenRows();
+            //         return Rows.Count - ActualFixedRows - Rows.HiddenRowsCoordinator.GetTotalHiddenRows();
+
+            //return 0;
+        }
+
+
+
 		private int GetTotalHiddenRows(int from)
 		{
 			return Rows.HiddenRowsCoordinator.GetTotalHiddenRows();

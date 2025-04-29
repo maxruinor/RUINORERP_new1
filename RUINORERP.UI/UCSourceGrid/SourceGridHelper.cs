@@ -816,6 +816,10 @@ namespace RUINORERP.UI.UCSourceGrid
         {
             FindCurMenuInfo(griddefine);
             SGDefine = griddefine;
+
+            grid.Dock = DockStyle.Fill;
+            grid.VScrollBar.Visible = true;
+
             griddefine.grid = grid;
             griddefine.MainBizDependencyTypeName = MainBizDependencyTypeName;
             grid.HandleDestroyed += Grid_HandleDestroyed;
@@ -957,6 +961,10 @@ namespace RUINORERP.UI.UCSourceGrid
             }
 
             griddefine.OnCalculateTotalValue += Griddefine_OnCalculateTotalValue;
+
+            // 强制重新计算滚动条
+            //grid.RecalcCustomScrollBars();
+            //grid.Invalidate();
         }
 
         private void Grid_HandleDestroyed(object sender, EventArgs e)
@@ -1330,6 +1338,14 @@ namespace RUINORERP.UI.UCSourceGrid
             }
 
             AddRows(AddRowIndex, grid, define, RowReadonly);
+
+            // 数据更新后强制刷新滚动条
+            //grid.AutoStretchRowsToFitHeight = false;
+            //grid.VScrollBar.Maximum = grid.Rows.Count;
+            //grid.Invalidate();
+            // 强制重新计算滚动条
+            grid.RecalcCustomScrollBars();
+            grid.Invalidate();
         }
 
         private void AddRows(int addRowIndex, SourceGrid.Grid grid, SourceGridDefine define, bool RowReadonly)

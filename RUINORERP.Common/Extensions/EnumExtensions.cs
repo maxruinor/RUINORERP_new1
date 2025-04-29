@@ -186,32 +186,70 @@ namespace RUINORERP.Common.Extensions
         /// 
         /// </summary>
         /// <param name="type">typeof(enum)</param>
-        /// <param name="selectedItem">要选中的项</param>
+        /// <param name="selectedItem">要选中的项 Index -1 所以为int型</param>
         /// <param name="exclude">要排除的集合int型</param>
         /// <returns></returns>
-        public static List<EnumEntityMember> GetListByEnum(this Type type, int? selectedItem = null, params int[] exclude)
+        public static List<EnumEntityMember> GetListByEnum(this Type type, int? selectedItem = null, params long[] exclude)
         {
             List<EnumEntityMember> listResult = new List<EnumEntityMember>();
             Array enumValues = Enum.GetValues(type);
+            // 获取枚举的基础类型
+            Type underlyingType = Enum.GetUnderlyingType(type);
 
             IEnumerator e = enumValues.GetEnumerator();
             e.Reset();
-            int currentValue;
+
+            object currentValueObj;
             string currentName;
             while (e.MoveNext())
             {
                 EnumEntityMember item = new EnumEntityMember();
-                currentValue = (int)e.Current;
-                if (exclude.Contains(currentValue))
+                //currentValue = (int)e.Current;
+                //if (exclude.Contains(currentValue))
+                //{
+                //    //排除
+                //    continue;
+                //}
+                //currentName = e.Current.ToString();
+
+
+
+                currentValueObj = e.Current;
+                // 根据基础类型转换值
+
+                long currentValueLong;
+                if (underlyingType == typeof(int))
                 {
-                    //排除
+                    currentValueLong = ((int)currentValueObj).ToLong();
+                    if (exclude.Contains(currentValueLong))
+                    {
+                        //排除
+                        continue;
+                    }
+
+                }
+                else if (underlyingType == typeof(long))
+                {
+                    currentValueLong = (long)currentValueObj;
+                    if (exclude.Contains(currentValueLong))
+                    {
+                        //排除
+                        continue;
+                    }
+
+                }
+                else
+                {
+                    // 其他基础类型的处理，这里简单跳过
                     continue;
                 }
+
                 currentName = e.Current.ToString();
-                item.Value = currentValue;
+
+                item.Value = currentValueLong;
 
                 item.Description = currentName;
-                if (selectedItem.HasValue && currentValue == selectedItem.Value)
+                if (selectedItem.HasValue && currentValueLong == selectedItem.Value)
                 {
                     item.Selected = true;
                 }

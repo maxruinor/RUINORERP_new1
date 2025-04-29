@@ -36,6 +36,9 @@ using MathNet.Numerics.Optimization;
 namespace RUINORERP.UI.FM
 {
 
+    /// <summary>
+    /// 预收付款单， 
+    /// </summary>
     public partial class UCPreReceivedPayment : BaseBillEditGeneric<tb_FM_PreReceivedPayment, tb_FM_PreReceivedPayment>
     {
         public UCPreReceivedPayment()
@@ -45,6 +48,12 @@ namespace RUINORERP.UI.FM
 
         }
 
+        public override void AddExcludeMenuList()
+        {
+            base.AddExcludeMenuList(MenuItemEnums.反结案);
+            base.AddExcludeMenuList(MenuItemEnums.反审);
+            base.AddExcludeMenuList(MenuItemEnums.结案);
+        }
 
         /// <summary>
         /// 收付款类型决定对应的菜单功能
@@ -88,6 +97,13 @@ namespace RUINORERP.UI.FM
                         #endregion
 
                     }
+                    //else
+                    //{
+                    //    //收款信息不显示，只在付款时显示
+                    //    cmbPayeeInfoID.Visible = false;
+                    //    btnInfo.Visible = false;
+                    //    kryptonGroupBox收款账号信息.Visible = false;
+                    //}
                 }
                 else
                 {
@@ -126,7 +142,7 @@ namespace RUINORERP.UI.FM
                 entity.ReceivePaymentType = (int)PaymentType;
                 entity.ActionStatus = ActionStatus.新增;
                 entity.PrePayDate = System.DateTime.Now;
-                entity.FMPaymentStatus = (int)FMPaymentStatus.草稿;
+                entity.PrePaymentStatus = (long)PrePaymentStatus.草稿;
                 if (PaymentType == ReceivePaymentType.付款)
                 {
                     entity.PreRPNO = BizCodeGenerator.Instance.GetBizBillNo(BizType.预付款单);
@@ -183,7 +199,7 @@ namespace RUINORERP.UI.FM
             DataBindingHelper.BindData4TextBox<tb_FM_PreReceivedPayment>(entity, t => t.ApprovalOpinions, txtApprovalOpinions, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4Label<tb_FM_PreReceivedPayment>(entity, k => k.LocalPrepaidAmountInWords, lblLocalPrepaidAmountInWords, BindDataType4TextBox.Text, true);
             DataBindingHelper.BindData4TextBox<tb_FM_PreReceivedPayment>(entity, t => t.PayeeAccountNo, txtPayeeAccountNo, BindDataType4TextBox.Text, false);
-            DataBindingHelper.BindData4ControlByEnum<tb_FM_PreReceivedPayment>(entity, t => t.FMPaymentStatus, lblDataStatus, BindDataType4Enum.EnumName, typeof(FMPaymentStatus));
+            DataBindingHelper.BindData4ControlByEnum<tb_FM_PreReceivedPayment>(entity, t => t.PrePaymentStatus, lblDataStatus, BindDataType4Enum.EnumName, typeof(PrePaymentStatus));
             //显示 打印状态 如果是草稿状态 不显示打印
             ShowPrintStatus(lblPrintStatus, entity);
 
@@ -541,16 +557,16 @@ namespace RUINORERP.UI.FM
             if (MessageBox.Show("系统不建议删除单据资料\r\n确定删除吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Information) == DialogResult.Yes)
             {
                 //https://www.runoob.com/w3cnote/csharp-enum.html
-                var dataStatus = (FMPaymentStatus)(EditEntity.GetPropertyValue(typeof(FMPaymentStatus).Name).ToInt());
-                if (dataStatus == FMPaymentStatus.提交 || dataStatus == FMPaymentStatus.草稿)
+                var dataStatus = (PrePaymentStatus)(EditEntity.GetPropertyValue(typeof(PrePaymentStatus).Name).ToInt());
+                if (dataStatus == PrePaymentStatus.待审核 || dataStatus == PrePaymentStatus.草稿)
                 {
                     //如果草稿。都可以删除。如果是新建，则提交过了。要创建人或超级管理员才能删除
-                    if (dataStatus == FMPaymentStatus.提交 && !AppContext.IsSuperUser)
+                    if (dataStatus == PrePaymentStatus.待审核 && !AppContext.IsSuperUser)
                     {
                         if (EditEntity.Created_by.Value != AppContext.CurUserInfo.Id)
                         {
-                            MessageBox.Show("只有创建人才能删除提交的单据。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                            rss.ErrorMsg = "只有创建人才能删除提交的单据。";
+                            MessageBox.Show("只有创建人才能删除待审核的单据。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                            rss.ErrorMsg = "只有创建人才能删除待审核的单据。";
                             rss.Succeeded = false;
                             return rss;
                         }
@@ -595,6 +611,7 @@ namespace RUINORERP.UI.FM
                     lblCustomerVendor_ID.Text = "付款单位";
                     btnInfo.Visible = false;
                     cmbPayeeInfoID.Visible = false;
+                    lblPayeeInfoID.Visible = false;
                     kryptonGroupBox收款账号信息.Visible = false;
 
                     break;

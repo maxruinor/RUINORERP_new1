@@ -169,9 +169,9 @@ namespace RUINORERP.Business
                     payable.ApprovalOpinions = "";
                     payable.Modified_at = null;
                     payable.Modified_by = null;
-                    if (entity.tb_projectgroup != null && entity.tb_projectgroup.tb_department != null)
+                    if (entity.tb_projectgroup != null)
                     {
-                        payable.DepartmentID = entity.tb_projectgroup.tb_department.DepartmentID;
+                        payable.DepartmentID = entity.tb_projectgroup.DepartmentID;
                     }
                     //销售就是收款
                     payable.ReceivePaymentType = (int)ReceivePaymentType.收款;
@@ -215,13 +215,15 @@ namespace RUINORERP.Business
                             payable.LocalPrepaidAmount = entity.Deposit;
                         }
 
-                        //payable.LocalPrepaidAmountInWords = payable.LocalPrepaidAmount.ToUpper();
+                        
                     }
-                    payable.LocalPrepaidAmountInWords = payable.LocalPrepaidAmount.ToString("C");
+                    //payable.LocalPrepaidAmountInWords = payable.LocalPrepaidAmount.ToString("C");
+                    payable.LocalPrepaidAmountInWords = payable.LocalPrepaidAmount.ToUpper();
+                    payable.IsAvailable = true;//默认可用
 
                     payable.PrePaymentReason = $"销售订单{entity.SOrderNo}的预收款";
                     Business.BusinessHelper.Instance.InitEntity(payable);
-                    payable.FMPaymentStatus = (int)FMPaymentStatus.提交;
+                    payable.PrePaymentStatus = (long)PrePaymentStatus.待审核;
                     ReturnResults<tb_FM_PreReceivedPayment> rmpay = await ctrpay.SaveOrUpdate(payable);
                     if (rmpay.Succeeded)
                     {
@@ -647,7 +649,7 @@ namespace RUINORERP.Business
                 if (entity.tb_SaleOuts != null
                     && (entity.tb_SaleOuts.Any(c => c.DataStatus == (int)DataStatus.确认 || c.DataStatus == (int)DataStatus.完结) && entity.tb_SaleOuts.Any(c => c.ApprovalStatus == (int)ApprovalStatus.已审核)))
                 {
-                    rmrs.ErrorMsg = "存在已确认或已完结，或已审核的销售出库单，不能反审核  ";
+                    rmrs.ErrorMsg = "存在已确认或已完结，或已审核的销售出库单，不能反审核,请退回处理。"; 
                     _unitOfWorkManage.RollbackTran();
                     rmrs.Succeeded = false;
                     return rmrs;
@@ -695,16 +697,19 @@ namespace RUINORERP.Business
                 var pay = await ctrpay.IsExistEntityAsync(p => p.SourceBill_ID == entity.SOrder_ID);
                 if (pay != null)
                 {
-                    if (pay.FMPaymentStatus == (int)FMPaymentStatus.草稿 || pay.FMPaymentStatus == (int)FMPaymentStatus.提交)
+                    if (pay.PrePaymentStatus == (long)PrePaymentStatus.草稿 || pay.PrePaymentStatus == (long)PrePaymentStatus.待审核)
                     {
                         await ctrpay.DeleteAsync(pay);
                     }
                     else
                     {
-                        rmrs.ErrorMsg = $"销售订单{pay.SourceBillNO}已经生成预收款单{pay.PreRPNO}，已经确认收款，请不能反审核。";
-                        _unitOfWorkManage.RollbackTran();
-                        rmrs.Succeeded = false;
-                        return rmrs;
+                        //如果没有出库，则生成红冲单  ，已冲销  已取消，先用取消标记
+                        //如果是要退款，则在预收款查询这，生成退款单。
+
+                        //rmrs.ErrorMsg = $"销售订单{pay.SourceBillNO}已经生成预收款单{pay.PreRPNO}，已经确认收款，请不能反审核。";
+                        //_unitOfWorkManage.RollbackTran();
+                        //rmrs.Succeeded = false;
+                        //return rmrs;
                     }
 
                 }

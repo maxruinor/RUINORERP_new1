@@ -75,7 +75,7 @@ namespace RUINORERP.UI.BaseForm
 
 
 
-        #region 如果查询窗体，有些按钮不用出现在这个业务窗体时。这里手动排除。集合有值才行
+        #region 如果窗体，有些按钮不用出现在这个业务窗体时。这里手动排除。集合有值才行
         
         List<MenuItemEnums> _excludeMenuList = new List<MenuItemEnums>();
         public List<MenuItemEnums> ExcludeMenuList { get => _excludeMenuList; set => _excludeMenuList = value; }

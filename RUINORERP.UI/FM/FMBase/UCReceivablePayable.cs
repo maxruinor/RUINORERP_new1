@@ -116,7 +116,7 @@ namespace RUINORERP.UI.FM
             else
             {
                 entity.ActionStatus = ActionStatus.新增;
-                entity.FMPaymentStatus = (int)FMPaymentStatus.草稿;
+                entity.ARAPStatus = (long)ARAPStatus.草稿;
                 entity.ReceivePaymentType = (int)PaymentType;
                 entity.ActionStatus = ActionStatus.新增;
 
@@ -134,10 +134,7 @@ namespace RUINORERP.UI.FM
                 }
                 //entity.InvoiceDate = System.DateTime.Now;
 
-                if (MainForm.Instance.AppContext.CurUserInfo.UserInfo.tb_employee != null)
-                {
-                    entity.Employee_ID = MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID.Value;
-                }
+        
                 // 清空 DataSource（如果适用）
                 cmbPayeeInfoID.DataSource = null;
                 cmbPayeeInfoID.DataBindings.Clear();
@@ -172,7 +169,7 @@ namespace RUINORERP.UI.FM
 
             DataBindingHelper.BindData4CheckBox<tb_FM_ReceivablePayable>(entity, t => t.ApprovalResults, chkApprovalResults, false);
             DataBindingHelper.BindData4Cmb<tb_FM_PayeeInfo>(entity, k => k.PayeeInfoID, v => v.Account_name, cmbPayeeInfoID, c => c.CustomerVendor_ID.HasValue && c.CustomerVendor_ID.Value == entity.CustomerVendor_ID);
-            DataBindingHelper.BindData4ControlByEnum<tb_FM_ReceivablePayable>(entity, t => t.FMPaymentStatus, lblDataStatus, BindDataType4Enum.EnumName, typeof(FMPaymentStatus));
+            DataBindingHelper.BindData4ControlByEnum<tb_FM_ReceivablePayable>(entity, t => t.ARAPStatus, lblDataStatus, BindDataType4Enum.EnumName, typeof(ARAPStatus));
             DataBindingHelper.BindData4ControlByEnum<tb_FM_ReceivablePayable>(entity, t => t.ApprovalStatus, lblReview, BindDataType4Enum.EnumName, typeof(Global.ApprovalStatus));
             //显示 打印状态 如果是草稿状态 不显示打印
             ShowPrintStatus(lblPrintStatus, entity);
@@ -227,8 +224,8 @@ namespace RUINORERP.UI.FM
                     item.PropertyChanged += (sender, s1) =>
                     {
                         //权限允许
-                        if ((true && entity.FMPaymentStatus == (int)FMPaymentStatus.草稿) ||
-                        (true && entity.FMPaymentStatus == (int)FMPaymentStatus.提交))
+                        if ((true && entity.ARAPStatus == (long)ARAPStatus.草稿) ||
+                        (true && entity.ARAPStatus == (long)ARAPStatus.待审核))
                         {
                             EditEntity.ActionStatus = ActionStatus.修改;
                         }
@@ -247,8 +244,8 @@ namespace RUINORERP.UI.FM
             entity.PropertyChanged += (sender, s2) =>
             {
                 //权限允许
-                if ((true && entity.FMPaymentStatus == (int)FMPaymentStatus.草稿)
-                || (true && entity.FMPaymentStatus == (int)FMPaymentStatus.提交))
+                if ((true && entity.ARAPStatus == (long)ARAPStatus.草稿)
+                || (true && entity.ARAPStatus == (long)ARAPStatus.待审核))
                 {
                     EditEntity.ActionStatus = ActionStatus.修改;
                 }
@@ -305,7 +302,7 @@ namespace RUINORERP.UI.FM
             };
 
             //显示 打印状态 如果是草稿状态 不显示打印
-            if ((FMPaymentStatus)EditEntity.FMPaymentStatus != FMPaymentStatus.草稿)
+            if ((ARAPStatus)EditEntity.ARAPStatus != ARAPStatus.草稿)
             {
                 toolStripbtnPrint.Enabled = true;
                 if (EditEntity.PrintStatus == 0)
@@ -340,7 +337,7 @@ namespace RUINORERP.UI.FM
                              // .AndIF(CurMenuInfo.CaptionCN.Contains("供应商"), t => t.IsVendor == true)
                              .And(t => t.isdeleted == false)
                             //报销人员限制，财务不限制 自己的只能查自己的
-                            .AndIF(AuthorizeController.GetOwnershipControl(MainForm.Instance.AppContext), t => t.Employee_ID == MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID)//限制了销售只看到自己的客户,采购不限制
+                            .AndIF(AuthorizeController.GetOwnershipControl(MainForm.Instance.AppContext), t => t.Created_by == MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID)//限制了销售只看到自己的客户,采购不限制
                             .ToExpression();//注意 这一句 不能少
             QueryConditionFilter.SetFieldLimitCondition(lambda);
 

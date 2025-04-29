@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：04/26/2025 22:26:18
+// 时间：04/29/2025 11:22:25
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -59,7 +59,6 @@ namespace RUINORERP.UI
         
         
         
-        
 
          }
 /*
@@ -73,12 +72,11 @@ namespace RUINORERP.UI
                         entity.SourceBillNO = txtSourceBillNO.Text ;
                        entity.SourceBizType = Int32.Parse(txtSourceBizType.Text);
                         entity.SourceCurrencyID = Int64.Parse(txtSourceCurrencyID.Text);
-                        entity.SourceExchangeRate = Decimal.Parse(txtSourceExchangeRate.Text);
+                        entity.ExchangeRate = Decimal.Parse(txtExchangeRate.Text);
                         entity.TargetBizType = Int32.Parse(txtTargetBizType.Text);
                         entity.TargetBillID = Int64.Parse(txtTargetBillID.Text);
                         entity.TargetBillNO = txtTargetBillNO.Text ;
                        entity.TargetCurrencyID = Int64.Parse(txtTargetCurrencyID.Text);
-                        entity.TargetExchangeRate = Decimal.Parse(txtTargetExchangeRate.Text);
                         entity.ReceivePaymentType = Int64.Parse(txtReceivePaymentType.Text);
                         entity.Account_id = Int64.Parse(txtAccount_id.Text);
                         entity.CustomerVendor_ID = Int64.Parse(txtCustomerVendor_ID.Text);
@@ -109,12 +107,11 @@ namespace RUINORERP.UI
            DataBindingHelper.BindData4TextBox<tb_FM_PaymentSettlement>(entity, t => t.SourceBillNO, txtSourceBillNO, BindDataType4TextBox.Text,false);
           ReversedSettlementID主外字段不一致。 DataBindingHelper.BindData4TextBox<tb_FM_PaymentSettlement>(entity, t => t.SourceBizType, txtSourceBizType, BindDataType4TextBox.Qty,false);
           ReversedSettlementID主外字段不一致。 DataBindingHelper.BindData4TextBox<tb_FM_PaymentSettlement>(entity, t => t.SourceCurrencyID, txtSourceCurrencyID, BindDataType4TextBox.Qty,false);
-           DataBindingHelper.BindData4TextBox<tb_FM_PaymentSettlement>(entity, t => t.SourceExchangeRate.ToString(), txtSourceExchangeRate, BindDataType4TextBox.Money,false);
+           DataBindingHelper.BindData4TextBox<tb_FM_PaymentSettlement>(entity, t => t.ExchangeRate.ToString(), txtExchangeRate, BindDataType4TextBox.Money,false);
           ReversedSettlementID主外字段不一致。 DataBindingHelper.BindData4TextBox<tb_FM_PaymentSettlement>(entity, t => t.TargetBizType, txtTargetBizType, BindDataType4TextBox.Qty,false);
           ReversedSettlementID主外字段不一致。 DataBindingHelper.BindData4TextBox<tb_FM_PaymentSettlement>(entity, t => t.TargetBillID, txtTargetBillID, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4TextBox<tb_FM_PaymentSettlement>(entity, t => t.TargetBillNO, txtTargetBillNO, BindDataType4TextBox.Text,false);
           ReversedSettlementID主外字段不一致。 DataBindingHelper.BindData4TextBox<tb_FM_PaymentSettlement>(entity, t => t.TargetCurrencyID, txtTargetCurrencyID, BindDataType4TextBox.Qty,false);
-           DataBindingHelper.BindData4TextBox<tb_FM_PaymentSettlement>(entity, t => t.TargetExchangeRate.ToString(), txtTargetExchangeRate, BindDataType4TextBox.Money,false);
           ReversedSettlementID主外字段不一致。 DataBindingHelper.BindData4TextBox<tb_FM_PaymentSettlement>(entity, t => t.ReceivePaymentType, txtReceivePaymentType, BindDataType4TextBox.Qty,false);
           ReversedSettlementID主外字段不一致。 DataBindingHelper.BindData4TextBox<tb_FM_PaymentSettlement>(entity, t => t.Account_id, txtAccount_id, BindDataType4TextBox.Qty,false);
           ReversedSettlementID主外字段不一致。 DataBindingHelper.BindData4TextBox<tb_FM_PaymentSettlement>(entity, t => t.CustomerVendor_ID, txtCustomerVendor_ID, BindDataType4TextBox.Qty,false);

@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：04/22/2025 12:16:05
+// 时间：04/29/2025 11:22:20
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -248,20 +248,20 @@ namespace RUINORERP.Business
             {
             
                              rs = await _unitOfWorkManage.GetDbClient().UpdateNav<tb_FM_PayeeInfo>(entity as tb_FM_PayeeInfo)
-                        .Include(m => m.tb_FM_PaymentRecords)
-                    .Include(m => m.tb_FM_PaymentApplications)
-                    .Include(m => m.tb_FM_ExpenseClaims)
+                        .Include(m => m.tb_FM_PaymentApplications)
+                    .Include(m => m.tb_FM_PaymentRecords)
                     .Include(m => m.tb_FM_PreReceivedPayments)
+                    .Include(m => m.tb_FM_ExpenseClaims)
                     .Include(m => m.tb_FM_ReceivablePayables)
                     .ExecuteCommandAsync();
                  }
         else    
         {
                         rs = await _unitOfWorkManage.GetDbClient().InsertNav<tb_FM_PayeeInfo>(entity as tb_FM_PayeeInfo)
-                .Include(m => m.tb_FM_PaymentRecords)
                 .Include(m => m.tb_FM_PaymentApplications)
-                .Include(m => m.tb_FM_ExpenseClaims)
+                .Include(m => m.tb_FM_PaymentRecords)
                 .Include(m => m.tb_FM_PreReceivedPayments)
+                .Include(m => m.tb_FM_ExpenseClaims)
                 .Include(m => m.tb_FM_ReceivablePayables)
          
                 .ExecuteCommandAsync();
@@ -296,10 +296,10 @@ namespace RUINORERP.Business
         public async override Task<List<T>> BaseQueryByAdvancedNavAsync(bool useLike, object dto)
         {
             var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<tb_FM_PayeeInfo>()
-                                .Includes(m => m.tb_FM_PaymentRecords)
-                        .Includes(m => m.tb_FM_PaymentApplications)
-                        .Includes(m => m.tb_FM_ExpenseClaims)
+                                .Includes(m => m.tb_FM_PaymentApplications)
+                        .Includes(m => m.tb_FM_PaymentRecords)
                         .Includes(m => m.tb_FM_PreReceivedPayments)
+                        .Includes(m => m.tb_FM_ExpenseClaims)
                         .Includes(m => m.tb_FM_ReceivablePayables)
                                         .Where(useLike, dto);
             return await querySqlQueryable.ToListAsync()as List<T>;
@@ -310,10 +310,10 @@ namespace RUINORERP.Business
         {
             tb_FM_PayeeInfo entity = model as tb_FM_PayeeInfo;
              bool rs = await _unitOfWorkManage.GetDbClient().DeleteNav<tb_FM_PayeeInfo>(m => m.PayeeInfoID== entity.PayeeInfoID)
-                                .Include(m => m.tb_FM_PaymentRecords)
-                        .Include(m => m.tb_FM_PaymentApplications)
-                        .Include(m => m.tb_FM_ExpenseClaims)
+                                .Include(m => m.tb_FM_PaymentApplications)
+                        .Include(m => m.tb_FM_PaymentRecords)
                         .Include(m => m.tb_FM_PreReceivedPayments)
+                        .Include(m => m.tb_FM_ExpenseClaims)
                         .Include(m => m.tb_FM_ReceivablePayables)
                                         .ExecuteCommandAsync();
             if (rs)
@@ -479,10 +479,10 @@ namespace RUINORERP.Business
             List<tb_FM_PayeeInfo> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_FM_PayeeInfo>()
                                .Includes(t => t.tb_customervendor )
                                .Includes(t => t.tb_employee )
-                                            .Includes(t => t.tb_FM_PaymentRecords )
-                                .Includes(t => t.tb_FM_PaymentApplications )
-                                .Includes(t => t.tb_FM_ExpenseClaims )
+                                            .Includes(t => t.tb_FM_PaymentApplications )
+                                .Includes(t => t.tb_FM_PaymentRecords )
                                 .Includes(t => t.tb_FM_PreReceivedPayments )
+                                .Includes(t => t.tb_FM_ExpenseClaims )
                                 .Includes(t => t.tb_FM_ReceivablePayables )
                         .ToListAsync();
             
@@ -505,10 +505,10 @@ namespace RUINORERP.Business
             List<tb_FM_PayeeInfo> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_FM_PayeeInfo>().Where(exp)
                                .Includes(t => t.tb_customervendor )
                                .Includes(t => t.tb_employee )
-                                            .Includes(t => t.tb_FM_PaymentRecords )
-                                .Includes(t => t.tb_FM_PaymentApplications )
-                                .Includes(t => t.tb_FM_ExpenseClaims )
+                                            .Includes(t => t.tb_FM_PaymentApplications )
+                                .Includes(t => t.tb_FM_PaymentRecords )
                                 .Includes(t => t.tb_FM_PreReceivedPayments )
+                                .Includes(t => t.tb_FM_ExpenseClaims )
                                 .Includes(t => t.tb_FM_ReceivablePayables )
                         .ToListAsync();
             
@@ -531,10 +531,10 @@ namespace RUINORERP.Business
             List<tb_FM_PayeeInfo> list = _unitOfWorkManage.GetDbClient().Queryable<tb_FM_PayeeInfo>().Where(exp)
                             .Includes(t => t.tb_customervendor )
                             .Includes(t => t.tb_employee )
-                                        .Includes(t => t.tb_FM_PaymentRecords )
-                            .Includes(t => t.tb_FM_PaymentApplications )
-                            .Includes(t => t.tb_FM_ExpenseClaims )
+                                        .Includes(t => t.tb_FM_PaymentApplications )
+                            .Includes(t => t.tb_FM_PaymentRecords )
                             .Includes(t => t.tb_FM_PreReceivedPayments )
+                            .Includes(t => t.tb_FM_ExpenseClaims )
                             .Includes(t => t.tb_FM_ReceivablePayables )
                         .ToList();
             
@@ -574,10 +574,10 @@ namespace RUINORERP.Business
             tb_FM_PayeeInfo entity = await _unitOfWorkManage.GetDbClient().Queryable<tb_FM_PayeeInfo>().Where(w => w.PayeeInfoID == (long)id)
                              .Includes(t => t.tb_customervendor )
                             .Includes(t => t.tb_employee )
-                                        .Includes(t => t.tb_FM_PaymentRecords )
-                            .Includes(t => t.tb_FM_PaymentApplications )
-                            .Includes(t => t.tb_FM_ExpenseClaims )
+                                        .Includes(t => t.tb_FM_PaymentApplications )
+                            .Includes(t => t.tb_FM_PaymentRecords )
                             .Includes(t => t.tb_FM_PreReceivedPayments )
+                            .Includes(t => t.tb_FM_ExpenseClaims )
                             .Includes(t => t.tb_FM_ReceivablePayables )
                         .FirstAsync();
             if(entity!=null)

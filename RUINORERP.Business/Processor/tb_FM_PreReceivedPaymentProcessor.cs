@@ -55,9 +55,10 @@ namespace RUINORERP.Business.Processor
             queryFilter.SetQueryField<tb_FM_PreReceivedPayment>(c => c.DepartmentID);
             queryFilter.SetQueryField<tb_FM_PreReceivedPayment>(c => c.PrePaymentReason);
             queryFilter.SetQueryField<tb_FM_PreReceivedPayment>(c => c.PrePayDate, false);
+     
             queryFilter.SetQueryField<tb_FM_PreReceivedPayment>(c => c.PrintStatus, QueryFieldType.CmbEnum, typeof(PrintStatus));
             queryFilter.SetQueryField<tb_FM_PreReceivedPayment>(c => c.ApprovalStatus, QueryFieldType.CmbEnum, typeof(ApprovalStatus));
-            queryFilter.SetQueryField<tb_FM_PreReceivedPayment>(c => c.FMPaymentStatus, QueryFieldType.CmbEnum, typeof(FMPaymentStatus));
+            queryFilter.SetQueryField<tb_FM_PreReceivedPayment>(c => c.PrePaymentStatus, QueryFieldType.CmbEnum, typeof(PrePaymentStatus));
             queryFilter.SetQueryField<tb_FM_PreReceivedPayment>(c => c.Remark);
 
             return queryFilter;

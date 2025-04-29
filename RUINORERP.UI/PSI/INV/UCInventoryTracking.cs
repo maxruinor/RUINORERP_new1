@@ -110,7 +110,8 @@ namespace RUINORERP.UI.PSI.INV
             page1.Text = "纵向库存跟踪";
 
             base._UCOutlookGridAnalysis1.GridRelated.ComplexType = true;
-            base._UCOutlookGridAnalysis1.GridRelated.ComplexTargtetField = "业务类型";
+            base._UCOutlookGridAnalysis1.GridRelated.SetComplexTargetField<Proc_InventoryTracking>(c => c.业务类型);
+            //base._UCOutlookGridAnalysis1.GridRelated.ComplexTargtetField = "业务类型";
             var mappings = new Dictionary<string, string>
         {
             { "采购入库", "tb_PurEntry" },

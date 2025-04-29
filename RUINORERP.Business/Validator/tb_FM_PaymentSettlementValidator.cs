@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：04/26/2025 22:26:21
+// 时间：04/29/2025 11:22:26
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -50,7 +50,7 @@ namespace RUINORERP.Business
 
  RuleFor(tb_FM_PaymentSettlement =>tb_FM_PaymentSettlement.SourceCurrencyID).NotEmpty().When(x => x.SourceCurrencyID.HasValue);
 
- RuleFor(x => x.SourceExchangeRate).PrecisionScale(18,6,true).WithMessage("来源汇率:小数位不能超过6。");
+ RuleFor(x => x.ExchangeRate).PrecisionScale(18,6,true).WithMessage("汇率:小数位不能超过6。");
 
  RuleFor(tb_FM_PaymentSettlement =>tb_FM_PaymentSettlement.TargetBizType).NotEmpty().When(x => x.TargetBizType.HasValue);
 
@@ -60,9 +60,8 @@ namespace RUINORERP.Business
 
  RuleFor(tb_FM_PaymentSettlement =>tb_FM_PaymentSettlement.TargetCurrencyID).NotEmpty().When(x => x.TargetCurrencyID.HasValue);
 
- RuleFor(x => x.TargetExchangeRate).PrecisionScale(18,6,true).WithMessage("目标汇率:小数位不能超过6。");
-
-
+//***** 
+ RuleFor(tb_FM_PaymentSettlement =>tb_FM_PaymentSettlement.ReceivePaymentType).NotNull().WithMessage("收付类型:不能为空。");
 
  RuleFor(tb_FM_PaymentSettlement =>tb_FM_PaymentSettlement.Account_id).NotEmpty().When(x => x.Account_id.HasValue);
 

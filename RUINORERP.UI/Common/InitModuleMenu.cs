@@ -361,6 +361,8 @@ namespace RUINORERP.UI.Common
                 menuInfo.tb_ButtonInfos = new List<tb_ButtonInfo>();
             }
 
+
+
             List<tb_ButtonInfo> tb_ButtonInfos = new List<tb_ButtonInfo>();
             foreach (var item in btns)
             {
@@ -534,7 +536,7 @@ namespace RUINORERP.UI.Common
                 }
             }
 
-            //通过情况时 排除窗体上的一些指定的按钮，如：核销查询。只会有查询。没有审核 删除这些
+            //通用情况时 排除窗体上的一些指定的按钮，如：核销查询。只会有查询。没有审核 删除这些
             if (c is BaseQuery)
             {
                 BaseQuery baseQuery = c as BaseQuery;
@@ -545,16 +547,49 @@ namespace RUINORERP.UI.Common
                     {
                         baseQuery.AddIncludedMenuList();
                         List<MenuItemEnums> stripItems = baseQuery.IncludedMenuList;
-                        tb_ButtonInfos = tb_ButtonInfos.Where(it => stripItems.Contains((MenuItemEnums)Enum.Parse(typeof(MenuItemEnums), it.BtnText))).ToList();
+                        List<string> excludemenuTextList = stripItems.Select(it => it.ToString()).ToList();
+                        tb_ButtonInfos = tb_ButtonInfos.Where(it => excludemenuTextList.Contains(it.BtnText)).ToList();
+
                     }
                     else
                     {
                         baseQuery.AddExcludeMenuList();
                         //其它的排除
                         List<MenuItemEnums> stripItems = baseQuery.ExcludeMenuList;
-                        tb_ButtonInfos = tb_ButtonInfos.Where(it => !stripItems.Contains((MenuItemEnums)Enum.Parse(typeof(MenuItemEnums), it.BtnText))).ToList();
+                        //意思是stripItems这个公共按钮是和枚举命名是对应的。但是 特殊窗体中 添加了命名不一样的菜单
+                        List<string> excludemenuTextList = stripItems.Select(it => it.ToString()).ToList();
+                        tb_ButtonInfos = tb_ButtonInfos.Where(it => !excludemenuTextList.Contains(it.BtnText)).ToList();
                         //其它的排除
                         List<string> MenuTextItems = baseQuery.ExcludeMenuTextList;
+                        tb_ButtonInfos = tb_ButtonInfos.Where(it => !MenuTextItems.Contains(it.BtnText)).ToList();
+                    }
+                }
+            }
+
+            if (c is BaseBillEdit)
+            {
+                BaseBillEdit baseBillEdit = c as BaseBillEdit;
+                if (baseBillEdit != null)
+                {
+                    //优先保留指定设置的菜单集合，其它的排除
+                    if (baseBillEdit.IncludedMenuList.Count > 0)
+                    {
+                        baseBillEdit.AddIncludedMenuList();
+                        List<MenuItemEnums> stripItems = baseBillEdit.IncludedMenuList;
+                        List<string> excludemenuTextList = stripItems.Select(it => it.ToString()).ToList();
+                        tb_ButtonInfos = tb_ButtonInfos.Where(it => excludemenuTextList.Contains(it.BtnText)).ToList();
+
+                    }
+                    else
+                    {
+                        baseBillEdit.AddExcludeMenuList();
+                        //其它的排除
+                        List<MenuItemEnums> stripItems = baseBillEdit.ExcludeMenuList;
+                        List<string> excludemenuTextList = stripItems.Select(it => it.ToString()).ToList();
+                        tb_ButtonInfos = tb_ButtonInfos.Where(it => !excludemenuTextList.Contains(it.BtnText)).ToList();
+
+                        //其它的排除
+                        List<string> MenuTextItems = baseBillEdit.ExcludeMenuTextList;
                         tb_ButtonInfos = tb_ButtonInfos.Where(it => !MenuTextItems.Contains(it.BtnText)).ToList();
                     }
                 }

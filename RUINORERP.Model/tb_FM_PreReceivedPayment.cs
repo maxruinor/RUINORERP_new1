@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：04/22/2025 12:16:14
+// 时间：04/29/2025 11:22:28
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -67,10 +67,10 @@ namespace RUINORERP.Model
 
         private long? _Account_id;
         /// <summary>
-        /// 收付款账户
+        /// 公司账户
         /// </summary>
-        [AdvQueryAttribute(ColName = "Account_id",ColDesc = "收付款账户")] 
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Account_id" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "收付款账户" )]
+        [AdvQueryAttribute(ColName = "Account_id",ColDesc = "公司账户")] 
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Account_id" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "公司账户" )]
         [FKRelationAttribute("tb_FM_Account","Account_id")]
         public long? Account_id
         { 
@@ -283,17 +283,17 @@ namespace RUINORERP.Model
                         }
         }
 
-        private int _FMPaymentStatus;
+        private long _PrePaymentStatus;
         /// <summary>
-        /// 支付状态
+        /// 预收付状态
         /// </summary>
-        [AdvQueryAttribute(ColName = "FMPaymentStatus",ColDesc = "支付状态")] 
-        [SugarColumn(ColumnDataType = "int", SqlParameterDbType ="Int32",  ColumnName = "FMPaymentStatus" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "支付状态")]
-        public int FMPaymentStatus
+        [AdvQueryAttribute(ColName = "PrePaymentStatus",ColDesc = "预收付状态")] 
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "PrePaymentStatus" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "预收付状态" )]
+        public long PrePaymentStatus
         { 
-            get{return _FMPaymentStatus;}
+            get{return _PrePaymentStatus;}
             set{
-            SetProperty(ref _FMPaymentStatus, value);
+            SetProperty(ref _PrePaymentStatus, value);
                         }
         }
 
@@ -367,6 +367,34 @@ namespace RUINORERP.Model
                         }
         }
 
+        private decimal _LocalRefundAmount= ((0));
+        /// <summary>
+        /// 退款金额本币
+        /// </summary>
+        [AdvQueryAttribute(ColName = "LocalRefundAmount",ColDesc = "退款金额本币")] 
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "LocalRefundAmount" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "退款金额本币" )]
+        public decimal LocalRefundAmount
+        { 
+            get{return _LocalRefundAmount;}
+            set{
+            SetProperty(ref _LocalRefundAmount, value);
+                        }
+        }
+
+        private decimal _ForeignRefundAmount= ((0));
+        /// <summary>
+        /// 退款金额外币
+        /// </summary>
+        [AdvQueryAttribute(ColName = "ForeignRefundAmount",ColDesc = "退款金额外币")] 
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "ForeignRefundAmount" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "退款金额外币" )]
+        public decimal ForeignRefundAmount
+        { 
+            get{return _ForeignRefundAmount;}
+            set{
+            SetProperty(ref _ForeignRefundAmount, value);
+                        }
+        }
+
         private decimal _ForeignBalanceAmount= ((0));
         /// <summary>
         /// 余额外币
@@ -422,20 +450,21 @@ namespace RUINORERP.Model
             SetProperty(ref _PaymentImagePath, value);
                         }
         }
-        private bool _IsAvailable;
+
+        private bool? _IsAvailable= true;
         /// <summary>
         /// 是否可用
         /// </summary>
-        [AdvQueryAttribute(ColName = "IsAvailable", ColDesc = "是否可用")]
-        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType = "Boolean", ColumnName = "IsAvailable", IsNullable = true, ColumnDescription = "是否可用")]
-        public bool IsAvailable
-        {
-            get { return _IsAvailable; }
-            set
-            {
-                SetProperty(ref _IsAvailable, value);
-            }
+        [AdvQueryAttribute(ColName = "IsAvailable",ColDesc = "是否可用")] 
+        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType ="Boolean",  ColumnName = "IsAvailable" ,IsNullable = true,ColumnDescription = "是否可用" )]
+        public bool? IsAvailable
+        { 
+            get{return _IsAvailable;}
+            set{
+            SetProperty(ref _IsAvailable, value);
+                        }
         }
+
         private string _Remark;
         /// <summary>
         /// 备注
@@ -654,7 +683,7 @@ namespace RUINORERP.Model
         [Navigate(NavigateType.OneToMany, nameof(tb_FM_ReceivablePayable.PreRPID))]
         public virtual List<tb_FM_ReceivablePayable> tb_FM_ReceivablePayables { get; set; }
         //tb_FM_ReceivablePayable.PreRPID)
-        //PreRPID.FK_TB_FM_RE_REFERENCE_TB_FM_PR)
+        //PreRPID.FK_FM_RECEIVABLEPAYABLE_REF_FM_PRERECEIVEDPAYMENT)
         //tb_FM_PreReceivedPayment.PreRPID)
 
 

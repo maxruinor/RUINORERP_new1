@@ -2033,19 +2033,15 @@ namespace RUINORERP.UI.Common
         /// <param name="cmbBox"></param>
         public static void InitDataToCmbByEnumDynamicGeneratedDataSource(Type enumType, string keyName, KryptonComboBox cmbBox, bool addSelect)
         {
-            //枚举值为int，动态生成一个类再绑定，
-            //var type = typeof(T);
+            //枚举值为int/long，动态生成一个类再绑定，
+
+            // 获取枚举的基础类型
+            Type underlyingType = Enum.GetUnderlyingType(enumType);
+
+
             var type = enumType;
             var aName = new System.Reflection.AssemblyName(Assembly.GetExecutingAssembly().GetName().Name);
-            //var ab = AppDomain.CurrentDomain.DefineDynamicAssembly(aName, AssemblyBuilderAccess.Run);//定义
-            //var mb = ab.DefineDynamicModule(aName.Name);
-            //var tb = mb.DefineType(type.Name + "EnumProxy", System.Reflection.TypeAttributes.Public, type);
-
-            //string newlikeProName1 = coldata.ColName + "_Like";
-            //var attrlikeBuilder1 = new CustomAttributeBuilder(attrCtorInfo, new object[] { coldata.ColName, "like", newlikeProName1, AdvQueryProcessType.stringLike });
-            ////动态属性要提前创建生成，后面要实体化传入控件
-            //PropertyBuilder newlikeProp1 = AddProperty(tb, newlikeProName1);
-            //newlikeProp1.SetCustomAttribute(attrlikeBuilder1);
+       
 
             TypeConfig typeConfig = new TypeConfig();
             typeConfig.FullName = aName.Name;
@@ -2053,8 +2049,14 @@ namespace RUINORERP.UI.Common
             //要创建的属性
             PropertyConfig propertyConfigKey = new PropertyConfig();
             propertyConfigKey.PropertyName = keyName;// type.Name;默认枚举名改为可以指定名
-            propertyConfigKey.PropertyType = typeof(int);//枚举值为int 默认
-
+            if (underlyingType == typeof(int))
+            {
+                propertyConfigKey.PropertyType = typeof(int);//枚举值为int 默认
+            }
+            if (underlyingType == typeof(long))
+            {
+                propertyConfigKey.PropertyType = typeof(long);//枚举值为long 默认
+            }
             PropertyConfig propertyConfigName = new PropertyConfig();
             propertyConfigName.PropertyName = "Name";
             propertyConfigName.PropertyType = typeof(string);
@@ -2065,16 +2067,28 @@ namespace RUINORERP.UI.Common
 
             List<object> list = new List<object>();
             //(enumType[])Enum.GetValues(typeof(enumType));
+
+    
+
             Array enumValues = Enum.GetValues(type);
             IEnumerator e = enumValues.GetEnumerator();
             e.Reset();
             int currentValue;
+            long currentValueLong;
             string currentName;
             while (e.MoveNext())
             {
                 object eobj = Activator.CreateInstance(newType);
-                currentValue = (int)e.Current;
-                eobj.SetPropertyValue(keyName, currentValue);
+                if (underlyingType == typeof(int))
+                {
+                    currentValue = (int)e.Current;
+                    eobj.SetPropertyValue(keyName, currentValue);
+                }
+                else if (underlyingType == typeof(long))
+                {
+                    currentValueLong = (long)e.Current;
+                    eobj.SetPropertyValue(keyName, currentValueLong);
+                }
 
                 currentName = e.Current.ToString();
 

@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：04/27/2025 15:20:51
+// 时间：04/29/2025 11:22:23
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -92,7 +92,7 @@ namespace RUINORERP.UI
                         entity.DepartmentID = Int64.Parse(txtDepartmentID.Text);
                         entity.ProjectGroup_ID = Int64.Parse(txtProjectGroup_ID.Text);
                         entity.Paytype_ID = Int64.Parse(txtPaytype_ID.Text);
-                        entity.FMPaymentStatus = Int32.Parse(txtFMPaymentStatus.Text);
+                        entity.PaymentStatus = Int64.Parse(txtPaymentStatus.Text);
                         entity.PaymentImagePath = txtPaymentImagePath.Text ;
                        entity.ReferenceNo = txtReferenceNo.Text ;
                        entity.Remark = txtRemark.Text ;
@@ -135,7 +135,7 @@ namespace RUINORERP.UI
           // DataBindingHelper.BindData4Cmb<tb_Department>(entity, k => k.DepartmentID, v=>v.XXNAME, cmbDepartmentID);
           // DataBindingHelper.BindData4Cmb<tb_ProjectGroup>(entity, k => k.ProjectGroup_ID, v=>v.XXNAME, cmbProjectGroup_ID);
           // DataBindingHelper.BindData4Cmb<tb_PaymentMethod>(entity, k => k.Paytype_ID, v=>v.XXNAME, cmbPaytype_ID);
-           DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.FMPaymentStatus, txtFMPaymentStatus, BindDataType4TextBox.Qty,false);
+           DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.PaymentStatus, txtPaymentStatus, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.PaymentImagePath, txtPaymentImagePath, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.ReferenceNo, txtReferenceNo, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.Remark, txtRemark, BindDataType4TextBox.Text,false);

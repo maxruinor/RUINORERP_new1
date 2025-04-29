@@ -43,12 +43,17 @@ namespace RUINORERP.Global.Model
  
     //在销售出库单列表中双击订单号，显示销售订单
     //通过出库单中的订单ID或者订单号关联到销售订单
+
+    /// <summary>
+    /// 关联信息
+    /// </summary>
     public class RelatedInfo
     {
         public RelatedInfo()
         {
 
         }
+
 
         public string SourceTableName { get; set; }
 

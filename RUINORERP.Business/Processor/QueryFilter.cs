@@ -375,6 +375,31 @@ namespace RUINORERP.Business.Processor
             }
             return queryField;
         }
+        /// <summary>
+        /// 指定枚举类型 保留这个写法。暂时没有使用
+        /// </summary>
+        /// <typeparam name="T">实体类型</typeparam>
+        /// <typeparam name="TEnum">枚举类型</typeparam>
+        /// <param name="queryFieldExp">查询字段表达式</param>
+        /// <param name="defaultSelectedValue">默认选中的值</param>
+        public QueryField SetQueryField<T, TEnum>(Expression<Func<T, object>> queryFieldExp, TEnum? defaultSelectedValue = null)
+            where TEnum : struct, Enum
+        {
+            QueryField queryField = SetQueryField<T>(queryFieldExp, true);
+            QueryFieldEnumData enumDataStatus = new QueryFieldEnumData();
+            queryField.FieldType = QueryFieldType.CmbEnum;
+            enumDataStatus.EnumType = typeof(TEnum);
+            enumDataStatus.SetEnumValueColName<T>(queryFieldExp);
+            enumDataStatus.AddSelectItem = true;
+
+            int? selectedValue = defaultSelectedValue.HasValue ? Convert.ToInt32(defaultSelectedValue.Value) : -1;
+            enumDataStatus.BindDataSource = EnumBindExt.GetListByEnum(typeof(TEnum), selectedValue);
+
+            queryField.AdvQueryFieldType = AdvQueryProcessType.EnumSelect;
+            queryField.QueryFieldDataPara = enumDataStatus;
+            return queryField;
+        }
+
 
         /// <summary>
         /// 能默认一次添加的普通字段用这个

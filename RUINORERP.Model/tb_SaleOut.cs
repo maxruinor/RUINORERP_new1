@@ -86,10 +86,10 @@ namespace RUINORERP.Model
 
         private long? _SOrder_ID;
         /// <summary>
-        /// 引用订单
+        /// 销售订单
         /// </summary>
-        [AdvQueryAttribute(ColName = "SOrder_ID", ColDesc = "引用订单")]
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType = "Int64", ColumnName = "SOrder_ID", DecimalDigits = 0, IsNullable = true, ColumnDescription = "引用订单")]
+        [AdvQueryAttribute(ColName = "SOrder_ID", ColDesc = "销售订单")]
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType = "Int64", ColumnName = "SOrder_ID", DecimalDigits = 0, IsNullable = true, ColumnDescription = "销售订单")]
         [FKRelationAttribute("tb_SaleOrder", "SOrder_ID")]
         public long? SOrder_ID
         {

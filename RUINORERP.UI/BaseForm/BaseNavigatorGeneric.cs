@@ -669,8 +669,12 @@ namespace RUINORERP.UI.BaseForm
                 MainForm.Instance.kryptonDockableWorkspace1.Root.Children.Add(cell);
             }
             KryptonPage page = (thisform as Control).Parent as KryptonPage;
-            MainForm.Instance.kryptonDockingManager1.RemovePage(page.UniqueName, true);
-            page.Dispose();
+            if (page != null)
+            {
+                MainForm.Instance.kryptonDockingManager1.RemovePage(page.UniqueName, true);
+                page.Dispose();
+            }
+ 
             /*
             if (page == null)
             {

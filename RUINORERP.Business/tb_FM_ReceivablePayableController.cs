@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：04/25/2025 19:03:35
+// 时间：04/29/2025 11:22:29
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -464,8 +464,11 @@ namespace RUINORERP.Business
                                .Includes(t => t.tb_currency )
                                .Includes(t => t.tb_fm_account )
                                .Includes(t => t.tb_fm_payeeinfo )
-                               .Includes(t => t.tb_customervendor )
                                .Includes(t => t.tb_fm_prereceivedpayment )
+                               .Includes(t => t.tb_customervendor )
+                               .Includes(t => t.tb_projectgroup )
+                               .Includes(t => t.tb_fm_paymentrecord )
+                               .Includes(t => t.tb_department )
                                             .Includes(t => t.tb_FM_ReceivablePayableDetails )
                         .ToListAsync();
             
@@ -489,8 +492,11 @@ namespace RUINORERP.Business
                                .Includes(t => t.tb_currency )
                                .Includes(t => t.tb_fm_account )
                                .Includes(t => t.tb_fm_payeeinfo )
-                               .Includes(t => t.tb_customervendor )
                                .Includes(t => t.tb_fm_prereceivedpayment )
+                               .Includes(t => t.tb_customervendor )
+                               .Includes(t => t.tb_projectgroup )
+                               .Includes(t => t.tb_fm_paymentrecord )
+                               .Includes(t => t.tb_department )
                                             .Includes(t => t.tb_FM_ReceivablePayableDetails )
                         .ToListAsync();
             
@@ -514,8 +520,11 @@ namespace RUINORERP.Business
                             .Includes(t => t.tb_currency )
                             .Includes(t => t.tb_fm_account )
                             .Includes(t => t.tb_fm_payeeinfo )
-                            .Includes(t => t.tb_customervendor )
                             .Includes(t => t.tb_fm_prereceivedpayment )
+                            .Includes(t => t.tb_customervendor )
+                            .Includes(t => t.tb_projectgroup )
+                            .Includes(t => t.tb_fm_paymentrecord )
+                            .Includes(t => t.tb_department )
                                         .Includes(t => t.tb_FM_ReceivablePayableDetails )
                         .ToList();
             
@@ -556,8 +565,11 @@ namespace RUINORERP.Business
                              .Includes(t => t.tb_currency )
                             .Includes(t => t.tb_fm_account )
                             .Includes(t => t.tb_fm_payeeinfo )
-                            .Includes(t => t.tb_customervendor )
                             .Includes(t => t.tb_fm_prereceivedpayment )
+                            .Includes(t => t.tb_customervendor )
+                            .Includes(t => t.tb_projectgroup )
+                            .Includes(t => t.tb_fm_paymentrecord )
+                            .Includes(t => t.tb_department )
                                         .Includes(t => t.tb_FM_ReceivablePayableDetails )
                         .FirstAsync();
             if(entity!=null)

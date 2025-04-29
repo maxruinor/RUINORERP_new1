@@ -47,6 +47,14 @@ namespace RUINORERP.UI.FM
 
         }
 
+        public override void AddExcludeMenuList()
+        {
+            base.AddExcludeMenuList(MenuItemEnums.反结案);
+            base.AddExcludeMenuList(MenuItemEnums.反审);
+            base.AddExcludeMenuList(MenuItemEnums.结案);
+            base.AddExcludeMenuList(MenuItemEnums.复制性新增);
+            base.AddExcludeMenuList(MenuItemEnums.新增);
+        }
 
         /// <summary>
         /// 收付款类型决定对应的菜单功能
@@ -88,6 +96,14 @@ namespace RUINORERP.UI.FM
 
                         #endregion
                     }
+                    else
+                    {
+                        lblPayeeInfoID.Visible = false;
+                        txtPayeeAccountNo.Visible = false;
+                        cmbPayeeInfoID.Visible = false;
+                        btnInfo.Visible = false;
+                        kryptonGroupBox收款账号信息.Visible = false;
+                    }
                 }
                 else
                 {
@@ -126,7 +142,7 @@ namespace RUINORERP.UI.FM
                 entity.ReceivePaymentType = (int)PaymentType;
                 entity.ActionStatus = ActionStatus.新增;
                 entity.PaymentDate = System.DateTime.Now;
-                entity.FMPaymentStatus = (int)FMPaymentStatus.草稿;
+                entity.PaymentStatus = (long)PaymentStatus.草稿;
                 if (PaymentType == ReceivePaymentType.付款)
                 {
                     entity.PaymentNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.付款单);
@@ -162,7 +178,7 @@ namespace RUINORERP.UI.FM
             DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.LocalPaidAmount.ToString(), txtLocalPaidAmount, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.Remark, txtRemark, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.PayeeAccountNo, txtPayeeAccountNo, BindDataType4TextBox.Text, false);
-            DataBindingHelper.BindData4ControlByEnum<tb_FM_PaymentRecord>(entity, t => t.FMPaymentStatus, lblDataStatus, BindDataType4Enum.EnumName, typeof(FMPaymentStatus));
+            DataBindingHelper.BindData4ControlByEnum<tb_FM_PaymentRecord>(entity, t => t.PaymentStatus, lblDataStatus, BindDataType4Enum.EnumName, typeof(PaymentStatus));
             DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.BizType, txtBizType, BindDataType4TextBox.Qty, false);
             //DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.SourceBilllID, txtSourceBilllID, BindDataType4TextBox.Qty, false);
             DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.SourceBillNO, txtSourceBillNO, BindDataType4TextBox.Text, false);

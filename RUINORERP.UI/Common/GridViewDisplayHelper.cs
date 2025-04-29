@@ -123,9 +123,21 @@ namespace RUINORERP.UI.Common
                 {
                     FixedDictionaryMappings.Add(new FixedDictionaryMapping(_type.Name, nameof(GoodsSource), Common.CommonHelper.Instance.GetKeyValuePairs(typeof(GoodsSource))));
                 }
-                else if (prop.Name == nameof(FMPaymentStatus))
+                else if (prop.Name == nameof(SettlementType))
                 {
-                    FixedDictionaryMappings.Add(new FixedDictionaryMapping(_type.Name, nameof(FMPaymentStatus), Common.CommonHelper.Instance.GetKeyValuePairs(typeof(FMPaymentStatus))));
+                    FixedDictionaryMappings.Add(new FixedDictionaryMapping(_type.Name, nameof(SettlementType), Common.CommonHelper.Instance.GetKeyValuePairs(typeof(SettlementType))));
+                }
+                else if (prop.Name == nameof(PaymentStatus))
+                {
+                    FixedDictionaryMappings.Add(new FixedDictionaryMapping(_type.Name, nameof(PaymentStatus), Common.CommonHelper.Instance.GetKeyValuePairs(typeof(PaymentStatus))));
+                }
+                else if (prop.Name == nameof(PrePaymentStatus))
+                {
+                    FixedDictionaryMappings.Add(new FixedDictionaryMapping(_type.Name, nameof(PrePaymentStatus), Common.CommonHelper.Instance.GetKeyValuePairs(typeof(PrePaymentStatus))));
+                }
+                else if (prop.Name == nameof(ARAPStatus))
+                {
+                    FixedDictionaryMappings.Add(new FixedDictionaryMapping(_type.Name, nameof(ARAPStatus), Common.CommonHelper.Instance.GetKeyValuePairs(typeof(ARAPStatus))));
                 }
                 else if (prop.Name == nameof(BizType))
                 {

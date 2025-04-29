@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：04/26/2025 22:26:21
+// 时间：04/29/2025 11:22:26
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -135,17 +135,17 @@ namespace RUINORERP.Model
                         }
         }
 
-        private decimal? _SourceExchangeRate;
+        private decimal? _ExchangeRate;
         /// <summary>
-        /// 来源汇率
+        /// 汇率
         /// </summary>
-        [AdvQueryAttribute(ColName = "SourceExchangeRate",ColDesc = "来源汇率")] 
-        [SugarColumn(ColumnDataType = "decimal", SqlParameterDbType ="Decimal",  ColumnName = "SourceExchangeRate" , DecimalDigits = 6,IsNullable = true,ColumnDescription = "来源汇率" )]
-        public decimal? SourceExchangeRate
+        [AdvQueryAttribute(ColName = "ExchangeRate",ColDesc = "汇率")] 
+        [SugarColumn(ColumnDataType = "decimal", SqlParameterDbType ="Decimal",  ColumnName = "ExchangeRate" , DecimalDigits = 6,IsNullable = true,ColumnDescription = "汇率" )]
+        public decimal? ExchangeRate
         { 
-            get{return _SourceExchangeRate;}
+            get{return _ExchangeRate;}
             set{
-            SetProperty(ref _SourceExchangeRate, value);
+            SetProperty(ref _ExchangeRate, value);
                         }
         }
 
@@ -202,20 +202,6 @@ namespace RUINORERP.Model
             get{return _TargetCurrencyID;}
             set{
             SetProperty(ref _TargetCurrencyID, value);
-                        }
-        }
-
-        private decimal? _TargetExchangeRate;
-        /// <summary>
-        /// 目标汇率
-        /// </summary>
-        [AdvQueryAttribute(ColName = "TargetExchangeRate",ColDesc = "目标汇率")] 
-        [SugarColumn(ColumnDataType = "decimal", SqlParameterDbType ="Decimal",  ColumnName = "TargetExchangeRate" , DecimalDigits = 6,IsNullable = true,ColumnDescription = "目标汇率" )]
-        public decimal? TargetExchangeRate
-        { 
-            get{return _TargetExchangeRate;}
-            set{
-            SetProperty(ref _TargetExchangeRate, value);
                         }
         }
 

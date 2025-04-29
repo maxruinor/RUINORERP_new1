@@ -28,15 +28,41 @@
         /// </summary>
         private void InitializeComponent()
         {
+            ((System.ComponentModel.ISupportInitialize)(this.kryptonPanelMainBig)).BeginInit();
+            this.kryptonPanelMainBig.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.kryptonDockableWorkspaceQuery)).BeginInit();
             this.SuspendLayout();
             // 
-            // UCLocationTypeList
+            // kryptonPanelMainBig
+            // 
+            this.kryptonPanelMainBig.Size = new System.Drawing.Size(467, 420);
+            // 
+            // kryptonDockableWorkspaceQuery
+            // 
+            // 
+            // 
+            // 
+            this.kryptonDockableWorkspaceQuery.Root.UniqueName = "1E691A582DF14E8443907289238B58BD";
+            this.kryptonDockableWorkspaceQuery.Root.WorkspaceControl = this.kryptonDockableWorkspaceQuery;
+            this.kryptonDockableWorkspaceQuery.Size = new System.Drawing.Size(467, 281);
+            // 
+            // kryptonDockingManagerQuery
+            // 
+            this.kryptonDockingManagerQuery.Strings.TextAutoHide = "自动隐藏";
+            // 
+            // UCPaymentSettlementQuery
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.Name = "UCLocationTypeList";
+            this.Name = "UCPaymentSettlementQuery";
             this.Size = new System.Drawing.Size(467, 445);
+            this.Load += new System.EventHandler(this.UCPaymentSettlementQuery_Load);
+            ((System.ComponentModel.ISupportInitialize)(this.kryptonPanelMainBig)).EndInit();
+            this.kryptonPanelMainBig.ResumeLayout(false);
+            this.kryptonPanelMainBig.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.kryptonDockableWorkspaceQuery)).EndInit();
             this.ResumeLayout(false);
+            this.PerformLayout();
 
         }
 

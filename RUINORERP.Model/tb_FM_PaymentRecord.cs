@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：04/27/2025 15:20:54
+// 时间：04/29/2025 11:22:24
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -311,17 +311,17 @@ namespace RUINORERP.Model
                         }
         }
 
-        private int? _FMPaymentStatus;
+        private long? _PaymentStatus;
         /// <summary>
         /// 支付状态
         /// </summary>
-        [AdvQueryAttribute(ColName = "FMPaymentStatus",ColDesc = "支付状态")] 
-        [SugarColumn(ColumnDataType = "int", SqlParameterDbType ="Int32",  ColumnName = "FMPaymentStatus" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "支付状态" )]
-        public int? FMPaymentStatus
+        [AdvQueryAttribute(ColName = "PaymentStatus",ColDesc = "支付状态")] 
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "PaymentStatus" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "支付状态" )]
+        public long? PaymentStatus
         { 
-            get{return _FMPaymentStatus;}
+            get{return _PaymentStatus;}
             set{
-            SetProperty(ref _FMPaymentStatus, value);
+            SetProperty(ref _PaymentStatus, value);
                         }
         }
 
@@ -565,6 +565,14 @@ namespace RUINORERP.Model
         [Navigate(NavigateType.OneToOne, nameof(Account_id))]
         public virtual tb_FM_Account tb_fm_account { get; set; }
 
+
+        //[Browsable(false)]打印报表时的数据源会不显示
+        [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_FM_ReceivablePayable.PaymentId))]
+        public virtual List<tb_FM_ReceivablePayable> tb_FM_ReceivablePayables { get; set; }
+        //tb_FM_ReceivablePayable.PaymentId)
+        //PaymentId.FK_TB_FM_RE_REFERENCE_TB_FM_PA)
+        //tb_FM_PaymentRecord.PaymentId)
 
 
         #endregion

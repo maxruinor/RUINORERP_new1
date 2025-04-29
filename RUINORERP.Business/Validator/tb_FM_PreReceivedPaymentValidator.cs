@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：04/22/2025 12:16:15
+// 时间：04/29/2025 11:22:28
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -41,7 +41,7 @@ namespace RUINORERP.Business
  RuleFor(tb_FM_PreReceivedPayment =>tb_FM_PreReceivedPayment.PreRPNO).MaximumLength(15).WithMessage("单据编号:不能超过最大长度,15.");
  RuleFor(tb_FM_PreReceivedPayment =>tb_FM_PreReceivedPayment.PreRPNO).NotEmpty().WithMessage("单据编号:不能为空。");
 
- RuleFor(tb_FM_PreReceivedPayment =>tb_FM_PreReceivedPayment.Account_id).Must(CheckForeignKeyValueCanNull).WithMessage("收付款账户:下拉选择值不正确。");
+ RuleFor(tb_FM_PreReceivedPayment =>tb_FM_PreReceivedPayment.Account_id).Must(CheckForeignKeyValueCanNull).WithMessage("公司账户:下拉选择值不正确。");
  RuleFor(tb_FM_PreReceivedPayment =>tb_FM_PreReceivedPayment.Account_id).NotEmpty().When(x => x.Account_id.HasValue);
 
  RuleFor(tb_FM_PreReceivedPayment =>tb_FM_PreReceivedPayment.CustomerVendor_ID).Must(CheckForeignKeyValue).WithMessage("往来单位:下拉选择值不正确。");
@@ -78,7 +78,8 @@ namespace RUINORERP.Business
 
  RuleFor(tb_FM_PreReceivedPayment =>tb_FM_PreReceivedPayment.SourceBillNO).MaximumLength(15).WithMessage("来源单号:不能超过最大长度,15.");
 
-
+//***** 
+ RuleFor(tb_FM_PreReceivedPayment =>tb_FM_PreReceivedPayment.PrePaymentStatus).NotNull().WithMessage("预收付状态:不能为空。");
 
  RuleFor(x => x.ForeignPrepaidAmount).PrecisionScale(19,4,true).WithMessage("预定金额外币:小数位不能超过4。");
 
@@ -91,6 +92,10 @@ namespace RUINORERP.Business
 
  RuleFor(x => x.LocalPaidAmount).PrecisionScale(19,4,true).WithMessage("核销金额本币:小数位不能超过4。");
 
+ RuleFor(x => x.LocalRefundAmount).PrecisionScale(19,4,true).WithMessage("退款金额本币:小数位不能超过4。");
+
+ RuleFor(x => x.ForeignRefundAmount).PrecisionScale(19,4,true).WithMessage("退款金额外币:小数位不能超过4。");
+
  RuleFor(x => x.ForeignBalanceAmount).PrecisionScale(19,4,true).WithMessage("余额外币:小数位不能超过4。");
 
  RuleFor(x => x.LocalBalanceAmount).PrecisionScale(19,4,true).WithMessage("余额本币:小数位不能超过4。");
@@ -99,6 +104,8 @@ namespace RUINORERP.Business
  RuleFor(tb_FM_PreReceivedPayment =>tb_FM_PreReceivedPayment.ReceivePaymentType).NotNull().WithMessage("收付款类型:不能为空。");
 
  RuleFor(tb_FM_PreReceivedPayment =>tb_FM_PreReceivedPayment.PaymentImagePath).MaximumLength(300).WithMessage("付款凭证:不能超过最大长度,300.");
+
+//有默认值
 
  RuleFor(tb_FM_PreReceivedPayment =>tb_FM_PreReceivedPayment.Remark).MaximumLength(150).WithMessage("备注:不能超过最大长度,150.");
 

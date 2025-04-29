@@ -82,17 +82,31 @@ namespace RUINORERP.UI.Common
         {
             if (!enumType.IsEnum)
                 throw new ArgumentException("提供的类型必须是枚举类型。", nameof(enumType));
+
+            // 获取枚举的基础类型
+            Type underlyingType = Enum.GetUnderlyingType(enumType);
+
             List<KeyValuePair<object, string>> kvlistPayStatus = new List<KeyValuePair<object, string>>();
             Array enumValues = Enum.GetValues(enumType);
             IEnumerator e = enumValues.GetEnumerator();
             e.Reset();
-            int currentValue;
+            int currentValueInt;
+            long currentValueLong;
+
             string currentName;
             while (e.MoveNext())
             {
-                currentValue = (int)e.Current;
                 currentName = e.Current.ToString();
-                kvlistPayStatus.Add(new KeyValuePair<object, string>(currentValue, currentName));
+                if (underlyingType == typeof(int))
+                {
+                    currentValueInt = (int)e.Current;
+                    kvlistPayStatus.Add(new KeyValuePair<object, string>(currentValueInt, currentName));
+                }
+                if (underlyingType == typeof(long))
+                {
+                    currentValueLong = (long)e.Current;
+                    kvlistPayStatus.Add(new KeyValuePair<object, string>(currentValueLong, currentName));
+                }
             }
             return kvlistPayStatus;
         }

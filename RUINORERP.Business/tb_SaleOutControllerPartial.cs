@@ -573,7 +573,7 @@ namespace RUINORERP.Business
 
                     //payable.Remark = $"销售出库单：{entity.SaleOutNo}的应收款";
                     Business.BusinessHelper.Instance.InitEntity(payable);
-                    payable.FMPaymentStatus = (int)FMPaymentStatus.提交;
+                    payable.ARAPStatus = (long)ARAPStatus.待审核;
                     BaseController<tb_FM_ReceivablePayable> ctrpay = _appContext.GetRequiredServiceByName<BaseController<tb_FM_ReceivablePayable>>(typeof(T).Name + "Controller");
                     ReturnMainSubResults<tb_FM_ReceivablePayable> rmr = await ctrpay.BaseSaveOrUpdateWithChild<tb_FM_ReceivablePayable>(payable);
                     if (rmr.Succeeded)
@@ -587,8 +587,8 @@ namespace RUINORERP.Business
                                 .Where(c => c.CustomerVendor_ID == entity.CustomerVendor_ID
                                  && c.Currency_ID == entity.Currency_ID // 添加币种条件
                                  && c.IsAvailable == true
-                                && (c.FMPaymentStatus == (int)FMPaymentStatus.已审核
-                                 || c.FMPaymentStatus == (int)FMPaymentStatus.部分核销))
+                                && (c.PrePaymentStatus == (long)PrePaymentStatus.已生效
+                                 || c.PrePaymentStatus == (long)PrePaymentStatus.部分核销))
                                 .OrderBy(c => c.PrePayDate)
                                 .ToListAsync();
 
@@ -615,11 +615,11 @@ namespace RUINORERP.Business
 
                                     if (prePayments[i].ForeignBalanceAmount == 0)
                                     {
-                                        prePayments[i].FMPaymentStatus = (int)FMPaymentStatus.全额核销;
+                                        prePayments[i].PrePaymentStatus = (long)PrePaymentStatus.全额核销;
                                     }
                                     else
                                     {
-                                        prePayments[i].FMPaymentStatus = (int)FMPaymentStatus.部分核销;
+                                        prePayments[i].PrePaymentStatus = (long)PrePaymentStatus.部分核销;
                                     }
                                     // 更新应付表
 
@@ -630,11 +630,11 @@ namespace RUINORERP.Business
                                     payable.ForeignBalanceAmount = entity.ForeignTotalAmount - payable.ForeignPaidAmount;
                                     if (payable.ForeignBalanceAmount == 0)
                                     {
-                                        payable.FMPaymentStatus = (int)FMPaymentStatus.全额核销;
+                                        payable.ARAPStatus = (long)ARAPStatus.已结清;
                                     }
                                     else
                                     {
-                                        payable.FMPaymentStatus = (int)FMPaymentStatus.部分核销;
+                                        payable.ARAPStatus = (long)ARAPStatus.部分支付;
                                     }
                                 }
                                 else
@@ -645,22 +645,22 @@ namespace RUINORERP.Business
                                     TotalAmount -= prePayLocalAmount;
                                     if (prePayments[i].LocalBalanceAmount == 0)
                                     {
-                                        prePayments[i].FMPaymentStatus = (int)FMPaymentStatus.全额核销;
+                                        prePayments[i].PrePaymentStatus = (long)PrePaymentStatus.全额核销;
                                     }
                                     else
                                     {
-                                        prePayments[i].FMPaymentStatus = (int)FMPaymentStatus.部分核销;
+                                        prePayments[i].PrePaymentStatus = (long)PrePaymentStatus.部分核销;
                                     }
                                     // 更新应付表
                                     payable.LocalPaidAmount += prePayLocalAmount;
                                     payable.LocalBalanceAmount = entity.TotalAmount - payable.LocalPaidAmount;
                                     if (payable.LocalBalanceAmount == 0)
                                     {
-                                        payable.FMPaymentStatus = (int)FMPaymentStatus.全额核销;
+                                        payable.ARAPStatus = (long)ARAPStatus.已结清;
                                     }
                                     else
                                     {
-                                        payable.FMPaymentStatus = (int)FMPaymentStatus.部分核销;
+                                        payable.ARAPStatus = (long)ARAPStatus.部分支付;
                                     }
                                 }
                                 // 生成核销记录证明从预收中收款抵扣应收
@@ -689,7 +689,7 @@ namespace RUINORERP.Business
                                 }
                                 if (prePayments[i].ExchangeRate.HasValue)
                                 {
-                                    writeoff.SourceExchangeRate = prePayments[i].ExchangeRate.Value;
+                                    writeoff.ExchangeRate = prePayments[i].ExchangeRate.Value;
                                 }
 
                                 writeoff.TargetBillID = payable.ARAPId; // 应收单ID
@@ -699,7 +699,7 @@ namespace RUINORERP.Business
                                 writeoff.TargetCurrencyID = payable.Currency_ID;
                                 if (payable.ExchangeRate.HasValue)
                                 {
-                                    writeoff.TargetExchangeRate = payable.ExchangeRate.Value;
+                                    writeoff.ExchangeRate = payable.ExchangeRate.Value;
                                 }
                                 writeoff.IsReversed = false;
                                 writeoff.SettledForeignAmount = prePayForeignAmount;
@@ -726,7 +726,7 @@ namespace RUINORERP.Business
                                 var result = await _unitOfWorkManage.GetDbClient().Updateable<tb_FM_PreReceivedPayment>(prePayments)
                                     .UpdateColumns(it => new
                                     {
-                                        it.FMPaymentStatus,
+                                        it.PrePaymentStatus,
                                         it.ForeignBalanceAmount,
                                         it.ForeignPaidAmount,
                                         it.LocalBalanceAmount,
@@ -790,11 +790,11 @@ namespace RUINORERP.Business
         {
             if (payable.ForeignBalanceAmount == 0 || payable.LocalBalanceAmount == 0)
             {
-                payable.FMPaymentStatus = (int)FMPaymentStatus.全额核销;
+                payable.ARAPStatus = (long)ARAPStatus.已结清;
             }
             else
             {
-                payable.FMPaymentStatus = (int)FMPaymentStatus.部分核销;
+                payable.ARAPStatus = (long)ARAPStatus.部分支付;
             }
         }
 

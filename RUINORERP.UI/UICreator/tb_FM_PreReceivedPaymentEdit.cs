@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：04/22/2025 12:16:13
+// 时间：04/29/2025 11:22:26
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -72,6 +72,9 @@ namespace RUINORERP.UI
         
         
         
+        
+        
+        
 
          }
 /*
@@ -92,20 +95,23 @@ namespace RUINORERP.UI
                         entity.ExchangeRate = Decimal.Parse(txtExchangeRate.Text);
                         entity.PrePayDate = DateTime.Parse(txtPrePayDate.Text);
                         entity.PrePaymentReason = txtPrePaymentReason.Text ;
-                       entity.SourceBill_BizType = Int32.Parse(txtSourceBill_BizType.Text);
+                       entity.BizType = Int32.Parse(txtBizType.Text);
                         entity.SourceBill_ID = Int64.Parse(txtSourceBill_ID.Text);
                         entity.SourceBillNO = txtSourceBillNO.Text ;
-                       entity.FMPaymentStatus = Int32.Parse(txtFMPaymentStatus.Text);
+                       entity.PrePaymentStatus = Int64.Parse(txtPrePaymentStatus.Text);
                         entity.ForeignPrepaidAmount = Decimal.Parse(txtForeignPrepaidAmount.Text);
                         entity.LocalPrepaidAmount = Decimal.Parse(txtLocalPrepaidAmount.Text);
                         entity.LocalPrepaidAmountInWords = txtLocalPrepaidAmountInWords.Text ;
                        entity.ForeignPaidAmount = Decimal.Parse(txtForeignPaidAmount.Text);
                         entity.LocalPaidAmount = Decimal.Parse(txtLocalPaidAmount.Text);
+                        entity.LocalRefundAmount = Decimal.Parse(txtLocalRefundAmount.Text);
+                        entity.ForeignRefundAmount = Decimal.Parse(txtForeignRefundAmount.Text);
                         entity.ForeignBalanceAmount = Decimal.Parse(txtForeignBalanceAmount.Text);
                         entity.LocalBalanceAmount = Decimal.Parse(txtLocalBalanceAmount.Text);
                         entity.ReceivePaymentType = Int32.Parse(txtReceivePaymentType.Text);
                         entity.PaymentImagePath = txtPaymentImagePath.Text ;
-                       entity.Remark = txtRemark.Text ;
+                       entity.IsAvailable = Boolean.Parse(txtIsAvailable.Text);
+                        entity.Remark = txtRemark.Text ;
                        entity.Created_at = DateTime.Parse(txtCreated_at.Text);
                         entity.Created_by = Int64.Parse(txtCreated_by.Text);
                         entity.Modified_at = DateTime.Parse(txtModified_at.Text);
@@ -140,19 +146,23 @@ namespace RUINORERP.UI
            DataBindingHelper.BindData4TextBox<tb_FM_PreReceivedPayment>(entity, t => t.ExchangeRate.ToString(), txtExchangeRate, BindDataType4TextBox.Money,false);
            DataBindingHelper.BindData4DataTime<tb_FM_PreReceivedPayment>(entity, t => t.PrePayDate, dtpPrePayDate,false);
            DataBindingHelper.BindData4TextBox<tb_FM_PreReceivedPayment>(entity, t => t.PrePaymentReason, txtPrePaymentReason, BindDataType4TextBox.Text,false);
-           DataBindingHelper.BindData4TextBox<tb_FM_PreReceivedPayment>(entity, t => t.SourceBill_BizType, txtSourceBill_BizType, BindDataType4TextBox.Qty,false);
+           DataBindingHelper.BindData4TextBox<tb_FM_PreReceivedPayment>(entity, t => t.BizType, txtBizType, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4TextBox<tb_FM_PreReceivedPayment>(entity, t => t.SourceBill_ID, txtSourceBill_ID, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4TextBox<tb_FM_PreReceivedPayment>(entity, t => t.SourceBillNO, txtSourceBillNO, BindDataType4TextBox.Text,false);
-           DataBindingHelper.BindData4TextBox<tb_FM_PreReceivedPayment>(entity, t => t.FMPaymentStatus, txtFMPaymentStatus, BindDataType4TextBox.Qty,false);
+           DataBindingHelper.BindData4TextBox<tb_FM_PreReceivedPayment>(entity, t => t.PrePaymentStatus, txtPrePaymentStatus, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4TextBox<tb_FM_PreReceivedPayment>(entity, t => t.ForeignPrepaidAmount.ToString(), txtForeignPrepaidAmount, BindDataType4TextBox.Money,false);
            DataBindingHelper.BindData4TextBox<tb_FM_PreReceivedPayment>(entity, t => t.LocalPrepaidAmount.ToString(), txtLocalPrepaidAmount, BindDataType4TextBox.Money,false);
            DataBindingHelper.BindData4TextBox<tb_FM_PreReceivedPayment>(entity, t => t.LocalPrepaidAmountInWords, txtLocalPrepaidAmountInWords, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_FM_PreReceivedPayment>(entity, t => t.ForeignPaidAmount.ToString(), txtForeignPaidAmount, BindDataType4TextBox.Money,false);
            DataBindingHelper.BindData4TextBox<tb_FM_PreReceivedPayment>(entity, t => t.LocalPaidAmount.ToString(), txtLocalPaidAmount, BindDataType4TextBox.Money,false);
+           DataBindingHelper.BindData4TextBox<tb_FM_PreReceivedPayment>(entity, t => t.LocalRefundAmount.ToString(), txtLocalRefundAmount, BindDataType4TextBox.Money,false);
+           DataBindingHelper.BindData4TextBox<tb_FM_PreReceivedPayment>(entity, t => t.ForeignRefundAmount.ToString(), txtForeignRefundAmount, BindDataType4TextBox.Money,false);
            DataBindingHelper.BindData4TextBox<tb_FM_PreReceivedPayment>(entity, t => t.ForeignBalanceAmount.ToString(), txtForeignBalanceAmount, BindDataType4TextBox.Money,false);
            DataBindingHelper.BindData4TextBox<tb_FM_PreReceivedPayment>(entity, t => t.LocalBalanceAmount.ToString(), txtLocalBalanceAmount, BindDataType4TextBox.Money,false);
            DataBindingHelper.BindData4TextBox<tb_FM_PreReceivedPayment>(entity, t => t.ReceivePaymentType, txtReceivePaymentType, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4TextBox<tb_FM_PreReceivedPayment>(entity, t => t.PaymentImagePath, txtPaymentImagePath, BindDataType4TextBox.Text,false);
+           DataBindingHelper.BindData4CheckBox<tb_FM_PreReceivedPayment>(entity, t => t.IsAvailable, chkIsAvailable, false);
+//有默认值
            DataBindingHelper.BindData4TextBox<tb_FM_PreReceivedPayment>(entity, t => t.Remark, txtRemark, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4DataTime<tb_FM_PreReceivedPayment>(entity, t => t.Created_at, dtpCreated_at,false);
            DataBindingHelper.BindData4TextBox<tb_FM_PreReceivedPayment>(entity, t => t.Created_by, txtCreated_by, BindDataType4TextBox.Qty,false);

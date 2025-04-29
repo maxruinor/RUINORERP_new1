@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：04/25/2025 19:03:37
+// 时间：04/29/2025 11:22:30
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -43,22 +43,25 @@ namespace RUINORERP.Business
  RuleFor(tb_FM_ReceivablePayable =>tb_FM_ReceivablePayable.PreRPID).Must(CheckForeignKeyValueCanNull).WithMessage("预收付款单:下拉选择值不正确。");
  RuleFor(tb_FM_ReceivablePayable =>tb_FM_ReceivablePayable.PreRPID).NotEmpty().When(x => x.PreRPID.HasValue);
 
- RuleFor(tb_FM_ReceivablePayable =>tb_FM_ReceivablePayable.PayeeInfoID).Must(CheckForeignKeyValueCanNull).WithMessage("收款信息:下拉选择值不正确。");
- RuleFor(tb_FM_ReceivablePayable =>tb_FM_ReceivablePayable.PayeeInfoID).NotEmpty().When(x => x.PayeeInfoID.HasValue);
-
- RuleFor(tb_FM_ReceivablePayable =>tb_FM_ReceivablePayable.PayeeAccountNo).MaximumLength(50).WithMessage("收款账号:不能超过最大长度,50.");
- RuleFor(tb_FM_ReceivablePayable =>tb_FM_ReceivablePayable.PayeeAccountNo).NotEmpty().WithMessage("收款账号:不能为空。");
-
- RuleFor(tb_FM_ReceivablePayable =>tb_FM_ReceivablePayable.Account_id).Must(CheckForeignKeyValueCanNull).WithMessage("付款账户:下拉选择值不正确。");
- RuleFor(tb_FM_ReceivablePayable =>tb_FM_ReceivablePayable.Account_id).NotEmpty().When(x => x.Account_id.HasValue);
+ RuleFor(tb_FM_ReceivablePayable =>tb_FM_ReceivablePayable.PaymentId).Must(CheckForeignKeyValueCanNull).WithMessage("支付记录:下拉选择值不正确。");
+ RuleFor(tb_FM_ReceivablePayable =>tb_FM_ReceivablePayable.PaymentId).NotEmpty().When(x => x.PaymentId.HasValue);
 
  RuleFor(tb_FM_ReceivablePayable =>tb_FM_ReceivablePayable.CustomerVendor_ID).Must(CheckForeignKeyValue).WithMessage("往来单位:下拉选择值不正确。");
 
  RuleFor(tb_FM_ReceivablePayable =>tb_FM_ReceivablePayable.Currency_ID).Must(CheckForeignKeyValue).WithMessage("币别:下拉选择值不正确。");
 
+ RuleFor(tb_FM_ReceivablePayable =>tb_FM_ReceivablePayable.Account_id).Must(CheckForeignKeyValueCanNull).WithMessage("公司账户:下拉选择值不正确。");
+ RuleFor(tb_FM_ReceivablePayable =>tb_FM_ReceivablePayable.Account_id).NotEmpty().When(x => x.Account_id.HasValue);
+
+ RuleFor(tb_FM_ReceivablePayable =>tb_FM_ReceivablePayable.PayeeInfoID).Must(CheckForeignKeyValueCanNull).WithMessage("收款信息:下拉选择值不正确。");
+ RuleFor(tb_FM_ReceivablePayable =>tb_FM_ReceivablePayable.PayeeInfoID).NotEmpty().When(x => x.PayeeInfoID.HasValue);
+
+ RuleFor(tb_FM_ReceivablePayable =>tb_FM_ReceivablePayable.PayeeAccountNo).MaximumLength(50).WithMessage("收款账号:不能超过最大长度,50.");
+
  RuleFor(x => x.ExchangeRate).PrecisionScale(10,4,true).WithMessage("汇率:小数位不能超过4。");
 
-
+//***** 
+ RuleFor(tb_FM_ReceivablePayable =>tb_FM_ReceivablePayable.ReceivePaymentType).NotNull().WithMessage("收付类型:不能为空。");
 
  RuleFor(x => x.TotalForeignPayableAmount).PrecisionScale(19,4,true).WithMessage("总金额外币:小数位不能超过4。");
 
@@ -73,10 +76,10 @@ namespace RUINORERP.Business
  RuleFor(x => x.LocalBalanceAmount).PrecisionScale(19,4,true).WithMessage("未核销本币:小数位不能超过4。");
 
 
- RuleFor(tb_FM_ReceivablePayable =>tb_FM_ReceivablePayable.Employee_ID).NotEmpty().When(x => x.Employee_ID.HasValue);
-
+ RuleFor(tb_FM_ReceivablePayable =>tb_FM_ReceivablePayable.DepartmentID).Must(CheckForeignKeyValueCanNull).WithMessage("部门:下拉选择值不正确。");
  RuleFor(tb_FM_ReceivablePayable =>tb_FM_ReceivablePayable.DepartmentID).NotEmpty().When(x => x.DepartmentID.HasValue);
 
+ RuleFor(tb_FM_ReceivablePayable =>tb_FM_ReceivablePayable.ProjectGroup_ID).Must(CheckForeignKeyValueCanNull).WithMessage("项目组:下拉选择值不正确。");
  RuleFor(tb_FM_ReceivablePayable =>tb_FM_ReceivablePayable.ProjectGroup_ID).NotEmpty().When(x => x.ProjectGroup_ID.HasValue);
 
 
@@ -84,7 +87,7 @@ namespace RUINORERP.Business
 
  RuleFor(x => x.UntaxedTotalAmont).PrecisionScale(19,4,true).WithMessage("未税总计:小数位不能超过4。");
 
- 
+ RuleFor(tb_FM_ReceivablePayable =>tb_FM_ReceivablePayable.ARAPStatus).NotEmpty().When(x => x.ARAPStatus.HasValue);
 
  RuleFor(tb_FM_ReceivablePayable =>tb_FM_ReceivablePayable.Remark).MaximumLength(150).WithMessage("备注:不能超过最大长度,150.");
 

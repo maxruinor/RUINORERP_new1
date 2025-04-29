@@ -33,6 +33,8 @@ using AutoUpdateTools;
 using RUINORERP.UI.BaseForm;
 using RUINORERP.Common.Extensions;
 using RUINORERP.Global.EnumExt;
+using RUINORERP.Business.CommService;
+using RUINORERP.Global.Model;
 namespace RUINORERP.UI.FM
 {
 
@@ -46,6 +48,15 @@ namespace RUINORERP.UI.FM
             HasChildData = false;
         }
         public ReceivePaymentType PaymentType { get; set; }
+
+
+        public override void AddExcludeMenuList()
+        {
+            base.AddExcludeMenuList(MenuItemEnums.反结案);
+            base.AddExcludeMenuList(MenuItemEnums.反审);
+            base.AddExcludeMenuList(MenuItemEnums.结案);
+        }
+
         public override void BuildLimitQueryConditions()
         {
             var lambda = Expressionable.Create<tb_FM_PaymentRecord>()
@@ -110,8 +121,31 @@ namespace RUINORERP.UI.FM
             }
         }
 
+        private void UCPaymentRecordQuery_Load(object sender, EventArgs e)
+        {
+
+            #region 双击单号后按业务类型查询显示对应业务窗体
+            base._UCBillMasterQuery.GridRelated.ComplexType = true;
+            //由这个列来决定单号显示哪个的业务窗体
+            base._UCBillMasterQuery.GridRelated.SetComplexTargetField<tb_FM_PaymentRecord>(c => c.BizType);
+            BizTypeMapper mapper = new BizTypeMapper();
+            //将枚举中的值循环
+            foreach (var biztype in Enum.GetValues(typeof(BizType)))
+            {
+                var tableName = mapper.GetTableType((BizType)biztype);
+                if (tableName == null)
+                {
+                    continue;
+                }
+                ////这个参数中指定要双击的列单号。是来自另一组  一对一的指向关系
+                //因为后面代码去查找时，直接用的 从一个对象中找这个列的值。但是枚举显示的是名称。所以这里直接传入枚举的值。
+                KeyNamePair keyNamePair = new KeyNamePair(((int)((BizType)biztype)).ToString(), tableName.Name);
+                base._UCBillMasterQuery.GridRelated.SetRelatedInfo<tb_FM_PaymentRecord>(c => c.SourceBillNO, keyNamePair);
+            }
+            #endregion
 
 
 
+        }
     }
 }

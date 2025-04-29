@@ -55,7 +55,10 @@ namespace RUINORERP.UI.Common
         /// </summary>
         public string ComplexTargtetField { get => complexTargtetField; set => complexTargtetField = value; }
 
-
+        public void SetComplexTargetField<T1>(Expression<Func<T1, object>> _ExpBusinessTypeField)
+        {
+            ComplexTargtetField = _ExpBusinessTypeField.GetMemberInfo().Name;
+        }
 
         //public void GuideToForm<T>(tb_MenuInfo RelatedMenuInfo, string GridViewColumnFieldName, string RelatedTargetColName, object RelatedTargetEntity)
         //{
@@ -159,7 +162,8 @@ namespace RUINORERP.UI.Common
         /// 
         /// </summary>
         /// <typeparam name="T1">来源 表格目前显示的实体</typeparam>
-        /// <param name="_ExpSourceUniqueField">要打开的窗体用的实体名</param>
+        /// <param name="_ExpSourceUniqueField">双击的列名</param>
+        /// <param name="TargetTableNameFromField">这个参数能指定一个单据编号 是来自不同的 实体，类似由这个表其它列来指定 如biztype</param>
         public void SetRelatedInfo<T1>(Expression<Func<T1, object>> _ExpSourceUniqueField, KeyNamePair TargetTableNameFromField)
         {
             RelatedInfo relatedInfo = new RelatedInfo();
@@ -174,15 +178,18 @@ namespace RUINORERP.UI.Common
             }
         }
 
-        /// <summary>
-        /// 打开自己本身的窗体（双击哪一列会跳到单据编辑菜单）
-        /// 
-        /// </summary>
-        /// <typeparam name="T1">来源 表格目前显示的实体</typeparam>
-        /// <typeparam name="T2">目标 要打开的窗体用的实体</typeparam>
-        /// <param name="_ExpSourceUniqueField">来源的唯一字段</param>
-        /// <param name="_ExpTargetDisplayField">目标的显示字段</param>
-        public void SetRelatedInfo<T1>(Expression<Func<T1, object>> _ExpSourceUniqueField)
+
+    
+
+            /// <summary>
+            /// 打开自己本身的窗体（双击哪一列会跳到单据编辑菜单）
+            /// 
+            /// </summary>
+            /// <typeparam name="T1">来源 表格目前显示的实体</typeparam>
+            /// <typeparam name="T2">目标 要打开的窗体用的实体</typeparam>
+            /// <param name="_ExpSourceUniqueField">来源的唯一字段</param>
+            /// <param name="_ExpTargetDisplayField">目标的显示字段</param>
+            public void SetRelatedInfo<T1>(Expression<Func<T1, object>> _ExpSourceUniqueField)
         {
             RelatedInfo relatedInfo = new RelatedInfo();
             relatedInfo.SourceTableName = typeof(T1).Name;
@@ -202,10 +209,10 @@ namespace RUINORERP.UI.Common
             RelatedInfo relatedInfo = new RelatedInfo();
             relatedInfo.SourceTableName = TableName;
             relatedInfo.TargetTableName = new KeyNamePair(TableName, string.Empty);
-
             relatedInfo.SourceUniqueField = FieldName;
             relatedInfo.TargetDisplayField = FieldName;
-            if (!RelatedInfoList.Any(c => c.TargetTableName.Key == TableName && c.SourceTableName == TableName))
+
+            if (!RelatedInfoList.Any(c => c.TargetTableName.Key == TableName && c.SourceTableName == TableName && c.SourceUniqueField == FieldName))
             {
                 RelatedInfoList.Add(relatedInfo);
             }

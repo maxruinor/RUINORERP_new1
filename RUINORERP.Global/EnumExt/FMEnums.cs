@@ -1,23 +1,102 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace RUINORERP.Global.EnumExt
 {
-
-    public enum FMItemType
+    #region 关键业务财务数据状态
+    // 基础状态 (所有财务单据共用)
+    [Flags]
+    public enum BaseFMPaymentStatus : long
     {
-        /// <summary>
-        /// 产品
-        /// </summary>
-        产品 = 1,
-        /// <summary>
-        /// 服务
-        /// </summary>
-        服务 = 2
+        [Description("未提交")]
+        草稿 = 0,
+
+        [Description("待审核")]
+        待审核 = 1 << 0,
+
+        [Description("流程终止")]
+        已取消 = 1 << 1,
+
+        [Description("审核通过")]
+        已生效 = 1 << 2,
+
+        [Description("反向冲抵")]
+        已冲销 = 1 << 3
     }
+
+    // 预收/预付单据状态
+    // 预收付状态扩展（10~19位）
+    [Flags]
+    public enum PrePaymentStatus : long
+    {
+        // 继承基础状态
+        草稿 = BaseFMPaymentStatus.草稿,
+        待审核 = BaseFMPaymentStatus.待审核,
+        已取消 = BaseFMPaymentStatus.已取消,
+
+        //审核就变成已生效，并且生成收付单，审核后变为待核销
+        [Description("已生效")]
+        已生效 = BaseFMPaymentStatus.已生效,
+
+        已冲销 = BaseFMPaymentStatus.已冲销,
+
+        // 专属状态
+        [Description("部分核销")]
+        部分核销 = 1 << 10,
+
+        [Description("全额核销")]
+        全额核销 = 1 << 11,
+
+        [Description("待核销")]
+        待核销 = 1 << 12
+    }
+
+    // 应收/应付单据状态
+    // 应收付状态扩展（20~29位）
+    [Flags]
+    public enum ARAPStatus : long
+    {
+        // 继承基础状态
+        草稿 = BaseFMPaymentStatus.草稿,
+        待审核 = BaseFMPaymentStatus.待审核,
+        已取消 = BaseFMPaymentStatus.已取消,
+        已生效 = BaseFMPaymentStatus.已生效,
+        已冲销 = BaseFMPaymentStatus.已冲销,
+
+        // 专属状态
+        [Description("已结清")]
+        已结清 = 1 << 20,
+
+        [Description("坏账")]
+        坏账 = 1 << 21,
+
+        [Description("部分支付")]
+        部分支付 = 1 << 22
+    }
+
+    // 收/付款单据状态
+    // 收付款状态扩展（30~39位）
+    [Flags]
+    public enum PaymentStatus : long
+    {
+        // 继承基础状态
+        草稿 = BaseFMPaymentStatus.草稿,
+        待审核 = BaseFMPaymentStatus.待审核,
+        已取消 = BaseFMPaymentStatus.已取消,
+        已生效 = BaseFMPaymentStatus.已生效,
+        已冲销 = BaseFMPaymentStatus.已冲销,
+
+        // 专属状态
+        [Description("已核销")]
+        已核销 = 1 << 30
+    }
+    #endregion
+
+    /*
 
     /// <summary>
     /// 支付状态
@@ -30,7 +109,7 @@ namespace RUINORERP.Global.EnumExt
         /// <summary>已提交审核</summary>
         提交 = 1,       // 0b0001（2^0）
 
-        /// <summary>财务审核通过</summary>
+        /// <summary>财务审核通过支付生效</summary>
         已审核 = 2,     // 0b0010（2^1）
 
         /// <summary>部分生效（如部分核销/结清）</summary>
@@ -45,18 +124,38 @@ namespace RUINORERP.Global.EnumExt
         /// <summary>单据关闭）</summary>
         已取消 = 32,    // 0b10000（2^4，新增无冲突的2的幂）
     }
+    */
+
 
     /// <summary>
     /// 核销类型
     /// </summary>
     public enum SettlementType
     {
+     
+        [Description("手工核销")]
+        未核销 = 0,
+
+        [Description("收款核销应收")]
         收款核销 = 1,
+
+        [Description("付款核销应付")]
         付款核销 = 2,
+
+        [Description("预收冲抵应收")]
         预收冲应收 = 3,
+
+        [Description("预付冲抵应付")]
         预付冲应付 = 4,
-        退款红冲 = 5,
- 
+
+        [Description("坏账核销")]
+        坏账核销 = 5,
+
+        [Description("退款红冲")]
+        红冲核销 = 6,
+
+        [Description("多币种调汇")]
+        汇差调整 = 7
 
     }
 
@@ -103,7 +202,7 @@ namespace RUINORERP.Global.EnumExt
 
     public enum PaymentType { Cash, BankTransfer, CreditCard, Other }
     public enum ARPType { Receivable, Payable }
-    public enum PaymentStatus { Unpaid, PartiallyPaid, Paid }
+
 
 
     public enum BusinessType { Unsettled, PartiallySettled, Settled }
@@ -133,33 +232,18 @@ namespace RUINORERP.Global.EnumExt
         已关闭,
     }
 
-    //创建一个财务模块中的应收应付中的一个状态枚举 0=未结清,1=部分结清,2=已结清
+ 
+   
 
-    /// <summary>
-    /// 应收应付状态 未收款、已收款、逾期
-    /// </summary>
-    public enum Receivable
-    {
-
-    }
-
-    /// <summary>
-    /// 付款 状态 未付款、部分付款，已付款
-    /// </summary>
-    public enum Payable
-    {
-
-    }
-
-    /// <summary>
-    /// 结算状态
-    /// </summary>
-    public enum SettlementStatus
-    {
-        未结清,
-        部分结清,
-        已结清
-    }
+    ///// <summary>
+    ///// 结算状态
+    ///// </summary>
+    //public enum SettlementStatus
+    //{
+    //    未结清,
+    //    部分结清,
+    //    已结清
+    //}
 
     /// <summary>
     /// 审核状态：0=草稿,1=已审核

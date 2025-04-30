@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/13/2024 18:44:39
+// 时间：04/30/2025 13:26:31
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -264,6 +264,71 @@ namespace RUINORERP.Model.QueryDto
         { 
             get{return _IsDebug;}
             set{SetProperty(ref _IsDebug, value);}
+        }
+     
+
+        private bool _EnableVoucherModule= true;
+        /// <summary>
+        /// 启用凭证模块
+        /// </summary>
+        [AdvQueryAttribute(ColName = "EnableVoucherModule",ColDesc = "启用凭证模块")]
+        [SugarColumn(ColumnDataType = "bit",SqlParameterDbType ="Boolean",ColumnName = "EnableVoucherModule",IsNullable = false,ColumnDescription = "启用凭证模块" )]
+        public bool EnableVoucherModule 
+        { 
+            get{return _EnableVoucherModule;}
+            set{SetProperty(ref _EnableVoucherModule, value);}
+        }
+     
+
+        private bool _EnableContractModule= true;
+        /// <summary>
+        /// 启用合同模块
+        /// </summary>
+        [AdvQueryAttribute(ColName = "EnableContractModule",ColDesc = "启用合同模块")]
+        [SugarColumn(ColumnDataType = "bit",SqlParameterDbType ="Boolean",ColumnName = "EnableContractModule",IsNullable = false,ColumnDescription = "启用合同模块" )]
+        public bool EnableContractModule 
+        { 
+            get{return _EnableContractModule;}
+            set{SetProperty(ref _EnableContractModule, value);}
+        }
+     
+
+        private bool _EnableInvoiceModule;
+        /// <summary>
+        /// 启用发票模块
+        /// </summary>
+        [AdvQueryAttribute(ColName = "EnableInvoiceModule",ColDesc = "启用发票模块")]
+        [SugarColumn(ColumnDataType = "bit",SqlParameterDbType ="Boolean",ColumnName = "EnableInvoiceModule",IsNullable = false,ColumnDescription = "启用发票模块" )]
+        public bool EnableInvoiceModule 
+        { 
+            get{return _EnableInvoiceModule;}
+            set{SetProperty(ref _EnableInvoiceModule, value);}
+        }
+     
+
+        private bool _EnableMultiCurrency= true;
+        /// <summary>
+        /// 启用多币种
+        /// </summary>
+        [AdvQueryAttribute(ColName = "EnableMultiCurrency",ColDesc = "启用多币种")]
+        [SugarColumn(ColumnDataType = "bit",SqlParameterDbType ="Boolean",ColumnName = "EnableMultiCurrency",IsNullable = false,ColumnDescription = "启用多币种" )]
+        public bool EnableMultiCurrency 
+        { 
+            get{return _EnableMultiCurrency;}
+            set{SetProperty(ref _EnableMultiCurrency, value);}
+        }
+     
+
+        private bool _EnableFinancialModule= true;
+        /// <summary>
+        /// 启用财务模块
+        /// </summary>
+        [AdvQueryAttribute(ColName = "EnableFinancialModule",ColDesc = "启用财务模块")]
+        [SugarColumn(ColumnDataType = "bit",SqlParameterDbType ="Boolean",ColumnName = "EnableFinancialModule",IsNullable = false,ColumnDescription = "启用财务模块" )]
+        public bool EnableFinancialModule 
+        { 
+            get{return _EnableFinancialModule;}
+            set{SetProperty(ref _EnableFinancialModule, value);}
         }
 
 

@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/18/2024 17:45:32
+// 时间：04/30/2025 13:26:32
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -68,6 +68,15 @@ namespace RUINORERP.Business
 
 
 
+
+//有默认值
+
+//有默认值
+
+
+//有默认值
+
+//有默认值
 
            	        Initialize();
      }

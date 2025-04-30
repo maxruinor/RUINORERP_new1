@@ -461,11 +461,21 @@ namespace RUINORERP.UI.UserPersonalized
         #endregion
 
 
+
+        /// <summary>
+        /// 保存不可见的列
+        /// 系统设置为不可用，或程序中控制了不可见的列.
+        /// 这里是初始化后要优化将这个集合里面的设置为不显示不可用列
+        /// </summary>
+        public HashSet<string> InvisibleCols { get; set; } = new HashSet<string>();
+
+
+
         private void btnInitCol_Click(object sender, EventArgs e)
         {
             //ColumnDisplays
             //这里初始化时，注意要以显示到可以操作的列为基准。（比方有些列BuildInvisibleCols在这个方法硬编码不显示，则默认这里也不会显示）
-            UIBizSrvice.InitDataGridViewColumnDisplays(ColumnDisplays, dataGridView, gridviewType, CurMenuInfo);
+            UIBizSrvice.InitDataGridViewColumnDisplays(ColumnDisplays, dataGridView, gridviewType, CurMenuInfo, InvisibleCols);
             LoadColumnDisplayList();
         }
 

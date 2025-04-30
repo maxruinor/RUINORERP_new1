@@ -76,7 +76,7 @@ namespace RUINORERP.UI.PSI.SAL
         {
             base.MasterSummaryCols.Add(c => c.TotalQty);
             base.MasterSummaryCols.Add(c => c.TotalAmount);
-            base.MasterSummaryCols.Add(c => c.ActualRefundAmount);
+            base.MasterSummaryCols.Add(c => c.ForeignTotalAmount);
             base.MasterSummaryCols.Add(c => c.ShipCost);
 
 

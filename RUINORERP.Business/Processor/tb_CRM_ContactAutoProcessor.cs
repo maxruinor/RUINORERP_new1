@@ -51,7 +51,6 @@ namespace RUINORERP.Business.Processor
 
             queryFilter.FilterLimitExpressions.Add(lambda);
 
-
             queryFilter.SetQueryField<tb_CRM_Contact>(c => c.Contact_Name);
             queryFilter.SetQueryField<tb_CRM_Contact>(c => c.Customer_id);
             queryFilter.SetQueryField<tb_CRM_Contact>(c => c.Contact_Phone);

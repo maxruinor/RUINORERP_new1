@@ -47,5 +47,16 @@ namespace RUINORERP.UI.FM
             InitializeComponent();
             base.PaymentType = Global.EnumExt.ReceivePaymentType.收款;
         }
+
+
+        public override void BuildInvisibleCols()
+        {
+            base.MasterInvisibleCols.Add(c => c.PayeeInfoID);
+            base.MasterInvisibleCols.Add(c => c.PayeeAccountNo);
+            base.MasterInvisibleCols.Add(c => c.SourceBilllID);
+            base.BuildInvisibleCols();
+            //base.ChildInvisibleCols.Add(c => c.SubtotalCostAmount);
+        }
+
     }
 }

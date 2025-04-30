@@ -183,18 +183,19 @@ namespace RUINORERP.Model
                         }
         }
 
-        private long _ReceivePaymentType;
+        private int _ReceivePaymentType = ((0));
         /// <summary>
         /// 收付类型
         /// </summary>
-        [AdvQueryAttribute(ColName = "ReceivePaymentType",ColDesc = "收付类型")] 
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "ReceivePaymentType" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "收付类型" )]
-        public long ReceivePaymentType
-        { 
-            get{return _ReceivePaymentType;}
-            set{
-            SetProperty(ref _ReceivePaymentType, value);
-                        }
+        [AdvQueryAttribute(ColName = "ReceivePaymentType", ColDesc = "收付类型")]
+        [SugarColumn(ColumnDataType = "int", SqlParameterDbType = "Int32", ColumnName = "ReceivePaymentType", DecimalDigits = 0, IsNullable = false, ColumnDescription = "收付类型")]
+        public int ReceivePaymentType
+        {
+            get { return _ReceivePaymentType; }
+            set
+            {
+                SetProperty(ref _ReceivePaymentType, value);
+            }
         }
 
         private decimal _TotalForeignPayableAmount= ((0));

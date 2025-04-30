@@ -345,6 +345,25 @@ namespace RUINORERP.Model
             }
         }
 
+
+        private decimal _Inv_SubtotalCostMoney = 0;
+
+
+        /// <summary>
+        /// 成本小计
+        /// </summary>
+
+        [AdvQueryAttribute(ColName = "Inv_SubtotalCostMoney", ColDesc = "成本小计")]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType = "Decimal", ColumnName = "Inv_SubtotalCostMoney", IsNullable = false, ColumnDescription = "成本小计")]
+        [Display(Name = "成本小计")]
+        public decimal Inv_SubtotalCostMoney
+        {
+            get { return _Inv_SubtotalCostMoney; }            set
+            {                SetProperty(ref _Inv_SubtotalCostMoney, value);
+            }
+        }
+
+
         private long? _Location_ID;
 
 

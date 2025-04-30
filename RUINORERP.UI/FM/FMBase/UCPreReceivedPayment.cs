@@ -556,10 +556,11 @@ namespace RUINORERP.UI.FM
             {
                 //https://www.runoob.com/w3cnote/csharp-enum.html
                 var dataStatus = (PrePaymentStatus)(EditEntity.GetPropertyValue(typeof(PrePaymentStatus).Name).ToInt());
-                if (dataStatus == PrePaymentStatus.待审核 || dataStatus == PrePaymentStatus.草稿)
+                //没有收到钱之前都可以删除？
+                if ( dataStatus == PrePaymentStatus.草稿|| dataStatus == PrePaymentStatus.待审核 ||  dataStatus==PrePaymentStatus.已生效)
                 {
                     //如果草稿。都可以删除。如果是新建，则提交过了。要创建人或超级管理员才能删除
-                    if (dataStatus == PrePaymentStatus.待审核 && !AppContext.IsSuperUser)
+                    if (!AppContext.IsSuperUser)
                     {
                         if (EditEntity.Created_by.Value != AppContext.CurUserInfo.Id)
                         {

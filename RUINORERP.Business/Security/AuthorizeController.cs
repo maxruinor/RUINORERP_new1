@@ -40,6 +40,7 @@ namespace RUINORERP.Business.Security
         {
             _context = context ?? throw new ArgumentNullException(nameof(context));
         }
+ 
 
         public bool GetQueryPageLayoutCustomize()
         {
@@ -324,5 +325,33 @@ namespace RUINORERP.Business.Security
             }
         }
 
+        /// <summary>
+        /// 是否启用财务模块
+        /// </summary>
+        /// <returns></returns>
+        public bool EnableFinancialModule()
+        {
+            return  _context.SysConfig.EnableFinancialModule;
+        }
+
+        public bool EnableMultiCurrency()
+        {
+            return _context.SysConfig.EnableMultiCurrency;
+        }
+
+        public bool EnableContractModule()
+        {
+            return _context.SysConfig.EnableContractModule;
+        }
+
+        public bool EnableInvoiceModule()
+        {
+            return _context.SysConfig.EnableInvoiceModule;
+        }
+
+        public bool EnableVoucherModule()
+        {
+            return _context.SysConfig.EnableVoucherModule;
+        }
     }
 }

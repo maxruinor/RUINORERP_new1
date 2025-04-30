@@ -492,7 +492,10 @@ namespace RUINORERP.UI.Common
         /// <param name="InvisibleCols">系统硬编码不可见和权限设置的不可见</param>
         /// <param name="DefaultHideCols">系统硬编码不可见和权限设置的不可见</param>
         /// <returns></returns>
-        public static async Task SetGridViewAsync(Type GridSourceType, NewSumDataGridView dataGridView, tb_MenuInfo CurMenuInfo, bool ShowSettingForm = false, HashSet<string> InvisibleCols = null, HashSet<string> DefaultHideCols = null, bool SaveGridSetting = false)
+        public static async Task SetGridViewAsync(Type GridSourceType, NewSumDataGridView dataGridView, tb_MenuInfo CurMenuInfo, 
+            bool ShowSettingForm = false, HashSet<string> InvisibleCols = null,
+            HashSet<string> DefaultHideCols = null, 
+            bool SaveGridSetting = false)
         {
             if (dataGridView == null)
             {
@@ -655,6 +658,7 @@ namespace RUINORERP.UI.Common
             {
                 frmGridViewColSetting set = new frmGridViewColSetting();
                 set.ConfiguredGrid = dataGridView;
+                set.InvisibleCols = InvisibleCols;
                 set.gridviewType = GridSourceType;
                 set.CurMenuInfo = CurMenuInfo;
                 set.GridSetting = GridSetting;
@@ -869,7 +873,7 @@ namespace RUINORERP.UI.Common
 
 
         public static void InitDataGridViewColumnDisplays(List<ColDisplayController> ColumnDisplays,
-            NewSumDataGridView dataGridView, Type GridSourceType, tb_MenuInfo CurMenuInfo)
+            NewSumDataGridView dataGridView, Type GridSourceType, tb_MenuInfo CurMenuInfo, HashSet<string> InvisibleCols)
         {
             if (dataGridView == null)
             {
@@ -983,7 +987,21 @@ namespace RUINORERP.UI.Common
 
                 });
             });
+            //不管什么情况都处理系统和权限的限制列显示
+            ColumnDisplays.ForEach(c =>
+            {
+                //系统指定不显示的
+                if (InvisibleCols != null)
+                {
+                    if (InvisibleCols.Any(ic => c.ColName.Equals(ic)))
+                    {
+                        c.Visible = false;
+                        c.Disable = true;
+                    }
 
+                }
+
+            });
             dataGridView.ColumnDisplays = ColumnDisplays;
             dataGridView.BindColumnStyle();
         }

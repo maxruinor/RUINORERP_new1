@@ -345,21 +345,26 @@ namespace RUINORERP.Business
                     }
                 }
 
-                //处理财务数据 退货退货
-                #region 销售退款 财务处理 不管什么情况都是生成红字应收【金额为负】
-                if (entity.tb_saleout != null)
+                AuthorizeController authorizeController = _appContext.GetRequiredService<AuthorizeController>();
+                if (authorizeController.EnableFinancialModule())
                 {
-                    var ctrpayable = _appContext.GetRequiredService<tb_FM_ReceivablePayableController<tb_FM_ReceivablePayable>>();
+                    //处理财务数据 退货退货
+                    #region 销售退款 财务处理 不管什么情况都是生成红字应收【金额为负】
 
-                    ReturnMainSubResults<tb_FM_ReceivablePayable> results = await ctrpayable.CreateReceivablePayable(entity);
-                    if (results.Succeeded)
+                    if (entity.tb_saleout != null)
                     {
-                        //财务审核应收红单后 看如何核销
+                        var ctrpayable = _appContext.GetRequiredService<tb_FM_ReceivablePayableController<tb_FM_ReceivablePayable>>();
+
+                        ReturnMainSubResults<tb_FM_ReceivablePayable> results = await ctrpayable.CreateReceivablePayable(entity);
+                        if (results.Succeeded)
+                        {
+                            //财务审核应收红单后 看如何核销
+                        }
                     }
+
+
+                    #endregion
                 }
-
-
-                #endregion
                 /*
                  仅退款的财务处理
 生成记账凭证：
@@ -645,7 +650,15 @@ namespace RUINORERP.Business
                 await _unitOfWorkManage.GetDbClient().Updateable(saleout).UpdateColumns(t => new { t.DataStatus }).ExecuteCommandAsync();
 
                 #endregion
-                entity.ApprovalOpinions = "反审";
+
+
+
+                AuthorizeController authorizeController = _appContext.GetRequiredService<AuthorizeController>();
+                if (authorizeController.EnableFinancialModule())
+                {
+                }
+
+                    entity.ApprovalOpinions = "反审";
                 //后面已经修改为
                 entity.ApprovalResults = null;
                 entity.ApprovalStatus = (int)ApprovalStatus.未审核;

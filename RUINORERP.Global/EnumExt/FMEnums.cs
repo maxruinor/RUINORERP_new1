@@ -50,7 +50,8 @@ namespace RUINORERP.Global.EnumExt
 
         [Description("全额核销")]
         全额核销 = 1 << 11,
-
+        
+        //表示已经支付成功
         [Description("待核销")]
         待核销 = 1 << 12
     }

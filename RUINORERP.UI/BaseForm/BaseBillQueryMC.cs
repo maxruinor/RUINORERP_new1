@@ -180,7 +180,7 @@ namespace RUINORERP.UI.BaseForm
                                 }
                             }
                         }
-                        else if(item is ToolStripSplitButton)
+                        else if (item is ToolStripSplitButton)
                         {
                             ToolStripSplitButton subItem = item as ToolStripSplitButton;
                             subItem.Click += Item_Click;
@@ -250,7 +250,7 @@ namespace RUINORERP.UI.BaseForm
 
         private async void button表格显示设置_Click(object sender, EventArgs e)
         {
-            await UIBizSrvice.SetGridViewAsync(typeof(M), _UCBillMasterQuery.newSumDataGridViewMaster, CurMenuInfo, true);
+            await UIBizSrvice.SetGridViewAsync(typeof(M), _UCBillMasterQuery.newSumDataGridViewMaster, CurMenuInfo, true, _UCBillMasterQuery.InvisibleCols);
         }
 
         private async void button设置查询条件_Click(object sender, EventArgs e)
@@ -404,7 +404,7 @@ namespace RUINORERP.UI.BaseForm
                         }
                     }
                     break;
-                 
+
                 case MenuItemEnums.打印:
                     Print(RptMode.PRINT);
                     break;

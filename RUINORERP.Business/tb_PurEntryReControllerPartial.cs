@@ -114,8 +114,13 @@ namespace RUINORERP.Business
                 }
 
 
-                //这部分是否能提出到上一级公共部分？
-                entity.DataStatus = (int)DataStatus.确认;
+                AuthorizeController authorizeController = _appContext.GetRequiredService<AuthorizeController>();
+                if (authorizeController.EnableFinancialModule())
+                {
+                }
+
+                    //这部分是否能提出到上一级公共部分？
+                    entity.DataStatus = (int)DataStatus.确认;
 
                 entity.ApprovalStatus = (int)ApprovalStatus.已审核;
                 BusinessHelper.Instance.ApproverEntity(entity);
@@ -268,10 +273,14 @@ namespace RUINORERP.Business
                 }
                 */
 
+                AuthorizeController authorizeController = _appContext.GetRequiredService<AuthorizeController>();
+                if (authorizeController.EnableFinancialModule())
+                {
+                }
 
 
-                //这部分是否能提出到上一级公共部分？
-                entity.DataStatus = (int)DataStatus.新建;
+                    //这部分是否能提出到上一级公共部分？
+                    entity.DataStatus = (int)DataStatus.新建;
                 entity.ApprovalOpinions = "被反审核";
                 //后面已经修改为
                 entity.ApprovalResults = false;

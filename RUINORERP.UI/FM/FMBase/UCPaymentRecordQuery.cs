@@ -35,6 +35,8 @@ using RUINORERP.Common.Extensions;
 using RUINORERP.Global.EnumExt;
 using RUINORERP.Business.CommService;
 using RUINORERP.Global.Model;
+using Org.BouncyCastle.Crypto.Prng;
+using LiveChartsCore.Geo;
 namespace RUINORERP.UI.FM
 {
 
@@ -82,6 +84,14 @@ namespace RUINORERP.UI.FM
         {
             base.MasterInvisibleCols.Add(c => c.SourceBilllID);
             base.MasterInvisibleCols.Add(c => c.ReceivePaymentType);
+            //如果不用户多币种，则不用显示外币
+            AuthorizeController authorizeController = MainForm.Instance.AppContext.GetRequiredService<AuthorizeController>();
+            if (authorizeController.EnableMultiCurrency())
+            {
+                base.MasterInvisibleCols.Add(c => c.ForeignPaidAmount);
+                base.MasterInvisibleCols.Add(c => c.ExchangeRate);
+            }
+            base.BuildInvisibleCols();
             //base.ChildInvisibleCols.Add(c => c.SubtotalCostAmount);
         }
 
@@ -102,8 +112,8 @@ namespace RUINORERP.UI.FM
                 foreach (var item in Datas)
                 {
                     //https://www.runoob.com/w3cnote/csharp-enum.html
-                    var dataStatus = (DataStatus)(item.GetPropertyValue(typeof(DataStatus).Name).ToInt());
-                    if (dataStatus == DataStatus.新建 || dataStatus == DataStatus.草稿)
+                    var paymentStatus = (PaymentStatus)(item.GetPropertyValue(typeof(PaymentStatus).Name).ToInt());
+                    if (paymentStatus == PaymentStatus.待审核 || paymentStatus == PaymentStatus.草稿)
                     {
                         BaseController<tb_FM_PaymentRecord> ctr = Startup.GetFromFacByName<BaseController<tb_FM_PaymentRecord>>(typeof(tb_FM_PaymentRecord).Name + "Controller");
                         bool rs = await ctr.BaseDeleteAsync(item);
@@ -114,7 +124,7 @@ namespace RUINORERP.UI.FM
                     }
                     else
                     {
-                        MainForm.Instance.uclog.AddLog("提示", "已【确认】【审核】的生效单据无法删除");
+                        MainForm.Instance.uclog.AddLog("提示", "【未审核】的单据才能删除");
                     }
                 }
                 MainForm.Instance.uclog.AddLog("提示", $"成功删除数据：{counter}条.");

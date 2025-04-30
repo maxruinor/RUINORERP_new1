@@ -143,6 +143,11 @@ namespace RUINORERP.UI.Common
                 {
                     FixedDictionaryMappings.Add(new FixedDictionaryMapping(_type.Name, nameof(BizType), Common.CommonHelper.Instance.GetKeyValuePairs(typeof(BizType))));
                 }
+                
+                else if (prop.Name == nameof(ReceivePaymentType))
+                {
+                    FixedDictionaryMappings.Add(new FixedDictionaryMapping(_type.Name, nameof(ReceivePaymentType), Common.CommonHelper.Instance.GetKeyValuePairs(typeof(ReceivePaymentType))));
+                }
                 else if (prop.Name == "ApprovalResults")
                 {
                     List<KeyValuePair<object, string>> ApprovalResultskvlist = new List<KeyValuePair<object, string>>();

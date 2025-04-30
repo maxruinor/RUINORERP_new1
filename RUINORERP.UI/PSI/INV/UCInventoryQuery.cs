@@ -139,6 +139,7 @@ namespace RUINORERP.UI.PSI.INV
         public override void BuildSummaryCols()
         {
             SummaryCols.Add(c => c.Quantity);
+            SummaryCols.Add(c => c.Inv_SubtotalCostMoney);
         }
 
 

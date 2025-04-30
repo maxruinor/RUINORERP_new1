@@ -57,8 +57,8 @@ namespace RUINORERP.Business
 
  RuleFor(x => x.ExchangeRate).PrecisionScale(10,4,true).WithMessage("汇率:小数位不能超过4。");
 
- RuleFor(tb_SaleOrder =>tb_SaleOrder.Employee_ID).Must(CheckForeignKeyValueCanNull).WithMessage("业务员:下拉选择值不正确。");
- RuleFor(tb_SaleOrder =>tb_SaleOrder.Employee_ID).NotEmpty().When(x => x.Employee_ID.HasValue);
+ RuleFor(tb_SaleOrder =>tb_SaleOrder.Employee_ID).Must(CheckForeignKeyValue).WithMessage("业务员:下拉选择值不正确。");
+
 
  RuleFor(tb_SaleOrder =>tb_SaleOrder.ProjectGroup_ID).Must(CheckForeignKeyValueCanNull).WithMessage("项目组:下拉选择值不正确。");
  RuleFor(tb_SaleOrder =>tb_SaleOrder.ProjectGroup_ID).NotEmpty().When(x => x.ProjectGroup_ID.HasValue);

@@ -3,7 +3,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：04/29/2025 11:22:25
+// 时间：04/30/2025 15:18:07
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -320,7 +320,7 @@ this.txtTargetCurrencyID.TabIndex = 11;
 this.Controls.Add(this.lblTargetCurrencyID);
 this.Controls.Add(this.txtTargetCurrencyID);
 
-           //#####ReceivePaymentType###Int64
+           //#####ReceivePaymentType###Int32
 //属性测试300ReceivePaymentType
 ReversedSettlementID主外字段不一致。this.lblReceivePaymentType.AutoSize = true;
 this.lblReceivePaymentType.Location = new System.Drawing.Point(100,300);

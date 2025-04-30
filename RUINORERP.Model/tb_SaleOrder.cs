@@ -153,14 +153,14 @@ namespace RUINORERP.Model
                         }
         }
 
-        private long? _Employee_ID;
+        private long _Employee_ID;
         /// <summary>
         /// 业务员
         /// </summary>
         [AdvQueryAttribute(ColName = "Employee_ID",ColDesc = "业务员")] 
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Employee_ID" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "业务员" )]
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Employee_ID" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "业务员" )]
         [FKRelationAttribute("tb_Employee","Employee_ID")]
-        public long? Employee_ID
+        public long Employee_ID
         { 
             get{return _Employee_ID;}
             set{

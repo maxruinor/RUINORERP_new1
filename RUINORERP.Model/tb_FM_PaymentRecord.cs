@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：04/29/2025 11:22:24
+// 时间：04/30/2025 15:18:07
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -107,13 +107,13 @@ namespace RUINORERP.Model
                         }
         }
 
-        private long _ReceivePaymentType;
+        private int _ReceivePaymentType;
         /// <summary>
         /// 收付类型
         /// </summary>
         [AdvQueryAttribute(ColName = "ReceivePaymentType",ColDesc = "收付类型")] 
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "ReceivePaymentType" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "收付类型" )]
-        public long ReceivePaymentType
+        [SugarColumn(ColumnDataType = "int", SqlParameterDbType ="Int32",  ColumnName = "ReceivePaymentType" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "收付类型" )]
+        public int ReceivePaymentType
         { 
             get{return _ReceivePaymentType;}
             set{
@@ -353,50 +353,46 @@ namespace RUINORERP.Model
                         }
         }
 
-        private bool _IsReversed = false;
+        private bool _IsReversed= false;
         /// <summary>
         /// 是否冲销
         /// </summary>
-        [AdvQueryAttribute(ColName = "IsReversed", ColDesc = "是否冲销")]
-        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType = "Boolean", ColumnName = "IsReversed", IsNullable = false, ColumnDescription = "是否冲销")]
-        [Browsable(false)]
+        [AdvQueryAttribute(ColName = "IsReversed",ColDesc = "是否冲销")] 
+        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType ="Boolean",  ColumnName = "IsReversed" ,IsNullable = false,ColumnDescription = "是否冲销" )]
         public bool IsReversed
-        {
-            get { return _IsReversed; }
-            set
-            {
-                SetProperty(ref _IsReversed, value);
-            }
+        { 
+            get{return _IsReversed;}
+            set{
+            SetProperty(ref _IsReversed, value);
+                        }
         }
 
-        private long _ReversedPaymentId;
+        private long? _ReversedPaymentId;
         /// <summary>
-        /// 冲销记录
+        /// 对冲记录
         /// </summary>
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType = "Int64", ColumnName = "ReversedPaymentId", DecimalDigits = 0, IsNullable = false, ColumnDescription = "冲销记录")]
-        public long ReversedPaymentId
-        {
-            get { return _ReversedPaymentId; }
-            set
-            {
-                SetProperty(ref _ReversedPaymentId, value);
-                base.PrimaryKeyID = _ReversedPaymentId;
-            }
+        [AdvQueryAttribute(ColName = "ReversedPaymentId",ColDesc = "对冲记录")] 
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "ReversedPaymentId" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "对冲记录" )]
+        public long? ReversedPaymentId
+        { 
+            get{return _ReversedPaymentId;}
+            set{
+            SetProperty(ref _ReversedPaymentId, value);
+                        }
         }
 
         private string _ReversedPaymentNo;
         /// <summary>
-        /// 冲销单号
+        /// 对冲单号
         /// </summary>
-        [AdvQueryAttribute(ColName = "ReversedPaymentNo", ColDesc = "冲销单号")]
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType = "String", ColumnName = "ReversedPaymentNo", Length = 30, IsNullable = false, ColumnDescription = "冲销单号")]
+        [AdvQueryAttribute(ColName = "ReversedPaymentNo",ColDesc = "对冲单号")] 
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "ReversedPaymentNo" ,Length=30,IsNullable = true,ColumnDescription = "对冲单号" )]
         public string ReversedPaymentNo
-        {
-            get { return _ReversedPaymentNo; }
-            set
-            {
-                SetProperty(ref _ReversedPaymentNo, value);
-            }
+        { 
+            get{return _ReversedPaymentNo;}
+            set{
+            SetProperty(ref _ReversedPaymentNo, value);
+                        }
         }
 
         private string _Remark;
@@ -611,14 +607,6 @@ namespace RUINORERP.Model
         [Navigate(NavigateType.OneToOne, nameof(Account_id))]
         public virtual tb_FM_Account tb_fm_account { get; set; }
 
-
-        //[Browsable(false)]打印报表时的数据源会不显示
-        [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_FM_ReceivablePayable.PaymentId))]
-        public virtual List<tb_FM_ReceivablePayable> tb_FM_ReceivablePayables { get; set; }
-        //tb_FM_ReceivablePayable.PaymentId)
-        //PaymentId.FK_TB_FM_RE_REFERENCE_TB_FM_PA)
-        //tb_FM_PaymentRecord.PaymentId)
 
 
         #endregion

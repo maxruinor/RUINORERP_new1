@@ -370,7 +370,11 @@ namespace RUINORERP.UI.PSI.SAL
                     {
                         if (obj is tb_CustomerVendor cv)
                         {
-                            EditEntity.Employee_ID = cv.Employee_ID;
+                            if (cv.Employee_ID.HasValue)
+                            {
+                                EditEntity.Employee_ID = cv.Employee_ID.Value;
+                            }
+                            
                             EditEntity.ShippingAddress = cv.Address;
                         }
                     }
@@ -599,7 +603,7 @@ namespace RUINORERP.UI.PSI.SAL
             View_ProdDetail vp = (View_ProdDetail)_View_ProdDetail;
             tb_SaleOrderDetail _SDetail = (tb_SaleOrderDetail)rowObj;
             //通过产品查询页查出来后引过来才有值，如果直接在输入框输入SKU这种唯一的。就没有则要查一次。这时是缓存了？
-            if (vp.ProdDetailID > 0 && EditEntity.Employee_ID.HasValue && EditEntity.Employee_ID.Value > 0)
+            if (vp.ProdDetailID > 0 && EditEntity.Employee_ID > 0)
             {
                 tb_PriceRecord pr = MainForm.Instance.AppContext.Db.Queryable<tb_PriceRecord>().Where(a => a.Employee_ID == EditEntity.Employee_ID && a.ProdDetailID == vp.ProdDetailID).Single();
                 if (pr != null)

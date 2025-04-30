@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：04/29/2025 11:22:30
+// 时间：04/30/2025 15:18:12
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -62,36 +62,6 @@ namespace RUINORERP.Model
             get{return _ARAPNo;}
             set{
             SetProperty(ref _ARAPNo, value);
-                        }
-        }
-
-        private long? _PreRPID;
-        /// <summary>
-        /// 预收付款单
-        /// </summary>
-        [AdvQueryAttribute(ColName = "PreRPID",ColDesc = "预收付款单")] 
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "PreRPID" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "预收付款单" )]
-        [FKRelationAttribute("tb_FM_PreReceivedPayment","PreRPID")]
-        public long? PreRPID
-        { 
-            get{return _PreRPID;}
-            set{
-            SetProperty(ref _PreRPID, value);
-                        }
-        }
-
-        private long? _PaymentId;
-        /// <summary>
-        /// 支付记录
-        /// </summary>
-        [AdvQueryAttribute(ColName = "PaymentId",ColDesc = "支付记录")] 
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "PaymentId" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "支付记录" )]
-        [FKRelationAttribute("tb_FM_PaymentRecord","PaymentId")]
-        public long? PaymentId
-        { 
-            get{return _PaymentId;}
-            set{
-            SetProperty(ref _PaymentId, value);
                         }
         }
 
@@ -183,19 +153,18 @@ namespace RUINORERP.Model
                         }
         }
 
-        private int _ReceivePaymentType = ((0));
+        private int _ReceivePaymentType;
         /// <summary>
         /// 收付类型
         /// </summary>
-        [AdvQueryAttribute(ColName = "ReceivePaymentType", ColDesc = "收付类型")]
-        [SugarColumn(ColumnDataType = "int", SqlParameterDbType = "Int32", ColumnName = "ReceivePaymentType", DecimalDigits = 0, IsNullable = false, ColumnDescription = "收付类型")]
+        [AdvQueryAttribute(ColName = "ReceivePaymentType",ColDesc = "收付类型")] 
+        [SugarColumn(ColumnDataType = "int", SqlParameterDbType ="Int32",  ColumnName = "ReceivePaymentType" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "收付类型" )]
         public int ReceivePaymentType
-        {
-            get { return _ReceivePaymentType; }
-            set
-            {
-                SetProperty(ref _ReceivePaymentType, value);
-            }
+        { 
+            get{return _ReceivePaymentType;}
+            set{
+            SetProperty(ref _ReceivePaymentType, value);
+                        }
         }
 
         private decimal _TotalForeignPayableAmount= ((0));
@@ -295,6 +264,23 @@ namespace RUINORERP.Model
             SetProperty(ref _DueDate, value);
                         }
         }
+
+        private long _Employee_ID;
+        /// <summary>
+        /// 经办人
+        /// </summary>
+        [AdvQueryAttribute(ColName = "Employee_ID", ColDesc = "经办人")]
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType = "Int64", ColumnName = "Employee_ID", DecimalDigits = 0, IsNullable = false, ColumnDescription = "经办人")]
+        [FKRelationAttribute("tb_CustomerVendor", "Employee_ID")]
+        public long Employee_ID
+        {
+            get { return _Employee_ID; }
+            set
+            {
+                SetProperty(ref _Employee_ID, value);
+            }
+        }
+
 
         private long? _DepartmentID;
         /// <summary>
@@ -571,11 +557,6 @@ namespace RUINORERP.Model
 
         [SugarColumn(IsIgnore = true)]
         //[Browsable(false)] 打印报表时的数据源会不显示
-        [Navigate(NavigateType.OneToOne, nameof(PreRPID))]
-        public virtual tb_FM_PreReceivedPayment tb_fm_prereceivedpayment { get; set; }
-
-        [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(CustomerVendor_ID))]
         public virtual tb_CustomerVendor tb_customervendor { get; set; }
 
@@ -583,11 +564,6 @@ namespace RUINORERP.Model
         //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(ProjectGroup_ID))]
         public virtual tb_ProjectGroup tb_projectgroup { get; set; }
-
-        [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)] 打印报表时的数据源会不显示
-        [Navigate(NavigateType.OneToOne, nameof(PaymentId))]
-        public virtual tb_FM_PaymentRecord tb_fm_paymentrecord { get; set; }
 
         [SugarColumn(IsIgnore = true)]
         //[Browsable(false)] 打印报表时的数据源会不显示

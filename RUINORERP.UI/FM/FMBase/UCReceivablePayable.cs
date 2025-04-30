@@ -112,6 +112,26 @@ namespace RUINORERP.UI.FM
                     //清空
                     cmbPayeeInfoID.DataBindings.Clear();
                 }
+
+
+                #region 应收单 不用显示 收款信息 ，付款时才要显示对方的信息。
+
+                if (PaymentType == ReceivePaymentType.收款)
+                {
+                    lblAccount_type.Visible = false;
+                    cmbAccount_type.Visible = false;
+                    btnInfo.Visible = false;
+                    lblPayeeInfoID.Visible = false;
+                    cmbPayeeInfoID.Visible = false;
+                    lblPayeeAccountNo.Visible = false;
+                    txtPayeeAccountNo.Visible = false;
+                }
+
+
+
+                #endregion
+
+
             }
             else
             {
@@ -134,7 +154,7 @@ namespace RUINORERP.UI.FM
                 }
                 //entity.InvoiceDate = System.DateTime.Now;
 
-        
+
                 // 清空 DataSource（如果适用）
                 cmbPayeeInfoID.DataSource = null;
                 cmbPayeeInfoID.DataBindings.Clear();
@@ -231,13 +251,13 @@ namespace RUINORERP.UI.FM
                         }
                     };
                 }
-                sgh.LoadItemDataToGrid<tb_FM_ReceivablePayableDetail>(grid1, sgd, entity.tb_FM_ReceivablePayableDetails, c => c.ARAPDetailID);
+                sgh.LoadItemDataToGrid<tb_FM_ReceivablePayableDetail>(grid1, sgd, entity.tb_FM_ReceivablePayableDetails, c => c.ProdDetailID);
                 // 模拟按下 Tab 键
                 SendKeys.Send("{TAB}");//为了显示远程图片列
             }
             else
             {
-                sgh.LoadItemDataToGrid<tb_FM_ReceivablePayableDetail>(grid1, sgd, new List<tb_FM_ReceivablePayableDetail>(), c => c.ARAPDetailID);
+                sgh.LoadItemDataToGrid<tb_FM_ReceivablePayableDetail>(grid1, sgd, new List<tb_FM_ReceivablePayableDetail>(), c => c.ProdDetailID);
             }
 
             //如果属性变化 则状态为修改
@@ -261,41 +281,16 @@ namespace RUINORERP.UI.FM
                             // entity.DueDate = System.DateTime.Now.AddDays(cv.CreditDays);
                         }
                     }
-                     //entity.DueDate = System.DateTime.Now;
+                    //entity.DueDate = System.DateTime.Now;
                 }
-
-
-                //如果报销人有变化，带出对应的收款方式
-                //if (entity.PayeeInfoID > 0 && s2.PropertyName == entity.GetPropertyName<tb_FM_ReceivablePayable>(c => c.pay))
-                //{
-                //    var obj = BizCacheHelper.Instance.GetEntity<tb_FM_PayeeInfo>(entity.PayeeInfoID);
-                //    if (obj != null && obj.ToString() != "System.Object")
-                //    {
-                //        if (obj is tb_FM_PayeeInfo cv)
-                //        {
-                //            DataBindingHelper.BindData4CmbByEnum<tb_FM_PayeeInfo>(cv, k => k.Account_type, typeof(AccountType), cmbAccount_type, false);
-                //            //添加收款信息。展示给财务看
-                //            cmbAccount_type.Enabled = false;
-                //            txtAccount_No.Text = cv.Account_No;
-                //            if (!string.IsNullOrEmpty(cv.PaymentCodeImagePath))
-                //            {
-                //                btnInfo.Tag = cv;
-                //                btnInfo.Visible = true;
-                //            }
-                //            else
-                //            {
-                //                btnInfo.Tag = string.Empty;
-                //                btnInfo.Visible = false;
-                //            }
-                //        }
-                //        else
-                //        {
-                //            //cmbAccount_type
-                //            txtAccount_No.Text = "";
-                //        }
-                //    }
-                //}
-
+                if (entity.Currency_ID>0 && s2.PropertyName == entity.GetPropertyName<tb_FM_ReceivablePayable>(c => c.Currency_ID))
+                {
+                    //如果币别是本位币则不显示汇率列
+                    if (EditEntity != null && EditEntity.Currency_ID == MainForm.Instance.AppContext.BaseCurrency.Currency_ID)
+                    {
+                        listCols.SetCol_NeverVisible<tb_FM_ReceivablePayableDetail>(c => c.ExchangeRate);
+                    }
+                }
 
                 base.ToolBarEnabledControl(entity);
 
@@ -351,26 +346,34 @@ namespace RUINORERP.UI.FM
         SourceGridDefine sgd = null;
         SourceGridHelper sgh = new SourceGridHelper();
         //设计关联列和目标列
-        tb_FM_OtherExpenseDetailController<tb_FM_ReceivablePayableDetail> dc = Startup.GetFromFac<tb_FM_OtherExpenseDetailController<tb_FM_ReceivablePayableDetail>>();
-        List<tb_FM_ReceivablePayableDetail> list = new List<tb_FM_ReceivablePayableDetail>();
+
         List<SGDefineColumnItem> listCols = new List<SGDefineColumnItem>();
+
+        //设计关联列和目标列
+        View_ProdDetailController<View_ProdDetail> dc = Startup.GetFromFac<View_ProdDetailController<View_ProdDetail>>();
+        List<View_ProdDetail> list = new List<View_ProdDetail>();
+
         private void UCStockIn_Load(object sender, EventArgs e)
         {
             #region
             switch (PaymentType)
             {
                 case ReceivePaymentType.收款:
-                    lblBillText.Text = "预收款单";
+                    lblBillText.Text = "应收款单";
                     lblAccount_id.Text = "收款账号";
-                    lblCustomerVendor_ID.Text = "付款单位";
+                    lblCustomerVendor_ID.Text = "应付单位";
+                    lblAccount_type.Visible = false;
+                    cmbAccount_type.Visible = false;
                     btnInfo.Visible = false;
+                    lblPayeeInfoID.Visible = false;
                     cmbPayeeInfoID.Visible = false;
-
+                    lblPayeeAccountNo.Visible = false;
+                    txtPayeeAccountNo.Visible = false;
                     break;
                 case ReceivePaymentType.付款:
-                    lblBillText.Text = "预付款单";
+                    lblBillText.Text = "应付款单";
                     lblAccount_id.Text = "付款账号";
-                    lblCustomerVendor_ID.Text = "收款单位";
+                    lblCustomerVendor_ID.Text = "应收单位";
                     break;
                 default:
                     break;
@@ -391,10 +394,32 @@ namespace RUINORERP.UI.FM
 
             listCols = new List<SGDefineColumnItem>();
             //指定了关键字段ProdDetailID
-            listCols = sgh.GetGridColumns<tb_FM_ReceivablePayableDetail>();
-            UIHelper.ControlChildColumnsInvisible(CurMenuInfo, listCols);
+            listCols = sgh.GetGridColumns<ProductSharePart, tb_FM_ReceivablePayableDetail>(c => c.ProdDetailID, false);
+
+
             listCols.SetCol_NeverVisible<tb_FM_ReceivablePayableDetail>(c => c.ARAPDetailID);
             listCols.SetCol_NeverVisible<tb_FM_ReceivablePayableDetail>(c => c.SourceBill_ID);
+            listCols.SetCol_NeverVisible<tb_FM_ReceivablePayableDetail>(c => c.ProdDetailID);
+            listCols.SetCol_NeverVisible<ProductSharePart>(c => c.Rack_ID);
+            listCols.SetCol_NeverVisible<ProductSharePart>(c => c.ShortCode);
+            listCols.SetCol_NeverVisible<ProductSharePart>(c => c.Brand);
+            listCols.SetCol_NeverVisible<ProductSharePart>(c => c.Location_ID);
+            listCols.SetCol_NeverVisible<ProductSharePart>(c => c.Model);
+            listCols.SetCol_NeverVisible<ProductSharePart>(c => c.VendorModelCode);
+            listCols.SetCol_NeverVisible<ProductSharePart>(c => c.Images);
+            listCols.SetCol_NeverVisible<ProductSharePart>(c => c.Inv_Cost);
+            listCols.SetCol_NeverVisible<ProductSharePart>(c => c.Standard_Price);
+            listCols.SetCol_NeverVisible<ProductSharePart>(c => c.TransPrice);
+
+     
+
+            UIHelper.ControlChildColumnsInvisible(CurMenuInfo, listCols);
+            listCols.SetCol_ReadOnly<tb_FM_ReceivablePayableDetail>(c => c.SourceBillNO);
+            UIHelper.ControlChildColumnsInvisible(CurMenuInfo, listCols);
+            if (!AppContext.SysConfig.UseBarCode)
+            {
+                listCols.SetCol_NeverVisible<ProductSharePart>(c => c.BarCode);
+            }
             //listCols.SetCol_DefaultValue<tb_FM_ReceivablePayableDetail>(c => c.ForeignPayableAmount, 0.00M);
 
             //listCols.SetCol_ReadOnly<tb_FM_OtherExpenseDetail>(c => c.CNName);
@@ -402,9 +427,11 @@ namespace RUINORERP.UI.FM
             listCols.SetCol_Format<tb_FM_ReceivablePayableDetail>(c => c.TaxRate, CustomFormatType.PercentFormat);
             listCols.SetCol_Format<tb_FM_ReceivablePayableDetail>(c => c.LocalPayableAmount, CustomFormatType.CurrencyFormat);
             listCols.SetCol_Format<tb_FM_ReceivablePayableDetail>(c => c.TaxLocalAmount, CustomFormatType.CurrencyFormat);
+            listCols.SetCol_Format<tb_FM_ReceivablePayableDetail>(c => c.UnitPrice, CustomFormatType.CurrencyFormat);
             //listCols.SetCol_Format<tb_FM_ReceivablePayableDetail>(c => c.ForeignPayableAmount, CustomFormatType.CurrencyFormat);
 
             sgd = new SourceGridDefine(grid1, listCols, true);
+            listCols.SetCol_Formula<tb_FM_ReceivablePayableDetail>((a, b) => a.UnitPrice * b.Quantity, c => c.LocalPayableAmount);//-->成交价是结果列
 
             sgd.GridMasterData = EditEntity;
             /*
@@ -431,15 +458,21 @@ namespace RUINORERP.UI.FM
             //listCols.SetCol_Formula<tb_FM_ReceivablePayableDetail>((a, b) => a.TransactionPrice / b.UnitPrice, c => c.Discount);
             //listCols.SetCol_Formula<tb_FM_ReceivablePayableDetail>((a, b) => a.TransactionPrice / b.Discount, c => c.UnitPrice);
 
-            //sgh.SetPointToColumnPairs<ProductSharePart, tb_PurEntryDetail>(sgd, f => f.Location_ID, t => t.Location_ID);
-            //sgh.SetPointToColumnPairs<ProductSharePart, tb_PurEntryDetail>(sgd, f => f.Rack_ID, t => t.Rack_ID);
 
-
+            //公共到明细的映射 源 ，左边会隐藏
+            sgh.SetPointToColumnPairs<ProductSharePart, tb_FM_ReceivablePayableDetail>(sgd, f => f.Specifications, t => t.Specifications);
+            sgh.SetPointToColumnPairs<ProductSharePart, tb_FM_ReceivablePayableDetail>(sgd, f => f.Unit_ID, t => t.Unit_ID);
+            //sgh.SetPointToColumnPairs<ProductSharePart, tb_FM_ReceivablePayableDetail>(sgd, f => f.Standard_Price, t => t.UnitPrice);
+            sgh.SetPointToColumnPairs<ProductSharePart, tb_FM_ReceivablePayableDetail>(sgd, f => f.prop, t => t.property);
 
             //应该只提供一个结构
             List<tb_FM_ReceivablePayableDetail> lines = new List<tb_FM_ReceivablePayableDetail>();
             bindingSourceSub.DataSource = lines; //  ctrSub.Query(" 1>2 ");
             sgd.BindingSourceLines = bindingSourceSub;
+
+            list = MainForm.Instance.list;
+            sgd.SetDependencyObject<ProductSharePart, tb_FM_ReceivablePayableDetail>(list);
+
             sgd.HasRowHeader = true;
             sgh.InitGrid(grid1, sgd, true, nameof(tb_FM_ReceivablePayableDetail));
             sgh.OnCalculateColumnValue += Sgh_OnCalculateColumnValue;

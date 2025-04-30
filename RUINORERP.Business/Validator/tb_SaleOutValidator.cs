@@ -38,8 +38,8 @@ namespace RUINORERP.Business
             RuleFor(tb_SaleOut => tb_SaleOut.Employee_ID).Must(CheckForeignKeyValueCanNull).WithMessage("业务员:下拉选择值不正确。");
             RuleFor(tb_SaleOut => tb_SaleOut.Employee_ID).NotEmpty().When(x => x.Employee_ID.HasValue);
 
-            RuleFor(tb_SaleOut => tb_SaleOut.CustomerVendor_ID).Must(CheckForeignKeyValueCanNull).WithMessage("客户:下拉选择值不正确。");
-            RuleFor(tb_SaleOut => tb_SaleOut.CustomerVendor_ID).NotEmpty().When(x => x.CustomerVendor_ID.HasValue);
+            RuleFor(tb_SaleOut => tb_SaleOut.CustomerVendor_ID).Must(CheckForeignKeyValue).WithMessage("客户:下拉选择值不正确。");
+          
 
             RuleFor(tb_SaleOut => tb_SaleOut.SOrder_ID).Must(CheckForeignKeyValueCanNull).WithMessage("引用订单:下拉选择值不正确。");
             RuleFor(tb_SaleOut => tb_SaleOut.SOrder_ID).NotEmpty().When(x => x.SOrder_ID.HasValue);

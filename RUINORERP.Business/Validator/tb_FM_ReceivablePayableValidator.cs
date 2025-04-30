@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：04/29/2025 11:22:30
+// 时间：04/30/2025 15:18:12
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -39,12 +39,6 @@ namespace RUINORERP.Business
         
      
  RuleFor(tb_FM_ReceivablePayable =>tb_FM_ReceivablePayable.ARAPNo).MaximumLength(15).WithMessage("单据编号:不能超过最大长度,15.");
-
- RuleFor(tb_FM_ReceivablePayable =>tb_FM_ReceivablePayable.PreRPID).Must(CheckForeignKeyValueCanNull).WithMessage("预收付款单:下拉选择值不正确。");
- RuleFor(tb_FM_ReceivablePayable =>tb_FM_ReceivablePayable.PreRPID).NotEmpty().When(x => x.PreRPID.HasValue);
-
- RuleFor(tb_FM_ReceivablePayable =>tb_FM_ReceivablePayable.PaymentId).Must(CheckForeignKeyValueCanNull).WithMessage("支付记录:下拉选择值不正确。");
- RuleFor(tb_FM_ReceivablePayable =>tb_FM_ReceivablePayable.PaymentId).NotEmpty().When(x => x.PaymentId.HasValue);
 
  RuleFor(tb_FM_ReceivablePayable =>tb_FM_ReceivablePayable.CustomerVendor_ID).Must(CheckForeignKeyValue).WithMessage("往来单位:下拉选择值不正确。");
 

@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：04/29/2025 11:22:28
+// 时间：04/30/2025 15:18:10
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -101,7 +101,7 @@ namespace RUINORERP.Business
  RuleFor(x => x.LocalBalanceAmount).PrecisionScale(19,4,true).WithMessage("余额本币:小数位不能超过4。");
 
 //***** 
- RuleFor(tb_FM_PreReceivedPayment =>tb_FM_PreReceivedPayment.ReceivePaymentType).NotNull().WithMessage("收付款类型:不能为空。");
+ RuleFor(tb_FM_PreReceivedPayment =>tb_FM_PreReceivedPayment.ReceivePaymentType).NotNull().WithMessage("收付类型:不能为空。");
 
  RuleFor(tb_FM_PreReceivedPayment =>tb_FM_PreReceivedPayment.PaymentImagePath).MaximumLength(300).WithMessage("付款凭证:不能超过最大长度,300.");
 

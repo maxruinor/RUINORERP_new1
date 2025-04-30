@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：04/29/2025 11:22:25
+// 时间：04/30/2025 15:18:07
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -185,7 +185,7 @@ this.Controls.Add(this.txtTargetBillNO);
            //#####TargetCurrencyID###Int64
 //属性测试275TargetCurrencyID
 ReversedSettlementID主外字段不一致。
-           //#####ReceivePaymentType###Int64
+           //#####ReceivePaymentType###Int32
 //属性测试300ReceivePaymentType
 ReversedSettlementID主外字段不一致。
            //#####Account_id###Int64

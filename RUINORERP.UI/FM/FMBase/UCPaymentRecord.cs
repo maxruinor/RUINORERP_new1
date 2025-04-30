@@ -506,20 +506,20 @@ namespace RUINORERP.UI.FM
             if (MessageBox.Show("系统不建议删除单据资料\r\n确定删除吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Information) == DialogResult.Yes)
             {
                 //https://www.runoob.com/w3cnote/csharp-enum.html
-                var dataStatus = (DataStatus)(EditEntity.GetPropertyValue(typeof(DataStatus).Name).ToInt());
-                if (dataStatus == DataStatus.新建 || dataStatus == DataStatus.草稿)
+              
+                var paymentStatus = (PaymentStatus)(EditEntity.GetPropertyValue(typeof(PaymentStatus).Name).ToInt());
+                if (paymentStatus == PaymentStatus.待审核 || paymentStatus == PaymentStatus.草稿)
                 {
                     //如果草稿。都可以删除。如果是新建，则提交过了。要创建人或超级管理员才能删除
-                    if (dataStatus == DataStatus.新建 && !AppContext.IsSuperUser)
-                    {
-                        if (EditEntity.Created_by.Value != AppContext.CurUserInfo.Id)
-                        {
-                            MessageBox.Show("只有创建人才能删除提交的单据。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                            rss.ErrorMsg = "只有创建人才能删除提交的单据。";
-                            rss.Succeeded = false;
-                            return rss;
-                        }
-                    }
+
+                    //if (EditEntity.Created_by.Value != AppContext.CurUserInfo.Id)
+                    //{
+                    //    MessageBox.Show("只有创建人才能删除提交的单据。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    //    rss.ErrorMsg = "只有创建人才能删除提交的单据。";
+                    //    rss.Succeeded = false;
+                    //    return rss;
+                    //}
+
 
                     tb_FM_PaymentRecordController<tb_FM_PaymentRecord> ctr = Startup.GetFromFac<tb_FM_PaymentRecordController<tb_FM_PaymentRecord>>();
                     bool rs = await ctr.BaseDeleteAsync(EditEntity as tb_FM_PaymentRecord);

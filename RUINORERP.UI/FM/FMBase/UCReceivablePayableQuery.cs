@@ -49,7 +49,7 @@ namespace RUINORERP.UI.FM
             InitializeComponent();
             base.RelatedBillEditCol = (c => c.ARAPNo);
             //标记没有明细子表
-            HasChildData = false;
+            HasChildData = true;
         }
         public ReceivePaymentType PaymentType { get; set; }
         public override void BuildLimitQueryConditions()
@@ -154,7 +154,13 @@ namespace RUINORERP.UI.FM
         {
             base.MasterInvisibleCols.Add(c => c.ARAPId);
             base.MasterInvisibleCols.Add(c => c.ReceivePaymentType);
-            //base.ChildInvisibleCols.Add(c => c.SubtotalCostAmount);
+            if (PaymentType==ReceivePaymentType.收款)
+            {
+                //应收款，不需要对方的收款信息。收款才要显示
+                base.MasterInvisibleCols.Add(c => c.PayeeInfoID);
+                base.MasterInvisibleCols.Add(c => c.PayeeAccountNo);
+            }
+            base.ChildInvisibleCols.Add(c => c.SourceBill_ID);
         }
 
 
@@ -166,7 +172,7 @@ namespace RUINORERP.UI.FM
 
         private void UCReceivablePayableQuery_Load(object sender, EventArgs e)
         {
-            /*
+        
             #region 双击单号后按业务类型查询显示对应业务窗体
             base._UCBillChildQuery.GridRelated.ComplexType = true;
             //由这个列来决定单号显示哪个的业务窗体
@@ -186,7 +192,7 @@ namespace RUINORERP.UI.FM
                 base._UCBillChildQuery.GridRelated.SetRelatedInfo<tb_FM_ReceivablePayableDetail>(c => c.SourceBillNO, keyNamePair);
             }
             #endregion
-            */
+           
         }
     }
 }

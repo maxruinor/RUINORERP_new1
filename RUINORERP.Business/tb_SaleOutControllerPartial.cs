@@ -223,7 +223,7 @@ namespace RUINORERP.Business
                         //注意这里的人应该是业务员的ID。销售订单的录入人，不是审核人。也不是出库单的人。
                         // tb_PriceRecordController<tb_PriceRecord> ctrPriceRecord = _appContext.GetRequiredService<tb_PriceRecordController<tb_PriceRecord>>();
                         tb_PriceRecord priceRecord = _unitOfWorkManage.GetDbClient().Queryable<tb_PriceRecord>()
-                        .Where(c => c.Employee_ID == entity.tb_saleorder.Employee_ID.Value && c.ProdDetailID == child.ProdDetailID
+                        .Where(c => c.Employee_ID == entity.tb_saleorder.Employee_ID && c.ProdDetailID == child.ProdDetailID
 
                         ).First();
                         //如果存在则更新，否则插入
@@ -231,7 +231,7 @@ namespace RUINORERP.Business
                         {
                             priceRecord = new tb_PriceRecord();
                         }
-                        priceRecord.Employee_ID = entity.tb_saleorder.Employee_ID.Value;
+                        priceRecord.Employee_ID = entity.tb_saleorder.Employee_ID;
                         if (priceRecord.SalePrice != child.TransactionPrice)
                         {
                             priceRecord.SalePrice = child.TransactionPrice;

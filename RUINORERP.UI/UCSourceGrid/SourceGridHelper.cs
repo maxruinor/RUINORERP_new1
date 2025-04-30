@@ -228,7 +228,7 @@ namespace RUINORERP.UI.UCSourceGrid
                 }
             }
 
-          
+
 
             return listCols;
         }
@@ -640,6 +640,7 @@ namespace RUINORERP.UI.UCSourceGrid
         }
 
 
+
         /// <summary>
         /// 加载已经的数据明细显示到表格
         /// </summary>
@@ -647,7 +648,7 @@ namespace RUINORERP.UI.UCSourceGrid
         /// <param name="grid1"></param>
         /// <param name="sgdefine"></param>
         /// <param name="_details"></param>
-        /// <param name="BizKeyTargetColExp"></param>
+        /// <param name="BizKeyTargetColExp">这个应该指向产品的ID</param>
         public void LoadItemDataToGrid<C>(SourceGrid.Grid grid1, SourceGridDefine sgdefine,
             List<C> _details, Expression<Func<C, long?>> BizKeyTargetColExp) where C : class
         {
@@ -4056,7 +4057,7 @@ namespace RUINORERP.UI.UCSourceGrid
             foreach (ColumnInfo item in sgdefine.grid.Columns)
             {
                 var defineColumnItem = item.Tag as SGDefineColumnItem;
-                if (defineColumnItem==null)
+                if (defineColumnItem == null)
                 {
                     continue;
                 }
@@ -4068,13 +4069,13 @@ namespace RUINORERP.UI.UCSourceGrid
                         continue;
                     }
                 }
-           
+
                 if (defineColumnItem.IsRowHeaderCol)
                 {
                     continue;
                 }
                 //这里是设置明细中的主要业务字段
-                if ((defineColumnItem.GuideToTargetColumn && !sgdefine.PointToColumnPairList.ContainsKey(defineColumnItem) 
+                if ((defineColumnItem.GuideToTargetColumn && !sgdefine.PointToColumnPairList.ContainsKey(defineColumnItem)
                     && !defineColumnItem.IsPrimaryBizKeyColumn))
                 {
                     //这里给默认值  明细中的。如数量为0？

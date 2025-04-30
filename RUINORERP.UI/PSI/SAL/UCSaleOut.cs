@@ -54,9 +54,9 @@ namespace RUINORERP.UI.PSI.SAL
             base.toolStripButton结案.Visible = true;
         }
 
-    
-       
-      
+
+
+
 
         internal override void LoadDataToUI(object Entity)
         {
@@ -115,7 +115,11 @@ namespace RUINORERP.UI.PSI.SAL
                     entity.ActionStatus = ActionStatus.新增;
                     entity.DataStatus = (int)DataStatus.草稿;
                     entity.OutDate = System.DateTime.Now;
-                    entity.SaleOutNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.销售出库单);
+                    if (string.IsNullOrEmpty(entity.SaleOutNo))
+                    {
+                        entity.SaleOutNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.销售出库单);
+                    }
+
                     if (entity.tb_SaleOutDetails != null && entity.tb_SaleOutDetails.Count > 0)
                     {
                         entity.tb_SaleOutDetails.ForEach(c => c.SaleOut_MainID = 0);
@@ -156,13 +160,13 @@ namespace RUINORERP.UI.PSI.SAL
             DataBindingHelper.BindData4TextBox<tb_SaleOut>(entity, t => t.ApprovalOpinions, txtApprovalOpinions, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4CheckBox<tb_SaleOut>(entity, t => t.ApprovalResults, chkApprovalResults, false);
             DataBindingHelper.BindData4CheckBox<tb_SaleOut>(entity, t => t.ReplaceOut, chk替代品出库, false);
-        
+
             DataBindingHelper.BindData4TextBox<tb_SaleOut>(entity, t => t.TotalCost.ToString(), txtTotalCost, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4TextBox<tb_SaleOut>(entity, t => t.TotalTaxAmount.ToString(), txtTaxAmount, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4TextBox<tb_SaleOut>(entity, t => t.TotalQty.ToString(), txtTotalQty, BindDataType4TextBox.Qty, false);
             DataBindingHelper.BindData4TextBox<tb_SaleOut>(entity, t => t.ForeignTotalAmount.ToString(), txtForeignTotalAmount, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4CheckBox<tb_SaleOut>(entity, t => t.GenerateVouchers, chkGenerateVouchers, false);
- 
+
             DataBindingHelper.BindData4CheckBox<tb_SaleOut>(entity, t => t.IsCustomizedOrder, chkIsCustomizedOrder, false);
 
             base.errorProviderForAllInput.DataSource = entity;
@@ -201,7 +205,7 @@ namespace RUINORERP.UI.PSI.SAL
                 {
                     if (s2.PropertyName == entity.GetPropertyName<tb_SaleOut>(c => c.Currency_ID) && entity.Currency_ID > 0)
                     {
-                        
+
                         if (cmbCurrency_ID.SelectedItem is tb_Currency cv)
                         {
                             if (cv.CurrencyCode.Trim() != DefaultCurrency.RMB.ToString())
@@ -229,7 +233,7 @@ namespace RUINORERP.UI.PSI.SAL
                                 entity.ForeignTotalAmount = 0;
                             }
                         }
-                        
+
                     }
 
                     if (s2.PropertyName == entity.GetPropertyName<tb_SaleOut>(c => c.Paytype_ID) && entity.Paytype_ID.HasValue && entity.Paytype_ID > 0)
@@ -242,7 +246,7 @@ namespace RUINORERP.UI.PSI.SAL
                 }
 
 
-                if (entity.CustomerVendor_ID.HasValue && entity.CustomerVendor_ID > 0 && s2.PropertyName == entity.GetPropertyName<tb_SaleOut>(c => c.CustomerVendor_ID))
+                if (entity.CustomerVendor_ID > 0 && s2.PropertyName == entity.GetPropertyName<tb_SaleOut>(c => c.CustomerVendor_ID))
                 {
                     var obj = BizCacheHelper.Instance.GetEntity<tb_CustomerVendor>(entity.CustomerVendor_ID);
                     if (obj != null && obj.ToString() != "System.Object")
@@ -484,7 +488,7 @@ namespace RUINORERP.UI.PSI.SAL
 
                 EditEntity.TotalTaxAmount = details.Sum(c => c.SubtotalTaxAmount);
                 EditEntity.TotalTaxAmount = EditEntity.TotalTaxAmount.ToRoundDecimalPlaces(MainForm.Instance.authorizeController.GetMoneyDataPrecision());
-          
+
                 EditEntity.TotalAmount = details.Sum(c => c.TransactionPrice * c.Quantity);
                 EditEntity.TotalAmount = EditEntity.TotalAmount + EditEntity.ShipCost;
                 if (EditEntity.Currency_ID.HasValue && EditEntity.Currency_ID != AppContext.BaseCurrency.Currency_ID && EditEntity.ExchangeRate.HasValue)
@@ -607,9 +611,10 @@ namespace RUINORERP.UI.PSI.SAL
                 }
 
                 //二选中，验证机制还没有弄好。先这里处理
-                if (EditEntity.CustomerVendor_ID == 0 || EditEntity.CustomerVendor_ID == -1)
+                if (NeedValidated && (EditEntity.CustomerVendor_ID == 0 || EditEntity.CustomerVendor_ID == -1))
                 {
-                    EditEntity.CustomerVendor_ID = null;
+                    System.Windows.Forms.MessageBox.Show("往来单位选择不能为空，请检查记录！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    return false;
                 }
 
                 if (EditEntity.Employee_ID == 0 || EditEntity.Employee_ID == -1)

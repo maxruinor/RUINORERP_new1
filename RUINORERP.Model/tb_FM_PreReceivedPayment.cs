@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：04/29/2025 11:22:28
+// 时间：04/30/2025 15:18:10
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -677,14 +677,6 @@ namespace RUINORERP.Model
         [Navigate(NavigateType.OneToOne, nameof(Employee_ID))]
         public virtual tb_Employee tb_employee { get; set; }
 
-
-        //[Browsable(false)]打印报表时的数据源会不显示
-        [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_FM_ReceivablePayable.PreRPID))]
-        public virtual List<tb_FM_ReceivablePayable> tb_FM_ReceivablePayables { get; set; }
-        //tb_FM_ReceivablePayable.PreRPID)
-        //PreRPID.FK_FM_RECEIVABLEPAYABLE_REF_FM_PRERECEIVEDPAYMENT)
-        //tb_FM_PreReceivedPayment.PreRPID)
 
 
         #endregion

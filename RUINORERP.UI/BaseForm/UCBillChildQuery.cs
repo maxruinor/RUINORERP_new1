@@ -20,11 +20,13 @@ namespace RUINORERP.UI.BaseForm
         public UCBillChildQuery()
         {
             InitializeComponent();
-            newSumDataGridViewChild.CellFormatting += DataGridView1_CellFormatting;
+            // newSumDataGridViewChild.CellFormatting += DataGridView1_CellFormatting;
+            newSumDataGridViewChild.CellDoubleClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.newSumDataGridViewChild_CellDoubleClick);
         }
-
+        public GridViewDisplayTextResolver DisplayTextResolver;
         private void UCBillChildQuery_Load(object sender, EventArgs e)
         {
+            DisplayTextResolver = new GridViewDisplayTextResolver(entityType);
             newSumDataGridViewChild.ColumnHeadersDefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
             newSumDataGridViewChild.XmlFileName = this.Name + entityType.Name + "Child";
             newSumDataGridViewChild.FieldNameList = UIHelper.GetFieldNameColList(entityType);
@@ -41,10 +43,39 @@ namespace RUINORERP.UI.BaseForm
                 newSumDataGridViewChild.FieldNameList.TryRemove(item, out kv);
                 KeyValuePair<string, bool> Newkv = new KeyValuePair<string, bool>(kv.Key, false);
                 newSumDataGridViewChild.FieldNameList.TryAdd(item, Newkv);
-                //newSumDataGridViewMaster.FieldNameList.TryUpdate(item, Newkv, kv);
+                //newSumDataGridViewChild.FieldNameList.TryUpdate(item, Newkv, kv);
             }
 
             newSumDataGridViewChild.DataSource = bindingSourceChild;
+            newSumDataGridViewChild.CellFormatting -= DataGridView1_CellFormatting;
+            DisplayTextResolver.Initialize(newSumDataGridViewChild);
+        }
+
+       
+
+        /// <summary>
+        /// 双击单号导向单据的功能类
+        /// </summary>
+        public GridViewRelated GridRelated { get; set; } = new GridViewRelated();
+
+
+        MenuPowerHelper menuPowerHelper = Startup.GetFromFac<MenuPowerHelper>();
+        private void newSumDataGridViewChild_CellDoubleClick(object sender, DataGridViewCellEventArgs e)
+        {
+            if (e.ColumnIndex == -1 || e.RowIndex == -1)
+            {
+                return;
+            }
+            object bizkey = null;
+            if (newSumDataGridViewChild.CurrentRow != null && newSumDataGridViewChild.CurrentCell != null)
+            {
+                if (newSumDataGridViewChild.CurrentRow.DataBoundItem != null)
+                {
+                    bizkey = GridRelated.GuideToForm(newSumDataGridViewChild.Columns[e.ColumnIndex].Name, newSumDataGridViewChild.CurrentRow);
+                }
+
+            }
+            
         }
 
 

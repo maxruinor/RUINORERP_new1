@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：04/29/2025 11:22:23
+// 时间：04/30/2025 15:18:05
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -67,6 +67,9 @@ namespace RUINORERP.UI
         
         
         
+        
+        
+        
 
          }
 /*
@@ -78,7 +81,7 @@ namespace RUINORERP.UI
                        entity.BizType = Int32.Parse(txtBizType.Text);
                         entity.SourceBilllID = Int64.Parse(txtSourceBilllID.Text);
                         entity.SourceBillNO = txtSourceBillNO.Text ;
-                       entity.ReceivePaymentType = Int64.Parse(txtReceivePaymentType.Text);
+                       entity.ReceivePaymentType = Int32.Parse(txtReceivePaymentType.Text);
                         entity.Account_id = Int64.Parse(txtAccount_id.Text);
                         entity.CustomerVendor_ID = Int64.Parse(txtCustomerVendor_ID.Text);
                         entity.PayeeInfoID = Int64.Parse(txtPayeeInfoID.Text);
@@ -95,6 +98,9 @@ namespace RUINORERP.UI
                         entity.PaymentStatus = Int64.Parse(txtPaymentStatus.Text);
                         entity.PaymentImagePath = txtPaymentImagePath.Text ;
                        entity.ReferenceNo = txtReferenceNo.Text ;
+                       entity.IsReversed = Boolean.Parse(txtIsReversed.Text);
+                        entity.ReversedPaymentId = Int64.Parse(txtReversedPaymentId.Text);
+                        entity.ReversedPaymentNo = txtReversedPaymentNo.Text ;
                        entity.Remark = txtRemark.Text ;
                        entity.Created_at = DateTime.Parse(txtCreated_at.Text);
                         entity.Created_by = Int64.Parse(txtCreated_by.Text);
@@ -138,6 +144,9 @@ namespace RUINORERP.UI
            DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.PaymentStatus, txtPaymentStatus, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.PaymentImagePath, txtPaymentImagePath, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.ReferenceNo, txtReferenceNo, BindDataType4TextBox.Text,false);
+           DataBindingHelper.BindData4CheckBox<tb_FM_PaymentRecord>(entity, t => t.IsReversed, chkIsReversed, false);
+           DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.ReversedPaymentId, txtReversedPaymentId, BindDataType4TextBox.Qty,false);
+           DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.ReversedPaymentNo, txtReversedPaymentNo, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.Remark, txtRemark, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4DataTime<tb_FM_PaymentRecord>(entity, t => t.Created_at, dtpCreated_at,false);
            DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.Created_by, txtCreated_by, BindDataType4TextBox.Qty,false);

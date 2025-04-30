@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：04/29/2025 11:22:25
+// 时间：04/30/2025 15:18:07
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -77,7 +77,7 @@ namespace RUINORERP.UI
                         entity.TargetBillID = Int64.Parse(txtTargetBillID.Text);
                         entity.TargetBillNO = txtTargetBillNO.Text ;
                        entity.TargetCurrencyID = Int64.Parse(txtTargetCurrencyID.Text);
-                        entity.ReceivePaymentType = Int64.Parse(txtReceivePaymentType.Text);
+                        entity.ReceivePaymentType = Int32.Parse(txtReceivePaymentType.Text);
                         entity.Account_id = Int64.Parse(txtAccount_id.Text);
                         entity.CustomerVendor_ID = Int64.Parse(txtCustomerVendor_ID.Text);
                         entity.SettledForeignAmount = Decimal.Parse(txtSettledForeignAmount.Text);

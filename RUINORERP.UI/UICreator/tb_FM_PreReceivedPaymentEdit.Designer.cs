@@ -3,7 +3,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：04/29/2025 11:22:26
+// 时间：04/30/2025 15:18:08
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -664,7 +664,7 @@ this.lblReceivePaymentType.Location = new System.Drawing.Point(100,675);
 this.lblReceivePaymentType.Name = "lblReceivePaymentType";
 this.lblReceivePaymentType.Size = new System.Drawing.Size(41, 12);
 this.lblReceivePaymentType.TabIndex = 27;
-this.lblReceivePaymentType.Text = "收付款类型";
+this.lblReceivePaymentType.Text = "收付类型";
 this.txtReceivePaymentType.Location = new System.Drawing.Point(173,671);
 this.txtReceivePaymentType.Name = "txtReceivePaymentType";
 this.txtReceivePaymentType.Size = new System.Drawing.Size(100, 21);

@@ -1801,6 +1801,12 @@ namespace RUINORERP.UI.BaseForm
         private KryptonPage ChildQuery()
         {
             _UCBillChildQuery = new UCBillChildQuery();
+
+            if (_UCBillChildQuery.GridRelated.RelatedInfoList.Count == 0 && RelatedBillEditCol != null)
+            {
+                _UCBillChildQuery.GridRelated.SetRelatedInfo(typeof(C).Name, RelatedBillEditCol.GetMemberInfo().Name);
+            }
+
             _UCBillChildQuery.Name = "_UCBillChildQuery";
             _UCBillChildQuery.entityType = typeof(C);
             List<string> childlist = RuinorExpressionHelper.ExpressionListToStringList(ChildSummaryCols);
@@ -1890,6 +1896,8 @@ namespace RUINORERP.UI.BaseForm
                 }
                 _UCBillMasterQuery.GridRelated.SetRelatedInfo(typeof(M).Name, RelatedBillEditCol.GetMemberInfo().Name);
             }
+
+
 
             SetGridViewDisplayConfig();
             KryptonPage page = NewPage("单据信息", 1, _UCBillMasterQuery);

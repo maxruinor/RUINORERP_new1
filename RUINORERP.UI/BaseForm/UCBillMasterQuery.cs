@@ -137,7 +137,6 @@ namespace RUINORERP.UI.BaseForm
         public GridViewRelated GridRelated { get; set; } = new GridViewRelated();
 
 
-
         MenuPowerHelper menuPowerHelper = Startup.GetFromFac<MenuPowerHelper>();
         private void newSumDataGridViewMaster_CellDoubleClick(object sender, DataGridViewCellEventArgs e)
         {

@@ -72,11 +72,11 @@ namespace RUINORERP.Business
                 //删除
                 if (entity.ReceivePaymentType == (int)ReceivePaymentType.收款)
                 {
-                    await _appContext.Db.Deleteable<tb_FM_PaymentRecord>().Where(c => c.SourceBilllID == entity.PreRPID && c.BizType == (int)BizType.应收单).ExecuteCommandAsync();
+                    await _appContext.Db.Deleteable<tb_FM_PaymentRecord>().Where(c => c.SourceBilllID == entity.ARAPId && c.BizType == (int)BizType.应收单).ExecuteCommandAsync();
                 }
                 else
                 {
-                    await _appContext.Db.Deleteable<tb_FM_PaymentRecord>().Where(c => c.SourceBilllID == entity.PreRPID && c.BizType == (int)BizType.应付单).ExecuteCommandAsync();
+                    await _appContext.Db.Deleteable<tb_FM_PaymentRecord>().Where(c => c.SourceBilllID == entity.ARAPId && c.BizType == (int)BizType.应付单).ExecuteCommandAsync();
                 }
                 entity.ARAPStatus = (long)ARAPStatus.草稿;
                 entity.ApprovalResults = false;
@@ -260,9 +260,9 @@ namespace RUINORERP.Business
             payable.ApprovalOpinions = "";
             payable.Modified_at = null;
             payable.Modified_by = null;
-            if (entity.tb_projectgroup != null && entity.tb_projectgroup.tb_department != null)
+            if (entity.tb_projectgroup != null && entity.tb_projectgroup.DepartmentID.HasValue)
             {
-                payable.DepartmentID = entity.tb_projectgroup.tb_department.DepartmentID;
+                payable.DepartmentID = entity.tb_projectgroup.DepartmentID;
             }
             //销售就是收款
             payable.ReceivePaymentType = (int)ReceivePaymentType.收款;
@@ -274,9 +274,25 @@ namespace RUINORERP.Business
             }
             if (entity.tb_saleorder.tb_paymentmethod.Paytype_Name == DefaultPaymentMethod.账期.ToString())
             {
+
+                var obj = BizCacheHelper.Instance.GetEntity<tb_CustomerVendor>(entity.CustomerVendor_ID);
+                if (obj != null && obj.ToString() != "System.Object")
+                {
+                    if (obj is tb_CustomerVendor cv)
+                    {
+                        entity.tb_customervendor = cv;
+                    }
+                }
+                else
+                {
+                    //db查询
+                    entity.tb_customervendor = await _appContext.GetRequiredService<tb_CustomerVendorController<tb_CustomerVendor>>().BaseQueryByIdAsync(entity.CustomerVendor_ID);
+                }
+
                 if (entity.tb_customervendor.CustomerCreditDays.HasValue)
                 {
                     // 从销售出库日期开始计算到期日
+                    //应收账期 的到期时间
                     payable.DueDate = entity.OutDate.Date.AddDays(entity.tb_customervendor.CustomerCreditDays.Value).AddDays(1).AddTicks(-1);
                 }
             }
@@ -368,6 +384,20 @@ namespace RUINORERP.Business
             }
             if (entity.tb_purorder.tb_paymentmethod.Paytype_Name == DefaultPaymentMethod.账期.ToString())
             {
+                var obj = BizCacheHelper.Instance.GetEntity<tb_CustomerVendor>(entity.CustomerVendor_ID);
+                if (obj != null && obj.ToString() != "System.Object")
+                {
+                    if (obj is tb_CustomerVendor cv)
+                    {
+                        entity.tb_customervendor = cv;
+                    }
+                }
+                else
+                {
+                    //db查询
+                    entity.tb_customervendor = await _appContext.GetRequiredService<tb_CustomerVendorController<tb_CustomerVendor>>().BaseQueryByIdAsync(entity.CustomerVendor_ID);
+                }
+
                 if (entity.tb_customervendor.SupplierCreditDays.HasValue)
                 {
                     // 从销售出库日期开始计算到期日
@@ -569,7 +599,7 @@ namespace RUINORERP.Business
         public async override Task<List<T>> GetPrintDataSource(long ID)
         {
             List<tb_FM_ReceivablePayable> list = await _appContext.Db.CopyNew().Queryable<tb_FM_ReceivablePayable>()
-                .Where(m => m.PreRPID == ID)
+                .Where(m => m.ARAPId == ID)
                             .Includes(a => a.tb_fm_account)
                             .Includes(a => a.tb_fm_payeeinfo)
                             .Includes(a => a.tb_currency)

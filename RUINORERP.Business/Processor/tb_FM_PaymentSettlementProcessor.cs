@@ -51,16 +51,15 @@ namespace RUINORERP.Business.Processor
      
             queryFilter.SetQueryField<tb_FM_PaymentSettlement>(c => c.SourceBillNO);
   
-            queryFilter.SetQueryField<tb_FM_PaymentSettlement>(c => c.BizType, QueryFieldType.CmbEnum, typeof(BizType));
+            queryFilter.SetQueryField<tb_FM_PaymentSettlement>(c => c.SourceBizType, QueryFieldType.CmbEnum, typeof(BizType));
             queryFilter.SetQueryField<tb_FM_PaymentSettlement>(c => c.SourceBizType, QueryFieldType.CmbEnum, typeof(BizType));
             queryFilter.SetQueryField<tb_FM_PaymentSettlement>(c => c.TargetBizType, QueryFieldType.CmbEnum, typeof(BizType));
     
             queryFilter.SetQueryField<tb_FM_PaymentSettlement>(c => c.Account_id);
 
 
-            queryFilter.SetQueryFieldByAlias<tb_FM_PaymentSettlement, tb_Currency>(a => a.TargetCurrencyID, null, b => b.Currency_ID, b => b.CurrencyName);
-            queryFilter.SetQueryFieldByAlias<tb_FM_PaymentSettlement, tb_Currency>(a => a.SourceCurrencyID, null, b => b.Currency_ID, b => b.CurrencyName);
-
+            queryFilter.SetQueryFieldByAlias<tb_FM_PaymentSettlement, tb_Currency>(a => a.Currency_ID, null, b => b.Currency_ID, b => b.CurrencyName);
+            
 
             queryFilter.SetQueryField<tb_FM_PaymentSettlement>(c => c.SettleDate, false);
 

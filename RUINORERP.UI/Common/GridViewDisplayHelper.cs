@@ -122,6 +122,7 @@ namespace RUINORERP.UI.Common
                 else if (prop.Name == nameof(GoodsSource)||prop.Name == "SourceType") //应该字段名和枚举名相同才好
                 {
                     FixedDictionaryMappings.Add(new FixedDictionaryMapping(_type.Name, nameof(GoodsSource), Common.CommonHelper.Instance.GetKeyValuePairs(typeof(GoodsSource))));
+                    FixedDictionaryMappings.Add(new FixedDictionaryMapping(_type.Name, "SourceType", Common.CommonHelper.Instance.GetKeyValuePairs(typeof(GoodsSource))));
                 }
                 else if (prop.Name == nameof(SettlementType))
                 {
@@ -139,11 +140,12 @@ namespace RUINORERP.UI.Common
                 {
                     FixedDictionaryMappings.Add(new FixedDictionaryMapping(_type.Name, nameof(ARAPStatus), Common.CommonHelper.Instance.GetKeyValuePairs(typeof(ARAPStatus))));
                 }
-                else if (prop.Name == nameof(BizType))
+                else if (prop.Name == nameof(BizType)|| prop.Name == "TargetBizType"|| prop.Name == "SourceBizType")
                 {
                     FixedDictionaryMappings.Add(new FixedDictionaryMapping(_type.Name, nameof(BizType), Common.CommonHelper.Instance.GetKeyValuePairs(typeof(BizType))));
+                    FixedDictionaryMappings.Add(new FixedDictionaryMapping(_type.Name, "TargetBizType", Common.CommonHelper.Instance.GetKeyValuePairs(typeof(BizType))));
+                    FixedDictionaryMappings.Add(new FixedDictionaryMapping(_type.Name, "SourceBizType", Common.CommonHelper.Instance.GetKeyValuePairs(typeof(BizType))));
                 }
-                
                 else if (prop.Name == nameof(ReceivePaymentType))
                 {
                     FixedDictionaryMappings.Add(new FixedDictionaryMapping(_type.Name, nameof(ReceivePaymentType), Common.CommonHelper.Instance.GetKeyValuePairs(typeof(ReceivePaymentType))));

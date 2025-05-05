@@ -250,10 +250,6 @@ namespace RUINORERP.UI.BaseForm
 
             }
 
-
-
-
-
             //动态字典值显示
             string colName = string.Empty;
             if (ColDisplayTypes != null && ColDisplayTypes.Count > 0)
@@ -268,8 +264,6 @@ namespace RUINORERP.UI.BaseForm
             {
                 e.Value = colName;
             }
-
-
             //处理创建人 修改人，因为这两个字段没有做外键。固定的所以可以统一处理
 
         }

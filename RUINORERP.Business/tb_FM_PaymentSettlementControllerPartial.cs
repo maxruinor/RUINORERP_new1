@@ -63,8 +63,6 @@ namespace RUINORERP.Business
                 {
                     SettlementRecord.SettlementType = (int)SettlementType.红冲核销;
                     SettlementRecord.IsReversed = true;
-                    SettlementRecord.SettledForeignAmount = entity.ForeignPaidAmount;
-                    SettlementRecord.SettledLocalAmount = entity.LocalPaidAmount;
                 }
             }
             else
@@ -77,7 +75,7 @@ namespace RUINORERP.Business
                 }
             }
 
-            SettlementRecord.BizType = entity.BizType;
+            SettlementRecord.SourceBizType = entity.BizType;
             SettlementRecord.SourceBillNO = entity.SourceBillNO;
             SettlementRecord.SourceBillID = entity.SourceBilllID;
             //SourceBillDetailID 应收时 可以按明细核销？
@@ -99,16 +97,14 @@ namespace RUINORERP.Business
             }
             if (entity.Currency_ID.HasValue)
             {
-                SettlementRecord.SourceCurrencyID = entity.Currency_ID.Value;
+                SettlementRecord.Currency_ID = entity.Currency_ID.Value;
             }
             SettlementRecord.ExchangeRate = entity.ExchangeRate;
             if (true)
             {
 
             }
-            SettlementRecord.SourceBizType = entity.BizType;
-
-            SettlementRecord.BizType = entity.BizType;
+            
             SettlementRecord.SettledForeignAmount = entity.ForeignPaidAmount;
             SettlementRecord.SettledLocalAmount = entity.LocalPaidAmount;
 

@@ -35,6 +35,7 @@ using RUINORERP.Common.Extensions;
 using RUINORERP.Global.EnumExt;
 using RUINORERP.Business.CommService;
 using RUINORERP.Global.Model;
+using Org.BouncyCastle.Crypto.Prng;
 namespace RUINORERP.UI.FM
 {
     /// <summary>
@@ -93,7 +94,10 @@ namespace RUINORERP.UI.FM
         public override void BuildInvisibleCols()
         {
             base.MasterInvisibleCols.Add(c => c.SettlementId);
+            base.MasterInvisibleCols.Add(c => c.SourceBillID);
+            base.MasterInvisibleCols.Add(c => c.TargetBillID);
             base.MasterInvisibleCols.Add(c => c.ReceivePaymentType);
+
             //base.ChildInvisibleCols.Add(c => c.SubtotalCostAmount);
         }
 
@@ -109,7 +113,8 @@ namespace RUINORERP.UI.FM
             #region 双击单号后按业务类型查询显示对应业务窗体
             base._UCBillMasterQuery.GridRelated.ComplexType = true;
             //由这个列来决定单号显示哪个的业务窗体
-            base._UCBillMasterQuery.GridRelated.SetComplexTargetField<tb_FM_PaymentSettlement>(c => c.BizType);
+            base._UCBillMasterQuery.GridRelated.SetComplexTargetField<tb_FM_PaymentSettlement>(c => c.SourceBizType, c => c.SourceBillNO);
+            base._UCBillMasterQuery.GridRelated.SetComplexTargetField<tb_FM_PaymentSettlement>(c => c.TargetBizType, c => c.TargetBillNO);
             BizTypeMapper mapper = new BizTypeMapper();
             //将枚举中的值循环
             foreach (var biztype in Enum.GetValues(typeof(BizType)))

@@ -144,7 +144,7 @@ namespace RUINORERP.UI.FM
 
                 //entity.DueDate = System.DateTime.Now;
 
-                if (PaymentType == ReceivePaymentType.付款)
+                if (PaymentType == ReceivePaymentType.收款)
                 {
                     entity.ARAPNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.应收单);
                 }

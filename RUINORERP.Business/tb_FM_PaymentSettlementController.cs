@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：04/30/2025 15:18:08
+// 时间：04/30/2025 19:46:41
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -29,7 +29,7 @@ using RUINORERP.Common.Helper;
 namespace RUINORERP.Business
 {
     /// <summary>
-    /// 记录收款 与应收的匹配，核销表
+    /// 记录收款 与应收的匹配，核销表 核销记录用于跟踪资金与债权债务的冲抵关系，确保财务数据可追溯。正常的收款，支付不需要保存核销记录
     /// </summary>
     public partial class tb_FM_PaymentSettlementController<T>:BaseController<T> where T : class
     {
@@ -461,6 +461,8 @@ namespace RUINORERP.Business
          public virtual async Task<List<tb_FM_PaymentSettlement>> QueryByNavAsync()
         {
             List<tb_FM_PaymentSettlement> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_FM_PaymentSettlement>()
+                               .Includes(t => t.tb_currency )
+                               .Includes(t => t.tb_fm_account )
                                .Includes(t => t.tb_fm_paymentsettlement )
                                             .Includes(t => t.tb_FM_PaymentSettlements )
                         .ToListAsync();
@@ -482,6 +484,8 @@ namespace RUINORERP.Business
          public virtual async Task<List<tb_FM_PaymentSettlement>> QueryByNavAsync(Expression<Func<tb_FM_PaymentSettlement, bool>> exp)
         {
             List<tb_FM_PaymentSettlement> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_FM_PaymentSettlement>().Where(exp)
+                               .Includes(t => t.tb_currency )
+                               .Includes(t => t.tb_fm_account )
                                .Includes(t => t.tb_fm_paymentsettlement )
                                             .Includes(t => t.tb_FM_PaymentSettlements )
                         .ToListAsync();
@@ -503,6 +507,8 @@ namespace RUINORERP.Business
          public virtual List<tb_FM_PaymentSettlement> QueryByNav(Expression<Func<tb_FM_PaymentSettlement, bool>> exp)
         {
             List<tb_FM_PaymentSettlement> list = _unitOfWorkManage.GetDbClient().Queryable<tb_FM_PaymentSettlement>().Where(exp)
+                            .Includes(t => t.tb_currency )
+                            .Includes(t => t.tb_fm_account )
                             .Includes(t => t.tb_fm_paymentsettlement )
                                         .Includes(t => t.tb_FM_PaymentSettlements )
                         .ToList();
@@ -541,7 +547,9 @@ namespace RUINORERP.Business
         public override async Task<T> BaseQueryByIdNavAsync(object id)
         {
             tb_FM_PaymentSettlement entity = await _unitOfWorkManage.GetDbClient().Queryable<tb_FM_PaymentSettlement>().Where(w => w.SettlementId == (long)id)
-                             .Includes(t => t.tb_fm_paymentsettlement )
+                             .Includes(t => t.tb_currency )
+                            .Includes(t => t.tb_fm_account )
+                            .Includes(t => t.tb_fm_paymentsettlement )
                                         .Includes(t => t.tb_FM_PaymentSettlements )
                         .FirstAsync();
             if(entity!=null)

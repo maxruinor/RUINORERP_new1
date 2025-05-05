@@ -421,10 +421,9 @@ namespace RUINORERP.Business
                                 }
                                 // 生成核销记录证明从预付中付款抵扣应付
                                 tb_FM_PaymentSettlement writeoff = new tb_FM_PaymentSettlement();
-                                writeoff.SettlementType = (int)SettlementType.付款核销;
+                                writeoff.SettlementType = (int)SettlementType.预付冲应付;
                                 writeoff.SettlementNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.付款核销);
                                 writeoff.SettleDate = DateTime.Now;
-                                writeoff.BizType = (int)BizType.销售出库单;
                                 writeoff.ReceivePaymentType = (int)ReceivePaymentType.付款;
                                 writeoff.Account_id = prePayments[i].Account_id;
 
@@ -438,9 +437,10 @@ namespace RUINORERP.Business
                                 writeoff.SourceBizType = (int)BizType.预付款单;
                                 writeoff.SourceBillID = prePayments[i].PreRPID;
                                 writeoff.SourceBillNO = prePayments[i].PreRPNO;
+                                writeoff.Currency_ID = payable.Currency_ID;
                                 if (prePayments[i].Currency_ID.HasValue)
                                 {
-                                    writeoff.SourceCurrencyID = prePayments[i].Currency_ID.Value;
+                                    writeoff.Currency_ID = prePayments[i].Currency_ID.Value;
 
                                 }
                                 if (prePayments[i].ExchangeRate.HasValue)
@@ -452,7 +452,7 @@ namespace RUINORERP.Business
                                 writeoff.TargetBillNO = payable.ARAPNo; // 应付单号
                                 writeoff.TargetBizType = (int)BizType.应付单;
                                 writeoff.CustomerVendor_ID = prePayments[i].CustomerVendor_ID;
-                                writeoff.TargetCurrencyID = payable.Currency_ID;
+                               
                                 if (payable.ExchangeRate.HasValue)
                                 {
                                     writeoff.ExchangeRate = payable.ExchangeRate.Value;

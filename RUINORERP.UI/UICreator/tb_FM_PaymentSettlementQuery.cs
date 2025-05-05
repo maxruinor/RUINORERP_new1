@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：04/30/2025 15:18:07
+// 时间：04/30/2025 19:46:41
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -24,9 +24,9 @@ using RUINORERP.UI.Common;
 namespace RUINORERP.UI
 {
     /// <summary>
-    /// 记录收款 与应收的匹配，核销表数据查询
+    /// 记录收款 与应收的匹配，核销表 核销记录用于跟踪资金与债权债务的冲抵关系，确保财务数据可追溯。正常的收款，支付不需要保存核销记录数据查询
     /// </summary>
-     [MenuAttribute(typeof(tb_FM_PaymentSettlementQuery), "记录收款 与应收的匹配，核销表数据查询", true)]
+     [MenuAttribute(typeof(tb_FM_PaymentSettlementQuery), "记录收款 与应收的匹配，核销表 核销记录用于跟踪资金与债权债务的冲抵关系，确保财务数据可追溯。正常的收款，支付不需要保存核销记录数据查询", true)]
     public partial class tb_FM_PaymentSettlementQuery:UserControl
     {
      public tb_FM_PaymentSettlementQuery() {
@@ -91,8 +91,6 @@ namespace RUINORERP.UI
         
     
         
-    
-        
 
   
    
@@ -104,7 +102,9 @@ namespace RUINORERP.UI
 
         public void LoadDroplistData()
         {
-          ReversedSettlementID主外字段不一致。// DataBindingHelper.InitDataToCmb<tb_FM_PaymentSettlement>(k => k.SettlementId, v=>v.XXNAME, cmbSettlementId);
+          // DataBindingHelper.InitDataToCmb<tb_Currency>(k => k.Currency_ID, v=>v.XXNAME, cmbCurrency_ID);
+ReversedSettlementID主外字段不一致。          // DataBindingHelper.InitDataToCmb<tb_FM_Account>(k => k.Account_id, v=>v.XXNAME, cmbAccount_id);
+ReversedSettlementID主外字段不一致。          ReversedSettlementID主外字段不一致。// DataBindingHelper.InitDataToCmb<tb_FM_PaymentSettlement>(k => k.SettlementId, v=>v.XXNAME, cmbSettlementId);
         }
         
 

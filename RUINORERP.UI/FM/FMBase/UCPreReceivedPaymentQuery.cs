@@ -224,7 +224,7 @@ namespace RUINORERP.UI.FM
             }
             base._UCBillMasterQuery.GridRelated.ComplexType = true;
             //由这个列来决定单号显示哪个的业务窗体
-            base._UCBillMasterQuery.GridRelated.SetComplexTargetField<tb_FM_PreReceivedPayment>(c => c.BizType);
+            base._UCBillMasterQuery.GridRelated.SetComplexTargetField<tb_FM_PreReceivedPayment>(c => c.BizType,c => c.SourceBillNO);
             BizTypeMapper mapper = new BizTypeMapper();
             //将枚举中的值循环
             foreach (var biztype in Enum.GetValues(typeof(BizType)))

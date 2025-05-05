@@ -327,8 +327,11 @@ namespace RUINORERP.Business
             paymentRecord.SourceBilllID = entity.ARAPId;
             paymentRecord.PaymentDate = System.DateTime.Now;
             paymentRecord.Currency_ID = paymentRecord.Currency_ID;
-            paymentRecord.ForeignPaidAmount = entity.TotalForeignPayableAmount;
-            paymentRecord.LocalPaidAmount = entity.LocalPaidAmount;
+
+            //应收会的余额给到付款单。创建收款
+            paymentRecord.ForeignPaidAmount = entity.ForeignBalanceAmount;
+            paymentRecord.LocalPaidAmount = entity.LocalBalanceAmount;
+
             paymentRecord.PayeeInfoID = entity.PayeeInfoID;
             paymentRecord.CustomerVendor_ID = entity.CustomerVendor_ID;
             paymentRecord.PayeeAccountNo = entity.PayeeAccountNo;

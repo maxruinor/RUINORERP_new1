@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：04/30/2025 15:18:08
+// 时间：04/30/2025 19:46:43
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,7 +21,7 @@ using Microsoft.Extensions.Options;
 namespace RUINORERP.Business
 {
     /// <summary>
-    /// 记录收款 与应收的匹配，核销表验证类
+    /// 记录收款 与应收的匹配，核销表 核销记录用于跟踪资金与债权债务的冲抵关系，确保财务数据可追溯。正常的收款，支付不需要保存核销记录验证类
     /// </summary>
     /*public partial class tb_FM_PaymentSettlementValidator:AbstractValidator<tb_FM_PaymentSettlement>*/
     public partial class tb_FM_PaymentSettlementValidator:BaseValidatorGeneric<tb_FM_PaymentSettlement>
@@ -38,7 +38,7 @@ namespace RUINORERP.Business
  
         
      
- RuleFor(tb_FM_PaymentSettlement =>tb_FM_PaymentSettlement.SettlementNo).MaximumLength(15).WithMessage("来源单号:不能超过最大长度,15.");
+ RuleFor(tb_FM_PaymentSettlement =>tb_FM_PaymentSettlement.SettlementNo).MaximumLength(15).WithMessage("核销单号:不能超过最大长度,15.");
 
  RuleFor(tb_FM_PaymentSettlement =>tb_FM_PaymentSettlement.BizType).NotEmpty().When(x => x.BizType.HasValue);
 
@@ -48,8 +48,6 @@ namespace RUINORERP.Business
 
  RuleFor(tb_FM_PaymentSettlement =>tb_FM_PaymentSettlement.SourceBizType).NotEmpty().When(x => x.SourceBizType.HasValue);
 
- RuleFor(tb_FM_PaymentSettlement =>tb_FM_PaymentSettlement.SourceCurrencyID).NotEmpty().When(x => x.SourceCurrencyID.HasValue);
-
  RuleFor(x => x.ExchangeRate).PrecisionScale(18,6,true).WithMessage("汇率:小数位不能超过6。");
 
  RuleFor(tb_FM_PaymentSettlement =>tb_FM_PaymentSettlement.TargetBizType).NotEmpty().When(x => x.TargetBizType.HasValue);
@@ -58,11 +56,10 @@ namespace RUINORERP.Business
 
  RuleFor(tb_FM_PaymentSettlement =>tb_FM_PaymentSettlement.TargetBillNO).MaximumLength(15).WithMessage("目标单据编号:不能超过最大长度,15.");
 
- RuleFor(tb_FM_PaymentSettlement =>tb_FM_PaymentSettlement.TargetCurrencyID).NotEmpty().When(x => x.TargetCurrencyID.HasValue);
-
 //***** 
  RuleFor(tb_FM_PaymentSettlement =>tb_FM_PaymentSettlement.ReceivePaymentType).NotNull().WithMessage("收付类型:不能为空。");
 
+ RuleFor(tb_FM_PaymentSettlement =>tb_FM_PaymentSettlement.Account_id).Must(CheckForeignKeyValueCanNull).WithMessage("公司账户:下拉选择值不正确。");
  RuleFor(tb_FM_PaymentSettlement =>tb_FM_PaymentSettlement.Account_id).NotEmpty().When(x => x.Account_id.HasValue);
 
 //***** 
@@ -75,6 +72,9 @@ namespace RUINORERP.Business
 
 
  RuleFor(tb_FM_PaymentSettlement =>tb_FM_PaymentSettlement.ReversedSettlementID).NotEmpty().When(x => x.ReversedSettlementID.HasValue);
+
+ RuleFor(tb_FM_PaymentSettlement =>tb_FM_PaymentSettlement.Currency_ID).Must(CheckForeignKeyValueCanNull).WithMessage("币别:下拉选择值不正确。");
+ RuleFor(tb_FM_PaymentSettlement =>tb_FM_PaymentSettlement.Currency_ID).NotEmpty().When(x => x.Currency_ID.HasValue);
 
 
  RuleFor(tb_FM_PaymentSettlement =>tb_FM_PaymentSettlement.Notes).MaximumLength(150).WithMessage("备注:不能超过最大长度,150.");

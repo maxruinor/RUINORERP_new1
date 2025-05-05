@@ -2004,7 +2004,6 @@ namespace RUINORERP.UI.BaseForm
                 {
                     MainForm.Instance.uclog.AddLog($"单据已被锁定，请刷新后再试");
                     return ae;
-
                     //分读写锁  保存后就只有读。释放 写？
                 }
             }
@@ -2017,7 +2016,7 @@ namespace RUINORERP.UI.BaseForm
                     && EditEntity.GetPropertyValue("ApprovalResults").ToBool() == true
                     )
                 {
-
+                    ae.ApprovalResults = true;
                 }
                 else
                 {

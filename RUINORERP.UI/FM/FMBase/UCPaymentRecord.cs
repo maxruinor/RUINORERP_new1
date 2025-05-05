@@ -424,7 +424,11 @@ namespace RUINORERP.UI.FM
                     EditEntity.ApprovalStatus = (int)ApprovalStatus.未审核;
                 }
 
-
+                if (NeedValidated && (EditEntity.ForeignPaidAmount == 0 && EditEntity.LocalPaidAmount == 0))
+                {
+                    System.Windows.Forms.MessageBox.Show("收款金额不能为零，请检查数据录入是否正确！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    return false;
+                }
                 //没有经验通过下面先不计算
                 if (NeedValidated && !base.Validator(EditEntity))
                 {
@@ -506,7 +510,7 @@ namespace RUINORERP.UI.FM
             if (MessageBox.Show("系统不建议删除单据资料\r\n确定删除吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Information) == DialogResult.Yes)
             {
                 //https://www.runoob.com/w3cnote/csharp-enum.html
-              
+
                 var paymentStatus = (PaymentStatus)(EditEntity.GetPropertyValue(typeof(PaymentStatus).Name).ToInt());
                 if (paymentStatus == PaymentStatus.待审核 || paymentStatus == PaymentStatus.草稿)
                 {

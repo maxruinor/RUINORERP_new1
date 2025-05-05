@@ -48,16 +48,25 @@ namespace RUINORERP.UI.Common
         /// </summary>
         public bool ComplexType { get => complexType; set => complexType = value; }
 
-        private string complexTargtetField = string.Empty;
+
+
+        private List<KeyValuePair<string, string>> complexTargtetField = new List<KeyValuePair<string, string>>();
 
         /// <summary>
         /// 复杂类型时，目标字段
         /// </summary>
-        public string ComplexTargtetField { get => complexTargtetField; set => complexTargtetField = value; }
+        public List<KeyValuePair<string, string>> ComplexTargtetField { get => complexTargtetField; set => complexTargtetField = value; }
 
-        public void SetComplexTargetField<T1>(Expression<Func<T1, object>> _ExpBusinessTypeField)
+
+        /// <summary>
+        /// 设置复杂关联字段，由类型决定编号是哪种业务类型的窗体。
+        /// </summary>
+        /// <typeparam name="T1"></typeparam>
+        /// <param name="_ExpBizType"></param>
+        /// <param name="_ExpBillNo"></param>
+        public void SetComplexTargetField<T1>(Expression<Func<T1, object>> _ExpBizType, Expression<Func<T1, object>> _ExpBillNo)
         {
-            ComplexTargtetField = _ExpBusinessTypeField.GetMemberInfo().Name;
+            ComplexTargtetField.Add(new KeyValuePair<string, string>(_ExpBizType.GetMemberInfo().Name, _ExpBillNo.GetMemberInfo().Name));
         }
 
         //public void GuideToForm<T>(tb_MenuInfo RelatedMenuInfo, string GridViewColumnFieldName, string RelatedTargetColName, object RelatedTargetEntity)
@@ -179,17 +188,17 @@ namespace RUINORERP.UI.Common
         }
 
 
-    
 
-            /// <summary>
-            /// 打开自己本身的窗体（双击哪一列会跳到单据编辑菜单）
-            /// 
-            /// </summary>
-            /// <typeparam name="T1">来源 表格目前显示的实体</typeparam>
-            /// <typeparam name="T2">目标 要打开的窗体用的实体</typeparam>
-            /// <param name="_ExpSourceUniqueField">来源的唯一字段</param>
-            /// <param name="_ExpTargetDisplayField">目标的显示字段</param>
-            public void SetRelatedInfo<T1>(Expression<Func<T1, object>> _ExpSourceUniqueField)
+
+        /// <summary>
+        /// 打开自己本身的窗体（双击哪一列会跳到单据编辑菜单）
+        /// 
+        /// </summary>
+        /// <typeparam name="T1">来源 表格目前显示的实体</typeparam>
+        /// <typeparam name="T2">目标 要打开的窗体用的实体</typeparam>
+        /// <param name="_ExpSourceUniqueField">来源的唯一字段</param>
+        /// <param name="_ExpTargetDisplayField">目标的显示字段</param>
+        public void SetRelatedInfo<T1>(Expression<Func<T1, object>> _ExpSourceUniqueField)
         {
             RelatedInfo relatedInfo = new RelatedInfo();
             relatedInfo.SourceTableName = typeof(T1).Name;
@@ -270,7 +279,7 @@ namespace RUINORERP.UI.Common
         /// <summary>
         /// 用于要打开的窗体是由源来中的一个列名决定ID或编号，目标表名是由源表格中某一列的值来决定
         /// </summary>
-        /// <param name="GridViewColumnFieldName"></param>
+        /// <param name="GridViewColumnFieldName">SourceBillNo</param>
         /// <param name="CurrentRowEntity"></param>
         /// <param name="IsFromGridValue">是否从Grid中取值,只是用这个参数来区别一下没有实际作用,后面优化吧</param
         public object GuideToForm(string GridViewColumnFieldName, object CurrentRowEntity)
@@ -280,9 +289,23 @@ namespace RUINORERP.UI.Common
 
             if (ComplexType)
             {
+                string TargetTableKey = string.Empty;
                 #region 复杂类型
+                var result = ComplexTargtetField.FirstOrDefault(pair => pair.Value == GridViewColumnFieldName);
 
-                string TargetTableKey = CurrentRowEntity.GetPropertyValue(ComplexTargtetField).ToString();
+                if (result.Key != null)
+                {
+                    //通过业务类型找
+                    TargetTableKey = CurrentRowEntity.GetPropertyValue(result.Key).ToString();
+                    Console.WriteLine($"找到的键值对: Key = {result.Key}, Value = {result.Value}");
+                }
+                else
+                {
+                    Console.WriteLine($"未找到值为 {GridViewColumnFieldName} 的键值对。");
+                }
+
+
+                //通过业务类型找到目标表名对应的菜单   
                 RelatedInfo relatedRelationship = RelatedInfoList.FirstOrDefault(c => c.SourceUniqueField == GridViewColumnFieldName && c.TargetTableName.Key == TargetTableKey);
                 if (relatedRelationship != null)
                 {

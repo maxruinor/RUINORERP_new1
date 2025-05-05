@@ -511,6 +511,7 @@ namespace RUINORERP.Business
                             if (entity.PayStatus == (int)PayStatus.部分付款 || entity.PayStatus == (int)PayStatus.全部付款)
                             {
                                 #region 去预收中抵扣相同币种的情况下的预收款，生成收款单，并且生成核销记录
+                                //预付抵应收
                                 //按客户查找所有的未核销完的预付款记录。并且是审核过的。
                                 List<tb_FM_PreReceivedPayment> prePayments = await _unitOfWorkManage.GetDbClient()
                                     .Queryable<tb_FM_PreReceivedPayment>()
@@ -595,10 +596,10 @@ namespace RUINORERP.Business
                                     }
                                     // 生成核销记录证明从预收中收款抵扣应收
                                     tb_FM_PaymentSettlement writeoff = new tb_FM_PaymentSettlement();
-                                    writeoff.SettlementType = (int)SettlementType.收款核销;
+                                    writeoff.SettlementType = (int)SettlementType.预付冲应付;
                                     writeoff.SettlementNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.收款核销);
                                     writeoff.SettleDate = DateTime.Now;
-                                    writeoff.BizType = (int)BizType.销售出库单;
+                                    writeoff.SourceBizType = (int)BizType.销售出库单;
                                     writeoff.ReceivePaymentType = (int)ReceivePaymentType.收款;
                                     writeoff.Account_id = prePayments[i].Account_id;
 
@@ -614,9 +615,11 @@ namespace RUINORERP.Business
                                     writeoff.SourceBillNO = prePayments[i].PreRPNO;
                                     if (prePayments[i].Currency_ID.HasValue)
                                     {
-                                        writeoff.SourceCurrencyID = prePayments[i].Currency_ID.Value;
-
+                                        writeoff.Currency_ID = prePayments[i].Currency_ID.Value;
                                     }
+                                    writeoff.Currency_ID = payable.Currency_ID;
+                                    //?????TODO
+
                                     if (prePayments[i].ExchangeRate.HasValue)
                                     {
                                         writeoff.ExchangeRate = prePayments[i].ExchangeRate.Value;
@@ -626,7 +629,9 @@ namespace RUINORERP.Business
                                     writeoff.TargetBillNO = payable.ARAPNo; // 应收单号
                                     writeoff.TargetBizType = (int)BizType.应收单;
                                     writeoff.CustomerVendor_ID = prePayments[i].CustomerVendor_ID;
-                                    writeoff.TargetCurrencyID = payable.Currency_ID;
+
+                                 
+
                                     if (payable.ExchangeRate.HasValue)
                                     {
                                         writeoff.ExchangeRate = payable.ExchangeRate.Value;

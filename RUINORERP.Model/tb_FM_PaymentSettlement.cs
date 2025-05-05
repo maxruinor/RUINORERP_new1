@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：04/30/2025 15:18:08
+// 时间：04/30/2025 19:46:43
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -18,10 +18,10 @@ using RUINORERP.Global.CustomAttribute;
 namespace RUINORERP.Model
 {
     /// <summary>
-    /// 记录收款 与应收的匹配，核销表
+    /// 记录收款 与应收的匹配，核销表 核销记录用于跟踪资金与债权债务的冲抵关系，确保财务数据可追溯。正常的收款，支付不需要保存核销记录
     /// </summary>
     [Serializable()]
-    [Description("记录收款 与应收的匹配，核销表")]
+    [Description("记录收款 与应收的匹配，核销表 核销记录用于跟踪资金与债权债务的冲抵关系，确保财务数据可追溯。正常的收款，支付不需要保存核销记录")]
     [SugarTable("tb_FM_PaymentSettlement")]
     public partial class tb_FM_PaymentSettlement: BaseEntity, ICloneable
     {
@@ -30,7 +30,7 @@ namespace RUINORERP.Model
             base.FieldNameList = fieldNameList;
             if (!PK_FK_ID_Check())
             {
-                throw new Exception("记录收款 与应收的匹配，核销表tb_FM_PaymentSettlement" + "外键ID与对应主主键名称不一致。请修改数据库");
+                throw new Exception("记录收款 与应收的匹配，核销表 核销记录用于跟踪资金与债权债务的冲抵关系，确保财务数据可追溯。正常的收款，支付不需要保存核销记录tb_FM_PaymentSettlement" + "外键ID与对应主主键名称不一致。请修改数据库");
             }
         }
 
@@ -53,10 +53,10 @@ namespace RUINORERP.Model
 
         private string _SettlementNo;
         /// <summary>
-        /// 来源单号
+        /// 核销单号
         /// </summary>
-        [AdvQueryAttribute(ColName = "SettlementNo",ColDesc = "来源单号")] 
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "SettlementNo" ,Length=30,IsNullable = true,ColumnDescription = "来源单号" )]
+        [AdvQueryAttribute(ColName = "SettlementNo",ColDesc = "核销单号")] 
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "SettlementNo" ,Length=30,IsNullable = true,ColumnDescription = "核销单号" )]
         public string SettlementNo
         { 
             get{return _SettlementNo;}
@@ -67,10 +67,10 @@ namespace RUINORERP.Model
 
         private int? _BizType;
         /// <summary>
-        /// 业务类型
+        /// 来源业务
         /// </summary>
-        [AdvQueryAttribute(ColName = "BizType",ColDesc = "业务类型")] 
-        [SugarColumn(ColumnDataType = "int", SqlParameterDbType ="Int32",  ColumnName = "BizType" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "业务类型" )]
+        [AdvQueryAttribute(ColName = "BizType",ColDesc = "来源业务")] 
+        [SugarColumn(ColumnDataType = "int", SqlParameterDbType ="Int32",  ColumnName = "BizType" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "来源业务" )]
         public int? BizType
         { 
             get{return _BizType;}
@@ -121,20 +121,6 @@ namespace RUINORERP.Model
                         }
         }
 
-        private long? _SourceCurrencyID;
-        /// <summary>
-        /// 来源币种
-        /// </summary>
-        [AdvQueryAttribute(ColName = "SourceCurrencyID",ColDesc = "来源币种")] 
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "SourceCurrencyID" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "来源币种" )]
-        public long? SourceCurrencyID
-        { 
-            get{return _SourceCurrencyID;}
-            set{
-            SetProperty(ref _SourceCurrencyID, value);
-                        }
-        }
-
         private decimal? _ExchangeRate;
         /// <summary>
         /// 汇率
@@ -151,10 +137,10 @@ namespace RUINORERP.Model
 
         private int? _TargetBizType;
         /// <summary>
-        /// 目标单据类型
+        /// 目标业务
         /// </summary>
-        [AdvQueryAttribute(ColName = "TargetBizType",ColDesc = "目标单据类型")] 
-        [SugarColumn(ColumnDataType = "int", SqlParameterDbType ="Int32",  ColumnName = "TargetBizType" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "目标单据类型" )]
+        [AdvQueryAttribute(ColName = "TargetBizType",ColDesc = "目标业务")] 
+        [SugarColumn(ColumnDataType = "int", SqlParameterDbType ="Int32",  ColumnName = "TargetBizType" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "目标业务" )]
         public int? TargetBizType
         { 
             get{return _TargetBizType;}
@@ -191,20 +177,6 @@ namespace RUINORERP.Model
                         }
         }
 
-        private long? _TargetCurrencyID;
-        /// <summary>
-        /// 目标币种
-        /// </summary>
-        [AdvQueryAttribute(ColName = "TargetCurrencyID",ColDesc = "目标币种")] 
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "TargetCurrencyID" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "目标币种" )]
-        public long? TargetCurrencyID
-        { 
-            get{return _TargetCurrencyID;}
-            set{
-            SetProperty(ref _TargetCurrencyID, value);
-                        }
-        }
-
         private int _ReceivePaymentType;
         /// <summary>
         /// 收付类型
@@ -225,6 +197,7 @@ namespace RUINORERP.Model
         /// </summary>
         [AdvQueryAttribute(ColName = "Account_id",ColDesc = "公司账户")] 
         [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Account_id" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "公司账户" )]
+        [FKRelationAttribute("tb_FM_Account","Account_id")]
         public long? Account_id
         { 
             get{return _Account_id;}
@@ -318,6 +291,21 @@ namespace RUINORERP.Model
                         }
         }
 
+        private long? _Currency_ID;
+        /// <summary>
+        /// 币别
+        /// </summary>
+        [AdvQueryAttribute(ColName = "Currency_ID",ColDesc = "币别")] 
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Currency_ID" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "币别" )]
+        [FKRelationAttribute("tb_Currency","Currency_ID")]
+        public long? Currency_ID
+        { 
+            get{return _Currency_ID;}
+            set{
+            SetProperty(ref _Currency_ID, value);
+                        }
+        }
+
         private DateTime _SettleDate;
         /// <summary>
         /// 核销日期
@@ -405,6 +393,16 @@ namespace RUINORERP.Model
         #endregion
 
         #region 扩展属性
+        [SugarColumn(IsIgnore = true)]
+        //[Browsable(false)] 打印报表时的数据源会不显示
+        [Navigate(NavigateType.OneToOne, nameof(Currency_ID))]
+        public virtual tb_Currency tb_currency { get; set; }
+
+        [SugarColumn(IsIgnore = true)]
+        //[Browsable(false)] 打印报表时的数据源会不显示
+        [Navigate(NavigateType.OneToOne, nameof(Account_id))]
+        public virtual tb_FM_Account tb_fm_account { get; set; }
+
         [SugarColumn(IsIgnore = true)]
         //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(ReversedSettlementID))]

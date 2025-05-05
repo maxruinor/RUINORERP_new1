@@ -35,6 +35,7 @@ using RUINORERP.UI.UControls;
 using RUINORERP.UI.UCSourceGrid;
 using RUINORERP.UI.UserCenter;
 using RUINORERP.UI.UserPersonalized;
+using SourceGrid2.Win32;
 using SqlSugar;
 using System;
 using System.Collections;
@@ -157,8 +158,35 @@ namespace RUINORERP.UI.BaseForm
                     MainForm.Instance.AppContext.log.ActionName = "BaseBillQueryMC()";
 
                     toolStripButton结案.Visible = false;
+                    AddExcludeMenuList();
+                    //其它的排除
+                    List<MenuItemEnums> stripItems = ExcludeMenuList;
+
                     foreach (var item in BaseToolStrip.Items)
                     {
+                        #region 窗体按钮权限控制  硬编码指定不显示的按钮
+                        List<string> excludemenuTextList = stripItems.Select(it => it.ToString()).ToList();
+                        if (excludemenuTextList.Count > 0)
+                        {
+                            if (item is ToolStripButton)
+                            {
+                                ToolStripButton subItem = item as ToolStripButton;
+                                if (excludemenuTextList.Contains(subItem.Text))
+                                {
+                                    subItem.Visible = false;
+                                }
+                            }
+                            else if (item is ToolStripDropDownButton subItemDr)
+                            {
+                                if (excludemenuTextList.Contains(subItemDr.Text))
+                                {
+                                    subItemDr.Visible = false;
+                                }
+                           }
+                        }
+                        #endregion
+
+
                         if (item is ToolStripButton)
                         {
                             ToolStripButton subItem = item as ToolStripButton;
@@ -208,6 +236,8 @@ namespace RUINORERP.UI.BaseForm
 
                         }
                     }
+
+                   
 
                     Krypton.Toolkit.KryptonButton button设置查询条件 = new Krypton.Toolkit.KryptonButton();
                     button设置查询条件.Text = "设置查询条件";
@@ -1615,6 +1645,11 @@ namespace RUINORERP.UI.BaseForm
 
         private async void _UCBillMasterQuery_OnSelectDataRow(object entity, object bizKey)
         {
+            if (_UCBillChildQuery == null)
+            {
+                return;
+            }
+
             if (entity == null)
             {
                 return;

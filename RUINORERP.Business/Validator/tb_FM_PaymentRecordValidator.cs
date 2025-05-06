@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：04/30/2025 15:18:07
+// 时间：05/06/2025 10:30:38
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -42,7 +42,7 @@ namespace RUINORERP.Business
  RuleFor(tb_FM_PaymentRecord =>tb_FM_PaymentRecord.PaymentNo).NotEmpty().WithMessage("支付单号:不能为空。");
 
 //***** 
- RuleFor(tb_FM_PaymentRecord =>tb_FM_PaymentRecord.BizType).NotNull().WithMessage("来源业务:不能为空。");
+ RuleFor(tb_FM_PaymentRecord =>tb_FM_PaymentRecord.SourceBizType).NotNull().WithMessage("来源业务:不能为空。");
 
 //***** 
  RuleFor(tb_FM_PaymentRecord =>tb_FM_PaymentRecord.SourceBilllID).NotNull().WithMessage("来源单据:不能为空。");

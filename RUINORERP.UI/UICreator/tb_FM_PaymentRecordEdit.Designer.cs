@@ -3,7 +3,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：04/30/2025 15:18:05
+// 时间：05/06/2025 10:30:35
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -55,8 +55,8 @@ namespace RUINORERP.UI
      this.lblPaymentNo = new Krypton.Toolkit.KryptonLabel();
 this.txtPaymentNo = new Krypton.Toolkit.KryptonTextBox();
 
-this.lblBizType = new Krypton.Toolkit.KryptonLabel();
-this.txtBizType = new Krypton.Toolkit.KryptonTextBox();
+this.lblSourceBizType = new Krypton.Toolkit.KryptonLabel();
+this.txtSourceBizType = new Krypton.Toolkit.KryptonTextBox();
 
 this.lblSourceBilllID = new Krypton.Toolkit.KryptonLabel();
 this.txtSourceBilllID = new Krypton.Toolkit.KryptonTextBox();
@@ -206,27 +206,27 @@ this.txtPaymentNo.TabIndex = 1;
 this.Controls.Add(this.lblPaymentNo);
 this.Controls.Add(this.txtPaymentNo);
 
-           //#####BizType###Int32
-//属性测试50BizType
-//属性测试50BizType
-//属性测试50BizType
-//属性测试50BizType
-//属性测试50BizType
-//属性测试50BizType
-//属性测试50BizType
-//属性测试50BizType
-this.lblBizType.AutoSize = true;
-this.lblBizType.Location = new System.Drawing.Point(100,50);
-this.lblBizType.Name = "lblBizType";
-this.lblBizType.Size = new System.Drawing.Size(41, 12);
-this.lblBizType.TabIndex = 2;
-this.lblBizType.Text = "来源业务";
-this.txtBizType.Location = new System.Drawing.Point(173,46);
-this.txtBizType.Name = "txtBizType";
-this.txtBizType.Size = new System.Drawing.Size(100, 21);
-this.txtBizType.TabIndex = 2;
-this.Controls.Add(this.lblBizType);
-this.Controls.Add(this.txtBizType);
+           //#####SourceBizType###Int32
+//属性测试50SourceBizType
+//属性测试50SourceBizType
+//属性测试50SourceBizType
+//属性测试50SourceBizType
+//属性测试50SourceBizType
+//属性测试50SourceBizType
+//属性测试50SourceBizType
+//属性测试50SourceBizType
+this.lblSourceBizType.AutoSize = true;
+this.lblSourceBizType.Location = new System.Drawing.Point(100,50);
+this.lblSourceBizType.Name = "lblSourceBizType";
+this.lblSourceBizType.Size = new System.Drawing.Size(41, 12);
+this.lblSourceBizType.TabIndex = 2;
+this.lblSourceBizType.Text = "来源业务";
+this.txtSourceBizType.Location = new System.Drawing.Point(173,46);
+this.txtSourceBizType.Name = "txtSourceBizType";
+this.txtSourceBizType.Size = new System.Drawing.Size(100, 21);
+this.txtSourceBizType.TabIndex = 2;
+this.Controls.Add(this.lblSourceBizType);
+this.Controls.Add(this.txtSourceBizType);
 
            //#####SourceBilllID###Int64
 //属性测试75SourceBilllID
@@ -832,8 +832,8 @@ this.Controls.Add(this.txtPrintStatus);
                 this.Controls.Add(this.lblPaymentNo );
 this.Controls.Add(this.txtPaymentNo );
 
-                this.Controls.Add(this.lblBizType );
-this.Controls.Add(this.txtBizType );
+                this.Controls.Add(this.lblSourceBizType );
+this.Controls.Add(this.txtSourceBizType );
 
                 this.Controls.Add(this.lblSourceBilllID );
 this.Controls.Add(this.txtSourceBilllID );
@@ -964,8 +964,8 @@ private Krypton.Toolkit.KryptonTextBox txtPaymentNo;
 
     
         
-              private Krypton.Toolkit.KryptonLabel lblBizType;
-private Krypton.Toolkit.KryptonTextBox txtBizType;
+              private Krypton.Toolkit.KryptonLabel lblSourceBizType;
+private Krypton.Toolkit.KryptonTextBox txtSourceBizType;
 
     
         

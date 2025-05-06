@@ -74,11 +74,11 @@ namespace RUINORERP.Business
                 //删除
                 if (entity.ReceivePaymentType == (int)ReceivePaymentType.收款)
                 {
-                    await _appContext.Db.Deleteable<tb_FM_PaymentRecord>().Where(c => c.SourceBilllID == entity.PreRPID && c.BizType == (int)BizType.预收款单).ExecuteCommandAsync();
+                    await _appContext.Db.Deleteable<tb_FM_PaymentRecord>().Where(c => c.SourceBilllID == entity.PreRPID && c.SourceBizType == (int)BizType.预收款单).ExecuteCommandAsync();
                 }
                 else
                 {
-                    await _appContext.Db.Deleteable<tb_FM_PaymentRecord>().Where(c => c.SourceBilllID == entity.PreRPID && c.BizType == (int)BizType.预付款单).ExecuteCommandAsync();
+                    await _appContext.Db.Deleteable<tb_FM_PaymentRecord>().Where(c => c.SourceBilllID == entity.PreRPID && c.SourceBizType == (int)BizType.预付款单).ExecuteCommandAsync();
                 }
                 entity.PrePaymentStatus = (long)PrePaymentStatus.草稿;
                 entity.ApprovalResults = false;

@@ -39,6 +39,7 @@ using AutoMapper;
 using RUINORERP.Business.AutoMapper;
 using RUINORERP.Model.Base;
 using RUINORERP.Business.Processor;
+using StackExchange.Redis;
 
 namespace RUINORERP.UI.PSI.INV
 {
@@ -102,10 +103,10 @@ namespace RUINORERP.UI.PSI.INV
             DataBindingHelper.InitDataToCmbByEnumDynamicGeneratedDataSource<tb_Stocktake>(typeof(Adjust_Type), e => e.Adjust_Type, cmb调整类型, false);
             EnumBindingHelper bindingHelper = new EnumBindingHelper();
             //枚举过滤了一下
-            CheckMode checkMode = CheckMode.日常盘点;
+           // CheckMode checkMode = CheckMode.日常盘点;
             List<string> listStr = new List<string>();
             List<EnumEntityMember> list = new List<EnumEntityMember>();
-            list = checkMode.GetListByEnum(2);
+            list = typeof(CheckMode).GetListByEnum<CheckMode>(selectedItem: 2); 
             bindingHelper.InitDataToCmbByEnumOnWhere(list, "CheckMode", cmbCheckMode);
 
             //var c = new Controller();

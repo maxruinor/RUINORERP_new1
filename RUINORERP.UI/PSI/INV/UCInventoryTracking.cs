@@ -175,6 +175,7 @@ namespace RUINORERP.UI.PSI.INV
                     List<string> SummaryCols = new List<string>();
                     SummaryCols.Add("数量");//这里要优化，按理可以是引用类型来处理
                     _UCOutlookGridAnalysis1.kryptonOutlookGrid1.SubtotalColumns = SummaryCols;
+                  
                     _UCOutlookGridAnalysis1.ColDisplayTypes = new List<Type>();
                     //这个视图是用SQL语句生成的,用生成器。
                     _UCOutlookGridAnalysis1.ColDisplayTypes.Add(typeof(Proc_InventoryTracking));

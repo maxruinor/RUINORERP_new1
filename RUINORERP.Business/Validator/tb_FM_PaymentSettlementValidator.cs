@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：04/30/2025 19:46:43
+// 时间：05/06/2025 10:30:39
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -40,13 +40,11 @@ namespace RUINORERP.Business
      
  RuleFor(tb_FM_PaymentSettlement =>tb_FM_PaymentSettlement.SettlementNo).MaximumLength(15).WithMessage("核销单号:不能超过最大长度,15.");
 
- RuleFor(tb_FM_PaymentSettlement =>tb_FM_PaymentSettlement.BizType).NotEmpty().When(x => x.BizType.HasValue);
+ RuleFor(tb_FM_PaymentSettlement =>tb_FM_PaymentSettlement.SourceBizType).NotEmpty().When(x => x.SourceBizType.HasValue);
 
  RuleFor(tb_FM_PaymentSettlement =>tb_FM_PaymentSettlement.SourceBillID).NotEmpty().When(x => x.SourceBillID.HasValue);
 
  RuleFor(tb_FM_PaymentSettlement =>tb_FM_PaymentSettlement.SourceBillNO).MaximumLength(15).WithMessage("来源单据编号:不能超过最大长度,15.");
-
- RuleFor(tb_FM_PaymentSettlement =>tb_FM_PaymentSettlement.SourceBizType).NotEmpty().When(x => x.SourceBizType.HasValue);
 
  RuleFor(x => x.ExchangeRate).PrecisionScale(18,6,true).WithMessage("汇率:小数位不能超过6。");
 

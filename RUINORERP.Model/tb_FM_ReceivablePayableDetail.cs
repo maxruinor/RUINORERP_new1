@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：04/30/2025 15:18:13
+// 时间：05/06/2025 10:30:44
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -64,48 +64,6 @@ namespace RUINORERP.Model
             SetProperty(ref _ARAPDetailID, value);
                 base.PrimaryKeyID = _ARAPDetailID;
             }
-        }
-
-        private int? _BizType;
-        /// <summary>
-        /// 来源业务
-        /// </summary>
-        [AdvQueryAttribute(ColName = "BizType",ColDesc = "来源业务")] 
-        [SugarColumn(ColumnDataType = "int", SqlParameterDbType ="Int32",  ColumnName = "BizType" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "来源业务" )]
-        public int? BizType
-        { 
-            get{return _BizType;}
-            set{
-            SetProperty(ref _BizType, value);
-                        }
-        }
-
-        private long? _SourceBill_ID;
-        /// <summary>
-        /// 来源单据
-        /// </summary>
-        [AdvQueryAttribute(ColName = "SourceBill_ID",ColDesc = "来源单据")] 
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "SourceBill_ID" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "来源单据" )]
-        public long? SourceBill_ID
-        { 
-            get{return _SourceBill_ID;}
-            set{
-            SetProperty(ref _SourceBill_ID, value);
-                        }
-        }
-
-        private string _SourceBillNO;
-        /// <summary>
-        /// 来源单号
-        /// </summary>
-        [AdvQueryAttribute(ColName = "SourceBillNO",ColDesc = "来源单号")] 
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "SourceBillNO" ,Length=30,IsNullable = true,ColumnDescription = "来源单号" )]
-        public string SourceBillNO
-        { 
-            get{return _SourceBillNO;}
-            set{
-            SetProperty(ref _SourceBillNO, value);
-                        }
         }
 
         private long? _ProdDetailID;

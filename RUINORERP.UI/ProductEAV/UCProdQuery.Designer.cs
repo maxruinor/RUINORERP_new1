@@ -32,10 +32,10 @@ namespace RUINORERP.UI.ProductEAV
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
             System.Windows.Forms.TreeListViewItemCollection.TreeListViewItemCollectionComparer treeListViewItemCollectionComparer1 = new System.Windows.Forms.TreeListViewItemCollection.TreeListViewItemCollectionComparer();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(UCProdQuery));
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle3 = new System.Windows.Forms.DataGridViewCellStyle();
             this.kryptonSplitContainer1 = new Krypton.Toolkit.KryptonSplitContainer();
             this.kryptonSplitContainer2 = new Krypton.Toolkit.KryptonSplitContainer();
             this.kryptonSplitContainerQuery = new Krypton.Toolkit.KryptonSplitContainer();
@@ -771,8 +771,8 @@ namespace RUINORERP.UI.ProductEAV
             this.newSumDataGridView产品.AllowUserToAddRows = false;
             this.newSumDataGridView产品.AllowUserToDeleteRows = false;
             this.newSumDataGridView产品.AllowUserToOrderColumns = true;
-            dataGridViewCellStyle1.BackColor = System.Drawing.Color.Beige;
-            this.newSumDataGridView产品.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle1;
+            dataGridViewCellStyle2.BackColor = System.Drawing.Color.Beige;
+            this.newSumDataGridView产品.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle2;
             this.newSumDataGridView产品.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
@@ -784,6 +784,7 @@ namespace RUINORERP.UI.ProductEAV
             this.newSumDataGridView产品.IsShowSumRow = false;
             this.newSumDataGridView产品.Location = new System.Drawing.Point(0, 0);
             this.newSumDataGridView产品.Name = "newSumDataGridView产品";
+            this.newSumDataGridView产品.NeedSaveColumnsXml = true;
             this.newSumDataGridView产品.ReadOnly = true;
             this.newSumDataGridView产品.RowTemplate.Height = 23;
             this.newSumDataGridView产品.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
@@ -929,8 +930,8 @@ namespace RUINORERP.UI.ProductEAV
             this.newSumDataGridView产品组合.AllowUserToAddRows = false;
             this.newSumDataGridView产品组合.AllowUserToDeleteRows = false;
             this.newSumDataGridView产品组合.AllowUserToOrderColumns = true;
-            dataGridViewCellStyle2.BackColor = System.Drawing.Color.Beige;
-            this.newSumDataGridView产品组合.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle2;
+            dataGridViewCellStyle3.BackColor = System.Drawing.Color.Beige;
+            this.newSumDataGridView产品组合.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle3;
             this.newSumDataGridView产品组合.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
@@ -942,6 +943,7 @@ namespace RUINORERP.UI.ProductEAV
             this.newSumDataGridView产品组合.IsShowSumRow = false;
             this.newSumDataGridView产品组合.Location = new System.Drawing.Point(0, 0);
             this.newSumDataGridView产品组合.Name = "newSumDataGridView产品组合";
+            this.newSumDataGridView产品组合.NeedSaveColumnsXml = true;
             this.newSumDataGridView产品组合.ReadOnly = true;
             this.newSumDataGridView产品组合.RowTemplate.Height = 23;
             this.newSumDataGridView产品组合.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
@@ -961,16 +963,17 @@ namespace RUINORERP.UI.ProductEAV
             // btnCancel
             // 
             this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.btnCancel.Location = new System.Drawing.Point(579, 14);
+            this.btnCancel.Location = new System.Drawing.Point(658, 14);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(90, 25);
             this.btnCancel.TabIndex = 5;
             this.btnCancel.Values.Text = "取消";
+            this.btnCancel.Visible = false;
             this.btnCancel.Click += new System.EventHandler(this.btnCancel_Click);
             // 
             // btnOk
             // 
-            this.btnOk.Location = new System.Drawing.Point(406, 14);
+            this.btnOk.Location = new System.Drawing.Point(470, 14);
             this.btnOk.Name = "btnOk";
             this.btnOk.Size = new System.Drawing.Size(90, 25);
             this.btnOk.TabIndex = 4;

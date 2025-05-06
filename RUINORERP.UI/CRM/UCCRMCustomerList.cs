@@ -339,7 +339,7 @@ namespace RUINORERP.UI.CRM
                 toolStripButton分配.ImageTransparentColor = System.Drawing.Color.Magenta;
                 toolStripButton分配.Name = "分配AssignmentToBizEmp";
                 toolStripButton分配.Visible = false;//默认隐藏
-                ControlButton(toolStripButton分配);
+                UIHelper.ControlButton(CurMenuInfo, toolStripButton分配);
                 toolStripButton分配.ToolTipText = "分配给指定业务员。";
                 toolStripButton分配.Click += new System.EventHandler(this.toolStripButton分配_Click);
 
@@ -355,7 +355,7 @@ namespace RUINORERP.UI.CRM
                 toolStripButton回收.ImageTransparentColor = System.Drawing.Color.Magenta;
                 toolStripButton回收.Name = "回收RecyclingToHighSeas";
                 toolStripButton回收.Visible = false;//默认隐藏
-                ControlButton(toolStripButton回收);
+                UIHelper.ControlButton(CurMenuInfo, toolStripButton回收);
                 toolStripButton回收.ToolTipText = "回收到公海。";
                 toolStripButton回收.Click += new System.EventHandler(this.toolStripButton回收_Click);
 

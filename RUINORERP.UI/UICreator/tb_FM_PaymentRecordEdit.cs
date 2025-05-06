@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：04/30/2025 15:18:05
+// 时间：05/06/2025 10:30:34
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -78,7 +78,7 @@ namespace RUINORERP.UI
         {
         tb_FM_PaymentRecord entity = new tb_FM_PaymentRecord();
                      entity.PaymentNo = txtPaymentNo.Text ;
-                       entity.BizType = Int32.Parse(txtBizType.Text);
+                       entity.SourceBizType = Int32.Parse(txtSourceBizType.Text);
                         entity.SourceBilllID = Int64.Parse(txtSourceBilllID.Text);
                         entity.SourceBillNO = txtSourceBillNO.Text ;
                        entity.ReceivePaymentType = Int32.Parse(txtReceivePaymentType.Text);
@@ -124,7 +124,7 @@ namespace RUINORERP.UI
         {
         _EditEntity = entity;
                         DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.PaymentNo, txtPaymentNo, BindDataType4TextBox.Text,false);
-           DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.BizType, txtBizType, BindDataType4TextBox.Qty,false);
+           DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.SourceBizType, txtSourceBizType, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.SourceBilllID, txtSourceBilllID, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.SourceBillNO, txtSourceBillNO, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.ReceivePaymentType, txtReceivePaymentType, BindDataType4TextBox.Qty,false);

@@ -172,7 +172,7 @@ namespace RUINORERP.Business
                         payable.ReceivePaymentType = (int)ReceivePaymentType.收款;
 
                         payable.PreRPNO = BizCodeGenerator.Instance.GetBizBillNo(BizType.预收款单);
-                        payable.BizType = (int)BizType.销售订单;
+                        payable.SourceBizType = (int)BizType.销售订单;
                         payable.SourceBillNO = entity.SOrderNo;
                         payable.SourceBill_ID = entity.SOrder_ID;
                         payable.Currency_ID = entity.Currency_ID;

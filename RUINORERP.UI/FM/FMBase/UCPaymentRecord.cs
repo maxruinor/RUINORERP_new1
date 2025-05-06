@@ -31,6 +31,7 @@ using RUINORERP.UI.SysConfig;
 using Fireasy.Common.Extensions;
 using FastReport.Table;
 using MathNet.Numerics.Optimization;
+using Netron.GraphLib;
 
 
 namespace RUINORERP.UI.FM
@@ -111,31 +112,7 @@ namespace RUINORERP.UI.FM
                     cmbPayeeInfoID.DataBindings.Clear();
                 }
                 //根据币别如果是外币才显示外币相关的字段
-                if (entity.Currency_ID > 0)
-                {
-                    var obj = BizCacheHelper.Instance.GetEntity<tb_Currency>(entity.Currency_ID);
-                    if (obj != null && obj.ToString() != "System.Object")
-                    {
-                        if (obj is tb_Currency cv)
-                        {
-                            if (cv.CurrencyCode != DefaultCurrency.RMB.ToString())
-                            {
-                                //显示外币相关
-                                UIHelper.ControlForeignFieldInvisible<tb_FM_PaymentRecord>(this, true);
-                                lblExchangeRate.Visible = true;
-                                txtExchangeRate.Visible = true;
-                            }
-                            else
-                            {
-                                //隐藏外币相关
-                                UIHelper.ControlForeignFieldInvisible<tb_FM_PaymentRecord>(this, false);
-                                lblExchangeRate.Visible = false;
-                                txtExchangeRate.Visible = false;
-                            }
-                        }
-
-                    }
-                }
+                ControlCurrency(entity);
             }
             else
             {
@@ -154,6 +131,8 @@ namespace RUINORERP.UI.FM
                 //entity.InvoiceDate = System.DateTime.Now;
                 entity.Employee_ID = MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID.Value;
                 //清空
+                ControlCurrency(entity);
+
 
                 // 清空 DataSource（如果适用）
                 cmbPayeeInfoID.DataSource = null;
@@ -179,7 +158,7 @@ namespace RUINORERP.UI.FM
             DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.Remark, txtRemark, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.PayeeAccountNo, txtPayeeAccountNo, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4ControlByEnum<tb_FM_PaymentRecord>(entity, t => t.PaymentStatus, lblDataStatus, BindDataType4Enum.EnumName, typeof(PaymentStatus));
-            DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.BizType, txtBizType, BindDataType4TextBox.Qty, false);
+            DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.SourceBizType, txtBizType, BindDataType4TextBox.Qty, false);
             //DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.SourceBilllID, txtSourceBilllID, BindDataType4TextBox.Qty, false);
             DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.SourceBillNO, txtSourceBillNO, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4DataTime<tb_FM_PaymentRecord>(entity, t => t.PaymentDate, dtpPaymentDate, false);
@@ -310,33 +289,7 @@ namespace RUINORERP.UI.FM
 
                     if (s2.PropertyName == entity.GetPropertyName<tb_FM_PaymentRecord>(c => c.Currency_ID))
                     {
-                        //根据币别如果是外币才显示外币相关的字段
-                        if (entity.Currency_ID > 0)
-                        {
-                            var obj = BizCacheHelper.Instance.GetEntity<tb_Currency>(entity.Currency_ID);
-                            if (obj != null && obj.ToString() != "System.Object")
-                            {
-                                if (obj is tb_Currency cv)
-                                {
-                                    if (cv.CurrencyCode.Trim() != DefaultCurrency.RMB.ToString())
-                                    {
-                                        //显示外币相关
-                                        UIHelper.ControlForeignFieldInvisible<tb_FM_PaymentRecord>(this, true);
-                                        //需要有一个方法。通过外币代码得到换人民币的汇率
-                                        entity.ExchangeRate = BizService.GetExchangeRateFromCache(cv.Currency_ID, AppContext.BaseCurrency.Currency_ID);
-                                        lblExchangeRate.Visible = true;
-                                        txtExchangeRate.Visible = true;
-                                    }
-                                    else
-                                    {
-                                        //隐藏外币相关
-                                        UIHelper.ControlForeignFieldInvisible<tb_FM_PaymentRecord>(this, false);
-                                        lblExchangeRate.Visible = false;
-                                        txtExchangeRate.Visible = false;
-                                    }
-                                }
-                            }
-                        }
+                        ControlCurrency(entity);
                     }
 
 
@@ -383,6 +336,37 @@ namespace RUINORERP.UI.FM
             base.BindData(entity);
         }
 
+
+        private void ControlCurrency(tb_FM_PaymentRecord entity)
+        {
+            //根据币别如果是外币才显示外币相关的字段
+            if (entity.Currency_ID > 0)
+            {
+                var obj = BizCacheHelper.Instance.GetEntity<tb_Currency>(entity.Currency_ID);
+                if (obj != null && obj.ToString() != "System.Object")
+                {
+                    if (obj is tb_Currency cv)
+                    {
+                        if (cv.CurrencyCode.Trim() != DefaultCurrency.RMB.ToString())
+                        {
+                            //显示外币相关
+                            UIHelper.ControlForeignFieldInvisible<tb_FM_PaymentRecord>(this, true);
+                            //需要有一个方法。通过外币代码得到换人民币的汇率
+                            entity.ExchangeRate = BizService.GetExchangeRateFromCache(cv.Currency_ID, AppContext.BaseCurrency.Currency_ID);
+                            lblExchangeRate.Visible = true;
+                            txtExchangeRate.Visible = true;
+                        }
+                        else
+                        {
+                            //隐藏外币相关
+                            UIHelper.ControlForeignFieldInvisible<tb_FM_PaymentRecord>(this, false);
+                            lblExchangeRate.Visible = false;
+                            txtExchangeRate.Visible = false;
+                        }
+                    }
+                }
+            }
+        }
 
 
         private async void LoadImageData(string CloseCaseImagePath)

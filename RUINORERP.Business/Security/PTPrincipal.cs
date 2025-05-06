@@ -63,7 +63,7 @@ namespace RUINORERP.Business.Security
 
                 #endregion
             }
-            if (!appcontext.IsSuperUser || username != "admin")
+            if (username != "admin")
             {
                 #region 正常用户验证  两套方式  正常是用P4表来控制的
 

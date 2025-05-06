@@ -143,7 +143,9 @@ namespace RUINORERP.UI.ProductEAV
             List<int> exclude = new List<int>();
             exclude.Add((int)ProductAttributeType.虚拟);
             exclude.Add((int)ProductAttributeType.捆绑);
-            bindingHelper.InitDataToCmbByEnumOnWhere<tb_Prod>(typeof(ProductAttributeType).GetListByEnum(2, exclude.ToArray()), e => e.PropertyType, cmbPropertyType);
+
+            
+            bindingHelper.InitDataToCmbByEnumOnWhere<tb_Prod>(typeof(ProductAttributeType).GetListByEnum<ProductAttributeType>(selectedItem: 2, exclude.ToArray()), e => e.PropertyType, cmbPropertyType);
 
             prodpropValueList = mcPropertyValue.QueryByNav(c => true);
 

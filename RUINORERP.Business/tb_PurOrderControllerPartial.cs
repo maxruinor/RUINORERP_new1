@@ -285,7 +285,7 @@ namespace RUINORERP.Business
                         //采购就是付款
                         payable.ReceivePaymentType = (int)ReceivePaymentType.付款;
                         payable.PreRPNO = BizCodeGenerator.Instance.GetBizBillNo(BizType.预付款单);
-                        payable.BizType = (int)BizType.采购订单;
+                        payable.SourceBizType = (int)BizType.采购订单;
                         payable.SourceBillNO = entity.PurOrderNo;
                         payable.SourceBill_ID = entity.PurOrder_ID;
                         payable.Currency_ID = entity.Currency_ID;

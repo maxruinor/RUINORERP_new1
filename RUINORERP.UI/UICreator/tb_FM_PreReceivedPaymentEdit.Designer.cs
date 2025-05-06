@@ -3,7 +3,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：04/30/2025 15:18:08
+// 时间：05/06/2025 10:30:40
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -91,8 +91,8 @@ this.dtpPrePayDate = new Krypton.Toolkit.KryptonDateTimePicker();
 this.lblPrePaymentReason = new Krypton.Toolkit.KryptonLabel();
 this.txtPrePaymentReason = new Krypton.Toolkit.KryptonTextBox();
 
-this.lblBizType = new Krypton.Toolkit.KryptonLabel();
-this.txtBizType = new Krypton.Toolkit.KryptonTextBox();
+this.lblSourceBizType = new Krypton.Toolkit.KryptonLabel();
+this.txtSourceBizType = new Krypton.Toolkit.KryptonTextBox();
 
 this.lblSourceBill_ID = new Krypton.Toolkit.KryptonLabel();
 this.txtSourceBill_ID = new Krypton.Toolkit.KryptonTextBox();
@@ -436,27 +436,27 @@ this.txtPrePaymentReason.TabIndex = 13;
 this.Controls.Add(this.lblPrePaymentReason);
 this.Controls.Add(this.txtPrePaymentReason);
 
-           //#####BizType###Int32
-//属性测试350BizType
-//属性测试350BizType
-//属性测试350BizType
-//属性测试350BizType
-//属性测试350BizType
-//属性测试350BizType
-//属性测试350BizType
-//属性测试350BizType
-this.lblBizType.AutoSize = true;
-this.lblBizType.Location = new System.Drawing.Point(100,350);
-this.lblBizType.Name = "lblBizType";
-this.lblBizType.Size = new System.Drawing.Size(41, 12);
-this.lblBizType.TabIndex = 14;
-this.lblBizType.Text = "来源业务";
-this.txtBizType.Location = new System.Drawing.Point(173,346);
-this.txtBizType.Name = "txtBizType";
-this.txtBizType.Size = new System.Drawing.Size(100, 21);
-this.txtBizType.TabIndex = 14;
-this.Controls.Add(this.lblBizType);
-this.Controls.Add(this.txtBizType);
+           //#####SourceBizType###Int32
+//属性测试350SourceBizType
+//属性测试350SourceBizType
+//属性测试350SourceBizType
+//属性测试350SourceBizType
+//属性测试350SourceBizType
+//属性测试350SourceBizType
+//属性测试350SourceBizType
+//属性测试350SourceBizType
+this.lblSourceBizType.AutoSize = true;
+this.lblSourceBizType.Location = new System.Drawing.Point(100,350);
+this.lblSourceBizType.Name = "lblSourceBizType";
+this.lblSourceBizType.Size = new System.Drawing.Size(41, 12);
+this.lblSourceBizType.TabIndex = 14;
+this.lblSourceBizType.Text = "来源业务";
+this.txtSourceBizType.Location = new System.Drawing.Point(173,346);
+this.txtSourceBizType.Name = "txtSourceBizType";
+this.txtSourceBizType.Size = new System.Drawing.Size(100, 21);
+this.txtSourceBizType.TabIndex = 14;
+this.Controls.Add(this.lblSourceBizType);
+this.Controls.Add(this.txtSourceBizType);
 
            //#####SourceBill_ID###Int64
 //属性测试375SourceBill_ID
@@ -951,8 +951,8 @@ this.Controls.Add(this.dtpPrePayDate );
                 this.Controls.Add(this.lblPrePaymentReason );
 this.Controls.Add(this.txtPrePaymentReason );
 
-                this.Controls.Add(this.lblBizType );
-this.Controls.Add(this.txtBizType );
+                this.Controls.Add(this.lblSourceBizType );
+this.Controls.Add(this.txtSourceBizType );
 
                 this.Controls.Add(this.lblSourceBill_ID );
 this.Controls.Add(this.txtSourceBill_ID );
@@ -1122,8 +1122,8 @@ private Krypton.Toolkit.KryptonTextBox txtPrePaymentReason;
 
     
         
-              private Krypton.Toolkit.KryptonLabel lblBizType;
-private Krypton.Toolkit.KryptonTextBox txtBizType;
+              private Krypton.Toolkit.KryptonLabel lblSourceBizType;
+private Krypton.Toolkit.KryptonTextBox txtSourceBizType;
 
     
         

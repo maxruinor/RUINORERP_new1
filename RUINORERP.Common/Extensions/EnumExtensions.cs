@@ -278,48 +278,39 @@ namespace RUINORERP.Common.Extensions
         /// <returns></returns>
 
 
-        public static List<EnumEntityMember> GetListByEnum<TEnum>(this TEnum enumObj, int? selectedItem = null, params int[] exclude)
+        // 优化后的方法
+        public static List<EnumEntityMember> GetListByEnum<TEnum>(this Type enumType, int? selectedItem = null, params int[] exclude) where TEnum : struct, Enum
         {
-            /////排除一些枚举值
-            //  Enum.GetValues(typeof(ProductAttributeType)).OfType<ProductAttributeType>().Where(x => (int)x != (int)ProductAttributeType.虚拟);
-
-            if (Enum.GetValues(typeof(TEnum)).Length > 0)
+            if (!typeof(TEnum).IsEnum)
             {
-                List<EnumEntityMember> listResult = new List<EnumEntityMember>();
-                foreach (TEnum e in Enum.GetValues(typeof(TEnum)))
-                {
-                    if (exclude.Contains(Convert.ToInt32(e)))
-                    {
-                        //排除
-                        continue;
-                    }
-                    if (selectedItem != null && selectedItem == Convert.ToInt32(e)) // 选中
-                    {
-                        EnumEntityMember item = new EnumEntityMember
-                        {
-                            Value = Convert.ToInt32(e).ToString(),    // 传输值
-                            Description = e.ToString(),      // 显示值
-                            Selected = true
-                        };
-                        listResult.Add(item);
-                    }
-                    else
-                    {
-                        EnumEntityMember item = new EnumEntityMember     // 不选中
-                        {
-                            Value = Convert.ToInt32(e).ToString(),     // 传输值
-                            Description = e.ToString()      // 显示值
-                        };
-                        listResult.Add(item);
-                    }
-                }
-                return listResult;
-                //if (selectedItem != null)
-                //    return new EnumerationMember(listResult, "Value", "Text", selectedItem);
-                //else
-                //    return new EnumerationMember(listResult, "Value", "Text");
+                throw new ArgumentException("TEnum 必须为枚举类型。");
             }
-            return null;
+
+            var values = Enum.GetValues(enumType);
+            if (values.Length == 0)
+            {
+                return null;
+            }
+
+            var listResult = new List<EnumEntityMember>();
+            foreach (TEnum e in values)
+            {
+                int enumValue = Convert.ToInt32(e);
+                if (exclude.Contains(enumValue))
+                {
+                    continue;
+                }
+
+                var item = new EnumEntityMember
+                {
+                    Value = enumValue.ToString(),
+                    Description = e.ToString(),
+                    Selected = selectedItem.HasValue && selectedItem.Value == enumValue
+                };
+                listResult.Add(item);
+            }
+
+            return listResult;
         }
 
 

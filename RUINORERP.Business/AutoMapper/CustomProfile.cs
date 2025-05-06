@@ -46,10 +46,28 @@ namespace RUINORERP.Business.AutoMapper
             .ForMember(a => a.Summary, o => o.MapFrom(d => d.Summary));
 
 
+            //生成应收及明细
+            CreateMap<tb_SaleOutRe, tb_FM_ReceivablePayable>();
+            CreateMap<tb_SaleOutReDetail, tb_FM_ReceivablePayableDetail>()
+            .ForMember(a => a.UnitPrice, o => o.MapFrom(d => d.TransactionPrice))
+            .ForMember(a => a.Quantity, o => o.MapFrom(d => d.Quantity))
+            .ForMember(a => a.ProdDetailID, o => o.MapFrom(d => d.ProdDetailID))
+            .ForMember(a => a.property, o => o.MapFrom(d => d.property))
+            //.ForMember(a => a.IncludeTax, o => o.MapFrom(d => d.incl))
+            .ForMember(a => a.CustomerPartNo, o => o.MapFrom(d => d.CustomerPartNo))
+            .ForMember(a => a.TaxRate, o => o.MapFrom(d => d.TaxRate))
+            .ForMember(a => a.TaxLocalAmount, o => o.MapFrom(d => d.SubtotalTaxAmount))
+            .ForMember(a => a.LocalPayableAmount, o => o.MapFrom(d => d.SubtotalTransAmount))
+            .ForMember(a => a.Summary, o => o.MapFrom(d => d.Summary));
+
 
             //生成应付及明细
             CreateMap<tb_PurEntry, tb_FM_ReceivablePayable>();
             CreateMap<tb_PurEntryDetail, tb_FM_ReceivablePayableDetail>();
+
+            //生成应付及明细
+            CreateMap<tb_PurEntryRe, tb_FM_ReceivablePayable>();
+            CreateMap<tb_PurEntryReDetail, tb_FM_ReceivablePayableDetail>();
 
 
             //应收付单生成收款记录表

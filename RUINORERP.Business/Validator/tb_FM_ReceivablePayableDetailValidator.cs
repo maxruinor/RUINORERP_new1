@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：04/30/2025 15:18:13
+// 时间：05/06/2025 10:30:44
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -39,12 +39,6 @@ namespace RUINORERP.Business
         
       RuleFor(tb_FM_ReceivablePayableDetail =>tb_FM_ReceivablePayableDetail.ARAPId).NotEmpty().When(x => x.ARAPId.HasValue);
 
-
- RuleFor(tb_FM_ReceivablePayableDetail =>tb_FM_ReceivablePayableDetail.BizType).NotEmpty().When(x => x.BizType.HasValue);
-
- RuleFor(tb_FM_ReceivablePayableDetail =>tb_FM_ReceivablePayableDetail.SourceBill_ID).NotEmpty().When(x => x.SourceBill_ID.HasValue);
-
- RuleFor(tb_FM_ReceivablePayableDetail =>tb_FM_ReceivablePayableDetail.SourceBillNO).MaximumLength(15).WithMessage("来源单号:不能超过最大长度,15.");
 
  RuleFor(tb_FM_ReceivablePayableDetail =>tb_FM_ReceivablePayableDetail.ProdDetailID).Must(CheckForeignKeyValueCanNull).WithMessage("产品:下拉选择值不正确。");
  RuleFor(tb_FM_ReceivablePayableDetail =>tb_FM_ReceivablePayableDetail.ProdDetailID).NotEmpty().When(x => x.ProdDetailID.HasValue);

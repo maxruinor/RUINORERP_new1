@@ -53,7 +53,7 @@ namespace RUINORERP.Business
             SettlementRecord = mapper.Map<tb_FM_PaymentSettlement>(entity);
 
             SettlementRecord.ActionStatus = ActionStatus.新增;
-
+            SettlementRecord.IsAutoSettlement = true;
             SettlementRecord.ReceivePaymentType = entity.ReceivePaymentType;
             if (entity.ReceivePaymentType == (int)ReceivePaymentType.收款)
             {
@@ -64,6 +64,7 @@ namespace RUINORERP.Business
                     SettlementRecord.SettlementType = (int)SettlementType.红冲核销;
                     SettlementRecord.IsReversed = true;
                 }
+                SettlementRecord.TargetBizType = (int)BizType.收款单;
             }
             else
             {
@@ -73,18 +74,24 @@ namespace RUINORERP.Business
                 {
                     SettlementRecord.SettlementType = (int)SettlementType.红冲核销;
                 }
+                SettlementRecord.TargetBizType = (int)BizType.付款单;
             }
 
-            SettlementRecord.SourceBizType = entity.BizType;
+            SettlementRecord.SourceBizType = entity.SourceBizType;
             SettlementRecord.SourceBillNO = entity.SourceBillNO;
             SettlementRecord.SourceBillID = entity.SourceBilllID;
+
+
+            SettlementRecord.TargetBillID = entity.PaymentId;
+            SettlementRecord.TargetBillNO = entity.PaymentNo;
+
             //SourceBillDetailID 应收时 可以按明细核销？
             SettlementRecord.SettleDate = System.DateTime.Now;
             if (SettlementRecord.SettledLocalAmount < 0)
             {
                 SettlementRecord.SettlementType = (int)SettlementType.红冲核销;
             }
-            switch (entity.BizType)
+            switch (entity.SourceBizType)
             {
                 case (int)BizType.收款核销:
                     SettlementRecord.SettlementType = (int)SettlementType.收款核销;
@@ -104,7 +111,7 @@ namespace RUINORERP.Business
             {
 
             }
-            
+
             SettlementRecord.SettledForeignAmount = entity.ForeignPaidAmount;
             SettlementRecord.SettledLocalAmount = entity.LocalPaidAmount;
 
@@ -118,7 +125,92 @@ namespace RUINORERP.Business
             return SettlementRecord;
         }
 
+        /// <summary>
+        /// 退款或红冲时，生成反向核销记录（IsReversed=1），并关联原记录。
+        /// 正向不用。反向用？
+        /// </summary>
+        /// <param name="entity"></param>
+        /// <returns></returns>
+        public async Task<tb_FM_PaymentSettlement> GenerateSettlement(tb_FM_ReceivablePayable sourceEntity, tb_FM_ReceivablePayable targetEntity)
+        {
+            //预收付款单 审核时 自动生成 收付款记录
+            IMapper mapper = RUINORERP.Business.AutoMapper.AutoMapperConfig.RegisterMappings().CreateMapper();
+            tb_FM_PaymentSettlement SettlementRecord = new tb_FM_PaymentSettlement();
+            SettlementRecord = mapper.Map<tb_FM_PaymentSettlement>(targetEntity);
 
+            SettlementRecord.ActionStatus = ActionStatus.新增;
+            SettlementRecord.IsAutoSettlement = true;
+            SettlementRecord.ReceivePaymentType = targetEntity.ReceivePaymentType;
+            if (targetEntity.ReceivePaymentType == (int)ReceivePaymentType.收款)
+            {
+                SettlementRecord.SettlementNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.收款核销);
+                SettlementRecord.SettlementType = (int)SettlementType.收款核销;
+                if (targetEntity.ForeignPaidAmount < 0 || targetEntity.ForeignPaidAmount < 0)
+                {
+                    SettlementRecord.SettlementType = (int)SettlementType.红冲核销;
+                    SettlementRecord.IsReversed = true;
+                }
+                SettlementRecord.TargetBizType = (int)BizType.应收单;
+                SettlementRecord.SourceBizType = (int)BizType.应收单;
+            }
+            else
+            {
+                SettlementRecord.SettlementNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.付款核销);
+                SettlementRecord.SettlementType = (int)SettlementType.付款核销;
+                if (targetEntity.ForeignPaidAmount < 0 || targetEntity.ForeignPaidAmount < 0)
+                {
+                    SettlementRecord.SettlementType = (int)SettlementType.红冲核销;
+                }
+                SettlementRecord.TargetBizType = (int)BizType.应付单;
+                SettlementRecord.SourceBizType = (int)BizType.应付单;
+            }
+
+
+            SettlementRecord.SourceBillNO = sourceEntity.ARAPNo;
+            SettlementRecord.SourceBillID = sourceEntity.ARAPId;
+
+
+            SettlementRecord.TargetBillID = targetEntity.ARAPId;
+            SettlementRecord.TargetBillNO = targetEntity.ARAPNo;
+
+            //SourceBillDetailID 应收时 可以按明细核销？
+            SettlementRecord.SettleDate = System.DateTime.Now;
+            if (SettlementRecord.SettledLocalAmount < 0)
+            {
+                SettlementRecord.SettlementType = (int)SettlementType.红冲核销;
+            }
+            switch (targetEntity.SourceBizType)
+            {
+                case (int)BizType.收款核销:
+                    SettlementRecord.SettlementType = (int)SettlementType.收款核销;
+                    break;
+                case (int)BizType.付款核销:
+                    SettlementRecord.SettlementType = (int)SettlementType.付款核销;
+                    break;
+                default:
+                    break;
+            }
+
+            SettlementRecord.Currency_ID = targetEntity.Currency_ID;
+
+            SettlementRecord.ExchangeRate = targetEntity.ExchangeRate;
+            if (true)
+            {
+
+            }
+
+            SettlementRecord.SettledForeignAmount = Math.Abs(targetEntity.ForeignPaidAmount);
+            SettlementRecord.SettledLocalAmount = Math.Abs(targetEntity.LocalPaidAmount);
+
+            BusinessHelper.Instance.InitEntity(SettlementRecord);
+            long id = await _unitOfWorkManage.GetDbClient().Insertable<tb_FM_PaymentSettlement>(SettlementRecord).ExecuteReturnSnowflakeIdAsync();
+            if (id > 0)
+            {
+
+            }
+
+            return SettlementRecord;
+        }
     }
 
 }

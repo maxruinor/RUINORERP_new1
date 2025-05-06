@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：04/30/2025 19:46:42
+// 时间：05/06/2025 10:30:39
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -46,16 +46,16 @@ namespace RUINORERP.Model.QueryDto
         }
      
 
-        private int? _BizType;
+        private int? _SourceBizType;
         /// <summary>
-        /// 来源业务
+        /// 来源单据类型
         /// </summary>
-        [AdvQueryAttribute(ColName = "BizType",ColDesc = "来源业务")]
-        [SugarColumn(ColumnDataType = "int",SqlParameterDbType ="Int32",ColumnName = "BizType",IsNullable = true,ColumnDescription = "来源业务" )]
-        public int? BizType 
+        [AdvQueryAttribute(ColName = "SourceBizType",ColDesc = "来源单据类型")]
+        [SugarColumn(ColumnDataType = "int",SqlParameterDbType ="Int32",ColumnName = "SourceBizType",IsNullable = true,ColumnDescription = "来源单据类型" )]
+        public int? SourceBizType 
         { 
-            get{return _BizType;}
-            set{SetProperty(ref _BizType, value);}
+            get{return _SourceBizType;}
+            set{SetProperty(ref _SourceBizType, value);}
         }
      
 
@@ -82,19 +82,6 @@ namespace RUINORERP.Model.QueryDto
         { 
             get{return _SourceBillNO;}
             set{SetProperty(ref _SourceBillNO, value);}
-        }
-     
-
-        private int? _SourceBizType;
-        /// <summary>
-        /// 来源单据类型
-        /// </summary>
-        [AdvQueryAttribute(ColName = "SourceBizType",ColDesc = "来源单据类型")]
-        [SugarColumn(ColumnDataType = "int",SqlParameterDbType ="Int32",ColumnName = "SourceBizType",IsNullable = true,ColumnDescription = "来源单据类型" )]
-        public int? SourceBizType 
-        { 
-            get{return _SourceBizType;}
-            set{SetProperty(ref _SourceBizType, value);}
         }
      
 

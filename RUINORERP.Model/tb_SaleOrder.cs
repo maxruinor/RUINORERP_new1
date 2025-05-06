@@ -197,6 +197,21 @@ namespace RUINORERP.Model
                         }
         }
 
+        private decimal _ForeignShipCost = ((0));
+        /// <summary>
+        /// 运费外币
+        /// </summary>
+        [AdvQueryAttribute(ColName = "ForeignShipCost", ColDesc = "运费外币")]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType = "Decimal", ColumnName = "ForeignShipCost", DecimalDigits = 4, IsNullable = false, ColumnDescription = "运费外币")]
+        public decimal ForeignShipCost
+        {
+            get { return _ForeignShipCost; }
+            set
+            {
+                SetProperty(ref _ForeignShipCost, value);
+            }
+        }
+
         private int _TotalQty= ((0));
         /// <summary>
         /// 总数量

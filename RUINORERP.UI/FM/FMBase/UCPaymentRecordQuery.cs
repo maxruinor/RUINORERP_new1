@@ -57,6 +57,7 @@ namespace RUINORERP.UI.FM
             base.AddExcludeMenuList(MenuItemEnums.反结案);
             base.AddExcludeMenuList(MenuItemEnums.反审);
             base.AddExcludeMenuList(MenuItemEnums.结案);
+            base.AddExcludeMenuList(MenuItemEnums.提交);
         }
 
         public override void BuildLimitQueryConditions()
@@ -137,7 +138,7 @@ namespace RUINORERP.UI.FM
             #region 双击单号后按业务类型查询显示对应业务窗体
             base._UCBillMasterQuery.GridRelated.ComplexType = true;
             //由这个列来决定单号显示哪个的业务窗体
-            base._UCBillMasterQuery.GridRelated.SetComplexTargetField<tb_FM_PaymentRecord>(c => c.BizType, c => c.SourceBillNO);
+            base._UCBillMasterQuery.GridRelated.SetComplexTargetField<tb_FM_PaymentRecord>(c => c.SourceBizType, c => c.SourceBillNO);
             BizTypeMapper mapper = new BizTypeMapper();
             //将枚举中的值循环
             foreach (var biztype in Enum.GetValues(typeof(BizType)))

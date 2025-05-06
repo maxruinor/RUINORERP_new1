@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：04/30/2025 15:18:09
+// 时间：05/06/2025 10:30:40
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -395,15 +395,15 @@ this.txtPrePaymentReason.TabIndex = 13;
 this.Controls.Add(this.lblPrePaymentReason);
 this.Controls.Add(this.txtPrePaymentReason);
 
-           //#####BizType###Int32
-//属性测试350BizType
-//属性测试350BizType
-//属性测试350BizType
-//属性测试350BizType
-//属性测试350BizType
-//属性测试350BizType
-//属性测试350BizType
-//属性测试350BizType
+           //#####SourceBizType###Int32
+//属性测试350SourceBizType
+//属性测试350SourceBizType
+//属性测试350SourceBizType
+//属性测试350SourceBizType
+//属性测试350SourceBizType
+//属性测试350SourceBizType
+//属性测试350SourceBizType
+//属性测试350SourceBizType
 
            //#####SourceBill_ID###Int64
 //属性测试375SourceBill_ID

@@ -238,6 +238,65 @@ namespace RUINORERP.Model
                         }
         }
 
+        private int? _PayStatus;
+        /// <summary>
+        /// 退款状态
+        /// </summary>
+        [AdvQueryAttribute(ColName = "PayStatus", ColDesc = "退款状态")]
+        [SugarColumn(ColumnDataType = "int", SqlParameterDbType = "Int32", ColumnName = "PayStatus", DecimalDigits = 0, IsNullable = true, ColumnDescription = "退款状态")]
+        public int? PayStatus
+        {
+            get { return _PayStatus; }
+            set
+            {
+                SetProperty(ref _PayStatus, value);
+            }
+        }
+
+        private long? _Currency_ID;
+        /// <summary>
+        /// 币别
+        /// </summary>
+        [AdvQueryAttribute(ColName = "Currency_ID", ColDesc = "币别")]
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType = "Int64", ColumnName = "Currency_ID", DecimalDigits = 0, IsNullable = true, ColumnDescription = "币别")]
+        [FKRelationAttribute("tb_Currency", "Currency_ID")]
+        public long? Currency_ID
+        {
+            get { return _Currency_ID; }
+            set
+            {
+                SetProperty(ref _Currency_ID, value);
+            }
+        }
+
+        private decimal? _ExchangeRate = 1;
+        /// <summary>
+        /// 汇率
+        /// </summary>
+        [AdvQueryAttribute(ColName = "ExchangeRate", ColDesc = "汇率")]
+        [SugarColumn(ColumnDataType = "decimal", SqlParameterDbType = "Decimal", ColumnName = "ExchangeRate", DecimalDigits = 4, IsNullable = true, ColumnDescription = "汇率")]
+        public decimal? ExchangeRate
+        {
+            get { return _ExchangeRate; }
+            set
+            {
+                SetProperty(ref _ExchangeRate, value);
+            }
+        }
+        private decimal _ForeignTotalAmount = ((0));
+        /// <summary>
+        /// 总金额外币
+        /// </summary>
+        [AdvQueryAttribute(ColName = "ForeignTotalAmount", ColDesc = "总金额外币")]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType = "Decimal", ColumnName = "ForeignTotalAmount", DecimalDigits = 4, IsNullable = false, ColumnDescription = "总金额外币")]
+        public decimal ForeignTotalAmount
+        {
+            get { return _ForeignTotalAmount; }
+            set
+            {
+                SetProperty(ref _ForeignTotalAmount, value);
+            }
+        }
         private string _ShippingWay;
         /// <summary>
         /// 发货方式

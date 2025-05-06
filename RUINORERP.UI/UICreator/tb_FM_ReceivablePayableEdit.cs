@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：04/30/2025 15:18:10
+// 时间：05/06/2025 10:30:42
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -67,6 +67,10 @@ namespace RUINORERP.UI
         
         
         
+        
+        
+        
+        
 
          }
 /*
@@ -75,6 +79,9 @@ namespace RUINORERP.UI
         {
         tb_FM_ReceivablePayable entity = new tb_FM_ReceivablePayable();
                      entity.ARAPNo = txtARAPNo.Text ;
+                       entity.SourceBizType = Int32.Parse(txtSourceBizType.Text);
+                        entity.SourceBill_ID = Int64.Parse(txtSourceBill_ID.Text);
+                        entity.SourceBillNO = txtSourceBillNO.Text ;
                        entity.CustomerVendor_ID = Int64.Parse(txtCustomerVendor_ID.Text);
                         entity.Currency_ID = Int64.Parse(txtCurrency_ID.Text);
                         entity.Account_id = Int64.Parse(txtAccount_id.Text);
@@ -89,6 +96,7 @@ namespace RUINORERP.UI
                         entity.ForeignBalanceAmount = Decimal.Parse(txtForeignBalanceAmount.Text);
                         entity.LocalBalanceAmount = Decimal.Parse(txtLocalBalanceAmount.Text);
                         entity.DueDate = DateTime.Parse(txtDueDate.Text);
+                        entity.Employee_ID = Int64.Parse(txtEmployee_ID.Text);
                         entity.DepartmentID = Int64.Parse(txtDepartmentID.Text);
                         entity.ProjectGroup_ID = Int64.Parse(txtProjectGroup_ID.Text);
                         entity.IsIncludeTax = Boolean.Parse(txtIsIncludeTax.Text);
@@ -118,6 +126,9 @@ namespace RUINORERP.UI
         {
         _EditEntity = entity;
                         DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayable>(entity, t => t.ARAPNo, txtARAPNo, BindDataType4TextBox.Text,false);
+           DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayable>(entity, t => t.SourceBizType, txtSourceBizType, BindDataType4TextBox.Qty,false);
+           DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayable>(entity, t => t.SourceBill_ID, txtSourceBill_ID, BindDataType4TextBox.Qty,false);
+           DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayable>(entity, t => t.SourceBillNO, txtSourceBillNO, BindDataType4TextBox.Text,false);
           // DataBindingHelper.BindData4Cmb<tb_CustomerVendor>(entity, k => k.CustomerVendor_ID, v=>v.XXNAME, cmbCustomerVendor_ID);
           // DataBindingHelper.BindData4Cmb<tb_Currency>(entity, k => k.Currency_ID, v=>v.XXNAME, cmbCurrency_ID);
           // DataBindingHelper.BindData4Cmb<tb_FM_Account>(entity, k => k.Account_id, v=>v.XXNAME, cmbAccount_id);
@@ -132,6 +143,7 @@ namespace RUINORERP.UI
            DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayable>(entity, t => t.ForeignBalanceAmount.ToString(), txtForeignBalanceAmount, BindDataType4TextBox.Money,false);
            DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayable>(entity, t => t.LocalBalanceAmount.ToString(), txtLocalBalanceAmount, BindDataType4TextBox.Money,false);
            DataBindingHelper.BindData4DataTime<tb_FM_ReceivablePayable>(entity, t => t.DueDate, dtpDueDate,false);
+          // DataBindingHelper.BindData4Cmb<tb_Employee>(entity, k => k.Employee_ID, v=>v.XXNAME, cmbEmployee_ID);
           // DataBindingHelper.BindData4Cmb<tb_Department>(entity, k => k.DepartmentID, v=>v.XXNAME, cmbDepartmentID);
           // DataBindingHelper.BindData4Cmb<tb_ProjectGroup>(entity, k => k.ProjectGroup_ID, v=>v.XXNAME, cmbProjectGroup_ID);
            DataBindingHelper.BindData4CheckBox<tb_FM_ReceivablePayable>(entity, t => t.IsIncludeTax, chkIsIncludeTax, false);

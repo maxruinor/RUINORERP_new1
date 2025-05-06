@@ -131,6 +131,24 @@ namespace RUINORERP.UI.FM
 
                 #endregion
 
+                //如果状态是已经生效才可能有审核，如果是待收款 才可能有反审
+                if (entity.ARAPStatus== (long)ARAPStatus.待审核)
+                {
+                    base.toolStripbtnReview.Visible = true;
+                }
+                else
+                {
+                    base.toolStripbtnReview.Visible = false;
+                }
+
+                if (entity.ARAPStatus == (long)ARAPStatus.已生效)
+                {
+                    base.toolStripBtnReverseReview.Visible = true;
+                }
+                else
+                {
+                    base.toolStripBtnReverseReview.Visible = false;
+                }
 
             }
             else
@@ -398,7 +416,6 @@ namespace RUINORERP.UI.FM
 
 
             listCols.SetCol_NeverVisible<tb_FM_ReceivablePayableDetail>(c => c.ARAPDetailID);
-            listCols.SetCol_NeverVisible<tb_FM_ReceivablePayableDetail>(c => c.SourceBill_ID);
             listCols.SetCol_NeverVisible<tb_FM_ReceivablePayableDetail>(c => c.ProdDetailID);
             listCols.SetCol_NeverVisible<ProductSharePart>(c => c.Rack_ID);
             listCols.SetCol_NeverVisible<ProductSharePart>(c => c.ShortCode);
@@ -414,7 +431,6 @@ namespace RUINORERP.UI.FM
      
 
             UIHelper.ControlChildColumnsInvisible(CurMenuInfo, listCols);
-            listCols.SetCol_ReadOnly<tb_FM_ReceivablePayableDetail>(c => c.SourceBillNO);
             UIHelper.ControlChildColumnsInvisible(CurMenuInfo, listCols);
             if (!AppContext.SysConfig.UseBarCode)
             {
@@ -740,11 +756,11 @@ namespace RUINORERP.UI.FM
             if (MessageBox.Show("系统不建议删除单据资料\r\n确定删除吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Information) == DialogResult.Yes)
             {
                 //https://www.runoob.com/w3cnote/csharp-enum.html
-                var dataStatus = (DataStatus)(EditEntity.GetPropertyValue(typeof(DataStatus).Name).ToInt());
-                if (dataStatus == DataStatus.新建 || dataStatus == DataStatus.草稿)
+                var dataStatus = (ARAPStatus)(EditEntity.GetPropertyValue(typeof(ARAPStatus).Name).ToLong());
+                if (dataStatus == ARAPStatus.待审核 || dataStatus == ARAPStatus.草稿)
                 {
                     //如果草稿。都可以删除。如果是新建，则提交过了。要创建人或超级管理员才能删除
-                    if (dataStatus == DataStatus.新建 && !AppContext.IsSuperUser)
+                    if (dataStatus == ARAPStatus.待审核 && !AppContext.IsSuperUser)
                     {
                         if (EditEntity.Created_by.Value != AppContext.CurUserInfo.Id)
                         {

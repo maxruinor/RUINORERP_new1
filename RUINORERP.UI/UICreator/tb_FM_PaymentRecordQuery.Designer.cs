@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：04/30/2025 15:18:06
+// 时间：05/06/2025 10:30:36
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -163,15 +163,15 @@ this.txtPaymentNo.TabIndex = 1;
 this.Controls.Add(this.lblPaymentNo);
 this.Controls.Add(this.txtPaymentNo);
 
-           //#####BizType###Int32
-//属性测试50BizType
-//属性测试50BizType
-//属性测试50BizType
-//属性测试50BizType
-//属性测试50BizType
-//属性测试50BizType
-//属性测试50BizType
-//属性测试50BizType
+           //#####SourceBizType###Int32
+//属性测试50SourceBizType
+//属性测试50SourceBizType
+//属性测试50SourceBizType
+//属性测试50SourceBizType
+//属性测试50SourceBizType
+//属性测试50SourceBizType
+//属性测试50SourceBizType
+//属性测试50SourceBizType
 
            //#####SourceBilllID###Int64
 //属性测试75SourceBilllID

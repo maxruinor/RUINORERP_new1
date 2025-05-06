@@ -97,8 +97,9 @@ namespace RUINORERP.Global.EnumExt
         [Description("已支付")]
         已支付 = 1 << 30,
 
-        已冲销 = BaseFMPaymentStatus.已冲销,
-
+        //是通过预收付等 抵扣时用户自定义的
+        [Description("已核销")]
+        已冲销 = 1 << 31,
 
     }
     #endregion
@@ -212,7 +213,7 @@ namespace RUINORERP.Global.EnumExt
     }
 
     public enum PaymentType { Cash, BankTransfer, CreditCard, Other }
-    public enum ARPType { Receivable, Payable }
+ 
 
 
 

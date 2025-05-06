@@ -714,7 +714,6 @@ namespace RUINORERP.UI.ProductEAV
             this.cmbPropertyType.Name = "cmbPropertyType";
             this.cmbPropertyType.Size = new System.Drawing.Size(178, 21);
             this.cmbPropertyType.TabIndex = 138;
-            this.cmbPropertyType.SelectedIndexChanged += new System.EventHandler(this.cmbPropertyType_SelectedIndexChanged);
             // 
             // kryptonLabel2
             // 

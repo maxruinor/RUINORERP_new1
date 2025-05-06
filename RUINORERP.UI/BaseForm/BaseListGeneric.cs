@@ -312,12 +312,12 @@ namespace RUINORERP.UI.BaseForm
                         {
                             ToolStripButton subItem = item as ToolStripButton;
                             subItem.Click += Item_Click;
-                            ControlButton(subItem);
+                            UIHelper.ControlButton(CurMenuInfo, subItem);
 
                         }
                         if (item is ToolStripDropDownButton subItemDr)
                         {
-                            ControlButton(subItemDr);
+                            UIHelper.ControlButton(CurMenuInfo, subItemDr);
                             subItemDr.Click += Item_Click;
                             //下一级
                             if (subItemDr.HasDropDownItems)
@@ -502,38 +502,7 @@ namespace RUINORERP.UI.BaseForm
             }
         }
 
-        /// <summary>
-        /// 没有权限的菜单不显示
-        /// </summary>
-        /// <param name="btnItem"></param>
-        public void ControlButton(ToolStripButton btnItem)
-        {
-            if (!MainForm.Instance.AppContext.IsSuperUser)
-            {
-                if (CurMenuInfo.tb_P4Buttons == null)
-                {
-                    btnItem.Visible = false;
-                }
-                else
-                {
-                    //如果因为热键 Text改变了。到时再处理
-                    tb_P4Button p4b = CurMenuInfo.tb_P4Buttons.Where(b => b.tb_buttoninfo.BtnText == btnItem.Text).FirstOrDefault();
-                    if (p4b != null)
-                    {
-                        btnItem.Visible = p4b.IsVisble;
-                        btnItem.Enabled = p4b.IsEnabled;
-                    }
-                    else
-                    {
-                        btnItem.Visible = false;
-                    }
-                }
-            }
-            else
-            {
-                btnItem.Visible = true;
-            }
-        }
+ 
 
 
 

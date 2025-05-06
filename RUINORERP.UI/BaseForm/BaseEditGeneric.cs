@@ -357,6 +357,10 @@ namespace RUINORERP.UI.BaseForm
             else
             {
                 #region F1
+                if (ActiveControl==null)
+                {
+                    return;
+                }
                 if (ActiveControl.GetType().ToString() == "ComponentFactory.Krypton.Toolkit.KryptonTextBox+InternalTextBox")
                 {
                     KryptonTextBox txt = ActiveControl.Parent as KryptonTextBox;

@@ -5,6 +5,7 @@ using Krypton.Navigator;
 using Krypton.Toolkit;
 using Krypton.Workspace;
 using Microsoft.Extensions.Logging;
+using NPOI.SS.Formula.Functions;
 using RUINORERP.AutoMapper;
 using RUINORERP.Business;
 using RUINORERP.Business.Processor;
@@ -1217,6 +1218,7 @@ namespace RUINORERP.UI.BaseForm
             // _UCOutlookGridAnalysis1.InvisibleCols = ExpressionHelper.ExpressionListToStringList(MasterInvisibleCols);
             // _UCOutlookGridAnalysis1.ColNameDataDictionary = MasterColNameDataDictionary;
 
+          
             KryptonPage page = NewPage(NavParts.结果分析1.ToString(), 1, _UCOutlookGridAnalysis1);
             //page.ClearFlags(KryptonPageFlags.All);
             // Document pages cannot be docked or auto hidden
@@ -1224,7 +1226,7 @@ namespace RUINORERP.UI.BaseForm
             return page;
         }
 
-
+    
         #endregion
 
         #region  分析2

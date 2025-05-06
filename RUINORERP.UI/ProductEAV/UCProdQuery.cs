@@ -1274,11 +1274,16 @@ namespace RUINORERP.UI.ProductEAV
 
         private void btnCancel_Click(object sender, EventArgs e)
         {
+            //CloseTheForm(thisform);
             //退出
-            Form frm = (this as Control).Parent.Parent as Form;
-            frm.DialogResult = DialogResult.OK;
-            frm.Close();
-            return;
+            //Form frm = (this as Control).Parent.Parent as Form;
+            //if (frm == null)
+            //{
+            //    frm = (this as Control).Parent.Parent.Parent as Form;
+            //}
+            //frm.DialogResult = DialogResult.OK;
+            //frm.Close();
+            //return;
         }
 
         private void chkMultiSelect_CheckedChanged(object sender, EventArgs e)

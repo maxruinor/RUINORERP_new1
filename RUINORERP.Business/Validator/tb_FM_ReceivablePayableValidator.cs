@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：04/30/2025 15:18:12
+// 时间：05/06/2025 10:30:43
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -40,6 +40,12 @@ namespace RUINORERP.Business
      
  RuleFor(tb_FM_ReceivablePayable =>tb_FM_ReceivablePayable.ARAPNo).MaximumLength(15).WithMessage("单据编号:不能超过最大长度,15.");
 
+ RuleFor(tb_FM_ReceivablePayable =>tb_FM_ReceivablePayable.SourceBizType).NotEmpty().When(x => x.SourceBizType.HasValue);
+
+ RuleFor(tb_FM_ReceivablePayable =>tb_FM_ReceivablePayable.SourceBill_ID).NotEmpty().When(x => x.SourceBill_ID.HasValue);
+
+ RuleFor(tb_FM_ReceivablePayable =>tb_FM_ReceivablePayable.SourceBillNO).MaximumLength(15).WithMessage("来源单号:不能超过最大长度,15.");
+
  RuleFor(tb_FM_ReceivablePayable =>tb_FM_ReceivablePayable.CustomerVendor_ID).Must(CheckForeignKeyValue).WithMessage("往来单位:下拉选择值不正确。");
 
  RuleFor(tb_FM_ReceivablePayable =>tb_FM_ReceivablePayable.Currency_ID).Must(CheckForeignKeyValue).WithMessage("币别:下拉选择值不正确。");
@@ -69,6 +75,8 @@ namespace RUINORERP.Business
 
  RuleFor(x => x.LocalBalanceAmount).PrecisionScale(19,4,true).WithMessage("未核销本币:小数位不能超过4。");
 
+
+ RuleFor(tb_FM_ReceivablePayable =>tb_FM_ReceivablePayable.Employee_ID).Must(CheckForeignKeyValue).WithMessage("经办人:下拉选择值不正确。");
 
  RuleFor(tb_FM_ReceivablePayable =>tb_FM_ReceivablePayable.DepartmentID).Must(CheckForeignKeyValueCanNull).WithMessage("部门:下拉选择值不正确。");
  RuleFor(tb_FM_ReceivablePayable =>tb_FM_ReceivablePayable.DepartmentID).NotEmpty().When(x => x.DepartmentID.HasValue);

@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：04/30/2025 15:18:10
+// 时间：05/06/2025 10:30:41
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -241,17 +241,17 @@ namespace RUINORERP.Model
                         }
         }
 
-        private int? _BizType;
+        private int? _SourceBizType;
         /// <summary>
         /// 来源业务
         /// </summary>
-        [AdvQueryAttribute(ColName = "BizType",ColDesc = "来源业务")] 
-        [SugarColumn(ColumnDataType = "int", SqlParameterDbType ="Int32",  ColumnName = "BizType" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "来源业务" )]
-        public int? BizType
+        [AdvQueryAttribute(ColName = "SourceBizType",ColDesc = "来源业务")] 
+        [SugarColumn(ColumnDataType = "int", SqlParameterDbType ="Int32",  ColumnName = "SourceBizType" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "来源业务" )]
+        public int? SourceBizType
         { 
-            get{return _BizType;}
+            get{return _SourceBizType;}
             set{
-            SetProperty(ref _BizType, value);
+            SetProperty(ref _SourceBizType, value);
                         }
         }
 

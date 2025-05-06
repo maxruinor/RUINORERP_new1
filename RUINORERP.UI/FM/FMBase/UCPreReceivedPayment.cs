@@ -184,7 +184,7 @@ namespace RUINORERP.UI.FM
             DataBindingHelper.BindData4TextBox<tb_FM_PreReceivedPayment>(entity, t => t.ExchangeRate.ToString(), txtExchangeRate, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4DataTime<tb_FM_PreReceivedPayment>(entity, t => t.PrePayDate, dtpPrePayDate, false);
             DataBindingHelper.BindData4TextBox<tb_FM_PreReceivedPayment>(entity, t => t.PrePaymentReason, txtPrePaymentReason, BindDataType4TextBox.Text, false);
-            DataBindingHelper.BindData4TextBox<tb_FM_PreReceivedPayment>(entity, t => t.BizType, txtBizType, BindDataType4TextBox.Qty, false);
+            DataBindingHelper.BindData4TextBox<tb_FM_PreReceivedPayment>(entity, t => t.SourceBizType, txtBizType, BindDataType4TextBox.Qty, false);
             DataBindingHelper.BindData4TextBox<tb_FM_PreReceivedPayment>(entity, t => t.SourceBill_ID, txtSourceBill_ID, BindDataType4TextBox.Qty, false);
             DataBindingHelper.BindData4TextBox<tb_FM_PreReceivedPayment>(entity, t => t.SourceBillNO, txtSourceBillNO, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_FM_PreReceivedPayment>(entity, t => t.ForeignPrepaidAmount.ToString(), txtForeignPrepaidAmount, BindDataType4TextBox.Money, false);

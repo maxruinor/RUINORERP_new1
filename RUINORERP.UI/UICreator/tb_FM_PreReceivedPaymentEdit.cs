@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：04/30/2025 15:18:08
+// 时间：05/06/2025 10:30:39
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -95,7 +95,7 @@ namespace RUINORERP.UI
                         entity.ExchangeRate = Decimal.Parse(txtExchangeRate.Text);
                         entity.PrePayDate = DateTime.Parse(txtPrePayDate.Text);
                         entity.PrePaymentReason = txtPrePaymentReason.Text ;
-                       entity.BizType = Int32.Parse(txtBizType.Text);
+                       entity.SourceBizType = Int32.Parse(txtSourceBizType.Text);
                         entity.SourceBill_ID = Int64.Parse(txtSourceBill_ID.Text);
                         entity.SourceBillNO = txtSourceBillNO.Text ;
                        entity.PrePaymentStatus = Int64.Parse(txtPrePaymentStatus.Text);
@@ -146,7 +146,7 @@ namespace RUINORERP.UI
            DataBindingHelper.BindData4TextBox<tb_FM_PreReceivedPayment>(entity, t => t.ExchangeRate.ToString(), txtExchangeRate, BindDataType4TextBox.Money,false);
            DataBindingHelper.BindData4DataTime<tb_FM_PreReceivedPayment>(entity, t => t.PrePayDate, dtpPrePayDate,false);
            DataBindingHelper.BindData4TextBox<tb_FM_PreReceivedPayment>(entity, t => t.PrePaymentReason, txtPrePaymentReason, BindDataType4TextBox.Text,false);
-           DataBindingHelper.BindData4TextBox<tb_FM_PreReceivedPayment>(entity, t => t.BizType, txtBizType, BindDataType4TextBox.Qty,false);
+           DataBindingHelper.BindData4TextBox<tb_FM_PreReceivedPayment>(entity, t => t.SourceBizType, txtSourceBizType, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4TextBox<tb_FM_PreReceivedPayment>(entity, t => t.SourceBill_ID, txtSourceBill_ID, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4TextBox<tb_FM_PreReceivedPayment>(entity, t => t.SourceBillNO, txtSourceBillNO, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_FM_PreReceivedPayment>(entity, t => t.PrePaymentStatus, txtPrePaymentStatus, BindDataType4TextBox.Qty,false);

@@ -20,6 +20,7 @@ using Krypton.Toolkit.Suite.Extended.Outlook.Grid;
 using Token = Krypton.Toolkit.Suite.Extended.Outlook.Grid.Token;
 using RUINORERP.Model;
 using FastReport.DevComponents.DotNetBar.Controls;
+using NPOI.SS.Formula.Functions;
 
 
 namespace RUINORERP.UI.BaseForm
@@ -342,7 +343,7 @@ namespace RUINORERP.UI.BaseForm
                         {
 
                         }
-                        if (value.GetType().Name=="DateTime")
+                        if (value.GetType().Name == "DateTime")
                         {
                             values[i] = value;
                         }
@@ -360,7 +361,7 @@ namespace RUINORERP.UI.BaseForm
                                 values[i] = value;
                             }
                         }
-                        
+
 
                     }
                     else
@@ -526,6 +527,13 @@ namespace RUINORERP.UI.BaseForm
                     GridRelated.GuideToForm(kryptonOutlookGrid1.Columns[e.ColumnIndex].Name, entity);
                 }
             }
+        }
+        private void kryptonOutlookGrid1_CellPainting(object sender, DataGridViewCellPaintingEventArgs e)
+        {
+            //if (kryptonOutlookGrid1.RowCount > 0)
+            //{
+            //    kryptonOutlookGrid1.TopLeftHeaderCell.Value = (kryptonOutlookGrid1.RowCount - 1).ToString("#");
+            //}
         }
     }
 }

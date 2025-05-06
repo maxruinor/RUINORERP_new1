@@ -1,4 +1,5 @@
 ﻿
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using RUINORERP.Global;
 using RUINORERP.Global.CustomAttribute;
@@ -90,8 +91,17 @@ namespace RUINORERP.Model
         {
             if (this.PropertyChanged != null && !SuppressNotifyPropertyChanged)
             {
-                this.PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
-                HasChanged = true;
+                try
+                {
+                    this.PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
+                    HasChanged = true;
+                }
+                catch (Exception ex)
+                {
+                     
+                    
+                }
+                
             }
         }
 

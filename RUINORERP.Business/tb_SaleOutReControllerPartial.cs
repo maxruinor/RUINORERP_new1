@@ -28,6 +28,8 @@ using RUINORERP.Model.CommonModel;
 using RUINORERP.Business.Security;
 using System.Windows.Interop;
 using SqlSugar;
+using RUINORERP.Global.EnumExt;
+using RUINORERP.Business.Processor;
 
 namespace RUINORERP.Business
 {
@@ -86,6 +88,23 @@ namespace RUINORERP.Business
                                         .Includes(t => t.tb_SaleOutDetails, c => c.tb_proddetail)
                                         .Includes(t => t.tb_saleorder, b => b.tb_SaleOrderDetails)
                                 .FirstAsync();
+
+                        if (entity.tb_saleout.TotalAmount < entity.TotalAmount || entity.tb_saleout.ForeignTotalAmount < entity.ForeignTotalAmount)
+                        {
+                            //特殊情况 要选择客户信息，还要进一步完善！TODO
+                            rrs.ErrorMsg = "退货金额不能大于出库金额。如果特殊情况，请单独使用【其他费用支出】完成退款。";
+                            _unitOfWorkManage.RollbackTran();
+                            rrs.Succeeded = false;
+                            return rrs;
+                        }
+
+                        if (entity.tb_saleout.TotalAmount > entity.TotalAmount || entity.tb_saleout.ForeignTotalAmount > entity.ForeignTotalAmount)
+                        {
+                            //特殊情况 要选择客户信息，还要进一步完善！TODO
+                            // "退货金额小于出库金额。。";
+                            //部分退款
+                        }
+
                     }
                 }
 
@@ -351,17 +370,78 @@ namespace RUINORERP.Business
                     //处理财务数据 退货退货
                     #region 销售退款 财务处理 不管什么情况都是生成红字应收【金额为负】
 
-                    if (entity.tb_saleout != null)
+                    //如果是有出库情况，则反冲。如果是没有出库情况。则生成付款单
+                    //退货单审核后生成红字应收单（负金额）
+                    var ctrpayable = _appContext.GetRequiredService<tb_FM_ReceivablePayableController<tb_FM_ReceivablePayable>>();
+                    ReturnMainSubResults<tb_FM_ReceivablePayable> results = await ctrpayable.CreateReceivablePayable(entity);
+                    if (results.Succeeded)
                     {
-                        var ctrpayable = _appContext.GetRequiredService<tb_FM_ReceivablePayableController<tb_FM_ReceivablePayable>>();
+                        tb_FM_ReceivablePayable returnpayable = results.ReturnObject;
+                        //如果这个客户要退款，则去找这个客户名下是否还有应收款。找到所有的。倒算自动红冲 余额
+                        var PositivePayableList = await ctrpayable.BaseQueryByWhereAsync(c => c.CustomerVendor_ID == returnpayable.CustomerVendor_ID
+                        && (c.ARAPStatus == (long)ARAPStatus.已生效 || c.ARAPStatus == (long)ARAPStatus.部分支付)
+                        &&
+                        (c.LocalBalanceAmount > 0 && c.ForeignBalanceAmount > 0)
+                        );
+                        PositivePayableList = PositivePayableList.OrderBy(c => c.Created_at.Value).ToList();
 
-                        ReturnMainSubResults<tb_FM_ReceivablePayable> results = await ctrpayable.CreateReceivablePayable(entity);
-                        if (results.Succeeded)
+                        for (int i = 0; i < PositivePayableList.Count; i++)
                         {
-                            //财务审核应收红单后 看如何核销
-                        }
-                    }
+                            var OriginalPayable = PositivePayableList[i];
+                            #region 如果原始应收没有核销付款，则直接生成 红字应收核销
 
+                            //判断 如果出库的应收金额和未核销余额一样。说明 客户还没有支付任何款，则可以直接全额红冲
+
+                            OriginalPayable.LocalBalanceAmount -= entity.TotalAmount;
+                            //-500 加上退款500 应该为0
+                            returnpayable.LocalBalanceAmount += entity.TotalAmount;
+
+                            OriginalPayable.ForeignBalanceAmount -= entity.ForeignTotalAmount;
+                            //-500 加上退款500 应该为0
+                            returnpayable.ForeignBalanceAmount += entity.ForeignTotalAmount;
+
+
+                            OriginalPayable.ARAPStatus = (long)ARAPStatus.已冲销;
+                            returnpayable.ARAPStatus = (long)ARAPStatus.已冲销;
+                            //生成核销记录证明正负抵消应收应付
+                            //生成一笔核销记录  应收红冲
+                            tb_FM_PaymentSettlementController<tb_FM_PaymentSettlement> settlementController = _appContext.GetRequiredService<tb_FM_PaymentSettlementController<tb_FM_PaymentSettlement>>();
+                            await settlementController.GenerateSettlement(OriginalPayable, returnpayable);
+
+                            await _unitOfWorkManage.GetDbClient().Updateable<tb_FM_ReceivablePayable>(OriginalPayable).ExecuteCommandAsync();
+                            await _unitOfWorkManage.GetDbClient().Updateable<tb_FM_ReceivablePayable>(returnpayable).ExecuteCommandAsync();
+
+                            #endregion
+                        }
+
+                        if (Math.Abs(returnpayable.LocalBalanceAmount) > 0 || Math.Abs(returnpayable.ForeignBalanceAmount) > 0)
+                        {
+                            var paymentController = _appContext.GetRequiredService<tb_FM_PaymentRecordController<tb_FM_PaymentRecord>>();
+                            #region 通过负数的应收，生成退款单
+
+                            //找到支付记录
+                            //通过负数的应收，生成退款单
+                            tb_FM_PaymentRecord paymentRecord = await paymentController.CreatePaymentRecord(returnpayable, false);
+                            //退款单生成成功等待 财务审核
+                            #endregion
+
+                        }
+                        else
+                        {
+                            entity.PayStatus = (int)PayStatus.全部付款;
+                        }
+
+                        //财务审核应收红单后 看如何核销
+                        /*
+                          生成退款单	- 手动录入：选择退款方式（现金/原支付渠道）	生成 退款单（RefundMaster），金额为退货金额，关联原收款单	退款单状态：草稿 → 财务审核 → 已审核
+                                                5. 更新资金账户	- 现金退款：直接减少现金账户余额
+                                                - 原渠道退款：生成红字收款单并关联银行流水	更新 PaymentDetail 或生成红字收款单（IsRed=1）	现金账户余额减少
+                                                红字收款单状态为 已审核
+
+                         */
+
+
+                    }
 
                     #endregion
                 }
@@ -422,6 +502,9 @@ namespace RUINORERP.Business
             }
 
         }
+
+
+
 
 
         /// <summary>
@@ -656,9 +739,78 @@ namespace RUINORERP.Business
                 AuthorizeController authorizeController = _appContext.GetRequiredService<AuthorizeController>();
                 if (authorizeController.EnableFinancialModule())
                 {
+                    //处理财务数据 退货退货
+                    #region 销售退款 财务处理 不管什么情况都是生成红字应收【金额为负】-------------反审
+
+                    //如果是有出库情况，则反冲。如果是没有出库情况。则生成付款单
+                    //退货单审核后生成红字应收单（负金额）
+                    var ctrpayable = _appContext.GetRequiredService<tb_FM_ReceivablePayableController<tb_FM_ReceivablePayable>>();
+
+                    //被冲销的 找回来
+                    var RetrunPayableList = await ctrpayable.BaseQueryByWhereAsync(c => c.CustomerVendor_ID == entity.CustomerVendor_ID
+                    && (c.ARAPStatus == (long)ARAPStatus.已冲销)
+                    && c.SourceBill_ID == entity.SaleOutRe_ID
+                    );
+
+                    var returnpayable = RetrunPayableList.FirstOrDefault();
+
+                    //找到审核时可能被冲销的正向应收清单，再加回去
+                    var PositivePayableList = await ctrpayable.BaseQueryByWhereAsync(c => c.CustomerVendor_ID == returnpayable.CustomerVendor_ID
+                      && c.ARAPStatus == (long)ARAPStatus.已冲销
+                      && (c.TotalLocalPayableAmount > 0 || c.TotalForeignPayableAmount > 0)
+                      );
+
+                    PositivePayableList = PositivePayableList.OrderBy(c => c.Created_at.Value).ToList();
+
+                    //反向加回去
+                    for (int i = 0; i < PositivePayableList.Count; i++)
+                    {
+                        var OriginalPayable = PositivePayableList[i];
+                        #region 如果原始应收没有核销付款，则直接生成 红字应收核销
+
+                        //判断 如果出库的应收金额和未核销余额一样。说明 客户还没有支付任何款，则可以直接全额红冲
+                        OriginalPayable.LocalBalanceAmount += entity.TotalAmount;
+
+                        returnpayable.LocalBalanceAmount -= entity.TotalAmount;
+
+                        OriginalPayable.ForeignBalanceAmount += entity.ForeignTotalAmount;
+
+                        returnpayable.ForeignBalanceAmount -= entity.ForeignTotalAmount;
+
+
+                        OriginalPayable.ARAPStatus = (long)ARAPStatus.已冲销;
+                        returnpayable.ARAPStatus = (long)ARAPStatus.已冲销;
+                        //生成核销记录证明正负抵消应收应付
+                        //生成一笔核销记录  应收红冲
+                        tb_FM_PaymentSettlementController<tb_FM_PaymentSettlement> settlementController = _appContext.GetRequiredService<tb_FM_PaymentSettlementController<tb_FM_PaymentSettlement>>();
+                        await settlementController.GenerateSettlement(OriginalPayable, returnpayable);
+
+                        await _unitOfWorkManage.GetDbClient().Updateable<tb_FM_ReceivablePayable>(OriginalPayable).ExecuteCommandAsync();
+                        await _unitOfWorkManage.GetDbClient().Updateable<tb_FM_ReceivablePayable>(returnpayable).ExecuteCommandAsync();
+                        #endregion
+                    }
+
+                    if (returnpayable.LocalBalanceAmount > 0 || returnpayable.ForeignBalanceAmount > 0)
+                    {
+                        var paymentController = _appContext.GetRequiredService<tb_FM_PaymentRecordController<tb_FM_PaymentRecord>>();
+                        #region 通过负数的应收，生成退款单
+
+                        //找到支付记录
+                        //通过负数的应收，生成退款单
+                        //tb_FM_PaymentRecord paymentRecord = await paymentController.CreatePaymentRecord(returnpayable, false);
+                        //退款单生成成功等待 财务审核
+                        #endregion
+
+                    }
+
+
+
+
+
+                    #endregion
                 }
 
-                    entity.ApprovalOpinions = "反审";
+                entity.ApprovalOpinions = "反审";
                 //后面已经修改为
                 entity.ApprovalResults = null;
                 entity.ApprovalStatus = (int)ApprovalStatus.未审核;

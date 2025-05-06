@@ -1,4 +1,7 @@
-﻿namespace RUINORERP.UI.BaseForm
+﻿using System;
+using System.Windows.Forms;
+
+namespace RUINORERP.UI.BaseForm
 {
     partial class UCBillOutlookGridAnalysis
     {
@@ -101,6 +104,7 @@
             this.kryptonOutlookGrid1.SubtotalColumns = ((System.Collections.Generic.List<string>)(resources.GetObject("kryptonOutlookGrid1.SubtotalColumns")));
             this.kryptonOutlookGrid1.TabIndex = 1;
             this.kryptonOutlookGrid1.CellDoubleClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.kryptonOutlookGrid1_CellDoubleClick);
+            this.kryptonOutlookGrid1.CellPainting+= new System.Windows.Forms.DataGridViewCellPaintingEventHandler(this.kryptonOutlookGrid1_CellPainting);
             this.kryptonOutlookGrid1.Resize += new System.EventHandler(this.OutlookGrid1_Resize);
             // 
             // UCBillOutlookGridAnalysis
@@ -124,6 +128,8 @@
             this.ResumeLayout(false);
 
         }
+
+   
 
         #endregion
 

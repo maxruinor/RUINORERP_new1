@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：04/30/2025 15:18:12
+// 时间：05/06/2025 10:30:43
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -62,6 +62,48 @@ namespace RUINORERP.Model
             get{return _ARAPNo;}
             set{
             SetProperty(ref _ARAPNo, value);
+                        }
+        }
+
+        private int? _SourceBizType;
+        /// <summary>
+        /// 来源业务
+        /// </summary>
+        [AdvQueryAttribute(ColName = "SourceBizType",ColDesc = "来源业务")] 
+        [SugarColumn(ColumnDataType = "int", SqlParameterDbType ="Int32",  ColumnName = "SourceBizType" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "来源业务" )]
+        public int? SourceBizType
+        { 
+            get{return _SourceBizType;}
+            set{
+            SetProperty(ref _SourceBizType, value);
+                        }
+        }
+
+        private long? _SourceBill_ID;
+        /// <summary>
+        /// 来源单据
+        /// </summary>
+        [AdvQueryAttribute(ColName = "SourceBill_ID",ColDesc = "来源单据")] 
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "SourceBill_ID" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "来源单据" )]
+        public long? SourceBill_ID
+        { 
+            get{return _SourceBill_ID;}
+            set{
+            SetProperty(ref _SourceBill_ID, value);
+                        }
+        }
+
+        private string _SourceBillNO;
+        /// <summary>
+        /// 来源单号
+        /// </summary>
+        [AdvQueryAttribute(ColName = "SourceBillNO",ColDesc = "来源单号")] 
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "SourceBillNO" ,Length=30,IsNullable = true,ColumnDescription = "来源单号" )]
+        public string SourceBillNO
+        { 
+            get{return _SourceBillNO;}
+            set{
+            SetProperty(ref _SourceBillNO, value);
                         }
         }
 
@@ -269,18 +311,16 @@ namespace RUINORERP.Model
         /// <summary>
         /// 经办人
         /// </summary>
-        [AdvQueryAttribute(ColName = "Employee_ID", ColDesc = "经办人")]
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType = "Int64", ColumnName = "Employee_ID", DecimalDigits = 0, IsNullable = false, ColumnDescription = "经办人")]
-        [FKRelationAttribute("tb_CustomerVendor", "Employee_ID")]
+        [AdvQueryAttribute(ColName = "Employee_ID",ColDesc = "经办人")] 
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Employee_ID" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "经办人" )]
+        [FKRelationAttribute("tb_Employee","Employee_ID")]
         public long Employee_ID
-        {
-            get { return _Employee_ID; }
-            set
-            {
-                SetProperty(ref _Employee_ID, value);
-            }
+        { 
+            get{return _Employee_ID;}
+            set{
+            SetProperty(ref _Employee_ID, value);
+                        }
         }
-
 
         private long? _DepartmentID;
         /// <summary>
@@ -564,6 +604,11 @@ namespace RUINORERP.Model
         //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(ProjectGroup_ID))]
         public virtual tb_ProjectGroup tb_projectgroup { get; set; }
+
+        [SugarColumn(IsIgnore = true)]
+        //[Browsable(false)] 打印报表时的数据源会不显示
+        [Navigate(NavigateType.OneToOne, nameof(Employee_ID))]
+        public virtual tb_Employee tb_employee { get; set; }
 
         [SugarColumn(IsIgnore = true)]
         //[Browsable(false)] 打印报表时的数据源会不显示

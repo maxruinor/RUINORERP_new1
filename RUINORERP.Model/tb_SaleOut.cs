@@ -179,10 +179,10 @@ namespace RUINORERP.Model
 
         private decimal _ShipCost = ((0));
         /// <summary>
-        /// 运费收入
+        /// 运费本币
         /// </summary>
-        [AdvQueryAttribute(ColName = "ShipCost", ColDesc = "运费收入")]
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType = "Decimal", ColumnName = "ShipCost", DecimalDigits = 4, IsNullable = false, ColumnDescription = "运费收入")]
+        [AdvQueryAttribute(ColName = "ShipCost", ColDesc = "运费本币")]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType = "Decimal", ColumnName = "ShipCost", DecimalDigits = 4, IsNullable = false, ColumnDescription = "运费本币")]
         public decimal ShipCost
         {
             get { return _ShipCost; }
@@ -191,13 +191,28 @@ namespace RUINORERP.Model
                 SetProperty(ref _ShipCost, value);
             }
         }
+        private decimal _ForeignShipCost = ((0));
+        /// <summary>
+        /// 运费外币
+        /// </summary>
+        [AdvQueryAttribute(ColName = "ForeignShipCost", ColDesc = "运费外币")]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType = "Decimal", ColumnName = "ForeignShipCost", DecimalDigits = 4, IsNullable = false, ColumnDescription = "运费外币")]
+        public decimal ForeignShipCost
+        {
+            get { return _ForeignShipCost; }
+            set
+            {
+                SetProperty(ref _ForeignShipCost, value);
+            }
+        }
+
 
         private decimal _FreightCost = ((0));
         /// <summary>
-        /// 运费成本
+        /// 运费成本本币
         /// </summary>
-        [AdvQueryAttribute(ColName = "FreightCost", ColDesc = "运费成本")]
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType = "Decimal", ColumnName = "FreightCost", DecimalDigits = 4, IsNullable = false, ColumnDescription = "运费成本")]
+        [AdvQueryAttribute(ColName = "FreightCost", ColDesc = "运费成本本币")]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType = "Decimal", ColumnName = "FreightCost", DecimalDigits = 4, IsNullable = false, ColumnDescription = "运费成本本币")]
         public decimal FreightCost
         {
             get { return _FreightCost; }
@@ -206,6 +221,22 @@ namespace RUINORERP.Model
                 SetProperty(ref _FreightCost, value);
             }
         }
+
+        private decimal _ForeignFreightCost = ((0));
+        /// <summary>
+        /// 运费成本外币
+        /// </summary>
+        [AdvQueryAttribute(ColName = "ForeignFreightCost", ColDesc = "运费成本外币")]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType = "Decimal", ColumnName = "ForeignFreightCost", DecimalDigits = 4, IsNullable = false, ColumnDescription = "运费成本外币")]
+        public decimal ForeignFreightCost
+        {
+            get { return _ForeignFreightCost; }
+            set
+            {
+                SetProperty(ref _ForeignFreightCost, value);
+            }
+        }
+
 
 
         private int _TotalQty = ((0));

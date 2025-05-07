@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：05/06/2025 10:30:39
+// 时间：05/07/2025 15:37:44
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -42,17 +42,17 @@ namespace RUINORERP.Business
 
  RuleFor(tb_FM_PaymentSettlement =>tb_FM_PaymentSettlement.SourceBizType).NotEmpty().When(x => x.SourceBizType.HasValue);
 
- RuleFor(tb_FM_PaymentSettlement =>tb_FM_PaymentSettlement.SourceBillID).NotEmpty().When(x => x.SourceBillID.HasValue);
+ RuleFor(tb_FM_PaymentSettlement =>tb_FM_PaymentSettlement.SourceBillId).NotEmpty().When(x => x.SourceBillId.HasValue);
 
- RuleFor(tb_FM_PaymentSettlement =>tb_FM_PaymentSettlement.SourceBillNO).MaximumLength(15).WithMessage("来源单据编号:不能超过最大长度,15.");
+ RuleFor(tb_FM_PaymentSettlement =>tb_FM_PaymentSettlement.SourceBillNo).MaximumLength(15).WithMessage("来源单据编号:不能超过最大长度,15.");
 
  RuleFor(x => x.ExchangeRate).PrecisionScale(18,6,true).WithMessage("汇率:小数位不能超过6。");
 
  RuleFor(tb_FM_PaymentSettlement =>tb_FM_PaymentSettlement.TargetBizType).NotEmpty().When(x => x.TargetBizType.HasValue);
 
- RuleFor(tb_FM_PaymentSettlement =>tb_FM_PaymentSettlement.TargetBillID).NotEmpty().When(x => x.TargetBillID.HasValue);
+ RuleFor(tb_FM_PaymentSettlement =>tb_FM_PaymentSettlement.TargetBillId).NotEmpty().When(x => x.TargetBillId.HasValue);
 
- RuleFor(tb_FM_PaymentSettlement =>tb_FM_PaymentSettlement.TargetBillNO).MaximumLength(15).WithMessage("目标单据编号:不能超过最大长度,15.");
+ RuleFor(tb_FM_PaymentSettlement =>tb_FM_PaymentSettlement.TargetBillNo).MaximumLength(15).WithMessage("目标单据编号:不能超过最大长度,15.");
 
 //***** 
  RuleFor(tb_FM_PaymentSettlement =>tb_FM_PaymentSettlement.ReceivePaymentType).NotNull().WithMessage("收付类型:不能为空。");

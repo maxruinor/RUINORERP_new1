@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：05/06/2025 10:30:42
+// 时间：05/07/2025 15:37:47
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -248,12 +248,14 @@ namespace RUINORERP.Business
             {
             
                              rs = await _unitOfWorkManage.GetDbClient().UpdateNav<tb_FM_ReceivablePayable>(entity as tb_FM_ReceivablePayable)
-                        .Include(m => m.tb_FM_ReceivablePayableDetails)
+                        .Include(m => m.tb_FM_StatementDetails)
+                    .Include(m => m.tb_FM_ReceivablePayableDetails)
                     .ExecuteCommandAsync();
                  }
         else    
         {
                         rs = await _unitOfWorkManage.GetDbClient().InsertNav<tb_FM_ReceivablePayable>(entity as tb_FM_ReceivablePayable)
+                .Include(m => m.tb_FM_StatementDetails)
                 .Include(m => m.tb_FM_ReceivablePayableDetails)
          
                 .ExecuteCommandAsync();
@@ -288,7 +290,8 @@ namespace RUINORERP.Business
         public async override Task<List<T>> BaseQueryByAdvancedNavAsync(bool useLike, object dto)
         {
             var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<tb_FM_ReceivablePayable>()
-                                .Includes(m => m.tb_FM_ReceivablePayableDetails)
+                                .Includes(m => m.tb_FM_StatementDetails)
+                        .Includes(m => m.tb_FM_ReceivablePayableDetails)
                                         .Where(useLike, dto);
             return await querySqlQueryable.ToListAsync()as List<T>;
         }
@@ -298,7 +301,8 @@ namespace RUINORERP.Business
         {
             tb_FM_ReceivablePayable entity = model as tb_FM_ReceivablePayable;
              bool rs = await _unitOfWorkManage.GetDbClient().DeleteNav<tb_FM_ReceivablePayable>(m => m.ARAPId== entity.ARAPId)
-                                .Include(m => m.tb_FM_ReceivablePayableDetails)
+                                .Include(m => m.tb_FM_StatementDetails)
+                        .Include(m => m.tb_FM_ReceivablePayableDetails)
                                         .ExecuteCommandAsync();
             if (rs)
             {
@@ -467,8 +471,10 @@ namespace RUINORERP.Business
                                .Includes(t => t.tb_customervendor )
                                .Includes(t => t.tb_projectgroup )
                                .Includes(t => t.tb_employee )
+                               .Includes(t => t.tb_fm_invoice )
                                .Includes(t => t.tb_department )
-                                            .Includes(t => t.tb_FM_ReceivablePayableDetails )
+                                            .Includes(t => t.tb_FM_StatementDetails )
+                                .Includes(t => t.tb_FM_ReceivablePayableDetails )
                         .ToListAsync();
             
             foreach (var item in list)
@@ -494,8 +500,10 @@ namespace RUINORERP.Business
                                .Includes(t => t.tb_customervendor )
                                .Includes(t => t.tb_projectgroup )
                                .Includes(t => t.tb_employee )
+                               .Includes(t => t.tb_fm_invoice )
                                .Includes(t => t.tb_department )
-                                            .Includes(t => t.tb_FM_ReceivablePayableDetails )
+                                            .Includes(t => t.tb_FM_StatementDetails )
+                                .Includes(t => t.tb_FM_ReceivablePayableDetails )
                         .ToListAsync();
             
             foreach (var item in list)
@@ -521,8 +529,10 @@ namespace RUINORERP.Business
                             .Includes(t => t.tb_customervendor )
                             .Includes(t => t.tb_projectgroup )
                             .Includes(t => t.tb_employee )
+                            .Includes(t => t.tb_fm_invoice )
                             .Includes(t => t.tb_department )
-                                        .Includes(t => t.tb_FM_ReceivablePayableDetails )
+                                        .Includes(t => t.tb_FM_StatementDetails )
+                            .Includes(t => t.tb_FM_ReceivablePayableDetails )
                         .ToList();
             
             foreach (var item in list)
@@ -565,8 +575,10 @@ namespace RUINORERP.Business
                             .Includes(t => t.tb_customervendor )
                             .Includes(t => t.tb_projectgroup )
                             .Includes(t => t.tb_employee )
+                            .Includes(t => t.tb_fm_invoice )
                             .Includes(t => t.tb_department )
-                                        .Includes(t => t.tb_FM_ReceivablePayableDetails )
+                                        .Includes(t => t.tb_FM_StatementDetails )
+                            .Includes(t => t.tb_FM_ReceivablePayableDetails )
                         .FirstAsync();
             if(entity!=null)
             {

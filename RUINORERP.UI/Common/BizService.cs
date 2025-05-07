@@ -38,7 +38,7 @@ namespace RUINORERP.UI.Common
         /// <param name="fromCurrencyID">外币</param>
         /// <param name="toCurrencyID">人民币</param>
         /// <returns></returns>
-        public static decimal? GetExchangeRateFromCache(long fromCurrencyID, long toCurrencyID)
+        public static decimal GetExchangeRateFromCache(long fromCurrencyID, long toCurrencyID)
         {
             List<tb_CurrencyExchangeRate> rates = new List<tb_CurrencyExchangeRate>();
 
@@ -62,7 +62,7 @@ namespace RUINORERP.UI.Common
             tb_CurrencyExchangeRate rate = rates.Where(m => m.BaseCurrencyID == fromCurrencyID && m.TargetCurrencyID == toCurrencyID).FirstOrDefault();
             if (rate == null)
             {
-                return null;
+                return 1;
             }
             else
             {

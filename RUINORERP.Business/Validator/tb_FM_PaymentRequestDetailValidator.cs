@@ -48,9 +48,9 @@ namespace RUINORERP.Business
 
  RuleFor(tb_FM_PaymentRequestDetail =>tb_FM_PaymentRequestDetail.SourceBill_BizType).NotEmpty().When(x => x.SourceBill_BizType.HasValue);
 
- RuleFor(tb_FM_PaymentRequestDetail =>tb_FM_PaymentRequestDetail.SourceBill_ID).NotEmpty().When(x => x.SourceBill_ID.HasValue);
+ RuleFor(tb_FM_PaymentRequestDetail =>tb_FM_PaymentRequestDetail.SourceBillId).NotEmpty().When(x => x.SourceBillId.HasValue);
 
- RuleFor(tb_FM_PaymentRequestDetail =>tb_FM_PaymentRequestDetail.SourceBillNO).MaximumLength(15).WithMessage("来源单号:不能超过最大长度,15.");
+ RuleFor(tb_FM_PaymentRequestDetail =>tb_FM_PaymentRequestDetail.SourceBillNo).MaximumLength(15).WithMessage("来源单号:不能超过最大长度,15.");
 
 
  RuleFor(tb_FM_PaymentRequestDetail =>tb_FM_PaymentRequestDetail.PayReasonItems).MaximumLength(100).WithMessage("付款项目/原因:不能超过最大长度,100.");

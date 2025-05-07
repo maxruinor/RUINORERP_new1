@@ -52,8 +52,8 @@ namespace RUINORERP.Business
  RuleFor(tb_SaleOrder =>tb_SaleOrder.Account_id).Must(CheckForeignKeyValueCanNull).WithMessage("收款账户:下拉选择值不正确。");
  RuleFor(tb_SaleOrder =>tb_SaleOrder.Account_id).NotEmpty().When(x => x.Account_id.HasValue);
 
- RuleFor(tb_SaleOrder =>tb_SaleOrder.Currency_ID).Must(CheckForeignKeyValueCanNull).WithMessage("币别:下拉选择值不正确。");
- RuleFor(tb_SaleOrder =>tb_SaleOrder.Currency_ID).NotEmpty().When(x => x.Currency_ID.HasValue);
+ RuleFor(tb_SaleOrder =>tb_SaleOrder.Currency_ID).Must(CheckForeignKeyValue).WithMessage("币别:下拉选择值不正确。");
+
 
  RuleFor(x => x.ExchangeRate).PrecisionScale(10,4,true).WithMessage("汇率:小数位不能超过4。");
 

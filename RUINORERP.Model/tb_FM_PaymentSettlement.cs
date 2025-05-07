@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：05/06/2025 10:30:39
+// 时间：05/07/2025 15:37:44
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -79,31 +79,31 @@ namespace RUINORERP.Model
                         }
         }
 
-        private long? _SourceBillID;
+        private long? _SourceBillId;
         /// <summary>
         /// 来源单据
         /// </summary>
-        [AdvQueryAttribute(ColName = "SourceBillID",ColDesc = "来源单据")] 
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "SourceBillID" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "来源单据" )]
-        public long? SourceBillID
+        [AdvQueryAttribute(ColName = "SourceBillId",ColDesc = "来源单据")] 
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "SourceBillId" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "来源单据" )]
+        public long? SourceBillId
         { 
-            get{return _SourceBillID;}
+            get{return _SourceBillId;}
             set{
-            SetProperty(ref _SourceBillID, value);
+            SetProperty(ref _SourceBillId, value);
                         }
         }
 
-        private string _SourceBillNO;
+        private string _SourceBillNo;
         /// <summary>
         /// 来源单据编号
         /// </summary>
-        [AdvQueryAttribute(ColName = "SourceBillNO",ColDesc = "来源单据编号")] 
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "SourceBillNO" ,Length=30,IsNullable = true,ColumnDescription = "来源单据编号" )]
-        public string SourceBillNO
+        [AdvQueryAttribute(ColName = "SourceBillNo",ColDesc = "来源单据编号")] 
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "SourceBillNo" ,Length=30,IsNullable = true,ColumnDescription = "来源单据编号" )]
+        public string SourceBillNo
         { 
-            get{return _SourceBillNO;}
+            get{return _SourceBillNo;}
             set{
-            SetProperty(ref _SourceBillNO, value);
+            SetProperty(ref _SourceBillNo, value);
                         }
         }
 
@@ -135,31 +135,31 @@ namespace RUINORERP.Model
                         }
         }
 
-        private long? _TargetBillID;
+        private long? _TargetBillId;
         /// <summary>
         /// 目标单据
         /// </summary>
-        [AdvQueryAttribute(ColName = "TargetBillID",ColDesc = "目标单据")] 
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "TargetBillID" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "目标单据" )]
-        public long? TargetBillID
+        [AdvQueryAttribute(ColName = "TargetBillId",ColDesc = "目标单据")] 
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "TargetBillId" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "目标单据" )]
+        public long? TargetBillId
         { 
-            get{return _TargetBillID;}
+            get{return _TargetBillId;}
             set{
-            SetProperty(ref _TargetBillID, value);
+            SetProperty(ref _TargetBillId, value);
                         }
         }
 
-        private string _TargetBillNO;
+        private string _TargetBillNo;
         /// <summary>
         /// 目标单据编号
         /// </summary>
-        [AdvQueryAttribute(ColName = "TargetBillNO",ColDesc = "目标单据编号")] 
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "TargetBillNO" ,Length=30,IsNullable = true,ColumnDescription = "目标单据编号" )]
-        public string TargetBillNO
+        [AdvQueryAttribute(ColName = "TargetBillNo",ColDesc = "目标单据编号")] 
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "TargetBillNo" ,Length=30,IsNullable = true,ColumnDescription = "目标单据编号" )]
+        public string TargetBillNo
         { 
-            get{return _TargetBillNO;}
+            get{return _TargetBillNo;}
             set{
-            SetProperty(ref _TargetBillNO, value);
+            SetProperty(ref _TargetBillNo, value);
                         }
         }
 

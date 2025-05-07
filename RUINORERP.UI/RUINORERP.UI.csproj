@@ -606,6 +606,12 @@
     <Compile Include="BI\UCProjectGroupAssigneeEmployees.Designer.cs">
       <DependentUpon>UCProjectGroupAssigneeEmployees.cs</DependentUpon>
     </Compile>
+    <Compile Include="FM\FMBase\UCPaymentRecord.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="FM\FMBase\UCPaymentRecord.Designer.cs">
+      <DependentUpon>UCPaymentRecord.cs</DependentUpon>
+    </Compile>
     <Compile Include="FM\FMBase\UCReceivablePayableQuery.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -1529,12 +1535,6 @@
     </Compile>
     <Compile Include="FM\UCPreReceived.Designer.cs">
       <DependentUpon>UCPreReceived.cs</DependentUpon>
-    </Compile>
-    <Compile Include="FM\FMBase\UCPaymentRecord.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="FM\FMBase\UCPaymentRecord.Designer.cs">
-      <DependentUpon>UCPaymentRecord.cs</DependentUpon>
     </Compile>
     <Compile Include="FM\FMBase\UCPreReceivedPayment.cs">
       <SubType>UserControl</SubType>
@@ -3338,6 +3338,9 @@
     <EmbeddedResource Include="CRM\UCLeadsList.resx">
       <DependentUpon>UCLeadsList.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="FM\FMBase\UCPaymentRecord.resx">
+      <DependentUpon>UCPaymentRecord.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="FM\FMBase\UCReceivablePayableQuery.resx">
       <DependentUpon>UCReceivablePayableQuery.cs</DependentUpon>
     </EmbeddedResource>
@@ -3355,9 +3358,6 @@
     </EmbeddedResource>
     <EmbeddedResource Include="FM\UCPreReceived.resx">
       <DependentUpon>UCPreReceived.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="FM\FMBase\UCPaymentRecord.resx">
-      <DependentUpon>UCPaymentRecord.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="FM\FMBase\UCPreReceivedPayment.resx">
       <DependentUpon>UCPreReceivedPayment.cs</DependentUpon>

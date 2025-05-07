@@ -93,7 +93,7 @@ namespace RUINORERP.UI.PSI.SAL
                 {
                     entity.PrimaryKeyID = entity.SaleOut_MainID;
                     entity.ActionStatus = ActionStatus.加载;
-                    if (entity.Currency_ID.HasValue && entity.Currency_ID != AppContext.BaseCurrency.Currency_ID && entity.ExchangeRate.HasValue)
+                    if (entity.Currency_ID.HasValue && entity.Currency_ID != AppContext.BaseCurrency.Currency_ID)
                     {
                         lblExchangeRate.Visible = true;
                         txtExchangeRate.Visible = true;
@@ -213,9 +213,9 @@ namespace RUINORERP.UI.PSI.SAL
                                 //显示外币相关
                                 UIHelper.ControlForeignFieldInvisible<tb_SaleOut>(this, true);
                                 entity.ExchangeRate = BizService.GetExchangeRateFromCache(cv.Currency_ID, AppContext.BaseCurrency.Currency_ID);
-                                if (EditEntity.Currency_ID != AppContext.BaseCurrency.Currency_ID && EditEntity.ExchangeRate.HasValue)
+                                if (EditEntity.Currency_ID != AppContext.BaseCurrency.Currency_ID)
                                 {
-                                    EditEntity.ForeignTotalAmount = EditEntity.TotalAmount / EditEntity.ExchangeRate.Value;
+                                    EditEntity.ForeignTotalAmount = EditEntity.TotalAmount / EditEntity.ExchangeRate;
                                     //
                                     EditEntity.ForeignTotalAmount = Math.Round(EditEntity.ForeignTotalAmount, 2); // 四舍五入到 2 位小数
                                 }
@@ -229,7 +229,7 @@ namespace RUINORERP.UI.PSI.SAL
                                 UIHelper.ControlForeignFieldInvisible<tb_SaleOut>(this, false);
                                 lblExchangeRate.Visible = false;
                                 txtExchangeRate.Visible = false;
-                                entity.ExchangeRate = null;
+                                entity.ExchangeRate = 1;
                                 entity.ForeignTotalAmount = 0;
                             }
                         }
@@ -491,9 +491,9 @@ namespace RUINORERP.UI.PSI.SAL
 
                 EditEntity.TotalAmount = details.Sum(c => c.TransactionPrice * c.Quantity);
                 EditEntity.TotalAmount = EditEntity.TotalAmount + EditEntity.ShipCost;
-                if (EditEntity.Currency_ID.HasValue && EditEntity.Currency_ID != AppContext.BaseCurrency.Currency_ID && EditEntity.ExchangeRate.HasValue)
+                if (EditEntity.Currency_ID.HasValue && EditEntity.Currency_ID != AppContext.BaseCurrency.Currency_ID)
                 {
-                    EditEntity.ForeignTotalAmount = EditEntity.TotalAmount / EditEntity.ExchangeRate.Value;
+                    EditEntity.ForeignTotalAmount = EditEntity.TotalAmount / EditEntity.ExchangeRate;
                     //
                     EditEntity.ForeignTotalAmount = Math.Round(EditEntity.ForeignTotalAmount, 2); // 四舍五入到 2 位小数
                 }

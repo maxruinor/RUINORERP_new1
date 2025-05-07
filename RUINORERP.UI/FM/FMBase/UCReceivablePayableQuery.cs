@@ -165,7 +165,7 @@ namespace RUINORERP.UI.FM
             {
                 list.Add(new ContextMenuController("【转为付款单】", true, false, "NewSumDataGridView_转为收付款单"));
             }
-           // list.Add(new ContextMenuController("【生成对账单】", true, false, "NewSumDataGridView_生成对账单"));
+            // list.Add(new ContextMenuController("【生成对账单】", true, false, "NewSumDataGridView_生成对账单"));
             return list;
         }
         public override void BuildContextMenuController()
@@ -197,13 +197,13 @@ namespace RUINORERP.UI.FM
                 if (canConvert || item.ARAPStatus == (long)ARAPStatus.部分支付)
                 {
                     tb_FM_PaymentRecordController<tb_FM_PaymentRecord> paymentController = MainForm.Instance.AppContext.GetRequiredService<tb_FM_PaymentRecordController<tb_FM_PaymentRecord>>();
-                    tb_FM_PaymentRecord paymentRecord = await paymentController.CreatePaymentRecord(item, false);
+                    List<tb_FM_PaymentRecord> paymentRecords = await paymentController.CreatePaymentRecord(new List<tb_FM_ReceivablePayable> { item }, false);
                     MenuPowerHelper menuPowerHelper;
                     menuPowerHelper = Startup.GetFromFac<MenuPowerHelper>();
                     tb_MenuInfo RelatedMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble && m.EntityName == nameof(tb_FM_PaymentRecord) && m.BIBaseForm == "BaseBillEditGeneric`2").FirstOrDefault();
                     if (RelatedMenuInfo != null)
                     {
-                        menuPowerHelper.ExecuteEvents(RelatedMenuInfo, paymentRecord);
+                        menuPowerHelper.ExecuteEvents(RelatedMenuInfo, paymentRecords[0]);
                     }
                     return;
                 }
@@ -224,9 +224,9 @@ namespace RUINORERP.UI.FM
 
 
         //按客户生成对账单
-        private  void NewSumDataGridView_生成对账单(object sender, EventArgs e)
+        private void NewSumDataGridView_生成对账单(object sender, EventArgs e)
         {
-          
+
         }
 
         public override void BuildSummaryCols()
@@ -248,14 +248,14 @@ namespace RUINORERP.UI.FM
         {
             base.MasterInvisibleCols.Add(c => c.ARAPId);
             base.MasterInvisibleCols.Add(c => c.ReceivePaymentType);
-            base.MasterInvisibleCols.Add(c => c.SourceBill_ID);
+            base.ChildInvisibleCols.Add(c => c.SourceBillId);
             if (PaymentType == ReceivePaymentType.收款)
             {
                 //应收款，不需要对方的收款信息。收款才要显示
                 base.MasterInvisibleCols.Add(c => c.PayeeInfoID);
                 base.MasterInvisibleCols.Add(c => c.PayeeAccountNo);
             }
-       
+
         }
 
 
@@ -269,9 +269,9 @@ namespace RUINORERP.UI.FM
         {
 
             #region 双击单号后按业务类型查询显示对应业务窗体
-            base._UCBillMasterQuery.GridRelated.ComplexType = true;
+            base._UCBillChildQuery.GridRelated.ComplexType = true;
             //由这个列来决定单号显示哪个的业务窗体
-            base._UCBillMasterQuery.GridRelated.SetComplexTargetField<tb_FM_ReceivablePayable>(c => c.SourceBizType, c => c.SourceBillNO);
+            base._UCBillChildQuery.GridRelated.SetComplexTargetField<tb_FM_ReceivablePayableDetail>(c => c.SourceBizType, c => c.SourceBillNo);
             BizTypeMapper mapper = new BizTypeMapper();
             //将枚举中的值循环
             foreach (var biztype in Enum.GetValues(typeof(BizType)))
@@ -284,7 +284,7 @@ namespace RUINORERP.UI.FM
                 ////这个参数中指定要双击的列单号。是来自另一组  一对一的指向关系
                 //因为后面代码去查找时，直接用的 从一个对象中找这个列的值。但是枚举显示的是名称。所以这里直接传入枚举的值。
                 KeyNamePair keyNamePair = new KeyNamePair(((int)((BizType)biztype)).ToString(), tableName.Name);
-                base._UCBillMasterQuery.GridRelated.SetRelatedInfo<tb_FM_ReceivablePayable>(c => c.SourceBillNO, keyNamePair);
+                base._UCBillChildQuery.GridRelated.SetRelatedInfo<tb_FM_ReceivablePayableDetail>(c => c.SourceBillNo, keyNamePair);
             }
             #endregion
 

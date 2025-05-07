@@ -167,7 +167,7 @@ namespace RUINORERP.UI.FM
 
         public override void BuildInvisibleCols()
         {
-            base.MasterInvisibleCols.Add(c => c.SourceBill_ID);
+            base.MasterInvisibleCols.Add(c => c.SourceBillId);
             base.MasterInvisibleCols.Add(c => c.ReceivePaymentType);
             if (PaymentType == ReceivePaymentType.收款)
             {
@@ -224,7 +224,7 @@ namespace RUINORERP.UI.FM
             }
             base._UCBillMasterQuery.GridRelated.ComplexType = true;
             //由这个列来决定单号显示哪个的业务窗体
-            base._UCBillMasterQuery.GridRelated.SetComplexTargetField<tb_FM_PreReceivedPayment>(c => c.SourceBizType, c => c.SourceBillNO);
+            base._UCBillMasterQuery.GridRelated.SetComplexTargetField<tb_FM_PreReceivedPayment>(c => c.SourceBizType, c => c.SourceBillNo);
             BizTypeMapper mapper = new BizTypeMapper();
             //将枚举中的值循环
             foreach (var biztype in Enum.GetValues(typeof(BizType)))
@@ -237,7 +237,7 @@ namespace RUINORERP.UI.FM
                 ////这个参数中指定要双击的列单号。是来自另一组  一对一的指向关系
                 //因为后面代码去查找时，直接用的 从一个对象中找这个列的值。但是枚举显示的是名称。所以这里直接传入枚举的值。
                 KeyNamePair keyNamePair = new KeyNamePair(((int)((BizType)biztype)).ToString(), tableName.Name);
-                base._UCBillMasterQuery.GridRelated.SetRelatedInfo<tb_FM_PreReceivedPayment>(c => c.SourceBillNO, keyNamePair);
+                base._UCBillMasterQuery.GridRelated.SetRelatedInfo<tb_FM_PreReceivedPayment>(c => c.SourceBillNo, keyNamePair);
             }
 
         }

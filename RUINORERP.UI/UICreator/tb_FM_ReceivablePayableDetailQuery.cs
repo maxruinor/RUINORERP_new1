@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：05/06/2025 10:30:44
+// 时间：05/07/2025 15:37:48
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -32,8 +32,6 @@ namespace RUINORERP.UI
      public tb_FM_ReceivablePayableDetailQuery() {
      
          
-        
-    
                 
         //==============
 
@@ -45,6 +43,14 @@ namespace RUINORERP.UI
        //===============
        
           
+    
+        
+    
+        
+    
+        
+    
+        
     
         
     

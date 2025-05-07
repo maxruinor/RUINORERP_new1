@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：05/06/2025 10:30:37
+// 时间：05/07/2025 15:37:41
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -43,45 +43,6 @@ namespace RUINORERP.Model.QueryDto
         { 
             get{return _PaymentNo;}
             set{SetProperty(ref _PaymentNo, value);}
-        }
-     
-
-        private int _SourceBizType;
-        /// <summary>
-        /// 来源业务
-        /// </summary>
-        [AdvQueryAttribute(ColName = "SourceBizType",ColDesc = "来源业务")]
-        [SugarColumn(ColumnDataType = "int",SqlParameterDbType ="Int32",ColumnName = "SourceBizType",IsNullable = false,ColumnDescription = "来源业务" )]
-        public int SourceBizType 
-        { 
-            get{return _SourceBizType;}
-            set{SetProperty(ref _SourceBizType, value);}
-        }
-     
-
-        private long _SourceBilllID;
-        /// <summary>
-        /// 来源单据
-        /// </summary>
-        [AdvQueryAttribute(ColName = "SourceBilllID",ColDesc = "来源单据")]
-        [SugarColumn(ColumnDataType = "bigint",SqlParameterDbType ="Int64",ColumnName = "SourceBilllID",IsNullable = false,ColumnDescription = "来源单据" )]
-        public long SourceBilllID 
-        { 
-            get{return _SourceBilllID;}
-            set{SetProperty(ref _SourceBilllID, value);}
-        }
-     
-
-        private string _SourceBillNO;
-        /// <summary>
-        /// 来源单号
-        /// </summary>
-        [AdvQueryAttribute(ColName = "SourceBillNO",ColDesc = "来源单号")]
-        [SugarColumn(ColumnDataType = "varchar",SqlParameterDbType ="String",ColumnName = "SourceBillNO",Length=30,IsNullable = false,ColumnDescription = "来源单号" )]
-        public string SourceBillNO 
-        { 
-            get{return _SourceBillNO;}
-            set{SetProperty(ref _SourceBillNO, value);}
         }
      
 
@@ -153,56 +114,43 @@ namespace RUINORERP.Model.QueryDto
         }
      
 
-        private long? _Currency_ID;
+        private long _Currency_ID;
         /// <summary>
         /// 币别
         /// </summary>
         [AdvQueryAttribute(ColName = "Currency_ID",ColDesc = "币别")]
-        [SugarColumn(ColumnDataType = "bigint",SqlParameterDbType ="Int64",ColumnName = "Currency_ID",IsNullable = true,ColumnDescription = "币别" )]
+        [SugarColumn(ColumnDataType = "bigint",SqlParameterDbType ="Int64",ColumnName = "Currency_ID",IsNullable = false,ColumnDescription = "币别" )]
         [FKRelationAttribute("tb_Currency","Currency_ID")]
-        public long? Currency_ID 
+        public long Currency_ID 
         { 
             get{return _Currency_ID;}
             set{SetProperty(ref _Currency_ID, value);}
         }
      
 
-        private decimal? _ExchangeRate;
-        /// <summary>
-        /// 汇率
-        /// </summary>
-        [AdvQueryAttribute(ColName = "ExchangeRate",ColDesc = "汇率")]
-        [SugarColumn(ColumnDataType = "decimal",SqlParameterDbType ="Decimal",ColumnName = "ExchangeRate",IsNullable = true,ColumnDescription = "汇率" )]
-        public decimal? ExchangeRate 
-        { 
-            get{return _ExchangeRate;}
-            set{SetProperty(ref _ExchangeRate, value);}
-        }
-     
-
-        private decimal _ForeignPaidAmount= ((0));
+        private decimal _TotalForeignAmount= ((0));
         /// <summary>
         /// 支付金额外币
         /// </summary>
-        [AdvQueryAttribute(ColName = "ForeignPaidAmount",ColDesc = "支付金额外币")]
-        [SugarColumn(ColumnDataType = "money",SqlParameterDbType ="Decimal",ColumnName = "ForeignPaidAmount",IsNullable = false,ColumnDescription = "支付金额外币" )]
-        public decimal ForeignPaidAmount 
+        [AdvQueryAttribute(ColName = "TotalForeignAmount",ColDesc = "支付金额外币")]
+        [SugarColumn(ColumnDataType = "money",SqlParameterDbType ="Decimal",ColumnName = "TotalForeignAmount",IsNullable = false,ColumnDescription = "支付金额外币" )]
+        public decimal TotalForeignAmount 
         { 
-            get{return _ForeignPaidAmount;}
-            set{SetProperty(ref _ForeignPaidAmount, value);}
+            get{return _TotalForeignAmount;}
+            set{SetProperty(ref _TotalForeignAmount, value);}
         }
      
 
-        private decimal _LocalPaidAmount= ((0));
+        private decimal _TotalLocalAmount= ((0));
         /// <summary>
         /// 支付金额本币
         /// </summary>
-        [AdvQueryAttribute(ColName = "LocalPaidAmount",ColDesc = "支付金额本币")]
-        [SugarColumn(ColumnDataType = "money",SqlParameterDbType ="Decimal",ColumnName = "LocalPaidAmount",IsNullable = false,ColumnDescription = "支付金额本币" )]
-        public decimal LocalPaidAmount 
+        [AdvQueryAttribute(ColName = "TotalLocalAmount",ColDesc = "支付金额本币")]
+        [SugarColumn(ColumnDataType = "money",SqlParameterDbType ="Decimal",ColumnName = "TotalLocalAmount",IsNullable = false,ColumnDescription = "支付金额本币" )]
+        public decimal TotalLocalAmount 
         { 
-            get{return _LocalPaidAmount;}
-            set{SetProperty(ref _LocalPaidAmount, value);}
+            get{return _TotalLocalAmount;}
+            set{SetProperty(ref _TotalLocalAmount, value);}
         }
      
 
@@ -230,34 +178,6 @@ namespace RUINORERP.Model.QueryDto
         { 
             get{return _Employee_ID;}
             set{SetProperty(ref _Employee_ID, value);}
-        }
-     
-
-        private long? _DepartmentID;
-        /// <summary>
-        /// 部门
-        /// </summary>
-        [AdvQueryAttribute(ColName = "DepartmentID",ColDesc = "部门")]
-        [SugarColumn(ColumnDataType = "bigint",SqlParameterDbType ="Int64",ColumnName = "DepartmentID",IsNullable = true,ColumnDescription = "部门" )]
-        [FKRelationAttribute("tb_Department","DepartmentID")]
-        public long? DepartmentID 
-        { 
-            get{return _DepartmentID;}
-            set{SetProperty(ref _DepartmentID, value);}
-        }
-     
-
-        private long? _ProjectGroup_ID;
-        /// <summary>
-        /// 项目组
-        /// </summary>
-        [AdvQueryAttribute(ColName = "ProjectGroup_ID",ColDesc = "项目组")]
-        [SugarColumn(ColumnDataType = "bigint",SqlParameterDbType ="Int64",ColumnName = "ProjectGroup_ID",IsNullable = true,ColumnDescription = "项目组" )]
-        [FKRelationAttribute("tb_ProjectGroup","ProjectGroup_ID")]
-        public long? ProjectGroup_ID 
-        { 
-            get{return _ProjectGroup_ID;}
-            set{SetProperty(ref _ProjectGroup_ID, value);}
         }
      
 

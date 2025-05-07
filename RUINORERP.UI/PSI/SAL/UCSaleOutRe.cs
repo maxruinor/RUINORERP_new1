@@ -78,7 +78,7 @@ namespace RUINORERP.UI.PSI.SAL
 
                 return;
             }
-
+            base.EditEntity = entity;
             if (entity != null)
             {
                 if (entity.SaleOutRe_ID > 0)

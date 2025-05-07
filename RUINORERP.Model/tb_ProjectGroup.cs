@@ -267,13 +267,7 @@ namespace RUINORERP.Model
         //ProjectGroup_ID.FK_SALEORDER_REF_PROJECTGROUP)
         //tb_ProjectGroup.ProjectGroup_ID)
 
-        //[Browsable(false)]打印报表时的数据源会不显示
-        [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_FM_PaymentRecord.ProjectGroup_ID))]
-        public virtual List<tb_FM_PaymentRecord> tb_FM_PaymentRecords { get; set; }
-        //tb_FM_PaymentRecord.ProjectGroup_ID)
-        //ProjectGroup_ID.FK_FM_PAYMENTRECORD_REF_PROJECTGROUP)
-        //tb_ProjectGroup.ProjectGroup_ID)
+       
 
         //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]

@@ -185,8 +185,8 @@ namespace RUINORERP.UI.FM
             DataBindingHelper.BindData4DataTime<tb_FM_PreReceivedPayment>(entity, t => t.PrePayDate, dtpPrePayDate, false);
             DataBindingHelper.BindData4TextBox<tb_FM_PreReceivedPayment>(entity, t => t.PrePaymentReason, txtPrePaymentReason, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_FM_PreReceivedPayment>(entity, t => t.SourceBizType, txtBizType, BindDataType4TextBox.Qty, false);
-            DataBindingHelper.BindData4TextBox<tb_FM_PreReceivedPayment>(entity, t => t.SourceBill_ID, txtSourceBill_ID, BindDataType4TextBox.Qty, false);
-            DataBindingHelper.BindData4TextBox<tb_FM_PreReceivedPayment>(entity, t => t.SourceBillNO, txtSourceBillNO, BindDataType4TextBox.Text, false);
+            DataBindingHelper.BindData4TextBox<tb_FM_PreReceivedPayment>(entity, t => t.SourceBillId, txtSourceBillId, BindDataType4TextBox.Qty, false);
+            DataBindingHelper.BindData4TextBox<tb_FM_PreReceivedPayment>(entity, t => t.SourceBillNo, txtSourceBillNo, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_FM_PreReceivedPayment>(entity, t => t.ForeignPrepaidAmount.ToString(), txtForeignPrepaidAmount, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4TextBox<tb_FM_PreReceivedPayment>(entity, t => t.LocalPrepaidAmount.ToString(), txtLocalPrepaidAmount, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4TextBox<tb_FM_PreReceivedPayment>(entity, t => t.ForeignPaidAmount.ToString(), txtForeignPaidAmount, BindDataType4TextBox.Money, false);
@@ -493,7 +493,7 @@ namespace RUINORERP.UI.FM
                     SaveResult = await base.Save(EditEntity);
                     if (SaveResult.Succeeded)
                     {
-                        MainForm.Instance.PrintInfoLog($"保存成功,{EditEntity.SourceBillNO}。");
+                        MainForm.Instance.PrintInfoLog($"保存成功,{EditEntity.SourceBillNo}。");
                     }
                     else
                     {

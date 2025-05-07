@@ -110,31 +110,31 @@ namespace RUINORERP.Model
                         }
         }
 
-        private long? _SourceBill_ID;
+        private long? _SourceBillId;
         /// <summary>
         /// 来源单据
         /// </summary>
-        [AdvQueryAttribute(ColName = "SourceBill_ID",ColDesc = "来源单据")] 
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "SourceBill_ID" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "来源单据" )]
-        public long? SourceBill_ID
+        [AdvQueryAttribute(ColName = "SourceBillId",ColDesc = "来源单据")] 
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "SourceBillId" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "来源单据" )]
+        public long? SourceBillId
         { 
-            get{return _SourceBill_ID;}
+            get{return _SourceBillId;}
             set{
-            SetProperty(ref _SourceBill_ID, value);
+            SetProperty(ref _SourceBillId, value);
                         }
         }
 
-        private string _SourceBillNO;
+        private string _SourceBillNo;
         /// <summary>
         /// 来源单号
         /// </summary>
-        [AdvQueryAttribute(ColName = "SourceBillNO",ColDesc = "来源单号")] 
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "SourceBillNO" ,Length=30,IsNullable = true,ColumnDescription = "来源单号" )]
-        public string SourceBillNO
+        [AdvQueryAttribute(ColName = "SourceBillNo",ColDesc = "来源单号")] 
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "SourceBillNo" ,Length=30,IsNullable = true,ColumnDescription = "来源单号" )]
+        public string SourceBillNo
         { 
-            get{return _SourceBillNO;}
+            get{return _SourceBillNo;}
             set{
-            SetProperty(ref _SourceBillNO, value);
+            SetProperty(ref _SourceBillNo, value);
                         }
         }
 

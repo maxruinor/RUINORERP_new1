@@ -1861,12 +1861,13 @@ namespace RUINORERP.UI.BaseForm
                 RevertCommand command = new RevertCommand();
                 //缓存当前编辑的对象。如果撤销就回原来的值
                 T oldobj = CloneHelper.DeepCloneObject<T>(EditEntity);
-
                 command.UndoOperation = delegate ()
                 {
                     //Undo操作会执行到的代码 意思是如果退审核，内存中审核的数据要变为空白（之前的样子）
                     CloneHelper.SetValues<T>(EditEntity, oldobj);
                 };
+
+
                 if (ae.ApprovalResults == true)
                 {
                     //审核了。数据状态要更新为
@@ -2038,6 +2039,16 @@ namespace RUINORERP.UI.BaseForm
             frm.BindData(ae);
             if (frm.ShowDialog() == DialogResult.OK)
             {
+                RevertCommand command = new RevertCommand();
+                //缓存当前编辑的对象。如果撤销就回原来的值
+                T oldobj = CloneHelper.DeepCloneObject<T>(EditEntity);
+                command.UndoOperation = delegate ()
+                {
+                    //Undo操作会执行到的代码 意思是如果取消反审，内存中反审核的数据要变为空白（之前的样子）
+                    CloneHelper.SetValues<T>(EditEntity, oldobj);
+                };
+                //保存旧值要在下面更新值前
+
                 //中间中的所有字段，都给值到单据主表中，后面需要处理审核历史这种再完善
                 PropertyInfo[] array_property = ae.GetType().GetProperties();
                 {
@@ -2073,14 +2084,7 @@ namespace RUINORERP.UI.BaseForm
                     }
                 }
 
-                RevertCommand command = new RevertCommand();
-                //缓存当前编辑的对象。如果撤销就回原来的值
-                T oldobj = CloneHelper.DeepCloneObject<T>(EditEntity);
-                command.UndoOperation = delegate ()
-                {
-                    //Undo操作会执行到的代码 意思是如果取消反审，内存中反审核的数据要变为空白（之前的样子）
-                    CloneHelper.SetValues<T>(EditEntity, oldobj);
-                };
+
 
                 ReturnResults<T> rmr = new ReturnResults<T>();
                 BaseController<T> ctr = Startup.GetFromFacByName<BaseController<T>>(typeof(T).Name + "Controller");

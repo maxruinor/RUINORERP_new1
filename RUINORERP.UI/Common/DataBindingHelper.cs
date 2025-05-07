@@ -1323,7 +1323,7 @@ namespace RUINORERP.UI.Common
             Binding binddata = null;
             if (SyncUI)
             {
-                binddata = new Binding("Checked", entity, key, true, DataSourceUpdateMode.OnValidation);
+                binddata = new Binding("Checked", entity, key, true, DataSourceUpdateMode.OnPropertyChanged);
             }
             else
             {
@@ -1576,7 +1576,9 @@ namespace RUINORERP.UI.Common
             //else
             //{
             //    //单向绑定 应用于加载
-            depa = new Binding("Text", entity, textField, true, DataSourceUpdateMode.OnValidation);
+            //depa = new Binding("Text", entity, textField, true, DataSourceUpdateMode.OnValidation);
+
+            depa = new Binding("Text", entity, textField, true, DataSourceUpdateMode.OnPropertyChanged);
             //}
 
             switch (type)

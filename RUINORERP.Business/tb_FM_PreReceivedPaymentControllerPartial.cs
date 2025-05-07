@@ -70,15 +70,17 @@ namespace RUINORERP.Business
                 // 开启事务，保证数据一致性
                 _unitOfWorkManage.BeginTran();
 
-                //注意，反审是将只有收款单没有审核前，删除
+                //注意，反审 将对应的预付生成的收款单，只有收款单没有审核前，删除
                 //删除
                 if (entity.ReceivePaymentType == (int)ReceivePaymentType.收款)
                 {
-                    await _appContext.Db.Deleteable<tb_FM_PaymentRecord>().Where(c => c.SourceBilllID == entity.PreRPID && c.SourceBizType == (int)BizType.预收款单).ExecuteCommandAsync();
+                    await _appContext.Db.Deleteable<tb_FM_PaymentRecord>()
+                        .Where(c => (c.PaymentStatus == (long)PaymentStatus.草稿 || c.PaymentStatus == (long)PaymentStatus.待审核) && c.tb_FM_PaymentRecordDetails.Any(d => d.SourceBilllId == entity.PreRPID && d.SourceBizType == (int)BizType.预收款单)).ExecuteCommandAsync();
                 }
                 else
                 {
-                    await _appContext.Db.Deleteable<tb_FM_PaymentRecord>().Where(c => c.SourceBilllID == entity.PreRPID && c.SourceBizType == (int)BizType.预付款单).ExecuteCommandAsync();
+                    await _appContext.Db.Deleteable<tb_FM_PaymentRecord>()
+                        .Where(c => (c.PaymentStatus == (long)PaymentStatus.草稿 || c.PaymentStatus == (long)PaymentStatus.待审核) && c.tb_FM_PaymentRecordDetails.Any(d => d.SourceBilllId == entity.PreRPID && d.SourceBizType == (int)BizType.预付款单)).ExecuteCommandAsync();
                 }
                 entity.PrePaymentStatus = (long)PrePaymentStatus.草稿;
                 entity.ApprovalResults = false;

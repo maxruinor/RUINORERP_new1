@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：05/06/2025 10:30:36
+// 时间：05/07/2025 15:37:40
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -247,22 +247,17 @@ namespace RUINORERP.Business
             if (entity.PaymentId > 0)
             {
             
-                                 var result= await _unitOfWorkManage.GetDbClient().Updateable<tb_FM_PaymentRecord>(entity as tb_FM_PaymentRecord)
+                             rs = await _unitOfWorkManage.GetDbClient().UpdateNav<tb_FM_PaymentRecord>(entity as tb_FM_PaymentRecord)
+                        .Include(m => m.tb_FM_PaymentRecordDetails)
                     .ExecuteCommandAsync();
-                    if (result > 0)
-                    {
-                        rs = true;
-                    }
-            }
+                 }
         else    
         {
-                                  var result= await _unitOfWorkManage.GetDbClient().Insertable<tb_FM_PaymentRecord>(entity as tb_FM_PaymentRecord)
-                    .ExecuteReturnSnowflakeIdAsync();
-                    if (result > 0)
-                    {
-                        rs = true;
-                    }
-                                              
+                        rs = await _unitOfWorkManage.GetDbClient().InsertNav<tb_FM_PaymentRecord>(entity as tb_FM_PaymentRecord)
+                .Include(m => m.tb_FM_PaymentRecordDetails)
+         
+                .ExecuteCommandAsync();
+                                          
                      
         }
         
@@ -293,9 +288,8 @@ namespace RUINORERP.Business
         public async override Task<List<T>> BaseQueryByAdvancedNavAsync(bool useLike, object dto)
         {
             var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<tb_FM_PaymentRecord>()
-                                //这里一般是子表，或没有一对多外键的情况 ，用自动的只是为了语法正常一般不会调用这个方法
-                .IncludesAllFirstLayer()//自动更新导航 只能两层。这里项目中有时会失效，具体看文档
-                                .Where(useLike, dto);
+                                .Includes(m => m.tb_FM_PaymentRecordDetails)
+                                        .Where(useLike, dto);
             return await querySqlQueryable.ToListAsync()as List<T>;
         }
 
@@ -304,9 +298,8 @@ namespace RUINORERP.Business
         {
             tb_FM_PaymentRecord entity = model as tb_FM_PaymentRecord;
              bool rs = await _unitOfWorkManage.GetDbClient().DeleteNav<tb_FM_PaymentRecord>(m => m.PaymentId== entity.PaymentId)
-                                //这里一般是子表，或没有一对多外键的情况 ，用自动的只是为了语法正常一般不会调用这个方法
-                .IncludesAllFirstLayer()//自动更新导航 只能两层。这里项目中有时会失效，具体看文档
-                                .ExecuteCommandAsync();
+                                .Include(m => m.tb_FM_PaymentRecordDetails)
+                                        .ExecuteCommandAsync();
             if (rs)
             {
                 //////生成时暂时只考虑了一个主键的情况
@@ -470,13 +463,12 @@ namespace RUINORERP.Business
             List<tb_FM_PaymentRecord> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_FM_PaymentRecord>()
                                .Includes(t => t.tb_currency )
                                .Includes(t => t.tb_customervendor )
-                               .Includes(t => t.tb_department )
                                .Includes(t => t.tb_employee )
                                .Includes(t => t.tb_fm_payeeinfo )
                                .Includes(t => t.tb_paymentmethod )
-                               .Includes(t => t.tb_projectgroup )
                                .Includes(t => t.tb_fm_account )
-                                    .ToListAsync();
+                                            .Includes(t => t.tb_FM_PaymentRecordDetails )
+                        .ToListAsync();
             
             foreach (var item in list)
             {
@@ -497,13 +489,12 @@ namespace RUINORERP.Business
             List<tb_FM_PaymentRecord> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_FM_PaymentRecord>().Where(exp)
                                .Includes(t => t.tb_currency )
                                .Includes(t => t.tb_customervendor )
-                               .Includes(t => t.tb_department )
                                .Includes(t => t.tb_employee )
                                .Includes(t => t.tb_fm_payeeinfo )
                                .Includes(t => t.tb_paymentmethod )
-                               .Includes(t => t.tb_projectgroup )
                                .Includes(t => t.tb_fm_account )
-                                    .ToListAsync();
+                                            .Includes(t => t.tb_FM_PaymentRecordDetails )
+                        .ToListAsync();
             
             foreach (var item in list)
             {
@@ -524,13 +515,12 @@ namespace RUINORERP.Business
             List<tb_FM_PaymentRecord> list = _unitOfWorkManage.GetDbClient().Queryable<tb_FM_PaymentRecord>().Where(exp)
                             .Includes(t => t.tb_currency )
                             .Includes(t => t.tb_customervendor )
-                            .Includes(t => t.tb_department )
                             .Includes(t => t.tb_employee )
                             .Includes(t => t.tb_fm_payeeinfo )
                             .Includes(t => t.tb_paymentmethod )
-                            .Includes(t => t.tb_projectgroup )
                             .Includes(t => t.tb_fm_account )
-                                    .ToList();
+                                        .Includes(t => t.tb_FM_PaymentRecordDetails )
+                        .ToList();
             
             foreach (var item in list)
             {
@@ -568,13 +558,12 @@ namespace RUINORERP.Business
             tb_FM_PaymentRecord entity = await _unitOfWorkManage.GetDbClient().Queryable<tb_FM_PaymentRecord>().Where(w => w.PaymentId == (long)id)
                              .Includes(t => t.tb_currency )
                             .Includes(t => t.tb_customervendor )
-                            .Includes(t => t.tb_department )
                             .Includes(t => t.tb_employee )
                             .Includes(t => t.tb_fm_payeeinfo )
                             .Includes(t => t.tb_paymentmethod )
-                            .Includes(t => t.tb_projectgroup )
                             .Includes(t => t.tb_fm_account )
-                                    .FirstAsync();
+                                        .Includes(t => t.tb_FM_PaymentRecordDetails )
+                        .FirstAsync();
             if(entity!=null)
             {
                 entity.HasChanged = false;

@@ -40,7 +40,7 @@ using LiveChartsCore.Geo;
 namespace RUINORERP.UI.FM
 {
 
-    public partial class UCPaymentRecordQuery : BaseBillQueryMC<tb_FM_PaymentRecord, tb_FM_PaymentRecord>
+    public partial class UCPaymentRecordQuery : BaseBillQueryMC<tb_FM_PaymentRecord, tb_FM_PaymentRecordDetail>
     {
         public UCPaymentRecordQuery()
         {
@@ -53,7 +53,7 @@ namespace RUINORERP.UI.FM
 
 
         public override void AddExcludeMenuList()
-         {
+        {
             base.AddExcludeMenuList(MenuItemEnums.反结案);
             base.AddExcludeMenuList(MenuItemEnums.反审);
             base.AddExcludeMenuList(MenuItemEnums.结案);
@@ -76,21 +76,23 @@ namespace RUINORERP.UI.FM
 
         public override void BuildSummaryCols()
         {
-            base.MasterSummaryCols.Add(c => c.ForeignPaidAmount);
-            base.MasterSummaryCols.Add(c => c.LocalPaidAmount);
+            base.MasterSummaryCols.Add(c => c.TotalForeignAmount);
+            base.MasterSummaryCols.Add(c => c.TotalLocalAmount);
+            base.ChildSummaryCols.Add(c => c.ForeignAmount);
+            base.ChildSummaryCols.Add(c => c.LocalAmount);
         }
 
 
         public override void BuildInvisibleCols()
         {
-            base.MasterInvisibleCols.Add(c => c.SourceBilllID);
+            base.ChildInvisibleCols.Add(c => c.SourceBilllId);
             base.MasterInvisibleCols.Add(c => c.ReceivePaymentType);
             //如果不用户多币种，则不用显示外币
             AuthorizeController authorizeController = MainForm.Instance.AppContext.GetRequiredService<AuthorizeController>();
             if (authorizeController.EnableMultiCurrency())
             {
-                base.MasterInvisibleCols.Add(c => c.ForeignPaidAmount);
-                base.MasterInvisibleCols.Add(c => c.ExchangeRate);
+                base.MasterInvisibleCols.Add(c => c.TotalForeignAmount);
+                base.ChildInvisibleCols.Add(c => c.ExchangeRate);
             }
             base.BuildInvisibleCols();
             //base.ChildInvisibleCols.Add(c => c.SubtotalCostAmount);
@@ -136,9 +138,9 @@ namespace RUINORERP.UI.FM
         {
 
             #region 双击单号后按业务类型查询显示对应业务窗体
-            base._UCBillMasterQuery.GridRelated.ComplexType = true;
+            base._UCBillChildQuery.GridRelated.ComplexType = true;
             //由这个列来决定单号显示哪个的业务窗体
-            base._UCBillMasterQuery.GridRelated.SetComplexTargetField<tb_FM_PaymentRecord>(c => c.SourceBizType, c => c.SourceBillNO);
+            base._UCBillChildQuery.GridRelated.SetComplexTargetField<tb_FM_PaymentRecordDetail>(c => c.SourceBizType, c => c.SourceBillNo);
             BizTypeMapper mapper = new BizTypeMapper();
             //将枚举中的值循环
             foreach (var biztype in Enum.GetValues(typeof(BizType)))
@@ -151,7 +153,7 @@ namespace RUINORERP.UI.FM
                 ////这个参数中指定要双击的列单号。是来自另一组  一对一的指向关系
                 //因为后面代码去查找时，直接用的 从一个对象中找这个列的值。但是枚举显示的是名称。所以这里直接传入枚举的值。
                 KeyNamePair keyNamePair = new KeyNamePair(((int)((BizType)biztype)).ToString(), tableName.Name);
-                base._UCBillMasterQuery.GridRelated.SetRelatedInfo<tb_FM_PaymentRecord>(c => c.SourceBillNO, keyNamePair);
+                base._UCBillChildQuery.GridRelated.SetRelatedInfo<tb_FM_PaymentRecordDetail>(c => c.SourceBillNo, keyNamePair);
             }
             #endregion
 

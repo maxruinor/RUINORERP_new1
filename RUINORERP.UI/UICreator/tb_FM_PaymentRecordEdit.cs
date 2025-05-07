@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：05/06/2025 10:30:34
+// 时间：05/07/2025 15:37:38
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -64,12 +64,6 @@ namespace RUINORERP.UI
         
         
         
-        
-        
-        
-        
-        
-        
 
          }
 /*
@@ -78,22 +72,16 @@ namespace RUINORERP.UI
         {
         tb_FM_PaymentRecord entity = new tb_FM_PaymentRecord();
                      entity.PaymentNo = txtPaymentNo.Text ;
-                       entity.SourceBizType = Int32.Parse(txtSourceBizType.Text);
-                        entity.SourceBilllID = Int64.Parse(txtSourceBilllID.Text);
-                        entity.SourceBillNO = txtSourceBillNO.Text ;
                        entity.ReceivePaymentType = Int32.Parse(txtReceivePaymentType.Text);
                         entity.Account_id = Int64.Parse(txtAccount_id.Text);
                         entity.CustomerVendor_ID = Int64.Parse(txtCustomerVendor_ID.Text);
                         entity.PayeeInfoID = Int64.Parse(txtPayeeInfoID.Text);
                         entity.PayeeAccountNo = txtPayeeAccountNo.Text ;
                        entity.Currency_ID = Int64.Parse(txtCurrency_ID.Text);
-                        entity.ExchangeRate = Decimal.Parse(txtExchangeRate.Text);
-                        entity.ForeignPaidAmount = Decimal.Parse(txtForeignPaidAmount.Text);
-                        entity.LocalPaidAmount = Decimal.Parse(txtLocalPaidAmount.Text);
+                        entity.TotalForeignAmount = Decimal.Parse(txtTotalForeignAmount.Text);
+                        entity.TotalLocalAmount = Decimal.Parse(txtTotalLocalAmount.Text);
                         entity.PaymentDate = DateTime.Parse(txtPaymentDate.Text);
                         entity.Employee_ID = Int64.Parse(txtEmployee_ID.Text);
-                        entity.DepartmentID = Int64.Parse(txtDepartmentID.Text);
-                        entity.ProjectGroup_ID = Int64.Parse(txtProjectGroup_ID.Text);
                         entity.Paytype_ID = Int64.Parse(txtPaytype_ID.Text);
                         entity.PaymentStatus = Int64.Parse(txtPaymentStatus.Text);
                         entity.PaymentImagePath = txtPaymentImagePath.Text ;
@@ -124,22 +112,16 @@ namespace RUINORERP.UI
         {
         _EditEntity = entity;
                         DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.PaymentNo, txtPaymentNo, BindDataType4TextBox.Text,false);
-           DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.SourceBizType, txtSourceBizType, BindDataType4TextBox.Qty,false);
-           DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.SourceBilllID, txtSourceBilllID, BindDataType4TextBox.Qty,false);
-           DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.SourceBillNO, txtSourceBillNO, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.ReceivePaymentType, txtReceivePaymentType, BindDataType4TextBox.Qty,false);
           // DataBindingHelper.BindData4Cmb<tb_FM_Account>(entity, k => k.Account_id, v=>v.XXNAME, cmbAccount_id);
           // DataBindingHelper.BindData4Cmb<tb_CustomerVendor>(entity, k => k.CustomerVendor_ID, v=>v.XXNAME, cmbCustomerVendor_ID);
           // DataBindingHelper.BindData4Cmb<tb_FM_PayeeInfo>(entity, k => k.PayeeInfoID, v=>v.XXNAME, cmbPayeeInfoID);
            DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.PayeeAccountNo, txtPayeeAccountNo, BindDataType4TextBox.Text,false);
           // DataBindingHelper.BindData4Cmb<tb_Currency>(entity, k => k.Currency_ID, v=>v.XXNAME, cmbCurrency_ID);
-           DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.ExchangeRate.ToString(), txtExchangeRate, BindDataType4TextBox.Money,false);
-           DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.ForeignPaidAmount.ToString(), txtForeignPaidAmount, BindDataType4TextBox.Money,false);
-           DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.LocalPaidAmount.ToString(), txtLocalPaidAmount, BindDataType4TextBox.Money,false);
+           DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.TotalForeignAmount.ToString(), txtTotalForeignAmount, BindDataType4TextBox.Money,false);
+           DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.TotalLocalAmount.ToString(), txtTotalLocalAmount, BindDataType4TextBox.Money,false);
            DataBindingHelper.BindData4DataTime<tb_FM_PaymentRecord>(entity, t => t.PaymentDate, dtpPaymentDate,false);
           // DataBindingHelper.BindData4Cmb<tb_Employee>(entity, k => k.Employee_ID, v=>v.XXNAME, cmbEmployee_ID);
-          // DataBindingHelper.BindData4Cmb<tb_Department>(entity, k => k.DepartmentID, v=>v.XXNAME, cmbDepartmentID);
-          // DataBindingHelper.BindData4Cmb<tb_ProjectGroup>(entity, k => k.ProjectGroup_ID, v=>v.XXNAME, cmbProjectGroup_ID);
           // DataBindingHelper.BindData4Cmb<tb_PaymentMethod>(entity, k => k.Paytype_ID, v=>v.XXNAME, cmbPaytype_ID);
            DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.PaymentStatus, txtPaymentStatus, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.PaymentImagePath, txtPaymentImagePath, BindDataType4TextBox.Text,false);

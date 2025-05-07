@@ -55,9 +55,9 @@ namespace RUINORERP.Business
 
  RuleFor(tb_FM_GeneralLedger =>tb_FM_GeneralLedger.SourceBill_BizType).NotEmpty().When(x => x.SourceBill_BizType.HasValue);
 
- RuleFor(tb_FM_GeneralLedger =>tb_FM_GeneralLedger.SourceBill_ID).NotEmpty().When(x => x.SourceBill_ID.HasValue);
+ RuleFor(tb_FM_GeneralLedger =>tb_FM_GeneralLedger.SourceBillId).NotEmpty().When(x => x.SourceBillId.HasValue);
 
- RuleFor(tb_FM_GeneralLedger =>tb_FM_GeneralLedger.SourceBillNO).MaximumLength(15).WithMessage("来源单号:不能超过最大长度,15.");
+ RuleFor(tb_FM_GeneralLedger =>tb_FM_GeneralLedger.SourceBillNo).MaximumLength(15).WithMessage("来源单号:不能超过最大长度,15.");
 
 
  RuleFor(tb_FM_GeneralLedger =>tb_FM_GeneralLedger.Created_by).NotEmpty().When(x => x.Created_by.HasValue);

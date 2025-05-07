@@ -139,9 +139,9 @@ namespace RUINORERP.Business
                     }
                     // 外币相关处理 正确是 外币时一定要有汇率
                     decimal exchangeRate = 1; // 获取销售订单的汇率
-                    if (entity.Currency_ID.HasValue && _appContext.BaseCurrency.Currency_ID != entity.Currency_ID.Value)
+                    if (_appContext.BaseCurrency.Currency_ID != entity.Currency_ID)
                     {
-                        exchangeRate = entity.ExchangeRate.Value; // 获取销售订单的汇率
+                        exchangeRate = entity.ExchangeRate; // 获取销售订单的汇率
                                                                   // 这里可以考虑获取最新的汇率，而不是直接使用销售订单的汇率
                                                                   // exchangeRate = GetLatestExchangeRate(entity.Currency_ID.Value, _appContext.BaseCurrency.Currency_ID);
                     }
@@ -173,8 +173,8 @@ namespace RUINORERP.Business
 
                         payable.PreRPNO = BizCodeGenerator.Instance.GetBizBillNo(BizType.预收款单);
                         payable.SourceBizType = (int)BizType.销售订单;
-                        payable.SourceBillNO = entity.SOrderNo;
-                        payable.SourceBill_ID = entity.SOrder_ID;
+                        payable.SourceBillNo = entity.SOrderNo;
+                        payable.SourceBillId = entity.SOrder_ID;
                         payable.Currency_ID = entity.Currency_ID;
                         payable.PrePayDate = entity.SaleDate;
                         payable.ExchangeRate = exchangeRate;
@@ -185,7 +185,7 @@ namespace RUINORERP.Business
                         if (entity.PayStatus == (int)PayStatus.全部付款)
                         {
                             //外币时 全部付款，则外币金额=本币金额/汇率 在UI中显示出来。
-                            if (entity.Currency_ID.HasValue && _appContext.BaseCurrency.Currency_ID != entity.Currency_ID.Value)
+                            if ( _appContext.BaseCurrency.Currency_ID != entity.Currency_ID)
                             {
                                 payable.ForeignPrepaidAmount = entity.ForeignTotalAmount;
                                 //payable.LocalPrepaidAmount = payable.ForeignPrepaidAmount * exchangeRate;
@@ -200,7 +200,7 @@ namespace RUINORERP.Business
                         if (entity.PayStatus == (int)PayStatus.部分付款)
                         {
                             //外币时
-                            if (entity.Currency_ID.HasValue && _appContext.BaseCurrency.Currency_ID != entity.Currency_ID.Value)
+                            if ( _appContext.BaseCurrency.Currency_ID != entity.Currency_ID)
                             {
                                 payable.ForeignPrepaidAmount = entity.ForeignDeposit;
                                 // payable.LocalPrepaidAmount = payable.ForeignPrepaidAmount * exchangeRate;
@@ -695,7 +695,7 @@ namespace RUINORERP.Business
                     #region  预收款单处理
 
                     tb_FM_PreReceivedPaymentController<tb_FM_PreReceivedPayment> ctrpay = _appContext.GetRequiredService<tb_FM_PreReceivedPaymentController<tb_FM_PreReceivedPayment>>();
-                    var pay = await ctrpay.IsExistEntityAsync(p => p.SourceBill_ID == entity.SOrder_ID);
+                    var pay = await ctrpay.IsExistEntityAsync(p => p.SourceBillId == entity.SOrder_ID);
                     if (pay != null)
                     {
                         if (pay.PrePaymentStatus == (long)PrePaymentStatus.草稿 || pay.PrePaymentStatus == (long)PrePaymentStatus.待审核)
@@ -709,7 +709,7 @@ namespace RUINORERP.Business
                             //如果没有出库，则生成红冲单  ，已冲销  已取消，先用取消标记
                             //如果是要退款，则在预收款查询这，生成退款单。
 
-                            //rmrs.ErrorMsg = $"销售订单{pay.SourceBillNO}已经生成预收款单{pay.PreRPNO}，已经确认收款，请不能反审核。";
+                            //rmrs.ErrorMsg = $"销售订单{pay.SourceBillNo}已经生成预收款单{pay.PreRPNO}，已经确认收款，请不能反审核。";
                             //_unitOfWorkManage.RollbackTran();
                             //rmrs.Succeeded = false;
                             //return rmrs;
@@ -1110,7 +1110,7 @@ namespace RUINORERP.Business
                 #region  预收款单处理
 
                 tb_FM_PreReceivedPaymentController<tb_FM_PreReceivedPayment> ctrpay = _appContext.GetRequiredService<tb_FM_PreReceivedPaymentController<tb_FM_PreReceivedPayment>>();
-                var pay = await ctrpay.IsExistEntityAsync(p => p.SourceBill_ID == entity.SOrder_ID && p.PrePaymentStatus == (long)PrePaymentStatus.待核销);
+                var pay = await ctrpay.IsExistEntityAsync(p => p.SourceBillId == entity.SOrder_ID && p.PrePaymentStatus == (long)PrePaymentStatus.待核销);
                 if (pay != null)
                 {
                     if (pay.PrePaymentStatus == (long)PrePaymentStatus.待核销)

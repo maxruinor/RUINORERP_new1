@@ -44,10 +44,10 @@
             this.lblOpeningbank = new Krypton.Toolkit.KryptonLabel();
             this.lblSourceBill_BizType = new Krypton.Toolkit.KryptonLabel();
             this.txtBizType = new Krypton.Toolkit.KryptonTextBox();
-            this.lblSourceBill_ID = new Krypton.Toolkit.KryptonLabel();
-            this.txtSourceBill_ID = new Krypton.Toolkit.KryptonTextBox();
-            this.lblSourceBillNO = new Krypton.Toolkit.KryptonLabel();
-            this.txtSourceBillNO = new Krypton.Toolkit.KryptonTextBox();
+            this.lblSourceBillId = new Krypton.Toolkit.KryptonLabel();
+            this.txtSourceBillId = new Krypton.Toolkit.KryptonTextBox();
+            this.lblSourceBillNo = new Krypton.Toolkit.KryptonLabel();
+            this.txtSourceBillNo = new Krypton.Toolkit.KryptonTextBox();
             this.lblForeignPrepaidAmount = new Krypton.Toolkit.KryptonLabel();
             this.txtForeignPrepaidAmount = new Krypton.Toolkit.KryptonTextBox();
             this.lblForeignPaidAmount = new Krypton.Toolkit.KryptonLabel();
@@ -128,10 +128,10 @@
             this.kryptonPanel1.Controls.Add(this.kryptonGroupBox收款账号信息);
             this.kryptonPanel1.Controls.Add(this.lblSourceBill_BizType);
             this.kryptonPanel1.Controls.Add(this.txtBizType);
-            this.kryptonPanel1.Controls.Add(this.lblSourceBill_ID);
-            this.kryptonPanel1.Controls.Add(this.txtSourceBill_ID);
-            this.kryptonPanel1.Controls.Add(this.lblSourceBillNO);
-            this.kryptonPanel1.Controls.Add(this.txtSourceBillNO);
+            this.kryptonPanel1.Controls.Add(this.lblSourceBillId);
+            this.kryptonPanel1.Controls.Add(this.txtSourceBillId);
+            this.kryptonPanel1.Controls.Add(this.lblSourceBillNo);
+            this.kryptonPanel1.Controls.Add(this.txtSourceBillNo);
             this.kryptonPanel1.Controls.Add(this.lblForeignPrepaidAmount);
             this.kryptonPanel1.Controls.Add(this.txtForeignPrepaidAmount);
             this.kryptonPanel1.Controls.Add(this.lblForeignPaidAmount);
@@ -305,35 +305,35 @@
             this.txtBizType.Size = new System.Drawing.Size(156, 23);
             this.txtBizType.TabIndex = 211;
             // 
-            // lblSourceBill_ID
+            // lblSourceBillId
             // 
-            this.lblSourceBill_ID.Location = new System.Drawing.Point(814, 195);
-            this.lblSourceBill_ID.Name = "lblSourceBill_ID";
-            this.lblSourceBill_ID.Size = new System.Drawing.Size(62, 20);
-            this.lblSourceBill_ID.TabIndex = 212;
-            this.lblSourceBill_ID.Values.Text = "来源单据";
+            this.lblSourceBillId.Location = new System.Drawing.Point(814, 195);
+            this.lblSourceBillId.Name = "lblSourceBillId";
+            this.lblSourceBillId.Size = new System.Drawing.Size(62, 20);
+            this.lblSourceBillId.TabIndex = 212;
+            this.lblSourceBillId.Values.Text = "来源单据";
             // 
-            // txtSourceBill_ID
+            // txtSourceBillId
             // 
-            this.txtSourceBill_ID.Location = new System.Drawing.Point(882, 191);
-            this.txtSourceBill_ID.Name = "txtSourceBill_ID";
-            this.txtSourceBill_ID.Size = new System.Drawing.Size(156, 23);
-            this.txtSourceBill_ID.TabIndex = 213;
+            this.txtSourceBillId.Location = new System.Drawing.Point(882, 191);
+            this.txtSourceBillId.Name = "txtSourceBillId";
+            this.txtSourceBillId.Size = new System.Drawing.Size(156, 23);
+            this.txtSourceBillId.TabIndex = 213;
             // 
-            // lblSourceBillNO
+            // lblSourceBillNo
             // 
-            this.lblSourceBillNO.Location = new System.Drawing.Point(814, 220);
-            this.lblSourceBillNO.Name = "lblSourceBillNO";
-            this.lblSourceBillNO.Size = new System.Drawing.Size(62, 20);
-            this.lblSourceBillNO.TabIndex = 214;
-            this.lblSourceBillNO.Values.Text = "来源单号";
+            this.lblSourceBillNo.Location = new System.Drawing.Point(814, 220);
+            this.lblSourceBillNo.Name = "lblSourceBillNo";
+            this.lblSourceBillNo.Size = new System.Drawing.Size(62, 20);
+            this.lblSourceBillNo.TabIndex = 214;
+            this.lblSourceBillNo.Values.Text = "来源单号";
             // 
-            // txtSourceBillNO
+            // txtSourceBillNo
             // 
-            this.txtSourceBillNO.Location = new System.Drawing.Point(882, 216);
-            this.txtSourceBillNO.Name = "txtSourceBillNO";
-            this.txtSourceBillNO.Size = new System.Drawing.Size(156, 23);
-            this.txtSourceBillNO.TabIndex = 215;
+            this.txtSourceBillNo.Location = new System.Drawing.Point(882, 216);
+            this.txtSourceBillNo.Name = "txtSourceBillNo";
+            this.txtSourceBillNo.Size = new System.Drawing.Size(156, 23);
+            this.txtSourceBillNo.TabIndex = 215;
             // 
             // lblForeignPrepaidAmount
             // 
@@ -837,10 +837,10 @@
         private Krypton.Toolkit.KryptonTextBox txtForeignPrepaidAmount;
         private Krypton.Toolkit.KryptonLabel lblSourceBill_BizType;
         private Krypton.Toolkit.KryptonTextBox txtBizType;
-        private Krypton.Toolkit.KryptonLabel lblSourceBill_ID;
-        private Krypton.Toolkit.KryptonTextBox txtSourceBill_ID;
-        private Krypton.Toolkit.KryptonLabel lblSourceBillNO;
-        private Krypton.Toolkit.KryptonTextBox txtSourceBillNO;
+        private Krypton.Toolkit.KryptonLabel lblSourceBillId;
+        private Krypton.Toolkit.KryptonTextBox txtSourceBillId;
+        private Krypton.Toolkit.KryptonLabel lblSourceBillNo;
+        private Krypton.Toolkit.KryptonTextBox txtSourceBillNo;
         private Krypton.Toolkit.KryptonGroupBox kryptonGroupBox收款账号信息;
         private Krypton.Toolkit.KryptonLabel lblPayeeAccountName;
         private Krypton.Toolkit.KryptonTextBox txtPayeeAccountNo;

@@ -32,6 +32,9 @@ using Fireasy.Common.Extensions;
 using FastReport.Table;
 using MathNet.Numerics.Optimization;
 using Netron.GraphLib;
+using RUINORERP.UI.UCSourceGrid;
+using RUINORERP.Model.Dto;
+using Microsoft.Extensions.Logging;
 
 
 namespace RUINORERP.UI.FM
@@ -39,7 +42,7 @@ namespace RUINORERP.UI.FM
     /// <summary>
     /// 收付款记录合并
     /// </summary>
-    public partial class UCPaymentRecord : BaseBillEditGeneric<tb_FM_PaymentRecord, tb_FM_PaymentRecord>
+    public partial class UCPaymentRecord : BaseBillEditGeneric<tb_FM_PaymentRecord, tb_FM_PaymentRecordDetail>
     {
         public UCPaymentRecord()
         {
@@ -103,7 +106,7 @@ namespace RUINORERP.UI.FM
                         txtPayeeAccountNo.Visible = false;
                         cmbPayeeInfoID.Visible = false;
                         btnInfo.Visible = false;
-                        kryptonGroupBox收款账号信息.Visible = false;
+                        // kryptonGroupBox收款账号信息.Visible = false;
                     }
                 }
                 else
@@ -143,26 +146,26 @@ namespace RUINORERP.UI.FM
                 cmbAccount_type.DataBindings.Clear();
                 txtPayeeAccountNo.Text = "";
             }
-            DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.PaymentNo, txtPaymentNo, BindDataType4TextBox.Text, false);
+            // DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.PaymentNo, txtPaymentNo, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4Cmb<tb_ProjectGroup>(entity, k => k.ProjectGroup_ID, v => v.ProjectGroupName, cmbProjectGroup_ID);
-            DataBindingHelper.BindData4Cmb<tb_PaymentMethod>(entity, k => k.Paytype_ID, v => v.Paytype_Name, cmbPaytype_ID, c => c.Cash == true);
+            // DataBindingHelper.BindData4Cmb<tb_PaymentMethod>(entity, k => k.Paytype_ID, v => v.Paytype_Name, cmbPaytype_ID, c => c.Cash == true);
             DataBindingHelper.BindData4Cmb<tb_Employee>(entity, k => k.Employee_ID, v => v.Employee_Name, cmbEmployee_ID);
             DataBindingHelper.BindData4Cmb<tb_Department>(entity, k => k.DepartmentID, v => v.DepartmentName, cmbDepartmentID);
             DataBindingHelper.BindData4Cmb<tb_Currency>(entity, k => k.Currency_ID, v => v.CurrencyName, cmbCurrency_ID);
             DataBindingHelper.BindData4Cmb<tb_FM_Account>(entity, k => k.Account_id, v => v.Account_name, cmbAccount_id);
             DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.ApprovalOpinions, txtApprovalOpinions, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4ControlByEnum<tb_FM_PaymentRecord>(entity, t => t.ApprovalStatus, lblReview, BindDataType4Enum.EnumName, typeof(Global.ApprovalStatus));
-            DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.ExchangeRate.ToString(), txtExchangeRate, BindDataType4TextBox.Money, false);
-            DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.ForeignPaidAmount.ToString(), txtForeignPaidAmount, BindDataType4TextBox.Money, false);
-            DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.LocalPaidAmount.ToString(), txtLocalPaidAmount, BindDataType4TextBox.Money, false);
+            //  DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.ExchangeRate.ToString(), txtExchangeRate, BindDataType4TextBox.Money, false);
+            DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.TotalForeignAmount.ToString(), txtForeignPaidAmount, BindDataType4TextBox.Money, false);
+            DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.TotalLocalAmount.ToString(), txtLocalPaidAmount, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.Remark, txtRemark, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.PayeeAccountNo, txtPayeeAccountNo, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4ControlByEnum<tb_FM_PaymentRecord>(entity, t => t.PaymentStatus, lblDataStatus, BindDataType4Enum.EnumName, typeof(PaymentStatus));
-            DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.SourceBizType, txtBizType, BindDataType4TextBox.Qty, false);
+            //  DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.SourceBizType, txtBizType, BindDataType4TextBox.Qty, false);
             //DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.SourceBilllID, txtSourceBilllID, BindDataType4TextBox.Qty, false);
-            DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.SourceBillNO, txtSourceBillNO, BindDataType4TextBox.Text, false);
-            DataBindingHelper.BindData4DataTime<tb_FM_PaymentRecord>(entity, t => t.PaymentDate, dtpPaymentDate, false);
-            DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.ReferenceNo, txtReferenceNo, BindDataType4TextBox.Text, false);
+            //  DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.SourceBillNo, txtSourceBillNo, BindDataType4TextBox.Text, false);
+            //  DataBindingHelper.BindData4DataTime<tb_FM_PaymentRecord>(entity, t => t.PaymentDate, dtpPaymentDate, false);
+            //  DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.ReferenceNo, txtReferenceNo, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4CheckBox<tb_FM_PaymentRecord>(entity, t => t.ApprovalResults, chkApprovalResults, false);
 
 
@@ -264,8 +267,8 @@ namespace RUINORERP.UI.FM
                                 DataBindingHelper.BindData4CmbByEnum<tb_FM_PayeeInfo>(payeeInfo, k => k.Account_type, typeof(AccountType), cmbAccount_type, false);
                                 //添加收款信息。展示给财务看
                                 entity.PayeeAccountNo = payeeInfo.Account_No;
-                                lblBelongingBank.Text = payeeInfo.BelongingBank;
-                                lblOpeningbank.Text = payeeInfo.OpeningBank;
+                                // lblBelongingBank.Text = payeeInfo.BelongingBank;
+                                // lblOpeningbank.Text = payeeInfo.OpeningBank;
                                 cmbAccount_type.SelectedItem = payeeInfo.Account_type;
                                 if (!string.IsNullOrEmpty(payeeInfo.PaymentCodeImagePath))
                                 {
@@ -282,8 +285,8 @@ namespace RUINORERP.UI.FM
                         else
                         {
                             txtPayeeAccountNo.Text = "";
-                            lblBelongingBank.Text = "";
-                            lblOpeningbank.Text = "";
+                            //lblBelongingBank.Text = "";
+                            // lblOpeningbank.Text = "";
                         }
                     }
 
@@ -307,8 +310,8 @@ namespace RUINORERP.UI.FM
                         DataBindingHelper.BindData4CmbByEnum<tb_FM_PayeeInfo>(cv, k => k.Account_type, typeof(AccountType), cmbAccount_type, false);
                         //添加收款信息。展示给财务看
                         entity.PayeeAccountNo = cv.Account_No;
-                        lblBelongingBank.Text = cv.BelongingBank;
-                        lblOpeningbank.Text = cv.OpeningBank;
+                        // lblBelongingBank.Text = cv.BelongingBank;
+                        // lblOpeningbank.Text = cv.OpeningBank;
                         // lblPayeeAccountName.Text = cv.Account_name;
                         cmbAccount_type.SelectedItem = cv.Account_type;
                         if (!string.IsNullOrEmpty(cv.PaymentCodeImagePath))
@@ -325,8 +328,8 @@ namespace RUINORERP.UI.FM
                     else
                     {
                         txtPayeeAccountNo.Text = "";
-                        lblBelongingBank.Text = "";
-                        lblOpeningbank.Text = "";
+                        //lblBelongingBank.Text = "";
+                        //lblOpeningbank.Text = "";
                     }
                 }
             }
@@ -352,7 +355,7 @@ namespace RUINORERP.UI.FM
                             //显示外币相关
                             UIHelper.ControlForeignFieldInvisible<tb_FM_PaymentRecord>(this, true);
                             //需要有一个方法。通过外币代码得到换人民币的汇率
-                            entity.ExchangeRate = BizService.GetExchangeRateFromCache(cv.Currency_ID, AppContext.BaseCurrency.Currency_ID);
+                            // entity.ExchangeRate = BizService.GetExchangeRateFromCache(cv.Currency_ID, AppContext.BaseCurrency.Currency_ID);
                             lblExchangeRate.Visible = true;
                             txtExchangeRate.Visible = true;
                         }
@@ -377,8 +380,8 @@ namespace RUINORERP.UI.FM
                 try
                 {
                     byte[] img = await httpWebService.DownloadImgFileAsync(CloseCaseImagePath);
-                    magicPictureBox1.Image = UI.Common.ImageHelper.byteArrayToImage(img);
-                    magicPictureBox1.Visible = true;
+                    //  magicPictureBox1.Image = UI.Common.ImageHelper.byteArrayToImage(img);
+                    //  magicPictureBox1.Visible = true;
                 }
                 catch (Exception ex)
                 {
@@ -387,10 +390,13 @@ namespace RUINORERP.UI.FM
             }
             else
             {
-                magicPictureBox1.Visible = false;
+                // magicPictureBox1.Visible = false;
             }
         }
 
+
+
+        List<tb_FM_PaymentRecordDetail> details = new List<tb_FM_PaymentRecordDetail>();
         protected async override Task<bool> Save(bool NeedValidated)
         {
             if (EditEntity == null)
@@ -399,40 +405,82 @@ namespace RUINORERP.UI.FM
             }
 
             var eer = errorProviderForAllInput.GetError(txtLocalPaidAmount);
-
+            bindingSourceSub.EndEdit();
+            if (NeedValidated && (EditEntity.TotalForeignAmount == 0 && EditEntity.TotalLocalAmount == 0))
+            {
+                System.Windows.Forms.MessageBox.Show("收款金额不能为零，请检查数据录入是否正确！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return false;
+            }
+            List<tb_FM_PaymentRecordDetail> detailentity = bindingSourceSub.DataSource as List<tb_FM_PaymentRecordDetail>;
             if (EditEntity.ActionStatus == ActionStatus.新增 || EditEntity.ActionStatus == ActionStatus.修改)
             {
-
-                if (EditEntity.ApprovalStatus == null)
+                //产品ID有值才算有效值
+                details = detailentity.Where(t => t.ForeignAmount > 0 || t.LocalAmount > 0).ToList();
+                //如果没有有效的明细。直接提示
+                if (NeedValidated && details.Count == 0)
                 {
-                    EditEntity.ApprovalStatus = (int)ApprovalStatus.未审核;
-                }
-
-                if (NeedValidated && (EditEntity.ForeignPaidAmount == 0 && EditEntity.LocalPaidAmount == 0))
-                {
-                    System.Windows.Forms.MessageBox.Show("收款金额不能为零，请检查数据录入是否正确！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    MessageBox.Show("请录入有效明细记录！");
                     return false;
                 }
+
+                EditEntity.tb_FM_PaymentRecordDetails = details;
+
+                //如果主表的总金额和明细金额加总后不相等，则提示
+                if (NeedValidated && EditEntity.TotalForeignAmount != details.Sum(c => c.ForeignAmount))
+                {
+                    if (MessageBox.Show("总金额外币和明细金额外币总计不相等，你确定要保存吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button1) == DialogResult.No)
+                    {
+                        return false;
+                    }
+                }
+
+
+                if (NeedValidated && EditEntity.TotalLocalAmount != details.Sum(c => c.LocalAmount))
+                {
+                    if (MessageBox.Show("总金额本币和明细金额本币总计不相等，你确定要保存吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button1) == DialogResult.No)
+                    {
+                        return false;
+                    }
+                }
+
                 //没有经验通过下面先不计算
                 if (NeedValidated && !base.Validator(EditEntity))
                 {
                     return false;
                 }
-
-                //if (NeedValidated && EditEntity.TotalAmount == 0)
-                //{
-                //    System.Windows.Forms.MessageBox.Show("金额不能为零，请检查记录！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                //    return false;
-                //}
+                if (NeedValidated && !base.Validator<tb_FM_PaymentRecordDetail>(details))
+                {
+                    return false;
+                }
+                if (NeedValidated)
+                {//处理图片
+                    bool uploadImg = await base.SaveFileToServer(sgd, EditEntity.tb_FM_PaymentRecordDetails);
+                    if (uploadImg)
+                    {
+                        ////更新图片名后保存到数据库
+                        //int ImgCounter = await MainForm.Instance.AppContext.Db.Updateable<tb_FM_PaymentRecordDetail>(EditEntity.tb_FM_PaymentRecordDetails)
+                        //    .UpdateColumns(t => new { t.EvidenceImagePath })
+                        //    .ExecuteCommandAsync();
+                        //if (ImgCounter > 0)
+                        //{
+                        MainForm.Instance.PrintInfoLog($"图片保存成功,。");
+                        //}
+                    }
+                    else
+                    {
+                        MainForm.Instance.uclog.AddLog("图片上传出错。");
+                        return false;
+                    }
+                }
 
                 ReturnMainSubResults<tb_FM_PaymentRecord> SaveResult = new ReturnMainSubResults<tb_FM_PaymentRecord>();
                 if (NeedValidated)
                 {
-                    //SaveResult = await base.UpdateSave(EditEntity);
                     SaveResult = await base.Save(EditEntity);
                     if (SaveResult.Succeeded)
                     {
-                        MainForm.Instance.PrintInfoLog($"保存成功,{EditEntity.SourceBillNO}。");
+
+                        MainForm.Instance.PrintInfoLog($"保存成功,{EditEntity.PaymentNo}。");
                     }
                     else
                     {
@@ -441,8 +489,13 @@ namespace RUINORERP.UI.FM
                 }
                 return SaveResult.Succeeded;
             }
-            return false;
+            else
+            {
+                MainForm.Instance.uclog.AddLog("加载状态下无法保存");
+                return false;
+            }
         }
+
         protected override async Task<bool> Submit()
         {
             bool rs = await base.Submit();
@@ -541,47 +594,207 @@ namespace RUINORERP.UI.FM
             return rss;
         }
 
+ 
 
-        private void UCCustomerVendorEdit_Load(object sender, EventArgs e)
+        SourceGridDefine sgd = null;
+        SourceGridHelper sgh = new SourceGridHelper();
+        //设计关联列和目标列
+
+        List<SGDefineColumnItem> listCols = new List<SGDefineColumnItem>();
+
+        //设计关联列和目标列
+        View_ProdDetailController<View_ProdDetail> dc = Startup.GetFromFac<View_ProdDetailController<View_ProdDetail>>();
+        List<View_ProdDetail> list = new List<View_ProdDetail>();
+
+        private void UCPaymentRecord_Load(object sender, EventArgs e)
         {
+            #region
+            switch (PaymentType)
+            {
+                case ReceivePaymentType.收款:
+                    lblBillText.Text = "应收款单";
+                    lblAccount_id.Text = "收款账号";
+                    lblCustomerVendor_ID.Text = "应付单位";
+                    lblAccount_type.Visible = false;
+                    cmbAccount_type.Visible = false;
+                    btnInfo.Visible = false;
+                    lblPayeeInfoID.Visible = false;
+                    cmbPayeeInfoID.Visible = false;
+                    lblPayeeAccountNo.Visible = false;
+                    txtPayeeAccountNo.Visible = false;
+                    break;
+                case ReceivePaymentType.付款:
+                    lblBillText.Text = "应付款单";
+                    lblAccount_id.Text = "付款账号";
+                    lblCustomerVendor_ID.Text = "应收单位";
+                    break;
+                default:
+                    break;
+            }
 
+            #endregion
+
+            MainForm.Instance.LoginWebServer();
+            if (CurMenuInfo != null)
+            {
+                lblBillText.Text = CurMenuInfo.CaptionCN;
+            }
+        
+            base.ToolBarEnabledControl(MenuItemEnums.刷新);
+
+            grid1.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            grid1.Selection.EnableMultiSelection = false;
+
+            listCols = new List<SGDefineColumnItem>();
+            //指定了关键字段ProdDetailID
+            listCols = sgh.GetGridColumns<ProductSharePart, tb_FM_PaymentRecordDetail>(c => c.PaymentDetailId, false);
+
+            listCols.SetCol_NeverVisible<tb_FM_PaymentRecordDetail>(c => c.PaymentDetailId);
+            listCols.SetCol_NeverVisible<ProductSharePart>(c => c.Rack_ID);
+            listCols.SetCol_NeverVisible<ProductSharePart>(c => c.ShortCode);
+            listCols.SetCol_NeverVisible<ProductSharePart>(c => c.Brand);
+            listCols.SetCol_NeverVisible<ProductSharePart>(c => c.Location_ID);
+            listCols.SetCol_NeverVisible<ProductSharePart>(c => c.Model);
+            listCols.SetCol_NeverVisible<ProductSharePart>(c => c.VendorModelCode);
+            listCols.SetCol_NeverVisible<ProductSharePart>(c => c.Images);
+            listCols.SetCol_NeverVisible<ProductSharePart>(c => c.Inv_Cost);
+            listCols.SetCol_NeverVisible<ProductSharePart>(c => c.Standard_Price);
+            listCols.SetCol_NeverVisible<ProductSharePart>(c => c.TransPrice);
+
+
+
+            UIHelper.ControlChildColumnsInvisible(CurMenuInfo, listCols);
+            UIHelper.ControlChildColumnsInvisible(CurMenuInfo, listCols);
+            if (!AppContext.SysConfig.UseBarCode)
+            {
+                listCols.SetCol_NeverVisible<ProductSharePart>(c => c.BarCode);
+            }
+            //listCols.SetCol_DefaultValue<tb_FM_PaymentRecordDetail>(c => c.ForeignPayableAmount, 0.00M);
+
+            //listCols.SetCol_ReadOnly<tb_FM_OtherExpenseDetail>(c => c.CNName);
+
+            //listCols.SetCol_Format<tb_FM_PaymentRecordDetail>(c => c.TaxRate, CustomFormatType.PercentFormat);
+            //listCols.SetCol_Format<tb_FM_PaymentRecordDetail>(c => c.LocalPayableAmount, CustomFormatType.CurrencyFormat);
+            //listCols.SetCol_Format<tb_FM_PaymentRecordDetail>(c => c.TaxLocalAmount, CustomFormatType.CurrencyFormat);
+            //listCols.SetCol_Format<tb_FM_PaymentRecordDetail>(c => c.UnitPrice, CustomFormatType.CurrencyFormat);
+            //listCols.SetCol_Format<tb_FM_PaymentRecordDetail>(c => c.ForeignPayableAmount, CustomFormatType.CurrencyFormat);
+
+            sgd = new SourceGridDefine(grid1, listCols, true);
+          //  listCols.SetCol_Formula<tb_FM_PaymentRecordDetail>((a, b) => a.UnitPrice * b.Quantity, c => c.LocalPayableAmount);//-->成交价是结果列
+
+            sgd.GridMasterData = EditEntity;
+            /*
+            //具体审核权限的人才显示
+            if (!AppContext.CurUserInfo.UserButtonList.Where(c => c.BtnText == MenuItemEnums.审核.ToString()).Any())
+            {
+                //listCols.SetCol_NeverVisible<tb_PurEntryDetail>(c => c.UnitPrice);
+                //listCols.SetCol_NeverVisible<tb_PurEntryDetail>(c => c.TransactionPrice);
+                //listCols.SetCol_NeverVisible<tb_PurEntryDetail>(c => c.SubtotalPirceAmount);
+            }*/
+
+
+            //listCols.SetCol_NeverVisible<tb_FM_PaymentRecordDetail>(c => c.EvidenceImage);//后面会删除这一列
+            //listCols.SetCol_Summary<tb_FM_PaymentRecordDetail>(c => c.ForeignPayableAmount);
+           // listCols.SetCol_Summary<tb_FM_PaymentRecordDetail>(c => c.LocalPayableAmount);
+           // listCols.SetCol_Summary<tb_FM_PaymentRecordDetail>(c => c.TaxLocalAmount);
+
+           // listCols.SetCol_Formula<tb_FM_PaymentRecordDetail>((a, b, c) => a.TaxLocalAmount / (1 + b.TaxRate) * c.TaxRate, d => d.TaxLocalAmount);
+            //listCols.SetCol_Formula<tb_FM_PaymentRecordDetail>((a, b) => a.TotalAmount - b.TaxAmount, c => cLocalPayableAmount);
+
+            ////反算成交单价，目标列能重复添加。已经优化好了。
+            //listCols.SetCol_Formula<tb_FM_PaymentRecordDetail>((a, b) => a.SubtotalAmount / b.Quantity, c => c.TransactionPrice);//-->成交价是结果列
+            ////反算折扣
+            //listCols.SetCol_Formula<tb_FM_PaymentRecordDetail>((a, b) => a.TransactionPrice / b.UnitPrice, c => c.Discount);
+            //listCols.SetCol_Formula<tb_FM_PaymentRecordDetail>((a, b) => a.TransactionPrice / b.Discount, c => c.UnitPrice);
+
+
+            //公共到明细的映射 源 ，左边会隐藏
+           // sgh.SetPointToColumnPairs<ProductSharePart, tb_FM_PaymentRecordDetail>(sgd, f => f.Specifications, t => t.Specifications);
+           // sgh.SetPointToColumnPairs<ProductSharePart, tb_FM_PaymentRecordDetail>(sgd, f => f.Unit_ID, t => t.Unit_ID);
+            //sgh.SetPointToColumnPairs<ProductSharePart, tb_FM_PaymentRecordDetail>(sgd, f => f.Standard_Price, t => t.UnitPrice);
+          //  sgh.SetPointToColumnPairs<ProductSharePart, tb_FM_PaymentRecordDetail>(sgd, f => f.prop, t => t.property);
+
+            //应该只提供一个结构
+            List<tb_FM_PaymentRecordDetail> lines = new List<tb_FM_PaymentRecordDetail>();
+            bindingSourceSub.DataSource = lines; //  ctrSub.Query(" 1>2 ");
+            sgd.BindingSourceLines = bindingSourceSub;
+
+            list = MainForm.Instance.list;
+            sgd.SetDependencyObject<ProductSharePart, tb_FM_PaymentRecordDetail>(list);
+
+            sgd.HasRowHeader = true;
+            sgh.InitGrid(grid1, sgd, true, nameof(tb_FM_PaymentRecordDetail));
+            sgh.OnCalculateColumnValue += Sgh_OnCalculateColumnValue;
+            sgh.OnAddDataRow += Sgh_OnAddDataRow;
+            UIHelper.ControlMasterColumnsInvisible(CurMenuInfo, this);
             switch (PaymentType)
             {
                 case ReceivePaymentType.收款:
                     lblBillText.Text = "收款单";
                     lblAccount_id.Text = "收款账号";
-                    lblPaymentDate.Text = "收款日期";
+                    //lblPaymentDate.Text = "收款日期";
                     lblCustomerVendor_ID.Text = "付款单位";
                     btnInfo.Visible = false;
                     lblPayeeInfoID.Visible = false;
                     cmbPayeeInfoID.Visible = false;
-                    kryptonGroupBox收款账号信息.Visible = false;
+                    //kryptonGroupBox收款账号信息.Visible = false;
 
                     break;
                 case ReceivePaymentType.付款:
                     lblBillText.Text = "付款单";
                     lblAccount_id.Text = "付款账号";
-                    lblPaymentDate.Text = "付款日期";
+                    //lblPaymentDate.Text = "付款日期";
                     lblCustomerVendor_ID.Text = "收款单位";
                     btnInfo.Visible = true;
                     lblPayeeInfoID.Visible = true;
                     cmbPayeeInfoID.Visible = true;
-                    kryptonGroupBox收款账号信息.Visible = true;
+                    //kryptonGroupBox收款账号信息.Visible = true;
                     break;
                 default:
                     break;
             }
 
         }
-
-        private void btnInfo_Click(object sender, EventArgs e)
+        private void Sgh_OnCalculateColumnValue(object _rowObj, SourceGridDefine myGridDefine, SourceGrid.Position position)
         {
+
+            if (EditEntity == null)
+            {
+                //都不是正常状态
+                MainForm.Instance.uclog.AddLog("请先使用新增或查询加载数据");
+                return;
+            }
+            try
+            {
+
+                //计算总金额  这些逻辑是不是放到业务层？后面要优化
+                List<tb_FM_PaymentRecordDetail> details = sgd.BindingSourceLines.DataSource as List<tb_FM_PaymentRecordDetail>;
+                details = details.Where(c => c.LocalAmount > 0 || c.ForeignAmount > 0).ToList();
+                if (details.Count == 0)
+                {
+                    MainForm.Instance.uclog.AddLog("金额必须大于0");
+                    return;
+                }
+                EditEntity.TotalForeignAmount = details.Sum(c => c.ForeignAmount);
+                EditEntity.TotalLocalAmount = details.Sum(c => c.LocalAmount);
+            }
+            catch (Exception ex)
+            {
+
+                logger.LogError("计算出错", ex);
+                MainForm.Instance.uclog.AddLog("Sgh_OnCalculateColumnValue" + ex.Message);
+            }
+
+
+        }
+        private void Sgh_OnAddDataRow(object rowObj)
+        {
+
+
 
         }
 
-
-
-        private void btnInfo_Click_1(object sender, EventArgs e)
+        private void btnInfo_Click(object sender, EventArgs e)
         {
             if (sender is KryptonButton btninfo)
             {
@@ -612,16 +825,22 @@ namespace RUINORERP.UI.FM
                             }
                         }
                         #endregion
-
+                        //HttpWebService httpWebService = Startup.GetFromFac<HttpWebService>();
+                        //try
+                        //{
+                        //    byte[] img = await httpWebService.DownloadImgFileAsync(btninfo.Tag.ToString());
+                        //    frmPictureViewer pictureViewer = new frmPictureViewer();
+                        //    pictureViewer.PictureBoxViewer.Image = UI.Common.ImageHelper.byteArrayToImage(img);
+                        //    pictureViewer.ShowDialog();
+                        //}
+                        //catch (Exception ex)
+                        //{
+                        //    MainForm.Instance.uclog.AddLog(ex.Message, Global.UILogType.错误);
+                        //}
                     }
 
                 }
             }
-        }
-
-        private void kryptonPanel1_Paint(object sender, PaintEventArgs e)
-        {
-
         }
     }
 }

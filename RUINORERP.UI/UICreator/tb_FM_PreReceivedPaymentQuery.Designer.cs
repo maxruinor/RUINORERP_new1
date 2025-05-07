@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：05/06/2025 10:30:40
+// 时间：05/07/2025 15:37:45
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -91,8 +91,8 @@ this.txtPrePaymentReason = new ComponentFactory.Krypton.Toolkit.KryptonTextBox()
 
 
 
-this.lblSourceBillNO = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
-this.txtSourceBillNO = new ComponentFactory.Krypton.Toolkit.KryptonTextBox();
+this.lblSourceBillNo = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
+this.txtSourceBillNo = new ComponentFactory.Krypton.Toolkit.KryptonTextBox();
 
 
 this.lblForeignPrepaidAmount = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
@@ -405,29 +405,29 @@ this.Controls.Add(this.txtPrePaymentReason);
 //属性测试350SourceBizType
 //属性测试350SourceBizType
 
-           //#####SourceBill_ID###Int64
-//属性测试375SourceBill_ID
-//属性测试375SourceBill_ID
-//属性测试375SourceBill_ID
-//属性测试375SourceBill_ID
-//属性测试375SourceBill_ID
-//属性测试375SourceBill_ID
-//属性测试375SourceBill_ID
-//属性测试375SourceBill_ID
+           //#####SourceBillId###Int64
+//属性测试375SourceBillId
+//属性测试375SourceBillId
+//属性测试375SourceBillId
+//属性测试375SourceBillId
+//属性测试375SourceBillId
+//属性测试375SourceBillId
+//属性测试375SourceBillId
+//属性测试375SourceBillId
 
-           //#####30SourceBillNO###String
-this.lblSourceBillNO.AutoSize = true;
-this.lblSourceBillNO.Location = new System.Drawing.Point(100,400);
-this.lblSourceBillNO.Name = "lblSourceBillNO";
-this.lblSourceBillNO.Size = new System.Drawing.Size(41, 12);
-this.lblSourceBillNO.TabIndex = 16;
-this.lblSourceBillNO.Text = "来源单号";
-this.txtSourceBillNO.Location = new System.Drawing.Point(173,396);
-this.txtSourceBillNO.Name = "txtSourceBillNO";
-this.txtSourceBillNO.Size = new System.Drawing.Size(100, 21);
-this.txtSourceBillNO.TabIndex = 16;
-this.Controls.Add(this.lblSourceBillNO);
-this.Controls.Add(this.txtSourceBillNO);
+           //#####30SourceBillNo###String
+this.lblSourceBillNo.AutoSize = true;
+this.lblSourceBillNo.Location = new System.Drawing.Point(100,400);
+this.lblSourceBillNo.Name = "lblSourceBillNo";
+this.lblSourceBillNo.Size = new System.Drawing.Size(41, 12);
+this.lblSourceBillNo.TabIndex = 16;
+this.lblSourceBillNo.Text = "来源单号";
+this.txtSourceBillNo.Location = new System.Drawing.Point(173,396);
+this.txtSourceBillNo.Name = "txtSourceBillNo";
+this.txtSourceBillNo.Size = new System.Drawing.Size(100, 21);
+this.txtSourceBillNo.TabIndex = 16;
+this.Controls.Add(this.lblSourceBillNo);
+this.Controls.Add(this.txtSourceBillNo);
 
            //#####PrePaymentStatus###Int64
 //属性测试425PrePaymentStatus
@@ -806,8 +806,8 @@ this.Controls.Add(this.txtPrePaymentReason );
 
                 
                 
-                this.Controls.Add(this.lblSourceBillNO );
-this.Controls.Add(this.txtSourceBillNO );
+                this.Controls.Add(this.lblSourceBillNo );
+this.Controls.Add(this.txtSourceBillNo );
 
                 
                 this.Controls.Add(this.lblForeignPrepaidAmount );
@@ -953,8 +953,8 @@ private ComponentFactory.Krypton.Toolkit.KryptonTextBox txtPrePaymentReason;
               
     
         
-              private ComponentFactory.Krypton.Toolkit.KryptonLabel lblSourceBillNO;
-private ComponentFactory.Krypton.Toolkit.KryptonTextBox txtSourceBillNO;
+              private ComponentFactory.Krypton.Toolkit.KryptonLabel lblSourceBillNo;
+private ComponentFactory.Krypton.Toolkit.KryptonTextBox txtSourceBillNo;
 
     
         

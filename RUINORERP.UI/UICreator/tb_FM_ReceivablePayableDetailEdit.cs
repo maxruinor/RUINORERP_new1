@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：05/06/2025 10:30:43
+// 时间：05/07/2025 15:37:48
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -31,9 +31,12 @@ namespace RUINORERP.UI
     {
      public tb_FM_ReceivablePayableDetailEdit() {
      
-             
-                    InitializeComponent();
+                         InitializeComponent();
       
+        
+        
+        
+        
         
         
         
@@ -57,7 +60,10 @@ namespace RUINORERP.UI
         {
         tb_FM_ReceivablePayableDetail entity = new tb_FM_ReceivablePayableDetail();
                      entity.ARAPId = Int64.Parse(txtARAPId.Text);
-                        entity.ProdDetailID = Int64.Parse(txtProdDetailID.Text);
+                        entity.SourceBizType = Int32.Parse(txtSourceBizType.Text);
+                        entity.SourceBillId = Int64.Parse(txtSourceBillId.Text);
+                        entity.SourceBillNo = txtSourceBillNo.Text ;
+                       entity.ProdDetailID = Int64.Parse(txtProdDetailID.Text);
                         entity.property = txtproperty.Text ;
                        entity.Specifications = txtSpecifications.Text ;
                        entity.Unit_ID = Int64.Parse(txtUnit_ID.Text);
@@ -82,6 +88,9 @@ namespace RUINORERP.UI
         {
         _EditEntity = entity;
                        // DataBindingHelper.BindData4Cmb<tb_FM_ReceivablePayable>(entity, k => k.ARAPId, v=>v.XXNAME, cmbARAPId);
+           DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayableDetail>(entity, t => t.SourceBizType, txtSourceBizType, BindDataType4TextBox.Qty,false);
+           DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayableDetail>(entity, t => t.SourceBillId, txtSourceBillId, BindDataType4TextBox.Qty,false);
+           DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayableDetail>(entity, t => t.SourceBillNo, txtSourceBillNo, BindDataType4TextBox.Text,false);
           // DataBindingHelper.BindData4Cmb<tb_ProdDetail>(entity, k => k.ProdDetailID, v=>v.XXNAME, cmbProdDetailID);
            DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayableDetail>(entity, t => t.property, txtproperty, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayableDetail>(entity, t => t.Specifications, txtSpecifications, BindDataType4TextBox.Text,false);

@@ -421,7 +421,7 @@ namespace RUINORERP.Business
 
                             //找到支付记录
                             //通过负数的应收，生成退款单
-                            tb_FM_PaymentRecord paymentRecord = await paymentController.CreatePaymentRecord(returnpayable, false);
+                              await paymentController.CreatePaymentRecord(new List<tb_FM_ReceivablePayable> { returnpayable }, false);
                             //退款单生成成功等待 财务审核
                             #endregion
 
@@ -749,63 +749,61 @@ namespace RUINORERP.Business
                     //被冲销的 找回来
                     var RetrunPayableList = await ctrpayable.BaseQueryByWhereAsync(c => c.CustomerVendor_ID == entity.CustomerVendor_ID
                     && (c.ARAPStatus == (long)ARAPStatus.已冲销)
-                    && c.SourceBill_ID == entity.SaleOutRe_ID
+                   
                     );
 
                     var returnpayable = RetrunPayableList.FirstOrDefault();
-
-                    //找到审核时可能被冲销的正向应收清单，再加回去
-                    var PositivePayableList = await ctrpayable.BaseQueryByWhereAsync(c => c.CustomerVendor_ID == returnpayable.CustomerVendor_ID
-                      && c.ARAPStatus == (long)ARAPStatus.已冲销
-                      && (c.TotalLocalPayableAmount > 0 || c.TotalForeignPayableAmount > 0)
-                      );
-
-                    PositivePayableList = PositivePayableList.OrderBy(c => c.Created_at.Value).ToList();
-
-                    //反向加回去
-                    for (int i = 0; i < PositivePayableList.Count; i++)
+                    if (returnpayable != null)
                     {
-                        var OriginalPayable = PositivePayableList[i];
-                        #region 如果原始应收没有核销付款，则直接生成 红字应收核销
+                        //找到审核时可能被冲销的正向应收清单，再加回去
+                        var PositivePayableList = await ctrpayable.BaseQueryByWhereAsync(c => c.CustomerVendor_ID == returnpayable.CustomerVendor_ID
+                          && c.ARAPStatus == (long)ARAPStatus.已冲销
+                          && (c.TotalLocalPayableAmount > 0 || c.TotalForeignPayableAmount > 0)
+                          );
 
-                        //判断 如果出库的应收金额和未核销余额一样。说明 客户还没有支付任何款，则可以直接全额红冲
-                        OriginalPayable.LocalBalanceAmount += entity.TotalAmount;
+                        PositivePayableList = PositivePayableList.OrderBy(c => c.Created_at.Value).ToList();
 
-                        returnpayable.LocalBalanceAmount -= entity.TotalAmount;
+                        //反向加回去
+                        for (int i = 0; i < PositivePayableList.Count; i++)
+                        {
+                            var OriginalPayable = PositivePayableList[i];
+                            #region 如果原始应收没有核销付款，则直接生成 红字应收核销
 
-                        OriginalPayable.ForeignBalanceAmount += entity.ForeignTotalAmount;
+                            //判断 如果出库的应收金额和未核销余额一样。说明 客户还没有支付任何款，则可以直接全额红冲
+                            OriginalPayable.LocalBalanceAmount += entity.TotalAmount;
 
-                        returnpayable.ForeignBalanceAmount -= entity.ForeignTotalAmount;
+                            returnpayable.LocalBalanceAmount -= entity.TotalAmount;
+
+                            OriginalPayable.ForeignBalanceAmount += entity.ForeignTotalAmount;
+
+                            returnpayable.ForeignBalanceAmount -= entity.ForeignTotalAmount;
 
 
-                        OriginalPayable.ARAPStatus = (long)ARAPStatus.已冲销;
-                        returnpayable.ARAPStatus = (long)ARAPStatus.已冲销;
-                        //生成核销记录证明正负抵消应收应付
-                        //生成一笔核销记录  应收红冲
-                        tb_FM_PaymentSettlementController<tb_FM_PaymentSettlement> settlementController = _appContext.GetRequiredService<tb_FM_PaymentSettlementController<tb_FM_PaymentSettlement>>();
-                        await settlementController.GenerateSettlement(OriginalPayable, returnpayable);
+                            OriginalPayable.ARAPStatus = (long)ARAPStatus.已冲销;
+                            returnpayable.ARAPStatus = (long)ARAPStatus.已冲销;
+                            //生成核销记录证明正负抵消应收应付
+                            //生成一笔核销记录  应收红冲
+                            tb_FM_PaymentSettlementController<tb_FM_PaymentSettlement> settlementController = _appContext.GetRequiredService<tb_FM_PaymentSettlementController<tb_FM_PaymentSettlement>>();
+                            await settlementController.GenerateSettlement(OriginalPayable, returnpayable);
 
-                        await _unitOfWorkManage.GetDbClient().Updateable<tb_FM_ReceivablePayable>(OriginalPayable).ExecuteCommandAsync();
-                        await _unitOfWorkManage.GetDbClient().Updateable<tb_FM_ReceivablePayable>(returnpayable).ExecuteCommandAsync();
-                        #endregion
+                            await _unitOfWorkManage.GetDbClient().Updateable<tb_FM_ReceivablePayable>(OriginalPayable).ExecuteCommandAsync();
+                            await _unitOfWorkManage.GetDbClient().Updateable<tb_FM_ReceivablePayable>(returnpayable).ExecuteCommandAsync();
+                            #endregion
+                        }
+
+                        if (returnpayable.LocalBalanceAmount > 0 || returnpayable.ForeignBalanceAmount > 0)
+                        {
+                            var paymentController = _appContext.GetRequiredService<tb_FM_PaymentRecordController<tb_FM_PaymentRecord>>();
+                            #region 通过负数的应收，生成退款单
+
+                            //找到支付记录
+                            //通过负数的应收，生成退款单
+                            //tb_FM_PaymentRecord paymentRecord = await paymentController.CreatePaymentRecord(returnpayable, false);
+                            //退款单生成成功等待 财务审核
+                            #endregion
+
+                        }
                     }
-
-                    if (returnpayable.LocalBalanceAmount > 0 || returnpayable.ForeignBalanceAmount > 0)
-                    {
-                        var paymentController = _appContext.GetRequiredService<tb_FM_PaymentRecordController<tb_FM_PaymentRecord>>();
-                        #region 通过负数的应收，生成退款单
-
-                        //找到支付记录
-                        //通过负数的应收，生成退款单
-                        //tb_FM_PaymentRecord paymentRecord = await paymentController.CreatePaymentRecord(returnpayable, false);
-                        //退款单生成成功等待 财务审核
-                        #endregion
-
-                    }
-
-
-
-
 
                     #endregion
                 }

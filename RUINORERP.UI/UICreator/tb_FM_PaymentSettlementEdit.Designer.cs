@@ -3,7 +3,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：05/06/2025 10:30:39
+// 时间：05/07/2025 15:37:43
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -58,11 +58,11 @@ this.txtSettlementNo = new Krypton.Toolkit.KryptonTextBox();
 ReversedSettlementID主外字段不一致。this.lblSourceBizType = new Krypton.Toolkit.KryptonLabel();
 this.txtSourceBizType = new Krypton.Toolkit.KryptonTextBox();
 
-ReversedSettlementID主外字段不一致。this.lblSourceBillID = new Krypton.Toolkit.KryptonLabel();
-this.txtSourceBillID = new Krypton.Toolkit.KryptonTextBox();
+ReversedSettlementID主外字段不一致。this.lblSourceBillId = new Krypton.Toolkit.KryptonLabel();
+this.txtSourceBillId = new Krypton.Toolkit.KryptonTextBox();
 
-this.lblSourceBillNO = new Krypton.Toolkit.KryptonLabel();
-this.txtSourceBillNO = new Krypton.Toolkit.KryptonTextBox();
+this.lblSourceBillNo = new Krypton.Toolkit.KryptonLabel();
+this.txtSourceBillNo = new Krypton.Toolkit.KryptonTextBox();
 
 this.lblExchangeRate = new Krypton.Toolkit.KryptonLabel();
 this.txtExchangeRate = new Krypton.Toolkit.KryptonTextBox();
@@ -70,11 +70,11 @@ this.txtExchangeRate = new Krypton.Toolkit.KryptonTextBox();
 ReversedSettlementID主外字段不一致。this.lblTargetBizType = new Krypton.Toolkit.KryptonLabel();
 this.txtTargetBizType = new Krypton.Toolkit.KryptonTextBox();
 
-ReversedSettlementID主外字段不一致。this.lblTargetBillID = new Krypton.Toolkit.KryptonLabel();
-this.txtTargetBillID = new Krypton.Toolkit.KryptonTextBox();
+ReversedSettlementID主外字段不一致。this.lblTargetBillId = new Krypton.Toolkit.KryptonLabel();
+this.txtTargetBillId = new Krypton.Toolkit.KryptonTextBox();
 
-this.lblTargetBillNO = new Krypton.Toolkit.KryptonLabel();
-this.txtTargetBillNO = new Krypton.Toolkit.KryptonTextBox();
+this.lblTargetBillNo = new Krypton.Toolkit.KryptonLabel();
+this.txtTargetBillNo = new Krypton.Toolkit.KryptonTextBox();
 
 ReversedSettlementID主外字段不一致。this.lblReceivePaymentType = new Krypton.Toolkit.KryptonLabel();
 this.txtReceivePaymentType = new Krypton.Toolkit.KryptonTextBox();
@@ -183,36 +183,36 @@ this.txtSourceBizType.TabIndex = 2;
 this.Controls.Add(this.lblSourceBizType);
 this.Controls.Add(this.txtSourceBizType);
 
-           //#####SourceBillID###Int64
-//属性测试75SourceBillID
-//属性测试75SourceBillID
-//属性测试75SourceBillID
-ReversedSettlementID主外字段不一致。this.lblSourceBillID.AutoSize = true;
-this.lblSourceBillID.Location = new System.Drawing.Point(100,75);
-this.lblSourceBillID.Name = "lblSourceBillID";
-this.lblSourceBillID.Size = new System.Drawing.Size(41, 12);
-this.lblSourceBillID.TabIndex = 3;
-this.lblSourceBillID.Text = "来源单据";
-this.txtSourceBillID.Location = new System.Drawing.Point(173,71);
-this.txtSourceBillID.Name = "txtSourceBillID";
-this.txtSourceBillID.Size = new System.Drawing.Size(100, 21);
-this.txtSourceBillID.TabIndex = 3;
-this.Controls.Add(this.lblSourceBillID);
-this.Controls.Add(this.txtSourceBillID);
+           //#####SourceBillId###Int64
+//属性测试75SourceBillId
+//属性测试75SourceBillId
+//属性测试75SourceBillId
+ReversedSettlementID主外字段不一致。this.lblSourceBillId.AutoSize = true;
+this.lblSourceBillId.Location = new System.Drawing.Point(100,75);
+this.lblSourceBillId.Name = "lblSourceBillId";
+this.lblSourceBillId.Size = new System.Drawing.Size(41, 12);
+this.lblSourceBillId.TabIndex = 3;
+this.lblSourceBillId.Text = "来源单据";
+this.txtSourceBillId.Location = new System.Drawing.Point(173,71);
+this.txtSourceBillId.Name = "txtSourceBillId";
+this.txtSourceBillId.Size = new System.Drawing.Size(100, 21);
+this.txtSourceBillId.TabIndex = 3;
+this.Controls.Add(this.lblSourceBillId);
+this.Controls.Add(this.txtSourceBillId);
 
-           //#####30SourceBillNO###String
-this.lblSourceBillNO.AutoSize = true;
-this.lblSourceBillNO.Location = new System.Drawing.Point(100,100);
-this.lblSourceBillNO.Name = "lblSourceBillNO";
-this.lblSourceBillNO.Size = new System.Drawing.Size(41, 12);
-this.lblSourceBillNO.TabIndex = 4;
-this.lblSourceBillNO.Text = "来源单据编号";
-this.txtSourceBillNO.Location = new System.Drawing.Point(173,96);
-this.txtSourceBillNO.Name = "txtSourceBillNO";
-this.txtSourceBillNO.Size = new System.Drawing.Size(100, 21);
-this.txtSourceBillNO.TabIndex = 4;
-this.Controls.Add(this.lblSourceBillNO);
-this.Controls.Add(this.txtSourceBillNO);
+           //#####30SourceBillNo###String
+this.lblSourceBillNo.AutoSize = true;
+this.lblSourceBillNo.Location = new System.Drawing.Point(100,100);
+this.lblSourceBillNo.Name = "lblSourceBillNo";
+this.lblSourceBillNo.Size = new System.Drawing.Size(41, 12);
+this.lblSourceBillNo.TabIndex = 4;
+this.lblSourceBillNo.Text = "来源单据编号";
+this.txtSourceBillNo.Location = new System.Drawing.Point(173,96);
+this.txtSourceBillNo.Name = "txtSourceBillNo";
+this.txtSourceBillNo.Size = new System.Drawing.Size(100, 21);
+this.txtSourceBillNo.TabIndex = 4;
+this.Controls.Add(this.lblSourceBillNo);
+this.Controls.Add(this.txtSourceBillNo);
 
            //#####ExchangeRate###Decimal
 this.lblExchangeRate.AutoSize = true;
@@ -246,36 +246,36 @@ this.txtTargetBizType.TabIndex = 6;
 this.Controls.Add(this.lblTargetBizType);
 this.Controls.Add(this.txtTargetBizType);
 
-           //#####TargetBillID###Int64
-//属性测试175TargetBillID
-//属性测试175TargetBillID
-//属性测试175TargetBillID
-ReversedSettlementID主外字段不一致。this.lblTargetBillID.AutoSize = true;
-this.lblTargetBillID.Location = new System.Drawing.Point(100,175);
-this.lblTargetBillID.Name = "lblTargetBillID";
-this.lblTargetBillID.Size = new System.Drawing.Size(41, 12);
-this.lblTargetBillID.TabIndex = 7;
-this.lblTargetBillID.Text = "目标单据";
-this.txtTargetBillID.Location = new System.Drawing.Point(173,171);
-this.txtTargetBillID.Name = "txtTargetBillID";
-this.txtTargetBillID.Size = new System.Drawing.Size(100, 21);
-this.txtTargetBillID.TabIndex = 7;
-this.Controls.Add(this.lblTargetBillID);
-this.Controls.Add(this.txtTargetBillID);
+           //#####TargetBillId###Int64
+//属性测试175TargetBillId
+//属性测试175TargetBillId
+//属性测试175TargetBillId
+ReversedSettlementID主外字段不一致。this.lblTargetBillId.AutoSize = true;
+this.lblTargetBillId.Location = new System.Drawing.Point(100,175);
+this.lblTargetBillId.Name = "lblTargetBillId";
+this.lblTargetBillId.Size = new System.Drawing.Size(41, 12);
+this.lblTargetBillId.TabIndex = 7;
+this.lblTargetBillId.Text = "目标单据";
+this.txtTargetBillId.Location = new System.Drawing.Point(173,171);
+this.txtTargetBillId.Name = "txtTargetBillId";
+this.txtTargetBillId.Size = new System.Drawing.Size(100, 21);
+this.txtTargetBillId.TabIndex = 7;
+this.Controls.Add(this.lblTargetBillId);
+this.Controls.Add(this.txtTargetBillId);
 
-           //#####30TargetBillNO###String
-this.lblTargetBillNO.AutoSize = true;
-this.lblTargetBillNO.Location = new System.Drawing.Point(100,200);
-this.lblTargetBillNO.Name = "lblTargetBillNO";
-this.lblTargetBillNO.Size = new System.Drawing.Size(41, 12);
-this.lblTargetBillNO.TabIndex = 8;
-this.lblTargetBillNO.Text = "目标单据编号";
-this.txtTargetBillNO.Location = new System.Drawing.Point(173,196);
-this.txtTargetBillNO.Name = "txtTargetBillNO";
-this.txtTargetBillNO.Size = new System.Drawing.Size(100, 21);
-this.txtTargetBillNO.TabIndex = 8;
-this.Controls.Add(this.lblTargetBillNO);
-this.Controls.Add(this.txtTargetBillNO);
+           //#####30TargetBillNo###String
+this.lblTargetBillNo.AutoSize = true;
+this.lblTargetBillNo.Location = new System.Drawing.Point(100,200);
+this.lblTargetBillNo.Name = "lblTargetBillNo";
+this.lblTargetBillNo.Size = new System.Drawing.Size(41, 12);
+this.lblTargetBillNo.TabIndex = 8;
+this.lblTargetBillNo.Text = "目标单据编号";
+this.txtTargetBillNo.Location = new System.Drawing.Point(173,196);
+this.txtTargetBillNo.Name = "txtTargetBillNo";
+this.txtTargetBillNo.Size = new System.Drawing.Size(100, 21);
+this.txtTargetBillNo.TabIndex = 8;
+this.Controls.Add(this.lblTargetBillNo);
+this.Controls.Add(this.txtTargetBillNo);
 
            //#####ReceivePaymentType###Int32
 //属性测试225ReceivePaymentType
@@ -536,11 +536,11 @@ this.Controls.Add(this.txtSettlementNo );
                 ReversedSettlementID主外字段不一致。this.Controls.Add(this.lblSourceBizType );
 this.Controls.Add(this.txtSourceBizType );
 
-                ReversedSettlementID主外字段不一致。this.Controls.Add(this.lblSourceBillID );
-this.Controls.Add(this.txtSourceBillID );
+                ReversedSettlementID主外字段不一致。this.Controls.Add(this.lblSourceBillId );
+this.Controls.Add(this.txtSourceBillId );
 
-                this.Controls.Add(this.lblSourceBillNO );
-this.Controls.Add(this.txtSourceBillNO );
+                this.Controls.Add(this.lblSourceBillNo );
+this.Controls.Add(this.txtSourceBillNo );
 
                 this.Controls.Add(this.lblExchangeRate );
 this.Controls.Add(this.txtExchangeRate );
@@ -548,11 +548,11 @@ this.Controls.Add(this.txtExchangeRate );
                 ReversedSettlementID主外字段不一致。this.Controls.Add(this.lblTargetBizType );
 this.Controls.Add(this.txtTargetBizType );
 
-                ReversedSettlementID主外字段不一致。this.Controls.Add(this.lblTargetBillID );
-this.Controls.Add(this.txtTargetBillID );
+                ReversedSettlementID主外字段不一致。this.Controls.Add(this.lblTargetBillId );
+this.Controls.Add(this.txtTargetBillId );
 
-                this.Controls.Add(this.lblTargetBillNO );
-this.Controls.Add(this.txtTargetBillNO );
+                this.Controls.Add(this.lblTargetBillNo );
+this.Controls.Add(this.txtTargetBillNo );
 
                 ReversedSettlementID主外字段不一致。this.Controls.Add(this.lblReceivePaymentType );
 this.Controls.Add(this.txtReceivePaymentType );
@@ -633,13 +633,13 @@ private Krypton.Toolkit.KryptonTextBox txtSourceBizType;
 
     
         
-              ReversedSettlementID主外字段不一致。private Krypton.Toolkit.KryptonLabel lblSourceBillID;
-private Krypton.Toolkit.KryptonTextBox txtSourceBillID;
+              ReversedSettlementID主外字段不一致。private Krypton.Toolkit.KryptonLabel lblSourceBillId;
+private Krypton.Toolkit.KryptonTextBox txtSourceBillId;
 
     
         
-              private Krypton.Toolkit.KryptonLabel lblSourceBillNO;
-private Krypton.Toolkit.KryptonTextBox txtSourceBillNO;
+              private Krypton.Toolkit.KryptonLabel lblSourceBillNo;
+private Krypton.Toolkit.KryptonTextBox txtSourceBillNo;
 
     
         
@@ -653,13 +653,13 @@ private Krypton.Toolkit.KryptonTextBox txtTargetBizType;
 
     
         
-              ReversedSettlementID主外字段不一致。private Krypton.Toolkit.KryptonLabel lblTargetBillID;
-private Krypton.Toolkit.KryptonTextBox txtTargetBillID;
+              ReversedSettlementID主外字段不一致。private Krypton.Toolkit.KryptonLabel lblTargetBillId;
+private Krypton.Toolkit.KryptonTextBox txtTargetBillId;
 
     
         
-              private Krypton.Toolkit.KryptonLabel lblTargetBillNO;
-private Krypton.Toolkit.KryptonTextBox txtTargetBillNO;
+              private Krypton.Toolkit.KryptonLabel lblTargetBillNo;
+private Krypton.Toolkit.KryptonTextBox txtTargetBillNo;
 
     
         

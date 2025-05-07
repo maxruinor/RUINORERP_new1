@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：04/30/2025 15:18:03
+// 时间：05/07/2025 14:22:23
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -223,10 +223,10 @@ namespace RUINORERP.Model
 
         //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_FM_PaymentRecord.PayeeInfoID))]
-        public virtual List<tb_FM_PaymentRecord> tb_FM_PaymentRecords { get; set; }
-        //tb_FM_PaymentRecord.PayeeInfoID)
-        //PayeeInfoID.FK_FM_PAYMENTRECORD_REF_PAYEEINFO)
+        [Navigate(NavigateType.OneToMany, nameof(tb_FM_Statement.PayeeInfoID))]
+        public virtual List<tb_FM_Statement> tb_FM_Statements { get; set; }
+        //tb_FM_Statement.PayeeInfoID)
+        //PayeeInfoID.FK_FM_STATEMENT_REF_FM_PAYEEINFO)
         //tb_FM_PayeeInfo.PayeeInfoID)
 
         //[Browsable(false)]打印报表时的数据源会不显示
@@ -251,6 +251,14 @@ namespace RUINORERP.Model
         public virtual List<tb_FM_ExpenseClaim> tb_FM_ExpenseClaims { get; set; }
         //tb_FM_ExpenseClaim.PayeeInfoID)
         //PayeeInfoID.FK_EXPENSECLAIM_REF_PAYEEINFO)
+        //tb_FM_PayeeInfo.PayeeInfoID)
+
+        //[Browsable(false)]打印报表时的数据源会不显示
+        [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_FM_PaymentRecord.PayeeInfoID))]
+        public virtual List<tb_FM_PaymentRecord> tb_FM_PaymentRecords { get; set; }
+        //tb_FM_PaymentRecord.PayeeInfoID)
+        //PayeeInfoID.FK_FM_PAYMENTRECORD_REF_PAYEEINFO)
         //tb_FM_PayeeInfo.PayeeInfoID)
 
         //[Browsable(false)]打印报表时的数据源会不显示

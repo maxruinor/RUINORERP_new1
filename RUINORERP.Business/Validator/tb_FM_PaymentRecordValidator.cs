@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：05/06/2025 10:30:38
+// 时间：05/07/2025 15:37:42
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -42,15 +42,6 @@ namespace RUINORERP.Business
  RuleFor(tb_FM_PaymentRecord =>tb_FM_PaymentRecord.PaymentNo).NotEmpty().WithMessage("支付单号:不能为空。");
 
 //***** 
- RuleFor(tb_FM_PaymentRecord =>tb_FM_PaymentRecord.SourceBizType).NotNull().WithMessage("来源业务:不能为空。");
-
-//***** 
- RuleFor(tb_FM_PaymentRecord =>tb_FM_PaymentRecord.SourceBilllID).NotNull().WithMessage("来源单据:不能为空。");
-
- RuleFor(tb_FM_PaymentRecord =>tb_FM_PaymentRecord.SourceBillNO).MaximumLength(15).WithMessage("来源单号:不能超过最大长度,15.");
- RuleFor(tb_FM_PaymentRecord =>tb_FM_PaymentRecord.SourceBillNO).NotEmpty().WithMessage("来源单号:不能为空。");
-
-//***** 
  RuleFor(tb_FM_PaymentRecord =>tb_FM_PaymentRecord.ReceivePaymentType).NotNull().WithMessage("收付类型:不能为空。");
 
  RuleFor(tb_FM_PaymentRecord =>tb_FM_PaymentRecord.Account_id).Must(CheckForeignKeyValueCanNull).WithMessage("公司账户:下拉选择值不正确。");
@@ -63,30 +54,19 @@ namespace RUINORERP.Business
 
  RuleFor(tb_FM_PaymentRecord =>tb_FM_PaymentRecord.PayeeAccountNo).MaximumLength(50).WithMessage("收款账号:不能超过最大长度,50.");
 
- RuleFor(tb_FM_PaymentRecord =>tb_FM_PaymentRecord.Currency_ID).Must(CheckForeignKeyValueCanNull).WithMessage("币别:下拉选择值不正确。");
- RuleFor(tb_FM_PaymentRecord =>tb_FM_PaymentRecord.Currency_ID).NotEmpty().When(x => x.Currency_ID.HasValue);
+ RuleFor(tb_FM_PaymentRecord =>tb_FM_PaymentRecord.Currency_ID).Must(CheckForeignKeyValue).WithMessage("币别:下拉选择值不正确。");
 
- RuleFor(x => x.ExchangeRate).PrecisionScale(10,4,true).WithMessage("汇率:小数位不能超过4。");
+ RuleFor(x => x.TotalForeignAmount).PrecisionScale(19,4,true).WithMessage("支付金额外币:小数位不能超过4。");
 
- RuleFor(x => x.ForeignPaidAmount).PrecisionScale(19,4,true).WithMessage("支付金额外币:小数位不能超过4。");
-
- RuleFor(x => x.LocalPaidAmount).PrecisionScale(19,4,true).WithMessage("支付金额本币:小数位不能超过4。");
+ RuleFor(x => x.TotalLocalAmount).PrecisionScale(19,4,true).WithMessage("支付金额本币:小数位不能超过4。");
 
 
  RuleFor(tb_FM_PaymentRecord =>tb_FM_PaymentRecord.Employee_ID).Must(CheckForeignKeyValueCanNull).WithMessage("经办人:下拉选择值不正确。");
  RuleFor(tb_FM_PaymentRecord =>tb_FM_PaymentRecord.Employee_ID).NotEmpty().When(x => x.Employee_ID.HasValue);
 
- RuleFor(tb_FM_PaymentRecord =>tb_FM_PaymentRecord.DepartmentID).Must(CheckForeignKeyValueCanNull).WithMessage("部门:下拉选择值不正确。");
- RuleFor(tb_FM_PaymentRecord =>tb_FM_PaymentRecord.DepartmentID).NotEmpty().When(x => x.DepartmentID.HasValue);
-
- RuleFor(tb_FM_PaymentRecord =>tb_FM_PaymentRecord.ProjectGroup_ID).Must(CheckForeignKeyValueCanNull).WithMessage("项目组:下拉选择值不正确。");
- RuleFor(tb_FM_PaymentRecord =>tb_FM_PaymentRecord.ProjectGroup_ID).NotEmpty().When(x => x.ProjectGroup_ID.HasValue);
-
  RuleFor(tb_FM_PaymentRecord =>tb_FM_PaymentRecord.Paytype_ID).Must(CheckForeignKeyValueCanNull).WithMessage("付款方式:下拉选择值不正确。");
  RuleFor(tb_FM_PaymentRecord =>tb_FM_PaymentRecord.Paytype_ID).NotEmpty().When(x => x.Paytype_ID.HasValue);
-
- RuleFor(tb_FM_PaymentRecord =>tb_FM_PaymentRecord.PaymentStatus).NotEmpty().When(x => x.PaymentStatus.HasValue);
-
+ 
  RuleFor(tb_FM_PaymentRecord =>tb_FM_PaymentRecord.PaymentImagePath).MaximumLength(300).WithMessage("付款凭证:不能超过最大长度,300.");
 
  RuleFor(tb_FM_PaymentRecord =>tb_FM_PaymentRecord.ReferenceNo).MaximumLength(150).WithMessage("交易参考号:不能超过最大长度,150.");
@@ -115,11 +95,30 @@ namespace RUINORERP.Business
 //***** 
  RuleFor(tb_FM_PaymentRecord =>tb_FM_PaymentRecord.PrintStatus).NotNull().WithMessage("打印状态:不能为空。");
 
-           	        Initialize();
+           	                //long?
+                //PaymentId
+                //tb_FM_PaymentRecordDetail
+                //RuleFor(x => x.tb_FM_PaymentRecordDetails).Must(DetailedRecordsNotEmpty).WithMessage("明细不能为空");
+               //视图不需要验证，目前认为无编辑新增操作
+                //RuleFor(c => c.tb_FM_PaymentRecordDetails).NotNull();
+                //RuleForEach(x => x.tb_FM_PaymentRecordDetails).NotNull();
+                //RuleFor(x => x.tb_FM_PaymentRecordDetails).Must(DetailedRecordsNotEmpty).WithMessage("明细不能为空");
+                    Initialize();
      }
 
 
 
+
+        private bool DetailedRecordsNotEmpty(List<tb_FM_PaymentRecordDetail> details)
+        {
+            bool rs = true;
+            if (details == null || details.Count == 0)
+            {
+                return false;
+            }
+            return rs;
+        }
+        
 
 
 

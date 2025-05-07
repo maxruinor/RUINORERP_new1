@@ -1,0 +1,34 @@
+﻿
+// **************************************
+// 生成：CodeBuilder (http://www.fireasy.cn/codebuilder)
+// 项目：信息系统
+// 版权：Copyright RUINOR
+// 作者：Watson
+// 时间：05/07/2025 15:37:51
+// **************************************
+using AutoMapper;
+using RUINORERP.IRepository.Base;
+using RUINORERP.IServices;
+using RUINORERP.Model;
+using RUINORERP.Services.BASE;
+using System.Threading.Tasks;
+using System;
+﻿using SqlSugar;
+using System.Collections.Generic;
+
+
+namespace RUINORERP.Services
+{
+    /// <summary>
+    /// 对账单明细（关联应收单） 
+    /// </summary>
+    public partial class tb_FM_StatementDetailServices : BaseServices<tb_FM_StatementDetail>, Itb_FM_StatementDetailServices
+    {
+        IMapper _mapper;
+        public tb_FM_StatementDetailServices(IMapper mapper, IBaseRepository<tb_FM_StatementDetail> dal)
+        {
+            this._mapper = mapper;
+            base.BaseDal = dal;
+        }
+    }
+}

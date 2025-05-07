@@ -34,7 +34,7 @@ namespace RUINORERP.UI.PSI.SAL
 
         }
 
-   
+
 
         private void UCSaleOrderStatistics_Load(object sender, EventArgs e)
         {
@@ -54,11 +54,12 @@ namespace RUINORERP.UI.PSI.SAL
             base._UCMasterQuery.ColDisplayTypes.Add(typeof(tb_FM_OtherExpense));
             base._UCMasterQuery.ColDisplayTypes.Add(typeof(tb_Currency));
             base._UCMasterQuery.ColDisplayTypes.Add(typeof(tb_FM_ExpenseType));
+            base._UCMasterQuery.ColDisplayTypes.Add(typeof(tb_CustomerVendor));
             base._UCOutlookGridGroupAnalysis.ColDisplayTypes = base._UCMasterQuery.ColDisplayTypes;
             base._UCOutlookGridGroupAnalysis.GridRelated.SetRelatedInfo<View_FM_OtherExpenseItems, tb_FM_OtherExpense>(c => c.ExpenseNo, r => r.ExpenseNo);
- 
+
         }
-  
+
 
         public override void BuildLimitQueryConditions()
         {

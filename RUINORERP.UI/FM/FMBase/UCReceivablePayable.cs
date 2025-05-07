@@ -373,6 +373,7 @@ namespace RUINORERP.UI.FM
 
         private void UCStockIn_Load(object sender, EventArgs e)
         {
+
             #region
             switch (PaymentType)
             {

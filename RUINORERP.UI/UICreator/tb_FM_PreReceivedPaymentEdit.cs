@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：05/06/2025 10:30:39
+// 时间：05/07/2025 15:37:44
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -96,8 +96,8 @@ namespace RUINORERP.UI
                         entity.PrePayDate = DateTime.Parse(txtPrePayDate.Text);
                         entity.PrePaymentReason = txtPrePaymentReason.Text ;
                        entity.SourceBizType = Int32.Parse(txtSourceBizType.Text);
-                        entity.SourceBill_ID = Int64.Parse(txtSourceBill_ID.Text);
-                        entity.SourceBillNO = txtSourceBillNO.Text ;
+                        entity.SourceBillId = Int64.Parse(txtSourceBillId.Text);
+                        entity.SourceBillNo = txtSourceBillNo.Text ;
                        entity.PrePaymentStatus = Int64.Parse(txtPrePaymentStatus.Text);
                         entity.ForeignPrepaidAmount = Decimal.Parse(txtForeignPrepaidAmount.Text);
                         entity.LocalPrepaidAmount = Decimal.Parse(txtLocalPrepaidAmount.Text);
@@ -147,8 +147,8 @@ namespace RUINORERP.UI
            DataBindingHelper.BindData4DataTime<tb_FM_PreReceivedPayment>(entity, t => t.PrePayDate, dtpPrePayDate,false);
            DataBindingHelper.BindData4TextBox<tb_FM_PreReceivedPayment>(entity, t => t.PrePaymentReason, txtPrePaymentReason, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_FM_PreReceivedPayment>(entity, t => t.SourceBizType, txtSourceBizType, BindDataType4TextBox.Qty,false);
-           DataBindingHelper.BindData4TextBox<tb_FM_PreReceivedPayment>(entity, t => t.SourceBill_ID, txtSourceBill_ID, BindDataType4TextBox.Qty,false);
-           DataBindingHelper.BindData4TextBox<tb_FM_PreReceivedPayment>(entity, t => t.SourceBillNO, txtSourceBillNO, BindDataType4TextBox.Text,false);
+           DataBindingHelper.BindData4TextBox<tb_FM_PreReceivedPayment>(entity, t => t.SourceBillId, txtSourceBillId, BindDataType4TextBox.Qty,false);
+           DataBindingHelper.BindData4TextBox<tb_FM_PreReceivedPayment>(entity, t => t.SourceBillNo, txtSourceBillNo, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_FM_PreReceivedPayment>(entity, t => t.PrePaymentStatus, txtPrePaymentStatus, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4TextBox<tb_FM_PreReceivedPayment>(entity, t => t.ForeignPrepaidAmount.ToString(), txtForeignPrepaidAmount, BindDataType4TextBox.Money,false);
            DataBindingHelper.BindData4TextBox<tb_FM_PreReceivedPayment>(entity, t => t.LocalPrepaidAmount.ToString(), txtLocalPrepaidAmount, BindDataType4TextBox.Money,false);

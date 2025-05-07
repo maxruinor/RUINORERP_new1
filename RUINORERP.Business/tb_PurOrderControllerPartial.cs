@@ -254,9 +254,9 @@ namespace RUINORERP.Business
                     }
                     // 外币相关处理 正确是 外币时一定要有汇率
                     decimal exchangeRate = 1; // 获取销售订单的汇率
-                    if (entity.Currency_ID.HasValue && _appContext.BaseCurrency.Currency_ID != entity.Currency_ID.Value)
+                    if (_appContext.BaseCurrency.Currency_ID != entity.Currency_ID)
                     {
-                        exchangeRate = entity.ExchangeRate.Value; // 获取销售订单的汇率
+                        exchangeRate = entity.ExchangeRate; // 获取销售订单的汇率
                                                                   // 这里可以考虑获取最新的汇率，而不是直接使用销售订单的汇率
                                                                   // exchangeRate = GetLatestExchangeRate(entity.Currency_ID.Value, _appContext.BaseCurrency.Currency_ID);
                     }
@@ -286,8 +286,8 @@ namespace RUINORERP.Business
                         payable.ReceivePaymentType = (int)ReceivePaymentType.付款;
                         payable.PreRPNO = BizCodeGenerator.Instance.GetBizBillNo(BizType.预付款单);
                         payable.SourceBizType = (int)BizType.采购订单;
-                        payable.SourceBillNO = entity.PurOrderNo;
-                        payable.SourceBill_ID = entity.PurOrder_ID;
+                        payable.SourceBillNo = entity.PurOrderNo;
+                        payable.SourceBillId = entity.PurOrder_ID;
                         payable.Currency_ID = entity.Currency_ID;
                         payable.PrePayDate = entity.PurDate;
                         payable.ExchangeRate = exchangeRate;
@@ -297,7 +297,7 @@ namespace RUINORERP.Business
                         if (entity.PayStatus == (int)PayStatus.全部付款)
                         {
                             //外币时
-                            if (entity.Currency_ID.HasValue && _appContext.BaseCurrency.Currency_ID != entity.Currency_ID.Value)
+                            if (_appContext.BaseCurrency.Currency_ID != entity.Currency_ID)
                             {
                                 payable.ForeignPrepaidAmount = entity.ForeignTotalAmount;
                                 payable.LocalPrepaidAmount = payable.ForeignPrepaidAmount * exchangeRate;
@@ -312,7 +312,7 @@ namespace RUINORERP.Business
                         if (entity.PayStatus == (int)PayStatus.部分付款)
                         {
                             //外币时
-                            if (entity.Currency_ID.HasValue && _appContext.BaseCurrency.Currency_ID != entity.Currency_ID.Value)
+                            if (_appContext.BaseCurrency.Currency_ID != entity.Currency_ID)
                             {
                                 payable.ForeignPrepaidAmount = entity.ForeignDeposit;
                                 payable.LocalPrepaidAmount = payable.ForeignPrepaidAmount * exchangeRate;

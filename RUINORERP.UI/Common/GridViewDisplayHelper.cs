@@ -64,6 +64,7 @@ namespace RUINORERP.UI.Common
 {
     /// <summary>
     /// 所有表格显示为名称的代码都放到这里，还有一些没有重构完
+    /// UI不直接调用。
     /// </summary>
     public class GridViewDisplayHelper
     {

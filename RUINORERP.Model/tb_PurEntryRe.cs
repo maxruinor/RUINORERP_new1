@@ -269,13 +269,13 @@ namespace RUINORERP.Model
             }
         }
 
-        private decimal? _ExchangeRate = 1;
+        private decimal _ExchangeRate = 1;
         /// <summary>
         /// 汇率
         /// </summary>
         [AdvQueryAttribute(ColName = "ExchangeRate", ColDesc = "汇率")]
-        [SugarColumn(ColumnDataType = "decimal", SqlParameterDbType = "Decimal", ColumnName = "ExchangeRate", DecimalDigits = 4, IsNullable = true, ColumnDescription = "汇率")]
-        public decimal? ExchangeRate
+        [SugarColumn(ColumnDataType = "decimal", SqlParameterDbType = "Decimal", ColumnName = "ExchangeRate", DecimalDigits = 4, IsNullable = false, ColumnDescription = "汇率")]
+        public decimal ExchangeRate
         {
             get { return _ExchangeRate; }
             set

@@ -59,7 +59,7 @@ namespace RUINORERP.Business
             {
                 SettlementRecord.SettlementNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.收款核销);
                 SettlementRecord.SettlementType = (int)SettlementType.收款核销;
-                if (entity.ForeignPaidAmount < 0 || entity.ForeignPaidAmount < 0)
+                if (entity.TotalForeignAmount < 0 || entity.TotalLocalAmount < 0)
                 {
                     SettlementRecord.SettlementType = (int)SettlementType.红冲核销;
                     SettlementRecord.IsReversed = true;
@@ -70,20 +70,30 @@ namespace RUINORERP.Business
             {
                 SettlementRecord.SettlementNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.付款核销);
                 SettlementRecord.SettlementType = (int)SettlementType.付款核销;
-                if (entity.ForeignPaidAmount < 0 || entity.ForeignPaidAmount < 0)
+                if (entity.TotalForeignAmount < 0 || entity.TotalLocalAmount < 0)
                 {
                     SettlementRecord.SettlementType = (int)SettlementType.红冲核销;
                 }
                 SettlementRecord.TargetBizType = (int)BizType.付款单;
             }
 
-            SettlementRecord.SourceBizType = entity.SourceBizType;
-            SettlementRecord.SourceBillNO = entity.SourceBillNO;
-            SettlementRecord.SourceBillID = entity.SourceBilllID;
+            if (entity.tb_FM_PaymentRecordDetails != null)
+            {
+                foreach (var item in entity.tb_FM_PaymentRecordDetails)
+                {
+                    //按明细生成具体的核销记录
+                    //SettlementRecord.SourceBizType = entity.SourceBizType;
+                    //SettlementRecord.SourceBillNo = entity.SourceBillNo;
+                    //SettlementRecord.SourceBillId = entity.SourceBilllID;
+                }
+            }
 
 
-            SettlementRecord.TargetBillID = entity.PaymentId;
-            SettlementRecord.TargetBillNO = entity.PaymentNo;
+            
+
+
+            SettlementRecord.TargetBillId = entity.PaymentId;
+            SettlementRecord.TargetBillNo = entity.PaymentNo;
 
             //SourceBillDetailID 应收时 可以按明细核销？
             SettlementRecord.SettleDate = System.DateTime.Now;
@@ -91,29 +101,18 @@ namespace RUINORERP.Business
             {
                 SettlementRecord.SettlementType = (int)SettlementType.红冲核销;
             }
-            switch (entity.SourceBizType)
-            {
-                case (int)BizType.收款核销:
-                    SettlementRecord.SettlementType = (int)SettlementType.收款核销;
-                    break;
-                case (int)BizType.付款核销:
-                    SettlementRecord.SettlementType = (int)SettlementType.付款核销;
-                    break;
-                default:
-                    break;
-            }
-            if (entity.Currency_ID.HasValue)
-            {
-                SettlementRecord.Currency_ID = entity.Currency_ID.Value;
-            }
-            SettlementRecord.ExchangeRate = entity.ExchangeRate;
+            
+         
+                SettlementRecord.Currency_ID = entity.Currency_ID;
+            
+           
             if (true)
             {
 
             }
 
-            SettlementRecord.SettledForeignAmount = entity.ForeignPaidAmount;
-            SettlementRecord.SettledLocalAmount = entity.LocalPaidAmount;
+            SettlementRecord.SettledForeignAmount = entity.TotalForeignAmount;
+            SettlementRecord.SettledLocalAmount = entity.TotalLocalAmount;
 
             BusinessHelper.Instance.InitEntity(SettlementRecord);
             long id = await _unitOfWorkManage.GetDbClient().Insertable<tb_FM_PaymentSettlement>(SettlementRecord).ExecuteReturnSnowflakeIdAsync();
@@ -166,29 +165,18 @@ namespace RUINORERP.Business
             }
 
 
-            SettlementRecord.SourceBillNO = sourceEntity.ARAPNo;
-            SettlementRecord.SourceBillID = sourceEntity.ARAPId;
+            SettlementRecord.SourceBillNo = sourceEntity.ARAPNo;
+            SettlementRecord.SourceBillId = sourceEntity.ARAPId;
 
 
-            SettlementRecord.TargetBillID = targetEntity.ARAPId;
-            SettlementRecord.TargetBillNO = targetEntity.ARAPNo;
+            SettlementRecord.TargetBillId = targetEntity.ARAPId;
+            SettlementRecord.TargetBillNo = targetEntity.ARAPNo;
 
             //SourceBillDetailID 应收时 可以按明细核销？
             SettlementRecord.SettleDate = System.DateTime.Now;
             if (SettlementRecord.SettledLocalAmount < 0)
             {
                 SettlementRecord.SettlementType = (int)SettlementType.红冲核销;
-            }
-            switch (targetEntity.SourceBizType)
-            {
-                case (int)BizType.收款核销:
-                    SettlementRecord.SettlementType = (int)SettlementType.收款核销;
-                    break;
-                case (int)BizType.付款核销:
-                    SettlementRecord.SettlementType = (int)SettlementType.付款核销;
-                    break;
-                default:
-                    break;
             }
 
             SettlementRecord.Currency_ID = targetEntity.Currency_ID;

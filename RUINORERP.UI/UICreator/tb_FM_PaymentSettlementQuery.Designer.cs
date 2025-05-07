@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：05/06/2025 10:30:39
+// 时间：05/07/2025 15:37:43
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -55,16 +55,16 @@ this.txtSettlementNo = new ComponentFactory.Krypton.Toolkit.KryptonTextBox();
 
 ReversedSettlementID主外字段不一致。
 ReversedSettlementID主外字段不一致。
-this.lblSourceBillNO = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
-this.txtSourceBillNO = new ComponentFactory.Krypton.Toolkit.KryptonTextBox();
+this.lblSourceBillNo = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
+this.txtSourceBillNo = new ComponentFactory.Krypton.Toolkit.KryptonTextBox();
 
 this.lblExchangeRate = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
 this.txtExchangeRate = new ComponentFactory.Krypton.Toolkit.KryptonTextBox();
 
 ReversedSettlementID主外字段不一致。
 ReversedSettlementID主外字段不一致。
-this.lblTargetBillNO = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
-this.txtTargetBillNO = new ComponentFactory.Krypton.Toolkit.KryptonTextBox();
+this.lblTargetBillNo = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
+this.txtTargetBillNo = new ComponentFactory.Krypton.Toolkit.KryptonTextBox();
 
 ReversedSettlementID主外字段不一致。
 this.lblAccount_id = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
@@ -128,24 +128,24 @@ this.Controls.Add(this.txtSettlementNo);
 //属性测试50SourceBizType
 //属性测试50SourceBizType
 ReversedSettlementID主外字段不一致。
-           //#####SourceBillID###Int64
-//属性测试75SourceBillID
-//属性测试75SourceBillID
-//属性测试75SourceBillID
+           //#####SourceBillId###Int64
+//属性测试75SourceBillId
+//属性测试75SourceBillId
+//属性测试75SourceBillId
 ReversedSettlementID主外字段不一致。
-           //#####30SourceBillNO###String
-this.lblSourceBillNO.AutoSize = true;
-this.lblSourceBillNO.Location = new System.Drawing.Point(100,100);
-this.lblSourceBillNO.Name = "lblSourceBillNO";
-this.lblSourceBillNO.Size = new System.Drawing.Size(41, 12);
-this.lblSourceBillNO.TabIndex = 4;
-this.lblSourceBillNO.Text = "来源单据编号";
-this.txtSourceBillNO.Location = new System.Drawing.Point(173,96);
-this.txtSourceBillNO.Name = "txtSourceBillNO";
-this.txtSourceBillNO.Size = new System.Drawing.Size(100, 21);
-this.txtSourceBillNO.TabIndex = 4;
-this.Controls.Add(this.lblSourceBillNO);
-this.Controls.Add(this.txtSourceBillNO);
+           //#####30SourceBillNo###String
+this.lblSourceBillNo.AutoSize = true;
+this.lblSourceBillNo.Location = new System.Drawing.Point(100,100);
+this.lblSourceBillNo.Name = "lblSourceBillNo";
+this.lblSourceBillNo.Size = new System.Drawing.Size(41, 12);
+this.lblSourceBillNo.TabIndex = 4;
+this.lblSourceBillNo.Text = "来源单据编号";
+this.txtSourceBillNo.Location = new System.Drawing.Point(173,96);
+this.txtSourceBillNo.Name = "txtSourceBillNo";
+this.txtSourceBillNo.Size = new System.Drawing.Size(100, 21);
+this.txtSourceBillNo.TabIndex = 4;
+this.Controls.Add(this.lblSourceBillNo);
+this.Controls.Add(this.txtSourceBillNo);
 
            //#####ExchangeRate###Decimal
 this.lblExchangeRate.AutoSize = true;
@@ -167,24 +167,24 @@ this.Controls.Add(this.txtExchangeRate);
 //属性测试150TargetBizType
 //属性测试150TargetBizType
 ReversedSettlementID主外字段不一致。
-           //#####TargetBillID###Int64
-//属性测试175TargetBillID
-//属性测试175TargetBillID
-//属性测试175TargetBillID
+           //#####TargetBillId###Int64
+//属性测试175TargetBillId
+//属性测试175TargetBillId
+//属性测试175TargetBillId
 ReversedSettlementID主外字段不一致。
-           //#####30TargetBillNO###String
-this.lblTargetBillNO.AutoSize = true;
-this.lblTargetBillNO.Location = new System.Drawing.Point(100,200);
-this.lblTargetBillNO.Name = "lblTargetBillNO";
-this.lblTargetBillNO.Size = new System.Drawing.Size(41, 12);
-this.lblTargetBillNO.TabIndex = 8;
-this.lblTargetBillNO.Text = "目标单据编号";
-this.txtTargetBillNO.Location = new System.Drawing.Point(173,196);
-this.txtTargetBillNO.Name = "txtTargetBillNO";
-this.txtTargetBillNO.Size = new System.Drawing.Size(100, 21);
-this.txtTargetBillNO.TabIndex = 8;
-this.Controls.Add(this.lblTargetBillNO);
-this.Controls.Add(this.txtTargetBillNO);
+           //#####30TargetBillNo###String
+this.lblTargetBillNo.AutoSize = true;
+this.lblTargetBillNo.Location = new System.Drawing.Point(100,200);
+this.lblTargetBillNo.Name = "lblTargetBillNo";
+this.lblTargetBillNo.Size = new System.Drawing.Size(41, 12);
+this.lblTargetBillNo.TabIndex = 8;
+this.lblTargetBillNo.Text = "目标单据编号";
+this.txtTargetBillNo.Location = new System.Drawing.Point(173,196);
+this.txtTargetBillNo.Name = "txtTargetBillNo";
+this.txtTargetBillNo.Size = new System.Drawing.Size(100, 21);
+this.txtTargetBillNo.TabIndex = 8;
+this.Controls.Add(this.lblTargetBillNo);
+this.Controls.Add(this.txtTargetBillNo);
 
            //#####ReceivePaymentType###Int32
 //属性测试225ReceivePaymentType
@@ -374,16 +374,16 @@ this.Controls.Add(this.txtSettlementNo );
 
                 ReversedSettlementID主外字段不一致。
                 ReversedSettlementID主外字段不一致。
-                this.Controls.Add(this.lblSourceBillNO );
-this.Controls.Add(this.txtSourceBillNO );
+                this.Controls.Add(this.lblSourceBillNo );
+this.Controls.Add(this.txtSourceBillNo );
 
                 this.Controls.Add(this.lblExchangeRate );
 this.Controls.Add(this.txtExchangeRate );
 
                 ReversedSettlementID主外字段不一致。
                 ReversedSettlementID主外字段不一致。
-                this.Controls.Add(this.lblTargetBillNO );
-this.Controls.Add(this.txtTargetBillNO );
+                this.Controls.Add(this.lblTargetBillNo );
+this.Controls.Add(this.txtTargetBillNo );
 
                 ReversedSettlementID主外字段不一致。
                 this.Controls.Add(this.lblAccount_id );
@@ -443,8 +443,8 @@ private ComponentFactory.Krypton.Toolkit.KryptonTextBox txtSettlementNo;
               ReversedSettlementID主外字段不一致。
     
         
-              private ComponentFactory.Krypton.Toolkit.KryptonLabel lblSourceBillNO;
-private ComponentFactory.Krypton.Toolkit.KryptonTextBox txtSourceBillNO;
+              private ComponentFactory.Krypton.Toolkit.KryptonLabel lblSourceBillNo;
+private ComponentFactory.Krypton.Toolkit.KryptonTextBox txtSourceBillNo;
 
     
         
@@ -459,8 +459,8 @@ private ComponentFactory.Krypton.Toolkit.KryptonTextBox txtExchangeRate;
               ReversedSettlementID主外字段不一致。
     
         
-              private ComponentFactory.Krypton.Toolkit.KryptonLabel lblTargetBillNO;
-private ComponentFactory.Krypton.Toolkit.KryptonTextBox txtTargetBillNO;
+              private ComponentFactory.Krypton.Toolkit.KryptonLabel lblTargetBillNo;
+private ComponentFactory.Krypton.Toolkit.KryptonTextBox txtTargetBillNo;
 
     
         

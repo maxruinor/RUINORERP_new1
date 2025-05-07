@@ -28,6 +28,7 @@ namespace RUINORERP.Model
             base.SetRelatedTableTypes<tb_FM_OtherExpense>();
             base.SetRelatedTableTypes<tb_FM_OtherExpenseDetail>();
             base.SetRelatedTableTypes<tb_Prod>();
+            base.SetRelatedTableTypes<tb_CustomerVendor>();
         }
 
     }

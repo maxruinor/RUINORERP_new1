@@ -19,6 +19,7 @@ namespace RUINORERP.UI.Common
     /// <summary>
     /// AI代码借鉴 没有使用
     /// </summary>
+    [Obsolete]
     public class GridViewDisplayNameResolver
     {
         #region Configuration Classes

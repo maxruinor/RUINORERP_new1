@@ -435,28 +435,24 @@ namespace RUINORERP.Business
 
 
                                 writeoff.SourceBizType = (int)BizType.预付款单;
-                                writeoff.SourceBillID = prePayments[i].PreRPID;
-                                writeoff.SourceBillNO = prePayments[i].PreRPNO;
+                                writeoff.SourceBillId = prePayments[i].PreRPID;
+                                writeoff.SourceBillNo = prePayments[i].PreRPNO;
                                 writeoff.Currency_ID = payable.Currency_ID;
-                                if (prePayments[i].Currency_ID.HasValue)
-                                {
-                                    writeoff.Currency_ID = prePayments[i].Currency_ID.Value;
+                            
+                                    writeoff.Currency_ID = prePayments[i].Currency_ID;
 
-                                }
-                                if (prePayments[i].ExchangeRate.HasValue)
-                                {
-                                    writeoff.ExchangeRate = prePayments[i].ExchangeRate.Value;
-                                }
+                              
+                                    writeoff.ExchangeRate = prePayments[i].ExchangeRate;
+                               
 
-                                writeoff.TargetBillID = payable.ARAPId; // 应付单ID
-                                writeoff.TargetBillNO = payable.ARAPNo; // 应付单号
+                                writeoff.TargetBillId = payable.ARAPId; // 应付单ID
+                                writeoff.TargetBillNo = payable.ARAPNo; // 应付单号
                                 writeoff.TargetBizType = (int)BizType.应付单;
                                 writeoff.CustomerVendor_ID = prePayments[i].CustomerVendor_ID;
                                
-                                if (payable.ExchangeRate.HasValue)
-                                {
-                                    writeoff.ExchangeRate = payable.ExchangeRate.Value;
-                                }
+                              
+                                    writeoff.ExchangeRate = payable.ExchangeRate;
+                               
                                 writeoff.IsReversed = false;
                                 writeoff.SettledForeignAmount = prePayForeignAmount;
                                 writeoff.SettledLocalAmount = prePayLocalAmount;

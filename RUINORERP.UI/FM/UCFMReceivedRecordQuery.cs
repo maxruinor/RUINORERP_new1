@@ -53,7 +53,7 @@ namespace RUINORERP.UI.FM
         {
             base.MasterInvisibleCols.Add(c => c.PayeeInfoID);
             base.MasterInvisibleCols.Add(c => c.PayeeAccountNo);
-            base.MasterInvisibleCols.Add(c => c.SourceBilllID);
+            base.ChildInvisibleCols.Add(c => c.SourceBilllId);
             base.BuildInvisibleCols();
             //base.ChildInvisibleCols.Add(c => c.SubtotalCostAmount);
         }

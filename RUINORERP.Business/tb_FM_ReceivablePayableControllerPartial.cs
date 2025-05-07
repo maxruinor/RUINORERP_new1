@@ -224,14 +224,14 @@ namespace RUINORERP.Business
             //    }
             //}
             payable.ExchangeRate = entity.ExchangeRate;
-            payable.SourceBillNO = entity.ReturnNo;
-            payable.SourceBill_ID = entity.SaleOutRe_ID;
-            payable.SourceBizType = (int)BizType.销售退回单;
+          
             List<tb_FM_ReceivablePayableDetail> details = mapper.Map<List<tb_FM_ReceivablePayableDetail>>(entity.tb_SaleOutReDetails);
 
             for (global::System.Int32 i = 0; i < details.Count; i++)
             {
-
+                details[i].SourceBillNo = entity.ReturnNo;
+                details[i].SourceBillId = entity.SaleOutRe_ID;
+                details[i].SourceBizType = (int)BizType.销售退回单;
                 details[i].ExchangeRate = entity.ExchangeRate;
                 details[i].ActionStatus = ActionStatus.新增;
 
@@ -383,14 +383,15 @@ namespace RUINORERP.Business
                 }
             }
             payable.ExchangeRate = entity.ExchangeRate;
-            payable.SourceBillNO = entity.SaleOutNo;
-            payable.SourceBill_ID = entity.SaleOut_MainID;
-            payable.SourceBizType = (int)BizType.销售出库单;
+  
 
             List<tb_FM_ReceivablePayableDetail> details = mapper.Map<List<tb_FM_ReceivablePayableDetail>>(entity.tb_SaleOutDetails);
 
             for (global::System.Int32 i = 0; i < details.Count; i++)
             {
+                details[i].SourceBillNo = entity.SaleOutNo;
+                details[i].SourceBillId = entity.SaleOut_MainID;
+                details[i].SourceBizType = (int)BizType.销售出库单;
 
                 details[i].ExchangeRate = entity.ExchangeRate;
                 details[i].ActionStatus = ActionStatus.新增;
@@ -531,15 +532,15 @@ namespace RUINORERP.Business
                 }
             }
             payable.ExchangeRate = entity.ExchangeRate;
-            payable.SourceBillNO = entity.PurEntryNo;
-            payable.SourceBill_ID = entity.PurEntryID;
-            payable.SourceBizType = (int)BizType.采购入库单;
+      
 
             List<tb_FM_ReceivablePayableDetail> details = mapper.Map<List<tb_FM_ReceivablePayableDetail>>(entity.tb_PurEntryDetails);
 
             for (global::System.Int32 i = 0; i < details.Count; i++)
             {
-
+                details[i].SourceBillNo = entity.PurEntryNo;
+                details[i].SourceBillId = entity.PurEntryID;
+                details[i].SourceBizType = (int)BizType.采购入库单;
                 details[i].ExchangeRate = entity.ExchangeRate;
                 details[i].ActionStatus = ActionStatus.新增;
                 View_ProdDetail obj = BizCacheHelper.Instance.GetEntity<View_ProdDetail>(details[i].ProdDetailID);
@@ -624,14 +625,14 @@ namespace RUINORERP.Business
             //    }
             //}
             payable.ExchangeRate = entity.ExchangeRate;
-            payable.SourceBillNO = entity.PurEntryReNo;
-            payable.SourceBill_ID = entity.PurEntryRe_ID;
-            payable.SourceBizType = (int)BizType.采购退货单;
+
             List<tb_FM_ReceivablePayableDetail> details = mapper.Map<List<tb_FM_ReceivablePayableDetail>>(entity.tb_PurEntryReDetails);
 
             for (global::System.Int32 i = 0; i < details.Count; i++)
             {
-
+                details[i].SourceBillNo = entity.PurEntryReNo;
+                details[i].SourceBillId = entity.PurEntryRe_ID;
+                details[i].SourceBizType = (int)BizType.采购退货单;
                 details[i].ExchangeRate = entity.ExchangeRate;
                 details[i].ActionStatus = ActionStatus.新增;
 

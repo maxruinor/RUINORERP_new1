@@ -49,7 +49,7 @@ namespace RUINORERP.Business.Processor
             queryFilter.SetQueryField<tb_FM_PaymentSettlement, tb_CustomerVendor>(c => c.CustomerVendor_ID, lambda);
             //可以根据关联外键自动加载条件，条件用公共虚方法
      
-            queryFilter.SetQueryField<tb_FM_PaymentSettlement>(c => c.SourceBillNO);
+            queryFilter.SetQueryField<tb_FM_PaymentSettlement>(c => c.SourceBillNo);
   
             queryFilter.SetQueryField<tb_FM_PaymentSettlement>(c => c.SourceBizType, QueryFieldType.CmbEnum, typeof(BizType));
             queryFilter.SetQueryField<tb_FM_PaymentSettlement>(c => c.SourceBizType, QueryFieldType.CmbEnum, typeof(BizType));

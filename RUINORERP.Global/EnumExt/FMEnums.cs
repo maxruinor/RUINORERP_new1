@@ -8,6 +8,21 @@ using System.Threading.Tasks;
 namespace RUINORERP.Global.EnumExt
 {
     #region 关键业务财务数据状态
+
+    /// <summary>
+    /// 对账单状态
+    /// 0=草稿,1=已发送,2=已确认,3=已关闭，4=已结算，5=部分结算
+    /// </summary>
+    public enum StatementStatus : long
+    {
+        草稿 = 0,
+        已发送 = 1,
+        已确认 = 2,
+        已关闭 = 3,
+        已结清 = 4,
+        部分结算 = 5
+    }
+
     // 基础状态 (所有财务单据共用)
     [Flags]
     public enum BaseFMPaymentStatus : long
@@ -50,7 +65,7 @@ namespace RUINORERP.Global.EnumExt
 
         [Description("全额核销")]
         全额核销 = 1 << 11,
-        
+
         //表示已经支付成功
         [Description("待核销")]
         待核销 = 1 << 12
@@ -93,7 +108,7 @@ namespace RUINORERP.Global.EnumExt
         ///// 表示收款单或付款单已通过审核，可以进行后续操作（如支付或收款）。
         ///// </summary>
         //已生效 = BaseFMPaymentStatus.已生效,
-        // 专属状态 审核就是已支付
+        // 专属状态 审核就是已支付,已核销
         [Description("已支付")]
         已支付 = 1 << 30,
 
@@ -144,7 +159,7 @@ namespace RUINORERP.Global.EnumExt
     /// </summary>
     public enum SettlementType
     {
-     
+
         [Description("手工核销")]
         未核销 = 0,
 
@@ -213,7 +228,7 @@ namespace RUINORERP.Global.EnumExt
     }
 
     public enum PaymentType { Cash, BankTransfer, CreditCard, Other }
- 
+
 
 
 
@@ -244,8 +259,8 @@ namespace RUINORERP.Global.EnumExt
         已关闭,
     }
 
- 
-   
+
+
 
     ///// <summary>
     ///// 结算状态

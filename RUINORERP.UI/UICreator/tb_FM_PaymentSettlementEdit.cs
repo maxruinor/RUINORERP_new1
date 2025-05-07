@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：05/06/2025 10:30:38
+// 时间：05/07/2025 15:37:43
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -66,12 +66,12 @@ namespace RUINORERP.UI
         tb_FM_PaymentSettlement entity = new tb_FM_PaymentSettlement();
                      entity.SettlementNo = txtSettlementNo.Text ;
                        entity.SourceBizType = Int32.Parse(txtSourceBizType.Text);
-                        entity.SourceBillID = Int64.Parse(txtSourceBillID.Text);
-                        entity.SourceBillNO = txtSourceBillNO.Text ;
+                        entity.SourceBillId = Int64.Parse(txtSourceBillId.Text);
+                        entity.SourceBillNo = txtSourceBillNo.Text ;
                        entity.ExchangeRate = Decimal.Parse(txtExchangeRate.Text);
                         entity.TargetBizType = Int32.Parse(txtTargetBizType.Text);
-                        entity.TargetBillID = Int64.Parse(txtTargetBillID.Text);
-                        entity.TargetBillNO = txtTargetBillNO.Text ;
+                        entity.TargetBillId = Int64.Parse(txtTargetBillId.Text);
+                        entity.TargetBillNo = txtTargetBillNo.Text ;
                        entity.ReceivePaymentType = Int32.Parse(txtReceivePaymentType.Text);
                         entity.Account_id = Int64.Parse(txtAccount_id.Text);
                         entity.CustomerVendor_ID = Int64.Parse(txtCustomerVendor_ID.Text);
@@ -99,12 +99,12 @@ namespace RUINORERP.UI
         _EditEntity = entity;
                         DataBindingHelper.BindData4TextBox<tb_FM_PaymentSettlement>(entity, t => t.SettlementNo, txtSettlementNo, BindDataType4TextBox.Text,false);
           ReversedSettlementID主外字段不一致。 DataBindingHelper.BindData4TextBox<tb_FM_PaymentSettlement>(entity, t => t.SourceBizType, txtSourceBizType, BindDataType4TextBox.Qty,false);
-          ReversedSettlementID主外字段不一致。 DataBindingHelper.BindData4TextBox<tb_FM_PaymentSettlement>(entity, t => t.SourceBillID, txtSourceBillID, BindDataType4TextBox.Qty,false);
-           DataBindingHelper.BindData4TextBox<tb_FM_PaymentSettlement>(entity, t => t.SourceBillNO, txtSourceBillNO, BindDataType4TextBox.Text,false);
+          ReversedSettlementID主外字段不一致。 DataBindingHelper.BindData4TextBox<tb_FM_PaymentSettlement>(entity, t => t.SourceBillId, txtSourceBillId, BindDataType4TextBox.Qty,false);
+           DataBindingHelper.BindData4TextBox<tb_FM_PaymentSettlement>(entity, t => t.SourceBillNo, txtSourceBillNo, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_FM_PaymentSettlement>(entity, t => t.ExchangeRate.ToString(), txtExchangeRate, BindDataType4TextBox.Money,false);
           ReversedSettlementID主外字段不一致。 DataBindingHelper.BindData4TextBox<tb_FM_PaymentSettlement>(entity, t => t.TargetBizType, txtTargetBizType, BindDataType4TextBox.Qty,false);
-          ReversedSettlementID主外字段不一致。 DataBindingHelper.BindData4TextBox<tb_FM_PaymentSettlement>(entity, t => t.TargetBillID, txtTargetBillID, BindDataType4TextBox.Qty,false);
-           DataBindingHelper.BindData4TextBox<tb_FM_PaymentSettlement>(entity, t => t.TargetBillNO, txtTargetBillNO, BindDataType4TextBox.Text,false);
+          ReversedSettlementID主外字段不一致。 DataBindingHelper.BindData4TextBox<tb_FM_PaymentSettlement>(entity, t => t.TargetBillId, txtTargetBillId, BindDataType4TextBox.Qty,false);
+           DataBindingHelper.BindData4TextBox<tb_FM_PaymentSettlement>(entity, t => t.TargetBillNo, txtTargetBillNo, BindDataType4TextBox.Text,false);
           ReversedSettlementID主外字段不一致。 DataBindingHelper.BindData4TextBox<tb_FM_PaymentSettlement>(entity, t => t.ReceivePaymentType, txtReceivePaymentType, BindDataType4TextBox.Qty,false);
           // DataBindingHelper.BindData4Cmb<tb_FM_Account>(entity, k => k.Account_id, v=>v.XXNAME, cmbAccount_id);
 ReversedSettlementID主外字段不一致。          ReversedSettlementID主外字段不一致。 DataBindingHelper.BindData4TextBox<tb_FM_PaymentSettlement>(entity, t => t.CustomerVendor_ID, txtCustomerVendor_ID, BindDataType4TextBox.Qty,false);

@@ -31,6 +31,7 @@ using RUINORERP.Global;
 using RUINORERP.Model.CommonModel;
 using System.Windows.Forms;
 using SqlSugar;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.ListView;
 
 namespace RUINORERP.Business
 {
@@ -136,14 +137,22 @@ namespace RUINORERP.Business
 
                         BusinessHelper.Instance.EditEntity(inv);
                     }
+
+                    if (!_appContext.SysConfig.CheckNegativeInventory && (inv.Quantity - child.Quantity) < 0)
+                    {
+                        // rrs.ErrorMsg = "系统设置不允许负库存，请检查物料出库数量与库存相关数据";
+                        rs.ErrorMsg = $"库存为：{inv.Quantity}，返工退库数量为：{child.Quantity}\r\n 系统设置不允许负库存， 请检查返工退库数量与库存相关数据";
+                        _unitOfWorkManage.RollbackTran();
+                        rs.Succeeded = false;
+                        
+                        return rs; 
+                    }
+
                     inv.ProdDetailID = child.ProdDetailID;
                     inv.Location_ID = child.Location_ID;
                     inv.Notes = "";//后面修改数据库是不需要？
                     inv.LatestStorageTime = System.DateTime.Now;
-                    //采购订单时添加 。这里减掉在路上的数量
                     inv.On_the_way_Qty = inv.On_the_way_Qty + child.Quantity;
-
-
 
                     inv.Quantity = inv.Quantity - child.Quantity;
                     inv.Inv_SubtotalCostMoney = inv.Inv_Cost * inv.Quantity;

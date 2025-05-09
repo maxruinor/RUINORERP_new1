@@ -62,8 +62,18 @@ namespace RUINORERP.Business
                     tb_Inventory inv = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == ReDetail.ProdDetailID && i.Location_ID == ReDetail.Location_ID);
                     if (inv != null)
                     {
+                        if (!_appContext.SysConfig.CheckNegativeInventory && (inv.Quantity - ReDetail.Quantity) < 0)
+                        {
+                            // rrs.ErrorMsg = "系统设置不允许负库存，请检查物料出库数量与库存相关数据";
+                            rs.ErrorMsg = $"库存为：{inv.Quantity}，采购退回数量为：{ReDetail.Quantity}\r\n 系统设置不允许负库存， 请检查退回数量与库存相关数据";
+                            _unitOfWorkManage.RollbackTran();
+                            rs.Succeeded = false;
+                            return rs;
+                        }
+
                         //更新库存
                         inv.Quantity = inv.Quantity - ReDetail.Quantity;
+                   
                         BusinessHelper.Instance.EditEntity(inv);
                     }
                     /*

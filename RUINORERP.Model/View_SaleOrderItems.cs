@@ -296,23 +296,8 @@ namespace RUINORERP.Model
                 }
         }
 
-        private DateTime? _DeliveryDate;
-        
-        
-        /// <summary>
-        /// 发货日期
-        /// </summary>
-
-        [AdvQueryAttribute(ColName = "DeliveryDate",ColDesc = "发货日期")]
-        [SugarColumn(ColumnDataType = "datetime", SqlParameterDbType ="DateTime",  ColumnName = "DeliveryDate" ,IsNullable = true,ColumnDescription = "发货日期" )]
-        [Display(Name = "发货日期")]
-        public DateTime? DeliveryDate 
-        { 
-            get{return _DeliveryDate;}
-            set{
-                SetProperty(ref _DeliveryDate, value);
-                }
-        }
+       
+       
 
         private long? _ProdDetailID;
         

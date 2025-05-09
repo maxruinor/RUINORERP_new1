@@ -503,16 +503,16 @@ namespace RUINORERP.UI.SysConfig
             for (int i = 0; i < tb_Inventorys.Count; i++)
             {
                 List<View_PurEntryItems> purEntryItems = await MainForm.Instance.AppContext.Db.Queryable<View_PurEntryItems>()
-                .Where(c => c.ProdDetailID == tb_Inventorys[i].ProdDetailID && c.TransactionPrice != 0)
+                .Where(c => c.ProdDetailID == tb_Inventorys[i].ProdDetailID && c.UnitPrice != 0)
                 .OrderByDescending(c => c.EntryDate)
                 .ToListAsync();
                 if (purEntryItems.Count > 0)
                 {
-                    tb_Inventorys[i].CostFIFO = purEntryItems[0].TransactionPrice.Value;
-                    tb_Inventorys[i].CostMonthlyWA = purEntryItems[0].TransactionPrice.Value;
-                    tb_Inventorys[i].CostMovingWA = purEntryItems[0].TransactionPrice.Value;
-                    tb_Inventorys[i].Inv_AdvCost = purEntryItems[0].TransactionPrice.Value;
-                    tb_Inventorys[i].Inv_Cost = purEntryItems[0].TransactionPrice.Value;
+                    tb_Inventorys[i].CostFIFO = purEntryItems[0].UnitPrice.Value;
+                    tb_Inventorys[i].CostMonthlyWA = purEntryItems[0].UnitPrice.Value;
+                    tb_Inventorys[i].CostMovingWA = purEntryItems[0].UnitPrice.Value;
+                    tb_Inventorys[i].Inv_AdvCost = purEntryItems[0].UnitPrice.Value;
+                    tb_Inventorys[i].Inv_Cost = purEntryItems[0].UnitPrice.Value;
                 }
             }
 

@@ -37,6 +37,8 @@ using AutoUpdate;
 using System.Xml.Linq;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
+using Microsoft.Extensions.Caching.Memory;
+using log4net.Repository.Hierarchy;
 
 
 namespace RUINORERP.UI
@@ -768,7 +770,11 @@ namespace RUINORERP.UI
         }
 
 
-
+        private static readonly MemoryCache _errorCache = new MemoryCache(new MemoryCacheOptions());
+        private static readonly MemoryCacheEntryOptions _cacheOptions = new MemoryCacheEntryOptions
+        {
+            SlidingExpiration = TimeSpan.FromMinutes(30) // 30分钟内无访问自动过期
+        };
         static void Application_ThreadException(object sender, System.Threading.ThreadExceptionEventArgs e)
         {
             List<string> IgnoreExceptionMsglist = new List<string>
@@ -789,7 +795,7 @@ namespace RUINORERP.UI
                         Exception errorIgnore = e.Exception as Exception;
                         if (errorIgnore != null)
                         {
-                            errorStrIgnore = string.Format( "异常类型：{0}\r\n异常消息：{1}\r\n{2}\r\n",
+                            errorStrIgnore = string.Format("异常类型：{0}\r\n异常消息：{1}\r\n{2}\r\n",
                                errorIgnore.GetType().Name, errorIgnore.Message, errorIgnore.StackTrace);
                         }
                         else
@@ -801,23 +807,25 @@ namespace RUINORERP.UI
                         return;
                     }
                 }
-
             }
             string str = "";
             string strDateInfo = "\r\n\r\n出现应用程序未处理的异常,请更新到最新版本，如果无法解决，请联系管理员!" + DateTime.Now.ToString() + "\r\n";
-            Exception error = e.Exception as Exception;
-            if (error != null)
-            {
-                str = string.Format(strDateInfo + "异常类型：{0}\r\n异常消息：{1}\r\n{2}\r\n",
-                error.GetType().Name, error.Message, error.StackTrace);
-            }
-            else
-            {
-                str = string.Format("应用程序线程错误:{0}", e);
-            }
-            SystemOptimizerService.异常信息发送(error.Message, error);
+            //Exception error = e.Exception as Exception;
+            //if (error != null)
+            //{
+            //    str = string.Format(strDateInfo + "异常类型：{0}\r\n异常消息：{1}\r\n{2}\r\n",
+            //    error.GetType().Name, error.Message, error.StackTrace);
+            //}
+            //else
+            //{
+            //    str = string.Format("应用程序线程错误:{0}", e);
+            //}
+            SystemOptimizerService.异常信息发送(e.Exception.Message, e.Exception);
             //MainForm.Instance.uclog.AddLog("线程", str);
-            MainForm.Instance.logger.LogError("出现应用程序未处理的异常,请更新到新版本，如果无法解决，请联系管理员！\r\n" + error.Message, error);
+            string errorHash = e.Exception.StackTrace?.GetHashCode().ToString(); // 更稳定的哈希
+            if (_errorCache.TryGetValue(errorHash, out _)) return;
+            _errorCache.Set(errorHash, DateTime.Now, _cacheOptions);
+            MainForm.Instance.logger.LogError(e.Exception, "全局异常");
             MessageBox.Show(str, "系统错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
         static void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)

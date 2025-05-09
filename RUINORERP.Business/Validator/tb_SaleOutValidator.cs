@@ -103,7 +103,7 @@ namespace RUINORERP.Business
 
             RuleFor(x => x.TotalCost).PrecisionScale(19, 4, true).WithMessage("总成本:小数位不能超过4。");
 
-            RuleFor(x => x.TaxRate).PrecisionScale(5, 3, true).WithMessage("税率:小数位不能超过3。");
+            
 
             RuleFor(x => x.TotalTaxAmount).PrecisionScale(19, 4, true).WithMessage("总税额:小数位不能超过4。");
 

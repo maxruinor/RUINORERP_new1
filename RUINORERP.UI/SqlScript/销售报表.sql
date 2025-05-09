@@ -99,7 +99,7 @@ WHERE (m.DataStatus=4 or m.DataStatus=8) and m.ApprovalStatus=1 and m.ApprovalRe
  and  Convert(varchar(10),m.ReturnDate,120) <= ''' + @End + '''
 GROUP BY Employee_ID,m.ProjectGroup_ID 
 union all
-SELECT Employee_ID,ProjectGroup_ID, 0  as [退货税额] , sum(TotalQty) as 退货数量,sum(ActualRefundAmount) as 退货金额 , sum(0) as 佣金返还,sum(cost*Quantity) as 成本 from  tb_SaleOutRe m RIGHT JOIN  tb_SaleOutReDetail c on  m.SaleOutRe_ID=c.SaleOutRe_ID
+SELECT Employee_ID,ProjectGroup_ID, 0  as [退货税额] , sum(TotalQty) as 退货数量,sum(TotalAmount) as 退货金额 , sum(0) as 佣金返还,sum(cost*Quantity) as 成本 from  tb_SaleOutRe m RIGHT JOIN  tb_SaleOutReDetail c on  m.SaleOutRe_ID=c.SaleOutRe_ID
 WHERE (m.DataStatus=4 or m.DataStatus=8) and m.ApprovalStatus=1 and m.ApprovalResults=1 and m.RefundOnly=1
  and  Convert(varchar(10),m.ReturnDate,120) >=''' + @Start + '''
  and  Convert(varchar(10),m.ReturnDate,120) <= ''' + @End + '''

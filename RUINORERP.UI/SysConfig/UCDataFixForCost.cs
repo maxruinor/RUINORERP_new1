@@ -440,7 +440,7 @@ namespace RUINORERP.UI.SysConfig
                             入库日期 = it.EntryDate,
                             采购入库单号 = it.PurEntryNo,
                             SKU码 = it.SKU,
-                            成本 = it.TransactionPrice,
+                            成本 = it.UnitPrice,
                             数量 = it.Quantity
                         })
                         .ToList();

@@ -56,14 +56,14 @@ namespace RUINORERP.Business
                     return rs;
                 }
 
-                foreach (var child in entity.tb_PurEntryReDetails)
+                foreach (var ReDetail in entity.tb_PurEntryReDetails)
                 {
                     #region 库存表的更新 这里应该是必需有库存的数据，
-                    tb_Inventory inv = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == child.ProdDetailID && i.Location_ID == child.Location_ID);
+                    tb_Inventory inv = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == ReDetail.ProdDetailID && i.Location_ID == ReDetail.Location_ID);
                     if (inv != null)
                     {
                         //更新库存
-                        inv.Quantity = inv.Quantity - child.Quantity;
+                        inv.Quantity = inv.Quantity - ReDetail.Quantity;
                         BusinessHelper.Instance.EditEntity(inv);
                     }
                     /*
@@ -102,18 +102,19 @@ namespace RUINORERP.Business
                             .Where(c => c.PurEntryID == entity.tb_purentry.PurEntryID).ToListAsync();
                     }
 
+                    //循环入库明细。更新入库明细中的对应的退回数量
                     for (int i = 0; i < entity.tb_purentry.tb_PurEntryDetails.Count; i++)
                     {
-                        var child = entity.tb_purentry.tb_PurEntryDetails[i];
-                        tb_PurEntryReDetail entryDetail = entity.tb_PurEntryReDetails
-                            .Where(c => c.ProdDetailID == child.ProdDetailID && c.Location_ID == child.Location_ID).FirstOrDefault();
-                        if (entryDetail == null)
+                        var EntryDetail = entity.tb_purentry.tb_PurEntryDetails[i];
+                        tb_PurEntryReDetail ReturnDetail = entity.tb_PurEntryReDetails
+                            .Where(c => c.ProdDetailID == EntryDetail.ProdDetailID && c.Location_ID == EntryDetail.Location_ID).FirstOrDefault();
+                        if (ReturnDetail == null)
                         {
                             continue;
                         }
-                        child.ReturnedQty += entryDetail.Quantity;
+                        EntryDetail.ReturnedQty += ReturnDetail.Quantity;
                         //如果已退数量大于订单数量 给出警告实际操作中 使用其他方式出库
-                        if (child.ReturnedQty > entity.tb_purentry.TotalQty)
+                        if (EntryDetail.ReturnedQty > entity.tb_purentry.TotalQty)
                         {
                             _unitOfWorkManage.RollbackTran();
                             throw new Exception("退回数量不能大于对应入库数量！");
@@ -206,7 +207,7 @@ namespace RUINORERP.Business
                     inv.Location_ID = child.Location_ID;
                     inv.Notes = "";//后面修改数据库是不需要？
                     inv.LatestStorageTime = System.DateTime.Now;
-
+                    inv.Quantity = inv.Quantity + child.Quantity;
                     /*
                   直接输入成本：在录入库存记录时，直接输入该产品或物品的成本价格。这种方式适用于成本价格相对稳定或容易确定的情况。
                  平均成本法：通过计算一段时间内该产品或物品的平均成本来确定成本价格。这种方法适用于成本价格随时间波动的情况，可以更准确地反映实际成本。
@@ -218,7 +219,7 @@ namespace RUINORERP.Business
                  市场价格：参考市场上类似产品或物品的价格。
                   */
                     CommService.CostCalculations.AntiCostCalculation(_appContext, inv, child.Quantity, child.UnitPrice);
-                    inv.Quantity = inv.Quantity + child.Quantity;
+                 
                     inv.Inv_SubtotalCostMoney = inv.Inv_Cost * inv.Quantity;
                     inv.LatestOutboundTime = System.DateTime.Now;
                     #endregion
@@ -236,17 +237,17 @@ namespace RUINORERP.Business
                         entity.tb_purentry.tb_PurEntryDetails = await _unitOfWorkManage.GetDbClient().Queryable<tb_PurEntryDetail>().Where(c => c.PurEntryID == entity.tb_purentry.PurEntryID).ToListAsync();
                     }
 
-                    foreach (var child in entity.tb_purentry.tb_PurEntryDetails)
+                    foreach (var entryDetail in entity.tb_purentry.tb_PurEntryDetails)
                     {
-                        tb_PurEntryReDetail entryDetail = entity.tb_PurEntryReDetails
-                            .Where(c => c.ProdDetailID == child.ProdDetailID && c.Location_ID == child.Location_ID).FirstOrDefault();
-                        if (entryDetail == null)
+                        tb_PurEntryReDetail ReturnDetail = entity.tb_PurEntryReDetails
+                            .Where(c => c.ProdDetailID == entryDetail.ProdDetailID && c.Location_ID == entryDetail.Location_ID).FirstOrDefault();
+                        if (ReturnDetail == null)
                         {
                             continue;
                         }
-                        child.ReturnedQty -= entryDetail.Quantity;
+                        entryDetail.ReturnedQty -= ReturnDetail.Quantity;
                         //如果已交数据大于 订单数量 给出警告实际操作中 使用其他方式将备品入库
-                        if (child.ReturnedQty < 0)
+                        if (entryDetail.ReturnedQty < 0)
                         {
                             _unitOfWorkManage.RollbackTran();
                             throw new Exception("已退回数量不能小于0！");

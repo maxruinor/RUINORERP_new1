@@ -468,24 +468,7 @@ namespace RUINORERP.Model
                 SetProperty(ref _Gift, value);
                 }
         }
-
-        private bool? _IncludingTax;
-        
-        
-        /// <summary>
-        /// 含税
-        /// </summary>
-
-        [AdvQueryAttribute(ColName = "IncludingTax",ColDesc = "含税")]
-        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType ="Boolean",  ColumnName = "IncludingTax" ,IsNullable = true,ColumnDescription = "含税" )]
-        [Display(Name = "含税")]
-        public bool? IncludingTax 
-        { 
-            get{return _IncludingTax;}
-            set{
-                SetProperty(ref _IncludingTax, value);
-                }
-        }
+ 
 
         private decimal? _UnitPrice;
         
@@ -523,23 +506,7 @@ namespace RUINORERP.Model
                 }
         }
 
-        private decimal? _SubtotalUntaxedAmount;
         
-        
-        /// <summary>
-        /// 未税本位币
-        /// </summary>
-
-        [AdvQueryAttribute(ColName = "SubtotalUntaxedAmount",ColDesc = "未税本位币")]
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "SubtotalUntaxedAmount" ,IsNullable = true,ColumnDescription = "未税本位币" )]
-        [Display(Name = "未税本位币")]
-        public decimal? SubtotalUntaxedAmount 
-        { 
-            get{return _SubtotalUntaxedAmount;}
-            set{
-                SetProperty(ref _SubtotalUntaxedAmount, value);
-                }
-        }
 
         private decimal? _CommissionAmount;
         

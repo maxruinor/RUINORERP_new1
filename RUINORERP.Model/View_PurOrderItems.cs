@@ -413,35 +413,9 @@ namespace RUINORERP.Model
             get{return _UnitPrice;}            set{                SetProperty(ref _UnitPrice, value);                }
         }
 
-        private decimal? _Discount;
-        
-        
-        /// <summary>
-        /// 折扣
-        /// </summary>
 
-        [AdvQueryAttribute(ColName = "Discount",ColDesc = "折扣")]
-        [SugarColumn(ColumnDataType = "decimal", SqlParameterDbType ="Decimal",  ColumnName = "Discount" , DecimalDigits = 5,Length=5,IsNullable = true,ColumnDescription = "折扣" )]
-        [Display(Name = "折扣")]
-        public decimal? Discount 
-        { 
-            get{return _Discount;}            set{                SetProperty(ref _Discount, value);                }
-        }
 
-        private decimal? _TransactionPrice;
-        
-        
-        /// <summary>
-        /// 成交单价
-        /// </summary>
-
-        [AdvQueryAttribute(ColName = "TransactionPrice",ColDesc = "成交单价")]
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "TransactionPrice" ,IsNullable = true,ColumnDescription = "成交单价" )]
-        [Display(Name = "成交单价")]
-        public decimal? TransactionPrice 
-        { 
-            get{return _TransactionPrice;}            set{                SetProperty(ref _TransactionPrice, value);                }
-        }
+         
 
         private decimal? _TaxRate;
         

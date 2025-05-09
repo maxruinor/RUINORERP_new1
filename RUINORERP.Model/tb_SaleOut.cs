@@ -680,20 +680,7 @@ namespace RUINORERP.Model
             }
         }
 
-        private decimal? _TaxRate;
-        /// <summary>
-        /// 税率
-        /// </summary>
-        [AdvQueryAttribute(ColName = "TaxRate", ColDesc = "税率")]
-        [SugarColumn(ColumnDataType = "decimal", SqlParameterDbType = "Decimal", ColumnName = "TaxRate", DecimalDigits = 3, IsNullable = true, ColumnDescription = "税率")]
-        public decimal? TaxRate
-        {
-            get { return _TaxRate; }
-            set
-            {
-                SetProperty(ref _TaxRate, value);
-            }
-        }
+       
 
         private decimal _TotalTaxAmount;
         /// <summary>

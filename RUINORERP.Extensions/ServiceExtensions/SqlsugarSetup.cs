@@ -7,12 +7,15 @@ using System.Linq.Dynamic.Core.CustomTypeProviders;
 using System.Reflection;
 using System.Threading.Tasks;
 using System.Web.UI.WebControls.WebParts;
+using Mapster;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using RUINORERP.Common.DB;
 using RUINORERP.Common.Log4Net;
+using RUINORERP.Common.LogHelper;
+using RUINORERP.Model;
 using RUINORERP.Model.Context;
 using SqlSugar;
 
@@ -30,12 +33,12 @@ namespace RUINORERP.Extensions
 
         [Browsable(true), Description("引发外部事件")]
         public static event CheckHandler CheckEvent;
-      
+
         public static void AddSqlsugarSetup(this IServiceCollection services,
         ApplicationContext AppContextData, string connectString,
             string dbName = "ConnectString")
         {
-            
+
             var logProvider = new Log4NetProviderByCustomeDb("Log4net_db.config", connectString, AppContextData);
             var logger = logProvider.CreateLogger("SqlsugarSetup");
 
@@ -60,7 +63,7 @@ namespace RUINORERP.Extensions
                     db.Aop.OnLogExecuting = (sql, pars) =>
                         {
                             //获取原生SQL推荐 5.1.4.63  性能OK
-//                            Console.WriteLine(UtilMethods.GetNativeSql(sql, pars));
+                            //                            Console.WriteLine(UtilMethods.GetNativeSql(sql, pars));
 
                             if (CheckEvent != null)
                             {
@@ -119,15 +122,31 @@ namespace RUINORERP.Extensions
 
                     db.Aop.OnError = (e) =>
                     {
+                        //try
+                        //{
+
+                        //    string errorsql = SqlProfiler.FormatParam(e.Sql, e.Parametres as SugarParameter[]);
+
+                        //    Console.WriteLine(errorsql);
+                        //    logger.LogInformation("LogInformation错误sql:" + errorsql);
+                        //    logger.LogError("LogError" + e.Message + errorsql);
+                        //}
+                        //catch (Exception exx)
+                        //{
+                        //    var aa = (e.Parametres as SugarParameter[]).ToDictionary(it => it.ParameterName, it => it.Value);
+                        //}
+
                         try
                         {
-                            logger.LogError(e.Message + SqlProfiler.FormatParam(e.Sql, e.Parametres as SugarParameter[]));
+                            string errorsql = e.Message + "\r\n" + SqlProfiler.FormatParam(e.Sql, e.Parametres as SugarParameter[]);
+                            logger.Error("Error" + errorsql, e);
+                            // 控制台输出用于调试
+                            //Console.WriteLine($"[SQL ERROR] {DateTime.Now:HH:mm:ss} {errorsql}");
                         }
-                        catch (Exception exx)
+                        catch (Exception ex)
                         {
-                            var aa = (e.Parametres as SugarParameter[]).ToDictionary(it => it.ParameterName, it => it.Value);
+                            Console.WriteLine($"日志记录失败: {ex.Message}\n原始错误: {e.Message}");
                         }
-
                     };
 
                     db.Aop.OnLogExecuted = (sql, pars) =>
@@ -136,7 +155,7 @@ namespace RUINORERP.Extensions
                         if (AppContextData.IsDebug)
                         {
                             Console.WriteLine(Common.DB.SqlProfiler.FormatParam(sql, pars));
-                            logger.LogInformation(SqlProfiler.FormatParam(sql, pars as SugarParameter[]));
+                            //logger.LogInformation(SqlProfiler.FormatParam(sql, pars as SugarParameter[]));
                         }
 
                     };

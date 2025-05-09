@@ -570,7 +570,20 @@ namespace RUINORERP.Model
             SetProperty(ref _ShippingCost, value);
                         }
         }
-
+        private decimal _ForeignShipCost = ((0));
+        /// <summary>
+        /// 运费外币
+        /// </summary>
+        [AdvQueryAttribute(ColName = "ForeignShipCost", ColDesc = "运费外币")]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType = "Decimal", ColumnName = "ForeignShipCost", DecimalDigits = 4, IsNullable = false, ColumnDescription = "运费外币")]
+        public decimal ForeignShipCost
+        {
+            get { return _ForeignShipCost; }
+            set
+            {
+                SetProperty(ref _ForeignShipCost, value);
+            }
+        }
         #endregion
 
         #region 扩展属性

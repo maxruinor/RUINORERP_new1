@@ -242,10 +242,10 @@ namespace RUINORERP.UI.PSI.PUR
             listCols.SetCol_ReadOnly<ProductSharePart>(c => c.prop);
             listCols.SetCol_ReadOnly<ProductSharePart>(c => c.CNName);
 
-            listCols.SetCol_Format<tb_PurEntryDetail>(c => c.Discount, CustomFormatType.PercentFormat);
             listCols.SetCol_Format<tb_PurEntryDetail>(c => c.TaxRate, CustomFormatType.PercentFormat);
+            listCols.SetCol_Format<tb_PurEntryDetail>(c => c.SubtotalAmount, CustomFormatType.CurrencyFormat);
+            listCols.SetCol_Format<tb_PurEntryDetail>(c => c.TaxAmount, CustomFormatType.CurrencyFormat);
             listCols.SetCol_Format<tb_PurEntryDetail>(c => c.UnitPrice, CustomFormatType.CurrencyFormat);
-
             sgd = new SourceGridDefine(grid1, listCols, true);
             sgd.GridMasterData = EditEntity;
             /*
@@ -258,12 +258,11 @@ namespace RUINORERP.UI.PSI.PUR
             }*/
 
             listCols.SetCol_Summary<tb_PurEntryDetail>(c => c.Quantity);
-            listCols.SetCol_Summary<tb_PurEntryDetail>(c => c.TransactionPrice);
+            listCols.SetCol_Summary<tb_PurEntryDetail>(c => c.TaxAmount);
             listCols.SetCol_Summary<tb_PurEntryDetail>(c => c.SubtotalAmount);
 
 
-            listCols.SetCol_Formula<tb_PurEntryDetail>((a, b) => a.UnitPrice * b.Discount, c => c.TransactionPrice);
-            listCols.SetCol_Formula<tb_PurEntryDetail>((a, b, c) => a.UnitPrice * b.Discount * c.Quantity, c => c.SubtotalAmount);
+            listCols.SetCol_Formula<tb_PurEntryDetail>((a, b, c) => a.UnitPrice  * c.Quantity, c => c.SubtotalAmount);
             listCols.SetCol_Formula<tb_PurEntryDetail>((a, b, c) => a.SubtotalAmount / (1 + b.TaxRate) * c.TaxRate, d => d.TaxAmount);
             //反算成交价
             listCols.SetCol_FormulaReverse<tb_PurEntryDetail>((a) => a.Quantity != 0, (a, b) => a.SubtotalAmount / b.Quantity, c => c.UnitPrice);
@@ -494,7 +493,7 @@ namespace RUINORERP.UI.PSI.PUR
                             && c.Location_ID == details[i].Location_ID
                             && c.PurOrder_ChildID == details[i].PurOrder_ChildID);
                         details[i].Quantity = item.Quantity - item.DeliveredQuantity;// 已经交数量去掉
-                        details[i].SubtotalAmount = details[i].TransactionPrice * details[i].Quantity;
+                        details[i].SubtotalAmount = details[i].UnitPrice * details[i].Quantity;
                         if (details[i].Quantity > 0)
                         {
                             NewDetails.Add(details[i]);
@@ -515,7 +514,7 @@ namespace RUINORERP.UI.PSI.PUR
                             && c.Location_ID == details[i].Location_ID
                             );
                         details[i].Quantity = item.Quantity - item.DeliveredQuantity;// 已经交数量去掉
-                        details[i].SubtotalAmount = details[i].TransactionPrice * details[i].Quantity;
+                        details[i].SubtotalAmount = details[i].UnitPrice * details[i].Quantity;
                         if (details[i].Quantity > 0)
                         {
                             NewDetails.Add(details[i]);

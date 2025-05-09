@@ -919,7 +919,7 @@ namespace RUINORERP.UI.SysConfig
                 foreach (tb_Inventory item in Allitems)
                 {
                     if (item.tb_proddetail.tb_PurEntryDetails.Count > 0
-                        && item.tb_proddetail.tb_PurEntryDetails.Sum(c => c.TransactionPrice) > 0
+                        && item.tb_proddetail.tb_PurEntryDetails.Sum(c => c.UnitPrice) > 0
                         && item.tb_proddetail.tb_PurEntryDetails.Sum(c => c.Quantity) > 0
                         )
                     {
@@ -927,8 +927,8 @@ namespace RUINORERP.UI.SysConfig
                         var realDetails = item.tb_proddetail.tb_PurEntryDetails.Where(c => c.UnitPrice > 0).ToList();
                         //每笔的入库的数量*成交价/总数量
                         var transPrice = realDetails
-                            .Where(c => c.TransactionPrice > 0 && c.Quantity > 0 && c.UnitPrice > 0)
-                            .Sum(c => c.TransactionPrice * c.Quantity) / realDetails.Sum(c => c.Quantity);
+                            .Where(c => c.Quantity > 0 && c.UnitPrice > 0)
+                            .Sum(c => c.UnitPrice * c.Quantity) / realDetails.Sum(c => c.Quantity);
                         if (targetCost > 0)
                         {
                             transPrice = targetCost;

@@ -3369,6 +3369,9 @@
     <EmbeddedResource Include="FM\UCFMReceivedRecord.resx">
       <DependentUpon>UCFMReceivedRecord.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="FM\UCPaymentSettledQuery.resx">
+      <DependentUpon>UCPaymentSettledQuery.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="FM\UCPreReceived.resx">
       <DependentUpon>UCPreReceived.cs</DependentUpon>
     </EmbeddedResource>

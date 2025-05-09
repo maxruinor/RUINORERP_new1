@@ -424,7 +424,7 @@ namespace RUINORERP.UI.FM
                 }
 
                 EditEntity.tb_FM_PaymentRecordDetails = details;
-
+                
                 //如果主表的总金额和明细金额加总后不相等，则提示
                 if (NeedValidated && EditEntity.TotalForeignAmount != details.Sum(c => c.ForeignAmount))
                 {

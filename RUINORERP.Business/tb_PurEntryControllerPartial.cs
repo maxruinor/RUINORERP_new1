@@ -226,9 +226,9 @@ namespace RUINORERP.Business
                     //采购价格：从供应商处购买产品或物品时的价格。
                     //生产成本：自行生产产品时的成本，包括原材料、人工和间接费用等。
                     //市场价格：参考市场上类似产品或物品的价格。
-                    if (child.IsGift.HasValue && child.IsGift == false && child.TransactionPrice > 0)
+                    if (child.IsGift.HasValue && child.IsGift == false && child.UnitPrice > 0)
                     {
-                        CommService.CostCalculations.CostCalculation(_appContext, inv, child.Quantity, child.TransactionPrice);
+                        CommService.CostCalculations.CostCalculation(_appContext, inv, child.Quantity, child.UnitPrice);
                         #region 更新BOM价格,当前产品存在哪些BOM中，则更新所有BOM的价格包含主子表数据的变化
 
                         tb_BOM_SDetailController<tb_BOM_SDetail> ctrtb_BOM_SDetail = _appContext.GetRequiredService<tb_BOM_SDetailController<tb_BOM_SDetail>>();
@@ -276,9 +276,9 @@ namespace RUINORERP.Business
                             priceRecord = new tb_PriceRecord();
                         }
                         priceRecord.Employee_ID = entity.tb_purorder.Employee_ID;
-                        if (child.TransactionPrice != priceRecord.PurPrice)
+                        if (child.UnitPrice != priceRecord.PurPrice)
                         {
-                            priceRecord.PurPrice = child.TransactionPrice;
+                            priceRecord.PurPrice = child.UnitPrice;
                             priceRecord.PurDate = System.DateTime.Now;
                             priceRecord.ProdDetailID = child.ProdDetailID;
                             ReturnResults<tb_PriceRecord> rrpr = await ctrPriceRecord.SaveOrUpdate(priceRecord);
@@ -616,9 +616,9 @@ namespace RUINORERP.Business
                  生产成本：自行生产产品时的成本，包括原材料、人工和间接费用等。
                  市场价格：参考市场上类似产品或物品的价格。
                   */
-                    if (child.IsGift.HasValue && child.IsGift == false && child.TransactionPrice > 0)
+                    if (child.IsGift.HasValue && child.IsGift == false && child.UnitPrice > 0)
                     {
-                        CommService.CostCalculations.AntiCostCalculation(_appContext, inv, child.Quantity, child.TransactionPrice);
+                        CommService.CostCalculations.AntiCostCalculation(_appContext, inv, child.Quantity, child.UnitPrice);
                         //赠品不更新。价格为0的不更新。
                         #region 更新BOM价格,当前产品存在哪些BOM中，则更新所有BOM的价格包含主子表数据的变化
 

@@ -533,7 +533,14 @@ namespace RUINORERP.UI.PSI.SAL
 
 
                 EditEntity.tb_SaleOutReDetails = details;
-
+                if (details.Sum(c=>c.SubtotalTaxAmount) > 0)
+                {
+                    EditEntity.IsIncludeTax = true;
+                }
+                else
+                {
+                    EditEntity.IsIncludeTax = false;
+                }
 
                 //产品ID有值才算有效值
                 LastRefurbishedMaterials = RefurbishedMaterials.Where(t => t.ProdDetailID > 0).ToList();

@@ -152,19 +152,7 @@ namespace RUINORERP.Model
                         }
         }
 
-        private decimal _Discount= ((1));
-        /// <summary>
-        /// 折扣
-        /// </summary>
-        [AdvQueryAttribute(ColName = "Discount",ColDesc = "折扣")] 
-        [SugarColumn(ColumnDataType = "decimal", SqlParameterDbType ="Decimal",  ColumnName = "Discount" , DecimalDigits = 2,IsNullable = false,ColumnDescription = "折扣" )]
-        public decimal Discount
-        { 
-            get{return _Discount;}
-            set{
-            SetProperty(ref _Discount, value);
-                        }
-        }
+       
 
         private bool? _IsGift;
         /// <summary>
@@ -208,19 +196,7 @@ namespace RUINORERP.Model
                         }
         }
 
-        private decimal _TransactionPrice= ((0));
-        /// <summary>
-        /// 成交单价
-        /// </summary>
-        [AdvQueryAttribute(ColName = "TransactionPrice",ColDesc = "成交单价")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "TransactionPrice" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "成交单价" )]
-        public decimal TransactionPrice
-        { 
-            get{return _TransactionPrice;}
-            set{
-            SetProperty(ref _TransactionPrice, value);
-                        }
-        }
+       
 
         private decimal _SubtotalAmount= ((0));
         /// <summary>

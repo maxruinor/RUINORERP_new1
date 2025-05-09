@@ -28,13 +28,12 @@ namespace RUINORERP.Business
         {
             // 这里添加额外的初始化代码
             RuleFor(x => x.Quantity).GreaterThan(0).WithMessage("明细中，数量：要大于零。");
-            RuleFor(x => x.Discount).GreaterThan(0).WithMessage("明细中，折扣：要大于零。");
+          
             RuleFor(x => x.UnitPrice).GreaterThan(0).When(c => c.IsGift == false).WithMessage("明细中，单价：非赠品时要大于零。");
-            RuleFor(x => x.TransactionPrice).GreaterThan(0).When(c => c.IsGift == false).WithMessage("明细中，单价：非赠品时要大于零。");
-            RuleFor(x => x.TransactionPrice).GreaterThan(0).When(c => c.tb_purentryre != null && c.tb_purentryre.PurEntryID.HasValue == false)
+            RuleFor(x => x.UnitPrice).GreaterThan(0).When(c => c.tb_purentryre != null && c.tb_purentryre.PurEntryID.HasValue == false)
                 .WithMessage("在没有引用入库单中明细数据时，单价：非赠品时要大于零。");
             //如果成交小计不等于成交价*数量，则抛出异常
-            RuleFor(x => x.TransactionPrice * x.Quantity).Equal(x => x.SubtotalTrPriceAmount).WithMessage("明细中，成交小计：要等于成交价*数量。");
+            RuleFor(x => x.UnitPrice * x.Quantity).Equal(x => x.SubtotalTrPriceAmount).WithMessage("明细中，成交小计：要等于成交价*数量。");
         }
     }
 

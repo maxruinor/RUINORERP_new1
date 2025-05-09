@@ -126,8 +126,6 @@ namespace RUINORERP.UI.PSI.PUR
             DataBindingHelper.BindData4TextBox<tb_PurReturnEntry>(entity, t => t.TrackNo, txtTrackNo, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_PurReturnEntry>(entity, t => t.Notes, txtNotes, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4CheckBox<tb_PurReturnEntry>(entity, t => t.IsIncludeTax, chkIsIncludeTax, false);
-            DataBindingHelper.BindData4TextBox<tb_PurReturnEntry>(entity, t => t.Deposit.ToString(), txtDeposit, BindDataType4TextBox.Money, false);
-            DataBindingHelper.BindData4TextBox<tb_PurReturnEntry>(entity, t => t.TotalDiscountAmount.ToString(), txtTotalTaxAmount, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4CheckBox<tb_PurReturnEntry>(entity, t => t.ReceiptInvoiceClosed, chkReceiptInvoiceClosed, false);
             DataBindingHelper.BindData4CheckBox<tb_PurReturnEntry>(entity, t => t.GenerateVouchers, chkGenerateVouchers, false);
             DataBindingHelper.BindData4TextBox<tb_PurReturnEntry>(entity, t => t.VoucherNO, txtVoucherNO, BindDataType4TextBox.Text, false);
@@ -270,10 +268,10 @@ namespace RUINORERP.UI.PSI.PUR
             listCols.SetCol_ReadOnly<ProductSharePart>(c => c.prop);
             listCols.SetCol_ReadOnly<ProductSharePart>(c => c.CNName);
 
-            listCols.SetCol_Format<tb_PurReturnEntryDetail>(c => c.Discount, CustomFormatType.PercentFormat);
             listCols.SetCol_Format<tb_PurReturnEntryDetail>(c => c.TaxRate, CustomFormatType.PercentFormat);
             listCols.SetCol_Format<tb_PurReturnEntryDetail>(c => c.UnitPrice, CustomFormatType.CurrencyFormat);
-
+            listCols.SetCol_Format<tb_PurReturnEntryDetail>(c => c.TaxAmount, CustomFormatType.CurrencyFormat);
+            listCols.SetCol_Format<tb_PurReturnEntryDetail>(c => c.SubtotalTrPriceAmount, CustomFormatType.CurrencyFormat);
             sgd = new SourceGridDefine(grid1, listCols, true);
             sgd.GridMasterData = EditEntity;
 
@@ -282,11 +280,9 @@ namespace RUINORERP.UI.PSI.PUR
             listCols.SetCol_Summary<tb_PurReturnEntryDetail>(c => c.Quantity);
             listCols.SetCol_Summary<tb_PurReturnEntryDetail>(c => c.TaxAmount);
             listCols.SetCol_Summary<tb_PurReturnEntryDetail>(c => c.SubtotalTrPriceAmount);
-            listCols.SetCol_Summary<tb_PurReturnEntryDetail>(c => c.DiscountAmount);
+            
 
-            listCols.SetCol_Formula<tb_PurReturnEntryDetail>((a, b, c) => a.UnitPrice * b.Discount - c.SubtotalTrPriceAmount, d => d.DiscountAmount);
-            listCols.SetCol_Formula<tb_PurReturnEntryDetail>((a, b) => a.UnitPrice * b.Discount, c => c.TransactionPrice);
-            listCols.SetCol_Formula<tb_PurReturnEntryDetail>((a, b, c) => a.UnitPrice * b.Discount * c.Quantity, c => c.SubtotalTrPriceAmount);
+            listCols.SetCol_Formula<tb_PurReturnEntryDetail>((a, b, c) => a.UnitPrice  * c.Quantity, c => c.SubtotalTrPriceAmount);
             listCols.SetCol_Formula<tb_PurReturnEntryDetail>((a, b, c) => a.SubtotalTrPriceAmount / (1 + b.TaxRate) * c.TaxRate, d => d.TaxAmount);
 
 
@@ -337,7 +333,6 @@ namespace RUINORERP.UI.PSI.PUR
                     return;
                 }
                 EditEntity.TotalQty = details.Sum(c => c.Quantity);
-                EditEntity.TotalDiscountAmount = details.Sum(c => c.DiscountAmount);
                 EditEntity.TotalAmount = details.Sum(c => c.SubtotalTrPriceAmount);
                 EditEntity.TotalTaxAmount = details.Sum(c => c.TaxAmount);
             }
@@ -379,7 +374,14 @@ namespace RUINORERP.UI.PSI.PUR
                 }
 
                 EditEntity.tb_PurReturnEntryDetails = details;
-
+                if (EditEntity.TotalTaxAmount > 0)
+                {
+                    EditEntity.IsIncludeTax = true;
+                }
+                else
+                {
+                    EditEntity.IsIncludeTax = false;
+                }
 
                 //没有经验通过下面先不计算
                 if (NeedValidated && !base.Validator(EditEntity))
@@ -470,7 +472,7 @@ namespace RUINORERP.UI.PSI.PUR
                     #region 
 
                     details[i].Quantity = details[i].Quantity - item.DeliveredQuantity;// 减掉已经入的数量
-                    details[i].SubtotalTrPriceAmount = details[i].TransactionPrice * details[i].Quantity;
+                    details[i].SubtotalTrPriceAmount = details[i].UnitPrice * details[i].Quantity;
 
                     if (details[i].Quantity > 0)
                     {
@@ -505,7 +507,6 @@ namespace RUINORERP.UI.PSI.PUR
                 entity.TotalAmount = NewDetails.Sum(c => c.SubtotalTrPriceAmount);
                 entity.TotalQty = NewDetails.Sum(c => c.Quantity);
                 entity.TotalTaxAmount = NewDetails.Sum(c => c.TaxAmount);
-                entity.TotalDiscountAmount = NewDetails.Sum(c => c.DiscountAmount);
 
                 entity.DataStatus = (int)DataStatus.草稿;
                 entity.ApprovalStatus = (int)ApprovalStatus.未审核;
@@ -521,7 +522,6 @@ namespace RUINORERP.UI.PSI.PUR
                 {
                     entity.CustomerVendor_ID = purEntryRe.CustomerVendor_ID;
                     entity.DepartmentID = purEntryRe.DepartmentID;
-                    entity.Deposit = purEntryRe.Deposit;
                     entity.Paytype_ID = purEntryRe.Paytype_ID;
                 }
                 BusinessHelper.Instance.InitEntity(entity);

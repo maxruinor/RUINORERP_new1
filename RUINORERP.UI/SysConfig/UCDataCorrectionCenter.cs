@@ -232,14 +232,14 @@ namespace RUINORERP.UI.SysConfig
                         //折扣为0的单价大于0的。成交价为0的。折扣修改为1，成交价修改为单价
                         List<tb_PurOrderDetail> PurOrderDetails = MainForm.Instance.AppContext.Db.Queryable<tb_PurOrderDetail>()
                             .Includes(c => c.tb_purorder, b => b.tb_PurOrderDetails)
-                            .Where(c => c.Discount == 0 && c.UnitPrice > 0 && c.TransactionPrice == 0)
+                            .Where(c =>  c.UnitPrice > 0 )
                             .ToList();
 
                         for (int i = 0; i < PurOrderDetails.Count; i++)
                         {
-                            PurOrderDetails[i].Discount = 1;
-                            PurOrderDetails[i].TransactionPrice = PurOrderDetails[i].UnitPrice;
-                            PurOrderDetails[i].SubtotalAmount = PurOrderDetails[i].TransactionPrice * PurOrderDetails[i].Quantity;
+                            //PurOrderDetails[i].Discount = 1;
+                          
+                            PurOrderDetails[i].SubtotalAmount = PurOrderDetails[i].UnitPrice * PurOrderDetails[i].Quantity;
 
                             if (PurOrderDetails[i].tb_purorder.tb_PurOrderDetails.Count == 1)
                             {
@@ -266,14 +266,14 @@ namespace RUINORERP.UI.SysConfig
                         //折扣为0的单价大于0的。成交价为0的。折扣修改为1，成交价修改为单价
                         List<tb_PurOrderDetail> PurOrderDetails1 = MainForm.Instance.AppContext.Db.Queryable<tb_PurOrderDetail>()
                             .Includes(c => c.tb_purorder, b => b.tb_PurOrderDetails)
-                            .Where(c => c.Discount == 1 && c.UnitPrice == 0 && c.TransactionPrice > 0)
+                            .Where(c =>  c.UnitPrice == 0 )
                             .ToList();
 
                         for (int i = 0; i < PurOrderDetails1.Count; i++)
                         {
-                            PurOrderDetails1[i].Discount = 1;
-                            PurOrderDetails1[i].UnitPrice = PurOrderDetails1[i].TransactionPrice;
-                            PurOrderDetails1[i].SubtotalAmount = PurOrderDetails1[i].TransactionPrice * PurOrderDetails1[i].Quantity;
+                           
+                          
+                            PurOrderDetails1[i].SubtotalAmount = PurOrderDetails1[i].UnitPrice * PurOrderDetails1[i].Quantity;
 
                             if (PurOrderDetails1[i].tb_purorder.tb_PurOrderDetails.Count == 1)
                             {
@@ -298,44 +298,7 @@ namespace RUINORERP.UI.SysConfig
 
 
 
-                        //单价不等于成交价时。看折扣情况
-                        PurOrderDetails = MainForm.Instance.AppContext.Db.Queryable<tb_PurOrderDetail>()
-                           .Includes(c => c.tb_purorder, b => b.tb_PurOrderDetails)
-                           .Where(c => c.UnitPrice != c.TransactionPrice && c.Discount != 0)
-                           .ToList();
-
-                        for (int i = 0; i < PurOrderDetails.Count; i++)
-                        {
-                            //如果是成交价等于单价*折扣，跳过
-                            if (PurOrderDetails[i].TransactionPrice == PurOrderDetails[i].UnitPrice * PurOrderDetails[i].Discount)
-                            {
-                                continue;
-                            }
-                            PurOrderDetails[i].TransactionPrice = PurOrderDetails[i].UnitPrice * PurOrderDetails[i].Discount;
-                            PurOrderDetails[i].SubtotalAmount = PurOrderDetails[i].TransactionPrice * PurOrderDetails[i].Quantity;
-
-                            if (PurOrderDetails[i].tb_purorder.tb_PurOrderDetails.Count == 1)
-                            {
-                                PurOrderDetails[i].tb_purorder.TotalAmount = PurOrderDetails[i].SubtotalAmount;
-                                PurOrderDetails[i].tb_purorder.TotalAmount = PurOrderDetails[i].SubtotalAmount + PurOrderDetails[i].tb_purorder.ShippingCost;
-                            }
-                            else
-                            {
-
-                            }
-
-                            if (!chkTestMode.Checked)
-                            {
-
-                                await ctrPurOrderDetail.UpdateAsync(PurOrderDetails[i]);
-                                if (PurOrderDetails[i].tb_purorder.tb_PurOrderDetails.Count == 1)
-                                {
-                                    await ctrPurOrder.UpdateAsync(PurOrderDetails[i].tb_purorder);
-                                }
-                            }
-                        }
-
-
+                 
 
                         #endregion
                     }
@@ -356,7 +319,7 @@ namespace RUINORERP.UI.SysConfig
                             {
                                 //如果明细的小计不等于成交价*数量
                                 if (PurOrders[i].tb_PurOrderDetails[j].SubtotalAmount !=
-                                    PurOrders[i].tb_PurOrderDetails[j].TransactionPrice * PurOrders[i].tb_PurOrderDetails[j].Quantity)
+                                    PurOrders[i].tb_PurOrderDetails[j].UnitPrice * PurOrders[i].tb_PurOrderDetails[j].Quantity)
                                 {
                                     if (chkTestMode.Checked)
                                     {
@@ -364,7 +327,7 @@ namespace RUINORERP.UI.SysConfig
                                     }
                                     else
                                     {
-                                        PurOrders[i].tb_PurOrderDetails[j].SubtotalAmount = PurOrders[i].tb_PurOrderDetails[j].TransactionPrice * PurOrders[i].tb_PurOrderDetails[j].Quantity;
+                                        PurOrders[i].tb_PurOrderDetails[j].SubtotalAmount = PurOrders[i].tb_PurOrderDetails[j].UnitPrice * PurOrders[i].tb_PurOrderDetails[j].Quantity;
                                         int totalamountCounter = await MainForm.Instance.AppContext.Db.Updateable(PurOrders[i].tb_PurOrderDetails[j]).UpdateColumns(t => new { t.SubtotalAmount }).ExecuteCommandAsync();
                                         richTextBoxLog.AppendText($"采购订单明细{PurOrders[i].tb_PurOrderDetails[j].ProdDetailID}的小计金额{PurOrders[i].tb_PurOrderDetails[j].SubtotalAmount}修复成功：{totalamountCounter} " + "\r\n");
                                     }
@@ -408,14 +371,13 @@ namespace RUINORERP.UI.SysConfig
                         //折扣为0的单价大于0的。成交价为0的。折扣修改为1，成交价修改为单价
                         List<tb_PurEntryDetail> PurEntryDetails = MainForm.Instance.AppContext.Db.Queryable<tb_PurEntryDetail>()
                             .Includes(c => c.tb_purentry, b => b.tb_PurEntryDetails)
-                            .Where(c => c.UnitPrice > 0 && c.TransactionPrice == 0 && c.Discount != 0)
+                            .Where(c => c.UnitPrice > 0 )
                             .ToList();
 
                         for (int i = 0; i < PurEntryDetails.Count; i++)
                         {
-                            PurEntryDetails[i].Discount = 1;
-                            PurEntryDetails[i].TransactionPrice = PurEntryDetails[i].UnitPrice;
-                            PurEntryDetails[i].SubtotalAmount = PurEntryDetails[i].TransactionPrice * PurEntryDetails[i].Quantity;
+                         
+                            PurEntryDetails[i].SubtotalAmount = PurEntryDetails[i].UnitPrice * PurEntryDetails[i].Quantity;
                             if (!chkTestMode.Checked)
                             {
 
@@ -432,14 +394,14 @@ namespace RUINORERP.UI.SysConfig
                         //折扣为0的单价大于0的。成交价为0的。折扣修改为1，成交价修改为单价
                         List<tb_PurEntryDetail> PurEntryDetails1 = MainForm.Instance.AppContext.Db.Queryable<tb_PurEntryDetail>()
                             .Includes(c => c.tb_purentry, b => b.tb_PurEntryDetails)
-                            .Where(c => c.UnitPrice == 0 && c.TransactionPrice > 0)
+                            .Where(c => c.UnitPrice == 0)
                             .ToList();
 
                         for (int i = 0; i < PurEntryDetails1.Count; i++)
                         {
-                            PurEntryDetails1[i].Discount = 1;
-                            PurEntryDetails1[i].UnitPrice = PurEntryDetails1[i].TransactionPrice;
-                            PurEntryDetails1[i].SubtotalAmount = PurEntryDetails1[i].TransactionPrice * PurEntryDetails1[i].Quantity;
+                    
+                       
+                            PurEntryDetails1[i].SubtotalAmount = PurEntryDetails1[i].UnitPrice * PurEntryDetails1[i].Quantity;
 
                             if (!chkTestMode.Checked)
                             {
@@ -455,31 +417,31 @@ namespace RUINORERP.UI.SysConfig
 
 
 
-                        //折扣为0的单价大于0的。成交价为0的。折扣修改为1，成交价修改为单价
-                        PurEntryDetails1 = MainForm.Instance.AppContext.Db.Queryable<tb_PurEntryDetail>()
-                            .Includes(c => c.tb_purentry, b => b.tb_PurEntryDetails)
-                            .Where(c => c.UnitPrice != c.TransactionPrice)
-                            .ToList();
+                        ////折扣为0的单价大于0的。成交价为0的。折扣修改为1，成交价修改为单价
+                        //PurEntryDetails1 = MainForm.Instance.AppContext.Db.Queryable<tb_PurEntryDetail>()
+                        //    .Includes(c => c.tb_purentry, b => b.tb_PurEntryDetails)
+                        //    .Where(c => c.UnitPrice != c.TransactionPrice)
+                        //    .ToList();
 
-                        for (int i = 0; i < PurEntryDetails1.Count; i++)
-                        {
-                            //如果是成交价等于单价*折扣，跳过
-                            if (PurEntryDetails1[i].TransactionPrice == PurEntryDetails1[i].UnitPrice * PurEntryDetails1[i].Discount)
-                            {
-                                continue;
-                            }
-                            PurEntryDetails1[i].TransactionPrice = PurEntryDetails1[i].UnitPrice * PurEntryDetails1[i].Discount;
-                            PurEntryDetails1[i].SubtotalAmount = PurEntryDetails1[i].TransactionPrice * PurEntryDetails1[i].Quantity;
+                        //for (int i = 0; i < PurEntryDetails1.Count; i++)
+                        //{
+                        //    //如果是成交价等于单价*折扣，跳过
+                        //    if (PurEntryDetails1[i].TransactionPrice == PurEntryDetails1[i].UnitPrice * PurEntryDetails1[i].Discount)
+                        //    {
+                        //        continue;
+                        //    }
+                        //    PurEntryDetails1[i].TransactionPrice = PurEntryDetails1[i].UnitPrice * PurEntryDetails1[i].Discount;
+                        //    PurEntryDetails1[i].SubtotalAmount = PurEntryDetails1[i].TransactionPrice * PurEntryDetails1[i].Quantity;
 
-                            if (!chkTestMode.Checked)
-                            {
-                                await ctrPurEntryDetail.UpdateAsync(PurEntryDetails1[i]);
-                            }
-                            else
-                            {
-                                richTextBoxLog.AppendText($"3采购入库单明细{PurEntryDetails[i].ProdDetailID}的价格需要修复" + "\r\n");
-                            }
-                        }
+                        //    if (!chkTestMode.Checked)
+                        //    {
+                        //        await ctrPurEntryDetail.UpdateAsync(PurEntryDetails1[i]);
+                        //    }
+                        //    else
+                        //    {
+                        //        richTextBoxLog.AppendText($"3采购入库单明细{PurEntryDetails[i].ProdDetailID}的价格需要修复" + "\r\n");
+                        //    }
+                        //}
 
 
                         #endregion
@@ -499,7 +461,7 @@ namespace RUINORERP.UI.SysConfig
                             {
                                 //如果明细的小计不等于成交价*数量
                                 if (tb_PurEntrys[i].tb_PurEntryDetails[j].SubtotalAmount !=
-                                    tb_PurEntrys[i].tb_PurEntryDetails[j].TransactionPrice * tb_PurEntrys[i].tb_PurEntryDetails[j].Quantity)
+                                    tb_PurEntrys[i].tb_PurEntryDetails[j].UnitPrice * tb_PurEntrys[i].tb_PurEntryDetails[j].Quantity)
                                 {
                                     if (chkTestMode.Checked)
                                     {
@@ -507,7 +469,7 @@ namespace RUINORERP.UI.SysConfig
                                     }
                                     else
                                     {
-                                        tb_PurEntrys[i].tb_PurEntryDetails[j].SubtotalAmount = tb_PurEntrys[i].tb_PurEntryDetails[j].TransactionPrice * tb_PurEntrys[i].tb_PurEntryDetails[j].Quantity;
+                                        tb_PurEntrys[i].tb_PurEntryDetails[j].SubtotalAmount = tb_PurEntrys[i].tb_PurEntryDetails[j].UnitPrice * tb_PurEntrys[i].tb_PurEntryDetails[j].Quantity;
                                         int totalamountCounter = await MainForm.Instance.AppContext.Db.Updateable(tb_PurEntrys[i].tb_PurEntryDetails[j]).UpdateColumns(t => new { t.SubtotalAmount }).ExecuteCommandAsync();
                                         richTextBoxLog.AppendText($"采购入库单明细{tb_PurEntrys[i].tb_PurEntryDetails[j].ProdDetailID}的小计金额{tb_PurEntrys[i].tb_PurEntryDetails[j].SubtotalAmount}修复成功：{totalamountCounter} " + "\r\n");
                                     }
@@ -551,7 +513,7 @@ namespace RUINORERP.UI.SysConfig
                             //如果入库明细单价为0时则检测订单明细中单价多少。
                             for (int b = 0; b < MyPurEntrys[a].tb_PurEntryDetails.Count; b++)
                             {
-                                if (MyPurEntrys[a].tb_PurEntryDetails[b].TransactionPrice == 0 && MyPurEntrys[a].tb_PurEntryDetails[b].UnitPrice == 0)
+                                if ( MyPurEntrys[a].tb_PurEntryDetails[b].UnitPrice == 0)
                                 {
                                     //没有引用订单的跳过
                                     if (MyPurEntrys[a].tb_purorder == null)
@@ -561,7 +523,7 @@ namespace RUINORERP.UI.SysConfig
                                     var orderdetail = MyPurEntrys[a].tb_purorder.tb_PurOrderDetails.FirstOrDefault(c => c.ProdDetailID == MyPurEntrys[a].tb_PurEntryDetails[b].ProdDetailID);
                                     if (orderdetail != null)
                                     {
-                                        if (orderdetail.UnitPrice > 0 || orderdetail.TransactionPrice > 0)
+                                        if (orderdetail.UnitPrice > 0 )
                                         {
                                             //更新入库单明细
                                             if (chkTestMode.Checked)
@@ -570,10 +532,9 @@ namespace RUINORERP.UI.SysConfig
                                             }
                                             else
                                             {
-                                                MyPurEntrys[a].tb_PurEntryDetails[b].Discount = 1;
                                                 MyPurEntrys[a].tb_PurEntryDetails[b].UnitPrice = orderdetail.UnitPrice;
-                                                MyPurEntrys[a].tb_PurEntryDetails[b].TransactionPrice = orderdetail.TransactionPrice;
-                                                int totalamountCounter = await MainForm.Instance.AppContext.Db.Updateable(MyPurEntrys[a].tb_PurEntryDetails[b]).UpdateColumns(t => new { t.SubtotalAmount, t.Discount, t.TransactionPrice, t.UnitPrice }).ExecuteCommandAsync();
+                                            
+                                                int totalamountCounter = await MainForm.Instance.AppContext.Db.Updateable(MyPurEntrys[a].tb_PurEntryDetails[b]).UpdateColumns(t => new { t.SubtotalAmount,t.TaxAmount,t.UnitPrice }).ExecuteCommandAsync();
                                                 richTextBoxLog.AppendText($"采购入库单明细{MyPurEntrys[a].tb_PurEntryDetails[b].ProdDetailID}的小计金额{MyPurEntrys[a].tb_PurEntryDetails[b].SubtotalAmount}修复成功：{totalamountCounter} " + "\r\n");
                                             }
 
@@ -1109,7 +1070,7 @@ namespace RUINORERP.UI.SysConfig
                 foreach (tb_Inventory item in Allitems)
                 {
                     if (item.tb_proddetail.tb_PurEntryDetails.Count > 0
-                        && item.tb_proddetail.tb_PurEntryDetails.Sum(c => c.TransactionPrice) > 0
+                        && item.tb_proddetail.tb_PurEntryDetails.Sum(c => c.UnitPrice) > 0
                         && item.tb_proddetail.tb_PurEntryDetails.Sum(c => c.Quantity) > 0
                         )
                     {
@@ -1118,8 +1079,8 @@ namespace RUINORERP.UI.SysConfig
 
                         //每笔的入库的数量*成交价/总数量
                         var transPrice = realDetails
-                            .Where(c => c.TransactionPrice > 0 && c.Quantity > 0 && c.UnitPrice > 0)
-                            .Sum(c => c.TransactionPrice * c.Quantity) / realDetails.Sum(c => c.Quantity);
+                            .Where(c =>  c.Quantity > 0 && c.UnitPrice > 0)
+                            .Sum(c => c.UnitPrice * c.Quantity) / realDetails.Sum(c => c.Quantity);
                         if (transPrice > 0)
                         {
                             //百分比

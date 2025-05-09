@@ -393,19 +393,7 @@ namespace RUINORERP.Model
                         }
         }
 
-        private decimal? _Deposit= ((0));
-        /// <summary>
-        /// 订金
-        /// </summary>
-        [AdvQueryAttribute(ColName = "Deposit",ColDesc = "订金")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "Deposit" , DecimalDigits = 4,IsNullable = true,ColumnDescription = "订金" )]
-        public decimal? Deposit
-        { 
-            get{return _Deposit;}
-            set{
-            SetProperty(ref _Deposit, value);
-                        }
-        }
+ 
 
         private int? _TaxDeductionType;
         /// <summary>
@@ -421,19 +409,7 @@ namespace RUINORERP.Model
                         }
         }
 
-        private decimal? _TotalDiscountAmount;
-        /// <summary>
-        /// 折扣金额总计
-        /// </summary>
-        [AdvQueryAttribute(ColName = "TotalDiscountAmount",ColDesc = "折扣金额总计")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "TotalDiscountAmount" , DecimalDigits = 4,IsNullable = true,ColumnDescription = "折扣金额总计" )]
-        public decimal? TotalDiscountAmount
-        { 
-            get{return _TotalDiscountAmount;}
-            set{
-            SetProperty(ref _TotalDiscountAmount, value);
-                        }
-        }
+        
 
         private bool? _ReceiptInvoiceClosed;
         /// <summary>

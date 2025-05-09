@@ -28,8 +28,35 @@
         /// </summary>
         private void InitializeComponent()
         {
-            components = new System.ComponentModel.Container();
+            ((System.ComponentModel.ISupportInitialize)(this.kryptonPanelMainBig)).BeginInit();
+            this.kryptonPanelMainBig.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.kryptonDockableWorkspaceQuery)).BeginInit();
+            this.SuspendLayout();
+            // 
+            // kryptonDockableWorkspaceQuery
+            // 
+            // 
+            // 
+            // 
+            this.kryptonDockableWorkspaceQuery.Root.UniqueName = "1E691A582DF14E8443907289238B58BD";
+            this.kryptonDockableWorkspaceQuery.Root.WorkspaceControl = this.kryptonDockableWorkspaceQuery;
+            // 
+            // kryptonDockingManagerQuery
+            // 
+            this.kryptonDockingManagerQuery.Strings.TextAutoHide = "自动隐藏";
+            // 
+            // UCPaymentSettledQuery
+            // 
+            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.Name = "UCPaymentSettledQuery";
+            ((System.ComponentModel.ISupportInitialize)(this.kryptonPanelMainBig)).EndInit();
+            this.kryptonPanelMainBig.ResumeLayout(false);
+            this.kryptonPanelMainBig.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.kryptonDockableWorkspaceQuery)).EndInit();
+            this.ResumeLayout(false);
+            this.PerformLayout();
+
         }
 
         #endregion

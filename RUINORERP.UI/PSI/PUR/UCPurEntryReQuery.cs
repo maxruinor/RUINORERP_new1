@@ -109,10 +109,10 @@ namespace RUINORERP.UI.PSI.PUR
             base.MasterSummaryCols.Add(c => c.TotalAmount);
             base.MasterSummaryCols.Add(c => c.TotalTaxAmount);
 
-            base.MasterSummaryCols.Add(c => c.Deposit);
+            base.MasterSummaryCols.Add(c => c.ForeignTotalAmount);
 
             base.ChildSummaryCols.Add(c => c.Quantity);
-
+            base.ChildSummaryCols.Add(c => c.SubtotalTrPriceAmount);
 
         }
 

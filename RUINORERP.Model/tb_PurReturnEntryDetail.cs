@@ -197,33 +197,8 @@ namespace RUINORERP.Model
                         }
         }
 
-        private decimal _Discount= ((1));
-        /// <summary>
-        /// 折扣
-        /// </summary>
-        [AdvQueryAttribute(ColName = "Discount",ColDesc = "折扣")] 
-        [SugarColumn(ColumnDataType = "decimal", SqlParameterDbType ="Decimal",  ColumnName = "Discount" , DecimalDigits = 2,IsNullable = false,ColumnDescription = "折扣" )]
-        public decimal Discount
-        { 
-            get{return _Discount;}
-            set{
-            SetProperty(ref _Discount, value);
-                        }
-        }
-
-        private decimal _TransactionPrice= ((0));
-        /// <summary>
-        /// 成交单价
-        /// </summary>
-        [AdvQueryAttribute(ColName = "TransactionPrice",ColDesc = "成交单价")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "TransactionPrice" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "成交单价" )]
-        public decimal TransactionPrice
-        { 
-            get{return _TransactionPrice;}
-            set{
-            SetProperty(ref _TransactionPrice, value);
-                        }
-        }
+         
+ 
 
         private bool? _IsGift;
         /// <summary>
@@ -295,33 +270,9 @@ namespace RUINORERP.Model
                         }
         }
 
-        private decimal _DiscountAmount= ((0));
-        /// <summary>
-        /// 优惠金额
-        /// </summary>
-        [AdvQueryAttribute(ColName = "DiscountAmount",ColDesc = "优惠金额")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "DiscountAmount" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "优惠金额" )]
-        public decimal DiscountAmount
-        { 
-            get{return _DiscountAmount;}
-            set{
-            SetProperty(ref _DiscountAmount, value);
-                        }
-        }
+        
 
-        private bool? _IsIncludeTax= false;
-        /// <summary>
-        /// 含税
-        /// </summary>
-        [AdvQueryAttribute(ColName = "IsIncludeTax",ColDesc = "含税")] 
-        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType ="Boolean",  ColumnName = "IsIncludeTax" ,IsNullable = true,ColumnDescription = "含税" )]
-        public bool? IsIncludeTax
-        { 
-            get{return _IsIncludeTax;}
-            set{
-            SetProperty(ref _IsIncludeTax, value);
-                        }
-        }
+         
 
         #endregion
 

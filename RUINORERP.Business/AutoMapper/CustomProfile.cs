@@ -38,7 +38,7 @@ namespace RUINORERP.Business.AutoMapper
             .ForMember(a => a.Quantity, o => o.MapFrom(d => d.Quantity))
             .ForMember(a => a.ProdDetailID, o => o.MapFrom(d => d.ProdDetailID))
             .ForMember(a => a.property, o => o.MapFrom(d => d.property))
-            .ForMember(a => a.IncludeTax, o => o.MapFrom(d => d.IncludingTax))
+       
             .ForMember(a => a.CustomerPartNo, o => o.MapFrom(d => d.CustomerPartNo))
             .ForMember(a => a.TaxRate, o => o.MapFrom(d => d.TaxRate))
             .ForMember(a => a.TaxLocalAmount, o => o.MapFrom(d => d.SubtotalTaxAmount))

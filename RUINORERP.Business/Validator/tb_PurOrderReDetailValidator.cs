@@ -50,7 +50,7 @@ namespace RUINORERP.Business
 //***** 
  RuleFor(tb_PurOrderReDetail =>tb_PurOrderReDetail.Quantity).NotNull().WithMessage("数量:不能为空。");
 
- RuleFor(x => x.Discount).PrecisionScale(8,3,true).WithMessage("折扣:小数位不能超过3。");
+ 
 
  RuleFor(x => x.TransactionPrice).PrecisionScale(18,0,true).WithMessage("成交单价:小数位不能超过0。");
 
@@ -59,7 +59,7 @@ namespace RUINORERP.Business
  RuleFor(tb_PurOrderReDetail =>tb_PurOrderReDetail.Summary).MaximumLength(127).WithMessage("摘要:不能超过最大长度,127.");
 
 
- RuleFor(x => x.commission).PrecisionScale(19,4,true).WithMessage("抽成金额:小数位不能超过4。");
+ 
 
  RuleFor(tb_PurOrderReDetail =>tb_PurOrderReDetail.Notes).MaximumLength(100).WithMessage("备注:不能超过最大长度,100.");
 

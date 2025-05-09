@@ -35,6 +35,7 @@ namespace RUINORERP.Business
 
         /// <summary>
         /// 采购入库退回，会影响到原始采购单，UI上如果勾选影响原始采购单，则会影响到原始采购单的状态和数量，如果不勾选，则只退货。不要退了。。退货款。
+        /// 采购入库退货 是否需要更新回写采购订单明细中的退回数量呢？
         /// </summary>
         /// <param name="entity"></param>
         /// <returns></returns>
@@ -84,6 +85,11 @@ namespace RUINORERP.Business
                     {
 
                     }
+                    else
+                    {
+                        _unitOfWorkManage.RollbackTran();
+                        throw new Exception("采购退货审核时，库存保存失败！" + rr.ErrorMsg);
+                    }
                 }
 
                 //入库退回 写回入库单明细,审核用加，
@@ -91,12 +97,16 @@ namespace RUINORERP.Business
                 {
                     if (entity.tb_purentry.tb_PurEntryDetails == null)
                     {
-                        entity.tb_purentry.tb_PurEntryDetails = _unitOfWorkManage.GetDbClient().Queryable<tb_PurEntryDetail>().Where(c => c.PurEntryID == entity.tb_purentry.PurEntryID).ToList();
+                        entity.tb_purentry.tb_PurEntryDetails = await _unitOfWorkManage.GetDbClient().Queryable<tb_PurEntryDetail>()
+                            //.Includes(a=>a.tb_purentry,b=>b.tb_purorder)
+                            .Where(c => c.PurEntryID == entity.tb_purentry.PurEntryID).ToListAsync();
                     }
 
-                    foreach (var child in entity.tb_purentry.tb_PurEntryDetails)
+                    for (int i = 0; i < entity.tb_purentry.tb_PurEntryDetails.Count; i++)
                     {
-                        tb_PurEntryReDetail entryDetail = entity.tb_PurEntryReDetails.Where(c => c.ProdDetailID == child.ProdDetailID && c.Location_ID==child.Location_ID).FirstOrDefault();
+                        var child = entity.tb_purentry.tb_PurEntryDetails[i];
+                        tb_PurEntryReDetail entryDetail = entity.tb_PurEntryReDetails
+                            .Where(c => c.ProdDetailID == child.ProdDetailID && c.Location_ID == child.Location_ID).FirstOrDefault();
                         if (entryDetail == null)
                         {
                             continue;
@@ -110,17 +120,20 @@ namespace RUINORERP.Business
                         }
                     }
                     //更新已退回数量
-                    await _unitOfWorkManage.GetDbClient().Updateable<tb_PurEntryDetail>(entity.tb_purentry.tb_PurEntryDetails).ExecuteCommandAsync();
+                    await _unitOfWorkManage.GetDbClient().Updateable(entity.tb_purentry.tb_PurEntryDetails)
+                        .UpdateColumns(t => t.ReturnedQty)
+                        .ExecuteCommandAsync();
                 }
 
 
                 AuthorizeController authorizeController = _appContext.GetRequiredService<AuthorizeController>();
                 if (authorizeController.EnableFinancialModule())
                 {
+
                 }
 
-                    //这部分是否能提出到上一级公共部分？
-                    entity.DataStatus = (int)DataStatus.确认;
+                //这部分是否能提出到上一级公共部分？
+                entity.DataStatus = (int)DataStatus.确认;
 
                 entity.ApprovalStatus = (int)ApprovalStatus.已审核;
                 BusinessHelper.Instance.ApproverEntity(entity);
@@ -180,7 +193,7 @@ namespace RUINORERP.Business
                     tb_Inventory inv = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == child.ProdDetailID && i.Location_ID == child.Location_ID);
                     if (inv != null)
                     {
-                       
+
                         BusinessHelper.Instance.EditEntity(inv);
                     }
                     else
@@ -204,7 +217,7 @@ namespace RUINORERP.Business
                  生产成本：自行生产产品时的成本，包括原材料、人工和间接费用等。
                  市场价格：参考市场上类似产品或物品的价格。
                   */
-                    CommService.CostCalculations.AntiCostCalculation(_appContext, inv, child.Quantity, child.TransactionPrice);
+                    CommService.CostCalculations.AntiCostCalculation(_appContext, inv, child.Quantity, child.UnitPrice);
                     inv.Quantity = inv.Quantity + child.Quantity;
                     inv.Inv_SubtotalCostMoney = inv.Inv_Cost * inv.Quantity;
                     inv.LatestOutboundTime = System.DateTime.Now;
@@ -220,13 +233,13 @@ namespace RUINORERP.Business
                 {
                     if (entity.tb_purentry.tb_PurEntryDetails == null)
                     {
-                        entity.tb_purentry.tb_PurEntryDetails = _unitOfWorkManage.GetDbClient().Queryable<tb_PurEntryDetail>().Where(c => c.PurEntryID == entity.tb_purentry.PurEntryID).ToList();
+                        entity.tb_purentry.tb_PurEntryDetails = await _unitOfWorkManage.GetDbClient().Queryable<tb_PurEntryDetail>().Where(c => c.PurEntryID == entity.tb_purentry.PurEntryID).ToListAsync();
                     }
 
                     foreach (var child in entity.tb_purentry.tb_PurEntryDetails)
                     {
                         tb_PurEntryReDetail entryDetail = entity.tb_PurEntryReDetails
-                            .Where(c => c.ProdDetailID == child.ProdDetailID && c.Location_ID==child.Location_ID).FirstOrDefault();
+                            .Where(c => c.ProdDetailID == child.ProdDetailID && c.Location_ID == child.Location_ID).FirstOrDefault();
                         if (entryDetail == null)
                         {
                             continue;
@@ -240,7 +253,11 @@ namespace RUINORERP.Business
                         }
                     }
                     //更新已退回数量
-                    await _unitOfWorkManage.GetDbClient().Updateable<tb_PurEntryDetail>(entity.tb_purentry.tb_PurEntryDetails).ExecuteCommandAsync();
+                    int ReturnQtyUpdaterCounter = await _unitOfWorkManage.GetDbClient().Updateable(entity.tb_purentry.tb_PurEntryDetails).ExecuteCommandAsync();
+                    if (ReturnQtyUpdaterCounter > 0)
+                    {
+
+                    }
                 }
                 //===============
                 //也写回采购订单明细
@@ -279,8 +296,8 @@ namespace RUINORERP.Business
                 }
 
 
-                    //这部分是否能提出到上一级公共部分？
-                    entity.DataStatus = (int)DataStatus.新建;
+                //这部分是否能提出到上一级公共部分？
+                entity.DataStatus = (int)DataStatus.新建;
                 entity.ApprovalOpinions = "被反审核";
                 //后面已经修改为
                 entity.ApprovalResults = false;
@@ -350,7 +367,7 @@ namespace RUINORERP.Business
                             {
                                 entity.tb_purentry.DataStatus = (int)DataStatus.完结;
                             }
-                         
+
                             BusinessHelper.Instance.EditEntity(entity);
                             if (entity.tb_purentry.tb_purorder == null && entity.tb_purentry.PurOrder_ID.HasValue)
                             {

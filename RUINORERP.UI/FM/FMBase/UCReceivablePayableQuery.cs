@@ -48,8 +48,6 @@ namespace RUINORERP.UI.FM
         {
             InitializeComponent();
             base.RelatedBillEditCol = (c => c.ARAPNo);
-            //标记没有明细子表
-            HasChildData = true;
         }
         public ReceivePaymentType PaymentType { get; set; }
         public override void BuildLimitQueryConditions()

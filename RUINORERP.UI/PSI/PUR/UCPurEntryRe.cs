@@ -127,8 +127,7 @@ namespace RUINORERP.UI.PSI.PUR
             DataBindingHelper.BindData4TextBox<tb_PurEntryRe>(entity, t => t.TrackNo, txtTrackNo, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_PurEntryRe>(entity, t => t.Notes, txtNotes, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4CheckBox<tb_PurEntryRe>(entity, t => t.IsIncludeTax, chkIsIncludeTax, false);
-            DataBindingHelper.BindData4TextBox<tb_PurEntryRe>(entity, t => t.Deposit.ToString(), txtDeposit, BindDataType4TextBox.Money, false);
-            DataBindingHelper.BindData4TextBox<tb_PurEntryRe>(entity, t => t.TotalDiscountAmount.ToString(), txtDiscountAmount, BindDataType4TextBox.Money, false);
+            DataBindingHelper.BindData4TextBox<tb_PurEntryRe>(entity, t => t.TotalTaxAmount.ToString(), txtTotalTaxAmount, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4CheckBox<tb_PurEntryRe>(entity, t => t.ReceiptInvoiceClosed, chkReceiptInvoiceClosed, false);
             DataBindingHelper.BindData4CheckBox<tb_PurEntryRe>(entity, t => t.GenerateVouchers, chkGenerateVouchers, false);
             DataBindingHelper.BindData4TextBox<tb_PurEntryRe>(entity, t => t.VoucherNO, txtVoucherNO, BindDataType4TextBox.Text, false);
@@ -263,10 +262,12 @@ namespace RUINORERP.UI.PSI.PUR
             listCols.SetCol_ReadOnly<ProductSharePart>(c => c.Brand);
             listCols.SetCol_ReadOnly<ProductSharePart>(c => c.prop);
             listCols.SetCol_ReadOnly<ProductSharePart>(c => c.CNName);
-
-            listCols.SetCol_Format<tb_PurEntryReDetail>(c => c.Discount, CustomFormatType.PercentFormat);
+            //已交数量 是退回供应商后。要关注的。回来多少。
+            listCols.SetCol_ReadOnly<tb_PurEntryReDetail>(c => c.DeliveredQuantity);
             listCols.SetCol_Format<tb_PurEntryReDetail>(c => c.TaxRate, CustomFormatType.PercentFormat);
             listCols.SetCol_Format<tb_PurEntryReDetail>(c => c.UnitPrice, CustomFormatType.CurrencyFormat);
+            listCols.SetCol_Format<tb_PurEntryReDetail>(c => c.SubtotalTrPriceAmount, CustomFormatType.CurrencyFormat);
+            listCols.SetCol_Format<tb_PurEntryReDetail>(c => c.TaxAmount, CustomFormatType.CurrencyFormat);
 
             sgd = new SourceGridDefine(grid1, listCols, true);
             sgd.GridMasterData = EditEntity;
@@ -274,13 +275,10 @@ namespace RUINORERP.UI.PSI.PUR
             listCols.SetCol_Summary<tb_PurEntryReDetail>(c => c.Quantity);
             listCols.SetCol_Summary<tb_PurEntryReDetail>(c => c.TaxAmount);
             listCols.SetCol_Summary<tb_PurEntryReDetail>(c => c.SubtotalTrPriceAmount);
-            listCols.SetCol_Summary<tb_PurEntryReDetail>(c => c.DiscountAmount);
 
-            listCols.SetCol_Formula<tb_PurEntryReDetail>((a, b) => a.UnitPrice * b.Discount, c => c.TransactionPrice);
-            listCols.SetCol_Formula<tb_PurEntryReDetail>((a, b, c) => a.UnitPrice * b.Discount * c.Quantity, c => c.SubtotalTrPriceAmount);
+            listCols.SetCol_Formula<tb_PurEntryReDetail>((a, b, c) => a.UnitPrice * c.Quantity, c => c.SubtotalTrPriceAmount);
             listCols.SetCol_Formula<tb_PurEntryReDetail>((a, b, c) => a.SubtotalTrPriceAmount / (1 + b.TaxRate) * c.TaxRate, d => d.TaxAmount);
             //原价*数量-折扣金额后的金额
-            listCols.SetCol_Formula<tb_PurEntryReDetail>((a, b, c) => a.UnitPrice * c.Quantity - c.SubtotalTrPriceAmount, d => d.DiscountAmount);
 
             sgh.SetPointToColumnPairs<ProductSharePart, tb_PurEntryReDetail>(sgd, f => f.Location_ID, t => t.Location_ID);
             sgh.SetPointToColumnPairs<ProductSharePart, tb_PurEntryReDetail>(sgd, f => f.Rack_ID, t => t.Rack_ID);
@@ -327,7 +325,6 @@ namespace RUINORERP.UI.PSI.PUR
                     return;
                 }
                 EditEntity.TotalQty = details.Sum(c => c.Quantity);
-                EditEntity.TotalDiscountAmount = details.Sum(c => c.DiscountAmount);
                 EditEntity.TotalAmount = details.Sum(c => c.SubtotalTrPriceAmount);
                 EditEntity.TotalTaxAmount = details.Sum(c => c.TaxAmount);
             }
@@ -370,6 +367,14 @@ namespace RUINORERP.UI.PSI.PUR
 
                 EditEntity.tb_PurEntryReDetails = details;
 
+                if (EditEntity.TotalTaxAmount>0)
+                {
+                    EditEntity.IsIncludeTax = true;
+                }
+                else
+                {
+                    EditEntity.IsIncludeTax = false;
+                }
 
                 //没有经验通过下面先不计算
                 if (NeedValidated && !base.Validator(EditEntity))
@@ -590,7 +595,7 @@ protected async override void ReReview()
                 {
                     tb_PurEntryDetail item = purEntry.tb_PurEntryDetails.FirstOrDefault(c => c.ProdDetailID == details[i].ProdDetailID);
                     details[i].Quantity = details[i].Quantity - item.ReturnedQty;// 减掉已经退回的数量
-                    details[i].SubtotalTrPriceAmount = details[i].TransactionPrice * details[i].Quantity;
+                    details[i].SubtotalTrPriceAmount = details[i].UnitPrice * details[i].Quantity;
 
                     if (details[i].Quantity > 0)
                     {
@@ -625,7 +630,6 @@ protected async override void ReReview()
                 entity.TotalAmount = NewDetails.Sum(c => c.SubtotalTrPriceAmount);
                 entity.TotalQty = NewDetails.Sum(c => c.Quantity);
                 entity.TotalTaxAmount = NewDetails.Sum(c => c.TaxAmount);
-                entity.TotalDiscountAmount = NewDetails.Sum(c => c.DiscountAmount);
 
 
                 entity.DataStatus = (int)DataStatus.草稿;

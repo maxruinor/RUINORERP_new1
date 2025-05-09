@@ -7,10 +7,7 @@ using RUINORERP.UI.UControls;
 using SqlSugar;
 using System;
 using Autofac;
-using Autofac.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Data;
 using System.Drawing;
 using System.Linq;
@@ -23,15 +20,11 @@ using System.Threading;
 using RUINORERP.UI.Common;
 using System.Runtime.Remoting.Messaging;
 using RUINORERP.UI.BI;
-using RUINORERP.Common.CollectionExtension;
-using RUINORERP.Common;
+
 using System.Reflection;
 using RUINORERP.UI.UserCenter;
 using RUINORERP.Business;
 
-using System.Security.Claims;
-using SuperSocket.ProtoBase;
-using SuperSocket.ClientEngine;
 using RUINORERP.UI.SuperSocketClient;
 using System.Net;
 using TransInstruction;
@@ -84,11 +77,7 @@ using RUINORERP.UI.ClientCmdService;
 using RUINORERP.Global;
 using TransInstruction.CommandService;
 using HLH.Lib.Security;
-using Netron.NetronLight;
-using Netron.Xeon;
-using RUINORERP.UI.WorkFlowDesigner.Entities;
-using static RUINORERP.Business.CommService.LockManager;
-using RUINORERP.UI.SS;
+ 
 
 
 

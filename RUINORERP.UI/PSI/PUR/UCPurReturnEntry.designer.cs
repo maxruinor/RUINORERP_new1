@@ -50,8 +50,6 @@
             this.txtNotes = new Krypton.Toolkit.KryptonTextBox();
             this.lblIsIncludeTax = new Krypton.Toolkit.KryptonLabel();
             this.chkIsIncludeTax = new Krypton.Toolkit.KryptonCheckBox();
-            this.lblDeposit = new Krypton.Toolkit.KryptonLabel();
-            this.txtDeposit = new Krypton.Toolkit.KryptonTextBox();
             this.lblCustomerVendor_ID = new Krypton.Toolkit.KryptonLabel();
             this.cmbCustomerVendor_ID = new Krypton.Toolkit.KryptonComboBox();
             this.lblDepartmentID = new Krypton.Toolkit.KryptonLabel();
@@ -65,8 +63,6 @@
             this.lbl盘点单 = new Krypton.Toolkit.KryptonLabel();
             this.kryptonSplitContainer2 = new Krypton.Toolkit.KryptonSplitContainer();
             this.grid1 = new SourceGrid.Grid();
-            this.txtDiscountAmount = new Krypton.Toolkit.KryptonTextBox();
-            this.lblDiscountAmount = new Krypton.Toolkit.KryptonLabel();
             this.lblTotalAmount = new Krypton.Toolkit.KryptonLabel();
             this.lblTotalQty = new Krypton.Toolkit.KryptonLabel();
             this.txtTotalAmount = new Krypton.Toolkit.KryptonTextBox();
@@ -124,8 +120,6 @@
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.txtNotes);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.lblIsIncludeTax);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.chkIsIncludeTax);
-            this.kryptonSplitContainer1.Panel1.Controls.Add(this.lblDeposit);
-            this.kryptonSplitContainer1.Panel1.Controls.Add(this.txtDeposit);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.lblCustomerVendor_ID);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.cmbCustomerVendor_ID);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.lblDepartmentID);
@@ -311,21 +305,6 @@
             this.chkIsIncludeTax.TabIndex = 110;
             this.chkIsIncludeTax.Values.Text = "";
             // 
-            // lblDeposit
-            // 
-            this.lblDeposit.Location = new System.Drawing.Point(322, 82);
-            this.lblDeposit.Name = "lblDeposit";
-            this.lblDeposit.Size = new System.Drawing.Size(36, 20);
-            this.lblDeposit.TabIndex = 111;
-            this.lblDeposit.Values.Text = "订金";
-            // 
-            // txtDeposit
-            // 
-            this.txtDeposit.Location = new System.Drawing.Point(362, 83);
-            this.txtDeposit.Name = "txtDeposit";
-            this.txtDeposit.Size = new System.Drawing.Size(167, 23);
-            this.txtDeposit.TabIndex = 112;
-            // 
             // lblCustomerVendor_ID
             // 
             this.lblCustomerVendor_ID.Location = new System.Drawing.Point(38, 109);
@@ -437,8 +416,6 @@
             // 
             // kryptonSplitContainer2.Panel2
             // 
-            this.kryptonSplitContainer2.Panel2.Controls.Add(this.txtDiscountAmount);
-            this.kryptonSplitContainer2.Panel2.Controls.Add(this.lblDiscountAmount);
             this.kryptonSplitContainer2.Panel2.Controls.Add(this.lblTotalAmount);
             this.kryptonSplitContainer2.Panel2.Controls.Add(this.lblTotalQty);
             this.kryptonSplitContainer2.Panel2.Controls.Add(this.txtTotalAmount);
@@ -463,24 +440,9 @@
             this.grid1.TabStop = true;
             this.grid1.ToolTipText = "";
             // 
-            // txtDiscountAmount
-            // 
-            this.txtDiscountAmount.Location = new System.Drawing.Point(632, 27);
-            this.txtDiscountAmount.Name = "txtDiscountAmount";
-            this.txtDiscountAmount.Size = new System.Drawing.Size(100, 23);
-            this.txtDiscountAmount.TabIndex = 126;
-            // 
-            // lblDiscountAmount
-            // 
-            this.lblDiscountAmount.Location = new System.Drawing.Point(543, 27);
-            this.lblDiscountAmount.Name = "lblDiscountAmount";
-            this.lblDiscountAmount.Size = new System.Drawing.Size(88, 20);
-            this.lblDiscountAmount.TabIndex = 125;
-            this.lblDiscountAmount.Values.Text = "折扣金额总计";
-            // 
             // lblTotalAmount
             // 
-            this.lblTotalAmount.Location = new System.Drawing.Point(819, 24);
+            this.lblTotalAmount.Location = new System.Drawing.Point(474, 30);
             this.lblTotalAmount.Name = "lblTotalAmount";
             this.lblTotalAmount.Size = new System.Drawing.Size(62, 20);
             this.lblTotalAmount.TabIndex = 123;
@@ -496,7 +458,7 @@
             // 
             // txtTotalAmount
             // 
-            this.txtTotalAmount.Location = new System.Drawing.Point(915, 21);
+            this.txtTotalAmount.Location = new System.Drawing.Point(570, 27);
             this.txtTotalAmount.Name = "txtTotalAmount";
             this.txtTotalAmount.Size = new System.Drawing.Size(100, 23);
             this.txtTotalAmount.TabIndex = 124;
@@ -581,8 +543,6 @@
         private Krypton.Toolkit.KryptonTextBox txtNotes;
         private Krypton.Toolkit.KryptonLabel lblIsIncludeTax;
         private Krypton.Toolkit.KryptonCheckBox chkIsIncludeTax;
-        private Krypton.Toolkit.KryptonLabel lblDeposit;
-        private Krypton.Toolkit.KryptonTextBox txtDeposit;
         private Krypton.Toolkit.KryptonLabel lblTotalTaxAmount;
         private Krypton.Toolkit.KryptonTextBox txtTotalTaxAmount;
         private Krypton.Toolkit.KryptonLabel lblReceiptInvoiceClosed;
@@ -602,7 +562,5 @@
         private Krypton.Toolkit.KryptonLabel lblDataStatus;
         private Krypton.Toolkit.KryptonLabel kryptonLabel2;
         private Krypton.Toolkit.KryptonDateTimePicker dtpBillDate;
-        private Krypton.Toolkit.KryptonTextBox txtDiscountAmount;
-        private Krypton.Toolkit.KryptonLabel lblDiscountAmount;
     }
 }

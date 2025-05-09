@@ -170,7 +170,15 @@ namespace RUINORERP.Common.LogHelper
                 LogWriteLock.ExitWriteLock();
             }
         }
-        public static void OutSql2LogToDB(string prefix, string traceId, string[] dataParas, bool IsHeader = true)
+
+
+
+        public static void OutSql2LogToDB(string logContent)
+        {
+            log.Error(logContent);
+        }
+       
+            public static void OutSql2LogToDB(string prefix, string traceId, string[] dataParas, bool IsHeader = true)
         {
             log4net.LogicalThreadContext.Properties["LogType"] = prefix;
             log4net.LogicalThreadContext.Properties["TraceId"] = traceId;

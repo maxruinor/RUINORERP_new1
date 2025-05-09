@@ -205,24 +205,7 @@ namespace RUINORERP.Model
             }
         }
 
-        private decimal? _Deposit;
-
-
-        /// <summary>
-        /// 订金
-        /// </summary>
-
-        [AdvQueryAttribute(ColName = "Deposit", ColDesc = "订金")]
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType = "Decimal", ColumnName = "Deposit", IsNullable = true, ColumnDescription = "订金")]
-        [Display(Name = "订金")]
-        public decimal? Deposit
-        {
-            get { return _Deposit; }
-            set
-            {
-                SetProperty(ref _Deposit, value);
-            }
-        }
+ 
 
         private int? _TaxDeductionType;
 
@@ -717,25 +700,7 @@ namespace RUINORERP.Model
                 SetProperty(ref _ApprovalOpinions, value);
             }
         }
-
-        private decimal? _ActualAmount;
-
-
-        /// <summary>
-        /// 实付金额
-        /// </summary>
-
-        [AdvQueryAttribute(ColName = "ActualAmount", ColDesc = "实付金额")]
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType = "Decimal", ColumnName = "ActualAmount", IsNullable = true, ColumnDescription = "实付金额")]
-        [Display(Name = "实付金额")]
-        public decimal? ActualAmount
-        {
-            get { return _ActualAmount; }
-            set
-            {
-                SetProperty(ref _ActualAmount, value);
-            }
-        }
+ 
 
         private decimal? _TotalAmount;
 
@@ -774,25 +739,7 @@ namespace RUINORERP.Model
                 SetProperty(ref _TotalTaxAmount, value);
             }
         }
-
-        private decimal? _DiscountAmount;
-
-
-        /// <summary>
-        /// 折扣金额总计
-        /// </summary>
-
-        [AdvQueryAttribute(ColName = "DiscountAmount", ColDesc = "折扣金额总计")]
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType = "Decimal", ColumnName = "DiscountAmount", IsNullable = true, ColumnDescription = "折扣金额总计")]
-        [Display(Name = "折扣金额总计")]
-        public decimal? DiscountAmount
-        {
-            get { return _DiscountAmount; }
-            set
-            {
-                SetProperty(ref _DiscountAmount, value);
-            }
-        }
+ 
 
         private decimal? _TotalQty;
 

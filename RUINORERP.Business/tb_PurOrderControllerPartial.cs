@@ -257,8 +257,8 @@ namespace RUINORERP.Business
                     if (_appContext.BaseCurrency.Currency_ID != entity.Currency_ID)
                     {
                         exchangeRate = entity.ExchangeRate; // 获取销售订单的汇率
-                                                                  // 这里可以考虑获取最新的汇率，而不是直接使用销售订单的汇率
-                                                                  // exchangeRate = GetLatestExchangeRate(entity.Currency_ID.Value, _appContext.BaseCurrency.Currency_ID);
+                                                            // 这里可以考虑获取最新的汇率，而不是直接使用销售订单的汇率
+                                                            // exchangeRate = GetLatestExchangeRate(entity.Currency_ID.Value, _appContext.BaseCurrency.Currency_ID);
                     }
 
                     //销售订单审核时，非账期，即时收款时，生成预收款。 订金，部分收款
@@ -507,7 +507,7 @@ namespace RUINORERP.Business
                             && c.Location_ID == details[i].Location_ID
                             && c.PurOrder_ChildID == details[i].PurOrder_ChildID);
                         details[i].Quantity = item.Quantity - item.DeliveredQuantity;// 已经交数量去掉
-                        details[i].SubtotalAmount = details[i].TransactionPrice * details[i].Quantity;
+                        details[i].SubtotalAmount = details[i].UnitPrice * details[i].Quantity;
                         if (details[i].Quantity > 0)
                         {
                             NewDetails.Add(details[i]);
@@ -528,7 +528,7 @@ namespace RUINORERP.Business
                             && c.Location_ID == details[i].Location_ID
                             );
                         details[i].Quantity = item.Quantity - item.DeliveredQuantity;// 已经交数量去掉
-                        details[i].SubtotalAmount = details[i].TransactionPrice * details[i].Quantity;
+                        details[i].SubtotalAmount = details[i].UnitPrice * details[i].Quantity;
                         if (details[i].Quantity > 0)
                         {
                             NewDetails.Add(details[i]);
@@ -578,13 +578,15 @@ namespace RUINORERP.Business
                 entity.ActionStatus = ActionStatus.新增;
 
                 entity.TotalQty = NewDetails.Sum(c => c.Quantity);
-                entity.TotalAmount = NewDetails.Sum(c => c.TransactionPrice * c.Quantity);
+                entity.TotalAmount = NewDetails.Sum(c => c.UnitPrice * c.Quantity);
                 entity.TotalTaxAmount = NewDetails.Sum(c => c.TaxAmount);
                 entity.tb_PurEntryDetails = NewDetails;
                 entity.PurOrder_ID = order.PurOrder_ID;
                 entity.PurOrder_NO = order.PurOrderNo;
                 entity.TotalAmount = entity.TotalAmount + entity.ShippingCost;
-             
+
+                //要添加外币金额的运费
+                entity.ForeignTotalAmount = entity.ForeignTotalAmount + entity.ShippingCost;
 
                 //if (order.Arrival_date.HasValue)
                 //{

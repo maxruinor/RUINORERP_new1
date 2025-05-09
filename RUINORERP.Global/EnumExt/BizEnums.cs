@@ -308,7 +308,6 @@ namespace RUINORERP.Global
         收款单 = 89,
 
 
-
         收款核销 = 90,
         付款核销 = 91,
 

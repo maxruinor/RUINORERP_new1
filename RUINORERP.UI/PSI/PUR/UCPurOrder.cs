@@ -373,9 +373,11 @@ namespace RUINORERP.UI.PSI.PUR
 
 
             //https://blog.csdn.net/m0_46426259/article/details/120265783  格式化
-            listCols.SetCol_Format<tb_PurOrderDetail>(c => c.Discount, CustomFormatType.PercentFormat);
+            
             listCols.SetCol_Format<tb_PurOrderDetail>(c => c.TaxRate, CustomFormatType.PercentFormat);
             listCols.SetCol_Format<tb_PurOrderDetail>(c => c.UnitPrice, CustomFormatType.CurrencyFormat);
+            listCols.SetCol_Format<tb_PurOrderDetail>(c => c.SubtotalAmount, CustomFormatType.CurrencyFormat);
+            listCols.SetCol_Format<tb_PurOrderDetail>(c => c.TaxAmount, CustomFormatType.CurrencyFormat);
 
             sgd = new SourceGridDefine(grid1, listCols, true);
             sgd.GridMasterData = EditEntity;
@@ -405,14 +407,11 @@ namespace RUINORERP.UI.PSI.PUR
                 }
             }
 
-            listCols.SetCol_Formula<tb_PurOrderDetail>((a, b) => a.UnitPrice * b.Discount, c => c.TransactionPrice);
-            listCols.SetCol_Formula<tb_PurOrderDetail>((a, b, c) => a.UnitPrice * b.Discount * c.Quantity, c => c.SubtotalAmount);
-            listCols.SetCol_Formula<tb_PurOrderDetail>((a, b, c) => a.TransactionPrice * c.Quantity, c => c.SubtotalAmount);
+      
+            listCols.SetCol_Formula<tb_PurOrderDetail>((a, b, c) => a.UnitPrice  * c.Quantity, c => c.SubtotalAmount);
             listCols.SetCol_Formula<tb_PurOrderDetail>((a, b, c) => a.SubtotalAmount / (1 + b.TaxRate) * c.TaxRate, d => d.TaxAmount);
 
-            listCols.SetCol_FormulaReverse<tb_PurOrderDetail>(d => d.UnitPrice == 0 && d.Quantity != 0 && d.SubtotalAmount != 0, (a, b) => a.SubtotalAmount / b.Quantity, c => c.TransactionPrice);//-->成交价是结果列
-            listCols.SetCol_FormulaReverse<tb_PurOrderDetail>(d => d.UnitPrice == 0 && d.Discount != 0, (a, b) => a.TransactionPrice / b.Discount, c => c.UnitPrice);//-->成交价是结果列
-            listCols.SetCol_FormulaReverse<tb_PurOrderDetail>(d => d.Discount != 0 && d.UnitPrice != 0 && d.TransactionPrice != 0, (a, b) => a.TransactionPrice / b.UnitPrice, c => c.Discount);//-->成交价是结果列
+            listCols.SetCol_FormulaReverse<tb_PurOrderDetail>(d => d.UnitPrice == 0, (a, b) => a.SubtotalAmount / b.Quantity, c => c.UnitPrice);//-->成交价是结果列
 
 
             sgh.SetPointToColumnPairs<ProductSharePart, tb_PurOrderDetail>(sgd, f => f.Location_ID, t => t.Location_ID);
@@ -641,6 +640,14 @@ namespace RUINORERP.UI.PSI.PUR
                 foreach (var item in details)
                 {
                     item.tb_purorder = EditEntity;
+                }
+                if (EditEntity.TotalTaxAmount > 0)
+                {
+                    EditEntity.IsIncludeTax = true;
+                }
+                else
+                {
+                    EditEntity.IsIncludeTax = false;
                 }
                 //var aa = details.Select(c => c.ProdDetailID).ToList().GroupBy(x => x).Where(x => x.Count() > 1).Select(x => x.Key).ToList();
                 //if (aa.Count > 0)

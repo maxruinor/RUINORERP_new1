@@ -15,7 +15,7 @@ using System.Windows.Forms;
 
 namespace RUINORERP.UI.FM
 {
-    [MenuAttrAssemblyInfo("应收单", ModuleMenuDefine.模块定义.财务管理, ModuleMenuDefine.财务管理.付款管理, BizType.应收单)]
+    [MenuAttrAssemblyInfo("应收单", ModuleMenuDefine.模块定义.财务管理, ModuleMenuDefine.财务管理.收款管理, BizType.应收单)]
     [BillBusinessTypeRequired]
     public partial class UCReceivable : UCReceivablePayable, IFMBillBusinessType
     {

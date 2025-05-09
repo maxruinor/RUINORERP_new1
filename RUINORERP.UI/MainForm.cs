@@ -99,6 +99,9 @@ namespace RUINORERP.UI
     public partial class MainForm : KryptonForm
     {
 
+  
+
+
         //IOptions<T> 提供对配置设置的单例访问。它在整个应用程序生命周期中保持相同的实例，这意味着即使在配置文件更改后，通过 IOptions<T> 获取的值也不会改变
         //。
 
@@ -536,6 +539,13 @@ namespace RUINORERP.UI
 
         private async void MainForm_Load(object sender, EventArgs e)
         {
+
+            #region 进度条
+            progressBar.Visible = true;
+            // 初始化 ProgressManager
+            ProgressManager.Instance.Initialize(lblStatusGlobal, progressBar);
+            #endregion
+
 
             InitUpdateSystemWatcher();
 
@@ -1654,110 +1664,7 @@ namespace RUINORERP.UI
         }
 
         tb_MenuInfoController<tb_MenuInfo> mc = Startup.GetFromFac<tb_MenuInfoController<tb_MenuInfo>>();
-        private List<tb_MenuInfo> LoadTypesNew()
-        {
-
-            tb_MenuInfo menuInfoparent = new tb_MenuInfo();
-            List<tb_MenuInfo> menuList = new List<tb_MenuInfo>();
-            #region
-
-            /*
-            List<string> haust = new List<string>();
-            haust.Add("0001");
-            haust.Add("1001");
-            haust.Add("0111");
-            haust.Add("0011");
-
-            var arr = haust.GroupBy(x => x.Substring(2, 2));//这一句是重点
-            //输出
-            foreach (var a in arr)
-            {
-                Console.Write(a.Key + ":");
-                foreach (var it in a)
-                {
-                    Console.Write(it + " ");
-                }
-            }
-            */
-            #endregion
-            List<MenuAttrAssemblyInfo> list = UIHelper.RegisterForm();
-
-            var arrs = list.GroupBy(x => x.MenuPath.Split('|')[0]);
-            //输出
-            foreach (var a in arrs)
-            {
-                menuInfoparent.MenuName = a.Key;
-                menuInfoparent.IsVisble = true;
-                menuInfoparent.IsEnabled = true;
-                menuInfoparent.CaptionCN = a.Key;
-                menuInfoparent.MenuType = "导航菜单";
-                menuInfoparent.Parent_id = 0;
-                mc.AddMenuInfo(menuInfoparent);
-                Console.Write(a.Key + ":" + "\r\n");
-                foreach (var it in a)
-                {
-                    //如果最后为空则是行为菜单了
-                    if (it.MenuPath.Split('|').Last<string>() == "")
-                    {
-                        Model.tb_MenuInfo menu = new tb_MenuInfo();
-                        menu.MenuName = it.ClassName;
-                        menu.IsVisble = true;
-                        menu.IsEnabled = true;
-                        menu.CaptionCN = it.Caption;
-                        menu.ClassPath = it.ClassPath;
-                        menu.FormName = it.ClassName;
-                        menu.Parent_id = menuInfoparent.MenuID;
-                        if (it.MenuBizType.HasValue)
-                        {
-                            menu.BizType = (int)it.MenuBizType;
-                        }
-
-                        menu.MenuType = "行为菜单";
-                        mc.AddMenuInfo(menu);
-                    }
-                    else
-                    {
-                        //再次分组
-
-                    }
-                    Console.Write(it + " " + "\r\n");
-                }
-                Console.WriteLine();
-                // menuList.Add(menuInfoparent);
-            }
-
-            List<KeyValuePair<MenuAttrAssemblyInfo, string[]>> kvlist = new List<KeyValuePair<MenuAttrAssemblyInfo, string[]>>();
-            int max = 0;
-            foreach (var item in list)
-            {
-                string[] mps = item.MenuPath.Split('|');
-                KeyValuePair<MenuAttrAssemblyInfo, string[]> kv = new KeyValuePair<MenuAttrAssemblyInfo, string[]>(item, mps.ToArray<string>());
-                if (mps.Length > max)
-                {
-                    max = mps.Length;
-                }
-
-                kvlist.Add(kv);
-                //  AnalysisMenuPath(item, mps[0]);
-            }
-
-
-
-            //IEnumerable<IGrouping<string, Cart_Model>> query = list_CartModel.GroupBy(pet => pet.ShopId, pet => pet);
-
-            //分组
-            //                    var groups = list
-            ////                                .Select((item, index) => new { Item = item, GroupIndex = index % GroupCount })
-            //                                .GroupBy(item => item.GroupIndex, (key, group) => group.Select(groupItem => groupItem.Item).ToList())
-            //                                .ToList();
-
-            //return groups;
-
-
-
-            return menuList;
-        }
-
+   
 
         private void CreateMenu(List<MenuAttrAssemblyInfo> list, int i, long parent_id)
         {

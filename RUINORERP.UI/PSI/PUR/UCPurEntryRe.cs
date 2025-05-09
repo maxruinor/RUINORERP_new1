@@ -119,7 +119,7 @@ namespace RUINORERP.UI.PSI.PUR
             DataBindingHelper.BindData4TextBox<tb_PurEntryRe>(entity, t => t.PurEntryReNo, txtPurEntryRENo, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_PurEntryRe>(entity, t => t.TotalQty.ToString(), txtTotalQty, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4TextBox<tb_PurEntryRe>(entity, t => t.TotalAmount.ToString(), txtTotalAmount, BindDataType4TextBox.Money, false);
-            DataBindingHelper.BindData4TextBox<tb_PurEntryRe>(entity, t => t.ActualAmount.ToString(), txtActualAmount, BindDataType4TextBox.Money, false);
+            //DataBindingHelper.BindData4TextBox<tb_PurEntryRe>(entity, t => t.ActualAmount.ToString(), txtActualAmount, BindDataType4TextBox.Money, false);
 
 
             DataBindingHelper.BindData4DataTime<tb_PurEntryRe>(entity, t => t.ReturnDate, dtpReturnDate, false);

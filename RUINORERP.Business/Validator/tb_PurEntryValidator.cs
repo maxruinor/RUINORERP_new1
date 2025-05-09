@@ -59,7 +59,6 @@ namespace RUINORERP.Business
 
  RuleFor(x => x.TotalAmount).PrecisionScale(19,4,true).WithMessage("合计金额:小数位不能超过4。");
 
- RuleFor(x => x.ActualAmount).PrecisionScale(19,4,true).WithMessage("实付金额:小数位不能超过4。");
 
  RuleFor(x => x.TotalTaxAmount).PrecisionScale(19,4,true).WithMessage("合计税额:小数位不能超过4。");
 

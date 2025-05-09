@@ -26,6 +26,7 @@ using FastReport.Table;
 using Newtonsoft.Json.Linq;
 using System.Web.UI;
 using Control = System.Windows.Forms.Control;
+using Netron.GraphLib;
 
 namespace RUINORERP.UI.BaseForm
 {
@@ -290,20 +291,27 @@ namespace RUINORERP.UI.BaseForm
                                 #endregion
 
                             }
+                            //下面使用了ktb.DataBindings.Count。下面方法不能清掉重新绑定
                             Common.DataBindingHelper.InitDataToCmb(NewBsList, ktb.ValueMember, ktb.DisplayMember, ktb);
+
                             ////因为选择中 实体数据并没有更新，下面两行是将对象对应的属性给一个选中的值。
                             object selectValue = RUINORERP.Common.Helper.ReflectionHelper.GetPropertyValue(obj, ktb.ValueMember);
                             Binding binding = null;
                             if (ktb.DataBindings.Count > 0)
                             {
                                 binding = ktb.DataBindings[0]; //这个是下拉绑定的实体集合
+                                RUINORERP.Common.Helper.ReflectionHelper.SetPropertyValue(binding.DataSource, ktb.ValueMember, selectValue);
                             }
                             else
                             {
-                                // binding = new Binding();
+                               //实际到这里是错的
+                                binding =  new Binding("SelectedValue", obj, ktb.ValueMember, true, DataSourceUpdateMode.OnValidation);
+                                ktb.DataBindings.Add(binding);
+                                RUINORERP.Common.Helper.ReflectionHelper.SetPropertyValue(obj, ktb.ValueMember, selectValue);
                             }
 
-                            RUINORERP.Common.Helper.ReflectionHelper.SetPropertyValue(binding.DataSource, ktb.ValueMember, selectValue);
+
+                  
                         }
 
                     }

@@ -24,6 +24,9 @@ using Krypton.Navigator;
 using RUINOR.WinFormsUI.TreeViewThreeState;
 using RUINORERP.UI.UControls;
 using FastReport.DevComponents.DotNetBar.Controls;
+using StackExchange.Redis;
+using System.Threading;
+using Microsoft.Extensions.Logging;
 
 namespace RUINORERP.UI.SysConfig
 {
@@ -39,13 +42,27 @@ namespace RUINORERP.UI.SysConfig
             InitializeComponent();
         }
 
-        private void UCRoleAuthorization_Load(object sender, EventArgs e)
+        private async void UCRoleAuthorization_Load(object sender, EventArgs e)
         {
             TreeView1.HideSelection = false;
             TreeView1.DrawMode = TreeViewDrawMode.OwnerDrawText;
-            DataBindingHelper.InitCmb<tb_RoleInfo>(k => k.RoleID, v => v.RoleName, cmRoleInfo.ComboBox, true);
-            LoadTreeView();
 
+            List<tb_RoleInfo> roleInfos = await MainForm.Instance.AppContext.Db.CopyNew().Queryable<tb_RoleInfo>()
+           .Includes(m => m.tb_P4Modules)
+           .AsNavQueryable()
+           .Includes(m => m.tb_P4Menus, t => t.tb_menuinfo, b => b.tb_P4Buttons)
+           .Includes(m => m.tb_P4Menus, t => t.tb_menuinfo, b => b.tb_P4Fields)
+           .Includes(m => m.tb_P4Menus, t => t.tb_menuinfo, b => b.tb_P4Menus)
+           //.Includes(m => m.tb_P4Menus, t => t.tb_roleinfo, b => b.tb_P4Buttons)
+           //.Includes(m => m.tb_P4Menus, t => t.tb_roleinfo, b => b.tb_P4Fields)
+           //.Includes(m => m.tb_P4Menus, t => t.tb_roleinfo, b => b.tb_P4Menus)
+           //.Includes(m => m.tb_P4Buttons)
+           //.Includes(m => m.tb_P4Fields)
+           //.Includes(m => m.tb_P4Modules)
+           .ToListAsync();
+
+            DataBindingHelper.InitCmb<tb_RoleInfo>(k => k.RoleID, v => v.RoleName, cmRoleInfo.ComboBox, true, roleInfos);
+            LoadTreeView();
             InitListData();
             dataGridView1.NeedSaveColumnsXml = true;
             dataGridView2.NeedSaveColumnsXml = true;
@@ -75,7 +92,7 @@ namespace RUINORERP.UI.SysConfig
         /// <summary>
         /// 将模块 菜单 显示为树
         /// </summary>
-        private async void LoadTreeView()
+        private async void LoadTreeView(bool Seleted = false)
         {
             //if (CurrentRole.RoleID != -1)
             //{
@@ -86,6 +103,9 @@ namespace RUINORERP.UI.SysConfig
             List<tb_ModuleDefinition> Modules = await MainForm.Instance.AppContext.Db.CopyNew().Queryable<tb_ModuleDefinition>()
             .Includes(m => m.tb_MenuInfos, a => a.tb_ButtonInfos)
             .Includes(m => m.tb_MenuInfos, a => a.tb_FieldInfos)
+            .Includes(m => m.tb_MenuInfos, a => a.tb_P4Buttons, b => b.tb_buttoninfo)
+            .Includes(m => m.tb_MenuInfos, a => a.tb_P4Fields,  b => b.tb_fieldinfo)
+            .Includes(m => m.tb_MenuInfos, a => a.tb_P4Menus)
             .ToListAsync();
 
             //检测CRM如果没有购买则不会显示
@@ -99,6 +119,7 @@ namespace RUINORERP.UI.SysConfig
 
             ThreeStateTreeNode nd = new ThreeStateTreeNode();
             nd.Text = "系统根节点";
+            nd.Checked = Seleted;
             //加载模块 模块和顶级菜单相同
             //  AddTopTreeNode(Modules, nd, MenuInfoList, 0);
             AddTreeNodeByMod(Modules, nd);
@@ -160,7 +181,7 @@ namespace RUINORERP.UI.SysConfig
         /// <param name="nd"></param>
         /// <param name="list"></param>
         /// <param name="parent_id"></param>
-        private void AddTreeNodeByMod(List<tb_ModuleDefinition> Modules, ThreeStateTreeNode nd)
+        private void AddTreeNodeByMod(List<tb_ModuleDefinition> Modules, ThreeStateTreeNode nd, bool Seleted = false)
         {
             foreach (var item in Modules)
             {
@@ -175,6 +196,11 @@ namespace RUINORERP.UI.SysConfig
                 ThreeStateTreeNode node = new ThreeStateTreeNode(NodeText);
                 node.Tag = _MenuInfo;
                 node.Checked = item.Visible;
+                if (Seleted)
+                {
+                    node.Checked = true;
+                }
+
                 node.Name = item.ModuleID.ToString();
                 //模块与菜单关系是用枚举的硬编码 在窗体的特性中定义标记的
                 //初始化时已经将模块ID保存为外键到菜单中关联起来了
@@ -185,7 +211,7 @@ namespace RUINORERP.UI.SysConfig
         }
 
 
-        private void AddTreeNode(ThreeStateTreeNode nd, List<tb_MenuInfo> list, long parent_id)
+        private void AddTreeNode(ThreeStateTreeNode nd, List<tb_MenuInfo> list, long parent_id, bool Seleted = false)
         {
             var selectList = list.Where(m => m.Parent_id == parent_id).OrderBy(c => c.Sort);
             foreach (var item in selectList)
@@ -203,14 +229,17 @@ namespace RUINORERP.UI.SysConfig
                 //建立一个新节点
                 ThreeStateTreeNode node = new ThreeStateTreeNode(NodeText);
                 node.Tag = item;
-             
+                if (Seleted)
+                {
+                    node.Checked = true;
+                }
                 if (item.MenuType == "行为菜单")
                 {
                     node.ContextMenuStrip = contextMenuStrip4InitData;
                 }
                 //模块与菜单关系是用枚举的硬编码 在窗体的特性中定义标记的
                 //初始化时已经将模块ID保存为外键到菜单中关联起来了
-                AddTreeNode(node, list, item.MenuID);
+                AddTreeNode(node, list, item.MenuID, Seleted);
                 nd.Nodes.Add(node);
             }
         }
@@ -566,29 +595,89 @@ namespace RUINORERP.UI.SysConfig
                 return;
             }
 
-            //TODO 要完善 如果每次执行不如在查询是直接传入条件
-            var pmlis = await MainForm.Instance.AppContext.Db.CopyNew().Queryable<tb_P4Menu>().Where(r => r.RoleID == CurrentRole.RoleID)
-                    .Includes(t => t.tb_menuinfo)
-                    .Includes(t => t.tb_roleinfo)
-                    .ToListAsync();
-            if (pmlis.Count == 0)
+            // 使用等待对话框
+            await BusyDialog.ShowAsync(async () =>
             {
-                //默认插入一遍,并且重新加载一下
-                InitMenuByRole(CurrentRole);
-                LoadTreeView();
-            }
-            else
-            {
-                if (TreeView1.Nodes.Count == 0)
+                // await Task.Delay(2000); // 你的异步操作
+
+                //如果选中了一个角色 ，则其它角色 自动生成下拉按钮
+                List<tb_RoleInfo> roleList = cmRoleInfo.Items.CastToList<tb_RoleInfo>();
+                roleList.Remove(CurrentRole);
+                toolStripCopyRoleConfig.DropDownItems.Clear();
+                toolStripCopyRoleConfig.DropDownItems.Add(new ToolStripSeparator());
+                roleList.ForEach(x =>
                 {
+                    if (x.RoleName != "请选择")
+                    {
+                        var item = new ToolStripMenuItem(x.RoleName);
+                        item.Click += async (s, e) =>
+                        {
+                            #region 复制选中角色的权限
+                            if (CurrentRole.tb_P4Menus == null)
+                            {
+                                CurrentRole.tb_P4Menus = new List<tb_P4Menu>();
+                            }
+                            //TODO 要完善 如果每次执行不如在查询是直接传入条件
+                            if (CurrentRole.tb_P4Menus.Count == 0)
+                            {
+                                //默认插入一遍,并且重新加载一下
+                                InitMenuByRole(x);
+                                LoadTreeView();
+                            }
+                            else
+                            {
+                                if (TreeView1.Nodes.Count == 0)
+                                {
+                                    LoadTreeView();
+                                }
+                                //循环去钩选
+                                UpdateP4MenuUI(TreeView1.Nodes[0].Nodes, CurrentRole.tb_P4Menus);
+                            }
+                            #endregion
+                        };
+                        toolStripCopyRoleConfig.DropDownItems.Add(item);
+                    }
+                });
+
+
+                //TODO 要完善 如果每次执行不如在查询是直接传入条件
+                var pmlis = await MainForm.Instance.AppContext.Db.CopyNew().Queryable<tb_P4Menu>().Where(r => r.RoleID == CurrentRole.RoleID)
+                                 .Includes(t => t.tb_menuinfo, b => b.tb_P4Buttons)
+                                    .Includes(t => t.tb_menuinfo, b => b.tb_P4Fields)
+                                    .Includes(t => t.tb_menuinfo, b => b.tb_P4Menus)
+                                    .Includes(t => t.tb_roleinfo, b => b.tb_P4Buttons)
+                                    .Includes(t => t.tb_roleinfo, b => b.tb_P4Fields)
+                                    .Includes(t => t.tb_roleinfo, b => b.tb_P4Menus)
+                        .ToListAsync();
+                if (pmlis.Count == 0)
+                {
+                    //默认插入一遍,并且重新加载一下
+                    InitMenuByRole(CurrentRole);
                     LoadTreeView();
                 }
+                else
+                {
+                    if (TreeView1.Nodes.Count == 0)
+                    {
+                        LoadTreeView();
+                    }
 
-                //循环去钩选
-                UpdateP4MenuUI(TreeView1.Nodes[0].Nodes, pmlis);
-            }
+                    //循环去钩选
+                    UpdateP4MenuUI(TreeView1.Nodes[0].Nodes, pmlis);
+                }
+
+                // 调用其他耗时操作...
+
+
+            }, "加载数据...");
+
+
+
 
         }
+
+
+
 
 
         private void UpdateP4MenuUI(TreeNodeCollection Nodes, List<tb_P4Menu> tb_P4Menus)
@@ -615,86 +704,238 @@ namespace RUINORERP.UI.SysConfig
         }
 
         #region 角色级初始化菜单
-
+        private readonly object _menuLock = new object();
+        private readonly object _newListLock = new object();
         /// <summary>
         /// 按角色初始化所有菜单,默认为否
         /// </summary>
         /// <param name="role"></param>
-        public async void InitMenuByRole(tb_RoleInfo role)
+        public async void InitMenuByRole(tb_RoleInfo role, bool Selected = false)
         {
             var db = MainForm.Instance.AppContext.Db;
             var list = await ctrMenu.QueryByNavAsync();
-            List<tb_P4Menu> plist = new List<tb_P4Menu>();
-            foreach (var item in list)
-            {
-                tb_P4Menu pm = new tb_P4Menu();
-                pm.RoleID = role.RoleID;
-                pm.MenuID = item.MenuID;
-                pm.ModuleID = item.ModuleID;
-                pm.IsVisble = false;
-                //ctrMenu.InitEntity(pm);
-                BusinessHelper.Instance.InitEntity(pm);
-                plist.Add(pm);
-            }
-            var ids = ctrPMenu.AddAsync(plist);
+            int totalItems = list.Count;
+            int lastReported = -1;
+            List<tb_P4Menu> Newplist = new List<tb_P4Menu>();
+
+
+
+            // 使用状态栏进度条
+
+            ProgressManager.Instance.RunAsync(async worker =>
+                {
+                    try
+                    {
+
+                        //foreach (var item in list)
+                        foreach (var (item, index) in list.Select((item, idx) => (item, idx)))
+                        {
+                            // 检查取消请求
+                            if (worker.CancellationPending)
+                            {
+                                worker.ReportProgress(0, "Operation cancelled");
+                                return; // 立即退出循环
+                            }
+
+
+                            // 报告进度 
+                            int currentPercent = (index + 1) * 100 / totalItems;
+                            //避免过于频繁的UI更新
+                            if (currentPercent != lastReported)
+                            {
+                                worker.ReportProgress(currentPercent, $"Processing item {index + 1}/{totalItems}");
+                                lastReported = currentPercent;
+                            }
+
+                            try
+                            {
+                                // 同步执行异步方法
+                                Task.Run(async () =>
+                                {
+                                    #region 耗时业务代码
+
+                                    tb_P4Menu pm = new tb_P4Menu();
+                                    // 加锁访问 role.tb_P4Menus
+                                    lock (_menuLock)
+                                    {
+                                        pm = role.tb_P4Menus.FirstOrDefault(c => c.MenuID == item.MenuID);
+                                    }
+
+
+                                    if (pm == null)
+                                    {
+                                        pm = new tb_P4Menu();
+                                    }
+                                    else
+                                    {
+                                        if (item.MenuType == "导航菜单")
+                                        {
+                                            return;
+                                        }
+                                        #region 每个菜单 都添加按钮和字段
+                                        if (item.MenuID == 1920107280263680000)
+                                        {
+
+                                        }
+
+                                        await InitBtnByRole(role, item, true);
+                                        //await InitFiledByRole(role, item, item.tb_P4Fields, item.tb_FieldInfos, true);
+                                        await InitFiledByRole(role, item, true);
+                                        #endregion
+                                        return;
+                                    }
+                                    pm.RoleID = role.RoleID;
+                                    pm.MenuID = item.MenuID;
+                                    pm.ModuleID = item.ModuleID;
+                                    if (Selected)
+                                    {
+                                        pm.IsVisble = Selected;
+                                    }
+                                    else
+                                    {
+                                        pm.IsVisble = false;
+                                    }
+                                    pm.IsVisble = item.IsVisble;
+                                    BusinessHelper.Instance.InitEntity(pm);
+                                    if (pm.P4Menu_ID == 0)
+                                    {
+                                        Newplist.Add(pm);
+                                    }
+                                    #endregion
+
+                                }).Wait(); // 同步等待任务完成
+                            }
+                            catch (Exception exx)
+                            {
+                                MainForm.Instance.logger.Error("初始化时出错了。", exx);
+                                worker.ReportProgress(100, $"Error: {exx.Message}");
+                                throw; // 触发外层 catch
+
+                            }
+                            //支持取消
+                            if (worker.CancellationPending)
+                            {
+                                worker.ReportProgress(100, "Cancelled");
+                                return;
+                            }
+                        }
+                        // 最终强制报告100%
+                        worker.ReportProgress(100, "Completed");
+
+                    }
+                    catch (Exception ex)
+                    {
+                        // 标记错误并终止任务
+                        worker.ReportProgress(100, $"Error: {ex.Message}");
+                    }
+
+                }, (cancelled, error) =>
+                {
+                    if (error != null) MessageBox.Show(error.Message);
+                });
+
+
+            var ids = ctrPMenu.AddAsync(Newplist.Where(c => c.P4Menu_ID == 0).ToList());
+
+            CurrentRole.tb_P4Menus.AddRange(Newplist);
+
             // var ids = await db.Insertable(plist).ExecuteReturnSnowflakeIdListAsync();
         }
 
+        List<MenuAttrAssemblyInfo> MenuAssemblylist = UIHelper.RegisterForm();
 
         /// <summary>
-        /// 
+        /// 初始化菜单下的按钮权限
         /// </summary>
-        /// <param name="role"></param>
-        /// <param name="menuInfo"></param>
-        /// <param name="pblist">如果已经存在部分正常的权限和按钮关系，则要排除</param>
+        /// <param name="role">当前角色</param>
+        /// <param name="menuInfo">当前菜单</param>
+        /// <param name="ButtonInfolist"></param>
+        /// <param name="P4Buttonlist">如果已经存在部分正常的权限和按钮关系，则要排除</param>
         /// <returns></returns>
-        public async Task<bool> InitBtnByRole(tb_RoleInfo role, tb_MenuInfo menuInfo, List<tb_P4Button> pblist, List<tb_ButtonInfo> objlist)
+        public async Task<bool> InitBtnByRole(tb_RoleInfo role, tb_MenuInfo menuInfo, bool Seleted = false)
         {
-            //List<tb_ButtonInfo> objlist = new List<tb_ButtonInfo>();
-            ////没有就添加 有就查询出来 
-            ////List<tb_P4Button> pblist = new List<tb_P4Button>();
-            //// objlist = await ctrBut.QueryByNavAsync();
-            //objlist = await MainForm.Instance.AppContext.Db.CopyNew().Queryable<tb_ButtonInfo>()
-            //.Where(t => t.MenuID == menuInfo.MenuID)
-            //.Includes(t => t.tb_menuinfo)
-            //.ToListAsync();
-            //如果默认的按钮为0的话，执行一次初始化？
-            //if (objlist.Count == 0)
-            //{
-            List<MenuAttrAssemblyInfo> MenuAssemblylist = UIHelper.RegisterForm();
             MenuAttrAssemblyInfo mai = MenuAssemblylist.FirstOrDefault(e => e.ClassPath == menuInfo.ClassPath);
             if (mai != null)
             {
-                InitModuleMenu imm = Startup.GetFromFac<InitModuleMenu>();
-                imm.InitToolStripItem(mai, menuInfo);
+                await Task.Run(() =>
+                {
+                    MainForm.Instance.Invoke(new Action(() =>
+                    {
+                        InitModuleMenu imm = Startup.GetFromFac<InitModuleMenu>();
+                        imm.InitToolStripItem(mai, menuInfo);
+
+                    }));
+                });
+
+
             }
-            //}
+            if (menuInfo.tb_P4Buttons == null)
+            {
+                menuInfo.tb_P4Buttons = new List<tb_P4Button>();
+            }
+
             List<tb_P4Button> Newpblist = new List<tb_P4Button>();
-            foreach (var item in objlist)
+            List<tb_P4Button> Updatepblist = new List<tb_P4Button>();
+            foreach (var item in menuInfo.tb_ButtonInfos)
             {
                 //这里的意思是 按钮的数量要与角色对应按钮一致。可以不启用 但是重复的则可以不用加入
                 //存在过就不添加了 没有的才添加
-                if (pblist.Where(p => p.MenuID == menuInfo.MenuID && p.RoleID == CurrentRole.RoleID && p.ButtonInfo_ID == item.ButtonInfo_ID).FirstOrDefault() == null)
+                tb_P4Button pb = new tb_P4Button();
+                pb = menuInfo.tb_P4Buttons.Where(p => p.MenuID == menuInfo.MenuID && p.RoleID == CurrentRole.RoleID && p.ButtonInfo_ID == item.ButtonInfo_ID).FirstOrDefault();
+                if (pb == null)
                 {
-                    tb_P4Button pb = new tb_P4Button();
-                    pb.RoleID = CurrentRole.RoleID;
-                    pb.ButtonInfo_ID = item.ButtonInfo_ID;
-                    pb.MenuID = menuInfo.MenuID;
-                    pb.IsVisble = false;
-                    pb.IsEnabled = false;
+                    pb = new tb_P4Button();
                     BusinessHelper.Instance.InitEntity(pb);
+                }
+                else
+                {
+                    pb.HasChanged = false;
+                }
+
+                pb.RoleID = CurrentRole.RoleID;
+                pb.ButtonInfo_ID = item.ButtonInfo_ID;
+                pb.MenuID = menuInfo.MenuID;
+                if (Seleted)
+                {
+                    pb.IsVisble = true;
+                    pb.IsEnabled = true;
+                }
+                //else
+                //{
+                //    pb.IsVisble = false;
+                //    pb.IsEnabled = false;
+                //}
+                if (pb.P4Btn_ID == 0)
+                {
                     Newpblist.Add(pb);
+                }
+                else
+                {
+                    if (pb.HasChanged == true)
+                    {
+                        Updatepblist.Add(pb);
+                    }
+
                 }
 
             }
-            if (Newpblist.Count == 0)
-            {
-                return false;
-            }
-            else
+            if (Newpblist.Count > 0)
             {
                 var ids = await ctrPBut.AddAsync(Newpblist);
+                if (ids.Count > 0)
+                {
+                    menuInfo.tb_P4Buttons.AddRange(Newpblist);
+                }
             }
+            if (Updatepblist.Count > 0)
+            {
+                int updatecounter = await MainForm.Instance.AppContext.Db.Updateable(Updatepblist).ExecuteCommandAsync();
+                if (updatecounter > 0)
+                {
+
+                }
+            }
+
             return true;
             // var ids = await MainForm.Instance.AppContext.Db.Insertable(pblist).ExecuteReturnSnowflakeIdListAsync();
         }
@@ -705,64 +946,95 @@ namespace RUINORERP.UI.SysConfig
         /// <param name="role"></param>
         /// <param name="menuInfo"></param>
         /// <returns></returns>
-        public async Task<bool> InitFiledByRole(tb_RoleInfo role, tb_MenuInfo menuInfo)
+        public async Task<bool> InitFiledByRole(tb_RoleInfo role, tb_MenuInfo menuInfo, bool Seleted = false)
         {
-            List<tb_FieldInfo> objlist = new List<tb_FieldInfo>();
+            //List<tb_FieldInfo> objlist = new List<tb_FieldInfo>();
             //没有就添加 有就查询出来 
-            List<tb_P4Field> pblist = new List<tb_P4Field>();
-            // objlist = await ctrField.QueryByNavAsync();
-            objlist = await MainForm.Instance.AppContext.Db.CopyNew().Queryable<tb_FieldInfo>()
-                    .Where(t => t.MenuID == menuInfo.MenuID)
-                    .Includes(t => t.tb_menuinfo)
-                    .ToListAsync();
-
-            if (objlist.Count == 0)
+            List<tb_P4Field> Newpblist = new List<tb_P4Field>();
+            List<tb_P4Field> Updatepblist = new List<tb_P4Field>();
+            //objlist = await MainForm.Instance.AppContext.Db.CopyNew().Queryable<tb_FieldInfo>()
+            //        .Where(t => t.MenuID == menuInfo.MenuID)
+            //        .Includes(t => t.tb_menuinfo)
+            //        .ToListAsync();
+            if (menuInfo.tb_FieldInfos == null)
             {
-                Assembly dalAssemble = System.Reflection.Assembly.LoadFrom("RUINORERP.Model.dll");
-                Type[] ModelTypes = dalAssemble.GetExportedTypes();
-                List<string> typeNames = ModelTypes.Select(m => m.Name).ToList();
-                Type mai = ModelTypes.FirstOrDefault(e => e.Name == menuInfo.EntityName);
-                if (mai != null)
-                {
-                    InitModuleMenu imm = Startup.GetFromFac<InitModuleMenu>();
-                    imm.InitFieldInoMainAndSub(mai, menuInfo, false, "");
-                    //尝试找子表类型
-                    string childType = typeNames.FirstOrDefault(s => s.Contains(mai.Name + "Detail"));
-                    if (!string.IsNullOrEmpty(childType))
-                    {
-                        Type cType = ModelTypes.FirstOrDefault(t => t.FullName == mai.FullName + "Detail");
-                        if (cType != null)
-                        {
-                            imm.InitFieldInoMainAndSub(cType, menuInfo, true, childType);
-                        }
+                menuInfo.tb_FieldInfos = new List<tb_FieldInfo>();
+            }
 
+            if (menuInfo.tb_P4Fields == null)
+            {
+                menuInfo.tb_P4Fields = new List<tb_P4Field>();
+            }
+
+
+            //增量式增加字段
+
+            Assembly dalAssemble = System.Reflection.Assembly.LoadFrom("RUINORERP.Model.dll");
+            Type[] ModelTypes = dalAssemble.GetExportedTypes();
+            List<string> typeNames = ModelTypes.Select(m => m.Name).ToList();
+            Type mai = ModelTypes.FirstOrDefault(e => e.Name == menuInfo.EntityName);
+            if (mai != null)
+            {
+                InitModuleMenu imm = Startup.GetFromFac<InitModuleMenu>();
+                imm.InitFieldInoMainAndSub(mai, menuInfo, false, "");
+                //尝试找子表类型
+                string childType = typeNames.FirstOrDefault(s => s.Contains(mai.Name + "Detail"));
+                if (!string.IsNullOrEmpty(childType))
+                {
+                    Type cType = ModelTypes.FirstOrDefault(t => t.FullName == mai.FullName + "Detail");
+                    if (cType != null)
+                    {
+                        imm.InitFieldInoMainAndSub(cType, menuInfo, true, childType);
                     }
                 }
             }
 
-            foreach (var item in objlist)
+
+            foreach (var item in menuInfo.tb_FieldInfos)
             {
                 tb_P4Field pb = new tb_P4Field();
+                pb = menuInfo.tb_P4Fields.FirstOrDefault(e => e.FieldInfo_ID == item.FieldInfo_ID && e.MenuID == menuInfo.MenuID);
+                if (pb == null)
+                {
+                    pb = new tb_P4Field();
+                    BusinessHelper.Instance.InitEntity(pb);
+                }
+                else
+                {
+                    pb.HasChanged = false;
+                }
                 pb.RoleID = CurrentRole.RoleID;
                 pb.FieldInfo_ID = item.FieldInfo_ID;
                 pb.MenuID = menuInfo.MenuID;
                 pb.IsVisble = false;
-                BusinessHelper.Instance.InitEntity(pb);
-                bool isexist = ctrPField.IsExist(e => e.RoleID == pb.RoleID
-                && e.FieldInfo_ID == pb.FieldInfo_ID
-                && e.MenuID == menuInfo.MenuID
-               );
-                if (!isexist)
+                if (Seleted)
                 {
-                    pblist.Add(pb);
+                    pb.IsVisble = true;
+                    if (pb.P4Field_ID > 0 && pb.HasChanged)
+                    {
+                        Updatepblist.Add(pb);
+                    }
                 }
 
+                if (pb.P4Field_ID == 0)
+                {
+                    Newpblist.Add(pb);
+                }
             }
-            if (pblist.Count == 0)
+            if (Newpblist.Count > 0)
             {
-                return false;
+                var ids = await ctrPField.AddAsync(Newpblist);
+                if (ids.Count > 0)
+                {
+                    menuInfo.tb_P4Fields.AddRange(Newpblist);
+                }
             }
-            var ids = await ctrPField.AddAsync(pblist);
+
+            if (Updatepblist.Count > 0)
+            {
+                await MainForm.Instance.AppContext.Db.Updateable(Updatepblist).ExecuteCommandAsync();
+            }
+
             // var ids = await MainForm.Instance.AppContext.Db.Insertable(pblist).ExecuteReturnSnowflakeIdListAsync();
             return true;
         }
@@ -799,25 +1071,24 @@ namespace RUINORERP.UI.SysConfig
             }
 
             //没有就添加 有就查询出来 
-            List<tb_P4Button> pblist = await MainForm.Instance.AppContext.Db.CopyNew().Queryable<tb_P4Button>()
-                .Where(t => t.RoleID == CurrentRole.RoleID && t.MenuID == selectMenu.MenuID)
-                .Includes(t => t.tb_buttoninfo)
-                .ToListAsync();
+            //List<tb_P4Button> pblist = await MainForm.Instance.AppContext.Db.CopyNew().Queryable<tb_P4Button>()
+            //    .Where(t => t.RoleID == CurrentRole.RoleID && t.MenuID == selectMenu.MenuID)
+            //    .Includes(t => t.tb_buttoninfo)
+            //    .ToListAsync();
 
-            List<tb_ButtonInfo> btnInfolist = new List<tb_ButtonInfo>();
             //没有就添加 有就查询出来 
-            btnInfolist = await MainForm.Instance.AppContext.Db.CopyNew().Queryable<tb_ButtonInfo>()
-            .Where(t => t.MenuID == selectMenu.MenuID)
-            .Includes(t => t.tb_menuinfo)
-            .ToListAsync();
+            //List<tb_ButtonInfo> btnInfoList = await MainForm.Instance.AppContext.Db.CopyNew().Queryable<tb_ButtonInfo>()
+            //  .Where(t => t.MenuID == selectMenu.MenuID)
+            //  .Includes(t => t.tb_menuinfo)
+            //  .ToListAsync();
 
             //当前角色下如果可操作按钮为0时，或当前角色下添加的按钮数量小于当前菜单下的所有按钮时
-            if (pblist.Count == 0 || pblist.Count < btnInfolist.Count)
-            {
-                await InitBtnByRole(CurrentRole, selectMenu, pblist, btnInfolist);
-            }
+            //if (pblist.Count == 0 || pblist.Count < selectMenu.tb_ButtonInfos.Count)
+            //{
+            await InitBtnByRole(CurrentRole, selectMenu);
+            //}
             //&& t.tb_ButtonInfo != null && t.tb_ButtonInfo.MenuID == selectMenu.MenuID
-            bindingSource1.DataSource = pblist.ToBindingSortCollection();
+            bindingSource1.DataSource = selectMenu.tb_P4Buttons.ToBindingSortCollection();
             dataGridView1.DataSource = ListDataSoure1;
 
 
@@ -837,7 +1108,7 @@ namespace RUINORERP.UI.SysConfig
             {
                 await InitFiledByRole(CurrentRole, selectMenu);
             }
-            bindingSource2.DataSource = pflist.ToBindingSortCollection(); ;
+            bindingSource2.DataSource = pflist.ToBindingSortCollection();
             dataGridView2.DataSource = ListDataSoure2;
 
             foreach (DataGridViewColumn col in dataGridView2.Columns)
@@ -854,7 +1125,7 @@ namespace RUINORERP.UI.SysConfig
             }
 
             #region 按钮和字段列表的中的值 有变化则保存可用
-            pblist.ForEach(x => UpdateSaveEnabled(x));
+            selectMenu.tb_P4Buttons.ForEach(x => UpdateSaveEnabled(x));
             pflist.ForEach(x => UpdateSaveEnabled(x));
             #endregion
 
@@ -1081,6 +1352,7 @@ namespace RUINORERP.UI.SysConfig
             if (dataGridView2.Rows[e.RowIndex].DataBoundItem is tb_P4Field)
             {
                 tb_P4Field pf = dataGridView2.Rows[e.RowIndex].DataBoundItem as tb_P4Field;
+                
                 if (pf.tb_fieldinfo != null && colDbName == pf.GetPropertyName<tb_P4Field>(c => c.FieldInfo_ID))
                 {
                     e.Value = pf.tb_fieldinfo.FieldText;
@@ -1230,6 +1502,11 @@ namespace RUINORERP.UI.SysConfig
 
         }
 
+        /// <summary>
+        /// 添加按钮
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private async void toolStripMenuItemInitBtn_Click(object sender, EventArgs e)
         {
             if (CurrentRole == null)
@@ -1245,19 +1522,20 @@ namespace RUINORERP.UI.SysConfig
                 return;
             }
             tb_MenuInfo mInfo = TreeView1.SelectedNode.Tag as tb_MenuInfo;
-            List<tb_ButtonInfo> objlist = await MainForm.Instance.AppContext.Db.CopyNew().Queryable<tb_ButtonInfo>()
-            .Where(t => t.MenuID == mInfo.MenuID)
-            .Includes(t => t.tb_menuinfo)
-            .ToListAsync();
 
-            //没有就添加 有就查询出来 
-            List<tb_P4Button> pblist = await MainForm.Instance.AppContext.Db.CopyNew().Queryable<tb_P4Button>()
-                .Where(t => t.RoleID == CurrentRole.RoleID && t.MenuID == mInfo.MenuID)
-                .Includes(t => t.tb_buttoninfo)
-                .ToListAsync();
+            //List<tb_ButtonInfo> objlist = await MainForm.Instance.AppContext.Db.CopyNew().Queryable<tb_ButtonInfo>()
+            //.Where(t => t.MenuID == mInfo.MenuID)
+            //.Includes(t => t.tb_menuinfo)
+            //.ToListAsync();
+
+            ////没有就添加 有就查询出来 
+            //List<tb_P4Button> pblist = await MainForm.Instance.AppContext.Db.CopyNew().Queryable<tb_P4Button>()
+            //    .Where(t => t.RoleID == CurrentRole.RoleID && t.MenuID == mInfo.MenuID)
+            //    .Includes(t => t.tb_buttoninfo)
+            //    .ToListAsync();
 
 
-            await InitBtnByRole(CurrentRole, mInfo, pblist, objlist);
+            await InitBtnByRole(CurrentRole, mInfo);
 
             //if (objlist.Count == 0)
             //{
@@ -1273,6 +1551,11 @@ namespace RUINORERP.UI.SysConfig
 
         }
 
+        /// <summary>
+        /// 添加字段
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private async void toolStripMenuItemInitField_Click(object sender, EventArgs e)
         {
             if (CurrentRole == null)
@@ -1315,7 +1598,6 @@ namespace RUINORERP.UI.SysConfig
                         {
                             imm.InitFieldInoMainAndSub(cType, mInfo, true, childType);
                         }
-
                     }
                 }
             }
@@ -1327,6 +1609,35 @@ namespace RUINORERP.UI.SysConfig
         private void TreeView1_AfterCheck(object sender, TreeViewEventArgs e)
         {
             toolStripButtonSave.Enabled = true;
+        }
+
+
+        private void toolsbtnFullAuthorization_Click(object sender, EventArgs e)
+        {
+            if (CurrentRole == null)
+            {
+                MessageBox.Show("请选择要设置的角色。");
+                return;
+            }
+            if (CurrentRole.RoleName == "请选择")
+            {
+                MessageBox.Show("请选择要设置的角色。");
+                return;
+            }
+            //当前操作会将当前角色的权限完全授权，请确认是否继续？
+            if (MessageBox.Show("当前操作会将当前角色的权限完全授权为【超级管理员】角色，请确认是否继续？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+            {
+                //全量授权，菜单全选。每个菜单的按钮全启用可见，每个菜单的字段全显示
+                #region
+
+                //默认插入一遍,并且重新加载一下
+                InitMenuByRole(CurrentRole);
+                //LoadTreeView(true);
+                ////循环去钩选
+                //UpdateP4MenuUI(TreeView1.Nodes[0].Nodes, CurrentRole.tb_P4Menus);
+
+                #endregion
+            }
         }
     }
 }

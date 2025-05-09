@@ -580,12 +580,11 @@ namespace RUINORERP.Business
                 entity.TotalQty = NewDetails.Sum(c => c.Quantity);
                 entity.TotalAmount = NewDetails.Sum(c => c.TransactionPrice * c.Quantity);
                 entity.TotalTaxAmount = NewDetails.Sum(c => c.TaxAmount);
-                entity.ActualAmount = NewDetails.Sum(c => c.TransactionPrice * c.Quantity);
                 entity.tb_PurEntryDetails = NewDetails;
                 entity.PurOrder_ID = order.PurOrder_ID;
                 entity.PurOrder_NO = order.PurOrderNo;
                 entity.TotalAmount = entity.TotalAmount + entity.ShippingCost;
-                entity.ActualAmount = entity.ShippingCost + entity.TotalAmount;
+             
 
                 //if (order.Arrival_date.HasValue)
                 //{

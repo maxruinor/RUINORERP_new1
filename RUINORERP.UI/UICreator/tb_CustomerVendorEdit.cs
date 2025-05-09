@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：04/25/2025 10:38:50
+// 时间：05/08/2025 12:05:04
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -60,6 +60,11 @@ namespace RUINORERP.UI
         
         
         
+        
+        
+        
+        
+        
 
          }
 /*
@@ -77,11 +82,16 @@ namespace RUINORERP.UI
                         entity.Customer_id = Int64.Parse(txtCustomer_id.Text);
                         entity.Area = txtArea.Text ;
                        entity.Contact = txtContact.Text ;
+                       entity.MobilePhone = txtMobilePhone.Text ;
+                       entity.Fax = txtFax.Text ;
                        entity.Phone = txtPhone.Text ;
+                       entity.Email = txtEmail.Text ;
                        entity.Address = txtAddress.Text ;
                        entity.Website = txtWebsite.Text ;
-                       entity.CreditLimit = Decimal.Parse(txtCreditLimit.Text);
-                        entity.CreditDays = Int32.Parse(txtCreditDays.Text);
+                       entity.CustomerCreditLimit = Decimal.Parse(txtCustomerCreditLimit.Text);
+                        entity.CustomerCreditDays = Int32.Parse(txtCustomerCreditDays.Text);
+                        entity.SupplierCreditLimit = Decimal.Parse(txtSupplierCreditLimit.Text);
+                        entity.SupplierCreditDays = Int32.Parse(txtSupplierCreditDays.Text);
                         entity.IsCustomer = Boolean.Parse(txtIsCustomer.Text);
                         entity.IsVendor = Boolean.Parse(txtIsVendor.Text);
                         entity.IsOther = Boolean.Parse(txtIsOther.Text);
@@ -114,11 +124,16 @@ namespace RUINORERP.UI
            DataBindingHelper.BindData4TextBox<tb_CustomerVendor>(entity, t => t.Customer_id, txtCustomer_id, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4TextBox<tb_CustomerVendor>(entity, t => t.Area, txtArea, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_CustomerVendor>(entity, t => t.Contact, txtContact, BindDataType4TextBox.Text,false);
+           DataBindingHelper.BindData4TextBox<tb_CustomerVendor>(entity, t => t.MobilePhone, txtMobilePhone, BindDataType4TextBox.Text,false);
+           DataBindingHelper.BindData4TextBox<tb_CustomerVendor>(entity, t => t.Fax, txtFax, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_CustomerVendor>(entity, t => t.Phone, txtPhone, BindDataType4TextBox.Text,false);
+           DataBindingHelper.BindData4TextBox<tb_CustomerVendor>(entity, t => t.Email, txtEmail, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_CustomerVendor>(entity, t => t.Address, txtAddress, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_CustomerVendor>(entity, t => t.Website, txtWebsite, BindDataType4TextBox.Text,false);
-           DataBindingHelper.BindData4TextBox<tb_CustomerVendor>(entity, t => t.CreditLimit.ToString(), txtCreditLimit, BindDataType4TextBox.Money,false);
-           DataBindingHelper.BindData4TextBox<tb_CustomerVendor>(entity, t => t.CreditDays, txtCreditDays, BindDataType4TextBox.Qty,false);
+           DataBindingHelper.BindData4TextBox<tb_CustomerVendor>(entity, t => t.CustomerCreditLimit.ToString(), txtCustomerCreditLimit, BindDataType4TextBox.Money,false);
+           DataBindingHelper.BindData4TextBox<tb_CustomerVendor>(entity, t => t.CustomerCreditDays, txtCustomerCreditDays, BindDataType4TextBox.Qty,false);
+           DataBindingHelper.BindData4TextBox<tb_CustomerVendor>(entity, t => t.SupplierCreditLimit.ToString(), txtSupplierCreditLimit, BindDataType4TextBox.Money,false);
+           DataBindingHelper.BindData4TextBox<tb_CustomerVendor>(entity, t => t.SupplierCreditDays, txtSupplierCreditDays, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4CheckBox<tb_CustomerVendor>(entity, t => t.IsCustomer, chkIsCustomer, false);
            DataBindingHelper.BindData4CheckBox<tb_CustomerVendor>(entity, t => t.IsVendor, chkIsVendor, false);
            DataBindingHelper.BindData4CheckBox<tb_CustomerVendor>(entity, t => t.IsOther, chkIsOther, false);
@@ -128,6 +143,8 @@ namespace RUINORERP.UI
            DataBindingHelper.BindData4DataTime<tb_CustomerVendor>(entity, t => t.Modified_at, dtpModified_at,false);
            DataBindingHelper.BindData4TextBox<tb_CustomerVendor>(entity, t => t.Modified_by, txtModified_by, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4CheckBox<tb_CustomerVendor>(entity, t => t.Is_enabled, chkIs_enabled, false);
+//有默认值
+           DataBindingHelper.BindData4CheckBox<tb_CustomerVendor>(entity, t => t.Is_available, chkIs_available, false);
 //有默认值
            DataBindingHelper.BindData4CheckBox<tb_CustomerVendor>(entity, t => t.isdeleted, chkisdeleted, false);
 }
@@ -145,9 +162,10 @@ namespace RUINORERP.UI
         
         }
 
+        private void txtEmail_TextChanged(object sender, EventArgs e)
+        {
 
-
-
+        }
     }
 }
 

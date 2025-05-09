@@ -47,10 +47,12 @@ namespace RUINORERP.UI.BI
             base.ColNameDataDictionary.TryAdd(colName1, kvlist);
             base.ColNameDataDictionary.TryAdd(colName2, kvlist);*/
         }
-        protected override void Add()
+        protected override async void Add()
         {
             if (ListDataSoure.Count == 0)
             {
+                //弹出提示框：系统将默认为您添加人民币和美元币别。
+                MessageBox.Show("系统将默认为您添加人民币和美元币别。");
                 //第一次添加付款方式时，添加系统默认的值  优化
                 //循环枚举DefaultPaymentMethod中的值，添加到表中
                 List<tb_Currency> list = new List<tb_Currency>();
@@ -63,12 +65,14 @@ namespace RUINORERP.UI.BI
                     switch (defaultCurrency)
                     {
                         case DefaultCurrency.RMB:
-                            currency.CurrencyName = "中国";
+                            currency.Country="中国";
+                            currency.CurrencyName = "人民币";
                             currency.CurrencySymbol = "￥";
                             currency.Is_BaseCurrency = true;
                             break;
                         case DefaultCurrency.USD:
-                            currency.CurrencyName = "美国";
+                            currency.Country = "美国";
+                            currency.CurrencyName = "美元";
                             currency.CurrencySymbol = "$";
                             currency.Is_BaseCurrency = false;
                             break;
@@ -77,7 +81,7 @@ namespace RUINORERP.UI.BI
                     }
                     list.Add(currency);
                 }
-                MainForm.Instance.AppContext.Db.Insertable<tb_PaymentMethod>(list).ExecuteCommandAsync();
+                List<long> ids = await MainForm.Instance.AppContext.Db.Insertable<tb_Currency>(list).ExecuteReturnSnowflakeIdListAsync();
                 Query();
                 base.Add();
                 base.toolStripButtonModify.Enabled = false;

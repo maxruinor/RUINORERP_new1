@@ -3,7 +3,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：04/25/2025 10:38:51
+// 时间：05/08/2025 12:05:04
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -66,16 +66,26 @@ namespace RUINORERP.UI
             this.txtArea = new Krypton.Toolkit.KryptonTextBox();
             this.lblContact = new Krypton.Toolkit.KryptonLabel();
             this.txtContact = new Krypton.Toolkit.KryptonTextBox();
+            this.lblMobilePhone = new Krypton.Toolkit.KryptonLabel();
+            this.txtMobilePhone = new Krypton.Toolkit.KryptonTextBox();
+            this.lblFax = new Krypton.Toolkit.KryptonLabel();
+            this.txtFax = new Krypton.Toolkit.KryptonTextBox();
             this.lblPhone = new Krypton.Toolkit.KryptonLabel();
             this.txtPhone = new Krypton.Toolkit.KryptonTextBox();
+            this.lblEmail = new Krypton.Toolkit.KryptonLabel();
+            this.txtEmail = new Krypton.Toolkit.KryptonTextBox();
             this.lblAddress = new Krypton.Toolkit.KryptonLabel();
             this.txtAddress = new Krypton.Toolkit.KryptonTextBox();
             this.lblWebsite = new Krypton.Toolkit.KryptonLabel();
             this.txtWebsite = new Krypton.Toolkit.KryptonTextBox();
-            this.lblCreditLimit = new Krypton.Toolkit.KryptonLabel();
-            this.txtCreditLimit = new Krypton.Toolkit.KryptonTextBox();
-            this.lblCreditDays = new Krypton.Toolkit.KryptonLabel();
-            this.txtCreditDays = new Krypton.Toolkit.KryptonTextBox();
+            this.lblCustomerCreditLimit = new Krypton.Toolkit.KryptonLabel();
+            this.txtCustomerCreditLimit = new Krypton.Toolkit.KryptonTextBox();
+            this.lblCustomerCreditDays = new Krypton.Toolkit.KryptonLabel();
+            this.txtCustomerCreditDays = new Krypton.Toolkit.KryptonTextBox();
+            this.lblSupplierCreditLimit = new Krypton.Toolkit.KryptonLabel();
+            this.txtSupplierCreditLimit = new Krypton.Toolkit.KryptonTextBox();
+            this.lblSupplierCreditDays = new Krypton.Toolkit.KryptonLabel();
+            this.txtSupplierCreditDays = new Krypton.Toolkit.KryptonTextBox();
             this.lblIsCustomer = new Krypton.Toolkit.KryptonLabel();
             this.chkIsCustomer = new Krypton.Toolkit.KryptonCheckBox();
             this.lblIsVendor = new Krypton.Toolkit.KryptonLabel();
@@ -263,260 +273,335 @@ namespace RUINORERP.UI
             this.txtContact.Size = new System.Drawing.Size(100, 23);
             this.txtContact.TabIndex = 10;
             // 
+            // lblMobilePhone
+            // 
+            this.lblMobilePhone.Location = new System.Drawing.Point(418, 254);
+            this.lblMobilePhone.Name = "lblMobilePhone";
+            this.lblMobilePhone.Size = new System.Drawing.Size(36, 20);
+            this.lblMobilePhone.TabIndex = 11;
+            this.lblMobilePhone.Values.Text = "手机";
+            // 
+            // txtMobilePhone
+            // 
+            this.txtMobilePhone.Location = new System.Drawing.Point(491, 250);
+            this.txtMobilePhone.Name = "txtMobilePhone";
+            this.txtMobilePhone.Size = new System.Drawing.Size(100, 23);
+            this.txtMobilePhone.TabIndex = 11;
+            // 
+            // lblFax
+            // 
+            this.lblFax.Location = new System.Drawing.Point(418, 279);
+            this.lblFax.Name = "lblFax";
+            this.lblFax.Size = new System.Drawing.Size(36, 20);
+            this.lblFax.TabIndex = 12;
+            this.lblFax.Values.Text = "传真";
+            // 
+            // txtFax
+            // 
+            this.txtFax.Location = new System.Drawing.Point(491, 275);
+            this.txtFax.Name = "txtFax";
+            this.txtFax.Size = new System.Drawing.Size(100, 23);
+            this.txtFax.TabIndex = 12;
+            // 
             // lblPhone
             // 
-            this.lblPhone.Location = new System.Drawing.Point(100, 275);
+            this.lblPhone.Location = new System.Drawing.Point(418, 358);
             this.lblPhone.Name = "lblPhone";
             this.lblPhone.Size = new System.Drawing.Size(36, 20);
-            this.lblPhone.TabIndex = 11;
+            this.lblPhone.TabIndex = 13;
             this.lblPhone.Values.Text = "电话";
             // 
             // txtPhone
             // 
-            this.txtPhone.Location = new System.Drawing.Point(173, 271);
-            this.txtPhone.Multiline = true;
+            this.txtPhone.Location = new System.Drawing.Point(491, 354);
             this.txtPhone.Name = "txtPhone";
-            this.txtPhone.Size = new System.Drawing.Size(100, 21);
-            this.txtPhone.TabIndex = 11;
+            this.txtPhone.Size = new System.Drawing.Size(100, 23);
+            this.txtPhone.TabIndex = 13;
+            // 
+            // lblEmail
+            // 
+            this.lblEmail.Location = new System.Drawing.Point(418, 329);
+            this.lblEmail.Name = "lblEmail";
+            this.lblEmail.Size = new System.Drawing.Size(36, 20);
+            this.lblEmail.TabIndex = 14;
+            this.lblEmail.Values.Text = "邮箱";
+            // 
+            // txtEmail
+            // 
+            this.txtEmail.Location = new System.Drawing.Point(491, 325);
+            this.txtEmail.Name = "txtEmail";
+            this.txtEmail.Size = new System.Drawing.Size(100, 23);
+            this.txtEmail.TabIndex = 14;
+            this.txtEmail.TextChanged += new System.EventHandler(this.txtEmail_TextChanged);
             // 
             // lblAddress
             // 
-            this.lblAddress.Location = new System.Drawing.Point(100, 300);
+            this.lblAddress.Location = new System.Drawing.Point(100, 375);
             this.lblAddress.Name = "lblAddress";
             this.lblAddress.Size = new System.Drawing.Size(36, 20);
-            this.lblAddress.TabIndex = 12;
+            this.lblAddress.TabIndex = 15;
             this.lblAddress.Values.Text = "地址";
             // 
             // txtAddress
             // 
-            this.txtAddress.Location = new System.Drawing.Point(173, 296);
+            this.txtAddress.Location = new System.Drawing.Point(173, 371);
             this.txtAddress.Multiline = true;
             this.txtAddress.Name = "txtAddress";
             this.txtAddress.Size = new System.Drawing.Size(100, 21);
-            this.txtAddress.TabIndex = 12;
+            this.txtAddress.TabIndex = 15;
             // 
             // lblWebsite
             // 
-            this.lblWebsite.Location = new System.Drawing.Point(100, 325);
+            this.lblWebsite.Location = new System.Drawing.Point(100, 400);
             this.lblWebsite.Name = "lblWebsite";
             this.lblWebsite.Size = new System.Drawing.Size(36, 20);
-            this.lblWebsite.TabIndex = 13;
+            this.lblWebsite.TabIndex = 16;
             this.lblWebsite.Values.Text = "网址";
             // 
             // txtWebsite
             // 
-            this.txtWebsite.Location = new System.Drawing.Point(173, 321);
+            this.txtWebsite.Location = new System.Drawing.Point(173, 396);
             this.txtWebsite.Multiline = true;
             this.txtWebsite.Name = "txtWebsite";
             this.txtWebsite.Size = new System.Drawing.Size(100, 21);
-            this.txtWebsite.TabIndex = 13;
+            this.txtWebsite.TabIndex = 16;
             // 
-            // lblCreditLimit
+            // lblCustomerCreditLimit
             // 
-            this.lblCreditLimit.Location = new System.Drawing.Point(100, 350);
-            this.lblCreditLimit.Name = "lblCreditLimit";
-            this.lblCreditLimit.Size = new System.Drawing.Size(62, 20);
-            this.lblCreditLimit.TabIndex = 14;
-            this.lblCreditLimit.Values.Text = "信用额度";
+            this.lblCustomerCreditLimit.Location = new System.Drawing.Point(100, 425);
+            this.lblCustomerCreditLimit.Name = "lblCustomerCreditLimit";
+            this.lblCustomerCreditLimit.Size = new System.Drawing.Size(88, 20);
+            this.lblCustomerCreditLimit.TabIndex = 17;
+            this.lblCustomerCreditLimit.Values.Text = "客户信用额度";
             // 
-            // txtCreditLimit
+            // txtCustomerCreditLimit
             // 
-            this.txtCreditLimit.Location = new System.Drawing.Point(173, 346);
-            this.txtCreditLimit.Name = "txtCreditLimit";
-            this.txtCreditLimit.Size = new System.Drawing.Size(100, 23);
-            this.txtCreditLimit.TabIndex = 14;
+            this.txtCustomerCreditLimit.Location = new System.Drawing.Point(173, 421);
+            this.txtCustomerCreditLimit.Name = "txtCustomerCreditLimit";
+            this.txtCustomerCreditLimit.Size = new System.Drawing.Size(100, 23);
+            this.txtCustomerCreditLimit.TabIndex = 17;
             // 
-            // lblCreditDays
+            // lblCustomerCreditDays
             // 
-            this.lblCreditDays.Location = new System.Drawing.Point(100, 375);
-            this.lblCreditDays.Name = "lblCreditDays";
-            this.lblCreditDays.Size = new System.Drawing.Size(62, 20);
-            this.lblCreditDays.TabIndex = 15;
-            this.lblCreditDays.Values.Text = "账期天数";
+            this.lblCustomerCreditDays.Location = new System.Drawing.Point(100, 450);
+            this.lblCustomerCreditDays.Name = "lblCustomerCreditDays";
+            this.lblCustomerCreditDays.Size = new System.Drawing.Size(88, 20);
+            this.lblCustomerCreditDays.TabIndex = 18;
+            this.lblCustomerCreditDays.Values.Text = "客户账期天数";
             // 
-            // txtCreditDays
+            // txtCustomerCreditDays
             // 
-            this.txtCreditDays.Location = new System.Drawing.Point(173, 371);
-            this.txtCreditDays.Name = "txtCreditDays";
-            this.txtCreditDays.Size = new System.Drawing.Size(100, 23);
-            this.txtCreditDays.TabIndex = 15;
+            this.txtCustomerCreditDays.Location = new System.Drawing.Point(173, 446);
+            this.txtCustomerCreditDays.Name = "txtCustomerCreditDays";
+            this.txtCustomerCreditDays.Size = new System.Drawing.Size(100, 23);
+            this.txtCustomerCreditDays.TabIndex = 18;
+            // 
+            // lblSupplierCreditLimit
+            // 
+            this.lblSupplierCreditLimit.Location = new System.Drawing.Point(100, 475);
+            this.lblSupplierCreditLimit.Name = "lblSupplierCreditLimit";
+            this.lblSupplierCreditLimit.Size = new System.Drawing.Size(101, 20);
+            this.lblSupplierCreditLimit.TabIndex = 19;
+            this.lblSupplierCreditLimit.Values.Text = "供应商信用额度";
+            // 
+            // txtSupplierCreditLimit
+            // 
+            this.txtSupplierCreditLimit.Location = new System.Drawing.Point(173, 471);
+            this.txtSupplierCreditLimit.Name = "txtSupplierCreditLimit";
+            this.txtSupplierCreditLimit.Size = new System.Drawing.Size(100, 23);
+            this.txtSupplierCreditLimit.TabIndex = 19;
+            // 
+            // lblSupplierCreditDays
+            // 
+            this.lblSupplierCreditDays.Location = new System.Drawing.Point(100, 500);
+            this.lblSupplierCreditDays.Name = "lblSupplierCreditDays";
+            this.lblSupplierCreditDays.Size = new System.Drawing.Size(101, 20);
+            this.lblSupplierCreditDays.TabIndex = 20;
+            this.lblSupplierCreditDays.Values.Text = "供应商账期天数";
+            // 
+            // txtSupplierCreditDays
+            // 
+            this.txtSupplierCreditDays.Location = new System.Drawing.Point(173, 496);
+            this.txtSupplierCreditDays.Name = "txtSupplierCreditDays";
+            this.txtSupplierCreditDays.Size = new System.Drawing.Size(100, 23);
+            this.txtSupplierCreditDays.TabIndex = 20;
             // 
             // lblIsCustomer
             // 
-            this.lblIsCustomer.Location = new System.Drawing.Point(100, 400);
+            this.lblIsCustomer.Location = new System.Drawing.Point(100, 525);
             this.lblIsCustomer.Name = "lblIsCustomer";
             this.lblIsCustomer.Size = new System.Drawing.Size(49, 20);
-            this.lblIsCustomer.TabIndex = 16;
+            this.lblIsCustomer.TabIndex = 21;
             this.lblIsCustomer.Values.Text = "是客户";
             // 
             // chkIsCustomer
             // 
-            this.chkIsCustomer.Location = new System.Drawing.Point(173, 396);
+            this.chkIsCustomer.Location = new System.Drawing.Point(173, 521);
             this.chkIsCustomer.Name = "chkIsCustomer";
             this.chkIsCustomer.Size = new System.Drawing.Size(19, 13);
-            this.chkIsCustomer.TabIndex = 16;
+            this.chkIsCustomer.TabIndex = 21;
             this.chkIsCustomer.Values.Text = "";
             // 
             // lblIsVendor
             // 
-            this.lblIsVendor.Location = new System.Drawing.Point(100, 425);
+            this.lblIsVendor.Location = new System.Drawing.Point(100, 550);
             this.lblIsVendor.Name = "lblIsVendor";
             this.lblIsVendor.Size = new System.Drawing.Size(62, 20);
-            this.lblIsVendor.TabIndex = 17;
+            this.lblIsVendor.TabIndex = 22;
             this.lblIsVendor.Values.Text = "是供应商";
             // 
             // chkIsVendor
             // 
-            this.chkIsVendor.Location = new System.Drawing.Point(173, 421);
+            this.chkIsVendor.Location = new System.Drawing.Point(173, 546);
             this.chkIsVendor.Name = "chkIsVendor";
             this.chkIsVendor.Size = new System.Drawing.Size(19, 13);
-            this.chkIsVendor.TabIndex = 17;
+            this.chkIsVendor.TabIndex = 22;
             this.chkIsVendor.Values.Text = "";
             // 
             // lblIsOther
             // 
-            this.lblIsOther.Location = new System.Drawing.Point(100, 450);
+            this.lblIsOther.Location = new System.Drawing.Point(100, 575);
             this.lblIsOther.Name = "lblIsOther";
             this.lblIsOther.Size = new System.Drawing.Size(49, 20);
-            this.lblIsOther.TabIndex = 18;
+            this.lblIsOther.TabIndex = 23;
             this.lblIsOther.Values.Text = "是其他";
             // 
             // chkIsOther
             // 
-            this.chkIsOther.Location = new System.Drawing.Point(173, 446);
+            this.chkIsOther.Location = new System.Drawing.Point(173, 571);
             this.chkIsOther.Name = "chkIsOther";
             this.chkIsOther.Size = new System.Drawing.Size(19, 13);
-            this.chkIsOther.TabIndex = 18;
+            this.chkIsOther.TabIndex = 23;
             this.chkIsOther.Values.Text = "";
             // 
             // lblNotes
             // 
-            this.lblNotes.Location = new System.Drawing.Point(100, 475);
+            this.lblNotes.Location = new System.Drawing.Point(100, 600);
             this.lblNotes.Name = "lblNotes";
             this.lblNotes.Size = new System.Drawing.Size(36, 20);
-            this.lblNotes.TabIndex = 19;
+            this.lblNotes.TabIndex = 24;
             this.lblNotes.Values.Text = "备注";
             // 
             // txtNotes
             // 
-            this.txtNotes.Location = new System.Drawing.Point(173, 471);
+            this.txtNotes.Location = new System.Drawing.Point(173, 596);
             this.txtNotes.Multiline = true;
             this.txtNotes.Name = "txtNotes";
             this.txtNotes.Size = new System.Drawing.Size(100, 21);
-            this.txtNotes.TabIndex = 19;
+            this.txtNotes.TabIndex = 24;
             // 
             // lblCreated_at
             // 
-            this.lblCreated_at.Location = new System.Drawing.Point(100, 500);
+            this.lblCreated_at.Location = new System.Drawing.Point(100, 625);
             this.lblCreated_at.Name = "lblCreated_at";
             this.lblCreated_at.Size = new System.Drawing.Size(62, 20);
-            this.lblCreated_at.TabIndex = 20;
+            this.lblCreated_at.TabIndex = 25;
             this.lblCreated_at.Values.Text = "创建时间";
             // 
             // dtpCreated_at
             // 
-            this.dtpCreated_at.Location = new System.Drawing.Point(173, 496);
+            this.dtpCreated_at.Location = new System.Drawing.Point(173, 621);
             this.dtpCreated_at.Name = "dtpCreated_at";
             this.dtpCreated_at.ShowCheckBox = true;
             this.dtpCreated_at.Size = new System.Drawing.Size(100, 21);
-            this.dtpCreated_at.TabIndex = 20;
+            this.dtpCreated_at.TabIndex = 25;
             // 
             // lblCreated_by
             // 
-            this.lblCreated_by.Location = new System.Drawing.Point(100, 525);
+            this.lblCreated_by.Location = new System.Drawing.Point(100, 650);
             this.lblCreated_by.Name = "lblCreated_by";
             this.lblCreated_by.Size = new System.Drawing.Size(49, 20);
-            this.lblCreated_by.TabIndex = 21;
+            this.lblCreated_by.TabIndex = 26;
             this.lblCreated_by.Values.Text = "创建人";
             // 
             // txtCreated_by
             // 
-            this.txtCreated_by.Location = new System.Drawing.Point(173, 521);
+            this.txtCreated_by.Location = new System.Drawing.Point(173, 646);
             this.txtCreated_by.Name = "txtCreated_by";
             this.txtCreated_by.Size = new System.Drawing.Size(100, 23);
-            this.txtCreated_by.TabIndex = 21;
+            this.txtCreated_by.TabIndex = 26;
             // 
             // lblModified_at
             // 
-            this.lblModified_at.Location = new System.Drawing.Point(100, 550);
+            this.lblModified_at.Location = new System.Drawing.Point(100, 675);
             this.lblModified_at.Name = "lblModified_at";
             this.lblModified_at.Size = new System.Drawing.Size(62, 20);
-            this.lblModified_at.TabIndex = 22;
+            this.lblModified_at.TabIndex = 27;
             this.lblModified_at.Values.Text = "修改时间";
             // 
             // dtpModified_at
             // 
-            this.dtpModified_at.Location = new System.Drawing.Point(173, 546);
+            this.dtpModified_at.Location = new System.Drawing.Point(173, 671);
             this.dtpModified_at.Name = "dtpModified_at";
             this.dtpModified_at.ShowCheckBox = true;
             this.dtpModified_at.Size = new System.Drawing.Size(100, 21);
-            this.dtpModified_at.TabIndex = 22;
+            this.dtpModified_at.TabIndex = 27;
             // 
             // lblModified_by
             // 
-            this.lblModified_by.Location = new System.Drawing.Point(100, 575);
+            this.lblModified_by.Location = new System.Drawing.Point(100, 700);
             this.lblModified_by.Name = "lblModified_by";
             this.lblModified_by.Size = new System.Drawing.Size(49, 20);
-            this.lblModified_by.TabIndex = 23;
+            this.lblModified_by.TabIndex = 28;
             this.lblModified_by.Values.Text = "修改人";
             // 
             // txtModified_by
             // 
-            this.txtModified_by.Location = new System.Drawing.Point(173, 571);
+            this.txtModified_by.Location = new System.Drawing.Point(173, 696);
             this.txtModified_by.Name = "txtModified_by";
             this.txtModified_by.Size = new System.Drawing.Size(100, 23);
-            this.txtModified_by.TabIndex = 23;
+            this.txtModified_by.TabIndex = 28;
             // 
             // lblIs_enabled
             // 
-            this.lblIs_enabled.Location = new System.Drawing.Point(100, 600);
+            this.lblIs_enabled.Location = new System.Drawing.Point(100, 725);
             this.lblIs_enabled.Name = "lblIs_enabled";
             this.lblIs_enabled.Size = new System.Drawing.Size(62, 20);
-            this.lblIs_enabled.TabIndex = 24;
+            this.lblIs_enabled.TabIndex = 29;
             this.lblIs_enabled.Values.Text = "是否启用";
             // 
             // chkIs_enabled
             // 
             this.chkIs_enabled.Checked = true;
             this.chkIs_enabled.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.chkIs_enabled.Location = new System.Drawing.Point(173, 596);
+            this.chkIs_enabled.Location = new System.Drawing.Point(173, 721);
             this.chkIs_enabled.Name = "chkIs_enabled";
             this.chkIs_enabled.Size = new System.Drawing.Size(19, 13);
-            this.chkIs_enabled.TabIndex = 24;
+            this.chkIs_enabled.TabIndex = 29;
             this.chkIs_enabled.Values.Text = "";
             // 
             // lblIs_available
             // 
-            this.lblIs_available.Location = new System.Drawing.Point(100, 625);
+            this.lblIs_available.Location = new System.Drawing.Point(100, 750);
             this.lblIs_available.Name = "lblIs_available";
             this.lblIs_available.Size = new System.Drawing.Size(62, 20);
-            this.lblIs_available.TabIndex = 25;
+            this.lblIs_available.TabIndex = 30;
             this.lblIs_available.Values.Text = "是否可用";
             // 
             // chkIs_available
             // 
             this.chkIs_available.Checked = true;
             this.chkIs_available.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.chkIs_available.Location = new System.Drawing.Point(173, 621);
+            this.chkIs_available.Location = new System.Drawing.Point(173, 746);
             this.chkIs_available.Name = "chkIs_available";
             this.chkIs_available.Size = new System.Drawing.Size(19, 13);
-            this.chkIs_available.TabIndex = 25;
+            this.chkIs_available.TabIndex = 30;
             this.chkIs_available.Values.Text = "";
             // 
             // lblisdeleted
             // 
-            this.lblisdeleted.Location = new System.Drawing.Point(100, 650);
+            this.lblisdeleted.Location = new System.Drawing.Point(100, 775);
             this.lblisdeleted.Name = "lblisdeleted";
             this.lblisdeleted.Size = new System.Drawing.Size(62, 20);
-            this.lblisdeleted.TabIndex = 26;
+            this.lblisdeleted.TabIndex = 31;
             this.lblisdeleted.Values.Text = "逻辑删除";
             // 
             // chkisdeleted
             // 
-            this.chkisdeleted.Location = new System.Drawing.Point(173, 646);
+            this.chkisdeleted.Location = new System.Drawing.Point(173, 771);
             this.chkisdeleted.Name = "chkisdeleted";
             this.chkisdeleted.Size = new System.Drawing.Size(19, 13);
-            this.chkisdeleted.TabIndex = 26;
+            this.chkisdeleted.TabIndex = 31;
             this.chkisdeleted.Values.Text = "";
             // 
             // tb_CustomerVendorEdit
@@ -543,16 +628,26 @@ namespace RUINORERP.UI
             this.Controls.Add(this.txtArea);
             this.Controls.Add(this.lblContact);
             this.Controls.Add(this.txtContact);
+            this.Controls.Add(this.lblMobilePhone);
+            this.Controls.Add(this.txtMobilePhone);
+            this.Controls.Add(this.lblFax);
+            this.Controls.Add(this.txtFax);
             this.Controls.Add(this.lblPhone);
             this.Controls.Add(this.txtPhone);
+            this.Controls.Add(this.lblEmail);
+            this.Controls.Add(this.txtEmail);
             this.Controls.Add(this.lblAddress);
             this.Controls.Add(this.txtAddress);
             this.Controls.Add(this.lblWebsite);
             this.Controls.Add(this.txtWebsite);
-            this.Controls.Add(this.lblCreditLimit);
-            this.Controls.Add(this.txtCreditLimit);
-            this.Controls.Add(this.lblCreditDays);
-            this.Controls.Add(this.txtCreditDays);
+            this.Controls.Add(this.lblCustomerCreditLimit);
+            this.Controls.Add(this.txtCustomerCreditLimit);
+            this.Controls.Add(this.lblCustomerCreditDays);
+            this.Controls.Add(this.txtCustomerCreditDays);
+            this.Controls.Add(this.lblSupplierCreditLimit);
+            this.Controls.Add(this.txtSupplierCreditLimit);
+            this.Controls.Add(this.lblSupplierCreditDays);
+            this.Controls.Add(this.txtSupplierCreditDays);
             this.Controls.Add(this.lblIsCustomer);
             this.Controls.Add(this.chkIsCustomer);
             this.Controls.Add(this.lblIsVendor);
@@ -576,7 +671,7 @@ namespace RUINORERP.UI
             this.Controls.Add(this.lblisdeleted);
             this.Controls.Add(this.chkisdeleted);
             this.Name = "tb_CustomerVendorEdit";
-            this.Size = new System.Drawing.Size(911, 707);
+            this.Size = new System.Drawing.Size(911, 601);
             ((System.ComponentModel.ISupportInitialize)(this.cmbType_ID)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmbEmployee_ID)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmbPaytype_ID)).EndInit();
@@ -639,8 +734,23 @@ private Krypton.Toolkit.KryptonTextBox txtContact;
 
     
         
+              private Krypton.Toolkit.KryptonLabel lblMobilePhone;
+private Krypton.Toolkit.KryptonTextBox txtMobilePhone;
+
+    
+        
+              private Krypton.Toolkit.KryptonLabel lblFax;
+private Krypton.Toolkit.KryptonTextBox txtFax;
+
+    
+        
               private Krypton.Toolkit.KryptonLabel lblPhone;
 private Krypton.Toolkit.KryptonTextBox txtPhone;
+
+    
+        
+              private Krypton.Toolkit.KryptonLabel lblEmail;
+private Krypton.Toolkit.KryptonTextBox txtEmail;
 
     
         
@@ -654,13 +764,23 @@ private Krypton.Toolkit.KryptonTextBox txtWebsite;
 
     
         
-              private Krypton.Toolkit.KryptonLabel lblCreditLimit;
-private Krypton.Toolkit.KryptonTextBox txtCreditLimit;
+              private Krypton.Toolkit.KryptonLabel lblCustomerCreditLimit;
+private Krypton.Toolkit.KryptonTextBox txtCustomerCreditLimit;
 
     
         
-              private Krypton.Toolkit.KryptonLabel lblCreditDays;
-private Krypton.Toolkit.KryptonTextBox txtCreditDays;
+              private Krypton.Toolkit.KryptonLabel lblCustomerCreditDays;
+private Krypton.Toolkit.KryptonTextBox txtCustomerCreditDays;
+
+    
+        
+              private Krypton.Toolkit.KryptonLabel lblSupplierCreditLimit;
+private Krypton.Toolkit.KryptonTextBox txtSupplierCreditLimit;
+
+    
+        
+              private Krypton.Toolkit.KryptonLabel lblSupplierCreditDays;
+private Krypton.Toolkit.KryptonTextBox txtSupplierCreditDays;
 
     
         

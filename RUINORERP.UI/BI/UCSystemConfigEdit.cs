@@ -53,6 +53,16 @@ namespace RUINORERP.UI.BI
             DataBindingHelper.BindData4CheckBox<tb_SystemConfig>(entity, t => t.QueryPageLayoutCustomize, chkQueryPageLayoutCustomize, false);
             DataBindingHelper.BindData4CheckBox<tb_SystemConfig>(entity, t => t.QueryGridColCustomize, chkQueryGridColCustomize, false);
             DataBindingHelper.BindData4CheckBox<tb_SystemConfig>(entity, t => t.BillGridColCustomize, chkBillGridColCustomize, false);
+
+            DataBindingHelper.BindData4CheckBox<tb_SystemConfig>(entity, t => t.EnableVoucherModule, chkEnableVoucherModule, false);
+            //有默认值
+            DataBindingHelper.BindData4CheckBox<tb_SystemConfig>(entity, t => t.EnableContractModule, chkEnableContractModule, false);
+            //有默认值
+            DataBindingHelper.BindData4CheckBox<tb_SystemConfig>(entity, t => t.EnableInvoiceModule, chkEnableInvoiceModule, false);
+            DataBindingHelper.BindData4CheckBox<tb_SystemConfig>(entity, t => t.EnableMultiCurrency, chkEnableMultiCurrency, false);
+            //有默认值
+            DataBindingHelper.BindData4CheckBox<tb_SystemConfig>(entity, t => t.EnableFinancialModule, chkEnableFinancialModule, false);
+
             base.BindData(entity);
         }
 

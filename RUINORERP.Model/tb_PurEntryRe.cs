@@ -196,19 +196,19 @@ namespace RUINORERP.Model
                         }
         }
 
-        private decimal _ActualAmount= ((0));
-        /// <summary>
-        /// 实退金额
-        /// </summary>
-        [AdvQueryAttribute(ColName = "ActualAmount",ColDesc = "实退金额")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "ActualAmount" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "实退金额" )]
-        public decimal ActualAmount
-        { 
-            get{return _ActualAmount;}
-            set{
-            SetProperty(ref _ActualAmount, value);
-                        }
-        }
+        //private decimal _ActualAmount= ((0));
+        ///// <summary>
+        ///// 实退金额
+        ///// </summary>
+        //[AdvQueryAttribute(ColName = "ActualAmount",ColDesc = "实退金额")] 
+        //[SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "ActualAmount" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "实退金额" )]
+        //public decimal ActualAmount
+        //{ 
+        //    get{return _ActualAmount;}
+        //    set{
+        //    SetProperty(ref _ActualAmount, value);
+        //                }
+        //}
 
         private int _ProcessWay= ((0));
         /// <summary>

@@ -76,6 +76,10 @@ namespace RUINORERP.Server
 {
     public partial class frmMain : Form
     {
+   
+
+
+
         /// <summary>
         /// 注册时定义好了可以使用的功能模块
         /// </summary>

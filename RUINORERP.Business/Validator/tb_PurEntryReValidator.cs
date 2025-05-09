@@ -62,7 +62,7 @@ namespace RUINORERP.Business
 
  RuleFor(x => x.TotalAmount).PrecisionScale(19,4,true).WithMessage("合计金额:小数位不能超过4。");
 
- RuleFor(x => x.ActualAmount).PrecisionScale(19,4,true).WithMessage("实退金额:小数位不能超过4。");
+ //RuleFor(x => x.ActualAmount).PrecisionScale(19,4,true).WithMessage("实退金额:小数位不能超过4。");
 
 //***** 
  RuleFor(tb_PurEntryRe =>tb_PurEntryRe.ProcessWay).NotNull().WithMessage("处理方式:不能为空。");

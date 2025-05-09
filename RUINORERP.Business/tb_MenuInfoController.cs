@@ -482,7 +482,7 @@ namespace RUINORERP.Business
         {
             List<tb_MenuInfo> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_MenuInfo>()
                                .Includes(t => t.tb_moduledefinition )
-                                            .Includes(t => t.tb_FieldInfos )
+                                .Includes(t => t.tb_FieldInfos )
                                 .Includes(t => t.tb_P4Fields )
                                 .Includes(t => t.tb_ButtonInfos )
                                 .Includes(t => t.tb_UIMenuPersonalizations )

@@ -32,7 +32,7 @@ namespace RUINORERP.UI.BI
 
         }
 
-        protected override void Add()
+        protected override async void Add()
         {
             if (ListDataSoure.Count == 0)
             {
@@ -41,9 +41,14 @@ namespace RUINORERP.UI.BI
                 List<tb_PaymentMethod> list = new List<tb_PaymentMethod>();
                 foreach (var item in Enum.GetValues(typeof(DefaultPaymentMethod)))
                 {
-                    list.Add(new tb_PaymentMethod() { Paytype_Name = item.ToString() });
+                    bool cash = true;
+                    if (item.ToString() == "账期")
+                    {
+                        cash = false;
+                    }
+                    list.Add(new tb_PaymentMethod() { Paytype_Name = item.ToString(), Cash = cash });
                 }
-                MainForm.Instance.AppContext.Db.Insertable<tb_PaymentMethod>(list).ExecuteCommandAsync();
+                await MainForm.Instance.AppContext.Db.Insertable<tb_PaymentMethod>(list).ExecuteReturnSnowflakeIdListAsync();
                 Query();
                 base.Add();
                 base.toolStripButtonModify.Enabled = false;

@@ -296,19 +296,7 @@ namespace RUINORERP.Model
                         }
         }
 
-        private DateTime? _DeliveryDate;
-        /// <summary>
-        /// 发货日期
-        /// </summary>
-        [AdvQueryAttribute(ColName = "DeliveryDate",ColDesc = "发货日期")] 
-        [SugarColumn(ColumnDataType = "datetime", SqlParameterDbType ="DateTime",  ColumnName = "DeliveryDate" ,IsNullable = true,ColumnDescription = "发货日期" )]
-        public DateTime? DeliveryDate
-        { 
-            get{return _DeliveryDate;}
-            set{
-            SetProperty(ref _DeliveryDate, value);
-                        }
-        }
+ 
 
         private string _ShippingAddress;
         /// <summary>
@@ -338,19 +326,7 @@ namespace RUINORERP.Model
                         }
         }
 
-        private string _TrackNo;
-        /// <summary>
-        /// 物流单号
-        /// </summary>
-        [AdvQueryAttribute(ColName = "TrackNo",ColDesc = "物流单号")] 
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "TrackNo" ,Length=50,IsNullable = true,ColumnDescription = "物流单号" )]
-        public string TrackNo
-        { 
-            get{return _TrackNo;}
-            set{
-            SetProperty(ref _TrackNo, value);
-                        }
-        }
+ 
 
         private decimal _ForeignTotalAmount= ((0));
         /// <summary>
@@ -365,34 +341,7 @@ namespace RUINORERP.Model
             SetProperty(ref _ForeignTotalAmount, value);
                         }
         }
-
-        private decimal _CollectedMoney= ((0));
-        /// <summary>
-        /// 实收金额
-        /// </summary>
-        [AdvQueryAttribute(ColName = "CollectedMoney",ColDesc = "实收金额")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "CollectedMoney" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "实收金额" )]
-        public decimal CollectedMoney
-        { 
-            get{return _CollectedMoney;}
-            set{
-            SetProperty(ref _CollectedMoney, value);
-                        }
-        }
-
-        private decimal _PrePayMoney= ((0));
-        /// <summary>
-        /// 预收款
-        /// </summary>
-        [AdvQueryAttribute(ColName = "PrePayMoney",ColDesc = "预收款")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "PrePayMoney" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "预收款" )]
-        public decimal PrePayMoney
-        { 
-            get{return _PrePayMoney;}
-            set{
-            SetProperty(ref _PrePayMoney, value);
-                        }
-        }
+      
 
         private decimal _ForeignDeposit= ((0));
         /// <summary>
@@ -422,19 +371,7 @@ namespace RUINORERP.Model
                         }
         }
 
-        private decimal? _TaxRate= ((0));
-        /// <summary>
-        /// 税率
-        /// </summary>
-        [AdvQueryAttribute(ColName = "TaxRate",ColDesc = "税率")] 
-        [SugarColumn(ColumnDataType = "decimal", SqlParameterDbType ="Decimal",  ColumnName = "TaxRate" , DecimalDigits = 3,IsNullable = true,ColumnDescription = "税率" )]
-        public decimal? TaxRate
-        { 
-            get{return _TaxRate;}
-            set{
-            SetProperty(ref _TaxRate, value);
-                        }
-        }
+ 
 
         private bool? _DeliveryDateConfirm;
         /// <summary>
@@ -450,19 +387,7 @@ namespace RUINORERP.Model
                         }
         }
 
-        private decimal _TotalUntaxedAmount= ((0));
-        /// <summary>
-        /// 未税本位币
-        /// </summary>
-        [AdvQueryAttribute(ColName = "TotalUntaxedAmount",ColDesc = "未税本位币")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "TotalUntaxedAmount" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "未税本位币" )]
-        public decimal TotalUntaxedAmount
-        { 
-            get{return _TotalUntaxedAmount;}
-            set{
-            SetProperty(ref _TotalUntaxedAmount, value);
-                        }
-        }
+ 
 
         private DateTime? _Created_at;
         /// <summary>
@@ -809,6 +734,10 @@ namespace RUINORERP.Model
         //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(CustomerVendor_ID))]
         public virtual tb_CustomerVendor tb_customervendor { get; set; }
+
+
+
+
 
         [SugarColumn(IsIgnore = true)]
         //[Browsable(false)] 打印报表时的数据源会不显示

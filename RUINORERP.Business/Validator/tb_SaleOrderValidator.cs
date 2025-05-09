@@ -81,22 +81,21 @@ namespace RUINORERP.Business
 
  RuleFor(tb_SaleOrder =>tb_SaleOrder.ShippingWay).MaximumLength(25).WithMessage("发货方式:不能超过最大长度,25.");
 
- RuleFor(tb_SaleOrder =>tb_SaleOrder.TrackNo).MaximumLength(25).WithMessage("物流单号:不能超过最大长度,25.");
 
  RuleFor(x => x.ForeignTotalAmount).PrecisionScale(19,4,true).WithMessage("金额外币:小数位不能超过4。");
 
- RuleFor(x => x.CollectedMoney).PrecisionScale(19,4,true).WithMessage("实收金额:小数位不能超过4。");
+ 
 
- RuleFor(x => x.PrePayMoney).PrecisionScale(19,4,true).WithMessage("预收款:小数位不能超过4。");
+ 
 
  RuleFor(x => x.ForeignDeposit).PrecisionScale(19,4,true).WithMessage("订金外币:小数位不能超过4。");
 
  RuleFor(x => x.Deposit).PrecisionScale(19,4,true).WithMessage("订金:小数位不能超过4。");
 
- RuleFor(x => x.TaxRate).PrecisionScale(5,3,true).WithMessage("税率:小数位不能超过3。");
+ 
 
 
- RuleFor(x => x.TotalUntaxedAmount).PrecisionScale(19,4,true).WithMessage("未税本位币:小数位不能超过4。");
+ 
 
 
  RuleFor(tb_SaleOrder =>tb_SaleOrder.Created_by).NotEmpty().When(x => x.Created_by.HasValue);

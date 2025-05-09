@@ -142,7 +142,6 @@ namespace RUINORERP.UI.BI
 
             DataBindingHelper.BindData4TextBox<tb_CustomerVendor>(entity, t => t.CVName, txtCVName, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_CustomerVendor>(entity, t => t.Contact, txtContact, BindDataType4TextBox.Text, false);
-            DataBindingHelper.BindData4TextBox<tb_CustomerVendor>(entity, t => t.Phone, txtPhone, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_CustomerVendor>(entity, t => t.Address, txtAddress, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_CustomerVendor>(entity, t => t.Website, txtWebsite, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_CustomerVendor>(entity, t => t.CVCode, txtCVCode, BindDataType4TextBox.Text, false);
@@ -154,7 +153,10 @@ namespace RUINORERP.UI.BI
             DataBindingHelper.BindData4Cmb<tb_Employee>(entity, k => k.Employee_ID, v => v.Employee_Name, cmbEmployee_ID);
             DataBindingHelper.BindData4TextBox<tb_CustomerVendor>(entity, t => t.Notes, txtNotes, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4RadioGroupTrueFalse<tb_CustomerVendor>(entity, t => t.Is_enabled, rdbis_enabledYes, rdbis_enabledNo);
-
+            DataBindingHelper.BindData4TextBox<tb_CustomerVendor>(entity, t => t.MobilePhone, txtMobilePhone, BindDataType4TextBox.Text, false);
+            DataBindingHelper.BindData4TextBox<tb_CustomerVendor>(entity, t => t.Fax, txtFax, BindDataType4TextBox.Text, false);
+            DataBindingHelper.BindData4TextBox<tb_CustomerVendor>(entity, t => t.Phone, txtPhone, BindDataType4TextBox.Text, false);
+            DataBindingHelper.BindData4TextBox<tb_CustomerVendor>(entity, t => t.Email, txtEmail, BindDataType4TextBox.Text, false);
 
             //有默认值
             //如果在模块定义中客户关系是启用时，就必须录入来源的目标客户。
@@ -389,5 +391,9 @@ namespace RUINORERP.UI.BI
                 }
             }
         }
+
+  
+
+        
     }
 }

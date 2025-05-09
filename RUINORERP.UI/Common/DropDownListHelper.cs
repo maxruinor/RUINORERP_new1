@@ -202,11 +202,22 @@ namespace RUINORERP.UI.Common
         /// <param name="add请选择">  是数据源绑定形式不可以自由添加，只能在数据源上做文章 ("请选择", "-1")</param>
         public static void InitDropList(BindingSource bs, KryptonComboBox cmb, string ValueMember, string DisplayMember, ComboBoxStyle DropStyle, bool auto)
         {
+            //cmb.DataSource = null;
+            //cmb.DataBindings.Clear();
             cmb.BeginUpdate();
             cmb.DataSource = bs;
             cmb.DropDownStyle = DropStyle;
             cmb.DisplayMember = DisplayMember;
-            cmb.ValueMember = ValueMember;
+            if (string.IsNullOrEmpty(cmb.ValueMember))
+            {
+                cmb.ValueMember = ValueMember;
+            }
+            else
+            {
+
+            }
+            
+
             AutoCompleteStringCollection sc = new AutoCompleteStringCollection();
             foreach (var dr in bs.List)
             {

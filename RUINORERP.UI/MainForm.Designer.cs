@@ -64,6 +64,7 @@ namespace RUINORERP.UI
             this.lblServerInfo = new System.Windows.Forms.ToolStripStatusLabel();
             this.tsdropBtn = new System.Windows.Forms.ToolStripDropDownButton();
             this.toolStripComboBox1 = new System.Windows.Forms.ToolStripComboBox();
+            this.progressBar = new System.Windows.Forms.ToolStripProgressBar();
             this.toolStrip1 = new System.Windows.Forms.ToolStrip();
             this.toolStripBtnUpdate = new System.Windows.Forms.ToolStripButton();
             this.toolBtnlogOff = new System.Windows.Forms.ToolStripButton();
@@ -155,7 +156,7 @@ namespace RUINORERP.UI
             this.kryptonPage2,
             this.kryptonPage4});
             this.kryptonNavigator1.SelectedIndex = 0;
-            this.kryptonNavigator1.Size = new System.Drawing.Size(168, 578);
+            this.kryptonNavigator1.Size = new System.Drawing.Size(168, 675);
             this.kryptonNavigator1.TabIndex = 0;
             // 
             // buttonSpecNavigator1
@@ -173,7 +174,7 @@ namespace RUINORERP.UI
             this.kryptonPage5.LastVisibleSet = true;
             this.kryptonPage5.MinimumSize = new System.Drawing.Size(50, 50);
             this.kryptonPage5.Name = "kryptonPage5";
-            this.kryptonPage5.Size = new System.Drawing.Size(166, 450);
+            this.kryptonPage5.Size = new System.Drawing.Size(166, 547);
             this.kryptonPage5.Text = "仓库";
             this.kryptonPage5.TextDescription = "";
             this.kryptonPage5.TextTitle = "仓库系统";
@@ -336,11 +337,12 @@ namespace RUINORERP.UI
             this.lblServerStatus,
             this.lblStatusGlobal,
             this.lblServerInfo,
+            this.progressBar,
             this.tsdropBtn});
-            this.statusStrip1.Location = new System.Drawing.Point(0, 627);
+            this.statusStrip1.Location = new System.Drawing.Point(0, 724);
             this.statusStrip1.Name = "statusStrip1";
             this.statusStrip1.RenderMode = System.Windows.Forms.ToolStripRenderMode.ManagerRenderMode;
-            this.statusStrip1.Size = new System.Drawing.Size(1044, 22);
+            this.statusStrip1.Size = new System.Drawing.Size(1353, 22);
             this.statusStrip1.TabIndex = 4;
             this.statusStrip1.Text = "statusStrip1";
             // 
@@ -438,6 +440,12 @@ namespace RUINORERP.UI
             this.toolStripComboBox1.Name = "toolStripComboBox1";
             this.toolStripComboBox1.Size = new System.Drawing.Size(121, 25);
             // 
+            // progressBar
+            // 
+            this.progressBar.Name = "progressBar";
+            this.progressBar.Size = new System.Drawing.Size(150, 16);
+            this.progressBar.ToolTipText = "全局进度条";
+            // 
             // toolStrip1
             // 
             this.toolStrip1.Font = new System.Drawing.Font("Segoe UI", 9F);
@@ -450,7 +458,7 @@ namespace RUINORERP.UI
             this.tsbtnSysTest});
             this.toolStrip1.Location = new System.Drawing.Point(0, 24);
             this.toolStrip1.Name = "toolStrip1";
-            this.toolStrip1.Size = new System.Drawing.Size(1044, 25);
+            this.toolStrip1.Size = new System.Drawing.Size(1353, 25);
             this.toolStrip1.TabIndex = 7;
             this.toolStrip1.Text = "toolStrip1";
             // 
@@ -521,7 +529,7 @@ namespace RUINORERP.UI
             this.窗口ToolStripMenuItem});
             this.menuStripMain.Location = new System.Drawing.Point(0, 0);
             this.menuStripMain.Name = "menuStripMain";
-            this.menuStripMain.Size = new System.Drawing.Size(1044, 24);
+            this.menuStripMain.Size = new System.Drawing.Size(1353, 24);
             this.menuStripMain.TabIndex = 9;
             this.menuStripMain.Text = "menuStrip1";
             // 
@@ -567,7 +575,7 @@ namespace RUINORERP.UI
             this.kryptonDockableWorkspace1.Root.WorkspaceControl = this.kryptonDockableWorkspace1;
             this.kryptonDockableWorkspace1.SeparatorStyle = Krypton.Toolkit.SeparatorStyle.HighProfile;
             this.kryptonDockableWorkspace1.ShowMaximizeButton = false;
-            this.kryptonDockableWorkspace1.Size = new System.Drawing.Size(866, 578);
+            this.kryptonDockableWorkspace1.Size = new System.Drawing.Size(1175, 675);
             this.kryptonDockableWorkspace1.SplitterWidth = 5;
             this.kryptonDockableWorkspace1.TabIndex = 2;
             this.kryptonDockableWorkspace1.TabStop = true;
@@ -625,7 +633,7 @@ namespace RUINORERP.UI
             this.kryptonPanelBigg.Dock = System.Windows.Forms.DockStyle.Fill;
             this.kryptonPanelBigg.Location = new System.Drawing.Point(0, 49);
             this.kryptonPanelBigg.Name = "kryptonPanelBigg";
-            this.kryptonPanelBigg.Size = new System.Drawing.Size(1044, 578);
+            this.kryptonPanelBigg.Size = new System.Drawing.Size(1353, 675);
             this.kryptonPanelBigg.TabIndex = 15;
             // 
             // kryptonSeparator1
@@ -633,7 +641,7 @@ namespace RUINORERP.UI
             this.kryptonSeparator1.Dock = System.Windows.Forms.DockStyle.Left;
             this.kryptonSeparator1.Location = new System.Drawing.Point(168, 0);
             this.kryptonSeparator1.Name = "kryptonSeparator1";
-            this.kryptonSeparator1.Size = new System.Drawing.Size(10, 578);
+            this.kryptonSeparator1.Size = new System.Drawing.Size(10, 675);
             this.kryptonSeparator1.TabIndex = 3;
             // 
             // MainForm
@@ -641,7 +649,7 @@ namespace RUINORERP.UI
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.AutoSize = true;
-            this.ClientSize = new System.Drawing.Size(1044, 649);
+            this.ClientSize = new System.Drawing.Size(1353, 746);
             this.Controls.Add(this.kryptonPanelBigg);
             this.Controls.Add(this.toolStrip1);
             this.Controls.Add(this.statusStrip1);
@@ -732,6 +740,7 @@ namespace RUINORERP.UI
         private System.Windows.Forms.ToolStripButton tsbtnSysTest;
         private System.Windows.Forms.ToolStripComboBox toolStripComboBox1;
         internal System.Windows.Forms.ToolStripDropDownButton tsdropBtn;
+        public System.Windows.Forms.ToolStripProgressBar progressBar;
     }
 }
 

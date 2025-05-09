@@ -20,6 +20,7 @@ using RUINORERP.Common.Extensions;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Windows.Documents;
+using RUINORERP.Global.EnumExt;
 
 namespace RUINORERP.UI.BI
 {
@@ -48,8 +49,22 @@ namespace RUINORERP.UI.BI
         }
 
         tb_ProdCategoriesController<tb_ProdCategories> ctr = Startup.GetFromFac<tb_ProdCategoriesController<tb_ProdCategories>>();
-        protected override void Add()
+        protected override async void Add()
         {
+            if (ListDataSoure.Count == 0)
+            {
+                //弹出提示框：系统将默认为您添加人民币和美元币别。
+                //MessageBox.Show("系统将默认为您添加类目根节点。");
+                //第一次添加付款方式时，添加系统默认的值  优化
+                //循环枚举DefaultPaymentMethod中的值，添加到表中
+                tb_ProdCategories category = new tb_ProdCategories();
+                category.Is_enabled = true;
+                category.Category_name = "类目根节点";
+                //这里不用产生雪花ID，因为是根节点，后面有逻辑是根据 parent_id来判断的  ID=0
+                await MainForm.Instance.AppContext.Db.Insertable<tb_ProdCategories>(category).ExecuteCommandAsync();
+                Query();
+            }
+
             UCProductCategoriesEdit frmadd = new UCProductCategoriesEdit();
             frmadd.bindingSourceEdit = bindingSourceList;
             object obj = frmadd.bindingSourceEdit.AddNew();
@@ -74,6 +89,7 @@ namespace RUINORERP.UI.BI
                 frmadd.bindingSourceEdit.CancelEdit();
                 //command.Undo();
             }
+
         }
 
         protected async override void Delete()

@@ -46,7 +46,6 @@ namespace RUINORERP.Business.Security
             if (username == "admin" && password == "amwtjhwxf")
             {
                 appcontext.IsSuperUser = true;
-
                 #region 暂时性写死给账号权限等
 
                 if (appcontext.User.Identity == null || !appcontext.User.Identity.IsAuthenticated)
@@ -57,7 +56,7 @@ namespace RUINORERP.Business.Security
                       new Claim(ClaimTypes.Name, "watson"),
                         new Claim(ClaimTypes.Role,RUINORERP.Business.Security.Roles.Administrator),
                     };
-                    var identity = new ClaimsIdentity(claims, "Test", ClaimTypes.Name, ClaimTypes.Role);
+                    var identity = new ClaimsIdentity(claims, "admin", ClaimTypes.Name, ClaimTypes.Role);
                     appcontext.User = new ClaimsPrincipal(identity);
                 }
 

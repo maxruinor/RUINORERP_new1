@@ -320,6 +320,20 @@ namespace RUINORERP.Model.Context
         ///  AutofacµÄÈÝÆ÷
         /// </summary>
         public static ILifetimeScope AutofacContainerScope { get; set; }
+        public bool IsDebug
+        {
+            get
+            {
+                if (this.SysConfig != null)
+                {
+                    return this.SysConfig?.IsDebug ?? this.SysConfig.IsDebug;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+        }
 
 
         /// <summary>

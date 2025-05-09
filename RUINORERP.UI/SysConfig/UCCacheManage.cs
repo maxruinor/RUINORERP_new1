@@ -103,6 +103,7 @@ namespace RUINORERP.UI.SysConfig
                 if (tableName == "锁定信息列表")
                 {
                     this.dataGridView1.SetUseCustomColumnDisplay(false);
+                   
                     dataGridView1.DataSource = MainForm.Instance.lockManager.GetLockItems();
                 }
                 else
@@ -114,7 +115,7 @@ namespace RUINORERP.UI.SysConfig
                         return;
                     }
                     // 使用 Assembly.Load 加载包含 PrintHelper<T> 类的程序集
-
+                    dataGridView1.NeedSaveColumnsXml = true;
                     // 使用 GetType 方法获取 PrintHelper<T> 的类型
                     Type type = assembly.GetType("RUINORERP.Model." + tableName);
                     dataGridView1.FieldNameList = UIHelper.GetFieldNameColList(true, type);

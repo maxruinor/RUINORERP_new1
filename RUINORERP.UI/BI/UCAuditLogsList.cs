@@ -26,7 +26,7 @@ using RUINORERP.Global.EnumExt.CRM;
 namespace RUINORERP.UI.BI
 {
 
-    [MenuAttrAssemblyInfo("审计日志管理", ModuleMenuDefine.模块定义.系统设置, ModuleMenuDefine.系统设置.审计日志)]
+    [MenuAttrAssemblyInfo("审计日志管理", ModuleMenuDefine.模块定义.系统设置, ModuleMenuDefine.系统设置.系统工具)]
     public partial class UCAuditLogsList : BaseForm.BaseListGeneric<tb_AuditLogs>
     {
         public UCAuditLogsList()

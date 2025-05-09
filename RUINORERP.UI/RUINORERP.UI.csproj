@@ -606,6 +606,14 @@
     <Compile Include="BI\UCProjectGroupAssigneeEmployees.Designer.cs">
       <DependentUpon>UCProjectGroupAssigneeEmployees.cs</DependentUpon>
     </Compile>
+    <Compile Include="BusyDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="BusyDialog.Designer.cs">
+      <DependentUpon>BusyDialog.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Common\ProgressExtensions.cs" />
+    <Compile Include="Common\ProgressHelper.cs" />
     <Compile Include="FM\FMBase\UCPaymentRecord.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -2024,6 +2032,7 @@
       <DependentUpon>UCProductList.cs</DependentUpon>
     </Compile>
     <Compile Include="Program.cs" />
+    <Compile Include="ProgressManager.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
@@ -2919,6 +2928,7 @@
     <Content Include="FM\财务核销逻辑.txt" />
     <Content Include="InitSQL.sql" />
     <None Include="ResourceFile\Hint.ico" />
+    <Content Include="ResourceFile\copy.png" />
     <Content Include="ResourceFile\money-rmb.png" />
     <None Include="ResourceFile\人民币 -32.png" />
     <None Include="ResourceFile\search history_16x16.ico" />
@@ -3256,6 +3266,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="BusinessFlow\FlowDesign.resx">
       <DependentUpon>FlowDesign.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="BusyDialog.resx">
+      <DependentUpon>BusyDialog.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="ChartFramework\Core\Rendering\Controls\ChartControl.resx">
       <DependentUpon>ChartControl.cs</DependentUpon>

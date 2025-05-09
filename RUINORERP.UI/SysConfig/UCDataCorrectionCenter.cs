@@ -524,8 +524,8 @@ namespace RUINORERP.UI.SysConfig
                                 else
                                 {
                                     tb_PurEntrys[i].TotalAmount = tb_PurEntrys[i].tb_PurEntryDetails.Sum(c => c.SubtotalAmount);
-                                    tb_PurEntrys[i].ActualAmount = tb_PurEntrys[i].TotalAmount + tb_PurEntrys[i].ShippingCost;
-                                    int totalamountCounter = await MainForm.Instance.AppContext.Db.Updateable(tb_PurEntrys[i]).UpdateColumns(t => new { t.TotalAmount, t.ActualAmount }).ExecuteCommandAsync();
+                                    tb_PurEntrys[i].TotalAmount = tb_PurEntrys[i].TotalAmount + tb_PurEntrys[i].ShippingCost;
+                                    int totalamountCounter = await MainForm.Instance.AppContext.Db.Updateable(tb_PurEntrys[i]).UpdateColumns(t => new { t.TotalAmount }).ExecuteCommandAsync();
                                     richTextBoxLog.AppendText($"采购入库单{tb_PurEntrys[i].PurEntryNo}的总金额修复成功：{totalamountCounter} " + "\r\n");
                                 }
                             }

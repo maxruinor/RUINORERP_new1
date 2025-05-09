@@ -68,9 +68,7 @@
             this.lblTotalAmount = new Krypton.Toolkit.KryptonLabel();
             this.lblTotalQty = new Krypton.Toolkit.KryptonLabel();
             this.txtTotalAmount = new Krypton.Toolkit.KryptonTextBox();
-            this.lblActualAmount = new Krypton.Toolkit.KryptonLabel();
             this.txtTotalQty = new Krypton.Toolkit.KryptonTextBox();
-            this.txtActualAmount = new Krypton.Toolkit.KryptonTextBox();
             this.txtDiscountAmount = new Krypton.Toolkit.KryptonTextBox();
             this.lblDiscountAmount = new Krypton.Toolkit.KryptonLabel();
             this.cmbPaytype_ID = new Krypton.Toolkit.KryptonComboBox();
@@ -445,9 +443,7 @@
             this.kryptonSplitContainer2.Panel2.Controls.Add(this.lblTotalAmount);
             this.kryptonSplitContainer2.Panel2.Controls.Add(this.lblTotalQty);
             this.kryptonSplitContainer2.Panel2.Controls.Add(this.txtTotalAmount);
-            this.kryptonSplitContainer2.Panel2.Controls.Add(this.lblActualAmount);
             this.kryptonSplitContainer2.Panel2.Controls.Add(this.txtTotalQty);
-            this.kryptonSplitContainer2.Panel2.Controls.Add(this.txtActualAmount);
             this.kryptonSplitContainer2.Panel2.Controls.Add(this.txtDiscountAmount);
             this.kryptonSplitContainer2.Panel2.Controls.Add(this.lblDiscountAmount);
             this.kryptonSplitContainer2.Panel2.Controls.Add(this.cmbPaytype_ID);
@@ -493,27 +489,12 @@
             this.txtTotalAmount.Size = new System.Drawing.Size(100, 23);
             this.txtTotalAmount.TabIndex = 124;
             // 
-            // lblActualAmount
-            // 
-            this.lblActualAmount.Location = new System.Drawing.Point(697, 36);
-            this.lblActualAmount.Name = "lblActualAmount";
-            this.lblActualAmount.Size = new System.Drawing.Size(62, 20);
-            this.lblActualAmount.TabIndex = 125;
-            this.lblActualAmount.Values.Text = "实退金额";
-            // 
             // txtTotalQty
             // 
             this.txtTotalQty.Location = new System.Drawing.Point(94, 36);
             this.txtTotalQty.Name = "txtTotalQty";
             this.txtTotalQty.Size = new System.Drawing.Size(100, 23);
             this.txtTotalQty.TabIndex = 101;
-            // 
-            // txtActualAmount
-            // 
-            this.txtActualAmount.Location = new System.Drawing.Point(770, 36);
-            this.txtActualAmount.Name = "txtActualAmount";
-            this.txtActualAmount.Size = new System.Drawing.Size(100, 23);
-            this.txtActualAmount.TabIndex = 126;
             // 
             // txtDiscountAmount
             // 
@@ -618,8 +599,6 @@
         private Krypton.Toolkit.KryptonTextBox txtVoucherNO;
         private Krypton.Toolkit.KryptonLabel lblTotalAmount;
         private Krypton.Toolkit.KryptonTextBox txtTotalAmount;
-        private Krypton.Toolkit.KryptonLabel lblActualAmount;
-        private Krypton.Toolkit.KryptonTextBox txtActualAmount;
         private Krypton.Toolkit.KryptonLabel lblDeliveryDate;
         private Krypton.Toolkit.KryptonDateTimePicker dtpReturnDate;
         private Krypton.Toolkit.KryptonLabel lblShippingWay;

@@ -96,23 +96,16 @@ namespace RUINORERP.UI.PSI.PUR
         }
 
 
-
-
         public override void BuildSummaryCols()
         {
             base.MasterSummaryCols.Add(c => c.TotalQty);
             base.MasterSummaryCols.Add(c => c.TotalAmount);
             base.MasterSummaryCols.Add(c => c.TotalTaxAmount);
-            base.MasterSummaryCols.Add(c => c.ActualAmount);
-            base.MasterSummaryCols.Add(c => c.ActualAmount);
             base.MasterSummaryCols.Add(c => c.ForeignTotalAmount);
-
             base.ChildSummaryCols.Add(c => c.Quantity);
-
             base.ChildRelatedSummaryCols.Add(c => c.Quantity);
         }
 
- 
 
         /*
 

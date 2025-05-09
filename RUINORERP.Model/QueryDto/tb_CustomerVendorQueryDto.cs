@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：04/25/2025 10:38:53
+// 时间：05/08/2025 12:05:07
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -166,16 +166,55 @@ namespace RUINORERP.Model.QueryDto
         }
      
 
+        private string _MobilePhone;
+        /// <summary>
+        /// 手机
+        /// </summary>
+        [AdvQueryAttribute(ColName = "MobilePhone",ColDesc = "手机")]
+        [SugarColumn(ColumnDataType = "varchar",SqlParameterDbType ="String",ColumnName = "MobilePhone",Length=50,IsNullable = true,ColumnDescription = "手机" )]
+        public string MobilePhone 
+        { 
+            get{return _MobilePhone;}
+            set{SetProperty(ref _MobilePhone, value);}
+        }
+     
+
+        private string _Fax;
+        /// <summary>
+        /// 传真
+        /// </summary>
+        [AdvQueryAttribute(ColName = "Fax",ColDesc = "传真")]
+        [SugarColumn(ColumnDataType = "varchar",SqlParameterDbType ="String",ColumnName = "Fax",Length=50,IsNullable = true,ColumnDescription = "传真" )]
+        public string Fax 
+        { 
+            get{return _Fax;}
+            set{SetProperty(ref _Fax, value);}
+        }
+     
+
         private string _Phone;
         /// <summary>
         /// 电话
         /// </summary>
         [AdvQueryAttribute(ColName = "Phone",ColDesc = "电话")]
-        [SugarColumn(ColumnDataType = "varchar",SqlParameterDbType ="String",ColumnName = "Phone",Length=255,IsNullable = true,ColumnDescription = "电话" )]
+        [SugarColumn(ColumnDataType = "varchar",SqlParameterDbType ="String",ColumnName = "Phone",Length=50,IsNullable = true,ColumnDescription = "电话" )]
         public string Phone 
         { 
             get{return _Phone;}
             set{SetProperty(ref _Phone, value);}
+        }
+     
+
+        private string _Email;
+        /// <summary>
+        /// 邮箱
+        /// </summary>
+        [AdvQueryAttribute(ColName = "Email",ColDesc = "邮箱")]
+        [SugarColumn(ColumnDataType = "varchar",SqlParameterDbType ="String",ColumnName = "Email",Length=100,IsNullable = true,ColumnDescription = "邮箱" )]
+        public string Email 
+        { 
+            get{return _Email;}
+            set{SetProperty(ref _Email, value);}
         }
      
 
@@ -205,29 +244,55 @@ namespace RUINORERP.Model.QueryDto
         }
      
 
-        private decimal? _CreditLimit= ((0));
+        private decimal? _CustomerCreditLimit= ((0));
         /// <summary>
-        /// 信用额度
+        /// 客户信用额度
         /// </summary>
-        [AdvQueryAttribute(ColName = "CreditLimit",ColDesc = "信用额度")]
-        [SugarColumn(ColumnDataType = "decimal",SqlParameterDbType ="Decimal",ColumnName = "CreditLimit",IsNullable = true,ColumnDescription = "信用额度" )]
-        public decimal? CreditLimit 
+        [AdvQueryAttribute(ColName = "CustomerCreditLimit",ColDesc = "客户信用额度")]
+        [SugarColumn(ColumnDataType = "decimal",SqlParameterDbType ="Decimal",ColumnName = "CustomerCreditLimit",IsNullable = true,ColumnDescription = "客户信用额度" )]
+        public decimal? CustomerCreditLimit 
         { 
-            get{return _CreditLimit;}
-            set{SetProperty(ref _CreditLimit, value);}
+            get{return _CustomerCreditLimit;}
+            set{SetProperty(ref _CustomerCreditLimit, value);}
         }
      
 
-        private int? _CreditDays= ((0));
+        private int? _CustomerCreditDays= ((0));
         /// <summary>
-        /// 账期天数
+        /// 客户账期天数
         /// </summary>
-        [AdvQueryAttribute(ColName = "CreditDays",ColDesc = "账期天数")]
-        [SugarColumn(ColumnDataType = "int",SqlParameterDbType ="Int32",ColumnName = "CreditDays",IsNullable = true,ColumnDescription = "账期天数" )]
-        public int? CreditDays 
+        [AdvQueryAttribute(ColName = "CustomerCreditDays",ColDesc = "客户账期天数")]
+        [SugarColumn(ColumnDataType = "int",SqlParameterDbType ="Int32",ColumnName = "CustomerCreditDays",IsNullable = true,ColumnDescription = "客户账期天数" )]
+        public int? CustomerCreditDays 
         { 
-            get{return _CreditDays;}
-            set{SetProperty(ref _CreditDays, value);}
+            get{return _CustomerCreditDays;}
+            set{SetProperty(ref _CustomerCreditDays, value);}
+        }
+     
+
+        private decimal? _SupplierCreditLimit= ((0));
+        /// <summary>
+        /// 供应商信用额度
+        /// </summary>
+        [AdvQueryAttribute(ColName = "SupplierCreditLimit",ColDesc = "供应商信用额度")]
+        [SugarColumn(ColumnDataType = "decimal",SqlParameterDbType ="Decimal",ColumnName = "SupplierCreditLimit",IsNullable = true,ColumnDescription = "供应商信用额度" )]
+        public decimal? SupplierCreditLimit 
+        { 
+            get{return _SupplierCreditLimit;}
+            set{SetProperty(ref _SupplierCreditLimit, value);}
+        }
+     
+
+        private int? _SupplierCreditDays= ((0));
+        /// <summary>
+        /// 供应商账期天数
+        /// </summary>
+        [AdvQueryAttribute(ColName = "SupplierCreditDays",ColDesc = "供应商账期天数")]
+        [SugarColumn(ColumnDataType = "int",SqlParameterDbType ="Int32",ColumnName = "SupplierCreditDays",IsNullable = true,ColumnDescription = "供应商账期天数" )]
+        public int? SupplierCreditDays 
+        { 
+            get{return _SupplierCreditDays;}
+            set{SetProperty(ref _SupplierCreditDays, value);}
         }
      
 

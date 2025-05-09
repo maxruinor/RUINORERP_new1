@@ -332,7 +332,7 @@ namespace RUINORERP.UI.PSI.PUR
                 }
                 EditEntity.TotalQty = details.Sum(c => c.Quantity);
                 EditEntity.TotalAmount = details.Sum(c => c.SubtotalAmount);
-                EditEntity.ActualAmount = EditEntity.TotalAmount + EditEntity.ShippingCost;
+                EditEntity.TotalAmount = EditEntity.TotalAmount + EditEntity.ShippingCost;
             }
             catch (Exception ex)
             {
@@ -395,7 +395,7 @@ namespace RUINORERP.UI.PSI.PUR
                 }
                 EditEntity.TotalQty = details.Sum(c => c.Quantity);
                 EditEntity.TotalAmount = details.Sum(c => c.SubtotalAmount);
-                EditEntity.ActualAmount = EditEntity.TotalAmount + EditEntity.ShippingCost;
+                EditEntity.TotalAmount = EditEntity.TotalAmount + EditEntity.ShippingCost;
 
                 if (EditEntity.TotalTaxAmount>0)
                 {

@@ -1506,6 +1506,10 @@ namespace RUINORERP.UI.Common
         /// <param name="btnItem"></param>
         public static void ControlButton<T>(tb_MenuInfo CurMenuInfo, T btnItem) where T : ToolStripItem
         {
+            if (CurMenuInfo == null || MainForm.Instance.AppContext.IsSuperUser)
+            {
+                return;
+            }
             if (MainForm.Instance.AppContext.IsSuperUser)
             {
                 return;
@@ -1531,7 +1535,10 @@ namespace RUINORERP.UI.Common
 
         public static void ControlButton(tb_MenuInfo CurMenuInfo, ToolStripSplitButton btnItem)
         {
-
+            if (CurMenuInfo == null || MainForm.Instance.AppContext.IsSuperUser)
+            {
+                return;
+            }
             if (CurMenuInfo.tb_P4Buttons == null)
             {
                 btnItem.Visible = false;
@@ -1555,7 +1562,10 @@ namespace RUINORERP.UI.Common
 
         public static void ControlButton(tb_MenuInfo CurMenuInfo, ToolStripMenuItem btnItem)
         {
-
+            if (CurMenuInfo == null || MainForm.Instance.AppContext.IsSuperUser)
+            {
+                return;
+            }
             if (CurMenuInfo.tb_P4Buttons == null)
             {
                 btnItem.Visible = false;
@@ -1579,7 +1589,10 @@ namespace RUINORERP.UI.Common
 
         public static void ControlButton(tb_MenuInfo CurMenuInfo, ToolStripDropDownButton btnItem)
         {
-
+            if (CurMenuInfo == null || MainForm.Instance.AppContext.IsSuperUser)
+            {
+                return;
+            }
             if (CurMenuInfo.tb_P4Buttons == null)
             {
                 btnItem.Visible = false;
@@ -1603,7 +1616,10 @@ namespace RUINORERP.UI.Common
 
         public static void ControlButton(tb_MenuInfo CurMenuInfo, ToolStripButton btnItem)
         {
-
+            if (CurMenuInfo==null || MainForm.Instance.AppContext.IsSuperUser)
+            {
+                return;
+            }
             if (CurMenuInfo.tb_P4Buttons == null)
             {
                 btnItem.Visible = false;
@@ -1626,7 +1642,10 @@ namespace RUINORERP.UI.Common
         }
         public static void ControlButton(tb_MenuInfo CurMenuInfo, ToolStripItem btnItem)
         {
-
+            if (CurMenuInfo == null || MainForm.Instance.AppContext.IsSuperUser)
+            {
+                return;
+            }
             if (CurMenuInfo.tb_P4Buttons == null)
             {
                 btnItem.Visible = false;
@@ -1650,7 +1669,10 @@ namespace RUINORERP.UI.Common
 
         public static void ControlButton(tb_MenuInfo CurMenuInfo, ToolStripControlHost tsc)
         {
-
+            if (CurMenuInfo == null || MainForm.Instance.AppContext.IsSuperUser)
+            {
+                return;
+            }
             if (CurMenuInfo.tb_P4Buttons == null)
             {
                 tsc.Visible = false;

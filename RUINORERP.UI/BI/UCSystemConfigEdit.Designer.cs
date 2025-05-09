@@ -29,6 +29,8 @@
         private void InitializeComponent()
         {
             this.kryptonPanel1 = new Krypton.Toolkit.KryptonPanel();
+            this.kryptonLabel9 = new Krypton.Toolkit.KryptonLabel();
+            this.chkOwnershipControl = new Krypton.Toolkit.KryptonCheckBox();
             this.kryptonLabel8 = new Krypton.Toolkit.KryptonLabel();
             this.chkIsDebug = new Krypton.Toolkit.KryptonCheckBox();
             this.kryptonLabel7 = new Krypton.Toolkit.KryptonLabel();
@@ -65,8 +67,16 @@
             this.chkDepartBizLimited = new Krypton.Toolkit.KryptonCheckBox();
             this.lblPurchsaeBizLimited = new Krypton.Toolkit.KryptonLabel();
             this.chkPurchsaeBizLimited = new Krypton.Toolkit.KryptonCheckBox();
-            this.kryptonLabel9 = new Krypton.Toolkit.KryptonLabel();
-            this.chkOwnershipControl = new Krypton.Toolkit.KryptonCheckBox();
+            this.lblEnableVoucherModule = new Krypton.Toolkit.KryptonLabel();
+            this.chkEnableVoucherModule = new Krypton.Toolkit.KryptonCheckBox();
+            this.lblEnableContractModule = new Krypton.Toolkit.KryptonLabel();
+            this.chkEnableContractModule = new Krypton.Toolkit.KryptonCheckBox();
+            this.lblEnableInvoiceModule = new Krypton.Toolkit.KryptonLabel();
+            this.chkEnableInvoiceModule = new Krypton.Toolkit.KryptonCheckBox();
+            this.lblEnableMultiCurrency = new Krypton.Toolkit.KryptonLabel();
+            this.chkEnableMultiCurrency = new Krypton.Toolkit.KryptonCheckBox();
+            this.lblEnableFinancialModule = new Krypton.Toolkit.KryptonLabel();
+            this.chkEnableFinancialModule = new Krypton.Toolkit.KryptonCheckBox();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel1)).BeginInit();
             this.kryptonPanel1.SuspendLayout();
@@ -75,6 +85,16 @@
             // 
             // kryptonPanel1
             // 
+            this.kryptonPanel1.Controls.Add(this.lblEnableVoucherModule);
+            this.kryptonPanel1.Controls.Add(this.chkEnableVoucherModule);
+            this.kryptonPanel1.Controls.Add(this.lblEnableContractModule);
+            this.kryptonPanel1.Controls.Add(this.chkEnableContractModule);
+            this.kryptonPanel1.Controls.Add(this.lblEnableInvoiceModule);
+            this.kryptonPanel1.Controls.Add(this.chkEnableInvoiceModule);
+            this.kryptonPanel1.Controls.Add(this.lblEnableMultiCurrency);
+            this.kryptonPanel1.Controls.Add(this.chkEnableMultiCurrency);
+            this.kryptonPanel1.Controls.Add(this.lblEnableFinancialModule);
+            this.kryptonPanel1.Controls.Add(this.chkEnableFinancialModule);
             this.kryptonPanel1.Controls.Add(this.kryptonLabel9);
             this.kryptonPanel1.Controls.Add(this.chkOwnershipControl);
             this.kryptonPanel1.Controls.Add(this.kryptonLabel8);
@@ -116,12 +136,28 @@
             this.kryptonPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.kryptonPanel1.Location = new System.Drawing.Point(0, 0);
             this.kryptonPanel1.Name = "kryptonPanel1";
-            this.kryptonPanel1.Size = new System.Drawing.Size(485, 442);
+            this.kryptonPanel1.Size = new System.Drawing.Size(721, 607);
             this.kryptonPanel1.TabIndex = 0;
+            // 
+            // kryptonLabel9
+            // 
+            this.kryptonLabel9.Location = new System.Drawing.Point(96, 140);
+            this.kryptonLabel9.Name = "kryptonLabel9";
+            this.kryptonLabel9.Size = new System.Drawing.Size(88, 20);
+            this.kryptonLabel9.TabIndex = 187;
+            this.kryptonLabel9.Values.Text = "数据归属控制";
+            // 
+            // chkOwnershipControl
+            // 
+            this.chkOwnershipControl.Location = new System.Drawing.Point(188, 144);
+            this.chkOwnershipControl.Name = "chkOwnershipControl";
+            this.chkOwnershipControl.Size = new System.Drawing.Size(19, 13);
+            this.chkOwnershipControl.TabIndex = 188;
+            this.chkOwnershipControl.Values.Text = "";
             // 
             // kryptonLabel8
             // 
-            this.kryptonLabel8.Location = new System.Drawing.Point(344, 15);
+            this.kryptonLabel8.Location = new System.Drawing.Point(496, 16);
             this.kryptonLabel8.Name = "kryptonLabel8";
             this.kryptonLabel8.Size = new System.Drawing.Size(62, 20);
             this.kryptonLabel8.TabIndex = 185;
@@ -129,7 +165,7 @@
             // 
             // chkIsDebug
             // 
-            this.chkIsDebug.Location = new System.Drawing.Point(412, 16);
+            this.chkIsDebug.Location = new System.Drawing.Point(564, 17);
             this.chkIsDebug.Name = "chkIsDebug";
             this.chkIsDebug.Size = new System.Drawing.Size(19, 13);
             this.chkIsDebug.TabIndex = 186;
@@ -138,7 +174,7 @@
             // 
             // kryptonLabel7
             // 
-            this.kryptonLabel7.Location = new System.Drawing.Point(46, 262);
+            this.kryptonLabel7.Location = new System.Drawing.Point(44, 262);
             this.kryptonLabel7.Name = "kryptonLabel7";
             this.kryptonLabel7.Size = new System.Drawing.Size(140, 20);
             this.kryptonLabel7.TabIndex = 183;
@@ -153,7 +189,7 @@
             // 
             // kryptonLabel6
             // 
-            this.kryptonLabel6.Location = new System.Drawing.Point(46, 298);
+            this.kryptonLabel6.Location = new System.Drawing.Point(44, 298);
             this.kryptonLabel6.Name = "kryptonLabel6";
             this.kryptonLabel6.Size = new System.Drawing.Size(140, 20);
             this.kryptonLabel6.TabIndex = 181;
@@ -168,7 +204,7 @@
             // 
             // kryptonLabel3
             // 
-            this.kryptonLabel3.Location = new System.Drawing.Point(301, 163);
+            this.kryptonLabel3.Location = new System.Drawing.Point(444, 164);
             this.kryptonLabel3.Name = "kryptonLabel3";
             this.kryptonLabel3.Size = new System.Drawing.Size(114, 20);
             this.kryptonLabel3.TabIndex = 179;
@@ -176,7 +212,7 @@
             // 
             // chkBillGridColCustomize
             // 
-            this.chkBillGridColCustomize.Location = new System.Drawing.Point(412, 167);
+            this.chkBillGridColCustomize.Location = new System.Drawing.Point(564, 168);
             this.chkBillGridColCustomize.Name = "chkBillGridColCustomize";
             this.chkBillGridColCustomize.Size = new System.Drawing.Size(19, 13);
             this.chkBillGridColCustomize.TabIndex = 180;
@@ -184,7 +220,7 @@
             // 
             // kryptonLabel4
             // 
-            this.kryptonLabel4.Location = new System.Drawing.Point(301, 140);
+            this.kryptonLabel4.Location = new System.Drawing.Point(444, 141);
             this.kryptonLabel4.Name = "kryptonLabel4";
             this.kryptonLabel4.Size = new System.Drawing.Size(114, 20);
             this.kryptonLabel4.TabIndex = 177;
@@ -192,7 +228,7 @@
             // 
             // chkQueryGridColCustomize
             // 
-            this.chkQueryGridColCustomize.Location = new System.Drawing.Point(412, 145);
+            this.chkQueryGridColCustomize.Location = new System.Drawing.Point(564, 146);
             this.chkQueryGridColCustomize.Name = "chkQueryGridColCustomize";
             this.chkQueryGridColCustomize.Size = new System.Drawing.Size(19, 13);
             this.chkQueryGridColCustomize.TabIndex = 178;
@@ -200,7 +236,7 @@
             // 
             // kryptonLabel5
             // 
-            this.kryptonLabel5.Location = new System.Drawing.Point(301, 117);
+            this.kryptonLabel5.Location = new System.Drawing.Point(444, 118);
             this.kryptonLabel5.Name = "kryptonLabel5";
             this.kryptonLabel5.Size = new System.Drawing.Size(114, 20);
             this.kryptonLabel5.TabIndex = 175;
@@ -208,7 +244,7 @@
             // 
             // chkQueryPageLayoutCustomize
             // 
-            this.chkQueryPageLayoutCustomize.Location = new System.Drawing.Point(412, 121);
+            this.chkQueryPageLayoutCustomize.Location = new System.Drawing.Point(564, 122);
             this.chkQueryPageLayoutCustomize.Name = "chkQueryPageLayoutCustomize";
             this.chkQueryPageLayoutCustomize.Size = new System.Drawing.Size(19, 13);
             this.chkQueryPageLayoutCustomize.TabIndex = 176;
@@ -216,7 +252,7 @@
             // 
             // kryptonLabel2
             // 
-            this.kryptonLabel2.Location = new System.Drawing.Point(326, 94);
+            this.kryptonLabel2.Location = new System.Drawing.Point(470, 95);
             this.kryptonLabel2.Name = "kryptonLabel2";
             this.kryptonLabel2.Size = new System.Drawing.Size(88, 20);
             this.kryptonLabel2.TabIndex = 174;
@@ -224,7 +260,7 @@
             // 
             // chkUseBarCode
             // 
-            this.chkUseBarCode.Location = new System.Drawing.Point(412, 98);
+            this.chkUseBarCode.Location = new System.Drawing.Point(564, 99);
             this.chkUseBarCode.Name = "chkUseBarCode";
             this.chkUseBarCode.Size = new System.Drawing.Size(19, 13);
             this.chkUseBarCode.TabIndex = 173;
@@ -232,7 +268,7 @@
             // 
             // kryptonLabel1
             // 
-            this.kryptonLabel1.Location = new System.Drawing.Point(72, 94);
+            this.kryptonLabel1.Location = new System.Drawing.Point(70, 94);
             this.kryptonLabel1.Name = "kryptonLabel1";
             this.kryptonLabel1.Size = new System.Drawing.Size(114, 20);
             this.kryptonLabel1.TabIndex = 30;
@@ -242,7 +278,7 @@
             // 
             this.chkAutoAddZero.Checked = true;
             this.chkAutoAddZero.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.chkAutoAddZero.Location = new System.Drawing.Point(184, 98);
+            this.chkAutoAddZero.Location = new System.Drawing.Point(188, 98);
             this.chkAutoAddZero.Name = "chkAutoAddZero";
             this.chkAutoAddZero.Size = new System.Drawing.Size(19, 13);
             this.chkAutoAddZero.TabIndex = 31;
@@ -340,7 +376,7 @@
             // 
             this.chkCheckNegativeInventory.Checked = true;
             this.chkCheckNegativeInventory.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.chkCheckNegativeInventory.Location = new System.Drawing.Point(184, 122);
+            this.chkCheckNegativeInventory.Location = new System.Drawing.Point(188, 122);
             this.chkCheckNegativeInventory.Name = "chkCheckNegativeInventory";
             this.chkCheckNegativeInventory.Size = new System.Drawing.Size(19, 13);
             this.chkCheckNegativeInventory.TabIndex = 11;
@@ -348,7 +384,7 @@
             // 
             // lblShowDebugInfo
             // 
-            this.lblShowDebugInfo.Location = new System.Drawing.Point(318, 40);
+            this.lblShowDebugInfo.Location = new System.Drawing.Point(470, 41);
             this.lblShowDebugInfo.Name = "lblShowDebugInfo";
             this.lblShowDebugInfo.Size = new System.Drawing.Size(88, 20);
             this.lblShowDebugInfo.TabIndex = 12;
@@ -357,7 +393,7 @@
             // 
             // chkShowDebugInfo
             // 
-            this.chkShowDebugInfo.Location = new System.Drawing.Point(412, 42);
+            this.chkShowDebugInfo.Location = new System.Drawing.Point(564, 43);
             this.chkShowDebugInfo.Name = "chkShowDebugInfo";
             this.chkShowDebugInfo.Size = new System.Drawing.Size(19, 13);
             this.chkShowDebugInfo.TabIndex = 13;
@@ -366,7 +402,7 @@
             // 
             // lblSaleBizLimited
             // 
-            this.lblSaleBizLimited.Location = new System.Drawing.Point(72, 166);
+            this.lblSaleBizLimited.Location = new System.Drawing.Point(70, 166);
             this.lblSaleBizLimited.Name = "lblSaleBizLimited";
             this.lblSaleBizLimited.Size = new System.Drawing.Size(114, 20);
             this.lblSaleBizLimited.TabIndex = 14;
@@ -374,7 +410,7 @@
             // 
             // chkSaleBizLimited
             // 
-            this.chkSaleBizLimited.Location = new System.Drawing.Point(184, 168);
+            this.chkSaleBizLimited.Location = new System.Drawing.Point(188, 168);
             this.chkSaleBizLimited.Name = "chkSaleBizLimited";
             this.chkSaleBizLimited.Size = new System.Drawing.Size(19, 13);
             this.chkSaleBizLimited.TabIndex = 15;
@@ -382,7 +418,7 @@
             // 
             // lblDepartBizLimited
             // 
-            this.lblDepartBizLimited.Location = new System.Drawing.Point(97, 189);
+            this.lblDepartBizLimited.Location = new System.Drawing.Point(96, 189);
             this.lblDepartBizLimited.Name = "lblDepartBizLimited";
             this.lblDepartBizLimited.Size = new System.Drawing.Size(88, 20);
             this.lblDepartBizLimited.TabIndex = 16;
@@ -390,7 +426,7 @@
             // 
             // chkDepartBizLimited
             // 
-            this.chkDepartBizLimited.Location = new System.Drawing.Point(184, 192);
+            this.chkDepartBizLimited.Location = new System.Drawing.Point(188, 192);
             this.chkDepartBizLimited.Name = "chkDepartBizLimited";
             this.chkDepartBizLimited.Size = new System.Drawing.Size(19, 13);
             this.chkDepartBizLimited.TabIndex = 17;
@@ -398,7 +434,7 @@
             // 
             // lblPurchsaeBizLimited
             // 
-            this.lblPurchsaeBizLimited.Location = new System.Drawing.Point(301, 193);
+            this.lblPurchsaeBizLimited.Location = new System.Drawing.Point(444, 194);
             this.lblPurchsaeBizLimited.Name = "lblPurchsaeBizLimited";
             this.lblPurchsaeBizLimited.Size = new System.Drawing.Size(114, 20);
             this.lblPurchsaeBizLimited.TabIndex = 18;
@@ -406,33 +442,105 @@
             // 
             // chkPurchsaeBizLimited
             // 
-            this.chkPurchsaeBizLimited.Location = new System.Drawing.Point(412, 196);
+            this.chkPurchsaeBizLimited.Location = new System.Drawing.Point(564, 197);
             this.chkPurchsaeBizLimited.Name = "chkPurchsaeBizLimited";
             this.chkPurchsaeBizLimited.Size = new System.Drawing.Size(19, 13);
             this.chkPurchsaeBizLimited.TabIndex = 19;
             this.chkPurchsaeBizLimited.Values.Text = "";
             // 
-            // kryptonLabel9
+            // lblEnableVoucherModule
             // 
-            this.kryptonLabel9.Location = new System.Drawing.Point(96, 140);
-            this.kryptonLabel9.Name = "kryptonLabel9";
-            this.kryptonLabel9.Size = new System.Drawing.Size(88, 20);
-            this.kryptonLabel9.TabIndex = 187;
-            this.kryptonLabel9.Values.Text = "数据归属控制";
+            this.lblEnableVoucherModule.Location = new System.Drawing.Point(457, 270);
+            this.lblEnableVoucherModule.Name = "lblEnableVoucherModule";
+            this.lblEnableVoucherModule.Size = new System.Drawing.Size(88, 20);
+            this.lblEnableVoucherModule.TabIndex = 189;
+            this.lblEnableVoucherModule.Values.Text = "启用凭证模块";
             // 
-            // chkOwnershipControl
+            // chkEnableVoucherModule
             // 
-            this.chkOwnershipControl.Location = new System.Drawing.Point(184, 144);
-            this.chkOwnershipControl.Name = "chkOwnershipControl";
-            this.chkOwnershipControl.Size = new System.Drawing.Size(19, 13);
-            this.chkOwnershipControl.TabIndex = 188;
-            this.chkOwnershipControl.Values.Text = "";
+            this.chkEnableVoucherModule.Checked = true;
+            this.chkEnableVoucherModule.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.chkEnableVoucherModule.Location = new System.Drawing.Point(564, 272);
+            this.chkEnableVoucherModule.Name = "chkEnableVoucherModule";
+            this.chkEnableVoucherModule.Size = new System.Drawing.Size(19, 13);
+            this.chkEnableVoucherModule.TabIndex = 190;
+            this.chkEnableVoucherModule.Values.Text = "";
+            // 
+            // lblEnableContractModule
+            // 
+            this.lblEnableContractModule.Location = new System.Drawing.Point(457, 295);
+            this.lblEnableContractModule.Name = "lblEnableContractModule";
+            this.lblEnableContractModule.Size = new System.Drawing.Size(88, 20);
+            this.lblEnableContractModule.TabIndex = 191;
+            this.lblEnableContractModule.Values.Text = "启用合同模块";
+            // 
+            // chkEnableContractModule
+            // 
+            this.chkEnableContractModule.Checked = true;
+            this.chkEnableContractModule.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.chkEnableContractModule.Location = new System.Drawing.Point(564, 297);
+            this.chkEnableContractModule.Name = "chkEnableContractModule";
+            this.chkEnableContractModule.Size = new System.Drawing.Size(19, 13);
+            this.chkEnableContractModule.TabIndex = 192;
+            this.chkEnableContractModule.Values.Text = "";
+            // 
+            // lblEnableInvoiceModule
+            // 
+            this.lblEnableInvoiceModule.Location = new System.Drawing.Point(457, 320);
+            this.lblEnableInvoiceModule.Name = "lblEnableInvoiceModule";
+            this.lblEnableInvoiceModule.Size = new System.Drawing.Size(88, 20);
+            this.lblEnableInvoiceModule.TabIndex = 193;
+            this.lblEnableInvoiceModule.Values.Text = "启用发票模块";
+            // 
+            // chkEnableInvoiceModule
+            // 
+            this.chkEnableInvoiceModule.Location = new System.Drawing.Point(564, 322);
+            this.chkEnableInvoiceModule.Name = "chkEnableInvoiceModule";
+            this.chkEnableInvoiceModule.Size = new System.Drawing.Size(19, 13);
+            this.chkEnableInvoiceModule.TabIndex = 194;
+            this.chkEnableInvoiceModule.Values.Text = "";
+            // 
+            // lblEnableMultiCurrency
+            // 
+            this.lblEnableMultiCurrency.Location = new System.Drawing.Point(457, 345);
+            this.lblEnableMultiCurrency.Name = "lblEnableMultiCurrency";
+            this.lblEnableMultiCurrency.Size = new System.Drawing.Size(75, 20);
+            this.lblEnableMultiCurrency.TabIndex = 195;
+            this.lblEnableMultiCurrency.Values.Text = "启用多币种";
+            // 
+            // chkEnableMultiCurrency
+            // 
+            this.chkEnableMultiCurrency.Checked = true;
+            this.chkEnableMultiCurrency.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.chkEnableMultiCurrency.Location = new System.Drawing.Point(564, 347);
+            this.chkEnableMultiCurrency.Name = "chkEnableMultiCurrency";
+            this.chkEnableMultiCurrency.Size = new System.Drawing.Size(19, 13);
+            this.chkEnableMultiCurrency.TabIndex = 196;
+            this.chkEnableMultiCurrency.Values.Text = "";
+            // 
+            // lblEnableFinancialModule
+            // 
+            this.lblEnableFinancialModule.Location = new System.Drawing.Point(457, 370);
+            this.lblEnableFinancialModule.Name = "lblEnableFinancialModule";
+            this.lblEnableFinancialModule.Size = new System.Drawing.Size(88, 20);
+            this.lblEnableFinancialModule.TabIndex = 197;
+            this.lblEnableFinancialModule.Values.Text = "启用财务模块";
+            // 
+            // chkEnableFinancialModule
+            // 
+            this.chkEnableFinancialModule.Checked = true;
+            this.chkEnableFinancialModule.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.chkEnableFinancialModule.Location = new System.Drawing.Point(564, 372);
+            this.chkEnableFinancialModule.Name = "chkEnableFinancialModule";
+            this.chkEnableFinancialModule.Size = new System.Drawing.Size(19, 13);
+            this.chkEnableFinancialModule.TabIndex = 198;
+            this.chkEnableFinancialModule.Values.Text = "";
             // 
             // UCSystemConfigEdit
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(485, 442);
+            this.ClientSize = new System.Drawing.Size(721, 607);
             this.Controls.Add(this.kryptonPanel1);
             this.Name = "UCSystemConfigEdit";
             this.Text = "UCSystemConfigEdit";
@@ -487,5 +595,15 @@
         private Krypton.Toolkit.KryptonCheckBox chkIsDebug;
         private Krypton.Toolkit.KryptonLabel kryptonLabel9;
         private Krypton.Toolkit.KryptonCheckBox chkOwnershipControl;
+        private Krypton.Toolkit.KryptonLabel lblEnableVoucherModule;
+        private Krypton.Toolkit.KryptonCheckBox chkEnableVoucherModule;
+        private Krypton.Toolkit.KryptonLabel lblEnableContractModule;
+        private Krypton.Toolkit.KryptonCheckBox chkEnableContractModule;
+        private Krypton.Toolkit.KryptonLabel lblEnableInvoiceModule;
+        private Krypton.Toolkit.KryptonCheckBox chkEnableInvoiceModule;
+        private Krypton.Toolkit.KryptonLabel lblEnableMultiCurrency;
+        private Krypton.Toolkit.KryptonCheckBox chkEnableMultiCurrency;
+        private Krypton.Toolkit.KryptonLabel lblEnableFinancialModule;
+        private Krypton.Toolkit.KryptonCheckBox chkEnableFinancialModule;
     }
 }

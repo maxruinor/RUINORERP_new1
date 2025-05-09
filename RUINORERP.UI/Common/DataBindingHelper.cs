@@ -43,6 +43,7 @@ using static Google.Protobuf.Reflection.FeatureSet.Types;
 using System.Windows.Media.Animation;
 using Fireasy.Common.Extensions;
 using RUINORERP.UI.ChartFramework.Core;
+using Image = System.Drawing.Image;
 
 
 namespace RUINORERP.UI.Common
@@ -283,6 +284,7 @@ namespace RUINORERP.UI.Common
                                             else
                                             {
                                                 MessageBox.Show("没有绑定数据！");
+                                                return;
                                             }
                                             //绑定的值字段
                                             ValueField = binding.BindingMemberInfo.BindingField;
@@ -2043,7 +2045,7 @@ namespace RUINORERP.UI.Common
 
             var type = enumType;
             var aName = new System.Reflection.AssemblyName(Assembly.GetExecutingAssembly().GetName().Name);
-       
+
 
             TypeConfig typeConfig = new TypeConfig();
             typeConfig.FullName = aName.Name;
@@ -2070,7 +2072,7 @@ namespace RUINORERP.UI.Common
             List<object> list = new List<object>();
             //(enumType[])Enum.GetValues(typeof(enumType));
 
-    
+
 
             Array enumValues = Enum.GetValues(type);
             IEnumerator e = enumValues.GetEnumerator();
@@ -2380,14 +2382,14 @@ namespace RUINORERP.UI.Common
         /// <param name="expID"></param>
         /// <param name="expValue"></param>
         /// <param name="cmbBox"></param>
-        public static void InitCmb<T>(Expression<Func<T, long>> expID, Expression<Func<T, string>> expValue, ComboBox cmbBox, bool HasSelectItem) where T : class
+        public static void InitCmb<T>(Expression<Func<T, long>> expID, Expression<Func<T, string>> expValue, ComboBox cmbBox, bool HasSelectItem, List<T> bindDataSource = null) where T : class
         {
             MemberInfo minfo = expID.GetMemberInfo();
             string key = minfo.Name;
             MemberInfo minfoValue = expValue.GetMemberInfo();
             string value = minfoValue.Name;
             string tableName = expID.Parameters[0].Type.Name;
-            InitCmb<T>(key, value, tableName, cmbBox, HasSelectItem);
+            InitCmb<T>(key, value, tableName, cmbBox, HasSelectItem, bindDataSource);
         }
 
         /// <summary>
@@ -2397,87 +2399,109 @@ namespace RUINORERP.UI.Common
         /// <param name="expression"></param>
         /// <param name="expValue"></param>
         /// <param name="cmbBox"></param>
-        public static void InitCmb<T>(string key, string value, string tableName, ComboBox cmbBox, bool HasSelectItem) where T : class
+        public static void InitCmb<T>(string key, string value, string tableName, ComboBox cmbBox, bool HasSelectItem, List<T> bindDataSource = null) where T : class
         {
-
-            if (BizCacheHelper.Manager.NewTableList.ContainsKey(tableName))
+            if (bindDataSource != null)
             {
+                #region 指定数据源
+
                 BindingSource bs = new BindingSource();
                 List<T> tlist = new List<T>();
-                var cachelist = BizCacheHelper.Manager.CacheEntityList.Get(tableName);
-                if (cachelist == null)
+                tlist = bindDataSource;
+                if (HasSelectItem)
                 {
-                    Business.CommService.CommonController bdc = Startup.GetFromFac<Business.CommService.CommonController>();
-                    tlist = bdc.GetBindSource<T>(tableName);
-                    if (HasSelectItem)
-                    {
-                        InsertSelectItem<T>(key, value, tlist);
-                    }
-
-                    bs.DataSource = tlist;
+                    InsertSelectItem<T>(key, value, tlist);
                 }
-                else
-                {
-                    Type listType = cachelist.GetType();
-                    if (TypeHelper.IsGenericList(listType))
-                    {
-                        //tlist = cachelist as List<T>;
-                        //tlist = cachelist as List<object>;
-                        // Type elementType = listType.GetGenericArguments()[0];
-                        // 创建一个新的 List<object>
-                        List<object> convertedList = new List<object>();
-                        convertedList = cachelist as List<object>;
-                        if (convertedList != null)
-                        {
-                            // Type elementType = TypeHelper.GetFirstArgumentType(listType);
-                            Type elementType = null;
-                            if (BizCacheHelper.Manager.NewTableTypeList.TryGetValue(tableName, out elementType))
-                            {
-                                foreach (var item in convertedList)
-                                {
-                                    try
-                                    {
-                                        var convertedItem = Convert.ChangeType(item, elementType);
-                                        tlist.Add(convertedItem as T);
-                                    }
-                                    catch (InvalidCastException)
-                                    {
-                                        // 处理类型转换失败的情况
-                                    }
-                                }
-                                //var newInstance = Activator.CreateInstance(elementType);
-                                //// 这里需要根据具体情况实现属性值的复制 这个方法也可以。但是还要处理赋值，麻烦一些
-                                //tlist.Add(newInstance as T);
-
-                                #region  强类型 转换失败
-                                //var lastlist = ((IEnumerable<dynamic>)convertedList).Select(item => Activator.CreateInstance(elementType)).ToList();
-                                //tlist = lastlist as List<T>;
-                                #endregion
-                            }
-                        }
-
-
-                    }
-                    else if (TypeHelper.IsJArrayList(listType))
-                    {
-                        List<T> lastOKList = new List<T>();
-                        var objlist = TypeHelper.ConvertJArrayToList(typeof(T), cachelist as JArray);
-                        var lastlist = ((IEnumerable<dynamic>)objlist).ToList();
-                        foreach (var item in lastlist)
-                        {
-                            lastOKList.Add(item);
-                        }
-                        tlist = lastOKList;
-                    }
-
-                    if (HasSelectItem)
-                    {
-                        InsertSelectItem<T>(key, value, tlist);
-                    }
-                    bs.DataSource = tlist;
-                }
+                bs.DataSource = tlist;
                 InitCmb(bs, cmbBox, key, value, ComboBoxStyle.DropDownList, false, true);
+                #endregion
             }
+            else
+            {
+                #region 从缓存中获取数据源，否则查数据库
+                if (BizCacheHelper.Manager.NewTableList.ContainsKey(tableName))
+                {
+                    BindingSource bs = new BindingSource();
+                    List<T> tlist = new List<T>();
+                    var cachelist = BizCacheHelper.Manager.CacheEntityList.Get(tableName);
+                    if (cachelist == null)
+                    {
+                        Business.CommService.CommonController bdc = Startup.GetFromFac<Business.CommService.CommonController>();
+                        tlist = bdc.GetBindSource<T>(tableName);
+                        if (HasSelectItem)
+                        {
+                            InsertSelectItem<T>(key, value, tlist);
+                        }
+
+                        bs.DataSource = tlist;
+                    }
+                    else
+                    {
+                        Type listType = cachelist.GetType();
+                        if (TypeHelper.IsGenericList(listType))
+                        {
+                            //tlist = cachelist as List<T>;
+                            //tlist = cachelist as List<object>;
+                            // Type elementType = listType.GetGenericArguments()[0];
+                            // 创建一个新的 List<object>
+                            List<object> convertedList = new List<object>();
+                            convertedList = cachelist as List<object>;
+                            if (convertedList != null)
+                            {
+                                // Type elementType = TypeHelper.GetFirstArgumentType(listType);
+                                Type elementType = null;
+                                if (BizCacheHelper.Manager.NewTableTypeList.TryGetValue(tableName, out elementType))
+                                {
+                                    foreach (var item in convertedList)
+                                    {
+                                        try
+                                        {
+                                            var convertedItem = Convert.ChangeType(item, elementType);
+                                            tlist.Add(convertedItem as T);
+                                        }
+                                        catch (InvalidCastException)
+                                        {
+                                            // 处理类型转换失败的情况
+                                        }
+                                    }
+                                    //var newInstance = Activator.CreateInstance(elementType);
+                                    //// 这里需要根据具体情况实现属性值的复制 这个方法也可以。但是还要处理赋值，麻烦一些
+                                    //tlist.Add(newInstance as T);
+
+                                    #region  强类型 转换失败
+                                    //var lastlist = ((IEnumerable<dynamic>)convertedList).Select(item => Activator.CreateInstance(elementType)).ToList();
+                                    //tlist = lastlist as List<T>;
+                                    #endregion
+                                }
+                            }
+
+
+                        }
+                        else if (TypeHelper.IsJArrayList(listType))
+                        {
+                            List<T> lastOKList = new List<T>();
+                            var objlist = TypeHelper.ConvertJArrayToList(typeof(T), cachelist as JArray);
+                            var lastlist = ((IEnumerable<dynamic>)objlist).ToList();
+                            foreach (var item in lastlist)
+                            {
+                                lastOKList.Add(item);
+                            }
+                            tlist = lastOKList;
+                        }
+
+                        if (HasSelectItem)
+                        {
+                            InsertSelectItem<T>(key, value, tlist);
+                        }
+                        bs.DataSource = tlist;
+                    }
+                    InitCmb(bs, cmbBox, key, value, ComboBoxStyle.DropDownList, false, true);
+                }
+                #endregion
+
+
+            }
+
         }
 
 

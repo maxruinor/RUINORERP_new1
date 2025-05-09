@@ -133,8 +133,12 @@ namespace RUINORERP.Extensions
                     db.Aop.OnLogExecuted = (sql, pars) =>
                     {
                         //Console.WriteLine("执行成功：" + sql);//输出sql
-                        //Console.WriteLine(Common.DB.SqlProfiler.FormatParam(sql, pars));
-                        //logger.LogInformation(SqlProfiler.FormatParam(sql, pars as SugarParameter[]));
+                        if (AppContextData.IsDebug)
+                        {
+                            Console.WriteLine(Common.DB.SqlProfiler.FormatParam(sql, pars));
+                            logger.LogInformation(SqlProfiler.FormatParam(sql, pars as SugarParameter[]));
+                        }
+
                     };
 
                 });

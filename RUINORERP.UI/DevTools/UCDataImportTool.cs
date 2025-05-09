@@ -238,7 +238,7 @@ namespace RUINORERP.UI.DevTools
                 }
 
             }
-
+            LoadfileToCmbbox();
         }
 
         private void dataGridView2_CellPainting(object sender, DataGridViewCellPaintingEventArgs e)
@@ -338,8 +338,8 @@ namespace RUINORERP.UI.DevTools
 new { table_catalog = "erpnew" });
             //DataSet ds = new DataSet();
             //ds.Tables.Add(dt);
-            HLH.Lib.Helper.DropDownListHelper.InitDropList(dt.DataSet, cmb导入所属数据表, "table_name", "table_name", ComboBoxStyle.DropDown,true, true);
-          
+            HLH.Lib.Helper.DropDownListHelper.InitDropList(dt.DataSet, cmb导入所属数据表, "table_name", "table_name", ComboBoxStyle.DropDown, true, true);
+
             dataGridView1.AllowUserToDeleteRows = true;
             dataGridView1.AllowUserToAddRows = true;
             dataGridView1.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
@@ -405,8 +405,7 @@ new { table_catalog = "erpnew" });
             string tableName = cmb导入所属数据表.SelectedValue.ToString();
             BindingSortCollection<object> sortList = new BindingSortCollection<object>();
             Type t = GetTypeByTableName(tableName);
-            //创建一个实体对象
-            object si = Activator.CreateInstance(t);
+
             DataTable dt = new DataTable();
             dt = dataGridView1.DataSource as DataTable;
             if (dt == null)
@@ -431,13 +430,18 @@ new { table_catalog = "erpnew" });
                 }
             }
 
-            if (KeyColName.Trim().Length == 0 && KeyColNameExcel.Trim().Length == 0)
+            if (KeyColName.Trim().Length == 0 || KeyColNameExcel.Trim().Length == 0)
             {
                 if (MessageBox.Show("匹配结果中没有设置逻辑主键！，则只能一次性增加无法更新,是否继续", "提示", MessageBoxButtons.YesNo) == DialogResult.No)
                 {
                     return;
                 }
             }
+            if (string.IsNullOrEmpty(KeyColName))
+            {
+                KeyColName = UIHelper.GetPrimaryKeyColName(t);
+            }
+
 
             var EntityFieldNameList = UIHelper.GetALLFieldInfoList(t);
             var dtDicUpdateList = new List<Dictionary<string, object>>();
@@ -446,139 +450,151 @@ new { table_catalog = "erpnew" });
             //真正遍历数据行
             foreach (DataRow dr in dt.Rows)
             {
-                if (dr[KeyColNameExcel].ToString().Trim().Length > 0)
+                //创建一个实体对象
+                object si = Activator.CreateInstance(t);
+                if (dt.Columns.Contains(KeyColNameExcel))
                 {
-                    #region 处理导入的数据
-                    try
+                    if (dr[KeyColNameExcel].ToString().Trim().Length > 0)
                     {
-                        var dcrow = new Dictionary<string, object>();
-                   
-                        //这个列表需要检测  更新的是匹配结果的列的集合了。
-                        foreach (SuperKeyValuePair dc in dclist)
-                        {
-                            ///检测这个列是否存在。
-                            //获取属性信息,并判断是否存在
-                            PropertyInfo property = t.GetProperty(dc.Key.ToString());
-                            if (property != null)
-                            {
-                                if (dc.Key.superDataTypeName == "datetime")
-                                {
-                                    string tempDateTime = dr[dc.Value.ToString()].ToString();
-                                    /*
-                                     查了一下，原因是这个数据的格式是日期。Excel日期格式的数据实际上是一个int，从1900年1月1日开始算起。1900/1/1是1，1900/1/2是2，以此类推。
-                                    C#里要将这个整型数据转换成DateTime类型的数据也很方便。有一个方法叫FromOADate。
-                                    举例：从44413转成2021/08/05的代码：
-                                   https://blog.csdn.net/Allison_Q/article/details/120194579
-                                     */
-                                    if (tempDateTime.Length == 5)
-                                    {
-                                        string dateStr = DateTime.FromOADate(Convert.ToInt32(tempDateTime)).ToString("yyyy/MM/dd");
-                                        DateTime dte = System.DateTime.MinValue;
-                                        if (DateTime.TryParse(dateStr, out dte))
-                                        {
-                                            dr[dc.Value.ToString()] = dte.ToString();
-                                        }
-                                        //指定转换格式 
-                                        //System.IFormatProvider format = new System.Globalization.CultureInfo("zh-CN", true);
-                                        //string strDateFormat = "yyyyMMdd";
-                                        //DateTime date = DateTime.ParseExact(dateStr, strDateFormat, format, System.Globalization.DateTimeStyles.AllowWhiteSpaces);
-                                        //dr[dc.Value.ToString()] = date.ToString();
-                                    }
-                                    else
-                                    {
-                                        if (tempDateTime.Length == 8)
-                                        {
-                                            string dateStr = tempDateTime;
-                                            //指定转换格式 
-                                            System.IFormatProvider format = new System.Globalization.CultureInfo("zh-CN", true);
-                                            string strDateFormat = "yyyyMMdd";
-                                            DateTime date = DateTime.ParseExact(dateStr, strDateFormat, format, System.Globalization.DateTimeStyles.AllowWhiteSpaces);
-                                            dr[dc.Value.ToString()] = date.ToString();
-                                        }
-                                        else
-                                        {
-                                            DateTime dte = System.DateTime.MinValue;
-                                            if (DateTime.TryParse(tempDateTime, out dte))
-                                            {
-                                                dr[dc.Value.ToString()] = dte.ToString();
-                                            }
-                                        }
-                                    }
 
-                                }
+                    }
+                }
+                else
+                {
+                    //没有指定主键时。用就雪花ID直接生成主键
+                }
 
-                                if (dr[dc.Value.ToString()].ToString().Trim().Length > 0)
-                                {
-                                    //转换合适类型
-                                    var col = EntityFieldNameList.Where(c => c.SugarCol != null && c.SugarCol.ColumnName != null && c.FieldName == dc.Key.ToString()).FirstOrDefault();
-                                    TypeConverter converter = new TypeConverter();
+                #region 处理导入的数据
+                try
+                {
+                    var dcrow = new Dictionary<string, object>();
 
-                                    Type newcolType; ;
-                                    // We need to check whether the property is NULLABLE
-                                    if (col.ColDataType.IsGenericType && col.ColDataType.GetGenericTypeDefinition() == typeof(Nullable<>))
-                                    {
-                                        // If it is NULLABLE, then get the underlying type. eg if "Nullable<int>" then this will return just "int"
-                                        newcolType = col.ColDataType.GetGenericArguments()[0];
-                                    }
-                                    else
-                                    {
-                                        newcolType = col.ColDataType;
-                                    }
-                                    //var tarobj = converter.ConvertTo(dr[dc.Value.ToString()], newcolType);
-                                    var tarobj = dr[dc.Value.ToString()].ToString().Convert(newcolType);
-                                    RUINORERP.Common.Helper.ReflectionHelper.SetPropertyValue(si, dc.Key.ToString(), tarobj);
-                                    //ReflectionHelper.SetPropertyValue(si, dc.Key.ToString(), tarobj);
-                                }
-                            }
-                            else
-                            {
-                                MessageBox.Show(string.Format("导入列名:{0}不存在于实体{1}中。", dc.Key.ToString(), t.Name));
-                                return;
-                            }
-                        }
+                    //这个列表需要检测  更新的是匹配结果的列的集合了。
+                    foreach (SuperKeyValuePair dc in dclist)
+                    {
                         ///检测这个列是否存在。
                         //获取属性信息,并判断是否存在
-                        PropertyInfo property导入时间 = t.GetProperty("导入时间");
-                        if (property导入时间 != null)
+                        PropertyInfo property = t.GetProperty(dc.Key.ToString());
+                        if (property != null)
                         {
-                            ReflectionHelper.SetPropertyValue(si, "导入时间", System.DateTime.Now);
-                        }
-                        foreach (Model.Base.BaseDtoField baseDtoField in EntityFieldNameList.Where(c => c.SugarCol != null && c.SugarCol.ColumnName != null).ToList())
-                        {
-                            if (baseDtoField.SugarCol.IsPrimaryKey)
+                            if (dc.Key.superDataTypeName == "datetime")
                             {
-                                continue;
-                            }
-                            if (baseDtoField.IsFKRelationAttribute)
-                            {
-                                object fkcolValue = ReflectionHelper.GetPropertyValue(si, baseDtoField.SugarCol.ColumnName);
-                                if (fkcolValue != null)
+                                string tempDateTime = dr[dc.Value.ToString()].ToString();
+                                /*
+                                 查了一下，原因是这个数据的格式是日期。Excel日期格式的数据实际上是一个int，从1900年1月1日开始算起。1900/1/1是1，1900/1/2是2，以此类推。
+                                C#里要将这个整型数据转换成DateTime类型的数据也很方便。有一个方法叫FromOADate。
+                                举例：从44413转成2021/08/05的代码：
+                               https://blog.csdn.net/Allison_Q/article/details/120194579
+                                 */
+                                if (tempDateTime.Length == 5)
                                 {
-                                    dcrow.Add(baseDtoField.SugarCol.ColumnName, fkcolValue);
+                                    string dateStr = DateTime.FromOADate(Convert.ToInt32(tempDateTime)).ToString("yyyy/MM/dd");
+                                    DateTime dte = System.DateTime.MinValue;
+                                    if (DateTime.TryParse(dateStr, out dte))
+                                    {
+                                        dr[dc.Value.ToString()] = dte.ToString();
+                                    }
+                                    //指定转换格式 
+                                    //System.IFormatProvider format = new System.Globalization.CultureInfo("zh-CN", true);
+                                    //string strDateFormat = "yyyyMMdd";
+                                    //DateTime date = DateTime.ParseExact(dateStr, strDateFormat, format, System.Globalization.DateTimeStyles.AllowWhiteSpaces);
+                                    //dr[dc.Value.ToString()] = date.ToString();
                                 }
                                 else
                                 {
-                                    dcrow.Add(baseDtoField.SugarCol.ColumnName, null);
+                                    if (tempDateTime.Length == 8)
+                                    {
+                                        string dateStr = tempDateTime;
+                                        //指定转换格式 
+                                        System.IFormatProvider format = new System.Globalization.CultureInfo("zh-CN", true);
+                                        string strDateFormat = "yyyyMMdd";
+                                        DateTime date = DateTime.ParseExact(dateStr, strDateFormat, format, System.Globalization.DateTimeStyles.AllowWhiteSpaces);
+                                        dr[dc.Value.ToString()] = date.ToString();
+                                    }
+                                    else
+                                    {
+                                        DateTime dte = System.DateTime.MinValue;
+                                        if (DateTime.TryParse(tempDateTime, out dte))
+                                        {
+                                            dr[dc.Value.ToString()] = dte.ToString();
+                                        }
+                                    }
                                 }
-                                continue;
+
                             }
-                            //跳过图片类型的列
-                            if (baseDtoField.SugarCol.ColumnDataType == "image")
+
+                            if (dr[dc.Value.ToString()].ToString().Trim().Length > 0)
                             {
-                                continue;
+                                //转换合适类型
+                                var col = EntityFieldNameList.Where(c => c.SugarCol != null && c.SugarCol.ColumnName != null && c.FieldName == dc.Key.ToString()).FirstOrDefault();
+                                TypeConverter converter = new TypeConverter();
+
+                                Type newcolType;
+                                // We need to check whether the property is NULLABLE
+                                if (col.ColDataType.IsGenericType && col.ColDataType.GetGenericTypeDefinition() == typeof(Nullable<>))
+                                {
+                                    // If it is NULLABLE, then get the underlying type. eg if "Nullable<int>" then this will return just "int"
+                                    newcolType = col.ColDataType.GetGenericArguments()[0];
+                                }
+                                else
+                                {
+                                    newcolType = col.ColDataType;
+                                }
+                                //var tarobj = converter.ConvertTo(dr[dc.Value.ToString()], newcolType);
+                                var tarobj = dr[dc.Value.ToString()].ToString().Convert(newcolType);
+                                RUINORERP.Common.Helper.ReflectionHelper.SetPropertyValue(si, dc.Key.ToString(), tarobj);
+                                //ReflectionHelper.SetPropertyValue(si, dc.Key.ToString(), tarobj);
                             }
-                            object dccolValue = ReflectionHelper.GetPropertyValue(si, baseDtoField.SugarCol.ColumnName).ToString();
-                            dcrow.Add(baseDtoField.SugarCol.ColumnName, dccolValue);
                         }
-                        sortList.Add(si);
+                        else
+                        {
+                            MessageBox.Show(string.Format("导入列名:{0}不存在于实体{1}中。", dc.Key.ToString(), t.Name));
+                            return;
+                        }
                     }
-                    catch (Exception ex)
+                    ///检测这个列是否存在。
+                    //获取属性信息,并判断是否存在
+                    PropertyInfo property导入时间 = t.GetProperty("导入时间");
+                    if (property导入时间 != null)
                     {
-                        MessageBox.Show(ex.Message + ex.StackTrace);
-                        break;
+                        ReflectionHelper.SetPropertyValue(si, "导入时间", System.DateTime.Now);
                     }
-                    #endregion
+                    foreach (Model.Base.BaseDtoField baseDtoField in EntityFieldNameList.Where(c => c.SugarCol != null && c.SugarCol.ColumnName != null).ToList())
+                    {
+                        if (baseDtoField.SugarCol.IsPrimaryKey)
+                        {
+                            continue;
+                        }
+                        if (baseDtoField.IsFKRelationAttribute)
+                        {
+                            object fkcolValue = ReflectionHelper.GetPropertyValue(si, baseDtoField.SugarCol.ColumnName);
+                            if (fkcolValue != null)
+                            {
+                                dcrow.Add(baseDtoField.SugarCol.ColumnName, fkcolValue);
+                            }
+                            else
+                            {
+                                dcrow.Add(baseDtoField.SugarCol.ColumnName, null);
+                            }
+                            continue;
+                        }
+                        //跳过图片类型的列
+                        if (baseDtoField.SugarCol.ColumnDataType == "image")
+                        {
+                            continue;
+                        }
+                        object dccolValue = ReflectionHelper.GetPropertyValue(si, baseDtoField.SugarCol.ColumnName).ToString();
+                        dcrow.Add(baseDtoField.SugarCol.ColumnName, dccolValue);
+                    }
+                    sortList.Add(si);
                 }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(ex.Message + ex.StackTrace);
+                    break;
+                }
+                #endregion
+
             }
 
             #endregion
@@ -607,7 +623,13 @@ new { table_catalog = "erpnew" });
                 ConditionalType = ConditionalType.In,
                 FieldValue = string.Join(",", logicPKValueList)
             });
-            object queryList = MainForm.Instance.AppContext.Db.Queryable(tableName, "tn").Where(conModels).ToDataTable();
+
+            var query = MainForm.Instance.AppContext.Db.Queryable(tableName, "tn");
+            if (logicPKValueList.Count > 0)
+            {
+                query.Where(conModels);
+            }
+            object queryList = query.ToDataTable();
             List<DataRow> drs = new List<DataRow>();
 
             //标记一下Excel数据源 查出来的 背景色区别一下 同时真正主键的值 显示的UI
@@ -697,7 +719,7 @@ new { table_catalog = "erpnew" });
         }
 
         int SaveRowCounter = 0;
-        private BindingSortCollection<object> UpdateDataToDBForSave(List<SuperKeyValuePair> dclist)
+        private async Task<BindingSortCollection<object>> UpdateDataToDBForSave(List<SuperKeyValuePair> dclist)
         {
 
             string tableName = cmb导入所属数据表.SelectedValue.ToString();
@@ -709,18 +731,37 @@ new { table_catalog = "erpnew" });
             var rslist = Activator.CreateInstance(specificListType);
             BindingSortCollection<object> sortList = new BindingSortCollection<object>();
             rslist = bindingSource结果.DataSource;
-            var lastlist = ((IEnumerable<dynamic>)rslist).ToList();
-            if (lastlist != null)
-            {
-
-            }
-
-
 
             var EntityFieldNameList = UIHelper.GetALLFieldInfoList(t);
             var dtDicUpdateList = new List<Dictionary<string, object>>();
             var dtDicAddList = new List<Dictionary<string, object>>();
             string pkColName = EntityFieldNameList.FirstOrDefault(b => b.SugarCol.IsPrimaryKey == true).SugarCol.ColumnName;
+
+
+
+            var lastlist = ((IEnumerable<dynamic>)rslist).ToList();
+            if (lastlist != null)
+            {
+                foreach (var item in lastlist)
+                {
+                    long pkvalue = long.Parse(ReflectionHelper.GetPropertyValue(item, pkColName).ToString());
+                    //===
+                    //如果只是看结果 就显示0，如果是直接保存新增 就给ID值
+                    if (pkvalue == 0)
+                    {
+                        long sid = RUINORERP.Common.SnowflakeIdHelper.IdHelper.GetLongId();
+                        RUINORERP.Common.Helper.ReflectionHelper.SetPropertyValue(item, pkColName, sid);
+                        await MainForm.Instance.AppContext.Db.InsertableByObject(item).ExecuteCommandAsync();
+                    }
+                    else
+                    {
+                        await MainForm.Instance.AppContext.Db.UpdateableByObject(item).ExecuteCommandAsync();
+                    }
+                    sortList.Add(item);
+                }
+                //await MainForm.Instance.AppContext.Db.Insertable(lastlist).ExecuteReturnSnowflakeIdListAsync();
+            }
+            return sortList;
 
             //真正遍历数据行
             foreach (var row in lastlist)

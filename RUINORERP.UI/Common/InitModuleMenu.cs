@@ -38,6 +38,9 @@ namespace RUINORERP.UI.Common
             _appContext = apeContext;
         }
 
+        //提取到UI的类相关信息
+        List<MenuAttrAssemblyInfo> MenuAssemblylist { get; set; } = new List<MenuAttrAssemblyInfo>();
+
         /// <summary>
         /// 为了查找明细表名类型，保存所有类型名称方便查找
         /// </summary>
@@ -51,14 +54,15 @@ namespace RUINORERP.UI.Common
         /// </summary>
         public async void InitModuleAndMenu()
         {
+            MenuAssemblylist = UIHelper.RegisterForm();
+
             //这里先提取要找到实体的类型，执行一次
             Assembly dalAssemble = System.Reflection.Assembly.LoadFrom("RUINORERP.Model.dll");
             ModelTypes = dalAssemble.GetExportedTypes();
 
             typeNames = ModelTypes.Select(m => m.Name).ToList();
+               
 
-            //提取到UI的类相关信息
-            List<MenuAttrAssemblyInfo> MenuAssemblylist = UIHelper.RegisterForm();
 
             tb_ModuleDefinitionController<tb_ModuleDefinition> mdctr = _appContext.GetRequiredService<tb_ModuleDefinitionController<tb_ModuleDefinition>>();
             tb_MenuInfoController<tb_MenuInfo> mc = _appContext.GetRequiredService<tb_MenuInfoController<tb_MenuInfo>>();
@@ -349,7 +353,11 @@ namespace RUINORERP.UI.Common
         }
 
 
-
+        /// <summary>
+        /// 初始化按钮 包含工具栏和右键菜单按钮
+        /// </summary>
+        /// <param name="info"></param>
+        /// <param name="menuInfo"></param>
         public async void InitToolStripItem(MenuAttrAssemblyInfo info, tb_MenuInfo menuInfo)
         {
             Control c = Startup.ServiceProvider.GetService(info.ClassType) as Control;
@@ -361,9 +369,10 @@ namespace RUINORERP.UI.Common
                 menuInfo.tb_ButtonInfos = new List<tb_ButtonInfo>();
             }
 
+            //保存按钮信息，后面批量保存到数据库再添加了对应菜单的按钮信息集合中
 
+            List<tb_ButtonInfo> NewButtonInfos = new List<tb_ButtonInfo>();
 
-            List<tb_ButtonInfo> tb_ButtonInfos = new List<tb_ButtonInfo>();
             foreach (var item in btns)
             {
                 if (item.GetType().Name == "ToolStrip")
@@ -389,7 +398,7 @@ namespace RUINORERP.UI.Common
                                 if (ExistBtnInfo == null)
                                 {
                                     //tnController.AddReEntity(btnInfo);
-                                    tb_ButtonInfos.Add(btnInfo);
+                                    NewButtonInfos.Add(btnInfo);
                                 }
                                 //else
                                 //{
@@ -415,7 +424,7 @@ namespace RUINORERP.UI.Common
                                 tb_ButtonInfo ExistBtnInfo = menuInfo.tb_ButtonInfos.FirstOrDefault(it => it.ClassPath == info.ClassPath && it.BtnText == btnSplit.Text && it.MenuID == menuInfo.MenuID);
                                 if (ExistBtnInfo == null)
                                 {
-                                    tb_ButtonInfos.Add(btnInfo);
+                                    NewButtonInfos.Add(btnInfo);
                                 }
                                 foreach (ToolStripItem tsi in btnSplit.DropDownItems)
                                 {
@@ -431,7 +440,7 @@ namespace RUINORERP.UI.Common
                                     tb_ButtonInfo ExistBtnInfoSub = menuInfo.tb_ButtonInfos.FirstOrDefault(it => it.ClassPath == info.ClassPath && it.BtnText == btnInfoSub.BtnText && it.MenuID == menuInfo.MenuID);
                                     if (ExistBtnInfoSub == null)
                                     {
-                                        tb_ButtonInfos.Add(btnInfoSub);
+                                        NewButtonInfos.Add(btnInfoSub);
                                     }
                                 }
                             }
@@ -453,7 +462,7 @@ namespace RUINORERP.UI.Common
                                 if (ExistBtnInfoDrop == null)
                                 {
                                     //tnController.AddReEntity(btnInfo);
-                                    tb_ButtonInfos.Add(btnInfoDrop);
+                                    NewButtonInfos.Add(btnInfoDrop);
                                 }
 
                                 foreach (ToolStripItem tsi in btnddb.DropDownItems)
@@ -471,7 +480,7 @@ namespace RUINORERP.UI.Common
                                     if (ExistBtnInfo == null)
                                     {
                                         //tnController.AddReEntity(btnInfo);
-                                        tb_ButtonInfos.Add(btnInfo);
+                                        NewButtonInfos.Add(btnInfo);
                                     }
                                 }
                             }
@@ -501,7 +510,7 @@ namespace RUINORERP.UI.Common
                         tb_ButtonInfo ExistBtnInfoSub = menuInfo.tb_ButtonInfos.FirstOrDefault(it => it.ClassPath == info.ClassPath && it.BtnText == btnInfoSub.BtnText && it.MenuID == menuInfo.MenuID);
                         if (ExistBtnInfoSub == null)
                         {
-                            tb_ButtonInfos.Add(btnInfoSub);
+                            NewButtonInfos.Add(btnInfoSub);
                         }
                     }
                 }
@@ -530,7 +539,7 @@ namespace RUINORERP.UI.Common
                         && it.BtnText == btnInfoSub.BtnText && it.MenuID == menuInfo.MenuID);
                         if (ExistBtnInfoSub == null)
                         {
-                            tb_ButtonInfos.Add(btnInfoSub);
+                            NewButtonInfos.Add(btnInfoSub);
                         }
                     }
                 }
@@ -548,7 +557,7 @@ namespace RUINORERP.UI.Common
                         baseQuery.AddIncludedMenuList();
                         List<MenuItemEnums> stripItems = baseQuery.IncludedMenuList;
                         List<string> excludemenuTextList = stripItems.Select(it => it.ToString()).ToList();
-                        tb_ButtonInfos = tb_ButtonInfos.Where(it => excludemenuTextList.Contains(it.BtnText)).ToList();
+                        NewButtonInfos = NewButtonInfos.Where(it => excludemenuTextList.Contains(it.BtnText)).ToList();
 
                     }
                     else
@@ -558,10 +567,10 @@ namespace RUINORERP.UI.Common
                         List<MenuItemEnums> stripItems = baseQuery.ExcludeMenuList;
                         //意思是stripItems这个公共按钮是和枚举命名是对应的。但是 特殊窗体中 添加了命名不一样的菜单
                         List<string> excludemenuTextList = stripItems.Select(it => it.ToString()).ToList();
-                        tb_ButtonInfos = tb_ButtonInfos.Where(it => !excludemenuTextList.Contains(it.BtnText)).ToList();
+                        NewButtonInfos = NewButtonInfos.Where(it => !excludemenuTextList.Contains(it.BtnText)).ToList();
                         //其它的排除
                         List<string> MenuTextItems = baseQuery.ExcludeMenuTextList;
-                        tb_ButtonInfos = tb_ButtonInfos.Where(it => !MenuTextItems.Contains(it.BtnText)).ToList();
+                        NewButtonInfos = NewButtonInfos.Where(it => !MenuTextItems.Contains(it.BtnText)).ToList();
                     }
                 }
             }
@@ -577,7 +586,7 @@ namespace RUINORERP.UI.Common
                         baseBillEdit.AddIncludedMenuList();
                         List<MenuItemEnums> stripItems = baseBillEdit.IncludedMenuList;
                         List<string> excludemenuTextList = stripItems.Select(it => it.ToString()).ToList();
-                        tb_ButtonInfos = tb_ButtonInfos.Where(it => excludemenuTextList.Contains(it.BtnText)).ToList();
+                        NewButtonInfos = NewButtonInfos.Where(it => excludemenuTextList.Contains(it.BtnText)).ToList();
 
                     }
                     else
@@ -586,24 +595,29 @@ namespace RUINORERP.UI.Common
                         //其它的排除
                         List<MenuItemEnums> stripItems = baseBillEdit.ExcludeMenuList;
                         List<string> excludemenuTextList = stripItems.Select(it => it.ToString()).ToList();
-                        tb_ButtonInfos = tb_ButtonInfos.Where(it => !excludemenuTextList.Contains(it.BtnText)).ToList();
+                        NewButtonInfos = NewButtonInfos.Where(it => !excludemenuTextList.Contains(it.BtnText)).ToList();
 
                         //其它的排除
                         List<string> MenuTextItems = baseBillEdit.ExcludeMenuTextList;
-                        tb_ButtonInfos = tb_ButtonInfos.Where(it => !MenuTextItems.Contains(it.BtnText)).ToList();
+                        NewButtonInfos = NewButtonInfos.Where(it => !MenuTextItems.Contains(it.BtnText)).ToList();
                     }
                 }
             }
 
-            if (tb_ButtonInfos.Count > 0)
+            if (NewButtonInfos.Count > 0)
             {
-                List<long> idsbtn = await _appContext.Db.CopyNew().Insertable<tb_ButtonInfo>(tb_ButtonInfos).ExecuteReturnSnowflakeIdListAsync();
-                if (idsbtn.Count == tb_ButtonInfos.Count)
+                List<long> idsbtn = await _appContext.Db.CopyNew().Insertable<tb_ButtonInfo>(NewButtonInfos).ExecuteReturnSnowflakeIdListAsync();
+                if (idsbtn.Count > 0)
                 {
-                    //添加后才不会重复添加
-                    menuInfo.tb_ButtonInfos.AddRange(tb_ButtonInfos);
+                    //不会重复添加
+                    for (int i = 0; i < NewButtonInfos.Count; i++)
+                    {
+                        if (!menuInfo.tb_ButtonInfos.Any(c => c.BtnText == NewButtonInfos[i].BtnText))
+                        {
+                            menuInfo.tb_ButtonInfos.Add(NewButtonInfos[i]);
+                        }
+                    }
                 }
-
             }
 
         }
@@ -764,10 +778,19 @@ namespace RUINORERP.UI.Common
                     if (tb_FieldInfos.Count > 0)
                     {
                         List<long> idsbtn = await _appContext.Db.CopyNew().Insertable<tb_FieldInfo>(tb_FieldInfos).ExecuteReturnSnowflakeIdListAsync();
-                        if (idsbtn.Count == tb_FieldInfos.Count)
+                        if (idsbtn.Count > 0)
                         {
                             //添加后才不会重复添加
                             menuInfo.tb_FieldInfos.AddRange(tb_FieldInfos);
+
+                            //不会重复添加
+                            for (int i = 0; i < tb_FieldInfos.Count; i++)
+                            {
+                                if (!menuInfo.tb_FieldInfos.Any(c => c.FieldName == tb_FieldInfos[i].FieldName && c.ClassPath == tb_FieldInfos[i].ClassPath))
+                                {
+                                    menuInfo.tb_FieldInfos.Add(tb_FieldInfos[i]);
+                                }
+                            }
                         }
                     }
 

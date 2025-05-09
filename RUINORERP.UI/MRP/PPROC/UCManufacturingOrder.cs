@@ -336,9 +336,8 @@ namespace RUINORERP.UI.MRP.MP
             QueryFilter queryFilterCOut = baseProcessorOut.GetQueryFilter();
             queryFilterCOut.FilterLimitExpressions.Add(lambdaOut);
             DataBindingHelper.BindData4Cmb<tb_CustomerVendor, tb_ManufacturingOrder>(entity, k => k.CustomerVendor_ID, v => v.CVName, k => k.CustomerVendor_ID_Out.Value, cmbCustomerVendor_ID_Out, true, queryFilterCOut.GetFilterExpression<tb_CustomerVendor>());
-            DataBindingHelper.InitFilterForControlByExp<tb_CustomerVendor>(entity, cmbCustomerVendor_ID_Out, c => c.CVName, queryFilterCOut);
-
-
+            //如果要查询功能。可能要优化一个方法 像上面绑定一下能指定不同的字段 如果不注释就会绑定时出错。赋值不到 CustomerVendor_ID_Out  TODO要优化一下。暂时只用下拉
+            //DataBindingHelper.InitFilterForControlByExp<tb_CustomerVendor>(entity, cmbCustomerVendor_ID_Out, c => c.CVName, queryFilterCOut);
 
 
             if (entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改)

@@ -238,7 +238,7 @@ namespace RUINORERP.UI.PSI.SAL
             DataBindingHelper.BindData4DataTime<tb_SaleOrder>(entity, t => t.SaleDate, dtpSaleDate, false);
             DataBindingHelper.BindData4TextBox<tb_SaleOrder>(entity, t => t.ShippingAddress, txtShippingAddress, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_SaleOrder>(entity, t => t.ShippingWay, txtshippingWay, BindDataType4TextBox.Text, false);
-            DataBindingHelper.BindData4TextBox<tb_SaleOrder>(entity, t => t.TrackNo, txtTrackNo, BindDataType4TextBox.Text, false);
+            
             DataBindingHelper.BindData4TextBox<tb_SaleOrder>(entity, t => t.ForeignTotalAmount.ToString(), txtForeignTotalAmount, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4TextBox<tb_SaleOrder>(entity, t => t.ForeignDeposit.ToString(), txtForeignDeposit, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4TextBox<tb_SaleOrder>(entity, t => t.Notes, txtNotes, BindDataType4TextBox.Text, false);

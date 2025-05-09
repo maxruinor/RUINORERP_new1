@@ -816,7 +816,7 @@ namespace RUINORERP.UI
                 str = string.Format("应用程序线程错误:{0}", e);
             }
             SystemOptimizerService.异常信息发送(error.Message, error);
-            MainForm.Instance.uclog.AddLog("线程", str);
+            //MainForm.Instance.uclog.AddLog("线程", str);
             MainForm.Instance.logger.LogError("出现应用程序未处理的异常,请更新到新版本，如果无法解决，请联系管理员！\r\n" + error.Message, error);
             MessageBox.Show(str, "系统错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
         }

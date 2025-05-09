@@ -74,7 +74,8 @@ namespace RUINORERP.UI.BaseForm
                         CurMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble && m.FormName ==this.Name && m.ClassPath == this.ToString()).FirstOrDefault();
                         if ((CurMenuInfo == null || CurMenuInfo.ClassPath.IsNullOrEmpty()) && !MainForm.Instance.AppContext.IsSuperUser)
                         {
-                            MessageBox.Show(this.ToString() + "A菜单不能为空，请联系管理员。");
+                            //MessageBox.Show(this.ToString() + " BaseChartReport菜单不能为空，请联系管理员。");
+                            MainForm.Instance.PrintInfoLog(this.ToString() + " BaseChartReport菜单不能为空，请联系管理员。");
                             return;
                         }
                     }

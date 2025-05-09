@@ -915,15 +915,10 @@ namespace RUINORERP.UI.MRP.MP
                 entity.ActionStatus = ActionStatus.新增;
                 entity.PrintStatus = 0;
 
-                if (saleorder.DeliveryDate.HasValue)
-                {
-                    entity.RequirementDate = saleorder.DeliveryDate.Value;
-                }
-                else
-                {
-                    entity.RequirementDate = System.DateTime.Now.AddDays(10);//这是不是一个平均时间。将来可以根据数据优化？   
-                    entity.PlanDate = System.DateTime.Now;
-                }
+
+                entity.RequirementDate = System.DateTime.Now.AddDays(10);//这是不是一个平均时间。将来可以根据数据优化？   
+                entity.PlanDate = System.DateTime.Now;
+
                 if (entity.SOrder_ID.HasValue && entity.SOrder_ID > 0)
                 {
                     entity.SOrder_ID = saleorder.SOrder_ID;

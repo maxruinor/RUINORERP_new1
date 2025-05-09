@@ -71,6 +71,7 @@ namespace RUINORERP.UI.Common
         /// 加载菜单明码模式 20160823优化
         /// </summary>
         /// <param name="ms"></param>
+        /// <param name="InitSupperUser">admin用户初始化时使用加载菜单</param>
         public List<tb_MenuInfo> AddMenu(System.Windows.Forms.MenuStrip ms)
         {
             //菜单列表
@@ -81,20 +82,20 @@ namespace RUINORERP.UI.Common
             ms.Items.CopyTo(fixedItems, 0);
             ms.Items.Clear();
             //两套逻辑 要区分处理
-            //if (appContext.IsSuperUser)
-            //{
-            //    foreach (var item in appContext.CurUserInfo.UserModList)
-            //    {
-            //        if (item.tb_MenuInfos != null)
-            //        {
-            //            var modmenus = item.tb_MenuInfos;
-            //            resourceList.AddRange(modmenus);
-            //            LoadMenu(ms.Items, modmenus, 0);
-            //        }
-            //    }
-            //}
-            //else
-            //{
+            if (appContext.IsSuperUser)// && appContext.User.Identity.Name == "admin"
+            {
+                foreach (var item in appContext.CurUserInfo.UserModList)
+                {
+                    if (item.tb_MenuInfos != null)
+                    {
+                        var modmenus = item.tb_MenuInfos;
+                        resourceList.AddRange(modmenus);
+                        LoadMenu(ms.Items, modmenus, 0);
+                    }
+                }
+            }
+            else
+            {
                 if (appContext.CurUserInfo == null)
                 {
                     return new();
@@ -118,7 +119,7 @@ namespace RUINORERP.UI.Common
                         resourceList.AddRange(tempList);
                     }
                 }
-            //}
+            }
 
             //最后加上窗口菜单
             ms.Items.AddRange(fixedItems);

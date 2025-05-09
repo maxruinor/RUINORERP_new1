@@ -90,7 +90,7 @@ namespace RUINORERP.Business
                 }
 
                 AuthorizeController authorizeController = _appContext.GetRequiredService<AuthorizeController>();
-                if(authorizeController.EnableFinancialModule())
+                if (authorizeController.EnableFinancialModule())
                 {
                     #region 生成预收款单
                     // 获取付款方式信息
@@ -142,8 +142,8 @@ namespace RUINORERP.Business
                     if (_appContext.BaseCurrency.Currency_ID != entity.Currency_ID)
                     {
                         exchangeRate = entity.ExchangeRate; // 获取销售订单的汇率
-                                                                  // 这里可以考虑获取最新的汇率，而不是直接使用销售订单的汇率
-                                                                  // exchangeRate = GetLatestExchangeRate(entity.Currency_ID.Value, _appContext.BaseCurrency.Currency_ID);
+                                                            // 这里可以考虑获取最新的汇率，而不是直接使用销售订单的汇率
+                                                            // exchangeRate = GetLatestExchangeRate(entity.Currency_ID.Value, _appContext.BaseCurrency.Currency_ID);
                     }
 
                     //销售订单审核时，非账期，即时收款时，生成预收款。 订金，部分收款
@@ -185,7 +185,7 @@ namespace RUINORERP.Business
                         if (entity.PayStatus == (int)PayStatus.全部付款)
                         {
                             //外币时 全部付款，则外币金额=本币金额/汇率 在UI中显示出来。
-                            if ( _appContext.BaseCurrency.Currency_ID != entity.Currency_ID)
+                            if (_appContext.BaseCurrency.Currency_ID != entity.Currency_ID)
                             {
                                 payable.ForeignPrepaidAmount = entity.ForeignTotalAmount;
                                 //payable.LocalPrepaidAmount = payable.ForeignPrepaidAmount * exchangeRate;
@@ -200,7 +200,7 @@ namespace RUINORERP.Business
                         if (entity.PayStatus == (int)PayStatus.部分付款)
                         {
                             //外币时
-                            if ( _appContext.BaseCurrency.Currency_ID != entity.Currency_ID)
+                            if (_appContext.BaseCurrency.Currency_ID != entity.Currency_ID)
                             {
                                 payable.ForeignPrepaidAmount = entity.ForeignDeposit;
                                 // payable.LocalPrepaidAmount = payable.ForeignPrepaidAmount * exchangeRate;
@@ -210,7 +210,7 @@ namespace RUINORERP.Business
                                 payable.LocalPrepaidAmount = entity.Deposit;
                             }
                         }
-                        
+
                         //payable.LocalPrepaidAmountInWords = payable.LocalPrepaidAmount.ToString("C");
                         payable.LocalPrepaidAmountInWords = payable.LocalPrepaidAmount.ToUpper();
                         payable.IsAvailable = true;//默认可用
@@ -1003,16 +1003,8 @@ namespace RUINORERP.Business
                 }
 
 
-                if (saleorder.DeliveryDate.HasValue)
-                {
-                    entity.OutDate = saleorder.DeliveryDate.Value;
-                    entity.DeliveryDate = saleorder.DeliveryDate;
-                }
-                else
-                {
-                    entity.OutDate = System.DateTime.Now;
-                    entity.DeliveryDate = System.DateTime.Now;
-                }
+                entity.OutDate = System.DateTime.Now;
+                entity.DeliveryDate = System.DateTime.Now;
 
                 BusinessHelper.Instance.InitEntity(entity);
 

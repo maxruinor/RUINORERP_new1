@@ -62,7 +62,9 @@
             this.lblPriority = new Krypton.Toolkit.KryptonLabel();
             this.lblPreDeliveryDate = new Krypton.Toolkit.KryptonLabel();
             this.lblRefNO = new Krypton.Toolkit.KryptonLabel();
+            this.txtForeignShipCost = new Krypton.Toolkit.KryptonTextBox();
             this.txtShipCost = new Krypton.Toolkit.KryptonTextBox();
+            this.lblForeignShipCost = new Krypton.Toolkit.KryptonLabel();
             this.txtRefNO = new Krypton.Toolkit.KryptonTextBox();
             this.lblShipCost = new Krypton.Toolkit.KryptonLabel();
             this.lblForeignDeposit = new Krypton.Toolkit.KryptonLabel();
@@ -90,10 +92,6 @@
             this.lblTotalAmount = new Krypton.Toolkit.KryptonLabel();
             this.txtApprovalOpinions = new Krypton.Toolkit.KryptonTextBox();
             this.lblApprovalOpinions = new Krypton.Toolkit.KryptonLabel();
-            this.txtTrackNo = new Krypton.Toolkit.KryptonTextBox();
-            this.lblTrackNo = new Krypton.Toolkit.KryptonLabel();
-            this.lblForeignShipCost = new Krypton.Toolkit.KryptonLabel();
-            this.txtForeignShipCost = new Krypton.Toolkit.KryptonTextBox();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceSub)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1)).BeginInit();
@@ -467,12 +465,27 @@
             this.lblRefNO.Values.Text = "引用单据";
             this.lblRefNO.Visible = false;
             // 
+            // txtForeignShipCost
+            // 
+            this.txtForeignShipCost.Location = new System.Drawing.Point(907, 104);
+            this.txtForeignShipCost.Name = "txtForeignShipCost";
+            this.txtForeignShipCost.Size = new System.Drawing.Size(140, 23);
+            this.txtForeignShipCost.TabIndex = 55;
+            // 
             // txtShipCost
             // 
             this.txtShipCost.Location = new System.Drawing.Point(907, 77);
             this.txtShipCost.Name = "txtShipCost";
             this.txtShipCost.Size = new System.Drawing.Size(140, 23);
             this.txtShipCost.TabIndex = 55;
+            // 
+            // lblForeignShipCost
+            // 
+            this.lblForeignShipCost.Location = new System.Drawing.Point(839, 108);
+            this.lblForeignShipCost.Name = "lblForeignShipCost";
+            this.lblForeignShipCost.Size = new System.Drawing.Size(62, 20);
+            this.lblForeignShipCost.TabIndex = 54;
+            this.lblForeignShipCost.Values.Text = "运费外币";
             // 
             // txtRefNO
             // 
@@ -605,8 +618,6 @@
             this.kryptonSplitContainerGridAndSub.Panel2.Controls.Add(this.lblTotalAmount);
             this.kryptonSplitContainerGridAndSub.Panel2.Controls.Add(this.txtApprovalOpinions);
             this.kryptonSplitContainerGridAndSub.Panel2.Controls.Add(this.lblApprovalOpinions);
-            this.kryptonSplitContainerGridAndSub.Panel2.Controls.Add(this.txtTrackNo);
-            this.kryptonSplitContainerGridAndSub.Panel2.Controls.Add(this.lblTrackNo);
             this.kryptonSplitContainerGridAndSub.Size = new System.Drawing.Size(1067, 357);
             this.kryptonSplitContainerGridAndSub.SplitterDistance = 276;
             this.kryptonSplitContainerGridAndSub.TabIndex = 1;
@@ -627,14 +638,14 @@
             // 
             // txtTotalQty
             // 
-            this.txtTotalQty.Location = new System.Drawing.Point(77, 47);
+            this.txtTotalQty.Location = new System.Drawing.Point(77, 18);
             this.txtTotalQty.Name = "txtTotalQty";
             this.txtTotalQty.Size = new System.Drawing.Size(100, 23);
             this.txtTotalQty.TabIndex = 102;
             // 
             // kryptonLabel1
             // 
-            this.kryptonLabel1.Location = new System.Drawing.Point(16, 47);
+            this.kryptonLabel1.Location = new System.Drawing.Point(16, 18);
             this.kryptonLabel1.Name = "kryptonLabel1";
             this.kryptonLabel1.Size = new System.Drawing.Size(49, 20);
             this.kryptonLabel1.TabIndex = 101;
@@ -657,7 +668,7 @@
             // 
             // lblForeignTotalAmount
             // 
-            this.lblForeignTotalAmount.Location = new System.Drawing.Point(463, 18);
+            this.lblForeignTotalAmount.Location = new System.Drawing.Point(463, 44);
             this.lblForeignTotalAmount.Name = "lblForeignTotalAmount";
             this.lblForeignTotalAmount.Size = new System.Drawing.Size(62, 20);
             this.lblForeignTotalAmount.TabIndex = 99;
@@ -665,9 +676,9 @@
             // 
             // txtForeignTotalAmount
             // 
-            this.txtForeignTotalAmount.Location = new System.Drawing.Point(536, 18);
+            this.txtForeignTotalAmount.Location = new System.Drawing.Point(536, 44);
             this.txtForeignTotalAmount.Name = "txtForeignTotalAmount";
-            this.txtForeignTotalAmount.Size = new System.Drawing.Size(140, 23);
+            this.txtForeignTotalAmount.Size = new System.Drawing.Size(100, 23);
             this.txtForeignTotalAmount.TabIndex = 100;
             // 
             // lbl扣税类型
@@ -689,14 +700,14 @@
             // 
             // txtTotalAmount
             // 
-            this.txtTotalAmount.Location = new System.Drawing.Point(77, 18);
+            this.txtTotalAmount.Location = new System.Drawing.Point(536, 15);
             this.txtTotalAmount.Name = "txtTotalAmount";
             this.txtTotalAmount.Size = new System.Drawing.Size(100, 23);
             this.txtTotalAmount.TabIndex = 57;
             // 
             // lblTotalAmount
             // 
-            this.lblTotalAmount.Location = new System.Drawing.Point(16, 18);
+            this.lblTotalAmount.Location = new System.Drawing.Point(475, 15);
             this.lblTotalAmount.Name = "lblTotalAmount";
             this.lblTotalAmount.Size = new System.Drawing.Size(49, 20);
             this.lblTotalAmount.TabIndex = 56;
@@ -704,48 +715,19 @@
             // 
             // txtApprovalOpinions
             // 
-            this.txtApprovalOpinions.Location = new System.Drawing.Point(765, 44);
+            this.txtApprovalOpinions.Location = new System.Drawing.Point(768, 18);
+            this.txtApprovalOpinions.Multiline = true;
             this.txtApprovalOpinions.Name = "txtApprovalOpinions";
-            this.txtApprovalOpinions.Size = new System.Drawing.Size(266, 23);
+            this.txtApprovalOpinions.Size = new System.Drawing.Size(266, 46);
             this.txtApprovalOpinions.TabIndex = 77;
             // 
             // lblApprovalOpinions
             // 
-            this.lblApprovalOpinions.Location = new System.Drawing.Point(697, 47);
+            this.lblApprovalOpinions.Location = new System.Drawing.Point(700, 15);
             this.lblApprovalOpinions.Name = "lblApprovalOpinions";
             this.lblApprovalOpinions.Size = new System.Drawing.Size(62, 20);
             this.lblApprovalOpinions.TabIndex = 76;
             this.lblApprovalOpinions.Values.Text = "审批意见";
-            // 
-            // txtTrackNo
-            // 
-            this.txtTrackNo.Location = new System.Drawing.Point(765, 16);
-            this.txtTrackNo.Name = "txtTrackNo";
-            this.txtTrackNo.Size = new System.Drawing.Size(266, 23);
-            this.txtTrackNo.TabIndex = 69;
-            // 
-            // lblTrackNo
-            // 
-            this.lblTrackNo.Location = new System.Drawing.Point(697, 18);
-            this.lblTrackNo.Name = "lblTrackNo";
-            this.lblTrackNo.Size = new System.Drawing.Size(62, 20);
-            this.lblTrackNo.TabIndex = 68;
-            this.lblTrackNo.Values.Text = "物流单号";
-            // 
-            // lblForeignShipCost
-            // 
-            this.lblForeignShipCost.Location = new System.Drawing.Point(839, 108);
-            this.lblForeignShipCost.Name = "lblForeignShipCost";
-            this.lblForeignShipCost.Size = new System.Drawing.Size(62, 20);
-            this.lblForeignShipCost.TabIndex = 54;
-            this.lblForeignShipCost.Values.Text = "运费外币";
-            // 
-            // txtForeignShipCost
-            // 
-            this.txtForeignShipCost.Location = new System.Drawing.Point(907, 104);
-            this.txtForeignShipCost.Name = "txtForeignShipCost";
-            this.txtForeignShipCost.Size = new System.Drawing.Size(140, 23);
-            this.txtForeignShipCost.TabIndex = 55;
             // 
             // UCSaleOrder
             // 
@@ -815,8 +797,6 @@
         private Krypton.Toolkit.KryptonTextBox txtShippingAddress;
         private Krypton.Toolkit.KryptonLabel lblshippingWay;
         private Krypton.Toolkit.KryptonTextBox txtshippingWay;
-        private Krypton.Toolkit.KryptonLabel lblTrackNo;
-        private Krypton.Toolkit.KryptonTextBox txtTrackNo;
         private Krypton.Toolkit.KryptonLabel lblNotes;
         private Krypton.Toolkit.KryptonTextBox txtNotes;
         private Krypton.Toolkit.KryptonLabel lblApprovalOpinions;

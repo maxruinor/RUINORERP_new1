@@ -51,10 +51,10 @@ namespace RUINORERP.Business
             {
                 // 开启事务，保证数据一致性
                 _unitOfWorkManage.BeginTran();
-                tb_OpeningInventoryController<tb_OpeningInventory> ctrOPinv = _appContext.GetRequiredService<tb_OpeningInventoryController<tb_OpeningInventory>>();
+                 
                 tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
                 BillConverterFactory bcf = _appContext.GetRequiredService<BillConverterFactory>();
-
+               
 
                 //处理采购退货单
                 entity.tb_purentryre = _unitOfWorkManage.GetDbClient().Queryable<tb_PurEntryRe>()
@@ -83,6 +83,8 @@ namespace RUINORERP.Business
                         return rs;
                     }
                 }
+
+                List<tb_Inventory> invUpdateList = new List<tb_Inventory>();
 
                 foreach (tb_PurReturnEntryDetail child in entity.tb_PurReturnEntryDetails)
                 {
@@ -151,16 +153,17 @@ namespace RUINORERP.Business
                     inv.Inv_SubtotalCostMoney = inv.Inv_Cost * inv.Quantity;
                     inv.LatestStorageTime = System.DateTime.Now;
                     #endregion
-
-                    ReturnResults<tb_Inventory> rr = await ctrinv.SaveOrUpdate(inv);
-                    if (rr.Succeeded)
-                    {
-                        if (AuthorizeController.GetShowDebugInfoAuthorization(_appContext))
-                        {
-                            _logger.Info(child.ProdDetailID + "==>" + child.property + "库存更新成功");
-                        }
-                    }
+                    invUpdateList.Add(inv);
+                    
                 }
+
+                int InvUpdateCounter = await _unitOfWorkManage.GetDbClient().Updateable(invUpdateList).ExecuteCommandAsync();
+                if (InvUpdateCounter != invUpdateList.Count)
+                {
+                    _unitOfWorkManage.RollbackTran();
+                    throw new Exception("库存更新失败！");
+                }
+
 
                 //因为可以多次分批入库，所以需要判断当前入库数量是否大于退货数量
                 //先找到所有采购退货入库明细,再找按采购退款明细去循环比较。如果入库总数量大于退货数量，则不允许入库。
@@ -332,10 +335,10 @@ namespace RUINORERP.Business
 
                 // 开启事务，保证数据一致性
                 _unitOfWorkManage.BeginTran();
-                tb_OpeningInventoryController<tb_OpeningInventory> ctrOPinv = _appContext.GetRequiredService<tb_OpeningInventoryController<tb_OpeningInventory>>();
+                
                 tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
                 BillConverterFactory bcf = _appContext.GetRequiredService<BillConverterFactory>();
-
+                List<tb_Inventory> invUpdateList = new List<tb_Inventory>();
                 foreach (var child in entity.tb_PurReturnEntryDetails)
                 {
                     #region 库存表的更新 这里应该是必需有库存的数据，
@@ -368,12 +371,17 @@ namespace RUINORERP.Business
                     inv.LatestOutboundTime = System.DateTime.Now;
 
                     #endregion
-                    ReturnResults<tb_Inventory> rr = await ctrinv.SaveOrUpdate(inv);
-                    if (rr.Succeeded)
-                    {
-
-                    }
+                    invUpdateList.Add(inv);
+                   
                 }
+
+                int InvUpdateCounter = await _unitOfWorkManage.GetDbClient().Updateable(invUpdateList).ExecuteCommandAsync();
+                if (InvUpdateCounter != invUpdateList.Count)
+                {
+                    _unitOfWorkManage.RollbackTran();
+                    throw new Exception("库存更新失败！");
+                }
+
 
                 if (entity.tb_purentryre != null)
                 {

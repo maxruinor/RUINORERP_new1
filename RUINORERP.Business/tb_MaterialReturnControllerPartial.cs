@@ -271,7 +271,7 @@ namespace RUINORERP.Business
             {
                 // 开启事务，保证数据一致性
                 _unitOfWorkManage.BeginTran();
-                tb_OpeningInventoryController<tb_OpeningInventory> ctrOPinv = _appContext.GetRequiredService<tb_OpeningInventoryController<tb_OpeningInventory>>();
+
                 tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
                 //更新拟销售量减少
 
@@ -317,11 +317,9 @@ namespace RUINORERP.Business
                     }
                 }
 
-
+                List<tb_Inventory> invUpdateList = new List<tb_Inventory>();
                 foreach (var child in entity.tb_MaterialReturnDetails)
                 {
-                    //var Detail = entity.tb_materialrequisition.tb_MaterialRequisitionDetails.FirstOrDefault(c => c.ProdDetailID == child.ProdDetailID);
-                    //var prodInfo = Detail.tb_proddetail.tb_prod.CNName + Detail.tb_proddetail.tb_prod.Specifications;
 
                     #region 库存表的更新 ，
                     tb_Inventory inv = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == child.ProdDetailID && i.Location_ID == child.Location_ID);
@@ -331,14 +329,6 @@ namespace RUINORERP.Business
                         rs.ErrorMsg = $"{child.ProdDetailID}当前产品无库存数据，无法退料。请使用【期初盘点】【采购入库】】【生产缴库】的方式进行盘点后，再操作。";
                         rs.Succeeded = false;
                         return rs;
-                        inv = new tb_Inventory();
-                        inv.ProdDetailID = child.ProdDetailID;
-                        inv.Location_ID = child.Location_ID;
-                        inv.Quantity = 0;
-                        inv.InitInventory = (int)inv.Quantity;
-                        inv.Notes = "";//后面修改数据库是不需要？
-                                       //inv.LatestStorageTime = System.DateTime.Now;
-                        BusinessHelper.Instance.InitEntity(inv);
                     }
                     if (!_appContext.SysConfig.CheckNegativeInventory && (inv.Quantity - child.Quantity) < 0)
                     {
@@ -354,25 +344,26 @@ namespace RUINORERP.Business
                     inv.LatestOutboundTime = System.DateTime.Now;
                     BusinessHelper.Instance.EditEntity(inv);
                     #endregion
-                    ReturnResults<tb_Inventory> rr = await ctrinv.SaveOrUpdate(inv);
-                    if (rr.Succeeded)
-                    {
-                        //更新领料单明细中退回数量
-                        var tb_MaterialRequisitionDetail = entity.tb_materialrequisition.tb_MaterialRequisitionDetails.FirstOrDefault(c => c.ProdDetailID == child.ProdDetailID && child.Location_ID == child.Location_ID);
+                    invUpdateList.Add(inv);
 
-                        tb_MaterialRequisitionDetail.ReturnQty -= child.Quantity;
+                    //更新领料单明细中退回数量
+                    var tb_MaterialRequisitionDetail = entity.tb_materialrequisition.tb_MaterialRequisitionDetails.FirstOrDefault(c => c.ProdDetailID == child.ProdDetailID && child.Location_ID == child.Location_ID);
+                    tb_MaterialRequisitionDetail.ReturnQty -= child.Quantity;
+                    tb_ManufacturingOrderDetail manufacturingOrderDetail = entity.tb_materialrequisition.tb_manufacturingorder.tb_ManufacturingOrderDetails.FirstOrDefault(c => c.ProdDetailID == child.ProdDetailID && child.Location_ID == child.Location_ID);
+                    manufacturingOrderDetail.ActualSentQty += child.Quantity;
 
-                        tb_ManufacturingOrderDetail manufacturingOrderDetail = entity.tb_materialrequisition.tb_manufacturingorder.tb_ManufacturingOrderDetails.FirstOrDefault(c => c.ProdDetailID == child.ProdDetailID && child.Location_ID == child.Location_ID);
-                        manufacturingOrderDetail.ActualSentQty += child.Quantity;
-
-                        // tb_MaterialRequisitionDetail.ActualSentQty += child.Quantity;
-                    }
                 }
+                int InvUpdateCounter = await _unitOfWorkManage.GetDbClient().Updateable(invUpdateList).ExecuteCommandAsync();
+                if (InvUpdateCounter != invUpdateList.Count)
+                {
+                    _unitOfWorkManage.RollbackTran();
+                    throw new Exception("库存更新失败！");
+                }
+
 
                 await _unitOfWorkManage.GetDbClient().Updateable<tb_ManufacturingOrderDetail>(entity.tb_materialrequisition.tb_manufacturingorder.tb_ManufacturingOrderDetails).ExecuteCommandAsync();
                 await _unitOfWorkManage.GetDbClient().Updateable<tb_MaterialRequisitionDetail>(entity.tb_materialrequisition.tb_MaterialRequisitionDetails).ExecuteCommandAsync();
                 entity.tb_materialrequisition.TotalReQty = entity.tb_materialrequisition.tb_MaterialRequisitionDetails.Sum(s => s.ReturnQty);
-                //entity.tb_materialrequisition.TotalSendQty = entity.tb_materialrequisition.tb_MaterialRequisitionDetails.Sum(s => s.ActualSentQty);
                 await _unitOfWorkManage.GetDbClient().Updateable(entity.tb_materialrequisition).UpdateColumns(t => new { t.TotalReQty }).ExecuteCommandAsync();
 
                 entity.DataStatus = (int)DataStatus.新建;

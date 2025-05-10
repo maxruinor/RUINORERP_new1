@@ -187,7 +187,7 @@ namespace RUINORERP.Global.EnumExt
     }
 
     /// <summary>
-    /// 收付款类型
+    /// 收付款方式
     /// </summary>
     public enum ReceivePaymentType
     {

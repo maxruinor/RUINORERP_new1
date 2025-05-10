@@ -58,6 +58,7 @@ using RUINORERP.UI.ClientCmdService;
 using FastReport.DevComponents.DotNetBar;
 using RUINORERP.UI.FM;
 using RUINORERP.Global.EnumExt;
+using RUINORERP.Business.CommService;
 
 
 namespace RUINORERP.UI
@@ -119,6 +120,15 @@ namespace RUINORERP.UI
 
             ConfigureServices(Services);
 
+
+            builder.RegisterGeneric(typeof(DbHelper<>))
+            .As(typeof(DbHelper<>))
+                .AsImplementedInterfaces().AsSelf()
+            //.EnableInterfaceInterceptors() // 如果需要 AOP 拦截的话
+                                           //.EnableClassInterceptors() // 如果需要 AOP 拦截的话
+            .PropertiesAutowired() // 指定属性注入
+            .SingleInstance(); // 单例模式
+
             //直接实现。或排除
             //builder.Register(c => new ClientEventManager()).As<IClientEventManager>();
             //注册当前程序集的所有类成员
@@ -145,6 +155,7 @@ namespace RUINORERP.UI
             //如果注册为名称的，需要这样操作
             builder.RegisterType<RUINORERP.UI.SS.MenuInit>().Named<UserControl>("MENU")
             .AsImplementedInterfaces().AsSelf();
+
 
 
             ConfigureContainerForDll(builder);
@@ -448,7 +459,7 @@ namespace RUINORERP.UI
                     // 【新增】优先处理实现业务类型接口的窗体（收/付业务）
                     if (IsIFMBillBusinessTypeForm(type))
                     {
-                        HandleBillBusinessTypeRegistration(_builder,  Assemblyobj ,type);
+                        HandleBillBusinessTypeRegistration(_builder, Assemblyobj, type);
                         continue; // 处理后跳过后续基类判断
                     }
 
@@ -490,7 +501,7 @@ namespace RUINORERP.UI
 
                         }
                         else
-                        if (type.BaseType.Name.Contains("BaseNavigatorAnalysis") || type.BaseType.Name.Contains("BaseNavigatorPages") || type.BaseType.Name.Contains("BaseNavigatorGeneric") ||  type.BaseType.Name.Contains("BaseBillQueryMC") || type.BaseType.Name.Contains("BaseMasterQueryWithCondition"))
+                        if (type.BaseType.Name.Contains("BaseNavigatorAnalysis") || type.BaseType.Name.Contains("BaseNavigatorPages") || type.BaseType.Name.Contains("BaseNavigatorGeneric") || type.BaseType.Name.Contains("BaseBillQueryMC") || type.BaseType.Name.Contains("BaseMasterQueryWithCondition"))
                         {
                             _builder.Register(c => Assemblyobj.CreateInstance(type.FullName)).Named<UserControl>(type.Name)
                              //.AsImplementedInterfaces().AsSelf() //加上这一行，会出错
@@ -596,7 +607,7 @@ namespace RUINORERP.UI
             //       .PropertiesAutowired(new CustPropertyAutowiredSelector())
             //       .AsSelf() // 同时支持按自身类型解析
             //       .As(typeof(IFMBillBusinessType)); // 支持接口注入（可选）
-            
+
             if (type.BaseType.BaseType.Name.Contains("BaseBillEditGeneric"))
             {
                 //builder.RegisterType(type)
@@ -616,7 +627,7 @@ namespace RUINORERP.UI
                 _builder.Register(c => Assemblyobj.CreateInstance(type.FullName)).Named<BaseQuery>(type.Name)
                           .PropertiesAutowired(new CustPropertyAutowiredSelector());//指定属性注入
             }
-            
+
 
 
             // 【扩展】如果需要区分收/付业务，可添加额外元数据

@@ -19,13 +19,10 @@ SELECT 经营历程, ProdDetailID,ProductNo,SKU ,CNName,Specifications,prop,业�
             ELSE '负'
         END AS 进出方向,
         日期 from (
-SELECT '初始库存' as 经营历程,  vp.ProdDetailID,vp.ProductNo,vp.SKU,vp.CNName,vp.Specifications,vp.prop,'期初库存' as 业务类型 ,'' as 单据编号, a.Location_ID as 库位,InitQty as 数量,InitInvDate as 日期 from tb_Inventory a LEFT JOIN tb_OpeningInventory b on a.Inventory_ID=b.Inventory_ID INNER JOIN View_ProdDetail vp on vp.ProdDetailID=a.ProdDetailID and vp.Location_ID=a.Location_ID
- WHERE a.Location_ID=@Location_ID  and a.ProdDetailID=@ProdDetailID
-union ALL
 SELECT '进出明细' as 经营历程, vp.ProdDetailID,vp.ProductNo,vp.SKU,vp.CNName,vp.Specifications,vp.prop,'采购入库' as 业务类型 ,PurEntryNo as 单据编号, pc.Location_ID as 库位,  pc.Quantity as 数量,EntryDate as 日期 from  tb_PurEntry pm LEFT JOIN tb_PurEntryDetail pc on pm.PurEntryID=pc.PurEntryID INNER JOIN View_ProdDetail vp on vp.ProdDetailID=pc.ProdDetailID and vp.Location_ID=pc.Location_ID
 WHERE (pm.DataStatus=4 or pm.DataStatus=8)  and pc.Location_ID=@Location_ID  and pc.ProdDetailID=@ProdDetailID
 union ALL
-SELECT '进出明细' as 经营历程, vp.ProdDetailID,vp.ProductNo,vp.SKU,vp.CNName,vp.Specifications,vp.prop,'采购退回' as 业务类型,PurEntryNo as 单据编号 , pc.Location_ID as 库位,  -pc.Quantity as 数量 ,ReturnDate as 日期 from  tb_PurEntryRe pm LEFT JOIN tb_PurEntryReDetail pc on pm.PurEntryRe_ID=pc.PurEntryRe_ID INNER JOIN View_ProdDetail vp on vp.ProdDetailID=pc.ProdDetailID and vp.Location_ID=pc.Location_ID 
+SELECT '进出明细' as 经营历程, vp.ProdDetailID,vp.ProductNo,vp.SKU,vp.CNName,vp.Specifications,vp.prop,'采购退回' as 业务类型,PurEntryReNo as 单据编号 , pc.Location_ID as 库位,  -pc.Quantity as 数量 ,ReturnDate as 日期 from  tb_PurEntryRe pm LEFT JOIN tb_PurEntryReDetail pc on pm.PurEntryRe_ID=pc.PurEntryRe_ID INNER JOIN View_ProdDetail vp on vp.ProdDetailID=pc.ProdDetailID and vp.Location_ID=pc.Location_ID 
 WHERE (pm.DataStatus=4 or pm.DataStatus=8)  and pc.Location_ID=@Location_ID  and pc.ProdDetailID=@ProdDetailID
 union ALL
 SELECT '进出明细' as 经营历程, vp.ProdDetailID,vp.ProductNo,vp.SKU,vp.CNName,vp.Specifications,vp.prop,'采购退回入库' as 业务类型,PurReEntryNo as 单据编号 , pc.Location_ID as 库位,  pc.Quantity as 数量 ,BillDate as 日期 from  tb_PurReturnEntry pm LEFT JOIN tb_PurReturnEntryDetail pc on pm.PurReEntry_ID=pc.PurReEntry_ID INNER JOIN View_ProdDetail vp on vp.ProdDetailID=pc.ProdDetailID and vp.Location_ID=pc.Location_ID 

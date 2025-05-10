@@ -54,7 +54,7 @@ namespace RUINORERP.Business
             {
                 // 开启事务，保证数据一致性
                 _unitOfWorkManage.BeginTran();
-                tb_OpeningInventoryController<tb_OpeningInventory> ctrOPinv = _appContext.GetRequiredService<tb_OpeningInventoryController<tb_OpeningInventory>>();
+                
                 tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
                 BillConverterFactory bcf = _appContext.GetRequiredService<BillConverterFactory>();
 
@@ -78,19 +78,19 @@ namespace RUINORERP.Business
 
 
                 #region 由缴库更新库存
-
+                List<tb_Inventory> invInsertList = new List<tb_Inventory>();
+                List<tb_Inventory> invUpdateList = new List<tb_Inventory>();
                 foreach (var child in entity.tb_FinishedGoodsInvDetails)
                 {
 
                     #region 库存表的更新 这里应该是必需有库存的数据，
-                    bool Opening = false;
+              
                     tb_Inventory inv = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == child.ProdDetailID && i.Location_ID == child.Location_ID);
                     if (inv == null)
                     {
-                        Opening = true;
                         inv = new tb_Inventory();
                         inv.InitInventory = (int)inv.Quantity;
-                        inv.Notes = "";//后面修改数据库是不需要？
+                        inv.Notes = "由缴库时自动生成";//后面修改数据库是不需要？
                         inv.Inv_Cost = child.UnitCost;
                         inv.Inv_AdvCost = child.UnitCost;
                         BusinessHelper.Instance.InitEntity(inv);
@@ -157,41 +157,29 @@ namespace RUINORERP.Business
                     inv.LatestStorageTime = System.DateTime.Now;
 
                     #endregion
-
-                    ReturnResults<tb_Inventory> rr = await ctrinv.SaveOrUpdate(inv);
-                    if (rr.Succeeded)
+                    if (inv.Inventory_ID == 0)
                     {
-                        if (AuthorizeController.GetShowDebugInfoAuthorization(_appContext))
-                        {
-                            _logger.Info(child.ProdDetailID + "==>" + child.property + "缴库时库存更新成功");
-                        }
-
-                        if (Opening)
-                        {
-                            #region 处理期初
-                            //库存都没有。期初也会没有 ,并且期初只会新增，不会修改。
-                            tb_OpeningInventory oinv = new tb_OpeningInventory();
-                            oinv.Inventory_ID = rr.ReturnObject.Inventory_ID;
-                            oinv.Cost_price = rr.ReturnObject.Inv_Cost;
-                            oinv.Subtotal_Cost_Price = oinv.Cost_price * oinv.InitQty;
-                            oinv.InitInvDate = entity.DeliveryDate;
-                            oinv.RefBillID = entity.FG_ID;
-                            oinv.RefNO = entity.DeliveryBillNo;
-                            string BizTypeName = Enum.GetName(typeof(BizType), BizType.缴库单);
-                            oinv.RefBizType = BizTypeName;
-                            oinv.InitQty = 0;
-                            oinv.InitInvDate = System.DateTime.Now;
-                            oinv.Notes = "由缴库时自动生成";
-                            CommBillData cbd = bcf.GetBillData<tb_FinishedGoodsInv>(entity);
-                            //oinv.RefBizType = cbd.BizType;
-                            //TODO 还要完善引用数据
-                            await ctrOPinv.AddReEntityAsync(oinv);
-                            #endregion
-                        }
+                        invInsertList.Add(inv);
+                    }
+                    if (inv.Inventory_ID > 0)
+                    {
+                        invUpdateList.Add(inv);
                     }
                 }
                 #endregion
+                var InvInsertCounter = await _unitOfWorkManage.GetDbClient().Insertable(invInsertList).ExecuteReturnSnowflakeIdAsync();
+                if (InvInsertCounter != invInsertList.Count)
+                {
+                    _unitOfWorkManage.RollbackTran();
+                    throw new Exception("库存保存失败！");
+                }
 
+                int InvUpdateCounter = await _unitOfWorkManage.GetDbClient().Updateable(invUpdateList).ExecuteCommandAsync();
+                if (InvUpdateCounter != invUpdateList.Count)
+                {
+                    _unitOfWorkManage.RollbackTran();
+                    throw new Exception("库存更新失败！");
+                }
 
 
                 //如果缴库明细中的品不是来自制令单，则报错
@@ -487,16 +475,14 @@ namespace RUINORERP.Business
 
                 // 开启事务，保证数据一致性
                 _unitOfWorkManage.BeginTran();
-                tb_OpeningInventoryController<tb_OpeningInventory> ctrOPinv = _appContext.GetRequiredService<tb_OpeningInventoryController<tb_OpeningInventory>>();
+              
                 tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
-
-
+                List<tb_Inventory> invUpdateList = new List<tb_Inventory>();
                 foreach (var child in entity.tb_FinishedGoodsInvDetails)
                 {
                     #region 库存表的更新 这里应该是必需有库存的数据，
                     //实际 反审时 期初已经有数据
                     tb_Inventory inv = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == child.ProdDetailID && i.Location_ID == child.Location_ID);
-
                     BusinessHelper.Instance.EditEntity(inv);
                     inv.ProdDetailID = child.ProdDetailID;
                     inv.Location_ID = child.Location_ID;
@@ -508,11 +494,14 @@ namespace RUINORERP.Business
                     inv.Inv_SubtotalCostMoney = inv.Inv_Cost * inv.Quantity;
                     inv.LatestStorageTime = System.DateTime.Now;
                     #endregion
-                    ReturnResults<tb_Inventory> rr = await ctrinv.SaveOrUpdate(inv);
-                    if (rr.Succeeded)
-                    {
-                        //反审不可能有期初库存
-                    }
+                    invUpdateList.Add(inv);
+                     
+                }
+                int InvUpdateCounter = await _unitOfWorkManage.GetDbClient().Updateable(invUpdateList).ExecuteCommandAsync();
+                if (InvUpdateCounter != invUpdateList.Count)
+                {
+                    _unitOfWorkManage.RollbackTran();
+                    throw new Exception("库存更新失败！");
                 }
 
                 #region

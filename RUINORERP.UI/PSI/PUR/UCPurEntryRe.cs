@@ -143,7 +143,7 @@ namespace RUINORERP.UI.PSI.PUR
             }
 
             //如果属性变化 则状态为修改
-            entity.PropertyChanged += (sender, s2) =>
+            entity.PropertyChanged += async (sender, s2) =>
             {
                 //权限允许
                 if ((true && entity.DataStatus == (int)DataStatus.草稿) || (true && entity.DataStatus == (int)DataStatus.新建))
@@ -174,12 +174,13 @@ namespace RUINORERP.UI.PSI.PUR
                 //如果是采购入库引入变化则加载明细及相关数据
                 if ((entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改) && entity.PurEntryID > 0 && s2.PropertyName == entity.GetPropertyName<tb_PurEntryRe>(c => c.PurEntryID))
                 {
+                    await Task.Delay(200);//要延迟一下。不然tag中的值还没有赋值就会执行了
                     LoadRefBillData(entity.PurEntryID);
                 }
-                else
-                {
-                    MainForm.Instance.PrintInfoLog(entity.ActionStatus.GetName());
-                }
+                //else
+                //{
+                //    MainForm.Instance.PrintInfoLog(entity.ActionStatus.GetName());
+                //}
 
             };
 

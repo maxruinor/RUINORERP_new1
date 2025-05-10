@@ -47,6 +47,7 @@ namespace RUINORERP.Business
                 // 开启事务，保证数据一致性
                 _unitOfWorkManage.BeginTran();
                 tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
+                List<tb_Inventory> invUpdateList = new List<tb_Inventory>();
                 foreach (var child in entity.tb_StockOutDetails)
                 {
                     #region 库存表的更新 这里应该是必需有库存的数据，
@@ -82,11 +83,13 @@ namespace RUINORERP.Business
                     //inv.Inv_SubtotalCostMoney = inv.Inv_Cost * inv.Quantity;
                     inv.LatestOutboundTime = System.DateTime.Now;
                     #endregion
-                    ReturnResults<tb_Inventory> rr = await ctrinv.SaveOrUpdate(inv);
-                    if (rr.Succeeded)
-                    {
-
-                    }
+                    invUpdateList.Add(inv);
+                }
+                int InvUpdateCounter = await _unitOfWorkManage.GetDbClient().Updateable(invUpdateList).ExecuteCommandAsync();
+                if (InvUpdateCounter != invUpdateList.Count)
+                {
+                    _unitOfWorkManage.RollbackTran();
+                    throw new Exception("库存更新失败！");
                 }
 
                 //这部分是否能提出到上一级公共部分？
@@ -133,7 +136,7 @@ namespace RUINORERP.Business
             {
                 // 开启事务，保证数据一致性
                 _unitOfWorkManage.BeginTran();
-                tb_OpeningInventoryController<tb_OpeningInventory> ctrOPinv = _appContext.GetRequiredService<tb_OpeningInventoryController<tb_OpeningInventory>>();
+                
                 tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
                 //更新拟销售量减少
 

@@ -29,7 +29,7 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            RUINORERP.Global.Model.DataRowImage dataRowImage2 = new RUINORERP.Global.Model.DataRowImage();
+            RUINORERP.Global.Model.DataRowImage dataRowImage1 = new RUINORERP.Global.Model.DataRowImage();
             this.kryptonSplitContainer1 = new Krypton.Toolkit.KryptonSplitContainer();
             this.kryptonPanel1 = new Krypton.Toolkit.KryptonPanel();
             this.lblAccount_type = new Krypton.Toolkit.KryptonLabel();
@@ -193,7 +193,7 @@
             // lbl盘点单
             // 
             this.lbl盘点单.LabelStyle = Krypton.Toolkit.LabelStyle.TitlePanel;
-            this.lbl盘点单.Location = new System.Drawing.Point(376, 26);
+            this.lbl盘点单.Location = new System.Drawing.Point(420, 17);
             this.lbl盘点单.Name = "lbl盘点单";
             this.lbl盘点单.Size = new System.Drawing.Size(110, 29);
             this.lbl盘点单.StateCommon.LongText.Color1 = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(192)))), ((int)(((byte)(192)))));
@@ -337,15 +337,15 @@
             this.magicPictureBox1.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.magicPictureBox1.Location = new System.Drawing.Point(933, 167);
             this.magicPictureBox1.Name = "magicPictureBox1";
-            dataRowImage2.Dir = null;
-            dataRowImage2.image = null;
-            dataRowImage2.ImageBase64 = null;
-            dataRowImage2.ImageBytes = null;
-            dataRowImage2.ImageFullName = null;
-            dataRowImage2.newhash = null;
-            dataRowImage2.oldhash = null;
-            dataRowImage2.realName = null;
-            this.magicPictureBox1.RowImage = dataRowImage2;
+            dataRowImage1.Dir = null;
+            dataRowImage1.image = null;
+            dataRowImage1.ImageBase64 = null;
+            dataRowImage1.ImageBytes = null;
+            dataRowImage1.ImageFullName = null;
+            dataRowImage1.newhash = null;
+            dataRowImage1.oldhash = null;
+            dataRowImage1.realName = null;
+            this.magicPictureBox1.RowImage = dataRowImage1;
             this.magicPictureBox1.Size = new System.Drawing.Size(131, 68);
             this.magicPictureBox1.TabIndex = 162;
             this.magicPictureBox1.TabStop = false;

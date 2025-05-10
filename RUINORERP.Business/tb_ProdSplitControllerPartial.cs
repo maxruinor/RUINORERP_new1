@@ -51,7 +51,7 @@ namespace RUINORERP.Business
             {
                 // 开启事务，保证数据一致性
                 _unitOfWorkManage.BeginTran();
-                tb_OpeningInventoryController<tb_OpeningInventory> ctrOPinv = _appContext.GetRequiredService<tb_OpeningInventoryController<tb_OpeningInventory>>();
+                
                 tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
                 BillConverterFactory bcf = _appContext.GetRequiredService<BillConverterFactory>();
 
@@ -78,15 +78,18 @@ namespace RUINORERP.Business
                     _unitOfWorkManage.RollbackTran();
                     throw new Exception("系统对应的仓库中没有母件库存,请检查数据！ ");
                 }
-                ReturnResults<tb_Inventory> rrm = await ctrinv.SaveOrUpdate(invMother);
-                if (rrm.Succeeded)
+                int InvInsertCounter = await _unitOfWorkManage.GetDbClient().Updateable(invMother).ExecuteCommandAsync();
+                if (InvInsertCounter > 0)
                 {
+                    
                     #region 子件增加
+                    List<tb_Inventory> invUpdateList = new List<tb_Inventory>();
+
                     foreach (var child in entity.tb_ProdSplitDetails)
                     {
                         #region 库存表的更新 这里应该是必需有库存的数据，
-                        //标记是否有期初
-                        bool Opening = false;
+                      
+                      
                         tb_Inventory inv = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == child.ProdDetailID && i.Location_ID == child.Location_ID);
                         if (inv != null)
                         {
@@ -96,7 +99,7 @@ namespace RUINORERP.Business
                         }
                         else
                         {
-                            Opening = true;
+                          
                             inv = new tb_Inventory();
                             inv.Quantity = inv.Quantity + child.Qty;
                             inv.InitInventory = (int)inv.Quantity;
@@ -123,28 +126,17 @@ namespace RUINORERP.Business
                         inv.LatestStorageTime = System.DateTime.Now;
 
                         #endregion
-                        ReturnResults<tb_Inventory> rr = await ctrinv.SaveOrUpdate(inv);
-                        if (rr.Succeeded)
-                        {
-                            if (Opening)
-                            {
-                                #region 处理期初
-                                //库存都没有。期初也会没有 ,并且期初只会新增，不会修改。
-                                tb_OpeningInventory oinv = new tb_OpeningInventory();
-                                oinv.Inventory_ID = rr.ReturnObject.Inventory_ID;
-                                oinv.Cost_price = rr.ReturnObject.Inv_Cost;
-                                oinv.Subtotal_Cost_Price = oinv.Cost_price * oinv.InitQty;
-                                oinv.InitInvDate = entity.SplitDate;
-                                oinv.RefBillID = entity.SplitID;
-                                oinv.RefNO = entity.SplitNo;
-                                oinv.Notes = entity.SplitNo + "由母件切割得到";//后面修改数据库是不需要？
-                                oinv.InitQty = 0;
-                                oinv.InitInvDate = System.DateTime.Now;
-                                await ctrOPinv.AddReEntityAsync(oinv);
-                                #endregion
-                            }
-                        }
+                        invUpdateList.Add(inv);
                     }
+                    DbHelper<tb_Inventory> dbHelper = _appContext.GetRequiredService<DbHelper<tb_Inventory>>();
+                    var Counter = await dbHelper.BaseDefaultAddElseUpdateAsync(invUpdateList);
+                    if (Counter != invUpdateList.Count)
+                    {
+                        _unitOfWorkManage.RollbackTran();
+                        throw new Exception("库存更新失败！");
+                    }
+
+
                     //这部分是否能提出到上一级公共部分？
                     entity.DataStatus = (int)DataStatus.确认;
                     // entity.ApprovalOpinions = approvalEntity.ApprovalComments;
@@ -215,9 +207,10 @@ namespace RUINORERP.Business
                     _unitOfWorkManage.RollbackTran();
                     throw new Exception("系统对应的仓库中没有母件库存,请检查数据！ ");
                 }
-                ReturnResults<tb_Inventory> rrm = await ctrinv.SaveOrUpdate(invMother);
-                if (rrm.Succeeded)
+                int InvInsertCounter = await _unitOfWorkManage.GetDbClient().Updateable(invMother).ExecuteCommandAsync();
+                if (InvInsertCounter > 0)
                 {
+                    List<tb_Inventory> invUpdateList = new List<tb_Inventory>();
                     foreach (var child in entity.tb_ProdSplitDetails)
                     {
                         #region 库存表的更新 这里应该是必需有库存的数据，
@@ -248,13 +241,17 @@ namespace RUINORERP.Business
                         // inv.Inv_SubtotalCostMoney = inv.Inv_Cost * inv.Quantity;
                         inv.LatestStorageTime = System.DateTime.Now;
                         #endregion
-                        ReturnResults<tb_Inventory> rr = await ctrinv.SaveOrUpdate(inv);
-                        if (rr.Succeeded)
-                        {
-
-                        }
+                        invUpdateList.Add(inv);
+                    }
+                    DbHelper<tb_Inventory> dbHelper = _appContext.GetRequiredService<DbHelper<tb_Inventory>>();
+                    var Counter = await dbHelper.BaseDefaultAddElseUpdateAsync(invUpdateList);
+                    if (Counter != invUpdateList.Count)
+                    {
+                        _unitOfWorkManage.RollbackTran();
+                        throw new Exception("子件库存更新失败！");
                     }
                 }
+                
 
                 //这部分是否能提出到上一级公共部分？
                 entity.DataStatus = (int)DataStatus.新建;

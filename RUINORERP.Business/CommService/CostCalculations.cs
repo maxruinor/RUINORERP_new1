@@ -75,7 +75,8 @@ namespace RUINORERP.Business.CommService
         /// <param name="currentCostPrice"></param>
         public static void AntiCostCalculation(ApplicationContext _appContext, tb_Inventory inv, int currentQty, decimal currentCostPrice)
         {
-
+            //注意！！！！！！！！
+            //要先算成本再赋值数量
             Global.库存成本计算方式 m = (Global.库存成本计算方式)_appContext.SysConfig.CostCalculationMethod;
             switch (m)
             {

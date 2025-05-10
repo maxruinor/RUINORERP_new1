@@ -140,7 +140,7 @@ namespace RUINORERP.Business
             {
                 // 开启事务，保证数据一致性
                 _unitOfWorkManage.BeginTran();
-                tb_OpeningInventoryController<tb_OpeningInventory> ctrOPinv = _appContext.GetRequiredService<tb_OpeningInventoryController<tb_OpeningInventory>>();
+                
                 tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
                 //更新拟销售量减少
 
@@ -151,6 +151,7 @@ namespace RUINORERP.Business
                     //return false;
                     return rsms;
                 }
+                List<tb_Inventory> invUpdateList = new List<tb_Inventory>();
                 foreach (var child in entity.tb_ProdBorrowingDetails)
                 {
                     #region 库存表的更新 ，
@@ -161,16 +162,7 @@ namespace RUINORERP.Business
                         rsms.ErrorMsg = $"{child.ProdDetailID}当前产品无库存数据，无法借出。请使用【期初盘点】【采购入库】】【生产缴库】的方式进行盘点后，再操作。";
                         rsms.Succeeded = false;
                         return rsms;
-
-                       
-                        inv = new tb_Inventory();
-                        inv.ProdDetailID = child.ProdDetailID;
-                        inv.Location_ID = child.Location_ID;
-                        inv.Quantity = 0;
-                        inv.InitInventory = (int)inv.Quantity;
-                        inv.Notes = "";//后面修改数据库是不需要？
-                                       //inv.LatestStorageTime = System.DateTime.Now;
-                        BusinessHelper.Instance.InitEntity(inv);
+                         
                     }
                     //更新在途库存
                     //反审，出库的要加回来，要卖的也要加回来
@@ -179,18 +171,17 @@ namespace RUINORERP.Business
                     //inv.LatestStorageTime
                     BusinessHelper.Instance.EditEntity(inv);
                     #endregion
-                    ReturnResults<tb_Inventory> rr = await ctrinv.SaveOrUpdate(inv);
-                    if (rr.Succeeded)
-                    {
+                    invUpdateList.Add(inv);
+                }
+                int InvUpdateCounter = await _unitOfWorkManage.GetDbClient().Updateable(invUpdateList).ExecuteCommandAsync();
+                if (InvUpdateCounter != invUpdateList.Count)
+                {
+                    _unitOfWorkManage.RollbackTran();
+                    throw new Exception("库存更新失败！");
+                }
 
-                    }
-
-
-
-                    //==
-
-                    //这部分是否能提出到上一级公共部分？
-                    entity.DataStatus = (int)DataStatus.新建;
+                //这部分是否能提出到上一级公共部分？
+                entity.DataStatus = (int)DataStatus.新建;
                     entity.ApprovalResults = false;
                     entity.ApprovalStatus = (int)ApprovalStatus.未审核;
                     BusinessHelper.Instance.ApproverEntity(entity);
@@ -200,7 +191,7 @@ namespace RUINORERP.Business
                     //只更新指定列
                     // var result = _unitOfWorkManage.GetDbClient().Updateable<tb_Stocktake>(entity).UpdateColumns(it => new { it.DataStatus, it.ApprovalOpinions }).ExecuteCommand();
                     await _unitOfWorkManage.GetDbClient().Updateable<tb_ProdBorrowing>(entity).ExecuteCommandAsync();
-                }
+             
 
 
                 // 注意信息的完整性

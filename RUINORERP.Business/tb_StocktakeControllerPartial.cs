@@ -49,9 +49,8 @@ namespace RUINORERP.Business
             {
                 // 开启事务，保证数据一致性
                 _unitOfWorkManage.BeginTran();
-                tb_OpeningInventoryController<tb_OpeningInventory> ctrOPinv = _appContext.GetRequiredService<tb_OpeningInventoryController<tb_OpeningInventory>>();
+                 
                 tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
-
 
                 if (entity == null)
                 {
@@ -63,12 +62,13 @@ namespace RUINORERP.Business
                 //将盘点到的数据，根据处理调整类型去修改库存表，期初还需要保存到期初表中
                 //最后要用事务操作
                 //保存库存，增加 通过产品明细ID去找
+                List<tb_Inventory> invUpdateList = new List<tb_Inventory>();
                 foreach (var child in entity.tb_StocktakeDetails)
                 {
                     //先看库存表中是否存在记录。
                     #region 库存表的更新
                     //标记是否有期初
-                    bool Opening = false;
+                  
                     tb_Inventory inv = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == child.ProdDetailID && i.Location_ID == entity.Location_ID);
                     if (inv == null)
                     {
@@ -79,7 +79,7 @@ namespace RUINORERP.Business
                             rmsr.ErrorMsg = $"{view_Prod.SKU}=> {view_Prod.CNName}\r\n当前盘点产品在当前仓库中，无库存数据。请使用【期初盘点】方式盘点。";
                             return rmsr;
                         }
-                        Opening = true;
+                    
                         inv = new tb_Inventory();
                         if (child.Cost == 0)
                         {
@@ -104,8 +104,6 @@ namespace RUINORERP.Business
                     }
                     else
                     {
-                        Opening = false;
-
                         inv.LastInventoryDate = System.DateTime.Now;
                         BusinessHelper.Instance.EditEntity(inv);
                     }
@@ -155,30 +153,25 @@ namespace RUINORERP.Business
                     }
 
                     #endregion
-                    ReturnResults<tb_Inventory> rr = await ctrinv.SaveOrUpdate(inv);
-                    if (rr.Succeeded)
-                    {
-                        if (Opening)
-                        {
-                            #region 处理期初
-                            //库存都没有。期初也会没有 ,并且期初只会新增，不会修改。
-                            tb_OpeningInventory oinv = new tb_OpeningInventory();
-                            oinv.Inventory_ID = rr.ReturnObject.Inventory_ID;
-                            oinv.Cost_price = rr.ReturnObject.Inv_Cost;
-                            oinv.Subtotal_Cost_Price = oinv.Cost_price * oinv.InitQty;
-                            oinv.InitInvDate = entity.Check_date;
-                            oinv.RefBillID = entity.MainID;
-                            oinv.RefNO = entity.CheckNo;
-                            oinv.InitQty = 0;
-                            //oinv.InitInvDate = System.DateTime.Now;
-                            CommBillData cbd = bcf.GetBillData<tb_Stocktake>(entity);
-                            //oinv.RefBizType = cbd.BizType;
-                            //TODO 还要完善引用数据
-                            await ctrOPinv.AddReEntityAsync(oinv);
-                            #endregion
-                        }
-                    }
+                    invUpdateList.Add(inv);
+                }
 
+                List<tb_Inventory> InsertList = invUpdateList.Where(c => c.Inventory_ID == 0).ToList();
+                var InvInsertCounter = await _unitOfWorkManage.GetDbClient().Insertable(InsertList).ExecuteReturnSnowflakeIdAsync();
+                if (InvInsertCounter != InsertList.Count)
+                {
+                    _unitOfWorkManage.RollbackTran();
+                    throw new Exception("库存保存失败！");
+                }
+
+
+                List<tb_Inventory> UpdateList=invUpdateList.Where(c=>c.Inventory_ID>0).ToList();
+
+                int InvUpdateCounter = await _unitOfWorkManage.GetDbClient().Updateable(UpdateList).ExecuteCommandAsync();
+                if (InvUpdateCounter != UpdateList.Count)
+                {
+                    _unitOfWorkManage.RollbackTran();
+                    throw new Exception("库存更新失败！");
                 }
 
                 //这部分是否能提出到上一级公共部分？
@@ -227,12 +220,12 @@ namespace RUINORERP.Business
             {
                 // 开启事务，保证数据一致性
                 _unitOfWorkManage.BeginTran();
-                tb_OpeningInventoryController<tb_OpeningInventory> ctrOPinv = _appContext.GetRequiredService<tb_OpeningInventoryController<tb_OpeningInventory>>();
+                
                 tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
                 //更新拟销售量减少
                 BillConverterFactory bcf = _appContext.GetRequiredService<BillConverterFactory>();
 
-
+                List<tb_Inventory> invUpdateList = new List<tb_Inventory>();
                 foreach (var child in entity.tb_StocktakeDetails)
                 {
                     //先看库存表中是否存在记录。
@@ -298,32 +291,16 @@ namespace RUINORERP.Business
                     }
 
                     #endregion
-                    ReturnResults<tb_Inventory> rr = await ctrinv.SaveOrUpdate(inv);
-                    if (rr.Succeeded)
-                    {
-                        if (Opening)
-                        {
-                            #region 处理期初
-                            //库存都没有。期初也会没有 ,并且期初只会新增，不会修改。
-                            tb_OpeningInventory oinv = new tb_OpeningInventory();
-                            oinv.Inventory_ID = rr.ReturnObject.Inventory_ID;
-                            oinv.Cost_price = rr.ReturnObject.Inv_Cost;
-                            oinv.Subtotal_Cost_Price = oinv.Cost_price * oinv.InitQty;
-                            oinv.InitInvDate = entity.Check_date;
-                            oinv.RefBillID = entity.MainID;
-                            oinv.RefNO = entity.CheckNo;
-                            oinv.InitQty = 0;
-                            //oinv.InitInvDate = System.DateTime.Now;
-                            CommBillData cbd = bcf.GetBillData<tb_Stocktake>(entity);
-                            oinv.RefBizType = cbd.BizType.ToString();
-                            //TODO 还要完善引用数据
-                            await ctrOPinv.AddReEntityAsync(oinv);
-                            #endregion
-                        }
-                    }
-
+                    invUpdateList.Add(inv);
                 }
 
+                DbHelper<tb_Inventory> dbHelper = _appContext.GetRequiredService<DbHelper<tb_Inventory>>();
+                var Counter = await dbHelper.BaseDefaultAddElseUpdateAsync(invUpdateList);
+                if (Counter != invUpdateList.Count)
+                {
+                    _unitOfWorkManage.RollbackTran();
+                    throw new Exception("库存更新失败！");
+                }
 
                 CheckMode cm = (CheckMode)entity.CheckMode;
                 //盘点模式 三个含义是:期初时可以录入成本,另两个不可以,由库存表中带出来.

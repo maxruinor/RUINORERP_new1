@@ -18,6 +18,7 @@ using System.Collections.Concurrent;
 using RUINORERP.UI.Common;
 using System.Reflection;
 using RUINORERP.UI.UCSourceGrid;
+using RUINORERP.Business.CommService;
 
 
 namespace RUINORERP.UI
@@ -35,7 +36,7 @@ namespace RUINORERP.UI
         private void btnNew_Click(object sender, EventArgs e)
         {
             btnRedo.Enabled = false;
-          RUINOR.Core.RevertCommand command = new RevertCommand();
+            RUINOR.Core.RevertCommand command = new RevertCommand();
             Label label = new Label();
             Random r = new Random();
             label.Text = ((char)r.Next(65, 99)).ToString();
@@ -167,7 +168,7 @@ namespace RUINORERP.UI
         private void button1_Click(object sender, EventArgs e)
         {
 
-            Type combinedType = Common.EmitHelper.MergeTypes(true, typeof(Model.Dto.ProductSharePart), typeof(tb_OpeningInventory));
+            Type combinedType = Common.EmitHelper.MergeTypes(true, typeof(Model.Dto.ProductSharePart), typeof(tb_Inventory));
             object ReturnSumInst = Activator.CreateInstance(combinedType);
             //创建实例化
             //object o = ReturnSumInst.InvokeMember("ReturnSum", BindingFlags.InvokeMethod, null, ReturnSumInst, null);//调用方法
@@ -238,12 +239,12 @@ namespace RUINORERP.UI
 
             return;
 
-        
+
         }
 
         private void btnGridTest_Click(object sender, EventArgs e)
         {
-            Type combinedType = Common.EmitHelper.MergeTypes(true, typeof(Model.Dto.ProductSharePart), typeof(tb_OpeningInventory));
+            Type combinedType = Common.EmitHelper.MergeTypes(true, typeof(Model.Dto.ProductSharePart), typeof(tb_Inventory));
             object ReturnSumInst = Activator.CreateInstance(combinedType);
             //创建实例化
             //object o = ReturnSumInst.InvokeMember("ReturnSum", BindingFlags.InvokeMethod, null, ReturnSumInst, null);//调用方法
@@ -263,7 +264,7 @@ namespace RUINORERP.UI
             //SourceGridHelper<tb_ProdDetail, tb_OpeningInventory> sgh = new SourceGridHelper<tb_ProdDetail, tb_OpeningInventory>();
             SourceGridHelper sgh = new SourceGridHelper();
             SourceGridDefine sgd = new SourceGridDefine(grid2, listCols, true);
-           // sgh.InitGrid(grid2, sgd, "frmtest");
+            // sgh.InitGrid(grid2, sgd, "frmtest");
             sgh.InitGrid(grid2, sgd, true, "frmtest");
             grid2.SelectionMode = SourceGrid.GridSelectionMode.Row;
             for (int r = 1; r < 30; r++)
@@ -333,6 +334,47 @@ namespace RUINORERP.UI
 
         private void btnBIndTest_Click(object sender, EventArgs e)
         {
+
+        }
+
+        private async void btnDefaultAddElseUpdateTest_Click(object sender, EventArgs e)
+        {
+            await MultipleTest();
+        }
+
+        private async Task<long> SingleTest()
+        {
+            tb_Unit invMain = new tb_Unit();
+            invMain.UnitName = "test1";
+
+            DbHelper<tb_Unit> dbHelper = MainForm.Instance.AppContext.GetRequiredService<DbHelper<tb_Unit>>();
+            var InvMainCounter = await dbHelper.BaseDefaultAddElseUpdateAsync(invMain);
+            if (InvMainCounter == 0)
+            {
+                MessageBox.Show("保存失败");
+            }
+            invMain.UnitName = "test2";
+            invMain.Notes = "修改为test2";
+            InvMainCounter = await dbHelper.BaseDefaultAddElseUpdateAsync(invMain);
+            if (InvMainCounter == 0)
+            {
+                MessageBox.Show("更新失败");
+            }
+            return InvMainCounter;
+        }
+
+
+        private async Task<List<tb_Unit>> MultipleTest()
+        {
+            List<tb_Unit> units = new List<tb_Unit>();
+            units.Add(new tb_Unit() { Notes = "0001LL1", UnitName = "MultipleTest7" });
+            units.Add(new tb_Unit() { Notes = "0002AA2", UnitName = "MultipleTest8" });
+            units.Add(new tb_Unit() { Unit_ID = 1920666804015992832, UnitName = "MultipleTest5" });
+            units.Add(new tb_Unit() { Unit_ID = 1921125849642438656, UnitName = "MultipleTest6" });
+
+            DbHelper<tb_Unit> dbHelper = MainForm.Instance.AppContext.GetRequiredService<DbHelper<tb_Unit>>();
+            var list = await dbHelper.BaseAddOrUpdateAsync(units);
+            return list;
 
         }
     }

@@ -735,8 +735,9 @@ namespace RUINORERP.UI.PUR
                         frmaddg.BindData(bty, ActionStatus.新增);
                         if (frmaddg.ShowDialog() == DialogResult.OK)
                         {
-                            var entiry = await MainForm.Instance.AppContext.Db.Storageable(EntityInfo).DefaultAddElseUpdate().ExecuteReturnEntityAsync();
-                            if (entiry.CommentID > 0)
+                            DbHelper<tb_gl_Comment> dbHelper = MainForm.Instance.AppContext.GetRequiredService<DbHelper<tb_gl_Comment>>();
+                            var Counter = await dbHelper.BaseDefaultAddElseUpdateAsync(EntityInfo);
+                            if (Counter > 0)
                             {
 
                             }

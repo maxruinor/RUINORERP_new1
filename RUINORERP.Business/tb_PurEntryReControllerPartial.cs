@@ -27,6 +27,7 @@ using RUINORERP.Global;
 using RUINORERP.Model.CommonModel;
 using RUINORERP.Business.Security;
 using RUINORERP.Business.CommService;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.ListView;
 
 namespace RUINORERP.Business
 {
@@ -55,7 +56,7 @@ namespace RUINORERP.Business
                 {
                     return rs;
                 }
-
+                List<tb_Inventory> invUpdateList = new List<tb_Inventory>();
                 foreach (var ReDetail in entity.tb_PurEntryReDetails)
                 {
                     #region 库存表的更新 这里应该是必需有库存的数据，
@@ -73,9 +74,22 @@ namespace RUINORERP.Business
 
                         //更新库存
                         inv.Quantity = inv.Quantity - ReDetail.Quantity;
-                   
+                        if (entity.ProcessWay==(int)PurReProcessWay.需要返回)
+                        {
+                            inv.On_the_way_Qty = inv.On_the_way_Qty + ReDetail.Quantity;
+                        }
+                        
                         BusinessHelper.Instance.EditEntity(inv);
+
                     }
+                    else
+                    {
+                        _unitOfWorkManage.RollbackTran();
+                        //这里都是采购入库退货了。必须是入过库有数据的
+                        throw new Exception($"当前仓库{ReDetail.Location_ID}无产品{ReDetail.ProdDetailID}的库存数据,请联系管理员");
+                    }
+
+
                     /*
                   直接输入成本：在录入库存记录时，直接输入该产品或物品的成本价格。这种方式适用于成本价格相对稳定或容易确定的情况。
                  平均成本法：通过计算一段时间内该产品或物品的平均成本来确定成本价格。这种方法适用于成本价格随时间波动的情况，可以更准确地反映实际成本。
@@ -90,17 +104,17 @@ namespace RUINORERP.Business
                     inv.Inv_SubtotalCostMoney = inv.Inv_Cost * inv.Quantity;
                     inv.LatestStorageTime = System.DateTime.Now;
                     #endregion
-                    ReturnResults<tb_Inventory> rr = await ctrinv.SaveOrUpdate(inv);
-                    if (rr.Succeeded)
-                    {
 
-                    }
-                    else
-                    {
-                        _unitOfWorkManage.RollbackTran();
-                        throw new Exception("采购退货审核时，库存保存失败！" + rr.ErrorMsg);
-                    }
+                    invUpdateList.Add(inv);
                 }
+
+                int InvUpdateCounter = await _unitOfWorkManage.GetDbClient().Updateable(invUpdateList).ExecuteCommandAsync();
+                if (InvUpdateCounter != invUpdateList.Count)
+                {
+                    _unitOfWorkManage.RollbackTran();
+                    throw new Exception("采购退货审核时，库存更新失败！");
+                }
+
 
                 //入库退回 写回入库单明细,审核用加，
                 if (entity.tb_purentry != null)
@@ -151,7 +165,6 @@ namespace RUINORERP.Business
                 //只更新指定列
                 // var result = _unitOfWorkManage.GetDbClient().Updateable<tb_Stocktake>(entity).UpdateColumns(it => new { it.DataStatus, it.ApprovalOpinions }).ExecuteCommand();
                 await _unitOfWorkManage.GetDbClient().Updateable<tb_PurEntryRe>(entity).ExecuteCommandAsync();
-                //rmr = await ctr.BaseSaveOrUpdate(EditEntity);
                 // 注意信息的完整性
                 _unitOfWorkManage.CommitTran();
                 rs.ReturnObject = entity as T;
@@ -192,9 +205,12 @@ namespace RUINORERP.Business
 
                 // 开启事务，保证数据一致性
                 _unitOfWorkManage.BeginTran();
-                tb_OpeningInventoryController<tb_OpeningInventory> ctrOPinv = _appContext.GetRequiredService<tb_OpeningInventoryController<tb_OpeningInventory>>();
+                
                 tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
                 BillConverterFactory bcf = _appContext.GetRequiredService<BillConverterFactory>();
+
+
+                List<tb_Inventory> invUpdateList = new List<tb_Inventory>();
 
                 foreach (var child in entity.tb_PurEntryReDetails)
                 {
@@ -217,7 +233,7 @@ namespace RUINORERP.Business
                     inv.Location_ID = child.Location_ID;
                     inv.Notes = "";//后面修改数据库是不需要？
                     inv.LatestStorageTime = System.DateTime.Now;
-                    inv.Quantity = inv.Quantity + child.Quantity;
+
                     /*
                   直接输入成本：在录入库存记录时，直接输入该产品或物品的成本价格。这种方式适用于成本价格相对稳定或容易确定的情况。
                  平均成本法：通过计算一段时间内该产品或物品的平均成本来确定成本价格。这种方法适用于成本价格随时间波动的情况，可以更准确地反映实际成本。
@@ -229,16 +245,26 @@ namespace RUINORERP.Business
                  市场价格：参考市场上类似产品或物品的价格。
                   */
                     CommService.CostCalculations.AntiCostCalculation(_appContext, inv, child.Quantity, child.UnitPrice);
-                 
+                    inv.Quantity = inv.Quantity + child.Quantity;
+                    if (entity.ProcessWay == (int)PurReProcessWay.需要返回)
+                    {
+                        inv.On_the_way_Qty = inv.On_the_way_Qty - child.Quantity;
+                    }
+
                     inv.Inv_SubtotalCostMoney = inv.Inv_Cost * inv.Quantity;
                     inv.LatestOutboundTime = System.DateTime.Now;
                     #endregion
-                    ReturnResults<tb_Inventory> rr = await ctrinv.SaveOrUpdate(inv);
-                    if (rr.Succeeded)
-                    {
-
-                    }
+                    invUpdateList.Add(inv);
                 }
+                int InvUpdateCounter = await _unitOfWorkManage.GetDbClient().Updateable(invUpdateList).ExecuteCommandAsync();
+                if (InvUpdateCounter != invUpdateList.Count)
+                {
+                    _unitOfWorkManage.RollbackTran();
+                    throw new Exception("库存更新失败！");
+                }
+
+
+
                 //入库退回 写回入库单明细，
                 if (entity.tb_purentry != null)
                 {
@@ -246,9 +272,10 @@ namespace RUINORERP.Business
                     {
                         entity.tb_purentry.tb_PurEntryDetails = await _unitOfWorkManage.GetDbClient().Queryable<tb_PurEntryDetail>().Where(c => c.PurEntryID == entity.tb_purentry.PurEntryID).ToListAsync();
                     }
-
-                    foreach (var entryDetail in entity.tb_purentry.tb_PurEntryDetails)
+                    //不用foreach
+                    for (int i = 0; i < entity.tb_purentry.tb_PurEntryDetails.Count; i++)
                     {
+                        tb_PurEntryDetail entryDetail = entity.tb_purentry.tb_PurEntryDetails[i];
                         tb_PurEntryReDetail ReturnDetail = entity.tb_PurEntryReDetails
                             .Where(c => c.ProdDetailID == entryDetail.ProdDetailID && c.Location_ID == entryDetail.Location_ID).FirstOrDefault();
                         if (ReturnDetail == null)
@@ -273,33 +300,10 @@ namespace RUINORERP.Business
                 //===============
                 //也写回采购订单明细
                 //退回流程不算入采购订单的已交数量
+                //退回售后流程是一个独立的。与入库明细已交挂够。观察售后回来情况
+                //采购订单。入库时回写已交数量 是观察订单情况。两个要分开处理
 
-                /*
-                if (entity.tb_purentry.tb_purorder == null)
-                {
-                    if (entity.tb_purentry.tb_purorder.tb_PurOrderDetails == null)
-                    {
-                        entity.tb_purentry.tb_purorder.tb_PurOrderDetails = _unitOfWorkManage.GetDbClient().Queryable<tb_PurOrderDetail>().Where(c => c.PurOrder_ID == entity.tb_purorder.PurOrder_ID).ToList();
-                    }
 
-                    foreach (var child in entity.tb_purorder.tb_PurOrderDetails)
-                    {
-                        tb_PurEntryDetail entryDetail = entity.tb_PurEntryDetails.Where(c => c.ProdDetailID == child.ProdDetailID).FirstOrDefault();
-                        if (entryDetail == null)
-                        {
-                            continue;
-                        }
-                        child.DeliveredQuantity -= entryDetail.Quantity;
-                        //如果已交数据大于 订单数量 给出警告实际操作中 使用其他方式将备品入库
-                        if (child.DeliveredQuantity < 0)
-                        {
-                            throw new Exception("已入库数量不能小于0！");
-                        }
-                    }
-                    //更新已交数量
-                    await _unitOfWorkManage.GetDbClient().Updateable<tb_PurOrderDetail>(entity.tb_purorder.tb_PurOrderDetails).ExecuteCommandAsync();
-                }
-                */
 
                 AuthorizeController authorizeController = _appContext.GetRequiredService<AuthorizeController>();
                 if (authorizeController.EnableFinancialModule())

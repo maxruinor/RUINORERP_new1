@@ -8,6 +8,7 @@ using Krypton.Navigator;
 using Krypton.Toolkit;
 using Krypton.Toolkit.Suite.Extended.TreeGridView;
 using Krypton.Workspace;
+using LiveChartsCore.Geo;
 using Microsoft.Extensions.Logging;
 using Netron.GraphLib;
 using NPOI.OpenXmlFormats.Spreadsheet;
@@ -205,8 +206,9 @@ namespace RUINORERP.UI.MRP
                         frmaddg.BindData(bty, ActionStatus.新增);
                         if (frmaddg.ShowDialog() == DialogResult.OK)
                         {
-                            var entiry = await MainForm.Instance.AppContext.Db.Storageable(EntityInfo).DefaultAddElseUpdate().ExecuteReturnEntityAsync();
-                            if (entiry.CommentID > 0)
+                            DbHelper<tb_gl_Comment> dbHelper = MainForm.Instance.AppContext.GetRequiredService<DbHelper<tb_gl_Comment>>();
+                            var Counter = await dbHelper.BaseDefaultAddElseUpdateAsync(EntityInfo);
+                            if (Counter > 0)
                             {
 
                             }

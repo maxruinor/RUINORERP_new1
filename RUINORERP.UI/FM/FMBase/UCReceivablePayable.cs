@@ -56,7 +56,7 @@ namespace RUINORERP.UI.FM
             InitializeComponent();
         }
         /// <summary>
-        /// 收付款类型决定对应的菜单功能
+        /// 收付款方式决定对应的菜单功能
         /// </summary>
         public ReceivePaymentType PaymentType { get; set; }
         /// <summary>

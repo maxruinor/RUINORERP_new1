@@ -133,12 +133,12 @@ namespace RUINORERP.Model
 
 
         /// <summary>
-        /// 交易方式
+        /// 付款方式
         /// </summary>
 
-        [AdvQueryAttribute(ColName = "Paytype_ID", ColDesc = "交易方式")]
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType = "Int64", ColumnName = "Paytype_ID", IsNullable = true, ColumnDescription = "交易方式")]
-        [Display(Name = "交易方式")]
+        [AdvQueryAttribute(ColName = "Paytype_ID", ColDesc = "付款方式")]
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType = "Int64", ColumnName = "Paytype_ID", IsNullable = true, ColumnDescription = "付款方式")]
+        [Display(Name = "付款方式")]
         public long? Paytype_ID
         {
             get { return _Paytype_ID; }

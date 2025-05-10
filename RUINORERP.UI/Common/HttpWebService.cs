@@ -1,10 +1,13 @@
 ﻿using Microsoft.Extensions.Logging;
 using MySqlX.XDevAPI;
+using Netron.GraphLib;
 using NSoup.Helper;
 using Org.BouncyCastle.Asn1.Ocsp;
 using RUINORERP.Business;
+using RUINORERP.Model;
 using RUINORERP.Repository.UnitOfWorks;
 using RUINORERP.UI.SysConfig;
+using SqlSugar.SplitTableExtensions;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -14,6 +17,7 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Documents;
 using System.Windows.Forms;
 
 namespace RUINORERP.UI.Common
@@ -40,9 +44,38 @@ namespace RUINORERP.UI.Common
             _unitOfWorkManage = unitOfWorkManage;
             _appContext = appContext;
             _configManager = configManager;
+        }
 
+
+        #region 测试DefaultAddElseUpdate
+
+        public async Task<int> DefaultAddElseUpdateTest()
+        {
+            tb_Unit unit=new tb_Unit();
+            unit.UnitName = "测试GH";
+
+            //下面的写法可以做到批量的  插入更新。雪花ID
+            var x = _unitOfWorkManage.GetDbClient().Storageable(unit).ToStorage();
+            x.AsInsertable.ExecuteReturnSnowflakeIdList();//不存在插入
+            return await x.AsUpdateable.ExecuteCommandAsync();//存在更新
+
+        
+            List<tb_Unit> units = new List<tb_Unit>();
+            units.Add(new tb_Unit() { Notes = "0001LL", UnitName = "a" });
+            units.Add(new tb_Unit() { Notes = "0002AA", UnitName = "b" });
+            units.Add(new tb_Unit() { Unit_ID = 1920666804015992832, UnitName = "8aa" });
+            units.Add(new tb_Unit() { Unit_ID = 1921125849642438656, UnitName = "9bb" });
+
+            ////下面的写法可以做到批量的  插入更新。雪花ID
+            //var x = _unitOfWorkManage.GetDbClient().Storageable(units).ToStorage();
+            //x.AsInsertable.ExecuteReturnSnowflakeIdList();//不存在插入
+            //return await x.AsUpdateable.ExecuteCommandAsync();//存在更新
 
         }
+
+        #endregion
+
+
         #region 登陆
         /// <summary>
         /// 登陆webserver
@@ -173,7 +206,7 @@ namespace RUINORERP.UI.Common
             string webServerUrl = _configManager.GetValue("WebServerUrl");
             cookieContainer.Add(new Uri(webServerUrl), new Cookie("sessionId", _appContext.SessionId));
 
-                return cookieContainer;
+            return cookieContainer;
         }
 
         /// <summary>
@@ -310,7 +343,7 @@ namespace RUINORERP.UI.Common
                 HttpWebResponse response = await request.GetResponseAsync() as HttpWebResponse;
                 Stream instream = response.GetResponseStream();
                 StreamReader sr = new StreamReader(instream, Encoding.UTF8);
-                return "上传成功"+sr.ReadToEnd();
+                return "上传成功" + sr.ReadToEnd();
             }
             catch (Exception ex)
             {
@@ -413,7 +446,7 @@ namespace RUINORERP.UI.Common
             string imageUrl = WebServerUrl + "/" + ServerImageDirectory + "/" + fileNameNoExtName + ".jpg";
             byte[] result = new byte[0];
             try
-                {
+            {
                 // 构建请求
                 var handler = new HttpClientHandler();
 

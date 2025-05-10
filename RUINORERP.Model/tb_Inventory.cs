@@ -445,14 +445,6 @@ namespace RUINORERP.Model
         //Inventory_ID.FK_TB_INV_A_REFERENCE_TB_INVEN)
         //tb_Inventory.Inventory_ID)
 
-        //[Browsable(false)]打印报表时的数据源会不显示
-        [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_OpeningInventory.Inventory_ID))]
-        public virtual List<tb_OpeningInventory> tb_OpeningInventories { get; set; }
-        //tb_OpeningInventory.Inventory_ID)
-        //Inventory_ID.FK_TB_OPENI_REFERENCE_TB_INVEN)
-        //tb_Inventory.Inventory_ID)
-
 
         #endregion
 

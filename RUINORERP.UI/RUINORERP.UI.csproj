@@ -1747,12 +1747,6 @@
     <Compile Include="FormProperty\frmQuicklyInputGeneric.Designer.cs">
       <DependentUpon>frmQuicklyInputGeneric.cs</DependentUpon>
     </Compile>
-    <Compile Include="FrmAddUnit.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="FrmAddUnit.Designer.cs">
-      <DependentUpon>FrmAddUnit.cs</DependentUpon>
-    </Compile>
     <Compile Include="FrmBase.cs">
       <SubType>Form</SubType>
     </Compile>

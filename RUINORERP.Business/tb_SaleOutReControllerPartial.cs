@@ -97,14 +97,6 @@ namespace RUINORERP.Business
                             rrs.Succeeded = false;
                             return rrs;
                         }
-
-                        if (entity.tb_saleout.TotalAmount > entity.TotalAmount || entity.tb_saleout.ForeignTotalAmount > entity.ForeignTotalAmount)
-                        {
-                            //特殊情况 要选择客户信息，还要进一步完善！TODO
-                            // "退货金额小于出库金额。。";
-                            //部分退款
-                        }
-
                     }
                 }
 
@@ -112,7 +104,6 @@ namespace RUINORERP.Business
                 //处理业务数据
                 if (!entity.RefundOnly)
                 {
-
                     #region   将更新销售订单ReturnedQty已退数量，销售出库单OrderReturnTotalQty订单退回数
                     //要注意的是  如果销售订单中有 多行相同SKU的的情况（实际是不同配置时） 出库退库要把订单的明细主键带上。
                     if (entity != null)
@@ -169,6 +160,7 @@ namespace RUINORERP.Business
                         }
                         await _unitOfWorkManage.GetDbClient().Updateable<tb_SaleOutDetail>(entity.tb_saleout.tb_SaleOutDetails).ExecuteCommandAsync();
 
+
                         #region
 
                         //2024-4-15思路更新:如果销售订单中有相同的产品的多行情况。时 如订单: A 5PCS  A2PCS  ,出库也可以多行，A 2,A3, A2 按订单循环
@@ -177,10 +169,6 @@ namespace RUINORERP.Business
                         {
                             tb_SaleOrderDetail orderDetail = entity.tb_saleout.tb_saleorder.tb_SaleOrderDetails[i];
                             //判断是否订单中也录入了多行。这个很重要
-                            //List<tb_SaleOrderDetail> orderDetailLines = new List<tb_SaleOrderDetail>();
-                            //orderDetailLines = entity.tb_saleout.tb_saleorder.tb_SaleOrderDetails.Where(c => c.ProdDetailID == orderDetail.ProdDetailID
-                            //  && c.SaleOrderDetail_ID == orderDetail.SaleOrderDetail_ID
-                            //).ToList();
                             List<tb_SaleOutDetail> outDetails = entity.tb_saleout.tb_SaleOutDetails
                                 .Where(c => c.ProdDetailID == orderDetail.ProdDetailID
                                 && c.Location_ID == orderDetail.Location_ID
@@ -218,19 +206,21 @@ namespace RUINORERP.Business
                                 return rrs;
                             }
 
-                            //更新已退数量
-                            await _unitOfWorkManage.GetDbClient().Updateable<tb_SaleOrderDetail>(entity.tb_saleout.tb_saleorder.tb_SaleOrderDetails).ExecuteCommandAsync();
 
-                            //!!!!!!!!2024-7-11  思路 重新定义为：退货不改变结案状态，因为在计算业绩时已经减掉了退回情况。
-                            //销售出库单，如果来自于销售订单，则要把退回数量累加到订单中的退回总数量 并且如果数量够 也认为自动结案  全出库全退库
-                            //if (saleout.tb_saleorder != null && saleout.tb_saleorder.tb_SaleOrderDetails.Sum(c => c.TotalReturnedQty) == saleout.tb_saleorder.TotalQty)
-                            //{
-                            //    saleout.tb_saleorder.DataStatus = (int)DataStatus.完结;
-                            //    await _unitOfWorkManage.GetDbClient().Updateable(saleout.tb_saleorder).UpdateColumns(t => new { t.DataStatus }).ExecuteCommandAsync();
-                            //}
 
                             #endregion
                         }
+
+                        //更新已退数量
+                        await _unitOfWorkManage.GetDbClient().Updateable<tb_SaleOrderDetail>(entity.tb_saleout.tb_saleorder.tb_SaleOrderDetails).ExecuteCommandAsync();
+
+                        //!!!!!!!!2024-7-11  思路 重新定义为：退货不改变结案状态，因为在计算业绩时已经减掉了退回情况。
+                        //销售出库单，如果来自于销售订单，则要把退回数量累加到订单中的退回总数量 并且如果数量够 也认为自动结案  全出库全退库
+                        //if (saleout.tb_saleorder != null && saleout.tb_saleorder.tb_SaleOrderDetails.Sum(c => c.TotalReturnedQty) == saleout.tb_saleorder.TotalQty)
+                        //{
+                        //    saleout.tb_saleorder.DataStatus = (int)DataStatus.完结;
+                        //    await _unitOfWorkManage.GetDbClient().Updateable(saleout.tb_saleorder).UpdateColumns(t => new { t.DataStatus }).ExecuteCommandAsync();
+                        //}
 
 
                         int ReturnTotalQty = entity.tb_SaleOutReDetails.Sum(c => c.Quantity);
@@ -239,22 +229,21 @@ namespace RUINORERP.Business
                         if (entity.tb_saleout.TotalQty == ReturnTotalQty)
                         {
                             entity.tb_saleout.DataStatus = (int)DataStatus.完结;
+                            await _unitOfWorkManage.GetDbClient().Updateable(entity.tb_saleout).UpdateColumns(t => new { t.DataStatus }).ExecuteCommandAsync();
                         }
-                        await _unitOfWorkManage.GetDbClient().Updateable(entity.tb_saleout).UpdateColumns(t => new { t.DataStatus }).ExecuteCommandAsync();
 
                         #endregion
 
                     }
+
+                    List<tb_Inventory> invUpdateList = new List<tb_Inventory>();
                     foreach (var child in entity.tb_SaleOutReDetails)
                     {
                         #region 库存表的更新 这里应该是必需有库存的数据，
                         tb_Inventory inv = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == child.ProdDetailID && i.Location_ID == child.Location_ID);
-                        if (inv != null)
-                        {
-                            //更新库存
-                            inv.Quantity = inv.Quantity + child.Quantity;
-                            BusinessHelper.Instance.EditEntity(inv);
-                        }
+                        //更新库存
+                        inv.Quantity = inv.Quantity + child.Quantity;
+                        BusinessHelper.Instance.EditEntity(inv);
                         /*
                       直接输入成本：在录入库存记录时，直接输入该产品或物品的成本价格。这种方式适用于成本价格相对稳定或容易确定的情况。
                      平均成本法：通过计算一段时间内该产品或物品的平均成本来确定成本价格。这种方法适用于成本价格随时间波动的情况，可以更准确地反映实际成本。
@@ -269,37 +258,30 @@ namespace RUINORERP.Business
                         inv.Inv_SubtotalCostMoney = inv.Inv_Cost * inv.Quantity;
                         inv.LatestStorageTime = System.DateTime.Now;
                         #endregion
-                        ReturnResults<tb_Inventory> rr = await ctrinv.SaveOrUpdate(inv);
-                        if (rr.Succeeded)
-                        {
-
-                        }
-                        else
-                        {
-                            return rrs;
-                        }
+                        invUpdateList.Add(inv);
                     }
+                    int InvUpdateCounter = await _unitOfWorkManage.GetDbClient().Updateable(invUpdateList).ExecuteCommandAsync();
+                    if (InvUpdateCounter != invUpdateList.Count)
+                    {
+                        _unitOfWorkManage.RollbackTran();
+                        throw new Exception("库存更新失败！");
+                    }
+
 
                     if (entity.tb_SaleOutReRefurbishedMaterialsDetails != null)
                     {
+                        List<tb_Inventory> invMaterialsUpdateList = new List<tb_Inventory>();
                         //如果有翻新明细则要出库 减少库存
                         foreach (var child in entity.tb_SaleOutReRefurbishedMaterialsDetails)
                         {
                             #region 库存表的更新 这里应该是必需有库存的数据，
-                            bool Opening = false;
                             tb_Inventory inv = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == child.ProdDetailID && i.Location_ID == child.Location_ID);
                             if (inv == null)
                             {
                                 _unitOfWorkManage.RollbackTran();
-                                rrs.ErrorMsg = $"{child.ProdDetailID}当前产品无库存数据，无法进行销售退货。请使用【期初盘点】【采购入库】】【生产缴库】的方式进行盘点后，再操作。";
+                                rrs.ErrorMsg = $"{child.ProdDetailID}当前产品无库存数据，无法当入销售退货翻新物料。请使用【期初盘点】【采购入库】】【生产缴库】的方式进行盘点后，再操作。";
                                 rrs.Succeeded = false;
                                 return rrs;
-                                Opening = true;
-                                inv = new tb_Inventory();
-                                inv.InitInventory = (int)inv.Quantity;
-                                inv.Quantity = inv.Quantity - child.Quantity;
-                                inv.Notes = "来自于销售退货翻新明细审核";//后面修改数据库是不需要？
-                                BusinessHelper.Instance.InitEntity(inv);
                             }
                             else
                             {
@@ -307,9 +289,6 @@ namespace RUINORERP.Business
                                 BusinessHelper.Instance.EditEntity(inv);
                             }
 
-                            //采购订单时添加 。这里减掉在路上的数量
-                            inv.ProdDetailID = child.ProdDetailID;
-                            inv.Location_ID = child.Location_ID;
                             // 直接输入成本：在录入库存记录时，直接输入该产品或物品的成本价格。这种方式适用于成本价格相对稳定或容易确定的情况。
                             //平均成本法：通过计算一段时间内该产品或物品的平均成本来确定成本价格。这种方法适用于成本价格随时间波动的情况，可以更准确地反映实际成本。
                             //先进先出法（FIFO）：按照先入库的产品先出库的原则，计算库存成本。这种方法适用于库存流转速度较快，成本价格相对稳定的情况。
@@ -325,41 +304,19 @@ namespace RUINORERP.Business
                             //inv.CostFIFO = child.TransactionPrice;
                             //inv.CostMonthlyWA = child.TransactionPrice;
                             //inv.CostMovingWA = child.TransactionPrice;
+
                             inv.Inv_SubtotalCostMoney = inv.Inv_Cost * inv.Quantity;
                             inv.LatestStorageTime = System.DateTime.Now;
 
-
-
                             #endregion
-                            ReturnResults<tb_Inventory> rr = await ctrinv.SaveOrUpdate(inv);
-                            if (rr.Succeeded)
-                            {
-                                if (Opening)
-                                {
-                                    tb_OpeningInventoryController<tb_OpeningInventory> ctrOPinv = _appContext.GetRequiredService<tb_OpeningInventoryController<tb_OpeningInventory>>();
-                                    #region 处理期初
-                                    //库存都没有。期初也会没有 ,并且期初只会新增，不会修改。
-                                    tb_OpeningInventory oinv = new tb_OpeningInventory();
-                                    oinv.Inventory_ID = rr.ReturnObject.Inventory_ID;
-                                    oinv.Cost_price = rr.ReturnObject.Inv_Cost;
-                                    oinv.Subtotal_Cost_Price = oinv.Cost_price * oinv.InitQty;
-                                    oinv.InitInvDate = entity.ReturnDate;
-                                    oinv.RefBillID = entity.SaleOutRe_ID;
-                                    oinv.RefNO = entity.ReturnNo; ;
-                                    oinv.InitQty = 0;
-                                    oinv.InitInvDate = System.DateTime.Now;
-                                    //CommBillData cbd = bcf.GetBillData<tb_PurEntry>(entitys[ii]);
-                                    //oinv.RefBizType = cbd.BizType;
-                                    //TODO 还要完善引用数据
-                                    await ctrOPinv.AddReEntityAsync(oinv);
-                                    #endregion
-                                }
-                            }
-                            else
-                            {
-                                return rrs;
-                            }
-
+                            invMaterialsUpdateList.Add(inv);
+                        }
+                        
+                        int invMaterialsCounter = await _unitOfWorkManage.GetDbClient().Updateable(invMaterialsUpdateList).ExecuteCommandAsync();
+                        if (invMaterialsCounter != invMaterialsUpdateList.Count)
+                        {
+                            _unitOfWorkManage.RollbackTran();
+                            throw new Exception("翻新物料的库存更新失败！");
                         }
                     }
                 }
@@ -421,7 +378,7 @@ namespace RUINORERP.Business
 
                             //找到支付记录
                             //通过负数的应收，生成退款单
-                              await paymentController.CreatePaymentRecord(new List<tb_FM_ReceivablePayable> { returnpayable }, false);
+                            await paymentController.CreatePaymentRecord(new List<tb_FM_ReceivablePayable> { returnpayable }, false);
                             //退款单生成成功等待 财务审核
                             #endregion
 
@@ -749,7 +706,7 @@ namespace RUINORERP.Business
                     //被冲销的 找回来
                     var RetrunPayableList = await ctrpayable.BaseQueryByWhereAsync(c => c.CustomerVendor_ID == entity.CustomerVendor_ID
                     && (c.ARAPStatus == (long)ARAPStatus.已冲销)
-                   
+
                     );
 
                     var returnpayable = RetrunPayableList.FirstOrDefault();

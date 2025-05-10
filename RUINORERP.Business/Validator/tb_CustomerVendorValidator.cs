@@ -53,7 +53,7 @@ namespace RUINORERP.Business
 
 //有默认值
 
- RuleFor(tb_CustomerVendor =>tb_CustomerVendor.Paytype_ID).Must(CheckForeignKeyValueCanNull).WithMessage("默认交易方式:下拉选择值不正确。");
+ RuleFor(tb_CustomerVendor =>tb_CustomerVendor.Paytype_ID).Must(CheckForeignKeyValueCanNull).WithMessage("默认付款方式:下拉选择值不正确。");
  RuleFor(tb_CustomerVendor =>tb_CustomerVendor.Paytype_ID).NotEmpty().When(x => x.Paytype_ID.HasValue);
 
  RuleFor(tb_CustomerVendor =>tb_CustomerVendor.Customer_id).NotEmpty().When(x => x.Customer_id.HasValue);

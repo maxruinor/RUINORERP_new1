@@ -269,7 +269,7 @@ namespace RUINORERP.UI.PSI.SAL
                 //LoadDataToGrid(new List<tb_SaleOrderDetail>());
                 sgh.LoadItemDataToGrid<tb_SaleOrderDetail>(grid1, sgd, new List<tb_SaleOrderDetail>(), c => c.ProdDetailID);
             }
-            toolStripButton付款调整.ToolTipText = "当付款状态或付款类型发生变化时，需要进行付款调整才会显示。";
+            toolStripButton付款调整.ToolTipText = "当付款状态或付款方式发生变化时，需要进行付款调整才会显示。";
 
             //如果属性变化 则状态为修改
             entity.PropertyChanged += (sender, s2) =>

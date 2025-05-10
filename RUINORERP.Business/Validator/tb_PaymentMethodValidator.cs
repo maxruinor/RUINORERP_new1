@@ -21,7 +21,7 @@ using Microsoft.Extensions.Options;
 namespace RUINORERP.Business
 {
     /// <summary>
-    /// 付款方式 交易方式，后面扩展有关账期 账龄分析的字段验证类
+    /// 付款方式 付款方式，后面扩展有关账期 账龄分析的字段验证类
     /// </summary>
     /*public partial class tb_PaymentMethodValidator:AbstractValidator<tb_PaymentMethod>*/
     public partial class tb_PaymentMethodValidator:BaseValidatorGeneric<tb_PaymentMethod>

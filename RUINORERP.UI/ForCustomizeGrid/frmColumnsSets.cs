@@ -6,6 +6,8 @@ using System.Collections.Generic;
 using System.Windows.Forms;
 using System.Collections.Concurrent;
 using System.Linq;
+using RUINORERP.UI.BaseForm;
+using RUINORERP.UI.Common;
 namespace RUINORERP.UI.ForCustomizeGrid
 {
     public partial class frmColumnsSets : KryptonForm
@@ -15,7 +17,7 @@ namespace RUINORERP.UI.ForCustomizeGrid
             InitializeComponent();
         }
 
- 
+
 
         public List<ColDisplayController> ColumnDisplays { get; set; } = new List<ColDisplayController>();
 
@@ -110,7 +112,7 @@ namespace RUINORERP.UI.ForCustomizeGrid
                 }
             }
 
-       
+
 
 
             //添加悬浮提示  
@@ -370,6 +372,19 @@ namespace RUINORERP.UI.ForCustomizeGrid
             {
                 item.Checked = !item.Checked;
             }
+        }
+
+
+        public NewSumDataGridView DataGridViewSetTarget
+        { get; set; }
+
+        public Type DataSourceType { get; set; }
+
+
+
+        private async void btnMoreSetting_Click(object sender, EventArgs e)
+        {
+            //await UIBizSrvice.SetGridViewAsync(DataSourceType, DataGridViewSetTarget, CurMenuInfo, true);
         }
     }
 }

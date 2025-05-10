@@ -203,7 +203,7 @@ namespace RUINORERP.UI.MRP.PQC
                 }
                 else
                 {
-                    MainForm.Instance.PrintInfoLog(entity.ActionStatus.GetName());
+                   // MainForm.Instance.PrintInfoLog(entity.ActionStatus.GetName());
                 }
 
             };

@@ -131,7 +131,7 @@ namespace RUINORERP.UI.PSI.PUR
             var dto = QueryDto as View_PurEntryItems;
             if (!dto.CustomerVendor_ID.HasValue)
             {
-                MessageBox.Show("缺少客户信息，请将客户作为查询统计的条件。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                MessageBox.Show("缺少厂商信息，请将厂商作为查询统计的条件。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 return;
             }
             else

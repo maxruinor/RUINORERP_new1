@@ -18,10 +18,10 @@ using RUINORERP.Global.CustomAttribute;
 namespace RUINORERP.Model
 {
     /// <summary>
-    /// 付款方式 交易方式，后面扩展有关账期 账龄分析的字段
+    /// 付款方式 付款方式，后面扩展有关账期 账龄分析的字段
     /// </summary>
     [Serializable()]
-    [Description("付款方式 交易方式，后面扩展有关账期 账龄分析的字段")]
+    [Description("付款方式 付款方式，后面扩展有关账期 账龄分析的字段")]
     [SugarTable("tb_PaymentMethod")]
     public partial class tb_PaymentMethod : BaseEntity, ICloneable
     {
@@ -30,7 +30,7 @@ namespace RUINORERP.Model
             base.FieldNameList = fieldNameList;
             if (!PK_FK_ID_Check())
             {
-                throw new Exception("付款方式 交易方式，后面扩展有关账期 账龄分析的字段tb_PaymentMethod" + "外键ID与对应主主键名称不一致。请修改数据库");
+                throw new Exception("付款方式 付款方式，后面扩展有关账期 账龄分析的字段tb_PaymentMethod" + "外键ID与对应主主键名称不一致。请修改数据库");
             }
         }
 

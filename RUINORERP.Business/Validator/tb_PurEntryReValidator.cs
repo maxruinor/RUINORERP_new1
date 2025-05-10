@@ -48,7 +48,7 @@ namespace RUINORERP.Business
 
  RuleFor(tb_PurEntryRe =>tb_PurEntryRe.Employee_ID).Must(CheckForeignKeyValue).WithMessage("经办人:下拉选择值不正确。");
 
- RuleFor(tb_PurEntryRe =>tb_PurEntryRe.Paytype_ID).Must(CheckForeignKeyValueCanNull).WithMessage("付款类型:下拉选择值不正确。");
+ RuleFor(tb_PurEntryRe =>tb_PurEntryRe.Paytype_ID).Must(CheckForeignKeyValueCanNull).WithMessage("付款方式:下拉选择值不正确。");
  RuleFor(tb_PurEntryRe =>tb_PurEntryRe.Paytype_ID).NotEmpty().When(x => x.Paytype_ID.HasValue);
 
  RuleFor(tb_PurEntryRe =>tb_PurEntryRe.PurEntryID).NotEmpty().When(x => x.PurEntryID.HasValue);

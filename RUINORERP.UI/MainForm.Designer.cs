@@ -62,9 +62,9 @@ namespace RUINORERP.UI
             this.lblServerStatus = new System.Windows.Forms.ToolStripStatusLabel();
             this.lblStatusGlobal = new System.Windows.Forms.ToolStripStatusLabel();
             this.lblServerInfo = new System.Windows.Forms.ToolStripStatusLabel();
+            this.progressBar = new System.Windows.Forms.ToolStripProgressBar();
             this.tsdropBtn = new System.Windows.Forms.ToolStripDropDownButton();
             this.toolStripComboBox1 = new System.Windows.Forms.ToolStripComboBox();
-            this.progressBar = new System.Windows.Forms.ToolStripProgressBar();
             this.toolStrip1 = new System.Windows.Forms.ToolStrip();
             this.toolStripBtnUpdate = new System.Windows.Forms.ToolStripButton();
             this.toolBtnlogOff = new System.Windows.Forms.ToolStripButton();
@@ -423,6 +423,12 @@ namespace RUINORERP.UI
             this.lblServerInfo.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
             this.lblServerInfo.Visible = false;
             // 
+            // progressBar
+            // 
+            this.progressBar.Name = "progressBar";
+            this.progressBar.Size = new System.Drawing.Size(150, 16);
+            this.progressBar.ToolTipText = "全局进度条";
+            // 
             // tsdropBtn
             // 
             this.tsdropBtn.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
@@ -439,12 +445,6 @@ namespace RUINORERP.UI
             // 
             this.toolStripComboBox1.Name = "toolStripComboBox1";
             this.toolStripComboBox1.Size = new System.Drawing.Size(121, 25);
-            // 
-            // progressBar
-            // 
-            this.progressBar.Name = "progressBar";
-            this.progressBar.Size = new System.Drawing.Size(150, 16);
-            this.progressBar.ToolTipText = "全局进度条";
             // 
             // toolStrip1
             // 

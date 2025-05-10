@@ -47,13 +47,14 @@ namespace RUINORERP.Business
             {
                 // 开启事务，保证数据一致性
                 _unitOfWorkManage.BeginTran();
-                tb_OpeningInventoryController<tb_OpeningInventory> ctrOPinv = _appContext.GetRequiredService<tb_OpeningInventoryController<tb_OpeningInventory>>();
+              
                 tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
                 if (entity == null)
                 {
                     return rmsr;
                 }
-
+                List<tb_Inventory> invUpdateListFrom = new List<tb_Inventory>();
+                List<tb_Inventory> invUpdateListTo = new List<tb_Inventory>();
                 foreach (var child in entity.tb_StockTransferDetails)
                 {
                     //先看库存表中是否存在记录。  
@@ -86,17 +87,16 @@ namespace RUINORERP.Business
                         rmsr.Succeeded = false;
                         return rmsr;
                     }
-                    ReturnResults<tb_Inventory> rrfrom = await ctrinv.SaveOrUpdate(invFrom);
+                    invUpdateListFrom.Add(invFrom);
 
                     #endregion
 
                     #region 库存表的更新  调入时不考虑成本价格,如果初次入库时则使用调出时的成本。
                     //标记是否有期初
-                    bool Opening = false;
+                
                     tb_Inventory invTo = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == child.ProdDetailID && i.Location_ID == entity.Location_ID_to);
                     if (invTo != null)
                     {
-                        Opening = false;
                         //更新库存
                         invTo.Quantity = invTo.Quantity + child.Qty;
                         invTo.LatestStorageTime = System.DateTime.Now;
@@ -104,8 +104,8 @@ namespace RUINORERP.Business
                         BusinessHelper.Instance.EditEntity(invTo);
                     }
                     else
-                    {
-                        Opening = true;
+                    { 
+                      
                         invTo = new tb_Inventory();
                         invTo.Location_ID = entity.Location_ID_to;
                         invTo.ProdDetailID = child.ProdDetailID;
@@ -121,32 +121,33 @@ namespace RUINORERP.Business
                         invTo.Notes = "";//后面修改数据库是不需要？
                         BusinessHelper.Instance.InitEntity(invTo);
                     }
-
+                    invUpdateListTo.Add(invTo);
                     #endregion
 
+                  
+                }
+                int InvUpdateCounterFrom = await _unitOfWorkManage.GetDbClient().Updateable(invUpdateListFrom).ExecuteCommandAsync();
+                if (InvUpdateCounterFrom != invUpdateListFrom.Count)
+                {
+                    _unitOfWorkManage.RollbackTran();
+                    throw new Exception("来源库存更新失败！");
+                }
 
-                    ReturnResults<tb_Inventory> rr = await ctrinv.SaveOrUpdate(invTo);
-                    if (rr.Succeeded)
-                    {
-                        if (Opening)
-                        {
-                            #region 处理期初
-                            //库存都没有。期初也会没有 ,并且期初只会新增，不会修改。
-                            tb_OpeningInventory oinv = new tb_OpeningInventory();
-                            oinv.Inventory_ID = rr.ReturnObject.Inventory_ID;
-                            oinv.Cost_price = rr.ReturnObject.Inv_Cost;
-                            oinv.Subtotal_Cost_Price = oinv.Cost_price * oinv.InitQty;
-                            oinv.InitInvDate = System.DateTime.Now;
-                            oinv.RefBillID = entity.StockTransferID;
-                            oinv.RefNO = entity.StockTransferNo;
-                            oinv.InitQty = rr.ReturnObject.Quantity;
-                            oinv.RefBizType = BizTypeInt.ToString();
-                            //TODO 还要完善引用数据
-                            await ctrOPinv.AddReEntityAsync(oinv);
-                            #endregion
-                        }
-                    }
+                List<tb_Inventory> invInsertList = invUpdateListTo.Where(c => c.Inventory_ID == 0).ToList();
+               
 
+                var InvInsertCounterTo = await _unitOfWorkManage.GetDbClient().Insertable(invInsertList).ExecuteReturnSnowflakeIdAsync();
+                if (InvInsertCounterTo != invInsertList.Count)
+                {
+                    _unitOfWorkManage.RollbackTran();
+                    throw new Exception("目标库存保存失败！");
+                }
+                List<tb_Inventory> invUpdateList = invUpdateListTo.Where(c => c.Inventory_ID > 0).ToList();
+                int InvUpdateCounterTo = await _unitOfWorkManage.GetDbClient().Updateable(invUpdateList).ExecuteCommandAsync();
+                if (InvUpdateCounterTo != invUpdateList.Count)
+                {
+                    _unitOfWorkManage.RollbackTran();
+                    throw new Exception("目标库存更新失败！");
                 }
 
                 //这部分是否能提出到上一级公共部分？
@@ -186,7 +187,6 @@ namespace RUINORERP.Business
             {
                 // 开启事务，保证数据一致性
                 _unitOfWorkManage.BeginTran();
-                tb_OpeningInventoryController<tb_OpeningInventory> ctrOPinv = _appContext.GetRequiredService<tb_OpeningInventoryController<tb_OpeningInventory>>();
                 tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
 
                 foreach (var child in entity.tb_StockTransferDetails)

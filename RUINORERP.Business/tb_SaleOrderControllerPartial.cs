@@ -52,13 +52,11 @@ namespace RUINORERP.Business
             try
             {
 
-
-
                 // 开启事务，保证数据一致性
                 _unitOfWorkManage.BeginTran();
-                tb_OpeningInventoryController<tb_OpeningInventory> ctrOPinv = _appContext.GetRequiredService<tb_OpeningInventoryController<tb_OpeningInventory>>();
                 tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
-
+                List<tb_Inventory> invList = new List<tb_Inventory>();
+          
                 //更新拟销售量
                 foreach (var child in entity.tb_SaleOrderDetails)
                 {
@@ -70,24 +68,33 @@ namespace RUINORERP.Business
                         inv = new tb_Inventory();
                         inv.ProdDetailID = child.ProdDetailID;
                         inv.Location_ID = child.Location_ID;
-
                         inv.Quantity = 0;
-
                         inv.InitInventory = (int)inv.Quantity;
-                        inv.Notes = "销售订单创建";//后面修改数据库是不需要？
-                        //inv.LatestStorageTime = System.DateTime.Now;
+                        inv.Notes = "销售订单创建";
+                        inv.Sale_Qty = inv.Sale_Qty + child.Quantity;
                         BusinessHelper.Instance.InitEntity(inv);
+                        invList.Add(inv);
                     }
-                    //更新在途库存
-                    inv.Sale_Qty = inv.Sale_Qty + child.Quantity;
-                    BusinessHelper.Instance.EditEntity(inv);
-                    #endregion
-                    ReturnResults<tb_Inventory> rr = await ctrinv.SaveOrUpdate(inv);
-                    if (rr.Succeeded)
+                    else
                     {
-
+                        //更新在途库存
+                        inv.Sale_Qty = inv.Sale_Qty + child.Quantity;
+                        BusinessHelper.Instance.EditEntity(inv);
+                        invList.Add(inv);
                     }
+                   
+                    #endregion
+
                 }
+
+                DbHelper<tb_Inventory> dbHelper = _appContext.GetRequiredService<DbHelper<tb_Inventory>>();
+                var Counter = await dbHelper.BaseDefaultAddElseUpdateAsync(invList);
+                if (Counter != invList.Count)
+                {
+                    _unitOfWorkManage.RollbackTran();
+                    throw new Exception("库存更新失败！");
+                }
+                
 
                 AuthorizeController authorizeController = _appContext.GetRequiredService<AuthorizeController>();
                 if (authorizeController.EnableFinancialModule())
@@ -280,7 +287,7 @@ namespace RUINORERP.Business
             {
                 // 开启事务，保证数据一致性
                 _unitOfWorkManage.BeginTran();
-                tb_OpeningInventoryController<tb_OpeningInventory> ctrOPinv = _appContext.GetRequiredService<tb_OpeningInventoryController<tb_OpeningInventory>>();
+
                 tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
 
                 if (!approvalEntity.ApprovalResults)
@@ -380,7 +387,7 @@ namespace RUINORERP.Business
                 // 开启事务，保证数据一致性
                 _unitOfWorkManage.BeginTran();
                 #region 结案
-                tb_OpeningInventoryController<tb_OpeningInventory> ctrOPinv = _appContext.GetRequiredService<tb_OpeningInventoryController<tb_OpeningInventory>>();
+
 
                 //更新拟销售量  减少
                 for (int m = 0; m < entitys.Count; m++)
@@ -472,7 +479,7 @@ namespace RUINORERP.Business
                 // 开启事务，保证数据一致性
                 _unitOfWorkManage.BeginTran();
                 #region 反结案
-                tb_OpeningInventoryController<tb_OpeningInventory> ctrOPinv = _appContext.GetRequiredService<tb_OpeningInventoryController<tb_OpeningInventory>>();
+
 
                 //更新拟销售量  加回去
                 for (int m = 0; m < entitys.Count; m++)
@@ -637,7 +644,7 @@ namespace RUINORERP.Business
             {
                 // 开启事务，保证数据一致性
                 _unitOfWorkManage.BeginTran();
-                tb_OpeningInventoryController<tb_OpeningInventory> ctrOPinv = _appContext.GetRequiredService<tb_OpeningInventoryController<tb_OpeningInventory>>();
+
                 tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
                 //更新拟销售量减少
 
@@ -662,33 +669,29 @@ namespace RUINORERP.Business
                     rmrs.Succeeded = false;
                     return rmrs;
                 }
+                List<tb_Inventory> invUpdateList = new List<tb_Inventory>();
                 foreach (var child in entity.tb_SaleOrderDetails)
                 {
                     #region 库存表的更新 ，
                     tb_Inventory inv = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == child.ProdDetailID && i.Location_ID == child.Location_ID);
                     if (inv == null)
                     {
-                        inv = new tb_Inventory();
-                        inv.ProdDetailID = child.ProdDetailID;
-                        inv.Location_ID = child.Location_ID;
-                        inv.Quantity = 0;
-                        inv.InitInventory = (int)inv.Quantity;
-                        inv.Notes = "";//后面修改数据库是不需要？
-                        //inv.LatestStorageTime = System.DateTime.Now;
-                        BusinessHelper.Instance.InitEntity(inv);
+                        //实际不会出现这个情况。因为审核时创建了。
+                        _unitOfWorkManage.RollbackTran();
+                        throw new Exception("库存数据不存在,反审失败！");
                     }
                     //更新在途库存
                     inv.Sale_Qty = inv.Sale_Qty - child.Quantity;
                     BusinessHelper.Instance.EditEntity(inv);
                     #endregion
-                    ReturnResults<tb_Inventory> rr = await ctrinv.SaveOrUpdate(inv);
-                    if (rr.Succeeded)
-                    {
-
-                    }
+                    invUpdateList.Add(inv);
                 }
-
-
+                int InvUpdateCounter = await _unitOfWorkManage.GetDbClient().Updateable(invUpdateList).ExecuteCommandAsync();
+                if (InvUpdateCounter != invUpdateList.Count)
+                {
+                    _unitOfWorkManage.RollbackTran();
+                    throw new Exception("库存更新失败！");
+                }
                 AuthorizeController authorizeController = _appContext.GetRequiredService<AuthorizeController>();
                 if (authorizeController.EnableFinancialModule())
                 {
@@ -757,7 +760,7 @@ namespace RUINORERP.Business
         }
         /// <summary>
         /// 更新付款状态，并且一次只能更新一个单据
-        /// 更新订单，更新出库单的付款状态， 付款状态，付款类型。付款日期？付款凭证？
+        /// 更新订单，更新出库单的付款状态， 付款状态，付款方式。付款日期？付款凭证？
         /// </summary>
         /// <param name="entity"></param>
         /// <returns></returns>
@@ -811,7 +814,7 @@ namespace RUINORERP.Business
 
         /// <summary>
         /// 更新付款状态，并且一次只能更新一个单据
-        /// 更新订单，更新出库单的付款状态， 付款状态，付款类型。付款日期？付款凭证？
+        /// 更新订单，更新出库单的付款状态， 付款状态，付款方式。付款日期？付款凭证？
         /// </summary>
         /// <param name="entity"></param>
         /// <returns></returns>
@@ -1058,7 +1061,7 @@ namespace RUINORERP.Business
             {
                 // 开启事务，保证数据一致性
                 _unitOfWorkManage.BeginTran();
-                tb_OpeningInventoryController<tb_OpeningInventory> ctrOPinv = _appContext.GetRequiredService<tb_OpeningInventoryController<tb_OpeningInventory>>();
+
                 tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
                 //更新拟销售量减少
 

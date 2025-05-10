@@ -185,10 +185,13 @@ namespace RUINORERP.Business
                     }
 
 
-                    // 如果成本为零时则会实时检测库存成本，以库存成本为基准。这种情况解决未知成本，提前销售的情况。
+                    // 如果成本为零时则会实时检测库存成本，以库存成本为基准。这种情况解决未知成本，提前销售的情况。 相于于订单时成本不清楚写的0。销售出库时才有成本。
+
                     //这里设置一个集合 用于保存特殊情况，后面统一更新
                     List<tb_SaleOutDetail> UpdateSaleOutCostlist = new List<tb_SaleOutDetail>();
-                    List<tb_SaleOrderDetail> UpdateSaleOrderCostlist = new List<tb_SaleOrderDetail>();
+
+                    List<tb_Inventory> invUpdateList = new List<tb_Inventory>();
+                    List<tb_PriceRecord> priceUpdateList = new List<tb_PriceRecord>();
                     foreach (var child in entity.tb_SaleOutDetails)
                     {
                         #region 库存表的更新 这里应该是必需有库存的数据，
@@ -222,10 +225,9 @@ namespace RUINORERP.Business
 
                         #region 更新销售价格历史记录
                         //注意这里的人应该是业务员的ID。销售订单的录入人，不是审核人。也不是出库单的人。
-                        // tb_PriceRecordController<tb_PriceRecord> ctrPriceRecord = _appContext.GetRequiredService<tb_PriceRecordController<tb_PriceRecord>>();
+
                         tb_PriceRecord priceRecord = _unitOfWorkManage.GetDbClient().Queryable<tb_PriceRecord>()
                         .Where(c => c.Employee_ID == entity.tb_saleorder.Employee_ID && c.ProdDetailID == child.ProdDetailID
-
                         ).First();
                         //如果存在则更新，否则插入
                         if (priceRecord == null)
@@ -238,21 +240,11 @@ namespace RUINORERP.Business
                             priceRecord.SalePrice = child.TransactionPrice;
                             priceRecord.SaleDate = System.DateTime.Now;
                             priceRecord.ProdDetailID = child.ProdDetailID;
-
-                            await _unitOfWorkManage.GetDbClient().Storageable(priceRecord).DefaultAddElseUpdate().ExecuteReturnEntityAsync();
-                            //ReturnResults<tb_PriceRecord> rrpr = await ctrPriceRecord.SaveOrUpdate(priceRecord);
                         }
-
+                        priceUpdateList.Add(priceRecord);
                         #endregion
-                        await _unitOfWorkManage.GetDbClient().Storageable(inv).DefaultAddElseUpdate().ExecuteReturnEntityAsync();
-                        //ReturnResults<tb_Inventory> rr = await ctrinv.SaveOrUpdate(inv);
-                        //if (rr.Succeeded)
-                        //{
-                        //}
-                        //else
-                        //{
-                        //    return rrs;
-                        //}
+                        invUpdateList.Add(inv);
+
                         #region 如果成本为零时则会实时检测库存成本，以库存成本为基准。这种情况解决未知成本，提前销售的情况。
                         if (child.Cost == 0 && inv.Inv_Cost > 0)
                         {
@@ -262,13 +254,27 @@ namespace RUINORERP.Business
                         #endregion
 
                     }
-
-
-                    int UpdateSaleOutCostCounter = await _unitOfWorkManage.GetDbClient().Updateable<tb_SaleOutDetail>(UpdateSaleOutCostlist).ExecuteCommandAsync();
-                    if (UpdateSaleOutCostCounter > 0)
+                    int InvUpdateCounter = await _unitOfWorkManage.GetDbClient().Updateable(invUpdateList).ExecuteCommandAsync();
+                    if (InvUpdateCounter != invUpdateList.Count)
                     {
-
+                        _unitOfWorkManage.RollbackTran();
+                        throw new Exception("库存更新失败！");
                     }
+                    DbHelper<tb_SaleOutDetail> dbHelper = _appContext.GetRequiredService<DbHelper<tb_SaleOutDetail>>();
+                    var Counter = await dbHelper.BaseDefaultAddElseUpdateAsync(UpdateSaleOutCostlist);
+                    if (Counter != UpdateSaleOutCostlist.Count)
+                    {
+                        _unitOfWorkManage.RollbackTran();
+                        throw new Exception("销售出库价格更新失败！");
+                    }
+                    DbHelper<tb_PriceRecord> dbHelperPrice = _appContext.GetRequiredService<DbHelper<tb_PriceRecord>>();
+                    var PriceCounter = await dbHelperPrice.BaseDefaultAddElseUpdateAsync(priceUpdateList);
+                    if (PriceCounter != priceUpdateList.Count)
+                    {
+                        _unitOfWorkManage.RollbackTran();
+                        throw new Exception("价格记录更新失败！");
+                    }
+
                     if (!entity.ReplaceOut)
                     {
                         #region 回写订单状态及明细数据
@@ -688,6 +694,7 @@ namespace RUINORERP.Business
                         entity.ShipCost = 0;
                     }
                     entity.ApprovalStatus = (int)ApprovalStatus.已审核;
+                    entity.ApprovalResults = true;
                     BusinessHelper.Instance.ApproverEntity(entity);
                     //只更新指定列
                     int last = await _unitOfWorkManage.GetDbClient().Updateable<tb_SaleOut>(entity).ExecuteCommandAsync();
@@ -752,7 +759,7 @@ namespace RUINORERP.Business
             {
                 // 开启事务，保证数据一致性
                 _unitOfWorkManage.BeginTran();
-                //  tb_OpeningInventoryController<tb_OpeningInventory> ctrOPinv = _appContext.GetRequiredService<tb_OpeningInventoryController<tb_OpeningInventory>>();
+                //  
                 tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
                 //更新拟销售量减少
 
@@ -776,6 +783,8 @@ namespace RUINORERP.Business
                     rs.Succeeded = false;
                     return rs;
                 }
+                List<tb_Inventory> invUpdateList = new List<tb_Inventory>();
+
                 foreach (var child in entity.tb_SaleOutDetails)
                 {
                     #region 库存表的更新 ，
@@ -783,17 +792,10 @@ namespace RUINORERP.Business
                     if (inv == null)
                     {
                         _unitOfWorkManage.RollbackTran();
-                        rs.ErrorMsg = $"{child.ProdDetailID}当前产品无库存数据，无法借出。请使用【期初盘点】【采购入库】】【生产缴库】的方式进行盘点后，再操作。";
+                        rs.ErrorMsg = $"{child.ProdDetailID}当前产品无库存数据，无法出库。请使用【期初盘点】【采购入库】】【生产缴库】的方式进行盘点后，再操作。";
                         rs.Succeeded = false;
                         return rs;
-                        inv = new tb_Inventory();
-                        inv.ProdDetailID = child.ProdDetailID;
-                        inv.Location_ID = child.Location_ID;
-                        inv.Quantity = 0;
-                        inv.InitInventory = (int)inv.Quantity;
-                        inv.Notes = "";//后面修改数据库是不需要？
-                                       //inv.LatestStorageTime = System.DateTime.Now;
-                        BusinessHelper.Instance.InitEntity(inv);
+
                     }
                     //更新在途库存
                     //反审，出库的要加回来，要卖的也要加回来
@@ -802,15 +804,17 @@ namespace RUINORERP.Business
                     //最后出库时间要改回来，这里没有处理
                     //inv.LatestStorageTime
                     BusinessHelper.Instance.EditEntity(inv);
+                    invUpdateList.Add(inv);
                     #endregion
-
-                    await _unitOfWorkManage.GetDbClient().Storageable(inv).ExecuteReturnEntityAsync();
-                    // ReturnResults<tb_Inventory> rr = await ctrinv.SaveOrUpdate(inv);
-                    // if (rr.Succeeded)
-                    // {
-
-                    // }
                 }
+
+                int InvUpdateCounter = await _unitOfWorkManage.GetDbClient().Updateable(invUpdateList).ExecuteCommandAsync();
+                if (InvUpdateCounter != invUpdateList.Count)
+                {
+                    _unitOfWorkManage.RollbackTran();
+                    throw new Exception("库存更新失败！");
+                }
+
                 if (!entity.ReplaceOut)
                 {
                     #region  反审检测写回 退回

@@ -30,7 +30,7 @@ using RUINORERP.Common.Helper;
 namespace RUINORERP.Business.Processor
 {
     /// <summary>
-    /// 付款方式 交易方式，后面扩展有关账期 账龄分析的字段
+    /// 付款方式 付款方式，后面扩展有关账期 账龄分析的字段
     /// </summary>
     public partial class tb_PaymentMethodProcessor:BaseProcessor 
     {

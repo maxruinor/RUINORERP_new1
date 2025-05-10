@@ -20,6 +20,7 @@ using System.Linq;
 using RUINORERP.Business.CommService;
 using RUINOR.Core;
 using RUINORERP.Common.Helper;
+using System.Collections;
 
 namespace RUINORERP.Business
 {
@@ -39,9 +40,12 @@ namespace RUINORERP.Business
             {
                 // 开启事务，保证数据一致性
                 _unitOfWorkManage.BeginTran();
-                tb_OpeningInventoryController<tb_OpeningInventory> ctrOPinv = _appContext.GetRequiredService<tb_OpeningInventoryController<tb_OpeningInventory>>();
+
                 tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
                 //更新库存  from 8 to   from-qty=to+qty;
+
+                List<tb_Inventory> invList = new List<tb_Inventory>();
+
                 foreach (var child in entity.tb_ProdConversionDetails)
                 {
                     int TransferQty = child.ConversionQty;
@@ -54,14 +58,6 @@ namespace RUINORERP.Business
                             $"\r\n可以尝用【期初盘点】数量为零的方式或开启【手工录入】初始成本。";
                         rmrs.Succeeded = false;
                         return rmrs;
-                        invForm = new tb_Inventory();
-                        invForm.ProdDetailID = child.ProdDetailID_from;
-                        invForm.Location_ID = entity.Location_ID;
-                        invForm.Quantity = 0;
-                        invForm.Inv_Cost = child.TargetInitCost;
-
-                        invForm.InitInventory = (int)invForm.Quantity;
-                        BusinessHelper.Instance.InitEntity(invForm);
                     }
                     else
                     {
@@ -130,9 +126,22 @@ namespace RUINORERP.Business
                     }
                     invTo.Quantity = invTo.Quantity + TransferQty;
                     #endregion
-                    ReturnResults<tb_Inventory> rrFrom = await ctrinv.SaveOrUpdate(invForm);
-                    ReturnResults<tb_Inventory> rrTo = await ctrinv.SaveOrUpdate(invTo);
+
+                    invList.Add(invForm);
+                    invList.Add(invTo);
+
                 }
+                DbHelper<tb_Inventory> dbHelper = _appContext.GetRequiredService<DbHelper<tb_Inventory>>();
+                var InvMainCounter = await dbHelper.BaseDefaultAddElseUpdateAsync(invList);
+                if (InvMainCounter.ToInt() != invList.Count)
+                {
+                    _unitOfWorkManage.RollbackTran();
+                    throw new Exception("库存更新失败！");
+                }
+
+
+
+
                 //这部分是否能提出到上一级公共部分？
                 entity.DataStatus = (int)DataStatus.确认;
                 entity.ApprovalStatus = (int)ApprovalStatus.已审核;
@@ -169,7 +178,7 @@ namespace RUINORERP.Business
                 // 开启事务，保证数据一致性
                 _unitOfWorkManage.BeginTran();
                 #region 结案
-                tb_OpeningInventoryController<tb_OpeningInventory> ctrOPinv = _appContext.GetRequiredService<tb_OpeningInventoryController<tb_OpeningInventory>>();
+
 
                 //更新拟销售量  减少
                 for (int m = 0; m < entitys.Count; m++)
@@ -221,7 +230,7 @@ namespace RUINORERP.Business
             {
                 // 开启事务，保证数据一致性
                 _unitOfWorkManage.BeginTran();
-                tb_OpeningInventoryController<tb_OpeningInventory> ctrOPinv = _appContext.GetRequiredService<tb_OpeningInventoryController<tb_OpeningInventory>>();
+
                 tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
 
                 //判断是否能反审?
@@ -233,6 +242,9 @@ namespace RUINORERP.Business
                     return rmrs;
                 }
                 //反审核时 更新库存  from 8 to   from-qty=to+qty;===》  from+qty=to-qty
+                List<tb_Inventory> invList = new List<tb_Inventory>();
+
+                //将from的 数量 减少，to 数量增加  但是如果为负数。则实际相反
                 foreach (var child in entity.tb_ProdConversionDetails)
                 {
                     int TransferQty = child.ConversionQty;
@@ -244,7 +256,7 @@ namespace RUINORERP.Business
                         invForm.ProdDetailID = child.ProdDetailID_from;
                         invForm.Location_ID = entity.Location_ID;
                         invForm.Quantity = 0;
-                        invForm.InitInventory = (int)invForm.Quantity;
+                        invForm.InitInventory += (int)invForm.Quantity;
                         BusinessHelper.Instance.InitEntity(invForm);
                     }
                     else
@@ -254,7 +266,7 @@ namespace RUINORERP.Business
 
                     if (TransferQty > 0)
                     {
-                        invForm.LatestStorageTime = System.DateTime.Now;
+                        invForm.LatestOutboundTime = System.DateTime.Now;
 
                     }
                     if (TransferQty < 0)
@@ -266,9 +278,11 @@ namespace RUINORERP.Business
                             rmrs.Succeeded = false;
                             return rmrs;
                         }
-                        invForm.LatestOutboundTime = System.DateTime.Now;
+                        invForm.LatestStorageTime = System.DateTime.Now;
                     }
-                    invForm.Quantity = invForm.Quantity + TransferQty;
+                    invForm.Quantity += TransferQty;
+
+                    invList.Add(invForm);
                     #endregion
 
                     #region  目标库存更新 ，
@@ -279,7 +293,7 @@ namespace RUINORERP.Business
                         invTo.ProdDetailID = child.ProdDetailID_to;
                         invTo.Location_ID = entity.Location_ID;
                         invTo.Quantity = 0;
-                        invTo.InitInventory = (int)invTo.Quantity;
+                        invTo.InitInventory -= (int)invTo.Quantity;
                         BusinessHelper.Instance.InitEntity(invTo);
                     }
                     else
@@ -296,19 +310,24 @@ namespace RUINORERP.Business
                             rmrs.Succeeded = false;
                             return rmrs;
                         }
-                        invForm.LatestOutboundTime = System.DateTime.Now;
-
-                    }
-                    invTo.Quantity = invTo.Quantity - TransferQty;
-                    if (TransferQty < 0)
-                    {
                         invTo.LatestStorageTime = System.DateTime.Now;
                     }
+                    invTo.Quantity -=  TransferQty;
+                    if (TransferQty < 0)
+                    {
+                        invTo.LatestOutboundTime = System.DateTime.Now;
+                    }
                     #endregion
-                    ReturnResults<tb_Inventory> rrFrom = await ctrinv.SaveOrUpdate(invForm);
-                    ReturnResults<tb_Inventory> rrTo = await ctrinv.SaveOrUpdate(invTo);
+                    invList.Add(invTo);
                 }
-
+                DbHelper<tb_Inventory> dbHelper = _appContext.GetRequiredService<DbHelper<tb_Inventory>>();
+                var Counter = await dbHelper.BaseDefaultAddElseUpdateAsync(invList);
+                if (Counter != invList.Count)
+                {
+                    _unitOfWorkManage.RollbackTran();
+                    throw new Exception("库存更新失败！");
+                }
+                
                 //这部分是否能提出到上一级公共部分？
                 entity.DataStatus = (int)DataStatus.新建;
                 entity.ApprovalResults = false;

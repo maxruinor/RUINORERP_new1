@@ -216,12 +216,14 @@ namespace RUINORERP.Common.Log4Net
 
         }
 
+
+        //TODO  发布前 日志缓存 多设置一些
         public ILoggerRepository CreateLoggerRepository(string _ConnectionString)
         {
             log4net.Repository.ILoggerRepository rep = log4net.LogManager.CreateRepository(Guid.NewGuid().ToString());
             AdoNetAppender adoNetAppender = new AdoNetAppender();
             //adoNetAppender.BufferSize = -1; //缓冲区大小  默认为256 ，0 -1 都是 有就保存。这样数据库开销大。
-            adoNetAppender.BufferSize = 5; // 设置合理缓冲 后面可以设置为50，100
+            adoNetAppender.BufferSize = 0; // 设置合理缓冲 后面可以设置为50，100
             adoNetAppender.Lossy = false; // 确保不丢失日志
 
 

@@ -1830,6 +1830,7 @@ namespace RUINORERP.UI.BaseForm
             {
                 return null;
             }
+             
             ApprovalEntity ae = new ApprovalEntity();
             if (ReflectionHelper.ExistPropertyName<T>("ApprovalStatus") && ReflectionHelper.ExistPropertyName<T>("ApprovalResults"))
             {
@@ -1903,23 +1904,25 @@ namespace RUINORERP.UI.BaseForm
                     foreach (var property in array_property)
                     {
                         //保存审核结果 将审核中间值给到单据中，是否做循环处理？
-                        //Expression<Func<ApprovalEntity, object>> PNameExp = t => t.ApprovalStatus;
-                        //MemberInfo minfo = PNameExp.GetMemberInfo();
-                        //string propertyName = minfo.Name;
                         if (ReflectionHelper.ExistPropertyName<T>(property.Name))
                         {
                             object aeValue = ReflectionHelper.GetPropertyValue(ae, property.Name);
-                            //if (aeValue.Equals(true))
-                            //{
-                            //    aeValue = 1;
-                            //}
-                            //if (aeValue.Equals(false))
-                            //{
-                            //    aeValue = 0;
-                            //}
                             ReflectionHelper.SetPropertyValue(EditEntity, property.Name, aeValue);
                         }
                     }
+                }
+                //审核通过赋值
+                if (ReflectionHelper.ExistPropertyName<T>("ApprovalOpinions"))
+                {
+                    EditEntity.SetPropertyValue("ApprovalOpinions", ae.ApprovalOpinions);
+                }
+                if (ReflectionHelper.ExistPropertyName<T>("ApprovalStatus"))
+                {
+                    EditEntity.SetPropertyValue("ApprovalStatus", (int)ApprovalStatus.已审核);
+                }
+                if (ReflectionHelper.ExistPropertyName<T>("ApprovalResults"))
+                {
+                    EditEntity.SetPropertyValue("ApprovalResults", true);
                 }
 
                 ReturnResults<T> rmr = new ReturnResults<T>();
@@ -1960,7 +1963,7 @@ namespace RUINORERP.UI.BaseForm
                     {
                         toolStripbtnReview.Enabled = true;
                     }
-
+                    ToolBarEnabledControl(EditEntity);
                     ae.ApprovalResults = true;
                     AuditLogHelper.Instance.CreateAuditLog<T>("审核", EditEntity, $"审核结果：{ae.ApprovalResults}-{ae.ApprovalOpinions}");
                 }

@@ -57,7 +57,7 @@ namespace RUINORERP.Business
                 // 开启事务，保证数据一致性
                 _unitOfWorkManage.BeginTran();
                 #region 结案
-                tb_OpeningInventoryController<tb_OpeningInventory> ctrOPinv = _appContext.GetRequiredService<tb_OpeningInventoryController<tb_OpeningInventory>>();
+
 
                 //更新拟销售量  减少
                 for (int m = 0; m < entitys.Count; m++)
@@ -75,6 +75,10 @@ namespace RUINORERP.Business
                     decimal 应发数 = entitys[m].tb_ManufacturingOrderDetails.Select(c => c.ShouldSendQty).Sum();
 
                     tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
+
+                    List<tb_Inventory> invUpdateList = new List<tb_Inventory>();
+
+
                     for (int c = 0; c < entitys[m].tb_ManufacturingOrderDetails.Count; c++)
                     {
                         #region 库存表的更新 ，
@@ -104,11 +108,14 @@ namespace RUINORERP.Business
                         }
                         BusinessHelper.Instance.EditEntity(inv);
                         #endregion
-                        ReturnResults<tb_Inventory> rr = await ctrinv.SaveOrUpdate(inv);
-                        if (rr.Succeeded)
-                        {
+                        invUpdateList.Add(inv);
+                    }
 
-                        }
+                    int InvUpdateCounter = await _unitOfWorkManage.GetDbClient().Updateable(invUpdateList).ExecuteCommandAsync();
+                    if (InvUpdateCounter != invUpdateList.Count)
+                    {
+                        _unitOfWorkManage.RollbackTran();
+                        throw new Exception("库存更新失败！");
                     }
 
                     //这部分是否能提出到上一级公共部分？
@@ -153,7 +160,7 @@ namespace RUINORERP.Business
             {
                 // 开启事务，保证数据一致性
                 _unitOfWorkManage.BeginTran();
-                tb_OpeningInventoryController<tb_OpeningInventory> ctrOPinv = _appContext.GetRequiredService<tb_OpeningInventoryController<tb_OpeningInventory>>();
+
                 tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
                 //更新拟销售量减少
 
@@ -225,17 +232,25 @@ namespace RUINORERP.Business
                 }
                 invMain.MakingQty -= entity.ManufacturingQty.ToInt();
                 //更新未发数量
-
                 BusinessHelper.Instance.EditEntity(invMain);
-                ReturnResults<tb_Inventory> rr = await ctrinv.SaveOrUpdate(invMain);
-                if (rr.Succeeded)
-                {
 
+
+                //下面的写法可以做到批量的  插入更新。雪花ID
+                //var x = _unitOfWorkManage.GetDbClient().Storageable(units).ToStorage();
+                //x.AsInsertable.ExecuteReturnSnowflakeIdList();//不存在插入
+                //return await x.AsUpdateable.ExecuteCommandAsync();//存在更新
+                DbHelper<tb_Inventory> dbHelper = _appContext.GetRequiredService<DbHelper<tb_Inventory>>();
+                var InvMainCounter = await dbHelper.BaseDefaultAddElseUpdateAsync(invMain);
+                if (InvMainCounter == 0)
+                {
+                    _unitOfWorkManage.RollbackTran();
+                    throw new Exception("在制产品库存更新失败！");
                 }
+
 
                 #endregion
 
-
+                List<tb_Inventory> invUpdateList = new List<tb_Inventory>();
                 foreach (tb_ManufacturingOrderDetail item in entity.tb_ManufacturingOrderDetails)
                 {
                     #region 更新未发数量 是要在明细中体现的
@@ -250,14 +265,15 @@ namespace RUINORERP.Business
                         throw new Exception($"ProdDetailID:{inv.ProdDetailID}不存在库存信息");
                     }
                     BusinessHelper.Instance.EditEntity(inv);
-                    ReturnResults<tb_Inventory> rv = await ctrinv.SaveOrUpdate(inv);
-                    if (rv.Succeeded)
-                    {
-
-                    }
+                    invUpdateList.Add(inv);
                     #endregion
                 }
-
+                int InvUpdateCounter = await _unitOfWorkManage.GetDbClient().Updateable(invUpdateList).ExecuteCommandAsync();
+                if (InvUpdateCounter != invUpdateList.Count)
+                {
+                    _unitOfWorkManage.RollbackTran();
+                    throw new Exception("库存更新失败！");
+                }
                 //这部分是否能提出到上一级公共部分？
                 entity.DataStatus = (int)DataStatus.新建;
                 entity.ApprovalResults = false;
@@ -309,7 +325,7 @@ namespace RUINORERP.Business
             {
                 // 开启事务，保证数据一致性
                 _unitOfWorkManage.BeginTran();
-                tb_OpeningInventoryController<tb_OpeningInventory> ctrOPinv = _appContext.GetRequiredService<tb_OpeningInventoryController<tb_OpeningInventory>>();
+
                 tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
 
                 //更新未发料量
@@ -348,11 +364,10 @@ namespace RUINORERP.Business
                 #endregion
 
                 #region 更新在制数量，这个是针对主表目标的更新
-                bool MainOpening = false;
+
                 tb_Inventory invMain = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == entity.ProdDetailID && i.Location_ID == entity.Location_ID);
                 if (invMain == null)
                 {
-                    MainOpening = true;
                     invMain = new tb_Inventory();
                     invMain.ProdDetailID = entity.ProdDetailID;
                     invMain.Location_ID = entity.Location_ID;
@@ -366,40 +381,31 @@ namespace RUINORERP.Business
                 #endregion
 
                 BusinessHelper.Instance.EditEntity(invMain);
-
-                ReturnResults<tb_Inventory> rr = await ctrinv.SaveOrUpdate(invMain);
-                if (rr.Succeeded)
+                DbHelper<tb_Inventory> dbHelper = _appContext.GetRequiredService<DbHelper<tb_Inventory>>();
+                var InvMainCounter = await dbHelper.BaseDefaultAddElseUpdateAsync(invMain);
+              
+                if (InvMainCounter == 0)
                 {
-                    if (MainOpening)
-                    {
-                        #region 处理期初
-                        //库存都没有。期初也会没有 ,并且期初只会新增，不会修改。
-                        tb_OpeningInventory oinv = new tb_OpeningInventory();
-                        oinv.Inventory_ID = rr.ReturnObject.Inventory_ID;
-                        oinv.Cost_price = rr.ReturnObject.Inv_Cost;
-                        oinv.Subtotal_Cost_Price = oinv.Cost_price * oinv.InitQty;
-                        oinv.InitInvDate = System.DateTime.Now;
-                        oinv.InitQty = 0;
-                        oinv.InitInvDate = System.DateTime.Now;
-                        oinv.Notes = "制令单审核时，自动生成期初信息";
-                        await ctrOPinv.AddReEntityAsync(oinv);
-                        #endregion
-                    }
+                    _unitOfWorkManage.RollbackTran();
+                    throw new Exception("在制产品库存更新失败！");
                 }
 
+                List<tb_Inventory> invInsertList = new List<tb_Inventory>();
+                List<tb_Inventory> invUpdateList = new List<tb_Inventory>();
                 foreach (tb_ManufacturingOrderDetail item in entity.tb_ManufacturingOrderDetails)
                 {
                     #region 更新未发数量 是要在明细中体现的
-                    bool Opening = false;
+
                     tb_Inventory inv = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == item.ProdDetailID && i.Location_ID == item.Location_ID);
                     if (inv != null)
                     {
                         inv.NotOutQty += item.ShouldSendQty.ToInt();
                         BusinessHelper.Instance.EditEntity(inv);
+                        invUpdateList.Add(inv);
                     }
                     else
                     {
-                        Opening = true;
+
                         inv = new tb_Inventory();
                         inv.ProdDetailID = item.ProdDetailID;
                         inv.Location_ID = item.Location_ID;
@@ -407,29 +413,24 @@ namespace RUINORERP.Business
                         inv.InitInventory = 0;
                         inv.Notes = "制令单审核时，自动生成库存信息";
                         BusinessHelper.Instance.InitEntity(inv);
+                        invInsertList.Add(inv);
                     }
-                    ReturnResults<tb_Inventory> rv = await ctrinv.SaveOrUpdate(inv);
-                    if (rv.Succeeded)
-                    {
-                        if (Opening)
-                        {
-                            #region 处理期初
-                            //库存都没有。期初也会没有 ,并且期初只会新增，不会修改。
-                            tb_OpeningInventory oinvSub = new tb_OpeningInventory();
-                            oinvSub.Inventory_ID = rv.ReturnObject.Inventory_ID;
-                            oinvSub.Cost_price = rv.ReturnObject.Inv_Cost;
-                            oinvSub.Subtotal_Cost_Price = oinvSub.Cost_price * oinvSub.InitQty;
-                            oinvSub.InitInvDate = System.DateTime.Now;
-                            oinvSub.InitQty = 0;
-                            oinvSub.InitInvDate = System.DateTime.Now;
-                            oinvSub.Notes = "制令单审核时，自动生成期初信息";
-                            await ctrOPinv.AddReEntityAsync(oinvSub);
-                            #endregion
-                        }
-                    }
+
                     #endregion
                 }
+                var InvInsertCounter = await _unitOfWorkManage.GetDbClient().Insertable(invInsertList).ExecuteReturnSnowflakeIdAsync();
+                if (InvInsertCounter != invInsertList.Count)
+                {
+                    _unitOfWorkManage.RollbackTran();
+                    throw new Exception("库存保存失败！");
+                }
 
+                int InvUpdateCounter = await _unitOfWorkManage.GetDbClient().Updateable(invUpdateList).ExecuteCommandAsync();
+                if (InvUpdateCounter != invUpdateList.Count)
+                {
+                    _unitOfWorkManage.RollbackTran();
+                    throw new Exception("库存更新失败！");
+                }
 
                 //这部分是否能提出到上一级公共部分？
                 entity.DataStatus = (int)DataStatus.确认;

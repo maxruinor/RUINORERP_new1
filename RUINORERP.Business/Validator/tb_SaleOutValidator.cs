@@ -54,7 +54,7 @@ namespace RUINORERP.Business
 
             RuleFor(tb_SaleOut => tb_SaleOut.PayStatus).NotEmpty().When(x => x.PayStatus.HasValue);
 
-            RuleFor(tb_SaleOut => tb_SaleOut.Paytype_ID).Must(CheckForeignKeyValueCanNull).WithMessage("付款类型:下拉选择值不正确。");
+            RuleFor(tb_SaleOut => tb_SaleOut.Paytype_ID).Must(CheckForeignKeyValueCanNull).WithMessage("付款方式:下拉选择值不正确。");
             RuleFor(tb_SaleOut => tb_SaleOut.Paytype_ID).NotEmpty().When(x => x.Paytype_ID.HasValue);
 
             RuleFor(x => x.ShipCost).PrecisionScale(19, 4, true).WithMessage("运费:小数位不能超过4。");

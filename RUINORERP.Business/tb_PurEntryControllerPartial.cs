@@ -62,7 +62,7 @@ namespace RUINORERP.Business
                     return rs;
                 }
 
-                tb_OpeningInventoryController<tb_OpeningInventory> ctrOPinv = _appContext.GetRequiredService<tb_OpeningInventoryController<tb_OpeningInventory>>();
+                
                 tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
                 BillConverterFactory bcf = _appContext.GetRequiredService<BillConverterFactory>();
 
@@ -192,15 +192,16 @@ namespace RUINORERP.Business
                         _logger.Debug(entity.PurEntryNo + "==>" + entity.PurOrder_NO + $"对应 的订单更新成功===重点代码 看已交数量是否正确");
                     }
                 }
+                List<tb_Inventory> invInsertList =new List<tb_Inventory>();
+                List<tb_Inventory> invUpdateList=new List<tb_Inventory>();
 
                 foreach (tb_PurEntryDetail child in entity.tb_PurEntryDetails)
                 {
                     #region 库存表的更新 这里应该是必需有库存的数据，
-                    bool Opening = false;
+                 
                     tb_Inventory inv = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == child.ProdDetailID && i.Location_ID == child.Location_ID);
                     if (inv == null)
                     {
-                        Opening = true;
                         inv = new tb_Inventory();
                         inv.InitInventory = (int)inv.Quantity;
                         inv.Notes = "采购入库创建";//后面修改数据库是不需要？
@@ -287,38 +288,29 @@ namespace RUINORERP.Business
 
                         #endregion
                     }
-
-
-                    ReturnResults<tb_Inventory> rr = await ctrinv.SaveOrUpdate(inv);
-                    if (rr.Succeeded)
+                    if (inv.Inventory_ID==0)
                     {
-                        if (AuthorizeController.GetShowDebugInfoAuthorization(_appContext))
-                        {
-                            _logger.Info(child.ProdDetailID + "==>" + child.property + "库存更新成功");
-                        }
-
-                        if (Opening)
-                        {
-                            #region 处理期初  
-                            //库存都没有。期初也会没有 ,并且期初只会新增，并且数据只是期初盘点时才有，不会修改。
-                            tb_OpeningInventory oinv = new tb_OpeningInventory();
-                            oinv.Inventory_ID = rr.ReturnObject.Inventory_ID;
-                            oinv.Cost_price = rr.ReturnObject.Inv_Cost;
-                            oinv.Subtotal_Cost_Price = oinv.Cost_price * oinv.InitQty;
-                            oinv.InitInvDate = entity.EntryDate;
-                            oinv.RefBillID = entity.PurEntryID;
-                            oinv.RefNO = entity.PurEntryNo;
-                            oinv.InitQty = 0;
-                            oinv.InitInvDate = System.DateTime.Now;
-                            CommBillData cbd = bcf.GetBillData<tb_PurEntry>(entity);
-                            //oinv.RefBizType = cbd.BizType;
-                            //TODO 还要完善引用数据
-                            await ctrOPinv.AddReEntityAsync(oinv);
-                            #endregion
-                        }
+                        invInsertList.Add(inv);
+                    }
+                    if (inv.Inventory_ID > 0)
+                    {
+                        invUpdateList.Add(inv);
                     }
                 }
+                var InvInsertCounter = await _unitOfWorkManage.GetDbClient().Insertable(invInsertList).ExecuteReturnSnowflakeIdAsync();
+                if (InvInsertCounter != invInsertList.Count)
+                {
+                    _unitOfWorkManage.RollbackTran();
+                    throw new Exception("库存保存失败！");
+                }
 
+                int InvUpdateCounter = await _unitOfWorkManage.GetDbClient().Updateable(invUpdateList).ExecuteCommandAsync();
+                if (InvUpdateCounter != invUpdateList.Count)
+                {
+                    _unitOfWorkManage.RollbackTran();
+                    throw new Exception("库存更新失败！");
+                }
+                
 
                 AuthorizeController authorizeController = _appContext.GetRequiredService<AuthorizeController>();
                 if (authorizeController.EnableFinancialModule())
@@ -438,21 +430,21 @@ namespace RUINORERP.Business
                                 writeoff.SourceBillId = prePayments[i].PreRPID;
                                 writeoff.SourceBillNo = prePayments[i].PreRPNO;
                                 writeoff.Currency_ID = payable.Currency_ID;
-                            
-                                    writeoff.Currency_ID = prePayments[i].Currency_ID;
 
-                              
-                                    writeoff.ExchangeRate = prePayments[i].ExchangeRate;
-                               
+                                writeoff.Currency_ID = prePayments[i].Currency_ID;
+
+
+                                writeoff.ExchangeRate = prePayments[i].ExchangeRate;
+
 
                                 writeoff.TargetBillId = payable.ARAPId; // 应付单ID
                                 writeoff.TargetBillNo = payable.ARAPNo; // 应付单号
                                 writeoff.TargetBizType = (int)BizType.应付单;
                                 writeoff.CustomerVendor_ID = prePayments[i].CustomerVendor_ID;
-                               
-                              
-                                    writeoff.ExchangeRate = payable.ExchangeRate;
-                               
+
+
+                                writeoff.ExchangeRate = payable.ExchangeRate;
+
                                 writeoff.IsReversed = false;
                                 writeoff.SettledForeignAmount = prePayForeignAmount;
                                 writeoff.SettledLocalAmount = prePayLocalAmount;
@@ -572,24 +564,21 @@ namespace RUINORERP.Business
                     return rs;
                 }
 
-
                 // 开启事务，保证数据一致性
                 _unitOfWorkManage.BeginTran();
-                tb_OpeningInventoryController<tb_OpeningInventory> ctrOPinv = _appContext.GetRequiredService<tb_OpeningInventoryController<tb_OpeningInventory>>();
+                
                 tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
                 BillConverterFactory bcf = _appContext.GetRequiredService<BillConverterFactory>();
-
+                List<tb_Inventory> invUpdateList = new List<tb_Inventory>();
                 foreach (var child in entity.tb_PurEntryDetails)
                 {
                     #region 库存表的更新 这里应该是必需有库存的数据，
                     //实际 期初已经有数据了，则要
-                    bool Opening = false;
+                  
                     tb_Inventory inv = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == child.ProdDetailID && i.Location_ID == child.Location_ID);
                     if (inv == null)
                     {
-                        Opening = true;
                         inv = new tb_Inventory();
-
                         inv.InitInventory = (int)inv.Quantity;
                         inv.Notes = "";//后面修改数据库是不需要？
                         BusinessHelper.Instance.InitEntity(inv);
@@ -651,31 +640,17 @@ namespace RUINORERP.Business
                     inv.Quantity = inv.Quantity - child.Quantity;
                     inv.Inv_SubtotalCostMoney = inv.Inv_Cost * inv.Quantity;
                     inv.LatestOutboundTime = System.DateTime.Now;
-
+                    invUpdateList.Add(inv);
                     #endregion
-                    ReturnResults<tb_Inventory> rr = await ctrinv.SaveOrUpdate(inv);
-                    if (rr.Succeeded)
-                    {
-                        if (Opening)
-                        {
-                            #region 处理期初
-                            //库存都没有。期初也会没有 ,并且期初只会新增，不会修改。
-                            tb_OpeningInventory oinv = new tb_OpeningInventory();
-                            oinv.Inventory_ID = rr.ReturnObject.Inventory_ID;
-                            oinv.Cost_price = rr.ReturnObject.Inv_Cost;
-                            oinv.Subtotal_Cost_Price = oinv.Cost_price * oinv.InitQty;
-                            oinv.InitInvDate = entity.EntryDate;
-                            oinv.RefBillID = entity.PurEntryID;
-                            oinv.RefNO = entity.PurEntryNo;
-                            oinv.InitQty = 0;
-                            oinv.InitInvDate = System.DateTime.Now;
-                            CommBillData cbd = bcf.GetBillData<tb_PurEntry>(entity);
-                            //oinv.RefBizType = cbd.BizType;
-                            //TODO 还要完善引用数据
-                            await ctrOPinv.AddReEntityAsync(oinv);
-                            #endregion
-                        }
-                    }
+                    
+                }
+
+                DbHelper<tb_Inventory> dbHelper = _appContext.GetRequiredService<DbHelper<tb_Inventory>>();
+                var Counter = await dbHelper.BaseDefaultAddElseUpdateAsync(invUpdateList);
+                if (Counter != invUpdateList.Count)
+                {
+                    _unitOfWorkManage.RollbackTran();
+                    throw new Exception("库存更新失败！");
                 }
 
                 if (entity.tb_purorder != null)

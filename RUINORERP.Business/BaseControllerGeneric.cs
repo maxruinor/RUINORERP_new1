@@ -33,6 +33,7 @@ using RUINORERP.Global.CustomAttribute;
 using System.Linq.Dynamic.Core;
 using SharpYaml.Tokens;
 using RUINORERP.Business.CommService;
+using System.Web.UI.WebControls;
 
 namespace RUINORERP.Business
 {
@@ -69,8 +70,11 @@ namespace RUINORERP.Business
         #region  打印数据提供相关
         public virtual Task<List<T>> GetPrintDataSource(long id)
         {
+
+            _logger.LogError(typeof(T).FullName + "子类要重写GetPrintData，保证打印数据的完整提供");
             //子类重写
             throw new Exception("子类要重写GetPrintData，保证打印数据的完整提供。");
+
         }
 
 
@@ -207,6 +211,9 @@ namespace RUINORERP.Business
             //子类重写
             throw new Exception("子类要重写QueryAsync");
         }
+
+
+
 
         public virtual Task<ReturnMainSubResults<T>> BaseSaveOrUpdateWithChild<C>(T entity) where C : class
         {

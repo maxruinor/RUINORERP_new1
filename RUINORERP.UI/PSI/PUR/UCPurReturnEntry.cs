@@ -182,7 +182,7 @@ namespace RUINORERP.UI.PSI.PUR
                 }
                 else
                 {
-                    MainForm.Instance.PrintInfoLog(entity.ActionStatus.GetName());
+                   // MainForm.Instance.PrintInfoLog(entity.ActionStatus.GetName());
                 }
 
             };

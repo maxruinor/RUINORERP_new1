@@ -443,7 +443,7 @@
             this.lblPaytype_ID.Name = "lblPaytype_ID";
             this.lblPaytype_ID.Size = new System.Drawing.Size(62, 20);
             this.lblPaytype_ID.TabIndex = 99;
-            this.lblPaytype_ID.Values.Text = "交易方式";
+            this.lblPaytype_ID.Values.Text = "付款方式";
             // 
             // cmbPaytype_ID
             // 

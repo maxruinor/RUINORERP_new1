@@ -174,6 +174,8 @@ namespace RUINORERP.Business
                         }
                     }
                 }
+
+                List<tb_Inventory> invUpdateList = new List<tb_Inventory>();
                 foreach (var child in entity.tb_PurOrderDetails)
                 {
                     #region 库存表的更新 这里应该是必需有库存的数据，
@@ -194,13 +196,13 @@ namespace RUINORERP.Business
                     inv.On_the_way_Qty = inv.On_the_way_Qty + child.Quantity;
                     BusinessHelper.Instance.EditEntity(inv);
                     #endregion
-                    ReturnResults<tb_Inventory> rr = await ctrinv.SaveOrUpdate(inv);
-                    if (rr.Succeeded)
-                    {
-
-                    }
-
-                    //
+                    invUpdateList.Add(inv);
+                }
+                int InvUpdateCounter = await _unitOfWorkManage.GetDbClient().Updateable(invUpdateList).ExecuteCommandAsync();
+                if (InvUpdateCounter != invUpdateList.Count)
+                {
+                    _unitOfWorkManage.RollbackTran();
+                    throw new Exception("库存更新失败！");
                 }
 
 

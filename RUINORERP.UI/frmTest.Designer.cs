@@ -42,6 +42,7 @@
             this.dataGridView1 = new System.Windows.Forms.DataGridView();
             this.btnBIndTest = new System.Windows.Forms.Button();
             this.dataGrid1 = new SourceGrid.DataGrid();
+            this.btnDefaultAddElseUpdateTest = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
             this.SuspendLayout();
             // 
@@ -320,11 +321,22 @@
             this.dataGrid1.TabStop = true;
             this.dataGrid1.ToolTipText = "";
             // 
+            // btnDefaultAddElseUpdateTest
+            // 
+            this.btnDefaultAddElseUpdateTest.Location = new System.Drawing.Point(629, 132);
+            this.btnDefaultAddElseUpdateTest.Name = "btnDefaultAddElseUpdateTest";
+            this.btnDefaultAddElseUpdateTest.Size = new System.Drawing.Size(225, 23);
+            this.btnDefaultAddElseUpdateTest.TabIndex = 14;
+            this.btnDefaultAddElseUpdateTest.Text = "DefaultAddElseUpdate";
+            this.btnDefaultAddElseUpdateTest.UseVisualStyleBackColor = true;
+            this.btnDefaultAddElseUpdateTest.Click += new System.EventHandler(this.btnDefaultAddElseUpdateTest_Click);
+            // 
             // frmTest
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(935, 810);
+            this.Controls.Add(this.btnDefaultAddElseUpdateTest);
             this.Controls.Add(this.dataGrid1);
             this.Controls.Add(this.btnBIndTest);
             this.Controls.Add(this.dataGridView1);
@@ -362,5 +374,6 @@
         private System.Windows.Forms.DataGridView dataGridView1;
         private System.Windows.Forms.Button btnBIndTest;
         private SourceGrid.DataGrid dataGrid1;
+        private System.Windows.Forms.Button btnDefaultAddElseUpdateTest;
     }
 }

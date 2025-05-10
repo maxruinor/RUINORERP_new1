@@ -2784,6 +2784,11 @@ namespace RUINORERP.UI
             string enPwd = EncryptionHelper.AesEncryptByHashKey("123456", "张三");
 
             string pwd = EncryptionHelper.AesDecryptByHashKey(enPwd, "张三");
+
+            frmTest f = new frmTest();
+            f.Text = "Child " + (2).ToString();
+            //f.MdiParent = this;
+            f.ShowDialog();
         }
     }
 }

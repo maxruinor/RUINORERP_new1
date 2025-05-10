@@ -590,7 +590,7 @@ namespace RUINORERP.UI.PSI.PUR
 
                             if (pm.Cash || pm.Paytype_Name != DefaultPaymentMethod.账期.ToString())
                             {
-                                MessageBox.Show("未付款时，付款方式错误,请选择【账期】。");
+                                MessageBox.Show("未付款时，【付款方式】错误,请选择【账期】。");
                                 return false;
                             }
                         }
@@ -608,7 +608,7 @@ namespace RUINORERP.UI.PSI.PUR
                             //如果是账期，但是又选择的是非 未付款
                             if (pm.Paytype_Name == DefaultPaymentMethod.账期.ToString())
                             {
-                                MessageBox.Show("付款方式错误,全部付款或部分付款时，请选择付款时使用的方式。");
+                                MessageBox.Show("【付款方式】错误,全部付款或部分付款时，请选择【付款方式】时使用的方式。");
                                 return false;
                             }
                         }

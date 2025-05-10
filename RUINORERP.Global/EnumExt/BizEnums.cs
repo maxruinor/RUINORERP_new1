@@ -47,7 +47,7 @@ namespace RUINORERP.Global
         /// <summary>
         /// 会修改采购订单数量，会修改库存数量？？
         /// </summary>
-        换货 = 2,
+        //换货 = 2,
 
     }
 

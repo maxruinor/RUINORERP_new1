@@ -26,6 +26,9 @@ namespace RUINORERP.Business
         public override void Initialize()
         {
             // 这里添加额外的初始化代码
+
+    
+
             RuleFor(x => x.Quantity).GreaterThan(0).WithMessage("明细中，数量：要大于零。");
             RuleFor(x => x.Discount).GreaterThan(0).WithMessage("明细中，折扣：要大于零。");
             RuleFor(x => x.UnitPrice).GreaterThan(0).When(c => c.Gift == false).WithMessage("明细中，单价：非赠品时要大于零。");

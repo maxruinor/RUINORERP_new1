@@ -3,6 +3,7 @@ using DevAge.Drawing;
 using DevAge.Windows.Forms;
 using FastReport.DevComponents.DotNetBar;
 using FastReport.Utils;
+using Google.Protobuf.Reflection;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NPOI.SS.Formula.Functions;
@@ -2219,7 +2220,11 @@ namespace RUINORERP.UI.UCSourceGrid
                 switch (dci.SugarCol.ColumnDataType)
                 {
                     case "datetime":
-                        _editor = new SourceGrid.Cells.Editors.TextBoxUITypeEditor(typeof(DateTime));
+                        //_editor = new SourceGrid.Cells.Editors.TextBoxUITypeEditor(typeof(DateTime));
+                        SourceGrid.Cells.Editors.DateTimePicker editorDtPickerNull = new SourceGrid.Cells.Editors.DateTimePicker();
+                        editorDtPickerNull.AllowNull = true;
+                        editorDtPickerNull.Format = DateTimePickerFormat.Short;
+                        _editor = editorDtPickerNull;
                         break;
                     case "money":
                         dci.CustomFormat = CustomFormatType.CurrencyFormat;
@@ -3203,7 +3208,7 @@ namespace RUINORERP.UI.UCSourceGrid
         /// <param name="TypeForEnumOptions">如果是枚举时，传入枚举类型用于创建下拉值</param>
         /// <returns></returns>
         private SourceGrid.Cells.Editors.ComboBox SetComboxEditor(SGDefineColumnItem dci)
-        {
+            {
             var _editor = new SourceGrid.Cells.Editors.ComboBox(typeof(string));
             if (dci.CustomFormat == CustomFormatType.EnumOptions && dci.TypeForEnumOptions != null)
             {
@@ -4034,7 +4039,7 @@ namespace RUINORERP.UI.UCSourceGrid
             }
         }
 
-
+        GridViewDisplayHelper displayHelper = new GridViewDisplayHelper();
 
         /// <summary>
         /// 设置单元格的值,包含关联的值
@@ -4145,10 +4150,9 @@ namespace RUINORERP.UI.UCSourceGrid
                                     };
                                     sgdefine.grid[p.Row, realIndex].AddController(SeletedController);
                                 }
-
                             }
-
                         }
+
                         ///默认值处理
                         if (defineColumnItem.DefaultValue != null && defineColumnItem.GuideToTargetColumn)
                         {
@@ -4179,7 +4183,14 @@ namespace RUINORERP.UI.UCSourceGrid
                             sgdefine.grid[p.Row, realIndex].Value = defineColumnItem.DefaultValue;
                         }
 
-
+                        //格式化显示的列
+                        if (defineColumnItem.IsDisplayFormatText)
+                        {   
+                            //本来是为了在应收单明中显示业务类型，但是这里是输入，那么应该需要做一下cmb下拉的。再显示对应的值
+                            //可以做一个数据源，然后在SetCols时设置。后面根据这个去生成对应的控件
+                            //sgdefine.grid[p.Row, realIndex].Value = defineColumnItem.DefaultValue;
+                            displayHelper.GetGridViewDisplayText(defineColumnItem.BelongingObjectType.Name, defineColumnItem.ColName, sgdefine.grid[p.Row, realIndex].Value);
+                        }
 
                         //如果这个列属性的名称在查询结果中指定的集合中匹配。就设置一下目标
                         //查询结果字段名，如盘点单中的 查出来的数量，（实际库存，认为是载账数量），指定以明细中的载账数量

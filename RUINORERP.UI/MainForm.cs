@@ -77,7 +77,7 @@ using RUINORERP.UI.ClientCmdService;
 using RUINORERP.Global;
 using TransInstruction.CommandService;
 using HLH.Lib.Security;
- 
+
 
 
 
@@ -88,7 +88,7 @@ namespace RUINORERP.UI
     public partial class MainForm : KryptonForm
     {
 
-  
+
 
 
         //IOptions<T> 提供对配置设置的单例访问。它在整个应用程序生命周期中保持相同的实例，这意味着即使在配置文件更改后，通过 IOptions<T> 获取的值也不会改变
@@ -180,7 +180,9 @@ namespace RUINORERP.UI
                 // 监听配置变化
                 Globalconfig.OnChange(updatedConfig =>
                 {
-                    Console.WriteLine($"Configuration has changed: {updatedConfig.SomeSetting}");
+                    //Console.WriteLine($"Configuration has changed: {updatedConfig.SomeSetting}");
+                    AppContext.GlobalVariableConfig.IsFromPlatform = updatedConfig.IsFromPlatform;
+
                 });
             }
 
@@ -745,7 +747,7 @@ namespace RUINORERP.UI
                 }
                 else
                 {
-                    MainForm.Instance.AppContext.BaseCurrency =  MainForm.Instance.AppContext.Db.CopyNew().Queryable<tb_Currency>()
+                    MainForm.Instance.AppContext.BaseCurrency = MainForm.Instance.AppContext.Db.CopyNew().Queryable<tb_Currency>()
                     .Where(c => c.Is_BaseCurrency.HasValue && c.Is_BaseCurrency.Value == true).Single();
                     if (MainForm.Instance.AppContext.BaseCurrency == null)
                     {
@@ -1653,7 +1655,7 @@ namespace RUINORERP.UI
         }
 
         tb_MenuInfoController<tb_MenuInfo> mc = Startup.GetFromFac<tb_MenuInfoController<tb_MenuInfo>>();
-   
+
 
         private void CreateMenu(List<MenuAttrAssemblyInfo> list, int i, long parent_id)
         {

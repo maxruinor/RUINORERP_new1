@@ -47,7 +47,7 @@ namespace RUINORERP.UI.UserPersonalized
 
         UCAdvDateTimerPickerGroup dtpgroup = new UCAdvDateTimerPickerGroup();
         KryptonComboBox DefaultCmb = new KryptonComboBox();
-
+        KryptonCheckBox DefaultChk = new KryptonCheckBox();
         DataBindingHelper dbh = new DataBindingHelper();
         public void BindData(tb_UIInputDataField entity)
         {
@@ -67,7 +67,6 @@ namespace RUINORERP.UI.UserPersonalized
             {
                 switch (queryField.AdvQueryFieldType)
                 {
-
                     case AdvQueryProcessType.defaultSelect:
                         txtDefault1.Visible = false;
                         chkEnableDefault1.Visible = true;
@@ -135,13 +134,12 @@ namespace RUINORERP.UI.UserPersonalized
                             }
                         }
 
-             
+
 
                         DefaultCmb.Location = new System.Drawing.Point(txtDefault1.Location.X, txtDefault1.Location.Y);
                         this.Controls.Add(DefaultCmb);
                         #endregion
                         break;
-
                     case AdvQueryProcessType.datetimeRange:
                         txtDefault1.Visible = false;
 
@@ -184,6 +182,29 @@ namespace RUINORERP.UI.UserPersonalized
                         kdp.Size = new System.Drawing.Size(160, 100);
                         this.Controls.Add(kdp);
 
+                        #endregion
+                        break;
+                    case AdvQueryProcessType.YesOrNo:
+
+                        //默认的文本框隐藏
+                        txtDefault1.Visible = false;
+                        #region
+                        chkEnableDefault1.Visible = true;
+                        //给个默认值先，不然会报空错误
+                        ReflectionHelper.SetPropertyValue(TargetEntityDto, queryField.FieldName, false);
+                        object chkValue = ReflectionHelper.GetPropertyValue(TargetEntityDto, queryField.FieldName);
+                        DataBindingHelper.BindData4CheckBox(TargetEntityDto, queryField.FieldName, DefaultChk, true);
+                        DefaultChk.CheckedChanged += (sender, e) =>
+                        {
+                            //绑定数据 ,保存的默认值是一个文本字符串，并且绑定的控件也是自己重新定义的。所以这里实时的变化值状态要转换到entity.Default1
+                            entity.Default1 = DefaultChk.Checked.ToString();
+                        };
+
+                        //时间控件更长为260px，这里要特殊处理
+                        DefaultChk.Location = new System.Drawing.Point(txtDefault1.Location.X, txtDefault1.Location.Y);
+                        DefaultChk.Size = new System.Drawing.Size(20, 20);
+                        DefaultChk.Text = "如果默认是，则请勾选";
+                        this.Controls.Add(DefaultChk);
                         #endregion
                         break;
                     default:
@@ -293,7 +314,6 @@ namespace RUINORERP.UI.UserPersonalized
             {
                 if (queryField.AdvQueryFieldType == Global.AdvQueryProcessType.datetimeRange)
                 {
-
                     EditEntity.EnableDefault1 = dtpgroup.dtp1.Checked;
                     if (EditEntity.EnableDefault1.Value)
                     {
@@ -308,9 +328,28 @@ namespace RUINORERP.UI.UserPersonalized
                     {
                         EditEntity.DiffDays1 = 0;
                     }
-
-
                 }
+
+                //如果默认当前时间，就设置一下默认值？
+                if (queryField.AdvQueryFieldType == Global.AdvQueryProcessType.datetime)
+                {
+                    EditEntity.EnableDefault1 = dtpgroup.dtp1.Checked;
+                    if (EditEntity.EnableDefault1.Value)
+                    {
+                        //变化时算时天数差值
+                        EditEntity.DiffDays1 = (ReflectionHelper.GetPropertyValue(TargetEntityDto, queryField.ExtendedAttribute[0].ColName).ToDateTime() - System.DateTime.Now).Days;
+                        if (EditEntity.DiffDays1 < -3650)
+                        {
+                            EditEntity.DiffDays1 = -3650;
+                        }
+                    }
+                    else
+                    {
+                        EditEntity.DiffDays1 = 0;
+                    }
+                }
+
+
 
                 if (queryField.AdvQueryFieldType == Global.AdvQueryProcessType.defaultSelect)
                 {
@@ -319,15 +358,21 @@ namespace RUINORERP.UI.UserPersonalized
                         EditEntity.Default1 = DefaultCmb.SelectedValue.ToString();
                         EditEntity.EnableDefault1 = chkEnableDefault1.Checked;
                     }
+                }
 
+                if (queryField.AdvQueryFieldType == Global.AdvQueryProcessType.YesOrNo)
+                {
+                    if (DefaultCmb.SelectedValue != null)
+                    {
+                        EditEntity.Default1 = DefaultChk.Checked.ToString();
+                        EditEntity.EnableDefault1 = chkEnableDefault1.Checked;
+                    }
                 }
 
                 if (chkFocused.Checked)
                 {
                     queryField.Focused = chkFocused.Checked;
                     EditEntity.Focused = queryField.Focused;
-
-
                 }
             }
         }

@@ -287,7 +287,7 @@ namespace RUINORERP.UI.BaseForm
 
         internal override void LoadDataToUI(object Entity)
         {
-            BindData(Entity as T);
+                BindData(Entity as T);
             ToolBarEnabledControl(Entity);
         }
 

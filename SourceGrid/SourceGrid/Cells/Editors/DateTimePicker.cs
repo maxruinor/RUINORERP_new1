@@ -14,6 +14,8 @@ namespace SourceGrid.Cells.Editors
     [System.ComponentModel.ToolboxItem(false)]
     public class DateTimePicker : EditorControlBase
 	{
+
+
 		/// <summary>
 		/// Constructor
 		/// </summary>
@@ -21,15 +23,38 @@ namespace SourceGrid.Cells.Editors
 		{
 		}
 
+        private DateTimePickerFormat m_Format = DateTimePickerFormat.Short;
+
+        /// <summary>
+        /// Gets or sets the format of the date and time displayed in the control.
+        /// </summary>
+        [DefaultValue(DateTimePickerFormat.Short)]
+        [Description("Gets or sets the format of the date and time displayed in the control.")]
+        public DateTimePickerFormat Format
+        {
+            get { return m_Format; }
+            set
+            {
+                if (m_Format != value)
+                {
+                    m_Format = value;
+                    OnChanged(EventArgs.Empty);
+                }
+            }
+        }
+
+        
+		
 		#region Edit Control
-		/// <summary>
-		/// Create the editor control
-		/// </summary>
-		/// <returns></returns>
-		protected override Control CreateControl()
+        /// <summary>
+        /// Create the editor control
+        /// </summary>
+        /// <returns></returns>
+        protected override Control CreateControl()
 		{
 			System.Windows.Forms.DateTimePicker dtPicker = new System.Windows.Forms.DateTimePicker();
-			dtPicker.Format = DateTimePickerFormat.Short;
+            //dtPicker.Format = DateTimePickerFormat.Short;
+            dtPicker.Format = Format; // 使用新添加的Format属性
             dtPicker.ShowCheckBox = AllowNull;
 			return dtPicker;
 		}
@@ -88,11 +113,21 @@ namespace SourceGrid.Cells.Editors
 		/// <returns></returns>
 		public override object GetEditedValue()
 		{
+            //if (Control.Checked)
+            //    return Control.Value;
+            //else
+            //    return null;
             if (Control.Checked)
-                return Control.Value;
+            {
+                // 根据格式决定返回日期还是日期时间
+                if (Format == DateTimePickerFormat.Short || Format == DateTimePickerFormat.Long)
+                    return Control.Value.Date;
+                else
+                    return Control.Value;
+            }
             else
                 return null;
-		}
+        }
 
 
 		public override object GetEditedTagValue()

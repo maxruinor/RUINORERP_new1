@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 namespace RUINORERP.Model.ConfigModel
 {
     /// <summary>
-    /// 全局验证配置类
+    /// 全局验证配置类,随时根据业务需求进行修改，来验证单据输入的数据合法性。
     /// 可以从客户端或服务器端分布这些配置
     /// </summary>
     [Serializable()]
@@ -35,7 +35,10 @@ namespace RUINORERP.Model.ConfigModel
         [Description("预完工日期必填设置为必须填写。")]
         public bool 预完工日期必填 { get; set; }
 
-
+        [JsonProperty("销售订单默认平台单为真")]
+        [Category("销售模块")]
+        [Description("销售订单默认平台单为真")]
+        public bool IsFromPlatform { get; set; }
 
         [JsonProperty("返工提醒天数")]
         [Category("生产模块")]

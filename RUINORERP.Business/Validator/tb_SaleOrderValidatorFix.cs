@@ -29,6 +29,27 @@ namespace RUINORERP.Business
         public override void Initialize()
         {
             // 这里添加额外的初始化代码
+
+            RuleFor(x => x.IsFromPlatform)
+             .Custom((value, context) =>
+             {
+                 var Order = context.InstanceToValidate as tb_SaleOrder;
+                 if (Order != null)
+                 {
+                     //根据配置判断平台单是不是必须勾选
+                     //实际情况是 保存时可能不清楚交期，保存后截图发给供应商后才知道。这时提交才要求
+                     if (ValidatorConfig.CurrentValue.IsFromPlatform)
+                     {
+                         //只是默认值。不能强制选择
+                         //if (Order.IsFromPlatform)
+                         //{
+                         //    context.AddFailure("平台单：必须选择。");
+                         //}
+                     }
+                 }
+             });
+
+
             RuleFor(x => x.tb_SaleOrderDetails).Must(list => list.Count > 0).WithMessage("销售明细不能为空。");
             RuleFor(x => x.TotalAmount).GreaterThan(0).When(x => x.tb_SaleOrderDetails.Any(s => s.Gift == false)).WithMessage("总金额：明细中有非赠品产品时，总金额要大于零。");//可非全赠品时 总金额要大于0.订单。
             RuleFor(x => x.TotalQty).GreaterThan(0).WithMessage("总数量：要大于零。");

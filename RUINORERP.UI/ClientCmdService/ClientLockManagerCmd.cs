@@ -401,7 +401,7 @@ namespace RUINORERP.UI.ClientCmdService
                 }
                 if (string.IsNullOrEmpty(json) || json == "null")
                 {
-                    MainForm.Instance.logger.LogError("BuildDataPacket:锁单时，请求数据为空。=>" + lockCmd.ToString() + request.ToString());
+                    //MainForm.Instance.logger.LogError("BuildDataPacket:锁单时，请求数据为空。=>" + lockCmd.ToString() + request.ToString());
                     return;
                 }
 

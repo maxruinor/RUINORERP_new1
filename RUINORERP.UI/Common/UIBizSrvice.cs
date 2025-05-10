@@ -241,7 +241,7 @@ namespace RUINORERP.UI.Common
                                 case "money"://金额不能有预设值
                                     continue;
                                 case "bit":
-
+                                    queryField.AdvQueryFieldType = AdvQueryProcessType.YesOrNo;
                                     break;
                                 case "bigint":
                                     if (!string.IsNullOrEmpty(queryField.FKTableName))
@@ -492,9 +492,9 @@ namespace RUINORERP.UI.Common
         /// <param name="InvisibleCols">系统硬编码不可见和权限设置的不可见</param>
         /// <param name="DefaultHideCols">系统硬编码不可见和权限设置的不可见</param>
         /// <returns></returns>
-        public static async Task SetGridViewAsync(Type GridSourceType, NewSumDataGridView dataGridView, tb_MenuInfo CurMenuInfo, 
+        public static async Task SetGridViewAsync(Type GridSourceType, NewSumDataGridView dataGridView, tb_MenuInfo CurMenuInfo,
             bool ShowSettingForm = false, HashSet<string> InvisibleCols = null,
-            HashSet<string> DefaultHideCols = null, 
+            HashSet<string> DefaultHideCols = null,
             bool SaveGridSetting = false)
         {
             if (dataGridView == null)

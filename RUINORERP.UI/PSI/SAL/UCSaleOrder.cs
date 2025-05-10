@@ -183,7 +183,15 @@ namespace RUINORERP.UI.PSI.SAL
                     entity.DataStatus = (int)DataStatus.草稿;
                     entity.SOrderNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.销售订单);
                     entity.SaleDate = System.DateTime.Now;
-                    entity.IsFromPlatform = true;//默认 平台单为真
+                    //通过动态参数来设置这个默认值。这样每个公司不同设置按自己的来。
+                    entity.IsFromPlatform = AppContext.GlobalVariableConfig.IsFromPlatform;
+
+                    // 监听配置变化
+                    //MainForm.Instance.Globalconfig.OnChange((config, value) =>
+                    //{
+                    //    entity.IsFromPlatform = config.IsFromPlatform;
+                    //});
+
                     if (entity.tb_SaleOrderDetails != null && entity.tb_SaleOrderDetails.Count > 0)
                     {
                         entity.tb_SaleOrderDetails.ForEach(c => c.SOrder_ID = 0);
@@ -226,8 +234,6 @@ namespace RUINORERP.UI.PSI.SAL
                 DataBindingHelper.BindData4Cmb<tb_ProjectGroup>(entity, k => k.ProjectGroup_ID, v => v.ProjectGroupName, cmbProjectGroup);
             }
 
-
-
             //DataBindingHelper.BindData4Cmb<tb_CustomerVendor>(entity, k => k.CustomerVendor_ID, v => v.CVName, cmbCustomerVendor_ID, true);
             DataBindingHelper.BindData4Cmb<tb_Currency>(entity, k => k.Currency_ID, v => v.CurrencyName, cmbCurrency_ID);
             DataBindingHelper.BindData4CmbByEnum<tb_SaleOrder>(entity, k => k.PayStatus, typeof(PayStatus), cmbPayStatus, false);
@@ -238,7 +244,7 @@ namespace RUINORERP.UI.PSI.SAL
             DataBindingHelper.BindData4DataTime<tb_SaleOrder>(entity, t => t.SaleDate, dtpSaleDate, false);
             DataBindingHelper.BindData4TextBox<tb_SaleOrder>(entity, t => t.ShippingAddress, txtShippingAddress, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_SaleOrder>(entity, t => t.ShippingWay, txtshippingWay, BindDataType4TextBox.Text, false);
-            
+
             DataBindingHelper.BindData4TextBox<tb_SaleOrder>(entity, t => t.ForeignTotalAmount.ToString(), txtForeignTotalAmount, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4TextBox<tb_SaleOrder>(entity, t => t.ForeignDeposit.ToString(), txtForeignDeposit, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4TextBox<tb_SaleOrder>(entity, t => t.Notes, txtNotes, BindDataType4TextBox.Text, false);
@@ -374,7 +380,7 @@ namespace RUINORERP.UI.PSI.SAL
                             {
                                 EditEntity.Employee_ID = cv.Employee_ID.Value;
                             }
-                            
+
                             EditEntity.ShippingAddress = cv.Address;
                         }
                     }
@@ -388,7 +394,7 @@ namespace RUINORERP.UI.PSI.SAL
                         EditEntity.TotalTaxAmount = entity.tb_SaleOrderDetails.Sum(c => c.SubtotalTaxAmount);
                         EditEntity.TotalAmount = entity.tb_SaleOrderDetails.Sum(c => c.TransactionPrice * c.Quantity);
                         EditEntity.TotalAmount = EditEntity.TotalAmount + EditEntity.ShipCost;
-                        if (EditEntity.Currency_ID != AppContext.BaseCurrency.Currency_ID )
+                        if (EditEntity.Currency_ID != AppContext.BaseCurrency.Currency_ID)
                         {
                             EditEntity.ForeignTotalAmount = EditEntity.TotalAmount / EditEntity.ExchangeRate;
                             //
@@ -755,7 +761,7 @@ namespace RUINORERP.UI.PSI.SAL
                     //如果订金大于零时，则不能是未付款
                     if (EditEntity.Deposit > 0 || EditEntity.ForeignDeposit > 0)
                     {
-                
+
                     }
                     else
                     {

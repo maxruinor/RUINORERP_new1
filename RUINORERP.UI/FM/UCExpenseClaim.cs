@@ -74,7 +74,7 @@ namespace RUINORERP.UI.FM
         //}
         public override void BindData(tb_FM_ExpenseClaim entity, ActionStatus actionStatus)
         {
-           
+
             if (entity == null)
             {
                 return;
@@ -124,13 +124,13 @@ namespace RUINORERP.UI.FM
             DataBindingHelper.BindData4TextBox<tb_FM_ExpenseClaim>(entity, t => t.ApprovalOpinions, txtApprovalOpinions, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4CheckBox<tb_FM_ExpenseClaim>(entity, t => t.ApprovalResults, chkApprovalResults, false);
             DataBindingHelper.BindData4TextBox<tb_FM_ExpenseClaim>(entity, t => t.CloseCaseOpinions, txtCloseCaseOpinions, BindDataType4TextBox.Text, false);
-            
+
             DataBindingHelper.BindData4ControlByEnum<tb_FM_ExpenseClaim>(entity, t => t.DataStatus, lblDataStatus, BindDataType4Enum.EnumName, typeof(Global.DataStatus));
             DataBindingHelper.BindData4ControlByEnum<tb_FM_ExpenseClaim>(entity, t => t.ApprovalStatus, lblReview, BindDataType4Enum.EnumName, typeof(Global.ApprovalStatus));
             //后面这些依赖于控件绑定的数据源和字段。所以要在绑定后执行。
             if (entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改)
             {
-                base.InitRequiredToControl(MainForm.Instance.AppContext.GetRequiredService <tb_FM_ExpenseClaimValidator> (), kryptonPanel1.Controls);
+                base.InitRequiredToControl(MainForm.Instance.AppContext.GetRequiredService<tb_FM_ExpenseClaimValidator>(), kryptonPanel1.Controls);
                 //UIBaseTool uIBaseTool = new();
                 //uIBaseTool.CurMenuInfo = CurMenuInfo;
                 //uIBaseTool.AddEditableQueryControl<tb_Employee>(cmbEmployee_ID, false);
@@ -169,7 +169,7 @@ namespace RUINORERP.UI.FM
 
 
                 if (MainForm.Instance.AppContext.CurUserInfo.UserInfo.tb_employee != null)
-                    {
+                {
                     entity.Employee_ID = MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID.Value;
                     EditEntity.Employee_ID = entity.Employee_ID;
                     /*
@@ -191,12 +191,12 @@ namespace RUINORERP.UI.FM
                     //cmbPayeeInfoID.SelectedIndex = cmbPayeeInfoID.FindStringExact(emp.Account_name);
                     var obj = BizCacheHelper.Instance.GetEntity<tb_FM_PayeeInfo>(entity.PayeeInfoID);
                     if (obj != null && obj.ToString() != "System.Object")
-                    {   
+                    {
                         if (obj is tb_FM_PayeeInfo cv)
                         {
                             DataBindingHelper.BindData4CmbByEnum<tb_FM_PayeeInfo>(cv, k => k.Account_type, typeof(AccountType), cmbAccount_type, false);
                             //添加收款信息。展示给财务看
-                                cmbAccount_type.Enabled = false;
+                            cmbAccount_type.Enabled = false;
                             txtAccount_No.Text = cv.Account_No;
                             if (!string.IsNullOrEmpty(cv.PaymentCodeImagePath))
                             {
@@ -220,7 +220,7 @@ namespace RUINORERP.UI.FM
             if (entity.tb_FM_ExpenseClaimDetails != null && entity.tb_FM_ExpenseClaimDetails.Count > 0)
             {
                 //新建和草稿时子表编辑也可以保存。
-                foreach (   var item in entity.tb_FM_ExpenseClaimDetails)
+                foreach (var item in entity.tb_FM_ExpenseClaimDetails)
                 {
                     item.PropertyChanged += (sender, s1) =>
                     {
@@ -428,7 +428,7 @@ namespace RUINORERP.UI.FM
             sgh.InitGrid(grid1, sgd, true, nameof(tb_FM_ExpenseClaimDetail));
             sgh.OnCalculateColumnValue += Sgh_OnCalculateColumnValue;
             sgh.OnAddDataRow += Sgh_OnAddDataRow;
-            UIHelper.ControlMasterColumnsInvisible(CurMenuInfo,this);
+            UIHelper.ControlMasterColumnsInvisible(CurMenuInfo, this);
         }
 
         private void Sgh_OnAddDataRow(object rowObj)
@@ -567,7 +567,7 @@ namespace RUINORERP.UI.FM
             {
                 return false;
             }
-           
+
             var eer = errorProviderForAllInput.GetError(txtClaimlAmount);
             bindingSourceSub.EndEdit();
             List<tb_FM_ExpenseClaimDetail> detailentity = bindingSourceSub.DataSource as List<tb_FM_ExpenseClaimDetail>;
@@ -578,7 +578,7 @@ namespace RUINORERP.UI.FM
                 //如果没有有效的明细。直接提示
                 if (NeedValidated && details.Count == 0)
                 {
-                    MessageBox.Show("请录入有效明细记录！");
+                    MessageBox.Show("明细记录中，单项【总金额】不能为零，请录入有效记录！");
                     return false;
                 }
 

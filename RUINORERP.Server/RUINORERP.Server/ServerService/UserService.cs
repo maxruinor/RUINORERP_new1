@@ -199,14 +199,13 @@ namespace RUINORERP.Server.BizService
 
                 foreach (var item in frmMain.Instance.sessionListBiz.ToArray())
                 {
-                    //排除更新者自己
-                    if (item.Key == UserSession.SessionID)
-                    {
-                        continue;
-                    }
+                    //排除更新者自己 自己也更新吧.产品这块上新时容易不显示公共部分
+                    //if (item.Key == UserSession.SessionID)
+                    //{
+                    //    continue;
+                    //}
                     SessionforBiz sessionforBiz = item.Value as SessionforBiz;
                     sessionforBiz.AddSendData((byte)ServerCmdEnum.转发更新缓存, null, tx.toByte());
-
                     if (frmMain.Instance.IsDebug)
                     {
                         frmMain.Instance.PrintMsg($"转发更新的缓存{tableName}给：" + item.Value.User.姓名);

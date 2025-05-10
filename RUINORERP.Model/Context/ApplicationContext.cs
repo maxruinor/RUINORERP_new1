@@ -11,6 +11,7 @@ using RUINORERP.Model.CommonModel;
 using System.Collections.Concurrent;
 using WorkflowCore.Interface;
 using RUINORERP.Global;
+using RUINORERP.Model.ConfigModel;
 
 namespace RUINORERP.Model.Context
 {
@@ -20,6 +21,14 @@ namespace RUINORERP.Model.Context
     /// </summary>
     public class ApplicationContext
     {
+
+        #region 全局可控件变量
+        /// <summary>
+        /// 这个类中的值，实际是自动生成了json配置文件。并且系统实时监控这个配置文件中的值
+        /// </summary>
+        public SystemGlobalconfig GlobalVariableConfig { get; set; } = new SystemGlobalconfig();
+
+        #endregion
 
         #region 业务缓存数据  所属项目级
 

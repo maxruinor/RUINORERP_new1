@@ -132,7 +132,7 @@ namespace RUINORERP.UI.FM
                 #endregion
 
                 //如果状态是已经生效才可能有审核，如果是待收款 才可能有反审
-                if (entity.ARAPStatus== (long)ARAPStatus.待审核)
+                if (entity.ARAPStatus == (long)ARAPStatus.待审核)
                 {
                     base.toolStripbtnReview.Visible = true;
                 }
@@ -212,20 +212,43 @@ namespace RUINORERP.UI.FM
             //显示 打印状态 如果是草稿状态 不显示打印
             ShowPrintStatus(lblPrintStatus, entity);
 
-            //创建表达式
-            var lambda = Expressionable.Create<tb_CustomerVendor>()
-                            .And(t => t.IsVendor == true)//供应商和第三方
+
+            if (PaymentType == ReceivePaymentType.收款)
+            {
+                //创建表达式
+                var lambda = Expressionable.Create<tb_CustomerVendor>()
+                            .And(t => t.IsCustomer == true)//供应商和第三方
                             .And(t => t.isdeleted == false)
                             .And(t => t.Is_enabled == true)
                             .ToExpression();//注意 这一句 不能少
 
-            BaseProcessor baseProcessor = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_CustomerVendor).Name + "Processor");
-            QueryFilter queryFilterC = baseProcessor.GetQueryFilter();
-            queryFilterC.FilterLimitExpressions.Add(lambda);
+                BaseProcessor baseProcessor = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_CustomerVendor).Name + "Processor");
+                QueryFilter queryFilterC = baseProcessor.GetQueryFilter();
+                queryFilterC.FilterLimitExpressions.Add(lambda);
 
-            //带过滤的下拉绑定要这样
-            DataBindingHelper.BindData4Cmb<tb_CustomerVendor>(entity, k => k.CustomerVendor_ID, v => v.CVName, cmbCustomerVendor_ID, queryFilterC.GetFilterExpression<tb_CustomerVendor>(), true);
-            DataBindingHelper.InitFilterForControlByExp<tb_CustomerVendor>(entity, cmbCustomerVendor_ID, c => c.CVName, queryFilterC);
+                //带过滤的下拉绑定要这样
+                DataBindingHelper.BindData4Cmb<tb_CustomerVendor>(entity, k => k.CustomerVendor_ID, v => v.CVName, cmbCustomerVendor_ID, queryFilterC.GetFilterExpression<tb_CustomerVendor>(), true);
+                DataBindingHelper.InitFilterForControlByExp<tb_CustomerVendor>(entity, cmbCustomerVendor_ID, c => c.CVName, queryFilterC);
+
+            }
+            else
+            {
+                //应付  付给供应商
+                //创建表达式
+                var lambda = Expressionable.Create<tb_CustomerVendor>()
+                            .And(t => t.IsVendor == true)//供应商
+                            .And(t => t.isdeleted == false)
+                            .And(t => t.Is_enabled == true)
+                            .ToExpression();//注意 这一句 不能少
+
+                BaseProcessor baseProcessor = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_CustomerVendor).Name + "Processor");
+                QueryFilter queryFilterC = baseProcessor.GetQueryFilter();
+                queryFilterC.FilterLimitExpressions.Add(lambda);
+
+                //带过滤的下拉绑定要这样
+                DataBindingHelper.BindData4Cmb<tb_CustomerVendor>(entity, k => k.CustomerVendor_ID, v => v.CVName, cmbCustomerVendor_ID, queryFilterC.GetFilterExpression<tb_CustomerVendor>(), true);
+                DataBindingHelper.InitFilterForControlByExp<tb_CustomerVendor>(entity, cmbCustomerVendor_ID, c => c.CVName, queryFilterC);
+            }
 
             //后面这些依赖于控件绑定的数据源和字段。所以要在绑定后执行。
             if (entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改)
@@ -301,7 +324,7 @@ namespace RUINORERP.UI.FM
                     }
                     //entity.DueDate = System.DateTime.Now;
                 }
-                if (entity.Currency_ID>0 && s2.PropertyName == entity.GetPropertyName<tb_FM_ReceivablePayable>(c => c.Currency_ID))
+                if (entity.Currency_ID > 0 && s2.PropertyName == entity.GetPropertyName<tb_FM_ReceivablePayable>(c => c.Currency_ID))
                 {
                     //如果币别是本位币则不显示汇率列
                     if (EditEntity != null && EditEntity.Currency_ID == MainForm.Instance.AppContext.BaseCurrency.Currency_ID)
@@ -428,8 +451,7 @@ namespace RUINORERP.UI.FM
             listCols.SetCol_NeverVisible<ProductSharePart>(c => c.Inv_Cost);
             listCols.SetCol_NeverVisible<ProductSharePart>(c => c.Standard_Price);
             listCols.SetCol_NeverVisible<ProductSharePart>(c => c.TransPrice);
-
-     
+            listCols.SetCol_NeverVisible<tb_FM_ReceivablePayableDetail>(c => c.SourceBillId);
 
             UIHelper.ControlChildColumnsInvisible(CurMenuInfo, listCols);
             UIHelper.ControlChildColumnsInvisible(CurMenuInfo, listCols);
@@ -439,8 +461,8 @@ namespace RUINORERP.UI.FM
             }
             //listCols.SetCol_DefaultValue<tb_FM_ReceivablePayableDetail>(c => c.ForeignPayableAmount, 0.00M);
 
-            //listCols.SetCol_ReadOnly<tb_FM_OtherExpenseDetail>(c => c.CNName);
-
+            //listCols.SetCol_DisplayFormatText<tb_FM_ReceivablePayableDetail>(c => c.SourceBizType, 1);
+            listCols.SetCol_Format<tb_FM_ReceivablePayableDetail>(c => c.SourceBizType, CustomFormatType.EnumOptions, null, typeof(BizType));
             listCols.SetCol_Format<tb_FM_ReceivablePayableDetail>(c => c.TaxRate, CustomFormatType.PercentFormat);
             listCols.SetCol_Format<tb_FM_ReceivablePayableDetail>(c => c.LocalPayableAmount, CustomFormatType.CurrencyFormat);
             listCols.SetCol_Format<tb_FM_ReceivablePayableDetail>(c => c.TaxLocalAmount, CustomFormatType.CurrencyFormat);

@@ -223,6 +223,38 @@ namespace RUINORERP.UI.UCSourceGrid
 
 
 
+        [Obsolete]
+        public static void SetCol_DisplayFormatText(this SGDefineColumnItem col, string colName, object DefaultValue)
+        {
+            if (col.ColName == colName)
+            {
+                col.IsDisplayFormatText = true;
+            }
+        }
+
+        /// <summary>
+        /// 指定列的显示值,  比如枚举值,但是有更好的已经实现了的方式。这个暂时没有使用了。
+        ///listCols.SetCol_Format<tb_FM_ReceivablePayableDetail>(c => c.SourceBizType, CustomFormatType.EnumOptions, null, typeof(BizType));
+        ///displayHelper.GetGridViewDisplayText(typeof(T).Name, columnName, e.Value);
+        ///GridViewDisplayHelper displayHelper = new GridViewDisplayHelper();
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="cols"></param>
+        /// <param name="colNameExp"></param>
+        [Obsolete]
+        public static void SetCol_DisplayFormatText<T>(this List<SGDefineColumnItem> cols, Expression<Func<T, object>> colNameExp, object DefaultValue)
+        {
+            MemberInfo minfo = colNameExp.GetMemberInfo();
+            foreach (var item in cols)
+            {
+                if (item.BelongingObjectType.Name != typeof(T).Name)
+                {
+                    continue;
+                }
+                item.SetCol_DisplayFormatText(minfo.Name, DefaultValue);
+            }
+        }
+
         /// <summary>
         /// 指定关联列的特殊值，支持动态参数设置,给colNameSourceExp设置一个参数，指向目标colNameTargetExp，值NewValue是通过valueParameters来确定的。
         /// 意思是当A列值设置后，B列的值就是A列的值的基础上做一些变化处理</summary>
@@ -454,6 +486,9 @@ namespace RUINORERP.UI.UCSourceGrid
 
 
         }
+
+
+    
 
         public static void SetCol_DefaultValue(this SGDefineColumnItem col, string colName, object DefaultValue)
         {

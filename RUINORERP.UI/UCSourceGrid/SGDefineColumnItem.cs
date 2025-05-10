@@ -266,6 +266,14 @@ namespace RUINORERP.UI.UCSourceGrid
         /// </summary>
         public object DefaultValue { get; set; }
 
+        /// <summary>
+        /// 标记为需要格式化显示的列
+        /// 暂时这样，也许可以设置一个keyvaluepair，key为列名，value为格式化显示的格式值的集合
+        /// </summary>
+        public bool IsDisplayFormatText { get; set; } = false;
+
+
+
         public bool result;
         public bool newline;
 

@@ -31,7 +31,7 @@ using RUINORERP.UI.SysConfig;
 using Fireasy.Common.Extensions;
 using FastReport.Table;
 using MathNet.Numerics.Optimization;
-using NPOI.SS.Formula.Functions;
+
 
 namespace RUINORERP.UI.FM
 {

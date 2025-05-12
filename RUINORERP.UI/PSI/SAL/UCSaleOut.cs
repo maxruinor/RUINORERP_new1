@@ -39,7 +39,7 @@ using static StackExchange.Redis.Role;
 using RUINORERP.Business.CommService;
 using RUINORERP.Common.Extensions;
 using RUINORERP.Business.Security;
-using NPOI.SS.Formula.Functions;
+
 using RUINORERP.Global.EnumExt;
 namespace RUINORERP.UI.PSI.SAL
 {

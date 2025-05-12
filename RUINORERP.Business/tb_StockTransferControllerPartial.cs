@@ -136,8 +136,8 @@ namespace RUINORERP.Business
                 List<tb_Inventory> invInsertList = invUpdateListTo.Where(c => c.Inventory_ID == 0).ToList();
                
 
-                var InvInsertCounterTo = await _unitOfWorkManage.GetDbClient().Insertable(invInsertList).ExecuteReturnSnowflakeIdAsync();
-                if (InvInsertCounterTo != invInsertList.Count)
+                var InvInsertCounterTo = await _unitOfWorkManage.GetDbClient().Insertable(invInsertList).ExecuteReturnSnowflakeIdListAsync();
+                if (InvInsertCounterTo.Count != invInsertList.Count)
                 {
                     _unitOfWorkManage.RollbackTran();
                     throw new Exception("目标库存保存失败！");

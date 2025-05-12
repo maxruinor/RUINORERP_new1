@@ -27,6 +27,9 @@
     <Compile Remove="frmUserOnline.cs" />
     <Compile Remove="frmUserOnline.Designer.cs" />
     <Compile Remove="log4netHelper.cs" />
+    <Compile Remove="SmartReminder\CachedRuleEngineCenter.cs" />
+    <Compile Remove="SmartReminder\InvReminder\InventoryAlertWorkflow.cs" />
+    <Compile Remove="SmartReminder\WorkflowReminderService.cs" />
     <Compile Remove="Startup - 复制.cs" />
     <Compile Remove="Workflow\BillConverterFactory.cs" />
     <Compile Remove="Workflow\WFApproval\ActivityWorkflow.cs" />
@@ -107,9 +110,11 @@
     <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="8.1.0" />
     <PackageReference Include="Huanent.Logging.File" Version="3.0.2" />
     <PackageReference Include="log4net" Version="2.0.15" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Scripting" Version="4.13.0" />
     <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="7.0.0" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.0" />
     <PackageReference Include="Microsoft.Extensions.Logging.Log4Net.AspNetCore" Version="7.0.0" />
+    <PackageReference Include="RulesEngine" Version="5.0.6" />
     <PackageReference Include="SqlSugarCore" Version="5.1.4.130" />
     <PackageReference Include="System.Data.SqlClient" Version="4.8.6" />
     <PackageReference Include="WorkflowCore.Persistence.SqlServer" Version="3.9.0" />

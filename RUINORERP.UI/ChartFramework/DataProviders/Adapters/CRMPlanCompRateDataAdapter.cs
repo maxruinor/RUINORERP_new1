@@ -16,8 +16,6 @@ using System.Threading.Tasks;
 using ValueType = RUINORERP.UI.ChartFramework.Core.ValueType;
 using RUINORERP.Global.EnumExt.CRM;
 using FastReport.Data;
-using NPOI.POIFS.Crypt.Dsig;
-using NPOI.SS.Formula.Functions;
 using System.Web.UI.WebControls;
 using NSoup.Helper;
 

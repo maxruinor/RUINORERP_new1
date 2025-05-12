@@ -7,7 +7,7 @@ using Netron.Neon.HtmlHelp;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NPOI.POIFS.Crypt.Dsig;
-using NPOI.SS.Formula.Functions;
+
 using RUINORERP.Business;
 using RUINORERP.Business.CommService;
 using RUINORERP.Business.Processor;
@@ -168,14 +168,14 @@ namespace RUINORERP.UI.Common
                     {
                         FKRelationAttribute FKAttribute = attr as FKRelationAttribute;
                         //如果子表中引用的主表主键,则不显示
-                        if (typeof(T).Name.Contains(FKAttribute.FKTableName) && typeof(T).Name.Replace("Detail", "") == FKAttribute.FKTableName)
-                        {
+                        //if (typeof(T).Name.Contains(FKAttribute.FKTableName) && typeof(T).Name.Replace("Detail", "") == FKAttribute.FKTableName)
+                        //{
 
-                        }
-                        else
-                        {
+                        //}
+                        //else
+                        //{
 
-                        }
+                        //}
                         queryField.fKRelationAttribute = FKAttribute;
                         queryField.FKTableName = FKAttribute.FKTableName;
                         queryField.SubQueryTargetType = Assembly.LoadFrom("RUINORERP.Model.dll").GetType("RUINORERP.Model." + FKAttribute.FKTableName);

@@ -35,7 +35,7 @@ using RUINORERP.Common.Extensions;
 using RUINORERP.Global.EnumExt;
 using RUINORERP.UI.UControls;
 using RUINORERP.Global.Model;
-using NPOI.SS.Formula.Functions;
+
 using RUINORERP.Business.CommService;
 using FastReport.Table;
 

@@ -54,7 +54,7 @@ namespace RUINORERP.Business
             {
                 // 开启事务，保证数据一致性
                 _unitOfWorkManage.BeginTran();
-                
+
                 tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
                 BillConverterFactory bcf = _appContext.GetRequiredService<BillConverterFactory>();
 
@@ -84,7 +84,7 @@ namespace RUINORERP.Business
                 {
 
                     #region 库存表的更新 这里应该是必需有库存的数据，
-              
+
                     tb_Inventory inv = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == child.ProdDetailID && i.Location_ID == child.Location_ID);
                     if (inv == null)
                     {
@@ -167,8 +167,10 @@ namespace RUINORERP.Business
                     }
                 }
                 #endregion
-                var InvInsertCounter = await _unitOfWorkManage.GetDbClient().Insertable(invInsertList).ExecuteReturnSnowflakeIdAsync();
-                if (InvInsertCounter != invInsertList.Count)
+                //List应该用ExecuteReturnSnowflakeIdListAsync 否则返回的是ID的值不是影响的行数。
+                //var InvInsertCounter = await _unitOfWorkManage.GetDbClient().Insertable(invInsertList).ExecuteReturnSnowflakeIdAsync();
+                var InvInsertCounter = await _unitOfWorkManage.GetDbClient().Insertable(invInsertList).ExecuteReturnSnowflakeIdListAsync();
+                if (InvInsertCounter.Count != invInsertList.Count)
                 {
                     _unitOfWorkManage.RollbackTran();
                     throw new Exception("库存保存失败！");
@@ -475,7 +477,7 @@ namespace RUINORERP.Business
 
                 // 开启事务，保证数据一致性
                 _unitOfWorkManage.BeginTran();
-              
+
                 tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
                 List<tb_Inventory> invUpdateList = new List<tb_Inventory>();
                 foreach (var child in entity.tb_FinishedGoodsInvDetails)
@@ -495,7 +497,7 @@ namespace RUINORERP.Business
                     inv.LatestStorageTime = System.DateTime.Now;
                     #endregion
                     invUpdateList.Add(inv);
-                     
+
                 }
                 int InvUpdateCounter = await _unitOfWorkManage.GetDbClient().Updateable(invUpdateList).ExecuteCommandAsync();
                 if (InvUpdateCounter != invUpdateList.Count)

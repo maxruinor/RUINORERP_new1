@@ -20,7 +20,6 @@ using Krypton.Toolkit.Suite.Extended.Outlook.Grid;
 using Token = Krypton.Toolkit.Suite.Extended.Outlook.Grid.Token;
 using RUINORERP.Model;
 using FastReport.DevComponents.DotNetBar.Controls;
-using NPOI.SS.Formula.Functions;
 
 
 namespace RUINORERP.UI.BaseForm

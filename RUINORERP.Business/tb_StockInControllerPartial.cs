@@ -109,8 +109,8 @@ namespace RUINORERP.Business
                     throw new Exception("库存更新失败！");
                 }
                 List<tb_Inventory> InsertList = invUpdateList.Where(c => c.Inventory_ID == 0).ToList();
-                var InvInsertCounter = await _unitOfWorkManage.GetDbClient().Insertable(InsertList).ExecuteReturnSnowflakeIdAsync();
-                if (InvInsertCounter != InsertList.Count)
+                var InvInsertCounter = await _unitOfWorkManage.GetDbClient().Insertable(InsertList).ExecuteReturnSnowflakeIdListAsync();
+                if (InvInsertCounter.Count != InsertList.Count)
                 {
                     _unitOfWorkManage.RollbackTran();
                     throw new Exception("库存更新失败！");

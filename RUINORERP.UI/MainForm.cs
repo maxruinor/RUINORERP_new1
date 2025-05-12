@@ -89,7 +89,7 @@ namespace RUINORERP.UI
     {
 
 
-
+        
 
         //IOptions<T> 提供对配置设置的单例访问。它在整个应用程序生命周期中保持相同的实例，这意味着即使在配置文件更改后，通过 IOptions<T> 获取的值也不会改变
         //。
@@ -1301,7 +1301,7 @@ namespace RUINORERP.UI
 
                 if (loginForm.IsInitPassword)
                 {
-                    MessageBox.Show("初始密码【123456】有风险，请及时修改！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    MessageBox.Show("初始密码【123456】有风险，请及时修改！\r\n修改路径：【系统设置】->【个性化设置】->【密码修改】", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 }
 
                 LoginWebServer();

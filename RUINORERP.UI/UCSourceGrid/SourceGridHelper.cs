@@ -6,7 +6,7 @@ using FastReport.Utils;
 using Google.Protobuf.Reflection;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using NPOI.SS.Formula.Functions;
+
 
 
 //using Google.Protobuf.Reflection;

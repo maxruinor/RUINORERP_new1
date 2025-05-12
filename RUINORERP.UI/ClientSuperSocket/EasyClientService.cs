@@ -26,7 +26,7 @@ using RUINORERP.Model.TransModel;
 using TransInstruction.CommandService;
 using FastReport.DevComponents.DotNetBar;
 using NPOI.POIFS.Crypt.Dsig;
-using NPOI.SS.Formula.Functions;
+
 using RUINORERP.UI.ClientSuperSocket;
 
 namespace RUINORERP.UI.SuperSocketClient

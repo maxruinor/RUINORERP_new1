@@ -34,6 +34,7 @@ using RUINORERP.Server.Commands;
 using RUINORERP.Server.CommandService;
 using RUINORERP.Server.ServerService;
 using RUINORERP.Server.ServerSession;
+using RUINORERP.Server.SmartReminder.InvReminder;
 using RUINORERP.Server.Workflow.WFReminder;
 using RUINORERP.Server.Workflow.WFScheduled;
 using SharpYaml.Tokens;
@@ -76,7 +77,7 @@ namespace RUINORERP.Server
 {
     public partial class frmMain : Form
     {
-   
+
 
 
 
@@ -142,7 +143,7 @@ namespace RUINORERP.Server
             InitializeComponent();
             _main = this;
             _logger = logger;
-            _services = Startup.Services;
+            _services = Startup.services;
             host = workflowHost;
 
             Globalconfig = config;
@@ -188,6 +189,8 @@ namespace RUINORERP.Server
                 //Tools.ShowMsg("RoleService Thread Id =" + System.Threading.Thread.CurrentThread.ManagedThreadId);
                 //准备工作 准备数据
 
+                var inventoryMonitor = Startup.GetFromFac<InventoryMonitorStarter>();
+                await inventoryMonitor.StartAsync(CancellationToken.None);
                 //启动socket
                 frmMain.Instance.PrintInfoLog("StartServerUI Thread Id =" + System.Threading.Thread.CurrentThread.ManagedThreadId);
                 StartSendData();
@@ -880,7 +883,7 @@ namespace RUINORERP.Server
                                     frmUserList.userInfos.Remove(sg.User);
                                 }));
                             }
-                            if (reason.Reason!=SuperSocket.Connection.CloseReason.ServerShutdown)
+                            if (reason.Reason != SuperSocket.Connection.CloseReason.ServerShutdown)
                             {
                                 PrintMsg($"{DateTime.Now} [SessionforBiz-主要程序]  {session.RemoteEndPoint} closed，原因：: {reason.Reason}");
                             }
@@ -894,7 +897,7 @@ namespace RUINORERP.Server
                                 //移除再广播出去 服务器主动将他的锁在别人电脑上的单据释放
                                 lockManager.RemoveLockByUserID(sg.User.UserID);
                             }
-                   
+
                             ServerLockManagerCmd cmd = new ServerLockManagerCmd(CmdOperation.Send);
                             cmd.BuildDataPacketBroadcastLockStatus();
 
@@ -923,7 +926,7 @@ namespace RUINORERP.Server
                                 //services.AddSingleton<CommandDispatcher>();
                                 //services.AddTransient<ICommandHandler, LoginCommandHandler>();
 
-                                foreach (var service in Startup.Services)
+                                foreach (var service in Startup.services)
                                 {
                                     // 假设 service 是一个 ServiceDescriptor 对象
                                     // 将 service 注册添加到 OtherServices 中

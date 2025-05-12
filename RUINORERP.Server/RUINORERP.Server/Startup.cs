@@ -59,6 +59,9 @@ using TransInstruction;
 using TransInstruction.CommandService;
 using RUINORERP.Server.CommandService;
 using ZXing;
+using RUINORERP.Server.SmartReminder.InvReminder;
+using RUINORERP.Server.SmartReminder;
+using RUINORERP.Server.SmartReminder.ReminderRuleStrategy;
 
 namespace RUINORERP.Server
 {
@@ -73,7 +76,7 @@ namespace RUINORERP.Server
         /// <summary>
         ///  服务容器
         /// </summary>
-        public static IServiceCollection Services { get; set; }
+        public static IServiceCollection services { get; set; }
         /// <summary>
         /// 服务管理者
         /// </summary>
@@ -90,9 +93,9 @@ namespace RUINORERP.Server
         {
 
             #region  注册
-            Services = new ServiceCollection();
+            services = new ServiceCollection();
 
-
+           
 
             //注册当前程序集的所有类成员
             //builder.RegisterAssemblyTypes(System.Reflection.Assembly.GetExecutingAssembly())
@@ -158,11 +161,11 @@ namespace RUINORERP.Server
 
             //注册是最后的覆盖前面的 ，AOP测试时，业务控制器中的方法不生效。与 ConfigureContainer(builder); 中注册的方式有关。可能参数不对。
 
-            ConfigureServices(Services);
+            ConfigureServices(services);
 
             string conn = AppSettings.GetValue("ConnectString");
             Program.InitAppcontextValue(Program.AppContextData);
-            Services.AddLogging(logBuilder =>
+            services.AddLogging(logBuilder =>
             {
                 logBuilder.ClearProviders();
                 //logBuilder.AddProvider(new Log4NetProvider("log4net.config"));
@@ -239,8 +242,45 @@ namespace RUINORERP.Server
             //    ILifetimeScope RegisterTypes(Action<ContainerBuilder> configurationAction);
             //}
 
+            #region 智能提醒服务
+
+            builder.RegisterType<NotificationService>().As<INotificationService>()
+                .AsImplementedInterfaces()
+                .InstancePerLifetimeScope()
+                .AsImplementedInterfaces().AsSelf()
+                .PropertiesAutowired() // 指定属性注入
+                .SingleInstance(); // 单例模式
+
+            builder.RegisterType<InventoryMonitor>().As<IInventoryMonitor>()
+              .AsImplementedInterfaces()
+              .InstancePerLifetimeScope()
+              .AsImplementedInterfaces().AsSelf()
+              .PropertiesAutowired() // 指定属性注入
+              .SingleInstance(); // 单例模式
+
+            builder.RegisterType<SafetyStockStrategy>().As<IAlertStrategy>()
+          .AsImplementedInterfaces()
+          .InstancePerLifetimeScope()
+          .AsImplementedInterfaces().AsSelf()
+          .PropertiesAutowired() // 指定属性注入
+          .SingleInstance(); // 单例模式
+
+            builder.RegisterType<InventoryMonitorStarter>()
+            .AsImplementedInterfaces()
+            .InstancePerLifetimeScope()
+            .AsImplementedInterfaces().AsSelf()
+            .PropertiesAutowired() // 指定属性注入
+            .SingleInstance(); // 单例模式
+
+            // 添加健康检查
+            //services.AddHealthChecks()
+            //    .AddCheck<MonitorHealthCheck>("inventory_monitor");
+
+            #endregion
+
+
             //后面需要研究
-            builder.Populate(Services);//将自带的也注入到autofac
+            builder.Populate(services);//将自带的也注入到autofac
         }
 
         /* 先注释掉，以后再研究

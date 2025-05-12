@@ -1,5 +1,4 @@
-﻿using NPOI.SS.Formula.Functions;
-using RUINORERP.UI.ChartFramework.Models;
+﻿using RUINORERP.UI.ChartFramework.Models;
 using SqlSugar;
 using System;
 using System.Collections.Generic;

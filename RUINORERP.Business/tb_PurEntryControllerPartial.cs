@@ -297,8 +297,8 @@ namespace RUINORERP.Business
                         invUpdateList.Add(inv);
                     }
                 }
-                var InvInsertCounter = await _unitOfWorkManage.GetDbClient().Insertable(invInsertList).ExecuteReturnSnowflakeIdAsync();
-                if (InvInsertCounter != invInsertList.Count)
+                var InvInsertCounter = await _unitOfWorkManage.GetDbClient().Insertable(invInsertList).ExecuteReturnSnowflakeIdListAsync();
+                if (InvInsertCounter.Count != invInsertList.Count)
                 {
                     _unitOfWorkManage.RollbackTran();
                     throw new Exception("库存保存失败！");

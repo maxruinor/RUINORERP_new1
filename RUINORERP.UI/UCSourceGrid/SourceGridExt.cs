@@ -31,6 +31,10 @@ namespace RUINORERP.UI.UCSourceGrid
             MemberInfo minfo = colNameExp.GetMemberInfo();
             foreach (var item in cols)
             {
+                if (item.BelongingObjectType == null)
+                {
+                    continue;
+                }
                 if (item.BelongingObjectType.Name == typeof(T).Name)
                 {
                     item.SetCol_AutoSizeMode(minfo.Name, autoSizeMode);
@@ -48,6 +52,10 @@ namespace RUINORERP.UI.UCSourceGrid
             MemberInfo minfo = colNameExp.GetMemberInfo();
             foreach (var item in cols)
             {
+                if (item.BelongingObjectType == null)
+                {
+                    continue;
+                }
                 if (item.BelongingObjectType.Name == typeof(T).Name)
                 {
                     if (item.ColName == minfo.Name && item.BelongingObjectType == typeof(T))
@@ -74,6 +82,10 @@ namespace RUINORERP.UI.UCSourceGrid
             MemberInfo minfo = colNameExp.GetMemberInfo();
             foreach (var item in cols)
             {
+                if (item.BelongingObjectType == null)
+                {
+                    continue;
+                }
                 if (item.BelongingObjectType.Name == typeof(T).Name)
                 {
                     item.SetCol_NeverVisible(minfo.Name, typeof(T), NeverVisible);
@@ -86,6 +98,10 @@ namespace RUINORERP.UI.UCSourceGrid
             MemberInfo minfo = colNameExp.GetMemberInfo();
             foreach (var item in cols)
             {
+                if (item.BelongingObjectType == null)
+                {
+                    continue;
+                }
                 if (item.BelongingObjectType.Name == typeof(T).Name)
                 {
                     item.SetCol_CanMuliSelect(minfo.Name, typeof(T), CanMuliSelect);
@@ -95,6 +111,10 @@ namespace RUINORERP.UI.UCSourceGrid
 
         public static void SetCol_CanMuliSelect(this SGDefineColumnItem col, string colName, Type BelongingObjectType, bool CanMuliSelect)
         {
+            if (BelongingObjectType == null)
+            {
+                return;
+            }
             if (col.ColName == colName && col.BelongingObjectType == BelongingObjectType)
             {
                 col.CanMuliSelect = CanMuliSelect;
@@ -371,6 +391,10 @@ namespace RUINORERP.UI.UCSourceGrid
             MemberInfo minfo = colNameExp.GetMemberInfo();
             foreach (var item in cols)
             {
+                if (item.BelongingObjectType == null)
+                {
+                    continue;
+                }
                 if (item.BelongingObjectType.Name != typeof(T).Name)
                 {
                     continue;
@@ -488,7 +512,7 @@ namespace RUINORERP.UI.UCSourceGrid
         }
 
 
-    
+
 
         public static void SetCol_DefaultValue(this SGDefineColumnItem col, string colName, object DefaultValue)
         {
@@ -597,6 +621,10 @@ namespace RUINORERP.UI.UCSourceGrid
             MemberInfo minfo = colNameExp.GetMemberInfo();
             foreach (var item in cols)
             {
+                if (item.BelongingObjectType ==null)
+                {
+                    continue;
+                }
                 if (item.BelongingObjectType.Name == typeof(T).Name)
                 {
                     item.SetCol_Summary<T>(minfo.Name);
@@ -706,6 +734,10 @@ namespace RUINORERP.UI.UCSourceGrid
             MemberInfo minfo = ResultColName.GetMemberInfo();
             foreach (SGDefineColumnItem item in cols)
             {
+                if (item.BelongingObjectType==null)
+                {
+                    continue;
+                }
                 if (item.BelongingObjectType.Name != typeof(T).Name)
                 {
                     continue;
@@ -817,6 +849,10 @@ namespace RUINORERP.UI.UCSourceGrid
             MemberInfo minfo = ResultColName.GetMemberInfo();
             foreach (SGDefineColumnItem item in cols)
             {
+                if (item.BelongingObjectType == null)
+                {
+                    continue;
+                }
                 if (item.BelongingObjectType.Name != typeof(T).Name)
                 {
                     continue;
@@ -934,6 +970,10 @@ namespace RUINORERP.UI.UCSourceGrid
 
         public static void SetCol_Summary<T>(this SGDefineColumnItem col, string colName)
         {
+            if (col.BelongingObjectType == null)
+            {
+                return;
+            }
             if (col.ColName == colName && col.BelongingObjectType.Name == typeof(T).Name)
             {
                 col.Summary = true;
@@ -950,6 +990,11 @@ namespace RUINORERP.UI.UCSourceGrid
             MemberInfo minfoTarget = colNameTargetExp.GetMemberInfo();
             foreach (var item in cols)
             {
+                if (item.BelongingObjectType == null)
+                {
+                    continue;
+                }
+
                 if (item.BelongingObjectType.Name != typeof(Target).Name)
                 {
                     continue;

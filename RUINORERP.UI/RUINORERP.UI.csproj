@@ -4481,6 +4481,7 @@
     <Folder Include="Other\" />
     <Folder Include="PM\" />
     <Folder Include="RM\" />
+    <Folder Include="SmartReminder\" />
     <Folder Include="UCForm\" />
     <Folder Include="UControls\TreeGridView\" />
     <Folder Include="UICreator\" />

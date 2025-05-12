@@ -1025,7 +1025,6 @@ namespace RUINORERP.Business
                 //    entity.TotalQty = NewDetails.Sum(c => c.Quantity);
                 //    entity.TotalCost = NewDetails.Sum(c => c.Cost * c.Quantity);
                 //    entity.TotalAmount = NewDetails.Sum(c => c.TransactionPrice * c.Quantity);
-                //    entity.CollectedMoney = NewDetails.Sum(c => c.TransactionPrice * c.Quantity);
                 //    entity.TotalTaxAmount = NewDetails.Sum(c => c.SubtotalTaxAmount);
                 //    entity.TotalUntaxedAmount = NewDetails.Sum(c => c.SubtotalUntaxedAmount);
 

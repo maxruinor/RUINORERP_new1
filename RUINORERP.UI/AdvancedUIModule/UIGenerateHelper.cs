@@ -639,6 +639,7 @@ namespace RUINORERP.UI.AdvancedUIModule
                         break;
                     case AdvQueryProcessType.datetimeRange:
                         UCAdvDateTimerPickerGroup dtpgroup = new UCAdvDateTimerPickerGroup();
+                        //dtpgroup.Width = 260;
                         dtpgroup.Name = queryField.FieldName;
                         string dtpKeyName1 = queryField.ExtendedAttribute[0].ColName;
                         string dtpKeyName2 = queryField.ExtendedAttribute[1].ColName;
@@ -659,9 +660,8 @@ namespace RUINORERP.UI.AdvancedUIModule
                         }
                         else
                         {
-                            dtpgroup.dtp1.Checked = true;
+                            dtpgroup.dtp1.Checked = queryField.IsEnabled;
                         }
-
 
 
                         dtpgroup.dtp2.Name = dtpKeyName2;
@@ -679,7 +679,7 @@ namespace RUINORERP.UI.AdvancedUIModule
                         }
                         else
                         {
-                            dtpgroup.dtp2.Checked = true;
+                            dtpgroup.dtp2.Checked = queryField.IsEnabled;
                         }
                         //时间控件更长为260px，这里要特殊处理
                         dtpgroup.Location = new System.Drawing.Point(_x, _y);

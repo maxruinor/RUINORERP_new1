@@ -39,8 +39,8 @@ namespace RUINORERP.Business.Processor
         public override QueryFilter GetQueryFilter()
         {
             QueryFilter queryFilter = new QueryFilter();
-            queryFilter.SetQueryField<Proc_SaleOrderStatisticsByEmployeePara>(c => c.Start, AdvQueryProcessType.datetime);
-            queryFilter.SetQueryField<Proc_SaleOrderStatisticsByEmployeePara>(c => c.End, AdvQueryProcessType.datetime);
+            queryFilter.SetQueryField<Proc_SaleOrderStatisticsByEmployeePara>(c => c.Start, AdvQueryProcessType.datetime, true);
+            queryFilter.SetQueryField<Proc_SaleOrderStatisticsByEmployeePara>(c => c.End, AdvQueryProcessType.datetime, true);
             queryFilter.SetQueryField<Proc_SaleOrderStatisticsByEmployeePara>(c => c.Employee_ID, true, AdvQueryProcessType.CmbMultiChoiceCanIgnore);
             queryFilter.SetQueryField<Proc_SaleOrderStatisticsByEmployeePara>(c => c.ProjectGroup_ID, true, AdvQueryProcessType.CmbMultiChoiceCanIgnore);
 

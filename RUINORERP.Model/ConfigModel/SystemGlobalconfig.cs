@@ -12,6 +12,7 @@ namespace RUINORERP.Model.ConfigModel
     /// <summary>
     /// 随时根据业务需求进行修改，来让单据输入的默认的数据。
     /// 如设置打印是否直接打印还是显示设计
+    /// 这里默认的值还是优化级低点，比方打印是否直接打印。为了简单默认是直接打印
     /// </summary>
     [Serializable()]
     public class SystemGlobalconfig : BaseConfig
@@ -30,7 +31,7 @@ namespace RUINORERP.Model.ConfigModel
         [JsonProperty("DirectPrinting")]
         [Category("打印设置")]
         [Description("是否直接打印，如果否则会先打开设计功能再打印")]
-        public bool DirectPrinting { get; set; }
+        public bool DirectPrinting { get; set; } = true;
 
         [JsonProperty("UseSharedPrinter")]
         [Category("使用共享打印机")]

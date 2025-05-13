@@ -75,7 +75,7 @@ namespace RUINORERP.UI.SysConfig
         {
             LoadTree();
         }
-
+        IMapper mapper = AutoMapperConfig.RegisterMappings().CreateMapper();
         private async void treeView1_MouseDoubleClick(object sender, MouseEventArgs e)
         {
             if (treeViewTableList.SelectedNode != null && treeView1.SelectedNode != null)
@@ -766,7 +766,7 @@ namespace RUINORERP.UI.SysConfig
                 {
                     MessageBox.Show("只能执行一次。已经执行过了。");
                     //crm数据修复 只能执行一次。这里要注释掉。
-                    /*
+                  
                     #region 
                     List<tb_CustomerVendor> CustomerVendors = MainForm.Instance.AppContext.Db.Queryable<tb_CustomerVendor>()
                         .IncludesAllFirstLayer()
@@ -775,7 +775,7 @@ namespace RUINORERP.UI.SysConfig
                     List<tb_CRM_Customer> customers = new List<tb_CRM_Customer>();
                     foreach (var Customer in CustomerVendors)
                     {
-                        IMapper mapper = AutoMapperConfig.RegisterMappings().CreateMapper();
+                        
                         tb_CRM_Customer entity = mapper.Map<tb_CRM_Customer>(Customer);
                         BusinessHelper.Instance.InitEntity(entity);
                         customers.Add(entity);
@@ -789,7 +789,7 @@ namespace RUINORERP.UI.SysConfig
                     }
 
                     #endregion
-                    */
+                   
                 }
                 if (treeView1.SelectedNode.Text == "属性重复的SKU检测")
                 {

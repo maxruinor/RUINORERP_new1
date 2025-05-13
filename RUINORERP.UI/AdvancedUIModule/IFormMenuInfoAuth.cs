@@ -36,7 +36,7 @@ namespace RUINORERP.UI.AdvancedUIModule
         /// </summary>
         /// <param name="menuInfo"></param>
         /// <returns></returns>
-        List<UI.UControls.ContextMenuController> AddContextMenu();
+         List<UI.UControls.ContextMenuController> AddContextMenu();
     }
 
 }

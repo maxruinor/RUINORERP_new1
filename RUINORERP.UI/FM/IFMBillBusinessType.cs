@@ -8,18 +8,13 @@ using System.Threading.Tasks;
 
 namespace RUINORERP.UI.FM
 {
+
     /// <summary>
-    /// 财务模块合且时 实际窗体分开时的标识
+    /// 用这个特性来标识需要共享窗体的类
+    /// 共享业务表
     /// </summary>
-    public interface IFMBillBusinessType
-    {
-        ReceivePaymentType PaymentType { get; }
-    }
-
-
-    
     [AttributeUsage(AttributeTargets.Class, Inherited = true, AllowMultiple = false)]
-    public sealed class BillBusinessTypeRequiredAttribute : Attribute { }
+    public sealed class SharedIdRequiredAttribute : Attribute { }
 
 
     //////// 在基类添加特性（可选）  这样特性标记就可以在编译时检测到一定要实际这个接口

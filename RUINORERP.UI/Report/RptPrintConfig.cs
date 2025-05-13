@@ -17,6 +17,7 @@ using System.Windows.Forms;
 using Microsoft.Extensions.Logging;
 using FastReport;
 using RUINORERP.Business.CommService;
+using RUINORERP.UI.BaseForm;
 
 namespace RUINORERP.UI.Report
 {
@@ -35,6 +36,13 @@ namespace RUINORERP.UI.Report
         /// 要打印的数据
         /// </summary>
         public List<object> PrintDataSources { get; set; }
+
+        /// <summary>
+        /// PrintDataSources 打印对象的主键字段名，为了更新打印状态和次数
+        /// </summary>
+        public string PKFieldName { get; set; }
+
+
         public List<tb_Company> companyInfos { get; set; }
 
         public List<ICurrentUserInfo> currUserInfos { get; set; }
@@ -197,71 +205,87 @@ namespace RUINORERP.UI.Report
         private void PrintReport(RptMode rptMode)
         {
             FastReport.Report TargetReport = new FastReport.Report();
-            //TargetReport.FileName = RptName;
-            tb_PrintTemplate printTemplate = new tb_PrintTemplate();
-            if (newSumDataGridView1.CurrentRow != null)
+
+            try
             {
-                printTemplate = newSumDataGridView1.CurrentRow.DataBoundItem as tb_PrintTemplate;
-            }
-            else
-            {
-                MessageBox.Show("请选择对应的模板.", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                return;
-            }
 
-            TargetReport.RegisterData(PrintDataSources, "rd");
-            List<ICurrentUserInfo> currUserInfo = new List<ICurrentUserInfo>();
-            currUserInfo.Add(MainForm.Instance.AppContext.CurUserInfo);
 
-            List<tb_Company> companyInfo = new List<tb_Company>();
-            companyInfo.Add(MainForm.Instance.AppContext.CompanyInfo);
-
-            TargetReport.RegisterData(currUserInfo, "currUserInfo");
-            TargetReport.RegisterData(companyInfo, "companyInfo");
-
-            if (printTemplate.TemplateFileStream != null)
-            {
-                byte[] ReportBytes = (byte[])printTemplate.TemplateFileStream;
-                using (System.IO.MemoryStream Stream = new System.IO.MemoryStream(ReportBytes))
+                //TargetReport.FileName = RptName;
+                tb_PrintTemplate printTemplate = new tb_PrintTemplate();
+                if (newSumDataGridView1.CurrentRow != null)
                 {
-                    TargetReport.Load(Stream);
+                    printTemplate = newSumDataGridView1.CurrentRow.DataBoundItem as tb_PrintTemplate;
+                }
+                else
+                {
+                    MessageBox.Show("请选择对应的模板.", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    return;
+                }
+
+                TargetReport.RegisterData(PrintDataSources, "rd");
+                List<ICurrentUserInfo> currUserInfo = new List<ICurrentUserInfo>();
+                currUserInfo.Add(MainForm.Instance.AppContext.CurUserInfo);
+
+                List<tb_Company> companyInfo = new List<tb_Company>();
+                companyInfo.Add(MainForm.Instance.AppContext.CompanyInfo);
+
+                TargetReport.RegisterData(currUserInfo, "currUserInfo");
+                TargetReport.RegisterData(companyInfo, "companyInfo");
+
+                if (printTemplate.TemplateFileStream != null)
+                {
+                    byte[] ReportBytes = (byte[])printTemplate.TemplateFileStream;
+                    using (System.IO.MemoryStream Stream = new System.IO.MemoryStream(ReportBytes))
+                    {
+                        TargetReport.Load(Stream);
+                    }
+                }
+
+                //准备
+                //TargetReport.Prepare();
+                //准备合并上次的 多页时候才需要
+                TargetReport.Prepare(true);
+
+                //设置默认打印机
+                if (printConfig.PrinterSelected.HasValue && printConfig.PrinterSelected.Value)
+                {
+                    TargetReport.PrintSettings.ShowDialog = false;
+                    TargetReport.PrintSettings.Printer = printConfig.PrinterName;
+                }
+
+                //操作方式：DESIGN-设计;PREVIEW-预览;PRINT-打印
+                if (rptMode == RptMode.DESIGN)
+                {
+                    TargetReport.Design();
+                    ////释放资源
+                    TargetReport.Dispose();
+                }
+                else if (rptMode == RptMode.PREVIEW)
+                {
+                    RptPreviewForm frm = new RptPreviewForm();
+                    frm.Text = printConfig.BizName + "打印预览";
+                    frm.MyReport = TargetReport;
+                    frm.ShowDialog();
+                    //TargetReport.ShowPrepared();
+                }
+                else if (rptMode == RptMode.PRINT)
+                {
+                    //打印准备好的内容
+                    TargetReport.PrintPrepared();
+
+                    //打印状态更新
+                    PrintHelper<object>.UpdatePrintStatus(PrintDataSources, PKFieldName);
                 }
             }
-
-            //准备
-            //TargetReport.Prepare();
-            //准备合并上次的 多页时候才需要
-            TargetReport.Prepare(true);
-
-            //设置默认打印机
-            if (printConfig.PrinterSelected.HasValue && printConfig.PrinterSelected.Value)
+            catch (Exception ex)
             {
-                TargetReport.PrintSettings.ShowDialog = false;
-                TargetReport.PrintSettings.Printer = printConfig.PrinterName;
+                MainForm.Instance.logger.Error(ex);
             }
-
-            //操作方式：DESIGN-设计;PREVIEW-预览;PRINT-打印
-            if (rptMode == RptMode.DESIGN)
-            {
-                TargetReport.Design();
-                ////释放资源
+            finally
+            {    ////释放资源
                 TargetReport.Dispose();
             }
-            else if (rptMode == RptMode.PREVIEW)
-            {
-                RptPreviewForm frm = new RptPreviewForm();
-                frm.Text = printConfig.BizName + "打印预览";
-                frm.MyReport = TargetReport;
-                frm.ShowDialog();
-                //TargetReport.ShowPrepared();
-            }
-            else if (rptMode == RptMode.PRINT)
-            {
-                //打印准备好的内容
-                TargetReport.PrintPrepared();
-            }
-            ////释放资源
-            TargetReport.Dispose();
+
         }
 
 

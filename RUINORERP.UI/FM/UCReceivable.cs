@@ -16,14 +16,14 @@ using System.Windows.Forms;
 namespace RUINORERP.UI.FM
 {
     [MenuAttrAssemblyInfo("应收单", ModuleMenuDefine.模块定义.财务管理, ModuleMenuDefine.财务管理.收款管理, BizType.应收单)]
-    [BillBusinessTypeRequired]
-    public partial class UCReceivable : UCReceivablePayable, IFMBillBusinessType
+    [SharedIdRequired]
+    public partial class UCReceivable : UCReceivablePayable, ISharedIdentification
     {
         public UCReceivable()
         {
             InitializeComponent();
             base.PaymentType = Global.EnumExt.ReceivePaymentType.收款;
         }
-      
+        public SharedFlag sharedFlag { get; set; } = SharedFlag.Flag2;
     }
 }

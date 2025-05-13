@@ -116,12 +116,12 @@ namespace RUINORERP.UI.PSI.PUR
 
             DataBindingHelper.BindData4TextBox<tb_PurEntry>(entity, t => t.TotalQty.ToString(), txtTotalQty, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4TextBox<tb_PurEntry>(entity, t => t.TotalAmount.ToString(), txtTotalAmount, BindDataType4TextBox.Money, false);
- 
+
             DataBindingHelper.BindData4DataTime<tb_PurEntry>(entity, t => t.EntryDate, dtpEntryDate, false);
             DataBindingHelper.BindData4TextBox<tb_PurEntry>(entity, t => t.Notes, txtNotes, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_PurEntry>(entity, t => t.ApprovalOpinions, txtApprovalOpinions, BindDataType4TextBox.Text, false);
-          
-    
+
+
             DataBindingHelper.BindData4CheckBox<tb_PurEntry>(entity, t => t.ReceiptInvoiceClosed, chkReceiptInvoiceClosed, false);
             DataBindingHelper.BindData4CheckBox<tb_PurEntry>(entity, t => t.GenerateVouchers, chkGenerateVouchers, false);
             DataBindingHelper.BindData4TextBox<tb_PurEntry>(entity, t => t.VoucherNO, txtVoucherNO, BindDataType4TextBox.Text, false);
@@ -262,7 +262,7 @@ namespace RUINORERP.UI.PSI.PUR
             listCols.SetCol_Summary<tb_PurEntryDetail>(c => c.SubtotalAmount);
 
 
-            listCols.SetCol_Formula<tb_PurEntryDetail>((a, b, c) => a.UnitPrice  * c.Quantity, c => c.SubtotalAmount);
+            listCols.SetCol_Formula<tb_PurEntryDetail>((a, b, c) => a.UnitPrice * c.Quantity, c => c.SubtotalAmount);
             listCols.SetCol_Formula<tb_PurEntryDetail>((a, b, c) => a.SubtotalAmount / (1 + b.TaxRate) * c.TaxRate, d => d.TaxAmount);
             //反算成交价
             listCols.SetCol_FormulaReverse<tb_PurEntryDetail>((a) => a.Quantity != 0, (a, b) => a.SubtotalAmount / b.Quantity, c => c.UnitPrice);
@@ -349,6 +349,13 @@ namespace RUINORERP.UI.PSI.PUR
             {
                 return false;
             }
+
+            //正常是从订单中转过来。如果直接创建的，则没有订单的。则默认订单的币种
+            if (EditEntity.Currency_ID.HasValue == false)
+            {
+                EditEntity.Currency_ID = MainForm.Instance.AppContext.BaseCurrency.Currency_ID;
+            }
+
             var eer = errorProviderForAllInput.GetError(txtTotalQty);
             bindingSourceSub.EndEdit();
             List<tb_PurEntryDetail> detailentity = bindingSourceSub.DataSource as List<tb_PurEntryDetail>;
@@ -396,7 +403,7 @@ namespace RUINORERP.UI.PSI.PUR
                 EditEntity.TotalAmount = details.Sum(c => c.SubtotalAmount);
                 EditEntity.TotalAmount = EditEntity.TotalAmount + EditEntity.ShippingCost;
 
-                if (EditEntity.TotalTaxAmount>0)
+                if (EditEntity.TotalTaxAmount > 0)
                 {
                     EditEntity.IsIncludeTax = true;
                 }

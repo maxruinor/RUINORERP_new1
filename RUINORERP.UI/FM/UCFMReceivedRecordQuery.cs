@@ -33,14 +33,15 @@ using AutoUpdateTools;
 using RUINORERP.UI.BaseForm;
 using RUINORERP.Common.Extensions;
 using RUINORERP.Global.EnumExt;
+using RUINORERP.UI.ATechnologyStack;
 namespace RUINORERP.UI.FM
 {
     /// <summary>
     /// 收款记录表
     /// </summary>
     [MenuAttrAssemblyInfo("收款单查询", ModuleMenuDefine.模块定义.财务管理, ModuleMenuDefine.财务管理.收款管理, BizType.收款单)]
-    [BillBusinessTypeRequired]
-    public partial class UCFMReceivedRecordQuery : UCPaymentRecordQuery, IFMBillBusinessType
+    [SharedIdRequired]
+    public partial class UCFMReceivedRecordQuery : UCPaymentRecordQuery, ISharedIdentification
     {
         public UCFMReceivedRecordQuery()
         {
@@ -48,7 +49,7 @@ namespace RUINORERP.UI.FM
             base.PaymentType = Global.EnumExt.ReceivePaymentType.收款;
         }
 
-
+        public SharedFlag sharedFlag { get; set; } = SharedFlag.Flag1;
         public override void BuildInvisibleCols()
         {
             base.MasterInvisibleCols.Add(c => c.PayeeInfoID);

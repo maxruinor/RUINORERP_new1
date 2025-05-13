@@ -202,7 +202,7 @@ namespace RUINORERP.Business
                 else
                 {
                     //db查询
-                    entity.tb_projectgroup = await _appContext.GetRequiredService<tb_CustomerVendorController<tb_ProjectGroup>>().BaseQueryByIdAsync(entity.ProjectGroup_ID);
+                    entity.tb_projectgroup = await _appContext.GetRequiredService<tb_ProjectGroupController<tb_ProjectGroup>>().BaseQueryByIdAsync(entity.ProjectGroup_ID);
                     payable.DepartmentID = entity.tb_projectgroup.DepartmentID;
                 }
             }
@@ -224,7 +224,7 @@ namespace RUINORERP.Business
             //    }
             //}
             payable.ExchangeRate = entity.ExchangeRate;
-          
+
             List<tb_FM_ReceivablePayableDetail> details = mapper.Map<List<tb_FM_ReceivablePayableDetail>>(entity.tb_SaleOutReDetails);
 
             for (global::System.Int32 i = 0; i < details.Count; i++)
@@ -327,7 +327,7 @@ namespace RUINORERP.Business
                 else
                 {
                     //db查询
-                    entity.tb_projectgroup = await _appContext.GetRequiredService<tb_CustomerVendorController<tb_ProjectGroup>>().BaseQueryByIdAsync(entity.ProjectGroup_ID);
+                    entity.tb_projectgroup = await _appContext.GetRequiredService<tb_ProjectGroupController<tb_ProjectGroup>>().BaseQueryByIdAsync(entity.ProjectGroup_ID);
                     payable.DepartmentID = entity.tb_projectgroup.DepartmentID;
                 }
             }
@@ -346,7 +346,7 @@ namespace RUINORERP.Business
                 else
                 {
                     //db查询
-                    entity.tb_projectgroup = await _appContext.GetRequiredService<tb_CustomerVendorController<tb_ProjectGroup>>().BaseQueryByIdAsync(entity.ProjectGroup_ID);
+                    entity.tb_projectgroup = await _appContext.GetRequiredService<tb_ProjectGroupController<tb_ProjectGroup>>().BaseQueryByIdAsync(entity.ProjectGroup_ID);
                     payable.DepartmentID = entity.tb_projectgroup.DepartmentID;
                 }
             }
@@ -383,7 +383,7 @@ namespace RUINORERP.Business
                 }
             }
             payable.ExchangeRate = entity.ExchangeRate;
-  
+
 
             List<tb_FM_ReceivablePayableDetail> details = mapper.Map<List<tb_FM_ReceivablePayableDetail>>(entity.tb_SaleOutDetails);
 
@@ -482,7 +482,8 @@ namespace RUINORERP.Business
             {
                 payable.DepartmentID = entity.tb_projectgroup.tb_department.DepartmentID;
             }
-            //如果部门还是没有值 则从缓存中加载,如果项目有所属部门的话
+
+            #region 如果部门还是没有值 则从缓存中加载,如果项目有所属部门的话 
             if (payable.ProjectGroup_ID.HasValue && !payable.DepartmentID.HasValue)
             {
                 var projectgroup = BizCacheHelper.Instance.GetEntity<tb_ProjectGroup>(entity.ProjectGroup_ID);
@@ -497,10 +498,12 @@ namespace RUINORERP.Business
                 else
                 {
                     //db查询
-                    entity.tb_projectgroup = await _appContext.GetRequiredService<tb_CustomerVendorController<tb_ProjectGroup>>().BaseQueryByIdAsync(entity.ProjectGroup_ID);
+                    entity.tb_projectgroup = await _appContext.GetRequiredService<tb_ProjectGroupController<tb_ProjectGroup>>().BaseQueryByIdAsync(entity.ProjectGroup_ID);
                     payable.DepartmentID = entity.tb_projectgroup.DepartmentID;
                 }
             }
+
+            #endregion
 
             //采购就是付款
             payable.ReceivePaymentType = (int)ReceivePaymentType.付款;
@@ -509,6 +512,26 @@ namespace RUINORERP.Business
             {
                 payable.Currency_ID = entity.Currency_ID.Value;
             }
+            #region 如果部门还是没有值 则从缓存中加载,如果项目有所属部门的话 
+            if (entity.tb_purorder != null && entity.tb_purorder.tb_paymentmethod == null && entity.tb_purorder.Paytype_ID.HasValue)
+            {
+                var paymentMethod = BizCacheHelper.Instance.GetEntity<tb_PaymentMethod>(entity.ProjectGroup_ID);
+                if (paymentMethod != null && paymentMethod.ToString() != "System.Object")
+                {
+                    if (paymentMethod is tb_PaymentMethod pj)
+                    {
+                        entity.tb_purorder.tb_paymentmethod = pj;
+                    }
+                }
+                else
+                {
+                    //db查询
+                    entity.tb_purorder.tb_paymentmethod = await _appContext.GetRequiredService<tb_PaymentMethodController<tb_PaymentMethod>>().BaseQueryByIdAsync(entity.tb_purorder.Paytype_ID.Value);
+                }
+            }
+
+            #endregion
+
             if (entity.tb_purorder.tb_paymentmethod.Paytype_Name == DefaultPaymentMethod.账期.ToString())
             {
                 var obj = BizCacheHelper.Instance.GetEntity<tb_CustomerVendor>(entity.CustomerVendor_ID);
@@ -532,7 +555,7 @@ namespace RUINORERP.Business
                 }
             }
             payable.ExchangeRate = entity.ExchangeRate;
-      
+
 
             List<tb_FM_ReceivablePayableDetail> details = mapper.Map<List<tb_FM_ReceivablePayableDetail>>(entity.tb_PurEntryDetails);
 

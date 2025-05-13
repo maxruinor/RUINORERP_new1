@@ -16,13 +16,14 @@ namespace RUINORERP.UI.FM
 {
     //付款记录表
     [MenuAttrAssemblyInfo("付款单", ModuleMenuDefine.模块定义.财务管理, ModuleMenuDefine.财务管理.付款管理, BizType.付款单)]
-    [BillBusinessTypeRequired]
-    public partial class UCFMPaymentRecord : UCPaymentRecord, IFMBillBusinessType
+    [SharedIdRequired]
+    public partial class UCFMPaymentRecord : UCPaymentRecord, ISharedIdentification
     {
         public UCFMPaymentRecord()
         {
             InitializeComponent();
             base.PaymentType = Global.EnumExt.ReceivePaymentType.付款;
         }
+        public SharedFlag sharedFlag { get; set; } = SharedFlag.Flag2;
     }
 }

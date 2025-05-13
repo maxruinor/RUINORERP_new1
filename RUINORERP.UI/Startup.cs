@@ -59,6 +59,8 @@ using FastReport.DevComponents.DotNetBar;
 using RUINORERP.UI.FM;
 using RUINORERP.Global.EnumExt;
 using RUINORERP.Business.CommService;
+using Newtonsoft.Json;
+using RUINORERP.UI.ATechnologyStack;
 
 
 namespace RUINORERP.UI
@@ -125,7 +127,7 @@ namespace RUINORERP.UI
             .As(typeof(DbHelper<>))
                 .AsImplementedInterfaces().AsSelf()
             //.EnableInterfaceInterceptors() // 如果需要 AOP 拦截的话
-                                           //.EnableClassInterceptors() // 如果需要 AOP 拦截的话
+            //.EnableClassInterceptors() // 如果需要 AOP 拦截的话
             .PropertiesAutowired() // 指定属性注入
             .SingleInstance(); // 单例模式
 
@@ -457,9 +459,9 @@ namespace RUINORERP.UI
                     }
 
                     // 【新增】优先处理实现业务类型接口的窗体（收/付业务）
-                    if (IsIFMBillBusinessTypeForm(type))
+                    if (ISharedForm(type))
                     {
-                        HandleBillBusinessTypeRegistration(_builder, Assemblyobj, type);
+                        HandleSharedFormTypeRegistration(_builder, Assemblyobj, type);
                         continue; // 处理后跳过后续基类判断
                     }
 
@@ -590,16 +592,17 @@ namespace RUINORERP.UI
         }
 
         // 接口检测辅助方法
-        private static bool IsIFMBillBusinessTypeForm(Type type)
+        private static bool ISharedForm(Type type)
         {
             // 确保是具体类，且实现了IFMBillBusinessType接口
             return type.IsClass && !type.IsAbstract &&
-                   typeof(IFMBillBusinessType).IsAssignableFrom(type);
+                   typeof(ISharedIdentification).IsAssignableFrom(type);
         }
 
 
         // 接口类型注册处理
-        private static void HandleBillBusinessTypeRegistration(ContainerBuilder _builder, System.Reflection.Assembly Assemblyobj, Type type)
+        //这里处理的是BaseType.BaseType，提前处理的多一级基类。共享窗体也是加了一级子类所以按这个规律来处理了
+        private static void HandleSharedFormTypeRegistration(ContainerBuilder _builder, System.Reflection.Assembly Assemblyobj, Type type)
         {
             // 注册为BaseQuery子类（假设基类是BaseQuery）
             //builder.Register(c => Activator.CreateInstance(type))
@@ -627,7 +630,11 @@ namespace RUINORERP.UI
                 _builder.Register(c => Assemblyobj.CreateInstance(type.FullName)).Named<BaseQuery>(type.Name)
                           .PropertiesAutowired(new CustPropertyAutowiredSelector());//指定属性注入
             }
-
+            else if (type.BaseType.BaseType.Name.Contains("BaseListGeneric"))
+            {
+                _builder.Register(c => Assemblyobj.CreateInstance(type.FullName)).Named<BaseUControl>(type.Name)
+              .PropertiesAutowired(new CustPropertyAutowiredSelector());//指定属性注入
+            }
 
 
             // 【扩展】如果需要区分收/付业务，可添加额外元数据
@@ -652,6 +659,32 @@ namespace RUINORERP.UI
         {
             services.AddSingleton<SmtpClient>(new SmtpClient("your.smtp.server"));
             services.AddTransient<INotificationSender, EmailNotificationSender>();
+            #region 创建配置文件-开始
+            // 配置文件所在的目录
+            string configDirectory = Path.Combine(Directory.GetCurrentDirectory(), "SysConfigFiles");
+            if (!Directory.Exists(configDirectory))
+            {
+                Directory.CreateDirectory(configDirectory);
+            }
+
+            // 检查并生成 SystemGlobalconfig 配置文件
+            string systemGlobalConfigPath = Path.Combine(configDirectory, nameof(SystemGlobalconfig) + ".json");
+            if (!File.Exists(systemGlobalConfigPath))
+            {
+                var systemGlobalConfig = new SystemGlobalconfig();
+                string systemGlobalConfigJson = JsonConvert.SerializeObject(new { SystemGlobalconfig = systemGlobalConfig }, Formatting.Indented);
+                File.WriteAllText(systemGlobalConfigPath, systemGlobalConfigJson);
+            }
+
+            // 检查并生成 GlobalValidatorConfig 配置文件
+            string globalValidatorConfigPath = Path.Combine(configDirectory, nameof(GlobalValidatorConfig) + ".json");
+            if (!File.Exists(globalValidatorConfigPath))
+            {
+                var globalValidatorConfig = new GlobalValidatorConfig();
+                string globalValidatorConfigJson = JsonConvert.SerializeObject(globalValidatorConfig, Formatting.Indented);
+                File.WriteAllText(globalValidatorConfigPath, globalValidatorConfigJson);
+            }
+            #endregion
 
             // 读取自定义的 JSON 配置文件
             var builder = new ConfigurationBuilder()

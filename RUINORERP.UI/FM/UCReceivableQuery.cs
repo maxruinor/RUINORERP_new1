@@ -15,8 +15,8 @@ using System.Windows.Forms;
 namespace RUINORERP.UI.FM
 {
     [MenuAttrAssemblyInfo("应收查询", ModuleMenuDefine.模块定义.财务管理, ModuleMenuDefine.财务管理.收款管理, BizType.应收单)]
-    [BillBusinessTypeRequired]
-    public partial class UCReceivableQuery : UCReceivablePayableQuery, IFMBillBusinessType
+    [SharedIdRequired]
+    public partial class UCReceivableQuery : UCReceivablePayableQuery, ISharedIdentification
     {
         public UCReceivableQuery()
         {
@@ -24,7 +24,7 @@ namespace RUINORERP.UI.FM
             base.PaymentType = Global.EnumExt.ReceivePaymentType.收款;
         }
 
-       
+        public SharedFlag sharedFlag { get; set; } = SharedFlag.Flag2;
 
     }
 }

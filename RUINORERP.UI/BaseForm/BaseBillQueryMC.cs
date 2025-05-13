@@ -68,7 +68,7 @@ namespace RUINORERP.UI.BaseForm
     /// </summary>
     /// <typeparam name="M"></typeparam>
     /// <typeparam name="C"></typeparam>
-    public partial class BaseBillQueryMC<M, C> : BaseQuery where M : class where C : class
+    public partial class BaseBillQueryMC<M, C> : BaseQuery, IContextMenuInfoAuth where M : class where C : class
     {
         /// <summary>
         /// 判断是否需要加载子表明细。为了将这个基类适应于单表单据。如付款申请单
@@ -114,6 +114,12 @@ namespace RUINORERP.UI.BaseForm
         /// </summary>
         public Expression<Func<M, string>> RelatedBillEditCol { get; set; }
 
+        public virtual List<ContextMenuController> AddContextMenu()
+        {
+            List<ContextMenuController> list = new List<ContextMenuController>();
+            list.Add(new ContextMenuController("【批量处理】", true, false, "NewSumDataGridView_标记已打印"));
+            return list;
+        }
 
         public BaseBillQueryMC()
         {
@@ -1929,6 +1935,7 @@ namespace RUINORERP.UI.BaseForm
             UIHelper.ControlColumnsInvisible(CurMenuInfo, _UCBillMasterQuery.InvisibleCols, _UCBillMasterQuery.DefaultHideCols, false);
 
             _UCBillMasterQuery.ColNameDataDictionary = MasterColNameDataDictionary;
+            _UCBillMasterQuery.GridRelated.FromMenuInfo = CurMenuInfo;
 
             if (_UCBillMasterQuery.GridRelated.RelatedInfoList.Count == 0 && RelatedBillEditCol != null)
             {

@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/18/2024 17:45:26
+// 时间：05/13/2025 22:52:42
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -39,8 +39,12 @@ namespace RUINORERP.Business
         
      
  RuleFor(tb_CustomerVendorType =>tb_CustomerVendorType.TypeName).MaximumLength(25).WithMessage("类型等级名称:不能超过最大长度,25.");
+ RuleFor(tb_CustomerVendorType =>tb_CustomerVendorType.TypeName).NotEmpty().WithMessage("类型等级名称:不能为空。");
 
  RuleFor(tb_CustomerVendorType =>tb_CustomerVendorType.Desc).MaximumLength(50).WithMessage("描述:不能超过最大长度,50.");
+
+//***** 
+ RuleFor(tb_CustomerVendorType =>tb_CustomerVendorType.BusinessPartnerType).NotNull().WithMessage(":不能为空。");
 
            	        Initialize();
      }

@@ -41,9 +41,37 @@ namespace RUINORERP.UI.SysConfig
         {
             InitializeComponent();
         }
+        private void KryptonNavigator1_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            // TODO: 实现导航器索引改变时的逻辑
+            NewSumDataGridView dg = kryptonNavigator1.SelectedPage.Controls[0] as NewSumDataGridView;
+            #region 设置全选菜单
 
+            //如果是bool型的才显示右键菜单全选全不选
+            foreach (DataGridViewColumn dc in dg.Columns)
+            {
+                if (dc.GetType().Name == "DataGridViewCheckBoxColumn")
+                {
+                    dc.HeaderCell.ContextMenuStrip = contextMenuStrip1;
+                }
+            }
+
+            foreach (DataGridViewColumn dc in dg.Columns)
+            {
+                if (dc.GetType().Name == "DataGridViewCheckBoxColumn")
+                {
+                    dc.HeaderCell.ContextMenuStrip = contextMenuStrip1;
+                }
+            }
+
+
+            #endregion
+        }
         private async void UCRoleAuthorization_Load(object sender, EventArgs e)
         {
+
+            kryptonNavigator1.SelectedPageChanged += KryptonNavigator1_SelectedIndexChanged;
+
             TreeView1.HideSelection = false;
             TreeView1.DrawMode = TreeViewDrawMode.OwnerDrawText;
 
@@ -62,7 +90,7 @@ namespace RUINORERP.UI.SysConfig
            .ToListAsync();
 
             DataBindingHelper.InitCmb<tb_RoleInfo>(k => k.RoleID, v => v.RoleName, cmRoleInfo.ComboBox, true, roleInfos);
-            LoadTreeView();
+            await LoadTreeView();
             InitListData();
             dataGridView1.NeedSaveColumnsXml = true;
             dataGridView2.NeedSaveColumnsXml = true;
@@ -74,6 +102,9 @@ namespace RUINORERP.UI.SysConfig
             dataGridView2.CellMouseDown += new DataGridViewCellMouseEventHandler(dataGridView2_CellMouseDown);
 
         }
+
+
+
 
 
         tb_ModuleDefinitionController<tb_ModuleDefinition> ctrMod = Startup.GetFromFac<tb_ModuleDefinitionController<tb_ModuleDefinition>>();
@@ -92,7 +123,7 @@ namespace RUINORERP.UI.SysConfig
         /// <summary>
         /// 将模块 菜单 显示为树
         /// </summary>
-        private async void LoadTreeView(bool Seleted = false)
+        private async Task<bool> LoadTreeView(bool Seleted = false)
         {
             //if (CurrentRole.RoleID != -1)
             //{
@@ -125,7 +156,7 @@ namespace RUINORERP.UI.SysConfig
             AddTreeNodeByMod(Modules, nd);
             TreeView1.Nodes.Add(nd);
             TreeView1.Nodes[0].Expand();
-            //}
+            return true;
         }
 
 
@@ -185,10 +216,10 @@ namespace RUINORERP.UI.SysConfig
         {
             foreach (var item in Modules)
             {
-                tb_MenuInfo _MenuInfo = item.tb_MenuInfos.FirstOrDefault(c => c.MenuName == item.ModuleName);
+                tb_MenuInfo _MenuInfo = item.tb_MenuInfos.FirstOrDefault(c => c.MenuName == item.ModuleName && c.IsEnabled);
                 if (_MenuInfo == null)
                 {
-                    return;
+                    continue;
                 }
                 string NodeText = "";
                 NodeText = item.ModuleName;
@@ -218,11 +249,11 @@ namespace RUINORERP.UI.SysConfig
             {
                 if (!item.IsVisble)
                 {
-                    return;
+                    continue;
                 }
                 if (!item.IsEnabled)
                 {
-                    return;
+                    continue;
                 }
                 string NodeText = "";
                 NodeText = item.CaptionCN;
@@ -401,6 +432,27 @@ namespace RUINORERP.UI.SysConfig
 
         private async void btnSave_Click(object sender, EventArgs e)
         {
+            #region
+            if (TreeView1.SelectedNode == null)
+            {
+                return;
+            }
+
+            if (CurrentRole == null)
+            {
+                return;
+            }
+            if (!(TreeView1.SelectedNode.Tag is tb_MenuInfo))
+            {
+                return;
+            }
+            tb_MenuInfo selectMenu = TreeView1.SelectedNode.Tag as tb_MenuInfo;
+            if (selectMenu.MenuType != "行为菜单")
+            {
+                return;
+            }
+
+            #endregion
             if (CurrentRole != null)
             {
                 dataGridView1.EndEdit();
@@ -413,9 +465,9 @@ namespace RUINORERP.UI.SysConfig
                     .Where(p => p.RoleID == CurrentRole.RoleID)
                     .Includes(m => m.tb_moduledefinition)
                     .ToListAsync();
-
                 //保存顶级菜单勾选情况  是用更新 第一个是根节点
                 UpdateP4Module(TreeView1.Nodes[0].Nodes, tb_P4Modules);
+
 
                 //==================看到的  选项 处理一次保存一次
                 //更新按钮关系
@@ -438,6 +490,10 @@ namespace RUINORERP.UI.SysConfig
                     pflist.Add(pf);
                 }
                 bool rs2 = await MainForm.Instance.AppContext.Db.CopyNew().Updateable(pflist).ExecuteCommandHasChangeAsync();
+
+                //更新到对应的菜单下的集合中不然还是用前面的缓存
+                
+
                 /*
                 //准备要更新的集合
                 List<tb_P4Menu> tb_P4Menus = await MainForm.Instance.AppContext.Db.CopyNew().Queryable<tb_P4Menu>().Where(p => p.RoleID == CurrentRole.RoleID).ToListAsync();
@@ -447,7 +503,6 @@ namespace RUINORERP.UI.SysConfig
 
                 //更新到关系表中tb_p4menu，因为上面有些只是更新了字段。要保存到db
                 bool rs = await MainForm.Instance.AppContext.Db.CopyNew().Updateable(tb_P4Menus).ExecuteCommandHasChangeAsync();
-            
                 */
                 toolStripButtonSave.Enabled = false;
             }
@@ -622,13 +677,13 @@ namespace RUINORERP.UI.SysConfig
                             {
                                 //默认插入一遍,并且重新加载一下
                                 InitMenuByRole(x);
-                                LoadTreeView();
+                                await LoadTreeView();
                             }
                             else
                             {
                                 if (TreeView1.Nodes.Count == 0)
                                 {
-                                    LoadTreeView();
+                                    await LoadTreeView();
                                 }
                                 //循环去钩选
                                 UpdateP4MenuUI(TreeView1.Nodes[0].Nodes, CurrentRole.tb_P4Menus);
@@ -653,13 +708,13 @@ namespace RUINORERP.UI.SysConfig
                 {
                     //默认插入一遍,并且重新加载一下
                     InitMenuByRole(CurrentRole);
-                    LoadTreeView();
+                    await LoadTreeView();
                 }
                 else
                 {
-                    if (TreeView1.Nodes.Count == 0)
+                    if (TreeView1.Nodes.Count <= 1)
                     {
-                        LoadTreeView();
+                        await LoadTreeView();
                     }
 
                     //循环去钩选
@@ -1007,7 +1062,7 @@ namespace RUINORERP.UI.SysConfig
                 pb.RoleID = CurrentRole.RoleID;
                 pb.FieldInfo_ID = item.FieldInfo_ID;
                 pb.MenuID = menuInfo.MenuID;
-                pb.IsVisble = false;
+                //pb.IsVisble = false;//加上就不对了 保存了勾选都被显示为没勾选了
                 if (Seleted)
                 {
                     pb.IsVisble = true;
@@ -1093,8 +1148,7 @@ namespace RUINORERP.UI.SysConfig
 
             #endregion
 
-
-            #region 设置左右菜单
+            #region 设置全选菜单
 
             //如果是bool型的才显示右键菜单全选全不选
             foreach (DataGridViewColumn dc in dataGridView1.Columns)
@@ -1465,8 +1519,19 @@ namespace RUINORERP.UI.SysConfig
         private void contextMenuStrip1_Opening(object sender, CancelEventArgs e)
         {
             contextMenuStrip1.Tag = null;
-            //找到点击的列保存到tag中。再单项点时控制
-            NewSumDataGridView dg = contextMenuStrip1.SourceControl as NewSumDataGridView;
+            NewSumDataGridView dg = new NewSumDataGridView();
+            if (contextMenuStrip1.SourceControl == null)
+            {
+                if (dataGridView1.Focused)
+                {
+                    dg = dataGridView1;
+                }
+            }
+            else
+            {
+                //找到点击的列保存到tag中。再单项点时控制
+                dg = contextMenuStrip1.SourceControl as NewSumDataGridView;
+            }
             Point pt = dg.PointToClient(Cursor.Position);
             for (int i = 0; i < dg.ColumnCount; i++)
             {
@@ -1483,7 +1548,18 @@ namespace RUINORERP.UI.SysConfig
         {
             if (contextMenuStrip1.Tag != null)
             {
-                NewSumDataGridView dg = contextMenuStrip1.SourceControl as NewSumDataGridView;
+                NewSumDataGridView dg = new NewSumDataGridView();
+                if (dataGridView1.Focused)
+                {
+                    dg = dataGridView1;
+                }
+                else
+                {
+                    if (contextMenuStrip1.SourceControl != null)
+                    {
+                        dg = contextMenuStrip1.SourceControl as NewSumDataGridView;
+                    }
+                }
                 int ClickedColindex = int.Parse(contextMenuStrip1.Tag.ToString());
                 foreach (DataGridViewRow dr in dg.Rows)
                 {
@@ -1621,5 +1697,6 @@ namespace RUINORERP.UI.SysConfig
                 #endregion
             }
         }
+
     }
 }

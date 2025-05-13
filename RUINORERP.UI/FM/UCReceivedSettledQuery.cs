@@ -15,13 +15,14 @@ using System.Windows.Forms;
 namespace RUINORERP.UI.FM
 {
     [MenuAttrAssemblyInfo("收款核销查询", ModuleMenuDefine.模块定义.财务管理, ModuleMenuDefine.财务管理.收款管理, BizType.收款核销)]
-    [BillBusinessTypeRequired]
-    public partial class UCReceivedSettledQuery : UCPaymentSettlementQuery, IFMBillBusinessType
+    [SharedIdRequired]
+    public partial class UCReceivedSettledQuery : UCPaymentSettlementQuery, ISharedIdentification
     {
         public UCReceivedSettledQuery()
         {
             InitializeComponent(); 
             base.PaymentType = Global.EnumExt.ReceivePaymentType.收款;
         }
+        public SharedFlag sharedFlag { get; set; } = SharedFlag.Flag1;
     }
 }

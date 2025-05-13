@@ -79,12 +79,6 @@
     <Content Include="log4net_back.config">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="SysConfigFiles\GlobalValidatorConfig.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="SysConfigFiles\SystemGlobalConfig.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <Content Include="Workflow\Json\审批流程.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -141,6 +135,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="SysConfigFiles\" />
     <Folder Include="Workflow\WFOrder\" />
     <Folder Include="Workflow\WFProduce\" />
   </ItemGroup>

@@ -29,14 +29,16 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(UCRoleAuthorization));
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle3 = new System.Windows.Forms.DataGridViewCellStyle();
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(UCRoleAuthorization));
             this.kryptonSplitContainer1 = new Krypton.Toolkit.KryptonSplitContainer();
             this.TreeView1 = new RUINOR.WinFormsUI.TreeViewThreeState.ThreeStateTreeView();
             this.kryptonNavigator1 = new Krypton.Navigator.KryptonNavigator();
             this.kryptonPage1 = new Krypton.Navigator.KryptonPage();
+            this.dataGridView1 = new RUINORERP.UI.UControls.NewSumDataGridView();
             this.kryptonPage3 = new Krypton.Navigator.KryptonPage();
+            this.dataGridView2 = new RUINORERP.UI.UControls.NewSumDataGridView();
             this.BaseToolStrip = new System.Windows.Forms.ToolStrip();
             this.contextMenuStrip4InitData = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.toolStripMenuItemInitBtn = new System.Windows.Forms.ToolStripMenuItem();
@@ -47,15 +49,13 @@
             this.toolStripButtonSave = new System.Windows.Forms.ToolStripButton();
             this.btnClose = new System.Windows.Forms.ToolStripButton();
             this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
+            this.toolStripCopyRoleConfig = new System.Windows.Forms.ToolStripDropDownButton();
+            this.toolsbtnFullAuthorization = new System.Windows.Forms.ToolStripButton();
             this.contextMenuStrip1 = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.selectAll = new System.Windows.Forms.ToolStripMenuItem();
             this.selectNoAll = new System.Windows.Forms.ToolStripMenuItem();
             this.bindingSource1 = new System.Windows.Forms.BindingSource(this.components);
             this.bindingSource2 = new System.Windows.Forms.BindingSource(this.components);
-            this.toolStripCopyRoleConfig = new System.Windows.Forms.ToolStripDropDownButton();
-            this.dataGridView1 = new RUINORERP.UI.UControls.NewSumDataGridView();
-            this.dataGridView2 = new RUINORERP.UI.UControls.NewSumDataGridView();
-            this.toolsbtnFullAuthorization = new System.Windows.Forms.ToolStripButton();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1.Panel1)).BeginInit();
             this.kryptonSplitContainer1.Panel1.SuspendLayout();
@@ -66,15 +66,15 @@
             this.kryptonNavigator1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPage1)).BeginInit();
             this.kryptonPage1.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPage3)).BeginInit();
             this.kryptonPage3.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.dataGridView2)).BeginInit();
             this.BaseToolStrip.SuspendLayout();
             this.contextMenuStrip4InitData.SuspendLayout();
             this.contextMenuStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSource1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSource2)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.dataGridView2)).BeginInit();
             this.SuspendLayout();
             // 
             // kryptonSplitContainer1
@@ -157,6 +157,39 @@
             this.kryptonPage1.ToolTipTitle = "Page ToolTip";
             this.kryptonPage1.UniqueName = "60445288435B49021FB28348D07C5399";
             // 
+            // dataGridView1
+            // 
+            this.dataGridView1.AllowUserToAddRows = false;
+            this.dataGridView1.AllowUserToDeleteRows = false;
+            this.dataGridView1.AllowUserToOrderColumns = true;
+            dataGridViewCellStyle1.BackColor = System.Drawing.Color.Beige;
+            this.dataGridView1.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle1;
+            this.dataGridView1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.dataGridView1.BorderStyle = System.Windows.Forms.BorderStyle.None;
+            this.dataGridView1.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.dataGridView1.CustomRowNo = false;
+            this.dataGridView1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.dataGridView1.FieldNameList = null;
+            this.dataGridView1.IsShowSumRow = false;
+            this.dataGridView1.Location = new System.Drawing.Point(0, 0);
+            this.dataGridView1.Name = "dataGridView1";
+            this.dataGridView1.NeedSaveColumnsXml = false;
+            this.dataGridView1.RowTemplate.Height = 23;
+            this.dataGridView1.Size = new System.Drawing.Size(647, 589);
+            this.dataGridView1.SumColumns = null;
+            this.dataGridView1.SummaryDescription = "2020-08最新 带有合计列功能;";
+            this.dataGridView1.SumRowCellFormat = "N2";
+            this.dataGridView1.TabIndex = 0;
+            this.dataGridView1.UseCustomColumnDisplay = true;
+            this.dataGridView1.UseSelectedColumn = false;
+            this.dataGridView1.Use是否使用内置右键功能 = true;
+            this.dataGridView1.XmlFileName = "";
+            this.dataGridView1.CellFormatting += new System.Windows.Forms.DataGridViewCellFormattingEventHandler(this.DataGridView1_CellFormatting);
+            this.dataGridView1.ColumnHeaderMouseClick += new System.Windows.Forms.DataGridViewCellMouseEventHandler(this.dataGridView1_ColumnHeaderMouseClick);
+            this.dataGridView1.DataError += new System.Windows.Forms.DataGridViewDataErrorEventHandler(this.dataGridView1_DataError);
+            // 
             // kryptonPage3
             // 
             this.kryptonPage3.AutoHiddenSlideSize = new System.Drawing.Size(200, 200);
@@ -169,6 +202,39 @@
             this.kryptonPage3.Text = "字段配置";
             this.kryptonPage3.ToolTipTitle = "Page ToolTip";
             this.kryptonPage3.UniqueName = "4005A0325384478A20BFEBB7440319BD";
+            // 
+            // dataGridView2
+            // 
+            this.dataGridView2.AllowUserToAddRows = false;
+            this.dataGridView2.AllowUserToDeleteRows = false;
+            this.dataGridView2.AllowUserToOrderColumns = true;
+            dataGridViewCellStyle2.BackColor = System.Drawing.Color.Beige;
+            this.dataGridView2.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle2;
+            this.dataGridView2.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.dataGridView2.BorderStyle = System.Windows.Forms.BorderStyle.None;
+            this.dataGridView2.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.dataGridView2.CustomRowNo = false;
+            this.dataGridView2.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.dataGridView2.FieldNameList = null;
+            this.dataGridView2.IsShowSumRow = false;
+            this.dataGridView2.Location = new System.Drawing.Point(0, 0);
+            this.dataGridView2.Name = "dataGridView2";
+            this.dataGridView2.NeedSaveColumnsXml = false;
+            this.dataGridView2.RowTemplate.Height = 23;
+            this.dataGridView2.Size = new System.Drawing.Size(647, 589);
+            this.dataGridView2.SumColumns = null;
+            this.dataGridView2.SummaryDescription = "2020-08最新 带有合计列功能;";
+            this.dataGridView2.SumRowCellFormat = "N2";
+            this.dataGridView2.TabIndex = 0;
+            this.dataGridView2.UseCustomColumnDisplay = true;
+            this.dataGridView2.UseSelectedColumn = false;
+            this.dataGridView2.Use是否使用内置右键功能 = true;
+            this.dataGridView2.XmlFileName = "";
+            this.dataGridView2.CellFormatting += new System.Windows.Forms.DataGridViewCellFormattingEventHandler(this.DataGridView2_CellFormatting);
+            this.dataGridView2.ColumnHeaderMouseClick += new System.Windows.Forms.DataGridViewCellMouseEventHandler(this.dataGridView2_ColumnHeaderMouseClick);
+            this.dataGridView2.DataError += new System.Windows.Forms.DataGridViewDataErrorEventHandler(this.dataGridView2_DataError);
             // 
             // BaseToolStrip
             // 
@@ -253,6 +319,24 @@
             this.toolStripSeparator2.Name = "toolStripSeparator2";
             this.toolStripSeparator2.Size = new System.Drawing.Size(6, 25);
             // 
+            // toolStripCopyRoleConfig
+            // 
+            this.toolStripCopyRoleConfig.Image = ((System.Drawing.Image)(resources.GetObject("toolStripCopyRoleConfig.Image")));
+            this.toolStripCopyRoleConfig.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.toolStripCopyRoleConfig.Name = "toolStripCopyRoleConfig";
+            this.toolStripCopyRoleConfig.Size = new System.Drawing.Size(88, 22);
+            this.toolStripCopyRoleConfig.Text = "复制授权";
+            this.toolStripCopyRoleConfig.ToolTipText = "加载选择角色的权限配置";
+            // 
+            // toolsbtnFullAuthorization
+            // 
+            this.toolsbtnFullAuthorization.Image = global::RUINORERP.UI.Properties.Resources.closecase;
+            this.toolsbtnFullAuthorization.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.toolsbtnFullAuthorization.Name = "toolsbtnFullAuthorization";
+            this.toolsbtnFullAuthorization.Size = new System.Drawing.Size(79, 22);
+            this.toolsbtnFullAuthorization.Text = "全量授权";
+            this.toolsbtnFullAuthorization.Click += new System.EventHandler(this.toolsbtnFullAuthorization_Click);
+            // 
             // contextMenuStrip1
             // 
             this.contextMenuStrip1.Font = new System.Drawing.Font("Segoe UI", 9F);
@@ -278,90 +362,6 @@
             this.selectNoAll.Text = "全不选";
             this.selectNoAll.Click += new System.EventHandler(this.selectNoAll_Click);
             // 
-            // toolStripCopyRoleConfig
-            // 
-            this.toolStripCopyRoleConfig.Image = ((System.Drawing.Image)(resources.GetObject("toolStripCopyRoleConfig.Image")));
-            this.toolStripCopyRoleConfig.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.toolStripCopyRoleConfig.Name = "toolStripCopyRoleConfig";
-            this.toolStripCopyRoleConfig.Size = new System.Drawing.Size(88, 22);
-            this.toolStripCopyRoleConfig.Text = "复制授权";
-            this.toolStripCopyRoleConfig.ToolTipText = "加载选择角色的权限配置";
-            // 
-            // dataGridView1
-            // 
-            this.dataGridView1.AllowUserToAddRows = false;
-            this.dataGridView1.AllowUserToDeleteRows = false;
-            this.dataGridView1.AllowUserToOrderColumns = true;
-            dataGridViewCellStyle3.BackColor = System.Drawing.Color.Beige;
-            this.dataGridView1.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle3;
-            this.dataGridView1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.dataGridView1.BorderStyle = System.Windows.Forms.BorderStyle.None;
-            this.dataGridView1.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            this.dataGridView1.CustomRowNo = false;
-            this.dataGridView1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.dataGridView1.FieldNameList = null;
-            this.dataGridView1.IsShowSumRow = false;
-            this.dataGridView1.Location = new System.Drawing.Point(0, 0);
-            this.dataGridView1.Name = "dataGridView1";
-            this.dataGridView1.NeedSaveColumnsXml = false;
-            this.dataGridView1.RowTemplate.Height = 23;
-            this.dataGridView1.Size = new System.Drawing.Size(647, 589);
-            this.dataGridView1.SumColumns = null;
-            this.dataGridView1.SummaryDescription = "2020-08最新 带有合计列功能;";
-            this.dataGridView1.SumRowCellFormat = "N2";
-            this.dataGridView1.TabIndex = 0;
-            this.dataGridView1.UseCustomColumnDisplay = true;
-            this.dataGridView1.UseSelectedColumn = false;
-            this.dataGridView1.Use是否使用内置右键功能 = true;
-            this.dataGridView1.XmlFileName = "";
-            this.dataGridView1.CellFormatting += new System.Windows.Forms.DataGridViewCellFormattingEventHandler(this.DataGridView1_CellFormatting);
-            this.dataGridView1.ColumnHeaderMouseClick += new System.Windows.Forms.DataGridViewCellMouseEventHandler(this.dataGridView1_ColumnHeaderMouseClick);
-            this.dataGridView1.DataError += new System.Windows.Forms.DataGridViewDataErrorEventHandler(this.dataGridView1_DataError);
-            // 
-            // dataGridView2
-            // 
-            this.dataGridView2.AllowUserToAddRows = false;
-            this.dataGridView2.AllowUserToDeleteRows = false;
-            this.dataGridView2.AllowUserToOrderColumns = true;
-            dataGridViewCellStyle1.BackColor = System.Drawing.Color.Beige;
-            this.dataGridView2.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle1;
-            this.dataGridView2.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.dataGridView2.BorderStyle = System.Windows.Forms.BorderStyle.None;
-            this.dataGridView2.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            this.dataGridView2.CustomRowNo = false;
-            this.dataGridView2.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.dataGridView2.FieldNameList = null;
-            this.dataGridView2.IsShowSumRow = false;
-            this.dataGridView2.Location = new System.Drawing.Point(0, 0);
-            this.dataGridView2.Name = "dataGridView2";
-            this.dataGridView2.NeedSaveColumnsXml = false;
-            this.dataGridView2.RowTemplate.Height = 23;
-            this.dataGridView2.Size = new System.Drawing.Size(647, 589);
-            this.dataGridView2.SumColumns = null;
-            this.dataGridView2.SummaryDescription = "2020-08最新 带有合计列功能;";
-            this.dataGridView2.SumRowCellFormat = "N2";
-            this.dataGridView2.TabIndex = 0;
-            this.dataGridView2.UseCustomColumnDisplay = true;
-            this.dataGridView2.UseSelectedColumn = false;
-            this.dataGridView2.Use是否使用内置右键功能 = true;
-            this.dataGridView2.XmlFileName = "";
-            this.dataGridView2.CellFormatting += new System.Windows.Forms.DataGridViewCellFormattingEventHandler(this.DataGridView2_CellFormatting);
-            this.dataGridView2.ColumnHeaderMouseClick += new System.Windows.Forms.DataGridViewCellMouseEventHandler(this.dataGridView2_ColumnHeaderMouseClick);
-            this.dataGridView2.DataError += new System.Windows.Forms.DataGridViewDataErrorEventHandler(this.dataGridView2_DataError);
-            // 
-            // toolsbtnFullAuthorization
-            // 
-            this.toolsbtnFullAuthorization.Image = global::RUINORERP.UI.Properties.Resources.closecase;
-            this.toolsbtnFullAuthorization.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.toolsbtnFullAuthorization.Name = "toolsbtnFullAuthorization";
-            this.toolsbtnFullAuthorization.Size = new System.Drawing.Size(79, 22);
-            this.toolsbtnFullAuthorization.Text = "全量授权";
-            this.toolsbtnFullAuthorization.Click += new System.EventHandler(this.toolsbtnFullAuthorization_Click);
-            // 
             // UCRoleAuthorization
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
@@ -381,16 +381,16 @@
             this.kryptonNavigator1.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPage1)).EndInit();
             this.kryptonPage1.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPage3)).EndInit();
             this.kryptonPage3.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.dataGridView2)).EndInit();
             this.BaseToolStrip.ResumeLayout(false);
             this.BaseToolStrip.PerformLayout();
             this.contextMenuStrip4InitData.ResumeLayout(false);
             this.contextMenuStrip1.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.bindingSource1)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSource2)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.dataGridView2)).EndInit();
             this.ResumeLayout(false);
 
         }

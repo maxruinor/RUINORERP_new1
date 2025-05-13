@@ -125,6 +125,10 @@ namespace RUINORERP.UI.Common
                     FixedDictionaryMappings.Add(new FixedDictionaryMapping(_type.Name, nameof(GoodsSource), Common.CommonHelper.Instance.GetKeyValuePairs(typeof(GoodsSource))));
                     FixedDictionaryMappings.Add(new FixedDictionaryMapping(_type.Name, "SourceType", Common.CommonHelper.Instance.GetKeyValuePairs(typeof(GoodsSource))));
                 }
+                else if (prop.Name == nameof(BusinessPartnerType))
+                {
+                    FixedDictionaryMappings.Add(new FixedDictionaryMapping(_type.Name, nameof(BusinessPartnerType), Common.CommonHelper.Instance.GetKeyValuePairs(typeof(BusinessPartnerType))));
+                }
                 else if (prop.Name == nameof(SettlementType))
                 {
                     FixedDictionaryMappings.Add(new FixedDictionaryMapping(_type.Name, nameof(SettlementType), Common.CommonHelper.Instance.GetKeyValuePairs(typeof(SettlementType))));

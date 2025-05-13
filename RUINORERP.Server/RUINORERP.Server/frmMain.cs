@@ -163,7 +163,6 @@ namespace RUINORERP.Server
             //);
             //_logger = loggerFactory.CreateLogger<frmMain>();
 
-
             System.Windows.Forms.Control.CheckForIllegalCrossThreadCalls = false;
         }
 

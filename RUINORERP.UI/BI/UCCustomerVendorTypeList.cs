@@ -19,7 +19,7 @@ using RUINORERP.Business;
 namespace RUINORERP.UI.BI
 {
 
-    [MenuAttrAssemblyInfo( "往来单位类型", ModuleMenuDefine.模块定义.基础资料, ModuleMenuDefine.基础资料.供销资料)]
+    [MenuAttrAssemblyInfo("往来单位等级", ModuleMenuDefine.模块定义.基础资料, ModuleMenuDefine.基础资料.供销资料)]
     public partial class UCCustomerVendorTypeList : BaseForm.BaseListGeneric<tb_CustomerVendorType>
     {
         public UCCustomerVendorTypeList()

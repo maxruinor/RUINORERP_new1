@@ -52,12 +52,14 @@ namespace RUINORERP.UI.PSI.SAL
             base.RelatedBillEditCol = (c => c.SOrderNo);
         }
 
-        public List<ContextMenuController> AddContextMenu()
+        public override List<ContextMenuController> AddContextMenu()
         {
             List<EventHandler> ContextClickList = new List<EventHandler>();
             ContextClickList.Add(NewSumDataGridView_转为销售出库单);
             ContextClickList.Add(NewSumDataGridView_取消订单);
+            ContextClickList.Add(NewSumDataGridView_标记已打印);
             List<ContextMenuController> list = new List<ContextMenuController>();
+            list.Add(new ContextMenuController("【标记已打印】", true, false, "NewSumDataGridView_标记已打印"));
             list.Add(new ContextMenuController("【转为出库单】", true, false, "NewSumDataGridView_转为销售出库单"));
             list.Add(new ContextMenuController("【取消订单】", true, false, "NewSumDataGridView_取消订单"));
             return list;
@@ -66,8 +68,8 @@ namespace RUINORERP.UI.PSI.SAL
         public override void BuildContextMenuController()
         {
             List<EventHandler> ContextClickList = new List<EventHandler>();
+            ContextClickList.Add(NewSumDataGridView_标记已打印);
             ContextClickList.Add(NewSumDataGridView_转为销售出库单);
-
             ContextClickList.Add(NewSumDataGridView_取消订单);
 
             List<ContextMenuController> list = new List<ContextMenuController>();
@@ -116,7 +118,16 @@ namespace RUINORERP.UI.PSI.SAL
         }
 
 
-
+        private async void NewSumDataGridView_标记已打印(object sender, EventArgs e)
+        {
+            List<tb_SaleOrder> selectlist = GetSelectResult();
+            foreach (var item in selectlist)
+            {
+                item.PrintStatus++;
+                tb_SaleOrderController<tb_SaleOrder> ctr = Startup.GetFromFac<tb_SaleOrderController<tb_SaleOrder>>();
+                await ctr.SaveOrUpdate(item);
+            }
+        }
 
         private void NewSumDataGridView_转为销售出库单(object sender, EventArgs e)
         {
@@ -168,7 +179,6 @@ namespace RUINORERP.UI.PSI.SAL
             }
         }
 
-
         private async void NewSumDataGridView_取消订单(object sender, EventArgs e)
         {
             List<tb_SaleOrder> selectlist = GetSelectResult();
@@ -185,7 +195,7 @@ namespace RUINORERP.UI.PSI.SAL
 
                     tb_SaleOrderController<tb_SaleOrder> ctr = Startup.GetFromFac<tb_SaleOrderController<tb_SaleOrder>>();
                     //审核状态时取消订单
-                    ReturnResults<tb_SaleOrder> rmrs =await ctr.CancelOrder(item);
+                    ReturnResults<tb_SaleOrder> rmrs = await ctr.CancelOrder(item);
                     //if (result)
                     //{
 
@@ -194,7 +204,7 @@ namespace RUINORERP.UI.PSI.SAL
                     //{
 
                     //}
-                     
+
                 }
                 else
                 {

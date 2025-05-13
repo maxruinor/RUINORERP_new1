@@ -9,7 +9,23 @@ namespace RUINORERP.Global
 {
     //合同类型枚举
 
-    //合同类型枚举
+    /// <summary>
+    /// 往来单位类型枚举
+    /// </summary>
+    public enum BusinessPartnerType
+    {
+        //Supplier
+        [Description("供应商")]
+        供应商 = 1,
+
+        //Customer
+        [Description("客户")]
+        客户 = 2,
+
+        //Other
+        [Description("其他")]
+        其他 = 3   
+    }
 
     public enum ContractEnum
     {

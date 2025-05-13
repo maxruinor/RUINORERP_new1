@@ -762,6 +762,7 @@ namespace RUINORERP.UI.ProductEAV
                 dtp1.Visible = false;
                 dtp2.Visible = false;
                 kryptonLabel10.Visible = false;
+
             }
 
             chksku_available.Checked = true;
@@ -822,7 +823,18 @@ namespace RUINORERP.UI.ProductEAV
                 BindData();
             }
 
-            //Query();
+            chkIncludeNotInStockProd.CheckedChanged += (sender, e) =>
+            {
+                if (chkIncludeNotInStockProd.Checked)
+                {
+                    cmbLocation.SelectedIndex = -1;
+                }
+                else
+                {
+                    //否则默认选择第一个仓库，0是请选择
+                    cmbLocation.SelectedIndex = 1;
+                }
+            };
 
             kryptonNavigator1.SelectedPage = kryptonPage产品;
             SetPage();
@@ -1630,6 +1642,8 @@ namespace RUINORERP.UI.ProductEAV
             }
 
         }
+
+
     }
 }
 

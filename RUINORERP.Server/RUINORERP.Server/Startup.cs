@@ -61,6 +61,7 @@ using RUINORERP.Server.CommandService;
 using ZXing;
 using RUINORERP.Server.SmartReminder;
 using RUINORERP.Server.SmartReminder.ReminderRuleStrategy;
+using Newtonsoft.Json;
 
 namespace RUINORERP.Server
 {
@@ -500,6 +501,32 @@ namespace RUINORERP.Server
             //IOptionsMonitor适用于单例（Singleton）生命周期的服务，它会监听配置文件发生的更新，并且自动同步响应
             //在这两种情况下，当你的config.json文件发生变化时，IOptionsSnapshot和IOptionsMonitor都会确保你的服务能够获取到最新的配置值。选择使用哪一个取决于你的服务的生命周期和需求。如果你的服务是短期的，并且每个请求都需要最新的配置，那么IOptionsSnapshot是更好的选择。如果你的服务是长期的，并且需要在配置变化时得到通知，那么IOptionsMonitor是更合适的选择
 
+            #region 创建配置文件-开始
+            // 配置文件所在的目录
+            string configDirectory = Path.Combine(Directory.GetCurrentDirectory(), "SysConfigFiles");
+            if (!Directory.Exists(configDirectory))
+            {
+                Directory.CreateDirectory(configDirectory);
+            }
+
+            // 检查并生成 SystemGlobalconfig 配置文件
+            string systemGlobalConfigPath = Path.Combine(configDirectory, nameof(SystemGlobalconfig) + ".json");
+            if (!File.Exists(systemGlobalConfigPath))
+            {
+                var systemGlobalConfig = new SystemGlobalconfig();
+                string systemGlobalConfigJson = JsonConvert.SerializeObject(new { SystemGlobalconfig = systemGlobalConfig }, Formatting.Indented);
+                File.WriteAllText(systemGlobalConfigPath, systemGlobalConfigJson);
+            }
+
+            // 检查并生成 GlobalValidatorConfig 配置文件
+            string globalValidatorConfigPath = Path.Combine(configDirectory, nameof(GlobalValidatorConfig) + ".json");
+            if (!File.Exists(globalValidatorConfigPath))
+            {
+                var globalValidatorConfig = new GlobalValidatorConfig();
+                string globalValidatorConfigJson = JsonConvert.SerializeObject(globalValidatorConfig, Formatting.Indented);
+                File.WriteAllText(globalValidatorConfigPath, globalValidatorConfigJson);
+            }
+            #endregion
 
             // 读取自定义的 JSON 配置文件
             var builder = new ConfigurationBuilder()

@@ -214,7 +214,6 @@ namespace RUINORERP.UI.SysConfig
         private async void RecordSave(bool w_EidtFlag)
         {
             Model.tb_MenuInfo info = new Model.tb_MenuInfo();
-
             info.MenuName = this.txt_MenuName.Text.Trim();
             info.IsVisble = chkisview.Checked;
             info.IsEnabled = chkEnable.Checked;
@@ -282,7 +281,7 @@ namespace RUINORERP.UI.SysConfig
                 //drset.Created_by = UserSettings.Instance.EmpNo;
                 w_EidtFlag = !await mc.UpdateMenuInfo(info);
             }
-            LoadEnevt();
+            //LoadEnevt();
             CmdEnable(true);
             w_EidtFlag = false;
         }
@@ -346,6 +345,7 @@ namespace RUINORERP.UI.SysConfig
                 txt_CaptonC.Text = info.CaptionCN;
                 txt_CaptionE.Text = info.CaptionEN;
                 txtClassPath.Text = info.ClassPath;
+                txtUIPropertyIdentifier.Text = info.UIPropertyIdentifier;
                 txtDiscription.Text = info.Discription;
                 txtFormName.Text = info.FormName;
                 txtEntityName.Text = info.EntityName;

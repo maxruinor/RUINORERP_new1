@@ -570,6 +570,25 @@
     <Compile Include="AdvancedUIModule\UIGenerateHelper.cs" />
     <Compile Include="AdvancedUIModule\UIQueryHelper.cs" />
     <Compile Include="ATechnologyStack\AOP\DbBizLogAOP.cs" />
+    <Compile Include="ATechnologyStack\ISharedIdentification.cs" />
+    <Compile Include="BI\UCBusinessPartnerList.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="BI\UCBusinessPartnerList.Designer.cs">
+      <DependentUpon>UCBusinessPartnerList.cs</DependentUpon>
+    </Compile>
+    <Compile Include="BI\UCCustomerList.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="BI\UCCustomerList.Designer.cs">
+      <DependentUpon>UCCustomerList.cs</DependentUpon>
+    </Compile>
+    <Compile Include="BI\UCOtherBusinessPartnerList.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="BI\UCOtherBusinessPartnerList.Designer.cs">
+      <DependentUpon>UCOtherBusinessPartnerList.cs</DependentUpon>
+    </Compile>
     <Compile Include="BI\UCProjectGroupAccountMapperEdit.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -606,6 +625,12 @@
     <Compile Include="BI\UCProjectGroupAssigneeEmployees.Designer.cs">
       <DependentUpon>UCProjectGroupAssigneeEmployees.cs</DependentUpon>
     </Compile>
+    <Compile Include="BI\UCSupplierList.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="BI\UCSupplierList.Designer.cs">
+      <DependentUpon>UCSupplierList.cs</DependentUpon>
+    </Compile>
     <Compile Include="BI\UCUserPersonalizedEdit.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -620,6 +645,18 @@
     </Compile>
     <Compile Include="Common\ProgressExtensions.cs" />
     <Compile Include="Common\ProgressHelper.cs" />
+    <Compile Include="CRM\UCHighSeasCustomerList.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="CRM\UCHighSeasCustomerList.Designer.cs">
+      <DependentUpon>UCHighSeasCustomerList.cs</DependentUpon>
+    </Compile>
+    <Compile Include="CRM\UCTargetCustomerList.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="CRM\UCTargetCustomerList.Designer.cs">
+      <DependentUpon>UCTargetCustomerList.cs</DependentUpon>
+    </Compile>
     <Compile Include="FM\FMBase\UCPaymentRecord.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -3401,6 +3438,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="FM\UCExpenseClaimStatistics.resx">
       <DependentUpon>UCExpenseClaimStatistics.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FM\UCReceivableQuery.resx">
+      <DependentUpon>UCReceivableQuery.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="FormProperty\frmFormProperty.resx">
       <DependentUpon>frmFormProperty.cs</DependentUpon>

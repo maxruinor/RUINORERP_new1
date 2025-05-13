@@ -108,7 +108,7 @@ namespace RUINORERP.UI.PSI.INV
 
             KryptonPage page1 = kryptonWorkspace1.AllPages().FirstOrDefault(c => c.UniqueName == NavParts.结果分析1.ToString());
             page1.Text = "纵向库存跟踪";
-
+            base._UCOutlookGridAnalysis1.GridRelated.FromMenuInfo = this.CurMenuInfo;
             base._UCOutlookGridAnalysis1.GridRelated.ComplexType = true;
             base._UCOutlookGridAnalysis1.GridRelated.SetComplexTargetField<Proc_InventoryTracking>(c => c.业务类型,c=>c.单据编号);
             //base._UCOutlookGridAnalysis1.GridRelated.ComplexTargtetField = "业务类型";

@@ -7,6 +7,7 @@ using RUINORERP.Common.Extensions;
 using RUINORERP.Global.EnumExt;
 using RUINORERP.Global.Model;
 using RUINORERP.Model;
+using RUINORERP.UI.ATechnologyStack;
 using RUINORERP.UI.FM;
 using RUINORERP.UI.PSI.INV;
 using SourceGrid2.Win32;
@@ -37,6 +38,14 @@ namespace RUINORERP.UI.Common
             menuPowerHelper = Startup.GetFromFac<MenuPowerHelper>();
 
         }
+
+
+        /// <summary>
+        /// 双击时当前窗体的菜单信息
+        /// 相当于是要打开目标的上级菜单信息
+        /// </summary>
+        public tb_MenuInfo FromMenuInfo { get; set; } = new tb_MenuInfo();
+
         MenuPowerHelper menuPowerHelper;
 
 
@@ -413,20 +422,32 @@ namespace RUINORERP.UI.Common
                 //先判断是否多个，合并时会有两个再来根据属性标识去找正确的
                 List<tb_MenuInfo> TargetMenus = MainForm.Instance.MenuList.Where(m => m.IsVisble && m.EntityName == relatedRelationship.TargetTableName.Key
                 && m.BIBaseForm == "BaseBillEditGeneric`2").ToList();
-                if (TargetMenus.Count > 1)
+                    if (TargetMenus.Count > 1)
                 {
                     if (!string.IsNullOrEmpty(TargetMenus[0].BizInterface) && !string.IsNullOrEmpty(TargetMenus[1].BizInterface))
                     {
                         if (TargetMenus[0].BizInterface == TargetMenus[1].BizInterface
-                            && TargetMenus[0].BizInterface == nameof(IFMBillBusinessType))
+                            && TargetMenus[0].BizInterface == nameof(ISharedIdentification))
                         {
-                            int flag = CurrentRow.DataBoundItem.GetPropertyValue(nameof(ReceivePaymentType)).ToInt();
-                            ReceivePaymentType paymentType = (ReceivePaymentType)flag;
-                            var sss = CurrentRow.DataBoundItem.GetPropertyInfo(nameof(ReceivePaymentType));
+
+                            //数据库中保存的是枚举的名称 Flag1
+                            //为了通用 共享一组单据的业务表。如 应收应付。  基类做好了 查询 和 单据编辑。分别对应有四个两组子类
+                            //这时 标记要对应统一。如果应收单和应收查询  都是  Flag1.可以是Flag2 但是要一样
+                            string Flag = string.Empty;
+                            if (this.FromMenuInfo == null)
+                            {
+                                MessageBox.Show("请联系管理员，配置入口菜单");
+                            }
+                            else
+                            {
+                                Flag = this.FromMenuInfo.UIPropertyIdentifier;
+                            }
+
+                            var sss = CurrentRow.DataBoundItem.GetPropertyInfo(nameof(SharedFlag));
                             RelatedMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble
                              && m.EntityName == relatedRelationship.TargetTableName.Key
                              && m.BIBaseForm == "BaseBillEditGeneric`2"
-                             && m.UIPropertyIdentifier == paymentType.ToString()
+                             && m.UIPropertyIdentifier == Flag
                        ).FirstOrDefault();
                         }
 

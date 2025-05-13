@@ -16,12 +16,14 @@ using RUINORERP.UI.BaseForm;
 using RUINORERP.Business.LogicaService;
 using RUINORERP.Business;
 using RUINORERP.UI.Common;
+using RUINORERP.Global.EnumExt;
+using RUINORERP.Global;
 
 namespace RUINORERP.UI.BI
 {
 
 
-    [MenuAttrAssemblyInfo( "往来单位类型编辑", true, UIType.单表数据)]
+    [MenuAttrAssemblyInfo( "往来单位等级编辑", true, UIType.单表数据)]
     public partial class UCCustomerVendorTypeEdit : BaseEditGeneric<tb_CustomerVendorType>
     {
         public UCCustomerVendorTypeEdit()
@@ -36,6 +38,7 @@ namespace RUINORERP.UI.BI
            
             DataBindingHelper.BindData4TextBox<tb_CustomerVendorType>(entity, t => t.TypeName, txtTypeName, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_CustomerVendorType>(entity, t => t.Desc, txtDesc, BindDataType4TextBox.Text, false);
+            DataBindingHelper.BindData4ControlByEnum<tb_CustomerVendorType>(entity, t => t.BusinessPartnerType, cmbCustomerVendorType, BindDataType4Enum.EnumName, typeof(BusinessPartnerType));
             //后面这些依赖于控件绑定的数据源和字段。所以要在绑定后执行。
             if (entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改)
             {

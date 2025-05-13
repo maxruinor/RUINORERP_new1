@@ -114,11 +114,16 @@ namespace RUINORERP.UI.BI
                     txtSupplierCreditDays.Visible = false;
                     lblSupplierCreditLimit.Visible = false;
                     txtSupplierCreditLimit.Visible = false;
+                    if (!_EditEntity.Customer_id.HasValue)
+                    {
+                        chkNoNeedSource.Checked = true;
+                        cmbCustomer_id.Visible = false;
+                    }
 
                 }
                 if (Text.Contains("供应商"))
                 {
-                 
+
                     chkNoNeedSource.Visible = true;
                     lblCustomerCreditDays.Visible = false;
                     txtCustomerCreditDays.Visible = false;
@@ -166,8 +171,17 @@ namespace RUINORERP.UI.BI
                 MainForm.Instance.AppContext.CanUsefunctionModules.Contains(Global.GlobalFunctionModule.客户管理系统CRM)
                 && crmMod.Available && _EditEntity.IsCustomer)
             {
-                lblCustomer_id.Visible = true;
-                cmbCustomer_id.Visible = true;
+                if (_EditEntity.Customer_id != null && _EditEntity.Customer_id.HasValue)
+                {
+                    lblCustomer_id.Visible = true;
+                    cmbCustomer_id.Visible = true;
+                }
+                else
+                {
+                    lblCustomer_id.Visible = false;
+                    cmbCustomer_id.Visible = false;
+                }
+
             }
             else
             {
@@ -392,8 +406,8 @@ namespace RUINORERP.UI.BI
             }
         }
 
-  
 
-        
+
+
     }
 }

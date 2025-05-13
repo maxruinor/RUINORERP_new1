@@ -38,7 +38,6 @@ using RUINORERP.UI.SuperSocketClient;
 namespace RUINORERP.UI.CRM
 {
 
-    [MenuAttrAssemblyInfo("目标客户", ModuleMenuDefine.模块定义.客户关系, ModuleMenuDefine.客户关系.客户管理)]
     public partial class UCCRMCustomerList : BaseForm.BaseListGeneric<tb_CRM_Customer>, IToolStripMenuInfoAuth
     {
         public UCCRMCustomerList()
@@ -68,10 +67,13 @@ namespace RUINORERP.UI.CRM
                 MessageBox.Show("只能删除自己的目标客户信息。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 return Task.FromResult(false);
             }
-            if (rowInfo.tb_CRM_FollowUpPlanses != null || rowInfo.tb_CRM_FollowUpRecordses != null || rowInfo.CustomerStatus != (int)CustomerStatus.新增客户)
+            if (
+               (rowInfo.tb_CRM_FollowUpPlanses != null && rowInfo.tb_CRM_FollowUpPlanses.Count > 0)
+                || (rowInfo.tb_CRM_FollowUpRecordses != null && rowInfo.tb_CRM_FollowUpRecordses.Count > 0) 
+                || rowInfo.CustomerStatus != (int)CustomerStatus.新增客户)
             {
-                //只能删除自己的收款信息。
-                MessageBox.Show("只有【新增客户】的线索,并且没有任何跟进信息时才能删除。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                //只能删除自己的信息。
+                MessageBox.Show("只有【新增客户】,并且没有任何跟进信息时才能删除。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 return Task.FromResult(false);
             }
             return base.Delete();

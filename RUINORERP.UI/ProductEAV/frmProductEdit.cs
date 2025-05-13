@@ -540,6 +540,7 @@ namespace RUINORERP.UI.ProductEAV
             this.Close();
         }
 
+        IMapper mapper = AutoMapperConfig.RegisterMappings().CreateMapper();
         /// <summary>
         /// 得到关系列表
         /// </summary>
@@ -581,7 +582,7 @@ namespace RUINORERP.UI.ProductEAV
 
                         #region
                         tb_Prod_Attr_Relation rela = new tb_Prod_Attr_Relation();
-                        IMapper mapper = AutoMapperConfig.RegisterMappings().CreateMapper();
+                  
                         var detail = mapper.Map<tb_ProdDetail>(item);
                         //rela.Property_ID = -1;
                         //rela.PropertyValueID = -1;
@@ -628,7 +629,7 @@ namespace RUINORERP.UI.ProductEAV
         }
 
 
-        IMapper mapper = AutoMapperConfig.RegisterMappings().CreateMapper();
+      
         //这个方法比较耗时
         private List<tb_ProdDetail> GetDetailsAndRelations(tb_Prod baseInfo, List<Eav_ProdDetails> removeList)
         {

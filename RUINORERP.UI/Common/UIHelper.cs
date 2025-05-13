@@ -32,6 +32,7 @@ using RUINORERP.UI.UCSourceGrid;
 using System.Web.UI.WebControls;
 using RUINORERP.UI.FM;
 using RUINORERP.Global.EnumExt;
+using RUINORERP.UI.ATechnologyStack;
 
 namespace RUINORERP.UI.Common
 {
@@ -2019,28 +2020,27 @@ namespace RUINORERP.UI.Common
 
                     // 确保是具体类，且实现了IBillBusinessType接口
                     if (type.IsClass && !type.IsAbstract &&
-                           typeof(IFMBillBusinessType).IsAssignableFrom(type))
+                           typeof(ISharedIdentification).IsAssignableFrom(type))
                     {
-                        info.BizInterface = nameof(IFMBillBusinessType);
+                        info.BizInterface = nameof(ISharedIdentification);
 
                         // 获取接口类型（避免硬编码字符串）
-                        Type interfaceType = typeof(IFMBillBusinessType);
+                        Type interfaceType = typeof(ISharedIdentification);
 
                         // 检查类型是否显式或隐式实现了该接口
                         if (interfaceType.IsAssignableFrom(type) && !type.IsInterface)
                         {
                             // 获取接口属性（支持显式/隐式实现）
-                            PropertyInfo property = interfaceType.GetProperty("PaymentType", BindingFlags.Public | BindingFlags.Instance);
-
+                            PropertyInfo property = interfaceType.GetProperty("sharedFlag", BindingFlags.Public | BindingFlags.Instance);
                             if (property != null && property.CanRead)
                             {
                                 object instance = Activator.CreateInstance(type); // 需要无参构造函数
-                                info.UIPropertyIdentifier = interfaceType.GetProperty("PaymentType").GetValue(instance, null).ToString();
+                                info.UIPropertyIdentifier = interfaceType.GetProperty("sharedFlag").GetValue(instance, null).ToString();
                             }
                             else
                             {
                                 // 处理属性未正确实现的异常（日志或忽略）
-                                MainForm.Instance.uclog.AddLog($"类型 {type.Name} 未正确实现 {interfaceType.Name} 接口的 PaymentType 属性", Global.UILogType.警告);
+                                MainForm.Instance.uclog.AddLog($"类型 {type.Name} 未正确实现 {interfaceType.Name} 接口的 sharedFlag 属性", Global.UILogType.警告);
                             }
                         }
 

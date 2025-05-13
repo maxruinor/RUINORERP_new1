@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/13/2024 18:43:34
+// 时间：05/13/2025 22:52:41
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -38,7 +38,7 @@ namespace RUINORERP.Model.QueryDto
         /// 类型等级名称
         /// </summary>
         [AdvQueryAttribute(ColName = "TypeName",ColDesc = "类型等级名称")]
-        [SugarColumn(ColumnDataType = "varchar",SqlParameterDbType ="String",ColumnName = "TypeName",Length=50,IsNullable = true,ColumnDescription = "类型等级名称" )]
+        [SugarColumn(ColumnDataType = "varchar",SqlParameterDbType ="String",ColumnName = "TypeName",Length=50,IsNullable = false,ColumnDescription = "类型等级名称" )]
         public string TypeName 
         { 
             get{return _TypeName;}
@@ -56,6 +56,19 @@ namespace RUINORERP.Model.QueryDto
         { 
             get{return _Desc;}
             set{SetProperty(ref _Desc, value);}
+        }
+     
+
+        private int _BusinessPartnerType;
+        /// <summary>
+        /// 
+        /// </summary>
+        [AdvQueryAttribute(ColName = "BusinessPartnerType",ColDesc = "")]
+        [SugarColumn(ColumnDataType = "int",SqlParameterDbType ="Int32",ColumnName = "BusinessPartnerType",IsNullable = false,ColumnDescription = "" )]
+        public int BusinessPartnerType 
+        { 
+            get{return _BusinessPartnerType;}
+            set{SetProperty(ref _BusinessPartnerType, value);}
         }
 
 

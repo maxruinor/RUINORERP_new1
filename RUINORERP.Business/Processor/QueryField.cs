@@ -20,6 +20,7 @@ namespace RUINORERP.Business.Processor
     /// </summary>
     public class QueryField
     {
+
         /// <summary>
         /// 显示顺序
         /// </summary>
@@ -168,6 +169,8 @@ namespace RUINORERP.Business.Processor
         public bool IsHidden { get; set; }
         public bool IsVisible { get; set; } = false;
 
+        //  是否启用 ,特别是日期时。如果是 则默认勾选中
+        public bool IsEnabled { get; set; } = true;
 
         public string Caption { get; set; } = string.Empty;
 

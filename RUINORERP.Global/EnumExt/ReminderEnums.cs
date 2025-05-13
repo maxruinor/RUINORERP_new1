@@ -8,12 +8,13 @@ using System.Threading.Tasks;
 namespace RUINORERP.Global.EnumExt
 {
 
-    enum RuleEngineType
+    public enum RuleEngineType
     {
         //RulesEngine/Roslyn
-        None  = 0,
+        None = 0,
         RulesEngine = 1,
-        Hybrid = 2
+        Roslyn = 2,
+        Hybrid = 3
     }
     public enum ReminderBizType
     {
@@ -85,10 +86,10 @@ namespace RUINORERP.Global.EnumExt
         Workflow = 8
     }
 
-    public enum HealthStatus
-    {
-        Healthy,
-        Degraded,
-        Unhealthy
-    }
+    //public enum HealthStatus
+    //{
+    //    Healthy,
+    //    Degraded,
+    //    Unhealthy
+    //}
 }

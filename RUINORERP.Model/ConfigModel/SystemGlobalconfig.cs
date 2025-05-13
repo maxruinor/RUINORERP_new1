@@ -11,6 +11,7 @@ namespace RUINORERP.Model.ConfigModel
 
     /// <summary>
     /// 随时根据业务需求进行修改，来让单据输入的默认的数据。
+    /// 如设置打印是否直接打印还是显示设计
     /// </summary>
     [Serializable()]
     public class SystemGlobalconfig : BaseConfig
@@ -25,6 +26,16 @@ namespace RUINORERP.Model.ConfigModel
         [Category("销售模块")]
         [Description("销售订单默认平台单为真")]
         public bool IsFromPlatform { get; set; }
+
+        [JsonProperty("DirectPrinting")]
+        [Category("打印设置")]
+        [Description("是否直接打印，如果否则会先打开设计功能再打印")]
+        public bool DirectPrinting { get; set; }
+
+        [JsonProperty("UseSharedPrinter")]
+        [Category("使用共享打印机")]
+        [Description("如果为否，则每个客户端指定一个打印机。为真则使用默认服务器的打印机")]
+        public bool UseSharedPrinter { get; set; }
 
 
         [JsonProperty("SomeSetting")]

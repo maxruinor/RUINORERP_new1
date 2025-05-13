@@ -25,6 +25,7 @@ using AutoMapper;
 using System.Windows.Forms;
 using RUINORERP.Global.EnumExt;
 using Fireasy.Common.Extensions;
+using System.Collections;
 
 namespace RUINORERP.Business
 {
@@ -56,7 +57,7 @@ namespace RUINORERP.Business
                 _unitOfWorkManage.BeginTran();
                 tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
                 List<tb_Inventory> invList = new List<tb_Inventory>();
-          
+
                 //更新拟销售量
                 foreach (var child in entity.tb_SaleOrderDetails)
                 {
@@ -82,7 +83,7 @@ namespace RUINORERP.Business
                         BusinessHelper.Instance.EditEntity(inv);
                         invList.Add(inv);
                     }
-                   
+
                     #endregion
 
                 }
@@ -94,7 +95,7 @@ namespace RUINORERP.Business
                     _unitOfWorkManage.RollbackTran();
                     throw new Exception("库存更新失败！");
                 }
-                
+
 
                 AuthorizeController authorizeController = _appContext.GetRequiredService<AuthorizeController>();
                 if (authorizeController.EnableFinancialModule())
@@ -103,7 +104,7 @@ namespace RUINORERP.Business
                     // 获取付款方式信息
                     if (entity.tb_paymentmethod == null)
                     {
-                        var obj = BizCacheHelper.Instance.GetEntity<tb_PaymentMethod>(entity.Paytype_ID.Value);
+                        var obj = BizCacheHelper.Instance.GetEntity<tb_PaymentMethod>(entity.Paytype_ID);
                         if (obj != null && obj.ToString() != "System.Object")
                         {
                             entity.tb_paymentmethod = obj as tb_PaymentMethod;
@@ -304,6 +305,7 @@ namespace RUINORERP.Business
                     #region 审核
                     foreach (var entity in entitys)
                     {
+                        List<tb_Inventory> invUpdateList = new List<tb_Inventory>();
                         foreach (var child in entity.tb_SaleOrderDetails)
                         {
                             #region 库存表的更新 ，
@@ -326,13 +328,15 @@ namespace RUINORERP.Business
                             inv.Sale_Qty = inv.Sale_Qty + child.Quantity;
                             BusinessHelper.Instance.EditEntity(inv);
                             #endregion
-                            ReturnResults<tb_Inventory> rr = await ctrinv.SaveOrUpdate(inv);
-                            if (rr.Succeeded)
-                            {
-
-                            }
+                            invUpdateList.Add(inv);
                         }
-
+                        DbHelper<tb_Inventory> dbHelper = _appContext.GetRequiredService<DbHelper<tb_Inventory>>();
+                        var Counter = await dbHelper.BaseDefaultAddElseUpdateAsync(invUpdateList);
+                        if (Counter != invUpdateList.Count)
+                        {
+                            _unitOfWorkManage.RollbackTran();
+                            throw new Exception("库存更新失败！");
+                        }
                         //这部分是否能提出到上一级公共部分？
                         entity.DataStatus = (int)DataStatus.确认;
                         entity.ApprovalOpinions = approvalEntity.ApprovalOpinions;
@@ -404,6 +408,7 @@ namespace RUINORERP.Business
                     if (entitys[m].tb_SaleOrderDetails.Select(c => c.TotalDeliveredQty).Sum() < entitys[m].tb_SaleOrderDetails.Select(c => c.Quantity).Sum())
                     {
                         tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
+                        List<tb_Inventory> invUpdateList = new List<tb_Inventory>();
                         for (int c = 0; c < entitys[m].tb_SaleOrderDetails.Count; c++)
                         {
 
@@ -426,11 +431,14 @@ namespace RUINORERP.Business
                             inv.Sale_Qty -= (entitys[m].tb_SaleOrderDetails[c].Quantity - entitys[m].tb_SaleOrderDetails[c].TotalDeliveredQty);
                             BusinessHelper.Instance.EditEntity(inv);
                             #endregion
-                            ReturnResults<tb_Inventory> rr = await ctrinv.SaveOrUpdate(inv);
-                            if (rr.Succeeded)
-                            {
-
-                            }
+                            invUpdateList.Add(inv);
+                        }
+                        DbHelper<tb_Inventory> dbHelper = _appContext.GetRequiredService<DbHelper<tb_Inventory>>();
+                        var InvUpdateCounter = await dbHelper.BaseDefaultAddElseUpdateAsync(invUpdateList);
+                        if (InvUpdateCounter != invUpdateList.Count)
+                        {
+                            _unitOfWorkManage.RollbackTran();
+                            throw new Exception("库存更新失败！");
                         }
                     }
                     //这部分是否能提出到上一级公共部分？
@@ -496,6 +504,7 @@ namespace RUINORERP.Business
                     if (entitys[m].tb_SaleOrderDetails.Select(c => c.TotalDeliveredQty).Sum() < entitys[m].tb_SaleOrderDetails.Select(c => c.Quantity).Sum())
                     {
                         tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
+                        List<tb_Inventory> invUpdateList = new List<tb_Inventory>();
                         for (int c = 0; c < entitys[m].tb_SaleOrderDetails.Count; c++)
                         {
 
@@ -518,11 +527,14 @@ namespace RUINORERP.Business
                             inv.Sale_Qty += (entitys[m].tb_SaleOrderDetails[c].Quantity - entitys[m].tb_SaleOrderDetails[c].TotalDeliveredQty);
                             BusinessHelper.Instance.EditEntity(inv);
                             #endregion
-                            ReturnResults<tb_Inventory> rr = await ctrinv.SaveOrUpdate(inv);
-                            if (rr.Succeeded)
-                            {
-
-                            }
+                            invUpdateList.Add(inv);
+                        }
+                        DbHelper<tb_Inventory> dbHelper = _appContext.GetRequiredService<DbHelper<tb_Inventory>>();
+                        var InvUpdateCounter = await dbHelper.BaseDefaultAddElseUpdateAsync(invUpdateList);
+                        if (InvUpdateCounter != invUpdateList.Count)
+                        {
+                            _unitOfWorkManage.RollbackTran();
+                            throw new Exception("库存更新失败！");
                         }
                     }
 
@@ -1074,7 +1086,7 @@ namespace RUINORERP.Business
                     rmrs.Succeeded = false;
                     return rmrs;
                 }
-
+                List<tb_Inventory> invUpdateList = new List<tb_Inventory>();
                 foreach (var child in entity.tb_SaleOrderDetails)
                 {
                     #region 库存表的更新 ，
@@ -1094,11 +1106,15 @@ namespace RUINORERP.Business
                     inv.Sale_Qty = inv.Sale_Qty - child.Quantity;
                     BusinessHelper.Instance.EditEntity(inv);
                     #endregion
-                    ReturnResults<tb_Inventory> rr = await ctrinv.SaveOrUpdate(inv);
-                    if (rr.Succeeded)
-                    {
+                    invUpdateList.Add(inv);
+                }
 
-                    }
+                DbHelper<tb_Inventory> dbHelper = _appContext.GetRequiredService<DbHelper<tb_Inventory>>();
+                var InvUpdateCounter = await dbHelper.BaseDefaultAddElseUpdateAsync(invUpdateList);
+                if (InvUpdateCounter != invUpdateList.Count)
+                {
+                    _unitOfWorkManage.RollbackTran();
+                    throw new Exception("库存更新失败！");
                 }
 
                 #region  预收款单处理

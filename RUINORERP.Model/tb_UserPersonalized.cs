@@ -93,6 +93,34 @@ namespace RUINORERP.Model
             SetProperty(ref _ID, value);
                         }
         }
+        private string _PrinterName;
+        /// <summary>
+        /// 打印机名称
+        /// </summary>
+        [AdvQueryAttribute(ColName = "PrinterName", ColDesc = "打印机名称")]
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType = "String", ColumnName = "PrinterName", Length = 200, IsNullable = true, ColumnDescription = "打印机名称")]
+        public string PrinterName
+        {
+            get { return _PrinterName; }
+            set
+            {
+                SetProperty(ref _PrinterName, value);
+            }
+        }
+        private bool? _UseUserOwnPrinter = false;
+        /// <summary>
+        /// 设置指定打印机
+        /// </summary>
+        [AdvQueryAttribute(ColName = "UseUserOwnPrinter", ColDesc = "设置指定打印机")]
+        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType = "Boolean", ColumnName = "UseUserOwnPrinter", IsNullable = true, ColumnDescription = "设置指定打印机")]
+        public bool? UseUserOwnPrinter
+        {
+            get { return _UseUserOwnPrinter; }
+            set
+            {
+                SetProperty(ref _UseUserOwnPrinter, value);
+            }
+        }
 
         #endregion
 

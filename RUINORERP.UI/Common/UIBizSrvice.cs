@@ -255,7 +255,12 @@ namespace RUINORERP.UI.Common
                                     queryField.AdvQueryFieldType = AdvQueryProcessType.TextSelect;
                                     break;
                                 case "image":
-                                    continue;
+                                    break;
+                                case "int":
+                                    queryField.AdvQueryFieldType = AdvQueryProcessType.Int;
+                                    break;
+                                default:
+                                    break;
                             }
 
                             if (sugarColumn.IsNullable == true)
@@ -315,6 +320,8 @@ namespace RUINORERP.UI.Common
                 {
                     continue;
                 }
+                if (col.Caption.Contains("数量"))
+                    continue;
                 if (col.Caption.Contains("引用"))
                     continue;
                 if (col.Caption.Contains("编号"))

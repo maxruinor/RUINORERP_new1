@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Diagnostics.HealthChecks;
+using Microsoft.Extensions.Logging;
 using RUINORERP.Global.EnumExt;
 using System;
 using System.Collections.Generic;
@@ -7,14 +8,14 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace RUINORERP.Server.SmartReminder.InvReminder
+namespace RUINORERP.Server.SmartReminder
 {
     public class MonitorHealthCheck : IHealthCheck
     {
-        private readonly IInventoryMonitor _monitor;
+        private readonly ISmartReminderMonitor _monitor;
         private readonly ILogger<MonitorHealthCheck> _logger;
 
-        public MonitorHealthCheck(IInventoryMonitor monitor, ILogger<MonitorHealthCheck> logger)
+        public MonitorHealthCheck(ISmartReminderMonitor monitor, ILogger<MonitorHealthCheck> logger)
         {
             _monitor = monitor;
             _logger = logger;
@@ -59,7 +60,7 @@ namespace RUINORERP.Server.SmartReminder.InvReminder
                     exception: ex,
                     description: "库存监控服务健康检查失败"));
             }
-           
+
         }
     }
 
@@ -81,8 +82,7 @@ namespace RUINORERP.Server.SmartReminder.InvReminder
 }
 
 
-    // TODO 要如果调用修复？
-    // 注册健康检查
-    //services.AddHealthChecks()
-    //.AddCheck<MonitorHealthCheck>("inventory_monitor");
- 
+// TODO 要如果调用修复？
+// 注册健康检查
+//services.AddHealthChecks()
+//.AddCheck<MonitorHealthCheck>("inventory_monitor");

@@ -26,6 +26,7 @@ using System.Linq;
 
 using RUINORERP.Global;
 using RUINORERP.Business.Security;
+using RUINORERP.Business.CommService;
 
 
 namespace RUINORERP.Business
@@ -140,7 +141,7 @@ namespace RUINORERP.Business
                 tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
                 //更新拟销售量减少
 
-
+                List<tb_Inventory> invUpdateList = new List<tb_Inventory>();
                 foreach (var child in entity.tb_StockOutDetails)
                 {
                     #region 库存表的更新 ，
@@ -163,13 +164,15 @@ namespace RUINORERP.Business
                     //inv.LatestStorageTime
                     BusinessHelper.Instance.EditEntity(inv);
                     #endregion
-                    ReturnResults<tb_Inventory> rr = await ctrinv.SaveOrUpdate(inv);
-                    if (rr.Succeeded)
-                    {
-
-                    }
+                    invUpdateList.Add(inv);
                 }
-
+                DbHelper<tb_Inventory> dbHelper = _appContext.GetRequiredService<DbHelper<tb_Inventory>>();
+                var Counter = await dbHelper.BaseDefaultAddElseUpdateAsync(invUpdateList);
+                if (Counter != invUpdateList.Count)
+                {
+                    _unitOfWorkManage.RollbackTran();
+                    throw new Exception("库存更新失败！");
+                }
 
                 //==
 

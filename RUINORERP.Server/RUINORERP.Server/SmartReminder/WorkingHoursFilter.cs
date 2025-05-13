@@ -1,11 +1,12 @@
 ﻿using Microsoft.Extensions.Logging;
+using RUINORERP.Server.SmartReminder.InvReminder;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace RUINORERP.Server.SmartReminder.InvReminder
+namespace RUINORERP.Server.SmartReminder
 {
     /// <summary>
     /// 下班时间暂停检查
@@ -40,7 +41,7 @@ namespace RUINORERP.Server.SmartReminder.InvReminder
             return true;
 
         }
-        public async Task CheckInventoryAsync(IInventoryMonitor monitor)
+        public async Task CheckInventoryAsync(ISmartReminderMonitor monitor)
         {
             if (!ShouldCheck())
             {
@@ -50,7 +51,7 @@ namespace RUINORERP.Server.SmartReminder.InvReminder
 
             try
             {
-                await monitor.CheckInventoryAsync();
+                await monitor.CheckRemindersAsync();
             }
             catch (Exception ex)
             {
@@ -62,7 +63,7 @@ namespace RUINORERP.Server.SmartReminder.InvReminder
                 }
             }
         }
-        private void EnterDegradedMode(IInventoryMonitor monitor)
+        private void EnterDegradedMode(ISmartReminderMonitor monitor)
         {
             _logger.LogWarning("进入库存检查降级模式");
             // 调整检查频率

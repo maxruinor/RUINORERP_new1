@@ -182,7 +182,7 @@ namespace RUINORERP.UI.BaseForm
                                 {
                                     subItemDr.Visible = false;
                                 }
-                           }
+                            }
                         }
                         #endregion
 
@@ -237,7 +237,7 @@ namespace RUINORERP.UI.BaseForm
                         }
                     }
 
-                   
+
 
                     Krypton.Toolkit.KryptonButton button设置查询条件 = new Krypton.Toolkit.KryptonButton();
                     button设置查询条件.Text = "设置查询条件";
@@ -436,7 +436,14 @@ namespace RUINORERP.UI.BaseForm
                     break;
 
                 case MenuItemEnums.打印:
-                    Print(RptMode.PRINT);
+                    if (MainForm.Instance.AppContext.GlobalVariableConfig.DirectPrinting)
+                    {
+                        Print(RptMode.PRINT);
+                    }
+                    else
+                    {
+                        Print(RptMode.DESIGN);
+                    }
                     break;
                 case MenuItemEnums.预览:
                     Print(RptMode.PREVIEW);

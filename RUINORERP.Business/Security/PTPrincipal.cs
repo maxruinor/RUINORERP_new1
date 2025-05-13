@@ -205,6 +205,7 @@ namespace RUINORERP.Business.Security
         /// <returns></returns>
         /// <exception cref="Exception"></exception>
         public static bool GetAllAuthorizationInfo(ApplicationContext appcontext, tb_UserInfo user, tb_RoleInfo roleInfo = null)
+        
         {
             bool loginSucceed = false;
             if (appcontext.CurUserInfo == null)

@@ -59,7 +59,6 @@ using TransInstruction;
 using TransInstruction.CommandService;
 using RUINORERP.Server.CommandService;
 using ZXing;
-using RUINORERP.Server.SmartReminder.InvReminder;
 using RUINORERP.Server.SmartReminder;
 using RUINORERP.Server.SmartReminder.ReminderRuleStrategy;
 
@@ -251,21 +250,21 @@ namespace RUINORERP.Server
                 .PropertiesAutowired() // 指定属性注入
                 .SingleInstance(); // 单例模式
 
-            builder.RegisterType<InventoryMonitor>().As<IInventoryMonitor>()
+            builder.RegisterType<SmartReminderMonitor>().As<ISmartReminderMonitor>()
               .AsImplementedInterfaces()
               .InstancePerLifetimeScope()
               .AsImplementedInterfaces().AsSelf()
               .PropertiesAutowired() // 指定属性注入
               .SingleInstance(); // 单例模式
 
-            builder.RegisterType<SafetyStockStrategy>().As<IAlertStrategy>()
+            builder.RegisterType<SafetyStockStrategy>().As<IReminderStrategy>()
           .AsImplementedInterfaces()
           .InstancePerLifetimeScope()
           .AsImplementedInterfaces().AsSelf()
           .PropertiesAutowired() // 指定属性注入
           .SingleInstance(); // 单例模式
 
-            builder.RegisterType<InventoryMonitorStarter>()
+            builder.RegisterType<SmartReminderMonitorStarter>()
             .AsImplementedInterfaces()
             .InstancePerLifetimeScope()
             .AsImplementedInterfaces().AsSelf()

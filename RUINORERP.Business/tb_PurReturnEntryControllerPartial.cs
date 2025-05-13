@@ -29,6 +29,7 @@ using RUINORERP.Business.Security;
 using System.Windows.Forms;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.ListView;
 using RUINORERP.Business.CommService;
+using System.Collections;
 
 namespace RUINORERP.Business
 {
@@ -97,11 +98,6 @@ namespace RUINORERP.Business
                        rs.ErrorMsg = $"{child.ProdDetailID}当前产品无库存数据，无法进行采购退货。请使用【期初盘点】【采购入库】】【生产缴库】的方式进行盘点后，再操作。";
                         rs.Succeeded = false;
                         return rs;
-                        inv = new tb_Inventory();
-                        inv.Quantity = inv.Quantity + child.Quantity;
-                        inv.InitInventory = (int)inv.Quantity;
-                        inv.Notes = "";//后面修改数据库是不需要？
-                        BusinessHelper.Instance.InitEntity(inv);
                     }
                     else
                     {
@@ -374,8 +370,8 @@ namespace RUINORERP.Business
                     invUpdateList.Add(inv);
                    
                 }
-
-                int InvUpdateCounter = await _unitOfWorkManage.GetDbClient().Updateable(invUpdateList).ExecuteCommandAsync();
+                DbHelper<tb_Inventory> dbHelper = _appContext.GetRequiredService<DbHelper<tb_Inventory>>();
+                var InvUpdateCounter = await dbHelper.BaseDefaultAddElseUpdateAsync(invUpdateList);
                 if (InvUpdateCounter != invUpdateList.Count)
                 {
                     _unitOfWorkManage.RollbackTran();

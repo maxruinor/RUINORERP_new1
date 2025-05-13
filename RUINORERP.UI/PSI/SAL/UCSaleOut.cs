@@ -236,7 +236,7 @@ namespace RUINORERP.UI.PSI.SAL
 
                     }
 
-                    if (s2.PropertyName == entity.GetPropertyName<tb_SaleOut>(c => c.Paytype_ID) && entity.Paytype_ID.HasValue && entity.Paytype_ID > 0)
+                    if (s2.PropertyName == entity.GetPropertyName<tb_SaleOut>(c => c.Paytype_ID)  && entity.Paytype_ID > 0)
                     {
                         if (cmbPaytype_ID.SelectedItem is tb_PaymentMethod paymentMethod)
                         {

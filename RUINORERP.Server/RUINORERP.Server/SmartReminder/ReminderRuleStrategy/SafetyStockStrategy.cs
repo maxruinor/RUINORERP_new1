@@ -2,7 +2,7 @@
 using RUINORERP.Global.EnumExt;
 using RUINORERP.Model;
 using RUINORERP.Model.ReminderModel;
-using RUINORERP.Server.SmartReminder.InvReminder;
+using RUINORERP.Server.SmartReminder.ReminderContext;
 using StackExchange.Redis;
 using System;
 using System.Collections.Generic;
@@ -13,7 +13,7 @@ using System.Threading.Tasks;
 namespace RUINORERP.Server.SmartReminder.ReminderRuleStrategy
 {
     // 3. 基础策略实现
-    public class SafetyStockStrategy : IAlertStrategy
+    public class SafetyStockStrategy : IReminderStrategy
     {
         public int Priority => 1;
         private readonly INotificationService _notification;
@@ -42,7 +42,6 @@ namespace RUINORERP.Server.SmartReminder.ReminderRuleStrategy
                 //{
                 //    await _notification.SendAlertAsync(policy, GenerateMessage(stock));
                 //}
-
 
                 // 使用缓存获取库存数据
                 var currentStock = 0;//根据规则去查询要提醒的库存集合 await _stockCache.GetStockAsync(policy.);
@@ -77,6 +76,16 @@ namespace RUINORERP.Server.SmartReminder.ReminderRuleStrategy
         }
 
         public Task CheckAsync(tb_ReminderRule policy, tb_Inventory stock)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task CheckAsync(IReminderRule rule, IReminderContext context)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool CanHandle(ReminderBizType reminderType)
         {
             throw new NotImplementedException();
         }

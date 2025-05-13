@@ -3,12 +3,15 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using RUINORERP.Global.EnumExt;
 using RUINORERP.Model;
+using RUINORERP.Model.ReminderModel;
+using RUINORERP.Server.SmartReminder.ReminderContext;
 using RulesEngine;
 
 namespace RUINORERP.Server.SmartReminder.ReminderRuleStrategy
 {
-    public class RulesEngineStrategy : IAlertStrategy
+    public class RulesEngineStrategy : IReminderStrategy
     {
         private readonly RulesEngine.RulesEngine _engine;
 
@@ -27,9 +30,20 @@ namespace RUINORERP.Server.SmartReminder.ReminderRuleStrategy
         /// </summary>
         public int Priority => 0;
 
-        public async Task CheckAsync(tb_ReminderRule policy, tb_Inventory stock)
+        public bool CanHandle(ReminderBizType reminderType)
         {
-            var result = await _engine.ExecuteAllRulesAsync("CustomRules", stock);
+            throw new NotImplementedException();
+        }
+
+        //public async Task CheckAsync(IReminderRule policy, tb_Inventory stock)
+        //{
+        //    var result = await _engine.ExecuteAllRulesAsync("CustomRules", stock);
+        //    // 处理规则结果
+        //}
+
+        public async  Task CheckAsync(IReminderRule rule, IReminderContext context)
+        {
+            var result = await _engine.ExecuteAllRulesAsync("CustomRules", context);
             // 处理规则结果
         }
     }

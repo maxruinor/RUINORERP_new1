@@ -2,6 +2,7 @@
 using RUINORERP.Model;
 using RUINORERP.Model.ReminderModel;
 using RUINORERP.Server.SmartReminder.InvReminder;
+using RUINORERP.Server.SmartReminder.ReminderContext;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,33 +11,35 @@ using System.Threading.Tasks;
 
 namespace RUINORERP.Server.SmartReminder
 {
-    public interface IRuleEditorService
+ 
+
+    public interface IReminderStrategy
     {
-        Task<IReminderRule> SaveRuleAsync(tb_ReminderRule model);
-        Task ValidateRuleSyntaxAsync(string condition, string type);
-    }
-    public interface IAlertStrategy
-    {
-        Task CheckAsync(tb_ReminderRule policy, tb_Inventory stock);
+        Task CheckAsync(IReminderRule rule, IReminderContext context);
         int Priority { get; }
+        bool CanHandle(ReminderBizType reminderType);
     }
-    public interface IInventoryMonitor
+    public interface ISmartReminderMonitor
     {
         bool IsRunning { get; }
         bool PerformQuickCheck();
+        Task CheckRemindersAsync();
         void StartMonitoring(TimeSpan interval);
-        Task CheckInventoryAsync();
-        void AddStrategy(IAlertStrategy strategy);
+  
+        void AddStrategy(IReminderStrategy strategy);
+        object GetActiveRuleCount();
     }
     // 4. 通知服务实现
     public interface INotificationService
     {
-        public Task SendAlertAsync(tb_ReminderRule policy, string message);
+        Task SendNotificationAsync(IReminderRule rule, string message, object contextData);
     }
 
     public interface IHealthCheck
     {
 
     }
+
+
 
 }

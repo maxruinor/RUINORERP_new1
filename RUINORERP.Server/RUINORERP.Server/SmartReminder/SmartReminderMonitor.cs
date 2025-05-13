@@ -15,11 +15,14 @@ using RUINORERP.Model.Context;
 using WorkflowCore.Primitives;
 using CacheManager.Core;
 using RUINORERP.Common;
+using RUINORERP.Model.ReminderModel;
+using RUINORERP.Server.SmartReminder.ReminderContext;
+using RUINORERP.Global.EnumExt;
 
-namespace RUINORERP.Server.SmartReminder.InvReminder
+namespace RUINORERP.Server.SmartReminder
 {
-    // 6. 库存监控服务
-    public class InventoryMonitor : IInventoryMonitor, IDisposable
+    //监控服务
+    public class SmartReminderMonitor : ISmartReminderMonitor, IDisposable
     {
 
         //通过注入的方式，把缓存操作接口通过构造函数注入
@@ -29,13 +32,13 @@ namespace RUINORERP.Server.SmartReminder.InvReminder
         private readonly ApplicationContext _appContext;
 
         private readonly NotificationService _notification;
-        private readonly List<IAlertStrategy> _strategies = new();
-        private readonly ILogger<InventoryMonitor> _logger;
+        private readonly List<IReminderStrategy> _strategies = new();
+        private readonly ILogger<SmartReminderMonitor> _logger;
         //推荐在服务/后台使用
         private Timer _timer;
 
-        public InventoryMonitor(IMemoryCache cache,
-           ILogger<InventoryMonitor> logger, ApplicationContext _AppContextData, IUnitOfWorkManage unitOfWorkManage, NotificationService notification)
+        public SmartReminderMonitor(IMemoryCache cache,
+           ILogger<SmartReminderMonitor> logger, ApplicationContext _AppContextData, IUnitOfWorkManage unitOfWorkManage, NotificationService notification)
         {
             _cache = cache;
             _logger = logger;
@@ -45,7 +48,7 @@ namespace RUINORERP.Server.SmartReminder.InvReminder
             StartMonitoring(TimeSpan.FromMinutes(5));
         }
         private bool _isRunning;
-        public bool IsRunning => _isRunning;
+        public bool IsRunning { get; set; }
 
         public bool PerformQuickCheck()
         {
@@ -73,10 +76,11 @@ namespace RUINORERP.Server.SmartReminder.InvReminder
             // if (!_scheduler.ShouldTrigger(currentRule)) return;
 
 
-            _timer = new Timer(async _ => await CheckInventoryAsync(),
+            _timer = new Timer(async _ => await CheckRemindersAsync(),
                 null,
                 dueTime: TimeSpan.FromSeconds(15),
                 period: interval);
+            IsRunning = true;
 
             //_timer = new Timer(async _ => await CheckInventoryAsync(),
             //    null, TimeSpan.Zero, interval);
@@ -102,10 +106,26 @@ namespace RUINORERP.Server.SmartReminder.InvReminder
 
         private readonly SemaphoreSlim _checkLock = new(1, 1);
 
-        public async Task CheckInventoryAsync()
+        public async Task CheckRemindersAsync()
         {
             if (!await _checkLock.WaitAsync(TimeSpan.Zero)) return;
+            var activeRules = await GetActiveRulesAsync();
 
+            foreach (var rule in activeRules)
+            {
+                var context = await CreateContextAsync(rule);
+
+                //                ReminderBizType reminderBiz= rule.ReminderBizType;
+                //这里要从数据库配置中转换过来
+                ReminderBizType reminderBiz = ReminderBizType.安全库存提醒;
+                var strategies = _strategies.Where(s => s.CanHandle(reminderBiz));
+
+                foreach (var strategy in strategies.OrderBy(s => s.Priority))
+                {
+                    await strategy.CheckAsync(rule, context);
+                }
+            }
+            /*
             try
             {
                 // 执行检查
@@ -127,14 +147,35 @@ namespace RUINORERP.Server.SmartReminder.InvReminder
             finally
             {
                 _checkLock.Release();
-            }
+            }*/
         }
 
+
+
+        private async Task<IReminderContext> CreateContextAsync(IReminderRule rule)
+        {
+            return rule.ReminderBiz switch
+            {
+                ReminderBizType.安全库存提醒 => await CreateInventoryContextAsync(rule),
+                //ReminderBizType.单据审批提醒 => await CreateOrderContextAsync(rule),
+                _ => throw new NotSupportedException()
+            };
+        }
+
+        private async Task<IReminderContext> CreateInventoryContextAsync(IReminderRule rule)
+        {
+            //var productIds = rule.GetConfig<SafetyStockConfig>().ProductIds;
+            long[] productIds = new long[1];
+            var stocks = await _unitOfWorkManage.GetDbClient().Queryable<tb_Inventory>()
+                .Where(s => productIds.Contains(s.ProdDetailID))
+                .ToListAsync();
+            return new InventoryContext(stocks[0]);
+        }
         private async void CheckInventoryCallback(object state)
         {
             try
             {
-                await CheckInventoryAsync();
+                await CheckRemindersAsync();
             }
             catch (Exception ex)
             {
@@ -147,7 +188,7 @@ namespace RUINORERP.Server.SmartReminder.InvReminder
 
         private static readonly MemoryCache _policyCache = new(new MemoryCacheOptions());
 
-        private async Task<List<tb_ReminderRule>> GetActivePoliciesAsync()
+        private async Task<List<tb_ReminderRule>> GetActiveRulesAsync()
         {
             return await _policyCache.GetOrCreateAsync("ActivePolicies", async entry =>
             {
@@ -157,7 +198,7 @@ namespace RUINORERP.Server.SmartReminder.InvReminder
                               .ToListAsync();
             });
         }
-        public void AddStrategy(IAlertStrategy strategy) => _strategies.Add(strategy);
+        public void AddStrategy(IReminderStrategy strategy) => _strategies.Add(strategy);
 
         public void Dispose()
         {
@@ -169,6 +210,11 @@ namespace RUINORERP.Server.SmartReminder.InvReminder
             //var timeout = Task.Delay(5000);
             //var completion = Task.WhenAll(_runningTasks);
             //await Task.WhenAny(completion, timeout);
+        }
+
+        public object GetActiveRuleCount()
+        {
+            throw new NotImplementedException();
         }
     }
 

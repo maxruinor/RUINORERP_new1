@@ -3,6 +3,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using RUINORERP.Model.Context;
 using RUINORERP.Repository.UnitOfWorks;
+using RUINORERP.Server.SmartReminder.InvReminder;
 using RUINORERP.Server.SmartReminder.ReminderRuleStrategy;
 using System;
 using System.Collections.Generic;
@@ -12,21 +13,21 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace RUINORERP.Server.SmartReminder.InvReminder
+namespace RUINORERP.Server.SmartReminder
 {
     // 后台服务启动器
-    public class InventoryMonitorStarter : BackgroundService
+    public class SmartReminderMonitorStarter : BackgroundService
     {
-        private readonly IInventoryMonitor _monitor;
+        private readonly ISmartReminderMonitor _monitor;
         private readonly InventoryMonitorConfig _config;
-        private readonly ILogger<InventoryMonitorStarter> _logger;
+        private readonly ILogger<SmartReminderMonitorStarter> _logger;
         public readonly IUnitOfWorkManage _unitOfWorkManage;
         private readonly ApplicationContext _appContext;
-        public InventoryMonitorStarter(
-               IInventoryMonitor monitor,
+        public SmartReminderMonitorStarter(
+               ISmartReminderMonitor monitor,
                IConfiguration configuration,
  ApplicationContext _AppContextData, IUnitOfWorkManage unitOfWorkManage,
-        ILogger<InventoryMonitorStarter> logger)
+        ILogger<SmartReminderMonitorStarter> logger)
         {
             _monitor = monitor;
             _appContext = _AppContextData;

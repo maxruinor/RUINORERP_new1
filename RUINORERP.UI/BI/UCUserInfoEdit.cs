@@ -134,6 +134,7 @@ namespace RUINORERP.UI.BI
                 lblIsSuperUser.Visible = false;
                 rdbIsSuperUserYes.Visible = false;
                 rdbIsSuperUserNo.Visible = false;
+                kryptonGroupBox3.Visible = false;
             }
 
             DataBindingHelper.BindData4TextBox<tb_UserInfo>(entity, t => t.Notes, txtNotes, BindDataType4TextBox.Text, true);

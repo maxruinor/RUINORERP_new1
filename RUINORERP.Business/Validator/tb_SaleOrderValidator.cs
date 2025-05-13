@@ -44,8 +44,8 @@ namespace RUINORERP.Business
 //***** 
  RuleFor(tb_SaleOrder =>tb_SaleOrder.PayStatus).NotNull().WithMessage("付款状态:不能为空。");
 
- RuleFor(tb_SaleOrder =>tb_SaleOrder.Paytype_ID).Must(CheckForeignKeyValueCanNull).WithMessage("付款方式:下拉选择值不正确。");
- RuleFor(tb_SaleOrder =>tb_SaleOrder.Paytype_ID).NotEmpty().When(x => x.Paytype_ID.HasValue);
+ RuleFor(tb_SaleOrder =>tb_SaleOrder.Paytype_ID).Must(CheckForeignKeyValue).WithMessage("付款方式:下拉选择值不正确。");
+
 
  RuleFor(tb_SaleOrder =>tb_SaleOrder.CustomerVendor_ID).Must(CheckForeignKeyValue).WithMessage("客户:下拉选择值不正确。");
 

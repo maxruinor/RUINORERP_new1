@@ -1,9 +1,11 @@
 ﻿using Microsoft.Extensions.Logging;
 using Microsoft.VisualBasic.ApplicationServices;
+using Newtonsoft.Json;
 using Pipelines.Sockets.Unofficial;
 using RUINORERP.Global.EnumExt;
 using RUINORERP.Model;
 using RUINORERP.Model.Context;
+using RUINORERP.Model.ReminderModel;
 using RUINORERP.Repository.UnitOfWorks;
 using RUINORERP.Server.BizService;
 using RUINORERP.Server.ServerSession;
@@ -15,7 +17,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace RUINORERP.Server.SmartReminder.InvReminder
+namespace RUINORERP.Server.SmartReminder
 {
     /// <summary>
     /// 通知服务将来是不是数据库只放到一个类中去操作。这里是回写提醒结果日志等
@@ -25,41 +27,50 @@ namespace RUINORERP.Server.SmartReminder.InvReminder
         public readonly IUnitOfWorkManage _unitOfWorkManage;
         private readonly ApplicationContext _appContext;
         private readonly ILogger<NotificationService> _logger;
+        //private readonly IRealtimeNotifier _realtimeNotifier;
         // 添加邮件和短信服务依赖
         //private readonly IEmailService _emailService;
         //private readonly ISmsService _smsService;
         public NotificationService()
         {
+           
 
         }
         //private readonly IEmailService _email;
 
         //public NotificationService(ISqlSugarClient db, SocketServer socket, IEmailService email)
         //{
-        public NotificationService(ILogger<NotificationService> logger, ApplicationContext _AppContextData, IUnitOfWorkManage unitOfWorkManage)
+        public NotificationService(ILogger<NotificationService> logger, 
+            ApplicationContext _AppContextData, 
+            IUnitOfWorkManage unitOfWorkManage
+             //IRealtimeNotifier realtimeNotifier
+            )
         {
             //_email = email;
             _logger = logger;
             _appContext = _AppContextData;
             _unitOfWorkManage = unitOfWorkManage;
+            //_realtimeNotifier = realtimeNotifier;
         }
 
-        public async Task SendAlertAsync(tb_ReminderRule policy, string message)
+        public async Task SendNotificationAsync(IReminderRule rule, string message,object contextData)
         {
             try
             {
                 // 记录到数据库
+                // 记录到数据库
                 var alert = new tb_ReminderAlert
                 {
-                    RuleId = policy.RuleId,
-               
-                //    CurrentStock = (await _unitOfWorkManage.GetDbClient().Queryable<tb_Inventory>()
-                                 //      .FirstAsync(p => p.ProdDetailID == policy.ProductId)).Quantity,
+                    RuleId = rule.RuleId,
                     AlertTime = DateTime.Now,
-                    Message = message
+                    Message = message,
+                    //后面补一个属性
+                    //ContextData = JsonConvert.SerializeObject(contextData)
                 };
                 await _unitOfWorkManage.GetDbClient().Insertable(alert).ExecuteCommandAsync();
-                List<NotificationChannel> channels = SmartReminderHelper.ParseChannels(policy.NotifyChannels);
+
+                // 获取通知渠道
+                List<NotificationChannel> channels = SmartReminderHelper.ParseChannels(rule.NotifyChannels);
                 foreach (var channel in channels)
                 {
                     if (channel == NotificationChannel.Realtime)
@@ -110,7 +121,7 @@ namespace RUINORERP.Server.SmartReminder.InvReminder
                         //    }
                         //}
 
-                       
+
                     }
                 }
 

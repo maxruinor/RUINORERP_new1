@@ -182,7 +182,7 @@ namespace RUINORERP.UI
                 {
                     //Console.WriteLine($"Configuration has changed: {updatedConfig.SomeSetting}");
                     AppContext.GlobalVariableConfig.IsFromPlatform = updatedConfig.IsFromPlatform;
-
+                    AppContext.GlobalVariableConfig.DirectPrinting = updatedConfig.DirectPrinting;
                 });
             }
 
@@ -1007,12 +1007,12 @@ namespace RUINORERP.UI
             {
                 //InitEditObjectValue();
                 LoadMenu();
-                LoadUIPagesByLeft();
+                LoadMenuPagesByLeft();
             }
         }
 
         #region  加载左边菜单
-        private void LoadUIPagesByLeft()
+        private void LoadMenuPagesByLeft()
         {
             kryptonNavigator1.Pages.Clear();
             if (AppContext.IsSuperUser)
@@ -1037,7 +1037,7 @@ namespace RUINORERP.UI
                         foreach (tb_P4Menu P4Menu in item.tb_P4Menus.Where(c => c.IsVisble).ToList())
                         {
                             //不重复
-                            if (!tempList.Contains(P4Menu.tb_menuinfo))
+                            if (!tempList.Contains(P4Menu.tb_menuinfo)  )
                             {
                                 tempList.Add(P4Menu.tb_menuinfo);
                             }
@@ -1045,31 +1045,35 @@ namespace RUINORERP.UI
                         //如果是顶级菜单是和模块名相同，跳过
 
                         var modMenu = tempList.FirstOrDefault(c => c.Parent_id == 0 && c.MenuName == item.ModuleName);
-                        var subMenus = tempList.Where(c => c.Parent_id != 0 && c.Parent_id == modMenu.MenuID).OrderBy(c => c.Sort);
-                        foreach (tb_MenuInfo subMenu in subMenus)
+                        if (modMenu != null)
                         {
-                            if (!subMenu.IsEnabled || !subMenu.IsVisble)
+                            var subMenus = tempList.Where(c => c.Parent_id != 0 && c.Parent_id == modMenu.MenuID).OrderBy(c => c.Sort);
+                            foreach (tb_MenuInfo subMenu in subMenus)
                             {
-                                continue;
+                                if (!subMenu.IsEnabled || !subMenu.IsVisble)
+                                {
+                                    continue;
+                                }
+                                // Add the control for display inside the page
+                                TreeNode nodeRoot = new TreeNode();
+                                nodeRoot.Text = subMenu.MenuName;
+                                nodeRoot.Name = subMenu.MenuID.ToString();
+                                nodeRoot.Tag = subMenu;
+
+                                TreeView1.Nodes.Add(nodeRoot);
+                                List<tb_MenuInfo> sortlist = tempList.OrderBy(t => t.Sort).ToList();
+                                Bind(nodeRoot, sortlist, subMenu.MenuID);
+                                TreeView1.HideSelection = false;
+                                // TreeView1.Nodes.Clear();
+                                TreeView1.Dock = DockStyle.Fill;
+                                p.ClearFlags(KryptonPageFlags.DockingAllowClose);
+                                //TreeView1.Nodes[0].Expand();
+                                TreeView1.ExpandAll();
+                                p.Controls.Add(TreeView1);
+
                             }
-                            // Add the control for display inside the page
-                            TreeNode nodeRoot = new TreeNode();
-                            nodeRoot.Text = subMenu.MenuName;
-                            nodeRoot.Name = subMenu.MenuID.ToString();
-                            nodeRoot.Tag = subMenu;
-
-                            TreeView1.Nodes.Add(nodeRoot);
-                            List<tb_MenuInfo> sortlist = tempList.OrderBy(t => t.Sort).ToList();
-                            Bind(nodeRoot, sortlist, subMenu.MenuID);
-                            TreeView1.HideSelection = false;
-                            // TreeView1.Nodes.Clear();
-                            TreeView1.Dock = DockStyle.Fill;
-                            p.ClearFlags(KryptonPageFlags.DockingAllowClose);
-                            //TreeView1.Nodes[0].Expand();
-                            TreeView1.ExpandAll();
-                            p.Controls.Add(TreeView1);
-
                         }
+                   
                     }
                     kryptonNavigator1.Pages.Add(p);
                 }
@@ -1078,6 +1082,8 @@ namespace RUINORERP.UI
             {
                 foreach (tb_ModuleDefinition item in AppContext.CurUserInfo.UserModList)
                 {
+                    if (!item.Visible) continue ;
+
                     // Create new page with title and image
                     KryptonPage p = new KryptonPage();
                     p.Text = item.ModuleName;
@@ -1098,7 +1104,7 @@ namespace RUINORERP.UI
                         foreach (tb_P4Menu P4Menu in item.tb_P4Menus.Where(c => c.IsVisble).ToList())
                         {
                             //不重复
-                            if (!tempList.Contains(P4Menu.tb_menuinfo))
+                            if (!tempList.Contains(P4Menu.tb_menuinfo) && P4Menu.tb_menuinfo.IsVisble)
                             {
                                 tempList.Add(P4Menu.tb_menuinfo);
                             }
@@ -2303,7 +2309,7 @@ namespace RUINORERP.UI
             {
                 //InitEditObjectValue();
                 LoadMenu();
-                LoadUIPagesByLeft();
+                LoadMenuPagesByLeft();
             }
         }
 

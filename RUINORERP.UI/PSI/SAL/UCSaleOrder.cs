@@ -24,7 +24,6 @@ using RUINORERP.Global.CustomAttribute;
 using RUINORERP.Global;
 using RUINORERP.UI.Report;
 using RUINORERP.UI.BaseForm;
-
 using Microsoft.Extensions.Logging;
 using RUINOR.Core;
 using SqlSugar;
@@ -197,7 +196,11 @@ namespace RUINORERP.UI.PSI.SAL
                         entity.tb_SaleOrderDetails.ForEach(c => c.SOrder_ID = 0);
                         entity.tb_SaleOrderDetails.ForEach(c => c.SaleOrderDetail_ID = 0);
                     }
-                    entity.Currency_ID = AppContext.BaseCurrency.Currency_ID;
+                    if (AppContext.BaseCurrency != null)
+                    {
+                        entity.Currency_ID = AppContext.BaseCurrency.Currency_ID;
+                    }
+                    
                     lblExchangeRate.Visible = false;
                     txtExchangeRate.Visible = false;
                     UIHelper.ControlForeignFieldInvisible<tb_SaleOrder>(this, false);
@@ -340,7 +343,7 @@ namespace RUINORERP.UI.PSI.SAL
                         //}
                     }
 
-                    if (s2.PropertyName == entity.GetPropertyName<tb_SaleOrder>(c => c.Paytype_ID) && entity.Paytype_ID.HasValue && entity.Paytype_ID > 0)
+                    if (s2.PropertyName == entity.GetPropertyName<tb_SaleOrder>(c => c.Paytype_ID) && entity.Paytype_ID > 0)
                     {
                         if (cmbPaytype_ID.SelectedItem is tb_PaymentMethod paymentMethod)
                         {
@@ -380,8 +383,13 @@ namespace RUINORERP.UI.PSI.SAL
                             {
                                 EditEntity.Employee_ID = cv.Employee_ID.Value;
                             }
-
-                            EditEntity.ShippingAddress = cv.Address;
+                            //客户的 地址 电话 联系人都显示到收货地址中。
+                            //如果手机为空则显示座机
+                            if (string.IsNullOrEmpty(cv.MobilePhone))
+                            {
+                                cv.MobilePhone = cv.Phone;
+                            }
+                            EditEntity.ShippingAddress = cv.Address + " " + cv.MobilePhone + " " + cv.Contact;
                         }
                     }
                 }
@@ -562,7 +570,7 @@ namespace RUINORERP.UI.PSI.SAL
             sgh.SetPointToColumnPairs<ProductSharePart, tb_SaleOrderDetail>(sgd, f => f.Inv_Cost, t => t.Cost);
             sgh.SetPointToColumnPairs<ProductSharePart, tb_SaleOrderDetail>(sgd, f => f.Standard_Price, t => t.UnitPrice);
             sgh.SetPointToColumnPairs<ProductSharePart, tb_SaleOrderDetail>(sgd, f => f.prop, t => t.property);
-
+            sgh.SetPointToColumnPairs<ProductSharePart, tb_SaleOrderDetail>(sgd, f => f.Model, t => t.CustomerPartNo);
 
             //应该只提供一个结构
             List<tb_SaleOrderDetail> lines = new List<tb_SaleOrderDetail>();
@@ -717,10 +725,10 @@ namespace RUINORERP.UI.PSI.SAL
             if (NeedValidated)
             {
 
-                if (EditEntity.Paytype_ID.HasValue)
+                if (EditEntity.Paytype_ID>0)
                 {
-                    var paytype = EditEntity.Paytype_ID.Value;
-                    var paymethod = BizCacheHelper.Instance.GetEntity<tb_PaymentMethod>(EditEntity.Paytype_ID.Value);
+                    var paytype = EditEntity.Paytype_ID;
+                    var paymethod = BizCacheHelper.Instance.GetEntity<tb_PaymentMethod>(EditEntity.Paytype_ID);
                     if (paymethod != null && paymethod.ToString() != "System.Object")
                     {
                         if (paymethod is tb_PaymentMethod pm)
@@ -745,7 +753,7 @@ namespace RUINORERP.UI.PSI.SAL
                         }
                     }
                 }
-
+            
 
                 if (EditEntity.PayStatus == (int)PayStatus.未付款)
                 {
@@ -754,6 +762,10 @@ namespace RUINORERP.UI.PSI.SAL
                     {
                         MessageBox.Show("未付款时，订金不能大于零。");
                         return false;
+                    }
+                    if (EditEntity.Paytype_ID == 0)
+                    { 
+
                     }
                 }
                 if (EditEntity.PayStatus == (int)PayStatus.部分付款)

@@ -37,6 +37,11 @@ namespace RUINORERP.Model
 
         public List<NotificationChannel> Channels { get; set; }
         public JObject Metadata { get; set; } // 扩展字段
+        long IReminderRule.RuleId { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+        string IReminderRule.Condition { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+        ReminderBizType IReminderRule.ReminderBiz { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+        string IReminderRule.NotifyChannels { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+        int IReminderRule.RuleEngineType { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
     }
 
     public class ReminderConfig

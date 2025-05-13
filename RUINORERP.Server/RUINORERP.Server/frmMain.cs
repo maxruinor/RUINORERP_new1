@@ -34,7 +34,7 @@ using RUINORERP.Server.Commands;
 using RUINORERP.Server.CommandService;
 using RUINORERP.Server.ServerService;
 using RUINORERP.Server.ServerSession;
-using RUINORERP.Server.SmartReminder.InvReminder;
+using RUINORERP.Server.SmartReminder;
 using RUINORERP.Server.Workflow.WFReminder;
 using RUINORERP.Server.Workflow.WFScheduled;
 using SharpYaml.Tokens;
@@ -180,17 +180,20 @@ namespace RUINORERP.Server
             ServerStart = true;
             try
             {
-                _logger.Error("StartServerUI启动ERP服务");
                 //_logger.LogError("LogErrorLogError11");
                 PrintInfoLog("开始启动服务器");
                 _logger.LogInformation("开始启动socket服务器");
                 // BaseKXGame.Instance.Initinal();
-                //log4netHelper.info("开始启动服务器");
+
                 //Tools.ShowMsg("RoleService Thread Id =" + System.Threading.Thread.CurrentThread.ManagedThreadId);
                 //准备工作 准备数据
 
-                var inventoryMonitor = Startup.GetFromFac<InventoryMonitorStarter>();
-                await inventoryMonitor.StartAsync(CancellationToken.None);
+                //智能提醒  先不启用。还没有做好
+                //var inventoryMonitor = Startup.GetFromFac<SmartReminderMonitorStarter>();
+                //await inventoryMonitor.StartAsync(CancellationToken.None);
+
+
+
                 //启动socket
                 frmMain.Instance.PrintInfoLog("StartServerUI Thread Id =" + System.Threading.Thread.CurrentThread.ManagedThreadId);
                 StartSendData();

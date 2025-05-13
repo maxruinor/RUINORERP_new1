@@ -67,6 +67,7 @@ namespace RUINORERP.Business
                         if (entity.tb_PurOrderDetails.Select(c => c.DeliveredQuantity).Sum() < entity.tb_PurOrderDetails.Select(c => c.Quantity).Sum())
                         {
                             tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
+                            List<tb_Inventory> invUpdateList = new List<tb_Inventory>();
                             foreach (var child in entity.tb_PurOrderDetails)
                             {
                                 #region 库存表的更新 这里应该是必需有库存的数据，
@@ -86,14 +87,19 @@ namespace RUINORERP.Business
                                 inv.On_the_way_Qty -= (child.Quantity - child.DeliveredQuantity);
                                 BusinessHelper.Instance.EditEntity(inv);
                                 #endregion
-                                ReturnResults<tb_Inventory> rr = await ctrinv.SaveOrUpdate(inv);
-                                if (rr.Succeeded)
-                                {
-
-                                }
+                                invUpdateList.Add(inv);
+                                
+                            }
+                            DbHelper<tb_Inventory> dbHelper = _appContext.GetRequiredService<DbHelper<tb_Inventory>>();
+                            var Counter = await dbHelper.BaseDefaultAddElseUpdateAsync(invUpdateList);
+                            if (Counter != invUpdateList.Count)
+                            {
+                                _unitOfWorkManage.RollbackTran();
+                                throw new Exception("库存更新失败！");
                             }
                         }
 
+                   
 
                         entity.DataStatus = (int)DataStatus.完结;
                         BusinessHelper.Instance.EditEntity(entity);
@@ -198,7 +204,10 @@ namespace RUINORERP.Business
                     #endregion
                     invUpdateList.Add(inv);
                 }
-                int InvUpdateCounter = await _unitOfWorkManage.GetDbClient().Updateable(invUpdateList).ExecuteCommandAsync();
+
+                DbHelper<tb_Inventory> dbHelper = _appContext.GetRequiredService<DbHelper<tb_Inventory>>();
+                var InvUpdateCounter = await dbHelper.BaseDefaultAddElseUpdateAsync(invUpdateList);
+
                 if (InvUpdateCounter != invUpdateList.Count)
                 {
                     _unitOfWorkManage.RollbackTran();
@@ -429,7 +438,7 @@ namespace RUINORERP.Business
                 }
 
                 tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
-
+                List<tb_Inventory> invUpdateList = new List<tb_Inventory>();
                 foreach (var child in entity.tb_PurOrderDetails)
                 {
                     #region 库存表的更新 这里应该是必需有库存的数据，
@@ -449,13 +458,15 @@ namespace RUINORERP.Business
                     inv.On_the_way_Qty = inv.On_the_way_Qty - child.Quantity;
                     BusinessHelper.Instance.EditEntity(inv);
                     #endregion
-                    ReturnResults<tb_Inventory> rr = await ctrinv.SaveOrUpdate(inv);
-                    if (rr.Succeeded)
-                    {
-
-                    }
+                    invUpdateList.Add(inv);
                 }
-
+                DbHelper<tb_Inventory> dbHelper = _appContext.GetRequiredService<DbHelper<tb_Inventory>>();
+                var Counter = await dbHelper.BaseDefaultAddElseUpdateAsync(invUpdateList);
+                if (Counter != invUpdateList.Count)
+                {
+                    _unitOfWorkManage.RollbackTran();
+                    throw new Exception("库存更新失败！");
+                }
                 //这部分是否能提出到上一级公共部分？
                 entity.DataStatus = (int)DataStatus.新建;
                 entity.ApprovalResults = false;

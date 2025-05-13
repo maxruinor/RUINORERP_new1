@@ -71,7 +71,7 @@ namespace RUINORERP.UI.UserPersonalized
                         txtDefault1.Visible = false;
                         chkEnableDefault1.Visible = true;
 
-                        #region     单选下拉
+                        #region     单选下拉  这里是通过 queryField.FKTableName 的外键来加载数据的。那么int 类型 来自于枚举则要 通过外面加载一个keyvalue的值来确定？
 
                         DefaultCmb.Name = queryField.FieldName;
                         DefaultCmb.Text = "";
@@ -205,6 +205,17 @@ namespace RUINORERP.UI.UserPersonalized
                         DefaultChk.Size = new System.Drawing.Size(20, 20);
                         DefaultChk.Text = "如果默认是，则请勾选";
                         this.Controls.Add(DefaultChk);
+                        #endregion
+                        break;
+                    case AdvQueryProcessType.Int:
+
+                        //默认的文本框隐藏
+                        txtDefault1.Visible = true;
+                        #region
+                        chkEnableDefault1.Visible = true;
+                        //给个默认值先，不然会报空错误
+                        ReflectionHelper.SetPropertyValue(TargetEntityDto, queryField.FieldName, 0);
+                       
                         #endregion
                         break;
                     default:

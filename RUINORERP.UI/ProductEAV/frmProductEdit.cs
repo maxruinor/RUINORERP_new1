@@ -628,8 +628,8 @@ namespace RUINORERP.UI.ProductEAV
         }
 
 
-
-
+        IMapper mapper = AutoMapperConfig.RegisterMappings().CreateMapper();
+        //这个方法比较耗时
         private List<tb_ProdDetail> GetDetailsAndRelations(tb_Prod baseInfo, List<Eav_ProdDetails> removeList)
         {
             List<tb_ProdDetail> details = new List<tb_ProdDetail>();
@@ -641,7 +641,7 @@ namespace RUINORERP.UI.ProductEAV
                 {
                     Eav_ProdDetails epd = item as Eav_ProdDetails;
                     tb_ProdDetail detail = new tb_ProdDetail();
-                    IMapper mapper = AutoMapperConfig.RegisterMappings().CreateMapper();
+               
                     //为null的不需要，不然会覆盖
                     detail = mapper.Map<tb_ProdDetail>(epd);
 

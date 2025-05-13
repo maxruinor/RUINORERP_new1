@@ -104,7 +104,7 @@ namespace RUINORERP.UI.SysConfig
             .Includes(m => m.tb_MenuInfos, a => a.tb_ButtonInfos)
             .Includes(m => m.tb_MenuInfos, a => a.tb_FieldInfos)
             .Includes(m => m.tb_MenuInfos, a => a.tb_P4Buttons, b => b.tb_buttoninfo)
-            .Includes(m => m.tb_MenuInfos, a => a.tb_P4Fields,  b => b.tb_fieldinfo)
+            .Includes(m => m.tb_MenuInfos, a => a.tb_P4Fields, b => b.tb_fieldinfo)
             .Includes(m => m.tb_MenuInfos, a => a.tb_P4Menus)
             .ToListAsync();
 
@@ -758,7 +758,7 @@ namespace RUINORERP.UI.SysConfig
                                     // 加锁访问 role.tb_P4Menus
                                     lock (_menuLock)
                                     {
-                                        pm = role.tb_P4Menus.FirstOrDefault(c => c.MenuID == item.MenuID);
+                                        pm = role.tb_P4Menus.FirstOrDefault(c => c.MenuID == item.MenuID && c.RoleID == role.RoleID);
                                     }
 
 
@@ -779,7 +779,8 @@ namespace RUINORERP.UI.SysConfig
                                         }
 
                                         await InitBtnByRole(role, item, true);
-                                        //await InitFiledByRole(role, item, item.tb_P4Fields, item.tb_FieldInfos, true);
+
+
                                         await InitFiledByRole(role, item, true);
                                         #endregion
                                         return;
@@ -852,7 +853,7 @@ namespace RUINORERP.UI.SysConfig
         /// <param name="ButtonInfolist"></param>
         /// <param name="P4Buttonlist">如果已经存在部分正常的权限和按钮关系，则要排除</param>
         /// <returns></returns>
-        public async Task<bool> InitBtnByRole(tb_RoleInfo role, tb_MenuInfo menuInfo, bool Seleted = false)
+        public async Task<List<tb_P4Button>> InitBtnByRole(tb_RoleInfo role, tb_MenuInfo menuInfo, bool Seleted = false)
         {
             MenuAttrAssemblyInfo mai = MenuAssemblylist.FirstOrDefault(e => e.ClassPath == menuInfo.ClassPath);
             if (mai != null)
@@ -936,7 +937,7 @@ namespace RUINORERP.UI.SysConfig
                 }
             }
 
-            return true;
+            return menuInfo.tb_P4Buttons.Where(c => c.RoleID == role.RoleID).ToList();
             // var ids = await MainForm.Instance.AppContext.Db.Insertable(pblist).ExecuteReturnSnowflakeIdListAsync();
         }
 
@@ -945,8 +946,9 @@ namespace RUINORERP.UI.SysConfig
         /// </summary>
         /// <param name="role"></param>
         /// <param name="menuInfo"></param>
+        /// <param name="Seleted">是否选中</param>
         /// <returns></returns>
-        public async Task<bool> InitFiledByRole(tb_RoleInfo role, tb_MenuInfo menuInfo, bool Seleted = false)
+        public async Task<List<tb_P4Field>> InitFiledByRole(tb_RoleInfo role, tb_MenuInfo menuInfo, bool Seleted = false)
         {
             //List<tb_FieldInfo> objlist = new List<tb_FieldInfo>();
             //没有就添加 有就查询出来 
@@ -966,9 +968,7 @@ namespace RUINORERP.UI.SysConfig
                 menuInfo.tb_P4Fields = new List<tb_P4Field>();
             }
 
-
             //增量式增加字段
-
             Assembly dalAssemble = System.Reflection.Assembly.LoadFrom("RUINORERP.Model.dll");
             Type[] ModelTypes = dalAssemble.GetExportedTypes();
             List<string> typeNames = ModelTypes.Select(m => m.Name).ToList();
@@ -993,7 +993,8 @@ namespace RUINORERP.UI.SysConfig
             foreach (var item in menuInfo.tb_FieldInfos)
             {
                 tb_P4Field pb = new tb_P4Field();
-                pb = menuInfo.tb_P4Fields.FirstOrDefault(e => e.FieldInfo_ID == item.FieldInfo_ID && e.MenuID == menuInfo.MenuID);
+                pb = menuInfo.tb_P4Fields.FirstOrDefault(e => e.FieldInfo_ID == item.FieldInfo_ID
+                && e.MenuID == menuInfo.MenuID && e.RoleID == role.RoleID);
                 if (pb == null)
                 {
                     pb = new tb_P4Field();
@@ -1036,7 +1037,7 @@ namespace RUINORERP.UI.SysConfig
             }
 
             // var ids = await MainForm.Instance.AppContext.Db.Insertable(pblist).ExecuteReturnSnowflakeIdListAsync();
-            return true;
+            return menuInfo.tb_P4Fields.Where(c => c.RoleID == role.RoleID).ToList();
         }
 
         #endregion
@@ -1049,7 +1050,7 @@ namespace RUINORERP.UI.SysConfig
         tb_RoleInfoController<tb_RoleInfo> ctrRole = Startup.GetFromFac<tb_RoleInfoController<tb_RoleInfo>>();
 
 
-        private async void TreeView1_AfterSelect(object sender, TreeViewEventArgs e)
+        private void TreeView1_AfterSelect(object sender, TreeViewEventArgs e)
         {
             if (TreeView1.SelectedNode == null)
             {
@@ -1070,63 +1071,13 @@ namespace RUINORERP.UI.SysConfig
                 return;
             }
 
-            //没有就添加 有就查询出来 
-            //List<tb_P4Button> pblist = await MainForm.Instance.AppContext.Db.CopyNew().Queryable<tb_P4Button>()
-            //    .Where(t => t.RoleID == CurrentRole.RoleID && t.MenuID == selectMenu.MenuID)
-            //    .Includes(t => t.tb_buttoninfo)
-            //    .ToListAsync();
+            InitLoadP4Button(selectMenu);
 
-            //没有就添加 有就查询出来 
-            //List<tb_ButtonInfo> btnInfoList = await MainForm.Instance.AppContext.Db.CopyNew().Queryable<tb_ButtonInfo>()
-            //  .Where(t => t.MenuID == selectMenu.MenuID)
-            //  .Includes(t => t.tb_menuinfo)
-            //  .ToListAsync();
-
-            //当前角色下如果可操作按钮为0时，或当前角色下添加的按钮数量小于当前菜单下的所有按钮时
-            //if (pblist.Count == 0 || pblist.Count < selectMenu.tb_ButtonInfos.Count)
-            //{
-            await InitBtnByRole(CurrentRole, selectMenu);
-            //}
-            //&& t.tb_ButtonInfo != null && t.tb_ButtonInfo.MenuID == selectMenu.MenuID
-            bindingSource1.DataSource = selectMenu.tb_P4Buttons.ToBindingSortCollection();
-            dataGridView1.DataSource = ListDataSoure1;
-
-
-            foreach (DataGridViewColumn col in dataGridView1.Columns)
-            {
-                if (col.ValueType.Name == "Boolean")
-                {
-                    col.ReadOnly = false;
-                }
-            }
-
-            //没有就添加 有就查询出来 
-            List<tb_P4Field> pflist = await MainForm.Instance.AppContext.Db.CopyNew().Queryable<tb_P4Field>().Where(t => t.RoleID == CurrentRole.RoleID && t.MenuID == selectMenu.MenuID)
-            .Includes(t => t.tb_fieldinfo)
-            .ToListAsync();
-            if (pflist.Count == 0)
-            {
-                await InitFiledByRole(CurrentRole, selectMenu);
-            }
-            bindingSource2.DataSource = pflist.ToBindingSortCollection();
-            dataGridView2.DataSource = ListDataSoure2;
-
-            foreach (DataGridViewColumn col in dataGridView2.Columns)
-            {
-                if (col.ValueType.Name == "Boolean")
-                {
-                    col.ReadOnly = false;
-                }
-                //ischild只是标记是否为子表。他不可以编辑
-                if (col.DataPropertyName == "IsChild")
-                {
-                    col.ReadOnly = true;
-                }
-            }
+            InitLoadP4Field(selectMenu);
 
             #region 按钮和字段列表的中的值 有变化则保存可用
-            selectMenu.tb_P4Buttons.ForEach(x => UpdateSaveEnabled(x));
-            pflist.ForEach(x => UpdateSaveEnabled(x));
+            selectMenu.tb_P4Buttons.Where(c => c.RoleID == CurrentRole.RoleID).ForEach(x => UpdateSaveEnabled(x));
+            selectMenu.tb_P4Fields.Where(c => c.RoleID == CurrentRole.RoleID).ForEach(x => UpdateSaveEnabled(x));
             #endregion
 
 
@@ -1176,6 +1127,54 @@ namespace RUINORERP.UI.SysConfig
              */
 
             #endregion
+        }
+        private async void InitLoadP4Button(tb_MenuInfo selectMenu, bool InitLoadData = true)
+        {
+            if (selectMenu.tb_P4Buttons == null)
+            {
+                selectMenu.tb_P4Buttons = new List<tb_P4Button>();
+            }
+            List<tb_P4Button> pblist = selectMenu.tb_P4Buttons.Where(c => c.RoleID == CurrentRole.RoleID).ToList();
+            if (pblist.Count == 0 || InitLoadData)
+            {
+                pblist = await InitBtnByRole(CurrentRole, selectMenu);
+            }
+            bindingSource1.DataSource = pblist.ToBindingSortCollection();
+            dataGridView1.DataSource = ListDataSoure1;
+            foreach (DataGridViewColumn col in dataGridView1.Columns)
+            {
+                if (col.ValueType.Name == "Boolean")
+                {
+                    col.ReadOnly = false;
+                }
+            }
+        }
+
+        private async void InitLoadP4Field(tb_MenuInfo selectMenu, bool InitLoadData = true)
+        {
+            if (selectMenu.tb_P4Fields == null)
+            {
+                selectMenu.tb_P4Fields = new List<tb_P4Field>();
+            }
+            List<tb_P4Field> pflist = selectMenu.tb_P4Fields.Where(c => c.RoleID == CurrentRole.RoleID).ToList();
+            if (pflist.Count == 0 || InitLoadData)
+            {
+                pflist = await InitFiledByRole(CurrentRole, selectMenu);
+            }
+            bindingSource2.DataSource = pflist.ToBindingSortCollection();
+            dataGridView2.DataSource = ListDataSoure2;
+            foreach (DataGridViewColumn col in dataGridView2.Columns)
+            {
+                if (col.ValueType.Name == "Boolean")
+                {
+                    col.ReadOnly = false;
+                }
+                //ischild只是标记是否为子表。他不可以编辑
+                if (col.DataPropertyName == "IsChild")
+                {
+                    col.ReadOnly = true;
+                }
+            }
         }
 
 
@@ -1352,7 +1351,7 @@ namespace RUINORERP.UI.SysConfig
             if (dataGridView2.Rows[e.RowIndex].DataBoundItem is tb_P4Field)
             {
                 tb_P4Field pf = dataGridView2.Rows[e.RowIndex].DataBoundItem as tb_P4Field;
-                
+
                 if (pf.tb_fieldinfo != null && colDbName == pf.GetPropertyName<tb_P4Field>(c => c.FieldInfo_ID))
                 {
                     e.Value = pf.tb_fieldinfo.FieldText;
@@ -1507,7 +1506,7 @@ namespace RUINORERP.UI.SysConfig
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private async void toolStripMenuItemInitBtn_Click(object sender, EventArgs e)
+        private void toolStripMenuItemInitBtn_Click(object sender, EventArgs e)
         {
             if (CurrentRole == null)
             {
@@ -1521,34 +1520,9 @@ namespace RUINORERP.UI.SysConfig
             {
                 return;
             }
+
             tb_MenuInfo mInfo = TreeView1.SelectedNode.Tag as tb_MenuInfo;
-
-            //List<tb_ButtonInfo> objlist = await MainForm.Instance.AppContext.Db.CopyNew().Queryable<tb_ButtonInfo>()
-            //.Where(t => t.MenuID == mInfo.MenuID)
-            //.Includes(t => t.tb_menuinfo)
-            //.ToListAsync();
-
-            ////没有就添加 有就查询出来 
-            //List<tb_P4Button> pblist = await MainForm.Instance.AppContext.Db.CopyNew().Queryable<tb_P4Button>()
-            //    .Where(t => t.RoleID == CurrentRole.RoleID && t.MenuID == mInfo.MenuID)
-            //    .Includes(t => t.tb_buttoninfo)
-            //    .ToListAsync();
-
-
-            await InitBtnByRole(CurrentRole, mInfo);
-
-            //if (objlist.Count == 0)
-            //{
-            //    List<MenuAttrAssemblyInfo> MenuAssemblylist = UIHelper.RegisterForm();
-            //    MenuAttrAssemblyInfo mai = MenuAssemblylist.FirstOrDefault(e => e.ClassPath == mInfo.ClassPath);
-            //    if (mai != null)
-            //    {
-            //        InitModuleMenu imm = Startup.GetFromFac<InitModuleMenu>();
-            //        imm.InitToolStripItem(mai, mInfo);
-            //    }
-            //}
-
-
+            InitLoadP4Button(mInfo, true);
         }
 
         /// <summary>
@@ -1556,7 +1530,7 @@ namespace RUINORERP.UI.SysConfig
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private async void toolStripMenuItemInitField_Click(object sender, EventArgs e)
+        private void toolStripMenuItemInitField_Click(object sender, EventArgs e)
         {
             if (CurrentRole == null)
             {
@@ -1570,8 +1544,8 @@ namespace RUINORERP.UI.SysConfig
             {
                 return;
             }
-
             tb_MenuInfo mInfo = TreeView1.SelectedNode.Tag as tb_MenuInfo;
+            /*
             List<tb_FieldInfo> objlist = await MainForm.Instance.AppContext.Db.CopyNew().Queryable<tb_FieldInfo>()
                     .Where(t => t.MenuID == mInfo.MenuID)
                     .Includes(t => t.tb_menuinfo)
@@ -1602,8 +1576,16 @@ namespace RUINORERP.UI.SysConfig
                 }
             }
 
+            if (mInfo.tb_P4Fields == null)
+            {
+                mInfo.tb_P4Fields = new List<tb_P4Field>();
+            }
+            List<tb_P4Field> pflist = mInfo.tb_P4Fields.Where(c => c.RoleID == CurrentRole.RoleID).ToList();
+            pflist = await InitFiledByRole(CurrentRole, mInfo);
+            */
 
-            await InitFiledByRole(CurrentRole, mInfo);
+            InitLoadP4Field(mInfo, true);
+
         }
 
         private void TreeView1_AfterCheck(object sender, TreeViewEventArgs e)

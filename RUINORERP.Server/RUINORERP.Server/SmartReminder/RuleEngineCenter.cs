@@ -16,6 +16,8 @@ using Newtonsoft.Json;
 using WorkflowCore.Models;
 using RUINORERP.Model.ReminderModel;
 using RUINORERP.Model;
+using RUINORERP.Global.EnumExt;
+using System.Reflection;
 
 namespace RUINORERP.Server.SmartReminder
 {
@@ -29,8 +31,8 @@ namespace RUINORERP.Server.SmartReminder
         private readonly ConcurrentDictionary<string, ScriptRunner<bool>> _roslynCache = new();
         public readonly IUnitOfWorkManage _unitOfWorkManage;
         private readonly ApplicationContext _appContext;
-        private readonly ILogger<InventoryMonitor> _logger;
-        public RuleEngineCenter(ILogger<InventoryMonitor> logger, ApplicationContext _AppContextData, IUnitOfWorkManage unitOfWorkManage)
+        private readonly ILogger<SmartReminderMonitor> _logger;
+        public RuleEngineCenter(ILogger<SmartReminderMonitor> logger, ApplicationContext _AppContextData, IUnitOfWorkManage unitOfWorkManage)
         {
             _logger = logger;
             _appContext = _AppContextData;
@@ -52,11 +54,13 @@ namespace RUINORERP.Server.SmartReminder
         //}
         public async Task<bool> EvaluateAsync(IReminderRule rule, object context)
         {
-            return rule switch
+            var EngineType = (RuleEngineType)rule.RuleEngineType;
+
+            return EngineType switch
             {
-                //{ ConditionType: "RulesEngine" } => await EvaluateWithRulesEngine(rule, context),
-                //{ ConditionType: "Roslyn" } => await EvaluateWithRoslyn(rule, context),
-                //_ => throw new NotSupportedException()
+                RuleEngineType.RulesEngine => await EvaluateWithRulesEngine(rule, context),
+                RuleEngineType.Roslyn => await EvaluateWithRoslyn(rule, context),
+                _ => throw new NotSupportedException($"不支持的规则引擎类型: {EngineType}")
             };
         }
 
@@ -66,12 +70,20 @@ namespace RUINORERP.Server.SmartReminder
             return result.Any(r => r.IsSuccess);
         }
 
-        private async Task<bool> EvaluateWithRoslyn(tb_ReminderRule rule, object context)
+        private async Task<bool> EvaluateWithRoslyn(IReminderRule rule, object context)
         {
             if (!_roslynCache.TryGetValue(rule.RuleId.ToString(), out var runner))
             {
+                var scriptOptions = ScriptOptions.Default
+                .AddReferences(Assembly.GetExecutingAssembly())
+                .AddImports("System");
+
                 var script = CSharpScript.Create<bool>(rule.Condition,
+                    options: scriptOptions,
                     globalsType: typeof(RuleGlobals<>).MakeGenericType(context.GetType()));
+
+     
+              
 
                 runner = script.CreateDelegate();
                 _roslynCache.TryAdd(rule.RuleId.ToString(), runner);

@@ -66,6 +66,9 @@ namespace RUINORERP.Global
         /// 时间区间段
         /// </summary>
         datetimeRange,
+
+
+        Int,
     }
 
     //数据类型

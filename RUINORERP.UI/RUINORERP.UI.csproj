@@ -606,6 +606,12 @@
     <Compile Include="BI\UCProjectGroupAssigneeEmployees.Designer.cs">
       <DependentUpon>UCProjectGroupAssigneeEmployees.cs</DependentUpon>
     </Compile>
+    <Compile Include="BI\UCUserPersonalizedEdit.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="BI\UCUserPersonalizedEdit.designer.cs">
+      <DependentUpon>UCUserPersonalizedEdit.cs</DependentUpon>
+    </Compile>
     <Compile Include="BusyDialog.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -3138,6 +3144,9 @@
     <EmbeddedResource Include="BI\UCGroupEmployeesAssignee.resx">
       <DependentUpon>UCGroupEmployeesAssignee.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="BI\UCUserPersonalizedEdit.resx">
+      <DependentUpon>UCUserPersonalizedEdit.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="BI\UCSysGlobalDynamicConfigEdit.resx">
       <DependentUpon>UCSysGlobalDynamicConfigEdit.cs</DependentUpon>
     </EmbeddedResource>
@@ -4000,9 +4009,6 @@
     </Content>
     <None Include=".editorconfig" />
     <Content Include="ResourceFile\task.png" />
-    <Content Include="SysConfigFiles\GlobalValidatorConfig.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <None Include="packages.config" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
@@ -4057,9 +4063,6 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <None Include="RUINORERP.UI_TemporaryKey.pfx" />
-    <Content Include="SysConfigFiles\SystemGlobalConfig.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <Content Include="permission_rules.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -4481,7 +4484,8 @@
     <Folder Include="Other\" />
     <Folder Include="PM\" />
     <Folder Include="RM\" />
-    <Folder Include="SmartReminder\" />
+    <Folder Include="SmartReminderClient\" />
+    <Folder Include="SysConfigFiles\" />
     <Folder Include="UCForm\" />
     <Folder Include="UControls\TreeGridView\" />
     <Folder Include="UICreator\" />

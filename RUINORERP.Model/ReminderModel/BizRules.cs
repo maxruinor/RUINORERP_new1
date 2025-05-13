@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 namespace RUINORERP.Model.ReminderModel
 {
     // 安全库存提醒规则模型
+    //[RuleType(ReminderType.SafetyStock)]
     public class SafetyStockRule : tb_ReminderRule
     {
         public SafetyStockConfig BusinessConfig { get; set; }
@@ -17,6 +18,12 @@ namespace RUINORERP.Model.ReminderModel
             return $@"input => input.Quantity < {policy.MinStock} 
                 || input.Quantity > {policy.MaxStock}";
         }
+
+        //public override string BuildCondition()
+        //{
+        //    return $@"input => input.Quantity < {Config.MinStock} 
+        //    || input.Quantity > {Config.MaxStock}";
+        //}
     }
 
     public class SafetyStockConfig
@@ -26,8 +33,8 @@ namespace RUINORERP.Model.ReminderModel
         public int MaxStock { get; set; }
         public List<string> ResponsibleRoles { get; set; } // 责任人角色
         public bool IsInstantAlert { get; set; } // 是否实时提醒
+        public List<string> NotifyRoles { get; set; }
 
-     
     }
 
     // 库存积压提醒规则模型

@@ -163,8 +163,10 @@ namespace RUINORERP.UI.SysConfig
             treeView1.DrawMode = TreeViewDrawMode.OwnerDrawText;
             treeView1.CheckBoxes = false;
             treeView1.Nodes.Clear();
+
             GetConfig<GlobalValidatorConfig>("验证配置");
             GetConfig<SystemGlobalconfig>("系统配置");
+
             //LoadData();
         }
 

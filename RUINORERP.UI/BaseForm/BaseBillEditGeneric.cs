@@ -287,7 +287,7 @@ namespace RUINORERP.UI.BaseForm
 
         internal override void LoadDataToUI(object Entity)
         {
-                BindData(Entity as T);
+            BindData(Entity as T);
             ToolBarEnabledControl(Entity);
         }
 
@@ -1553,7 +1553,15 @@ namespace RUINORERP.UI.BaseForm
                     await AntiCloseCaseAsync();
                     break;
                 case MenuItemEnums.打印:
-                    Print();
+                    if (AppContext.GlobalVariableConfig.DirectPrinting)
+                    {
+                        Print();
+                    }
+                    else
+                    {
+                        PrintDesigned();
+                    }
+
                     toolStripbtnPrint.Enabled = false;
                     break;
                 case MenuItemEnums.预览:
@@ -1830,7 +1838,7 @@ namespace RUINORERP.UI.BaseForm
             {
                 return null;
             }
-             
+
             ApprovalEntity ae = new ApprovalEntity();
             if (ReflectionHelper.ExistPropertyName<T>("ApprovalStatus") && ReflectionHelper.ExistPropertyName<T>("ApprovalResults"))
             {
@@ -3289,6 +3297,7 @@ namespace RUINORERP.UI.BaseForm
         {
             if (EditEntity == null)
             {
+                MessageBox.Show("请提供正确的打印数据！");
                 return;
             }
             List<T> list = new List<T>();
@@ -3305,6 +3314,7 @@ namespace RUINORERP.UI.BaseForm
         {
             if (EditEntity == null)
             {
+                MessageBox.Show("请提供正确的打印数据！");
                 return;
             }
             List<T> list = new List<T>();
@@ -3341,6 +3351,7 @@ namespace RUINORERP.UI.BaseForm
         {
             if (EditEntity == null)
             {
+                MessageBox.Show("请提供正确的打印预览数据！");
                 return;
             }
             List<T> list = new List<T>();

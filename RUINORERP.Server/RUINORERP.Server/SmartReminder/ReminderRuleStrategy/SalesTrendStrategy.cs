@@ -1,4 +1,7 @@
-﻿using RUINORERP.Model;
+﻿using RUINORERP.Global.EnumExt;
+using RUINORERP.Model;
+using RUINORERP.Model.ReminderModel;
+using RUINORERP.Server.SmartReminder.ReminderContext;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,16 +10,27 @@ using System.Threading.Tasks;
 
 namespace RUINORERP.Server.SmartReminder.ReminderRuleStrategy
 {
-    public class SalesTrendStrategy : IAlertStrategy
+    /// <summary>
+    /// 根据销售趋势查询数据的策略
+    /// </summary>
+    public class SalesTrendStrategy : IReminderStrategy
     {
         public int Priority => 2;
 
-        public async Task CheckAsync(tb_ReminderRule policy, tb_Inventory stock)
+        public bool CanHandle(ReminderBizType reminderType)
+        {
+            throw new NotImplementedException();
+        }
+
+        public async Task CheckAsync(IReminderRule policy, tb_Inventory stock)
         {
             // 实现销售趋势分析逻辑
         }
-    }
 
-    // 注册到DI容器
-    //services.AddSingleton<IAlertStrategy, SalesTrendStrategy>();
+        public Task CheckAsync(IReminderRule rule, IReminderContext context)
+        {
+            throw new NotImplementedException();
+        }
+    }
+ 
 }

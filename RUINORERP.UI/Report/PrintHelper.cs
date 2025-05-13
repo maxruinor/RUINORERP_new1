@@ -293,12 +293,28 @@ namespace RUINORERP.UI.Report
                         FReport.Prepare(true);
                     }
                     ////////打印////////
-                    //设置默认打印机
-                    if (printConfig.PrinterSelected.HasValue && printConfig.PrinterSelected.Value)
+                    if (MainForm.Instance.AppContext.CurrentUser_Role_Personalized.UseUserOwnPrinter.HasValue
+                        && MainForm.Instance.AppContext.CurrentUser_Role_Personalized.UseUserOwnPrinter.Value)
                     {
+                        //优先使用用户个性化设置指定的打印机
                         FReport.PrintSettings.ShowDialog = false;
-                        FReport.PrintSettings.Printer = printConfig.PrinterName;
+                        FReport.PrintSettings.Printer = MainForm.Instance.AppContext.CurrentUser_Role_Personalized.PrinterName;
                     }
+                    else
+                    {
+                        //设置默认打印机
+                        if (printConfig.PrinterSelected.HasValue && printConfig.PrinterSelected.Value)
+                        {
+                            FReport.PrintSettings.ShowDialog = false;
+                            FReport.PrintSettings.Printer = printConfig.PrinterName;
+                        }
+
+                    }
+
+
+
+
+
                 }
             }
 

@@ -123,7 +123,11 @@ namespace RUINORERP.UI.PSI.PUR
                     entity.tb_PurOrderDetails.ForEach(c => c.PurOrder_ID = 0);
                     entity.tb_PurOrderDetails.ForEach(c => c.PurOrder_ChildID = 0);
                 }
-                entity.Currency_ID = AppContext.BaseCurrency.Currency_ID;
+                if (AppContext.BaseCurrency != null)
+                {
+                    entity.Currency_ID = AppContext.BaseCurrency.Currency_ID;
+                }
+             
                 lblExchangeRate.Visible = false;
                 txtExchangeRate.Visible = false;
                 UIHelper.ControlForeignFieldInvisible<tb_PurOrder>(this, false);

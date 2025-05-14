@@ -809,7 +809,7 @@ namespace AULWriter
             {
                 HandleSuccessfulCompletion(e.Result as UpdateXmlResult);
             }
-
+            AppendLog("检测到差异文件个数为: " + DiffFileList.Count);
         }
 
 
@@ -1731,8 +1731,11 @@ namespace AULWriter
         {
             try
             {
-                XDocument oldDoc = XDocument.Load(txtAutoUpdateXmlSavePath.Text);
-                XDocument newDoc = XDocument.Parse(txtLastXml.Text);
+                //XDocument oldDoc = XDocument.Load(txtAutoUpdateXmlSavePath.Text);
+                //XDocument newDoc = XDocument.Parse(txtLastXml.Text);
+
+                XDocument oldDoc = XDocument.Parse(rtbOld.Text);
+                XDocument newDoc = XDocument.Parse(rtbNew.Text);
 
                 var oldPath = SaveTempXml("old.xml", oldDoc);
                 var newPath = SaveTempXml("new.xml", newDoc);

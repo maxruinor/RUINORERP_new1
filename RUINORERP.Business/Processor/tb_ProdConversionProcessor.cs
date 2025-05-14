@@ -25,6 +25,7 @@ using RUINORERP.Model.Context;
 using System.Linq;
 using RUINOR.Core;
 using RUINORERP.Common.Helper;
+using RUINORERP.Global;
 
 
 namespace RUINORERP.Business.Processor
@@ -42,6 +43,9 @@ namespace RUINORERP.Business.Processor
             queryFilter.SetQueryField<tb_ProdConversion>(c => c.Reason);
             queryFilter.SetQueryField<tb_ProdConversion>(c => c.ConversionDate);
             queryFilter.SetQueryField<tb_ProdConversion>(c => c.Employee_ID);
+            queryFilter.SetQueryField<tb_ProdConversion>(c => c.PrintStatus, QueryFieldType.CmbEnum, typeof(PrintStatus));
+            queryFilter.SetQueryField<tb_ProdConversion>(c => c.ApprovalStatus, QueryFieldType.CmbEnum, typeof(ApprovalStatus));
+            queryFilter.SetQueryField<tb_ProdConversion>(c => c.DataStatus, QueryFieldType.CmbEnum, typeof(DataStatus));
             return queryFilter;
         }
     }

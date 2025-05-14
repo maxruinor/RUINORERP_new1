@@ -302,7 +302,7 @@ namespace AULWriter
             //从配置文件读取配置
             readConfigFromFile();
             btnDiff.Enabled = false;
-
+            this.txtTargetDirectory.TextChanged += new System.EventHandler(this.txtTargetDirectory_TextChanged);
         }
 
         //从配置文件读取配置
@@ -400,7 +400,7 @@ namespace AULWriter
                 worker.ReportProgress(0, new ProgressData { TotalFiles = fileElements.Count });
 
                 ProcessFiles(worker, parameters, fileElements, diffList);
-                ProcessNewFiles(doc, parameters.PreVerUpdatedFiles, diffList);
+                ProcessNewFiles(doc, parameters.PreVerUpdatedFiles, diffList, parameters);
 
                 e.Result = new UpdateXmlResult { Document = doc, DiffList = diffList };
             }
@@ -427,23 +427,85 @@ namespace AULWriter
                 var fileElement = fileElements[i];
                 var fileName = fileElement.Attribute("Name").Value;
 
-                if (ShouldExcludeFile(parameters, fileName)) continue;
+                //排除指定文件
+                if (ShouldExcludeFile(fileName, parameters)) continue;
 
+                string diffFileName = string.Empty;
                 if (IsFileModified(parameters, fileName))
                 {
                     UpdateFileVersion(fileElement);
+                    diffFileName = fileName;
                     diffList.Add(fileName);
                 }
 
-                ReportProgress(worker, i + 1, fileElements.Count, fileName);
+                ReportProgress(worker, i + 1, fileElements.Count, diffFileName);
             }
         }
 
-        private bool ShouldExcludeFile(UpdateXmlParameters parameters, string fileName)
+
+        // 扩展的排除条件检查
+        private bool ShouldExcludeFile(string fileName, UpdateXmlParameters parameters)
         {
-            return parameters.ExcludeUnnecessaryFiles?.Invoke(fileName) ?? false;
+            // 基础排除规则
+            if (parameters.ExcludeUnnecessaryFiles?.Invoke(fileName) == true)
+                return true;
+
+            // 扩展规则
+            var extension = Path.GetExtension(fileName).ToLower();
+            var excludeExtensions = new[] { ".log", ".tmp", ".bak" };
+
+            return
+                excludeExtensions.Contains(extension) ||    // 排除特定扩展名
+                fileName.StartsWith("_") ||                 // 排除下划线开头的文件
+                IsInHiddenDirectory(fileName) ||            // 排除隐藏目录中的文件
+                IsOverSizeLimit(fileName, 100);             // 排除超过100MB的大文件
         }
 
+        private bool IsInHiddenDirectory(string filePath)
+        {
+            try
+            {
+                var dir = Path.GetDirectoryName(filePath);
+                return (new DirectoryInfo(dir).Attributes & FileAttributes.Hidden)
+                       == FileAttributes.Hidden;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        private bool IsOverSizeLimit(string filePath, int maxMB)
+        {
+            try
+            {
+                var fileInfo = new FileInfo(filePath);
+                return fileInfo.Length > maxMB * 1024L * 1024L;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        private bool IsSystemFile(string fileName)
+        {
+            try
+            {
+                var attr = File.GetAttributes(fileName);
+                return (attr & FileAttributes.System) == FileAttributes.System;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        private bool IsTemporaryFile(string fileName)
+        {
+            return Path.GetExtension(fileName).Equals(".tmp", StringComparison.OrdinalIgnoreCase) ||
+                   fileName.Contains("~$");
+        }
         private bool IsFileModified(UpdateXmlParameters parameters, string fileName)
         {
             var sourcePath = Path.Combine(parameters.SourceFolder, fileName);
@@ -471,18 +533,46 @@ namespace AULWriter
             return CalculateFileHash(sourcePath) != CalculateFileHash(targetPath);
         }
 
-        private void ProcessNewFiles(XDocument doc, List<string> newFiles, List<string> diffList)
-        {
-            var existingFiles = doc.Descendants("File")
-                .Select(f => f.Attribute("Name").Value)
-                .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
-            foreach (var newFile in newFiles.Except(existingFiles))
+        //新添加的文件 从1.0.0.0开始加到集合中
+        private void ProcessNewFiles(XDocument doc,
+                            List<string> newFiles,
+                            List<string> diffList,
+                            UpdateXmlParameters parameters)
+        {
+            try
             {
-                AddNewFileElement(doc, newFile);
-                diffList.Add(newFile);
+                // 获取现有文件名的哈希集合（不区分大小写）
+                var existingFiles = doc.Descendants("File")
+                    .Select(f => f.Attribute("Name").Value)
+                    .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+                // 使用LINQ过滤需要处理的新文件
+                var validNewFiles = newFiles
+                    .Where(f => !existingFiles.Contains(f) &&
+                               !ShouldExcludeFile(f, parameters))
+                    .ToList();
+
+                foreach (var newFile in validNewFiles)
+                {
+                    // 添加文件节点到XML
+                    var newElement = new XElement("File",
+                        new XAttribute("Ver", "1.0.0.0"),
+                        new XAttribute("Name", newFile));
+
+                    doc.Descendants("Files").First().Add(newElement);
+                    diffList.Add(newFile);
+                }
+            }
+            catch (Exception ex)
+            {
+                // 记录异常日志
+                Debug.WriteLine($"处理新文件时出错: {ex.Message}");
+                throw;
             }
         }
+
+
 
         private void AddNewFileElement(XDocument doc, string fileName)
         {
@@ -695,7 +785,11 @@ namespace AULWriter
 
             foreach (var item in data.DiffItems)
             {
-                txtDiff.AppendText($"{item}\r\n");
+                if (!string.IsNullOrEmpty(item))
+                {
+                    DiffFileList.Add(item);
+                    txtDiff.AppendText($"{item}\r\n");
+                }
             }
         }
 
@@ -722,7 +816,7 @@ namespace AULWriter
         private void HandleSuccessfulCompletion(UpdateXmlResult result)
         {
 
-            XDocument document  = result?.Document;
+            XDocument document = result?.Document;
             // 在保存文档前调用
             UpdateLastUpdateTime(document);
 
@@ -1232,7 +1326,7 @@ namespace AULWriter
         //    return content;
         //}
 
-        List<string> DiffList = new List<string>();
+        List<string> DiffFileList = new List<string>();
 
         /// <summary>
         /// 这个方法被AI重写了。这里是正确的。AI的要检查验证
@@ -1298,7 +1392,7 @@ namespace AULWriter
                         string version = fileElement.Attribute("Ver").Value;
                         IncrementVersion(ref version);
                         fileElement.SetAttributeValue("Ver", version);
-                        DiffList.Add(fileName);
+                        DiffFileList.Add(fileName);
                         txtDiff.AppendText(fileName + "\r\n");
                     }
                     else if (isSourceExist && isTargetExist)
@@ -1313,7 +1407,7 @@ namespace AULWriter
                             string version = fileElement.Attribute("Ver").Value;
                             IncrementVersion(ref version);
                             fileElement.SetAttributeValue("Ver", version);
-                            DiffList.Add(fileName);
+                            DiffFileList.Add(fileName);
                             txtDiff.AppendText(fileName + "\r\n");
                         }
                     }
@@ -1326,7 +1420,7 @@ namespace AULWriter
                             string version = fileElement.Attribute("Ver").Value;
                             IncrementVersion(ref version);
                             fileElement.SetAttributeValue("Ver", version);
-                            DiffList.Add(fileName);
+                            DiffFileList.Add(fileName);
                             txtDiff.AppendText(fileName + "\r\n");
                         }
                     }
@@ -1358,7 +1452,7 @@ namespace AULWriter
                 newFileElement.SetAttributeValue("Name", item);
                 var FilesElement = doc.Descendants("Files").FirstOrDefault();
                 FilesElement.Add(newFileElement);
-                DiffList.Add(item);
+                DiffFileList.Add(item);
                 txtDiff.AppendText(item + "\r\n");
             }
 
@@ -1466,13 +1560,27 @@ namespace AULWriter
 
         private void btnrelease_Click(object sender, EventArgs e)
         {
-            foreach (var item in DiffList)
+            if (DiffFileList.Count == 0)
             {
-                CopyFile(txtCompareSource.Text, txtTargetDirectory.Text, item);
+                MessageBox.Show("没有需要发布的文件。请先生成差异文件。");
+                return;
+            }
+            foreach (var item in DiffFileList)
+            {
+                if (!chkTest.Checked)
+                {
+                    CopyFile(txtCompareSource.Text, txtTargetDirectory.Text, item);
+                }
+
             }
 
-            richTxtLog.AppendText($"保存到目标-{txtTargetDirectory.Text}  成功{DiffList.Count}个。");
+            richTxtLog.AppendText($"保存到目标-{txtTargetDirectory.Text}  成功{DiffFileList.Count}个。");
             richTxtLog.AppendText("\r\n");
+
+            if (chkTest.Checked)
+            {
+                return;
+            }
 
             // 将StringBuilder的内容写入文件
             //File.WriteAllText(this.txtAutoUpdateXmlSavePath.Text.Trim(), txtLastXml.Text.ToString(), System.Text.Encoding.GetEncoding("gb2312"));
@@ -1649,6 +1757,7 @@ namespace AULWriter
         private void btnLoadCurrentVer_Click(object sender, EventArgs e)
         {
             LoadOldCurrentList(txtAutoUpdateXmlSavePath.Text);
+            readConfigFromFile();
         }
 
 
@@ -1683,7 +1792,31 @@ namespace AULWriter
             rtbOld.Text = doc.ToString();
         }
 
+        private void btnCancel_Click(object sender, EventArgs e)
+        {
+            bgWorker.CancelAsync();
+        }
 
+        private void txtTargetDirectory_TextChanged(object sender, EventArgs e)
+        {
+            string mainProgramFileName = "企业数字化集成ERP.exe";
+            string listFileName = "AutoUpdaterList.xml";
+
+            FileInfo exeFileInfo = new FileInfo(txtMainExePath.Text);
+            if (exeFileInfo != null && exeFileInfo.DirectoryName != null)
+            {
+                mainProgramFileName = exeFileInfo.Name;
+            }
+            FileInfo listFileInfo = new FileInfo(txtAutoUpdateXmlSavePath.Text);
+            if (listFileInfo != null && listFileInfo.DirectoryName != null)
+            {
+                listFileName = listFileInfo.Name;
+            }
+
+            txtMainExePath.Text = System.IO.Path.Combine(txtTargetDirectory.Text, mainProgramFileName);
+            txtAutoUpdateXmlSavePath.Text = System.IO.Path.Combine(txtTargetDirectory.Text, listFileName);
+
+        }
     }
 
 

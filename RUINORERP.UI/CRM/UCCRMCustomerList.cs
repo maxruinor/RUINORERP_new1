@@ -34,6 +34,7 @@ using TransInstruction;
 using RUINORERP.Global;
 using RUINORERP.Model.TransModel;
 using RUINORERP.UI.SuperSocketClient;
+using FastReport.DevComponents.DotNetBar;
 
 namespace RUINORERP.UI.CRM
 {
@@ -352,7 +353,7 @@ namespace RUINORERP.UI.CRM
                 {
                     toolStripButton分配.Visible = false;//默认隐藏
                 }
-                
+
                 UIHelper.ControlButton(CurMenuInfo, toolStripButton分配);
                 toolStripButton分配.ToolTipText = "分配给指定业务员。";
                 toolStripButton分配.Click += new System.EventHandler(this.toolStripButton分配_Click);
@@ -368,7 +369,7 @@ namespace RUINORERP.UI.CRM
                 toolStripButton回收.Image = global::RUINORERP.UI.Properties.Resources.reset;
                 toolStripButton回收.ImageTransparentColor = System.Drawing.Color.Magenta;
                 toolStripButton回收.Name = "回收RecyclingToHighSeas";
-         
+
                 if (MainForm.Instance.AppContext.IsSuperUser)
                 {
                     toolStripButton回收.Visible = true;//默认
@@ -392,20 +393,63 @@ namespace RUINORERP.UI.CRM
 
         private async void toolStripButton回收_Click(object sender, EventArgs e)
         {
-            if (bindingSourceList.Current != null && dataGridView1.CurrentCell != null)
+            UIHelper.CheckValidation(this);
+            List<tb_CRM_Customer> updateList = new List<tb_CRM_Customer>();
+
+            //多选模式时
+            if (dataGridView1.UseSelectedColumn)
             {
-                //  弹出提示说：您确定将这个公司回收投入到公海吗？
-                if (bindingSourceList.Current is tb_CRM_Customer sourceEntity)
+                foreach (var item in bindingSourceList)
                 {
-                    if (MessageBox.Show($"您确定将这个客户：{sourceEntity.CustomerName}回收到公海吗？", "提示", MessageBoxButtons.OKCancel, MessageBoxIcon.Question) == DialogResult.OK)
+                    if (item is tb_CRM_Customer sourceEntity)
                     {
-                        sourceEntity.Employee_ID = null;
-                        int result = await MainForm.Instance.AppContext.Db.Updateable<tb_CRM_Customer>(sourceEntity).ExecuteCommandAsync();
-                        if (result > 0)
+                        if (sourceEntity.Employee_ID.HasValue && sourceEntity.Employee_ID.Value > 0 && sourceEntity.Selected.HasValue && sourceEntity.Selected.Value)
                         {
-                            MainForm.Instance.ShowStatusText("回收成功!");
-                            Query();
+                            updateList.Add(sourceEntity);
                         }
+
+                    }
+                }
+            }
+            else
+            {
+
+                if (bindingSourceList.Current != null && dataGridView1.CurrentCell != null)
+                {
+                    if (bindingSourceList.Current is tb_CRM_Customer sourceEntity)
+                    {
+                        updateList.Add(sourceEntity);
+                    }
+                }
+            }
+
+            if (updateList.Count > 0)
+            {
+                string msg = string.Empty;
+                int counter = 0;
+                msg = "\r\n";
+                foreach (var item in updateList)
+                {
+                    counter++;
+                    //将客户的名称 添加到提示信息中。并\r\n分开
+                    msg += "【" + item.CustomerName + "】" + "\r\n";
+                    if (counter > 10)
+                    {
+                        msg += $".... 等 {counter}位客户";
+                        break;
+                    }
+                }
+                ////去掉最后的\r\n
+                //msg = msg.TrimEnd('\r', '\n');
+
+                if (MessageBox.Show($"您确定将：{msg}回收到公海吗？", "提示", MessageBoxButtons.OKCancel, MessageBoxIcon.Question) == DialogResult.OK)
+                {
+                    updateList.ForEach(c => c.Employee_ID = null);
+                    int result = await MainForm.Instance.AppContext.Db.Updateable(updateList).ExecuteCommandAsync();
+                    if (result > 0)
+                    {
+                        MainForm.Instance.ShowStatusText($"回收成功{result}条数据!");
+                        Query();
                     }
                 }
             }
@@ -414,27 +458,77 @@ namespace RUINORERP.UI.CRM
 
         private async void toolStripButton分配_Click(object sender, EventArgs e)
         {
-            if (bindingSourceList.Current != null && dataGridView1.CurrentCell != null)
+            UIHelper.CheckValidation(this);
+            List<tb_CRM_Customer> updateList = new List<tb_CRM_Customer>();
+
+            //多选模式时
+            if (dataGridView1.UseSelectedColumn)
             {
-                //  弹出提示说：？
-                if (bindingSourceList.Current is tb_CRM_Customer sourceEntity)
+                foreach (var item in bindingSourceList)
                 {
-                    frmSelectObject frm = new frmSelectObject();
-                    //frm.selectedObject = sourceEntity;
-                    frm.SetSelectDataList<tb_Employee>(sourceEntity, C => C.Employee_ID, n => n.Employee_Name);
-                    if (frm.ShowDialog() == DialogResult.OK)
+                    if (item is tb_CRM_Customer sourceEntity)
                     {
-                        if (MessageBox.Show($"您确定将这个客户：【{sourceEntity.CustomerName}】分配给【{frm.SelectItemText}】吗？", "提示", MessageBoxButtons.OKCancel, MessageBoxIcon.Question) == DialogResult.OK)
+                        if (sourceEntity.Employee_ID == null && sourceEntity.Selected.HasValue && sourceEntity.Selected.Value)
                         {
-                            int result = await MainForm.Instance.AppContext.Db.Updateable<tb_CRM_Customer>(sourceEntity).ExecuteCommandAsync();
-                            if (result > 0)
-                            {
-                                MainForm.Instance.ShowStatusText("分配成功!");
-                                Query();
-                            }
+                            updateList.Add(sourceEntity);
                         }
+
                     }
                 }
+            }
+            else
+            {
+
+                if (bindingSourceList.Current != null && dataGridView1.CurrentCell != null)
+                {
+                    if (bindingSourceList.Current is tb_CRM_Customer sourceEntity)
+                    {
+                        updateList.Add(sourceEntity);
+                    }
+                }
+            }
+
+            if (updateList.Count > 0)
+            {
+                frmSelectObject frm = new frmSelectObject();
+                frm.SetSelectDataList<tb_Employee>(updateList[0], C => C.Employee_ID, n => n.Employee_Name);
+
+                if (frm.ShowDialog() == DialogResult.OK)
+                {
+                    long empID = updateList[0].Employee_ID.Value;
+                    string msg = string.Empty;
+                    int counter = 0;
+                    msg = "\r\n";
+                    foreach (var item in updateList)
+                    {
+                        counter++;
+                        //将客户的名称 添加到提示信息中。并\r\n分开
+                        msg += "【" + item.CustomerName + "】" + "\r\n";
+                        if (counter > 10)
+                        {
+                            msg += $".... 等 {counter}位客户";
+                            break;
+                        }
+                    }
+                    ////去掉最后的\r\n
+                    //msg = msg.TrimEnd('\r', '\n');
+                    updateList.ForEach(c => c.Employee_ID = empID);
+                    if (MessageBox.Show($"您确定将：{msg}分配给【{frm.SelectItemText}】吗？", "提示", MessageBoxButtons.OKCancel, MessageBoxIcon.Question) == DialogResult.OK)
+                    {
+                        int result = await MainForm.Instance.AppContext.Db.Updateable(updateList).ExecuteCommandAsync();
+                        if (result > 0)
+                        {
+                            MainForm.Instance.ShowStatusText($"分配成功{result}条数据!");
+                            Query();
+                        }
+                    }
+                    else
+                    {
+                        //恢复
+                        updateList.ForEach(c => c.Employee_ID = null);
+                    }
+                }
+
             }
         }
 

@@ -39,6 +39,50 @@ namespace RUINORERP.UI.Common
     public static class UIHelper
     {
 
+        #region 触发UI验证事件 让数据生效
+
+        public static void CheckValidation(UserControl userControl, KryptonPanel kryptonPanel1 = null, ErrorProvider errorProviderForAllInput = null)
+        {
+            //为了验证 付款原因。直接点保存丢失的问题。使用了下面所有方法。都不行。只能在绑定时用同步 实时更新 ture
+            // 强制焦点离开当前控件以触发验证
+            if (userControl.ActiveControl != null && userControl.ActiveControl is TextBoxBase)
+            {
+                var previousControl = userControl.ActiveControl;
+                userControl.ActiveControl = null; // 移出焦点
+                userControl.ActiveControl = previousControl; // 可选：恢复焦点
+            }
+
+            if (kryptonPanel1 != null && errorProviderForAllInput != null)
+            {
+                var hasErrors = false;
+                foreach (Control control in kryptonPanel1.Controls)
+                {
+                    if (!string.IsNullOrEmpty(errorProviderForAllInput.GetError(control)))
+                    {
+                        hasErrors = true;
+                        break;
+                    }
+                }
+                if (hasErrors)
+                {
+                    MessageBox.Show("存在无效输入，请检查错误提示！");
+                }
+
+                // 手动强制所有绑定更新到数据源
+                foreach (Control control in kryptonPanel1.Controls)
+                {
+                    foreach (Binding binding in control.DataBindings)
+                    {
+                        binding.WriteValue(); // 强制写入数据源
+                    }
+                }
+            }
+
+            //操作前将数据收集
+            userControl.ValidateChildren(System.Windows.Forms.ValidationConstraints.None);
+        }
+        #endregion
+
 
         #region 控制外币相关字段是否显示（单表时）
 
@@ -1617,7 +1661,7 @@ namespace RUINORERP.UI.Common
 
         public static void ControlButton(tb_MenuInfo CurMenuInfo, ToolStripButton btnItem)
         {
-            if (CurMenuInfo==null || MainForm.Instance.AppContext.IsSuperUser)
+            if (CurMenuInfo == null || MainForm.Instance.AppContext.IsSuperUser)
             {
                 return;
             }

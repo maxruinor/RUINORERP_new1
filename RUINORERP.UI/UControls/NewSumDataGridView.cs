@@ -709,6 +709,16 @@ namespace RUINORERP.UI.UControls
             {
                 cdc.Disable = !UseSelectedColumn;
                 cdc.Visible = UseSelectedColumn;
+                if (UseSelectedColumn)
+                {
+                    this.ReadOnly = false;
+                    Columns[cdc.ColName].ReadOnly = false;
+                }
+                else
+                {
+                    Columns[cdc.ColName].ReadOnly = true;
+                }
+
             }
             else
             {

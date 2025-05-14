@@ -53,6 +53,8 @@ using RUINORERP.UI.UserPersonalized;
 using RUINORERP.UI.UControls;
 using Newtonsoft.Json;
 using Fireasy.Common.Extensions;
+using ContextMenuController = RUINORERP.UI.UControls.ContextMenuController;
+using Netron.Automatology;
 
 
 
@@ -63,7 +65,7 @@ namespace RUINORERP.UI.BaseForm
     /// 基本资料的列表，是否需要加一个标记来表示 在菜单中编辑 ，还是在 其他窗体时 关联编辑。看后面的业务情况。
     /// </summary>
     [PreCheckMustOverrideBaseClass]
-    public partial class BaseListGeneric<T> : BaseUControl where T : class
+    public partial class BaseListGeneric<T> : BaseUControl, IContextMenuInfoAuth where T : class
     {
 
         //public virtual ToolStripItem[] AddExtendButton()
@@ -71,7 +73,12 @@ namespace RUINORERP.UI.BaseForm
         //    //返回空的数组
         //    return new ToolStripItem[] { };
         //}
-
+        public virtual List<ContextMenuController> AddContextMenu()
+        {
+            List<ContextMenuController> list = new List<ContextMenuController>();
+            list.Add(new ContextMenuController("【批量处理】", true, false, "NewSumDataGridView_标记已打印"));
+            return list;
+        }
 
         /// <summary>
         /// 用来保存外键表名与外键主键列名  通过这个打到对应的名称。
@@ -182,7 +189,7 @@ namespace RUINORERP.UI.BaseForm
         /// 手动设置的。优化级比较自动的FKValueColNameTBList高
         /// </summary>
         public List<Type> ColDisplayTypes { get; set; } = new List<Type>();
- 
+
         private void DataGridView1_CellFormatting(object sender, DataGridViewCellFormattingEventArgs e)
         {
             //如果列是隐藏的是不是可以不需要控制显示了呢? 后面看是否是导出这块需要不需要 不然可以隐藏的直接跳过
@@ -502,7 +509,7 @@ namespace RUINORERP.UI.BaseForm
             }
         }
 
- 
+
 
 
 
@@ -767,10 +774,18 @@ namespace RUINORERP.UI.BaseForm
                 case MenuItemEnums.删除:
                     if (bindingSourceList.Current == null)
                     {
-
                         return;
                     }
-                    await Delete();
+                    if (this.dataGridView1.UseSelectedColumn)
+                    {
+                        //多选模式时批量删除
+                        await BatchDelete();
+                    }
+                    else
+                    {
+                        await Delete();
+                    }
+
                     break;
                 case MenuItemEnums.修改:
                     Modify();
@@ -1051,6 +1066,104 @@ namespace RUINORERP.UI.BaseForm
             return rs;
         }
 
+        protected async virtual Task<int> BatchDelete()
+        {
+
+            List<T> SelectedList = new List<T>();
+            //多选模式时
+            if (dataGridView1.UseSelectedColumn)
+            {
+                foreach (var item in bindingSourceList)
+                {
+                    if (item is T sourceEntity)
+                    {
+                        var selected = (sourceEntity as BaseEntity).Selected;
+                        if (selected.HasValue && selected.Value)
+                        {
+                            SelectedList.Add(sourceEntity);
+                        }
+                    }
+                }
+            }
+            bool rs = false;
+            int counter = 0;
+            if (MessageBox.Show($"系统不建议删除基本资料\r\n确定删除选择的【{SelectedList.Count}】条记录吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Information) == DialogResult.Yes)
+            {
+                // rs = await MainForm.Instance.AppContext.Db.DeleteNav<T>(SelectedList).IncludesAllFirstLayer().ExecuteCommandAsync();
+                // counter = await MainForm.Instance.AppContext.Db.Deleteable<T>(SelectedList).ExecuteCommandAsync();
+
+                try
+                {
+                    bool tryDelete = await ctr.BaseDeleteAsync(SelectedList); //可以执行。但是有外键。无法删除
+                    if (tryDelete)
+                    {
+                        AuditLogHelper.Instance.CreateAuditLog($"批量删除{counter}条记录", CurMenuInfo.CaptionCN);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MainForm.Instance.logger.LogInformation(ex, "批量删除时出错,再次单个尝试导航删除.");
+                    //再次尝试单个导航删除
+                    for (int i = 0; i < SelectedList.Count; i++)
+                    {
+                        T loc = SelectedList[i];
+                        string PKColName = UIHelper.GetPrimaryKeyColName(typeof(T));
+                        object PKValue = SelectedList[i].GetPropertyValue(PKColName);
+                        this.bindingSourceList.Remove(loc);
+                        rs = await ctr.BaseDeleteByNavAsync(loc);
+                        if (rs)
+                        {
+                            counter++;
+                            if (MainForm.Instance.AppContext.SysConfig.IsDebug)
+                            {
+                                MainForm.Instance.logger.LogInformation($"删除:{typeof(T).Name}，主键值：{PKValue.ToString()} ");
+                            }
+                            AuditLogHelper.Instance.CreateAuditLog("删除", CurMenuInfo.CaptionCN);
+                        }
+                    }
+                }
+
+
+
+
+            }
+
+            #region 更新缓存
+            if (SelectedList.Count == counter)
+            {
+                foreach (var item in SelectedList)
+                {
+                    string PKColName = UIHelper.GetPrimaryKeyColName(typeof(T));
+                    object PKValue = item.GetPropertyValue(PKColName);
+                    if (MainForm.Instance.AppContext.SysConfig.IsDebug)
+                    {
+                        MainForm.Instance.logger.LogInformation($"删除:{typeof(T).Name}，主键值：{PKValue.ToString()} ");
+                    }
+
+                    //提示服务器开启推送工作流
+                    OriginalData beatDataDel = ClientDataBuilder.BaseInfoChangeBuilder(typeof(T).Name);
+                    MainForm.Instance.ecs.AddSendData(beatDataDel);
+
+                    //根据要缓存的列表集合来判断是否需要上传到服务器。让服务器分发到其他客户端
+                    KeyValuePair<string, string> pair = new KeyValuePair<string, string>();
+                    //只处理需要缓存的表
+                    if (BizCacheHelper.Manager.NewTableList.TryGetValue(typeof(T).Name, out pair))
+                    {
+                        //如果有更新变动就上传到服务器再分发到所有客户端
+                        OriginalData odforCache = ActionForClient.删除缓存<T>(PKColName, PKValue.ToLong());
+                        byte[] buffer = CryptoProtocol.EncryptClientPackToServer(odforCache);
+                        MainForm.Instance.ecs.client.Send(buffer);
+                    }
+                }
+
+            }
+
+            #endregion
+
+
+            return counter;
+        }
+
         protected virtual void Modify()
         {
             if (EditForm == null)
@@ -1099,7 +1212,7 @@ namespace RUINORERP.UI.BaseForm
             }
         }
 
- 
+
         protected virtual void Modify(BaseEdit frmadd)
         {
             if (bindingSourceList.Current != null)
@@ -1880,7 +1993,6 @@ namespace RUINORERP.UI.BaseForm
 
         private void dataGridView1_CellDoubleClick(object sender, DataGridViewCellEventArgs e)
         {
-
             if (Runway == BaseListRunWay.选中模式)
             {
                 tsbtnSelected.Visible = true;
@@ -1889,7 +2001,11 @@ namespace RUINORERP.UI.BaseForm
             else
             {
                 tsbtnSelected.Visible = false;
-                Modify();
+                //如果双击选择列，则不是编辑
+                if (dataGridView1.Columns[e.ColumnIndex].Name != "Selected")
+                {
+                    Modify();
+                }
             }
             if (e.ColumnIndex == -1 || e.RowIndex == -1)
             {
@@ -1948,8 +2064,16 @@ namespace RUINORERP.UI.BaseForm
                 BaseDataGridView1 = dataGridView1;
 
             }
-        }
 
+            BuildContextMenuController();
+        }
+        /// <summary>
+        /// 创建右键菜单
+        /// </summary>
+        public virtual void BuildContextMenuController()
+        {
+
+        }
         /*
         private void DataGridView_ColumnWidthChanged(object sender, DataGridViewColumnEventArgs e)
         {

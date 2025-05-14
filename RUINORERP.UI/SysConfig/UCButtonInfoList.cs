@@ -20,6 +20,7 @@ using RUINORERP.Global;
 using RUINORERP.Business.Processor;
 using SqlSugar;
 using System.Reflection;
+using RUINORERP.UI.AdvancedUIModule;
 
 namespace RUINORERP.UI.BI
 {

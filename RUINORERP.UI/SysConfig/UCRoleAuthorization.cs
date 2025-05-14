@@ -1059,6 +1059,9 @@ namespace RUINORERP.UI.SysConfig
                 {
                     pb.HasChanged = false;
                 }
+                //冗余 ,让 配置权限时更方便查看
+                pb.IsChild = item.IsChild;
+
                 pb.RoleID = CurrentRole.RoleID;
                 pb.FieldInfo_ID = item.FieldInfo_ID;
                 pb.MenuID = menuInfo.MenuID;

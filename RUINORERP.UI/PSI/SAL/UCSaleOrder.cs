@@ -186,10 +186,10 @@ namespace RUINORERP.UI.PSI.SAL
                     entity.IsFromPlatform = AppContext.GlobalVariableConfig.IsFromPlatform;
 
                     // 监听配置变化
-                    //MainForm.Instance.Globalconfig.OnChange((config, value) =>
-                    //{
-                    //    entity.IsFromPlatform = config.IsFromPlatform;
-                    //});
+                    MainForm.Instance.Globalconfig.OnChange((config, value) =>
+                    {
+                        entity.IsFromPlatform = config.IsFromPlatform;
+                    });
 
                     if (entity.tb_SaleOrderDetails != null && entity.tb_SaleOrderDetails.Count > 0)
                     {
@@ -257,9 +257,10 @@ namespace RUINORERP.UI.PSI.SAL
             DataBindingHelper.BindData4TextBox<tb_SaleOrder>(entity, t => t.PlatformOrderNo, txtPlatformOrderNo, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_SaleOrder>(entity, t => t.TotalQty, txtTotalQty, BindDataType4TextBox.Qty, false);
             DataBindingHelper.BindData4TextBox<tb_SaleOrder>(entity, t => t.TotalTaxAmount, txtTaxAmount, BindDataType4TextBox.Money, false);
+          
             DataBindingHelper.BindData4CheckBox<tb_SaleOrder>(entity, t => t.IsFromPlatform, chk平台单, false);
             DataBindingHelper.BindData4CheckBox<tb_SaleOrder>(entity, t => t.IsCustomizedOrder, chkIsCustomizedOrder, false);
-
+         
             base.errorProviderForAllInput.DataSource = entity;
             base.errorProviderForAllInput.ContainerControl = this;
 

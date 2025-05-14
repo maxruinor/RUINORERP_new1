@@ -15,6 +15,7 @@ namespace RUINORERP.UI.AdvancedUIModule
 
     /// <summary>
     /// 给窗体添加一些特殊的权限控制等
+    /// 添加工具栏按钮
     /// </summary>
     public interface IToolStripMenuInfoAuth
     {

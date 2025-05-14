@@ -7,7 +7,7 @@
 // 时间：02/08/2025 16:32:08
 // **************************************
 using System;
-﻿using SqlSugar;
+using SqlSugar;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
@@ -23,7 +23,7 @@ namespace RUINORERP.Model
     [Serializable()]
     [Description("字段权限表")]
     [SugarTable("tb_P4Field")]
-    public partial class tb_P4Field: BaseEntity, ICloneable
+    public partial class tb_P4Field : BaseEntity, ICloneable
     {
         public tb_P4Field()
         {
@@ -40,13 +40,14 @@ namespace RUINORERP.Model
         /// <summary>
         /// 字段关系
         /// </summary>
- 
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "P4Field_ID" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "字段关系" , IsPrimaryKey = true)]
+
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType = "Int64", ColumnName = "P4Field_ID", DecimalDigits = 0, IsNullable = false, ColumnDescription = "字段关系", IsPrimaryKey = true)]
         public long P4Field_ID
-        { 
-            get{return _P4Field_ID;}
-            set{
-            SetProperty(ref _P4Field_ID, value);
+        {
+            get { return _P4Field_ID; }
+            set
+            {
+                SetProperty(ref _P4Field_ID, value);
                 base.PrimaryKeyID = _P4Field_ID;
             }
         }
@@ -55,117 +56,138 @@ namespace RUINORERP.Model
         /// <summary>
         /// 字段
         /// </summary>
-        [AdvQueryAttribute(ColName = "FieldInfo_ID",ColDesc = "字段")] 
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "FieldInfo_ID" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "字段" )]
-        [FKRelationAttribute("tb_FieldInfo","FieldInfo_ID")]
+        [AdvQueryAttribute(ColName = "FieldInfo_ID", ColDesc = "字段")]
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType = "Int64", ColumnName = "FieldInfo_ID", DecimalDigits = 0, IsNullable = true, ColumnDescription = "字段")]
+        [FKRelationAttribute("tb_FieldInfo", "FieldInfo_ID")]
         public long? FieldInfo_ID
-        { 
-            get{return _FieldInfo_ID;}
-            set{
-            SetProperty(ref _FieldInfo_ID, value);
-                        }
+        {
+            get { return _FieldInfo_ID; }
+            set
+            {
+                SetProperty(ref _FieldInfo_ID, value);
+            }
         }
 
         private long? _RoleID;
         /// <summary>
         /// 角色
         /// </summary>
-        [AdvQueryAttribute(ColName = "RoleID",ColDesc = "角色")] 
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "RoleID" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "角色" )]
-        [FKRelationAttribute("tb_RoleInfo","RoleID")]
+        [AdvQueryAttribute(ColName = "RoleID", ColDesc = "角色")]
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType = "Int64", ColumnName = "RoleID", DecimalDigits = 0, IsNullable = true, ColumnDescription = "角色")]
+        [FKRelationAttribute("tb_RoleInfo", "RoleID")]
         public long? RoleID
-        { 
-            get{return _RoleID;}
-            set{
-            SetProperty(ref _RoleID, value);
-                        }
+        {
+            get { return _RoleID; }
+            set
+            {
+                SetProperty(ref _RoleID, value);
+            }
         }
 
         private long? _MenuID;
         /// <summary>
         /// 菜单
         /// </summary>
-        [AdvQueryAttribute(ColName = "MenuID",ColDesc = "菜单")] 
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "MenuID" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "菜单" )]
-        [FKRelationAttribute("tb_MenuInfo","MenuID")]
+        [AdvQueryAttribute(ColName = "MenuID", ColDesc = "菜单")]
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType = "Int64", ColumnName = "MenuID", DecimalDigits = 0, IsNullable = true, ColumnDescription = "菜单")]
+        [FKRelationAttribute("tb_MenuInfo", "MenuID")]
         public long? MenuID
-        { 
-            get{return _MenuID;}
-            set{
-            SetProperty(ref _MenuID, value);
-                        }
+        {
+            get { return _MenuID; }
+            set
+            {
+                SetProperty(ref _MenuID, value);
+            }
         }
 
         private bool _IsVisble;
         /// <summary>
         /// 是否可见
         /// </summary>
-        [AdvQueryAttribute(ColName = "IsVisble",ColDesc = "是否可见")] 
-        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType ="Boolean",  ColumnName = "IsVisble" ,IsNullable = false,ColumnDescription = "是否可见" )]
+        [AdvQueryAttribute(ColName = "IsVisble", ColDesc = "是否可见")]
+        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType = "Boolean", ColumnName = "IsVisble", IsNullable = false, ColumnDescription = "是否可见")]
         public bool IsVisble
-        { 
-            get{return _IsVisble;}
-            set{
-            SetProperty(ref _IsVisble, value);
-                        }
+        {
+            get { return _IsVisble; }
+            set
+            {
+                SetProperty(ref _IsVisble, value);
+            }
         }
 
-    
+        private bool? _IsChild;
+        /// <summary>
+        /// 子表字段
+        /// </summary>
+        [AdvQueryAttribute(ColName = "IsChild", ColDesc = "子表字段")]
+        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType = "Boolean", ColumnName = "IsChild", IsNullable = true, ColumnDescription = "子表字段")]
+        public bool? IsChild
+        {
+            get { return _IsChild; }
+            set
+            {
+                SetProperty(ref _IsChild, value);
+            }
+        }
 
         private DateTime? _Created_at;
         /// <summary>
         /// 创建时间
         /// </summary>
-        [AdvQueryAttribute(ColName = "Created_at",ColDesc = "创建时间")] 
-        [SugarColumn(ColumnDataType = "datetime", SqlParameterDbType ="DateTime",  ColumnName = "Created_at" ,IsNullable = true,ColumnDescription = "创建时间" )]
+        [AdvQueryAttribute(ColName = "Created_at", ColDesc = "创建时间")]
+        [SugarColumn(ColumnDataType = "datetime", SqlParameterDbType = "DateTime", ColumnName = "Created_at", IsNullable = true, ColumnDescription = "创建时间")]
         public DateTime? Created_at
-        { 
-            get{return _Created_at;}
-            set{
-            SetProperty(ref _Created_at, value);
-                        }
+        {
+            get { return _Created_at; }
+            set
+            {
+                SetProperty(ref _Created_at, value);
+            }
         }
 
         private long? _Created_by;
         /// <summary>
         /// 创建人
         /// </summary>
-        [AdvQueryAttribute(ColName = "Created_by",ColDesc = "创建人")] 
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Created_by" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "创建人" )]
+        [AdvQueryAttribute(ColName = "Created_by", ColDesc = "创建人")]
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType = "Int64", ColumnName = "Created_by", DecimalDigits = 0, IsNullable = true, ColumnDescription = "创建人")]
         public long? Created_by
-        { 
-            get{return _Created_by;}
-            set{
-            SetProperty(ref _Created_by, value);
-                        }
+        {
+            get { return _Created_by; }
+            set
+            {
+                SetProperty(ref _Created_by, value);
+            }
         }
 
         private DateTime? _Modified_at;
         /// <summary>
         /// 修改时间
         /// </summary>
-        [AdvQueryAttribute(ColName = "Modified_at",ColDesc = "修改时间")] 
-        [SugarColumn(ColumnDataType = "datetime", SqlParameterDbType ="DateTime",  ColumnName = "Modified_at" ,IsNullable = true,ColumnDescription = "修改时间" )]
+        [AdvQueryAttribute(ColName = "Modified_at", ColDesc = "修改时间")]
+        [SugarColumn(ColumnDataType = "datetime", SqlParameterDbType = "DateTime", ColumnName = "Modified_at", IsNullable = true, ColumnDescription = "修改时间")]
         public DateTime? Modified_at
-        { 
-            get{return _Modified_at;}
-            set{
-            SetProperty(ref _Modified_at, value);
-                        }
+        {
+            get { return _Modified_at; }
+            set
+            {
+                SetProperty(ref _Modified_at, value);
+            }
         }
 
         private long? _Modified_by;
         /// <summary>
         /// 修改人
         /// </summary>
-        [AdvQueryAttribute(ColName = "Modified_by",ColDesc = "修改人")] 
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Modified_by" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "修改人" )]
+        [AdvQueryAttribute(ColName = "Modified_by", ColDesc = "修改人")]
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType = "Int64", ColumnName = "Modified_by", DecimalDigits = 0, IsNullable = true, ColumnDescription = "修改人")]
         public long? Modified_by
-        { 
-            get{return _Modified_by;}
-            set{
-            SetProperty(ref _Modified_by, value);
-                        }
+        {
+            get { return _Modified_by; }
+            set
+            {
+                SetProperty(ref _Modified_by, value);
+            }
         }
 
         //private bool _IsChild;
@@ -207,12 +229,12 @@ namespace RUINORERP.Model
 
 
 
-//如果为false,则不可以。
-private bool PK_FK_ID_Check()
-{
-  bool rs=true;
-return rs;
-}
+        //如果为false,则不可以。
+        private bool PK_FK_ID_Check()
+        {
+            bool rs = true;
+            return rs;
+        }
 
 
 
@@ -238,35 +260,35 @@ return rs;
                     fieldNameList = new ConcurrentDictionary<string, string>();
                     SugarColumn entityAttr;
                     Type type = typeof(tb_P4Field);
-                    
-                       foreach (PropertyInfo field in type.GetProperties())
+
+                    foreach (PropertyInfo field in type.GetProperties())
+                    {
+                        foreach (Attribute attr in field.GetCustomAttributes(true))
+                        {
+                            entityAttr = attr as SugarColumn;
+                            if (null != entityAttr)
                             {
-                                foreach (Attribute attr in field.GetCustomAttributes(true))
+                                if (entityAttr.ColumnDescription == null)
                                 {
-                                    entityAttr = attr as SugarColumn;
-                                    if (null != entityAttr)
-                                    {
-                                        if (entityAttr.ColumnDescription == null)
-                                        {
-                                            continue;
-                                        }
-                                        if (entityAttr.IsIdentity)
-                                        {
-                                            continue;
-                                        }
-                                        if (entityAttr.IsPrimaryKey)
-                                        {
-                                            continue;
-                                        }
-                                        if (entityAttr.ColumnDescription.Trim().Length > 0)
-                                        {
-                                            fieldNameList.TryAdd(field.Name, entityAttr.ColumnDescription);
-                                        }
-                                    }
+                                    continue;
+                                }
+                                if (entityAttr.IsIdentity)
+                                {
+                                    continue;
+                                }
+                                if (entityAttr.IsPrimaryKey)
+                                {
+                                    continue;
+                                }
+                                if (entityAttr.ColumnDescription.Trim().Length > 0)
+                                {
+                                    fieldNameList.TryAdd(field.Name, entityAttr.ColumnDescription);
                                 }
                             }
+                        }
+                    }
                 }
-                
+
                 return fieldNameList;
             }
             set
@@ -276,7 +298,7 @@ return rs;
 
         }
         #endregion
-        
+
 
         public override object Clone()
         {

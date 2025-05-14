@@ -21,12 +21,18 @@ using SqlSugar;
 using System.Linq.Dynamic.Core;
 using static RUINORERP.UI.Common.DuplicateFinder;
 using System.Reflection;
+using RUINORERP.UI.AdvancedUIModule;
+using RUINORERP.UI.BaseForm;
+using RUINORERP.UI.UControls;
+using FastReport.Table;
+using RUINORERP.Common.Extensions;
+
 
 namespace RUINORERP.UI.BI
 {
 
     [MenuAttrAssemblyInfo("字段管理", ModuleMenuDefine.模块定义.系统设置, ModuleMenuDefine.系统设置.权限管理)]
-    public partial class UCFieldInfoList : BaseForm.BaseListGeneric<tb_FieldInfo>
+    public partial class UCFieldInfoList : BaseForm.BaseListGeneric<tb_FieldInfo>, IContextMenuInfoAuth
     {
 
         public UCFieldInfoList()
@@ -43,7 +49,95 @@ namespace RUINORERP.UI.BI
             base.frm.flowLayoutPanelButtonsArea.Controls.Add(button检查数据);
         }
 
+        public override List<ContextMenuController> AddContextMenu()
+        {
+            List<EventHandler> ContextClickList = new List<EventHandler>();
+            ContextClickList.Add(NewSumDataGridView_检测字段是否存在);
+            List<ContextMenuController> list = new List<ContextMenuController>();
+            list.Add(new ContextMenuController("【检测字段是否存在】", true, false, "NewSumDataGridView_检测字段是否存在"));
+            return list;
+        }
+        public override void BuildContextMenuController()
+        {
+            List<EventHandler> ContextClickList = new List<EventHandler>();
+            ContextClickList.Add(NewSumDataGridView_检测字段是否存在);
 
+
+            List<ContextMenuController> list = new List<ContextMenuController>();
+            list = AddContextMenu();
+
+            UIHelper.ControlContextMenuInvisible(CurMenuInfo, list);
+
+            if (dataGridView1 != null)
+            {
+                //base.dataGridView1.Use是否使用内置右键功能 = false;
+                ContextMenuStrip newContextMenuStrip = this.dataGridView1.GetContextMenu(this.dataGridView1.ContextMenuStrip
+                , ContextClickList, list, true
+                    );
+                dataGridView1.ContextMenuStrip = newContextMenuStrip;
+            }
+
+
+        }
+
+        private void NewSumDataGridView_检测字段是否存在(object sender, EventArgs e)
+        {
+            if (!dataGridView1.UseSelectedColumn)
+            {
+                //请开启多选模式再进行检测
+                MessageBox.Show("请开启多选模式再进行检测");
+                return;
+            }
+
+            UIHelper.CheckValidation(this);
+            List<tb_FieldInfo> CheckList = new List<tb_FieldInfo>();
+            //多选模式时
+            if (dataGridView1.UseSelectedColumn)
+            {
+                foreach (var item in bindingSourceList)
+                {
+                    if (item is tb_FieldInfo sourceEntity)
+                    {
+                        CheckList.Add(sourceEntity);
+                    }
+                }
+            }
+
+            //再将列表按 EntityName 分组处理。因为每组要创建一个对应的实例
+            var groupList = CheckList.GroupBy(c => c.EntityName).ToArray();
+            foreach (var group in groupList)
+            {
+
+                string tableName = group.Key;
+                List<tb_FieldInfo> list = group.ToList();
+                var type = Assembly.LoadFrom(Global.GlobalConstants.ModelDLL_NAME).GetType(Global.GlobalConstants.Model_NAME + "." + tableName);
+                //创建这个类型的实体
+                var entity = Activator.CreateInstance(type);
+                foreach (var item in list)
+                {
+                    if (!entity.ContainsProperty(item.FieldName))
+                    {
+                        //勾选
+                        foreach (var field in bindingSourceList)
+                        {
+                            if (item is tb_FieldInfo sourceEntity)
+                            {
+                                if (sourceEntity.FieldName == item.FieldName)
+                                {
+                                    //勾选
+                                    (sourceEntity as BaseEntity).Selected = true;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+
+
+
+
+        }
 
         private void button检查数据_Click(object sender, EventArgs e)
         {
@@ -70,7 +164,7 @@ namespace RUINORERP.UI.BI
                 var values = properties.Select(prop => prop.GetValue(p)).ToArray();
                 return Tuple.Create(values);
             };
-            
+
             // 使用自定义比较器进行分组
             var duplicatesList = list.GroupBy(
                 keySelector2,
@@ -84,7 +178,7 @@ namespace RUINORERP.UI.BI
             dataGridView1.DataSource = ListDataSoure;
         }
 
- 
+
         public override void BuildRelatedDisplay()
         {
             //表格显示时DataGridView1_CellFormatting 取外键类型
@@ -103,7 +197,7 @@ namespace RUINORERP.UI.BI
             foreach (DataGridViewRow dr in this.dataGridView1.SelectedRows)
             {
                 tb_FieldInfo buttonInfo = dr.DataBoundItem as tb_FieldInfo;
-                 rs = await childctr.BaseDeleteByNavAsync(dr.DataBoundItem as tb_FieldInfo);
+                rs = await childctr.BaseDeleteByNavAsync(dr.DataBoundItem as tb_FieldInfo);
                 if (rs)
                 {
                     //提示

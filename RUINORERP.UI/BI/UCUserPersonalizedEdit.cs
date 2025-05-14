@@ -69,6 +69,7 @@ namespace RUINORERP.UI.BI
         {
             Personalized = MainForm.Instance.AppContext.CurrentUser_Role_Personalized;
             DataBindingHelper.BindData4CheckBox<tb_UserPersonalized>(Personalized, t => t.UseUserOwnPrinter, chkSelectPrinter, false);
+            DataBindingHelper.BindData4CheckBox<tb_UserPersonalized>(Personalized, t => t.SelectTemplatePrint, chkSelectTemplatePrint, false);
 
             cmbPrinterList.Items.Clear();
             var printers = LocalPrinter.GetLocalPrinters();

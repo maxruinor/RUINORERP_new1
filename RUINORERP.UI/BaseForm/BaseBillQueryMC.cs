@@ -442,13 +442,15 @@ namespace RUINORERP.UI.BaseForm
                     break;
 
                 case MenuItemEnums.打印:
-                    if (MainForm.Instance.AppContext.GlobalVariableConfig.DirectPrinting)
+                    //个性化设置了打印要选择模板打印时，就进入设计介面
+                    if (MainForm.Instance.AppContext.CurrentUser_Role_Personalized.SelectTemplatePrint.HasValue
+                           && MainForm.Instance.AppContext.CurrentUser_Role_Personalized.SelectTemplatePrint.Value)
                     {
-                        Print(RptMode.PRINT);
+                        Print(RptMode.DESIGN);
                     }
                     else
                     {
-                        Print(RptMode.DESIGN);
+                        Print(RptMode.PRINT);
                     }
                     break;
                 case MenuItemEnums.预览:

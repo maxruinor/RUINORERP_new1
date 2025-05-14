@@ -344,6 +344,13 @@ namespace RUINORERP.UI.Report
             newSumDataGridView1.DataSource = null;
             newSumDataGridView1.DataSource = bindingSourcePrintTemplate;
 
+            //如果个人的个性化打印设置了优先个人的设置
+            if (MainForm.Instance.AppContext.CurrentUser_Role_Personalized.UseUserOwnPrinter.HasValue
+                           && MainForm.Instance.AppContext.CurrentUser_Role_Personalized.UseUserOwnPrinter.Value)
+            {
+                chkSelectPrinter.Visible = false;
+                GroupBoxSelectPrinter.Visible = false;
+            }
 
         }
 

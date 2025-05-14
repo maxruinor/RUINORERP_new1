@@ -825,7 +825,7 @@ namespace RUINORERP.UI
             string errorHash = e.Exception.StackTrace?.GetHashCode().ToString(); // 更稳定的哈希
             if (_errorCache.TryGetValue(errorHash, out _)) return;
             _errorCache.Set(errorHash, DateTime.Now, _cacheOptions);
-            MainForm.Instance.logger.LogError(e.Exception, "全局异常");
+            MainForm.Instance.logger.LogError(e.Exception, e.Exception.Message);
             MessageBox.Show(str, "系统错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
         static void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)

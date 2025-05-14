@@ -163,7 +163,37 @@ namespace RUINORERP.Model
             SetProperty(ref _LocalAmount, value);
                         }
         }
+        private long? _DepartmentID;
+        /// <summary>
+        /// 部门
+        /// </summary>
+        [AdvQueryAttribute(ColName = "DepartmentID", ColDesc = "部门")]
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType = "Int64", ColumnName = "DepartmentID", DecimalDigits = 0, IsNullable = true, ColumnDescription = "部门")]
+        [FKRelationAttribute("tb_Department", "DepartmentID")]
+        public long? DepartmentID
+        {
+            get { return _DepartmentID; }
+            set
+            {
+                SetProperty(ref _DepartmentID, value);
+            }
+        }
 
+        private long? _ProjectGroup_ID;
+        /// <summary>
+        /// 项目组
+        /// </summary>
+        [AdvQueryAttribute(ColName = "ProjectGroup_ID", ColDesc = "项目组")]
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType = "Int64", ColumnName = "ProjectGroup_ID", DecimalDigits = 0, IsNullable = true, ColumnDescription = "项目组")]
+        [FKRelationAttribute("tb_ProjectGroup", "ProjectGroup_ID")]
+        public long? ProjectGroup_ID
+        {
+            get { return _ProjectGroup_ID; }
+            set
+            {
+                SetProperty(ref _ProjectGroup_ID, value);
+            }
+        }
         private string _Summary;
         /// <summary>
         /// 摘要

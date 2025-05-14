@@ -40,11 +40,13 @@
             this.chk文件比较 = new System.Windows.Forms.CheckBox();
             this.button_save_config = new System.Windows.Forms.Button();
             this.btnrelease = new System.Windows.Forms.Button();
-            this.btnProduce = new System.Windows.Forms.Button();
+            this.btnGenerateNewlist = new System.Windows.Forms.Button();
+            this.richTxtLog = new System.Windows.Forms.RichTextBox();
             this.prbProd = new System.Windows.Forms.ProgressBar();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.tabControl1 = new System.Windows.Forms.TabControl();
             this.tbpBase = new System.Windows.Forms.TabPage();
+            this.label8 = new System.Windows.Forms.Label();
             this.txtAutoUpdateXmlSavePath = new System.Windows.Forms.TextBox();
             this.btnBaseDir = new System.Windows.Forms.Button();
             this.txtTargetDirectory = new System.Windows.Forms.TextBox();
@@ -52,7 +54,6 @@
             this.btnCompareSource = new System.Windows.Forms.Button();
             this.txtCompareSource = new System.Windows.Forms.TextBox();
             this.label6 = new System.Windows.Forms.Label();
-            this.richTxtLog = new System.Windows.Forms.RichTextBox();
             this.txtUrl = new System.Windows.Forms.TextBox();
             this.label5 = new System.Windows.Forms.Label();
             this.btnExpt = new System.Windows.Forms.Button();
@@ -130,10 +131,10 @@
             this.panel2.Controls.Add(this.chk文件比较);
             this.panel2.Controls.Add(this.button_save_config);
             this.panel2.Controls.Add(this.btnrelease);
-            this.panel2.Controls.Add(this.btnProduce);
+            this.panel2.Controls.Add(this.btnGenerateNewlist);
             this.panel2.Controls.Add(this.richTxtLog);
             this.panel2.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.panel2.Location = new System.Drawing.Point(0, 496);
+            this.panel2.Location = new System.Drawing.Point(0, 519);
             this.panel2.Name = "panel2";
             this.panel2.Size = new System.Drawing.Size(1061, 237);
             this.panel2.TabIndex = 1;
@@ -154,7 +155,7 @@
             this.btnLoadPreCurrentVer.Name = "btnLoadPreCurrentVer";
             this.btnLoadPreCurrentVer.Size = new System.Drawing.Size(74, 23);
             this.btnLoadPreCurrentVer.TabIndex = 9;
-            this.btnLoadPreCurrentVer.Text = "加载清单";
+            this.btnLoadPreCurrentVer.Text = "加载旧清单";
             this.btnLoadPreCurrentVer.UseVisualStyleBackColor = true;
             this.btnLoadPreCurrentVer.Click += new System.EventHandler(this.btnLoadCurrentVer_Click);
             // 
@@ -193,25 +194,33 @@
             this.btnrelease.UseVisualStyleBackColor = true;
             this.btnrelease.Click += new System.EventHandler(this.btnrelease_Click);
             // 
-            // btnProduce
+            // btnGenerateNewlist
             // 
-            this.btnProduce.FlatStyle = System.Windows.Forms.FlatStyle.Popup;
-            this.btnProduce.Location = new System.Drawing.Point(351, 9);
-            this.btnProduce.Name = "btnProduce";
-            this.btnProduce.Size = new System.Drawing.Size(75, 23);
-            this.btnProduce.TabIndex = 0;
-            this.btnProduce.Text = "1)生成(&G)";
-            this.btnProduce.UseVisualStyleBackColor = true;
-            this.btnProduce.Click += new System.EventHandler(this.btnProduce_Click);
+            this.btnGenerateNewlist.FlatStyle = System.Windows.Forms.FlatStyle.Popup;
+            this.btnGenerateNewlist.Location = new System.Drawing.Point(326, 8);
+            this.btnGenerateNewlist.Name = "btnGenerateNewlist";
+            this.btnGenerateNewlist.Size = new System.Drawing.Size(111, 23);
+            this.btnGenerateNewlist.TabIndex = 0;
+            this.btnGenerateNewlist.Text = "1)生成最新清单(&G)";
+            this.btnGenerateNewlist.UseVisualStyleBackColor = true;
+            this.btnGenerateNewlist.Click += new System.EventHandler(this.btnProduce_Click);
+            // 
+            // richTxtLog
+            // 
+            this.richTxtLog.Dock = System.Windows.Forms.DockStyle.Bottom;
+            this.richTxtLog.Location = new System.Drawing.Point(0, 49);
+            this.richTxtLog.Name = "richTxtLog";
+            this.richTxtLog.Size = new System.Drawing.Size(1061, 188);
+            this.richTxtLog.TabIndex = 11;
+            this.richTxtLog.Text = "";
             // 
             // prbProd
             // 
             this.prbProd.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.prbProd.Location = new System.Drawing.Point(0, 733);
+            this.prbProd.Location = new System.Drawing.Point(0, 496);
             this.prbProd.Name = "prbProd";
             this.prbProd.Size = new System.Drawing.Size(1061, 23);
             this.prbProd.TabIndex = 2;
-            this.prbProd.Visible = false;
             // 
             // groupBox1
             // 
@@ -219,7 +228,7 @@
             this.groupBox1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.groupBox1.Location = new System.Drawing.Point(0, 53);
             this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(1061, 443);
+            this.groupBox1.Size = new System.Drawing.Size(1061, 466);
             this.groupBox1.TabIndex = 2;
             this.groupBox1.TabStop = false;
             // 
@@ -235,11 +244,12 @@
             this.tabControl1.Location = new System.Drawing.Point(3, 17);
             this.tabControl1.Name = "tabControl1";
             this.tabControl1.SelectedIndex = 0;
-            this.tabControl1.Size = new System.Drawing.Size(1055, 423);
+            this.tabControl1.Size = new System.Drawing.Size(1055, 446);
             this.tabControl1.TabIndex = 0;
             // 
             // tbpBase
             // 
+            this.tbpBase.Controls.Add(this.label8);
             this.tbpBase.Controls.Add(this.txtAutoUpdateXmlSavePath);
             this.tbpBase.Controls.Add(this.btnBaseDir);
             this.tbpBase.Controls.Add(this.txtTargetDirectory);
@@ -260,10 +270,19 @@
             this.tbpBase.Location = new System.Drawing.Point(4, 22);
             this.tbpBase.Name = "tbpBase";
             this.tbpBase.Padding = new System.Windows.Forms.Padding(3);
-            this.tbpBase.Size = new System.Drawing.Size(1047, 397);
+            this.tbpBase.Size = new System.Drawing.Size(1047, 420);
             this.tbpBase.TabIndex = 0;
             this.tbpBase.Text = "※基本信息";
             this.tbpBase.UseVisualStyleBackColor = true;
+            // 
+            // label8
+            // 
+            this.label8.AutoSize = true;
+            this.label8.Location = new System.Drawing.Point(666, 366);
+            this.label8.Name = "label8";
+            this.label8.Size = new System.Drawing.Size(263, 12);
+            this.label8.TabIndex = 18;
+            this.label8.Text = "生成后也会使用配置文件中 指定的更新网址端口";
             // 
             // txtAutoUpdateXmlSavePath
             // 
@@ -329,15 +348,6 @@
             this.label6.Size = new System.Drawing.Size(59, 12);
             this.label6.TabIndex = 12;
             this.label6.Text = "来源目录:";
-            // 
-            // richTxtLog
-            // 
-            this.richTxtLog.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.richTxtLog.Location = new System.Drawing.Point(0, 49);
-            this.richTxtLog.Name = "richTxtLog";
-            this.richTxtLog.Size = new System.Drawing.Size(1061, 188);
-            this.richTxtLog.TabIndex = 11;
-            this.richTxtLog.Text = "";
             // 
             // txtUrl
             // 
@@ -443,7 +453,7 @@
             this.tbpOpt.Location = new System.Drawing.Point(4, 22);
             this.tbpOpt.Name = "tbpOpt";
             this.tbpOpt.Padding = new System.Windows.Forms.Padding(3);
-            this.tbpOpt.Size = new System.Drawing.Size(1047, 397);
+            this.tbpOpt.Size = new System.Drawing.Size(1047, 420);
             this.tbpOpt.TabIndex = 1;
             this.tbpOpt.Text = "※将要生成的清单";
             this.tbpOpt.UseVisualStyleBackColor = true;
@@ -464,7 +474,7 @@
             this.splitContainerOption.Panel2.Controls.Add(this.txtBaseExeVersion);
             this.splitContainerOption.Panel2.Controls.Add(this.chk目录转为明细);
             this.splitContainerOption.Panel2.Controls.Add(this.chkAppend);
-            this.splitContainerOption.Size = new System.Drawing.Size(1041, 391);
+            this.splitContainerOption.Size = new System.Drawing.Size(1041, 414);
             this.splitContainerOption.SplitterDistance = 715;
             this.splitContainerOption.TabIndex = 0;
             // 
@@ -476,7 +486,7 @@
             this.txtPreVerUpdatedFiles.Multiline = true;
             this.txtPreVerUpdatedFiles.Name = "txtPreVerUpdatedFiles";
             this.txtPreVerUpdatedFiles.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.txtPreVerUpdatedFiles.Size = new System.Drawing.Size(715, 391);
+            this.txtPreVerUpdatedFiles.Size = new System.Drawing.Size(715, 414);
             this.txtPreVerUpdatedFiles.TabIndex = 0;
             this.txtPreVerUpdatedFiles.DragDrop += new System.Windows.Forms.DragEventHandler(this.txtUpdatedFiles_DragDrop);
             this.txtPreVerUpdatedFiles.DragEnter += new System.Windows.Forms.DragEventHandler(this.txtUpdatedFiles_DragEnter);
@@ -529,7 +539,7 @@
             this.tbpDiffList.Location = new System.Drawing.Point(4, 22);
             this.tbpDiffList.Name = "tbpDiffList";
             this.tbpDiffList.Padding = new System.Windows.Forms.Padding(3);
-            this.tbpDiffList.Size = new System.Drawing.Size(1047, 397);
+            this.tbpDiffList.Size = new System.Drawing.Size(1047, 420);
             this.tbpDiffList.TabIndex = 2;
             this.tbpDiffList.Text = "※差异文件列表";
             this.tbpDiffList.UseVisualStyleBackColor = true;
@@ -539,7 +549,7 @@
             this.txtDiff.Dock = System.Windows.Forms.DockStyle.Fill;
             this.txtDiff.Location = new System.Drawing.Point(3, 3);
             this.txtDiff.Name = "txtDiff";
-            this.txtDiff.Size = new System.Drawing.Size(1041, 391);
+            this.txtDiff.Size = new System.Drawing.Size(1041, 414);
             this.txtDiff.TabIndex = 1;
             this.txtDiff.Text = "";
             // 
@@ -549,7 +559,7 @@
             this.tbpLastXml.Location = new System.Drawing.Point(4, 22);
             this.tbpLastXml.Name = "tbpLastXml";
             this.tbpLastXml.Padding = new System.Windows.Forms.Padding(3);
-            this.tbpLastXml.Size = new System.Drawing.Size(1047, 397);
+            this.tbpLastXml.Size = new System.Drawing.Size(1047, 420);
             this.tbpLastXml.TabIndex = 3;
             this.tbpLastXml.Text = "※结果";
             this.tbpLastXml.UseVisualStyleBackColor = true;
@@ -560,7 +570,7 @@
             this.txtLastXml.Location = new System.Drawing.Point(3, 3);
             this.txtLastXml.Name = "txtLastXml";
             this.txtLastXml.ReadOnly = true;
-            this.txtLastXml.Size = new System.Drawing.Size(1041, 391);
+            this.txtLastXml.Size = new System.Drawing.Size(1041, 414);
             this.txtLastXml.TabIndex = 0;
             this.txtLastXml.Text = "";
             // 
@@ -570,7 +580,7 @@
             this.tabPageDiff.Location = new System.Drawing.Point(4, 22);
             this.tabPageDiff.Name = "tabPageDiff";
             this.tabPageDiff.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPageDiff.Size = new System.Drawing.Size(1047, 397);
+            this.tabPageDiff.Size = new System.Drawing.Size(1047, 420);
             this.tabPageDiff.TabIndex = 4;
             this.tabPageDiff.Text = "※新【右】-旧【左】版本差异比较";
             this.tabPageDiff.UseVisualStyleBackColor = true;
@@ -588,7 +598,7 @@
             // splitContainerDiff.Panel2
             // 
             this.splitContainerDiff.Panel2.Controls.Add(this.rtbNew);
-            this.splitContainerDiff.Size = new System.Drawing.Size(1041, 391);
+            this.splitContainerDiff.Size = new System.Drawing.Size(1041, 414);
             this.splitContainerDiff.SplitterDistance = 519;
             this.splitContainerDiff.TabIndex = 0;
             // 
@@ -597,7 +607,7 @@
             this.rtbOld.Dock = System.Windows.Forms.DockStyle.Fill;
             this.rtbOld.Location = new System.Drawing.Point(0, 0);
             this.rtbOld.Name = "rtbOld";
-            this.rtbOld.Size = new System.Drawing.Size(519, 391);
+            this.rtbOld.Size = new System.Drawing.Size(519, 414);
             this.rtbOld.TabIndex = 0;
             this.rtbOld.Text = "";
             // 
@@ -606,7 +616,7 @@
             this.rtbNew.Dock = System.Windows.Forms.DockStyle.Fill;
             this.rtbNew.Location = new System.Drawing.Point(0, 0);
             this.rtbNew.Name = "rtbNew";
-            this.rtbNew.Size = new System.Drawing.Size(518, 391);
+            this.rtbNew.Size = new System.Drawing.Size(518, 414);
             this.rtbNew.TabIndex = 0;
             this.rtbNew.Text = "";
             // 
@@ -615,7 +625,7 @@
             this.tabUsedescribe.Controls.Add(this.txt使用说明);
             this.tabUsedescribe.Location = new System.Drawing.Point(4, 22);
             this.tabUsedescribe.Name = "tabUsedescribe";
-            this.tabUsedescribe.Size = new System.Drawing.Size(1047, 397);
+            this.tabUsedescribe.Size = new System.Drawing.Size(1047, 420);
             this.tabUsedescribe.TabIndex = 5;
             this.tabUsedescribe.Text = "使用说明";
             this.tabUsedescribe.UseVisualStyleBackColor = true;
@@ -628,7 +638,7 @@
             this.txt使用说明.Multiline = true;
             this.txt使用说明.Name = "txt使用说明";
             this.txt使用说明.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.txt使用说明.Size = new System.Drawing.Size(1047, 397);
+            this.txt使用说明.Size = new System.Drawing.Size(1047, 420);
             this.txt使用说明.TabIndex = 1;
             this.txt使用说明.Text = "1）如果没有旧版（旧版清单为空时），则以目标目录中的所有文件为标准全部更新。（执行排除清单）\r\n\r\n2）旧版清单中添加，实际目标中没有的。则版本号按前面规则（指定" +
     "初始版本或或文件版本本身为标准）添加\r\n\r\n3）文件比较勾选：按文件修改时间和哈希比较后产生变化的才加入到更新清单中。\r\n\r\n4）新旧清单中对应项目增加1，如果" +
@@ -664,10 +674,10 @@
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1061, 756);
+            this.Controls.Add(this.prbProd);
             this.Controls.Add(this.groupBox1);
             this.Controls.Add(this.panel2);
             this.Controls.Add(this.panel1);
-            this.Controls.Add(this.prbProd);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "frmAULWriter";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
@@ -711,7 +721,7 @@
         private System.Windows.Forms.TabControl tabControl1;
         private System.Windows.Forms.TabPage tbpBase;
         private System.Windows.Forms.Label label2;
-        private System.Windows.Forms.Button btnProduce;
+        private System.Windows.Forms.Button btnGenerateNewlist;
         private System.Windows.Forms.Button btnrelease;
         private System.Windows.Forms.TextBox txtMainExePath;
         private System.Windows.Forms.Button btnSrc;
@@ -756,6 +766,7 @@
         private System.Windows.Forms.Button btnLoadPreCurrentVer;
         private System.Windows.Forms.TabPage tabUsedescribe;
         private System.Windows.Forms.TextBox txt使用说明;
+        private System.Windows.Forms.Label label8;
     }
 }
 

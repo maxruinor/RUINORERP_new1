@@ -8,8 +8,6 @@ using System.Xml.Serialization;
 
 namespace AutoUpdateTools
 {
-
- 
         class SerializeXmlHelper
         {
             /// <summary>

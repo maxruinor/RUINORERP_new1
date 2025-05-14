@@ -31,21 +31,58 @@ namespace AULWriter
 {
     public partial class frmAULWriter : Form
     {
+        // 常量定义
+        private const int BufferSize = 1024 * 1024; // 1MB缓冲区大小
+        private static readonly string[] TextSeparators = { "\r\n" };
+
+        // 颜色配置
         private readonly Color SameColor = Color.FromArgb(240, 240, 240);
         private readonly Color DiffColor = Color.FromArgb(255, 220, 220);
         private readonly Color AddedColor = Color.FromArgb(220, 255, 220);
         private readonly Color RemovedColor = Color.FromArgb(255, 200, 200);
         private readonly Color HeaderColor = Color.FromArgb(230, 230, 255);
+        // 后台工作组件
+        private readonly BackgroundWorker bgWorker = new BackgroundWorker
+        {
+            WorkerReportsProgress = true,
+            WorkerSupportsCancellation = true
+        };
+        // 配置文件路径
+        private readonly string configFilePath = Path.Combine(
+            Application.StartupPath, "config", "config.xml");
+
 
         #region [基本入口构造函数]
 
         public frmAULWriter()
         {
             InitializeComponent();
+            InitializeBackgroundWorker();
             SetupRichTextBoxes();
             SetupSafeScrollSync();
         }
+        #region 初始化方法
+        private void InitializeBackgroundWorker()
+        {
+            bgWorker.DoWork += BgWorker_DoWork;
+            bgWorker.ProgressChanged += BgWorker_ProgressChanged;
+            bgWorker.RunWorkerCompleted += BgWorker_RunWorkerCompleted;
+        }
 
+        private void SetupRichTextBoxes()
+        {
+            // 设置左右两个RichTextBox的样式
+            foreach (var rtb in new[] { rtbOld, rtbNew })
+            {
+                rtb.Font = new Font("Consolas", 10);
+                rtb.WordWrap = false;
+                rtb.ScrollBars = RichTextBoxScrollBars.Both;
+                rtb.DetectUrls = false;
+            }
+
+        }
+
+        #endregion
         private SafeScrollSynchronizer _syncOldToNew;
         private SafeScrollSynchronizer _syncNewToOld;
         private void SetupSafeScrollSync()
@@ -61,18 +98,7 @@ namespace AULWriter
 
         #region
 
-        private void SetupRichTextBoxes()
-        {
-            // 设置左右两个RichTextBox的样式
-            foreach (var rtb in new[] { rtbOld, rtbNew })
-            {
-                rtb.Font = new Font("Consolas", 10);
-                rtb.WordWrap = false;
-                rtb.ScrollBars = RichTextBoxScrollBars.Both;
-                rtb.DetectUrls = false;
-            }
 
-        }
 
         public void CompareXmlDocuments(XDocument oldDoc, XDocument newDoc)
         {
@@ -276,6 +302,7 @@ namespace AULWriter
             //从配置文件读取配置
             readConfigFromFile();
             btnDiff.Enabled = false;
+
         }
 
         //从配置文件读取配置
@@ -323,82 +350,151 @@ namespace AULWriter
         #endregion [主窗体加载]
 
         #region [生成文件]
+        // 在窗体类中定义以下成员变量
 
+        private UpdateXmlParameters workerParams;
         private void btnProduce_Click(object sender, EventArgs e)
         {
-            UpdateXmlFile(txtAutoUpdateXmlSavePath.Text, txtCompareSource.Text, txtTargetDirectory.Text, chk文件比较.Checked);
-            tabControl1.SelectedTab = tbpLastXml;
-            btnDiff.Enabled = true;
-            return;
-            //建立新线程
-            /*
-            Thread thrdProduce = new Thread(new ThreadStart(WriterAUList));
+            // 禁用按钮防止重复点击
+            btnGenerateNewlist.Enabled = false;
+            prbProd.Value = 0;
+            txtDiff.Clear();
 
-            if (this.btnProduce.Text == "生成(&G)")
+            // 准备参数
+            workerParams = new UpdateXmlParameters
             {
+                TargetXmlFilePath = txtAutoUpdateXmlSavePath.Text,
+                SourceFolder = txtCompareSource.Text,
+                TargetFolder = txtTargetDirectory.Text,
+                FileComparison = chk文件比较.Checked,
+                UseBaseVersion = chkUseBaseVersion.Checked,
+                BaseExeVersion = txtBaseExeVersion.Text,
+                PreVerUpdatedFiles = txtPreVerUpdatedFiles.Text.Split(new[] { "\r\n" },
+                                  StringSplitOptions.RemoveEmptyEntries).ToList(),
+                ExcludeUnnecessaryFiles = ExcludeUnnecessaryFiles
+            };
 
-                #region [检测基本条件]
-
-                if (!File.Exists(this.txtSrc.Text))
-                {
-                    MessageBox.Show(this, "请选择主入口程序!", "AutoUpdater", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    this.btnSrc_Click(sender, e);
-                }
-
-                #region [请输入自动更新网址]
-
-                if (this.txtUrl.Text.Trim().Length == 0)
-                {
-                    MessageBox.Show(this, "请输入自动更新网址!", "AutoUpdater", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    this.txtUrl.Focus();
-
-                    return;
-                }
-
-
-                #endregion [请输入自动更新网址]
-
-                if (this.txtDest.Text.Trim() == string.Empty)
-                {
-                    MessageBox.Show(this, "请选择AutoUpdaterList保存位置!", "AutoUpdater", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    this.btnSearDes_Click(sender, e);
-                }
-
-                #endregion [检测基本条件]
-
-                #region [新线程写文件]
-
-                thrdProduce.IsBackground = true;
-                thrdProduce.Start();
-
-                #endregion [新线程写文件]
-
-                this.btnProduce.Text = "停止(&S)";
-            }
-            else
-            {
-                Application.DoEvents();
-                if (MessageBox.Show(this, "是否停止文件生成更新文件?", "AutoUpdater", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
-                {
-                    //thrdProduce.Interrupt();
-                    //thrdProduce.Abort();
-                    if (thrdProduce.IsAlive)
-                    {
-                        thrdProduce.Abort();
-                        thrdProduce.Join();
-                    }
-                    this.btnProduce.Text = "生成(&G)";
-                }
-            }
-            */
-
+            // 开始后台工作
+            bgWorker.RunWorkerAsync(workerParams);
+            //UpdateXmlFile(txtAutoUpdateXmlSavePath.Text, txtCompareSource.Text, txtTargetDirectory.Text, chk文件比较.Checked);
+            //tabControl1.SelectedTab = tbpLastXml;
+            //btnDiff.Enabled = true;
+            //return;
 
         }
 
-        #region [写AutoUpdaterList]
+        #region 核心业务逻辑
 
+        private void BgWorker_DoWork(object sender, DoWorkEventArgs e)
+        {
+            var worker = (BackgroundWorker)sender;
+            var parameters = (UpdateXmlParameters)e.Argument;
+            var diffList = new List<string>();
 
+            try
+            {
+                var doc = XDocument.Load(parameters.TargetXmlFilePath);
+                UpdateVersionInformation(doc, parameters);
 
+                var fileElements = doc.Descendants("File").ToList();
+                worker.ReportProgress(0, new ProgressData { TotalFiles = fileElements.Count });
+
+                ProcessFiles(worker, parameters, fileElements, diffList);
+                ProcessNewFiles(doc, parameters.PreVerUpdatedFiles, diffList);
+
+                e.Result = new UpdateXmlResult { Document = doc, DiffList = diffList };
+            }
+            catch (Exception ex)
+            {
+                e.Result = ex;
+            }
+        }
+        private void UpdateVersionInformation(XDocument doc, UpdateXmlParameters parameters)
+        {
+            if (!parameters.UseBaseVersion) return;
+
+            var versionElement = doc.Descendants("Version").FirstOrDefault();
+            versionElement?.SetValue(parameters.BaseExeVersion);
+        }
+
+        private void ProcessFiles(BackgroundWorker worker, UpdateXmlParameters parameters,
+            List<XElement> fileElements, List<string> diffList)
+        {
+            for (int i = 0; i < fileElements.Count; i++)
+            {
+                if (worker.CancellationPending) return;
+
+                var fileElement = fileElements[i];
+                var fileName = fileElement.Attribute("Name").Value;
+
+                if (ShouldExcludeFile(parameters, fileName)) continue;
+
+                if (IsFileModified(parameters, fileName))
+                {
+                    UpdateFileVersion(fileElement);
+                    diffList.Add(fileName);
+                }
+
+                ReportProgress(worker, i + 1, fileElements.Count, fileName);
+            }
+        }
+
+        private bool ShouldExcludeFile(UpdateXmlParameters parameters, string fileName)
+        {
+            return parameters.ExcludeUnnecessaryFiles?.Invoke(fileName) ?? false;
+        }
+
+        private bool IsFileModified(UpdateXmlParameters parameters, string fileName)
+        {
+            var sourcePath = Path.Combine(parameters.SourceFolder, fileName);
+            var targetPath = Path.Combine(parameters.TargetFolder, fileName);
+
+            if (!File.Exists(sourcePath) || !File.Exists(targetPath))
+                return true;
+
+            return CompareFiles(sourcePath, targetPath);
+        }
+
+        private bool CompareFiles(string sourcePath, string targetPath)
+        {
+            var sourceInfo = new FileInfo(sourcePath);
+            var targetInfo = new FileInfo(targetPath);
+
+            // 快速比较：文件大小和修改时间
+            if (sourceInfo.Length != targetInfo.Length ||
+                sourceInfo.LastWriteTimeUtc != targetInfo.LastWriteTimeUtc)
+            {
+                return true;
+            }
+
+            // 精确比较：哈希值校验
+            return CalculateFileHash(sourcePath) != CalculateFileHash(targetPath);
+        }
+
+        private void ProcessNewFiles(XDocument doc, List<string> newFiles, List<string> diffList)
+        {
+            var existingFiles = doc.Descendants("File")
+                .Select(f => f.Attribute("Name").Value)
+                .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+            foreach (var newFile in newFiles.Except(existingFiles))
+            {
+                AddNewFileElement(doc, newFile);
+                diffList.Add(newFile);
+            }
+        }
+
+        private void AddNewFileElement(XDocument doc, string fileName)
+        {
+            var newElement = new XElement("File",
+                new XAttribute("Ver", "1.0.0.0"),
+                new XAttribute("Name", fileName));
+
+            doc.Descendants("Files").First().Add(newElement);
+        }
+        #endregion
+
+        #region 辅助方法
 
         #region 工具性静态方法
         /// <summary>
@@ -416,6 +512,15 @@ namespace AULWriter
                     return BitConverter.ToString(hash).Replace("-", "").ToLowerInvariant();
                 }
             }
+
+            //using (var sha256 = SHA256.Create())
+            //using (var stream = File.OpenRead(filePath))
+            //{
+            //    return BitConverter.ToString(sha256.ComputeHash(stream))
+            //        .Replace("-", "").ToLowerInvariant();
+            //}
+
+
         }
         /// <summary>
         /// 源文件夹是最新的。目标是要更新的。 
@@ -511,6 +616,186 @@ namespace AULWriter
 
 
         #endregion
+
+        // 辅助方法保持原样
+        private void UpdateFileVersion(XElement fileElement)
+        {
+            //var version = fileElement.Attribute("Ver").Value;
+            //var parts = version.Split('.');
+            //parts[3] = (int.Parse(parts[3]) + 1).ToString();
+            //fileElement.SetAttributeValue("Ver", string.Join(".", parts));
+
+            var version = fileElement.Attribute("Ver").Value;
+            IncrementVersion(ref version);
+            fileElement.SetAttributeValue("Ver", version);
+        }
+
+
+
+        private void ReportProgress(BackgroundWorker worker, int processed, int total, string fileName)
+        {
+            var progress = (int)((double)processed / total * 100);
+            worker.ReportProgress(progress, new ProgressData
+            {
+                Processed = processed,
+                DiffItems = new List<string> { fileName }
+            });
+        }
+        #endregion
+
+        #region UI事件处理
+        private void BgWorker_ProgressChanged(object sender, ProgressChangedEventArgs e)
+        {
+            if (e.UserState is ProgressData data)
+            {
+                UpdateProgressBar(data);
+                UpdateDiffList(data);
+            }
+
+
+        }
+
+        private void UpdateProgressBar(ProgressData data)
+        {    // 更新进度条
+            //if (data.TotalFiles > 0)
+            //    prbProd.Maximum = data.TotalFiles;
+
+            //prbProd.Value = Math.Min(data.Processed, prbProd.Maximum);
+            // 初始化进度条
+            if (data.TotalFiles > 0 && prbProd.Maximum != data.TotalFiles)
+            {
+                prbProd.Maximum = data.TotalFiles;
+            }
+
+            // 更新进度值
+            if (data.Processed > 0)
+            {
+                prbProd.Value = Math.Min(data.Processed, prbProd.Maximum);
+            }
+
+
+
+        }
+
+        private void UpdateLastUpdateTime(XDocument doc)
+        {
+            var lastUpdateElement = doc.Descendants("LastUpdateTime").FirstOrDefault();
+            if (lastUpdateElement != null)
+            {
+                //lastUpdateElement.Value = DateTime.Now.ToString("yyyy-MM-dd");
+                lastUpdateElement.Value = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+            }
+        }
+
+
+        // 实时更新差异列表
+        private void UpdateDiffList(ProgressData data)
+        {
+            if (data.DiffItems == null) return;
+
+            foreach (var item in data.DiffItems)
+            {
+                txtDiff.AppendText($"{item}\r\n");
+            }
+        }
+
+        private void BgWorker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
+        {
+            btnGenerateNewlist.Enabled = true;
+
+            if (e.Error != null)
+            {
+                ShowErrorMessage($"操作失败: {e.Error.Message}");
+            }
+            else if (e.Cancelled)
+            {
+                ShowInformationMessage("操作已取消");
+            }
+            else
+            {
+                HandleSuccessfulCompletion(e.Result as UpdateXmlResult);
+            }
+
+        }
+
+
+        private void HandleSuccessfulCompletion(UpdateXmlResult result)
+        {
+
+            XDocument document  = result?.Document;
+            // 在保存文档前调用
+            UpdateLastUpdateTime(document);
+
+            txtLastXml.Text = document.ToString();
+            //txtLastXml.Text = result?.Document.ToString();
+            rtbNew.Text = txtLastXml.Text;
+            tabControl1.SelectedTab = tbpLastXml;
+            btnDiff.Enabled = true;
+            AppendLog("XML文件生成成功！");
+        }
+
+        private void ShowErrorMessage(string message)
+        {
+            MessageBox.Show(message, "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            AppendLog($"错误: {message}");
+        }
+
+        private void ShowInformationMessage(string message)
+        {
+            MessageBox.Show(message, "信息", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            AppendLog(message);
+        }
+
+        private void AppendLog(string message)
+        {
+            richTxtLog.AppendText($"{DateTime.Now:yyyy-MM-dd HH:mm:ss}: {message}\r\n");
+        }
+        #endregion
+
+        #region 文件操作
+        private void SafeFileCopy(string source, string target)
+        {
+            try
+            {
+                var dir = Path.GetDirectoryName(target);
+                Directory.CreateDirectory(dir);
+                File.Copy(source, target, true);
+            }
+            catch (Exception ex)
+            {
+                AppendLog($"文件复制失败: {ex.Message}");
+            }
+        }
+        #endregion
+
+
+
+
+
+
+
+
+        /// <summary>
+        /// 版本号加1
+        /// </summary>
+        /// <param name="version"></param>
+        private void IncrementVersion(ref string version)
+        {
+            //var parts = version.Split('.').Select(int.Parse).ToArray();
+            //parts[3]++;
+            //version = string.Join(".", parts);
+
+            var parts = version.Split('.');
+            parts[3] = (int.Parse(parts[3]) + 1).ToString();
+            version = string.Join(".", parts);
+        }
+
+        #region [写AutoUpdaterList]
+
+
+
+
+
 
         /*
         /// <summary>
@@ -746,7 +1031,7 @@ namespace AULWriter
             try
             {
                 saveConfigToFile();
-                richTxtLog.AppendText("配置保存成功");
+                richTxtLog.AppendText("配置保存成功：" + configFilePath);
                 //MessageBox.Show("配置保存成功");
             }
             catch (Exception ex)
@@ -755,7 +1040,7 @@ namespace AULWriter
             }
         }
 
-        private string configFilePath = Application.StartupPath + "\\config\\config.xml";
+
 
         private void saveConfigToFile()
         {
@@ -950,7 +1235,7 @@ namespace AULWriter
         List<string> DiffList = new List<string>();
 
         /// <summary>
-        /// 
+        /// 这个方法被AI重写了。这里是正确的。AI的要检查验证
         /// </summary>
         /// <param name="targetXmlFilePath"></param>
         /// <param name="sourceFolder"></param>
@@ -971,26 +1256,30 @@ namespace AULWriter
                     versionElement.Value = txtBaseExeVersion.Text; // 替换为您想要设置的新值
                 }
             }
-
+            //来自NAS的发布目标中现有的文件中的清单文件数量
             string[] files = txtPreVerUpdatedFiles.Text.Split(new string[] { "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
 
             //排序
             Array.Sort(files);
             List<string> list = files.ToList();
-            foreach (XElement fileElement in doc.Descendants("File"))
+            var XElementFiles = doc.Descendants("File");
+            foreach (XElement fileElement in XElementFiles)
             {
                 string fileName = fileElement.Attribute("Name").Value;
                 if (list.Count > 0 && !list.Contains(fileName))
                 {
                     // 如果文件不在新文件列表中，删除该文件
-                   // fileElement.Remove();
-                   //这个情况暂时是版本号不变。也就是不更新。
+                    // fileElement.Remove();
+                    //这个情况暂时是版本号不变。也就是不更新。
                 }
                 //如果文件在排除列表中也移除
-                if(ExcludeUnnecessaryFiles(fileName))
+                if (ExcludeUnnecessaryFiles(fileName))
                 {
                     //fileElement.Remove();
+                    continue;
                     //这个情况暂时是版本号不变。也就是不更新。  移除会导致xml文件结构破坏
+                    //如果是第一次则是不参与生成
+
                 }
 
                 if (FileComparison)
@@ -1116,16 +1405,7 @@ namespace AULWriter
             }
         }
 
-        /// <summary>
-        /// 版本号加1
-        /// </summary>
-        /// <param name="version"></param>
-        private void IncrementVersion(ref string version)
-        {
-            var parts = version.Split('.');
-            parts[3] = (int.Parse(parts[3]) + 1).ToString();
-            version = string.Join(".", parts);
-        }
+
 
         #endregion
 
@@ -1400,10 +1680,40 @@ namespace AULWriter
                 txtPreVerUpdatedFiles.AppendText(filename + "\r\n");
             }
 
-
+            rtbOld.Text = doc.ToString();
         }
 
 
     }
+
+
+    #region 辅助类
+    public class UpdateXmlResult
+    {
+        public XDocument Document { get; set; }
+        public List<string> DiffList { get; set; }
+    }
+
+
+    public class UpdateXmlParameters
+    {
+        public string TargetXmlFilePath { get; set; }
+        public string SourceFolder { get; set; }
+        public string TargetFolder { get; set; }
+        public bool FileComparison { get; set; }
+        public bool UseBaseVersion { get; set; }
+        public string BaseExeVersion { get; set; }
+        public List<string> PreVerUpdatedFiles { get; set; }
+        public Func<string, bool> ExcludeUnnecessaryFiles { get; set; }
+    }
+
+    public class ProgressData
+    {
+        public int TotalFiles { get; set; }
+        public int Processed { get; set; }
+        public List<string> DiffItems { get; set; }
+    }
+    #endregion
+
 
 }

@@ -496,7 +496,9 @@ namespace AutoUpdate
             else
             {
                 this.Visible = false;
-                StartEntryPointExe(NewVersion);
+   
+
+                StartEntryPointExe(NewVersion );
                 this.Close();
             }
             //else
@@ -1015,6 +1017,39 @@ namespace AutoUpdate
             System.Diagnostics.Process.Start(linkLabel1.Text);
         }
 
+
+        public (string Version, DateTime LastUpdateTime, string url) ParseXmlInfo(string xmlFilePath)
+        {
+            try
+            {
+                var doc = XDocument.Load(xmlFilePath);
+
+                // 获取Application版本
+                var version = doc.Descendants("Application")
+                                .Elements("Version")
+                                .FirstOrDefault()?.Value;
+
+                // 获取最后更新时间
+                var lastUpdate = doc.Descendants("LastUpdateTime")
+                                    .FirstOrDefault()?.Value;
+
+                // 获取最后更新时间
+                var url = doc.Descendants("Url")
+                                    .FirstOrDefault()?.Value;
+
+
+                DateTime.TryParse(lastUpdate, out var lastUpdateTime);
+
+                return (version, lastUpdateTime, url);
+            }
+            catch (Exception ex)
+            {
+                // 添加异常处理
+                MessageBox.Show($"解析XML失败: {ex.Message}");
+                return (null, DateTime.MinValue, null);
+            }
+        }
+
         /// <summary>
         /// 保留最多最新的版本数量
         /// </summary>
@@ -1026,7 +1061,15 @@ namespace AutoUpdate
         {
             LastCopy();
             Thread.Sleep(500);
+            // 解析现有配置文件
+            var (version, updateTime, url) = ParseXmlInfo("AutoUpdaterList.xml");
+
+            // 显示结果
+            Console.WriteLine($"当前版本: {version}");
+            Console.WriteLine($"最后更新时间: {updateTime:yyyy-MM-dd}");
+
             StartEntryPointExe(NewVersion);
+
             mainResult = 0;
             this.Close();
             this.Dispose();
@@ -1110,7 +1153,7 @@ namespace AutoUpdate
                 //Process.Start(p);
             }
 
-           
+
 
             //全部更新完成后。配置文件也要更新过来
             File.Copy(serverXmlFile, localXmlFile, true);
@@ -1512,6 +1555,11 @@ namespace AutoUpdate
             //return;
             if (System.IO.File.Exists(mainAppExe))
             {
+
+
+
+
+
                 //Process.Start(mainAppExe);
                 // 要传递给程序的参数
                 string arguments = tempUpdatePath;

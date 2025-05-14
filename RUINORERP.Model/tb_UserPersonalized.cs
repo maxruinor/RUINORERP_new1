@@ -122,6 +122,22 @@ namespace RUINORERP.Model
             }
         }
 
+        private bool? _SelectTemplatePrint = false;
+        /// <summary>
+        /// 选择模板打印
+        /// </summary>
+        [AdvQueryAttribute(ColName = "SelectTemplatePrint", ColDesc = "选择模板打印")]
+        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType = "Boolean", ColumnName = "SelectTemplatePrint", IsNullable = true, ColumnDescription = "选择模板打印")]
+        public bool? SelectTemplatePrint
+        {
+            get { return _SelectTemplatePrint; }
+            set
+            {
+                SetProperty(ref _SelectTemplatePrint, value);
+            }
+        }
+
+
         #endregion
 
         #region 扩展属性

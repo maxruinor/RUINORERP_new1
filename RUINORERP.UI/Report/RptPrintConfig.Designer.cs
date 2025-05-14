@@ -103,6 +103,7 @@
             // kryptonSplitContainer1.Panel2
             // 
             this.kryptonSplitContainer1.Panel2.Controls.Add(this.GroupBoxSelectPrinter);
+            this.kryptonSplitContainer1.Panel2.Controls.Add(this.btnPrinter);
             this.kryptonSplitContainer1.Panel2.Controls.Add(this.chkSelectPrinter);
             this.kryptonSplitContainer1.Panel2.Controls.Add(this.btnDesign);
             this.kryptonSplitContainer1.Panel2.Controls.Add(this.btnExit);
@@ -252,8 +253,7 @@
             // GroupBoxSelectPrinter.Panel
             // 
             this.GroupBoxSelectPrinter.Panel.Controls.Add(this.cmbPrinterList);
-            this.GroupBoxSelectPrinter.Panel.Controls.Add(this.btnPrinter);
-            this.GroupBoxSelectPrinter.Size = new System.Drawing.Size(535, 57);
+            this.GroupBoxSelectPrinter.Size = new System.Drawing.Size(442, 57);
             this.GroupBoxSelectPrinter.TabIndex = 11;
             this.GroupBoxSelectPrinter.Values.Heading = "默认打印机设置";
             // 
@@ -268,7 +268,7 @@
             // 
             // btnPrinter
             // 
-            this.btnPrinter.Location = new System.Drawing.Point(438, 5);
+            this.btnPrinter.Location = new System.Drawing.Point(472, 128);
             this.btnPrinter.Name = "btnPrinter";
             this.btnPrinter.Size = new System.Drawing.Size(90, 25);
             this.btnPrinter.TabIndex = 10;

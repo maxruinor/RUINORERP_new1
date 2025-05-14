@@ -77,6 +77,7 @@ using RUINORERP.UI.ClientCmdService;
 using RUINORERP.Global;
 using TransInstruction.CommandService;
 using HLH.Lib.Security;
+using System.Xml.Linq;
 
 
 
@@ -89,7 +90,7 @@ namespace RUINORERP.UI
     {
 
 
-        
+
 
         //IOptions<T> 提供对配置设置的单例访问。它在整个应用程序生命周期中保持相同的实例，这意味着即使在配置文件更改后，通过 IOptions<T> 获取的值也不会改变
         //。
@@ -528,6 +529,42 @@ namespace RUINORERP.UI
 
         }
 
+        public (string Version, DateTime LastUpdateTime, string url) ParseXmlInfo(string xmlFilePath)
+        {
+            try
+            {
+                var doc = XDocument.Load(xmlFilePath);
+
+                // 获取Application版本
+                var version = doc.Descendants("Application")
+                                .Elements("Version")
+                                .FirstOrDefault()?.Value;
+
+                // 获取最后更新时间
+                var lastUpdate = doc.Descendants("LastUpdateTime")
+                                    .FirstOrDefault()?.Value;
+
+                // 获取最后更新时间
+                var url = doc.Descendants("Url")
+                                    .FirstOrDefault()?.Value;
+
+
+                DateTime.TryParse(lastUpdate, out var lastUpdateTime);
+
+                return (version, lastUpdateTime, url);
+            }
+            catch (Exception ex)
+            {
+                // 添加异常处理
+                //MessageBox.Show($"解析XML失败: {ex.Message}");
+                return (null, DateTime.MinValue, null);
+            }
+        }
+
+        #region 客户端版本 更新 配置情况
+
+        #endregion
+
         private async void MainForm_Load(object sender, EventArgs e)
         {
 
@@ -758,6 +795,26 @@ namespace RUINORERP.UI
                 PrintInfoLog("本位币别查询完成。");
 
                 #endregion
+
+
+                try
+                {
+                    //读取更新版本的文件配置情况。通过心跳回到服务器上去 
+                    // 解析现有配置文件
+                    var (version, updateTime, url) = ParseXmlInfo("AutoUpdaterList.xml");
+                    // 显示结果
+                    Console.WriteLine($"当前版本: {version}");
+                    Console.WriteLine($"最后更新时间: {updateTime:yyyy-MM-dd}");
+
+                    MainForm.Instance.AppContext.CurrentUser.客户端版本 = version + "-" + updateTime;
+
+                }
+                catch (Exception)
+                {
+
+                }
+                finally { }
+
 
             });
 
@@ -1037,7 +1094,7 @@ namespace RUINORERP.UI
                         foreach (tb_P4Menu P4Menu in item.tb_P4Menus.Where(c => c.IsVisble).ToList())
                         {
                             //不重复
-                            if (!tempList.Contains(P4Menu.tb_menuinfo)  )
+                            if (!tempList.Contains(P4Menu.tb_menuinfo))
                             {
                                 tempList.Add(P4Menu.tb_menuinfo);
                             }
@@ -1073,7 +1130,7 @@ namespace RUINORERP.UI
 
                             }
                         }
-                   
+
                     }
                     kryptonNavigator1.Pages.Add(p);
                 }
@@ -1082,7 +1139,7 @@ namespace RUINORERP.UI
             {
                 foreach (tb_ModuleDefinition item in AppContext.CurUserInfo.UserModList)
                 {
-                    if (!item.Visible) continue ;
+                    if (!item.Visible) continue;
 
                     // Create new page with title and image
                     KryptonPage p = new KryptonPage();

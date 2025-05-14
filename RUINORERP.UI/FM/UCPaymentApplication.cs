@@ -119,12 +119,12 @@ namespace RUINORERP.UI.FM
 
             DataBindingHelper.BindData4CheckBox<tb_FM_PaymentApplication>(entity, t => t.IsAdvancePayment, chkIsAdvancePayment, false);
             DataBindingHelper.BindData4TextBox<tb_FM_PaymentApplication>(entity, t => t.PrePaymentBill_id, txtPrePaymentBill_id, BindDataType4TextBox.Qty, false);
-            DataBindingHelper.BindData4TextBox<tb_FM_PaymentApplication>(entity, t => t.PayReasonItems, txtPayReasonItems, BindDataType4TextBox.Text, false);
+            DataBindingHelper.BindData4TextBox<tb_FM_PaymentApplication>(entity, t => t.PayReasonItems, txtPayReasonItems, BindDataType4TextBox.Text, true);
             DataBindingHelper.BindData4DataTime<tb_FM_PaymentApplication>(entity, t => t.InvoiceDate, dtpInvoiceDate, false);
 
             DataBindingHelper.BindData4TextBox<tb_FM_PaymentApplication>(entity, t => t.Notes, txtNotes, BindDataType4TextBox.Text, false);
-            DataBindingHelper.BindData4TextBox<tb_FM_PaymentApplication>(entity, t => t.TotalAmount.ToString(), txtTotalAmount, BindDataType4TextBox.Money, false);
-            DataBindingHelper.BindData4TextBox<tb_FM_PaymentApplication>(entity, t => t.OverpaymentAmount.ToString(), txtOverpaymentAmount, BindDataType4TextBox.Money, false);
+            DataBindingHelper.BindData4TextBox<tb_FM_PaymentApplication>(entity, t => t.TotalAmount.ToString(), txtTotalAmount, BindDataType4TextBox.Money, true);
+            DataBindingHelper.BindData4TextBox<tb_FM_PaymentApplication>(entity, t => t.OverpaymentAmount.ToString(), txtOverpaymentAmount, BindDataType4TextBox.Money, true);
 
             DataBindingHelper.BindData4TextBox<tb_FM_PaymentApplication>(entity, t => t.ApprovalOpinions, txtApprovalOpinions, BindDataType4TextBox.Text, false);
 
@@ -310,11 +310,45 @@ namespace RUINORERP.UI.FM
 
         protected async override Task<bool> Save(bool NeedValidated)
         {
+            //为了验证 付款原因。直接点保存丢失的问题。使用了下面所有方法。都不行。只能在绑定时用同步 实时更新 ture
+            // 强制焦点离开当前控件以触发验证
+            if (this.ActiveControl != null && this.ActiveControl is TextBoxBase)
+            {
+                var previousControl = this.ActiveControl;
+                this.ActiveControl = null; // 移出焦点
+                this.ActiveControl = previousControl; // 可选：恢复焦点
+            }
+
+            var hasErrors = false;
+            foreach (Control control in kryptonPanel1.Controls)
+            {
+                if (!string.IsNullOrEmpty(errorProviderForAllInput.GetError(control)))
+                {
+                    hasErrors = true;
+                    break;
+                }
+            }
+            if (hasErrors)
+            {
+                MessageBox.Show("存在无效输入，请检查错误提示！");
+                return false;
+            }
+
+            // 手动强制所有绑定更新到数据源
+            foreach (Control control in kryptonPanel1.Controls)
+            {
+                foreach (Binding binding in control.DataBindings)
+                {
+                    binding.WriteValue(); // 强制写入数据源
+                }
+            }
+
+            //操作前将数据收集
+            this.ValidateChildren(System.Windows.Forms.ValidationConstraints.None);
             if (EditEntity == null)
             {
                 return false;
             }
-
             var eer = errorProviderForAllInput.GetError(txtTotalAmount);
 
             if (EditEntity.ActionStatus == ActionStatus.新增 || EditEntity.ActionStatus == ActionStatus.修改)

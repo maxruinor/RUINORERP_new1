@@ -8,7 +8,6 @@ using System.Xml.Linq;
 
 namespace AutoUpdateTools.XmlCompare
 {
-
     /// <summary>
     /// 高级XML差异比较器 (优化版)
     /// </summary>

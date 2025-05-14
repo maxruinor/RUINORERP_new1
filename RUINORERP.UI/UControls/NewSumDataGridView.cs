@@ -1,6 +1,7 @@
 ﻿using FastReport.DevComponents.DotNetBar.Controls;
 using Krypton.Toolkit;
 using Newtonsoft.Json;
+using NPOI.SS.Formula.Functions;
 using NPOI.Util;
 using RUINORERP.Common.Extensions;
 using RUINORERP.Common.Helper;
@@ -114,11 +115,110 @@ namespace RUINORERP.UI.UControls
             get { return _UseSelectedColumn; }
             set
             {
-                _UseSelectedColumn = value;
-                SetSelectedColumn(_UseSelectedColumn);
+                if (_UseSelectedColumn != value)
+                {
+                    _UseSelectedColumn = value;
+                    SetSelectedColumn(value);
+                    // 触发列显示状态更新
+                    BindColumnStyle();
+                }
+            }
+        }
+        #region 实现右键多选菜单
+
+        private bool _headerMenuShown = false; // 标记是否显示行头菜单
+
+        //保存实际业务右键菜单
+        ContextMenuStrip HolderMenu = new ContextMenuStrip();
+        ContextMenuStrip headerMenu = new ContextMenuStrip();
+        protected override void OnCellMouseDown(DataGridViewCellMouseEventArgs e)
+        {
+            base.OnCellMouseDown(e);
+            if (HolderMenu.Items.Count == 0)
+            {
+                HolderMenu = this.ContextMenuStrip;
+            }
+
+            // 处理左上角行头右键点击
+            if (e.RowIndex == -1 && e.ColumnIndex == -1 && e.Button == MouseButtons.Right)
+            {
+                var headerMenu = BuildHeaderMenu();
+                this.ContextMenuStrip = headerMenu;
+                ShowHeaderContextMenu(headerMenu, e.Location);
+                _headerMenuShown = true;
+            }
+            else
+            {
+                this.ContextMenuStrip = HolderMenu;
+                _headerMenuShown = false;
             }
         }
 
+
+        protected override void OnMouseDown(MouseEventArgs e)
+        {
+            base.OnMouseDown(e);
+            if (!_headerMenuShown && HolderMenu.Items.Count > 0)
+            {
+                this.ContextMenuStrip = HolderMenu;
+            }
+        }
+
+        private ContextMenuStrip BuildHeaderMenu()
+        {
+            if (headerMenu.Items.Count > 0)
+            {
+                return headerMenu;
+            }
+
+            // 创建带复选框的菜单项
+            ToolStripMenuItem multiSelectItem = new ToolStripMenuItem("多选模式")
+            {
+                CheckOnClick = true,
+                Checked = this.UseSelectedColumn
+            };
+
+            multiSelectItem.Click += (sender, e) =>
+            {
+                this.UseSelectedColumn = ((ToolStripMenuItem)sender).Checked;
+                MultiSelect = UseSelectedColumn;
+                //((ToolStripMenuItem)sender).Checked = this.UseSelectedColumn;
+            };
+            // 添加其他行头相关菜单项...
+            headerMenu.Items.Add(multiSelectItem);
+            return headerMenu;
+        }
+
+
+        private void ShowHeaderContextMenu(ContextMenuStrip headerMenu, Point screenPos)
+        {
+
+            //// 显示菜单前隐藏默认菜单
+            //this.ContextMenuStrip?.Hide();
+
+            //// 显示自定义菜单
+            //headerMenu.Show(screenPos);
+        }
+
+        protected override void OnMouseUp(MouseEventArgs e)
+        {
+            // 如果显示了行头菜单，则阻止默认右键菜单
+            if (!_headerMenuShown)
+            {
+                base.OnMouseUp(e);
+            }
+            _headerMenuShown = false; // 重置标记
+        }
+        private bool _headerMenuActive;
+
+        protected override void OnMouseLeave(EventArgs e)
+        {
+            _headerMenuActive = false;
+            base.OnMouseLeave(e);
+        }
+
+
+        #endregion
 
         private void SetSelectedColumn(bool _UseSelectedColumns)
         {
@@ -288,6 +388,15 @@ namespace RUINORERP.UI.UControls
         //[Designer(typeof(MyDesigner))]
         public NewSumDataGridView()
         {
+            // 启用双缓冲
+            this.DoubleBuffered = true;
+            // 在构造函数中添加
+            this.RowHeadersWidthSizeMode = DataGridViewRowHeadersWidthSizeMode.AutoSizeToAllHeaders;
+            this.TopLeftHeaderCell.Style.BackColor = Color.LightGray;
+            this.TopLeftHeaderCell.ToolTipText = "点击右键显示设置多选模式设置菜单";
+
+
+
             base.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.ColumnWidthChanged += new DataGridViewColumnEventHandler(this_ColumnWidthChanged);
             this.DataSourceChanged += new EventHandler(this_DataSourceChanged);
@@ -584,10 +693,8 @@ namespace RUINORERP.UI.UControls
         /// </summary>
         public void BindColumnStyle()
         {
-            if (Columns.Count == 0)
-            {
-                return;
-            }
+            if (this.Columns == null || this.Columns.Count == 0) return;
+
             //foreach (var item in InvisibleCols)
             //{
             //    ColumnDisplayController cdcInv = ColumnDisplays.Where(c => c.ColName == item).FirstOrDefault();
@@ -601,6 +708,22 @@ namespace RUINORERP.UI.UControls
             if (cdc != null)
             {
                 cdc.Disable = !UseSelectedColumn;
+                cdc.Visible = UseSelectedColumn;
+            }
+            else
+            {
+                if (UseSelectedColumn)
+                {
+                    ColumnDisplays.Add(new ColDisplayController()
+                    {
+                        ColName = "Selected",
+                        ColDisplayIndex = 0,
+                        ColDisplayText = "选择",
+                        ColWidth = 50,
+                        Disable = !UseSelectedColumn,
+                        Visible = UseSelectedColumn
+                    });
+                }
             }
             //加载列样式
             foreach (ColDisplayController displayController in ColumnDisplays)
@@ -1220,6 +1343,12 @@ namespace RUINORERP.UI.UControls
         {
             // 创建新的上下文菜单
             ContextMenuStrip newContextMenuStrip = new ContextMenuStrip();
+
+            // 添加条件：不在行头区域时才显示常规菜单项
+            if (_headerMenuShown)
+            {
+                return new ContextMenuStrip();
+            }
             newContextMenuStrip.BackColor = Color.FromArgb(192, 255, 255);
 
             // 合并传入的菜单项
@@ -2051,6 +2180,7 @@ namespace RUINORERP.UI.UControls
         /// </summary>
         private void InitScrollWithSourceGrid()
         {
+            if (DesignMode) return;
             //如果没有使用合计功能 跳出来。
             if (!IsShowSumRow)
             {

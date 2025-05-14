@@ -69,7 +69,7 @@ namespace RUINORERP.UI.CRM
             }
             if (
                (rowInfo.tb_CRM_FollowUpPlanses != null && rowInfo.tb_CRM_FollowUpPlanses.Count > 0)
-                || (rowInfo.tb_CRM_FollowUpRecordses != null && rowInfo.tb_CRM_FollowUpRecordses.Count > 0) 
+                || (rowInfo.tb_CRM_FollowUpRecordses != null && rowInfo.tb_CRM_FollowUpRecordses.Count > 0)
                 || rowInfo.CustomerStatus != (int)CustomerStatus.新增客户)
             {
                 //只能删除自己的信息。
@@ -98,15 +98,19 @@ namespace RUINORERP.UI.CRM
         private void UCCRMCustomerList_Load(object sender, EventArgs e)
         {
             //base.dataGridView1.Use是否使用内置右键功能 = false;
-            ContextMenuStrip newContextMenuStrip = base.dataGridView1.GetContextMenu(contextMenuStrip1);
-            base.dataGridView1.ContextMenuStrip = newContextMenuStrip;
+
 
             if (CurMenuInfo.CaptionCN.Contains("公海客户"))
             {
                 toolStripButtonAdd.Visible = false;
                 toolStripButtonDelete.Visible = false;
             }
-
+            else
+            {
+                //目标客户才可以转
+                ContextMenuStrip newContextMenuStrip = base.dataGridView1.GetContextMenu(contextMenuStrip1);
+                base.dataGridView1.ContextMenuStrip = newContextMenuStrip;
+            }
             AddExtendButton(CurMenuInfo);
 
         }
@@ -340,7 +344,15 @@ namespace RUINORERP.UI.CRM
                 toolStripButton分配.Image = global::RUINORERP.UI.Properties.Resources.Assignment;
                 toolStripButton分配.ImageTransparentColor = System.Drawing.Color.Magenta;
                 toolStripButton分配.Name = "分配AssignmentToBizEmp";
-                toolStripButton分配.Visible = false;//默认隐藏
+                if (MainForm.Instance.AppContext.IsSuperUser)
+                {
+                    toolStripButton分配.Visible = true;//默认
+                }
+                else
+                {
+                    toolStripButton分配.Visible = false;//默认隐藏
+                }
+                
                 UIHelper.ControlButton(CurMenuInfo, toolStripButton分配);
                 toolStripButton分配.ToolTipText = "分配给指定业务员。";
                 toolStripButton分配.Click += new System.EventHandler(this.toolStripButton分配_Click);
@@ -356,7 +368,15 @@ namespace RUINORERP.UI.CRM
                 toolStripButton回收.Image = global::RUINORERP.UI.Properties.Resources.reset;
                 toolStripButton回收.ImageTransparentColor = System.Drawing.Color.Magenta;
                 toolStripButton回收.Name = "回收RecyclingToHighSeas";
-                toolStripButton回收.Visible = false;//默认隐藏
+         
+                if (MainForm.Instance.AppContext.IsSuperUser)
+                {
+                    toolStripButton回收.Visible = true;//默认
+                }
+                else
+                {
+                    toolStripButton回收.Visible = false;//默认隐藏
+                }
                 UIHelper.ControlButton(CurMenuInfo, toolStripButton回收);
                 toolStripButton回收.ToolTipText = "回收到公海。";
                 toolStripButton回收.Click += new System.EventHandler(this.toolStripButton回收_Click);

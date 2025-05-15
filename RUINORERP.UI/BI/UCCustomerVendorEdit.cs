@@ -331,9 +331,9 @@ namespace RUINORERP.UI.BI
             .Where(c => c.Customer_id == entity.Customer_id)
             .SingleAsync();
 
-            IMapper mapper = AutoMapperConfig.RegisterMappings().CreateMapper();
-            mapper.Map(crmCustomer, entity);  // 直接将 crmLeads 的值映射到传入的 entity 对象上，保持了引用
-                                              // entity = mapper.Map<tb_CRM_Customer>(crmLeads);//这个是直接重新生成了对象。
+          
+            MainForm.Instance.mapper.Map(crmCustomer, entity);  // 直接将 crmLeads 的值映射到传入的 entity 对象上，保持了引用
+                                                                // entity = mapper.Map<tb_CRM_Customer>(crmLeads);//这个是直接重新生成了对象。
             entity.ActionStatus = ActionStatus.新增;
 
             List<string> tipsMsg = new List<string>();

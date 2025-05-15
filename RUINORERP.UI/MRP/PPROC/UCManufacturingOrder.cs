@@ -472,10 +472,10 @@ namespace RUINORERP.UI.MRP.MP
             if (RowDetails != null)
             {
                 List<tb_ManufacturingOrderDetail> details = new List<tb_ManufacturingOrderDetail>();
-                IMapper mapper = AutoMapperConfig.RegisterMappings().CreateMapper();
+                
                 foreach (var item in RowDetails)
                 {
-                    tb_ManufacturingOrderDetail Detail = mapper.Map<tb_ManufacturingOrderDetail>(item);
+                    tb_ManufacturingOrderDetail Detail = MainForm.Instance.mapper.Map<tb_ManufacturingOrderDetail>(item);
                     details.Add(Detail);
                 }
                 sgh.InsertItemDataToGrid<tb_ManufacturingOrderDetail>(grid1, sgd, details, c => c.ProdDetailID, position);

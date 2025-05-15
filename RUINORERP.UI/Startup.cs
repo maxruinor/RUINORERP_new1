@@ -800,7 +800,7 @@ namespace RUINORERP.UI
             //services.AddTransient<BaseController, AuthorizeController>();
 
             //  services.AddSingleton(typeof(AutoMapperConfig));
-            // IMapper mapper = AutoMapperConfig.RegisterMappings().CreateMapper();
+            // 
             //services.AddScoped<IMapper, Mapper>();
             //services.AddSingleton<IMapper>(mapper);
 

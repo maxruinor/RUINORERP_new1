@@ -73,7 +73,7 @@ namespace RUINORERP.UI.FM
         //    BindData(Entity as tb_FM_ExpenseClaim);
         //}
         public override void BindData(tb_FM_ExpenseClaim entity, ActionStatus actionStatus)
-        {
+            {
 
             if (entity == null)
             {
@@ -91,12 +91,14 @@ namespace RUINORERP.UI.FM
             else
             {
                 entity.ActionStatus = ActionStatus.新增;
-
                 entity.DataStatus = (int)DataStatus.草稿;
+                //默认优化报销自己
                 if (MainForm.Instance.AppContext.CurUserInfo.UserInfo.tb_employee != null)
                 {
                     entity.Employee_ID = MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID.Value;
+                    EditEntity.Employee_ID = entity.Employee_ID;
                 }
+
                 entity.DocumentDate = System.DateTime.Now;
                 if (CurMenuInfo != null)
                 {
@@ -104,15 +106,14 @@ namespace RUINORERP.UI.FM
                 }
 
                 //新增时，默认币别为人民币
-
+                //cmbCurrency_ID.SelectedIndex = 1;//默认第一个人民币
+                entity.Currency_ID = MainForm.Instance.AppContext.BaseCurrency.Currency_ID;
             }
 
-
+            DataBindingHelper.BindData4Cmb<tb_Employee>(entity, k => k.Employee_ID, v => v.Employee_Name, cmbEmployee_ID);
             DataBindingHelper.BindData4TextBox<tb_FM_ExpenseClaim>(entity, t => t.ClaimNo, txtClaimNo, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4Cmb<tb_Currency>(entity, k => k.Currency_ID, v => v.CurrencyName, cmbCurrency_ID);
             DataBindingHelper.BindData4Cmb<tb_FM_PayeeInfo>(entity, k => k.PayeeInfoID, v => v.Account_name, cmbPayeeInfoID, c => c.Employee_ID.HasValue && c.Employee_ID.Value == entity.Employee_ID);
-            DataBindingHelper.BindData4Cmb<tb_Employee>(entity, k => k.Employee_ID, v => v.Employee_Name, cmbEmployee_ID);
-            cmbCurrency_ID.SelectedIndex = 1;//默认第一个人民币
             DataBindingHelper.BindData4DataTime<tb_FM_ExpenseClaim>(entity, t => t.DocumentDate, dtpDocumentDate, false);
             DataBindingHelper.BindData4TextBox<tb_FM_ExpenseClaim>(entity, t => t.ClaimAmount.ToString(), txtClaimlAmount, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4TextBox<tb_FM_ExpenseClaim>(entity, t => t.ApprovedAmount.ToString(), txtApprovedAmount, BindDataType4TextBox.Money, false);
@@ -124,9 +125,10 @@ namespace RUINORERP.UI.FM
             DataBindingHelper.BindData4TextBox<tb_FM_ExpenseClaim>(entity, t => t.ApprovalOpinions, txtApprovalOpinions, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4CheckBox<tb_FM_ExpenseClaim>(entity, t => t.ApprovalResults, chkApprovalResults, false);
             DataBindingHelper.BindData4TextBox<tb_FM_ExpenseClaim>(entity, t => t.CloseCaseOpinions, txtCloseCaseOpinions, BindDataType4TextBox.Text, false);
-
             DataBindingHelper.BindData4ControlByEnum<tb_FM_ExpenseClaim>(entity, t => t.DataStatus, lblDataStatus, BindDataType4Enum.EnumName, typeof(Global.DataStatus));
             DataBindingHelper.BindData4ControlByEnum<tb_FM_ExpenseClaim>(entity, t => t.ApprovalStatus, lblReview, BindDataType4Enum.EnumName, typeof(Global.ApprovalStatus));
+          
+
             //后面这些依赖于控件绑定的数据源和字段。所以要在绑定后执行。
             if (entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改)
             {
@@ -134,28 +136,8 @@ namespace RUINORERP.UI.FM
                 //UIBaseTool uIBaseTool = new();
                 //uIBaseTool.CurMenuInfo = CurMenuInfo;
                 //uIBaseTool.AddEditableQueryControl<tb_Employee>(cmbEmployee_ID, false);
-
-
-                #region 收款信息可以根据报销人带出 ，并且可以添加
-
-                //创建表达式
-                var lambda = Expressionable.Create<tb_FM_PayeeInfo>()
-                                .And(t => t.Is_enabled == true)
-                                .And(t => t.Employee_ID == AppContext.CurUserInfo.UserInfo.Employee_ID)//限制了只能处理自己 的收款信息
-                                .ToExpression();//注意 这一句 不能少
-
-                BaseProcessor baseProcessor = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_FM_PayeeInfo).Name + "Processor");
-                QueryFilter queryFilterC = baseProcessor.GetQueryFilter();
-                queryFilterC.FilterLimitExpressions.Add(lambda);
-                //DataBindingHelper.BindData4Cmb<tb_CustomerVendor>(entity, k => k.CustomerVendor_ID, v => v.CVName, cmbCustomerVendor_ID, queryFilterC.GetFilterExpression<tb_CustomerVendor>(), true);
-                DataBindingHelper.InitFilterForControlByExpCanEdit<tb_FM_PayeeInfo>(entity, cmbPayeeInfoID, c => c.Account_name, queryFilterC, true);
-
-
-                #endregion
-
-
-                #region 报销人
-
+                LoadPayeeInfo(entity);
+                #region 报销人 可以选择 可以添加
                 var lambdaEmp = Expressionable.Create<tb_Employee>()
                                 .And(t => t.Is_enabled == true)
                                 .ToExpression();
@@ -164,24 +146,7 @@ namespace RUINORERP.UI.FM
                 queryFilterEmp.FilterLimitExpressions.Add(lambdaEmp);
                 DataBindingHelper.InitFilterForControlByExpCanEdit<tb_Employee>(entity, cmbEmployee_ID, c => c.Employee_Name, queryFilterEmp, true);
 
-
                 #endregion
-
-
-                if (MainForm.Instance.AppContext.CurUserInfo.UserInfo.tb_employee != null)
-                {
-                    entity.Employee_ID = MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID.Value;
-                    EditEntity.Employee_ID = entity.Employee_ID;
-                    /*
-                       var obj = BizCacheHelper.Instance.GetEntity(nameof(tb_Employee), entity.Employee_ID);
-                       if (obj != null)
-                       {
-                           var emp = obj as tb_Employee;
-                           cmbEmployee_ID.SelectedIndex = cmbEmployee_ID.FindStringExact(emp.Employee_Name);
-                       }
-                      */
-                }
-
             }
             else
             {
@@ -233,7 +198,7 @@ namespace RUINORERP.UI.FM
                 }
                 sgh.LoadItemDataToGrid<tb_FM_ExpenseClaimDetail>(grid1, sgd, entity.tb_FM_ExpenseClaimDetails, c => c.ClaimSubID);
                 // 模拟按下 Tab 键
-                SendKeys.Send("{TAB}");//为了显示远程图片列
+                    SendKeys.Send("{TAB}");//为了显示远程图片列
             }
             else
             {
@@ -248,6 +213,11 @@ namespace RUINORERP.UI.FM
                 {
                     EditEntity.ActionStatus = ActionStatus.修改;
                 }
+                if (entity.Employee_ID > 0 && s2.PropertyName == entity.GetPropertyName<tb_FM_ExpenseClaim>(c => c.Employee_ID))
+                {
+                    LoadPayeeInfo(entity);
+                }
+
                 //如果报销人有变化，带出对应的收款方式
                 if (entity.PayeeInfoID > 0 && s2.PropertyName == entity.GetPropertyName<tb_FM_ExpenseClaim>(c => c.PayeeInfoID))
                 {
@@ -279,7 +249,6 @@ namespace RUINORERP.UI.FM
                     }
                 }
 
-
                 base.ToolBarEnabledControl(entity);
 
             };
@@ -305,6 +274,28 @@ namespace RUINORERP.UI.FM
             LoadImageData(entity.CloseCaseImagePath);
             base.BindData(entity);
         }
+
+
+        private void LoadPayeeInfo(tb_FM_ExpenseClaim entity)
+        {
+            cmbPayeeInfoID.DataBindings.Clear();
+            DataBindingHelper.BindData4Cmb<tb_FM_PayeeInfo>(entity, k => k.PayeeInfoID, v => v.Account_name, cmbPayeeInfoID, c => c.Employee_ID.HasValue && c.Employee_ID.Value == entity.Employee_ID);
+            #region  收款信息可以根据报销人带出 ，并且可以添加
+
+            //创建表达式
+            var lambda = Expressionable.Create<tb_FM_PayeeInfo>()
+                            .And(t => t.Is_enabled == true)
+                            .And(t => t.Employee_ID == entity.Employee_ID)//限制了只能处理自己 的收款信息
+                            .ToExpression();//注意 这一句 不能少
+
+            BaseProcessor baseProcessor = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_FM_PayeeInfo).Name + "Processor");
+            QueryFilter queryFilterC = baseProcessor.GetQueryFilter();
+            queryFilterC.FilterLimitExpressions.Add(lambda);
+            DataBindingHelper.InitFilterForControlByExpCanEdit<tb_FM_PayeeInfo>(entity, cmbPayeeInfoID, c => c.Account_name, queryFilterC, true);
+
+            #endregion
+        }
+
         private async void LoadImageData(string CloseCaseImagePath)
         {
             if (!string.IsNullOrWhiteSpace(CloseCaseImagePath))

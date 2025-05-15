@@ -650,10 +650,10 @@ namespace RUINORERP.UI.PSI.SAL
             if (RowDetails != null)
             {
                 List<tb_SaleOrderDetail> details = new List<tb_SaleOrderDetail>();
-                IMapper mapper = AutoMapperConfig.RegisterMappings().CreateMapper();
+                
                 foreach (var item in RowDetails)
                 {
-                    tb_SaleOrderDetail Detail = mapper.Map<tb_SaleOrderDetail>(item);
+                    tb_SaleOrderDetail Detail = MainForm.Instance.mapper.Map<tb_SaleOrderDetail>(item);
                     details.Add(Detail);
                 }
                 sgh.InsertItemDataToGrid<tb_SaleOrderDetail>(grid1, sgd, details, c => c.ProdDetailID, position);

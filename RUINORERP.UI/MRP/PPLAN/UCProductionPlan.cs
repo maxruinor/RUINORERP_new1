@@ -340,10 +340,10 @@ namespace RUINORERP.UI.MRP.MP
             if (RowDetails != null)
             {
                 List<tb_ProductionPlanDetail> details = new List<tb_ProductionPlanDetail>();
-                IMapper mapper = AutoMapperConfig.RegisterMappings().CreateMapper();
+
                 foreach (var item in RowDetails)
                 {
-                    tb_ProductionPlanDetail Detail = mapper.Map<tb_ProductionPlanDetail>(item);
+                    tb_ProductionPlanDetail Detail = MainForm.Instance.mapper.Map<tb_ProductionPlanDetail>(item);
                     details.Add(Detail);
                 }
                 sgh.InsertItemDataToGrid<tb_ProductionPlanDetail>(grid1, sgd, details, c => c.ProdDetailID, position);
@@ -847,9 +847,9 @@ namespace RUINORERP.UI.MRP.MP
             //新增时才可以转单
             if (saleorder != null)
             {
-                IMapper mapper = AutoMapperConfig.RegisterMappings().CreateMapper();
-                tb_ProductionPlan entity = mapper.Map<tb_ProductionPlan>(saleorder);
-                List<tb_ProductionPlanDetail> details = mapper.Map<List<tb_ProductionPlanDetail>>(saleorder.tb_SaleOrderDetails);
+
+                tb_ProductionPlan entity = MainForm.Instance.mapper.Map<tb_ProductionPlan>(saleorder);
+                List<tb_ProductionPlanDetail> details = MainForm.Instance.mapper.Map<List<tb_ProductionPlanDetail>>(saleorder.tb_SaleOrderDetails);
                 entity.PlanDate = System.DateTime.Now;
                 List<tb_ProductionPlanDetail> NewDetails = new List<tb_ProductionPlanDetail>();
                 List<string> tipsMsg = new List<string>();

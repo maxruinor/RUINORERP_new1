@@ -84,7 +84,7 @@ namespace RUINORERP.UI.BaseForm
             //dataGridView1.XmlFileName = "Query" + typeof(T).Name;
             //this.dataGridView1.FieldNameList = this.FieldNameList;
             //dataGridView1.ReadOnly = true;
-            ////IMapper mapper = AutoMapperConfig.RegisterMappings().CreateMapper();
+          
             //List<T> list = new List<T>();
             //ListDataSoure.DataSource = list.ToBindingSortCollection();//这句是否能集成到上一层生成
             //dataGridView1.DataSource = ListDataSoure;

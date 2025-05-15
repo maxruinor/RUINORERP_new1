@@ -472,12 +472,12 @@ namespace RUINORERP.UI.MRP.PQC
             }
             if (FinishedGoodsInv != null)
             {
-                IMapper mapper = AutoMapperConfig.RegisterMappings().CreateMapper();
-                tb_MRP_ReworkReturn entity = mapper.Map<tb_MRP_ReworkReturn>(FinishedGoodsInv);
+                
+                tb_MRP_ReworkReturn entity = MainForm.Instance.mapper.Map<tb_MRP_ReworkReturn>(FinishedGoodsInv);
 
                 List<tb_MRP_ReworkReturnDetail> NewDetails = new List<tb_MRP_ReworkReturnDetail>();
                 List<string> tipsMsg = new List<string>();
-                List<tb_MRP_ReworkReturnDetail> details = mapper.Map<List<tb_MRP_ReworkReturnDetail>>(FinishedGoodsInv.tb_FinishedGoodsInvDetails);
+                List<tb_MRP_ReworkReturnDetail> details = MainForm.Instance.mapper.Map<List<tb_MRP_ReworkReturnDetail>>(FinishedGoodsInv.tb_FinishedGoodsInvDetails);
                 for (int i = 0; i < details.Count; i++)
                 {
                     details[i].Quantity = FinishedGoodsInv.TotalQty;

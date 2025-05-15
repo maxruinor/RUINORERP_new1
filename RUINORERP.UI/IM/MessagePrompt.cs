@@ -97,7 +97,7 @@ namespace RUINORERP.UI.IM
             messageTimer.Start();
         }
 
-        public BizTypeMapper mapper { get; set; }
+        public BizTypeMapper Bizmapper { get; set; }
         QueryParameter parameter { get; set; }
 
 
@@ -129,7 +129,7 @@ namespace RUINORERP.UI.IM
         private void btnOk_Click(object sender, EventArgs e)
         {
             //计划提醒，则把要提醒的计划查出条件找到
-            Type tableType = mapper.GetTableType(ReminderData.BizType);
+            Type tableType = Bizmapper.GetTableType(ReminderData.BizType);
             //找到要提醒的数据
             var conModel = new List<IConditionalModel>();
             // conModel.Add(new ConditionalModel { FieldName = "DataStatus", ConditionalType = ConditionalType.Equal, FieldValue = "3", CSharpTypeName = "int" });

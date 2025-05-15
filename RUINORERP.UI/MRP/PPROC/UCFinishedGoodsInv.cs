@@ -353,10 +353,10 @@ namespace RUINORERP.UI.PSI.PUR
             if (RowDetails != null)
             {
                 List<tb_FinishedGoodsInvDetail> details = new List<tb_FinishedGoodsInvDetail>();
-                IMapper mapper = AutoMapperConfig.RegisterMappings().CreateMapper();
+                
                 foreach (var item in RowDetails)
                 {
-                    tb_FinishedGoodsInvDetail bOM_SDetail = mapper.Map<tb_FinishedGoodsInvDetail>(item);
+                    tb_FinishedGoodsInvDetail bOM_SDetail = MainForm.Instance.mapper.Map<tb_FinishedGoodsInvDetail>(item);
                     bOM_SDetail.Qty = 0;
                     details.Add(bOM_SDetail);
                 }
@@ -654,8 +654,8 @@ protected async override Task<ApprovalEntity> ReReview()
                 && SourceBill.QuantityDelivered < SourceBill.ManufacturingQty)
             {
 
-                IMapper mapper = AutoMapperConfig.RegisterMappings().CreateMapper();
-                tb_FinishedGoodsInv entity = mapper.Map<tb_FinishedGoodsInv>(SourceBill);
+                
+                tb_FinishedGoodsInv entity = MainForm.Instance.mapper.Map<tb_FinishedGoodsInv>(SourceBill);
                 entity.MONo = SourceBill.MONO;
                 entity.MOID = SourceBill.MOID;
                 entity.DeliveryDate = System.DateTime.Now;
@@ -676,7 +676,7 @@ protected async override Task<ApprovalEntity> ReReview()
                 //可以多次缴库
                 #region 每行产品ID唯一
 
-                tb_FinishedGoodsInvDetail NewDetail = mapper.Map<tb_FinishedGoodsInvDetail>(SourceBill);
+                tb_FinishedGoodsInvDetail NewDetail = MainForm.Instance.mapper.Map<tb_FinishedGoodsInvDetail>(SourceBill);
 
                 NewDetail.PayableQty = SourceBill.ManufacturingQty - SourceBill.QuantityDelivered;
                 NewDetail.Qty = 0;

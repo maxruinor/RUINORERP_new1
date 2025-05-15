@@ -1764,7 +1764,7 @@ namespace RUINORERP.UI.BaseForm
         protected async void AdvQueryShowResult(bool useLike, BaseEntityDto dto)
         {
             dataGridView1.ReadOnly = true;
-            IMapper mapper = AutoMapperConfig.RegisterMappings().CreateMapper();
+           
             List<T> list = await ctr.BaseQueryByAdvancedNavAsync(useLike, dto);
             //ListDataSoure.DataSource = list.ToBindingSortCollection();//这句是否能集成到上一层生成
             //dataGridView1.DataSource = ListDataSoure;

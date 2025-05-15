@@ -778,10 +778,10 @@ namespace RUINORERP.UI.MRP.MP
             if (RowDetails != null)
             {
                 List<tb_ProductionDemandDetail> details = new List<tb_ProductionDemandDetail>();
-                IMapper mapper = AutoMapperConfig.RegisterMappings().CreateMapper();
+                
                 foreach (var item in RowDetails)
                 {
-                    tb_ProductionDemandDetail Detail = mapper.Map<tb_ProductionDemandDetail>(item);
+                    tb_ProductionDemandDetail Detail = MainForm.Instance.mapper.Map<tb_ProductionDemandDetail>(item);
                     details.Add(Detail);
                 }
                 sghPur.InsertItemDataToGrid<tb_ProductionDemandDetail>(gridPurItems, sgdPur, details, c => c.ProdDetailID, position);
@@ -1289,9 +1289,9 @@ protected async override Task<ApprovalEntity> ReReview()
             //新增时才可以转单
             if (SourceBill != null)
             {
-                IMapper mapper = AutoMapperConfig.RegisterMappings().CreateMapper();
-                tb_ProductionDemand entity = mapper.Map<tb_ProductionDemand>(SourceBill);
-                List<tb_ProductionDemandTargetDetail> details = mapper.Map<List<tb_ProductionDemandTargetDetail>>(SourceBill.tb_ProductionPlanDetails);
+                
+                tb_ProductionDemand entity = MainForm.Instance.mapper.Map<tb_ProductionDemand>(SourceBill);
+                List<tb_ProductionDemandTargetDetail> details = MainForm.Instance.mapper.Map<List<tb_ProductionDemandTargetDetail>>(SourceBill.tb_ProductionPlanDetails);
                 entity.AnalysisDate = System.DateTime.Now;
 
                 List<string> tipsMsg = new List<string>();
@@ -1545,9 +1545,9 @@ protected async override Task<ApprovalEntity> ReReview()
 
 
 
-            IMapper mapper = AutoMapperConfig.RegisterMappings().CreateMapper();
+            
             //将产品详情转换为基本信息列表
-            List<BaseProductInfo> BaseProductInfoList = mapper.Map<List<BaseProductInfo>>(MainForm.Instance.list);
+            List<BaseProductInfo> BaseProductInfoList = MainForm.Instance.mapper.Map<List<BaseProductInfo>>(MainForm.Instance.list);
 
             //合并的实体中有指定的业务主键关联，不然无法给值  TODO:不科学，后面要修改完善！！！数据太多查出来性能不好。
             DataTable dtAll = lastNeedIitems.ToDataTable<BaseProductInfo, tb_ProductionDemandDetail>(BaseProductInfoList, BaseProductInfoColNames, colNames, c => c.ProdDetailID);
@@ -1611,9 +1611,9 @@ protected async override Task<ApprovalEntity> ReReview()
             ConcurrentDictionary<string, string> BaseProductInfoColNames = UIHelper.GetFieldNameList<BaseProductInfo>(true)
                 .exclude<BaseProductInfo>(expressions);
 
-            IMapper mapper = AutoMapperConfig.RegisterMappings().CreateMapper();
+            
             //将产品详情转换为基本信息列表
-            List<BaseProductInfo> BaseProductInfoList = mapper.Map<List<BaseProductInfo>>(MainForm.Instance.list);
+            List<BaseProductInfo> BaseProductInfoList = MainForm.Instance.mapper.Map<List<BaseProductInfo>>(MainForm.Instance.list);
 
             //合并的实体中有指定的业务主键关联，不然无法给值
             DataTable dtAll = lastNeeditems.ToDataTable<BaseProductInfo, tb_ProduceGoodsRecommendDetail>(BaseProductInfoList, BaseProductInfoColNames, colNames, c => c.ProdDetailID);
@@ -1932,8 +1932,8 @@ protected async override Task<ApprovalEntity> ReReview()
             foreach (tb_ProductionDemandDetail target in EditEntity.tb_ProductionDemandDetails.Where(c => c.ParentId == 0).ToList())
             {
                 tb_ProduceGoodsRecommendDetail MakingProd = new tb_ProduceGoodsRecommendDetail();
-                IMapper mapper = AutoMapperConfig.RegisterMappings().CreateMapper();
-                MakingProd = mapper.Map<tb_ProduceGoodsRecommendDetail>(target);
+                
+                MakingProd = MainForm.Instance.mapper.Map<tb_ProduceGoodsRecommendDetail>(target);
                 //要用原始的ID及父ID
                 //long sid = RUINORERP.Common.SnowflakeIdHelper.IdHelper.GetLongId();
                 MakingProd.ID = target.ID;

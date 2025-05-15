@@ -218,7 +218,7 @@ namespace RUINORERP.UI.PSI.PUR
             //转单
             if (order != null)
             {
-                IMapper mapper = RUINORERP.Business.AutoMapper.AutoMapperConfig.RegisterMappings().CreateMapper();
+                
 
                 entity = mapper.Map<tb_PurEntry>(order);
                 List<tb_PurEntryDetail> details = mapper.Map<List<tb_PurEntryDetail>>(order.tb_BuyingRequisitionDetails);

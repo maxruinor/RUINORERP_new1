@@ -809,14 +809,14 @@ namespace RUINORERP.UI
                     Console.WriteLine($"最后更新时间: {updateTime:yyyy-MM-dd}");
                     if (!string.IsNullOrEmpty(version))
                     {
-                        MainForm.Instance.AppContext.CurrentUser.客户端版本 += "-"+version;
+                        MainForm.Instance.AppContext.CurrentUser.客户端版本 += "-" + version;
                     }
-                    
-                        MainForm.Instance.AppContext.CurrentUser.客户端版本 += "-"+updateTime;
-                    
+
+                    MainForm.Instance.AppContext.CurrentUser.客户端版本 += "-" + updateTime;
+
                     if (!string.IsNullOrEmpty(url))
                     {
-                        MainForm.Instance.AppContext.CurrentUser.客户端版本 += "-"+url;
+                        MainForm.Instance.AppContext.CurrentUser.客户端版本 += "-" + url;
                     }
                 }
                 catch (Exception)
@@ -828,10 +828,12 @@ namespace RUINORERP.UI
 
             });
 
-            Mapper = RUINORERP.Business.AutoMapper.AutoMapperConfig.RegisterMappings().CreateMapper();
+            //mapper = RUINORERP.Business.AutoMapper.AutoMapperConfig.RegisterMappings().CreateMapper();
+            //
+            mapper = AppContext.GetRequiredService<IMapper>();
         }
 
-        public IMapper Mapper { get; set; }
+        public IMapper mapper { get; set; }
 
         private void KryptonDockingManager1_DockspaceRemoved(object sender, DockspaceEventArgs e)
         {
@@ -848,7 +850,7 @@ namespace RUINORERP.UI
 
         }
 
-        BizTypeMapper mapper = new BizTypeMapper();
+        BizTypeMapper Bizmapper = new BizTypeMapper();
         public AuthorizeController authorizeController;
         private void RefreshData()
         {
@@ -908,7 +910,7 @@ namespace RUINORERP.UI
                     //NotificationBox notificationBox = new NotificationBox();
                     //notificationBox.ShowForm(MessageInfo.Content);
                     MessagePrompt messager = new MessagePrompt();
-                    messager.mapper = mapper;
+                    messager.Bizmapper = Bizmapper;
 
                     if (MessageInfo.ReceiverEmployeeIDs == null)
                     {

@@ -481,10 +481,10 @@ namespace RUINORERP.UI.PSI.PUR
             if (RowDetails != null)
             {
                 List<tb_PurOrderDetail> details = new List<tb_PurOrderDetail>();
-                IMapper mapper = AutoMapperConfig.RegisterMappings().CreateMapper();
+                
                 foreach (var item in RowDetails)
                 {
-                    tb_PurOrderDetail bOM_SDetail = mapper.Map<tb_PurOrderDetail>(item);
+                    tb_PurOrderDetail bOM_SDetail = MainForm.Instance.mapper.Map<tb_PurOrderDetail>(item);
                     if (EditEntity.PreDeliveryDate.HasValue)
                     {
                         bOM_SDetail.PreDeliveryDate = EditEntity.PreDeliveryDate.Value;

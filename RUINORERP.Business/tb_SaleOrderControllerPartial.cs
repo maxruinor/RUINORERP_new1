@@ -160,7 +160,6 @@ namespace RUINORERP.Business
                         tb_FM_PreReceivedPaymentController<tb_FM_PreReceivedPayment> ctrpay = _appContext.GetRequiredService<tb_FM_PreReceivedPaymentController<tb_FM_PreReceivedPayment>>();
 
                         tb_FM_PreReceivedPayment payable = new tb_FM_PreReceivedPayment();
-                        IMapper mapper = RUINORERP.Business.AutoMapper.AutoMapperConfig.RegisterMappings().CreateMapper();
                         payable = mapper.Map<tb_FM_PreReceivedPayment>(entity);
                         payable.ApprovalResults = null;
                         payable.ApprovalStatus = (int)ApprovalStatus.未审核;
@@ -905,7 +904,6 @@ namespace RUINORERP.Business
             //转单
             if (saleorder != null)
             {
-                IMapper mapper = RUINORERP.Business.AutoMapper.AutoMapperConfig.RegisterMappings().CreateMapper();
                 entity = mapper.Map<tb_SaleOut>(saleorder);
                 //注意转过来的实体  各种状态要重新赋值不然逻辑有问题，保存就是已经审核
                 entity.ApprovalOpinions = "快捷转单";

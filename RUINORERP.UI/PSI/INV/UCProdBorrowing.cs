@@ -328,10 +328,10 @@ namespace RUINORERP.UI.PSI.INV
             if (RowDetails != null)
             {
                 List<tb_ProdBorrowingDetail> details = new List<tb_ProdBorrowingDetail>();
-                IMapper mapper = AutoMapperConfig.RegisterMappings().CreateMapper();
+                
                 foreach (var item in RowDetails)
                 {
-                    tb_ProdBorrowingDetail bOM_SDetail = mapper.Map<tb_ProdBorrowingDetail>(item);
+                    tb_ProdBorrowingDetail bOM_SDetail = MainForm.Instance.mapper.Map<tb_ProdBorrowingDetail>(item);
                     bOM_SDetail.Qty = 0;
                     details.Add(bOM_SDetail);
                 }

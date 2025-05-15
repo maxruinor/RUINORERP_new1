@@ -443,10 +443,10 @@ namespace RUINORERP.UI.PSI.INV
             if (RowDetails != null)
             {
                 List<tb_ProdSplitDetail> details = new List<tb_ProdSplitDetail>();
-                IMapper mapper = AutoMapperConfig.RegisterMappings().CreateMapper();
+                
                 foreach (var item in RowDetails)
                 {
-                    tb_ProdSplitDetail bOM_SDetail = mapper.Map<tb_ProdSplitDetail>(item);
+                    tb_ProdSplitDetail bOM_SDetail = MainForm.Instance.mapper.Map<tb_ProdSplitDetail>(item);
                     bOM_SDetail.Qty = 0;
                     details.Add(bOM_SDetail);
                 }
@@ -779,11 +779,11 @@ namespace RUINORERP.UI.PSI.INV
                     if (RowDetails != null)
                     {
                         List<tb_ProdSplitDetail> details = new List<tb_ProdSplitDetail>();
-                        IMapper mapper = AutoMapperConfig.RegisterMappings().CreateMapper();
+                        
                         decimal bomOutQty = EditEntity.tb_bom_s.OutputQty;
                         foreach (var item in RowDetails)
                         {
-                            tb_ProdSplitDetail bOM_SDetail = mapper.Map<tb_ProdSplitDetail>(item);
+                            tb_ProdSplitDetail bOM_SDetail = MainForm.Instance.mapper.Map<tb_ProdSplitDetail>(item);
                             bOM_SDetail.Location_ID = EditEntity.Location_ID;
                             bOM_SDetail.Qty = (RowDetails.FirstOrDefault(c => c.ProdDetailID == bOM_SDetail.ProdDetailID
                            

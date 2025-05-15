@@ -587,9 +587,9 @@ protected async override void ReReview()
                 //    return;
                 //}
                 purEntryid = purEntry.PurEntryID.ToString();
-                IMapper mapper = AutoMapperConfig.RegisterMappings().CreateMapper();
-                tb_PurEntryRe entity = mapper.Map<tb_PurEntryRe>(purEntry);
-                List<tb_PurEntryReDetail> details = mapper.Map<List<tb_PurEntryReDetail>>(purEntry.tb_PurEntryDetails);
+                
+                tb_PurEntryRe entity = MainForm.Instance.mapper.Map<tb_PurEntryRe>(purEntry);
+                List<tb_PurEntryReDetail> details = MainForm.Instance.mapper.Map<List<tb_PurEntryReDetail>>(purEntry.tb_PurEntryDetails);
                 List<tb_PurEntryReDetail> NewDetails = new List<tb_PurEntryReDetail>();
                 List<string> tipsMsg = new List<string>();
                 for (global::System.Int32 i = 0; i < details.Count; i++)

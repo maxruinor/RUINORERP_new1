@@ -554,7 +554,7 @@ namespace RUINORERP.UI.PSI.SAL
             //转单
             if (saleorder != null)
             {
-                IMapper mapper = RUINORERP.Business.AutoMapper.AutoMapperConfig.RegisterMappings().CreateMapper();
+                 
                 entity = mapper.Map<tb_SaleOut>(saleorder);
                 List<tb_SaleOutDetail> details = mapper.Map<List<tb_SaleOutDetail>>(saleorder.tb_SaleOrderDetails);
                 //转单要TODO

@@ -75,7 +75,7 @@ namespace RUINORERP.UI.SysConfig
         {
             LoadTree();
         }
-        IMapper mapper = AutoMapperConfig.RegisterMappings().CreateMapper();
+        
         private async void treeView1_MouseDoubleClick(object sender, MouseEventArgs e)
         {
             if (treeViewTableList.SelectedNode != null && treeView1.SelectedNode != null)
@@ -776,7 +776,7 @@ namespace RUINORERP.UI.SysConfig
                     foreach (var Customer in CustomerVendors)
                     {
                         
-                        tb_CRM_Customer entity = mapper.Map<tb_CRM_Customer>(Customer);
+                        tb_CRM_Customer entity = MainForm.Instance.mapper.Map<tb_CRM_Customer>(Customer);
                         BusinessHelper.Instance.InitEntity(entity);
                         customers.Add(entity);
                     }

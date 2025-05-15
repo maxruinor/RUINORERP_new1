@@ -450,9 +450,9 @@ namespace RUINORERP.UI.PSI.PUR
                     return;
                 }
                 purEntryReid = purEntryRe.PurEntryRe_ID.ToString();
-                IMapper mapper = AutoMapperConfig.RegisterMappings().CreateMapper();
-                tb_PurReturnEntry entity = mapper.Map<tb_PurReturnEntry>(purEntryRe);
-                List<tb_PurReturnEntryDetail> details = mapper.Map<List<tb_PurReturnEntryDetail>>(purEntryRe.tb_PurEntryReDetails);
+                
+                tb_PurReturnEntry entity = MainForm.Instance.mapper.Map<tb_PurReturnEntry>(purEntryRe);
+                List<tb_PurReturnEntryDetail> details = MainForm.Instance.mapper.Map<List<tb_PurReturnEntryDetail>>(purEntryRe.tb_PurEntryReDetails);
 
                 List<tb_PurReturnEntryDetail> NewDetails = new List<tb_PurReturnEntryDetail>();
                 List<string> tipsMsg = new List<string>();

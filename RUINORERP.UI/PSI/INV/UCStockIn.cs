@@ -269,10 +269,10 @@ namespace RUINORERP.UI.PSI.INV
             if (RowDetails != null)
             {
                 List<tb_StockInDetail> details = new List<tb_StockInDetail>();
-                IMapper mapper = AutoMapperConfig.RegisterMappings().CreateMapper();
+                
                 foreach (var item in RowDetails)
                 {
-                    tb_StockInDetail bOM_SDetail = mapper.Map<tb_StockInDetail>(item);
+                    tb_StockInDetail bOM_SDetail = MainForm.Instance.mapper.Map<tb_StockInDetail>(item);
                     bOM_SDetail.Qty = 0;
                     details.Add(bOM_SDetail);
                 }

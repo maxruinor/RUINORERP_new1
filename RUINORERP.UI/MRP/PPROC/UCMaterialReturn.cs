@@ -372,10 +372,10 @@ namespace RUINORERP.UI.MRP.MP
             if (RowDetails != null)
             {
                 List<tb_MaterialReturnDetail> details = new List<tb_MaterialReturnDetail>();
-                IMapper mapper = AutoMapperConfig.RegisterMappings().CreateMapper();
+                
                 foreach (var item in RowDetails)
                 {
-                    tb_MaterialReturnDetail Detail = mapper.Map<tb_MaterialReturnDetail>(item);
+                    tb_MaterialReturnDetail Detail = MainForm.Instance.mapper.Map<tb_MaterialReturnDetail>(item);
                     details.Add(Detail);
                 }
                 sgh.InsertItemDataToGrid<tb_MaterialReturnDetail>(grid1, sgd, details, c => c.ProdDetailID, position);
@@ -842,9 +842,9 @@ namespace RUINORERP.UI.MRP.MP
             //新增时才可以转单
             if (SourceBill != null)
             {
-                IMapper mapper = AutoMapperConfig.RegisterMappings().CreateMapper();
-                tb_MaterialReturn entity = mapper.Map<tb_MaterialReturn>(SourceBill);
-                List<tb_MaterialReturnDetail> details = mapper.Map<List<tb_MaterialReturnDetail>>(SourceBill.tb_MaterialRequisitionDetails);
+                
+                tb_MaterialReturn entity = MainForm.Instance.mapper.Map<tb_MaterialReturn>(SourceBill);
+                List<tb_MaterialReturnDetail> details = MainForm.Instance.mapper.Map<List<tb_MaterialReturnDetail>>(SourceBill.tb_MaterialRequisitionDetails);
                 entity.ReturnDate = System.DateTime.Now;
                 List<tb_MaterialReturnDetail> NewDetails = new List<tb_MaterialReturnDetail>();
                 List<string> tipsMsg = new List<string>();

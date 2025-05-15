@@ -301,10 +301,10 @@ namespace RUINORERP.UI.PSI.PUR
             if (RowDetails != null)
             {
                 List<tb_BuyingRequisitionDetail> details = new List<tb_BuyingRequisitionDetail>();
-                IMapper mapper = AutoMapperConfig.RegisterMappings().CreateMapper();
+                
                 foreach (var item in RowDetails)
                 {
-                    tb_BuyingRequisitionDetail bOM_SDetail = mapper.Map<tb_BuyingRequisitionDetail>(item);
+                    tb_BuyingRequisitionDetail bOM_SDetail = MainForm.Instance.mapper.Map<tb_BuyingRequisitionDetail>(item);
                     bOM_SDetail.Quantity = 0;
                     details.Add(bOM_SDetail);
                 }
@@ -653,7 +653,7 @@ namespace RUINORERP.UI.PSI.PUR
             if (purorder != null)
             {
                 orderid = purorder.PurOrder_ID.ToString();
-                IMapper mapper = AutoMapperConfig.RegisterMappings().CreateMapper();
+                
                 tb_PurEntry entity = mapper.Map<tb_PurEntry>(purorder);
                 List<tb_PurEntryDetail> details = mapper.Map<List<tb_PurEntryDetail>>(purorder.tb_PurOrderDetails);
 
@@ -816,11 +816,11 @@ namespace RUINORERP.UI.PSI.PUR
             entity.RefBizType = (int)BizType.请购单;
             entity.DataStatus = (int)DataStatus.草稿;
             List<string> tipsMsg = new List<string>();
-            IMapper mapper = AutoMapperConfig.RegisterMappings().CreateMapper();
+            
 
             for (int i = 0; i < details.Count; i++)
             {
-                tb_PurOrderDetail orderDetail = mapper.Map<tb_PurOrderDetail>(details[i]);
+                tb_PurOrderDetail orderDetail = MainForm.Instance.mapper.Map<tb_PurOrderDetail>(details[i]);
                 if (details[i].Purchased.HasValue && details[i].Purchased == true)
                 {
                     continue; //已经采购的忽略

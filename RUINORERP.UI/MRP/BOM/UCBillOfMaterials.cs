@@ -1084,7 +1084,7 @@ namespace RUINORERP.UI.MRP.BOM
                 .Where(m => longids.ToArray().Contains(m.ProdDetailID)).ToList();
 
             //将产品详情转换为基本信息列表
-            List<BaseProductInfo> BaseProductInfoList = mapper.Map<List<BaseProductInfo>>(ViewProdlist);
+            List<BaseProductInfo> BaseProductInfoList = MainForm.Instance.mapper.Map<List<BaseProductInfo>>(ViewProdlist);
 
 
             //合并的实体中有指定的业务主键关联，不然无法给值
@@ -1098,7 +1098,7 @@ namespace RUINORERP.UI.MRP.BOM
 
         }
 
-        IMapper mapper = AutoMapperConfig.RegisterMappings().CreateMapper();
+
         /// <summary>
         /// 获取下一级bom需要的原料ok
         /// </summary>
@@ -1121,7 +1121,7 @@ namespace RUINORERP.UI.MRP.BOM
             foreach (tb_BOM_SDetail detail in bomDetails)
             {
                 tb_BOM_SDetailTree node = new tb_BOM_SDetailTree();
-                node = mapper.Map<tb_BOM_SDetailTree>(detail);
+                node = MainForm.Instance.mapper.Map<tb_BOM_SDetailTree>(detail);
                 node.ParentId = BOM_ID;
                 long sid = RUINORERP.Common.SnowflakeIdHelper.IdHelper.GetLongId();
                 node.ID = sid;
@@ -1892,10 +1892,10 @@ namespace RUINORERP.UI.MRP.BOM
             if (RowDetails != null)
             {
                 List<tb_BOM_SDetail> details = new List<tb_BOM_SDetail>();
-                IMapper mapper = AutoMapperConfig.RegisterMappings().CreateMapper();
+
                 foreach (var item in RowDetails)
                 {
-                    tb_BOM_SDetail bOM_SDetail = mapper.Map<tb_BOM_SDetail>(item);
+                    tb_BOM_SDetail bOM_SDetail = MainForm.Instance.mapper.Map<tb_BOM_SDetail>(item);
                     details.Add(bOM_SDetail);
                 }
                 //List<tb_BOM_SDetail> details = mapper.Map<List<tb_BOM_SDetail>>(RowDetails);

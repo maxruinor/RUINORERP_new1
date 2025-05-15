@@ -415,10 +415,10 @@ namespace RUINORERP.UI.MRP.MP
             if (RowDetails != null)
             {
                 List<tb_MaterialRequisitionDetail> details = new List<tb_MaterialRequisitionDetail>();
-                IMapper mapper = AutoMapperConfig.RegisterMappings().CreateMapper();
+                
                 foreach (var item in RowDetails)
                 {
-                    tb_MaterialRequisitionDetail Detail = mapper.Map<tb_MaterialRequisitionDetail>(item);
+                    tb_MaterialRequisitionDetail Detail = MainForm.Instance.mapper.Map<tb_MaterialRequisitionDetail>(item);
                     details.Add(Detail);
                 }
                 sgh.InsertItemDataToGrid<tb_MaterialRequisitionDetail>(grid1, sgd, details, c => c.ProdDetailID, position);
@@ -635,9 +635,9 @@ namespace RUINORERP.UI.MRP.MP
             //新增时才可以转单
             if (SourceBill != null)
             {
-                IMapper mapper = AutoMapperConfig.RegisterMappings().CreateMapper();
-                tb_MaterialRequisition entity = mapper.Map<tb_MaterialRequisition>(SourceBill);
-                List<tb_MaterialRequisitionDetail> details = mapper.Map<List<tb_MaterialRequisitionDetail>>(SourceBill.tb_ManufacturingOrderDetails);
+                
+                tb_MaterialRequisition entity = MainForm.Instance.mapper.Map<tb_MaterialRequisition>(SourceBill);
+                List<tb_MaterialRequisitionDetail> details = MainForm.Instance.mapper.Map<List<tb_MaterialRequisitionDetail>>(SourceBill.tb_ManufacturingOrderDetails);
                 entity.DeliveryDate = System.DateTime.Now;
                 List<tb_MaterialRequisitionDetail> NewDetails = new List<tb_MaterialRequisitionDetail>();
                 List<string> tipsMsg = new List<string>();

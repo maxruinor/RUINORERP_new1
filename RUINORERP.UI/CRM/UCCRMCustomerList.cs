@@ -226,8 +226,8 @@ namespace RUINORERP.UI.CRM
                         frmaddg.bindingSourceEdit.DataSource = new List<tb_CustomerVendor>();
                         object obj = frmaddg.bindingSourceEdit.AddNew();
                         tb_CustomerVendor EntityInfo = obj as tb_CustomerVendor;
-                        IMapper mapper = AutoMapperConfig.RegisterMappings().CreateMapper();
-                        mapper.Map(sourceEntity, EntityInfo);  // 直接将 crmLeads 的值映射到传入的 entity 对象上，保持了引用
+                       
+                        MainForm.Instance.mapper.Map(sourceEntity, EntityInfo);  // 直接将 crmLeads 的值映射到传入的 entity 对象上，保持了引用
                                                                // EntityInfo = mapper.Map<tb_CustomerVendor>(sourceEntity);
                         EntityInfo.Customer_id = sourceEntity.Customer_id;
                         EntityInfo.Employee_ID = sourceEntity.Employee_ID;

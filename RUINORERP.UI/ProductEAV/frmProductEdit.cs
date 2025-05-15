@@ -540,7 +540,7 @@ namespace RUINORERP.UI.ProductEAV
             this.Close();
         }
 
-        IMapper mapper = AutoMapperConfig.RegisterMappings().CreateMapper();
+        
         /// <summary>
         /// 得到关系列表
         /// </summary>
@@ -583,7 +583,7 @@ namespace RUINORERP.UI.ProductEAV
                         #region
                         tb_Prod_Attr_Relation rela = new tb_Prod_Attr_Relation();
                   
-                        var detail = mapper.Map<tb_ProdDetail>(item);
+                        var detail = MainForm.Instance.mapper.Map<tb_ProdDetail>(item);
                         //rela.Property_ID = -1;
                         //rela.PropertyValueID = -1;
                         //tb_Prod_Attr_Relation relaTemp = detail.tb_Prod_Attr_Relations.FirstOrDefault(w => w.PropertyValueID == ppv.PropertyValueID);
@@ -644,7 +644,7 @@ namespace RUINORERP.UI.ProductEAV
                     tb_ProdDetail detail = new tb_ProdDetail();
                
                     //为null的不需要，不然会覆盖
-                    detail = mapper.Map<tb_ProdDetail>(epd);
+                    detail = MainForm.Instance.mapper.Map<tb_ProdDetail>(epd);
 
                     if (detail.ProdDetailID == 0)
                     {
@@ -754,9 +754,9 @@ namespace RUINORERP.UI.ProductEAV
                 {
                     tb_ProdDetail detail = new tb_ProdDetail();
                     Eav_ProdDetails epd = item as Eav_ProdDetails;
-                    IMapper mapper = AutoMapperConfig.RegisterMappings().CreateMapper();
+                    
                     //为null的不需要，不然会覆盖
-                    detail = mapper.Map<tb_ProdDetail>(epd);
+                    detail = MainForm.Instance.mapper.Map<tb_ProdDetail>(epd);
                     if (epd.tb_ProdDetail != null)
                     {
                         detail.ProdBaseID = epd.tb_ProdDetail.ProdBaseID;
@@ -786,8 +786,8 @@ namespace RUINORERP.UI.ProductEAV
         private tb_Prod_Attr_Relation SKUDetailToRelateion(Eav_ProdDetails item, List<tb_ProdPropertyValue> prodPropertyValues, string propertyValueName)
         {
             tb_Prod_Attr_Relation rela = new tb_Prod_Attr_Relation();
-            IMapper mapper = AutoMapperConfig.RegisterMappings().CreateMapper();
-            var detail = mapper.Map<tb_ProdDetail>(item);
+            
+            var detail = MainForm.Instance.mapper.Map<tb_ProdDetail>(item);
             tb_ProdPropertyValue ppv = prodPropertyValues.FirstOrDefault(p => p.PropertyValueName == propertyValueName);
             rela.Property_ID = ppv.Property_ID;
             rela.PropertyValueID = ppv.PropertyValueID;
@@ -1621,9 +1621,9 @@ namespace RUINORERP.UI.ProductEAV
                 {
                     isMultProperty = true;
                 }
-                IMapper mapper = AutoMapperConfig.RegisterMappings().CreateMapper();
+                
                 //明细转为中间数据视图
-                Eav_ProdDetails ppg = mapper.Map<Eav_ProdDetails>(detail);
+                Eav_ProdDetails ppg = MainForm.Instance.mapper.Map<Eav_ProdDetails>(detail);
                 ppg.GroupName = groupName;
                 ppg.tb_Prod_Attr_Relations = pars;//暂存
                 ppg.tb_ProdDetail = detail;//暂存

@@ -50,7 +50,7 @@ namespace RUINORERP.Business
         /// </summary>
         public IUnitOfWorkManage _unitOfWorkManage;
         public ILogger<BaseController<T>> _logger;
-        public IMapper Mapper { get; set; }
+        public IMapper mapper { get; set; }
         public string BizTypeText { get; set; }
         public int BizTypeInt { get; set; }
         public BaseController(ILogger<BaseController<T>> logger, IUnitOfWorkManage unitOfWorkManage, ApplicationContext appContext = null)
@@ -58,11 +58,12 @@ namespace RUINORERP.Business
             _logger = logger;
             _unitOfWorkManage = unitOfWorkManage;
             _appContext = appContext;
-            BizTypeMapper mapper = new BizTypeMapper();
-            BizType bizType = mapper.GetBizType(typeof(T).Name);
+            BizTypeMapper Bizmapper = new BizTypeMapper();
+            BizType bizType = Bizmapper.GetBizType(typeof(T).Name);
             BizTypeText = bizType.ToString();
             BizTypeInt = (int)bizType;
-            Mapper = AutoMapper.AutoMapperConfig.RegisterMappings().CreateMapper();
+            //mapper = AutoMapper.AutoMapperConfig.RegisterMappings().CreateMapper();
+            mapper = appContext.GetRequiredService<IMapper>();
         }
 
 

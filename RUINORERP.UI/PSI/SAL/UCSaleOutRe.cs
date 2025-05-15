@@ -424,10 +424,10 @@ namespace RUINORERP.UI.PSI.SAL
             if (RowDetails != null)
             {
                 List<tb_SaleOutReDetail> details = new List<tb_SaleOutReDetail>();
-                IMapper mapper = AutoMapperConfig.RegisterMappings().CreateMapper();
+                
                 foreach (var item in RowDetails)
                 {
-                    tb_SaleOutReDetail bOM_SDetail = mapper.Map<tb_SaleOutReDetail>(item);
+                    tb_SaleOutReDetail bOM_SDetail = MainForm.Instance.mapper.Map<tb_SaleOutReDetail>(item);
                     bOM_SDetail.Quantity = 0;
                     details.Add(bOM_SDetail);
                 }
@@ -446,10 +446,10 @@ namespace RUINORERP.UI.PSI.SAL
             if (RowDetails != null)
             {
                 List<tb_SaleOutReRefurbishedMaterialsDetail> details = new List<tb_SaleOutReRefurbishedMaterialsDetail>();
-                IMapper mapper = AutoMapperConfig.RegisterMappings().CreateMapper();
+                
                 foreach (var item in RowDetails)
                 {
-                    tb_SaleOutReRefurbishedMaterialsDetail bOM_SDetail = mapper.Map<tb_SaleOutReRefurbishedMaterialsDetail>(item);
+                    tb_SaleOutReRefurbishedMaterialsDetail bOM_SDetail = MainForm.Instance.mapper.Map<tb_SaleOutReRefurbishedMaterialsDetail>(item);
                     bOM_SDetail.Quantity = 0;
                     details.Add(bOM_SDetail);
                 }
@@ -708,9 +708,9 @@ namespace RUINORERP.UI.PSI.SAL
                 }
 
                 saleoutid = saleout.SaleOut_MainID;
-                IMapper mapper = AutoMapperConfig.RegisterMappings().CreateMapper();
-                tb_SaleOutRe entity = mapper.Map<tb_SaleOutRe>(saleout);
-                List<tb_SaleOutReDetail> details = mapper.Map<List<tb_SaleOutReDetail>>(saleout.tb_SaleOutDetails);
+                
+                tb_SaleOutRe entity = MainForm.Instance.mapper.Map<tb_SaleOutRe>(saleout);
+                List<tb_SaleOutReDetail> details = MainForm.Instance.mapper.Map<List<tb_SaleOutReDetail>>(saleout.tb_SaleOutDetails);
                 List<tb_SaleOutReDetail> NewDetails = new List<tb_SaleOutReDetail>();
                 List<string> tipsMsg = new List<string>();
                 for (global::System.Int32 i = 0; i < details.Count; i++)

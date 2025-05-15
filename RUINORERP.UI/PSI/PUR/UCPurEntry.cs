@@ -298,10 +298,10 @@ namespace RUINORERP.UI.PSI.PUR
             if (RowDetails != null)
             {
                 List<tb_PurEntryDetail> details = new List<tb_PurEntryDetail>();
-                IMapper mapper = AutoMapperConfig.RegisterMappings().CreateMapper();
+                
                 foreach (var item in RowDetails)
                 {
-                    tb_PurEntryDetail bOM_SDetail = mapper.Map<tb_PurEntryDetail>(item);
+                    tb_PurEntryDetail bOM_SDetail = MainForm.Instance.mapper.Map<tb_PurEntryDetail>(item);
                     bOM_SDetail.Quantity = 0;
                     details.Add(bOM_SDetail);
                 }
@@ -470,9 +470,9 @@ namespace RUINORERP.UI.PSI.PUR
             if (purorder != null)
             {
                 orderid = purorder.PurOrder_ID.ToString();
-                IMapper mapper = AutoMapperConfig.RegisterMappings().CreateMapper();
-                tb_PurEntry entity = mapper.Map<tb_PurEntry>(purorder);
-                List<tb_PurEntryDetail> details = mapper.Map<List<tb_PurEntryDetail>>(purorder.tb_PurOrderDetails);
+                
+                tb_PurEntry entity = MainForm.Instance.mapper.Map<tb_PurEntry>(purorder);
+                List<tb_PurEntryDetail> details = MainForm.Instance.mapper.Map<List<tb_PurEntryDetail>>(purorder.tb_PurOrderDetails);
 
                 entity.EntryDate = System.DateTime.Now;
                 entity.ApprovalOpinions = "";

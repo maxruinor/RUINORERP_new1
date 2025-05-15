@@ -464,9 +464,9 @@ namespace RUINORERP.UI.MRP.PQC
             }
             if (ReworkReturn != null)
             {
-                IMapper mapper = AutoMapperConfig.RegisterMappings().CreateMapper();
-                tb_MRP_ReworkEntry entity = mapper.Map<tb_MRP_ReworkEntry>(ReworkReturn);
-                List<tb_MRP_ReworkEntryDetail> details = mapper.Map<List<tb_MRP_ReworkEntryDetail>>(ReworkReturn.tb_MRP_ReworkReturnDetails);
+                
+                tb_MRP_ReworkEntry entity = MainForm.Instance.mapper.Map<tb_MRP_ReworkEntry>(ReworkReturn);
+                List<tb_MRP_ReworkEntryDetail> details = MainForm.Instance.mapper.Map<List<tb_MRP_ReworkEntryDetail>>(ReworkReturn.tb_MRP_ReworkReturnDetails);
                 List<tb_MRP_ReworkEntryDetail> NewDetails = new List<tb_MRP_ReworkEntryDetail>();
 
                 List<string> tipsMsg = new List<string>();

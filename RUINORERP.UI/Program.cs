@@ -228,7 +228,7 @@ namespace RUINORERP.UI
             // if (services.IsNull()) throw new ArgumentNullException(nameof(services));
 
             //  services.AddSingleton(typeof(AutoMapperConfig));
-            // IMapper mapper = AutoMapperConfig.RegisterMappings().CreateMapper();
+            // 
 
             // services.AddScoped<IMapper, Mapper>();
             //  services.AddSingleton<IMapper>(mapper);

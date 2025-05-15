@@ -169,8 +169,8 @@
             // kryptonSplitContainer1.Panel2
             // 
             this.kryptonSplitContainer1.Panel2.Controls.Add(this.kryptonSplitContainerGridAndSub);
-            this.kryptonSplitContainer1.Size = new System.Drawing.Size(1210, 744);
-            this.kryptonSplitContainer1.SplitterDistance = 235;
+            this.kryptonSplitContainer1.Size = new System.Drawing.Size(1233, 784);
+            this.kryptonSplitContainer1.SplitterDistance = 247;
             this.kryptonSplitContainer1.TabIndex = 0;
             // 
             // lblStore_ID
@@ -225,7 +225,7 @@
             // chkIsCustomizedOrder
             // 
             this.chkIsCustomizedOrder.Enabled = false;
-            this.chkIsCustomizedOrder.Location = new System.Drawing.Point(908, 39);
+            this.chkIsCustomizedOrder.Location = new System.Drawing.Point(800, 39);
             this.chkIsCustomizedOrder.Name = "chkIsCustomizedOrder";
             this.chkIsCustomizedOrder.Size = new System.Drawing.Size(62, 20);
             this.chkIsCustomizedOrder.TabIndex = 154;
@@ -310,7 +310,7 @@
             // 
             // chk替代品出库
             // 
-            this.chk替代品出库.Location = new System.Drawing.Point(1100, 69);
+            this.chk替代品出库.Location = new System.Drawing.Point(1037, 41);
             this.chk替代品出库.Name = "chk替代品出库";
             this.chk替代品出库.Size = new System.Drawing.Size(88, 20);
             this.chk替代品出库.TabIndex = 146;
@@ -363,12 +363,12 @@
             this.txtNotes.Location = new System.Drawing.Point(632, 143);
             this.txtNotes.Multiline = true;
             this.txtNotes.Name = "txtNotes";
-            this.txtNotes.Size = new System.Drawing.Size(163, 88);
+            this.txtNotes.Size = new System.Drawing.Size(444, 88);
             this.txtNotes.TabIndex = 131;
             // 
             // lblApprovalOpinions
             // 
-            this.lblApprovalOpinions.Location = new System.Drawing.Point(870, 144);
+            this.lblApprovalOpinions.Location = new System.Drawing.Point(1082, 65);
             this.lblApprovalOpinions.Name = "lblApprovalOpinions";
             this.lblApprovalOpinions.Size = new System.Drawing.Size(62, 20);
             this.lblApprovalOpinions.TabIndex = 132;
@@ -376,14 +376,15 @@
             // 
             // txtApprovalOpinions
             // 
-            this.txtApprovalOpinions.Location = new System.Drawing.Point(939, 141);
+            this.txtApprovalOpinions.Location = new System.Drawing.Point(1088, 90);
+            this.txtApprovalOpinions.Multiline = true;
             this.txtApprovalOpinions.Name = "txtApprovalOpinions";
-            this.txtApprovalOpinions.Size = new System.Drawing.Size(137, 23);
+            this.txtApprovalOpinions.Size = new System.Drawing.Size(137, 141);
             this.txtApprovalOpinions.TabIndex = 133;
             // 
             // chkApprovalResults
             // 
-            this.chkApprovalResults.Location = new System.Drawing.Point(977, 39);
+            this.chkApprovalResults.Location = new System.Drawing.Point(1150, 41);
             this.chkApprovalResults.Name = "chkApprovalResults";
             this.chkApprovalResults.Size = new System.Drawing.Size(75, 20);
             this.chkApprovalResults.TabIndex = 137;
@@ -428,7 +429,7 @@
             // 
             // chkGenerateVouchers
             // 
-            this.chkGenerateVouchers.Location = new System.Drawing.Point(1100, 48);
+            this.chkGenerateVouchers.Location = new System.Drawing.Point(939, 39);
             this.chkGenerateVouchers.Name = "chkGenerateVouchers";
             this.chkGenerateVouchers.Size = new System.Drawing.Size(75, 20);
             this.chkGenerateVouchers.TabIndex = 125;
@@ -572,8 +573,8 @@
             this.kryptonSplitContainerGridAndSub.Panel2.Controls.Add(this.txtTaxAmount);
             this.kryptonSplitContainerGridAndSub.Panel2.Controls.Add(this.txtShipCost);
             this.kryptonSplitContainerGridAndSub.Panel2.Controls.Add(this.lblShipCost);
-            this.kryptonSplitContainerGridAndSub.Size = new System.Drawing.Size(1210, 504);
-            this.kryptonSplitContainerGridAndSub.SplitterDistance = 418;
+            this.kryptonSplitContainerGridAndSub.Size = new System.Drawing.Size(1233, 532);
+            this.kryptonSplitContainerGridAndSub.SplitterDistance = 441;
             this.kryptonSplitContainerGridAndSub.TabIndex = 1;
             // 
             // grid1
@@ -585,7 +586,7 @@
             this.grid1.Name = "grid1";
             this.grid1.OptimizeMode = SourceGrid.CellOptimizeMode.ForRows;
             this.grid1.SelectionMode = SourceGrid.GridSelectionMode.Cell;
-            this.grid1.Size = new System.Drawing.Size(1210, 418);
+            this.grid1.Size = new System.Drawing.Size(1233, 441);
             this.grid1.TabIndex = 0;
             this.grid1.TabStop = true;
             this.grid1.ToolTipText = "";
@@ -623,14 +624,14 @@
             // 
             // txtForeignTotalAmount
             // 
-            this.txtForeignTotalAmount.Location = new System.Drawing.Point(622, 44);
+            this.txtForeignTotalAmount.Location = new System.Drawing.Point(632, 16);
             this.txtForeignTotalAmount.Name = "txtForeignTotalAmount";
             this.txtForeignTotalAmount.Size = new System.Drawing.Size(132, 23);
             this.txtForeignTotalAmount.TabIndex = 123;
             // 
             // lblForeignTotalAmount
             // 
-            this.lblForeignTotalAmount.Location = new System.Drawing.Point(542, 45);
+            this.lblForeignTotalAmount.Location = new System.Drawing.Point(552, 17);
             this.lblForeignTotalAmount.Name = "lblForeignTotalAmount";
             this.lblForeignTotalAmount.Size = new System.Drawing.Size(75, 20);
             this.lblForeignTotalAmount.TabIndex = 122;
@@ -687,7 +688,7 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.Controls.Add(this.kryptonSplitContainer1);
             this.Name = "UCSaleOut";
-            this.Size = new System.Drawing.Size(1210, 769);
+            this.Size = new System.Drawing.Size(1233, 809);
             this.Load += new System.EventHandler(this.UcSaleOrderEdit_Load);
             this.Controls.SetChildIndex(this.kryptonSplitContainer1, 0);
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceSub)).EndInit();

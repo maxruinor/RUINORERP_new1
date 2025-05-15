@@ -71,18 +71,10 @@ namespace RUINORERP.UI.FM
             this.lblPrintStatus = new Krypton.Toolkit.KryptonLabel();
             this.kryptonSplitContainer2 = new Krypton.Toolkit.KryptonSplitContainer();
             this.grid1 = new SourceGrid.Grid();
-            this.lblForeignBalanceAmount = new Krypton.Toolkit.KryptonLabel();
-            this.lblForeignPaidAmount = new Krypton.Toolkit.KryptonLabel();
-            this.txtForeignBalanceAmount = new Krypton.Toolkit.KryptonTextBox();
-            this.lblTotalForeignAmount = new Krypton.Toolkit.KryptonLabel();
-            this.txtForeignPaidAmount = new Krypton.Toolkit.KryptonTextBox();
-            this.txtTotalLocalPayableAmount = new Krypton.Toolkit.KryptonTextBox();
-            this.txtTotalForeignPayableAmount = new Krypton.Toolkit.KryptonTextBox();
+            this.txtTotalLocalAmount = new Krypton.Toolkit.KryptonTextBox();
             this.lblTotalLocalAmount = new Krypton.Toolkit.KryptonLabel();
-            this.txtLocalPaidAmount = new Krypton.Toolkit.KryptonTextBox();
-            this.lblLocalPaidAmount = new Krypton.Toolkit.KryptonLabel();
-            this.txtLocalBalanceAmount = new Krypton.Toolkit.KryptonTextBox();
-            this.lblLocalBalanceAmount = new Krypton.Toolkit.KryptonLabel();
+            this.txtTotalForeignAmount = new Krypton.Toolkit.KryptonTextBox();
+            this.lblTotalForeignAmount = new Krypton.Toolkit.KryptonLabel();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceSub)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1)).BeginInit();
@@ -298,10 +290,10 @@ namespace RUINORERP.UI.FM
             this.cmbCustomerVendor_ID.Size = new System.Drawing.Size(383, 21);
             this.cmbCustomerVendor_ID.TabIndex = 177;
             // 
-            // txtARAPNo
+            // txtPaymentNo
             // 
             this.txtPaymentNo.Location = new System.Drawing.Point(79, 66);
-            this.txtPaymentNo.Name = "txtARAPNo";
+            this.txtPaymentNo.Name = "txtPaymentNo";
             this.txtPaymentNo.Size = new System.Drawing.Size(137, 23);
             this.txtPaymentNo.TabIndex = 175;
             // 
@@ -437,7 +429,7 @@ namespace RUINORERP.UI.FM
             this.txtRemark.Location = new System.Drawing.Point(79, 171);
             this.txtRemark.Multiline = true;
             this.txtRemark.Name = "txtRemark";
-            this.txtRemark.Size = new System.Drawing.Size(385, 68);
+            this.txtRemark.Size = new System.Drawing.Size(645, 68);
             this.txtRemark.TabIndex = 142;
             // 
             // lblApprovalOpinions
@@ -496,18 +488,10 @@ namespace RUINORERP.UI.FM
             // 
             // kryptonSplitContainer2.Panel2
             // 
-            this.kryptonSplitContainer2.Panel2.Controls.Add(this.lblForeignBalanceAmount);
-            this.kryptonSplitContainer2.Panel2.Controls.Add(this.lblForeignPaidAmount);
-            this.kryptonSplitContainer2.Panel2.Controls.Add(this.txtForeignBalanceAmount);
-            this.kryptonSplitContainer2.Panel2.Controls.Add(this.lblTotalForeignAmount);
-            this.kryptonSplitContainer2.Panel2.Controls.Add(this.txtForeignPaidAmount);
-            this.kryptonSplitContainer2.Panel2.Controls.Add(this.txtTotalLocalPayableAmount);
-            this.kryptonSplitContainer2.Panel2.Controls.Add(this.txtTotalForeignPayableAmount);
+            this.kryptonSplitContainer2.Panel2.Controls.Add(this.txtTotalLocalAmount);
             this.kryptonSplitContainer2.Panel2.Controls.Add(this.lblTotalLocalAmount);
-            this.kryptonSplitContainer2.Panel2.Controls.Add(this.txtLocalPaidAmount);
-            this.kryptonSplitContainer2.Panel2.Controls.Add(this.lblLocalPaidAmount);
-            this.kryptonSplitContainer2.Panel2.Controls.Add(this.txtLocalBalanceAmount);
-            this.kryptonSplitContainer2.Panel2.Controls.Add(this.lblLocalBalanceAmount);
+            this.kryptonSplitContainer2.Panel2.Controls.Add(this.txtTotalForeignAmount);
+            this.kryptonSplitContainer2.Panel2.Controls.Add(this.lblTotalForeignAmount);
             this.kryptonSplitContainer2.Size = new System.Drawing.Size(1133, 470);
             this.kryptonSplitContainer2.SplitterDistance = 416;
             this.kryptonSplitContainer2.TabIndex = 2;
@@ -526,95 +510,35 @@ namespace RUINORERP.UI.FM
             this.grid1.TabStop = true;
             this.grid1.ToolTipText = "";
             // 
-            // lblForeignBalanceAmount
+            // txtTotalLocalAmount
             // 
-            this.lblForeignBalanceAmount.Location = new System.Drawing.Point(946, 13);
-            this.lblForeignBalanceAmount.Name = "lblForeignBalanceAmount";
-            this.lblForeignBalanceAmount.Size = new System.Drawing.Size(75, 20);
-            this.lblForeignBalanceAmount.TabIndex = 204;
-            this.lblForeignBalanceAmount.Values.Text = "未核销外币";
-            // 
-            // lblForeignPaidAmount
-            // 
-            this.lblForeignPaidAmount.Location = new System.Drawing.Point(756, 13);
-            this.lblForeignPaidAmount.Name = "lblForeignPaidAmount";
-            this.lblForeignPaidAmount.Size = new System.Drawing.Size(75, 20);
-            this.lblForeignPaidAmount.TabIndex = 200;
-            this.lblForeignPaidAmount.Values.Text = "已核销外币";
-            // 
-            // txtForeignBalanceAmount
-            // 
-            this.txtForeignBalanceAmount.Location = new System.Drawing.Point(1025, 12);
-            this.txtForeignBalanceAmount.Name = "txtForeignBalanceAmount";
-            this.txtForeignBalanceAmount.Size = new System.Drawing.Size(75, 23);
-            this.txtForeignBalanceAmount.TabIndex = 205;
-            // 
-            // lblTotalForeignAmount
-            // 
-            this.lblTotalForeignAmount.Location = new System.Drawing.Point(570, 13);
-            this.lblTotalForeignAmount.Name = "lblTotalForeignAmount";
-            this.lblTotalForeignAmount.Size = new System.Drawing.Size(75, 20);
-            this.lblTotalForeignAmount.TabIndex = 196;
-            this.lblTotalForeignAmount.Values.Text = "总金额外币";
-            // 
-            // txtForeignPaidAmount
-            // 
-            this.txtForeignPaidAmount.Location = new System.Drawing.Point(832, 12);
-            this.txtForeignPaidAmount.Name = "txtForeignPaidAmount";
-            this.txtForeignPaidAmount.Size = new System.Drawing.Size(75, 23);
-            this.txtForeignPaidAmount.TabIndex = 201;
-            // 
-            // txtTotalLocalPayableAmount
-            // 
-            this.txtTotalLocalPayableAmount.Location = new System.Drawing.Point(90, 12);
-            this.txtTotalLocalPayableAmount.Name = "txtTotalLocalPayableAmount";
-            this.txtTotalLocalPayableAmount.Size = new System.Drawing.Size(75, 23);
-            this.txtTotalLocalPayableAmount.TabIndex = 199;
-            // 
-            // txtTotalForeignPayableAmount
-            // 
-            this.txtTotalForeignPayableAmount.Location = new System.Drawing.Point(649, 12);
-            this.txtTotalForeignPayableAmount.Name = "txtTotalForeignPayableAmount";
-            this.txtTotalForeignPayableAmount.Size = new System.Drawing.Size(75, 23);
-            this.txtTotalForeignPayableAmount.TabIndex = 197;
+            this.txtTotalLocalAmount.Location = new System.Drawing.Point(394, 14);
+            this.txtTotalLocalAmount.Name = "txtTotalLocalAmount";
+            this.txtTotalLocalAmount.Size = new System.Drawing.Size(103, 23);
+            this.txtTotalLocalAmount.TabIndex = 199;
             // 
             // lblTotalLocalAmount
             // 
-            this.lblTotalLocalAmount.Location = new System.Drawing.Point(16, 13);
+            this.lblTotalLocalAmount.Location = new System.Drawing.Point(300, 14);
             this.lblTotalLocalAmount.Name = "lblTotalLocalAmount";
-            this.lblTotalLocalAmount.Size = new System.Drawing.Size(75, 20);
+            this.lblTotalLocalAmount.Size = new System.Drawing.Size(88, 20);
             this.lblTotalLocalAmount.TabIndex = 198;
-            this.lblTotalLocalAmount.Values.Text = "总金额本币";
+            this.lblTotalLocalAmount.Values.Text = "支付金额本币";
             // 
-            // txtLocalPaidAmount
+            // txtTotalForeignAmount
             // 
-            this.txtLocalPaidAmount.Location = new System.Drawing.Point(265, 12);
-            this.txtLocalPaidAmount.Name = "txtLocalPaidAmount";
-            this.txtLocalPaidAmount.Size = new System.Drawing.Size(75, 23);
-            this.txtLocalPaidAmount.TabIndex = 203;
+            this.txtTotalForeignAmount.Location = new System.Drawing.Point(800, 14);
+            this.txtTotalForeignAmount.Name = "txtTotalForeignAmount";
+            this.txtTotalForeignAmount.Size = new System.Drawing.Size(103, 23);
+            this.txtTotalForeignAmount.TabIndex = 203;
             // 
-            // lblLocalPaidAmount
+            // lblTotalForeignAmount
             // 
-            this.lblLocalPaidAmount.Location = new System.Drawing.Point(187, 13);
-            this.lblLocalPaidAmount.Name = "lblLocalPaidAmount";
-            this.lblLocalPaidAmount.Size = new System.Drawing.Size(75, 20);
-            this.lblLocalPaidAmount.TabIndex = 202;
-            this.lblLocalPaidAmount.Values.Text = "已核销本币";
-            // 
-            // txtLocalBalanceAmount
-            // 
-            this.txtLocalBalanceAmount.Location = new System.Drawing.Point(457, 12);
-            this.txtLocalBalanceAmount.Name = "txtLocalBalanceAmount";
-            this.txtLocalBalanceAmount.Size = new System.Drawing.Size(75, 23);
-            this.txtLocalBalanceAmount.TabIndex = 207;
-            // 
-            // lblLocalBalanceAmount
-            // 
-            this.lblLocalBalanceAmount.Location = new System.Drawing.Point(374, 13);
-            this.lblLocalBalanceAmount.Name = "lblLocalBalanceAmount";
-            this.lblLocalBalanceAmount.Size = new System.Drawing.Size(75, 20);
-            this.lblLocalBalanceAmount.TabIndex = 206;
-            this.lblLocalBalanceAmount.Values.Text = "未核销本币";
+            this.lblTotalForeignAmount.Location = new System.Drawing.Point(696, 16);
+            this.lblTotalForeignAmount.Name = "lblTotalForeignAmount";
+            this.lblTotalForeignAmount.Size = new System.Drawing.Size(88, 20);
+            this.lblTotalForeignAmount.TabIndex = 202;
+            this.lblTotalForeignAmount.Values.Text = "支付金额外币";
             // 
             // UCPaymentRecord
             // 
@@ -695,18 +619,10 @@ namespace RUINORERP.UI.FM
             private Krypton.Toolkit.KryptonLabel lblDueDate;
             private Krypton.Toolkit.KryptonDateTimePicker dtpDueDate;
             private Krypton.Toolkit.KryptonLabel lblEmployee_ID;
-            private Krypton.Toolkit.KryptonLabel lblTotalForeignAmount;
-            private Krypton.Toolkit.KryptonTextBox txtTotalForeignPayableAmount;
             private Krypton.Toolkit.KryptonLabel lblTotalLocalAmount;
-            private Krypton.Toolkit.KryptonTextBox txtTotalLocalPayableAmount;
-            private Krypton.Toolkit.KryptonLabel lblForeignPaidAmount;
-            private Krypton.Toolkit.KryptonTextBox txtForeignPaidAmount;
-            private Krypton.Toolkit.KryptonLabel lblLocalPaidAmount;
-            private Krypton.Toolkit.KryptonTextBox txtLocalPaidAmount;
-            private Krypton.Toolkit.KryptonLabel lblForeignBalanceAmount;
-            private Krypton.Toolkit.KryptonTextBox txtForeignBalanceAmount;
-            private Krypton.Toolkit.KryptonLabel lblLocalBalanceAmount;
-            private Krypton.Toolkit.KryptonTextBox txtLocalBalanceAmount;
+            private Krypton.Toolkit.KryptonTextBox txtTotalLocalAmount;
+            private Krypton.Toolkit.KryptonLabel lblTotalForeignAmount;
+            private Krypton.Toolkit.KryptonTextBox txtTotalForeignAmount;
             private Krypton.Toolkit.KryptonTextBox txtPayeeAccountNo;
             private Krypton.Toolkit.KryptonLabel lblPayeeAccountNo;
             private Krypton.Toolkit.KryptonLabel lblAccount_id;

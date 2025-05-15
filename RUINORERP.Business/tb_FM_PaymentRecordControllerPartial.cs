@@ -295,7 +295,7 @@ namespace RUINORERP.Business
         public async Task<tb_FM_PaymentRecord> CreatePaymentRecord(tb_FM_PreReceivedPayment entity, bool isRefund)
         {
             //预收付款单 审核时 自动生成 收付款记录
-            IMapper mapper = RUINORERP.Business.AutoMapper.AutoMapperConfig.RegisterMappings().CreateMapper();
+            
             tb_FM_PaymentRecord paymentRecord = new tb_FM_PaymentRecord();
             paymentRecord = mapper.Map<tb_FM_PaymentRecord>(entity);
             paymentRecord.ApprovalResults = null;
@@ -378,7 +378,7 @@ namespace RUINORERP.Business
             foreach (var entity in entities)
             {
                 tb_FM_PaymentRecord paymentRecord = new tb_FM_PaymentRecord();
-                paymentRecord = Mapper.Map<tb_FM_PaymentRecord>(entity);
+                paymentRecord = mapper.Map<tb_FM_PaymentRecord>(entity);
                 paymentRecord.ApprovalResults = null;
                 paymentRecord.ApprovalStatus = (int)ApprovalStatus.未审核;
                 paymentRecord.Approver_at = null;
@@ -397,7 +397,7 @@ namespace RUINORERP.Business
                 {
                     paymentRecord.PaymentNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.付款单);
                 }
-                List<tb_FM_PaymentRecordDetail> details = Mapper.Map<List<tb_FM_PaymentRecordDetail>>(entity.tb_FM_ReceivablePayableDetails);
+                List<tb_FM_PaymentRecordDetail> details = mapper.Map<List<tb_FM_PaymentRecordDetail>>(entity.tb_FM_ReceivablePayableDetails);
                 List<tb_FM_PaymentRecordDetail> NewDetails = new List<tb_FM_PaymentRecordDetail>();
                 for (int i = 0; i < details.Count; i++)
                 {

@@ -781,7 +781,7 @@ namespace RUINORERP.UI.PSI.SAL
             .Where(c => c.SOrder_ID == _sorderid)
             .SingleAsync();
 
-            IMapper mapper = AutoMapperConfig.RegisterMappings().CreateMapper();
+            
             tb_SaleOut entity = mapper.Map<tb_SaleOut>(saleorder);
             List<string> tipsMsg = new List<string>();
             entity.DataStatus = (int)DataStatus.草稿;

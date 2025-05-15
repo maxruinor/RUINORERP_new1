@@ -412,10 +412,10 @@ namespace RUINORERP.UI.PSI.INV
             if (RowDetails != null)
             {
                 List<tb_StocktakeDetail> details = new List<tb_StocktakeDetail>();
-                IMapper mapper = AutoMapperConfig.RegisterMappings().CreateMapper();
+                
                 foreach (var item in RowDetails)
                 {
-                    tb_StocktakeDetail Detail = mapper.Map<tb_StocktakeDetail>(item);
+                    tb_StocktakeDetail Detail = MainForm.Instance.mapper.Map<tb_StocktakeDetail>(item);
                     if (item.Quantity.HasValue)
                     {
                         Detail.CarryinglQty = item.Quantity.Value;
@@ -668,8 +668,8 @@ namespace RUINORERP.UI.PSI.INV
                     List<tb_StocktakeDetail> details = new List<tb_StocktakeDetail>();
                     foreach (View_ProdDetail item in dg.prodQuery.QueryObjects)
                     {
-                        IMapper mapper = AutoMapperConfig.RegisterMappings().CreateMapper();
-                        tb_StocktakeDetail detail = mapper.Map<tb_StocktakeDetail>(item);
+                        
+                        tb_StocktakeDetail detail = MainForm.Instance.mapper.Map<tb_StocktakeDetail>(item);
                         detail.property = item.prop;
                         if (item.Inv_Cost.HasValue)
                         {

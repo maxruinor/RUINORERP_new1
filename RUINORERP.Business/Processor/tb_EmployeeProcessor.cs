@@ -37,6 +37,7 @@ namespace RUINORERP.Business.Processor
             queryFilter.SetQueryField<tb_Employee>(c => c.Employee_Name);
             queryFilter.SetQueryField<tb_Employee>(c => c.DepartmentID);
             queryFilter.SetQueryField<tb_Employee>(c => c.Email);
+            queryFilter.SetQueryField<tb_Employee>(c => c.Is_enabled);
             return queryFilter;
         }
 

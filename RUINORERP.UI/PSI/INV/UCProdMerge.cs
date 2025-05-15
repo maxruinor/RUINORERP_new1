@@ -423,10 +423,10 @@ namespace RUINORERP.UI.PSI.INV
             if (RowDetails != null)
             {
                 List<tb_ProdMergeDetail> details = new List<tb_ProdMergeDetail>();
-                IMapper mapper = AutoMapperConfig.RegisterMappings().CreateMapper();
+                
                 foreach (var item in RowDetails)
                 {
-                    tb_ProdMergeDetail bOM_SDetail = mapper.Map<tb_ProdMergeDetail>(item);
+                    tb_ProdMergeDetail bOM_SDetail = MainForm.Instance.mapper.Map<tb_ProdMergeDetail>(item);
                     bOM_SDetail.Qty = 0;
                     details.Add(bOM_SDetail);
                 }
@@ -748,10 +748,10 @@ namespace RUINORERP.UI.PSI.INV
                     if (RowDetails != null)
                     {
                         List<tb_ProdMergeDetail> details = new List<tb_ProdMergeDetail>();
-                        IMapper mapper = AutoMapperConfig.RegisterMappings().CreateMapper();
+                        
                         foreach (var item in RowDetails)
                         {
-                            tb_ProdMergeDetail bOM_SDetail = mapper.Map<tb_ProdMergeDetail>(item);
+                            tb_ProdMergeDetail bOM_SDetail = MainForm.Instance.mapper.Map<tb_ProdMergeDetail>(item);
                             bOM_SDetail.Location_ID = EditEntity.Location_ID;
                             bOM_SDetail.Qty = (RowDetails.FirstOrDefault(c => c.ProdDetailID == bOM_SDetail.ProdDetailID
                             ).UsedQty * EditEntity.MergeTargetQty).ToInt();

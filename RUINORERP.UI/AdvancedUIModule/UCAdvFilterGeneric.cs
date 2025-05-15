@@ -293,7 +293,7 @@ namespace RUINORERP.UI.AdvancedUIModule
                 return;
 
             dataGridView1.ReadOnly = true;
-            IMapper mapper = AutoMapperConfig.RegisterMappings().CreateMapper();
+           
             BaseController<T> ctr = Startup.GetFromFacByName<BaseController<T>>(typeof(T).Name + "Controller");
             //QueryConditions 如果条件为0，则会查询全部结果
             //List<T> list = await ctr.BaseQueryByAdvancedNavWithConditionsAsync(true, QueryConditions, LimitQueryConditions, dto);

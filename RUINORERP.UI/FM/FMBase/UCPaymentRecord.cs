@@ -157,8 +157,8 @@ namespace RUINORERP.UI.FM
             DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.ApprovalOpinions, txtApprovalOpinions, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4ControlByEnum<tb_FM_PaymentRecord>(entity, t => t.ApprovalStatus, lblReview, BindDataType4Enum.EnumName, typeof(Global.ApprovalStatus));
             //  DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.ExchangeRate.ToString(), txtExchangeRate, BindDataType4TextBox.Money, false);
-            DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.TotalForeignAmount.ToString(), txtForeignPaidAmount, BindDataType4TextBox.Money, false);
-            DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.TotalLocalAmount.ToString(), txtLocalPaidAmount, BindDataType4TextBox.Money, false);
+            DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.TotalForeignAmount.ToString(), txtTotalForeignAmount, BindDataType4TextBox.Money, false);
+            DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.TotalLocalAmount.ToString(), txtTotalLocalAmount, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.Remark, txtRemark, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.PayeeAccountNo, txtPayeeAccountNo, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4ControlByEnum<tb_FM_PaymentRecord>(entity, t => t.PaymentStatus, lblDataStatus, BindDataType4Enum.EnumName, typeof(PaymentStatus));
@@ -410,7 +410,7 @@ namespace RUINORERP.UI.FM
                 return false;
             }
 
-            var eer = errorProviderForAllInput.GetError(txtLocalPaidAmount);
+            var eer = errorProviderForAllInput.GetError(txtTotalForeignAmount);
             bindingSourceSub.EndEdit();
             if (NeedValidated && (EditEntity.TotalForeignAmount == 0 && EditEntity.TotalLocalAmount == 0))
             {
@@ -671,6 +671,9 @@ namespace RUINORERP.UI.FM
             sgd = new SourceGridDefine(grid1, listCols, true);
 
             //  listCols.SetCol_Formula<tb_FM_PaymentRecordDetail>((a, b) => a.UnitPrice * b.Quantity, c => c.LocalPayableAmount);//-->成交价是结果列
+            listCols.SetCol_Summary<tb_FM_PaymentRecordDetail>(c => c.ForeignAmount);
+            listCols.SetCol_Summary<tb_FM_PaymentRecordDetail>(c => c.LocalAmount);
+        
 
             sgd.GridMasterData = EditEntity;
 

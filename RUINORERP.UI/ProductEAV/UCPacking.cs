@@ -563,10 +563,10 @@ namespace RUINORERP.UI.ProductEAV
             if (RowDetails != null)
             {
                 List<tb_PackingDetail> details = new List<tb_PackingDetail>();
-                IMapper mapper = AutoMapperConfig.RegisterMappings().CreateMapper();
+                
                 foreach (var item in RowDetails)
                 {
-                    tb_PackingDetail Detail = mapper.Map<tb_PackingDetail>(item);
+                    tb_PackingDetail Detail = MainForm.Instance.mapper.Map<tb_PackingDetail>(item);
                     details.Add(Detail);
                 }
                 sgh1.InsertItemDataToGrid<tb_PackingDetail>(grid1, sgd1, details, c => c.ProdDetailID, position);
@@ -754,9 +754,9 @@ namespace RUINORERP.UI.ProductEAV
             //新增时才可以转单
             if (saleorder != null)
             {
-                IMapper mapper = AutoMapperConfig.RegisterMappings().CreateMapper();
-                tb_Packing entity = mapper.Map<tb_Packing>(saleorder);
-                List<tb_PackingDetail> details = mapper.Map<List<tb_PackingDetail>>(saleorder.tb_SaleOrderDetails);
+                
+                tb_Packing entity = MainForm.Instance.mapper.Map<tb_Packing>(saleorder);
+                List<tb_PackingDetail> details = MainForm.Instance.mapper.Map<List<tb_PackingDetail>>(saleorder.tb_SaleOrderDetails);
                 entity.Created_at = System.DateTime.Now;
                 List<tb_PackingDetail> NewDetails = new List<tb_PackingDetail>();
                 List<string> tipsMsg = new List<string>();

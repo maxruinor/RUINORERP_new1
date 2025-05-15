@@ -1248,9 +1248,6 @@ namespace RUINORERP.Business
             //转单
             if (saleout != null)
             {
-
-
-                IMapper mapper = RUINORERP.Business.AutoMapper.AutoMapperConfig.RegisterMappings().CreateMapper();
                 entity = mapper.Map<tb_SaleOutRe>(saleout);
                 entity.ApprovalOpinions = "快捷转单";
                 entity.ApprovalResults = null;

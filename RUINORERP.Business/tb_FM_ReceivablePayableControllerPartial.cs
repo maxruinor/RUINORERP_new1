@@ -172,7 +172,6 @@ namespace RUINORERP.Business
         {
 
             tb_FM_ReceivablePayable payable = new tb_FM_ReceivablePayable();
-            IMapper mapper = RUINORERP.Business.AutoMapper.AutoMapperConfig.RegisterMappings().CreateMapper();
             payable = mapper.Map<tb_FM_ReceivablePayable>(entity);
             payable.ApprovalResults = null;
             payable.ApprovalStatus = (int)ApprovalStatus.未审核;
@@ -296,7 +295,6 @@ namespace RUINORERP.Business
         {
 
             tb_FM_ReceivablePayable payable = new tb_FM_ReceivablePayable();
-            IMapper mapper = RUINORERP.Business.AutoMapper.AutoMapperConfig.RegisterMappings().CreateMapper();
             payable = mapper.Map<tb_FM_ReceivablePayable>(entity);
             payable.ApprovalResults = null;
             payable.ApprovalStatus = (int)ApprovalStatus.未审核;
@@ -467,7 +465,6 @@ namespace RUINORERP.Business
             //有付款过的。就去预付中抵扣，不够的金额及状态标识出来生成对账单
 
             tb_FM_ReceivablePayable payable = new tb_FM_ReceivablePayable();
-            IMapper mapper = RUINORERP.Business.AutoMapper.AutoMapperConfig.RegisterMappings().CreateMapper();
             payable = mapper.Map<tb_FM_ReceivablePayable>(entity);
             payable.ApprovalResults = null;
             payable.ApprovalStatus = (int)ApprovalStatus.未审核;
@@ -618,7 +615,6 @@ namespace RUINORERP.Business
         {
 
             tb_FM_ReceivablePayable payable = new tb_FM_ReceivablePayable();
-            IMapper mapper = RUINORERP.Business.AutoMapper.AutoMapperConfig.RegisterMappings().CreateMapper();
             payable = mapper.Map<tb_FM_ReceivablePayable>(entity);
             payable.ApprovalResults = null;
             payable.ApprovalStatus = (int)ApprovalStatus.未审核;

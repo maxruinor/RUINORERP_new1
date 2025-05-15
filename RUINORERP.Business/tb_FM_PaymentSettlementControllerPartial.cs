@@ -48,7 +48,6 @@ namespace RUINORERP.Business
         public async Task<tb_FM_PaymentSettlement> GenerateSettlement(tb_FM_PaymentRecord entity)
         {
             //预收付款单 审核时 自动生成 收付款记录
-            IMapper mapper = RUINORERP.Business.AutoMapper.AutoMapperConfig.RegisterMappings().CreateMapper();
             tb_FM_PaymentSettlement SettlementRecord = new tb_FM_PaymentSettlement();
             SettlementRecord = mapper.Map<tb_FM_PaymentSettlement>(entity);
 
@@ -133,7 +132,6 @@ namespace RUINORERP.Business
         public async Task<tb_FM_PaymentSettlement> GenerateSettlement(tb_FM_ReceivablePayable sourceEntity, tb_FM_ReceivablePayable targetEntity)
         {
             //预收付款单 审核时 自动生成 收付款记录
-            IMapper mapper = RUINORERP.Business.AutoMapper.AutoMapperConfig.RegisterMappings().CreateMapper();
             tb_FM_PaymentSettlement SettlementRecord = new tb_FM_PaymentSettlement();
             SettlementRecord = mapper.Map<tb_FM_PaymentSettlement>(targetEntity);
 

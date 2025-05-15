@@ -258,10 +258,10 @@ namespace RUINORERP.UI.ProductEAV
             if (RowDetails != null)
             {
                 List<tb_ProdBundleDetail> details = new List<tb_ProdBundleDetail>();
-                IMapper mapper = AutoMapperConfig.RegisterMappings().CreateMapper();
+                
                 foreach (var item in RowDetails)
                 {
-                    tb_ProdBundleDetail bOM_SDetail = mapper.Map<tb_ProdBundleDetail>(item);
+                    tb_ProdBundleDetail bOM_SDetail = MainForm.Instance.mapper.Map<tb_ProdBundleDetail>(item);
                     bOM_SDetail.Quantity = 1;
                     details.Add(bOM_SDetail);
                 }

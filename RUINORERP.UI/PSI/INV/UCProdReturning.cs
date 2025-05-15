@@ -299,10 +299,10 @@ namespace RUINORERP.UI.PSI.INV
             if (RowDetails != null)
             {
                 List<tb_ProdReturningDetail> details = new List<tb_ProdReturningDetail>();
-                IMapper mapper = AutoMapperConfig.RegisterMappings().CreateMapper();
+                
                 foreach (var item in RowDetails)
                 {
-                    tb_ProdReturningDetail bOM_SDetail = mapper.Map<tb_ProdReturningDetail>(item);
+                    tb_ProdReturningDetail bOM_SDetail = MainForm.Instance.mapper.Map<tb_ProdReturningDetail>(item);
                     bOM_SDetail.Qty = 0;
                     details.Add(bOM_SDetail);
                 }
@@ -584,9 +584,9 @@ namespace RUINORERP.UI.PSI.INV
             //新增时才可以转单
             if (refBill != null)
             {
-                IMapper mapper = AutoMapperConfig.RegisterMappings().CreateMapper();
-                tb_ProdReturning master = mapper.Map<tb_ProdReturning>(refBill);
-                List<tb_ProdReturningDetail> details = mapper.Map<List<tb_ProdReturningDetail>>(refBill.tb_ProdBorrowingDetails);
+                
+                tb_ProdReturning master = MainForm.Instance.mapper.Map<tb_ProdReturning>(refBill);
+                List<tb_ProdReturningDetail> details = MainForm.Instance.mapper.Map<List<tb_ProdReturningDetail>>(refBill.tb_ProdBorrowingDetails);
                 master.ReturnDate = System.DateTime.Now;
 
                 List<tb_ProdReturningDetail> NewDetails = new List<tb_ProdReturningDetail>();

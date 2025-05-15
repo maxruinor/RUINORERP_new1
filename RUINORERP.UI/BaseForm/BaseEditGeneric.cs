@@ -100,25 +100,6 @@ namespace RUINORERP.UI.BaseForm
 
  
 
-        public bool ShowInvalidMessage(ValidationResult results)
-        {
-            bool validationSucceeded = results.IsValid;
-            IList<ValidationFailure> failures = results.Errors;
-            //validator.ValidateAndThrow(info);
-            StringBuilder msg = new StringBuilder();
-            int counter = 1;
-            foreach (var item in failures)
-            {
-                msg.Append(counter.ToString() + ") ");
-                msg.Append(item.ErrorMessage).Append("\r\n");
-                counter++;
-            }
-            if (!results.IsValid)
-            {
-                MessageBox.Show(msg.ToString(), "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-            }
-            return results.IsValid;
-        }
 
         /// <summary>
         /// esc退出窗体
@@ -600,14 +581,14 @@ namespace RUINORERP.UI.BaseForm
         {
             BaseController<T> ctr = Startup.GetFromFacByName<BaseController<T>>(typeof(T).Name + "Controller");
             var EditEntity = bindingSourceEdit.Current as T;
-            bool vd = ShowInvalidMessage(ctr.BaseValidator(EditEntity));
+            bool vd = UIHelper.ShowInvalidMessage(ctr.BaseValidator(EditEntity));
             return vd;
         }
 
         protected bool Validator<C>(C checkItem) where C : class
         {
             BaseController<C> ctr = Startup.GetFromFacByName<BaseController<C>>(typeof(C).Name + "Controller");
-            bool vd = ShowInvalidMessage(ctr.BaseValidator(checkItem as C));
+            bool vd = UIHelper.ShowInvalidMessage(ctr.BaseValidator(checkItem as C));
             return vd;
         }
 

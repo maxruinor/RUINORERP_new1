@@ -150,7 +150,7 @@ namespace RUINORERP.UI.FM
 
 
 
-        public List<ContextMenuController> AddContextMenu()
+        public override List<ContextMenuController> AddContextMenu()
         {
             //List<EventHandler> ContextClickList = new List<EventHandler>();
             //ContextClickList.Add(NewSumDataGridView_转为收付款单);
@@ -198,7 +198,21 @@ namespace RUINORERP.UI.FM
                     List<tb_FM_PaymentRecord> paymentRecords = await paymentController.CreatePaymentRecord(new List<tb_FM_ReceivablePayable> { item }, false);
                     MenuPowerHelper menuPowerHelper;
                     menuPowerHelper = Startup.GetFromFac<MenuPowerHelper>();
-                    tb_MenuInfo RelatedMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble && m.EntityName == nameof(tb_FM_PaymentRecord) && m.BIBaseForm == "BaseBillEditGeneric`2").FirstOrDefault();
+
+                    string Flag = string.Empty;
+                    if (PaymentType == ReceivePaymentType.收款)
+                    {
+                        Flag = typeof(RUINORERP.UI.FM.UCFMReceivedRecord).FullName;
+                    }
+                    else
+                    {
+                        Flag = typeof(RUINORERP.UI.FM.UCFMPaymentRecord).FullName;
+                    }
+
+                    tb_MenuInfo RelatedMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble
+                && m.EntityName == nameof(tb_FM_PaymentRecord)
+                && m.BIBaseForm == "BaseBillEditGeneric`2" && m.ClassPath == Flag)
+                    .FirstOrDefault();
                     if (RelatedMenuInfo != null)
                     {
                         menuPowerHelper.ExecuteEvents(RelatedMenuInfo, paymentRecords[0]);

@@ -124,6 +124,8 @@ namespace RUINORERP.UI.UControls
                 }
             }
         }
+
+   
         #region 实现右键多选菜单
 
         private bool _headerMenuShown = false; // 标记是否显示行头菜单
@@ -134,33 +136,44 @@ namespace RUINORERP.UI.UControls
         protected override void OnCellMouseDown(DataGridViewCellMouseEventArgs e)
         {
             base.OnCellMouseDown(e);
-            if (HolderMenu.Items.Count == 0)
+            if (e.Button == MouseButtons.Right)
             {
-                HolderMenu = this.ContextMenuStrip;
+                if (HolderMenu.Items.Count == 0)
+                {
+                    HolderMenu = this.ContextMenuStrip;
+                }
+
+                // 处理左上角行头右键点击
+                if (e.RowIndex == -1 && e.ColumnIndex == -1 && e.Button == MouseButtons.Right)
+                {
+                    var headerMenu = BuildHeaderMenu();
+                    this.ContextMenuStrip = headerMenu;
+                    ShowHeaderContextMenu(headerMenu, e.Location);
+                    _headerMenuShown = true;
+                }
+                else
+                {
+                    this.ContextMenuStrip = HolderMenu;
+                    _headerMenuShown = false;
+                }
             }
 
-            // 处理左上角行头右键点击
-            if (e.RowIndex == -1 && e.ColumnIndex == -1 && e.Button == MouseButtons.Right)
-            {
-                var headerMenu = BuildHeaderMenu();
-                this.ContextMenuStrip = headerMenu;
-                ShowHeaderContextMenu(headerMenu, e.Location);
-                _headerMenuShown = true;
-            }
-            else
-            {
-                this.ContextMenuStrip = HolderMenu;
-                _headerMenuShown = false;
-            }
         }
 
 
         protected override void OnMouseDown(MouseEventArgs e)
         {
             base.OnMouseDown(e);
-            if (!_headerMenuShown && HolderMenu.Items.Count > 0)
+            if (e.Button == MouseButtons.Right)
             {
-                this.ContextMenuStrip = HolderMenu;
+                if (!_headerMenuShown && HolderMenu.Items.Count > 0)
+                {
+                    if (true)
+                    {
+                        this.ContextMenuStrip = HolderMenu;
+                    }
+                }
+
             }
         }
 
@@ -219,7 +232,7 @@ namespace RUINORERP.UI.UControls
 
 
         #endregion
-
+        
         private void SetSelectedColumn(bool _UseSelectedColumns)
         {
             if (this.Columns["Selected"] == null)
@@ -390,8 +403,9 @@ namespace RUINORERP.UI.UControls
         {
             // 启用双缓冲
             this.DoubleBuffered = true;
-            // 在构造函数中添加
-            this.RowHeadersWidthSizeMode = DataGridViewRowHeadersWidthSizeMode.AutoSizeToAllHeaders;
+            //// 在构造函数中添加
+            ///这个设置会在每次行数变化时触发全量行头宽度计算，当数据量超过1000行时会产生严重的性能问题
+            //this.RowHeadersWidthSizeMode = DataGridViewRowHeadersWidthSizeMode.AutoSizeToAllHeaders;
             this.TopLeftHeaderCell.Style.BackColor = Color.LightGray;
             this.TopLeftHeaderCell.ToolTipText = "点击右键显示设置多选模式设置菜单";
 
@@ -492,10 +506,19 @@ namespace RUINORERP.UI.UControls
         // 处理SelectionChanged事件，以更新其他选中单元格的背景色
         private void dataGridView1_SelectionChanged(object sender, EventArgs e)
         {
+            //以更新当前单元格的背景色 dataGridView1_CurrentCellChanged已经实现
+            return;
             if (this.SelectedRows.Count > 200)
             {
                 return;
             }
+
+            // 仅更新必要元素
+            //foreach (DataGridViewRow row in this.Rows)
+            //{
+            //    row.Selected = row.Index == this.CurrentCell?.RowIndex;
+            //}
+
             foreach (DataGridViewCell cell in this.SelectedCells)
             {
                 if (cell != this.CurrentCell)
@@ -694,113 +717,125 @@ namespace RUINORERP.UI.UControls
         public void BindColumnStyle()
         {
             if (this.Columns == null || this.Columns.Count == 0) return;
-
-            //foreach (var item in InvisibleCols)
-            //{
-            //    ColumnDisplayController cdcInv = ColumnDisplays.Where(c => c.ColName == item).FirstOrDefault();
-            //    if (cdcInv != null)
-            //    {
-            //        cdcInv.Disable = true;
-            //    }
-            //}
-            ColumnDisplays.Where(c => c.Disable).ToList().ForEach(f => f.ColDisplayIndex = 1000);
-            ColDisplayController cdc = ColumnDisplays.Where(c => c.ColName == "Selected").FirstOrDefault();
-            if (cdc != null)
+            this.SuspendLayout();
+            try
             {
-                cdc.Disable = !UseSelectedColumn;
-                cdc.Visible = UseSelectedColumn;
-                if (UseSelectedColumn)
+                //foreach (var item in InvisibleCols)
+                //{
+                //    ColumnDisplayController cdcInv = ColumnDisplays.Where(c => c.ColName == item).FirstOrDefault();
+                //    if (cdcInv != null)
+                //    {
+                //        cdcInv.Disable = true;
+                //    }
+                //}
+                ColumnDisplays.Where(c => c.Disable).ToList().ForEach(f => f.ColDisplayIndex = 1000);
+                ColDisplayController cdc = ColumnDisplays.Where(c => c.ColName == "Selected").FirstOrDefault();
+                if (cdc != null)
                 {
-                    this.ReadOnly = false;
-                    Columns[cdc.ColName].ReadOnly = false;
+                    cdc.Disable = !UseSelectedColumn;
+                    cdc.Visible = UseSelectedColumn;
+                    if (UseSelectedColumn)
+                    {
+                        this.ReadOnly = false;
+                        Columns[cdc.ColName].ReadOnly = false;
+                    }
+                    else
+                    {
+                        Columns[cdc.ColName].ReadOnly = true;
+                    }
+
                 }
                 else
                 {
-                    Columns[cdc.ColName].ReadOnly = true;
-                }
-
-            }
-            else
-            {
-                if (UseSelectedColumn)
-                {
-                    ColumnDisplays.Add(new ColDisplayController()
+                    if (UseSelectedColumn)
                     {
-                        ColName = "Selected",
-                        ColDisplayIndex = 0,
-                        ColDisplayText = "选择",
-                        ColWidth = 50,
-                        Disable = !UseSelectedColumn,
-                        Visible = UseSelectedColumn
-                    });
-                }
-            }
-            //加载列样式
-            foreach (ColDisplayController displayController in ColumnDisplays)
-            {
-                if (Columns.Contains(displayController.ColName))
-                {
-                    Columns[displayController.ColName].HeaderText = displayController.ColDisplayText;
-                    if (displayController.ColDisplayIndex < ColumnCount)
-                    {
-                        Columns[displayController.ColName].DisplayIndex = displayController.ColDisplayIndex;
-                    }
-                    Columns[displayController.ColName].Width = displayController.ColWidth;
-                    //Columns[displayController.ColName].DataPropertyName = displayController.DataPropertyName;
-                    Columns[displayController.ColName].Visible = displayController.Visible;
-
-                    //if (displayController.ColName != "Selected")
-                    //{
-                    //    Columns[displayController.ColName].ReadOnly = true;
-                    //}
-
-                    if (displayController.ColName == "Selected")
-                    {
-                        //为选择列时
-                        Columns[displayController.ColName].HeaderText = "选择";
-                        Columns[displayController.ColName].Visible = displayController.Visible;
-                        if (UseSelectedColumn)
+                        ColumnDisplays.Add(new ColDisplayController()
                         {
-                            Columns[displayController.ColName].Visible = true;
-                            Columns[displayController.ColName].DisplayIndex = 0;
+                            ColName = "Selected",
+                            ColDisplayIndex = 0,
+                            ColDisplayText = "选择",
+                            ColWidth = 50,
+                            Disable = !UseSelectedColumn,
+                            Visible = UseSelectedColumn
+                        });
+                    }
+                }
+                //加载列样式
+                foreach (ColDisplayController displayController in ColumnDisplays)
+                {
+                    if (Columns.Contains(displayController.ColName))
+                    {
+
+                        #region 设置列
+
+                      
+                        Columns[displayController.ColName].HeaderText = displayController.ColDisplayText;
+                        if (displayController.ColDisplayIndex < ColumnCount)
+                        {
+                            Columns[displayController.ColName].DisplayIndex = displayController.ColDisplayIndex;
                         }
-                        else
+                        Columns[displayController.ColName].Width = displayController.ColWidth;
+                        //Columns[displayController.ColName].DataPropertyName = displayController.DataPropertyName;
+                        Columns[displayController.ColName].Visible = displayController.Visible;
+
+                        //if (displayController.ColName != "Selected")
+                        //{
+                        //    Columns[displayController.ColName].ReadOnly = true;
+                        //}
+
+                        if (displayController.ColName == "Selected")
+                        {
+                            //为选择列时
+                            Columns[displayController.ColName].HeaderText = "选择";
+                            Columns[displayController.ColName].Visible = displayController.Visible;
+                            if (UseSelectedColumn)
+                            {
+                                Columns[displayController.ColName].Visible = true;
+                                Columns[displayController.ColName].DisplayIndex = 0;
+                            }
+                            else
+                            {
+                                Columns[displayController.ColName].Visible = false;
+                            }
+                        }
+
+                        if (displayController.Disable)
                         {
                             Columns[displayController.ColName].Visible = false;
                         }
-                    }
 
-                    if (displayController.Disable)
-                    {
-                        Columns[displayController.ColName].Visible = false;
-                    }
+                        //最后处理特别情况，如果整个dg只读为假，则checkbox可以选择？
+                        if (Columns[displayController.ColName].ValueType.Name.Contains("Boolean") && displayController.ColName != "Selected")
+                        {
+                            Columns[displayController.ColName].ReadOnly = this.ReadOnly;
+                        }
+                        #endregion
+                        
 
-                    //最后处理特别情况，如果整个dg只读为假，则checkbox可以选择？
-                    if (Columns[displayController.ColName].ValueType.Name.Contains("Boolean") && displayController.ColName != "Selected")
-                    {
-                        Columns[displayController.ColName].ReadOnly = this.ReadOnly;
                     }
 
                 }
 
-            }
-
-            //如果
-            if (this.Columns.Count != ColumnDisplays.Count && this.Columns.Count > 5)
-            {
-                //ColumnDisplays中不存在的列，但是this.Columns中存在，则设置为隐藏
-                foreach (DataGridViewColumn col in this.Columns)
+                //如果
+                if (this.Columns.Count != ColumnDisplays.Count && this.Columns.Count > 5)
                 {
-                    if (!ColumnDisplays.Any(c => c.ColName == col.Name))
+                    //ColumnDisplays中不存在的列，但是this.Columns中存在，则设置为隐藏
+                    foreach (DataGridViewColumn col in this.Columns)
                     {
-                        col.Visible = false;
+                        if (!ColumnDisplays.Any(c => c.ColName == col.Name))
+                        {
+                            col.Visible = false;
+                        }
                     }
                 }
+
+                BindColumnStyleFordgvSum();
+
             }
-
-            BindColumnStyleFordgvSum();
-
-
+            finally
+            {
+                this.ResumeLayout(true);
+            }
         }
 
         /// <summary>
@@ -857,92 +892,101 @@ namespace RUINORERP.UI.UControls
         /// <param name="e"></param>
         private void NewSumDataGridView_DataBindingComplete(object sender, DataGridViewBindingCompleteEventArgs e)
         {
-            //求各前。判断一下
-            if (IsShowSumRow)
+            //在数据绑定的关键位置添加布局挂起和恢复
+            this.SuspendLayout();
+            try
             {
-                if (SumColumns == null)
+                //求各前。判断一下
+                if (IsShowSumRow)
                 {
-                    MessageBox.Show("统计列的属性，需要在数据源之前赋值！", "控件提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                }
-                else
-                {
-                    SumData();
-                }
-            }
-
-
-            if (UseCustomColumnDisplay)
-            {
-                #region 如果列为空时 再初始化一次
-                if (ColumnDisplays.Count == 0)
-                {
-                    this.AllowDrop = true;
-                    if (NeedSaveColumnsXml)
+                    if (SumColumns == null)
                     {
-                        ColumnDisplays = customizeGrid.LoadColumnsListByCdc();
+                        MessageBox.Show("统计列的属性，需要在数据源之前赋值！", "控件提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     }
-
-
-                    #region 将没有中文字段 比方ID，或对象集合这种都不启动
-
-                    List<string> FieldNames = FieldNameList.Select(kv => kv.Key).ToList();
-                    List<string> ColNamesDispays = ColumnDisplays.Select(c => c.ColName).ToList();
-                    // 将 A 中不存于 B 中的元素存储到一个新的 List<A> 中
-                    List<string> result = ColNamesDispays.Except(FieldNames).ToList();
-                    foreach (string str in result)
+                    else
                     {
-                        ColDisplayController cdc = ColumnDisplays.Where(c => c.ColName == str).FirstOrDefault();
-                        if (cdc != null)
+                        SumData();
+                    }
+                }
+
+
+                if (UseCustomColumnDisplay)
+                {
+                    #region 如果列为空时 再初始化一次
+                    if (ColumnDisplays.Count == 0)
+                    {
+                        this.AllowDrop = true;
+                        if (NeedSaveColumnsXml)
                         {
-                            cdc.Disable = true;
+                            ColumnDisplays = customizeGrid.LoadColumnsListByCdc();
                         }
-                    }
-                    #endregion
 
-                    //这里认为只执行一次？并且要把显示名的中文传过来，并且不在默认中文及控制显示列表中，就不显示了。
-                    foreach (var item in FieldNameList)
-                    {
-                        ColDisplayController cdc = ColumnDisplays.Where(c => c.ColName == item.Key).FirstOrDefault();
-                        if (cdc != null)
+
+                        #region 将没有中文字段 比方ID，或对象集合这种都不启动
+
+                        List<string> FieldNames = FieldNameList.Select(kv => kv.Key).ToList();
+                        List<string> ColNamesDispays = ColumnDisplays.Select(c => c.ColName).ToList();
+                        // 将 A 中不存于 B 中的元素存储到一个新的 List<A> 中
+                        List<string> result = ColNamesDispays.Except(FieldNames).ToList();
+                        foreach (string str in result)
                         {
-                            cdc.ColDisplayText = item.Value.Key;
-                            if (!item.Value.Value)
+                            ColDisplayController cdc = ColumnDisplays.Where(c => c.ColName == str).FirstOrDefault();
+                            if (cdc != null)
                             {
-                                cdc.Visible = item.Value.Value;//如果默认不显示，则不参加控制
                                 cdc.Disable = true;
                             }
-                            //特别处理选择列
-                            if (cdc.ColName == "Selected")
+                        }
+                        #endregion
+
+                        //这里认为只执行一次？并且要把显示名的中文传过来，并且不在默认中文及控制显示列表中，就不显示了。
+                        foreach (var item in FieldNameList)
+                        {
+                            ColDisplayController cdc = ColumnDisplays.Where(c => c.ColName == item.Key).FirstOrDefault();
+                            if (cdc != null)
                             {
-                                cdc.Visible = UseSelectedColumn;
-                                cdc.Disable = !UseSelectedColumn;
+                                cdc.ColDisplayText = item.Value.Key;
+                                if (!item.Value.Value)
+                                {
+                                    cdc.Visible = item.Value.Value;//如果默认不显示，则不参加控制
+                                    cdc.Disable = true;
+                                }
+                                //特别处理选择列
+                                if (cdc.ColName == "Selected")
+                                {
+                                    cdc.Visible = UseSelectedColumn;
+                                    cdc.Disable = !UseSelectedColumn;
+                                }
+                            }
+                            else
+                            {
+
                             }
                         }
-                        else
-                        {
+                    }
 
-                        }
+                    #endregion
+                    // 加载列样式 这里会多次执行，就算关闭时也会执行，所以这里只是显示绑定到UI的样式，不能加载
+                    BindColumnStyle();
+                }
+
+                //隐藏 FieldNameList
+                if (Columns.Contains("FieldNameList"))
+                {
+                    Columns["FieldNameList"].Visible = false;
+                }
+
+                //隐藏 FieldNameList
+                if (Columns.Contains("Selected"))
+                {
+                    if (Columns["Selected"].HeaderText == "Selected")
+                    {
+                        Columns["Selected"].Visible = false;
                     }
                 }
-
-                #endregion
-                // 加载列样式 这里会多次执行，就算关闭时也会执行，所以这里只是显示绑定到UI的样式，不能加载
-                BindColumnStyle();
             }
-
-            //隐藏 FieldNameList
-            if (Columns.Contains("FieldNameList"))
+            finally
             {
-                Columns["FieldNameList"].Visible = false;
-            }
-
-            //隐藏 FieldNameList
-            if (Columns.Contains("Selected"))
-            {
-                if (Columns["Selected"].HeaderText == "Selected")
-                {
-                    Columns["Selected"].Visible = false;
-                }
+                this.ResumeLayout(true);
             }
         }
 
@@ -1355,10 +1399,11 @@ namespace RUINORERP.UI.UControls
             ContextMenuStrip newContextMenuStrip = new ContextMenuStrip();
 
             // 添加条件：不在行头区域时才显示常规菜单项
-            if (_headerMenuShown)
-            {
-                return new ContextMenuStrip();
-            }
+            //if (_headerMenuShown)
+            //{
+            //    return new ContextMenuStrip();
+            //}
+
             newContextMenuStrip.BackColor = Color.FromArgb(192, 255, 255);
 
             // 合并传入的菜单项
@@ -2114,7 +2159,7 @@ namespace RUINORERP.UI.UControls
             _dgvSumRow.Height = _sumRowHeight;
             _dgvSumRow.RowTemplate.Height = _sumRowHeight;
             _dgvSumRow.AllowUserToAddRows = false;
-            _dgvSumRow.RowHeadersWidthSizeMode = DataGridViewRowHeadersWidthSizeMode.DisableResizing;
+            //_dgvSumRow.RowHeadersWidthSizeMode = DataGridViewRowHeadersWidthSizeMode.DisableResizing;
             _dgvSumRow.ReadOnly = true;
             _dgvSumRow.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             _dgvSumRow.DefaultCellStyle.SelectionBackColor = _dgvSumRow.DefaultCellStyle.BackColor;
@@ -2190,7 +2235,14 @@ namespace RUINORERP.UI.UControls
         /// </summary>
         private void InitScrollWithSourceGrid()
         {
-            if (DesignMode) return;
+            this.SuspendLayout();
+            _vScrollBar?.SuspendLayout();
+            _hScrollBar?.SuspendLayout();
+            try
+            {
+                #region 初始化滚动条
+
+                if (DesignMode) return;
             //如果没有使用合计功能 跳出来。
             if (!IsShowSumRow)
             {
@@ -2299,6 +2351,14 @@ namespace RUINORERP.UI.UControls
                 _dgvSumRow.Visible = false;
             }
             _initSourceGriding = false;
+                #endregion
+            }
+            finally
+            {
+                this.ResumeLayout(true);
+                _vScrollBar?.ResumeLayout();
+                _hScrollBar?.ResumeLayout();
+            }
         }
 
 

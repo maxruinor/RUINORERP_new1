@@ -30,27 +30,23 @@ using RUINORERP.Common.Helper;
 namespace RUINORERP.Business.Processor
 {
     /// <summary>
-    /// 销售订单明细
+    /// 销售出库单明细
     /// </summary>
-    public partial class tb_SaleOrderDetailProcessor:BaseProcessor 
+    public partial class tb_SaleOutDetailProcessor : BaseProcessor 
     {
+        
         public override List<string> GetSummaryCols()
         {
-            List<Expression<Func<tb_SaleOrderDetail, object>>> SummaryCols = new List<Expression<Func<tb_SaleOrderDetail, object>>>();
+            List<Expression<Func<tb_SaleOutDetail, object>>> SummaryCols = new List<Expression<Func<tb_SaleOutDetail, object>>>();
             SummaryCols.Add(c => c.Quantity);
             SummaryCols.Add(c => c.CommissionAmount);
             SummaryCols.Add(c => c.SubtotalTaxAmount);
             SummaryCols.Add(c => c.SubtotalCostAmount);
             SummaryCols.Add(c => c.SubtotalTransAmount);
-            SummaryCols.Add(c => c.TotalDeliveredQty);
+            SummaryCols.Add(c => c.CustomizedCost);
             SummaryCols.Add(c => c.TotalReturnedQty);
-            //listCols.SetCol_Summary<tb_SaleOrderDetail>(c => c.Quantity);
-            //listCols.SetCol_Summary<tb_SaleOrderDetail>(c => c.CommissionAmount);
-            //listCols.SetCol_Summary<tb_SaleOrderDetail>(c => c.SubtotalCostAmount);
-            //listCols.SetCol_Summary<tb_SaleOrderDetail>(c => c.SubtotalTransAmount);
-            //listCols.SetCol_Summary<tb_SaleOrderDetail>(c => c.SubtotalTaxAmount);
 
-            List<string> SummaryList = RuinorExpressionHelper.ExpressionListToStringList<tb_SaleOrderDetail>(SummaryCols);
+            List<string> SummaryList = RuinorExpressionHelper.ExpressionListToStringList<tb_SaleOutDetail>(SummaryCols);
             return SummaryList;
         }
 

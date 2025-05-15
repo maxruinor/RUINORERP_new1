@@ -233,13 +233,13 @@ namespace RUINORERP.Business
                         if (priceRecord == null)
                         {
                             priceRecord = new tb_PriceRecord();
+                            priceRecord.ProdDetailID = child.ProdDetailID;
                         }
                         priceRecord.Employee_ID = entity.tb_saleorder.Employee_ID;
                         if (priceRecord.SalePrice != child.TransactionPrice)
                         {
                             priceRecord.SalePrice = child.TransactionPrice;
                             priceRecord.SaleDate = System.DateTime.Now;
-                            priceRecord.ProdDetailID = child.ProdDetailID;
                         }
                         priceUpdateList.Add(priceRecord);
                         #endregion
@@ -249,6 +249,7 @@ namespace RUINORERP.Business
                         if (child.Cost == 0 && inv.Inv_Cost > 0)
                         {
                             child.Cost = inv.Inv_Cost;
+                            child.SubtotalCostAmount = (child.Cost + child.CustomizedCost) * child.Quantity;
                             UpdateSaleOutCostlist.Add(child);
                         }
                         #endregion
@@ -346,7 +347,7 @@ namespace RUINORERP.Business
                                     if (entity.tb_saleorder.tb_SaleOrderDetails[i].Cost == 0 && saleOutDetailCost > 0)
                                     {
                                         entity.tb_saleorder.tb_SaleOrderDetails[i].Cost = saleOutDetailCost;
-                                        entity.tb_saleorder.tb_SaleOrderDetails[i].SubtotalCostAmount = saleOutDetailCost * entity.tb_saleorder.tb_SaleOrderDetails[i].Quantity;
+                                        entity.tb_saleorder.tb_SaleOrderDetails[i].SubtotalCostAmount = (saleOutDetailCost+ entity.tb_saleorder.tb_SaleOrderDetails[i].CustomizedCost) * entity.tb_saleorder.tb_SaleOrderDetails[i].Quantity;
                                     }
 
                                     //如果已交数据大于 订单数量 给出警告实际操作中 使用其他方式将备品入库
@@ -387,7 +388,9 @@ namespace RUINORERP.Business
                                     if (entity.tb_saleorder.tb_SaleOrderDetails[i].Cost == 0 && saleOutDetailCost > 0)
                                     {
                                         entity.tb_saleorder.tb_SaleOrderDetails[i].Cost = saleOutDetailCost;
-                                        entity.tb_saleorder.tb_SaleOrderDetails[i].SubtotalCostAmount = saleOutDetailCost * entity.tb_saleorder.tb_SaleOrderDetails[i].Quantity;
+                                         
+                                        entity.tb_saleorder.tb_SaleOrderDetails[i].SubtotalCostAmount = (saleOutDetailCost+ entity.tb_saleorder.tb_SaleOrderDetails[i].CustomizedCost)
+                                            * entity.tb_saleorder.tb_SaleOrderDetails[i].Quantity;
                                     }
 
                                     //如果已交数据大于 订单数量 给出警告实际操作中 使用其他方式将备品入库

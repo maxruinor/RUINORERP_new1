@@ -33,11 +33,32 @@ using System.Web.UI.WebControls;
 using RUINORERP.UI.FM;
 using RUINORERP.Global.EnumExt;
 using RUINORERP.UI.ATechnologyStack;
+using FluentValidation.Results;
 
 namespace RUINORERP.UI.Common
 {
     public static class UIHelper
     {
+
+        public static bool ShowInvalidMessage(ValidationResult results)
+        {
+            bool validationSucceeded = results.IsValid;
+            IList<ValidationFailure> failures = results.Errors;
+            //validator.ValidateAndThrow(info);
+            StringBuilder msg = new StringBuilder();
+            int counter = 1;
+            foreach (var item in failures)
+            {
+                msg.Append(counter.ToString() + ") ");
+                msg.Append(item.ErrorMessage).Append("\r\n");
+                counter++;
+            }
+            if (!results.IsValid)
+            {
+                MessageBox.Show(msg.ToString(), "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            }
+            return results.IsValid;
+        }
 
         #region 触发UI验证事件 让数据生效
 

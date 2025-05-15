@@ -73,6 +73,8 @@ namespace RUINORERP.Business.AutoMapper
             //应收付单生成收款记录表
             CreateMap<tb_FM_ReceivablePayable, tb_FM_PaymentRecord>();
 
+            //应收付单生成收款记录表
+            CreateMap<tb_FM_ReceivablePayableDetail, tb_FM_PaymentRecordDetail>();
             #endregion
 
 

@@ -48,7 +48,7 @@ namespace RUINORERP.UI.FM
             this.txtExchangeRate = new Krypton.Toolkit.KryptonTextBox();
             this.lblCustomerVendor_ID = new Krypton.Toolkit.KryptonLabel();
             this.cmbCustomerVendor_ID = new Krypton.Toolkit.KryptonComboBox();
-            this.txtARAPNo = new Krypton.Toolkit.KryptonTextBox();
+            this.txtPaymentNo = new Krypton.Toolkit.KryptonTextBox();
             this.lblAccount_type = new Krypton.Toolkit.KryptonLabel();
             this.cmbAccount_type = new Krypton.Toolkit.KryptonComboBox();
             this.lblBillText = new Krypton.Toolkit.KryptonLabel();
@@ -144,7 +144,7 @@ namespace RUINORERP.UI.FM
             this.kryptonPanel1.Controls.Add(this.txtExchangeRate);
             this.kryptonPanel1.Controls.Add(this.lblCustomerVendor_ID);
             this.kryptonPanel1.Controls.Add(this.cmbCustomerVendor_ID);
-            this.kryptonPanel1.Controls.Add(this.txtARAPNo);
+            this.kryptonPanel1.Controls.Add(this.txtPaymentNo);
             this.kryptonPanel1.Controls.Add(this.lblAccount_type);
             this.kryptonPanel1.Controls.Add(this.cmbAccount_type);
             this.kryptonPanel1.Controls.Add(this.lblBillText);
@@ -300,10 +300,10 @@ namespace RUINORERP.UI.FM
             // 
             // txtARAPNo
             // 
-            this.txtARAPNo.Location = new System.Drawing.Point(79, 66);
-            this.txtARAPNo.Name = "txtARAPNo";
-            this.txtARAPNo.Size = new System.Drawing.Size(137, 23);
-            this.txtARAPNo.TabIndex = 175;
+            this.txtPaymentNo.Location = new System.Drawing.Point(79, 66);
+            this.txtPaymentNo.Name = "txtARAPNo";
+            this.txtPaymentNo.Size = new System.Drawing.Size(137, 23);
+            this.txtPaymentNo.TabIndex = 175;
             // 
             // lblAccount_type
             // 
@@ -327,11 +327,11 @@ namespace RUINORERP.UI.FM
             this.lblBillText.LabelStyle = Krypton.Toolkit.LabelStyle.TitlePanel;
             this.lblBillText.Location = new System.Drawing.Point(461, 17);
             this.lblBillText.Name = "lblBillText";
-            this.lblBillText.Size = new System.Drawing.Size(110, 29);
+            this.lblBillText.Size = new System.Drawing.Size(90, 29);
             this.lblBillText.StateCommon.LongText.Color1 = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(192)))), ((int)(((byte)(192)))));
             this.lblBillText.StateCommon.LongText.Color2 = System.Drawing.Color.Lime;
             this.lblBillText.TabIndex = 45;
-            this.lblBillText.Values.Text = "应收对账单";
+            this.lblBillText.Values.Text = "收付款单";
             // 
             // btnInfo
             // 
@@ -682,7 +682,7 @@ namespace RUINORERP.UI.FM
             private Krypton.Toolkit.KryptonLabel lblAccount_type;
             private Krypton.Toolkit.KryptonComboBox cmbAccount_type;
             internal Krypton.Toolkit.KryptonPanel kryptonPanel1;
-            private Krypton.Toolkit.KryptonTextBox txtARAPNo;
+            private Krypton.Toolkit.KryptonTextBox txtPaymentNo;
             private Krypton.Toolkit.KryptonLabel lblCustomerVendor_ID;
             private Krypton.Toolkit.KryptonComboBox cmbCustomerVendor_ID;
             private Krypton.Toolkit.KryptonLabel lblExchangeRate;

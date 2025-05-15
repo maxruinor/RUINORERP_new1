@@ -275,13 +275,13 @@ namespace RUINORERP.Business
                         if (priceRecord == null)
                         {
                             priceRecord = new tb_PriceRecord();
+                            priceRecord.ProdDetailID = child.ProdDetailID;
                         }
                         priceRecord.Employee_ID = entity.tb_purorder.Employee_ID;
                         if (child.UnitPrice != priceRecord.PurPrice)
                         {
                             priceRecord.PurPrice = child.UnitPrice;
                             priceRecord.PurDate = System.DateTime.Now;
-                            priceRecord.ProdDetailID = child.ProdDetailID;
                             ReturnResults<tb_PriceRecord> rrpr = await ctrPriceRecord.SaveOrUpdate(priceRecord);
                         }
 

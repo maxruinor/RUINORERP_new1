@@ -414,7 +414,7 @@ namespace RUINORERP.UI.ProductEAV
         {
 
             //比方 暂时没有供应商  又是外键，则是如何处理的？
-            bool vb = base.ShowInvalidMessage(mcProdBase.Validator(EditEntity));
+            bool vb = UIHelper.ShowInvalidMessage(mcProdBase.Validator(EditEntity));
             if (!vb)
             {
                 return;
@@ -449,7 +449,7 @@ namespace RUINORERP.UI.ProductEAV
             List<bool> subrs = new List<bool>();
             foreach (var item in EditEntity.tb_ProdDetails)
             {
-                bool vd = base.ShowInvalidMessage(mcDetail.Validator(item));
+                bool vd = UIHelper.ShowInvalidMessage(mcDetail.Validator(item));
                 subrs.Add(vd);
             }
 

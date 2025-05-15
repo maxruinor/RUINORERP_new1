@@ -424,6 +424,12 @@ namespace RUINORERP.UI.SysConfig
 
         private void AddLoadRelatedData()
         {
+            if (dataGridViewInv.CurrentRow == null)
+            {
+                MessageBox.Show("请先选中要处理的库存数据");
+                return;
+            }
+           
             View_Inventory child = null;
             long ProdDetailID = 0;
             View_ProdDetail prodDetail = null;

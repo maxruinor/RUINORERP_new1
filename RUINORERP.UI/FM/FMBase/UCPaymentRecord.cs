@@ -123,14 +123,18 @@ namespace RUINORERP.UI.FM
                 entity.ActionStatus = ActionStatus.新增;
                 entity.PaymentDate = System.DateTime.Now;
                 entity.PaymentStatus = (long)PaymentStatus.草稿;
-                if (PaymentType == ReceivePaymentType.付款)
+                if (string.IsNullOrEmpty(entity.PaymentNo))
                 {
-                    entity.PaymentNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.付款单);
+                    if (PaymentType == ReceivePaymentType.付款)
+                    {
+                        entity.PaymentNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.付款单);
+                    }
+                    else
+                    {
+                        entity.PaymentNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.收款单);
+                    }
                 }
-                else
-                {
-                    entity.PaymentNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.收款单);
-                }
+               
                 //entity.InvoiceDate = System.DateTime.Now;
                 entity.Employee_ID = MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID.Value;
                 //清空
@@ -149,6 +153,7 @@ namespace RUINORERP.UI.FM
             DataBindingHelper.BindData4Cmb<tb_Employee>(entity, k => k.Employee_ID, v => v.Employee_Name, cmbEmployee_ID);
             DataBindingHelper.BindData4Cmb<tb_Currency>(entity, k => k.Currency_ID, v => v.CurrencyName, cmbCurrency_ID);
             DataBindingHelper.BindData4Cmb<tb_FM_Account>(entity, k => k.Account_id, v => v.Account_name, cmbAccount_id);
+            DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.PaymentNo, txtPaymentNo, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.ApprovalOpinions, txtApprovalOpinions, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4ControlByEnum<tb_FM_PaymentRecord>(entity, t => t.ApprovalStatus, lblReview, BindDataType4Enum.EnumName, typeof(Global.ApprovalStatus));
             //  DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.ExchangeRate.ToString(), txtExchangeRate, BindDataType4TextBox.Money, false);
@@ -167,7 +172,17 @@ namespace RUINORERP.UI.FM
 
             //显示 打印状态 如果是草稿状态 不显示打印
             ShowPrintStatus(lblPrintStatus, entity);
+            //this.ValidateChildren();
+            this.AutoValidate = AutoValidate.EnableAllowFocusChange;
 
+            if (entity.tb_FM_PaymentRecordDetails != null && entity.tb_FM_PaymentRecordDetails.Count > 0)
+            {
+                sgh.LoadItemDataToGrid<tb_FM_PaymentRecordDetail>(grid1, sgd, entity.tb_FM_PaymentRecordDetails, c => c.PaymentDetailId);
+            }
+            else
+            {
+                sgh.LoadItemDataToGrid<tb_FM_PaymentRecordDetail>(grid1, sgd, new List<tb_FM_PaymentRecordDetail>(), c => c.PaymentDetailId);
+            }
             if (entity.ReceivePaymentType == (long)ReceivePaymentType.收款)
             {
                 //收客户的款
@@ -407,6 +422,12 @@ namespace RUINORERP.UI.FM
             {
                 //产品ID有值才算有效值
                 details = detailentity.Where(t => t.ForeignAmount > 0 || t.LocalAmount > 0).ToList();
+
+
+                //
+
+
+
                 //如果没有有效的明细。直接提示
                 if (NeedValidated && details.Count == 0)
                 {
@@ -415,7 +436,7 @@ namespace RUINORERP.UI.FM
                 }
 
                 EditEntity.tb_FM_PaymentRecordDetails = details;
-                
+
                 //如果主表的总金额和明细金额加总后不相等，则提示
                 if (NeedValidated && EditEntity.TotalForeignAmount != details.Sum(c => c.ForeignAmount))
                 {
@@ -585,7 +606,7 @@ namespace RUINORERP.UI.FM
             return rss;
         }
 
- 
+
 
         SourceGridDefine sgd = null;
         SourceGridHelper sgh = new SourceGridHelper();
@@ -593,9 +614,7 @@ namespace RUINORERP.UI.FM
 
         List<SGDefineColumnItem> listCols = new List<SGDefineColumnItem>();
 
-        //设计关联列和目标列
-        View_ProdDetailController<View_ProdDetail> dc = Startup.GetFromFac<View_ProdDetailController<View_ProdDetail>>();
-        List<View_ProdDetail> list = new List<View_ProdDetail>();
+
 
         private void UCPaymentRecord_Load(object sender, EventArgs e)
         {
@@ -630,7 +649,7 @@ namespace RUINORERP.UI.FM
             {
                 lblBillText.Text = CurMenuInfo.CaptionCN;
             }
-        
+
             base.ToolBarEnabledControl(MenuItemEnums.刷新);
 
             grid1.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
@@ -638,80 +657,29 @@ namespace RUINORERP.UI.FM
 
             listCols = new List<SGDefineColumnItem>();
             //指定了关键字段ProdDetailID
-            listCols = sgh.GetGridColumns<ProductSharePart, tb_FM_PaymentRecordDetail>(c => c.PaymentDetailId, false);
+            listCols = sgh.GetGridColumns<tb_FM_PaymentRecordDetail>();
 
             listCols.SetCol_NeverVisible<tb_FM_PaymentRecordDetail>(c => c.PaymentDetailId);
-            listCols.SetCol_NeverVisible<ProductSharePart>(c => c.Rack_ID);
-            listCols.SetCol_NeverVisible<ProductSharePart>(c => c.ShortCode);
-            listCols.SetCol_NeverVisible<ProductSharePart>(c => c.Brand);
-            listCols.SetCol_NeverVisible<ProductSharePart>(c => c.Location_ID);
-            listCols.SetCol_NeverVisible<ProductSharePart>(c => c.Model);
-            listCols.SetCol_NeverVisible<ProductSharePart>(c => c.VendorModelCode);
-            listCols.SetCol_NeverVisible<ProductSharePart>(c => c.Images);
-            listCols.SetCol_NeverVisible<ProductSharePart>(c => c.Inv_Cost);
-            listCols.SetCol_NeverVisible<ProductSharePart>(c => c.Standard_Price);
-            listCols.SetCol_NeverVisible<ProductSharePart>(c => c.TransPrice);
-
-
+            listCols.SetCol_NeverVisible<tb_FM_PaymentRecordDetail>(c => c.SourceBilllId);
 
             UIHelper.ControlChildColumnsInvisible(CurMenuInfo, listCols);
             UIHelper.ControlChildColumnsInvisible(CurMenuInfo, listCols);
-            if (!AppContext.SysConfig.UseBarCode)
-            {
-                listCols.SetCol_NeverVisible<ProductSharePart>(c => c.BarCode);
-            }
-            //listCols.SetCol_DefaultValue<tb_FM_PaymentRecordDetail>(c => c.ForeignPayableAmount, 0.00M);
 
-            //listCols.SetCol_ReadOnly<tb_FM_OtherExpenseDetail>(c => c.CNName);
-
-            //listCols.SetCol_Format<tb_FM_PaymentRecordDetail>(c => c.TaxRate, CustomFormatType.PercentFormat);
-            //listCols.SetCol_Format<tb_FM_PaymentRecordDetail>(c => c.LocalPayableAmount, CustomFormatType.CurrencyFormat);
-            //listCols.SetCol_Format<tb_FM_PaymentRecordDetail>(c => c.TaxLocalAmount, CustomFormatType.CurrencyFormat);
-            //listCols.SetCol_Format<tb_FM_PaymentRecordDetail>(c => c.UnitPrice, CustomFormatType.CurrencyFormat);
-            //listCols.SetCol_Format<tb_FM_PaymentRecordDetail>(c => c.ForeignPayableAmount, CustomFormatType.CurrencyFormat);
-
+            listCols.SetCol_Format<tb_FM_PaymentRecordDetail>(c => c.SourceBizType, CustomFormatType.EnumOptions, null, typeof(BizType));
+            listCols.SetCol_Format<tb_FM_PaymentRecordDetail>(c => c.LocalAmount, CustomFormatType.CurrencyFormat);
+            listCols.SetCol_Format<tb_FM_PaymentRecordDetail>(c => c.ForeignAmount, CustomFormatType.CurrencyFormat);
             sgd = new SourceGridDefine(grid1, listCols, true);
-          //  listCols.SetCol_Formula<tb_FM_PaymentRecordDetail>((a, b) => a.UnitPrice * b.Quantity, c => c.LocalPayableAmount);//-->成交价是结果列
+
+            //  listCols.SetCol_Formula<tb_FM_PaymentRecordDetail>((a, b) => a.UnitPrice * b.Quantity, c => c.LocalPayableAmount);//-->成交价是结果列
 
             sgd.GridMasterData = EditEntity;
-            /*
-            //具体审核权限的人才显示
-            if (!AppContext.CurUserInfo.UserButtonList.Where(c => c.BtnText == MenuItemEnums.审核.ToString()).Any())
-            {
-                //listCols.SetCol_NeverVisible<tb_PurEntryDetail>(c => c.UnitPrice);
-                //listCols.SetCol_NeverVisible<tb_PurEntryDetail>(c => c.TransactionPrice);
-                //listCols.SetCol_NeverVisible<tb_PurEntryDetail>(c => c.SubtotalPirceAmount);
-            }*/
-
-
-            //listCols.SetCol_NeverVisible<tb_FM_PaymentRecordDetail>(c => c.EvidenceImage);//后面会删除这一列
-            //listCols.SetCol_Summary<tb_FM_PaymentRecordDetail>(c => c.ForeignPayableAmount);
-           // listCols.SetCol_Summary<tb_FM_PaymentRecordDetail>(c => c.LocalPayableAmount);
-           // listCols.SetCol_Summary<tb_FM_PaymentRecordDetail>(c => c.TaxLocalAmount);
-
-           // listCols.SetCol_Formula<tb_FM_PaymentRecordDetail>((a, b, c) => a.TaxLocalAmount / (1 + b.TaxRate) * c.TaxRate, d => d.TaxLocalAmount);
-            //listCols.SetCol_Formula<tb_FM_PaymentRecordDetail>((a, b) => a.TotalAmount - b.TaxAmount, c => cLocalPayableAmount);
-
-            ////反算成交单价，目标列能重复添加。已经优化好了。
-            //listCols.SetCol_Formula<tb_FM_PaymentRecordDetail>((a, b) => a.SubtotalAmount / b.Quantity, c => c.TransactionPrice);//-->成交价是结果列
-            ////反算折扣
-            //listCols.SetCol_Formula<tb_FM_PaymentRecordDetail>((a, b) => a.TransactionPrice / b.UnitPrice, c => c.Discount);
-            //listCols.SetCol_Formula<tb_FM_PaymentRecordDetail>((a, b) => a.TransactionPrice / b.Discount, c => c.UnitPrice);
-
-
-            //公共到明细的映射 源 ，左边会隐藏
-           // sgh.SetPointToColumnPairs<ProductSharePart, tb_FM_PaymentRecordDetail>(sgd, f => f.Specifications, t => t.Specifications);
-           // sgh.SetPointToColumnPairs<ProductSharePart, tb_FM_PaymentRecordDetail>(sgd, f => f.Unit_ID, t => t.Unit_ID);
-            //sgh.SetPointToColumnPairs<ProductSharePart, tb_FM_PaymentRecordDetail>(sgd, f => f.Standard_Price, t => t.UnitPrice);
-          //  sgh.SetPointToColumnPairs<ProductSharePart, tb_FM_PaymentRecordDetail>(sgd, f => f.prop, t => t.property);
 
             //应该只提供一个结构
             List<tb_FM_PaymentRecordDetail> lines = new List<tb_FM_PaymentRecordDetail>();
             bindingSourceSub.DataSource = lines; //  ctrSub.Query(" 1>2 ");
             sgd.BindingSourceLines = bindingSourceSub;
 
-            list = MainForm.Instance.list;
-            sgd.SetDependencyObject<ProductSharePart, tb_FM_PaymentRecordDetail>(list);
+
 
             sgd.HasRowHeader = true;
             sgh.InitGrid(grid1, sgd, true, nameof(tb_FM_PaymentRecordDetail));

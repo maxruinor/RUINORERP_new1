@@ -124,7 +124,22 @@ namespace RUINORERP.UI.FM
                         tb_FM_PaymentRecord paymentRecord = await paymentController.CreatePaymentRecord(item, isRefund);
                         MenuPowerHelper menuPowerHelper;
                         menuPowerHelper = Startup.GetFromFac<MenuPowerHelper>();
-                        tb_MenuInfo RelatedMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble && m.EntityName == nameof(tb_FM_PaymentRecord) && m.BIBaseForm == "BaseBillEditGeneric`2").FirstOrDefault();
+
+                        string Flag = string.Empty;
+                        if (CurMenuInfo == null)
+                        {
+                            MessageBox.Show("请联系管理员，配置入口菜单");
+                        }
+                        else
+                        {
+                            Flag = CurMenuInfo.UIPropertyIdentifier;
+                        }
+
+                        tb_MenuInfo RelatedMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble
+                        && m.EntityName == nameof(tb_FM_PaymentRecord)
+                        && m.BIBaseForm == "BaseBillEditGeneric`2"
+                        && m.UIPropertyIdentifier == Flag
+                        ).FirstOrDefault();
                         if (RelatedMenuInfo != null)
                         {
                             menuPowerHelper.ExecuteEvents(RelatedMenuInfo, paymentRecord);
@@ -134,9 +149,9 @@ namespace RUINORERP.UI.FM
                     else
                     {
                         //没有金额可退。
-                        
+
                     }
-                   
+
                 }
                 else
                 {

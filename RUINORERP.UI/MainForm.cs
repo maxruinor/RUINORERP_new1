@@ -78,6 +78,8 @@ using RUINORERP.Global;
 using TransInstruction.CommandService;
 using HLH.Lib.Security;
 using System.Xml.Linq;
+using Fireasy.Common.Extensions;
+using AutoMapper;
 
 
 
@@ -805,9 +807,17 @@ namespace RUINORERP.UI
                     // 显示结果
                     Console.WriteLine($"当前版本: {version}");
                     Console.WriteLine($"最后更新时间: {updateTime:yyyy-MM-dd}");
-
-                    MainForm.Instance.AppContext.CurrentUser.客户端版本 = version + "-" + updateTime;
-
+                    if (!string.IsNullOrEmpty(version))
+                    {
+                        MainForm.Instance.AppContext.CurrentUser.客户端版本 += "-"+version;
+                    }
+                    
+                        MainForm.Instance.AppContext.CurrentUser.客户端版本 += "-"+updateTime;
+                    
+                    if (!string.IsNullOrEmpty(url))
+                    {
+                        MainForm.Instance.AppContext.CurrentUser.客户端版本 += "-"+url;
+                    }
                 }
                 catch (Exception)
                 {
@@ -818,7 +828,10 @@ namespace RUINORERP.UI
 
             });
 
+            Mapper = RUINORERP.Business.AutoMapper.AutoMapperConfig.RegisterMappings().CreateMapper();
         }
+
+        public IMapper Mapper { get; set; }
 
         private void KryptonDockingManager1_DockspaceRemoved(object sender, DockspaceEventArgs e)
         {

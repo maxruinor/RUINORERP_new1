@@ -82,6 +82,9 @@ namespace RUINORERP.Business.Processor
             SummaryCols.Add(c => c.ForeignTotalAmount);
             SummaryCols.Add(c => c.ShipCost);
             SummaryCols.Add(c => c.Deposit);
+
+
+
             List<string> SummaryList = RuinorExpressionHelper.ExpressionListToStringList<tb_SaleOrder>(SummaryCols);
             return SummaryList;
         }

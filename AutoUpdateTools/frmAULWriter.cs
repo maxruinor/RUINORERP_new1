@@ -359,7 +359,7 @@ namespace AULWriter
             btnGenerateNewlist.Enabled = false;
             prbProd.Value = 0;
             txtDiff.Clear();
-
+            DiffFileList.Clear();
             // 准备参数
             workerParams = new UpdateXmlParameters
             {
@@ -1572,15 +1572,24 @@ namespace AULWriter
                     CopyFile(txtCompareSource.Text, txtTargetDirectory.Text, item);
                 }
 
+
             }
-
-            richTxtLog.AppendText($"保存到目标-{txtTargetDirectory.Text}  成功{DiffFileList.Count}个。");
-            richTxtLog.AppendText("\r\n");
-
             if (chkTest.Checked)
             {
+
+                richTxtLog.AppendText($"测试模式----保存到目标-{txtTargetDirectory.Text}  成功{DiffFileList.Count}个。");
+                richTxtLog.AppendText("\r\n");
                 return;
+
             }
+            else
+            {
+                richTxtLog.AppendText($"保存到目标-{txtTargetDirectory.Text}  成功{DiffFileList.Count}个。");
+                richTxtLog.AppendText("\r\n");
+            }
+
+
+
 
             // 将StringBuilder的内容写入文件
             //File.WriteAllText(this.txtAutoUpdateXmlSavePath.Text.Trim(), txtLastXml.Text.ToString(), System.Text.Encoding.GetEncoding("gb2312"));
@@ -1610,7 +1619,7 @@ namespace AULWriter
                 MessageBox.Show("配置保存失败:" + ex.Message);
             }
 
-            richTxtLog.AppendText($"发布到目标-{txtTargetDirectory}成功。");
+            richTxtLog.AppendText($"发布到目标-{txtTargetDirectory.Text}成功。");
             richTxtLog.AppendText("\r\n");
         }
 

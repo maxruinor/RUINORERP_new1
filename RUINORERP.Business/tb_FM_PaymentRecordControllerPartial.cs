@@ -30,6 +30,10 @@ using RUINORERP.Business.Security;
 using RUINORERP.Global.EnumExt;
 using AutoMapper;
 using RUINORERP.Business.FMService;
+using MapsterMapper;
+using IMapper = AutoMapper.IMapper;
+using System.Text;
+using System.Windows.Forms;
 
 namespace RUINORERP.Business
 {
@@ -312,9 +316,8 @@ namespace RUINORERP.Business
             {
                 paymentRecord.PaymentNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.付款单);
             }
-
-            #region 明细 对于预收付 就一条明细记录
             tb_FM_PaymentRecordDetail paymentRecordDetail = new tb_FM_PaymentRecordDetail();
+            #region 明细 
 
             if (entity.ReceivePaymentType == (int)ReceivePaymentType.收款)
             {
@@ -327,16 +330,11 @@ namespace RUINORERP.Business
             paymentRecordDetail.SourceBillNo = entity.PreRPNO;
             paymentRecordDetail.SourceBilllId = entity.PreRPID;
             paymentRecordDetail.ExchangeRate = entity.ExchangeRate;
-
             paymentRecordDetail.Currency_ID = entity.Currency_ID;
-
             paymentRecordDetail.ExchangeRate = entity.ExchangeRate;
-
             #endregion
-
             if (isRefund)
             {
-
                 paymentRecordDetail.ForeignAmount = -entity.ForeignPrepaidAmount;
                 paymentRecordDetail.LocalAmount = -entity.LocalPrepaidAmount;
             }
@@ -375,12 +373,12 @@ namespace RUINORERP.Business
         public async Task<List<tb_FM_PaymentRecord>> CreatePaymentRecord(List<tb_FM_ReceivablePayable> entities, bool SaveToDb = false, tb_FM_PaymentRecord OriginalPaymentRecord = null)
         {
             //通过应收 自动生成 收付款记录
-            IMapper mapper = RUINORERP.Business.AutoMapper.AutoMapperConfig.RegisterMappings().CreateMapper();
+
             List<tb_FM_PaymentRecord> PaymentRecords = new List<tb_FM_PaymentRecord>();
             foreach (var entity in entities)
             {
                 tb_FM_PaymentRecord paymentRecord = new tb_FM_PaymentRecord();
-                paymentRecord = mapper.Map<tb_FM_PaymentRecord>(entity);
+                paymentRecord = Mapper.Map<tb_FM_PaymentRecord>(entity);
                 paymentRecord.ApprovalResults = null;
                 paymentRecord.ApprovalStatus = (int)ApprovalStatus.未审核;
                 paymentRecord.Approver_at = null;
@@ -399,25 +397,31 @@ namespace RUINORERP.Business
                 {
                     paymentRecord.PaymentNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.付款单);
                 }
-
-                #region 明细 对于预收付 就一条明细记录
-                tb_FM_PaymentRecordDetail paymentRecordDetail = new tb_FM_PaymentRecordDetail();
-
-                if (entity.ReceivePaymentType == (int)ReceivePaymentType.收款)
+                List<tb_FM_PaymentRecordDetail> details = Mapper.Map<List<tb_FM_PaymentRecordDetail>>(entity.tb_FM_ReceivablePayableDetails);
+                List<tb_FM_PaymentRecordDetail> NewDetails = new List<tb_FM_PaymentRecordDetail>();
+                for (int i = 0; i < details.Count; i++)
                 {
-                    paymentRecordDetail.SourceBizType = (int)BizType.应收单;
+                    #region 明细 
+                    tb_FM_PaymentRecordDetail paymentRecordDetail = details[i];
+                    if (entity.ReceivePaymentType == (int)ReceivePaymentType.收款)
+                    {
+                        paymentRecordDetail.SourceBizType = (int)BizType.应收单;
+                    }
+                    else
+                    {
+                        paymentRecordDetail.SourceBizType = (int)BizType.应付单;
+                    }
+
+                    paymentRecordDetail.SourceBillNo = entity.ARAPNo;
+                    paymentRecordDetail.SourceBilllId = entity.ARAPId;
+                    paymentRecordDetail.Currency_ID = entity.Currency_ID;
+                    paymentRecordDetail.ExchangeRate = entity.ExchangeRate;
+                    paymentRecordDetail.ForeignAmount = entity.ForeignBalanceAmount;
+                    paymentRecordDetail.LocalAmount = entity.LocalBalanceAmount;
+                    #endregion
+                    NewDetails.Add(paymentRecordDetail);
                 }
-                else
-                {
-                    paymentRecordDetail.SourceBizType = (int)BizType.应付单;
-                }
-                paymentRecordDetail.SourceBillNo = entity.ARAPNo;
-                paymentRecordDetail.SourceBilllId = entity.ARAPId;
-                paymentRecordDetail.Currency_ID = entity.Currency_ID;
-                paymentRecordDetail.ExchangeRate = entity.ExchangeRate;
-                paymentRecordDetail.ForeignAmount = entity.ForeignBalanceAmount;
-                paymentRecordDetail.LocalAmount = entity.LocalBalanceAmount;
-                #endregion
+
 
                 paymentRecord.PaymentDate = System.DateTime.Now;
                 paymentRecord.Currency_ID = paymentRecord.Currency_ID;
@@ -444,21 +448,35 @@ namespace RUINORERP.Business
 
                 BusinessHelper.Instance.InitEntity(paymentRecord);
                 //            paymentRecord.ReferenceNo=entity.no 流水
+                paymentRecord.tb_FM_PaymentRecordDetails = NewDetails;
                 if (SaveToDb)
                 {
                     //自动提交
                     paymentRecord.PaymentStatus = (long)PaymentStatus.待审核;
-                    long id = await _unitOfWorkManage.GetDbClient().Insertable<tb_FM_PaymentRecord>(paymentRecord).ExecuteReturnSnowflakeIdAsync();
-                    if (id > 0)
+                    var ctr = _appContext.GetRequiredService<tb_FM_PaymentRecordController<tb_FM_PaymentRecord>>();
+                    //比方 暂时没有供应商  又是外键，则是如何处理的？
+                    bool vb = ShowInvalidMessage(ctr.Validator(paymentRecord));
+                    if (!vb)
                     {
-                        paymentRecordDetail.PaymentId = id;
-                        paymentRecord.tb_FM_PaymentRecordDetails.Add(paymentRecordDetail);
+                        return new List<tb_FM_PaymentRecord>() ;
                     }
+
+                    var paymentRecordController = _appContext.GetRequiredService<tb_FM_PaymentRecordController<tb_FM_PaymentRecord>>();
+                    ReturnMainSubResults<tb_FM_PaymentRecord> rsms = await paymentRecordController.BaseSaveOrUpdateWithChild<tb_FM_PaymentRecord>(paymentRecord);
+                    if (rsms.Succeeded)
+                    {
+                        paymentRecord.tb_FM_PaymentRecordDetails.ForEach(c => c.PaymentId = rsms.ReturnObject.PaymentId);
+                    }
+                    else
+                    {
+                        //记录错误日志
+                        _logger.LogError(rsms.ErrorMsg);
+                    }
+
                 }
                 else
                 {
                     paymentRecord.PaymentStatus = (long)PaymentStatus.草稿;
-                    paymentRecord.tb_FM_PaymentRecordDetails.Add(paymentRecordDetail);
                 }
 
                 PaymentRecords.Add(paymentRecord);
@@ -466,7 +484,25 @@ namespace RUINORERP.Business
             return PaymentRecords;
         }
 
-
+        public static bool ShowInvalidMessage(ValidationResult results)
+        {
+            bool validationSucceeded = results.IsValid;
+            IList<ValidationFailure> failures = results.Errors;
+            //validator.ValidateAndThrow(info);
+            StringBuilder msg = new StringBuilder();
+            int counter = 1;
+            foreach (var item in failures)
+            {
+                msg.Append(counter.ToString() + ") ");
+                msg.Append(item.ErrorMessage).Append("\r\n");
+                counter++;
+            }
+            if (!results.IsValid)
+            {
+                MessageBox.Show(msg.ToString(), "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            }
+            return results.IsValid;
+        }
         public async Task<bool> BaseLogicDeleteAsync(tb_FM_PaymentRecord ObjectEntity)
         {
             //  ReturnResults<tb_FM_PaymentRecordController> rrs = new Business.ReturnResults<tb_FM_PaymentRecordController>();

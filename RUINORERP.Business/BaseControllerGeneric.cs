@@ -34,6 +34,7 @@ using System.Linq.Dynamic.Core;
 using SharpYaml.Tokens;
 using RUINORERP.Business.CommService;
 using System.Web.UI.WebControls;
+using AutoMapper;
 
 namespace RUINORERP.Business
 {
@@ -49,7 +50,7 @@ namespace RUINORERP.Business
         /// </summary>
         public IUnitOfWorkManage _unitOfWorkManage;
         public ILogger<BaseController<T>> _logger;
-
+        public IMapper Mapper { get; set; }
         public string BizTypeText { get; set; }
         public int BizTypeInt { get; set; }
         public BaseController(ILogger<BaseController<T>> logger, IUnitOfWorkManage unitOfWorkManage, ApplicationContext appContext = null)
@@ -61,6 +62,7 @@ namespace RUINORERP.Business
             BizType bizType = mapper.GetBizType(typeof(T).Name);
             BizTypeText = bizType.ToString();
             BizTypeInt = (int)bizType;
+            Mapper = AutoMapper.AutoMapperConfig.RegisterMappings().CreateMapper();
         }
 
 

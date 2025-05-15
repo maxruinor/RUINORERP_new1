@@ -8,20 +8,20 @@ using System.Windows.Forms;
 
 namespace SourceGrid.Cells.Editors
 {
-	/// <summary>
-	/// Create an Editor that use a DateTimePicker as control for date editing.
-	/// </summary>
+    /// <summary>
+    /// Create an Editor that use a DateTimePicker as control for date editing.
+    /// </summary>
     [System.ComponentModel.ToolboxItem(false)]
     public class DateTimePicker : EditorControlBase
-	{
+    {
 
 
-		/// <summary>
-		/// Constructor
-		/// </summary>
-		public DateTimePicker():base(typeof(System.DateTime))
-		{
-		}
+        /// <summary>
+        /// Constructor
+        /// </summary>
+        public DateTimePicker() : base(typeof(System.DateTime))
+        {
+        }
 
         private DateTimePickerFormat m_Format = DateTimePickerFormat.Short;
 
@@ -43,21 +43,21 @@ namespace SourceGrid.Cells.Editors
             }
         }
 
-        
-		
-		#region Edit Control
+
+
+        #region Edit Control
         /// <summary>
         /// Create the editor control
         /// </summary>
         /// <returns></returns>
         protected override Control CreateControl()
-		{
-			System.Windows.Forms.DateTimePicker dtPicker = new System.Windows.Forms.DateTimePicker();
+        {
+            System.Windows.Forms.DateTimePicker dtPicker = new System.Windows.Forms.DateTimePicker();
             //dtPicker.Format = DateTimePickerFormat.Short;
             dtPicker.Format = Format; // 使用新添加的Format属性
             dtPicker.ShowCheckBox = AllowNull;
-			return dtPicker;
-		}
+            return dtPicker;
+        }
 
         protected override void OnChanged(EventArgs e)
         {
@@ -70,49 +70,57 @@ namespace SourceGrid.Cells.Editors
             }
         }
 
-		/// <summary>
-		/// Gets the control used for editing the cell.
-		/// </summary>
-		public new System.Windows.Forms.DateTimePicker Control
-		{
-			get
-			{
-				return (System.Windows.Forms.DateTimePicker)base.Control;
-			}
-		}
-		#endregion
+        /// <summary>
+        /// Gets the control used for editing the cell.
+        /// </summary>
+        public new System.Windows.Forms.DateTimePicker Control
+        {
+            get
+            {
+                return (System.Windows.Forms.DateTimePicker)base.Control;
+            }
+        }
+        #endregion
 
-		/// <summary>
-		/// This method is called just before the edit start. You can use this method to customize the editor with the cell informations.
-		/// </summary>
-		/// <param name="cellContext"></param>
-		/// <param name="editorControl"></param>
-		protected override void OnStartingEdit(CellContext cellContext, Control editorControl)
-		{
-			base.OnStartingEdit(cellContext, editorControl);
+        /// <summary>
+        /// This method is called just before the edit start. You can use this method to customize the editor with the cell informations.
+        /// </summary>
+        /// <param name="cellContext"></param>
+        /// <param name="editorControl"></param>
+        protected override void OnStartingEdit(CellContext cellContext, Control editorControl)
+        {
+            base.OnStartingEdit(cellContext, editorControl);
 
-			System.Windows.Forms.DateTimePicker dtPicker = (System.Windows.Forms.DateTimePicker)editorControl;
-			dtPicker.Font = cellContext.Cell.View.Font;
-		}
-		/// <summary>
-		/// Set the specified value in the current editor control.
-		/// </summary>
-		/// <param name="editValue"></param>
-		public override void SetEditValue(object editValue)
-		{
-			if (editValue is DateTime)
-				Control.Value = (DateTime)editValue;
+            System.Windows.Forms.DateTimePicker dtPicker = (System.Windows.Forms.DateTimePicker)editorControl;
+            dtPicker.Font = cellContext.Cell.View.Font;
+        }
+        /// <summary>
+        /// Set the specified value in the current editor control.
+        /// </summary>
+        /// <param name="editValue"></param>
+        public override void SetEditValue(object editValue)
+        {
+            if (editValue is DateTime)
+            {
+                //如果editValue是0001-01-01 0:00:00
+                //则转换为最小时间，或当前时间
+                if ((DateTime)editValue == DateTime.MinValue)
+                {
+                    editValue = DateTime.Now;
+                }
+                Control.Value = (DateTime)editValue;
+            }
             else if (editValue == null)
                 Control.Checked = false;
             else
                 throw new SourceGridException("Invalid edit value, expected DateTime");
-		}
-		/// <summary>
-		/// Returns the value inserted with the current editor control
-		/// </summary>
-		/// <returns></returns>
-		public override object GetEditedValue()
-		{
+        }
+        /// <summary>
+        /// Returns the value inserted with the current editor control
+        /// </summary>
+        /// <returns></returns>
+        public override object GetEditedValue()
+        {
             //if (Control.Checked)
             //    return Control.Value;
             //else
@@ -130,18 +138,18 @@ namespace SourceGrid.Cells.Editors
         }
 
 
-		public override object GetEditedTagValue()
-		{
-			if (Control.Checked)
-				return Control.Tag;
-			else
-				return null;
-		}
+        public override object GetEditedTagValue()
+        {
+            if (Control.Checked)
+                return Control.Tag;
+            else
+                return null;
+        }
 
-		protected override void OnSendCharToEditor(char key)
+        protected override void OnSendCharToEditor(char key)
         {
             //No implementation
         }
-	}
+    }
 }
 

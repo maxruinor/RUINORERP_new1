@@ -2002,10 +2002,18 @@ namespace RUINORERP.UI.BaseForm
             {
                 tsbtnSelected.Visible = false;
                 //如果双击选择列，则不是编辑
-                if (dataGridView1.Columns[e.ColumnIndex].Name != "Selected")
+                if (e.ColumnIndex != -1)
+                {
+                    if (dataGridView1.Columns[e.ColumnIndex].Name != "Selected")
+                    {
+                        Modify();
+                    }
+                }
+                else
                 {
                     Modify();
                 }
+                
             }
             if (e.ColumnIndex == -1 || e.RowIndex == -1)
             {

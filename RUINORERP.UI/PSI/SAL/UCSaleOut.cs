@@ -396,8 +396,20 @@ namespace RUINORERP.UI.PSI.SAL
             //将数量默认为已出库数量  这个逻辑不对这个是订单累计 的出库数量只能是在出库审核时才累计数据，这里最多只读
             //listCols.SetCol_Formula<tb_SaleOutDetail>((a, b) => a.Quantity, c => c.TotalDeliveredQty);
 
-            listCols.SetCol_Summary<tb_SaleOutDetail>(c => c.Quantity);
-            listCols.SetCol_Summary<tb_SaleOutDetail>(c => c.CommissionAmount);
+            //listCols.SetCol_Summary<tb_SaleOutDetail>(c => c.Quantity);
+            //listCols.SetCol_Summary<tb_SaleOutDetail>(c => c.CommissionAmount);
+            //listCols.SetCol_Summary<tb_SaleOutDetail>(c => c.SubtotalCostAmount);
+            //listCols.SetCol_Summary<tb_SaleOutDetail>(c => c.SubtotalTransAmount);
+            //listCols.SetCol_Summary<tb_SaleOutDetail>(c => c.SubtotalTaxAmount);
+            BaseProcessor baseProcessor = BusinessHelper._appContext.GetRequiredServiceByName<BaseProcessor>(typeof(tb_SaleOutDetail).Name + "Processor");
+            var summaryCols = baseProcessor.GetSummaryCols();
+            foreach (var item in summaryCols)
+            {
+                foreach (var col in listCols)
+                {
+                    col.SetCol_Summary<tb_SaleOutDetail>(item);
+                }
+            }
 
             sgh.SetPointToColumnPairs<ProductSharePart, tb_SaleOutDetail>(sgd, f => f.Location_ID, t => t.Location_ID);
             sgh.SetPointToColumnPairs<ProductSharePart, tb_SaleOutDetail>(sgd, f => f.Rack_ID, t => t.Rack_ID);
@@ -482,10 +494,14 @@ namespace RUINORERP.UI.PSI.SAL
                     MainForm.Instance.uclog.AddLog("请先选择产品数据");
                     return;
                 }
+                foreach (var item in details)
+                {
+                    item.SubtotalCostAmount = item.Cost * item.Quantity;
+                }
+
                 EditEntity.TotalQty = details.Sum(c => c.Quantity);
                 EditEntity.TotalCost = details.Sum(c => c.Cost * c.Quantity);
                 EditEntity.TotalCost = EditEntity.TotalCost + EditEntity.FreightCost;
-
                 EditEntity.TotalTaxAmount = details.Sum(c => c.SubtotalTaxAmount);
                 EditEntity.TotalTaxAmount = EditEntity.TotalTaxAmount.ToRoundDecimalPlaces(MainForm.Instance.authorizeController.GetMoneyDataPrecision());
 

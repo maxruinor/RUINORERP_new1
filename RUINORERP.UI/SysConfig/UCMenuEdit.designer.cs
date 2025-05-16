@@ -1,4 +1,5 @@
-﻿using RUINORERP.UI.UControls;
+﻿using Krypton.Toolkit;
+using RUINORERP.UI.UControls;
 
 namespace RUINORERP.UI.SysConfig
 {
@@ -43,22 +44,22 @@ namespace RUINORERP.UI.SysConfig
             this.lblName = new System.Windows.Forms.Label();
             this.lblCaption_C = new System.Windows.Forms.Label();
             this.lblCaption_E = new System.Windows.Forms.Label();
-            this.txt_MenuName = new System.Windows.Forms.TextBox();
-            this.txt_CaptionE = new System.Windows.Forms.TextBox();
-            this.txt_CaptonC = new System.Windows.Forms.TextBox();
-            this.chkisview = new System.Windows.Forms.CheckBox();
-            this.chkEnable = new System.Windows.Forms.CheckBox();
-            this.txtDiscription = new System.Windows.Forms.TextBox();
+            this.txt_MenuName = new Krypton.Toolkit.KryptonTextBox();
+            this.txt_CaptionE = new Krypton.Toolkit.KryptonTextBox();
+            this.txt_CaptonC = new Krypton.Toolkit.KryptonTextBox();
+            this.chkisview = new KryptonCheckBox();
+            this.chkEnable = new KryptonCheckBox();
+            this.txtDiscription = new Krypton.Toolkit.KryptonTextBox();
             this.lblDiscription = new System.Windows.Forms.Label();
             this.lblOID = new System.Windows.Forms.Label();
             this.dataGridView1 = new RUINORERP.UI.UControls.NewSumDataGridView();
             this.btnLoad = new System.Windows.Forms.Button();
             this.openFileDialog1 = new System.Windows.Forms.OpenFileDialog();
             this.label2 = new System.Windows.Forms.Label();
-            this.txtClassPath = new System.Windows.Forms.TextBox();
+            this.txtClassPath = new Krypton.Toolkit.KryptonTextBox();
             this.label1 = new System.Windows.Forms.Label();
-            this.txtAssembly = new System.Windows.Forms.TextBox();
-            this.txtFormName = new System.Windows.Forms.TextBox();
+            this.txtAssembly = new Krypton.Toolkit.KryptonTextBox();
+            this.txtFormName = new Krypton.Toolkit.KryptonTextBox();
             this.label3 = new System.Windows.Forms.Label();
             this.cmbMenuType = new System.Windows.Forms.ComboBox();
             this.label4 = new System.Windows.Forms.Label();
@@ -66,25 +67,25 @@ namespace RUINORERP.UI.SysConfig
             this.kryptonSplitContainer1 = new Krypton.Toolkit.KryptonSplitContainer();
             this.kryptonSplitContainer2 = new Krypton.Toolkit.KryptonSplitContainer();
             this.kryptonSplitContainer3 = new Krypton.Toolkit.KryptonSplitContainer();
-            this.txtBizInterface = new System.Windows.Forms.TextBox();
+            this.txtBizInterface = new Krypton.Toolkit.KryptonTextBox();
             this.label10 = new System.Windows.Forms.Label();
-            this.txtSort = new System.Windows.Forms.TextBox();
+            this.txtSort = new Krypton.Toolkit.KryptonTextBox();
             this.label8 = new System.Windows.Forms.Label();
             this.toolStrip1 = new System.Windows.Forms.ToolStrip();
             this.toolStripLabel1 = new System.Windows.Forms.ToolStripLabel();
             this.txtMenuName = new System.Windows.Forms.ToolStripTextBox();
-            this.txtBizType = new System.Windows.Forms.TextBox();
+            this.txtBizType = new Krypton.Toolkit.KryptonTextBox();
             this.label7 = new System.Windows.Forms.Label();
-            this.txtBIBizBaseform = new System.Windows.Forms.TextBox();
-            this.txtBIBaseForm = new System.Windows.Forms.TextBox();
+            this.txtBIBizBaseform = new Krypton.Toolkit.KryptonTextBox();
+            this.txtBIBaseForm = new Krypton.Toolkit.KryptonTextBox();
             this.label9 = new System.Windows.Forms.Label();
             this.label6 = new System.Windows.Forms.Label();
             this.chkOnlyNew = new System.Windows.Forms.CheckBox();
-            this.txtEntityName = new System.Windows.Forms.TextBox();
+            this.txtEntityName = new Krypton.Toolkit.KryptonTextBox();
             this.label5 = new System.Windows.Forms.Label();
             this.kryptonPanelQuery = new Krypton.Toolkit.KryptonPanel();
             this.groupLine1 = new WinLib.Line.GroupLine();
-            this.txtUIPropertyIdentifier = new System.Windows.Forms.TextBox();
+            this.txtUIPropertyIdentifier = new Krypton.Toolkit.KryptonTextBox();
             this.label11 = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1)).BeginInit();
@@ -244,7 +245,6 @@ namespace RUINORERP.UI.SysConfig
             this.chkisview.Size = new System.Drawing.Size(72, 16);
             this.chkisview.TabIndex = 12;
             this.chkisview.Text = "是否可见";
-            this.chkisview.UseVisualStyleBackColor = true;
             // 
             // chkEnable
             // 
@@ -256,7 +256,6 @@ namespace RUINORERP.UI.SysConfig
             this.chkEnable.Size = new System.Drawing.Size(72, 16);
             this.chkEnable.TabIndex = 14;
             this.chkEnable.Text = "是否可用";
-            this.chkEnable.UseVisualStyleBackColor = true;
             // 
             // txtDiscription
             // 
@@ -727,22 +726,22 @@ namespace RUINORERP.UI.SysConfig
         private System.Windows.Forms.Label lblName;
         private System.Windows.Forms.Label lblCaption_C;
         private System.Windows.Forms.Label lblCaption_E;
-        private System.Windows.Forms.TextBox txt_MenuName;
-        private System.Windows.Forms.TextBox txt_CaptionE;
-        private System.Windows.Forms.TextBox txt_CaptonC;
-        private System.Windows.Forms.CheckBox chkisview;
-        private System.Windows.Forms.CheckBox chkEnable;
-        private System.Windows.Forms.TextBox txtDiscription;
+        private Krypton.Toolkit.KryptonTextBox txt_MenuName;
+        private Krypton.Toolkit.KryptonTextBox txt_CaptionE;
+        private Krypton.Toolkit.KryptonTextBox txt_CaptonC;
+        private KryptonCheckBox chkisview;
+        private KryptonCheckBox chkEnable;
+        private Krypton.Toolkit.KryptonTextBox txtDiscription;
         private System.Windows.Forms.Label lblDiscription;
         private System.Windows.Forms.Label lblOID;
         private NewSumDataGridView dataGridView1;
         private System.Windows.Forms.Button btnLoad;
         private System.Windows.Forms.OpenFileDialog openFileDialog1;
         private System.Windows.Forms.Label label2;
-        private System.Windows.Forms.TextBox txtClassPath;
+        private Krypton.Toolkit.KryptonTextBox txtClassPath;
         private System.Windows.Forms.Label label1;
-        private System.Windows.Forms.TextBox txtAssembly;
-        private System.Windows.Forms.TextBox txtFormName;
+        private Krypton.Toolkit.KryptonTextBox txtAssembly;
+        private Krypton.Toolkit.KryptonTextBox txtFormName;
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.ComboBox cmbMenuType;
         private System.Windows.Forms.Label label4;
@@ -750,25 +749,25 @@ namespace RUINORERP.UI.SysConfig
         private Krypton.Toolkit.KryptonSplitContainer kryptonSplitContainer1;
         private Krypton.Toolkit.KryptonSplitContainer kryptonSplitContainer2;
         private System.Windows.Forms.CheckBox chkOnlyNew;
-        private System.Windows.Forms.TextBox txtEntityName;
+        private Krypton.Toolkit.KryptonTextBox txtEntityName;
         private System.Windows.Forms.Label label5;
-        private System.Windows.Forms.TextBox txtBIBaseForm;
+        private Krypton.Toolkit.KryptonTextBox txtBIBaseForm;
         private System.Windows.Forms.Label label6;
         private Krypton.Toolkit.KryptonSplitContainer kryptonSplitContainer3;
-        private System.Windows.Forms.TextBox txtBizType;
+        private Krypton.Toolkit.KryptonTextBox txtBizType;
         private System.Windows.Forms.Label label7;
-        private System.Windows.Forms.TextBox txtSort;
+        private Krypton.Toolkit.KryptonTextBox txtSort;
         private System.Windows.Forms.Label label8;
         private System.Windows.Forms.ToolStrip toolStrip1;
         private System.Windows.Forms.ToolStripLabel toolStripLabel1;
         private System.Windows.Forms.ToolStripTextBox txtMenuName;
         internal Krypton.Toolkit.KryptonPanel kryptonPanelQuery;
         private WinLib.Line.GroupLine groupLine1;
-        private System.Windows.Forms.TextBox txtBIBizBaseform;
+        private Krypton.Toolkit.KryptonTextBox txtBIBizBaseform;
         private System.Windows.Forms.Label label9;
-        private System.Windows.Forms.TextBox txtBizInterface;
+        private Krypton.Toolkit.KryptonTextBox txtBizInterface;
         private System.Windows.Forms.Label label10;
-        private System.Windows.Forms.TextBox txtUIPropertyIdentifier;
+        private Krypton.Toolkit.KryptonTextBox txtUIPropertyIdentifier;
         private System.Windows.Forms.Label label11;
     }
 }

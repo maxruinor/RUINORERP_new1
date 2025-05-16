@@ -3327,13 +3327,18 @@ namespace RUINORERP.UI.BaseForm
                 }
                 if (item.ContainsProperty("DataStatus"))
                 {
-                    if (item.GetPropertyValue("DataStatus").ToString() == ((int)DataStatus.草稿).ToString() || item.GetPropertyValue("DataStatus").ToString() == ((int)DataStatus.新建).ToString())
+                    if (item.GetPropertyValue("DataStatus").ToString() == ((int)DataStatus.草稿).ToString().ToString())
+                    {
+                        MessageBox.Show("没有提交的数据不能打印！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        return;
+                    }
+
+                    if (item.GetPropertyValue("DataStatus").ToString() == ((int)DataStatus.新建).ToString())
                     {
                         if (MessageBox.Show("没有审核的数据无法打印,你确定要打印吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2) == DialogResult.No)
                         {
                             return;
                         }
-
                     }
                 }
             }

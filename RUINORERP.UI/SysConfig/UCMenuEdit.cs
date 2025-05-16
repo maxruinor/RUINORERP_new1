@@ -63,7 +63,7 @@ namespace RUINORERP.UI.SysConfig
             LoadEnevt();
         }
 
-
+        //新增加时。选中的是当作上级
         private void btn_add_Click(object sender, EventArgs e)
         {
             if (comboBoxTreeView1.TreeView.SelectedNode == null || string.IsNullOrEmpty(comboBoxTreeView1.Text))
@@ -73,21 +73,21 @@ namespace RUINORERP.UI.SysConfig
             }
             else
             {
-                this.txt_MenuName.Text = "";
-                this.txt_CaptonC.Text = "";
-                this.txt_CaptionE.Text = "";
-                this.chkisview.Checked = true;
-                this.chkEnable.Checked = true;
-                cmbMenuType.Text = "";
-                txtFormName.Text = "";
-                this.txtDiscription.Text = "";
-                txtBIBaseForm.Text = "";
-                txtBizType.Text = "";
+                tb_MenuInfo info = new tb_MenuInfo();
+                info.MenuName = "新建菜单";
+                info.Parent_id = (comboBoxTreeView1.TreeView.SelectedNode.Tag as tb_MenuInfo).Parent_id;
+                info.IsEnabled = true;
+                info.IsVisble = true;
+                info.Sort = (comboBoxTreeView1.TreeView.SelectedNode.Tag as tb_MenuInfo).Sort + 1;
+                info.MenuType = "菜单";
+                BindData(info);
+                tree_MainMenu.SelectedNode.Tag = info;
                 CmdEnable(false);
                 w_EidtFlag = false;
+
+                //tree_MainMenu.SelectedNode = tree_MainMenu.Nodes[0].Nodes.Add(info);
+
             }
-
-
         }
 
         private void frmMenuEdit_Load(object sender, EventArgs e)
@@ -213,80 +213,70 @@ namespace RUINORERP.UI.SysConfig
 
         private async void RecordSave(bool w_EidtFlag)
         {
-            Model.tb_MenuInfo info = new Model.tb_MenuInfo();
-            info.MenuName = this.txt_MenuName.Text.Trim();
-            info.IsVisble = chkisview.Checked;
-            info.IsEnabled = chkEnable.Checked;
-            info.BIBaseForm = txtBIBaseForm.Text.Trim();
-            info.BIBizBaseForm = txtBIBizBaseform.Text.Trim();
-            info.BizInterface = txtBizInterface.Text.Trim();
-            info.UIPropertyIdentifier = txtUIPropertyIdentifier.Text.Trim();
-            info.CaptionCN = txt_CaptonC.Text.Trim();
-            info.CaptionEN = txt_CaptionE.Text.Trim();
-            if (txtBizType.Tag != null)
+            if (tree_MainMenu.SelectedNode.Tag is tb_MenuInfo)
             {
-                info.BizType = (int)Enum.Parse(typeof(BizType), txtBizType.Tag.ToString());
-            }
+                tb_MenuInfo info = tree_MainMenu.SelectedNode.Tag as tb_MenuInfo;
+                info.MenuName = this.txt_MenuName.Text.Trim();
 
-            info.ClassPath = txtClassPath.Text.Trim();
-            info.FormName = txtFormName.Text;
-            info.MenuType = cmbMenuType.Text;
-            if (info.MenuType.Trim().Length == 0)
-            {
-                MessageBox.Show("菜单类型不能为空！");
-                return;
-            }
-            info.EntityName = txtEntityName.Text;
-            if (txtSort.Text.Trim().Length > 0)
-            {
-                info.Sort = int.TryParse(txtSort.Text, out int sort) ? sort : 0;
-            }
-
-            info.Discription = txtDiscription.Text.Trim();
-
-            //暂时是子节点的个数
-            if (comboBoxTreeView1.TreeView.SelectedNode != null)
-            {
-                info.Sort = comboBoxTreeView1.TreeView.SelectedNode.Nodes.Count;
-            }
-            if (comboBoxTreeView1.TreeView.SelectedNode.Tag is tb_MenuInfo)
-            {
-                tb_MenuInfo mi = (comboBoxTreeView1.TreeView.SelectedNode.Tag as tb_MenuInfo);
-                info.Parent_id = mi.MenuID;
-                info.ModuleID = mi.ModuleID;
-            }
-            else
-            {
-                info.Parent_id = 0;
-            }
-
-
-            bool vd = ShowInvalidMessage(mc.Validator(info));
-            if (!vd)
-            {
-                return;
-            }
-            if (!w_EidtFlag)//新加
-            {
-                info.Created_at = System.DateTime.Now;
-                await mc.AddMenuInfoAsync(info);
-            }
-            else //修改
-            {
-                info.Modified_at = System.DateTime.Now;
-                if (tree_MainMenu.SelectedNode.Tag is tb_MenuInfo)
+                if (txtBizType.Tag != null)
                 {
-                    info.MenuID = (tree_MainMenu.SelectedNode.Tag as tb_MenuInfo).MenuID;
+                    info.BizType = (int)Enum.Parse(typeof(BizType), txtBizType.Tag.ToString());
                 }
-                //drset.Created_by = UserSettings.Instance.EmpNo;
-                w_EidtFlag = !await mc.UpdateMenuInfo(info);
+
+                if (info.MenuType.Trim().Length == 0)
+                {
+                    MessageBox.Show("菜单类型不能为空！");
+                    return;
+                }
+                info.EntityName = txtEntityName.Text;
+                if (txtSort.Text.Trim().Length > 0)
+                {
+                    info.Sort = int.TryParse(txtSort.Text, out int sort) ? sort : 0;
+                }
+
+
+
+                //暂时是子节点的个数
+                if (comboBoxTreeView1.TreeView.SelectedNode != null)
+                {
+                    info.Sort = comboBoxTreeView1.TreeView.SelectedNode.Nodes.Count;
+                }
+                if (comboBoxTreeView1.TreeView.SelectedNode.Tag is tb_MenuInfo)
+                {
+                    tb_MenuInfo mi = (comboBoxTreeView1.TreeView.SelectedNode.Tag as tb_MenuInfo);
+                    info.Parent_id = mi.MenuID;
+                    info.ModuleID = mi.ModuleID;
+                }
+                else
+                {
+                    info.Parent_id = 0;
+                }
+
+                bool vd = ShowInvalidMessage(mc.Validator(info));
+                if (!vd)
+                {
+                    return;
+                }
+                if (!w_EidtFlag)//新加
+                {
+                    info.Created_at = System.DateTime.Now;
+                    await mc.AddMenuInfoAsync(info);
+                }
+                else //修改
+                {
+                    info.Modified_at = System.DateTime.Now;
+                    if (tree_MainMenu.SelectedNode.Tag is tb_MenuInfo)
+                    {
+                        info.MenuID = (tree_MainMenu.SelectedNode.Tag as tb_MenuInfo).MenuID;
+                    }
+                    //drset.Created_by = UserSettings.Instance.EmpNo;
+                    w_EidtFlag = !await mc.UpdateMenuInfo(info);
+                }
+                //LoadEnevt();
+                CmdEnable(true);
+                w_EidtFlag = false;
             }
-            //LoadEnevt();
-            CmdEnable(true);
-            w_EidtFlag = false;
         }
-
-
 
         //递归方法
         private void Bind(TreeNode parNode, List<tb_MenuInfo> list, long nodeId)
@@ -308,7 +298,25 @@ namespace RUINORERP.UI.SysConfig
             CmdEnable(false);
 
         }
-
+        public void BindData(tb_MenuInfo entity)
+        {
+            DataBindingHelper.BindData4TextBox<tb_MenuInfo>(entity, t => t.MenuName, txt_MenuName, BindDataType4TextBox.Text, false);
+            DataBindingHelper.BindData4TextBox<tb_MenuInfo>(entity, t => t.Discription, txtDiscription, BindDataType4TextBox.Text, false);
+            DataBindingHelper.BindData4TextBox<tb_MenuInfo>(entity, t => t.CaptionCN, txt_CaptonC, BindDataType4TextBox.Text, false);
+            DataBindingHelper.BindData4TextBox<tb_MenuInfo>(entity, t => t.CaptionEN, txt_CaptionE, BindDataType4TextBox.Text, false);
+            DataBindingHelper.BindData4TextBox<tb_MenuInfo>(entity, t => t.ClassPath, txtClassPath, BindDataType4TextBox.Text, false);
+            DataBindingHelper.BindData4TextBox<tb_MenuInfo>(entity, t => t.UIPropertyIdentifier, txtUIPropertyIdentifier, BindDataType4TextBox.Text, false);
+            DataBindingHelper.BindData4TextBox<tb_MenuInfo>(entity, t => t.BizInterface, txtBizInterface, BindDataType4TextBox.Text, false);
+            DataBindingHelper.BindData4TextBox<tb_MenuInfo>(entity, t => t.FormName, txtFormName, BindDataType4TextBox.Text, false);
+            DataBindingHelper.BindData4TextBox<tb_MenuInfo>(entity, t => t.EntityName, txtEntityName, BindDataType4TextBox.Text, false);
+            DataBindingHelper.BindData4TextBox<tb_MenuInfo>(entity, t => t.Sort, txtSort, BindDataType4TextBox.Qty, false);
+            DataBindingHelper.BindData4TextBox<tb_MenuInfo>(entity, t => t.BIBaseForm, txtBIBaseForm, BindDataType4TextBox.Text, false);
+            DataBindingHelper.BindData4TextBox<tb_MenuInfo>(entity, t => t.BIBizBaseForm, txtBIBizBaseform, BindDataType4TextBox.Text, false);
+            DataBindingHelper.BindData4CheckBox<tb_MenuInfo>(entity, t => t.IsVisble, chkisview, false);
+            DataBindingHelper.BindData4CheckBox<tb_MenuInfo>(entity, t => t.IsEnabled, chkEnable, false);
+            DataBindingHelper.BindData4TextBox<tb_MenuInfo>(entity, t => t.BizType, txtBizType, BindDataType4TextBox.Text, false);
+            cmbMenuType.SelectedIndex = cmbMenuType.FindString(entity.MenuType.ToString());
+        }
         private void tree_MainMenu_AfterSelect(object sender, TreeViewEventArgs e)
         {
             if (tree_MainMenu.SelectedNode.Tag is tb_MenuInfo)
@@ -338,31 +346,34 @@ namespace RUINORERP.UI.SysConfig
 
 
 
-                this.txt_MenuName.Text = info.MenuName;
-                chkisview.Checked = info.IsVisble;
-                chkEnable.Checked = info.IsEnabled;
-                txtDiscription.Text = info.Discription;
-                txt_CaptonC.Text = info.CaptionCN;
-                txt_CaptionE.Text = info.CaptionEN;
-                txtClassPath.Text = info.ClassPath;
-                txtUIPropertyIdentifier.Text = info.UIPropertyIdentifier;
-                txtDiscription.Text = info.Discription;
-                txtFormName.Text = info.FormName;
-                txtEntityName.Text = info.EntityName;
-                txtSort.Text = info.Sort.ToString();
-                txtBIBaseForm.Text = info.BIBaseForm;
-                txtBIBizBaseform.Text = info.BIBizBaseForm;
-                if (info.BizType.HasValue)
-                {
-                    txtBizType.Text = info.BizType.ToString();
-                    txtBizType.Tag = info.BizType;
-                }
-                else
-                {
-                    txtBizType.Text = "";
-                    txtBizType.Tag = null;
-                }
-                cmbMenuType.SelectedIndex = cmbMenuType.FindString(info.MenuType);
+                //this.txt_MenuName.Text = info.MenuName;
+                //chkisview.Checked = info.IsVisble;
+                //chkEnable.Checked = info.IsEnabled;
+                //txtDiscription.Text = info.Discription;
+                //txt_CaptonC.Text = info.CaptionCN;
+                //txt_CaptionE.Text = info.CaptionEN;
+                //txtClassPath.Text = info.ClassPath;
+                //txtUIPropertyIdentifier.Text = info.UIPropertyIdentifier;
+                //txtBizInterface.Text = info.BizInterface;
+                //txtDiscription.Text = info.Discription;
+                //txtFormName.Text = info.FormName;
+                //txtEntityName.Text = info.EntityName;
+                //txtSort.Text = info.Sort.ToString();
+                //txtBIBaseForm.Text = info.BIBaseForm;
+                //txtBIBizBaseform.Text = info.BIBizBaseForm;
+                //if (info.BizType.HasValue)
+                //{
+                //    txtBizType.Text = info.BizType.ToString();
+                //    txtBizType.Tag = info.BizType;
+                //}
+                //else
+                //{
+                //    txtBizType.Text = "";
+                //    txtBizType.Tag = null;
+                //}
+                //cmbMenuType.SelectedIndex = cmbMenuType.FindString(info.MenuType);
+
+                BindData(info);
                 //设置上级菜单节点
                 SearchNodes(info.Parent_id.ToString(), comboBoxTreeView1.TreeView.Nodes, comboBoxTreeView1.TreeView);
 
@@ -429,8 +440,6 @@ namespace RUINORERP.UI.SysConfig
             btn_del.Enabled = p_YesNo;
             btn_cancel.Enabled = !p_YesNo;
             this.btn_Refresh.Enabled = p_YesNo;
-
-
         }
 
 
@@ -778,52 +787,44 @@ namespace RUINORERP.UI.SysConfig
                 if (dataGridView1.SelectedRows[0].DataBoundItem is MenuAttrAssemblyInfo)
                 {
                     MenuAttrAssemblyInfo menuInfo = dataGridView1.SelectedRows[0].DataBoundItem as MenuAttrAssemblyInfo;
-                    if (!w_EidtFlag)
+                    btn_modify.Enabled = true;
+                    dataGridView1.ReadOnly = false;
+                    if (menuInfo.MenuBizType.HasValue)
                     {
-                        dataGridView1.ReadOnly = true;
-
-                        txt_MenuName.Text = menuInfo.Caption;
-                        txt_CaptonC.Text = menuInfo.Caption;
-                        txtClassPath.Text = menuInfo.ClassPath;
-                        txtFormName.Text = menuInfo.ClassName;
-                        txtEntityName.Text = menuInfo.EntityName;
-                        //txtSort.Text=menuInfo.Sort.ToString();
-                        txtBIBaseForm.Text = menuInfo.BIBaseForm;
-                        txtBIBizBaseform.Text = menuInfo.BIBizBaseForm;
-                        txtBizInterface.Text = menuInfo.BizInterface;
-                        txtUIPropertyIdentifier.Text = menuInfo.UIPropertyIdentifier;
-                        if (menuInfo.MenuBizType.HasValue)
-                        {
-                            txtBizType.Text = menuInfo.MenuBizType.ToString();
-                            txtBizType.Tag = menuInfo.MenuBizType;
-                        }
-                        else
-                        {
-                            txtBizType.Text = "";
-                            txtBizType.Tag = null;
-                        }
+                        txtBizType.Text = ((int)menuInfo.MenuBizType).ToString();
+                        txtBizType.Tag = menuInfo.MenuBizType;
                     }
                     else
                     {
-                        dataGridView1.ReadOnly = false;
-                        if (menuInfo.MenuBizType.HasValue)
+                        txtBizType.Text = "";
+                        txtBizType.Tag = null;
+                    }
+                    if (tree_MainMenu.SelectedNode != null && tree_MainMenu.SelectedNode.Tag is tb_MenuInfo)
+                    {
+                        tb_MenuInfo info = tree_MainMenu.SelectedNode.Tag as tb_MenuInfo;
+                        //BindData(info);
+                        if (info.ClassPath == menuInfo.ClassPath || info.CaptionCN == menuInfo.Caption || info.MenuID == 0)
                         {
-                            txtBizType.Text = ((int)menuInfo.MenuBizType).ToString();
-                            txtBizType.Tag = menuInfo.MenuBizType;
-                        }
-                        else
-                        {
-                            txtBizType.Text = "";
-                            txtBizType.Tag = null;
+                            info.EntityName = menuInfo.EntityName;
+                            info.MenuName = menuInfo.Caption;
+                            info.FormName = menuInfo.ClassName;
+                            info.ClassPath = menuInfo.ClassPath;
+                            info.CaptionCN = menuInfo.Caption;
+                            //info.CaptionCN = menuInfo.Caption;
+                            info.UIPropertyIdentifier = menuInfo.UIPropertyIdentifier;
+                            info.BizInterface = menuInfo.BizInterface;
+                            info.BizInterface = menuInfo.BizInterface;
+                            info.BIBaseForm = menuInfo.BIBaseForm;
+                            info.BIBizBaseForm = menuInfo.BIBizBaseForm;
+                            info.BizInterface = menuInfo.BizInterface;
+                            if (menuInfo.MenuBizType.HasValue)
+                            {
+                                info.BizType = (int)menuInfo.MenuBizType;
+                            }
+                            info.MenuType = "行为菜单";
                         }
                     }
-                    txtEntityName.Text = menuInfo.EntityName;
-                    txtUIPropertyIdentifier.Text = menuInfo.UIPropertyIdentifier;
-                    txtBizInterface.Text = menuInfo.BizInterface;
-                    txtBIBaseForm.Text = menuInfo.BIBaseForm;
-                    txtBIBizBaseform.Text = menuInfo.BIBizBaseForm;
-                    txtClassPath.Text = menuInfo.ClassPath;
-                    txtFormName.Text = menuInfo.ClassName;
+
                     if (menuInfo.BIBaseForm.Trim().Length > 0)
                     {
                         tb_MenuInfo tb_Menu = list.Where(c => c.CaptionCN == menuInfo.Caption && c.MenuType == "行为菜单").FirstOrDefault();

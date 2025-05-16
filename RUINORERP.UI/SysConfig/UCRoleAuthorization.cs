@@ -27,6 +27,11 @@ using FastReport.DevComponents.DotNetBar.Controls;
 using StackExchange.Redis;
 using System.Threading;
 using Microsoft.Extensions.Logging;
+using RUINORERP.UI.AdvancedUIModule;
+using TransInstruction;
+using RUINORERP.UI.SuperSocketClient;
+using RUINORERP.Business.CommService;
+using System.Windows.Documents;
 
 namespace RUINORERP.UI.SysConfig
 {
@@ -35,12 +40,94 @@ namespace RUINORERP.UI.SysConfig
     /// 比用户授权角色简单，那个是行记录存在性控制， 这里是默认每个角色都有。通过关系表中的字段来控制的
     /// </summary>
     [MenuAttrAssemblyInfo("角色授权", ModuleMenuDefine.模块定义.系统设置, ModuleMenuDefine.系统设置.权限管理)]
-    public partial class UCRoleAuthorization : UserControl
+    public partial class UCRoleAuthorization : UserControl, IContextMenuInfoAuth
     {
         public UCRoleAuthorization()
         {
             InitializeComponent();
+            BuildContextMenuController();
         }
+
+
+        #region 检测是否重复
+        public List<ContextMenuController> AddContextMenu()
+        {
+            List<EventHandler> ContextClickList = new List<EventHandler>();
+            ContextClickList.Add(NewSumDataGridView_检测是否重复);
+            List<ContextMenuController> list = new List<ContextMenuController>();
+            list.Add(new ContextMenuController("【检测是否重复】", true, false, "NewSumDataGridView_检测是否重复"));
+            return list;
+        }
+        public void BuildContextMenuController()
+        {
+            List<EventHandler> ContextClickList = new List<EventHandler>();
+            ContextClickList.Add(NewSumDataGridView_检测是否重复);
+
+            List<ContextMenuController> list = new List<ContextMenuController>();
+            list = AddContextMenu();
+
+            if (dataGridView1 != null)
+            {
+                //base.dataGridView1.Use是否使用内置右键功能 = false;
+                ContextMenuStrip newContextMenuStrip = this.dataGridView1.GetContextMenu(this.dataGridView1.ContextMenuStrip
+                , ContextClickList, list, true
+                    );
+                dataGridView1.ContextMenuStrip = newContextMenuStrip;
+            }
+
+            if (dataGridView2 != null)
+            {
+                //base.dataGridView1.Use是否使用内置右键功能 = false;
+                ContextMenuStrip newContextMenuStrip = this.dataGridView2.GetContextMenu(this.dataGridView2.ContextMenuStrip
+                , ContextClickList, list, true
+                    );
+                dataGridView2.ContextMenuStrip = newContextMenuStrip;
+            }
+        }
+
+        private void NewSumDataGridView_检测是否重复(object sender, EventArgs e)
+        {
+            tb_MenuInfo selectMenu = TreeView1.SelectedNode.Tag as tb_MenuInfo;
+            if (kryptonNavigator1.SelectedPage.Name == "kryptonPage1")
+            {
+                // 定义参与比较的属性列表
+                var ButtonProperties = new List<string>()
+                    .Include<tb_P4Button>(c => c.MenuID)
+                    .Include<tb_P4Button>(c => c.RoleID);
+
+                //数据源开始绑定时用的BindingSortCollection
+                UITools.CheckDuplicateData<tb_P4Button>(ListDataSoure1.Cast<tb_P4Button>().ToList(), ButtonProperties.ToList());
+
+                if (dataGridView1.UseSelectedColumn)
+                {
+                    // await BatchDelete<tb_P4Button>(ListDataSoure1, true);
+                }
+            }
+
+            if (kryptonNavigator1.SelectedPage.Name == "kryptonPage3")
+            {
+                // 定义参与比较的属性列表
+                var includeProperties = new List<string>()
+                    .Include<tb_P4Field>(c => c.MenuID)
+                    .Include<tb_P4Field>(c => c.RoleID);
+
+                UITools.CheckDuplicateData<tb_P4Field>(ListDataSoure2.Cast<tb_P4Field>().ToList(), includeProperties.ToList());
+
+                if (dataGridView1.UseSelectedColumn)
+                {
+
+                    //selectMenu.tb_P4Fields = selectMenu.tb_P4Fields.Where(c => !ids.Contains(c.P4Field_ID)).ToList();
+                }
+
+            }
+
+
+        }
+
+
+
+        #endregion
+
         private void KryptonNavigator1_SelectedIndexChanged(object sender, EventArgs e)
         {
             // TODO: 实现导航器索引改变时的逻辑
@@ -492,7 +579,7 @@ namespace RUINORERP.UI.SysConfig
                 bool rs2 = await MainForm.Instance.AppContext.Db.CopyNew().Updateable(pflist).ExecuteCommandHasChangeAsync();
 
                 //更新到对应的菜单下的集合中不然还是用前面的缓存
-                
+
 
                 /*
                 //准备要更新的集合
@@ -942,6 +1029,7 @@ namespace RUINORERP.UI.SysConfig
                 {
                     pb = new tb_P4Button();
                     BusinessHelper.Instance.InitEntity(pb);
+                    pb.Notes = item.BtnText;
                 }
                 else
                 {
@@ -977,7 +1065,10 @@ namespace RUINORERP.UI.SysConfig
             }
             if (Newpblist.Count > 0)
             {
-                var ids = await ctrPBut.AddAsync(Newpblist);
+                //这里要防止添加重复的按钮对Newpblist 按菜单ID和权限ID分组。ID>0才添加
+                List<tb_P4Button> Newpblist2 = Newpblist.GroupBy(c => new { c.MenuID, c.RoleID }).Select(g => g.First()).ToList();
+                Newpblist = Newpblist2;
+                var ids = await ctrPBut.AddAsync(Newpblist.Where(c => c.P4Btn_ID == 0).ToList());
                 if (ids.Count > 0)
                 {
                     menuInfo.tb_P4Buttons.AddRange(Newpblist);
@@ -1054,6 +1145,7 @@ namespace RUINORERP.UI.SysConfig
                 {
                     pb = new tb_P4Field();
                     BusinessHelper.Instance.InitEntity(pb);
+                    pb.Notes = item.FieldText;
                 }
                 else
                 {
@@ -1128,6 +1220,7 @@ namespace RUINORERP.UI.SysConfig
             {
                 return;
             }
+            kryptonNavigator1.SelectedPage = kryptonPage1;
 
             InitLoadP4Button(selectMenu);
 
@@ -1701,5 +1794,142 @@ namespace RUINORERP.UI.SysConfig
             }
         }
 
+        private async void tsbtnDelete_Click(object sender, EventArgs e)
+        {
+
+            if (kryptonNavigator1.SelectedPage.Name == "kryptonPage1")
+            {
+                if (dataGridView1.UseSelectedColumn)
+                {
+                    await BatchDelete<tb_P4Button>(ListDataSoure1, true);
+                }
+                else
+                {
+                    await Delete<tb_P4Button>(ListDataSoure1);
+                }
+            }
+
+            if (kryptonNavigator1.SelectedPage.Name == "kryptonPage3")
+            {
+                tb_MenuInfo selectMenu = TreeView1.SelectedNode.Tag as tb_MenuInfo;
+                if (dataGridView1.UseSelectedColumn)
+                {
+                    List<long> ids = await BatchDelete<tb_P4Field>(ListDataSoure2, true);
+                    selectMenu.tb_P4Fields = selectMenu.tb_P4Fields.Where(c => !ids.Contains(c.P4Field_ID)).ToList();
+                }
+                else
+                {
+                    long id = await Delete<tb_P4Field>(ListDataSoure2);
+                    selectMenu.tb_P4Fields = selectMenu.tb_P4Fields.Where(c => c.P4Field_ID != id).ToList();
+                }
+            }
+        }
+
+        /// <summary>
+        /// 注意这里是物理删除
+        /// </summary>
+        protected async Task<long> Delete<T>(BindingSource bindingSource) where T : class
+        {
+            long id = 0;
+            BaseController<T> ctr = Startup.GetFromFacByName<BaseController<T>>(typeof(T).Name + "Controller");
+            bool rs = false;
+            if (MessageBox.Show("系统不建议删除基本资料\r\n确定删除吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Information) == DialogResult.Yes)
+            {
+                T loc = (T)bindingSource.Current;
+                string PKColName = UIHelper.GetPrimaryKeyColName(typeof(T));
+                object PKValue = bindingSource.Current.GetPropertyValue(PKColName);
+                bindingSource.Remove(loc);
+                rs = await ctr.BaseDeleteAsync(loc);
+                if (rs)
+                {
+                    id = PKValue.ToLong();
+                    if (MainForm.Instance.AppContext.SysConfig.IsDebug)
+                    {
+                        MainForm.Instance.logger.LogInformation($"删除:{typeof(T).Name}，主键值：{PKValue.ToString()} ");
+                    }
+                }
+            }
+            return id;
+        }
+
+
+        protected async virtual Task<List<long>> BatchDelete<T>(BindingSource bindingSourceList, bool UseSelectedColumn) where T : class
+        {
+            List<long> ids = new List<long>();
+            BaseController<T> ctr = Startup.GetFromFacByName<BaseController<T>>(typeof(T).Name + "Controller");
+            List<T> SelectedList = new List<T>();
+            //多选模式时
+            if (UseSelectedColumn)
+            {
+                foreach (var item in bindingSourceList)
+                {
+                    if (item is T sourceEntity)
+                    {
+                        var selected = (sourceEntity as BaseEntity).Selected;
+                        if (selected.HasValue && selected.Value)
+                        {
+                            SelectedList.Add(sourceEntity);
+                        }
+                    }
+                }
+            }
+            bool rs = false;
+            int counter = 0;
+            if (MessageBox.Show($"系统不建议删除基本资料\r\n确定删除选择的【{SelectedList.Count}】条记录吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Information) == DialogResult.Yes)
+            {
+                //再次尝试单个导航删除
+                for (int i = 0; i < SelectedList.Count; i++)
+                {
+                    T loc = SelectedList[i];
+                    string PKColName = UIHelper.GetPrimaryKeyColName(typeof(T));
+                    object PKValue = SelectedList[i].GetPropertyValue(PKColName);
+                    bindingSourceList.Remove(loc);
+                    rs = await ctr.BaseDeleteByNavAsync(loc);
+                    if (rs)
+                    {
+                        ids.Add(PKValue.ToLong());
+                        counter++;
+                        if (MainForm.Instance.AppContext.SysConfig.IsDebug)
+                        {
+                            MainForm.Instance.logger.LogInformation($"删除:{typeof(T).Name}，主键值：{PKValue.ToString()} ");
+                        }
+                        AuditLogHelper.Instance.CreateAuditLog("删除", "角色授权时");
+                    }
+                }
+            }
+
+            #region 更新缓存
+            if (SelectedList.Count == counter)
+            {
+                foreach (var item in SelectedList)
+                {
+                    string PKColName = UIHelper.GetPrimaryKeyColName(typeof(T));
+                    object PKValue = item.GetPropertyValue(PKColName);
+                    if (MainForm.Instance.AppContext.SysConfig.IsDebug)
+                    {
+                        MainForm.Instance.logger.LogInformation($"删除:{typeof(T).Name}，主键值：{PKValue.ToString()} ");
+                    }
+
+                    //提示服务器开启推送工作流
+                    OriginalData beatDataDel = ClientDataBuilder.BaseInfoChangeBuilder(typeof(T).Name);
+                    MainForm.Instance.ecs.AddSendData(beatDataDel);
+
+                    //根据要缓存的列表集合来判断是否需要上传到服务器。让服务器分发到其他客户端
+                    KeyValuePair<string, string> pair = new KeyValuePair<string, string>();
+                    //只处理需要缓存的表
+                    if (BizCacheHelper.Manager.NewTableList.TryGetValue(typeof(T).Name, out pair))
+                    {
+                        //如果有更新变动就上传到服务器再分发到所有客户端
+                        OriginalData odforCache = ActionForClient.删除缓存<T>(PKColName, PKValue.ToLong());
+                        byte[] buffer = CryptoProtocol.EncryptClientPackToServer(odforCache);
+                        MainForm.Instance.ecs.client.Send(buffer);
+                    }
+                }
+
+            }
+
+            #endregion
+            return ids;
+        }
     }
 }

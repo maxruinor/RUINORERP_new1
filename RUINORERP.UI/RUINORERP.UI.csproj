@@ -1509,6 +1509,12 @@
     <Compile Include="CRM\UCLeadsList.Designer.cs">
       <DependentUpon>UCLeadsList.cs</DependentUpon>
     </Compile>
+    <Compile Include="FM\OtherExpenseVoucherStatistics.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="FM\OtherExpenseVoucherStatistics.Designer.cs">
+      <DependentUpon>OtherExpenseVoucherStatistics.cs</DependentUpon>
+    </Compile>
     <Compile Include="FM\UCFMPaymentRecordQuery.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -1526,6 +1532,42 @@
     </Compile>
     <Compile Include="FM\UCFMPaymentRecord.Designer.cs">
       <DependentUpon>UCFMPaymentRecord.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FM\FMBase\UCOtherExpenseQuery.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="FM\FMBase\UCOtherExpenseQuery.designer.cs">
+      <DependentUpon>UCOtherExpenseQuery.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FM\OtherExpenseVoucher.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="FM\OtherExpenseVoucher.Designer.cs">
+      <DependentUpon>OtherExpenseVoucher.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FM\UCOtherIncomeVoucher.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="FM\UCOtherIncomeVoucher.Designer.cs">
+      <DependentUpon>UCOtherIncomeVoucher.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FM\OtherExpenseVoucherQuery.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="FM\OtherExpenseVoucherQuery.Designer.cs">
+      <DependentUpon>OtherExpenseVoucherQuery.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FM\UCOtherIncomeVoucherQuery.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="FM\UCOtherIncomeVoucherQuery.Designer.cs">
+      <DependentUpon>UCOtherIncomeVoucherQuery.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FM\UCOtherIncomeVoucherStatistics.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="FM\UCOtherIncomeVoucherStatistics.Designer.cs">
+      <DependentUpon>UCOtherIncomeVoucherStatistics.cs</DependentUpon>
     </Compile>
     <Compile Include="FM\UCReceivable.cs">
       <SubType>UserControl</SubType>
@@ -1623,10 +1665,10 @@
     <Compile Include="FM\UCPaymentApplicationQuery.Designer.cs">
       <DependentUpon>UCPaymentApplicationQuery.cs</DependentUpon>
     </Compile>
-    <Compile Include="FM\UCOtherExpenseStatistics.cs">
+    <Compile Include="FM\FMBase\UCOtherExpenseStatistics.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="FM\UCOtherExpenseStatistics.Designer.cs">
+    <Compile Include="FM\FMBase\UCOtherExpenseStatistics.Designer.cs">
       <DependentUpon>UCOtherExpenseStatistics.cs</DependentUpon>
     </Compile>
     <Compile Include="FM\UCExpenseClaimStatistics.cs">
@@ -1742,29 +1784,11 @@
     <Compile Include="FM\UCExpenseClaimQuery.designer.cs">
       <DependentUpon>UCExpenseClaimQuery.cs</DependentUpon>
     </Compile>
-    <Compile Include="FM\UCOtherExpenseINC.cs">
+    <Compile Include="FM\FMBase\UCOtherExpense.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="FM\UCOtherExpenseINC.designer.cs">
-      <DependentUpon>UCOtherExpenseINC.cs</DependentUpon>
-    </Compile>
-    <Compile Include="FM\UCOtherExpenseINCQuery.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="FM\UCOtherExpenseINCQuery.designer.cs">
-      <DependentUpon>UCOtherExpenseINCQuery.cs</DependentUpon>
-    </Compile>
-    <Compile Include="FM\UCOtherExpenseOut.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="FM\UCOtherExpenseOut.designer.cs">
-      <DependentUpon>UCOtherExpenseOut.cs</DependentUpon>
-    </Compile>
-    <Compile Include="FM\UCOtherExpenseOutQuery.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="FM\UCOtherExpenseOutQuery.designer.cs">
-      <DependentUpon>UCOtherExpenseOutQuery.cs</DependentUpon>
+    <Compile Include="FM\FMBase\UCOtherExpense.designer.cs">
+      <DependentUpon>UCOtherExpense.cs</DependentUpon>
     </Compile>
     <Compile Include="ForCustomizeGrid\frmColumnsSets.cs">
       <SubType>Form</SubType>
@@ -3409,6 +3433,15 @@
     <EmbeddedResource Include="FM\UCFMReceivedRecord.resx">
       <DependentUpon>UCFMReceivedRecord.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="FM\FMBase\UCOtherExpenseQuery.resx">
+      <DependentUpon>UCOtherExpenseQuery.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FM\OtherExpenseVoucherQuery.resx">
+      <DependentUpon>OtherExpenseVoucherQuery.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FM\UCOtherIncomeVoucherQuery.resx">
+      <DependentUpon>UCOtherIncomeVoucherQuery.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="FM\UCPaymentSettledQuery.resx">
       <DependentUpon>UCPaymentSettledQuery.cs</DependentUpon>
     </EmbeddedResource>
@@ -3433,7 +3466,7 @@
     <EmbeddedResource Include="FM\UCPaymentApplicationQuery.resx">
       <DependentUpon>UCPaymentApplicationQuery.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="FM\UCOtherExpenseStatistics.resx">
+    <EmbeddedResource Include="FM\FMBase\UCOtherExpenseStatistics.resx">
       <DependentUpon>UCOtherExpenseStatistics.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="FM\UCExpenseClaimStatistics.resx">
@@ -3472,17 +3505,8 @@
     <EmbeddedResource Include="FM\UCExpenseClaimQuery.resx">
       <DependentUpon>UCExpenseClaimQuery.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="FM\UCOtherExpenseINC.resx">
-      <DependentUpon>UCOtherExpenseINC.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="FM\UCOtherExpenseINCQuery.resx">
-      <DependentUpon>UCOtherExpenseINCQuery.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="FM\UCOtherExpenseOut.resx">
-      <DependentUpon>UCOtherExpenseOut.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="FM\UCOtherExpenseOutQuery.resx">
-      <DependentUpon>UCOtherExpenseOutQuery.cs</DependentUpon>
+    <EmbeddedResource Include="FM\FMBase\UCOtherExpense.resx">
+      <DependentUpon>UCOtherExpense.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="ForCustomizeGrid\frmColumnsSets.resx">
       <DependentUpon>frmColumnsSets.cs</DependentUpon>

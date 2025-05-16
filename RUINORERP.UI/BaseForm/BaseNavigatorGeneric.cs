@@ -216,61 +216,7 @@ namespace RUINORERP.UI.BaseForm
             {
                 if (!this.DesignMode)
                 {
-                    //权限菜单
-                    if (CurMenuInfo == null || CurMenuInfo.ClassPath.IsNullOrEmpty())
-                    {
-                        CurMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble && m.EntityName == typeof(M).Name && m.ClassPath == this.ToString()).FirstOrDefault();
-                        if (CurMenuInfo == null && !MainForm.Instance.AppContext.IsSuperUser)
-                        {
-                            MessageBox.Show(this.ToString() + "A菜单不能为空，请联系管理员。");
-                            return;
-                        }
-                    }
-
-                    foreach (var item in base.BaseToolStrip.Items)
-                    {
-                        if (item is ToolStripButton)
-                        {
-                            ToolStripButton subItem = item as ToolStripButton;
-                            subItem.Click += Item_Click;
-                            UIHelper.ControlButton(this.CurMenuInfo, subItem);
-                        }
-                        if (item is ToolStripDropDownButton)
-                        {
-                            ToolStripDropDownButton subItem = item as ToolStripDropDownButton;
-                            subItem.Click += Item_Click;
-                            UIHelper.ControlButton(this.CurMenuInfo, subItem);
-                            //下一级
-                            if (subItem.HasDropDownItems)
-                            {
-                                foreach (var sub in subItem.DropDownItems)
-                                {
-                                    ToolStripMenuItem subStripMenuItem = sub as ToolStripMenuItem;
-                                    subStripMenuItem.Click += Item_Click;
-                                    UIHelper.ControlButton(this.CurMenuInfo, subStripMenuItem);
-                                }
-                            }
-                        }
-                        //打印特殊处理
-                        if (item is ToolStripSplitButton)
-                        {
-                            ToolStripSplitButton subItem = item as ToolStripSplitButton;
-                            subItem.Click += Item_Click;
-                            UIHelper.ControlButton(this.CurMenuInfo, subItem);
-                            //下一级
-                            if (subItem.HasDropDownItems)
-                            {
-                                foreach (var sub in subItem.DropDownItems)
-                                {
-                                    ToolStripItem subStripMenuItem = sub as ToolStripItem;
-                                    subStripMenuItem.Click += Item_Click;
-                                    UIHelper.ControlButton(this.CurMenuInfo, subStripMenuItem);
-                                }
-                            }
-                        }
-
-                    }
-
+                   
 
 
                     Krypton.Toolkit.KryptonButton button设置查询条件 = new Krypton.Toolkit.KryptonButton();
@@ -733,6 +679,67 @@ namespace RUINORERP.UI.BaseForm
             {
                 return;
             }
+            else
+            {
+                #region 菜单权限控制
+                //权限菜单
+                if (CurMenuInfo == null || CurMenuInfo.ClassPath.IsNullOrEmpty())
+                {
+                    CurMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble && m.EntityName == typeof(M).Name && m.ClassPath == this.ToString()).FirstOrDefault();
+                    if (CurMenuInfo == null && !MainForm.Instance.AppContext.IsSuperUser)
+                    {
+                        MessageBox.Show(this.ToString() + "A菜单不能为空，请联系管理员。");
+                        return;
+                    }
+                }
+
+                foreach (var item in base.BaseToolStrip.Items)
+                {
+                    if (item is ToolStripButton)
+                    {
+                        ToolStripButton subItem = item as ToolStripButton;
+                        subItem.Click += Item_Click;
+                        UIHelper.ControlButton(this.CurMenuInfo, subItem);
+                    }
+                    if (item is ToolStripDropDownButton)
+                    {
+                        ToolStripDropDownButton subItem = item as ToolStripDropDownButton;
+                        subItem.Click += Item_Click;
+                        UIHelper.ControlButton(this.CurMenuInfo, subItem);
+                        //下一级
+                        if (subItem.HasDropDownItems)
+                        {
+                            foreach (var sub in subItem.DropDownItems)
+                            {
+                                ToolStripMenuItem subStripMenuItem = sub as ToolStripMenuItem;
+                                subStripMenuItem.Click += Item_Click;
+                                UIHelper.ControlButton(this.CurMenuInfo, subStripMenuItem);
+                            }
+                        }
+                    }
+                    //打印特殊处理
+                    if (item is ToolStripSplitButton)
+                    {
+                        ToolStripSplitButton subItem = item as ToolStripSplitButton;
+                        subItem.Click += Item_Click;
+                        UIHelper.ControlButton(this.CurMenuInfo, subItem);
+                        //下一级
+                        if (subItem.HasDropDownItems)
+                        {
+                            foreach (var sub in subItem.DropDownItems)
+                            {
+                                ToolStripItem subStripMenuItem = sub as ToolStripItem;
+                                subStripMenuItem.Click += Item_Click;
+                                UIHelper.ControlButton(this.CurMenuInfo, subStripMenuItem);
+                            }
+                        }
+                    }
+
+                }
+
+                #endregion
+            }
+
             _dm = new DragManager();
             _dm.StateCommon.Feedback = PaletteDragFeedback.Rounded;
             _dm.DragTargetProviders.Add(kryptonWorkspace1);

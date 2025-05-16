@@ -27,7 +27,8 @@ namespace RUINORERP.Business
             // 这里添加额外的初始化代码
             RuleFor(x => x.TotalQty).GreaterThan(0).WithMessage("总数量：要大于零。");
             //如果成交小计不等于成交价*数量，则抛出异常
-            RuleFor(x => x.TotalAmount).Equal(x => x.tb_SaleOutDetails.Sum(c => (c.TransactionPrice ) * c.Quantity)).WithMessage("明细中，成交小计：要等于成交价*数量。");
+            //总金额包了运费要大于等于成交小计
+            RuleFor(x => x.TotalAmount).GreaterThanOrEqualTo(x => x.tb_SaleOutDetails.Sum(c => (c.TransactionPrice ) * c.Quantity)).WithMessage("明细中，成交小计：要等于成交价*数量。");
             RuleFor(x => x.TotalCost).Equal(x => x.tb_SaleOutDetails.Sum(c => (c.Cost + c.CustomizedCost) * c.Quantity)).WithMessage("明细中，成本小计：要等于成本加定制成本*数量。");
 
         }

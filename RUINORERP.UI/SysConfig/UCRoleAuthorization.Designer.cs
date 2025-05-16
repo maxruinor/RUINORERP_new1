@@ -51,6 +51,7 @@
             this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
             this.toolStripCopyRoleConfig = new System.Windows.Forms.ToolStripDropDownButton();
             this.toolsbtnFullAuthorization = new System.Windows.Forms.ToolStripButton();
+            this.tsbtnDelete = new System.Windows.Forms.ToolStripButton();
             this.contextMenuStrip1 = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.selectAll = new System.Windows.Forms.ToolStripMenuItem();
             this.selectNoAll = new System.Windows.Forms.ToolStripMenuItem();
@@ -248,7 +249,8 @@
             this.btnClose,
             this.toolStripSeparator2,
             this.toolStripCopyRoleConfig,
-            this.toolsbtnFullAuthorization});
+            this.toolsbtnFullAuthorization,
+            this.tsbtnDelete});
             this.BaseToolStrip.Location = new System.Drawing.Point(0, 0);
             this.BaseToolStrip.Name = "BaseToolStrip";
             this.BaseToolStrip.Size = new System.Drawing.Size(649, 25);
@@ -337,6 +339,15 @@
             this.toolsbtnFullAuthorization.Text = "全量授权";
             this.toolsbtnFullAuthorization.Click += new System.EventHandler(this.toolsbtnFullAuthorization_Click);
             // 
+            // tsbtnDelete
+            // 
+            this.tsbtnDelete.Image = global::RUINORERP.UI.Properties.Resources.Delete_ok;
+            this.tsbtnDelete.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.tsbtnDelete.Name = "tsbtnDelete";
+            this.tsbtnDelete.Size = new System.Drawing.Size(53, 22);
+            this.tsbtnDelete.Text = "删除";
+            this.tsbtnDelete.Click += new System.EventHandler(this.tsbtnDelete_Click);
+            // 
             // contextMenuStrip1
             // 
             this.contextMenuStrip1.Font = new System.Drawing.Font("Segoe UI", 9F);
@@ -421,5 +432,6 @@
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator2;
         private System.Windows.Forms.ToolStripDropDownButton toolStripCopyRoleConfig;
         private System.Windows.Forms.ToolStripButton toolsbtnFullAuthorization;
+        private System.Windows.Forms.ToolStripButton tsbtnDelete;
     }
 }

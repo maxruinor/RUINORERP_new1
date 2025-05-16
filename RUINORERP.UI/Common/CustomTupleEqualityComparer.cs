@@ -12,6 +12,9 @@ namespace RUINORERP.UI.Common
 {
     public class CustomTupleEqualityComparer<T> : IEqualityComparer<T>
     {
+
+
+
         private readonly string[] _ignoredProperties;
 
         public CustomTupleEqualityComparer(string[] ignoredProperties)
@@ -80,4 +83,42 @@ namespace RUINORERP.UI.Common
             return sugarColumnAttribute != null && !sugarColumnAttribute.IsIgnore;
         }
     }
+
+    /*
+// 自定义元组比较器
+private class CustomTupleEqualityComparer<T> : IEqualityComparer<T> where T : Tuple<object[]>
+{
+public bool Equals(T x, T y)
+{
+   if (x == null && y == null) return true;
+   if (x == null || y == null) return false;
+   if (x.Item1.Length != y.Item1.Length) return false;
+
+   for (int i = 0; i < x.Item1.Length; i++)
+   {
+       var valueX = x.Item1[i];
+       var valueY = y.Item1[i];
+
+       if (valueX == null && valueY == null) continue;
+       if (valueX == null || valueY == null) return false;
+       if (!valueX.Equals(valueY)) return false;
+   }
+
+   return true;
+}
+
+public int GetHashCode(T obj)
+{
+   if (obj == null || obj.Item1 == null || obj.Item1.Length == 0)
+       return 0;
+
+   int hash = 17;
+   foreach (var item in obj.Item1)
+   {
+       hash = hash * 23 + (item?.GetHashCode() ?? 0);
+   }
+   return hash;
+}
+}
+*/
 }

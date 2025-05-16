@@ -1,4 +1,4 @@
-﻿namespace RUINORERP.UI.PSI.SAL
+﻿namespace RUINORERP.UI.FM.FMBase
 {
     partial class UCOtherExpenseStatistics
     {

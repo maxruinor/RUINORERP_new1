@@ -20,20 +20,21 @@ using RUINORERP.Common.Helper;
 using RUINOR.Core;
 using RUINORERP.Common.Extensions;
 using RUINORERP.Business.Processor;
+using RUINORERP.UI.ATechnologyStack;
 
 
 namespace RUINORERP.UI.FM
 {
 
     [MenuAttrAssemblyInfo("其他费用收入查询", ModuleMenuDefine.模块定义.财务管理, ModuleMenuDefine.财务管理.费用管理, BizType.其他费用收入)]
-    public partial class UCOtherExpenseINCQuery : BaseBillQueryMC<tb_FM_OtherExpense, tb_FM_OtherExpenseDetail>
+    public partial class UCOtherExpenseINCQuery : BaseBillQueryMC<tb_FM_OtherExpense, tb_FM_OtherExpenseDetail>, ISharedIdentification
     {
         public UCOtherExpenseINCQuery()
         {
             InitializeComponent();
             base.RelatedBillEditCol = (c => c.ExpenseNo);
         }
-
+        public SharedFlag sharedFlag { get; set; } = SharedFlag.Flag2;
 
         public override void BuildLimitQueryConditions()
         {

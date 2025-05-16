@@ -797,40 +797,13 @@ namespace RUINORERP.UI
                 PrintInfoLog("本位币别查询完成。");
 
                 #endregion
-
-
-                try
-                {
-                    //读取更新版本的文件配置情况。通过心跳回到服务器上去 
-                    // 解析现有配置文件
-                    var (version, updateTime, url) = ParseXmlInfo("AutoUpdaterList.xml");
-                    // 显示结果
-                    Console.WriteLine($"当前版本: {version}");
-                    Console.WriteLine($"最后更新时间: {updateTime:yyyy-MM-dd}");
-                    if (!string.IsNullOrEmpty(version))
-                    {
-                        MainForm.Instance.AppContext.CurrentUser.客户端版本 += "-" + version;
-                    }
-
-                    MainForm.Instance.AppContext.CurrentUser.客户端版本 += "-" + updateTime;
-
-                    if (!string.IsNullOrEmpty(url))
-                    {
-                        MainForm.Instance.AppContext.CurrentUser.客户端版本 += "-" + url;
-                    }
-                }
-                catch (Exception)
-                {
-
-                }
-                finally { }
-
-
             });
 
             //mapper = RUINORERP.Business.AutoMapper.AutoMapperConfig.RegisterMappings().CreateMapper();
             //
             mapper = AppContext.GetRequiredService<IMapper>();
+
+            GetAutoUpdateConfig();
         }
 
         public IMapper mapper { get; set; }
@@ -2634,6 +2607,7 @@ namespace RUINORERP.UI
                 //!MainForm.Instance.AppContext.IsOnline  屏蔽了更新工作台。可能会卡列。需要优化
                 if (GetLastInputTime() > 30 && !MainForm.Instance.AppContext.IsOnline)
                 {
+                    GetAutoUpdateConfig();
                     //刷新工作台数据？
                     //指向工作台
                     KryptonWorkspaceCell cell = kryptonDockableWorkspace1.ActiveCell;
@@ -2663,6 +2637,38 @@ namespace RUINORERP.UI
             }
         }
 
+        /// <summary>
+        /// 获取更新配置通过心跳给服务器
+        /// </summary>
+        private void GetAutoUpdateConfig()
+        {
+            try
+            {
+                //读取更新版本的文件配置情况。通过心跳回到服务器上去 
+                // 解析现有配置文件
+                var (version, updateTime, url) = ParseXmlInfo("AutoUpdaterList.xml");
+                // 显示结果
+                Console.WriteLine($"当前版本: {version}");
+                Console.WriteLine($"最后更新时间: {updateTime:yyyy-MM-dd}");
+                if (!string.IsNullOrEmpty(version))
+                {
+                    MainForm.Instance.AppContext.CurrentUser.客户端版本 += "-" + version;
+                }
+
+                MainForm.Instance.AppContext.CurrentUser.客户端版本 += "-" + updateTime;
+
+                if (!string.IsNullOrEmpty(url))
+                {
+                    MainForm.Instance.AppContext.CurrentUser.客户端版本 += "-" + url;
+                }
+            }
+            catch (Exception)
+            {
+
+            }
+            finally { }
+
+        }
 
 
         public void TryRequestCache(string nextTableName, Type elementType = null)

@@ -242,7 +242,7 @@
             // 
             // chkIsCustomizedOrder
             // 
-            this.chkIsCustomizedOrder.Location = new System.Drawing.Point(1141, 186);
+            this.chkIsCustomizedOrder.Location = new System.Drawing.Point(1122, 162);
             this.chkIsCustomizedOrder.Name = "chkIsCustomizedOrder";
             this.chkIsCustomizedOrder.Size = new System.Drawing.Size(62, 20);
             this.chkIsCustomizedOrder.TabIndex = 102;
@@ -252,7 +252,7 @@
             // 
             this.chk平台单.Checked = true;
             this.chk平台单.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.chk平台单.Location = new System.Drawing.Point(1141, 159);
+            this.chk平台单.Location = new System.Drawing.Point(795, 58);
             this.chk平台单.Name = "chk平台单";
             this.chk平台单.Size = new System.Drawing.Size(62, 20);
             this.chk平台单.TabIndex = 101;

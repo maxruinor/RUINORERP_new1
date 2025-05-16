@@ -8,11 +8,115 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using RUINORERP.Common.Helper;
+using System.Reflection;
 
 namespace RUINORERP.UI.Common
 {
     public class UITools
     {
+        /// <summary>
+        /// 提取重复的数据
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="dataSource"></param>
+        /// <param name="includeProperties"></param>
+        /// <returns></returns>
+        public static List<T> CheckDuplicateData<T>(List<T> dataSource, List<string> includeProperties) where T : class
+        {
+            List<T> DuplicateData = new List<T>();
+            try
+            {
+                // 转换数据源 BindingSortCollection
+
+                if (!dataSource.Any())
+                {
+                    MessageBox.Show("没有数据可检查", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+
+                // 获取主键名称
+                string pkName = UIHelper.GetPrimaryKeyColName(typeof(T));
+
+                // 创建属性访问器缓存
+                var propertyAccessors = typeof(T)
+                    .GetProperties()
+                    .Where(p => includeProperties.Contains(p.Name) && p.Name != pkName)
+                    .Select(p => new { Property = p, Getter = ExpressionHelper.CreateGetter(p) })
+                    .ToList();
+
+                if (!propertyAccessors.Any())
+                {
+                    MessageBox.Show("没有可比较的属性", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                }
+                List<T> dlist = new List<T>();
+                foreach (var item in propertyAccessors)
+                {
+                    dlist.Add(item as T);
+                }
+                //====
+
+                Func<T, Tuple<object[]>> keySelector2 = p =>
+                {
+                    PropertyInfo[] properties = typeof(T).GetProperties()
+                        .Where(prop => includeProperties.Contains(prop.Name) && prop.Name != pkName)
+                        .ToArray();
+                    var values = properties.Select(prop => prop.GetValue(p)).ToArray();
+                    return Tuple.Create(values);
+                };
+
+
+
+                // 使用自定义比较器进行分组
+                var duplicatesList = dataSource.GroupBy(
+                    keySelector2,
+                    new CustomTupleEqualityComparer<Tuple<object[]>>(includeProperties.ToArray()) // 使用适当的比较器
+                ).Where(g => g.Count() > 1)
+                 .Select(g => g.Skip(1))//排除掉第一个元素，这个是第一个重复的元素，要保留
+                .SelectMany(g => g)
+                .ToList();
+                //=====
+
+
+                var s1 = dataSource.GroupBy(
+                    keySelector2,
+                    new CustomTupleEqualityComparer<Tuple<object[]>>(includeProperties.ToArray()) // 使用适当的比较器
+                )
+                .Select(g => g.Skip(1))//排除掉第一个元素，这个是第一个重复的元素，要保留
+                .ToList();
+
+
+
+                DuplicateData = duplicatesList;
+
+
+                // 使用属性值元组作为键进行分组
+                //var duplicates = dataSource
+                //    .GroupBy(item => ExpressionHelper.CreateKey<T>(item, dlist))
+                //    .Where(g => g.Count() > 1)
+                //    .SelectMany(g => g.Skip(1)) // 保留第一个，选择重复的
+                //    .ToList();
+
+
+
+
+                // 显示结果
+                //if (duplicates.Any())
+                //{
+                //    MainForm.Instance.PrintInfoLog($"发现 {duplicates.Count} 条重复数据");
+                //}
+                //else
+                //{
+                //    MainForm.Instance.PrintInfoLog($"没有发现重复数据");
+                //}
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"检查过程中发生错误: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            return DuplicateData;
+        }
+
+
         public static float CalculateTextWidth(string text, Font font, Graphics graphics)
         {
             if (string.IsNullOrEmpty(text) || font == null || graphics == null)

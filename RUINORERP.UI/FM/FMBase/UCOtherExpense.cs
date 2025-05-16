@@ -38,13 +38,14 @@ using RUINORERP.Business.AutoMapper;
 using Krypton.Toolkit;
 using RUINORERP.Business.Processor;
 using RUINORERP.Business.Security;
+using RUINORERP.UI.ATechnologyStack;
 
-namespace RUINORERP.UI.FM
+namespace RUINORERP.UI.FM.FMBase
 {
-    [MenuAttrAssemblyInfo("其他费用支出", ModuleMenuDefine.模块定义.财务管理, ModuleMenuDefine.财务管理.费用管理, BizType.其他费用支出)]
-    public partial class UCOtherExpenseOut : BaseBillEditGeneric<tb_FM_OtherExpense, tb_FM_OtherExpenseDetail>
+    //其他费用
+    public partial class UCOtherExpense : BaseBillEditGeneric<tb_FM_OtherExpense, tb_FM_OtherExpenseDetail>
     {
-        public UCOtherExpenseOut()
+        public UCOtherExpense()
         {
             InitializeComponent();
         }
@@ -59,10 +60,6 @@ namespace RUINORERP.UI.FM
         /// </summary>
         public void InitDataTocmbbox()
         {
-            rdb收入.Visible = false;
-            rdb支出.Visible = false;
-            lblEXPOrINC.Visible = false;
-            kryptonGroupBox4.Visible = false;
             lblPrintStatus.Text = "";
             lblReview.Text = "";
             DataBindingHelper.InitDataToCmb<tb_Employee>(k => k.Employee_ID, v => v.Employee_Name, cmbEmployee_ID);
@@ -105,12 +102,9 @@ namespace RUINORERP.UI.FM
                         entity.ExpenseNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.其他费用收入);
                     }
                 }
-
-
-
             }
 
-            DataBindingHelper.BindData4RadioGroupTrueFalse<tb_FM_OtherExpense>(entity, t => t.EXPOrINC, rdb收入, rdb支出);
+          
 
             DataBindingHelper.BindData4Cmb<tb_Employee>(entity, k => k.Employee_ID, v => v.Employee_Name, cmbEmployee_ID);
             DataBindingHelper.BindData4TextBox<tb_FM_OtherExpense>(entity, t => t.TotalAmount.ToString(), txtTotalAmount, BindDataType4TextBox.Money, false);
@@ -167,6 +161,29 @@ namespace RUINORERP.UI.FM
             LoadImageData(entity.CloseCaseImagePath);
             base.BindData(entity);
         }
+
+        /// <summary>
+        /// 如果需要查询条件查询，就要在子类中重写这个方法
+        /// </summary>
+        public override void QueryConditionBuilder()
+        {
+            BaseProcessor baseProcessor = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_FM_OtherExpense).Name + "Processor");
+            QueryConditionFilter = baseProcessor.GetQueryFilter();
+
+            //创建表达式
+            var lambda = Expressionable.Create<tb_FM_OtherExpense>()
+                             //.AndIF(CurMenuInfo.CaptionCN.Contains("客户"), t => t.IsCustomer == true)
+                             // .AndIF(CurMenuInfo.CaptionCN.Contains("供应商"), t => t.IsVendor == true)
+                             .And(t => t.isdeleted == false)
+                                .And(t => t.EXPOrINC == true)
+                            // .And(t => t.Is_enabled == true)
+                            //报销人员限制，财务不限制
+                            .AndIF(AuthorizeController.GetOwnershipControl(MainForm.Instance.AppContext), t => t.Employee_ID == MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID)//限制了销售只看到自己的客户,采购不限制
+                            .ToExpression();//注意 这一句 不能少
+            QueryConditionFilter.SetFieldLimitCondition(lambda);
+
+        }
+
 
         private async void LoadImageData(string CloseCaseImagePath)
         {
@@ -349,27 +366,7 @@ namespace RUINORERP.UI.FM
 
         }
 
-        /// <summary>
-        /// 如果需要查询条件查询，就要在子类中重写这个方法
-        /// </summary>
-        public override void QueryConditionBuilder()
-        {
-            BaseProcessor baseProcessor = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_FM_OtherExpense).Name + "Processor");
-            QueryConditionFilter = baseProcessor.GetQueryFilter();
-
-            //创建表达式
-            var lambda = Expressionable.Create<tb_FM_OtherExpense>()
-                             //.AndIF(CurMenuInfo.CaptionCN.Contains("客户"), t => t.IsCustomer == true)
-                             // .AndIF(CurMenuInfo.CaptionCN.Contains("供应商"), t => t.IsVendor == true)
-                             .And(t => t.isdeleted == false)
-                                .And(t => t.EXPOrINC == false)
-                            // .And(t => t.Is_enabled == true)
-                            //报销人员限制，财务不限制
-                            .AndIF(AuthorizeController.GetOwnershipControl(MainForm.Instance.AppContext), t => t.Employee_ID == MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID)//限制了销售只看到自己的客户,采购不限制
-                            .ToExpression();//注意 这一句 不能少
-            QueryConditionFilter.SetFieldLimitCondition(lambda);
-
-        }
+ 
 
         List<tb_FM_OtherExpenseDetail> details = new List<tb_FM_OtherExpenseDetail>();
         protected async override Task<bool> Save(bool NeedValidated)
@@ -402,12 +399,7 @@ namespace RUINORERP.UI.FM
                 {
                     return false;
                 }
-                //必需选一个
-                if (NeedValidated && (!rdb支出.Checked && !rdb收入.Checked))
-                {
-                    MessageBox.Show("收入和支出必需选其一！");
-                    return false;
-                }
+                
                 EditEntity.TaxAmount = details.Sum(c => c.TaxAmount);
                 EditEntity.TotalAmount = details.Sum(c => c.TotalAmount);
                 if (NeedValidated)

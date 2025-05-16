@@ -54,6 +54,7 @@ namespace RUINORERP.Business
             RuleFor(x => x.TotalAmount).GreaterThan(0).When(x => x.tb_SaleOrderDetails.Any(s => s.Gift == false)).WithMessage("总金额：明细中有非赠品产品时，总金额要大于零。");//可非全赠品时 总金额要大于0.订单。
             RuleFor(x => x.TotalQty).GreaterThan(0).WithMessage("总数量：要大于零。");
             RuleFor(x => x.TotalAmount).GreaterThan(0).WithMessage("总金额：要大于零。");
+            RuleFor(x => x.TotalAmount).GreaterThanOrEqualTo(x => x.tb_SaleOrderDetails.Sum(c => (c.TransactionPrice) * c.Quantity)).WithMessage("明细中，成交小计：要等于成交价*数量。");
             RuleFor(x => x.PlatformOrderNo).NotEmpty().When(c => c.IsFromPlatform).WithMessage("平台单时，平台订单号不能为空。");
             RuleFor(x => x.PayStatus).GreaterThan(0).WithMessage("付款状态:不能为空。");
             RuleFor(x => x.Paytype_ID).GreaterThan(0).When(c => c.PayStatus != (int)PayStatus.未付款).WithMessage("付款方式:有付款的情况下，付款方式不能为空。");

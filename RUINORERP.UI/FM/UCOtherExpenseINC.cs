@@ -38,18 +38,19 @@ using RUINORERP.Business.AutoMapper;
 using Krypton.Toolkit;
 using RUINORERP.Business.Processor;
 using RUINORERP.Business.Security;
+using RUINORERP.UI.ATechnologyStack;
 
 
 namespace RUINORERP.UI.FM
 {
     [MenuAttrAssemblyInfo("其他费用收入", ModuleMenuDefine.模块定义.财务管理, ModuleMenuDefine.财务管理.费用管理, BizType.其他费用收入)]
-    public partial class UCOtherExpenseINC : BaseBillEditGeneric<tb_FM_OtherExpense, tb_FM_OtherExpenseDetail>
+    public partial class UCOtherExpenseINC : BaseBillEditGeneric<tb_FM_OtherExpense, tb_FM_OtherExpenseDetail>, ISharedIdentification
     {
         public UCOtherExpenseINC()
         {
             InitializeComponent();
         }
-
+        public SharedFlag sharedFlag { get; set; } = SharedFlag.Flag2;
         internal override void LoadDataToUI(object Entity)
         {
             ActionStatus actionStatus = ActionStatus.无操作;

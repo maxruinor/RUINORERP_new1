@@ -35,8 +35,8 @@ namespace RUINORERP.Business.Processor
                            // .And(t => t.Is_enabled == true)
                            .OrIF(AuthorizeController.GetExclusiveLimitedAuth(_appContext), t => t.IsExclusive == true && t.Employee_ID == _appContext.CurUserInfo.UserInfo.Employee_ID)
                           .ToExpression();//注意 这一句 不能少
-            //这个因为供应商和客户混在一起。限制条件在外面 调用时确定 
-            //2024-4-11思路升级  条件可以合并，这里也可以限制。合并时要注意怎么联接
+            //这个因为供应商和客户混在一起。限制条件在外层外面 调用时确定 
+            //2024-4-11思路升级  条件可以合并，这里也可以限制。合并时要注意怎么联接 
             queryFilter.FilterLimitExpressions.Add(lambda);
 
             queryFilter.SetQueryField<tb_CustomerVendor>(c => c.CVName);

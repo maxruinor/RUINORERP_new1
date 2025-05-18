@@ -60,16 +60,28 @@ namespace RUINORERP.UI.FM
 
         public override void BuildLimitQueryConditions()
         {
+            //这里外层来实现对客户供应商的限制
+            string customerVendorId = "".ToFieldName<tb_CustomerVendor>(c => c.CustomerVendor_ID);
+
+            //应收付款中的往来单位额外添加一些条件
+            var lambdaCv = Expressionable.Create<tb_CustomerVendor>()
+                .AndIF(PaymentType == ReceivePaymentType.收款, t => t.IsCustomer == true)
+                .AndIF(PaymentType == ReceivePaymentType.付款, t => t.IsVendor == true)
+              .ToExpression();
+            QueryField queryField = QueryConditionFilter.QueryFields.Where(c => c.FieldName == customerVendorId).FirstOrDefault();
+            queryField.SubFilter.FilterLimitExpressions.Add(lambdaCv);
+
+
             var lambda = Expressionable.Create<tb_FM_PaymentRecord>()
                               .And(t => t.isdeleted == false)
                              .And(t => t.ReceivePaymentType == (int)PaymentType)
                             .AndIF(AuthorizeController.GetOwnershipControl(MainForm.Instance.AppContext),
-                             t => t.Employee_ID == MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID)
+                             t => t.Created_by == MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID)
                          .ToExpression();//注意 这一句 不能少
-
             QueryConditionFilter.FilterLimitExpressions.Add(lambda);
 
             base.LimitQueryConditions = lambda;
+           
         }
 
         public override void BuildSummaryCols()

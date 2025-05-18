@@ -80,6 +80,8 @@ using HLH.Lib.Security;
 using System.Xml.Linq;
 using Fireasy.Common.Extensions;
 using AutoMapper;
+using Netron.GraphLib.IO.NML;
+using RUINORERP.Global.EnumExt;
 
 
 
@@ -746,8 +748,6 @@ namespace RUINORERP.UI
             {
                 await Task.Delay(3000);
                 #region 本位币别
-
-
                 #region 查询对应的项目组
 
                 PrintInfoLog("正在查询项目组...");
@@ -762,7 +762,7 @@ namespace RUINORERP.UI
                 MainForm.Instance.AppContext.projectGroups = groupEmployees.Select(c => c.tb_projectgroup).ToList();
                 #endregion
 
-
+                #region  本位币别查询
                 PrintInfoLog("正在查询本位币别...");
 
                 List<tb_Currency> currencies = new List<tb_Currency>();
@@ -795,6 +795,9 @@ namespace RUINORERP.UI
                 }
 
                 PrintInfoLog("本位币别查询完成。");
+                #endregion
+
+
 
                 #endregion
             });
@@ -804,6 +807,49 @@ namespace RUINORERP.UI
             mapper = AppContext.GetRequiredService<IMapper>();
 
             GetAutoUpdateConfig();
+
+
+            // 异步延迟3秒执行本位币别查询事件，不会阻止UI线程
+            _ = Task.Run(async () =>
+            {
+                await Task.Delay(10000);
+                #region  正在查询账期的设置
+                PrintInfoLog("正在查询账期的设置");
+
+                List<tb_PaymentMethod> PaymentMethods = new List<tb_PaymentMethod>();
+
+                var rslist = BizCacheHelper.Manager.CacheEntityList.Get(nameof(tb_PaymentMethod));
+                if (rslist != null)
+                {
+                    List<object> objlist = rslist as List<object>;
+                    foreach (var item in objlist)
+                    {
+                        if (item is tb_PaymentMethod ra)
+                        {
+                            PaymentMethods.Add(ra);
+                        }
+                    }
+                }
+
+                tb_PaymentMethod paymentMethod = PaymentMethods.Where(m => m.Paytype_Name == DefaultPaymentMethod.账期.ToString()).FirstOrDefault();
+                if (paymentMethod != null)
+                {
+                    MainForm.Instance.AppContext.PaymentMethodOfPeriod = paymentMethod;
+                }
+                else
+                {
+                    MainForm.Instance.AppContext.PaymentMethodOfPeriod = MainForm.Instance.AppContext.Db.CopyNew().Queryable<tb_PaymentMethod>()
+                    .Where(c => c.Paytype_Name == DefaultPaymentMethod.账期.ToString()).Single();
+                    if (MainForm.Instance.AppContext.BaseCurrency == null)
+                    {
+                        MessageBox.Show("请在基础设置中的付款方式添加【账期】。");
+                    }
+                }
+
+                PrintInfoLog("账期设置查询完成。");
+                #endregion
+            });
+
         }
 
         public IMapper mapper { get; set; }
@@ -1299,7 +1345,15 @@ namespace RUINORERP.UI
                 rs = true;
                 if (AppContext.CurUserInfo != null)
                 {
-                    this.SystemOperatorState.Text = $"登陆: {AppContext.CurUserInfo.Name}【{AppContext.CurrentRole.RoleName}】";
+                    if (AppContext.CurUserInfo.UserInfo!=null && AppContext.CurUserInfo.UserInfo.tb_employee!=null)
+                    {
+                        this.SystemOperatorState.Text = $"登陆: {AppContext.CurUserInfo.UserInfo.UserName}-{AppContext.CurUserInfo.UserInfo.tb_employee.Employee_Name}【{AppContext.CurrentRole.RoleName}】";
+                    }
+                    else
+                    {
+                        this.SystemOperatorState.Text = $"登陆: {AppContext.CurUserInfo.UserInfo.UserName}【{AppContext.CurrentRole.RoleName}】";
+                    }
+                    
                 }
 
                 //加载角色

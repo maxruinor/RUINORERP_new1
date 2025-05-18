@@ -345,8 +345,8 @@ namespace RUINORERP.Business.CommService
                         cbd.BillNo = Paymentrecord.PaymentNo;
                     }
                     break;
-                case BizType.应付单:
-                case BizType.应收单:
+                case BizType.应付款单:
+                case BizType.应收款单:
                     var ReceivablePayable = Entity as tb_FM_ReceivablePayable;
                     if (ReceivablePayable != null)
                     {

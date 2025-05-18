@@ -166,42 +166,17 @@ namespace RUINORERP.UI.BaseForm
                     toolStripButton结案.Visible = false;
                     AddExcludeMenuList();
                     //其它的排除
-                    List<MenuItemEnums> stripItems = ExcludeMenuList;
-
                     foreach (var item in BaseToolStrip.Items)
                     {
-                        #region 窗体按钮权限控制  硬编码指定不显示的按钮
-                        List<string> excludemenuTextList = stripItems.Select(it => it.ToString()).ToList();
-                        if (excludemenuTextList.Count > 0)
-                        {
-                            if (item is ToolStripButton)
-                            {
-                                ToolStripButton subItem = item as ToolStripButton;
-                                if (excludemenuTextList.Contains(subItem.Text))
-                                {
-                                    subItem.Visible = false;
-                                }
-                            }
-                            else if (item is ToolStripDropDownButton subItemDr)
-                            {
-                                if (excludemenuTextList.Contains(subItemDr.Text))
-                                {
-                                    subItemDr.Visible = false;
-                                }
-                            }
-                        }
-                        #endregion
-
-
                         if (item is ToolStripButton)
                         {
                             ToolStripButton subItem = item as ToolStripButton;
                             subItem.Click += Item_Click;
-                            UIHelper.ControlButton<ToolStripButton>(CurMenuInfo, subItem);
+                            UIHelper.ControlButton<ToolStripButton>(CurMenuInfo, subItem, ExcludeMenuList);
                         }
                         else if (item is ToolStripDropDownButton subItemDr)
                         {
-                            UIHelper.ControlButton<ToolStripDropDownButton>(CurMenuInfo, subItemDr);
+                            UIHelper.ControlButton<ToolStripDropDownButton>(CurMenuInfo, subItemDr, ExcludeMenuList);
                             subItemDr.Click += Item_Click;
                             //下一级
                             if (subItemDr.HasDropDownItems)
@@ -592,7 +567,7 @@ namespace RUINORERP.UI.BaseForm
             if (_UCBillMasterQuery != null)
             {
                 _UCBillMasterQuery.newSumDataGridViewMaster.EndEdit();
-                if (cbbatch.Checked)
+                if (cbbatch.Checked || _UCBillMasterQuery.newSumDataGridViewMaster.UseSelectedColumn)
                 {
                     #region 批量处理
                     if (_UCBillMasterQuery.newSumDataGridViewMaster.SelectedRows != null)
@@ -1032,6 +1007,7 @@ namespace RUINORERP.UI.BaseForm
 
         /// <summary>
         /// 针对查询结果的限制
+        /// 也可以对process中字段添加子限制来过滤加载的项目
         /// </summary>
         public virtual void BuildLimitQueryConditions()
         {
@@ -1049,6 +1025,9 @@ namespace RUINORERP.UI.BaseForm
         // Expression<Func<User, bool>> condition4 = t => t.Money > 1000;
         //var lambda = condition1.And(condition2).And(condition3).Or(condition4);
         // var users = UserDbContext.Query(lambda);
+        ///对一个实体查询时，额外的条件 一般添加在ui中，没有在process中
+        /// 只是针对查询结果的限制
+        /// 也可以对process中字段添加子限制来过滤加载的项目
         /// </summary>
         public Expression<Func<M, bool>> LimitQueryConditions { get; set; }
 
@@ -1231,9 +1210,16 @@ namespace RUINORERP.UI.BaseForm
         {
 
             BuildInvisibleCols();
-            BuildLimitQueryConditions();
-            BuildColNameDataDictionary();
+
+            //先添加主要的条件 在processor中
             BuildQueryCondition();
+
+            //再添加UI上额外的情况
+            BuildLimitQueryConditions();
+
+
+            BuildColNameDataDictionary();
+
             BuildSummaryCols();
         }
 

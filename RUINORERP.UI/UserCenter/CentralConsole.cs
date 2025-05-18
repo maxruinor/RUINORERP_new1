@@ -56,6 +56,14 @@ namespace RUINORERP.UI.UserCenter
         请购单,
         借出单,
         归还单,
+        预收款单,
+        预付款单,
+        应收款单,
+        应付款单,
+        收款单,
+        付款单,
+        
+
     }
 
     public enum 常用操作

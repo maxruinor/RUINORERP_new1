@@ -42,7 +42,15 @@ namespace RUINORERP.Business
         /// <summary>
         /// 库存中的拟销售量增加，同时检查数量和金额，总数量和总金额不能小于明细小计的和
         /// 财务业务模板：如果账期，则是在销售出库时生成应收。
-        /// 销售订单审核时，非账期，即时收款时，生成预收款
+        /// 销售订单审核时
+        /// 部分付款叫订金。 有订金才生成预收款，意思是有金额交易才生成
+        /// 全部付款生成应收
+        /// 账期就要等出库审核时生成应收款。
+        /// 
+        /// 销售订金（预收）	- 预收定金生成预收单
+        //- 后续订单核销预收 → 自动冲抵应收	- 预收付表：减少 RemainAmount
+        //- 应收应付表：减少 TotalAmount
+
         /// </summary>
         /// <param name="entity"></param>
         /// <returns></returns>
@@ -85,38 +93,38 @@ namespace RUINORERP.Business
                     }
 
                     #endregion
-
                 }
 
                 DbHelper<tb_Inventory> dbHelper = _appContext.GetRequiredService<DbHelper<tb_Inventory>>();
                 var Counter = await dbHelper.BaseDefaultAddElseUpdateAsync(invList);
-                if (Counter != invList.Count)
+                if (Counter == 0)
                 {
                     _unitOfWorkManage.RollbackTran();
-                    throw new Exception("库存更新失败！");
+                    throw new Exception("库存更新数据为0，更新失败！");
                 }
 
 
                 AuthorizeController authorizeController = _appContext.GetRequiredService<AuthorizeController>();
                 if (authorizeController.EnableFinancialModule())
                 {
-                    #region 生成预收款单
+                    #region 生成预收款单 
+
+                    #region 生成预收款单条件判断检测
                     // 获取付款方式信息
-                    if (entity.tb_paymentmethod == null)
+                    if (_appContext.PaymentMethodOfPeriod == null)
                     {
-                        var obj = BizCacheHelper.Instance.GetEntity<tb_PaymentMethod>(entity.Paytype_ID);
-                        if (obj != null && obj.ToString() != "System.Object")
+                        _unitOfWorkManage.RollbackTran();
+                        rmrs.Succeeded = false;
+                        rmrs.ErrorMsg = $"请先配置付款方式信息！";
+                        if (_appContext.SysConfig.ShowDebugInfo)
                         {
-                            entity.tb_paymentmethod = obj as tb_PaymentMethod;
+                            _logger.LogInformation(rmrs.ErrorMsg);
                         }
-                        if (entity.tb_paymentmethod == null)
-                        {
-                            entity.tb_paymentmethod = await _appContext.Db.Queryable<tb_PaymentMethod>().Where(c => c.Paytype_ID == entity.Paytype_ID).FirstAsync();
-                        }
+                        return rmrs;
                     }
 
                     //如果是账期必须是未付款
-                    if (entity.tb_paymentmethod.Paytype_Name == DefaultPaymentMethod.账期.ToString())
+                    if (entity.Paytype_ID == _appContext.PaymentMethodOfPeriod.Paytype_ID)
                     {
                         if (entity.PayStatus != (int)PayStatus.未付款)
                         {
@@ -133,7 +141,7 @@ namespace RUINORERP.Business
 
                     if (entity.PayStatus == (int)PayStatus.未付款)
                     {
-                        if (entity.tb_paymentmethod.Paytype_Name != DefaultPaymentMethod.账期.ToString())
+                        if (entity.Paytype_ID != _appContext.PaymentMethodOfPeriod.Paytype_ID)
                         {
                             rmrs.Succeeded = false;
                             _unitOfWorkManage.RollbackTran();
@@ -145,6 +153,11 @@ namespace RUINORERP.Business
                             return rmrs;
                         }
                     }
+
+
+                    #endregion
+
+
                     // 外币相关处理 正确是 外币时一定要有汇率
                     decimal exchangeRate = 1; // 获取销售订单的汇率
                     if (_appContext.BaseCurrency.Currency_ID != entity.Currency_ID)
@@ -154,11 +167,14 @@ namespace RUINORERP.Business
                                                             // exchangeRate = GetLatestExchangeRate(entity.Currency_ID.Value, _appContext.BaseCurrency.Currency_ID);
                     }
 
-                    //销售订单审核时，非账期，即时收款时，生成预收款。 订金，部分收款
-                    if (entity.tb_paymentmethod.Paytype_Name != DefaultPaymentMethod.账期.ToString())
+                    //销售订单审核时，非账期，即时收款时
+                    //订金，部分收款 生成预收款。
+                    //全款生成应收 转收款单
+                    if (entity.Paytype_ID != _appContext.PaymentMethodOfPeriod.Paytype_ID
+                        && entity.PayStatus == (int)PayStatus.部分付款
+                        )
                     {
-                        tb_FM_PreReceivedPaymentController<tb_FM_PreReceivedPayment> ctrpay = _appContext.GetRequiredService<tb_FM_PreReceivedPaymentController<tb_FM_PreReceivedPayment>>();
-
+                        var ctrpay = _appContext.GetRequiredService<tb_FM_PreReceivedPaymentController<tb_FM_PreReceivedPayment>>();
                         tb_FM_PreReceivedPayment payable = new tb_FM_PreReceivedPayment();
                         payable = mapper.Map<tb_FM_PreReceivedPayment>(entity);
                         payable.ApprovalResults = null;
@@ -243,7 +259,98 @@ namespace RUINORERP.Business
                             return rmrs;
                         }
                     }
+                    if (entity.Paytype_ID != _appContext.PaymentMethodOfPeriod.Paytype_ID
+                        && entity.PayStatus == (int)PayStatus.部分付款
+                        )
+                    {
+                        var ctrpay = _appContext.GetRequiredService<tb_FM_PreReceivedPaymentController<tb_FM_PreReceivedPayment>>();
+                        tb_FM_PreReceivedPayment payable = new tb_FM_PreReceivedPayment();
+                        payable = mapper.Map<tb_FM_PreReceivedPayment>(entity);
+                        payable.ApprovalResults = null;
+                        payable.ApprovalStatus = (int)ApprovalStatus.未审核;
+                        payable.Approver_at = null;
+                        payable.Approver_by = null;
+                        payable.PrintStatus = 0;
+                        payable.IsAvailable = true;
+                        payable.ActionStatus = ActionStatus.新增;
+                        payable.ApprovalOpinions = "";
+                        payable.Modified_at = null;
+                        payable.Modified_by = null;
+                        if (entity.tb_projectgroup != null)
+                        {
+                            payable.DepartmentID = entity.tb_projectgroup.DepartmentID;
+                        }
+                        //销售就是收款
+                        payable.ReceivePaymentType = (int)ReceivePaymentType.收款;
 
+                        payable.PreRPNO = BizCodeGenerator.Instance.GetBizBillNo(BizType.预收款单);
+                        payable.SourceBizType = (int)BizType.销售订单;
+                        payable.SourceBillNo = entity.SOrderNo;
+                        payable.SourceBillId = entity.SOrder_ID;
+                        payable.Currency_ID = entity.Currency_ID;
+                        payable.PrePayDate = entity.SaleDate;
+                        payable.ExchangeRate = exchangeRate;
+
+                        payable.LocalPrepaidAmountInWords = string.Empty;
+                        payable.Account_id = entity.Account_id;
+                        //如果是外币时，则由外币算出本币
+                        if (entity.PayStatus == (int)PayStatus.全部付款)
+                        {
+                            //外币时 全部付款，则外币金额=本币金额/汇率 在UI中显示出来。
+                            if (_appContext.BaseCurrency.Currency_ID != entity.Currency_ID)
+                            {
+                                payable.ForeignPrepaidAmount = entity.ForeignTotalAmount;
+                                //payable.LocalPrepaidAmount = payable.ForeignPrepaidAmount * exchangeRate;
+                            }
+                            else
+                            {
+                                //本币时
+                                payable.LocalPrepaidAmount = entity.TotalAmount;
+                            }
+                        }
+                        //来自于订金
+                        if (entity.PayStatus == (int)PayStatus.部分付款)
+                        {
+                            //外币时
+                            if (_appContext.BaseCurrency.Currency_ID != entity.Currency_ID)
+                            {
+                                payable.ForeignPrepaidAmount = entity.ForeignDeposit;
+                                // payable.LocalPrepaidAmount = payable.ForeignPrepaidAmount * exchangeRate;
+                            }
+                            else
+                            {
+                                payable.LocalPrepaidAmount = entity.Deposit;
+                            }
+                        }
+
+                        //payable.LocalPrepaidAmountInWords = payable.LocalPrepaidAmount.ToString("C");
+                        payable.LocalPrepaidAmountInWords = payable.LocalPrepaidAmount.ToUpper();
+                        payable.IsAvailable = true;//默认可用
+
+                        payable.PrePaymentReason = $"销售订单{entity.SOrderNo}的预收款";
+                        Business.BusinessHelper.Instance.InitEntity(payable);
+                        payable.PrePaymentStatus = (long)PrePaymentStatus.待审核;
+                        ReturnResults<tb_FM_PreReceivedPayment> rmpay = await ctrpay.SaveOrUpdate(payable);
+                        if (rmpay.Succeeded)
+                        {
+                            // 预收款单生成成功后的处理逻辑
+                        }
+                        else
+                        {
+                            // 处理预收款单生成失败的情况
+                            rmrs.Succeeded = false;
+                            _unitOfWorkManage.RollbackTran();
+                            rmrs.ErrorMsg = $"预收款单生成失败：{rmpay.ErrorMsg ?? "未知错误"}";
+                            if (_appContext.SysConfig.ShowDebugInfo)
+                            {
+                                _logger.LogInformation(rmrs.ErrorMsg);
+                            }
+                            return rmrs;
+                        }
+                    }
+                    {
+                        //全款 现金 在出库时生成应收，再自动生成收款。自动核销应收单
+                    }
                     #endregion
                 }
 
@@ -434,7 +541,7 @@ namespace RUINORERP.Business
                         }
                         DbHelper<tb_Inventory> dbHelper = _appContext.GetRequiredService<DbHelper<tb_Inventory>>();
                         var InvUpdateCounter = await dbHelper.BaseDefaultAddElseUpdateAsync(invUpdateList);
-                        if (InvUpdateCounter != invUpdateList.Count)
+                        if (InvUpdateCounter == 0)
                         {
                             _unitOfWorkManage.RollbackTran();
                             throw new Exception("库存更新失败！");
@@ -530,7 +637,7 @@ namespace RUINORERP.Business
                         }
                         DbHelper<tb_Inventory> dbHelper = _appContext.GetRequiredService<DbHelper<tb_Inventory>>();
                         var InvUpdateCounter = await dbHelper.BaseDefaultAddElseUpdateAsync(invUpdateList);
-                        if (InvUpdateCounter != invUpdateList.Count)
+                        if (InvUpdateCounter == 0)
                         {
                             _unitOfWorkManage.RollbackTran();
                             throw new Exception("库存更新失败！");
@@ -698,7 +805,7 @@ namespace RUINORERP.Business
                     invUpdateList.Add(inv);
                 }
                 int InvUpdateCounter = await _unitOfWorkManage.GetDbClient().Updateable(invUpdateList).ExecuteCommandAsync();
-                if (InvUpdateCounter != invUpdateList.Count)
+                if (InvUpdateCounter == 0)
                 {
                     _unitOfWorkManage.RollbackTran();
                     throw new Exception("库存更新失败！");
@@ -1109,7 +1216,7 @@ namespace RUINORERP.Business
 
                 DbHelper<tb_Inventory> dbHelper = _appContext.GetRequiredService<DbHelper<tb_Inventory>>();
                 var InvUpdateCounter = await dbHelper.BaseDefaultAddElseUpdateAsync(invUpdateList);
-                if (InvUpdateCounter != invUpdateList.Count)
+                if (InvUpdateCounter == 0)
                 {
                     _unitOfWorkManage.RollbackTran();
                     throw new Exception("库存更新失败！");

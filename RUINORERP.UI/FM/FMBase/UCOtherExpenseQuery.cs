@@ -41,6 +41,8 @@ namespace RUINORERP.UI.FM.FMBase
 
         public override void BuildLimitQueryConditions()
         {
+
+
             //创建表达式
             var lambda = Expressionable.Create<tb_FM_OtherExpense>()
                              .AndIF(CurMenuInfo.CaptionCN.Contains("收入"), t => t.EXPOrINC == true)

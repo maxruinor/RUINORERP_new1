@@ -52,13 +52,25 @@ namespace RUINORERP.UI.FM
         public ReceivePaymentType PaymentType { get; set; }
         public override void BuildLimitQueryConditions()
         {
+
+            //这里外层来实现对客户供应商的限制
+            string customerVendorId = "".ToFieldName<tb_CustomerVendor>(c => c.CustomerVendor_ID);
+
+            //应收付款中的往来单位额外添加一些条件
+            var lambdaCv = Expressionable.Create<tb_CustomerVendor>()
+                .AndIF(PaymentType == ReceivePaymentType.收款, t => t.IsCustomer == true)
+                .AndIF(PaymentType == ReceivePaymentType.付款, t => t.IsVendor == true)
+              .ToExpression();
+            QueryField queryField = QueryConditionFilter.QueryFields.Where(c => c.FieldName == customerVendorId).FirstOrDefault();
+            queryField.SubFilter.FilterLimitExpressions.Add(lambdaCv);
+
+
             var lambda = Expressionable.Create<tb_FM_ReceivablePayable>()
                               .And(t => t.isdeleted == false)
                              .And(t => t.ReceivePaymentType == (int)PaymentType)
                             .AndIF(AuthorizeController.GetOwnershipControl(MainForm.Instance.AppContext),
                              t => t.Created_by == MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID)
                          .ToExpression();//注意 这一句 不能少
-
             QueryConditionFilter.FilterLimitExpressions.Add(lambda);
 
             base.LimitQueryConditions = lambda;
@@ -150,6 +162,7 @@ namespace RUINORERP.UI.FM
 
 
 
+        #region 转为收付款单
         public override List<ContextMenuController> AddContextMenu()
         {
             //List<EventHandler> ContextClickList = new List<EventHandler>();
@@ -187,52 +200,76 @@ namespace RUINORERP.UI.FM
         }
         private async void NewSumDataGridView_转为收付款单(object sender, EventArgs e)
         {
+
             List<tb_FM_ReceivablePayable> selectlist = GetSelectResult();
+            List<tb_FM_ReceivablePayable> RealList = new List<tb_FM_ReceivablePayable>();
+            StringBuilder msg = new StringBuilder();
+            int counter = 1;
             foreach (var item in selectlist)
             {
                 //只有审核状态才可以转换为收款单
                 bool canConvert = item.ARAPStatus == (long)ARAPStatus.已生效 && item.ApprovalStatus == (int)ApprovalStatus.已审核 && item.ApprovalResults.HasValue && item.ApprovalResults.Value;
                 if (canConvert || item.ARAPStatus == (long)ARAPStatus.部分支付)
                 {
-                    tb_FM_PaymentRecordController<tb_FM_PaymentRecord> paymentController = MainForm.Instance.AppContext.GetRequiredService<tb_FM_PaymentRecordController<tb_FM_PaymentRecord>>();
-                    List<tb_FM_PaymentRecord> paymentRecords = await paymentController.CreatePaymentRecord(new List<tb_FM_ReceivablePayable> { item }, false);
-                    MenuPowerHelper menuPowerHelper;
-                    menuPowerHelper = Startup.GetFromFac<MenuPowerHelper>();
-
-                    string Flag = string.Empty;
-                    if (PaymentType == ReceivePaymentType.收款)
-                    {
-                        Flag = typeof(RUINORERP.UI.FM.UCFMReceivedRecord).FullName;
-                    }
-                    else
-                    {
-                        Flag = typeof(RUINORERP.UI.FM.UCFMPaymentRecord).FullName;
-                    }
-
-                    tb_MenuInfo RelatedMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble
-                && m.EntityName == nameof(tb_FM_PaymentRecord)
-                && m.BIBaseForm == "BaseBillEditGeneric`2" && m.ClassPath == Flag)
-                    .FirstOrDefault();
-                    if (RelatedMenuInfo != null)
-                    {
-                        menuPowerHelper.ExecuteEvents(RelatedMenuInfo, paymentRecords[0]);
-                    }
-                    return;
+                    RealList.Add(item);
                 }
                 else
                 {
-                    if (PaymentType == ReceivePaymentType.收款)
-                    {
-                        MessageBox.Show($"当前应收款单 {item.ARAPNo} 无法生成收款单，请查询单据状态是否正确。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    }
-                    else
-                    {
-                        MessageBox.Show($"当前应付款单 {item.ARAPNo} 无法生成收款单，请查询单据状态是否正确。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    }
-
+                    msg.Append(counter.ToString() + ") ");
+                    msg.Append($"当前应{PaymentType.ToString()}单 {item.ARAPNo}状态为【 {((ARAPStatus)item.ARAPStatus.Value).ToString()}】 无法生成收款单。").Append("\r\n");
+                    counter++;
                 }
             }
+            //多选时。要相同客户才能合并到一个收款单
+            if (RealList.GroupBy(g => g.CustomerVendor_ID).Select(g => g.Key).Count() > 1)
+            {
+                msg.Append("多选时，要相同客户才能合并到一个收款单");
+                MessageBox.Show(msg.ToString(), "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+            if (msg.ToString().Length > 0)
+            {
+                MessageBox.Show(msg.ToString(), "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                if (RealList.Count == 0)
+                {
+                    return;
+                }
+            }
+
+            if (RealList.Count == 0)
+            {
+                msg.Append("请至少选择一行数据转为收款单");
+                MessageBox.Show(msg.ToString(), "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            tb_FM_PaymentRecordController<tb_FM_PaymentRecord> paymentController = MainForm.Instance.AppContext.GetRequiredService<tb_FM_PaymentRecordController<tb_FM_PaymentRecord>>();
+            tb_FM_PaymentRecord paymentRecord = await paymentController.CreatePaymentRecord(RealList, false);
+            MenuPowerHelper menuPowerHelper;
+            menuPowerHelper = Startup.GetFromFac<MenuPowerHelper>();
+
+            string Flag = string.Empty;
+            if (PaymentType == ReceivePaymentType.收款)
+            {
+                Flag = typeof(RUINORERP.UI.FM.UCFMReceivedRecord).FullName;
+            }
+            else
+            {
+                Flag = typeof(RUINORERP.UI.FM.UCFMPaymentRecord).FullName;
+            }
+
+            tb_MenuInfo RelatedMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble
+        && m.EntityName == nameof(tb_FM_PaymentRecord)
+        && m.BIBaseForm == "BaseBillEditGeneric`2" && m.ClassPath == Flag)
+            .FirstOrDefault();
+            if (RelatedMenuInfo != null)
+            {
+                menuPowerHelper.ExecuteEvents(RelatedMenuInfo, paymentRecord);
+            }
         }
+        #endregion
+
+
 
 
         //按客户生成对账单
@@ -260,7 +297,7 @@ namespace RUINORERP.UI.FM
         {
             base.MasterInvisibleCols.Add(c => c.ARAPId);
             base.MasterInvisibleCols.Add(c => c.ReceivePaymentType);
-            base.ChildInvisibleCols.Add(c => c.SourceBillId);
+            base.MasterInvisibleCols.Add(c => c.SourceBillId);
             if (PaymentType == ReceivePaymentType.收款)
             {
                 //应收款，不需要对方的收款信息。收款才要显示
@@ -281,9 +318,9 @@ namespace RUINORERP.UI.FM
         {
 
             #region 双击单号后按业务类型查询显示对应业务窗体
-            base._UCBillChildQuery.GridRelated.ComplexType = true;
+            base._UCBillMasterQuery.GridRelated.ComplexType = true;
             //由这个列来决定单号显示哪个的业务窗体
-            base._UCBillChildQuery.GridRelated.SetComplexTargetField<tb_FM_ReceivablePayableDetail>(c => c.SourceBizType, c => c.SourceBillNo);
+            base._UCBillMasterQuery.GridRelated.SetComplexTargetField<tb_FM_ReceivablePayable>(c => c.SourceBizType, c => c.SourceBillNo);
             BizTypeMapper mapper = new BizTypeMapper();
             //将枚举中的值循环
             foreach (var biztype in Enum.GetValues(typeof(BizType)))
@@ -296,7 +333,7 @@ namespace RUINORERP.UI.FM
                 ////这个参数中指定要双击的列单号。是来自另一组  一对一的指向关系
                 //因为后面代码去查找时，直接用的 从一个对象中找这个列的值。但是枚举显示的是名称。所以这里直接传入枚举的值。
                 KeyNamePair keyNamePair = new KeyNamePair(((int)((BizType)biztype)).ToString(), tableName.Name);
-                base._UCBillChildQuery.GridRelated.SetRelatedInfo<tb_FM_ReceivablePayableDetail>(c => c.SourceBillNo, keyNamePair);
+                base._UCBillMasterQuery.GridRelated.SetRelatedInfo<tb_FM_ReceivablePayable>(c => c.SourceBillNo, keyNamePair);
             }
             #endregion
 

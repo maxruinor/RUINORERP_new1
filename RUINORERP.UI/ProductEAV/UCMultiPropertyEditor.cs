@@ -1231,12 +1231,8 @@ namespace RUINORERP.UI.ProductEAV
         tb_Prod oldOjb = null;
         private async void btnOk_Click(object sender, EventArgs e)
         {
-
-
+            btnOk.Enabled = false;
             List<string> MixByTreeGrid = new List<string>();
-
-
-
             #region 获取最新的组合关系。并且保存为一个新的数组与现有的组合关系进行比较 取差集
             List<tb_Prod_Attr_Relation> attr_Relations = GetProdDetailsFromTreeGrid();
             var existDetails = attr_Relations.GroupBy(c => c.ProdDetailID).ToList();
@@ -1387,11 +1383,13 @@ namespace RUINORERP.UI.ProductEAV
             rr = await pctr.SaveOrUpdateAsync(EditEntity);
             if (rr.Succeeded)
             {
+                btnOk.Enabled = true;
                 MainForm.Instance.uclog.AddLog("保存成功");
                 this.Exit(this);
             }
             else
             {
+                btnOk.Enabled = true;
                 MainForm.Instance.uclog.AddLog($"保存失败:{rr.ErrorMsg}");
             }
 

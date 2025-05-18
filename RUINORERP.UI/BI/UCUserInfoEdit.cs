@@ -129,14 +129,6 @@ namespace RUINORERP.UI.BI
                 chkModifyPwd.Visible = true;
             }
 
-            if (!MainForm.Instance.AppContext.IsSuperUser)
-            {
-                lblIsSuperUser.Visible = false;
-                rdbIsSuperUserYes.Visible = false;
-                rdbIsSuperUserNo.Visible = false;
-                kryptonGroupBox3.Visible = false;
-            }
-
             DataBindingHelper.BindData4TextBox<tb_UserInfo>(entity, t => t.Notes, txtNotes, BindDataType4TextBox.Text, true);
 
             //后面这些依赖于控件绑定的数据源和字段。所以要在绑定后执行。
@@ -147,6 +139,7 @@ namespace RUINORERP.UI.BI
             }
             base.errorProviderForAllInput.DataSource = entity;
             base.BindData(entity);
+            
         }
 
 
@@ -216,7 +209,21 @@ namespace RUINORERP.UI.BI
 
         private void UCUserInfoEdit_Load(object sender, EventArgs e)
         {
-
+            if (!MainForm.Instance.AppContext.IsSuperUser)
+            {
+                lbSuperUser.Visible = false;
+                rdbIsSuperUserYes.Visible = false;
+                rdbIsSuperUserNo.Visible = false;
+                kryptonGroupBox3.Visible = false;
+            }
+            else
+            {
+                lbSuperUser.Visible = true;
+                rdbIsSuperUserYes.Visible = true;
+                rdbIsSuperUserNo.Visible = true;
+                kryptonGroupBox3.Visible = true;
+            }
+     
         }
     }
 }

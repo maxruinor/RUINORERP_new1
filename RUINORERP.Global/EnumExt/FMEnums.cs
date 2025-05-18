@@ -51,7 +51,6 @@ namespace RUINORERP.Global.EnumExt
         // 继承基础状态
         草稿 = BaseFMPaymentStatus.草稿,
         待审核 = BaseFMPaymentStatus.待审核,
-        已取消 = BaseFMPaymentStatus.已取消,
 
         //审核就变成已生效，并且生成收付单，审核后变为待核销
         [Description("已生效")]
@@ -68,7 +67,9 @@ namespace RUINORERP.Global.EnumExt
 
         //表示已经支付成功
         [Description("待核销")]
-        待核销 = 1 << 12
+        待核销 = 1 << 12,
+
+        已取消 = BaseFMPaymentStatus.已取消,
     }
 
     // 应收/应付单据状态
@@ -226,60 +227,10 @@ namespace RUINORERP.Global.EnumExt
         /// </summary>
         已核销,
     }
+ 
+ 
 
-    public enum PaymentType { Cash, BankTransfer, CreditCard, Other }
-
-
-
-
-    public enum BusinessType { Unsettled, PartiallySettled, Settled }
-
-    //1:应收/2:应付/3:预收/4:预付
-    public enum ARPTypes { Receivable = 1, Payable = 2, AdvanceReceivable = 3, AdvancePayable = 4 }
-
-
-    /*
-     | 状态值 | 状态描述 | 说明 | 
-| --- | --- | --- | 
-| 0 | 草稿 | 记录尚未审核，处于草稿状态 | 
-| 1 | 已审核 | 记录已审核，处于生效状态 | 
-| 2 | 部分收付 | 部分金额已收付，但未完全结清 | 
-| 3 | 已结清 | 全部金额已收付，记录已完全结清 | 
-| 4 | 已冲销 | 记录已冲销，通常用于坏账处理或核销 | 
-| 5 | 已关闭 | 记录已关闭，通常用于不再处理的情况 | 
-
-     */
-    public enum ReceivablePayableStatus
-    {
-        草稿,
-        已审核,
-        部分收付,
-        已结清,
-        已冲销,
-        已关闭,
-    }
-
-
-
-
-    ///// <summary>
-    ///// 结算状态
-    ///// </summary>
-    //public enum SettlementStatus
-    //{
-    //    未结清,
-    //    部分结清,
-    //    已结清
-    //}
-
-    /// <summary>
-    /// 审核状态：0=草稿,1=已审核
-    /// </summary>
-    public enum AuditStatus
-    {
-        草稿,
-        已审核,
-    }
+ 
 
     /// <summary>
     /// 默认币种

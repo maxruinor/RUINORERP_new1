@@ -127,7 +127,7 @@ namespace RUINORERP.UI.PSI.PUR
                 {
                     entity.Currency_ID = AppContext.BaseCurrency.Currency_ID;
                 }
-             
+
                 lblExchangeRate.Visible = false;
                 txtExchangeRate.Visible = false;
                 UIHelper.ControlForeignFieldInvisible<tb_PurOrder>(this, false);
@@ -194,6 +194,18 @@ namespace RUINORERP.UI.PSI.PUR
             //如果属性变化 则状态为修改
             entity.PropertyChanged += (sender, s2) =>
             {
+                if (s2.PropertyName == entity.GetPropertyName<tb_PurOrder>(c => c.PayStatus) && entity.PayStatus == (int)PayStatus.未付款)
+                {
+                    //默认为账期
+                    entity.Paytype_ID = MainForm.Instance.AppContext.PaymentMethodOfPeriod.Paytype_ID;
+                }
+                if (s2.PropertyName == entity.GetPropertyName<tb_PurOrder>(c => c.Paytype_ID) && entity.Paytype_ID == MainForm.Instance.AppContext.PaymentMethodOfPeriod.Paytype_ID)
+                {
+                    //默认为未付款
+                    entity.PayStatus = (int)PayStatus.未付款;
+                }
+
+
                 //权限允许
                 if ((true && entity.DataStatus == (int)DataStatus.草稿) || (true && entity.DataStatus == (int)DataStatus.新建))
                 {
@@ -207,7 +219,7 @@ namespace RUINORERP.UI.PSI.PUR
                                 //显示外币相关
                                 UIHelper.ControlForeignFieldInvisible<tb_PurOrder>(this, true);
                                 entity.ExchangeRate = BizService.GetExchangeRateFromCache(cv.Currency_ID, AppContext.BaseCurrency.Currency_ID);
-                                if (EditEntity.Currency_ID != AppContext.BaseCurrency.Currency_ID )
+                                if (EditEntity.Currency_ID != AppContext.BaseCurrency.Currency_ID)
                                 {
                                     EditEntity.ForeignTotalAmount = EditEntity.TotalAmount / EditEntity.ExchangeRate;
                                     //
@@ -266,7 +278,7 @@ namespace RUINORERP.UI.PSI.PUR
                 {
                     EditEntity.TotalAmount = EditEntity.TotalAmount + EditEntity.ShippingCost;
 
-                    if (EditEntity.Currency_ID != AppContext.BaseCurrency.Currency_ID )
+                    if (EditEntity.Currency_ID != AppContext.BaseCurrency.Currency_ID)
                     {
                         EditEntity.ForeignTotalAmount = EditEntity.TotalAmount / EditEntity.ExchangeRate;
                         //
@@ -377,7 +389,7 @@ namespace RUINORERP.UI.PSI.PUR
 
 
             //https://blog.csdn.net/m0_46426259/article/details/120265783  格式化
-            
+
             listCols.SetCol_Format<tb_PurOrderDetail>(c => c.TaxRate, CustomFormatType.PercentFormat);
             listCols.SetCol_Format<tb_PurOrderDetail>(c => c.UnitPrice, CustomFormatType.CurrencyFormat);
             listCols.SetCol_Format<tb_PurOrderDetail>(c => c.SubtotalAmount, CustomFormatType.CurrencyFormat);
@@ -411,8 +423,8 @@ namespace RUINORERP.UI.PSI.PUR
                 }
             }
 
-      
-            listCols.SetCol_Formula<tb_PurOrderDetail>((a, b, c) => a.UnitPrice  * c.Quantity, c => c.SubtotalAmount);
+
+            listCols.SetCol_Formula<tb_PurOrderDetail>((a, b, c) => a.UnitPrice * c.Quantity, c => c.SubtotalAmount);
             listCols.SetCol_Formula<tb_PurOrderDetail>((a, b, c) => a.SubtotalAmount / (1 + b.TaxRate) * c.TaxRate, d => d.TaxAmount);
 
             listCols.SetCol_FormulaReverse<tb_PurOrderDetail>(d => d.UnitPrice == 0, (a, b) => a.SubtotalAmount / b.Quantity, c => c.UnitPrice);//-->成交价是结果列
@@ -481,7 +493,7 @@ namespace RUINORERP.UI.PSI.PUR
             if (RowDetails != null)
             {
                 List<tb_PurOrderDetail> details = new List<tb_PurOrderDetail>();
-                
+
                 foreach (var item in RowDetails)
                 {
                     tb_PurOrderDetail bOM_SDetail = MainForm.Instance.mapper.Map<tb_PurOrderDetail>(item);

@@ -66,13 +66,24 @@ namespace RUINORERP.UI.FM
         public ReceivePaymentType PaymentType { get; set; }
         public override void BuildLimitQueryConditions()
         {
+            //这里外层来实现对客户供应商的限制
+            string customerVendorId = "".ToFieldName<tb_CustomerVendor>(c => c.CustomerVendor_ID);
+
+            //应收付款中的往来单位额外添加一些条件
+            var lambdaCv = Expressionable.Create<tb_CustomerVendor>()
+                .AndIF(PaymentType == ReceivePaymentType.收款, t => t.IsCustomer == true)
+                .AndIF(PaymentType == ReceivePaymentType.付款, t => t.IsVendor == true)
+              .ToExpression();
+            QueryField queryField = QueryConditionFilter.QueryFields.Where(c => c.FieldName == customerVendorId).FirstOrDefault();
+            queryField.SubFilter.FilterLimitExpressions.Add(lambdaCv);
+
+
             var lambda = Expressionable.Create<tb_FM_PreReceivedPayment>()
                               .And(t => t.isdeleted == false)
                              .And(t => t.ReceivePaymentType == (int)PaymentType)
                             .AndIF(AuthorizeController.GetOwnershipControl(MainForm.Instance.AppContext),
-                             t => t.Employee_ID == MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID)
+                             t => t.Created_by == MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID)
                          .ToExpression();//注意 这一句 不能少
-
             QueryConditionFilter.FilterLimitExpressions.Add(lambda);
 
             base.LimitQueryConditions = lambda;
@@ -155,15 +166,7 @@ namespace RUINORERP.UI.FM
                 }
                 else
                 {
-                    if (PaymentType == ReceivePaymentType.付款)
-                    {
-                        MessageBox.Show($"当前预付款单 {item.PreRPNO} 无法生成退款单，请查询单据状态是否正确。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    }
-                    else
-                    {
-                        MessageBox.Show($"当前预收款单 {item.PreRPNO} 无法生成退款单，请查询单据状态是否正确。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    }
-
+                    MessageBox.Show($"当前预{((ReceivePaymentType)PaymentType).ToString()}单 {item.PreRPNO}状态为【{((PrePaymentStatus)item.PrePaymentStatus).ToString()}】 无法生成退款单，请查询单据状态是否正确。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
             }
         }

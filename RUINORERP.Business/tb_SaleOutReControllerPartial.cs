@@ -41,6 +41,13 @@ namespace RUINORERP.Business
         /// <summary>
         /// 审核销售退货 库存加回
         /// 如果有翻新明细，则要将明细出库用来重新打包处理等物料
+        /// 
+        /// 部分退货退款	- 生成退货单（负向出库）
+        //- 生成退款单 → 反向核销原收款	- 应收应付表：恢复 RemainAmount
+        //- 收付款表：插入退款单（状态=已审核）
+        //6. 全部退货退款	- 生成全额退款单 → 冲销所有核销记录
+        //- 关闭原应收单	- 核销表：标记所有关联记录为已冲销
+        //- 应收应付表：状态=已冲销
         /// </summary>
         /// <param name="entity"></param>
         /// <returns></returns>
@@ -261,7 +268,7 @@ namespace RUINORERP.Business
                         invUpdateList.Add(inv);
                     }
                     int InvUpdateCounter = await _unitOfWorkManage.GetDbClient().Updateable(invUpdateList).ExecuteCommandAsync();
-                    if (InvUpdateCounter != invUpdateList.Count)
+                    if (InvUpdateCounter == 0)
                     {
                         _unitOfWorkManage.RollbackTran();
                         throw new Exception("库存更新失败！");
@@ -311,7 +318,7 @@ namespace RUINORERP.Business
                             #endregion
                             invMaterialsUpdateList.Add(inv);
                         }
-                        
+
                         int invMaterialsCounter = await _unitOfWorkManage.GetDbClient().Updateable(invMaterialsUpdateList).ExecuteCommandAsync();
                         if (invMaterialsCounter != invMaterialsUpdateList.Count)
                         {
@@ -330,7 +337,7 @@ namespace RUINORERP.Business
                     //如果是有出库情况，则反冲。如果是没有出库情况。则生成付款单
                     //退货单审核后生成红字应收单（负金额）
                     var ctrpayable = _appContext.GetRequiredService<tb_FM_ReceivablePayableController<tb_FM_ReceivablePayable>>();
-                    ReturnMainSubResults<tb_FM_ReceivablePayable> results = await ctrpayable.CreateReceivablePayable(entity);
+                    ReturnMainSubResults<tb_FM_ReceivablePayable> results = await ctrpayable.CreateReceivablePayable(entity, true);
                     if (results.Succeeded)
                     {
                         tb_FM_ReceivablePayable returnpayable = results.ReturnObject;

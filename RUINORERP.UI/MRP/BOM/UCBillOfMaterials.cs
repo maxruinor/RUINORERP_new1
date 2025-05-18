@@ -2077,14 +2077,14 @@ namespace RUINORERP.UI.MRP.BOM
         }
 
 
-        protected async override Task<ApprovalEntity> Review()
-        {
-            ApprovalEntity ae = await base.Review();
-            if (ae.ApprovalResults)
+        protected async override Task<ReviewResult> Review()
+        { 
+            ReviewResult reviewResult = await base.Review();
+            if (reviewResult.approval.ApprovalResults)
             {
                 UIPordBOMHelper.BindToTreeViewNoRootNode(EditEntity.tb_BOM_SDetails, kryptonTreeView1.TreeView);
             }
-            return ae;
+            return reviewResult;
         }
 
 

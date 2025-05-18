@@ -443,20 +443,20 @@ namespace RUINORERP.UI.FM.FMBase
         }
 
         /// <summary>
-        /// 采购入库审核成功后。如果有对应的采购订单引入，则将其结案，并把数量回写？
+        /// 其它收入支出审核就结案？不对。后面还要经过财务。再回写结案
         /// </summary>
         /// <returns></returns>
 
-        protected async override Task<ApprovalEntity> Review()
-        {
-            ApprovalEntity ae = await base.Review();
-            if (ae.ApprovalResults)
-            {
-                EditEntity.DataStatus = (int)DataStatus.完结;
-                await AppContext.Db.Updateable(EditEntity).UpdateColumns(t => new { t.DataStatus }).ExecuteCommandAsync();
-            }
-            return ae;
-        }
+        //protected async override Task<ApprovalEntity> Review()
+        //{
+        //    ApprovalEntity ae = await base.Review();
+        //    if (ae.ApprovalResults)
+        //    {
+        //        EditEntity.DataStatus = (int)DataStatus.完结;
+        //        await AppContext.Db.Updateable(EditEntity).UpdateColumns(t => new { t.DataStatus }).ExecuteCommandAsync();
+        //    }
+        //    return ae;
+        //}
 
         /*
         protected async override Task<ApprovalEntity> ReReview()

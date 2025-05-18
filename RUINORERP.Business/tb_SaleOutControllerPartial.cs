@@ -107,6 +107,16 @@ namespace RUINORERP.Business
 
         /// <summary>
         /// 审核其他出库单 注意逻辑是减少库存，并且更新单据本身状态
+        /// 如果非账期则同时生成收款单
+        /// 
+        /// 1. 现金销售（全额收款）	- 销售出库时生成应收单（即使现金）
+        //- 生成收款单并审核 → 自动核销应收单	- 应收应付表：生成应收单（状态=已审核）
+        //- 收付款表：插入收款单（状态=已审核）
+        //- 核销表：自动生成核销记录
+        //2. 账期销售（分期收款）	- 销售出库生成应收单
+        //- 分次生成收款单 → 手动核销	- 每次核销更新 应收应付表.RemainAmount
+        //- 最后一次核销标记 IsFullySettled = 1
+
         /// </summary>
         /// <param name="entity"></param>
         /// <returns></returns>
@@ -256,7 +266,7 @@ namespace RUINORERP.Business
 
                     }
                     int InvUpdateCounter = await _unitOfWorkManage.GetDbClient().Updateable(invUpdateList).ExecuteCommandAsync();
-                    if (InvUpdateCounter != invUpdateList.Count)
+                     if (InvUpdateCounter == 0)
                     {
                         _unitOfWorkManage.RollbackTran();
                         throw new Exception("库存更新失败！");
@@ -502,16 +512,18 @@ namespace RUINORERP.Business
 
                     #endregion
 
+                    //出库 产生应收前，先判断预收的情况。先核销一下部分。生成付款单成已经付款状态。同时写核销记录。同时反写预收的余额。
+                    //！！！！！！！！！！！！！！！！！！！！！！！！！！！！注意要实现 参考收款单审核中 反冲时回写预收old的代码
 
+                    //所有统一先应收再收款 by 2025-05-18 仅仅是订金时先处理了一些东西而已。
                     AuthorizeController authorizeController = _appContext.GetRequiredService<AuthorizeController>();
                     if (authorizeController.EnableFinancialModule())
                     {
-                        //账期就是出库时生成应收
+                        //账期和全款（全款时如果多次出库不好处理，所以这里统一起先应收）就是出库时生成应收
                         #region 生成应收 ,应收从预收中抵扣 同时 核销
-
                         var ctrpayable = _appContext.GetRequiredService<tb_FM_ReceivablePayableController<tb_FM_ReceivablePayable>>();
 
-                        //出库时，全部生成应收，账期的。就加上到期日
+                        //出库时，全部生成应收，账期的。就加上到期日. 应收金额是全金额。核销金额有预收才加上预收的。未付就前面两个减过来算出来。
                         //有付款过的。就去预收中抵扣，不够的金额及状态标识出来生成对账单
                         ReturnMainSubResults<tb_FM_ReceivablePayable> results = await ctrpayable.CreateReceivablePayable(entity, false);
                         if (results.Succeeded)
@@ -528,7 +540,7 @@ namespace RUINORERP.Business
                                     .Where(c => c.CustomerVendor_ID == entity.CustomerVendor_ID
                                      && c.Currency_ID == entity.Currency_ID // 添加币种条件
                                      && c.IsAvailable == true
-                                    && (c.PrePaymentStatus == (long)PrePaymentStatus.已生效
+                                    && (c.PrePaymentStatus == (long)PrePaymentStatus.待核销
                                      || c.PrePaymentStatus == (long)PrePaymentStatus.部分核销))
                                     .OrderBy(c => c.PrePayDate)
                                     .ToListAsync();
@@ -607,7 +619,7 @@ namespace RUINORERP.Business
                                     // 生成核销记录证明从预收中收款抵扣应收
                                     tb_FM_PaymentSettlement writeoff = new tb_FM_PaymentSettlement();
                                     writeoff.SettlementType = (int)SettlementType.预付冲应付;
-                                    writeoff.SettlementNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.收款核销);
+                                    writeoff.SettlementNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.收款核销款);
                                     writeoff.SettleDate = DateTime.Now;
                                     writeoff.SourceBizType = (int)BizType.销售出库单;
                                     writeoff.ReceivePaymentType = (int)ReceivePaymentType.收款;
@@ -635,7 +647,7 @@ namespace RUINORERP.Business
 
                                     writeoff.TargetBillId = payable.ARAPId; // 应收单ID
                                     writeoff.TargetBillNo = payable.ARAPNo; // 应收单号
-                                    writeoff.TargetBizType = (int)BizType.应收单;
+                                    writeoff.TargetBizType = (int)BizType.应收款单;
                                     writeoff.CustomerVendor_ID = prePayments[i].CustomerVendor_ID;
 
 
@@ -812,7 +824,7 @@ namespace RUINORERP.Business
                 }
 
                 int InvUpdateCounter = await _unitOfWorkManage.GetDbClient().Updateable(invUpdateList).ExecuteCommandAsync();
-                if (InvUpdateCounter != invUpdateList.Count)
+                 if (InvUpdateCounter == 0)
                 {
                     _unitOfWorkManage.RollbackTran();
                     throw new Exception("库存更新失败！");
@@ -975,7 +987,7 @@ namespace RUINORERP.Business
                 }
 
 
-
+                //销售出库的反审 
                 AuthorizeController authorizeController = _appContext.GetRequiredService<AuthorizeController>();
                 if (authorizeController.EnableFinancialModule())
                 {
@@ -989,9 +1001,12 @@ namespace RUINORERP.Business
                     //出库时，全部生成应收，账期的。就加上到期日
                     //有付款过的。就去预收中抵扣，不够的金额及状态标识出来生成对账单
                     //反操作上面的逻辑
+
+
+
                     int deleteCounter = await _appContext.Db.Deleteable<tb_FM_ReceivablePayable>()
                           .Where(c => (c.ARAPStatus == (long)ARAPStatus.草稿 || c.ARAPStatus == (long)ARAPStatus.待审核 || c.ARAPStatus == (long)ARAPStatus.已生效)
-                          && c.tb_FM_ReceivablePayableDetails.Any(d => d.SourceBillId == entity.SaleOut_MainID && d.SourceBizType == (int)BizType.销售出库单)).ExecuteCommandAsync();
+                          && c.SourceBillId == entity.SaleOut_MainID && c.SourceBizType == (int)BizType.销售出库单).ExecuteCommandAsync();
                     if (deleteCounter == 0)
                     {
                         //开始认为可以删除时直接删除。如果不行。则可能是已经结算或部分结算则。则查出来 根据不同情况来处理
@@ -1002,9 +1017,10 @@ namespace RUINORERP.Business
                              || c.ARAPStatus == (long)ARAPStatus.部分支付
                              || c.ARAPStatus == (long)ARAPStatus.已取消
                              )
-                             && c.tb_FM_ReceivablePayableDetails.Any(d => d.SourceBillId == entity.SaleOut_MainID && d.SourceBizType == (int)BizType.销售出库单)).ToListAsync();
+                             && c.SourceBillId == entity.SaleOut_MainID && c.SourceBizType == (int)BizType.销售出库单).ToListAsync();
                         foreach (var payable in payableList)
                         {
+                            //要根据他核销的是预收的。还是收款单的 分别处理
                             switch (payable.ARAPStatus)
                             {
                                 case (long)ARAPStatus.已结清:
@@ -1113,7 +1129,7 @@ namespace RUINORERP.Business
                                     // 生成核销记录证明从预收中收款抵扣应收
                                     tb_FM_PaymentSettlement writeoff = new tb_FM_PaymentSettlement();
                                     writeoff.SettlementType = (int)SettlementType.预付冲应付;
-                                    writeoff.SettlementNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.收款核销);
+                                    writeoff.SettlementNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.收款核销款);
                                     writeoff.SettleDate = DateTime.Now;
                                     writeoff.SourceBizType = (int)BizType.销售出库单;
                                     writeoff.ReceivePaymentType = (int)ReceivePaymentType.收款;
@@ -1140,7 +1156,7 @@ namespace RUINORERP.Business
 
                                     writeoff.TargetBillId = payable.ARAPId; // 应收单ID
                                     writeoff.TargetBillNo = payable.ARAPNo; // 应收单号
-                                    writeoff.TargetBizType = (int)BizType.应收单;
+                                    writeoff.TargetBizType = (int)BizType.应收款单;
                                     writeoff.CustomerVendor_ID = prePayments[i].CustomerVendor_ID;
 
 

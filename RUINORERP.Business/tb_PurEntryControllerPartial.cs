@@ -305,7 +305,7 @@ namespace RUINORERP.Business
                 }
 
                 int InvUpdateCounter = await _unitOfWorkManage.GetDbClient().Updateable(invUpdateList).ExecuteCommandAsync();
-                if (InvUpdateCounter != invUpdateList.Count)
+                 if (InvUpdateCounter == 0)
                 {
                     _unitOfWorkManage.RollbackTran();
                     throw new Exception("库存更新失败！");
@@ -414,7 +414,7 @@ namespace RUINORERP.Business
                                 // 生成核销记录证明从预付中付款抵扣应付
                                 tb_FM_PaymentSettlement writeoff = new tb_FM_PaymentSettlement();
                                 writeoff.SettlementType = (int)SettlementType.预付冲应付;
-                                writeoff.SettlementNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.付款核销);
+                                writeoff.SettlementNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.付款核销款);
                                 writeoff.SettleDate = DateTime.Now;
                                 writeoff.ReceivePaymentType = (int)ReceivePaymentType.付款;
                                 writeoff.Account_id = prePayments[i].Account_id;
@@ -439,7 +439,7 @@ namespace RUINORERP.Business
 
                                 writeoff.TargetBillId = payable.ARAPId; // 应付单ID
                                 writeoff.TargetBillNo = payable.ARAPNo; // 应付单号
-                                writeoff.TargetBizType = (int)BizType.应付单;
+                                writeoff.TargetBizType = (int)BizType.应付款单;
                                 writeoff.CustomerVendor_ID = prePayments[i].CustomerVendor_ID;
 
 

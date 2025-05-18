@@ -1483,16 +1483,16 @@ namespace RUINORERP.UI.BaseForm
                                 {
                                     MainForm.Instance.uclog.AddLog("已经是【完结】或【确认】状态，保存失败。");
                                 }
-                            }
-                            else
-                            {
-                                await Save(true);
+                                return;
                             }
                         }
-                        else
+                        toolStripButtonSave.Enabled = false;
+                        bool rsSave = await Save(true);
+                        if (!rsSave)
                         {
-                            await Save(true);
+                            toolStripButtonSave.Enabled = true;
                         }
+
                         UNLock();
                     }
                     else
@@ -1509,11 +1509,14 @@ namespace RUINORERP.UI.BaseForm
                     }
                     //操作前将数据收集
                     this.ValidateChildren(System.Windows.Forms.ValidationConstraints.None);
-                    await Submit();
+
+                    toolStripbtnSubmit.Enabled = false;
+                    bool rs = await Submit();
+                    if (!rs)
+                    {
+                        toolStripbtnSubmit.Enabled = true;
+                    }
                     break;
-                //case MenuItemEnums.高级查询:
-                //    AdvQuery();
-                //    break;
                 case MenuItemEnums.关闭:
                     Exit(this);
                     break;
@@ -1529,14 +1532,25 @@ namespace RUINORERP.UI.BaseForm
                         return;
                     }
                     toolStripbtnReview.Enabled = false;
-                    await Review();
+                    ReviewResult reviewResult  = await Review();
+                    if (!reviewResult.Succeeded)
+                    {
+                        toolStripbtnReview.Enabled = true;
+                    }
+
                     break;
                 case MenuItemEnums.反审:
                     if (IsLock())
                     {
                         return;
                     }
-                    await ReReview();
+                    toolStripBtnReverseReview.Enabled = false;
+                    bool rs反审 = await ReReview();
+                    if (!rs反审)
+                    {
+                        toolStripBtnReverseReview.Enabled = true;
+                    }
+
                     break;
                 case MenuItemEnums.结案:
                     if (IsLock())
@@ -1561,7 +1575,6 @@ namespace RUINORERP.UI.BaseForm
                     {
                         PrintDesigned();
                     }
-
                     toolStripbtnPrint.Enabled = false;
                     break;
                 case MenuItemEnums.预览:
@@ -1832,11 +1845,12 @@ namespace RUINORERP.UI.BaseForm
         /// 比方出库单，审核就会减少库存修改成本
         /// （如果有月结动作，则在月结时统计修改成本，更科学，因为如果退单等会影响成本）
         /// </summary>
-        protected async override Task<ApprovalEntity> Review()
+        protected async override Task<ReviewResult> Review()
         {
+            ReviewResult reviewResult = new ReviewResult();
             if (EditEntity == null)
             {
-                return null;
+                return reviewResult;
             }
 
             ApprovalEntity ae = new ApprovalEntity();
@@ -1849,7 +1863,7 @@ namespace RUINORERP.UI.BaseForm
                     )
                 {
                     MainForm.Instance.uclog.AddLog("【未审核】或【驳回】的单据才能再次审核。");
-                    return ae;
+                    return reviewResult;
                 }
             }
             //如果已经审核并且审核通过，则不能再次审核
@@ -1885,6 +1899,7 @@ namespace RUINORERP.UI.BaseForm
                 else
                 {
                     //审核了。驳回 时数据状态要更新为新建。要再次修改后提交
+                    #region UI驳回直接保存返回。不用进入审核流程了。
                     EditEntity.SetPropertyValue(typeof(DataStatus).Name, (int)DataStatus.新建);
                     if (ReflectionHelper.ExistPropertyName<T>("ApprovalOpinions"))
                     {
@@ -1901,8 +1916,12 @@ namespace RUINORERP.UI.BaseForm
                     BusinessHelper.Instance.ApproverEntity(EditEntity);
                     BaseController<T> ctrBase = Startup.GetFromFacByName<BaseController<T>>(typeof(T).Name + "Controller");
                     //因为只需要更新主表
-                    await ctrBase.BaseSaveOrUpdate(EditEntity);
-                    return ae;
+                    ReturnResults<T> rr = await ctrBase.BaseSaveOrUpdate(EditEntity);
+                    reviewResult.approval = ae;
+                    reviewResult.Succeeded = rr.Succeeded;
+                    return reviewResult;
+                    #endregion
+
                 }
 
 
@@ -1940,6 +1959,8 @@ namespace RUINORERP.UI.BaseForm
                 rmr = await ctr.ApprovalAsync(EditEntity);
                 if (rmr.Succeeded)
                 {
+                    reviewResult.Succeeded = rmr.Succeeded;
+                   
                     //如果是出库单审核，则上传到服务器 锁定订单无法修改
                     if (ae.bizType == BizType.销售出库单)
                     {
@@ -1973,7 +1994,9 @@ namespace RUINORERP.UI.BaseForm
                     }
                     ToolBarEnabledControl(EditEntity);
                     ae.ApprovalResults = true;
+                    reviewResult.approval = ae;
                     AuditLogHelper.Instance.CreateAuditLog<T>("审核", EditEntity, $"审核结果：{ae.ApprovalResults}-{ae.ApprovalOpinions}");
+                    MainForm.Instance.PrintInfoLog($"{ae.bizName}:{ae.BillNo}审核成功。", Color.Red);
                 }
                 else
                 {
@@ -1982,10 +2005,10 @@ namespace RUINORERP.UI.BaseForm
                     ae.ApprovalResults = false;
                     ToolBarEnabledControl(EditEntity);
                     ae.ApprovalStatus = (int)ApprovalStatus.未审核;
+                    reviewResult.approval = ae;
                     AuditLogHelper.Instance.CreateAuditLog<T>("审核", EditEntity, $"审核结果{ae.ApprovalResults},{rmr.ErrorMsg}");
                     MainForm.Instance.logger.LogError($"{ae.bizName}:{ae.BillNo}审核失败{rmr.ErrorMsg}");
                     MainForm.Instance.PrintInfoLog($"{ae.bizName}:{ae.BillNo}审核失败{rmr.ErrorMsg},请联系管理员！", Color.Red);
-
                 }
 
                 toolStripbtnReview.Enabled = false;
@@ -1994,18 +2017,19 @@ namespace RUINORERP.UI.BaseForm
             {
                 toolStripbtnReview.Enabled = true;
             }
-            return ae;
+            return reviewResult;
         }
 
         /// <summary>
         /// 反审核 与审核相反
         /// </summary>
-        protected async override Task<ApprovalEntity> ReReview()
+        protected async override Task<bool> ReReview()
         {
+            bool rs = false;
             ApprovalEntity ae = new ApprovalEntity();
             if (EditEntity == null)
             {
-                return ae;
+                return rs;
             }
             string PKCol = BaseUIHelper.GetEntityPrimaryKey<T>();
             long pkid = (long)ReflectionHelper.GetPropertyValue(EditEntity, PKCol);
@@ -2015,7 +2039,7 @@ namespace RUINORERP.UI.BaseForm
                 if (IsLock())
                 {
                     MainForm.Instance.uclog.AddLog($"单据已被锁定，请刷新后再试");
-                    return ae;
+                    return rs;
                     //分读写锁  保存后就只有读。释放 写？
                 }
             }
@@ -2033,7 +2057,7 @@ namespace RUINORERP.UI.BaseForm
                 else
                 {
                     MainForm.Instance.uclog.AddLog("已经审核,且【同意】的单据才能反审。");
-                    return ae;
+                    return rs;
                 }
             }
 
@@ -2107,6 +2131,7 @@ namespace RUINORERP.UI.BaseForm
                 rmr = await ctr.AntiApprovalAsync(EditEntity);
                 if (rmr.Succeeded)
                 {
+                    rs = true;
                     //如果是出库单审核，则上传到服务器 锁定订单无法修改
                     if (ae.bizType == BizType.销售出库单)
                     {
@@ -2134,13 +2159,14 @@ namespace RUINORERP.UI.BaseForm
                 {
                     //审核失败 要恢复之前的值
                     command.Undo();
+                    rs = false;
                     ToolBarEnabledControl(EditEntity);
                     AuditLogHelper.Instance.CreateAuditLog<T>("反审失败", EditEntity, $"反审原因{ae.ApprovalOpinions},{rmr.ErrorMsg}");
                     MainForm.Instance.logger.LogError($"{cbd.BillNo}反审失败{rmr.ErrorMsg}");
                     MainForm.Instance.PrintInfoLog($"{cbd.BillNo}反审失败{rmr.ErrorMsg},请联系管理员！", Color.Red);
                 }
             }
-            return ae;
+            return rs;
         }
 
 

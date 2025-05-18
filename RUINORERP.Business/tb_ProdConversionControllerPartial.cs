@@ -312,7 +312,7 @@ namespace RUINORERP.Business
                         }
                         invTo.LatestStorageTime = System.DateTime.Now;
                     }
-                    invTo.Quantity -=  TransferQty;
+                    invTo.Quantity -= TransferQty;
                     if (TransferQty < 0)
                     {
                         invTo.LatestOutboundTime = System.DateTime.Now;
@@ -322,12 +322,12 @@ namespace RUINORERP.Business
                 }
                 DbHelper<tb_Inventory> dbHelper = _appContext.GetRequiredService<DbHelper<tb_Inventory>>();
                 var Counter = await dbHelper.BaseDefaultAddElseUpdateAsync(invList);
-                if (Counter != invList.Count)
+                if (Counter == 0)
                 {
                     _unitOfWorkManage.RollbackTran();
-                    throw new Exception("库存更新失败！");
+                    throw new Exception("库存更新数据为0，更新失败！");
                 }
-                
+
                 //这部分是否能提出到上一级公共部分？
                 entity.DataStatus = (int)DataStatus.新建;
                 entity.ApprovalResults = false;

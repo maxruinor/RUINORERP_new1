@@ -198,13 +198,14 @@ namespace RUINORERP.UI.ProductEAV
                         break;
                     case ActionStatus.新增:
                     case ActionStatus.修改:
-
+                        base.toolStripButtonSave.Enabled = false;
                         ReturnResults<tb_Prod> rr = new ReturnResults<tb_Prod>();
                         rr = await pctr.SaveOrUpdateAsync(entity);
                         //  rr = await base.ctr.BaseSaveOrUpdateWithChildtb_Prod(entity as tb_Prod);
                         // await ctr.SaveOrUpdate(entity as tb_Unit);
                         if (rr.Succeeded)
                         {
+                            base.toolStripButtonSave.Enabled = true;
                             ToolBarEnabledControl(MenuItemEnums.保存);
                             list.Add(rr.ReturnObject);
                             //保存箱规
@@ -235,6 +236,7 @@ namespace RUINORERP.UI.ProductEAV
                         }
                         else
                         {
+                            base.toolStripButtonSave.Enabled = false;
                             MainForm.Instance.uclog.AddLog(rr.ErrorMsg, Global.UILogType.错误);
                         }
                         //tb_Unit Entity = await ctr.AddReEntityAsync(entity);

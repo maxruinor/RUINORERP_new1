@@ -50,7 +50,7 @@ namespace RUINORERP.UI.BaseForm
             bwRemoting.ProgressChanged += bwRemoting_progressChanged;
             //如果打开单时。被其它人锁定。才显示锁定图标
             tsBtnLocked.Visible = false;
-          
+
         }
         #region 如果窗体，有些按钮不用出现在这个业务窗体时。这里手动排除。集合有值才行
 
@@ -179,84 +179,6 @@ namespace RUINORERP.UI.BaseForm
         }
 
         public tb_MenuInfo CurMenuInfo { get; set; }
-        public void ControlButton(ToolStripMenuItem btnItem)
-        {
-            if (!MainForm.Instance.AppContext.IsSuperUser)
-            {
-                if (CurMenuInfo.tb_P4Buttons == null)
-                {
-                    btnItem.Visible = false;
-                }
-                else
-                {
-                    //如果因为热键 Text改变了。到时再处理
-                    tb_P4Button p4b = CurMenuInfo.tb_P4Buttons.Where(b => b.tb_buttoninfo.BtnText == btnItem.Text).FirstOrDefault();
-                    if (p4b != null)
-                    {
-                        btnItem.Visible = p4b.IsVisble;
-                        btnItem.Enabled = p4b.IsEnabled;
-                    }
-                    else
-                    {
-                        btnItem.Visible = false;
-                    }
-                }
-            }
-        }
-
-        public void ControlButton(ToolStripDropDownButton btnItem)
-        {
-            if (!MainForm.Instance.AppContext.IsSuperUser)
-            {
-                if (CurMenuInfo.tb_P4Buttons == null)
-                {
-                    btnItem.Visible = false;
-                }
-                else
-                {
-                    //如果因为热键 Text改变了。到时再处理
-                    tb_P4Button p4b = CurMenuInfo.tb_P4Buttons.Where(b => b.tb_buttoninfo.BtnText == btnItem.Text).FirstOrDefault();
-                    if (p4b != null)
-                    {
-                        btnItem.Visible = p4b.IsVisble;
-                        btnItem.Enabled = p4b.IsEnabled;
-                    }
-                    else
-                    {
-                        btnItem.Visible = false;
-                    }
-                }
-            }
-        }
-
-        public void ControlButton(ToolStripButton btnItem)
-        {
-            if (!MainForm.Instance.AppContext.IsSuperUser)
-            {
-                if (CurMenuInfo.tb_P4Buttons == null)
-                {
-                    btnItem.Visible = false;
-                }
-                else
-                {
-                    //如果因为热键 Text改变了。到时再处理
-                    tb_P4Button p4b = CurMenuInfo.tb_P4Buttons.Where(b => b.tb_buttoninfo.BtnText == btnItem.Text).FirstOrDefault();
-                    if (p4b != null)
-                    {
-                        btnItem.Visible = p4b.IsVisble;
-                        btnItem.Enabled = p4b.IsEnabled;
-                    }
-                    else
-                    {
-                        btnItem.Visible = false;
-                    }
-                }
-            }
-            else
-            {
-                btnItem.Visible = true;
-            }
-        }
 
 
         private void Item_Click(object sender, EventArgs e)
@@ -336,7 +258,7 @@ namespace RUINORERP.UI.BaseForm
 
         }
 
-        
+
         protected virtual void AddByCopy()
         {
 
@@ -402,17 +324,17 @@ namespace RUINORERP.UI.BaseForm
         /// <summary>
         /// 暂时只支持一级审核，将来可以设计配置 可选多级审核。并且能看到每级的审核情况
         /// </summary>
-        protected async virtual Task<ApprovalEntity> Review()
+        protected async virtual Task<ReviewResult> Review()
         {
             await Task.Delay(0);
             MessageBox.Show("应该有选项 同意和同意，原因？");
             return null;
         }
 
-        protected async virtual Task<ApprovalEntity> ReReview()
+        protected async virtual Task<bool> ReReview()
         {
             await Task.Delay(0);
-            return null;
+            return false;
         }
         protected virtual void Property()
         {
@@ -468,7 +390,7 @@ namespace RUINORERP.UI.BaseForm
 
         }
 
- 
+
 
 
         #endregion
@@ -834,18 +756,21 @@ namespace RUINORERP.UI.BaseForm
                                     return;
                                 }
                             }
+
+                            AddExcludeMenuList();
                             foreach (var item in BaseToolStrip.Items)
                             {
+
                                 if (item is ToolStripButton)
                                 {
                                     ToolStripButton subItem = item as ToolStripButton;
                                     subItem.Click += Item_Click;
-                                    ControlButton(subItem);
+                                    UIHelper.ControlButton<ToolStripButton>(CurMenuInfo, subItem, ExcludeMenuList);
                                 }
                                 if (item is ToolStripDropDownButton)
                                 {
                                     ToolStripDropDownButton subItem = item as ToolStripDropDownButton;
-                                    ControlButton(subItem);
+                                    UIHelper.ControlButton<ToolStripDropDownButton>(CurMenuInfo, subItem);
                                     subItem.Click += Item_Click;
                                     //下一级
                                     if (subItem.HasDropDownItems)
@@ -853,7 +778,7 @@ namespace RUINORERP.UI.BaseForm
                                         foreach (var sub in subItem.DropDownItems)
                                         {
                                             ToolStripMenuItem subStripMenuItem = sub as ToolStripMenuItem;
-                                            ControlButton(subStripMenuItem);
+                                            UIHelper.ControlButton<ToolStripMenuItem>(CurMenuInfo, subStripMenuItem);
                                             subStripMenuItem.Click += Item_Click;
                                         }
                                     }
@@ -869,6 +794,7 @@ namespace RUINORERP.UI.BaseForm
                                         {
                                             ToolStripItem subStripMenuItem = sub as ToolStripItem;
                                             subStripMenuItem.Click += Item_Click;
+                                            UIHelper.ControlButton<ToolStripItem>(CurMenuInfo, subStripMenuItem);
                                         }
                                     }
                                 }

@@ -110,7 +110,7 @@ namespace RUINORERP.Business
         /// <summary>
         /// 这个审核可以由业务来审。后面还会有财务来定是否真实收付，这财务审核收款单前，还是可以反审的
         /// 审核通过时
-        /// 预收款单本身是「收款」的一种业务类型，要生成收款单，通过 BizType 标记其业务属性为预收款。
+        /// 预收款单本身是「收款」的一种业务类型，要销售订单审核时已经生成了预收款单 ，通过 BizType 标记其业务属性为预收款。
         /// tb_FM_PaymentSettlement 不需要立即生成，但需在后续触发核销时生成（抵扣时生成）。
         /// </summary>
         /// <param name="ObjectEntity"></param>
@@ -123,8 +123,11 @@ namespace RUINORERP.Business
             {
                 // 开启事务，保证数据一致性
                 _unitOfWorkManage.BeginTran();
-                tb_FM_PaymentRecordController<tb_FM_PaymentRecord> settlementController = _appContext.GetRequiredService<tb_FM_PaymentRecordController<tb_FM_PaymentRecord>>();
-                tb_FM_PaymentRecord paymentRecord = await settlementController.CreatePaymentRecord(entity, false);
+
+                
+
+                //tb_FM_PaymentRecordController<tb_FM_PaymentRecord> settlementController = _appContext.GetRequiredService<tb_FM_PaymentRecordController<tb_FM_PaymentRecord>>();
+                //tb_FM_PaymentRecord paymentRecord = await settlementController.CreatePaymentRecord(entity, false);
                 //确认收到款  应该是收款审核时 反写回来 成 【待核销】
                 //if (paymentRecord.PaymentId > 0)
                 //{

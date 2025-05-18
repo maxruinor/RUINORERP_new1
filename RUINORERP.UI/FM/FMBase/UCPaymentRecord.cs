@@ -116,6 +116,7 @@ namespace RUINORERP.UI.FM
                 }
                 //根据币别如果是外币才显示外币相关的字段
                 ControlCurrency(entity);
+
             }
             else
             {
@@ -134,7 +135,7 @@ namespace RUINORERP.UI.FM
                         entity.PaymentNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.收款单);
                     }
                 }
-               
+
                 //entity.InvoiceDate = System.DateTime.Now;
                 entity.Employee_ID = MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID.Value;
                 //清空
@@ -371,6 +372,11 @@ namespace RUINORERP.UI.FM
                             UIHelper.ControlForeignFieldInvisible<tb_FM_PaymentRecord>(this, false);
                             lblExchangeRate.Visible = false;
                             txtExchangeRate.Visible = false;
+                            if (listCols != null)
+                            {
+                                listCols.SetCol_DefaultHide<tb_FM_PaymentRecordDetail>(c => c.ExchangeRate);
+                            }
+
                         }
                     }
                 }
@@ -421,7 +427,7 @@ namespace RUINORERP.UI.FM
             if (EditEntity.ActionStatus == ActionStatus.新增 || EditEntity.ActionStatus == ActionStatus.修改)
             {
                 //产品ID有值才算有效值
-                details = detailentity.Where(t => t.ForeignAmount > 0 || t.LocalAmount > 0).ToList();
+                details = detailentity.Where(t => t.ForeignAmount != 0 || t.LocalAmount != 0).ToList();
 
 
                 //
@@ -673,7 +679,7 @@ namespace RUINORERP.UI.FM
             //  listCols.SetCol_Formula<tb_FM_PaymentRecordDetail>((a, b) => a.UnitPrice * b.Quantity, c => c.LocalPayableAmount);//-->成交价是结果列
             listCols.SetCol_Summary<tb_FM_PaymentRecordDetail>(c => c.ForeignAmount);
             listCols.SetCol_Summary<tb_FM_PaymentRecordDetail>(c => c.LocalAmount);
-        
+
 
             sgd.GridMasterData = EditEntity;
 
@@ -731,7 +737,8 @@ namespace RUINORERP.UI.FM
 
                 //计算总金额  这些逻辑是不是放到业务层？后面要优化
                 List<tb_FM_PaymentRecordDetail> details = sgd.BindingSourceLines.DataSource as List<tb_FM_PaymentRecordDetail>;
-                details = details.Where(c => c.LocalAmount > 0 || c.ForeignAmount > 0).ToList();
+                //红冲时就是负数
+                details = details.Where(c => c.LocalAmount != 0 || c.ForeignAmount != 0).ToList();
                 if (details.Count == 0)
                 {
                     MainForm.Instance.uclog.AddLog("金额必须大于0");

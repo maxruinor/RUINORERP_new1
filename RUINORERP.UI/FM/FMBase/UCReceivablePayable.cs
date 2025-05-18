@@ -164,11 +164,11 @@ namespace RUINORERP.UI.FM
 
                 if (PaymentType == ReceivePaymentType.收款)
                 {
-                    entity.ARAPNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.应收单);
+                    entity.ARAPNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.应收款单);
                 }
                 else
                 {
-                    entity.ARAPNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.应付单);
+                    entity.ARAPNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.应付款单);
                 }
                 //entity.InvoiceDate = System.DateTime.Now;
 
@@ -191,6 +191,10 @@ namespace RUINORERP.UI.FM
             DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayable>(entity, t => t.LocalPaidAmount.ToString(), txtLocalPaidAmount, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayable>(entity, t => t.ForeignBalanceAmount.ToString(), txtForeignBalanceAmount, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayable>(entity, t => t.LocalBalanceAmount.ToString(), txtLocalBalanceAmount, BindDataType4TextBox.Money, false);
+            DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayable>(entity, t => t.SourceBizType, txtBizType, BindDataType4TextBox.Qty, false);
+           // DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayable>(entity, t => t.SourceBillId, txtSourceBillId, BindDataType4TextBox.Qty, false);
+            DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayable>(entity, t => t.SourceBillNo, txtSourceBillNo, BindDataType4TextBox.Text, false);
+
             DataBindingHelper.BindData4DataTime<tb_FM_ReceivablePayable>(entity, t => t.DueDate, dtpDueDate, false);
             DataBindingHelper.BindData4Cmb<tb_Department>(entity, k => k.DepartmentID, v => v.DepartmentName, cmbDepartmentID);
             DataBindingHelper.BindData4Cmb<tb_ProjectGroup>(entity, k => k.ProjectGroup_ID, v => v.ProjectGroupName, cmbProjectGroup_ID);
@@ -214,7 +218,7 @@ namespace RUINORERP.UI.FM
 
 
             if (PaymentType == ReceivePaymentType.收款)
-            {
+                {
                 //创建表达式
                 var lambda = Expressionable.Create<tb_CustomerVendor>()
                             .And(t => t.IsCustomer == true)//供应商和第三方
@@ -451,7 +455,7 @@ namespace RUINORERP.UI.FM
             listCols.SetCol_NeverVisible<ProductSharePart>(c => c.Inv_Cost);
             listCols.SetCol_NeverVisible<ProductSharePart>(c => c.Standard_Price);
             listCols.SetCol_NeverVisible<ProductSharePart>(c => c.TransPrice);
-            listCols.SetCol_NeverVisible<tb_FM_ReceivablePayableDetail>(c => c.SourceBillId);
+ 
 
             UIHelper.ControlChildColumnsInvisible(CurMenuInfo, listCols);
             UIHelper.ControlChildColumnsInvisible(CurMenuInfo, listCols);
@@ -462,7 +466,7 @@ namespace RUINORERP.UI.FM
             //listCols.SetCol_DefaultValue<tb_FM_ReceivablePayableDetail>(c => c.ForeignPayableAmount, 0.00M);
 
             //listCols.SetCol_DisplayFormatText<tb_FM_ReceivablePayableDetail>(c => c.SourceBizType, 1);
-            listCols.SetCol_Format<tb_FM_ReceivablePayableDetail>(c => c.SourceBizType, CustomFormatType.EnumOptions, null, typeof(BizType));
+   
             listCols.SetCol_Format<tb_FM_ReceivablePayableDetail>(c => c.TaxRate, CustomFormatType.PercentFormat);
             listCols.SetCol_Format<tb_FM_ReceivablePayableDetail>(c => c.LocalPayableAmount, CustomFormatType.CurrencyFormat);
             listCols.SetCol_Format<tb_FM_ReceivablePayableDetail>(c => c.TaxLocalAmount, CustomFormatType.CurrencyFormat);
@@ -661,7 +665,7 @@ namespace RUINORERP.UI.FM
             if (EditEntity.ActionStatus == ActionStatus.新增 || EditEntity.ActionStatus == ActionStatus.修改)
             {
                 //产品ID有值才算有效值
-                details = detailentity.Where(t => t.LocalPayableAmount > 0).ToList();
+                details = detailentity.Where(t => t.LocalPayableAmount != 0).ToList();
                 //如果没有有效的明细。直接提示
                 if (NeedValidated && details.Count == 0)
                 {

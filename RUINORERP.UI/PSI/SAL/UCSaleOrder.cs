@@ -89,7 +89,6 @@ namespace RUINORERP.UI.PSI.SAL
             {
                 return;
             }
-
             //反审，要审核过，并且通过了，才能反审。
             if (EditEntity.ApprovalStatus.Value == (int)ApprovalStatus.已审核 && !EditEntity.ApprovalResults.HasValue)
             {
@@ -165,7 +164,6 @@ namespace RUINORERP.UI.PSI.SAL
                         lblExchangeRate.Visible = true;
                         txtExchangeRate.Visible = true;
                         UIHelper.ControlForeignFieldInvisible<tb_SaleOrder>(this, true);
-
                     }
                     else
                     {
@@ -200,7 +198,7 @@ namespace RUINORERP.UI.PSI.SAL
                     {
                         entity.Currency_ID = AppContext.BaseCurrency.Currency_ID;
                     }
-                    
+
                     lblExchangeRate.Visible = false;
                     txtExchangeRate.Visible = false;
                     UIHelper.ControlForeignFieldInvisible<tb_SaleOrder>(this, false);
@@ -257,10 +255,10 @@ namespace RUINORERP.UI.PSI.SAL
             DataBindingHelper.BindData4TextBox<tb_SaleOrder>(entity, t => t.PlatformOrderNo, txtPlatformOrderNo, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_SaleOrder>(entity, t => t.TotalQty, txtTotalQty, BindDataType4TextBox.Qty, false);
             DataBindingHelper.BindData4TextBox<tb_SaleOrder>(entity, t => t.TotalTaxAmount, txtTaxAmount, BindDataType4TextBox.Money, false);
-          
+
             DataBindingHelper.BindData4CheckBox<tb_SaleOrder>(entity, t => t.IsFromPlatform, chk平台单, false);
             DataBindingHelper.BindData4CheckBox<tb_SaleOrder>(entity, t => t.IsCustomizedOrder, chkIsCustomizedOrder, false);
-         
+
             base.errorProviderForAllInput.DataSource = entity;
             base.errorProviderForAllInput.ContainerControl = this;
 
@@ -344,6 +342,16 @@ namespace RUINORERP.UI.PSI.SAL
                         //}
                     }
 
+                    if (s2.PropertyName == entity.GetPropertyName<tb_PurOrder>(c => c.PayStatus) && entity.PayStatus == (int)PayStatus.未付款)
+                    {
+                        //默认为账期
+                        entity.Paytype_ID = MainForm.Instance.AppContext.PaymentMethodOfPeriod.Paytype_ID;
+                    }
+                    if (s2.PropertyName == entity.GetPropertyName<tb_PurOrder>(c => c.Paytype_ID) && entity.Paytype_ID == MainForm.Instance.AppContext.PaymentMethodOfPeriod.Paytype_ID)
+                    {
+                        //默认为未付款
+                        entity.PayStatus = (int)PayStatus.未付款;
+                    }
                     if (s2.PropertyName == entity.GetPropertyName<tb_SaleOrder>(c => c.Paytype_ID) && entity.Paytype_ID > 0)
                     {
                         if (cmbPaytype_ID.SelectedItem is tb_PaymentMethod paymentMethod)
@@ -650,7 +658,7 @@ namespace RUINORERP.UI.PSI.SAL
             if (RowDetails != null)
             {
                 List<tb_SaleOrderDetail> details = new List<tb_SaleOrderDetail>();
-                
+
                 foreach (var item in RowDetails)
                 {
                     tb_SaleOrderDetail Detail = MainForm.Instance.mapper.Map<tb_SaleOrderDetail>(item);
@@ -728,7 +736,7 @@ namespace RUINORERP.UI.PSI.SAL
             if (NeedValidated)
             {
 
-                if (EditEntity.Paytype_ID>0)
+                if (EditEntity.Paytype_ID > 0)
                 {
                     var paytype = EditEntity.Paytype_ID;
                     var paymethod = BizCacheHelper.Instance.GetEntity<tb_PaymentMethod>(EditEntity.Paytype_ID);
@@ -756,7 +764,7 @@ namespace RUINORERP.UI.PSI.SAL
                         }
                     }
                 }
-            
+
 
                 if (EditEntity.PayStatus == (int)PayStatus.未付款)
                 {
@@ -767,7 +775,7 @@ namespace RUINORERP.UI.PSI.SAL
                         return false;
                     }
                     if (EditEntity.Paytype_ID == 0)
-                    { 
+                    {
 
                     }
                 }
@@ -1315,7 +1323,7 @@ namespace RUINORERP.UI.PSI.SAL
             toolStripButton定制成本确认.ImageTransparentColor = System.Drawing.Color.Magenta;
             toolStripButton定制成本确认.Name = "定制成本确认";
             toolStripButton定制成本确认.Visible = false;//默认隐藏
-            ControlButton(toolStripButton定制成本确认);
+            UIHelper.ControlButton(CurMenuInfo, toolStripButton定制成本确认);
             toolStripButton定制成本确认.ToolTipText = "定制订单时，产品的成本有变化，额外增加或减少的成本要在明细中体现，使用本功能。";
             toolStripButton定制成本确认.Click += new System.EventHandler(this.toolStripButton定制成本确认_Click);
 
@@ -1325,7 +1333,7 @@ namespace RUINORERP.UI.PSI.SAL
             toolStripButton付款调整.ImageTransparentColor = System.Drawing.Color.Magenta;
             toolStripButton付款调整.Name = "付款调整";
             toolStripButton付款调整.Visible = false;//默认隐藏
-            ControlButton(toolStripButton付款调整);
+            UIHelper.ControlButton(CurMenuInfo,toolStripButton付款调整);
             toolStripButton付款调整.ToolTipText = "客户付款情况变动时，使用本功能。";
             toolStripButton付款调整.Click += new System.EventHandler(this.toolStripButton付款调整_Click);
 
@@ -1335,7 +1343,7 @@ namespace RUINORERP.UI.PSI.SAL
             toolStripButton反结案.ImageTransparentColor = System.Drawing.Color.Magenta;
             toolStripButton反结案.Name = "反结案";
             toolStripButton反结案.Visible = false;//默认隐藏
-            ControlButton(toolStripButton反结案);
+            UIHelper.ControlButton(CurMenuInfo,toolStripButton反结案);
             toolStripButton反结案.ToolTipText = "结案错误，要上级特殊处理时，使用本功能。";
             toolStripButton反结案.Click += new System.EventHandler(this.toolStripButton反结案_Click);
 

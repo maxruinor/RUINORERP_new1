@@ -31,10 +31,11 @@
             this.btnOk = new Krypton.Toolkit.KryptonButton();
             this.btnCancel = new Krypton.Toolkit.KryptonButton();
             this.kryptonPanel1 = new Krypton.Toolkit.KryptonPanel();
+            this.chkModifyPwd = new Krypton.Toolkit.KryptonCheckBox();
             this.kryptonGroupBox3 = new Krypton.Toolkit.KryptonGroupBox();
             this.rdbIsSuperUserNo = new Krypton.Toolkit.KryptonRadioButton();
             this.rdbIsSuperUserYes = new Krypton.Toolkit.KryptonRadioButton();
-            this.lblIsSuperUser = new Krypton.Toolkit.KryptonLabel();
+            this.lbSuperUser = new Krypton.Toolkit.KryptonLabel();
             this.cmbEmployee = new Krypton.Toolkit.KryptonComboBox();
             this.lblEmployee = new Krypton.Toolkit.KryptonLabel();
             this.kryptonGroupBox2 = new Krypton.Toolkit.KryptonGroupBox();
@@ -51,7 +52,6 @@
             this.lblis_available = new Krypton.Toolkit.KryptonLabel();
             this.lblNotes = new Krypton.Toolkit.KryptonLabel();
             this.txtNotes = new Krypton.Toolkit.KryptonTextBox();
-            this.chkModifyPwd = new Krypton.Toolkit.KryptonCheckBox();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel1)).BeginInit();
             this.kryptonPanel1.SuspendLayout();
@@ -92,7 +92,7 @@
             // 
             this.kryptonPanel1.Controls.Add(this.chkModifyPwd);
             this.kryptonPanel1.Controls.Add(this.kryptonGroupBox3);
-            this.kryptonPanel1.Controls.Add(this.lblIsSuperUser);
+            this.kryptonPanel1.Controls.Add(this.lbSuperUser);
             this.kryptonPanel1.Controls.Add(this.cmbEmployee);
             this.kryptonPanel1.Controls.Add(this.lblEmployee);
             this.kryptonPanel1.Controls.Add(this.kryptonGroupBox2);
@@ -112,6 +112,15 @@
             this.kryptonPanel1.Name = "kryptonPanel1";
             this.kryptonPanel1.Size = new System.Drawing.Size(570, 502);
             this.kryptonPanel1.TabIndex = 2;
+            // 
+            // chkModifyPwd
+            // 
+            this.chkModifyPwd.Location = new System.Drawing.Point(473, 53);
+            this.chkModifyPwd.Name = "chkModifyPwd";
+            this.chkModifyPwd.Size = new System.Drawing.Size(75, 20);
+            this.chkModifyPwd.TabIndex = 76;
+            this.chkModifyPwd.Values.Text = "修改密码";
+            this.chkModifyPwd.CheckedChanged += new System.EventHandler(this.chkModifyPwd_CheckedChanged);
             // 
             // kryptonGroupBox3
             // 
@@ -143,13 +152,13 @@
             this.rdbIsSuperUserYes.TabIndex = 2;
             this.rdbIsSuperUserYes.Values.Text = "是";
             // 
-            // lblIsSuperUser
+            // lbSuperUser
             // 
-            this.lblIsSuperUser.Location = new System.Drawing.Point(129, 249);
-            this.lblIsSuperUser.Name = "lblIsSuperUser";
-            this.lblIsSuperUser.Size = new System.Drawing.Size(62, 20);
-            this.lblIsSuperUser.TabIndex = 74;
-            this.lblIsSuperUser.Values.Text = "超级用户";
+            this.lbSuperUser.Location = new System.Drawing.Point(129, 249);
+            this.lbSuperUser.Name = "lbSuperUser";
+            this.lbSuperUser.Size = new System.Drawing.Size(62, 20);
+            this.lbSuperUser.TabIndex = 74;
+            this.lbSuperUser.Values.Text = "超级用户";
             // 
             // cmbEmployee
             // 
@@ -289,15 +298,6 @@
             this.txtNotes.Size = new System.Drawing.Size(261, 102);
             this.txtNotes.TabIndex = 31;
             // 
-            // chkModifyPwd
-            // 
-            this.chkModifyPwd.Location = new System.Drawing.Point(473, 53);
-            this.chkModifyPwd.Name = "chkModifyPwd";
-            this.chkModifyPwd.Size = new System.Drawing.Size(75, 20);
-            this.chkModifyPwd.TabIndex = 76;
-            this.chkModifyPwd.Values.Text = "修改密码";
-            this.chkModifyPwd.CheckedChanged += new System.EventHandler(this.chkModifyPwd_CheckedChanged);
-            // 
             // UCUserInfoEdit
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
@@ -354,7 +354,7 @@
         private Krypton.Toolkit.KryptonGroupBox kryptonGroupBox3;
         private Krypton.Toolkit.KryptonRadioButton rdbIsSuperUserNo;
         private Krypton.Toolkit.KryptonRadioButton rdbIsSuperUserYes;
-        private Krypton.Toolkit.KryptonLabel lblIsSuperUser;
+        private Krypton.Toolkit.KryptonLabel lbSuperUser;
         private Krypton.Toolkit.KryptonCheckBox chkModifyPwd;
     }
 }

@@ -2985,6 +2985,11 @@
     <None Include="ResourceFile\import_32x32.ico" />
     <Content Include="ChartFramework\分层架构设计.txt" />
     <Content Include="CRM\商机总览.sql" />
+    <Content Include="FM\应收付.txt" />
+    <Content Include="FM\收付核销单.txt" />
+    <Content Include="FM\预收付.txt" />
+    <Content Include="FM\收付款单.txt" />
+    <Content Include="FM\发票管理.txt" />
     <Content Include="FM\财务各状态.txt" />
     <Content Include="FM\财务核销逻辑.txt" />
     <Content Include="InitSQL.sql" />

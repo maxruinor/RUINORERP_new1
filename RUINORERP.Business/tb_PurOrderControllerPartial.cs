@@ -136,7 +136,9 @@ namespace RUINORERP.Business
 
 
 
-
+//        采购预付款（预付）	- 生成预付单
+//- 收货后核销预付 → 冲抵应付	- 预收付表：减少 RemainAmount
+//- 应收应付表（应付）：减少 TotalAmount
         public async override Task<ReturnResults<T>> ApprovalAsync(T ObjectEntity)
         {
             ReturnResults<T> rmrs = new ReturnResults<T>();
@@ -208,7 +210,7 @@ namespace RUINORERP.Business
                 DbHelper<tb_Inventory> dbHelper = _appContext.GetRequiredService<DbHelper<tb_Inventory>>();
                 var InvUpdateCounter = await dbHelper.BaseDefaultAddElseUpdateAsync(invUpdateList);
 
-                if (InvUpdateCounter != invUpdateList.Count)
+                 if (InvUpdateCounter == 0)
                 {
                     _unitOfWorkManage.RollbackTran();
                     throw new Exception("库存更新失败！");
@@ -220,21 +222,22 @@ namespace RUINORERP.Business
                 {
                     #region 生成预付款单
 
-                    if (entity.tb_paymentmethod == null)
+                    // 获取付款方式信息
+                    if (_appContext.PaymentMethodOfPeriod == null)
                     {
-                        var obj = BizCacheHelper.Instance.GetEntity<tb_PaymentMethod>(entity.Paytype_ID.Value);
-                        if (obj != null && obj.ToString() != "System.Object")
+                        _unitOfWorkManage.RollbackTran();
+                        rmrs.Succeeded = false;
+                        rmrs.ErrorMsg = $"请先配置付款方式信息！";
+                        if (_appContext.SysConfig.ShowDebugInfo)
                         {
-                            entity.tb_paymentmethod = obj as tb_PaymentMethod;
+                            _logger.LogInformation(rmrs.ErrorMsg);
                         }
-                        if (entity.tb_paymentmethod == null)
-                        {
-                            entity.tb_paymentmethod = await _appContext.Db.Queryable<tb_PaymentMethod>().Where(c => c.Paytype_ID == entity.Paytype_ID).FirstAsync();
-                        }
+                        return rmrs;
                     }
 
+
                     //如果是账期必须是未付款
-                    if (entity.tb_paymentmethod.Paytype_Name == DefaultPaymentMethod.账期.ToString())
+                    if (entity.Paytype_ID == _appContext.PaymentMethodOfPeriod.Paytype_ID)
                     {
                         if (entity.PayStatus != (int)PayStatus.未付款)
                         {
@@ -251,7 +254,8 @@ namespace RUINORERP.Business
 
                     if (entity.PayStatus == (int)PayStatus.未付款)
                     {
-                        if (entity.tb_paymentmethod.Paytype_Name != DefaultPaymentMethod.账期.ToString())
+                        
+                        if (entity.Paytype_ID != _appContext.PaymentMethodOfPeriod.Paytype_ID)
                         {
                             rmrs.Succeeded = false;
                             _unitOfWorkManage.RollbackTran();
@@ -273,7 +277,7 @@ namespace RUINORERP.Business
                     }
 
                     //销售订单审核时，非账期，即时收款时，生成预收款。 订金，部分收款
-                    if (entity.tb_paymentmethod.Paytype_Name != DefaultPaymentMethod.账期.ToString())
+                    if (entity.Paytype_ID != _appContext.PaymentMethodOfPeriod.Paytype_ID)
                     {
                         tb_FM_PreReceivedPaymentController<tb_FM_PreReceivedPayment> ctrpay = _appContext.GetRequiredService<tb_FM_PreReceivedPaymentController<tb_FM_PreReceivedPayment>>();
                         tb_FM_PreReceivedPayment payable = new tb_FM_PreReceivedPayment();

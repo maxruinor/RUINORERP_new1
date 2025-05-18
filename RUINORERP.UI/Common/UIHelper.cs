@@ -1570,8 +1570,13 @@ namespace RUINORERP.UI.Common
         /// <typeparam name="T"></typeparam>
         /// <param name="CurMenuInfo"></param>
         /// <param name="btnItem"></param>
-        public static void ControlButton<T>(tb_MenuInfo CurMenuInfo, T btnItem) where T : ToolStripItem
+        /// <param name="ExcludeMenuList">窗体按钮权限控制  硬编码指定不显示的按钮</param>
+        public static void ControlButton<T>(tb_MenuInfo CurMenuInfo, T btnItem, List<MenuItemEnums> ExcludeMenuList = null) where T : ToolStripItem
         {
+            if (ExcludeMenuList != null && ExcludeMenuList.Any(c => c.ToString() == btnItem.Text))
+            {
+                btnItem.Visible = false;
+            }
             if (CurMenuInfo == null || MainForm.Instance.AppContext.IsSuperUser)
             {
                 return;

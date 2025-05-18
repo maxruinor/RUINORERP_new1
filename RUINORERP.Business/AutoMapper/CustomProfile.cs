@@ -38,7 +38,7 @@ namespace RUINORERP.Business.AutoMapper
             .ForMember(a => a.Quantity, o => o.MapFrom(d => d.Quantity))
             .ForMember(a => a.ProdDetailID, o => o.MapFrom(d => d.ProdDetailID))
             .ForMember(a => a.property, o => o.MapFrom(d => d.property))
-       
+
             .ForMember(a => a.CustomerPartNo, o => o.MapFrom(d => d.CustomerPartNo))
             .ForMember(a => a.TaxRate, o => o.MapFrom(d => d.TaxRate))
             .ForMember(a => a.TaxLocalAmount, o => o.MapFrom(d => d.SubtotalTaxAmount))
@@ -75,6 +75,18 @@ namespace RUINORERP.Business.AutoMapper
 
             //应收付单生成收款记录表
             CreateMap<tb_FM_ReceivablePayableDetail, tb_FM_PaymentRecordDetail>();
+
+            //多个应收应付 合并生成一个 付款单
+            CreateMap<tb_FM_ReceivablePayable, tb_FM_PaymentRecordDetail>()
+                .ForMember(a => a.SourceBilllId, o => o.MapFrom(d => d.ARAPId))
+               .ForMember(a => a.SourceBillNo, o => o.MapFrom(d => d.ARAPNo))
+               .ForMember(a => a.DepartmentID, o => o.MapFrom(d => d.DepartmentID))
+               .ForMember(a => a.ExchangeRate, o => o.MapFrom(d => d.ExchangeRate))
+               .ForMember(a => a.ForeignAmount, o => o.MapFrom(d => d.ForeignBalanceAmount))
+               .ForMember(a => a.LocalAmount, o => o.MapFrom(d => d.LocalBalanceAmount))
+               .ForMember(a => a.ProjectGroup_ID, o => o.MapFrom(d => d.ProjectGroup_ID))
+               .ForMember(a => a.Currency_ID, o => o.MapFrom(d => d.Currency_ID));
+
             #endregion
 
 

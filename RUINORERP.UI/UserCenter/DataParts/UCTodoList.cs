@@ -1,9 +1,12 @@
 ﻿using AutoMapper;
+using Netron.GraphLib;
+using Netron.GraphLib.Entitology;
 using RUINORERP.Business.CommService;
 using RUINORERP.Business.Processor;
 using RUINORERP.Business.Security;
 using RUINORERP.Common.Extensions;
 using RUINORERP.Global;
+using RUINORERP.Global.EnumExt;
 using RUINORERP.Model;
 using RUINORERP.UI.Common;
 using SqlSugar;
@@ -156,7 +159,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
         /// <summary>
         /// 待办事项
         /// </summary>
-        private void BuilderToDoListTreeView()
+        private async void BuilderToDoListTreeView()
         {
             kryptonTreeViewJobList.Nodes.Clear();
             TreeNode nd = new TreeNode();
@@ -164,6 +167,8 @@ namespace RUINORERP.UI.UserCenter.DataParts
             nd.ImageIndex = 0;
             //nd.Tag = centerConfig;
             //手动构造已提交未审核
+
+            #region 通常业务的 未提交 未审核
             var conModel未审核 = new List<IConditionalModel>();
             conModel未审核.Add(new ConditionalModel { FieldName = "ApprovalStatus", ConditionalType = ConditionalType.Equal, FieldValue = "0", CSharpTypeName = "int" }); //设置类型 和C#名称一样常用的支持
             conModel未审核.Add(new ConditionalModel { FieldName = "DataStatus", ConditionalType = ConditionalType.Equal, FieldValue = "2", CSharpTypeName = "int" });
@@ -185,6 +190,77 @@ namespace RUINORERP.UI.UserCenter.DataParts
                 conModel未提交.Add(new ConditionalModel { FieldName = "Employee_ID", ConditionalType = ConditionalType.Equal, FieldValue = MainForm.Instance.AppContext.CurUserInfo.UserInfo.tb_employee.Employee_ID.ToString(), CSharpTypeName = "long" });
             }
             conModel未提交.Add(new ConditionalModel { FieldName = "isdeleted", ConditionalType = ConditionalType.Equal, FieldValue = "False", CSharpTypeName = "bool" });
+
+
+            #endregion
+
+            #region 财务模块的 未提交 未审核
+
+            #region 预收付款
+            var conModelFM预收付款未审核 = new List<IConditionalModel>();
+            conModelFM预收付款未审核.Add(new ConditionalModel { FieldName = "PrePaymentStatus", ConditionalType = ConditionalType.Equal, FieldValue = ((long)PrePaymentStatus.草稿).ToString(), CSharpTypeName = "long" });
+            conModelFM预收付款未审核.Add(new ConditionalModel { FieldName = "isdeleted", ConditionalType = ConditionalType.Equal, FieldValue = "False", CSharpTypeName = "bool" });
+            //如果限制
+            if (AuthorizeController.GetSaleLimitedAuth(MainForm.Instance.AppContext))
+            {
+                conModelFM预收付款未审核.Add(new ConditionalModel { FieldName = "Employee_ID", ConditionalType = ConditionalType.Equal, FieldValue = MainForm.Instance.AppContext.CurUserInfo.UserInfo.tb_employee.Employee_ID.ToString(), CSharpTypeName = "long" });
+            }
+
+            var conModelFM预收付款未提交 = new List<IConditionalModel>();
+            conModelFM预收付款未提交.Add(new ConditionalModel { FieldName = "PrePaymentStatus", ConditionalType = ConditionalType.Equal, FieldValue = ((long)PrePaymentStatus.待审核).ToString(), CSharpTypeName = "long" });
+            //如果限制
+            if (AuthorizeController.GetSaleLimitedAuth(MainForm.Instance.AppContext))
+            {
+                conModelFM预收付款未提交.Add(new ConditionalModel { FieldName = "Employee_ID", ConditionalType = ConditionalType.Equal, FieldValue = MainForm.Instance.AppContext.CurUserInfo.UserInfo.tb_employee.Employee_ID.ToString(), CSharpTypeName = "long" });
+            }
+            conModelFM预收付款未提交.Add(new ConditionalModel { FieldName = "isdeleted", ConditionalType = ConditionalType.Equal, FieldValue = "False", CSharpTypeName = "bool" });
+
+            #endregion
+
+            #region 应收付款
+            var conModelFM应收付款未审核 = new List<IConditionalModel>();
+            conModelFM应收付款未审核.Add(new ConditionalModel { FieldName = "ARAPStatus", ConditionalType = ConditionalType.Equal, FieldValue = ((long)PrePaymentStatus.待审核).ToString(), CSharpTypeName = "long" });
+            conModelFM应收付款未审核.Add(new ConditionalModel { FieldName = "isdeleted", ConditionalType = ConditionalType.Equal, FieldValue = "False", CSharpTypeName = "bool" });
+            //如果限制
+            if (AuthorizeController.GetSaleLimitedAuth(MainForm.Instance.AppContext))
+            {
+                conModelFM应收付款未审核.Add(new ConditionalModel { FieldName = "Employee_ID", ConditionalType = ConditionalType.Equal, FieldValue = MainForm.Instance.AppContext.CurUserInfo.UserInfo.tb_employee.Employee_ID.ToString(), CSharpTypeName = "long" });
+            }
+
+            var conModelFM应收付款未提交 = new List<IConditionalModel>();
+            conModelFM应收付款未提交.Add(new ConditionalModel { FieldName = "ARAPStatus", ConditionalType = ConditionalType.Equal, FieldValue = ((long)PrePaymentStatus.待审核).ToString(), CSharpTypeName = "long" });
+            //如果限制
+            if (AuthorizeController.GetSaleLimitedAuth(MainForm.Instance.AppContext))
+            {
+                conModelFM应收付款未提交.Add(new ConditionalModel { FieldName = "Employee_ID", ConditionalType = ConditionalType.Equal, FieldValue = MainForm.Instance.AppContext.CurUserInfo.UserInfo.tb_employee.Employee_ID.ToString(), CSharpTypeName = "long" });
+            }
+            conModelFM应收付款未提交.Add(new ConditionalModel { FieldName = "isdeleted", ConditionalType = ConditionalType.Equal, FieldValue = "False", CSharpTypeName = "bool" });
+
+            #endregion
+
+            #region 收付款
+            var conModelFM收付款未审核 = new List<IConditionalModel>();
+            conModelFM收付款未审核.Add(new ConditionalModel { FieldName = "PaymentStatus", ConditionalType = ConditionalType.Equal, FieldValue = ((long)PrePaymentStatus.待审核).ToString(), CSharpTypeName = "int" });
+            conModelFM收付款未审核.Add(new ConditionalModel { FieldName = "isdeleted", ConditionalType = ConditionalType.Equal, FieldValue = "False", CSharpTypeName = "bool" });
+            //如果限制
+            if (AuthorizeController.GetSaleLimitedAuth(MainForm.Instance.AppContext))
+            {
+                conModelFM收付款未审核.Add(new ConditionalModel { FieldName = "Employee_ID", ConditionalType = ConditionalType.Equal, FieldValue = MainForm.Instance.AppContext.CurUserInfo.UserInfo.tb_employee.Employee_ID.ToString(), CSharpTypeName = "long" });
+            }
+
+            var conModelFM收付款未提交 = new List<IConditionalModel>();
+            conModelFM应收付款未提交.Add(new ConditionalModel { FieldName = "PaymentStatus", ConditionalType = ConditionalType.Equal, FieldValue = ((long)PrePaymentStatus.待审核).ToString(), CSharpTypeName = "int" });
+            //如果限制
+            if (AuthorizeController.GetSaleLimitedAuth(MainForm.Instance.AppContext))
+            {
+                conModelFM收付款未提交.Add(new ConditionalModel { FieldName = "Employee_ID", ConditionalType = ConditionalType.Equal, FieldValue = MainForm.Instance.AppContext.CurUserInfo.UserInfo.tb_employee.Employee_ID.ToString(), CSharpTypeName = "long" });
+            }
+            conModelFM收付款未提交.Add(new ConditionalModel { FieldName = "isdeleted", ConditionalType = ConditionalType.Equal, FieldValue = "False", CSharpTypeName = "bool" });
+
+            #endregion
+
+            #endregion
+
 
 
             var conModel未出库 = new List<IConditionalModel>();
@@ -248,6 +324,44 @@ namespace RUINORERP.UI.UserCenter.DataParts
             conModel未结案.Add(new ConditionalModel { FieldName = "ApprovalResults", ConditionalType = ConditionalType.Equal, FieldValue = "True", CSharpTypeName = "bool" });
             conModel未结案.Add(new ConditionalModel { FieldName = "isdeleted", ConditionalType = ConditionalType.Equal, FieldValue = "False", CSharpTypeName = "bool" });
 
+
+            #region 预收付款
+
+            var conModel预收付款待核销 = new List<IConditionalModel>();
+            conModel预收付款待核销.Add(new ConditionalModel { FieldName = "PrePaymentStatus", ConditionalType = ConditionalType.Equal, FieldValue = (1 << 12).ToString(), CSharpTypeName = "long" });
+            //如果限制
+            if (AuthorizeController.GetSaleLimitedAuth(MainForm.Instance.AppContext))
+            {
+                conModel预收付款待核销.Add(new ConditionalModel { FieldName = "Employee_ID", ConditionalType = ConditionalType.Equal, FieldValue = MainForm.Instance.AppContext.CurUserInfo.UserInfo.tb_employee.Employee_ID.ToString(), CSharpTypeName = "long" });
+            }
+            conModel预收付款待核销.Add(new ConditionalModel { FieldName = "isdeleted", ConditionalType = ConditionalType.Equal, FieldValue = "False", CSharpTypeName = "bool" });
+
+
+            #endregion
+
+            #region 应收应付 已生效
+
+            var conModel等待回款付款 = new List<IConditionalModel>();
+            conModel等待回款付款.Add(new ConditionalModel { FieldName = "ARAPStatus", ConditionalType = ConditionalType.Equal, FieldValue = ((long)ARAPStatus.已生效).ToString(), CSharpTypeName = "long" });
+            //如果限制
+            if (AuthorizeController.GetSaleLimitedAuth(MainForm.Instance.AppContext))
+            {
+                conModel等待回款付款.Add(new ConditionalModel { FieldName = "Employee_ID", ConditionalType = ConditionalType.Equal, FieldValue = MainForm.Instance.AppContext.CurUserInfo.UserInfo.tb_employee.Employee_ID.ToString(), CSharpTypeName = "long" });
+            }
+            conModel等待回款付款.Add(new ConditionalModel { FieldName = "isdeleted", ConditionalType = ConditionalType.Equal, FieldValue = "False", CSharpTypeName = "bool" });
+
+
+            #endregion
+
+
+            #region 收款付款 待确认支付
+
+            var conModel待确认支付 = new List<IConditionalModel>();
+            conModel待确认支付.Add(new ConditionalModel { FieldName = "PaymentStatus", ConditionalType = ConditionalType.Equal, FieldValue = ((long)PaymentStatus.待审核).ToString(), CSharpTypeName = "long" });
+            conModel待确认支付.Add(new ConditionalModel { FieldName = "isdeleted", ConditionalType = ConditionalType.Equal, FieldValue = "False", CSharpTypeName = "bool" });
+
+
+            #endregion
 
             List<BizType> bizTypes = new List<BizType>();
             if (CenterConfig != null)
@@ -324,6 +438,24 @@ namespace RUINORERP.UI.UserCenter.DataParts
                             bizTypes.Add(BizType.返工退库单);
                             bizTypes.Add(BizType.返工入库单);
                             break;
+                        case 待办事项.预付款单:
+                            bizTypes.Add(BizType.预付款单);
+                            break;
+                        case 待办事项.预收款单:
+                            bizTypes.Add(BizType.预收款单);
+                            break;
+                        case 待办事项.应付款单:
+                            bizTypes.Add(BizType.应付款单);
+                            break;
+                        case 待办事项.应收款单:
+                            bizTypes.Add(BizType.应收款单);
+                            break;
+                        case 待办事项.付款单:
+                            bizTypes.Add(BizType.付款单);
+                            break;
+                        case 待办事项.收款单:
+                            bizTypes.Add(BizType.收款单);
+                            break;
                         default:
                             break;
                     }
@@ -335,62 +467,101 @@ namespace RUINORERP.UI.UserCenter.DataParts
             {
                 TreeNode node = new TreeNode(item.ToString());
                 Type tableType = mapper.GetTableType(item);
-
-                TreeNode SubNode未提交 = new TreeNode(item.ToString());
-                DataTable queryList未提交 = MainForm.Instance.AppContext.Db.Queryable(tableType.Name, "TN").Where(conModel未提交).ToDataTable();
-                if (queryList未提交.Rows.Count > 0)
+                //可以修改
+                if (tableType.ContainsProperty(typeof(DataStatus).Name))
                 {
-                    QueryParameter parameter = new QueryParameter();
-                    parameter.conditionals = conModel未提交;
-                    parameter.tableType = tableType;
+                    #region 通常业务的 未提交 未审核
 
-                    SubNode未提交.Text = "未提交【" + queryList未提交.Rows.Count + "】";
-                    SubNode未提交.Tag = parameter;
-                    node.Tag = parameter;
-                    //  MainForm.Instance.AppContext.Db.CopyNew().Queryable(tableType.Name.ToString(), "a").Where().ToList();
-                    if (!node.Nodes.Contains(SubNode未提交))
+                    TreeNode SubNode未提交 = new TreeNode(item.ToString());
+                    DataTable queryList未提交 = await MainForm.Instance.AppContext.Db.Queryable(tableType.Name, "TN").Where(conModel未提交).ToDataTableAsync();
+                    if (queryList未提交.Rows.Count > 0)
                     {
-                        node.Nodes.Add(SubNode未提交);
+                        QueryParameter parameter = new QueryParameter();
+                        parameter.conditionals = conModel未提交;
+                        parameter.tableType = tableType;
+
+                        SubNode未提交.Text = "未提交【" + queryList未提交.Rows.Count + "】";
+                        SubNode未提交.Tag = parameter;
+                        node.Tag = parameter;
+                        //  MainForm.Instance.AppContext.Db.CopyNew().Queryable(tableType.Name.ToString(), "a").Where().ToList();
+                        if (!node.Nodes.Contains(SubNode未提交))
+                        {
+                            node.Nodes.Add(SubNode未提交);
+                        }
+
                     }
 
+                    TreeNode SubNode未审核 = new TreeNode(item.ToString());
+                    DataTable queryList未审核 = await MainForm.Instance.AppContext.Db.Queryable(tableType.Name, "TN").Where(conModel未审核).ToDataTableAsync();
+                    if (queryList未审核.Rows.Count > 0)
+                    {
+                        QueryParameter parameter = new QueryParameter();
+                        parameter.conditionals = conModel未审核;
+                        parameter.tableType = tableType;
 
+                        SubNode未审核.Text = "未审核【" + queryList未审核.Rows.Count + "】";
+                        SubNode未审核.Tag = parameter;
+                        if (!node.Nodes.Contains(SubNode未审核))
+                        {
+                            node.Nodes.Add(SubNode未审核);
+                        }
+                    }
+
+                    #endregion
+                }
+                else if (tableType.ContainsProperty(typeof(PrePaymentStatus).Name))
+                {
+                    #region 财务的 未提交 未审核
+                   
+                    AddNode(item, node, conModelFM预收付款未提交, "未提交");
+
+                    AddNode(item, node,conModelFM预收付款未审核,  "未审核");
+
+                    #endregion
+                }
+                else if (tableType.ContainsProperty(typeof(ARAPStatus).Name))
+                {
+                    #region 财务的 未提交 未审核
+
+                    AddNode(item, node, conModelFM应收付款未提交, "未提交");
+
+                    AddNode(item, node, conModelFM应收付款未审核, "未审核");
+
+                    #endregion
+                }
+                else if (tableType.ContainsProperty(typeof(PaymentStatus).Name))
+                {
+                    #region 财务的 未提交 未审核
+
+                    AddNode(item, node, conModelFM收付款未提交, "未提交");
+
+                    AddNode(item, node, conModelFM收付款未审核, "未审核");
+
+                    #endregion
                 }
 
 
-                TreeNode SubNode未审核 = new TreeNode(item.ToString());
-                DataTable queryList未审核 = MainForm.Instance.AppContext.Db.Queryable(tableType.Name, "TN").Where(conModel未审核).ToDataTable();
-                if (queryList未审核.Rows.Count > 0)
-                {
-                    QueryParameter parameter = new QueryParameter();
-                    parameter.conditionals = conModel未审核;
-                    parameter.tableType = tableType;
-
-                    SubNode未审核.Text = "未审核【" + queryList未审核.Rows.Count + "】";
-                    SubNode未审核.Tag = parameter;
-                    if (!node.Nodes.Contains(SubNode未审核))
-                    {
-                        node.Nodes.Add(SubNode未审核);
-                    }
-                }
 
                 //下面是特殊情况。上面是所有单据的情况
                 if (item == BizType.借出单)
                 {
-                    QueryParameter parameter = new QueryParameter();
-                    parameter.conditionals = conModel借出未还清;
-                    parameter.tableType = tableType;
-                    //未出库
-                    TreeNode SubNode借出未还清 = new TreeNode(item.ToString());
-                    DataTable queryList借出未还清 = MainForm.Instance.AppContext.Db.Queryable(tableType.Name, "TN").Where(conModel借出未还清).ToDataTable();
-                    if (queryList借出未还清.Rows.Count > 0)
-                    {
-                        SubNode借出未还清.Text = "未还清【" + queryList借出未还清.Rows.Count + "】";
-                        SubNode借出未还清.Tag = parameter;
-                        if (!node.Nodes.Contains(SubNode借出未还清))
-                        {
-                            node.Nodes.Add(SubNode借出未还清);
-                        }
-                    }
+                    //QueryParameter parameter = new QueryParameter();
+                    //parameter.conditionals = conModel借出未还清;
+                    //parameter.tableType = tableType;
+                    
+                    //TreeNode SubNode借出未还清 = new TreeNode(item.ToString());
+                    //DataTable queryList借出未还清 = await MainForm.Instance.AppContext.Db.Queryable(tableType.Name, "TN").Where(conModel借出未还清).ToDataTableAsync();
+                    //if (queryList借出未还清.Rows.Count > 0)
+                    //{
+                    //    SubNode借出未还清.Text = "未还清【" + queryList借出未还清.Rows.Count + "】";
+                    //    SubNode借出未还清.Tag = parameter;
+                    //    if (!node.Nodes.Contains(SubNode借出未还清))
+                    //    {
+                    //        node.Nodes.Add(SubNode借出未还清);
+                    //    }
+                    //}
+                  
+                    AddNode(item, node, conModel借出未还清, "未还清");
                 }
 
                 //下面是特殊情况。上面是所有单据的情况
@@ -422,7 +593,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
 
                     // 待收款
                     TreeNode SubNode待收款 = new TreeNode(item.ToString());
-                    DataTable queryList待收款 = MainForm.Instance.AppContext.Db.Queryable(tableType.Name, "TN").Where(conModel待收款).ToDataTable();
+                    DataTable queryList待收款 = await MainForm.Instance.AppContext.Db.Queryable(tableType.Name, "TN").Where(conModel待收款).ToDataTableAsync();
                     if (queryList待收款.Rows.Count > 0)
                     {
                         SubNode待收款.Text = "待收款【" + queryList待收款.Rows.Count + "】";
@@ -475,7 +646,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
                     parameter.tableType = tableType;
                     //未出库
                     TreeNode SubNode采购退货待入库 = new TreeNode(item.ToString());
-                    DataTable queryList采购退货待入库 = MainForm.Instance.AppContext.Db.Queryable(tableType.Name, "TN").Where(conModel未结案).ToDataTable();
+                    DataTable queryList采购退货待入库 = await MainForm.Instance.AppContext.Db.Queryable(tableType.Name, "TN").Where(conModel未结案).ToDataTableAsync();
                     if (queryList采购退货待入库.Rows.Count > 0)
                     {
                         SubNode采购退货待入库.Text = "待返回【" + queryList采购退货待入库.Rows.Count + "】";
@@ -486,6 +657,77 @@ namespace RUINORERP.UI.UserCenter.DataParts
                         }
                     }
                 }
+
+
+                if (item == BizType.预收款单 || item == BizType.预付款单)
+                {
+                    QueryParameter parameter = new QueryParameter();
+                    parameter.conditionals = conModel预收付款待核销;
+                    parameter.tableType = tableType;
+
+                    // 待收款
+                    TreeNode SubNode待收款 = new TreeNode(item.ToString());
+                    DataTable queryList待核销 = await MainForm.Instance.AppContext.Db.Queryable(tableType.Name, "TN").Where(conModel预收付款待核销).ToDataTableAsync();
+                    if (queryList待核销.Rows.Count > 0)
+                    {
+                        SubNode待收款.Text = "待核销【" + queryList待核销.Rows.Count + "】";
+                        SubNode待收款.Tag = parameter;
+                        if (!node.Nodes.Contains(SubNode待收款))
+                        {
+                            node.Nodes.Add(SubNode待收款);
+                        }
+                    }
+                }
+
+                if (item == BizType.应收款单 || item == BizType.应付款单)
+                {
+                    QueryParameter parameter = new QueryParameter();
+                    parameter.conditionals = conModel等待回款付款;
+                    parameter.tableType = tableType;
+
+                    string paytypeName = "回款";
+                    if (item == BizType.应付款单)
+                    {
+                        paytypeName = "付款";
+                    }
+
+                    // 待收款
+                    TreeNode SubNode待回款付款 = new TreeNode(item.ToString());
+                    DataTable queryList待回款付款 = await MainForm.Instance.AppContext.Db.Queryable(tableType.Name, "TN").Where(conModel等待回款付款).ToDataTableAsync();
+                    if (queryList待回款付款.Rows.Count > 0)
+                    {
+                        SubNode待回款付款.Text = $"待{paytypeName}【" + queryList待回款付款.Rows.Count + "】";
+                        SubNode待回款付款.Tag = parameter;
+                        if (!node.Nodes.Contains(SubNode待回款付款))
+                        {
+                            node.Nodes.Add(SubNode待回款付款);
+                        }
+                    }
+                }
+
+                if (item == BizType.收款单 || item == BizType.付款单)
+                {
+                    QueryParameter parameter = new QueryParameter();
+                    parameter.conditionals = conModel待确认支付;
+                    parameter.tableType = tableType;
+
+
+
+                    // 待收款
+                    TreeNode SubNode待确认支付 = new TreeNode(item.ToString());
+                    DataTable queryList待确认支付 = await MainForm.Instance.AppContext.Db.Queryable(tableType.Name, "TN").Where(conModel待确认支付).ToDataTableAsync();
+                    if (queryList待确认支付.Rows.Count > 0)
+                    {
+                        SubNode待确认支付.Text = $"待确认支付【" + queryList待确认支付.Rows.Count + "】";
+                        SubNode待确认支付.Tag = parameter;
+                        if (!node.Nodes.Contains(SubNode待确认支付))
+                        {
+                            node.Nodes.Add(SubNode待确认支付);
+                        }
+                    }
+                }
+
+
                 //没有数据的不用显示
                 if (node.Nodes.Count > 0)
                 {
@@ -506,6 +748,41 @@ namespace RUINORERP.UI.UserCenter.DataParts
             //  kryptonTreeViewJobList.Nodes[0].Expand();
             kryptonTreeViewJobList.ExpandAll();
         }
+
+
+
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="item"></param>
+        /// <param name="node"></param>
+        /// <param name="conModel"></param>
+        /// <param name="SubNodeText">未审核</param>
+        private async void AddNode(BizType item, TreeNode node, List<IConditionalModel> conModel, string SubNodeText)
+        {
+            Type tableType = mapper.GetTableType(item);
+            TreeNode SubNodeeFM预收付款未审核 = new TreeNode(item.ToString());
+            DataTable queryListeFM预收付款未审核 = await MainForm.Instance.AppContext.Db.Queryable(tableType.Name, "TN").Where(conModel).ToDataTableAsync();
+            if (queryListeFM预收付款未审核.Rows.Count > 0)
+            {
+                QueryParameter parameter = new QueryParameter();
+                parameter.conditionals = conModel;
+                parameter.tableType = tableType;
+
+                SubNodeeFM预收付款未审核.Text = $"{SubNodeText}【" + queryListeFM预收付款未审核.Rows.Count + "】";
+                SubNodeeFM预收付款未审核.Tag = parameter;
+                if (!node.Nodes.Contains(SubNodeeFM预收付款未审核))
+                {
+                    node.Nodes.Add(SubNodeeFM预收付款未审核);
+                }
+            }
+        }
+
+
+
+
 
         // 假设您有一个方法，用于将字符串转换为布尔值
         private static object ConvertStringToBoolean(string value)

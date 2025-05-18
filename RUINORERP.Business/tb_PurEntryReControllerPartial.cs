@@ -109,7 +109,7 @@ namespace RUINORERP.Business
                 }
 
                 int InvUpdateCounter = await _unitOfWorkManage.GetDbClient().Updateable(invUpdateList).ExecuteCommandAsync();
-                if (InvUpdateCounter != invUpdateList.Count)
+                 if (InvUpdateCounter == 0)
                 {
                     _unitOfWorkManage.RollbackTran();
                     throw new Exception("采购退货审核时，库存更新失败！");
@@ -257,7 +257,7 @@ namespace RUINORERP.Business
                     invUpdateList.Add(inv);
                 }
                 int InvUpdateCounter = await _unitOfWorkManage.GetDbClient().Updateable(invUpdateList).ExecuteCommandAsync();
-                if (InvUpdateCounter != invUpdateList.Count)
+                 if (InvUpdateCounter == 0)
                 {
                     _unitOfWorkManage.RollbackTran();
                     throw new Exception("库存更新失败！");

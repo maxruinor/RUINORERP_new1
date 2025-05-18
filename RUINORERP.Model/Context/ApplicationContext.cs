@@ -43,6 +43,14 @@ namespace RUINORERP.Model.Context
         /// </summary>
         public tb_Currency BaseCurrency { get; set; }
 
+        /// <summary>
+        /// 专门保存一下账期的信息，省得比较判断时还要去缓存取
+        /// </summary>
+        public tb_PaymentMethod PaymentMethodOfPeriod { get; set; }
+
+
+
+
         //BillConverterFactory 中会用到这个。UI层才有缓存。单例模式没有作用到。暂时没有处理用。用这个属性来传值。
         public List<tb_MenuInfo> UserMenuList;
 

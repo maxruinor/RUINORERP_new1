@@ -72,12 +72,12 @@ namespace RUINORERP.Business.CommService
             Mapping.Add(BizType.付款单, typeof(tb_FM_PaymentRecord));
             Mapping.Add(BizType.收款单, typeof(tb_FM_PaymentRecord));
 
-            Mapping.Add(BizType.应付单, typeof(tb_FM_ReceivablePayable));
-            Mapping.Add(BizType.应收单, typeof(tb_FM_ReceivablePayable));
+            Mapping.Add(BizType.应付款单, typeof(tb_FM_ReceivablePayable));
+            Mapping.Add(BizType.应收款单, typeof(tb_FM_ReceivablePayable));
 
 
-            Mapping.Add(BizType.收款核销, typeof(tb_FM_PaymentSettlement));
-            Mapping.Add(BizType.付款核销, typeof(tb_FM_PaymentSettlement));
+            Mapping.Add(BizType.收款核销款, typeof(tb_FM_PaymentSettlement));
+            Mapping.Add(BizType.付款核销款, typeof(tb_FM_PaymentSettlement));
 
 
 

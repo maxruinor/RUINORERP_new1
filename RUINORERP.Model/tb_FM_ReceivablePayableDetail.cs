@@ -66,48 +66,7 @@ namespace RUINORERP.Model
                         }
         }
 
-        private int? _SourceBizType;
-        /// <summary>
-        /// 来源业务
-        /// </summary>
-        [AdvQueryAttribute(ColName = "SourceBizType",ColDesc = "来源业务")] 
-        [SugarColumn(ColumnDataType = "int", SqlParameterDbType ="Int32",  ColumnName = "SourceBizType" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "来源业务" )]
-        public int? SourceBizType
-        { 
-            get{return _SourceBizType;}
-            set{
-            SetProperty(ref _SourceBizType, value);
-                        }
-        }
-
-        private long? _SourceBillId;
-        /// <summary>
-        /// 来源单据
-        /// </summary>
-        [AdvQueryAttribute(ColName = "SourceBillId",ColDesc = "来源单据")] 
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "SourceBillId" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "来源单据" )]
-        public long? SourceBillId
-        { 
-            get{return _SourceBillId;}
-            set{
-            SetProperty(ref _SourceBillId, value);
-                        }
-        }
-
-        private string _SourceBillNo;
-        /// <summary>
-        /// 来源单号
-        /// </summary>
-        [AdvQueryAttribute(ColName = "SourceBillNo",ColDesc = "来源单号")] 
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "SourceBillNo" ,Length=30,IsNullable = true,ColumnDescription = "来源单号" )]
-        public string SourceBillNo
-        { 
-            get{return _SourceBillNo;}
-            set{
-            SetProperty(ref _SourceBillNo, value);
-                        }
-        }
-
+   
         private long? _ProdDetailID;
         /// <summary>
         /// 产品

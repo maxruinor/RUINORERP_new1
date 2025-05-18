@@ -30,6 +30,7 @@ using RUINORERP.Global;
 using RUINORERP.Business.CommService;
 using AutoMapper;
 using System.IO.IsolatedStorage;
+using StackExchange.Redis;
 
 namespace RUINORERP.Business
 {
@@ -40,6 +41,7 @@ namespace RUINORERP.Business
     {
         /// <summary>
         /// 客户取消订单时，如果有订单，如果财务没有在他对应的收付单里审核前是可以反审的。否则只能通过红冲机制处理。
+        /// 应收应付 没有审核，没有生成付款单，也没有从预收付中抵扣时。即可 状态和 核销金额和 应收付金额一样时可以反审删除
         /// </summary>
         /// <param name="ObjectEntity"></param>
         /// <returns></returns>
@@ -105,7 +107,7 @@ namespace RUINORERP.Business
 
         /// <summary>
         /// 这个审核可以由业务来审。后面还会有财务来定是否真实收付，这财务审核收款单前，还是可以反审的
-        /// 审核通过时
+        /// 审核通过时生成关联的收款/付款草稿单 财务核对是否到账。
         /// </summary>
         /// <param name="ObjectEntity"></param>
         /// <returns></returns>
@@ -117,8 +119,7 @@ namespace RUINORERP.Business
             {
                 // 开启事务，保证数据一致性
                 _unitOfWorkManage.BeginTran();
-
-
+                //出库入库时生成应收。。其它业务审核确认这个就生效。
                 /*             
                 1. 状态更新	将应收单状态从“未审核”改为“已审核”	应收单自身状态
                 2. 财务凭证生成	根据应收单生成会计分录（如：借应收账款，贷销售收入）	总账模块、财务报表
@@ -159,18 +160,20 @@ namespace RUINORERP.Business
                 rmrs.ErrorMsg = ex.Message;
                 return rmrs;
             }
-
         }
+
+
 
 
         /// <summary>
         /// 创建为红字冲销 应收款单
+        /// 即使相同客户的，也不能合并，一个销售出库，退货对应一个应收单。收付单和付款单才可以合并。
+        /// 暂时不提供批量。要检查数据
         /// </summary>
         /// <param name="entity"></param>
         /// <returns></returns>
-        public async Task<ReturnMainSubResults<tb_FM_ReceivablePayable>> CreateReceivablePayable(tb_SaleOutRe entity)
+        public async Task<ReturnMainSubResults<tb_FM_ReceivablePayable>> CreateReceivablePayable(tb_SaleOutRe entity, bool IsSaveToDb = false)
         {
-
             tb_FM_ReceivablePayable payable = new tb_FM_ReceivablePayable();
             payable = mapper.Map<tb_FM_ReceivablePayable>(entity);
             payable.ApprovalResults = null;
@@ -182,6 +185,9 @@ namespace RUINORERP.Business
             payable.ApprovalOpinions = "";
             payable.Modified_at = null;
             payable.Modified_by = null;
+            payable.SourceBillNo = entity.ReturnNo;
+            payable.SourceBillId = entity.SaleOutRe_ID;
+            payable.SourceBizType = (int)BizType.销售退回单;
             if (entity.tb_projectgroup != null && entity.tb_projectgroup.tb_department != null)
             {
                 payable.DepartmentID = entity.tb_projectgroup.tb_department.DepartmentID;
@@ -209,7 +215,7 @@ namespace RUINORERP.Business
             //销售就是收款
             payable.ReceivePaymentType = (int)ReceivePaymentType.收款;
 
-            payable.ARAPNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.应收单);
+            payable.ARAPNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.应收款单);
             if (entity.Currency_ID.HasValue)
             {
                 payable.Currency_ID = entity.Currency_ID.Value;
@@ -228,9 +234,7 @@ namespace RUINORERP.Business
 
             for (global::System.Int32 i = 0; i < details.Count; i++)
             {
-                details[i].SourceBillNo = entity.ReturnNo;
-                details[i].SourceBillId = entity.SaleOutRe_ID;
-                details[i].SourceBizType = (int)BizType.销售退回单;
+
                 details[i].ExchangeRate = entity.ExchangeRate;
                 details[i].ActionStatus = ActionStatus.新增;
 
@@ -242,10 +246,40 @@ namespace RUINORERP.Business
                         details[i].Unit_ID = obj.Unit_ID.Value;
                     }
                 }
+                //数量标负数，单价保持正数是标准做法
+                details[i].Quantity = -details[i].Quantity;
+                details[i].TaxLocalAmount = -details[i].TaxLocalAmount;
+                details[i].LocalPayableAmount = details[i].UnitPrice.Value * details[i].Quantity.Value;
             }
+
+            #region 单独加一行运算到明细中 默认退货不退运费,要的话,自己手动添加
+
+            // 添加运费行（关键部分）
+            //if (entity.ShipCost > 0)
+            //{
+            //    details.Add(new tb_FM_ReceivablePayableDetail
+            //    {
+            //        ProdDetailID = null,
+            //        property = "运费",
+            //        SourceBillNo = entity.ReturnNo,
+            //        SourceBillId = entity.SaleOutRe_ID,
+            //        SourceBizType = (int)BizType.销售退回单,
+            //        Specifications = "",
+            //        ExchangeRate = 1,
+            //        Description = "发货运费",
+            //        UnitPrice = entity.ShipCost,
+            //        Quantity = 1,
+            //        TaxRate = 0.09m, // 假设运费税率为9%
+            //        TaxLocalAmount = 1,
+            //        Summary = "",
+            //        LocalPayableAmount = entity.ShipCost
+            //    });
+            //}
+
+            #endregion
+
             payable.tb_FM_ReceivablePayableDetails = details;
             //如果是外币时，则由外币算出本币
-
             //外币时
             if (entity.Currency_ID.HasValue && _appContext.BaseCurrency.Currency_ID != entity.Currency_ID.Value)
             {
@@ -262,37 +296,48 @@ namespace RUINORERP.Business
             }
 
             payable.Remark = $"销售出库单：{entity.SaleOut_NO}对应的销售退回单{entity.ReturnNo}的应退款";
-
             Business.BusinessHelper.Instance.InitEntity(payable);
             payable.ARAPStatus = (long)ARAPStatus.待审核;
-            BaseController<tb_FM_ReceivablePayable> ctrpay = _appContext.GetRequiredServiceByName<BaseController<tb_FM_ReceivablePayable>>(typeof(T).Name + "Controller");
-            ReturnMainSubResults<tb_FM_ReceivablePayable> rmr = await ctrpay.BaseSaveOrUpdateWithChild<tb_FM_ReceivablePayable>(payable);
-            if (rmr.Succeeded)
+            ReturnMainSubResults<tb_FM_ReceivablePayable> rmr = new ReturnMainSubResults<tb_FM_ReceivablePayable>();
+            if (IsSaveToDb)
             {
-                var paybalbe = rmr.ReturnObject as tb_FM_ReceivablePayable;
-                paybalbe.ApprovalOpinions = "自动审核通过";
-                ReturnResults<tb_FM_ReceivablePayable> rr = await ctrpay.ApprovalAsync(paybalbe);
-                if (rr.Succeeded)
+                BaseController<tb_FM_ReceivablePayable> ctrpay = _appContext.GetRequiredServiceByName<BaseController<tb_FM_ReceivablePayable>>(typeof(T).Name + "Controller");
+                rmr = await ctrpay.BaseSaveOrUpdateWithChild<tb_FM_ReceivablePayable>(payable);
+                if (rmr.Succeeded)
                 {
-                    return rmr;
+                    var paybalbe = rmr.ReturnObject as tb_FM_ReceivablePayable;
+                    paybalbe.ApprovalOpinions = "自动审核通过";
+                    ReturnResults<tb_FM_ReceivablePayable> rr = await ctrpay.ApprovalAsync(paybalbe);
+                    if (rr.Succeeded)
+                    {
+                        return rmr;
+                    }
+                    else
+                    {
+                        rmr.Succeeded = false;
+                        rmr.ErrorMsg = rr.ErrorMsg;
+                    }
                 }
-                else
-                {
-                    rmr.Succeeded = false;
-                    rmr.ErrorMsg = rr.ErrorMsg;
-                }
+            }
+            else
+            {
+                rmr.ReturnObject = payable;
             }
             return rmr;
         }
 
+
         /// <summary>
         /// 创建应收款单，并且自动审核，因为后面还会自动去冲预收款单
+        /// 如果有订金，会先去预收检测
         /// </summary>
         /// <param name="entity"></param>
         /// <param name="isRefund">反审核时用，true为红字冲销</param>
         /// <returns></returns>
         public async Task<ReturnMainSubResults<tb_FM_ReceivablePayable>> CreateReceivablePayable(tb_SaleOut entity, bool isRefund)
         {
+
+            #region 创建应收款单
 
             tb_FM_ReceivablePayable payable = new tb_FM_ReceivablePayable();
             payable = mapper.Map<tb_FM_ReceivablePayable>(entity);
@@ -305,10 +350,15 @@ namespace RUINORERP.Business
             payable.ApprovalOpinions = "";
             payable.Modified_at = null;
             payable.Modified_by = null;
+            payable.SourceBillNo = entity.SaleOutNo;
+            payable.SourceBillId = entity.SaleOut_MainID;
+            payable.SourceBizType = (int)BizType.销售出库单;
             if (entity.tb_projectgroup != null && entity.tb_projectgroup.DepartmentID.HasValue)
             {
                 payable.DepartmentID = entity.tb_projectgroup.DepartmentID;
             }
+
+
 
             //如果部门还是没有值 则从缓存中加载,如果项目有所属部门的话
             if (payable.ProjectGroup_ID.HasValue && !payable.DepartmentID.HasValue)
@@ -351,14 +401,13 @@ namespace RUINORERP.Business
             //销售就是收款
             payable.ReceivePaymentType = (int)ReceivePaymentType.收款;
 
-            payable.ARAPNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.应收单);
+            payable.ARAPNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.应收款单);
             if (entity.Currency_ID.HasValue)
             {
                 payable.Currency_ID = entity.Currency_ID.Value;
             }
-            if (entity.tb_saleorder.tb_paymentmethod.Paytype_Name == DefaultPaymentMethod.账期.ToString())
+            if (entity.tb_saleorder.Paytype_ID == _appContext.PaymentMethodOfPeriod.Paytype_ID)
             {
-
                 var obj = BizCacheHelper.Instance.GetEntity<tb_CustomerVendor>(entity.CustomerVendor_ID);
                 if (obj != null && obj.ToString() != "System.Object")
                 {
@@ -387,9 +436,9 @@ namespace RUINORERP.Business
 
             for (global::System.Int32 i = 0; i < details.Count; i++)
             {
-                details[i].SourceBillNo = entity.SaleOutNo;
-                details[i].SourceBillId = entity.SaleOut_MainID;
-                details[i].SourceBizType = (int)BizType.销售出库单;
+
+
+
 
                 details[i].ExchangeRate = entity.ExchangeRate;
                 details[i].ActionStatus = ActionStatus.新增;
@@ -403,6 +452,48 @@ namespace RUINORERP.Business
                     }
                 }
             }
+
+            #region 单独加一行运算到明细中
+            // 添加运费行（关键部分）
+            if (entity.ShipCost > 0)
+            {
+                details.Add(new tb_FM_ReceivablePayableDetail
+                {
+                    ProdDetailID = null,
+                    property = "运费",
+
+                    Specifications = "",
+                    ExchangeRate = 1,
+                    Description = "发货运费",
+                    UnitPrice = entity.ShipCost,
+                    Quantity = 1,
+                    TaxRate = 0.09m, // 假设运费税率为9%
+                    TaxLocalAmount = 1,
+                    Summary = "",
+                    LocalPayableAmount = entity.ShipCost
+                });
+            }
+            // 添加运费行（关键部分）
+            if (entity.ForeignShipCost > 0)
+            {
+                details.Add(new tb_FM_ReceivablePayableDetail
+                {
+                    ProdDetailID = null,
+                    property = "运费",
+
+                    Specifications = "",
+                    ExchangeRate = 1,
+                    Description = "发货运费",
+                    UnitPrice = entity.ForeignShipCost,
+                    Quantity = 1,
+                    TaxRate = 0.09m, // 假设运费税率为9%
+                    TaxLocalAmount = 1,
+                    Summary = "",
+                    LocalPayableAmount = entity.ForeignShipCost
+                });
+            }
+            #endregion
+
             payable.tb_FM_ReceivablePayableDetails = details;
             //如果是外币时，则由外币算出本币
             if (isRefund)
@@ -431,6 +522,43 @@ namespace RUINORERP.Business
 
             Business.BusinessHelper.Instance.InitEntity(payable);
             payable.ARAPStatus = (long)ARAPStatus.待审核;
+
+            #endregion
+
+            /*
+             在外面处理，功能单。不合要在一起
+            //订金时要去预收款中去检测
+            if (entity.tb_saleorder != null && entity.tb_saleorder.Paytype_ID != _appContext.PaymentMethodOfPeriod.Paytype_ID
+                && entity.tb_saleorder.PayStatus == (int)PayStatus.部分付款
+                && (entity.tb_saleorder.Deposit > 0 || entity.tb_saleorder.ForeignDeposit > 0)
+                )
+            {
+                var ctrPreReceivedPayment = _appContext.GetRequiredService<tb_FM_PreReceivedPaymentController<tb_FM_PreReceivedPayment>>();
+                var preReceivedPayment = await _unitOfWorkManage.GetDbClient().Queryable<tb_FM_PreReceivedPayment>()
+                      .Where(c => c.SourceBillId == entity.tb_saleorder.SOrder_ID
+                      && c.SourceBizType == (int)BizType.销售订单
+                      && (c.PrePaymentStatus == (int)PrePaymentStatus.待核销 || c.PrePaymentStatus == (int)PrePaymentStatus.部分核销)
+                      ).FirstAsync();
+                if (preReceivedPayment != null)
+                {
+                    //如果有可以核销的预付款时
+                    if (preReceivedPayment.LocalBalanceAmount >= payable.LocalBalanceAmount || preReceivedPayment.ForeignBalanceAmount >= payable.ForeignBalanceAmount)
+                    {
+
+                        payable.PreReceivedPayment_ID = preReceivedPayment.PreReceivedPayment_ID;
+                        payable.LocalBalanceAmount = -preReceivedPayment.LocalBalanceAmount;
+                        payable.LocalPaidAmount = 0;
+                        payable.TotalLocalPayableAmount = -preReceivedPayment.LocalBalanceAmount;
+                        payable.ForeignBalanceAmount = -preReceivedPayment.ForeignBalanceAmount;
+                        payable.ForeignPaidAmount = 0;
+                        payable.TotalForeignPayableAmount = -preReceivedPayment.ForeignBalanceAmount;
+                    }
+
+                }
+
+            }
+
+             */
             BaseController<tb_FM_ReceivablePayable> ctrpay = _appContext.GetRequiredServiceByName<BaseController<tb_FM_ReceivablePayable>>(typeof(T).Name + "Controller");
             ReturnMainSubResults<tb_FM_ReceivablePayable> rmr = await ctrpay.BaseSaveOrUpdateWithChild<tb_FM_ReceivablePayable>(payable);
             if (rmr.Succeeded)
@@ -475,6 +603,9 @@ namespace RUINORERP.Business
             payable.ApprovalOpinions = "";
             payable.Modified_at = null;
             payable.Modified_by = null;
+            payable.SourceBillNo = entity.PurEntryNo;
+            payable.SourceBillId = entity.PurEntryID;
+            payable.SourceBizType = (int)BizType.采购入库单;
             if (entity.tb_projectgroup != null && entity.tb_projectgroup.tb_department != null)
             {
                 payable.DepartmentID = entity.tb_projectgroup.tb_department.DepartmentID;
@@ -504,32 +635,14 @@ namespace RUINORERP.Business
 
             //采购就是付款
             payable.ReceivePaymentType = (int)ReceivePaymentType.付款;
-            payable.ARAPNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.应付单);
+            payable.ARAPNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.应付款单);
             if (entity.Currency_ID.HasValue)
             {
                 payable.Currency_ID = entity.Currency_ID.Value;
             }
-            #region 如果部门还是没有值 则从缓存中加载,如果项目有所属部门的话 
-            if (entity.tb_purorder != null && entity.tb_purorder.tb_paymentmethod == null && entity.tb_purorder.Paytype_ID.HasValue)
-            {
-                var paymentMethod = BizCacheHelper.Instance.GetEntity<tb_PaymentMethod>(entity.ProjectGroup_ID);
-                if (paymentMethod != null && paymentMethod.ToString() != "System.Object")
-                {
-                    if (paymentMethod is tb_PaymentMethod pj)
-                    {
-                        entity.tb_purorder.tb_paymentmethod = pj;
-                    }
-                }
-                else
-                {
-                    //db查询
-                    entity.tb_purorder.tb_paymentmethod = await _appContext.GetRequiredService<tb_PaymentMethodController<tb_PaymentMethod>>().BaseQueryByIdAsync(entity.tb_purorder.Paytype_ID.Value);
-                }
-            }
 
-            #endregion
-
-            if (entity.tb_purorder.tb_paymentmethod.Paytype_Name == DefaultPaymentMethod.账期.ToString())
+            //如果销售订单中付款方式不为空，并且是账期时
+            if (entity.tb_purorder.Paytype_ID.HasValue && entity.tb_purorder.Paytype_ID == _appContext.PaymentMethodOfPeriod.Paytype_ID)
             {
                 var obj = BizCacheHelper.Instance.GetEntity<tb_CustomerVendor>(entity.CustomerVendor_ID);
                 if (obj != null && obj.ToString() != "System.Object")
@@ -558,9 +671,7 @@ namespace RUINORERP.Business
 
             for (global::System.Int32 i = 0; i < details.Count; i++)
             {
-                details[i].SourceBillNo = entity.PurEntryNo;
-                details[i].SourceBillId = entity.PurEntryID;
-                details[i].SourceBizType = (int)BizType.采购入库单;
+
                 details[i].ExchangeRate = entity.ExchangeRate;
                 details[i].ActionStatus = ActionStatus.新增;
                 View_ProdDetail obj = BizCacheHelper.Instance.GetEntity<View_ProdDetail>(details[i].ProdDetailID);
@@ -626,11 +737,13 @@ namespace RUINORERP.Business
             payable.Modified_at = null;
             payable.Modified_by = null;
             payable.DepartmentID = entity.DepartmentID;
-
+            payable.SourceBillNo = entity.PurEntryReNo;
+            payable.SourceBillId = entity.PurEntryRe_ID;
+            payable.SourceBizType = (int)BizType.采购退货单;
             //销售就是收款
             payable.ReceivePaymentType = (int)ReceivePaymentType.付款;
 
-            payable.ARAPNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.应付单);
+            payable.ARAPNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.应付款单);
             if (entity.Currency_ID.HasValue)
             {
                 payable.Currency_ID = entity.Currency_ID.Value;
@@ -649,9 +762,7 @@ namespace RUINORERP.Business
 
             for (global::System.Int32 i = 0; i < details.Count; i++)
             {
-                details[i].SourceBillNo = entity.PurEntryReNo;
-                details[i].SourceBillId = entity.PurEntryRe_ID;
-                details[i].SourceBizType = (int)BizType.采购退货单;
+
                 details[i].ExchangeRate = entity.ExchangeRate;
                 details[i].ActionStatus = ActionStatus.新增;
 

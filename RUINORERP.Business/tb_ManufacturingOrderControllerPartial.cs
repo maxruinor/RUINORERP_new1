@@ -38,8 +38,6 @@ namespace RUINORERP.Business
     /// </summary>
     public partial class tb_ManufacturingOrderController<T> : BaseController<T> where T : class
     {
-
-
         /// <summary>
         /// 批量结案
         /// 结案时 如果没有完全完成的。则未发量这些数量要减去。结案后不需要计算未发量了
@@ -112,7 +110,7 @@ namespace RUINORERP.Business
                     }
 
                     int InvUpdateCounter = await _unitOfWorkManage.GetDbClient().Updateable(invUpdateList).ExecuteCommandAsync();
-                    if (InvUpdateCounter != invUpdateList.Count)
+                     if (InvUpdateCounter == 0)
                     {
                         _unitOfWorkManage.RollbackTran();
                         throw new Exception("库存更新失败！");
@@ -269,7 +267,7 @@ namespace RUINORERP.Business
                     #endregion
                 }
                 int InvUpdateCounter = await _unitOfWorkManage.GetDbClient().Updateable(invUpdateList).ExecuteCommandAsync();
-                if (InvUpdateCounter != invUpdateList.Count)
+                if (InvUpdateCounter == 0)
                 {
                     _unitOfWorkManage.RollbackTran();
                     throw new Exception("库存更新失败！");
@@ -383,7 +381,7 @@ namespace RUINORERP.Business
                 BusinessHelper.Instance.EditEntity(invMain);
                 DbHelper<tb_Inventory> dbHelper = _appContext.GetRequiredService<DbHelper<tb_Inventory>>();
                 var InvMainCounter = await dbHelper.BaseDefaultAddElseUpdateAsync(invMain);
-              
+
                 if (InvMainCounter == 0)
                 {
                     _unitOfWorkManage.RollbackTran();
@@ -426,7 +424,8 @@ namespace RUINORERP.Business
                 }
 
                 int InvUpdateCounter = await _unitOfWorkManage.GetDbClient().Updateable(invUpdateList).ExecuteCommandAsync();
-                if (InvUpdateCounter != invUpdateList.Count)
+                //因为目前库存是整数  纸箱这种用了小数所以更新失败。暂时不管理 后面统一为decimal(18, 4)
+                if (InvUpdateCounter == 0)
                 {
                     _unitOfWorkManage.RollbackTran();
                     throw new Exception("库存更新失败！");

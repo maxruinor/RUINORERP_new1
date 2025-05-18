@@ -317,15 +317,15 @@ namespace RUINORERP.Global
         预收款单 = 84,
         预付款单 = 85,
 
-        应收单 = 86,
-        应付单 = 87,
+        应收款单 = 86,
+        应付款单 = 87,
 
         付款单 = 88,
         收款单 = 89,
 
 
-        收款核销 = 90,
-        付款核销 = 91,
+        收款核销款 = 90,
+        付款核销款 = 91,
 
         销售合同 = 150,
 
@@ -373,8 +373,11 @@ namespace RUINORERP.Global
     /// </summary>
     public enum Adjust_Type
     {
+        [Description("【增加库存】")]
         增加,
+        [Description("【减少库存】")]
         减少,
+        [Description("【全部】")]
         全部
     }
 
@@ -383,28 +386,28 @@ namespace RUINORERP.Global
     /// </summary>
     public enum DataStatus
     {
-        [Description("添加")]
+        [Description("【草稿】未提交")]
         /// <summary>
         /// 草稿Draft
         /// </summary>
         草稿 = 1,
 
 
-        [Description("提交")]
+        [Description("【新建】已提交")]
         /// <summary>
         /// 提交后才会推送给审核人员
         /// </summary>
         新建 = 2,
 
 
-        [Description("审核")]
+        [Description("【确认】已审核")]
         /// <summary>
         /// Confimmed,
         /// </summary>
         确认 = 4,
 
 
-        [Description("结案")]
+        [Description("【完结】已结案")]
         /// <summary>
         /// close
         /// </summary>

@@ -30,6 +30,12 @@
         {
             this.kryptonSplitContainer1 = new Krypton.Toolkit.KryptonSplitContainer();
             this.kryptonPanel1 = new Krypton.Toolkit.KryptonPanel();
+            this.lblSourceBill_BizType = new Krypton.Toolkit.KryptonLabel();
+            this.txtBizType = new Krypton.Toolkit.KryptonTextBox();
+            this.lblSourceBillId = new Krypton.Toolkit.KryptonLabel();
+            this.txtSourceBillId = new Krypton.Toolkit.KryptonTextBox();
+            this.lblSourceBillNo = new Krypton.Toolkit.KryptonLabel();
+            this.txtSourceBillNo = new Krypton.Toolkit.KryptonTextBox();
             this.lblAccount_id = new Krypton.Toolkit.KryptonLabel();
             this.cmbAccount_id = new Krypton.Toolkit.KryptonComboBox();
             this.txtPayeeAccountNo = new Krypton.Toolkit.KryptonTextBox();
@@ -132,6 +138,12 @@
             // 
             // kryptonPanel1
             // 
+            this.kryptonPanel1.Controls.Add(this.lblSourceBill_BizType);
+            this.kryptonPanel1.Controls.Add(this.txtBizType);
+            this.kryptonPanel1.Controls.Add(this.lblSourceBillId);
+            this.kryptonPanel1.Controls.Add(this.txtSourceBillId);
+            this.kryptonPanel1.Controls.Add(this.lblSourceBillNo);
+            this.kryptonPanel1.Controls.Add(this.txtSourceBillNo);
             this.kryptonPanel1.Controls.Add(this.lblAccount_id);
             this.kryptonPanel1.Controls.Add(this.cmbAccount_id);
             this.kryptonPanel1.Controls.Add(this.txtPayeeAccountNo);
@@ -178,6 +190,53 @@
             this.kryptonPanel1.Name = "kryptonPanel1";
             this.kryptonPanel1.Size = new System.Drawing.Size(1133, 271);
             this.kryptonPanel1.TabIndex = 4;
+            // 
+            // lblSourceBill_BizType
+            // 
+            this.lblSourceBill_BizType.Location = new System.Drawing.Point(524, 181);
+            this.lblSourceBill_BizType.Name = "lblSourceBill_BizType";
+            this.lblSourceBill_BizType.Size = new System.Drawing.Size(62, 20);
+            this.lblSourceBill_BizType.TabIndex = 216;
+            this.lblSourceBill_BizType.Values.Text = "来源业务";
+            // 
+            // txtBizType
+            // 
+            this.txtBizType.Location = new System.Drawing.Point(592, 178);
+            this.txtBizType.Name = "txtBizType";
+            this.txtBizType.Size = new System.Drawing.Size(156, 23);
+            this.txtBizType.TabIndex = 217;
+            // 
+            // lblSourceBillId
+            // 
+            this.lblSourceBillId.Location = new System.Drawing.Point(524, 207);
+            this.lblSourceBillId.Name = "lblSourceBillId";
+            this.lblSourceBillId.Size = new System.Drawing.Size(62, 20);
+            this.lblSourceBillId.TabIndex = 218;
+            this.lblSourceBillId.Values.Text = "来源单据";
+            this.lblSourceBillId.Visible = false;
+            // 
+            // txtSourceBillId
+            // 
+            this.txtSourceBillId.Location = new System.Drawing.Point(592, 203);
+            this.txtSourceBillId.Name = "txtSourceBillId";
+            this.txtSourceBillId.Size = new System.Drawing.Size(156, 23);
+            this.txtSourceBillId.TabIndex = 219;
+            this.txtSourceBillId.Visible = false;
+            // 
+            // lblSourceBillNo
+            // 
+            this.lblSourceBillNo.Location = new System.Drawing.Point(524, 232);
+            this.lblSourceBillNo.Name = "lblSourceBillNo";
+            this.lblSourceBillNo.Size = new System.Drawing.Size(62, 20);
+            this.lblSourceBillNo.TabIndex = 220;
+            this.lblSourceBillNo.Values.Text = "来源单号";
+            // 
+            // txtSourceBillNo
+            // 
+            this.txtSourceBillNo.Location = new System.Drawing.Point(592, 228);
+            this.txtSourceBillNo.Name = "txtSourceBillNo";
+            this.txtSourceBillNo.Size = new System.Drawing.Size(156, 23);
+            this.txtSourceBillNo.TabIndex = 221;
             // 
             // lblAccount_id
             // 
@@ -757,5 +816,11 @@
         private Krypton.Toolkit.KryptonLabel lblPayeeAccountNo;
         private Krypton.Toolkit.KryptonLabel lblAccount_id;
         private Krypton.Toolkit.KryptonComboBox cmbAccount_id;
+        private Krypton.Toolkit.KryptonLabel lblSourceBill_BizType;
+        private Krypton.Toolkit.KryptonTextBox txtBizType;
+        private Krypton.Toolkit.KryptonLabel lblSourceBillId;
+        private Krypton.Toolkit.KryptonTextBox txtSourceBillId;
+        private Krypton.Toolkit.KryptonLabel lblSourceBillNo;
+        private Krypton.Toolkit.KryptonTextBox txtSourceBillNo;
     }
 }

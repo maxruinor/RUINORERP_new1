@@ -72,6 +72,7 @@ namespace RUINORERP.UI.AdvancedUIModule
         /// <param name="QueryDtoProxy">如果是从工作台这种形式加载，则执行两次，一次是生成，第二次用生成的对象传入
         /// ，再根据对象的值判断UI的显示。特别是时间chked没变化所以用这个来解决</param>
         /// <returns></returns>
+        [Obsolete]//没有使用了。
         public BaseEntity SetQueryUI(bool useLike, Krypton.Toolkit.KryptonPanel UcPanel, QueryFilter queryFilter, decimal DefineColNum)
         {
             var type = typeof(T);

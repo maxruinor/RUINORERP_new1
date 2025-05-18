@@ -53,7 +53,7 @@ namespace RUINORERP.Model
 
         public int ApprovalStatus { get => _ApprovalStatus; set => _ApprovalStatus = value; }
 
- 
+
 
         private bool _ApprovalResults = false;
 
@@ -90,4 +90,18 @@ namespace RUINORERP.Model
 
 
     }
+
+    public class ReviewResult
+    {
+        /// <summary>
+        /// 数据库执行结果
+        /// </summary>
+        public bool Succeeded { get; set; } = false;
+
+        /// <summary>
+        /// 审核结果
+        /// </summary>
+        public ApprovalEntity approval { get; set; }
+    }
+
 }

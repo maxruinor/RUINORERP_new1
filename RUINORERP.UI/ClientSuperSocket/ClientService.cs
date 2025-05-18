@@ -402,6 +402,7 @@ namespace RUINORERP.UI.SuperSocketClient
                                     UserGlobalConfig.Instance.ServerPort = newport.ToString();
                                     UserGlobalConfig.Instance.Serialize();
                                     MainForm.Instance.PrintInfoLog("切换服务器成功");
+                          
                                 }
                                 else
                                 {

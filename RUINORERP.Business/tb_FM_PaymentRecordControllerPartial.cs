@@ -457,10 +457,10 @@ namespace RUINORERP.Business
         }
 
         // 生成收付款记录表
-        public async Task<tb_FM_PaymentRecord> CreatePaymentRecord(List<tb_FM_ReceivablePayable> entities, bool SaveToDb = false, tb_FM_PaymentRecord OriginalPaymentRecord = null)
+        public async Task<ReturnResults<tb_FM_PaymentRecord>> CreatePaymentRecord(List<tb_FM_ReceivablePayable> entities, bool SaveToDb = false, tb_FM_PaymentRecord OriginalPaymentRecord = null)
         {
             //通过应收 自动生成 收付款记录
-
+            ReturnResults<tb_FM_PaymentRecord> rs = new ReturnResults<tb_FM_PaymentRecord>();
             tb_FM_PaymentRecord paymentRecord = new tb_FM_PaymentRecord();
             paymentRecord = mapper.Map<tb_FM_PaymentRecord>(entities[0]);
             paymentRecord.ApprovalResults = null;
@@ -527,9 +527,11 @@ namespace RUINORERP.Business
 
             //在收款单明细中，不可以存在：一种应付下有两同的两个应收单。 否则这里会出错。
             var checkList = paymentRecord.tb_FM_PaymentRecordDetails.GroupBy(c => c.SourceBizType, c => c.SourceBilllId).ToList();
-            if (checkList.Count > 0)
+            if (checkList.Count > 1)
             {
-                throw new Exception("收付款单明细中，同一业务下同一张单据不能重复分行收款。\r\n有相同业务下的单据必须为一行。");
+                rs.ErrorMsg = ("收付款单明细中，同一业务下同一张单据不能重复分行收款。\r\n有相同业务下的单据必须为一行。");
+                rs.ReturnObject = paymentRecord;
+                return rs;
             }
 
 
@@ -544,7 +546,9 @@ namespace RUINORERP.Business
                 bool vb = ShowInvalidMessage(ctr.Validator(paymentRecord));
                 if (!vb)
                 {
-                    return new tb_FM_PaymentRecord();
+                    rs.ErrorMsg = "数据校验失败。";
+                    rs.ReturnObject = paymentRecord;
+                    return rs;
                 }
                 var paymentRecordController = _appContext.GetRequiredService<tb_FM_PaymentRecordController<tb_FM_PaymentRecord>>();
                 ReturnMainSubResults<tb_FM_PaymentRecord> rsms = await paymentRecordController.BaseSaveOrUpdateWithChild<tb_FM_PaymentRecord>(paymentRecord);
@@ -562,7 +566,9 @@ namespace RUINORERP.Business
             {
                 paymentRecord.PaymentStatus = (long)PaymentStatus.草稿;
             }
-            return paymentRecord;
+            rs.Succeeded = true;
+            rs.ReturnObject = paymentRecord;
+            return rs;
         }
 
         public static bool ShowInvalidMessage(ValidationResult results)

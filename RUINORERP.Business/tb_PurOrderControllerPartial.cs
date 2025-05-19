@@ -90,6 +90,23 @@ namespace RUINORERP.Business
                                 invUpdateList.Add(inv);
                                 
                             }
+
+                            // 使用LINQ查询
+                            var CheckNewInvList = invUpdateList.Where(c => c.Inventory_ID == 0)
+                                .GroupBy(i => new { i.ProdDetailID, i.Location_ID })
+                                .Where(g => g.Count() > 1)
+                                .Select(g => g.Key.ProdDetailID)
+                                .ToList();
+
+                            if (CheckNewInvList.Count > 0)
+                            {
+                                //新增库存中有重复的商品，操作失败。请联系管理员。
+                                rs.ErrorMsg = "新增库存中有重复的商品，操作失败。";
+                                rs.Succeeded = false;
+                                _logger.LogError(rs.ErrorMsg + "详细信息：" + string.Join(",", CheckNewInvList));
+                                return rs;
+                            }
+
                             DbHelper<tb_Inventory> dbHelper = _appContext.GetRequiredService<DbHelper<tb_Inventory>>();
                             var Counter = await dbHelper.BaseDefaultAddElseUpdateAsync(invUpdateList);
                             if (Counter != invUpdateList.Count)
@@ -207,13 +224,30 @@ namespace RUINORERP.Business
                     invUpdateList.Add(inv);
                 }
 
+                // 使用LINQ查询
+                var CheckNewInvList = invUpdateList.Where(c => c.Inventory_ID == 0)
+                    .GroupBy(i => new { i.ProdDetailID, i.Location_ID })
+                    .Where(g => g.Count() > 1)
+                    .Select(g => g.Key.ProdDetailID)
+                    .ToList();
+
+                if (CheckNewInvList.Count > 0)
+                {
+                    //新增库存中有重复的商品，操作失败。请联系管理员。
+                    rmrs.ErrorMsg = "新增库存中有重复的商品，操作失败。";
+                    rmrs.Succeeded = false;
+                    _logger.LogError(rmrs.ErrorMsg + "详细信息：" + string.Join(",", CheckNewInvList));
+                    return rmrs;
+                }
+
                 DbHelper<tb_Inventory> dbHelper = _appContext.GetRequiredService<DbHelper<tb_Inventory>>();
                 var InvUpdateCounter = await dbHelper.BaseDefaultAddElseUpdateAsync(invUpdateList);
-
                  if (InvUpdateCounter == 0)
                 {
                     _unitOfWorkManage.RollbackTran();
-                    throw new Exception("库存更新失败！");
+                    rmrs.ErrorMsg = ("库存更新失败！");
+                    rmrs.Succeeded = false;
+                    return rmrs;
                 }
 
 
@@ -463,6 +497,22 @@ namespace RUINORERP.Business
                     #endregion
                     invUpdateList.Add(inv);
                 }
+
+                // 使用LINQ查询
+                var CheckNewInvList = invUpdateList.Where(c => c.Inventory_ID == 0)
+                    .GroupBy(i => new { i.ProdDetailID, i.Location_ID })
+                    .Where(g => g.Count() > 1)
+                    .Select(g => g.Key.ProdDetailID)
+                    .ToList();
+
+                if (CheckNewInvList.Count > 0)
+                {
+                    //新增库存中有重复的商品，操作失败。请联系管理员。
+                    rs.ErrorMsg = "新增库存中有重复的商品，操作失败。";
+                    rs.Succeeded = false;
+                    _logger.LogError(rs.ErrorMsg + "详细信息：" + string.Join(",", CheckNewInvList));
+                    return rs;
+                }
                 DbHelper<tb_Inventory> dbHelper = _appContext.GetRequiredService<DbHelper<tb_Inventory>>();
                 var Counter = await dbHelper.BaseDefaultAddElseUpdateAsync(invUpdateList);
                 if (Counter != invUpdateList.Count)
@@ -505,6 +555,8 @@ namespace RUINORERP.Business
             {
 
                 entity = mapper.Map<tb_PurEntry>(order);
+                entity.PayStatus = order.PayStatus;
+                entity.Paytype_ID=order.Paytype_ID;
                 List<tb_PurEntryDetail> details = mapper.Map<List<tb_PurEntryDetail>>(order.tb_PurOrderDetails);
                 //转单要TODO
                 //转换时，默认认为订单出库数量就等于这次出库数量，是否多个订单累计？，如果是UI录单。则只是默认这个数量。也可以手工修改

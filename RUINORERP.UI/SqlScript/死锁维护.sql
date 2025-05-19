@@ -63,20 +63,15 @@ exec sp_who_lock
 
 或杀死进程号
 
-
 --=================
 
-select A.SPID as 被阻塞进程,a.CMD AS 正在执行的操作,b.spid AS 阻塞进程号,b.cmd AS 阻塞进程正在执行的操作
-from master..sysprocesses a,master..sysprocesses b
-where a.blocked<>0 and a.blocked= b.spid
 
 exec sp_who 'active'--查看系统内所有的活动进程 BLK不为0的为死锁
 
 exec sp_lock 60 --返回某个进程对资源的锁定情况
+ 
 
-SELECT object_name(1504685104)--返回对象ID对应的对象名
-
-DBCC INPUTBUFFER (63)--显示从客户端发送到服务器的最后一个语句
+DBCC INPUTBUFFER (269)
 
 ------------
 
@@ -93,7 +88,7 @@ where
 resource_type='OBJECT'
 		
 exec sp_who2 1245
-
+DBCC INPUTBUFFER (1245)   --显示从客户端发送到服务器的最后一个语句 
 
 --查询正在运行的进程SQL
 
@@ -115,18 +110,10 @@ WHERE    spid > 50
 ORDER BY blocked DESC, DB_NAME(sp.dbid) ASC, a.[text];
 
 
-更多：
-https://www.cnblogs.com/luchenglong/p/13667024.html
+ 
+ 
 
-
-
-查询Sqlserver中造成死锁SPID
-
-SELECT request_session_id spid,OBJECT_NAME(resource_associated_entity_id)  tableName
-FROM sys.dm_tran_locks
-WHERE resource_type='OBJECT '
-
-用内置函数查询执行信息
+ 
 
 execute sp_who
 

@@ -110,8 +110,7 @@ namespace RUINORERP.Business
 
             try
             {
-                // 开启事务，保证数据一致性
-                _unitOfWorkManage.BeginTran();
+
                 tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
 
 
@@ -121,6 +120,10 @@ namespace RUINORERP.Business
                 //  entity.ApprovalOpinions = approvalEntity.ApprovalComments;
                 //后面已经修改为
                 // entity.ApprovalResults = approvalEntity.ApprovalResults;
+
+
+          
+
 
                 #region 审核 通过时
                 if (entity.ApprovalResults.Value)
@@ -140,7 +143,7 @@ namespace RUINORERP.Business
                         if (!entity.tb_manufacturingorder.tb_ManufacturingOrderDetails.Any(c => c.ProdDetailID == child.ProdDetailID && c.Location_ID == child.Location_ID))
                         {
                             rrs.Succeeded = false;
-                            _unitOfWorkManage.RollbackTran();
+                            //_unitOfWorkManage.RollbackTran();
                             rrs.ErrorMsg = $"领料明细中，有不属于当前制令单的明细!请检查数据后重试！";
                             _logger.LogInformation(rrs.ErrorMsg);
                             return rrs;
@@ -168,7 +171,7 @@ namespace RUINORERP.Business
                             {
                                 string msg = $"制令单:{entity.tb_manufacturingorder.MONO}的【{prodName}】在明细中拥有多行记录，必须使用引用的方式添加，审核失败！";
                                 MessageBox.Show(msg, "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                                _unitOfWorkManage.RollbackTran();
+                                //_unitOfWorkManage.RollbackTran();
                                 rrs.ErrorMsg = msg;
                                 _logger.LogInformation(msg);
                                 return rrs;
@@ -198,7 +201,7 @@ namespace RUINORERP.Business
                             {
                                 string msg = $"非补料时，制令单:{entity.tb_manufacturingorder.MONO}的【{prodName}】的领料数量不能大于制令单对应行的应发数量，审核失败！";
                                 MessageBox.Show(msg, "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                                _unitOfWorkManage.RollbackTran();
+                                //_unitOfWorkManage.RollbackTran();
                                 rrs.ErrorMsg = msg;
                                 _logger.LogInformation(msg);
                                 return rrs;
@@ -215,7 +218,8 @@ namespace RUINORERP.Business
                     }
                     #endregion
 
-
+                    // 开启事务，保证数据一致性
+                    _unitOfWorkManage.BeginTran();
 
                     //更新已交数量,制令单的
                     int poCounter = await _unitOfWorkManage.GetDbClient().Updateable<tb_ManufacturingOrderDetail>(entity.tb_manufacturingorder.tb_ManufacturingOrderDetails).ExecuteCommandAsync();
@@ -232,7 +236,6 @@ namespace RUINORERP.Business
                     //因为要计算未发数量，所以要更新库存要在最后一步
                     foreach (var child in entity.tb_MaterialRequisitionDetails)
                     {
-
 
                         #region 库存表的更新 这里应该是必需有库存的数据，
                         tb_Inventory inv = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == child.ProdDetailID && i.Location_ID == child.Location_ID);
@@ -279,7 +282,9 @@ namespace RUINORERP.Business
                         else
                         {
                             _unitOfWorkManage.RollbackTran();
-                            throw new Exception($"当前仓库{child.Location_ID}无产品{child.ProdDetailID}的库存数据,请联系管理员");
+                            rrs.ErrorMsg = $"当前仓库{child.Location_ID}无产品{child.ProdDetailID}的库存数据,请联系管理员";
+                            _logger.LogInformation(rrs.ErrorMsg);
+                            return rrs;
                         }
                         // CommService.CostCalculations.CostCalculation(_appContext, inv, child.TransactionPrice);
                         //inv.Inv_Cost = 0;//这里需要计算，根据系统设置中的算法计算。
@@ -336,9 +341,7 @@ namespace RUINORERP.Business
             }
             catch (Exception ex)
             {
-
                 _unitOfWorkManage.RollbackTran();
-
                 rrs.ErrorMsg = "事务回滚=>" + ex.Message;
                 _logger.Error(ex, "事务回滚" + ex.Message);
                 return rrs;

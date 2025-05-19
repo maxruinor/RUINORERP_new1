@@ -1002,8 +1002,6 @@ namespace RUINORERP.Business
                     //有付款过的。就去预收中抵扣，不够的金额及状态标识出来生成对账单
                     //反操作上面的逻辑
 
-
-
                     int deleteCounter = await _appContext.Db.Deleteable<tb_FM_ReceivablePayable>()
                           .Where(c => (c.ARAPStatus == (long)ARAPStatus.草稿 || c.ARAPStatus == (long)ARAPStatus.待审核 || c.ARAPStatus == (long)ARAPStatus.已生效)
                           && c.SourceBillId == entity.SaleOut_MainID && c.SourceBizType == (int)BizType.销售出库单).ExecuteCommandAsync();

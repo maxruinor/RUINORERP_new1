@@ -305,6 +305,11 @@ namespace RUINORERP.Business.Processor
             {
                 if (!FilterLimitExpressions.Contains(whereExp))
                 {
+                    if (this.QueryTargetType == null)
+                    {
+                        this.QueryTargetType= typeof(R);
+                    }
+
                     FilterLimitExpressions.Add(whereExp);
                 }
             }

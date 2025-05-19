@@ -416,6 +416,23 @@ namespace RUINORERP.Business
 
                     #endregion
                 }
+
+                // 使用LINQ查询
+                var CheckNewInvList = invInsertList
+                    .GroupBy(i => new { i.ProdDetailID, i.Location_ID })
+                    .Where(g => g.Count() > 1)
+                    .Select(g => g.Key.ProdDetailID)
+                    .ToList();
+
+                if (CheckNewInvList.Count > 0)
+                {
+                    //新增库存中有重复的商品，操作失败。请联系管理员。
+                    rs.ErrorMsg = "新增库存中有重复的商品，操作失败。";
+                    rs.Succeeded = false;
+                    _logger.LogError(rs.ErrorMsg + "详细信息：" + string.Join(",", CheckNewInvList));
+                    return rs;
+                }
+
                 var InvInsertCounter = await _unitOfWorkManage.GetDbClient().Insertable(invInsertList).ExecuteReturnSnowflakeIdListAsync();
                 if (InvInsertCounter.Count != invInsertList.Count)
                 {

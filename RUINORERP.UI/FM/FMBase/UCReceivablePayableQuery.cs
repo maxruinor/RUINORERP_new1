@@ -244,7 +244,13 @@ namespace RUINORERP.UI.FM
             }
 
             tb_FM_PaymentRecordController<tb_FM_PaymentRecord> paymentController = MainForm.Instance.AppContext.GetRequiredService<tb_FM_PaymentRecordController<tb_FM_PaymentRecord>>();
-            tb_FM_PaymentRecord paymentRecord = await paymentController.CreatePaymentRecord(RealList, false);
+            ReturnResults<tb_FM_PaymentRecord> rr = await paymentController.CreatePaymentRecord(RealList, false);
+            if (!rr.Succeeded)
+            {
+                MessageBox.Show(rr.ErrorMsg);
+                return;
+            }
+            tb_FM_PaymentRecord paymentRecord = rr.ReturnObject;
             MenuPowerHelper menuPowerHelper;
             menuPowerHelper = Startup.GetFromFac<MenuPowerHelper>();
 

@@ -42,19 +42,19 @@ namespace RUINORERP.Business
 
         public async override Task<ReturnResults<T>> ApprovalAsync(T ObjectEntity)
         {
-            ReturnResults<T> rmsr = new ReturnResults<T>();
+            ReturnResults<T> rmrs = new ReturnResults<T>();
             tb_Stocktake entity = ObjectEntity as tb_Stocktake;
 
             try
             {
                 // 开启事务，保证数据一致性
                 _unitOfWorkManage.BeginTran();
-                 
+
                 tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
 
                 if (entity == null)
                 {
-                    return rmsr;
+                    return rmrs;
                 }
                 BillConverterFactory bcf = _appContext.GetRequiredService<BillConverterFactory>();
                 //!!!child.DiffQty 是否有正负数？如果有正数
@@ -68,25 +68,25 @@ namespace RUINORERP.Business
                     //先看库存表中是否存在记录。
                     #region 库存表的更新
                     //标记是否有期初
-                  
+
                     tb_Inventory inv = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == child.ProdDetailID && i.Location_ID == entity.Location_ID);
                     if (inv == null)
                     {
                         if (CheckMode.期初盘点 != cm)
                         {
-                            View_ProdDetail view_Prod = await _unitOfWorkManage.GetDbClient().Queryable<View_ProdDetail>().Where(c => c.ProdDetailID == child.ProdDetailID  && c.Location_ID==entity.Location_ID).FirstAsync();
+                            View_ProdDetail view_Prod = await _unitOfWorkManage.GetDbClient().Queryable<View_ProdDetail>().Where(c => c.ProdDetailID == child.ProdDetailID && c.Location_ID == entity.Location_ID).FirstAsync();
                             _unitOfWorkManage.RollbackTran();
-                            rmsr.ErrorMsg = $"{view_Prod.SKU}=> {view_Prod.CNName}\r\n当前盘点产品在当前仓库中，无库存数据。请使用【期初盘点】方式盘点。";
-                            return rmsr;
+                            rmrs.ErrorMsg = $"{view_Prod.SKU}=> {view_Prod.CNName}\r\n当前盘点产品在当前仓库中，无库存数据。请使用【期初盘点】方式盘点。";
+                            return rmrs;
                         }
-                    
+
                         inv = new tb_Inventory();
                         if (child.Cost == 0)
                         {
                             View_ProdDetail view_Prod = await _unitOfWorkManage.GetDbClient().Queryable<View_ProdDetail>().Where(c => c.ProdDetailID == child.ProdDetailID && c.Location_ID == entity.Location_ID).FirstAsync();
                             _unitOfWorkManage.RollbackTran();
-                            rmsr.ErrorMsg = $"{view_Prod.SKU}=> {view_Prod.CNName}\r\n【期初盘点】时，必须输入正确的成本价格。";
-                            return rmsr;
+                            rmrs.ErrorMsg = $"{view_Prod.SKU}=> {view_Prod.CNName}\r\n【期初盘点】时，必须输入正确的成本价格。";
+                            return rmrs;
                         }
                         else
                         {
@@ -157,6 +157,24 @@ namespace RUINORERP.Business
                 }
 
                 List<tb_Inventory> InsertList = invUpdateList.Where(c => c.Inventory_ID == 0).ToList();
+
+                // 使用LINQ查询
+                var CheckNewInvList = InsertList
+                    .GroupBy(i => new { i.ProdDetailID, i.Location_ID })
+                    .Where(g => g.Count() > 1)
+                    .Select(g => g.Key.ProdDetailID)
+                    .ToList();
+
+                if (CheckNewInvList.Count > 0)
+                {
+                    //新增库存中有重复的商品，操作失败。请联系管理员。
+                    rmrs.ErrorMsg = "新增库存中有重复的商品，操作失败。";
+                    rmrs.Succeeded = false;
+                    _logger.LogError(rmrs.ErrorMsg + "详细信息：" + string.Join(",", CheckNewInvList));
+                    return rmrs;
+
+                }
+
                 var InvInsertCounter = await _unitOfWorkManage.GetDbClient().Insertable(InsertList).ExecuteReturnSnowflakeIdListAsync();
                 if (InvInsertCounter.Count != InsertList.Count)
                 {
@@ -165,7 +183,7 @@ namespace RUINORERP.Business
                 }
 
 
-                List<tb_Inventory> UpdateList=invUpdateList.Where(c=>c.Inventory_ID>0).ToList();
+                List<tb_Inventory> UpdateList = invUpdateList.Where(c => c.Inventory_ID > 0).ToList();
 
                 int InvUpdateCounter = await _unitOfWorkManage.GetDbClient().Updateable(UpdateList).ExecuteCommandAsync();
                 if (InvUpdateCounter != UpdateList.Count)
@@ -187,10 +205,10 @@ namespace RUINORERP.Business
                 //rmr = await ctr.BaseSaveOrUpdate(EditEntity);
                 // 注意信息的完整性
                 _unitOfWorkManage.CommitTran();
-                rmsr.ReturnObject = entity as T;
+                rmrs.ReturnObject = entity as T;
                 //_logger.Info(approvalEntity.bizName + "审核事务成功");
-                rmsr.Succeeded = true;
-                return rmsr;
+                rmrs.Succeeded = true;
+                return rmrs;
             }
             catch (Exception ex)
             {
@@ -199,8 +217,8 @@ namespace RUINORERP.Business
 
                 _logger.Error(ex, "事务回滚" + ex.Message);
 
-                rmsr.ErrorMsg = "事务回滚=>" + ex.Message;
-                return rmsr;
+                rmrs.ErrorMsg = "事务回滚=>" + ex.Message;
+                return rmrs;
             }
 
         }
@@ -220,7 +238,7 @@ namespace RUINORERP.Business
             {
                 // 开启事务，保证数据一致性
                 _unitOfWorkManage.BeginTran();
-                
+
                 tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
                 //更新拟销售量减少
                 BillConverterFactory bcf = _appContext.GetRequiredService<BillConverterFactory>();
@@ -292,6 +310,23 @@ namespace RUINORERP.Business
 
                     #endregion
                     invUpdateList.Add(inv);
+                }
+
+                // 使用LINQ查询
+                var CheckNewInvList = invUpdateList.Where(c => c.Inventory_ID == 0)
+                    .GroupBy(i => new { i.ProdDetailID, i.Location_ID })
+                    .Where(g => g.Count() > 1)
+                    .Select(g => g.Key.ProdDetailID)
+                    .ToList();
+
+                if (CheckNewInvList.Count > 0)
+                {
+                    //新增库存中有重复的商品，操作失败。请联系管理员。
+                    rmsr.ErrorMsg = "新增库存中有重复的商品，操作失败。";
+                    rmsr.Succeeded = false;
+                    _logger.LogError(rmsr.ErrorMsg + "详细信息：" + string.Join(",", CheckNewInvList));
+                    return rmsr;
+
                 }
 
                 DbHelper<tb_Inventory> dbHelper = _appContext.GetRequiredService<DbHelper<tb_Inventory>>();

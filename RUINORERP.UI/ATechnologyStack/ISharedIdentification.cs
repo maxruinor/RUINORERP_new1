@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -22,11 +23,20 @@ namespace RUINORERP.UI.ATechnologyStack
     /// </summary>
     public enum SharedFlag
     {
+
+        [Description("收款")]
         Flag1 = 1,
+
+        [Description("付款")]
         Flag2 = 2,
+
+
         Flag3 = 3,
+
         Flag4 = 4,
+
         Flag5 = 5,
+
         Flag6 = 6,
     }
 

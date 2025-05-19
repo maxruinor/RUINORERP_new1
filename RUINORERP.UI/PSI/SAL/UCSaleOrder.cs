@@ -553,6 +553,8 @@ namespace RUINORERP.UI.PSI.SAL
 
             //反算时还要加更复杂的逻辑：如果单价为0时，则可以反算到单价。折扣不变。（默认为1）， 如果单价有值。则反算折扣？成交价？
 
+
+            
             listCols.SetCol_Formula<tb_SaleOrderDetail>((a, b, c) => a.SubtotalTransAmount / (1 + b.TaxRate) * c.TaxRate, d => d.SubtotalTaxAmount);
             listCols.SetCol_Formula<tb_SaleOrderDetail>((a, b) => (a.Cost + a.CustomizedCost) * b.Quantity, c => c.SubtotalCostAmount);
 
@@ -573,8 +575,6 @@ namespace RUINORERP.UI.PSI.SAL
                     col.SetCol_Summary<tb_SaleOrderDetail>(item);
                 }
             }
-
-
 
             //公共到明细的映射 源 ，左边会隐藏
             sgh.SetPointToColumnPairs<ProductSharePart, tb_SaleOrderDetail>(sgd, f => f.Location_ID, t => t.Location_ID);

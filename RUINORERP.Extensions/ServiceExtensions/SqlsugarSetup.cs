@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Data.SqlClient;
 using System.Linq;
 using System.Linq.Dynamic.Core;
 using System.Linq.Dynamic.Core.CustomTypeProviders;
@@ -12,6 +13,7 @@ using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 using RUINORERP.Common.DB;
 using RUINORERP.Common.Log4Net;
 using RUINORERP.Common.LogHelper;
@@ -140,12 +142,28 @@ namespace RUINORERP.Extensions
                         {
                             string errorsql = e.Message + "\r\n" + SqlProfiler.FormatParam(e.Sql, e.Parametres as SugarParameter[]);
                             logger.Error("Error" + errorsql, e);
+
+                            if (e.InnerException is SqlException sqlEx && sqlEx.Number == 1205)
+                            {
+                                var deadlockInfo = new
+                                {
+                                    Time = DateTime.Now,
+                                   // SessionId = db.Ado.SqlStackTrace.SugarStackTraceList.SessionId,
+                                    StackTrace = e.StackTrace,
+                                    Sql = errorsql
+                                };
+                                logger.Error("deadlock", JsonConvert.SerializeObject(deadlockInfo) + "\n");
+                            }
+
+
                             // 控制台输出用于调试
+
                             //Console.WriteLine($"[SQL ERROR] {DateTime.Now:HH:mm:ss} {errorsql}");
                         }
                         catch (Exception ex)
                         {
                             Console.WriteLine($"日志记录失败: {ex.Message}\n原始错误: {e.Message}");
+                            logger.Error("记录SQL日志时出错了",ex);
                         }
                     };
 

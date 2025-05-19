@@ -66,6 +66,7 @@ namespace RUINORERP.Repository.UnitOfWorks
             lock (this)
             {
                 _tranCount++;
+                
                 GetDbClient().BeginTran();
             }
         }

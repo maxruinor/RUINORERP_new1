@@ -167,6 +167,25 @@ namespace RUINORERP.Business
                     invUpdateList.Add(inv);
                 }
                 DbHelper<tb_Inventory> dbHelper = _appContext.GetRequiredService<DbHelper<tb_Inventory>>();
+
+
+                // 使用LINQ查询
+                var CheckNewInvList = invUpdateList.Where(c => c.Inventory_ID == 0)
+                    .GroupBy(i => new { i.ProdDetailID, i.Location_ID })
+                    .Where(g => g.Count() > 1)
+                    .Select(g => g.Key.ProdDetailID)
+                    .ToList();
+
+                if (CheckNewInvList.Count > 0)
+                {
+                    //新增库存中有重复的商品，操作失败。请联系管理员。
+                    rs.ErrorMsg = "新增库存中有重复的商品，操作失败。";
+                    rs.Succeeded = false;
+                    _logger.LogError(rs.ErrorMsg + "详细信息：" + string.Join(",", CheckNewInvList));
+                    return rs;
+
+                }
+
                 var Counter = await dbHelper.BaseDefaultAddElseUpdateAsync(invUpdateList);
                 if (Counter != invUpdateList.Count)
                 {

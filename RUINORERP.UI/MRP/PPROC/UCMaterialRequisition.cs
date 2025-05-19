@@ -274,6 +274,8 @@ namespace RUINORERP.UI.MRP.MP
             BaseProcessor basePro = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_ManufacturingOrder).Name + "Processor");
             QueryFilter queryFilter = basePro.GetQueryFilter();
 
+            //这里控制查询的最终数据。是不是应该放开，在UI上 条件限制。这样不会因为没有审核。找不到数据。只是选择了。再判断 状态。这要可以提醒上一级 审核。
+            //TODO 
             var lambdaOrder = Expressionable.Create<tb_ManufacturingOrder>()
              .And(t => t.DataStatus == (int)DataStatus.确认)
               .And(t => t.isdeleted == false)

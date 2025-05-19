@@ -62,7 +62,6 @@ namespace RUINORERP.Business
             {
 
                 // 开启事务，保证数据一致性
-                _unitOfWorkManage.BeginTran();
                 tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
                 List<tb_Inventory> invList = new List<tb_Inventory>();
 
@@ -95,6 +94,24 @@ namespace RUINORERP.Business
                     #endregion
                 }
 
+                // 使用LINQ查询
+                var CheckNewInvList = invList
+                    .GroupBy(i => new { i.ProdDetailID, i.Location_ID })
+                    .Where(g => g.Count() > 1)
+                    .Select(g => g.Key.ProdDetailID)
+                    .ToList();
+
+                if (CheckNewInvList.Count > 0)
+                {
+                    //新增库存中有重复的商品，操作失败。请联系管理员。
+                    rmrs.ErrorMsg = "新增库存中有重复的商品，操作失败。";
+                    rmrs.Succeeded = false;
+                    _logger.LogError(rmrs.ErrorMsg + "详细信息：" + string.Join(",", CheckNewInvList));
+                    return rmrs;
+                }
+
+
+                _unitOfWorkManage.BeginTran();
                 DbHelper<tb_Inventory> dbHelper = _appContext.GetRequiredService<DbHelper<tb_Inventory>>();
                 var Counter = await dbHelper.BaseDefaultAddElseUpdateAsync(invList);
                 if (Counter == 0)
@@ -436,7 +453,24 @@ namespace RUINORERP.Business
                             #endregion
                             invUpdateList.Add(inv);
                         }
+
+
                         DbHelper<tb_Inventory> dbHelper = _appContext.GetRequiredService<DbHelper<tb_Inventory>>();
+
+                        // 使用LINQ查询
+                        var CheckNewInvList = invUpdateList
+                            .GroupBy(i => new { i.ProdDetailID, i.Location_ID })
+                            .Where(g => g.Count() > 1)
+                            .Select(g => g.Key.ProdDetailID)
+                            .ToList();
+
+                        if (CheckNewInvList.Count > 0)
+                        {
+                            _unitOfWorkManage.RollbackTran();
+                            //新增库存中有重复的商品，操作失败。请联系管理员。
+                            throw new Exception("新增库存中有重复的商品，操作失败。");
+                        }
+
                         var Counter = await dbHelper.BaseDefaultAddElseUpdateAsync(invUpdateList);
                         if (Counter != invUpdateList.Count)
                         {
@@ -539,6 +573,23 @@ namespace RUINORERP.Business
                             #endregion
                             invUpdateList.Add(inv);
                         }
+
+                        // 使用LINQ查询
+                        var CheckNewInvList = invUpdateList.Where(c => c.Inventory_ID == 0)
+                            .GroupBy(i => new { i.ProdDetailID, i.Location_ID })
+                            .Where(g => g.Count() > 1)
+                            .Select(g => g.Key.ProdDetailID)
+                            .ToList();
+
+                        if (CheckNewInvList.Count > 0)
+                        {
+                            //新增库存中有重复的商品，操作失败。请联系管理员。
+                            rs.ErrorMsg = "新增库存中有重复的商品，操作失败。";
+                            rs.Succeeded = false;
+                            _logger.LogError(rs.ErrorMsg + "详细信息：" + string.Join(",", CheckNewInvList));
+                            return rs;
+
+                        }
                         DbHelper<tb_Inventory> dbHelper = _appContext.GetRequiredService<DbHelper<tb_Inventory>>();
                         var InvUpdateCounter = await dbHelper.BaseDefaultAddElseUpdateAsync(invUpdateList);
                         if (InvUpdateCounter == 0)
@@ -635,6 +686,24 @@ namespace RUINORERP.Business
                             #endregion
                             invUpdateList.Add(inv);
                         }
+
+                        // 使用LINQ查询
+                        var CheckNewInvList = invUpdateList.Where(c => c.Inventory_ID == 0)
+                            .GroupBy(i => new { i.ProdDetailID, i.Location_ID })
+                            .Where(g => g.Count() > 1)
+                            .Select(g => g.Key.ProdDetailID)
+                            .ToList();
+
+                        if (CheckNewInvList.Count > 0)
+                        {
+                            //新增库存中有重复的商品，操作失败。请联系管理员。
+                            rs.ErrorMsg = "新增库存中有重复的商品，操作失败。";
+                            rs.Succeeded = false;
+                            _logger.LogError(rs.ErrorMsg + "详细信息：" + string.Join(",", CheckNewInvList));
+                            return rs;
+
+                        }
+
                         DbHelper<tb_Inventory> dbHelper = _appContext.GetRequiredService<DbHelper<tb_Inventory>>();
                         var InvUpdateCounter = await dbHelper.BaseDefaultAddElseUpdateAsync(invUpdateList);
                         if (InvUpdateCounter == 0)
@@ -1212,6 +1281,23 @@ namespace RUINORERP.Business
                     BusinessHelper.Instance.EditEntity(inv);
                     #endregion
                     invUpdateList.Add(inv);
+                }
+
+                // 使用LINQ查询
+                var CheckNewInvList = invUpdateList.Where(c => c.Inventory_ID == 0)
+                    .GroupBy(i => new { i.ProdDetailID, i.Location_ID })
+                    .Where(g => g.Count() > 1)
+                    .Select(g => g.Key.ProdDetailID)
+                    .ToList();
+
+                if (CheckNewInvList.Count > 0)
+                {
+                    //新增库存中有重复的商品，操作失败。请联系管理员。
+                    rmrs.ErrorMsg = "新增库存中有重复的商品，操作失败。";
+                    rmrs.Succeeded = false;
+                    _logger.LogError(rmrs.ErrorMsg + "详细信息：" + string.Join(",", CheckNewInvList));
+                    return rmrs;
+
                 }
 
                 DbHelper<tb_Inventory> dbHelper = _appContext.GetRequiredService<DbHelper<tb_Inventory>>();

@@ -70,7 +70,7 @@ namespace RUINORERP.Business.CommService
             //下面的写法可以做到批量的  插入更新。雪花ID
             long counter = 0;
             List<long> ids = new List<long>();
-            var x = _unitOfWorkManage.GetDbClient().Storageable<T>(list).ToStorage();
+            var x =await _unitOfWorkManage.GetDbClient().Storageable<T>(list).ToStorageAsync();
             ids = await x.AsInsertable.ExecuteReturnSnowflakeIdListAsync();//不存在插入 long 实际不会太长
             counter += await x.AsUpdateable.ExecuteCommandAsync();//存在更新
             return counter + ids.Count;

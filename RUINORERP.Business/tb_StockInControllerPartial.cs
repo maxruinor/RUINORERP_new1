@@ -109,6 +109,24 @@ namespace RUINORERP.Business
                     throw new Exception("库存更新失败！");
                 }
                 List<tb_Inventory> InsertList = invUpdateList.Where(c => c.Inventory_ID == 0).ToList();
+
+                // 使用LINQ查询
+                var CheckNewInvList = InsertList.Where(c => c.Inventory_ID == 0)
+                    .GroupBy(i => new { i.ProdDetailID, i.Location_ID })
+                    .Where(g => g.Count() > 1)
+                    .Select(g => g.Key.ProdDetailID)
+                    .ToList();
+
+                if (CheckNewInvList.Count > 0)
+                {
+                    //新增库存中有重复的商品，操作失败。请联系管理员。
+                    rs.ErrorMsg = "新增库存中有重复的商品，操作失败。";
+                    rs.Succeeded = false;
+                    _logger.LogError(rs.ErrorMsg + "详细信息：" + string.Join(",", CheckNewInvList));
+                    return rs;
+
+                }
+
                 var InvInsertCounter = await _unitOfWorkManage.GetDbClient().Insertable(InsertList).ExecuteReturnSnowflakeIdListAsync();
                 if (InvInsertCounter.Count != InsertList.Count)
                 {

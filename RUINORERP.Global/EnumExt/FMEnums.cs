@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 namespace RUINORERP.Global.EnumExt
 {
     #region 关键业务财务数据状态
+ 
 
     /// <summary>
     /// 对账单状态
@@ -33,14 +34,14 @@ namespace RUINORERP.Global.EnumExt
         [Description("待审核")]
         待审核 = 1 << 0,
 
-        [Description("流程终止")]
-        已取消 = 1 << 1,
-
         [Description("审核通过")]
         已生效 = 1 << 2,
 
         [Description("反向冲抵")]
-        已冲销 = 1 << 3
+        已冲销 = 1 << 3,
+
+        [Description("流程终止")]
+        已取消 = 1 << 1,
     }
 
     // 预收/预付单据状态
@@ -103,52 +104,20 @@ namespace RUINORERP.Global.EnumExt
         // 继承基础状态
         草稿 = BaseFMPaymentStatus.草稿,
         待审核 = BaseFMPaymentStatus.待审核,
-        已取消 = BaseFMPaymentStatus.已取消,
-
-        ///// <summary>
-        ///// 表示收款单或付款单已通过审核，可以进行后续操作（如支付或收款）。
-        ///// </summary>
-        //已生效 = BaseFMPaymentStatus.已生效,
-        // 专属状态 审核就是已支付,已核销
-        [Description("已支付")]
+ 
+        [Description("【审核】已支付")]
         已支付 = 1 << 30,
 
         //是通过预收付等 抵扣时用户自定义的
         [Description("已核销")]
         已冲销 = 1 << 31,
 
+
+        已取消 = BaseFMPaymentStatus.已取消,
+
     }
     #endregion
 
-    /*
-
-    /// <summary>
-    /// 支付状态
-    /// </summary>
-    public enum FMPaymentStatus
-    {
-        /// <summary>未提交（无任何有效状态）</summary>
-        草稿 = 0,       // 0b0000（默认值，标志位全0）
-
-        /// <summary>已提交审核</summary>
-        提交 = 1,       // 0b0001（2^0）
-
-        /// <summary>财务审核通过支付生效</summary>
-        已审核 = 2,     // 0b0010（2^1）
-
-        /// <summary>部分生效（如部分核销/结清）</summary>
-        部分核销 = 4,   // 0b0100（2^2）
-
-        /// <summary>全部生效（全额核销/结清）</summary>
-        全额核销 = 8,   // 0b1000（2^3）
-
-        /// <summary>数据被冲销（反向操作）</summary>
-        已冲销 = 16,    // 0b10000（2^4，新增无冲突的2的幂）
-
-        /// <summary>单据关闭）</summary>
-        已取消 = 32,    // 0b10000（2^4，新增无冲突的2的幂）
-    }
-    */
 
 
     /// <summary>
@@ -196,11 +165,7 @@ namespace RUINORERP.Global.EnumExt
         付款 = 2,
     }
 
-
-    // 枚举定义
-    public enum ContractStatus { Draft, Active, Completed, Terminated }
-    public enum InvoiceType { Sales, Purchase }
-
+ 
     public enum InvoiceStatus
     {
 

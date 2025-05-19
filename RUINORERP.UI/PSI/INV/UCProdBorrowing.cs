@@ -41,6 +41,7 @@ using RUINORERP.Business.Processor;
 using RUINORERP.Business.Security;
 using System.Diagnostics;
 using Netron.GraphLib;
+using LiveChartsCore.Geo;
 
 namespace RUINORERP.UI.PSI.INV
 {
@@ -113,6 +114,16 @@ namespace RUINORERP.UI.PSI.INV
                 }
                 entity.Created_at = System.DateTime.Now;
                 BusinessHelper.Instance.InitEntity(entity);
+            }
+
+            //销售不能借给供应商东西
+            if (AuthorizeController.GetSaleLimitedAuth(MainForm.Instance.AppContext))
+            {
+                chkIsVendor.Visible = false;
+            }
+            else
+            {
+                chkIsVendor.Visible = true;
             }
 
             DataBindingHelper.BindData4Cmb<tb_Employee>(entity, k => k.Employee_ID, v => v.Employee_Name, cmbEmployee_ID);
@@ -205,31 +216,50 @@ namespace RUINORERP.UI.PSI.INV
 
         private void InitLoadSupplierData(tb_ProdBorrowing entity)
         {
-            //创建表达式
-            var lambdaSupplier = Expressionable.Create<tb_CustomerVendor>()
-                            .And(t => t.IsVendor == true)
-                            .AndIF(AuthorizeController.GetExclusiveLimitedAuth(MainForm.Instance.AppContext) && !AppContext.IsSuperUser, t => t.Employee_ID == AppContext.CurUserInfo.UserInfo.Employee_ID)//限制了销售只看到自己的客户
-                            .ToExpression();//注意 这一句 不能少
-
+         
             BaseProcessor baseProcessor = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_CustomerVendor).Name + "Processor");
             QueryFilter queryFilterSupplier = baseProcessor.GetQueryFilter();
-            queryFilterSupplier.FilterLimitExpressions.Add(lambdaSupplier);
+
+            //这里外层来实现对客户供应商的限制
+            string IsVendor = "".ToFieldName<tb_CustomerVendor>(c => c.IsVendor);
+            //应收付款中的往来单位额外添加一些条件
+            var lambdaIsVendor = Expressionable.Create<tb_CustomerVendor>()
+                .And(t => t.IsVendor == true)
+                .And(t => t.isdeleted == false)
+                .And(t => t.Is_enabled == true)
+              .ToExpression();
+            // QueryField queryFieldVendor = queryFilterSupplier.QueryFields.Where(c => c.FieldName == IsVendor).FirstOrDefault();
+            queryFilterSupplier.FilterLimitExpressions.Clear();
+            queryFilterSupplier.SetFieldLimitCondition(lambdaIsVendor);
+
+            //这时要特殊处理一下这个 因为是相同的控件上 改变条件。InitFilterForControlByExp这个里面跳过了已经添加过的 叹号
+            cmbCustomerVendor_ID.ButtonSpecs.Clear();
+
             DataBindingHelper.BindData4Cmb<tb_CustomerVendor>(EditEntity, k => k.CustomerVendor_ID, v => v.CVName, cmbCustomerVendor_ID, queryFilterSupplier.GetFilterExpression<tb_CustomerVendor>(), true);
             DataBindingHelper.InitFilterForControlByExp<tb_CustomerVendor>(EditEntity, cmbCustomerVendor_ID, c => c.CVName, queryFilterSupplier);
         }
         private void InitLoadCustomerData(tb_ProdBorrowing entity)
         {
-            //创建表达式
-            var lambda = Expressionable.Create<tb_CustomerVendor>()
-                            .And(t => t.IsCustomer == true)
-                            .AndIF(AuthorizeController.GetSaleLimitedAuth(MainForm.Instance.AppContext) && !AppContext.IsSuperUser, t => t.Employee_ID == AppContext.CurUserInfo.UserInfo.Employee_ID)//限制了销售只看到自己的客户
-                            .ToExpression();//注意 这一句 不能少
-
             BaseProcessor baseProcessor = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_CustomerVendor).Name + "Processor");
-            QueryFilter queryFilterC = baseProcessor.GetQueryFilter();
-            queryFilterC.FilterLimitExpressions.Add(lambda);
-            DataBindingHelper.BindData4Cmb<tb_CustomerVendor>(entity, k => k.CustomerVendor_ID, v => v.CVName, cmbCustomerVendor_ID, queryFilterC.GetFilterExpression<tb_CustomerVendor>(), true);
-            DataBindingHelper.InitFilterForControlByExp<tb_CustomerVendor>(entity, cmbCustomerVendor_ID, c => c.CVName, queryFilterC);
+            QueryFilter queryFilterCustomer = baseProcessor.GetQueryFilter();
+
+            string IsCustomer = "".ToFieldName<tb_CustomerVendor>(c => c.IsCustomer);
+            //应收付款中的往来单位额外添加一些条件
+            var lambdaIsCustomer = Expressionable.Create<tb_CustomerVendor>()
+                .And(t => t.IsCustomer == true)
+                .And(t => t.isdeleted == false)
+                .And(t => t.Is_enabled == true)
+              .ToExpression();
+            // QueryField queryFieldCustomer = queryFilterCustomer.QueryFields.Where(c => c.FieldName == IsCustomer).FirstOrDefault();
+            queryFilterCustomer.FilterLimitExpressions.Clear();
+            queryFilterCustomer.SetFieldLimitCondition(lambdaIsCustomer);
+
+            DataBindingHelper.BindData4Cmb<tb_CustomerVendor>(entity, k => k.CustomerVendor_ID, v => v.CVName, cmbCustomerVendor_ID, queryFilterCustomer.GetFilterExpression<tb_CustomerVendor>(), true);
+
+            //这时要特殊处理一下这个 因为是相同的控件上 改变条件。InitFilterForControlByExp这个里面跳过了已经添加过的 叹号
+            cmbCustomerVendor_ID.ButtonSpecs.Clear();
+
+            DataBindingHelper.InitFilterForControlByExp<tb_CustomerVendor>(entity, cmbCustomerVendor_ID, c => c.CVName, queryFilterCustomer);
 
 
         }
@@ -441,147 +471,6 @@ namespace RUINORERP.UI.PSI.INV
             }
             return false;
         }
-
-        /*
-        protected async override Task<ApprovalEntity> Review()
-        {
-            if (EditEntity == null)
-            {
-                return null;
-            }
-            //如果已经审核通过，则不能重复审核
-            if (EditEntity.ApprovalStatus.HasValue)
-            {
-                if (EditEntity.ApprovalStatus.Value == (int)ApprovalStatus.已审核)
-                {
-                    if (EditEntity.ApprovalResults.HasValue && EditEntity.ApprovalResults.Value)
-                    {
-                        MainForm.Instance.uclog.AddLog("已经审核,且【同意】的单据不能重复审核。");
-                        return null;
-                    }
-                }
-            }
-
-            RevertCommand command = new RevertCommand();
-            //缓存当前编辑的对象。如果撤销就回原来的值
-            tb_ProdBorrowing oldobj = CloneHelper.DeepCloneObject<tb_ProdBorrowing>(EditEntity);
-            command.UndoOperation = delegate ()
-            {
-                //Undo操作会执行到的代码 意思是如果退审核，内存中审核的数据要变为空白（之前的样子）
-                CloneHelper.SetValues<tb_ProdBorrowing>(EditEntity, oldobj);
-            };
-            ApprovalEntity ae = await base.Review();
-            if (EditEntity == null)
-            {
-                return null;
-            }
-            if (ae.ApprovalStatus == (int)ApprovalStatus.未审核)
-            {
-                return null;
-            }
-            //ReturnResults<tb_Stocktake> rmr = new ReturnResults<tb_Stocktake>();
-            // BaseController<T> ctr = Startup.GetFromFacByName<BaseController<T>>(typeof(T).Name + "Controller");
-            //因为只需要更新主表
-            //rmr = await ctr.BaseSaveOrUpdate(EditEntity);
-            // rmr = await ctr.BaseSaveOrUpdateWithChild<T>(EditEntity);
-            tb_ProdBorrowingController<tb_ProdBorrowing> ctr = Startup.GetFromFac<tb_ProdBorrowingController<tb_ProdBorrowing>>();
-            ReturnResults<tb_ProdBorrowing> rmrs = await ctr.ApprovalAsync(EditEntity);
-            if (rmrs.Succeeded)
-            {
-                //if (MainForm.Instance.WorkflowItemlist.ContainsKey(""))
-                //{
-
-                //}
-                //这里审核完了的话，如果这个单存在于工作流的集合队列中，则向服务器说明审核完成。
-                //这里推送到审核，启动工作流  队列应该有一个策略 比方优先级，桌面不动1 3 5分钟 
-                //OriginalData od = ActionForClient.工作流审批(pkid, (int)BizType.盘点单, ae.ApprovalResults, ae.ApprovalComments);
-                //MainForm.Instance.ecs.AddSendData(od);
-
-                //审核成功
-                base.ToolBarEnabledControl(MenuItemEnums.审核);
-                //如果审核结果为不通过时，审核不是灰色。
-                if (!ae.ApprovalResults)
-                {
-                    toolStripbtnReview.Enabled = true;
-                }
-            }
-            else
-            {
-                //审核失败 要恢复之前的值
-                command.Undo();
-                MainForm.Instance.PrintInfoLog($"{ae.bizName}:{ae.BillNo}审核失败,请联系管理员！", Color.Red);
-                MainForm.Instance.PrintInfoLog(rmrs.ErrorMsg);
-            }
-
-            return ae;
-        }
-        */
-        /*
-        /// <summary>
-        /// 列表中不再实现反审，批量，出库反审情况极少。并且是仔细处理
-        /// </summary>
-        protected async override void ReReview()
-        {
-            if (EditEntity == null)
-            {
-                return;
-            }
-
-            //反审，要审核过，并且通过了，才能反审。
-            if (EditEntity.ApprovalStatus.Value == (int)ApprovalStatus.已审核 && !EditEntity.ApprovalResults.HasValue)
-            {
-                MainForm.Instance.uclog.AddLog("已经审核,且【同意】的单据才能反审核。");
-                return;
-            }
-
-
-            if (EditEntity.tb_ProdBorrowingDetails == null || EditEntity.tb_ProdBorrowingDetails.Count == 0)
-            {
-                MainForm.Instance.uclog.AddLog("单据中没有明细数据，请确认录入了完整数量和金额。", UILogType.警告);
-                return;
-            }
-
-            RevertCommand command = new RevertCommand();
-            //缓存当前编辑的对象。如果撤销就回原来的值
-            tb_ProdBorrowing oldobj = CloneHelper.DeepCloneObject<tb_ProdBorrowing>(EditEntity);
-            command.UndoOperation = delegate ()
-            {
-                //Undo操作会执行到的代码 意思是如果退审核，内存中审核的数据要变为空白（之前的样子）
-                CloneHelper.SetValues<tb_ProdBorrowing>(EditEntity, oldobj);
-            };
-
-            tb_ProdBorrowingController<tb_ProdBorrowing> ctr = Startup.GetFromFac<tb_ProdBorrowingController<tb_ProdBorrowing>>();
-            List<tb_ProdBorrowing> list = new List<tb_ProdBorrowing>();
-            list.Add(EditEntity);
-            bool Succeeded = await ctr.AntiApprovalAsync(list);
-            if (Succeeded)
-            {
-
-                //if (MainForm.Instance.WorkflowItemlist.ContainsKey(""))
-                //{
-
-                //}
-                //这里审核完了的话，如果这个单存在于工作流的集合队列中，则向服务器说明审核完成。
-                //这里推送到审核，启动工作流  队列应该有一个策略 比方优先级，桌面不动1 3 5分钟 
-                //OriginalData od = ActionForClient.工作流审批(pkid, (int)BizType.盘点单, ae.ApprovalResults, ae.ApprovalComments);
-                //MainForm.Instance.ecs.AddSendData(od);
-
-                //审核成功
-                base.ToolBarEnabledControl(MenuItemEnums.反审);
-                toolStripbtnReview.Enabled = true;
-
-            }
-            else
-            {
-                //审核失败 要恢复之前的值
-                command.Undo();
-                MainForm.Instance.PrintInfoLog($"销售出库单{EditEntity.BorrowNo}反审失败,请联系管理员！", Color.Red);
-            }
-
-        }
-        */
-
-
 
 
     }

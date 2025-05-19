@@ -184,7 +184,7 @@
             // cmbPayStatus
             // 
             this.cmbPayStatus.DropDownWidth = 100;
-            this.cmbPayStatus.Enabled = false;
+            this.cmbPayStatus.Enabled = true;
             this.cmbPayStatus.IntegralHeight = false;
             this.cmbPayStatus.Location = new System.Drawing.Point(386, 134);
             this.cmbPayStatus.Name = "cmbPayStatus";

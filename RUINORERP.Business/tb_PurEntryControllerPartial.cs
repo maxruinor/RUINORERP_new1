@@ -62,7 +62,7 @@ namespace RUINORERP.Business
                     return rs;
                 }
 
-                
+
                 tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
                 BillConverterFactory bcf = _appContext.GetRequiredService<BillConverterFactory>();
 
@@ -192,13 +192,13 @@ namespace RUINORERP.Business
                         _logger.Debug(entity.PurEntryNo + "==>" + entity.PurOrder_NO + $"对应 的订单更新成功===重点代码 看已交数量是否正确");
                     }
                 }
-                List<tb_Inventory> invInsertList =new List<tb_Inventory>();
-                List<tb_Inventory> invUpdateList=new List<tb_Inventory>();
+                List<tb_Inventory> invInsertList = new List<tb_Inventory>();
+                List<tb_Inventory> invUpdateList = new List<tb_Inventory>();
 
                 foreach (tb_PurEntryDetail child in entity.tb_PurEntryDetails)
                 {
                     #region 库存表的更新 这里应该是必需有库存的数据，
-                 
+
                     tb_Inventory inv = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == child.ProdDetailID && i.Location_ID == child.Location_ID);
                     if (inv == null)
                     {
@@ -288,7 +288,7 @@ namespace RUINORERP.Business
 
                         #endregion
                     }
-                    if (inv.Inventory_ID==0)
+                    if (inv.Inventory_ID == 0)
                     {
                         invInsertList.Add(inv);
                     }
@@ -296,6 +296,22 @@ namespace RUINORERP.Business
                     {
                         invUpdateList.Add(inv);
                     }
+                }
+
+                // 使用LINQ查询
+                var CheckNewInvList = invInsertList
+                    .GroupBy(i => new { i.ProdDetailID, i.Location_ID })
+                    .Where(g => g.Count() > 1)
+                    .Select(g => g.Key.ProdDetailID)
+                    .ToList();
+
+                if (CheckNewInvList.Count > 0)
+                {
+                    //新增库存中有重复的商品，操作失败。请联系管理员。
+                    rs.ErrorMsg = "新增库存中有重复的商品，操作失败。";
+                    rs.Succeeded = false;
+                    _logger.LogError(rs.ErrorMsg + "详细信息：" + string.Join(",", CheckNewInvList));
+                    return rs;
                 }
                 var InvInsertCounter = await _unitOfWorkManage.GetDbClient().Insertable(invInsertList).ExecuteReturnSnowflakeIdListAsync();
                 if (InvInsertCounter.Count != invInsertList.Count)
@@ -305,12 +321,12 @@ namespace RUINORERP.Business
                 }
 
                 int InvUpdateCounter = await _unitOfWorkManage.GetDbClient().Updateable(invUpdateList).ExecuteCommandAsync();
-                 if (InvUpdateCounter == 0)
+                if (InvUpdateCounter == 0)
                 {
                     _unitOfWorkManage.RollbackTran();
                     throw new Exception("库存更新失败！");
                 }
-                
+
 
                 AuthorizeController authorizeController = _appContext.GetRequiredService<AuthorizeController>();
                 if (authorizeController.EnableFinancialModule())
@@ -566,7 +582,7 @@ namespace RUINORERP.Business
 
                 // 开启事务，保证数据一致性
                 _unitOfWorkManage.BeginTran();
-                
+
                 tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
                 BillConverterFactory bcf = _appContext.GetRequiredService<BillConverterFactory>();
                 List<tb_Inventory> invUpdateList = new List<tb_Inventory>();
@@ -574,7 +590,7 @@ namespace RUINORERP.Business
                 {
                     #region 库存表的更新 这里应该是必需有库存的数据，
                     //实际 期初已经有数据了，则要
-                  
+
                     tb_Inventory inv = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == child.ProdDetailID && i.Location_ID == child.Location_ID);
                     if (inv == null)
                     {
@@ -642,7 +658,23 @@ namespace RUINORERP.Business
                     inv.LatestOutboundTime = System.DateTime.Now;
                     invUpdateList.Add(inv);
                     #endregion
-                    
+
+                }
+
+                // 使用LINQ查询
+                var CheckNewInvList = invUpdateList.Where(c => c.Inventory_ID == 0)
+                    .GroupBy(i => new { i.ProdDetailID, i.Location_ID })
+                    .Where(g => g.Count() > 1)
+                    .Select(g => g.Key.ProdDetailID)
+                    .ToList();
+
+                if (CheckNewInvList.Count > 0)
+                {
+                    //新增库存中有重复的商品，操作失败。请联系管理员。
+                    rs.ErrorMsg = "新增库存中有重复的商品，操作失败。";
+                    rs.Succeeded = false;
+                    _logger.LogError(rs.ErrorMsg + "详细信息：" + string.Join(",", CheckNewInvList));
+                    return rs;
                 }
 
                 DbHelper<tb_Inventory> dbHelper = _appContext.GetRequiredService<DbHelper<tb_Inventory>>();

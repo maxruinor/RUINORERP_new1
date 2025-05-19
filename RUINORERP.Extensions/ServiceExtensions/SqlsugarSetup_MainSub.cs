@@ -15,6 +15,7 @@ namespace RUINORERP.Extensions
     /// <summary>
     /// SqlSugar 启动服务
     /// </summary>
+    [Obsolete]
     public static class SqlsugarSetup_MainSub
     {
         private static readonly MemoryCache Cache = new MemoryCache(new MemoryCacheOptions());

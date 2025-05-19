@@ -106,6 +106,7 @@ namespace RUINORERP.UI.PSI.PUR
                     entity.tb_PurEntryDetails.ForEach(c => c.PurEntryDetail_ID = 0);
                 }
             }
+            DataBindingHelper.BindData4CmbByEnum<tb_PurEntry>(entity, k => k.PayStatus, typeof(PayStatus), cmbPayStatus, false);
             DataBindingHelper.BindData4TextBox<tb_PurEntry>(entity, t => t.PurEntryNo, txtPurEntryNo, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_PurEntry>(entity, t => t.ShippingCost.ToString(), txtShippingCost, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4Cmb<tb_Department>(entity, k => k.DepartmentID, v => v.DepartmentName, cmbDepartmentID);
@@ -154,6 +155,8 @@ namespace RUINORERP.UI.PSI.PUR
                     try
                     {
                         LoadPurOrder(entity.PurOrder_ID);
+                        cmbPayStatus.Enabled = false;
+                        cmbPaytype_ID.Enabled = false;
                     }
                     catch (Exception ex)
                     {

@@ -414,7 +414,7 @@ namespace RUINORERP.Global
         //结案
         完结 = 8,
 
-        [Description("取消")]
+        [Description("【取消】作废")]
         已取消 = 16
     }
 

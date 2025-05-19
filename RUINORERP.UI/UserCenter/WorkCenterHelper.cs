@@ -22,6 +22,11 @@ namespace RUINORERP.UI.UserCenter
 
         public QueryFilter queryFilter { get; set; }
         public BizType bizType { get; set; }
+
+        /// <summary>
+        /// 工作台中 如果是 共享用一个表 表达了多种业务时区别菜单用。对应共享的子类业务的每个窗体的标记
+        /// </summary>
+        public string UIPropertyIdentifier { get; set; }
         public Type tableType { get; set; }
     }
 }

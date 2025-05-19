@@ -187,7 +187,7 @@ namespace RUINORERP.Business
                 }
 
                 var InvInsertCounter = await _unitOfWorkManage.GetDbClient().Insertable(invInsertList).ExecuteReturnSnowflakeIdListAsync();
-                if (InvInsertCounter.Count != invInsertList.Count)
+                if (InvInsertCounter.Count ==0)
                 {
                     _unitOfWorkManage.RollbackTran();
                     throw new Exception("库存保存失败！");

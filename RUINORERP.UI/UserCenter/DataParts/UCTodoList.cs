@@ -1061,6 +1061,10 @@ namespace RUINORERP.UI.UserCenter.DataParts
             }
         }
 
+        /// <summary>
+        /// 公共查询
+        /// </summary>
+        /// <returns></returns>
         private Dictionary<string, List<IConditionalModel>> GetCommonStatusConditions()
         {
             var conditions = new Dictionary<string, List<IConditionalModel>>();
@@ -1290,12 +1294,16 @@ namespace RUINORERP.UI.UserCenter.DataParts
             int Counter = 0;
             switch (bizType)
             {
+                case BizType.采购订单:
+                    Counter += await AddNode(node, tableType, bizType, GetNotEndConditions(), "待入库");
+                    break;
+
                 case BizType.借出单:
-                    Counter += await AddNode(node, tableType, bizType, GetLendNotReturnedConditions(), "未还清");
+                    Counter += await AddNode(node, tableType, bizType, GetNotEndConditions(), "待还清");
                     break;
 
                 case BizType.销售订单:
-                    Counter += await AddNode(node, tableType, bizType, GetNotShippedConditions(), "未出库");
+                    Counter += await AddNode(node, tableType, bizType, GetNotEndConditions(), "待出库");
                     break;
 
                 case BizType.销售出库单:
@@ -1332,25 +1340,14 @@ namespace RUINORERP.UI.UserCenter.DataParts
             return Counter;
         }
 
-        private List<IConditionalModel> GetLendNotReturnedConditions()
-        {
+ 
+
+        private List<IConditionalModel> GetNotEndConditions()
+        { 
             var conditions = new List<IConditionalModel>
             {
                 new ConditionalModel { FieldName = "ApprovalStatus", ConditionalType = ConditionalType.Equal, FieldValue = "1", CSharpTypeName = "int" },
-                new ConditionalModel { FieldName = "DataStatus", ConditionalType = ConditionalType.Equal, FieldValue = "4", CSharpTypeName = "int" },
-                new ConditionalModel { FieldName = "isdeleted", ConditionalType = ConditionalType.Equal, FieldValue = "False", CSharpTypeName = "bool" }
-            };
-
-            AddSaleLimitedCondition(conditions);
-
-            return conditions;
-        }
-
-        private List<IConditionalModel> GetNotShippedConditions()
-        {
-            var conditions = new List<IConditionalModel>
-            {
-                new ConditionalModel { FieldName = "DataStatus", ConditionalType = ConditionalType.Equal, FieldValue = "4", CSharpTypeName = "int" },
+                new ConditionalModel { FieldName = "DataStatus", ConditionalType = ConditionalType.Equal, FieldValue =((int)DataStatus.确认).ToString(), CSharpTypeName = "int" },
                 new ConditionalModel { FieldName = "isdeleted", ConditionalType = ConditionalType.Equal, FieldValue = "False", CSharpTypeName = "bool" }
             };
 

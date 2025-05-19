@@ -32,7 +32,6 @@ namespace RUINORERP.Business.CommService
         /// <param name="currentCostPrice"></param>
         public static void CostCalculation(ApplicationContext _appContext, tb_Inventory inv, int currentQty, decimal currentCostPrice)
         {
-
             //注意！！！！！！！！
             //要先算成本再赋值数量
 

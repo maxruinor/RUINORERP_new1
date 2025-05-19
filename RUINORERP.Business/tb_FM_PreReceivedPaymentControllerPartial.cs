@@ -31,6 +31,7 @@ using RUINORERP.Global.EnumExt;
 using AutoMapper;
 using RUINORERP.Business.FMService;
 using OfficeOpenXml.Export.ToDataTable;
+using Fireasy.Common.Extensions;
 
 namespace RUINORERP.Business
 {
@@ -124,7 +125,7 @@ namespace RUINORERP.Business
                 // 开启事务，保证数据一致性
                 _unitOfWorkManage.BeginTran();
 
-                
+
 
                 //tb_FM_PaymentRecordController<tb_FM_PaymentRecord> settlementController = _appContext.GetRequiredService<tb_FM_PaymentRecordController<tb_FM_PaymentRecord>>();
                 //tb_FM_PaymentRecord paymentRecord = await settlementController.CreatePaymentRecord(entity, false);
@@ -170,6 +171,113 @@ namespace RUINORERP.Business
                 // MyCacheManager.Instance.DeleteEntityList<tb_FM_PreReceivedPaymentController>(entity);
             }
             return false;
+        }
+
+
+        public async Task<ReturnResults<tb_FM_PreReceivedPayment>> CreatePreReceivedPayment(tb_SaleOrder entity, bool SaveToDb = false)
+        {
+            ReturnResults<tb_FM_PreReceivedPayment> rmrs = new ReturnResults<tb_FM_PreReceivedPayment>();
+
+            // 外币相关处理 正确是 外币时一定要有汇率
+            decimal exchangeRate = 1; // 获取销售订单的汇率
+            if (_appContext.BaseCurrency.Currency_ID != entity.Currency_ID)
+            {
+                exchangeRate = entity.ExchangeRate; // 获取销售订单的汇率
+                                                    // 这里可以考虑获取最新的汇率，而不是直接使用销售订单的汇率
+                                                    // exchangeRate = GetLatestExchangeRate(entity.Currency_ID.Value, _appContext.BaseCurrency.Currency_ID);
+            }
+
+            #region 生成预收款
+            var ctrpay = _appContext.GetRequiredService<tb_FM_PreReceivedPaymentController<tb_FM_PreReceivedPayment>>();
+
+            tb_FM_PreReceivedPayment payable = new tb_FM_PreReceivedPayment();
+            payable = mapper.Map<tb_FM_PreReceivedPayment>(entity);
+            payable.ApprovalResults = null;
+            payable.ApprovalStatus = (int)ApprovalStatus.未审核;
+            payable.Approver_at = null;
+            payable.Approver_by = null;
+            payable.PrintStatus = 0;
+            payable.IsAvailable = true;
+            payable.ActionStatus = ActionStatus.新增;
+            payable.ApprovalOpinions = "";
+            payable.Modified_at = null;
+            payable.Modified_by = null;
+            if (entity.tb_projectgroup != null)
+            {
+                payable.DepartmentID = entity.tb_projectgroup.DepartmentID;
+            }
+            //销售就是收款
+            payable.ReceivePaymentType = (int)ReceivePaymentType.收款;
+
+            payable.PreRPNO = BizCodeGenerator.Instance.GetBizBillNo(BizType.预收款单);
+            payable.SourceBizType = (int)BizType.销售订单;
+            payable.SourceBillNo = entity.SOrderNo;
+            payable.SourceBillId = entity.SOrder_ID;
+            payable.Currency_ID = entity.Currency_ID;
+            payable.PrePayDate = entity.SaleDate;
+            payable.ExchangeRate = exchangeRate;
+
+            payable.LocalPrepaidAmountInWords = string.Empty;
+            payable.Account_id = entity.Account_id;
+            //如果是外币时，则由外币算出本币
+            if (entity.PayStatus == (int)PayStatus.全部付款)
+            {
+                //外币时 全部付款，则外币金额=本币金额/汇率 在UI中显示出来。
+                if (_appContext.BaseCurrency.Currency_ID != entity.Currency_ID)
+                {
+                    payable.ForeignPrepaidAmount = entity.ForeignTotalAmount;
+                    //payable.LocalPrepaidAmount = payable.ForeignPrepaidAmount * exchangeRate;
+                }
+                else
+                {
+                    //本币时
+                    payable.LocalPrepaidAmount = entity.TotalAmount;
+                }
+            }
+            //来自于订金
+            if (entity.PayStatus == (int)PayStatus.部分付款)
+            {
+                //外币时
+                if (_appContext.BaseCurrency.Currency_ID != entity.Currency_ID)
+                {
+                    payable.ForeignPrepaidAmount = entity.ForeignDeposit;
+                    // payable.LocalPrepaidAmount = payable.ForeignPrepaidAmount * exchangeRate;
+                }
+                else
+                {
+                    payable.LocalPrepaidAmount = entity.Deposit;
+                }
+            }
+
+            //payable.LocalPrepaidAmountInWords = payable.LocalPrepaidAmount.ToString("C");
+            payable.LocalPrepaidAmountInWords = payable.LocalPrepaidAmount.ToUpper();
+            payable.IsAvailable = true;//默认可用
+
+            payable.PrePaymentReason = $"销售订单{entity.SOrderNo}的预收款";
+            Business.BusinessHelper.Instance.InitEntity(payable);
+            payable.PrePaymentStatus = (long)PrePaymentStatus.待审核;
+            if (SaveToDb)
+            {
+                ReturnResults<tb_FM_PreReceivedPayment> rmpay = await ctrpay.SaveOrUpdate(payable);
+                if (rmpay.Succeeded)
+                {
+                    // 预收款单生成成功后的处理逻辑
+                }
+                else
+                {
+                    // 处理预收款单生成失败的情况
+                    rmrs.Succeeded = false;
+                    _unitOfWorkManage.RollbackTran();
+                    rmrs.ErrorMsg = $"预收款单生成失败：{rmpay.ErrorMsg ?? "未知错误"}";
+                    if (_appContext.SysConfig.ShowDebugInfo)
+                    {
+                        _logger.LogInformation(rmrs.ErrorMsg);
+                    }
+                }
+            }
+            rmrs.ReturnObject = payable;
+            #endregion
+            return rmrs;
         }
 
         ///// <summary>

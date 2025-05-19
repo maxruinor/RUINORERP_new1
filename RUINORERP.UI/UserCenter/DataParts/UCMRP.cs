@@ -107,7 +107,10 @@ namespace RUINORERP.UI.UserCenter.DataParts
                   .Includes(c => c.tb_ProductionDemands, d => d.tb_ProduceGoodsRecommendDetails, f => f.tb_ManufacturingOrders, e => e.tb_FinishedGoodsInvs, f => f.tb_FinishedGoodsInvDetails)
                   .AsNavQueryable()
                   .Includes(c => c.tb_ProductionDemands, d => d.tb_ProduceGoodsRecommendDetails, f => f.tb_ManufacturingOrders, c => c.tb_MaterialRequisitions)
-                  .Where(c => (c.DataStatus == 2 || c.DataStatus == 4)).OrderBy(c => c.RequirementDate)
+                  .Where(c => (c.DataStatus == 2 || c.DataStatus == (int)DataStatus.确认))
+                  .Where(t => t.ApprovalStatus.HasValue && t.ApprovalStatus.Value == (int)ApprovalStatus.已审核)
+                  .Where(t => t.ApprovalResults.HasValue && t.ApprovalResults.Value == true && t.isdeleted == false)
+                  .OrderBy(c => c.RequirementDate)
                   // .WithCache(60) // 缓存60秒
                   .ToListAsync();
                 }

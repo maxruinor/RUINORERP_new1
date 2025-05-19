@@ -100,7 +100,11 @@ namespace RUINORERP.UI.UserCenter.DataParts
                   .Includes(c => c.tb_SaleOuts, d => d.tb_SaleOutRes, f => f.tb_SaleOutReDetails)
                   .Includes(c => c.tb_SaleOuts, d => d.tb_SaleOutRes, f => f.tb_SaleOutReRefurbishedMaterialsDetails)
                   .Includes(c => c.tb_SaleOuts, d => d.tb_SaleOutDetails)
-                  .Where(c => (c.DataStatus == 2 || c.DataStatus == 4)).OrderBy(c => c.SaleDate)
+                  .Where(c => (c.DataStatus == 2 || c.DataStatus == 4)
+                  && c.isdeleted == false
+                  && c.ApprovalResults.HasValue && c.ApprovalResults == true
+                  && c.ApprovalStatus.HasValue && c.ApprovalStatus == (int)ApprovalStatus.已审核)
+                  .OrderBy(c => c.SaleDate)
                   .WhereIF(AuthorizeController.GetSaleLimitedAuth(MainForm.Instance.AppContext), t => t.Employee_ID == MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID)//限制了销售只看到自己的客户,采购不限制
                                                                                                                                                                                      //.WithCache(60) // 缓存60秒
                   .ToPageListAsync(1, 1000); // 第一页，每页最多显示2000条

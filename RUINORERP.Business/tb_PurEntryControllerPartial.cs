@@ -31,6 +31,7 @@ using static System.Windows.Forms.VisualStyles.VisualStyleElement.ListView;
 using RUINORERP.Business.CommService;
 using AutoMapper;
 using RUINORERP.Global.EnumExt;
+using SharpYaml.Tokens;
 
 namespace RUINORERP.Business
 {
@@ -48,177 +49,236 @@ namespace RUINORERP.Business
             tb_PurEntry entity = ObjectEntity as tb_PurEntry;
             ReturnResults<T> rs = new ReturnResults<T>();
             rs.Succeeded = false;
-
             try
             {
-                // 开启事务，保证数据一致性
-                _unitOfWorkManage.BeginTran();
                 //采购入库总数量和明细求和检查
                 if (entity.TotalQty.Equals(entity.tb_PurEntryDetails.Sum(c => c.Quantity)) == false)
                 {
                     rs.ErrorMsg = $"采入入库数量与明细之和不相等!请检查数据后重试！";
-                    _unitOfWorkManage.RollbackTran();
+
                     rs.Succeeded = false;
                     return rs;
                 }
-
-
-                tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
+                // 开启事务，保证数据一致性
+                _unitOfWorkManage.BeginTran();
+                var ctrtb_BOM_SDetail = _appContext.GetRequiredService<tb_BOM_SDetailController<tb_BOM_SDetail>>();
+                var ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
                 BillConverterFactory bcf = _appContext.GetRequiredService<BillConverterFactory>();
-
-
-
-                //处理采购订单
-                entity.tb_purorder = _unitOfWorkManage.GetDbClient().Queryable<tb_PurOrder>()
-                     .Includes(a => a.tb_PurEntries, b => b.tb_PurEntryDetails)
-                     .Includes(t => t.tb_PurOrderDetails)
-                     .AsNavQueryable()//加这个前面,超过三级在前面加这一行，并且第四级无VS智能提示，但是可以用
-                     .Includes(a => a.tb_PurOrderDetails, b => b.tb_proddetail, c => c.tb_prod)
-                     .Where(c => c.PurOrder_ID == entity.PurOrder_ID)
-                     .Single();
-
-                if (entity.tb_purorder == null)
+                if (entity.PurOrder_ID.HasValue && entity.PurOrder_ID.Value > 0)
                 {
-                    rs.ErrorMsg = $"没有找到对应的采购订单!请检查数据后重试！";
-                    _unitOfWorkManage.RollbackTran();
-                    rs.Succeeded = false;
-                    return rs;
-                }
+                    //处理采购订单
+                    entity.tb_purorder = await _unitOfWorkManage.GetDbClient().Queryable<tb_PurOrder>()
+                         .Includes(a => a.tb_PurEntries, b => b.tb_PurEntryDetails)
+                         .Includes(t => t.tb_PurOrderDetails)
+                         .AsNavQueryable()//加这个前面,超过三级在前面加这一行，并且第四级无VS智能提示，但是可以用
+                         .Includes(a => a.tb_PurOrderDetails, b => b.tb_proddetail, c => c.tb_prod)
+                         .Where(c => c.PurOrder_ID == entity.PurOrder_ID)
+                         .SingleAsync();
 
-                //如果入库明细中的产品。不存在于订单中。审核失败。
-                foreach (var child in entity.tb_PurEntryDetails)
-                {
-                    if (!entity.tb_purorder.tb_PurOrderDetails.Any(c => c.ProdDetailID == child.ProdDetailID && c.Location_ID == child.Location_ID))
+                    if (entity.tb_purorder == null)
                     {
-                        rs.Succeeded = false;
+                        rs.ErrorMsg = $"没有找到对应的采购订单!请检查数据后重试！";
                         _unitOfWorkManage.RollbackTran();
-                        rs.ErrorMsg = $"入库明细中有产品不属于当前订单!请检查数据后重试！";
+                        rs.Succeeded = false;
                         return rs;
                     }
-                }
 
-                //先找到所有入库明细,再找按订单明细去循环比较。如果入库总数量大于订单数量，则不允许入库。
-                List<tb_PurEntryDetail> detailList = new List<tb_PurEntryDetail>();
-                foreach (var item in entity.tb_purorder.tb_PurEntries)
-                {
-                    detailList.AddRange(item.tb_PurEntryDetails);
-                }
 
-                //分两种情况处理。
-                for (int i = 0; i < entity.tb_purorder.tb_PurOrderDetails.Count; i++)
-                {
-                    //如果当前订单明细行，不存在于入库明细行。直接跳过。这种就是多行多品被删除时。不需要比较
-                    string prodName = entity.tb_purorder.tb_PurOrderDetails[i].tb_proddetail.tb_prod.CNName +
-                              entity.tb_purorder.tb_PurOrderDetails[i].tb_proddetail.tb_prod.Specifications;
-                    //明细中有相同的产品或物品。
-                    var aa = entity.tb_purorder.tb_PurOrderDetails.Select(c => c.ProdDetailID).ToList().GroupBy(x => x).Where(x => x.Count() > 1).Select(x => x.Key).ToList();
-                    if (aa.Count > 0 && entity.tb_purorder.tb_PurOrderDetails[i].PurOrder_ChildID > 0)
+                    //如果入库明细中的产品。不存在于订单中。审核失败。
+                    foreach (var child in entity.tb_PurEntryDetails)
                     {
-                        #region //如果存在不是引用的明细,则不允许入库。这样不支持手动添加的情况。
-                        if (entity.tb_PurEntryDetails.Any(c => c.PurOrder_ChildID == 0))
+                        if (!entity.tb_purorder.tb_PurOrderDetails.Any(c => c.ProdDetailID == child.ProdDetailID && c.Location_ID == child.Location_ID))
                         {
-                            //如果存在不是引用的明细,则不允许入库。这样不支持手动添加的情况。
-                            string msg = $"采购订单:{entity.tb_purorder.PurOrderNo}的【{prodName}】在订单明细中拥有多行记录，必须使用引用的方式添加，审核失败！";
-                            MessageBox.Show(msg, "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                            rs.Succeeded = false;
                             _unitOfWorkManage.RollbackTran();
-                            _logger.LogInformation(msg);
+                            rs.ErrorMsg = $"入库明细中有产品不属于当前订单!请检查数据后重试！";
                             return rs;
                         }
+                    }
+
+
+                    //先找到所有入库明细,再找按订单明细去循环比较。如果入库总数量大于订单数量，则不允许入库。
+                    List<tb_PurEntryDetail> detailList = new List<tb_PurEntryDetail>();
+                    foreach (var item in entity.tb_purorder.tb_PurEntries)
+                    {
+                        detailList.AddRange(item.tb_PurEntryDetails);
+                    }
+
+                    //分两种情况处理。
+                    for (int i = 0; i < entity.tb_purorder.tb_PurOrderDetails.Count; i++)
+                    {
+                        //如果当前订单明细行，不存在于入库明细行。直接跳过。这种就是多行多品被删除时。不需要比较
+                        string prodName = entity.tb_purorder.tb_PurOrderDetails[i].tb_proddetail.tb_prod.CNName +
+                                  entity.tb_purorder.tb_PurOrderDetails[i].tb_proddetail.tb_prod.Specifications;
+                        //明细中有相同的产品或物品。
+                        var aa = entity.tb_purorder.tb_PurOrderDetails.Select(c => c.ProdDetailID).ToList().GroupBy(x => x).Where(x => x.Count() > 1).Select(x => x.Key).ToList();
+                        if (aa.Count > 0 && entity.tb_purorder.tb_PurOrderDetails[i].PurOrder_ChildID > 0)
+                        {
+                            #region //如果存在不是引用的明细,则不允许入库。这样不支持手动添加的情况。
+                            if (entity.tb_PurEntryDetails.Any(c => c.PurOrder_ChildID == 0))
+                            {
+                                //如果存在不是引用的明细,则不允许入库。这样不支持手动添加的情况。
+                                string msg = $"采购订单:{entity.tb_purorder.PurOrderNo}的【{prodName}】在订单明细中拥有多行记录，必须使用引用的方式添加，审核失败！";
+                                MessageBox.Show(msg, "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                                _unitOfWorkManage.RollbackTran();
+                                _logger.LogInformation(msg);
+                                return rs;
+                            }
+                            #endregion
+
+                            var inQty = detailList.Where(c => c.ProdDetailID == entity.tb_purorder.tb_PurOrderDetails[i].ProdDetailID
+                            && c.Location_ID == entity.tb_purorder.tb_PurOrderDetails[i].Location_ID
+                            //行数一致时，判断入库的数量是否大于订单数量。（费赠品）
+                            && c.PurOrder_ChildID == entity.tb_purorder.tb_PurOrderDetails[i].PurOrder_ChildID).Where(c => c.IsGift.HasValue && !c.IsGift.Value).Sum(c => c.Quantity);
+                            if (inQty > entity.tb_purorder.tb_PurOrderDetails[i].Quantity)
+                            {
+                                string msg = $"采购订单:{entity.tb_purorder.PurOrderNo}的【{prodName}】的入库数量不能大于订单中对应行的数量\r\n" + $"或存在针对当前采购订单重复录入了采购入库单，审核失败！";
+                                MessageBox.Show(msg, "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                                _unitOfWorkManage.RollbackTran();
+                                _logger.LogInformation(msg);
+                                return rs;
+                            }
+                            else
+                            {
+                                var RowQty = entity.tb_PurEntryDetails.Where(c => c.ProdDetailID == entity.tb_purorder.tb_PurOrderDetails[i].ProdDetailID && c.PurOrder_ChildID == entity.tb_purorder.tb_PurOrderDetails[i].PurOrder_ChildID
+                                && c.Location_ID == entity.tb_purorder.tb_PurOrderDetails[i].Location_ID
+                                ).Sum(c => c.Quantity);
+                                //算出交付的数量
+                                entity.tb_purorder.tb_PurOrderDetails[i].DeliveredQuantity += RowQty;
+                                //如果已交数据大于 订单数量 给出警告实际操作中 使用其他方式将备品入库
+                                if (entity.tb_purorder.tb_PurOrderDetails[i].DeliveredQuantity > entity.tb_purorder.tb_PurOrderDetails[i].Quantity)
+                                {
+                                    _unitOfWorkManage.RollbackTran();
+                                    throw new Exception($"入库单：{entity.PurEntryNo}审核时，对应的订单：{entity.tb_purorder.PurOrderNo}，入库总数量不能大于订单数量！");
+                                }
+                            }
+                        }
+                        else
+                        {
+                            //一对一时
+                            var inQty = detailList.Where(c => c.ProdDetailID == entity.tb_purorder.tb_PurOrderDetails[i].ProdDetailID
+                            && c.Location_ID == entity.tb_purorder.tb_PurOrderDetails[i].Location_ID).Where(c => c.IsGift.HasValue && !c.IsGift.Value).Sum(c => c.Quantity);
+                            if (inQty > entity.tb_purorder.tb_PurOrderDetails[i].Quantity)
+                            {
+
+                                string msg = $"采购订单:{entity.tb_purorder.PurOrderNo}的【{prodName}】的入库数量不能大于订单中对应行的数量\r\n" + $"或存在针对当前采购订单重复录入了采购入库单，审核失败！";
+                                MessageBox.Show(msg, "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                                _unitOfWorkManage.RollbackTran();
+                                _logger.LogInformation(msg);
+                                return rs;
+                            }
+                            else
+                            {
+                                //当前行累计到交付
+                                var RowQty = entity.tb_PurEntryDetails.Where(c => c.ProdDetailID == entity.tb_purorder.tb_PurOrderDetails[i].ProdDetailID
+                                && c.Location_ID == entity.tb_purorder.tb_PurOrderDetails[i].Location_ID).Sum(c => c.Quantity);
+                                entity.tb_purorder.tb_PurOrderDetails[i].DeliveredQuantity += RowQty;
+                                //如果已交数据大于 订单数量 给出警告实际操作中 使用其他方式将备品入库
+                                if (entity.tb_purorder.tb_PurOrderDetails[i].DeliveredQuantity > entity.tb_purorder.tb_PurOrderDetails[i].Quantity)
+                                {
+                                    _unitOfWorkManage.RollbackTran();
+                                    throw new Exception($"入库单：{entity.PurEntryNo}审核时，对应的订单：{entity.tb_purorder.PurOrderNo}，入库总数量不能大于订单数量！");
+                                }
+                            }
+                        }
+                    }
+
+                    //更新已交数量
+                    int poCounter = await _unitOfWorkManage.GetDbClient().Updateable<tb_PurOrderDetail>(entity.tb_purorder.tb_PurOrderDetails).ExecuteCommandAsync();
+                    if (poCounter > 0)
+                    {
+                        if (AuthorizeController.GetShowDebugInfoAuthorization(_appContext))
+                        {
+                            _logger.Debug(entity.PurEntryNo + "==>" + entity.PurOrder_NO + $"对应 的订单更新成功===重点代码 看已交数量是否正确");
+                        }
+                    }
+                }
+              
+
+
+                // 使用字典按 (ProdDetailID, LocationID) 分组，存储库存记录及累计数据
+                var inventoryGroups = new Dictionary<(long ProdDetailID, long LocationID), (tb_Inventory Inventory, decimal PurQtySum, bool? IsGift,
+                    decimal UnitPrice, DateTime LatestStorageTime)>();
+
+                // 遍历销售订单明细，聚合数据
+                foreach (var child in entity.tb_PurEntryDetails)
+                {
+                    var key = (child.ProdDetailID, child.Location_ID);
+                    decimal currentEntryQty = child.Quantity;
+                    DateTime currentStorageTime = DateTime.Now;
+
+                    // 若字典中不存在该产品，初始化记录
+                    if (!inventoryGroups.TryGetValue(key, out var group))
+                    {
+                        #region 库存表的更新 这里应该是必需有库存的数据，
+
+                        tb_Inventory inv = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == child.ProdDetailID && i.Location_ID == child.Location_ID);
+                        if (inv == null)
+                        {
+                            inv = new tb_Inventory
+                            {
+                                ProdDetailID = key.ProdDetailID,
+                                Location_ID = key.Location_ID,
+                                Quantity = 0, // 初始数量
+                                Inv_Cost = 0, // 假设成本价需从其他地方获取，需根据业务补充
+                                Notes = "采购入库创建",
+                                InitInventory = (int)inv.Quantity,
+                                Sale_Qty = 0,
+                                LatestStorageTime = DateTime.Now // 初始时间
+                            };
+
+                            BusinessHelper.Instance.InitEntity(inv); // 初始化公共字段
+                        }
+                        else
+                        {
+                            BusinessHelper.Instance.EditEntity(inv);
+                        }
+
                         #endregion
 
-                        var inQty = detailList.Where(c => c.ProdDetailID == entity.tb_purorder.tb_PurOrderDetails[i].ProdDetailID
-                        && c.Location_ID == entity.tb_purorder.tb_PurOrderDetails[i].Location_ID
-                        //行数一致时，判断入库的数量是否大于订单数量。（费赠品）
-                        && c.PurOrder_ChildID == entity.tb_purorder.tb_PurOrderDetails[i].PurOrder_ChildID).Where(c => c.IsGift.HasValue && !c.IsGift.Value).Sum(c => c.Quantity);
-                        if (inQty > entity.tb_purorder.tb_PurOrderDetails[i].Quantity)
-                        {
-                            string msg = $"采购订单:{entity.tb_purorder.PurOrderNo}的【{prodName}】的入库数量不能大于订单中对应行的数量\r\n" + $"或存在针对当前采购订单重复录入了采购入库单，审核失败！";
-                            MessageBox.Show(msg, "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                            _unitOfWorkManage.RollbackTran();
-                            _logger.LogInformation(msg);
-                            return rs;
-                        }
-                        else
-                        {
-                            var RowQty = entity.tb_PurEntryDetails.Where(c => c.ProdDetailID == entity.tb_purorder.tb_PurOrderDetails[i].ProdDetailID && c.PurOrder_ChildID == entity.tb_purorder.tb_PurOrderDetails[i].PurOrder_ChildID
-                            && c.Location_ID == entity.tb_purorder.tb_PurOrderDetails[i].Location_ID
-                            ).Sum(c => c.Quantity);
-                            //算出交付的数量
-                            entity.tb_purorder.tb_PurOrderDetails[i].DeliveredQuantity += RowQty;
-                            //如果已交数据大于 订单数量 给出警告实际操作中 使用其他方式将备品入库
-                            if (entity.tb_purorder.tb_PurOrderDetails[i].DeliveredQuantity > entity.tb_purorder.tb_PurOrderDetails[i].Quantity)
-                            {
-                                _unitOfWorkManage.RollbackTran();
-                                throw new Exception($"入库单：{entity.PurEntryNo}审核时，对应的订单：{entity.tb_purorder.PurOrderNo}，入库总数量不能大于订单数量！");
-                            }
-                        }
+
+                        // 初始化分组数据
+                        group = (
+                            Inventory: inv,
+                            PurQtySum: currentEntryQty, // 首次累加
+                            IsGift: child.IsGift,
+                            UnitPrice: child.UnitPrice,
+                            LatestStorageTime: currentStorageTime
+                        );
+                        inventoryGroups[key] = group;
                     }
                     else
                     {
-                        //一对一时
-                        var inQty = detailList.Where(c => c.ProdDetailID == entity.tb_purorder.tb_PurOrderDetails[i].ProdDetailID
-                        && c.Location_ID == entity.tb_purorder.tb_PurOrderDetails[i].Location_ID).Where(c => c.IsGift.HasValue && !c.IsGift.Value).Sum(c => c.Quantity);
-                        if (inQty > entity.tb_purorder.tb_PurOrderDetails[i].Quantity)
-                        {
+                        // 累加已有分组的数值字段
 
-                            string msg = $"采购订单:{entity.tb_purorder.PurOrderNo}的【{prodName}】的入库数量不能大于订单中对应行的数量\r\n" + $"或存在针对当前采购订单重复录入了采购入库单，审核失败！";
-                            MessageBox.Show(msg, "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                            _unitOfWorkManage.RollbackTran();
-                            _logger.LogInformation(msg);
-                            return rs;
+                        group.IsGift = child.IsGift;
+                        if (group.IsGift.HasValue && !group.IsGift.Value && group.UnitPrice > 0)
+                        {
+                            group.UnitPrice = ((currentEntryQty * child.UnitPrice) + (group.UnitPrice * group.PurQtySum)) / (group.PurQtySum + currentEntryQty);
                         }
                         else
                         {
-                            //当前行累计到交付
-                            var RowQty = entity.tb_PurEntryDetails.Where(c => c.ProdDetailID == entity.tb_purorder.tb_PurOrderDetails[i].ProdDetailID
-                            && c.Location_ID == entity.tb_purorder.tb_PurOrderDetails[i].Location_ID).Sum(c => c.Quantity);
-                            entity.tb_purorder.tb_PurOrderDetails[i].DeliveredQuantity += RowQty;
-                            //如果已交数据大于 订单数量 给出警告实际操作中 使用其他方式将备品入库
-                            if (entity.tb_purorder.tb_PurOrderDetails[i].DeliveredQuantity > entity.tb_purorder.tb_PurOrderDetails[i].Quantity)
-                            {
-                                _unitOfWorkManage.RollbackTran();
-                                throw new Exception($"入库单：{entity.PurEntryNo}审核时，对应的订单：{entity.tb_purorder.PurOrderNo}，入库总数量不能大于订单数量！");
-                            }
+                            group.UnitPrice = child.UnitPrice;
                         }
+                        group.PurQtySum += currentEntryQty;
+
+                        // 取最新出库时间（若当前时间更新，则覆盖）
+                        group.LatestStorageTime = System.DateTime.Now;
+                        inventoryGroups[key] = group; // 更新分组数据
                     }
                 }
 
-                //更新已交数量
-                int poCounter = await _unitOfWorkManage.GetDbClient().Updateable<tb_PurOrderDetail>(entity.tb_purorder.tb_PurOrderDetails).ExecuteCommandAsync();
-                if (poCounter > 0)
-                {
-                    if (AuthorizeController.GetShowDebugInfoAuthorization(_appContext))
-                    {
-                        _logger.Debug(entity.PurEntryNo + "==>" + entity.PurOrder_NO + $"对应 的订单更新成功===重点代码 看已交数量是否正确");
-                    }
-                }
-                List<tb_Inventory> invInsertList = new List<tb_Inventory>();
                 List<tb_Inventory> invUpdateList = new List<tb_Inventory>();
+                List<tb_BOM_SDetail> BOM_SDetails = new List<tb_BOM_SDetail>();
+                List<tb_BOM_S> BOMs = new List<tb_BOM_S>();
+                List<tb_PriceRecord> PriceRecords = new List<tb_PriceRecord>();
 
-                foreach (tb_PurEntryDetail child in entity.tb_PurEntryDetails)
+                // 处理分组数据，更新库存记录的各字段
+                foreach (var group in inventoryGroups)
                 {
-                    #region 库存表的更新 这里应该是必需有库存的数据，
+                    var inv = group.Value.Inventory;
 
-                    tb_Inventory inv = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == child.ProdDetailID && i.Location_ID == child.Location_ID);
-                    if (inv == null)
-                    {
-                        inv = new tb_Inventory();
-                        inv.InitInventory = (int)inv.Quantity;
-                        inv.Notes = "采购入库创建";//后面修改数据库是不需要？
-                        BusinessHelper.Instance.InitEntity(inv);
-                    }
-                    else
-                    {
-
-                        BusinessHelper.Instance.EditEntity(inv);
-                    }
-                    inv.ProdDetailID = child.ProdDetailID;
-                    inv.Location_ID = child.Location_ID;
-                    inv.Notes = "";//后面修改数据库是不需要？
-                    inv.LatestStorageTime = System.DateTime.Now;
-                    //采购订单时添加 。这里减掉在路上的数量
-                    inv.On_the_way_Qty = inv.On_the_way_Qty - child.Quantity;
-
+                    #region 计算成本
                     //直接输入成本：在录入库存记录时，直接输入该产品或物品的成本价格。这种方式适用于成本价格相对稳定或容易确定的情况。
                     //平均成本法：通过计算一段时间内该产品或物品的平均成本来确定成本价格。这种方法适用于成本价格随时间波动的情况，可以更准确地反映实际成本。
                     //先进先出法（FIFO）：按照先入库的产品先出库的原则，计算库存成本。这种方法适用于库存流转速度较快，成本价格相对稳定的情况。适用范围：适用于存货的实物流转比较符合先进先出的假设，比如食品、药品等有保质期限制的商品，先购进的存货会先发出销售。
@@ -227,15 +287,14 @@ namespace RUINORERP.Business
                     //采购价格：从供应商处购买产品或物品时的价格。
                     //生产成本：自行生产产品时的成本，包括原材料、人工和间接费用等。
                     //市场价格：参考市场上类似产品或物品的价格。
-                    if (child.IsGift.HasValue && child.IsGift == false && child.UnitPrice > 0)
+                    if (group.Value.IsGift.HasValue && !group.Value.IsGift.Value && group.Value.UnitPrice > 0)
                     {
-                        CommService.CostCalculations.CostCalculation(_appContext, inv, child.Quantity, child.UnitPrice);
+                        CommService.CostCalculations.CostCalculation(_appContext, inv, group.Value.PurQtySum.ToInt(), group.Value.UnitPrice);
                         #region 更新BOM价格,当前产品存在哪些BOM中，则更新所有BOM的价格包含主子表数据的变化
 
-                        tb_BOM_SDetailController<tb_BOM_SDetail> ctrtb_BOM_SDetail = _appContext.GetRequiredService<tb_BOM_SDetailController<tb_BOM_SDetail>>();
-                        List<tb_BOM_SDetail> bomDetails = _unitOfWorkManage.GetDbClient().Queryable<tb_BOM_SDetail>()
+                        List<tb_BOM_SDetail> bomDetails =await _unitOfWorkManage.GetDbClient().Queryable<tb_BOM_SDetail>()
                         .Includes(b => b.tb_bom_s, d => d.tb_BOM_SDetails)
-                        .Where(c => c.ProdDetailID == child.ProdDetailID).ToList();
+                        .Where(c => c.ProdDetailID == group.Key.ProdDetailID).ToListAsync();
                         foreach (tb_BOM_SDetail bomDetail in bomDetails)
                         {
                             //如果存在则更新 
@@ -246,87 +305,90 @@ namespace RUINORERP.Business
                                 bomDetail.tb_bom_s.TotalMaterialCost = bomDetail.tb_bom_s.tb_BOM_SDetails.Sum(c => c.SubtotalUnitCost);
                                 bomDetail.tb_bom_s.OutProductionAllCosts = bomDetail.tb_bom_s.TotalMaterialCost + bomDetail.tb_bom_s.TotalOutManuCost + bomDetail.tb_bom_s.OutApportionedCost;
                                 bomDetail.tb_bom_s.SelfProductionAllCosts = bomDetail.tb_bom_s.TotalMaterialCost + bomDetail.tb_bom_s.TotalSelfManuCost + bomDetail.tb_bom_s.SelfApportionedCost;
-                                await _unitOfWorkManage.GetDbClient().Updateable<tb_BOM_S>(bomDetail.tb_bom_s).ExecuteCommandAsync();
+                               
+                                BOMs.Add(bomDetail.tb_bom_s);
                             }
+                            BOM_SDetails.Add(bomDetail);
                         }
-                        if (bomDetails.Count > 0)
-                        {
-                            await _unitOfWorkManage.GetDbClient().Updateable<tb_BOM_SDetail>(bomDetails).ExecuteCommandAsync();
-                        }
-
 
                         #endregion
                     }
-
-                    inv.Quantity = inv.Quantity + child.Quantity;
-                    inv.Inv_SubtotalCostMoney = inv.Inv_Cost * inv.Quantity;
-                    inv.LatestStorageTime = System.DateTime.Now;
 
                     #endregion
 
-                    if (child.IsGift.HasValue && child.IsGift == false)
+                    #region 更新采购价格
+
+                    //注意这里的人是指采购订单录入的人。不是采购入库的人。
+                    tb_PriceRecordController<tb_PriceRecord> ctrPriceRecord = _appContext.GetRequiredService<tb_PriceRecordController<tb_PriceRecord>>();
+                    tb_PriceRecord priceRecord = await _unitOfWorkManage.GetDbClient().Queryable<tb_PriceRecord>()
+                    .Where(c => c.Employee_ID == entity.tb_purorder.Employee_ID && c.ProdDetailID == group.Key.ProdDetailID).FirstAsync();
+                    //如果存在则更新，否则插入
+                    if (priceRecord == null)
                     {
-                        #region 更新采购价格
-                        //注意这里的人是指采购订单录入的人。不是采购入库的人。
-                        tb_PriceRecordController<tb_PriceRecord> ctrPriceRecord = _appContext.GetRequiredService<tb_PriceRecordController<tb_PriceRecord>>();
-                        tb_PriceRecord priceRecord = _unitOfWorkManage.GetDbClient().Queryable<tb_PriceRecord>()
-                        .Where(c => c.Employee_ID == entity.tb_purorder.Employee_ID && c.ProdDetailID == child.ProdDetailID).First();
-                        //如果存在则更新，否则插入
-                        if (priceRecord == null)
-                        {
-                            priceRecord = new tb_PriceRecord();
-                            priceRecord.ProdDetailID = child.ProdDetailID;
-                        }
-                        priceRecord.Employee_ID = entity.tb_purorder.Employee_ID;
-                        if (child.UnitPrice != priceRecord.PurPrice)
-                        {
-                            priceRecord.PurPrice = child.UnitPrice;
-                            priceRecord.PurDate = System.DateTime.Now;
-                            ReturnResults<tb_PriceRecord> rrpr = await ctrPriceRecord.SaveOrUpdate(priceRecord);
-                        }
+                        priceRecord = new tb_PriceRecord();
+                        priceRecord.ProdDetailID = group.Key.ProdDetailID;
+                    }
+                    priceRecord.Employee_ID = entity.tb_purorder.Employee_ID;
+                    if (group.Value.UnitPrice != priceRecord.PurPrice)
+                    {
+                        priceRecord.PurPrice = group.Value.UnitPrice;
+                        priceRecord.PurDate = System.DateTime.Now;
+                        PriceRecords.Add(priceRecord);
+                    }
 
 
-                        #endregion
-                    }
-                    if (inv.Inventory_ID == 0)
-                    {
-                        invInsertList.Add(inv);
-                    }
-                    if (inv.Inventory_ID > 0)
-                    {
-                        invUpdateList.Add(inv);
-                    }
+                    #endregion
+
+                    // 累加数值字段
+                    inv.On_the_way_Qty -= group.Value.PurQtySum.ToInt();
+                    inv.Quantity += group.Value.PurQtySum.ToInt();
+                    inv.LatestStorageTime = System.DateTime.Now;
+                    // 计算衍生字段（如总成本）
+                    inv.Inv_SubtotalCostMoney = inv.Inv_Cost * inv.Quantity; // 需确保 Inv_Cost 有值
+                    invUpdateList.Add(inv);
                 }
 
-                // 使用LINQ查询
-                var CheckNewInvList = invInsertList
-                    .GroupBy(i => new { i.ProdDetailID, i.Location_ID })
-                    .Where(g => g.Count() > 1)
-                    .Select(g => g.Key.ProdDetailID)
-                    .ToList();
-
-                if (CheckNewInvList.Count > 0)
-                {
-                    //新增库存中有重复的商品，操作失败。请联系管理员。
-                    rs.ErrorMsg = "新增库存中有重复的商品，操作失败。";
-                    rs.Succeeded = false;
-                    _logger.LogError(rs.ErrorMsg + "详细信息：" + string.Join(",", CheckNewInvList));
-                    return rs;
-                }
-                var InvInsertCounter = await _unitOfWorkManage.GetDbClient().Insertable(invInsertList).ExecuteReturnSnowflakeIdListAsync();
-                if (InvInsertCounter.Count != invInsertList.Count)
+                DbHelper<tb_Inventory> dbHelper = _appContext.GetRequiredService<DbHelper<tb_Inventory>>();
+                var Counter = await dbHelper.BaseDefaultAddElseUpdateAsync(invUpdateList);
+                if (invUpdateList.Count > 0 && Counter == 0)
                 {
                     _unitOfWorkManage.RollbackTran();
-                    throw new Exception("库存保存失败！");
+                    throw new Exception("入库时，库存更新数据为0，更新失败！");
                 }
 
-                int InvUpdateCounter = await _unitOfWorkManage.GetDbClient().Updateable(invUpdateList).ExecuteCommandAsync();
-                if (InvUpdateCounter == 0)
+                if (BOM_SDetails.Count > 0)
                 {
-                    _unitOfWorkManage.RollbackTran();
-                    throw new Exception("库存更新失败！");
+                    DbHelper<tb_BOM_SDetail> BOM_SDetaildbHelper = _appContext.GetRequiredService<DbHelper<tb_BOM_SDetail>>();
+                    var BOM_SDetailCounter = await BOM_SDetaildbHelper.BaseDefaultAddElseUpdateAsync(BOM_SDetails);
+                    if (BOM_SDetailCounter == 0)
+                    {
+                        _unitOfWorkManage.RollbackTran();
+                        throw new Exception("入库时，配方明细成本更新数据为0，更新失败！");
+                    }
                 }
 
+                if (BOMs.Count > 0)
+                {
+                    DbHelper<tb_BOM_S> BOM_SdbHelper = _appContext.GetRequiredService<DbHelper<tb_BOM_S>>();
+                    var BOMCounter = await BOM_SdbHelper.BaseDefaultAddElseUpdateAsync(BOMs);
+                    if (BOMCounter == 0)
+                    {
+                        _unitOfWorkManage.RollbackTran();
+                        throw new Exception("入库时，配方主表成本更新数据为0，更新失败！");
+                    }
+                }
+
+                if (PriceRecords.Count > 0)
+                {
+                    DbHelper<tb_PriceRecord> PriceRecorddbHelper = _appContext.GetRequiredService<DbHelper<tb_PriceRecord>>();
+                    var PriceRecordCounter = await PriceRecorddbHelper.BaseDefaultAddElseUpdateAsync(PriceRecords);
+                    if (PriceRecordCounter == 0)
+                    {
+                        _unitOfWorkManage.RollbackTran();
+                        throw new Exception("入库时，采购价格历史记录更新数据为0，更新失败！");
+                    }
+
+                }
 
                 AuthorizeController authorizeController = _appContext.GetRequiredService<AuthorizeController>();
                 if (authorizeController.EnableFinancialModule())
@@ -583,54 +645,87 @@ namespace RUINORERP.Business
                 // 开启事务，保证数据一致性
                 _unitOfWorkManage.BeginTran();
 
-                tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
-                BillConverterFactory bcf = _appContext.GetRequiredService<BillConverterFactory>();
-                List<tb_Inventory> invUpdateList = new List<tb_Inventory>();
+                var ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
+                var bcf = _appContext.GetRequiredService<BillConverterFactory>();
+
+                // 使用字典按 (ProdDetailID, LocationID) 分组，存储库存记录及累计数据
+                var inventoryGroups = new Dictionary<(long ProdDetailID, long LocationID), (tb_Inventory Inventory, decimal PurQtySum, bool? IsGift,
+                    decimal UnitPrice, DateTime LatestStorageTime)>();
+
+                // 遍历销售订单明细，聚合数据
                 foreach (var child in entity.tb_PurEntryDetails)
                 {
-                    #region 库存表的更新 这里应该是必需有库存的数据，
-                    //实际 期初已经有数据了，则要
+                    var key = (child.ProdDetailID, child.Location_ID);
+                    decimal currentEntryQty = child.Quantity;
+                    DateTime currentStorageTime = DateTime.Now;
 
-                    tb_Inventory inv = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == child.ProdDetailID && i.Location_ID == child.Location_ID);
-                    if (inv == null)
+                    // 若字典中不存在该产品，初始化记录
+                    if (!inventoryGroups.TryGetValue(key, out var group))
                     {
-                        inv = new tb_Inventory();
-                        inv.InitInventory = (int)inv.Quantity;
-                        inv.Notes = "";//后面修改数据库是不需要？
-                        BusinessHelper.Instance.InitEntity(inv);
+                        #region 库存表的更新 这里应该是必需有库存的数据，
+                        //实际 期初已经有数据了，则要
+                        tb_Inventory inv = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == child.ProdDetailID && i.Location_ID == child.Location_ID);
+                        BusinessHelper.Instance.EditEntity(inv);
+                        #endregion
+
+                        // 初始化分组数据
+                        group = (
+                            Inventory: inv,
+                            PurQtySum: currentEntryQty, // 首次累加
+                            IsGift: child.IsGift,
+                            UnitPrice: child.UnitPrice,
+                            LatestStorageTime: currentStorageTime
+                        );
+                        inventoryGroups[key] = group;
                     }
                     else
                     {
+                        // 累加已有分组的数值字段
 
-                        BusinessHelper.Instance.EditEntity(inv);
+                        group.IsGift = child.IsGift;
+                        if (group.IsGift.HasValue && !group.IsGift.Value && group.UnitPrice > 0)
+                        {
+                            group.UnitPrice = ((currentEntryQty * child.UnitPrice) + (group.UnitPrice * group.PurQtySum)) / (group.PurQtySum + currentEntryQty);
+                        }
+                        else
+                        {
+                            group.UnitPrice = child.UnitPrice;
+                        }
+                        group.PurQtySum += currentEntryQty;
+
+                        // 取最新出库时间（若当前时间更新，则覆盖）
+                        group.LatestStorageTime = System.DateTime.Now;
+                        inventoryGroups[key] = group; // 更新分组数据
                     }
-                    inv.ProdDetailID = child.ProdDetailID;
-                    inv.Location_ID = child.Location_ID;
-                    inv.Notes = "";//后面修改数据库是不需要？
-                    inv.LatestStorageTime = System.DateTime.Now;
+                }
 
-                    //采购订单时添加 。这里减掉在路上的数量
-                    inv.On_the_way_Qty = inv.On_the_way_Qty + child.Quantity;
-                    /*
-                  直接输入成本：在录入库存记录时，直接输入该产品或物品的成本价格。这种方式适用于成本价格相对稳定或容易确定的情况。
-                 平均成本法：通过计算一段时间内该产品或物品的平均成本来确定成本价格。这种方法适用于成本价格随时间波动的情况，可以更准确地反映实际成本。
-                 先进先出法（FIFO）：按照先入库的产品先出库的原则，计算库存成本。这种方法适用于库存流转速度较快，成本价格相对稳定的情况。
-                 后进先出法（LIFO）：按照后入库的产品先出库的原则，计算库存成本。这种方法适用于库存流转速度较慢，成本价格波动较大的情况。
-                 数据来源可以是多种多样的，例如：
-                 采购价格：从供应商处购买产品或物品时的价格。
-                 生产成本：自行生产产品时的成本，包括原材料、人工和间接费用等。
-                 市场价格：参考市场上类似产品或物品的价格。
-                  */
-                    if (child.IsGift.HasValue && child.IsGift == false && child.UnitPrice > 0)
+                List<tb_Inventory> invUpdateList = new List<tb_Inventory>();
+                List<tb_BOM_SDetail> BOM_SDetails = new List<tb_BOM_SDetail>();
+                List<tb_BOM_S> BOMs = new List<tb_BOM_S>();
+                List<tb_PriceRecord> PriceRecords = new List<tb_PriceRecord>();
+
+                // 处理分组数据，更新库存记录的各字段
+                foreach (var group in inventoryGroups)
+                {
+                    var inv = group.Value.Inventory;
+
+                    #region 计算成本
+                    //直接输入成本：在录入库存记录时，直接输入该产品或物品的成本价格。这种方式适用于成本价格相对稳定或容易确定的情况。
+                    //平均成本法：通过计算一段时间内该产品或物品的平均成本来确定成本价格。这种方法适用于成本价格随时间波动的情况，可以更准确地反映实际成本。
+                    //先进先出法（FIFO）：按照先入库的产品先出库的原则，计算库存成本。这种方法适用于库存流转速度较快，成本价格相对稳定的情况。适用范围：适用于存货的实物流转比较符合先进先出的假设，比如食品、药品等有保质期限制的商品，先购进的存货会先发出销售。
+
+                    //数据来源可以是多种多样的，例如：
+                    //采购价格：从供应商处购买产品或物品时的价格。
+                    //生产成本：自行生产产品时的成本，包括原材料、人工和间接费用等。
+                    //市场价格：参考市场上类似产品或物品的价格。
+                    if (group.Value.IsGift.HasValue && !group.Value.IsGift.Value && group.Value.UnitPrice > 0)
                     {
-                        CommService.CostCalculations.AntiCostCalculation(_appContext, inv, child.Quantity, child.UnitPrice);
-                        //赠品不更新。价格为0的不更新。
+                        CommService.CostCalculations.AntiCostCalculation(_appContext, inv, group.Value.PurQtySum.ToInt(), group.Value.UnitPrice);
                         #region 更新BOM价格,当前产品存在哪些BOM中，则更新所有BOM的价格包含主子表数据的变化
 
-                        tb_BOM_SDetailController<tb_BOM_SDetail> ctrtb_BOM_SDetail = _appContext.GetRequiredService<tb_BOM_SDetailController<tb_BOM_SDetail>>();
-                        List<tb_BOM_SDetail> bomDetails = _unitOfWorkManage.GetDbClient().Queryable<tb_BOM_SDetail>()
-                        .Includes(b => b.tb_bom_s, c => c.tb_BOM_SDetails)
-                        .Where(c => c.ProdDetailID == child.ProdDetailID).ToList();
+                        List<tb_BOM_SDetail> bomDetails =await _unitOfWorkManage.GetDbClient().Queryable<tb_BOM_SDetail>()
+                        .Includes(b => b.tb_bom_s, d => d.tb_BOM_SDetails)
+                        .Where(c => c.ProdDetailID == group.Key.ProdDetailID).ToListAsync();
                         foreach (tb_BOM_SDetail bomDetail in bomDetails)
                         {
                             //如果存在则更新 
@@ -641,48 +736,89 @@ namespace RUINORERP.Business
                                 bomDetail.tb_bom_s.TotalMaterialCost = bomDetail.tb_bom_s.tb_BOM_SDetails.Sum(c => c.SubtotalUnitCost);
                                 bomDetail.tb_bom_s.OutProductionAllCosts = bomDetail.tb_bom_s.TotalMaterialCost + bomDetail.tb_bom_s.TotalOutManuCost + bomDetail.tb_bom_s.OutApportionedCost;
                                 bomDetail.tb_bom_s.SelfProductionAllCosts = bomDetail.tb_bom_s.TotalMaterialCost + bomDetail.tb_bom_s.TotalSelfManuCost + bomDetail.tb_bom_s.SelfApportionedCost;
-                                await _unitOfWorkManage.GetDbClient().Updateable<tb_BOM_S>(bomDetail.tb_bom_s).ExecuteCommandAsync();
+                                BOMs.Add(bomDetail.tb_bom_s);
                             }
+                            BOM_SDetails.Add(bomDetail);
                         }
-                        if (bomDetails.Count > 0)
-                        {
-                            await _unitOfWorkManage.GetDbClient().Updateable<tb_BOM_SDetail>(bomDetails).ExecuteCommandAsync();
-                        }
-
-
-
                         #endregion
                     }
-                    inv.Quantity = inv.Quantity - child.Quantity;
-                    inv.Inv_SubtotalCostMoney = inv.Inv_Cost * inv.Quantity;
-                    inv.LatestOutboundTime = System.DateTime.Now;
-                    invUpdateList.Add(inv);
+
                     #endregion
 
+                    #region 更新采购价格
+
+                    //注意这里的人是指采购订单录入的人。不是采购入库的人。
+                    tb_PriceRecordController<tb_PriceRecord> ctrPriceRecord = _appContext.GetRequiredService<tb_PriceRecordController<tb_PriceRecord>>();
+                    tb_PriceRecord priceRecord = await _unitOfWorkManage.GetDbClient().Queryable<tb_PriceRecord>()
+                    .Where(c => c.Employee_ID == entity.tb_purorder.Employee_ID && c.ProdDetailID == group.Key.ProdDetailID).FirstAsync();
+                    //如果存在则更新，否则插入
+                    if (priceRecord == null)
+                    {
+                        priceRecord = new tb_PriceRecord();
+                        priceRecord.ProdDetailID = group.Key.ProdDetailID;
+                    }
+                    priceRecord.Employee_ID = entity.tb_purorder.Employee_ID;
+                    if (group.Value.UnitPrice != priceRecord.PurPrice)
+                    {
+                        priceRecord.PurPrice = group.Value.UnitPrice;
+                        priceRecord.PurDate = System.DateTime.Now;
+                        PriceRecords.Add(priceRecord);
+                    }
+
+
+                    #endregion
+
+                    // 累加数值字段
+                    inv.On_the_way_Qty += group.Value.PurQtySum.ToInt();
+                    inv.Quantity -= group.Value.PurQtySum.ToInt();
+                    inv.LatestStorageTime = System.DateTime.Now;
+                    // 计算衍生字段（如总成本）
+                    inv.Inv_SubtotalCostMoney = inv.Inv_Cost * inv.Quantity; // 需确保 Inv_Cost 有值
+                    invUpdateList.Add(inv);
                 }
 
-                // 使用LINQ查询
-                var CheckNewInvList = invUpdateList.Where(c => c.Inventory_ID == 0)
-                    .GroupBy(i => new { i.ProdDetailID, i.Location_ID })
-                    .Where(g => g.Count() > 1)
-                    .Select(g => g.Key.ProdDetailID)
-                    .ToList();
-
-                if (CheckNewInvList.Count > 0)
+                if (invUpdateList.Count > 0)
                 {
-                    //新增库存中有重复的商品，操作失败。请联系管理员。
-                    rs.ErrorMsg = "新增库存中有重复的商品，操作失败。";
-                    rs.Succeeded = false;
-                    _logger.LogError(rs.ErrorMsg + "详细信息：" + string.Join(",", CheckNewInvList));
-                    return rs;
+                    DbHelper<tb_Inventory> dbHelper = _appContext.GetRequiredService<DbHelper<tb_Inventory>>();
+                    var Counter = await dbHelper.BaseDefaultAddElseUpdateAsync(invUpdateList);
+                    if (Counter == 0)
+                    {
+                        _unitOfWorkManage.RollbackTran();
+                        throw new Exception("入库时，库存更新数据为0，更新失败！");
+                    }
                 }
 
-                DbHelper<tb_Inventory> dbHelper = _appContext.GetRequiredService<DbHelper<tb_Inventory>>();
-                var Counter = await dbHelper.BaseDefaultAddElseUpdateAsync(invUpdateList);
-                if (Counter != invUpdateList.Count)
+                if (BOM_SDetails.Count > 0)
                 {
-                    _unitOfWorkManage.RollbackTran();
-                    throw new Exception("库存更新失败！");
+                    DbHelper<tb_BOM_SDetail> BOM_SDetaildbHelper = _appContext.GetRequiredService<DbHelper<tb_BOM_SDetail>>();
+                    var BOM_SDetailCounter = await BOM_SDetaildbHelper.BaseDefaultAddElseUpdateAsync(BOM_SDetails);
+                    if (BOM_SDetailCounter == 0)
+                    {
+                        _unitOfWorkManage.RollbackTran();
+                        throw new Exception("入库时，配方明细成本更新数据为0，更新失败！");
+                    }
+                }
+
+                if (BOMs.Count > 0)
+                {
+                    DbHelper<tb_BOM_S> BOM_SdbHelper = _appContext.GetRequiredService<DbHelper<tb_BOM_S>>();
+                    var BOMCounter = await BOM_SdbHelper.BaseDefaultAddElseUpdateAsync(BOMs);
+                    if (BOMCounter == 0)
+                    {
+                        _unitOfWorkManage.RollbackTran();
+                        throw new Exception("入库时，配方主表成本更新数据为0，更新失败！");
+                    }
+                }
+
+                if (PriceRecords.Count > 0)
+                {
+                    DbHelper<tb_PriceRecord> PriceRecorddbHelper = _appContext.GetRequiredService<DbHelper<tb_PriceRecord>>();
+                    var PriceRecordCounter = await PriceRecorddbHelper.BaseDefaultAddElseUpdateAsync(PriceRecords);
+                    if (PriceRecordCounter == 0)
+                    {
+                        _unitOfWorkManage.RollbackTran();
+                        throw new Exception("入库时，采购价格历史记录更新数据为0，更新失败！");
+                    }
                 }
 
                 if (entity.tb_purorder != null)

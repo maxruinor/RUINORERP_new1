@@ -163,7 +163,7 @@ namespace RUINORERP.Business
 
                     DbHelper<tb_Inventory> dbHelper = _appContext.GetRequiredService<DbHelper<tb_Inventory>>();
                     var Counter = await dbHelper.BaseDefaultAddElseUpdateAsync(invUpdateList);
-                    if (Counter != invUpdateList.Count)
+                    if (Counter ==0)
                     {
                         _unitOfWorkManage.RollbackTran();
                         throw new Exception("子件库存更新失败！");
@@ -280,7 +280,7 @@ namespace RUINORERP.Business
                     }
                     DbHelper<tb_Inventory> dbHelper = _appContext.GetRequiredService<DbHelper<tb_Inventory>>();
                     var Counter = await dbHelper.BaseDefaultAddElseUpdateAsync(invUpdateList);
-                    if (Counter != invUpdateList.Count)
+                    if (Counter ==0)
                     {
                         _unitOfWorkManage.RollbackTran();
                         throw new Exception("子件库存更新失败！");

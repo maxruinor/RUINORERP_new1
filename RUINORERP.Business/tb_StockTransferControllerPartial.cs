@@ -127,7 +127,7 @@ namespace RUINORERP.Business
                   
                 }
                 int InvUpdateCounterFrom = await _unitOfWorkManage.GetDbClient().Updateable(invUpdateListFrom).ExecuteCommandAsync();
-                if (InvUpdateCounterFrom != invUpdateListFrom.Count)
+                if (InvUpdateCounterFrom == 0)
                 {
                     _unitOfWorkManage.RollbackTran();
                     throw new Exception("来源库存更新失败！");
@@ -137,14 +137,14 @@ namespace RUINORERP.Business
                
 
                 var InvInsertCounterTo = await _unitOfWorkManage.GetDbClient().Insertable(invInsertList).ExecuteReturnSnowflakeIdListAsync();
-                if (InvInsertCounterTo.Count != invInsertList.Count)
+                if (InvInsertCounterTo.Count == 0)
                 {
                     _unitOfWorkManage.RollbackTran();
                     throw new Exception("目标库存保存失败！");
                 }
                 List<tb_Inventory> invUpdateList = invUpdateListTo.Where(c => c.Inventory_ID > 0).ToList();
                 int InvUpdateCounterTo = await _unitOfWorkManage.GetDbClient().Updateable(invUpdateList).ExecuteCommandAsync();
-                if (InvUpdateCounterTo != invUpdateList.Count)
+                if (InvUpdateCounterTo == 0)
                 {
                     _unitOfWorkManage.RollbackTran();
                     throw new Exception("目标库存更新失败！");

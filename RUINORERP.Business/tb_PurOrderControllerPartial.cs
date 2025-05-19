@@ -31,6 +31,7 @@ using AutoMapper;
 using RUINORERP.Business.CommService;
 using RUINORERP.Global.EnumExt;
 using Fireasy.Common.Extensions;
+using System.Collections;
 
 namespace RUINORERP.Business
 {
@@ -88,35 +89,20 @@ namespace RUINORERP.Business
                                 BusinessHelper.Instance.EditEntity(inv);
                                 #endregion
                                 invUpdateList.Add(inv);
-                                
+
                             }
 
-                            // 使用LINQ查询
-                            var CheckNewInvList = invUpdateList.Where(c => c.Inventory_ID == 0)
-                                .GroupBy(i => new { i.ProdDetailID, i.Location_ID })
-                                .Where(g => g.Count() > 1)
-                                .Select(g => g.Key.ProdDetailID)
-                                .ToList();
-
-                            if (CheckNewInvList.Count > 0)
-                            {
-                                //新增库存中有重复的商品，操作失败。请联系管理员。
-                                rs.ErrorMsg = "新增库存中有重复的商品，操作失败。";
-                                rs.Succeeded = false;
-                                _logger.LogError(rs.ErrorMsg + "详细信息：" + string.Join(",", CheckNewInvList));
-                                return rs;
-                            }
 
                             DbHelper<tb_Inventory> dbHelper = _appContext.GetRequiredService<DbHelper<tb_Inventory>>();
                             var Counter = await dbHelper.BaseDefaultAddElseUpdateAsync(invUpdateList);
-                            if (Counter != invUpdateList.Count)
+                            if (Counter == 0)
                             {
                                 _unitOfWorkManage.RollbackTran();
                                 throw new Exception("库存更新失败！");
                             }
                         }
 
-                   
+
 
                         entity.DataStatus = (int)DataStatus.完结;
                         BusinessHelper.Instance.EditEntity(entity);
@@ -153,26 +139,22 @@ namespace RUINORERP.Business
 
 
 
-//        采购预付款（预付）	- 生成预付单
-//- 收货后核销预付 → 冲抵应付	- 预收付表：减少 RemainAmount
-//- 应收应付表（应付）：减少 TotalAmount
+        //        采购预付款（预付）	- 生成预付单
+        //- 收货后核销预付 → 冲抵应付	- 预收付表：减少 RemainAmount
+        //- 应收应付表（应付）：减少 TotalAmount
         public async override Task<ReturnResults<T>> ApprovalAsync(T ObjectEntity)
         {
             ReturnResults<T> rmrs = new ReturnResults<T>();
             tb_PurOrder entity = ObjectEntity as tb_PurOrder;
-
+            if (entity == null)
+            {
+                return rmrs;
+            }
             try
             {
+                tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
                 // 开启事务，保证数据一致性
                 _unitOfWorkManage.BeginTran();
-                tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
-
-
-                if (entity == null)
-                {
-                    return rmrs;
-                }
-
 
                 //如果采购订单明细数据来自于请购单，则明细要回写状态为已采购
                 if (entity.RefBillID.HasValue && entity.RefBillID.Value > 0)
@@ -184,7 +166,6 @@ namespace RUINORERP.Business
                             .Where(c => c.PuRequisition_ID == entity.RefBillID).Single();
                         if (buyingRequisition != null)
                         {
-
                             foreach (var child in entity.tb_PurOrderDetails)
                             {
                                 var buyItem = buyingRequisition.tb_BuyingRequisitionDetails
@@ -200,49 +181,68 @@ namespace RUINORERP.Business
                     }
                 }
 
-                List<tb_Inventory> invUpdateList = new List<tb_Inventory>();
+                var inventoryGroups = new Dictionary<(long ProdDetailID, long LocationID), (tb_Inventory Inventory, decimal OnTheWayQty)>();
+
                 foreach (var child in entity.tb_PurOrderDetails)
                 {
-                    #region 库存表的更新 这里应该是必需有库存的数据，
-                    tb_Inventory inv = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == child.ProdDetailID && i.Location_ID == child.Location_ID);
-                    if (inv == null)
+                    var key = (child.ProdDetailID, child.Location_ID);
+                    decimal currentOnTheWayQty = child.Quantity; // 假设 Sale_Qty 对应明细中的 Quantity
+                    if (!inventoryGroups.TryGetValue(key, out var group))
                     {
-                        //采购和销售都会提前处理。所以这里默认提供一行数据。成本和数量都可能为0
-                        inv = new tb_Inventory();
-                        inv.ProdDetailID = child.ProdDetailID;
-                        inv.Location_ID = child.Location_ID;
-                        inv.Quantity = 0;
-                        inv.InitInventory = (int)inv.Quantity;
-                        inv.Notes = "采购订单创建";//后面修改数据库是不需要？
-                                             //inv.LatestStorageTime = System.DateTime.Now;
-                        BusinessHelper.Instance.InitEntity(inv);
+                        #region 库存表的更新 这里应该是必需有库存的数据，
+                        tb_Inventory inv = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == child.ProdDetailID && i.Location_ID == child.Location_ID);
+                        if (inv == null)
+                        {
+                            //采购和销售都会提前处理。所以这里默认提供一行数据。成本和数量都可能为0
+                            inv = new tb_Inventory
+                            {
+                                ProdDetailID = key.ProdDetailID,
+                                Location_ID = key.Location_ID,
+                                Quantity = 0, // 初始数量
+                                InitInventory = 0,
+                                Inv_Cost = 0, // 假设成本价需从其他地方获取，需根据业务补充
+                                Notes = "采购订单创建",
+                                Sale_Qty = 0,
+                            };
+                            BusinessHelper.Instance.InitEntity(inv);
+                        }
+                        else
+                        {
+                            BusinessHelper.Instance.EditEntity(inv);
+                        }
+                        // 初始化分组数据
+                        group = (
+                            Inventory: inv,
+                            OnTheWayQty: currentOnTheWayQty // 首次累加
+                                                            //QtySum: currentQty
+                        );
+                        inventoryGroups[key] = group;
+
+                        #endregion
                     }
-                    //更新在途库存
-                    inv.On_the_way_Qty = inv.On_the_way_Qty + child.Quantity;
-                    BusinessHelper.Instance.EditEntity(inv);
-                    #endregion
-                    invUpdateList.Add(inv);
+                    else
+                    {
+                        // 累加已有分组的数值字段
+                        group.OnTheWayQty += currentOnTheWayQty;
+                        inventoryGroups[key] = group; // 更新分组数据
+                    }
                 }
 
-                // 使用LINQ查询
-                var CheckNewInvList = invUpdateList.Where(c => c.Inventory_ID == 0)
-                    .GroupBy(i => new { i.ProdDetailID, i.Location_ID })
-                    .Where(g => g.Count() > 1)
-                    .Select(g => g.Key.ProdDetailID)
-                    .ToList();
+                List<tb_Inventory> invUpdateList = new List<tb_Inventory>();
 
-                if (CheckNewInvList.Count > 0)
+                // 处理分组数据，更新库存记录的各字段
+                //循环inventoryGroups
+                foreach (var group in inventoryGroups)
                 {
-                    //新增库存中有重复的商品，操作失败。请联系管理员。
-                    rmrs.ErrorMsg = "新增库存中有重复的商品，操作失败。";
-                    rmrs.Succeeded = false;
-                    _logger.LogError(rmrs.ErrorMsg + "详细信息：" + string.Join(",", CheckNewInvList));
-                    return rmrs;
+                    var inv = group.Value.Inventory;
+                    // 累加数值字段 //更新在途库存
+                    inv.On_the_way_Qty += group.Value.OnTheWayQty.ToInt();
+                    invUpdateList.Add(inv);
                 }
 
                 DbHelper<tb_Inventory> dbHelper = _appContext.GetRequiredService<DbHelper<tb_Inventory>>();
                 var InvUpdateCounter = await dbHelper.BaseDefaultAddElseUpdateAsync(invUpdateList);
-                 if (InvUpdateCounter == 0)
+                if (InvUpdateCounter == 0)
                 {
                     _unitOfWorkManage.RollbackTran();
                     rmrs.ErrorMsg = ("库存更新失败！");
@@ -288,7 +288,7 @@ namespace RUINORERP.Business
 
                     if (entity.PayStatus == (int)PayStatus.未付款)
                     {
-                        
+
                         if (entity.Paytype_ID != _appContext.PaymentMethodOfPeriod.Paytype_ID)
                         {
                             rmrs.Succeeded = false;
@@ -475,47 +475,68 @@ namespace RUINORERP.Business
                 }
 
                 tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
-                List<tb_Inventory> invUpdateList = new List<tb_Inventory>();
+
+
+                var inventoryGroups = new Dictionary<(long ProdDetailID, long LocationID), (tb_Inventory Inventory, decimal OnTheWayQty)>();
+
                 foreach (var child in entity.tb_PurOrderDetails)
                 {
-                    #region 库存表的更新 这里应该是必需有库存的数据，
-                    tb_Inventory inv = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == child.ProdDetailID && i.Location_ID == child.Location_ID);
-                    if (inv == null)
+                    var key = (child.ProdDetailID, child.Location_ID);
+                    decimal currentOnTheWayQty = child.Quantity; // 假设 Sale_Qty 对应明细中的 Quantity
+                    if (!inventoryGroups.TryGetValue(key, out var group))
                     {
-                        inv = new tb_Inventory();
-                        inv.ProdDetailID = child.ProdDetailID;
-                        inv.Location_ID = child.Location_ID;
-                        inv.Quantity = 0;
-                        inv.InitInventory = (int)inv.Quantity;
-                        inv.Notes = "";//后面修改数据库是不需要？
-                                       //inv.LatestStorageTime = System.DateTime.Now;
-                        BusinessHelper.Instance.InitEntity(inv);
+                        #region 库存表的更新 这里应该是必需有库存的数据，
+                        tb_Inventory inv = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == child.ProdDetailID && i.Location_ID == child.Location_ID);
+                        if (inv == null)
+                        {
+                            inv = new tb_Inventory
+                            {
+                                ProdDetailID = key.ProdDetailID,
+                                Location_ID = key.Location_ID,
+                                Quantity = 0, // 初始数量
+                                Inv_Cost = 0, // 假设成本价需从其他地方获取，需根据业务补充
+                                Notes = "销售订单创建",
+                                Sale_Qty = 0,
+                                LatestOutboundTime = DateTime.MinValue // 初始时间
+                            };
+                            BusinessHelper.Instance.InitEntity(inv); // 初始化公共字段
+                        }
+                        else
+                        {
+                            BusinessHelper.Instance.EditEntity(inv);
+                        }
+                        // 初始化分组数据
+                        group = (
+                            Inventory: inv,
+                            OnTheWayQty: currentOnTheWayQty // 首次累加
+                                                            //QtySum: currentQty
+                        );
+                        inventoryGroups[key] = group;
+                        #endregion
                     }
-                    //更新在途库存
-                    inv.On_the_way_Qty = inv.On_the_way_Qty - child.Quantity;
-                    BusinessHelper.Instance.EditEntity(inv);
-                    #endregion
+                    else
+                    {
+                        // 累加已有分组的数值字段
+                        group.OnTheWayQty += currentOnTheWayQty;
+                        inventoryGroups[key] = group; // 更新分组数据
+                    }
+                }
+
+                List<tb_Inventory> invUpdateList = new List<tb_Inventory>();
+
+                // 处理分组数据，更新库存记录的各字段
+                //循环inventoryGroups
+                foreach (var group in inventoryGroups)
+                {
+                    var inv = group.Value.Inventory;
+                    // 累加数值字段 //更新在途库存
+                    inv.On_the_way_Qty -= group.Value.OnTheWayQty.ToInt();
                     invUpdateList.Add(inv);
                 }
 
-                // 使用LINQ查询
-                var CheckNewInvList = invUpdateList.Where(c => c.Inventory_ID == 0)
-                    .GroupBy(i => new { i.ProdDetailID, i.Location_ID })
-                    .Where(g => g.Count() > 1)
-                    .Select(g => g.Key.ProdDetailID)
-                    .ToList();
-
-                if (CheckNewInvList.Count > 0)
-                {
-                    //新增库存中有重复的商品，操作失败。请联系管理员。
-                    rs.ErrorMsg = "新增库存中有重复的商品，操作失败。";
-                    rs.Succeeded = false;
-                    _logger.LogError(rs.ErrorMsg + "详细信息：" + string.Join(",", CheckNewInvList));
-                    return rs;
-                }
                 DbHelper<tb_Inventory> dbHelper = _appContext.GetRequiredService<DbHelper<tb_Inventory>>();
                 var Counter = await dbHelper.BaseDefaultAddElseUpdateAsync(invUpdateList);
-                if (Counter != invUpdateList.Count)
+                if (Counter == 0)
                 {
                     _unitOfWorkManage.RollbackTran();
                     throw new Exception("库存更新失败！");
@@ -556,7 +577,7 @@ namespace RUINORERP.Business
 
                 entity = mapper.Map<tb_PurEntry>(order);
                 entity.PayStatus = order.PayStatus;
-                entity.Paytype_ID=order.Paytype_ID;
+                entity.Paytype_ID = order.Paytype_ID;
                 List<tb_PurEntryDetail> details = mapper.Map<List<tb_PurEntryDetail>>(order.tb_PurOrderDetails);
                 //转单要TODO
                 //转换时，默认认为订单出库数量就等于这次出库数量，是否多个订单累计？，如果是UI录单。则只是默认这个数量。也可以手工修改
@@ -573,6 +594,19 @@ namespace RUINORERP.Business
                             .FirstOrDefault(c => c.ProdDetailID == details[i].ProdDetailID
                             && c.Location_ID == details[i].Location_ID
                             && c.PurOrder_ChildID == details[i].PurOrder_ChildID);
+
+                        string ProdName = string.Empty;
+                        View_ProdDetail Prod = BizCacheHelper.Instance.GetEntity<View_ProdDetail>(details[i].ProdDetailID);
+                        if (Prod != null && Prod.GetType().Name != "Object" && Prod is View_ProdDetail prodDetail)
+                        {
+
+                        }
+                        else
+                        {
+                            Prod = BizCacheHelper.Instance.GetEntity<View_ProdDetail>(details[i].ProdDetailID);
+                        }
+
+
                         details[i].Quantity = item.Quantity - item.DeliveredQuantity;// 已经交数量去掉
                         details[i].SubtotalAmount = details[i].UnitPrice * details[i].Quantity;
                         if (details[i].Quantity > 0)
@@ -581,7 +615,7 @@ namespace RUINORERP.Business
                         }
                         else
                         {
-                            tipsMsg.Add($"订单{order.PurOrderNo}，{item.tb_proddetail.tb_prod.CNName + item.tb_proddetail.tb_prod.Specifications}已入库数为{item.DeliveredQuantity}，可入库数为{details[i].Quantity}，当前行数据忽略！");
+                            tipsMsg.Add($"订单{order.PurOrderNo}，{Prod.CNName + Prod.Specifications}已入库数为{item.DeliveredQuantity}，可入库数为{details[i].Quantity}，当前行数据忽略！");
                         }
 
                         #endregion
@@ -594,6 +628,18 @@ namespace RUINORERP.Business
                             .FirstOrDefault(c => c.ProdDetailID == details[i].ProdDetailID
                             && c.Location_ID == details[i].Location_ID
                             );
+
+                        string ProdName = string.Empty;
+                        View_ProdDetail Prod = BizCacheHelper.Instance.GetEntity<View_ProdDetail>(details[i].ProdDetailID);
+                        if (Prod != null && Prod.GetType().Name != "Object" && Prod is View_ProdDetail prodDetail)
+                        {
+
+                        }
+                        else
+                        {
+                            Prod = BizCacheHelper.Instance.GetEntity<View_ProdDetail>(details[i].ProdDetailID);
+                        }
+
                         details[i].Quantity = item.Quantity - item.DeliveredQuantity;// 已经交数量去掉
                         details[i].SubtotalAmount = details[i].UnitPrice * details[i].Quantity;
                         if (details[i].Quantity > 0)
@@ -602,34 +648,14 @@ namespace RUINORERP.Business
                         }
                         else
                         {
-                            tipsMsg.Add($"订单{order.PurOrderNo}，{item.tb_proddetail.tb_prod.CNName}已入库数为{item.DeliveredQuantity}，可入库数为{details[i].Quantity}，当前行数据忽略！");
+                            tipsMsg.Add($"订单{order.PurOrderNo}，{Prod.CNName}已入库数为{item.DeliveredQuantity}，可入库数为{details[i].Quantity}，当前行数据忽略！");
                         }
                         #endregion
                     }
 
                 }
 
-                /*
-                foreach (tb_PurEntryDetail item in details)
-                {
-                    tb_PurOrderDetail orderDetail = new tb_PurOrderDetail();
-                    orderDetail = order.tb_PurOrderDetails.FirstOrDefault<tb_PurOrderDetail>(c => c.ProdDetailID == item.ProdDetailID);
-                    if (orderDetail != null)
-                    {
-                        //已经入库数量等于已经入库数量则认为这项全入库了，不再出
-                        if (orderDetail.DeliveredQuantity == item.Quantity)
-                        {
-                            continue;
-                        }
-                        else
-                        {
-                            item.Quantity = item.Quantity - orderDetail.DeliveredQuantity;
-                            NewDetails.Add(item);
-                        }
-                    }
 
-                }
-                */
 
 
 

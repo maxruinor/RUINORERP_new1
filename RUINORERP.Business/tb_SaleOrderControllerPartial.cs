@@ -65,51 +65,68 @@ namespace RUINORERP.Business
                 tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
                 List<tb_Inventory> invList = new List<tb_Inventory>();
 
+                // 使用字典按 (ProdDetailID, LocationID) 分组，存储库存记录及累计数据
+                //var inventoryGroups = new Dictionary<(long ProdDetailID, long LocationID), (tb_Inventory Inventory, decimal SaleQtySum, decimal QtySum)>();
+                var inventoryGroups = new Dictionary<(long ProdDetailID, long LocationID), (tb_Inventory Inventory, decimal SaleQtySum)>();
+
                 //更新拟销售量
                 foreach (var child in entity.tb_SaleOrderDetails)
                 {
-                    #region 库存表的更新 ，
-                    tb_Inventory inv = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == child.ProdDetailID && i.Location_ID == child.Location_ID);
-                    if (inv == null)
+                    var key = (child.ProdDetailID, child.Location_ID);
+                    decimal currentSaleQty = child.Quantity; // 假设 Sale_Qty 对应明细中的 Quantity
+                    //decimal currentQty = child.Quantity; // 假设 Qty 与 Sale_Qty 相同，可根据实际业务调整
+                    DateTime currentOutboundTime = DateTime.Now; // 每次出库更新时间
+                                                                 // 若字典中不存在该产品，初始化记录
+                    if (!inventoryGroups.TryGetValue(key, out var group))
                     {
-                        //采购和销售都会提前处理。所以这里默认提供一行数据。成本和数量都可能为0
-                        inv = new tb_Inventory();
-                        inv.ProdDetailID = child.ProdDetailID;
-                        inv.Location_ID = child.Location_ID;
-                        inv.Quantity = 0;
-                        inv.InitInventory = (int)inv.Quantity;
-                        inv.Notes = "销售订单创建";
-                        inv.Sale_Qty = inv.Sale_Qty + child.Quantity;
-                        BusinessHelper.Instance.InitEntity(inv);
-                        invList.Add(inv);
+                        #region 库存表的更新 ，
+                        tb_Inventory inv = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == child.ProdDetailID && i.Location_ID == child.Location_ID);
+                        if (inv == null)
+                        {
+                            //采购和销售都会提前处理。所以这里默认提供一行数据。成本和数量都可能为0
+                            inv = new tb_Inventory
+                            {
+                                ProdDetailID = key.ProdDetailID,
+                                Location_ID = key.Location_ID,
+                                Quantity = 0, // 初始数量
+                                InitInventory = 0,
+                                Inv_Cost = 0, // 假设成本价需从其他地方获取，需根据业务补充
+                                Notes = "销售订单创建",
+                                Sale_Qty = 0,
+                            };
+                            BusinessHelper.Instance.InitEntity(inv);
+                        }
+                        else
+                        {
+                            BusinessHelper.Instance.EditEntity(inv);
+                        }
+                        // 初始化分组数据
+                        group = (
+                            Inventory: inv,
+                            SaleQtySum: currentSaleQty // 首次累加
+                                                       //QtySum: currentQty
+                        );
+                        inventoryGroups[key] = group;
+                        #endregion
                     }
                     else
                     {
-                        //更新在途库存
-                        inv.Sale_Qty = inv.Sale_Qty + child.Quantity;
-                        BusinessHelper.Instance.EditEntity(inv);
-                        invList.Add(inv);
+                        // 累加已有分组的数值字段
+                        group.SaleQtySum += currentSaleQty;
+                        inventoryGroups[key] = group; // 更新分组数据
                     }
-
-                    #endregion
                 }
 
-                // 使用LINQ查询
-                var CheckNewInvList = invList
-                    .GroupBy(i => new { i.ProdDetailID, i.Location_ID })
-                    .Where(g => g.Count() > 1)
-                    .Select(g => g.Key.ProdDetailID)
-                    .ToList();
-
-                if (CheckNewInvList.Count > 0)
+                // 处理分组数据，更新库存记录的各字段
+                //循环inventoryGroups
+                foreach (var group in inventoryGroups)
                 {
-                    //新增库存中有重复的商品，操作失败。请联系管理员。
-                    rmrs.ErrorMsg = "新增库存中有重复的商品，操作失败。";
-                    rmrs.Succeeded = false;
-                    _logger.LogError(rmrs.ErrorMsg + "详细信息：" + string.Join(",", CheckNewInvList));
-                    return rmrs;
+                    var inv = group.Value.Inventory;
+                    // 累加数值字段
+                    inv.Sale_Qty += group.Value.SaleQtySum.ToInt();
+                    invList.Add(inv);
                 }
-
+                 
 
                 _unitOfWorkManage.BeginTran();
                 DbHelper<tb_Inventory> dbHelper = _appContext.GetRequiredService<DbHelper<tb_Inventory>>();
@@ -187,193 +204,16 @@ namespace RUINORERP.Business
                     //销售订单审核时，非账期，即时收款时
                     //订金，部分收款 生成预收款。
                     //全款生成应收 转收款单
+                    var ctrpay = _appContext.GetRequiredService<tb_FM_PreReceivedPaymentController<tb_FM_PreReceivedPayment>>();
                     if (entity.Paytype_ID != _appContext.PaymentMethodOfPeriod.Paytype_ID
                         && entity.PayStatus == (int)PayStatus.部分付款
                         )
                     {
-                        var ctrpay = _appContext.GetRequiredService<tb_FM_PreReceivedPaymentController<tb_FM_PreReceivedPayment>>();
-                        tb_FM_PreReceivedPayment payable = new tb_FM_PreReceivedPayment();
-                        payable = mapper.Map<tb_FM_PreReceivedPayment>(entity);
-                        payable.ApprovalResults = null;
-                        payable.ApprovalStatus = (int)ApprovalStatus.未审核;
-                        payable.Approver_at = null;
-                        payable.Approver_by = null;
-                        payable.PrintStatus = 0;
-                        payable.IsAvailable = true;
-                        payable.ActionStatus = ActionStatus.新增;
-                        payable.ApprovalOpinions = "";
-                        payable.Modified_at = null;
-                        payable.Modified_by = null;
-                        if (entity.tb_projectgroup != null)
-                        {
-                            payable.DepartmentID = entity.tb_projectgroup.DepartmentID;
-                        }
-                        //销售就是收款
-                        payable.ReceivePaymentType = (int)ReceivePaymentType.收款;
-
-                        payable.PreRPNO = BizCodeGenerator.Instance.GetBizBillNo(BizType.预收款单);
-                        payable.SourceBizType = (int)BizType.销售订单;
-                        payable.SourceBillNo = entity.SOrderNo;
-                        payable.SourceBillId = entity.SOrder_ID;
-                        payable.Currency_ID = entity.Currency_ID;
-                        payable.PrePayDate = entity.SaleDate;
-                        payable.ExchangeRate = exchangeRate;
-
-                        payable.LocalPrepaidAmountInWords = string.Empty;
-                        payable.Account_id = entity.Account_id;
-                        //如果是外币时，则由外币算出本币
-                        if (entity.PayStatus == (int)PayStatus.全部付款)
-                        {
-                            //外币时 全部付款，则外币金额=本币金额/汇率 在UI中显示出来。
-                            if (_appContext.BaseCurrency.Currency_ID != entity.Currency_ID)
-                            {
-                                payable.ForeignPrepaidAmount = entity.ForeignTotalAmount;
-                                //payable.LocalPrepaidAmount = payable.ForeignPrepaidAmount * exchangeRate;
-                            }
-                            else
-                            {
-                                //本币时
-                                payable.LocalPrepaidAmount = entity.TotalAmount;
-                            }
-                        }
-                        //来自于订金
-                        if (entity.PayStatus == (int)PayStatus.部分付款)
-                        {
-                            //外币时
-                            if (_appContext.BaseCurrency.Currency_ID != entity.Currency_ID)
-                            {
-                                payable.ForeignPrepaidAmount = entity.ForeignDeposit;
-                                // payable.LocalPrepaidAmount = payable.ForeignPrepaidAmount * exchangeRate;
-                            }
-                            else
-                            {
-                                payable.LocalPrepaidAmount = entity.Deposit;
-                            }
-                        }
-
-                        //payable.LocalPrepaidAmountInWords = payable.LocalPrepaidAmount.ToString("C");
-                        payable.LocalPrepaidAmountInWords = payable.LocalPrepaidAmount.ToUpper();
-                        payable.IsAvailable = true;//默认可用
-
-                        payable.PrePaymentReason = $"销售订单{entity.SOrderNo}的预收款";
-                        Business.BusinessHelper.Instance.InitEntity(payable);
-                        payable.PrePaymentStatus = (long)PrePaymentStatus.待审核;
-                        ReturnResults<tb_FM_PreReceivedPayment> rmpay = await ctrpay.SaveOrUpdate(payable);
-                        if (rmpay.Succeeded)
-                        {
-                            // 预收款单生成成功后的处理逻辑
-                        }
-                        else
-                        {
-                            // 处理预收款单生成失败的情况
-                            rmrs.Succeeded = false;
-                            _unitOfWorkManage.RollbackTran();
-                            rmrs.ErrorMsg = $"预收款单生成失败：{rmpay.ErrorMsg ?? "未知错误"}";
-                            if (_appContext.SysConfig.ShowDebugInfo)
-                            {
-                                _logger.LogInformation(rmrs.ErrorMsg);
-                            }
-                            return rmrs;
-                        }
+                        var PreReceivedPayment = ctrpay.CreatePreReceivedPayment(entity, true);
                     }
-                    if (entity.Paytype_ID != _appContext.PaymentMethodOfPeriod.Paytype_ID
-                        && entity.PayStatus == (int)PayStatus.部分付款
-                        )
-                    {
-                        var ctrpay = _appContext.GetRequiredService<tb_FM_PreReceivedPaymentController<tb_FM_PreReceivedPayment>>();
-                        tb_FM_PreReceivedPayment payable = new tb_FM_PreReceivedPayment();
-                        payable = mapper.Map<tb_FM_PreReceivedPayment>(entity);
-                        payable.ApprovalResults = null;
-                        payable.ApprovalStatus = (int)ApprovalStatus.未审核;
-                        payable.Approver_at = null;
-                        payable.Approver_by = null;
-                        payable.PrintStatus = 0;
-                        payable.IsAvailable = true;
-                        payable.ActionStatus = ActionStatus.新增;
-                        payable.ApprovalOpinions = "";
-                        payable.Modified_at = null;
-                        payable.Modified_by = null;
-                        if (entity.tb_projectgroup != null)
-                        {
-                            payable.DepartmentID = entity.tb_projectgroup.DepartmentID;
-                        }
-                        //销售就是收款
-                        payable.ReceivePaymentType = (int)ReceivePaymentType.收款;
 
-                        payable.PreRPNO = BizCodeGenerator.Instance.GetBizBillNo(BizType.预收款单);
-                        payable.SourceBizType = (int)BizType.销售订单;
-                        payable.SourceBillNo = entity.SOrderNo;
-                        payable.SourceBillId = entity.SOrder_ID;
-                        payable.Currency_ID = entity.Currency_ID;
-                        payable.PrePayDate = entity.SaleDate;
-                        payable.ExchangeRate = exchangeRate;
-
-                        payable.LocalPrepaidAmountInWords = string.Empty;
-                        payable.Account_id = entity.Account_id;
-                        //如果是外币时，则由外币算出本币
-                        if (entity.PayStatus == (int)PayStatus.全部付款)
-                        {
-                            //外币时 全部付款，则外币金额=本币金额/汇率 在UI中显示出来。
-                            if (_appContext.BaseCurrency.Currency_ID != entity.Currency_ID)
-                            {
-                                payable.ForeignPrepaidAmount = entity.ForeignTotalAmount;
-                                //payable.LocalPrepaidAmount = payable.ForeignPrepaidAmount * exchangeRate;
-                            }
-                            else
-                            {
-                                //本币时
-                                payable.LocalPrepaidAmount = entity.TotalAmount;
-                            }
-                        }
-                        //来自于订金
-                        if (entity.PayStatus == (int)PayStatus.部分付款)
-                        {
-                            //外币时
-                            if (_appContext.BaseCurrency.Currency_ID != entity.Currency_ID)
-                            {
-                                payable.ForeignPrepaidAmount = entity.ForeignDeposit;
-                                // payable.LocalPrepaidAmount = payable.ForeignPrepaidAmount * exchangeRate;
-                            }
-                            else
-                            {
-                                payable.LocalPrepaidAmount = entity.Deposit;
-                            }
-                        }
-
-                        //payable.LocalPrepaidAmountInWords = payable.LocalPrepaidAmount.ToString("C");
-                        payable.LocalPrepaidAmountInWords = payable.LocalPrepaidAmount.ToUpper();
-                        payable.IsAvailable = true;//默认可用
-
-                        payable.PrePaymentReason = $"销售订单{entity.SOrderNo}的预收款";
-                        Business.BusinessHelper.Instance.InitEntity(payable);
-                        payable.PrePaymentStatus = (long)PrePaymentStatus.待审核;
-                        ReturnResults<tb_FM_PreReceivedPayment> rmpay = await ctrpay.SaveOrUpdate(payable);
-                        if (rmpay.Succeeded)
-                        {
-                            // 预收款单生成成功后的处理逻辑
-                        }
-                        else
-                        {
-                            // 处理预收款单生成失败的情况
-                            rmrs.Succeeded = false;
-                            _unitOfWorkManage.RollbackTran();
-                            rmrs.ErrorMsg = $"预收款单生成失败：{rmpay.ErrorMsg ?? "未知错误"}";
-                            if (_appContext.SysConfig.ShowDebugInfo)
-                            {
-                                _logger.LogInformation(rmrs.ErrorMsg);
-                            }
-                            return rmrs;
-                        }
-                    }
-                    {
-                        //全款 现金 在出库时生成应收，再自动生成收款。自动核销应收单
-                    }
                     #endregion
                 }
-
-
-
-
 
                 //这部分是否能提出到上一级公共部分？
                 entity.DataStatus = (int)DataStatus.确认;
@@ -457,22 +297,11 @@ namespace RUINORERP.Business
 
                         DbHelper<tb_Inventory> dbHelper = _appContext.GetRequiredService<DbHelper<tb_Inventory>>();
 
-                        // 使用LINQ查询
-                        var CheckNewInvList = invUpdateList
-                            .GroupBy(i => new { i.ProdDetailID, i.Location_ID })
-                            .Where(g => g.Count() > 1)
-                            .Select(g => g.Key.ProdDetailID)
-                            .ToList();
 
-                        if (CheckNewInvList.Count > 0)
-                        {
-                            _unitOfWorkManage.RollbackTran();
-                            //新增库存中有重复的商品，操作失败。请联系管理员。
-                            throw new Exception("新增库存中有重复的商品，操作失败。");
-                        }
+                        
 
                         var Counter = await dbHelper.BaseDefaultAddElseUpdateAsync(invUpdateList);
-                        if (Counter != invUpdateList.Count)
+                        if (Counter == 0)
                         {
                             _unitOfWorkManage.RollbackTran();
                             throw new Exception("库存更新失败！");
@@ -574,22 +403,6 @@ namespace RUINORERP.Business
                             invUpdateList.Add(inv);
                         }
 
-                        // 使用LINQ查询
-                        var CheckNewInvList = invUpdateList.Where(c => c.Inventory_ID == 0)
-                            .GroupBy(i => new { i.ProdDetailID, i.Location_ID })
-                            .Where(g => g.Count() > 1)
-                            .Select(g => g.Key.ProdDetailID)
-                            .ToList();
-
-                        if (CheckNewInvList.Count > 0)
-                        {
-                            //新增库存中有重复的商品，操作失败。请联系管理员。
-                            rs.ErrorMsg = "新增库存中有重复的商品，操作失败。";
-                            rs.Succeeded = false;
-                            _logger.LogError(rs.ErrorMsg + "详细信息：" + string.Join(",", CheckNewInvList));
-                            return rs;
-
-                        }
                         DbHelper<tb_Inventory> dbHelper = _appContext.GetRequiredService<DbHelper<tb_Inventory>>();
                         var InvUpdateCounter = await dbHelper.BaseDefaultAddElseUpdateAsync(invUpdateList);
                         if (InvUpdateCounter == 0)
@@ -687,22 +500,7 @@ namespace RUINORERP.Business
                             invUpdateList.Add(inv);
                         }
 
-                        // 使用LINQ查询
-                        var CheckNewInvList = invUpdateList.Where(c => c.Inventory_ID == 0)
-                            .GroupBy(i => new { i.ProdDetailID, i.Location_ID })
-                            .Where(g => g.Count() > 1)
-                            .Select(g => g.Key.ProdDetailID)
-                            .ToList();
-
-                        if (CheckNewInvList.Count > 0)
-                        {
-                            //新增库存中有重复的商品，操作失败。请联系管理员。
-                            rs.ErrorMsg = "新增库存中有重复的商品，操作失败。";
-                            rs.Succeeded = false;
-                            _logger.LogError(rs.ErrorMsg + "详细信息：" + string.Join(",", CheckNewInvList));
-                            return rs;
-
-                        }
+                     
 
                         DbHelper<tb_Inventory> dbHelper = _appContext.GetRequiredService<DbHelper<tb_Inventory>>();
                         var InvUpdateCounter = await dbHelper.BaseDefaultAddElseUpdateAsync(invUpdateList);
@@ -829,8 +627,7 @@ namespace RUINORERP.Business
             tb_SaleOrder entity = ObjectEntity as tb_SaleOrder;
             try
             {
-                // 开启事务，保证数据一致性
-                _unitOfWorkManage.BeginTran();
+    
 
                 tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
                 //更新拟销售量减少
@@ -838,10 +635,10 @@ namespace RUINORERP.Business
 
                 //判断是否能反审?
                 if (entity.tb_SaleOuts != null
-                    && (entity.tb_SaleOuts.Any(c => c.DataStatus == (int)DataStatus.确认 || c.DataStatus == (int)DataStatus.完结) && entity.tb_SaleOuts.Any(c => c.ApprovalStatus == (int)ApprovalStatus.已审核)))
+                    && (entity.tb_SaleOuts.Any(c => c.DataStatus == (int)DataStatus.确认 || c.DataStatus == (int)DataStatus.完结) 
+                    && entity.tb_SaleOuts.Any(c => c.ApprovalStatus == (int)ApprovalStatus.已审核)))
                 {
                     rmrs.ErrorMsg = "存在已确认或已完结，或已审核的销售出库单，不能反审核,请退回处理。";
-                    _unitOfWorkManage.RollbackTran();
                     rmrs.Succeeded = false;
                     return rmrs;
                 }
@@ -852,27 +649,60 @@ namespace RUINORERP.Business
                 {
 
                     rmrs.ErrorMsg = "只能反审核已确认,并且有审核结果的订单 ";
-                    _unitOfWorkManage.RollbackTran();
                     rmrs.Succeeded = false;
                     return rmrs;
                 }
-                List<tb_Inventory> invUpdateList = new List<tb_Inventory>();
+                // 开启事务，保证数据一致性
+                _unitOfWorkManage.BeginTran();
+                // 使用字典按 (ProdDetailID, LocationID) 分组，存储库存记录及累计数据
+                var inventoryGroups = new Dictionary<(long ProdDetailID, long LocationID), (tb_Inventory Inventory, decimal SaleQtySum)>();
+
+   
                 foreach (var child in entity.tb_SaleOrderDetails)
                 {
-                    #region 库存表的更新 ，
-                    tb_Inventory inv = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == child.ProdDetailID && i.Location_ID == child.Location_ID);
-                    if (inv == null)
+                    var key = (child.ProdDetailID, child.Location_ID);
+                    decimal currentSaleQty = child.Quantity; // 假设 Sale_Qty 对应明细中的 Quantity
+                                                             // 若字典中不存在该产品，初始化记录
+                    if (!inventoryGroups.TryGetValue(key, out var group))
                     {
-                        //实际不会出现这个情况。因为审核时创建了。
-                        _unitOfWorkManage.RollbackTran();
-                        throw new Exception("库存数据不存在,反审失败！");
+                        #region 库存表的更新 ，
+                        tb_Inventory inv = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == child.ProdDetailID && i.Location_ID == child.Location_ID);
+                        if (inv == null)
+                        {
+                            //实际不会出现这个情况。因为审核时创建了。
+                            _unitOfWorkManage.RollbackTran();
+                            throw new Exception("库存数据不存在,反审失败！");
+                        }
+                  
+                        BusinessHelper.Instance.EditEntity(inv);
+                        #endregion
+                        // 初始化分组数据
+                        group = (
+                            Inventory: inv,
+                            SaleQtySum: currentSaleQty // 首次累加
+                        );
+                        inventoryGroups[key] = group;
                     }
-                    //更新在途库存
-                    inv.Sale_Qty = inv.Sale_Qty - child.Quantity;
-                    BusinessHelper.Instance.EditEntity(inv);
-                    #endregion
+                    else
+                    {
+                        // 累加分组的数值字段 反审也是累加。下面才可能是减少
+                        group.SaleQtySum += currentSaleQty;
+                        inventoryGroups[key] = group; // 更新分组数据
+                    }
+                }
+
+                // 处理分组数据，更新库存记录的各字段
+                List<tb_Inventory> invUpdateList = new List<tb_Inventory>();
+                foreach (var group in inventoryGroups)
+                {
+                    var inv = group.Value.Inventory;
+                    //反审 要用减
+                    inv.Sale_Qty -= group.Value.SaleQtySum.ToInt();
+                    inv.Inv_SubtotalCostMoney = inv.Inv_Cost * inv.Quantity; // 需确保 Inv_Cost 有值
                     invUpdateList.Add(inv);
                 }
+
+
                 int InvUpdateCounter = await _unitOfWorkManage.GetDbClient().Updateable(invUpdateList).ExecuteCommandAsync();
                 if (InvUpdateCounter == 0)
                 {
@@ -895,7 +725,6 @@ namespace RUINORERP.Business
                         else
                         {
                             //订单反审核  只是用来修改，还是真实取消订单。取消的话。则要退款。修改的话。则不需要退款。
-
                             //如果没有出库，则生成红冲单  ，已冲销  已取消，先用取消标记
                             //如果是要退款，则在预收款查询这，生成退款单。
 
@@ -1237,7 +1066,7 @@ namespace RUINORERP.Business
             return entity;
         }
 
-
+        //应该就是反审 直接删除。或逻辑删除。不用再做一个重复的方法来实现。
         public async Task<ReturnResults<tb_SaleOrder>> CancelOrder(tb_SaleOrder ObjectEntity)
         {
             ReturnResults<tb_SaleOrder> rmrs = new ReturnResults<tb_SaleOrder>();
@@ -1283,22 +1112,7 @@ namespace RUINORERP.Business
                     invUpdateList.Add(inv);
                 }
 
-                // 使用LINQ查询
-                var CheckNewInvList = invUpdateList.Where(c => c.Inventory_ID == 0)
-                    .GroupBy(i => new { i.ProdDetailID, i.Location_ID })
-                    .Where(g => g.Count() > 1)
-                    .Select(g => g.Key.ProdDetailID)
-                    .ToList();
-
-                if (CheckNewInvList.Count > 0)
-                {
-                    //新增库存中有重复的商品，操作失败。请联系管理员。
-                    rmrs.ErrorMsg = "新增库存中有重复的商品，操作失败。";
-                    rmrs.Succeeded = false;
-                    _logger.LogError(rmrs.ErrorMsg + "详细信息：" + string.Join(",", CheckNewInvList));
-                    return rmrs;
-
-                }
+             
 
                 DbHelper<tb_Inventory> dbHelper = _appContext.GetRequiredService<DbHelper<tb_Inventory>>();
                 var InvUpdateCounter = await dbHelper.BaseDefaultAddElseUpdateAsync(invUpdateList);
@@ -1362,7 +1176,7 @@ namespace RUINORERP.Business
                 BusinessHelper.Instance.EditEntity(entity);
 
                 //只更新指定列
-                var result = _unitOfWorkManage.GetDbClient().Updateable<tb_SaleOrder>(entity).UpdateColumns(it => new { it.DataStatus }).ExecuteCommand();
+                var result =await _unitOfWorkManage.GetDbClient().Updateable<tb_SaleOrder>(entity).UpdateColumns(it => new { it.DataStatus }).ExecuteCommandAsync();
 
                 if (result > 0)
                 {
@@ -1391,96 +1205,7 @@ namespace RUINORERP.Business
         }
 
 
-        /*
-        /// <summary>
-        /// 没有删除。只是保留一点可以参考的代码写法
-        /// </summary>
-        /// <returns></returns>
-        public  List<QueryParameter<T>> GetQueryParameters()
-        {
-            List<QueryParameter<tb_SaleOrder>> _Paras = new List<QueryParameter<tb_SaleOrder>>();
-            var lambda = Expressionable.Create<tb_CustomerVendor>()
-                       .And(t => t.isdeleted == false)
-                       .And(t => t.Is_available == true)
-                       .And(t => t.IsCustomer == true)
-                       .And(t => t.Is_enabled == true)
-                       .AndIF(AuthorizeController.GetSaleLimitedAuth(_appContext), t => t.Employee_ID == _appContext.CurUserInfo.UserInfo.Employee_ID)//限制了销售只看到自己的客户,采购不限制
-                       .ToExpression();//注意 这一句 不能少
-            QueryParameter<tb_SaleOrder> parameter = new QueryParameter<tb_SaleOrder>(c => c.CustomerVendor_ID);
-            parameter.SetFieldLimitCondition<tb_CustomerVendor>(lambda);
-            // parameter.FieldLimitConditions<tb_CustomerVendor>(lambda);
 
-            //设置次级查询条件
-            var conlist = _appContext.GetRequiredService<tb_CustomerVendorController<tb_CustomerVendor>>().GetQueryParameters();
-            parameter.SubQueryParameter = new List<string>(conlist.Select(t => t.QueryField).ToList()); ;
-            //可以根据关联外键自动加载条件，条件用公共虚方法
-
-            _Paras.Add(parameter);
-            _Paras.Add(new QueryParameter<tb_SaleOrder>(c => c.SOrderNo));
-            _Paras.Add(new QueryParameter<tb_SaleOrder>(c => c.Employee_ID));
-            _Paras.Add(new QueryParameter<tb_SaleOrder>(c => c.ProjectGroup_ID));
-            _Paras.Add(new QueryParameter<tb_SaleOrder>(c => c.Notes));
-            _Paras.Add(new QueryParameter<tb_SaleOrder>(c => c.PlatformOrderNo));
-            _Paras.Add(new QueryParameter<tb_SaleOrder>(c => c.ShippingAddress));
-            _Paras.Add(new QueryParameter<tb_SaleOrder>(c => c.SaleDate));
-
-            QueryParameter<tb_SaleOrder> paraApprovalStatus = new QueryParameter<tb_SaleOrder>(c => c.ApprovalStatus);
-            paraApprovalStatus.QueryFieldType = QueryFieldType.CmbEnum;
-
-            QueryFieldEnumData<tb_SaleOrder> queryFieldData = new QueryFieldEnumData<tb_SaleOrder>();
-            queryFieldData.EnumType = typeof(ApprovalStatus);
-            queryFieldData.expEnumValueColName = c => c.ApprovalStatus;
-            queryFieldData.AddSelectItem = true;
-
-            //枚举过滤了一下
-
-            ApprovalStatus enumdata = ApprovalStatus.已审核;
-            List<string> listStr = new List<string>();
-            List<EnumEntityMember> list = new List<EnumEntityMember>();
-            list = enumdata.GetListByEnum(1);
-            queryFieldData.BindDataSource = list;
-
-            //是直接给类型还是给数据源呢？
-
-            //InitDataToCmbByEnumDynamicGeneratedDataSource(typeof(CheckMode), cmbCheckMode);
-            //DataBindingHelper.InitDataToCmbByEnumDynamicGeneratedDataSource<tb_Stocktake>(typeof(Adjust_Type), e => e.Adjust_Type, cmb调整类型, false);
-            //EnumBindingHelper.InitDataToCmbByEnumOnWhere(list, "CheckMode", cmbCheckMode);
-            paraApprovalStatus.QueryFieldDataPara = queryFieldData;
-            _Paras.Add(paraApprovalStatus);
-
-
-            QueryParameter<tb_SaleOrder> paraPayStatus = QueryParameterTool<tb_SaleOrder>.GetFieldEnumPara(QueryFieldType.CmbEnum,
-                typeof(PayStatus), c => c.PayStatus, true);
-            _Paras.Add(paraPayStatus);
-
-            QueryParameter<tb_SaleOrder> paraDataStatus = QueryParameterTool<tb_SaleOrder>.GetFieldEnumPara(QueryFieldType.CmbEnum,
-                typeof(DataStatus), c => c.DataStatus, true);
-            _Paras.Add(paraDataStatus);
-
-            QueryParameter<tb_SaleOrder> paraPrintStatus = QueryParameterTool<tb_SaleOrder>.GetFieldEnumPara(QueryFieldType.CmbEnum,
-                typeof(PrintStatus), c => c.PrintStatus, true);
-            _Paras.Add(paraPrintStatus);
-
-
-            //_Paras.Add(new QueryParameter<tb_SaleOrder>(c => c.SOrderNo));
-            //_Paras.Add(new QueryParameter<tb_SaleOrder>(c => c.SaleDate));
-            //_Paras.Add(new QueryParameter<tb_SaleOrder>(c => c.CustomerVendor_ID));
-            //_Paras.Add(new QueryParameter<tb_SaleOrder>(c => c.PayStatus));
-            //_Paras.Add(new QueryParameter<tb_SaleOrder>(c => c.tb_paymentmethod));
-            //_Paras.Add(new QueryParameter<tb_SaleOrder>(c => c.PlatformOrderNo));
-            //_Paras.Add(new QueryParameter<tb_SaleOrder>(c => c.ShippingAddress));
-            //_Paras.Add(new QueryParameter<tb_SaleOrder>(c => c.TrackNo));
-            //_Paras.Add(new QueryParameter<tb_SaleOrder>(c => c.Paytype_ID));
-            //_Paras.Add(new QueryParameter<tb_SaleOrder>(c => c.ProjectGroup_ID));
-            //_Paras.Add(new QueryParameter<tb_SaleOrder>(c => c.Employee_ID));
-            //_Paras.Add(new QueryParameter<tb_SaleOrder>(c => c.Notes));
-            //_Paras.Add(new QueryParameter<tb_SaleOrder>(c => c.Created_at));
-            //_Paras.Add(new QueryParameter<tb_SaleOrder>(c => c.Created_by));
-            //_Paras.Add(new QueryParameter<tb_SaleOrder>(c => c.DeliveryDate));
-            return _Paras as List<QueryParameter<T>>;
-        }
-
-        */
 
 
     }

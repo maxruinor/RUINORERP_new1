@@ -191,6 +191,7 @@ namespace RUINORERP.UI.PSI.SAL
                     if (item.tb_SaleOuts != null && item.tb_SaleOuts.Count > 0)
                     {
                         MessageBox.Show($"当前订单：{item.SOrderNo},已经生成过出库单，\r\n无法取消！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        return;
                     }
 
                     tb_SaleOrderController<tb_SaleOrder> ctr = Startup.GetFromFac<tb_SaleOrderController<tb_SaleOrder>>();
@@ -217,6 +218,7 @@ namespace RUINORERP.UI.PSI.SAL
                     {
                         // 弹出提示窗口：没有审核的销售订单， 
                         MessageBox.Show($"当前订单{item.SOrderNo}：未审核，可以直接删除", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        return;
 
                     }
 

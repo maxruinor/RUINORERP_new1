@@ -575,8 +575,13 @@ namespace RUINORERP.UI.PSI.INV
                 }
 
                 var aa = details.Select(c => c.ProdDetailID).ToList().GroupBy(x => x).Where(x => x.Count() > 1).Select(x => x.Key).ToList();
+
+
                 if (NeedValidated && aa.Count > 0)
                 {
+
+
+
                     var prod = MainForm.Instance.list.FirstOrDefault(c => c.ProdDetailID.ToString() == aa[0].ToString());
                     System.Windows.Forms.MessageBox.Show($"明细中，SKU{prod.SKU},{prod.CNName}\r\n相同的产品不能多行录入,如有需要,请另建单据保存!", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     if (MainForm.Instance.AppContext.SysConfig.IsDebug)

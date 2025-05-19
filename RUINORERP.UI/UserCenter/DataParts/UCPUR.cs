@@ -104,10 +104,8 @@ namespace RUINORERP.UI.UserCenter.DataParts
                    .AsNavQueryable()
                    .Includes(c => c.tb_PurEntries, d => d.tb_PurEntryRes, f => f.tb_PurReturnEntries, g => g.tb_PurReturnEntryDetails)
                   .WhereIF(AuthorizeController.GetPurBizLimitedAuth(MainForm.Instance.AppContext) && !MainForm.Instance.AppContext.IsSuperUser, t => t.Employee_ID == MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID)//限制了采购只看到自己的
-                                                                                                                                                                                                                                    //.Where(c => (c.DataStatus == 2 || c.DataStatus == 4)).OrderBy(c => c.PurDate)
-                                                                                                                                                                                                                                    //.Where(t => t.DataStatus == (int)DataStatus.确认)
                   .Where(t => t.ApprovalStatus.HasValue && t.ApprovalStatus.Value == (int)ApprovalStatus.已审核)
-                  .Where(t => t.ApprovalResults.HasValue && t.ApprovalResults.Value == true)
+                  .Where(t => t.ApprovalResults.HasValue && t.ApprovalResults.Value == true && t.isdeleted == false)
                    .Where(c => c.DataStatus == (int)DataStatus.确认).OrderBy(c => c.PurDate)
                     //.WithCache(60) // 缓存60秒
                   .ToListAsync();

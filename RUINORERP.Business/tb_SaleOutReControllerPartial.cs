@@ -320,7 +320,7 @@ namespace RUINORERP.Business
                         }
 
                         int invMaterialsCounter = await _unitOfWorkManage.GetDbClient().Updateable(invMaterialsUpdateList).ExecuteCommandAsync();
-                        if (invMaterialsCounter != invMaterialsUpdateList.Count)
+                        if (invMaterialsCounter == 0)
                         {
                             _unitOfWorkManage.RollbackTran();
                             throw new Exception("翻新物料的库存更新失败！");

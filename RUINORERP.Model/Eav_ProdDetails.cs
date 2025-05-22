@@ -19,7 +19,7 @@ namespace RUINORERP.Model
     {
         public Eav_ProdDetails()
         {
-            base.FieldNameList = fieldNameList;
+            
         }
 
         private string _GroupName;
@@ -36,62 +36,7 @@ namespace RUINORERP.Model
             }
         }
 
-        #region 字段描述对应列表
-        private ConcurrentDictionary<string, string> fieldNameList;
-
-
-        /// <summary>
-        /// 表列名的中文描述集合
-        /// </summary>
-        [Description("列名中文描述"), Category("自定属性"), Browsable(true)]
-        [SugarColumn(IsIgnore = true)]
-        public override ConcurrentDictionary<string, string> FieldNameList
-        {
-            get
-            {
-                if (fieldNameList == null)
-                {
-                    fieldNameList = new ConcurrentDictionary<string, string>();
-                    SugarColumn entityAttr;
-                    Type type = typeof(Eav_ProdDetails);
-
-                    foreach (PropertyInfo field in type.GetProperties())
-                    {
-                        foreach (Attribute attr in field.GetCustomAttributes(true))
-                        {
-                            entityAttr = attr as SugarColumn;
-                            if (null != entityAttr)
-                            {
-                                if (entityAttr.ColumnDescription == null)
-                                {
-                                    continue;
-                                }
-                                if (entityAttr.IsIdentity)
-                                {
-                                    continue;
-                                }
-                                if (entityAttr.IsPrimaryKey)
-                                {
-                                    continue;
-                                }
-                                if (entityAttr.ColumnDescription.Trim().Length > 0)
-                                {
-                                    fieldNameList.TryAdd(field.Name, entityAttr.ColumnDescription);
-                                }
-                            }
-                        }
-                    }
-                }
-
-                return fieldNameList;
-            }
-            set
-            {
-                fieldNameList = value;
-            }
-
-        }
-        #endregion
+     
         public override object Clone()
         {
             Eav_ProdDetails prodproptype = (Eav_ProdDetails)this.MemberwiseClone(); //创建当前对象的浅拷贝。

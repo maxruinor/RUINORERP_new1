@@ -27,7 +27,7 @@ namespace RUINORERP.Model
     {
         public tb_MaterialReturn()
         {
-            base.FieldNameList = fieldNameList;
+            
             if (!PK_FK_ID_Check())
             {
                 throw new Exception("退料单(包括生产和托工） 在生产过程中或结束后，我们会根据加工任务（制令单）进行生产退料。这时就需要使用生产退料这个单据进行退料。生产退料单会影响到制令单的直接材料成本，它会冲减该制令单所发生的原料成本tb_MaterialReturn" + "外键ID与对应主主键名称不一致。请修改数据库");
@@ -499,64 +499,6 @@ namespace RUINORERP.Model
 
 
 
-
-        #region 字段描述对应列表
-        private ConcurrentDictionary<string, string> fieldNameList;
-
-
-        /// <summary>
-        /// 表列名的中文描述集合
-        /// </summary>
-        [Description("列名中文描述"), Category("自定属性")]
-        [SugarColumn(IsIgnore = true)]
-        [Browsable(false)]
-        public override ConcurrentDictionary<string, string> FieldNameList
-        {
-            get
-            {
-                if (fieldNameList == null)
-                {
-                    fieldNameList = new ConcurrentDictionary<string, string>();
-                    SugarColumn entityAttr;
-                    Type type = typeof(tb_MaterialReturn);
-
-                    foreach (PropertyInfo field in type.GetProperties())
-                    {
-                        foreach (Attribute attr in field.GetCustomAttributes(true))
-                        {
-                            entityAttr = attr as SugarColumn;
-                            if (null != entityAttr)
-                            {
-                                if (entityAttr.ColumnDescription == null)
-                                {
-                                    continue;
-                                }
-                                if (entityAttr.IsIdentity)
-                                {
-                                    continue;
-                                }
-                                if (entityAttr.IsPrimaryKey)
-                                {
-                                    continue;
-                                }
-                                if (entityAttr.ColumnDescription.Trim().Length > 0)
-                                {
-                                    fieldNameList.TryAdd(field.Name, entityAttr.ColumnDescription);
-                                }
-                            }
-                        }
-                    }
-                }
-
-                return fieldNameList;
-            }
-            set
-            {
-                fieldNameList = value;
-            }
-
-        }
-        #endregion
 
 
         public override object Clone()

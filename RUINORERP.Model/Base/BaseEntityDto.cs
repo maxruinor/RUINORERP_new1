@@ -1,6 +1,7 @@
 ﻿
 using RUINORERP.Global;
 using RUINORERP.Global.CustomAttribute;
+using RUINORERP.Global.EnumExt;
 using RUINORERP.Model.Base;
 using SqlSugar;
 using System;
@@ -20,6 +21,8 @@ namespace RUINORERP.Model.Base
     /// </summary>
     public class BaseEntityDto : DynamicEntityDto,INotifyPropertyChanged, IDataErrorInfo
     {
+       
+
 
         #region
 
@@ -100,92 +103,8 @@ namespace RUINORERP.Model.Base
         #endregion
 
 
-
-        //#region 字段列表
-        //private ConcurrentDictionary<string, BaseDtoField> fieldNameList;
-
-        ///// <summary>
-        ///// 表列名的中文描述集合
-        ///// </summary>
-        //[Description("列名中文描述"), Category("自定属性"), Browsable(true)]
-        //[SugarColumn(IsIgnore = true)]
-        //public virtual ConcurrentDictionary<string, BaseDtoField> FieldNameList
-        //{
-        //    get
-        //    {
-        //        return fieldNameList;
-        //    }
-        //    set
-        //    {
-        //        fieldNameList = value;
-        //    }
-
-        //}
-
-        /*
-        #region 字段描述对应列表
-        private ConcurrentDictionary<string, BaseDtoField> fieldNameList;
-
-
-        /// <summary>
-        /// 表列名的中文描述集合
-        /// </summary>
-        [Description("列名中文描述"), Category("自定属性"), Browsable(true)]
-        [SugarColumn(IsIgnore = true)]
-        public ConcurrentDictionary<string, BaseDtoField> FieldNameList
-        {
-            get
-            {
-                if (fieldNameList == null)
-                {
-                    fieldNameList = new ConcurrentDictionary<string, BaseDtoField>();
-                    SugarColumn entityAttr;
-                    Type type = typeof(tb_Prod_BaseQueryDto);
-
-                    foreach (PropertyInfo field in type.GetProperties())
-                    {
-                        foreach (Attribute attr in field.GetCustomAttributes(true))
-                        {
-                            entityAttr = attr as SugarColumn;
-                            if (null != entityAttr)
-                            {
-                                if (entityAttr.ColumnDescription == null)
-                                {
-                                    continue;
-                                }
-                                if (entityAttr.IsIdentity)
-                                {
-                                    continue;
-                                }
-                                if (entityAttr.IsPrimaryKey)
-                                {
-                                    continue;
-                                }
-                                if (entityAttr.ColumnDescription.Trim().Length > 0)
-                                {
-                                    BaseDtoField bdf = new BaseDtoField();
-                                    bdf.ColName = field.Name;
-                                    bdf.Caption = entityAttr.ColumnDescription;
-                                    bdf.ColDataType = field.PropertyType;
-                                    bdf.UseContain = false;
-
-                                    fieldNameList.TryAdd(field.Name, bdf);
-                                }
-                            }
-                        }
-                    }
-                }
-
-                return fieldNameList;
-            }
-            set
-            {
-                fieldNameList = value;
-            }
-
-        }
-        #endregion
-        */
+ 
+    
 
 
         private ConcurrentDictionary<string, string> _HelpInfo;

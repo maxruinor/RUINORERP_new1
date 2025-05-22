@@ -31,6 +31,10 @@ using RUINORERP.UI.SysConfig;
 using Fireasy.Common.Extensions;
 using FastReport.Table;
 using MathNet.Numerics.Optimization;
+using NPOI.SS.Formula.Functions;
+using RUINOR.Core;
+using RUINORERP.Model.CommonModel;
+using RUINORERP.Business.FMService;
 
 
 namespace RUINORERP.UI.FM
@@ -167,7 +171,7 @@ namespace RUINORERP.UI.FM
 
             DataBindingHelper.BindData4Cmb<tb_ProjectGroup>(entity, k => k.ProjectGroup_ID, v => v.ProjectGroupName, cmbProjectGroup_ID);
             DataBindingHelper.BindData4Cmb<tb_PaymentMethod>(entity, k => k.Paytype_ID, v => v.Paytype_Name, cmbPaytype_ID, c => c.Cash == true);
-          
+
             DataBindingHelper.BindData4Cmb<tb_Employee>(entity, k => k.Employee_ID, v => v.Employee_Name, cmbEmployee_ID);
             DataBindingHelper.BindData4Cmb<tb_Department>(entity, k => k.DepartmentID, v => v.DepartmentName, cmbDepartmentID);
 
@@ -177,7 +181,7 @@ namespace RUINORERP.UI.FM
             DataBindingHelper.BindData4TextBox<tb_FM_PreReceivedPayment>(entity, t => t.PreRPNO, txtPreRPNO, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_FM_PreReceivedPayment>(entity, t => t.ApprovalOpinions, txtApprovalOpinions, BindDataType4TextBox.Text, false);
 
-             DataBindingHelper.BindData4CheckBox<tb_FM_PreReceivedPayment>(entity, t => t.IsAvailable, chkIsAvailable, false);
+            DataBindingHelper.BindData4CheckBox<tb_FM_PreReceivedPayment>(entity, t => t.IsAvailable, chkIsAvailable, false);
 
             DataBindingHelper.BindData4ControlByEnum<tb_FM_PreReceivedPayment>(entity, t => t.ApprovalStatus, lblReview, BindDataType4Enum.EnumName, typeof(Global.ApprovalStatus));
 
@@ -424,7 +428,7 @@ namespace RUINORERP.UI.FM
                 SetValueToRowImage();
             }
             var eer = errorProviderForAllInput.GetError(txtLocalPrepaidAmount);
-         
+
             if (EditEntity.ActionStatus == ActionStatus.新增 || EditEntity.ActionStatus == ActionStatus.修改)
             {
 
@@ -475,8 +479,8 @@ namespace RUINORERP.UI.FM
                                 {
                                     //重要
                                     EditEntity.RowImage.ImageFullName = EditEntity.RowImage.UpdateImageName(EditEntity.RowImage.newhash);
-                                    EditEntity.PaymentImagePath= EditEntity.RowImage.ImageFullName;
-                                
+                                    EditEntity.PaymentImagePath = EditEntity.RowImage.ImageFullName;
+
                                     //成功后。旧文件名部分要和上传成功后新文件名部分一致。后面修改只修改新文件名部分。再对比
                                     MainForm.Instance.PrintInfoLog("UploadSuccessful for base List:" + newfileName);
                                 }
@@ -504,9 +508,10 @@ namespace RUINORERP.UI.FM
             }
             return false;
         }
+
         protected override async Task<bool> Submit()
         {
-            bool rs = await base.Submit();
+            bool rs = await base.Submit(typeof(PrePaymentStatus));
             if (rs)
             {
                 ConfigManager configManager = Startup.GetFromFac<ConfigManager>();
@@ -518,6 +523,9 @@ namespace RUINORERP.UI.FM
             }
             return true;
         }
+
+
+
 
         public override async Task<bool> DeleteRemoteImages()
         {
@@ -557,7 +565,7 @@ namespace RUINORERP.UI.FM
                 //https://www.runoob.com/w3cnote/csharp-enum.html
                 var dataStatus = (PrePaymentStatus)(EditEntity.GetPropertyValue(typeof(PrePaymentStatus).Name).ToInt());
                 //没有收到钱之前都可以删除？
-                if ( dataStatus == PrePaymentStatus.草稿|| dataStatus == PrePaymentStatus.待审核 ||  dataStatus==PrePaymentStatus.已生效)
+                if (dataStatus == PrePaymentStatus.草稿 || dataStatus == PrePaymentStatus.待审核 || dataStatus == PrePaymentStatus.已生效)
                 {
                     //如果草稿。都可以删除。如果是新建，则提交过了。要创建人或超级管理员才能删除
                     if (!AppContext.IsSuperUser)
@@ -575,7 +583,7 @@ namespace RUINORERP.UI.FM
                     bool rs = await ctr.BaseDeleteAsync(EditEntity as tb_FM_PreReceivedPayment);
                     if (rs)
                     {
-                        
+
                         ////删除远程图片及本地图片
                         await DeleteRemoteImages();
 

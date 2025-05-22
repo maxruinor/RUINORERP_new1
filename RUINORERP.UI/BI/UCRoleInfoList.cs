@@ -19,6 +19,8 @@ using RUINORERP.UI.BaseForm;
 using SqlSugar;
 using RUINORERP.Business.Processor;
 using MathNet.Numerics.Distributions;
+using RUINORERP.Global.EnumExt;
+using RUINORERP.Global;
 
 
 namespace RUINORERP.UI.BI

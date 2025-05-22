@@ -179,7 +179,8 @@ namespace AutoUpdate
                 if (fsOut != null)
                 {
                     fsOut.Close();
-                    fsOut = null;
+                    fsOut.Dispose();
+                    //fsOut = null;
                 }
                 if (fsIn != null)
                 {

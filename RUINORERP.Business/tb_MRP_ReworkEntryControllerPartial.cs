@@ -109,8 +109,8 @@ namespace RUINORERP.Business
                     && c.Location_ID == entity.tb_mrp_reworkreturn.tb_MRP_ReworkReturnDetails[i].Location_ID).Sum(c => c.Quantity);
                     if (inQty > entity.tb_mrp_reworkreturn.tb_MRP_ReworkReturnDetails[i].Quantity)
                     {
-                        string msg = $"返工退库:{entity.tb_mrp_reworkreturn.ReworkReturnNo}的【{prodName}】的入库数量不能大于返工退库单中对应行的数量\r\n" + $"或存在重复录入了返工入库单，审核失败！";
-                        MessageBox.Show(msg, "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        string msg = $"返工退库:{entity.tb_mrp_reworkreturn.ReworkReturnNo}的【{prodName}】的入库数量不能大于返工退库单中对应行的数量\r\n" + $"或存在重复录入了返工入库单。";
+                        rs.ErrorMsg = msg;
                         _unitOfWorkManage.RollbackTran();
                         _logger.LogInformation(msg);
                         return rs;
@@ -330,8 +330,8 @@ namespace RUINORERP.Business
                         if (inQty > entity.tb_mrp_reworkreturn.tb_MRP_ReworkReturnDetails[i].Quantity)
                         {
 
-                            string msg = $"返工退库:{entity.tb_mrp_reworkreturn.ReworkReturnNo}的【{prodName}】的返工入库数量不能大于对应退库时的数量，审核失败！";
-                            MessageBox.Show(msg, "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                            string msg = $"返工退库:{entity.tb_mrp_reworkreturn.ReworkReturnNo}的【{prodName}】的返工入库数量不能大于对应退库时的数量。";
+                            rs.ErrorMsg = msg;
                             _unitOfWorkManage.RollbackTran();
                             if (_appContext.SysConfig.ShowDebugInfo)
                             {

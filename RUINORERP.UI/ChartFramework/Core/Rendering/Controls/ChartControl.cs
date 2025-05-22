@@ -99,7 +99,7 @@ namespace RUINORERP.UI.ChartFramework.Rendering.Controls
 
                 if (saveFileDialog.ShowDialog() == DialogResult.OK)
                 {
-                    using (var progressForm = new ProgressForm("正在导出图表数据..."))
+                    using (var progressForm = new ProgressFormBar("正在导出图表数据..."))
                     {
                         progressForm.Show();
                         Application.DoEvents();

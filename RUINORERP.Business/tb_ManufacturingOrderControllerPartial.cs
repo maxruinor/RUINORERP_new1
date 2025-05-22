@@ -109,11 +109,11 @@ namespace RUINORERP.Business
                         invUpdateList.Add(inv);
                     }
 
-                    int InvUpdateCounter = await _unitOfWorkManage.GetDbClient().Updateable(invUpdateList).ExecuteCommandAsync();
-                     if (InvUpdateCounter == 0)
+                    DbHelper<tb_Inventory> dbHelper = _appContext.GetRequiredService<DbHelper<tb_Inventory>>();
+                    var InvMainCounter = await dbHelper.BaseDefaultAddElseUpdateAsync(invUpdateList);
+                    if (InvMainCounter == 0)
                     {
-                        _unitOfWorkManage.RollbackTran();
-                        throw new Exception("库存更新失败！");
+                        _logger.LogInformation($"{entitys[m].MONO}更新库存结果为0行，请检查数据！");
                     }
 
                     //这部分是否能提出到上一级公共部分？
@@ -266,12 +266,20 @@ namespace RUINORERP.Business
                     invUpdateList.Add(inv);
                     #endregion
                 }
-                int InvUpdateCounter = await _unitOfWorkManage.GetDbClient().Updateable(invUpdateList).ExecuteCommandAsync();
+
+              
+                var InvUpdateCounter = await dbHelper.BaseDefaultAddElseUpdateAsync(invUpdateList);
                 if (InvUpdateCounter == 0)
                 {
-                    _unitOfWorkManage.RollbackTran();
-                    throw new Exception("库存更新失败！");
+                    _logger.LogInformation($"制令单明细更新库存结果为0行，请检查数据！");
                 }
+
+                //int InvUpdateCounter = await _unitOfWorkManage.GetDbClient().Updateable(invUpdateList).ExecuteCommandAsync();
+                //if (InvUpdateCounter == 0)
+                //{
+                //    _unitOfWorkManage.RollbackTran();
+                //    throw new Exception("库存更新失败！");
+                //}
                 //这部分是否能提出到上一级公共部分？
                 entity.DataStatus = (int)DataStatus.新建;
                 entity.ApprovalResults = false;
@@ -381,14 +389,11 @@ namespace RUINORERP.Business
                 BusinessHelper.Instance.EditEntity(invMain);
                 DbHelper<tb_Inventory> dbHelper = _appContext.GetRequiredService<DbHelper<tb_Inventory>>();
                 var InvMainCounter = await dbHelper.BaseDefaultAddElseUpdateAsync(invMain);
-
                 if (InvMainCounter == 0)
                 {
-                    _unitOfWorkManage.RollbackTran();
-                    throw new Exception("在制产品库存更新失败！");
+                    _logger.LogInformation($"在制产品库存更新库存结果为0行，请检查数据！");
                 }
-
-                List<tb_Inventory> invInsertList = new List<tb_Inventory>();
+               
                 List<tb_Inventory> invUpdateList = new List<tb_Inventory>();
                 foreach (tb_ManufacturingOrderDetail item in entity.tb_ManufacturingOrderDetails)
                 {
@@ -399,7 +404,7 @@ namespace RUINORERP.Business
                     {
                         inv.NotOutQty += item.ShouldSendQty.ToInt();
                         BusinessHelper.Instance.EditEntity(inv);
-                        invUpdateList.Add(inv);
+
                     }
                     else
                     {
@@ -411,14 +416,13 @@ namespace RUINORERP.Business
                         inv.InitInventory = 0;
                         inv.Notes = "制令单审核时，自动生成库存信息";
                         BusinessHelper.Instance.InitEntity(inv);
-                        invInsertList.Add(inv);
                     }
-
+                    invUpdateList.Add(inv);
                     #endregion
                 }
 
                 // 使用LINQ查询
-                var CheckNewInvList = invInsertList
+                var CheckNewInvList = invUpdateList
                     .GroupBy(i => new { i.ProdDetailID, i.Location_ID })
                     .Where(g => g.Count() > 1)
                     .Select(g => g.Key.ProdDetailID)
@@ -433,20 +437,13 @@ namespace RUINORERP.Business
                     return rs;
                 }
 
-                var InvInsertCounter = await _unitOfWorkManage.GetDbClient().Insertable(invInsertList).ExecuteReturnSnowflakeIdListAsync();
-                if (InvInsertCounter.Count==0)
-                {
-                    _unitOfWorkManage.RollbackTran();
-                    throw new Exception("库存保存失败！");
-                }
-
-                int InvUpdateCounter = await _unitOfWorkManage.GetDbClient().Updateable(invUpdateList).ExecuteCommandAsync();
-                //因为目前库存是整数  纸箱这种用了小数所以更新失败。暂时不管理 后面统一为decimal(18, 4)
+                var InvUpdateCounter = await dbHelper.BaseDefaultAddElseUpdateAsync(invUpdateList);
                 if (InvUpdateCounter == 0)
                 {
-                    _unitOfWorkManage.RollbackTran();
-                    throw new Exception("库存更新失败！");
+                    _logger.LogInformation($"制令单明细更新库存结果为0行，请检查数据！");
                 }
+                //因为目前库存是整数  纸箱这种用了小数所以更新失败。暂时不管理 后面统一为decimal(18, 4)
+                
 
                 //这部分是否能提出到上一级公共部分？
                 entity.DataStatus = (int)DataStatus.确认;

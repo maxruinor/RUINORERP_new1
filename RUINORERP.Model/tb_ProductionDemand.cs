@@ -27,7 +27,7 @@ namespace RUINORERP.Model
     {
         public tb_ProductionDemand()
         {
-            base.FieldNameList = fieldNameList;
+            
             if (!PK_FK_ID_Check())
             {
                 throw new Exception("生产需求分析表 是一个中间表，由计划生产单或销售订单带入数据来分析，产生采购订单再产生制令单，分析时有三步，库存不足项（包括有成品材料所有项），采购商品建议，自制品成品建议,中间表保存记录而已，操作UI上会有生成采购订单，或生产单等操作tb_ProductionDemand" + "外键ID与对应主主键名称不一致。请修改数据库");
@@ -412,65 +412,6 @@ return rs;
 
 
 
-
-
-        #region 字段描述对应列表
-        private ConcurrentDictionary<string, string> fieldNameList;
-
-
-        /// <summary>
-        /// 表列名的中文描述集合
-        /// </summary>
-        [Description("列名中文描述"), Category("自定属性")]
-        [SugarColumn(IsIgnore = true)]
-        [Browsable(false)]
-        public override ConcurrentDictionary<string, string> FieldNameList
-        {
-            get
-            {
-                if (fieldNameList == null)
-                {
-                    fieldNameList = new ConcurrentDictionary<string, string>();
-                    SugarColumn entityAttr;
-                    Type type = typeof(tb_ProductionDemand);
-                    
-                       foreach (PropertyInfo field in type.GetProperties())
-                            {
-                                foreach (Attribute attr in field.GetCustomAttributes(true))
-                                {
-                                    entityAttr = attr as SugarColumn;
-                                    if (null != entityAttr)
-                                    {
-                                        if (entityAttr.ColumnDescription == null)
-                                        {
-                                            continue;
-                                        }
-                                        if (entityAttr.IsIdentity)
-                                        {
-                                            continue;
-                                        }
-                                        if (entityAttr.IsPrimaryKey)
-                                        {
-                                            continue;
-                                        }
-                                        if (entityAttr.ColumnDescription.Trim().Length > 0)
-                                        {
-                                            fieldNameList.TryAdd(field.Name, entityAttr.ColumnDescription);
-                                        }
-                                    }
-                                }
-                            }
-                }
-                
-                return fieldNameList;
-            }
-            set
-            {
-                fieldNameList = value;
-            }
-
-        }
-        #endregion
         
 
         public override object Clone()

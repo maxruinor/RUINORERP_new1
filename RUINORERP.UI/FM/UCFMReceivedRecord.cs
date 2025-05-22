@@ -1,4 +1,5 @@
-﻿using RUINORERP.Global;
+﻿using RUINORERP.Business.FMService;
+using RUINORERP.Global;
 using RUINORERP.Model;
 using RUINORERP.UI.ATechnologyStack;
 using RUINORERP.UI.Common;
@@ -29,7 +30,7 @@ namespace RUINORERP.UI.FM
         public SharedFlag sharedFlag { get; set; } = SharedFlag.Flag1;
         private void UCPreReceived_Load(object sender, EventArgs e)
         {
-
+           
         }
     }
 }

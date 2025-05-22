@@ -8,20 +8,19 @@ using System.Threading.Tasks;
 namespace RUINORERP.Global.EnumExt
 {
     #region 关键业务财务数据状态
- 
+
 
     /// <summary>
-    /// 对账单状态
-    /// 0=草稿,1=已发送,2=已确认,3=已关闭，4=已结算，5=部分结算
+    /// 对账单状态（独立状态机）
     /// </summary>
     public enum StatementStatus : long
     {
-        草稿 = 0,
-        已发送 = 1,
-        已确认 = 2,
-        已关闭 = 3,
-        已结清 = 4,
-        部分结算 = 5
+        草稿 = 0,       // 初始状态
+        已发送 = 1,     // 已发送给客户
+        已确认 = 2,     // 客户确认对账
+        已关闭 = 4,     // 流程终止
+        已结清 = 8,     // 完全结清
+        部分结算 = 16   // 部分金额结算
     }
 
     // 基础状态 (所有财务单据共用)
@@ -32,93 +31,110 @@ namespace RUINORERP.Global.EnumExt
         草稿 = 0,
 
         [Description("待审核")]
-        待审核 = 1 << 0,
+        待审核 = 1,
 
         [Description("审核通过")]
-        已生效 = 1 << 2,
+        已生效 = 2,
 
         [Description("反向冲抵")]
-        已冲销 = 1 << 3,
+        已冲销 = 4,
 
         [Description("流程终止")]
-        已取消 = 1 << 1,
+        已取消 = 8,
     }
 
-    // 预收/预付单据状态
-    // 预收付状态扩展（10~19位）
+  
     [Flags]
+    //（5~10位）
     public enum PrePaymentStatus : long
     {
-        // 继承基础状态
-        草稿 = BaseFMPaymentStatus.草稿,
-        待审核 = BaseFMPaymentStatus.待审核,
 
+        // 继承基础状态（0-4位）
+        草稿 = BaseFMPaymentStatus.草稿,   // 0
+        待审核 = BaseFMPaymentStatus.待审核, // 1
+        
+        
         //审核就变成已生效，并且生成收付单，审核后变为待核销
         [Description("已生效")]
-        已生效 = BaseFMPaymentStatus.已生效,
+        已生效 = BaseFMPaymentStatus.已生效, // 2
+        已冲销 = BaseFMPaymentStatus.已冲销, // 4
+        已取消 = BaseFMPaymentStatus.已取消, // 8
 
-        已冲销 = BaseFMPaymentStatus.已冲销,
-
-        // 专属状态
+        // 扩展状态（5-9位）
         [Description("部分核销")]
-        部分核销 = 1 << 10,
+        部分核销 = 32,    // 0b100000 (2^5)
 
         [Description("全额核销")]
-        全额核销 = 1 << 11,
+        全额核销 = 64,    // 0b1000000 (2^6)
+
 
         //表示已经支付成功
         [Description("待核销")]
-        待核销 = 1 << 12,
+        待核销 = 128    // 0b10000000 (2^7)
 
-        已取消 = BaseFMPaymentStatus.已取消,
     }
 
+
+
     // 应收/应付单据状态
-    // 应收付状态扩展（20~29位）
+    // 应收付状态扩展（11~15位）
     [Flags]
     public enum ARAPStatus : long
     {
-        // 继承基础状态
-        草稿 = BaseFMPaymentStatus.草稿,
-        待审核 = BaseFMPaymentStatus.待审核,
-        已取消 = BaseFMPaymentStatus.已取消,
-        已生效 = BaseFMPaymentStatus.已生效,
-        已冲销 = BaseFMPaymentStatus.已冲销,
 
-        // 专属状态
+        // 继承基础状态（0-4位）
+        草稿 = BaseFMPaymentStatus.草稿,   // 0
+        待审核 = BaseFMPaymentStatus.待审核, // 1
+        已生效 = BaseFMPaymentStatus.已生效, // 2
+        已冲销 = BaseFMPaymentStatus.已冲销, // 4
+        已取消 = BaseFMPaymentStatus.已取消, // 8
+
+        // 扩展状态（10-14位）
         [Description("已结清")]
-        已结清 = 1 << 20,
+        已结清 = 1024,   // 0b10000000000 (2^10)
 
         [Description("坏账")]
-        坏账 = 1 << 21,
+        坏账 = 2048,   // 0b100000000000 (2^11)
 
         [Description("部分支付")]
-        部分支付 = 1 << 22
+        部分支付 = 4096    // 0b1000000000000 (2^12)
+
+
+       
+
+
+   
+
     }
 
     // 收/付款单据状态
-    // 收付款状态扩展（30~39位）
+    // 收付款状态扩展（16~20位）
     [Flags]
     public enum PaymentStatus : long
     {
-        // 继承基础状态
-        草稿 = BaseFMPaymentStatus.草稿,
-        待审核 = BaseFMPaymentStatus.待审核,
- 
-        [Description("【审核】已支付")]
-        已支付 = 1 << 30,
 
-        //是通过预收付等 抵扣时用户自定义的
+        // 继承基础状态（0-4位）
+        草稿 = BaseFMPaymentStatus.草稿,   // 0
+        待审核 = BaseFMPaymentStatus.待审核, // 1
+        已生效 = BaseFMPaymentStatus.已生效, // 2
+        已冲销 = BaseFMPaymentStatus.已冲销, // 4
+        已取消 = BaseFMPaymentStatus.已取消, // 8
+
+        // 扩展状态（15-19位）
+        [Description("已支付")]
+        已支付 = 32768,  // 0b1000000000000000 (2^15)
+
         [Description("已核销")]
-        已冲销 = 1 << 31,
+        已核销 = 65536   // 0b10000000000000000 (2^16)
+
+      
+
+ 
 
 
-        已取消 = BaseFMPaymentStatus.已取消,
+ 
 
     }
-    #endregion
-
-
 
     /// <summary>
     /// 核销类型
@@ -165,10 +181,16 @@ namespace RUINORERP.Global.EnumExt
         付款 = 2,
     }
 
- 
+
+    #endregion
+
+
+
+
+
     public enum InvoiceStatus
     {
-
+        
 
         /// <summary>
         /// 发票未正式开具	编辑、删除

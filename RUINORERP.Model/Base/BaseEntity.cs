@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using RUINORERP.Global;
 using RUINORERP.Global.CustomAttribute;
+using RUINORERP.Global.EnumExt;
 using RUINORERP.Global.Model;
 using RUINORERP.Model.Base;
 using SharpYaml.Tokens;
@@ -16,7 +17,6 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Xml.Serialization;
-
 namespace RUINORERP.Model
 {
     public enum ActionStatus
@@ -30,10 +30,212 @@ namespace RUINORERP.Model
     }
 
     [Serializable()]
-    public class BaseEntity : INotifyPropertyChanged, IDataErrorInfo
+    public class BaseEntity : INotifyPropertyChanged, IDataErrorInfo//, IStatusProvider
     {
 
-        public  void SetDetails<C>(List<C> details) where C : class, new()
+        #region  状态管理相关代码
+        #region 状态字段事件通知
+
+        public event EventHandler<StatusChangedEventArgs> StatusChanged;
+        protected virtual void OnPropertyChangedStatus(string propertyName, object oldValue, object newValue)
+        {
+            StatusChanged?.Invoke(this, new StatusChangedEventArgs(propertyName, oldValue, newValue));
+        }
+        protected virtual void OnPropertyChanged(string propertyName, object oldValue, object newValue)
+        {
+            // 触发常规属性变更事件 已经调用 了。
+            //PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+
+            // 检查是否是状态属性变更
+            if (propertyName == _statusPropertyName && !oldValue.Equals(newValue))
+            {
+                //OnPropertyChangedStatus(propertyName, oldValue, newValue);
+            }
+        }
+
+
+        #endregion
+        #region 状态机管理
+
+
+
+        [SugarColumn(IsIgnore = true)]
+        [Browsable(false)]
+        public IStatusEvaluator StatusEvaluator { get => _statusEvaluator; set => _statusEvaluator = value; }
+
+        private string _statusPropertyName;
+        private Type _statusEnumType;
+
+
+        private IStatusEvaluator _statusEvaluator;
+
+        public BaseEntity()
+        {
+            /*
+            // 默认使用基础状态提供器
+            if (this.FieldNameList.Keys.Contains(nameof(DataStatus)))
+            {
+                StatusEvaluator = new BusinessStatusEvaluator();
+                StatusEvaluator.CurrentStatus = (DataStatus)ReflectionHelper.GetPropertyValue(this, "DataStatus").ToInt();
+                StatusEvaluator.ApprovalResult = ReflectionHelper.GetPropertyValue(this, "ApprovalResults").ToBool();
+                _statusPropertyName = nameof(DataStatus);
+                _statusEnumType = typeof(DataStatus);
+                //ApprovalResult = StatusEvaluator.ApprovalResult;
+                StatusEvaluator.StatusChanged += (s, e) => OnPropertyChanged(nameof(StatusEvaluator.CurrentStatus));
+            }
+            else if (this.FieldNameList.Keys.Contains(nameof(PaymentStatus)))
+            {
+                StatusEvaluator = new FinancialStatusEvaluator();
+                StatusEvaluator.CurrentStatus = (PaymentStatus)ReflectionHelper.GetPropertyValue(this, "PaymentStatus").ToInt();
+                StatusEvaluator.ApprovalResult = ReflectionHelper.GetPropertyValue(this, "ApprovalResults").ToBool();
+                _statusPropertyName = nameof(PaymentStatus);
+                _statusEnumType = typeof(PaymentStatus);
+                //ApprovalResult = StatusEvaluator.ApprovalResult;
+                StatusEvaluator.StatusChanged += (s, e) => OnPropertyChanged(nameof(StatusEvaluator.CurrentStatus));
+            }
+            else
+            {
+                //是不是要给一个基础啥都没有的？ 或要判断_statusEvaluator空值情况
+            }
+
+            // 绑定状态变化事件,实体中的字段变化就会反应到到评估计算器中
+            this.StatusChanged += (s, e) =>
+            {
+                if (e.PropertyName == _statusPropertyName && _statusEnumType != null)
+                {
+                    // 将新值转换为对应的枚举类型
+                    object newStatus = Enum.ToObject(_statusEnumType, e.NewValue);
+                    StatusEvaluator.CurrentStatus = (Enum)newStatus;
+                }
+
+                //if (e.PropertyName == nameof(DataStatus))
+                //{
+                //    _statusEvaluator.CurrentStatus = (Enum)Convert.ChangeType(e.NewValue, typeof(Enum));
+                //}
+
+                //if (e.PropertyName == nameof(PaymentStatus))
+                //{
+                //    _statusEvaluator.CurrentStatus = (Enum)Convert.ChangeType(e.NewValue, typeof(Enum));
+                //}
+            };
+            */
+        }
+
+        // 允许子类替换状态提供器
+        protected void SetStatusProvider(IStatusEvaluator statusEvaluator)
+        {
+            StatusEvaluator = statusEvaluator;
+            StatusEvaluator.StatusChanged += (s, e) => OnPropertyChanged(nameof(StatusEvaluator.CurrentStatus));
+        }
+
+
+        //private Enum _currentStatus;
+
+        //[SugarColumn(IsIgnore = true)]
+        //[Browsable(false)]
+        //public Enum CurrentStatus
+        //{
+        //    get
+        //    {
+        //        if (StatusEvaluator == null)
+        //        {
+        //            return null;
+        //        }
+        //        return _currentStatus;
+        //    }
+        //    set
+        //    {
+        //        SetProperty(ref _currentStatus, value);
+        //    }
+        //}
+
+        //public Enum CurrentStatus => _statusProvider.CurrentStatus;
+
+        //[SugarColumn(IsIgnore = true)]
+        //[Browsable(false)]
+        //public bool ApprovalResult { get; set; }
+
+        //event EventHandler<StatusChangedEventArgs> IStatusProvider.StatusChanged
+        //{
+        //    add => StatusEvaluator.StatusChanged += value;
+        //    remove => StatusEvaluator.StatusChanged -= value;
+        //}
+
+
+        #endregion
+
+        #endregion
+
+
+
+
+        #region 字段基类描述对应列表 - 基类实现
+
+
+        #region 字段列表
+        //private ConcurrentDictionary<string, string> fieldNameList;
+
+        ///// <summary>
+        ///// 表列名的中文描述集合
+        ///// </summary>
+        //[Description("列名中文描述"), Category("自定属性")]
+        //[SugarColumn(IsIgnore = true)]
+        //[Browsable(false)]
+        //[JsonIgnore]
+        //[XmlIgnore]
+        //public virtual ConcurrentDictionary<string, string> FieldNameList
+        //{
+        //    get
+        //    {
+        //        return fieldNameList;
+        //    }
+        //    set
+        //    {
+        //        fieldNameList = value;
+        //    }
+
+        //}
+
+
+
+
+
+        #endregion
+
+        private static readonly ConcurrentDictionary<Type, ConcurrentDictionary<string, string>> _fieldNameListCache = new ConcurrentDictionary<Type, ConcurrentDictionary<string, string>>();
+
+        [Description("列名中文描述"), Category("自定属性")]
+        [SugarColumn(IsIgnore = true)]
+        [Browsable(false)]
+        [JsonIgnore]
+        [XmlIgnore]
+        public virtual ConcurrentDictionary<string, string> FieldNameList
+        {
+            get
+            {
+                var type = this.GetType();
+                return _fieldNameListCache.GetOrAdd(type, t => GenerateFieldNameList(t));
+            }
+            set { /* 如果需要子类覆盖，可以在这里实现 */ }
+        }
+
+        private static ConcurrentDictionary<string, string> GenerateFieldNameList(Type type)
+        {
+            var fieldNameList = new ConcurrentDictionary<string, string>();
+            foreach (var property in type.GetProperties())
+            {
+                var sugarColumnAttr = property.GetCustomAttribute<SugarColumn>(false);
+                if (sugarColumnAttr != null && !string.IsNullOrEmpty(sugarColumnAttr.ColumnDescription))
+                {
+                    fieldNameList.TryAdd(property.Name, sugarColumnAttr.ColumnDescription);
+                }
+            }
+            return fieldNameList;
+        }
+
+        #endregion
+
+        public void SetDetails<C>(List<C> details) where C : class, new()
         {
 
         }
@@ -98,10 +300,10 @@ namespace RUINORERP.Model
                 }
                 catch (Exception ex)
                 {
-                     
-                    
+
+
                 }
-                
+
             }
         }
 
@@ -144,8 +346,13 @@ namespace RUINORERP.Model
         /// <param name="propertyName"></param>
         protected void SetProperty<T>(ref T storage, T value, [CallerMemberName] String propertyName = null)
         {
+            if (EqualityComparer<T>.Default.Equals(storage, value))
+                return;
+
             if (object.Equals(storage, value)) return;
             storage = value;
+            T oldValue = storage;
+            OnPropertyChanged(propertyName, oldValue, value);
             this.OnPropertyChanged(propertyName);
             HasChanged = true;
         }
@@ -205,31 +412,6 @@ namespace RUINORERP.Model
         [Browsable(false)]
         public List<int> DeleteIDs { get; set; }
 
-        #region 字段列表
-        private ConcurrentDictionary<string, string> fieldNameList;
-
-        /// <summary>
-        /// 表列名的中文描述集合
-        /// </summary>
-        [Description("列名中文描述"), Category("自定属性")]
-        [SugarColumn(IsIgnore = true)]
-        [Browsable(false)]
-        [JsonIgnore]
-        [XmlIgnore]
-        public virtual ConcurrentDictionary<string, string> FieldNameList
-        {
-            get
-            {
-                return fieldNameList;
-            }
-            set
-            {
-                fieldNameList = value;
-            }
-
-        }
-
-
         private ConcurrentDictionary<string, string> _HelpInfo;
         /// <summary>
         /// 如果有帮助信息，则在子类的分文件中描写
@@ -248,9 +430,6 @@ namespace RUINORERP.Model
             }
         }
 
-
-
-        #endregion
 
         // 用于保存验证错误信息。key 保存所验证的字段名称；value 保存对应的字段的验证错误信息列表
         private Dictionary<String, List<String>> errors = new Dictionary<string, List<string>>();
@@ -367,6 +546,8 @@ namespace RUINORERP.Model
             BaseEntity loctype = (BaseEntity)this.MemberwiseClone(); //创建当前对象的浅拷贝。
             return loctype;
         }
+
+
     }
 
     // 定义一个事件参数类，用于传递新旧值
@@ -381,4 +562,5 @@ namespace RUINORERP.Model
             NewValue = newValue;
         }
     }
+
 }

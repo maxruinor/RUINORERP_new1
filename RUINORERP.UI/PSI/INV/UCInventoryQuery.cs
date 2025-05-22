@@ -27,6 +27,7 @@ using System.Collections;
 using RUINORERP.UI.AdvancedUIModule;
 using RUINORERP.UI.CommonUI;
 using RUINORERP.UI.ATechnologyStack;
+using RUINORERP.Global.EnumExt;
 
 namespace RUINORERP.UI.PSI.INV
 {

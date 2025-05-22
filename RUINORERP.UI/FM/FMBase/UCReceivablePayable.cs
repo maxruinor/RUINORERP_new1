@@ -49,6 +49,10 @@ using System.Configuration;
 
 namespace RUINORERP.UI.FM
 {
+    
+    /// <summary>
+    /// 应收应付
+    /// </summary>
     public partial class UCReceivablePayable : BaseBillEditGeneric<tb_FM_ReceivablePayable, tb_FM_ReceivablePayableDetail>
     {
         public UCReceivablePayable()
@@ -756,7 +760,7 @@ namespace RUINORERP.UI.FM
 
         protected override async Task<bool> Submit()
         {
-            bool rs = await base.Submit();
+            bool rs = await base.Submit(typeof(ARAPStatus));
             if (rs)
             {
                 ConfigManager configManager = Startup.GetFromFac<ConfigManager>();
@@ -768,6 +772,7 @@ namespace RUINORERP.UI.FM
             }
             return true;
         }
+
 
 
         protected async override Task<ReturnResults<tb_FM_ReceivablePayable>> Delete()

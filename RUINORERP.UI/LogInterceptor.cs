@@ -9,6 +9,8 @@ namespace RUINORERP.UI
     /// </summary>
     public class LogInterceptor : IInterceptor
     {
+
+
         public void Intercept(IInvocation invocation)
         {
             #region 方法执行前

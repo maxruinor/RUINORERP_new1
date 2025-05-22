@@ -39,7 +39,9 @@ using Org.BouncyCastle.Crypto.Prng;
 using LiveChartsCore.Geo;
 namespace RUINORERP.UI.FM
 {
-
+    /// <summary>
+    /// 付款单
+    /// </summary>
     public partial class UCPaymentRecordQuery : BaseBillQueryMC<tb_FM_PaymentRecord, tb_FM_PaymentRecordDetail>
     {
         public UCPaymentRecordQuery()

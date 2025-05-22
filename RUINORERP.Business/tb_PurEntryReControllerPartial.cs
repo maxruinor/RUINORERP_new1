@@ -256,13 +256,13 @@ namespace RUINORERP.Business
                     #endregion
                     invUpdateList.Add(inv);
                 }
-                int InvUpdateCounter = await _unitOfWorkManage.GetDbClient().Updateable(invUpdateList).ExecuteCommandAsync();
-                 if (InvUpdateCounter == 0)
+            
+                DbHelper<tb_Inventory> dbHelper = _appContext.GetRequiredService<DbHelper<tb_Inventory>>();
+                var Counter = await dbHelper.BaseDefaultAddElseUpdateAsync(invUpdateList);
+                if (Counter.ToInt() == 0)
                 {
-                    _unitOfWorkManage.RollbackTran();
-                    throw new Exception("库存更新失败！");
+                    _logger.LogInformation($"{entity.PurEntryReNo}更新库存结果为0行，请检查数据！");
                 }
-
 
 
                 //入库退回 写回入库单明细，

@@ -24,7 +24,7 @@ namespace RUINORERP.UI.Common
         /// <returns></returns>
         public static List<T> CheckDuplicateData<T>(List<T> dataSource, List<string> includeProperties) where T : class
         {
-            List<T> DuplicateData = new List<T>();
+            List<T> duplicateData = new List<T>();
             try
             {
                 // 转换数据源 BindingSortCollection
@@ -32,88 +32,87 @@ namespace RUINORERP.UI.Common
                 if (!dataSource.Any())
                 {
                     MessageBox.Show("没有数据可检查", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    return duplicateData;
                 }
 
                 // 获取主键名称
                 string pkName = UIHelper.GetPrimaryKeyColName(typeof(T));
 
                 // 创建属性访问器缓存
-                var propertyAccessors = typeof(T)
+                var propertiesToCompare = typeof(T)
                     .GetProperties()
                     .Where(p => includeProperties.Contains(p.Name) && p.Name != pkName)
-                    .Select(p => new { Property = p, Getter = ExpressionHelper.CreateGetter(p) })
+                    //.Select(p => new { Property = p, Getter = ExpressionHelper.CreateGetter(p) })
                     .ToList();
 
-                if (!propertyAccessors.Any())
+                if (!propertiesToCompare.Any())
                 {
                     MessageBox.Show("没有可比较的属性", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return duplicateData;
                 }
-                List<T> dlist = new List<T>();
-                foreach (var item in propertyAccessors)
-                {
-                    dlist.Add(item as T);
-                }
-                //====
 
-                Func<T, Tuple<object[]>> keySelector2 = p =>
+                // 创建属性值获取器
+                Func<T, object[]> propertyValuesGetter = entity =>
                 {
-                    PropertyInfo[] properties = typeof(T).GetProperties()
-                        .Where(prop => includeProperties.Contains(prop.Name) && prop.Name != pkName)
+                    return propertiesToCompare
+                        .Select(p => p.GetValue(entity))
                         .ToArray();
-                    var values = properties.Select(prop => prop.GetValue(p)).ToArray();
-                    return Tuple.Create(values);
                 };
 
-
-
+                //List<T> dlist = new List<T>();
+                //foreach (var item in propertyAccessors)
+                //{
+                //    dlist.Add(item as T);
+                //}
+                //====
                 // 使用自定义比较器进行分组
-                var duplicatesList = dataSource.GroupBy(
-                    keySelector2,
-                    new CustomTupleEqualityComparer<Tuple<object[]>>(includeProperties.ToArray()) // 使用适当的比较器
-                ).Where(g => g.Count() > 1)
-                 .Select(g => g.Skip(1))//排除掉第一个元素，这个是第一个重复的元素，要保留
-                .SelectMany(g => g)
-                .ToList();
-                //=====
+                var duplicatesGroups = dataSource
+                    .GroupBy(entity => propertyValuesGetter(entity), new ArrayEqualityComparer())
+                    .Where(g => g.Count() > 1)
+                    .ToList();
 
-
-                var s1 = dataSource.GroupBy(
-                    keySelector2,
-                    new CustomTupleEqualityComparer<Tuple<object[]>>(includeProperties.ToArray()) // 使用适当的比较器
-                )
-                .Select(g => g.Skip(1))//排除掉第一个元素，这个是第一个重复的元素，要保留
-                .ToList();
-
-
-
-                DuplicateData = duplicatesList;
-
-
-                // 使用属性值元组作为键进行分组
-                //var duplicates = dataSource
-                //    .GroupBy(item => ExpressionHelper.CreateKey<T>(item, dlist))
-                //    .Where(g => g.Count() > 1)
-                //    .SelectMany(g => g.Skip(1)) // 保留第一个，选择重复的
-                //    .ToList();
-
-
-
-
-                // 显示结果
-                //if (duplicates.Any())
+                // 收集所有重复项（排除每组的第一个元素）
+                foreach (var group in duplicatesGroups)
+                {
+                    duplicateData.AddRange(group.Skip(1));
+                }
+                //Func<T, Tuple<object[]>> keySelector2 = p =>
                 //{
-                //    MainForm.Instance.PrintInfoLog($"发现 {duplicates.Count} 条重复数据");
-                //}
-                //else
-                //{
-                //    MainForm.Instance.PrintInfoLog($"没有发现重复数据");
-                //}
+                //    PropertyInfo[] properties = typeof(T).GetProperties()
+                //        .Where(prop => includeProperties.Contains(prop.Name) && prop.Name != pkName)
+                //        .ToArray();
+                //    var values = properties.Select(prop => prop.GetValue(p)).ToArray();
+                //    return Tuple.Create(values);
+                //};
+
+
+
+                //// 使用自定义比较器进行分组
+                //var duplicatesList = dataSource.GroupBy(
+                //    keySelector2,
+                //    new CustomTupleEqualityComparer<Tuple<object[]>>(includeProperties.ToArray()) // 使用适当的比较器
+                //).Where(g => g.Count() > 1)
+                // .Select(g => g.Skip(1))//排除掉第一个元素，这个是第一个重复的元素，要保留
+                //.SelectMany(g => g)
+                //.ToList();
+                ////=====
+
+
+                //var s1 = dataSource.GroupBy(
+                //    keySelector2,
+                //    new CustomTupleEqualityComparer<Tuple<object[]>>(includeProperties.ToArray()) // 使用适当的比较器
+                //)
+                //.Select(g => g.Skip(1))//排除掉第一个元素，这个是第一个重复的元素，要保留
+                //.ToList();
+
+                //duplicateData = duplicatesList;
+
             }
             catch (Exception ex)
             {
                 MessageBox.Show($"检查过程中发生错误: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
-            return DuplicateData;
+            return duplicateData;
         }
 
 
@@ -151,7 +150,7 @@ namespace RUINORERP.UI.Common
 
             return thumbnail;
         }
-        
+
 
 
         /// <summary>
@@ -359,4 +358,36 @@ namespace RUINORERP.UI.Common
         public string Msg { get; set; }
 
     }
+
+    // 自定义数组比较器
+    public class ArrayEqualityComparer : IEqualityComparer<object[]>
+    {
+        public bool Equals(object[] x, object[] y)
+        {
+            if (ReferenceEquals(x, y)) return true;
+            if (x == null || y == null) return false;
+            if (x.Length != y.Length) return false;
+
+            for (int i = 0; i < x.Length; i++)
+            {
+                if (!Equals(x[i], y[i]))
+                    return false;
+            }
+            return true;
+        }
+
+        public int GetHashCode(object[] obj)
+        {
+            unchecked
+            {
+                int hash = 17;
+                foreach (var item in obj)
+                {
+                    hash = hash * 23 + (item?.GetHashCode() ?? 0);
+                }
+                return hash;
+            }
+        }
+    }
 }
+

@@ -149,7 +149,7 @@ namespace RUINORERP.Business
                     if (detailEntity.UnitCost == 0)
                     {
                         _unitOfWorkManage.RollbackTran();
-                        rmrs.ErrorMsg = $"{detailEntity.SKU}的单位成本不能为0。审核失败。";
+                        rmrs.ErrorMsg = $"{detailEntity.SKU}的单位成本不能为0。";
                         rmrs.Succeeded = false;
                         return rmrs;
                     }
@@ -167,7 +167,7 @@ namespace RUINORERP.Business
                     await ctrDetail.UpdateAsync(detail);
                 }
 
-
+                
 
                 //这部分是否能提出到上一级公共部分？
                 entity.DataStatus = (int)DataStatus.确认;

@@ -21,6 +21,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Windows.Documents;
 using RUINORERP.Global.EnumExt;
+using RUINORERP.Global;
 
 namespace RUINORERP.UI.BI
 {

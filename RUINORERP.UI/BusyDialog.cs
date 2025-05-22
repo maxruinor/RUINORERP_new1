@@ -23,7 +23,7 @@ namespace RUINORERP.UI
 
         private static BusyDialog _instance;
 
-        private BusyDialog(string message)
+        public BusyDialog(string message)
         {
 
             InitializeComponent();

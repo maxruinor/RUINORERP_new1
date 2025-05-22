@@ -28,6 +28,7 @@ using RUINORERP.Model.CommonModel;
 using RUINORERP.Business.Security;
 using System.Windows.Forms;
 using RUINORERP.Business.CommService;
+using System.Collections;
 
 namespace RUINORERP.Business
 {
@@ -114,7 +115,7 @@ namespace RUINORERP.Business
                         {
 
                             string msg = $"归还单:{entity.tb_prodborrowing.BorrowNo}的【{prodName}】的归还数量不能大于借出中对应行的数量，\r\n\" " +
-                                $"或存在当前借出单重复录入了归还单，审核失败！";
+                                $"或存在当前借出单重复录入了归还单。";
                             MessageBox.Show(msg, "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                             _unitOfWorkManage.RollbackTran();
                             _logger.LogInformation(msg);
@@ -226,12 +227,10 @@ namespace RUINORERP.Business
 
                 DbHelper<tb_Inventory> dbHelper = _appContext.GetRequiredService<DbHelper<tb_Inventory>>();
                 var Counter = await dbHelper.BaseDefaultAddElseUpdateAsync(invUpdateList);
-                if (Counter ==0)
+                if (Counter.ToInt() == 0)
                 {
-                    _unitOfWorkManage.RollbackTran();
-                    throw new Exception("库存更新失败！");
+                    _logger.LogInformation($"{entity.ReturnNo}更新库存结果为0行，请检查数据！");
                 }
-
 
                 entity.ApprovalStatus = (int)ApprovalStatus.已审核;
                 BusinessHelper.Instance.ApproverEntity(entity);
@@ -317,7 +316,7 @@ namespace RUINORERP.Business
                         {
                             string msg = $"归还单:{entity.tb_prodborrowing.BorrowNo}的【{prodName}】的归还数量不能于小于零，\r\n\" " +
                                 "反审失败！";
-                            MessageBox.Show(msg, "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                            rs.ErrorMsg = msg;
                             _unitOfWorkManage.RollbackTran();
                             _logger.LogInformation(msg);
                             return rs;

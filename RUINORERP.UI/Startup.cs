@@ -61,6 +61,7 @@ using RUINORERP.Global.EnumExt;
 using RUINORERP.Business.CommService;
 using Newtonsoft.Json;
 using RUINORERP.UI.ATechnologyStack;
+using RUINORERP.Model.Base;
 
 
 namespace RUINORERP.UI
@@ -702,7 +703,7 @@ namespace RUINORERP.UI
                                                     // 注册工作流定义
             services.AddSingleton<IWorkflowRegistry, WorkflowRegistry>();
             services.AddSingleton<IWorkflowHost, WorkflowHost>();
-
+        
             services.AddScoped(typeof(UI.BaseForm.frmBase));
             services.AddScoped(typeof(UI.BaseForm.BaseUControl));
             services.AddScoped(typeof(UI.BaseForm.BaseQuery));
@@ -1009,6 +1010,31 @@ namespace RUINORERP.UI
                 {
 
                 }
+                if (tempTypes[i].Name == "IWorkflowNotificationService")
+                {
+                    builder.RegisterType<WorkflowNotificationService>()
+                    .AsImplementedInterfaces().AsSelf()
+                    .PropertiesAutowired() //属性注入 如果没有这个  public Itb_LocationTypeServices _tb_LocationTypeServices { get; set; }  这个值会没有，所以实际后为null
+                    ;
+                    continue;
+                }
+                if (tempTypes[i].Name == "IStatusMachine")
+                {
+                    builder.RegisterType<BusinessStatusMachine>()
+                    .AsImplementedInterfaces().AsSelf()
+                    .PropertiesAutowired() //属性注入 如果没有这个  public Itb_LocationTypeServices _tb_LocationTypeServices { get; set; }  这个值会没有，所以实际后为null
+                    ;
+                    continue;
+                }
+                if (tempTypes[i].Name == "IStatusHandler")
+                {
+                    builder.RegisterType<ProductionStatusHandler>()
+                    .AsImplementedInterfaces().AsSelf()
+                    .PropertiesAutowired() //属性注入 如果没有这个  public Itb_LocationTypeServices _tb_LocationTypeServices { get; set; }  这个值会没有，所以实际后为null
+                    ;
+                    continue;
+                }
+
                 if (tempTypes[i].Name == "IAuthorizeController")
                 {
                     builder.RegisterType<AuthorizeController>()

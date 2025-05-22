@@ -33,6 +33,7 @@ using RUINORERP.Business.Processor;
 using RUINORERP.UI.BaseForm;
 using RUINORERP.Model.Models;
 using RUINORERP.UI.UserPersonalized;
+using RUINORERP.Global.EnumExt;
 
 
 namespace RUINORERP.UI.AdvancedUIModule
@@ -207,7 +208,7 @@ namespace RUINORERP.UI.AdvancedUIModule
             MainForm.Instance.AppContext.log.ActionName = e.ClickedItem.Text.ToString();
             if (e.ClickedItem.Text.Length > 0)
             {
-                DoButtonClick(EnumHelper.GetEnumByString<AdvQueryMenuItemEnums>(e.ClickedItem.Text));
+                DoButtonClick(EnumHelper.GetEnumByString<MenuItemEnums>(e.ClickedItem.Text));
             }
             else
             {
@@ -221,23 +222,23 @@ namespace RUINORERP.UI.AdvancedUIModule
         /// 控制功能按钮
         /// </summary>
         /// <param name="p_Text"></param>
-        protected virtual void DoButtonClick(AdvQueryMenuItemEnums menuItem)
+        protected virtual void DoButtonClick(MenuItemEnums menuItem)
         {
             //操作前将数据收集
             this.ValidateChildren(System.Windows.Forms.ValidationConstraints.None);
             switch (menuItem)
             {
-                case AdvQueryMenuItemEnums.查询:
+                case MenuItemEnums.查询:
                     toolStripBtnQuery.Select();
                     Query();
                     break;
-                case AdvQueryMenuItemEnums.关闭:
+                case MenuItemEnums.关闭:
                     Exit(this);
                     break;
-                case AdvQueryMenuItemEnums.选中:
+                case MenuItemEnums.选中:
                     SelectedData();
                     break;
-                case AdvQueryMenuItemEnums.属性:
+                case MenuItemEnums.属性:
                     MenuPersonalizedSettings();
                     break;
                 default:

@@ -39,6 +39,7 @@ using RUINORERP.Business.Security;
 using FastReport.Table;
 using Org.BouncyCastle.Asn1.Cmp;
 using RUINORERP.Business.CommService;
+using RUINORERP.Global.EnumExt;
 
 
 

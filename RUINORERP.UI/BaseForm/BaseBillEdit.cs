@@ -33,6 +33,7 @@ using RUINORERP.Model.TransModel;
 using RUINORERP.UI.ClientCmdService;
 using System.Threading;
 using TransInstruction.CommandService;
+using RUINORERP.Global.EnumExt;
 
 namespace RUINORERP.UI.BaseForm
 {
@@ -731,6 +732,25 @@ namespace RUINORERP.UI.BaseForm
                 {
                     logger = MainForm.Instance.logger;
                     AppContext = MainForm.Instance.AppContext;
+
+
+                    // 获取按钮状态
+                    //var printState = uiManager.GetButtonState(MenuItemEnums.打印);
+                    //var exportState = uiManager.GetButtonState(MenuItemEnums.导出);
+
+                    //// 在工具栏初始化时
+                    //foreach (MenuItemEnums item in Enum.GetValues(typeof(MenuItemEnums)))
+                    //{
+                    //    var state = uiManager.GetButtonState(item);
+                    //    toolStrip.Items.Add(new ToolStripButton
+                    //    {
+                    //        Text = item.ToString(),
+                    //        Enabled = state.Enabled,
+                    //        Visible = state.Visible
+                    //    });
+                    //}
+
+
                     #region 
 
 
@@ -760,6 +780,16 @@ namespace RUINORERP.UI.BaseForm
                             AddExcludeMenuList();
                             foreach (var item in BaseToolStrip.Items)
                             {
+                                //给按钮tag给个值。有什么意义？ 就为了后面注册状态用？用Text直接判断就可以了。
+                                //foreach (MenuItemEnums menuItem in Enum.GetValues(typeof(MenuItemEnums)))
+                                //{
+                                //    var button = new ToolStripButton
+                                //    {
+                                //        Text = item.ToString(),
+                                //        Tag = item // 关键：设置Tag属性为枚举值
+                                //    };
+                                //}
+
 
                                 if (item is ToolStripButton)
                                 {

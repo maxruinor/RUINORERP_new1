@@ -28,6 +28,7 @@ using RUINORERP.Common.Helper;
 using RUINORERP.Global;
 using System.Windows.Forms;
 using RUINORERP.Business.Security;
+using RUINORERP.Business.CommService;
 
 namespace RUINORERP.Business
 {
@@ -137,14 +138,15 @@ namespace RUINORERP.Business
                         .Where(c => c.MOID == entity.MOID).Single();
 
 
-                    //如果领料明细中的产品。不存在于制令单明细中。审核失败。意思是领料的东西必须是制令单中的明细数据。如果不是 可以用其他 出库
+                    //如果领料明细中的产品。不存在于制令单明细中。意思是领料的东西必须是制令单中的明细数据。如果不是 可以用其他 出库
                     foreach (var child in entity.tb_MaterialRequisitionDetails)
                     {
                         if (!entity.tb_manufacturingorder.tb_ManufacturingOrderDetails.Any(c => c.ProdDetailID == child.ProdDetailID && c.Location_ID == child.Location_ID))
                         {
                             rrs.Succeeded = false;
-                            //_unitOfWorkManage.RollbackTran();
                             rrs.ErrorMsg = $"领料明细中，有不属于当前制令单的明细!请检查数据后重试！";
+                            MessageBox.Show(rrs.ErrorMsg, "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                            ///没有启动事务时才可以弹窗提示
                             _logger.LogInformation(rrs.ErrorMsg);
                             return rrs;
                         }
@@ -169,8 +171,9 @@ namespace RUINORERP.Business
                             //意思是一个东西多行。不是引用来的。无法减对应的行数，反审不用管。
                             if (entity.tb_MaterialRequisitionDetails.Any(c => c.ManufacturingOrderDetailRowID == 0))
                             {
-                                string msg = $"制令单:{entity.tb_manufacturingorder.MONO}的【{prodName}】在明细中拥有多行记录，必须使用引用的方式添加，审核失败！";
+                                string msg = $"制令单:{entity.tb_manufacturingorder.MONO}的【{prodName}】在明细中拥有多行记录，必须使用引用的方式添加。";
                                 MessageBox.Show(msg, "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                                ///没有启动事务时才可以弹窗提示
                                 //_unitOfWorkManage.RollbackTran();
                                 rrs.ErrorMsg = msg;
                                 _logger.LogInformation(msg);
@@ -199,7 +202,7 @@ namespace RUINORERP.Business
 
                             if (!entity.ReApply)
                             {
-                                string msg = $"非补料时，制令单:{entity.tb_manufacturingorder.MONO}的【{prodName}】的领料数量不能大于制令单对应行的应发数量，审核失败！";
+                                string msg = $"非补料时，制令单:{entity.tb_manufacturingorder.MONO}的【{prodName}】的领料数量不能大于制令单对应行的应发数量。";
                                 MessageBox.Show(msg, "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                                 //_unitOfWorkManage.RollbackTran();
                                 rrs.ErrorMsg = msg;
@@ -232,7 +235,7 @@ namespace RUINORERP.Business
                     }
 
                     #endregion
-
+                    List<tb_Inventory> invUpdateList = new List<tb_Inventory>();
                     //因为要计算未发数量，所以要更新库存要在最后一步
                     foreach (var child in entity.tb_MaterialRequisitionDetails)
                     {
@@ -265,8 +268,8 @@ namespace RUINORERP.Business
                                 if (!entity.ReApply && totalActualSentQty > MoDeltail.ShouldSendQty)
                                 {
                                     string prodName = child.tb_proddetail.tb_prod.CNName + child.tb_proddetail.tb_prod.Specifications;
-                                    string msg = $"非补料时，制令单:{entity.tb_manufacturingorder.MONO}的【{prodName}】的领料数量不能大于制令单对应行的应发数量，审核失败！";
-                                    MessageBox.Show(msg, "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                                    string msg = $"非补料时，制令单:{entity.tb_manufacturingorder.MONO}的【{prodName}】的领料数量不能大于制令单对应行的应发数量。";
+                                    rrs.ErrorMsg = msg;
                                     _unitOfWorkManage.RollbackTran();
                                     rrs.ErrorMsg = msg;
                                     _logger.LogInformation(msg);
@@ -291,17 +294,13 @@ namespace RUINORERP.Business
                         inv.Inv_SubtotalCostMoney = inv.Inv_Cost * inv.Quantity;
                         inv.LatestOutboundTime = System.DateTime.Now;
                         #endregion
-
-                        ReturnResults<tb_Inventory> rr = await ctrinv.SaveOrUpdate(inv);
-                        if (rr.Succeeded)
-                        {
-
-                        }
-                        else
-                        {
-                            return rrs;
-                        }
-
+                        invUpdateList.Add(inv);
+                    }
+                    DbHelper<tb_Inventory> InvdbHelper = _appContext.GetRequiredService<DbHelper<tb_Inventory>>();
+                    var InvCounter = await InvdbHelper.BaseDefaultAddElseUpdateAsync(invUpdateList);
+                    if (InvCounter == 0)
+                    {
+                        _logger.LogInformation($"{entity.MaterialRequisitionNO}审核时，更新库存结果为0行，请检查数据！");
                     }
 
                     //TODO: 制令单  怎么样才能结案
@@ -312,10 +311,7 @@ namespace RUINORERP.Business
                     //    entity.tb_manufacturingorder.CloseCaseOpinions = "【系统自动结案】==》" + System.DateTime.Now.ToString() + _appContext.CurUserInfo.UserInfo.tb_employee.Employee_Name + "审核销售库单时:" + entity.SaleOutNo + "结案。"; ;
                     //    await _unitOfWorkManage.GetDbClient().Updateable(entity.tb_manufacturingorder).UpdateColumns(t => new { t.DataStatus, t.CloseCaseOpinions }).ExecuteCommandAsync();
                     //}
-
                 }
-
-
 
                 BusinessHelper.Instance.ApproverEntity(entity);
                 //只更新指定列
@@ -443,12 +439,14 @@ namespace RUINORERP.Business
                     invUpdateList.Add(inv);
                    
                 }
-                int InvUpdateCounter = await _unitOfWorkManage.GetDbClient().Updateable(invUpdateList).ExecuteCommandAsync();
-                 if (InvUpdateCounter == 0)
+                DbHelper<tb_Inventory> dbHelper = _appContext.GetRequiredService<DbHelper<tb_Inventory>>();
+                var InvMainCounter = await dbHelper.BaseDefaultAddElseUpdateAsync(invUpdateList);
+                if (InvMainCounter == 0)
                 {
-                    _unitOfWorkManage.RollbackTran();
-                    throw new Exception("库存更新失败！");
+                    _logger.LogInformation($"{entity.MaterialRequisitionNO}更新库存结果为0行，请检查数据！");
                 }
+
+                
 
                 //更新制作单明细的已发数量
                 if (entity.tb_manufacturingorder != null)

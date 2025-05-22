@@ -1,4 +1,6 @@
 ﻿using RUINORERP.Business.Processor;
+using RUINORERP.Global;
+using RUINORERP.Global.EnumExt;
 using RUINORERP.Model;
 using RUINORERP.UI.UControls;
 using RUINORERP.UI.UserCenter;

@@ -153,13 +153,14 @@ namespace RUINORERP.Business
                     
                 }
 
-                int InvUpdateCounter = await _unitOfWorkManage.GetDbClient().Updateable(invUpdateList).ExecuteCommandAsync();
-                if (InvUpdateCounter == 0)
+                DbHelper<tb_Inventory> dbHelper = _appContext.GetRequiredService<DbHelper<tb_Inventory>>();
+                var Counter = await dbHelper.BaseDefaultAddElseUpdateAsync(invUpdateList);
+                if (Counter == 0)
                 {
-                    _unitOfWorkManage.RollbackTran();
-                    throw new Exception("库存更新失败！");
+                    _logger.LogInformation($"{entity.PurReEntryNo}更新库存结果为0行，请检查数据！");
                 }
 
+               
 
                 //因为可以多次分批入库，所以需要判断当前入库数量是否大于退货数量
                 //先找到所有采购退货入库明细,再找按采购退款明细去循环比较。如果入库总数量大于退货数量，则不允许入库。
@@ -183,8 +184,8 @@ namespace RUINORERP.Business
                         if (entity.tb_PurReturnEntryDetails.Any(c => c.PurReEntry_CID == 0))
                         {
                             //如果存在不是引用的明细,则不允许入库。这样不支持手动添加的情况。
-                            string msg = $"采购退货单:{entity.tb_purentryre.PurEntryReNo}的【{prodName}】在明细中拥有多行记录，必须使用引用的方式添加，审核失败！";
-                            MessageBox.Show(msg, "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                            string msg = $"采购退货单:{entity.tb_purentryre.PurEntryReNo}的【{prodName}】在明细中拥有多行记录，必须使用引用的方式添加。";
+                            rs.ErrorMsg = msg;
                             _unitOfWorkManage.RollbackTran();
                             _logger.LogInformation(msg);
                             return rs;
@@ -195,8 +196,8 @@ namespace RUINORERP.Business
                         && c.PurEntryRe_CID == entity.tb_purentryre.tb_PurEntryReDetails[i].PurEntryRe_CID).Sum(c => c.Quantity);
                         if (inQty > entity.tb_purentryre.tb_PurEntryReDetails[i].Quantity)
                         {
-                            string msg = $"【{prodName}】的采购退货入库数量不能大于退货单中对应行的数量\r\n" + $"或存在针对当前采购退货单重复录入了采购退货入库单，审核失败！";
-                            MessageBox.Show(msg, "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                            string msg = $"【{prodName}】的采购退货入库数量不能大于退货单中对应行的数量\r\n" + $"或存在针对当前采购退货单重复录入了采购退货入库单。";
+                            rs.ErrorMsg = msg;
                             _unitOfWorkManage.RollbackTran();
                             _logger.LogInformation(msg);
                             return rs;
@@ -228,8 +229,8 @@ namespace RUINORERP.Business
                         if (inQty > entity.tb_purentryre.tb_PurEntryReDetails[i].Quantity)
                         {
 
-                            string msg = $"采购退货单:{entity.tb_purentryre.PurEntryReNo}的【{prodName}】的入库数量不能大于退货单中对应行的数量\r\n" + $"                                    或存在针对当前采购退货单重复录入了采购入库单，审核失败！";
-                            MessageBox.Show(msg, "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                            string msg = $"采购退货单:{entity.tb_purentryre.PurEntryReNo}的【{prodName}】的入库数量不能大于退货单中对应行的数量\r\n" + $"或存在针对当前采购退货单重复录入了采购入库单。";
+                            rs.ErrorMsg = msg;
                             _unitOfWorkManage.RollbackTran();
                             _logger.LogInformation(msg);
                             return rs;
@@ -391,9 +392,9 @@ namespace RUINORERP.Business
                 var InvUpdateCounter = await dbHelper.BaseDefaultAddElseUpdateAsync(invUpdateList);
                  if (InvUpdateCounter == 0)
                 {
-                    _unitOfWorkManage.RollbackTran();
-                    throw new Exception("库存更新失败！");
+                    _logger.LogInformation($"{entity.PurReEntryNo}更新库存结果为0行，请检查数据！");
                 }
+               
 
 
                 if (entity.tb_purentryre != null)
@@ -434,7 +435,7 @@ namespace RUINORERP.Business
                             {
                                 //如果存在不是引用的明细,则不允许入库。这样不支持手动添加的情况。
                                 string msg = $"采购退货单:{entity.tb_purentryre.PurEntryReNo}的【{prodName}】在退货单明细中拥有多行记录，必须使用引用的方式添加，反审失败！";
-                                MessageBox.Show(msg, "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                                rs.ErrorMsg = msg;
                                 _unitOfWorkManage.RollbackTran();
                                 if (_appContext.SysConfig.ShowDebugInfo)
                                 {
@@ -450,8 +451,8 @@ namespace RUINORERP.Business
                                 && c.PurEntryRe_CID == entity.tb_purentryre.tb_PurEntryReDetails[i].PurEntryRe_CID).Sum(c => c.Quantity);
                             if (inQty > entity.tb_purentryre.tb_PurEntryReDetails[i].Quantity)
                             {
-                                string msg = $"采购退货单:{entity.tb_purentryre.PurEntryReNo}的【{prodName}】的入库数量不能大于退货单中对应行的数量，审核失败！";
-                                MessageBox.Show(msg, "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                                string msg = $"采购退货单:{entity.tb_purentryre.PurEntryReNo}的【{prodName}】的入库数量不能大于退货单中对应行的数量。";
+                                rs.ErrorMsg = msg;
                                 _unitOfWorkManage.RollbackTran();
                                 if (_appContext.SysConfig.ShowDebugInfo)
                                 {
@@ -484,8 +485,8 @@ namespace RUINORERP.Business
                             if (inQty > entity.tb_purentryre.tb_PurEntryReDetails[i].Quantity)
                             {
 
-                                string msg = $"采购退货单:{entity.tb_purentryre.PurEntryReNo}的【{prodName}】的入库数量不能大于退货单中对应行的数量，审核失败！";
-                                MessageBox.Show(msg, "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                                string msg = $"采购退货单:{entity.tb_purentryre.PurEntryReNo}的【{prodName}】的入库数量不能大于退货单中对应行的数量。";
+                                rs.ErrorMsg = msg;
                                 _unitOfWorkManage.RollbackTran();
                                 if (_appContext.SysConfig.ShowDebugInfo)
                                 {

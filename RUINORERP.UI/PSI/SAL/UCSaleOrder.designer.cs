@@ -242,7 +242,7 @@
             // 
             // chkIsCustomizedOrder
             // 
-            this.chkIsCustomizedOrder.Location = new System.Drawing.Point(1122, 162);
+            this.chkIsCustomizedOrder.Location = new System.Drawing.Point(1132, 111);
             this.chkIsCustomizedOrder.Name = "chkIsCustomizedOrder";
             this.chkIsCustomizedOrder.Size = new System.Drawing.Size(62, 20);
             this.chkIsCustomizedOrder.TabIndex = 102;
@@ -273,7 +273,7 @@
             // 
             this.txtShippingAddress.Location = new System.Drawing.Point(77, 159);
             this.txtShippingAddress.Name = "txtShippingAddress";
-            this.txtShippingAddress.Size = new System.Drawing.Size(1039, 23);
+            this.txtShippingAddress.Size = new System.Drawing.Size(999, 23);
             this.txtShippingAddress.TabIndex = 65;
             // 
             // lblPrintStatus
@@ -350,7 +350,7 @@
             this.txtNotes.Location = new System.Drawing.Point(76, 186);
             this.txtNotes.Multiline = true;
             this.txtNotes.Name = "txtNotes";
-            this.txtNotes.Size = new System.Drawing.Size(1040, 73);
+            this.txtNotes.Size = new System.Drawing.Size(1000, 73);
             this.txtNotes.TabIndex = 75;
             // 
             // txtOrderNo

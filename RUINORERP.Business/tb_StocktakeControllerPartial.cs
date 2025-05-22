@@ -47,8 +47,7 @@ namespace RUINORERP.Business
 
             try
             {
-                // 开启事务，保证数据一致性
-                _unitOfWorkManage.BeginTran();
+
 
                 tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
 
@@ -156,10 +155,8 @@ namespace RUINORERP.Business
                     invUpdateList.Add(inv);
                 }
 
-                List<tb_Inventory> InsertList = invUpdateList.Where(c => c.Inventory_ID == 0).ToList();
-
                 // 使用LINQ查询
-                var CheckNewInvList = InsertList
+                var CheckNewInvList = invUpdateList
                     .GroupBy(i => new { i.ProdDetailID, i.Location_ID })
                     .Where(g => g.Count() > 1)
                     .Select(g => g.Key.ProdDetailID)
@@ -175,12 +172,21 @@ namespace RUINORERP.Business
 
                 }
 
-                var InvInsertCounter = await _unitOfWorkManage.GetDbClient().Insertable(InsertList).ExecuteReturnSnowflakeIdListAsync();
-                if (InvInsertCounter.Count == 0)
+                // 开启事务，保证数据一致性
+                _unitOfWorkManage.BeginTran();
+
+                 
+
+               
+
+                DbHelper<tb_Inventory> InvdbHelper = _appContext.GetRequiredService<DbHelper<tb_Inventory>>();
+                var Counter = await InvdbHelper.BaseDefaultAddElseUpdateAsync(invUpdateList);
+                if (Counter == 0)
                 {
-                    _unitOfWorkManage.RollbackTran();
-                    throw new Exception("库存保存失败！");
+                    _logger.LogInformation($"{entity.CheckNo}审核时，更新库存结果为0行，请检查数据！");
                 }
+
+              
 
 
                 List<tb_Inventory> UpdateList = invUpdateList.Where(c => c.Inventory_ID > 0).ToList();
@@ -236,8 +242,7 @@ namespace RUINORERP.Business
 
             try
             {
-                // 开启事务，保证数据一致性
-                _unitOfWorkManage.BeginTran();
+ 
 
                 tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
                 //更新拟销售量减少
@@ -328,13 +333,13 @@ namespace RUINORERP.Business
                     return rmsr;
 
                 }
-
-                DbHelper<tb_Inventory> dbHelper = _appContext.GetRequiredService<DbHelper<tb_Inventory>>();
-                var Counter = await dbHelper.BaseDefaultAddElseUpdateAsync(invUpdateList);
+                // 开启事务，保证数据一致性
+                _unitOfWorkManage.BeginTran();
+                DbHelper<tb_Inventory> InvdbHelper = _appContext.GetRequiredService<DbHelper<tb_Inventory>>();
+                var Counter = await InvdbHelper.BaseDefaultAddElseUpdateAsync(invUpdateList);
                 if (Counter == 0)
                 {
-                    _unitOfWorkManage.RollbackTran();
-                    throw new Exception("库存更新失败！");
+                    _logger.LogInformation($"{entity.CheckNo}反审核时，更新库存结果为0行，请检查数据！");
                 }
 
                 CheckMode cm = (CheckMode)entity.CheckMode;

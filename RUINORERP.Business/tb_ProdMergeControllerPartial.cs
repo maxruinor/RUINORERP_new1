@@ -62,7 +62,7 @@ namespace RUINORERP.Business
                 if (invMother == null)
                 {
                     _unitOfWorkManage.RollbackTran();
-                    rs.ErrorMsg = $"母件首次增加库存必须通过【采购入库】，【期初盘点】或【缴库记录】产生过库存记录。组合单审核失败。";
+                    rs.ErrorMsg = $"母件首次增加库存必须通过【采购入库】，【期初盘点】或【缴库记录】产生过库存记录。";
                     rs.Succeeded = false;
                     return rs;
 

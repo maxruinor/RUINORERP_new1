@@ -22,6 +22,7 @@ using Castle.Components.DictionaryAdapter.Xml;
 using System.Web.WebSockets;
 using SourceGrid2.Win32;
 using RUINORERP.UI.BaseForm;
+using RUINORERP.Global.EnumExt;
 
 namespace RUINORERP.UI.Common
 {
@@ -768,7 +769,6 @@ namespace RUINORERP.UI.Common
                         info.IsChild = isChild;
                         info.ChildEntityName = childType;
                         BusinessHelper.Instance.InitEntity(info);
-                        //bool isexist = fieldController.IsExist(e => e.EntityName == info.EntityName && e.FieldName == kv.Key && e.MenuID == menuInfo.MenuID && e.IsChild == isChild);
                         var existFieldInfo = menuInfo.tb_FieldInfos.FirstOrDefault(e => e.EntityName == info.EntityName && e.FieldName == kv.Key && e.MenuID == menuInfo.MenuID && e.IsChild == isChild);
                         if (existFieldInfo == null)
                         {
@@ -782,19 +782,17 @@ namespace RUINORERP.UI.Common
                         {
                             //添加后才不会重复添加
                             menuInfo.tb_FieldInfos.AddRange(tb_FieldInfos);
-
-                            //不会重复添加
-                            for (int i = 0; i < tb_FieldInfos.Count; i++)
-                            {
-                                if (!menuInfo.tb_FieldInfos.Any(c => c.FieldName == tb_FieldInfos[i].FieldName && c.ClassPath == tb_FieldInfos[i].ClassPath))
-                                {
-                                    menuInfo.tb_FieldInfos.Add(tb_FieldInfos[i]);
-                                }
-                            }
                         }
                     }
 
-
+                    //不会重复添加
+                    //for (int i = 0; i < tb_FieldInfos.Count; i++)
+                    //{
+                    //    if (!menuInfo.tb_FieldInfos.Any(c => c.FieldName == tb_FieldInfos[i].FieldName && c.ClassPath == tb_FieldInfos[i].ClassPath))
+                    //    {
+                    //        menuInfo.tb_FieldInfos.Add(tb_FieldInfos[i]);
+                    //    }
+                    //}
                 }
             }
         }

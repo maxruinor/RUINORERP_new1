@@ -55,6 +55,8 @@ using Newtonsoft.Json;
 using Fireasy.Common.Extensions;
 using ContextMenuController = RUINORERP.UI.UControls.ContextMenuController;
 using Netron.Automatology;
+using RUINORERP.Global.EnumExt;
+using RUINORERP.Global;
 
 
 

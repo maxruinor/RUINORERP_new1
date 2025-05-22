@@ -40,6 +40,7 @@ using RUINORERP.Business.AutoMapper;
 using RUINORERP.Model.Base;
 using RUINORERP.Business.Processor;
 using StackExchange.Redis;
+using RUINORERP.Global.EnumExt;
 
 namespace RUINORERP.UI.PSI.INV
 {

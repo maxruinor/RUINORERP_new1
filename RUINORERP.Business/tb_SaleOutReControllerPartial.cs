@@ -30,6 +30,7 @@ using System.Windows.Interop;
 using SqlSugar;
 using RUINORERP.Global.EnumExt;
 using RUINORERP.Business.Processor;
+using RUINORERP.Business.CommService;
 
 namespace RUINORERP.Business
 {
@@ -267,12 +268,14 @@ namespace RUINORERP.Business
                         #endregion
                         invUpdateList.Add(inv);
                     }
-                    int InvUpdateCounter = await _unitOfWorkManage.GetDbClient().Updateable(invUpdateList).ExecuteCommandAsync();
-                    if (InvUpdateCounter == 0)
+
+                    DbHelper<tb_Inventory> InvdbHelper = _appContext.GetRequiredService<DbHelper<tb_Inventory>>();
+                    var Counter = await InvdbHelper.BaseDefaultAddElseUpdateAsync(invUpdateList);
+                    if (Counter == 0)
                     {
-                        _unitOfWorkManage.RollbackTran();
-                        throw new Exception("库存更新失败！");
+                        _logger.LogInformation($"{entity.ReturnNo}审核时，更新库存结果为0行，请检查数据！");
                     }
+
 
 
                     if (entity.tb_SaleOutReRefurbishedMaterialsDetails != null)
@@ -319,12 +322,16 @@ namespace RUINORERP.Business
                             invMaterialsUpdateList.Add(inv);
                         }
 
-                        int invMaterialsCounter = await _unitOfWorkManage.GetDbClient().Updateable(invMaterialsUpdateList).ExecuteCommandAsync();
-                        if (invMaterialsCounter == 0)
+                        if (invMaterialsUpdateList.Count > 0)
                         {
-                            _unitOfWorkManage.RollbackTran();
-                            throw new Exception("翻新物料的库存更新失败！");
+                            int invMaterialsCounter = await _unitOfWorkManage.GetDbClient().Updateable(invMaterialsUpdateList).ExecuteCommandAsync();
+                            if (invMaterialsCounter == 0)
+                            {
+                                _unitOfWorkManage.RollbackTran();
+                                throw new Exception("翻新物料的库存更新失败！");
+                            }
                         }
+                        
                     }
                 }
 

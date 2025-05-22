@@ -22,6 +22,7 @@ using RUINORERP.Common.Extensions;
 using RUINORERP.Common.Helper;
 using RUINORERP.Global;
 using RUINORERP.Global.CustomAttribute;
+using RUINORERP.Global.EnumExt;
 using RUINORERP.Model;
 using RUINORERP.Model.Base;
 using RUINORERP.Model.CommonModel;
@@ -759,6 +760,7 @@ namespace RUINORERP.UI.BaseForm
                     command.Undo();
                     //MainForm.Instance.PrintInfoLog($"{EditEntity.SOrderNo}反审失败{rr.ErrorMsg},请联系管理员！", Color.Red);
                     MainForm.Instance.PrintInfoLog($"{ae.bizName}:{ae.BillNo}审核失败{rmr.ErrorMsg},请联系管理员！", Color.Red);
+                    MessageBox.Show("提示", $"{ae.bizName}:{ae.BillNo}审核失败。\r\n {rmr.ErrorMsg}", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
 
             }
@@ -861,6 +863,7 @@ namespace RUINORERP.UI.BaseForm
                     command.Undo();
                     //MainForm.Instance.PrintInfoLog($"{EditEntity.SOrderNo}反审失败{rr.ErrorMsg},请联系管理员！", Color.Red);
                     MainForm.Instance.PrintInfoLog($"{ae.bizName}:{ae.BillNo}审核失败,请联系管理员！", Color.Red);
+                    MessageBox.Show("提示", $"{ae.bizName}:{ae.BillNo}反审核失败。\r\n {rmr.ErrorMsg}", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
             return ae;

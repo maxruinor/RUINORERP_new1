@@ -41,6 +41,7 @@ using FastReport.DevComponents.DotNetBar.Controls;
 using Krypton.Workspace;
 using Krypton.Navigator;
 using RUINORERP.UI.UserCenter;
+using RUINORERP.Global.EnumExt;
 
 namespace RUINORERP.UI.SysConfig
 {
@@ -403,7 +404,7 @@ namespace RUINORERP.UI.SysConfig
         {
             if (CurrentRole == null)
             {
-                MainForm.Instance.PrintInfoLog("请先选择角色或人员。");
+                MessageBox.Show("请先选择角色或人员。");
                 return;
             }
           

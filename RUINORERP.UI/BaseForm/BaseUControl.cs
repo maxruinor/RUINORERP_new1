@@ -15,6 +15,8 @@ using RUINORERP.UI.UserCenter;
 using RUINORERP.UI.UControls;
 using FastReport.DevComponents.DotNetBar.Controls;
 using RUINORERP.UI.Common;
+using RUINORERP.Global.EnumExt;
+using RUINORERP.Global;
 
 namespace RUINORERP.UI.BaseForm
 {

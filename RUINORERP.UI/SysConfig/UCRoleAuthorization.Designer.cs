@@ -329,6 +329,7 @@
             this.toolStripCopyRoleConfig.Size = new System.Drawing.Size(88, 22);
             this.toolStripCopyRoleConfig.Text = "复制授权";
             this.toolStripCopyRoleConfig.ToolTipText = "加载选择角色的权限配置";
+            this.toolStripCopyRoleConfig.Click += new System.EventHandler(this.toolStripCopyRoleConfig_Click);
             // 
             // toolsbtnFullAuthorization
             // 
@@ -337,7 +338,7 @@
             this.toolsbtnFullAuthorization.Name = "toolsbtnFullAuthorization";
             this.toolsbtnFullAuthorization.Size = new System.Drawing.Size(79, 22);
             this.toolsbtnFullAuthorization.Text = "全量授权";
-            this.toolsbtnFullAuthorization.Click += new System.EventHandler(this.toolsbtnFullAuthorization_Click);
+            this.toolsbtnFullAuthorization.Click += new System.EventHandler(this.toolsbtnFullAuthorization_ClickAsync);
             // 
             // tsbtnDelete
             // 

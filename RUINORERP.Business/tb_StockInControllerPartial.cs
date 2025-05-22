@@ -48,8 +48,7 @@ namespace RUINORERP.Business
             tb_StockIn entity = ObjectEntity as tb_StockIn;
             try
             {
-                // 开启事务，保证数据一致性
-                _unitOfWorkManage.BeginTran();
+
 
                 tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
                 BillConverterFactory bcf = _appContext.GetRequiredService<BillConverterFactory>();
@@ -101,39 +100,35 @@ namespace RUINORERP.Business
                     invUpdateList.Add(inv);
                 }
 
-                List<tb_Inventory> UpdateList = invUpdateList.Where(c => c.Inventory_ID > 0).ToList();
-                int InvUpdateCounter = await _unitOfWorkManage.GetDbClient().Updateable(UpdateList).ExecuteCommandAsync();
-                if (InvUpdateCounter == 0)
-                {
-                    _unitOfWorkManage.RollbackTran();
-                    throw new Exception("库存更新失败！");
-                }
                 List<tb_Inventory> InsertList = invUpdateList.Where(c => c.Inventory_ID == 0).ToList();
-
-                // 使用LINQ查询
-                var CheckNewInvList = InsertList.Where(c => c.Inventory_ID == 0)
-                    .GroupBy(i => new { i.ProdDetailID, i.Location_ID })
-                    .Where(g => g.Count() > 1)
-                    .Select(g => g.Key.ProdDetailID)
-                    .ToList();
-
-                if (CheckNewInvList.Count > 0)
+                if (invUpdateList.Count > 0)
                 {
-                    //新增库存中有重复的商品，操作失败。请联系管理员。
-                    rs.ErrorMsg = "新增库存中有重复的商品，操作失败。";
-                    rs.Succeeded = false;
-                    _logger.LogError(rs.ErrorMsg + "详细信息：" + string.Join(",", CheckNewInvList));
-                    return rs;
+                    // 使用LINQ查询
+                    var CheckNewInvList = InsertList.Where(c => c.Inventory_ID == 0)
+                        .GroupBy(i => new { i.ProdDetailID, i.Location_ID })
+                        .Where(g => g.Count() > 1)
+                        .Select(g => g.Key.ProdDetailID)
+                        .ToList();
 
+                    if (CheckNewInvList.Count > 0)
+                    {
+                        //新增库存中有重复的商品，操作失败。请联系管理员。
+                        rs.ErrorMsg = "新增库存中有重复的商品，操作失败。";
+                        rs.Succeeded = false;
+                        _logger.LogError(rs.ErrorMsg + "详细信息：" + string.Join(",", CheckNewInvList));
+                        return rs;
+                    }
                 }
 
-                var InvInsertCounter = await _unitOfWorkManage.GetDbClient().Insertable(InsertList).ExecuteReturnSnowflakeIdListAsync();
-                if (InvInsertCounter.Count == 0)
-                {
-                    _unitOfWorkManage.RollbackTran();
-                    throw new Exception("库存更新失败！");
-                }
+                // 开启事务，保证数据一致性
+                _unitOfWorkManage.BeginTran();
 
+                DbHelper<tb_Inventory> InvdbHelper = _appContext.GetRequiredService<DbHelper<tb_Inventory>>();
+                var Counter = await InvdbHelper.BaseDefaultAddElseUpdateAsync(invUpdateList);
+                if (Counter == 0)
+                {
+                    _logger.LogInformation($"{entity.BillNo}审核时，更新库存结果为0行，请检查数据！");
+                }
 
                 //这部分是否能提出到上一级公共部分？
                 entity.DataStatus = (int)DataStatus.确认;
@@ -222,13 +217,13 @@ namespace RUINORERP.Business
                     #endregion
                     invUpdateList.Add(inv);
                 }
-                int InvUpdateCounter = await _unitOfWorkManage.GetDbClient().Updateable(invUpdateList).ExecuteCommandAsync();
-                 if (InvUpdateCounter == 0)
+                
+                DbHelper<tb_Inventory> InvdbHelper = _appContext.GetRequiredService<DbHelper<tb_Inventory>>();
+                var Counter = await InvdbHelper.BaseDefaultAddElseUpdateAsync(invUpdateList);
+                if (Counter == 0)
                 {
-                    _unitOfWorkManage.RollbackTran();
-                    throw new Exception("库存更新失败！");
+                    _logger.LogInformation($"{entity.BillNo}反审核时，更新库存结果为0行，请检查数据！");
                 }
-
 
                 //这部分是否能提出到上一级公共部分？
                 entity.DataStatus = (int)DataStatus.新建;

@@ -126,7 +126,7 @@ namespace RUINORERP.Business
                     inv.Sale_Qty += group.Value.SaleQtySum.ToInt();
                     invList.Add(inv);
                 }
-                 
+
 
                 _unitOfWorkManage.BeginTran();
                 DbHelper<tb_Inventory> dbHelper = _appContext.GetRequiredService<DbHelper<tb_Inventory>>();
@@ -164,7 +164,7 @@ namespace RUINORERP.Business
                         {
                             rmrs.Succeeded = false;
                             _unitOfWorkManage.RollbackTran();
-                            rmrs.ErrorMsg = $"付款方式为账期的订单必须是未付款！审核失败。";
+                            rmrs.ErrorMsg = $"付款方式为账期的订单必须是未付款。";
                             if (_appContext.SysConfig.ShowDebugInfo)
                             {
                                 _logger.LogInformation(rmrs.ErrorMsg);
@@ -179,7 +179,7 @@ namespace RUINORERP.Business
                         {
                             rmrs.Succeeded = false;
                             _unitOfWorkManage.RollbackTran();
-                            rmrs.ErrorMsg = $"未付款订单的付款方式必须是账期！审核失败。";
+                            rmrs.ErrorMsg = $"未付款订单的付款方式必须是账期。";
                             if (_appContext.SysConfig.ShowDebugInfo)
                             {
                                 _logger.LogInformation(rmrs.ErrorMsg);
@@ -294,18 +294,14 @@ namespace RUINORERP.Business
                             invUpdateList.Add(inv);
                         }
 
-
                         DbHelper<tb_Inventory> dbHelper = _appContext.GetRequiredService<DbHelper<tb_Inventory>>();
-
-
-                        
-
                         var Counter = await dbHelper.BaseDefaultAddElseUpdateAsync(invUpdateList);
                         if (Counter == 0)
                         {
-                            _unitOfWorkManage.RollbackTran();
-                            throw new Exception("库存更新失败！");
+                            _logger.LogInformation($"{entity.SOrderNo}批量审核时，更新库存结果为0行，请检查数据！");
                         }
+
+
                         //这部分是否能提出到上一级公共部分？
                         entity.DataStatus = (int)DataStatus.确认;
                         entity.ApprovalOpinions = approvalEntity.ApprovalOpinions;
@@ -407,9 +403,10 @@ namespace RUINORERP.Business
                         var InvUpdateCounter = await dbHelper.BaseDefaultAddElseUpdateAsync(invUpdateList);
                         if (InvUpdateCounter == 0)
                         {
-                            _unitOfWorkManage.RollbackTran();
-                            throw new Exception("库存更新失败！");
+                            _logger.LogInformation($"{entitys[m].SOrderNo},批量关闭时，更新库存结果为0行，请检查数据！");
                         }
+
+
                     }
                     //这部分是否能提出到上一级公共部分？
                     entitys[m].DataStatus = (int)DataStatus.完结;
@@ -499,16 +496,13 @@ namespace RUINORERP.Business
                             #endregion
                             invUpdateList.Add(inv);
                         }
-
-                     
-
                         DbHelper<tb_Inventory> dbHelper = _appContext.GetRequiredService<DbHelper<tb_Inventory>>();
                         var InvUpdateCounter = await dbHelper.BaseDefaultAddElseUpdateAsync(invUpdateList);
                         if (InvUpdateCounter == 0)
                         {
-                            _unitOfWorkManage.RollbackTran();
-                            throw new Exception("库存更新失败！");
+                            _logger.LogInformation($"{entitys[m].SOrderNo}反审核，更新库存结果为0行，请检查数据！");
                         }
+
                     }
 
                     entitys[m].DataStatus = (int)DataStatus.确认;
@@ -627,7 +621,7 @@ namespace RUINORERP.Business
             tb_SaleOrder entity = ObjectEntity as tb_SaleOrder;
             try
             {
-    
+
 
                 tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
                 //更新拟销售量减少
@@ -635,7 +629,7 @@ namespace RUINORERP.Business
 
                 //判断是否能反审?
                 if (entity.tb_SaleOuts != null
-                    && (entity.tb_SaleOuts.Any(c => c.DataStatus == (int)DataStatus.确认 || c.DataStatus == (int)DataStatus.完结) 
+                    && (entity.tb_SaleOuts.Any(c => c.DataStatus == (int)DataStatus.确认 || c.DataStatus == (int)DataStatus.完结)
                     && entity.tb_SaleOuts.Any(c => c.ApprovalStatus == (int)ApprovalStatus.已审核)))
                 {
                     rmrs.ErrorMsg = "存在已确认或已完结，或已审核的销售出库单，不能反审核,请退回处理。";
@@ -657,7 +651,7 @@ namespace RUINORERP.Business
                 // 使用字典按 (ProdDetailID, LocationID) 分组，存储库存记录及累计数据
                 var inventoryGroups = new Dictionary<(long ProdDetailID, long LocationID), (tb_Inventory Inventory, decimal SaleQtySum)>();
 
-   
+
                 foreach (var child in entity.tb_SaleOrderDetails)
                 {
                     var key = (child.ProdDetailID, child.Location_ID);
@@ -673,7 +667,7 @@ namespace RUINORERP.Business
                             _unitOfWorkManage.RollbackTran();
                             throw new Exception("库存数据不存在,反审失败！");
                         }
-                  
+
                         BusinessHelper.Instance.EditEntity(inv);
                         #endregion
                         // 初始化分组数据
@@ -702,13 +696,15 @@ namespace RUINORERP.Business
                     invUpdateList.Add(inv);
                 }
 
-
-                int InvUpdateCounter = await _unitOfWorkManage.GetDbClient().Updateable(invUpdateList).ExecuteCommandAsync();
+                DbHelper<tb_Inventory> dbHelper = _appContext.GetRequiredService<DbHelper<tb_Inventory>>();
+                var InvUpdateCounter = await dbHelper.BaseDefaultAddElseUpdateAsync(invUpdateList);
                 if (InvUpdateCounter == 0)
                 {
-                    _unitOfWorkManage.RollbackTran();
-                    throw new Exception("库存更新失败！");
+                    _logger.LogInformation($"{entity.SOrderNo}反审核，更新库存结果为0行，请检查数据！");
                 }
+
+
+
                 AuthorizeController authorizeController = _appContext.GetRequiredService<AuthorizeController>();
                 if (authorizeController.EnableFinancialModule())
                 {
@@ -1112,15 +1108,15 @@ namespace RUINORERP.Business
                     invUpdateList.Add(inv);
                 }
 
-             
+
 
                 DbHelper<tb_Inventory> dbHelper = _appContext.GetRequiredService<DbHelper<tb_Inventory>>();
                 var InvUpdateCounter = await dbHelper.BaseDefaultAddElseUpdateAsync(invUpdateList);
                 if (InvUpdateCounter == 0)
                 {
-                    _unitOfWorkManage.RollbackTran();
-                    throw new Exception("库存更新失败！");
+                    _logger.LogInformation($"{entity.SOrderNo}取消时，更新库存结果为0行，请检查数据！");
                 }
+
 
                 #region  预收款单处理
 
@@ -1176,7 +1172,7 @@ namespace RUINORERP.Business
                 BusinessHelper.Instance.EditEntity(entity);
 
                 //只更新指定列
-                var result =await _unitOfWorkManage.GetDbClient().Updateable<tb_SaleOrder>(entity).UpdateColumns(it => new { it.DataStatus }).ExecuteCommandAsync();
+                var result = await _unitOfWorkManage.GetDbClient().Updateable<tb_SaleOrder>(entity).UpdateColumns(it => new { it.DataStatus }).ExecuteCommandAsync();
 
                 if (result > 0)
                 {

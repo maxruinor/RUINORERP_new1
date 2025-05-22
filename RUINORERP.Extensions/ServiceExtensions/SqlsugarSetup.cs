@@ -143,12 +143,12 @@ namespace RUINORERP.Extensions
                             string errorsql = e.Message + "\r\n" + SqlProfiler.FormatParam(e.Sql, e.Parametres as SugarParameter[]);
                             logger.Error("Error" + errorsql, e);
 
-                            if (e.InnerException is SqlException sqlEx && sqlEx.Number == 1205)
+                            if (e.InnerException != null && e.InnerException is SqlException sqlEx && sqlEx.Number == 1205)
                             {
                                 var deadlockInfo = new
                                 {
                                     Time = DateTime.Now,
-                                   // SessionId = db.Ado.SqlStackTrace.SugarStackTraceList.SessionId,
+                                    // SessionId = db.Ado.SqlStackTrace.SugarStackTraceList.SessionId,
                                     StackTrace = e.StackTrace,
                                     Sql = errorsql
                                 };
@@ -163,7 +163,7 @@ namespace RUINORERP.Extensions
                         catch (Exception ex)
                         {
                             Console.WriteLine($"日志记录失败: {ex.Message}\n原始错误: {e.Message}");
-                            logger.Error("记录SQL日志时出错了",ex);
+                            logger.Error("记录SQL日志时出错了", ex);
                         }
                     };
 

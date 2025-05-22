@@ -643,8 +643,10 @@
     <Compile Include="BusyDialog.Designer.cs">
       <DependentUpon>BusyDialog.cs</DependentUpon>
     </Compile>
+    <Compile Include="Common\MenuItemEnumsExtensions.cs" />
     <Compile Include="Common\ProgressExtensions.cs" />
     <Compile Include="Common\ProgressHelper.cs" />
+    <Compile Include="Common\UIStateManager.cs" />
     <Compile Include="CRM\UCHighSeasCustomerList.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -1742,7 +1744,6 @@
     <Compile Include="Common\KryptonTreeGridViewExt.cs" />
     <Compile Include="Common\MenuAssemblyInfo.cs" />
     <Compile Include="Common\MenuHelper.cs" />
-    <Compile Include="Common\MenuItemEnums.cs" />
     <Compile Include="Common\MenuPropertyAttribute.cs" />
     <Compile Include="Common\Operator.cs" />
     <Compile Include="Common\ParseFormulaString.cs" />
@@ -2093,6 +2094,19 @@
       <DependentUpon>UCProductList.cs</DependentUpon>
     </Compile>
     <Compile Include="Program.cs" />
+    <Compile Include="ProgressDialog.cs" />
+    <Compile Include="ProgressForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="ProgressForm.Designer.cs">
+      <DependentUpon>ProgressForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="ProgressFormBar.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="ProgressFormBar.Designer.cs">
+      <DependentUpon>ProgressFormBar.cs</DependentUpon>
+    </Compile>
     <Compile Include="ProgressManager.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Properties\Resources.Designer.cs">
@@ -2718,6 +2732,7 @@
     <Compile Include="UserCenter\ControlCenterConfig.Designer.cs">
       <DependentUpon>ControlCenterConfig.cs</DependentUpon>
     </Compile>
+    <Compile Include="UserCenter\DataParts\ConditionBuilderFactory.cs" />
     <Compile Include="UserCenter\DataParts\DataBoardUnit.cs" />
     <Compile Include="UserCenter\DataParts\UCCellSetting.cs">
       <SubType>UserControl</SubType>
@@ -3002,6 +3017,7 @@
     <None Include="ResourceFile\user-available.png" />
     <Content Include="ResourceFile\人民币.png" />
     <None Include="Resources\lockbill.png" />
+    <Content Include="SqlScript\mssql连接池情况.sql" />
     <Content Include="SqlScript\地区省市.sql" />
     <Content Include="SqlScript\内置函数支持.sql" />
     <Content Include="UpdateLog.txt">
@@ -3657,6 +3673,12 @@
     </EmbeddedResource>
     <EmbeddedResource Include="ProductEAV\UCProductList.resx">
       <DependentUpon>UCProductList.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ProgressForm.resx">
+      <DependentUpon>ProgressForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ProgressFormBar.resx">
+      <DependentUpon>ProgressFormBar.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>

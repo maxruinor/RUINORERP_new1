@@ -42,6 +42,7 @@ using RUINORERP.UI.MRP.MP;
 
 using RUINORERP.Business.CommService;
 using RUINORERP.Business.Security;
+using RUINORERP.Global.EnumExt;
 
 
 namespace RUINORERP.UI.PSI.PUR

@@ -11,13 +11,13 @@ using System.Windows.Forms;
 
 namespace RUINORERP.UI.CommonUI
 {
-    public partial class ProgressForm : Form
+    public partial class ExcelProgressForm : Form
     {
         private ProgressBar progressBar;
         private Label label;
         private string v;
 
-        public ProgressForm(string message)
+        public ExcelProgressForm(string message)
         {
             InitializeComponent();
             this.Text = "请稍候";

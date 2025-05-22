@@ -45,6 +45,7 @@ using FastReport.DevComponents.DotNetBar.Controls;
 using RUINORERP.UI.CommonUI;
 
 using RUINORERP.Global.EnumExt;
+using Fireasy.Common.Configuration;
 
 
 namespace RUINORERP.UI.PSI.SAL
@@ -147,6 +148,7 @@ namespace RUINORERP.UI.PSI.SAL
         public override void BindData(tb_SaleOrder entityPara, ActionStatus actionStatus)
         {
             tb_SaleOrder entity = entityPara as tb_SaleOrder;
+
             if (entity == null)
             {
 
@@ -204,7 +206,8 @@ namespace RUINORERP.UI.PSI.SAL
                     UIHelper.ControlForeignFieldInvisible<tb_SaleOrder>(this, false);
                 }
             }
-
+            //StatusMachine.CurrentDataStatus = (DataStatus)entity.DataStatus;
+            //StatusMachine.ApprovalStatus = (ApprovalStatus)entity.ApprovalStatus;
             if (entity.ApprovalStatus.HasValue)
             {
                 lblReview.Text = ((ApprovalStatus)entity.ApprovalStatus).ToString();
@@ -388,6 +391,10 @@ namespace RUINORERP.UI.PSI.SAL
                     {
                         if (obj is tb_CustomerVendor cv)
                         {
+                            if (!string.IsNullOrEmpty(cv.SpecialNotes))
+                            {
+                                txtNotes.Text = $"【{cv.SpecialNotes}】";
+                            }
                             if (cv.Employee_ID.HasValue)
                             {
                                 EditEntity.Employee_ID = cv.Employee_ID.Value;
@@ -465,6 +472,78 @@ namespace RUINORERP.UI.PSI.SAL
                 // base.InitEditItemToControl(entity, kryptonPanelMainInfo.Controls);
             }
             base.BindData(entity);
+
+            /*
+            #region 状态管理
+         
+            // 初始化
+            var notificationService = new WorkflowNotificationService();
+            var statusMachine = new StatusMachine(
+                (DataStatus)entity.DataStatus,
+                (ApprovalStatus)entity.ApprovalStatus,
+                entity.ApprovalResults ?? false,//这里是如果有值则显示他的值，如果没有则false。要修复
+                notificationService);
+
+
+            // 创建带自定义规则的UI绑定器
+            var binder = new UIStateBinder(statusMachine, BaseToolStrip, MainForm.Instance.AppContext.workflowHost,
+                (data, approval, result, op) =>
+            {
+                // 示例：增加财务专属操作
+                if (op == MenuItemEnums.数据特殊修正)
+                {
+                    return new ControlState
+                    {
+                        Visible = data == DataStatus.确认 || true,
+                        Enabled = MainForm.Instance.AppContext.IsSuperUser
+                    };
+                }
+                return StatusEvaluator.GetControlState(data, approval, result, op);
+            });
+
+
+            // 手动注册特殊按钮
+            // binder.RegisterControl(btnFinanceApprove, MenuItemEnums.财务审核);
+         
+            #endregion
+            */
+
+
+
+
+
+            /*
+             * 
+             * // 初始化状态机和UI绑定
+var workflowHost = new WorkflowHost();
+var statusMachine = new StatusMachine(...);
+var mainForm = Application.OpenForms[0];
+
+using var binder = new UIStateBinder(
+    statusMachine,
+    mainForm.Controls["toolStrip1"], // 传入实际的ToolStrip控件
+    workflowHost);
+
+// 手动注册特殊控件
+binder.RegisterControl(btnSpecialOperation, MenuItemEnums.数据特殊修正);
+
+
+             var customEvaluator = (DataStatus ds, ApprovalStatus aps, bool result, MenuItemEnums op) =>
+{
+    if (op == MenuItemEnums.数据特殊修正)
+    {
+        return new ControlState
+        {
+            Visible = ds == DataStatus.确认,
+            Enabled = aps == ApprovalStatus.已审核 && result
+        };
+    }
+    return StatusEvaluator.GetControlState(ds, aps, result, op);
+};
+
+using var binder = new UIStateBinder(..., customEvaluator);
+             
+             */
         }
 
         public void InitDataTocmbbox()
@@ -495,8 +574,8 @@ namespace RUINORERP.UI.PSI.SAL
             AddExtendButton(CurMenuInfo);
             var sw = new Stopwatch();
             sw.Start();
-            //InitDataTocmbbox();
-            base.ToolBarEnabledControl(MenuItemEnums.刷新);
+
+            //base.ToolBarEnabledControl(MenuItemEnums.刷新);
 
             ///显示列表对应的中文
             //base.FieldNameList = UIHelper.GetFieldNameList<tb_SaleOrderDetail>();
@@ -554,7 +633,7 @@ namespace RUINORERP.UI.PSI.SAL
             //反算时还要加更复杂的逻辑：如果单价为0时，则可以反算到单价。折扣不变。（默认为1）， 如果单价有值。则反算折扣？成交价？
 
 
-            
+
             listCols.SetCol_Formula<tb_SaleOrderDetail>((a, b, c) => a.SubtotalTransAmount / (1 + b.TaxRate) * c.TaxRate, d => d.SubtotalTaxAmount);
             listCols.SetCol_Formula<tb_SaleOrderDetail>((a, b) => (a.Cost + a.CustomizedCost) * b.Quantity, c => c.SubtotalCostAmount);
 
@@ -1333,7 +1412,7 @@ namespace RUINORERP.UI.PSI.SAL
             toolStripButton付款调整.ImageTransparentColor = System.Drawing.Color.Magenta;
             toolStripButton付款调整.Name = "付款调整";
             toolStripButton付款调整.Visible = false;//默认隐藏
-            UIHelper.ControlButton(CurMenuInfo,toolStripButton付款调整);
+            UIHelper.ControlButton(CurMenuInfo, toolStripButton付款调整);
             toolStripButton付款调整.ToolTipText = "客户付款情况变动时，使用本功能。";
             toolStripButton付款调整.Click += new System.EventHandler(this.toolStripButton付款调整_Click);
 
@@ -1343,7 +1422,7 @@ namespace RUINORERP.UI.PSI.SAL
             toolStripButton反结案.ImageTransparentColor = System.Drawing.Color.Magenta;
             toolStripButton反结案.Name = "反结案";
             toolStripButton反结案.Visible = false;//默认隐藏
-            UIHelper.ControlButton(CurMenuInfo,toolStripButton反结案);
+            UIHelper.ControlButton(CurMenuInfo, toolStripButton反结案);
             toolStripButton反结案.ToolTipText = "结案错误，要上级特殊处理时，使用本功能。";
             toolStripButton反结案.Click += new System.EventHandler(this.toolStripButton反结案_Click);
 

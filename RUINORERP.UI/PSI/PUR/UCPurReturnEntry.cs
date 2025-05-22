@@ -41,6 +41,7 @@ using RUINORERP.UI.PSI.SAL;
 using EnumsNET;
 using RUINORERP.UI.ToolForm;
 using RUINORERP.Business.Security;
+using RUINORERP.Global.EnumExt;
 
 
 namespace RUINORERP.UI.PSI.PUR

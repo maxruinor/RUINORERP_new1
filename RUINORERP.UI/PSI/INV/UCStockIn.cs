@@ -37,6 +37,7 @@ using AutoMapper;
 using RUINORERP.Business.AutoMapper;
 using RUINORERP.Business.Processor;
 using RUINORERP.Business.Security;
+using RUINORERP.Global.EnumExt;
 
 
 namespace RUINORERP.UI.PSI.INV

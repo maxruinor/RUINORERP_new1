@@ -27,7 +27,7 @@ namespace RUINORERP.Model
     {
         public tb_CustomerVendor()
         {
-            base.FieldNameList = fieldNameList;
+            
             if (!PK_FK_ID_Check())
             {
                 throw new Exception("客户厂商表 开票资料这种与财务有关另外开表tb_CustomerVendor" + "外键ID与对应主主键名称不一致。请修改数据库");
@@ -375,6 +375,22 @@ namespace RUINORERP.Model
             SetProperty(ref _IsOther, value);
                         }
         }
+
+        private string _SpecialNotes;
+        /// <summary>
+        /// 特殊要求
+        /// </summary>
+        [AdvQueryAttribute(ColName = "SpecialNotes", ColDesc = "特殊要求")]
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType = "String", ColumnName = "SpecialNotes", Length = 255, IsNullable = true, ColumnDescription = "特殊要求")]
+        public string SpecialNotes
+        {
+            get { return _SpecialNotes; }
+            set
+            {
+                SetProperty(ref _SpecialNotes, value);
+            }
+        }
+
 
         private string _Notes;
         /// <summary>
@@ -775,67 +791,6 @@ return rs;
 
 
 
-
-
-
-        #region 字段描述对应列表
-        private ConcurrentDictionary<string, string> fieldNameList;
-
-
-        /// <summary>
-        /// 表列名的中文描述集合
-        /// </summary>
-        [Description("列名中文描述"), Category("自定属性")]
-        [SugarColumn(IsIgnore = true)]
-        [Browsable(false)]
-        public override ConcurrentDictionary<string, string> FieldNameList
-        {
-            get
-            {
-                if (fieldNameList == null)
-                {
-                    fieldNameList = new ConcurrentDictionary<string, string>();
-                    SugarColumn entityAttr;
-                    Type type = typeof(tb_CustomerVendor);
-                    
-                       foreach (PropertyInfo field in type.GetProperties())
-                            {
-                                foreach (Attribute attr in field.GetCustomAttributes(true))
-                                {
-                                    entityAttr = attr as SugarColumn;
-                                    if (null != entityAttr)
-                                    {
-                                        if (entityAttr.ColumnDescription == null)
-                                        {
-                                            continue;
-                                        }
-                                        if (entityAttr.IsIdentity)
-                                        {
-                                            continue;
-                                        }
-                                        if (entityAttr.IsPrimaryKey)
-                                        {
-                                            continue;
-                                        }
-                                        if (entityAttr.ColumnDescription.Trim().Length > 0)
-                                        {
-                                            fieldNameList.TryAdd(field.Name, entityAttr.ColumnDescription);
-                                        }
-                                    }
-                                }
-                            }
-                }
-                
-                return fieldNameList;
-            }
-            set
-            {
-                fieldNameList = value;
-            }
-
-        }
-        #endregion
-        
 
         public override object Clone()
         {

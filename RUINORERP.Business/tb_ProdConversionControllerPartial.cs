@@ -135,11 +135,9 @@ namespace RUINORERP.Business
                 var InvMainCounter = await dbHelper.BaseDefaultAddElseUpdateAsync(invList);
                 if (InvMainCounter.ToInt()==0)
                 {
-                    _unitOfWorkManage.RollbackTran();
-                    throw new Exception("库存更新失败！");
+                    _logger.LogInformation($"{entity.ConversionNo}更新库存结果为0行，请检查数据！");
                 }
-
-
+                
 
 
                 //这部分是否能提出到上一级公共部分？

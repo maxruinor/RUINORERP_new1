@@ -118,8 +118,8 @@ namespace RUINORERP.Business
                             if (entity.tb_PurEntryDetails.Any(c => c.PurOrder_ChildID == 0))
                             {
                                 //如果存在不是引用的明细,则不允许入库。这样不支持手动添加的情况。
-                                string msg = $"采购订单:{entity.tb_purorder.PurOrderNo}的【{prodName}】在订单明细中拥有多行记录，必须使用引用的方式添加，审核失败！";
-                                MessageBox.Show(msg, "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                                string msg = $"采购订单:{entity.tb_purorder.PurOrderNo}的【{prodName}】在订单明细中拥有多行记录，必须使用引用的方式添加。";
+                                rs.ErrorMsg= msg;
                                 _unitOfWorkManage.RollbackTran();
                                 _logger.LogInformation(msg);
                                 return rs;
@@ -132,8 +132,8 @@ namespace RUINORERP.Business
                             && c.PurOrder_ChildID == entity.tb_purorder.tb_PurOrderDetails[i].PurOrder_ChildID).Where(c => c.IsGift.HasValue && !c.IsGift.Value).Sum(c => c.Quantity);
                             if (inQty > entity.tb_purorder.tb_PurOrderDetails[i].Quantity)
                             {
-                                string msg = $"采购订单:{entity.tb_purorder.PurOrderNo}的【{prodName}】的入库数量不能大于订单中对应行的数量\r\n" + $"或存在针对当前采购订单重复录入了采购入库单，审核失败！";
-                                MessageBox.Show(msg, "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                                string msg = $"采购订单:{entity.tb_purorder.PurOrderNo}的【{prodName}】的入库数量不能大于订单中对应行的数量\r\n" + $"或存在针对当前采购订单重复录入了采购入库单。";
+                                rs.ErrorMsg = msg;
                                 _unitOfWorkManage.RollbackTran();
                                 _logger.LogInformation(msg);
                                 return rs;
@@ -161,8 +161,8 @@ namespace RUINORERP.Business
                             if (inQty > entity.tb_purorder.tb_PurOrderDetails[i].Quantity)
                             {
 
-                                string msg = $"采购订单:{entity.tb_purorder.PurOrderNo}的【{prodName}】的入库数量不能大于订单中对应行的数量\r\n" + $"或存在针对当前采购订单重复录入了采购入库单，审核失败！";
-                                MessageBox.Show(msg, "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                                string msg = $"采购订单:{entity.tb_purorder.PurOrderNo}的【{prodName}】的入库数量不能大于订单中对应行的数量\r\n" + $"或存在针对当前采购订单重复录入了采购入库单。";
+                                rs.ErrorMsg = msg;
                                 _unitOfWorkManage.RollbackTran();
                                 _logger.LogInformation(msg);
                                 return rs;
@@ -857,7 +857,7 @@ namespace RUINORERP.Business
                             {
                                 //如果存在不是引用的明细,则不允许入库。这样不支持手动添加的情况。
                                 string msg = $"采购订单:{entity.tb_purorder.PurOrderNo}的【{prodName}】在订单明细中拥有多行记录，必须使用引用的方式添加，反审失败！";
-                                MessageBox.Show(msg, "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                               rs.ErrorMsg = msg;
                                 _unitOfWorkManage.RollbackTran();
                                 if (_appContext.SysConfig.ShowDebugInfo)
                                 {
@@ -873,8 +873,8 @@ namespace RUINORERP.Business
                             ).Sum(c => c.Quantity);
                             if (inQty > entity.tb_purorder.tb_PurOrderDetails[i].Quantity)
                             {
-                                string msg = $"采购订单:{entity.tb_purorder.PurOrderNo}的【{prodName}】的入库数量不能大于订单中对应行的数量，审核失败！";
-                                MessageBox.Show(msg, "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                                string msg = $"采购订单:{entity.tb_purorder.PurOrderNo}的【{prodName}】的入库数量不能大于订单中对应行的数量。";
+                               rs.ErrorMsg = msg;
                                 _unitOfWorkManage.RollbackTran();
                                 if (_appContext.SysConfig.ShowDebugInfo)
                                 {
@@ -907,8 +907,8 @@ namespace RUINORERP.Business
                             if (inQty > entity.tb_purorder.tb_PurOrderDetails[i].Quantity)
                             {
 
-                                string msg = $"采购订单:{entity.tb_purorder.PurOrderNo}的【{prodName}】的入库数量不能大于订单中对应行的数量，审核失败！";
-                                MessageBox.Show(msg, "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                                string msg = $"采购订单:{entity.tb_purorder.PurOrderNo}的【{prodName}】的入库数量不能大于订单中对应行的数量。";
+                                rs.ErrorMsg = msg;
                                 _unitOfWorkManage.RollbackTran();
                                 if (_appContext.SysConfig.ShowDebugInfo)
                                 {

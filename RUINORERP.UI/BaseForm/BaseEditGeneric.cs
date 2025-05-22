@@ -27,6 +27,8 @@ using Newtonsoft.Json.Linq;
 using System.Web.UI;
 using Control = System.Windows.Forms.Control;
 using Netron.GraphLib;
+using RUINORERP.Global.EnumExt;
+using RUINORERP.Global;
 
 namespace RUINORERP.UI.BaseForm
 {

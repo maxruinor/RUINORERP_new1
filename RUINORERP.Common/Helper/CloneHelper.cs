@@ -7,6 +7,9 @@ using System.Runtime.Serialization.Formatters.Binary;
 using System.Runtime.Serialization;
 using System.Text;
 using System.Xml.Serialization;
+using System.IO;
+using System.Linq;
+using System.Runtime.InteropServices;
 
 namespace RUINORERP.Common.Helper
 {
@@ -186,10 +189,32 @@ namespace RUINORERP.Common.Helper
         /// 对象Clone
         /// </summary>
         /// <typeparam name="T"></typeparam>
-        /// <param name="t"></param>
+        /// <param name="source"></param>
         /// <returns></returns>
-        public static T DeepCloneObject<T>(this T t) where T : class
+        public static T DeepCloneObject_old<T>(this T source) where T : class
         {
+            if (source == null)
+                return default(T);
+            // 尝试使用序列化实现深拷贝
+            try
+            {
+                using (var memoryStream = new MemoryStream())
+                {
+                    var binaryFormatter = new BinaryFormatter();
+                    binaryFormatter.Serialize(memoryStream, source);
+                    memoryStream.Seek(0, SeekOrigin.Begin);
+                    return (T)binaryFormatter.Deserialize(memoryStream);
+                }
+            }
+            catch (SerializationException ex)
+            {
+
+                // 如果对象不可序列化，则回退到反射方式
+            }
+            // 反射方式深拷贝
+            Type type = typeof(T);
+            T target = (T)Activator.CreateInstance(type);
+
             var instance = Activator.CreateInstance<T>();
             var propertyInfos = instance.GetType().GetProperties();
 
@@ -202,24 +227,34 @@ namespace RUINORERP.Common.Helper
                 }
                 if (propertyInfo.PropertyType.IsGenericType && propertyInfo.PropertyType.GetGenericTypeDefinition().Equals(typeof(Nullable<>)))
                 {
-                    if (propertyInfo.GetValue(t) == null)
+                    if (propertyInfo.GetValue(source) == null)
                     {
                         continue;
                     }
                     var nullableConverter = new NullableConverter(propertyInfo.PropertyType);
                     try
                     {
-                        propertyInfo.SetValue(instance, Convert.ChangeType(propertyInfo.GetValue(t), nullableConverter.UnderlyingType), null);
+                        propertyInfo.SetValue(instance, Convert.ChangeType(propertyInfo.GetValue(source), nullableConverter.UnderlyingType), null);
                     }
                     catch (Exception ex)
                     {
                         var typeArray = propertyInfo.PropertyType.GetGenericArguments();
-                        propertyInfo.SetValue(instance, Convert.ChangeType(propertyInfo.GetValue(t), typeArray[0]), null);
+                        propertyInfo.SetValue(instance, Convert.ChangeType(propertyInfo.GetValue(source), typeArray[0]), null);
                     }
                 }
                 else
                 {
-                    propertyInfo.SetValue(instance, Convert.ChangeType(propertyInfo.GetValue(t), propertyInfo.PropertyType), null);
+
+                    try
+                    {
+                        propertyInfo.SetValue(instance, Convert.ChangeType(propertyInfo.GetValue(source), propertyInfo.PropertyType), null);
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine(propertyInfo.Name + "|" + propertyInfo.PropertyType.Name + "|" + source.ToString());
+                        Console.WriteLine(ex.Message + ex.StackTrace);
+                    }
+
                 }
             }
 
@@ -227,23 +262,260 @@ namespace RUINORERP.Common.Helper
         }
 
 
+        /// <summary>
+        /// 深拷贝对象（优化版）
+        /// </summary>
+        /// <typeparam name="T">对象类型</typeparam>
+        /// <param name="source">源对象</param>
+        /// <returns>深拷贝后的对象</returns>
+        public static T DeepCloneObject_old1<T>(this T source)
+        {
+            if (source == null)
+                return default(T);
+
+            // 尝试使用序列化实现深拷贝
+            try
+            {
+                using (var memoryStream = new MemoryStream())
+                {
+                    var binaryFormatter = new BinaryFormatter();
+                    binaryFormatter.Serialize(memoryStream, source);
+                    memoryStream.Seek(0, SeekOrigin.Begin);
+                    return (T)binaryFormatter.Deserialize(memoryStream);
+                }
+            }
+            catch (SerializationException ex)
+            {
+                Console.WriteLine(ex.Message + ex.StackTrace);
+                // 如果对象不可序列化，则回退到反射方式
+            }
+
+            // 反射方式深拷贝
+            Type type = typeof(T);
+            T target = (T)Activator.CreateInstance(type);
+            try
+            {
+                // 处理自定义属性克隆逻辑
+                foreach (var property in type.GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance))
+                {
+                    if (!property.CanRead || !property.CanWrite)
+                        continue;
+
+                    object value = property.GetValue(source, null);
+                    Type valueType = property.PropertyType;
+
+                    // 特殊类型处理
+                    if (valueType.IsPrimitive || valueType == typeof(string) || valueType == typeof(DateTime) || valueType == typeof(decimal))
+                    {
+                        // 基本类型直接赋值
+                        property.SetValue(target, value, null);
+                    }
+                    else if (valueType.IsArray)
+                    {
+                        // 数组类型特殊处理
+                        Array sourceArray = (Array)value;
+                        if (sourceArray != null && sourceArray.Length > 0)
+                        {
+                            Type elementType = valueType.GetElementType();
+                            Array targetArray = Array.CreateInstance(elementType, sourceArray.Length);
+
+                            for (int i = 0; i < sourceArray.Length; i++)
+                            {
+                                object element = sourceArray.GetValue(i);
+                                targetArray.SetValue(element.DeepCloneObject(), i);
+                            }
+
+                            property.SetValue(target, targetArray, null);
+                        }
+                    }
+                    else if (typeof(IEnumerable).IsAssignableFrom(valueType))
+                    {
+                        // 可枚举集合处理
+                        IEnumerable sourceEnumerable = (IEnumerable)value;
+                        if (sourceEnumerable != null)
+                        {
+                            Type elementType = valueType.GetGenericArguments().FirstOrDefault();
+
+                            // 创建目标集合实例
+                            object targetEnumerable = Activator.CreateInstance(valueType);
+                            MethodInfo addMethod = valueType.GetMethod("Add");
+
+                            foreach (var item in sourceEnumerable)
+                            {
+                                addMethod.Invoke(targetEnumerable, new[] { item.DeepCloneObject() });
+                            }
+
+                            property.SetValue(target, targetEnumerable, null);
+                        }
+                    }
+                    else
+                    {
+                        // 对象类型递归深拷贝
+                        property.SetValue(target, value.DeepCloneObject(), null);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message + ex.StackTrace);
+            }
+
+            return target;
+        }
+
+        public static T DeepCloneObject<T>(this T source)
+        {
+            if (source == null)
+                return default(T);
+
+            try
+            {
+                using (var memoryStream = new MemoryStream())
+                {
+                    var binaryFormatter = new BinaryFormatter();
+                    binaryFormatter.Serialize(memoryStream, source);
+                    memoryStream.Seek(0, SeekOrigin.Begin);
+                    return (T)binaryFormatter.Deserialize(memoryStream);
+                }
+            }
+            catch (SerializationException)
+            {
+                // 序列化失败，回退到反射方式
+            }
+
+            Type type = typeof(T);
+            T target = (T)Activator.CreateInstance(type);
+            try
+            {
+                foreach (var property in type.GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance))
+                {
+                    if (!property.CanRead || !property.CanWrite)
+                        continue;
+
+                    object value = property.GetValue(source, null);
+                    Type valueType = property.PropertyType;
+
+                    if (valueType.IsPrimitive || valueType == typeof(string) || valueType == typeof(DateTime) || valueType == typeof(decimal))
+                    {
+                        property.SetValue(target, value, null);
+                    }
+                    else if (valueType.IsArray)
+                    {
+                        Array sourceArray = (Array)value;
+                        if (sourceArray != null)
+                        {
+                            Type elementType = valueType.GetElementType();
+                            Array targetArray = Array.CreateInstance(elementType, sourceArray.Length);
+                            for (int i = 0; i < sourceArray.Length; i++)
+                            {
+                                object element = sourceArray.GetValue(i);
+                                targetArray.SetValue(element?.DeepCloneObject(), i);
+                            }
+                            property.SetValue(target, targetArray, null);
+                        }
+                    }
+                    else if (value is IEnumerable sourceEnumerable)
+                    {
+                        // 关键修复：处理集合类型
+                        Type actualType = sourceEnumerable.GetType();
+
+                        // 确定元素类型
+                        Type elementType = GetEnumerableElementType(actualType);
+
+                        // 创建目标集合实例
+                        object targetCollection = CreateTargetCollection(actualType, elementType);
+                        if (targetCollection == null) continue;
+
+                        // 获取Add方法
+                        MethodInfo addMethod = GetAddMethod(actualType, elementType);
+                        if (addMethod == null) continue;
+
+                        // 克隆并添加元素
+                        foreach (var item in sourceEnumerable)
+                        {
+                            object clonedItem = item?.DeepCloneObject();
+                            addMethod.Invoke(targetCollection, new[] { clonedItem });
+                        }
+
+                        property.SetValue(target, targetCollection, null);
+                    }
+                    else
+                    {
+                        property.SetValue(target, value?.DeepCloneObject(), null);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message + ex.StackTrace);
+            }
+
+            return target;
+        }
+
+        // 获取集合元素类型
+        private static Type GetEnumerableElementType(Type collectionType)
+        {
+            // 检查是否实现了IEnumerable<T>
+            var enumerableInterface = collectionType.GetInterfaces()
+                .FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IEnumerable<>));
+
+            return enumerableInterface?.GetGenericArguments()[0] ?? typeof(object);
+        }
+
+        // 创建目标集合实例
+        private static object CreateTargetCollection(Type collectionType, Type elementType)
+        {
+            try
+            {
+                // 尝试使用默认构造函数
+                return Activator.CreateInstance(collectionType);
+            }
+            catch
+            {
+                // 回退到创建List<T>实例（如果可能）
+                if (typeof(IList).IsAssignableFrom(collectionType))
+                {
+                    Type listType = typeof(List<>).MakeGenericType(elementType);
+                    return Activator.CreateInstance(listType);
+                }
+            }
+            return null;
+        }
+
+        // 获取Add方法
+        private static MethodInfo GetAddMethod(Type collectionType, Type elementType)
+        {
+            // 检查ICollection<T>.Add方法
+            var collectionInterface = collectionType.GetInterfaces()
+                .FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(ICollection<>));
+
+            if (collectionInterface != null)
+            {
+                return collectionInterface.GetMethod("Add");
+            }
+
+            // 查找参数类型匹配的Add方法
+            return collectionType.GetMethod("Add", new[] { elementType })
+                ?? collectionType.GetMethod("Add", new[] { typeof(object) });
+        }
 
         /// <summary>
         /// 在 .NET 中，有几个现成的库可以帮助简化深度复制对象的实现：
 
-//        AutoMapper：这是一个流行的对象到对象映射器，它不仅可以用于映射，还可以用于深度复制对象。使用 AutoMapper，你可以配置映射关系，然后使用它来复制对象。它的性能也相当不错，对于大多数应用场景来说是一个不错的选择。
+        //        AutoMapper：这是一个流行的对象到对象映射器，它不仅可以用于映射，还可以用于深度复制对象。使用 AutoMapper，你可以配置映射关系，然后使用它来复制对象。它的性能也相当不错，对于大多数应用场景来说是一个不错的选择。
 
-//DeepCloner：这是一个专门用于深度复制的库，它提供了一个简单的 API 来克隆对象。DeepCloner 可以处理复杂的对象图，包括集合和循环引用。
+        //DeepCloner：这是一个专门用于深度复制的库，它提供了一个简单的 API 来克隆对象。DeepCloner 可以处理复杂的对象图，包括集合和循环引用。
 
-//FastDeepCloner：这是一个高性能的深度克隆库，它提供了比传统二进制序列化更快的克隆方法。FastDeepCloner 支持多种.NET 框架，并且可以通过添加[FastDeepClonerIgnore] 属性来忽略特定属性的克隆。
+        //FastDeepCloner：这是一个高性能的深度克隆库，它提供了比传统二进制序列化更快的克隆方法。FastDeepCloner 支持多种.NET 框架，并且可以通过添加[FastDeepClonerIgnore] 属性来忽略特定属性的克隆。
 
-//System.Text.Json：如果你不需要安装额外的库，可以考虑使用.NET 自带的 System.Text.Json 库来进行深度复制。这种方法不需要序列化和反序列化整个对象图，但是它可能不适用于所有类型的复杂对象。
+        //System.Text.Json：如果你不需要安装额外的库，可以考虑使用.NET 自带的 System.Text.Json 库来进行深度复制。这种方法不需要序列化和反序列化整个对象图，但是它可能不适用于所有类型的复杂对象。
 
-//XmlSerializer 或 DataContractSerializer：这些是.NET 框架提供的序列化器，它们可以用来深度复制对象。这些方法需要你的类和成员标记为[Serializable] 或 [DataContract]，并且可能需要一些额外的配置。
+        //XmlSerializer 或 DataContractSerializer：这些是.NET 框架提供的序列化器，它们可以用来深度复制对象。这些方法需要你的类和成员标记为[Serializable] 或 [DataContract]，并且可能需要一些额外的配置。
 
-//BinaryFormatter：这是一个旧的.NET 序列化器，它可以用于深度复制对象。但是，从.NET Core 3.0 开始，BinaryFormatter 已被弃用，因为它存在安全问题。
+        //BinaryFormatter：这是一个旧的.NET 序列化器，它可以用于深度复制对象。但是，从.NET Core 3.0 开始，BinaryFormatter 已被弃用，因为它存在安全问题。
 
-//选择哪个库取决于你的具体需求，包括性能要求、是否需要处理特殊类型（如 byte[] 或 Image）、以及是否愿意引入外部依赖。在处理 byte[] 数组时，通常需要手动复制数组；而对于 Image 类型的对象，你可能需要调用特定的复制方法或重新从源创建实例。如果需要忽略某个属性，可以在克隆过程中检查属性名并跳过它，或者使用库提供的忽略属性的功能（如果支持）。
+        //选择哪个库取决于你的具体需求，包括性能要求、是否需要处理特殊类型（如 byte[] 或 Image）、以及是否愿意引入外部依赖。在处理 byte[] 数组时，通常需要手动复制数组；而对于 Image 类型的对象，你可能需要调用特定的复制方法或重新从源创建实例。如果需要忽略某个属性，可以在克隆过程中检查属性名并跳过它，或者使用库提供的忽略属性的功能（如果支持）。
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="t"></param>

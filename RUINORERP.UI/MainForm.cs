@@ -82,6 +82,7 @@ using Fireasy.Common.Extensions;
 using AutoMapper;
 using Netron.GraphLib.IO.NML;
 using RUINORERP.Global.EnumExt;
+using RUINORERP.Business.FMService;
 
 
 
@@ -94,7 +95,7 @@ namespace RUINORERP.UI
     {
 
 
-
+        
 
         //IOptions<T> 提供对配置设置的单例访问。它在整个应用程序生命周期中保持相同的实例，这意味着即使在配置文件更改后，通过 IOptions<T> 获取的值也不会改变
         //。
@@ -1677,7 +1678,7 @@ namespace RUINORERP.UI
         private async Task InitConfig(bool LoadData)
         {
             BizCacheHelper.Instance.InitDict(LoadData);
-            await Task.Delay(10);
+            await Task.Delay(5);
         }
 
         /// <summary>

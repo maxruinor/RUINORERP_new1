@@ -194,7 +194,7 @@ namespace RUINORERP.UI.Common
                     ExcelPackage.LicenseContext = OfficeOpenXml.LicenseContext.NonCommercial;
                     var stopwatch = Stopwatch.StartNew();
 
-                    using (var progressForm = new ProgressForm("正在导出数据..."))
+                    using (var progressForm = new ExcelProgressForm("正在导出数据..."))
                     using (var package = new ExcelPackage())
                     {
                         progressForm.Show();

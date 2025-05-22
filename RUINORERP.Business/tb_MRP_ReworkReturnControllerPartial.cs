@@ -111,8 +111,8 @@ namespace RUINORERP.Business
                         var inQty = detailList.Where(c => c.ProdDetailID == detail.ProdDetailID && c.Location_ID == detail.Location_ID).Sum(c => c.Quantity);
                         if (inQty > detail.Qty)
                         {
-                            string msg = $"返工退库:{entity.ReworkReturnNo}的【{prodName}】的数量不能大于缴款单中数量\r\n" + $"或存在针对当前缴单重复录入了返工退库单，审核失败！";
-                            MessageBox.Show(msg, "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                            string msg = $"返工退库:{entity.ReworkReturnNo}的【{prodName}】的数量不能大于缴款单中数量\r\n" + $"或存在针对当前缴库单重复录入了返工退库单。";
+                           rs.ErrorMsg=msg;
                             _unitOfWorkManage.RollbackTran();
                             _logger.LogInformation(msg);
                             return rs;

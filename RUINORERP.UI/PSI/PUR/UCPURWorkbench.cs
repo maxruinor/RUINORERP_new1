@@ -25,6 +25,7 @@ using RUINORERP.Common.Extensions;
 using RUINORERP.Common.Helper;
 using RUINORERP.Global;
 using RUINORERP.Global.CustomAttribute;
+using RUINORERP.Global.EnumExt;
 using RUINORERP.Global.EnumExt.CRM;
 using RUINORERP.Model;
 using RUINORERP.Model.Base;

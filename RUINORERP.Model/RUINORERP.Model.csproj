@@ -31,6 +31,7 @@
     <Compile Remove="Base\SerializationInfo.cs" />
     <Compile Remove="BillDetailDto\sales_order_detail.cs" />
     <Compile Remove="Models\RoleModulePermission.cs" />
+    <Compile Remove="ObjectExtensionUtils.cs" />
     <Compile Remove="product_PropertyComb.cs" />
     <Compile Remove="tb_BOM_SSecondaryDetail.cs" />
     <Compile Remove="tb_OpeningIinventory_detail.cs" />

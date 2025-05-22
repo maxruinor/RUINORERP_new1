@@ -16,6 +16,7 @@ namespace RUINORERP.Global.Model
     /// newhash值：f82df05f9d34bb4a84e6856b235e00e7  新的hash值
     /// 如果第一次上传，newhash值和hash值一样
     /// </summary>
+    [Serializable()]
     public class DataRowImage
     {
         //旧的hash值，除了第一次和数据库取出。其他都是修改newhash.实际作用是文件名。用于判断是否修改过
@@ -104,12 +105,12 @@ namespace RUINORERP.Global.Model
 
                         if (lastSlashIndex != -1 && firstDashIndex != -1 && lastSlashIndex < firstDashIndex)
                         {
-                             realName = _ImageFullName.Substring(lastSlashIndex + 1, firstDashIndex - lastSlashIndex - 1);
+                            realName = _ImageFullName.Substring(lastSlashIndex + 1, firstDashIndex - lastSlashIndex - 1);
                         }
                         //realName = string.Join("-", _ImageFullName.Split('-').Take(1));
                         if (string.IsNullOrEmpty(realName))
                         {
-                            realName =  Ulid.NewUlid().ToString();
+                            realName = Ulid.NewUlid().ToString();
                         }
                     }
                 }

@@ -78,7 +78,7 @@ namespace RUINORERP.Business
 
 
                 #region 由缴库更新库存
-                List<tb_Inventory> invInsertList = new List<tb_Inventory>();
+
                 List<tb_Inventory> invUpdateList = new List<tb_Inventory>();
                 foreach (var child in entity.tb_FinishedGoodsInvDetails)
                 {
@@ -157,21 +157,17 @@ namespace RUINORERP.Business
                     inv.LatestStorageTime = System.DateTime.Now;
 
                     #endregion
-                    if (inv.Inventory_ID == 0)
-                    {
-                        invInsertList.Add(inv);
-                    }
-                    if (inv.Inventory_ID > 0)
-                    {
-                        invUpdateList.Add(inv);
-                    }
+
+                    invUpdateList.Add(inv);
+
                 }
                 #endregion
                 //List应该用ExecuteReturnSnowflakeIdListAsync 否则返回的是ID的值不是影响的行数。
                 //var InvInsertCounter = await _unitOfWorkManage.GetDbClient().Insertable(invInsertList).ExecuteReturnSnowflakeIdAsync();
 
+
                 // 使用LINQ查询
-                var CheckNewInvList = invInsertList
+                var CheckNewInvList = invUpdateList
                     .GroupBy(i => new { i.ProdDetailID, i.Location_ID })
                     .Where(g => g.Count() > 1)
                     .Select(g => g.Key.ProdDetailID)
@@ -186,20 +182,12 @@ namespace RUINORERP.Business
                     return rs;
                 }
 
-                var InvInsertCounter = await _unitOfWorkManage.GetDbClient().Insertable(invInsertList).ExecuteReturnSnowflakeIdListAsync();
-                if (InvInsertCounter.Count ==0)
+                DbHelper<tb_Inventory> dbHelper = _appContext.GetRequiredService<DbHelper<tb_Inventory>>();
+                var InvMainCounter = await dbHelper.BaseDefaultAddElseUpdateAsync(invUpdateList);
+                if (InvMainCounter == 0)
                 {
-                    _unitOfWorkManage.RollbackTran();
-                    throw new Exception("库存保存失败！");
+                    _logger.LogInformation($"{entity.DeliveryBillNo}缴库更新库存结果为0行，请检查数据！");
                 }
-
-                int InvUpdateCounter = await _unitOfWorkManage.GetDbClient().Updateable(invUpdateList).ExecuteCommandAsync();
-                if (InvUpdateCounter == 0)
-                {
-                    _unitOfWorkManage.RollbackTran();
-                    throw new Exception("库存更新失败！");
-                }
-
 
                 //如果缴库明细中的品不是来自制令单，则报错
                 if (!entity.tb_FinishedGoodsInvDetails.Any(c => c.ProdDetailID == manufacturingOrder.ProdDetailID && c.Location_ID == manufacturingOrder.Location_ID))
@@ -209,7 +197,6 @@ namespace RUINORERP.Business
                     rs.ErrorMsg = $"缴库明细中有不属于当前制令单生产的产品及对应仓库!请检查数据后重试！";
                     return rs;
                 }
-
 
 
                 #region 由缴库单更新制令单
@@ -265,7 +252,7 @@ namespace RUINORERP.Business
                     {
                         if (MessageBox.Show("系统检测到缴库数量大于发出的关键物料能生产的最小数量,你确定要审核通过吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Asterisk) == DialogResult.No)
                         {
-                            string msg = $"制令单:{manufacturingOrder.MONO}的【{prodName}】的缴库数不能大于制令单中发出物料能生产的最小数量，审核失败！";
+                            string msg = $"制令单:{manufacturingOrder.MONO}的【{prodName}】的缴库数不能大于制令单中发出物料能生产的最小数量。";
                             try
                             {
                                 object obj = BizCacheHelper.Instance.GetEntity<View_ProdDetail>(MinQtyDetail.ProdDetailID);
@@ -280,7 +267,7 @@ namespace RUINORERP.Business
 
                             }
 
-                            MessageBox.Show(msg, "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                            rs.ErrorMsg = msg;
                             _unitOfWorkManage.RollbackTran();
                             _logger.LogInformation(msg);
                             return rs;
@@ -291,8 +278,8 @@ namespace RUINORERP.Business
                 //如果制令单中没有发任何数量的物料是不可能缴库的。
                 if (manufacturingOrder.tb_ManufacturingOrderDetails.Sum(c => c.ActualSentQty) == 0)
                 {
-                    string msg = $"制令单:{manufacturingOrder.MONO}，没有任何物料发出，审核失败！";
-                    MessageBox.Show(msg, "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    string msg = $"制令单:{manufacturingOrder.MONO}，没有任何物料发出。";
+                    rs.ErrorMsg = msg;
                     _unitOfWorkManage.RollbackTran();
                     return rs;
                 }
@@ -300,8 +287,8 @@ namespace RUINORERP.Business
                 #endregion
                 if (PaidQuantity > manufacturingOrder.ManufacturingQty)
                 {
-                    string msg = $"制令单:{manufacturingOrder.MONO}的【{prodName}】的缴库数量不能大于制令单中要生产的数量，审核失败！";
-                    MessageBox.Show(msg, "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    string msg = $"制令单:{manufacturingOrder.MONO}的【{prodName}】的缴库数量不能大于制令单中要生产的数量。";
+                    rs.ErrorMsg = msg;
                     _unitOfWorkManage.RollbackTran();
                     _logger.LogInformation(msg);
                     return rs;
@@ -419,7 +406,7 @@ namespace RUINORERP.Business
                         {
                             _unitOfWorkManage.RollbackTran();
                             rs.Succeeded = false;
-                            rs.ErrorMsg = $"缴库数量大于计划数量超过1.5倍!审核失败，请检查数据后重试！";
+                            rs.ErrorMsg = $"缴库数量大于计划数量超过1.5倍!请检查数据后重试！";
                             return rs;
                         }
                         PlanHasChanged = true;
@@ -516,12 +503,15 @@ namespace RUINORERP.Business
                     invUpdateList.Add(inv);
 
                 }
-                int InvUpdateCounter = await _unitOfWorkManage.GetDbClient().Updateable(invUpdateList).ExecuteCommandAsync();
-                 if (InvUpdateCounter == 0)
+
+                DbHelper<tb_Inventory> dbHelper = _appContext.GetRequiredService<DbHelper<tb_Inventory>>();
+                var InvMainCounter = await dbHelper.BaseDefaultAddElseUpdateAsync(invUpdateList);
+                if (InvMainCounter == 0)
                 {
-                    _unitOfWorkManage.RollbackTran();
-                    throw new Exception("库存更新失败！");
+                    _logger.LogInformation($"{entity.DeliveryBillNo}更新库存结果为0行，请检查数据！");
                 }
+
+            
 
                 #region
 

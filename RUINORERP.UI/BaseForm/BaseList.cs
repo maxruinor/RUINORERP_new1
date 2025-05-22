@@ -26,6 +26,8 @@ using RUINORERP.Common.Extensions;
 using RUINORERP.Business.AutoMapper;
 using AutoMapper;
 using RUINORERP.Model.Base;
+using RUINORERP.Global.EnumExt;
+using RUINORERP.Global;
 
 namespace RUINORERP.UI.BaseForm
 {

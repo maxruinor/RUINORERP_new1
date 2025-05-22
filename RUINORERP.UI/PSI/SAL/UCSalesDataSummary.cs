@@ -19,6 +19,7 @@ using RUINORERP.Common.Extensions;
 using RUINORERP.Common.Helper;
 using RUINORERP.Global;
 using RUINORERP.Global.CustomAttribute;
+using RUINORERP.Global.EnumExt;
 using RUINORERP.Model;
 using RUINORERP.UI.AdvancedUIModule;
 using RUINORERP.UI.BaseForm;
@@ -218,7 +219,7 @@ namespace RUINORERP.UI.PSI.SAL
             }
         }
 
-        public List<Proc_SaleOrderStatisticsByEmployee> GetSaleOrderDataListFromProc(UCBillMasterQuery queryMaster)
+        public async Task<List<Proc_SaleOrderStatisticsByEmployee>> GetSaleOrderDataListFromProc(UCBillMasterQuery queryMaster)
         {
 
             //先固定两个特殊的查询条件集合
@@ -321,7 +322,7 @@ namespace RUINORERP.UI.PSI.SAL
 
         ConcurrentDictionary<string, string> _ProjectGroupsEmployees = new ConcurrentDictionary<string, string>();
 
-        public List<Proc_SaleOutStatisticsByEmployee> GetSaleOutDataListFromProc(UCBillMasterQuery queryMaster)
+        public async Task<List<Proc_SaleOutStatisticsByEmployee>> GetSaleOutDataListFromProc(UCBillMasterQuery queryMaster)
         {
             //先固定两个特殊的查询条件集合
             List<Expression<Func<Proc_SaleOutStatisticsByEmployeePara, object>>> expressions = new List<Expression<Func<Proc_SaleOutStatisticsByEmployeePara, object>>>();

@@ -28,6 +28,7 @@ using RUINORERP.Common.Helper;
 using RUINORERP.Business.Security;
 using RUINORERP.Global;
 using System.Windows.Forms;
+using RUINORERP.Business.CommService;
 
 namespace RUINORERP.Business
 {
@@ -353,13 +354,15 @@ namespace RUINORERP.Business
                     manufacturingOrderDetail.ActualSentQty += child.Quantity;
 
                 }
-                int InvUpdateCounter = await _unitOfWorkManage.GetDbClient().Updateable(invUpdateList).ExecuteCommandAsync();
-                 if (InvUpdateCounter == 0)
+
+                DbHelper<tb_Inventory> dbHelper = _appContext.GetRequiredService<DbHelper<tb_Inventory>>();
+                var InvMainCounter = await dbHelper.BaseDefaultAddElseUpdateAsync(invUpdateList);
+                if (InvMainCounter == 0)
                 {
-                    _unitOfWorkManage.RollbackTran();
-                    throw new Exception("库存更新失败！");
+                    _logger.LogInformation($"{entity.MaterialRequisitionNO}更新库存结果为0行，请检查数据！");
                 }
 
+                
 
                 await _unitOfWorkManage.GetDbClient().Updateable<tb_ManufacturingOrderDetail>(entity.tb_materialrequisition.tb_manufacturingorder.tb_ManufacturingOrderDetails).ExecuteCommandAsync();
                 await _unitOfWorkManage.GetDbClient().Updateable<tb_MaterialRequisitionDetail>(entity.tb_materialrequisition.tb_MaterialRequisitionDetails).ExecuteCommandAsync();

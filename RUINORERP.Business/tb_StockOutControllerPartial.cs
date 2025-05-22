@@ -86,12 +86,14 @@ namespace RUINORERP.Business
                     #endregion
                     invUpdateList.Add(inv);
                 }
-                int InvUpdateCounter = await _unitOfWorkManage.GetDbClient().Updateable(invUpdateList).ExecuteCommandAsync();
-                 if (InvUpdateCounter == 0)
+                DbHelper<tb_Inventory> InvdbHelper = _appContext.GetRequiredService<DbHelper<tb_Inventory>>();
+                var Counter = await InvdbHelper.BaseDefaultAddElseUpdateAsync(invUpdateList);
+                if (Counter == 0)
                 {
-                    _unitOfWorkManage.RollbackTran();
-                    throw new Exception("库存更新失败！");
+                    _logger.LogInformation($"{entity.BillNo}审核时，更新库存结果为0行，请检查数据！");
+
                 }
+                
 
                 //这部分是否能提出到上一级公共部分？
                 entity.DataStatus = (int)DataStatus.确认;
@@ -135,8 +137,7 @@ namespace RUINORERP.Business
             tb_StockOut entity = ObjectEntity as tb_StockOut;
             try
             {
-                // 开启事务，保证数据一致性
-                _unitOfWorkManage.BeginTran();
+  
                 
                 tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
                 //更新拟销售量减少
@@ -166,7 +167,6 @@ namespace RUINORERP.Business
                     #endregion
                     invUpdateList.Add(inv);
                 }
-                DbHelper<tb_Inventory> dbHelper = _appContext.GetRequiredService<DbHelper<tb_Inventory>>();
 
 
                 // 使用LINQ查询
@@ -185,12 +185,14 @@ namespace RUINORERP.Business
                     return rs;
 
                 }
+                // 开启事务，保证数据一致性
+                _unitOfWorkManage.BeginTran();
 
-                var Counter = await dbHelper.BaseDefaultAddElseUpdateAsync(invUpdateList);
+                DbHelper<tb_Inventory> InvdbHelper = _appContext.GetRequiredService<DbHelper<tb_Inventory>>();
+                var Counter = await InvdbHelper.BaseDefaultAddElseUpdateAsync(invUpdateList);
                 if (Counter == 0)
                 {
-                    _unitOfWorkManage.RollbackTran();
-                    throw new Exception("库存更新失败！");
+                    _logger.LogInformation($"{entity.BillNo}反审核时，更新库存结果为0行，请检查数据！");
                 }
 
                 //==

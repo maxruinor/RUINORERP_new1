@@ -20,6 +20,8 @@ using RUINORERP.Common.Extensions;
 using System.Linq.Expressions;
 using System.Reflection;
 using FastReport.DevComponents.DotNetBar.Controls;
+using RUINORERP.Global.EnumExt;
+using RUINORERP.Global;
 
 namespace RUINORERP.UI.BI
 {

@@ -55,6 +55,8 @@ using Newtonsoft.Json;
 using Fireasy.Common.Extensions;
 using FastReport.DevComponents.DotNetBar.Controls;
 using RUINORERP.UI.ChartFramework.Models;
+using RUINORERP.Global.EnumExt;
+using RUINORERP.Global;
 
 namespace RUINORERP.UI.BaseForm
 {

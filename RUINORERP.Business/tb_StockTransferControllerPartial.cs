@@ -167,7 +167,7 @@ namespace RUINORERP.Business
             {
                 _unitOfWorkManage.RollbackTran();
                 _logger.Error(ex, BizTypeText + "事务回滚");
-                rmsr.ErrorMsg = BizTypeText + "审核失败，" + ex.Message;
+                rmsr.ErrorMsg = BizTypeText + ex.Message;
                 return rmsr;
             }
 

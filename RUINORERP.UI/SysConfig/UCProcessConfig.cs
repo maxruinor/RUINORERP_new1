@@ -41,6 +41,7 @@ using FastReport.DevComponents.DotNetBar.Controls;
 using Krypton.Workspace;
 using Krypton.Navigator;
 using RUINORERP.UI.UserCenter;
+using RUINORERP.Global.EnumExt;
 
 namespace RUINORERP.UI.SysConfig
 {

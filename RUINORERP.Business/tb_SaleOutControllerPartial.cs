@@ -129,8 +129,7 @@ namespace RUINORERP.Business
 
             try
             {
-                // 开启事务，保证数据一致性
-                _unitOfWorkManage.BeginTran();
+
                 if (entity == null)
                 {
                     return rrs;
@@ -139,7 +138,7 @@ namespace RUINORERP.Business
                 if (entity.TotalQty.Equals(entity.tb_SaleOutDetails.Sum(c => c.Quantity)) == false)
                 {
                     rrs.ErrorMsg = $"销售出库数量与明细之和不相等!请检查数据后重试！";
-                    _unitOfWorkManage.RollbackTran();
+
                     rrs.Succeeded = false;
                     return rrs;
                 }
@@ -156,7 +155,7 @@ namespace RUINORERP.Business
                 #region 审核 通过时
                 if (entity.ApprovalResults.Value)
                 {
-                    entity.tb_saleorder =await _unitOfWorkManage.GetDbClient().Queryable<tb_SaleOrder>()
+                    entity.tb_saleorder = await _unitOfWorkManage.GetDbClient().Queryable<tb_SaleOrder>()
                         .Includes(a => a.tb_paymentmethod)
                         .Includes(a => a.tb_projectgroup, b => b.tb_department)
                         .Includes(a => a.tb_SaleOuts, b => b.tb_SaleOutDetails)
@@ -169,7 +168,7 @@ namespace RUINORERP.Business
                     if (entity.tb_saleorder.DataStatus != (int)DataStatus.确认)
                     {
                         rrs.Succeeded = false;
-                        _unitOfWorkManage.RollbackTran();
+
                         rrs.ErrorMsg = $"出库时，对应销售订单不是审核状态!请检查数据后重试！";
                         if (_appContext.SysConfig.ShowDebugInfo)
                         {
@@ -185,7 +184,7 @@ namespace RUINORERP.Business
                             if (!entity.tb_saleorder.tb_SaleOrderDetails.Any(c => c.ProdDetailID == child.ProdDetailID && c.Location_ID == child.Location_ID))
                             {
                                 rrs.Succeeded = false;
-                                _unitOfWorkManage.RollbackTran();
+
                                 rrs.ErrorMsg = $"出库明细中有产品不属于当前销售订单!请检查数据后重试！";
                                 if (_appContext.SysConfig.ShowDebugInfo)
                                 {
@@ -195,7 +194,8 @@ namespace RUINORERP.Business
                             }
                         }
                     }
-
+                    // 开启事务，保证数据一致性
+                    _unitOfWorkManage.BeginTran();
 
                     // 如果成本为零时则会实时检测库存成本，以库存成本为基准。这种情况解决未知成本，提前销售的情况。 相于于订单时成本不清楚写的0。销售出库时才有成本。
 
@@ -239,7 +239,7 @@ namespace RUINORERP.Business
                             #region 更新销售价格历史记录
                             //注意这里的人应该是业务员的ID。销售订单的录入人，不是审核人。也不是出库单的人。
 
-                            tb_PriceRecord priceRecord =await _unitOfWorkManage.GetDbClient().Queryable<tb_PriceRecord>()
+                            tb_PriceRecord priceRecord = await _unitOfWorkManage.GetDbClient().Queryable<tb_PriceRecord>()
                             .Where(c => c.Employee_ID == entity.tb_saleorder.Employee_ID && c.ProdDetailID == child.ProdDetailID
                             ).FirstAsync();
                             //如果存在则更新，否则插入
@@ -307,12 +307,15 @@ namespace RUINORERP.Business
                         invUpdateList.Add(inv);
                     }
 
-                    int InvUpdateCounter = await _unitOfWorkManage.GetDbClient().Updateable(invUpdateList).ExecuteCommandAsync();
-                    if (InvUpdateCounter == 0)
+                    DbHelper<tb_Inventory> InvdbHelper = _appContext.GetRequiredService<DbHelper<tb_Inventory>>();
+                    var InvCounter = await InvdbHelper.BaseDefaultAddElseUpdateAsync(invUpdateList);
+                    if (InvCounter == 0)
                     {
-                        _unitOfWorkManage.RollbackTran();
-                        throw new Exception("库存更新失败！");
+                        _logger.LogInformation($"{entity.SaleOutNo}审核时，更新库存结果为0行，请检查数据！");
                     }
+
+
+
                     DbHelper<tb_SaleOutDetail> dbHelper = _appContext.GetRequiredService<DbHelper<tb_SaleOutDetail>>();
 
                     if (UpdateSaleOutCostlist.Count > 0)
@@ -320,8 +323,7 @@ namespace RUINORERP.Business
                         var Counter = await dbHelper.BaseDefaultAddElseUpdateAsync(UpdateSaleOutCostlist);
                         if (Counter == 0)
                         {
-                            _unitOfWorkManage.RollbackTran();
-                            throw new Exception("销售出库时成本价格更新失败！");
+                            _logger.LogInformation($"{entity.SaleOutNo}销售出库时成本价格更新失败，更新结果为0行，请检查数据！");
                         }
                     }
 
@@ -329,8 +331,7 @@ namespace RUINORERP.Business
                     var PriceCounter = await dbHelperPrice.BaseDefaultAddElseUpdateAsync(priceUpdateList);
                     if (PriceCounter == 0)
                     {
-                        _unitOfWorkManage.RollbackTran();
-                        throw new Exception("价格记录更新失败！");
+                        _logger.LogInformation($"{entity.SaleOutNo}销售出库时价格记录更新失败，更新结果为0行，请检查数据！");
                     }
 
                     if (!entity.ReplaceOut)
@@ -368,8 +369,8 @@ namespace RUINORERP.Business
                                 #region 如果存在不是引用的明细,则不允许出库。这样不支持手动添加的情况。
                                 if (entity.tb_saleorder.tb_SaleOrderDetails.Any(c => c.SaleOrderDetail_ID == 0))
                                 {
-                                    string msg = $"销售订单:{entity.tb_saleorder.SOrderNo}的【{prodName}】在订单明细中拥有多行记录，必须使用引用的方式添加，审核失败！";
-                                    MessageBox.Show(msg, "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                                    string msg = $"销售订单:{entity.tb_saleorder.SOrderNo}的【{prodName}】在订单明细中拥有多行记录，必须使用引用的方式添加。";
+                                    rrs.ErrorMsg = msg;
                                     _unitOfWorkManage.RollbackTran();
                                     _logger.LogInformation(msg);
                                     return rrs;
@@ -384,8 +385,8 @@ namespace RUINORERP.Business
                                 if (inQty > entity.tb_saleorder.tb_SaleOrderDetails[i].Quantity)
                                 {
                                     string msg = $"销售订单:{entity.tb_saleorder.SOrderNo}的【{prodName}】的出库数量不能大于订单中对应行的数量，\r\n\" " +
-                                        $"或存在当前销售订单重复录入了销售出库单，审核失败！";
-                                    MessageBox.Show(msg, "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                                        $"或存在当前销售订单重复录入了销售出库单。";
+                                    rrs.ErrorMsg = msg;
                                     _unitOfWorkManage.RollbackTran();
                                     _logger.LogInformation(msg);
                                     return rrs;
@@ -428,7 +429,7 @@ namespace RUINORERP.Business
 
                                     string msg = $"销售订单:{entity.tb_saleorder.SOrderNo}的【{prodName}】的出库数量不能大于订单中对应行的数量，\r\n\" " +
                                         $"或存在当前销售订单重复录入了销售出库单，审核失败！";
-                                    MessageBox.Show(msg, "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                                    rrs.ErrorMsg = msg;
                                     _unitOfWorkManage.RollbackTran();
                                     _logger.LogInformation(msg);
                                     return rrs;
@@ -486,7 +487,7 @@ namespace RUINORERP.Business
                     //如果出库金额为0，但是订单中不是为0，则不允许出库,如果明细中注明了。都是赠品是可以的。
                     if (entity.TotalAmount == 0 && entity.tb_saleorder.TotalAmount != 0 && !entity.tb_SaleOutDetails.Any(c => c.Gift))
                     {
-                        string msg = $"出库单:{entity.tb_saleorder.SOrderNo}的总金额为0， 但是订单中不为0，审核失败！请检查数据!";
+                        string msg = $"出库单:{entity.tb_saleorder.SOrderNo}的总金额为0， 但是订单中不为0，请检查数据!";
                         _unitOfWorkManage.RollbackTran();
                         _logger.LogInformation(msg);
                         return rrs;
@@ -907,18 +908,20 @@ namespace RUINORERP.Business
                     invUpdateList.Add(inv);
                 }
 
-                int InvUpdateCounter = await _unitOfWorkManage.GetDbClient().Updateable(invUpdateList).ExecuteCommandAsync();
-                if (InvUpdateCounter == 0)
+                DbHelper<tb_Inventory> InvdbHelper = _appContext.GetRequiredService<DbHelper<tb_Inventory>>();
+                var Counter = await InvdbHelper.BaseDefaultAddElseUpdateAsync(invUpdateList);
+                if (Counter == 0)
                 {
-                    _unitOfWorkManage.RollbackTran();
-                    throw new Exception("库存更新失败！");
+                    _logger.LogInformation($"{entity.SaleOutNo}反审核时，更新库存结果为0行，请检查数据！");
                 }
+
+
 
                 if (!entity.ReplaceOut)
                 {
                     #region  反审检测写回 退回
                     //处理销售订单
-                    entity.tb_saleorder =await _unitOfWorkManage.GetDbClient().Queryable<tb_SaleOrder>()
+                    entity.tb_saleorder = await _unitOfWorkManage.GetDbClient().Queryable<tb_SaleOrder>()
                      .Includes(a => a.tb_SaleOuts, b => b.tb_SaleOutDetails)
                      .Includes(a => a.tb_customervendor, b => b.tb_crm_customer, c => c.tb_crm_leads)
                      .AsNavQueryable()//加这个前面,超过三级在前面加这一行，并且第四级无VS智能提示，但是可以用
@@ -949,7 +952,7 @@ namespace RUINORERP.Business
                             {
                                 //如果存在不是引用的明细,则不允许入库。这样不支持手动添加的情况。
                                 string msg = $"销售订单:{entity.tb_saleorder.SOrderNo}的【{prodName}】在订单明细中拥有多行记录，必须使用引用的方式添加，反审失败！";
-                                MessageBox.Show(msg, "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                                rs.ErrorMsg = msg;
                                 _unitOfWorkManage.RollbackTran();
                                 _logger.LogInformation(msg);
                                 return rs;
@@ -962,8 +965,8 @@ namespace RUINORERP.Business
                             ).Sum(c => c.Quantity);
                             if (inQty > entity.tb_saleorder.tb_SaleOrderDetails[i].Quantity)
                             {
-                                string msg = $"销售订单:{entity.tb_saleorder.SOrderNo}的【{prodName}】的出库数量不能大于订单中对应行的数量，审核失败！";
-                                MessageBox.Show(msg, "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                                string msg = $"销售订单:{entity.tb_saleorder.SOrderNo}的【{prodName}】的出库数量不能大于订单中对应行的数量。";
+                                rs.ErrorMsg = msg;
                                 _unitOfWorkManage.RollbackTran();
                                 _logger.LogInformation(msg);
                                 return rs;
@@ -993,8 +996,8 @@ namespace RUINORERP.Business
                             if (inQty > entity.tb_saleorder.tb_SaleOrderDetails[i].Quantity)
                             {
 
-                                string msg = $"销售订单:{entity.tb_saleorder.SOrderNo}的【{prodName}】的出库数量不能大于订单中对应行的数量，审核失败！";
-                                MessageBox.Show(msg, "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                                string msg = $"销售订单:{entity.tb_saleorder.SOrderNo}的【{prodName}】的出库数量不能大于订单中对应行的数量。";
+                                rs.ErrorMsg = msg;
                                 _unitOfWorkManage.RollbackTran();
                                 _logger.LogInformation(msg);
                                 return rs;
@@ -1113,10 +1116,11 @@ namespace RUINORERP.Business
                                     break;
                                 case (long)ARAPStatus.部分支付:
                                     //退回部分
-                                    string msg = $"部分支付还要处理！";
-                                    MessageBox.Show(msg, "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                                    string msg = $"部分支付还要处理！所以反审核失败。请联系管理员";
+                                    rs.ErrorMsg = msg;
                                     _unitOfWorkManage.RollbackTran();
                                     _logger.LogInformation(msg);
+                                    return rs;
                                     break;
                             }
 

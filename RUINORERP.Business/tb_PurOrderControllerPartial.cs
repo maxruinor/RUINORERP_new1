@@ -97,12 +97,11 @@ namespace RUINORERP.Business
                             var Counter = await dbHelper.BaseDefaultAddElseUpdateAsync(invUpdateList);
                             if (Counter == 0)
                             {
-                                _unitOfWorkManage.RollbackTran();
-                                throw new Exception("库存更新失败！");
+                                _logger.LogInformation($"{entity.PurOrderNo}更新库存结果为0行，请检查数据！");
                             }
                         }
 
-
+                       
 
                         entity.DataStatus = (int)DataStatus.完结;
                         BusinessHelper.Instance.EditEntity(entity);
@@ -277,7 +276,7 @@ namespace RUINORERP.Business
                         {
                             rmrs.Succeeded = false;
                             _unitOfWorkManage.RollbackTran();
-                            rmrs.ErrorMsg = $"付款方式为账期的订单必须是未付款！审核失败。";
+                            rmrs.ErrorMsg = $"付款方式为账期的订单必须是未付款。";
                             if (_appContext.SysConfig.ShowDebugInfo)
                             {
                                 _logger.LogInformation(rmrs.ErrorMsg);
@@ -293,7 +292,7 @@ namespace RUINORERP.Business
                         {
                             rmrs.Succeeded = false;
                             _unitOfWorkManage.RollbackTran();
-                            rmrs.ErrorMsg = $"未付款订单的付款方式必须是账期！审核失败。";
+                            rmrs.ErrorMsg = $"未付款订单的付款方式必须是账期。";
                             if (_appContext.SysConfig.ShowDebugInfo)
                             {
                                 _logger.LogInformation(rmrs.ErrorMsg);
@@ -538,9 +537,10 @@ namespace RUINORERP.Business
                 var Counter = await dbHelper.BaseDefaultAddElseUpdateAsync(invUpdateList);
                 if (Counter == 0)
                 {
-                    _unitOfWorkManage.RollbackTran();
-                    throw new Exception("库存更新失败！");
+                    _logger.LogInformation($"{entity.PurOrderNo}更新库存结果为0行，请检查数据！");
                 }
+                
+
                 //这部分是否能提出到上一级公共部分？
                 entity.DataStatus = (int)DataStatus.新建;
                 entity.ApprovalResults = false;

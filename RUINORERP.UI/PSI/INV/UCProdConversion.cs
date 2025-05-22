@@ -38,6 +38,7 @@ using RUINORERP.Business.Processor;
 using RUINORERP.Business.Security;
 using Netron.GraphLib;
 using Krypton.Toolkit;
+using RUINORERP.Global.EnumExt;
 
 
 

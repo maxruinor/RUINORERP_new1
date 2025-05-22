@@ -19,6 +19,8 @@ using System.Collections.Concurrent;
 using RUINORERP.Common.Extensions;
 using System.Linq.Expressions;
 using System.Reflection;
+using RUINORERP.Global.EnumExt;
+using RUINORERP.Global;
 
 namespace RUINORERP.UI.CRM
 {

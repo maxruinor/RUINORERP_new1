@@ -1,6 +1,6 @@
 ﻿namespace RUINORERP.UI.CommonUI
 {
-    partial class ProgressForm
+    partial class ExcelProgressForm
     {
         /// <summary>
         /// Required designer variable.

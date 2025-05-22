@@ -86,6 +86,7 @@ using Org.BouncyCastle.Utilities;
 using SixLabors.ImageSharp.Processing;
 using RUINORERP.UI.BI;
 using NPOI.Util;
+using RUINORERP.Global.EnumExt;
 
 
 

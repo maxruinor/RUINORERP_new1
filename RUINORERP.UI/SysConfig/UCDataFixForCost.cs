@@ -1689,7 +1689,7 @@ namespace RUINORERP.UI.SysConfig
 
                                         #endregion
 
-                                        if (!chkTestMode.Checked)
+                                        if (!chkTestMode.Checked  && needupdateOut)
                                         {
                                             await MainForm.Instance.AppContext.Db.Updateable<tb_SaleOut>(SaleOut).ExecuteCommandAsync();
                                             await MainForm.Instance.AppContext.Db.Updateable<tb_SaleOutDetail>(SaleOut.tb_SaleOutDetails).ExecuteCommandAsync();

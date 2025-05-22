@@ -39,6 +39,7 @@ using SourceGrid;
 using EnumsNET;
 using RUINORERP.UI.PSI.PUR;
 using RUINORERP.Business.CommService;
+using RUINORERP.Global.EnumExt;
 
 namespace RUINORERP.UI.PSI.SAL
 {
@@ -718,7 +719,9 @@ namespace RUINORERP.UI.PSI.SAL
                     tb_SaleOutDetail item = saleout.tb_SaleOutDetails.FirstOrDefault(c => c.ProdDetailID == details[i].ProdDetailID);
                     details[i].Quantity = details[i].Quantity - item.TotalReturnedQty;// 减掉已经退回的数量
                     details[i].SubtotalTransAmount = details[i].TransactionPrice * details[i].Quantity;
-                    details[i].SubtotalCostAmount = details[i].Cost * details[i].Quantity;
+                    details[i].Cost  = details[i].Cost ;
+                    details[i].CustomizedCost = details[i].CustomizedCost;
+                    details[i].SubtotalCostAmount = (details[i].Cost + details[i].CustomizedCost) * details[i].Quantity;
 
                     if (details[i].Quantity > 0)
                     {

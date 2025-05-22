@@ -39,6 +39,7 @@ using Krypton.Toolkit;
 using RUINORERP.Business.Processor;
 using RUINORERP.Business.Security;
 using RUINORERP.UI.ATechnologyStack;
+using RUINORERP.Global.EnumExt;
 
 namespace RUINORERP.UI.FM.FMBase
 {

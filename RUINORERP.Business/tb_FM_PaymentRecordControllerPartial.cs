@@ -104,7 +104,7 @@ namespace RUINORERP.Business
             {
                 if (entity.TotalLocalAmount == 0 && entity.TotalForeignAmount == 0)
                 {
-                    rmrs.ErrorMsg = "付款金额不能为0,审核失败!";
+                    rmrs.ErrorMsg = "付款金额不能为0!";
                     rmrs.Succeeded = false;
                     rmrs.ReturnObject = entity as T;
                     return rmrs;
@@ -678,8 +678,8 @@ namespace RUINORERP.Business
                     //判断 能结案的 是关闭的意思。就是没有收到款 作废
                     // 检查预付款取消
                     var preStatus = PrePaymentStatus.已生效 | PrePaymentStatus.部分核销;
-                    bool hasRelated = true; // 存在核销单
-                    bool canCancel = preStatus.CanCancel(hasRelated); // 返回false
+                    bool hasRelated = true; // 存在核销单, 有关联的单据的时候
+                    bool canCancel = FMPaymentStatusHelper.CanCancel(preStatus, hasRelated); // 返回false
 
 
 

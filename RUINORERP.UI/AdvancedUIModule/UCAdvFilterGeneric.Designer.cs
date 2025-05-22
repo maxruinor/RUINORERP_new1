@@ -1,4 +1,6 @@
-﻿namespace RUINORERP.UI.AdvancedUIModule
+﻿using RUINORERP.Global;
+
+namespace RUINORERP.UI.AdvancedUIModule
 {
     partial class UCAdvFilterGeneric<T>
     {
@@ -336,7 +338,7 @@
             this.Controls.Add(this.kryptonSplitContainer1);
             this.Controls.Add(this.BaseToolStrip);
             this.Name = "UCAdvFilterGeneric";
-            this.Runway = RUINORERP.UI.BaseListRunWay.选中模式;
+            this.Runway = BaseListRunWay.选中模式;
             this.Size = new System.Drawing.Size(1145, 564);
             this.Load += new System.EventHandler(this.UCAdvFilterGeneric_Load);
             this.BaseToolStrip.ResumeLayout(false);

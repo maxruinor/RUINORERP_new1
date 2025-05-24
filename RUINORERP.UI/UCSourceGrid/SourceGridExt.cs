@@ -212,6 +212,10 @@ namespace RUINORERP.UI.UCSourceGrid
             MemberInfo minfo = colNameExp.GetMemberInfo();
             foreach (var item in cols)
             {
+                if (item.BelongingObjectType == null)
+                {
+                    continue;
+                }
                 if (item.BelongingObjectType.Name == typeof(T).Name)
                 {
                     item.SetCol_ReadOnly(minfo.Name);
@@ -423,7 +427,7 @@ namespace RUINORERP.UI.UCSourceGrid
             MemberInfo minfo = colNameExp.GetMemberInfo();
             foreach (var item in cols)
             {
-                if (item.BelongingObjectType.Name == typeof(T).Name)
+                if (item.BelongingObjectType != null && item.BelongingObjectType.Name == typeof(T).Name)
                 {
                     item.SetCol_Width(minfo.Name, width);
                 }
@@ -621,7 +625,7 @@ namespace RUINORERP.UI.UCSourceGrid
             MemberInfo minfo = colNameExp.GetMemberInfo();
             foreach (var item in cols)
             {
-                if (item.BelongingObjectType ==null)
+                if (item.BelongingObjectType == null)
                 {
                     continue;
                 }
@@ -734,7 +738,7 @@ namespace RUINORERP.UI.UCSourceGrid
             MemberInfo minfo = ResultColName.GetMemberInfo();
             foreach (SGDefineColumnItem item in cols)
             {
-                if (item.BelongingObjectType==null)
+                if (item.BelongingObjectType == null)
                 {
                     continue;
                 }

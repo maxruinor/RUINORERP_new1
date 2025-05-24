@@ -104,10 +104,10 @@ namespace RUINORERP.UI.PSI.INV
             DataBindingHelper.InitDataToCmbByEnumDynamicGeneratedDataSource<tb_Stocktake>(typeof(Adjust_Type), e => e.Adjust_Type, cmb调整类型, false);
             EnumBindingHelper bindingHelper = new EnumBindingHelper();
             //枚举过滤了一下
-           // CheckMode checkMode = CheckMode.日常盘点;
+            // CheckMode checkMode = CheckMode.日常盘点;
             List<string> listStr = new List<string>();
             List<EnumEntityMember> list = new List<EnumEntityMember>();
-            list = typeof(CheckMode).GetListByEnum<CheckMode>(selectedItem: 2); 
+            list = typeof(CheckMode).GetListByEnum<CheckMode>(selectedItem: 2);
             bindingHelper.InitDataToCmbByEnumOnWhere(list, "CheckMode", cmbCheckMode);
 
             //var c = new Controller();
@@ -413,7 +413,7 @@ namespace RUINORERP.UI.PSI.INV
             if (RowDetails != null)
             {
                 List<tb_StocktakeDetail> details = new List<tb_StocktakeDetail>();
-                
+
                 foreach (var item in RowDetails)
                 {
                     tb_StocktakeDetail Detail = MainForm.Instance.mapper.Map<tb_StocktakeDetail>(item);
@@ -580,9 +580,6 @@ namespace RUINORERP.UI.PSI.INV
 
                 if (NeedValidated && aa.Count > 0)
                 {
-
-
-
                     var prod = MainForm.Instance.list.FirstOrDefault(c => c.ProdDetailID.ToString() == aa[0].ToString());
                     System.Windows.Forms.MessageBox.Show($"明细中，SKU{prod.SKU},{prod.CNName}\r\n相同的产品不能多行录入,如有需要,请另建单据保存!", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     if (MainForm.Instance.AppContext.SysConfig.IsDebug)
@@ -591,9 +588,14 @@ namespace RUINORERP.UI.PSI.INV
                     }
                     return false;
                 }
-
-
-
+                
+                if (NeedValidated && (EditEntity.CheckTotalQty == 0 || detailentity.Sum(c => c.CheckQty) == 0))
+                {
+                    if(MessageBox.Show("您确定整单盘点数量为零吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2)==DialogResult.No)
+                    {
+                        return false;
+                    }
+                }
 
 
                 EditEntity.tb_StocktakeDetails = details;
@@ -674,7 +676,7 @@ namespace RUINORERP.UI.PSI.INV
                     List<tb_StocktakeDetail> details = new List<tb_StocktakeDetail>();
                     foreach (View_ProdDetail item in dg.prodQuery.QueryObjects)
                     {
-                        
+
                         tb_StocktakeDetail detail = MainForm.Instance.mapper.Map<tb_StocktakeDetail>(item);
                         detail.property = item.prop;
                         if (item.Inv_Cost.HasValue)

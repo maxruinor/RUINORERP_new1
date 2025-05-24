@@ -512,9 +512,9 @@ var description = typeof(BoxRuleBasis)
     /// </summary>
     public enum CheckMode
     {
-        一般盘点,
-        日常盘点,
-        期初盘点,
+        一般盘点 = 0,
+        //日常盘点 = 1,
+        期初盘点 = 2,
     }
 
     /// <summary>

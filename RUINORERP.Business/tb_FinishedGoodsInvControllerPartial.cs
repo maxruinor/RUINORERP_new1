@@ -58,26 +58,37 @@ namespace RUINORERP.Business
                 tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
                 BillConverterFactory bcf = _appContext.GetRequiredService<BillConverterFactory>();
 
-                //更新制令单的QuantityDelivered已交付数量 ,如果全交完了。则结案
                 tb_ManufacturingOrder manufacturingOrder = null;
-                if (entity.MOID > 0)
+                //更新制令单的QuantityDelivered已交付数量 ,如果全交完了。则结案
+                if (entity.tb_manufacturingorder == null)
                 {
-                    manufacturingOrder = await _unitOfWorkManage.GetDbClient().Queryable<tb_ManufacturingOrder>()
-
-                    .Includes(b => b.tb_proddetail, c => c.tb_prod)
-                    .Includes(b => b.tb_bom_s, c => c.tb_BOM_SDetails)
-                    .AsNavQueryable()//加这个前面,超过三级在前面加这一行，并且第四级无VS智能提示，但是可以用
-                    .Includes(d => d.tb_ManufacturingOrderDetails, e => e.tb_bom_s, c => c.tb_BOM_SDetails, f => f.tb_BOM_SDetailSubstituteMaterials)
-                    .Includes(b => b.tb_productiondemand, c => c.tb_productionplan, d => d.tb_ProductionPlanDetails)
-                    //  .Includes(b => b.tb_productiondemand, c => c.tb_ManufacturingOrders, d => d.tb_ManufacturingOrderDetails)
-                    .Includes(b => b.tb_MaterialRequisitions, c => c.tb_MaterialRequisitionDetails)
-                   .Includes(a => a.tb_FinishedGoodsInvs, b => b.tb_FinishedGoodsInvDetails) //找到他名下的所有的缴库信息
-                    .Where(c => c.MOID == entity.MOID)
-                    .SingleAsync();
+                    if (entity.MOID > 0)
+                    {
+                        entity.tb_manufacturingorder = await _unitOfWorkManage.GetDbClient().Queryable<tb_ManufacturingOrder>()
+                        .Includes(b => b.tb_proddetail, c => c.tb_prod)
+                        .Includes(b => b.tb_bom_s, c => c.tb_BOM_SDetails)
+                        .AsNavQueryable()//加这个前面,超过三级在前面加这一行，并且第四级无VS智能提示，但是可以用
+                        .Includes(d => d.tb_ManufacturingOrderDetails, e => e.tb_bom_s, c => c.tb_BOM_SDetails, f => f.tb_BOM_SDetailSubstituteMaterials)
+                        .Includes(b => b.tb_productiondemand, c => c.tb_productionplan, d => d.tb_ProductionPlanDetails)
+                        //  .Includes(b => b.tb_productiondemand, c => c.tb_ManufacturingOrders, d => d.tb_ManufacturingOrderDetails)
+                        .Includes(b => b.tb_MaterialRequisitions, c => c.tb_MaterialRequisitionDetails)
+                       .Includes(a => a.tb_FinishedGoodsInvs, b => b.tb_FinishedGoodsInvDetails) //找到他名下的所有的缴库信息
+                        .Where(c => c.MOID == entity.MOID)
+                        .SingleAsync();
+                    }
                 }
+                manufacturingOrder = entity.tb_manufacturingorder;
 
 
                 #region 由缴库更新库存
+
+                if (entity.tb_FinishedGoodsInvDetails == null)
+                {
+                    entity = await _unitOfWorkManage.GetDbClient().Queryable<tb_FinishedGoodsInv>()
+                        .Includes(b => b.tb_FinishedGoodsInvDetails)
+                        .Where(c => c.FG_ID == entity.FG_ID)
+                        .SingleAsync();
+                }
 
                 List<tb_Inventory> invUpdateList = new List<tb_Inventory>();
                 foreach (var child in entity.tb_FinishedGoodsInvDetails)
@@ -264,7 +275,7 @@ namespace RUINORERP.Business
                             }
                             catch (Exception tipEx)
                             {
-
+                                _logger.Error(tipEx);
                             }
 
                             rs.ErrorMsg = msg;
@@ -511,7 +522,7 @@ namespace RUINORERP.Business
                     _logger.LogInformation($"{entity.DeliveryBillNo}更新库存结果为0行，请检查数据！");
                 }
 
-            
+
 
                 #region
 

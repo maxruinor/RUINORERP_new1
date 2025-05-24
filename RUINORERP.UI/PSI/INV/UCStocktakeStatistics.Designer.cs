@@ -31,11 +31,11 @@
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanelMain)).BeginInit();
             this.SuspendLayout();
             // 
-            // UCPurEntryStatistics
+            // UCStocktakeStatistics
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.Name = "UCPurEntryStatistics";
+            this.Name = "UCStocktakeStatistics";
             this.Load += new System.EventHandler(this.UCPurEntryStatistics_Load);
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanelMain)).EndInit();
             this.ResumeLayout(false);

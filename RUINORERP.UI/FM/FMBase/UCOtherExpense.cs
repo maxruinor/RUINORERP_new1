@@ -105,7 +105,7 @@ namespace RUINORERP.UI.FM.FMBase
                 }
             }
 
-          
+
 
             DataBindingHelper.BindData4Cmb<tb_Employee>(entity, k => k.Employee_ID, v => v.Employee_Name, cmbEmployee_ID);
             DataBindingHelper.BindData4TextBox<tb_FM_OtherExpense>(entity, t => t.TotalAmount.ToString(), txtTotalAmount, BindDataType4TextBox.Money, false);
@@ -136,7 +136,7 @@ namespace RUINORERP.UI.FM.FMBase
                 //权限允许
                 if ((true && entity.DataStatus == (int)DataStatus.草稿) || (true && entity.DataStatus == (int)DataStatus.新建))
                 {
-                    
+
                 }
 
                 //显示 打印状态 如果是草稿状态 不显示打印
@@ -208,7 +208,7 @@ namespace RUINORERP.UI.FM.FMBase
             }
         }
 
-      
+
         public override async Task<bool> DeleteRemoteImages()
         {
 
@@ -329,7 +329,7 @@ namespace RUINORERP.UI.FM.FMBase
             sgd.HasRowHeader = true;
             sgh.InitGrid(grid1, sgd, true, nameof(tb_FM_OtherExpenseDetail));
             sgh.OnCalculateColumnValue += Sgh_OnCalculateColumnValue;
-            UIHelper.ControlMasterColumnsInvisible(CurMenuInfo,this);
+            UIHelper.ControlMasterColumnsInvisible(CurMenuInfo, this);
         }
 
 
@@ -347,7 +347,7 @@ namespace RUINORERP.UI.FM.FMBase
 
                 //计算总金额  这些逻辑是不是放到业务层？后面要优化
                 List<tb_FM_OtherExpenseDetail> details = sgd.BindingSourceLines.DataSource as List<tb_FM_OtherExpenseDetail>;
-                details = details.Where(c => c.TotalAmount > 0).ToList();
+                details = details.Where(c => c.TotalAmount != 0).ToList();
                 if (details.Count == 0)
                 {
                     MainForm.Instance.uclog.AddLog("金额必须大于0");
@@ -367,7 +367,7 @@ namespace RUINORERP.UI.FM.FMBase
 
         }
 
- 
+
 
         List<tb_FM_OtherExpenseDetail> details = new List<tb_FM_OtherExpenseDetail>();
         protected async override Task<bool> Save(bool NeedValidated)
@@ -400,7 +400,7 @@ namespace RUINORERP.UI.FM.FMBase
                 {
                     return false;
                 }
-                
+
                 EditEntity.TaxAmount = details.Sum(c => c.TaxAmount);
                 EditEntity.TotalAmount = details.Sum(c => c.TotalAmount);
                 if (NeedValidated)

@@ -132,11 +132,14 @@ namespace RUINORERP.UI.FM
                 }
             }
 
+
+
             DataBindingHelper.BindData4TextBox<tb_FM_PriceAdjustment>(entity, t => t.AdjustNo, txtAdjustNo, BindDataType4TextBox.Qty, false);
             DataBindingHelper.BindData4TextBox<tb_FM_PriceAdjustment>(entity, t => t.ExchangeRate.ToString(), txtExchangeRate, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4TextBox<tb_FM_PriceAdjustment>(entity, t => t.TotalForeignDiffAmount.ToString(), txtTotalForeignDiffAmount, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4TextBox<tb_FM_PriceAdjustment>(entity, t => t.TotalLocalDiffAmount.ToString(), txtTotalLocalDiffAmount, BindDataType4TextBox.Money, false);
-
+            DataBindingHelper.BindData4TextBox<tb_FM_PriceAdjustment>(entity, t => t.AdjustReason, txtAdjustReason, BindDataType4TextBox.Text, false);
+            
 
             //先绑定这个。InitFilterForControl 这个才生效
             DataBindingHelper.BindData4TextBox<tb_FM_PriceAdjustment>(entity, v => v.SourceBillNo, txtSourceBillNo, BindDataType4TextBox.Text, true, false);
@@ -512,7 +515,7 @@ namespace RUINORERP.UI.FM
 
                 //计算总金额  这些逻辑是不是放到业务层？后面要优化
                 List<tb_FM_PriceAdjustmentDetail> details = sgd.BindingSourceLines.DataSource as List<tb_FM_PriceAdjustmentDetail>;
-                details = details.Where(c => c.SubtotalDiffLocalAmount > 0).ToList();
+                details = details.Where(c => c.SubtotalDiffLocalAmount != 0).ToList();
                 if (details.Count == 0)
                 {
                     MainForm.Instance.uclog.AddLog("差异小计金额必须大于0");
@@ -633,7 +636,7 @@ namespace RUINORERP.UI.FM
             if (EditEntity.ActionStatus == ActionStatus.新增 || EditEntity.ActionStatus == ActionStatus.修改)
             {
                 //产品ID有值才算有效值
-                details = detailentity.Where(t => t.SubtotalDiffLocalAmount > 0 || t.ProdDetailID > 0).ToList();
+                details = detailentity.Where(t => t.SubtotalDiffLocalAmount != 0 || t.ProdDetailID > 0).ToList();
                 //如果没有有效的明细。直接提示
                 if (NeedValidated && details.Count == 0)
                 {

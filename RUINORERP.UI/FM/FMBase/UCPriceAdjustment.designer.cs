@@ -448,7 +448,7 @@
             this.lblTotalForeignDiffAmount.Name = "lblTotalForeignDiffAmount";
             this.lblTotalForeignDiffAmount.Size = new System.Drawing.Size(101, 20);
             this.lblTotalForeignDiffAmount.TabIndex = 196;
-            this.lblTotalForeignDiffAmount.Values.Text = "金额差总计外币";
+            this.lblTotalForeignDiffAmount.Values.Text = "金额总计外币";
             // 
             // txtTotalLocalDiffAmount
             // 
@@ -470,7 +470,7 @@
             this.lblTotalLocalDiffAmount.Name = "lblTotalLocalDiffAmount";
             this.lblTotalLocalDiffAmount.Size = new System.Drawing.Size(101, 20);
             this.lblTotalLocalDiffAmount.TabIndex = 198;
-            this.lblTotalLocalDiffAmount.Values.Text = "金额差总计本币";
+            this.lblTotalLocalDiffAmount.Values.Text = "金额总计本币";
             // 
             // txtTaxTotalDiffLocalAmount
             // 

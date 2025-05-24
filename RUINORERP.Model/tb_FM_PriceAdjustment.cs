@@ -268,10 +268,10 @@ namespace RUINORERP.Model
 
         private decimal _TotalForeignDiffAmount= ((0));
         /// <summary>
-        /// 金额差总计外币
+        /// 金额总计外币
         /// </summary>
-        [AdvQueryAttribute(ColName = "TotalForeignDiffAmount",ColDesc = "金额差总计外币")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "TotalForeignDiffAmount" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "金额差总计外币" )]
+        [AdvQueryAttribute(ColName = "TotalForeignDiffAmount",ColDesc = "金额总计外币")] 
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "TotalForeignDiffAmount" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "金额总计外币" )]
         public decimal TotalForeignDiffAmount
         { 
             get{return _TotalForeignDiffAmount;}
@@ -282,10 +282,10 @@ namespace RUINORERP.Model
 
         private decimal _TotalLocalDiffAmount= ((0));
         /// <summary>
-        /// 金额差总计本币
+        /// 金额总计本币
         /// </summary>
-        [AdvQueryAttribute(ColName = "TotalLocalDiffAmount",ColDesc = "金额差总计本币")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "TotalLocalDiffAmount" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "金额差总计本币" )]
+        [AdvQueryAttribute(ColName = "TotalLocalDiffAmount",ColDesc = "金额总计本币")] 
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "TotalLocalDiffAmount" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "金额总计本币" )]
         public decimal TotalLocalDiffAmount
         { 
             get{return _TotalLocalDiffAmount;}
@@ -310,10 +310,10 @@ namespace RUINORERP.Model
 
         private decimal _TaxTotalDiffLocalAmount= ((0));
         /// <summary>
-        /// 税额差总计
+        /// 税额总计
         /// </summary>
-        [AdvQueryAttribute(ColName = "TaxTotalDiffLocalAmount",ColDesc = "税额差总计")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "TaxTotalDiffLocalAmount" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "税额差总计" )]
+        [AdvQueryAttribute(ColName = "TaxTotalDiffLocalAmount",ColDesc = "税额总计")] 
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "TaxTotalDiffLocalAmount" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "税额总计" )]
         public decimal TaxTotalDiffLocalAmount
         { 
             get{return _TaxTotalDiffLocalAmount;}

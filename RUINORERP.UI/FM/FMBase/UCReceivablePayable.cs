@@ -49,7 +49,7 @@ using System.Configuration;
 
 namespace RUINORERP.UI.FM
 {
-    
+
     /// <summary>
     /// 应收应付
     /// </summary>
@@ -196,7 +196,7 @@ namespace RUINORERP.UI.FM
             DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayable>(entity, t => t.ForeignBalanceAmount.ToString(), txtForeignBalanceAmount, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayable>(entity, t => t.LocalBalanceAmount.ToString(), txtLocalBalanceAmount, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayable>(entity, t => t.SourceBizType, txtBizType, BindDataType4TextBox.Qty, false);
-           // DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayable>(entity, t => t.SourceBillId, txtSourceBillId, BindDataType4TextBox.Qty, false);
+            // DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayable>(entity, t => t.SourceBillId, txtSourceBillId, BindDataType4TextBox.Qty, false);
             DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayable>(entity, t => t.SourceBillNo, txtSourceBillNo, BindDataType4TextBox.Text, false);
 
             DataBindingHelper.BindData4DataTime<tb_FM_ReceivablePayable>(entity, t => t.DueDate, dtpDueDate, false);
@@ -222,7 +222,7 @@ namespace RUINORERP.UI.FM
 
 
             if (PaymentType == ReceivePaymentType.收款)
-                {
+            {
                 //创建表达式
                 var lambda = Expressionable.Create<tb_CustomerVendor>()
                             .And(t => t.IsCustomer == true)//供应商和第三方
@@ -459,7 +459,7 @@ namespace RUINORERP.UI.FM
             listCols.SetCol_NeverVisible<ProductSharePart>(c => c.Inv_Cost);
             listCols.SetCol_NeverVisible<ProductSharePart>(c => c.Standard_Price);
             listCols.SetCol_NeverVisible<ProductSharePart>(c => c.TransPrice);
- 
+
 
             UIHelper.ControlChildColumnsInvisible(CurMenuInfo, listCols);
             UIHelper.ControlChildColumnsInvisible(CurMenuInfo, listCols);
@@ -470,7 +470,7 @@ namespace RUINORERP.UI.FM
             //listCols.SetCol_DefaultValue<tb_FM_ReceivablePayableDetail>(c => c.ForeignPayableAmount, 0.00M);
 
             //listCols.SetCol_DisplayFormatText<tb_FM_ReceivablePayableDetail>(c => c.SourceBizType, 1);
-   
+
             listCols.SetCol_Format<tb_FM_ReceivablePayableDetail>(c => c.TaxRate, CustomFormatType.PercentFormat);
             listCols.SetCol_Format<tb_FM_ReceivablePayableDetail>(c => c.LocalPayableAmount, CustomFormatType.CurrencyFormat);
             listCols.SetCol_Format<tb_FM_ReceivablePayableDetail>(c => c.TaxLocalAmount, CustomFormatType.CurrencyFormat);
@@ -548,7 +548,7 @@ namespace RUINORERP.UI.FM
 
                 //计算总金额  这些逻辑是不是放到业务层？后面要优化
                 List<tb_FM_ReceivablePayableDetail> details = sgd.BindingSourceLines.DataSource as List<tb_FM_ReceivablePayableDetail>;
-                details = details.Where(c => c.LocalPayableAmount > 0).ToList();
+                details = details.Where(c => c.LocalPayableAmount != 0).ToList();
                 if (details.Count == 0)
                 {
                     MainForm.Instance.uclog.AddLog("金额必须大于0");

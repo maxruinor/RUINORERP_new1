@@ -69,12 +69,12 @@ namespace RUINORERP.Business
  RuleFor(tb_FM_PriceAdjustment =>tb_FM_PriceAdjustment.InvoiceId).NotEmpty().When(x => x.InvoiceId.HasValue);
 
 
- RuleFor(x => x.TotalForeignDiffAmount).PrecisionScale(19,4,true).WithMessage("金额差总计外币:小数位不能超过4。");
+ RuleFor(x => x.TotalForeignDiffAmount).PrecisionScale(19,4,true).WithMessage("金额总计外币:小数位不能超过4。");
 
- RuleFor(x => x.TotalLocalDiffAmount).PrecisionScale(19,4,true).WithMessage("金额差总计本币:小数位不能超过4。");
+ RuleFor(x => x.TotalLocalDiffAmount).PrecisionScale(19,4,true).WithMessage("金额总计本币:小数位不能超过4。");
 
 
- RuleFor(x => x.TaxTotalDiffLocalAmount).PrecisionScale(19,4,true).WithMessage("税额差总计:小数位不能超过4。");
+ RuleFor(x => x.TaxTotalDiffLocalAmount).PrecisionScale(19,4,true).WithMessage("税额总计:小数位不能超过4。");
 
 //***** 
  RuleFor(tb_FM_PriceAdjustment =>tb_FM_PriceAdjustment.DataStatus).NotNull().WithMessage("数据状态:不能为空。");

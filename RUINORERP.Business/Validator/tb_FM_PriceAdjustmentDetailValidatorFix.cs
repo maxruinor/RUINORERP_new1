@@ -28,7 +28,7 @@ namespace RUINORERP.Business
     {
         public override void Initialize()
         {
-            RuleFor(x => x.DiffUnitPrice).Equal(0).WithMessage("差异单价:不能为0。");
+            RuleFor(x => x.DiffUnitPrice).NotEqual(0).WithMessage("差异单价:不能为0。");
         }
     }
 }

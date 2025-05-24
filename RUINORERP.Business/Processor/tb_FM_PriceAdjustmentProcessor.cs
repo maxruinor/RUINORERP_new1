@@ -36,24 +36,25 @@ namespace RUINORERP.Business.Processor
     /// <summary>
     /// 费用报销单
     /// </summary>
-    public partial class tb_FM_ReceivablePayableProcessor : BaseProcessor
+    public partial class tb_FM_PriceAdjustmentProcessor : BaseProcessor
     {
 
         public override QueryFilter GetQueryFilter()
         {
             QueryFilter queryFilter = new QueryFilter();
-            queryFilter.SetQueryField<tb_FM_ReceivablePayable, tb_CustomerVendor>(c => c.CustomerVendor_ID);
+            queryFilter.SetQueryField<tb_FM_PriceAdjustment, tb_CustomerVendor>(c => c.CustomerVendor_ID);
             //可以根据关联外键自动加载条件，条件用公共虚方法
-            queryFilter.SetQueryField<tb_FM_ReceivablePayable>(c => c.ARAPNo);
-            queryFilter.SetQueryField<tb_FM_ReceivablePayable>(c => c.Currency_ID);
-            queryFilter.SetQueryField<tb_FM_ReceivablePayable>(c => c.DepartmentID);
-            queryFilter.SetQueryField<tb_FM_ReceivablePayable>(c => c.ProjectGroup_ID);
-            queryFilter.SetQueryField<tb_FM_ReceivablePayable>(c => c.IsIncludeTax);
-            queryFilter.SetQueryField<tb_FM_ReceivablePayable>(c => c.Created_at, AdvQueryProcessType.datetimeRange, true);
-            queryFilter.SetQueryField<tb_FM_ReceivablePayable>(c => c.DueDate, AdvQueryProcessType.datetimeRange, false);
-            queryFilter.SetQueryField<tb_FM_ReceivablePayable>(c => c.ARAPStatus, QueryFieldType.CmbEnum, typeof(ARAPStatus));
-            queryFilter.SetQueryField<tb_FM_ReceivablePayable>(c => c.ApprovalStatus, QueryFieldType.CmbEnum, typeof(ApprovalStatus));
-            queryFilter.SetQueryField<tb_FM_ReceivablePayable>(c => c.Remark);
+            queryFilter.SetQueryField<tb_FM_PriceAdjustment>(c => c.AdjustNo);
+            queryFilter.SetQueryField<tb_FM_PriceAdjustment>(c => c.Currency_ID);
+            queryFilter.SetQueryField<tb_FM_PriceAdjustment>(c => c.DepartmentID);
+            queryFilter.SetQueryField<tb_FM_PriceAdjustment>(c => c.ProjectGroup_ID);
+            queryFilter.SetQueryField<tb_FM_PriceAdjustment>(c => c.AdjustReason);
+            queryFilter.SetQueryField<tb_FM_PriceAdjustment>(c => c.IsIncludeTax);
+            queryFilter.SetQueryField<tb_FM_PriceAdjustment>(c => c.Created_at, AdvQueryProcessType.datetimeRange, true);
+            queryFilter.SetQueryField<tb_FM_PriceAdjustment>(c => c.AdjustDate, AdvQueryProcessType.datetimeRange, false);
+            queryFilter.SetQueryField<tb_FM_PriceAdjustment>(c => c.DataStatus, QueryFieldType.CmbEnum, typeof(DataStatus));
+            queryFilter.SetQueryField<tb_FM_PriceAdjustment>(c => c.ApprovalStatus, QueryFieldType.CmbEnum, typeof(ApprovalStatus));
+            queryFilter.SetQueryField<tb_FM_PriceAdjustment>(c => c.Remark);
 
             return queryFilter;
         }

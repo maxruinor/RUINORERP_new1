@@ -234,7 +234,15 @@ namespace RUINORERP.Business
 
             for (global::System.Int32 i = 0; i < details.Count; i++)
             {
-
+                var olditem = entity.tb_SaleOutReDetails.Where(c => c.ProdDetailID == details[i].ProdDetailID).FirstOrDefault();
+                if (olditem != null)
+                {
+                    details[i].TaxRate = olditem.TaxRate;
+                    details[i].TaxLocalAmount = olditem.SubtotalTaxAmount;
+                    details[i].Quantity = olditem.Quantity;
+                    details[i].UnitPrice = olditem.TransactionPrice;
+                    details[i].LocalPayableAmount = olditem.TransactionPrice * olditem.Quantity;
+                }
                 details[i].ExchangeRate = entity.ExchangeRate;
                 details[i].ActionStatus = ActionStatus.新增;
 
@@ -433,7 +441,15 @@ namespace RUINORERP.Business
 
             for (global::System.Int32 i = 0; i < details.Count; i++)
             {
-
+                var olditem = entity.tb_FM_PriceAdjustmentDetails.Where(c => c.ProdDetailID == details[i].ProdDetailID).FirstOrDefault();
+                if (olditem != null)
+                {
+                    details[i].TaxRate = olditem.TaxRate;
+                    details[i].TaxLocalAmount = olditem.TaxDiffLocalAmount;
+                    details[i].Quantity = olditem.Quantity;
+                    details[i].UnitPrice = olditem.DiffUnitPrice;
+                    details[i].LocalPayableAmount = olditem.DiffUnitPrice * olditem.Quantity;
+                }
                 details[i].ExchangeRate = entity.ExchangeRate;
                 details[i].ActionStatus = ActionStatus.新增;
 
@@ -599,9 +615,15 @@ namespace RUINORERP.Business
 
             for (global::System.Int32 i = 0; i < details.Count; i++)
             {
-
-
-
+                var olditem = entity.tb_SaleOutDetails.Where(c => c.ProdDetailID == details[i].ProdDetailID).FirstOrDefault();
+                if (olditem != null)
+                {
+                    details[i].TaxRate = olditem.TaxRate;
+                    details[i].TaxLocalAmount = olditem.SubtotalTaxAmount;
+                    details[i].Quantity = olditem.Quantity;
+                    details[i].UnitPrice = olditem.TransactionPrice;
+                    details[i].LocalPayableAmount = olditem.TransactionPrice * olditem.Quantity;
+                }
 
                 details[i].ExchangeRate = entity.ExchangeRate;
                 details[i].ActionStatus = ActionStatus.新增;
@@ -834,7 +856,15 @@ namespace RUINORERP.Business
 
             for (global::System.Int32 i = 0; i < details.Count; i++)
             {
-
+                var olditem = entity.tb_PurEntryDetails.Where(c => c.ProdDetailID == details[i].ProdDetailID).FirstOrDefault();
+                if (olditem != null)
+                {
+                    details[i].TaxRate = olditem.TaxRate;
+                    details[i].TaxLocalAmount = olditem.TaxAmount;
+                    details[i].Quantity = olditem.Quantity;
+                    details[i].UnitPrice = olditem.UnitPrice;
+                    details[i].LocalPayableAmount = olditem.UnitPrice * olditem.Quantity;
+                }
                 details[i].ExchangeRate = entity.ExchangeRate;
                 details[i].ActionStatus = ActionStatus.新增;
                 View_ProdDetail obj = BizCacheHelper.Instance.GetEntity<View_ProdDetail>(details[i].ProdDetailID);
@@ -925,7 +955,15 @@ namespace RUINORERP.Business
 
             for (global::System.Int32 i = 0; i < details.Count; i++)
             {
-
+                var olditem = entity.tb_PurEntryReDetails.Where(c => c.ProdDetailID == details[i].ProdDetailID).FirstOrDefault();
+                if (olditem != null)
+                {
+                    details[i].TaxRate = olditem.TaxRate;
+                    details[i].TaxLocalAmount = olditem.TaxAmount;
+                    details[i].Quantity = olditem.Quantity;
+                    details[i].UnitPrice = olditem.UnitPrice;
+                    details[i].LocalPayableAmount = olditem.UnitPrice * olditem.Quantity;
+                }
                 details[i].ExchangeRate = entity.ExchangeRate;
                 details[i].ActionStatus = ActionStatus.新增;
 

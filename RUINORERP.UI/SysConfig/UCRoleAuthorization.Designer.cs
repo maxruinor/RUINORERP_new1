@@ -29,15 +29,15 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle3 = new System.Windows.Forms.DataGridViewCellStyle();
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(UCRoleAuthorization));
             this.kryptonSplitContainer1 = new Krypton.Toolkit.KryptonSplitContainer();
             this.TreeView1 = new RUINOR.WinFormsUI.TreeViewThreeState.ThreeStateTreeView();
             this.kryptonNavigator1 = new Krypton.Navigator.KryptonNavigator();
-            this.kryptonPage1 = new Krypton.Navigator.KryptonPage();
+            this.kryptonPageBtn = new Krypton.Navigator.KryptonPage();
             this.dataGridView1 = new RUINORERP.UI.UControls.NewSumDataGridView();
-            this.kryptonPage3 = new Krypton.Navigator.KryptonPage();
+            this.kryptonPageFieldInfo = new Krypton.Navigator.KryptonPage();
             this.dataGridView2 = new RUINORERP.UI.UControls.NewSumDataGridView();
             this.BaseToolStrip = new System.Windows.Forms.ToolStrip();
             this.contextMenuStrip4InitData = new System.Windows.Forms.ContextMenuStrip(this.components);
@@ -65,11 +65,11 @@
             this.kryptonSplitContainer1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonNavigator1)).BeginInit();
             this.kryptonNavigator1.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.kryptonPage1)).BeginInit();
-            this.kryptonPage1.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.kryptonPageBtn)).BeginInit();
+            this.kryptonPageBtn.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.kryptonPage3)).BeginInit();
-            this.kryptonPage3.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.kryptonPageFieldInfo)).BeginInit();
+            this.kryptonPageFieldInfo.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView2)).BeginInit();
             this.BaseToolStrip.SuspendLayout();
             this.contextMenuStrip4InitData.SuspendLayout();
@@ -132,39 +132,40 @@
             this.kryptonNavigator1.Owner = null;
             this.kryptonNavigator1.PageBackStyle = Krypton.Toolkit.PaletteBackStyle.ControlClient;
             this.kryptonNavigator1.Pages.AddRange(new Krypton.Navigator.KryptonPage[] {
-            this.kryptonPage1,
-            this.kryptonPage3});
-            this.kryptonNavigator1.SelectedIndex = 0;
+            this.kryptonPageBtn,
+            this.kryptonPageFieldInfo});
+            this.kryptonNavigator1.SelectedIndex = 1;
             this.kryptonNavigator1.Size = new System.Drawing.Size(649, 620);
             this.kryptonNavigator1.TabIndex = 1;
             this.kryptonNavigator1.Text = "kryptonNavigator1";
+            this.kryptonNavigator1.SelectedPageChanged += new System.EventHandler(this.kryptonNavigator1_SelectedPageChanged);
             // 
-            // kryptonPage1
+            // kryptonPageBtn
             // 
-            this.kryptonPage1.AutoHiddenSlideSize = new System.Drawing.Size(200, 200);
-            this.kryptonPage1.Controls.Add(this.dataGridView1);
-            this.kryptonPage1.Flags = 65534;
-            this.kryptonPage1.LastVisibleSet = true;
-            this.kryptonPage1.MinimumSize = new System.Drawing.Size(50, 50);
-            this.kryptonPage1.Name = "kryptonPage1";
-            this.kryptonPage1.Size = new System.Drawing.Size(647, 589);
-            this.kryptonPage1.StateNormal.Tab.Border.Color1 = System.Drawing.Color.White;
-            this.kryptonPage1.StateNormal.Tab.Border.DrawBorders = ((Krypton.Toolkit.PaletteDrawBorders)((((Krypton.Toolkit.PaletteDrawBorders.Top | Krypton.Toolkit.PaletteDrawBorders.Bottom) 
+            this.kryptonPageBtn.AutoHiddenSlideSize = new System.Drawing.Size(200, 200);
+            this.kryptonPageBtn.Controls.Add(this.dataGridView1);
+            this.kryptonPageBtn.Flags = 65534;
+            this.kryptonPageBtn.LastVisibleSet = true;
+            this.kryptonPageBtn.MinimumSize = new System.Drawing.Size(50, 50);
+            this.kryptonPageBtn.Name = "kryptonPageBtn";
+            this.kryptonPageBtn.Size = new System.Drawing.Size(647, 589);
+            this.kryptonPageBtn.StateNormal.Tab.Border.Color1 = System.Drawing.Color.White;
+            this.kryptonPageBtn.StateNormal.Tab.Border.DrawBorders = ((Krypton.Toolkit.PaletteDrawBorders)((((Krypton.Toolkit.PaletteDrawBorders.Top | Krypton.Toolkit.PaletteDrawBorders.Bottom) 
             | Krypton.Toolkit.PaletteDrawBorders.Left) 
             | Krypton.Toolkit.PaletteDrawBorders.Right)));
-            this.kryptonPage1.Text = "操作配置";
-            this.kryptonPage1.TextDescription = "主要资料";
-            this.kryptonPage1.TextTitle = "主要资料";
-            this.kryptonPage1.ToolTipTitle = "Page ToolTip";
-            this.kryptonPage1.UniqueName = "60445288435B49021FB28348D07C5399";
+            this.kryptonPageBtn.Text = "操作按钮配置";
+            this.kryptonPageBtn.TextDescription = "主要资料";
+            this.kryptonPageBtn.TextTitle = "主要资料";
+            this.kryptonPageBtn.ToolTipTitle = "Page ToolTip";
+            this.kryptonPageBtn.UniqueName = "60445288435B49021FB28348D07C5399";
             // 
             // dataGridView1
             // 
             this.dataGridView1.AllowUserToAddRows = false;
             this.dataGridView1.AllowUserToDeleteRows = false;
             this.dataGridView1.AllowUserToOrderColumns = true;
-            dataGridViewCellStyle1.BackColor = System.Drawing.Color.Beige;
-            this.dataGridView1.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle1;
+            dataGridViewCellStyle3.BackColor = System.Drawing.Color.Beige;
+            this.dataGridView1.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle3;
             this.dataGridView1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
@@ -191,26 +192,26 @@
             this.dataGridView1.ColumnHeaderMouseClick += new System.Windows.Forms.DataGridViewCellMouseEventHandler(this.dataGridView1_ColumnHeaderMouseClick);
             this.dataGridView1.DataError += new System.Windows.Forms.DataGridViewDataErrorEventHandler(this.dataGridView1_DataError);
             // 
-            // kryptonPage3
+            // kryptonPageFieldInfo
             // 
-            this.kryptonPage3.AutoHiddenSlideSize = new System.Drawing.Size(200, 200);
-            this.kryptonPage3.Controls.Add(this.dataGridView2);
-            this.kryptonPage3.Flags = 65534;
-            this.kryptonPage3.LastVisibleSet = true;
-            this.kryptonPage3.MinimumSize = new System.Drawing.Size(50, 50);
-            this.kryptonPage3.Name = "kryptonPage3";
-            this.kryptonPage3.Size = new System.Drawing.Size(647, 589);
-            this.kryptonPage3.Text = "字段配置";
-            this.kryptonPage3.ToolTipTitle = "Page ToolTip";
-            this.kryptonPage3.UniqueName = "4005A0325384478A20BFEBB7440319BD";
+            this.kryptonPageFieldInfo.AutoHiddenSlideSize = new System.Drawing.Size(200, 200);
+            this.kryptonPageFieldInfo.Controls.Add(this.dataGridView2);
+            this.kryptonPageFieldInfo.Flags = 65534;
+            this.kryptonPageFieldInfo.LastVisibleSet = true;
+            this.kryptonPageFieldInfo.MinimumSize = new System.Drawing.Size(50, 50);
+            this.kryptonPageFieldInfo.Name = "kryptonPageFieldInfo";
+            this.kryptonPageFieldInfo.Size = new System.Drawing.Size(647, 589);
+            this.kryptonPageFieldInfo.Text = "字段配置";
+            this.kryptonPageFieldInfo.ToolTipTitle = "Page ToolTip";
+            this.kryptonPageFieldInfo.UniqueName = "4005A0325384478A20BFEBB7440319BD";
             // 
             // dataGridView2
             // 
             this.dataGridView2.AllowUserToAddRows = false;
             this.dataGridView2.AllowUserToDeleteRows = false;
             this.dataGridView2.AllowUserToOrderColumns = true;
-            dataGridViewCellStyle2.BackColor = System.Drawing.Color.Beige;
-            this.dataGridView2.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle2;
+            dataGridViewCellStyle1.BackColor = System.Drawing.Color.Beige;
+            this.dataGridView2.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle1;
             this.dataGridView2.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
@@ -329,7 +330,6 @@
             this.toolStripCopyRoleConfig.Size = new System.Drawing.Size(88, 22);
             this.toolStripCopyRoleConfig.Text = "复制授权";
             this.toolStripCopyRoleConfig.ToolTipText = "加载选择角色的权限配置";
-            this.toolStripCopyRoleConfig.Click += new System.EventHandler(this.toolStripCopyRoleConfig_Click);
             // 
             // toolsbtnFullAuthorization
             // 
@@ -391,11 +391,11 @@
             this.kryptonSplitContainer1.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.kryptonNavigator1)).EndInit();
             this.kryptonNavigator1.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.kryptonPage1)).EndInit();
-            this.kryptonPage1.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.kryptonPageBtn)).EndInit();
+            this.kryptonPageBtn.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.kryptonPage3)).EndInit();
-            this.kryptonPage3.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.kryptonPageFieldInfo)).EndInit();
+            this.kryptonPageFieldInfo.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView2)).EndInit();
             this.BaseToolStrip.ResumeLayout(false);
             this.BaseToolStrip.PerformLayout();
@@ -412,8 +412,8 @@
         private RUINOR.WinFormsUI.TreeViewThreeState.ThreeStateTreeView TreeView1;
         private Krypton.Toolkit.KryptonSplitContainer kryptonSplitContainer1;
         private Krypton.Navigator.KryptonNavigator kryptonNavigator1;
-        private Krypton.Navigator.KryptonPage kryptonPage1;
-        private Krypton.Navigator.KryptonPage kryptonPage3;
+        private Krypton.Navigator.KryptonPage kryptonPageBtn;
+        private Krypton.Navigator.KryptonPage kryptonPageFieldInfo;
         private UControls.NewSumDataGridView dataGridView1;
         private UControls.NewSumDataGridView dataGridView2;
         private System.Windows.Forms.BindingSource bindingSource1;

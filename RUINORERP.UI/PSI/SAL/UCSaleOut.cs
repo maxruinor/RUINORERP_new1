@@ -236,7 +236,7 @@ namespace RUINORERP.UI.PSI.SAL
 
                     }
 
-                    if (s2.PropertyName == entity.GetPropertyName<tb_SaleOut>(c => c.Paytype_ID)  && entity.Paytype_ID > 0)
+                    if (s2.PropertyName == entity.GetPropertyName<tb_SaleOut>(c => c.Paytype_ID) && entity.Paytype_ID > 0)
                     {
                         if (cmbPaytype_ID.SelectedItem is tb_PaymentMethod paymentMethod)
                         {
@@ -500,7 +500,7 @@ namespace RUINORERP.UI.PSI.SAL
                 }
 
                 EditEntity.TotalQty = details.Sum(c => c.Quantity);
-                EditEntity.TotalCost = details.Sum(c => c.Cost * c.Quantity);
+                EditEntity.TotalCost = details.Sum(c => (c.Cost + c.CustomizedCost) * c.Quantity);
                 EditEntity.TotalCost = EditEntity.TotalCost + EditEntity.FreightCost;
                 EditEntity.TotalTaxAmount = details.Sum(c => c.SubtotalTaxAmount);
                 EditEntity.TotalTaxAmount = EditEntity.TotalTaxAmount.ToRoundDecimalPlaces(MainForm.Instance.authorizeController.GetMoneyDataPrecision());
@@ -598,19 +598,21 @@ namespace RUINORERP.UI.PSI.SAL
                     return false;
                 }
 
-                if (NeedValidated && (EditEntity.TotalAmount == 0 || detailentity.Sum(c => c.TransactionPrice * c.Quantity) == 0))
-                {
-                    if (MessageBox.Show("单据总金额或明细总金额为零，你确定吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2) == DialogResult.No)
-                    {
-                        return false;
-                    }
-                }
+
+                //订单中gift 分开出库时。就可能出现金额为0
+                //if (NeedValidated && ((EditEntity.TotalAmount == 0 || detailentity.Sum(c => c.TransactionPrice * c.Quantity) == 0)) && EditEntity.tb_saleorder.TotalQty != detailentity.Sum(c => c.Quantity))
+                //{
+                //    if (MessageBox.Show("单据总金额或明细总金额为零，你确定吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2) == DialogResult.No)
+                //    {
+                //        return false;
+                //    }
+                //}
                 //if (NeedValidated && (EditEntity.TotalAmount != detailentity.Sum(c => c.TransactionPrice * c.Quantity)))
                 //{
                 //    MessageBox.Show("单据总金额与明细总金额不相等！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 //    return false;
                 //}
-                if (NeedValidated && (EditEntity.TotalAmount + EditEntity.ShipCost < detailentity.Sum(c => c.TransactionPrice * c.Quantity)))
+                if (NeedValidated && ((EditEntity.TotalAmount + EditEntity.ShipCost) < detailentity.Sum(c => c.TransactionPrice * c.Quantity)))
                 {
                     MessageBox.Show("单据总金额不能小于明细总金额！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     return false;

@@ -33,13 +33,14 @@ namespace RUINORERP.Business
         /// <returns>数据列表</returns>
         public virtual List<tb_UserInfo> QueryByNavWithMoreInfo(Expression<Func<tb_UserInfo, bool>> exp)
         {
-
             List<tb_UserInfo> list = _unitOfWorkManage.GetDbClient().Queryable<tb_UserInfo>().Where(exp)
                             .Includes(t => t.tb_employee, e => e.tb_department, d => d.tb_company)
-                            .Includes(t => t.tb_User_Roles, ur => ur.tb_roleinfo, r => r.tb_P4Modules)
-                            .Includes(t => t.tb_User_Roles, ur => ur.tb_roleinfo, r => r.tb_P4Menus)
-                            .Includes(t => t.tb_User_Roles, ur => ur.tb_roleinfo, r => r.tb_P4Fields)
-                            .Includes(t => t.tb_User_Roles, ur => ur.tb_roleinfo, r => r.tb_P4Buttons)
+                            .AsNavQueryable()
+                            .Includes(t => t.tb_User_Roles, ur => ur.tb_roleinfo, r => r.tb_P4Menus, s => s.tb_menuinfo)
+                            .AsNavQueryable()
+                            .Includes(t => t.tb_User_Roles, ur => ur.tb_roleinfo, r => r.tb_P4Fields, s => s.tb_fieldinfo)
+                            .AsNavQueryable()
+                            .Includes(t => t.tb_User_Roles, ur => ur.tb_roleinfo, r => r.tb_P4Buttons, s => s.tb_buttoninfo)
                             .Includes(t => t.tb_User_Roles, ur => ur.tb_roleinfo, r => r.tb_rolepropertyconfig)
                             .AsNavQueryable()
                             .Includes(a => a.tb_User_Roles, b => b.tb_UserPersonalizeds, c => c.tb_UIMenuPersonalizations, d => d.tb_UIGridSettings)
@@ -60,10 +61,7 @@ namespace RUINORERP.Business
 
 
 
-        /// <summary>
-        /// 带参数异步导航查询
-        /// </summary>
-        /// <returns>数据列表</returns>
+        
         public virtual List<tb_RoleInfo> QueryALLPowerByNavWithMoreInfo(List<tb_RoleInfo> roles)
         {
             List<tb_RoleInfo> list = new List<tb_RoleInfo>();
@@ -77,10 +75,8 @@ namespace RUINORERP.Business
                 }
                 list = _unitOfWorkManage.GetDbClient().Queryable<tb_RoleInfo>()
                .In(it => it.RoleID, idss)
-               .Includes(a => a.tb_P4Modules, b => b.tb_moduledefinition)
                .AsNavQueryable()
-               .Includes(a => a.tb_P4Modules, b => b.tb_moduledefinition, c => c.tb_MenuInfos, d => d.tb_P4Fields, f => f.tb_fieldinfo)
-               .Includes(a => a.tb_P4Menus, b => b.tb_menuinfo,c=>c.tb_ButtonInfos)
+               .Includes(a => a.tb_P4Menus, b => b.tb_menuinfo, c => c.tb_ButtonInfos)
                .Includes(a => a.tb_P4Menus, b => b.tb_menuinfo, c => c.tb_FieldInfos)
                .Includes(a => a.tb_P4Buttons, b => b.tb_buttoninfo)
                .Includes(a => a.tb_P4Fields, b => b.tb_fieldinfo)
@@ -90,7 +86,6 @@ namespace RUINORERP.Business
                 {
                     item.HasChanged = false;
                 }
-                //MyCacheManager.Instance.UpdateEntityList<tb_User_Role>(list);
             }
             catch (Exception ex)
             {
@@ -122,7 +117,7 @@ namespace RUINORERP.Business
                 // idss = ids.Distinct().ToArray();
                 list = _unitOfWorkManage.GetDbClient().Queryable<tb_User_Role>()
                .In(it => it.RoleID, idss)
-               .Includes(t => t.tb_roleinfo, a => a.tb_P4Modules, b => b.tb_moduledefinition)
+               .Includes(t => t.tb_roleinfo)
                .Includes(t => t.tb_roleinfo, a => a.tb_P4Menus, b => b.tb_menuinfo)
                .Includes(t => t.tb_roleinfo, a => a.tb_P4Buttons, b => b.tb_buttoninfo)
                .Includes(t => t.tb_roleinfo, a => a.tb_P4Fields, b => b.tb_fieldinfo)

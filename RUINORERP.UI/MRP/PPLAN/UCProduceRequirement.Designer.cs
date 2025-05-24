@@ -158,7 +158,7 @@
             this.kp库存不足量需求,
             this.kryptonPage3,
             this.kryptonPage2});
-            this.kryptonNavigator1.SelectedIndex = 0;
+            this.kryptonNavigator1.SelectedIndex = 3;
             this.kryptonNavigator1.Size = new System.Drawing.Size(1118, 485);
             this.kryptonNavigator1.TabIndex = 0;
             this.kryptonNavigator1.Text = "kryptonNavigator1";

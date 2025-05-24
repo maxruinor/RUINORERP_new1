@@ -80,9 +80,9 @@ namespace RUINORERP.Business.Security
 
                 //密码如果为初始123456，则每次登陆会提示修改
                 string enPwd = EncryptionHelper.AesEncryptByHashKey("123456", username);
-                if( EnPassword == enPwd)
+                if (EnPassword == enPwd)
                 {
-                    IsInitPwd=true;
+                    IsInitPwd = true;
                 }
                 else
                 {
@@ -93,7 +93,7 @@ namespace RUINORERP.Business.Security
                 tb_UserInfo user = users[0];
                 if (user != null)
                 {
-                    if (GetAllAuthorizationInfo(appcontext, user))
+                    if (SetCurrentUserInfo(appcontext, user))
                     {
                         var claims = new Claim[]
                    {
@@ -117,22 +117,7 @@ namespace RUINORERP.Business.Security
                         //调用方法一
                         string mac1 = macHelper.GetMacByIpConfig();
                         appcontext.log.MAC = mac1;
-
                         appcontext.IsSuperUser = user.IsSuperUser;
-
-                        //GetAllAuthorizationInfo 里面已经实现
-                        //List<tb_ModuleDefinition> modlist = new List<tb_ModuleDefinition>();
-                        ////两套方式 正常是用P4表来控制的  超级管理员用默认菜单结构
-                        //modlist = appcontext.Db.CopyNew().Queryable<tb_ModuleDefinition>()
-                        //            .Includes(a => a.tb_MenuInfos, b => b.tb_ButtonInfos)
-                        //            .Includes(a => a.tb_MenuInfos, b => b.tb_FieldInfos)
-                        //            .Includes(a => a.tb_MenuInfos, b => b.tb_UIMenuPersonalizations, c => c.tb_userpersonalized)
-                        //            .Includes(a => a.tb_MenuInfos, b => b.tb_UIMenuPersonalizations, c => c.tb_UIQueryConditions)
-                        //            .Includes(a => a.tb_MenuInfos, b => b.tb_UIMenuPersonalizations, c => c.tb_UIGridSettings)
-                        //            .ToList();
-
-                        //appcontext.CurUserInfo.UserModList = modlist;
-
                         loginSucceed = true;
                     }
                 }
@@ -145,7 +130,6 @@ namespace RUINORERP.Business.Security
             else
             {
                 #region superUser
-
 
                 CurrentUserInfo cuser = new CurrentUserInfo();
                 cuser.Name = "超级管理员";
@@ -165,26 +149,7 @@ namespace RUINORERP.Business.Security
                             .Includes(a => a.tb_MenuInfos, b => b.tb_UIMenuPersonalizations, c => c.tb_UIGridSettings)
                             .ToList();
 
-                //List<tb_MenuInfo> menulist = new List<tb_MenuInfo>();
-                //menulist = appcontext.Db.CopyNew().Queryable<tb_MenuInfo>()
-                //            .Includes(a => a.tb_ButtonInfos)
-                //            .Includes(a => a.tb_FieldInfos)
-                //            .ToList();
 
-                //加载模块
-                //foreach (var mod in modlist)
-                //{
-                //    foreach (var menu in mod.tb_MenuInfos)
-                //    {
-                //        #region
-                //        tb_MenuInfo MenuInfo = menulist.FirstOrDefault(m => m.MenuID == menu.MenuID);
-                //        menu.tb_ButtonInfos = new List<tb_ButtonInfo>();
-                //        menu.tb_ButtonInfos.AddRange(MenuInfo.tb_ButtonInfos);
-                //        menu.tb_FieldInfos = new List<tb_FieldInfo>();
-                //        menu.tb_FieldInfos.AddRange(MenuInfo.tb_FieldInfos);
-                //        #endregion
-                //    }
-                //}
                 appcontext.CurUserInfo.UserModList = modlist;
                 loginSucceed = true;
                 #endregion
@@ -197,15 +162,15 @@ namespace RUINORERP.Business.Security
 
 
         /// <summary>
-        /// 
+        /// 将用户名和密码查出来的所有的资料都缓存到全局上下文appcontext
         /// </summary>
         /// <param name="appcontext"></param>
         /// <param name="user"></param>
-        /// <param name="roleInfo">正常登陆时传空，换角色时指定</param>
+        /// <param name="CurrentRole">正常登陆时传空，换角色时指定</param>
         /// <returns></returns>
         /// <exception cref="Exception"></exception>
-        public static bool GetAllAuthorizationInfo(ApplicationContext appcontext, tb_UserInfo user, tb_RoleInfo roleInfo = null)
-        
+        public static bool SetCurrentUserInfo(ApplicationContext appcontext, tb_UserInfo user, tb_RoleInfo CurrentRole = null)
+
         {
             bool loginSucceed = false;
             if (appcontext.CurUserInfo == null)
@@ -218,7 +183,7 @@ namespace RUINORERP.Business.Security
                 throw new Exception("您使用的账号没有所属员工。");
             }
             appcontext.CurUserInfo.Id = user.tb_employee.Employee_ID;
-            appcontext.CurrentUser.Employee_ID= user.tb_employee.Employee_ID;
+            appcontext.CurrentUser.Employee_ID = user.tb_employee.Employee_ID;
             appcontext.CurUserInfo.Name = user.tb_employee.Employee_Name;
             appcontext.CurrentUser.登陆时间 = System.DateTime.Now;
             appcontext.CompanyInfo = user.tb_employee.tb_department.tb_company;
@@ -243,16 +208,23 @@ namespace RUINORERP.Business.Security
                 roles.Add(item.tb_roleinfo);
             }
             appcontext.Roles = roles;
-            if (roleInfo == null)
+            if (CurrentRole == null)
             {
                 appcontext.CurrentRole = roles[0];
                 appcontext.CurrentUser_Role = CheckRoles[0];
             }
             else
             {
-                appcontext.CurrentRole = roleInfo;
-                appcontext.CurrentUser_Role = CheckRoles.FirstOrDefault(c => c.RoleID == roleInfo.RoleID);
+                appcontext.CurrentRole = CurrentRole;
+                appcontext.CurrentUser_Role = CheckRoles.FirstOrDefault(c => c.RoleID == CurrentRole.RoleID);
             }
+
+            //已经有了。
+            //将所有菜单按钮和字段都给到当前权限
+            //if (appcontext.CurrentRole != null)
+            //{
+            //    appcontext.CurrentRole = user.tb_User_Roles.Where(c => c.RoleID == CurrentRole.RoleID).FirstOrDefault().tb_roleinfo;
+            //}
 
             //每个用户和角色对应一个用户配置
             if (appcontext.CurrentUser_Role.tb_UserPersonalizeds == null)
@@ -276,94 +248,10 @@ namespace RUINORERP.Business.Security
                 appcontext.rolePropertyConfig = appcontext.CurrentRole.tb_rolepropertyconfig;
             }
 
-
             //获取工作台配置
             appcontext.WorkCenterConfigList = new List<tb_WorkCenterConfig>();
             appcontext.WorkCenterConfigList = appcontext.Db.CopyNew().Queryable<tb_WorkCenterConfig>().Where(c => c.RoleID == appcontext.CurrentRole.RoleID).ToList();
 
-            //下面所有能控制的东西都有路径和从属性一级传导到下一级 菜单名都可相同
-            //模块
-
-            //权限由上到下。上面没有，下面就不用处理了
-            List<tb_RoleInfo> UseRoles = new List<tb_RoleInfo>();
-            UseRoles.Add(appcontext.CurrentRole);
-            tb_UserInfoController<tb_UserInfo> ctrUser = appcontext.GetRequiredService<tb_UserInfoController<tb_UserInfo>>();
-            List<tb_RoleInfo> urs = ctrUser.QueryALLPowerByNavWithMoreInfo(UseRoles);
-            foreach (var item in urs)
-            {
-                //下面有多个循环
-                foreach (var sub in item.tb_P4Modules)
-                {
-                    #region  模块
-                    //可见才加入,可用的话，使用时控制
-                    if (sub.IsVisble)
-                    {
-                        tb_ModuleDefinition exmod = appcontext.CurUserInfo.UserModList.FirstOrDefault(w => w.ModuleName == sub.tb_moduledefinition.ModuleName);
-                        if (exmod == null)
-                        {
-                            appcontext.CurUserInfo.UserModList.Add(sub.tb_moduledefinition);
-                        }
-                        exmod = sub.tb_moduledefinition;
-                        if (exmod.tb_P4Menus == null)
-                        {
-                            //补充关系
-                            exmod.tb_P4Menus = new List<tb_P4Menu>();
-                        }
-                        #region  模块下的菜单
-                        List<tb_P4Menu> menuGX = item.tb_P4Menus.Where(p => p.ModuleID == exmod.ModuleID).ToList();
-                        foreach (var subMenu in menuGX)
-                        {
-                            //可见才加入
-                            if (subMenu.IsVisble && !exmod.tb_P4Menus.Contains(subMenu))
-                            {
-                                exmod.tb_P4Menus.Add(subMenu);
-
-                                #region  模块下的菜单下的按钮
-
-                                foreach (var subMenuBtn in item.tb_P4Buttons.Where(b => b.MenuID == subMenu.MenuID))
-                                {
-                                    if (subMenu.tb_menuinfo.tb_P4Buttons == null)
-                                    {
-                                        subMenu.tb_menuinfo.tb_P4Buttons = new List<tb_P4Button>();
-                                    }
-                                    //按钮可控属性多。只要不重复都加入
-                                    if (!subMenu.tb_menuinfo.tb_P4Buttons.Contains(subMenuBtn))
-                                    {
-                                        subMenu.tb_menuinfo.tb_P4Buttons.Add(subMenuBtn);
-                                    }
-                                }
-
-                                //subMenu.tb_menuinfo.tb_P4Buttons.AddRange(btnlist.Distinct().ToList());
-                                #endregion
-
-                                #region  模块下的菜单下的字段
-
-                                foreach (var subMenuField in item.tb_P4Fields.Where(f => f.MenuID == subMenu.MenuID))
-                                {
-                                    if (subMenu.tb_menuinfo.tb_P4Fields == null)
-                                    {
-                                        subMenu.tb_menuinfo.tb_P4Fields = new List<tb_P4Field>();
-                                    }
-
-                                    if (!subMenu.tb_menuinfo.tb_P4Fields.Contains(subMenuField))
-                                    {
-                                        subMenu.tb_menuinfo.tb_P4Fields.Add(subMenuField);
-                                    }
-                                }
-                                // appcontext.CurUserInfo.UserFieldList.AddRange(fieldlist.Distinct().ToList());
-                                #endregion
-                            }
-                        }
-                        #endregion
-
-                    }
-
-
-                    #endregion
-
-                }
-
-            }
             loginSucceed = true;
             return loginSucceed;
         }

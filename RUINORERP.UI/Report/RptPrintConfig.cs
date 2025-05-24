@@ -18,6 +18,10 @@ using Microsoft.Extensions.Logging;
 using FastReport;
 using RUINORERP.Business.CommService;
 using RUINORERP.UI.BaseForm;
+using AutoMapper;
+using NPOI.SS.Formula.Functions;
+using RUINORERP.Global;
+using RUINORERP.Common.Extensions;
 
 namespace RUINORERP.UI.Report
 {
@@ -200,7 +204,7 @@ namespace RUINORERP.UI.Report
         {
             GroupBoxSelectPrinter.Visible = chkSelectPrinter.Checked;
         }
-
+        BizTypeMapper Bizmapper = new BizTypeMapper();
         //设计报表
         private void PrintReport(RptMode rptMode)
         {
@@ -221,6 +225,21 @@ namespace RUINORERP.UI.Report
                     MessageBox.Show("请选择对应的模板.", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     return;
                 }
+
+                //打印次数提醒
+                if (PrintDataSources.Count > 0 && PrintDataSources[0].ContainsProperty("PrintStatus"))
+                {
+                    BizType bizType = Bizmapper.GetBizType(typeof(T).Name);
+                    int printCounter = PrintDataSources[0].GetPropertyValue("PrintStatus").ToString().ToInt();
+                    if (printCounter > 0)
+                    {
+                        if (MessageBox.Show($"当前【{bizType.ToString()}】已经打印过【{printCounter}】次,你确定要重新打印吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2) == DialogResult.No)
+                        {
+                            return;
+                        }
+                    }
+                }
+
 
                 TargetReport.RegisterData(PrintDataSources, "rd");
                 List<ICurrentUserInfo> currUserInfo = new List<ICurrentUserInfo>();

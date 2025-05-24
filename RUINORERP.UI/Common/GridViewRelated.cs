@@ -765,7 +765,15 @@ namespace RUINORERP.UI.Common
                     .Single();
                 menuPowerHelper.ExecuteEvents(RelatedMenuInfo, obj);
             }
-
+            if (tableName == typeof(tb_FM_PriceAdjustment).Name)
+            {
+                var obj = MainForm.Instance.AppContext.Db.Queryable<tb_FM_PriceAdjustment>()
+                    .Includes(c => c.tb_FM_PriceAdjustmentDetails)
+                    .WhereIF(billno.GetType() == typeof(long), c => c.AdjustId == billno.ToLong())
+                    .WhereIF(billno.GetType() == typeof(string), c => c.AdjustNo == billno.ToString())
+                    .Single();
+                menuPowerHelper.ExecuteEvents(RelatedMenuInfo, obj);
+            }
 
             if (tableName == typeof(tb_FM_PaymentRecord).Name)
             {

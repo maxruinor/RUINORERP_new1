@@ -95,7 +95,7 @@ namespace RUINORERP.UI
     {
 
 
-        
+
 
         //IOptions<T> 提供对配置设置的单例访问。它在整个应用程序生命周期中保持相同的实例，这意味着即使在配置文件更改后，通过 IOptions<T> 获取的值也不会改变
         //。
@@ -1098,7 +1098,7 @@ namespace RUINORERP.UI
             using (StatusBusy busy = new StatusBusy("系统正在加载数据... 请稍候"))
             {
                 //InitEditObjectValue();
-                LoadMenu();
+                LoadMenuOfTop();
                 LoadMenuPagesByLeft();
             }
         }
@@ -1107,7 +1107,7 @@ namespace RUINORERP.UI
         private void LoadMenuPagesByLeft()
         {
             kryptonNavigator1.Pages.Clear();
-            if (AppContext.IsSuperUser)
+            if (AppContext.CurUserInfo.Name == "超级管理员")
             {
                 foreach (tb_ModuleDefinition item in AppContext.CurUserInfo.UserModList)
                 {
@@ -1120,99 +1120,89 @@ namespace RUINORERP.UI
                                                         // p.ImageSmall = imageListSmall.Images[image];
                     KryptonTreeView TreeView1 = new KryptonTreeView();
                     TreeView1.MouseDoubleClick += TreeView1_DoubleClick;
-
                     TreeView1.NodeMouseDoubleClick += TreeView1_NodeMouseDoubleClick;
 
-                    if (item.tb_P4Menus != null)
+                    List<tb_MenuInfo> tempList = new List<tb_MenuInfo>();
+                    foreach (tb_MenuInfo menuInfo in item.tb_MenuInfos)
                     {
-                        List<tb_MenuInfo> tempList = new List<tb_MenuInfo>();
-                        foreach (tb_P4Menu P4Menu in item.tb_P4Menus.Where(c => c.IsVisble).ToList())
+                        //不重复,超级管理员。不用控制菜单启用可见
+                        if (!tempList.Contains(menuInfo))
                         {
-                            //不重复
-                            if (!tempList.Contains(P4Menu.tb_menuinfo))
-                            {
-                                tempList.Add(P4Menu.tb_menuinfo);
-                            }
-                        }
-                        //如果是顶级菜单是和模块名相同，跳过
-
-                        var modMenu = tempList.FirstOrDefault(c => c.Parent_id == 0 && c.MenuName == item.ModuleName);
-                        if (modMenu != null)
-                        {
-                            var subMenus = tempList.Where(c => c.Parent_id != 0 && c.Parent_id == modMenu.MenuID).OrderBy(c => c.Sort);
-                            foreach (tb_MenuInfo subMenu in subMenus)
-                            {
-                                if (!subMenu.IsEnabled || !subMenu.IsVisble)
-                                {
-                                    continue;
-                                }
-                                // Add the control for display inside the page
-                                TreeNode nodeRoot = new TreeNode();
-                                nodeRoot.Text = subMenu.MenuName;
-                                nodeRoot.Name = subMenu.MenuID.ToString();
-                                nodeRoot.Tag = subMenu;
-
-                                TreeView1.Nodes.Add(nodeRoot);
-                                List<tb_MenuInfo> sortlist = tempList.OrderBy(t => t.Sort).ToList();
-                                Bind(nodeRoot, sortlist, subMenu.MenuID);
-                                TreeView1.HideSelection = false;
-                                // TreeView1.Nodes.Clear();
-                                TreeView1.Dock = DockStyle.Fill;
-                                p.ClearFlags(KryptonPageFlags.DockingAllowClose);
-                                //TreeView1.Nodes[0].Expand();
-                                TreeView1.ExpandAll();
-                                p.Controls.Add(TreeView1);
-
-                            }
+                            tempList.Add(menuInfo);
                         }
 
+                    }
+                    //如果是顶级菜单是和模块名相同，跳过
+                    var modMenu = tempList.FirstOrDefault(c => c.Parent_id == 0 && c.MenuName == item.ModuleName);
+                    if (modMenu != null)
+                    {
+                        var subMenus = tempList.Where(c => c.Parent_id != 0 && c.Parent_id == modMenu.MenuID).OrderBy(c => c.Sort);
+                        foreach (tb_MenuInfo subMenu in subMenus)
+                        {
+                            // Add the control for display inside the page
+                            TreeNode nodeRoot = new TreeNode();
+                            nodeRoot.Text = subMenu.MenuName;
+                            nodeRoot.Name = subMenu.MenuID.ToString();
+                            nodeRoot.Tag = subMenu;
+
+                            TreeView1.Nodes.Add(nodeRoot);
+                            List<tb_MenuInfo> sortlist = tempList.OrderBy(t => t.Sort).ToList();
+                            Bind(nodeRoot, sortlist, subMenu.MenuID);
+                            TreeView1.HideSelection = false;
+                            // TreeView1.Nodes.Clear();
+                            TreeView1.Dock = DockStyle.Fill;
+                            p.ClearFlags(KryptonPageFlags.DockingAllowClose);
+                            //TreeView1.Nodes[0].Expand();
+                            TreeView1.ExpandAll();
+                            p.Controls.Add(TreeView1);
+
+                        }
                     }
                     kryptonNavigator1.Pages.Add(p);
                 }
             }
             else
             {
-                foreach (tb_ModuleDefinition item in AppContext.CurUserInfo.UserModList)
+                //先指定添加顶级菜单 即模块
+                foreach (tb_P4Menu ParentItem in AppContext.CurrentRole.tb_P4Menus.Where(c => c.tb_menuinfo.Parent_id == 0))
                 {
-                    if (!item.Visible) continue;
+                    if (!ParentItem.tb_menuinfo.IsVisble) continue;
 
                     // Create new page with title and image
                     KryptonPage p = new KryptonPage();
-                    p.Text = item.ModuleName;
-                    p.TextTitle = item.ModuleName;
-                    p.Name = item.ModuleID.ToString();
-                    p.TextDescription = item.ModuleName;// + item.BizType.ToString();
-                                                        // p.ImageSmall = imageListSmall.Images[image];
+                    p.Text = ParentItem.tb_menuinfo.MenuName;
+                    p.TextTitle = ParentItem.tb_menuinfo.MenuName;
+                    p.Name = ParentItem.ModuleID.ToString();
+                    p.TextDescription = ParentItem.tb_menuinfo.MenuName;// + item.BizType.ToString();
+                                                                        // p.ImageSmall = imageListSmall.Images[image];
 
-                    if (item.tb_P4Menus != null)
+                    #region 添加子菜单
+                    KryptonTreeView TreeView1 = new KryptonTreeView();
+                    TreeView1.MouseDoubleClick += TreeView1_DoubleClick;
+
+                    TreeView1.NodeMouseDoubleClick += TreeView1_NodeMouseDoubleClick;
+                    //如果是顶级菜单是和模块名相同，跳过
+
+                    List<tb_MenuInfo> tempList = new List<tb_MenuInfo>();
+                    foreach (tb_P4Menu P4Menu in AppContext.CurrentRole.tb_P4Menus.Where(c => c.tb_menuinfo.MenuID != ParentItem.MenuID).Where(c => c.IsVisble).ToList())
                     {
-                        KryptonTreeView TreeView1 = new KryptonTreeView();
-                        TreeView1.MouseDoubleClick += TreeView1_DoubleClick;
-
-                        TreeView1.NodeMouseDoubleClick += TreeView1_NodeMouseDoubleClick;
-                        //如果是顶级菜单是和模块名相同，跳过
-
-                        List<tb_MenuInfo> tempList = new List<tb_MenuInfo>();
-                        foreach (tb_P4Menu P4Menu in item.tb_P4Menus.Where(c => c.IsVisble).ToList())
+                        //不重复
+                        if (!tempList.Contains(P4Menu.tb_menuinfo) && P4Menu.tb_menuinfo.IsVisble)
                         {
-                            //不重复
-                            if (!tempList.Contains(P4Menu.tb_menuinfo) && P4Menu.tb_menuinfo.IsVisble)
-                            {
-                                tempList.Add(P4Menu.tb_menuinfo);
-                            }
+                            tempList.Add(P4Menu.tb_menuinfo);
                         }
-                        List<tb_MenuInfo> sortlist = tempList.OrderBy(t => t.Sort).ToList();
-                        Bind(TreeView1, sortlist);
-                        // Bind(nodeRoot, tempList, P4Menu.tb_menuinfo.MenuID);
-                        TreeView1.HideSelection = false;
-                        // TreeView1.Nodes.Clear();
-                        TreeView1.Dock = DockStyle.Fill;
-                        p.ClearFlags(KryptonPageFlags.DockingAllowClose);
-                        // TreeView1.Nodes[0].Expand();
-                        TreeView1.ExpandAll();
-                        p.Controls.Add(TreeView1);
-
                     }
+                    List<tb_MenuInfo> sortlist = tempList.OrderBy(t => t.Sort).ToList();
+                    Bind(TreeView1, sortlist, ParentItem);
+                    TreeView1.HideSelection = false;
+                    // TreeView1.Nodes.Clear();
+                    TreeView1.Dock = DockStyle.Fill;
+                    p.ClearFlags(KryptonPageFlags.DockingAllowClose);
+                    // TreeView1.Nodes[0].Expand();
+                    TreeView1.ExpandAll();
+                    p.Controls.Add(TreeView1);
+                    #endregion
+
                     kryptonNavigator1.Pages.Add(p);
                 }
             }
@@ -1238,10 +1228,10 @@ namespace RUINORERP.UI
 
 
         //递归方法
-        private void Bind(KryptonTreeView tree, List<tb_MenuInfo> resourceList)
+        private void Bind(KryptonTreeView tree, List<tb_MenuInfo> resourceList, tb_P4Menu ParentItem)
         {
             //            var childList = resourceList.Where(t => t.Parent_id == 0).OrderBy(m => m.CaptionCN).ThenBy(t => t.Sort);
-            var childList = resourceList.Where(t => t.Parent_id == 0).OrderBy(m => m.Sort);
+            var childList = resourceList.Where(t => t.Parent_id == ParentItem.MenuID).OrderBy(m => m.Sort);
             foreach (tb_MenuInfo tb_menuinfo in childList)
             {
                 TreeNode nodeRoot = new TreeNode();
@@ -1257,9 +1247,6 @@ namespace RUINORERP.UI
         //递归方法
         private void Bind(TreeNode parNode, List<tb_MenuInfo> resourceList, long nodeId)
         {
-            //   List<tb_MenuInfo> mlist = resourceList.FindAll(delegate (tb_MenuInfo p) { return p.Parent_id == nodeId; });
-            //  var sortlist = mlist.OrderBy(o => o.CaptionCN).ThenBy(t => t.Sort).ToList();
-            // var childList = resourceList.Where(t => t.Parent_id == nodeId).OrderBy(m => m.CaptionCN).ThenBy(t => t.Sort);
             var childList = resourceList.Where(t => t.Parent_id == nodeId).OrderBy(t => t.Sort);
             foreach (var nodeObj in childList)
             {
@@ -1346,7 +1333,7 @@ namespace RUINORERP.UI
                 rs = true;
                 if (AppContext.CurUserInfo != null)
                 {
-                    if (AppContext.CurUserInfo.UserInfo!=null && AppContext.CurUserInfo.UserInfo.tb_employee!=null)
+                    if (AppContext.CurUserInfo.UserInfo != null && AppContext.CurUserInfo.UserInfo.tb_employee != null)
                     {
                         this.SystemOperatorState.Text = $"登陆: {AppContext.CurUserInfo.UserInfo.UserName}-{AppContext.CurUserInfo.UserInfo.tb_employee.Employee_Name}【{AppContext.CurrentRole.RoleName}】";
                     }
@@ -1354,7 +1341,7 @@ namespace RUINORERP.UI
                     {
                         this.SystemOperatorState.Text = $"登陆: {AppContext.CurUserInfo.UserInfo.UserName}【{AppContext.CurrentRole.RoleName}】";
                     }
-                    
+
                 }
 
                 //加载角色
@@ -1684,7 +1671,7 @@ namespace RUINORERP.UI
         /// <summary>
         /// 只执行一次,初始化菜单
         /// </summary>
-        private void InitMenu()
+        private async void InitMenu()
         {
             //List<MenuAssemblyInfo> list = UIHelper.RegisterForm();
             //CreateMenu(list, 0, 0);
@@ -1692,7 +1679,7 @@ namespace RUINORERP.UI
             InitModuleMenu init = Startup.GetFromFac<InitModuleMenu>();
             try
             {
-                init.InitModuleAndMenu();
+                await init.InitModuleAndMenuAsync();
             }
             catch (Exception ex)
             {
@@ -1832,7 +1819,7 @@ namespace RUINORERP.UI
         /// 缓存给后面使用的菜单列表，注意权限控制
         /// </summary>
         internal List<tb_MenuInfo> MenuList = new List<tb_MenuInfo>();
-        private void LoadMenu()
+        private void LoadMenuOfTop()
         {
             using (StatusBusy busy = new StatusBusy("系统正在初始化 请稍候"))
             {
@@ -2408,7 +2395,7 @@ namespace RUINORERP.UI
             using (StatusBusy busy = new StatusBusy("系统正在加载数据... 请稍候"))
             {
                 //InitEditObjectValue();
-                LoadMenu();
+                LoadMenuOfTop();
                 LoadMenuPagesByLeft();
             }
         }
@@ -2646,7 +2633,7 @@ namespace RUINORERP.UI
                     //相当于注销一次
                     ClearUI();
                     AppContext.CurUserInfo.UserModList.Clear();
-                    PTPrincipal.GetAllAuthorizationInfo(AppContext, AppContext.CurUserInfo.UserInfo, roleInfo);
+                    PTPrincipal.SetCurrentUserInfo(AppContext, AppContext.CurUserInfo.UserInfo, roleInfo);
                     //await InitConfig();
                     LoadUIMenus();
                     LoadUIForIM_LogPages();

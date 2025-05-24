@@ -86,6 +86,8 @@ namespace RUINORERP.Global
         /// </summary>
         Link,
 
+        //工具栏按钮
+        Toolbar
     }
 
     /// <summary>

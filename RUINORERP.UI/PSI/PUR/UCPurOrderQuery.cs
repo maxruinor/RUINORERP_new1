@@ -40,7 +40,7 @@ namespace RUINORERP.UI.PSI.PUR
             base.RelatedBillEditCol = (c => c.PurOrderNo);
         }
 
-        public List<ContextMenuController> AddContextMenu()
+        public override List<ContextMenuController> AddContextMenu()
         {
             List<EventHandler> ContextClickList = new List<EventHandler>();
             ContextClickList.Add(NewSumDataGridView_转为采购入库单);

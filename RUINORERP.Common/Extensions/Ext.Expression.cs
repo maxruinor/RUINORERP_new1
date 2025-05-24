@@ -430,7 +430,23 @@ namespace RUINORERP.Common.Extensions
             };
         }
 
+        // 辅助方法：从表达式获取成员名称
+        private static string GetMemberName<T, TProperty>(Expression<Func<T, TProperty>> expression)
+        {
+            if (expression.Body is MemberExpression memberExpression)
+            {
+                return memberExpression.Member.Name;
+            }
 
+            if (expression.Body is UnaryExpression unaryExpression &&
+                unaryExpression.NodeType == ExpressionType.Convert &&
+                unaryExpression.Operand is MemberExpression operandMemberExpression)
+            {
+                return operandMemberExpression.Member.Name;
+            }
+
+            throw new ArgumentException("表达式不是有效的成员访问表达式", nameof(expression));
+        }
 
         /// <summary>
         /// 获取表达式中的固定值

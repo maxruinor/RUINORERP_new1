@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/13/2024 18:44:00
+// 时间：05/24/2025 18:28:29
 // **************************************
 using AutoMapper;
 using RUINORERP.IRepository.Base;
@@ -20,12 +20,12 @@ using System.Collections.Generic;
 namespace RUINORERP.Services
 {
     /// <summary>
-    /// 模块权限表（暂时没有使用，逻辑上用菜单的代替了）
+    /// 价格调整单明细
     /// </summary>
-    public partial class tb_P4ModuleServices : BaseServices<tb_P4Module>, Itb_P4ModuleServices
+    public partial class tb_FM_PriceAdjustmentDetailServices : BaseServices<tb_FM_PriceAdjustmentDetail>, Itb_FM_PriceAdjustmentDetailServices
     {
         IMapper _mapper;
-        public tb_P4ModuleServices(IMapper mapper, IBaseRepository<tb_P4Module> dal)
+        public tb_FM_PriceAdjustmentDetailServices(IMapper mapper, IBaseRepository<tb_FM_PriceAdjustmentDetail> dal)
         {
             this._mapper = mapper;
             base.BaseDal = dal;

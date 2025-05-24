@@ -149,13 +149,7 @@ namespace RUINORERP.Model
         //ModuleID.FK_TB_P4MEN_REFERENCE_TB_MODUL)
         //tb_ModuleDefinition.ModuleID)
 
-        //[Browsable(false)]打印报表时的数据源会不显示
-        [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_P4Module.ModuleID))]
-        public virtual List<tb_P4Module> tb_P4Modules { get; set; }
-        //tb_P4Module.ModuleID)
-        //ModuleID.FK_TB_P4MOD_REFERENCE_TB_MODUL)
-        //tb_ModuleDefinition.ModuleID)
+        
 
 
         #endregion

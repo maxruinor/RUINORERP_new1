@@ -326,6 +326,169 @@ namespace RUINORERP.Business
             return rmr;
         }
 
+        /// <summary>
+        ///  生成应收应付
+        /// </summary>
+        /// <param name="entity">返回应收付款单给UI进一步检查</param>
+        /// <returns></returns>
+        public async Task<tb_FM_ReceivablePayable> CreateReceivablePayable(tb_FM_PriceAdjustment entity)
+        {
+
+            #region 创建应收款单
+
+            tb_FM_ReceivablePayable payable = new tb_FM_ReceivablePayable();
+            payable = mapper.Map<tb_FM_ReceivablePayable>(entity);
+            payable.ApprovalResults = null;
+            payable.ApprovalStatus = (int)ApprovalStatus.未审核;
+            payable.Approver_at = null;
+            payable.Approver_by = null;
+            payable.PrintStatus = 0;
+            payable.ActionStatus = ActionStatus.新增;
+            payable.ARAPStatus = (int)ARAPStatus.草稿;
+            payable.ApprovalOpinions = "";
+            payable.Modified_at = null;
+            payable.Modified_by = null;
+            payable.SourceBillNo = entity.AdjustNo;
+            payable.SourceBillId = entity.AdjustId;
+            if (entity.ReceivePaymentType == (int)ReceivePaymentType.收款)
+            {
+                payable.SourceBizType = (int)BizType.销售价格调整单;
+                payable.ARAPNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.应收款单);
+                payable.Remark = $"销售出库单调整后：{entity.SourceBillNo} 的应收款";
+            }
+            else
+            {
+                payable.ARAPNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.应付款单);
+                payable.SourceBizType = (int)BizType.采购价格调整单;
+                payable.Remark = $"采购入库单调整后：{entity.SourceBillNo} 的应收款";
+            }
+
+            //如果部门还是没有值 则从缓存中加载,如果项目有所属部门的话
+            if (payable.ProjectGroup_ID.HasValue && !payable.DepartmentID.HasValue)
+            {
+                var projectgroup = BizCacheHelper.Instance.GetEntity<tb_ProjectGroup>(entity.ProjectGroup_ID);
+                if (projectgroup != null && projectgroup.ToString() != "System.Object")
+                {
+                    if (projectgroup is tb_ProjectGroup pj)
+                    {
+                        entity.tb_projectgroup = pj;
+                        payable.DepartmentID = pj.DepartmentID;
+                    }
+                }
+                else
+                {
+                    //db查询
+                    entity.tb_projectgroup = await _appContext.GetRequiredService<tb_ProjectGroupController<tb_ProjectGroup>>().BaseQueryByIdAsync(entity.ProjectGroup_ID);
+                    payable.DepartmentID = entity.tb_projectgroup.DepartmentID;
+                }
+            }
+            //如果部门还是没有值 则从缓存中加载,如果项目有所属部门的话
+            if (payable.ProjectGroup_ID.HasValue && !payable.DepartmentID.HasValue)
+            {
+                var projectgroup = BizCacheHelper.Instance.GetEntity<tb_ProjectGroup>(entity.ProjectGroup_ID);
+                if (projectgroup != null && projectgroup.ToString() != "System.Object")
+                {
+                    if (projectgroup is tb_ProjectGroup pj)
+                    {
+                        entity.tb_projectgroup = pj;
+                        payable.DepartmentID = pj.DepartmentID;
+                    }
+                }
+                else
+                {
+                    //db查询
+                    entity.tb_projectgroup = await _appContext.GetRequiredService<tb_ProjectGroupController<tb_ProjectGroup>>().BaseQueryByIdAsync(entity.ProjectGroup_ID);
+                    payable.DepartmentID = entity.tb_projectgroup.DepartmentID;
+                }
+            }
+
+            payable.Currency_ID = entity.Currency_ID;
+            var obj = BizCacheHelper.Instance.GetEntity<tb_CustomerVendor>(entity.CustomerVendor_ID);
+            if (obj != null && obj.ToString() != "System.Object")
+            {
+                if (obj is tb_CustomerVendor cv)
+                {
+                    entity.tb_customervendor = cv;
+                }
+            }
+            else
+            {
+                //db查询
+                entity.tb_customervendor = await _appContext.GetRequiredService<tb_CustomerVendorController<tb_CustomerVendor>>().BaseQueryByIdAsync(entity.CustomerVendor_ID);
+            }
+
+            if (entity.tb_customervendor.CustomerCreditDays.HasValue)
+            {
+                // 从销售出库日期开始计算到期日
+                //应收账期 的到期时间
+                payable.DueDate = entity.AdjustDate.AddDays(entity.tb_customervendor.CustomerCreditDays.Value).AddDays(1).AddTicks(-1);
+            }
+
+
+
+            payable.ExchangeRate = entity.ExchangeRate;
+
+
+            List<tb_FM_ReceivablePayableDetail> details = mapper.Map<List<tb_FM_ReceivablePayableDetail>>(entity.tb_FM_PriceAdjustmentDetails);
+
+            for (global::System.Int32 i = 0; i < details.Count; i++)
+            {
+
+                details[i].ExchangeRate = entity.ExchangeRate;
+                details[i].ActionStatus = ActionStatus.新增;
+
+                View_ProdDetail Prodobj = BizCacheHelper.Instance.GetEntity<View_ProdDetail>(details[i].ProdDetailID);
+                if (Prodobj != null && Prodobj.GetType().Name != "Object" && Prodobj is View_ProdDetail prodDetail)
+                {
+                    if (prodDetail != null && Prodobj.Unit_ID != null && Prodobj.Unit_ID.HasValue)
+                    {
+                        details[i].Unit_ID = Prodobj.Unit_ID.Value;
+                    }
+                }
+            }
+
+            payable.tb_FM_ReceivablePayableDetails = details;
+
+            //外币时
+            if (_appContext.BaseCurrency.Currency_ID != entity.Currency_ID)
+            {
+                payable.ForeignBalanceAmount = entity.TotalForeignDiffAmount;
+                payable.ForeignPaidAmount = 0;
+                payable.TotalForeignPayableAmount = entity.TotalForeignDiffAmount;
+            }
+            else
+            {
+                //本币时
+                payable.LocalBalanceAmount = entity.TotalLocalDiffAmount;
+                payable.LocalPaidAmount = 0;
+                payable.TotalLocalPayableAmount = entity.TotalLocalDiffAmount;
+            }
+
+
+
+            Business.BusinessHelper.Instance.InitEntity(payable);
+            payable.ARAPStatus = (long)ARAPStatus.待审核;
+
+            #endregion
+            //var ctrpay = _appContext.GetRequiredServiceByName<BaseController<tb_FM_ReceivablePayable>>(typeof(T).Name + "Controller");
+            //ReturnMainSubResults<tb_FM_ReceivablePayable> rmr = await ctrpay.BaseSaveOrUpdateWithChild<tb_FM_ReceivablePayable>(payable);
+            //if (rmr.Succeeded)
+            //{
+            //    var paybalbe = rmr.ReturnObject as tb_FM_ReceivablePayable;
+            //    paybalbe.ApprovalOpinions = "自动审核通过";
+            //    ReturnResults<tb_FM_ReceivablePayable> rr = await ctrpay.ApprovalAsync(paybalbe);
+            //    if (rr.Succeeded)
+            //    {
+            //        return rmr;
+            //    }
+            //    else
+            //    {
+            //rmr.Succeeded = false;
+            //        rmr.ErrorMsg = rr.ErrorMsg;
+            //    }
+            //}
+            return payable;
+        }
 
         /// <summary>
         /// 创建应收款单，并且自动审核，因为后面还会自动去冲预收款单

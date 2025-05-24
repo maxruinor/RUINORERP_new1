@@ -81,6 +81,7 @@
             this.txtApprovalOpinions = new Krypton.Toolkit.KryptonTextBox();
             this.txtTotalAmount = new Krypton.Toolkit.KryptonTextBox();
             this.lblTotalAmount = new Krypton.Toolkit.KryptonLabel();
+            this.chkIsCustomizedOrder = new Krypton.Toolkit.KryptonCheckBox();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceSub)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1)).BeginInit();
@@ -116,6 +117,7 @@
             // 
             // kryptonSplitContainer1.Panel1
             // 
+            this.kryptonSplitContainer1.Panel1.Controls.Add(this.chkIsCustomizedOrder);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.lblCurrency_ID);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.cmbCurrency_ID);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.lblExchangeRate);
@@ -614,6 +616,14 @@
             this.lblTotalAmount.TabIndex = 117;
             this.lblTotalAmount.Values.Text = "总金额";
             // 
+            // chkIsCustomizedOrder
+            // 
+            this.chkIsCustomizedOrder.Location = new System.Drawing.Point(1024, 122);
+            this.chkIsCustomizedOrder.Name = "chkIsCustomizedOrder";
+            this.chkIsCustomizedOrder.Size = new System.Drawing.Size(62, 20);
+            this.chkIsCustomizedOrder.TabIndex = 197;
+            this.chkIsCustomizedOrder.Values.Text = "定制单";
+            // 
             // UCPurOrder
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
@@ -708,5 +718,6 @@
         private Krypton.Toolkit.KryptonTextBox txtExchangeRate;
         private Krypton.Toolkit.KryptonLabel lblCurrency_ID;
         private Krypton.Toolkit.KryptonComboBox cmbCurrency_ID;
+        private Krypton.Toolkit.KryptonCheckBox chkIsCustomizedOrder;
     }
 }

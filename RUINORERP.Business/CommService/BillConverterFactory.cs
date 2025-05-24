@@ -345,6 +345,16 @@ namespace RUINORERP.Business.CommService
                         cbd.BillNo = Paymentrecord.PaymentNo;
                     }
                     break;
+                case BizType.销售价格调整单:
+                case BizType.采购价格调整单:
+                    var PriceAdjustment = Entity as tb_FM_PriceAdjustment;
+                    if (PriceAdjustment != null)
+                    {
+                        cbd.BillID = PriceAdjustment.AdjustId;
+                        cbd.BillNo = PriceAdjustment.AdjustNo;
+                    }
+                    break;
+
                 case BizType.应付款单:
                 case BizType.应收款单:
                     var ReceivablePayable = Entity as tb_FM_ReceivablePayable;

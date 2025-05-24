@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：03/14/2025 20:39:46
+// 时间：05/24/2025 18:28:26
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -29,32 +29,32 @@ using RUINORERP.Common.Helper;
 namespace RUINORERP.Business
 {
     /// <summary>
-    /// 模块权限表（暂时没有使用，逻辑上用菜单的代替了）
+    /// 价格调整单
     /// </summary>
-    public partial class tb_P4ModuleController<T>:BaseController<T> where T : class
+    public partial class tb_FM_PriceAdjustmentController<T>:BaseController<T> where T : class
     {
         /// <summary>
         /// 本为私有修改为公有，暴露出来方便使用
         /// </summary>
         //public readonly IUnitOfWorkManage _unitOfWorkManage;
         //public readonly ILogger<BaseController<T>> _logger;
-        public Itb_P4ModuleServices _tb_P4ModuleServices { get; set; }
+        public Itb_FM_PriceAdjustmentServices _tb_FM_PriceAdjustmentServices { get; set; }
        // private readonly ApplicationContext _appContext;
        
-        public tb_P4ModuleController(ILogger<tb_P4ModuleController<T>> logger, IUnitOfWorkManage unitOfWorkManage,tb_P4ModuleServices tb_P4ModuleServices , ApplicationContext appContext = null): base(logger, unitOfWorkManage, appContext)
+        public tb_FM_PriceAdjustmentController(ILogger<tb_FM_PriceAdjustmentController<T>> logger, IUnitOfWorkManage unitOfWorkManage,tb_FM_PriceAdjustmentServices tb_FM_PriceAdjustmentServices , ApplicationContext appContext = null): base(logger, unitOfWorkManage, appContext)
         {
             _logger = logger;
            _unitOfWorkManage = unitOfWorkManage;
-           _tb_P4ModuleServices = tb_P4ModuleServices;
+           _tb_FM_PriceAdjustmentServices = tb_FM_PriceAdjustmentServices;
             _appContext = appContext;
         }
       
         
-        public ValidationResult Validator(tb_P4Module info)
+        public ValidationResult Validator(tb_FM_PriceAdjustment info)
         {
 
-           // tb_P4ModuleValidator validator = new tb_P4ModuleValidator();
-           tb_P4ModuleValidator validator = _appContext.GetRequiredService<tb_P4ModuleValidator>();
+           // tb_FM_PriceAdjustmentValidator validator = new tb_FM_PriceAdjustmentValidator();
+           tb_FM_PriceAdjustmentValidator validator = _appContext.GetRequiredService<tb_FM_PriceAdjustmentValidator>();
             ValidationResult results = validator.Validate(info);
             return results;
         }
@@ -77,26 +77,26 @@ namespace RUINORERP.Business
         /// </summary>
         /// <param name="entity"></param>
         /// <returns></returns>
-        public async Task<ReturnResults<tb_P4Module>> SaveOrUpdate(tb_P4Module entity)
+        public async Task<ReturnResults<tb_FM_PriceAdjustment>> SaveOrUpdate(tb_FM_PriceAdjustment entity)
         {
-            ReturnResults<tb_P4Module> rr = new ReturnResults<tb_P4Module>();
-            tb_P4Module Returnobj;
+            ReturnResults<tb_FM_PriceAdjustment> rr = new ReturnResults<tb_FM_PriceAdjustment>();
+            tb_FM_PriceAdjustment Returnobj;
             try
             {
                 //生成时暂时只考虑了一个主键的情况
-                if (entity.P4Mod_ID > 0)
+                if (entity.AdjustId > 0)
                 {
-                    bool rs = await _tb_P4ModuleServices.Update(entity);
+                    bool rs = await _tb_FM_PriceAdjustmentServices.Update(entity);
                     if (rs)
                     {
-                        MyCacheManager.Instance.UpdateEntityList<tb_P4Module>(entity);
+                        MyCacheManager.Instance.UpdateEntityList<tb_FM_PriceAdjustment>(entity);
                     }
                     Returnobj = entity;
                 }
                 else
                 {
-                    Returnobj = await _tb_P4ModuleServices.AddReEntityAsync(entity);
-                    MyCacheManager.Instance.UpdateEntityList<tb_P4Module>(entity);
+                    Returnobj = await _tb_FM_PriceAdjustmentServices.AddReEntityAsync(entity);
+                    MyCacheManager.Instance.UpdateEntityList<tb_FM_PriceAdjustment>(entity);
                 }
 
                 rr.ReturnObject = Returnobj;
@@ -120,24 +120,24 @@ namespace RUINORERP.Business
         public async override Task<ReturnResults<T>>  BaseSaveOrUpdate(T model)
         {
             ReturnResults<T> rr = new ReturnResults<T>();
-            tb_P4Module entity = model as tb_P4Module;
+            tb_FM_PriceAdjustment entity = model as tb_FM_PriceAdjustment;
             T Returnobj;
             try
             {
                 //生成时暂时只考虑了一个主键的情况
-                if (entity.P4Mod_ID > 0)
+                if (entity.AdjustId > 0)
                 {
-                    bool rs = await _tb_P4ModuleServices.Update(entity);
+                    bool rs = await _tb_FM_PriceAdjustmentServices.Update(entity);
                     if (rs)
                     {
-                        MyCacheManager.Instance.UpdateEntityList<tb_P4Module>(entity);
+                        MyCacheManager.Instance.UpdateEntityList<tb_FM_PriceAdjustment>(entity);
                     }
                     Returnobj = entity as T;
                 }
                 else
                 {
-                    Returnobj = await _tb_P4ModuleServices.AddReEntityAsync(entity) as T ;
-                    MyCacheManager.Instance.UpdateEntityList<tb_P4Module>(entity);
+                    Returnobj = await _tb_FM_PriceAdjustmentServices.AddReEntityAsync(entity) as T ;
+                    MyCacheManager.Instance.UpdateEntityList<tb_FM_PriceAdjustment>(entity);
                 }
 
                 rr.ReturnObject = Returnobj;
@@ -154,10 +154,10 @@ namespace RUINORERP.Business
         
         public async override Task<List<T>> BaseQueryAsync(string wheresql) 
         {
-            List<T> list = await _tb_P4ModuleServices.QueryAsync(wheresql) as List<T>;
+            List<T> list = await _tb_FM_PriceAdjustmentServices.QueryAsync(wheresql) as List<T>;
             foreach (var item in list)
             {
-                tb_P4Module entity = item as tb_P4Module;
+                tb_FM_PriceAdjustment entity = item as tb_FM_PriceAdjustment;
                 entity.HasChanged = false;
             }
             if (list != null)
@@ -169,10 +169,10 @@ namespace RUINORERP.Business
         
         public async override Task<List<T>> BaseQueryAsync() 
         {
-            List<T> list = await _tb_P4ModuleServices.QueryAsync() as List<T>;
+            List<T> list = await _tb_FM_PriceAdjustmentServices.QueryAsync() as List<T>;
             foreach (var item in list)
             {
-                tb_P4Module entity = item as tb_P4Module;
+                tb_FM_PriceAdjustment entity = item as tb_FM_PriceAdjustment;
                 entity.HasChanged = false;
             }
             if (list != null)
@@ -185,12 +185,12 @@ namespace RUINORERP.Business
         
         public async override Task<bool> BaseDeleteAsync(T model)
         {
-            tb_P4Module entity = model as tb_P4Module;
-            bool rs = await _tb_P4ModuleServices.Delete(entity);
+            tb_FM_PriceAdjustment entity = model as tb_FM_PriceAdjustment;
+            bool rs = await _tb_FM_PriceAdjustmentServices.Delete(entity);
             if (rs)
             {
                 ////生成时暂时只考虑了一个主键的情况
-                MyCacheManager.Instance.DeleteEntityList<tb_P4Module>(entity);
+                MyCacheManager.Instance.DeleteEntityList<tb_FM_PriceAdjustment>(entity);
             }
             return rs;
         }
@@ -198,23 +198,23 @@ namespace RUINORERP.Business
         public async override Task<bool> BaseDeleteAsync(List<T> models)
         {
             bool rs=false;
-            List<tb_P4Module> entitys = models as List<tb_P4Module>;
-            int c = await _unitOfWorkManage.GetDbClient().Deleteable<tb_P4Module>(entitys).ExecuteCommandAsync();
+            List<tb_FM_PriceAdjustment> entitys = models as List<tb_FM_PriceAdjustment>;
+            int c = await _unitOfWorkManage.GetDbClient().Deleteable<tb_FM_PriceAdjustment>(entitys).ExecuteCommandAsync();
             if (c>0)
             {
                 rs=true;
                 ////生成时暂时只考虑了一个主键的情况
-                 long[] result = entitys.Select(e => e.P4Mod_ID).ToArray();
-                MyCacheManager.Instance.DeleteEntityList<tb_P4Module>(result);
+                 long[] result = entitys.Select(e => e.AdjustId).ToArray();
+                MyCacheManager.Instance.DeleteEntityList<tb_FM_PriceAdjustment>(result);
             }
             return rs;
         }
         
         public override ValidationResult BaseValidator(T info)
         {
-            //tb_P4ModuleValidator validator = new tb_P4ModuleValidator();
-           tb_P4ModuleValidator validator = _appContext.GetRequiredService<tb_P4ModuleValidator>();
-            ValidationResult results = validator.Validate(info as tb_P4Module);
+            //tb_FM_PriceAdjustmentValidator validator = new tb_FM_PriceAdjustmentValidator();
+           tb_FM_PriceAdjustmentValidator validator = _appContext.GetRequiredService<tb_FM_PriceAdjustmentValidator>();
+            ValidationResult results = validator.Validate(info as tb_FM_PriceAdjustment);
             return results;
         }
         
@@ -235,7 +235,7 @@ namespace RUINORERP.Business
             try
             {
 
-                tb_P4Module entity = model as tb_P4Module;
+                tb_FM_PriceAdjustment entity = model as tb_FM_PriceAdjustment;
                 command.UndoOperation = delegate ()
                 {
                     //Undo操作会执行到的代码
@@ -244,32 +244,27 @@ namespace RUINORERP.Business
                        // 开启事务，保证数据一致性
                 _unitOfWorkManage.BeginTran();
                 
-            if (entity.P4Mod_ID > 0)
+            if (entity.AdjustId > 0)
             {
             
-                                 var result= await _unitOfWorkManage.GetDbClient().Updateable<tb_P4Module>(entity as tb_P4Module)
+                             rs = await _unitOfWorkManage.GetDbClient().UpdateNav<tb_FM_PriceAdjustment>(entity as tb_FM_PriceAdjustment)
+                        .Include(m => m.tb_FM_PriceAdjustmentDetails)
                     .ExecuteCommandAsync();
-                    if (result > 0)
-                    {
-                        rs = true;
-                    }
-            }
+                 }
         else    
         {
-                                  var result= await _unitOfWorkManage.GetDbClient().Insertable<tb_P4Module>(entity as tb_P4Module)
-                    .ExecuteCommandAsync();
-                    if (result > 0)
-                    {
-                        rs = true;
-                    }
-                                              
+                        rs = await _unitOfWorkManage.GetDbClient().InsertNav<tb_FM_PriceAdjustment>(entity as tb_FM_PriceAdjustment)
+                .Include(m => m.tb_FM_PriceAdjustmentDetails)
+         
+                .ExecuteCommandAsync();
+                                          
                      
         }
         
                 // 注意信息的完整性
                 _unitOfWorkManage.CommitTran();
                 rsms.ReturnObject = entity as T ;
-                entity.PrimaryKeyID = entity.P4Mod_ID;
+                entity.PrimaryKeyID = entity.AdjustId;
                 rsms.Succeeded = rs;
             }
             catch (Exception ex)
@@ -292,21 +287,19 @@ namespace RUINORERP.Business
 
         public async override Task<List<T>> BaseQueryByAdvancedNavAsync(bool useLike, object dto)
         {
-            var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<tb_P4Module>()
-                                //这里一般是子表，或没有一对多外键的情况 ，用自动的只是为了语法正常一般不会调用这个方法
-                .IncludesAllFirstLayer()//自动更新导航 只能两层。这里项目中有时会失效，具体看文档
-                                .Where(useLike, dto);
+            var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<tb_FM_PriceAdjustment>()
+                                .Includes(m => m.tb_FM_PriceAdjustmentDetails)
+                                        .Where(useLike, dto);
             return await querySqlQueryable.ToListAsync()as List<T>;
         }
 
 
         public async override Task<bool> BaseDeleteByNavAsync(T model) 
         {
-            tb_P4Module entity = model as tb_P4Module;
-             bool rs = await _unitOfWorkManage.GetDbClient().DeleteNav<tb_P4Module>(m => m.P4Mod_ID== entity.P4Mod_ID)
-                                //这里一般是子表，或没有一对多外键的情况 ，用自动的只是为了语法正常一般不会调用这个方法
-                .IncludesAllFirstLayer()//自动更新导航 只能两层。这里项目中有时会失效，具体看文档
-                                .ExecuteCommandAsync();
+            tb_FM_PriceAdjustment entity = model as tb_FM_PriceAdjustment;
+             bool rs = await _unitOfWorkManage.GetDbClient().DeleteNav<tb_FM_PriceAdjustment>(m => m.AdjustId== entity.AdjustId)
+                                .Include(m => m.tb_FM_PriceAdjustmentDetails)
+                                        .ExecuteCommandAsync();
             if (rs)
             {
                 //////生成时暂时只考虑了一个主键的情况
@@ -318,60 +311,60 @@ namespace RUINORERP.Business
         
         
         
-        public tb_P4Module AddReEntity(tb_P4Module entity)
+        public tb_FM_PriceAdjustment AddReEntity(tb_FM_PriceAdjustment entity)
         {
-            tb_P4Module AddEntity =  _tb_P4ModuleServices.AddReEntity(entity);
-            MyCacheManager.Instance.UpdateEntityList<tb_P4Module>(AddEntity);
+            tb_FM_PriceAdjustment AddEntity =  _tb_FM_PriceAdjustmentServices.AddReEntity(entity);
+            MyCacheManager.Instance.UpdateEntityList<tb_FM_PriceAdjustment>(AddEntity);
             entity.ActionStatus = ActionStatus.无操作;
             return AddEntity;
         }
         
-         public async Task<tb_P4Module> AddReEntityAsync(tb_P4Module entity)
+         public async Task<tb_FM_PriceAdjustment> AddReEntityAsync(tb_FM_PriceAdjustment entity)
         {
-            tb_P4Module AddEntity = await _tb_P4ModuleServices.AddReEntityAsync(entity);
-            MyCacheManager.Instance.UpdateEntityList<tb_P4Module>(AddEntity);
+            tb_FM_PriceAdjustment AddEntity = await _tb_FM_PriceAdjustmentServices.AddReEntityAsync(entity);
+            MyCacheManager.Instance.UpdateEntityList<tb_FM_PriceAdjustment>(AddEntity);
             entity.ActionStatus = ActionStatus.无操作;
             return AddEntity;
         }
         
-        public async Task<long> AddAsync(tb_P4Module entity)
+        public async Task<long> AddAsync(tb_FM_PriceAdjustment entity)
         {
-            long id = await _tb_P4ModuleServices.Add(entity);
+            long id = await _tb_FM_PriceAdjustmentServices.Add(entity);
             if(id>0)
             {
-                 MyCacheManager.Instance.UpdateEntityList<tb_P4Module>(entity);
+                 MyCacheManager.Instance.UpdateEntityList<tb_FM_PriceAdjustment>(entity);
             }
             return id;
         }
         
-        public async Task<List<long>> AddAsync(List<tb_P4Module> infos)
+        public async Task<List<long>> AddAsync(List<tb_FM_PriceAdjustment> infos)
         {
-            List<long> ids = await _tb_P4ModuleServices.Add(infos);
+            List<long> ids = await _tb_FM_PriceAdjustmentServices.Add(infos);
             if(ids.Count>0)//成功的个数 这里缓存 对不对呢？
             {
-                 MyCacheManager.Instance.UpdateEntityList<tb_P4Module>(infos);
+                 MyCacheManager.Instance.UpdateEntityList<tb_FM_PriceAdjustment>(infos);
             }
             return ids;
         }
         
         
-        public async Task<bool> DeleteAsync(tb_P4Module entity)
+        public async Task<bool> DeleteAsync(tb_FM_PriceAdjustment entity)
         {
-            bool rs = await _tb_P4ModuleServices.Delete(entity);
+            bool rs = await _tb_FM_PriceAdjustmentServices.Delete(entity);
             if (rs)
             {
-                MyCacheManager.Instance.DeleteEntityList<tb_P4Module>(entity);
+                MyCacheManager.Instance.DeleteEntityList<tb_FM_PriceAdjustment>(entity);
                 
             }
             return rs;
         }
         
-        public async Task<bool> UpdateAsync(tb_P4Module entity)
+        public async Task<bool> UpdateAsync(tb_FM_PriceAdjustment entity)
         {
-            bool rs = await _tb_P4ModuleServices.Update(entity);
+            bool rs = await _tb_FM_PriceAdjustmentServices.Update(entity);
             if (rs)
             {
-                 MyCacheManager.Instance.UpdateEntityList<tb_P4Module>(entity);
+                 MyCacheManager.Instance.UpdateEntityList<tb_FM_PriceAdjustment>(entity);
                 entity.ActionStatus = ActionStatus.无操作;
             }
             return rs;
@@ -379,65 +372,65 @@ namespace RUINORERP.Business
         
         public async Task<bool> DeleteAsync(long id)
         {
-            bool rs = await _tb_P4ModuleServices.DeleteById(id);
+            bool rs = await _tb_FM_PriceAdjustmentServices.DeleteById(id);
             if (rs)
             {
-                MyCacheManager.Instance.DeleteEntityList<tb_P4Module>(id);
+                MyCacheManager.Instance.DeleteEntityList<tb_FM_PriceAdjustment>(id);
             }
             return rs;
         }
         
          public async Task<bool> DeleteAsync(long[] ids)
         {
-            bool rs = await _tb_P4ModuleServices.DeleteByIds(ids);
+            bool rs = await _tb_FM_PriceAdjustmentServices.DeleteByIds(ids);
             if (rs)
             {
-                MyCacheManager.Instance.DeleteEntityList<tb_P4Module>(ids);
+                MyCacheManager.Instance.DeleteEntityList<tb_FM_PriceAdjustment>(ids);
             }
             return rs;
         }
         
-        public virtual async Task<List<tb_P4Module>> QueryAsync()
+        public virtual async Task<List<tb_FM_PriceAdjustment>> QueryAsync()
         {
-            List<tb_P4Module> list = await  _tb_P4ModuleServices.QueryAsync();
+            List<tb_FM_PriceAdjustment> list = await  _tb_FM_PriceAdjustmentServices.QueryAsync();
             foreach (var item in list)
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_P4Module>(list);
+            MyCacheManager.Instance.UpdateEntityList<tb_FM_PriceAdjustment>(list);
             return list;
         }
         
-        public virtual List<tb_P4Module> Query()
+        public virtual List<tb_FM_PriceAdjustment> Query()
         {
-            List<tb_P4Module> list =  _tb_P4ModuleServices.Query();
+            List<tb_FM_PriceAdjustment> list =  _tb_FM_PriceAdjustmentServices.Query();
             foreach (var item in list)
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_P4Module>(list);
+            MyCacheManager.Instance.UpdateEntityList<tb_FM_PriceAdjustment>(list);
             return list;
         }
         
-        public virtual List<tb_P4Module> Query(string wheresql)
+        public virtual List<tb_FM_PriceAdjustment> Query(string wheresql)
         {
-            List<tb_P4Module> list =  _tb_P4ModuleServices.Query(wheresql);
+            List<tb_FM_PriceAdjustment> list =  _tb_FM_PriceAdjustmentServices.Query(wheresql);
             foreach (var item in list)
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_P4Module>(list);
+            MyCacheManager.Instance.UpdateEntityList<tb_FM_PriceAdjustment>(list);
             return list;
         }
         
-        public virtual async Task<List<tb_P4Module>> QueryAsync(string wheresql) 
+        public virtual async Task<List<tb_FM_PriceAdjustment>> QueryAsync(string wheresql) 
         {
-            List<tb_P4Module> list = await _tb_P4ModuleServices.QueryAsync(wheresql);
+            List<tb_FM_PriceAdjustment> list = await _tb_FM_PriceAdjustmentServices.QueryAsync(wheresql);
             foreach (var item in list)
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_P4Module>(list);
+            MyCacheManager.Instance.UpdateEntityList<tb_FM_PriceAdjustment>(list);
             return list;
         }
         
@@ -448,14 +441,14 @@ namespace RUINORERP.Business
         /// </summary>
         /// <param name="exp"></param>
         /// <returns></returns>
-        public async Task<List<tb_P4Module>> QueryAsync(Expression<Func<tb_P4Module, bool>> exp)
+        public async Task<List<tb_FM_PriceAdjustment>> QueryAsync(Expression<Func<tb_FM_PriceAdjustment, bool>> exp)
         {
-            List<tb_P4Module> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_P4Module>().Where(exp).ToListAsync();
+            List<tb_FM_PriceAdjustment> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_FM_PriceAdjustment>().Where(exp).ToListAsync();
             foreach (var item in list)
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_P4Module>(list);
+            MyCacheManager.Instance.UpdateEntityList<tb_FM_PriceAdjustment>(list);
             return list;
         }
         
@@ -465,19 +458,23 @@ namespace RUINORERP.Business
         /// 无参数异步导航查询
         /// </summary>
         /// <returns>数据列表</returns>
-         public virtual async Task<List<tb_P4Module>> QueryByNavAsync()
+         public virtual async Task<List<tb_FM_PriceAdjustment>> QueryByNavAsync()
         {
-            List<tb_P4Module> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_P4Module>()
-                               .Includes(t => t.tb_moduledefinition )
-                               .Includes(t => t.tb_roleinfo )
-                                    .ToListAsync();
+            List<tb_FM_PriceAdjustment> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_FM_PriceAdjustment>()
+                               .Includes(t => t.tb_currency )
+                               .Includes(t => t.tb_customervendor )
+                               .Includes(t => t.tb_department )
+                               .Includes(t => t.tb_employee )
+                               .Includes(t => t.tb_projectgroup )
+                                            .Includes(t => t.tb_FM_PriceAdjustmentDetails )
+                        .ToListAsync();
             
             foreach (var item in list)
             {
                 item.HasChanged = false;
             }
             
-            MyCacheManager.Instance.UpdateEntityList<tb_P4Module>(list);
+            MyCacheManager.Instance.UpdateEntityList<tb_FM_PriceAdjustment>(list);
             return list;
         }
 
@@ -486,19 +483,23 @@ namespace RUINORERP.Business
         /// 带参数异步导航查询
         /// </summary>
         /// <returns>数据列表</returns>
-         public virtual async Task<List<tb_P4Module>> QueryByNavAsync(Expression<Func<tb_P4Module, bool>> exp)
+         public virtual async Task<List<tb_FM_PriceAdjustment>> QueryByNavAsync(Expression<Func<tb_FM_PriceAdjustment, bool>> exp)
         {
-            List<tb_P4Module> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_P4Module>().Where(exp)
-                               .Includes(t => t.tb_moduledefinition )
-                               .Includes(t => t.tb_roleinfo )
-                                    .ToListAsync();
+            List<tb_FM_PriceAdjustment> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_FM_PriceAdjustment>().Where(exp)
+                               .Includes(t => t.tb_currency )
+                               .Includes(t => t.tb_customervendor )
+                               .Includes(t => t.tb_department )
+                               .Includes(t => t.tb_employee )
+                               .Includes(t => t.tb_projectgroup )
+                                            .Includes(t => t.tb_FM_PriceAdjustmentDetails )
+                        .ToListAsync();
             
             foreach (var item in list)
             {
                 item.HasChanged = false;
             }
             
-            MyCacheManager.Instance.UpdateEntityList<tb_P4Module>(list);
+            MyCacheManager.Instance.UpdateEntityList<tb_FM_PriceAdjustment>(list);
             return list;
         }
         
@@ -507,19 +508,23 @@ namespace RUINORERP.Business
         /// 带参数异步导航查询
         /// </summary>
         /// <returns>数据列表</returns>
-         public virtual List<tb_P4Module> QueryByNav(Expression<Func<tb_P4Module, bool>> exp)
+         public virtual List<tb_FM_PriceAdjustment> QueryByNav(Expression<Func<tb_FM_PriceAdjustment, bool>> exp)
         {
-            List<tb_P4Module> list = _unitOfWorkManage.GetDbClient().Queryable<tb_P4Module>().Where(exp)
-                            .Includes(t => t.tb_moduledefinition )
-                            .Includes(t => t.tb_roleinfo )
-                                    .ToList();
+            List<tb_FM_PriceAdjustment> list = _unitOfWorkManage.GetDbClient().Queryable<tb_FM_PriceAdjustment>().Where(exp)
+                            .Includes(t => t.tb_currency )
+                            .Includes(t => t.tb_customervendor )
+                            .Includes(t => t.tb_department )
+                            .Includes(t => t.tb_employee )
+                            .Includes(t => t.tb_projectgroup )
+                                        .Includes(t => t.tb_FM_PriceAdjustmentDetails )
+                        .ToList();
             
             foreach (var item in list)
             {
                 item.HasChanged = false;
             }
             
-            MyCacheManager.Instance.UpdateEntityList<tb_P4Module>(list);
+            MyCacheManager.Instance.UpdateEntityList<tb_FM_PriceAdjustment>(list);
             return list;
         }
         
@@ -529,9 +534,9 @@ namespace RUINORERP.Business
         /// 高级查询
         /// </summary>
         /// <returns></returns>
-        public async Task<List<tb_P4Module>> QueryByAdvancedAsync(bool useLike,object dto)
+        public async Task<List<tb_FM_PriceAdjustment>> QueryByAdvancedAsync(bool useLike,object dto)
         {
-            var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<tb_P4Module>().Where(useLike,dto);
+            var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<tb_FM_PriceAdjustment>().Where(useLike,dto);
             return await querySqlQueryable.ToListAsync();
         }
 
@@ -539,7 +544,7 @@ namespace RUINORERP.Business
 
         public async override Task<T> BaseQueryByIdAsync(object id)
         {
-            T entity = await _tb_P4ModuleServices.QueryByIdAsync(id) as T;
+            T entity = await _tb_FM_PriceAdjustmentServices.QueryByIdAsync(id) as T;
             return entity;
         }
         
@@ -547,16 +552,20 @@ namespace RUINORERP.Business
         
         public override async Task<T> BaseQueryByIdNavAsync(object id)
         {
-            tb_P4Module entity = await _unitOfWorkManage.GetDbClient().Queryable<tb_P4Module>().Where(w => w.P4Mod_ID == (long)id)
-                             .Includes(t => t.tb_moduledefinition )
-                            .Includes(t => t.tb_roleinfo )
-                                    .FirstAsync();
+            tb_FM_PriceAdjustment entity = await _unitOfWorkManage.GetDbClient().Queryable<tb_FM_PriceAdjustment>().Where(w => w.AdjustId == (long)id)
+                             .Includes(t => t.tb_currency )
+                            .Includes(t => t.tb_customervendor )
+                            .Includes(t => t.tb_department )
+                            .Includes(t => t.tb_employee )
+                            .Includes(t => t.tb_projectgroup )
+                                        .Includes(t => t.tb_FM_PriceAdjustmentDetails )
+                        .FirstAsync();
             if(entity!=null)
             {
                 entity.HasChanged = false;
             }
 
-            MyCacheManager.Instance.UpdateEntityList<tb_P4Module>(entity);
+            MyCacheManager.Instance.UpdateEntityList<tb_FM_PriceAdjustment>(entity);
             return entity as T;
         }
         

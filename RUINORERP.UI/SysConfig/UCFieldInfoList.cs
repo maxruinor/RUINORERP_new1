@@ -32,7 +32,7 @@ namespace RUINORERP.UI.BI
 {
 
     [MenuAttrAssemblyInfo("字段管理", ModuleMenuDefine.模块定义.系统设置, ModuleMenuDefine.系统设置.权限管理)]
-    public partial class UCFieldInfoList : BaseForm.BaseListGeneric<tb_FieldInfo>, IContextMenuInfoAuth
+    public partial class UCFieldInfoList : BaseForm.BaseListGeneric<tb_FieldInfo>, IContextMenuInfoAuth, IToolStripMenuInfoAuth
     {
 
         public UCFieldInfoList()
@@ -48,6 +48,73 @@ namespace RUINORERP.UI.BI
             button检查数据.Click += button检查数据_Click;
             base.frm.flowLayoutPanelButtonsArea.Controls.Add(button检查数据);
         }
+
+        #region 添加 提取重复数据
+
+        /// <summary>
+        /// 添加回收
+        /// </summary>
+        /// <returns></returns>
+        public override ToolStripItem[] AddExtendButton(tb_MenuInfo menuInfo)
+        {
+            ToolStripButton toolStripButton提取重复数据 = new System.Windows.Forms.ToolStripButton();
+            toolStripButton提取重复数据.Text = "提取重复数据";
+            //toolStripButton提取重复数据.Image = global::RUINORERP.UI.Properties.Resources.MakeSureCost;
+            toolStripButton提取重复数据.ImageTransparentColor = System.Drawing.Color.Magenta;
+            toolStripButton提取重复数据.Name = "提取重复数据";
+            UIHelper.ControlButton(CurMenuInfo, toolStripButton提取重复数据);
+            toolStripButton提取重复数据.ToolTipText = "提取重复数据，有一行会保留，没有显示出来。。";
+            toolStripButton提取重复数据.Click += new System.EventHandler(button提取重复数据_Click);
+
+            System.Windows.Forms.ToolStripItem[] extendButtons = new System.Windows.Forms.ToolStripItem[] { toolStripButton提取重复数据 };
+            this.BaseToolStrip.Items.AddRange(extendButtons);
+            return extendButtons;
+
+        }
+        private void button提取重复数据_Click(object sender, EventArgs e)
+        {
+            if (!dataGridView1.UseSelectedColumn)
+            {
+                dataGridView1.UseSelectedColumn = true;
+            }
+            // 定义参与比较的属性列表
+            var ButtonProperties = new List<string>()
+            .Include<tb_FieldInfo>(c => c.FieldName)
+            .Include<tb_FieldInfo>(c => c.IsChild)
+            .Include<tb_FieldInfo>(c => c.MenuID);
+
+            var oklist = UITools.CheckDuplicateData<tb_FieldInfo>(ListDataSoure.Cast<tb_FieldInfo>().ToList(), ButtonProperties.ToList());
+
+            #region 最新检查重复的方法
+            List<long> buttonids = oklist.Select(c => c.FieldInfo_ID).ToList();
+            if (dataGridView1.UseSelectedColumn)
+            {
+                for (int i = 0; i < dataGridView1.Rows.Count; i++)
+                {
+                    var dr = dataGridView1.Rows[i];
+                    if (dr.DataBoundItem is tb_FieldInfo buttonInfo)
+                    {
+                        if (buttonids.Contains(buttonInfo.FieldInfo_ID))
+                        {
+                            dr.Cells["Selected"].Value = true;
+                        }
+                        else
+                        {
+                            dr.Cells["Selected"].Value = false;
+                        }
+                    }
+                }
+
+            }
+
+
+            #endregion
+
+
+        }
+
+        #endregion
+
 
         public override List<ContextMenuController> AddContextMenu()
         {

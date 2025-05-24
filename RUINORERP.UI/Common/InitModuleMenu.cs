@@ -23,29 +23,734 @@ using System.Web.WebSockets;
 using SourceGrid2.Win32;
 using RUINORERP.UI.BaseForm;
 using RUINORERP.Global.EnumExt;
+using Microsoft.Extensions.Logging;
 
 namespace RUINORERP.UI.Common
 {
+
+    /// <summary>
+    /// 初始化模块菜单和权限的服务类
+    /// </summary>
+    public class InitModuleMenu
+    {
+        private readonly ApplicationContext _appContext;
+        private readonly ILogger<InitModuleMenu> _logger;
+        private List<MenuAttrAssemblyInfo> _menuAssemblyList = new List<MenuAttrAssemblyInfo>();
+        private List<string> _typeNames = new List<string>();
+        private Type[] _modelTypes;
+
+        public InitModuleMenu(ApplicationContext appContext, ILogger<InitModuleMenu> logger)
+        {
+            _appContext = appContext;
+            _logger = logger;
+        }
+
+        #region 系统级初始化菜单
+        /// <summary>
+        /// 初始化模块和菜单结构
+        /// 支持多次执行，采用批量操作优化性能
+        /// </summary>
+        public async Task InitModuleAndMenuAsync()
+        {
+            try
+            {
+                // 加载菜单程序集信息
+                _menuAssemblyList = UIHelper.RegisterForm();
+
+                // 加载模型类型信息
+                var dalAssemble = System.Reflection.Assembly.LoadFrom("RUINORERP.Model.dll");
+                _modelTypes = dalAssemble.GetExportedTypes();
+                _typeNames = _modelTypes.Select(m => m.Name).ToList();
+
+                // 获取控制器实例
+                var mdctr = _appContext.GetRequiredService<tb_ModuleDefinitionController<tb_ModuleDefinition>>();
+                var mc = _appContext.GetRequiredService<tb_MenuInfoController<tb_MenuInfo>>();
+
+                // 获取模块枚举列表并过滤不可用模块
+                var modules = typeof(ModuleMenuDefine.模块定义).EnumToList();
+                if (!MainForm.Instance.AppContext.CanUsefunctionModules.Contains(Global.GlobalFunctionModule.客户管理系统CRM))
+                {
+                    modules = modules.Where(m => m.Name != ModuleMenuDefine.模块定义.客户关系.ToString()).ToList();
+                }
+
+                // 从数据库加载现有模块数据（包含关联的菜单、按钮等信息）
+                var existModuleList = await MainForm.Instance.AppContext.Db.CopyNew()
+                    .Queryable<tb_ModuleDefinition>()
+                    .Includes(c => c.tb_MenuInfos, b => b.tb_moduledefinition)
+                    .Includes(c => c.tb_MenuInfos, b => b.tb_ButtonInfos)
+                    .Includes(c => c.tb_MenuInfos, b => b.tb_FieldInfos)
+                    .Includes(c => c.tb_MenuInfos, b => b.tb_UIMenuPersonalizations)
+                    .ToListAsync() ?? new List<tb_ModuleDefinition>();
+
+                // 处理模块和顶级菜单
+                foreach (var moduleDto in modules)
+                {
+                    // 查找或创建模块定义
+                    var module = existModuleList.FirstOrDefault(e => e.ModuleName == moduleDto.Name)
+                        ?? new tb_ModuleDefinition
+                        {
+                            ModuleName = moduleDto.Name,
+                            ModuleNo = BizCodeGenerator.Instance.GetBaseInfoNo(BaseInfoType.ModuleDefinition),
+                            Available = true,
+                            Visible = true
+                        };
+
+                    if (module.ModuleID == 0)
+                    {
+                        existModuleList.Add(module);
+                    }
+
+                    // 确保模块的菜单集合已初始化
+                    if (module.tb_MenuInfos == null)
+                    {
+                        module.tb_MenuInfos = new List<tb_MenuInfo>();
+                    }
+
+                    // 查找或创建顶级菜单
+                    var topMenu = module.tb_MenuInfos.FirstOrDefault(e => e.MenuName == moduleDto.Name && e.Parent_id == 0)
+                        ?? new tb_MenuInfo
+                        {
+                            MenuName = moduleDto.Name,
+                            IsVisble = true,
+                            ModuleID = module.ModuleID,
+                            IsEnabled = true,
+                            CaptionCN = moduleDto.Name,
+                            MenuType = "导航菜单",
+                            Parent_id = 0,
+                            Created_at = System.DateTime.Now
+                        };
+
+                    if (topMenu.MenuID == 0)
+                    {
+                        module.tb_MenuInfos.Add(topMenu);
+                    }
+                }
+
+                // 批量插入新模块
+                var newModules = existModuleList.Where(c => c.ModuleID == 0).ToList();
+                if (newModules.Any())
+                {
+                    var moduleIds = await MainForm.Instance.AppContext.Db
+                        .Insertable(newModules)
+                        .ExecuteReturnSnowflakeIdListAsync();
+
+                    // 确保ID正确分配给实体
+                    for (int i = 0; i < newModules.Count; i++)
+                    {
+                        newModules[i].ModuleID = moduleIds[i];
+                    }
+                }
+
+                // 关联菜单与模块
+                foreach (var module in existModuleList)
+                {
+                    foreach (var menu in module.tb_MenuInfos)
+                    {
+                        menu.ModuleID = module.ModuleID;
+                        menu.tb_moduledefinition = module;
+                    }
+                }
+
+                // 批量插入新菜单
+                var newMenus = existModuleList
+                    .SelectMany(m => m.tb_MenuInfos)
+                    .Where(m => m.MenuID == 0)
+                    .ToList();
+
+                if (newMenus.Any())
+                {
+                    var menuIds = await MainForm.Instance.AppContext.Db
+                        .Insertable(newMenus)
+                        .ExecuteReturnSnowflakeIdListAsync();
+
+                    // 确保ID正确分配给实体
+                    for (int i = 0; i < newMenus.Count; i++)
+                    {
+                        newMenus[i].MenuID = menuIds[i];
+                    }
+                }
+
+                // 处理顶级菜单的子菜单
+                var topMenus = existModuleList
+                    .SelectMany(m => m.tb_MenuInfos)
+                    .Where(m => m.Parent_id == 0)
+                    .ToList();
+
+                foreach (var topMenu in topMenus)
+                {
+                    await StartInitNavMenuAsync(topMenu, _menuAssemblyList, topMenu.tb_moduledefinition.ModuleName);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "初始化模块和菜单时发生错误");
+                MainForm.Instance.uclog.AddLog($"初始化模块和菜单失败: {ex.Message}", UILogType.错误);
+            }
+        }
+
+        /// <summary>
+        /// 初始化指定模块的导航菜单
+        /// </summary>
+        private async Task StartInitNavMenuAsync(tb_MenuInfo menuInfoparent, List<MenuAttrAssemblyInfo> menuAssemblyList, string modelName)
+        {
+            try
+            {
+                var menulist = menuAssemblyList.Where(it => it.MenuPath.Split('|')[0] == modelName).ToList();
+                模块定义 module = (模块定义)Enum.Parse(typeof(模块定义), modelName);
+
+                switch (module)
+                {
+                    case 模块定义.生产管理:
+                        await InitNavMenuAsync<生产管理>(menuInfoparent, menulist);
+                        break;
+                    case 模块定义.进销存管理:
+                        await InitNavMenuAsync<进销存管理>(menuInfoparent, menulist);
+                        break;
+                    case 模块定义.客户关系:
+                        await InitNavMenuAsync<客户关系>(menuInfoparent, menulist);
+                        break;
+                    case 模块定义.财务管理:
+                        await InitNavMenuAsync<财务管理>(menuInfoparent, menulist);
+                        break;
+                    case 模块定义.行政管理:
+                        await InitNavMenuAsync<行政管理>(menuInfoparent, menulist);
+                        break;
+                    case 模块定义.报表管理:
+                        await InitNavMenuAsync<报表管理>(menuInfoparent, menulist);
+                        break;
+                    case 模块定义.基础资料:
+                        await InitNavMenuAsync<基础资料>(menuInfoparent, menulist);
+                        break;
+                    case 模块定义.系统设置:
+                        await InitNavMenuAsync<系统设置>(menuInfoparent, menulist);
+                        break;
+                    default:
+                        _logger.LogWarning($"未处理的模块类型: {modelName}");
+                        break;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"初始化导航菜单时发生错误: {modelName}");
+                MainForm.Instance.uclog.AddLog($"初始化导航菜单失败: {ex.Message}", UILogType.错误);
+            }
+        }
+
+        /// <summary>
+        /// 初始化指定类型的导航菜单
+        /// </summary>
+        private async Task InitNavMenuAsync<T>(tb_MenuInfo menuParent, List<MenuAttrAssemblyInfo> list)
+        {
+            try
+            {
+                string parentName = typeof(T).Name;
+                var mc = _appContext.GetRequiredService<tb_MenuInfoController<tb_MenuInfo>>();
+                var modules = typeof(T).EnumToList();
+
+                // 确保父菜单的模块已初始化菜单集合
+                if (menuParent.tb_moduledefinition.tb_MenuInfos == null)
+                {
+                    menuParent.tb_moduledefinition.tb_MenuInfos = new List<tb_MenuInfo>();
+                }
+
+                // 获取现有子菜单
+                var existMenuInfoList = menuParent.tb_moduledefinition.tb_MenuInfos
+                    .Where(c => c.Parent_id == menuParent.MenuID)
+                    .ToList();
+
+                // 处理子菜单
+                foreach (var item in modules)
+                {
+                    var menuInfo = existMenuInfoList.FirstOrDefault(e => e.MenuName == item.Name && e.Parent_id == menuParent.MenuID)
+                        ?? new tb_MenuInfo
+                        {
+                            ModuleID = menuParent.ModuleID,
+                            MenuName = item.Name,
+                            IsVisble = true,
+                            IsEnabled = true,
+                            CaptionCN = item.Name,
+                            MenuType = "导航菜单",
+                            Parent_id = menuParent.MenuID,
+                            Created_at = System.DateTime.Now
+                        };
+
+                    if (menuInfo.MenuID == 0)
+                    {
+                        existMenuInfoList.Add(menuInfo);
+                    }
+                }
+
+                // 设置菜单关联信息
+                foreach (var menuInfo in existMenuInfoList)
+                {
+                    menuInfo.ModuleID = menuParent.tb_moduledefinition.ModuleID;
+                    menuInfo.Parent_id = menuParent.MenuID;
+                    menuInfo.tb_moduledefinition = menuParent.tb_moduledefinition;
+                }
+
+                // 批量插入新菜单
+                var newMenus = existMenuInfoList.Where(c => c.MenuID == 0).ToList();
+                if (newMenus.Any())
+                {
+                    var menuIds = await MainForm.Instance.AppContext.Db
+                        .Insertable(newMenus)
+                        .ExecuteReturnSnowflakeIdListAsync();
+
+                    // 确保ID正确分配给实体
+                    for (int i = 0; i < newMenus.Count; i++)
+                    {
+                        newMenus[i].MenuID = menuIds[i];
+                    }
+                }
+
+                // 处理子菜单的下级菜单项
+                foreach (var nextMenuInfo in existMenuInfoList)
+                {
+                    var menulist = list.Where(it =>
+                        it.MenuPath.Split('|')[0] == parentName &&
+                        it.MenuPath.Split('|')[1] == nextMenuInfo.MenuName).ToList();
+
+                    foreach (var menuinfo in menulist)
+                    {
+                        await AddMenuItemAsync(menuinfo, nextMenuInfo, mc);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"初始化导航菜单类型 {typeof(T).Name} 时发生错误");
+                MainForm.Instance.uclog.AddLog($"初始化导航菜单类型失败: {ex.Message}", UILogType.错误);
+            }
+        }
+
+        /// <summary>
+        /// 添加菜单项及其相关的按钮和字段信息
+        /// </summary>
+        private async Task AddMenuItemAsync(MenuAttrAssemblyInfo info, tb_MenuInfo parentMenuInfo, tb_MenuInfoController<tb_MenuInfo> mc)
+        {
+            try
+            {
+                // 确保父菜单的模块已初始化菜单集合
+                if (parentMenuInfo.tb_moduledefinition.tb_MenuInfos == null)
+                {
+                    parentMenuInfo.tb_moduledefinition.tb_MenuInfos = new List<tb_MenuInfo>();
+                }
+
+                // 获取现有菜单项
+                var existMenuInfoList = parentMenuInfo.tb_moduledefinition.tb_MenuInfos
+                    .Where(c => c.Parent_id == parentMenuInfo.MenuID)
+                    .ToList();
+
+                // 查找或创建菜单项
+                var menu = existMenuInfoList.FirstOrDefault(e => e.MenuName == info.Caption && e.Parent_id == parentMenuInfo.MenuID)
+                    ?? new tb_MenuInfo
+                    {
+                        MenuName = info.Caption,
+                        ModuleID = parentMenuInfo.ModuleID,
+                        IsVisble = true,
+                        IsEnabled = true,
+                        CaptionCN = info.Caption,
+                        ClassPath = info.ClassPath,
+                        FormName = info.ClassName,
+                        Parent_id = parentMenuInfo.MenuID,
+                        BIBaseForm = info.BIBaseForm,
+                        BIBizBaseForm = info.BIBizBaseForm,
+                        BizInterface = info.BizInterface,
+                        BizType = info.MenuBizType.HasValue ? (int)info.MenuBizType : 0,
+                        MenuType = "行为菜单",
+                        EntityName = info.EntityName,
+                        Created_at = System.DateTime.Now
+                    };
+
+                if (menu.MenuID == 0)
+                {
+                    menu = mc.AddReEntity(menu); // 单个添加，因为可能有复杂业务逻辑
+                    existMenuInfoList.Add(menu);
+                }
+
+                // 初始化菜单项的按钮和字段信息
+                await InitToolStripItemAsync(info, menu);
+                await InitFieldInoAsync(info, menu);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"添加菜单项 {info.Caption} 时发生错误");
+                MainForm.Instance.uclog.AddLog($"添加菜单项失败: {ex.Message}", UILogType.错误);
+            }
+        }
+
+        /// <summary>
+        /// 初始化工具栏按钮和右键菜单按钮信息
+        /// </summary>
+        public async Task InitToolStripItemAsync(MenuAttrAssemblyInfo info, tb_MenuInfo menuInfo)
+        {
+            try
+            {
+                // 创建并获取窗体实例
+                var c = Startup.ServiceProvider.GetService(info.ClassType) as Control;
+                if (c == null)
+                {
+                    _logger.LogWarning($"无法获取类型 {info.ClassType} 的实例");
+                    return;
+                }
+
+                // 获取按钮控制器
+                var btnController = Startup.GetFromFac<tb_ButtonInfoController<tb_ButtonInfo>>();
+
+                // 确保菜单的按钮集合已初始化
+                menuInfo.tb_ButtonInfos ??= new List<tb_ButtonInfo>();
+
+                // 查找窗体上的所有工具栏
+                var toolStrips = FindControls<ToolStrip>(c);
+
+                // 用于存储待添加的新按钮
+                var newButtonInfos = new List<tb_ButtonInfo>();
+
+                // 处理工具栏按钮
+                foreach (var toolStrip in toolStrips)
+                {
+                    foreach (var item in toolStrip.Items)
+                    {
+                        if (item is ToolStripButton btn && !string.IsNullOrWhiteSpace(btn.Text))
+                        {
+                            AddButtonIfNotExists(btn.Text, btn.Name, ButtonType.Toolbar);
+                        }
+                        else if (item is ToolStripSplitButton splitBtn && !string.IsNullOrWhiteSpace(splitBtn.Text))
+                        {
+                            AddButtonIfNotExists(splitBtn.Text, splitBtn.Name, ButtonType.Toolbar);
+
+                            // 处理下拉项
+                            foreach (ToolStripItem dropDownItem in splitBtn.DropDownItems)
+                            {
+                                if (!string.IsNullOrWhiteSpace(dropDownItem.Text))
+                                {
+                                    AddButtonIfNotExists(dropDownItem.Text, dropDownItem.Name, ButtonType.Toolbar);
+                                }
+                            }
+                        }
+                        else if (item is ToolStripDropDownButton dropDownBtn && !string.IsNullOrWhiteSpace(dropDownBtn.Text))
+                        {
+                            AddButtonIfNotExists(dropDownBtn.Text, dropDownBtn.Name, ButtonType.Toolbar);
+
+                            // 处理下拉项
+                            foreach (ToolStripItem dropDownItem in dropDownBtn.DropDownItems)
+                            {
+                                if (!string.IsNullOrWhiteSpace(dropDownItem.Text))
+                                {
+                                    AddButtonIfNotExists(dropDownItem.Text, dropDownItem.Name, ButtonType.Toolbar);
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // 处理扩展按钮
+                if (c is IToolStripMenuInfoAuth formAuth)
+                {
+                    var stripItems = formAuth.AddExtendButton(menuInfo);
+                    foreach (var tsitem in stripItems)
+                    {
+                        if (!string.IsNullOrWhiteSpace(tsitem.Text))
+                        {
+                            AddButtonIfNotExists(tsitem.Text, tsitem.Name, ButtonType.Toolbar);
+                        }
+                    }
+                }
+
+                // 处理右键菜单
+                if (c is IContextMenuInfoAuth contextMenuAuth)
+                {
+                    var contextMenuItems = contextMenuAuth.AddContextMenu();
+                    foreach (var menuItem in contextMenuItems)
+                    {
+                        if (!string.IsNullOrWhiteSpace(menuItem.MenuText))
+                        {
+                            AddButtonIfNotExists(
+                                menuItem.MenuText,
+                                menuItem.MenuText,
+                                ButtonType.ContextMenu);
+                        }
+                    }
+                }
+
+                // 处理特殊窗体类型的按钮过滤
+                if (c is BaseQuery baseQuery)
+                {
+                    ApplyMenuFilters(baseQuery, ref newButtonInfos);
+                }
+                else if (c is BaseBillEdit baseBillEdit)
+                {
+                    ApplyMenuFilters(baseBillEdit, ref newButtonInfos);
+                }
+
+                // 批量插入新按钮
+                if (newButtonInfos.Any())
+                {
+                    var buttonIds = await _appContext.Db
+                        .Insertable(newButtonInfos)
+                        .ExecuteReturnSnowflakeIdListAsync();
+
+                    // 确保ID正确分配给实体
+                    for (int i = 0; i < newButtonInfos.Count; i++)
+                    {
+                        newButtonInfos[i].ButtonInfo_ID = buttonIds[i];
+                    }
+
+                    // 添加到菜单的按钮集合中
+                    menuInfo.tb_ButtonInfos.AddRange(newButtonInfos);
+                }
+
+                // 局部函数：添加按钮（如果不存在）
+                void AddButtonIfNotExists(string text, string name, ButtonType buttonType)
+                {
+                    var buttonTypeStr = buttonType.ToString();
+                    var exists = menuInfo.tb_ButtonInfos.Any(
+                        it => it.ClassPath == info.ClassPath &&
+                              it.BtnText == text &&
+                              it.MenuID == menuInfo.MenuID &&
+                              it.ButtonType == buttonTypeStr);
+
+                    if (!exists)
+                    {
+                        newButtonInfos.Add(new tb_ButtonInfo
+                        {
+                            BtnName = name,
+                            BtnText = text,
+                            FormName = info.ClassName,
+                            ClassPath = info.ClassPath,
+                            MenuID = menuInfo.MenuID,
+                            IsEnabled = true,
+                            ButtonType = buttonTypeStr
+                        });
+                    }
+                }
+
+                // 局部函数：应用菜单过滤规则
+                void ApplyMenuFilters(dynamic form, ref List<tb_ButtonInfo> buttons)
+                {
+                    if (form.IncludedMenuList?.Count > 0)
+                    {
+                        form.AddIncludedMenuList();
+                        var includeList = ((IEnumerable<MenuItemEnums>)form.IncludedMenuList).Select(it => it.ToString()).ToList();
+                        buttons = buttons.Where(it => includeList.Contains(it.BtnText)).ToList();
+                    }
+                    else
+                    {
+                        form.AddExcludeMenuList();
+                        var excludeList = ((IEnumerable<MenuItemEnums>)form.ExcludeMenuList).Select(it => it.ToString()).ToList();
+                        buttons = buttons.Where(it => !excludeList.Contains(it.BtnText)).ToList();
+
+                        if (form.ExcludeMenuTextList?.Count > 0)
+                        {
+                            buttons = buttons.Where(it => !form.ExcludeMenuTextList.Contains(it.BtnText)).ToList();
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"初始化工具栏按钮时发生错误: {info.ClassPath}");
+                MainForm.Instance.uclog.AddLog($"初始化工具栏按钮失败: {ex.Message}", UILogType.错误);
+            }
+        }
+
+        /// <summary>
+        /// 遍历控件树，查找所有指定类型的子控件
+        /// </summary>
+        public List<T> FindControls<T>(Control control) where T : Control
+        {
+            var controls = new List<T>();
+
+            foreach (Control ctrl in control.Controls)
+            {
+                if (ctrl is T tControl)
+                {
+                    controls.Add(tControl);
+                }
+
+                if (ctrl.HasChildren)
+                {
+                    controls.AddRange(FindControls<T>(ctrl));
+                }
+            }
+
+            return controls;
+        }
+
+        /// <summary>
+        /// 初始化菜单关联的字段信息
+        /// </summary>
+        private async Task InitFieldInoAsync(MenuAttrAssemblyInfo info, tb_MenuInfo menuInfo)
+        {
+            try
+            {
+                if (_modelTypes == null || _modelTypes.Length == 0)
+                {
+                    _logger.LogWarning("模型类型集合为空，无法初始化字段信息");
+                    return;
+                }
+
+                foreach (Type type in _modelTypes)
+                {
+                    // 排除查询DTO类型
+                    if (type.FullName.Contains("QueryDto"))
+                    {
+                        continue;
+                    }
+
+                    // 只处理与菜单关联的实体类型
+                    if (type.Name != info.EntityName)
+                    {
+                        continue;
+                    }
+
+                    // 初始化主表字段
+                    await InitFieldInoMainAndSubAsync(type, menuInfo, false, "");
+
+                    // 尝试查找并初始化子表字段
+                    string childTypeName = _typeNames.FirstOrDefault(s => s.Contains(type.Name + "Detail"));
+                    if (!string.IsNullOrEmpty(childTypeName))
+                    {
+                        Type childType = _modelTypes.FirstOrDefault(t => t.FullName == type.FullName + "Detail");
+                        if (childType != null)
+                        {
+                            await InitFieldInoMainAndSubAsync(childType, menuInfo, true, childTypeName);
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"初始化字段信息时发生错误: {info.EntityName}");
+                MainForm.Instance.uclog.AddLog($"初始化字段信息失败: {ex.Message}", UILogType.错误);
+            }
+        }
+
+        /// <summary>
+        /// 初始化主表和子表的字段信息
+        /// </summary>
+        public async Task InitFieldInoMainAndSubAsync(Type type, tb_MenuInfo menuInfo, bool isChild, string childType)
+        {
+            try
+            {
+                // 确保菜单的字段集合已初始化
+                menuInfo.tb_FieldInfos ??= new List<tb_FieldInfo>();
+
+                // 获取实体的SugarTable特性
+                var tableAttrs = type.GetCustomAttributes<SugarTable>();
+                foreach (var attr in tableAttrs)
+                {
+                    // 获取实体的字段元数据
+                    var entityInstance = Startup.ServiceProvider.CreateInstance(type);
+                    var fieldNameList = ReflectionHelper.GetPropertyValue(entityInstance, "FieldNameList") as ConcurrentDictionary<string, string>;
+
+                    // 如果无法通过反射获取字段列表，则直接从属性特性中提取
+                    if (fieldNameList == null)
+                    {
+                        fieldNameList = new ConcurrentDictionary<string, string>();
+
+                        foreach (PropertyInfo property in type.GetProperties())
+                        {
+                            foreach (Attribute attrField in property.GetCustomAttributes(true))
+                            {
+                                if (attrField is SugarColumn columnAttr &&
+                                    !string.IsNullOrWhiteSpace(columnAttr.ColumnDescription) &&
+                                    !columnAttr.IsIdentity &&
+                                    !columnAttr.IsPrimaryKey)
+                                {
+                                    fieldNameList.TryAdd(property.Name, columnAttr.ColumnDescription);
+                                }
+                            }
+                        }
+                    }
+
+                    // 创建待添加的字段信息列表
+                    var newFieldInfos = new List<tb_FieldInfo>();
+                    foreach (var kv in fieldNameList)
+                    {
+                        // 检查字段是否已存在
+                        var exists = menuInfo.tb_FieldInfos.Any(
+                            e => e.EntityName == (isChild ? type.Name.Replace("Detail", "") : type.Name) &&
+                                 e.FieldName == kv.Key &&
+                                 e.MenuID == menuInfo.MenuID &&
+                                 e.IsChild == isChild);
+
+                        if (!exists)
+                        {
+                            newFieldInfos.Add(new tb_FieldInfo
+                            {
+                                ClassPath = type.FullName,
+                                EntityName = isChild ? type.Name.Replace("Detail", "") : type.Name,
+                                IsEnabled = true,
+                                FieldName = kv.Key,
+                                FieldText = kv.Value,
+                                MenuID = menuInfo.MenuID,
+                                IsChild = isChild,
+                                ChildEntityName = childType,
+                                ActionStatus = ActionStatus.新增
+                            });
+                        }
+                    }
+
+                    // 批量插入新字段
+                    if (newFieldInfos.Any())
+                    {
+                        // 初始化实体（设置默认值等）
+                        foreach (var fieldInfo in newFieldInfos)
+                        {
+                            BusinessHelper.Instance.InitEntity(fieldInfo);
+                        }
+
+                        var fieldIds = await _appContext.Db
+                            .Insertable(newFieldInfos)
+                            .ExecuteReturnSnowflakeIdListAsync();
+
+                        // 确保ID正确分配给实体
+                        for (int i = 0; i < newFieldInfos.Count; i++)
+                        {
+                            newFieldInfos[i].FieldInfo_ID = fieldIds[i];
+                        }
+
+                        // 添加到菜单的字段集合中
+                        menuInfo.tb_FieldInfos.AddRange(newFieldInfos);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"初始化字段信息（主表/子表）时发生错误: {type?.Name}");
+                MainForm.Instance.uclog.AddLog($"初始化字段信息失败: {ex.Message}", UILogType.错误);
+            }
+        }
+
+        #endregion
+    }
+
+
     /// <summary>
     /// TODO  要完善的 这里多个地方可以批量新增 需要优化
     /// 因为与UI紧密才放到这个层
     /// </summary>
-    public class InitModuleMenu
+    public class InitModuleMenu_old
     {
-        public ApplicationContext _appContext;
-
-        public InitModuleMenu(ApplicationContext apeContext)
-        {
-            _appContext = apeContext;
-        }
-
+     
+        private readonly ApplicationContext _appContext;
+        private readonly ILogger<InitModuleMenu> _logger;
         //提取到UI的类相关信息
-        List<MenuAttrAssemblyInfo> MenuAssemblylist { get; set; } = new List<MenuAttrAssemblyInfo>();
+        private List<MenuAttrAssemblyInfo> _menuAssemblyList = new List<MenuAttrAssemblyInfo>();
 
         /// <summary>
         /// 为了查找明细表名类型，保存所有类型名称方便查找
         /// </summary>
-        List<string> typeNames = new List<string>();
+        private List<string> _typeNames = new List<string>();
+        private Type[] _modelTypes;
+
+        public InitModuleMenu_old(ApplicationContext appContext, ILogger<InitModuleMenu> logger)
+        {
+            _appContext = appContext;
+            _logger = logger;
+        }
+       
 
         #region 系统级初始化菜单
         /// <summary>
@@ -55,13 +760,13 @@ namespace RUINORERP.UI.Common
         /// </summary>
         public async void InitModuleAndMenu()
         {
-            MenuAssemblylist = UIHelper.RegisterForm();
+            _menuAssemblyList = UIHelper.RegisterForm();
 
             //这里先提取要找到实体的类型，执行一次
             Assembly dalAssemble = System.Reflection.Assembly.LoadFrom("RUINORERP.Model.dll");
-            ModelTypes = dalAssemble.GetExportedTypes();
+            _modelTypes = dalAssemble.GetExportedTypes();
 
-            typeNames = ModelTypes.Select(m => m.Name).ToList();
+            _typeNames = _modelTypes.Select(m => m.Name).ToList();
                
 
 
@@ -170,7 +875,7 @@ namespace RUINORERP.UI.Common
             ExistModuleList.ForEach(c => needProcessTopMenulist.AddRange(c.tb_MenuInfos.Where(c => c.Parent_id == 0).ToList()));
             foreach (var newItem in needProcessTopMenulist)
             {
-                StartInitNavMenu(newItem, MenuAssemblylist, newItem.tb_moduledefinition.ModuleName);
+                StartInitNavMenu(newItem, _menuAssemblyList, newItem.tb_moduledefinition.ModuleName);
             }
 
             //批量添加的参考代码  
@@ -657,9 +1362,6 @@ namespace RUINORERP.UI.Common
 
         tb_FieldInfoController<tb_FieldInfo> fieldController = Startup.GetFromFac<tb_FieldInfoController<tb_FieldInfo>>();
 
-
-        Type[] ModelTypes;
-
         /// <summary>
         /// 初始化字段
         /// </summary>
@@ -668,7 +1370,7 @@ namespace RUINORERP.UI.Common
             try
             {
                 // Type[] ModelTypes
-                foreach (Type type in ModelTypes)
+                foreach (Type type in _modelTypes)
                 {
                     //如果不是指定菜单对应的实体就不加入字段
                     if (type.FullName.Contains("QueryDto"))
@@ -684,12 +1386,12 @@ namespace RUINORERP.UI.Common
 
                     InitFieldInoMainAndSub(type, menuInfo, false, "");
                     //尝试找子表类型
-                    string childType = typeNames.FirstOrDefault(s => s.Contains(type.Name + "Detail"));
+                    string childType = _typeNames.FirstOrDefault(s => s.Contains(type.Name + "Detail"));
                     if (!string.IsNullOrEmpty(childType))
                     {
                         // type.FullName + "Detail";
                         //Type cType = System.Reflection.Assembly.Load("RUINORERP.Model.dll").GetType(type.FullName + "Detail");
-                        Type cType = ModelTypes.FirstOrDefault(t => t.FullName == type.FullName + "Detail");
+                        Type cType = _modelTypes.FirstOrDefault(t => t.FullName == type.FullName + "Detail");
                         if (cType != null)
                         {
                             InitFieldInoMainAndSub(cType, menuInfo, true, childType);

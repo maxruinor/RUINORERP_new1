@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/13/2024 18:44:00
+// 时间：05/24/2025 18:28:26
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -30,12 +30,12 @@ using RUINORERP.Common.Helper;
 namespace RUINORERP.Business.Processor
 {
     /// <summary>
-    /// 模块权限表（暂时没有使用，逻辑上用菜单的代替了）
+    /// 价格调整单
     /// </summary>
-    public partial class tb_P4ModuleProcessor:BaseProcessor 
+    public partial class tb_FM_PriceAdjustmentProcessor:BaseProcessor 
     {
        
-        public tb_P4ModuleProcessor(ILogger<tb_P4ModuleProcessor> logger, IUnitOfWorkManage unitOfWorkManage, ApplicationContext appContext = null): base(logger, unitOfWorkManage, appContext)
+        public tb_FM_PriceAdjustmentProcessor(ILogger<tb_FM_PriceAdjustmentProcessor> logger, IUnitOfWorkManage unitOfWorkManage, ApplicationContext appContext = null): base(logger, unitOfWorkManage, appContext)
         {
             _logger = logger;
            _unitOfWorkManage = unitOfWorkManage;

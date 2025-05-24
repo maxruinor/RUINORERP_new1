@@ -21,8 +21,8 @@ namespace RUINORERP.Business.AutoMapper
         /// </summary>
         public CustomProfileAll()
         {
-            CreateMap<tb_ManufacturingOrder, tb_FinishedGoodsInv>();
-            CreateMap<tb_ManufacturingOrder, tb_FinishedGoodsInvDetail>();
+            //CreateMap<tb_ManufacturingOrder, tb_FinishedGoodsInv>();
+            //CreateMap<tb_ManufacturingOrder, tb_FinishedGoodsInvDetail>();
             //测试了订单转成入库单列表集合不用单设置也可以成功,List<T>  这种转。反而有问题？
            // CreateMap<tb_PurOrder, tb_PurEntry>();
              

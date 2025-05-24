@@ -75,6 +75,7 @@
             this.txtTotalAmount = new Krypton.Toolkit.KryptonTextBox();
             this.txtTotalQty = new Krypton.Toolkit.KryptonTextBox();
             this.lblTotalAmount = new Krypton.Toolkit.KryptonLabel();
+            this.chkIsCustomizedOrder = new Krypton.Toolkit.KryptonCheckBox();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceSub)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1)).BeginInit();
@@ -107,6 +108,7 @@
             // 
             // kryptonSplitContainer1.Panel1
             // 
+            this.kryptonSplitContainer1.Panel1.Controls.Add(this.chkIsCustomizedOrder);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.lblStore_ID);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.cmbProjectGroup);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.lblPayStatus);
@@ -184,7 +186,6 @@
             // cmbPayStatus
             // 
             this.cmbPayStatus.DropDownWidth = 100;
-            this.cmbPayStatus.Enabled = true;
             this.cmbPayStatus.IntegralHeight = false;
             this.cmbPayStatus.Location = new System.Drawing.Point(386, 134);
             this.cmbPayStatus.Name = "cmbPayStatus";
@@ -551,6 +552,15 @@
             this.lblTotalAmount.TabIndex = 115;
             this.lblTotalAmount.Values.Text = "总金额";
             // 
+            // chkIsCustomizedOrder
+            // 
+            this.chkIsCustomizedOrder.Enabled = false;
+            this.chkIsCustomizedOrder.Location = new System.Drawing.Point(964, 164);
+            this.chkIsCustomizedOrder.Name = "chkIsCustomizedOrder";
+            this.chkIsCustomizedOrder.Size = new System.Drawing.Size(62, 20);
+            this.chkIsCustomizedOrder.TabIndex = 160;
+            this.chkIsCustomizedOrder.Values.Text = "定制单";
+            // 
             // UCPurEntry
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
@@ -636,5 +646,6 @@
         private Krypton.Toolkit.KryptonComboBox cmbPayStatus;
         private Krypton.Toolkit.KryptonLabel lblStore_ID;
         private Krypton.Toolkit.KryptonComboBox cmbProjectGroup;
+        private Krypton.Toolkit.KryptonCheckBox chkIsCustomizedOrder;
     }
 }

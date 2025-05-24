@@ -26,8 +26,10 @@ namespace RUINORERP.Model
         //List<tb_MenuInfo> UserMenuList { get; set; }
         //List<tb_ButtonInfo> UserButtonList { get; set; }
         //List<tb_FieldInfo> UserFieldList { get; set; }
-
-        tb_UserInfo UserInfo { get; set; } 
+        /// <summary>
+        /// 保存了所有的相关的菜单 按钮 字段最全的 角色  个性化数据
+        /// </summary>
+        tb_UserInfo UserInfo { get; set; }
 
         #endregion
     }

@@ -9,6 +9,7 @@ using Krypton.Toolkit;
 using Krypton.Workspace;
 using Microsoft.Extensions.Logging;
 using Netron.GraphLib;
+using NPOI.SS.Formula.Functions;
 using OfficeOpenXml;
 using Org.BouncyCastle.Asn1.X509.Qualified;
 using RUINOR.Core;
@@ -69,8 +70,22 @@ namespace RUINORERP.UI.BaseForm
     /// </summary>
     /// <typeparam name="M"></typeparam>
     /// <typeparam name="C"></typeparam>
-    public partial class BaseBillQueryMC<M, C> : BaseQuery, IContextMenuInfoAuth where M : class where C : class
+    public partial class BaseBillQueryMC<M, C> : BaseQuery, IContextMenuInfoAuth, IToolStripMenuInfoAuth where M : class, new() where C : class, new()
     {
+        public virtual List<ContextMenuController> AddContextMenu()
+        {
+            List<ContextMenuController> list = new List<ContextMenuController>();
+            return list;
+        }
+      
+        public virtual ToolStripItem[] AddExtendButton(tb_MenuInfo menuInfo)
+        {
+            System.Windows.Forms.ToolStripItem[] extendButtons = new System.Windows.Forms.ToolStripItem[] { };
+            this.BaseToolStrip.Items.AddRange(extendButtons);
+            return extendButtons;
+        }
+
+
         /// <summary>
         /// 判断是否需要加载子表明细。为了将这个基类适应于单表单据。如付款申请单
         /// </summary>
@@ -115,12 +130,7 @@ namespace RUINORERP.UI.BaseForm
         /// </summary>
         public Expression<Func<M, string>> RelatedBillEditCol { get; set; }
 
-        public virtual List<ContextMenuController> AddContextMenu()
-        {
-            List<ContextMenuController> list = new List<ContextMenuController>();
-            list.Add(new ContextMenuController("【批量处理】", true, false, "NewSumDataGridView_标记已打印"));
-            return list;
-        }
+
 
         public BaseBillQueryMC()
         {
@@ -166,6 +176,7 @@ namespace RUINORERP.UI.BaseForm
 
                     toolStripButton结案.Visible = false;
                     AddExcludeMenuList();
+                 
                     //其它的排除
                     foreach (var item in BaseToolStrip.Items)
                     {
@@ -219,7 +230,7 @@ namespace RUINORERP.UI.BaseForm
                         }
                     }
 
-
+                    AddExtendButton(CurMenuInfo);
 
                     Krypton.Toolkit.KryptonButton button设置查询条件 = new Krypton.Toolkit.KryptonButton();
                     button设置查询条件.Text = "设置查询条件";
@@ -456,9 +467,10 @@ namespace RUINORERP.UI.BaseForm
 
 
 
-
+        BizTypeMapper Bizmapper = new BizTypeMapper();
         public virtual async void Print(RptMode rptMode)
         {
+            List<M> printItems = new List<M>();
             List<M> selectlist = GetSelectResult();
             if (selectlist.Count == 0)
             {
@@ -475,15 +487,31 @@ namespace RUINORERP.UI.BaseForm
                     if (item.GetPropertyValue("DataStatus").ToString() == ((int)DataStatus.草稿).ToString() || item.GetPropertyValue("DataStatus").ToString() == ((int)DataStatus.新建).ToString())
                     {
                         MessageBox.Show("没有审核的数据无法打印");
-                        return;
+                        continue;
                     }
                 }
+
+                //打印次数提醒
+                if (item.ContainsProperty("PrintStatus"))
+                {
+                    BizType bizType = Bizmapper.GetBizType(typeof(T).Name);
+                    int printCounter = item.GetPropertyValue("PrintStatus").ToString().ToInt();
+                    if (printCounter > 0)
+                    {
+                        if (MessageBox.Show($"当前【{bizType.ToString()}】已经打印过【{printCounter}】次,你确定要重新打印吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2) == DialogResult.No)
+                        {
+                            continue;
+                        }
+                    }
+                }
+
+                printItems.Add(item);
             }
             if (_PrintConfig == null || _PrintConfig.tb_PrintTemplates == null)
             {
-                _PrintConfig = PrintHelper<M>.GetPrintConfig(selectlist);
+                _PrintConfig = PrintHelper<M>.GetPrintConfig(printItems);
             }
-            bool rs = await PrintHelper<M>.Print(selectlist, rptMode, _PrintConfig);
+            bool rs = await PrintHelper<M>.Print(printItems, rptMode, _PrintConfig);
             if (rs && rptMode == RptMode.PRINT)
             {
                 toolStripSplitButtonPrint.Enabled = false;

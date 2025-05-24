@@ -133,16 +133,6 @@ namespace RUINORERP.Model
         //tb_P4Menu.RoleID)
         //RoleID.FK_TB_P4MEN_REFERENCE_TB_ROLEI)
         //tb_RoleInfo.RoleID)
-
-        //[Browsable(false)]打印报表时的数据源会不显示
-        [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_P4Module.RoleID))]
-        public virtual List<tb_P4Module> tb_P4Modules { get; set; }
-        //tb_P4Module.RoleID)
-        //RoleID.FK_TB_P4MOD_REFERENCE_TB_ROLEI)
-        //tb_RoleInfo.RoleID)
-
-
         #endregion
 
 

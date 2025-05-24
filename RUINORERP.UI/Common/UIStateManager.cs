@@ -524,13 +524,7 @@ public UIStateBinder(..., Func<DataStatus, ApprovalStatus, bool, MenuItemEnums, 
 _stateEvaluator = stateEvaluator ?? StatusEvaluator.GetControlState;
 }
  */
-    public static class ControlExtensions
-    {
-        public static bool In<T>(this T value, params T[] values) where T : Enum
-        {
-            return values.Contains(value);
-        }
-    }
+ 
 
 
 

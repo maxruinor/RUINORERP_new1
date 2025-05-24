@@ -306,6 +306,7 @@ namespace RUINORERP.UI.BaseForm
             EditEntity.SetPropertyValue(typeof(C).Name + "s", lines);
             OnBindDataToUIEvent(EditEntity, ActionStatus.加载);
         }
+        BizTypeMapper Bizmapper = new BizTypeMapper();
 
         RUINORERP.Common.Helper.XmlHelper manager = new RUINORERP.Common.Helper.XmlHelper();
         private void button加载最新数据_Click(object sender, EventArgs e)
@@ -3501,7 +3502,9 @@ namespace RUINORERP.UI.BaseForm
             bool rs = await PrintHelper<T>.Print(list, RptMode.DESIGN, PrintConfig);
         }
 
-
+        /// <summary>
+        /// 单个单据打印
+        /// </summary>
         public async void Print()
         {
             if (EditEntity == null)
@@ -3533,6 +3536,21 @@ namespace RUINORERP.UI.BaseForm
                         }
                     }
                 }
+                //打印次数提醒
+                if (item.ContainsProperty("PrintStatus"))
+                {
+                    BizType bizType = Bizmapper.GetBizType(typeof(T).Name);
+                    int printCounter = item.GetPropertyValue("PrintStatus").ToString().ToInt();
+                    if (printCounter > 0)
+                    {
+                        if (MessageBox.Show($"当前【{bizType.ToString()}】已经打印过【{printCounter}】次,你确定要重新打印吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2) == DialogResult.No)
+                        {
+                            return;
+                        }
+                    }
+                }
+
+
             }
             if (PrintConfig == null || PrintConfig.tb_PrintTemplates == null)
             {
@@ -3541,8 +3559,6 @@ namespace RUINORERP.UI.BaseForm
             bool rs = await PrintHelper<T>.Print(list, RptMode.PRINT, PrintConfig);
             AuditLogHelper.Instance.CreateAuditLog<T>("打印", EditEntity);
         }
-
-
 
         public async void Preview()
         {

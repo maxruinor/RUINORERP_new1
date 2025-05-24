@@ -24,7 +24,7 @@ namespace RUINORERP.Global
 
         //Other
         [Description("其他")]
-        其他 = 3   
+        其他 = 3
     }
 
     public enum ContractEnum
@@ -326,6 +326,9 @@ namespace RUINORERP.Global
 
         收款核销款 = 90,
         付款核销款 = 91,
+
+        销售价格调整单 = 92,
+        采购价格调整单 = 93,
 
         销售合同 = 150,
 

@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Threading;
 using System.Diagnostics;
+using RUINORERP.UI.Common;
 
 namespace RUINORERP.UI
 {
@@ -333,25 +334,5 @@ namespace RUINORERP.UI
         }
     }
 
-    public static class ControlExtensions
-    {
-        public static void InvokeIfRequired(this Control control, Action action)
-        {
-            if (control.InvokeRequired)
-            {
-                try
-                {
-                    control.Invoke(action);
-                }
-                catch (Exception ex)
-                {
-                    Debug.WriteLine($"Invoke操作出错: {ex.Message}");
-                }
-            }
-            else
-            {
-                action();
-            }
-        }
-    }
+    
 }

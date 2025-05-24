@@ -124,7 +124,20 @@ namespace RUINORERP.Model
             SetProperty(ref _Paytype_ID, value);
                         }
         }
-
+        private bool _IsCustomizedOrder = false;
+        /// <summary>
+        /// 定制单
+        /// </summary>
+        [AdvQueryAttribute(ColName = "IsCustomizedOrder", ColDesc = "定制单")]
+        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType = "Boolean", ColumnName = "IsCustomizedOrder", IsNullable = false, ColumnDescription = "定制单")]
+        public bool IsCustomizedOrder
+        {
+            get { return _IsCustomizedOrder; }
+            set
+            {
+                SetProperty(ref _IsCustomizedOrder, value);
+            }
+        }
         private long? _PurEntryID;
         /// <summary>
         /// 采购入库单

@@ -71,6 +71,7 @@
             this.lblTotalTaxAmount = new Krypton.Toolkit.KryptonLabel();
             this.cmbPaytype_ID = new Krypton.Toolkit.KryptonComboBox();
             this.lblPaytype_ID = new Krypton.Toolkit.KryptonLabel();
+            this.chkIsCustomizedOrder = new Krypton.Toolkit.KryptonCheckBox();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceSub)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1)).BeginInit();
@@ -102,6 +103,7 @@
             // 
             // kryptonSplitContainer1.Panel1
             // 
+            this.kryptonSplitContainer1.Panel1.Controls.Add(this.chkIsCustomizedOrder);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.cmbProcessWay);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.kryptonLabel1);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.lblDataStatus);
@@ -509,6 +511,15 @@
             this.lblPaytype_ID.TabIndex = 95;
             this.lblPaytype_ID.Values.Text = "付款方式";
             // 
+            // chkIsCustomizedOrder
+            // 
+            this.chkIsCustomizedOrder.Enabled = false;
+            this.chkIsCustomizedOrder.Location = new System.Drawing.Point(362, 69);
+            this.chkIsCustomizedOrder.Name = "chkIsCustomizedOrder";
+            this.chkIsCustomizedOrder.Size = new System.Drawing.Size(62, 20);
+            this.chkIsCustomizedOrder.TabIndex = 161;
+            this.chkIsCustomizedOrder.Values.Text = "定制单";
+            // 
             // UCPurEntryRe
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
@@ -589,5 +600,6 @@
         private Krypton.Toolkit.KryptonComboBox cmbProcessWay;
         private Krypton.Toolkit.KryptonTextBox txtTotalTaxAmount;
         private Krypton.Toolkit.KryptonLabel lblTotalTaxAmount;
+        private Krypton.Toolkit.KryptonCheckBox chkIsCustomizedOrder;
     }
 }

@@ -36,6 +36,7 @@
     <Compile Remove="tb_BOM_SSecondaryDetail.cs" />
     <Compile Remove="tb_OpeningIinventory_detail.cs" />
     <Compile Remove="tb_OpeningIinventory_detailPartial.cs" />
+    <Compile Remove="tb_P4Module.cs" />
     <Compile Remove="tb_ProdAttribute.cs" />
     <Compile Remove="tb_ProdBase.cs" />
     <Compile Remove="tb_Product.cs" />

@@ -42,7 +42,7 @@ using RUINORERP.Global.Model;
 namespace RUINORERP.UI.FM
 {
     //应收应付查询
-    public partial class UCReceivablePayableQuery : BaseBillQueryMC<tb_FM_ReceivablePayable, tb_FM_ReceivablePayableDetail>, UI.AdvancedUIModule.IContextMenuInfoAuth
+    public partial class UCReceivablePayableQuery : BaseBillQueryMC<tb_FM_ReceivablePayable, tb_FM_ReceivablePayableDetail>
     {
         public UCReceivablePayableQuery()
         {
@@ -98,7 +98,7 @@ namespace RUINORERP.UI.FM
         /// 添加回收
         /// </summary>
         /// <returns></returns>
-        public ToolStripItem[] AddExtendButton(tb_MenuInfo menuInfo)
+        public override ToolStripItem[] AddExtendButton(tb_MenuInfo menuInfo)
         {
             ToolStripButton toolStripButton生成对账单 = new System.Windows.Forms.ToolStripButton();
             toolStripButton生成对账单.Text = "生成对账单";

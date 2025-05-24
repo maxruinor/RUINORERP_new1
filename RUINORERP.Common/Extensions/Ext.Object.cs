@@ -452,9 +452,15 @@ namespace RUINORERP.Common.Extensions
         /// <returns></returns>
         public static object GetPropertyValue(this object obj, string propertyName)
         {
-            return obj.GetType().GetProperty(propertyName, BindingFlags)?.GetValue(obj);
+        //    return obj.GetType().GetProperty(propertyName, BindingFlags)?.GetValue(obj);
+        //}
+        //// 扩展方法: 获取对象属性值
+        //public static object GetPropertyValue(this object obj, string propertyName)
+        //{
+            if (obj == null) return null;
+            var property = obj.GetType().GetProperty(propertyName);
+            return property?.GetValue(obj);
         }
-
 
         /// <summary>
         /// 只是为了方便取属性名。因为实体修改后，编译时就能发现错误
@@ -491,7 +497,17 @@ namespace RUINORERP.Common.Extensions
         /// <returns></returns>
         public static void SetPropertyValue(this object obj, string propertyName, object value)
         {
-            obj.GetType().GetProperty(propertyName, BindingFlags)?.SetValue(obj, value);
+        //    obj.GetType().GetProperty(propertyName, BindingFlags)?.SetValue(obj, value);
+        //}
+        //// 扩展方法: 设置对象属性值
+        //public static void SetPropertyValue(this object obj, string propertyName, object value)
+        //{
+            if (obj == null) return;
+            var property = obj.GetType().GetProperty(propertyName);
+            if (property != null && property.CanWrite)
+            {
+                property.SetValue(obj, value);
+            }
         }
 
         /// <summary>

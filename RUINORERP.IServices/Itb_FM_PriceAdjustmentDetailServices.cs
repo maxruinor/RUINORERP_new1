@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/13/2024 18:44:00
+// 时间：05/24/2025 18:28:29
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -16,9 +16,9 @@ using RUINORERP.Model;
 namespace RUINORERP.IServices
 {
     /// <summary>
-    /// 模块权限表（暂时没有使用，逻辑上用菜单的代替了）
+    /// 价格调整单明细
     /// </summary>
-    public partial interface Itb_P4ModuleServices : IBaseServices<tb_P4Module>
+    public partial interface Itb_FM_PriceAdjustmentDetailServices : IBaseServices<tb_FM_PriceAdjustmentDetail>
     {
       
     }

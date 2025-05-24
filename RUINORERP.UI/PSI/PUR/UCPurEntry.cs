@@ -123,7 +123,7 @@ namespace RUINORERP.UI.PSI.PUR
             DataBindingHelper.BindData4TextBox<tb_PurEntry>(entity, t => t.Notes, txtNotes, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_PurEntry>(entity, t => t.ApprovalOpinions, txtApprovalOpinions, BindDataType4TextBox.Text, false);
 
-
+            DataBindingHelper.BindData4CheckBox<tb_PurEntry>(entity, t => t.IsCustomizedOrder, chkIsCustomizedOrder, false);
             DataBindingHelper.BindData4CheckBox<tb_PurEntry>(entity, t => t.ReceiptInvoiceClosed, chkReceiptInvoiceClosed, false);
             DataBindingHelper.BindData4CheckBox<tb_PurEntry>(entity, t => t.GenerateVouchers, chkGenerateVouchers, false);
             DataBindingHelper.BindData4TextBox<tb_PurEntry>(entity, t => t.VoucherNO, txtVoucherNO, BindDataType4TextBox.Text, false);
@@ -250,6 +250,7 @@ namespace RUINORERP.UI.PSI.PUR
             listCols.SetCol_Format<tb_PurEntryDetail>(c => c.SubtotalAmount, CustomFormatType.CurrencyFormat);
             listCols.SetCol_Format<tb_PurEntryDetail>(c => c.TaxAmount, CustomFormatType.CurrencyFormat);
             listCols.SetCol_Format<tb_PurEntryDetail>(c => c.UnitPrice, CustomFormatType.CurrencyFormat);
+            listCols.SetCol_Format<tb_PurEntryDetail>(c => c.CustomizedCost, CustomFormatType.CurrencyFormat);
             sgd = new SourceGridDefine(grid1, listCols, true);
             sgd.GridMasterData = EditEntity;
             /*
@@ -266,7 +267,7 @@ namespace RUINORERP.UI.PSI.PUR
             listCols.SetCol_Summary<tb_PurEntryDetail>(c => c.SubtotalAmount);
 
 
-            listCols.SetCol_Formula<tb_PurEntryDetail>((a, b, c) => a.UnitPrice * c.Quantity, c => c.SubtotalAmount);
+            listCols.SetCol_Formula<tb_PurEntryDetail>((a, b, c) => (a.UnitPrice + a.CustomizedCost) * c.Quantity, c => c.SubtotalAmount);
             listCols.SetCol_Formula<tb_PurEntryDetail>((a, b, c) => a.SubtotalAmount / (1 + b.TaxRate) * c.TaxRate, d => d.TaxAmount);
             //反算成交价
             listCols.SetCol_FormulaReverse<tb_PurEntryDetail>((a) => a.Quantity != 0, (a, b) => a.SubtotalAmount / b.Quantity, c => c.UnitPrice);
@@ -302,7 +303,7 @@ namespace RUINORERP.UI.PSI.PUR
             if (RowDetails != null)
             {
                 List<tb_PurEntryDetail> details = new List<tb_PurEntryDetail>();
-                
+
                 foreach (var item in RowDetails)
                 {
                     tb_PurEntryDetail bOM_SDetail = MainForm.Instance.mapper.Map<tb_PurEntryDetail>(item);
@@ -334,7 +335,7 @@ namespace RUINORERP.UI.PSI.PUR
                     return;
                 }
                 EditEntity.TotalQty = details.Sum(c => c.Quantity);
-                EditEntity.TotalAmount = details.Sum(c => c.SubtotalAmount);
+                EditEntity.TotalAmount = details.Sum(c => (c.UnitPrice + c.CustomizedCost) * c.Quantity);
                 EditEntity.TotalAmount = EditEntity.TotalAmount + EditEntity.ShippingCost;
             }
             catch (Exception ex)
@@ -404,7 +405,7 @@ namespace RUINORERP.UI.PSI.PUR
                     }
                 }
                 EditEntity.TotalQty = details.Sum(c => c.Quantity);
-                EditEntity.TotalAmount = details.Sum(c => c.SubtotalAmount);
+                EditEntity.TotalAmount = details.Sum(c => (c.UnitPrice + c.CustomizedCost) * c.Quantity);
                 EditEntity.TotalAmount = EditEntity.TotalAmount + EditEntity.ShippingCost;
 
                 if (EditEntity.TotalTaxAmount > 0)
@@ -474,7 +475,7 @@ namespace RUINORERP.UI.PSI.PUR
             if (purorder != null)
             {
                 orderid = purorder.PurOrder_ID.ToString();
-                
+
                 tb_PurEntry entity = MainForm.Instance.mapper.Map<tb_PurEntry>(purorder);
                 List<tb_PurEntryDetail> details = MainForm.Instance.mapper.Map<List<tb_PurEntryDetail>>(purorder.tb_PurOrderDetails);
 
@@ -504,7 +505,8 @@ namespace RUINORERP.UI.PSI.PUR
                             && c.Location_ID == details[i].Location_ID
                             && c.PurOrder_ChildID == details[i].PurOrder_ChildID);
                         details[i].Quantity = item.Quantity - item.DeliveredQuantity;// 已经交数量去掉
-                        details[i].SubtotalAmount = details[i].UnitPrice * details[i].Quantity;
+                        details[i].SubtotalAmount = (details[i].UnitPrice + details[i].CustomizedCost) * details[i].Quantity;
+
                         if (details[i].Quantity > 0)
                         {
                             NewDetails.Add(details[i]);
@@ -525,7 +527,7 @@ namespace RUINORERP.UI.PSI.PUR
                             && c.Location_ID == details[i].Location_ID
                             );
                         details[i].Quantity = item.Quantity - item.DeliveredQuantity;// 已经交数量去掉
-                        details[i].SubtotalAmount = details[i].UnitPrice * details[i].Quantity;
+                        details[i].SubtotalAmount = (details[i].UnitPrice + details[i].CustomizedCost) * details[i].Quantity;
                         if (details[i].Quantity > 0)
                         {
                             NewDetails.Add(details[i]);

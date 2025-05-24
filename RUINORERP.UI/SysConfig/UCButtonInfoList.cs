@@ -32,13 +32,13 @@ namespace RUINORERP.UI.BI
 {
 
     [MenuAttrAssemblyInfo("按钮管理", ModuleMenuDefine.模块定义.系统设置, ModuleMenuDefine.系统设置.权限管理)]
-    public partial class UCButtonInfoList : BaseForm.BaseListGeneric<tb_ButtonInfo>, IContextMenuInfoAuth, IToolStripMenuInfoAuth
+    public partial class UCButtonInfoList : BaseForm.BaseListGeneric<tb_ButtonInfo>
     {
         public UCButtonInfoList()
         {
             InitializeComponent();
             base.EditForm = typeof(UCButtonInfoEdit);
-            AddExtendButton(CurMenuInfo);
+
             //Krypton.Toolkit.KryptonButton button检查数据 = new Krypton.Toolkit.KryptonButton();
             //button检查数据.Text = "提取重复数据";
             //button检查数据.ToolTipValues.Description = "提取重复数据，有一行会保留，没有显示出来。";
@@ -49,11 +49,41 @@ namespace RUINORERP.UI.BI
         }
         private void button检查数据_Click(object sender, EventArgs e)
         {
+            if (!dataGridView1.UseSelectedColumn)
+            {
+                dataGridView1.UseSelectedColumn = true;
+            }
             // 定义参与比较的属性列表
             var ButtonProperties = new List<string>()
-                .Include<tb_ButtonInfo>(c => c.BtnName);
-            //数据源开始绑定时用的BindingSortCollection
-            ListDataSoure.DataSource = UITools.CheckDuplicateData<tb_ButtonInfo>(ListDataSoure.Cast<tb_ButtonInfo>().ToList(), ButtonProperties.ToList());
+            .Include<tb_ButtonInfo>(c => c.BtnName)
+            .Include<tb_ButtonInfo>(c => c.MenuID);
+            var oklist = UITools.CheckDuplicateData<tb_ButtonInfo>(ListDataSoure.Cast<tb_ButtonInfo>().ToList(), ButtonProperties.ToList());
+
+            #region 最新检查重复的方法
+            List<long> buttonids = oklist.Select(c => c.ButtonInfo_ID).ToList();
+            if (dataGridView1.UseSelectedColumn)
+            {
+                for (int i = 0; i < dataGridView1.Rows.Count; i++)
+                {
+                    var dr = dataGridView1.Rows[i];
+                    if (dr.DataBoundItem is tb_ButtonInfo buttonInfo)
+                    {
+                        if (buttonids.Contains(buttonInfo.ButtonInfo_ID))
+                        {
+                            dr.Cells["Selected"].Value = true;
+                        }
+                        else
+                        {
+                            dr.Cells["Selected"].Value = false;
+                        }
+                    }
+                }
+
+            }
+
+
+            #endregion
+
             return;
             try
             {
@@ -181,7 +211,7 @@ namespace RUINORERP.UI.BI
         /// 添加回收
         /// </summary>
         /// <returns></returns>
-        public ToolStripItem[] AddExtendButton(tb_MenuInfo menuInfo)
+        public override ToolStripItem[] AddExtendButton(tb_MenuInfo menuInfo)
         {
             ToolStripButton toolStripButton提取重复数据 = new System.Windows.Forms.ToolStripButton();
             toolStripButton提取重复数据.Text = "提取重复数据";

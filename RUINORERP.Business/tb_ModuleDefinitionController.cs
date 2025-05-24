@@ -251,7 +251,6 @@ namespace RUINORERP.Business
                         .Include(m => m.tb_FlowchartDefinitions)
                     .Include(m => m.tb_MenuInfos)
                     .Include(m => m.tb_P4Menus)
-                    .Include(m => m.tb_P4Modules)
                     .ExecuteCommandAsync();
                  }
         else    
@@ -260,7 +259,6 @@ namespace RUINORERP.Business
                 .Include(m => m.tb_FlowchartDefinitions)
                 .Include(m => m.tb_MenuInfos)
                 .Include(m => m.tb_P4Menus)
-                .Include(m => m.tb_P4Modules)
          
                 .ExecuteCommandAsync();
                                           
@@ -297,7 +295,6 @@ namespace RUINORERP.Business
                                 .Includes(m => m.tb_FlowchartDefinitions)
                         .Includes(m => m.tb_MenuInfos)
                         .Includes(m => m.tb_P4Menus)
-                        .Includes(m => m.tb_P4Modules)
                                         .Where(useLike, dto);
             return await querySqlQueryable.ToListAsync()as List<T>;
         }
@@ -310,7 +307,6 @@ namespace RUINORERP.Business
                                 .Include(m => m.tb_FlowchartDefinitions)
                         .Include(m => m.tb_MenuInfos)
                         .Include(m => m.tb_P4Menus)
-                        .Include(m => m.tb_P4Modules)
                                         .ExecuteCommandAsync();
             if (rs)
             {
@@ -476,7 +472,6 @@ namespace RUINORERP.Business
                                             .Includes(t => t.tb_FlowchartDefinitions )
                                 .Includes(t => t.tb_MenuInfos )
                                 .Includes(t => t.tb_P4Menus )
-                                .Includes(t => t.tb_P4Modules )
                         .ToListAsync();
             
             foreach (var item in list)
@@ -499,7 +494,6 @@ namespace RUINORERP.Business
                                             .Includes(t => t.tb_FlowchartDefinitions )
                                 .Includes(t => t.tb_MenuInfos )
                                 .Includes(t => t.tb_P4Menus )
-                                .Includes(t => t.tb_P4Modules )
                         .ToListAsync();
             
             foreach (var item in list)
@@ -522,7 +516,6 @@ namespace RUINORERP.Business
                                         .Includes(t => t.tb_FlowchartDefinitions )
                             .Includes(t => t.tb_MenuInfos )
                             .Includes(t => t.tb_P4Menus )
-                            .Includes(t => t.tb_P4Modules )
                         .ToList();
             
             foreach (var item in list)
@@ -562,7 +555,6 @@ namespace RUINORERP.Business
                                          .Includes(t => t.tb_FlowchartDefinitions )
                             .Includes(t => t.tb_MenuInfos )
                             .Includes(t => t.tb_P4Menus )
-                            .Includes(t => t.tb_P4Modules )
                         .FirstAsync();
             if(entity!=null)
             {

@@ -138,6 +138,7 @@ namespace RUINORERP.UI.PSI.PUR
             DataBindingHelper.BindData4Cmb<tb_Department>(entity, k => k.DepartmentID, v => v.DepartmentName, cmbDepartmentID);
             DataBindingHelper.BindData4Cmb<tb_PaymentMethod>(entity, k => k.Paytype_ID, v => v.Paytype_Name, cmbPaytype_ID);
             DataBindingHelper.BindData4Cmb<tb_Currency>(entity, k => k.Currency_ID, v => v.CurrencyName, cmbCurrency_ID);
+            DataBindingHelper.BindData4CheckBox<tb_PurOrder>(entity, t => t.IsCustomizedOrder, chkIsCustomizedOrder, false);
             //不是业务，不用指定组
             //if (AppContext.projectGroups != null && AppContext.projectGroups.Count > 0)
             //{
@@ -392,6 +393,7 @@ namespace RUINORERP.UI.PSI.PUR
 
             listCols.SetCol_Format<tb_PurOrderDetail>(c => c.TaxRate, CustomFormatType.PercentFormat);
             listCols.SetCol_Format<tb_PurOrderDetail>(c => c.UnitPrice, CustomFormatType.CurrencyFormat);
+            listCols.SetCol_Format<tb_PurOrderDetail>(c => c.CustomizedCost, CustomFormatType.CurrencyFormat);
             listCols.SetCol_Format<tb_PurOrderDetail>(c => c.SubtotalAmount, CustomFormatType.CurrencyFormat);
             listCols.SetCol_Format<tb_PurOrderDetail>(c => c.TaxAmount, CustomFormatType.CurrencyFormat);
 
@@ -424,7 +426,7 @@ namespace RUINORERP.UI.PSI.PUR
             }
 
 
-            listCols.SetCol_Formula<tb_PurOrderDetail>((a, b, c) => a.UnitPrice * c.Quantity, c => c.SubtotalAmount);
+            listCols.SetCol_Formula<tb_PurOrderDetail>((a, b, c) => (a.CustomizedCost + a.UnitPrice) * c.Quantity, c => c.SubtotalAmount);
             listCols.SetCol_Formula<tb_PurOrderDetail>((a, b, c) => a.SubtotalAmount / (1 + b.TaxRate) * c.TaxRate, d => d.TaxAmount);
 
             listCols.SetCol_FormulaReverse<tb_PurOrderDetail>(d => d.UnitPrice == 0, (a, b) => a.SubtotalAmount / b.Quantity, c => c.UnitPrice);//-->成交价是结果列
@@ -562,8 +564,7 @@ namespace RUINORERP.UI.PSI.PUR
                 */
 
                 EditEntity.TotalQty = details.Sum(c => c.Quantity);
-                //EditEntity.TotalAmount = details.Sum(c => c.TransactionPrice * c.Quantity);
-                EditEntity.TotalAmount = details.Sum(c => c.SubtotalAmount);
+                EditEntity.TotalAmount = details.Sum(c => (c.CustomizedCost + c.UnitPrice) * c.Quantity);
                 EditEntity.TotalAmount = EditEntity.TotalAmount + EditEntity.ShippingCost;
                 if (EditEntity.Currency_ID != AppContext.BaseCurrency.Currency_ID)
                 {
@@ -682,7 +683,7 @@ namespace RUINORERP.UI.PSI.PUR
                     return false;
                 }
                 EditEntity.TotalQty = details.Sum(c => c.Quantity);
-                EditEntity.TotalAmount = details.Sum(c => c.SubtotalAmount);
+                EditEntity.TotalAmount = details.Sum(c => (c.UnitPrice + c.CustomizedCost)* c.Quantity);
                 EditEntity.TotalAmount = EditEntity.TotalAmount + EditEntity.ShippingCost;
 
                 if (NeedValidated && EditEntity.TotalQty != details.Sum(c => c.Quantity))

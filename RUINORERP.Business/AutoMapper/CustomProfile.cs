@@ -60,6 +60,15 @@ namespace RUINORERP.Business.AutoMapper
             .ForMember(a => a.LocalPayableAmount, o => o.MapFrom(d => d.SubtotalTransAmount))
             .ForMember(a => a.Summary, o => o.MapFrom(d => d.Summary));
 
+            //生成应付及明细
+            CreateMap<tb_FM_PriceAdjustment, tb_FM_ReceivablePayable>();
+            CreateMap<tb_FM_PriceAdjustmentDetail, tb_FM_ReceivablePayableDetail>();
+
+            CreateMap<tb_SaleOut, tb_FM_PriceAdjustment>();
+            CreateMap<tb_SaleOutDetail, tb_FM_PriceAdjustmentDetail>();
+            CreateMap<tb_PurEntry, tb_FM_PriceAdjustment>();
+            CreateMap<tb_PurEntryDetail, tb_FM_PriceAdjustmentDetail>();
+
 
             //生成应付及明细
             CreateMap<tb_PurEntry, tb_FM_ReceivablePayable>();

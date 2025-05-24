@@ -74,7 +74,8 @@ namespace RUINORERP.Business.CommService
 
             Mapping.Add(BizType.应付款单, typeof(tb_FM_ReceivablePayable));
             Mapping.Add(BizType.应收款单, typeof(tb_FM_ReceivablePayable));
-
+            Mapping.Add(BizType.销售价格调整单, typeof(tb_FM_PriceAdjustment));
+            Mapping.Add(BizType.采购价格调整单, typeof(tb_FM_PriceAdjustment));
 
             Mapping.Add(BizType.收款核销款, typeof(tb_FM_PaymentSettlement));
             Mapping.Add(BizType.付款核销款, typeof(tb_FM_PaymentSettlement));
@@ -140,6 +141,7 @@ namespace RUINORERP.Business.CommService
             throw new ArgumentException("无效的表名", nameof(table));
         }
 
+ 
         //public string GetBillNoCol()
         //{
         //    BillConverterFactory bcf = Startup.GetFromFac<BillConverterFactory>();

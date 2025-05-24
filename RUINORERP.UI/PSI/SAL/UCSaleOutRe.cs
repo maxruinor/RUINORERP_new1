@@ -261,7 +261,7 @@ namespace RUINORERP.UI.PSI.SAL
             base.ToolBarEnabledControl(MenuItemEnums.刷新);
             LoadGrid1();
             LoadGrid2();
-            UIHelper.ControlMasterColumnsInvisible(CurMenuInfo,this);
+            UIHelper.ControlMasterColumnsInvisible(CurMenuInfo, this);
         }
 
         private void LoadGrid1()
@@ -306,7 +306,7 @@ namespace RUINORERP.UI.PSI.SAL
             listCols.SetCol_Summary<tb_SaleOutReDetail>(c => c.SubtotalUntaxedAmount);
             listCols.SetCol_Summary<tb_SaleOutReDetail>(c => c.SubtotalTaxAmount);
 
-            listCols.SetCol_Formula<tb_SaleOutReDetail>((a, b) => a.Cost * b.Quantity, c => c.SubtotalCostAmount);
+            listCols.SetCol_Formula<tb_SaleOutReDetail>((a, b) => (a.Cost + a.CustomizedCost) * b.Quantity, c => c.SubtotalCostAmount);
             listCols.SetCol_Formula<tb_SaleOutReDetail>((a, b) => a.TransactionPrice * b.Quantity, c => c.SubtotalTransAmount);
             listCols.SetCol_Formula<tb_SaleOutReDetail>((a, b) => a.SubtotalTransAmount - b.SubtotalTaxAmount, c => c.SubtotalUntaxedAmount);
             listCols.SetCol_Formula<tb_SaleOutReDetail>((a, b, c) => a.SubtotalTransAmount / (1 + b.TaxRate) * c.TaxRate, d => d.SubtotalTaxAmount);
@@ -425,7 +425,7 @@ namespace RUINORERP.UI.PSI.SAL
             if (RowDetails != null)
             {
                 List<tb_SaleOutReDetail> details = new List<tb_SaleOutReDetail>();
-                
+
                 foreach (var item in RowDetails)
                 {
                     tb_SaleOutReDetail bOM_SDetail = MainForm.Instance.mapper.Map<tb_SaleOutReDetail>(item);
@@ -447,7 +447,7 @@ namespace RUINORERP.UI.PSI.SAL
             if (RowDetails != null)
             {
                 List<tb_SaleOutReRefurbishedMaterialsDetail> details = new List<tb_SaleOutReRefurbishedMaterialsDetail>();
-                
+
                 foreach (var item in RowDetails)
                 {
                     tb_SaleOutReRefurbishedMaterialsDetail bOM_SDetail = MainForm.Instance.mapper.Map<tb_SaleOutReRefurbishedMaterialsDetail>(item);
@@ -471,7 +471,7 @@ namespace RUINORERP.UI.PSI.SAL
             {
                 //计算总金额  这些逻辑是不是放到业务层？后面要优化
                 List<tb_SaleOutReDetail> details = sgd.BindingSourceLines.DataSource as List<tb_SaleOutReDetail>;
-                if(details == null)
+                if (details == null)
                 {
                     return;
                 }
@@ -534,7 +534,7 @@ namespace RUINORERP.UI.PSI.SAL
 
 
                 EditEntity.tb_SaleOutReDetails = details;
-                if (details.Sum(c=>c.SubtotalTaxAmount) > 0)
+                if (details.Sum(c => c.SubtotalTaxAmount) > 0)
                 {
                     EditEntity.IsIncludeTax = true;
                 }
@@ -709,7 +709,7 @@ namespace RUINORERP.UI.PSI.SAL
                 }
 
                 saleoutid = saleout.SaleOut_MainID;
-                
+
                 tb_SaleOutRe entity = MainForm.Instance.mapper.Map<tb_SaleOutRe>(saleout);
                 List<tb_SaleOutReDetail> details = MainForm.Instance.mapper.Map<List<tb_SaleOutReDetail>>(saleout.tb_SaleOutDetails);
                 List<tb_SaleOutReDetail> NewDetails = new List<tb_SaleOutReDetail>();
@@ -719,7 +719,7 @@ namespace RUINORERP.UI.PSI.SAL
                     tb_SaleOutDetail item = saleout.tb_SaleOutDetails.FirstOrDefault(c => c.ProdDetailID == details[i].ProdDetailID);
                     details[i].Quantity = details[i].Quantity - item.TotalReturnedQty;// 减掉已经退回的数量
                     details[i].SubtotalTransAmount = details[i].TransactionPrice * details[i].Quantity;
-                    details[i].Cost  = details[i].Cost ;
+                    details[i].Cost = details[i].Cost;
                     details[i].CustomizedCost = details[i].CustomizedCost;
                     details[i].SubtotalCostAmount = (details[i].Cost + details[i].CustomizedCost) * details[i].Quantity;
 

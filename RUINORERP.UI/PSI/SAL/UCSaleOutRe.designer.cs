@@ -161,7 +161,7 @@
             // chkIsCustomizedOrder
             // 
             this.chkIsCustomizedOrder.Enabled = false;
-            this.chkIsCustomizedOrder.Location = new System.Drawing.Point(1124, 96);
+            this.chkIsCustomizedOrder.Location = new System.Drawing.Point(1090, 99);
             this.chkIsCustomizedOrder.Name = "chkIsCustomizedOrder";
             this.chkIsCustomizedOrder.Size = new System.Drawing.Size(62, 20);
             this.chkIsCustomizedOrder.TabIndex = 155;

@@ -11,6 +11,7 @@ using Autofac;
 using Krypton.Navigator;
 using Krypton.Toolkit;
 using Krypton.Workspace;
+using LiveChartsCore.Geo;
 using Microsoft.Extensions.Logging;
 using RUINORERP.Business;
 using RUINORERP.Business.Processor;
@@ -82,13 +83,15 @@ namespace RUINORERP.UI.Common
             ms.Items.CopyTo(fixedItems, 0);
             ms.Items.Clear();
             //两套逻辑 要区分处理
-            if (appContext.IsSuperUser)// && appContext.User.Identity.Name == "admin"
+            if (appContext.CurUserInfo.Name == "超级管理员")
             {
+                // 没有配置时按默认的加载
                 foreach (var item in appContext.CurUserInfo.UserModList)
                 {
                     if (item.tb_MenuInfos != null)
                     {
                         var modmenus = item.tb_MenuInfos;
+                        modmenus = modmenus.OrderBy(t => t.Sort).ToList();
                         resourceList.AddRange(modmenus);
                         LoadMenu(ms.Items, modmenus, 0);
                     }
@@ -96,29 +99,28 @@ namespace RUINORERP.UI.Common
             }
             else
             {
-                if (appContext.CurUserInfo == null)
+                List<tb_MenuInfo> tempList = new List<tb_MenuInfo>();
+                if (appContext.CurrentRole.tb_P4Menus == null)
                 {
-                    return new();
+                    appContext.CurrentRole.tb_P4Menus = new List<tb_P4Menu>();
                 }
-                foreach (var item in appContext.CurUserInfo.UserModList)
+                foreach (tb_P4Menu P4Menu in appContext.CurrentRole.tb_P4Menus)
                 {
-                    if (item.tb_P4Menus != null)
+                    if (P4Menu.IsVisble)
                     {
-                        List<tb_MenuInfo> tempList = new List<tb_MenuInfo>();
-                        foreach (tb_P4Menu P4Menu in item.tb_P4Menus.Where(c => c.IsVisble).ToList())
+                        //不重复
+                        if (!tempList.Contains(P4Menu.tb_menuinfo))
                         {
-                            //不重复
-                            if (!tempList.Contains(P4Menu.tb_menuinfo))
-                            {
-                                tempList.Add(P4Menu.tb_menuinfo);
-                            }
-
+                            tempList.Add(P4Menu.tb_menuinfo);
                         }
-                        ////加入权限，有权限才加载，除初次管理员加载
-                        LoadMenu(ms.Items, tempList, 0);
-                        resourceList.AddRange(tempList);
                     }
                 }
+
+                tempList = tempList.OrderBy(t => t.Sort).ToList();
+
+                ////加入权限，有权限才加载，除初次管理员加载
+                LoadMenu(ms.Items, tempList, 0);
+                resourceList.AddRange(tempList);
             }
 
             //最后加上窗口菜单

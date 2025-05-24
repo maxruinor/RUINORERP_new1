@@ -21,6 +21,7 @@
   <ItemGroup>
     <Compile Remove="AssemblyInfo.cs" />
     <Compile Remove="AutoMapper\CslaProfile.cs" />
+    <Compile Remove="AutoMapper\CustomProfileAll.cs" />
     <Compile Remove="CommService\DictServiceHelper.cs" />
     <Compile Remove="CommService\InitDBData.cs" />
     <Compile Remove="Ean13.cs" />

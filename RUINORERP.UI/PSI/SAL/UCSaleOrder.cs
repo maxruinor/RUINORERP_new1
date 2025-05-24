@@ -610,6 +610,7 @@ using var binder = new UIStateBinder(..., customEvaluator);
             listCols.SetCol_Format<tb_SaleOrderDetail>(c => c.Discount, CustomFormatType.PercentFormat);
             listCols.SetCol_Format<tb_SaleOrderDetail>(c => c.TaxRate, CustomFormatType.PercentFormat);
             listCols.SetCol_Format<tb_SaleOrderDetail>(c => c.UnitPrice, CustomFormatType.CurrencyFormat);
+            listCols.SetCol_Format<tb_SaleOrderDetail>(c => c.CustomizedCost, CustomFormatType.CurrencyFormat);
             sgd = new SourceGridDefine(grid1, listCols, true);
             sgd.GridMasterData = EditEntity;
 

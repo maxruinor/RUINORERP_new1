@@ -331,6 +331,12 @@ namespace RUINORERP.Business
                 case BizType.付款核销款:
                     rule = "{S:FKHX}{D:yyMMdd}{redis:{S:付款核销}{D:yyMM}/000}";
                     break;
+                case BizType.销售价格调整单:
+                    rule = "{S:SPA}{D:yyMMdd}{redis:{S:销售价格调整单}{D:yyMM}/000}";
+                    break;
+                case BizType.采购价格调整单:
+                    rule = "{S:PPA}{D:yyMMdd}{redis:{S:采购价格调整单}{D:yyMM}/000}";
+                    break;
                 default:
                     break;
             }

@@ -67,18 +67,11 @@ namespace RUINORERP.UI.BaseForm
     /// 基本资料的列表，是否需要加一个标记来表示 在菜单中编辑 ，还是在 其他窗体时 关联编辑。看后面的业务情况。
     /// </summary>
     [PreCheckMustOverrideBaseClass]
-    public partial class BaseListGeneric<T> : BaseUControl, IContextMenuInfoAuth where T : class
+    public partial class BaseListGeneric<T> : BaseUControl, IContextMenuInfoAuth, IToolStripMenuInfoAuth where T : class
     {
-
-        //public virtual ToolStripItem[] AddExtendButton()
-        //{
-        //    //返回空的数组
-        //    return new ToolStripItem[] { };
-        //}
         public virtual List<ContextMenuController> AddContextMenu()
         {
             List<ContextMenuController> list = new List<ContextMenuController>();
-            list.Add(new ContextMenuController("【批量处理】", true, false, "NewSumDataGridView_标记已打印"));
             return list;
         }
 
@@ -401,7 +394,7 @@ namespace RUINORERP.UI.BaseForm
                     // resolver.AddForeignKeyColumnMapping("Module", "ModuleId");
                 }
             }
-
+            AddExtendButton(CurMenuInfo);
         }
 
         private async void button表格显示设置_Click(object sender, EventArgs e)
@@ -1766,7 +1759,7 @@ namespace RUINORERP.UI.BaseForm
         protected async void AdvQueryShowResult(bool useLike, BaseEntityDto dto)
         {
             dataGridView1.ReadOnly = true;
-           
+
             List<T> list = await ctr.BaseQueryByAdvancedNavAsync(useLike, dto);
             //ListDataSoure.DataSource = list.ToBindingSortCollection();//这句是否能集成到上一层生成
             //dataGridView1.DataSource = ListDataSoure;
@@ -2015,7 +2008,7 @@ namespace RUINORERP.UI.BaseForm
                 {
                     Modify();
                 }
-                
+
             }
             if (e.ColumnIndex == -1 || e.RowIndex == -1)
             {
@@ -2225,6 +2218,13 @@ namespace RUINORERP.UI.BaseForm
         public virtual void dataGridView1_CellMouseDown(object sender, DataGridViewCellMouseEventArgs e)
         {
 
+        }
+
+        public virtual ToolStripItem[] AddExtendButton(tb_MenuInfo menuInfo)
+        {
+            System.Windows.Forms.ToolStripItem[] extendButtons = new System.Windows.Forms.ToolStripItem[] { };
+            this.BaseToolStrip.Items.AddRange(extendButtons);
+            return extendButtons;
         }
     }
 }

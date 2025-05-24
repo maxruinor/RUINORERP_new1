@@ -440,14 +440,14 @@ namespace RUINORERP.UI.MRP.MP
             {
                 listColsTarget.SetCol_NeverVisible<ProductSharePart>(c => c.BarCode);
             }
-          
+
 
             //如果库位为只读  暂时只会显示 ID
             //listCols.SetCol_ReadOnly<ProductSharePart>(c => c.Location_ID);
 
             //listCols.SetCol_ReadOnly<tb_ProductionDemandDetail>(c => c.CompletedQuantity);
- 
-            UIHelper.ControlChildColumnsInvisible(CurMenuInfo,listColsTarget );
+
+            UIHelper.ControlChildColumnsInvisible(CurMenuInfo, listColsTarget);
 
             sgdTarget = new SourceGridDefine(gridTargetItems, listColsTarget, true);
 
@@ -489,7 +489,7 @@ namespace RUINORERP.UI.MRP.MP
             //{
             //    listColsTarget.SetCol_NeverVisible<ProductSharePart>(c => c.BarCode);
             //}
-            
+
             UIHelper.ControlChildColumnsInvisible(CurMenuInfo, listColsTarget);
             /*
             //具体审核权限的人才显示
@@ -562,7 +562,7 @@ namespace RUINORERP.UI.MRP.MP
             {
                 listColsPur.SetCol_NeverVisible<ProductSharePart>(c => c.BarCode);
             }
-        
+
             UIHelper.ControlChildColumnsInvisible(CurMenuInfo, listColsPur);
             //listCols.SetCol_DefaultValue<tb_ProductionPlanDetail>(a => a.TaxRate, 0.13m);//m =>decial d=>double
 
@@ -657,7 +657,7 @@ namespace RUINORERP.UI.MRP.MP
             kryptonNavigator1.SelectedPage = KP分析目标;
 
             GridRelated.SetRelatedInfo<tb_ManufacturingOrder>(c => c.MONO);
-            UIHelper.ControlMasterColumnsInvisible(CurMenuInfo,this);
+            UIHelper.ControlMasterColumnsInvisible(CurMenuInfo, this);
 
             kryptonTreeGridViewStockLess.CellPainting += KryptonTreeGridViewStockLess_CellPainting;
             kryptonTreeGridViewMaking.CellPainting += KryptonTreeGridViewMaking_CellPainting;
@@ -778,7 +778,7 @@ namespace RUINORERP.UI.MRP.MP
             if (RowDetails != null)
             {
                 List<tb_ProductionDemandDetail> details = new List<tb_ProductionDemandDetail>();
-                
+
                 foreach (var item in RowDetails)
                 {
                     tb_ProductionDemandDetail Detail = MainForm.Instance.mapper.Map<tb_ProductionDemandDetail>(item);
@@ -1289,7 +1289,7 @@ protected async override Task<ApprovalEntity> ReReview()
             //新增时才可以转单
             if (SourceBill != null)
             {
-                
+
                 tb_ProductionDemand entity = MainForm.Instance.mapper.Map<tb_ProductionDemand>(SourceBill);
                 List<tb_ProductionDemandTargetDetail> details = MainForm.Instance.mapper.Map<List<tb_ProductionDemandTargetDetail>>(SourceBill.tb_ProductionPlanDetails);
                 entity.AnalysisDate = System.DateTime.Now;
@@ -1545,7 +1545,7 @@ protected async override Task<ApprovalEntity> ReReview()
 
 
 
-            
+
             //将产品详情转换为基本信息列表
             List<BaseProductInfo> BaseProductInfoList = MainForm.Instance.mapper.Map<List<BaseProductInfo>>(MainForm.Instance.list);
 
@@ -1611,7 +1611,7 @@ protected async override Task<ApprovalEntity> ReReview()
             ConcurrentDictionary<string, string> BaseProductInfoColNames = UIHelper.GetFieldNameList<BaseProductInfo>(true)
                 .exclude<BaseProductInfo>(expressions);
 
-            
+
             //将产品详情转换为基本信息列表
             List<BaseProductInfo> BaseProductInfoList = MainForm.Instance.mapper.Map<List<BaseProductInfo>>(MainForm.Instance.list);
 
@@ -1932,7 +1932,7 @@ protected async override Task<ApprovalEntity> ReReview()
             foreach (tb_ProductionDemandDetail target in EditEntity.tb_ProductionDemandDetails.Where(c => c.ParentId == 0).ToList())
             {
                 tb_ProduceGoodsRecommendDetail MakingProd = new tb_ProduceGoodsRecommendDetail();
-                
+
                 MakingProd = MainForm.Instance.mapper.Map<tb_ProduceGoodsRecommendDetail>(target);
                 //要用原始的ID及父ID
                 //long sid = RUINORERP.Common.SnowflakeIdHelper.IdHelper.GetLongId();
@@ -2157,12 +2157,12 @@ protected async override Task<ApprovalEntity> ReReview()
             //判断他是不是能再次生成制令单，是看选择的行中有没有已经生成过
             //先看是否选中，再看是中间件式还是 上层驱动，如果是中间件，
             //   如果是上层式，则找PID？
-            List<tb_ProduceGoodsRecommendDetail> MakingItems = EditEntity.tb_ProduceGoodsRecommendDetails.Where(c => c.Selected == true).ToList();
+            List<tb_ProduceGoodsRecommendDetail> MakingItems = EditEntity.tb_ProduceGoodsRecommendDetails.Where(c => c.Selected == true && !string.IsNullOrEmpty(c.RefBillNO)).ToList();
             if (MiddlewareType)
             {
                 if (MakingItems.Count > 1)
                 {
-                    MessageBox.Show("中间件模式下，一次只能选择一个目标生成制令单。");
+                    MessageBox.Show("中间件模式下，一次只能选择一个目标生成制令单。\r\n如已经生成过中间件，接着再生成时，请【刷新】后重试。");
                     return;
                 }
                 else
@@ -2184,9 +2184,9 @@ protected async override Task<ApprovalEntity> ReReview()
                 //上层驱动模式
                 List<tb_ProduceGoodsRecommendDetail> MakingItemsByTop = EditEntity.tb_ProduceGoodsRecommendDetails.Where(c => c.Selected == true).ToList().OrderBy(c => c.ParentId).ToList();
                 tb_ProduceGoodsRecommendDetail target = MakingItems.FirstOrDefault();
-                bool IsCreatectrMO = await ctrMO.IsExistAsync(c => c.PDID == EditEntity.PDID 
+                bool IsCreatectrMO = await ctrMO.IsExistAsync(c => c.PDID == EditEntity.PDID
                 && c.ProdDetailID == target.ProdDetailID && c.PDCID == target.PDCID
-                && c.Location_ID==target.Location_ID
+                && c.Location_ID == target.Location_ID
                 );
                 if (IsCreatectrMO)
                 {
@@ -2402,7 +2402,7 @@ protected async override Task<ApprovalEntity> ReReview()
                 decimal bomOutQty = Prow.tb_bom_s.OutputQty;
                 foreach (var item in EditEntity.tb_PurGoodsRecommendDetails)
                 {
-                    tb_BOM_SDetail sDetail = subBomDetails.FirstOrDefault(c => c.ProdDetailID == item.ProdDetailID );
+                    tb_BOM_SDetail sDetail = subBomDetails.FirstOrDefault(c => c.ProdDetailID == item.ProdDetailID);
                     if (sDetail != null)
                     {
                         decimal totalDiffQty = sDetail.UsedQty * DiffQty / bomOutQty;

@@ -65,10 +65,27 @@ namespace RUINORERP.UI.Report
         {
             if (!MainForm.Instance.AppContext.IsSuperUser)
             {
-                MessageBox.Show("您没有删除打印配置的权限，请联系管理员。");
-                return;
-            }
+                //MessageBox.Show("您没有删除打印配置的权限，请联系管理员。");
+                //return;
+                try
+                {
+                    if (bindingSourcePrintTemplate.Current != null && bindingSourcePrintTemplate.Current is tb_PrintTemplate template)
+                    {
+                        if (template.Created_by != null)
+                        {
+                            if (template.Created_by.Value != MainForm.Instance.AppContext.CurUserInfo.Id)
+                            {
+                                MessageBox.Show("只有创建人，才能删除打印配置。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                                return;
+                            }
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
 
+                }
+            }
             if (MessageBox.Show("打印模板删除后无法恢复\r\n确定删除吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Information) == DialogResult.Yes)
             {
                 if (bindingSourcePrintTemplate.Current != null)
@@ -79,9 +96,7 @@ namespace RUINORERP.UI.Report
                         bindingSourcePrintTemplate.RemoveCurrent();
                     }
                 }
-
             }
-
         }
 
         private void btnDesign_Click(object sender, EventArgs e)
@@ -265,11 +280,22 @@ namespace RUINORERP.UI.Report
                 //准备合并上次的 多页时候才需要
                 TargetReport.Prepare(true);
 
-                //设置默认打印机
-                if (printConfig.PrinterSelected.HasValue && printConfig.PrinterSelected.Value)
+
+                if (MainForm.Instance.AppContext.CurrentUser_Role_Personalized.UseUserOwnPrinter.HasValue
+                            && MainForm.Instance.AppContext.CurrentUser_Role_Personalized.UseUserOwnPrinter.Value)
                 {
+                    //优先使用用户个性化设置指定的打印机
                     TargetReport.PrintSettings.ShowDialog = false;
-                    TargetReport.PrintSettings.Printer = printConfig.PrinterName;
+                    TargetReport.PrintSettings.Printer = MainForm.Instance.AppContext.CurrentUser_Role_Personalized.PrinterName;
+                }
+                else
+                {
+                    //设置默认打印机
+                    if (printConfig.PrinterSelected.HasValue && printConfig.PrinterSelected.Value)
+                    {
+                        TargetReport.PrintSettings.ShowDialog = false;
+                        TargetReport.PrintSettings.Printer = printConfig.PrinterName;
+                    }
                 }
 
                 //操作方式：DESIGN-设计;PREVIEW-预览;PRINT-打印
@@ -346,8 +372,6 @@ namespace RUINORERP.UI.Report
                 cmbPrinterList.SelectedIndex = cmbPrinterList.FindString(printConfig.PrinterName);
             }
 
-
-
             newSumDataGridView1.NeedSaveColumnsXml = true;
             newSumDataGridView1.XmlFileName = typeof(tb_PrintTemplate).Name;
             newSumDataGridView1.FieldNameList = Common.UIHelper.GetFieldNameColList(typeof(tb_PrintTemplate));
@@ -375,6 +399,8 @@ namespace RUINORERP.UI.Report
 
         private async void btnPrinter_Click(object sender, EventArgs e)
         {
+
+
             if (cmbPrinterList.SelectedItem != null)
             {
                 printConfig.PrinterName = cmbPrinterList.SelectedItem.ToString();
@@ -389,6 +415,7 @@ namespace RUINORERP.UI.Report
                 BusinessHelper.Instance.InitEntity(printConfig);
             }
             await MainForm.Instance.AppContext.Db.Updateable<tb_PrintConfig>(printConfig).ExecuteCommandAsync();
+
         }
 
         private void 设为默认ToolStripMenuItem_Click(object sender, EventArgs e)

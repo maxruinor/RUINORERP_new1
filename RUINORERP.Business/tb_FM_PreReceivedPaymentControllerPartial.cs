@@ -67,22 +67,25 @@ namespace RUINORERP.Business
 
                     return rmrs;
                 }
-
+                var paymentRecordController = _appContext.GetRequiredService<tb_FM_PaymentRecordController<tb_FM_PaymentRecord>>();
                 // 开启事务，保证数据一致性
                 _unitOfWorkManage.BeginTran();
-
+                
+                
                 //注意，反审 将对应的预付生成的收款单，只有收款单没有审核前，删除
-                //删除
-                if (entity.ReceivePaymentType == (int)ReceivePaymentType.收款)
-                {
-                    await _appContext.Db.Deleteable<tb_FM_PaymentRecord>()
-                        .Where(c => (c.PaymentStatus == (long)PaymentStatus.草稿 || c.PaymentStatus == (long)PaymentStatus.待审核) && c.tb_FM_PaymentRecordDetails.Any(d => d.SourceBilllId == entity.PreRPID && d.SourceBizType == (int)BizType.预收款单)).ExecuteCommandAsync();
-                }
-                else
-                {
-                    await _appContext.Db.Deleteable<tb_FM_PaymentRecord>()
-                        .Where(c => (c.PaymentStatus == (long)PaymentStatus.草稿 || c.PaymentStatus == (long)PaymentStatus.待审核) && c.tb_FM_PaymentRecordDetails.Any(d => d.SourceBilllId == entity.PreRPID && d.SourceBizType == (int)BizType.预付款单)).ExecuteCommandAsync();
-                }
+                ////删除
+                //if (entity.ReceivePaymentType == (int)ReceivePaymentType.收款)
+                //{
+                //    var list = await _appContext.Db.Queryable<tb_FM_PaymentRecord>()
+                //                  .Where(c => (c.PaymentStatus == (long)PaymentStatus.草稿 || c.PaymentStatus == (long)PaymentStatus.待审核) && c.tb_FM_PaymentRecordDetails.Any(d => d.SourceBilllId == entity.PreRPID && d.SourceBizType == (int)BizType.预收款单)).ToListAsync();
+                //}
+                //else
+                //{
+                //    await _appContext.Db.Deleteable<tb_FM_PaymentRecord>()
+                //        .Where(c => (c.PaymentStatus == (long)PaymentStatus.草稿 || c.PaymentStatus == (long)PaymentStatus.待审核) && c.tb_FM_PaymentRecordDetails.Any(d => d.SourceBilllId == entity.PreRPID && d.SourceBizType == (int)BizType.预付款单)).ExecuteCommandAsync();
+                //}
+
+
                 entity.PrePaymentStatus = (long)PrePaymentStatus.草稿;
                 entity.ApprovalResults = false;
                 entity.ApprovalStatus = (int)ApprovalStatus.未审核;
@@ -111,7 +114,8 @@ namespace RUINORERP.Business
         /// <summary>
         /// 这个审核可以由业务来审。后面还会有财务来定是否真实收付，这财务审核收款单前，还是可以反审的
         /// 审核通过时
-        /// 预收款单本身是「收款」的一种业务类型，要销售订单审核时已经生成了预收款单 ，通过 BizType 标记其业务属性为预收款。
+        /// 预收款单本身是「收款」的一种业务类型，销售订单审核时已经生成了预收款单 ，通过 BizType 标记其业务属性为预收款。
+        /// 这里审核生成收款单
         /// tb_FM_PaymentSettlement 不需要立即生成，但需在后续触发核销时生成（抵扣时生成）。
         /// </summary>
         /// <param name="ObjectEntity"></param>
@@ -125,17 +129,15 @@ namespace RUINORERP.Business
                 // 开启事务，保证数据一致性
                 _unitOfWorkManage.BeginTran();
 
-
-
-                //tb_FM_PaymentRecordController<tb_FM_PaymentRecord> settlementController = _appContext.GetRequiredService<tb_FM_PaymentRecordController<tb_FM_PaymentRecord>>();
-                //tb_FM_PaymentRecord paymentRecord = await settlementController.CreatePaymentRecord(entity, false);
+                tb_FM_PaymentRecordController<tb_FM_PaymentRecord> settlementController = _appContext.GetRequiredService<tb_FM_PaymentRecordController<tb_FM_PaymentRecord>>();
+                tb_FM_PaymentRecord paymentRecord = await settlementController.CreatePaymentRecord(entity, false);
+             
                 //确认收到款  应该是收款审核时 反写回来 成 【待核销】
                 //if (paymentRecord.PaymentId > 0)
                 //{
                 //    entity.ForeignBalanceAmount = entity.ForeignPrepaidAmount;
                 //    entity.LocalBalanceAmount = entity.LocalPrepaidAmount;
                 //}
-
                 entity.PrePaymentStatus = (long)PrePaymentStatus.已生效;
                 entity.ApprovalStatus = (int)ApprovalStatus.已审核;
                 BusinessHelper.Instance.ApproverEntity(entity);

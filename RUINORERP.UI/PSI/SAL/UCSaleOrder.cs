@@ -57,6 +57,10 @@ namespace RUINORERP.UI.PSI.SAL
         {
             InitializeComponent();
             InitDataToCmbByEnumDynamicGeneratedDataSource<tb_SaleOrder>(typeof(Priority), e => e.OrderPriority, cmbOrderPriority, false);
+            if (!PublicEntityObjects.Contains(typeof(ProductSharePart)))
+            {
+                PublicEntityObjects.Add(typeof(ProductSharePart));
+            }
         }
 
 
@@ -561,8 +565,8 @@ using var binder = new UIStateBinder(..., customEvaluator);
         SetDependencyObject<P, S, T>   P包含S字段包含T字段--》是有且包含
          */
 
-
-
+        // 在基类中定义静态属性
+        public static List<Type> PublicEntityObjects { get; set; } = new List<Type>();
         SourceGridDefine sgd = null;
         //        SourceGridHelper<View_ProdDetail, tb_SaleOrderDetail> sgh = new SourceGridHelper<View_ProdDetail, tb_SaleOrderDetail>();
         SourceGridHelper sgh = new SourceGridHelper();
@@ -575,15 +579,8 @@ using var binder = new UIStateBinder(..., customEvaluator);
             var sw = new Stopwatch();
             sw.Start();
 
-            //base.ToolBarEnabledControl(MenuItemEnums.刷新);
-
-            ///显示列表对应的中文
-            //base.FieldNameList = UIHelper.GetFieldNameList<tb_SaleOrderDetail>();
-
-
             grid1.BorderStyle = BorderStyle.FixedSingle;
             grid1.Selection.EnableMultiSelection = false;
-
 
             List<SGDefineColumnItem> listCols = new List<SGDefineColumnItem>();
             //指定了关键字段ProdDetailID
@@ -604,7 +601,6 @@ using var binder = new UIStateBinder(..., customEvaluator);
 
             //如果库位为只读  暂时只会显示 ID
             //listCols.SetCol_ReadOnly<ProductSharePart>(c => c.Location_ID);
-
             listCols.SetCol_ReadOnly<tb_SaleOrderDetail>(c => c.TotalDeliveredQty);
 
             listCols.SetCol_Format<tb_SaleOrderDetail>(c => c.Discount, CustomFormatType.PercentFormat);
@@ -613,13 +609,8 @@ using var binder = new UIStateBinder(..., customEvaluator);
             listCols.SetCol_Format<tb_SaleOrderDetail>(c => c.CustomizedCost, CustomFormatType.CurrencyFormat);
             sgd = new SourceGridDefine(grid1, listCols, true);
             sgd.GridMasterData = EditEntity;
-
-
             listCols.SetCol_Formula<tb_SaleOrderDetail>((a, b) => a.UnitPrice * b.Discount, c => c.TransactionPrice);//-->成交价是结果列
-
-
             //listCols.SetCol_Formula<tb_SaleOrderDetail>((a, b) => a.TransactionPrice / b.Discount, c => c.UnitPrice);
-
 
             listCols.SetCol_FormulaReverse<tb_SaleOrderDetail>(d => d.UnitPrice == 0 && d.Discount != 0 && d.TransactionPrice != 0, (a, b) => a.TransactionPrice / b.Discount, c => c.UnitPrice);//-->成交价是结果列
             //单价和成交价不一样时，并且单价不能为零时，可以计算出折扣的值 TODO:!!!!
@@ -633,17 +624,11 @@ using var binder = new UIStateBinder(..., customEvaluator);
 
             //反算时还要加更复杂的逻辑：如果单价为0时，则可以反算到单价。折扣不变。（默认为1）， 如果单价有值。则反算折扣？成交价？
 
-
-
             listCols.SetCol_Formula<tb_SaleOrderDetail>((a, b, c) => a.SubtotalTransAmount / (1 + b.TaxRate) * c.TaxRate, d => d.SubtotalTaxAmount);
             listCols.SetCol_Formula<tb_SaleOrderDetail>((a, b) => (a.Cost + a.CustomizedCost) * b.Quantity, c => c.SubtotalCostAmount);
 
-            //listCols.SetCol_Summary<tb_SaleOrderDetail>(c => c.Quantity);
-            //listCols.SetCol_Summary<tb_SaleOrderDetail>(c => c.CommissionAmount);
-            //listCols.SetCol_Summary<tb_SaleOrderDetail>(c => c.SubtotalCostAmount);
             //listCols.SetCol_Summary<tb_SaleOrderDetail>(c => c.SubtotalTransAmount);
             //listCols.SetCol_Summary<tb_SaleOrderDetail>(c => c.SubtotalTaxAmount);
-
 
             //设置总计列
             BaseProcessor baseProcessor = BusinessHelper._appContext.GetRequiredServiceByName<BaseProcessor>(typeof(tb_SaleOrderDetail).Name + "Processor");
@@ -661,17 +646,12 @@ using var binder = new UIStateBinder(..., customEvaluator);
             sgh.SetPointToColumnPairs<ProductSharePart, tb_SaleOrderDetail>(sgd, f => f.Inv_Cost, t => t.Cost);
             sgh.SetPointToColumnPairs<ProductSharePart, tb_SaleOrderDetail>(sgd, f => f.Standard_Price, t => t.UnitPrice);
             sgh.SetPointToColumnPairs<ProductSharePart, tb_SaleOrderDetail>(sgd, f => f.prop, t => t.property);
-            sgh.SetPointToColumnPairs<ProductSharePart, tb_SaleOrderDetail>(sgd, f => f.Model, t => t.CustomerPartNo);
+            sgh.SetPointToColumnPairs<ProductSharePart, tb_SaleOrderDetail>(sgd, f => f.Model, t => t.CustomerPartNo, false);
 
             //应该只提供一个结构
             List<tb_SaleOrderDetail> lines = new List<tb_SaleOrderDetail>();
             bindingSourceSub.DataSource = lines;
             sgd.BindingSourceLines = bindingSourceSub;
-            //Expression<Func<View_ProdDetail, bool>> exp = Expressionable.Create<View_ProdDetail>() //创建表达式
-            //    .AndIF(true, w => w.CNName.Length > 0)
-            //   // .AndIF(txtSpecifications.Text.Trim().Length > 0, w => w.Specifications.Contains(txtSpecifications.Text.Trim()))
-            //   .ToExpression();//注意 这一句 不能少
-
 
             //list = dc.BaseQueryByWhere(exp);
             list = MainForm.Instance.list;
@@ -1515,6 +1495,7 @@ using var binder = new UIStateBinder(..., customEvaluator);
         ToolStripButton toolStripButton反结案 = new System.Windows.Forms.ToolStripButton();
 
 
+
         private async void toolStripButton反结案_Click(object sender, EventArgs e)
         {
             if (EditEntity == null)
@@ -1543,5 +1524,7 @@ using var binder = new UIStateBinder(..., customEvaluator);
         {
 
         }
+
+
     }
 }

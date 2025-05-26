@@ -83,6 +83,9 @@ using AutoMapper;
 using Netron.GraphLib.IO.NML;
 using RUINORERP.Global.EnumExt;
 using RUINORERP.Business.FMService;
+using SourceGrid;
+using log4net;
+using NPOI.SS.Formula.Functions;
 
 
 
@@ -94,8 +97,7 @@ namespace RUINORERP.UI
     public partial class MainForm : KryptonForm
     {
 
-
-
+        public UILogManager logManager;
 
         //IOptions<T> 提供对配置设置的单例访问。它在整个应用程序生命周期中保持相同的实例，这意味着即使在配置文件更改后，通过 IOptions<T> 获取的值也不会改变
         //。
@@ -193,8 +195,9 @@ namespace RUINORERP.UI
             }
 
             AppContext = Program.AppContextData;
-
-
+            SourceGrid.Cells.Views.Cell viewGreen = new SourceGrid.Cells.Views.Cell();
+            // 初始化日志管理器
+            logManager = new UILogManager(this, uclog.grid, viewGreen);
             var clientCommandRegistry = new ClientCommandRegistry();
             var clientCommandHandlers = clientCommandRegistry.AutoRegisterCommandHandler();
             dispatcher = new ClientCommandDispatcher(clientCommandHandlers);
@@ -313,43 +316,39 @@ namespace RUINORERP.UI
         public async Task<bool> UpdateSys(bool ActiveUpdate)
         {
             bool rs = false;
-
-            AutoUpdate.FrmUpdate Update = new AutoUpdate.FrmUpdate();
-            if (Update.CheckHasUpdates())
+            try
             {
-                MessageBox.Show("服务器有新版本，更新前请保存当前操作，关闭系统。", "温馨提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                Process.Start(Update.currentexeName);
-                rs = true;
-
-                // 等待2秒，确保更新程序启动
-                await Task.Delay(1000);
-
-
-
-                //启动另一个exe程序后等待2秒后来检测读取这个文件
-                // string content = FileHelper.ReadFileContent(UpdatefilePath);
-
-                // 确保当前程序退出
-                rs = true;
-
-
-            }
-            else
-            {
-                if (ActiveUpdate)
+                AutoUpdate.FrmUpdate Update = new AutoUpdate.FrmUpdate();
+                if (Update.CheckHasUpdates())
                 {
-                    MessageBox.Show("已经是最新版本，不需要更新。", "温馨提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                }
-                rs = false;
-            }
-            await Task.Delay(10); // 假设操作需要一段时间
-            if (rs)
-            {
-                // 确保当前程序退出
-                //Environment.Exit(0);
-            }
+                    MessageBox.Show("服务器有新版本，更新前请保存当前操作，关闭系统。", "温馨提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    Process.Start(Update.currentexeName);
+                    rs = true;
 
-            return rs;
+                    // 等待2秒，确保更新程序启动
+                    await Task.Delay(1500);
+                    //启动另一个exe程序后等待2秒后来检测读取这个文件
+                    // string content = FileHelper.ReadFileContent(UpdatefilePath);
+
+                    // 确保当前程序退出
+                    rs = true;
+
+                }
+                else
+                {
+                    if (ActiveUpdate)
+                    {
+                        MessageBox.Show("已经是最新版本，不需要更新。", "温馨提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    }
+                    rs = false;
+                }
+                await Task.Delay(10); // 假设操作需要一段时间
+                return rs;
+            }
+            catch
+            {
+                return false;
+            }
         }
 
 
@@ -366,11 +365,6 @@ namespace RUINORERP.UI
             //  LoginServerByEasyClient();
             // kryptonDockingManager1.AddFloatingWindow("Floating", new KryptonPage[] { NewInput() });
         }
-
-        //private KryptonPage NewInput()
-        //{
-        //    return NewPage("LocationTypeList", 0, new UCCustomerVendorList());
-        //}
 
 
 
@@ -427,6 +421,7 @@ namespace RUINORERP.UI
 
         public UClog uclog = Startup.GetFromFac<UClog>();
         // public IM.UCMessager ucMsg = new IM.UCMessager();
+
 
         private string version = string.Empty;
 
@@ -1264,7 +1259,8 @@ namespace RUINORERP.UI
         {
             if (AuthorizeController.GetShowDebugInfoAuthorization(AppContext))
             {
-                MainForm.Instance.uclog.AddLog(sql);
+                //MainForm.Instance.uclog.AddLog(sql);
+                logManager.AddLog("sql", sql);
             }
         }
 
@@ -2188,6 +2184,8 @@ namespace RUINORERP.UI
                 //    return;
                 //}
                 await ecs.client.Close();
+
+                logManager.Dispose();
             }
             catch (Exception ex)
             {
@@ -2240,10 +2238,12 @@ namespace RUINORERP.UI
         {
             try
             {
-                MainForm.Instance.Invoke(new Action(() =>
-                {
-                    uclog.AddLog("print", msg);
-                }));
+
+                logManager.AddLog("日志", msg);
+                //MainForm.Instance.Invoke(new Action(() =>
+                //{
+                //    uclog.AddLog("print", msg);
+                //}));
 
             }
             catch (Exception ex)

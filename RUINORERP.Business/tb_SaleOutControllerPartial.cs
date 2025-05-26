@@ -126,10 +126,8 @@ namespace RUINORERP.Business
         {
             ReturnResults<T> rrs = new ReturnResults<T>();
             tb_SaleOut entity = ObjectEntity as tb_SaleOut;
-
             try
             {
-
                 if (entity == null)
                 {
                     return rrs;
@@ -142,10 +140,7 @@ namespace RUINORERP.Business
                     rrs.Succeeded = false;
                     return rrs;
                 }
-
                 tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
-
-
                 //这部分是否能提出到上一级公共部分？
                 entity.DataStatus = (int)DataStatus.确认;
                 // entity.ApprovalOpinions = approvalEntity.ApprovalComments;
@@ -742,12 +737,7 @@ namespace RUINORERP.Business
                                 #endregion
                             }
                         }
-                        //// 多币种余额更新示例
-                        //if (payable.Currency_ID != customer.BaseCurrencyID)
-                        //{
-                        //    decimal convertedAmount = payable.ForeignBalanceAmount * payable.ExchangeRate;
-                        //    customer.LocalReceivableBalance += convertedAmount;
-                        //}
+
                         #endregion
                     }
                     //运费检测  如果一个订单有运费。多次出库时。运费也默认加到了每次的出库单。
@@ -1086,7 +1076,7 @@ namespace RUINORERP.Business
                     var ctrpayable = _appContext.GetRequiredService<tb_FM_ReceivablePayableController<tb_FM_ReceivablePayable>>();
 
                     //出库时，全部生成应收，账期的。就加上到期日
-                    //有付款过的。就去预收中抵扣，不够的金额及状态标识出来生成对账单
+                    //有付款过的。就去预收中抵扣，不够的金额及状态标识出来
                     //反操作上面的逻辑
 
                     int deleteCounter = await _appContext.Db.Deleteable<tb_FM_ReceivablePayable>()
@@ -1111,12 +1101,12 @@ namespace RUINORERP.Business
                                 case (long)ARAPStatus.已结清:
                                     //全额反向
                                     //出库时，全部生成应收，账期的。就加上到期日
-                                    //有付款过的。就去预收中抵扣，不够的金额及状态标识出来生成对账单
+                                    //有付款过的。就去预收中抵扣，生成反向应收单
                                     ReturnMainSubResults<tb_FM_ReceivablePayable> results = await ctrpayable.CreateReceivablePayable(entity, true);
                                     break;
                                 case (long)ARAPStatus.部分支付:
                                     //退回部分
-                                    string msg = $"部分支付还要处理！所以反审核失败。请联系管理员";
+                                    string msg = $"已部分支付，无法反审核。请联系管理员";
                                     rs.ErrorMsg = msg;
                                     _unitOfWorkManage.RollbackTran();
                                     _logger.LogInformation(msg);

@@ -187,6 +187,7 @@ namespace RUINORERP.UI.FM
                 txtPayeeAccountNo.Text = "";
             }
 
+            DataBindingHelper.BindData4Cmb<tb_FM_Account>(entity, k => k.Account_id, v => v.Account_name, cmbAccount_id);
             DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayable>(entity, t => t.ARAPNo, txtARAPNo, BindDataType4TextBox.Qty, false);
             DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayable>(entity, t => t.ExchangeRate.ToString(), txtExchangeRate, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayable>(entity, t => t.TotalForeignPayableAmount.ToString(), txtTotalForeignPayableAmount, BindDataType4TextBox.Money, false);
@@ -240,7 +241,7 @@ namespace RUINORERP.UI.FM
 
             }
             else
-            {
+                {
                 //应付  付给供应商
                 //创建表达式
                 var lambda = Expressionable.Create<tb_CustomerVendor>()

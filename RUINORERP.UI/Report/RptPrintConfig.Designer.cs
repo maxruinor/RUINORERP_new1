@@ -29,7 +29,7 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(RptPrintConfig));
             this.kryptonSplitContainer1 = new Krypton.Toolkit.KryptonSplitContainer();
             this.kryptonPanel2 = new Krypton.Toolkit.KryptonPanel();
@@ -103,7 +103,6 @@
             // kryptonSplitContainer1.Panel2
             // 
             this.kryptonSplitContainer1.Panel2.Controls.Add(this.GroupBoxSelectPrinter);
-            this.kryptonSplitContainer1.Panel2.Controls.Add(this.btnPrinter);
             this.kryptonSplitContainer1.Panel2.Controls.Add(this.chkSelectPrinter);
             this.kryptonSplitContainer1.Panel2.Controls.Add(this.btnDesign);
             this.kryptonSplitContainer1.Panel2.Controls.Add(this.btnExit);
@@ -112,8 +111,8 @@
             this.kryptonSplitContainer1.Panel2.Controls.Add(this.btnDelete);
             this.kryptonSplitContainer1.Panel2.Controls.Add(this.btnCreate);
             this.kryptonSplitContainer1.Panel2.Controls.Add(this.btnQueryBill);
-            this.kryptonSplitContainer1.Size = new System.Drawing.Size(574, 426);
-            this.kryptonSplitContainer1.SplitterDistance = 249;
+            this.kryptonSplitContainer1.Size = new System.Drawing.Size(664, 473);
+            this.kryptonSplitContainer1.SplitterDistance = 276;
             this.kryptonSplitContainer1.TabIndex = 0;
             // 
             // kryptonPanel2
@@ -122,7 +121,7 @@
             this.kryptonPanel2.Dock = System.Windows.Forms.DockStyle.Fill;
             this.kryptonPanel2.Location = new System.Drawing.Point(206, 0);
             this.kryptonPanel2.Name = "kryptonPanel2";
-            this.kryptonPanel2.Size = new System.Drawing.Size(368, 249);
+            this.kryptonPanel2.Size = new System.Drawing.Size(458, 276);
             this.kryptonPanel2.TabIndex = 2;
             // 
             // kryptonGroupBox2
@@ -134,7 +133,7 @@
             // kryptonGroupBox2.Panel
             // 
             this.kryptonGroupBox2.Panel.Controls.Add(this.newSumDataGridView1);
-            this.kryptonGroupBox2.Size = new System.Drawing.Size(368, 249);
+            this.kryptonGroupBox2.Size = new System.Drawing.Size(458, 276);
             this.kryptonGroupBox2.TabIndex = 0;
             this.kryptonGroupBox2.Values.Heading = "模板种类";
             // 
@@ -143,8 +142,8 @@
             this.newSumDataGridView1.AllowUserToAddRows = false;
             this.newSumDataGridView1.AllowUserToDeleteRows = false;
             this.newSumDataGridView1.AllowUserToOrderColumns = true;
-            dataGridViewCellStyle1.BackColor = System.Drawing.Color.Beige;
-            this.newSumDataGridView1.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle1;
+            dataGridViewCellStyle2.BackColor = System.Drawing.Color.Beige;
+            this.newSumDataGridView1.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle2;
             this.newSumDataGridView1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
@@ -160,7 +159,7 @@
             this.newSumDataGridView1.NeedSaveColumnsXml = false;
             this.newSumDataGridView1.RowTemplate.Height = 23;
             this.newSumDataGridView1.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
-            this.newSumDataGridView1.Size = new System.Drawing.Size(364, 225);
+            this.newSumDataGridView1.Size = new System.Drawing.Size(454, 252);
             this.newSumDataGridView1.SumColumns = null;
             this.newSumDataGridView1.SummaryDescription = "2020-08最新 带有合计列功能;";
             this.newSumDataGridView1.SumRowCellFormat = "N2";
@@ -221,7 +220,7 @@
             this.kryptonPanel1.Dock = System.Windows.Forms.DockStyle.Left;
             this.kryptonPanel1.Location = new System.Drawing.Point(0, 0);
             this.kryptonPanel1.Name = "kryptonPanel1";
-            this.kryptonPanel1.Size = new System.Drawing.Size(198, 249);
+            this.kryptonPanel1.Size = new System.Drawing.Size(198, 276);
             this.kryptonPanel1.TabIndex = 0;
             // 
             // kryptonGroupBox1
@@ -233,7 +232,7 @@
             // kryptonGroupBox1.Panel
             // 
             this.kryptonGroupBox1.Panel.Controls.Add(this.listboxBIll);
-            this.kryptonGroupBox1.Size = new System.Drawing.Size(198, 249);
+            this.kryptonGroupBox1.Size = new System.Drawing.Size(198, 276);
             this.kryptonGroupBox1.TabIndex = 0;
             this.kryptonGroupBox1.Values.Heading = "单据号";
             // 
@@ -242,7 +241,7 @@
             this.listboxBIll.Dock = System.Windows.Forms.DockStyle.Fill;
             this.listboxBIll.Location = new System.Drawing.Point(0, 0);
             this.listboxBIll.Name = "listboxBIll";
-            this.listboxBIll.Size = new System.Drawing.Size(194, 225);
+            this.listboxBIll.Size = new System.Drawing.Size(194, 252);
             this.listboxBIll.TabIndex = 0;
             // 
             // GroupBoxSelectPrinter
@@ -253,7 +252,8 @@
             // GroupBoxSelectPrinter.Panel
             // 
             this.GroupBoxSelectPrinter.Panel.Controls.Add(this.cmbPrinterList);
-            this.GroupBoxSelectPrinter.Size = new System.Drawing.Size(442, 57);
+            this.GroupBoxSelectPrinter.Panel.Controls.Add(this.btnPrinter);
+            this.GroupBoxSelectPrinter.Size = new System.Drawing.Size(604, 61);
             this.GroupBoxSelectPrinter.TabIndex = 11;
             this.GroupBoxSelectPrinter.Values.Heading = "默认打印机设置";
             // 
@@ -263,14 +263,14 @@
             this.cmbPrinterList.IntegralHeight = false;
             this.cmbPrinterList.Location = new System.Drawing.Point(3, 7);
             this.cmbPrinterList.Name = "cmbPrinterList";
-            this.cmbPrinterList.Size = new System.Drawing.Size(429, 21);
+            this.cmbPrinterList.Size = new System.Drawing.Size(498, 21);
             this.cmbPrinterList.TabIndex = 11;
             // 
             // btnPrinter
             // 
-            this.btnPrinter.Location = new System.Drawing.Point(472, 128);
+            this.btnPrinter.Location = new System.Drawing.Point(512, 5);
             this.btnPrinter.Name = "btnPrinter";
-            this.btnPrinter.Size = new System.Drawing.Size(90, 25);
+            this.btnPrinter.Size = new System.Drawing.Size(71, 25);
             this.btnPrinter.TabIndex = 10;
             this.btnPrinter.Values.Text = "保存";
             this.btnPrinter.Click += new System.EventHandler(this.btnPrinter_Click);
@@ -286,7 +286,7 @@
             // 
             // btnDesign
             // 
-            this.btnDesign.Location = new System.Drawing.Point(351, 15);
+            this.btnDesign.Location = new System.Drawing.Point(396, 15);
             this.btnDesign.Name = "btnDesign";
             this.btnDesign.Size = new System.Drawing.Size(90, 25);
             this.btnDesign.TabIndex = 8;
@@ -296,7 +296,7 @@
             // btnExit
             // 
             this.btnExit.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.btnExit.Location = new System.Drawing.Point(472, 69);
+            this.btnExit.Location = new System.Drawing.Point(541, 69);
             this.btnExit.Name = "btnExit";
             this.btnExit.Size = new System.Drawing.Size(90, 25);
             this.btnExit.TabIndex = 7;
@@ -305,7 +305,7 @@
             // 
             // btnPrint
             // 
-            this.btnPrint.Location = new System.Drawing.Point(351, 69);
+            this.btnPrint.Location = new System.Drawing.Point(396, 69);
             this.btnPrint.Name = "btnPrint";
             this.btnPrint.Size = new System.Drawing.Size(90, 25);
             this.btnPrint.TabIndex = 6;
@@ -323,7 +323,7 @@
             // 
             // btnDelete
             // 
-            this.btnDelete.Location = new System.Drawing.Point(472, 15);
+            this.btnDelete.Location = new System.Drawing.Point(541, 15);
             this.btnDelete.Name = "btnDelete";
             this.btnDelete.Size = new System.Drawing.Size(90, 25);
             this.btnDelete.TabIndex = 4;
@@ -366,7 +366,7 @@
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnExit;
-            this.ClientSize = new System.Drawing.Size(574, 426);
+            this.ClientSize = new System.Drawing.Size(664, 473);
             this.Controls.Add(this.kryptonSplitContainer1);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedToolWindow;
             this.Name = "RptPrintConfig";

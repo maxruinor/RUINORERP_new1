@@ -77,7 +77,7 @@ namespace RUINORERP.UI.BaseForm
             List<ContextMenuController> list = new List<ContextMenuController>();
             return list;
         }
-      
+
         public virtual ToolStripItem[] AddExtendButton(tb_MenuInfo menuInfo)
         {
             System.Windows.Forms.ToolStripItem[] extendButtons = new System.Windows.Forms.ToolStripItem[] { };
@@ -176,7 +176,7 @@ namespace RUINORERP.UI.BaseForm
 
                     toolStripButton结案.Visible = false;
                     AddExcludeMenuList();
-                 
+
                     //其它的排除
                     foreach (var item in BaseToolStrip.Items)
                     {
@@ -429,6 +429,17 @@ namespace RUINORERP.UI.BaseForm
                     break;
 
                 case MenuItemEnums.打印:
+
+                    if (PrintConfig != null && PrintConfig.tb_PrintTemplates != null)
+                    {
+                        //如果当前单据只有一个模块，就直接打印
+                        if (PrintConfig.tb_PrintTemplates.Count == 1)
+                        {
+                            Print(RptMode.PRINT);
+                            return;
+                        }
+                    }
+
                     //个性化设置了打印要选择模板打印时，就进入设计介面
                     if (MainForm.Instance.AppContext.CurrentUser_Role_Personalized.SelectTemplatePrint.HasValue
                            && MainForm.Instance.AppContext.CurrentUser_Role_Personalized.SelectTemplatePrint.Value)
@@ -487,6 +498,10 @@ namespace RUINORERP.UI.BaseForm
                     if (item.GetPropertyValue("DataStatus").ToString() == ((int)DataStatus.草稿).ToString() || item.GetPropertyValue("DataStatus").ToString() == ((int)DataStatus.新建).ToString())
                     {
                         MessageBox.Show("没有审核的数据无法打印");
+                        if (selectlist.Count == 1)
+                        {
+                            return;
+                        }
                         continue;
                     }
                 }
@@ -507,11 +522,18 @@ namespace RUINORERP.UI.BaseForm
 
                 printItems.Add(item);
             }
-            if (_PrintConfig == null || _PrintConfig.tb_PrintTemplates == null)
+
+            if (printItems.Count == 0)
             {
-                _PrintConfig = PrintHelper<M>.GetPrintConfig(printItems);
+                MessageBox.Show("没有需要打印的数据");
+                return;
             }
-            bool rs = await PrintHelper<M>.Print(printItems, rptMode, _PrintConfig);
+
+            if (PrintConfig == null || PrintConfig.tb_PrintTemplates == null)
+            {
+                PrintConfig = PrintHelper<M>.GetPrintConfig(printItems);
+            }
+            bool rs = await PrintHelper<M>.Print(printItems, rptMode, PrintConfig);
             if (rs && rptMode == RptMode.PRINT)
             {
                 toolStripSplitButtonPrint.Enabled = false;
@@ -520,7 +542,7 @@ namespace RUINORERP.UI.BaseForm
 
         #region 为了性能 打印认为打印时 检测过的打印机相关配置在一个窗体下成功后。即可不每次检测
         private tb_PrintConfig printConfig = null;
-        public tb_PrintConfig _PrintConfig
+        public tb_PrintConfig PrintConfig
         {
             get
             {

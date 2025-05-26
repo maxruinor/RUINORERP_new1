@@ -45,6 +45,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Windows.Media.Media3D;
 using Winista.Text.HtmlParser.Data;
+using Winista.Text.HtmlParser.Lex;
 using WorkflowCore.Primitives;
 using ZXing.Common;
 
@@ -3208,7 +3209,7 @@ namespace RUINORERP.UI.UCSourceGrid
         /// <param name="TypeForEnumOptions">如果是枚举时，传入枚举类型用于创建下拉值</param>
         /// <returns></returns>
         private SourceGrid.Cells.Editors.ComboBox SetComboxEditor(SGDefineColumnItem dci)
-            {
+        {
             var _editor = new SourceGrid.Cells.Editors.ComboBox(typeof(string));
             if (dci.CustomFormat == CustomFormatType.EnumOptions && dci.TypeForEnumOptions != null)
             {
@@ -3528,7 +3529,11 @@ namespace RUINORERP.UI.UCSourceGrid
         /// <param name="define"></param>
         /// <param name="fromExp"></param>
         /// <param name="toExp"></param>
-        public void SetPointToColumnPairs<ProdcutShare, BillDetail>(SourceGridDefine define, Expression<Func<ProdcutShare, object>> fromExp, Expression<Func<BillDetail, object>> toExp)
+        public void SetPointToColumnPairs<ProdcutShare, BillDetail>(SourceGridDefine define,
+            Expression<Func<ProdcutShare, object>> fromExp, 
+            Expression<Func<BillDetail, object>> toExp,
+            bool HideSourceColumn = true
+            )
         {
             string fromColName = fromExp.GetMemberInfo().Name;
             string toColName = toExp.GetMemberInfo().Name;
@@ -3539,8 +3544,8 @@ namespace RUINORERP.UI.UCSourceGrid
             }
             if (!define.PointToColumnPairList.ContainsKey(fromdc))
             {
-                fromdc.Visible = false;
-                fromdc.NeverVisible = true;
+                fromdc.Visible = !HideSourceColumn;
+                fromdc.NeverVisible = HideSourceColumn;
                 SGDefineColumnItem todc = define.DefineColumns.Where(c => c.ColName == toColName && c.BelongingObjectType.Name == typeof(BillDetail).Name).FirstOrDefault();
                 if (todc == null)
                 {
@@ -4061,6 +4066,10 @@ namespace RUINORERP.UI.UCSourceGrid
             //var colInfo = sgdefine.grid.Columns.GetColumnInfo(dc.UniqueId);
             foreach (ColumnInfo item in sgdefine.grid.Columns)
             {
+                if (item == null)
+                {
+                    continue;
+                }
                 var defineColumnItem = item.Tag as SGDefineColumnItem;
                 if (defineColumnItem == null)
                 {
@@ -4185,7 +4194,7 @@ namespace RUINORERP.UI.UCSourceGrid
 
                         //格式化显示的列
                         if (defineColumnItem.IsDisplayFormatText)
-                        {   
+                        {
                             //本来是为了在应收单明中显示业务类型，但是这里是输入，那么应该需要做一下cmb下拉的。再显示对应的值
                             //可以做一个数据源，然后在SetCols时设置。后面根据这个去生成对应的控件
                             //sgdefine.grid[p.Row, realIndex].Value = defineColumnItem.DefaultValue;

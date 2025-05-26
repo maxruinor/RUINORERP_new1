@@ -35,6 +35,7 @@ using RUINORERP.Global.EnumExt;
 using RUINORERP.UI.ATechnologyStack;
 using FluentValidation.Results;
 using RUINORERP.Global;
+using RUINORERP.Model.Dto;
 
 namespace RUINORERP.UI.Common
 {
@@ -393,7 +394,7 @@ namespace RUINORERP.UI.Common
                                 if (item.tb_fieldinfo.IsChild && !item.tb_fieldinfo.IsEnabled)
                                 {
                                     SGDefineColumnItem defineColumnItem = listCols.Where(w => w.ColName == item.tb_fieldinfo.FieldName
-                                    && !w.BelongingObjectType.Name.Contains("ProductSharePart")
+                                    && !w.BelongingObjectType.Name.Contains(typeof(ProductSharePart).Name)
                                     ).FirstOrDefault();
                                     if (defineColumnItem != null)
                                     {
@@ -407,7 +408,7 @@ namespace RUINORERP.UI.Common
                                 if ((!item.tb_fieldinfo.IsEnabled || !item.IsVisble) && item.tb_fieldinfo.IsChild)
                                 {
                                     SGDefineColumnItem defineColumnItem = listCols.Where(w => w.ColName == item.tb_fieldinfo.FieldName
-                                    && !w.BelongingObjectType.Name.Contains("ProductSharePart")
+                                    && !w.BelongingObjectType.Name.Contains(typeof(ProductSharePart).Name)
                                     ).FirstOrDefault();
                                     if (defineColumnItem != null)
                                     {
@@ -419,7 +420,7 @@ namespace RUINORERP.UI.Common
                                 if (item.tb_fieldinfo.DefaultHide && item.tb_fieldinfo.IsChild)
                                 {
                                     SGDefineColumnItem defineColumnItem = listCols.Where(w => w.ColName == item.tb_fieldinfo.FieldName
-                                    && !w.BelongingObjectType.Name.Contains("ProductSharePart")).FirstOrDefault();
+                                    && !w.BelongingObjectType.Name.Contains(typeof(ProductSharePart).Name)).FirstOrDefault();
                                     if (defineColumnItem != null)
                                     {
                                         defineColumnItem.SetCol_DefaultHide(item.tb_fieldinfo.FieldName);
@@ -430,7 +431,7 @@ namespace RUINORERP.UI.Common
                                 if (item.tb_fieldinfo.ReadOnly && item.tb_fieldinfo.IsChild)
                                 {
                                     SGDefineColumnItem defineColumnItem = listCols.Where(w => w.ColName == item.tb_fieldinfo.FieldName
-                                    && !w.BelongingObjectType.Name.Contains("ProductSharePart")).FirstOrDefault();
+                                    && !w.BelongingObjectType.Name.Contains(typeof(ProductSharePart).Name)).FirstOrDefault();
                                     if (defineColumnItem != null)
                                     {
                                         defineColumnItem.SetCol_ReadOnly(item.tb_fieldinfo.FieldName);

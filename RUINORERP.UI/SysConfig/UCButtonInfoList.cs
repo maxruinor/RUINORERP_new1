@@ -39,15 +39,8 @@ namespace RUINORERP.UI.BI
             InitializeComponent();
             base.EditForm = typeof(UCButtonInfoEdit);
 
-            //Krypton.Toolkit.KryptonButton button检查数据 = new Krypton.Toolkit.KryptonButton();
-            //button检查数据.Text = "提取重复数据";
-            //button检查数据.ToolTipValues.Description = "提取重复数据，有一行会保留，没有显示出来。";
-            //button检查数据.ToolTipValues.EnableToolTips = true;
-            //button检查数据.ToolTipValues.Heading = "提示";
-            //button检查数据.Click += button检查数据_Click;
-            //base.frm.flowLayoutPanelButtonsArea.Controls.Add(button检查数据);
         }
-        private void button检查数据_Click(object sender, EventArgs e)
+        private void button提取重复数据_Click(object sender, EventArgs e)
         {
             if (!dataGridView1.UseSelectedColumn)
             {
@@ -84,73 +77,7 @@ namespace RUINORERP.UI.BI
 
             #endregion
 
-            return;
-            try
-            {
-                // 转换数据源
-                var list = ListDataSoure.Cast<tb_ButtonInfo>().ToList();
-                if (!list.Any())
-                {
-                    MessageBox.Show("没有数据可检查", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    return;
-                }
 
-                // 获取主键名称
-                string pkName = UIHelper.GetPrimaryKeyColName(typeof(tb_ButtonInfo));
-
-                // 定义参与比较的属性列表
-                var includeProperties = new List<string>()
-                    .Include<tb_ButtonInfo>(c => c.MenuID)
-                    .Include<tb_ButtonInfo>(c => c.BtnText)
-                    .Include<tb_ButtonInfo>(c => c.FormName)
-                    .Include<tb_ButtonInfo>(c => c.ClassPath)
-                    .Include<tb_ButtonInfo>(c => c.BtnName);
-
-                // 创建属性访问器缓存
-                var propertyAccessors = typeof(tb_ButtonInfo)
-                    .GetProperties()
-                    .Where(p => includeProperties.Contains(p.Name) && p.Name != pkName)
-                    .Select(p => new { Property = p, Getter = ExpressionHelper.CreateGetter(p) })
-                    .ToList();
-
-                if (!propertyAccessors.Any())
-                {
-                    MessageBox.Show("没有可比较的属性", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                    return;
-                }
-                List<dynamic> dlist = new List<dynamic>();
-                foreach (var item in propertyAccessors)
-                {
-                    dlist.Add(item);
-                }
-
-                // 使用属性值元组作为键进行分组
-                var duplicates = list
-                    .GroupBy(item => ExpressionHelper.CreateKey<tb_ButtonInfo>(item, dlist))
-                    .Where(g => g.Count() > 1)
-                    .SelectMany(g => g.Skip(1)) // 保留第一个，选择重复的
-                    .ToList();
-
-
-                // 显示结果
-                if (duplicates.Any())
-                {
-                    ListDataSoure.DataSource = duplicates.ToBindingSortCollection<tb_ButtonInfo>();
-                    dataGridView1.DataSource = ListDataSoure;
-                    MessageBox.Show($"发现 {duplicates.Count} 条重复数据", "结果", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                }
-                else
-                {
-                    MessageBox.Show("没有发现重复数据", "结果", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    // 恢复原始数据显示
-                    ListDataSoure.DataSource = list.ToBindingSortCollection<tb_ButtonInfo>();
-                    dataGridView1.DataSource = ListDataSoure;
-                }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"检查过程中发生错误: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
         }
 
 
@@ -220,7 +147,7 @@ namespace RUINORERP.UI.BI
             toolStripButton提取重复数据.Name = "提取重复数据";
             UIHelper.ControlButton(CurMenuInfo, toolStripButton提取重复数据);
             toolStripButton提取重复数据.ToolTipText = "提取重复数据，有一行会保留，没有显示出来。。";
-            toolStripButton提取重复数据.Click += new System.EventHandler(this.button检查数据_Click);
+            toolStripButton提取重复数据.Click += new System.EventHandler(this.button提取重复数据_Click);
 
             System.Windows.Forms.ToolStripItem[] extendButtons = new System.Windows.Forms.ToolStripItem[] { toolStripButton提取重复数据 };
             this.BaseToolStrip.Items.AddRange(extendButtons);
@@ -268,10 +195,61 @@ namespace RUINORERP.UI.BI
 
 
         }
-
-        private void NewSumDataGridView_检测按钮是否存在(object sender, EventArgs e)
+        List<MenuAttrAssemblyInfo> MenuAssemblylist = UIHelper.RegisterForm();
+        private async void NewSumDataGridView_检测按钮是否存在(object sender, EventArgs e)
         {
+            dataGridView1.UseSelectedColumn = true;
 
+            // 提取所有按钮信息
+            var buttonList = this.dataGridView1.Rows
+                .Cast<DataGridViewRow>()
+                .Select(r => r.DataBoundItem as tb_ButtonInfo)
+                .Where(bi => bi != null)
+                .ToList();
+
+            // 按ClassPath分组并获取唯一的类路径集合
+            var uniqueClassPaths = buttonList
+                .GroupBy(bi => bi.ClassPath)
+                .Select(g => g.Key)
+                .ToList();
+
+            // 并行处理每个类路径
+            await Task.WhenAll(uniqueClassPaths.Select(async classPath =>
+            {
+                // 查找菜单信息
+                var menuInfo = MainForm.Instance.AppContext.UserMenuList
+                    .FirstOrDefault(m => m.ClassPath == classPath);
+
+                // 查找菜单属性信息
+                var menuAttrInfo = MenuAssemblylist
+                    .FirstOrDefault(mai => mai.ClassPath == classPath);
+
+                if (menuInfo != null && menuAttrInfo != null)
+                {
+                    // 在UI线程中初始化菜单项
+                    await MainForm.Instance.InvokeAsync(async () =>
+                    {
+                        var initModuleMenu = Startup.GetFromFac<InitModuleMenu>();
+                        var existingButtons = await initModuleMenu.InitToolStripItemAsync(menuAttrInfo, menuInfo, false);
+
+                        // 获取当前类路径下的所有按钮
+                        var classPathButtons = buttonList
+                            .Where(bi => bi.ClassPath == classPath)
+                            .ToList();
+
+                        // 筛选出在buttonList中存在但不在existingButtons中的按钮
+                        var buttonsToSelect = classPathButtons
+                            .Where(bi => !existingButtons.Any(eb => eb.BtnName == bi.BtnName && eb.BtnText == bi.BtnText))
+                            .ToList();
+
+                        // 更新选中状态
+                        foreach (var button in buttonsToSelect)
+                        {
+                            button.Selected = true;
+                        }
+                    });
+                }
+            }));
         }
 
         #endregion

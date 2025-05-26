@@ -70,6 +70,8 @@
             this.txtEmail = new Krypton.Toolkit.KryptonTextBox();
             this.lblNotes = new Krypton.Toolkit.KryptonLabel();
             this.txtNotes = new Krypton.Toolkit.KryptonTextBox();
+            this.lblFax = new Krypton.Toolkit.KryptonLabel();
+            this.txtFax = new Krypton.Toolkit.KryptonTextBox();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel1)).BeginInit();
             this.kryptonPanel1.SuspendLayout();
@@ -99,6 +101,8 @@
             // 
             // kryptonPanel1
             // 
+            this.kryptonPanel1.Controls.Add(this.lblFax);
+            this.kryptonPanel1.Controls.Add(this.txtFax);
             this.kryptonPanel1.Controls.Add(this.kryptonGroupBox1);
             this.kryptonPanel1.Controls.Add(this.lblCompanyCode);
             this.kryptonPanel1.Controls.Add(this.txtCompanyCode);
@@ -174,7 +178,7 @@
             // 
             // lblInvoiceTaxNumber
             // 
-            this.lblInvoiceTaxNumber.Location = new System.Drawing.Point(28, 31);
+            this.lblInvoiceTaxNumber.Location = new System.Drawing.Point(28, 33);
             this.lblInvoiceTaxNumber.Name = "lblInvoiceTaxNumber";
             this.lblInvoiceTaxNumber.Size = new System.Drawing.Size(88, 20);
             this.lblInvoiceTaxNumber.TabIndex = 21;
@@ -182,7 +186,7 @@
             // 
             // txtInvoiceTaxNumber
             // 
-            this.txtInvoiceTaxNumber.Location = new System.Drawing.Point(144, 28);
+            this.txtInvoiceTaxNumber.Location = new System.Drawing.Point(144, 30);
             this.txtInvoiceTaxNumber.Name = "txtInvoiceTaxNumber";
             this.txtInvoiceTaxNumber.Size = new System.Drawing.Size(307, 23);
             this.txtInvoiceTaxNumber.TabIndex = 22;
@@ -205,7 +209,7 @@
             // 
             // lblInvoiceTEL
             // 
-            this.lblInvoiceTEL.Location = new System.Drawing.Point(54, 122);
+            this.lblInvoiceTEL.Location = new System.Drawing.Point(54, 112);
             this.lblInvoiceTEL.Name = "lblInvoiceTEL";
             this.lblInvoiceTEL.Size = new System.Drawing.Size(62, 20);
             this.lblInvoiceTEL.TabIndex = 25;
@@ -213,14 +217,14 @@
             // 
             // txtInvoiceTEL
             // 
-            this.txtInvoiceTEL.Location = new System.Drawing.Point(144, 119);
+            this.txtInvoiceTEL.Location = new System.Drawing.Point(144, 109);
             this.txtInvoiceTEL.Name = "txtInvoiceTEL";
             this.txtInvoiceTEL.Size = new System.Drawing.Size(307, 23);
             this.txtInvoiceTEL.TabIndex = 26;
             // 
             // lblInvoiceBankAccount
             // 
-            this.lblInvoiceBankAccount.Location = new System.Drawing.Point(54, 147);
+            this.lblInvoiceBankAccount.Location = new System.Drawing.Point(54, 143);
             this.lblInvoiceBankAccount.Name = "lblInvoiceBankAccount";
             this.lblInvoiceBankAccount.Size = new System.Drawing.Size(62, 20);
             this.lblInvoiceBankAccount.TabIndex = 27;
@@ -228,7 +232,7 @@
             // 
             // txtInvoiceBankAccount
             // 
-            this.txtInvoiceBankAccount.Location = new System.Drawing.Point(144, 144);
+            this.txtInvoiceBankAccount.Location = new System.Drawing.Point(144, 140);
             this.txtInvoiceBankAccount.Name = "txtInvoiceBankAccount";
             this.txtInvoiceBankAccount.Size = new System.Drawing.Size(307, 23);
             this.txtInvoiceBankAccount.TabIndex = 28;
@@ -258,9 +262,9 @@
             // 
             // txtCompanyCode
             // 
-            this.txtCompanyCode.Location = new System.Drawing.Point(175, 16);
+            this.txtCompanyCode.Location = new System.Drawing.Point(175, 17);
             this.txtCompanyCode.Name = "txtCompanyCode";
-            this.txtCompanyCode.Size = new System.Drawing.Size(307, 23);
+            this.txtCompanyCode.Size = new System.Drawing.Size(333, 23);
             this.txtCompanyCode.TabIndex = 20;
             // 
             // lblCNName
@@ -273,9 +277,9 @@
             // 
             // txtCNName
             // 
-            this.txtCNName.Location = new System.Drawing.Point(175, 41);
+            this.txtCNName.Location = new System.Drawing.Point(175, 42);
             this.txtCNName.Name = "txtCNName";
-            this.txtCNName.Size = new System.Drawing.Size(307, 23);
+            this.txtCNName.Size = new System.Drawing.Size(333, 23);
             this.txtCNName.TabIndex = 22;
             // 
             // lblENName
@@ -288,9 +292,9 @@
             // 
             // txtENName
             // 
-            this.txtENName.Location = new System.Drawing.Point(175, 66);
+            this.txtENName.Location = new System.Drawing.Point(175, 67);
             this.txtENName.Name = "txtENName";
-            this.txtENName.Size = new System.Drawing.Size(307, 23);
+            this.txtENName.Size = new System.Drawing.Size(333, 23);
             this.txtENName.TabIndex = 24;
             // 
             // lblShortName
@@ -303,9 +307,9 @@
             // 
             // txtShortName
             // 
-            this.txtShortName.Location = new System.Drawing.Point(175, 91);
+            this.txtShortName.Location = new System.Drawing.Point(175, 92);
             this.txtShortName.Name = "txtShortName";
-            this.txtShortName.Size = new System.Drawing.Size(307, 23);
+            this.txtShortName.Size = new System.Drawing.Size(333, 23);
             this.txtShortName.TabIndex = 26;
             // 
             // lblLegalPersonName
@@ -320,7 +324,7 @@
             // 
             this.txtLegalPersonName.Location = new System.Drawing.Point(175, 116);
             this.txtLegalPersonName.Name = "txtLegalPersonName";
-            this.txtLegalPersonName.Size = new System.Drawing.Size(307, 23);
+            this.txtLegalPersonName.Size = new System.Drawing.Size(121, 23);
             this.txtLegalPersonName.TabIndex = 27;
             // 
             // lblUnifiedSocialCreditIdentifier
@@ -333,14 +337,14 @@
             // 
             // txtUnifiedSocialCreditIdentifier
             // 
-            this.txtUnifiedSocialCreditIdentifier.Location = new System.Drawing.Point(175, 141);
+            this.txtUnifiedSocialCreditIdentifier.Location = new System.Drawing.Point(175, 142);
             this.txtUnifiedSocialCreditIdentifier.Name = "txtUnifiedSocialCreditIdentifier";
-            this.txtUnifiedSocialCreditIdentifier.Size = new System.Drawing.Size(307, 23);
+            this.txtUnifiedSocialCreditIdentifier.Size = new System.Drawing.Size(333, 23);
             this.txtUnifiedSocialCreditIdentifier.TabIndex = 30;
             // 
             // lblContact
             // 
-            this.lblContact.Location = new System.Drawing.Point(98, 170);
+            this.lblContact.Location = new System.Drawing.Point(324, 119);
             this.lblContact.Name = "lblContact";
             this.lblContact.Size = new System.Drawing.Size(49, 20);
             this.lblContact.TabIndex = 31;
@@ -348,14 +352,14 @@
             // 
             // txtContact
             // 
-            this.txtContact.Location = new System.Drawing.Point(175, 166);
+            this.txtContact.Location = new System.Drawing.Point(376, 117);
             this.txtContact.Name = "txtContact";
-            this.txtContact.Size = new System.Drawing.Size(122, 23);
+            this.txtContact.Size = new System.Drawing.Size(132, 23);
             this.txtContact.TabIndex = 32;
             // 
             // lblPhone
             // 
-            this.lblPhone.Location = new System.Drawing.Point(303, 170);
+            this.lblPhone.Location = new System.Drawing.Point(111, 171);
             this.lblPhone.Name = "lblPhone";
             this.lblPhone.Size = new System.Drawing.Size(36, 20);
             this.lblPhone.TabIndex = 33;
@@ -363,9 +367,9 @@
             // 
             // txtPhone
             // 
-            this.txtPhone.Location = new System.Drawing.Point(345, 166);
+            this.txtPhone.Location = new System.Drawing.Point(175, 167);
             this.txtPhone.Name = "txtPhone";
-            this.txtPhone.Size = new System.Drawing.Size(137, 23);
+            this.txtPhone.Size = new System.Drawing.Size(121, 23);
             this.txtPhone.TabIndex = 34;
             // 
             // lblAddress
@@ -378,9 +382,9 @@
             // 
             // txtAddress
             // 
-            this.txtAddress.Location = new System.Drawing.Point(175, 196);
+            this.txtAddress.Location = new System.Drawing.Point(175, 197);
             this.txtAddress.Name = "txtAddress";
-            this.txtAddress.Size = new System.Drawing.Size(307, 23);
+            this.txtAddress.Size = new System.Drawing.Size(333, 23);
             this.txtAddress.TabIndex = 35;
             // 
             // lblENAddress
@@ -393,9 +397,9 @@
             // 
             // txtENAddress
             // 
-            this.txtENAddress.Location = new System.Drawing.Point(175, 221);
+            this.txtENAddress.Location = new System.Drawing.Point(175, 222);
             this.txtENAddress.Name = "txtENAddress";
-            this.txtENAddress.Size = new System.Drawing.Size(307, 23);
+            this.txtENAddress.Size = new System.Drawing.Size(333, 23);
             this.txtENAddress.TabIndex = 38;
             // 
             // lblWebsite
@@ -408,9 +412,9 @@
             // 
             // txtWebsite
             // 
-            this.txtWebsite.Location = new System.Drawing.Point(175, 246);
+            this.txtWebsite.Location = new System.Drawing.Point(175, 247);
             this.txtWebsite.Name = "txtWebsite";
-            this.txtWebsite.Size = new System.Drawing.Size(307, 23);
+            this.txtWebsite.Size = new System.Drawing.Size(333, 23);
             this.txtWebsite.TabIndex = 40;
             // 
             // lblEmail
@@ -423,9 +427,9 @@
             // 
             // txtEmail
             // 
-            this.txtEmail.Location = new System.Drawing.Point(175, 271);
+            this.txtEmail.Location = new System.Drawing.Point(175, 272);
             this.txtEmail.Name = "txtEmail";
-            this.txtEmail.Size = new System.Drawing.Size(307, 23);
+            this.txtEmail.Size = new System.Drawing.Size(333, 23);
             this.txtEmail.TabIndex = 42;
             // 
             // lblNotes
@@ -438,11 +442,26 @@
             // 
             // txtNotes
             // 
-            this.txtNotes.Location = new System.Drawing.Point(175, 300);
+            this.txtNotes.Location = new System.Drawing.Point(175, 301);
             this.txtNotes.Multiline = true;
             this.txtNotes.Name = "txtNotes";
-            this.txtNotes.Size = new System.Drawing.Size(307, 96);
+            this.txtNotes.Size = new System.Drawing.Size(333, 96);
             this.txtNotes.TabIndex = 52;
+            // 
+            // lblFax
+            // 
+            this.lblFax.Location = new System.Drawing.Point(335, 170);
+            this.lblFax.Name = "lblFax";
+            this.lblFax.Size = new System.Drawing.Size(36, 20);
+            this.lblFax.TabIndex = 54;
+            this.lblFax.Values.Text = "传真";
+            // 
+            // txtFax
+            // 
+            this.txtFax.Location = new System.Drawing.Point(376, 169);
+            this.txtFax.Name = "txtFax";
+            this.txtFax.Size = new System.Drawing.Size(132, 23);
+            this.txtFax.TabIndex = 55;
             // 
             // UCCompanyEdit
             // 
@@ -508,5 +527,7 @@
         private Krypton.Toolkit.KryptonTextBox txtInvoiceBankAccount;
         private Krypton.Toolkit.KryptonLabel lblInvoiceBankName;
         private Krypton.Toolkit.KryptonTextBox txtInvoiceBankName;
+        private Krypton.Toolkit.KryptonLabel lblFax;
+        private Krypton.Toolkit.KryptonTextBox txtFax;
     }
 }

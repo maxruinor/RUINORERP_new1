@@ -52,8 +52,13 @@ namespace RUINORERP.UI.PSI.PUR
         public UCPurEntryRe()
         {
             InitializeComponent();
-
+            if (!PublicEntityObjects.Contains(typeof(ProductSharePart)))
+            {
+                PublicEntityObjects.Add(typeof(ProductSharePart));
+            }
         }
+        //放到基类识别不到
+        public static List<Type> PublicEntityObjects { get; set; } = new List<Type>();
 
         internal override void LoadDataToUI(object Entity)
         {

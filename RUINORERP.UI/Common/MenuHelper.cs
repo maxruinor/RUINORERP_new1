@@ -111,6 +111,10 @@ namespace RUINORERP.UI.Common
                         //不重复
                         if (!tempList.Contains(P4Menu.tb_menuinfo))
                         {
+                            P4Menu.tb_menuinfo.tb_P4Buttons = new List<tb_P4Button>();
+                            P4Menu.tb_menuinfo.tb_P4Fields = new List<tb_P4Field>();
+                            P4Menu.tb_menuinfo.tb_P4Buttons = appContext.CurrentRole.tb_P4Buttons.Where(c=>c.MenuID==P4Menu.MenuID).ToList();
+                            P4Menu.tb_menuinfo.tb_P4Fields = appContext.CurrentRole.tb_P4Fields.Where(c => c.MenuID == P4Menu.MenuID).ToList();
                             tempList.Add(P4Menu.tb_menuinfo);
                         }
                     }

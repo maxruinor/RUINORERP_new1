@@ -48,8 +48,14 @@ namespace RUINORERP.UI.PSI.INV
         public UCStockIn()
         {
             InitializeComponent();
+            if (!PublicEntityObjects.Contains(typeof(ProductSharePart)))
+            {
+                PublicEntityObjects.Add(typeof(ProductSharePart));
+            }
         }
-  
+        //放到基类识别不到
+        public static List<Type> PublicEntityObjects { get; set; } = new List<Type>();
+
         internal override void LoadDataToUI(object Entity)
         {
             ActionStatus actionStatus = ActionStatus.无操作;

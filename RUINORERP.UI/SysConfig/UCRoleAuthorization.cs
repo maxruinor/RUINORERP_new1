@@ -98,11 +98,10 @@ namespace RUINORERP.UI.SysConfig
 
         private void NewSumDataGridView_检测是否重复(object sender, EventArgs e)
         {
-
-
             tb_MenuInfo selectMenu = TreeView1.SelectedNode.Tag as tb_MenuInfo;
             if (kryptonNavigator1.SelectedPage.Name == kryptonPageBtn.Name)
             {
+                dataGridView1.UseSelectedColumn = true;
                 if (!dataGridView1.UseSelectedColumn)
                 {
                     //请先开启多模式，重复结果将会勾选
@@ -141,6 +140,7 @@ namespace RUINORERP.UI.SysConfig
 
             if (kryptonNavigator1.SelectedPage.Name == kryptonPageFieldInfo.Name)
             {
+                dataGridView2.UseSelectedColumn = true;
                 if (!dataGridView2.UseSelectedColumn)
                 {
                     //请先开启多模式，重复结果将会勾选
@@ -215,11 +215,11 @@ namespace RUINORERP.UI.SysConfig
 
             TreeView1.HideSelection = false;
             TreeView1.DrawMode = TreeViewDrawMode.OwnerDrawText;
-
+            //角色 取到关系 。再找对应的实际为了显示
             List<tb_RoleInfo> roleInfos = await MainForm.Instance.AppContext.Db.CopyNew().Queryable<tb_RoleInfo>()
-            .Includes(m => m.tb_P4Buttons)
-           .Includes(m => m.tb_P4Fields)
-           .Includes(m => m.tb_P4Menus)
+            .Includes(m => m.tb_P4Buttons, c => c.tb_buttoninfo)
+           .Includes(m => m.tb_P4Fields, c => c.tb_fieldinfo)
+           .Includes(m => m.tb_P4Menus, c => c.tb_menuinfo)
            //.AsNavQueryable()
            //.Includes(m => m.tb_P4Menus, t => t.tb_menuinfo, b => b.tb_P4Buttons)
            //.Includes(m => m.tb_P4Menus, t => t.tb_menuinfo, b => b.tb_P4Fields)
@@ -671,7 +671,7 @@ namespace RUINORERP.UI.SysConfig
         /// </summary>
         /// <param name="Nodes"></param>
         /// <param name="tb_P4Modules"></param>
-        private async void UpdateP4Module(TreeNodeCollection Nodes,  List<tb_P4Menu> tb_P4Menus)
+        private async void UpdateP4Module(TreeNodeCollection Nodes, List<tb_P4Menu> tb_P4Menus)
         {
 
             // 先检查数据库中的重复数据
@@ -1144,40 +1144,35 @@ namespace RUINORERP.UI.SysConfig
         }
 
 
-        public async Task<List<tb_P4Button>> InitBtnByRole(tb_RoleInfo role, tb_MenuInfo menuInfo, bool selected = false)
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="CurrentRole"></param>
+        /// <param name="SelectedMenuInfo">菜单下有默认的按钮数据</param>
+        /// <param name="selected"></param>
+        /// <returns></returns>
+        public async Task<List<tb_P4Button>> InitBtnByRole(tb_RoleInfo CurrentRole, tb_MenuInfo SelectedMenuInfo, bool selected = false)
         {
             // 检查菜单信息是否为空
-            if (menuInfo == null)
+            if (SelectedMenuInfo == null)
             {
                 return new List<tb_P4Button>();
             }
 
-            // 初始化菜单按钮集合
-            if (menuInfo.tb_P4Buttons == null)
-            {
-                menuInfo.tb_P4Buttons = new List<tb_P4Button>();
-            }
-
             // 查找菜单属性信息并初始化菜单项
-            MenuAttrAssemblyInfo mai = MenuAssemblylist.FirstOrDefault(e => e.ClassPath == menuInfo.ClassPath);
+            MenuAttrAssemblyInfo mai = MenuAssemblylist.FirstOrDefault(e => e.ClassPath == SelectedMenuInfo.ClassPath);
             if (mai != null)
             {
                 // 使用扩展方法实现异步UI调用
                 await MainForm.Instance.InvokeAsync(async () =>
                 {
                     InitModuleMenu imm = Startup.GetFromFac<InitModuleMenu>();
-                    await imm.InitToolStripItemAsync(mai, menuInfo);
+                    await imm.InitToolStripItemAsync(mai, SelectedMenuInfo);
                 });
             }
 
-            // 处理按钮信息
-            if (menuInfo.tb_ButtonInfos == null || !menuInfo.tb_ButtonInfos.Any())
-            {
-                return menuInfo.tb_P4Buttons.Where(c => c.RoleID == role.RoleID).ToList();
-            }
-
-            // 先检查数据库中的重复数据
-            var duplicates = menuInfo.tb_P4Buttons.Where(c => c.RoleID == role.RoleID)
+            // 先检查数据库中的重复数据，当前角色下的当前菜单下的 按钮是否有重复
+            var duplicates = CurrentRole.tb_P4Buttons.Where(c => c.RoleID == CurrentRole.RoleID && c.MenuID == SelectedMenuInfo.MenuID)
                 .GroupBy(p => p.ButtonInfo_ID)
                 .Where(g => g.Count() > 1)
                 .Select(g => new { Key = g.Key, Count = g.Count() })
@@ -1186,25 +1181,25 @@ namespace RUINORERP.UI.SysConfig
             if (duplicates.Any())
             {
                 // 记录日志或抛出异常
-                MainForm.Instance.logger.Error($"tb_P4Buttons 菜单ID:{menuInfo.MenuID},角色ID:{CurrentRole.RoleID}下发现重复的 ButtonInfo_ID: " + string.Join(", ", duplicates.Select(d => d.Key)));
+                MainForm.Instance.logger.Error($"tb_P4Buttons 菜单ID:{SelectedMenuInfo.MenuID},角色ID:{this.CurrentRole.RoleID}下发现重复的 ButtonInfo_ID: " + string.Join(", ", duplicates.Select(d => d.Key)));
 
                 // 删除重复的数据
                 var deleteIds = duplicates.Select(d => d.Key).ToList();
-                await MainForm.Instance.AppContext.Db.Deleteable<tb_P4Button>().Where(p => p.RoleID == CurrentRole.RoleID && deleteIds.Contains(p.ButtonInfo_ID)).ExecuteCommandAsync();
+                await MainForm.Instance.AppContext.Db.Deleteable<tb_P4Button>().Where(p => p.RoleID == this.CurrentRole.RoleID && deleteIds.Contains(p.ButtonInfo_ID)).ExecuteCommandAsync();
 
                 // 重新加载数据
-                menuInfo.tb_P4Buttons = menuInfo.tb_P4Buttons.Where(p => !deleteIds.Contains(p.ButtonInfo_ID)).ToList();
+                CurrentRole.tb_P4Buttons = CurrentRole.tb_P4Buttons.Where(p => !deleteIds.Contains(p.ButtonInfo_ID)).ToList();
             }
 
-            var currentRoleId = CurrentRole.RoleID;
-            var existingButtons = menuInfo.tb_P4Buttons
-                .Where(p => p.MenuID == menuInfo.MenuID && p.RoleID == currentRoleId)
+            var currentRoleId = this.CurrentRole.RoleID;
+            var existingButtons = CurrentRole.tb_P4Buttons
+                .Where(p => p.MenuID == SelectedMenuInfo.MenuID && p.RoleID == currentRoleId)
                 .ToDictionary(p => p.ButtonInfo_ID);
 
             var newButtons = new List<tb_P4Button>();
             var updatedButtons = new List<tb_P4Button>();
 
-            foreach (var buttonInfo in menuInfo.tb_ButtonInfos)
+            foreach (var buttonInfo in SelectedMenuInfo.tb_ButtonInfos)
             {
                 if (!existingButtons.TryGetValue(buttonInfo.ButtonInfo_ID, out tb_P4Button button))
                 {
@@ -1214,18 +1209,16 @@ namespace RUINORERP.UI.SysConfig
                     button.Notes = buttonInfo.BtnText;
                     button.RoleID = currentRoleId;
                     button.ButtonInfo_ID = buttonInfo.ButtonInfo_ID;
-                    button.MenuID = menuInfo.MenuID;
-
+                    button.MenuID = SelectedMenuInfo.MenuID;
                     // 设置选中状态
                     SetButtonSelection(button, selected);
-
                     newButtons.Add(button);
                 }
                 else
                 {
                     //存在的关系，不用更新。保持数据显示
                     // 更新现有按钮状态,如果本身选中，就不改，如果没选中则选上
-                    if (selected == false)
+                    if (button.IsVisble == false)
                     {
                         if (SetButtonSelection(button, true))
                         {
@@ -1242,7 +1235,7 @@ namespace RUINORERP.UI.SysConfig
                 var ids = await ctrPBut.AddAsync(newButtons);
                 if (ids?.Count > 0)
                 {
-                    menuInfo.tb_P4Buttons.AddRange(newButtons);
+                    CurrentRole.tb_P4Buttons.AddRange(newButtons);
                 }
             }
 
@@ -1254,10 +1247,16 @@ namespace RUINORERP.UI.SysConfig
             }
 
             // 返回指定角色的按钮列表
-            return menuInfo.tb_P4Buttons.Where(c => c.RoleID == role.RoleID).ToList();
+            return CurrentRole.tb_P4Buttons.Where(c => c.RoleID == CurrentRole.RoleID && c.MenuID == SelectedMenuInfo.MenuID).ToList();
         }
 
         // 辅助方法：设置按钮选中状态并返回是否有变化
+        /// <summary>
+        /// 这个方法只设置，将没选，改为勾选。 选中方式不在这里处理。
+        /// </summary>
+        /// <param name="button"></param>
+        /// <param name="selected"></param>
+        /// <returns></returns>
         private bool SetButtonSelection(tb_P4Button button, bool selected)
         {
             bool hasChanged = false;
@@ -1280,7 +1279,7 @@ namespace RUINORERP.UI.SysConfig
 
 
         /// <summary>
-        /// 根据权限初始化字段
+        /// 根据权限初始化字段 以角色权限为基础了。不是以菜单为基础了。菜单只是默认
         /// </summary>
         /// <param name="role"></param>
         /// <param name="menuInfo"></param>
@@ -1385,17 +1384,25 @@ namespace RUINORERP.UI.SysConfig
             // var ids = await MainForm.Instance.AppContext.Db.Insertable(pblist).ExecuteReturnSnowflakeIdListAsync();
             return menuInfo.tb_P4Fields.Where(c => c.RoleID == role.RoleID).ToList();
         }
-        public async Task<List<tb_P4Field>> InitFiledByRole(tb_RoleInfo role, tb_MenuInfo menuInfo, bool selected = false)
+
+
+        /// <summary>
+        /// 这里检查到主表和子表。但是有时子表明细中。还有公共部分。为了也可以控制1
+        /// </summary>
+        /// <param name="CurrentRole"></param>
+        /// <param name="SelectedMenuInfo"></param>
+        /// <param name="selected"></param>
+        /// <returns></returns>
+        public async Task<List<tb_P4Field>> InitFiledByRole(tb_RoleInfo CurrentRole, tb_MenuInfo SelectedMenuInfo, bool selected = false)
         {
             // 空值检查
-            if (menuInfo == null || role == null)
+            if (SelectedMenuInfo == null || CurrentRole == null)
             {
                 return new List<tb_P4Field>();
             }
 
             // 初始化集合
-            menuInfo.tb_FieldInfos ??= new List<tb_FieldInfo>();
-            menuInfo.tb_P4Fields ??= new List<tb_P4Field>();
+            SelectedMenuInfo.tb_FieldInfos ??= new List<tb_FieldInfo>();
 
             // 加载模型类型并初始化字段信息
             try
@@ -1403,12 +1410,12 @@ namespace RUINORERP.UI.SysConfig
                 var dalAssemble = System.Reflection.Assembly.LoadFrom("RUINORERP.Model.dll");
                 var modelTypes = dalAssemble.GetExportedTypes();
                 var typeNames = modelTypes.Select(m => m.Name).ToList();
-                var mainType = modelTypes.FirstOrDefault(e => e.Name == menuInfo.EntityName);
+                var mainType = modelTypes.FirstOrDefault(e => e.Name == SelectedMenuInfo.EntityName);
 
                 if (mainType != null)
                 {
                     var imm = Startup.GetFromFac<InitModuleMenu>();
-                    await imm.InitFieldInoMainAndSubAsync(mainType, menuInfo, false, "");
+                    await imm.InitFieldInoMainAndSubAsync(mainType, SelectedMenuInfo, false, "");
 
                     // 尝试找子表类型
                     var childTypeName = typeNames.FirstOrDefault(s => s.Contains(mainType.Name + "Detail"));
@@ -1417,7 +1424,7 @@ namespace RUINORERP.UI.SysConfig
                         var childType = modelTypes.FirstOrDefault(t => t.FullName == mainType.FullName + "Detail");
                         if (childType != null)
                         {
-                            await imm.InitFieldInoMainAndSubAsync(childType, menuInfo, true, childTypeName);
+                            await imm.InitFieldInoMainAndSubAsync(childType, SelectedMenuInfo, true, childTypeName);
                         }
                     }
                 }
@@ -1429,7 +1436,7 @@ namespace RUINORERP.UI.SysConfig
             }
 
             // 先检查数据库中的重复数据
-            var duplicates = menuInfo.tb_P4Fields.Where(c => c.RoleID == CurrentRole.RoleID)
+            var duplicates = CurrentRole.tb_P4Fields.Where(c => c.RoleID == CurrentRole.RoleID && c.MenuID == SelectedMenuInfo.MenuID)
                 .GroupBy(p => p.FieldInfo_ID)
                 .Where(g => g.Count() > 1)
                 .Select(g => new { Key = g.Key, Count = g.Count() })
@@ -1438,23 +1445,21 @@ namespace RUINORERP.UI.SysConfig
             if (duplicates.Any())
             {
                 // 记录日志或抛出异常
-                MainForm.Instance.logger.Error($"在tb_P4Fields中 菜单ID:{menuInfo.MenuID},角色ID:{CurrentRole.RoleID}下发现重复的 FieldInfo_ID: " + string.Join(", ", duplicates.Select(d => d.Key)));
+                MainForm.Instance.logger.Error($"在tb_P4Fields中 菜单ID:{SelectedMenuInfo.MenuID},角色ID:{this.CurrentRole.RoleID}下发现重复的 FieldInfo_ID: " + string.Join(", ", duplicates.Select(d => d.Key)));
 
                 // 删除重复的数据
                 var deleteIds = duplicates.Select(d => d.Key).ToList();
-                await MainForm.Instance.AppContext.Db.Deleteable<tb_P4Field>().Where(p => p.RoleID == CurrentRole.RoleID && deleteIds.Contains(p.FieldInfo_ID)).ExecuteCommandAsync();
+                await MainForm.Instance.AppContext.Db.Deleteable<tb_P4Field>().Where(p => p.RoleID == this.CurrentRole.RoleID && deleteIds.Contains(p.FieldInfo_ID)).ExecuteCommandAsync();
 
                 // 重新加载数据
-                //menuInfo.tb_P4Fields = await MainForm.Instance.AppContext.Db.Queryable<tb_P4Field>().Where(p => p.RoleID == CurrentRole.RoleID).ToListAsync();
-                menuInfo.tb_P4Fields = menuInfo.tb_P4Fields.Where(p => !deleteIds.Contains(p.FieldInfo_ID)).ToList();
-
+                CurrentRole.tb_P4Fields = CurrentRole.tb_P4Fields.Where(p => !deleteIds.Contains(p.FieldInfo_ID)).ToList();
             }
 
 
             // 使用字典优化查找性能
-            var currentRoleId = CurrentRole.RoleID;
-            var existingFields = menuInfo.tb_P4Fields
-                .Where(p => p.MenuID == menuInfo.MenuID && p.RoleID == currentRoleId)
+            var currentRoleId = this.CurrentRole.RoleID;
+            var existingFields = CurrentRole.tb_P4Fields
+                .Where(p => p.MenuID == SelectedMenuInfo.MenuID && p.RoleID == currentRoleId)
                 .ToDictionary<tb_P4Field, string>(p => p.FieldInfo_ID.ToString(),
                     StringComparer.OrdinalIgnoreCase
                 );
@@ -1463,7 +1468,7 @@ namespace RUINORERP.UI.SysConfig
             var updatedFields = new List<tb_P4Field>();
 
             // 处理字段信息
-            foreach (var fieldInfo in menuInfo.tb_FieldInfos)
+            foreach (var fieldInfo in SelectedMenuInfo.tb_FieldInfos)
             {
                 if (!existingFields.TryGetValue(fieldInfo.FieldInfo_ID.ToString(), out tb_P4Field field))
                 {
@@ -1474,31 +1479,25 @@ namespace RUINORERP.UI.SysConfig
                     field.IsChild = fieldInfo.IsChild;
                     field.RoleID = currentRoleId;
                     field.FieldInfo_ID = fieldInfo.FieldInfo_ID;
-                    field.MenuID = menuInfo.MenuID;
-
+                    field.MenuID = SelectedMenuInfo.MenuID;
                     // 设置选中状态
-                    if (selected)
-                    {
-                        field.IsVisble = true;
-                    }
-
+                    field.IsVisble = selected;
                     newFields.Add(field);
                 }
                 else
                 {
                     // 更新现有字段权限
                     bool hasChanged = false;
-
-                    if (selected && !field.IsVisble)
+                    if (!field.IsVisble)
                     {
-                        field.IsVisble = true;
+                        field.IsVisble = selected;
                         hasChanged = true;
+                        if (hasChanged)
+                        {
+                            updatedFields.Add(field);
+                        }
                     }
 
-                    if (hasChanged)
-                    {
-                        updatedFields.Add(field);
-                    }
                 }
             }
 
@@ -1508,7 +1507,7 @@ namespace RUINORERP.UI.SysConfig
                 var ids = await ctrPField.AddAsync(newFields);
                 if (ids?.Count > 0)
                 {
-                    menuInfo.tb_P4Fields.AddRange(newFields);
+                    CurrentRole.tb_P4Fields.AddRange(newFields);
                 }
             }
 
@@ -1519,7 +1518,7 @@ namespace RUINORERP.UI.SysConfig
             }
 
             // 返回指定角色的字段权限列表
-            return menuInfo.tb_P4Fields.Where(c => c.RoleID == role.RoleID).ToList();
+            return CurrentRole.tb_P4Fields.Where(c => c.RoleID == CurrentRole.RoleID && c.MenuID == SelectedMenuInfo.MenuID).ToList();
         }
 
         #endregion
@@ -1554,26 +1553,13 @@ namespace RUINORERP.UI.SysConfig
             }
             kryptonNavigator1.SelectedPage = kryptonPageBtn;
 
-            InitLoadP4Button(selectMenu);
+            InitLoadP4Button(selectMenu, false);
 
-            InitLoadP4Field(selectMenu);
+            InitLoadP4Field(selectMenu, false);
 
             #region 按钮和字段列表的中的值 有变化则保存可用
-            selectMenu.tb_P4Buttons.Where(c => c.RoleID == CurrentRole.RoleID).ForEach(x => UpdateSaveEnabled(x));
-            selectMenu.tb_P4Fields.Where(c => c.RoleID == CurrentRole.RoleID).ForEach(x => UpdateSaveEnabled(x));
-            #endregion
-
-
-            #region  自定义组件开始
-
-            // DataGridViewColumnSelector cs = new DataGridViewColumnSelector(dataGridView1);
-            // cs.MaxHeight = 200;
-            // cs.Width = 110;
-
-            // dataGridView1.SetColToCheckBox<tb_P4Button>(c => c.IsVisble);
-            // dataGridView2.SetColToCheckBoxNew<tb_P4Field>(c => c.IsVisble);
-
-
+            CurrentRole.tb_P4Buttons.Where(c => c.RoleID == CurrentRole.RoleID).ForEach(x => UpdateSaveEnabled<tb_P4Button>(x));
+            CurrentRole.tb_P4Fields.Where(c => c.RoleID == CurrentRole.RoleID).ForEach(x => UpdateSaveEnabled<tb_P4Field>(x));
             #endregion
 
             #region 设置全选菜单
@@ -1587,19 +1573,22 @@ namespace RUINORERP.UI.SysConfig
                 }
             }
 
-
-
-
-
             #endregion
         }
-        private async void InitLoadP4Button(tb_MenuInfo selectMenu, bool InitLoadData = true)
+        private async void InitLoadP4Button(tb_MenuInfo selectMenu, bool InitLoadData = false)
         {
-            if (selectMenu.tb_P4Buttons == null)
+            if (CurrentRole == null)
             {
-                selectMenu.tb_P4Buttons = new List<tb_P4Button>();
+                return;
             }
-            List<tb_P4Button> pblist = selectMenu.tb_P4Buttons.Where(c => c.RoleID == CurrentRole.RoleID).ToList();
+
+            List<tb_P4Button> pblist = new List<tb_P4Button>();
+            //优先显示当前选中角色的对应的数据。如果没有才会显示默认为空的。没勾选的数据
+            if (CurrentRole.tb_P4Buttons != null)
+            {
+                pblist = CurrentRole.tb_P4Buttons.Where(c => c.MenuID == selectMenu.MenuID).ToList();
+
+            }
             if (pblist.Count == 0 || InitLoadData)
             {
                 pblist = await InitBtnByRole(CurrentRole, selectMenu);
@@ -1615,19 +1604,40 @@ namespace RUINORERP.UI.SysConfig
             }
         }
 
-        private async void InitLoadP4Field(tb_MenuInfo selectMenu, bool InitLoadData = true)
+        private async void InitLoadP4Field(tb_MenuInfo selectMenu, bool InitLoadData = false)
         {
-            if (selectMenu.tb_P4Fields == null)
+            if (CurrentRole == null)
             {
-                selectMenu.tb_P4Fields = new List<tb_P4Field>();
+                return;
             }
-            List<tb_P4Field> pflist = selectMenu.tb_P4Fields.Where(c => c.RoleID == CurrentRole.RoleID).ToList();
+            var pflist = new List<tb_P4Field>();
+            if (CurrentRole.tb_P4Fields != null && CurrentRole.tb_P4Fields.Count > 0)
+            {
+                pflist = CurrentRole.tb_P4Fields.Where(c => c.MenuID == selectMenu.MenuID).ToList();
+            }
+            #region 加载默认的
             if (pflist.Count == 0 || InitLoadData)
             {
                 pflist = await InitFiledByRole(CurrentRole, selectMenu);
             }
+            #endregion
+
             bindingSource2.DataSource = pflist.ToBindingSortCollection();
             dataGridView2.DataSource = ListDataSoure2;
+            foreach (DataGridViewColumn col in dataGridView2.Columns)
+            {
+                if (col.ValueType.Name == "Boolean")
+                {
+                    col.ReadOnly = false;
+                }
+                //ischild只是标记是否为子表。他不可以编辑
+                if (col.DataPropertyName == "IsChild")
+                {
+                    col.ReadOnly = true;
+                }
+            }
+
+
             foreach (DataGridViewColumn col in dataGridView2.Columns)
             {
                 if (col.ValueType.Name == "Boolean")
@@ -1643,19 +1653,30 @@ namespace RUINORERP.UI.SysConfig
         }
 
 
-        private void UpdateSaveEnabled(BaseEntity entity)
+        private void UpdateSaveEnabled<T>(BaseEntity entity)
         {
+            entity.PropertyChanged -= (sender, s2) => { };
             entity.PropertyChanged += (sender, s2) =>
-            {
-                //如果客户有变化，带出对应有业务员
-                //if (entity.CustomerVendor_ID > 0 && s2.PropertyName == entity.GetPropertyName<tb_SaleOrder>(c => c.CustomerVendor_ID))
-                //{
+             {
+                 if (typeof(T).Name == typeof(tb_P4Button).Name)
+                 {
+                     //如果有变化
+                     if (s2.PropertyName == entity.GetPropertyName<tb_P4Button>(c => c.IsEnabled) ||
+                     s2.PropertyName == entity.GetPropertyName<tb_P4Button>(c => c.IsVisble))
+                     {
+                         toolStripButtonSave.Enabled = true;
+                     }
 
-                //}
-
-                toolStripButtonSave.Enabled = true;
-
-            };
+                 }
+                 if (typeof(T).Name == typeof(tb_P4Field).Name)
+                 {
+                     //如果有变化
+                     if (s2.PropertyName == entity.GetPropertyName<tb_P4Field>(c => c.IsVisble))
+                     {
+                         toolStripButtonSave.Enabled = true;
+                     }
+                 }
+             };
         }
 
         /*

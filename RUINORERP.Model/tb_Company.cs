@@ -163,6 +163,21 @@ namespace RUINORERP.Model
                         }
         }
 
+        private string _Fax;
+        /// <summary>
+        /// 传真
+        /// </summary>
+        [AdvQueryAttribute(ColName = "Fax", ColDesc = "传真")]
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType = "String", ColumnName = "Fax", Length = 100, IsNullable = true, ColumnDescription = "传真")]
+        public string Fax
+        {
+            get { return _Fax; }
+            set
+            {
+                SetProperty(ref _Fax, value);
+            }
+        }
+
         private string _Address;
         /// <summary>
         /// 营业地址

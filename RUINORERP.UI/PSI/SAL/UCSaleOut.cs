@@ -52,8 +52,12 @@ namespace RUINORERP.UI.PSI.SAL
             //InitDataToCmbByEnumDynamicGeneratedDataSource<tb_SaleOut>(typeof(Priority), e => e.OrderPriority, cmbOrderPriority);
 
             base.toolStripButton结案.Visible = true;
+            if (!PublicEntityObjects.Contains(typeof(ProductSharePart)))
+            {
+                PublicEntityObjects.Add(typeof(ProductSharePart));
+            }
         }
-
+        public static List<Type> PublicEntityObjects { get; set; } = new List<Type>();
 
 
 
@@ -416,6 +420,7 @@ namespace RUINORERP.UI.PSI.SAL
             sgh.SetPointToColumnPairs<ProductSharePart, tb_SaleOutDetail>(sgd, f => f.Inv_Cost, t => t.Cost);
             sgh.SetPointToColumnPairs<ProductSharePart, tb_SaleOutDetail>(sgd, f => f.Standard_Price, t => t.UnitPrice);
             sgh.SetPointToColumnPairs<ProductSharePart, tb_SaleOutDetail>(sgd, f => f.prop, t => t.property);
+            sgh.SetPointToColumnPairs<ProductSharePart, tb_SaleOutDetail>(sgd, f => f.Model, t => t.CustomerPartNo, false);
 
             //应该只提供一个结构
             List<tb_SaleOutDetail> lines = new List<tb_SaleOutDetail>();

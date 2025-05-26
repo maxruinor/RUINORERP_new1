@@ -161,7 +161,7 @@ namespace RUINORERP.Business
                             if (child.TotalReturnedQty > child.Quantity)
                             {
                                 _unitOfWorkManage.RollbackTran();
-                                rrs.ErrorMsg = $"销售退回单中：{entity.ReturnNo}中，明细退回总数量不能大于出库数量！请检查该出库单是否已经退回过！";
+                                rrs.ErrorMsg = $"销售退回单：{entity.ReturnNo}中，明细退回总数量不能大于出库数量！请检查该出库单是否已经退回过！";
                                 rrs.Succeeded = false;
                                 return rrs;
                             }
@@ -331,7 +331,7 @@ namespace RUINORERP.Business
                                 throw new Exception("翻新物料的库存更新失败！");
                             }
                         }
-                        
+
                     }
                 }
 
@@ -347,6 +347,8 @@ namespace RUINORERP.Business
                     ReturnMainSubResults<tb_FM_ReceivablePayable> results = await ctrpayable.CreateReceivablePayable(entity, true);
                     if (results.Succeeded)
                     {
+                        //下面冲销逻辑应该放到付款的审核时处理
+                        /*
                         tb_FM_ReceivablePayable returnpayable = results.ReturnObject;
                         //如果这个客户要退款，则去找这个客户名下是否还有应收款。找到所有的。倒算自动红冲 余额
                         var PositivePayableList = await ctrpayable.BaseQueryByWhereAsync(c => c.CustomerVendor_ID == returnpayable.CustomerVendor_ID
@@ -395,13 +397,12 @@ namespace RUINORERP.Business
                             await paymentController.CreatePaymentRecord(new List<tb_FM_ReceivablePayable> { returnpayable }, false);
                             //退款单生成成功等待 财务审核
                             #endregion
-
                         }
                         else
                         {
                             entity.PayStatus = (int)PayStatus.全部付款;
                         }
-
+                        */
                         //财务审核应收红单后 看如何核销
                         /*
                           生成退款单	- 手动录入：选择退款方式（现金/原支付渠道）	生成 退款单（RefundMaster），金额为退货金额，关联原收款单	退款单状态：草稿 → 财务审核 → 已审核
@@ -621,7 +622,7 @@ namespace RUINORERP.Business
                         if (child.TotalReturnedQty > child.Quantity)
                         {
                             _unitOfWorkManage.RollbackTran();
-                            rrs.ErrorMsg = $"销售退回单中：{entity.ReturnNo}中，SKU明细的退回总数量不能大于出库数量！";
+                            rrs.ErrorMsg = $"销售退回单：{entity.ReturnNo}中，SKU明细的退回总数量不能大于出库数量！";
                             rrs.Succeeded = false;
                             return rrs;
                         }
@@ -712,21 +713,32 @@ namespace RUINORERP.Business
                 {
                     //处理财务数据 退货退货
                     #region 销售退款 财务处理 不管什么情况都是生成红字应收【金额为负】-------------反审
-
-                    //如果是有出库情况，则反冲。如果是没有出库情况。则生成付款单
-                    //退货单审核后生成红字应收单（负金额）
+                    //退货单审核后生成红字应收单（负金额），如果应收单状态 可以反审。则直接反审过来。否则只能开启新的流程。如销售订单重新买。
                     var ctrpayable = _appContext.GetRequiredService<tb_FM_ReceivablePayableController<tb_FM_ReceivablePayable>>();
 
+                    //反向应收 如果没核销则直接删除。否则倒算？  一个ID只会一次应付吗？是的应收应付只会一次。收款可以分开多次。
                     //被冲销的 找回来
-                    var RetrunPayableList = await ctrpayable.BaseQueryByWhereAsync(c => c.CustomerVendor_ID == entity.CustomerVendor_ID
-                    && (c.ARAPStatus == (long)ARAPStatus.已冲销)
-
-                    );
-
-                    var returnpayable = RetrunPayableList.FirstOrDefault();
+                    tb_FM_ReceivablePayable returnpayable = await _appContext.Db.Queryable<tb_FM_ReceivablePayable>()
+                                           .Where(c => c.CustomerVendor_ID == entity.CustomerVendor_ID
+                                            && c.SourceBizType == (int)BizType.销售退回单 && c.SourceBillId == entity.SaleOutRe_ID
+                                            ).SingleAsync();
                     if (returnpayable != null)
                     {
-                        //找到审核时可能被冲销的正向应收清单，再加回去
+                        if (returnpayable.ARAPStatus == (int)ARAPStatus.草稿
+                            || returnpayable.ARAPStatus == (int)ARAPStatus.待审核 || returnpayable.ARAPStatus == (int)ARAPStatus.已生效)
+                        {
+                            //删除
+                            bool deleters = await ctrpayable.BaseDeleteByNavAsync(returnpayable);
+                        }
+                        else
+                        {
+                            _unitOfWorkManage.RollbackTran();
+                            rrs.ErrorMsg = $"销售退回单：{entity.ReturnNo}中,对应的应收红冲数据已经生效。无法反审核！";
+                            rrs.Succeeded = false;
+                            return rrs;
+                        }
+
+                        /*
                         var PositivePayableList = await ctrpayable.BaseQueryByWhereAsync(c => c.CustomerVendor_ID == returnpayable.CustomerVendor_ID
                           && c.ARAPStatus == (long)ARAPStatus.已冲销
                           && (c.TotalLocalPayableAmount > 0 || c.TotalForeignPayableAmount > 0)
@@ -761,19 +773,8 @@ namespace RUINORERP.Business
                             await _unitOfWorkManage.GetDbClient().Updateable<tb_FM_ReceivablePayable>(returnpayable).ExecuteCommandAsync();
                             #endregion
                         }
-
-                        if (returnpayable.LocalBalanceAmount > 0 || returnpayable.ForeignBalanceAmount > 0)
-                        {
-                            var paymentController = _appContext.GetRequiredService<tb_FM_PaymentRecordController<tb_FM_PaymentRecord>>();
-                            #region 通过负数的应收，生成退款单
-
-                            //找到支付记录
-                            //通过负数的应收，生成退款单
-                            //tb_FM_PaymentRecord paymentRecord = await paymentController.CreatePaymentRecord(returnpayable, false);
-                            //退款单生成成功等待 财务审核
-                            #endregion
-
-                        }
+                        */
+                        
                     }
 
                     #endregion

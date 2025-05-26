@@ -76,6 +76,7 @@ using RUINORERP.Global.EnumExt;
 using RUINORERP.Business.FMService;
 using NPOI.POIFS.Crypt.Dsig;
 using RUINORERP.Model.Base;
+using System.Windows.Documents;
 
 namespace RUINORERP.UI.BaseForm
 {
@@ -202,6 +203,7 @@ namespace RUINORERP.UI.BaseForm
             }
         }
 
+       
 
         private async void button录入数据预设_Click(object sender, EventArgs e)
         {
@@ -1617,14 +1619,28 @@ namespace RUINORERP.UI.BaseForm
                     await AntiCloseCaseAsync();
                     break;
                 case MenuItemEnums.打印:
-                    if (AppContext.GlobalVariableConfig.DirectPrinting)
+
+                    if (PrintConfig != null && PrintConfig.tb_PrintTemplates != null)
                     {
-                        Print();
+                        //如果当前单据只有一个模块，就直接打印
+                        if (PrintConfig.tb_PrintTemplates.Count == 1)
+                        {
+                            Print();
+                            return;
+                        }
                     }
-                    else
+
+                    //个性化设置了打印要选择模板打印时，就进入设计介面
+                    if (MainForm.Instance.AppContext.CurrentUser_Role_Personalized.SelectTemplatePrint.HasValue
+                           && MainForm.Instance.AppContext.CurrentUser_Role_Personalized.SelectTemplatePrint.Value)
                     {
                         PrintDesigned();
                     }
+                    else
+                    {
+                        Print();
+                    }
+
                     toolStripbtnPrint.Enabled = false;
                     break;
                 case MenuItemEnums.预览:

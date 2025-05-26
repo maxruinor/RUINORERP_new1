@@ -2762,6 +2762,7 @@
     <Compile Include="UCToolBar\DataEdit.Designer.cs">
       <DependentUpon>DataEdit.cs</DependentUpon>
     </Compile>
+    <Compile Include="UILogManager.cs" />
     <Compile Include="UserCenter\CentralConsole.cs" />
     <Compile Include="UserCenter\ControlCenterConfig.cs">
       <SubType>UserControl</SubType>

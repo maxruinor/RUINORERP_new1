@@ -24,6 +24,8 @@ using SourceGrid2.Win32;
 using RUINORERP.UI.BaseForm;
 using RUINORERP.Global.EnumExt;
 using Microsoft.Extensions.Logging;
+using RUINORERP.Model.Dto;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace RUINORERP.UI.Common
 {
@@ -43,6 +45,8 @@ namespace RUINORERP.UI.Common
         {
             _appContext = appContext;
             _logger = logger;
+            // 加载菜单程序集信息
+            _menuAssemblyList = UIHelper.RegisterForm();
         }
 
         #region 系统级初始化菜单
@@ -54,8 +58,7 @@ namespace RUINORERP.UI.Common
         {
             try
             {
-                // 加载菜单程序集信息
-                _menuAssemblyList = UIHelper.RegisterForm();
+
 
                 // 加载模型类型信息
                 var dalAssemble = System.Reflection.Assembly.LoadFrom("RUINORERP.Model.dll");
@@ -382,7 +385,8 @@ namespace RUINORERP.UI.Common
         /// <summary>
         /// 初始化工具栏按钮和右键菜单按钮信息
         /// </summary>
-        public async Task InitToolStripItemAsync(MenuAttrAssemblyInfo info, tb_MenuInfo menuInfo)
+        /// <param name="InsertToDb">是否保存到数据库。有时只想检测是否属于指定窗体。因为编程中有变动。后期固定了才不会。</param>
+        public async Task<List<tb_ButtonInfo>> InitToolStripItemAsync(MenuAttrAssemblyInfo info, tb_MenuInfo menuInfo, bool InsertToDb = true)
         {
             try
             {
@@ -391,7 +395,7 @@ namespace RUINORERP.UI.Common
                 if (c == null)
                 {
                     _logger.LogWarning($"无法获取类型 {info.ClassType} 的实例");
-                    return;
+                    return null;
                 }
 
                 // 获取按钮控制器
@@ -486,16 +490,17 @@ namespace RUINORERP.UI.Common
                 // 批量插入新按钮
                 if (newButtonInfos.Any())
                 {
-                    var buttonIds = await _appContext.Db
-                        .Insertable(newButtonInfos)
-                        .ExecuteReturnSnowflakeIdListAsync();
-
-                    // 确保ID正确分配给实体
-                    for (int i = 0; i < newButtonInfos.Count; i++)
+                    if (InsertToDb)
                     {
-                        newButtonInfos[i].ButtonInfo_ID = buttonIds[i];
+                        var buttonIds = await _appContext.Db
+                                             .Insertable(newButtonInfos)
+                                             .ExecuteReturnSnowflakeIdListAsync();
                     }
-
+                    // 确保ID正确分配给实体
+                    //for (int i = 0; i < newButtonInfos.Count; i++)
+                    //{
+                    //    newButtonInfos[i].ButtonInfo_ID = buttonIds[i];
+                    //}
                     // 添加到菜单的按钮集合中
                     menuInfo.tb_ButtonInfos.AddRange(newButtonInfos);
                 }
@@ -552,6 +557,7 @@ namespace RUINORERP.UI.Common
                 _logger.LogError(ex, $"初始化工具栏按钮时发生错误: {info.ClassPath}");
                 MainForm.Instance.uclog.AddLog($"初始化工具栏按钮失败: {ex.Message}", UILogType.错误);
             }
+            return menuInfo.tb_ButtonInfos;
         }
 
         /// <summary>
@@ -628,17 +634,55 @@ namespace RUINORERP.UI.Common
 
         /// <summary>
         /// 初始化主表和子表的字段信息
+        /// 注册一个规律： 在一个菜单名下。可能有主子表和公共表。他们的实体名：都统一成主表
         /// </summary>
-        public async Task InitFieldInoMainAndSubAsync(Type type, tb_MenuInfo menuInfo, bool isChild, string childType)
+        public async Task InitFieldInoMainAndSubAsync(Type EntityType, tb_MenuInfo menuInfo, bool isChild, string childType)
         {
             try
             {
                 // 确保菜单的字段集合已初始化
                 menuInfo.tb_FieldInfos ??= new List<tb_FieldInfo>();
 
-                // 获取实体的SugarTable特性
-                var tableAttrs = type.GetCustomAttributes<SugarTable>();
-                foreach (var attr in tableAttrs)
+                //// 获取实体的SugarTable特性
+                //var tableAttrs = type.GetCustomAttributes<SugarTable>().ToList();
+                List<Type> entityTypes = new List<Type>();
+                entityTypes.Add(EntityType);
+
+                #region 取明细中的公共产品类，或其它类。
+                try
+                {
+                    MenuAttrAssemblyInfo mai = _menuAssemblyList.FirstOrDefault(e => e.ClassPath == menuInfo.ClassPath);
+                    if (mai != null)
+                    {
+                        // 创建并获取窗体实例
+                        object formType = Startup.ServiceProvider.GetService(mai.ClassType);
+
+                        var publicEntityObjects = formType.GetPropertyValue<List<Type>>("PublicEntityObjects");
+                        if (publicEntityObjects != null && publicEntityObjects is List<Type> types)
+                        {
+                            entityTypes.AddRange(types);
+                        }
+
+                    }
+
+                    // 在处理方法中直接通过类型访问
+                    //var publicEntityObjects = formType.GetProperty("PublicEntityObjects",
+                    //                                  BindingFlags.Static | BindingFlags.Public)
+                    //                     ?.GetValue(null) as List<Type>;
+
+
+                }
+                catch (Exception ex)
+                {
+
+                }
+
+
+
+                #endregion
+
+
+                foreach (var type in entityTypes)
                 {
                     // 获取实体的字段元数据
                     var entityInstance = Startup.ServiceProvider.CreateInstance(type);
@@ -648,7 +692,6 @@ namespace RUINORERP.UI.Common
                     if (fieldNameList == null)
                     {
                         fieldNameList = new ConcurrentDictionary<string, string>();
-
                         foreach (PropertyInfo property in type.GetProperties())
                         {
                             foreach (Attribute attrField in property.GetCustomAttributes(true))
@@ -664,23 +707,26 @@ namespace RUINORERP.UI.Common
                         }
                     }
 
+                    if (type.Name.Contains("") && type.Name.Contains(menuInfo.EntityName))
+                    {
+                        isChild = true;
+                    }
                     // 创建待添加的字段信息列表
                     var newFieldInfos = new List<tb_FieldInfo>();
                     foreach (var kv in fieldNameList)
                     {
                         // 检查字段是否已存在
                         var exists = menuInfo.tb_FieldInfos.Any(
-                            e => e.EntityName == (isChild ? type.Name.Replace("Detail", "") : type.Name) &&
+                            e => e.EntityName == type.Name &&
                                  e.FieldName == kv.Key &&
-                                 e.MenuID == menuInfo.MenuID &&
-                                 e.IsChild == isChild);
+                                 e.MenuID == menuInfo.MenuID);
 
                         if (!exists)
                         {
                             newFieldInfos.Add(new tb_FieldInfo
                             {
                                 ClassPath = type.FullName,
-                                EntityName = isChild ? type.Name.Replace("Detail", "") : type.Name,
+                                EntityName = type.Name,
                                 IsEnabled = true,
                                 FieldName = kv.Key,
                                 FieldText = kv.Value,
@@ -706,10 +752,10 @@ namespace RUINORERP.UI.Common
                             .ExecuteReturnSnowflakeIdListAsync();
 
                         // 确保ID正确分配给实体
-                        for (int i = 0; i < newFieldInfos.Count; i++)
-                        {
-                            newFieldInfos[i].FieldInfo_ID = fieldIds[i];
-                        }
+                        //for (int i = 0; i < newFieldInfos.Count; i++)
+                        //{
+                        //    newFieldInfos[i].FieldInfo_ID = fieldIds[i];
+                        //}
 
                         // 添加到菜单的字段集合中
                         menuInfo.tb_FieldInfos.AddRange(newFieldInfos);
@@ -718,7 +764,7 @@ namespace RUINORERP.UI.Common
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"初始化字段信息（主表/子表）时发生错误: {type?.Name}");
+                _logger.LogError(ex, $"初始化字段信息（主表/子表）时发生错误: {EntityType?.Name}");
                 MainForm.Instance.uclog.AddLog($"初始化字段信息失败: {ex.Message}", UILogType.错误);
             }
         }
@@ -733,7 +779,7 @@ namespace RUINORERP.UI.Common
     /// </summary>
     public class InitModuleMenu_old
     {
-     
+
         private readonly ApplicationContext _appContext;
         private readonly ILogger<InitModuleMenu> _logger;
         //提取到UI的类相关信息
@@ -750,7 +796,7 @@ namespace RUINORERP.UI.Common
             _appContext = appContext;
             _logger = logger;
         }
-       
+
 
         #region 系统级初始化菜单
         /// <summary>
@@ -767,7 +813,7 @@ namespace RUINORERP.UI.Common
             _modelTypes = dalAssemble.GetExportedTypes();
 
             _typeNames = _modelTypes.Select(m => m.Name).ToList();
-               
+
 
 
             tb_ModuleDefinitionController<tb_ModuleDefinition> mdctr = _appContext.GetRequiredService<tb_ModuleDefinitionController<tb_ModuleDefinition>>();

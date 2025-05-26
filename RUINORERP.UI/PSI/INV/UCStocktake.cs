@@ -55,7 +55,13 @@ namespace RUINORERP.UI.PSI.INV
         public UCStocktake()
         {
             InitializeComponent();
+            if (!PublicEntityObjects.Contains(typeof(ProductSharePart)))
+            {
+                PublicEntityObjects.Add(typeof(ProductSharePart));
+            }
         }
+        //放到基类识别不到
+        public static List<Type> PublicEntityObjects { get; set; } = new List<Type>();
 
         private void UCStocktake_OnBindDataToUIEvent(tb_Stocktake entity)
         {

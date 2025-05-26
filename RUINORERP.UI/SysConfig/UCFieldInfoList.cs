@@ -147,14 +147,9 @@ namespace RUINORERP.UI.BI
 
         }
 
-        private void NewSumDataGridView_检测字段是否存在(object sender, EventArgs e)
+        private void NewSumDataGridView_检测字段是否存在_old(object sender, EventArgs e)
         {
-            if (!dataGridView1.UseSelectedColumn)
-            {
-                //请开启多选模式再进行检测
-                MessageBox.Show("请开启多选模式再进行检测");
-                return;
-            }
+            dataGridView1.UseSelectedColumn = true;
 
             UIHelper.CheckValidation(this);
             List<tb_FieldInfo> CheckList = new List<tb_FieldInfo>();
@@ -171,13 +166,14 @@ namespace RUINORERP.UI.BI
             }
 
             //再将列表按 EntityName 分组处理。因为每组要创建一个对应的实例
-            var groupList = CheckList.GroupBy(c => c.EntityName).ToArray();
+            var groupList = CheckList.GroupBy(c => c.ClassPath).ToArray();
             foreach (var group in groupList)
             {
 
-                string tableName = group.Key;
+                string ClassPath = group.Key;
                 List<tb_FieldInfo> list = group.ToList();
-                var type = Assembly.LoadFrom(Global.GlobalConstants.ModelDLL_NAME).GetType(Global.GlobalConstants.Model_NAME + "." + tableName);
+                //                var type = Assembly.LoadFrom(Global.GlobalConstants.ModelDLL_NAME).GetType(Global.GlobalConstants.Model_NAME + "." + tableName);
+                var type = Assembly.LoadFrom(Global.GlobalConstants.ModelDLL_NAME).GetType(ClassPath);
                 //创建这个类型的实体
                 var entity = Activator.CreateInstance(type);
                 foreach (var item in list)
@@ -200,12 +196,70 @@ namespace RUINORERP.UI.BI
                 }
             }
 
-
-
-
-
         }
+        private void NewSumDataGridView_检测字段是否存在(object sender, EventArgs e)
+        {
+            dataGridView1.UseSelectedColumn = true;
+            UIHelper.CheckValidation(this);
 
+            // 提取所有需要检查的字段信息
+            var checkList = bindingSourceList
+                .OfType<tb_FieldInfo>()
+                .ToList();
+
+            // 按ClassPath分组处理
+            var groupedFields = checkList
+                .GroupBy(f => f.ClassPath)
+                .ToList();
+
+            // 缓存已加载的类型，避免重复加载
+            var typeCache = new Dictionary<string, Type>();
+
+            foreach (var group in groupedFields)
+            {
+                string classPath = group.Key;
+                List<tb_FieldInfo> fieldsInClass = group.ToList();
+
+                // 从缓存或程序集中获取类型
+                if (!typeCache.TryGetValue(classPath, out Type entityType))
+                {
+                    try
+                    {
+                        entityType = Assembly.LoadFrom(Global.GlobalConstants.ModelDLL_NAME).GetType(classPath);
+                        typeCache[classPath] = entityType;
+                    }
+                    catch (Exception ex)
+                    {
+                        // 记录错误日志，继续处理其他组
+                        Console.WriteLine($"加载类型 {classPath} 时出错: {ex.Message}");
+                        continue;
+                    }
+                }
+
+                if (entityType == null)
+                {
+                    // 类型不存在，选中该组所有字段
+                    foreach (var field in fieldsInClass)
+                    {
+                        field.Selected = true;
+                    }
+                    continue;
+                }
+
+                // 获取类型的所有属性
+                var properties = entityType.GetProperties(BindingFlags.Public | BindingFlags.Instance)
+                    .ToDictionary(p => p.Name, StringComparer.OrdinalIgnoreCase);
+
+                // 检查每个字段是否存在于实体中
+                foreach (var field in fieldsInClass)
+                {
+                    if (!properties.ContainsKey(field.FieldName))
+                    {
+                        field.Selected = true;
+                    }
+                }
+            }
+        }
         private void button检查数据_Click(object sender, EventArgs e)
         {
             List<tb_FieldInfo> list = new List<tb_FieldInfo>();

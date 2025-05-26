@@ -398,8 +398,8 @@ namespace RUINORERP.Business
 
                     var ctrpayable = _appContext.GetRequiredService<tb_FM_ReceivablePayableController<tb_FM_ReceivablePayable>>();
 
-                    //出库时，全部生成应收，账期的。就加上到期日
-                    //有付款过的。就去预收中抵扣，不够的金额及状态标识出来生成对账单
+                    //出库时，全部生成应付，账期的。就加上到期日
+                    //有付款过的。就去预收中抵扣，不够的金额及状态标识出来，生成应付后再用于生成对账单
                     ReturnMainSubResults<tb_FM_ReceivablePayable> results = await ctrpayable.CreateReceivablePayable(entity, false);
                     if (results.Succeeded)
                     {
@@ -944,6 +944,191 @@ namespace RUINORERP.Business
                     }
 
                 }
+
+                #region 财务反审
+                AuthorizeController authorizeController = _appContext.GetRequiredService<AuthorizeController>();
+                if (authorizeController.EnableFinancialModule())
+                {
+                    //入库后，已经支付的。用调整单。没支付的。可以反审。
+                    //反审是先去检查他的应付。看状态，如果能
+                    #region 找到生成应付单看状态是否对应的收款单已经支付。没有才可以。支付过了。不可以反审核
+                    //--,应付从预付中抵扣 同时 核销
+
+                    var ctrpayable = _appContext.GetRequiredService<tb_FM_ReceivablePayableController<tb_FM_ReceivablePayable>>();
+
+                    List<tb_FM_ReceivablePayable> ARAPPayments = await _unitOfWorkManage.GetDbClient()
+                                                  .Queryable<tb_FM_ReceivablePayable>()
+                                                  .Where(c => c.CustomerVendor_ID == entity.CustomerVendor_ID
+                                                   && c.Currency_ID == entity.Currency_ID
+                                                  && (c.ARAPStatus == (long)ARAPStatus.已生效
+                                                   || c.ARAPStatus == (long)PrePaymentStatus.部分核销))
+                                                  .OrderBy(c => c.DueDate)
+                                                  .ToListAsync();
+
+                    ////出库时，全部生成应付，账期的。就加上到期日
+                    ////有付款过的。就去预收中抵扣，不够的金额及状态标识出来，生成应付后再用于生成对账单
+                    //ReturnMainSubResults<tb_FM_ReceivablePayable> results = await ctrpayable.CreateReceivablePayable(entity, false);
+                    //if (results.Succeeded)
+                    //{ 
+                    //    tb_FM_ReceivablePayable payable = results.ReturnObject;
+                    //    if (entity.PayStatus != (int)PayStatus.未付款)
+                    //    {
+                    //        #region 去预付中抵扣相同币种的情况下的预付款，生成付款单，并且生成核销记录
+                    //        //按客户查找所有的未核销完的预付款记录。并且是审核过的。
+                    //        List<tb_FM_PreReceivedPayment> prePayments = await _unitOfWorkManage.GetDbClient()
+                    //            .Queryable<tb_FM_PreReceivedPayment>()
+                    //            .Where(c => c.CustomerVendor_ID == entity.CustomerVendor_ID
+                    //             && c.Currency_ID == entity.Currency_ID // 添加币种条件
+                    //             && c.IsAvailable == true
+                    //            && (c.PrePaymentStatus == (long)PrePaymentStatus.已生效
+                    //             || c.PrePaymentStatus == (long)PrePaymentStatus.部分核销))
+                    //            .OrderBy(c => c.PrePayDate)
+                    //            .ToListAsync();
+
+                    //        decimal ForeignTotalAmount = entity.ForeignTotalAmount;
+                    //        decimal TotalAmount = entity.TotalAmount;
+                    //        List<tb_FM_PaymentSettlement> writeoffs = new List<tb_FM_PaymentSettlement>(); // 用于存储核销记录
+                    //        for (int i = 0; i < prePayments.Count; i++)
+                    //        {
+                    //            decimal prePayForeignAmount = 0;
+                    //            decimal prePayLocalAmount = 0;
+
+                    //            if (entity.Currency_ID.HasValue && _appContext.BaseCurrency.Currency_ID != entity.Currency_ID.Value)
+                    //            {
+                    //                //出库金额ForeignTotalAmount和 预付金额prePayments[i].ForeignBalanceAmount 比较
+                    //                prePayForeignAmount = Math.Min(prePayments[i].ForeignBalanceAmount, ForeignTotalAmount);
+
+                    //                //预付款余额
+                    //                prePayments[i].ForeignBalanceAmount -= prePayForeignAmount;
+
+                    //                //预付款已核销金额
+                    //                prePayments[i].ForeignPaidAmount += prePayForeignAmount;
+
+                    //                ForeignTotalAmount -= prePayForeignAmount;
+
+                    //                if (prePayments[i].ForeignBalanceAmount == 0)
+                    //                {
+                    //                    prePayments[i].PrePaymentStatus = (long)PrePaymentStatus.全额核销;
+                    //                }
+                    //                else
+                    //                {
+                    //                    prePayments[i].PrePaymentStatus = (long)PrePaymentStatus.部分核销;
+                    //                }
+                    //                // 更新应付表
+
+                    //                //已经核销，从客户的预付款中扣到的金额
+                    //                payable.ForeignPaidAmount += prePayForeignAmount;
+
+                    //                //应付款的余额，表示未核销，还要从客户收取的金额
+                    //                payable.ForeignBalanceAmount = entity.ForeignTotalAmount - payable.ForeignPaidAmount;
+                    //                if (payable.ForeignBalanceAmount == 0)
+                    //                {
+                    //                    payable.ARAPStatus = (long)ARAPStatus.已结清;
+                    //                }
+                    //                else
+                    //                {
+                    //                    payable.ARAPStatus = (long)ARAPStatus.部分支付;
+                    //                }
+                    //            }
+                    //            else
+                    //            {
+                    //                prePayLocalAmount = Math.Min(prePayments[i].LocalBalanceAmount, TotalAmount);
+                    //                prePayments[i].LocalBalanceAmount -= prePayLocalAmount;
+                    //                prePayments[i].LocalPaidAmount += prePayLocalAmount;
+                    //                TotalAmount -= prePayLocalAmount;
+                    //                if (prePayments[i].LocalBalanceAmount == 0)
+                    //                {
+                    //                    prePayments[i].PrePaymentStatus = (long)ARAPStatus.已结清;
+                    //                }
+                    //                else
+                    //                {
+                    //                    prePayments[i].PrePaymentStatus = (long)ARAPStatus.部分支付;
+                    //                }
+                    //                // 更新应付表
+                    //                payable.LocalPaidAmount += prePayLocalAmount;
+                    //                payable.LocalBalanceAmount = entity.TotalAmount - payable.LocalPaidAmount;
+                    //                if (payable.LocalBalanceAmount == 0)
+                    //                {
+                    //                    payable.ARAPStatus = (long)ARAPStatus.已结清;
+                    //                }
+                    //                else
+                    //                {
+                    //                    payable.ARAPStatus = (long)ARAPStatus.部分支付;
+                    //                }
+                    //            }
+                    //            // 生成核销记录证明从预付中付款抵扣应付
+                    //            tb_FM_PaymentSettlement writeoff = new tb_FM_PaymentSettlement();
+                    //            writeoff.SettlementType = (int)SettlementType.预付冲应付;
+                    //            writeoff.SettlementNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.付款核销款);
+                    //            writeoff.SettleDate = DateTime.Now;
+                    //            writeoff.ReceivePaymentType = (int)ReceivePaymentType.付款;
+                    //            writeoff.Account_id = prePayments[i].Account_id;
+
+
+                    //            writeoff.SourceBizType = (int)BizType.预付款单;
+                    //            writeoff.SourceBillId = prePayments[i].PreRPID;
+                    //            writeoff.SourceBillNo = prePayments[i].PreRPNO;
+                    //            writeoff.Currency_ID = payable.Currency_ID;
+
+                    //            writeoff.Currency_ID = prePayments[i].Currency_ID;
+
+
+                    //            writeoff.ExchangeRate = prePayments[i].ExchangeRate;
+
+
+                    //            writeoff.TargetBillId = payable.ARAPId; // 应付单ID
+                    //            writeoff.TargetBillNo = payable.ARAPNo; // 应付单号
+                    //            writeoff.TargetBizType = (int)BizType.应付款单;
+                    //            writeoff.CustomerVendor_ID = prePayments[i].CustomerVendor_ID;
+
+
+                    //            writeoff.ExchangeRate = payable.ExchangeRate;
+
+                    //            writeoff.IsReversed = false;
+                    //            writeoff.SettledForeignAmount = prePayForeignAmount;
+                    //            writeoff.SettledLocalAmount = prePayLocalAmount;
+                    //            writeoff.IsAutoSettlement = true;
+                    //            BusinessHelper.Instance.InitEntity(writeoff);
+                    //            writeoffs.Add(writeoff);
+
+                    //            if (ForeignTotalAmount == 0 || TotalAmount == 0)
+                    //            {
+                    //                break;
+                    //            }
+
+                    //        }
+                    //        // 插入核销记录
+                    //        if (writeoffs.Count > 0)
+                    //        {
+                    //            await _unitOfWorkManage.GetDbClient().Insertable(writeoffs).ExecuteReturnSnowflakeIdListAsync();
+                    //        }
+
+                    //        //统计更新预付款单
+                    //        if (prePayments.Count > 0)
+                    //        {
+                    //            var result = await _unitOfWorkManage.GetDbClient().Updateable<tb_FM_PreReceivedPayment>(prePayments)
+                    //                .UpdateColumns(it => new
+                    //                {
+                    //                    it.PrePaymentStatus,
+                    //                    it.ForeignBalanceAmount,
+                    //                    it.ForeignPaidAmount,
+                    //                    it.LocalBalanceAmount,
+                    //                    it.LocalPaidAmount,
+
+                    //                }).ExecuteCommandAsync();
+                    //        }
+
+                    //        await _unitOfWorkManage.GetDbClient().Updateable<tb_FM_ReceivablePayable>(payable).ExecuteCommandAsync();
+
+                    //        #endregion
+                    //    }
+                    //}
+
+                    #endregion
+                }
+
+                #endregion
+
                 //这部分是否能提出到上一级公共部分？
                 entity.DataStatus = (int)DataStatus.新建;
                 entity.ApprovalOpinions = "被反审核";

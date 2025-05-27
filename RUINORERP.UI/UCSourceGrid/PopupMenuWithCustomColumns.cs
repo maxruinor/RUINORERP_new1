@@ -367,7 +367,15 @@ namespace RUINORERP.UI.UCSourceGrid
             List<ColumnInfo> columnInfos = new List<ColumnInfo>();
             for (int i = 0; i < sgdefine.grid.Columns.Count; i++)
             {
-                columnInfos.Add(sgdefine.grid.Columns[i]);
+                if (sgdefine.grid.Columns[i]==null)
+                {
+
+                }
+                else
+                {
+                    columnInfos.Add(sgdefine.grid.Columns[i]);
+                }
+                
             }
 
             List<ColumnInfo> OtherColumnInfos = new List<ColumnInfo>();
@@ -381,6 +389,8 @@ namespace RUINORERP.UI.UCSourceGrid
 
             for (int i = 0; i < DefineColumns.Count; i++)
             {
+                
+
                 var colInfo = columnInfos.FirstOrDefault(c => c.Tag as SGDefineColumnItem != null
                 && c.Tag is SGDefineColumnItem columnItem
                 && columnItem.ColName == DefineColumns[i].ColName

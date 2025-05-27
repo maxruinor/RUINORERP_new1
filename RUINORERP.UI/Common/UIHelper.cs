@@ -390,6 +390,20 @@ namespace RUINORERP.UI.Common
                             //设置不可见
                             if (item.tb_fieldinfo != null)
                             {
+
+                                //如果字段不启用时，直接不显示
+                                if (!item.tb_fieldinfo.IsEnabled)
+                                {
+                                    SGDefineColumnItem defineColumnItem = listCols.Where(w => w.ColName == item.tb_fieldinfo.FieldName
+                                    && w.BelongingObjectType.Name.Contains(typeof(ProductSharePart).Name)
+                                    ).FirstOrDefault();
+                                    if (defineColumnItem != null)
+                                    {
+                                        defineColumnItem.SetCol_NeverVisible(item.tb_fieldinfo.FieldName);
+                                    }
+                                    continue;
+                                }
+
                                 //如果字段不启用时，直接不显示
                                 if (item.tb_fieldinfo.IsChild && !item.tb_fieldinfo.IsEnabled)
                                 {

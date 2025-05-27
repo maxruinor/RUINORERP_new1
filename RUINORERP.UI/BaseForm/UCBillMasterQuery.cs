@@ -76,6 +76,7 @@ namespace RUINORERP.UI.BaseForm
             //newSumDataGridViewMaster.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.ColumnHeader;
             //newSumDataGridViewMaster.AutoSizeRowsMode = DataGridViewAutoSizeRowsMode.DisplayedCells;
             bindingSourceMaster.CurrentItemChanged += BindingSourceMaster_CurrentItemChanged;
+            bindingSourceMaster.CurrentChanged += BindingSourceMaster_CurrentChanged;
             //newSumDataGridViewMaster.ColumnDisplayControlToCaption(newSumDataGridViewMaster.FieldNameList);
 
             //newSumDataGridViewMaster.ReadOnly = false;
@@ -84,7 +85,7 @@ namespace RUINORERP.UI.BaseForm
             //dataGridView1.XmlFileName = "Query" + typeof(T).Name;
             //this.dataGridView1.FieldNameList = this.FieldNameList;
             //dataGridView1.ReadOnly = true;
-          
+
             //List<T> list = new List<T>();
             //ListDataSoure.DataSource = list.ToBindingSortCollection();//这句是否能集成到上一层生成
             //dataGridView1.DataSource = ListDataSoure;
@@ -94,9 +95,21 @@ namespace RUINORERP.UI.BaseForm
             DisplayTextResolver.Initialize(newSumDataGridViewMaster);
         }
 
-        private void BindingSourceMaster_CurrentItemChanged(object sender, EventArgs e)
+        private void BindingSourceMaster_CurrentChanged(object sender, EventArgs e)
         {
 
+        }
+
+        private void BindingSourceMaster_CurrentItemChanged(object sender, EventArgs e)
+        {
+            if (sender != null && sender is BindingSource bindingSource)
+            {
+                if (OnSelectDataRow != null && bindingSource.Current != null)
+                {
+                    OnSelectDataRow(bindingSource.Current);
+                }
+
+            }
         }
 
         /// <summary>
@@ -121,13 +134,16 @@ namespace RUINORERP.UI.BaseForm
         {
             if (OnSelectDataRow != null && newSumDataGridViewMaster.CurrentRow != null)
             {
-                OnSelectDataRow(bindingSourceMaster.Current);
+                //OnSelectDataRow(bindingSourceMaster.Current);
             }
         }
 
         private void newSumDataGridViewMaster_DataSourceChanged(object sender, EventArgs e)
         {
-
+            if (OnSelectDataRow != null && newSumDataGridViewMaster.CurrentRow != null)
+            {
+                OnSelectDataRow(bindingSourceMaster.Current);
+            }
         }
 
 
@@ -162,7 +178,7 @@ namespace RUINORERP.UI.BaseForm
             }
         }
 
-       
+
 
         private void DataGridView1_CellFormatting(object sender, DataGridViewCellFormattingEventArgs e)
         {

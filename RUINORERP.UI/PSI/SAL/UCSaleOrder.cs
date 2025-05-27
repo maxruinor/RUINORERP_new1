@@ -50,17 +50,19 @@ using Fireasy.Common.Configuration;
 
 namespace RUINORERP.UI.PSI.SAL
 {
+
+
+    /// <summary>
+    /// 销售订单时：有运费外币，总金额外币，订单外币。反而出库时不用这么多。外币只是用于记账。出库时只要根据本币和外币及汇率。生成应收时自动算出来。
+    /// </summary>
     [MenuAttrAssemblyInfo("销售订单", ModuleMenuDefine.模块定义.进销存管理, ModuleMenuDefine.进销存管理.销售管理, BizType.销售订单)]
-    public partial class UCSaleOrder : BaseBillEditGeneric<tb_SaleOrder, tb_SaleOrderDetail>, IToolStripMenuInfoAuth
+    public partial class UCSaleOrder : BaseBillEditGeneric<tb_SaleOrder, tb_SaleOrderDetail>, IToolStripMenuInfoAuth, IPublicEntityObject
     {
         public UCSaleOrder()
         {
             InitializeComponent();
             InitDataToCmbByEnumDynamicGeneratedDataSource<tb_SaleOrder>(typeof(Priority), e => e.OrderPriority, cmbOrderPriority, false);
-            if (!PublicEntityObjects.Contains(typeof(ProductSharePart)))
-            {
-                PublicEntityObjects.Add(typeof(ProductSharePart));
-            }
+            AddPublicEntityObject(typeof(ProductSharePart));
         }
 
 
@@ -245,7 +247,8 @@ namespace RUINORERP.UI.PSI.SAL
             //DataBindingHelper.BindData4Cmb<tb_CustomerVendor>(entity, k => k.CustomerVendor_ID, v => v.CVName, cmbCustomerVendor_ID, true);
             DataBindingHelper.BindData4Cmb<tb_Currency>(entity, k => k.Currency_ID, v => v.CurrencyName, cmbCurrency_ID);
             DataBindingHelper.BindData4CmbByEnum<tb_SaleOrder>(entity, k => k.PayStatus, typeof(PayStatus), cmbPayStatus, false);
-            DataBindingHelper.BindData4TextBox<tb_SaleOrder>(entity, t => t.ShipCost.ToString(), txtShipCost, BindDataType4TextBox.Money, false);
+            DataBindingHelper.BindData4TextBox<tb_SaleOrder>(entity, t => t.FreightIncome.ToString(), txtFreightIncome, BindDataType4TextBox.Money, false);
+            DataBindingHelper.BindData4TextBox<tb_SaleOrder>(entity, t => t.ForeignFreightIncome.ToString(), txtForeignFreightIncome, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4TextBox<tb_SaleOrder>(entity, t => t.TotalAmount.ToString(), txtTotalAmount, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4TextBox<tb_SaleOrder>(entity, t => t.ExchangeRate.ToString(), txtExchangeRate, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4DataTime<tb_SaleOrder>(entity, t => t.PreDeliveryDate, dtpPreDeliveryDate, false);
@@ -415,13 +418,13 @@ namespace RUINORERP.UI.PSI.SAL
                 }
 
 
-                if (entity.ShipCost > 0 && s2.PropertyName == entity.GetPropertyName<tb_SaleOrder>(c => c.ShipCost))
+                if (entity.FreightIncome > 0 && s2.PropertyName == entity.GetPropertyName<tb_SaleOrder>(c => c.FreightIncome))
                 {
                     if (EditEntity.tb_SaleOrderDetails != null)
                     {
                         EditEntity.TotalTaxAmount = entity.tb_SaleOrderDetails.Sum(c => c.SubtotalTaxAmount);
                         EditEntity.TotalAmount = entity.tb_SaleOrderDetails.Sum(c => c.TransactionPrice * c.Quantity);
-                        EditEntity.TotalAmount = EditEntity.TotalAmount + EditEntity.ShipCost;
+                        EditEntity.TotalAmount = EditEntity.TotalAmount + EditEntity.FreightIncome;
                         if (EditEntity.Currency_ID != AppContext.BaseCurrency.Currency_ID)
                         {
                             EditEntity.ForeignTotalAmount = EditEntity.TotalAmount / EditEntity.ExchangeRate;
@@ -566,7 +569,7 @@ using var binder = new UIStateBinder(..., customEvaluator);
          */
 
         // 在基类中定义静态属性
-        public static List<Type> PublicEntityObjects { get; set; } = new List<Type>();
+
         SourceGridDefine sgd = null;
         //        SourceGridHelper<View_ProdDetail, tb_SaleOrderDetail> sgh = new SourceGridHelper<View_ProdDetail, tb_SaleOrderDetail>();
         SourceGridHelper sgh = new SourceGridHelper();
@@ -756,12 +759,17 @@ using var binder = new UIStateBinder(..., customEvaluator);
                 EditEntity.TotalCost = details.Sum(c => (c.Cost + c.CustomizedCost) * c.Quantity);
                 EditEntity.TotalTaxAmount = details.Sum(c => c.SubtotalTaxAmount);
                 EditEntity.TotalAmount = details.Sum(c => c.TransactionPrice * c.Quantity);
-                EditEntity.TotalAmount = EditEntity.TotalAmount + EditEntity.ShipCost;
+                EditEntity.TotalAmount = EditEntity.TotalAmount + EditEntity.FreightIncome;
                 if (EditEntity.Currency_ID != AppContext.BaseCurrency.Currency_ID)
                 {
                     EditEntity.ForeignTotalAmount = EditEntity.TotalAmount / EditEntity.ExchangeRate;
-                    //
                     EditEntity.ForeignTotalAmount = Math.Round(EditEntity.ForeignTotalAmount, 2); // 四舍五入到 2 位小数
+                    //外币时，如果收了运费。算换成外币。反之
+                    if (EditEntity.FreightIncome > 0)
+                    {
+                        EditEntity.ForeignFreightIncome = EditEntity.FreightIncome / EditEntity.ExchangeRate;
+                        EditEntity.ForeignFreightIncome = Math.Round(EditEntity.ForeignFreightIncome, 2); // 四舍五入到 2 位小数
+                    }
                 }
             }
             catch (Exception ex)
@@ -896,7 +904,7 @@ using var binder = new UIStateBinder(..., customEvaluator);
                 EditEntity.TotalCost = details.Sum(c => (c.Cost + c.CustomizedCost) * c.Quantity);
                 EditEntity.TotalAmount = details.Sum(c => c.TransactionPrice * c.Quantity);
                 EditEntity.TotalTaxAmount = details.Sum(c => c.SubtotalTaxAmount);
-                EditEntity.TotalAmount = EditEntity.TotalAmount + EditEntity.ShipCost;
+                EditEntity.TotalAmount = EditEntity.TotalAmount + EditEntity.FreightIncome;
 
 
 
@@ -924,7 +932,7 @@ using var binder = new UIStateBinder(..., customEvaluator);
                         return false;
                     }
                 }
-                if (NeedValidated && (EditEntity.TotalAmount + EditEntity.ShipCost < detailentity.Sum(c => c.TransactionPrice * c.Quantity)))
+                if (NeedValidated && (EditEntity.TotalAmount + EditEntity.FreightIncome < detailentity.Sum(c => c.TransactionPrice * c.Quantity)))
                 {
                     MessageBox.Show("单据总金额不能小于明细总金额！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     return false;

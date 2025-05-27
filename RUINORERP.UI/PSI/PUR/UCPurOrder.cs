@@ -41,22 +41,20 @@ using RUINORERP.Business.CommService;
 using ZXing.Common;
 using RUINORERP.Business.Security;
 using RUINORERP.Global.EnumExt;
+using RUINORERP.UI.AdvancedUIModule;
+using NPOI.SS.Formula.Functions;
 
 namespace RUINORERP.UI.PSI.PUR
 {
     [MenuAttrAssemblyInfo("采购订单", ModuleMenuDefine.模块定义.进销存管理, ModuleMenuDefine.进销存管理.采购管理, BizType.采购订单)]
-    public partial class UCPurOrder : BaseBillEditGeneric<tb_PurOrder, tb_PurOrderDetail>
+    public partial class UCPurOrder : BaseBillEditGeneric<tb_PurOrder, tb_PurOrderDetail>, IPublicEntityObject
     {
         public UCPurOrder()
         {
             InitializeComponent();
-            if (!PublicEntityObjects.Contains(typeof(ProductSharePart)))
-            {
-                PublicEntityObjects.Add(typeof(ProductSharePart));
-            }
+            AddPublicEntityObject(typeof(ProductSharePart));
         }
-        //放到基类识别不到
-        public static List<Type> PublicEntityObjects { get; set; } = new List<Type>();
+
 
         internal override void LoadDataToUI(object Entity)
         {
@@ -429,13 +427,14 @@ namespace RUINORERP.UI.PSI.PUR
                 }
             }
 
-
             listCols.SetCol_Formula<tb_PurOrderDetail>((a, b, c) => (a.CustomizedCost + a.UnitPrice) * c.Quantity, c => c.SubtotalAmount);
             listCols.SetCol_Formula<tb_PurOrderDetail>((a, b, c) => a.SubtotalAmount / (1 + b.TaxRate) * c.TaxRate, d => d.TaxAmount);
+            listCols.SetCol_Formula<tb_PurOrderDetail>((a, b, c) => a.UnitPrice / (1 + b.TaxRate), d => d.UntaxedUnitPrice);
+            listCols.SetCol_Formula<tb_PurOrderDetail>((a, b, c) => a.CustomizedCost / (1 + b.TaxRate), d => d.UntaxedCustomizedCost);
+            listCols.SetCol_Formula<tb_PurOrderDetail>((a, b, c) => (a.UntaxedCustomizedCost + a.UntaxedUnitPrice) * c.Quantity, c => c.SubtotalUntaxedAmount);
+
 
             listCols.SetCol_FormulaReverse<tb_PurOrderDetail>(d => d.UnitPrice == 0, (a, b) => a.SubtotalAmount / b.Quantity, c => c.UnitPrice);//-->成交价是结果列
-
-
             sgh.SetPointToColumnPairs<ProductSharePart, tb_PurOrderDetail>(sgd, f => f.Location_ID, t => t.Location_ID);
             sgh.SetPointToColumnPairs<ProductSharePart, tb_PurOrderDetail>(sgd, f => f.prop, t => t.property);
             sgh.SetPointToColumnPairs<ProductSharePart, tb_PurOrderDetail>(sgd, f => f.VendorModelCode, t => t.VendorModelCode);
@@ -570,6 +569,19 @@ namespace RUINORERP.UI.PSI.PUR
                 EditEntity.TotalQty = details.Sum(c => c.Quantity);
                 EditEntity.TotalAmount = details.Sum(c => (c.CustomizedCost + c.UnitPrice) * c.Quantity);
                 EditEntity.TotalAmount = EditEntity.TotalAmount + EditEntity.ShippingCost;
+                EditEntity.TotalTaxAmount = details.Sum(c => c.TaxAmount);
+                EditEntity.TotalUntaxedAmount = details.Sum(c => (c.UntaxedCustomizedCost + c.UntaxedUnitPrice) * c.Quantity);
+
+                //不含税的总金额+不含税运费
+                decimal UntaxedShippingCost = 0;
+                if (EditEntity.ShippingCost > 0 && EditEntity.TotalTaxAmount > 0)
+                {
+                    decimal FreightTaxRate = details.FirstOrDefault(c => c.TaxRate > 0).TaxRate;
+                    UntaxedShippingCost = (EditEntity.ShippingCost / (1 + FreightTaxRate)); //计算列：不含税运费
+                    EditEntity.TotalUntaxedAmount += Math.Round(UntaxedShippingCost, 2);
+                }
+
+
                 if (EditEntity.Currency_ID != AppContext.BaseCurrency.Currency_ID)
                 {
                     EditEntity.ForeignTotalAmount = EditEntity.TotalAmount / EditEntity.ExchangeRate;
@@ -658,6 +670,15 @@ namespace RUINORERP.UI.PSI.PUR
                 //   其他输入条码验证
 
                 EditEntity.tb_PurOrderDetails = details;
+                EditEntity.tb_PurOrderDetails.ForEach(c =>
+                {
+                    if (c.TaxAmount > 0)
+                    {
+                        c.IncludingTax = true;
+                    }
+                }
+                    );
+
                 foreach (var item in details)
                 {
                     item.tb_purorder = EditEntity;
@@ -687,8 +708,27 @@ namespace RUINORERP.UI.PSI.PUR
                     return false;
                 }
                 EditEntity.TotalQty = details.Sum(c => c.Quantity);
-                EditEntity.TotalAmount = details.Sum(c => (c.UnitPrice + c.CustomizedCost)* c.Quantity);
+
+                //含税的
+                EditEntity.TotalAmount = details.Sum(c => (c.UnitPrice + c.CustomizedCost) * c.Quantity);
                 EditEntity.TotalAmount = EditEntity.TotalAmount + EditEntity.ShippingCost;
+
+                //产品税额
+                EditEntity.TotalTaxAmount = details.Sum(c => c.TaxAmount);
+
+                //默认认为运费含税，税率随明细
+
+                EditEntity.TotalUntaxedAmount = details.Sum(c => (c.UntaxedCustomizedCost + c.UntaxedUnitPrice) * c.Quantity);
+
+
+                //不含税的总金额+不含税运费
+                decimal UntaxedShippingCost = 0;
+                if (EditEntity.ShippingCost > 0 && EditEntity.TotalTaxAmount > 0)
+                {
+                    decimal FreightTaxRate = details.FirstOrDefault(c => c.TaxRate > 0).TaxRate;
+                    UntaxedShippingCost = (EditEntity.ShippingCost / (1 + FreightTaxRate)); //计算列：不含税运费
+                    EditEntity.TotalUntaxedAmount += Math.Round(UntaxedShippingCost, 2);
+                }
 
                 if (NeedValidated && EditEntity.TotalQty != details.Sum(c => c.Quantity))
                 {

@@ -46,6 +46,7 @@ using RUINORERP.Business.CommService;
 using RUINORERP.Business.Processor;
 using RUINORERP.Business.Security;
 using System.Configuration;
+using RUINORERP.UI.AdvancedUIModule;
 
 namespace RUINORERP.UI.FM
 {
@@ -53,12 +54,15 @@ namespace RUINORERP.UI.FM
     /// <summary>
     /// 应收应付
     /// </summary>
-    public partial class UCReceivablePayable : BaseBillEditGeneric<tb_FM_ReceivablePayable, tb_FM_ReceivablePayableDetail>
+    public partial class UCReceivablePayable : BaseBillEditGeneric<tb_FM_ReceivablePayable, tb_FM_ReceivablePayableDetail>, IPublicEntityObject
     {
         public UCReceivablePayable()
         {
             InitializeComponent();
+            AddPublicEntityObject(typeof(ProductSharePart));
+           
         }
+
         /// <summary>
         /// 收付款方式决定对应的菜单功能
         /// </summary>
@@ -241,7 +245,7 @@ namespace RUINORERP.UI.FM
 
             }
             else
-                {
+            {
                 //应付  付给供应商
                 //创建表达式
                 var lambda = Expressionable.Create<tb_CustomerVendor>()

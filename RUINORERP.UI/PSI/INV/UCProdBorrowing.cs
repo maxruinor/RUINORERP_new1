@@ -46,18 +46,14 @@ using LiveChartsCore.Geo;
 namespace RUINORERP.UI.PSI.INV
 {
     [MenuAttrAssemblyInfo("借出单", ModuleMenuDefine.模块定义.进销存管理, ModuleMenuDefine.进销存管理.借出归还, BizType.借出单)]
-    public partial class UCProdBorrowing : BaseBillEditGeneric<tb_ProdBorrowing, tb_ProdBorrowingDetail>
+    public partial class UCProdBorrowing : BaseBillEditGeneric<tb_ProdBorrowing, tb_ProdBorrowingDetail>, IPublicEntityObject
     {
         public UCProdBorrowing()
         {
             InitializeComponent();
-            if (!PublicEntityObjects.Contains(typeof(ProductSharePart)))
-            {
-                PublicEntityObjects.Add(typeof(ProductSharePart));
-            }
+            AddPublicEntityObject(typeof(ProductSharePart));
         }
-        //放到基类识别不到
-        public static List<Type> PublicEntityObjects { get; set; } = new List<Type>();
+ 
 
 
         internal override void LoadDataToUI(object Entity)
@@ -434,8 +430,8 @@ namespace RUINORERP.UI.PSI.INV
                     return false;
                 }
                 EditEntity.TotalQty = details.Sum(c => c.Qty);
-
                 EditEntity.TotalCost = details.Sum(c => c.Cost * c.Qty);
+                EditEntity.TotalAmount = details.Sum(c => c.Price * c.Qty);
                 if (NeedValidated && EditEntity.TotalQty == 0)
                 {
                     System.Windows.Forms.MessageBox.Show("单据总数量不能为零!", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);

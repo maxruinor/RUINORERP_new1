@@ -285,20 +285,7 @@ namespace RUINORERP.Model
             SetProperty(ref _ShippingCost, value);
                         }
         }
-        private decimal _ForeignShipCost = ((0));
-        /// <summary>
-        /// 运费外币
-        /// </summary>
-        [AdvQueryAttribute(ColName = "ForeignShipCost", ColDesc = "运费外币")]
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType = "Decimal", ColumnName = "ForeignShipCost", DecimalDigits = 4, IsNullable = false, ColumnDescription = "运费外币")]
-        public decimal ForeignShipCost
-        {
-            get { return _ForeignShipCost; }
-            set
-            {
-                SetProperty(ref _ForeignShipCost, value);
-            }
-        }
+       
         private decimal _TotalTaxAmount;
         /// <summary>
         /// 总税额
@@ -314,10 +301,10 @@ namespace RUINORERP.Model
         }
         private decimal _ForeignTotalAmount = ((0));
         /// <summary>
-        /// 金额外币
+        /// 总金额外币
         /// </summary>
-        [AdvQueryAttribute(ColName = "ForeignTotalAmount", ColDesc = "金额外币")]
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType = "Decimal", ColumnName = "ForeignTotalAmount", DecimalDigits = 4, IsNullable = false, ColumnDescription = "金额外币")]
+        [AdvQueryAttribute(ColName = "ForeignTotalAmount", ColDesc = "总金额外币")]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType = "Decimal", ColumnName = "ForeignTotalAmount", DecimalDigits = 4, IsNullable = false, ColumnDescription = "总金额外币")]
         public decimal ForeignTotalAmount
         {
             get { return _ForeignTotalAmount; }
@@ -328,10 +315,10 @@ namespace RUINORERP.Model
         }
         private decimal _TotalAmount;
         /// <summary>
-        /// 货款金额
+        /// 总金额
         /// </summary>
-        [AdvQueryAttribute(ColName = "TotalAmount",ColDesc = "货款金额")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "TotalAmount" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "货款金额" )]
+        [AdvQueryAttribute(ColName = "TotalAmount",ColDesc = "总金额")] 
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "TotalAmount" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "总金额")]
         public decimal TotalAmount
         { 
             get{return _TotalAmount;}
@@ -340,7 +327,20 @@ namespace RUINORERP.Model
                         }
         }
 
-
+        private decimal _TotalUntaxedAmount=0;
+        /// <summary>
+        /// 未税总金额
+        /// </summary>
+        [AdvQueryAttribute(ColName = "TotalUntaxedAmount", ColDesc = "未税总金额")]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType = "Decimal", ColumnName = "TotalUntaxedAmount", DecimalDigits = 4, IsNullable = false, ColumnDescription = "未税总金额")]
+        public decimal TotalUntaxedAmount
+        {
+            get { return _TotalUntaxedAmount; }
+            set
+            {
+                SetProperty(ref _TotalUntaxedAmount, value);
+            }
+        }
 
         private DateTime? _Arrival_date;
         /// <summary>

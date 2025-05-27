@@ -43,18 +43,14 @@ using RUINORERP.Business.Security;
 namespace RUINORERP.UI.PSI.INV
 {
     [MenuAttrAssemblyInfo("其他出库单", ModuleMenuDefine.模块定义.进销存管理, ModuleMenuDefine.进销存管理.其他出入库管理, BizType.其他出库单)]
-    public partial class UCStockOut : BaseBillEditGeneric<tb_StockOut, tb_StockOutDetail>
+    public partial class UCStockOut : BaseBillEditGeneric<tb_StockOut, tb_StockOutDetail>, IPublicEntityObject
     {
         public UCStockOut()
         {
             InitializeComponent();
-            if (!PublicEntityObjects.Contains(typeof(ProductSharePart)))
-            {
-                PublicEntityObjects.Add(typeof(ProductSharePart));
-            }
+            AddPublicEntityObject(typeof(ProductSharePart));
         }
-        //放到基类识别不到
-        public static List<Type> PublicEntityObjects { get; set; } = new List<Type>();
+ 
 
 
         internal override void LoadDataToUI(object Entity)
@@ -344,8 +340,10 @@ namespace RUINORERP.UI.PSI.INV
                     System.Windows.Forms.MessageBox.Show("明细中，相同的产品不能多行录入,如有需要,请另建单据保存!", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     return false;
                 }
-                EditEntity.TotalQty = details.Sum(c => c.Qty);
                 EditEntity.tb_StockOutDetails = details;
+                EditEntity.TotalQty = details.Sum(c => c.Qty);
+                EditEntity.TotalCost = details.Sum(c => c.Cost * c.Qty);
+                EditEntity.TotalAmount = details.Sum(c => c.Price * c.Qty);
                 //没有经验通过下面先不计算
                 if (NeedValidated && !base.Validator(EditEntity))
                 {

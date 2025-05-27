@@ -13,6 +13,7 @@ using RUINORERP.Global;
 using RUINORERP.Global.EnumExt;
 using RUINORERP.Model;
 using RUINORERP.Model.Dto;
+using RUINORERP.UI.AdvancedUIModule;
 using RUINORERP.UI.BaseForm;
 using RUINORERP.UI.Common;
 using RUINORERP.UI.UCSourceGrid;
@@ -31,18 +32,14 @@ using System.Windows.Forms;
 namespace RUINORERP.UI.PSI.PUR
 {
     [MenuAttrAssemblyInfo("采购入库单", ModuleMenuDefine.模块定义.进销存管理, ModuleMenuDefine.进销存管理.采购管理, BizType.采购入库单)]
-    public partial class UCPurEntry : BaseBillEditGeneric<tb_PurEntry, tb_PurEntryDetail>
+    public partial class UCPurEntry : BaseBillEditGeneric<tb_PurEntry, tb_PurEntryDetail>, IPublicEntityObject
     {
         public UCPurEntry()
         {
             InitializeComponent();
-            if (!PublicEntityObjects.Contains(typeof(ProductSharePart)))
-            {
-                PublicEntityObjects.Add(typeof(ProductSharePart));
-            }
+            AddPublicEntityObject(typeof(ProductSharePart));
         }
-        //放到基类识别不到
-        public static List<Type> PublicEntityObjects { get; set; } = new List<Type>();
+ 
 
 
         /// <summary>
@@ -255,6 +252,9 @@ namespace RUINORERP.UI.PSI.PUR
             listCols.SetCol_Format<tb_PurEntryDetail>(c => c.SubtotalAmount, CustomFormatType.CurrencyFormat);
             listCols.SetCol_Format<tb_PurEntryDetail>(c => c.TaxAmount, CustomFormatType.CurrencyFormat);
             listCols.SetCol_Format<tb_PurEntryDetail>(c => c.UnitPrice, CustomFormatType.CurrencyFormat);
+            listCols.SetCol_Format<tb_PurEntryDetail>(c => c.UntaxedUnitPrice, CustomFormatType.CurrencyFormat);
+            listCols.SetCol_Format<tb_PurEntryDetail>(c => c.UntaxedCustomizedCost, CustomFormatType.CurrencyFormat);
+            listCols.SetCol_Format<tb_PurEntryDetail>(c => c.SubtotalUntaxedAmount, CustomFormatType.CurrencyFormat);
             listCols.SetCol_Format<tb_PurEntryDetail>(c => c.CustomizedCost, CustomFormatType.CurrencyFormat);
             sgd = new SourceGridDefine(grid1, listCols, true);
             sgd.GridMasterData = EditEntity;
@@ -274,6 +274,13 @@ namespace RUINORERP.UI.PSI.PUR
 
             listCols.SetCol_Formula<tb_PurEntryDetail>((a, b, c) => (a.UnitPrice + a.CustomizedCost) * c.Quantity, c => c.SubtotalAmount);
             listCols.SetCol_Formula<tb_PurEntryDetail>((a, b, c) => a.SubtotalAmount / (1 + b.TaxRate) * c.TaxRate, d => d.TaxAmount);
+
+            listCols.SetCol_Formula<tb_PurEntryDetail>((a, b, c) => a.UnitPrice / (1 + b.TaxRate), d => d.UntaxedUnitPrice);
+            listCols.SetCol_Formula<tb_PurEntryDetail>((a, b, c) => a.CustomizedCost / (1 + b.TaxRate), d => d.UntaxedCustomizedCost);
+            listCols.SetCol_Formula<tb_PurEntryDetail>((a, b, c) => (a.UntaxedCustomizedCost + a.UntaxedUnitPrice) * c.Quantity, c => c.SubtotalUntaxedAmount);
+
+
+
             //反算成交价
             listCols.SetCol_FormulaReverse<tb_PurEntryDetail>((a) => a.Quantity != 0, (a, b) => a.SubtotalAmount / b.Quantity, c => c.UnitPrice);
 
@@ -342,6 +349,25 @@ namespace RUINORERP.UI.PSI.PUR
                 EditEntity.TotalQty = details.Sum(c => c.Quantity);
                 EditEntity.TotalAmount = details.Sum(c => (c.UnitPrice + c.CustomizedCost) * c.Quantity);
                 EditEntity.TotalAmount = EditEntity.TotalAmount + EditEntity.ShippingCost;
+                EditEntity.TotalTaxAmount=details.Sum(c=>c.TaxAmount);
+                EditEntity.TotalUntaxedAmount = details.Sum(c => (c.UntaxedCustomizedCost + c.UntaxedUnitPrice) * c.Quantity);
+
+                //不含税的总金额+不含税运费
+                decimal UntaxedShippingCost = 0;
+                if (EditEntity.ShippingCost > 0 && EditEntity.TotalTaxAmount > 0)
+                {
+                    decimal FreightTaxRate = details.FirstOrDefault(c => c.TaxRate > 0).TaxRate;
+                    UntaxedShippingCost = (EditEntity.ShippingCost / (1 + FreightTaxRate)); //计算列：不含税运费
+                    EditEntity.TotalUntaxedAmount += Math.Round(UntaxedShippingCost, 2);
+                }
+
+                //是不是选了外币就通过本币和汇率算一下？
+                if (EditEntity.Currency_ID != AppContext.BaseCurrency.Currency_ID)
+                {
+                    EditEntity.ForeignTotalAmount = EditEntity.TotalAmount / EditEntity.ExchangeRate;
+                    //
+                    EditEntity.ForeignTotalAmount = Math.Round(EditEntity.ForeignTotalAmount, 2); // 四舍五入到 2 位小数
+                }
             }
             catch (Exception ex)
             {
@@ -409,9 +435,23 @@ namespace RUINORERP.UI.PSI.PUR
                         return false;
                     }
                 }
+  
                 EditEntity.TotalQty = details.Sum(c => c.Quantity);
                 EditEntity.TotalAmount = details.Sum(c => (c.UnitPrice + c.CustomizedCost) * c.Quantity);
                 EditEntity.TotalAmount = EditEntity.TotalAmount + EditEntity.ShippingCost;
+                EditEntity.TotalTaxAmount = details.Sum(c => c.TaxAmount);
+                //是不是选了外币就通过本币和汇率算一下？
+                //默认认为运费含税，税率随明细
+
+                EditEntity.TotalUntaxedAmount = details.Sum(c => (c.UntaxedCustomizedCost + c.UntaxedUnitPrice) * c.Quantity);
+                //不含税的总金额+不含税运费
+                decimal UntaxedShippingCost = 0;
+                if (EditEntity.ShippingCost > 0 && EditEntity.TotalTaxAmount > 0)
+                {
+                    decimal FreightTaxRate = details.FirstOrDefault(c => c.TaxRate > 0).TaxRate;
+                    UntaxedShippingCost = (EditEntity.ShippingCost / (1 + FreightTaxRate)); //计算列：不含税运费
+                    EditEntity.TotalUntaxedAmount += Math.Round(UntaxedShippingCost, 2);
+                }
 
                 if (EditEntity.TotalTaxAmount > 0)
                 {
@@ -511,7 +551,7 @@ namespace RUINORERP.UI.PSI.PUR
                             && c.PurOrder_ChildID == details[i].PurOrder_ChildID);
                         details[i].Quantity = item.Quantity - item.DeliveredQuantity;// 已经交数量去掉
                         details[i].SubtotalAmount = (details[i].UnitPrice + details[i].CustomizedCost) * details[i].Quantity;
-
+                        details[i].SubtotalUntaxedAmount = (details[i].UntaxedUnitPrice + details[i].UntaxedCustomizedCost) * details[i].Quantity;
                         if (details[i].Quantity > 0)
                         {
                             NewDetails.Add(details[i]);

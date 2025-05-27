@@ -647,41 +647,40 @@ namespace RUINORERP.UI.Common
                 //var tableAttrs = type.GetCustomAttributes<SugarTable>().ToList();
                 List<Type> entityTypes = new List<Type>();
                 entityTypes.Add(EntityType);
-
-                #region 取明细中的公共产品类，或其它类。
-                try
+                //明细才处理
+                if (EntityType.Name.Contains("Detail"))
                 {
-                    MenuAttrAssemblyInfo mai = _menuAssemblyList.FirstOrDefault(e => e.ClassPath == menuInfo.ClassPath);
-                    if (mai != null)
+                    #region 取明细中的公共产品类，或其它类。
+                    try
                     {
-                        // 创建并获取窗体实例
-                        object formType = Startup.ServiceProvider.GetService(mai.ClassType);
-
-                        var publicEntityObjects = formType.GetPropertyValue<List<Type>>("PublicEntityObjects");
-                        if (publicEntityObjects != null && publicEntityObjects is List<Type> types)
+                        MenuAttrAssemblyInfo mai = _menuAssemblyList.FirstOrDefault(e => e.ClassPath == menuInfo.ClassPath);
+                        if (mai != null)
                         {
-                            entityTypes.AddRange(types);
+                            // 创建并获取窗体实例
+                            object formType = Startup.ServiceProvider.GetService(mai.ClassType);
+
+                            // 使用上面的方法获取公共实体类型
+                            List<Type> publicEntityTypes = GetPublicEntityTypes(formType);
+
+                            if (publicEntityTypes != null)
+                            {
+                                entityTypes.AddRange(publicEntityTypes);
+                            }
                         }
 
+                        // 在处理方法中直接通过类型访问
+                        //var publicEntityObjects = formType.GetProperty("PublicEntityObjects",
+                        //                                  BindingFlags.Static | BindingFlags.Public)
+                        //                     ?.GetValue(null) as List<Type>;
+
+
                     }
+                    catch (Exception ex)
+                    {
 
-                    // 在处理方法中直接通过类型访问
-                    //var publicEntityObjects = formType.GetProperty("PublicEntityObjects",
-                    //                                  BindingFlags.Static | BindingFlags.Public)
-                    //                     ?.GetValue(null) as List<Type>;
-
-
+                    }
+                    #endregion
                 }
-                catch (Exception ex)
-                {
-
-                }
-
-
-
-                #endregion
-
-
                 foreach (var type in entityTypes)
                 {
                     // 获取实体的字段元数据
@@ -707,7 +706,8 @@ namespace RUINORERP.UI.Common
                         }
                     }
 
-                    if (type.Name.Contains("") && type.Name.Contains(menuInfo.EntityName))
+                    //目前添加的是明细公共部分的。暂时也认为是子表中的一部分
+                    if (type.Name.Contains("") && type.Name.Contains(menuInfo.EntityName)||EntityType.Name.Contains("Detail"))
                     {
                         isChild = true;
                     }
@@ -769,6 +769,51 @@ namespace RUINORERP.UI.Common
             }
         }
 
+        /// <summary>
+        /// 优先接口
+        /// </summary>
+        /// <param name="entity"></param>
+        /// <returns></returns>
+        private List<Type> ProcessEntityWithInterface(object entity)
+        {
+            List<Type> publicEntityTypes = new List<Type>();
+            if (entity is IPublicEntityObject publicEntity)
+            {
+                publicEntityTypes = publicEntity.PublicEntityObjects;
+            }
+            //else
+            //{
+            //    //上一级
+            //    ProcessEntityWithInterface(entity.GetType().GetBaseType());
+            //}
+            return publicEntityTypes;
+        }
+
+
+        private List<Type> GetPublicEntityTypes(object entity)
+        {
+            return ProcessEntityWithInterface(entity);
+
+            // 优先尝试通过接口获取
+            if (entity is IPublicEntityObject publicEntity)
+            {
+                return publicEntity.PublicEntityObjects;
+            }
+
+            // 否则使用反射
+            Type type = entity.GetType();
+            PropertyInfo property = type.GetProperty("PublicEntityObjects",
+                BindingFlags.Public | BindingFlags.Instance);
+
+            if (property != null &&
+                property.PropertyType == typeof(List<Type>) &&
+                property.CanRead)
+            {
+                return property.GetValue(entity) as List<Type>;
+            }
+
+            return null;
+        }
         #endregion
     }
 

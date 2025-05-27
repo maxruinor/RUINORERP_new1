@@ -1588,14 +1588,17 @@ namespace RUINORERP.UI.Common
             //listCols = gridDefine.DefineColumns; 这个在调整顺序时 变为了UI上显示调整过的。不是默认
             listCols = gridDefine.InitDefineColumns;
             List<SGColDisplayHandler> originalColumnDisplays = listCols.Select(c => c.DisplayController).ToList();
+
+            //这里是程序级的禁用排除
             originalColumnDisplays = originalColumnDisplays.Where(c => c.Disable == false).ToList();
-            //newSumDataGridViewMaster.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.ColumnHeader;
+
             //不能设置上面这两个属性。因为设置了将不能自动调整宽度。这里计算一下按标题给个差不多的
 
             // 获取Graphics对象
             Graphics graphics = gridDefine.grid.CreateGraphics();
             originalColumnDisplays.ForEach(c =>
             {
+                //实际这里都不会禁用，上面查询用这个条件过滤的
                 if (c.Disable)
                 {
                     c.Visible = true;
@@ -1659,6 +1662,10 @@ namespace RUINORERP.UI.Common
                 }
 
             });
+
+            //经过权限级过滤后再次排除禁用的列
+            originalColumnDisplays = originalColumnDisplays.Where(c => c.Disable == false).ToList();
+
             return originalColumnDisplays;
         }
 

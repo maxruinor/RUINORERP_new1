@@ -167,7 +167,20 @@ namespace RUINORERP.Model
                 SetProperty(ref _CustomizedCost, value);
             }
         }
-
+        private decimal _UntaxedCustomizedCost = ((0));
+        /// <summary>
+        /// 未税定制成本
+        /// </summary>
+        [AdvQueryAttribute(ColName = "UntaxedCustomizedCost", ColDesc = "未税定制成本")]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType = "Decimal", ColumnName = "UntaxedCustomizedCost", DecimalDigits = 4, IsNullable = false, ColumnDescription = "未税定制成本")]
+        public decimal UntaxedCustomizedCost
+        {
+            get { return _UntaxedCustomizedCost; }
+            set
+            {
+                SetProperty(ref _UntaxedCustomizedCost, value);
+            }
+        }
         private decimal _TaxRate= ((0));
         /// <summary>
         /// 税率
@@ -196,6 +209,22 @@ namespace RUINORERP.Model
                         }
         }
 
+        private decimal _UntaxedUnitPrice=0;
+        /// <summary>
+        /// 未税单价
+        /// </summary>
+        [AdvQueryAttribute(ColName = "UntaxedUnitPrice", ColDesc = "未税单价")]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType = "Decimal", ColumnName = "UntaxedUnitPrice", DecimalDigits = 4, IsNullable = false, ColumnDescription = "未税单价")]
+        public decimal UntaxedUnitPrice
+        {
+            get { return _UntaxedUnitPrice; }
+            set
+            {
+                SetProperty(ref _UntaxedUnitPrice, value);
+            }
+        }
+
+
         private decimal _SubtotalAmount;
         /// <summary>
         /// 成交金额
@@ -209,6 +238,22 @@ namespace RUINORERP.Model
             SetProperty(ref _SubtotalAmount, value);
                         }
         }
+
+        private decimal _SubtotalUntaxedAmount;
+        /// <summary>
+        /// 未税小计
+        /// </summary>
+        [AdvQueryAttribute(ColName = "SubtotalUntaxedAmount", ColDesc = "未税小计")]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType = "Decimal", ColumnName = "SubtotalUntaxedAmount", DecimalDigits = 4, IsNullable = false, ColumnDescription = "未税小计")]
+        public decimal SubtotalUntaxedAmount
+        {
+            get { return _SubtotalUntaxedAmount; }
+            set
+            {
+                SetProperty(ref _SubtotalUntaxedAmount, value);
+            }
+        }
+
 
         private bool? _IsGift= false;
         /// <summary>

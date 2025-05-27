@@ -41,23 +41,20 @@ using Krypton.Toolkit;
 using System.Diagnostics;
  
 using Netron.GraphLib;
+using RUINORERP.UI.AdvancedUIModule;
 
 
 namespace RUINORERP.UI.PSI.INV
 {
     [MenuAttrAssemblyInfo("归还单", ModuleMenuDefine.模块定义.进销存管理, ModuleMenuDefine.进销存管理.借出归还, BizType.归还单)]
-    public partial class UCProdReturning : BaseBillEditGeneric<tb_ProdReturning, tb_ProdReturningDetail>
+    public partial class UCProdReturning : BaseBillEditGeneric<tb_ProdReturning, tb_ProdReturningDetail>, IPublicEntityObject
     {
         public UCProdReturning()
         {
             InitializeComponent();
-            if (!PublicEntityObjects.Contains(typeof(ProductSharePart)))
-            {
-                PublicEntityObjects.Add(typeof(ProductSharePart));
-            }
+            AddPublicEntityObject(typeof(ProductSharePart));
         }
-        //放到基类识别不到
-        public static List<Type> PublicEntityObjects { get; set; } = new List<Type>();
+ 
 
         internal override void LoadDataToUI(object Entity)
         {
@@ -370,6 +367,9 @@ namespace RUINORERP.UI.PSI.INV
                     MessageBox.Show("请录入有效明细记录！");
                     return false;
                 }
+                EditEntity.TotalQty = details.Sum(c => c.Qty);
+                EditEntity.TotalCost = details.Sum(c => c.Cost * c.Qty);
+                EditEntity.TotalAmount = details.Sum(c => c.Price * c.Qty);
                 //二选中，验证机制还没有弄好。先这里处理
                 if (NeedValidated && EditEntity.CustomerVendor_ID == 0 || EditEntity.CustomerVendor_ID == -1)
                 {

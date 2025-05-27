@@ -1005,10 +1005,10 @@ namespace RUINORERP.Business
                 //如果这个订单已经有出库单 则第二次运费为0
                 if (saleorder.tb_SaleOuts != null && saleorder.tb_SaleOuts.Count > 0)
                 {
-                    if (saleorder.ShipCost > 0)
+                    if (saleorder.FreightIncome > 0)
                     {
                         tipsMsg.Add($"当前订单已经有出库记录，运费收入已经计入前面出库单，当前出库运费收入为零！");
-                        entity.ShipCost = 0;
+                        entity.FreightIncome = 0;
                     }
                     else
                     {
@@ -1052,7 +1052,7 @@ namespace RUINORERP.Business
                 entity.TotalTaxAmount = entity.TotalTaxAmount.ToRoundDecimalPlaces(authorizeController.GetMoneyDataPrecision());
 
                 entity.TotalAmount = NewDetails.Sum(c => c.TransactionPrice * c.Quantity);
-                entity.TotalAmount = entity.TotalAmount + entity.ShipCost;
+                entity.TotalAmount = entity.TotalAmount + entity.FreightIncome;
 
 
                 BusinessHelper.Instance.InitEntity(entity);

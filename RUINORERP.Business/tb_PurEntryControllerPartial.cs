@@ -119,7 +119,7 @@ namespace RUINORERP.Business
                             {
                                 //如果存在不是引用的明细,则不允许入库。这样不支持手动添加的情况。
                                 string msg = $"采购订单:{entity.tb_purorder.PurOrderNo}的【{prodName}】在订单明细中拥有多行记录，必须使用引用的方式添加。";
-                                rs.ErrorMsg= msg;
+                                rs.ErrorMsg = msg;
                                 _unitOfWorkManage.RollbackTran();
                                 _logger.LogInformation(msg);
                                 return rs;
@@ -193,12 +193,12 @@ namespace RUINORERP.Business
                         }
                     }
                 }
-              
+
 
 
                 // 使用字典按 (ProdDetailID, LocationID) 分组，存储库存记录及累计数据
                 var inventoryGroups = new Dictionary<(long ProdDetailID, long LocationID), (tb_Inventory Inventory, decimal PurQtySum, bool? IsGift,
-                    decimal UnitPrice, DateTime LatestStorageTime)>();
+                    decimal UntaxedUnitPrice, DateTime LatestStorageTime)>();
 
                 // 遍历销售订单明细，聚合数据
                 foreach (var child in entity.tb_PurEntryDetails)
@@ -242,7 +242,7 @@ namespace RUINORERP.Business
                             Inventory: inv,
                             PurQtySum: currentEntryQty, // 首次累加
                             IsGift: child.IsGift,
-                            UnitPrice: child.UnitPrice,
+                            UntaxedUnitPrice: child.UntaxedUnitPrice,
                             LatestStorageTime: currentStorageTime
                         );
                         inventoryGroups[key] = group;
@@ -252,13 +252,13 @@ namespace RUINORERP.Business
                         // 累加已有分组的数值字段
 
                         group.IsGift = child.IsGift;
-                        if (group.IsGift.HasValue && !group.IsGift.Value && group.UnitPrice > 0)
+                        if (group.IsGift.HasValue && !group.IsGift.Value && group.UntaxedUnitPrice > 0)
                         {
-                            group.UnitPrice = ((currentEntryQty * child.UnitPrice) + (group.UnitPrice * group.PurQtySum)) / (group.PurQtySum + currentEntryQty);
+                            group.UntaxedUnitPrice = ((currentEntryQty * child.UntaxedUnitPrice) + (group.UntaxedUnitPrice * group.PurQtySum)) / (group.PurQtySum + currentEntryQty);
                         }
                         else
                         {
-                            group.UnitPrice = child.UnitPrice;
+                            group.UntaxedUnitPrice = child.UntaxedUnitPrice;
                         }
                         group.PurQtySum += currentEntryQty;
 
@@ -287,12 +287,21 @@ namespace RUINORERP.Business
                     //采购价格：从供应商处购买产品或物品时的价格。
                     //生产成本：自行生产产品时的成本，包括原材料、人工和间接费用等。
                     //市场价格：参考市场上类似产品或物品的价格。
-                    if (group.Value.IsGift.HasValue && !group.Value.IsGift.Value && group.Value.UnitPrice > 0)
+                    if (group.Value.IsGift.HasValue && !group.Value.IsGift.Value && group.Value.UntaxedUnitPrice > 0)
                     {
-                        CommService.CostCalculations.CostCalculation(_appContext, inv, group.Value.PurQtySum.ToInt(), group.Value.UnitPrice);
+                        //不含税的总金额+不含税运费
+                        decimal UntaxedShippingCost = 0;
+                        UntaxedShippingCost = entity.ShippingCost;
+                        if (entity.ShippingCost > 0 && entity.TotalTaxAmount > 0)
+                        {
+                            decimal FreightTaxRate = entity.tb_PurEntryDetails.FirstOrDefault(c => c.TaxRate > 0).TaxRate;
+                            UntaxedShippingCost = (entity.ShippingCost / (1 + FreightTaxRate)); //计算列：不含税运费
+                            UntaxedShippingCost = Math.Round(UntaxedShippingCost, 2);
+                        }
+                        CommService.CostCalculations.CostCalculation(_appContext, inv, group.Value.PurQtySum.ToInt(), group.Value.UntaxedUnitPrice, UntaxedShippingCost);
                         #region 更新BOM价格,当前产品存在哪些BOM中，则更新所有BOM的价格包含主子表数据的变化
 
-                        List<tb_BOM_SDetail> bomDetails =await _unitOfWorkManage.GetDbClient().Queryable<tb_BOM_SDetail>()
+                        List<tb_BOM_SDetail> bomDetails = await _unitOfWorkManage.GetDbClient().Queryable<tb_BOM_SDetail>()
                         .Includes(b => b.tb_bom_s, d => d.tb_BOM_SDetails)
                         .Where(c => c.ProdDetailID == group.Key.ProdDetailID).ToListAsync();
                         foreach (tb_BOM_SDetail bomDetail in bomDetails)
@@ -305,7 +314,7 @@ namespace RUINORERP.Business
                                 bomDetail.tb_bom_s.TotalMaterialCost = bomDetail.tb_bom_s.tb_BOM_SDetails.Sum(c => c.SubtotalUnitCost);
                                 bomDetail.tb_bom_s.OutProductionAllCosts = bomDetail.tb_bom_s.TotalMaterialCost + bomDetail.tb_bom_s.TotalOutManuCost + bomDetail.tb_bom_s.OutApportionedCost;
                                 bomDetail.tb_bom_s.SelfProductionAllCosts = bomDetail.tb_bom_s.TotalMaterialCost + bomDetail.tb_bom_s.TotalSelfManuCost + bomDetail.tb_bom_s.SelfApportionedCost;
-                               
+
                                 BOMs.Add(bomDetail.tb_bom_s);
                             }
                             BOM_SDetails.Add(bomDetail);
@@ -329,9 +338,9 @@ namespace RUINORERP.Business
                         priceRecord.ProdDetailID = group.Key.ProdDetailID;
                     }
                     priceRecord.Employee_ID = entity.tb_purorder.Employee_ID;
-                    if (group.Value.UnitPrice != priceRecord.PurPrice)
+                    if (group.Value.UntaxedUnitPrice != priceRecord.PurPrice)
                     {
-                        priceRecord.PurPrice = group.Value.UnitPrice;
+                        priceRecord.PurPrice = group.Value.UntaxedUnitPrice;
                         priceRecord.PurDate = System.DateTime.Now;
                         PriceRecords.Add(priceRecord);
                     }
@@ -650,7 +659,7 @@ namespace RUINORERP.Business
 
                 // 使用字典按 (ProdDetailID, LocationID) 分组，存储库存记录及累计数据
                 var inventoryGroups = new Dictionary<(long ProdDetailID, long LocationID), (tb_Inventory Inventory, decimal PurQtySum, bool? IsGift,
-                    decimal UnitPrice, DateTime LatestStorageTime)>();
+                    decimal UntaxedUnitPrice, DateTime LatestStorageTime)>();
 
                 // 遍历销售订单明细，聚合数据
                 foreach (var child in entity.tb_PurEntryDetails)
@@ -673,7 +682,7 @@ namespace RUINORERP.Business
                             Inventory: inv,
                             PurQtySum: currentEntryQty, // 首次累加
                             IsGift: child.IsGift,
-                            UnitPrice: child.UnitPrice,
+                            UntaxedUnitPrice: child.UntaxedUnitPrice,
                             LatestStorageTime: currentStorageTime
                         );
                         inventoryGroups[key] = group;
@@ -683,13 +692,13 @@ namespace RUINORERP.Business
                         // 累加已有分组的数值字段
 
                         group.IsGift = child.IsGift;
-                        if (group.IsGift.HasValue && !group.IsGift.Value && group.UnitPrice > 0)
+                        if (group.IsGift.HasValue && !group.IsGift.Value && group.UntaxedUnitPrice > 0)
                         {
-                            group.UnitPrice = ((currentEntryQty * child.UnitPrice) + (group.UnitPrice * group.PurQtySum)) / (group.PurQtySum + currentEntryQty);
+                            group.UntaxedUnitPrice = ((currentEntryQty * child.UntaxedUnitPrice) + (group.UntaxedUnitPrice * group.PurQtySum)) / (group.PurQtySum + currentEntryQty);
                         }
                         else
                         {
-                            group.UnitPrice = child.UnitPrice;
+                            group.UntaxedUnitPrice = child.UntaxedUnitPrice;
                         }
                         group.PurQtySum += currentEntryQty;
 
@@ -718,12 +727,12 @@ namespace RUINORERP.Business
                     //采购价格：从供应商处购买产品或物品时的价格。
                     //生产成本：自行生产产品时的成本，包括原材料、人工和间接费用等。
                     //市场价格：参考市场上类似产品或物品的价格。
-                    if (group.Value.IsGift.HasValue && !group.Value.IsGift.Value && group.Value.UnitPrice > 0)
+                    if (group.Value.IsGift.HasValue && !group.Value.IsGift.Value && group.Value.UntaxedUnitPrice > 0)
                     {
-                        CommService.CostCalculations.AntiCostCalculation(_appContext, inv, group.Value.PurQtySum.ToInt(), group.Value.UnitPrice);
+                        CommService.CostCalculations.AntiCostCalculation(_appContext, inv, group.Value.PurQtySum.ToInt(), group.Value.UntaxedUnitPrice);
                         #region 更新BOM价格,当前产品存在哪些BOM中，则更新所有BOM的价格包含主子表数据的变化
 
-                        List<tb_BOM_SDetail> bomDetails =await _unitOfWorkManage.GetDbClient().Queryable<tb_BOM_SDetail>()
+                        List<tb_BOM_SDetail> bomDetails = await _unitOfWorkManage.GetDbClient().Queryable<tb_BOM_SDetail>()
                         .Includes(b => b.tb_bom_s, d => d.tb_BOM_SDetails)
                         .Where(c => c.ProdDetailID == group.Key.ProdDetailID).ToListAsync();
                         foreach (tb_BOM_SDetail bomDetail in bomDetails)
@@ -758,9 +767,9 @@ namespace RUINORERP.Business
                         priceRecord.ProdDetailID = group.Key.ProdDetailID;
                     }
                     priceRecord.Employee_ID = entity.tb_purorder.Employee_ID;
-                    if (group.Value.UnitPrice != priceRecord.PurPrice)
+                    if (group.Value.UntaxedUnitPrice != priceRecord.PurPrice)
                     {
-                        priceRecord.PurPrice = group.Value.UnitPrice;
+                        priceRecord.PurPrice = group.Value.UntaxedUnitPrice;
                         priceRecord.PurDate = System.DateTime.Now;
                         PriceRecords.Add(priceRecord);
                     }
@@ -857,7 +866,7 @@ namespace RUINORERP.Business
                             {
                                 //如果存在不是引用的明细,则不允许入库。这样不支持手动添加的情况。
                                 string msg = $"采购订单:{entity.tb_purorder.PurOrderNo}的【{prodName}】在订单明细中拥有多行记录，必须使用引用的方式添加，反审失败！";
-                               rs.ErrorMsg = msg;
+                                rs.ErrorMsg = msg;
                                 _unitOfWorkManage.RollbackTran();
                                 if (_appContext.SysConfig.ShowDebugInfo)
                                 {
@@ -874,7 +883,7 @@ namespace RUINORERP.Business
                             if (inQty > entity.tb_purorder.tb_PurOrderDetails[i].Quantity)
                             {
                                 string msg = $"采购订单:{entity.tb_purorder.PurOrderNo}的【{prodName}】的入库数量不能大于订单中对应行的数量。";
-                               rs.ErrorMsg = msg;
+                                rs.ErrorMsg = msg;
                                 _unitOfWorkManage.RollbackTran();
                                 if (_appContext.SysConfig.ShowDebugInfo)
                                 {

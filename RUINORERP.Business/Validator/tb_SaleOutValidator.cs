@@ -57,7 +57,7 @@ namespace RUINORERP.Business
             RuleFor(tb_SaleOut => tb_SaleOut.Paytype_ID).Must(CheckForeignKeyValue).WithMessage("付款方式:下拉选择值不正确。");
         
 
-            RuleFor(x => x.ShipCost).PrecisionScale(19, 4, true).WithMessage("运费:小数位不能超过4。");
+            RuleFor(x => x.FreightIncome).PrecisionScale(19, 4, true).WithMessage("运费:小数位不能超过4。");
 
             //***** 
             RuleFor(tb_SaleOut => tb_SaleOut.TotalQty).NotNull().WithMessage("总数量:不能为空。");

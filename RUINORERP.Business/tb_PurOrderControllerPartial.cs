@@ -101,7 +101,7 @@ namespace RUINORERP.Business
                             }
                         }
 
-                       
+
 
                         entity.DataStatus = (int)DataStatus.完结;
                         BusinessHelper.Instance.EditEntity(entity);
@@ -539,7 +539,7 @@ namespace RUINORERP.Business
                 {
                     _logger.LogInformation($"{entity.PurOrderNo}更新库存结果为0行，请检查数据！");
                 }
-                
+
 
                 //这部分是否能提出到上一级公共部分？
                 entity.DataStatus = (int)DataStatus.新建;
@@ -608,7 +608,8 @@ namespace RUINORERP.Business
 
 
                         details[i].Quantity = item.Quantity - item.DeliveredQuantity;// 已经交数量去掉
-                        details[i].SubtotalAmount = details[i].UnitPrice * details[i].Quantity;
+                        details[i].SubtotalAmount = (details[i].UnitPrice + details[i].CustomizedCost) * details[i].Quantity;
+                        details[i].SubtotalUntaxedAmount = (details[i].UntaxedUnitPrice + details[i].UntaxedCustomizedCost) * details[i].Quantity;
                         if (details[i].Quantity > 0)
                         {
                             NewDetails.Add(details[i]);
@@ -642,6 +643,7 @@ namespace RUINORERP.Business
 
                         details[i].Quantity = item.Quantity - item.DeliveredQuantity;// 已经交数量去掉
                         details[i].SubtotalAmount = details[i].UnitPrice * details[i].Quantity;
+                        details[i].SubtotalUntaxedAmount = details[i].UntaxedUnitPrice * details[i].Quantity;
                         if (details[i].Quantity > 0)
                         {
                             NewDetails.Add(details[i]);
@@ -671,8 +673,10 @@ namespace RUINORERP.Business
                 entity.ActionStatus = ActionStatus.新增;
 
                 entity.TotalQty = NewDetails.Sum(c => c.Quantity);
-                entity.TotalAmount = NewDetails.Sum(c => c.UnitPrice * c.Quantity);
+                entity.TotalAmount = NewDetails.Sum(c => (c.UnitPrice + c.CustomizedCost) * c.Quantity);
                 entity.TotalTaxAmount = NewDetails.Sum(c => c.TaxAmount);
+                entity.TotalUntaxedAmount = NewDetails.Sum(c => (c.UntaxedUnitPrice + c.UntaxedCustomizedCost) * c.Quantity);
+
                 entity.tb_PurEntryDetails = NewDetails;
                 entity.PurOrder_ID = order.PurOrder_ID;
                 entity.PurOrder_NO = order.PurOrderNo;

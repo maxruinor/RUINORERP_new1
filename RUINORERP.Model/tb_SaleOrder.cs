@@ -183,34 +183,34 @@ namespace RUINORERP.Model
                         }
         }
 
-        private decimal _ShipCost= ((0));
+        private decimal _FreightIncome = ((0));
         /// <summary>
         /// 运费收入
         /// </summary>
-        [AdvQueryAttribute(ColName = "ShipCost",ColDesc = "运费收入")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "ShipCost" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "运费收入" )]
-        public decimal ShipCost
+        [AdvQueryAttribute(ColName = "FreightIncome", ColDesc = "运费收入")] 
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "FreightIncome", DecimalDigits = 4,IsNullable = false,ColumnDescription = "运费收入" )]
+        public decimal FreightIncome
         { 
-            get{return _ShipCost;}
+            get{return _FreightIncome; }
             set{
-            SetProperty(ref _ShipCost, value);
+            SetProperty(ref _FreightIncome, value);
                         }
         }
-
-        private decimal _ForeignShipCost = ((0));
+        private decimal _ForeignFreightIncome = ((0));
         /// <summary>
         /// 运费外币
         /// </summary>
-        [AdvQueryAttribute(ColName = "ForeignShipCost", ColDesc = "运费外币")]
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType = "Decimal", ColumnName = "ForeignShipCost", DecimalDigits = 4, IsNullable = false, ColumnDescription = "运费外币")]
-        public decimal ForeignShipCost
+        [AdvQueryAttribute(ColName = "ForeignFreightIncome", ColDesc = "运费外币")]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType = "Decimal", ColumnName = "ForeignFreightIncome", DecimalDigits = 4, IsNullable = false, ColumnDescription = "运费外币")]
+        public decimal ForeignFreightIncome
         {
-            get { return _ForeignShipCost; }
+            get { return _ForeignFreightIncome; }
             set
             {
-                SetProperty(ref _ForeignShipCost, value);
+                SetProperty(ref _ForeignFreightIncome, value);
             }
         }
+
 
         private int _TotalQty= ((0));
         /// <summary>

@@ -42,24 +42,21 @@ using EnumsNET;
 using RUINORERP.UI.ToolForm;
 using RUINORERP.Business.Security;
 using RUINORERP.Global.EnumExt;
+using RUINORERP.UI.AdvancedUIModule;
 
 
 namespace RUINORERP.UI.PSI.PUR
 {
     [MenuAttrAssemblyInfo("采购退货入库单", ModuleMenuDefine.模块定义.进销存管理, ModuleMenuDefine.进销存管理.采购管理, BizType.采购退货入库)]
-    public partial class UCPurReturnEntry : BaseBillEditGeneric<tb_PurReturnEntry, tb_PurReturnEntryDetail>
+    public partial class UCPurReturnEntry : BaseBillEditGeneric<tb_PurReturnEntry, tb_PurReturnEntryDetail>, IPublicEntityObject
     {
         public UCPurReturnEntry()
         {
             InitializeComponent();
 
-            if (!PublicEntityObjects.Contains(typeof(ProductSharePart)))
-            {
-                PublicEntityObjects.Add(typeof(ProductSharePart));
-            }
+            AddPublicEntityObject(typeof(ProductSharePart));
         }
-        //放到基类识别不到
-        public static List<Type> PublicEntityObjects { get; set; } = new List<Type>();
+ 
 
         internal override void LoadDataToUI(object Entity)
         {

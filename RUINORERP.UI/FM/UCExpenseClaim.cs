@@ -578,7 +578,7 @@ namespace RUINORERP.UI.FM
                 EditEntity.TaxAmount = details.Sum(c => c.TaxAmount);
                 EditEntity.ClaimAmount = details.Sum(c => c.TotalAmount);
                 EditEntity.UntaxedAmount = details.Sum(C => C.UntaxedAmount);
-
+                EditEntity.ApprovedAmount = EditEntity.ClaimAmount;
                 //如果主表的总金额和明细金额加总后不相等，则提示
                 if (NeedValidated && EditEntity.ClaimAmount != details.Sum(c => c.TotalAmount))
                 {

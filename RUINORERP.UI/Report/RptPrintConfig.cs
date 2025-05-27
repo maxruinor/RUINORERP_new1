@@ -337,64 +337,71 @@ namespace RUINORERP.UI.Report
 
         private void RptPrintConfig_Load(object sender, EventArgs e)
         {
-            listboxBIll.Items.Clear();
-            if (PrintDataSources != null)
+            try
             {
-                BillConverterFactory bcf = MainForm.Instance.AppContext.GetRequiredService<BillConverterFactory>();
 
-                foreach (var item in PrintDataSources)
+                listboxBIll.Items.Clear();
+                if (PrintDataSources != null)
                 {
-                    try
+                    BillConverterFactory bcf = MainForm.Instance.AppContext.GetRequiredService<BillConverterFactory>();
+
+                    foreach (var item in PrintDataSources)
                     {
-                        CommBillData cbd = bcf.GetBillData(item.GetType(), item);
-                        if (cbd.BillNo != null)
+                        try
                         {
-                            listboxBIll.Items.Add(cbd.BillNo);
+                            CommBillData cbd = bcf.GetBillData(item.GetType(), item);
+                            if (cbd.BillNo != null)
+                            {
+                                listboxBIll.Items.Add(cbd.BillNo);
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            MainForm.Instance.logger.Error(ex);
                         }
                     }
-                    catch (Exception ex)
-                    {
-                        MainForm.Instance.logger.Error(ex);
-                    }
+                }
+
+                DataBindingHelper.BindData4CheckBox<tb_PrintConfig>(printConfig, t => t.PrinterSelected, chkSelectPrinter, false);
+
+                cmbPrinterList.Items.Clear();
+                var printers = LocalPrinter.GetLocalPrinters();
+                foreach (var item in printers)
+                {
+                    cmbPrinterList.Items.Add(item);
+                }
+                if (printConfig.PrinterSelected.HasValue && printConfig.PrinterSelected.Value)
+                {
+                    cmbPrinterList.SelectedIndex = cmbPrinterList.FindString(printConfig.PrinterName);
+                }
+
+                newSumDataGridView1.NeedSaveColumnsXml = true;
+                newSumDataGridView1.XmlFileName = typeof(tb_PrintTemplate).Name;
+                newSumDataGridView1.FieldNameList = Common.UIHelper.GetFieldNameColList(typeof(tb_PrintTemplate));
+
+                newSumDataGridView1.Use是否使用内置右键功能 = true;
+                //要这样处理，不然数据源不联动
+                if (printConfig.tb_PrintTemplates == null)
+                {
+                    printConfig.tb_PrintTemplates = new List<tb_PrintTemplate>();
+                }
+                bindingSourcePrintTemplate.DataSource = printConfig.tb_PrintTemplates;
+                // 绑定数据 不修改绑定
+                newSumDataGridView1.DataSource = null;
+                newSumDataGridView1.DataSource = bindingSourcePrintTemplate;
+
+                //如果个人的个性化打印设置了优先个人的设置
+                if (MainForm.Instance.AppContext.CurrentUser_Role_Personalized.UseUserOwnPrinter.HasValue
+                               && MainForm.Instance.AppContext.CurrentUser_Role_Personalized.UseUserOwnPrinter.Value)
+                {
+                    chkSelectPrinter.Visible = false;
+                    GroupBoxSelectPrinter.Visible = false;
                 }
             }
-
-            DataBindingHelper.BindData4CheckBox<tb_PrintConfig>(printConfig, t => t.PrinterSelected, chkSelectPrinter, false);
-
-            cmbPrinterList.Items.Clear();
-            var printers = LocalPrinter.GetLocalPrinters();
-            foreach (var item in printers)
+            catch (Exception ex)
             {
-                cmbPrinterList.Items.Add(item);
+                MainForm.Instance.logger.Error("打印配置加载异常", ex);
             }
-            if (printConfig.PrinterSelected.HasValue && printConfig.PrinterSelected.Value)
-            {
-                cmbPrinterList.SelectedIndex = cmbPrinterList.FindString(printConfig.PrinterName);
-            }
-
-            newSumDataGridView1.NeedSaveColumnsXml = true;
-            newSumDataGridView1.XmlFileName = typeof(tb_PrintTemplate).Name;
-            newSumDataGridView1.FieldNameList = Common.UIHelper.GetFieldNameColList(typeof(tb_PrintTemplate));
-
-            newSumDataGridView1.Use是否使用内置右键功能 = true;
-            //要这样处理，不然数据源不联动
-            if (printConfig.tb_PrintTemplates == null)
-            {
-                printConfig.tb_PrintTemplates = new List<tb_PrintTemplate>();
-            }
-            bindingSourcePrintTemplate.DataSource = printConfig.tb_PrintTemplates;
-            // 绑定数据 不修改绑定
-            newSumDataGridView1.DataSource = null;
-            newSumDataGridView1.DataSource = bindingSourcePrintTemplate;
-
-            //如果个人的个性化打印设置了优先个人的设置
-            if (MainForm.Instance.AppContext.CurrentUser_Role_Personalized.UseUserOwnPrinter.HasValue
-                           && MainForm.Instance.AppContext.CurrentUser_Role_Personalized.UseUserOwnPrinter.Value)
-            {
-                chkSelectPrinter.Visible = false;
-                GroupBoxSelectPrinter.Visible = false;
-            }
-
         }
 
         private async void btnPrinter_Click(object sender, EventArgs e)

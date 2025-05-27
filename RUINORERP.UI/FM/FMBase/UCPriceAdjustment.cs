@@ -46,6 +46,7 @@ using RUINORERP.Business.CommService;
 using RUINORERP.Business.Processor;
 using RUINORERP.Business.Security;
 using System.Configuration;
+using RUINORERP.UI.AdvancedUIModule;
 
 namespace RUINORERP.UI.FM
 {
@@ -53,12 +54,14 @@ namespace RUINORERP.UI.FM
     /// <summary>
     /// 价格调整单
     /// </summary>
-    public partial class UCPriceAdjustment : BaseBillEditGeneric<tb_FM_PriceAdjustment, tb_FM_PriceAdjustmentDetail>
+    public partial class UCPriceAdjustment : BaseBillEditGeneric<tb_FM_PriceAdjustment, tb_FM_PriceAdjustmentDetail>, IPublicEntityObject
     {
         public UCPriceAdjustment()
         {
             InitializeComponent();
+            AddPublicEntityObject(typeof(ProductSharePart));
         }
+      
         /// <summary>
         /// 收付款方式决定对应的菜单功能
         /// </summary>

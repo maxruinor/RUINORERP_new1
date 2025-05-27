@@ -50,18 +50,14 @@ namespace RUINORERP.UI.PSI.INV
     /// 盘点时如果选择期初，成本强制显示出来，并且必须输入。其他的方式。不显示成本也不用必须输入。
     /// </summary>
     [MenuAttrAssemblyInfo("盘点作业", ModuleMenuDefine.模块定义.进销存管理, ModuleMenuDefine.进销存管理.盘点管理, BizType.盘点单)]
-    public partial class UCStocktake : BaseBillEditGeneric<tb_Stocktake, tb_StocktakeDetail>
+    public partial class UCStocktake : BaseBillEditGeneric<tb_Stocktake, tb_StocktakeDetail>, IPublicEntityObject
     {
         public UCStocktake()
         {
             InitializeComponent();
-            if (!PublicEntityObjects.Contains(typeof(ProductSharePart)))
-            {
-                PublicEntityObjects.Add(typeof(ProductSharePart));
-            }
+            AddPublicEntityObject(typeof(ProductSharePart));
         }
-        //放到基类识别不到
-        public static List<Type> PublicEntityObjects { get; set; } = new List<Type>();
+
 
         private void UCStocktake_OnBindDataToUIEvent(tb_Stocktake entity)
         {
@@ -456,29 +452,7 @@ namespace RUINORERP.UI.PSI.INV
             {
                 //给默认值的话，可以批量处理，按int类型这种？
                 tb_StocktakeDetail rowObj = _rowObj as tb_StocktakeDetail;
-                //计算值 
 
-                //rowObj.DiffQty = rowObj.CheckQty - rowObj.CarryinglQty;
-                // rowObj.DiffSubtotalAmount = rowObj.DiffQty * rowObj.Cost;
-                // rowObj.CarryingSubtotalAmount = rowObj.CarryinglQty * rowObj.Cost;
-                // rowObj.CheckSubtotalAmount = rowObj.CheckQty * rowObj.Cost;
-
-                //DoSomething((x, y) => rowObj.CheckQty - rowObj.CarryinglQty);
-
-
-                // Operator<int>.Add(rowObj.CheckQty, rowObj.CarryinglQty);
-
-                //反算  比方通过已经总价 和数量 算出单价  盘点这时不需要这样处理
-                //if (myGridDefine[position.Column].ColName == "DiffAmount")
-                //{
-                //    // rowObj.DiffQty = (rowObj.DiffAmount / rowObj.Cost);
-                //}
-                //else
-                //{
-                //    rowObj.DiffAmount = rowObj.DiffQty * rowObj.Cost;
-                //}
-
-                //sgd.BindingSourceLines
 
                 //计算总金额  这些逻辑是不是放到业务层？后面要优化
                 //details = sgd.BindingSourceLines.List.CastToList<tb_StocktakeDetail>();
@@ -490,13 +464,13 @@ namespace RUINORERP.UI.PSI.INV
                     return;
                 }
 
-                decimal? totalMoney = details.Sum(r => r.Cost * r.CheckQty);
                 EditEntity.CheckTotalQty = details.Sum(c => c.CheckQty);
                 EditEntity.CarryingTotalQty = details.Sum(c => c.CarryinglQty);
                 EditEntity.DiffTotalQty = details.Sum(c => c.DiffQty);
                 EditEntity.CheckTotalAmount = details.Sum(c => c.Cost * c.CheckQty);
                 EditEntity.CarryingTotalAmount = details.Sum(c => c.Cost * c.CarryinglQty);
                 EditEntity.DiffTotalAmount = details.Sum(c => c.Cost * c.DiffQty);
+
             }
             catch (Exception ex)
             {
@@ -594,18 +568,22 @@ namespace RUINORERP.UI.PSI.INV
                     }
                     return false;
                 }
-                
+
                 if (NeedValidated && (EditEntity.CheckTotalQty == 0 || detailentity.Sum(c => c.CheckQty) == 0))
                 {
-                    if(MessageBox.Show("您确定整单盘点数量为零吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2)==DialogResult.No)
+                    if (MessageBox.Show("您确定整单盘点数量为零吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2) == DialogResult.No)
                     {
                         return false;
                     }
                 }
 
-
                 EditEntity.tb_StocktakeDetails = details;
-
+                EditEntity.CheckTotalQty = details.Sum(c => c.CheckQty);
+                EditEntity.CarryingTotalQty = details.Sum(c => c.CarryinglQty);
+                EditEntity.DiffTotalQty = details.Sum(c => c.DiffQty);
+                EditEntity.CheckTotalAmount = details.Sum(c => c.Cost * c.CheckQty);
+                EditEntity.CarryingTotalAmount = details.Sum(c => c.Cost * c.CarryinglQty);
+                EditEntity.DiffTotalAmount = details.Sum(c => c.Cost * c.DiffQty);
                 //没有经验通过下面先不计算
                 if (NeedValidated && !base.Validator(EditEntity))
                 {

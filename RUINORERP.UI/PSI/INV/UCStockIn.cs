@@ -38,23 +38,20 @@ using RUINORERP.Business.AutoMapper;
 using RUINORERP.Business.Processor;
 using RUINORERP.Business.Security;
 using RUINORERP.Global.EnumExt;
+using RUINORERP.UI.AdvancedUIModule;
 
 
 namespace RUINORERP.UI.PSI.INV
 {
     [MenuAttrAssemblyInfo("其他入库单", ModuleMenuDefine.模块定义.进销存管理, ModuleMenuDefine.进销存管理.其他出入库管理, BizType.其他入库单)]
-    public partial class UCStockIn : BaseBillEditGeneric<tb_StockIn, tb_StockInDetail>
+    public partial class UCStockIn : BaseBillEditGeneric<tb_StockIn, tb_StockInDetail>, IPublicEntityObject
     {
         public UCStockIn()
         {
             InitializeComponent();
-            if (!PublicEntityObjects.Contains(typeof(ProductSharePart)))
-            {
-                PublicEntityObjects.Add(typeof(ProductSharePart));
-            }
+            AddPublicEntityObject(typeof(ProductSharePart));
         }
-        //放到基类识别不到
-        public static List<Type> PublicEntityObjects { get; set; } = new List<Type>();
+ 
 
         internal override void LoadDataToUI(object Entity)
         {
@@ -334,14 +331,17 @@ namespace RUINORERP.UI.PSI.INV
             {
                 //产品ID有值才算有效值
                 details = detailentity.Where(t => t.ProdDetailID > 0).ToList();
-                EditEntity.TotalQty = details.Sum(c => c.Qty);
                 EditEntity.tb_StockInDetails = details;
+                EditEntity.TotalQty = details.Sum(c => c.Qty);
+                EditEntity.TotalCost = details.Sum(c => c.Cost * c.Qty);
+                EditEntity.TotalAmount = details.Sum(c => c.Price * c.Qty);
                 //如果没有有效的明细。直接提示
                 if (NeedValidated && details.Count == 0)
                 {
                     MessageBox.Show("请录入有效明细记录！");
                     return false;
                 }
+
                 //二选中，验证机制还没有弄好。先这里处理
                 if (EditEntity.CustomerVendor_ID == 0 || EditEntity.CustomerVendor_ID == -1)
                 {

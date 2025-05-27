@@ -476,6 +476,8 @@ namespace RUINORERP.Business
                             tb_PurEntryDetail item = SourceBill.tb_PurEntryDetails
                                 .FirstOrDefault(c => c.ProdDetailID == details[i].ProdDetailID);
                             details[i].OriginalUnitPrice = item.UnitPrice;
+                            details[i].TaxRate = item.TaxRate;
+                            details[i].Quantity = item.Quantity;
                             NewDetails.Add(details[i]);
                             //tb_PurEntryDetail item = SourceBill.tb_PurEntryDetails
                             //    .FirstOrDefault(c => c.ProdDetailID == details[i].ProdDetailID);

@@ -150,7 +150,7 @@ namespace RUINORERP.UI.SysConfig
                                 MainForm.Instance.PrintInfoLog($"销售订单{_SaleOrder.SOrderNo}，明细数量和总数量不对========>价格为0。请修复！");
                             }
 
-                            if (_SaleOrder.tb_SaleOrderDetails != null && _SaleOrder.tb_SaleOrderDetails.Sum(c => c.SubtotalTransAmount) + _SaleOrder.ShipCost > _SaleOrder.TotalAmount)
+                            if (_SaleOrder.tb_SaleOrderDetails != null && _SaleOrder.tb_SaleOrderDetails.Sum(c => c.SubtotalTransAmount) + _SaleOrder.FreightIncome > _SaleOrder.TotalAmount)
                             {
                                 MainForm.Instance.PrintInfoLog($"销售订单{_SaleOrder.SOrderNo}，=======有运费情况。请修复！");
                             }

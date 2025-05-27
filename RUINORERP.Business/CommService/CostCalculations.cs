@@ -66,8 +66,10 @@ namespace RUINORERP.Business.CommService
         }
           */
 
-        public static void CostCalculation(ApplicationContext _appContext, tb_Inventory inv, int currentQty, decimal currentCostPrice)
+        public static void CostCalculation(ApplicationContext _appContext, tb_Inventory inv, int currentQty, decimal UntaxedUnitPrice, decimal UntaxedShippCost = 0)
         {
+
+            //新成本单价 = （原库存成本×原数量 + (采购不含税单价×采购数量 + 不含税运费)）/(原数量 + 采购数量 )
             // 先算成本再赋值数量（保持原有逻辑顺序）
             Global.库存成本计算方式 m = (Global.库存成本计算方式)_appContext.SysConfig.CostCalculationMethod;
 
@@ -84,7 +86,7 @@ namespace RUINORERP.Business.CommService
                     {
                         throw new InvalidOperationException("先进先出法下不允许现有库存为负数");
                     }
-                    inv.CostFIFO = currentCostPrice;
+                    inv.CostFIFO = UntaxedUnitPrice;
                     inv.Inv_Cost = inv.CostFIFO;
                     break;
 
@@ -94,7 +96,7 @@ namespace RUINORERP.Business.CommService
                     {
                         throw new InvalidOperationException("月加权平均法下不允许现有库存为负数");
                     }
-                    inv.CostMonthlyWA = currentCostPrice;
+                    inv.CostMonthlyWA = UntaxedUnitPrice;
                     inv.Inv_Cost = inv.CostMonthlyWA;
                     break;
 
@@ -119,7 +121,7 @@ namespace RUINORERP.Business.CommService
                     }
 
                     // 正常计算逻辑
-                    inv.CostMovingWA = (currentCostPrice * currentQty + inv.Inv_Cost * inv.Quantity) / totalQty;
+                    inv.CostMovingWA = (UntaxedUnitPrice * currentQty + (inv.Inv_Cost * inv.Quantity + UntaxedShippCost)) / totalQty;
                     inv.Inv_Cost = inv.CostMovingWA;
                     break;
 
@@ -129,7 +131,7 @@ namespace RUINORERP.Business.CommService
                     {
                         throw new InvalidOperationException("实际成本法下不允许现有库存为负数");
                     }
-                    inv.Inv_AdvCost = currentCostPrice;
+                    inv.Inv_AdvCost = UntaxedUnitPrice;
                     inv.Inv_Cost = inv.Inv_AdvCost;
                     break;
 

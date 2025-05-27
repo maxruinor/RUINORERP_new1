@@ -44,13 +44,14 @@ namespace RUINORERP.UI.AdvancedUIModule
     /// <summary>
     ///  窗体中的显示会要控制到 除主子表之外的公共性的实体。如单据的产品公共部分。
     /// </summary>
-    //public interface IPublicEntityObject
-    //{
-    //    /// <summary>
-    //    /// 
-    //    /// </summary>
-    //    /// <param name="menuInfo"></param>
-    //    /// <returns></returns>
-    //    List<BaseEntity> PublicEntityObjects { get; set; }
-    //}
+    public interface IPublicEntityObject
+    {
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="menuInfo"></param>
+        /// <returns></returns>
+        //List<BaseEntity> PublicEntityObjects { get; set; }
+        List<Type> PublicEntityObjects { get; set; }
+    }
 }

@@ -292,6 +292,7 @@ namespace RUINORERP.UI.PSI.INV
                 EditEntity.TotalQty = details.Sum(c => c.Qty);
                 EditEntity.TotalCost = details.Sum(c => c.Cost * c.Qty);
                 EditEntity.TotalTransferAmount = details.Sum(c => c.TransPrice * c.Qty);
+                
             }
             catch (Exception ex)
             {
@@ -328,9 +329,10 @@ namespace RUINORERP.UI.PSI.INV
                     System.Windows.Forms.MessageBox.Show("明细中，相同的产品不能多行录入,如有需要,请另建单据保存!", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     return false;
                 }
-                EditEntity.TotalQty = details.Sum(c => c.Qty);
                 EditEntity.tb_StockTransferDetails = details;
-                
+                EditEntity.TotalQty = details.Sum(c => c.Qty);
+                EditEntity.TotalCost = details.Sum(c => c.Cost * c.Qty);
+                EditEntity.TotalTransferAmount = details.Sum(c => c.TransPrice * c.Qty);
                 //没有经验通过下面先不计算
                 if (NeedValidated && !base.Validator(EditEntity))
                 {

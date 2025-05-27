@@ -228,6 +228,23 @@ namespace RUINORERP.Model
             SetProperty(ref _TotalAmount, value);
                         }
         }
+
+        private decimal _TotalUntaxedAmount = 0;
+        /// <summary>
+        /// 未税总金额
+        /// </summary>
+        [AdvQueryAttribute(ColName = "TotalUntaxedAmount", ColDesc = "未税总金额")]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType = "Decimal", ColumnName = "TotalUntaxedAmount", DecimalDigits = 4, IsNullable = false, ColumnDescription = "未税总金额")]
+        public decimal TotalUntaxedAmount
+        {
+            get { return _TotalUntaxedAmount; }
+            set
+            {
+                SetProperty(ref _TotalUntaxedAmount, value);
+            }
+        }
+
+
         private bool _IsCustomizedOrder = false;
         /// <summary>
         /// 定制单
@@ -583,20 +600,7 @@ namespace RUINORERP.Model
             SetProperty(ref _ShippingCost, value);
                         }
         }
-        private decimal _ForeignShipCost = ((0));
-        /// <summary>
-        /// 运费外币
-        /// </summary>
-        [AdvQueryAttribute(ColName = "ForeignShipCost", ColDesc = "运费外币")]
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType = "Decimal", ColumnName = "ForeignShipCost", DecimalDigits = 4, IsNullable = false, ColumnDescription = "运费外币")]
-        public decimal ForeignShipCost
-        {
-            get { return _ForeignShipCost; }
-            set
-            {
-                SetProperty(ref _ForeignShipCost, value);
-            }
-        }
+         
         #endregion
 
         #region 扩展属性

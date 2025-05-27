@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using RUINORERP.Business.Security;
 
 namespace RUINORERP.UI.UserCenter.DataParts
 {
@@ -262,7 +263,9 @@ namespace RUINORERP.UI.UserCenter.DataParts
 
         public List<ConditionGroup> GetSalesOrderSpecialConditions()
         {
-            return new List<ConditionGroup>
+            // 添加销售限制条件
+
+            var list = new List<ConditionGroup>
         {
             new ConditionGroup
             {
@@ -275,6 +278,28 @@ namespace RUINORERP.UI.UserCenter.DataParts
                 }
             }
         };
+
+            // 添加销售限制条件（如果有权限限制）
+            if (AuthorizeController.GetSaleLimitedAuth(MainForm.Instance.AppContext))
+            {
+                var employeeIdCondition = new ConditionalModel
+                {
+                    FieldName = "Employee_ID",
+                    ConditionalType = ConditionalType.Equal,
+                    FieldValue = MainForm.Instance.AppContext.CurUserInfo.UserInfo.tb_employee.Employee_ID.ToString(),
+                    CSharpTypeName = "long"
+                };
+
+                // 将员工ID条件添加到所有条件组
+                foreach (var group in list)
+                {
+                    group.Conditions.Add(employeeIdCondition);
+                }
+            }
+
+
+
+            return list;
         }
     }
 

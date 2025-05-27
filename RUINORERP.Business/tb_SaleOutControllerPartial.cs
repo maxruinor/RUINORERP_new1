@@ -744,7 +744,7 @@ namespace RUINORERP.Business
                     //这里审核时检测之前的是不是已加过（多次出库第一次加上运费。后面财务如何处理？再说） 第二次起都是为0.
                     if (entity.tb_saleorder.tb_SaleOuts.Count > 1)
                     {
-                        entity.ShipCost = 0;
+                        entity.FreightIncome = 0;
                     }
                     entity.ApprovalStatus = (int)ApprovalStatus.已审核;
                     entity.ApprovalResults = true;
@@ -1441,7 +1441,7 @@ namespace RUINORERP.Business
                 //如果这个订单已经有出库单 则第二次运费为0
                 if (saleout.tb_SaleOutRes != null && saleout.tb_SaleOutRes.Count > 0)
                 {
-                    if (saleout.ShipCost > 0)
+                    if (saleout.FreightIncome > 0)
                     {
                         tipsMsg.Add($"当前出库单已经有退库记录，运费收入退回已经计入前面退库单，当前退库运费收入退回为零！");
                         entity.ShipCost = 0;

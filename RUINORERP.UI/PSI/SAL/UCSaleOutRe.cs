@@ -40,24 +40,21 @@ using EnumsNET;
 using RUINORERP.UI.PSI.PUR;
 using RUINORERP.Business.CommService;
 using RUINORERP.Global.EnumExt;
+using RUINORERP.UI.AdvancedUIModule;
 
 namespace RUINORERP.UI.PSI.SAL
 {
     [MenuAttrAssemblyInfo("销售退回单", ModuleMenuDefine.模块定义.进销存管理, ModuleMenuDefine.进销存管理.销售管理, BizType.销售退回单)]
-    public partial class UCSaleOutRe : BaseBillEditGeneric<tb_SaleOutRe, tb_SaleOutReDetail>
+    public partial class UCSaleOutRe : BaseBillEditGeneric<tb_SaleOutRe, tb_SaleOutReDetail>, IPublicEntityObject
     {
         public UCSaleOutRe()
         {
             InitializeComponent();
             //InitDataToCmbByEnumDynamicGeneratedDataSource<tb_SaleOutRe>(typeof(Priority), e => e.OrderPriority, cmbOrderPriority);
-            if (!PublicEntityObjects.Contains(typeof(ProductSharePart)))
-            {
-                PublicEntityObjects.Add(typeof(ProductSharePart));
-            }
+            AddPublicEntityObject(typeof(ProductSharePart));
         }
 
-        //放到基类识别不到
-        public static List<Type> PublicEntityObjects { get; set; } = new List<Type>();
+ 
 
 
         public override void QueryConditionBuilder()
@@ -491,7 +488,6 @@ namespace RUINORERP.UI.PSI.SAL
             }
             catch (Exception ex)
             {
-
                 logger.LogError("计算出错", ex);
                 MainForm.Instance.uclog.AddLog("Sgh_OnCalculateColumnValue" + ex.Message);
             }

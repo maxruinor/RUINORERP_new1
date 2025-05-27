@@ -41,10 +41,11 @@ using RUINORERP.Common.Extensions;
 using RUINORERP.Business.Security;
 
 using RUINORERP.Global.EnumExt;
+using RUINORERP.UI.AdvancedUIModule;
 namespace RUINORERP.UI.PSI.SAL
 {
     [MenuAttrAssemblyInfo("销售出库单", ModuleMenuDefine.模块定义.进销存管理, ModuleMenuDefine.进销存管理.销售管理, BizType.销售出库单)]
-    public partial class UCSaleOut : BaseBillEditGeneric<tb_SaleOut, tb_SaleOutDetail>
+    public partial class UCSaleOut : BaseBillEditGeneric<tb_SaleOut, tb_SaleOutDetail>, IPublicEntityObject
     {
         public UCSaleOut()
         {
@@ -52,12 +53,9 @@ namespace RUINORERP.UI.PSI.SAL
             //InitDataToCmbByEnumDynamicGeneratedDataSource<tb_SaleOut>(typeof(Priority), e => e.OrderPriority, cmbOrderPriority);
 
             base.toolStripButton结案.Visible = true;
-            if (!PublicEntityObjects.Contains(typeof(ProductSharePart)))
-            {
-                PublicEntityObjects.Add(typeof(ProductSharePart));
-            }
+            AddPublicEntityObject(typeof(ProductSharePart));
         }
-        public static List<Type> PublicEntityObjects { get; set; } = new List<Type>();
+   
 
 
 
@@ -151,7 +149,7 @@ namespace RUINORERP.UI.PSI.SAL
             DataBindingHelper.BindData4CheckBox<tb_SaleOut>(entity, t => t.IsFromPlatform, chk平台单, false);
             DataBindingHelper.BindData4TextBox<tb_SaleOut>(entity, t => t.PlatformOrderNo, txtPlatformOrderNo, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_SaleOut>(entity, t => t.SaleOutNo, txtSaleOutNo, BindDataType4TextBox.Text, false);
-            DataBindingHelper.BindData4TextBox<tb_SaleOut>(entity, t => t.ShipCost.ToString(), txtShipCost, BindDataType4TextBox.Money, false);
+            DataBindingHelper.BindData4TextBox<tb_SaleOut>(entity, t => t.FreightIncome.ToString(), txtFreightIncome, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4TextBox<tb_SaleOut>(entity, t => t.FreightCost.ToString(), txtFreightCost, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4TextBox<tb_SaleOut>(entity, t => t.TotalAmount.ToString(), txtTotalAmount, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4TextBox<tb_SaleOut>(entity, t => t.ExchangeRate.ToString(), txtExchangeRate, BindDataType4TextBox.Money, false);
@@ -511,7 +509,7 @@ namespace RUINORERP.UI.PSI.SAL
                 EditEntity.TotalTaxAmount = EditEntity.TotalTaxAmount.ToRoundDecimalPlaces(MainForm.Instance.authorizeController.GetMoneyDataPrecision());
 
                 EditEntity.TotalAmount = details.Sum(c => c.TransactionPrice * c.Quantity);
-                EditEntity.TotalAmount = EditEntity.TotalAmount + EditEntity.ShipCost;
+                EditEntity.TotalAmount = EditEntity.TotalAmount + EditEntity.FreightIncome;
                 if (EditEntity.Currency_ID.HasValue && EditEntity.Currency_ID != AppContext.BaseCurrency.Currency_ID)
                 {
                     EditEntity.ForeignTotalAmount = EditEntity.TotalAmount / EditEntity.ExchangeRate;
@@ -617,7 +615,7 @@ namespace RUINORERP.UI.PSI.SAL
                 //    MessageBox.Show("单据总金额与明细总金额不相等！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 //    return false;
                 //}
-                if (NeedValidated && ((EditEntity.TotalAmount + EditEntity.ShipCost) < detailentity.Sum(c => c.TransactionPrice * c.Quantity)))
+                if (NeedValidated && ((EditEntity.TotalAmount + EditEntity.FreightIncome) < detailentity.Sum(c => c.TransactionPrice * c.Quantity)))
                 {
                     MessageBox.Show("单据总金额不能小于明细总金额！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     return false;
@@ -647,6 +645,21 @@ namespace RUINORERP.UI.PSI.SAL
 
 
                 EditEntity.TotalQty = details.Sum(c => c.Quantity);
+                EditEntity.TotalCost = details.Sum(c => (c.Cost + c.CustomizedCost) * c.Quantity);
+                EditEntity.TotalCost = EditEntity.TotalCost + EditEntity.FreightCost;
+                EditEntity.TotalTaxAmount = details.Sum(c => c.SubtotalTaxAmount);
+                EditEntity.TotalTaxAmount = EditEntity.TotalTaxAmount.ToRoundDecimalPlaces(MainForm.Instance.authorizeController.GetMoneyDataPrecision());
+
+                EditEntity.TotalAmount = details.Sum(c => c.TransactionPrice * c.Quantity);
+                EditEntity.TotalAmount = EditEntity.TotalAmount + EditEntity.FreightIncome;
+                if (EditEntity.Currency_ID.HasValue && EditEntity.Currency_ID != AppContext.BaseCurrency.Currency_ID)
+                {
+                    EditEntity.ForeignTotalAmount = EditEntity.TotalAmount / EditEntity.ExchangeRate;
+                    //
+                    EditEntity.ForeignTotalAmount = Math.Round(EditEntity.ForeignTotalAmount, 2); // 四舍五入到 2 位小数
+                }
+
+
                 if (NeedValidated && EditEntity.TotalQty != details.Sum(c => c.Quantity))
                 {
                     System.Windows.Forms.MessageBox.Show("单据总数量和明细数量的和不相等，请检查记录！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);

@@ -61,10 +61,8 @@
             this.dtpPreDeliveryDate = new Krypton.Toolkit.KryptonDateTimePicker();
             this.lblPriority = new Krypton.Toolkit.KryptonLabel();
             this.lblPreDeliveryDate = new Krypton.Toolkit.KryptonLabel();
-            this.txtForeignShipCost = new Krypton.Toolkit.KryptonTextBox();
-            this.txtShipCost = new Krypton.Toolkit.KryptonTextBox();
-            this.lblForeignShipCost = new Krypton.Toolkit.KryptonLabel();
-            this.lblShipCost = new Krypton.Toolkit.KryptonLabel();
+            this.txtFreightIncome = new Krypton.Toolkit.KryptonTextBox();
+            this.lblFreightIncome = new Krypton.Toolkit.KryptonLabel();
             this.lblForeignDeposit = new Krypton.Toolkit.KryptonLabel();
             this.lblDeposit = new Krypton.Toolkit.KryptonLabel();
             this.cmbEmployee_ID = new Krypton.Toolkit.KryptonComboBox();
@@ -90,6 +88,8 @@
             this.lblTotalAmount = new Krypton.Toolkit.KryptonLabel();
             this.txtApprovalOpinions = new Krypton.Toolkit.KryptonTextBox();
             this.lblApprovalOpinions = new Krypton.Toolkit.KryptonLabel();
+            this.txtForeignFreightIncome = new Krypton.Toolkit.KryptonTextBox();
+            this.lblForeignFreightIncome = new Krypton.Toolkit.KryptonLabel();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceSub)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1)).BeginInit();
@@ -169,10 +169,10 @@
             this.kryptonPanelMainInfo.Controls.Add(this.dtpPreDeliveryDate);
             this.kryptonPanelMainInfo.Controls.Add(this.lblPriority);
             this.kryptonPanelMainInfo.Controls.Add(this.lblPreDeliveryDate);
-            this.kryptonPanelMainInfo.Controls.Add(this.txtForeignShipCost);
-            this.kryptonPanelMainInfo.Controls.Add(this.txtShipCost);
-            this.kryptonPanelMainInfo.Controls.Add(this.lblForeignShipCost);
-            this.kryptonPanelMainInfo.Controls.Add(this.lblShipCost);
+            this.kryptonPanelMainInfo.Controls.Add(this.txtForeignFreightIncome);
+            this.kryptonPanelMainInfo.Controls.Add(this.txtFreightIncome);
+            this.kryptonPanelMainInfo.Controls.Add(this.lblForeignFreightIncome);
+            this.kryptonPanelMainInfo.Controls.Add(this.lblFreightIncome);
             this.kryptonPanelMainInfo.Controls.Add(this.lblForeignDeposit);
             this.kryptonPanelMainInfo.Controls.Add(this.lblDeposit);
             this.kryptonPanelMainInfo.Controls.Add(this.cmbEmployee_ID);
@@ -242,7 +242,7 @@
             // 
             // chkIsCustomizedOrder
             // 
-            this.chkIsCustomizedOrder.Location = new System.Drawing.Point(1132, 111);
+            this.chkIsCustomizedOrder.Location = new System.Drawing.Point(1149, 116);
             this.chkIsCustomizedOrder.Name = "chkIsCustomizedOrder";
             this.chkIsCustomizedOrder.Size = new System.Drawing.Size(62, 20);
             this.chkIsCustomizedOrder.TabIndex = 102;
@@ -452,39 +452,24 @@
             this.lblPreDeliveryDate.TabIndex = 58;
             this.lblPreDeliveryDate.Values.Text = "预交日期";
             // 
-            // txtForeignShipCost
+            // txtFreightIncome
             // 
-            this.txtForeignShipCost.Location = new System.Drawing.Point(1145, 56);
-            this.txtForeignShipCost.Name = "txtForeignShipCost";
-            this.txtForeignShipCost.Size = new System.Drawing.Size(58, 23);
-            this.txtForeignShipCost.TabIndex = 55;
+            this.txtFreightIncome.Location = new System.Drawing.Point(1149, 58);
+            this.txtFreightIncome.Name = "txtFreightIncome";
+            this.txtFreightIncome.Size = new System.Drawing.Size(71, 23);
+            this.txtFreightIncome.TabIndex = 55;
             // 
-            // txtShipCost
+            // lblFreightIncome
             // 
-            this.txtShipCost.Location = new System.Drawing.Point(951, 108);
-            this.txtShipCost.Name = "txtShipCost";
-            this.txtShipCost.Size = new System.Drawing.Size(125, 23);
-            this.txtShipCost.TabIndex = 55;
-            // 
-            // lblForeignShipCost
-            // 
-            this.lblForeignShipCost.Location = new System.Drawing.Point(1077, 57);
-            this.lblForeignShipCost.Name = "lblForeignShipCost";
-            this.lblForeignShipCost.Size = new System.Drawing.Size(62, 20);
-            this.lblForeignShipCost.TabIndex = 54;
-            this.lblForeignShipCost.Values.Text = "运费外币";
-            // 
-            // lblShipCost
-            // 
-            this.lblShipCost.Location = new System.Drawing.Point(884, 109);
-            this.lblShipCost.Name = "lblShipCost";
-            this.lblShipCost.Size = new System.Drawing.Size(62, 20);
-            this.lblShipCost.TabIndex = 54;
-            this.lblShipCost.Values.Text = "运费本币";
+            this.lblFreightIncome.Location = new System.Drawing.Point(1107, 61);
+            this.lblFreightIncome.Name = "lblFreightIncome";
+            this.lblFreightIncome.Size = new System.Drawing.Size(36, 20);
+            this.lblFreightIncome.TabIndex = 54;
+            this.lblFreightIncome.Values.Text = "运费";
             // 
             // lblForeignDeposit
             // 
-            this.lblForeignDeposit.Location = new System.Drawing.Point(1079, 82);
+            this.lblForeignDeposit.Location = new System.Drawing.Point(885, 135);
             this.lblForeignDeposit.Name = "lblForeignDeposit";
             this.lblForeignDeposit.Size = new System.Drawing.Size(62, 20);
             this.lblForeignDeposit.TabIndex = 86;
@@ -492,7 +477,7 @@
             // 
             // lblDeposit
             // 
-            this.lblDeposit.Location = new System.Drawing.Point(884, 134);
+            this.lblDeposit.Location = new System.Drawing.Point(884, 112);
             this.lblDeposit.Name = "lblDeposit";
             this.lblDeposit.Size = new System.Drawing.Size(62, 20);
             this.lblDeposit.TabIndex = 86;
@@ -509,14 +494,14 @@
             // 
             // txtForeignDeposit
             // 
-            this.txtForeignDeposit.Location = new System.Drawing.Point(1145, 82);
+            this.txtForeignDeposit.Location = new System.Drawing.Point(951, 134);
             this.txtForeignDeposit.Name = "txtForeignDeposit";
-            this.txtForeignDeposit.Size = new System.Drawing.Size(58, 23);
+            this.txtForeignDeposit.Size = new System.Drawing.Size(125, 23);
             this.txtForeignDeposit.TabIndex = 87;
             // 
             // txtDeposit
             // 
-            this.txtDeposit.Location = new System.Drawing.Point(951, 133);
+            this.txtDeposit.Location = new System.Drawing.Point(951, 109);
             this.txtDeposit.Name = "txtDeposit";
             this.txtDeposit.Size = new System.Drawing.Size(125, 23);
             this.txtDeposit.TabIndex = 87;
@@ -708,6 +693,21 @@
             this.lblApprovalOpinions.TabIndex = 76;
             this.lblApprovalOpinions.Values.Text = "审批意见";
             // 
+            // txtForeignFreightIncome
+            // 
+            this.txtForeignFreightIncome.Location = new System.Drawing.Point(1149, 87);
+            this.txtForeignFreightIncome.Name = "txtForeignFreightIncome";
+            this.txtForeignFreightIncome.Size = new System.Drawing.Size(71, 23);
+            this.txtForeignFreightIncome.TabIndex = 55;
+            // 
+            // lblForeignFreightIncome
+            // 
+            this.lblForeignFreightIncome.Location = new System.Drawing.Point(1084, 90);
+            this.lblForeignFreightIncome.Name = "lblForeignFreightIncome";
+            this.lblForeignFreightIncome.Size = new System.Drawing.Size(62, 20);
+            this.lblForeignFreightIncome.TabIndex = 54;
+            this.lblForeignFreightIncome.Values.Text = "运费外币";
+            // 
             // UCSaleOrder
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
@@ -764,8 +764,8 @@
         private Krypton.Toolkit.KryptonComboBox cmbEmployee_ID;
         private Krypton.Toolkit.KryptonLabel lblStore_ID;
         private Krypton.Toolkit.KryptonComboBox cmbProjectGroup;
-        private Krypton.Toolkit.KryptonLabel lblShipCost;
-        private Krypton.Toolkit.KryptonTextBox txtShipCost;
+        private Krypton.Toolkit.KryptonLabel lblFreightIncome;
+        private Krypton.Toolkit.KryptonTextBox txtFreightIncome;
         private Krypton.Toolkit.KryptonLabel lblTotalAmount;
         private Krypton.Toolkit.KryptonTextBox txtTotalAmount;
         private Krypton.Toolkit.KryptonLabel lblPreDeliveryDate;
@@ -811,7 +811,7 @@
         private Krypton.Toolkit.KryptonTextBox txtForeignDeposit;
         private Krypton.Toolkit.KryptonLabel lblAccount_id;
         private Krypton.Toolkit.KryptonComboBox cmbAccount_id;
-        private Krypton.Toolkit.KryptonTextBox txtForeignShipCost;
-        private Krypton.Toolkit.KryptonLabel lblForeignShipCost;
+        private Krypton.Toolkit.KryptonTextBox txtForeignFreightIncome;
+        private Krypton.Toolkit.KryptonLabel lblForeignFreightIncome;
     }
 }

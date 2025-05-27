@@ -86,6 +86,23 @@ namespace RUINORERP.UI.BaseForm
     /// <typeparam name="T"></typeparam>
     public partial class BaseBillEditGeneric<T, C> : BaseBillEdit where T : class where C : class
     {
+
+        #region 单据明细中的 产品公共部分的字段提取。为了能统一控制这些公共字段
+
+        public List<Type> PublicEntityObjects { get; set; } = new List<Type>();
+
+        public virtual void AddPublicEntityObject(Type type)
+        {
+            if (!PublicEntityObjects.Contains(type))
+            {
+                PublicEntityObjects.Add(type);
+            }
+
+        }
+
+        #endregion
+
+
         #region 单据状态 及按钮状态控制
 
         //private UIStateBinder<DataStatus> _UIStateBinder;
@@ -203,7 +220,7 @@ namespace RUINORERP.UI.BaseForm
             }
         }
 
-       
+
 
         private async void button录入数据预设_Click(object sender, EventArgs e)
         {
@@ -2585,27 +2602,186 @@ namespace RUINORERP.UI.BaseForm
 
                 T NewEditEntity = Activator.CreateInstance(typeof(T)) as T;
                 NewEditEntity = EditEntity.DeepCloneByjson();
-                //复制性新增 时  PK要清空，单据编号类的
+                //复制性新增 时  PK要清空，单据编号类的,还有他的关联性子集
+                // 获取主键列名
                 string PKCol = BaseUIHelper.GetEntityPrimaryKey<T>();
-                long pkid = (long)ReflectionHelper.GetPropertyValue(EditEntity, PKCol);
-                if (pkid > 0)
-                {
-                    NewEditEntity.SetPropertyValue(PKCol, 0);
-                }
-                if (ReflectionHelper.ExistPropertyName<T>(typeof(ApprovalStatus).Name))
-                {
-                    ReflectionHelper.SetPropertyValue(NewEditEntity, typeof(ApprovalStatus).Name, (int)ApprovalStatus.未审核);
-                }
-                //设置为审核状态为否
-                if (ReflectionHelper.ExistPropertyName<T>("ApprovalResults"))
-                {
-                    NewEditEntity.SetPropertyValue("ApprovalResults", false);
-                }
+
+                // 重置主实体的主键
+                ResetPrimaryKey(NewEditEntity, PKCol);
+
+                // 重置审批状态
+                ResetApprovalStatus(NewEditEntity);
+
+                // 递归处理所有导航属性（明细集合）
+                ProcessNavigationProperties(NewEditEntity, PKCol);
+
                 OnBindDataToUIEvent(NewEditEntity, ActionStatus.复制);
             }
 
             ToolBarEnabledControl(MenuItemEnums.新增);
         }
+
+        #region 复制性新增
+        // 重置实体的主键
+        private void ResetPrimaryKey(object entity, string pkCol)
+        {
+            if (entity == null) return;
+
+            long pkid = (long)ReflectionHelper.GetPropertyValue(entity, pkCol);
+            if (pkid > 0)
+            {
+                ReflectionHelper.SetPropertyValue(entity, pkCol, 0);
+            }
+        }
+
+        // 重置审批状态相关属性
+        private void ResetApprovalStatus(object entity)
+        {
+            if (entity == null) return;
+
+            if (ReflectionHelper.ExistPropertyName(entity.GetType(), typeof(ApprovalStatus).Name))
+            {
+                ReflectionHelper.SetPropertyValue(entity, typeof(ApprovalStatus).Name, (int)ApprovalStatus.未审核);
+            }
+
+            if (ReflectionHelper.ExistPropertyName(entity.GetType(), "ApprovalResults"))
+            {
+                ReflectionHelper.SetPropertyValue(entity, "ApprovalResults", false);
+            }
+        }
+
+        // 递归处理所有导航属性（明细集合）
+
+        // 获取引用主实体的外键属性
+        private PropertyInfo GetForeignKeyProperty(Type entityType, string parentPKCol)
+        {
+            // 尝试查找与主实体主键同名的属性
+            var fkProperty = entityType.GetProperty(parentPKCol);
+            if (fkProperty != null && fkProperty.PropertyType == typeof(long) || fkProperty.PropertyType == typeof(long?))
+            {
+                return fkProperty;
+            }
+
+            // 如果找不到同名属性，可以尝试其他约定，例如添加"_ID"后缀
+            fkProperty = entityType.GetProperty($"{entityType.Name}_{parentPKCol}");
+            if (fkProperty != null && fkProperty.PropertyType == typeof(long) || fkProperty.PropertyType == typeof(long?))
+            {
+                return fkProperty;
+            }
+
+            // 可以添加更多的外键检测逻辑...
+
+            return null;
+        }
+
+        // 处理主实体及其一级明细集合
+        private void ProcessNavigationProperties(object entity, string parentPKCol)
+        {
+            if (entity == null) return;
+
+            var type = entity.GetType();
+            var entityName = type.Name;
+
+            // 获取主实体的主键值，用于更新明细的外键
+            long parentPKValue = (long)ReflectionHelper.GetPropertyValue(entity, parentPKCol);
+
+            // 查找所有以主实体名+Detail结尾的导航属性
+            var detailProperties = type.GetProperties()
+                .Where(p => p.PropertyType.IsGenericType &&
+                           p.PropertyType.GetGenericTypeDefinition() == typeof(List<>) &&
+                           p.PropertyType.GetGenericArguments()[0].Name.EndsWith($"{entityName}Detail"))
+                .ToList();
+
+            foreach (var detailProperty in detailProperties)
+            {
+                // 获取明细集合类型
+                var detailType = detailProperty.PropertyType.GetGenericArguments()[0];
+
+                // 获取明细的主键和外键属性名
+                string detailPKCol = BaseUIHelper.GetEntityPrimaryKey(detailType);
+                string detailFKCol = $"{entityName}_ID"; // 假设外键名为"主表名_ID"
+
+                // 检查外键属性是否存在
+                var fkProperty = detailType.GetProperty(detailFKCol);
+                if (fkProperty == null)
+                {
+                    // 尝试其他可能的外键命名方式
+                    fkProperty = detailType.GetProperty(parentPKCol);
+                }
+
+                if (fkProperty != null)
+                {
+                    var collection = detailProperty.GetValue(entity) as System.Collections.IEnumerable;
+                    if (collection != null)
+                    {
+                        foreach (var item in collection)
+                        {
+                            // 重置明细的主键
+                            ReflectionHelper.SetPropertyValue(item, detailPKCol, 0);
+
+                            // 重置明细的外键（指向主实体）
+                            ReflectionHelper.SetPropertyValue(item, fkProperty.Name, 0);
+
+                            // 处理明细的子明细（第二级）
+                            ProcessSecondLevelDetails(item, detailPKCol, detailType.Name);
+                        }
+                    }
+                }
+            }
+        }
+
+        // 处理第二级明细集合（明细的明细）
+        private void ProcessSecondLevelDetails(object entity, string parentPKCol, string parentEntityName)
+        {
+            if (entity == null) return;
+
+            var type = entity.GetType();
+
+            // 查找所有以当前实体名+Detail结尾的导航属性
+            var subDetailProperties = type.GetProperties()
+                .Where(p => p.PropertyType.IsGenericType &&
+                           p.PropertyType.GetGenericTypeDefinition() == typeof(List<>) &&
+                           p.PropertyType.GetGenericArguments()[0].Name.EndsWith($"{parentEntityName}Detail"))
+                .ToList();
+
+            foreach (var subDetailProperty in subDetailProperties)
+            {
+                // 获取子明细集合类型
+                var subDetailType = subDetailProperty.PropertyType.GetGenericArguments()[0];
+
+                // 获取子明细的主键和外键属性名
+                string subDetailPKCol = BaseUIHelper.GetEntityPrimaryKey(subDetailType);
+                string subDetailFKCol = $"{parentEntityName}_ID"; // 假设外键名为"父表名_ID"
+
+                // 检查外键属性是否存在
+                var fkProperty = subDetailType.GetProperty(subDetailFKCol);
+                if (fkProperty == null)
+                {
+                    // 尝试其他可能的外键命名方式
+                    fkProperty = subDetailType.GetProperty(parentPKCol);
+                }
+
+                if (fkProperty != null)
+                {
+                    var collection = subDetailProperty.GetValue(entity) as System.Collections.IEnumerable;
+                    if (collection != null)
+                    {
+                        foreach (var item in collection)
+                        {
+                            // 重置子明细的主键
+                            ReflectionHelper.SetPropertyValue(item, subDetailPKCol, 0);
+
+                            // 重置子明细的外键（指向父明细）
+                            ReflectionHelper.SetPropertyValue(item, fkProperty.Name, 0);
+                        }
+                    }
+                }
+            }
+        }
+
+        #endregion
+
+
 
         protected override void Clear(SourceGridDefine sgd)
         {
@@ -3504,18 +3680,26 @@ namespace RUINORERP.UI.BaseForm
         #endregion
         public async void PrintDesigned()
         {
-            if (EditEntity == null)
+            try
             {
-                MessageBox.Show("请提供正确的打印数据！");
-                return;
+                if (EditEntity == null)
+                {
+                    MessageBox.Show("请提供正确的打印数据！");
+                    return;
+                }
+                List<T> list = new List<T>();
+                list.Add(EditEntity);
+                if (PrintConfig == null || PrintConfig.tb_PrintTemplates == null)
+                {
+                    PrintConfig = PrintHelper<T>.GetPrintConfig(list);
+                }
+                bool rs = await PrintHelper<T>.Print(list, RptMode.DESIGN, PrintConfig);
             }
-            List<T> list = new List<T>();
-            list.Add(EditEntity);
-            if (PrintConfig == null || PrintConfig.tb_PrintTemplates == null)
+            catch (Exception ex)
             {
-                PrintConfig = PrintHelper<T>.GetPrintConfig(list);
+                MainForm.Instance.logger.Error(ex);
+
             }
-            bool rs = await PrintHelper<T>.Print(list, RptMode.DESIGN, PrintConfig);
         }
 
         /// <summary>
@@ -3578,18 +3762,27 @@ namespace RUINORERP.UI.BaseForm
 
         public async void Preview()
         {
-            if (EditEntity == null)
+            bool rs = false;
+            try
             {
-                MessageBox.Show("请提供正确的打印预览数据！");
-                return;
+                if (EditEntity == null)
+                {
+                    MessageBox.Show("请提供正确的打印预览数据！");
+                    return;
+                }
+                List<T> list = new List<T>();
+                list.Add(EditEntity);
+                if (PrintConfig == null || PrintConfig.tb_PrintTemplates == null)
+                {
+                    PrintConfig = PrintHelper<T>.GetPrintConfig(list);
+                }
+                rs = await PrintHelper<T>.Print(list, RptMode.PREVIEW, PrintConfig);
             }
-            List<T> list = new List<T>();
-            list.Add(EditEntity);
-            if (PrintConfig == null || PrintConfig.tb_PrintTemplates == null)
+
+            catch (Exception ex)
             {
-                PrintConfig = PrintHelper<T>.GetPrintConfig(list);
+                MainForm.Instance.logger.Error("打印配置加载异常", ex);
             }
-            bool rs = await PrintHelper<T>.Print(list, RptMode.PREVIEW, PrintConfig);
         }
 
         #endregion

@@ -638,9 +638,9 @@ namespace RUINORERP.Business
                 }
             }
 
-            #region 单独加一行运算到明细中
+            #region 单独加一行运算到明细中 ,这里是应收。意思是收取客户的运费。应该以运费成本为标准。
             // 添加运费行（关键部分）
-            if (entity.ShipCost > 0)
+            if (entity.FreightCost > 0)
             {
                 details.Add(new tb_FM_ReceivablePayableDetail
                 {
@@ -650,33 +650,15 @@ namespace RUINORERP.Business
                     Specifications = "",
                     ExchangeRate = 1,
                     Description = "发货运费",
-                    UnitPrice = entity.ShipCost,
+                    UnitPrice = entity.FreightCost,
                     Quantity = 1,
                     TaxRate = 0.09m, // 假设运费税率为9%
                     TaxLocalAmount = 1,
                     Summary = "",
-                    LocalPayableAmount = entity.ShipCost
+                    LocalPayableAmount = entity.FreightCost
                 });
             }
-            // 添加运费行（关键部分）
-            if (entity.ForeignShipCost > 0)
-            {
-                details.Add(new tb_FM_ReceivablePayableDetail
-                {
-                    ProdDetailID = null,
-                    property = "运费",
 
-                    Specifications = "",
-                    ExchangeRate = 1,
-                    Description = "发货运费",
-                    UnitPrice = entity.ForeignShipCost,
-                    Quantity = 1,
-                    TaxRate = 0.09m, // 假设运费税率为9%
-                    TaxLocalAmount = 1,
-                    Summary = "",
-                    LocalPayableAmount = entity.ForeignShipCost
-                });
-            }
             #endregion
 
             payable.tb_FM_ReceivablePayableDetails = details;
@@ -687,8 +669,10 @@ namespace RUINORERP.Business
                 entity.ForeignTotalAmount = -entity.ForeignTotalAmount;
                 entity.TotalAmount = -entity.TotalAmount;
 
-            }
-            //外币时
+            } 
+
+            //这里要重点思考 是本币一定有。还是怎么样！！！！！！！！！！！！！！！！！ TODO by watson
+            //外币时  只是换算。本币不能少。
             if (entity.Currency_ID.HasValue && _appContext.BaseCurrency.Currency_ID != entity.Currency_ID.Value)
             {
                 payable.ForeignBalanceAmount = entity.ForeignTotalAmount;
@@ -702,6 +686,8 @@ namespace RUINORERP.Business
                 payable.LocalPaidAmount = 0;
                 payable.TotalLocalPayableAmount = entity.TotalAmount;
             }
+            
+
 
             payable.Remark = $"销售出库单：{entity.SaleOutNo} 的应收款";
 

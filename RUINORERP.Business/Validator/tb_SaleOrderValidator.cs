@@ -63,7 +63,7 @@ namespace RUINORERP.Business
  RuleFor(tb_SaleOrder =>tb_SaleOrder.ProjectGroup_ID).Must(CheckForeignKeyValueCanNull).WithMessage("项目组:下拉选择值不正确。");
  RuleFor(tb_SaleOrder =>tb_SaleOrder.ProjectGroup_ID).NotEmpty().When(x => x.ProjectGroup_ID.HasValue);
 
- RuleFor(x => x.ShipCost).PrecisionScale(19,4,true).WithMessage("运费收入:小数位不能超过4。");
+ RuleFor(x => x.FreightIncome).PrecisionScale(19,4,true).WithMessage("运费收入:小数位不能超过4。");
 
 //***** 
  RuleFor(tb_SaleOrder =>tb_SaleOrder.TotalQty).NotNull().WithMessage("总数量:不能为空。");

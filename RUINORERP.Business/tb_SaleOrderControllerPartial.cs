@@ -127,7 +127,6 @@ namespace RUINORERP.Business
                     invList.Add(inv);
                 }
 
-
                 _unitOfWorkManage.BeginTran();
                 DbHelper<tb_Inventory> dbHelper = _appContext.GetRequiredService<DbHelper<tb_Inventory>>();
                 var Counter = await dbHelper.BaseDefaultAddElseUpdateAsync(invList);
@@ -218,10 +217,18 @@ namespace RUINORERP.Business
                 //这部分是否能提出到上一级公共部分？
                 entity.DataStatus = (int)DataStatus.确认;
                 entity.ApprovalStatus = (int)ApprovalStatus.已审核;
+                entity.ApprovalResults = true;
                 BusinessHelper.Instance.ApproverEntity(entity);
                 //只更新指定列
-                // var result = _unitOfWorkManage.GetDbClient().Updateable<tb_Stocktake>(entity).UpdateColumns(it => new { it.DataStatus, it.ApprovalOpinions }).ExecuteCommand();
-                await _unitOfWorkManage.GetDbClient().Updateable<tb_SaleOrder>(entity).ExecuteCommandAsync();
+                var result =await _unitOfWorkManage.GetDbClient().Updateable<tb_SaleOrder>(entity).UpdateColumns(it => new
+                {
+                    it.DataStatus,
+                    it.ApprovalResults,
+                    it.ApprovalStatus,
+                    it.Approver_at,
+                    it.Approver_by,
+                    it.ApprovalOpinions
+                }).ExecuteCommandAsync();
                 // 注意信息的完整性
                 _unitOfWorkManage.CommitTran();
                 rmrs.ReturnObject = entity as T;
@@ -738,13 +745,20 @@ namespace RUINORERP.Business
                 entity.DataStatus = (int)DataStatus.新建;
                 entity.ApprovalResults = false;
                 entity.ApprovalStatus = (int)ApprovalStatus.未审核;
+                entity.ApprovalOpinions+="【被反审】";
                 BusinessHelper.Instance.ApproverEntity(entity);
 
                 //后面是不是要做一个审核历史记录表？
-
                 //只更新指定列
-                // var result = _unitOfWorkManage.GetDbClient().Updateable<tb_Stocktake>(entity).UpdateColumns(it => new { it.DataStatus, it.ApprovalOpinions }).ExecuteCommand();
-                int result = await _unitOfWorkManage.GetDbClient().Updateable<tb_SaleOrder>(entity).ExecuteCommandAsync();
+                var result = await _unitOfWorkManage.GetDbClient().Updateable<tb_SaleOrder>(entity).UpdateColumns(it => new
+                {
+                    it.ApprovalStatus,
+                    it.DataStatus,
+                    it.ApprovalResults,
+                    it.Approver_at,
+                    it.Approver_by,
+                    it.ApprovalOpinions
+                }).ExecuteCommandAsync();
                 if (result > 0)
                 {
                     // 注意信息的完整性

@@ -46,6 +46,7 @@ using RUINORERP.UI.CommonUI;
 
 using RUINORERP.Global.EnumExt;
 using Fireasy.Common.Configuration;
+using RUINORERP.UI.Monitoring.Auditing;
 
 
 namespace RUINORERP.UI.PSI.SAL
@@ -129,7 +130,7 @@ namespace RUINORERP.UI.PSI.SAL
             ReturnResults<bool> rr = await ctr.UpdatePaymentStatus(EditEntity);
             if (rr.Succeeded)
             {
-                AuditLogHelper.Instance.CreateAuditLog<tb_SaleOrder>("付款调整", EditEntity);
+                MainForm.Instance.AuditLogHelper.CreateAuditLog<tb_SaleOrder>("付款调整", EditEntity);
                 //if (MainForm.Instance.WorkflowItemlist.ContainsKey(""))
                 //{
 
@@ -552,6 +553,32 @@ using var binder = new UIStateBinder(..., customEvaluator);
              
              */
         }
+        protected override void AddByCopy()
+        {
+            if (EditEntity == null)
+            {
+                MessageBox.Show("请先选择一个采购订单作为复制的基准。", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+            EditEntity.ActionStatus = ActionStatus.新增;
+            EditEntity.SOrder_ID = 0;
+            EditEntity.ApprovalStatus = (int)ApprovalStatus.未审核;
+            EditEntity.DataStatus = (int)DataStatus.草稿;
+            EditEntity.Approver_at = null;
+            EditEntity.ApprovalResults = null;
+            EditEntity.tb_SaleOuts = null;
+            EditEntity.tb_PurOrders = null;
+            BusinessHelper.Instance.InitEntity(EditEntity);
+            foreach (var item in EditEntity.tb_SaleOrderDetails)
+            {
+                item.SOrder_ID = 0;
+                item.SaleOrderDetail_ID = 0;
+                item.PrimaryKeyID =0;
+                item.tb_saleorder = null;
+            }
+
+            base.AddByCopy();
+        }
 
         public void InitDataTocmbbox()
         {
@@ -609,6 +636,8 @@ using var binder = new UIStateBinder(..., customEvaluator);
             listCols.SetCol_Format<tb_SaleOrderDetail>(c => c.Discount, CustomFormatType.PercentFormat);
             listCols.SetCol_Format<tb_SaleOrderDetail>(c => c.TaxRate, CustomFormatType.PercentFormat);
             listCols.SetCol_Format<tb_SaleOrderDetail>(c => c.UnitPrice, CustomFormatType.CurrencyFormat);
+            listCols.SetCol_Format<tb_SaleOrderDetail>(c => c.Cost, CustomFormatType.CurrencyFormat);
+            listCols.SetCol_Format<tb_SaleOrderDetail>(c => c.SubtotalCostAmount, CustomFormatType.CurrencyFormat);
             listCols.SetCol_Format<tb_SaleOrderDetail>(c => c.CustomizedCost, CustomFormatType.CurrencyFormat);
             sgd = new SourceGridDefine(grid1, listCols, true);
             sgd.GridMasterData = EditEntity;
@@ -1298,7 +1327,7 @@ using var binder = new UIStateBinder(..., customEvaluator);
                     //这里推送到审核，启动工作流  队列应该有一个策略 比方优先级，桌面不动1 3 5分钟 
                     //OriginalData od = ActionForClient.工作流审批(pkid, (int)BizType.盘点单, ae.ApprovalResults, ae.ApprovalComments);
                     //MainForm.Instance.ecs.AddSendData(od);
-                    AuditLogHelper.Instance.CreateAuditLog<tb_SaleOrder>("反结案", EditEntity, $"反结案意见:{ae.CloseCaseOpinions}");
+                    MainForm.Instance.AuditLogHelper.CreateAuditLog<tb_SaleOrder>("反结案", EditEntity, $"反结案意见:{ae.CloseCaseOpinions}");
                     Refreshs();
                 }
                 else
@@ -1356,7 +1385,7 @@ using var binder = new UIStateBinder(..., customEvaluator);
                     //这里推送到审核，启动工作流  队列应该有一个策略 比方优先级，桌面不动1 3 5分钟 
                     //OriginalData od = ActionForClient.工作流审批(pkid, (int)BizType.盘点单, ae.ApprovalResults, ae.ApprovalComments);
                     //MainForm.Instance.ecs.AddSendData(od);
-                    AuditLogHelper.Instance.CreateAuditLog<tb_SaleOrder>("结案", EditEntity, $"结案意见:{ae.CloseCaseOpinions}");
+                    MainForm.Instance.AuditLogHelper.CreateAuditLog<tb_SaleOrder>("结案", EditEntity, $"结案意见:{ae.CloseCaseOpinions}");
                     Refreshs();
                 }
                 else
@@ -1469,7 +1498,7 @@ using var binder = new UIStateBinder(..., customEvaluator);
             ReturnResults<bool> rr = await ctr.UpdatePaymentStatus(EditEntity);
             if (rr.Succeeded)
             {
-                AuditLogHelper.Instance.CreateAuditLog<tb_SaleOrder>("付款调整", EditEntity);
+                MainForm.Instance.AuditLogHelper.CreateAuditLog<tb_SaleOrder>("付款调整", EditEntity);
                 //if (MainForm.Instance.WorkflowItemlist.ContainsKey(""))
                 //{
 

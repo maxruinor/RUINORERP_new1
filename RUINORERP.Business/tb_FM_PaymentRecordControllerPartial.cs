@@ -73,20 +73,36 @@ namespace RUINORERP.Business
             var settlementController = _appContext.GetRequiredService<tb_FM_PaymentSettlementController<tb_FM_PaymentSettlement>>();
             try
             {
+
+                entity = await _appContext.Db.Queryable<tb_FM_PaymentRecord>()
+                    .Includes(c => c.tb_FM_PaymentRecordDetails)
+                    .Includes(c => c.tb_fm_account)
+                    .Where(c => c.PaymentId == entity.PaymentId).SingleAsync();
+
                 //如果一个单位，正好正向500，负数-500 ，相抵消是正好为0，则可以为零。审核后要将应收应付核销掉。
                 //只有明细中有负数才可能等于0
-                if (entity.tb_FM_PaymentRecordDetails.Any(c => c.LocalAmount > 0) || (entity.TotalLocalAmount == 0 && entity.TotalForeignAmount == 0))
+                if (entity.TotalLocalAmount == 0 && entity.TotalForeignAmount == 0 && entity.tb_FM_PaymentRecordDetails.Sum(c => c.LocalAmount) != 0)
                 {
-                    rmrs.ErrorMsg = "付款金额不能为0!";
+                    rmrs.ErrorMsg = "非正负红冲时，付款金额不能为0!";
                     rmrs.Succeeded = false;
                     rmrs.ReturnObject = entity as T;
                     return rmrs;
                 }
+                if (entity.TotalLocalAmount == 0 && !entity.tb_FM_PaymentRecordDetails.Any(c => c.LocalAmount < 0))
+                {
+                    rmrs.ErrorMsg = "非正负红冲时，付款金额不能为0!";
+                    rmrs.Succeeded = false;
+                    rmrs.ReturnObject = entity as T;
+                    return rmrs;
+                }
+
+                //相同客户，多个应收可以合成一个收款 。所以明细中就是对应的应收单。
+
                 // 开启事务，保证数据一致性
                 _unitOfWorkManage.BeginTran();
                 #region
 
-                //多个应收可以合成一个收款 。所以明细中就是对应的应收单。
+                //相同客户，多个应收可以合成一个收款 。所以明细中就是对应的应收单。
                 if (entity.tb_FM_PaymentRecordDetails != null)
                 {
                     //为了提高性能 将按业务类型分组后再找到对应的单据去处理
@@ -105,8 +121,6 @@ namespace RUINORERP.Business
 
                     //预收付
                     List<tb_FM_PreReceivedPayment> preReceivedPaymentUpdateList = new List<tb_FM_PreReceivedPayment>();
-
-
                     List<tb_SaleOut> saleOutUpdateList = new List<tb_SaleOut>();
                     List<tb_SaleOrder> saleOrderUpdateList = new List<tb_SaleOrder>();
 
@@ -130,7 +144,6 @@ namespace RUINORERP.Business
                                 //在收款单明细中，不可以存在：一种应付下有两同的两个应收单。 否则这里会出错。
                                 //应收应付明细中可以相同的。负数对冲。最终收款时只会合并。
                                 tb_FM_PaymentRecordDetail RecordDetail = entity.tb_FM_PaymentRecordDetails.FirstOrDefault(c => c.SourceBilllId == receivablePayable.ARAPId);
-
                                 receivablePayable.ForeignPaidAmount += RecordDetail.ForeignAmount;
                                 receivablePayable.LocalPaidAmount += RecordDetail.LocalAmount;
                                 receivablePayable.ForeignBalanceAmount -= RecordDetail.ForeignAmount;
@@ -166,15 +179,19 @@ namespace RUINORERP.Business
                                                 saleOut.DataStatus = (int)DataStatus.完结;
                                                 saleOut.PayStatus = (int)PayStatus.全部付款;
                                             }
-
+                                            else
+                                            {
+                                                saleOut.PayStatus = (int)PayStatus.部分付款;
+                                            }
                                             if (saleOut.tb_saleorder.tb_SaleOuts != null)
                                             {
-                                                //如果这个出库单的上级 订单 是我次出库的。他出库的状态都是全部付款了。则这个订单就全部付款了。
+                                                //如果这个出库单的上级订单，的其它出库单的他出库的状态都是全部付款了。则这个订单就全部付款了。（排除自己）
                                                 //订单要保证全部出库了。才能这样算否则就先不管订单状态。只是部分付款
-                                                if (
-                                                    saleOut.tb_saleorder.TotalQty == saleOut.tb_saleorder.tb_SaleOuts.Sum(c => c.TotalQty) &&
-                                                    saleOut.tb_saleorder.tb_SaleOuts.Where(c => c.PayStatus == (int)PayStatus.全部付款).ToList().Count ==
-                                                    saleOut.tb_saleorder.tb_SaleOuts.Count)
+                                                List<tb_SaleOut> otherSaleOuts = saleOut.tb_saleorder.tb_SaleOuts
+                                                    .Where(c => c.SaleOut_MainID != saleOut.SaleOut_MainID && c.PayStatus == (int)PayStatus.全部付款).ToList();
+
+                                                if (receivablePayable.LocalPaidAmount == saleOut.TotalAmount
+                                                    && otherSaleOuts.Sum(c => c.TotalAmount) + saleOut.TotalAmount == saleOut.tb_saleorder.TotalAmount)
                                                 {
                                                     saleOut.tb_saleorder.PayStatus = (int)PayStatus.全部付款;
                                                 }
@@ -182,8 +199,8 @@ namespace RUINORERP.Business
                                                 {
                                                     saleOut.tb_saleorder.PayStatus = (int)PayStatus.部分付款;
                                                 }
+                                                
                                             }
-
                                             saleOrderUpdateList.Add(saleOut.tb_saleorder);
                                             saleOutUpdateList.Add(saleOut);
                                         }
@@ -232,10 +249,11 @@ namespace RUINORERP.Business
                                             {
                                                 //如果这个出库单的上级 订单 是我次出库的。他出库的状态都是全部付款了。则这个订单就全部付款了。
                                                 //订单要保证全部出库了。才能这样算否则就先不管订单状态。只是部分付款
-                                                if (
-                                                    purEntiry.tb_purorder.TotalQty == purEntiry.tb_purorder.tb_PurEntries.Sum(c => c.TotalQty) &&
-                                                    purEntiry.tb_purorder.tb_PurEntries.Where(c => c.PayStatus == (int)PayStatus.全部付款).ToList().Count ==
-                                                    purEntiry.tb_purorder.tb_PurEntries.Count)
+                                                List<tb_PurEntry> otherPurEntrys = purEntiry.tb_purorder.tb_PurEntries
+                                                .Where(c => c.PurEntryID != purEntiry.PurEntryID && c.PayStatus == (int)PayStatus.全部付款).ToList();
+
+                                                if (receivablePayable.LocalPaidAmount == purEntiry.TotalAmount
+                                                    && otherPurEntrys.Sum(c => c.TotalAmount) + purEntiry.TotalAmount == purEntiry.tb_purorder.TotalAmount)
                                                 {
                                                     purEntiry.tb_purorder.PayStatus = (int)PayStatus.全部付款;
                                                 }
@@ -413,18 +431,34 @@ namespace RUINORERP.Business
 
                         }
                     }
+
+                    if (saleOutUpdateList.Count > 0)
+                    {
+                        var r = await _unitOfWorkManage.GetDbClient().Updateable<tb_SaleOut>(saleOutUpdateList).ExecuteCommandAsync();
+                    }
+
+                    if (saleOrderUpdateList.Count > 0)
+                    {
+                        var r = await _unitOfWorkManage.GetDbClient().Updateable<tb_SaleOrder>(saleOrderUpdateList).ExecuteCommandAsync();
+                    }
+
+                    if (purEntryUpdateList.Count > 0)
+                    {
+                        var r = await _unitOfWorkManage.GetDbClient().Updateable<tb_PurEntry>(purEntryUpdateList).ExecuteCommandAsync();
+                    }
+
+                    if (purOrderUpdateList.Count > 0)
+                    {
+                        var r = await _unitOfWorkManage.GetDbClient().Updateable<tb_PurOrder>(purOrderUpdateList).ExecuteCommandAsync();
+                    }
+
                     if (receivablePayableUpdateList.Count > 0)
                     {
                         var r = await _unitOfWorkManage.GetDbClient().Updateable<tb_FM_ReceivablePayable>(receivablePayableUpdateList).ExecuteCommandAsync();
-                        if (r > 0)
-                        {
-                            //更新应收付状态和金额
-                        }
                     }
 
                     if (preReceivedPaymentUpdateList.Count > 0)
                     {
-
                         //更新
                         var preRs = await _unitOfWorkManage.GetDbClient().Updateable<tb_FM_PreReceivedPayment>(preReceivedPaymentUpdateList).UpdateColumns(it =>
                                     new
@@ -445,6 +479,7 @@ namespace RUINORERP.Business
                 if (entity.tb_fm_account == null && entity.Account_id.HasValue)
                 {
                     entity.tb_fm_account = await _unitOfWorkManage.GetDbClient().Queryable<tb_FM_Account>().Where(c => c.Account_id == entity.Account_id).FirstAsync();
+                    //和账户相同的币种才更新
                     if (entity.tb_fm_account.Currency_ID == entity.Currency_ID)
                     {
                         if (entity.tb_fm_account.Currency_ID == _appContext.BaseCurrency.Currency_ID)
@@ -462,11 +497,20 @@ namespace RUINORERP.Business
                 #endregion
 
                 entity.ApprovalStatus = (int)ApprovalStatus.已审核;
+                entity.ApprovalResults = true;
+                entity.PaymentStatus=(long)PaymentStatus.已支付;
                 BusinessHelper.Instance.ApproverEntity(entity);
-
                 //只更新指定列
-                // var result = _unitOfWorkManage.GetDbClient().Updateable<tb_Stocktake>(entity).UpdateColumns(it => new { it.FMPaymentStatus, it.ApprovalOpinions }).ExecuteCommand();
-                await _unitOfWorkManage.GetDbClient().Updateable<tb_FM_PaymentRecord>(entity).ExecuteCommandAsync();
+                var result = await _unitOfWorkManage.GetDbClient().Updateable<tb_FM_PaymentRecord>(entity).UpdateColumns(it => new
+                {
+                    it.ApprovalStatus,
+                    it.PaymentStatus,
+                    it.ApprovalResults,
+                    it.Approver_at,
+                    it.Approver_by,
+                    it.ApprovalOpinions
+                }).ExecuteCommandAsync();
+
                 // 注意信息的完整性
                 _unitOfWorkManage.CommitTran();
                 rmrs.Succeeded = true;

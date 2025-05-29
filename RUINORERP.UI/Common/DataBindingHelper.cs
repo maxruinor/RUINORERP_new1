@@ -2752,8 +2752,8 @@ namespace RUINORERP.UI.Common
             else
             {
                 //单向绑定 应用于加载
-                //depa = new Binding("Text", entity, textField, true, DataSourceUpdateMode.OnValidation);
-                depa = new Binding("Text", entity, textField, true, validationEnabled ? DataSourceUpdateMode.OnValidation : DataSourceUpdateMode.Never);
+                depa = new Binding("Text", entity, textField, true, DataSourceUpdateMode.OnValidation);
+                //depa = new Binding("Text", entity, textField, true, validationEnabled ? DataSourceUpdateMode.OnValidation : DataSourceUpdateMode.Never);
             }
             #region 完成验证事件
             depa.BindingComplete += (sender, e) =>

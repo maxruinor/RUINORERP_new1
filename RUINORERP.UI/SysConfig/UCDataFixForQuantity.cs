@@ -47,7 +47,6 @@ using RUINORERP.Global.EnumExt.CRM;
 using HLH.Lib.Security;
 
 using RUINORERP.UI.PSI.SAL;
-using HLH.WinControl.MyTypeConverter;
 using RUINORERP.UI.UserCenter.DataParts;
 using Fireasy.Common.Extensions;
 using RUINORERP.UI.UControls;

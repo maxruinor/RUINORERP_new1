@@ -67,7 +67,17 @@ namespace RUINORERP.Model.ConfigModel
         public int MoneyDataPrecision { get; set; } = 4;
         #endregion
 
-       
+
+
+        /// <summary>
+        /// JsonProperty这个属性值要与真的属性值名称一样。不然不起作用。读取出错。
+        /// </summary>
+        [JsonProperty("借出单的接收单位必填")]
+        [Category("借出")]
+        [Description("借出单的接收单位设置为必须填写。")]
+        public bool 借出单的接收单位必填 { get; set; }
+
+
 
         [JsonProperty("SomeSetting")]
         public string SomeSetting { get; set; }

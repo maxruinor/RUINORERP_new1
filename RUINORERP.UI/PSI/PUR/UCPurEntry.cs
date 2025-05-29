@@ -39,7 +39,7 @@ namespace RUINORERP.UI.PSI.PUR
             InitializeComponent();
             AddPublicEntityObject(typeof(ProductSharePart));
         }
- 
+
 
 
         /// <summary>
@@ -193,22 +193,21 @@ namespace RUINORERP.UI.PSI.PUR
 
             //先绑定这个。InitFilterForControl 这个才生效
             DataBindingHelper.BindData4TextBox<tb_PurEntry>(entity, v => v.PurOrder_NO, txtPurOrderNO, BindDataType4TextBox.Text, true);
-            DataBindingHelper.BindData4TextBoxWithTagQuery<tb_PurEntry>(entity, v => v.PurOrder_ID, txtPurOrderNO, true);
+            //DataBindingHelper.BindData4TextBoxWithTagQuery<tb_PurEntry>(entity, v => v.PurOrder_ID, txtPurOrderNO, true);
 
             //创建表达式  草稿 结案 和没有提交的都不显示
-            var lambdaOrder = Expressionable.Create<tb_PurOrder>()
-                            .And(t => t.DataStatus == (int)DataStatus.确认)
-                             .And(t => t.isdeleted == false)
-                            .ToExpression();//注意 这一句 不能少
-            //base.InitFilterForControl<tb_PurOrder, tb_PurOrderQueryDto>(entity, txtPurOrderNO, c => c.PurOrderNo, lambdaOrder, ctrPurorder.GetQueryParameters());
-
             BaseProcessor basePro = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_PurOrder).Name + "Processor");
             QueryFilter queryFilter = basePro.GetQueryFilter();
-
-            queryFilter.FilterLimitExpressions.Add(lambdaOrder);//意思是只有审核确认的。没有结案的。才能查询出来。
-
-            DataBindingHelper.InitFilterForControlByExp<tb_PurOrder>(entity, txtPurOrderNO, c => c.PurOrderNo, queryFilter);
-
+           
+            var lambdaSaleOut = Expressionable.Create<tb_PurOrder>()
+         .And(t => t.DataStatus == (int)DataStatus.确认)
+         .And(t => t.ApprovalStatus.HasValue && t.ApprovalStatus.Value == (int)ApprovalStatus.已审核)
+         .And(t => t.ApprovalResults.HasValue && t.ApprovalResults.Value == true)
+          .And(t => t.isdeleted == false)
+         .ToExpression();
+            queryFilter.SetFieldLimitCondition(lambdaSaleOut);
+            ControlBindingHelper.ConfigureControlFilter<tb_PurEntry, tb_PurOrder>(entity, txtPurOrderNO, t => t.PurOrder_NO,
+                f => f.PurOrderNo, queryFilter, a => a.PurOrder_ID, b => b.PurOrder_ID, null, false);
             base.BindData(entity);
         }
 
@@ -349,7 +348,7 @@ namespace RUINORERP.UI.PSI.PUR
                 EditEntity.TotalQty = details.Sum(c => c.Quantity);
                 EditEntity.TotalAmount = details.Sum(c => (c.UnitPrice + c.CustomizedCost) * c.Quantity);
                 EditEntity.TotalAmount = EditEntity.TotalAmount + EditEntity.ShippingCost;
-                EditEntity.TotalTaxAmount=details.Sum(c=>c.TaxAmount);
+                EditEntity.TotalTaxAmount = details.Sum(c => c.TaxAmount);
                 EditEntity.TotalUntaxedAmount = details.Sum(c => (c.UntaxedCustomizedCost + c.UntaxedUnitPrice) * c.Quantity);
 
                 //不含税的总金额+不含税运费
@@ -383,6 +382,11 @@ namespace RUINORERP.UI.PSI.PUR
         {
             if (EditEntity == null)
             {
+                return false;
+            }
+            if (!EditEntity.PurOrder_ID.HasValue || EditEntity.PurOrder_ID.Value == 0)
+            {
+                MessageBox.Show("请选择正确的采购订单，或从采购订单查询中转为入库单！");
                 return false;
             }
 
@@ -435,7 +439,7 @@ namespace RUINORERP.UI.PSI.PUR
                         return false;
                     }
                 }
-  
+
                 EditEntity.TotalQty = details.Sum(c => c.Quantity);
                 EditEntity.TotalAmount = details.Sum(c => (c.UnitPrice + c.CustomizedCost) * c.Quantity);
                 EditEntity.TotalAmount = EditEntity.TotalAmount + EditEntity.ShippingCost;

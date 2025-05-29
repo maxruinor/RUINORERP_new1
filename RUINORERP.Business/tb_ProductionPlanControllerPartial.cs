@@ -81,6 +81,8 @@ namespace RUINORERP.Business
                     it.DataStatus,
                     it.ApprovalResults,
                     it.ApprovalStatus,
+                    it.Approver_at,
+                    it.Approver_by,
                     it.ApprovalOpinions
 
                 }).ExecuteCommandAsync();
@@ -141,6 +143,8 @@ namespace RUINORERP.Business
                             it.DataStatus,
                             it.ApprovalResults,
                             it.ApprovalStatus,
+                            it.Approver_at,
+                            it.Approver_by,
                             it.ApprovalOpinions
 
                         }).ExecuteCommandAsync();

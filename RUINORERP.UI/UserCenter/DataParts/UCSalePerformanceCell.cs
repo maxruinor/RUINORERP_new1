@@ -64,8 +64,8 @@ namespace RUINORERP.UI.UserCenter.DataParts
                 var Employees = new SugarParameter("@Employees ", strEmployees == string.Empty ? null : strEmployees);
                 var sqloutput = new SugarParameter("@sqlOutput", null, true);//设置为output
                                                                              //var list = db.Ado.UseStoredProcedure().SqlQuery<Class1>("sp_school", nameP, ageP);//返回List
-                var SaleOutList = MainForm.Instance.AppContext.Db.Ado.UseStoredProcedure().SqlQuery<Proc_WorkCenterSale>("Proc_WorkCenterSale"
-                    , Employees, sqloutput);//返回List
+                //var SaleOutList = MainForm.Instance.AppContext.Db.Ado.UseStoredProcedure().SqlQuery<Proc_WorkCenterSale>("Proc_WorkCenterSale"
+                //    , Employees, sqloutput);//返回List
 
                 string sqlquery = string.Empty;
                 string WhereClause = " and 1=1 ";
@@ -90,18 +90,18 @@ namespace RUINORERP.UI.UserCenter.DataParts
                     {
                         lblMonthlyOrderPerformance.Text = string.Empty;
                         sqlquery = string.Format("SELECT sum(c.TransactionPrice*(c.Quantity-c.TotalReturnedQty)) as 订单金额  from  tb_SaleOrder m RIGHT JOIN tb_SaleOrderDetail c on m.SOrder_ID=c.SOrder_ID WHERE (m.DataStatus=4 or m.DataStatus=8) and m.ApprovalStatus=1 and m.ApprovalResults=1 and  YEAR(m.SaleDate) = YEAR('{0}') and  MONTH(m.SaleDate) = MONTH('{0}') " + WhereClause, System.DateTime.Now.ToString("yyyy-MM-dd"));
-                        decimal orderAmount = MainForm.Instance.AppContext.Db.Ado.GetDecimal(sqlquery);
+                        decimal orderAmount =await MainForm.Instance.AppContext.Db.Ado.GetDecimalAsync(sqlquery);
                         lblMonthlyOrderPerformance.Text = "本月订单业绩:" + orderAmount.ToString("##,###0元");
 
                         lblMonthlySalePerformance.Text = string.Empty;
                         sqlquery = string.Format("SELECT sum(c.TransactionPrice*(c.Quantity-c.TotalReturnedQty)) as 订单金额  from  tb_SaleOut m RIGHT JOIN tb_SaleOutDetail c on m.SaleOut_MainID=c.SaleOut_MainID WHERE (m.DataStatus=4 or m.DataStatus=8) and m.ApprovalStatus=1 and m.ApprovalResults=1 and YEAR(m.OutDate) = YEAR('{0}') and  MONTH(m.OutDate) = MONTH('{0}') " + WhereClause, System.DateTime.Now.ToString("yyyy-MM-dd"));
-                        decimal RealAmount = MainForm.Instance.AppContext.Db.Ado.GetDecimal(sqlquery);
+                        decimal RealAmount = await MainForm.Instance.AppContext.Db.Ado.GetDecimalAsync(sqlquery);
                         lblMonthlySalePerformance.Text = "本月实际业绩:" + RealAmount.ToString("##,###0元");
 
                         //客户数量
                         lblMonthlyCustomer.Text = string.Empty;
                         sqlquery = string.Format(" SELECT COUNT(CustomerVendor_ID) as 新增客户数 from tb_CustomerVendor  WHERE IsCustomer=1 and  YEAR(Created_at) = YEAR('{0}') and  MONTH(Created_at) = MONTH('{0}') " + WhereClause, System.DateTime.Now.ToString("yyyy-MM-dd"));
-                        decimal NewCustomerQty = MainForm.Instance.AppContext.Db.Ado.GetDecimal(sqlquery);
+                        decimal NewCustomerQty = await MainForm.Instance.AppContext.Db.Ado.GetDecimalAsync(sqlquery);
                         lblMonthlyCustomer.Text = "本月新增客户:" + NewCustomerQty.ToString("##,###0个");
 
                         //如果CRM启用了
@@ -110,26 +110,26 @@ namespace RUINORERP.UI.UserCenter.DataParts
                             //本月新增线索数
                             lblMonthly商机.Text = string.Empty;
                             sqlquery = string.Format(" SELECT COUNT(LeadID) as 新增线索数 from tb_CRM_Leads  WHERE  YEAR(Created_at) = YEAR('{0}') and  MONTH(Created_at) = MONTH('{0}') " + WhereClause, System.DateTime.Now.ToString("yyyy-MM-dd"));
-                            decimal Leads = MainForm.Instance.AppContext.Db.Ado.GetDecimal(sqlquery);
+                            decimal Leads = await MainForm.Instance.AppContext.Db.Ado.GetDecimalAsync(sqlquery);
                             lblMonthly商机.Text += "本月新增线索:" + Leads.ToString("##,###0个");
 
                             //本月新增潜客数
                             lblMonthly潜客数.Text = string.Empty;
                             sqlquery = string.Format(" SELECT COUNT(Customer_id) as 新增客户数 from tb_CRM_Customer  WHERE   YEAR(Created_at) = YEAR('{0}') and  MONTH(Created_at) = MONTH('{0}') " + WhereClause, System.DateTime.Now.ToString("yyyy-MM-dd"));
-                            decimal NewCustomers = MainForm.Instance.AppContext.Db.Ado.GetDecimal(sqlquery);
+                            decimal NewCustomers = await MainForm.Instance.AppContext.Db.Ado.GetDecimalAsync(sqlquery);
                             lblMonthly潜客数.Text = "本月新增潜客:" + NewCustomerQty.ToString("##,###0个");
 
 
                             //本月跟进记录数
                             lblMonthlyFollowupRecords.Text = string.Empty;
                             sqlquery = string.Format(" SELECT COUNT(RecordID) as 跟进记录数 from tb_CRM_FollowUpRecords  WHERE  YEAR(Created_at) = YEAR('{0}') and  MONTH(Created_at) = MONTH('{0}') " + WhereClause, System.DateTime.Now.ToString("yyyy-MM-dd"));
-                            decimal Records = MainForm.Instance.AppContext.Db.Ado.GetDecimal(sqlquery);
+                            decimal Records = await MainForm.Instance.AppContext.Db.Ado.GetDecimalAsync(sqlquery);
                             lblMonthlyFollowupRecords.Text = "本月跟进记录数:" + Records.ToString("##,###0个");
 
                             //本月制定计划数
                             lblMonthlyplans.Text = string.Empty;
                             sqlquery = string.Format(" SELECT COUNT(PlanID) as 制定计划数 from tb_CRM_FollowUpPlans  WHERE   YEAR(Created_at) = YEAR('{0}') and  MONTH(Created_at) = MONTH('{0}') " + WhereClause, System.DateTime.Now.ToString("yyyy-MM-dd"));
-                            decimal plans = MainForm.Instance.AppContext.Db.Ado.GetDecimal(sqlquery);
+                            decimal plans = await MainForm.Instance.AppContext.Db.Ado.GetDecimalAsync(sqlquery);
                             lblMonthlyplans.Text = "本月制定计划数:" + plans.ToString("##,###0个");
                         }
                         else

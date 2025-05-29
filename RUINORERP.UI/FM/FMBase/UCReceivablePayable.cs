@@ -60,7 +60,7 @@ namespace RUINORERP.UI.FM
         {
             InitializeComponent();
             AddPublicEntityObject(typeof(ProductSharePart));
-           
+
         }
 
         /// <summary>
@@ -92,6 +92,15 @@ namespace RUINORERP.UI.FM
             EditEntity = entity;
             if (entity.ARAPId > 0)
             {
+                if (entity.Currency_ID == MainForm.Instance.AppContext.BaseCurrency.Currency_ID)
+                {
+                    //隐藏外币相关
+                    UIHelper.ControlForeignFieldInvisible<tb_FM_ReceivablePayable>(this, false);
+                    if (listCols != null)
+                    {
+                        listCols.SetCol_DefaultHide<tb_FM_ReceivablePayableDetail>(c => c.ExchangeRate);
+                    }
+                }
                 entity.PrimaryKeyID = entity.ARAPId;
                 entity.ActionStatus = ActionStatus.加载;
                 //如果审核了，审核要灰色
@@ -342,8 +351,25 @@ namespace RUINORERP.UI.FM
                     //如果币别是本位币则不显示汇率列
                     if (EditEntity != null && EditEntity.Currency_ID == MainForm.Instance.AppContext.BaseCurrency.Currency_ID)
                     {
-                        listCols.SetCol_NeverVisible<tb_FM_ReceivablePayableDetail>(c => c.ExchangeRate);
+                        // listCols.SetCol_NeverVisible<tb_FM_ReceivablePayableDetail>(c => c.ExchangeRate);
+                        //隐藏外币相关
+                        UIHelper.ControlForeignFieldInvisible<tb_FM_ReceivablePayable>(this, false);
+                        if (listCols != null)
+                        {
+                            listCols.SetCol_DefaultHide<tb_FM_ReceivablePayableDetail>(c => c.ExchangeRate);
+                        }
                     }
+                    else
+                    {
+                        //显示外币相关
+                        UIHelper.ControlForeignFieldInvisible<tb_FM_ReceivablePayable>(this, true);
+                        //需要有一个方法。通过外币代码得到换人民币的汇率
+                        // entity.ExchangeRate = BizService.GetExchangeRateFromCache(cv.Currency_ID, AppContext.BaseCurrency.Currency_ID);
+
+
+                    }
+
+
                 }
 
                 base.ToolBarEnabledControl(entity);
@@ -529,7 +555,16 @@ namespace RUINORERP.UI.FM
             sgh.InitGrid(grid1, sgd, true, nameof(tb_FM_ReceivablePayableDetail));
             sgh.OnCalculateColumnValue += Sgh_OnCalculateColumnValue;
             sgh.OnAddDataRow += Sgh_OnAddDataRow;
-            UIHelper.ControlMasterColumnsInvisible(CurMenuInfo, this);
+                UIHelper.ControlMasterColumnsInvisible(CurMenuInfo, this);
+
+
+            //隐藏外币相关
+            UIHelper.ControlForeignFieldInvisible<tb_FM_ReceivablePayable>(this, false);
+            if (listCols != null)
+            {
+                listCols.SetCol_DefaultHide<tb_FM_ReceivablePayableDetail>(c => c.ExchangeRate);
+            }
+
         }
 
         private void Sgh_OnAddDataRow(object rowObj)
@@ -684,6 +719,19 @@ namespace RUINORERP.UI.FM
 
                 EditEntity.tb_FM_ReceivablePayableDetails = details;
 
+
+                //收付款单中的  收款或付款账号中的币别是否与选的币别一致。
+                if (NeedValidated && EditEntity.Currency_ID > 0 && EditEntity.Account_id > 0)
+                {
+                    tb_FM_Account bizcatch = BizCacheHelper.Instance.GetEntity<tb_FM_Account>(EditEntity.Account_id);
+                    if (bizcatch != null && bizcatch.Currency_ID != EditEntity.Currency_ID)
+                    {
+                        MessageBox.Show("收付款账号中的币别与当前单据的币别不一致。");
+                        return false;
+                    }
+                }
+
+
                 //如果主表的总金额和明细金额加总后不相等，则提示
                 if (NeedValidated && EditEntity.TotalLocalPayableAmount != details.Sum(c => c.LocalPayableAmount))
                 {
@@ -812,7 +860,7 @@ namespace RUINORERP.UI.FM
                     bool rs = await ctr.BaseLogicDeleteAsync(EditEntity as tb_FM_ReceivablePayable);
                     if (rs)
                     {
-                        //AuditLogHelper.Instance.CreateAuditLog<T>("删除", EditEntity);
+                        //MainForm.Instance.AuditLogHelper.CreateAuditLog<T>("删除", EditEntity);
                         //if (MainForm.Instance.AppContext.SysConfig.IsDebug)
                         //{
                         //    //MainForm.Instance.logger.Debug($"单据显示中删除:{typeof(T).Name}，主键值：{PKValue.ToString()} "); //如果要生效 要将配置文件中 <add key="log4net.Internal.Debug" value="true " /> 也许是：logn4net.config <log4net debug="false"> 改为true

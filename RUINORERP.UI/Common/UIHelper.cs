@@ -124,7 +124,7 @@ namespace RUINORERP.UI.Common
                 if (item != null)
                 {
                     //主表时，字段不可用或设置为不可见时  如果是金额还可以  再增加money类型
-                    if (item.Contains("Foreign"))
+                    if (item.Contains("Foreign")|| item.Contains("ExchangeRate"))
                     {
                         KryptonTextBox txtTextBox = UIHelper.FindTextBox(FormControl, item);
                         if (txtTextBox != null)

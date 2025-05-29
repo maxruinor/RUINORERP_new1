@@ -2127,6 +2127,7 @@ protected async override Task<ApprovalEntity> ReReview()
         ///<param name="MiddlewareType">中间件式:true，上层驱动模式:false</param>
         private async void CreateProductionNew2024(bool MiddlewareType = false)
         {
+
             if (EditEntity == null)
             {
                 return;
@@ -2147,6 +2148,7 @@ protected async override Task<ApprovalEntity> ReReview()
                 MainForm.Instance.uclog.AddLog("请选择要生成制令单的行。");
                 return;
             }
+            var eer = errorProviderForAllInput.GetError(txtPDNo);
 
             tb_ProductionDemandController<tb_ProductionDemand> ctrPD = Startup.GetFromFac<tb_ProductionDemandController<tb_ProductionDemand>>();
 
@@ -2157,7 +2159,13 @@ protected async override Task<ApprovalEntity> ReReview()
             //判断他是不是能再次生成制令单，是看选择的行中有没有已经生成过
             //先看是否选中，再看是中间件式还是 上层驱动，如果是中间件，
             //   如果是上层式，则找PID？
-            List<tb_ProduceGoodsRecommendDetail> MakingItems = EditEntity.tb_ProduceGoodsRecommendDetails.Where(c => c.Selected == true && !string.IsNullOrEmpty(c.RefBillNO)).ToList();
+            List<tb_ProduceGoodsRecommendDetail> MakingItems = EditEntity.tb_ProduceGoodsRecommendDetails.Where(c => c.Selected == true && string.IsNullOrEmpty(c.RefBillNO)).ToList();
+            if (MakingItems.Count == 0)
+            {
+                MessageBox.Show("请选择要生成制令单的目标产品。");
+                return;
+            }
+
             if (MiddlewareType)
             {
                 if (MakingItems.Count > 1)
@@ -2173,7 +2181,7 @@ protected async override Task<ApprovalEntity> ReReview()
                     && c.ProdDetailID == target.ProdDetailID && c.PDCID == target.PDCID);
                     if (IsCreatectrMO)
                     {
-                        MainForm.Instance.uclog.AddLog($"当前单据的制成品建议中，当前选中目标行产品，已经生成过制令单，无法重复生成", UILogType.警告);
+                        MainForm.Instance.uclog.AddLog($"制成品建议中，当前选中目标行产品，已经生成过制令单，无法重复生成", UILogType.警告);
                         btnCreatePurRequisition.Enabled = false;
                         return;
                     }
@@ -2190,7 +2198,7 @@ protected async override Task<ApprovalEntity> ReReview()
                 );
                 if (IsCreatectrMO)
                 {
-                    MainForm.Instance.uclog.AddLog($"当前单据的制成品建议中，当前选中目标行产品已经生成过制令单，无法重复生成", UILogType.警告);
+                    MainForm.Instance.uclog.AddLog($"制成品建议中，当前选中目标行产品已经生成过制令单，无法重复生成", UILogType.警告);
                     btnCreatePurRequisition.Enabled = false;
                     return;
                 }
@@ -2248,12 +2256,6 @@ protected async override Task<ApprovalEntity> ReReview()
                 MainForm.Instance.uclog.AddLog("没有自制品建议数据，无法生成");
             }
             #endregion
-
-
-
-
-
-
 
 
         }

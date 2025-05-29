@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/13/2024 11:11:32
+// 时间：05/29/2025 15:33:03
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -76,6 +76,11 @@ this.txtNewState = new ComponentFactory.Krypton.Toolkit.KryptonTextBox();
 
 this.lblNotes = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
 this.txtNotes = new ComponentFactory.Krypton.Toolkit.KryptonTextBox();
+this.txtNotes.Multiline = true;
+
+this.lblDataContent = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
+this.txtDataContent = new ComponentFactory.Krypton.Toolkit.KryptonTextBox();
+this.txtDataContent.Multiline = true;
 
     //for end
     this.SuspendLayout();
@@ -189,7 +194,7 @@ this.txtNewState.TabIndex = 9;
 this.Controls.Add(this.lblNewState);
 this.Controls.Add(this.txtNewState);
 
-           //#####100Notes###String
+           //#####8000Notes###String
 this.lblNotes.AutoSize = true;
 this.lblNotes.Location = new System.Drawing.Point(100,250);
 this.lblNotes.Name = "lblNotes";
@@ -202,6 +207,21 @@ this.txtNotes.Size = new System.Drawing.Size(100, 21);
 this.txtNotes.TabIndex = 10;
 this.Controls.Add(this.lblNotes);
 this.Controls.Add(this.txtNotes);
+
+           //#####2147483647DataContent###String
+this.lblDataContent.AutoSize = true;
+this.lblDataContent.Location = new System.Drawing.Point(100,275);
+this.lblDataContent.Name = "lblDataContent";
+this.lblDataContent.Size = new System.Drawing.Size(41, 12);
+this.lblDataContent.TabIndex = 11;
+this.lblDataContent.Text = "数据内容";
+this.txtDataContent.Location = new System.Drawing.Point(173,271);
+this.txtDataContent.Name = "txtDataContent";
+this.txtDataContent.Size = new System.Drawing.Size(100, 21);
+this.txtDataContent.TabIndex = 11;
+this.txtDataContent.Multiline = true;
+this.Controls.Add(this.lblDataContent);
+this.Controls.Add(this.txtDataContent);
 
           
     //for end
@@ -236,6 +256,9 @@ this.Controls.Add(this.txtNewState );
 
                 this.Controls.Add(this.lblNotes );
 this.Controls.Add(this.txtNotes );
+
+                this.Controls.Add(this.lblDataContent );
+this.Controls.Add(this.txtDataContent );
 
                     
             this.Name = "tb_AuditLogsQuery";
@@ -292,6 +315,11 @@ private ComponentFactory.Krypton.Toolkit.KryptonTextBox txtNewState;
         
               private ComponentFactory.Krypton.Toolkit.KryptonLabel lblNotes;
 private ComponentFactory.Krypton.Toolkit.KryptonTextBox txtNotes;
+
+    
+        
+              private ComponentFactory.Krypton.Toolkit.KryptonLabel lblDataContent;
+private ComponentFactory.Krypton.Toolkit.KryptonTextBox txtDataContent;
 
     
     

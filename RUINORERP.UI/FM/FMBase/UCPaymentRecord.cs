@@ -205,7 +205,7 @@ namespace RUINORERP.UI.FM
             {
                 //创建表达式
                 var lambda = Expressionable.Create<tb_CustomerVendor>()
-                                .And(t => t.IsCustomer == false)//供应商和第三方
+                                .And(t => t.IsVendor == true || t.IsOther == true)//供应商和第三方
                                 .And(t => t.isdeleted == false)
                                 .And(t => t.Is_enabled == true)
                                 .ToExpression();//注意 这一句 不能少
@@ -443,6 +443,19 @@ namespace RUINORERP.UI.FM
 
                 EditEntity.tb_FM_PaymentRecordDetails = details;
 
+
+                //收付款单中的  收款或付款账号中的币别是否与选的币别一致。
+                if (NeedValidated && EditEntity.Currency_ID > 0 && EditEntity.Account_id > 0)
+                {
+                    tb_FM_Account bizcatch = BizCacheHelper.Instance.GetEntity<tb_FM_Account>(EditEntity.Account_id);
+                    if (bizcatch != null && bizcatch.Currency_ID != EditEntity.Currency_ID)
+                    {
+                        MessageBox.Show("收付款账号中的币别与当前单据的币别不一致。");
+                        return false;
+                    }
+                }
+
+
                 //如果主表的总金额和明细金额加总后不相等，则提示
                 if (NeedValidated && EditEntity.TotalForeignAmount != details.Sum(c => c.ForeignAmount))
                 {
@@ -584,7 +597,7 @@ namespace RUINORERP.UI.FM
                     bool rs = await ctr.BaseDeleteAsync(EditEntity as tb_FM_PaymentRecord);
                     if (rs)
                     {
-                        //AuditLogHelper.Instance.CreateAuditLog<T>("删除", EditEntity);
+                        //MainForm.Instance.AuditLogHelper.CreateAuditLog<T>("删除", EditEntity);
                         //if (MainForm.Instance.AppContext.SysConfig.IsDebug)
                         //{
                         //    //MainForm.Instance.logger.Debug($"单据显示中删除:{typeof(T).Name}，主键值：{PKValue.ToString()} "); //如果要生效 要将配置文件中 <add key="log4net.Internal.Debug" value="true " /> 也许是：logn4net.config <log4net debug="false"> 改为true

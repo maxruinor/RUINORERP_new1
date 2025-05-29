@@ -12,6 +12,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -547,6 +548,124 @@ namespace RUINORERP.Model
             return loctype;
         }
 
+       
+
+        #region 提取重点数据
+
+        /// <summary>
+        /// 实体，特别是单据有时要保存重点的数据。这里提供一个通用实现
+        /// </summary>
+        /// <returns></returns>
+        public virtual string ToDataContent()
+        {
+            try
+            {
+                // 创建一个字典来存储需要记录的重点数据
+                var keyData = new Dictionary<string, object>();
+
+                // 获取实体类型
+                var type = GetType();
+
+                // 获取所有属性
+                var properties = type.GetProperties(BindingFlags.Public | BindingFlags.Instance);
+
+                // 遍历所有属性，收集需要记录的重点数据
+                foreach (var property in properties)
+                {
+                    // 跳过不应该记录的属性
+                    if (ShouldSkipProperty(property))
+                        continue;
+
+                    // 获取属性值
+                    var value = property.GetValue(this);
+
+                    // 处理集合类型
+                    if (property.PropertyType.IsGenericType &&
+                        property.PropertyType.GetGenericTypeDefinition() == typeof(List<>))
+                    {
+                        // 对于集合类型，只记录集合中每个元素的ID和其他关键属性
+                        var collection = value as System.Collections.IEnumerable;
+                        if (collection != null)
+                        {
+                            var itemsData = new List<Dictionary<string, object>>();
+                            foreach (var item in collection)
+                            {
+                                if (item != null)
+                                {
+                                    var itemData = new Dictionary<string, object>();
+                                    var itemType = item.GetType();
+
+                                    // 记录ID属性
+                                    var idProperty = itemType.GetProperty("ID") ??
+                                                     itemType.GetProperty($"{itemType.Name}ID");
+                                    if (idProperty != null && idProperty.CanRead)
+                                    {
+                                        itemData["ID"] = idProperty.GetValue(item);
+                                    }
+
+                                    // 记录其他关键属性（根据需要扩展）
+                                    var keyProperties = itemType.GetProperties(BindingFlags.Public | BindingFlags.Instance)
+                                        .Where(p => p.Name.Contains("Name") ||
+                                                    p.Name.Contains("Code") ||
+                                                    p.Name.Contains("Amount") ||
+                                                    p.Name.Contains("Quantity"));
+
+                                    foreach (var keyProp in keyProperties)
+                                    {
+                                        if (keyProp.CanRead && !ShouldSkipProperty(keyProp))
+                                        {
+                                            itemData[keyProp.Name] = keyProp.GetValue(item);
+                                        }
+                                    }
+
+                                    itemsData.Add(itemData);
+                                }
+                            }
+
+                            keyData[property.Name] = itemsData;
+                        }
+                    }
+                    else
+                    {
+                        // 对于普通属性，直接记录值
+                        keyData[property.Name] = value;
+                    }
+                }
+
+                // 将字典序列化为JSON字符串
+                return JsonConvert.SerializeObject(keyData);
+            }
+            catch (Exception ex)
+            {
+                // 记录错误，但返回空字符串，不影响主业务流程
+                Console.WriteLine($"生成数据内容失败: {ex.Message}");
+                return string.Empty;
+            }
+        }
+
+        /// <summary>
+        /// 判断是否应该跳过某个属性
+        /// </summary>
+        private bool ShouldSkipProperty(PropertyInfo property)
+        {
+            // 跳过忽略的属性
+            var sugarColumnAttr = property.GetCustomAttribute<SugarColumn>();
+            if (sugarColumnAttr != null && sugarColumnAttr.IsIgnore)
+                return true;
+
+            // 跳过导航属性
+            var navigateAttr = property.GetCustomAttribute<Navigate>();
+            if (navigateAttr != null)
+                return true;
+
+            // 跳过不需要记录的属性（根据需要扩展）
+            var skipProperties = new[] { "StatusEvaluator", "FieldNameList", "HelpInfos", "RowImage" };
+            if (skipProperties.Contains(property.Name))
+                return true;
+
+            return false;
+        }
+        #endregion
 
     }
 

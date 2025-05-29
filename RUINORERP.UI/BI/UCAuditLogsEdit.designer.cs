@@ -31,38 +31,38 @@
             this.btnOk = new Krypton.Toolkit.KryptonButton();
             this.btnCancel = new Krypton.Toolkit.KryptonButton();
             this.kryptonPanel1 = new Krypton.Toolkit.KryptonPanel();
-            this.lblDate = new Krypton.Toolkit.KryptonLabel();
-            this.dtpDate = new Krypton.Toolkit.KryptonDateTimePicker();
-            this.lblLevel = new Krypton.Toolkit.KryptonLabel();
-            this.txtLevel = new Krypton.Toolkit.KryptonTextBox();
-            this.lblLogger = new Krypton.Toolkit.KryptonLabel();
-            this.txtLogger = new Krypton.Toolkit.KryptonTextBox();
-            this.lblMessage = new Krypton.Toolkit.KryptonLabel();
-            this.txtMessage = new Krypton.Toolkit.KryptonTextBox();
-            this.lblException = new Krypton.Toolkit.KryptonLabel();
-            this.txtException = new Krypton.Toolkit.KryptonTextBox();
-            this.lblOperator = new Krypton.Toolkit.KryptonLabel();
-            this.txtOperator = new Krypton.Toolkit.KryptonTextBox();
-            this.lblModName = new Krypton.Toolkit.KryptonLabel();
-            this.txtModName = new Krypton.Toolkit.KryptonTextBox();
-            this.lblPath = new Krypton.Toolkit.KryptonLabel();
-            this.txtPath = new Krypton.Toolkit.KryptonTextBox();
-            this.lblActionName = new Krypton.Toolkit.KryptonLabel();
-            this.txtActionName = new Krypton.Toolkit.KryptonTextBox();
-            this.lblIP = new Krypton.Toolkit.KryptonLabel();
-            this.txtIP = new Krypton.Toolkit.KryptonTextBox();
-            this.lblMAC = new Krypton.Toolkit.KryptonLabel();
-            this.txtMAC = new Krypton.Toolkit.KryptonTextBox();
-            this.lblMachineName = new Krypton.Toolkit.KryptonLabel();
-            this.txtMachineName = new Krypton.Toolkit.KryptonTextBox();
+            this.txtActionTime = new Krypton.Toolkit.KryptonTextBox();
+            this.lblEmployee_ID = new Krypton.Toolkit.KryptonLabel();
+            this.cmbEmployee_ID = new Krypton.Toolkit.KryptonComboBox();
+            this.lblUserName = new Krypton.Toolkit.KryptonLabel();
+            this.txtUserName = new Krypton.Toolkit.KryptonTextBox();
+            this.lblActionTime = new Krypton.Toolkit.KryptonLabel();
+            this.lblActionType = new Krypton.Toolkit.KryptonLabel();
+            this.txtActionType = new Krypton.Toolkit.KryptonTextBox();
+            this.lblObjectType = new Krypton.Toolkit.KryptonLabel();
+            this.txtObjectType = new Krypton.Toolkit.KryptonTextBox();
+            this.lblObjectId = new Krypton.Toolkit.KryptonLabel();
+            this.txtObjectId = new Krypton.Toolkit.KryptonTextBox();
+            this.lblObjectNo = new Krypton.Toolkit.KryptonLabel();
+            this.txtObjectNo = new Krypton.Toolkit.KryptonTextBox();
+            this.lblOldState = new Krypton.Toolkit.KryptonLabel();
+            this.txtOldState = new Krypton.Toolkit.KryptonTextBox();
+            this.lblNewState = new Krypton.Toolkit.KryptonLabel();
+            this.txtNewState = new Krypton.Toolkit.KryptonTextBox();
+            this.lblNotes = new Krypton.Toolkit.KryptonLabel();
+            this.txtNotes = new Krypton.Toolkit.KryptonTextBox();
+            this.lblDataContent = new Krypton.Toolkit.KryptonLabel();
+            this.auditLogViewer1 = new RUINORERP.UI.Monitoring.Auditing.AuditLogViewer();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel1)).BeginInit();
             this.kryptonPanel1.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.cmbEmployee_ID)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.auditLogViewer1)).BeginInit();
             this.SuspendLayout();
             // 
             // btnOk
             // 
-            this.btnOk.Location = new System.Drawing.Point(274, 570);
+            this.btnOk.Location = new System.Drawing.Point(278, 720);
             this.btnOk.Name = "btnOk";
             this.btnOk.Size = new System.Drawing.Size(90, 25);
             this.btnOk.TabIndex = 0;
@@ -71,7 +71,7 @@
             // 
             // btnCancel
             // 
-            this.btnCancel.Location = new System.Drawing.Point(392, 570);
+            this.btnCancel.Location = new System.Drawing.Point(525, 720);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(90, 25);
             this.btnCancel.TabIndex = 1;
@@ -80,234 +80,218 @@
             // 
             // kryptonPanel1
             // 
-            this.kryptonPanel1.Controls.Add(this.lblDate);
-            this.kryptonPanel1.Controls.Add(this.dtpDate);
-            this.kryptonPanel1.Controls.Add(this.lblLevel);
-            this.kryptonPanel1.Controls.Add(this.txtLevel);
-            this.kryptonPanel1.Controls.Add(this.lblLogger);
-            this.kryptonPanel1.Controls.Add(this.txtLogger);
-            this.kryptonPanel1.Controls.Add(this.lblMessage);
-            this.kryptonPanel1.Controls.Add(this.txtMessage);
-            this.kryptonPanel1.Controls.Add(this.lblException);
-            this.kryptonPanel1.Controls.Add(this.txtException);
-            this.kryptonPanel1.Controls.Add(this.lblOperator);
-            this.kryptonPanel1.Controls.Add(this.txtOperator);
-            this.kryptonPanel1.Controls.Add(this.lblModName);
-            this.kryptonPanel1.Controls.Add(this.txtModName);
-            this.kryptonPanel1.Controls.Add(this.lblPath);
-            this.kryptonPanel1.Controls.Add(this.txtPath);
-            this.kryptonPanel1.Controls.Add(this.lblActionName);
-            this.kryptonPanel1.Controls.Add(this.txtActionName);
-            this.kryptonPanel1.Controls.Add(this.lblIP);
-            this.kryptonPanel1.Controls.Add(this.txtIP);
-            this.kryptonPanel1.Controls.Add(this.lblMAC);
-            this.kryptonPanel1.Controls.Add(this.txtMAC);
-            this.kryptonPanel1.Controls.Add(this.lblMachineName);
-            this.kryptonPanel1.Controls.Add(this.txtMachineName);
+            this.kryptonPanel1.Controls.Add(this.auditLogViewer1);
+            this.kryptonPanel1.Controls.Add(this.txtActionTime);
+            this.kryptonPanel1.Controls.Add(this.lblEmployee_ID);
+            this.kryptonPanel1.Controls.Add(this.cmbEmployee_ID);
+            this.kryptonPanel1.Controls.Add(this.lblUserName);
+            this.kryptonPanel1.Controls.Add(this.txtUserName);
+            this.kryptonPanel1.Controls.Add(this.lblActionTime);
+            this.kryptonPanel1.Controls.Add(this.lblActionType);
+            this.kryptonPanel1.Controls.Add(this.txtActionType);
+            this.kryptonPanel1.Controls.Add(this.lblObjectType);
+            this.kryptonPanel1.Controls.Add(this.txtObjectType);
+            this.kryptonPanel1.Controls.Add(this.lblObjectId);
+            this.kryptonPanel1.Controls.Add(this.txtObjectId);
+            this.kryptonPanel1.Controls.Add(this.lblObjectNo);
+            this.kryptonPanel1.Controls.Add(this.txtObjectNo);
+            this.kryptonPanel1.Controls.Add(this.lblOldState);
+            this.kryptonPanel1.Controls.Add(this.txtOldState);
+            this.kryptonPanel1.Controls.Add(this.lblNewState);
+            this.kryptonPanel1.Controls.Add(this.txtNewState);
+            this.kryptonPanel1.Controls.Add(this.lblNotes);
+            this.kryptonPanel1.Controls.Add(this.txtNotes);
+            this.kryptonPanel1.Controls.Add(this.lblDataContent);
             this.kryptonPanel1.Controls.Add(this.btnCancel);
             this.kryptonPanel1.Controls.Add(this.btnOk);
             this.kryptonPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.kryptonPanel1.Location = new System.Drawing.Point(0, 0);
             this.kryptonPanel1.Name = "kryptonPanel1";
-            this.kryptonPanel1.Size = new System.Drawing.Size(746, 607);
+            this.kryptonPanel1.Size = new System.Drawing.Size(977, 757);
             this.kryptonPanel1.TabIndex = 2;
             // 
-            // lblDate
+            // txtActionTime
             // 
-            this.lblDate.Location = new System.Drawing.Point(37, 12);
-            this.lblDate.Name = "lblDate";
-            this.lblDate.Size = new System.Drawing.Size(35, 20);
-            this.lblDate.TabIndex = 13;
-            this.lblDate.Values.Text = "时间";
+            this.txtActionTime.Location = new System.Drawing.Point(817, 10);
+            this.txtActionTime.Name = "txtActionTime";
+            this.txtActionTime.Size = new System.Drawing.Size(131, 23);
+            this.txtActionTime.TabIndex = 34;
             // 
-            // dtpDate
+            // lblEmployee_ID
             // 
-            this.dtpDate.Location = new System.Drawing.Point(79, 8);
-            this.dtpDate.Name = "dtpDate";
-            this.dtpDate.ShowCheckBox = true;
-            this.dtpDate.Size = new System.Drawing.Size(235, 21);
-            this.dtpDate.TabIndex = 14;
+            this.lblEmployee_ID.Location = new System.Drawing.Point(6, 13);
+            this.lblEmployee_ID.Name = "lblEmployee_ID";
+            this.lblEmployee_ID.Size = new System.Drawing.Size(62, 20);
+            this.lblEmployee_ID.TabIndex = 12;
+            this.lblEmployee_ID.Values.Text = "员工信息";
             // 
-            // lblLevel
+            // cmbEmployee_ID
             // 
-            this.lblLevel.Location = new System.Drawing.Point(37, 37);
-            this.lblLevel.Name = "lblLevel";
-            this.lblLevel.Size = new System.Drawing.Size(35, 20);
-            this.lblLevel.TabIndex = 15;
-            this.lblLevel.Values.Text = "级别";
+            this.cmbEmployee_ID.DropDownWidth = 100;
+            this.cmbEmployee_ID.IntegralHeight = false;
+            this.cmbEmployee_ID.Location = new System.Drawing.Point(79, 13);
+            this.cmbEmployee_ID.Name = "cmbEmployee_ID";
+            this.cmbEmployee_ID.Size = new System.Drawing.Size(160, 21);
+            this.cmbEmployee_ID.TabIndex = 13;
             // 
-            // txtLevel
+            // lblUserName
             // 
-            this.txtLevel.Location = new System.Drawing.Point(79, 33);
-            this.txtLevel.Name = "txtLevel";
-            this.txtLevel.Size = new System.Drawing.Size(235, 20);
-            this.txtLevel.TabIndex = 16;
+            this.lblUserName.Location = new System.Drawing.Point(6, 43);
+            this.lblUserName.Name = "lblUserName";
+            this.lblUserName.Size = new System.Drawing.Size(49, 20);
+            this.lblUserName.TabIndex = 14;
+            this.lblUserName.Values.Text = "用户名";
             // 
-            // lblLogger
+            // txtUserName
             // 
-            this.lblLogger.Location = new System.Drawing.Point(24, 114);
-            this.lblLogger.Name = "lblLogger";
-            this.lblLogger.Size = new System.Drawing.Size(48, 20);
-            this.lblLogger.TabIndex = 17;
-            this.lblLogger.Values.Text = "记录器";
+            this.txtUserName.Location = new System.Drawing.Point(79, 43);
+            this.txtUserName.Multiline = true;
+            this.txtUserName.Name = "txtUserName";
+            this.txtUserName.Size = new System.Drawing.Size(160, 21);
+            this.txtUserName.TabIndex = 15;
             // 
-            // txtLogger
+            // lblActionTime
             // 
-            this.txtLogger.Location = new System.Drawing.Point(79, 113);
-            this.txtLogger.Name = "txtLogger";
-            this.txtLogger.Size = new System.Drawing.Size(235, 20);
-            this.txtLogger.TabIndex = 18;
+            this.lblActionTime.Location = new System.Drawing.Point(744, 11);
+            this.lblActionTime.Name = "lblActionTime";
+            this.lblActionTime.Size = new System.Drawing.Size(62, 20);
+            this.lblActionTime.TabIndex = 16;
+            this.lblActionTime.Values.Text = "发生时间";
             // 
-            // lblMessage
+            // lblActionType
             // 
-            this.lblMessage.Location = new System.Drawing.Point(37, 145);
-            this.lblMessage.Name = "lblMessage";
-            this.lblMessage.Size = new System.Drawing.Size(35, 20);
-            this.lblMessage.TabIndex = 19;
-            this.lblMessage.Values.Text = "消息";
+            this.lblActionType.Location = new System.Drawing.Point(744, 41);
+            this.lblActionType.Name = "lblActionType";
+            this.lblActionType.Size = new System.Drawing.Size(36, 20);
+            this.lblActionType.TabIndex = 18;
+            this.lblActionType.Values.Text = "动作";
             // 
-            // txtMessage
+            // txtActionType
             // 
-            this.txtMessage.Location = new System.Drawing.Point(79, 144);
-            this.txtMessage.Multiline = true;
-            this.txtMessage.Name = "txtMessage";
-            this.txtMessage.ScrollBars = System.Windows.Forms.ScrollBars.Horizontal;
-            this.txtMessage.Size = new System.Drawing.Size(655, 77);
-            this.txtMessage.TabIndex = 20;
+            this.txtActionType.Location = new System.Drawing.Point(817, 40);
+            this.txtActionType.Name = "txtActionType";
+            this.txtActionType.Size = new System.Drawing.Size(131, 23);
+            this.txtActionType.TabIndex = 19;
             // 
-            // lblException
+            // lblObjectType
             // 
-            this.lblException.Location = new System.Drawing.Point(37, 227);
-            this.lblException.Name = "lblException";
-            this.lblException.Size = new System.Drawing.Size(35, 20);
-            this.lblException.TabIndex = 21;
-            this.lblException.Values.Text = "异常";
+            this.lblObjectType.Location = new System.Drawing.Point(362, 11);
+            this.lblObjectType.Name = "lblObjectType";
+            this.lblObjectType.Size = new System.Drawing.Size(62, 20);
+            this.lblObjectType.TabIndex = 20;
+            this.lblObjectType.Values.Text = "单据类型";
             // 
-            // txtException
+            // txtObjectType
             // 
-            this.txtException.Location = new System.Drawing.Point(79, 227);
-            this.txtException.Multiline = true;
-            this.txtException.Name = "txtException";
-            this.txtException.ScrollBars = System.Windows.Forms.ScrollBars.Horizontal;
-            this.txtException.Size = new System.Drawing.Size(655, 322);
-            this.txtException.TabIndex = 22;
+            this.txtObjectType.Location = new System.Drawing.Point(435, 10);
+            this.txtObjectType.Name = "txtObjectType";
+            this.txtObjectType.Size = new System.Drawing.Size(160, 23);
+            this.txtObjectType.TabIndex = 21;
             // 
-            // lblOperator
+            // lblObjectId
             // 
-            this.lblOperator.Location = new System.Drawing.Point(24, 63);
-            this.lblOperator.Name = "lblOperator";
-            this.lblOperator.Size = new System.Drawing.Size(48, 20);
-            this.lblOperator.TabIndex = 24;
-            this.lblOperator.Values.Text = "操作者";
+            this.lblObjectId.Location = new System.Drawing.Point(362, 41);
+            this.lblObjectId.Name = "lblObjectId";
+            this.lblObjectId.Size = new System.Drawing.Size(48, 20);
+            this.lblObjectId.TabIndex = 23;
+            this.lblObjectId.Values.Text = "单据ID";
             // 
-            // txtOperator
+            // txtObjectId
             // 
-            this.txtOperator.Location = new System.Drawing.Point(79, 59);
-            this.txtOperator.Name = "txtOperator";
-            this.txtOperator.Size = new System.Drawing.Size(235, 20);
-            this.txtOperator.TabIndex = 23;
+            this.txtObjectId.Location = new System.Drawing.Point(435, 40);
+            this.txtObjectId.Name = "txtObjectId";
+            this.txtObjectId.Size = new System.Drawing.Size(160, 23);
+            this.txtObjectId.TabIndex = 22;
             // 
-            // lblModName
+            // lblObjectNo
             // 
-            this.lblModName.Location = new System.Drawing.Point(24, 87);
-            this.lblModName.Name = "lblModName";
-            this.lblModName.Size = new System.Drawing.Size(48, 20);
-            this.lblModName.TabIndex = 25;
-            this.lblModName.Values.Text = "模块名";
+            this.lblObjectNo.Location = new System.Drawing.Point(6, 72);
+            this.lblObjectNo.Name = "lblObjectNo";
+            this.lblObjectNo.Size = new System.Drawing.Size(62, 20);
+            this.lblObjectNo.TabIndex = 24;
+            this.lblObjectNo.Values.Text = "单据编号";
             // 
-            // txtModName
+            // txtObjectNo
             // 
-            this.txtModName.Location = new System.Drawing.Point(79, 84);
-            this.txtModName.Name = "txtModName";
-            this.txtModName.Size = new System.Drawing.Size(235, 20);
-            this.txtModName.TabIndex = 26;
+            this.txtObjectNo.Location = new System.Drawing.Point(79, 71);
+            this.txtObjectNo.Name = "txtObjectNo";
+            this.txtObjectNo.Size = new System.Drawing.Size(160, 23);
+            this.txtObjectNo.TabIndex = 25;
             // 
-            // lblPath
+            // lblOldState
             // 
-            this.lblPath.Location = new System.Drawing.Point(417, 118);
-            this.lblPath.Name = "lblPath";
-            this.lblPath.Size = new System.Drawing.Size(35, 20);
-            this.lblPath.TabIndex = 27;
-            this.lblPath.Values.Text = "路径";
+            this.lblOldState.Location = new System.Drawing.Point(362, 70);
+            this.lblOldState.Name = "lblOldState";
+            this.lblOldState.Size = new System.Drawing.Size(75, 20);
+            this.lblOldState.TabIndex = 26;
+            this.lblOldState.Values.Text = "操作前状态";
             // 
-            // txtPath
+            // txtOldState
             // 
-            this.txtPath.Location = new System.Drawing.Point(462, 113);
-            this.txtPath.Name = "txtPath";
-            this.txtPath.Size = new System.Drawing.Size(272, 20);
-            this.txtPath.TabIndex = 28;
+            this.txtOldState.Location = new System.Drawing.Point(435, 69);
+            this.txtOldState.Name = "txtOldState";
+            this.txtOldState.Size = new System.Drawing.Size(160, 23);
+            this.txtOldState.TabIndex = 27;
             // 
-            // lblActionName
+            // lblNewState
             // 
-            this.lblActionName.Location = new System.Drawing.Point(417, 16);
-            this.lblActionName.Name = "lblActionName";
-            this.lblActionName.Size = new System.Drawing.Size(35, 20);
-            this.lblActionName.TabIndex = 29;
-            this.lblActionName.Values.Text = "动作";
+            this.lblNewState.Location = new System.Drawing.Point(744, 70);
+            this.lblNewState.Name = "lblNewState";
+            this.lblNewState.Size = new System.Drawing.Size(75, 20);
+            this.lblNewState.TabIndex = 28;
+            this.lblNewState.Values.Text = "操作后状态";
             // 
-            // txtActionName
+            // txtNewState
             // 
-            this.txtActionName.Location = new System.Drawing.Point(462, 12);
-            this.txtActionName.Name = "txtActionName";
-            this.txtActionName.Size = new System.Drawing.Size(272, 20);
-            this.txtActionName.TabIndex = 30;
+            this.txtNewState.Location = new System.Drawing.Point(817, 69);
+            this.txtNewState.Name = "txtNewState";
+            this.txtNewState.Size = new System.Drawing.Size(131, 23);
+            this.txtNewState.TabIndex = 29;
             // 
-            // lblIP
+            // lblNotes
             // 
-            this.lblIP.Location = new System.Drawing.Point(392, 41);
-            this.lblIP.Name = "lblIP";
-            this.lblIP.Size = new System.Drawing.Size(60, 20);
-            this.lblIP.TabIndex = 31;
-            this.lblIP.Values.Text = "网络地址";
+            this.lblNotes.Location = new System.Drawing.Point(6, 106);
+            this.lblNotes.Name = "lblNotes";
+            this.lblNotes.Size = new System.Drawing.Size(62, 20);
+            this.lblNotes.TabIndex = 30;
+            this.lblNotes.Values.Text = "备注说明";
             // 
-            // txtIP
+            // txtNotes
             // 
-            this.txtIP.Location = new System.Drawing.Point(462, 37);
-            this.txtIP.Name = "txtIP";
-            this.txtIP.Size = new System.Drawing.Size(272, 20);
-            this.txtIP.TabIndex = 32;
+            this.txtNotes.Location = new System.Drawing.Point(79, 102);
+            this.txtNotes.Multiline = true;
+            this.txtNotes.Name = "txtNotes";
+            this.txtNotes.Size = new System.Drawing.Size(869, 98);
+            this.txtNotes.TabIndex = 31;
             // 
-            // lblMAC
+            // lblDataContent
             // 
-            this.lblMAC.Location = new System.Drawing.Point(392, 66);
-            this.lblMAC.Name = "lblMAC";
-            this.lblMAC.Size = new System.Drawing.Size(60, 20);
-            this.lblMAC.TabIndex = 33;
-            this.lblMAC.Values.Text = "物理地址";
+            this.lblDataContent.Location = new System.Drawing.Point(6, 210);
+            this.lblDataContent.Name = "lblDataContent";
+            this.lblDataContent.Size = new System.Drawing.Size(62, 20);
+            this.lblDataContent.TabIndex = 32;
+            this.lblDataContent.Values.Text = "数据内容";
             // 
-            // txtMAC
+            // auditLogViewer1
             // 
-            this.txtMAC.Location = new System.Drawing.Point(462, 62);
-            this.txtMAC.Name = "txtMAC";
-            this.txtMAC.Size = new System.Drawing.Size(272, 20);
-            this.txtMAC.TabIndex = 34;
+            this.auditLogViewer1.Location = new System.Drawing.Point(79, 210);
+            this.auditLogViewer1.Name = "auditLogViewer1";
+            this.auditLogViewer1.Size = new System.Drawing.Size(849, 504);
+            this.auditLogViewer1.TabIndex = 35;
             // 
-            // lblMachineName
-            // 
-            this.lblMachineName.Location = new System.Drawing.Point(404, 91);
-            this.lblMachineName.Name = "lblMachineName";
-            this.lblMachineName.Size = new System.Drawing.Size(48, 20);
-            this.lblMachineName.TabIndex = 35;
-            this.lblMachineName.Values.Text = "电脑名";
-            // 
-            // txtMachineName
-            // 
-            this.txtMachineName.Location = new System.Drawing.Point(462, 87);
-            this.txtMachineName.Name = "txtMachineName";
-            this.txtMachineName.Size = new System.Drawing.Size(272, 20);
-            this.txtMachineName.TabIndex = 36;
-            // 
-            // UCLogsEdit
+            // UCAuditLogsEdit
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(746, 607);
+            this.ClientSize = new System.Drawing.Size(977, 757);
             this.Controls.Add(this.kryptonPanel1);
-            this.Name = "UCLogsEdit";
+            this.Name = "UCAuditLogsEdit";
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel1)).EndInit();
             this.kryptonPanel1.ResumeLayout(false);
             this.kryptonPanel1.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.cmbEmployee_ID)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.auditLogViewer1)).EndInit();
             this.ResumeLayout(false);
 
         }
@@ -317,29 +301,27 @@
         private Krypton.Toolkit.KryptonButton btnOk;
         private Krypton.Toolkit.KryptonButton btnCancel;
         private Krypton.Toolkit.KryptonPanel kryptonPanel1;
-        private Krypton.Toolkit.KryptonLabel lblDate;
-        private Krypton.Toolkit.KryptonDateTimePicker dtpDate;
-        private Krypton.Toolkit.KryptonLabel lblLevel;
-        private Krypton.Toolkit.KryptonTextBox txtLevel;
-        private Krypton.Toolkit.KryptonLabel lblLogger;
-        private Krypton.Toolkit.KryptonTextBox txtLogger;
-        private Krypton.Toolkit.KryptonLabel lblMessage;
-        private Krypton.Toolkit.KryptonTextBox txtMessage;
-        private Krypton.Toolkit.KryptonLabel lblException;
-        private Krypton.Toolkit.KryptonTextBox txtException;
-        private Krypton.Toolkit.KryptonLabel lblOperator;
-        private Krypton.Toolkit.KryptonTextBox txtOperator;
-        private Krypton.Toolkit.KryptonLabel lblModName;
-        private Krypton.Toolkit.KryptonTextBox txtModName;
-        private Krypton.Toolkit.KryptonLabel lblPath;
-        private Krypton.Toolkit.KryptonTextBox txtPath;
-        private Krypton.Toolkit.KryptonLabel lblActionName;
-        private Krypton.Toolkit.KryptonTextBox txtActionName;
-        private Krypton.Toolkit.KryptonLabel lblIP;
-        private Krypton.Toolkit.KryptonTextBox txtIP;
-        private Krypton.Toolkit.KryptonLabel lblMAC;
-        private Krypton.Toolkit.KryptonTextBox txtMAC;
-        private Krypton.Toolkit.KryptonLabel lblMachineName;
-        private Krypton.Toolkit.KryptonTextBox txtMachineName;
+        private Krypton.Toolkit.KryptonLabel lblEmployee_ID;
+        private Krypton.Toolkit.KryptonComboBox cmbEmployee_ID;
+        private Krypton.Toolkit.KryptonLabel lblUserName;
+        private Krypton.Toolkit.KryptonTextBox txtUserName;
+        private Krypton.Toolkit.KryptonLabel lblActionTime;
+        private Krypton.Toolkit.KryptonLabel lblActionType;
+        private Krypton.Toolkit.KryptonTextBox txtActionType;
+        private Krypton.Toolkit.KryptonLabel lblObjectType;
+        private Krypton.Toolkit.KryptonTextBox txtObjectType;
+        private Krypton.Toolkit.KryptonLabel lblObjectId;
+        private Krypton.Toolkit.KryptonTextBox txtObjectId;
+        private Krypton.Toolkit.KryptonLabel lblObjectNo;
+        private Krypton.Toolkit.KryptonTextBox txtObjectNo;
+        private Krypton.Toolkit.KryptonLabel lblOldState;
+        private Krypton.Toolkit.KryptonTextBox txtOldState;
+        private Krypton.Toolkit.KryptonLabel lblNewState;
+        private Krypton.Toolkit.KryptonTextBox txtNewState;
+        private Krypton.Toolkit.KryptonLabel lblNotes;
+        private Krypton.Toolkit.KryptonTextBox txtNotes;
+        private Krypton.Toolkit.KryptonLabel lblDataContent;
+        private Krypton.Toolkit.KryptonTextBox txtActionTime;
+        private Monitoring.Auditing.AuditLogViewer auditLogViewer1;
     }
 }

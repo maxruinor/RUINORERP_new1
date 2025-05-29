@@ -491,7 +491,7 @@ namespace RUINORERP.UI.BaseForm
             {
                 //保存属性
                 // ToolBarEnabledControl(MenuItemEnums.属性);
-                //AuditLogHelper.Instance.CreateAuditLog<T>("属性", EditEntity);
+                //MainForm.Instance.AuditLogHelper.CreateAuditLog<T>("属性", EditEntity);
             }
         }
 

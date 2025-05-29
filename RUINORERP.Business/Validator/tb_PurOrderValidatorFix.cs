@@ -68,7 +68,6 @@ namespace RUINORERP.Business
 
 
 
-
             // 这里添加额外的初始化代码
             RuleFor(x => x.PreDeliveryDate).GreaterThan(x => x.PurDate)
                 .When(c => c.PreDeliveryDate.HasValue)

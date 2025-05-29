@@ -38,7 +38,7 @@ namespace RUINORERP.Model
         #region 属性
         private long _PurEntryID;
         /// <summary>
-        /// 母件SKU
+        /// 
         /// </summary>
  
         [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "PurEntryID" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "母件SKU" , IsPrimaryKey = true)]

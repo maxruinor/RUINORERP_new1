@@ -29,7 +29,7 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            RUINORERP.Global.Model.DataRowImage dataRowImage1 = new RUINORERP.Global.Model.DataRowImage();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(UCOtherExpense));
             this.kryptonSplitContainer1 = new Krypton.Toolkit.KryptonSplitContainer();
             this.txtCloseCaseOpinions = new Krypton.Toolkit.KryptonTextBox();
             this.kryptonLabel2 = new Krypton.Toolkit.KryptonLabel();
@@ -129,7 +129,7 @@
             this.txtCloseCaseOpinions.Location = new System.Drawing.Point(885, 97);
             this.txtCloseCaseOpinions.Multiline = true;
             this.txtCloseCaseOpinions.Name = "txtCloseCaseOpinions";
-            this.txtCloseCaseOpinions.Size = new System.Drawing.Size(131, 50);
+            this.txtCloseCaseOpinions.Size = new System.Drawing.Size(131, 65);
             this.txtCloseCaseOpinions.TabIndex = 164;
             // 
             // kryptonLabel2
@@ -146,15 +146,7 @@
             this.magicPictureBox1.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.magicPictureBox1.Location = new System.Drawing.Point(1022, 94);
             this.magicPictureBox1.Name = "magicPictureBox1";
-            dataRowImage1.Dir = null;
-            dataRowImage1.image = null;
-            dataRowImage1.ImageBase64 = null;
-            dataRowImage1.ImageBytes = null;
-            dataRowImage1.ImageFullName = null;
-            dataRowImage1.newhash = null;
-            dataRowImage1.oldhash = null;
-            dataRowImage1.realName = null;
-            this.magicPictureBox1.RowImage = dataRowImage1;
+            this.magicPictureBox1.RowImage = ((RUINORERP.Global.Model.DataRowImage)(resources.GetObject("magicPictureBox1.RowImage")));
             this.magicPictureBox1.Size = new System.Drawing.Size(108, 68);
             this.magicPictureBox1.TabIndex = 165;
             this.magicPictureBox1.TabStop = false;

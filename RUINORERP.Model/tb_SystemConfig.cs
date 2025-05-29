@@ -95,7 +95,7 @@ namespace RUINORERP.Model
 
         private bool _CheckNegativeInventory= true;
         /// <summary>
-        /// 允许负库存
+        /// 允许负库存allowNegativeInventory 
         /// </summary>
         [AdvQueryAttribute(ColName = "CheckNegativeInventory",ColDesc = "允许负库存")] 
         [SugarColumn(ColumnDataType = "bit", SqlParameterDbType ="Boolean",  ColumnName = "CheckNegativeInventory" ,IsNullable = false,ColumnDescription = "允许负库存" )]

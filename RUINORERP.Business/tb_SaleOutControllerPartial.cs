@@ -54,8 +54,6 @@ namespace RUINORERP.Business
         {
             List<tb_SaleOut> entitys = new List<tb_SaleOut>();
             entitys = NeedCloseCaseList as List<tb_SaleOut>;
-
-
             ReturnResults<bool> rs = new ReturnResults<bool>();
             try
             {
@@ -132,11 +130,25 @@ namespace RUINORERP.Business
                 {
                     return rrs;
                 }
+                if (!entity.ApprovalResults.HasValue || !entity.ApprovalResults.Value)
+                {
+                    rrs.ErrorMsg = $"无审核数据!请刷新重试！";
+                    rrs.Succeeded = false;
+                    return rrs;
+                }
+                //当第一次审核失败后，Undo值是没有把tb_SaleOutDetails保存回去。导致 为null  暂时先查一下。后面优化尝试复制，恢复
+                if (entity.tb_SaleOutDetails == null)
+                {
+                    entity = await _unitOfWorkManage.GetDbClient().Queryable<tb_SaleOut>()
+                        .Includes(c => c.tb_SaleOutDetails)
+                        .Where(d => d.SaleOut_MainID == entity.SaleOut_MainID).FirstAsync();
+                }
+
+
                 //采购入库总数量和明细求和检查
                 if (entity.TotalQty.Equals(entity.tb_SaleOutDetails.Sum(c => c.Quantity)) == false)
                 {
                     rrs.ErrorMsg = $"销售出库数量与明细之和不相等!请检查数据后重试！";
-
                     rrs.Succeeded = false;
                     return rrs;
                 }
@@ -148,7 +160,7 @@ namespace RUINORERP.Business
                 //  entity.ApprovalResults = approvalEntity.ApprovalResults;
 
                 #region 审核 通过时
-                if (entity.ApprovalResults.Value)
+                if (entity.ApprovalResults.HasValue && entity.ApprovalResults.Value)
                 {
                     entity.tb_saleorder = await _unitOfWorkManage.GetDbClient().Queryable<tb_SaleOrder>()
                         .Includes(a => a.tb_paymentmethod)
@@ -163,7 +175,6 @@ namespace RUINORERP.Business
                     if (entity.tb_saleorder.DataStatus != (int)DataStatus.确认)
                     {
                         rrs.Succeeded = false;
-
                         rrs.ErrorMsg = $"出库时，对应销售订单不是审核状态!请检查数据后重试！";
                         if (_appContext.SysConfig.ShowDebugInfo)
                         {
@@ -194,7 +205,6 @@ namespace RUINORERP.Business
 
                     // 如果成本为零时则会实时检测库存成本，以库存成本为基准。这种情况解决未知成本，提前销售的情况。 相于于订单时成本不清楚写的0。销售出库时才有成本。
 
-
                     // 使用字典按 (ProdDetailID, LocationID) 分组，存储库存记录及累计数据
                     var inventoryGroups = new Dictionary<(long ProdDetailID, long LocationID), (tb_Inventory Inventory, decimal OutQtySum, DateTime LatestOutboundTime)>();
 
@@ -206,6 +216,7 @@ namespace RUINORERP.Business
                     // 遍历销售订单明细，聚合数据
                     foreach (var child in entity.tb_SaleOutDetails)
                     {
+                        //以产品和库位为联合主键，合并重复的产品。将数量累加
                         var key = (child.ProdDetailID, child.Location_ID);
                         decimal currentSaleQty = child.Quantity; // 假设 Sale_Qty 对应明细中的 Quantity
                         DateTime currentOutboundTime = DateTime.Now; // 每次出库更新时间
@@ -214,10 +225,13 @@ namespace RUINORERP.Business
                         if (!inventoryGroups.TryGetValue(key, out var group))
                         {
                             #region 库存表的更新 这里应该是必需有库存的数据，
-                            tb_Inventory inv = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == child.ProdDetailID && i.Location_ID == child.Location_ID);
+                            //tb_Inventory inv = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == child.ProdDetailID && i.Location_ID == child.Location_ID);
+
+                            tb_Inventory inv = await _unitOfWorkManage.GetDbClient().Queryable<tb_Inventory>()
+                                .Includes(a => a.tb_proddetail)
+                                .Where(i => i.ProdDetailID == child.ProdDetailID && i.Location_ID == child.Location_ID).FirstAsync();
                             if (inv != null)
                             {
-
                                 BusinessHelper.Instance.EditEntity(inv);
                             }
                             else
@@ -276,7 +290,7 @@ namespace RUINORERP.Business
                             if (!_appContext.SysConfig.CheckNegativeInventory && (group.Inventory.Quantity - group.OutQtySum) < 0)
                             {
                                 // rrs.ErrorMsg = "系统设置不允许负库存，请检查物料出库数量与库存相关数据";
-                                rrs.ErrorMsg = $"库存为：{group.Inventory.Quantity}，拟销售量为：{group.OutQtySum}\r\n 系统设置不允许负库存， 请检查出库数量与库存相关数据";
+                                rrs.ErrorMsg = $"sku:{group.Inventory.tb_proddetail.SKU}库存为：{group.Inventory.Quantity}，拟销售量为：{group.OutQtySum}\r\n 系统设置不允许负库存， 请检查出库数量与库存相关数据";
                                 _unitOfWorkManage.RollbackTran();
                                 rrs.Succeeded = false;
                                 return rrs;
@@ -297,6 +311,15 @@ namespace RUINORERP.Business
                         // 累加数值字段
                         inv.Sale_Qty -= group.Value.OutQtySum.ToInt();
                         inv.Quantity -= group.Value.OutQtySum.ToInt();
+
+                        if (!_appContext.SysConfig.CheckNegativeInventory && (inv.Quantity < 0))
+                        {
+                            // rrs.ErrorMsg = "系统设置不允许负库存，请检查物料出库数量与库存相关数据";
+                            rrs.ErrorMsg = $"sku:{inv.tb_proddetail.SKU}库存为：{inv.Quantity}，拟销售量为：{group.Value.OutQtySum}\r\n 系统设置不允许负库存， 请检查出库数量与库存相关数据";
+                            _unitOfWorkManage.RollbackTran();
+                            rrs.Succeeded = false;
+                            return rrs;
+                        }
                         // 计算衍生字段（如总成本）
                         inv.Inv_SubtotalCostMoney = inv.Inv_Cost * inv.Quantity; // 需确保 Inv_Cost 有值
                         invUpdateList.Add(inv);
@@ -746,22 +769,37 @@ namespace RUINORERP.Business
                     {
                         entity.FreightIncome = 0;
                     }
+                    entity.DataStatus = (int)DataStatus.确认;
                     entity.ApprovalStatus = (int)ApprovalStatus.已审核;
                     entity.ApprovalResults = true;
                     BusinessHelper.Instance.ApproverEntity(entity);
                     //只更新指定列
-                    int last = await _unitOfWorkManage.GetDbClient().Updateable<tb_SaleOut>(entity).ExecuteCommandAsync();
-                    if (last > 0)
-                    {
 
-                    }
-                    else
-                    {
-                        _logger.LogInformation("审核销售出库单失败" + entity.SaleOutNo);
-                        _unitOfWorkManage.RollbackTran();
-                        rrs.Succeeded = false;
-                        return rrs;
-                    }
+
+                }
+                else
+                {
+                    entity.DataStatus = (int)DataStatus.新建;
+                    entity.ApprovalStatus = (int)ApprovalStatus.驳回;
+                    entity.ApprovalResults = false;
+                }
+
+                var last = await _unitOfWorkManage.GetDbClient().Updateable<tb_SaleOut>(entity).UpdateColumns(it => new
+                {
+                    it.ApprovalStatus,
+                    it.DataStatus,
+                    it.ApprovalResults,
+                    it.Approver_at,
+                    it.Approver_by,
+                    it.ApprovalOpinions
+                }).ExecuteCommandAsync();
+                //int last = await _unitOfWorkManage.GetDbClient().Updateable<tb_SaleOut>(entity).ExecuteCommandAsync();
+                if (last < 0)
+                {
+                    _logger.LogInformation("审核销售出库单失败" + entity.SaleOutNo);
+                    _unitOfWorkManage.RollbackTran();
+                    rrs.Succeeded = false;
+                    return rrs;
                 }
 
                 // 注意信息的完整性

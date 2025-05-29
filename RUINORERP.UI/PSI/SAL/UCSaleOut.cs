@@ -42,6 +42,7 @@ using RUINORERP.Business.Security;
 
 using RUINORERP.Global.EnumExt;
 using RUINORERP.UI.AdvancedUIModule;
+using RUINORERP.UI.Monitoring.Auditing;
 namespace RUINORERP.UI.PSI.SAL
 {
     [MenuAttrAssemblyInfo("销售出库单", ModuleMenuDefine.模块定义.进销存管理, ModuleMenuDefine.进销存管理.销售管理, BizType.销售出库单)]
@@ -55,7 +56,7 @@ namespace RUINORERP.UI.PSI.SAL
             base.toolStripButton结案.Visible = true;
             AddPublicEntityObject(typeof(ProductSharePart));
         }
-   
+
 
 
 
@@ -296,16 +297,7 @@ namespace RUINORERP.UI.PSI.SAL
 
             //先绑定这个。InitFilterForControl 这个才生效
             DataBindingHelper.BindData4TextBox<tb_SaleOut>(entity, v => v.SaleOrderNo, txtSaleOrder, BindDataType4TextBox.Text, true);
-            DataBindingHelper.BindData4TextBoxWithTagQuery<tb_SaleOut>(entity, v => v.SOrder_ID, txtSaleOrder, true);
-
-            //tb_SaleOrderController<tb_SaleOrder> ctrsaleorder = Startup.GetFromFac<tb_SaleOrderController<tb_SaleOrder>>();
-
-            //创建表达式  草稿 结案 和没有提交的都不显示
-            //var lambdaOrder = Expressionable.Create<tb_SaleOrder>()
-            //                .And(t => t.DataStatus == (int)DataStatus.确认)
-            //                 .And(t => t.isdeleted == false)
-            //                .ToExpression();//注意 这一句 不能少
-            //base.InitFilterForControl<tb_SaleOrder, tb_SaleOrderQueryDto>(entity, txtSaleOrder, c => c.SOrderNo, lambdaOrder, ctrsaleorder.GetQueryParameters());
+            //DataBindingHelper.BindData4TextBoxWithTagQuery<tb_SaleOut>(entity, v => v.SOrder_ID, txtSaleOrder, true);
 
             BaseProcessor basePro = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_SaleOrder).Name + "Processor");
             QueryFilter queryFilter = basePro.GetQueryFilter();
@@ -315,12 +307,11 @@ namespace RUINORERP.UI.PSI.SAL
              .And(t => t.ApprovalStatus.HasValue && t.ApprovalStatus.Value == (int)ApprovalStatus.已审核)
              .And(t => t.ApprovalResults.HasValue && t.ApprovalResults.Value == true)
               .And(t => t.isdeleted == false)
-             .ToExpression();//注意 这一句 不能少
+             .ToExpression();
             //如果有限制则设置一下 但是注意 不应该在这设置，灵活的应该是在调用层设置
             queryFilter.SetFieldLimitCondition(lambdaOrder);
-
-            DataBindingHelper.InitFilterForControlByExp<tb_SaleOrder>(entity, txtSaleOrder, c => c.SOrderNo, queryFilter);
-
+            ControlBindingHelper.ConfigureControlFilter<tb_SaleOut, tb_SaleOrder>(entity, txtSaleOrder, t => t.SaleOrderNo,
+                f => f.SOrderNo, queryFilter, a => a.SOrder_ID, b => b.SOrder_ID, null, false);
 
             sgd.GridMasterData = entity;
             sgd.GridMasterDataType = entity.GetType();
@@ -537,6 +528,13 @@ namespace RUINORERP.UI.PSI.SAL
             {
                 return false;
             }
+
+            if (!EditEntity.SOrder_ID.HasValue || EditEntity.SOrder_ID.Value == 0)
+            {
+                MessageBox.Show("请选择正确的销售订单，或从销售订单查询中转为出库单！");
+                return false;
+            }
+
             var eer = errorProviderForAllInput.GetError(txtTotalAmount);
 
             bindingSourceSub.EndEdit();
@@ -708,7 +706,7 @@ namespace RUINORERP.UI.PSI.SAL
             {
                 string msg = string.Empty;
                 msg = $"订单号：{EditEntity.SaleOrderNo} 对应的出库单 {EditEntity.SaleOutNo} 删除成功。";
-                AuditLogHelper.Instance.CreateAuditLog<tb_SaleOut>("删除细节", EditEntity, msg);
+                MainForm.Instance.AuditLogHelper.CreateAuditLog<tb_SaleOut>("删除细节", EditEntity, msg);
             }
             return rss;
         }

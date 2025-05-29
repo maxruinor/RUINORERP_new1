@@ -24,7 +24,7 @@ namespace RUINORERP.Business
     {
         public override void Initialize()
         {
-            RuleFor(x => x.LocalAmount).Equal(0).WithMessage("支付金额本币:不能等于零。");
+            RuleFor(x => x.LocalAmount).NotEqual(0).WithMessage("支付金额本币:不能等于零。");
         }
     }
 

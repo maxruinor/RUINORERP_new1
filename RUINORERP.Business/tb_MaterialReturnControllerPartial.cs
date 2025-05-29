@@ -181,7 +181,8 @@ namespace RUINORERP.Business
                         {
                             //更新库存
                             inv.Quantity = inv.Quantity + child.Quantity;
-                            inv.NotOutQty += child.Quantity;
+                            //多领出来的料，有多才退回去。退回去并不代码，没有发。所以未发数量这里不修改。
+                            //inv.NotOutQty += child.Quantity;
                             inv.LatestStorageTime = System.DateTime.Now;
                             BusinessHelper.Instance.EditEntity(inv);
                         }
@@ -341,7 +342,7 @@ namespace RUINORERP.Business
                     //更新在途库存
                     //反审，出库的要加回来，要卖的也要加回来
                     inv.Quantity = inv.Quantity - child.Quantity;
-                    inv.NotOutQty -= child.Quantity;
+                    //inv.NotOutQty -= child.Quantity;
                     inv.LatestOutboundTime = System.DateTime.Now;
                     BusinessHelper.Instance.EditEntity(inv);
                     #endregion

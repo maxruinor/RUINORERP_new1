@@ -22,16 +22,13 @@ using RUINORERP.UI.Report;
 
 namespace RUINORERP.UI.BI
 {
-
-
-    [MenuAttrAssemblyInfo("当前角色的用户个性化编辑", ModuleMenuDefine.模块定义.系统设置, ModuleMenuDefine.系统设置.个性化设置)]
+    [MenuAttrAssemblyInfo("角色个性化编辑", ModuleMenuDefine.模块定义.系统设置, ModuleMenuDefine.系统设置.个性化设置)]
     public partial class UCUserPersonalizedEdit : UserControl
     {
         public UCUserPersonalizedEdit()
         {
             InitializeComponent();
         }
-
 
         private void btnCancel_Click(object sender, EventArgs e)
         {

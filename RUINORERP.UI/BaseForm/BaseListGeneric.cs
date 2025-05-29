@@ -57,6 +57,7 @@ using ContextMenuController = RUINORERP.UI.UControls.ContextMenuController;
 using Netron.Automatology;
 using RUINORERP.Global.EnumExt;
 using RUINORERP.Global;
+using RUINORERP.UI.Monitoring.Auditing;
 
 
 
@@ -828,7 +829,7 @@ namespace RUINORERP.UI.BaseForm
             {
                 //保存属性
                 ToolBarEnabledControl(MenuItemEnums.属性);
-                //AuditLogHelper.Instance.CreateAuditLog<T>("属性", EditEntity);
+                //MainForm.Instance.AuditLogHelper.CreateAuditLog<T>("属性", EditEntity);
             }
         }
 
@@ -1039,7 +1040,7 @@ namespace RUINORERP.UI.BaseForm
                     {
                         MainForm.Instance.logger.LogInformation($"删除:{typeof(T).Name}，主键值：{PKValue.ToString()} ");
                     }
-                    AuditLogHelper.Instance.CreateAuditLog("删除", CurMenuInfo.CaptionCN);
+                    MainForm.Instance.AuditLogHelper.CreateAuditLog("删除", CurMenuInfo.CaptionCN);
                     //提示服务器开启推送工作流
                     OriginalData beatDataDel = ClientDataBuilder.BaseInfoChangeBuilder(typeof(T).Name);
                     MainForm.Instance.ecs.AddSendData(beatDataDel);
@@ -1092,7 +1093,7 @@ namespace RUINORERP.UI.BaseForm
                     bool tryDelete = await ctr.BaseDeleteAsync(SelectedList); //可以执行。但是有外键。无法删除
                     if (tryDelete)
                     {
-                        AuditLogHelper.Instance.CreateAuditLog($"批量删除{counter}条记录", CurMenuInfo.CaptionCN);
+                        MainForm.Instance.AuditLogHelper.CreateAuditLog($"批量删除{counter}条记录", CurMenuInfo.CaptionCN);
                     }
                 }
                 catch (Exception ex)
@@ -1113,7 +1114,7 @@ namespace RUINORERP.UI.BaseForm
                             {
                                 MainForm.Instance.logger.LogInformation($"删除:{typeof(T).Name}，主键值：{PKValue.ToString()} ");
                             }
-                            AuditLogHelper.Instance.CreateAuditLog("删除", CurMenuInfo.CaptionCN);
+                            MainForm.Instance.AuditLogHelper.CreateAuditLog("删除", CurMenuInfo.CaptionCN);
                         }
                     }
                 }
@@ -1849,7 +1850,7 @@ namespace RUINORERP.UI.BaseForm
                             OriginalData beatData = ClientDataBuilder.BaseInfoChangeBuilder(typeof(T).Name);
                             MainForm.Instance.ecs.AddSendData(beatData);
                             //审计日志
-                            AuditLogHelper.Instance.CreateAuditLog("保存", CurMenuInfo.CaptionCN);
+                            MainForm.Instance.AuditLogHelper.CreateAuditLog("保存", CurMenuInfo.CaptionCN);
                             list.Add(rr.ReturnObject);
 
                             //根据要缓存的列表集合来判断是否需要上传到服务器。让服务器分发到其他客户端

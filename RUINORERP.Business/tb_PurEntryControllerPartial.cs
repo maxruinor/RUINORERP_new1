@@ -108,8 +108,9 @@ namespace RUINORERP.Business
                     for (int i = 0; i < entity.tb_purorder.tb_PurOrderDetails.Count; i++)
                     {
                         //如果当前订单明细行，不存在于入库明细行。直接跳过。这种就是多行多品被删除时。不需要比较
-                        string prodName = entity.tb_purorder.tb_PurOrderDetails[i].tb_proddetail.tb_prod.CNName +
+                        string prodName = entity.tb_purorder.tb_PurOrderDetails[i].tb_proddetail.SKU + "-" + entity.tb_purorder.tb_PurOrderDetails[i].tb_proddetail.tb_prod.CNName +
                                   entity.tb_purorder.tb_PurOrderDetails[i].tb_proddetail.tb_prod.Specifications;
+
                         //明细中有相同的产品或物品。
                         var aa = entity.tb_purorder.tb_PurOrderDetails.Select(c => c.ProdDetailID).ToList().GroupBy(x => x).Where(x => x.Count() > 1).Select(x => x.Key).ToList();
                         if (aa.Count > 0 && entity.tb_purorder.tb_PurOrderDetails[i].PurOrder_ChildID > 0)
@@ -132,7 +133,7 @@ namespace RUINORERP.Business
                             && c.PurOrder_ChildID == entity.tb_purorder.tb_PurOrderDetails[i].PurOrder_ChildID).Where(c => c.IsGift.HasValue && !c.IsGift.Value).Sum(c => c.Quantity);
                             if (inQty > entity.tb_purorder.tb_PurOrderDetails[i].Quantity)
                             {
-                                string msg = $"采购订单:{entity.tb_purorder.PurOrderNo}的【{prodName}】的入库数量不能大于订单中对应行的数量\r\n" + $"或存在针对当前采购订单重复录入了采购入库单。";
+                                string msg = $"采购订单:{entity.tb_purorder.PurOrderNo}的{entity}【{prodName}】的入库数量不能大于订单中对应行数量\r\n" + $"或当前采购订单重复录入采购入库单。";
                                 rs.ErrorMsg = msg;
                                 _unitOfWorkManage.RollbackTran();
                                 _logger.LogInformation(msg);
@@ -161,7 +162,7 @@ namespace RUINORERP.Business
                             if (inQty > entity.tb_purorder.tb_PurOrderDetails[i].Quantity)
                             {
 
-                                string msg = $"采购订单:{entity.tb_purorder.PurOrderNo}的【{prodName}】的入库数量不能大于订单中对应行的数量\r\n" + $"或存在针对当前采购订单重复录入了采购入库单。";
+                                string msg = $"采购订单:{entity.tb_purorder.PurOrderNo}的【{prodName}】的入库数量不能大于订单中对应行数量\r\n" + $"或当前采购订单重复录入了采购入库单。";
                                 rs.ErrorMsg = msg;
                                 _unitOfWorkManage.RollbackTran();
                                 _logger.LogInformation(msg);
@@ -326,7 +327,7 @@ namespace RUINORERP.Business
                     #endregion
 
                     #region 更新采购价格
-
+                     
                     //注意这里的人是指采购订单录入的人。不是采购入库的人。
                     tb_PriceRecordController<tb_PriceRecord> ctrPriceRecord = _appContext.GetRequiredService<tb_PriceRecordController<tb_PriceRecord>>();
                     tb_PriceRecord priceRecord = await _unitOfWorkManage.GetDbClient().Queryable<tb_PriceRecord>()

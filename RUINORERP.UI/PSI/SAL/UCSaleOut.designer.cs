@@ -76,6 +76,8 @@
             this.lbl销售订单 = new Krypton.Toolkit.KryptonLabel();
             this.kryptonSplitContainerGridAndSub = new Krypton.Toolkit.KryptonSplitContainer();
             this.grid1 = new SourceGrid.Grid();
+            this.txtForeignFreightIncome = new Krypton.Toolkit.KryptonTextBox();
+            this.lblForeignFreightIncome = new Krypton.Toolkit.KryptonLabel();
             this.txtTotalQty = new Krypton.Toolkit.KryptonTextBox();
             this.kryptonLabel2 = new Krypton.Toolkit.KryptonLabel();
             this.txtTotalCost = new Krypton.Toolkit.KryptonTextBox();
@@ -88,8 +90,6 @@
             this.txtTaxAmount = new Krypton.Toolkit.KryptonTextBox();
             this.txtFreightIncome = new Krypton.Toolkit.KryptonTextBox();
             this.lblFreightIncome = new Krypton.Toolkit.KryptonLabel();
-            this.txtForeignFreightIncome = new Krypton.Toolkit.KryptonTextBox();
-            this.lblForeignFreightIncome = new Krypton.Toolkit.KryptonLabel();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceSub)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1)).BeginInit();
@@ -351,6 +351,7 @@
             this.txtSaleOrder.ReadOnly = true;
             this.txtSaleOrder.Size = new System.Drawing.Size(234, 23);
             this.txtSaleOrder.TabIndex = 142;
+            this.txtSaleOrder.ToolTipValues.Description = "";
             // 
             // lblNotes
             // 
@@ -595,6 +596,21 @@
             this.grid1.TabStop = true;
             this.grid1.ToolTipText = "";
             // 
+            // txtForeignFreightIncome
+            // 
+            this.txtForeignFreightIncome.Location = new System.Drawing.Point(589, 47);
+            this.txtForeignFreightIncome.Name = "txtForeignFreightIncome";
+            this.txtForeignFreightIncome.Size = new System.Drawing.Size(96, 23);
+            this.txtForeignFreightIncome.TabIndex = 145;
+            // 
+            // lblForeignFreightIncome
+            // 
+            this.lblForeignFreightIncome.Location = new System.Drawing.Point(495, 48);
+            this.lblForeignFreightIncome.Name = "lblForeignFreightIncome";
+            this.lblForeignFreightIncome.Size = new System.Drawing.Size(88, 20);
+            this.lblForeignFreightIncome.TabIndex = 144;
+            this.lblForeignFreightIncome.Values.Text = "运费收入外币";
+            // 
             // txtTotalQty
             // 
             this.txtTotalQty.Location = new System.Drawing.Point(70, 46);
@@ -685,21 +701,6 @@
             this.lblFreightIncome.Size = new System.Drawing.Size(62, 20);
             this.lblFreightIncome.TabIndex = 102;
             this.lblFreightIncome.Values.Text = "运费收入";
-            // 
-            // txtForeignFreightIncome
-            // 
-            this.txtForeignFreightIncome.Location = new System.Drawing.Point(589, 47);
-            this.txtForeignFreightIncome.Name = "txtForeignFreightIncome";
-            this.txtForeignFreightIncome.Size = new System.Drawing.Size(96, 23);
-            this.txtForeignFreightIncome.TabIndex = 145;
-            // 
-            // lblForeignFreightIncome
-            // 
-            this.lblForeignFreightIncome.Location = new System.Drawing.Point(495, 48);
-            this.lblForeignFreightIncome.Name = "lblForeignFreightIncome";
-            this.lblForeignFreightIncome.Size = new System.Drawing.Size(88, 20);
-            this.lblForeignFreightIncome.TabIndex = 144;
-            this.lblForeignFreightIncome.Values.Text = "运费收入外币";
             // 
             // UCSaleOut
             // 

@@ -57,8 +57,15 @@ namespace RUINORERP.Business
 
                 tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
                 BillConverterFactory bcf = _appContext.GetRequiredService<BillConverterFactory>();
+                if (entity.tb_FinishedGoodsInvDetails == null)
+                {
+                    entity = await _unitOfWorkManage.GetDbClient().Queryable<tb_FinishedGoodsInv>()
+                        .Includes(b => b.tb_FinishedGoodsInvDetails)
+                        .Where(c => c.FG_ID == entity.FG_ID)
+                        .SingleAsync();
+                }
 
-                tb_ManufacturingOrder manufacturingOrder = null;
+            
                 //更新制令单的QuantityDelivered已交付数量 ,如果全交完了。则结案
                 //缴库复制。每次还是要先查询一下
                 if (entity.MOID > 0)
@@ -76,18 +83,12 @@ namespace RUINORERP.Business
                     .SingleAsync();
                 }
 
-                manufacturingOrder = entity.tb_manufacturingorder;
+         
 
 
                 #region 由缴库更新库存
 
-                if (entity.tb_FinishedGoodsInvDetails == null)
-                {
-                    entity = await _unitOfWorkManage.GetDbClient().Queryable<tb_FinishedGoodsInv>()
-                        .Includes(b => b.tb_FinishedGoodsInvDetails)
-                        .Where(c => c.FG_ID == entity.FG_ID)
-                        .SingleAsync();
-                }
+            
 
                 List<tb_Inventory> invUpdateList = new List<tb_Inventory>();
                 foreach (var child in entity.tb_FinishedGoodsInvDetails)
@@ -200,7 +201,7 @@ namespace RUINORERP.Business
                 }
 
                 //如果缴库明细中的品不是来自制令单，则报错
-                if (!entity.tb_FinishedGoodsInvDetails.Any(c => c.ProdDetailID == manufacturingOrder.ProdDetailID && c.Location_ID == manufacturingOrder.Location_ID))
+                if (!entity.tb_FinishedGoodsInvDetails.Any(c => c.ProdDetailID == entity.tb_manufacturingorder.ProdDetailID && c.Location_ID == entity.tb_manufacturingorder.Location_ID))
                 {
                     _unitOfWorkManage.RollbackTran();
                     rs.Succeeded = false;
@@ -210,13 +211,13 @@ namespace RUINORERP.Business
 
 
                 #region 由缴库单更新制令单
-                if (manufacturingOrder.tb_FinishedGoodsInvs == null)
+                if (entity.tb_manufacturingorder.tb_FinishedGoodsInvs == null)
                 {
-                    manufacturingOrder.tb_FinishedGoodsInvs = new List<tb_FinishedGoodsInv>();
+                    entity.tb_manufacturingorder.tb_FinishedGoodsInvs = new List<tb_FinishedGoodsInv>();
                 }
                 //先找到所有缴库明细,再找按制令单明细去循环比较。如果入库总数量大于订单数量，则不允许入库。
                 List<tb_FinishedGoodsInvDetail> detailList = new List<tb_FinishedGoodsInvDetail>();
-                foreach (var item in manufacturingOrder.tb_FinishedGoodsInvs.Where(c => c.DataStatus == (int)DataStatus.确认 || c.DataStatus == (int)DataStatus.完结).ToList())
+                foreach (var item in entity.tb_manufacturingorder.tb_FinishedGoodsInvs.Where(c => c.DataStatus == (int)DataStatus.确认 || c.DataStatus == (int)DataStatus.完结).ToList())
                 {
                     detailList.AddRange(item.tb_FinishedGoodsInvDetails);
                 }
@@ -226,15 +227,15 @@ namespace RUINORERP.Business
                 detailList.AddRange(entity.tb_FinishedGoodsInvDetails);
 
                 //这里与采购订单不一样。采购订单是用明细去比较，这里是回写的是制令单，是主表。
-                string prodName = manufacturingOrder.tb_proddetail.tb_prod.CNName + manufacturingOrder.tb_proddetail.tb_prod.Specifications;
+                string prodName = entity.tb_manufacturingorder.tb_proddetail.tb_prod.CNName + entity.tb_manufacturingorder.tb_proddetail.tb_prod.Specifications;
                 //找出所有这个制令单的对应 缴库的数量加总
-                var PaidQuantity = detailList.Where(c => c.ProdDetailID == manufacturingOrder.ProdDetailID && c.Location_ID == manufacturingOrder.Location_ID).Sum(c => c.Qty);
+                var PaidQuantity = detailList.Where(c => c.ProdDetailID == entity.tb_manufacturingorder.ProdDetailID && c.Location_ID == entity.tb_manufacturingorder.Location_ID).Sum(c => c.Qty);
 
                 #region 缴库数量按制令单实发数根据BOM计算得到最多能入库的数量，如果超过则提示后退回
                 decimal CanManufactureQtyBybom = 0;
                 //按制令单中所有要发出的物料中数量为整数的最小值为算 ，小数可能是 胶水 纸箱这种耗材。暂时排除
                 //最小可能产出量,关键物料且大于1的数量，根据BOM配方去计划
-                var CanManufactureQtyBybomList = manufacturingOrder.tb_ManufacturingOrderDetails.Where(c => c.ActualSentQty >= 1 && c.IsKeyMaterial.HasValue && c.IsKeyMaterial.Value == true).OrderByDescending(c => c.ActualSentQty).ToList();
+                var CanManufactureQtyBybomList = entity.tb_manufacturingorder.tb_ManufacturingOrderDetails.Where(c => c.ActualSentQty >= 1 && c.IsKeyMaterial.HasValue && c.IsKeyMaterial.Value == true).OrderByDescending(c => c.ActualSentQty).ToList();
 
                 //注意如果制令单生成时手动或程序指定了替换料，这时也要把替换料对应 的BOM记录到制令单明细中。用于后面判断生成最小量成品
                 if (CanManufactureQtyBybomList.Count > 0)
@@ -271,7 +272,7 @@ namespace RUINORERP.Business
                     {
                         if (MessageBox.Show("系统检测到缴库数量大于发出的关键物料能生产的最小数量,你确定要审核通过吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Asterisk) == DialogResult.No)
                         {
-                            string msg = $"制令单:{manufacturingOrder.MONO}的【{prodName}】的缴库数不能大于制令单中发出物料能生产的最小数量。";
+                            string msg = $"制令单:{entity.tb_manufacturingorder.MONO}的【{prodName}】的缴库数不能大于制令单中发出物料能生产的最小数量。";
                             try
                             {
                                 object obj = BizCacheHelper.Instance.GetEntity<View_ProdDetail>(MinQtyDetail.ProdDetailID);
@@ -295,18 +296,18 @@ namespace RUINORERP.Business
                 }
 
                 //如果制令单中没有发任何数量的物料是不可能缴库的。
-                if (manufacturingOrder.tb_ManufacturingOrderDetails.Sum(c => c.ActualSentQty) == 0)
+                if (entity.tb_manufacturingorder.tb_ManufacturingOrderDetails.Sum(c => c.ActualSentQty) == 0)
                 {
-                    string msg = $"制令单:{manufacturingOrder.MONO}，没有任何物料发出。";
+                    string msg = $"制令单:{entity.tb_manufacturingorder.MONO}，没有任何物料发出。";
                     rs.ErrorMsg = msg;
                     _unitOfWorkManage.RollbackTran();
                     return rs;
                 }
 
                 #endregion
-                if (PaidQuantity > manufacturingOrder.ManufacturingQty)
+                if (PaidQuantity > entity.tb_manufacturingorder.ManufacturingQty)
                 {
-                    string msg = $"制令单:{manufacturingOrder.MONO}的【{prodName}】的缴库数量不能大于制令单中要生产的数量。";
+                    string msg = $"制令单:{entity.tb_manufacturingorder.MONO}的【{prodName}】的缴库数量不能大于制令单中要生产的数量。";
                     rs.ErrorMsg = msg;
                     _unitOfWorkManage.RollbackTran();
                     _logger.LogInformation(msg);
@@ -315,23 +316,23 @@ namespace RUINORERP.Business
                 else
                 {
                     //当前行累计到交付,只是当前单的。不是以前的。
-                    var RowQty = entity.tb_FinishedGoodsInvDetails.Where(c => c.ProdDetailID == manufacturingOrder.ProdDetailID && c.Location_ID == manufacturingOrder.Location_ID).Sum(c => c.Qty);
-                    manufacturingOrder.QuantityDelivered += RowQty;
+                    var RowQty = entity.tb_FinishedGoodsInvDetails.Where(c => c.ProdDetailID == entity.tb_manufacturingorder.ProdDetailID && c.Location_ID == entity.tb_manufacturingorder.Location_ID).Sum(c => c.Qty);
+                    entity.tb_manufacturingorder.QuantityDelivered += RowQty;
                     //如果已交数据大于 订单数量 给出警告实际操作中 使用其他方式将备品入库
-                    if (manufacturingOrder.QuantityDelivered > detailList.Sum(c => c.Qty))
+                    if (entity.tb_manufacturingorder.QuantityDelivered > detailList.Sum(c => c.Qty))
                     {
                         _unitOfWorkManage.RollbackTran();
-                        rs.ErrorMsg = $"缴库单：{entity.DeliveryBillNo}审核时，{manufacturingOrder.SKU}缴库总数量不能大于制令单{manufacturingOrder.MONO}中的生产数量！";
+                        rs.ErrorMsg = $"缴库单：{entity.DeliveryBillNo}审核时，{entity.tb_manufacturingorder.SKU}缴库总数量不能大于制令单{entity.tb_manufacturingorder.MONO}中的生产数量！";
                         rs.Succeeded = false;
                         return rs;
                     }
 
                     //制令单已交数量和判断是否结案
-                    if (manufacturingOrder.QuantityDelivered == manufacturingOrder.ManufacturingQty
-                        && manufacturingOrder.DataStatus == (int)DataStatus.确认 && entity.ApprovalStatus.Value == (int)ApprovalStatus.已审核)
+                    if (entity.tb_manufacturingorder.QuantityDelivered == entity.tb_manufacturingorder.ManufacturingQty
+                        && entity.tb_manufacturingorder.DataStatus == (int)DataStatus.确认 && entity.ApprovalStatus.Value == (int)ApprovalStatus.已审核)
                     {
-                        manufacturingOrder.DataStatus = (int)DataStatus.完结;
-                        manufacturingOrder.CloseCaseOpinions = $"缴库单:{entity.DeliveryBillNo}->制令单:{manufacturingOrder.MONO},缴库单审核时，生产数量等于交付数量，自动结案";
+                        entity.tb_manufacturingorder.DataStatus = (int)DataStatus.完结;
+                        entity.tb_manufacturingorder.CloseCaseOpinions = $"缴库单:{entity.DeliveryBillNo}->制令单:{entity.tb_manufacturingorder.MONO},缴库单审核时，生产数量等于交付数量，自动结案";
 
                         //修改领料单状态 系统认为制令单已完成时。领料单也会结案
                         //但是有个前提是实发数据大于等于（有超发情况） 应该发的数量。并且是审核通过时
@@ -339,8 +340,8 @@ namespace RUINORERP.Business
                         {
 
                         }
-                        manufacturingOrder.tb_MaterialRequisitions.Where(c => c.DataStatus == (int)DataStatus.确认 && entity.ApprovalStatus == (int)ApprovalStatus.已审核).ToList().ForEach(c => c.DataStatus = (int)DataStatus.完结);
-                        int pomrCounter = await _unitOfWorkManage.GetDbClient().Updateable<tb_MaterialRequisition>(manufacturingOrder.tb_MaterialRequisitions).ExecuteCommandAsync();
+                        entity.tb_manufacturingorder.tb_MaterialRequisitions.Where(c => c.DataStatus == (int)DataStatus.确认 && entity.ApprovalStatus == (int)ApprovalStatus.已审核).ToList().ForEach(c => c.DataStatus = (int)DataStatus.完结);
+                        int pomrCounter = await _unitOfWorkManage.GetDbClient().Updateable<tb_MaterialRequisition>(entity.tb_manufacturingorder.tb_MaterialRequisitions).ExecuteCommandAsync();
                         if (pomrCounter > 0)
                         {
                             if (AuthorizeController.GetShowDebugInfoAuthorization(_appContext))
@@ -352,7 +353,7 @@ namespace RUINORERP.Business
                 }
 
                 //更新制令单已交数量和判断是否结案
-                int poCounter = await _unitOfWorkManage.GetDbClient().Updateable<tb_ManufacturingOrder>(manufacturingOrder).ExecuteCommandAsync();
+                int poCounter = await _unitOfWorkManage.GetDbClient().Updateable<tb_ManufacturingOrder>(entity.tb_manufacturingorder).ExecuteCommandAsync();
                 if (poCounter > 0)
                 {
                     if (AuthorizeController.GetShowDebugInfoAuthorization(_appContext))
@@ -364,14 +365,14 @@ namespace RUINORERP.Business
                 #endregion
 
                 //更新计划单已交数量，制令单会引用需求分析，需求分析引用计划单
-                if (manufacturingOrder.PDID > 0)
+                if (entity.tb_manufacturingorder.PDID > 0)
                 {
                     //2024-6-26修改为强引用了
                     //因为没有强引用 这里主动去查询
                     tb_ProductionDemand productionDemand = await _unitOfWorkManage.GetDbClient().Queryable<tb_ProductionDemand>()
                        .AsNavQueryable()//加这个前面,超过三级在前面加这一行，并且第四级无VS智能提示，但是可以用
                        .Includes(a => a.tb_productionplan, b => b.tb_ProductionPlanDetails)
-                       .Where(c => c.PDID == manufacturingOrder.PDID)
+                       .Where(c => c.PDID == entity.tb_manufacturingorder.PDID)
                        .SingleAsync();
 
                     //一个缴款单上面一个制令单。一个制令单 找到 需求单，再找到计划单。但是：需求下有多个制令单都来自于一个计划单，

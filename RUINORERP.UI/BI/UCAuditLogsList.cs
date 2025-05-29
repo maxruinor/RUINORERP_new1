@@ -32,7 +32,7 @@ namespace RUINORERP.UI.BI
         public UCAuditLogsList()
         {
             InitializeComponent();
-            //base.EditForm = typeof(tb_AuditLogs);
+            base.EditForm = typeof(UCAuditLogsEdit);
             toolStripButtonAdd.Visible = false;
             toolStripButtonModify.Visible = false;
             toolStripButtonSave.Visible = false;

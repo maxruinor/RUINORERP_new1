@@ -571,6 +571,12 @@
     <Compile Include="AdvancedUIModule\UIQueryHelper.cs" />
     <Compile Include="ATechnologyStack\AOP\DbBizLogAOP.cs" />
     <Compile Include="ATechnologyStack\ISharedIdentification.cs" />
+    <Compile Include="BI\UCAuditLogsEdit.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="BI\UCAuditLogsEdit.designer.cs">
+      <DependentUpon>UCAuditLogsEdit.cs</DependentUpon>
+    </Compile>
     <Compile Include="BI\UCBusinessPartnerList.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -1754,7 +1760,7 @@
     </Compile>
     <Compile Include="Common\BarCodeCreator.cs" />
     <Compile Include="Common\BarCodeHelper.cs" />
-    <Compile Include="Common\AuditLogHelper.cs" />
+    <Compile Include="Monitoring\Auditing\AuditLogHelper.cs" />
     <Compile Include="Common\CustomTupleEqualityComparer.cs" />
     <Compile Include="Common\DuplicateFinder.cs" />
     <Compile Include="Common\EnumerableExtensions.cs" />
@@ -1916,6 +1922,11 @@
     <Compile Include="MainForm.Designer.cs">
       <DependentUpon>MainForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="Monitoring\Auditing\AuditLogViewer.cs" />
+    <Compile Include="Monitoring\Auditing\AuditLogViewer.Designer.cs">
+      <DependentUpon>AuditLogViewer.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Monitoring\Auditing\EntityDataExtractor.cs" />
     <Compile Include="MRP\BOM\ExcelStyleExtensions.cs" />
     <Compile Include="MRP\PPLAN\UCProductionPlanStatistics.cs">
       <SubType>UserControl</SubType>
@@ -2672,6 +2683,7 @@
       <DependentUpon>GridUc.cs</DependentUpon>
     </Compile>
     <Compile Include="UControls\GridViewCheckBoxColumn.cs" />
+    <Compile Include="UControls\GridViewExtension.cs" />
     <Compile Include="UControls\MenuControllerConverter.cs" />
     <Compile Include="UControls\NewSumDataGridView.cs" />
     <Compile Include="UControls\Outlook\DataGridViewSetup.cs" />
@@ -3146,6 +3158,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="BaseForm\UCQueryShow.resx">
       <DependentUpon>UCQueryShow.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="BI\UCAuditLogsEdit.resx">
+      <DependentUpon>UCAuditLogsEdit.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="BI\UCBillingInformationEdit.resx">
       <DependentUpon>UCBillingInformationEdit.cs</DependentUpon>
@@ -4621,6 +4636,7 @@
     <Folder Include="ChartFramework\Shared\Extensions\SqlSugar\" />
     <Folder Include="IMResources\Icons\" />
     <Folder Include="IMResources\Images\" />
+    <Folder Include="Monitoring\Alerts\" />
     <Folder Include="MRP\RR\" />
     <Folder Include="Other\" />
     <Folder Include="PM\" />

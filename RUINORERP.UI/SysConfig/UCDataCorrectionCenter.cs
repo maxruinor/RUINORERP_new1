@@ -45,9 +45,7 @@ using AutoMapper;
 using RUINORERP.Business.AutoMapper;
 using RUINORERP.Global.EnumExt.CRM;
 using HLH.Lib.Security;
-
 using RUINORERP.UI.PSI.SAL;
-using HLH.WinControl.MyTypeConverter;
 using RUINORERP.UI.UserCenter.DataParts;
 using NPOI.POIFS.Properties;
 
@@ -75,7 +73,7 @@ namespace RUINORERP.UI.SysConfig
         {
             LoadTree();
         }
-        
+
         private async void treeView1_MouseDoubleClick(object sender, MouseEventArgs e)
         {
             if (treeViewTableList.SelectedNode != null && treeView1.SelectedNode != null)
@@ -232,13 +230,13 @@ namespace RUINORERP.UI.SysConfig
                         //折扣为0的单价大于0的。成交价为0的。折扣修改为1，成交价修改为单价
                         List<tb_PurOrderDetail> PurOrderDetails = MainForm.Instance.AppContext.Db.Queryable<tb_PurOrderDetail>()
                             .Includes(c => c.tb_purorder, b => b.tb_PurOrderDetails)
-                            .Where(c =>  c.UnitPrice > 0 )
+                            .Where(c => c.UnitPrice > 0)
                             .ToList();
 
                         for (int i = 0; i < PurOrderDetails.Count; i++)
                         {
                             //PurOrderDetails[i].Discount = 1;
-                          
+
                             PurOrderDetails[i].SubtotalAmount = PurOrderDetails[i].UnitPrice * PurOrderDetails[i].Quantity;
 
                             if (PurOrderDetails[i].tb_purorder.tb_PurOrderDetails.Count == 1)
@@ -266,13 +264,13 @@ namespace RUINORERP.UI.SysConfig
                         //折扣为0的单价大于0的。成交价为0的。折扣修改为1，成交价修改为单价
                         List<tb_PurOrderDetail> PurOrderDetails1 = MainForm.Instance.AppContext.Db.Queryable<tb_PurOrderDetail>()
                             .Includes(c => c.tb_purorder, b => b.tb_PurOrderDetails)
-                            .Where(c =>  c.UnitPrice == 0 )
+                            .Where(c => c.UnitPrice == 0)
                             .ToList();
 
                         for (int i = 0; i < PurOrderDetails1.Count; i++)
                         {
-                           
-                          
+
+
                             PurOrderDetails1[i].SubtotalAmount = PurOrderDetails1[i].UnitPrice * PurOrderDetails1[i].Quantity;
 
                             if (PurOrderDetails1[i].tb_purorder.tb_PurOrderDetails.Count == 1)
@@ -298,7 +296,7 @@ namespace RUINORERP.UI.SysConfig
 
 
 
-                 
+
 
                         #endregion
                     }
@@ -371,12 +369,12 @@ namespace RUINORERP.UI.SysConfig
                         //折扣为0的单价大于0的。成交价为0的。折扣修改为1，成交价修改为单价
                         List<tb_PurEntryDetail> PurEntryDetails = MainForm.Instance.AppContext.Db.Queryable<tb_PurEntryDetail>()
                             .Includes(c => c.tb_purentry, b => b.tb_PurEntryDetails)
-                            .Where(c => c.UnitPrice > 0 )
+                            .Where(c => c.UnitPrice > 0)
                             .ToList();
 
                         for (int i = 0; i < PurEntryDetails.Count; i++)
                         {
-                         
+
                             PurEntryDetails[i].SubtotalAmount = PurEntryDetails[i].UnitPrice * PurEntryDetails[i].Quantity;
                             if (!chkTestMode.Checked)
                             {
@@ -399,8 +397,8 @@ namespace RUINORERP.UI.SysConfig
 
                         for (int i = 0; i < PurEntryDetails1.Count; i++)
                         {
-                    
-                       
+
+
                             PurEntryDetails1[i].SubtotalAmount = PurEntryDetails1[i].UnitPrice * PurEntryDetails1[i].Quantity;
 
                             if (!chkTestMode.Checked)
@@ -513,7 +511,7 @@ namespace RUINORERP.UI.SysConfig
                             //如果入库明细单价为0时则检测订单明细中单价多少。
                             for (int b = 0; b < MyPurEntrys[a].tb_PurEntryDetails.Count; b++)
                             {
-                                if ( MyPurEntrys[a].tb_PurEntryDetails[b].UnitPrice == 0)
+                                if (MyPurEntrys[a].tb_PurEntryDetails[b].UnitPrice == 0)
                                 {
                                     //没有引用订单的跳过
                                     if (MyPurEntrys[a].tb_purorder == null)
@@ -523,7 +521,7 @@ namespace RUINORERP.UI.SysConfig
                                     var orderdetail = MyPurEntrys[a].tb_purorder.tb_PurOrderDetails.FirstOrDefault(c => c.ProdDetailID == MyPurEntrys[a].tb_PurEntryDetails[b].ProdDetailID);
                                     if (orderdetail != null)
                                     {
-                                        if (orderdetail.UnitPrice > 0 )
+                                        if (orderdetail.UnitPrice > 0)
                                         {
                                             //更新入库单明细
                                             if (chkTestMode.Checked)
@@ -533,8 +531,8 @@ namespace RUINORERP.UI.SysConfig
                                             else
                                             {
                                                 MyPurEntrys[a].tb_PurEntryDetails[b].UnitPrice = orderdetail.UnitPrice;
-                                            
-                                                int totalamountCounter = await MainForm.Instance.AppContext.Db.Updateable(MyPurEntrys[a].tb_PurEntryDetails[b]).UpdateColumns(t => new { t.SubtotalAmount,t.TaxAmount,t.UnitPrice }).ExecuteCommandAsync();
+
+                                                int totalamountCounter = await MainForm.Instance.AppContext.Db.Updateable(MyPurEntrys[a].tb_PurEntryDetails[b]).UpdateColumns(t => new { t.SubtotalAmount, t.TaxAmount, t.UnitPrice }).ExecuteCommandAsync();
                                                 richTextBoxLog.AppendText($"采购入库单明细{MyPurEntrys[a].tb_PurEntryDetails[b].ProdDetailID}的小计金额{MyPurEntrys[a].tb_PurEntryDetails[b].SubtotalAmount}修复成功：{totalamountCounter} " + "\r\n");
                                             }
 
@@ -633,6 +631,171 @@ namespace RUINORERP.UI.SysConfig
 
                 if (treeView1.SelectedNode.Text == "拟销在制在途修复")
                 {
+                    List<tb_Inventory> UpdateInventories = new List<tb_Inventory>(); //要更新的Inventories
+                    StringBuilder sb = new StringBuilder();
+                    #region 拟销在制在途修复
+                    List<tb_Inventory> inventories = await MainForm.Instance.AppContext.Db.Queryable<tb_Inventory>()
+                      .Includes(c => c.tb_proddetail)
+                      .Includes(c => c.tb_location)
+                      .ToListAsync();
+                    //按仓库按产品去各种业务单据中去找。找到更新
+                    List<tb_SaleOrder> SaleOrders = await MainForm.Instance.AppContext.Db.Queryable<tb_SaleOrder>()
+                     .Includes(c => c.tb_SaleOrderDetails)
+                     .Where(c => c.DataStatus == (int)DataStatus.确认)
+                     .ToListAsync();
+                    int totalSaleQty = 0;
+
+
+                    for (int i = 0; i < inventories.Count; i++)
+                    {
+                        totalSaleQty = 0;
+
+                        tb_Inventory inventory = inventories[i];
+                        foreach (var item in SaleOrders)
+                        {
+                            totalSaleQty += item.tb_SaleOrderDetails
+                                .Where(c => c.ProdDetailID == inventory.ProdDetailID && c.Location_ID == inventory.Location_ID)
+                                .Sum(c => (c.Quantity - c.TotalDeliveredQty));
+                        }
+
+                        if (inventory.Sale_Qty != totalSaleQty)
+                        {
+                            sb.Append($"SKU：{inventory.tb_proddetail.SKU}仓库：{inventory.Location_ID} 拟销数量由{inventory.Sale_Qty}修复为:{totalSaleQty}" + "\r\n");
+                            inventory.Sale_Qty = totalSaleQty;
+                            UpdateInventories.Add(inventory);
+                        }
+
+                    }
+
+                    #endregion
+
+
+                    #region 在途修复
+
+                    //按仓库按产品去各种业务单据中去找。找到更新
+                    List<tb_PurOrder> PurOrders = await MainForm.Instance.AppContext.Db.Queryable<tb_PurOrder>()
+                     .Includes(c => c.tb_PurOrderDetails)
+                     .Where(c => c.DataStatus == (int)DataStatus.确认)
+                     .ToListAsync();
+
+                    List<tb_PurEntryRe> PurEntryRes = await MainForm.Instance.AppContext.Db.Queryable<tb_PurEntryRe>()
+                 .Includes(c => c.tb_PurEntryReDetails)
+                 .Where(c => c.DataStatus == (int)DataStatus.确认 && c.ProcessWay == (int)PurReProcessWay.需要返回)
+                 .ToListAsync();
+
+                    List<tb_MRP_ReworkReturn> ReworkReturns = await MainForm.Instance.AppContext.Db.Queryable<tb_MRP_ReworkReturn>()
+                    .Includes(c => c.tb_MRP_ReworkReturnDetails)
+                    .Where(c => c.DataStatus == (int)DataStatus.确认)
+                    .ToListAsync();
+
+                    int totalOntheWayQty = 0;
+                    for (int i = 0; i < inventories.Count; i++)
+                    {
+                        totalOntheWayQty = 0;
+                        tb_Inventory inventory = inventories[i];
+                        foreach (var item in PurOrders)
+                        {
+                            totalOntheWayQty += item.tb_PurOrderDetails
+                                .Where(c => c.ProdDetailID == inventory.ProdDetailID && c.Location_ID == inventory.Location_ID)
+                                .Sum(c => (c.Quantity - c.DeliveredQuantity));
+                        }
+
+                        foreach (var item in ReworkReturns)
+                        {
+                            totalOntheWayQty += item.tb_MRP_ReworkReturnDetails
+                                .Where(c => c.ProdDetailID == inventory.ProdDetailID && c.Location_ID == inventory.Location_ID)
+                                .Sum(c => (c.Quantity - c.DeliveredQuantity));
+                        }
+
+                        foreach (var item in PurEntryRes)
+                        {
+                            totalOntheWayQty += item.tb_PurEntryReDetails
+                                .Where(c => c.ProdDetailID == inventory.ProdDetailID && c.Location_ID == inventory.Location_ID)
+                                .Sum(c => (c.Quantity - c.DeliveredQuantity));
+                        }
+
+                        if (inventory.On_the_way_Qty != totalOntheWayQty)
+                        {
+                            sb.Append($"SKU：{inventory.tb_proddetail.SKU}仓库：{inventory.Location_ID} " +
+                                $"在途数量由{inventory.On_the_way_Qty}修复为:{totalOntheWayQty}" + "\r\n");
+                            inventory.On_the_way_Qty = totalOntheWayQty;
+                            UpdateInventories.Add(inventory);
+                        }
+
+                    }
+
+                    #endregion
+
+                    #region 在制修复
+                    //在制作中，是算主表的制作目标的产品。
+                    List<tb_ManufacturingOrder> manufacturingOrders = await MainForm.Instance.AppContext.Db.Queryable<tb_ManufacturingOrder>()
+                     .Includes(c => c.tb_ManufacturingOrderDetails)
+                     .Where(c => c.DataStatus == (int)DataStatus.确认)
+                     .ToListAsync();
+                    int totalMakingQty = 0;
+
+                    for (int i = 0; i < inventories.Count; i++)
+                    {
+                        totalMakingQty = 0;
+                        tb_Inventory inventory = inventories[i];
+
+                        totalMakingQty += manufacturingOrders.Where(c => c.ProdDetailID == inventory.ProdDetailID && c.Location_ID == inventory.Location_ID)
+                            .Sum(c => (c.ManufacturingQty - c.QuantityDelivered));
+
+                        if (inventory.MakingQty != totalMakingQty)
+                        {
+                            sb.Append($"SKU：{inventory.tb_proddetail.SKU}仓库：{inventory.Location_ID} " +
+                                $"在制数量由{inventory.MakingQty}修复为:{totalMakingQty}" + "\r\n");
+                            inventory.MakingQty = totalMakingQty;
+                            UpdateInventories.Add(inventory);
+                        }
+
+                    }
+
+                    #endregion
+
+                    #region 未发数量修复
+
+
+                    decimal totalNotOutQty = 0;
+
+                    for (int i = 0; i < inventories.Count; i++)
+                    {
+                        totalNotOutQty = 0;
+                        tb_Inventory inventory = inventories[i];
+                        foreach (var item in manufacturingOrders)
+                        {
+                            totalNotOutQty += item.tb_ManufacturingOrderDetails
+                                .Where(c => c.ProdDetailID == inventory.ProdDetailID && c.Location_ID == inventory.Location_ID)
+                                .Sum(c => (c.ShouldSendQty - c.ActualSentQty));
+                        }
+
+
+                        if (inventory.NotOutQty != totalNotOutQty)
+                        {
+                            sb.Append($"SKU：{inventory.tb_proddetail.SKU}仓库：{inventory.Location_ID}" +
+                                $"未发数量由{inventory.NotOutQty}修复为:{totalNotOutQty}" + "\r\n");
+                            inventory.NotOutQty = totalNotOutQty.ToInt();
+                            UpdateInventories.Add(inventory);
+                        }
+
+                    }
+
+                    #endregion
+
+                    richTextBoxLog.AppendText(sb.ToString());
+                    if (chkTestMode.Checked)
+                    {
+                        richTextBoxLog.AppendText($"拟销在制在途修复 数据行：{UpdateInventories.Count} " + "\r\n");
+                    }
+                    else
+                    {
+                        int plancounter = await MainForm.Instance.AppContext.Db.Updateable<tb_Inventory>(UpdateInventories)
+                            .UpdateColumns(it => new { it.Sale_Qty, it.On_the_way_Qty, it.NotOutQty, it.MakingQty }).ExecuteCommandAsync();
+                        richTextBoxLog.AppendText($"拟销在制在途修复 数据行：{plancounter} " + "\r\n");
+                    }
+
+
 
                 }
 
@@ -699,14 +862,14 @@ namespace RUINORERP.UI.SysConfig
 
                         if (!bom.TotalMaterialCost.Equals(bom.tb_BOM_SDetails.Sum(c => c.SubtotalUnitCost)))
                         {
-                           
+
                             decimal diffpirce = Math.Abs(bom.tb_BOM_SDetails.Sum(c => c.SubtotalUnitCost) - bom.TotalMaterialCost);
                             if (diffpirce > 0.2m && ComparePrice(bom.tb_BOM_SDetails.Sum(c => c.SubtotalUnitCost).ToDouble(), bom.TotalMaterialCost.ToDouble()) > 10)
                             {
                                 richTextBoxLog.AppendText($"=====成本相差较大：{bom.BOM_ID}：{bom.BOM_No}   new {bom.tb_BOM_SDetails.Sum(c => c.SubtotalUnitCost)}  old {bom.TotalMaterialCost}" + "\r\n");
                                 richTextBoxLog.AppendText($"配方主次表材料成本不一致：{bom.BOM_ID}：{bom.BOM_No}   new {bom.tb_BOM_SDetails.Sum(c => c.SubtotalUnitCost)}  old {bom.TotalMaterialCost}" + "\r\n");
                             }
-                            
+
 
                             bom.TotalMaterialCost = bom.tb_BOM_SDetails.Sum(c => c.SubtotalUnitCost);
                             bom.OutProductionAllCosts = bom.TotalMaterialCost + bom.TotalOutManuCost + bom.OutApportionedCost;
@@ -766,7 +929,7 @@ namespace RUINORERP.UI.SysConfig
                 {
                     MessageBox.Show("只能执行一次。已经执行过了。");
                     //crm数据修复 只能执行一次。这里要注释掉。
-                  
+
                     #region 
                     List<tb_CustomerVendor> CustomerVendors = MainForm.Instance.AppContext.Db.Queryable<tb_CustomerVendor>()
                         .IncludesAllFirstLayer()
@@ -775,7 +938,7 @@ namespace RUINORERP.UI.SysConfig
                     List<tb_CRM_Customer> customers = new List<tb_CRM_Customer>();
                     foreach (var Customer in CustomerVendors)
                     {
-                        
+
                         tb_CRM_Customer entity = MainForm.Instance.mapper.Map<tb_CRM_Customer>(Customer);
                         BusinessHelper.Instance.InitEntity(entity);
                         customers.Add(entity);
@@ -789,7 +952,7 @@ namespace RUINORERP.UI.SysConfig
                     }
 
                     #endregion
-                   
+
                 }
                 if (treeView1.SelectedNode.Text == "属性重复的SKU检测")
                 {
@@ -1079,7 +1242,7 @@ namespace RUINORERP.UI.SysConfig
 
                         //每笔的入库的数量*成交价/总数量
                         var transPrice = realDetails
-                            .Where(c =>  c.Quantity > 0 && c.UnitPrice > 0)
+                            .Where(c => c.Quantity > 0 && c.UnitPrice > 0)
                             .Sum(c => c.UnitPrice * c.Quantity) / realDetails.Sum(c => c.Quantity);
                         if (transPrice > 0)
                         {
@@ -1370,7 +1533,7 @@ namespace RUINORERP.UI.SysConfig
                                     SaleOut.TotalAmount = SaleOut.tb_SaleOutDetails.Sum(c => c.SubtotalTransAmount);
                                     SaleOut.TotalQty = SaleOut.tb_SaleOutDetails.Sum(c => c.Quantity);
                                     SaleOut.TotalTaxAmount = SaleOut.tb_SaleOutDetails.Sum(c => c.SubtotalTaxAmount);
-                                 
+
 
                                     richTextBoxLog.AppendText($"销售出库{SaleOut.SaleOutNo}总金额：{SaleOut.TotalCost} " + "\r\n");
                                     #region 销售退回

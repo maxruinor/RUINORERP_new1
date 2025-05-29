@@ -47,6 +47,8 @@ namespace RUINORERP.UI.BI
             button检查数据.ToolTipValues.Heading = "提示";
             button检查数据.Click += button检查数据_Click;
             base.frm.flowLayoutPanelButtonsArea.Controls.Add(button检查数据);
+
+            dataGridView1.UseBatchEditColumn = true;
         }
 
         #region 添加 提取重复数据

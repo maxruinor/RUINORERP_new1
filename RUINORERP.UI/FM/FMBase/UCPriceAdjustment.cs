@@ -752,7 +752,7 @@ namespace RUINORERP.UI.FM
                     bool rs = await ctr.BaseLogicDeleteAsync(EditEntity as tb_FM_PriceAdjustment);
                     if (rs)
                     {
-                        //AuditLogHelper.Instance.CreateAuditLog<T>("删除", EditEntity);
+                        //MainForm.Instance.AuditLogHelper.CreateAuditLog<T>("删除", EditEntity);
                         //if (MainForm.Instance.AppContext.SysConfig.IsDebug)
                         //{
                         //    //MainForm.Instance.logger.Debug($"单据显示中删除:{typeof(T).Name}，主键值：{PKValue.ToString()} "); //如果要生效 要将配置文件中 <add key="log4net.Internal.Debug" value="true " /> 也许是：logn4net.config <log4net debug="false"> 改为true

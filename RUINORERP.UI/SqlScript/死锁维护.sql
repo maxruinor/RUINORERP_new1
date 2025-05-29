@@ -131,3 +131,40 @@ KILL 80
                           
                         
 原文链接：https://blog.csdn.net/feritylamb/article/details/107691610
+
+
+
+--可以查出一些信息
+
+
+WITH BlockingChain AS (
+    SELECT 
+        wt.session_id AS blocked_session,
+        wt.blocking_session_id,
+        er.blocking_session_id AS blocking_chain_id,
+        er.status,
+        er.wait_type,
+        er.wait_time,
+        er.command,
+        DB_NAME(er.database_id) AS database_name,
+        OBJECT_NAME(p.object_id, er.database_id) AS TableName,
+        l.request_mode,
+        l.resource_type,
+        l.resource_description,
+        st.text AS SQLText,
+        es.host_name,
+        es.program_name,
+        ROW_NUMBER() OVER(PARTITION BY wt.session_id ORDER BY l.request_session_id) AS rn
+    FROM sys.dm_os_waiting_tasks wt
+    INNER JOIN sys.dm_exec_requests er ON wt.session_id = er.session_id
+    INNER JOIN sys.dm_tran_locks l ON er.session_id = l.request_session_id
+    LEFT JOIN sys.partitions p ON l.resource_associated_entity_id = p.hobt_id
+    INNER JOIN sys.dm_exec_sessions es ON er.session_id = es.session_id
+    CROSS APPLY sys.dm_exec_sql_text(er.sql_handle) st
+    WHERE wt.wait_type LIKE 'LCK%_%'
+    AND er.database_id = DB_ID()
+)
+SELECT *
+FROM BlockingChain
+WHERE rn = 1
+ORDER BY wait_time DESC;

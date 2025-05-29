@@ -62,6 +62,7 @@ using RUINORERP.Business.CommService;
 using Newtonsoft.Json;
 using RUINORERP.UI.ATechnologyStack;
 using RUINORERP.Model.Base;
+using RUINORERP.UI.Monitoring.Auditing;
 
 
 namespace RUINORERP.UI
@@ -255,12 +256,19 @@ namespace RUINORERP.UI
 
             ////覆盖上面自动dll批量注入的方法，因为要用单例模式
             builder.RegisterType(typeof(RUINORERP.Business.CommService.BillConverterFactory))
-                 .AsImplementedInterfaces() //加上这一行，会出错
+                 .AsImplementedInterfaces() //注册所有实现的接口
                  .EnableInterfaceInterceptors()
-                 .EnableClassInterceptors()//打开AOP类的虚方法注入
+                 .EnableClassInterceptors()//打开AOP类的虚方法注入 同时启用接口和类拦截器可能导致冲突
                  .PropertiesAutowired()//指定属性注入
                  .SingleInstance();
 
+
+            // 注册 AuditLogHelper 为可注入服务
+            builder.RegisterType<AuditLogHelper>()
+                   .AsSelf()
+                   .InstancePerLifetimeScope(); // 或根据需要使用 SingleInstance() 或根据需要选择生命周期
+
+             
 
             //_containerBuilder = builder;
             //AutoFacContainer = builder.Build();
@@ -703,7 +711,7 @@ namespace RUINORERP.UI
                                                     // 注册工作流定义
             services.AddSingleton<IWorkflowRegistry, WorkflowRegistry>();
             services.AddSingleton<IWorkflowHost, WorkflowHost>();
-        
+
             services.AddScoped(typeof(UI.BaseForm.frmBase));
             services.AddScoped(typeof(UI.BaseForm.BaseUControl));
             services.AddScoped(typeof(UI.BaseForm.BaseQuery));
@@ -715,6 +723,9 @@ namespace RUINORERP.UI
             services.AddScoped(typeof(ReminderData));
             services.AddScoped(typeof(Model.LastCacheFetchInfo));
             services.AddScoped(typeof(Model.CacheFetchManager));
+
+
+
             // services.AddSingleton(new AppSettings(WebHostEnvironment));
             //services.AddScoped<ICurrentUser, CurrentUser>();
             //services.AddSingleton(Configuration);
@@ -787,7 +798,6 @@ namespace RUINORERP.UI
             services.AddAppContext(Program.AppContextData);
 
 
-
             IConfigurationBuilder configurationBuilder = new ConfigurationBuilder();
             var cfgBuilder = configurationBuilder.AddJsonFile("appsettings.json");//默认读取：当前运行目录
             IConfiguration configuration = cfgBuilder.Build();
@@ -796,6 +806,26 @@ namespace RUINORERP.UI
             string key = "ruinor1234567890";
             string newconn = HLH.Lib.Security.EncryptionHelper.AesDecrypt(conn, key);
             services.AddSqlsugarSetup(Program.AppContextData, newconn);
+
+            // 添加审计日志配置 （如果存在）
+            services.Configure<AuditLogOptions>(configuration.GetSection("AuditLog"));
+            
+            // 使用 ConfigureOptions 手动覆盖特定值
+            services.Configure<AuditLogOptions>(options =>
+            {
+                options.BatchSize = 3;
+                options.FlushInterval = 5000;
+                options.EnableAudit = true;
+            });
+
+
+            // 注册审计日志服务
+            services.AddSingleton<IAuditLogService, AuditLogService>();
+
+
+
+
+
 
             //services.AddSingleton<ApplicationContext>(Program.AppContextData);
             //services.AddTransient<BaseController, AuthorizeController>();

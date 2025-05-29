@@ -203,7 +203,7 @@ namespace RUINORERP.UI.MRP.PQC
                 }
                 else
                 {
-                   // MainForm.Instance.PrintInfoLog(entity.ActionStatus.GetName());
+                    // MainForm.Instance.PrintInfoLog(entity.ActionStatus.GetName());
                 }
 
             };
@@ -232,7 +232,7 @@ namespace RUINORERP.UI.MRP.PQC
             //返厂 只包含 加工厂和供应商非客户
             //创建表达式
             var lambda = Expressionable.Create<tb_CustomerVendor>()
-                            .And(t => t.IsCustomer == false)
+                            .And(t => t.IsVendor == true || t.IsOther == true)
                             .ToExpression();//注意 这一句 不能少
             BaseProcessor baseProcessor = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_CustomerVendor).Name + "Processor");
             QueryFilter queryFilterC = baseProcessor.GetQueryFilter();
@@ -340,7 +340,7 @@ namespace RUINORERP.UI.MRP.PQC
             sgd.HasRowHeader = true;
             sgh.InitGrid(grid1, sgd, true, nameof(tb_MRP_ReworkReturnDetail));
             sgh.OnCalculateColumnValue += Sgh_OnCalculateColumnValue;
-            UIHelper.ControlMasterColumnsInvisible(CurMenuInfo,this);
+            UIHelper.ControlMasterColumnsInvisible(CurMenuInfo, this);
         }
 
 
@@ -472,7 +472,7 @@ namespace RUINORERP.UI.MRP.PQC
             }
             if (FinishedGoodsInv != null)
             {
-                
+
                 tb_MRP_ReworkReturn entity = MainForm.Instance.mapper.Map<tb_MRP_ReworkReturn>(FinishedGoodsInv);
 
                 List<tb_MRP_ReworkReturnDetail> NewDetails = new List<tb_MRP_ReworkReturnDetail>();

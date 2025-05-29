@@ -3,7 +3,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/13/2024 11:11:32
+// 时间：05/29/2025 15:33:03
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -82,6 +82,11 @@ this.txtNewState = new Krypton.Toolkit.KryptonTextBox();
 
 this.lblNotes = new Krypton.Toolkit.KryptonLabel();
 this.txtNotes = new Krypton.Toolkit.KryptonTextBox();
+this.txtNotes.Multiline = true;
+
+this.lblDataContent = new Krypton.Toolkit.KryptonLabel();
+this.txtDataContent = new Krypton.Toolkit.KryptonTextBox();
+this.txtDataContent.Multiline = true;
 
     
     //for end
@@ -242,7 +247,7 @@ this.txtNewState.TabIndex = 9;
 this.Controls.Add(this.lblNewState);
 this.Controls.Add(this.txtNewState);
 
-           //#####100Notes###String
+           //#####8000Notes###String
 this.lblNotes.AutoSize = true;
 this.lblNotes.Location = new System.Drawing.Point(100,250);
 this.lblNotes.Name = "lblNotes";
@@ -255,6 +260,21 @@ this.txtNotes.Size = new System.Drawing.Size(100, 21);
 this.txtNotes.TabIndex = 10;
 this.Controls.Add(this.lblNotes);
 this.Controls.Add(this.txtNotes);
+
+           //#####2147483647DataContent###String
+this.lblDataContent.AutoSize = true;
+this.lblDataContent.Location = new System.Drawing.Point(100,275);
+this.lblDataContent.Name = "lblDataContent";
+this.lblDataContent.Size = new System.Drawing.Size(41, 12);
+this.lblDataContent.TabIndex = 11;
+this.lblDataContent.Text = "数据内容";
+this.txtDataContent.Location = new System.Drawing.Point(173,271);
+this.txtDataContent.Name = "txtDataContent";
+this.txtDataContent.Size = new System.Drawing.Size(100, 21);
+this.txtDataContent.TabIndex = 11;
+this.txtDataContent.Multiline = true;
+this.Controls.Add(this.lblDataContent);
+this.Controls.Add(this.txtDataContent);
 
         //for 加入到容器
             //components = new System.ComponentModel.Container();
@@ -270,7 +290,7 @@ this.Controls.Add(this.txtNotes);
             //this.kryptonPanel1.Location = new System.Drawing.Point(0, 0);
            // this.kryptonPanel1.Name = "kryptonPanel1";
            // this.kryptonPanel1.Size = new System.Drawing.Size(404, 300);
-           // this.kryptonPanel1.TabIndex = 10;
+           // this.kryptonPanel1.TabIndex = 11;
 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
@@ -303,6 +323,9 @@ this.Controls.Add(this.txtNewState );
 
                 this.Controls.Add(this.lblNotes );
 this.Controls.Add(this.txtNotes );
+
+                this.Controls.Add(this.lblDataContent );
+this.Controls.Add(this.txtDataContent );
 
                             // 
             // "tb_AuditLogsEdit"
@@ -375,6 +398,11 @@ private Krypton.Toolkit.KryptonTextBox txtNewState;
         
               private Krypton.Toolkit.KryptonLabel lblNotes;
 private Krypton.Toolkit.KryptonTextBox txtNotes;
+
+    
+        
+              private Krypton.Toolkit.KryptonLabel lblDataContent;
+private Krypton.Toolkit.KryptonTextBox txtDataContent;
 
     
             //private ComponentFactory.Krypton.Toolkit.KryptonButton btnOk;

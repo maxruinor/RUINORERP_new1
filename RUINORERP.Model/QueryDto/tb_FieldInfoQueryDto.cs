@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/13/2024 18:43:36
+// 时间：05/29/2025 18:37:28
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -52,7 +52,7 @@ namespace RUINORERP.Model.QueryDto
         /// 实体名称
         /// </summary>
         [AdvQueryAttribute(ColName = "EntityName",ColDesc = "实体名称")]
-        [SugarColumn(ColumnDataType = "varchar",SqlParameterDbType ="String",ColumnName = "EntityName",Length=50,IsNullable = true,ColumnDescription = "实体名称" )]
+        [SugarColumn(ColumnDataType = "varchar",SqlParameterDbType ="String",ColumnName = "EntityName",Length=100,IsNullable = true,ColumnDescription = "实体名称" )]
         public string EntityName 
         { 
             get{return _EntityName;}
@@ -65,7 +65,7 @@ namespace RUINORERP.Model.QueryDto
         /// 字段名称
         /// </summary>
         [AdvQueryAttribute(ColName = "FieldName",ColDesc = "字段名称")]
-        [SugarColumn(ColumnDataType = "varchar",SqlParameterDbType ="String",ColumnName = "FieldName",Length=50,IsNullable = true,ColumnDescription = "字段名称" )]
+        [SugarColumn(ColumnDataType = "varchar",SqlParameterDbType ="String",ColumnName = "FieldName",Length=100,IsNullable = true,ColumnDescription = "字段名称" )]
         public string FieldName 
         { 
             get{return _FieldName;}
@@ -78,7 +78,7 @@ namespace RUINORERP.Model.QueryDto
         /// 字段显示
         /// </summary>
         [AdvQueryAttribute(ColName = "FieldText",ColDesc = "字段显示")]
-        [SugarColumn(ColumnDataType = "varchar",SqlParameterDbType ="String",ColumnName = "FieldText",Length=50,IsNullable = true,ColumnDescription = "字段显示" )]
+        [SugarColumn(ColumnDataType = "varchar",SqlParameterDbType ="String",ColumnName = "FieldText",Length=100,IsNullable = true,ColumnDescription = "字段显示" )]
         public string FieldText 
         { 
             get{return _FieldText;}
@@ -109,6 +109,32 @@ namespace RUINORERP.Model.QueryDto
         { 
             get{return _IsForm;}
             set{SetProperty(ref _IsForm, value);}
+        }
+     
+
+        private bool _DefaultHide;
+        /// <summary>
+        /// 默认隐藏
+        /// </summary>
+        [AdvQueryAttribute(ColName = "DefaultHide",ColDesc = "默认隐藏")]
+        [SugarColumn(ColumnDataType = "bit",SqlParameterDbType ="Boolean",ColumnName = "DefaultHide",IsNullable = false,ColumnDescription = "默认隐藏" )]
+        public bool DefaultHide 
+        { 
+            get{return _DefaultHide;}
+            set{SetProperty(ref _DefaultHide, value);}
+        }
+     
+
+        private bool _ReadOnly;
+        /// <summary>
+        /// 只读
+        /// </summary>
+        [AdvQueryAttribute(ColName = "ReadOnly",ColDesc = "只读")]
+        [SugarColumn(ColumnDataType = "bit",SqlParameterDbType ="Boolean",ColumnName = "ReadOnly",IsNullable = false,ColumnDescription = "只读" )]
+        public bool ReadOnly 
+        { 
+            get{return _ReadOnly;}
+            set{SetProperty(ref _ReadOnly, value);}
         }
      
 
@@ -156,11 +182,24 @@ namespace RUINORERP.Model.QueryDto
         /// 子表名称
         /// </summary>
         [AdvQueryAttribute(ColName = "ChildEntityName",ColDesc = "子表名称")]
-        [SugarColumn(ColumnDataType = "varchar",SqlParameterDbType ="String",ColumnName = "ChildEntityName",Length=50,IsNullable = false,ColumnDescription = "子表名称" )]
+        [SugarColumn(ColumnDataType = "varchar",SqlParameterDbType ="String",ColumnName = "ChildEntityName",Length=100,IsNullable = true,ColumnDescription = "子表名称" )]
         public string ChildEntityName 
         { 
             get{return _ChildEntityName;}
             set{SetProperty(ref _ChildEntityName, value);}
+        }
+     
+
+        private DateTime? _Created_at;
+        /// <summary>
+        /// 创建时间
+        /// </summary>
+        [AdvQueryAttribute(ColName = "Created_at",ColDesc = "创建时间")]
+        [SugarColumn(ColumnDataType = "datetime",SqlParameterDbType ="DateTime",ColumnName = "Created_at",IsNullable = true,ColumnDescription = "创建时间" )]
+        public DateTime? Created_at 
+        { 
+            get{return _Created_at;}
+            set{SetProperty(ref _Created_at, value);}
         }
 
 

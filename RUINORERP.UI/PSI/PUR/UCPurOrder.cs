@@ -345,6 +345,32 @@ namespace RUINORERP.UI.PSI.PUR
             base.BindData(entity);
         }
 
+        protected override void AddByCopy()
+        {
+            if (EditEntity == null)
+            {
+                MessageBox.Show("请先选择一个采购订单作为复制的基准。", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+            EditEntity.ActionStatus = ActionStatus.新增;
+            EditEntity.PurOrder_ID = 0;
+            EditEntity.ApprovalStatus = (int)ApprovalStatus.未审核;
+            EditEntity.DataStatus = (int)DataStatus.草稿;
+            EditEntity.Approver_at = null;
+            EditEntity.tb_PurEntries=null;
+            EditEntity.tb_PurOrderRes = null;
+            BusinessHelper.Instance.InitEntity(EditEntity);
+            foreach (var item in EditEntity.tb_PurOrderDetails)
+            {
+                item.PurOrder_ID = 0;
+                item.PurOrder_ChildID = 0;
+                item.tb_purorder = null;
+                item.PrimaryKeyID = 0;
+            }
+             
+            base.AddByCopy();
+        }
+
 
         SourceGridDefine sgd = null;
         SourceGridHelper sgh = new SourceGridHelper();

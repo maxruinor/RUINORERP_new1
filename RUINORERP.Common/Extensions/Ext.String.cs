@@ -424,6 +424,16 @@ namespace RUINORERP.Common.Extensions
         }
 
         /// <summary>
+        /// 转换为Double
+        /// </summary>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public static double ToDouble(this decimal value)
+        {
+            return Convert.ToDouble(value);
+        }
+
+        /// <summary>
         /// string转byte[]
         /// </summary>
         /// <param name="str">字符串</param>

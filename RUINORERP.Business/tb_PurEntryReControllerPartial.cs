@@ -426,9 +426,9 @@ namespace RUINORERP.Business
                 var result = await _unitOfWorkManage.GetDbClient().Updateable<tb_PurEntryRe>(entity).UpdateColumns(it => new
                 {
                     it.DataStatus,
+                    it.Approver_at,
+                    it.Approver_by,
                     it.ApprovalOpinions,
-                    it.Modified_at,
-                    it.Modified_by,
                     it.ApprovalResults,
                     it.ApprovalStatus
                 }).ExecuteCommandAsync();

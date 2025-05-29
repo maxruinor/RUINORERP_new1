@@ -444,11 +444,22 @@ namespace RUINORERP.UI.FM
                     return false;
                 }
 
-                //if (NeedValidated && EditEntity.TotalAmount == 0)
-                //{
-                //    System.Windows.Forms.MessageBox.Show("金额不能为零，请检查记录！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                //    return false;
-                //}
+                if (NeedValidated && EditEntity.ForeignPrepaidAmount == 0 && EditEntity.LocalPrepaidAmount == 0)
+                {
+                    System.Windows.Forms.MessageBox.Show($"预{PaymentType.ToString()}金额不能为零，请检查记录！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    return false;
+                }
+
+                //收付款单中的  收款或付款账号中的币别是否与选的币别一致。
+                if (NeedValidated && EditEntity.Currency_ID > 0 && EditEntity.Account_id > 0)
+                {
+                    tb_FM_Account bizcatch = BizCacheHelper.Instance.GetEntity<tb_FM_Account>(EditEntity.Account_id);
+                    if (bizcatch != null && bizcatch.Currency_ID != EditEntity.Currency_ID)
+                    {
+                        MessageBox.Show("收付款账号中的币别与当前单据的币别不一致。");
+                        return false;
+                    }
+                }
 
                 ReturnMainSubResults<tb_FM_PreReceivedPayment> SaveResult = new ReturnMainSubResults<tb_FM_PreReceivedPayment>();
                 if (NeedValidated)

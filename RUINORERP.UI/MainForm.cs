@@ -86,6 +86,7 @@ using RUINORERP.Business.FMService;
 using SourceGrid;
 using log4net;
 using NPOI.SS.Formula.Functions;
+using RUINORERP.UI.Monitoring.Auditing;
 
 
 
@@ -165,11 +166,13 @@ namespace RUINORERP.UI
         public ApplicationContext AppContext { set; get; }
         public ILogger<MainForm> logger { get; set; }
         public string Version { get => version; set => version = value; }
-
-        public MainForm(ILogger<MainForm> _logger, IOptionsMonitor<SystemGlobalconfig> config)
+        public readonly AuditLogHelper auditLogHelper;
+        public AuditLogHelper AuditLogHelper => auditLogHelper;
+        public MainForm(ILogger<MainForm> _logger, AuditLogHelper _auditLogHelper, IOptionsMonitor<SystemGlobalconfig> config)
         {
             InitializeComponent();
             lblStatusGlobal.Text = string.Empty;
+            auditLogHelper = _auditLogHelper;
             logger = _logger;
             _main = this;
             System.Windows.Forms.Control.CheckForIllegalCrossThreadCalls = false;
@@ -850,6 +853,8 @@ namespace RUINORERP.UI
 
         public IMapper mapper { get; set; }
 
+
+
         private void KryptonDockingManager1_DockspaceRemoved(object sender, DockspaceEventArgs e)
         {
 
@@ -1357,7 +1362,7 @@ namespace RUINORERP.UI
                 }
 
                 //记入审计日志
-                //AuditLogHelper.Instance.CreateAuditLog("登陆", $"{System.Environment.MachineName}-成功登陆服务器");
+                //MainForm.Instance.AuditLogHelper.CreateAuditLog("登陆", $"{System.Environment.MachineName}-成功登陆服务器");
                 if (MainForm.Instance.AppContext.CurUserInfo != null && MainForm.Instance.AppContext.CurUserInfo.UserInfo != null)
                 {
                     try
@@ -1420,7 +1425,7 @@ namespace RUINORERP.UI
             try
             {
                 this.SystemOperatorState.Text = "登出";
-                AuditLogHelper.Instance.CreateAuditLog("登出", "成功登出服务器");
+                MainForm.Instance.AuditLogHelper.CreateAuditLog("登出", "成功登出服务器");
                 if (MainForm.Instance.AppContext.CurUserInfo != null && MainForm.Instance.AppContext.CurUserInfo.UserInfo != null)
                 {
                     MainForm.Instance.AppContext.CurUserInfo.UserInfo.Lastlogout_at = System.DateTime.Now;

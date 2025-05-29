@@ -31,6 +31,7 @@ using RUINORERP.Model.Models;
 using RUINORERP.UI.AdvancedUIModule;
 using RUINORERP.UI.Common;
 using RUINORERP.UI.FormProperty;
+using RUINORERP.UI.Monitoring.Auditing;
 using RUINORERP.UI.PSI.PUR;
 using RUINORERP.UI.Report;
 using RUINORERP.UI.UControls;
@@ -423,7 +424,7 @@ namespace RUINORERP.UI.BaseForm
                         bool rs = await CloseCase(selectlist);
                         if (rs)
                         {
-                            AuditLogHelper.Instance.CreateAuditLog<M>("结案", selectlist[0], $"结案意见:{rs}");
+                            MainForm.Instance.AuditLogHelper.CreateAuditLog<M>("结案", selectlist[0], $"结案意见:{rs}");
                         }
                     }
                     break;
@@ -761,7 +762,7 @@ namespace RUINORERP.UI.BaseForm
                     return ae;
                 }
 
-                AuditLogHelper.Instance.CreateAuditLog<M>("审核", EditEntity, $"审核结果{ae.ApprovalResults}-{ae.ApprovalOpinions}");
+
 
                 //中间中的所有字段，都给值到单据主表中，后面需要处理审核历史这种再完善
                 PropertyInfo[] array_property = ae.GetType().GetProperties();
@@ -802,13 +803,13 @@ namespace RUINORERP.UI.BaseForm
                     //ToolBarEnabledControl(MenuItemEnums.反审);
                     Query(QueryDto);
                     //这里推送到审核，启动工作流
-                    AuditLogHelper.Instance.CreateAuditLog<M>("审核", EditEntity, $"审核结果：{ae.ApprovalResults}");
+                    MainForm.Instance.AuditLogHelper.CreateAuditLog<M>("审核", EditEntity, $"审核结果{ae.ApprovalResults}-{ae.ApprovalOpinions}");
                 }
                 else
                 {
                     //审核失败 要恢复之前的值
                     command.Undo();
-                    //MainForm.Instance.PrintInfoLog($"{EditEntity.SOrderNo}反审失败{rr.ErrorMsg},请联系管理员！", Color.Red);
+                    MainForm.Instance.AuditLogHelper.CreateAuditLog<M>("审核失败", EditEntity, $"错误信息：{rmr.ErrorMsg}\r\n审核结果{ae.ApprovalResults}-{ae.ApprovalOpinions}");
                     MainForm.Instance.PrintInfoLog($"{ae.bizName}:{ae.BillNo}审核失败{rmr.ErrorMsg},请联系管理员！", Color.Red);
                     MessageBox.Show("提示", $"{ae.bizName}:{ae.BillNo}审核失败。\r\n {rmr.ErrorMsg}", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
@@ -905,7 +906,7 @@ namespace RUINORERP.UI.BaseForm
                 {
                     //ToolBarEnabledControl(MenuItemEnums.反审);
                     //这里推送到审核，启动工作流
-                    AuditLogHelper.Instance.CreateAuditLog<M>("反审", EditEntity, $"反审原因{ae.ApprovalOpinions}");
+                    MainForm.Instance.AuditLogHelper.CreateAuditLog<M>("反审", EditEntity, $"反审原因{ae.ApprovalOpinions}");
                 }
                 else
                 {

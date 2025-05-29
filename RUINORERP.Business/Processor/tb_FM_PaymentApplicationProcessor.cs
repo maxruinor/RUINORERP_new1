@@ -42,12 +42,12 @@ namespace RUINORERP.Business.Processor
         {
             QueryFilter queryFilter = new QueryFilter();
 
-             var lambda = Expressionable.Create<tb_CustomerVendor>()
-                        .And(t => t.isdeleted == false)
-                        .And(t => t.IsCustomer == false)
-                        .And(t => t.Is_enabled == true)
-                        .ToExpression(); 
-           queryFilter.SetQueryField<tb_FM_PaymentApplication, tb_CustomerVendor>(c => c.CustomerVendor_ID, lambda);
+            var lambda = Expressionable.Create<tb_CustomerVendor>()
+                       .And(t => t.isdeleted == false)
+                       .And(t => t.IsVendor == true)
+                       .And(t => t.Is_enabled == true)
+                       .ToExpression();
+            queryFilter.SetQueryField<tb_FM_PaymentApplication, tb_CustomerVendor>(c => c.CustomerVendor_ID, lambda);
             //可以根据关联外键自动加载条件，条件用公共虚方法
             queryFilter.SetQueryField<tb_FM_PaymentApplication>(c => c.ApplicationNo);
             queryFilter.SetQueryField<tb_FM_PaymentApplication>(c => c.Employee_ID);
@@ -59,7 +59,7 @@ namespace RUINORERP.Business.Processor
             queryFilter.SetQueryField<tb_FM_PaymentApplication>(c => c.ApprovalStatus, QueryFieldType.CmbEnum, typeof(ApprovalStatus));
             queryFilter.SetQueryField<tb_FM_PaymentApplication>(c => c.DataStatus, QueryFieldType.CmbEnum, typeof(DataStatus));
             queryFilter.SetQueryField<tb_FM_PaymentApplication>(c => c.Notes);
-            
+
             return queryFilter;
         }
 

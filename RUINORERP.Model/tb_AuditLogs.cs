@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：02/08/2025 16:31:51
+// 时间：05/29/2025 15:33:05
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -178,20 +178,35 @@ namespace RUINORERP.Model
                         }
         }
 
+
+
+        private string _DataContent;
+        /// <summary>
+        /// 数据内容
+        /// </summary>
+        [AdvQueryAttribute(ColName = "DataContent",ColDesc = "数据内容")] 
+        [SugarColumn(ColumnDataType = "text", SqlParameterDbType ="String",  ColumnName = "DataContent" ,Length=2147483647,IsNullable = true,ColumnDescription = "数据内容" )]
+        public string DataContent
+        { 
+            get{return _DataContent;}
+            set{
+            SetProperty(ref _DataContent, value);
+                        }
+        }
         private string _Notes;
         /// <summary>
         /// 备注说明
         /// </summary>
-        [AdvQueryAttribute(ColName = "Notes",ColDesc = "备注说明")] 
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "Notes" ,Length=8000,IsNullable = true,ColumnDescription = "备注说明" )]
+        [AdvQueryAttribute(ColName = "Notes", ColDesc = "备注说明")]
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType = "String", ColumnName = "Notes", Length = 8000, IsNullable = true, ColumnDescription = "备注说明")]
         public string Notes
-        { 
-            get{return _Notes;}
-            set{
-            SetProperty(ref _Notes, value);
-                        }
+        {
+            get { return _Notes; }
+            set
+            {
+                SetProperty(ref _Notes, value);
+            }
         }
-
         #endregion
 
         #region 扩展属性
@@ -219,6 +234,8 @@ return rs;
 
 
 
+       
+        
 
         public override object Clone()
         {

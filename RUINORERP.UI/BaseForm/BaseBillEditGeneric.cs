@@ -77,6 +77,7 @@ using RUINORERP.Business.FMService;
 using NPOI.POIFS.Crypt.Dsig;
 using RUINORERP.Model.Base;
 using System.Windows.Documents;
+using RUINORERP.UI.Monitoring.Auditing;
 
 namespace RUINORERP.UI.BaseForm
 {
@@ -356,6 +357,14 @@ namespace RUINORERP.UI.BaseForm
 
         internal override void LoadDataToUI(object Entity)
         {
+            if (Entity == null) return;
+            if (Entity is BaseEntity baseEntity)
+            {
+                if (baseEntity.ActionStatus == ActionStatus.新增 || baseEntity.ActionStatus == ActionStatus.修改)
+                {
+                    toolStripButtonSave.Enabled = true;
+                }
+            }
             BindData(Entity as T);
             InitializeStateManagement();
             ToolBarEnabledControl(Entity);
@@ -1600,10 +1609,12 @@ namespace RUINORERP.UI.BaseForm
                     {
                         return;
                     }
+                    LockBill();
                     toolStripbtnReview.Enabled = false;
                     ReviewResult reviewResult = await Review();
                     if (!reviewResult.Succeeded)
                     {
+                        UNLock();
                         toolStripbtnReview.Enabled = true;
                     }
 
@@ -1613,10 +1624,12 @@ namespace RUINORERP.UI.BaseForm
                     {
                         return;
                     }
+                    LockBill();
                     toolStripBtnReverseReview.Enabled = false;
                     bool rs反审 = await ReReview();
                     if (!rs反审)
                     {
+                        UNLock();
                         toolStripBtnReverseReview.Enabled = true;
                     }
 
@@ -1907,7 +1920,7 @@ namespace RUINORERP.UI.BaseForm
                     //这里推送到审核，启动工作流  队列应该有一个策略 比方优先级，桌面不动1 3 5分钟 
                     //OriginalData od = ActionForClient.工作流审批(pkid, (int)BizType.盘点单, ae.ApprovalResults, ae.ApprovalComments);
                     //MainForm.Instance.ecs.AddSendData(od);
-                    AuditLogHelper.Instance.CreateAuditLog<T>("结案", EditEntity, $"结案意见:{ae.CloseCaseOpinions}");
+                    MainForm.Instance.auditLogHelper.CreateAuditLog<T>("结案", EditEntity, $"结案意见:{ae.CloseCaseOpinions}");
                     Refreshs();
                 }
                 else
@@ -1935,6 +1948,21 @@ namespace RUINORERP.UI.BaseForm
             {
                 return reviewResult;
             }
+
+            // 需要恢复的字段列表
+            string[] fieldsToRestore = new string[]
+            {
+                nameof(PaymentStatus),
+                nameof(ARAPStatus),
+                nameof(PrePaymentStatus),
+                nameof(ApprovalStatus),
+                nameof(DataStatus),
+                "ApprovalOpinions",
+                "ApprovalResults"
+            };
+
+
+
 
             ApprovalEntity ae = new ApprovalEntity();
             if (ReflectionHelper.ExistPropertyName<T>("ApprovalStatus") && ReflectionHelper.ExistPropertyName<T>("ApprovalResults"))
@@ -1968,12 +1996,16 @@ namespace RUINORERP.UI.BaseForm
                 //缓存当前编辑的对象。如果撤销就回原来的值
                 //审核只是修改的审核状态。不用缓存全部
                 T oldobj = CloneHelper.DeepCloneObject<T>(EditEntity);
+
+                // 克隆指定字段的值
+                var originalFieldValues = CloneSpecificFields(EditEntity, fieldsToRestore);
                 command.UndoOperation = delegate ()
                 {
                     //Undo操作会执行到的代码 意思是如果退审核，内存中审核的数据要变为空白（之前的样子）
-                    CloneHelper.SetValues<T>(EditEntity, oldobj);
+                    //CloneHelper.SetValues<T>(EditEntity, oldobj);
+                    // 只恢复指定的字段
+                    RestoreSpecificFields(EditEntity, originalFieldValues);
                 };
-
 
                 if (ae.ApprovalResults == true)
                 {
@@ -2079,7 +2111,7 @@ namespace RUINORERP.UI.BaseForm
                     ToolBarEnabledControl(EditEntity);
                     ae.ApprovalResults = true;
                     reviewResult.approval = ae;
-                    AuditLogHelper.Instance.CreateAuditLog<T>("审核", EditEntity, $"审核结果：{ae.ApprovalResults}-{ae.ApprovalOpinions}");
+                    MainForm.Instance.AuditLogHelper.CreateAuditLog<T>("审核", EditEntity, $"审核结果：{(ae.ApprovalResults ? "通过" : "拒绝")}-{ae.ApprovalOpinions}");
                     MainForm.Instance.PrintInfoLog($"{ae.bizName}:{ae.BillNo}审核成功。", Color.Red);
                 }
                 else
@@ -2090,7 +2122,8 @@ namespace RUINORERP.UI.BaseForm
                     ToolBarEnabledControl(EditEntity);
                     ae.ApprovalStatus = (int)ApprovalStatus.未审核;
                     reviewResult.approval = ae;
-                    AuditLogHelper.Instance.CreateAuditLog<T>("审核", EditEntity, $"审核结果{ae.ApprovalResults},{rmr.ErrorMsg}");
+                    // 记录审计日志
+                    MainForm.Instance.AuditLogHelper.CreateAuditLog("审核失败", EditEntity, $"审核结果:{(ae.ApprovalResults ? "通过" : "拒绝")},{rmr.ErrorMsg}");
                     MainForm.Instance.logger.LogError($"{ae.bizName}:{ae.BillNo}审核失败{rmr.ErrorMsg}");
                     MainForm.Instance.PrintInfoLog($"{ae.bizName}:{ae.BillNo}审核失败{rmr.ErrorMsg},请联系管理员！", Color.Red);
                     MessageBox.Show($"{ae.bizName}:{ae.BillNo}审核失败。\r\n {rmr.ErrorMsg}", "提示", MessageBoxButtons.OK, MessageBoxIcon.Error);
@@ -2238,7 +2271,7 @@ namespace RUINORERP.UI.BaseForm
 
                     ToolBarEnabledControl(MenuItemEnums.反审);
                     //这里推送到审核，启动工作流
-                    AuditLogHelper.Instance.CreateAuditLog<T>("反审", EditEntity, $"反审原因{ae.ApprovalOpinions}");
+                    MainForm.Instance.AuditLogHelper.CreateAuditLog<T>("反审", EditEntity, $"反审原因{ae.ApprovalOpinions}");
                 }
                 else
                 {
@@ -2246,7 +2279,7 @@ namespace RUINORERP.UI.BaseForm
                     command.Undo();
                     rs = false;
                     ToolBarEnabledControl(EditEntity);
-                    AuditLogHelper.Instance.CreateAuditLog<T>("反审失败", EditEntity, $"反审原因{ae.ApprovalOpinions},{rmr.ErrorMsg}");
+                    MainForm.Instance.AuditLogHelper.CreateAuditLog<T>("反审失败", EditEntity, $"反审原因{ae.ApprovalOpinions},{rmr.ErrorMsg}");
                     MainForm.Instance.logger.LogError($"{cbd.BillNo}反审失败{rmr.ErrorMsg}");
                     MainForm.Instance.PrintInfoLog($"{cbd.BillNo}反审失败{rmr.ErrorMsg},请联系管理员！", Color.Red);
                 }
@@ -2254,6 +2287,33 @@ namespace RUINORERP.UI.BaseForm
             return rs;
         }
 
+
+        #region
+        // 添加辅助方法
+        private Dictionary<string, object> CloneSpecificFields(T entity, params string[] fieldNames)
+        {
+            var fieldValues = new Dictionary<string, object>();
+            foreach (var fieldName in fieldNames)
+            {
+                if (ReflectionHelper.ExistPropertyName<T>(fieldName))
+                {
+                    fieldValues[fieldName] = ReflectionHelper.GetPropertyValue(entity, fieldName);
+                }
+            }
+            return fieldValues;
+        }
+
+        private void RestoreSpecificFields(T entity, Dictionary<string, object> fieldValues)
+        {
+            foreach (var kvp in fieldValues)
+            {
+                if (ReflectionHelper.ExistPropertyName<T>(kvp.Key))
+                {
+                    ReflectionHelper.SetPropertyValue(entity, kvp.Key, kvp.Value);
+                }
+            }
+        }
+        #endregion
 
         private T editEntity;
         public T EditEntity { get => editEntity; set => editEntity = value; }
@@ -2283,7 +2343,7 @@ namespace RUINORERP.UI.BaseForm
             {
                 //保存属性
                 ToolBarEnabledControl(MenuItemEnums.属性);
-                //AuditLogHelper.Instance.CreateAuditLog<T>("属性", EditEntity);
+                //MainForm.Instance.AuditLogHelper.CreateAuditLog<T>("属性", EditEntity);
             }
             base.Property();
         }
@@ -2521,7 +2581,7 @@ namespace RUINORERP.UI.BaseForm
                 BusinessHelper.Instance.EditEntity(EditEntity);
                 EditEntity.SetPropertyValue(typeof(ActionStatus).Name, ActionStatus.修改);
                 base.Modify();
-                AuditLogHelper.Instance.CreateAuditLog<T>("修改", EditEntity);
+                MainForm.Instance.AuditLogHelper.CreateAuditLog<T>("修改", EditEntity);
             }
             else
             {
@@ -2863,7 +2923,7 @@ namespace RUINORERP.UI.BaseForm
 
                 ToolBarEnabledControl(MenuItemEnums.保存);
                 MainForm.Instance.uclog.AddLog("更新式保存成功");
-                AuditLogHelper.Instance.CreateAuditLog<T>("更新式保存成功", rmr.ReturnObject);
+                MainForm.Instance.AuditLogHelper.CreateAuditLog<T>("更新式保存成功", rmr.ReturnObject);
             }
             else
             {
@@ -2931,7 +2991,7 @@ namespace RUINORERP.UI.BaseForm
                 //sw.Stop();
 
                 //审计日志 保存
-                //AuditLogHelper.Instance.CreateAuditLog<T>("保存", rmr.ReturnObject);
+                //MainForm.Instance.AuditLogHelper.CreateAuditLog<T>("保存", rmr.ReturnObject);
             }
             else
             {
@@ -2987,7 +3047,7 @@ namespace RUINORERP.UI.BaseForm
                     rss.ReturnObject = editEntity;
                     if (rs)
                     {
-                        AuditLogHelper.Instance.CreateAuditLog<T>("删除", editEntity);
+                        MainForm.Instance.AuditLogHelper.CreateAuditLog<T>("删除", editEntity);
                         if (MainForm.Instance.AppContext.SysConfig.IsDebug)
                         {
                             //MainForm.Instance.logger.Debug($"单据显示中删除:{typeof(T).Name}，主键值：{PKValue.ToString()} "); //如果要生效 要将配置文件中 <add key="log4net.Internal.Debug" value="true " /> 也许是：logn4net.config <log4net debug="false"> 改为true
@@ -3061,7 +3121,7 @@ namespace RUINORERP.UI.BaseForm
                     if (rmr.Succeeded)
                     {
                         ToolBarEnabledControl(MenuItemEnums.提交);
-                        AuditLogHelper.Instance.CreateAuditLog<T>("提交", rmr.ReturnObject);
+                        MainForm.Instance.AuditLogHelper.CreateAuditLog<T>("提交", rmr.ReturnObject);
 
                         //这里推送到审核，启动工作流 后面优化
                         // OriginalData od = ActionForClient.工作流提交(pkid, (int)BizType.盘点单);
@@ -3104,7 +3164,7 @@ namespace RUINORERP.UI.BaseForm
                                         //MainForm.Instance.ecs.AddSendData(od);
                                         //审核成功
                                         ToolBarEnabledControl(MenuItemEnums.审核);
-                                        AuditLogHelper.Instance.CreateAuditLog<T>("审核", rmr.ReturnObject, "满足金额设置条件，自动审核通过");
+                                        MainForm.Instance.AuditLogHelper.CreateAuditLog<T>("审核", rmr.ReturnObject, "满足金额设置条件，自动审核通过");
                                         //如果审核结果为不通过时，审核不是灰色。
                                         if (!ae.ApprovalResults)
                                         {
@@ -3151,7 +3211,7 @@ namespace RUINORERP.UI.BaseForm
 
                                         //审核成功
                                         ToolBarEnabledControl(MenuItemEnums.审核);
-                                        AuditLogHelper.Instance.CreateAuditLog<T>("审核", rmr.ReturnObject, "满足金额设置条件，自动审核通过");
+                                        MainForm.Instance.AuditLogHelper.CreateAuditLog<T>("审核", rmr.ReturnObject, "满足金额设置条件，自动审核通过");
                                         //如果审核结果为不通过时，审核不是灰色。
                                         if (!ae.ApprovalResults)
                                         {
@@ -3182,7 +3242,7 @@ namespace RUINORERP.UI.BaseForm
                 bool rs = await this.Save(true);
                 if (rs)
                 {
-                    AuditLogHelper.Instance.CreateAuditLog<T>("提交前->保存", EditEntity);
+                    MainForm.Instance.AuditLogHelper.CreateAuditLog<T>("提交前->保存", EditEntity);
                     if (ReflectionHelper.ExistPropertyName<T>(typeof(DataStatus).Name))
                     {
                         ReflectionHelper.SetPropertyValue(EditEntity, typeof(DataStatus).Name, (int)DataStatus.新建);
@@ -3198,7 +3258,7 @@ namespace RUINORERP.UI.BaseForm
                     if (rmr.Succeeded)
                     {
                         ToolBarEnabledControl(MenuItemEnums.提交);
-                        AuditLogHelper.Instance.CreateAuditLog<T>("保存后->提交", rmr.ReturnObject);
+                        MainForm.Instance.AuditLogHelper.CreateAuditLog<T>("保存后->提交", rmr.ReturnObject);
                         //这里推送到审核，启动工作流 后面优化
                         // OriginalData od = ActionForClient.工作流提交(pkid, (int)BizType.盘点单);
                         // MainForm.Instance.ecs.AddSendData(od);
@@ -3207,7 +3267,7 @@ namespace RUINORERP.UI.BaseForm
                     }
                     else
                     {
-                        AuditLogHelper.Instance.CreateAuditLog<T>("保存-提交-出错了" + rmr.ErrorMsg, rmr.ReturnObject);
+                        MainForm.Instance.AuditLogHelper.CreateAuditLog<T>("保存-提交-出错了" + rmr.ErrorMsg, rmr.ReturnObject);
                     }
                 }
                 else
@@ -3261,7 +3321,7 @@ namespace RUINORERP.UI.BaseForm
                     if (rmr.Succeeded)
                     {
                         ToolBarEnabledControl(MenuItemEnums.提交);
-                        AuditLogHelper.Instance.CreateAuditLog<T>("提交", rmr.ReturnObject);
+                        MainForm.Instance.AuditLogHelper.CreateAuditLog<T>("提交", rmr.ReturnObject);
 
 
                         CommBillData cbd = new CommBillData();
@@ -3286,7 +3346,7 @@ namespace RUINORERP.UI.BaseForm
                 bool rs = await this.Save(true);
                 if (rs)
                 {
-                    AuditLogHelper.Instance.CreateAuditLog<T>("提交前->保存", EditEntity);
+                    MainForm.Instance.AuditLogHelper.CreateAuditLog<T>("提交前->保存", EditEntity);
                     if (ReflectionHelper.ExistPropertyName<T>(FMEnum.Name))
                     {
                         ReflectionHelper.SetPropertyValue(EditEntity, FMEnum.Name, (long)BaseFMPaymentStatus.待审核);
@@ -3302,7 +3362,7 @@ namespace RUINORERP.UI.BaseForm
                     if (rmr.Succeeded)
                     {
                         ToolBarEnabledControl(MenuItemEnums.提交);
-                        AuditLogHelper.Instance.CreateAuditLog<T>("保存后->提交", rmr.ReturnObject);
+                        MainForm.Instance.AuditLogHelper.CreateAuditLog<T>("保存后->提交", rmr.ReturnObject);
                         //这里推送到审核，启动工作流 后面优化
                         // OriginalData od = ActionForClient.工作流提交(pkid, (int)BizType.盘点单);
                         // MainForm.Instance.ecs.AddSendData(od);
@@ -3311,7 +3371,7 @@ namespace RUINORERP.UI.BaseForm
                     }
                     else
                     {
-                        AuditLogHelper.Instance.CreateAuditLog<T>("保存-提交-出错了" + rmr.ErrorMsg, rmr.ReturnObject);
+                        MainForm.Instance.AuditLogHelper.CreateAuditLog<T>("保存-提交-出错了" + rmr.ErrorMsg, rmr.ReturnObject);
                     }
                 }
                 else
@@ -3757,7 +3817,7 @@ namespace RUINORERP.UI.BaseForm
                 PrintConfig = PrintHelper<T>.GetPrintConfig(list);
             }
             bool rs = await PrintHelper<T>.Print(list, RptMode.PRINT, PrintConfig);
-            AuditLogHelper.Instance.CreateAuditLog<T>("打印", EditEntity);
+            MainForm.Instance.AuditLogHelper.CreateAuditLog<T>("打印", EditEntity);
         }
 
         public async void Preview()

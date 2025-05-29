@@ -1,5 +1,4 @@
 ﻿using FastReport.DevComponents.DotNetBar.Controls;
-using HLH.WinControl.MyTypeConverter;
 using MathNet.Numerics.LinearAlgebra.Factorization;
 using RUINORERP.Model;
 using RUINORERP.UI.Common;
@@ -13,7 +12,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-
+using RUINORERP.Common.Extensions;
 namespace RUINORERP.UI.FormProperty
 {
     /// <summary>

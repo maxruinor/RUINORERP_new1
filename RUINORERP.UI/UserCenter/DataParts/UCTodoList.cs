@@ -553,6 +553,10 @@ namespace RUINORERP.UI.UserCenter.DataParts
                 case BizType.销售订单:
                     conditionGroups.AddRange(_conditionBuilderFactory.GetSalesOrderSpecialConditions());
                     break;
+                case BizType.借出单:
+                    conditionGroups.AddRange(_conditionBuilderFactory.GetBorrowedSpecialConditions());
+                    break;
+
                     // 其他业务类型补充...
             }
 
@@ -862,15 +866,15 @@ namespace RUINORERP.UI.UserCenter.DataParts
 
             conditions.Add("未审核", conModel未审核);
 
-            // 待确认支付条件
-            var conModel待确认支付 = new List<IConditionalModel>
+            // 待支付条件
+            var conModel待支付 = new List<IConditionalModel>
             {
                 new ConditionalModel { FieldName = "ReceivePaymentType", ConditionalType = ConditionalType.Equal, FieldValue = ((int)paymentType).ToString(), CSharpTypeName = "int" },
                 new ConditionalModel { FieldName = "PaymentStatus", ConditionalType = ConditionalType.Equal, FieldValue = ((long)PaymentStatus.待审核).ToString(), CSharpTypeName = "long" },
                 new ConditionalModel { FieldName = "isdeleted", ConditionalType = ConditionalType.Equal, FieldValue = "False", CSharpTypeName = "bool" }
             };
 
-            conditions.Add("待确认支付", conModel待确认支付);
+            conditions.Add("待支付", conModel待支付);
 
             return conditions;
         }
@@ -1299,7 +1303,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
                     break;
 
                 case BizType.借出单:
-                    Counter += await AddNode(node, tableType, bizType, GetNotEndConditions(), "待还清");
+                    Counter += await AddNode(node, tableType, bizType, GetNotEndConditions(), "待归还");
                     break;
 
                 case BizType.销售订单:
@@ -1331,10 +1335,10 @@ namespace RUINORERP.UI.UserCenter.DataParts
                     break;
 
                 case BizType.收款单:
-                    Counter += await AddNode(node, tableType, bizType, GetPaymentToBeConfirmedConditions(ReceivePaymentType.收款), "待确认支付", SharedFlag.Flag1.ToString());
+                    Counter += await AddNode(node, tableType, bizType, GetPaymentToBeConfirmedConditions(ReceivePaymentType.收款), "待支付", SharedFlag.Flag1.ToString());
                     break;
                 case BizType.付款单:
-                    Counter += await AddNode(node, tableType, bizType, GetPaymentToBeConfirmedConditions(ReceivePaymentType.付款), "待确认支付", SharedFlag.Flag2.ToString());
+                    Counter += await AddNode(node, tableType, bizType, GetPaymentToBeConfirmedConditions(ReceivePaymentType.付款), "待支付", SharedFlag.Flag2.ToString());
                     break;
             }
             return Counter;

@@ -37,7 +37,6 @@ namespace RUINORERP.UI.UserCenter.DataParts
             },
             new ConditionGroup
             {
-
                 StatusName = "未审核",
                 Conditions = new List<IConditionalModel>
                 {
@@ -221,7 +220,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
             new ConditionGroup
             {
                 Identifier= identifier,
-                StatusName = "待确认支付",
+                StatusName = "待支付",
                 Conditions = new List<IConditionalModel>
                 {
                     new ConditionalModel
@@ -261,6 +260,45 @@ namespace RUINORERP.UI.UserCenter.DataParts
         };
         }
 
+
+        public List<ConditionGroup> GetBorrowedSpecialConditions()
+        {
+            var list = new List<ConditionGroup>
+        {
+            new ConditionGroup
+            {
+                StatusName = "待归还",
+                Conditions = new List<IConditionalModel>
+                {
+                    new ConditionalModel { FieldName = "ApprovalStatus", ConditionalType = ConditionalType.Equal, FieldValue = "1", CSharpTypeName = "int" },
+                    new ConditionalModel { FieldName = "DataStatus", ConditionalType = ConditionalType.Equal, FieldValue =((int)DataStatus.确认).ToString(), CSharpTypeName = "int" },
+                    new ConditionalModel { FieldName = "isdeleted", ConditionalType = ConditionalType.Equal, FieldValue = "False", CSharpTypeName = "bool" }
+                }
+            }
+            };
+
+            // 添加销售限制条件（如果有权限限制）
+            if (AuthorizeController.GetOwnershipControl(MainForm.Instance.AppContext))
+            {
+                var employeeIdCondition = new ConditionalModel
+                {
+                    FieldName = "Employee_ID",
+                    ConditionalType = ConditionalType.Equal,
+                    FieldValue = MainForm.Instance.AppContext.CurUserInfo.UserInfo.tb_employee.Employee_ID.ToString(),
+                    CSharpTypeName = "long"
+                };
+
+                // 将员工ID条件添加到所有条件组
+                foreach (var group in list)
+                {
+                    group.Conditions.Add(employeeIdCondition);
+                }
+            }
+
+            return list;
+        }
+
+
         public List<ConditionGroup> GetSalesOrderSpecialConditions()
         {
             // 添加销售限制条件
@@ -296,8 +334,6 @@ namespace RUINORERP.UI.UserCenter.DataParts
                     group.Conditions.Add(employeeIdCondition);
                 }
             }
-
-
 
             return list;
         }

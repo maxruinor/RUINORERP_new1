@@ -125,7 +125,7 @@ namespace RUINORERP.UI.UControls
             }
         }
 
-   
+
         #region 实现右键多选菜单
 
         private bool _headerMenuShown = false; // 标记是否显示行头菜单
@@ -143,16 +143,27 @@ namespace RUINORERP.UI.UControls
                     HolderMenu = this.ContextMenuStrip;
                 }
 
-                // 处理左上角行头右键点击
+                //处理左上角行头右键点击
                 if (e.RowIndex == -1 && e.ColumnIndex == -1 && e.Button == MouseButtons.Right)
                 {
-                    var headerMenu = BuildHeaderMenu();
+                    var headerMenu = BuildHeaderMenu(GridViewExtension.MULTI_SELECT_MODE);
+                    this.ContextMenuStrip = headerMenu;
+                    ShowHeaderContextMenu(headerMenu, e.Location);
+                    _headerMenuShown = true;
+
+                }
+                //列头
+                else if (e.RowIndex == -1 && e.ColumnIndex >= 0 && e.Button == MouseButtons.Right && UseBatchEditColumn)
+                {
+                    _currentEditingColumn = this.Columns[e.ColumnIndex];
+                    var headerMenu = BuildHeaderMenu(GridViewExtension.BATCH_EDIT_COLUMN);
                     this.ContextMenuStrip = headerMenu;
                     ShowHeaderContextMenu(headerMenu, e.Location);
                     _headerMenuShown = true;
                 }
                 else
                 {
+                    _currentEditingColumn = null;
                     this.ContextMenuStrip = HolderMenu;
                     _headerMenuShown = false;
                 }
@@ -177,30 +188,64 @@ namespace RUINORERP.UI.UControls
             }
         }
 
-        private ContextMenuStrip BuildHeaderMenu()
+
+        //后面优化吧。把菜单仓库过程重构 传入 菜单名称和委托事件
+        private ContextMenuStrip BuildHeaderMenu(params string[] args)
         {
-            if (headerMenu.Items.Count > 0)
+
+            //如果这里想优化是不是放到缓存中
+            //if (headerMenu.Items.Count > 0)
+            //{
+            //    return headerMenu;
+            //}
+
+
+            foreach (var item in args)
             {
-                return headerMenu;
+                if (item == GridViewExtension.MULTI_SELECT_MODE && !headerMenu.Items.ContainsKey(GridViewExtension.MULTI_SELECT_MODE))
+                {
+                    #region
+                    // 创建带复选框的菜单项
+                    ToolStripMenuItem multiSelectItem = new ToolStripMenuItem(GridViewExtension.MULTI_SELECT_MODE)
+                    {
+                        Name = GridViewExtension.MULTI_SELECT_MODE,
+                        CheckOnClick = true,
+                        Checked = this.UseSelectedColumn
+                    };
+
+                    multiSelectItem.Click += (sender, e) =>
+                    {
+                        this.UseSelectedColumn = ((ToolStripMenuItem)sender).Checked;
+                        MultiSelect = UseSelectedColumn;
+                        //((ToolStripMenuItem)sender).Checked = this.UseSelectedColumn;
+                    };
+
+                    // 添加其他行头相关菜单项...
+                    headerMenu.Items.Add(multiSelectItem);
+                    #endregion
+
+                }
+
+                if (item == GridViewExtension.BATCH_EDIT_COLUMN && !headerMenu.Items.ContainsKey(GridViewExtension.BATCH_EDIT_COLUMN))
+                {
+                    if (UseBatchEditColumn)
+                    {
+                        // 新增"批量编辑列值"菜单项
+                        ToolStripMenuItem batchEditItem = new ToolStripMenuItem(GridViewExtension.BATCH_EDIT_COLUMN);
+                        batchEditItem.Name=GridViewExtension.BATCH_EDIT_COLUMN;
+                        batchEditItem.Click += BatchEditItem_Click;
+                        headerMenu.Items.Add(batchEditItem);
+                    }
+
+                }
             }
 
-            // 创建带复选框的菜单项
-            ToolStripMenuItem multiSelectItem = new ToolStripMenuItem("多选模式")
-            {
-                CheckOnClick = true,
-                Checked = this.UseSelectedColumn
-            };
 
-            multiSelectItem.Click += (sender, e) =>
-            {
-                this.UseSelectedColumn = ((ToolStripMenuItem)sender).Checked;
-                MultiSelect = UseSelectedColumn;
-                //((ToolStripMenuItem)sender).Checked = this.UseSelectedColumn;
-            };
-            // 添加其他行头相关菜单项...
-            headerMenu.Items.Add(multiSelectItem);
             return headerMenu;
         }
+
+
+
 
 
         private void ShowHeaderContextMenu(ContextMenuStrip headerMenu, Point screenPos)
@@ -232,7 +277,289 @@ namespace RUINORERP.UI.UControls
 
 
         #endregion
-        
+
+        #region 实现批量编辑列的值的功能
+        private bool _UseBatchEditColumn = false;
+        [Browsable(true)]
+        [Description("是否批量编辑列的值")]
+        public bool UseBatchEditColumn
+        {
+            get { return _UseBatchEditColumn; }
+            set
+            {
+                if (_UseBatchEditColumn != value)
+                {
+                    _UseBatchEditColumn = value;
+                }
+            }
+        }
+
+        // 在NewSumDataGridView类中添加以下成员变量
+        private DataGridViewColumn _currentEditingColumn = null;
+        private Form _batchEditForm = null;
+
+
+        // 处理批量编辑列值菜单项点击事件
+        private void BatchEditItem_Click(object sender, EventArgs e)
+        {
+            if (_currentEditingColumn == null)
+                return;
+
+            // 获取列的数据类型
+            ColumnDataType dataType = GetColumnDataType(_currentEditingColumn);
+
+            // 创建并显示批量编辑表单
+            ShowBatchEditForm(dataType);
+        }
+
+        // 确定列的数据类型
+        private ColumnDataType GetColumnDataType(DataGridViewColumn column)
+        {
+            if (column == null || column.DataPropertyName == string.Empty)
+                return ColumnDataType.Other;
+
+            // 如果是DataTable数据源
+            if (this.DataSource is DataTable)
+            {
+                DataTable dt = this.DataSource as DataTable;
+                if (dt.Columns.Contains(column.DataPropertyName))
+                {
+                    Type columnType = dt.Columns[column.DataPropertyName].DataType;
+
+                    if (columnType == typeof(string))
+                        return ColumnDataType.String;
+                    else if (columnType == typeof(int) || columnType == typeof(long) ||
+                             columnType == typeof(short) || columnType == typeof(byte))
+                        return ColumnDataType.Integer;
+                    else if (columnType == typeof(decimal) || columnType == typeof(double) ||
+                             columnType == typeof(float))
+                        return ColumnDataType.Decimal;
+                    else if (columnType == typeof(bool))
+                        return ColumnDataType.Boolean;
+                    else if (columnType == typeof(DateTime))
+                        return ColumnDataType.DateTime;
+                }
+            }
+            // 如果是对象集合数据源
+            else if (this.Rows.Count > 0 && this.Rows[0].DataBoundItem != null)
+            {
+                object item = this.Rows[0].DataBoundItem;
+                Type itemType = item.GetType();
+                PropertyInfo property = itemType.GetProperty(column.DataPropertyName);
+
+                if (property != null)
+                {
+                    Type propertyType = property.PropertyType;
+
+                    if (propertyType == typeof(string))
+                        return ColumnDataType.String;
+                    else if (propertyType == typeof(int) || propertyType == typeof(long) ||
+                             propertyType == typeof(short) || propertyType == typeof(byte))
+                        return ColumnDataType.Integer;
+                    else if (propertyType == typeof(decimal) || propertyType == typeof(double) ||
+                             propertyType == typeof(float))
+                        return ColumnDataType.Decimal;
+                    else if (propertyType == typeof(bool))
+                        return ColumnDataType.Boolean;
+                    else if (propertyType == typeof(DateTime))
+                        return ColumnDataType.DateTime;
+                }
+            }
+
+            return ColumnDataType.Other;
+        }
+
+        // 显示批量编辑表单
+        private void ShowBatchEditForm(ColumnDataType dataType)
+        {
+            if (_batchEditForm != null && !_batchEditForm.IsDisposed)
+                _batchEditForm.Dispose();
+
+            _batchEditForm = new Form();
+            _batchEditForm.Text = $"批量编辑列: {_currentEditingColumn.HeaderText}";
+            _batchEditForm.Size = new Size(300, 180);
+            _batchEditForm.StartPosition = FormStartPosition.CenterScreen;
+            _batchEditForm.FormBorderStyle = FormBorderStyle.FixedDialog;
+            _batchEditForm.MaximizeBox = false;
+            _batchEditForm.MinimizeBox = false;
+
+            // 创建标签
+            Label lblValue = new Label();
+            lblValue.Text = "新值:";
+            lblValue.Location = new Point(20, 30);
+            lblValue.Size = new Size(50, 20);
+            _batchEditForm.Controls.Add(lblValue);
+
+            // 根据数据类型创建不同的输入控件
+            Control inputControl = null;
+            switch (dataType)
+            {
+                case ColumnDataType.String:
+                    TextBox txtValue = new TextBox();
+                    txtValue.Location = new Point(80, 30);
+                    txtValue.Size = new Size(180, 25);
+                    inputControl = txtValue;
+                    break;
+
+                case ColumnDataType.Integer:
+                    NumericUpDown numValue = new NumericUpDown();
+                    numValue.Location = new Point(80, 30);
+                    numValue.Size = new Size(180, 25);
+                    numValue.Minimum = int.MinValue;
+                    numValue.Maximum = int.MaxValue;
+                    inputControl = numValue;
+                    break;
+
+                case ColumnDataType.Decimal:
+                    NumericUpDown decValue = new NumericUpDown();
+                    decValue.Location = new Point(80, 30);
+                    decValue.Size = new Size(180, 25);
+                    decValue.Minimum = decimal.MinValue;
+                    decValue.Maximum = decimal.MaxValue;
+                    decValue.DecimalPlaces = 2;
+                    inputControl = decValue;
+                    break;
+
+                case ColumnDataType.Boolean:
+                    ComboBox boolValue = new ComboBox();
+                    boolValue.Location = new Point(80, 30);
+                    boolValue.Size = new Size(180, 25);
+                    boolValue.Items.Add("是");
+                    boolValue.Items.Add("否");
+                    boolValue.SelectedIndex = 0;
+                    inputControl = boolValue;
+                    break;
+
+                case ColumnDataType.DateTime:
+                    DateTimePicker dtValue = new DateTimePicker();
+                    dtValue.Location = new Point(80, 30);
+                    dtValue.Size = new Size(180, 25);
+                    inputControl = dtValue;
+                    break;
+
+                default:
+                    TextBox txtOtherValue = new TextBox();
+                    txtOtherValue.Location = new Point(80, 30);
+                    txtOtherValue.Size = new Size(180, 25);
+                    inputControl = txtOtherValue;
+                    break;
+            }
+
+            if (inputControl != null)
+            {
+                _batchEditForm.Controls.Add(inputControl);
+
+                // 创建"确定"按钮
+                Button btnOK = new Button();
+                btnOK.Text = "确定";
+                btnOK.Location = new Point(80, 100);
+                btnOK.Size = new Size(75, 30);
+                btnOK.Click += (sender, e) =>
+                {
+                    ApplyBatchEditValue(inputControl, dataType);
+                    _batchEditForm.Close();
+                };
+                _batchEditForm.Controls.Add(btnOK);
+
+                // 创建"取消"按钮
+                Button btnCancel = new Button();
+                btnCancel.Text = "取消";
+                btnCancel.Location = new Point(175, 100);
+                btnCancel.Size = new Size(75, 30);
+                btnCancel.Click += (sender, e) =>
+                {
+                    _batchEditForm.Close();
+                };
+                _batchEditForm.Controls.Add(btnCancel);
+            }
+
+            _batchEditForm.ShowDialog();
+        }
+
+        // 应用批量编辑的值到所有行
+        private void ApplyBatchEditValue(Control inputControl, ColumnDataType dataType)
+        {
+            if (_currentEditingColumn == null || inputControl == null)
+                return;
+
+            object newValue = null;
+
+            // 根据数据类型获取输入值
+            switch (dataType)
+            {
+                case ColumnDataType.String:
+                    newValue = ((TextBox)inputControl).Text;
+                    break;
+
+                case ColumnDataType.Integer:
+                    newValue = Convert.ToInt32(((NumericUpDown)inputControl).Value);
+                    break;
+
+                case ColumnDataType.Decimal:
+                    newValue = ((NumericUpDown)inputControl).Value;
+                    break;
+
+                case ColumnDataType.Boolean:
+                    newValue = ((ComboBox)inputControl).SelectedIndex == 0;
+                    break;
+
+                case ColumnDataType.DateTime:
+                    newValue = ((DateTimePicker)inputControl).Value;
+                    break;
+
+                default:
+                    newValue = ((TextBox)inputControl).Text;
+                    break;
+            }
+
+            // 开始批量更新
+            this.SuspendLayout();
+            try
+            {
+                // 更新所有行的值
+                for (int i = 0; i < this.Rows.Count; i++)
+                {
+                    if (!this.Rows[i].IsNewRow)
+                    {
+                        this.Rows[i].Cells[_currentEditingColumn.Index].Value = newValue;
+
+                        // 如果是数据绑定的对象，也更新对象属性值
+                        if (this.Rows[i].DataBoundItem != null)
+                        {
+                            object item = this.Rows[i].DataBoundItem;
+                            Type itemType = item.GetType();
+                            PropertyInfo property = itemType.GetProperty(_currentEditingColumn.DataPropertyName);
+
+                            if (property != null && property.CanWrite)
+                            {
+                                // 转换值类型以匹配属性类型
+                                object convertedValue = Convert.ChangeType(newValue, property.PropertyType);
+                                property.SetValue(item, convertedValue, null);
+                            }
+                        }
+                    }
+                }
+
+                // 标记数据已修改
+                dgvEdit = true;
+
+                MessageBox.Show($"成功更新{this.Rows.Count}行数据。", "批量编辑",
+                    MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"更新数据时出错: {ex.Message}", "错误",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            finally
+            {
+                this.ResumeLayout(true);
+            }
+        }
+
+
+        #endregion
+
         private void SetSelectedColumn(bool _UseSelectedColumns)
         {
             if (this.Columns["Selected"] == null)
@@ -487,6 +814,7 @@ namespace RUINORERP.UI.UControls
         // 处理CurrentCellChanged事件，以更新当前单元格的背景色
         private void dataGridView1_CurrentCellChanged(object sender, EventArgs e)
         {
+
             if (this.CurrentCell != null)
             {
                 // 设置当前单元格的选中背景色为蓝色
@@ -768,7 +1096,7 @@ namespace RUINORERP.UI.UControls
 
                         #region 设置列
 
-                      
+
                         Columns[displayController.ColName].HeaderText = displayController.ColDisplayText;
                         if (displayController.ColDisplayIndex < ColumnCount)
                         {
@@ -810,7 +1138,7 @@ namespace RUINORERP.UI.UControls
                             Columns[displayController.ColName].ReadOnly = this.ReadOnly;
                         }
                         #endregion
-                        
+
 
                     }
 
@@ -2243,114 +2571,114 @@ namespace RUINORERP.UI.UControls
                 #region 初始化滚动条
 
                 if (DesignMode) return;
-            //如果没有使用合计功能 跳出来。
-            if (!IsShowSumRow)
-            {
-                return;
-            }
-            if (_initSourceGriding || this.Parent == null)
-            {
-                return;
-            }
+                //如果没有使用合计功能 跳出来。
+                if (!IsShowSumRow)
+                {
+                    return;
+                }
+                if (_initSourceGriding || this.Parent == null)
+                {
+                    return;
+                }
 
-            //初始化合计行
-            if (_dgvSumRow == null)
-            {
-                InitSumDgvAndScrolBar();
-            }
-            _initSourceGriding = true;
+                //初始化合计行
+                if (_dgvSumRow == null)
+                {
+                    InitSumDgvAndScrolBar();
+                }
+                _initSourceGriding = true;
 
-            if (_dock == DockStyle.Fill)
-            {
-                this.Height = Parent.Height;
-                this.Width = Parent.Width;
-                this.Location = new Point(0, 0);
-            }
+                if (_dock == DockStyle.Fill)
+                {
+                    this.Height = Parent.Height;
+                    this.Width = Parent.Width;
+                    this.Location = new Point(0, 0);
+                }
 
-            _dgvSourceMaxHeight = this.Height;           //dgvSource最大高度
-            _dgvSourceMaxWidth = this.Width;             //dgvSource最大宽度
+                _dgvSourceMaxHeight = this.Height;           //dgvSource最大高度
+                _dgvSourceMaxWidth = this.Width;             //dgvSource最大宽度
 
 
-            if (_isShowSumRow)
-            {
-                _dgvSourceMaxHeight -= _sumRowHeight;
-            }
-            if (_dgvSourceMaxHeight < RowHeight * 2)
-            {
-                _initSourceGriding = false;
-                return;
-            }
+                if (_isShowSumRow)
+                {
+                    _dgvSourceMaxHeight -= _sumRowHeight;
+                }
+                if (_dgvSourceMaxHeight < RowHeight * 2)
+                {
+                    _initSourceGriding = false;
+                    return;
+                }
 
-            this.Height = _dgvSourceMaxHeight;
-            var displayDgvSumRowHeight = (_isShowSumRow && !DesignMode) ? _dgvSumRow.Height : 0;
-
-            //   this.MouseWheel -= new MouseEventHandler(dgvSource_MouseWheel);
-            #region 验证是否需要显示水平滚动条
-
-            //需要展示水平滚动条
-            if (this.DisplayedColumnCount(true) < this.Columns.Count)
-            {
-                _dgvSourceMaxHeight -= _hScrollBar.Height;
                 this.Height = _dgvSourceMaxHeight;
+                var displayDgvSumRowHeight = (_isShowSumRow && !DesignMode) ? _dgvSumRow.Height : 0;
 
-                _hScrollBar.Location = new Point(this.Location.X, this.Location.Y + this.Height + displayDgvSumRowHeight);
-                _hScrollBar.Width = _dgvSourceMaxWidth;
-                _hScrollBar.Visible = true;
-                _hScrollBar.BringToFront();
-                _hScrollBar.Minimum = 0;
-                _hScrollBar.SmallChange = AvgColWidth;
-                _hScrollBar.LargeChange = AvgColWidth * 2;
-                _hScrollBar.Maximum = ColsWidth;
-            }
-            else
-            {
-                _hScrollBar.Visible = false;
-            }
-            #endregion
+                //   this.MouseWheel -= new MouseEventHandler(dgvSource_MouseWheel);
+                #region 验证是否需要显示水平滚动条
 
-            //根据源dgv设置合计行
-            _dgvSumRow.RowHeadersWidth = this.RowHeadersWidth - 1;
+                //需要展示水平滚动条
+                if (this.DisplayedColumnCount(true) < this.Columns.Count)
+                {
+                    _dgvSourceMaxHeight -= _hScrollBar.Height;
+                    this.Height = _dgvSourceMaxHeight;
 
-            #region 验证是否需要显示纵向滚动条
+                    _hScrollBar.Location = new Point(this.Location.X, this.Location.Y + this.Height + displayDgvSumRowHeight);
+                    _hScrollBar.Width = _dgvSourceMaxWidth;
+                    _hScrollBar.Visible = true;
+                    _hScrollBar.BringToFront();
+                    _hScrollBar.Minimum = 0;
+                    _hScrollBar.SmallChange = AvgColWidth;
+                    _hScrollBar.LargeChange = AvgColWidth * 2;
+                    _hScrollBar.Maximum = ColsWidth;
+                }
+                else
+                {
+                    _hScrollBar.Visible = false;
+                }
+                #endregion
 
-            var dgvSourceDisplayedRowCount = this.DisplayedRowCount(false);     //最多显示行数
+                //根据源dgv设置合计行
+                _dgvSumRow.RowHeadersWidth = this.RowHeadersWidth - 1;
 
-            //不需要展示垂直滚动条
-            if (dgvSourceDisplayedRowCount >= this.Rows.Count)
-            {
-                _vScrollBar.Visible = false;
-                this.Width = _dgvSourceMaxWidth;
-                _dgvSumRow.Width = _dgvSourceMaxWidth;
-            }
-            else
-            {
-                //需要展示垂直滚动条
-                _dgvSourceMaxWidth = this.Width - _vScrollBar.Width;
+                #region 验证是否需要显示纵向滚动条
 
-                this.Width = _dgvSourceMaxWidth;
-                _vScrollBar.Height = this.Height + (_isShowSumRow ? _dgvSumRow.Height : 0);
-                _vScrollBar.Location = new Point(this.Location.X + this.Width, this.Location.Y);
-                _vScrollBar.Visible = true;
-                _vScrollBar.Maximum = (this.Rows.Count - dgvSourceDisplayedRowCount + 2) * RowHeight;
-                _vScrollBar.Minimum = 0;
-                _vScrollBar.SmallChange = RowHeight;
-                _vScrollBar.LargeChange = RowHeight * 2;
-                _vScrollBar.BringToFront();
-            }
-            #endregion
+                var dgvSourceDisplayedRowCount = this.DisplayedRowCount(false);     //最多显示行数
 
-            if (_isShowSumRow && !DesignMode)
-            {
-                _dgvSumRow.Location = new Point(this.Location.X, this.Location.Y + _dgvSourceMaxHeight - 1);
-                _dgvSumRow.Width = this.Width;
-                _dgvSumRow.Visible = true;
-                _dgvSumRow.BringToFront();
-            }
-            else
-            {
-                _dgvSumRow.Visible = false;
-            }
-            _initSourceGriding = false;
+                //不需要展示垂直滚动条
+                if (dgvSourceDisplayedRowCount >= this.Rows.Count)
+                {
+                    _vScrollBar.Visible = false;
+                    this.Width = _dgvSourceMaxWidth;
+                    _dgvSumRow.Width = _dgvSourceMaxWidth;
+                }
+                else
+                {
+                    //需要展示垂直滚动条
+                    _dgvSourceMaxWidth = this.Width - _vScrollBar.Width;
+
+                    this.Width = _dgvSourceMaxWidth;
+                    _vScrollBar.Height = this.Height + (_isShowSumRow ? _dgvSumRow.Height : 0);
+                    _vScrollBar.Location = new Point(this.Location.X + this.Width, this.Location.Y);
+                    _vScrollBar.Visible = true;
+                    _vScrollBar.Maximum = (this.Rows.Count - dgvSourceDisplayedRowCount + 2) * RowHeight;
+                    _vScrollBar.Minimum = 0;
+                    _vScrollBar.SmallChange = RowHeight;
+                    _vScrollBar.LargeChange = RowHeight * 2;
+                    _vScrollBar.BringToFront();
+                }
+                #endregion
+
+                if (_isShowSumRow && !DesignMode)
+                {
+                    _dgvSumRow.Location = new Point(this.Location.X, this.Location.Y + _dgvSourceMaxHeight - 1);
+                    _dgvSumRow.Width = this.Width;
+                    _dgvSumRow.Visible = true;
+                    _dgvSumRow.BringToFront();
+                }
+                else
+                {
+                    _dgvSumRow.Visible = false;
+                }
+                _initSourceGriding = false;
                 #endregion
             }
             finally
@@ -3174,4 +3502,15 @@ namespace RUINORERP.UI.UControls
 
     }
 
+
+    // 新增一个枚举用于表示数据类型
+    public enum ColumnDataType
+    {
+        String,
+        Integer,
+        Decimal,
+        Boolean,
+        DateTime,
+        Other
+    }
 }

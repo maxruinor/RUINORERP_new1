@@ -38,6 +38,7 @@ using OpenTK.Input;
 using Castle.Components.DictionaryAdapter.Xml;
 using log4net.Repository.Hierarchy;
 using RUINORERP.UI.SS;
+using RUINORERP.UI.Monitoring.Auditing;
 
 
 namespace RUINORERP.UI.SysConfig
@@ -2310,7 +2311,7 @@ namespace RUINORERP.UI.SysConfig
                         {
                             MainForm.Instance.logger.LogInformation($"删除:{typeof(T).Name}，主键值：{PKValue.ToString()} ");
                         }
-                        AuditLogHelper.Instance.CreateAuditLog("删除", "角色授权时");
+                        MainForm.Instance.AuditLogHelper.CreateAuditLog("删除", "角色授权时");
                     }
                 }
             }

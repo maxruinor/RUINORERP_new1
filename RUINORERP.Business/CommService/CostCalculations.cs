@@ -66,71 +66,87 @@ namespace RUINORERP.Business.CommService
         }
           */
 
-        public static void CostCalculation(ApplicationContext _appContext, tb_Inventory inv, int currentQty, decimal UntaxedUnitPrice, decimal UntaxedShippCost = 0)
+        public static void CostCalculation(ApplicationContext _appContext, tb_Inventory inv, int currentQty,
+            decimal UntaxedUnitPrice, decimal UntaxedShippCost = 0)
         {
-
+            // 获取系统配置
+            bool allowNegativeInventory = _appContext.SysConfig.CheckNegativeInventory;
             //新成本单价 = （原库存成本×原数量 + (采购不含税单价×采购数量 + 不含税运费)）/(原数量 + 采购数量 )
             // 先算成本再赋值数量（保持原有逻辑顺序）
             Global.库存成本计算方式 m = (Global.库存成本计算方式)_appContext.SysConfig.CostCalculationMethod;
 
             // 前置校验：当前操作数量不能为0（避免无意义操作）
-            if (currentQty == 0)
+            if (currentQty == 0) throw new ArgumentException("当前操作数量不能为0");
+            // 计算新库存数量
+            int newQty = inv.Quantity + currentQty;
+            // 负库存检查（如果不允许负库存）
+            if (!allowNegativeInventory && newQty < 0)
             {
-                throw new ArgumentException("当前操作数量不能为0");
+                throw new InvalidOperationException($"库存数量不能为负（操作后数量：{newQty}）");
             }
             switch (m)
             {
                 case 库存成本计算方式.先进先出法:
-                    // 先进先出法不允许负库存（符合常规业务逻辑）
-                    if (inv.Quantity < 0)
-                    {
-                        throw new InvalidOperationException("先进先出法下不允许现有库存为负数");
-                    }
+                    // 先进先出法：直接使用新单价作为成本
                     inv.CostFIFO = UntaxedUnitPrice;
                     inv.Inv_Cost = inv.CostFIFO;
                     break;
 
                 case 库存成本计算方式.月加权平均:
                     // 月加权平均法要求现有库存不能为负（否则无法正确计算月度平均）
-                    if (inv.Quantity < 0)
-                    {
-                        throw new InvalidOperationException("月加权平均法下不允许现有库存为负数");
-                    }
+                    // 月加权平均法：直接使用新单价作为成本
                     inv.CostMonthlyWA = UntaxedUnitPrice;
                     inv.Inv_Cost = inv.CostMonthlyWA;
                     break;
 
                 case 库存成本计算方式.移动加权平均法:
+
+                    //仅在移动加权平均法中考虑运费成本
+                    //其他方法忽略运费（符合标准会计实践）
                     // 计算移动加权平均时的关键分母
-                    decimal totalQty = currentQty + inv.Quantity;
+                    decimal totalQty = newQty;
 
                     // 分母异常处理（避免除零或负数导致的不合理计算）
                     if (totalQty == 0)
                     {
-                        throw new DivideByZeroException("移动加权平均计算时总数量不能为0");
-                    }
-                    if (totalQty < 0)
-                    {
-                        // 当总数量为负时，检查是否因负库存导致
-                        if (inv.Quantity < 0 && Math.Abs(inv.Quantity) > currentQty)
+                        // 数量归零时保留原成本（如果系统允许）
+                        if (allowNegativeInventory && inv.Inv_Cost > 0)
                         {
-                            throw new InvalidOperationException("移动加权平均计算时，现有负库存数量超过当前操作数量，无法正确计算成本");
+                            // 保留原成本值
                         }
-                        // 其他情况（如currentQty为负且绝对值过大）
-                        throw new InvalidOperationException($"移动加权平均计算时总数量不能为负（当前总数量：{totalQty}）");
+                        else
+                        {
+                            throw new DivideByZeroException("移动加权平均计算时总数量不能为0");
+                        }
                     }
+                    else
+                    {
+                        //if (totalQty < 0)
+                        //{
+                        //    // 当总数量为负时，检查是否因负库存导致
+                        //    if (inv.Quantity < 0 && Math.Abs(inv.Quantity) > currentQty)
+                        //    {
+                        //        throw new InvalidOperationException("移动加权平均计算时，现有负库存数量超过当前操作数量，无法正确计算成本");
+                        //    }
+                        //    // 其他情况（如currentQty为负且绝对值过大）
+                        //    throw new InvalidOperationException($"移动加权平均计算时总数量不能为负（当前总数量：{totalQty}）");
+                        //}
 
-                    // 正常计算逻辑
-                    inv.CostMovingWA = (UntaxedUnitPrice * currentQty + (inv.Inv_Cost * inv.Quantity + UntaxedShippCost)) / totalQty;
-                    inv.Inv_Cost = inv.CostMovingWA;
+                        // 核心计算公式：
+                        // 新成本 = (原库存金额 + 新入库金额 + 运费) / 新库存总量
+                        decimal originalAmount = inv.Inv_Cost * inv.Quantity;
+                        decimal newAmount = UntaxedUnitPrice * currentQty;
+                        decimal totalAmount = originalAmount + newAmount + UntaxedShippCost;
+
+                        inv.CostMovingWA = totalAmount / totalQty;
+                        inv.Inv_Cost = inv.CostMovingWA;
+
+                    }
+                    
                     break;
 
                 case 库存成本计算方式.实际成本法:
-                    // 实际成本法要求严格按批次成本记录，不允许负库存
-                    if (inv.Quantity < 0)
-                    {
-                        throw new InvalidOperationException("实际成本法下不允许现有库存为负数");
-                    }
+                    // 实际成本法：使用新单价作为成本
                     inv.Inv_AdvCost = UntaxedUnitPrice;
                     inv.Inv_Cost = inv.Inv_AdvCost;
                     break;
@@ -138,50 +154,47 @@ namespace RUINORERP.Business.CommService
                 default:
                     throw new NotImplementedException($"未实现的成本计算方式：{m}");
             }
-
-            // 强化成本负数控制（原逻辑补充）
+            // 成本负数检查（所有方法通用）
             if (inv.Inv_Cost < 0)
             {
-                throw new InvalidOperationException($"计算得到负库存成本（成本值：{inv.Inv_Cost}），请检查操作数量或成本价是否合理");
+                throw new InvalidOperationException($"计算得到负库存成本（成本值：{inv.Inv_Cost}）");
             }
+     
         }
         public static void AntiCostCalculation(ApplicationContext _appContext, tb_Inventory inv, int currentQty, decimal currentCostPrice)
         {
+            // 获取系统配置
+            bool allowNegativeInventory = _appContext.SysConfig.CheckNegativeInventory;
             // 先算成本再赋值数量（保持原有逻辑顺序）
             Global.库存成本计算方式 m = (Global.库存成本计算方式)_appContext.SysConfig.CostCalculationMethod;
 
             // 前置校验：当前操作数量不能为0（反审核无意义操作）
-            if (currentQty == 0)
+            if (currentQty == 0) throw new ArgumentException("反审核操作的当前数量不能为0");
+            // 计算新库存数量
+            int newQty = inv.Quantity - currentQty;
+
+            // 负库存检查（如果不允许负库存）
+            if (!allowNegativeInventory && newQty < 0)
             {
-                throw new ArgumentException("反审核操作的当前数量不能为0");
+                throw new InvalidOperationException($"库存数量不能为负（操作后数量：{newQty}）");
             }
 
             switch (m)
             {
                 case 库存成本计算方式.先进先出法:
                     // 反审核后库存数量 = 原数量 - 当前操作数量（假设currentQty为原操作数量）
-                    int newQuantity = inv.Quantity - currentQty;
-                    if (newQuantity < 0)
-                    {
-                        throw new InvalidOperationException($"先进先出法反审核后库存数量不能为负（当前计算结果：{newQuantity}）");
-                    }
                     inv.CostFIFO = currentCostPrice;
                     inv.Inv_Cost = inv.CostFIFO;
                     break;
 
                 case 库存成本计算方式.月加权平均:
-                    int monthlyNewQty = inv.Quantity - currentQty;
-                    if (monthlyNewQty < 0)
-                    {
-                        throw new InvalidOperationException($"月加权平均法反审核后库存数量不能为负（当前计算结果：{monthlyNewQty}）");
-                    }
                     inv.CostMonthlyWA = currentCostPrice;
                     inv.Inv_Cost = inv.CostMonthlyWA;
                     break;
 
                 case 库存成本计算方式.移动加权平均法:
                     // 计算反审核后的分母（原数量 - 当前操作数量）
-                    decimal denominator = inv.Quantity - currentQty;
+                    decimal denominator = newQty;
 
                     // 分母异常处理
                     if (denominator == 0)
@@ -198,19 +211,28 @@ namespace RUINORERP.Business.CommService
                         }
                         return;
                     }
-                    if (denominator < 0)
+                    else
                     {
-                        // 检查是否因反审核数量过大导致负库存
-                        if (currentQty > inv.Quantity)
-                        {
-                            throw new InvalidOperationException($"移动加权平均反审核后库存数量为负（原数量：{inv.Quantity}, 操作数量：{currentQty}）");
-                        }
-                        throw new InvalidOperationException($"移动加权平均反审核分母不能为负（当前分母：{denominator}）");
-                    }
+                        // 核心反算公式：
+                        // 原始库存金额 = (当前库存金额 - 反审核货物金额)
+                        decimal currentAmount = inv.Inv_Cost * inv.Quantity;
+                        decimal removeAmount = currentCostPrice * currentQty;
+                        decimal originalAmount = currentAmount - removeAmount;
 
-                    // 执行移动加权平均反计算
-                    inv.CostMovingWA = (inv.CostMovingWA * inv.Quantity - currentCostPrice * currentQty) / denominator;
-                    inv.Inv_Cost = inv.CostMovingWA;
+                        inv.CostMovingWA = originalAmount / denominator;
+                        inv.Inv_Cost = inv.CostMovingWA;
+                    }
+                    //if (denominator < 0)
+                    //{
+                    //    // 检查是否因反审核数量过大导致负库存
+                    //    if (currentQty > inv.Quantity)
+                    //    {
+                    //        throw new InvalidOperationException($"移动加权平均反审核后库存数量为负（原数量：{inv.Quantity}, 操作数量：{currentQty}）");
+                    //    }
+                    //    throw new InvalidOperationException($"移动加权平均反审核分母不能为负（当前分母：{denominator}）");
+                    //}
+
+ 
                     break;
 
                 case 库存成本计算方式.实际成本法:

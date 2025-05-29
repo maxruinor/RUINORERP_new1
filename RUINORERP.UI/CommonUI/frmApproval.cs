@@ -1,4 +1,6 @@
-﻿using RUINORERP.Global;
+﻿using Netron.GraphLib;
+using NPOI.SS.Formula.Functions;
+using RUINORERP.Global;
 using RUINORERP.Model;
 using RUINORERP.UI.BaseForm;
 using RUINORERP.UI.Common;
@@ -72,23 +74,29 @@ namespace RUINORERP.UI.CommonUI
             txtBillType.ReadOnly = true;
             entity.ApprovalResults = true;
             DataBindingHelper.BindData4RadioGroupTrueFalse<ApprovalEntity>(entity, t => t.ApprovalResults, rdbis_Yes, rdbis_No);
-            DataBindingHelper.BindData4TextBox<ApprovalEntity>(entity, t => t.ApprovalOpinions, txtOpinion, BindDataType4TextBox.Text, false);
+            DataBindingHelper.BindData4TextBox<ApprovalEntity>(entity, t => t.ApprovalOpinions, txtOpinion, BindDataType4TextBox.Text, true);
             errorProviderForAllInput.DataSource = entity;
         }
 
         private void rdbis_Yes_CheckedChanged(object sender, EventArgs e)
         {
-            if (rdbis_Yes.Checked)
-            {
-                txtOpinion.Text = MainForm.Instance.AppContext.CurUserInfo.UserInfo.tb_employee.Employee_Name + "【同意】";
-                _entity.ApprovalResults = true;
-            }
-            else
-            {
-                txtOpinion.Text = MainForm.Instance.AppContext.CurUserInfo.UserInfo.tb_employee.Employee_Name + "【不同意】";
-                _entity.ApprovalResults = false;
-            }
-
+            //if (rdbis_Yes.Checked)
+            //{
+            //    _entity.ApprovalOpinions = MainForm.Instance.AppContext.CurUserInfo.UserInfo.tb_employee.Employee_Name + "【同意】";
+            //}
+            //else
+            //{
+            //    _entity.ApprovalOpinions = MainForm.Instance.AppContext.CurUserInfo.UserInfo.tb_employee.Employee_Name + "【不同意】";
+            //}
+           if (_entity.ApprovalResults)
+           {
+               _entity.ApprovalOpinions = MainForm.Instance.AppContext.CurUserInfo.UserInfo.tb_employee.Employee_Name + "【同意】";
+           }
+           else
+           {
+               _entity.ApprovalOpinions = MainForm.Instance.AppContext.CurUserInfo.UserInfo.tb_employee.Employee_Name + "【不同意】";
+           }
+            txtOpinion.Text = _entity.ApprovalOpinions;
         }
     }
 }

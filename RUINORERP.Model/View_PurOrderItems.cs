@@ -522,19 +522,19 @@ namespace RUINORERP.Model
             get{return _DeliveredQuantity;}            set{                SetProperty(ref _DeliveredQuantity, value);                }
         }
 
-        private bool? _IncludingTax;
+        private bool? _IsIncludeTax;
         
         
         /// <summary>
         /// 含税
         /// </summary>
 
-        [AdvQueryAttribute(ColName = "IncludingTax",ColDesc = "含税")]
-        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType ="Boolean",  ColumnName = "IncludingTax" ,IsNullable = true,ColumnDescription = "含税" )]
+        [AdvQueryAttribute(ColName = "IsIncludeTax", ColDesc = "含税")]
+        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType ="Boolean",  ColumnName = "IsIncludeTax", IsNullable = true,ColumnDescription = "含税" )]
         [Display(Name = "含税")]
-        public bool? IncludingTax 
+        public bool? IsIncludeTax
         { 
-            get{return _IncludingTax;}            set{                SetProperty(ref _IncludingTax, value);                }
+            get{return _IsIncludeTax; }            set{                SetProperty(ref _IsIncludeTax, value);                }
         }
 
         private string _Summary;

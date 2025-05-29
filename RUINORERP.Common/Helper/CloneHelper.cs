@@ -10,6 +10,7 @@ using System.Xml.Serialization;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Runtime.CompilerServices;
 
 namespace RUINORERP.Common.Helper
 {
@@ -262,106 +263,6 @@ namespace RUINORERP.Common.Helper
         }
 
 
-        /// <summary>
-        /// 深拷贝对象（优化版）
-        /// </summary>
-        /// <typeparam name="T">对象类型</typeparam>
-        /// <param name="source">源对象</param>
-        /// <returns>深拷贝后的对象</returns>
-        public static T DeepCloneObject_old1<T>(this T source)
-        {
-            if (source == null)
-                return default(T);
-
-            // 尝试使用序列化实现深拷贝
-            try
-            {
-                using (var memoryStream = new MemoryStream())
-                {
-                    var binaryFormatter = new BinaryFormatter();
-                    binaryFormatter.Serialize(memoryStream, source);
-                    memoryStream.Seek(0, SeekOrigin.Begin);
-                    return (T)binaryFormatter.Deserialize(memoryStream);
-                }
-            }
-            catch (SerializationException ex)
-            {
-                Console.WriteLine(ex.Message + ex.StackTrace);
-                // 如果对象不可序列化，则回退到反射方式
-            }
-
-            // 反射方式深拷贝
-            Type type = typeof(T);
-            T target = (T)Activator.CreateInstance(type);
-            try
-            {
-                // 处理自定义属性克隆逻辑
-                foreach (var property in type.GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance))
-                {
-                    if (!property.CanRead || !property.CanWrite)
-                        continue;
-
-                    object value = property.GetValue(source, null);
-                    Type valueType = property.PropertyType;
-
-                    // 特殊类型处理
-                    if (valueType.IsPrimitive || valueType == typeof(string) || valueType == typeof(DateTime) || valueType == typeof(decimal))
-                    {
-                        // 基本类型直接赋值
-                        property.SetValue(target, value, null);
-                    }
-                    else if (valueType.IsArray)
-                    {
-                        // 数组类型特殊处理
-                        Array sourceArray = (Array)value;
-                        if (sourceArray != null && sourceArray.Length > 0)
-                        {
-                            Type elementType = valueType.GetElementType();
-                            Array targetArray = Array.CreateInstance(elementType, sourceArray.Length);
-
-                            for (int i = 0; i < sourceArray.Length; i++)
-                            {
-                                object element = sourceArray.GetValue(i);
-                                targetArray.SetValue(element.DeepCloneObject(), i);
-                            }
-
-                            property.SetValue(target, targetArray, null);
-                        }
-                    }
-                    else if (typeof(IEnumerable).IsAssignableFrom(valueType))
-                    {
-                        // 可枚举集合处理
-                        IEnumerable sourceEnumerable = (IEnumerable)value;
-                        if (sourceEnumerable != null)
-                        {
-                            Type elementType = valueType.GetGenericArguments().FirstOrDefault();
-
-                            // 创建目标集合实例
-                            object targetEnumerable = Activator.CreateInstance(valueType);
-                            MethodInfo addMethod = valueType.GetMethod("Add");
-
-                            foreach (var item in sourceEnumerable)
-                            {
-                                addMethod.Invoke(targetEnumerable, new[] { item.DeepCloneObject() });
-                            }
-
-                            property.SetValue(target, targetEnumerable, null);
-                        }
-                    }
-                    else
-                    {
-                        // 对象类型递归深拷贝
-                        property.SetValue(target, value.DeepCloneObject(), null);
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex.Message + ex.StackTrace);
-            }
-
-            return target;
-        }
 
         public static T DeepCloneObject<T>(this T source)
         {
@@ -453,6 +354,205 @@ namespace RUINORERP.Common.Helper
             return target;
         }
 
+        #region 深度复制克隆
+
+        public static T DeepCloneObject_maxnew<T>(this T source, int maxDepth = 3)
+        {
+            if (source == null)
+                return default;
+
+            // 处理循环引用的字典
+            var clonedObjects = new Dictionary<object, object>(new ReferenceEqualityComparer());
+            return (T)DeepCloneInternal(source, clonedObjects, 0, maxDepth);
+        }
+
+        private static object DeepCloneInternal(object source, Dictionary<object, object> clonedObjects, int currentDepth, int maxDepth)
+        {
+            if (source == null)
+                return null;
+
+            // 检查最大递归深度
+            if (currentDepth >= maxDepth)
+                return source;
+
+            // 检查是否已克隆过该对象
+            if (clonedObjects.TryGetValue(source, out var cloned))
+                return cloned;
+
+            Type type = source.GetType();
+
+            // 处理基本类型
+            if (type.IsPrimitive || type == typeof(string) || type == typeof(DateTime) || type == typeof(decimal))
+                return source;
+
+            // 处理数组
+            if (type.IsArray)
+            {
+                var sourceArray = (Array)source;
+                var elementType = type.GetElementType();
+                var targetArray = Array.CreateInstance(elementType, sourceArray.Length);
+                clonedObjects.Add(source, targetArray);
+
+                for (int i = 0; i < sourceArray.Length; i++)
+                {
+                    try
+                    {
+                        var element = sourceArray.GetValue(i);
+                        targetArray.SetValue(DeepCloneInternal(element, clonedObjects, currentDepth + 1, maxDepth), i);
+                    }
+                    catch (Exception ex)
+                    {
+                        // 记录异常并继续克隆其他元素
+                       // .Instance.logger.LogError($"克隆数组元素时发生异常: {ex.Message}");
+                        continue;
+                    }
+                }
+
+                return targetArray;
+            }
+
+            // 处理集合类型
+            if (source is IEnumerable enumerable)
+            {
+                // 获取实际集合类型和元素类型
+                Type actualType = source.GetType();
+                Type elementType = GetElementType(actualType) ?? typeof(object);
+
+                // 创建目标集合
+                object targetCollection = CreateCollectionInstance(actualType, elementType);
+                if (targetCollection == null)
+                    return source; // 无法创建则返回原对象
+
+                clonedObjects.Add(source, targetCollection);
+
+                // 获取Add方法
+                MethodInfo addMethod = GetAddMethod(targetCollection.GetType(), elementType);
+                if (addMethod == null)
+                    return targetCollection;
+
+                // 克隆并添加元素
+                foreach (var item in enumerable)
+                {
+                    try
+                    {
+                        object clonedItem = DeepCloneInternal(item, clonedObjects, currentDepth + 1, maxDepth);
+                        addMethod.Invoke(targetCollection, new[] { clonedItem });
+                    }
+                    catch (Exception ex)
+                    {
+                        // 记录异常并继续克隆其他元素
+                        //MainForm.Instance.logger.LogError($"克隆集合元素时发生异常: {ex.Message}");
+                        continue;
+                    }
+                }
+
+                return targetCollection;
+            }
+
+            // 处理实体对象
+            object target = Activator.CreateInstance(type);
+            clonedObjects.Add(source, target);
+
+            // 克隆属性
+            foreach (var property in type.GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance))
+            {
+                if (!property.CanRead || !property.CanWrite)
+                    continue;
+
+                //// 跳过导航属性（避免循环）
+                //if (property.Name.StartsWith("tb_") || property.PropertyType.Namespace == type.Namespace)
+                //    continue;
+
+                try
+                {
+                    object value = property.GetValue(source);
+                    object clonedValue = DeepCloneInternal(value, clonedObjects, currentDepth + 1, maxDepth);
+                    property.SetValue(target, clonedValue);
+                }
+                catch (Exception ex)
+                {
+                    // 记录异常并继续克隆其他属性
+                    //logger.LogError($"克隆属性 {property.Name} 时发生异常: {ex.Message}");
+                    continue;
+                }
+            }
+
+            return target;
+        }
+
+
+        // 辅助类：解决字典比较引用相等性问题
+        private class ReferenceEqualityComparer : IEqualityComparer<object>
+        {
+            public new bool Equals(object x, object y) => ReferenceEquals(x, y);
+            public int GetHashCode(object obj) => RuntimeHelpers.GetHashCode(obj);
+        }
+
+        // 获取集合元素类型
+        private static Type GetElementType(Type collectionType)
+        {
+            // 处理泛型集合
+            if (collectionType.IsGenericType)
+            {
+                var genericArgs = collectionType.GetGenericArguments();
+                if (genericArgs.Length == 1)
+                    return genericArgs[0];
+            }
+
+            // 处理数组
+            if (collectionType.IsArray)
+                return collectionType.GetElementType();
+
+            // 处理IEnumerable<T>
+            var iEnumerable = collectionType.GetInterfaces()
+                .FirstOrDefault(t => t.IsGenericType &&
+                                   t.GetGenericTypeDefinition() == typeof(IEnumerable<>));
+
+            return iEnumerable?.GetGenericArguments()[0];
+        }
+
+        // 创建集合实例
+        private static object CreateCollectionInstance(Type collectionType, Type elementType)
+        {
+            // 处理具体类型（如List<T>）
+            if (collectionType.IsClass && !collectionType.IsAbstract)
+            {
+                try { return Activator.CreateInstance(collectionType); }
+                catch { /* 继续尝试其他方式 */ }
+            }
+
+            // 处理接口（如IList<T>）
+            if (collectionType.IsInterface && collectionType.IsGenericType)
+            {
+                var genericType = collectionType.GetGenericTypeDefinition();
+                if (genericType == typeof(IList<>) || genericType == typeof(ICollection<>))
+                    return Activator.CreateInstance(typeof(List<>).MakeGenericType(elementType));
+            }
+
+            // 默认创建List<T>
+            return Activator.CreateInstance(typeof(List<>).MakeGenericType(elementType));
+        }
+
+      
+        // 获取Add方法
+        private static MethodInfo GetAddMethod(Type collectionType, Type elementType)
+        {
+            // 检查ICollection<T>.Add方法
+            var collectionInterface = collectionType.GetInterfaces()
+                .FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(ICollection<>));
+
+            if (collectionInterface != null)
+            {
+                return collectionInterface.GetMethod("Add");
+            }
+
+            // 查找参数类型匹配的Add方法
+            return collectionType.GetMethod("Add", new[] { elementType })
+                ?? collectionType.GetMethod("Add", new[] { typeof(object) });
+        }
+        #endregion
+
+
         // 获取集合元素类型
         private static Type GetEnumerableElementType(Type collectionType)
         {
@@ -483,22 +583,7 @@ namespace RUINORERP.Common.Helper
             return null;
         }
 
-        // 获取Add方法
-        private static MethodInfo GetAddMethod(Type collectionType, Type elementType)
-        {
-            // 检查ICollection<T>.Add方法
-            var collectionInterface = collectionType.GetInterfaces()
-                .FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(ICollection<>));
 
-            if (collectionInterface != null)
-            {
-                return collectionInterface.GetMethod("Add");
-            }
-
-            // 查找参数类型匹配的Add方法
-            return collectionType.GetMethod("Add", new[] { elementType })
-                ?? collectionType.GetMethod("Add", new[] { typeof(object) });
-        }
 
         /// <summary>
         /// 在 .NET 中，有几个现成的库可以帮助简化深度复制对象的实现：

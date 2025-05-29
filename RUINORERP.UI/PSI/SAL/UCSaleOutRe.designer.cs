@@ -372,6 +372,9 @@
             this.txtSaleOutNo.Name = "txtSaleOutNo";
             this.txtSaleOutNo.Size = new System.Drawing.Size(271, 23);
             this.txtSaleOutNo.TabIndex = 95;
+            this.txtSaleOutNo.ToolTipValues.Description = "请确保选择的出库单没有被重复退回";
+            this.txtSaleOutNo.ToolTipValues.EnableToolTips = true;
+            this.txtSaleOutNo.ToolTipValues.Heading = "\r\n";
             // 
             // txtReturnNo
             // 

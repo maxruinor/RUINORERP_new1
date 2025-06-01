@@ -71,7 +71,7 @@ namespace RUINORERP.Model
         /// 属性值名称
         /// </summary>
         [AdvQueryAttribute(ColName = "PropertyValueName",ColDesc = "属性值名称")] 
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "PropertyValueName" ,Length=20,IsNullable = false,ColumnDescription = "属性值名称" )]
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "PropertyValueName" ,Length=50,IsNullable = false,ColumnDescription = "属性值名称" )]
         public string PropertyValueName
         { 
             get{return _PropertyValueName;}
@@ -85,7 +85,7 @@ namespace RUINORERP.Model
         /// 属性值描述
         /// </summary>
         [AdvQueryAttribute(ColName = "PropertyValueDesc",ColDesc = "属性值描述")] 
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "PropertyValueDesc" ,Length=50,IsNullable = true,ColumnDescription = "属性值描述" )]
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "PropertyValueDesc" ,Length=100,IsNullable = true,ColumnDescription = "属性值描述" )]
         public string PropertyValueDesc
         { 
             get{return _PropertyValueDesc;}

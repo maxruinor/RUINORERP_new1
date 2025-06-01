@@ -45,7 +45,7 @@ namespace RUINORERP.Business
             RuleFor(tb_SaleOut => tb_SaleOut.SOrder_ID).NotEmpty().When(x => x.SOrder_ID.HasValue);
 
             RuleFor(tb_SaleOut => tb_SaleOut.SaleOrderNo).MaximumLength(25).WithMessage("销售订单编号:不能超过最大长度,25.");
-
+            RuleFor(tb_SaleOut => tb_SaleOut.CustomerPONo).MaximumLength(25).WithMessage("客户订单号:不能超过最大长度,25.");
             RuleFor(tb_SaleOut => tb_SaleOut.SaleOutNo).MaximumLength(25).WithMessage("出库单号:不能超过最大长度,25.");
             RuleFor(tb_SaleOut => tb_SaleOut.SaleOutNo).NotEmpty().WithMessage("出库单号:不能为空。");
 

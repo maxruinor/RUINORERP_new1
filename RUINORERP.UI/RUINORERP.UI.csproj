@@ -3070,6 +3070,7 @@
     <Content Include="SqlScript\mssql连接池情况.sql" />
     <Content Include="SqlScript\地区省市.sql" />
     <Content Include="SqlScript\内置函数支持.sql" />
+    <Content Include="SqlScript\清空业务表数据.sql" />
     <Content Include="UpdateLog.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

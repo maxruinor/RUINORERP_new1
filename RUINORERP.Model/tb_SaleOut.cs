@@ -333,6 +333,20 @@ namespace RUINORERP.Model
             }
         }
 
+        private string _CustomerPONo;
+        /// <summary>
+        /// 客户订单号
+        /// </summary>
+        [AdvQueryAttribute(ColName = "CustomerPONo", ColDesc = "客户订单号")]
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType = "String", ColumnName = "CustomerPONo", Length = 50, IsNullable = false, ColumnDescription = "客户订单号")]
+        public string CustomerPONo
+        {
+            get { return _CustomerPONo; }
+            set
+            {
+                SetProperty(ref _CustomerPONo, value);
+            }
+        }
 
         private string _ShippingAddress;
         /// <summary>

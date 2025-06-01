@@ -90,6 +90,8 @@
             this.txtTaxAmount = new Krypton.Toolkit.KryptonTextBox();
             this.txtFreightIncome = new Krypton.Toolkit.KryptonTextBox();
             this.lblFreightIncome = new Krypton.Toolkit.KryptonLabel();
+            this.txtCustomerPONo = new Krypton.Toolkit.KryptonTextBox();
+            this.lblCustomerPONo = new Krypton.Toolkit.KryptonLabel();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceSub)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1)).BeginInit();
@@ -122,6 +124,8 @@
             // 
             // kryptonSplitContainer1.Panel1
             // 
+            this.kryptonSplitContainer1.Panel1.Controls.Add(this.txtCustomerPONo);
+            this.kryptonSplitContainer1.Panel1.Controls.Add(this.lblCustomerPONo);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.lblStore_ID);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.cmbProjectGroup);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.lblExchangeRate);
@@ -194,7 +198,7 @@
             // 
             // lblExchangeRate
             // 
-            this.lblExchangeRate.Location = new System.Drawing.Point(897, 67);
+            this.lblExchangeRate.Location = new System.Drawing.Point(1106, 68);
             this.lblExchangeRate.Name = "lblExchangeRate";
             this.lblExchangeRate.Size = new System.Drawing.Size(36, 20);
             this.lblExchangeRate.TabIndex = 195;
@@ -202,9 +206,9 @@
             // 
             // txtExchangeRate
             // 
-            this.txtExchangeRate.Location = new System.Drawing.Point(939, 67);
+            this.txtExchangeRate.Location = new System.Drawing.Point(1148, 65);
             this.txtExchangeRate.Name = "txtExchangeRate";
-            this.txtExchangeRate.Size = new System.Drawing.Size(137, 23);
+            this.txtExchangeRate.Size = new System.Drawing.Size(77, 23);
             this.txtExchangeRate.TabIndex = 196;
             // 
             // lblCurrency_ID
@@ -227,7 +231,7 @@
             // chkIsCustomizedOrder
             // 
             this.chkIsCustomizedOrder.Enabled = false;
-            this.chkIsCustomizedOrder.Location = new System.Drawing.Point(800, 39);
+            this.chkIsCustomizedOrder.Location = new System.Drawing.Point(796, 39);
             this.chkIsCustomizedOrder.Name = "chkIsCustomizedOrder";
             this.chkIsCustomizedOrder.Size = new System.Drawing.Size(62, 20);
             this.chkIsCustomizedOrder.TabIndex = 154;
@@ -304,7 +308,7 @@
             // 
             this.chk平台单.Checked = true;
             this.chk平台单.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.chk平台单.Location = new System.Drawing.Point(801, 66);
+            this.chk平台单.Location = new System.Drawing.Point(797, 66);
             this.chk平台单.Name = "chk平台单";
             this.chk平台单.Size = new System.Drawing.Size(62, 20);
             this.chk平台单.TabIndex = 147;
@@ -402,7 +406,7 @@
             // 
             // txtFreightCost
             // 
-            this.txtFreightCost.Location = new System.Drawing.Point(632, 113);
+            this.txtFreightCost.Location = new System.Drawing.Point(632, 114);
             this.txtFreightCost.Name = "txtFreightCost";
             this.txtFreightCost.Size = new System.Drawing.Size(162, 23);
             this.txtFreightCost.TabIndex = 103;
@@ -417,7 +421,7 @@
             // 
             // lblTrackNo
             // 
-            this.lblTrackNo.Location = new System.Drawing.Point(870, 123);
+            this.lblTrackNo.Location = new System.Drawing.Point(873, 120);
             this.lblTrackNo.Name = "lblTrackNo";
             this.lblTrackNo.Size = new System.Drawing.Size(62, 20);
             this.lblTrackNo.TabIndex = 112;
@@ -425,7 +429,7 @@
             // 
             // txtShippingWay
             // 
-            this.txtShippingWay.Location = new System.Drawing.Point(939, 92);
+            this.txtShippingWay.Location = new System.Drawing.Point(939, 91);
             this.txtShippingWay.Name = "txtShippingWay";
             this.txtShippingWay.Size = new System.Drawing.Size(137, 23);
             this.txtShippingWay.TabIndex = 111;
@@ -440,7 +444,7 @@
             // 
             // lblShippingWay
             // 
-            this.lblShippingWay.Location = new System.Drawing.Point(871, 95);
+            this.lblShippingWay.Location = new System.Drawing.Point(873, 94);
             this.lblShippingWay.Name = "lblShippingWay";
             this.lblShippingWay.Size = new System.Drawing.Size(62, 20);
             this.lblShippingWay.TabIndex = 110;
@@ -702,6 +706,21 @@
             this.lblFreightIncome.TabIndex = 102;
             this.lblFreightIncome.Values.Text = "运费收入";
             // 
+            // txtCustomerPONo
+            // 
+            this.txtCustomerPONo.Location = new System.Drawing.Point(939, 65);
+            this.txtCustomerPONo.Name = "txtCustomerPONo";
+            this.txtCustomerPONo.Size = new System.Drawing.Size(137, 23);
+            this.txtCustomerPONo.TabIndex = 200;
+            // 
+            // lblCustomerPONo
+            // 
+            this.lblCustomerPONo.Location = new System.Drawing.Point(860, 68);
+            this.lblCustomerPONo.Name = "lblCustomerPONo";
+            this.lblCustomerPONo.Size = new System.Drawing.Size(75, 20);
+            this.lblCustomerPONo.TabIndex = 199;
+            this.lblCustomerPONo.Values.Text = "客户订单号";
+            // 
             // UCSaleOut
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
@@ -802,5 +821,7 @@
         private Krypton.Toolkit.KryptonComboBox cmbProjectGroup;
         private Krypton.Toolkit.KryptonTextBox txtForeignFreightIncome;
         private Krypton.Toolkit.KryptonLabel lblForeignFreightIncome;
+        private Krypton.Toolkit.KryptonTextBox txtCustomerPONo;
+        private Krypton.Toolkit.KryptonLabel lblCustomerPONo;
     }
 }

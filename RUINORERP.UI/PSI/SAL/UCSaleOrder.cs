@@ -221,6 +221,7 @@ namespace RUINORERP.UI.PSI.SAL
             }
             EditEntity = entity;
             DataBindingHelper.BindData4TextBox<tb_SaleOrder>(entity, t => t.SOrderNo, txtOrderNo, BindDataType4TextBox.Text, false);
+            DataBindingHelper.BindData4TextBox<tb_SaleOrder>(entity, t => t.CustomerPONo, txtCustomerPONo, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4Cmb<tb_PaymentMethod>(entity, k => k.Paytype_ID, v => v.Paytype_Name, cmbPaytype_ID);
             DataBindingHelper.BindData4Cmb<tb_FM_Account>(entity, k => k.Account_id, v => v.Account_name, cmbAccount_id);
             DataBindingHelper.BindData4Cmb<tb_Employee>(entity, k => k.Employee_ID, v => v.Employee_Name, cmbEmployee_ID, true);
@@ -573,7 +574,7 @@ using var binder = new UIStateBinder(..., customEvaluator);
             {
                 item.SOrder_ID = 0;
                 item.SaleOrderDetail_ID = 0;
-                item.PrimaryKeyID =0;
+                item.PrimaryKeyID = 0;
                 item.tb_saleorder = null;
             }
 
@@ -832,6 +833,10 @@ using var binder = new UIStateBinder(..., customEvaluator);
             //如果订单选择了 非未付款，但又选择了账期也不能通过。
             if (NeedValidated)
             {
+                if (EditEntity.ProjectGroup_ID.HasValue && EditEntity.ProjectGroup_ID.Value <= 0)
+                {
+                    EditEntity.ProjectGroup_ID = null;
+                }
 
                 if (EditEntity.Paytype_ID > 0)
                 {

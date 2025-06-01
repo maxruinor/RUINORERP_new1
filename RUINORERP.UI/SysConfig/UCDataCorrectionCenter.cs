@@ -794,9 +794,6 @@ namespace RUINORERP.UI.SysConfig
                             .UpdateColumns(it => new { it.Sale_Qty, it.On_the_way_Qty, it.NotOutQty, it.MakingQty }).ExecuteCommandAsync();
                         richTextBoxLog.AppendText($"拟销在制在途修复 数据行：{plancounter} " + "\r\n");
                     }
-
-
-
                 }
 
                 if (treeView1.SelectedNode.Text == "用户密码加密")
@@ -1200,6 +1197,59 @@ namespace RUINORERP.UI.SysConfig
                         }
                     }
                 }
+
+                if (treeView1.SelectedNode.Text == "清空业务数据")
+                {
+                    //核销表 付款表  应收付表 预收付表
+                    var StatementController = MainForm.Instance.AppContext.GetRequiredService<tb_FM_StatementController<tb_FM_Statement>>();
+                    var StatementList = StatementController.QueryByNav(c => c.StatementId > 0);
+                    richTextBoxLog.AppendText($"即将清空业务数据 核销表：{StatementList.Count} " + "\r\n");
+
+                    var PaymentRecordController = MainForm.Instance.AppContext.GetRequiredService<tb_FM_PaymentRecordController<tb_FM_PaymentRecord>>();
+                    var PaymentRecordList = PaymentRecordController.QueryByNav(c => c.PaymentId > 0);
+                    richTextBoxLog.AppendText($"即将清空业务数据 付款表：{PaymentRecordList.Count} " + "\r\n");
+
+                    var ReceivablePayableController = MainForm.Instance.AppContext.GetRequiredService<tb_FM_ReceivablePayableController<tb_FM_ReceivablePayable>>();
+                    var ReceivablePayableList = ReceivablePayableController.QueryByNav(c => c.ARAPId > 0);
+                    richTextBoxLog.AppendText($"即将清空业务数据 应收付表：{ReceivablePayableList.Count} " + "\r\n");
+
+                    var PreReceivedPaymentController = MainForm.Instance.AppContext.GetRequiredService<tb_FM_PreReceivedPaymentController<tb_FM_PreReceivedPayment>>();
+                    var PreReceivedPaymentList = PreReceivedPaymentController.QueryByNav(c => c.PreRPID > 0);
+                    richTextBoxLog.AppendText($"即将清空业务数据 预收付表：{PreReceivedPaymentList.Count} " + "\r\n");
+
+                    int totalamountCounter = 0;
+                    //销售出库 销售订单
+                    if (!chkTestMode.Checked)
+                    {
+                        totalamountCounter += StatementList.Count;
+                        totalamountCounter += PaymentRecordList.Count;
+                        totalamountCounter += ReceivablePayableList.Count;
+                        totalamountCounter += PreReceivedPaymentList.Count;
+                        for (int i = 0; i < StatementList.Count; i++)
+                        {
+                            await StatementController.BaseDeleteByNavAsync(StatementList[i]);
+                        }
+
+                        for (int i = 0; i < PaymentRecordList.Count; i++)
+                        {
+                            await PaymentRecordController.BaseDeleteByNavAsync(PaymentRecordList[i]);
+                        }
+
+                        for (int i = 0; i < ReceivablePayableList.Count; i++)
+                        {
+                            await ReceivablePayableController.BaseDeleteByNavAsync(ReceivablePayableList[i]);
+                        }
+
+                        for (int i = 0; i < PreReceivedPaymentList.Count; i++)
+                        {
+                            await PreReceivedPaymentController.BaseDeleteByNavAsync(PreReceivedPaymentList[i]);
+                        }
+
+
+                        richTextBoxLog.AppendText($"修复生产计划总数量 修复成功：{totalamountCounter} " + "\r\n");
+                    }
+                }
+
 
             }
         }

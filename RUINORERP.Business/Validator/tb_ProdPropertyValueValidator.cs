@@ -41,10 +41,10 @@ namespace RUINORERP.Business
 //***** 
  RuleFor(tb_ProdPropertyValue =>tb_ProdPropertyValue.Property_ID).NotNull().WithMessage("属性:不能为空。");
 
- RuleFor(tb_ProdPropertyValue =>tb_ProdPropertyValue.PropertyValueName).MaximumLength(10).WithMessage("属性值名称:不能超过最大长度,10.");
+ RuleFor(tb_ProdPropertyValue =>tb_ProdPropertyValue.PropertyValueName).MaximumLength(25).WithMessage("属性值名称:不能超过最大长度,25.");
  RuleFor(tb_ProdPropertyValue =>tb_ProdPropertyValue.PropertyValueName).NotEmpty().WithMessage("属性值名称:不能为空。");
 
- RuleFor(tb_ProdPropertyValue =>tb_ProdPropertyValue.PropertyValueDesc).MaximumLength(25).WithMessage("属性值描述:不能超过最大长度,25.");
+ RuleFor(tb_ProdPropertyValue =>tb_ProdPropertyValue.PropertyValueDesc).MaximumLength(50).WithMessage("属性值描述:不能超过最大长度,50.");
 
  RuleFor(tb_ProdPropertyValue =>tb_ProdPropertyValue.SortOrder).NotEmpty().When(x => x.SortOrder.HasValue);
 

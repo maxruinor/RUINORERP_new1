@@ -56,7 +56,6 @@ namespace RUINORERP.Business.Processor
             queryFilter.SetQueryField<tb_MaterialRequisition>(c => c.PrintStatus, QueryFieldType.CmbEnum, typeof(PrintStatus));
             queryFilter.SetQueryField<tb_MaterialRequisition>(c => c.ApprovalStatus, QueryFieldType.CmbEnum, typeof(ApprovalStatus));
             queryFilter.SetQueryField<tb_MaterialRequisition>(c => c.DataStatus, QueryFieldType.CmbEnum, typeof(DataStatus));
-            queryFilter.SetQueryField<tb_MaterialRequisition>(c => c.DepartmentID);
             queryFilter.SetQueryField<tb_MaterialRequisition>(c => c.DeliveryDate);
             return queryFilter;
         }

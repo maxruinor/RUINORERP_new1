@@ -1151,7 +1151,6 @@ namespace RUINORERP.Business
                             .Includes(a => a.tb_currency)
                             .Includes(a => a.tb_department)
                             .Includes(a => a.tb_projectgroup)
-                            .Includes(a => a.tb_department)
                             .Includes(a => a.tb_customervendor)
                             .Includes(a => a.tb_FM_ReceivablePayableDetails)
                             .ToListAsync();

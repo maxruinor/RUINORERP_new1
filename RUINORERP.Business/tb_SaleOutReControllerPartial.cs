@@ -181,11 +181,12 @@ namespace RUINORERP.Business
                         //2024-4-15思路更新:如果销售订单中有相同的产品的多行情况。时 如订单: A 5PCS  A2PCS  ,出库也可以多行，A 2,A3, A2 按订单循环
                         //回写订单退回数量
                         List<tb_SaleOrderDetail> maskedList = new List<tb_SaleOrderDetail>();
-                        if (entity.tb_saleout.tb_saleorder.tb_SaleOrderDetails == null)
+                        if (entity.tb_saleout.tb_saleorder == null || entity.tb_saleout.tb_saleorder.tb_SaleOrderDetails == null)
                         {
                             entity.tb_saleout.tb_saleorder = await _unitOfWorkManage.GetDbClient().Queryable<tb_SaleOrder>()
                                 .Includes(t => t.tb_SaleOrderDetails)
                                 .Includes(t => t.tb_SaleOuts, a => a.tb_SaleOutRes, b => b.tb_SaleOutReDetails)
+                                 .Includes(t => t.tb_SaleOuts, a => a.tb_SaleOutDetails)
                                 .Where(w => w.SOrder_ID == entity.tb_saleout.SOrder_ID.Value).FirstAsync();
                         }
                         //算出每订单中的产品 的全部退回的数量之和，并记录保存
@@ -649,11 +650,12 @@ namespace RUINORERP.Business
                     //2024-4-15思路更新:如果销售订单中有相同的产品的多行情况。时 如订单: A 5PCS  A2PCS  ,出库也可以多行，A 2,A3, A2 按订单循环
                     //回写订单退回数量 反审，就是恢复当前的数量 （变化的是上面的 退回数量）这里只是求和 保存回去？
                     List<tb_SaleOrderDetail> maskedList = new List<tb_SaleOrderDetail>();
-                    if (entity.tb_saleout.tb_saleorder.tb_SaleOrderDetails == null)
+                    if (entity.tb_saleout.tb_saleorder == null || entity.tb_saleout.tb_saleorder.tb_SaleOrderDetails == null)
                     {
                         entity.tb_saleout.tb_saleorder = await _unitOfWorkManage.GetDbClient().Queryable<tb_SaleOrder>()
                             .Includes(t => t.tb_SaleOrderDetails)
                             .Includes(t => t.tb_SaleOuts, a => a.tb_SaleOutRes, b => b.tb_SaleOutReDetails)
+                             .Includes(t => t.tb_SaleOuts, a => a.tb_SaleOutDetails)
                             .Where(w => w.SOrder_ID == entity.tb_saleout.SOrder_ID.Value).FirstAsync();
                     }
 
@@ -691,7 +693,7 @@ namespace RUINORERP.Business
 
                     //更新已退数量
                     await _unitOfWorkManage.GetDbClient().Updateable<tb_SaleOrderDetail>(entity.tb_saleout.tb_saleorder.tb_SaleOrderDetails).ExecuteCommandAsync();
-                                     
+
 
                     #endregion
 

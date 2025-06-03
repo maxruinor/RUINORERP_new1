@@ -208,6 +208,7 @@ namespace RUINORERP.UI.ProductEAV
                             base.toolStripButtonSave.Enabled = true;
                             ToolBarEnabledControl(MenuItemEnums.保存);
                             list.Add(rr.ReturnObject);
+                            MainForm.Instance.AuditLogHelper.CreateAuditLog<tb_Prod>("产品保存", rr.ReturnObject);
                             //保存箱规
                             //if (entity.tb_BoxRuleses.Count > 0 && entity.tb_BoxRuleses[0] != null && entity.tb_BoxRuleses[0].HasChanged)
                             //{

@@ -6,9 +6,6 @@ using FastReport.Utils;
 using Google.Protobuf.Reflection;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-
-
-
 //using Google.Protobuf.Reflection;
 //using NetTaste;
 using RUINORERP.Business;
@@ -2481,8 +2478,8 @@ namespace RUINORERP.UI.UCSourceGrid
                             //返回的值是 两个，一个是具体的值，另一个是选中的对象集合
 
 
-                            object val = sendControl.Value;
-                            if (val == null && _editor.AllowNull)
+                            object InputValue = sendControl.Value;
+                            if (InputValue == null && _editor.AllowNull)
                             {
                                 cancelEvent.Cancel = false;
                                 return;
@@ -2492,7 +2489,7 @@ namespace RUINORERP.UI.UCSourceGrid
                                 //没有修改过，有保存焦点进入时的值并且不是选择过来的
                                 if (currContext.CellRange.Start != new Position(-1, -1) && currContext.Tag != null && sendControl.Tag == null)
                                 {
-                                    if (currContext.Tag.ToString() == val.ToString())
+                                    if (currContext.Tag.ToString() == InputValue.ToString())
                                     {
                                         cancelEvent.Cancel = false;
                                         return;
@@ -2507,7 +2504,7 @@ namespace RUINORERP.UI.UCSourceGrid
                                 //    throw new Exception("请设置明细表格中的查询对象业务主键列");
                                 //}
 
-                                string valValue = val.ToString();
+                                string valValue = InputValue.ToString();
                                 #region 如果只是点来点去，值没有变化。暂时没有办法得到变化了没有。思路变为：如果当前行数据的产品id存在并且 tag为空时，就不需要重复验证
                                 //object tempRowData = dci.ParentGridDefine.grid.Rows[_editor.EditPosition.Row].RowData;
                                 //if (tempRowData != null)
@@ -2735,39 +2732,42 @@ namespace RUINORERP.UI.UCSourceGrid
                                 }
                                 else
                                 {
-                                    MainForm.Instance.uclog.AddLog("提示", "产品信息不存在。请重新打开程序重试。");
-                                    sendControl.TextBox.SelectAll();
-                                    using (QueryFormGeneric dg = new QueryFormGeneric())
+                                    if (!string.IsNullOrEmpty(InputValue.ToString()))
                                     {
-                                        dg.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
-                                        dg.prodQuery.QueryField = item.ColName;
-                                        //设置一下默认仓库，思路是，首先保存了主表的数据对象，然后拿到主表的仓库字段
-                                        //这里是不是可以设置为事件来驱动,的并且可以指定字段
-                                        Expression<Func<View_ProdDetail, object>> warehouse = x => x.Location_ID;
-                                        if (dci.ParentGridDefine.DefineColumns.FirstOrDefault(c => c.ColName == warehouse.GetMemberInfo().Name) != null)
+                                        MainForm.Instance.uclog.AddLog("提示", "产品信息不存在。请重新打开程序重试。");
+                                        sendControl.TextBox.SelectAll();
+                                        using (QueryFormGeneric dg = new QueryFormGeneric())
                                         {
-                                            if (dci.ParentGridDefine.GridMasterData != null)
+                                            dg.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
+                                            dg.prodQuery.QueryField = item.ColName;
+                                            //设置一下默认仓库，思路是，首先保存了主表的数据对象，然后拿到主表的仓库字段
+                                            //这里是不是可以设置为事件来驱动,的并且可以指定字段
+                                            Expression<Func<View_ProdDetail, object>> warehouse = x => x.Location_ID;
+                                            if (dci.ParentGridDefine.DefineColumns.FirstOrDefault(c => c.ColName == warehouse.GetMemberInfo().Name) != null)
                                             {
-                                                dg.prodQuery.LocationID = dci.ParentGridDefine.GridMasterData.GetPropertyValue(warehouse.GetMemberInfo().Name).ToLong();
+                                                if (dci.ParentGridDefine.GridMasterData != null)
+                                                {
+                                                    dg.prodQuery.LocationID = dci.ParentGridDefine.GridMasterData.GetPropertyValue(warehouse.GetMemberInfo().Name).ToLong();
+                                                }
+
                                             }
 
+                                            if (dg.ShowDialog() == DialogResult.OK)
+                                            {
+                                                sendControl.Tag = dg.prodQuery.QueryObjects;
+                                                sendControl.Value = dg.prodQuery.QueryValue;
+                                            }
+                                            else
+                                            {
+                                                cancelEvent.Cancel = false;
+                                                sendControl.TextBox.Text = string.Empty;
+                                                //清空关联的UI上的值，即就是用产品详情带出来的值
+                                                dci.ParentGridDefine.SetDependTargetValue(null, _editor.EditPosition, null, dci.ColName);
+                                                return;
+                                            }
                                         }
-
-                                        if (dg.ShowDialog() == DialogResult.OK)
-                                        {
-                                            sendControl.Tag = dg.prodQuery.QueryObjects;
-                                            sendControl.Value = dg.prodQuery.QueryValue;
-                                        }
-                                        else
-                                        {
-                                            cancelEvent.Cancel = false;
-                                            sendControl.TextBox.Text = string.Empty;
-                                            //清空关联的UI上的值，即就是用产品详情带出来的值
-                                            dci.ParentGridDefine.SetDependTargetValue(null, _editor.EditPosition, null, dci.ColName);
-                                            return;
-                                        }
+                                        cancelEvent.Cancel = true;
                                     }
-                                    cancelEvent.Cancel = true;
                                 }
                             }
                             #endregion
@@ -3530,7 +3530,7 @@ namespace RUINORERP.UI.UCSourceGrid
         /// <param name="fromExp"></param>
         /// <param name="toExp"></param>
         public void SetPointToColumnPairs<ProdcutShare, BillDetail>(SourceGridDefine define,
-            Expression<Func<ProdcutShare, object>> fromExp, 
+            Expression<Func<ProdcutShare, object>> fromExp,
             Expression<Func<BillDetail, object>> toExp,
             bool HideSourceColumn = true
             )

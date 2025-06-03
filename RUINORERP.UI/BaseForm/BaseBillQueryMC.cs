@@ -1288,6 +1288,15 @@ namespace RUINORERP.UI.BaseForm
         {
             BaseProcessor baseProcessor = Startup.GetFromFacByName<BaseProcessor>(typeof(M).Name + "Processor");
             QueryConditionFilter = baseProcessor.GetQueryFilter();
+
+            //如果添加了全局性重复的字段名为查询条件则加到日志中。便于查找
+            //QueryConditionFilter.QueryFields中的FieldName有相同的数据。则找出来
+            var queryFields = QueryConditionFilter.QueryFields.GroupBy(c => c.FieldName).Where(c => c.Count() > 1).ToList();
+            if (queryFields != null && queryFields.Count > 0)
+            {
+                MainForm.Instance.logger.LogError($"{typeof(M).Name}Processor 设置了重复查询条件");
+            }
+
             //添加默认全局的
             // base.QueryConditions.Add(c => c.Created_by);
             // List<string> slist = ExpressionHelper.ExpressionListToStringList(MasterSummaryCols);

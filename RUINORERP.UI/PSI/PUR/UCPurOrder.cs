@@ -357,7 +357,7 @@ namespace RUINORERP.UI.PSI.PUR
             EditEntity.ApprovalStatus = (int)ApprovalStatus.未审核;
             EditEntity.DataStatus = (int)DataStatus.草稿;
             EditEntity.Approver_at = null;
-            EditEntity.tb_PurEntries=null;
+            EditEntity.tb_PurEntries = null;
             EditEntity.tb_PurOrderRes = null;
             BusinessHelper.Instance.InitEntity(EditEntity);
             foreach (var item in EditEntity.tb_PurOrderDetails)
@@ -367,7 +367,7 @@ namespace RUINORERP.UI.PSI.PUR
                 item.tb_purorder = null;
                 item.PrimaryKeyID = 0;
             }
-             
+
             base.AddByCopy();
         }
 
@@ -401,6 +401,8 @@ namespace RUINORERP.UI.PSI.PUR
             listCols.SetCol_NeverVisible<ProductSharePart>(c => c.Rack_ID);
             listCols.SetCol_NeverVisible<ProductSharePart>(c => c.TransPrice);
 
+            //保存时自动判断的
+            listCols.SetCol_NeverVisible<tb_PurOrderDetail>(c => c.IncludingTax);
             if (!AppContext.SysConfig.UseBarCode)
             {
                 listCols.SetCol_NeverVisible<ProductSharePart>(c => c.BarCode);

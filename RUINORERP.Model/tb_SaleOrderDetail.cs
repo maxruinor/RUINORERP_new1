@@ -308,6 +308,20 @@ namespace RUINORERP.Model
             SetProperty(ref _CustomerPartNo, value);
                         }
         }
+        private string _SaleFlagCode;
+        /// <summary>
+        /// 标识代码
+        /// </summary>
+        [AdvQueryAttribute(ColName = "SaleFlagCode", ColDesc = "标识代码")]
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType = "String", ColumnName = "SaleFlagCode", Length = 100, IsNullable = true, ColumnDescription = "标识代码")]
+        public string SaleFlagCode
+        {
+            get { return _SaleFlagCode; }
+            set
+            {
+                SetProperty(ref _SaleFlagCode, value);
+            }
+        }
 
         private bool _Gift= false;
         /// <summary>

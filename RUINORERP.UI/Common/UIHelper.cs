@@ -124,7 +124,7 @@ namespace RUINORERP.UI.Common
                 if (item != null)
                 {
                     //主表时，字段不可用或设置为不可见时  如果是金额还可以  再增加money类型
-                    if (item.Contains("Foreign")|| item.Contains("ExchangeRate"))
+                    if (item.Contains("Foreign") || item.Contains("ExchangeRate"))
                     {
                         KryptonTextBox txtTextBox = UIHelper.FindTextBox(FormControl, item);
                         if (txtTextBox != null)
@@ -373,92 +373,110 @@ namespace RUINORERP.UI.Common
         /// <param name="InvisibleCols"></param>
         public static void ControlChildColumnsInvisible(tb_MenuInfo CurMenuInfo, List<SGDefineColumnItem> listCols)
         {
-            if (!MainForm.Instance.AppContext.IsSuperUser)
+            //if (!MainForm.Instance.AppContext.IsSuperUser)
+            //{
+            if (CurMenuInfo.tb_P4Fields != null)
             {
-                if (CurMenuInfo.tb_P4Fields != null)
+                List<tb_P4Field> P4Fields =
+                CurMenuInfo.tb_P4Fields
+                .Where(p => p.RoleID == MainForm.Instance.AppContext.CurrentUser_Role.RoleID
+                && p.tb_fieldinfo.IsChild).ToList();
+                foreach (var item in P4Fields)
                 {
-                    List<tb_P4Field> P4Fields =
-                    CurMenuInfo.tb_P4Fields
-                    .Where(p => p.RoleID == MainForm.Instance.AppContext.CurrentUser_Role.RoleID
-                    && p.tb_fieldinfo.IsChild).ToList();
-                    foreach (var item in P4Fields)
+                    if (item != null)
                     {
-                        if (item != null)
+
+                        //主表时,列不可用或设置为不可见时
+                        //设置不可见
+                        if (item.tb_fieldinfo != null)
                         {
 
-                            //主表时,列不可用或设置为不可见时
-                            //设置不可见
-                            if (item.tb_fieldinfo != null)
+                            if (item.tb_fieldinfo.FieldText == "属性")
                             {
 
-                                //如果字段不启用时，直接不显示
-                                if (!item.tb_fieldinfo.IsEnabled)
-                                {
-                                    SGDefineColumnItem defineColumnItem = listCols.Where(w => w.ColName == item.tb_fieldinfo.FieldName
-                                    && w.BelongingObjectType.Name.Contains(typeof(ProductSharePart).Name)
-                                    ).FirstOrDefault();
-                                    if (defineColumnItem != null)
-                                    {
-                                        defineColumnItem.SetCol_NeverVisible(item.tb_fieldinfo.FieldName);
-                                    }
-                                    continue;
-                                }
-
-                                //如果字段不启用时，直接不显示
-                                if (item.tb_fieldinfo.IsChild && !item.tb_fieldinfo.IsEnabled)
-                                {
-                                    SGDefineColumnItem defineColumnItem = listCols.Where(w => w.ColName == item.tb_fieldinfo.FieldName
-                                    && !w.BelongingObjectType.Name.Contains(typeof(ProductSharePart).Name)
-                                    ).FirstOrDefault();
-                                    if (defineColumnItem != null)
-                                    {
-                                        defineColumnItem.SetCol_NeverVisible(item.tb_fieldinfo.FieldName);
-                                    }
-                                    continue;
-                                }
-
-                                //设置不可见
-                                //if (!item.IsVisble && item.tb_fieldinfo.IsChild)
-                                if ((!item.tb_fieldinfo.IsEnabled || !item.IsVisble) && item.tb_fieldinfo.IsChild)
-                                {
-                                    SGDefineColumnItem defineColumnItem = listCols.Where(w => w.ColName == item.tb_fieldinfo.FieldName
-                                    && !w.BelongingObjectType.Name.Contains(typeof(ProductSharePart).Name)
-                                    ).FirstOrDefault();
-                                    if (defineColumnItem != null)
-                                    {
-                                        defineColumnItem.SetCol_NeverVisible(item.tb_fieldinfo.FieldName);
-                                    }
-                                }
-
-                                //设置默认隐藏
-                                if (item.tb_fieldinfo.DefaultHide && item.tb_fieldinfo.IsChild)
-                                {
-                                    SGDefineColumnItem defineColumnItem = listCols.Where(w => w.ColName == item.tb_fieldinfo.FieldName
-                                    && !w.BelongingObjectType.Name.Contains(typeof(ProductSharePart).Name)).FirstOrDefault();
-                                    if (defineColumnItem != null)
-                                    {
-                                        defineColumnItem.SetCol_DefaultHide(item.tb_fieldinfo.FieldName);
-                                    }
-                                }
-
-                                //设置默认只读
-                                if (item.tb_fieldinfo.ReadOnly && item.tb_fieldinfo.IsChild)
-                                {
-                                    SGDefineColumnItem defineColumnItem = listCols.Where(w => w.ColName == item.tb_fieldinfo.FieldName
-                                    && !w.BelongingObjectType.Name.Contains(typeof(ProductSharePart).Name)).FirstOrDefault();
-                                    if (defineColumnItem != null)
-                                    {
-                                        defineColumnItem.SetCol_ReadOnly(item.tb_fieldinfo.FieldName);
-                                    }
-                                }
-
                             }
-                        }
 
+                            //如果字段不启用时，直接不显示
+                            if (!item.tb_fieldinfo.IsEnabled)
+                            {
+                                SGDefineColumnItem defineColumnItem = listCols.Where(w => w.ColName == item.tb_fieldinfo.FieldName
+                                && w.BelongingObjectType.Name == item.tb_fieldinfo.EntityName).FirstOrDefault();
+                                if (defineColumnItem != null)
+                                {
+                                    defineColumnItem.SetCol_NeverVisible(item.tb_fieldinfo.FieldName);
+                                }
+                                continue;
+                            }
+
+
+                            //如果字段不启用时，直接不显示
+                            if (!item.tb_fieldinfo.IsEnabled)
+                            {
+                                SGDefineColumnItem defineColumnItem = listCols.Where(w => w.ColName == item.tb_fieldinfo.FieldName
+                                && w.BelongingObjectType.Name.Contains(typeof(ProductSharePart).Name)
+                                ).FirstOrDefault();
+                                if (defineColumnItem != null)
+                                {
+                                    defineColumnItem.SetCol_NeverVisible(item.tb_fieldinfo.FieldName);
+                                }
+                                continue;
+                            }
+
+                            //如果字段不启用时，直接不显示
+                            if (item.tb_fieldinfo.IsChild && !item.tb_fieldinfo.IsEnabled)
+                            {
+                                SGDefineColumnItem defineColumnItem = listCols.Where(w => w.ColName == item.tb_fieldinfo.FieldName
+                                && !w.BelongingObjectType.Name.Contains(typeof(ProductSharePart).Name)
+                                ).FirstOrDefault();
+                                if (defineColumnItem != null)
+                                {
+                                    defineColumnItem.SetCol_NeverVisible(item.tb_fieldinfo.FieldName);
+                                }
+                                continue;
+                            }
+
+                            //设置不可见
+                            //if (!item.IsVisble && item.tb_fieldinfo.IsChild)
+                            if ((!item.tb_fieldinfo.IsEnabled || !item.IsVisble) && item.tb_fieldinfo.IsChild)
+                            {
+                                SGDefineColumnItem defineColumnItem = listCols.Where(w => w.ColName == item.tb_fieldinfo.FieldName
+                                && !w.BelongingObjectType.Name.Contains(typeof(ProductSharePart).Name)
+                                ).FirstOrDefault();
+                                if (defineColumnItem != null)
+                                {
+                                    defineColumnItem.SetCol_NeverVisible(item.tb_fieldinfo.FieldName);
+                                }
+                            }
+
+                            //设置默认隐藏
+                            if (item.tb_fieldinfo.DefaultHide && item.tb_fieldinfo.IsChild)
+                            {
+                                SGDefineColumnItem defineColumnItem = listCols.Where(w => w.ColName == item.tb_fieldinfo.FieldName
+                                && !w.BelongingObjectType.Name.Contains(typeof(ProductSharePart).Name)).FirstOrDefault();
+                                if (defineColumnItem != null)
+                                {
+                                    defineColumnItem.SetCol_DefaultHide(item.tb_fieldinfo.FieldName);
+                                }
+                            }
+
+                            //设置默认只读
+                            if (item.tb_fieldinfo.ReadOnly && item.tb_fieldinfo.IsChild)
+                            {
+                                SGDefineColumnItem defineColumnItem = listCols.Where(w => w.ColName == item.tb_fieldinfo.FieldName
+                                && !w.BelongingObjectType.Name.Contains(typeof(ProductSharePart).Name)).FirstOrDefault();
+                                if (defineColumnItem != null)
+                                {
+                                    defineColumnItem.SetCol_ReadOnly(item.tb_fieldinfo.FieldName);
+                                }
+                            }
+
+                        }
                     }
 
                 }
+
             }
+            //}
         }
 
         /// <summary>

@@ -627,7 +627,7 @@ using var binder = new UIStateBinder(..., customEvaluator);
                 listCols.SetCol_NeverVisible<ProductSharePart>(c => c.BarCode);
             }
             listCols.SetCol_DefaultValue<tb_SaleOrderDetail>(a => a.Discount, 1m);
-            UIHelper.ControlChildColumnsInvisible(CurMenuInfo, listCols);
+        
             //listCols.SetCol_DefaultValue<tb_SaleOrderDetail>(a => a.TaxRate, 0.13m);//m =>decial d=>double
 
             //如果库位为只读  暂时只会显示 ID
@@ -691,6 +691,7 @@ using var binder = new UIStateBinder(..., customEvaluator);
 
             sgd.SetDependencyObject<ProductSharePart, tb_SaleOrderDetail>(list);
             sgd.HasRowHeader = true;
+            UIHelper.ControlChildColumnsInvisible(CurMenuInfo, listCols);
             sgh.InitGrid(grid1, sgd, true, nameof(tb_SaleOrderDetail));
             sgh.OnCalculateColumnValue += Sgh_OnCalculateColumnValue;
             sgh.OnLoadMultiRowData += Sgh_OnLoadMultiRowData;

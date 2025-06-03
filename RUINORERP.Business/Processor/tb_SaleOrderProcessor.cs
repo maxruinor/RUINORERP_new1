@@ -52,6 +52,7 @@ namespace RUINORERP.Business.Processor
             queryFilter.SetQueryField<tb_SaleOrder>(c => c.PrintStatus, QueryFieldType.CmbEnum, typeof(PrintStatus));
             queryFilter.SetQueryField<tb_SaleOrder>(c => c.ApprovalStatus, QueryFieldType.CmbEnum, typeof(ApprovalStatus));
             queryFilter.SetQueryField<tb_SaleOrder>(c => c.DataStatus, QueryFieldType.CmbEnum, typeof(DataStatus));
+            queryFilter.SetQueryField<tb_SaleOrder>(c => c.Created_by, typeof(tb_Employee));
             queryFilter.SetQueryField<tb_SaleOrder>(c => c.SaleDate);
             queryFilter.SetQueryField<tb_SaleOrder>(c => c.Notes);
 

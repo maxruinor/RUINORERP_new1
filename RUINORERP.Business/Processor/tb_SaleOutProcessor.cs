@@ -44,7 +44,7 @@ namespace RUINORERP.Business.Processor
 
             var lambda = Expressionable.Create<tb_CustomerVendor>()
                        .And(t => t.isdeleted == false)
-              
+
                        .And(t => t.IsCustomer == true)
                        .And(t => t.Is_enabled == true)
                        .AndIF(AuthorizeController.GetSaleLimitedAuth(_appContext), t => t.Employee_ID == _appContext.CurUserInfo.UserInfo.Employee_ID)//限制了销售只看到自己的客户,采购不限制
@@ -65,6 +65,7 @@ namespace RUINORERP.Business.Processor
             queryFilter.SetQueryField<tb_SaleOut>(c => c.PrintStatus, QueryFieldType.CmbEnum, typeof(PrintStatus));
             queryFilter.SetQueryField<tb_SaleOut>(c => c.ApprovalStatus, QueryFieldType.CmbEnum, typeof(ApprovalStatus));
             queryFilter.SetQueryField<tb_SaleOut>(c => c.DataStatus, QueryFieldType.CmbEnum, typeof(DataStatus));
+            queryFilter.SetQueryField<tb_SaleOut>(c => c.Created_by, typeof(tb_Employee));
             queryFilter.SetQueryField<tb_SaleOut>(c => c.OutDate);
             queryFilter.SetQueryField<tb_SaleOut>(c => c.Notes);
 

@@ -1850,7 +1850,8 @@ namespace RUINORERP.UI.BaseForm
                             OriginalData beatData = ClientDataBuilder.BaseInfoChangeBuilder(typeof(T).Name);
                             MainForm.Instance.ecs.AddSendData(beatData);
                             //审计日志
-                            MainForm.Instance.AuditLogHelper.CreateAuditLog("保存", CurMenuInfo.CaptionCN);
+                            //MainForm.Instance.AuditLogHelper.CreateAuditLog("保存", CurMenuInfo.CaptionCN);
+                            MainForm.Instance.AuditLogHelper.CreateAuditLog<T>("保存", rr.ReturnObject);
                             list.Add(rr.ReturnObject);
 
                             //根据要缓存的列表集合来判断是否需要上传到服务器。让服务器分发到其他客户端

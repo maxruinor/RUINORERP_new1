@@ -346,7 +346,7 @@ namespace RUINORERP.Model
         /// 标识代码
         /// </summary>
         [AdvQueryAttribute(ColName = "SaleFlagCode", ColDesc = "标识代码")]
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType = "String", ColumnName = "SaleFlagCode", Length = 50, IsNullable = true, ColumnDescription = "标识代码")]
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType = "String", ColumnName = "SaleFlagCode", Length = 100, IsNullable = true, ColumnDescription = "标识代码")]
         public string SaleFlagCode
         {
             get { return _SaleFlagCode; }

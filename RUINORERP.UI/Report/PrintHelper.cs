@@ -256,6 +256,10 @@ namespace RUINORERP.UI.Report
                             //报表控件注册数据
                             FReport.RegisterData(mlist, "rd");
                             FReport.RegisterData(currUserInfos, "currUserInfo");
+
+                            //如果打印的实际中有项目小组，就去项目小组找他的上级部门，他的部分属性哪个公司，就打印哪个公司的抬头
+                            //TODO by watson
+
                             FReport.RegisterData(companyInfos, "companyInfo");
                             if (printConfig.tb_PrintTemplates == null)
                             {

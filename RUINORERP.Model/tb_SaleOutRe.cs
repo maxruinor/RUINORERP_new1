@@ -289,10 +289,10 @@ namespace RUINORERP.Model
 
         private DateTime? _ReturnDate;
         /// <summary>
-        /// 发货日期
+        /// 退货日期
         /// </summary>
-        [AdvQueryAttribute(ColName = "ReturnDate",ColDesc = "发货日期")] 
-        [SugarColumn(ColumnDataType = "datetime", SqlParameterDbType ="DateTime",  ColumnName = "ReturnDate" ,IsNullable = true,ColumnDescription = "发货日期" )]
+        [AdvQueryAttribute(ColName = "ReturnDate",ColDesc = "退货日期")] 
+        [SugarColumn(ColumnDataType = "datetime", SqlParameterDbType ="DateTime",  ColumnName = "ReturnDate" ,IsNullable = true,ColumnDescription = "退货日期")]
         public DateTime? ReturnDate
         { 
             get{return _ReturnDate;}

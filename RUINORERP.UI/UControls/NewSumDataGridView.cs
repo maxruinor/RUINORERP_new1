@@ -39,6 +39,7 @@ namespace RUINORERP.UI.UControls
     /// kryptonDataGridView1.MultiSelect = MultipleChoices;
     /// kryptonDataGridView1.UseSelectedColumn = MultipleChoices;
     /// 2023-11-25 优化列显示控制：this.dataGridView1.FieldNameList = UIHelper.GetFieldNameColList(typeof(T));
+    /// 2025 添加了很多功能，如多选模式，批量编辑列
     /// </summary>
     [Serializable]
     public class NewSumDataGridView : KryptonDataGridView

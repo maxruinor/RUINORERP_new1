@@ -80,6 +80,11 @@ namespace RUINORERP.UI.PSI.SAL
         {
             base.MasterSummaryCols.Add(c => c.Quantity);
             base.MasterSummaryCols.Add(c => c.SubtotalTransAmount);
+            base.MasterSummaryCols.Add(c => c.CommissionAmount);
+            base.MasterSummaryCols.Add(c => c.SubtotalCostAmount);
+            base.MasterSummaryCols.Add(c => c.TotalDeliveredQty);
+            base.MasterSummaryCols.Add(c => c.TotalReturnedQty);
+
         }
 
         public override void BuildInvisibleCols()

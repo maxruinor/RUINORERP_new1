@@ -175,7 +175,7 @@ namespace Krypton.Toolkit.Suite.Extended.TreeGridView
             // paint the cell normally
             base.Paint(graphics, clipBounds, cellBounds, rowIndex, cellState, value, formattedValue, errorText, cellStyle, advancedBorderStyle, paintParts);
 
-            #region Progress Bar 画进度条的代码位置 有注意这里不会影响下面树的结构这些
+            #region Progress Bar 画进度条的代码位置 注意这里不会影响下面树的结构这些
 
             double percentage = ProcessBarValue ?? 0;
             if (percentage > 0)
@@ -184,6 +184,9 @@ namespace Krypton.Toolkit.Suite.Extended.TreeGridView
 
                 // 绘制进度条背景和前景
                 int progressBarWidth = (int)(cellBounds.Width * percentage / 100);
+                // 确保宽度至少为1，避免创建零宽度的图形对象
+                if (progressBarWidth < 1)
+                    progressBarWidth = 1;
 
                 using (Brush backgroundBrush = new SolidBrush(Color.LightGray))
                 {
@@ -235,6 +238,11 @@ namespace Krypton.Toolkit.Suite.Extended.TreeGridView
             else
             {
                 //如果没有启动刚是白色，还是给红色呢？
+                // 进度为0时的处理逻辑，不能设置。设置白色 会覆盖实际的单号等文字
+                //using (Brush backgroundBrush = new SolidBrush(Color.White))
+                //{
+                //    graphics.FillRectangle(backgroundBrush, cellBounds.X + _calculatedLeftPadding, cellBounds.Y + (cellBounds.Height - ProgressBarHeight) / 2, cellBounds.Width - _calculatedLeftPadding, ProgressBarHeight);
+                //}
             }
 
             #endregion

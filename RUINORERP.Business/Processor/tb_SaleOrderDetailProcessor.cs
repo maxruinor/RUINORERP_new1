@@ -44,6 +44,7 @@ namespace RUINORERP.Business.Processor
             SummaryCols.Add(c => c.SubtotalTransAmount);
             SummaryCols.Add(c => c.TotalDeliveredQty);
             SummaryCols.Add(c => c.TotalReturnedQty);
+
             //listCols.SetCol_Summary<tb_SaleOrderDetail>(c => c.Quantity);
             //listCols.SetCol_Summary<tb_SaleOrderDetail>(c => c.CommissionAmount);
             //listCols.SetCol_Summary<tb_SaleOrderDetail>(c => c.SubtotalCostAmount);

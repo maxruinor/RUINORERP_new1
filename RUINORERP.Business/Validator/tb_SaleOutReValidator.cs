@@ -84,11 +84,6 @@ namespace RUINORERP.Business
 
  RuleFor(tb_SaleOutRe =>tb_SaleOutRe.Approver_by).NotEmpty().When(x => x.Approver_by.HasValue);
 
-
-
-
-
-
  RuleFor(tb_SaleOutRe =>tb_SaleOutRe.KeepAccountsType).NotEmpty().When(x => x.KeepAccountsType.HasValue);
 
  RuleFor(tb_SaleOutRe =>tb_SaleOutRe.TaxDeductionType).NotEmpty().When(x => x.TaxDeductionType.HasValue);

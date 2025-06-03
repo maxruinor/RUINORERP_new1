@@ -41,6 +41,7 @@ using RUINORERP.UI.PSI.PUR;
 using RUINORERP.Business.CommService;
 using RUINORERP.Global.EnumExt;
 using RUINORERP.UI.AdvancedUIModule;
+using RUINORERP.UI.SysConfig;
 
 namespace RUINORERP.UI.PSI.SAL
 {
@@ -54,7 +55,7 @@ namespace RUINORERP.UI.PSI.SAL
             AddPublicEntityObject(typeof(ProductSharePart));
         }
 
- 
+
 
 
         public override void QueryConditionBuilder()
@@ -599,7 +600,27 @@ namespace RUINORERP.UI.PSI.SAL
             return false;
         }
 
+        protected override async Task<bool> Submit()
+        {
 
+
+            if (EditEntity != null && EditEntity.ActionStatus == ActionStatus.新增)
+            {
+                if (EditEntity.ReturnDate == null)
+                {
+                    //退货日期不能为空。
+                    System.Windows.Forms.MessageBox.Show("退货日期不能为空。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    return false;
+                }
+                bool rs = await base.Submit();
+                return rs;
+            }
+            else
+            {
+                return false;
+            }
+
+        }
 
         private void cmbCustomerVendor_ID_SelectedIndexChanged(object sender, EventArgs e)
         {

@@ -138,10 +138,16 @@ namespace RUINORERP.UI.UserCenter.DataParts
 
                     foreach (var item in kryptonTreeGridView1.GridNodes)
                     {
+            
                         //如果他是来自于订单。特殊标记一下
 
                         //找到计划单号：
                         string PPNo = item.Cells[0].Value.ToString();
+                        if (PPNo == "PP25051312")
+                        {
+
+                        }
+
                         var ProductionPlan = PURList.FirstOrDefault(p => p.PPNo == PPNo);
                         item.Tag = ProductionPlan;
                         item.Cells[0].Tag = "PPNo";

@@ -662,7 +662,7 @@ using var binder = new UIStateBinder(..., customEvaluator);
 
             //listCols.SetCol_Summary<tb_SaleOrderDetail>(c => c.SubtotalTransAmount);
             //listCols.SetCol_Summary<tb_SaleOrderDetail>(c => c.SubtotalTaxAmount);
-
+            
             //设置总计列
             BaseProcessor baseProcessor = BusinessHelper._appContext.GetRequiredServiceByName<BaseProcessor>(typeof(tb_SaleOrderDetail).Name + "Processor");
             var summaryCols = baseProcessor.GetSummaryCols();

@@ -580,10 +580,11 @@ namespace RUINORERP.UI.Common
 
         /// <summary>
         /// 关闭的一个方法
+        /// 关闭事件 由tab左上的小x决定的
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void Bs_Click(object sender, EventArgs e)
+        private void Bs_Click_old(object sender, EventArgs e)
         {
             if (sender is ButtonSpecAny btn && btn.Owner is KryptonPage kpage)
             {
@@ -610,13 +611,17 @@ namespace RUINORERP.UI.Common
                         }
                     }
 
-                    if (control.GetType() != null && control.GetType().BaseType.Name == "BaseBillEditGeneric`2")
+                    if (control.GetType() != null &&
+                        (control.GetType().BaseType.Name == "BaseBillEditGeneric`2" ||
+                        control.GetType().BaseType.BaseType.Name == "BaseBillEditGeneric`2"))
                     {
                         var baseBillEdit = (BaseBillEdit)control;
                         baseBillEdit.UNLock();
                     }
 
-                    if (control.GetType() != null && control.GetType().BaseType.Name.Contains("BaseBillQueryMC"))
+                    if (control.GetType() != null && (control.GetType().BaseType.Name.Contains("BaseBillQueryMC") ||
+                    control.GetType().BaseType.BaseType.Name.Contains("BaseBillQueryMC")
+                        ))
                     {
                         // 获取泛型参数类型
                         Type[] genericArguments = control.GetType().BaseType.GetGenericArguments();
@@ -654,7 +659,27 @@ namespace RUINORERP.UI.Common
             }
         }
 
+        TabCloseHandler closeHandler = new TabCloseHandler();
 
+        /// <summary>
+        /// 关闭的一个方法
+        /// 关闭事件 由tab左上的小x决定的
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void Bs_Click(object sender, EventArgs e)
+        {
+            if (sender is ButtonSpecAny btn && btn.Owner is KryptonPage kpage)
+            {
+                if (kpage.Controls.Count == 1)
+                {
+                    var control = kpage.Controls[0];
+                    closeHandler.ProcessControlOnClose(control);
+                    MainForm.Instance.kryptonDockingManager1.RemovePage(kpage.UniqueName, true);
+                    kpage.Dispose();
+                }
+            }
+        }
         private KryptonPage NewPage(string name, int image, Control content)
         {
             // Create new page with title and image

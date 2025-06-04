@@ -28,6 +28,8 @@ namespace RUINORERP.UI.BI
         public override void BindData(BaseEntity entity)
         {
             DataBindingHelper.BindData4CmbByEnum<tb_SystemConfig>(entity, k => k.CostCalculationMethod, typeof(库存成本计算方式), cmbCostCalculationMethod, false);
+            DataBindingHelper.BindData4CmbByEnum<tb_SystemConfig>(entity, k => k.FreightAllocationRules, typeof(FreightAllocationRules), cmbFreightAllocationRules, false);
+
             DataBindingHelper.BindData4TextBox<tb_SystemConfig>(entity, t => t.QtyDataPrecision, txtQtyDataPrecision, BindDataType4TextBox.Qty, false);
 
             DataBindingHelper.BindData4TextBox<tb_SystemConfig>(entity, t => t.TaxRateDataPrecision, txtTaxRateDataPrecision, BindDataType4TextBox.Qty, false);

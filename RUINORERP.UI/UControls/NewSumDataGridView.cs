@@ -1,8 +1,10 @@
 ﻿using FastReport.DevComponents.DotNetBar.Controls;
+using HLH.Lib.List;
 using Krypton.Toolkit;
 using Newtonsoft.Json;
 using NPOI.SS.Formula.Functions;
 using NPOI.Util;
+using RUINORERP.Common.CollectionExtension;
 using RUINORERP.Common.Extensions;
 using RUINORERP.Common.Helper;
 using RUINORERP.Model;
@@ -13,11 +15,15 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
+using System.Linq.Dynamic.Core;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Threading;
 using System.Windows.Forms;
+using static RUINORERP.UI.UControls.ContextMenuController;
 
 
 namespace RUINORERP.UI.UControls
@@ -147,8 +153,9 @@ namespace RUINORERP.UI.UControls
                 //处理左上角行头右键点击
                 if (e.RowIndex == -1 && e.ColumnIndex == -1 && e.Button == MouseButtons.Right)
                 {
-                    var headerMenu = BuildHeaderMenu(GridViewExtension.MULTI_SELECT_MODE);
+                    var headerMenu = BuildHeaderMenu(GridViewExtension.MULTI_SELECT_MODE, GridViewExtension.FILTER_BY_COLUMN);
                     this.ContextMenuStrip = headerMenu;
+
                     ShowHeaderContextMenu(headerMenu, e.Location);
                     _headerMenuShown = true;
 
@@ -224,8 +231,31 @@ namespace RUINORERP.UI.UControls
                     // 添加其他行头相关菜单项...
                     headerMenu.Items.Add(multiSelectItem);
                     #endregion
-
                 }
+
+                if (item == GridViewExtension.FILTER_BY_COLUMN && !headerMenu.Items.ContainsKey(GridViewExtension.FILTER_BY_COLUMN))
+                {
+                    #region
+                    // 创建带复选框的菜单项
+                    ToolStripMenuItem FilterItem = new ToolStripMenuItem(GridViewExtension.FILTER_BY_COLUMN)
+                    {
+                        Name = GridViewExtension.FILTER_BY_COLUMN,
+                        CheckOnClick = true,
+                        //Text = "⚙️",
+                        Checked = this.EnableFiltering
+                    };
+
+                    FilterItem.Click += (sender, e) =>
+                    {
+                        this.EnableFiltering = ((ToolStripMenuItem)sender).Checked;
+                        //((ToolStripMenuItem)sender).Checked = this.UseSelectedColumn;
+                    };
+
+                    // 添加其他行头相关菜单项...
+                    headerMenu.Items.Add(FilterItem);
+                    #endregion
+                }
+
 
                 if (item == GridViewExtension.BATCH_EDIT_COLUMN && !headerMenu.Items.ContainsKey(GridViewExtension.BATCH_EDIT_COLUMN))
                 {
@@ -233,7 +263,7 @@ namespace RUINORERP.UI.UControls
                     {
                         // 新增"批量编辑列值"菜单项
                         ToolStripMenuItem batchEditItem = new ToolStripMenuItem(GridViewExtension.BATCH_EDIT_COLUMN);
-                        batchEditItem.Name=GridViewExtension.BATCH_EDIT_COLUMN;
+                        batchEditItem.Name = GridViewExtension.BATCH_EDIT_COLUMN;
                         batchEditItem.Click += BatchEditItem_Click;
                         headerMenu.Items.Add(batchEditItem);
                     }
@@ -516,7 +546,8 @@ namespace RUINORERP.UI.UControls
             // 开始批量更新
             this.SuspendLayout();
             try
-            {
+            {   // 使用事务处理提高性能
+                this.BeginEdit(true);
                 // 更新所有行的值
                 for (int i = 0; i < this.Rows.Count; i++)
                 {
@@ -541,6 +572,7 @@ namespace RUINORERP.UI.UControls
                     }
                 }
 
+                this.EndEdit();
                 // 标记数据已修改
                 dgvEdit = true;
 
@@ -610,8 +642,7 @@ namespace RUINORERP.UI.UControls
             DataGridViewCellStyle dgc = new DataGridViewCellStyle();
             dgc.Alignment = DataGridViewContentAlignment.MiddleCenter;
             checkBoxColumn.DefaultCellStyle = dgc;
-            //ColumnHeadersDefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
-            //DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
+
             //this.Columns["Selected"].Frozen = true;
             // 找到对应于 Selected 列的 DataGridViewColumn
             DataGridViewColumn selectedColumn = this.Columns["Selected"];
@@ -656,7 +687,7 @@ namespace RUINORERP.UI.UControls
             set { summaryDescription = value; }
         }
 
-        //
+
 
         ////BindingSource 加入???
 
@@ -722,6 +753,344 @@ namespace RUINORERP.UI.UControls
                 || LicenseManager.UsageMode == LicenseUsageMode.Designtime);
         }
 
+        #region 添加筛选功能
+        //添加筛选行容器
+        private KryptonPanel _filterPanel = new KryptonPanel();
+
+        private Dictionary<string, KryptonComboBox> _filterTypeBoxes = new Dictionary<string, KryptonComboBox>();
+        private Dictionary<string, KryptonTextBox> _filterValueBoxes = new Dictionary<string, KryptonTextBox>();
+
+        //  private Dictionary<string, FilterType> _filterTypes = new Dictionary<string, FilterType>();
+
+
+        //动态创建筛选文本框
+        private void CreateFilterControls()
+        {
+            if (!_enableFiltering) return;
+
+            //_filterBoxes.Clear();
+
+            _filterPanel.Controls.Clear();
+            _filterTypeBoxes.Clear();
+            _filterValueBoxes.Clear();
+            int currentX = this.RowHeadersWidth; // 从行头右侧开始
+            int padding = 2; // 控件间间距
+
+            foreach (DataGridViewColumn col in this.Columns)
+            {
+                if (!col.Visible || col.Width < 50) continue; // 跳过不可见或太窄的列
+
+                // 1. 创建筛选类型下拉框
+                KryptonComboBox cmbType = new KryptonComboBox
+                {
+                    Width = 30,
+                    DropDownStyle = ComboBoxStyle.DropDownList,
+                    Tag = col.Name
+                };
+
+                cmbType.DisplayMember = "Text";
+                cmbType.ValueMember = "Value";
+                cmbType.DataSource = Enum.GetValues(typeof(FilterType))
+                 .Cast<FilterType>()
+                 .Select(ft => new { Text = GetFilterSymbol(ft), Value = ft })
+                 .ToList();
+
+                // 在每个TextBox旁添加ComboBox
+                // cmbType.Items.AddRange(Enum.GetNames(typeof(FilterType)));
+                //cmbType.SelectedIndex = 0;
+                cmbType.SelectedIndexChanged += FilterType_Changed;
+
+                // 2. 创建筛选值文本框
+                KryptonTextBox txtValue = new KryptonTextBox
+                {
+                    Width = col.Width - cmbType.Width - padding,
+                    Tag = col.Name,
+
+                    //PlaceholderText = $"筛选 {col.HeaderText}",
+                    Anchor = AnchorStyles.Left | AnchorStyles.Right
+                };
+
+                ToolTipValues toolTip = new ToolTipValues(null);
+                toolTip.Description = $"筛选 {col.HeaderText}";
+                toolTip.EnableToolTips = true;
+                txtValue.ToolTipValues = toolTip;
+                txtValue.TextChanged += FilterValue_Changed;
+
+                // 3. 设置位置
+                cmbType.Location = new Point(currentX, 3);
+                txtValue.Location = new Point(currentX + cmbType.Width + padding, 3);
+
+                // 4. 添加到面板
+                _filterPanel.Controls.Add(cmbType);
+                _filterPanel.Controls.Add(txtValue);
+
+                // 5. 保存引用
+                _filterTypeBoxes.Add(col.Name, cmbType);
+                _filterValueBoxes.Add(col.Name, txtValue);
+
+                // 6. 移动到下一列位置
+                currentX += col.Width + padding;
+            }
+        }
+
+        // 列位置变化时更新筛选控件位置
+        private void UpdateFilterControlsPosition()
+        {
+            if (!_enableFiltering) return;
+
+            int currentX = this.RowHeadersWidth;
+            int padding = 2;
+
+            foreach (DataGridViewColumn col in this.Columns)
+            {
+                if (!col.Visible || !_filterTypeBoxes.ContainsKey(col.Name)) continue;
+
+                var cmbType = _filterTypeBoxes[col.Name];
+                var txtValue = _filterValueBoxes[col.Name];
+
+                cmbType.Location = new Point(currentX, 3);
+                txtValue.Location = new Point(currentX + cmbType.Width + padding, 3);
+                txtValue.Width = col.Width - cmbType.Width - padding;
+
+                currentX += col.Width + padding;
+            }
+        }
+        private void ApplyFilters()
+        {
+            if (this.DataSource == null) return;
+
+            try
+            {
+                // 构建过滤条件
+                var filterConditions = new List<string>();
+
+                foreach (var colName in _filterValueBoxes.Keys)
+                {
+                    string filterValue = _filterValueBoxes[colName].Text.Trim();
+                    if (string.IsNullOrEmpty(filterValue)) continue;
+
+                    var filterTypeBox = _filterTypeBoxes[colName];
+                    if (!Enum.TryParse(filterTypeBox.SelectedItem?.ToString(), out FilterType filterType))
+                    {
+                        filterType = FilterType.Contains;
+                    }
+                    // 如果是外键字段，获取显示的名称进行过滤
+                    //if (colName == "DepartmentID")
+                    //{
+                    //    var departmentName = GetDepartmentNameByFilterValue(filterValue);
+                    //    if (!string.IsNullOrEmpty(departmentName))
+                    //    {
+                    //        filterValue = departmentName;
+                    //    }
+                    //}
+
+                    string condition = GetFilterCondition(colName, filterValue, filterType);
+                    if (!string.IsNullOrEmpty(condition))
+                    {
+                        filterConditions.Add(condition);
+                    }
+                }
+
+                // 应用过滤
+                string finalFilter = string.Join(" AND ", filterConditions);
+
+                if (this.DataSource is DataTable dt)
+                {
+                    dt.DefaultView.RowFilter = finalFilter;
+                }
+                else if (this.DataSource is DataView dv)
+                {
+                    dv.RowFilter = finalFilter;
+                }
+                else if (this.DataSource is BindingSource bs)
+                {
+                    if (bs.DataSource is DataTable bsDt)
+                    {
+                        bsDt.DefaultView.RowFilter = finalFilter;
+                    }
+                    else if (bs.DataSource is DataView bsDv)
+                    {
+                        bsDv.RowFilter = finalFilter;
+                    }
+                    else
+                    {
+                        bs.Filter = finalFilter;
+                        //bs.RemoveFilter
+                    }
+                }
+                else 
+                {
+
+                    
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"筛选出错: {ex.Message}");
+            }
+        }
+
+        private string GetFilterCondition_old(string columnName, string value, FilterType filterType)
+        {
+            if (string.IsNullOrWhiteSpace(value)) return string.Empty;
+            // 防止SQL注入式攻击
+            string safeValue = value.Replace("'", "''");
+
+            switch (filterType)
+            {
+                case FilterType.Contains:
+                    return $"[{columnName}] LIKE '%{safeValue}%'";
+                case FilterType.StartsWith:
+                    return $"[{columnName}] LIKE '{safeValue}%'";
+                case FilterType.Equals:
+                    return $"[{columnName}] = '{safeValue}'";
+                case FilterType.NotEqual:
+                    return $"[{columnName}] <> '{safeValue}'";
+                default:
+                    return $"[{columnName}] LIKE '%{safeValue}%'";
+            }
+        }
+
+
+        private string GetFilterCondition(string columnName, string value, FilterType filterType)
+        {
+            if (string.IsNullOrWhiteSpace(value)) return string.Empty;
+
+            // 防止 SQL 注入式攻击
+            string safeValue = value.Replace("'", "''");
+
+            // 处理外键字段：如果列名是外键（如 DepartmentID），尝试获取对应的显示名称进行过滤
+            //if (columnName == "DepartmentID")
+            //{
+            //    var departmentName = GetDepartmentNameByFilterValue(safeValue);
+            //    if (!string.IsNullOrEmpty(departmentName))
+            //    {
+            //        safeValue = departmentName;
+            //    }
+            //}
+
+            switch (filterType)
+            {
+                case FilterType.Contains:
+                    return $"{columnName} LIKE '%{safeValue}%'";
+
+                case FilterType.StartsWith:
+                    return $"[{columnName}] LIKE '{safeValue}%'";
+
+                case FilterType.Equals:
+                    // 尝试解析为数字或日期
+                    if (long.TryParse(safeValue, out long numericValue))
+                    {
+                        return $"[{columnName}] = {numericValue}";
+                    }
+                    else if (DateTime.TryParse(safeValue, out DateTime dateValue))
+                    {
+                        // 日期格式需要使用 # 包裹
+                        return $"[{columnName}] = #{dateValue.ToShortDateString()}#";
+                    }
+                    else
+                    {
+                        return $"[{columnName}] = '{safeValue}'";
+                    }
+
+                case FilterType.NotEqual:
+                    // 尝试解析为数字或日期
+                    if (long.TryParse(safeValue, out long numericValueNot))
+                    {
+                        return $"[{columnName}] <> {numericValueNot}";
+                    }
+                    else if (DateTime.TryParse(safeValue, out DateTime dateValueNot))
+                    {
+                        return $"[{columnName}] <> #{dateValueNot.ToShortDateString()}#";
+                    }
+                    else
+                    {
+                        return $"[{columnName}] <> '{safeValue}'";
+                    }
+
+                default:
+                    return $"[{columnName}] LIKE '%{safeValue}%'";
+            }
+        }
+
+        // 筛选值变化处理（带防抖）
+        //添加防抖逻辑避免频繁过滤：
+        private System.Threading.Timer _filterTimer;
+        // 修改 FilterType 的显示逻辑
+        private string GetFilterSymbol(FilterType filterType)
+        {
+            switch (filterType)
+            {
+                case FilterType.Contains:
+                    return "%";
+                case FilterType.StartsWith:
+                    return "^";
+                case FilterType.Equals:
+                    return "=";
+                case FilterType.NotEqual:
+                    return "!=";
+                default:
+                    return "%";
+            }
+        }
+
+        private void FilterValue_Changed(object sender, EventArgs e)
+        {
+            _filterTimer?.Dispose();
+            _filterTimer = new System.Threading.Timer(_ =>
+            {
+                this.Invoke(new Action(ApplyFilters));
+            }, null, 500, Timeout.Infinite);
+        }
+
+        private void FilterType_Changed(object sender, EventArgs e)
+        {
+            ApplyFilters(); // 筛选类型变化立即应用
+        }
+
+
+
+
+        private bool _enableFiltering = false;
+
+        [Browsable(true)]
+        [Category("行为")]
+        [Description("是否启用顶部筛选功能")]
+        public bool EnableFiltering
+        {
+            get { return _enableFiltering; }
+            set
+            {
+                if (_enableFiltering != value)
+                {
+                    _enableFiltering = value;
+                    UpdateFilterPanelVisibility();
+                    if (_enableFiltering && this.DataSource != null)
+                    {
+                        CreateFilterControls();
+                    }
+                }
+            }
+        }
+        private void UpdateFilterPanelVisibility()
+        {
+            _filterPanel.Visible = _enableFiltering;
+            if (_enableFiltering)
+            {
+                // 调整数据区域位置
+                this.Top = _filterPanel.Height;
+                this.Height = Parent.Height - _filterPanel.Height;
+            }
+            else
+            {
+                this.Top = 0;
+                this.Height = Parent.Height;
+            }
+        }
+
+        #endregion
+
+
 
         /// <summary>
         /// 初始化
@@ -729,56 +1098,24 @@ namespace RUINORERP.UI.UControls
         //[Designer(typeof(MyDesigner))]
         public NewSumDataGridView()
         {
+
+
+
             // 启用双缓冲
             this.DoubleBuffered = true;
             //// 在构造函数中添加
             ///这个设置会在每次行数变化时触发全量行头宽度计算，当数据量超过1000行时会产生严重的性能问题
             //this.RowHeadersWidthSizeMode = DataGridViewRowHeadersWidthSizeMode.AutoSizeToAllHeaders;
             this.TopLeftHeaderCell.Style.BackColor = Color.LightGray;
-            this.TopLeftHeaderCell.ToolTipText = "点击右键显示设置多选模式设置菜单";
-
-
+            this.TopLeftHeaderCell.ToolTipText = "点击右键:设置多选模式菜单";
 
             base.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.ColumnWidthChanged += new DataGridViewColumnEventHandler(this_ColumnWidthChanged);
-            this.DataSourceChanged += new EventHandler(this_DataSourceChanged);
-            this.RowHeadersWidthChanged += new EventHandler(this_RowHeadersWidthChanged);
-            this.MouseWheel += new MouseEventHandler(dgvSource_MouseWheel);
-            this.CellEndEdit += NewSumDataGridView_CellEndEdit;
-            this.DataError += NewSumDataGridView_DataError;
-            this.CellValueChanged += NewSumDataGridView_CellValueChanged;
-            this.CurrentCellChanged += NewSumDataGridView_CurrentCellChanged;
-            this.CurrentCellDirtyStateChanged += NewSumDataGridView_CurrentCellDirtyStateChanged;
-            this.DataBindingComplete += NewSumDataGridView_DataBindingComplete;
-            this.ColumnDisplayIndexChanged += NewSumDataGridView_ColumnDisplayIndexChanged;
-            this.MouseDown += NewSumDataGridView_MouseDown;
-            this.CellClick += NewSumDataGridView_CellClick;
-            this.CellStateChanged += dataGridView1_CellStateChanged;
+            InitializeEvents();
+
             //所以行号不需要特别处理，调用者也不需要实现，除非有特殊要求
             //this.CellPainting += NewSumDataGridView_CellPainting;
             this.ReadOnly = false;
-            #region 后加by watson 参考自其他dg
-
-            DataGridViewCellStyle c = new DataGridViewCellStyle();
-            c.BackColor = Color.Yellow;
-            this.AlternatingRowsDefaultCellStyle = c;
-            this.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleLeft;
-            this.GridColor = Color.SkyBlue;
-            this.AlternatingRowsDefaultCellStyle.BackColor = Color.Beige;
-            this.DefaultCellStyle.SelectionBackColor = Color.MistyRose;
-            this.DefaultCellStyle.SelectionForeColor = Color.Blue;
-            this.RowHeadersDefaultCellStyle.SelectionBackColor = Color.Gold;
-            this.RowHeadersDefaultCellStyle.SelectionForeColor = Color.Green;
-
-
-            // this.FirstDisplayedScrollingRowIndex = this.Rows[this.Rows.Count - 1].Index;
-            //this.RowHeadersWidth = 59;
-            //this.this.Rows[this.Rows.Count + 1].Selected = true;
-
-            this.AllowUserToAddRows = false;
-            this.AllowUserToDeleteRows = false;
-
-            #endregion
+            InitializeDefaultStyles();
             //不占用原始的属性
             // this.Tag = "SUMDG";
 
@@ -808,9 +1145,73 @@ namespace RUINORERP.UI.UControls
 
             this.CurrentCellChanged += dataGridView1_CurrentCellChanged;
             this.SelectionChanged += dataGridView1_SelectionChanged;
+
+            // 智能过滤初始化
+            InitializeFilterPanel();
+
+
         }
 
+        private void InitializeFilterPanel()
+        {
+            #region  智能过滤
 
+            // 筛选面板初始化
+            _filterPanel = new KryptonPanel
+            {
+                Dock = DockStyle.Top,
+                Height = 20,
+                BackColor = Color.WhiteSmoke,
+                Visible = _enableFiltering
+            };
+            this.Controls.Add(_filterPanel);
+
+            // 订阅布局变化事件
+            this.ColumnWidthChanged += (s, e) => UpdateFilterControlsPosition();
+            this.ColumnDisplayIndexChanged += (s, e) => UpdateFilterControlsPosition();
+            this.Scroll += (s, e) =>
+            {
+                if (e.ScrollOrientation == ScrollOrientation.HorizontalScroll)
+                    UpdateFilterControlsPosition();
+            };
+
+            #endregion
+        }
+
+        private void InitializeEvents()
+        {
+            this.ColumnWidthChanged += new DataGridViewColumnEventHandler(this_ColumnWidthChanged);
+            this.DataSourceChanged += new EventHandler(this_DataSourceChanged);
+            this.RowHeadersWidthChanged += new EventHandler(this_RowHeadersWidthChanged);
+            this.MouseWheel += new MouseEventHandler(dgvSource_MouseWheel);
+            this.CellEndEdit += NewSumDataGridView_CellEndEdit;
+            this.DataError += NewSumDataGridView_DataError;
+            this.CellValueChanged += NewSumDataGridView_CellValueChanged;
+            this.CurrentCellChanged += NewSumDataGridView_CurrentCellChanged;
+            this.CurrentCellDirtyStateChanged += NewSumDataGridView_CurrentCellDirtyStateChanged;
+            this.DataBindingComplete += NewSumDataGridView_DataBindingComplete;
+            this.ColumnDisplayIndexChanged += NewSumDataGridView_ColumnDisplayIndexChanged;
+            this.MouseDown += NewSumDataGridView_MouseDown;
+            this.CellClick += NewSumDataGridView_CellClick;
+            this.CellStateChanged += dataGridView1_CellStateChanged;
+        }
+
+        private void InitializeDefaultStyles()
+        {
+            DataGridViewCellStyle c = new DataGridViewCellStyle();
+            c.BackColor = Color.Yellow;
+            this.AlternatingRowsDefaultCellStyle = c;
+            this.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleLeft;
+            this.GridColor = Color.SkyBlue;
+            this.AlternatingRowsDefaultCellStyle.BackColor = Color.Beige;
+            this.DefaultCellStyle.SelectionBackColor = Color.MistyRose;
+            this.DefaultCellStyle.SelectionForeColor = Color.Blue;
+            this.RowHeadersDefaultCellStyle.SelectionBackColor = Color.Gold;
+            this.RowHeadersDefaultCellStyle.SelectionForeColor = Color.Green;
+
+            this.AllowUserToAddRows = false;
+            this.AllowUserToDeleteRows = false;
+        }
 
         // 处理CurrentCellChanged事件，以更新当前单元格的背景色
         private void dataGridView1_CurrentCellChanged(object sender, EventArgs e)
@@ -1221,6 +1622,10 @@ namespace RUINORERP.UI.UControls
         /// <param name="e"></param>
         private void NewSumDataGridView_DataBindingComplete(object sender, DataGridViewBindingCompleteEventArgs e)
         {
+            if (_enableFiltering)
+            {
+                CreateFilterControls();
+            }
             //在数据绑定的关键位置添加布局挂起和恢复
             this.SuspendLayout();
             try
@@ -2515,10 +2920,16 @@ namespace RUINORERP.UI.UControls
         /// </summary>
         private void InitSumDgvAndScrolBar()
         {
+
             if (this.Parent == null)
             {
                 return;
             }
+            // 调整Top位置计算
+            int topOffset = _filterPanel.Height + (_isShowSumRow ? _sumRowHeight : 0);
+            this.Top = topOffset;
+
+
 
             //滚动条
             _vScrollBar = new VScrollBar();
@@ -2826,6 +3237,7 @@ namespace RUINORERP.UI.UControls
                 }
 
             }
+
         }
 
         private void this_RowHeadersWidthChanged(object sender, EventArgs e)
@@ -2913,54 +3325,74 @@ namespace RUINORERP.UI.UControls
             {
                 return;
             }
-
-            var sumRowDataDic = new Dictionary<int, decimal>();
-
-            #region 按设置的需要合计的列求和
-            Array.ForEach(SumColumns, col =>
+            this.SuspendLayout();
+            try
             {
-                if (!_dgvSumRow.Columns.Contains(col))
+                // 清除之前的合计值
+                if (_dgvSumRow.Rows.Count == 0)
+                    _dgvSumRow.Rows.Add(1);
+                for (int i = 0; i < _dgvSumRow.Columns.Count; i++)
                 {
-                    return;
+                    _dgvSumRow[i, 0].Value = "";
                 }
-                var tempSumVal = 0m;
-                var colIndex = _dgvSumRow.Columns[col].Index;
-                for (int i = 0; i < this.Rows.Count; i++)
-                {
-                    if (this[colIndex, i].Value == null)
-                    {
-                        continue;
-                    }
-                    if (this[colIndex, i].Value == DBNull.Value)
-                    {
-                        continue;
-                    }
-                    if (this[colIndex, i].Value.ToString() == "")
-                    {
-                        continue;
-                    }
 
-                    var tempVal = 0m;
-                    try
-                    {
-                        //这里要优化，当值为空时，可以跳过
-                        tempVal = (decimal)Convert.ChangeType(this[colIndex, i].Value, typeof(decimal));
-                    }
-                    catch
-                    {
-                    }
-                    tempSumVal += tempVal;
-                }
-                sumRowDataDic[colIndex] = tempSumVal;
-            });
-            #endregion
+                var sumRowDataDic = new Dictionary<int, decimal>();
 
-            if (sumRowDataDic.Count > 0)
-            {
-                sumRowDataDic.Keys.ToList().ForEach(colIndex =>
+                #region 按设置的需要合计的列求和
+                Array.ForEach(SumColumns, col =>
                 {
-                    _dgvSumRow[colIndex, 0].Value = sumRowDataDic[colIndex];
+                    if (!_dgvSumRow.Columns.Contains(col))
+                    {
+                        return;
+                    }
+                    var tempSumVal = 0m;
+                    var colIndex = _dgvSumRow.Columns[col].Index;
+                    for (int i = 0; i < this.Rows.Count; i++)
+                    {
+                        if (this[colIndex, i].Value == null)
+                        {
+                            continue;
+                        }
+                        if (this[colIndex, i].Value == DBNull.Value)
+                        {
+                            continue;
+                        }
+                        if (this[colIndex, i].Value.ToString() == "")
+                        {
+                            continue;
+                        }
+
+                        var tempVal = 0m;
+                        try
+                        {
+                            //这里要优化，当值为空时，可以跳过
+                            tempVal = (decimal)Convert.ChangeType(this[colIndex, i].Value, typeof(decimal));
+                        }
+                        catch
+                        {
+                        }
+                        tempSumVal += tempVal;
+                    }
+                    sumRowDataDic[colIndex] = tempSumVal;
                 });
+                #endregion
+
+                if (sumRowDataDic.Count > 0)
+                {
+                    sumRowDataDic.Keys.ToList().ForEach(colIndex =>
+                    {
+                        _dgvSumRow[colIndex, 0].Value = sumRowDataDic[colIndex];
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"计算合计行时出错: {ex.Message}", "错误",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            finally
+            {
+                this.ResumeLayout(true);
             }
         }
 
@@ -3354,25 +3786,15 @@ namespace RUINORERP.UI.UControls
 
         protected override void OnPaint(PaintEventArgs e)
         {
-            base.OnPaint(e);
-            //if (this.Rows.Count > 0)
-            //{
-            //    if (this.TopLeftHeaderCell.Value == null)
-            //    {
-            //        this.TopLeftHeaderCell.Value = this.Rows.Count.ToString();
-            //    }
-            //    if (this.Rows.Count.ToString() != this.TopLeftHeaderCell.Value.ToString())
-            //    {
-            //        this.TopLeftHeaderCell.Value = this.Rows.Count.ToString();
-            //    }
-            //}
-            if (_panel.Controls.Count > 0)
+            try
             {
-                if (this.IsShowSumRow)
-                {
-
-                }
+                base.OnPaint(e);
             }
+            catch (Exception)
+            {
+
+            }
+
         }
 
         private void NewSumDataGridView_CellPainting(object sender, DataGridViewCellPaintingEventArgs e)
@@ -3500,8 +3922,8 @@ namespace RUINORERP.UI.UControls
         }
 
 
-
     }
+
 
 
     // 新增一个枚举用于表示数据类型
@@ -3514,4 +3936,15 @@ namespace RUINORERP.UI.UControls
         DateTime,
         Other
     }
+
+    // 筛选类型枚举
+    public enum FilterType
+    {
+        Contains,
+        StartsWith,
+        Equals,
+        NotEqual
+    }
+
+
 }

@@ -29,6 +29,16 @@
         private void InitializeComponent()
         {
             this.kryptonPanel1 = new Krypton.Toolkit.KryptonPanel();
+            this.lblEnableVoucherModule = new Krypton.Toolkit.KryptonLabel();
+            this.chkEnableVoucherModule = new Krypton.Toolkit.KryptonCheckBox();
+            this.lblEnableContractModule = new Krypton.Toolkit.KryptonLabel();
+            this.chkEnableContractModule = new Krypton.Toolkit.KryptonCheckBox();
+            this.lblEnableInvoiceModule = new Krypton.Toolkit.KryptonLabel();
+            this.chkEnableInvoiceModule = new Krypton.Toolkit.KryptonCheckBox();
+            this.lblEnableMultiCurrency = new Krypton.Toolkit.KryptonLabel();
+            this.chkEnableMultiCurrency = new Krypton.Toolkit.KryptonCheckBox();
+            this.lblEnableFinancialModule = new Krypton.Toolkit.KryptonLabel();
+            this.chkEnableFinancialModule = new Krypton.Toolkit.KryptonCheckBox();
             this.kryptonLabel9 = new Krypton.Toolkit.KryptonLabel();
             this.chkOwnershipControl = new Krypton.Toolkit.KryptonCheckBox();
             this.kryptonLabel8 = new Krypton.Toolkit.KryptonLabel();
@@ -67,24 +77,19 @@
             this.chkDepartBizLimited = new Krypton.Toolkit.KryptonCheckBox();
             this.lblPurchsaeBizLimited = new Krypton.Toolkit.KryptonLabel();
             this.chkPurchsaeBizLimited = new Krypton.Toolkit.KryptonCheckBox();
-            this.lblEnableVoucherModule = new Krypton.Toolkit.KryptonLabel();
-            this.chkEnableVoucherModule = new Krypton.Toolkit.KryptonCheckBox();
-            this.lblEnableContractModule = new Krypton.Toolkit.KryptonLabel();
-            this.chkEnableContractModule = new Krypton.Toolkit.KryptonCheckBox();
-            this.lblEnableInvoiceModule = new Krypton.Toolkit.KryptonLabel();
-            this.chkEnableInvoiceModule = new Krypton.Toolkit.KryptonCheckBox();
-            this.lblEnableMultiCurrency = new Krypton.Toolkit.KryptonLabel();
-            this.chkEnableMultiCurrency = new Krypton.Toolkit.KryptonCheckBox();
-            this.lblEnableFinancialModule = new Krypton.Toolkit.KryptonLabel();
-            this.chkEnableFinancialModule = new Krypton.Toolkit.KryptonCheckBox();
+            this.cmbFreightAllocationRules = new Krypton.Toolkit.KryptonComboBox();
+            this.kryptonLabel10 = new Krypton.Toolkit.KryptonLabel();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel1)).BeginInit();
             this.kryptonPanel1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.cmbCostCalculationMethod)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.cmbFreightAllocationRules)).BeginInit();
             this.SuspendLayout();
             // 
             // kryptonPanel1
             // 
+            this.kryptonPanel1.Controls.Add(this.cmbFreightAllocationRules);
+            this.kryptonPanel1.Controls.Add(this.kryptonLabel10);
             this.kryptonPanel1.Controls.Add(this.lblEnableVoucherModule);
             this.kryptonPanel1.Controls.Add(this.chkEnableVoucherModule);
             this.kryptonPanel1.Controls.Add(this.lblEnableContractModule);
@@ -138,6 +143,94 @@
             this.kryptonPanel1.Name = "kryptonPanel1";
             this.kryptonPanel1.Size = new System.Drawing.Size(721, 607);
             this.kryptonPanel1.TabIndex = 0;
+            // 
+            // lblEnableVoucherModule
+            // 
+            this.lblEnableVoucherModule.Location = new System.Drawing.Point(457, 270);
+            this.lblEnableVoucherModule.Name = "lblEnableVoucherModule";
+            this.lblEnableVoucherModule.Size = new System.Drawing.Size(88, 20);
+            this.lblEnableVoucherModule.TabIndex = 189;
+            this.lblEnableVoucherModule.Values.Text = "启用凭证模块";
+            // 
+            // chkEnableVoucherModule
+            // 
+            this.chkEnableVoucherModule.Checked = true;
+            this.chkEnableVoucherModule.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.chkEnableVoucherModule.Location = new System.Drawing.Point(564, 272);
+            this.chkEnableVoucherModule.Name = "chkEnableVoucherModule";
+            this.chkEnableVoucherModule.Size = new System.Drawing.Size(19, 13);
+            this.chkEnableVoucherModule.TabIndex = 190;
+            this.chkEnableVoucherModule.Values.Text = "";
+            // 
+            // lblEnableContractModule
+            // 
+            this.lblEnableContractModule.Location = new System.Drawing.Point(457, 295);
+            this.lblEnableContractModule.Name = "lblEnableContractModule";
+            this.lblEnableContractModule.Size = new System.Drawing.Size(88, 20);
+            this.lblEnableContractModule.TabIndex = 191;
+            this.lblEnableContractModule.Values.Text = "启用合同模块";
+            // 
+            // chkEnableContractModule
+            // 
+            this.chkEnableContractModule.Checked = true;
+            this.chkEnableContractModule.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.chkEnableContractModule.Location = new System.Drawing.Point(564, 297);
+            this.chkEnableContractModule.Name = "chkEnableContractModule";
+            this.chkEnableContractModule.Size = new System.Drawing.Size(19, 13);
+            this.chkEnableContractModule.TabIndex = 192;
+            this.chkEnableContractModule.Values.Text = "";
+            // 
+            // lblEnableInvoiceModule
+            // 
+            this.lblEnableInvoiceModule.Location = new System.Drawing.Point(457, 320);
+            this.lblEnableInvoiceModule.Name = "lblEnableInvoiceModule";
+            this.lblEnableInvoiceModule.Size = new System.Drawing.Size(88, 20);
+            this.lblEnableInvoiceModule.TabIndex = 193;
+            this.lblEnableInvoiceModule.Values.Text = "启用发票模块";
+            // 
+            // chkEnableInvoiceModule
+            // 
+            this.chkEnableInvoiceModule.Location = new System.Drawing.Point(564, 322);
+            this.chkEnableInvoiceModule.Name = "chkEnableInvoiceModule";
+            this.chkEnableInvoiceModule.Size = new System.Drawing.Size(19, 13);
+            this.chkEnableInvoiceModule.TabIndex = 194;
+            this.chkEnableInvoiceModule.Values.Text = "";
+            // 
+            // lblEnableMultiCurrency
+            // 
+            this.lblEnableMultiCurrency.Location = new System.Drawing.Point(457, 345);
+            this.lblEnableMultiCurrency.Name = "lblEnableMultiCurrency";
+            this.lblEnableMultiCurrency.Size = new System.Drawing.Size(75, 20);
+            this.lblEnableMultiCurrency.TabIndex = 195;
+            this.lblEnableMultiCurrency.Values.Text = "启用多币种";
+            // 
+            // chkEnableMultiCurrency
+            // 
+            this.chkEnableMultiCurrency.Checked = true;
+            this.chkEnableMultiCurrency.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.chkEnableMultiCurrency.Location = new System.Drawing.Point(564, 347);
+            this.chkEnableMultiCurrency.Name = "chkEnableMultiCurrency";
+            this.chkEnableMultiCurrency.Size = new System.Drawing.Size(19, 13);
+            this.chkEnableMultiCurrency.TabIndex = 196;
+            this.chkEnableMultiCurrency.Values.Text = "";
+            // 
+            // lblEnableFinancialModule
+            // 
+            this.lblEnableFinancialModule.Location = new System.Drawing.Point(457, 370);
+            this.lblEnableFinancialModule.Name = "lblEnableFinancialModule";
+            this.lblEnableFinancialModule.Size = new System.Drawing.Size(88, 20);
+            this.lblEnableFinancialModule.TabIndex = 197;
+            this.lblEnableFinancialModule.Values.Text = "启用财务模块";
+            // 
+            // chkEnableFinancialModule
+            // 
+            this.chkEnableFinancialModule.Checked = true;
+            this.chkEnableFinancialModule.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.chkEnableFinancialModule.Location = new System.Drawing.Point(564, 372);
+            this.chkEnableFinancialModule.Name = "chkEnableFinancialModule";
+            this.chkEnableFinancialModule.Size = new System.Drawing.Size(19, 13);
+            this.chkEnableFinancialModule.TabIndex = 198;
+            this.chkEnableFinancialModule.Values.Text = "";
             // 
             // kryptonLabel9
             // 
@@ -295,11 +388,11 @@
             // 
             // lblCostCalculationMethod
             // 
-            this.lblCostCalculationMethod.Location = new System.Drawing.Point(113, 362);
+            this.lblCostCalculationMethod.Location = new System.Drawing.Point(87, 365);
             this.lblCostCalculationMethod.Name = "lblCostCalculationMethod";
-            this.lblCostCalculationMethod.Size = new System.Drawing.Size(62, 20);
+            this.lblCostCalculationMethod.Size = new System.Drawing.Size(88, 20);
             this.lblCostCalculationMethod.TabIndex = 28;
-            this.lblCostCalculationMethod.Values.Text = "成本方式";
+            this.lblCostCalculationMethod.Values.Text = "成本计算方式";
             // 
             // lblQtyDataPrecision
             // 
@@ -348,7 +441,7 @@
             // 
             // btnCancel
             // 
-            this.btnCancel.Location = new System.Drawing.Point(247, 389);
+            this.btnCancel.Location = new System.Drawing.Point(365, 534);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(90, 25);
             this.btnCancel.TabIndex = 21;
@@ -357,7 +450,7 @@
             // 
             // btnOk
             // 
-            this.btnOk.Location = new System.Drawing.Point(113, 389);
+            this.btnOk.Location = new System.Drawing.Point(231, 534);
             this.btnOk.Name = "btnOk";
             this.btnOk.Size = new System.Drawing.Size(90, 25);
             this.btnOk.TabIndex = 20;
@@ -448,93 +541,22 @@
             this.chkPurchsaeBizLimited.TabIndex = 19;
             this.chkPurchsaeBizLimited.Values.Text = "";
             // 
-            // lblEnableVoucherModule
+            // cmbFreightAllocationRules
             // 
-            this.lblEnableVoucherModule.Location = new System.Drawing.Point(457, 270);
-            this.lblEnableVoucherModule.Name = "lblEnableVoucherModule";
-            this.lblEnableVoucherModule.Size = new System.Drawing.Size(88, 20);
-            this.lblEnableVoucherModule.TabIndex = 189;
-            this.lblEnableVoucherModule.Values.Text = "启用凭证模块";
+            this.cmbFreightAllocationRules.DropDownWidth = 181;
+            this.cmbFreightAllocationRules.IntegralHeight = false;
+            this.cmbFreightAllocationRules.Location = new System.Drawing.Point(184, 411);
+            this.cmbFreightAllocationRules.Name = "cmbFreightAllocationRules";
+            this.cmbFreightAllocationRules.Size = new System.Drawing.Size(181, 21);
+            this.cmbFreightAllocationRules.TabIndex = 200;
             // 
-            // chkEnableVoucherModule
+            // kryptonLabel10
             // 
-            this.chkEnableVoucherModule.Checked = true;
-            this.chkEnableVoucherModule.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.chkEnableVoucherModule.Location = new System.Drawing.Point(564, 272);
-            this.chkEnableVoucherModule.Name = "chkEnableVoucherModule";
-            this.chkEnableVoucherModule.Size = new System.Drawing.Size(19, 13);
-            this.chkEnableVoucherModule.TabIndex = 190;
-            this.chkEnableVoucherModule.Values.Text = "";
-            // 
-            // lblEnableContractModule
-            // 
-            this.lblEnableContractModule.Location = new System.Drawing.Point(457, 295);
-            this.lblEnableContractModule.Name = "lblEnableContractModule";
-            this.lblEnableContractModule.Size = new System.Drawing.Size(88, 20);
-            this.lblEnableContractModule.TabIndex = 191;
-            this.lblEnableContractModule.Values.Text = "启用合同模块";
-            // 
-            // chkEnableContractModule
-            // 
-            this.chkEnableContractModule.Checked = true;
-            this.chkEnableContractModule.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.chkEnableContractModule.Location = new System.Drawing.Point(564, 297);
-            this.chkEnableContractModule.Name = "chkEnableContractModule";
-            this.chkEnableContractModule.Size = new System.Drawing.Size(19, 13);
-            this.chkEnableContractModule.TabIndex = 192;
-            this.chkEnableContractModule.Values.Text = "";
-            // 
-            // lblEnableInvoiceModule
-            // 
-            this.lblEnableInvoiceModule.Location = new System.Drawing.Point(457, 320);
-            this.lblEnableInvoiceModule.Name = "lblEnableInvoiceModule";
-            this.lblEnableInvoiceModule.Size = new System.Drawing.Size(88, 20);
-            this.lblEnableInvoiceModule.TabIndex = 193;
-            this.lblEnableInvoiceModule.Values.Text = "启用发票模块";
-            // 
-            // chkEnableInvoiceModule
-            // 
-            this.chkEnableInvoiceModule.Location = new System.Drawing.Point(564, 322);
-            this.chkEnableInvoiceModule.Name = "chkEnableInvoiceModule";
-            this.chkEnableInvoiceModule.Size = new System.Drawing.Size(19, 13);
-            this.chkEnableInvoiceModule.TabIndex = 194;
-            this.chkEnableInvoiceModule.Values.Text = "";
-            // 
-            // lblEnableMultiCurrency
-            // 
-            this.lblEnableMultiCurrency.Location = new System.Drawing.Point(457, 345);
-            this.lblEnableMultiCurrency.Name = "lblEnableMultiCurrency";
-            this.lblEnableMultiCurrency.Size = new System.Drawing.Size(75, 20);
-            this.lblEnableMultiCurrency.TabIndex = 195;
-            this.lblEnableMultiCurrency.Values.Text = "启用多币种";
-            // 
-            // chkEnableMultiCurrency
-            // 
-            this.chkEnableMultiCurrency.Checked = true;
-            this.chkEnableMultiCurrency.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.chkEnableMultiCurrency.Location = new System.Drawing.Point(564, 347);
-            this.chkEnableMultiCurrency.Name = "chkEnableMultiCurrency";
-            this.chkEnableMultiCurrency.Size = new System.Drawing.Size(19, 13);
-            this.chkEnableMultiCurrency.TabIndex = 196;
-            this.chkEnableMultiCurrency.Values.Text = "";
-            // 
-            // lblEnableFinancialModule
-            // 
-            this.lblEnableFinancialModule.Location = new System.Drawing.Point(457, 370);
-            this.lblEnableFinancialModule.Name = "lblEnableFinancialModule";
-            this.lblEnableFinancialModule.Size = new System.Drawing.Size(88, 20);
-            this.lblEnableFinancialModule.TabIndex = 197;
-            this.lblEnableFinancialModule.Values.Text = "启用财务模块";
-            // 
-            // chkEnableFinancialModule
-            // 
-            this.chkEnableFinancialModule.Checked = true;
-            this.chkEnableFinancialModule.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.chkEnableFinancialModule.Location = new System.Drawing.Point(564, 372);
-            this.chkEnableFinancialModule.Name = "chkEnableFinancialModule";
-            this.chkEnableFinancialModule.Size = new System.Drawing.Size(19, 13);
-            this.chkEnableFinancialModule.TabIndex = 198;
-            this.chkEnableFinancialModule.Values.Text = "";
+            this.kryptonLabel10.Location = new System.Drawing.Point(90, 411);
+            this.kryptonLabel10.Name = "kryptonLabel10";
+            this.kryptonLabel10.Size = new System.Drawing.Size(88, 20);
+            this.kryptonLabel10.TabIndex = 199;
+            this.kryptonLabel10.Values.Text = "运费分摊规则";
             // 
             // UCSystemConfigEdit
             // 
@@ -550,6 +572,7 @@
             this.kryptonPanel1.ResumeLayout(false);
             this.kryptonPanel1.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.cmbCostCalculationMethod)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.cmbFreightAllocationRules)).EndInit();
             this.ResumeLayout(false);
 
         }
@@ -605,5 +628,7 @@
         private Krypton.Toolkit.KryptonCheckBox chkEnableMultiCurrency;
         private Krypton.Toolkit.KryptonLabel lblEnableFinancialModule;
         private Krypton.Toolkit.KryptonCheckBox chkEnableFinancialModule;
+        private Krypton.Toolkit.KryptonComboBox cmbFreightAllocationRules;
+        private Krypton.Toolkit.KryptonLabel kryptonLabel10;
     }
 }

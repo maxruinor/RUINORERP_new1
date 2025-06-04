@@ -208,7 +208,12 @@ namespace RUINORERP.UI
 
         }
 
-
+        TabCloseHandler tabCloseHandler = new TabCloseHandler();
+        /// <summary>
+        /// 关闭事件  由 page的最右边x来决定的
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void KryptonDockableWorkspace1_PageCloseClicked(object sender, UniqueNameEventArgs e)
         {
             if (e.UniqueName == "控制中心" || e.UniqueName == "工作台")
@@ -219,6 +224,9 @@ namespace RUINORERP.UI
             if (kryptonDockableWorkspace1.ActivePage != null && kryptonDockableWorkspace1.ActivePage.UniqueName == e.UniqueName)
             {
                 var control = kryptonDockableWorkspace1.ActivePage.Controls[0];
+                tabCloseHandler.ProcessControlOnClose(control);
+                return;
+
                 if (control.GetType() != null && control.GetType().BaseType.Name == "BaseListGeneric`1")
                 {
                     // 获取泛型参数类型
@@ -232,7 +240,9 @@ namespace RUINORERP.UI
                     }
                 }
 
-                if (control.GetType() != null && control.GetType().BaseType.Name.Contains("BaseBillQueryMC"))
+                if (control.GetType() != null && (control.GetType().BaseType.Name.Contains("BaseBillQueryMC") ||
+                    control.GetType().BaseType.BaseType.Name.Contains("BaseBillQueryMC")
+                    ))
                 {
                     // 获取泛型参数类型
                     Type[] genericArguments = control.GetType().BaseType.GetGenericArguments();
@@ -264,7 +274,8 @@ namespace RUINORERP.UI
                         UIBizSrvice.SaveGridSettingData(baseUControl.CurMenuInfo, baseUControl.BaseMainDataGridView, genericParameterType);
                     }
                 }
-                if (control.GetType() != null && control.GetType().BaseType.Name == "BaseBillEditGeneric`2")
+                if (control.GetType() != null && (control.GetType().BaseType.Name == "BaseBillEditGeneric`2" ||
+                    control.GetType().BaseType.BaseType.Name == "BaseBillEditGeneric`2"))
                 {
                     var baseBillEdit = (BaseBillEdit)control;
                     baseBillEdit.UNLock();

@@ -66,7 +66,7 @@ namespace RUINORERP.Business
  RuleFor(x => x.TotalAmount).PrecisionScale(19,4,true).WithMessage("退款金额合计:小数位不能超过4。");
 
 
- RuleFor(x => x.ShipCost).PrecisionScale(19,4,true).WithMessage("需退运费:小数位不能超过4。");
+ RuleFor(x => x.FreightIncome).PrecisionScale(19,4,true).WithMessage("需退运费:小数位不能超过4。");
 
 
 

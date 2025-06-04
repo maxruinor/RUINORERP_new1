@@ -680,10 +680,10 @@ namespace RUINORERP.Business
                 entity.tb_PurEntryDetails = NewDetails;
                 entity.PurOrder_ID = order.PurOrder_ID;
                 entity.PurOrder_NO = order.PurOrderNo;
-                entity.TotalAmount = entity.TotalAmount + entity.ShippingCost;
+                entity.TotalAmount = entity.TotalAmount + entity.ShipCost;
 
                 //要添加外币金额的运费
-                entity.ForeignTotalAmount = entity.ForeignTotalAmount + entity.ShippingCost;
+                entity.ForeignTotalAmount = entity.ForeignTotalAmount + entity.ForeignShipCost;
 
                 //if (order.Arrival_date.HasValue)
                 //{

@@ -224,7 +224,10 @@ namespace RUINORERP.UI.UCSourceGrid
             var sourceItem = e.Data.GetData(typeof(ToolStripMenuItem)) as ToolStripMenuItem;
             var dropPos = contextMenuStrip1.PointToClient(new Point(e.X, e.Y));
             var targetItem = contextMenuStrip1.GetItemAt(dropPos);
-
+            if (targetItem == null)
+            {
+                return;
+            }
             //如果目标不是可拖动的。则返回不处理
             if (!targetItem.AllowDrop)
             {

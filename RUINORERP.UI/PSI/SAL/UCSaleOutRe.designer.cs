@@ -33,9 +33,9 @@
             this.chkIsCustomizedOrder = new Krypton.Toolkit.KryptonCheckBox();
             this.kryptonLabel5 = new Krypton.Toolkit.KryptonLabel();
             this.chkRefundOnly = new Krypton.Toolkit.KryptonCheckBox();
-            this.kryptonLabel4 = new Krypton.Toolkit.KryptonLabel();
+            this.lblFreightIncome = new Krypton.Toolkit.KryptonLabel();
             this.kryptonLabel3 = new Krypton.Toolkit.KryptonLabel();
-            this.txtShipcost = new Krypton.Toolkit.KryptonTextBox();
+            this.txtFreightIncome = new Krypton.Toolkit.KryptonTextBox();
             this.txtReturnReason = new Krypton.Toolkit.KryptonTextBox();
             this.lblDataStatus = new Krypton.Toolkit.KryptonLabel();
             this.lblStore_ID = new Krypton.Toolkit.KryptonLabel();
@@ -78,6 +78,8 @@
             this.kryptonLabel2 = new Krypton.Toolkit.KryptonLabel();
             this.txtTotalQty = new Krypton.Toolkit.KryptonTextBox();
             this.bindingSourceOtherSub = new System.Windows.Forms.BindingSource(this.components);
+            this.txtTotalCommissionAmount = new Krypton.Toolkit.KryptonTextBox();
+            this.lblTotalCommissionAmount = new Krypton.Toolkit.KryptonLabel();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceSub)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1)).BeginInit();
@@ -117,9 +119,9 @@
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.chkIsCustomizedOrder);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.kryptonLabel5);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.chkRefundOnly);
-            this.kryptonSplitContainer1.Panel1.Controls.Add(this.kryptonLabel4);
+            this.kryptonSplitContainer1.Panel1.Controls.Add(this.lblFreightIncome);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.kryptonLabel3);
-            this.kryptonSplitContainer1.Panel1.Controls.Add(this.txtShipcost);
+            this.kryptonSplitContainer1.Panel1.Controls.Add(this.txtFreightIncome);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.txtReturnReason);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.lblDataStatus);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.lblStore_ID);
@@ -183,13 +185,13 @@
             this.chkRefundOnly.TabIndex = 150;
             this.chkRefundOnly.Values.Text = "";
             // 
-            // kryptonLabel4
+            // lblFreightIncome
             // 
-            this.kryptonLabel4.Location = new System.Drawing.Point(706, 104);
-            this.kryptonLabel4.Name = "kryptonLabel4";
-            this.kryptonLabel4.Size = new System.Drawing.Size(62, 20);
-            this.kryptonLabel4.TabIndex = 104;
-            this.kryptonLabel4.Values.Text = "需退运费";
+            this.lblFreightIncome.Location = new System.Drawing.Point(706, 104);
+            this.lblFreightIncome.Name = "lblFreightIncome";
+            this.lblFreightIncome.Size = new System.Drawing.Size(62, 20);
+            this.lblFreightIncome.TabIndex = 104;
+            this.lblFreightIncome.Values.Text = "需退运费";
             // 
             // kryptonLabel3
             // 
@@ -199,12 +201,12 @@
             this.kryptonLabel3.TabIndex = 147;
             this.kryptonLabel3.Values.Text = "退货原因";
             // 
-            // txtShipcost
+            // txtFreightIncome
             // 
-            this.txtShipcost.Location = new System.Drawing.Point(779, 104);
-            this.txtShipcost.Name = "txtShipcost";
-            this.txtShipcost.Size = new System.Drawing.Size(157, 23);
-            this.txtShipcost.TabIndex = 105;
+            this.txtFreightIncome.Location = new System.Drawing.Point(779, 104);
+            this.txtFreightIncome.Name = "txtFreightIncome";
+            this.txtFreightIncome.Size = new System.Drawing.Size(157, 23);
+            this.txtFreightIncome.TabIndex = 105;
             // 
             // txtReturnReason
             // 
@@ -543,6 +545,8 @@
             // 
             // kryptonPanel1
             // 
+            this.kryptonPanel1.Controls.Add(this.txtTotalCommissionAmount);
+            this.kryptonPanel1.Controls.Add(this.lblTotalCommissionAmount);
             this.kryptonPanel1.Controls.Add(this.lblTotalAmount);
             this.kryptonPanel1.Controls.Add(this.txtTotalAmount);
             this.kryptonPanel1.Controls.Add(this.kryptonLabel2);
@@ -555,7 +559,7 @@
             // 
             // lblTotalAmount
             // 
-            this.lblTotalAmount.Location = new System.Drawing.Point(309, 14);
+            this.lblTotalAmount.Location = new System.Drawing.Point(649, 11);
             this.lblTotalAmount.Name = "lblTotalAmount";
             this.lblTotalAmount.Size = new System.Drawing.Size(75, 20);
             this.lblTotalAmount.TabIndex = 102;
@@ -563,7 +567,7 @@
             // 
             // txtTotalAmount
             // 
-            this.txtTotalAmount.Location = new System.Drawing.Point(388, 14);
+            this.txtTotalAmount.Location = new System.Drawing.Point(728, 11);
             this.txtTotalAmount.Name = "txtTotalAmount";
             this.txtTotalAmount.Size = new System.Drawing.Size(100, 23);
             this.txtTotalAmount.TabIndex = 103;
@@ -582,6 +586,21 @@
             this.txtTotalQty.Name = "txtTotalQty";
             this.txtTotalQty.Size = new System.Drawing.Size(100, 23);
             this.txtTotalQty.TabIndex = 107;
+            // 
+            // txtTotalCommissionAmount
+            // 
+            this.txtTotalCommissionAmount.Location = new System.Drawing.Point(387, 11);
+            this.txtTotalCommissionAmount.Name = "txtTotalCommissionAmount";
+            this.txtTotalCommissionAmount.Size = new System.Drawing.Size(100, 23);
+            this.txtTotalCommissionAmount.TabIndex = 109;
+            // 
+            // lblTotalCommissionAmount
+            // 
+            this.lblTotalCommissionAmount.Location = new System.Drawing.Point(293, 11);
+            this.lblTotalCommissionAmount.Name = "lblTotalCommissionAmount";
+            this.lblTotalCommissionAmount.Size = new System.Drawing.Size(88, 20);
+            this.lblTotalCommissionAmount.TabIndex = 108;
+            this.lblTotalCommissionAmount.Values.Text = "返还佣金金额";
             // 
             // UCSaleOutRe
             // 
@@ -670,10 +689,12 @@
         private System.Windows.Forms.BindingSource bindingSourceOtherSub;
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel1;
         private Krypton.Toolkit.KryptonPanel kryptonPanel1;
-        private Krypton.Toolkit.KryptonLabel kryptonLabel4;
-        private Krypton.Toolkit.KryptonTextBox txtShipcost;
+        private Krypton.Toolkit.KryptonLabel lblFreightIncome;
+        private Krypton.Toolkit.KryptonTextBox txtFreightIncome;
         private Krypton.Toolkit.KryptonLabel kryptonLabel5;
         private Krypton.Toolkit.KryptonCheckBox chkRefundOnly;
         private Krypton.Toolkit.KryptonCheckBox chkIsCustomizedOrder;
+        private Krypton.Toolkit.KryptonTextBox txtTotalCommissionAmount;
+        private Krypton.Toolkit.KryptonLabel lblTotalCommissionAmount;
     }
 }

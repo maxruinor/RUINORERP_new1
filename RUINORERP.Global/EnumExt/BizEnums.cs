@@ -7,6 +7,17 @@ using System.Threading.Tasks;
 
 namespace RUINORERP.Global
 {
+
+    /// <summary>
+    /// 运费分摊规则
+    /// </summary>
+    public enum FreightAllocationRules
+    {
+        产品数量占比=1,
+        产品金额占比=2,
+        产品重量占比=3,
+    }
+
     //合同类型枚举
 
     /// <summary>

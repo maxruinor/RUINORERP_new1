@@ -1481,7 +1481,7 @@ namespace RUINORERP.Business
                     if (saleout.FreightIncome > 0)
                     {
                         tipsMsg.Add($"当前出库单已经有退库记录，运费收入退回已经计入前面退库单，当前退库运费收入退回为零！");
-                        entity.ShipCost = 0;
+                        entity.FreightIncome = 0;
                     }
                     else
                     {
@@ -1509,7 +1509,7 @@ namespace RUINORERP.Business
 
 
                 entity.TotalAmount = NewDetails.Sum(c => c.TransactionPrice * c.Quantity);
-                entity.TotalAmount = entity.TotalAmount + entity.ShipCost;
+                entity.TotalAmount = entity.TotalAmount + entity.FreightIncome;
 
                 BusinessHelper.Instance.InitEntity(entity);
                 //保存到数据库

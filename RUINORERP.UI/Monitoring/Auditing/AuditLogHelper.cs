@@ -357,10 +357,7 @@ namespace RUINORERP.UI.Monitoring.Auditing
                 // 直接使用缓存的工厂，避免重复解析
                 // 使用时才解析依赖
                 var factory = _billConverterFactory.Value;
-
                 CommBillData cbd = factory.GetBillData<T>(entity);
-
-
                 auditLog.ObjectType = (int)BizType;
                 auditLog.ObjectId = cbd.BillID;
                 auditLog.ObjectNo = cbd.BillNo;

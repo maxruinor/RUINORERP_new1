@@ -29,6 +29,8 @@
         private void InitializeComponent()
         {
             this.kryptonSplitContainer1 = new Krypton.Toolkit.KryptonSplitContainer();
+            this.txtCustomerPONo = new Krypton.Toolkit.KryptonTextBox();
+            this.lblCustomerPONo = new Krypton.Toolkit.KryptonLabel();
             this.lblStore_ID = new Krypton.Toolkit.KryptonLabel();
             this.cmbProjectGroup = new Krypton.Toolkit.KryptonComboBox();
             this.lblExchangeRate = new Krypton.Toolkit.KryptonLabel();
@@ -90,8 +92,8 @@
             this.txtTaxAmount = new Krypton.Toolkit.KryptonTextBox();
             this.txtFreightIncome = new Krypton.Toolkit.KryptonTextBox();
             this.lblFreightIncome = new Krypton.Toolkit.KryptonLabel();
-            this.txtCustomerPONo = new Krypton.Toolkit.KryptonTextBox();
-            this.lblCustomerPONo = new Krypton.Toolkit.KryptonLabel();
+            this.txtTotalCommissionAmount = new Krypton.Toolkit.KryptonTextBox();
+            this.lblTotalCommissionAmount = new Krypton.Toolkit.KryptonLabel();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceSub)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1)).BeginInit();
@@ -178,6 +180,21 @@
             this.kryptonSplitContainer1.Size = new System.Drawing.Size(1233, 784);
             this.kryptonSplitContainer1.SplitterDistance = 247;
             this.kryptonSplitContainer1.TabIndex = 0;
+            // 
+            // txtCustomerPONo
+            // 
+            this.txtCustomerPONo.Location = new System.Drawing.Point(939, 65);
+            this.txtCustomerPONo.Name = "txtCustomerPONo";
+            this.txtCustomerPONo.Size = new System.Drawing.Size(137, 23);
+            this.txtCustomerPONo.TabIndex = 200;
+            // 
+            // lblCustomerPONo
+            // 
+            this.lblCustomerPONo.Location = new System.Drawing.Point(860, 68);
+            this.lblCustomerPONo.Name = "lblCustomerPONo";
+            this.lblCustomerPONo.Size = new System.Drawing.Size(75, 20);
+            this.lblCustomerPONo.TabIndex = 199;
+            this.lblCustomerPONo.Values.Text = "客户订单号";
             // 
             // lblStore_ID
             // 
@@ -568,6 +585,8 @@
             // 
             // kryptonSplitContainerGridAndSub.Panel2
             // 
+            this.kryptonSplitContainerGridAndSub.Panel2.Controls.Add(this.txtTotalCommissionAmount);
+            this.kryptonSplitContainerGridAndSub.Panel2.Controls.Add(this.lblTotalCommissionAmount);
             this.kryptonSplitContainerGridAndSub.Panel2.Controls.Add(this.txtForeignFreightIncome);
             this.kryptonSplitContainerGridAndSub.Panel2.Controls.Add(this.lblForeignFreightIncome);
             this.kryptonSplitContainerGridAndSub.Panel2.Controls.Add(this.txtTotalQty);
@@ -602,14 +621,14 @@
             // 
             // txtForeignFreightIncome
             // 
-            this.txtForeignFreightIncome.Location = new System.Drawing.Point(589, 47);
+            this.txtForeignFreightIncome.Location = new System.Drawing.Point(762, 47);
             this.txtForeignFreightIncome.Name = "txtForeignFreightIncome";
             this.txtForeignFreightIncome.Size = new System.Drawing.Size(96, 23);
             this.txtForeignFreightIncome.TabIndex = 145;
             // 
             // lblForeignFreightIncome
             // 
-            this.lblForeignFreightIncome.Location = new System.Drawing.Point(495, 48);
+            this.lblForeignFreightIncome.Location = new System.Drawing.Point(668, 48);
             this.lblForeignFreightIncome.Name = "lblForeignFreightIncome";
             this.lblForeignFreightIncome.Size = new System.Drawing.Size(88, 20);
             this.lblForeignFreightIncome.TabIndex = 144;
@@ -648,14 +667,14 @@
             // 
             // txtForeignTotalAmount
             // 
-            this.txtForeignTotalAmount.Location = new System.Drawing.Point(321, 46);
+            this.txtForeignTotalAmount.Location = new System.Drawing.Point(494, 46);
             this.txtForeignTotalAmount.Name = "txtForeignTotalAmount";
             this.txtForeignTotalAmount.Size = new System.Drawing.Size(132, 23);
             this.txtForeignTotalAmount.TabIndex = 123;
             // 
             // lblForeignTotalAmount
             // 
-            this.lblForeignTotalAmount.Location = new System.Drawing.Point(241, 47);
+            this.lblForeignTotalAmount.Location = new System.Drawing.Point(414, 47);
             this.lblForeignTotalAmount.Name = "lblForeignTotalAmount";
             this.lblForeignTotalAmount.Size = new System.Drawing.Size(75, 20);
             this.lblForeignTotalAmount.TabIndex = 122;
@@ -663,14 +682,14 @@
             // 
             // txtTotalAmount
             // 
-            this.txtTotalAmount.Location = new System.Drawing.Point(321, 18);
+            this.txtTotalAmount.Location = new System.Drawing.Point(494, 18);
             this.txtTotalAmount.Name = "txtTotalAmount";
             this.txtTotalAmount.Size = new System.Drawing.Size(132, 23);
             this.txtTotalAmount.TabIndex = 105;
             // 
             // lblTotalAmount
             // 
-            this.lblTotalAmount.Location = new System.Drawing.Point(267, 19);
+            this.lblTotalAmount.Location = new System.Drawing.Point(440, 19);
             this.lblTotalAmount.Name = "lblTotalAmount";
             this.lblTotalAmount.Size = new System.Drawing.Size(49, 20);
             this.lblTotalAmount.TabIndex = 104;
@@ -693,33 +712,33 @@
             // 
             // txtFreightIncome
             // 
-            this.txtFreightIncome.Location = new System.Drawing.Point(589, 18);
+            this.txtFreightIncome.Location = new System.Drawing.Point(762, 18);
             this.txtFreightIncome.Name = "txtFreightIncome";
             this.txtFreightIncome.Size = new System.Drawing.Size(96, 23);
             this.txtFreightIncome.TabIndex = 103;
             // 
             // lblFreightIncome
             // 
-            this.lblFreightIncome.Location = new System.Drawing.Point(523, 19);
+            this.lblFreightIncome.Location = new System.Drawing.Point(696, 19);
             this.lblFreightIncome.Name = "lblFreightIncome";
             this.lblFreightIncome.Size = new System.Drawing.Size(62, 20);
             this.lblFreightIncome.TabIndex = 102;
             this.lblFreightIncome.Values.Text = "运费收入";
             // 
-            // txtCustomerPONo
+            // txtTotalCommissionAmount
             // 
-            this.txtCustomerPONo.Location = new System.Drawing.Point(939, 65);
-            this.txtCustomerPONo.Name = "txtCustomerPONo";
-            this.txtCustomerPONo.Size = new System.Drawing.Size(137, 23);
-            this.txtCustomerPONo.TabIndex = 200;
+            this.txtTotalCommissionAmount.Location = new System.Drawing.Point(273, 21);
+            this.txtTotalCommissionAmount.Name = "txtTotalCommissionAmount";
+            this.txtTotalCommissionAmount.Size = new System.Drawing.Size(100, 23);
+            this.txtTotalCommissionAmount.TabIndex = 147;
             // 
-            // lblCustomerPONo
+            // lblTotalCommissionAmount
             // 
-            this.lblCustomerPONo.Location = new System.Drawing.Point(860, 68);
-            this.lblCustomerPONo.Name = "lblCustomerPONo";
-            this.lblCustomerPONo.Size = new System.Drawing.Size(75, 20);
-            this.lblCustomerPONo.TabIndex = 199;
-            this.lblCustomerPONo.Values.Text = "客户订单号";
+            this.lblTotalCommissionAmount.Location = new System.Drawing.Point(205, 21);
+            this.lblTotalCommissionAmount.Name = "lblTotalCommissionAmount";
+            this.lblTotalCommissionAmount.Size = new System.Drawing.Size(62, 20);
+            this.lblTotalCommissionAmount.TabIndex = 146;
+            this.lblTotalCommissionAmount.Values.Text = "抽成佣金";
             // 
             // UCSaleOut
             // 
@@ -823,5 +842,7 @@
         private Krypton.Toolkit.KryptonLabel lblForeignFreightIncome;
         private Krypton.Toolkit.KryptonTextBox txtCustomerPONo;
         private Krypton.Toolkit.KryptonLabel lblCustomerPONo;
+        private Krypton.Toolkit.KryptonTextBox txtTotalCommissionAmount;
+        private Krypton.Toolkit.KryptonLabel lblTotalCommissionAmount;
     }
 }

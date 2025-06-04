@@ -209,10 +209,10 @@ namespace RUINORERP.Model
         }
         private decimal _ForeignFreightIncome = ((0));
         /// <summary>
-        /// 运费外币
+        /// 运费收入外币
         /// </summary>
-        [AdvQueryAttribute(ColName = "ForeignFreightIncome", ColDesc = "运费外币")]
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType = "Decimal", ColumnName = "ForeignFreightIncome", DecimalDigits = 4, IsNullable = false, ColumnDescription = "运费外币")]
+        [AdvQueryAttribute(ColName = "ForeignFreightIncome", ColDesc = "运费收入外币")]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType = "Decimal", ColumnName = "ForeignFreightIncome", DecimalDigits = 4, IsNullable = false, ColumnDescription = "运费收入外币")]
         public decimal ForeignFreightIncome
         {
             get { return _ForeignFreightIncome; }
@@ -423,7 +423,20 @@ namespace RUINORERP.Model
             }
         }
 
-
+        private decimal _TotalCommissionAmount = ((0));
+        /// <summary>
+        /// 佣金金额
+        /// </summary>
+        [AdvQueryAttribute(ColName = "TotalCommissionAmount", ColDesc = "佣金金额")]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType = "Decimal", ColumnName = "TotalCommissionAmount", DecimalDigits = 4, IsNullable = false, ColumnDescription = "佣金金额")]
+        public decimal TotalCommissionAmount
+        {
+            get { return _TotalCommissionAmount; }
+            set
+            {
+                SetProperty(ref _TotalCommissionAmount, value);
+            }
+        }
 
         private DateTime? _Created_at;
         /// <summary>

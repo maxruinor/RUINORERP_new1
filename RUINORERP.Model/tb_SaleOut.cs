@@ -270,7 +270,20 @@ namespace RUINORERP.Model
                 SetProperty(ref _ExchangeRate, value);
             }
         }
-
+        private decimal _TotalCommissionAmount = ((0));
+        /// <summary>
+        /// 佣金金额
+        /// </summary>
+        [AdvQueryAttribute(ColName = "TotalCommissionAmount", ColDesc = "佣金金额")]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType = "Decimal", ColumnName = "TotalCommissionAmount", DecimalDigits = 4, IsNullable = false, ColumnDescription = "佣金金额")]
+        public decimal TotalCommissionAmount
+        {
+            get { return _TotalCommissionAmount; }
+            set
+            {
+                SetProperty(ref _TotalCommissionAmount, value);
+            }
+        }
 
         private decimal _TotalAmount = ((0));
         /// <summary>

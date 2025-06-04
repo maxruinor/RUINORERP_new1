@@ -252,6 +252,7 @@ namespace RUINORERP.UI.PSI.SAL
             DataBindingHelper.BindData4TextBox<tb_SaleOrder>(entity, t => t.FreightIncome.ToString(), txtFreightIncome, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4TextBox<tb_SaleOrder>(entity, t => t.ForeignFreightIncome.ToString(), txtForeignFreightIncome, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4TextBox<tb_SaleOrder>(entity, t => t.TotalAmount.ToString(), txtTotalAmount, BindDataType4TextBox.Money, false);
+            DataBindingHelper.BindData4TextBox<tb_SaleOrder>(entity, t => t.TotalCommissionAmount.ToString(), txtTotalCommissionAmount, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4TextBox<tb_SaleOrder>(entity, t => t.ExchangeRate.ToString(), txtExchangeRate, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4DataTime<tb_SaleOrder>(entity, t => t.PreDeliveryDate, dtpPreDeliveryDate, false);
             DataBindingHelper.BindData4DataTime<tb_SaleOrder>(entity, t => t.SaleDate, dtpSaleDate, false);
@@ -402,7 +403,7 @@ namespace RUINORERP.UI.PSI.SAL
                         {
                             if (!string.IsNullOrEmpty(cv.SpecialNotes))
                             {
-                                txtNotes.Text = $"【{cv.SpecialNotes}】";
+                                entity.Notes += $"【{cv.SpecialNotes}】";
                             }
                             if (cv.Employee_ID.HasValue)
                             {
@@ -627,7 +628,7 @@ using var binder = new UIStateBinder(..., customEvaluator);
                 listCols.SetCol_NeverVisible<ProductSharePart>(c => c.BarCode);
             }
             listCols.SetCol_DefaultValue<tb_SaleOrderDetail>(a => a.Discount, 1m);
-        
+
             //listCols.SetCol_DefaultValue<tb_SaleOrderDetail>(a => a.TaxRate, 0.13m);//m =>decial d=>double
 
             //如果库位为只读  暂时只会显示 ID
@@ -660,9 +661,12 @@ using var binder = new UIStateBinder(..., customEvaluator);
             listCols.SetCol_Formula<tb_SaleOrderDetail>((a, b, c) => a.SubtotalTransAmount / (1 + b.TaxRate) * c.TaxRate, d => d.SubtotalTaxAmount);
             listCols.SetCol_Formula<tb_SaleOrderDetail>((a, b) => (a.Cost + a.CustomizedCost) * b.Quantity, c => c.SubtotalCostAmount);
 
+            listCols.SetCol_Formula<tb_SaleOrderDetail>((a, b) => a.UnitCommissionAmount * b.Quantity, c => c.CommissionAmount);
+            listCols.SetCol_FormulaReverse<tb_SaleOrderDetail>(d => d.Quantity != 0, (a, b) => a.CommissionAmount / b.Quantity, c => c.UnitCommissionAmount);
+
             //listCols.SetCol_Summary<tb_SaleOrderDetail>(c => c.SubtotalTransAmount);
             //listCols.SetCol_Summary<tb_SaleOrderDetail>(c => c.SubtotalTaxAmount);
-            
+
             //设置总计列
             BaseProcessor baseProcessor = BusinessHelper._appContext.GetRequiredServiceByName<BaseProcessor>(typeof(tb_SaleOrderDetail).Name + "Processor");
             var summaryCols = baseProcessor.GetSummaryCols();
@@ -789,6 +793,7 @@ using var binder = new UIStateBinder(..., customEvaluator);
                 EditEntity.TotalQty = details.Sum(c => c.Quantity);
                 EditEntity.TotalCost = details.Sum(c => (c.Cost + c.CustomizedCost) * c.Quantity);
                 EditEntity.TotalTaxAmount = details.Sum(c => c.SubtotalTaxAmount);
+                EditEntity.TotalCommissionAmount = details.Sum(c => c.CommissionAmount);
                 EditEntity.TotalAmount = details.Sum(c => c.TransactionPrice * c.Quantity);
                 EditEntity.TotalAmount = EditEntity.TotalAmount + EditEntity.FreightIncome;
                 if (EditEntity.Currency_ID != AppContext.BaseCurrency.Currency_ID)
@@ -939,6 +944,7 @@ using var binder = new UIStateBinder(..., customEvaluator);
                 EditEntity.TotalCost = details.Sum(c => (c.Cost + c.CustomizedCost) * c.Quantity);
                 EditEntity.TotalAmount = details.Sum(c => c.TransactionPrice * c.Quantity);
                 EditEntity.TotalTaxAmount = details.Sum(c => c.SubtotalTaxAmount);
+                EditEntity.TotalCommissionAmount = details.Sum(c => c.CommissionAmount);
                 EditEntity.TotalAmount = EditEntity.TotalAmount + EditEntity.FreightIncome;
 
 
@@ -1002,6 +1008,7 @@ using var binder = new UIStateBinder(..., customEvaluator);
 
                 if (!MainForm.Instance.AppContext.SysConfig.CheckNegativeInventory)
                 {
+                    list = await dc.BaseGetQueryableAsync().ToListAsync();
                     foreach (var item in details)
                     {
                         var detail = list.FirstOrDefault(c => c.ProdDetailID == item.ProdDetailID);

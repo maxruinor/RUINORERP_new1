@@ -111,7 +111,7 @@ namespace RUINORERP.UI.PSI.PUR
             }
             DataBindingHelper.BindData4CmbByEnum<tb_PurEntry>(entity, k => k.PayStatus, typeof(PayStatus), cmbPayStatus, false);
             DataBindingHelper.BindData4TextBox<tb_PurEntry>(entity, t => t.PurEntryNo, txtPurEntryNo, BindDataType4TextBox.Text, false);
-            DataBindingHelper.BindData4TextBox<tb_PurEntry>(entity, t => t.ShippingCost.ToString(), txtShippingCost, BindDataType4TextBox.Money, false);
+            DataBindingHelper.BindData4TextBox<tb_PurEntry>(entity, t => t.ShipCost.ToString(), txtShipCost, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4Cmb<tb_Department>(entity, k => k.DepartmentID, v => v.DepartmentName, cmbDepartmentID);
             DataBindingHelper.BindData4Cmb<tb_Employee>(entity, k => k.Employee_ID, v => v.Employee_Name, cmbEmployee_ID);
             DataBindingHelper.BindData4Cmb<tb_PaymentMethod>(entity, k => k.Paytype_ID, v => v.Paytype_Name, cmbPaytype_ID);
@@ -347,16 +347,16 @@ namespace RUINORERP.UI.PSI.PUR
                 }
                 EditEntity.TotalQty = details.Sum(c => c.Quantity);
                 EditEntity.TotalAmount = details.Sum(c => (c.UnitPrice + c.CustomizedCost) * c.Quantity);
-                EditEntity.TotalAmount = EditEntity.TotalAmount + EditEntity.ShippingCost;
+                EditEntity.TotalAmount = EditEntity.TotalAmount + EditEntity.ShipCost;
                 EditEntity.TotalTaxAmount = details.Sum(c => c.TaxAmount);
                 EditEntity.TotalUntaxedAmount = details.Sum(c => (c.UntaxedCustomizedCost + c.UntaxedUnitPrice) * c.Quantity);
 
                 //不含税的总金额+不含税运费
                 decimal UntaxedShippingCost = 0;
-                if (EditEntity.ShippingCost > 0 && EditEntity.TotalTaxAmount > 0)
+                if (EditEntity.ShipCost > 0 && EditEntity.TotalTaxAmount > 0)
                 {
                     decimal FreightTaxRate = details.FirstOrDefault(c => c.TaxRate > 0).TaxRate;
-                    UntaxedShippingCost = (EditEntity.ShippingCost / (1 + FreightTaxRate)); //计算列：不含税运费
+                    UntaxedShippingCost = (EditEntity.ShipCost / (1 + FreightTaxRate)); //计算列：不含税运费
                     EditEntity.TotalUntaxedAmount += Math.Round(UntaxedShippingCost, 2);
                 }
 
@@ -442,7 +442,7 @@ namespace RUINORERP.UI.PSI.PUR
 
                 EditEntity.TotalQty = details.Sum(c => c.Quantity);
                 EditEntity.TotalAmount = details.Sum(c => (c.UnitPrice + c.CustomizedCost) * c.Quantity);
-                EditEntity.TotalAmount = EditEntity.TotalAmount + EditEntity.ShippingCost;
+                EditEntity.TotalAmount = EditEntity.TotalAmount + EditEntity.ShipCost;
                 EditEntity.TotalTaxAmount = details.Sum(c => c.TaxAmount);
                 //是不是选了外币就通过本币和汇率算一下？
                 //默认认为运费含税，税率随明细
@@ -450,10 +450,10 @@ namespace RUINORERP.UI.PSI.PUR
                 EditEntity.TotalUntaxedAmount = details.Sum(c => (c.UntaxedCustomizedCost + c.UntaxedUnitPrice) * c.Quantity);
                 //不含税的总金额+不含税运费
                 decimal UntaxedShippingCost = 0;
-                if (EditEntity.ShippingCost > 0 && EditEntity.TotalTaxAmount > 0)
+                if (EditEntity.ShipCost > 0 && EditEntity.TotalTaxAmount > 0)
                 {
                     decimal FreightTaxRate = details.FirstOrDefault(c => c.TaxRate > 0).TaxRate;
-                    UntaxedShippingCost = (EditEntity.ShippingCost / (1 + FreightTaxRate)); //计算列：不含税运费
+                    UntaxedShippingCost = (EditEntity.ShipCost / (1 + FreightTaxRate)); //计算列：不含税运费
                     EditEntity.TotalUntaxedAmount += Math.Round(UntaxedShippingCost, 2);
                 }
 

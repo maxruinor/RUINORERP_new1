@@ -292,11 +292,11 @@ namespace RUINORERP.Business
                     {
                         //不含税的总金额+不含税运费
                         decimal UntaxedShippingCost = 0;
-                        UntaxedShippingCost = entity.ShippingCost;
-                        if (entity.ShippingCost > 0 && entity.TotalTaxAmount > 0)
+                        UntaxedShippingCost = entity.ShipCost;
+                        if (entity.ShipCost > 0 && entity.TotalTaxAmount > 0)
                         {
                             decimal FreightTaxRate = entity.tb_PurEntryDetails.FirstOrDefault(c => c.TaxRate > 0).TaxRate;
-                            UntaxedShippingCost = (entity.ShippingCost / (1 + FreightTaxRate)); //计算列：不含税运费
+                            UntaxedShippingCost = (entity.ShipCost / (1 + FreightTaxRate)); //计算列：不含税运费
                             UntaxedShippingCost = Math.Round(UntaxedShippingCost, 2);
                         }
                         CommService.CostCalculations.CostCalculation(_appContext, inv, group.Value.PurQtySum.ToInt(), group.Value.UntaxedUnitPrice, UntaxedShippingCost);

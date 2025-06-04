@@ -307,7 +307,7 @@ namespace RUINORERP.UI.BaseForm
             Edited = toolStripButtonSave.Enabled;
         }
 
-
+        /*
         #region 画行号
 
         private void dataGridView1_CellPainting(object sender, DataGridViewCellPaintingEventArgs e)
@@ -339,6 +339,9 @@ namespace RUINORERP.UI.BaseForm
         }
 
         #endregion
+
+        */
+
         private ConcurrentDictionary<string, KeyValuePair<string, bool>> fieldNameList;
 
         /// <summary>
@@ -879,10 +882,7 @@ namespace RUINORERP.UI.BaseForm
 
         }
 
-        private void dataGridView1_DataError(object sender, DataGridViewDataErrorEventArgs e)
-        {
-
-        }
+  
 
         private void BaseList_Load(object sender, EventArgs e)
         {

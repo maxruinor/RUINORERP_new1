@@ -311,13 +311,28 @@ namespace RUINORERP.Model
             }
         }
 
-        private decimal? _CommissionAmount;
+        private decimal _UnitCommissionAmount;
         /// <summary>
-        /// 抽成返还
+        /// 单品返还佣金
         /// </summary>
-        [AdvQueryAttribute(ColName = "CommissionAmount", ColDesc = "抽成返还")]
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType = "Decimal", ColumnName = "CommissionAmount", DecimalDigits = 4, IsNullable = true, ColumnDescription = "抽成返还")]
-        public decimal? CommissionAmount
+        [AdvQueryAttribute(ColName = "UnitCommissionAmount", ColDesc = "单品返还佣金")]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType = "Decimal", ColumnName = "UnitCommissionAmount", DecimalDigits = 4, IsNullable = false, ColumnDescription = "单品返还佣金")]
+        public decimal UnitCommissionAmount
+        {
+            get { return _UnitCommissionAmount; }
+            set
+            {
+                SetProperty(ref _UnitCommissionAmount, value);
+            }
+        }
+
+        private decimal _CommissionAmount=0;
+        /// <summary>
+        /// 返还佣金小计
+        /// </summary>
+        [AdvQueryAttribute(ColName = "CommissionAmount", ColDesc = "返还佣金小计")]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType = "Decimal", ColumnName = "CommissionAmount", DecimalDigits = 4, IsNullable = false, ColumnDescription = "返还佣金小计")]
+        public decimal CommissionAmount
         {
             get { return _CommissionAmount; }
             set

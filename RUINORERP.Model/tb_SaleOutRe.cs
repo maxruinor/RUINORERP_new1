@@ -301,18 +301,47 @@ namespace RUINORERP.Model
                         }
         }
 
-        private decimal _ShipCost= ((0));
+        private decimal _FreightIncome= ((0));
         /// <summary>
         /// 需退运费
         /// </summary>
-        [AdvQueryAttribute(ColName = "ShipCost",ColDesc = "需退运费")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "ShipCost" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "需退运费" )]
-        public decimal ShipCost
+        [AdvQueryAttribute(ColName = "FreightIncome",ColDesc = "需退运费")] 
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "FreightIncome" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "需退运费" )]
+        public decimal FreightIncome
         { 
-            get{return _ShipCost;}
+            get{return _FreightIncome;}
             set{
-            SetProperty(ref _ShipCost, value);
+            SetProperty(ref _FreightIncome, value);
                         }
+        }
+
+        private decimal _ForeignFreightIncome = ((0));
+        /// <summary>
+        /// 需退运费外币
+        /// </summary>
+        [AdvQueryAttribute(ColName = "ForeignFreightIncome", ColDesc = "需退运费外币")]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType = "Decimal", ColumnName = "ForeignFreightIncome", DecimalDigits = 4, IsNullable = false, ColumnDescription = "需退运费外币")]
+        public decimal ForeignFreightIncome
+        {
+            get { return _ForeignFreightIncome; }
+            set
+            {
+                SetProperty(ref _ForeignFreightIncome, value);
+            }
+        }
+        private decimal _TotalCommissionAmount = ((0));
+        /// <summary>
+        /// 返还佣金金额
+        /// </summary>
+        [AdvQueryAttribute(ColName = "TotalCommissionAmount", ColDesc = "返还佣金金额")]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType = "Decimal", ColumnName = "TotalCommissionAmount", DecimalDigits = 4, IsNullable = false, ColumnDescription = "返还佣金金额")]
+        public decimal TotalCommissionAmount
+        {
+            get { return _TotalCommissionAmount; }
+            set
+            {
+                SetProperty(ref _TotalCommissionAmount, value);
+            }
         }
 
         private string _TrackNo;

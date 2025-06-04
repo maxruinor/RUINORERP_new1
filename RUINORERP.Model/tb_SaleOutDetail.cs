@@ -310,15 +310,28 @@ namespace RUINORERP.Model
                         }
         }
 
-      
+        private decimal _UnitCommissionAmount = ((0));
+        /// <summary>
+        /// 单品佣金
+        /// </summary>
+        [AdvQueryAttribute(ColName = "UnitCommissionAmount", ColDesc = "单品佣金")]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType = "Decimal", ColumnName = "UnitCommissionAmount", DecimalDigits = 4, IsNullable = false, ColumnDescription = "单品佣金")]
+        public decimal UnitCommissionAmount
+        {
+            get { return _UnitCommissionAmount; }
+            set
+            {
+                SetProperty(ref _UnitCommissionAmount, value);
+            }
+        }
 
 
         private decimal _CommissionAmount;
         /// <summary>
-        /// 抽成返点
+        /// 佣金小计
         /// </summary>
-        [AdvQueryAttribute(ColName = "CommissionAmount",ColDesc = "抽成返点")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "CommissionAmount" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "抽成返点" )]
+        [AdvQueryAttribute(ColName = "CommissionAmount",ColDesc = "佣金小计")] 
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "CommissionAmount" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "佣金小计" )]
         public decimal CommissionAmount
         { 
             get{return _CommissionAmount;}
@@ -356,6 +369,52 @@ namespace RUINORERP.Model
             }
         }
 
+        private decimal _AllocatedFreightIncome = ((0));
+        /// <summary>
+        /// 运费收入分摊
+        /// </summary>
+        [AdvQueryAttribute(ColName = "AllocatedFreightIncome", ColDesc = "运费收入分摊")]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType = "Decimal", ColumnName = "AllocatedFreightIncome", DecimalDigits = 4, IsNullable = false, ColumnDescription = "运费收入分摊")]
+        public decimal AllocatedFreightIncome
+        {
+            get { return _AllocatedFreightIncome; }
+            set
+            {
+                SetProperty(ref _AllocatedFreightIncome, value);
+            }
+        }
+
+
+        private decimal _AllocatedFreightCost = ((0));
+        /// <summary>
+        /// 运费成本分摊
+        /// </summary>
+        [AdvQueryAttribute(ColName = "AllocatedFreightCost", ColDesc = "运费成本分摊")]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType = "Decimal", ColumnName = "AllocatedFreightCost", DecimalDigits = 4, IsNullable = false, ColumnDescription = "运费成本分摊")]
+        public decimal AllocatedFreightCost
+        {
+            get { return _AllocatedFreightCost; }
+            set
+            {
+                SetProperty(ref _AllocatedFreightCost, value);
+            }
+        }
+
+        private int? _FreightAllocationRules;
+        /// <summary>
+        /// 分摊规则
+        /// </summary>
+        [AdvQueryAttribute(ColName = "FreightAllocationRules", ColDesc = "分摊规则")]
+        [SugarColumn(ColumnDataType = "int", SqlParameterDbType = "Int32", ColumnName = "FreightAllocationRules", DecimalDigits = 0, IsNullable = true, ColumnDescription = "分摊规则")]
+        public int? FreightAllocationRules
+        {
+            get { return _FreightAllocationRules; }
+            set
+            {
+                SetProperty(ref _FreightAllocationRules, value);
+            }
+        }
+
         private long? _SaleOrderDetail_ID;
         /// <summary>
         /// 
@@ -369,6 +428,8 @@ namespace RUINORERP.Model
             SetProperty(ref _SaleOrderDetail_ID, value);
                         }
         }
+
+
 
         #endregion
 

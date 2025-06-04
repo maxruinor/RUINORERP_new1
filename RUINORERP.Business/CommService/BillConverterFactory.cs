@@ -84,7 +84,7 @@ namespace RUINORERP.Business.CommService
                 if (!menuInfo.BizType.HasValue)
                 {
                     //throw new Exception("请联系管理员配置对应的业务类型" + menuInfo.MenuName);
-                    _logger.Error("请联系管理员配置对应的业务类型" + menuInfo.MenuName);
+                    //_logger.Error("请联系管理员配置对应的业务类型" + menuInfo.MenuName);
                     return cbd;
                 }
                 bizType = (BizType)menuInfo.BizType;

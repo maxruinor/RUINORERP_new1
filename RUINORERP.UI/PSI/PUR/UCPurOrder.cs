@@ -166,7 +166,7 @@ namespace RUINORERP.UI.PSI.PUR
             DataBindingHelper.BindData4TextBox<tb_PurOrder>(entity, t => t.PurOrderNo, txtPurOrderNo, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4DataTime<tb_PurOrder>(entity, t => t.PurDate, dtpPurDate, false);
             DataBindingHelper.BindData4DataTime<tb_PurOrder>(entity, t => t.PreDeliveryDate, dtpPreDeliveryDate, false);
-            DataBindingHelper.BindData4TextBox<tb_PurOrder>(entity, t => t.ShippingCost.ToString(), txtShippingCost, BindDataType4TextBox.Money, false);
+            DataBindingHelper.BindData4TextBox<tb_PurOrder>(entity, t => t.ShipCost.ToString(), txtShipCost, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4TextBox<tb_PurOrder>(entity, t => t.TotalAmount.ToString(), txtTotalAmount, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4TextBox<tb_PurOrder>(entity, t => t.TotalQty.ToString(), txtTotalQty, BindDataType4TextBox.Qty, false);
 
@@ -277,9 +277,9 @@ namespace RUINORERP.UI.PSI.PUR
                     }
                 }
 
-                if (s2.PropertyName == entity.GetPropertyName<tb_PurOrder>(c => c.ShippingCost))
+                if (s2.PropertyName == entity.GetPropertyName<tb_PurOrder>(c => c.ShipCost))
                 {
-                    EditEntity.TotalAmount = EditEntity.TotalAmount + EditEntity.ShippingCost;
+                    EditEntity.TotalAmount = EditEntity.TotalAmount + EditEntity.ShipCost;
 
                     if (EditEntity.Currency_ID != AppContext.BaseCurrency.Currency_ID)
                     {
@@ -596,16 +596,16 @@ namespace RUINORERP.UI.PSI.PUR
 
                 EditEntity.TotalQty = details.Sum(c => c.Quantity);
                 EditEntity.TotalAmount = details.Sum(c => (c.CustomizedCost + c.UnitPrice) * c.Quantity);
-                EditEntity.TotalAmount = EditEntity.TotalAmount + EditEntity.ShippingCost;
+                EditEntity.TotalAmount = EditEntity.TotalAmount + EditEntity.ShipCost;
                 EditEntity.TotalTaxAmount = details.Sum(c => c.TaxAmount);
                 EditEntity.TotalUntaxedAmount = details.Sum(c => (c.UntaxedCustomizedCost + c.UntaxedUnitPrice) * c.Quantity);
 
                 //不含税的总金额+不含税运费
                 decimal UntaxedShippingCost = 0;
-                if (EditEntity.ShippingCost > 0 && EditEntity.TotalTaxAmount > 0)
+                if (EditEntity.ShipCost > 0 && EditEntity.TotalTaxAmount > 0)
                 {
                     decimal FreightTaxRate = details.FirstOrDefault(c => c.TaxRate > 0).TaxRate;
-                    UntaxedShippingCost = (EditEntity.ShippingCost / (1 + FreightTaxRate)); //计算列：不含税运费
+                    UntaxedShippingCost = (EditEntity.ShipCost / (1 + FreightTaxRate)); //计算列：不含税运费
                     EditEntity.TotalUntaxedAmount += Math.Round(UntaxedShippingCost, 2);
                 }
 
@@ -739,7 +739,7 @@ namespace RUINORERP.UI.PSI.PUR
 
                 //含税的
                 EditEntity.TotalAmount = details.Sum(c => (c.UnitPrice + c.CustomizedCost) * c.Quantity);
-                EditEntity.TotalAmount = EditEntity.TotalAmount + EditEntity.ShippingCost;
+                EditEntity.TotalAmount = EditEntity.TotalAmount + EditEntity.ShipCost;
 
                 //产品税额
                 EditEntity.TotalTaxAmount = details.Sum(c => c.TaxAmount);
@@ -751,10 +751,10 @@ namespace RUINORERP.UI.PSI.PUR
 
                 //不含税的总金额+不含税运费
                 decimal UntaxedShippingCost = 0;
-                if (EditEntity.ShippingCost > 0 && EditEntity.TotalTaxAmount > 0)
+                if (EditEntity.ShipCost > 0 && EditEntity.TotalTaxAmount > 0)
                 {
                     decimal FreightTaxRate = details.FirstOrDefault(c => c.TaxRate > 0).TaxRate;
-                    UntaxedShippingCost = (EditEntity.ShippingCost / (1 + FreightTaxRate)); //计算列：不含税运费
+                    UntaxedShippingCost = (EditEntity.ShipCost / (1 + FreightTaxRate)); //计算列：不含税运费
                     EditEntity.TotalUntaxedAmount += Math.Round(UntaxedShippingCost, 2);
                 }
 

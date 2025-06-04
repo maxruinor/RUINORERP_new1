@@ -73,12 +73,12 @@
             this.lblForeignTotalAmount = new Krypton.Toolkit.KryptonLabel();
             this.txtForeignTotalAmount = new Krypton.Toolkit.KryptonTextBox();
             this.txtTotalTaxAmount = new Krypton.Toolkit.KryptonTextBox();
-            this.lblShippingCost = new Krypton.Toolkit.KryptonLabel();
+            this.lblShipCost = new Krypton.Toolkit.KryptonLabel();
             this.kryptonLabel3 = new Krypton.Toolkit.KryptonLabel();
             this.txtTotalQty = new Krypton.Toolkit.KryptonTextBox();
             this.kryptonLabel1 = new Krypton.Toolkit.KryptonLabel();
             this.lblApprovalOpinions = new Krypton.Toolkit.KryptonLabel();
-            this.txtShippingCost = new Krypton.Toolkit.KryptonTextBox();
+            this.txtShipCost = new Krypton.Toolkit.KryptonTextBox();
             this.txtApprovalOpinions = new Krypton.Toolkit.KryptonTextBox();
             this.txtTotalAmount = new Krypton.Toolkit.KryptonTextBox();
             this.lblTotalAmount = new Krypton.Toolkit.KryptonLabel();
@@ -511,12 +511,12 @@
             this.kryptonSplitContainer2.Panel2.Controls.Add(this.lblForeignTotalAmount);
             this.kryptonSplitContainer2.Panel2.Controls.Add(this.txtForeignTotalAmount);
             this.kryptonSplitContainer2.Panel2.Controls.Add(this.txtTotalTaxAmount);
-            this.kryptonSplitContainer2.Panel2.Controls.Add(this.lblShippingCost);
+            this.kryptonSplitContainer2.Panel2.Controls.Add(this.lblShipCost);
             this.kryptonSplitContainer2.Panel2.Controls.Add(this.kryptonLabel3);
             this.kryptonSplitContainer2.Panel2.Controls.Add(this.txtTotalQty);
             this.kryptonSplitContainer2.Panel2.Controls.Add(this.kryptonLabel1);
             this.kryptonSplitContainer2.Panel2.Controls.Add(this.lblApprovalOpinions);
-            this.kryptonSplitContainer2.Panel2.Controls.Add(this.txtShippingCost);
+            this.kryptonSplitContainer2.Panel2.Controls.Add(this.txtShipCost);
             this.kryptonSplitContainer2.Panel2.Controls.Add(this.txtApprovalOpinions);
             this.kryptonSplitContainer2.Panel2.Controls.Add(this.txtTotalAmount);
             this.kryptonSplitContainer2.Panel2.Controls.Add(this.lblTotalAmount);
@@ -562,13 +562,13 @@
             // 
             // lblShippingCost
             // 
-            this.lblShippingCost.Location = new System.Drawing.Point(65, 12);
-            this.lblShippingCost.Name = "lblShippingCost";
-            this.lblShippingCost.Size = new System.Drawing.Size(62, 20);
-            this.lblShippingCost.TabIndex = 115;
-            this.lblShippingCost.ToolTipValues.Description = "如果明细产品含税，则运费也含税.";
-            this.lblShippingCost.ToolTipValues.EnableToolTips = true;
-            this.lblShippingCost.Values.Text = "所付运费";
+            this.lblShipCost.Location = new System.Drawing.Point(65, 12);
+            this.lblShipCost.Name = "lblShippingCost";
+            this.lblShipCost.Size = new System.Drawing.Size(62, 20);
+            this.lblShipCost.TabIndex = 115;
+            this.lblShipCost.ToolTipValues.Description = "如果明细产品含税，则运费也含税.";
+            this.lblShipCost.ToolTipValues.EnableToolTips = true;
+            this.lblShipCost.Values.Text = "所付运费";
             // 
             // kryptonLabel3
             // 
@@ -603,10 +603,10 @@
             // 
             // txtShippingCost
             // 
-            this.txtShippingCost.Location = new System.Drawing.Point(134, 11);
-            this.txtShippingCost.Name = "txtShippingCost";
-            this.txtShippingCost.Size = new System.Drawing.Size(100, 23);
-            this.txtShippingCost.TabIndex = 116;
+            this.txtShipCost.Location = new System.Drawing.Point(134, 11);
+            this.txtShipCost.Name = "txtShippingCost";
+            this.txtShipCost.Size = new System.Drawing.Size(100, 23);
+            this.txtShipCost.TabIndex = 116;
             // 
             // txtApprovalOpinions
             // 
@@ -715,8 +715,8 @@
         private Krypton.Toolkit.KryptonTextBox txtApprovalOpinions;
         private Krypton.Toolkit.KryptonLabel lblRefNO;
         private Krypton.Toolkit.KryptonTextBox txtRefNO;
-        private Krypton.Toolkit.KryptonLabel lblShippingCost;
-        private Krypton.Toolkit.KryptonTextBox txtShippingCost;
+        private Krypton.Toolkit.KryptonLabel lblShipCost;
+        private Krypton.Toolkit.KryptonTextBox txtShipCost;
         private Krypton.Toolkit.KryptonLabel lblNotes;
         private Krypton.Toolkit.KryptonTextBox txtNotes;
         private Krypton.Toolkit.KryptonTextBox txtTotalAmount;

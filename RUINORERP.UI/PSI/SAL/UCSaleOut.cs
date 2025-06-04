@@ -144,7 +144,7 @@ namespace RUINORERP.UI.PSI.SAL
             DataBindingHelper.BindData4Cmb<tb_Employee>(entity, k => k.Employee_ID, v => v.Employee_Name, cmbEmployee_ID);
             DataBindingHelper.BindData4Cmb<tb_CustomerVendor>(entity, k => k.CustomerVendor_ID, v => v.CVName, cmbCustomerVendor_ID, c => c.IsCustomer == true);
             DataBindingHelper.BindData4Cmb<tb_Currency>(entity, k => k.Currency_ID, v => v.CurrencyName, cmbCurrency_ID);
-
+            DataBindingHelper.BindData4TextBox<tb_SaleOut>(entity, t => t.TotalCommissionAmount.ToString(), txtTotalCommissionAmount, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4TextBox<tb_SaleOut>(entity, t => t.CustomerPONo, txtCustomerPONo, BindDataType4TextBox.Text, false);
             //DataBindingHelper.BindData4Cmb<tb_SaleOrder>(entity, k => k.SOrder_ID, v => v.SOrderNo, cmbOrder_ID);
             DataBindingHelper.BindData4CmbByEnum<tb_SaleOut>(entity, k => k.PayStatus, typeof(PayStatus), cmbPayStatus, false);
@@ -391,6 +391,12 @@ namespace RUINORERP.UI.PSI.SAL
             listCols.SetCol_Formula<tb_SaleOutDetail>((a, b) => (a.Cost + a.CustomizedCost) * b.Quantity, c => c.SubtotalCostAmount);
             listCols.SetCol_Formula<tb_SaleOutDetail>((a, b) => a.TransactionPrice * b.Quantity, c => c.SubtotalTransAmount);
             listCols.SetCol_Formula<tb_SaleOutDetail>((a, b, c) => a.SubtotalTransAmount / (1 + b.TaxRate) * c.TaxRate, d => d.SubtotalTaxAmount);
+
+
+            listCols.SetCol_Formula<tb_SaleOutDetail>((a, b) => a.UnitCommissionAmount * b.Quantity, c => c.CommissionAmount);
+            listCols.SetCol_FormulaReverse<tb_SaleOutDetail>(d => d.Quantity != 0, (a, b) => a.CommissionAmount / b.Quantity, c => c.UnitCommissionAmount);
+
+
             //将数量默认为已出库数量  这个逻辑不对这个是订单累计 的出库数量只能是在出库审核时才累计数据，这里最多只读
             //listCols.SetCol_Formula<tb_SaleOutDetail>((a, b) => a.Quantity, c => c.TotalDeliveredQty);
 
@@ -502,6 +508,7 @@ namespace RUINORERP.UI.PSI.SAL
                 EditEntity.TotalCost = details.Sum(c => (c.Cost + c.CustomizedCost) * c.Quantity);
                 EditEntity.TotalCost = EditEntity.TotalCost + EditEntity.FreightCost;
                 EditEntity.TotalTaxAmount = details.Sum(c => c.SubtotalTaxAmount);
+                EditEntity.TotalCommissionAmount = details.Sum(c => c.CommissionAmount);
                 EditEntity.TotalTaxAmount = EditEntity.TotalTaxAmount.ToRoundDecimalPlaces(MainForm.Instance.authorizeController.GetMoneyDataPrecision());
 
                 EditEntity.TotalAmount = details.Sum(c => c.TransactionPrice * c.Quantity);
@@ -651,6 +658,7 @@ namespace RUINORERP.UI.PSI.SAL
                 EditEntity.TotalCost = details.Sum(c => (c.Cost + c.CustomizedCost) * c.Quantity);
                 EditEntity.TotalCost = EditEntity.TotalCost + EditEntity.FreightCost;
                 EditEntity.TotalTaxAmount = details.Sum(c => c.SubtotalTaxAmount);
+                EditEntity.TotalCommissionAmount = details.Sum(c => c.CommissionAmount);
                 EditEntity.TotalTaxAmount = EditEntity.TotalTaxAmount.ToRoundDecimalPlaces(MainForm.Instance.authorizeController.GetMoneyDataPrecision());
 
                 EditEntity.TotalAmount = details.Sum(c => c.TransactionPrice * c.Quantity);

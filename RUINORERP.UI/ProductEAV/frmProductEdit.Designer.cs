@@ -31,7 +31,7 @@ namespace RUINORERP.UI.ProductEAV
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(frmProductEdit));
             this.kryptonNavigator1 = new Krypton.Navigator.KryptonNavigator();
             this.kryptonPageMain = new Krypton.Navigator.KryptonPage();
@@ -77,6 +77,7 @@ namespace RUINORERP.UI.ProductEAV
             this.lblNotes = new Krypton.Toolkit.KryptonLabel();
             this.lblis_enabled = new Krypton.Toolkit.KryptonLabel();
             this.kryptonTreeView1 = new Krypton.Toolkit.KryptonTreeView();
+            this.chkexpandAll = new Krypton.Toolkit.KryptonCheckBox();
             this.kryptonPage3 = new Krypton.Navigator.KryptonPage();
             this.kryptonPanel3 = new Krypton.Toolkit.KryptonPanel();
             this.kryptonSplitContainer3 = new Krypton.Toolkit.KryptonSplitContainer();
@@ -117,7 +118,6 @@ namespace RUINORERP.UI.ProductEAV
             this.openFileDialog4Img = new System.Windows.Forms.OpenFileDialog();
             this.contextMenuStrip1 = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.bindingSourceList = new System.Windows.Forms.BindingSource(this.components);
-            this.chkexpandAll = new Krypton.Toolkit.KryptonCheckBox();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonNavigator1)).BeginInit();
             this.kryptonNavigator1.SuspendLayout();
@@ -624,6 +624,15 @@ namespace RUINORERP.UI.ProductEAV
             this.kryptonTreeView1.TabIndex = 3;
             this.kryptonTreeView1.DoubleClick += new System.EventHandler(this.kryptonTreeView1_DoubleClick);
             // 
+            // chkexpandAll
+            // 
+            this.chkexpandAll.Dock = System.Windows.Forms.DockStyle.Top;
+            this.chkexpandAll.Location = new System.Drawing.Point(0, 0);
+            this.chkexpandAll.Name = "chkexpandAll";
+            this.chkexpandAll.Size = new System.Drawing.Size(331, 20);
+            this.chkexpandAll.TabIndex = 133;
+            this.chkexpandAll.Values.Text = "全部展开";
+            // 
             // kryptonPage3
             // 
             this.kryptonPage3.AutoHiddenSlideSize = new System.Drawing.Size(200, 200);
@@ -766,8 +775,8 @@ namespace RUINORERP.UI.ProductEAV
             this.dataGridView1.AllowUserToAddRows = false;
             this.dataGridView1.AllowUserToDeleteRows = false;
             this.dataGridView1.AllowUserToOrderColumns = true;
-            dataGridViewCellStyle1.BackColor = System.Drawing.Color.Beige;
-            this.dataGridView1.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle1;
+            dataGridViewCellStyle2.BackColor = System.Drawing.Color.Beige;
+            this.dataGridView1.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle2;
             this.dataGridView1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
@@ -775,16 +784,19 @@ namespace RUINORERP.UI.ProductEAV
             this.dataGridView1.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.dataGridView1.CustomRowNo = false;
             this.dataGridView1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.dataGridView1.EnableFiltering = false;
             this.dataGridView1.FieldNameList = null;
             this.dataGridView1.IsShowSumRow = false;
             this.dataGridView1.Location = new System.Drawing.Point(0, 0);
             this.dataGridView1.Name = "dataGridView1";
+            this.dataGridView1.NeedSaveColumnsXml = true;
             this.dataGridView1.RowTemplate.Height = 23;
             this.dataGridView1.Size = new System.Drawing.Size(1022, 305);
             this.dataGridView1.SumColumns = null;
             this.dataGridView1.SummaryDescription = "2020-08最新 带有合计列功能;";
             this.dataGridView1.SumRowCellFormat = "N2";
             this.dataGridView1.TabIndex = 4;
+            this.dataGridView1.UseBatchEditColumn = false;
             this.dataGridView1.UseCustomColumnDisplay = true;
             this.dataGridView1.UseSelectedColumn = false;
             this.dataGridView1.Use是否使用内置右键功能 = false;
@@ -1049,16 +1061,6 @@ namespace RUINORERP.UI.ProductEAV
             this.contextMenuStrip1.Name = "contextMenuStrip1";
             this.contextMenuStrip1.Size = new System.Drawing.Size(61, 4);
             this.contextMenuStrip1.Opening += new System.ComponentModel.CancelEventHandler(this.contextMenuStrip1_Opening);
-            // 
-            // chkexpandAll
-            // 
-            this.chkexpandAll.Dock = System.Windows.Forms.DockStyle.Top;
-            this.chkexpandAll.Location = new System.Drawing.Point(0, 0);
-            this.chkexpandAll.Name = "chkexpandAll";
-            this.chkexpandAll.Size = new System.Drawing.Size(331, 20);
-            this.chkexpandAll.TabIndex = 133;
-            this.chkexpandAll.Values.Text = "全部展开";
-            
             // 
             // frmProductEdit
             // 

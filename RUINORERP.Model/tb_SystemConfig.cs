@@ -373,6 +373,21 @@ namespace RUINORERP.Model
                         }
         }
 
+        private int _FreightAllocationRules = 1;
+        /// <summary>
+        /// 运费分摊规则
+        /// </summary>
+        [AdvQueryAttribute(ColName = "FreightAllocationRules", ColDesc = "运费分摊规则")]
+        [SugarColumn(ColumnDataType = "int", SqlParameterDbType = "Int32", ColumnName = "CostCalculationMethod", DecimalDigits = 0, IsNullable = false, ColumnDescription = "运费分摊规则")]
+        public int FreightAllocationRules
+        {
+            get { return _FreightAllocationRules; }
+            set
+            {
+                SetProperty(ref _FreightAllocationRules, value);
+            }
+        }
+
         #endregion
 
         #region 扩展属性
@@ -383,8 +398,8 @@ namespace RUINORERP.Model
 
 
 
-//如果为false,则不可以。
-private bool PK_FK_ID_Check()
+        //如果为false,则不可以。
+        private bool PK_FK_ID_Check()
 {
   bool rs=true;
 return rs;

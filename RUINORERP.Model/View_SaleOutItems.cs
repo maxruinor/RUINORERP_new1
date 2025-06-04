@@ -512,12 +512,12 @@ namespace RUINORERP.Model
         
         
         /// <summary>
-        /// 抽成金额
+        /// 佣金小计
         /// </summary>
 
-        [AdvQueryAttribute(ColName = "CommissionAmount",ColDesc = "抽成金额")]
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "CommissionAmount" ,IsNullable = true,ColumnDescription = "抽成金额" )]
-        [Display(Name = "抽成金额")]
+        [AdvQueryAttribute(ColName = "CommissionAmount",ColDesc = "佣金小计")]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "CommissionAmount" ,IsNullable = true,ColumnDescription = "佣金小计" )]
+        [Display(Name = "佣金小计")]
         public decimal? CommissionAmount 
         { 
             get{return _CommissionAmount;}

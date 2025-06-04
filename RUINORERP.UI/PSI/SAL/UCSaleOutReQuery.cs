@@ -176,7 +176,8 @@ namespace RUINORERP.UI.PSI.SAL
             base.MasterSummaryCols.Add(c => c.TotalQty);
             base.MasterSummaryCols.Add(c => c.TotalAmount);
             base.MasterSummaryCols.Add(c => c.ForeignTotalAmount);
-            base.MasterSummaryCols.Add(c => c.ShipCost);
+            base.MasterSummaryCols.Add(c => c.FreightIncome);
+            base.MasterSummaryCols.Add(c => c.TotalCommissionAmount);
 
 
             base.ChildSummaryCols.Add(c => c.Quantity);

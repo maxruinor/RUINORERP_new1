@@ -847,7 +847,7 @@ namespace RUINORERP.UI.PSI.PUR
 
             entity.TotalAmount = NewDetails.Sum(c => c.SubtotalAmount);
             entity.TotalQty = NewDetails.Sum(c => c.Quantity);
-            entity.TotalAmount = entity.ShippingCost + entity.TotalAmount;
+            entity.TotalAmount = entity.ShipCost + entity.TotalAmount;
 
             entity.DataStatus = (int)DataStatus.草稿;
             entity.ApprovalStatus = (int)ApprovalStatus.未审核;

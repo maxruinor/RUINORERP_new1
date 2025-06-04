@@ -112,12 +112,15 @@ namespace RUINORERP.UI.PSI.SAL
                 lblReview.Text = ((ApprovalStatus)entity.ApprovalStatus).ToString();
             }
             EditEntity = entity;
+
+            DataBindingHelper.BindData4TextBox<tb_SaleOutRe>(entity, t => t.TotalCommissionAmount.ToString(), txtTotalCommissionAmount, BindDataType4TextBox.Money, false);
+
             DataBindingHelper.BindData4TextBox<tb_SaleOutRe>(entity, t => t.ReturnNo, txtReturnNo, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4Cmb<tb_Employee>(entity, k => k.Employee_ID, v => v.Employee_Name, cmbEmployee_ID);
             DataBindingHelper.BindData4Cmb<tb_CustomerVendor>(entity, k => k.CustomerVendor_ID, v => v.CVName, cmbCustomerVendor_ID, c => c.IsCustomer == true);
             DataBindingHelper.BindData4TextBox<tb_SaleOutRe>(entity, v => v.SaleOut_NO, txtSaleOutNo, BindDataType4TextBox.Text, true);
             DataBindingHelper.BindData4TextBox<tb_SaleOutRe>(entity, t => t.TotalAmount.ToString(), txtTotalAmount, BindDataType4TextBox.Money, false);
-            DataBindingHelper.BindData4TextBox<tb_SaleOutRe>(entity, t => t.ShipCost.ToString(), txtShipcost, BindDataType4TextBox.Money, false);
+            DataBindingHelper.BindData4TextBox<tb_SaleOutRe>(entity, t => t.FreightIncome.ToString(), txtFreightIncome, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4TextBox<tb_SaleOutRe>(entity, t => t.TotalQty, txtTotalQty, BindDataType4TextBox.Qty, false);
             DataBindingHelper.BindData4DataTime<tb_SaleOutRe>(entity, t => t.ReturnDate, dtpDeliveryDate, false);
             DataBindingHelper.BindData4TextBox<tb_SaleOutRe>(entity, t => t.TrackNo, txtTrackNo, BindDataType4TextBox.Text, false);
@@ -313,6 +316,10 @@ namespace RUINORERP.UI.PSI.SAL
             listCols.SetCol_Formula<tb_SaleOutReDetail>((a, b) => a.TransactionPrice * b.Quantity, c => c.SubtotalTransAmount);
             listCols.SetCol_Formula<tb_SaleOutReDetail>((a, b) => a.SubtotalTransAmount - b.SubtotalTaxAmount, c => c.SubtotalUntaxedAmount);
             listCols.SetCol_Formula<tb_SaleOutReDetail>((a, b, c) => a.SubtotalTransAmount / (1 + b.TaxRate) * c.TaxRate, d => d.SubtotalTaxAmount);
+            listCols.SetCol_Formula<tb_SaleOutReDetail>((a, b) => a.UnitCommissionAmount * b.Quantity, c => c.CommissionAmount);
+            listCols.SetCol_FormulaReverse<tb_SaleOutReDetail>(d => d.Quantity != 0, (a, b) => a.CommissionAmount / b.Quantity, c => c.UnitCommissionAmount);
+
+
             // listCols.SetCol_Formula<tb_SaleOutReDetail>((a, b, c) => a.TransactionPrice * b.Quantity - c.TaxSubtotalAmount, d => d.UntaxedAmount);
 
             //应该是审核时要处理的逻辑暂时隐藏
@@ -485,7 +492,8 @@ namespace RUINORERP.UI.PSI.SAL
                     return;
                 }
                 EditEntity.TotalQty = details.Sum(c => c.Quantity);
-                EditEntity.TotalAmount = details.Sum(c => c.TransactionPrice * c.Quantity) + EditEntity.ShipCost;
+                EditEntity.TotalAmount = details.Sum(c => c.TransactionPrice * c.Quantity) + EditEntity.FreightIncome;
+                EditEntity.TotalCommissionAmount = details.Sum(c => c.CommissionAmount);
             }
             catch (Exception ex)
             {
@@ -544,6 +552,9 @@ namespace RUINORERP.UI.PSI.SAL
                 {
                     EditEntity.IsIncludeTax = false;
                 }
+                EditEntity.TotalQty = details.Sum(c => c.Quantity);
+                EditEntity.TotalAmount = details.Sum(c => c.TransactionPrice * c.Quantity) + EditEntity.FreightIncome;
+                EditEntity.TotalCommissionAmount = details.Sum(c => c.CommissionAmount);
 
                 //产品ID有值才算有效值
                 LastRefurbishedMaterials = RefurbishedMaterials.Where(t => t.ProdDetailID > 0).ToList();
@@ -602,9 +613,7 @@ namespace RUINORERP.UI.PSI.SAL
 
         protected override async Task<bool> Submit()
         {
-
-
-            if (EditEntity != null && EditEntity.ActionStatus == ActionStatus.新增)
+            if (EditEntity != null)
             {
                 if (EditEntity.ReturnDate == null)
                 {

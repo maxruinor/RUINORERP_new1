@@ -30,6 +30,8 @@
         {
             this.kryptonSplitContainer1 = new Krypton.Toolkit.KryptonSplitContainer();
             this.kryptonPanelMainInfo = new Krypton.Toolkit.KryptonPanel();
+            this.txtCustomerPONo = new Krypton.Toolkit.KryptonTextBox();
+            this.lblCustomerPONo = new Krypton.Toolkit.KryptonLabel();
             this.lblAccount_id = new Krypton.Toolkit.KryptonLabel();
             this.cmbAccount_id = new Krypton.Toolkit.KryptonComboBox();
             this.lblExchangeRate = new Krypton.Toolkit.KryptonLabel();
@@ -90,8 +92,8 @@
             this.lblTotalAmount = new Krypton.Toolkit.KryptonLabel();
             this.txtApprovalOpinions = new Krypton.Toolkit.KryptonTextBox();
             this.lblApprovalOpinions = new Krypton.Toolkit.KryptonLabel();
-            this.txtCustomerPONo = new Krypton.Toolkit.KryptonTextBox();
-            this.lblCustomerPONo = new Krypton.Toolkit.KryptonLabel();
+            this.txtTotalCommissionAmount = new Krypton.Toolkit.KryptonTextBox();
+            this.lblTotalCommissionAmount = new Krypton.Toolkit.KryptonLabel();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceSub)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1)).BeginInit();
@@ -194,6 +196,21 @@
             this.kryptonPanelMainInfo.Size = new System.Drawing.Size(1223, 288);
             this.kryptonPanelMainInfo.TabIndex = 100;
             this.kryptonPanelMainInfo.Paint += new System.Windows.Forms.PaintEventHandler(this.kryptonPanelMainInfo_Paint);
+            // 
+            // txtCustomerPONo
+            // 
+            this.txtCustomerPONo.Location = new System.Drawing.Point(647, 132);
+            this.txtCustomerPONo.Name = "txtCustomerPONo";
+            this.txtCustomerPONo.Size = new System.Drawing.Size(142, 23);
+            this.txtCustomerPONo.TabIndex = 196;
+            // 
+            // lblCustomerPONo
+            // 
+            this.lblCustomerPONo.Location = new System.Drawing.Point(566, 133);
+            this.lblCustomerPONo.Name = "lblCustomerPONo";
+            this.lblCustomerPONo.Size = new System.Drawing.Size(75, 20);
+            this.lblCustomerPONo.TabIndex = 195;
+            this.lblCustomerPONo.Values.Text = "客户订单号";
             // 
             // lblAccount_id
             // 
@@ -589,6 +606,8 @@
             // 
             // kryptonSplitContainerGridAndSub.Panel2
             // 
+            this.kryptonSplitContainerGridAndSub.Panel2.Controls.Add(this.txtTotalCommissionAmount);
+            this.kryptonSplitContainerGridAndSub.Panel2.Controls.Add(this.lblTotalCommissionAmount);
             this.kryptonSplitContainerGridAndSub.Panel2.Controls.Add(this.txtTotalQty);
             this.kryptonSplitContainerGridAndSub.Panel2.Controls.Add(this.kryptonLabel1);
             this.kryptonSplitContainerGridAndSub.Panel2.Controls.Add(this.lblTaxAmount);
@@ -698,7 +717,7 @@
             // 
             // txtApprovalOpinions
             // 
-            this.txtApprovalOpinions.Location = new System.Drawing.Point(768, 18);
+            this.txtApprovalOpinions.Location = new System.Drawing.Point(934, 15);
             this.txtApprovalOpinions.Multiline = true;
             this.txtApprovalOpinions.Name = "txtApprovalOpinions";
             this.txtApprovalOpinions.Size = new System.Drawing.Size(266, 46);
@@ -706,26 +725,26 @@
             // 
             // lblApprovalOpinions
             // 
-            this.lblApprovalOpinions.Location = new System.Drawing.Point(700, 15);
+            this.lblApprovalOpinions.Location = new System.Drawing.Point(866, 12);
             this.lblApprovalOpinions.Name = "lblApprovalOpinions";
             this.lblApprovalOpinions.Size = new System.Drawing.Size(62, 20);
             this.lblApprovalOpinions.TabIndex = 76;
             this.lblApprovalOpinions.Values.Text = "审批意见";
             // 
-            // txtCustomerPONo
+            // txtTotalCommissionAmount
             // 
-            this.txtCustomerPONo.Location = new System.Drawing.Point(647, 132);
-            this.txtCustomerPONo.Name = "txtCustomerPONo";
-            this.txtCustomerPONo.Size = new System.Drawing.Size(142, 23);
-            this.txtCustomerPONo.TabIndex = 196;
+            this.txtTotalCommissionAmount.Location = new System.Drawing.Point(77, 47);
+            this.txtTotalCommissionAmount.Name = "txtTotalCommissionAmount";
+            this.txtTotalCommissionAmount.Size = new System.Drawing.Size(100, 23);
+            this.txtTotalCommissionAmount.TabIndex = 104;
             // 
-            // lblCustomerPONo
+            // lblTotalCommissionAmount
             // 
-            this.lblCustomerPONo.Location = new System.Drawing.Point(566, 133);
-            this.lblCustomerPONo.Name = "lblCustomerPONo";
-            this.lblCustomerPONo.Size = new System.Drawing.Size(75, 20);
-            this.lblCustomerPONo.TabIndex = 195;
-            this.lblCustomerPONo.Values.Text = "客户订单号";
+            this.lblTotalCommissionAmount.Location = new System.Drawing.Point(4, 50);
+            this.lblTotalCommissionAmount.Name = "lblTotalCommissionAmount";
+            this.lblTotalCommissionAmount.Size = new System.Drawing.Size(62, 20);
+            this.lblTotalCommissionAmount.TabIndex = 103;
+            this.lblTotalCommissionAmount.Values.Text = "抽成佣金";
             // 
             // UCSaleOrder
             // 
@@ -834,5 +853,7 @@
         private Krypton.Toolkit.KryptonLabel lblForeignFreightIncome;
         private Krypton.Toolkit.KryptonTextBox txtCustomerPONo;
         private Krypton.Toolkit.KryptonLabel lblCustomerPONo;
+        private Krypton.Toolkit.KryptonTextBox txtTotalCommissionAmount;
+        private Krypton.Toolkit.KryptonLabel lblTotalCommissionAmount;
     }
 }

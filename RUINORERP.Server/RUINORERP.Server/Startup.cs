@@ -62,6 +62,8 @@ using ZXing;
 using RUINORERP.Server.SmartReminder;
 using RUINORERP.Server.SmartReminder.ReminderRuleStrategy;
 using Newtonsoft.Json;
+using RUINORERP.Model.Base;
+using RUINORERP.Business.CommService;
 
 namespace RUINORERP.Server
 {
@@ -812,6 +814,31 @@ namespace RUINORERP.Server
                 {
 
                 }
+                if (tempTypes[i].Name == "IWorkflowNotificationService")
+                {
+                    builder.RegisterType<WorkflowNotificationService>()
+                    .AsImplementedInterfaces().AsSelf()
+                    .PropertiesAutowired() //属性注入 如果没有这个  public Itb_LocationTypeServices _tb_LocationTypeServices { get; set; }  这个值会没有，所以实际后为null
+                    ;
+                    continue;
+                }
+                if (tempTypes[i].Name == "IStatusMachine")
+                {
+                    builder.RegisterType<BusinessStatusMachine>()
+                    .AsImplementedInterfaces().AsSelf()
+                    .PropertiesAutowired() //属性注入 如果没有这个  public Itb_LocationTypeServices _tb_LocationTypeServices { get; set; }  这个值会没有，所以实际后为null
+                    ;
+                    continue;
+                }
+                if (tempTypes[i].Name == "IStatusHandler")
+                {
+                    builder.RegisterType<ProductionStatusHandler>()
+                    .AsImplementedInterfaces().AsSelf()
+                    .PropertiesAutowired() //属性注入 如果没有这个  public Itb_LocationTypeServices _tb_LocationTypeServices { get; set; }  这个值会没有，所以实际后为null
+                    ;
+                    continue;
+                }
+
                 if (tempTypes[i].Name == "IAuthorizeController")
                 {
                     builder.RegisterType<AuthorizeController>()

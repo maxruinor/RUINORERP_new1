@@ -34,8 +34,8 @@
             this.lblPayStatus = new Krypton.Toolkit.KryptonLabel();
             this.cmbPayStatus = new Krypton.Toolkit.KryptonComboBox();
             this.lblDataStatus = new Krypton.Toolkit.KryptonLabel();
-            this.lblShippingCost = new Krypton.Toolkit.KryptonLabel();
-            this.txtShippingCost = new Krypton.Toolkit.KryptonTextBox();
+            this.lblShipCost = new Krypton.Toolkit.KryptonLabel();
+            this.txtShipCost = new Krypton.Toolkit.KryptonTextBox();
             this.txtPurOrderNO = new Krypton.Toolkit.KryptonTextBox();
             this.lblNotes = new Krypton.Toolkit.KryptonLabel();
             this.txtNotes = new Krypton.Toolkit.KryptonTextBox();
@@ -114,8 +114,8 @@
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.lblPayStatus);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.cmbPayStatus);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.lblDataStatus);
-            this.kryptonSplitContainer1.Panel1.Controls.Add(this.lblShippingCost);
-            this.kryptonSplitContainer1.Panel1.Controls.Add(this.txtShippingCost);
+            this.kryptonSplitContainer1.Panel1.Controls.Add(this.lblShipCost);
+            this.kryptonSplitContainer1.Panel1.Controls.Add(this.txtShipCost);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.txtPurOrderNO);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.lblNotes);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.txtNotes);
@@ -204,18 +204,18 @@
             // 
             // lblShippingCost
             // 
-            this.lblShippingCost.Location = new System.Drawing.Point(922, 134);
-            this.lblShippingCost.Name = "lblShippingCost";
-            this.lblShippingCost.Size = new System.Drawing.Size(36, 20);
-            this.lblShippingCost.TabIndex = 134;
-            this.lblShippingCost.Values.Text = "运费";
+            this.lblShipCost.Location = new System.Drawing.Point(922, 134);
+            this.lblShipCost.Name = "lblShippingCost";
+            this.lblShipCost.Size = new System.Drawing.Size(36, 20);
+            this.lblShipCost.TabIndex = 134;
+            this.lblShipCost.Values.Text = "运费";
             // 
             // txtShippingCost
             // 
-            this.txtShippingCost.Location = new System.Drawing.Point(964, 133);
-            this.txtShippingCost.Name = "txtShippingCost";
-            this.txtShippingCost.Size = new System.Drawing.Size(143, 23);
-            this.txtShippingCost.TabIndex = 135;
+            this.txtShipCost.Location = new System.Drawing.Point(964, 133);
+            this.txtShipCost.Name = "txtShippingCost";
+            this.txtShipCost.Size = new System.Drawing.Size(143, 23);
+            this.txtShipCost.TabIndex = 135;
             // 
             // txtPurOrderNO
             // 
@@ -639,8 +639,8 @@
         private Krypton.Toolkit.KryptonTextBox txtNotes;
         private Krypton.Toolkit.KryptonLabel lblPurEntryNo;
         private Krypton.Toolkit.KryptonTextBox txtPurOrderNO;
-        private Krypton.Toolkit.KryptonLabel lblShippingCost;
-        private Krypton.Toolkit.KryptonTextBox txtShippingCost;
+        private Krypton.Toolkit.KryptonLabel lblShipCost;
+        private Krypton.Toolkit.KryptonTextBox txtShipCost;
         private Krypton.Toolkit.KryptonLabel lblDataStatus;
         private Krypton.Toolkit.KryptonLabel lblPayStatus;
         private Krypton.Toolkit.KryptonComboBox cmbPayStatus;

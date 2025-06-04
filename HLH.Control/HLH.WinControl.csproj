@@ -297,20 +297,8 @@
     <Compile Include="MyDataGrid\MyGrid.Designer.cs">
       <DependentUpon>MyGrid.cs</DependentUpon>
     </Compile>
-    <Compile Include="MyDataGrid\MySumDataGridView.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Include="MyDataGrid\MySumDataGridView.Designer.cs">
-      <DependentUpon>MySumDataGridView.cs</DependentUpon>
-    </Compile>
     <Compile Include="MyRichTextBox.cs">
       <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="MySumDataGridViewOfName.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Include="MySumDataGridViewOfName.designer.cs">
-      <DependentUpon>MySumDataGridViewOfName.cs</DependentUpon>
     </Compile>
     <Compile Include="NumberTextBox.cs">
       <SubType>Component</SubType>
@@ -384,9 +372,6 @@
     <EmbeddedResource Include="MyRichTextBox.resx">
       <DependentUpon>MyRichTextBox.cs</DependentUpon>
       <SubType>Designer</SubType>
-    </EmbeddedResource>
-    <EmbeddedResource Include="MySumDataGridViewOfName.resx">
-      <DependentUpon>MySumDataGridViewOfName.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="OutlookGrid\MyOutLookGrid.resx">
       <DependentUpon>MyOutLookGrid.cs</DependentUpon>

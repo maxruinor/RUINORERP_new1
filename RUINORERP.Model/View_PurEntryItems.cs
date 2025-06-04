@@ -167,22 +167,22 @@ namespace RUINORERP.Model
             }
         }
 
-        private decimal? _ShippingCost;
+        private decimal? _ShipCost;
 
 
         /// <summary>
         /// 运费
         /// </summary>
 
-        [AdvQueryAttribute(ColName = "ShippingCost", ColDesc = "运费")]
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType = "Decimal", ColumnName = "ShippingCost", IsNullable = true, ColumnDescription = "运费")]
+        [AdvQueryAttribute(ColName = "ShipCost", ColDesc = "运费")]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType = "Decimal", ColumnName = "ShipCost", IsNullable = true, ColumnDescription = "运费")]
         [Display(Name = "运费")]
-        public decimal? ShippingCost
+        public decimal? ShipCost
         {
-            get { return _ShippingCost; }
+            get { return _ShipCost; }
             set
             {
-                SetProperty(ref _ShippingCost, value);
+                SetProperty(ref _ShipCost, value);
             }
         }
 

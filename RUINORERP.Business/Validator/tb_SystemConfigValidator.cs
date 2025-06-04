@@ -52,17 +52,18 @@ namespace RUINORERP.Business
 //***** 
  RuleFor(tb_SystemConfig =>tb_SystemConfig.CostCalculationMethod).NotNull().WithMessage("成本方式:不能为空。");
 
+            RuleFor(tb_SystemConfig => tb_SystemConfig.FreightAllocationRules).NotNull().WithMessage("运费分配规则:不能为空。");
 
-//有默认值
-
-
-
-
-//有默认值
+            //有默认值
 
 
 
- RuleFor(x => x.AutoApprovedSaleOrderAmount).PrecisionScale(19,4,true).WithMessage("自动审核销售订单金额:小数位不能超过4。");
+
+            //有默认值
+
+
+
+            RuleFor(x => x.AutoApprovedSaleOrderAmount).PrecisionScale(19,4,true).WithMessage("自动审核销售订单金额:小数位不能超过4。");
 
  RuleFor(x => x.AutoApprovedPurOrderAmount).PrecisionScale(19,4,true).WithMessage("自动审核采购订单金额:小数位不能超过4。");
 

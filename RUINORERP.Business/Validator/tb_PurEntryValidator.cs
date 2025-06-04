@@ -98,7 +98,7 @@ namespace RUINORERP.Business
 
  RuleFor(tb_PurEntry =>tb_PurEntry.PurOrder_NO).MaximumLength(25).WithMessage("采购订单号:不能超过最大长度,25.");
 
- RuleFor(x => x.ShippingCost).PrecisionScale(19,4,true).WithMessage(":小数位不能超过4。");
+ RuleFor(x => x.ShipCost).PrecisionScale(19,4,true).WithMessage(":小数位不能超过4。");
 
            	                //long
                 //PurEntryID

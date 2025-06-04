@@ -306,7 +306,34 @@ namespace RUINORERP.Model
             SetProperty(ref _ReturnedQty, value);
                         }
         }
-
+        private decimal _AllocatedFreightCost = ((0));
+        /// <summary>
+        /// 运费成本分摊
+        /// </summary>
+        [AdvQueryAttribute(ColName = "AllocatedFreightCost", ColDesc = "运费成本分摊")]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType = "Decimal", ColumnName = "AllocatedFreightCost", DecimalDigits = 4, IsNullable = false, ColumnDescription = "运费成本分摊")]
+        public decimal AllocatedFreightCost
+        {
+            get { return _AllocatedFreightCost; }
+            set
+            {
+                SetProperty(ref _AllocatedFreightCost, value);
+            }
+        }
+        private int? _FreightAllocationRules;
+        /// <summary>
+        /// 分摊规则
+        /// </summary>
+        [AdvQueryAttribute(ColName = "FreightAllocationRules", ColDesc = "分摊规则")]
+        [SugarColumn(ColumnDataType = "int", SqlParameterDbType = "Int32", ColumnName = "FreightAllocationRules", DecimalDigits = 0, IsNullable = true, ColumnDescription = "分摊规则")]
+        public int? FreightAllocationRules
+        {
+            get { return _FreightAllocationRules; }
+            set
+            {
+                SetProperty(ref _FreightAllocationRules, value);
+            }
+        }
         private long? _Rack_ID;
         /// <summary>
         /// 货架

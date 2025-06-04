@@ -188,6 +188,7 @@ namespace RUINORERP.UI.BaseForm
 
         private void DataGridView1_CellFormatting(object sender, DataGridViewCellFormattingEventArgs e)
         {
+            return;
             //如果列是隐藏的是不是可以不需要控制显示了呢? 后面看是否是导出这块需要不需要 不然可以隐藏的直接跳过
             if (!dataGridView1.Columns[e.ColumnIndex].Visible)
             {
@@ -630,7 +631,7 @@ namespace RUINORERP.UI.BaseForm
 
         private void dataGridView1_CellPainting(object sender, DataGridViewCellPaintingEventArgs e)
         {
-
+            return;
             if (e.ColumnIndex >= 0 && e.RowIndex >= 0)
             {
                 DataGridViewPaintParts paintParts =

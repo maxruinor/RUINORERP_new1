@@ -641,6 +641,7 @@
     <Compile Include="Common\MenuItemEnumsExtensions.cs" />
     <Compile Include="Common\ProgressExtensions.cs" />
     <Compile Include="Common\ProgressHelper.cs" />
+    <Compile Include="Common\TabCloseHandler.cs" />
     <Compile Include="Common\UIStateManager.cs" />
     <Compile Include="CRM\UCHighSeasCustomerList.cs">
       <SubType>UserControl</SubType>

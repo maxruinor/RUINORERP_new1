@@ -63,19 +63,21 @@ namespace RUINORERP.Business
                     rrs.Succeeded = false;
                     return rrs;
                 }
-                if (!entity.SaleOut_MainID.HasValue)
-                {
-                    rrs.Succeeded = false;
-                    return rrs;
-                }
-                else
-                {
-                    if (entity.SaleOut_MainID.Value == 0)
-                    {
-                        rrs.Succeeded = false;
-                        return rrs;
-                    }
-                }
+
+                //支持无出库单退货
+                //if (!entity.SaleOut_MainID.HasValue)
+                //{
+                //    rrs.Succeeded = false;
+                //    return rrs;
+                //}
+                //else
+                //{
+                //    if (entity.SaleOut_MainID.Value == 0)
+                //    {
+                //        rrs.Succeeded = false;
+                //        return rrs;
+                //    }
+                //}
 
                 // 开启事务，保证数据一致性
                 _unitOfWorkManage.BeginTran();

@@ -66,7 +66,7 @@ namespace RUINORERP.Business
             //***** 
             RuleFor(tb_PurOrder => tb_PurOrder.TotalQty).NotNull().WithMessage("总数量:不能为空。");
 
-            RuleFor(x => x.ShippingCost).PrecisionScale(19, 4, true).WithMessage("运费:小数位不能超过4。");
+            RuleFor(x => x.ShipCost).PrecisionScale(19, 4, true).WithMessage("运费:小数位不能超过4。");
 
             RuleFor(x => x.TotalTaxAmount).PrecisionScale(19, 4, true).WithMessage("总税额:小数位不能超过4。");
 

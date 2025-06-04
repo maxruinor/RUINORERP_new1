@@ -78,6 +78,8 @@
             this.lbl销售订单 = new Krypton.Toolkit.KryptonLabel();
             this.kryptonSplitContainerGridAndSub = new Krypton.Toolkit.KryptonSplitContainer();
             this.grid1 = new SourceGrid.Grid();
+            this.txtTotalCommissionAmount = new Krypton.Toolkit.KryptonTextBox();
+            this.lblTotalCommissionAmount = new Krypton.Toolkit.KryptonLabel();
             this.txtForeignFreightIncome = new Krypton.Toolkit.KryptonTextBox();
             this.lblForeignFreightIncome = new Krypton.Toolkit.KryptonLabel();
             this.txtTotalQty = new Krypton.Toolkit.KryptonTextBox();
@@ -92,8 +94,6 @@
             this.txtTaxAmount = new Krypton.Toolkit.KryptonTextBox();
             this.txtFreightIncome = new Krypton.Toolkit.KryptonTextBox();
             this.lblFreightIncome = new Krypton.Toolkit.KryptonLabel();
-            this.txtTotalCommissionAmount = new Krypton.Toolkit.KryptonTextBox();
-            this.lblTotalCommissionAmount = new Krypton.Toolkit.KryptonLabel();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceSub)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1)).BeginInit();
@@ -619,6 +619,21 @@
             this.grid1.TabStop = true;
             this.grid1.ToolTipText = "";
             // 
+            // txtTotalCommissionAmount
+            // 
+            this.txtTotalCommissionAmount.Location = new System.Drawing.Point(273, 21);
+            this.txtTotalCommissionAmount.Name = "txtTotalCommissionAmount";
+            this.txtTotalCommissionAmount.Size = new System.Drawing.Size(100, 23);
+            this.txtTotalCommissionAmount.TabIndex = 147;
+            // 
+            // lblTotalCommissionAmount
+            // 
+            this.lblTotalCommissionAmount.Location = new System.Drawing.Point(205, 21);
+            this.lblTotalCommissionAmount.Name = "lblTotalCommissionAmount";
+            this.lblTotalCommissionAmount.Size = new System.Drawing.Size(62, 20);
+            this.lblTotalCommissionAmount.TabIndex = 146;
+            this.lblTotalCommissionAmount.Values.Text = "佣金金额";
+            // 
             // txtForeignFreightIncome
             // 
             this.txtForeignFreightIncome.Location = new System.Drawing.Point(762, 47);
@@ -724,21 +739,6 @@
             this.lblFreightIncome.Size = new System.Drawing.Size(62, 20);
             this.lblFreightIncome.TabIndex = 102;
             this.lblFreightIncome.Values.Text = "运费收入";
-            // 
-            // txtTotalCommissionAmount
-            // 
-            this.txtTotalCommissionAmount.Location = new System.Drawing.Point(273, 21);
-            this.txtTotalCommissionAmount.Name = "txtTotalCommissionAmount";
-            this.txtTotalCommissionAmount.Size = new System.Drawing.Size(100, 23);
-            this.txtTotalCommissionAmount.TabIndex = 147;
-            // 
-            // lblTotalCommissionAmount
-            // 
-            this.lblTotalCommissionAmount.Location = new System.Drawing.Point(205, 21);
-            this.lblTotalCommissionAmount.Name = "lblTotalCommissionAmount";
-            this.lblTotalCommissionAmount.Size = new System.Drawing.Size(62, 20);
-            this.lblTotalCommissionAmount.TabIndex = 146;
-            this.lblTotalCommissionAmount.Values.Text = "抽成佣金";
             // 
             // UCSaleOut
             // 

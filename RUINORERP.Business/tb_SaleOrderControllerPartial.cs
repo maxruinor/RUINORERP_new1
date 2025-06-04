@@ -220,7 +220,7 @@ namespace RUINORERP.Business
                 entity.ApprovalResults = true;
                 BusinessHelper.Instance.ApproverEntity(entity);
                 //只更新指定列
-                var result =await _unitOfWorkManage.GetDbClient().Updateable<tb_SaleOrder>(entity).UpdateColumns(it => new
+                var result = await _unitOfWorkManage.GetDbClient().Updateable<tb_SaleOrder>(entity).UpdateColumns(it => new
                 {
                     it.DataStatus,
                     it.ApprovalResults,
@@ -745,7 +745,7 @@ namespace RUINORERP.Business
                 entity.DataStatus = (int)DataStatus.新建;
                 entity.ApprovalResults = false;
                 entity.ApprovalStatus = (int)ApprovalStatus.未审核;
-                entity.ApprovalOpinions+="【被反审】";
+                entity.ApprovalOpinions += "【被反审】";
                 BusinessHelper.Instance.ApproverEntity(entity);
 
                 //后面是不是要做一个审核历史记录表？
@@ -908,6 +908,7 @@ namespace RUINORERP.Business
             return list as List<T>;
         }
 
+        AuthorizeController authorizeController = null;
 
         /// <summary>
         /// 转换为销售出库单
@@ -919,6 +920,11 @@ namespace RUINORERP.Business
             //转单
             if (saleorder != null)
             {
+                if (authorizeController == null)
+                {
+                    authorizeController = _appContext.GetRequiredService<AuthorizeController>();
+                }
+               
                 entity = mapper.Map<tb_SaleOut>(saleorder);
                 //注意转过来的实体  各种状态要重新赋值不然逻辑有问题，保存就是已经审核
                 entity.ApprovalOpinions = "快捷转单";
@@ -1013,9 +1019,6 @@ namespace RUINORERP.Business
                     tipsMsg.Add($"订单:{entity.SaleOrderNo}已全部出库，请检查是否正在重复出库！");
                 }
 
-                entity.tb_SaleOutDetails = NewDetails;
-
-
                 //如果这个订单已经有出库单 则第二次运费为0
                 if (saleorder.tb_SaleOuts != null && saleorder.tb_SaleOuts.Count > 0)
                 {
@@ -1030,7 +1033,27 @@ namespace RUINORERP.Business
                     }
                 }
 
+                entity.TotalQty = NewDetails.Sum(c => c.Quantity);
 
+                //默认认为 订单中的运费收入 就是实际发货的运费成本， 可以手动修改覆盖
+                if (entity.FreightIncome > 0)
+                {
+                    entity.FreightCost = entity.FreightIncome;
+                    //根据系统设置中的分摊规则来分配运费收入到明细。
+
+                    if (_appContext.SysConfig.FreightAllocationRules == (int)FreightAllocationRules.产品数量占比)
+                    {
+                        // 单个产品分摊运费 = 整单运费 ×（该产品数量 ÷ 总产品数量） 
+                        foreach (var item in NewDetails)
+                        {
+                            item.AllocatedFreightIncome = entity.FreightIncome * (item.Quantity / saleorder.TotalQty);
+                            item.AllocatedFreightIncome = item.AllocatedFreightIncome.ToRoundDecimalPlaces(authorizeController.GetMoneyDataPrecision());
+                        }
+                    }
+                }
+
+
+                entity.tb_SaleOutDetails = NewDetails;
                 entity.OutDate = System.DateTime.Now;
                 entity.DeliveryDate = System.DateTime.Now;
 
@@ -1056,12 +1079,12 @@ namespace RUINORERP.Business
 
                 //}
                 entity.tb_saleorder = saleorder;
-                entity.TotalQty = NewDetails.Sum(c => c.Quantity);
+
                 entity.TotalCost = NewDetails.Sum(c => c.Cost * c.Quantity);
                 entity.TotalCost = entity.TotalCost + entity.FreightCost;
 
                 entity.TotalTaxAmount = NewDetails.Sum(c => c.SubtotalTaxAmount);
-                AuthorizeController authorizeController = _appContext.GetRequiredService<AuthorizeController>();
+              
 
                 entity.TotalTaxAmount = entity.TotalTaxAmount.ToRoundDecimalPlaces(authorizeController.GetMoneyDataPrecision());
 

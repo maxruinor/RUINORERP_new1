@@ -391,10 +391,6 @@ namespace RUINORERP.UI.Common
                         if (item.tb_fieldinfo != null)
                         {
 
-                            if (item.tb_fieldinfo.FieldText == "属性")
-                            {
-
-                            }
 
                             //如果字段不启用时，直接不显示
                             if (!item.tb_fieldinfo.IsEnabled)

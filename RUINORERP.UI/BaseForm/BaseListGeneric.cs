@@ -70,6 +70,35 @@ namespace RUINORERP.UI.BaseForm
     [PreCheckMustOverrideBaseClass]
     public partial class BaseListGeneric<T> : BaseUControl, IContextMenuInfoAuth, IToolStripMenuInfoAuth where T : class
     {
+        #region 如果窗体，有些按钮不用出现在这个业务窗体时。这里手动排除。集合有值才行
+
+        List<MenuItemEnums> _excludeMenuList = new List<MenuItemEnums>();
+        public List<MenuItemEnums> ExcludeMenuList { get => _excludeMenuList; set => _excludeMenuList = value; }
+
+        List<string> _excludeMenuTextList = new List<string>();
+        public List<string> ExcludeMenuTextList { get => _excludeMenuTextList; set => _excludeMenuTextList = value; }
+
+
+        public virtual void AddExcludeMenuList(string menuItemText)
+        {
+            ExcludeMenuTextList.Add(menuItemText);
+        }
+
+        /// <summary>
+        /// 如果查询窗体，有些按钮不用出现在这个业务窗体时。这里手动排除
+        /// </summary>
+        /// <returns></returns>
+        public virtual void AddExcludeMenuList()
+        {
+
+        }
+
+        public virtual void AddExcludeMenuList(MenuItemEnums menuItem)
+        {
+            ExcludeMenuList.Add(menuItem);
+        }
+        #endregion
+
         public virtual List<ContextMenuController> AddContextMenu()
         {
             List<ContextMenuController> list = new List<ContextMenuController>();
@@ -1307,7 +1336,7 @@ namespace RUINORERP.UI.BaseForm
             dataGridView1.Refresh();
         }
 
-        protected virtual void Modify<T>(BaseEditGeneric<T> frmadd) where T : class
+        protected virtual void Modify(BaseEditGeneric<T> frmadd) 
         {
             if (bindingSourceList.Current != null)
             {

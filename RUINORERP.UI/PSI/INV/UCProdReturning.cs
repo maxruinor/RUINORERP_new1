@@ -215,7 +215,7 @@ namespace RUINORERP.UI.PSI.INV
         View_ProdDetailController<View_ProdDetail> dc = Startup.GetFromFac<View_ProdDetailController<View_ProdDetail>>();
         List<View_ProdDetail> list = new List<View_ProdDetail>();
 
-        private async void UCStockIn_Load(object sender, EventArgs e)
+        private  void UCStockIn_Load(object sender, EventArgs e)
         {
             var sw = new Stopwatch();
             // list = dc.Query();

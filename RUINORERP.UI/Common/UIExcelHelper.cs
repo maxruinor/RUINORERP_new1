@@ -83,11 +83,11 @@ namespace RUINORERP.UI.Common
                                     excelSheet.Cells[1, k + 1].Value = newSumDataGridViewMaster.Columns[i].HeaderText;
                                     // 设置列宽
                                     //一个字符的宽度大约是 7.5 像素（基于默认字体和字号）。
-                                    excelSheet.Column(k + 1).Width = newSumDataGridViewMaster.Columns[i].Width/7; // 第一列宽度设置为 20
+                                    excelSheet.Column(k + 1).Width = newSumDataGridViewMaster.Columns[i].Width / 7; // 第一列宽度设置为 20
                                     k++;
                                 }
                             }
-                             
+
 
                             //填充数据
 
@@ -180,6 +180,12 @@ namespace RUINORERP.UI.Common
 
             try
             {
+                if (newSumDataGridViewMaster.DataSource.GetType().Name == "")
+                {
+
+                }
+
+
                 using (SaveFileDialog saveDialog = new SaveFileDialog())
                 {
                     saveDialog.Filter = "Excel Files (*.xlsx; *.xls)|*.xlsx; *.xls";

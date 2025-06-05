@@ -165,10 +165,6 @@ namespace RUINORERP.UI.WorkFlowDesigner.Service
                 //TODO: more specific exception handling here
                 Trace.WriteLine(exc.Message, "JSONSerializer.SaveAs");
             }
-            catch
-            {
-                Trace.WriteLine("Non-CLS exception caught.", "BinarySerializer.SaveAs");
-            }
             finally
             {
                 if (tw != null) tw.Close();
@@ -368,7 +364,7 @@ namespace RUINORERP.UI.WorkFlowDesigner.Service
 
             // »ñÈ¡IdÖµ
             string idValue = jsonObject["Id"].ToString();
-             string version = jsonObject["Version"].ToString();
+            string version = jsonObject["Version"].ToString();
             //WorkFlowConfigData wFStartRool = (WFNodes.FirstOrDefault(c => c.NodeType == WFNodeType.Start).NodeStepPropertyValue as WorkFlowConfigData);
             string workflowid = idValue;
             if (string.IsNullOrEmpty(workflowid))
@@ -381,7 +377,7 @@ namespace RUINORERP.UI.WorkFlowDesigner.Service
             Dictionary<string, int> keys = new Dictionary<string, int>();
             keys.Add("Days", 5);
 
-            WorkFlowContextData wfData = new WorkFlowContextData();
+            WorkFlowContextData wfData = new();
             wfData.Name = "jsonNameInit";
             string _workflowid = await MainForm.Instance.AppContext.workflowHost.StartWorkflow<WorkFlowContextData>(workflowid, int.Parse(version), wfData, null);
             return rs;

@@ -116,7 +116,7 @@ namespace RUINORERP.UI.FM
 
         }
 
-        private async void toolStripButton生成对账单_Click(object sender, EventArgs e)
+        private void toolStripButton生成对账单_Click(object sender, EventArgs e)
         {
             /*后面再设计一个对账功能菜单？生成的回写一下？ 搞一个对账的表？*/
             /*

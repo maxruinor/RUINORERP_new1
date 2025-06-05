@@ -158,7 +158,7 @@ namespace RUINORERP.UI.PSI.INV
             base.MasterInvisibleCols.Add(c => c.Inv_Cost);
         }
 
-        private  async void 纵向库存跟踪ToolStripMenuItem_Click(object sender, EventArgs e)
+        private  void 纵向库存跟踪ToolStripMenuItem_Click(object sender, EventArgs e)
         {
             if (_UCMasterQuery.bindingSourceMaster.Current != null)
             {

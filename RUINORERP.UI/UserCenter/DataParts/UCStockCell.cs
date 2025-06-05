@@ -39,7 +39,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
         }
 
 
-        private async void QueryStockInfo()
+        private  void QueryStockInfo()
         {
             try
             {
@@ -189,7 +189,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
         }
 
 
-        private async void QueryStockOtherIn()
+        private  void QueryStockOtherIn()
         {
             try
             {
@@ -270,7 +270,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
                 MainForm.Instance.logger.Error(ex);
             }
         }
-        private async void QueryStockOtherOut()
+        private  void QueryStockOtherOut()
         {
             try
             {

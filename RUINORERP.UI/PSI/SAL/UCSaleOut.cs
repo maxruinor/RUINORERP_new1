@@ -43,6 +43,7 @@ using RUINORERP.Business.Security;
 using RUINORERP.Global.EnumExt;
 using RUINORERP.UI.AdvancedUIModule;
 using RUINORERP.UI.Monitoring.Auditing;
+using SourceGrid;
 namespace RUINORERP.UI.PSI.SAL
 {
     [MenuAttrAssemblyInfo("销售出库单", ModuleMenuDefine.模块定义.进销存管理, ModuleMenuDefine.进销存管理.销售管理, BizType.销售出库单)]
@@ -201,7 +202,6 @@ namespace RUINORERP.UI.PSI.SAL
                 if ((entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改) && entity.SOrder_ID.HasValue && entity.SOrder_ID > 0 && s2.PropertyName == entity.GetPropertyName<tb_SaleOut>(c => c.SOrder_ID))
                 {
                     await OrderToOutBill(entity.SOrder_ID.Value);
-                    MainForm.Instance.PrintInfoLog("一次");
                 }
 
 
@@ -253,6 +253,12 @@ namespace RUINORERP.UI.PSI.SAL
                     #region 计算运费成本分摊
                     if (entity.FreightCost > 0 && s2.PropertyName == entity.GetPropertyName<tb_SaleOut>(c => c.FreightCost))
                     {
+                        Expression<Func<tb_SaleOutDetail, object>> colNameExp = c => c.AllocatedFreightCost;
+                        string colName = colNameExp.GetMemberInfo().Name;
+                        var coltarget = sgh.SGDefine[colName];
+                        int colIndex = sgh.SGDefine.grid.Columns.GetColumnInfo(coltarget.UniqueId).Index;
+
+
                         //默认认为 订单中的运费收入 就是实际发货的运费成本， 可以手动修改覆盖
                         //根据系统设置中的分摊规则来分配运费收入到明细。
                         if (MainForm.Instance.AppContext.SysConfig.FreightAllocationRules == (int)FreightAllocationRules.产品数量占比)
@@ -260,13 +266,64 @@ namespace RUINORERP.UI.PSI.SAL
                             // 单个产品分摊运费 = 整单运费 ×（该产品数量 ÷ 总产品数量） 
                             foreach (var item in entity.tb_SaleOutDetails)
                             {
-                                item.AllocatedFreightCost = EditEntity.FreightCost * (item.Quantity / EditEntity.TotalQty);
+                                item.AllocatedFreightCost = EditEntity.FreightCost * (item.Quantity.ToDecimal() / EditEntity.TotalQty.ToDecimal());
                                 item.AllocatedFreightCost = item.AllocatedFreightCost.ToRoundDecimalPlaces(authorizeController.GetMoneyDataPrecision());
+                                item.FreightAllocationRules = MainForm.Instance.AppContext.SysConfig.FreightAllocationRules;
+                                for (int i = 0; i < sgh.SGDefine.grid.Rows.Count; i++)
+                                {
+                                    if (sgh.SGDefine.grid.Rows[i].RowData != null && sgh.SGDefine.grid.Rows[i].RowData is tb_SaleOutDetail line)
+                                    {
+                                        if (line.ProdDetailID == item.ProdDetailID)
+                                        {
+                                            Position position = new Position(i, colIndex);
+                                            sgh.SetCellValueForCurrentUICell(coltarget, colName, position, item);
+                                            continue;
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
 
                     #endregion
+
+                    #region 计算运费收入分摊
+                    if (entity.FreightIncome > 0 && s2.PropertyName == entity.GetPropertyName<tb_SaleOut>(c => c.FreightIncome))
+                    {
+                        Expression<Func<tb_SaleOutDetail, object>> colNameExp = c => c.AllocatedFreightIncome;
+                        string colName = colNameExp.GetMemberInfo().Name;
+                        var coltarget = sgh.SGDefine[colName];
+                        int colIndex = sgh.SGDefine.grid.Columns.GetColumnInfo(coltarget.UniqueId).Index;
+
+
+                        //默认认为 订单中的运费收入 就是实际发货的运费成本， 可以手动修改覆盖
+                        //根据系统设置中的分摊规则来分配运费收入到明细。
+                        if (MainForm.Instance.AppContext.SysConfig.FreightAllocationRules == (int)FreightAllocationRules.产品数量占比)
+                        {
+                            // 单个产品分摊运费 = 整单运费 ×（该产品数量 ÷ 总产品数量） 
+                            foreach (var item in entity.tb_SaleOutDetails)
+                            {
+                                item.AllocatedFreightIncome = EditEntity.FreightIncome * (item.Quantity.ToDecimal() / EditEntity.TotalQty.ToDecimal());
+                                item.AllocatedFreightIncome = item.AllocatedFreightIncome.ToRoundDecimalPlaces(authorizeController.GetMoneyDataPrecision());
+                                item.FreightAllocationRules = MainForm.Instance.AppContext.SysConfig.FreightAllocationRules;
+                                for (int i = 0; i < sgh.SGDefine.grid.Rows.Count; i++)
+                                {
+                                    if (sgh.SGDefine.grid.Rows[i].RowData != null && sgh.SGDefine.grid.Rows[i].RowData is tb_SaleOutDetail line)
+                                    {
+                                        if (line.ProdDetailID == item.ProdDetailID)
+                                        {
+                                            Position position = new Position(i, colIndex);
+                                            sgh.SetCellValueForCurrentUICell(coltarget, colName, position, item);
+                                            continue;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    #endregion
+
 
                     if (entity.CustomerVendor_ID > 0 && s2.PropertyName == entity.GetPropertyName<tb_SaleOut>(c => c.CustomerVendor_ID))
                     {
@@ -353,10 +410,7 @@ namespace RUINORERP.UI.PSI.SAL
         SetDependencyObject<P, S, T>   P包含S字段包含T字段--》是有且包含
          */
 
-
-
         SourceGridDefine sgd = null;
-        //        SourceGridHelper<View_ProdDetail, tb_SaleOutDetail> sgh = new SourceGridHelper<View_ProdDetail, tb_SaleOutDetail>();
         SourceGridHelper sgh = new SourceGridHelper();
         //设计关联列和目标列
         View_ProdDetailController<View_ProdDetail> dc = Startup.GetFromFac<View_ProdDetailController<View_ProdDetail>>();
@@ -392,17 +446,13 @@ namespace RUINORERP.UI.PSI.SAL
 
 
             UIHelper.ControlChildColumnsInvisible(CurMenuInfo, listCols);
+
+            listCols.SetCol_Format<tb_SaleOutDetail>(c => c.FreightAllocationRules, CustomFormatType.EnumOptions, null, typeof(FreightAllocationRules));
+
             listCols.SetCol_Format<tb_SaleOutDetail>(c => c.Discount, CustomFormatType.PercentFormat);
             listCols.SetCol_Format<tb_SaleOutDetail>(c => c.TaxRate, CustomFormatType.PercentFormat);
             sgd = new SourceGridDefine(grid1, listCols, true);
 
-            /*
-            //具体审核权限的人才显示
-            if (AppContext.CurUserInfo.UserButtonList.Where(c => c.BtnText == MenuItemEnums.审核.ToString()).Any())
-            {
-                listCols.SetCol_Summary<tb_SaleOutDetail>(c => c.TotalCostAmount, true);
-            }
-            */
 
             listCols.SetCol_Formula<tb_SaleOutDetail>((a, b) => a.UnitPrice * b.Discount, c => c.TransactionPrice);
             //listCols.SetCol_Formula<tb_SaleOutDetail>((a, b) => a.Cost * b.Quantity, c => c.SubtotalCostAmount);
@@ -433,6 +483,9 @@ namespace RUINORERP.UI.PSI.SAL
                 }
             }
 
+            listCols.SetCol_Summary<tb_SaleOutDetail>(c => c.AllocatedFreightCost);
+            listCols.SetCol_Summary<tb_SaleOutDetail>(c => c.AllocatedFreightIncome);
+
             sgh.SetPointToColumnPairs<ProductSharePart, tb_SaleOutDetail>(sgd, f => f.Location_ID, t => t.Location_ID);
             sgh.SetPointToColumnPairs<ProductSharePart, tb_SaleOutDetail>(sgd, f => f.Rack_ID, t => t.Rack_ID);
             sgh.SetPointToColumnPairs<ProductSharePart, tb_SaleOutDetail>(sgd, f => f.Inv_Cost, t => t.Cost);
@@ -445,13 +498,7 @@ namespace RUINORERP.UI.PSI.SAL
             bindingSourceSub.DataSource = lines;
             sgd.BindingSourceLines = bindingSourceSub;
 
-            //Expression<Func<View_ProdDetail, bool>> exp = Expressionable.Create<View_ProdDetail>() //创建表达式
-            //     .AndIF(true, w => w.CNName.Length > 0)
-            //    // .AndIF(txtSpecifications.Text.Trim().Length > 0, w => w.Specifications.Contains(txtSpecifications.Text.Trim()))
-            //    .ToExpression();//注意 这一句 不能少
-            //                    // StringBuilder sb = new StringBuilder();
-            ///// sb.Append(string.Format("{0}='{1}'", item.ColName, valValue));
-            //list = dc.BaseQueryByWhere(exp);
+
             list = MainForm.Instance.list;
             sgd.SetDependencyObject<ProductSharePart, tb_SaleOutDetail>(list);
             sgd.HasRowHeader = true;
@@ -529,33 +576,13 @@ namespace RUINORERP.UI.PSI.SAL
                 }
 
                 EditEntity.TotalQty = details.Sum(c => c.Quantity);
-
-                //默认认为 订单中的运费收入 就是实际发货的运费成本， 可以手动修改覆盖
-                if (EditEntity.FreightIncome > 0)
-                {
-
-                    //根据系统设置中的分摊规则来分配运费收入到明细。
-
-                    if (MainForm.Instance.AppContext.SysConfig.FreightAllocationRules == (int)FreightAllocationRules.产品数量占比)
-                    {
-                        // 单个产品分摊运费 = 整单运费 ×（该产品数量 ÷ 总产品数量） 
-                        foreach (var item in details)
-                        {
-                            item.AllocatedFreightIncome = EditEntity.FreightIncome * (item.Quantity / EditEntity.TotalQty);
-                            item.AllocatedFreightIncome = item.AllocatedFreightIncome.ToRoundDecimalPlaces(authorizeController.GetMoneyDataPrecision());
-                        }
-                    }
-                }
-
-
-
-
                 EditEntity.TotalCost = details.Sum(c => (c.Cost + c.CustomizedCost) * c.Quantity);
                 EditEntity.TotalCost = EditEntity.TotalCost + EditEntity.FreightCost;
                 EditEntity.TotalTaxAmount = details.Sum(c => c.SubtotalTaxAmount);
                 EditEntity.TotalCommissionAmount = details.Sum(c => c.CommissionAmount);
                 EditEntity.TotalTaxAmount = EditEntity.TotalTaxAmount.ToRoundDecimalPlaces(MainForm.Instance.authorizeController.GetMoneyDataPrecision());
-
+                EditEntity.FreightCost = details.Sum(c => c.AllocatedFreightCost);
+                EditEntity.ForeignFreightIncome = details.Sum(c => c.AllocatedFreightIncome);
                 EditEntity.TotalAmount = details.Sum(c => c.TransactionPrice * c.Quantity);
                 EditEntity.TotalAmount = EditEntity.TotalAmount + EditEntity.FreightIncome;
                 if (EditEntity.Currency_ID.HasValue && EditEntity.Currency_ID != AppContext.BaseCurrency.Currency_ID)
@@ -586,7 +613,7 @@ namespace RUINORERP.UI.PSI.SAL
                 return false;
             }
 
-            if (!EditEntity.SOrder_ID.HasValue || EditEntity.SOrder_ID.Value == 0)
+            if (NeedValidated && (!EditEntity.SOrder_ID.HasValue || EditEntity.SOrder_ID.Value == 0))
             {
                 MessageBox.Show("请选择正确的销售订单，或从销售订单查询中转为出库单！");
                 return false;
@@ -675,6 +702,23 @@ namespace RUINORERP.UI.PSI.SAL
                     MessageBox.Show("单据总金额不能小于明细总金额！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     return false;
                 }
+
+                //如果所有数据都出库。运费成本也要一致。否则提醒
+                if (NeedValidated)
+                {
+                    if (EditEntity.FreightCost != details.Sum(c => c.AllocatedFreightCost))
+                    {
+                        if (MessageBox.Show($"运费成本{EditEntity.FreightCost}与明细运费成本分摊总金额{details.Sum(c => c.AllocatedFreightCost)}不一致，确定要保存吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2) == DialogResult.No)
+                            return false;
+                    }
+                    if (EditEntity.FreightIncome != details.Sum(c => c.AllocatedFreightIncome))
+                    {
+                        if (MessageBox.Show($"运费收入{EditEntity.FreightCost}与明细运费收入分摊总金额{details.Sum(c => c.AllocatedFreightCost)}不一致，确定要保存吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2) == DialogResult.No)
+                            return false;
+                    }
+                }
+
+
 
                 //没有经验通过下面先不计算
                 if (NeedValidated && !base.Validator(EditEntity))
@@ -841,188 +885,7 @@ namespace RUINORERP.UI.PSI.SAL
             BindData(saleOut, actionStatus);
             return saleOut;
         }
-        /*
-        private async Task<tb_SaleOut> OrderToOutBill(long _sorderid)
-        {
-            tb_SaleOrder saleorder;
-            ButtonSpecAny bsa = txtSaleOrder.ButtonSpecs.FirstOrDefault(c => c.UniqueName == "btnQuery");
-            if (bsa == null)
-            {
-                return null;
-            }
-            //saleorder = bsa.Tag as tb_SaleOrder;
-            saleorder = await MainForm.Instance.AppContext.Db.Queryable<tb_SaleOrder>()
-            .Includes(a => a.tb_SaleOuts)
-            .Includes(a => a.tb_SaleOrderDetails, b => b.tb_proddetail, c => c.tb_prod)
-            .Where(c => c.SOrder_ID == _sorderid)
-            .SingleAsync();
 
-            
-            tb_SaleOut entity = mapper.Map<tb_SaleOut>(saleorder);
-            List<string> tipsMsg = new List<string>();
-            entity.DataStatus = (int)DataStatus.草稿;
-            entity.ApprovalStatus = (int)ApprovalStatus.未审核;
-            entity.ApprovalResults = null;
-            entity.ApprovalOpinions = "";
-            entity.Modified_at = null;
-            entity.Modified_by = null;
-            entity.Approver_at = null;
-            entity.Approver_by = null;
-            entity.PrintStatus = 0;
-            entity.ActionStatus = ActionStatus.新增;
-
-            //如果这个订单已经有出库单 则第二次运费为0
-            if (saleorder.tb_SaleOuts != null && saleorder.tb_SaleOuts.Count > 0)
-            {
-                if (saleorder.ShipCost > 0)
-                {
-                    tipsMsg.Add($"当前订单已经有出库记录，运费收入已经计入前面出库单，当前出库运费收入为零！");
-                    entity.ShipCost = 0;
-                }
-                else
-                {
-                    tipsMsg.Add($"当前订单已经有出库记录！");
-                }
-            }
-
-            if (saleorder.DeliveryDate.HasValue)
-            {
-                entity.OutDate = saleorder.DeliveryDate.Value;
-                entity.DeliveryDate = saleorder.DeliveryDate;
-            }
-            else
-            {
-                entity.OutDate = System.DateTime.Now;
-                entity.DeliveryDate = System.DateTime.Now;
-            }
-
-            if (entity.SOrder_ID.HasValue && entity.SOrder_ID > 0)
-            {
-                entity.CustomerVendor_ID = saleorder.CustomerVendor_ID;
-                entity.SaleOrderNo = saleorder.SOrderNo;
-                entity.PlatformOrderNo = saleorder.PlatformOrderNo;
-                entity.IsFromPlatform = saleorder.IsFromPlatform;
-            }
-
-            List<tb_SaleOutDetail> details = mapper.Map<List<tb_SaleOutDetail>>(saleorder.tb_SaleOrderDetails);
-            List<tb_SaleOutDetail> NewDetails = new List<tb_SaleOutDetail>();
-
-            for (global::System.Int32 i = 0; i < details.Count; i++)
-            {
-                var aa = details.Select(c => c.ProdDetailID).ToList().GroupBy(x => x).Where(x => x.Count() > 1).Select(x => x.Key).ToList();
-                if (aa.Count > 0 && details[i].SaleOrderDetail_ID > 0)
-                {
-                    #region 产品ID可能大于1行，共用料号情况
-                    tb_SaleOrderDetail item = saleorder.tb_SaleOrderDetails.FirstOrDefault(c => c.ProdDetailID == details[i].ProdDetailID 
-                    && c.Location_ID==details[i].Location_ID
-                    && c.SaleOrderDetail_ID == details[i].SaleOrderDetail_ID);
-                    details[i].Cost = item.Cost;
-                    details[i].CustomizedCost = item.CustomizedCost;
-                    //这时有一种情况就是订单时没有成本。没有产品。出库前有类似采购入库确定的成本
-                    if (details[i].Cost == 0)
-                    {
-                        View_ProdDetail obj = BizCacheHelper.Instance.GetEntity<View_ProdDetail>(details[i].ProdDetailID);
-                        if (obj != null && obj.GetType().Name != "Object" && obj is View_ProdDetail prodDetail)
-                        {
-                            details[i].Cost = obj.Inv_Cost.Value;
-                        }
-                    }
-                    details[i].Quantity = item.Quantity - item.TotalDeliveredQty;// 已经出数量去掉
-                    details[i].SubtotalTransAmount = details[i].TransactionPrice * details[i].Quantity;
-                    details[i].SubtotalCostAmount = (details[i].Cost + details[i].CustomizedCost) * details[i].Quantity;
-                    if (details[i].Quantity > 0)
-                    {
-                        NewDetails.Add(details[i]);
-                    }
-                    else
-                    {
-                        tipsMsg.Add($"销售订单{saleorder.SOrderNo}，{item.tb_proddetail.tb_prod.CNName + item.tb_proddetail.tb_prod.Specifications}已出库数为{item.TotalDeliveredQty}，可出库数为{details[i].Quantity}，当前行数据忽略！");
-                    }
-
-                    #endregion
-                }
-                else
-                {
-                    #region 每行产品ID唯一
-                    tb_SaleOrderDetail item = saleorder.tb_SaleOrderDetails.FirstOrDefault(c => c.ProdDetailID == details[i].ProdDetailID
-                      && c.Location_ID == details[i].Location_ID
-                    && c.SaleOrderDetail_ID == details[i].SaleOrderDetail_ID);
-                    details[i].Cost = item.Cost;
-                    details[i].CustomizedCost = item.CustomizedCost;
-                    //这时有一种情况就是订单时没有成本。没有产品。出库前有类似采购入库确定的成本
-                    if (details[i].Cost == 0)
-                    {
-                        View_ProdDetail obj = BizCacheHelper.Instance.GetEntity<View_ProdDetail>(details[i].ProdDetailID);
-                        if (obj != null && obj.GetType().Name != "Object" && obj is View_ProdDetail prodDetail)
-                        {
-                            if (obj.Inv_Cost == null)
-                            {
-                                obj.Inv_Cost = 0;
-                            }
-                            details[i].Cost = obj.Inv_Cost.Value;
-                        }
-                    }
-                    details[i].Quantity = details[i].Quantity - item.TotalDeliveredQty;// 减掉已经出库的数量
-                    details[i].SubtotalTransAmount = details[i].TransactionPrice * details[i].Quantity;
-                    details[i].SubtotalCostAmount = (details[i].Cost + details[i].CustomizedCost) * details[i].Quantity;
-
-                    if (details[i].Quantity > 0)
-                    {
-                        NewDetails.Add(details[i]);
-                    }
-                    else
-                    {
-                        tipsMsg.Add($"当前订单的SKU:{item.tb_proddetail.SKU}已出库数量为{details[i].Quantity}，当前行数据将不会加载到明细！");
-                    }
-                    #endregion
-                }
-
-            }
-
-            if (NewDetails.Count == 0)
-            {
-                tipsMsg.Add($"订单:{entity.SaleOrderNo}已全部出库，请检查是否正在重复出库！");
-            }
-
-            entity.tb_SaleOutDetails = NewDetails;
-
-            entity.TotalQty = NewDetails.Sum(c => c.Quantity);
-            entity.TotalCost = NewDetails.Sum(c => c.Cost * c.Quantity);
-            entity.TotalCost = entity.TotalCost + entity.FreightCost;
-
-            entity.TotalTaxAmount = NewDetails.Sum(c => c.SubtotalTaxAmount);
-            entity.TotalTaxAmount = entity.TotalTaxAmount.ToRoundDecimalPlaces(MainForm.Instance.authorizeController.GetMoneyDataPrecision());
-
-            entity.TotalUntaxedAmount = NewDetails.Sum(c => c.SubtotalUntaxedAmount);
-            entity.TotalUntaxedAmount = entity.TotalUntaxedAmount + entity.ShipCost;
-
-            entity.TotalAmount = NewDetails.Sum(c => c.TransactionPrice * c.Quantity);
-            entity.TotalAmount = entity.TotalAmount + entity.ShipCost;
-            entity.CollectedMoney = entity.TotalAmount;
-
-            if (saleorder.tb_SaleOrderDetails.Sum(c => c.SubtotalTransAmount) != NewDetails.Sum(c => c.SubtotalTransAmount) &&
-                saleorder.tb_SaleOuts != null && saleorder.tb_SaleOuts.Count == 0)
-            {
-                tipsMsg.Add($"当前引用订单:{entity.SaleOrderNo}与当前出库明细累计金额不同，请注意检查！");
-            }
-            StringBuilder msg = new StringBuilder();
-            foreach (var item in tipsMsg)
-            {
-                msg.Append(item).Append("\r\n");
-            }
-            if (tipsMsg.Count > 0)
-            {
-                MessageBox.Show(msg.ToString(), "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-            }
-
-            entity.tb_saleorder = saleorder;
-            BusinessHelper.Instance.InitEntity(entity);
-            ActionStatus actionStatus = ActionStatus.无操作;
-            BindData(entity, actionStatus);
-            return entity;
-        }
-
-        */
 
         private void chk替代品出库_CheckedChanged(object sender, EventArgs e)
         {

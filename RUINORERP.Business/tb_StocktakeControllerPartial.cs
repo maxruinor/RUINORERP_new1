@@ -75,6 +75,11 @@ namespace RUINORERP.Business
                         {
                             View_ProdDetail view_Prod = await _unitOfWorkManage.GetDbClient().Queryable<View_ProdDetail>().Where(c => c.ProdDetailID == child.ProdDetailID && c.Location_ID == entity.Location_ID).FirstAsync();
                             _unitOfWorkManage.RollbackTran();
+
+                            if (view_Prod == null)
+                            {
+                                view_Prod = BizCacheHelper.Instance.GetEntity<View_ProdDetail>(child.ProdDetailID);
+                            }
                             rmrs.ErrorMsg = $"{view_Prod.SKU}=> {view_Prod.CNName}\r\n当前盘点产品在当前仓库中，无库存数据。请使用【期初盘点】方式盘点。";
                             return rmrs;
                         }

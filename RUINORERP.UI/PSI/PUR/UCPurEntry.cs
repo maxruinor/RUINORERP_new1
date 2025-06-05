@@ -1,7 +1,10 @@
 ﻿using AutoMapper;
 using Krypton.Toolkit;
+using LiveChartsCore.Geo;
 using Microsoft.Extensions.Logging;
 using Netron.GraphLib;
+using NPOI.SS.Formula.Functions;
+using Org.BouncyCastle.Asn1.Cmp;
 using RUINOR.Core;
 using RUINORERP.Business;
 using RUINORERP.Business.AutoMapper;
@@ -28,6 +31,7 @@ using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using static OpenTK.Graphics.OpenGL.GL;
 
 namespace RUINORERP.UI.PSI.PUR
 {
@@ -150,6 +154,58 @@ namespace RUINORERP.UI.PSI.PUR
                 //权限允许
                 if ((true && entity.DataStatus == (int)DataStatus.草稿) || (true && entity.DataStatus == (int)DataStatus.新建))
                 {
+                    if (s2.PropertyName == entity.GetPropertyName<tb_PurEntry>(c => c.ShipCost) && entity.ShipCost > 0)
+                    {
+                        EditEntity.TotalAmount = EditEntity.tb_PurEntryDetails.Sum(c => (c.CustomizedCost + c.UnitPrice) * c.Quantity);
+                        EditEntity.TotalAmount = EditEntity.TotalAmount + EditEntity.ShipCost;
+                        //分摊成本
+                        if (authorizeController == null)
+                        {
+                            authorizeController = MainForm.Instance.AppContext.GetRequiredService<AuthorizeController>();
+                        }
+                        #region 分摊成本计算
+
+                        entity.TotalQty = entity.tb_PurEntryDetails.Sum(c => c.Quantity);
+
+                        //默认认为 订单中的运费收入 就是实际发货的运费成本， 可以手动修改覆盖
+                        if (entity.ShipCost > 0)
+                        {
+                            //根据系统设置中的分摊规则来分配运费收入到明细。
+                            if (MainForm.Instance.AppContext.SysConfig.FreightAllocationRules == (int)FreightAllocationRules.产品数量占比)
+                            {
+                                Expression<Func<tb_PurEntryDetail, object>> colNameExp = c => c.AllocatedFreightCost;
+                                string colName = colNameExp.GetMemberInfo().Name;
+                                var coltarget = sgh.SGDefine[colName];
+                                int colIndex = sgh.SGDefine.grid.Columns.GetColumnInfo(coltarget.UniqueId).Index;
+
+
+                                // 单个产品分摊运费 = 整单运费 ×（该产品数量 ÷ 总产品数量） 
+                                foreach (var item in entity.tb_PurEntryDetails)
+                                {
+                                    item.AllocatedFreightCost = entity.ShipCost * (item.Quantity / entity.TotalQty);
+                                    item.AllocatedFreightCost = item.AllocatedFreightCost.ToRoundDecimalPlaces(authorizeController.GetMoneyDataPrecision());
+                                    item.FreightAllocationRules = MainForm.Instance.AppContext.SysConfig.FreightAllocationRules;
+                                    for (int i = 0; i < sgh.SGDefine.grid.Rows.Count; i++)
+                                    {
+                                        if (sgh.SGDefine.grid.Rows[i].Tag != null && sgh.SGDefine.grid.Rows[i].Tag is tb_PurEntryDetail line)
+                                        {
+                                            if (line.ProdDetailID == item.ProdDetailID)
+                                            {
+                                                Position position = new Position(i, colIndex);
+                                                sgh.SetCellValueForCurrentUICell(coltarget, colName, position, item);
+                                                continue;
+                                            }
+                                        }
+                                    }
+
+                                }
+
+                            }
+                        }
+
+
+                        #endregion
+                    }
 
                 }
                 //如果是销售订单引入变化则加载明细及相关数据
@@ -198,7 +254,7 @@ namespace RUINORERP.UI.PSI.PUR
             //创建表达式  草稿 结案 和没有提交的都不显示
             BaseProcessor basePro = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_PurOrder).Name + "Processor");
             QueryFilter queryFilter = basePro.GetQueryFilter();
-           
+
             var lambdaSaleOut = Expressionable.Create<tb_PurOrder>()
          .And(t => t.DataStatus == (int)DataStatus.确认)
          .And(t => t.ApprovalStatus.HasValue && t.ApprovalStatus.Value == (int)ApprovalStatus.已审核)
@@ -247,6 +303,7 @@ namespace RUINORERP.UI.PSI.PUR
             listCols.SetCol_ReadOnly<ProductSharePart>(c => c.prop);
             listCols.SetCol_ReadOnly<ProductSharePart>(c => c.CNName);
 
+            listCols.SetCol_Format<tb_PurEntryDetail>(c => c.FreightAllocationRules, CustomFormatType.EnumOptions, null, typeof(FreightAllocationRules));
             listCols.SetCol_Format<tb_PurEntryDetail>(c => c.TaxRate, CustomFormatType.PercentFormat);
             listCols.SetCol_Format<tb_PurEntryDetail>(c => c.SubtotalAmount, CustomFormatType.CurrencyFormat);
             listCols.SetCol_Format<tb_PurEntryDetail>(c => c.TaxAmount, CustomFormatType.CurrencyFormat);
@@ -278,7 +335,7 @@ namespace RUINORERP.UI.PSI.PUR
             listCols.SetCol_Formula<tb_PurEntryDetail>((a, b, c) => a.CustomizedCost / (1 + b.TaxRate), d => d.UntaxedCustomizedCost);
             listCols.SetCol_Formula<tb_PurEntryDetail>((a, b, c) => (a.UntaxedCustomizedCost + a.UntaxedUnitPrice) * c.Quantity, c => c.SubtotalUntaxedAmount);
 
-
+            listCols.SetCol_Summary<tb_PurEntryDetail>(c => c.AllocatedFreightCost);
 
             //反算成交价
             listCols.SetCol_FormulaReverse<tb_PurEntryDetail>((a) => a.Quantity != 0, (a, b) => a.SubtotalAmount / b.Quantity, c => c.UnitPrice);
@@ -350,7 +407,7 @@ namespace RUINORERP.UI.PSI.PUR
                 EditEntity.TotalAmount = EditEntity.TotalAmount + EditEntity.ShipCost;
                 EditEntity.TotalTaxAmount = details.Sum(c => c.TaxAmount);
                 EditEntity.TotalUntaxedAmount = details.Sum(c => (c.UntaxedCustomizedCost + c.UntaxedUnitPrice) * c.Quantity);
-
+                EditEntity.ShipCost= details.Sum(c => c.AllocatedFreightCost);
                 //不含税的总金额+不含税运费
                 decimal UntaxedShippingCost = 0;
                 if (EditEntity.ShipCost > 0 && EditEntity.TotalTaxAmount > 0)
@@ -440,6 +497,16 @@ namespace RUINORERP.UI.PSI.PUR
                     }
                 }
 
+                //如果所有数据都出库。运费成本也要一致。否则提醒
+                if (NeedValidated)
+                {
+                    if (EditEntity.ShipCost != details.Sum(c => c.AllocatedFreightCost))
+                    {
+                        if (MessageBox.Show($"运费成本{EditEntity.ShipCost}与明细运费成本分摊总金额{details.Sum(c => c.AllocatedFreightCost)}不一致，确定要保存吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2) == DialogResult.No)
+                            return false;
+                    }
+                }
+
                 EditEntity.TotalQty = details.Sum(c => c.Quantity);
                 EditEntity.TotalAmount = details.Sum(c => (c.UnitPrice + c.CustomizedCost) * c.Quantity);
                 EditEntity.TotalAmount = EditEntity.TotalAmount + EditEntity.ShipCost;
@@ -503,7 +570,7 @@ namespace RUINORERP.UI.PSI.PUR
 
 
 
-
+        AuthorizeController authorizeController = null;
         string orderid = string.Empty;
 
         tb_PurOrder _purorder;
@@ -605,6 +672,34 @@ namespace RUINORERP.UI.PSI.PUR
                 {
                     MessageBox.Show(msg.ToString(), "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 }
+                if (authorizeController == null)
+                {
+                    authorizeController = MainForm.Instance.AppContext.GetRequiredService<AuthorizeController>();
+                }
+                #region 分摊成本计算
+
+                entity.TotalQty = NewDetails.Sum(c => c.Quantity);
+
+                //默认认为 订单中的运费收入 就是实际发货的运费成本， 可以手动修改覆盖
+                if (entity.ShipCost > 0)
+                {
+
+                    //根据系统设置中的分摊规则来分配运费收入到明细。
+
+                    if (MainForm.Instance.AppContext.SysConfig.FreightAllocationRules == (int)FreightAllocationRules.产品数量占比)
+                    {
+                        // 单个产品分摊运费 = 整单运费 ×（该产品数量 ÷ 总产品数量） 
+                        foreach (var item in NewDetails)
+                        {
+                            item.AllocatedFreightCost = entity.ShipCost * (item.Quantity / entity.TotalQty);
+                            item.AllocatedFreightCost = item.AllocatedFreightCost.ToRoundDecimalPlaces(authorizeController.GetMoneyDataPrecision());
+                            item.FreightAllocationRules = MainForm.Instance.AppContext.SysConfig.FreightAllocationRules;
+                        }
+                    }
+                }
+
+
+                #endregion
 
                 entity.tb_PurEntryDetails = NewDetails;
 

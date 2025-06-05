@@ -43,6 +43,7 @@ using RUINORERP.Business.Security;
 using RUINORERP.Global.EnumExt;
 using RUINORERP.UI.AdvancedUIModule;
 using NPOI.SS.Formula.Functions;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.ListView;
 
 namespace RUINORERP.UI.PSI.PUR
 {
@@ -168,6 +169,8 @@ namespace RUINORERP.UI.PSI.PUR
             DataBindingHelper.BindData4DataTime<tb_PurOrder>(entity, t => t.PreDeliveryDate, dtpPreDeliveryDate, false);
             DataBindingHelper.BindData4TextBox<tb_PurOrder>(entity, t => t.ShipCost.ToString(), txtShipCost, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4TextBox<tb_PurOrder>(entity, t => t.TotalAmount.ToString(), txtTotalAmount, BindDataType4TextBox.Money, false);
+            DataBindingHelper.BindData4TextBox<tb_PurOrder>(entity, t => t.TotalUntaxedAmount.ToString(), txtTotalUntaxedAmount, BindDataType4TextBox.Money, false);
+            DataBindingHelper.BindData4TextBox<tb_PurOrder>(entity, t => t.TotalTaxAmount.ToString(), txtTotalTaxAmount, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4TextBox<tb_PurOrder>(entity, t => t.TotalQty.ToString(), txtTotalQty, BindDataType4TextBox.Qty, false);
 
             //到货日期 是入库单的时间写回 逻辑后面再定
@@ -260,6 +263,13 @@ namespace RUINORERP.UI.PSI.PUR
                             EditEntity.tb_projectgroup = ProjectGroup;
                         }
                     }
+
+                    if (s2.PropertyName == entity.GetPropertyName<tb_PurOrder>(c => c.ShipCost) && entity.ShipCost > 0)
+                    {
+                        EditEntity.TotalAmount = EditEntity.tb_PurOrderDetails.Sum(c => (c.CustomizedCost + c.UnitPrice) * c.Quantity);
+                        EditEntity.TotalAmount = EditEntity.TotalAmount + EditEntity.ShipCost;
+                    }
+
                 }
 
                 if (s2.PropertyName == entity.GetPropertyName<tb_PurOrder>(c => c.PreDeliveryDate))
@@ -562,38 +572,6 @@ namespace RUINORERP.UI.PSI.PUR
                     return;
                 }
 
-                //SetCol_Summary 只计算了简单的小计乘法，复杂的暂时在这里处理
-                /*
-                tb_PurOrderDetail rowObj = _rowObj as tb_PurOrderDetail;
-                SourceGridDefineColumnItem colTaxAmount = myGridDefine.GetColumnDefineInfo<tb_PurOrderDetail>(c => c.TaxAmount);
-                if (colTaxAmount != null)
-                {
-                    if (rowObj.TaxRate.Value == 0)
-                    {
-                        rowObj.TaxAmount = 0;
-                    }
-                    else
-                    {
-                        rowObj.TaxAmount = rowObj.TransactionPrice / (1 + rowObj.TaxRate.Value);
-                        //保存两位小数
-                        rowObj.TaxAmount = Math.Round(rowObj.TaxAmount.Value, 2);
-                    }
-
-                    myGridDefine.grid[position.Row, colTaxAmount.ColIndex].Value = ReflectionHelper.GetPropertyValue(rowObj, colTaxAmount.ColName);
-                    //如果税额大于0则主明标记和明细标记都是含税
-                    var colIncludingTax = myGridDefine.GetColumnDefineInfo<tb_PurOrderDetail>(c => c.IncludingTax);
-                    if (rowObj.TaxAmount > 0)
-                    {
-                        EditEntity.IsIncludeTax = true;
-                        myGridDefine.grid[position.Row, colIncludingTax.ColIndex].Value = true;
-                    }
-                    else
-                    {
-                        myGridDefine.grid[position.Row, colIncludingTax.ColIndex].Value = false;
-                    }
-                }
-                */
-
                 EditEntity.TotalQty = details.Sum(c => c.Quantity);
                 EditEntity.TotalAmount = details.Sum(c => (c.CustomizedCost + c.UnitPrice) * c.Quantity);
                 EditEntity.TotalAmount = EditEntity.TotalAmount + EditEntity.ShipCost;
@@ -669,7 +647,7 @@ namespace RUINORERP.UI.PSI.PUR
                             //如果是账期，但是又选择的是非 未付款
                             if (pm.Paytype_Name == DefaultPaymentMethod.账期.ToString())
                             {
-                                MessageBox.Show("【付款方式】错误,全部付款或部分付款时，请选择【付款方式】时使用的方式。");
+                                MessageBox.Show("【付款方式】错误,全部付款或部分付款时，请选择【付款方式】为非账期的方式。");
                                 return false;
                             }
                         }

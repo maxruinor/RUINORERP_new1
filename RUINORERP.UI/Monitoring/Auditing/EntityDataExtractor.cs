@@ -258,4 +258,9 @@ namespace RUINORERP.UI.Monitoring.Auditing
             public bool IsChildTable { get; set; }
         }
     }
+
+
+
+
+
 }

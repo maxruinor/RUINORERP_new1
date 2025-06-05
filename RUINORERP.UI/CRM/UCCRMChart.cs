@@ -135,59 +135,7 @@ namespace RUINORERP.UI.CRM
             flowLayoutPanel1.Controls.Add(userControl1);
         }
 
-        private async void Load2()
-        {
-            // 示例1：按月统计
-            //var monthlyRequest = new DataRequest
-            //{
-            //    Dimensions = new List<string> { "Created_at", "Employee_ID" },
-            //    Metrics = new List<string> { MetricType.Count.ToString() },
-            //    //TimeRange = TimeGranularity.Yearly,
-            //    //TimeGroupType = TimeGranularity.Monthly,
-            //    StartTime = new DateTime(2025, 1, 1),
-            //    EndTime = new DateTime(2025, 12, 31)
-            //};
-
-            // 创建数据源和构建器
-            //var dataSource = new CustomerDataSource();
-            //var monthlyData = await dataSource.GetDataAsync(monthlyRequest);
-            //DisplayChartCreate(monthlyData, "新建目标客户数统计");
-
-            //// 创建数据源和构建器
-            //var RecordsDataSource = new FollowUpRecordsDataSource();
-            //var monthlyRecordsData = await RecordsDataSource.GetDataAsync(monthlyRequest);
-            //DisplayChartCreate(monthlyRecordsData, "跟踪记录统计");
-
-            //// 创建数据源和构建器
-            //var FollowUpPlansDataSource = new CRM_FollowUpPlansDataSource();
-            //var monthlyFollowUpPlansData = await FollowUpPlansDataSource.GetDataAsync(monthlyRequest);
-            //DisplayChartCreate(monthlyFollowUpPlansData, "跟踪计划统计");
-
-            //var monthlyCompletionRateData = await FollowUpPlansDataSource.GetData跟进计划完成率Async(monthlyRequest);
-            //DisplayChartCreate(monthlyCompletionRateData, "跟踪计划完成率", ChartType.Pie);
-
-            // var monthlyCompletionRateData = await FollowUpPlansDataSource.GetData跟进计划状态占比Async(monthlyRequest);
-            //DisplayChartCreate(monthlyCompletionRateData, "跟进计划状态占比", ChartType.Pie);
-
-            // 创建数据源和构建器
-            //var LeadsDataSource = new CRM_LeadsDataSource();
-            //var monthlyLeadsData = await LeadsDataSource.GetDataAsync(monthlyRequest);
-            //DisplayChartCreate(monthlyLeadsData, "线索记录统计");
-
-
-            // 示例2：按季度+地区统计
-            //var quarterRequest = new ChartRequest
-            //{
-            //    TimeGroupType = TimeRangeType.Quarterly,
-            //    Dimensions = new List<string> { "Region_ID" },
-            //    StartTime = new DateTime(2025, 1, 1),
-            //    EndTime = new DateTime(2025, 12, 31)
-            //};
-
-            //var quarterData = await dataSource.GetCustomerStatsAsync(quarterRequest);
-            //DisplayChart(quarterData, "按季度+地区客户统计");
-        }
-
+    
         /// <summary>
         /// 创建并显示图表
         /// </summary>

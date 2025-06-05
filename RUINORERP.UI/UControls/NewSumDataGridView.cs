@@ -2,7 +2,6 @@
 using HLH.Lib.List;
 using Krypton.Toolkit;
 using Newtonsoft.Json;
-using NPOI.SS.Formula.Functions;
 using NPOI.Util;
 using RUINORERP.Common.CollectionExtension;
 using RUINORERP.Common.Extensions;
@@ -768,24 +767,28 @@ namespace RUINORERP.UI.UControls
         {
             if (!_enableFiltering) return;
 
-            //_filterBoxes.Clear();
+            if (_filterValueBoxes.Count == this.Columns.GetColumnCount(DataGridViewElementStates.Visible))
+            {
+                return;
+            }
 
             _filterPanel.Controls.Clear();
             _filterTypeBoxes.Clear();
             _filterValueBoxes.Clear();
             int currentX = this.RowHeadersWidth; // 从行头右侧开始
-            int padding = 2; // 控件间间距
+            int padding = 0; // 控件间间距
 
-            foreach (DataGridViewColumn col in this.Columns)
+            foreach (ColDisplayController col in this.ColumnDisplays.OrderBy(c=>c.ColDisplayIndex).ToList())
             {
-                if (!col.Visible || col.Width < 50) continue; // 跳过不可见或太窄的列
+                if (!col.Visible || col.ColWidth < 50) continue; // 跳过不可见或太窄的列
 
                 // 1. 创建筛选类型下拉框
                 KryptonComboBox cmbType = new KryptonComboBox
                 {
-                    Width = 30,
+                    Top = 0,
+                    Width = 35,
                     DropDownStyle = ComboBoxStyle.DropDownList,
-                    Tag = col.Name
+                    Tag = col.ColName
                 };
 
                 cmbType.DisplayMember = "Text";
@@ -803,15 +806,16 @@ namespace RUINORERP.UI.UControls
                 // 2. 创建筛选值文本框
                 KryptonTextBox txtValue = new KryptonTextBox
                 {
-                    Width = col.Width - cmbType.Width - padding,
-                    Tag = col.Name,
+                    Width = col.ColWidth - cmbType.Width - padding,
+                    Tag = col.ColName,
 
                     //PlaceholderText = $"筛选 {col.HeaderText}",
                     Anchor = AnchorStyles.Left | AnchorStyles.Right
                 };
 
                 ToolTipValues toolTip = new ToolTipValues(null);
-                toolTip.Description = $"筛选 {col.HeaderText}";
+                toolTip.Description = $"筛选 {col.ColDisplayText}";
+                toolTip.Heading = "";
                 toolTip.EnableToolTips = true;
                 txtValue.ToolTipValues = toolTip;
                 txtValue.TextChanged += FilterValue_Changed;
@@ -825,11 +829,11 @@ namespace RUINORERP.UI.UControls
                 _filterPanel.Controls.Add(txtValue);
 
                 // 5. 保存引用
-                _filterTypeBoxes.Add(col.Name, cmbType);
-                _filterValueBoxes.Add(col.Name, txtValue);
+                _filterTypeBoxes.Add(col.ColName, cmbType);
+                _filterValueBoxes.Add(col.ColName, txtValue);
 
                 // 6. 移动到下一列位置
-                currentX += col.Width + padding;
+                currentX += col.ColWidth + padding;
             }
         }
 
@@ -839,7 +843,7 @@ namespace RUINORERP.UI.UControls
             if (!_enableFiltering) return;
 
             int currentX = this.RowHeadersWidth;
-            int padding = 2;
+            int padding = 0;
 
             foreach (DataGridViewColumn col in this.Columns)
             {
@@ -918,10 +922,10 @@ namespace RUINORERP.UI.UControls
                         //bs.RemoveFilter
                     }
                 }
-                else 
+                else
                 {
 
-                    
+
                 }
             }
             catch (Exception ex)
@@ -1067,7 +1071,26 @@ namespace RUINORERP.UI.UControls
                     UpdateFilterPanelVisibility();
                     if (_enableFiltering && this.DataSource != null)
                     {
+
                         CreateFilterControls();
+
+
+                        // 示例：切换过滤面板的可见性
+                        _filterPanel.Visible = _enableFiltering;
+
+                        // 调整 DataGridView 的位置或大小，避免遮挡
+                        if (_filterPanel.Visible)
+                        {
+                            this.Top = _filterPanel.Height;
+                            this.Height = this.Height - _filterPanel.Height;
+                        }
+                        else
+                        {
+                            this.Top = 0;
+                            this.Height = this.Height;
+                            this.Dock= DockStyle.Fill;
+                        }
+
                     }
                 }
             }
@@ -1098,8 +1121,6 @@ namespace RUINORERP.UI.UControls
         //[Designer(typeof(MyDesigner))]
         public NewSumDataGridView()
         {
-
-
 
             // 启用双缓冲
             this.DoubleBuffered = true;
@@ -1160,11 +1181,18 @@ namespace RUINORERP.UI.UControls
             _filterPanel = new KryptonPanel
             {
                 Dock = DockStyle.Top,
-                Height = 20,
+                Height = 25,
                 BackColor = Color.WhiteSmoke,
-                Visible = _enableFiltering
+                Visible = _enableFiltering,
+
             };
+
+
             this.Controls.Add(_filterPanel);
+
+            // 将过滤面板置于底层
+            _filterPanel.SendToBack();
+
 
             // 订阅布局变化事件
             this.ColumnWidthChanged += (s, e) => UpdateFilterControlsPosition();
@@ -1450,6 +1478,15 @@ namespace RUINORERP.UI.UControls
             this.SuspendLayout();
             try
             {
+                // 处理特殊列
+                var selectedColumn = Columns["Selected"];
+                if (selectedColumn != null)
+                {
+                    selectedColumn.Visible = UseSelectedColumn;
+                    selectedColumn.ReadOnly = !UseSelectedColumn;
+                }
+
+
                 //foreach (var item in InvisibleCols)
                 //{
                 //    ColumnDisplayController cdcInv = ColumnDisplays.Where(c => c.ColName == item).FirstOrDefault();
@@ -1493,6 +1530,8 @@ namespace RUINORERP.UI.UControls
                 //加载列样式
                 foreach (ColDisplayController displayController in ColumnDisplays)
                 {
+                    if (!Columns.Contains(displayController.ColName)) continue;
+
                     if (Columns.Contains(displayController.ColName))
                     {
 
@@ -1505,8 +1544,9 @@ namespace RUINORERP.UI.UControls
                             Columns[displayController.ColName].DisplayIndex = displayController.ColDisplayIndex;
                         }
                         Columns[displayController.ColName].Width = displayController.ColWidth;
-                        //Columns[displayController.ColName].DataPropertyName = displayController.DataPropertyName;
-                        Columns[displayController.ColName].Visible = displayController.Visible;
+
+                        //Columns[displayController.ColName].Visible = displayController.Visible;
+                        Columns[displayController.ColName].Visible = displayController.Visible && !displayController.Disable;
 
                         //if (displayController.ColName != "Selected")
                         //{
@@ -1633,7 +1673,7 @@ namespace RUINORERP.UI.UControls
                 //求各前。判断一下
                 if (IsShowSumRow)
                 {
-                    if (SumColumns == null)
+                    if (SumColumns == null || SumColumns.Length == 0)
                     {
                         MessageBox.Show("统计列的属性，需要在数据源之前赋值！", "控件提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     }
@@ -3297,9 +3337,14 @@ namespace RUINORERP.UI.UControls
         /// </summary>
         private void SumData()
         {
-            if (this.Columns.Count <= 0)
+            if (this.Columns.Count <= 0 || SumColumns == null || SumColumns.Length == 0)
             {
                 return;
+            }
+            // 确保合计行已初始化
+            if (_dgvSumRow == null)
+            {
+                InitSumRowDgv();
             }
 
             if (_dgvSumRow.Columns.Count != this.Columns.Count)
@@ -3312,7 +3357,7 @@ namespace RUINORERP.UI.UControls
                 _dgvSumRow.Rows.Clear();
                 _dgvSumRow.Rows.Add(1);
             }
-            //要刷新总计的结果 
+            // 清除之前的合计值
             for (int i = 0; i < _dgvSumRow.Columns.Count; i++)
             {
                 _dgvSumRow[i, 0].Value = "";
@@ -3349,29 +3394,32 @@ namespace RUINORERP.UI.UControls
                     var colIndex = _dgvSumRow.Columns[col].Index;
                     for (int i = 0; i < this.Rows.Count; i++)
                     {
-                        if (this[colIndex, i].Value == null)
+                        if (this.Rows[i].IsNewRow) continue;
+
+                        if (this[colIndex, i].Value == null || this[colIndex, i].Value == DBNull.Value)
                         {
                             continue;
                         }
-                        if (this[colIndex, i].Value == DBNull.Value)
-                        {
-                            continue;
-                        }
-                        if (this[colIndex, i].Value.ToString() == "")
+                        if (string.IsNullOrEmpty(this[colIndex, i].Value.ToString()))
                         {
                             continue;
                         }
 
                         var tempVal = 0m;
-                        try
+                        //try
+                        //{
+                        //    //这里要优化，当值为空时，可以跳过
+                        //    tempVal = (decimal)Convert.ChangeType(this[colIndex, i].Value, typeof(decimal));
+                        //}
+                        //catch
+                        //{
+                        //}
+                        //tempSumVal += tempVal;
+
+                        if (decimal.TryParse(this[colIndex, i].Value.ToString(), out decimal value))
                         {
-                            //这里要优化，当值为空时，可以跳过
-                            tempVal = (decimal)Convert.ChangeType(this[colIndex, i].Value, typeof(decimal));
+                            tempVal += value;
                         }
-                        catch
-                        {
-                        }
-                        tempSumVal += tempVal;
                     }
                     sumRowDataDic[colIndex] = tempSumVal;
                 });

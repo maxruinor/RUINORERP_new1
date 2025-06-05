@@ -382,9 +382,9 @@ namespace RUINORERP.UI.ForCustomizeGrid
 
 
 
-        private async void btnMoreSetting_Click(object sender, EventArgs e)
+        private  void btnMoreSetting_Click(object sender, EventArgs e)
         {
-            //await UIBizSrvice.SetGridViewAsync(DataSourceType, DataGridViewSetTarget, CurMenuInfo, true);
+             //UIBizSrvice.SetGridViewAsync(DataSourceType, DataGridViewSetTarget, CurMenuInfo, true);
         }
     }
 }

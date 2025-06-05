@@ -1015,7 +1015,7 @@ namespace RUINORERP.UI.SysConfig
                 action();
             }
         }
-        private async void CompleteMenuInitialization()
+        private void CompleteMenuInitialization()
         {
             try
             {
@@ -2066,7 +2066,7 @@ namespace RUINORERP.UI.SysConfig
         }
 
 
-        private async void toolsbtnFullAuthorization_ClickAsync(object sender, EventArgs e)
+        private  void toolsbtnFullAuthorization_ClickAsync(object sender, EventArgs e)
         {
             if (CurrentRole == null)
             {

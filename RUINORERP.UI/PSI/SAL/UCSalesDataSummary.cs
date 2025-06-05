@@ -105,7 +105,7 @@ namespace RUINORERP.UI.PSI.SAL
         /// </summary>
         /// <param name="dto"></param>
         [MustOverride]
-        protected virtual void Query()
+        protected virtual async void Query()
         {
             //var eer = errorProviderForAllInput.GetError(txtPDNo);
             this.ValidateChildren(System.Windows.Forms.ValidationConstraints.None);
@@ -135,7 +135,7 @@ namespace RUINORERP.UI.PSI.SAL
                             if (queryMaster != null)
                             {
                                 queryMaster.newSumDataGridViewMaster.NeedSaveColumnsXml = true;
-                                GetSaleOrderDataListFromProc(queryMaster);
+                               GetSaleOrderDataListFromProc(queryMaster);
                             }
                         }
 
@@ -180,7 +180,7 @@ namespace RUINORERP.UI.PSI.SAL
                             if (queryMaster != null)
                             {
                                 queryMaster.newSumDataGridViewMaster.NeedSaveColumnsXml = true;
-                                GetSaleOutDataListFromProc(queryMaster);
+                               GetSaleOutDataListFromProc(queryMaster);
                                 //queryMaster.bindingSourceMaster.DataSource =SaleOutList.ToBindingSortCollection();
                                 //queryMaster.ShowSummaryCols();
                             }
@@ -219,7 +219,7 @@ namespace RUINORERP.UI.PSI.SAL
             }
         }
 
-        public async Task<List<Proc_SaleOrderStatisticsByEmployee>> GetSaleOrderDataListFromProc(UCBillMasterQuery queryMaster)
+        public  List<Proc_SaleOrderStatisticsByEmployee> GetSaleOrderDataListFromProc(UCBillMasterQuery queryMaster)
         {
 
             //先固定两个特殊的查询条件集合
@@ -322,7 +322,7 @@ namespace RUINORERP.UI.PSI.SAL
 
         ConcurrentDictionary<string, string> _ProjectGroupsEmployees = new ConcurrentDictionary<string, string>();
 
-        public async Task<List<Proc_SaleOutStatisticsByEmployee>> GetSaleOutDataListFromProc(UCBillMasterQuery queryMaster)
+        public  List<Proc_SaleOutStatisticsByEmployee> GetSaleOutDataListFromProc(UCBillMasterQuery queryMaster)
         {
             //先固定两个特殊的查询条件集合
             List<Expression<Func<Proc_SaleOutStatisticsByEmployeePara, object>>> expressions = new List<Expression<Func<Proc_SaleOutStatisticsByEmployeePara, object>>>();

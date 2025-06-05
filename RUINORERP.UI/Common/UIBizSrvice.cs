@@ -84,7 +84,7 @@ namespace RUINORERP.UI.Common
                 }
             }
 
-            frmInputDataColSetting set = new frmInputDataColSetting();
+            frmInputDataColSetting set = new ();
             set.MenuPersonSetting = menuPersonalization;
             //这里是列的控制情况 
             //但是这个是grid列的显示控制的。这里是处理查询条件的，默认值，是否显示参与查询
@@ -549,7 +549,7 @@ namespace RUINORERP.UI.Common
             );
             if (GridSetting == null)
             {
-                GridSetting = new tb_UIGridSetting();
+                GridSetting = new();
                 GridSetting.GridKeyName = GridSourceType.Name;
                 GridSetting.GridType = dataGridView.GetType().Name;
                 GridSetting.UIMenuPID = menuPersonalization.UIMenuPID;
@@ -846,7 +846,20 @@ namespace RUINORERP.UI.Common
              });
 
 
-            List<ColDisplayController> oldColumns = JsonConvert.DeserializeObject<List<ColDisplayController>>(GridSetting.ColsSetting);
+            List<ColDisplayController> oldColumns = new List<ColDisplayController>();
+            if (!string.IsNullOrEmpty(GridSetting.ColsSetting))
+            {
+
+                try
+                {
+                    oldColumns = JsonConvert.DeserializeObject<List<ColDisplayController>>(GridSetting.ColsSetting);
+                }
+                catch (Exception)
+                {
+
+                }
+            }
+
             List<ColDisplayController> newColumns = JsonConvert.DeserializeObject<List<ColDisplayController>>(json);
 
             // 执行比较（使用之前提供的ColumnComparer类）
@@ -1049,7 +1062,7 @@ namespace RUINORERP.UI.Common
                     {
                         if (typeof(T).Name == "tb_ProductType")
                         {
-                            tb_ProductType view_Prod = new tb_ProductType();
+                            tb_ProductType view_Prod = new ();
                             view_Prod.Type_ID = ProdDetailID;
                             prodDetail = view_Prod as T;
                         }
@@ -1507,7 +1520,7 @@ namespace RUINORERP.UI.Common
             && c.UIMenuPID == menuPersonalization.UIMenuPID);
             if (GridSetting == null)
             {
-                GridSetting = new tb_UIGridSetting();
+                GridSetting = new ();
                 GridSetting.GridKeyName = gridDefine.MainBizDependencyTypeName;
                 GridSetting.GridType = grid1.GetType().Name;
                 GridSetting.UIMenuPID = menuPersonalization.UIMenuPID;
@@ -1574,7 +1587,21 @@ namespace RUINORERP.UI.Common
             {
                 ReferenceLoopHandling = ReferenceLoopHandling.Ignore
             });
-            List<SGColDisplayHandler> oldColumns = JsonConvert.DeserializeObject<List<SGColDisplayHandler>>(gridSetting.ColsSetting);
+
+            List<SGColDisplayHandler> oldColumns = new List<SGColDisplayHandler>();
+            if (!string.IsNullOrEmpty(gridSetting.ColsSetting))
+            {
+
+                try
+                {
+                    oldColumns = JsonConvert.DeserializeObject<List<SGColDisplayHandler>>(gridSetting.ColsSetting);
+                }
+                catch (Exception)
+                {
+
+                }
+            }
+
             List<SGColDisplayHandler> newColumns = JsonConvert.DeserializeObject<List<SGColDisplayHandler>>(json);
 
             // 执行比较（使用之前提供的ColumnComparer类）

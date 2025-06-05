@@ -1391,7 +1391,7 @@ namespace RUINORERP.UI.Common
                     }
                     else
                     {
-                        SugarColumn sugarColumn = new SugarColumn();
+                        SugarColumn sugarColumn = new ();
                         sugarColumn.IsIgnore = true;
                         if (attributes.Contains(sugarColumn))
                         {

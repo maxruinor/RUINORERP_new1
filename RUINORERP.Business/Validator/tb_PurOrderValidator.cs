@@ -51,7 +51,7 @@ namespace RUINORERP.Business
 
             RuleFor(tb_PurOrder => tb_PurOrder.DepartmentID).Must(CheckForeignKeyValueCanNull).WithMessage("使用部门:下拉选择值不正确。");
             RuleFor(tb_PurOrder => tb_PurOrder.DepartmentID).NotEmpty().When(x => x.DepartmentID.HasValue);
-
+            RuleFor(tb_PurOrder => tb_PurOrder.PayStatus).NotNull().WithMessage("付款状态:不能为空。");
             RuleFor(tb_PurOrder => tb_PurOrder.Paytype_ID).Must(CheckForeignKeyValueCanNull).WithMessage("付款方式:下拉选择值不正确。");
             RuleFor(tb_PurOrder => tb_PurOrder.Paytype_ID).NotEmpty().When(x => x.Paytype_ID.HasValue);
 

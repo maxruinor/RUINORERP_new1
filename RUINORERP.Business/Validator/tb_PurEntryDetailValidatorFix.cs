@@ -33,7 +33,8 @@ namespace RUINORERP.Business
             RuleFor(x => x.SubtotalAmount).GreaterThan(0).When(c => c.IsGift == false).WithMessage("采购入库明细中，成交小计：要大于零。");
 
             //如果成交小计不等于成交价*数量，则抛出异常
-            RuleFor(x => x.UnitPrice * x.Quantity).Equal(x => x.SubtotalAmount).WithMessage("采购入库明细中，成交小计：要等于成交价*数量。");
+            //RuleFor(x => x.UnitPrice * x.Quantity).Equal(x => x.SubtotalAmount).WithMessage("采购入库明细中，成交小计：要等于成交价*数量。");
+            RuleFor(x => (x.UnitPrice + x.CustomizedCost) * x.Quantity).Equal(x => x.SubtotalAmount).WithMessage("采购入库明细中，成交小计：要等于(单价+定制成本)*数量。");
         }
 
       

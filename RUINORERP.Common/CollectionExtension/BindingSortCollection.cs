@@ -1,4 +1,6 @@
-﻿using System;
+﻿using RUINORERP.Common.Extensions;
+using RUINORERP.Model;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
@@ -339,12 +341,14 @@ namespace RUINORERP.Common.CollectionExtension
             //    return items.Where(func).ToList();
             //}
 
-               // 备用过滤方案：手动编译表达式
-               var param = Expression.Parameter(typeof(T), "x");
-               var lambda = DynamicExpressionParserBinding.ParseLambda<T>(new[] { param }, filter);
-               var func = (Func<T, bool>)lambda.Compile();
-           
-               return items.Where(func).ToList();
+            // 备用过滤方案：手动编译表达式
+            //var param = Expression.Parameter(typeof(T), "x");
+            //var lambda = DynamicExpressionParserBinding.ParseLambda<T>(new[] { param }, filter);
+            //var func = (Func<T, bool>)lambda.Compile();
+
+
+            var filterexp = FilterParser.Parse<T>(filter);
+            return items.AsQueryable().Where(filterexp).ToList();
 
         }
 
@@ -357,13 +361,13 @@ namespace RUINORERP.Common.CollectionExtension
                 _syncContext.Send(_ =>
                 {
                     if (!originalItems.Contains(item)) originalItems.Add(item);
-                    if (ShouldIncludeInFilter(item)) base.InsertItem(index, item);
+                    if (ShouldInclude(item)) base.InsertItem(index, item);
                 }, null);
             }
             else
             {
                 if (!originalItems.Contains(item)) originalItems.Add(item);
-                if (ShouldIncludeInFilter(item)) base.InsertItem(index, item);
+                if (ShouldInclude(item)) base.InsertItem(index, item);
             }
 
             //originalItems.Add(item);  // 保持原始集合同步
@@ -539,6 +543,11 @@ namespace RUINORERP.Common.CollectionExtension
         public static IQueryable<T> Where11<T>(this IQueryable<T> source, string predicate)
         {
             if (string.IsNullOrEmpty(predicate)) return source;
+            var param = Expression.Parameter(typeof(T), "x");
+            var lambda = DynamicExpressionParserBinding.ParseLambda<T>(new[] { param }, predicate);
+            var predicateExpr = Expression.Lambda<Func<T, bool>>(lambda.Body, lambda.Parameters);
+
+            return Queryable.Where(source, predicateExpr);
 
             var parameter = Expression.Parameter(typeof(T), "x");
             var expression = DynamicExpressionParserBinding.ParseLambda<T>(new[] { parameter }, predicate);
@@ -570,22 +579,27 @@ namespace RUINORERP.Common.CollectionExtension
         {
             if (string.IsNullOrEmpty(predicate)) return source;
 
-            var param = Expression.Parameter(typeof(T), "x");
-            var lambda = DynamicExpressionParserBinding.ParseLambda<T>(new[] { param }, predicate);
+            //var param = Expression.Parameter(typeof(T), "x");
+            //var lambda = DynamicExpressionParserBinding.ParseLambda<T>(new[] { param }, predicate);
 
-            // 确保表达式返回布尔值
-            if (lambda.ReturnType != typeof(bool))
-            {
-                throw new ArgumentException(
-                    $"Filter expression must return boolean, but returns {lambda.ReturnType.Name}");
-            }
+            //// 确保表达式返回布尔值
+            //if (lambda.ReturnType != typeof(bool))
+            //{
+            //    throw new ArgumentException(
+            //        $"Filter expression must return boolean, but returns {lambda.ReturnType.Name}");
+            //}
 
-            // 创建强类型的谓词表达式
-            var predicateExpr = Expression.Lambda<Func<T, bool>>(
-                lambda.Body,
-                lambda.Parameters);
+            //// 创建强类型的谓词表达式
+            //var predicateExpr = Expression.Lambda<Func<T, bool>>(
+            //    lambda.Body,
+            //    lambda.Parameters);
 
-            return Queryable.Where(source, predicateExpr);
+
+            //var results = employees.AsQueryable().Where(filter);
+
+            // 解析RowFilter
+            var filter = FilterParser.Parse<T>(predicate);
+            return Queryable.Where(source, filter);
 
             //var predicateExpr = (Expression<Func<T, bool>>)lambda;
 
@@ -596,6 +610,8 @@ namespace RUINORERP.Common.CollectionExtension
     // 简单的动态表达式解析器
     public static class DynamicExpressionParserBinding
     {
+
+
 
         internal class DynamicExpressionParserCore<TItem>
         {
@@ -1163,7 +1179,7 @@ namespace RUINORERP.Common.CollectionExtension
         }
 
 
-      
+
 
         //public static LambdaExpression ParseLambda<TItem>(
         //ParameterExpression[] parameters,

@@ -181,6 +181,25 @@ namespace RUINORERP.Business
                         }
                         return rrs;
                     }
+
+                    // 检查销售订单状态是否为已确认
+                    bool isOrderConfirmed = entity.tb_saleorder.DataStatus == (int)DataStatus.确认;
+                    bool isApproved = entity.tb_saleorder.ApprovalResults.HasValue &&
+                                        entity.tb_saleorder.ApprovalResults.Value;
+                    // 销售订单非确认状态时阻止出库审核
+                    if (!isOrderConfirmed || !isApproved)
+                    {
+                        rrs.Succeeded = false;
+                        rrs.ErrorMsg = $"{entity.tb_saleorder.SOrderNo} 请确认销售订单状态为【确认】已审核，并且审核结果为已通过!请检查数据后重试！";
+                        if (_appContext.SysConfig.ShowDebugInfo)
+                        {
+                            _logger.LogInformation(rrs.ErrorMsg);
+                        }
+
+                        return rrs;
+                    }
+
+
                     if (!entity.ReplaceOut)
                     {
                         //如果明细中的产品。不存在于订单中。审核失败。

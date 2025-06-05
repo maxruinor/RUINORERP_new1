@@ -43,3 +43,15 @@ DELETE  from  tb_FM_PriceAdjustment;
 DELETE  from  tb_StockTransfer;
 DELETE  from  tb_StockOutDetail;
 DELETE  from  tb_StockOut;
+
+
+
+--下面这个禁用是有效果的，一禁用后。要恢复
+-- 禁用所有外键约束
+--EXEC sp_msforeachtable "ALTER TABLE ? NOCHECK CONSTRAINT ALL";
+
+-- 执行 TRUNCATE 语句
+--TRUNCATE TABLE ...;
+
+-- 启用所有外键约束
+--EXEC sp_msforeachtable "ALTER TABLE ? CHECK CONSTRAINT ALL";

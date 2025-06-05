@@ -42,9 +42,9 @@
             this.btnSaveMatchResult = new System.Windows.Forms.Button();
             this.txtMatchConfigFileName = new WinLib.WatermarkTextBox();
             this.listBoxExitFile = new System.Windows.Forms.ListBox();
-            this.label4 = new System.Windows.Forms.Label();
             this.contextMenuStripDelete = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.删除选中配置文件ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.label4 = new System.Windows.Forms.Label();
             this.contextMenuStrip1.SuspendLayout();
             this.contextMenuStripDelete.SuspendLayout();
             this.SuspendLayout();
@@ -172,6 +172,20 @@
             this.listBoxExitFile.TabIndex = 20;
             this.listBoxExitFile.DoubleClick += new System.EventHandler(this.listBoxExitFile_DoubleClick);
             // 
+            // contextMenuStripDelete
+            // 
+            this.contextMenuStripDelete.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.删除选中配置文件ToolStripMenuItem});
+            this.contextMenuStripDelete.Name = "contextMenuStripDelete";
+            this.contextMenuStripDelete.Size = new System.Drawing.Size(173, 26);
+            // 
+            // 删除选中配置文件ToolStripMenuItem
+            // 
+            this.删除选中配置文件ToolStripMenuItem.Name = "删除选中配置文件ToolStripMenuItem";
+            this.删除选中配置文件ToolStripMenuItem.Size = new System.Drawing.Size(172, 22);
+            this.删除选中配置文件ToolStripMenuItem.Text = "删除选中配置文件";
+            this.删除选中配置文件ToolStripMenuItem.Click += new System.EventHandler(this.删除选中配置文件ToolStripMenuItem_Click);
+            // 
             // label4
             // 
             this.label4.AutoSize = true;
@@ -180,20 +194,6 @@
             this.label4.Size = new System.Drawing.Size(113, 12);
             this.label4.TabIndex = 21;
             this.label4.Text = "已经存在的配对文件";
-            // 
-            // contextMenuStripDelete
-            // 
-            this.contextMenuStripDelete.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.删除选中配置文件ToolStripMenuItem});
-            this.contextMenuStripDelete.Name = "contextMenuStripDelete";
-            this.contextMenuStripDelete.Size = new System.Drawing.Size(181, 48);
-            // 
-            // 删除选中配置文件ToolStripMenuItem
-            // 
-            this.删除选中配置文件ToolStripMenuItem.Name = "删除选中配置文件ToolStripMenuItem";
-            this.删除选中配置文件ToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
-            this.删除选中配置文件ToolStripMenuItem.Text = "删除选中配置文件";
-            this.删除选中配置文件ToolStripMenuItem.Click += new System.EventHandler(this.删除选中配置文件ToolStripMenuItem_Click);
             // 
             // frmDbColumnToExlColumnConfig
             // 
@@ -206,12 +206,12 @@
             this.Controls.Add(this.txtMatchConfigFileName);
             this.Controls.Add(this.btnSaveMatchResult);
             this.Controls.Add(this.btmCancel);
-            this.Controls.Add(this.listbox匹配结果);
             this.Controls.Add(this.label2);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.listBoxDbColumns);
             this.Controls.Add(this.listBoxExcelColumns);
             this.Controls.Add(this.label3);
+            this.Controls.Add(this.listbox匹配结果);
             this.Name = "frmDbColumnToExlColumnConfig";
             this.Text = "frmLogisticDbColumnToExlColumnConfig";
             this.Load += new System.EventHandler(this.frmLogisticDbColumnToExlColumnConfig_Load);

@@ -355,12 +355,12 @@ namespace RUINORERP.UI.PSI.SAL
                         //}
                     }
 
-                    if (s2.PropertyName == entity.GetPropertyName<tb_PurOrder>(c => c.PayStatus) && entity.PayStatus == (int)PayStatus.未付款)
+                    if (s2.PropertyName == entity.GetPropertyName<tb_SaleOrder>(c => c.PayStatus) && entity.PayStatus == (int)PayStatus.未付款)
                     {
                         //默认为账期
                         entity.Paytype_ID = MainForm.Instance.AppContext.PaymentMethodOfPeriod.Paytype_ID;
                     }
-                    if (s2.PropertyName == entity.GetPropertyName<tb_PurOrder>(c => c.Paytype_ID) && entity.Paytype_ID == MainForm.Instance.AppContext.PaymentMethodOfPeriod.Paytype_ID)
+                    if (s2.PropertyName == entity.GetPropertyName<tb_SaleOrder>(c => c.Paytype_ID) && entity.Paytype_ID == MainForm.Instance.AppContext.PaymentMethodOfPeriod.Paytype_ID)
                     {
                         //默认为未付款
                         entity.PayStatus = (int)PayStatus.未付款;

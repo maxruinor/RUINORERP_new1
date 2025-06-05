@@ -1046,8 +1046,9 @@ namespace RUINORERP.Business
                         // 单个产品分摊运费 = 整单运费 ×（该产品数量 ÷ 总产品数量） 
                         foreach (var item in NewDetails)
                         {
-                            item.AllocatedFreightIncome = entity.FreightIncome * (item.Quantity / saleorder.TotalQty);
+                            item.AllocatedFreightIncome = entity.FreightIncome * (item.Quantity.ToDecimal() / saleorder.TotalQty.ToDecimal());
                             item.AllocatedFreightIncome = item.AllocatedFreightIncome.ToRoundDecimalPlaces(authorizeController.GetMoneyDataPrecision());
+                            item.FreightAllocationRules = _appContext.SysConfig.FreightAllocationRules;
                         }
                     }
                 }

@@ -511,11 +511,6 @@ namespace RUINORERP.UI.WorkFlowDesigner
 						mediator.Output(exc.Message,OutputInfoLevels.Exception);
 						continue;
 				}
-				catch
-				{
-					mediator.Output("Non-CLS exception caught.",OutputInfoLevels.Exception);
-					continue;
-				}
 				finally
 				{
 					fs.Close();

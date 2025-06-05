@@ -4444,6 +4444,102 @@ namespace RUINORERP.UI.UCSourceGrid
             #endregion
         }
 
+        /// <summary>
+        /// 设置单元格的值, 将指定列设置
+        /// </summary>
+        /// <param name="dc">指定列</param>
+        /// <param name="p"></param>
+        /// <param name="rowEntity"></param>
+        /// <param name="isbatch"></param>
+        /// <param name="isOnlyPointColumn">是否只设置指定列的值</param>
+        public void SetCellValueForCurrentUICell(SGDefineColumnItem dc, string toColName, SourceGrid.Position p, object rowEntity)
+        {
+            if (p.Column == -1 || p.Row == -1)
+            {
+                return;
+            }
+            SourceGridDefine sgdefine = dc.ParentGridDefine;
+            #region 目标列要修改对应的绑定数据对象
+
+            if (sgdefine.grid.Rows[p.Row].RowData != null)
+            {
+                int realIndex = sgdefine.grid.Columns.GetColumnInfo(dc.UniqueId).Index;
+                //设置目标的绑定数据值，就是产品ID
+              //  SourceGrid.CellContext processContext = new SourceGrid.CellContext(sgdefine.grid, new Position(p.Row, realIndex));
+                var cellValue = ReflectionHelper.GetPropertyValue(rowEntity, toColName);
+                sgdefine.grid[p.Row, realIndex].Value = cellValue;
+          
+                switch (dc.CustomFormat)
+                {
+                    case CustomFormatType.DefaultFormat:
+                        break;
+                    case CustomFormatType.PercentFormat:
+                        decimal pf = decimal.Parse(cellValue.ToString());
+                        sgdefine.grid[p.Row, realIndex].Value = pf;
+                        break;
+                    case CustomFormatType.CurrencyFormat:
+                        decimal cf = decimal.Parse(cellValue.ToString());
+                        sgdefine.grid[p.Row, realIndex].Value = cf;
+                        break;
+                    case CustomFormatType.DecimalPrecision:
+                        break;
+                    case CustomFormatType.Bool:
+                        bool bl = cellValue.ToBool();
+                        if (bl == true)
+                        {
+                            sgdefine.grid[p.Row, realIndex].DisplayText = "是";
+                        }
+                        else
+                        {
+                            sgdefine.grid[p.Row, realIndex].DisplayText = "否";
+                        }
+                        break;
+                    case CustomFormatType.Image:
+
+                        break;
+                    case CustomFormatType.WebPathImage:
+
+                        break;
+                    default:
+                        break;
+                }
+
+
+
+                ///默认值处理
+                if (dc.DefaultValue != null && dc.GuideToTargetColumn)
+                {
+                    var setcurrentObj = sgdefine.grid.Rows[p.Row].RowData;
+                    //如果值是空的，就给默认值，时间要特殊处理
+                    if (setcurrentObj != null && setcurrentObj.GetType().GetProperty(dc.ColName) == null)
+                    {
+                        ReflectionHelper.SetPropertyValue(setcurrentObj, dc.ColName, dc.DefaultValue);
+                    }
+                    if (setcurrentObj != null && setcurrentObj.GetType().GetProperty(dc.ColName) != null)
+                    {
+                        //时间为默认值的情况，格式不带时间
+                        if (dc.ColPropertyInfo.PropertyType == typeof(DateTime))
+                        {
+                            if (setcurrentObj.GetPropertyValue(dc.ColName).ToDateTime().Year == 1)
+                            {
+                                ReflectionHelper.SetPropertyValue(setcurrentObj, dc.ColName, dc.DefaultValue);
+                            }
+                            sgdefine.grid[p.Row, realIndex].DisplayText = string.Format("{0:yyyy-MM-dd}", dc.DefaultValue);
+                        }
+
+                    }
+
+                    if (dc.CustomFormat == CustomFormatType.CurrencyFormat)
+                    {
+                        sgdefine.grid[p.Row, realIndex].DisplayText = string.Format("{0:C}", dc.DefaultValue);
+                    }
+                    sgdefine.grid[p.Row, realIndex].Value = dc.DefaultValue;
+                }
+
+            }
+
+            #endregion
+        }
 
 
         /// <summary>

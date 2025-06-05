@@ -73,7 +73,7 @@ namespace RUINORERP.UI.BaseForm
                     //权限菜单
                     if (CurMenuInfo == null || CurMenuInfo.ClassPath.IsNullOrEmpty())
                     {
-                        CurMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble && m.FormName ==this.Name && m.ClassPath == this.ToString()).FirstOrDefault();
+                        CurMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble && m.FormName == this.Name && m.ClassPath == this.ToString()).FirstOrDefault();
                         if ((CurMenuInfo == null || CurMenuInfo.ClassPath.IsNullOrEmpty()) && !MainForm.Instance.AppContext.IsSuperUser)
                         {
                             //MessageBox.Show(this.ToString() + " BaseChartReport菜单不能为空，请联系管理员。");
@@ -115,7 +115,7 @@ namespace RUINORERP.UI.BaseForm
 
                     #endregion
                     Builder();
-                   // dataGridView1.CellFormatting -= DataGridView1_CellFormatting;
+                    // dataGridView1.CellFormatting -= DataGridView1_CellFormatting;
                 }
             }
         }
@@ -314,7 +314,7 @@ namespace RUINORERP.UI.BaseForm
             public string Msg { get; set; }
 
         }
- 
+
 
         private Type _EditForm;
 
@@ -335,11 +335,11 @@ namespace RUINORERP.UI.BaseForm
 
             switch (menu)
             {
-               
+
                 case MenuItemEnums.查询:
-                 
+
                     break;
-                
+
                 //case MenuItemEnums.高级查询:
                 //    toolStripButtonSave.Enabled = false;
                 //    toolStripBtnAdvQuery.Visible = true;
@@ -356,19 +356,19 @@ namespace RUINORERP.UI.BaseForm
                 default:
                     break;
             }
- 
+
         }
 
 
-     
 
 
- 
-    
 
-   
-  
- 
+
+
+
+
+
+
         /// 如果需要查询条件查询，就要在子类中重写这个方法
         /// </summary>
         public virtual void LimitQueryConditionsBuilder()
@@ -394,20 +394,20 @@ namespace RUINORERP.UI.BaseForm
         /// 控制功能按钮
         /// </summary>
         /// <param name="p_Text"></param>
-        protected virtual  void DoButtonClick(MenuItemEnums menuItem)
+        protected virtual void DoButtonClick(MenuItemEnums menuItem)
         {
             //操作前将数据收集
             this.ValidateChildren(System.Windows.Forms.ValidationConstraints.None);
             switch (menuItem)
             {
-           
+
                 case MenuItemEnums.查询:
 
                     Query();
 
 
                     break;
-           
+
                 case MenuItemEnums.关闭:
                     Exit(this);
                     break;
@@ -416,7 +416,7 @@ namespace RUINORERP.UI.BaseForm
                 case MenuItemEnums.导出:
                     ExportExcel();
                     break;
-                
+
                 case MenuItemEnums.属性:
                     Property();
                     break;
@@ -503,10 +503,10 @@ namespace RUINORERP.UI.BaseForm
             //{
             //    return false;
             //}
-           // UIExcelHelper.ExportExcel(dataGridView1);
+            // UIExcelHelper.ExportExcel(dataGridView1);
         }
-      
- 
+
+
 
 
         public virtual void QueryConditionBuilder()
@@ -518,12 +518,12 @@ namespace RUINORERP.UI.BaseForm
         /// <summary>
         /// 扩展带条件查询
         /// </summary>
-        protected async virtual void ExtendedQuery(bool UseAutoNavQuery = false)
+        protected virtual void ExtendedQuery(bool UseAutoNavQuery = false)
         {
             if (ValidationHelper.hasValidationErrors(this.Controls))
                 return;
 
-       
+
 
             //既然前台指定的查询哪些字段，到时可以配置。这里应该是 除软件删除外的。其他字段不需要
 
@@ -540,7 +540,7 @@ namespace RUINORERP.UI.BaseForm
                 QueryConditionFilter.FilterLimitExpressions = new List<LambdaExpression>();
             }
 
-            
+
             ToolBarEnabledControl(MenuItemEnums.查询);
         }
 
@@ -555,7 +555,7 @@ namespace RUINORERP.UI.BaseForm
 
 
 
-     
+
         /// <summary>
         /// 保存不可见的列
         /// </summary>
@@ -632,7 +632,7 @@ namespace RUINORERP.UI.BaseForm
         /// </summary>
         /// <param name="UseNavQuery">是否使用自动导航</param>
         //[MustOverride]
-        public async override void Query(bool UseAutoNavQuery = false)
+        public  override void Query(bool UseAutoNavQuery = false)
         {
             if (Edited)
             {
@@ -645,7 +645,7 @@ namespace RUINORERP.UI.BaseForm
 
             if (QueryConditionFilter == null || QueryConditionFilter.QueryFields == null || QueryConditionFilter.QueryFields.Count == 0)
             {
-           
+
 
             }
             else
@@ -702,12 +702,12 @@ namespace RUINORERP.UI.BaseForm
         //    }
         //}
 
-      
-
-         
 
 
-     
+
+
+
+
         #endregion
 
 
@@ -790,10 +790,10 @@ namespace RUINORERP.UI.BaseForm
 
         }
 
- 
 
-     
-        private   void BaseList_Load(object sender, EventArgs e)
+
+
+        private void BaseList_Load(object sender, EventArgs e)
         {
             if (System.ComponentModel.LicenseManager.UsageMode == System.ComponentModel.LicenseUsageMode.Designtime || this.DesignMode)
             {
@@ -839,7 +839,7 @@ namespace RUINORERP.UI.BaseForm
 
             kryptonPanel条件生成容器.ResumeLayout();
             kryptonPanel条件生成容器.Visible = true;
-           
+
             return QueryDtoProxy;
 
         }
@@ -849,8 +849,8 @@ namespace RUINORERP.UI.BaseForm
 
         }
 
-      
-     
+
+
     }
 }
 

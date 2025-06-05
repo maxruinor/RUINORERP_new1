@@ -59,11 +59,12 @@ namespace RUINORERP.Business
                     rs.Succeeded = false;
                     return rs;
                 }
-                // 开启事务，保证数据一致性
-                _unitOfWorkManage.BeginTran();
+
                 var ctrtb_BOM_SDetail = _appContext.GetRequiredService<tb_BOM_SDetailController<tb_BOM_SDetail>>();
                 var ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
                 BillConverterFactory bcf = _appContext.GetRequiredService<BillConverterFactory>();
+                // 开启事务，保证数据一致性
+                _unitOfWorkManage.BeginTran();
                 if (entity.PurOrder_ID.HasValue && entity.PurOrder_ID.Value > 0)
                 {
                     //处理采购订单
@@ -82,7 +83,21 @@ namespace RUINORERP.Business
                         rs.Succeeded = false;
                         return rs;
                     }
+                    else
+                    {
+                        // 检查采购订单状态是否为已确认且审核通过
+                        bool isOrderConfirmed = entity.tb_purorder.DataStatus == (int)DataStatus.确认;
+                        bool isApproved = entity.tb_purorder.ApprovalResults.HasValue &&
+                                          entity.tb_purorder.ApprovalResults.Value;
 
+                        if (!isOrderConfirmed || !isApproved)
+                        {
+                            rs.Succeeded = false;
+                            _unitOfWorkManage.RollbackTran();
+                            rs.ErrorMsg = $"{entity.tb_purorder.PurOrderNo} 请确认采购订单状态为【确认】已审核，并且审核结果为已通过!请检查数据后重试！";
+                            return rs;
+                        }
+                    }
 
                     //如果入库明细中的产品。不存在于订单中。审核失败。
                     foreach (var child in entity.tb_PurEntryDetails)
@@ -194,8 +209,6 @@ namespace RUINORERP.Business
                         }
                     }
                 }
-
-
 
                 // 使用字典按 (ProdDetailID, LocationID) 分组，存储库存记录及累计数据
                 var inventoryGroups = new Dictionary<(long ProdDetailID, long LocationID), (tb_Inventory Inventory, decimal PurQtySum, bool? IsGift,
@@ -327,7 +340,7 @@ namespace RUINORERP.Business
                     #endregion
 
                     #region 更新采购价格
-                     
+
                     //注意这里的人是指采购订单录入的人。不是采购入库的人。
                     tb_PriceRecordController<tb_PriceRecord> ctrPriceRecord = _appContext.GetRequiredService<tb_PriceRecordController<tb_PriceRecord>>();
                     tb_PriceRecord priceRecord = await _unitOfWorkManage.GetDbClient().Queryable<tb_PriceRecord>()

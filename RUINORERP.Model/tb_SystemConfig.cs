@@ -378,7 +378,7 @@ namespace RUINORERP.Model
         /// 运费分摊规则
         /// </summary>
         [AdvQueryAttribute(ColName = "FreightAllocationRules", ColDesc = "运费分摊规则")]
-        [SugarColumn(ColumnDataType = "int", SqlParameterDbType = "Int32", ColumnName = "CostCalculationMethod", DecimalDigits = 0, IsNullable = false, ColumnDescription = "运费分摊规则")]
+        [SugarColumn(ColumnDataType = "int", SqlParameterDbType = "Int32", ColumnName = "FreightAllocationRules", DecimalDigits = 0, IsNullable = false, ColumnDescription = "运费分摊规则")]
         public int FreightAllocationRules
         {
             get { return _FreightAllocationRules; }

@@ -65,8 +65,8 @@ namespace RUINORERP.Business
                }
            });
 
-
-
+            RuleFor(x => x.PayStatus).GreaterThan(0).WithMessage("付款状态:不能为空。");
+            RuleFor(x => x.Paytype_ID).GreaterThan(0).When(c => c.PayStatus != (int)PayStatus.未付款).WithMessage("付款方式:有付款的情况下，付款方式不能为空。");
 
             // 这里添加额外的初始化代码
             RuleFor(x => x.PreDeliveryDate).GreaterThan(x => x.PurDate)

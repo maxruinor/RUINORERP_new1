@@ -150,16 +150,22 @@ namespace RUINORERP.UI.PSI.INV
                 {
                     entity.ActionStatus = ActionStatus.新增;
                     entity.DataStatus = (int)DataStatus.草稿;
-                    entity.CheckNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.盘点单);
+                    if (string.IsNullOrEmpty(entity.CheckNo))
+                    {
+                        entity.CheckNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.盘点单);
+                    }
                     entity.Check_date = System.DateTime.Now;
                     entity.CarryingDate = System.DateTime.Now;
                     entity.Employee_ID = MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID.Value;
                     //设置一下默认的枚举
-
-                    entity.CheckMode = (int)CheckMode.一般盘点;
-                    entity.Adjust_Type = (int)Adjust_Type.全部;
-
-
+                    if (entity.CheckMode == 0)
+                    {
+                        entity.CheckMode = (int)CheckMode.一般盘点;
+                    }
+                    if (entity.Adjust_Type == 0)
+                    {
+                        entity.Adjust_Type = (int)Adjust_Type.全部;
+                    }
                     if (entity.tb_StocktakeDetails != null && entity.tb_StocktakeDetails.Count > 0)
                     {
                         entity.tb_StocktakeDetails.ForEach(c => c.MainID = 0);

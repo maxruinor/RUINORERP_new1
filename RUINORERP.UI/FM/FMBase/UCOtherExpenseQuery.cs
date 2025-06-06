@@ -22,6 +22,7 @@ using RUINORERP.Common.Extensions;
 using RUINORERP.Business.Security;
 using RUINORERP.Business.Processor;
 using RUINORERP.UI.ATechnologyStack;
+using RUINORERP.Global.EnumExt;
 
 namespace RUINORERP.UI.FM.FMBase
 {
@@ -37,7 +38,10 @@ namespace RUINORERP.UI.FM.FMBase
         }
 
 
-
+        /// <summary>
+        /// 收付款方式决定是不收入还是支出。收款=收入， 支出=付款
+        /// </summary>
+        public ReceivePaymentType PaymentType { get; set; }
 
         public override void BuildLimitQueryConditions()
         {
@@ -45,8 +49,8 @@ namespace RUINORERP.UI.FM.FMBase
 
             //创建表达式
             var lambda = Expressionable.Create<tb_FM_OtherExpense>()
-                             .AndIF(CurMenuInfo.CaptionCN.Contains("收入"), t => t.EXPOrINC == true)
-                              .AndIF(CurMenuInfo.CaptionCN.Contains("支出"), t => t.EXPOrINC == false)
+                             .AndIF(PaymentType == ReceivePaymentType.收款, t => t.EXPOrINC == true)
+                              .AndIF(PaymentType == ReceivePaymentType.付款, t => t.EXPOrINC == false)
                              .And(t => t.isdeleted == false)
                             // .And(t => t.Is_enabled == true)
                             //报销人员限制，财务不限制
@@ -74,20 +78,30 @@ namespace RUINORERP.UI.FM.FMBase
             //base.ChildInvisibleCols.Add(c => c.SubtotalCostAmount);
         }
 
-       
+
 
         /// <summary>
         /// 如果需要查询条件查询，就要在子类中重写这个方法
         /// </summary>
         public override void BuildQueryCondition()
         {
+            bool isIncome = true;
+            if (PaymentType == ReceivePaymentType.收款)
+            {
+                isIncome = true;
+            }
+            else
+            {
+                isIncome = false;
+            }
+
             BaseProcessor baseProcessor = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_FM_OtherExpense).Name + "Processor");
             QueryConditionFilter = baseProcessor.GetQueryFilter();
             var lambda = Expressionable.Create<tb_FM_OtherExpense>()
                             //.AndIF(CurMenuInfo.CaptionCN.Contains("客户"), t => t.IsCustomer == true)
                             // .AndIF(CurMenuInfo.CaptionCN.Contains("供应商"), t => t.IsVendor == true)
                             .And(t => t.isdeleted == false)
-                               .And(t => t.EXPOrINC == false)
+                                    .And(t => t.EXPOrINC == isIncome)
                            // .And(t => t.Is_enabled == true)
                            //报销人员限制，财务不限制
                            //  .AndIF(MainForm.Instance.AppContext.SysConfig.SaleBizLimited && !MainForm.Instance.AppContext.IsSuperUser, t => t.Employee_ID == MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID)//限制了销售只看到自己的客户,采购不限制
@@ -97,7 +111,7 @@ namespace RUINORERP.UI.FM.FMBase
 
         }
 
-     
+
 
     }
 

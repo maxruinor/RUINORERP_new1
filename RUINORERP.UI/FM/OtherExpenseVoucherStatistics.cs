@@ -22,6 +22,7 @@ namespace RUINORERP.UI.FM
         public OtherExpenseVoucherStatistics()
         {
             InitializeComponent();
+            base.PaymentType = Global.EnumExt.ReceivePaymentType.付款;
         }
         //要和对应的查询一样的值,但是收入和支出要不同
         public SharedFlag sharedFlag { get; set; } = SharedFlag.Flag2;

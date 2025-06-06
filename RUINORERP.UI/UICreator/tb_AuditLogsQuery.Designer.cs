@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：05/29/2025 15:33:03
+// 时间：06/06/2025 14:52:01
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -50,9 +50,7 @@ namespace RUINORERP.UI
         
      //for start
      
-     this.lblEmployee_ID = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
-this.cmbEmployee_ID = new ComponentFactory.Krypton.Toolkit.KryptonComboBox();
-
+     
 this.lblUserName = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
 this.txtUserName = new ComponentFactory.Krypton.Toolkit.KryptonTextBox();
 this.txtUserName.Multiline = true;
@@ -74,33 +72,19 @@ this.txtOldState = new ComponentFactory.Krypton.Toolkit.KryptonTextBox();
 this.lblNewState = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
 this.txtNewState = new ComponentFactory.Krypton.Toolkit.KryptonTextBox();
 
-this.lblNotes = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
-this.txtNotes = new ComponentFactory.Krypton.Toolkit.KryptonTextBox();
-this.txtNotes.Multiline = true;
-
 this.lblDataContent = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
 this.txtDataContent = new ComponentFactory.Krypton.Toolkit.KryptonTextBox();
 this.txtDataContent.Multiline = true;
+
+this.lblNotes = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
+this.txtNotes = new ComponentFactory.Krypton.Toolkit.KryptonTextBox();
+this.txtNotes.Multiline = true;
 
     //for end
     this.SuspendLayout();
     
          //for start
                  //#####Employee_ID###Int64
-//属性测试25Employee_ID
-this.lblEmployee_ID.AutoSize = true;
-this.lblEmployee_ID.Location = new System.Drawing.Point(100,25);
-this.lblEmployee_ID.Name = "lblEmployee_ID";
-this.lblEmployee_ID.Size = new System.Drawing.Size(41, 12);
-this.lblEmployee_ID.TabIndex = 1;
-this.lblEmployee_ID.Text = "员工信息";
-//111======25
-this.cmbEmployee_ID.Location = new System.Drawing.Point(173,21);
-this.cmbEmployee_ID.Name ="cmbEmployee_ID";
-this.cmbEmployee_ID.Size = new System.Drawing.Size(100, 21);
-this.cmbEmployee_ID.TabIndex = 1;
-this.Controls.Add(this.lblEmployee_ID);
-this.Controls.Add(this.cmbEmployee_ID);
 
            //#####255UserName###String
 this.lblUserName.AutoSize = true;
@@ -147,10 +131,8 @@ this.Controls.Add(this.lblActionType);
 this.Controls.Add(this.txtActionType);
 
            //#####ObjectType###Int32
-//属性测试125ObjectType
 
            //#####ObjectId###Int64
-//属性测试150ObjectId
 
            //#####50ObjectNo###String
 this.lblObjectNo.AutoSize = true;
@@ -194,34 +176,34 @@ this.txtNewState.TabIndex = 9;
 this.Controls.Add(this.lblNewState);
 this.Controls.Add(this.txtNewState);
 
-           //#####8000Notes###String
-this.lblNotes.AutoSize = true;
-this.lblNotes.Location = new System.Drawing.Point(100,250);
-this.lblNotes.Name = "lblNotes";
-this.lblNotes.Size = new System.Drawing.Size(41, 12);
-this.lblNotes.TabIndex = 10;
-this.lblNotes.Text = "备注说明";
-this.txtNotes.Location = new System.Drawing.Point(173,246);
-this.txtNotes.Name = "txtNotes";
-this.txtNotes.Size = new System.Drawing.Size(100, 21);
-this.txtNotes.TabIndex = 10;
-this.Controls.Add(this.lblNotes);
-this.Controls.Add(this.txtNotes);
-
            //#####2147483647DataContent###String
 this.lblDataContent.AutoSize = true;
-this.lblDataContent.Location = new System.Drawing.Point(100,275);
+this.lblDataContent.Location = new System.Drawing.Point(100,250);
 this.lblDataContent.Name = "lblDataContent";
 this.lblDataContent.Size = new System.Drawing.Size(41, 12);
-this.lblDataContent.TabIndex = 11;
+this.lblDataContent.TabIndex = 10;
 this.lblDataContent.Text = "数据内容";
-this.txtDataContent.Location = new System.Drawing.Point(173,271);
+this.txtDataContent.Location = new System.Drawing.Point(173,246);
 this.txtDataContent.Name = "txtDataContent";
 this.txtDataContent.Size = new System.Drawing.Size(100, 21);
-this.txtDataContent.TabIndex = 11;
+this.txtDataContent.TabIndex = 10;
 this.txtDataContent.Multiline = true;
 this.Controls.Add(this.lblDataContent);
 this.Controls.Add(this.txtDataContent);
+
+           //#####8000Notes###String
+this.lblNotes.AutoSize = true;
+this.lblNotes.Location = new System.Drawing.Point(100,275);
+this.lblNotes.Name = "lblNotes";
+this.lblNotes.Size = new System.Drawing.Size(41, 12);
+this.lblNotes.TabIndex = 11;
+this.lblNotes.Text = "备注说明";
+this.txtNotes.Location = new System.Drawing.Point(173,271);
+this.txtNotes.Name = "txtNotes";
+this.txtNotes.Size = new System.Drawing.Size(100, 21);
+this.txtNotes.TabIndex = 11;
+this.Controls.Add(this.lblNotes);
+this.Controls.Add(this.txtNotes);
 
           
     //for end
@@ -231,9 +213,7 @@ this.Controls.Add(this.txtDataContent);
             
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-                this.Controls.Add(this.lblEmployee_ID );
-this.Controls.Add(this.cmbEmployee_ID );
-
+                
                 this.Controls.Add(this.lblUserName );
 this.Controls.Add(this.txtUserName );
 
@@ -254,11 +234,11 @@ this.Controls.Add(this.txtOldState );
                 this.Controls.Add(this.lblNewState );
 this.Controls.Add(this.txtNewState );
 
-                this.Controls.Add(this.lblNotes );
-this.Controls.Add(this.txtNotes );
-
                 this.Controls.Add(this.lblDataContent );
 this.Controls.Add(this.txtDataContent );
+
+                this.Controls.Add(this.lblNotes );
+this.Controls.Add(this.txtNotes );
 
                     
             this.Name = "tb_AuditLogsQuery";
@@ -272,9 +252,7 @@ this.Controls.Add(this.txtDataContent );
      //for start
      
          
-              private ComponentFactory.Krypton.Toolkit.KryptonLabel lblEmployee_ID;
-private ComponentFactory.Krypton.Toolkit.KryptonComboBox cmbEmployee_ID;
-
+              
     
         
               private ComponentFactory.Krypton.Toolkit.KryptonLabel lblUserName;
@@ -313,13 +291,13 @@ private ComponentFactory.Krypton.Toolkit.KryptonTextBox txtNewState;
 
     
         
-              private ComponentFactory.Krypton.Toolkit.KryptonLabel lblNotes;
-private ComponentFactory.Krypton.Toolkit.KryptonTextBox txtNotes;
+              private ComponentFactory.Krypton.Toolkit.KryptonLabel lblDataContent;
+private ComponentFactory.Krypton.Toolkit.KryptonTextBox txtDataContent;
 
     
         
-              private ComponentFactory.Krypton.Toolkit.KryptonLabel lblDataContent;
-private ComponentFactory.Krypton.Toolkit.KryptonTextBox txtDataContent;
+              private ComponentFactory.Krypton.Toolkit.KryptonLabel lblNotes;
+private ComponentFactory.Krypton.Toolkit.KryptonTextBox txtNotes;
 
     
     

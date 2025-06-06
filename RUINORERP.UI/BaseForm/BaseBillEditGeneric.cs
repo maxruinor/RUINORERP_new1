@@ -3063,7 +3063,10 @@ namespace RUINORERP.UI.BaseForm
                         //加载一个空的显示的UI
                         bindingSourceSub.Clear();
                         OnBindDataToUIEvent(Activator.CreateInstance(typeof(T)) as T, ActionStatus.删除);
-
+                    }
+                    else
+                    {
+                        MainForm.Instance.AuditLogHelper.CreateAuditLog<T>("删除失败", editEntity);
                     }
                 }
                 else

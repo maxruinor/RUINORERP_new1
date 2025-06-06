@@ -175,6 +175,13 @@ namespace RUINORERP.Business.CommService
                 {
                     return default(T);
                 }
+                else
+                {
+                    if(entity.GetType().Name != "Object")
+                    {
+                        return default(T);
+                    }
+                }
                 return (T)entity;
             }
             catch (Exception ex)

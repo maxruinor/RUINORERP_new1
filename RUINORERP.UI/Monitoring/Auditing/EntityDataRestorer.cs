@@ -35,7 +35,7 @@ namespace RUINORERP.UI.Monitoring.Auditing
             return (T)RestoreEntity(typeof(T), data);
         }
 
-        private static object RestoreEntity(Type entityType, Dictionary<string, object> data)
+        public static object RestoreEntity(Type entityType, Dictionary<string, object> data)
         {
             // 创建实体实例
             var entity = Activator.CreateInstance(entityType);

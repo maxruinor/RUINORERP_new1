@@ -99,7 +99,10 @@ namespace RUINORERP.UI.PSI.INV
             {
                 entity.ActionStatus = ActionStatus.新增;
                 entity.DataStatus = (int)DataStatus.草稿;
-                entity.StockTransferNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.调拨单);
+                if (string.IsNullOrEmpty(entity.StockTransferNo))
+                {
+                    entity.StockTransferNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.调拨单);
+                }
                 entity.Transfer_date = System.DateTime.Now;
                 entity.Employee_ID = MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID.Value;
             }

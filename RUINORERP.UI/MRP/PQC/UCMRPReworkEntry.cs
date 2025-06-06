@@ -93,7 +93,10 @@ namespace RUINORERP.UI.MRP.PQC
                 entity.ActionStatus = ActionStatus.新增;
                 entity.DataStatus = (int)DataStatus.草稿;
                 entity.EntryDate = System.DateTime.Now;
-                entity.ReworkEntryNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.返工入库单);
+                if (string.IsNullOrEmpty(entity.ReworkEntryNo))
+                {
+                    entity.ReworkEntryNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.返工入库单);
+                }
                 entity.Employee_ID = MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID.Value;
                 if (entity.tb_MRP_ReworkEntryDetails != null && entity.tb_MRP_ReworkEntryDetails.Count > 0)
                 {

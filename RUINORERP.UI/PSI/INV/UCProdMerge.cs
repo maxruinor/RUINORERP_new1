@@ -130,7 +130,10 @@ namespace RUINORERP.UI.PSI.INV
                 entity.ActionStatus = ActionStatus.新增;
                 entity.DataStatus = (int)DataStatus.草稿;
                 entity.Employee_ID = MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID.Value;
-                entity.MergeNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.产品组合单);
+                if (string.IsNullOrEmpty(entity.MergeNo))
+                {
+                    entity.MergeNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.产品组合单);
+                }
                 entity.MergeDate = System.DateTime.Now;
                 cmbBOM_ID.DataSource = null;
                 if (entity.tb_ProdMergeDetails != null && entity.tb_ProdMergeDetails.Count > 0)

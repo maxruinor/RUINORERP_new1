@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：05/29/2025 15:33:04
+// 时间：06/06/2025 14:52:02
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -468,7 +468,6 @@ namespace RUINORERP.Business
          public virtual async Task<List<tb_AuditLogs>> QueryByNavAsync()
         {
             List<tb_AuditLogs> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_AuditLogs>()
-                               .Includes(t => t.tb_employee )
                                     .ToListAsync();
             
             foreach (var item in list)
@@ -488,7 +487,6 @@ namespace RUINORERP.Business
          public virtual async Task<List<tb_AuditLogs>> QueryByNavAsync(Expression<Func<tb_AuditLogs, bool>> exp)
         {
             List<tb_AuditLogs> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_AuditLogs>().Where(exp)
-                               .Includes(t => t.tb_employee )
                                     .ToListAsync();
             
             foreach (var item in list)
@@ -508,7 +506,6 @@ namespace RUINORERP.Business
          public virtual List<tb_AuditLogs> QueryByNav(Expression<Func<tb_AuditLogs, bool>> exp)
         {
             List<tb_AuditLogs> list = _unitOfWorkManage.GetDbClient().Queryable<tb_AuditLogs>().Where(exp)
-                            .Includes(t => t.tb_employee )
                                     .ToList();
             
             foreach (var item in list)
@@ -545,8 +542,7 @@ namespace RUINORERP.Business
         public override async Task<T> BaseQueryByIdNavAsync(object id)
         {
             tb_AuditLogs entity = await _unitOfWorkManage.GetDbClient().Queryable<tb_AuditLogs>().Where(w => w.Audit_ID == (long)id)
-                             .Includes(t => t.tb_employee )
-                                    .FirstAsync();
+                                     .FirstAsync();
             if(entity!=null)
             {
                 entity.HasChanged = false;

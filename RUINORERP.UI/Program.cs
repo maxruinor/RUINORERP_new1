@@ -39,6 +39,7 @@ using System.Diagnostics;
 using System.Runtime.InteropServices;
 using Microsoft.Extensions.Caching.Memory;
 using log4net.Repository.Hierarchy;
+using System.Text.RegularExpressions;
 
 
 namespace RUINORERP.UI
@@ -770,6 +771,29 @@ namespace RUINORERP.UI
         }
 
 
+        private static bool HandleUniqueConstraintException(Exception ex)
+        {
+            string errorMsg = ex.Message.ToLower();
+
+            // 判断是否为唯一约束冲突（中文/英文消息兼容）
+            if (errorMsg.Contains("unique key") || errorMsg.Contains("重复键"))
+            {
+                // 提取重复的订单编号（示例：从消息中匹配括号内的内容）
+                string orderNo = Regex.Match(errorMsg, @"\((.*?)\)").Groups[1].Value;
+
+                MessageBox.Show(
+                    $"编号【{orderNo}】已存在，请检查后重试！",
+                    "唯一性错误",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error
+                );
+                return true;
+            }
+            return false;
+        }
+
+
+
         private static readonly MemoryCache _errorCache = new MemoryCache(new MemoryCacheOptions());
         private static readonly MemoryCacheEntryOptions _cacheOptions = new MemoryCacheEntryOptions
         {
@@ -808,6 +832,10 @@ namespace RUINORERP.UI
                     }
                 }
             }
+
+            if (HandleUniqueConstraintException(e.Exception)) return;
+
+
             string str = "";
             string strDateInfo = "\r\n\r\n出现应用程序未处理的异常,请更新到最新版本，如果无法解决，请联系管理员!" + DateTime.Now.ToString() + "\r\n";
             //Exception error = e.Exception as Exception;

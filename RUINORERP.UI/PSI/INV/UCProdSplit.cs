@@ -142,7 +142,10 @@ namespace RUINORERP.UI.PSI.INV
             {
                 entity.ActionStatus = ActionStatus.新增;
                 entity.DataStatus = (int)DataStatus.草稿;
-                entity.SplitNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.产品分割单);
+                if (string.IsNullOrEmpty(entity.SplitNo))
+                {
+                    entity.SplitNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.产品分割单);
+                }
                 entity.Employee_ID = MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID.Value;
                 entity.SplitDate = System.DateTime.Now;
                 if (entity.tb_ProdSplitDetails != null && entity.tb_ProdSplitDetails.Count > 0)

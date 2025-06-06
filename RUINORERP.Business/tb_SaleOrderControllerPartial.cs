@@ -924,7 +924,7 @@ namespace RUINORERP.Business
                 {
                     authorizeController = _appContext.GetRequiredService<AuthorizeController>();
                 }
-               
+
                 entity = mapper.Map<tb_SaleOut>(saleorder);
                 //注意转过来的实体  各种状态要重新赋值不然逻辑有问题，保存就是已经审核
                 entity.ApprovalOpinions = "快捷转单";
@@ -942,11 +942,15 @@ namespace RUINORERP.Business
                 List<tb_SaleOutDetail> details = mapper.Map<List<tb_SaleOutDetail>>(saleorder.tb_SaleOrderDetails);
                 List<tb_SaleOutDetail> NewDetails = new List<tb_SaleOutDetail>();
 
+
+                //多行相同产品时 可能还在仔细优化核对
                 for (global::System.Int32 i = 0; i < details.Count; i++)
                 {
+                    View_ProdDetail obj = null;
                     var aa = details.Select(c => c.ProdDetailID).ToList().GroupBy(x => x).Where(x => x.Count() > 1).Select(x => x.Key).ToList();
                     if (aa.Count > 0 && details[i].SaleOrderDetail_ID > 0)
                     {
+                        obj = BizCacheHelper.Instance.GetEntity<View_ProdDetail>(details[i].ProdDetailID);
                         #region 产品ID可能大于1行，共用料号情况
                         tb_SaleOrderDetail item = saleorder.tb_SaleOrderDetails.FirstOrDefault(c => c.ProdDetailID == details[i].ProdDetailID
                         && c.Location_ID == details[i].Location_ID
@@ -956,7 +960,7 @@ namespace RUINORERP.Business
                         //这时有一种情况就是订单时没有成本。没有产品。出库前有类似采购入库确定的成本
                         if (details[i].Cost == 0)
                         {
-                            View_ProdDetail obj = BizCacheHelper.Instance.GetEntity<View_ProdDetail>(details[i].ProdDetailID);
+                            obj = BizCacheHelper.Instance.GetEntity<View_ProdDetail>(details[i].ProdDetailID);
                             if (obj != null && obj.GetType().Name != "Object" && obj is View_ProdDetail prodDetail)
                             {
                                 details[i].Cost = obj.Inv_Cost.Value;
@@ -971,7 +975,11 @@ namespace RUINORERP.Business
                         }
                         else
                         {
-                            tipsMsg.Add($"销售订单{saleorder.SOrderNo}，{item.tb_proddetail.tb_prod.CNName + item.tb_proddetail.tb_prod.Specifications}已出库数为{item.TotalDeliveredQty}，可出库数为{details[i].Quantity}，当前行数据忽略！");
+                            if (obj == null)
+                            {
+                                obj = BizCacheHelper.Instance.GetEntity<View_ProdDetail>(details[i].ProdDetailID);
+                            }
+                            tipsMsg.Add($"销售订单{saleorder.SOrderNo}，{obj.CNName + obj.Specifications}已出库数为{item.TotalDeliveredQty}，可出库数为{details[i].Quantity}，当前行数据忽略！");
                         }
 
                         #endregion
@@ -987,7 +995,7 @@ namespace RUINORERP.Business
                         //这时有一种情况就是订单时没有成本。没有产品。出库前有类似采购入库确定的成本
                         if (details[i].Cost == 0)
                         {
-                            View_ProdDetail obj = BizCacheHelper.Instance.GetEntity<View_ProdDetail>(details[i].ProdDetailID);
+                            obj = BizCacheHelper.Instance.GetEntity<View_ProdDetail>(details[i].ProdDetailID);
                             if (obj != null && obj.GetType().Name != "Object" && obj is View_ProdDetail prodDetail)
                             {
                                 if (obj.Inv_Cost == null)
@@ -1007,7 +1015,11 @@ namespace RUINORERP.Business
                         }
                         else
                         {
-                            tipsMsg.Add($"当前订单的SKU:{item.tb_proddetail.SKU}已出库数量为{details[i].Quantity}，当前行数据将不会加载到明细！");
+                            if (obj == null)
+                            {
+                                obj = BizCacheHelper.Instance.GetEntity<View_ProdDetail>(details[i].ProdDetailID);
+                            }
+                            tipsMsg.Add($"当前订单的SKU:{obj.SKU}{obj.CNName}已出库数量为{details[i].Quantity}，当前行数据将不会加载到明细！");
                         }
                         #endregion
                     }
@@ -1085,7 +1097,7 @@ namespace RUINORERP.Business
                 entity.TotalCost = entity.TotalCost + entity.FreightCost;
 
                 entity.TotalTaxAmount = NewDetails.Sum(c => c.SubtotalTaxAmount);
-              
+
 
                 entity.TotalTaxAmount = entity.TotalTaxAmount.ToRoundDecimalPlaces(authorizeController.GetMoneyDataPrecision());
 

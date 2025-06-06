@@ -87,6 +87,8 @@ using SourceGrid;
 using log4net;
 using NPOI.SS.Formula.Functions;
 using RUINORERP.UI.Monitoring.Auditing;
+using System.Text.RegularExpressions;
+using Match = System.Text.RegularExpressions.Match;
 
 
 
@@ -643,6 +645,7 @@ namespace RUINORERP.UI
             ClearData();
             ClearUI();
             RUINORERP.Extensions.SqlsugarSetup.CheckEvent += SqlsugarSetup_CheckEvent;
+            RUINORERP.Extensions.SqlsugarSetup.RemindEvent += SqlsugarSetup_RemindEvent;
             bool islogin = await Login();
             if (!islogin)
             {
@@ -861,6 +864,57 @@ namespace RUINORERP.UI
             });
 
         }
+
+
+
+       
+
+
+        private bool SqlsugarSetup_RemindEvent(SqlSugarException ex)
+        {
+            if (HandleUniqueConstraintException(ex))
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+        private string ExtractDuplicateValue(string errorMsg)
+        {
+            // 匹配 "重复键值为 (XXX)" 中的 XXX
+            Match match = Regex.Match(errorMsg, @"重复键值为 \((?<value>.*?)\)");
+            return match.Success ? match.Groups["value"].Value : "";
+        }
+        private bool HandleUniqueConstraintException(SqlSugarException ex)
+        {
+            bool handled = false;
+            string errorMsg = ex.Message.ToLower();
+            // 判断是否为唯一约束冲突（中文/英文消息兼容）
+            if (errorMsg.Contains("unique key") || errorMsg.Contains("重复键"))
+            {
+                // 提取重复的订单编号（示例：从消息中匹配括号内的内容）
+                string uniquekey = Regex.Match(errorMsg, @"\((.*?)\)").Groups[1].Value;
+                string value = ExtractDuplicateValue(ex.Message);
+
+                MessageBox.Show(
+                    $"【{value}】已存在，请检查后重试！",
+                    "唯一性错误",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error
+                );
+
+                handled = true;
+            }
+            return handled;
+            //else
+            //{
+            //    // 其他 SqlSugar 异常处理
+            //    MessageBox.Show($"操作失败：{ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            //}
+        }
+
 
         public IMapper mapper { get; set; }
 
@@ -2321,6 +2375,7 @@ namespace RUINORERP.UI
             AppContext.CurUserInfo = null;
             AppContext.IsSuperUser = false;
             RUINORERP.Extensions.SqlsugarSetup.CheckEvent -= SqlsugarSetup_CheckEvent;
+            RUINORERP.Extensions.SqlsugarSetup.RemindEvent -= SqlsugarSetup_RemindEvent;
             await ecs.Stop();
         }
 

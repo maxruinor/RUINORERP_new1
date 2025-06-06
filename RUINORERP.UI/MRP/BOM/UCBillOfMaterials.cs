@@ -1219,7 +1219,10 @@ namespace RUINORERP.UI.MRP.BOM
                 txtProdDetailID.ToolTipValues.Heading = "请选择物料编码，不能手动输入SKU码";
                 EditEntity.DataStatus = (int)DataStatus.草稿;
                 EditEntity.ActionStatus = ActionStatus.新增;
-                EditEntity.BOM_No = BizCodeGenerator.Instance.GetBizBillNo(BizType.BOM物料清单);
+                if (string.IsNullOrEmpty(entity.BOM_No))
+                {
+                    entity.BOM_No = BizCodeGenerator.Instance.GetBizBillNo(BizType.BOM物料清单);
+                }
                 EditEntity.Effective_at = System.DateTime.Now;
                 EditEntity.ApprovalStatus = (int)ApprovalStatus.未审核;
                 EditEntity.ApprovalResults = false;

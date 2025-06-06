@@ -3,6 +3,7 @@ using LiveChartsCore.Geo;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
+using RUINORERP.Business;
 using RUINORERP.Business.CommService;
 using RUINORERP.Common.Extensions;
 using RUINORERP.Common.Helper;
@@ -274,6 +275,7 @@ namespace RUINORERP.UI.Monitoring.Auditing
         private readonly ConcurrentQueue<tb_AuditLogs> _auditLogQueue = new ConcurrentQueue<tb_AuditLogs>();
 
         private readonly Lazy<BillConverterFactory> _billConverterFactory; // 缓存工厂
+        private readonly Lazy<tb_AuditLogsController<tb_AuditLogs>> _AuditLogsController; // 缓存工厂
         private readonly Timer _flushTimer;
         private readonly AuditLogOptions _options;
         private readonly ILogger<AuditLogService> _logger;
@@ -287,6 +289,9 @@ namespace RUINORERP.UI.Monitoring.Auditing
             // 延迟解析依赖，直到第一次使用时才获取实例
             _billConverterFactory = new Lazy<BillConverterFactory>(
                 () => MainForm.Instance.AppContext.GetRequiredService<BillConverterFactory>());// 缓存工厂
+
+
+            _AuditLogsController = new Lazy<tb_AuditLogsController<tb_AuditLogs>>(() => Startup.GetFromFac<tb_AuditLogsController<tb_AuditLogs>>());
             // 启动定时刷新
             _flushTimer = new Timer(FlushQueue, null, _options.FlushInterval, _options.FlushInterval);
         }
@@ -371,6 +376,8 @@ namespace RUINORERP.UI.Monitoring.Auditing
                 _logger.LogError(ex, "获取审计对象信息失败");
                 auditLog.Notes += $" | 获取对象信息失败: {ex.Message}";
             }
+
+
 
             return auditLog;
         }
@@ -517,12 +524,21 @@ namespace RUINORERP.UI.Monitoring.Auditing
                     }
                     catch (Exception ex)
                     {
-                        _logger.LogError(ex, "批量写入审计日志失败，将重新入队");
+                        _logger.LogError(ex, "批量写入审计日志失败，将重新入队,错误日志" + ex.Message);
 
                         // 写入失败，将日志重新入队
                         foreach (var log in logsToSave)
-                        {
-                            _auditLogQueue.Enqueue(log);
+                        {            //验证：一般是内容太长：
+                            var validator = _AuditLogsController.Value.BaseValidator(log);
+                            if (validator.IsValid)
+                            {
+                                _auditLogQueue.Enqueue(log);
+                            }
+                            else
+                            {
+                                _logger.LogError("日志入队时 没有通过验证。不再记录。", validator.Errors);
+                            }
+
                         }
                     }
                 }

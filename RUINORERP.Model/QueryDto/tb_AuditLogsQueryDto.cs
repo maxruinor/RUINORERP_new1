@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：05/29/2025 15:33:05
+// 时间：06/06/2025 14:52:02
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -39,7 +39,6 @@ namespace RUINORERP.Model.QueryDto
         /// </summary>
         [AdvQueryAttribute(ColName = "Employee_ID",ColDesc = "员工信息")]
         [SugarColumn(ColumnDataType = "bigint",SqlParameterDbType ="Int64",ColumnName = "Employee_ID",IsNullable = true,ColumnDescription = "员工信息" )]
-        [FKRelationAttribute("tb_Employee","Employee_ID")]
         public long? Employee_ID 
         { 
             get{return _Employee_ID;}
@@ -151,19 +150,6 @@ namespace RUINORERP.Model.QueryDto
         }
      
 
-        private string _Notes;
-        /// <summary>
-        /// 备注说明
-        /// </summary>
-        [AdvQueryAttribute(ColName = "Notes",ColDesc = "备注说明")]
-        [SugarColumn(ColumnDataType = "varchar",SqlParameterDbType ="String",ColumnName = "Notes",Length=8000,IsNullable = true,ColumnDescription = "备注说明" )]
-        public string Notes 
-        { 
-            get{return _Notes;}
-            set{SetProperty(ref _Notes, value);}
-        }
-     
-
         private string _DataContent;
         /// <summary>
         /// 数据内容
@@ -174,6 +160,19 @@ namespace RUINORERP.Model.QueryDto
         { 
             get{return _DataContent;}
             set{SetProperty(ref _DataContent, value);}
+        }
+     
+
+        private string _Notes;
+        /// <summary>
+        /// 备注说明
+        /// </summary>
+        [AdvQueryAttribute(ColName = "Notes",ColDesc = "备注说明")]
+        [SugarColumn(ColumnDataType = "varchar",SqlParameterDbType ="String",ColumnName = "Notes",Length=8000,IsNullable = true,ColumnDescription = "备注说明" )]
+        public string Notes 
+        { 
+            get{return _Notes;}
+            set{SetProperty(ref _Notes, value);}
         }
 
 

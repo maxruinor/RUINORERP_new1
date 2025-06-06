@@ -106,7 +106,12 @@ namespace RUINORERP.UI.PSI.PUR
                 purEntryReid = string.Empty;
                 entity.ActionStatus = ActionStatus.新增;
                 entity.DataStatus = (int)DataStatus.草稿;
-                entity.PurReEntryNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.采购退货入库);
+              
+                if (string.IsNullOrEmpty(entity.PurReEntryNo))
+                {
+                    entity.PurReEntryNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.采购退货入库);
+                }
+
                 entity.Employee_ID = MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID.Value;
                 if (entity.tb_PurReturnEntryDetails != null && entity.tb_PurReturnEntryDetails.Count > 0)
                 {

@@ -25,6 +25,7 @@ using RUINORERP.Global.EnumExt.CRM;
 using RUINORERP.UI.UControls;
 using Newtonsoft.Json;
 using RUINORERP.UI.Monitoring.Auditing;
+using RUINORERP.Business.CommService;
 
 namespace RUINORERP.UI.BI
 {
@@ -32,6 +33,8 @@ namespace RUINORERP.UI.BI
     [MenuAttrAssemblyInfo("审计日志管理", ModuleMenuDefine.模块定义.系统设置, ModuleMenuDefine.系统设置.系统工具)]
     public partial class UCAuditLogsList : BaseForm.BaseListGeneric<tb_AuditLogs>, UI.AdvancedUIModule.IContextMenuInfoAuth
     {
+
+        BizTypeMapper mapper = null;
         public UCAuditLogsList()
         {
             InitializeComponent();
@@ -54,6 +57,10 @@ namespace RUINORERP.UI.BI
             button检查数据.ToolTipValues.Heading = "提示";
             button检查数据.Click += button检查数据_Click;
             base.frm.flowLayoutPanelButtonsArea.Controls.Add(button检查数据);
+
+            //mapper=new BizTypeMapper();
+            mapper = Startup.GetFromFac<BizTypeMapper>();
+
         }
 
 
@@ -100,6 +107,36 @@ namespace RUINORERP.UI.BI
             {
                 if (dataGridView1.CurrentRow.DataBoundItem is tb_AuditLogs item)
                 {
+                    #region  恢复单据
+
+                    BizType bizType = (BizType)item.ObjectType.Value;
+                    Type objType = mapper.GetTableType(bizType);
+                    if (!string.IsNullOrEmpty(item.DataContent))
+                    {
+                        if (MessageBox.Show($"当前单据{item.ObjectNo}：将重新生成，请谨慎操作\r\n确定生成吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == DialogResult.Yes)
+                        {
+                            // 恢复实体对象
+                            // 解析JSON数据
+                            var data = JsonConvert.DeserializeObject<Dictionary<string, object>>(item.DataContent);
+                            var entity = EntityDataRestorer.RestoreEntity(objType, data);
+                            string PKColName = UIHelper.GetPrimaryKeyColName(objType);
+                            //  object PKValue = entity.GetPropertyValue(PKColName);
+                            entity.SetPropertyValue(PKColName, 0);
+
+                            MenuPowerHelper menuPowerHelper;
+                            menuPowerHelper = Startup.GetFromFac<MenuPowerHelper>();
+                            tb_MenuInfo RelatedMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble && m.EntityName == objType.Name && m.BIBaseForm == "BaseBillEditGeneric`2").FirstOrDefault();
+                            if (RelatedMenuInfo != null)
+                            {
+                                menuPowerHelper.ExecuteEvents(RelatedMenuInfo, entity);
+                            }
+                            return;
+                        }
+
+                    }
+
+
+                    /*
                     //只有审核状态才可以转换为出库单
                     if (item.ObjectType == (int)BizType.盘点单)
                     {
@@ -130,6 +167,8 @@ namespace RUINORERP.UI.BI
                         }
                         return;
                     }
+                    */
+                    #endregion
 
                 }
             }

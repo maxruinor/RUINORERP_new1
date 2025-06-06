@@ -3,7 +3,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：05/29/2025 15:33:03
+// 时间：06/06/2025 14:52:01
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -53,7 +53,7 @@ namespace RUINORERP.UI
       //this.kryptonPanel1 = new ComponentFactory.Krypton.Toolkit.KryptonPanel();
       //for definition
      this.lblEmployee_ID = new Krypton.Toolkit.KryptonLabel();
-this.cmbEmployee_ID = new Krypton.Toolkit.KryptonComboBox();
+this.txtEmployee_ID = new Krypton.Toolkit.KryptonTextBox();
 
 this.lblUserName = new Krypton.Toolkit.KryptonLabel();
 this.txtUserName = new Krypton.Toolkit.KryptonTextBox();
@@ -80,13 +80,13 @@ this.txtOldState = new Krypton.Toolkit.KryptonTextBox();
 this.lblNewState = new Krypton.Toolkit.KryptonLabel();
 this.txtNewState = new Krypton.Toolkit.KryptonTextBox();
 
-this.lblNotes = new Krypton.Toolkit.KryptonLabel();
-this.txtNotes = new Krypton.Toolkit.KryptonTextBox();
-this.txtNotes.Multiline = true;
-
 this.lblDataContent = new Krypton.Toolkit.KryptonLabel();
 this.txtDataContent = new Krypton.Toolkit.KryptonTextBox();
 this.txtDataContent.Multiline = true;
+
+this.lblNotes = new Krypton.Toolkit.KryptonLabel();
+this.txtNotes = new Krypton.Toolkit.KryptonTextBox();
+this.txtNotes.Multiline = true;
 
     
     //for end
@@ -116,20 +116,18 @@ this.txtDataContent.Multiline = true;
          //for size
      
             //#####Employee_ID###Int64
-//属性测试25Employee_ID
 this.lblEmployee_ID.AutoSize = true;
 this.lblEmployee_ID.Location = new System.Drawing.Point(100,25);
 this.lblEmployee_ID.Name = "lblEmployee_ID";
 this.lblEmployee_ID.Size = new System.Drawing.Size(41, 12);
 this.lblEmployee_ID.TabIndex = 1;
 this.lblEmployee_ID.Text = "员工信息";
-//111======25
-this.cmbEmployee_ID.Location = new System.Drawing.Point(173,21);
-this.cmbEmployee_ID.Name ="cmbEmployee_ID";
-this.cmbEmployee_ID.Size = new System.Drawing.Size(100, 21);
-this.cmbEmployee_ID.TabIndex = 1;
+this.txtEmployee_ID.Location = new System.Drawing.Point(173,21);
+this.txtEmployee_ID.Name = "txtEmployee_ID";
+this.txtEmployee_ID.Size = new System.Drawing.Size(100, 21);
+this.txtEmployee_ID.TabIndex = 1;
 this.Controls.Add(this.lblEmployee_ID);
-this.Controls.Add(this.cmbEmployee_ID);
+this.Controls.Add(this.txtEmployee_ID);
 
            //#####255UserName###String
 this.lblUserName.AutoSize = true;
@@ -176,7 +174,6 @@ this.Controls.Add(this.lblActionType);
 this.Controls.Add(this.txtActionType);
 
            //#####ObjectType###Int32
-//属性测试125ObjectType
 this.lblObjectType.AutoSize = true;
 this.lblObjectType.Location = new System.Drawing.Point(100,125);
 this.lblObjectType.Name = "lblObjectType";
@@ -191,7 +188,6 @@ this.Controls.Add(this.lblObjectType);
 this.Controls.Add(this.txtObjectType);
 
            //#####ObjectId###Int64
-//属性测试150ObjectId
 this.lblObjectId.AutoSize = true;
 this.lblObjectId.Location = new System.Drawing.Point(100,150);
 this.lblObjectId.Name = "lblObjectId";
@@ -247,34 +243,34 @@ this.txtNewState.TabIndex = 9;
 this.Controls.Add(this.lblNewState);
 this.Controls.Add(this.txtNewState);
 
-           //#####8000Notes###String
-this.lblNotes.AutoSize = true;
-this.lblNotes.Location = new System.Drawing.Point(100,250);
-this.lblNotes.Name = "lblNotes";
-this.lblNotes.Size = new System.Drawing.Size(41, 12);
-this.lblNotes.TabIndex = 10;
-this.lblNotes.Text = "备注说明";
-this.txtNotes.Location = new System.Drawing.Point(173,246);
-this.txtNotes.Name = "txtNotes";
-this.txtNotes.Size = new System.Drawing.Size(100, 21);
-this.txtNotes.TabIndex = 10;
-this.Controls.Add(this.lblNotes);
-this.Controls.Add(this.txtNotes);
-
            //#####2147483647DataContent###String
 this.lblDataContent.AutoSize = true;
-this.lblDataContent.Location = new System.Drawing.Point(100,275);
+this.lblDataContent.Location = new System.Drawing.Point(100,250);
 this.lblDataContent.Name = "lblDataContent";
 this.lblDataContent.Size = new System.Drawing.Size(41, 12);
-this.lblDataContent.TabIndex = 11;
+this.lblDataContent.TabIndex = 10;
 this.lblDataContent.Text = "数据内容";
-this.txtDataContent.Location = new System.Drawing.Point(173,271);
+this.txtDataContent.Location = new System.Drawing.Point(173,246);
 this.txtDataContent.Name = "txtDataContent";
 this.txtDataContent.Size = new System.Drawing.Size(100, 21);
-this.txtDataContent.TabIndex = 11;
+this.txtDataContent.TabIndex = 10;
 this.txtDataContent.Multiline = true;
 this.Controls.Add(this.lblDataContent);
 this.Controls.Add(this.txtDataContent);
+
+           //#####8000Notes###String
+this.lblNotes.AutoSize = true;
+this.lblNotes.Location = new System.Drawing.Point(100,275);
+this.lblNotes.Name = "lblNotes";
+this.lblNotes.Size = new System.Drawing.Size(41, 12);
+this.lblNotes.TabIndex = 11;
+this.lblNotes.Text = "备注说明";
+this.txtNotes.Location = new System.Drawing.Point(173,271);
+this.txtNotes.Name = "txtNotes";
+this.txtNotes.Size = new System.Drawing.Size(100, 21);
+this.txtNotes.TabIndex = 11;
+this.Controls.Add(this.lblNotes);
+this.Controls.Add(this.txtNotes);
 
         //for 加入到容器
             //components = new System.ComponentModel.Container();
@@ -295,7 +291,7 @@ this.Controls.Add(this.txtDataContent);
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
                 this.Controls.Add(this.lblEmployee_ID );
-this.Controls.Add(this.cmbEmployee_ID );
+this.Controls.Add(this.txtEmployee_ID );
 
                 this.Controls.Add(this.lblUserName );
 this.Controls.Add(this.txtUserName );
@@ -321,11 +317,11 @@ this.Controls.Add(this.txtOldState );
                 this.Controls.Add(this.lblNewState );
 this.Controls.Add(this.txtNewState );
 
-                this.Controls.Add(this.lblNotes );
-this.Controls.Add(this.txtNotes );
-
                 this.Controls.Add(this.lblDataContent );
 this.Controls.Add(this.txtDataContent );
+
+                this.Controls.Add(this.lblNotes );
+this.Controls.Add(this.txtNotes );
 
                             // 
             // "tb_AuditLogsEdit"
@@ -352,7 +348,7 @@ this.Controls.Add(this.txtDataContent );
      
          
               private Krypton.Toolkit.KryptonLabel lblEmployee_ID;
-private Krypton.Toolkit.KryptonComboBox cmbEmployee_ID;
+private Krypton.Toolkit.KryptonTextBox txtEmployee_ID;
 
     
         
@@ -396,13 +392,13 @@ private Krypton.Toolkit.KryptonTextBox txtNewState;
 
     
         
-              private Krypton.Toolkit.KryptonLabel lblNotes;
-private Krypton.Toolkit.KryptonTextBox txtNotes;
+              private Krypton.Toolkit.KryptonLabel lblDataContent;
+private Krypton.Toolkit.KryptonTextBox txtDataContent;
 
     
         
-              private Krypton.Toolkit.KryptonLabel lblDataContent;
-private Krypton.Toolkit.KryptonTextBox txtDataContent;
+              private Krypton.Toolkit.KryptonLabel lblNotes;
+private Krypton.Toolkit.KryptonTextBox txtNotes;
 
     
             //private ComponentFactory.Krypton.Toolkit.KryptonButton btnOk;

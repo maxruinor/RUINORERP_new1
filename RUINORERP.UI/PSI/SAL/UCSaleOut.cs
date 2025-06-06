@@ -800,18 +800,18 @@ namespace RUINORERP.UI.PSI.SAL
             return false;
         }
 
-        protected async override Task<ReturnResults<tb_SaleOut>> Delete()
-        {
-            ReturnResults<tb_SaleOut> rss = new ReturnResults<tb_SaleOut>();
-            rss = await base.Delete();
-            if (rss.Succeeded)
-            {
-                string msg = string.Empty;
-                msg = $"订单号：{EditEntity.SaleOrderNo} 对应的出库单 {EditEntity.SaleOutNo} 删除成功。";
-                MainForm.Instance.AuditLogHelper.CreateAuditLog<tb_SaleOut>("删除细节", EditEntity, msg);
-            }
-            return rss;
-        }
+        //protected async override Task<ReturnResults<tb_SaleOut>> Delete()
+        //{
+        //    ReturnResults<tb_SaleOut> rss = new ReturnResults<tb_SaleOut>();
+        //    rss = await base.Delete();
+        //    if (rss.Succeeded)
+        //    {
+        //        string msg = string.Empty;
+        //        msg = $"订单号：{EditEntity.SaleOrderNo} 对应的出库单 {EditEntity.SaleOutNo} 删除成功。";
+        //        MainForm.Instance.AuditLogHelper.CreateAuditLog<tb_SaleOut>("删除细节", EditEntity, msg);
+        //    }
+        //    return rss;
+        //}
 
         protected async override Task<bool> CloseCaseAsync()
         {

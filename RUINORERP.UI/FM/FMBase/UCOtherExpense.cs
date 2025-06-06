@@ -51,6 +51,13 @@ namespace RUINORERP.UI.FM.FMBase
             InitializeComponent();
         }
 
+        /// <summary>
+        /// 收付款方式决定是不收入还是支出。收款=收入， 支出=付款
+        /// </summary>
+        public ReceivePaymentType PaymentType { get; set; }
+
+
+
         internal override void LoadDataToUI(object Entity)
         {
             BindData(Entity as tb_FM_OtherExpense);
@@ -91,16 +98,22 @@ namespace RUINORERP.UI.FM.FMBase
                 if (CurMenuInfo != null)
                 {
                     lbl盘点单.Text = CurMenuInfo.CaptionCN;
-                    if (CurMenuInfo.CaptionCN.Contains("支出"))
+                    if (PaymentType==ReceivePaymentType.付款)
                     {
                         entity.EXPOrINC = false;
-                        entity.ExpenseNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.其他费用支出);
+                        if (string.IsNullOrEmpty(entity.ExpenseNo))
+                        {
+                            entity.ExpenseNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.其他费用支出);
+                        }
                     }
 
-                    if (CurMenuInfo.CaptionCN.Contains("收入"))
+                    if (PaymentType == ReceivePaymentType.收款)
                     {
                         entity.EXPOrINC = true;
-                        entity.ExpenseNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.其他费用收入);
+                        if (string.IsNullOrEmpty(entity.ExpenseNo))
+                        {
+                            entity.ExpenseNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.其他费用收入);
+                        }
                     }
                 }
             }
@@ -170,17 +183,25 @@ namespace RUINORERP.UI.FM.FMBase
         {
             BaseProcessor baseProcessor = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_FM_OtherExpense).Name + "Processor");
             QueryConditionFilter = baseProcessor.GetQueryFilter();
+            bool isIncome = true;
+            if (PaymentType == ReceivePaymentType.收款)
+            {
+                isIncome = true;
+            }
+            else
+            {
+                isIncome = false;
+            }
 
             //创建表达式
             var lambda = Expressionable.Create<tb_FM_OtherExpense>()
-                             //.AndIF(CurMenuInfo.CaptionCN.Contains("客户"), t => t.IsCustomer == true)
-                             // .AndIF(CurMenuInfo.CaptionCN.Contains("供应商"), t => t.IsVendor == true)
-                             .And(t => t.isdeleted == false)
-                                .And(t => t.EXPOrINC == true)
-                            // .And(t => t.Is_enabled == true)
-                            //报销人员限制，财务不限制
-                            .AndIF(AuthorizeController.GetOwnershipControl(MainForm.Instance.AppContext), t => t.Employee_ID == MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID)//限制了销售只看到自己的客户,采购不限制
-                            .ToExpression();//注意 这一句 不能少
+                         //.AndIF(CurMenuInfo.CaptionCN.Contains("客户"), t => t.IsCustomer == true)
+                         .And(t => t.isdeleted == false)
+                         .And(t => t.EXPOrINC == isIncome)
+                        // .And(t => t.Is_enabled == true)
+                        //报销人员限制，财务不限制
+                        .AndIF(AuthorizeController.GetOwnershipControl(MainForm.Instance.AppContext), t => t.Employee_ID == MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID)//限制了销售只看到自己的客户,采购不限制
+                        .ToExpression();//注意 这一句 不能少
             QueryConditionFilter.SetFieldLimitCondition(lambda);
 
         }

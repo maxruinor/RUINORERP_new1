@@ -178,15 +178,18 @@ namespace RUINORERP.UI.FM
                 //到期日期应该是根据对应客户的账期的天数来算
 
                 //entity.DueDate = System.DateTime.Now;
+                if (string.IsNullOrEmpty(entity.ARAPNo))
+                {
+                    if (PaymentType == ReceivePaymentType.收款)
+                    {
+                        entity.ARAPNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.应收款单);
+                    }
+                    else
+                    {
+                        entity.ARAPNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.应付款单);
+                    }
+                }
 
-                if (PaymentType == ReceivePaymentType.收款)
-                {
-                    entity.ARAPNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.应收款单);
-                }
-                else
-                {
-                    entity.ARAPNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.应付款单);
-                }
                 //entity.InvoiceDate = System.DateTime.Now;
 
 
@@ -555,7 +558,7 @@ namespace RUINORERP.UI.FM
             sgh.InitGrid(grid1, sgd, true, nameof(tb_FM_ReceivablePayableDetail));
             sgh.OnCalculateColumnValue += Sgh_OnCalculateColumnValue;
             sgh.OnAddDataRow += Sgh_OnAddDataRow;
-                UIHelper.ControlMasterColumnsInvisible(CurMenuInfo, this);
+            UIHelper.ControlMasterColumnsInvisible(CurMenuInfo, this);
 
 
             //隐藏外币相关

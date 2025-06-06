@@ -187,7 +187,11 @@ namespace RUINORERP.UI.PSI.SAL
                 {
                     entity.ActionStatus = ActionStatus.新增;
                     entity.DataStatus = (int)DataStatus.草稿;
-                    entity.SOrderNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.销售订单);
+                    if (string.IsNullOrEmpty(entity.SOrderNo))
+                    {
+                        entity.SOrderNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.销售订单);
+                    }
+                    
                     entity.SaleDate = System.DateTime.Now;
                     //通过动态参数来设置这个默认值。这样每个公司不同设置按自己的来。
                     entity.IsFromPlatform = AppContext.GlobalVariableConfig.IsFromPlatform;
@@ -403,7 +407,7 @@ namespace RUINORERP.UI.PSI.SAL
                         {
                             if (!string.IsNullOrEmpty(cv.SpecialNotes))
                             {
-                                entity.Notes += $"【{cv.SpecialNotes}】";
+                                entity.Notes = $"【{cv.SpecialNotes}】";
                             }
                             if (cv.Employee_ID.HasValue)
                             {

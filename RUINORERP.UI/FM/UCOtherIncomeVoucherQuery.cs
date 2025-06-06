@@ -23,6 +23,7 @@ namespace RUINORERP.UI.FM
         public UCOtherIncomeVoucherQuery()
         {
             InitializeComponent();
+            base.PaymentType = Global.EnumExt.ReceivePaymentType.收款;
         }
 
         public SharedFlag sharedFlag { get; set; } = SharedFlag.Flag1;

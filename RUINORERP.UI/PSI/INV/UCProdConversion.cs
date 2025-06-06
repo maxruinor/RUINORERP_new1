@@ -96,7 +96,10 @@ namespace RUINORERP.UI.PSI.INV
                 entity.ActionStatus = ActionStatus.新增;
                 entity.DataStatus = (int)DataStatus.草稿;
                 entity.Employee_ID = MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID.Value;
-                entity.ConversionNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.产品转换单);
+                if (string.IsNullOrEmpty(entity.ConversionNo))
+                {
+                    entity.ConversionNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.产品转换单);
+                }
                 entity.ConversionDate = System.DateTime.Now;
                 if (entity.tb_ProdConversionDetails != null && entity.tb_ProdConversionDetails.Count > 0)
                 {

@@ -6,6 +6,7 @@ using System.Linq;
 using System.Linq.Dynamic.Core;
 using System.Linq.Dynamic.Core.CustomTypeProviders;
 using System.Reflection;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Web.UI.WebControls.WebParts;
 using Mapster;
@@ -35,6 +36,14 @@ namespace RUINORERP.Extensions
 
         [Browsable(true), Description("引发外部事件")]
         public static event CheckHandler CheckEvent;
+
+
+        public delegate bool RemindHandler(SqlSugarException sugarException);
+        [Browsable(true), Description("引发外部提醒事件")]
+        public static event RemindHandler RemindEvent;
+
+
+
 
         public static void AddSqlsugarSetup(this IServiceCollection services,
         ApplicationContext AppContextData, string connectString,
@@ -137,9 +146,19 @@ namespace RUINORERP.Extensions
                         //{
                         //    var aa = (e.Parametres as SugarParameter[]).ToDictionary(it => it.ParameterName, it => it.Value);
                         //}
+                        if (RemindEvent != null)
+                        {
+                            //kimi查询到说这个性能更好
+                            if (RemindEvent(e))
+                            {
+                                return;
+                            }
+
+                        }
 
                         try
                         {
+                            Exception exception = e.GetBaseException();
                             string errorsql = e.Message + "\r\n" + SqlProfiler.FormatParam(e.Sql, e.Parametres as SugarParameter[]);
                             logger.Error("Error" + errorsql, e);
 
@@ -184,6 +203,12 @@ namespace RUINORERP.Extensions
             AppContextData.Db = sqlSugar;
         }
 
+
+        #region
+
+
+
+        #endregion
 
         public static void AddSqlsugarSetup(this IServiceCollection services,
             IConfiguration configuration, string dbName = "ConnectString")
@@ -267,6 +292,11 @@ namespace RUINORERP.Extensions
 
             services.AddSingleton<ISqlSugarClient>(sqlSugar);//这边是SqlSugarScope用AddSingleton
         }
+
+
+
+
+
 
     }
 

@@ -19,6 +19,7 @@ using RUINORERP.Common.Extensions;
 using SqlSugar;
 using RUINORERP.Business.Security;
 using RUINORERP.Business.Processor;
+using RUINORERP.Global.EnumExt;
 
 namespace RUINORERP.UI.FM.FMBase
 {
@@ -34,7 +35,10 @@ namespace RUINORERP.UI.FM.FMBase
 
         }
 
-
+        /// <summary>
+        /// 收付款方式决定是不收入还是支出。收款=收入， 支出=付款
+        /// </summary>
+        public ReceivePaymentType PaymentType { get; set; }
 
         private void UCSaleOrderStatistics_Load(object sender, EventArgs e)
         {

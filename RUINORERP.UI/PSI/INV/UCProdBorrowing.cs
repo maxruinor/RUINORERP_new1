@@ -105,7 +105,11 @@ namespace RUINORERP.UI.PSI.INV
             {
                 entity.ActionStatus = ActionStatus.新增;
                 entity.DataStatus = (int)DataStatus.草稿;
-                entity.BorrowNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.借出单);
+                if (string.IsNullOrEmpty(entity.BorrowNo))
+                {
+                    entity.BorrowNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.借出单);
+                }
+
                 entity.DueDate = System.DateTime.Now.AddDays(30);//最长时间为30天
                 entity.Out_date = System.DateTime.Now;
                 entity.Employee_ID = MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID.Value;

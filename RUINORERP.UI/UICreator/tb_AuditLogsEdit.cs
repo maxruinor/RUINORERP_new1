@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：05/29/2025 15:33:02
+// 时间：06/06/2025 14:52:00
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -61,8 +61,8 @@ namespace RUINORERP.UI
                         entity.ObjectNo = txtObjectNo.Text ;
                        entity.OldState = txtOldState.Text ;
                        entity.NewState = txtNewState.Text ;
-                       entity.Notes = txtNotes.Text ;
                        entity.DataContent = txtDataContent.Text ;
+                       entity.Notes = txtNotes.Text ;
                                return entity;
 }
         */
@@ -73,7 +73,7 @@ namespace RUINORERP.UI
         public void BindData(tb_AuditLogs entity)
         {
         _EditEntity = entity;
-                       // DataBindingHelper.BindData4Cmb<tb_Employee>(entity, k => k.Employee_ID, v=>v.XXNAME, cmbEmployee_ID);
+                        DataBindingHelper.BindData4TextBox<tb_AuditLogs>(entity, t => t.Employee_ID, txtEmployee_ID, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4TextBox<tb_AuditLogs>(entity, t => t.UserName, txtUserName, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4DataTime<tb_AuditLogs>(entity, t => t.ActionTime, dtpActionTime,false);
            DataBindingHelper.BindData4TextBox<tb_AuditLogs>(entity, t => t.ActionType, txtActionType, BindDataType4TextBox.Text,false);
@@ -82,8 +82,8 @@ namespace RUINORERP.UI
            DataBindingHelper.BindData4TextBox<tb_AuditLogs>(entity, t => t.ObjectNo, txtObjectNo, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_AuditLogs>(entity, t => t.OldState, txtOldState, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_AuditLogs>(entity, t => t.NewState, txtNewState, BindDataType4TextBox.Text,false);
-           DataBindingHelper.BindData4TextBox<tb_AuditLogs>(entity, t => t.Notes, txtNotes, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_AuditLogs>(entity, t => t.DataContent, txtDataContent, BindDataType4TextBox.Text,false);
+           DataBindingHelper.BindData4TextBox<tb_AuditLogs>(entity, t => t.Notes, txtNotes, BindDataType4TextBox.Text,false);
 }
 
 

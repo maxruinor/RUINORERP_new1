@@ -170,18 +170,6 @@ namespace RUINORERP.Business
                       .Includes(a => a.tb_SaleOrderDetails, b => b.tb_proddetail, c => c.tb_prod)
                         .Where(c => c.SOrder_ID == entity.SOrder_ID).SingleAsync();
 
-                    //如果销售订单不是审核状态。则不能出库审核。
-                    if (entity.tb_saleorder.DataStatus != (int)DataStatus.确认)
-                    {
-                        rrs.Succeeded = false;
-                        rrs.ErrorMsg = $"出库时，对应销售订单不是审核状态!请检查数据后重试！";
-                        if (_appContext.SysConfig.ShowDebugInfo)
-                        {
-                            _logger.LogInformation(rrs.ErrorMsg);
-                        }
-                        return rrs;
-                    }
-
                     // 检查销售订单状态是否为已确认
                     bool isOrderConfirmed = entity.tb_saleorder.DataStatus == (int)DataStatus.确认;
                     bool isApproved = entity.tb_saleorder.ApprovalResults.HasValue &&
@@ -190,7 +178,8 @@ namespace RUINORERP.Business
                     if (!isOrderConfirmed || !isApproved)
                     {
                         rrs.Succeeded = false;
-                        rrs.ErrorMsg = $"{entity.tb_saleorder.SOrderNo} 请确认销售订单状态为【确认】已审核，并且审核结果为已通过!请检查数据后重试！";
+                        rrs.ErrorMsg = $" 销售订单{entity.tb_saleorder.SOrderNo}状态为【{((DataStatus)entity.tb_saleorder.DataStatus).ToString()}】\r\n请确认状态为【确认】已审核，并且审核结果为已通过!\r\n" +
+                            $"请检查订单状态数据是否正确，或当前为相同订单重复出库！";
                         if (_appContext.SysConfig.ShowDebugInfo)
                         {
                             _logger.LogInformation(rrs.ErrorMsg);

@@ -145,14 +145,18 @@ namespace RUINORERP.UI.FM
                 entity.ActionStatus = ActionStatus.新增;
                 entity.PrePayDate = System.DateTime.Now;
                 entity.PrePaymentStatus = (long)PrePaymentStatus.草稿;
-                if (PaymentType == ReceivePaymentType.付款)
+                if (string.IsNullOrEmpty(entity.PreRPNO ))
                 {
-                    entity.PreRPNO = BizCodeGenerator.Instance.GetBizBillNo(BizType.预付款单);
+                    if (PaymentType == ReceivePaymentType.付款)
+                    {
+                        entity.PreRPNO = BizCodeGenerator.Instance.GetBizBillNo(BizType.预付款单);
+                    }
+                    else
+                    {
+                        entity.PreRPNO = BizCodeGenerator.Instance.GetBizBillNo(BizType.预收款单);
+                    }
                 }
-                else
-                {
-                    entity.PreRPNO = BizCodeGenerator.Instance.GetBizBillNo(BizType.预收款单);
-                }
+                
                 //entity.InvoiceDate = System.DateTime.Now;
                 entity.Employee_ID = MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID.Value;
                 //清空

@@ -46,6 +46,7 @@ using RUINORERP.Business.CommService;
 using RUINORERP.Business.Processor;
 using RUINORERP.Business.Security;
 using System.Configuration;
+using Fireasy.Common.Extensions;
 
 namespace RUINORERP.UI.FM
 {
@@ -73,7 +74,7 @@ namespace RUINORERP.UI.FM
         //    BindData(Entity as tb_FM_ExpenseClaim);
         //}
         public override void BindData(tb_FM_ExpenseClaim entity, ActionStatus actionStatus)
-            {
+        {
 
             if (entity == null)
             {
@@ -100,7 +101,7 @@ namespace RUINORERP.UI.FM
                 }
 
                 entity.DocumentDate = System.DateTime.Now;
-                if (CurMenuInfo != null)
+                if (string.IsNullOrEmpty(entity.ClaimNo))
                 {
                     entity.ClaimNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.费用报销单);
                 }
@@ -127,7 +128,7 @@ namespace RUINORERP.UI.FM
             DataBindingHelper.BindData4TextBox<tb_FM_ExpenseClaim>(entity, t => t.CloseCaseOpinions, txtCloseCaseOpinions, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4ControlByEnum<tb_FM_ExpenseClaim>(entity, t => t.DataStatus, lblDataStatus, BindDataType4Enum.EnumName, typeof(Global.DataStatus));
             DataBindingHelper.BindData4ControlByEnum<tb_FM_ExpenseClaim>(entity, t => t.ApprovalStatus, lblReview, BindDataType4Enum.EnumName, typeof(Global.ApprovalStatus));
-          
+
 
             //后面这些依赖于控件绑定的数据源和字段。所以要在绑定后执行。
             if (entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改)
@@ -198,7 +199,7 @@ namespace RUINORERP.UI.FM
                 }
                 sgh.LoadItemDataToGrid<tb_FM_ExpenseClaimDetail>(grid1, sgd, entity.tb_FM_ExpenseClaimDetails, c => c.ClaimSubID);
                 // 模拟按下 Tab 键
-                    SendKeys.Send("{TAB}");//为了显示远程图片列
+                SendKeys.Send("{TAB}");//为了显示远程图片列
             }
             else
             {

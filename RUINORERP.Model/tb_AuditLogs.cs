@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：05/29/2025 15:33:05
+// 时间：06/06/2025 14:52:03
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -57,7 +57,6 @@ namespace RUINORERP.Model
         /// </summary>
         [AdvQueryAttribute(ColName = "Employee_ID",ColDesc = "员工信息")] 
         [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Employee_ID" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "员工信息" )]
-        [FKRelationAttribute("tb_Employee","Employee_ID")]
         public long? Employee_ID
         { 
             get{return _Employee_ID;}
@@ -178,8 +177,6 @@ namespace RUINORERP.Model
                         }
         }
 
-
-
         private string _DataContent;
         /// <summary>
         /// 数据内容
@@ -193,28 +190,24 @@ namespace RUINORERP.Model
             SetProperty(ref _DataContent, value);
                         }
         }
+
         private string _Notes;
         /// <summary>
         /// 备注说明
         /// </summary>
-        [AdvQueryAttribute(ColName = "Notes", ColDesc = "备注说明")]
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType = "String", ColumnName = "Notes", Length = 8000, IsNullable = true, ColumnDescription = "备注说明")]
+        [AdvQueryAttribute(ColName = "Notes",ColDesc = "备注说明")] 
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "Notes" ,Length=8000,IsNullable = true,ColumnDescription = "备注说明" )]
         public string Notes
-        {
-            get { return _Notes; }
-            set
-            {
-                SetProperty(ref _Notes, value);
-            }
+        { 
+            get{return _Notes;}
+            set{
+            SetProperty(ref _Notes, value);
+                        }
         }
+
         #endregion
 
         #region 扩展属性
-        [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)] 打印报表时的数据源会不显示
-        [Navigate(NavigateType.OneToOne, nameof(Employee_ID))]
-        public virtual tb_Employee tb_employee { get; set; }
-
 
 
         #endregion

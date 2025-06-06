@@ -643,6 +643,7 @@
     <Compile Include="BI\UCUserPersonalizedEdit.designer.cs">
       <DependentUpon>UCUserPersonalizedEdit.cs</DependentUpon>
     </Compile>
+    <Compile Include="BusinessService\UniqueCodeChecker.cs" />
     <Compile Include="BusyDialog.cs">
       <SubType>Form</SubType>
     </Compile>

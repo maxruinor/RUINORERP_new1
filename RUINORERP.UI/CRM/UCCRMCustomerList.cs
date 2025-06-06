@@ -112,7 +112,8 @@ namespace RUINORERP.UI.CRM
                 ContextMenuStrip newContextMenuStrip = base.dataGridView1.GetContextMenu(contextMenuStrip1);
                 base.dataGridView1.ContextMenuStrip = newContextMenuStrip;
             }
-            AddExtendButton(CurMenuInfo);
+            //基类添加了。这里重复了
+            //AddExtendButton(CurMenuInfo);
 
         }
 

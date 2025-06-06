@@ -305,7 +305,11 @@ namespace AULWriter
             this.txtTargetDirectory.TextChanged += new System.EventHandler(this.txtTargetDirectory_TextChanged);
         }
 
-        //从配置文件读取配置
+
+
+        /// <summary>
+        /// 从配置文件读取配置
+        /// </summary>
         private void readConfigFromFile()
         {
             try
@@ -380,7 +384,7 @@ namespace AULWriter
             //tabControl1.SelectedTab = tbpLastXml;
             //btnDiff.Enabled = true;
             //return;
-
+            LoadOldCurrentList(txtAutoUpdateXmlSavePath.Text);
         }
 
         #region 核心业务逻辑
@@ -506,14 +510,31 @@ namespace AULWriter
             return Path.GetExtension(fileName).Equals(".tmp", StringComparison.OrdinalIgnoreCase) ||
                    fileName.Contains("~$");
         }
+        //private bool IsFileModified(UpdateXmlParameters parameters, string fileName)
+        //{
+        //    var sourcePath = Path.Combine(parameters.SourceFolder, fileName);
+        //    var targetPath = Path.Combine(parameters.TargetFolder, fileName);
+
+        //    if (!File.Exists(sourcePath) || !File.Exists(targetPath))
+        //        return true;
+
+        //    return CompareFiles(sourcePath, targetPath);
+        //}
+
         private bool IsFileModified(UpdateXmlParameters parameters, string fileName)
         {
             var sourcePath = Path.Combine(parameters.SourceFolder, fileName);
             var targetPath = Path.Combine(parameters.TargetFolder, fileName);
 
-            if (!File.Exists(sourcePath) || !File.Exists(targetPath))
+            // 如果源文件不存在，认为文件未修改（返回false）
+            if (!File.Exists(sourcePath))
+                return false;
+
+            // 如果目标文件不存在但源文件存在，认为文件已修改
+            if (!File.Exists(targetPath))
                 return true;
 
+            // 两个文件都存在时，进行内容比较
             return CompareFiles(sourcePath, targetPath);
         }
 
@@ -809,6 +830,7 @@ namespace AULWriter
             {
                 HandleSuccessfulCompletion(e.Result as UpdateXmlResult);
             }
+            
             AppendLog("检测到差异文件个数为: " + DiffFileList.Count);
         }
 
@@ -1535,8 +1557,10 @@ namespace AULWriter
         /// </summary>
         /// <param name="sourceDir"></param>
         /// <param name="objPath"></param>
-        public void CopyFile(string sourceDir, string targetDir, string tartgetfileName)
+        public bool CopyFile(string sourceDir, string targetDir, string tartgetfileName)
         {
+            bool copySuccess = false;
+
             string sourcePath = System.IO.Path.Combine(sourceDir, tartgetfileName);
             string targetPath = System.IO.Path.Combine(targetDir, tartgetfileName);
             if (!Directory.Exists(targetDir))
@@ -1545,12 +1569,18 @@ namespace AULWriter
             }
             try
             {
-                File.Copy(sourcePath, targetPath, true);
+                //存在才复制过去
+                if (File.Exists(sourcePath))
+                {
+                    File.Copy(sourcePath, targetPath, true);
+                    copySuccess = true;
+                }
             }
             catch (Exception ex)
             {
                 MessageBox.Show(ex.Message);
             }
+            return copySuccess;
         }
         //将差异的文件 复制I盘临时目录，再到服务器。并且生成时版本号只对差异的更新  保存配置到文件中
         //先复制 再生成xml
@@ -1565,26 +1595,28 @@ namespace AULWriter
                 MessageBox.Show("没有需要发布的文件。请先生成差异文件。");
                 return;
             }
+
+            int CopySuccessed = 0;
             foreach (var item in DiffFileList)
             {
                 if (!chkTest.Checked)
                 {
-                    CopyFile(txtCompareSource.Text, txtTargetDirectory.Text, item);
+                    if (CopyFile(txtCompareSource.Text, txtTargetDirectory.Text, item))
+                    {
+                        CopySuccessed++;
+                    }
                 }
-
-
             }
             if (chkTest.Checked)
             {
-
-                richTxtLog.AppendText($"测试模式----保存到目标-{txtTargetDirectory.Text}  成功{DiffFileList.Count}个。");
+                richTxtLog.AppendText($"测试模式----保存到目标-{txtTargetDirectory.Text}  成功{CopySuccessed}个。");
                 richTxtLog.AppendText("\r\n");
                 return;
 
             }
             else
             {
-                richTxtLog.AppendText($"保存到目标-{txtTargetDirectory.Text}  成功{DiffFileList.Count}个。");
+                richTxtLog.AppendText($"保存到目标-{txtTargetDirectory.Text}  成功{CopySuccessed}个。");
                 richTxtLog.AppendText("\r\n");
             }
 
@@ -1773,6 +1805,10 @@ namespace AULWriter
         }
 
 
+        /// <summary>
+        /// 加载旧的更新列表
+        /// </summary>
+        /// <param name="xmlFilePath"></param>
         private void LoadOldCurrentList(string xmlFilePath)
         {
             txtPreVerUpdatedFiles.Text = "";

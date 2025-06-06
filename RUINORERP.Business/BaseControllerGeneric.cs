@@ -62,7 +62,7 @@ namespace RUINORERP.Business
             BizType bizType = Bizmapper.GetBizType(typeof(T).Name);
             BizTypeText = bizType.ToString();
             BizTypeInt = (int)bizType;
-            //mapper = AutoMapper.AutoMapperConfig.RegisterMappings().CreateMapper();
+            // mapper = AutoMapper.AutoMapperConfig.RegisterMappings().CreateMapper();
             mapper = appContext.GetRequiredService<IMapper>();
         }
 

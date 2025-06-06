@@ -1150,6 +1150,7 @@ namespace RUINORERP.UI.UControls
             customizeGrid.UseCustomColumnDisplay = UseCustomColumnDisplay;
             AllowUserToOrderColumns = UseCustomColumnDisplay;
             customizeGrid.targetDataGridView = this;
+            
 
             //运行时，直接判断属性是否设置。如果没有就提示
             //或者在数据变动时提示
@@ -2836,11 +2837,7 @@ namespace RUINORERP.UI.UControls
         }
         #endregion
 
-        private void NewSumDataGridView_Test(object sender, EventArgs e)
-        {
-
-            MessageBox.Show("tset");
-        }
+ 
 
         private void NewSumDataGridView_SelectedAll(object sender, EventArgs e)
         {
@@ -3415,10 +3412,10 @@ namespace RUINORERP.UI.UControls
                         //{
                         //}
                         //tempSumVal += tempVal;
-
+                       
                         if (decimal.TryParse(this[colIndex, i].Value.ToString(), out decimal value))
                         {
-                            tempVal += value;
+                            tempSumVal += value;
                         }
                     }
                     sumRowDataDic[colIndex] = tempSumVal;

@@ -33,7 +33,7 @@
             this.btnCancel = new System.Windows.Forms.Button();
             this.chkReverseSelection = new Krypton.Toolkit.KryptonCheckBox();
             this.chkAll = new Krypton.Toolkit.KryptonCheckBox();
-            this.btnMoreSetting = new Krypton.Toolkit.KryptonButton();
+            this.btnRestoreDefaultConfig = new Krypton.Toolkit.KryptonButton();
             this.SuspendLayout();
             // 
             // listView1
@@ -88,14 +88,15 @@
             this.chkAll.Values.Text = "全选";
             this.chkAll.CheckedChanged += new System.EventHandler(this.chkAll_CheckedChanged);
             // 
-            // btnMoreSetting
+            // btnRestoreDefaultConfig
             // 
-            this.btnMoreSetting.Location = new System.Drawing.Point(301, 435);
-            this.btnMoreSetting.Name = "btnMoreSetting";
-            this.btnMoreSetting.Size = new System.Drawing.Size(72, 33);
-            this.btnMoreSetting.TabIndex = 11;
-            this.btnMoreSetting.Values.Text = "更多设置";
-            this.btnMoreSetting.Click += new System.EventHandler(this.btnMoreSetting_Click);
+            this.btnRestoreDefaultConfig.Location = new System.Drawing.Point(286, 435);
+            this.btnRestoreDefaultConfig.Name = "btnRestoreDefaultConfig";
+            this.btnRestoreDefaultConfig.Size = new System.Drawing.Size(87, 33);
+            this.btnRestoreDefaultConfig.TabIndex = 11;
+            this.btnRestoreDefaultConfig.Values.Text = "恢复默认值";
+            this.btnRestoreDefaultConfig.Visible = false;
+            this.btnRestoreDefaultConfig.Click += new System.EventHandler(this.btnMoreSetting_Click);
             // 
             // frmColumnsSets
             // 
@@ -104,7 +105,7 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
             this.ClientSize = new System.Drawing.Size(383, 479);
-            this.Controls.Add(this.btnMoreSetting);
+            this.Controls.Add(this.btnRestoreDefaultConfig);
             this.Controls.Add(this.chkReverseSelection);
             this.Controls.Add(this.chkAll);
             this.Controls.Add(this.btnOk);
@@ -126,6 +127,6 @@
         private System.Windows.Forms.Button btnCancel;
         private Krypton.Toolkit.KryptonCheckBox chkReverseSelection;
         private Krypton.Toolkit.KryptonCheckBox chkAll;
-        private Krypton.Toolkit.KryptonButton btnMoreSetting;
+        private Krypton.Toolkit.KryptonButton btnRestoreDefaultConfig;
     }
 }

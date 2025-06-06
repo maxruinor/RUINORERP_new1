@@ -384,7 +384,11 @@ namespace RUINORERP.UI.ForCustomizeGrid
 
         private  void btnMoreSetting_Click(object sender, EventArgs e)
         {
-             //UIBizSrvice.SetGridViewAsync(DataSourceType, DataGridViewSetTarget, CurMenuInfo, true);
+            //UIBizSrvice.SetGridViewAsync(DataSourceType, DataGridViewSetTarget, CurMenuInfo, true);
+       
+            //这里初始化时，注意要以显示到可以操作的列为基准。（比方有些列BuildInvisibleCols在这个方法硬编码不显示，则默认这里也不会显示）
+           // UIBizSrvice.InitDataGridViewColumnDisplays(ColumnDisplays, dataGridView, gridviewType, CurMenuInfo, InvisibleCols);
+           // LoadColumnDisplayList();
         }
     }
 }

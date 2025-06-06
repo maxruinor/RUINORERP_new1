@@ -3113,7 +3113,8 @@ namespace RUINORERP.UI.BaseForm
                 }
                 else
                 {
-                    //当数据不是新建时。直接提交不再保存了。只更新主表状态字段
+                  
+                    //当数据不是新建时。直接提交不再保存了。只更新主表状态字段  要优化！！！！！！！！！！！！！！！TODO
                     if (ReflectionHelper.ExistPropertyName<T>(typeof(DataStatus).Name))
                     {
                         ReflectionHelper.SetPropertyValue(EditEntity, typeof(DataStatus).Name, (int)DataStatus.新建);
@@ -3242,39 +3243,34 @@ namespace RUINORERP.UI.BaseForm
             }
             else
             {
+                if (ReflectionHelper.ExistPropertyName<T>(typeof(DataStatus).Name))
+                {
+                    ReflectionHelper.SetPropertyValue(EditEntity, typeof(DataStatus).Name, (int)DataStatus.新建);
+                }
                 bool rs = await this.Save(true);
                 if (rs)
                 {
-                    MainForm.Instance.AuditLogHelper.CreateAuditLog<T>("提交前->保存", EditEntity);
-                    if (ReflectionHelper.ExistPropertyName<T>(typeof(DataStatus).Name))
-                    {
-                        ReflectionHelper.SetPropertyValue(EditEntity, typeof(DataStatus).Name, (int)DataStatus.新建);
-                    }
-                    //先保存再提交
-                    if (AuthorizeController.GetShowDebugInfoAuthorization(MainForm.Instance.AppContext))
-                    {
-                        MainForm.Instance.uclog.AddLog("提交时,单据没有保存,将状态修改为提交状态后直接保存了。");
-                    }
-                    ReturnResults<T> rmr = new ReturnResults<T>();
-                    BaseController<T> ctr = Startup.GetFromFacByName<BaseController<T>>(typeof(T).Name + "Controller");
-                    rmr = await ctr.BaseSaveOrUpdate(EditEntity);
-                    if (rmr.Succeeded)
-                    {
-                        ToolBarEnabledControl(MenuItemEnums.提交);
-                        MainForm.Instance.AuditLogHelper.CreateAuditLog<T>("保存后->提交", rmr.ReturnObject);
-                        //这里推送到审核，启动工作流 后面优化
-                        // OriginalData od = ActionForClient.工作流提交(pkid, (int)BizType.盘点单);
-                        // MainForm.Instance.ecs.AddSendData(od);
-                        submitrs = true;
-                        return true;
-                    }
-                    else
-                    {
-                        MainForm.Instance.AuditLogHelper.CreateAuditLog<T>("保存-提交-出错了" + rmr.ErrorMsg, rmr.ReturnObject);
-                    }
+                    MainForm.Instance.AuditLogHelper.CreateAuditLog<T>("保存->提交", EditEntity);
+                    //ReturnResults<T> rmr = new ReturnResults<T>();
+                    //BaseController<T> ctr = Startup.GetFromFacByName<BaseController<T>>(typeof(T).Name + "Controller");
+                    //rmr = await ctr.BaseSaveOrUpdate(EditEntity);
+                    //if (rmr.Succeeded)
+                    //{
+                    ToolBarEnabledControl(MenuItemEnums.提交);
+                    //这里推送到审核，启动工作流 后面优化
+                    // OriginalData od = ActionForClient.工作流提交(pkid, (int)BizType.盘点单);
+                    // MainForm.Instance.ecs.AddSendData(od);
+                    submitrs = true;
+                    return true;
+                    //}
+                    //else
+                    //{
+                    //    MainForm.Instance.AuditLogHelper.CreateAuditLog<T>("保存-提交-出错了" + rmr.ErrorMsg, rmr.ReturnObject);
+                    //}
                 }
                 else
                 {
+                    MainForm.Instance.AuditLogHelper.CreateAuditLog<T>("保存->提交-出错", EditEntity);
                     return false;
                 }
             }

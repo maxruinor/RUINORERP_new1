@@ -317,9 +317,8 @@ namespace RUINORERP.Business
                         var inv = group.Value.Inventory;
                         // 累加数值字段
                         inv.Sale_Qty -= group.Value.OutQtySum.ToInt();
-                        inv.Quantity -= group.Value.OutQtySum.ToInt();
-
-                        if (!_appContext.SysConfig.CheckNegativeInventory && (inv.Quantity < 0))
+                     
+                        if (!_appContext.SysConfig.CheckNegativeInventory && (inv.Quantity- group.Value.OutQtySum.ToInt()) < 0)
                         {
                             // rrs.ErrorMsg = "系统设置不允许负库存，请检查物料出库数量与库存相关数据";
                             rrs.ErrorMsg = $"sku:{inv.tb_proddetail.SKU}库存为：{inv.Quantity}，拟销售量为：{group.Value.OutQtySum}\r\n 系统设置不允许负库存， 请检查出库数量与库存相关数据";
@@ -327,6 +326,9 @@ namespace RUINORERP.Business
                             rrs.Succeeded = false;
                             return rrs;
                         }
+
+                        inv.Quantity -= group.Value.OutQtySum.ToInt();
+
                         // 计算衍生字段（如总成本）
                         inv.Inv_SubtotalCostMoney = inv.Inv_Cost * inv.Quantity; // 需确保 Inv_Cost 有值
                         invUpdateList.Add(inv);
@@ -514,6 +516,7 @@ namespace RUINORERP.Business
                     {
                         string msg = $"出库单:{entity.tb_saleorder.SOrderNo}的总金额为0， 但是订单中不为0，请检查数据!";
                         _unitOfWorkManage.RollbackTran();
+                        rrs.ErrorMsg = msg;
                         _logger.LogInformation(msg);
                         return rrs;
                     }

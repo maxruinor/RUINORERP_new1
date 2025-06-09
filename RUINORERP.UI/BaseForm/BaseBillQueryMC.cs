@@ -498,12 +498,11 @@ namespace RUINORERP.UI.BaseForm
                 {
                     if (item.GetPropertyValue("DataStatus").ToString() == ((int)DataStatus.草稿).ToString() || item.GetPropertyValue("DataStatus").ToString() == ((int)DataStatus.新建).ToString())
                     {
-                        MessageBox.Show("没有审核的数据无法打印");
-                        if (selectlist.Count == 1)
+                        BizType bizType = Bizmapper.GetBizType(typeof(M).Name);
+                        if (MessageBox.Show($"当前【{bizType.ToString()}】没有审核,你确定要打印吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2) == DialogResult.No)
                         {
-                            return;
+                            continue;
                         }
-                        continue;
                     }
                 }
 

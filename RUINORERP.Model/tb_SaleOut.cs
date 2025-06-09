@@ -240,14 +240,14 @@ namespace RUINORERP.Model
             }
         }
 
-        private long? _Currency_ID;
+        private long _Currency_ID;
         /// <summary>
         /// 币别
         /// </summary>
         [AdvQueryAttribute(ColName = "Currency_ID", ColDesc = "币别")]
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType = "Int64", ColumnName = "Currency_ID", DecimalDigits = 0, IsNullable = true, ColumnDescription = "币别")]
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType = "Int64", ColumnName = "Currency_ID", DecimalDigits = 0, IsNullable = false, ColumnDescription = "币别")]
         [FKRelationAttribute("tb_Currency", "Currency_ID")]
-        public long? Currency_ID
+        public long Currency_ID
         {
             get { return _Currency_ID; }
             set

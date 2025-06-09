@@ -161,6 +161,7 @@ namespace RUINORERP.Business
                                 ).Sum(c => c.Quantity);
                                 //算出交付的数量
                                 entity.tb_purorder.tb_PurOrderDetails[i].DeliveredQuantity += RowQty;
+                                entity.tb_purorder.tb_PurOrderDetails[i].UndeliveredQty -= RowQty;
                                 //如果已交数据大于 订单数量 给出警告实际操作中 使用其他方式将备品入库
                                 if (entity.tb_purorder.tb_PurOrderDetails[i].DeliveredQuantity > entity.tb_purorder.tb_PurOrderDetails[i].Quantity)
                                 {
@@ -189,6 +190,7 @@ namespace RUINORERP.Business
                                 var RowQty = entity.tb_PurEntryDetails.Where(c => c.ProdDetailID == entity.tb_purorder.tb_PurOrderDetails[i].ProdDetailID
                                 && c.Location_ID == entity.tb_purorder.tb_PurOrderDetails[i].Location_ID).Sum(c => c.Quantity);
                                 entity.tb_purorder.tb_PurOrderDetails[i].DeliveredQuantity += RowQty;
+                                entity.tb_purorder.tb_PurOrderDetails[i].DeliveredQuantity -= RowQty;
                                 //如果已交数据大于 订单数量 给出警告实际操作中 使用其他方式将备品入库
                                 if (entity.tb_purorder.tb_PurOrderDetails[i].DeliveredQuantity > entity.tb_purorder.tb_PurOrderDetails[i].Quantity)
                                 {
@@ -197,6 +199,14 @@ namespace RUINORERP.Business
                                 }
                             }
                         }
+                    }
+
+                    entity.tb_purorder.TotalUndeliveredQty = entity.tb_purorder.tb_PurOrderDetails.Sum(c => c.UndeliveredQty);
+                    //更新未交数量
+                    int OrderCounter = await _unitOfWorkManage.GetDbClient().Updateable(entity.tb_purorder).UpdateColumns(c=>c.TotalUndeliveredQty).ExecuteCommandAsync();
+                    if (OrderCounter > 0)
+                    {
+                        
                     }
 
                     //更新已交数量
@@ -313,6 +323,7 @@ namespace RUINORERP.Business
                             UntaxedShippingCost = Math.Round(UntaxedShippingCost, 2);
                         }
                         CommService.CostCalculations.CostCalculation(_appContext, inv, group.Value.PurQtySum.ToInt(), group.Value.UntaxedUnitPrice, UntaxedShippingCost);
+
                         #region 更新BOM价格,当前产品存在哪些BOM中，则更新所有BOM的价格包含主子表数据的变化
 
                         List<tb_BOM_SDetail> bomDetails = await _unitOfWorkManage.GetDbClient().Queryable<tb_BOM_SDetail>()
@@ -913,6 +924,7 @@ namespace RUINORERP.Business
                                 ).Sum(c => c.Quantity);
                                 //算出交付的数量
                                 entity.tb_purorder.tb_PurOrderDetails[i].DeliveredQuantity -= RowQty;
+                                entity.tb_purorder.tb_PurOrderDetails[i].UndeliveredQty += RowQty;
                                 //如果已交数据大于 订单数量 给出警告实际操作中 使用其他方式将备品入库
                                 if (entity.tb_purorder.tb_PurOrderDetails[i].DeliveredQuantity < 0)
                                 {
@@ -945,6 +957,7 @@ namespace RUINORERP.Business
                                 var RowQty = entity.tb_PurEntryDetails.Where(c => c.ProdDetailID == entity.tb_purorder.tb_PurOrderDetails[i].ProdDetailID
                                 && c.Location_ID == entity.tb_purorder.tb_PurOrderDetails[i].Location_ID).Sum(c => c.Quantity);
                                 entity.tb_purorder.tb_PurOrderDetails[i].DeliveredQuantity -= RowQty;
+                                entity.tb_purorder.tb_PurOrderDetails[i].UndeliveredQty += RowQty;
                                 //如果已交数据大于 订单数量 给出警告实际操作中 使用其他方式将备品入库
                                 if (entity.tb_purorder.tb_PurOrderDetails[i].DeliveredQuantity < 0)
                                 {
@@ -957,7 +970,13 @@ namespace RUINORERP.Business
 
 
                     #endregion
+                    entity.tb_purorder.TotalUndeliveredQty = entity.tb_purorder.tb_PurOrderDetails.Sum(c => c.UndeliveredQty);
+                    //更新未交数量
+                    int OrderCounter = await _unitOfWorkManage.GetDbClient().Updateable(entity.tb_purorder).UpdateColumns(c => c.TotalUndeliveredQty).ExecuteCommandAsync();
+                    if (OrderCounter > 0)
+                    {
 
+                    }
                     //更新已交数量
                     int updatecounter = await _unitOfWorkManage.GetDbClient().Updateable<tb_PurOrderDetail>(entity.tb_purorder.tb_PurOrderDetails).ExecuteCommandAsync();
                     if (updatecounter == 0)

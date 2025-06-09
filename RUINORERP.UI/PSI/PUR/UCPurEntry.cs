@@ -18,6 +18,7 @@ using RUINORERP.Model;
 using RUINORERP.Model.Dto;
 using RUINORERP.UI.AdvancedUIModule;
 using RUINORERP.UI.BaseForm;
+using RUINORERP.UI.BusinessService.CalculationService;
 using RUINORERP.UI.Common;
 using RUINORERP.UI.UCSourceGrid;
 using SourceGrid;
@@ -82,7 +83,7 @@ namespace RUINORERP.UI.PSI.PUR
             QueryConditionFilter.FilterLimitExpressions.Add(lambda);
         }
 
-
+        private PurEntryCoordinator _coordinator;
 
         public override void BindData(tb_PurEntry entity, ActionStatus actionStatus)
         {
@@ -104,7 +105,7 @@ namespace RUINORERP.UI.PSI.PUR
                 entity.ActionStatus = ActionStatus.新增;
                 entity.DataStatus = (int)DataStatus.草稿;
                 entity.Employee_ID = AppContext.CurUserInfo.UserInfo.Employee_ID;
-               
+
                 if (string.IsNullOrEmpty(entity.PurEntryNo))
                 {
                     entity.PurEntryNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.采购入库单);
@@ -160,6 +161,8 @@ namespace RUINORERP.UI.PSI.PUR
                 //权限允许
                 if ((true && entity.DataStatus == (int)DataStatus.草稿) || (true && entity.DataStatus == (int)DataStatus.新建))
                 {
+                    /*
+
                     if (s2.PropertyName == entity.GetPropertyName<tb_PurEntry>(c => c.ShipCost) && entity.ShipCost > 0)
                     {
                         EditEntity.TotalAmount = EditEntity.tb_PurEntryDetails.Sum(c => (c.CustomizedCost + c.UnitPrice) * c.Quantity);
@@ -169,6 +172,8 @@ namespace RUINORERP.UI.PSI.PUR
                         {
                             authorizeController = MainForm.Instance.AppContext.GetRequiredService<AuthorizeController>();
                         }
+
+
                         #region 分摊成本计算
 
                         entity.TotalQty = entity.tb_PurEntryDetails.Sum(c => c.Quantity);
@@ -212,7 +217,7 @@ namespace RUINORERP.UI.PSI.PUR
 
                         #endregion
                     }
-
+                    */
                 }
                 //如果是销售订单引入变化则加载明细及相关数据
                 if ((entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改) && entity.PurOrder_ID.HasValue && entity.PurOrder_ID.Value > 0 && s2.PropertyName == entity.GetPropertyName<tb_PurEntry>(c => c.PurOrder_ID))
@@ -270,6 +275,7 @@ namespace RUINORERP.UI.PSI.PUR
             queryFilter.SetFieldLimitCondition(lambdaSaleOut);
             ControlBindingHelper.ConfigureControlFilter<tb_PurEntry, tb_PurOrder>(entity, txtPurOrderNO, t => t.PurOrder_NO,
                 f => f.PurOrderNo, queryFilter, a => a.PurOrder_ID, b => b.PurOrder_ID, null, false);
+            _coordinator = new(EditEntity, details, sgh);
             base.BindData(entity);
         }
 
@@ -413,7 +419,7 @@ namespace RUINORERP.UI.PSI.PUR
                 EditEntity.TotalAmount = EditEntity.TotalAmount + EditEntity.ShipCost;
                 EditEntity.TotalTaxAmount = details.Sum(c => c.TaxAmount);
                 EditEntity.TotalUntaxedAmount = details.Sum(c => (c.UntaxedCustomizedCost + c.UntaxedUnitPrice) * c.Quantity);
-                EditEntity.ShipCost= details.Sum(c => c.AllocatedFreightCost);
+                //EditEntity.ShipCost = details.Sum(c => c.AllocatedFreightCost);
                 //不含税的总金额+不含税运费
                 decimal UntaxedShippingCost = 0;
                 if (EditEntity.ShipCost > 0 && EditEntity.TotalTaxAmount > 0)
@@ -447,7 +453,7 @@ namespace RUINORERP.UI.PSI.PUR
             {
                 return false;
             }
-            if (!EditEntity.PurOrder_ID.HasValue || EditEntity.PurOrder_ID.Value == 0)
+            if (NeedValidated && !EditEntity.PurOrder_ID.HasValue || EditEntity.PurOrder_ID.Value == 0)
             {
                 MessageBox.Show("请选择正确的采购订单，或从采购订单查询中转为入库单！");
                 return false;

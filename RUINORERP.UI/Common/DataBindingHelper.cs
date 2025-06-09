@@ -215,7 +215,10 @@ namespace RUINORERP.UI.Common
                     }
                 }
             }
-
+            ToolTipValues toolTip = new ToolTipValues(null);
+            toolTip.Description = $"引用数据";
+            toolTip.Heading = "";
+            toolTip.EnableToolTips = true;
             // 处理下拉框控件
             if (visualControl is KryptonComboBox comboBox)
             {
@@ -225,11 +228,17 @@ namespace RUINORERP.UI.Common
 
                 if (comboBox.DataBindings.Count > 0)
                 {
+
+                    comboBox.ToolTipValues = toolTip;
                     // 创建查询按钮
                     var queryButton = new ButtonSpecAny
                     {
                         Image = GetEmbeddedResourceImage("help4"),
                         UniqueName = "btnQuery",
+                        ToolTipBody = "查询数据",
+                        ToolTipTitle = string.Empty,
+                        AllowInheritToolTipTitle = true,
+                        ToolTipShadow = true,
                         Tag = comboBox
                     };
                     comboBox.Tag = typeof(P);
@@ -327,10 +336,16 @@ namespace RUINORERP.UI.Common
 
                 if (textBox.DataBindings.Count > 0)
                 {
+
+                    textBox.ToolTipValues = toolTip;
                     // 创建查询按钮
                     var queryButton = new ButtonSpecAny
                     {
                         Image = GetEmbeddedResourceImage("help4"),
+                        ToolTipBody = "查询数据",
+                        ToolTipTitle = string.Empty,
+                        AllowInheritToolTipTitle = true,
+                        ToolTipShadow = true,
                         UniqueName = "btnQuery"
                     };
                     textBox.Tag = typeof(P);
@@ -442,7 +457,7 @@ namespace RUINORERP.UI.Common
 
                 if (image == null)
                 {
-                   MainForm.Instance.logger.LogWarning($"未找到名为 '{resourceName}' 的资源");
+                    MainForm.Instance.logger.LogWarning($"未找到名为 '{resourceName}' 的资源");
                     return null;
                 }
 
@@ -542,9 +557,9 @@ namespace RUINORERP.UI.Common
             throw new ArgumentException("表达式不是有效的成员访问表达式");
         }
 
-  
 
-       
+
+
     }
 
     public class DataBindingHelper
@@ -1286,17 +1301,17 @@ namespace RUINORERP.UI.Common
                                 string fktableName = string.Empty;
                                 BindingSource bsFKName = new BindingSource();
                                 fktableName = ktb.DataBindings[0].DataSource.GetType().Name;//这个是对应的是主体实体
-                                //if (bsFKName.Current == null)
-                                //{
-                                //    fktableName = bsFKName.DataSource.GetType().GetGenericArguments()[0].Name;
-                                //}
-                                //else
-                                //{
-                                //    fktableName = bsFKName.Current.GetType().Name;//这个会出错，current 可能会为空。
-                                //}
-                                //这里调用权限判断
-                                //调用通用的查询编辑基础资料。
-                                //需要对应的类名，如果修改新增了数据要重新加载下拉数据
+                                                                                            //if (bsFKName.Current == null)
+                                                                                            //{
+                                                                                            //    fktableName = bsFKName.DataSource.GetType().GetGenericArguments()[0].Name;
+                                                                                            //}
+                                                                                            //else
+                                                                                            //{
+                                                                                            //    fktableName = bsFKName.Current.GetType().Name;//这个会出错，current 可能会为空。
+                                                                                            //}
+                                                                                            //这里调用权限判断
+                                                                                            //调用通用的查询编辑基础资料。
+                                                                                            //需要对应的类名，如果修改新增了数据要重新加载下拉数据
                                 if (fktableName.Contains("Proxy"))
                                 {
                                     fktableName = fktableName.Replace("Proxy", "");
@@ -1426,7 +1441,7 @@ namespace RUINORERP.UI.Common
             return istr;
         }
 
-       
+
         public static void BindData4RadioGroupTrueFalse<T>(object entity, Expression<Func<T, bool?>> exp, KryptonRadioButton RadioButton1, KryptonRadioButton RadioButton2)
         {
             MemberInfo minfo = exp.GetMemberInfo();

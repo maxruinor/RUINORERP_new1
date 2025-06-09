@@ -13,6 +13,7 @@ namespace TransInstruction
     /// </summary>
     public class ActionForServer
     {
+
         /// <summary>
         /// 外部事件
         /// </summary>

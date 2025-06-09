@@ -3559,8 +3559,7 @@ namespace RUINORERP.UI.BaseForm
         {
             try
             {
-                // 单据都会有 录入表格 在Grid_HandleDestroyed中执行了。这样就不管关闭还是x
-                //UIBizSrvice.SetCustomSourceGridAsync(CurMenuInfo, typeof(C));
+                // 单据都会有 录入表格 SourceGridHelper 在 Grid_HandleDestroyed 中执行了。这样就不管关闭还是x
             }
             catch
             {

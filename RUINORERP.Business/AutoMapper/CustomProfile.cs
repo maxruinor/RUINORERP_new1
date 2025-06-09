@@ -101,8 +101,11 @@ namespace RUINORERP.Business.AutoMapper
 
 
             //销售订单转采购订单
-            CreateMap<tb_SaleOrder, tb_PurOrder>();
-            CreateMap<tb_SaleOrderDetail, tb_PurOrderDetail>();
+            CreateMap<tb_SaleOrder, tb_PurOrder>()
+            .ForMember(a => a.TotalQty, o => o.MapFrom(d => d.TotalQty));
+            CreateMap<tb_SaleOrderDetail, tb_PurOrderDetail>()
+              .ForMember(a => a.Quantity, o => o.MapFrom(d => d.Quantity))
+              .ForMember(a => a.UnitPrice, o => o.MapFrom(d => d.Cost + d.CustomizedCost));
 
 
 

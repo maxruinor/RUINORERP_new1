@@ -629,7 +629,7 @@ namespace RUINORERP.Business
                                     decimal prePayForeignAmount = 0;
                                     decimal prePayLocalAmount = 0;
 
-                                    if (entity.Currency_ID.HasValue && _appContext.BaseCurrency.Currency_ID != entity.Currency_ID.Value)
+                                    if (_appContext.BaseCurrency.Currency_ID != entity.Currency_ID)
                                     {
                                         //出库金额ForeignTotalAmount和 预收金额prePayments[i].ForeignBalanceAmount 比较
                                         prePayForeignAmount = Math.Min(prePayments[i].ForeignBalanceAmount, ForeignTotalAmount);
@@ -1187,7 +1187,7 @@ namespace RUINORERP.Business
                                     decimal prePayForeignAmount = 0;
                                     decimal prePayLocalAmount = 0;
 
-                                    if (entity.Currency_ID.HasValue && _appContext.BaseCurrency.Currency_ID != entity.Currency_ID.Value)
+                                    if ( _appContext.BaseCurrency.Currency_ID != entity.Currency_ID)
                                     {
                                         //出库金额ForeignTotalAmount和 预收金额prePayments[i].ForeignBalanceAmount 比较
                                         prePayForeignAmount = Math.Min(prePayments[i].ForeignBalanceAmount, ForeignTotalAmount);

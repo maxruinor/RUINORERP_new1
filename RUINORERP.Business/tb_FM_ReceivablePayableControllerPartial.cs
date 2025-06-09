@@ -216,10 +216,9 @@ namespace RUINORERP.Business
             payable.ReceivePaymentType = (int)ReceivePaymentType.收款;
 
             payable.ARAPNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.应收款单);
-            if (entity.Currency_ID.HasValue)
-            {
-                payable.Currency_ID = entity.Currency_ID.Value;
-            }
+          
+                payable.Currency_ID = entity.Currency_ID;
+            
             //if (entity.tb_saleorder.tb_paymentmethod.Paytype_Name == DefaultPaymentMethod.账期.ToString())
             //{
             //    if (entity.tb_customervendor.CustomerCreditDays.HasValue)
@@ -289,7 +288,7 @@ namespace RUINORERP.Business
             payable.tb_FM_ReceivablePayableDetails = details;
             //如果是外币时，则由外币算出本币
             //外币时
-            if (entity.Currency_ID.HasValue && _appContext.BaseCurrency.Currency_ID != entity.Currency_ID.Value)
+            if ( _appContext.BaseCurrency.Currency_ID != entity.Currency_ID)
             {
                 payable.ForeignBalanceAmount = -entity.ForeignTotalAmount;
                 payable.ForeignPaidAmount = 0;
@@ -581,10 +580,9 @@ namespace RUINORERP.Business
             payable.ReceivePaymentType = (int)ReceivePaymentType.收款;
 
             payable.ARAPNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.应收款单);
-            if (entity.Currency_ID.HasValue)
-            {
-                payable.Currency_ID = entity.Currency_ID.Value;
-            }
+       
+                payable.Currency_ID = entity.Currency_ID;
+           
             if (entity.tb_saleorder.Paytype_ID == _appContext.PaymentMethodOfPeriod.Paytype_ID)
             {
                 var obj = BizCacheHelper.Instance.GetEntity<tb_CustomerVendor>(entity.CustomerVendor_ID);
@@ -673,7 +671,7 @@ namespace RUINORERP.Business
 
             //这里要重点思考 是本币一定有。还是怎么样！！！！！！！！！！！！！！！！！ TODO by watson
             //外币时  只是换算。本币不能少。
-            if (entity.Currency_ID.HasValue && _appContext.BaseCurrency.Currency_ID != entity.Currency_ID.Value)
+            if (_appContext.BaseCurrency.Currency_ID != entity.Currency_ID)
             {
                 payable.ForeignBalanceAmount = entity.ForeignTotalAmount;
                 payable.ForeignPaidAmount = 0;

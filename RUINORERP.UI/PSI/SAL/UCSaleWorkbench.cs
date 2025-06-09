@@ -168,11 +168,11 @@ namespace RUINORERP.UI.SAL
         private void button设置查询条件_Click(object sender, EventArgs e)
         {
             MessageBox.Show("工作台是特殊的查询，暂时无法个性化设置条件。");
-           // MenuPersonalizedSettings();
+            // MenuPersonalizedSettings();
         }
         protected virtual void MenuPersonalizedSettings()
         {
-             
+
         }
 
 
@@ -356,7 +356,7 @@ namespace RUINORERP.UI.SAL
                              .Where(expPO)
                             .ToListAsync();
 
-                        long[] RefBillIds = PurOrders.Where(s => s.RefBillID.HasValue && s.RefBizType.HasValue && s.RefBizType.Value == (int)BizType.销售订单).Select(c => c.RefBillID.Value).ToArray();
+                        long[] RefBillIds = PurOrders.Where(s => s.SOrder_ID.HasValue).Select(c => c.SOrder_ID.Value).ToArray();
                         if (RefBillIds.Length > 0)
                         {
                             Expression<Func<tb_SaleOrder, bool>> expSO = Expressionable.Create<tb_SaleOrder>() //创建表达式
@@ -457,7 +457,7 @@ namespace RUINORERP.UI.SAL
 
                     break;
 
-                
+
                 case MenuItemEnums.打印:
 
                     break;

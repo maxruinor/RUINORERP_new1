@@ -51,7 +51,7 @@ namespace RUINORERP.Business
 
             RuleFor(tb_SaleOut => tb_SaleOut.ProjectGroup_ID).Must(CheckForeignKeyValueCanNull).WithMessage("项目组:下拉选择值不正确。");
             RuleFor(tb_SaleOut => tb_SaleOut.ProjectGroup_ID).NotEmpty().When(x => x.ProjectGroup_ID.HasValue);
-
+            RuleFor(tb_SaleOut => tb_SaleOut.Currency_ID).Must(CheckForeignKeyValue).WithMessage("币别:下拉选择值不正确。");
             RuleFor(tb_SaleOut => tb_SaleOut.PayStatus).NotEmpty().When(x => x.PayStatus.HasValue);
 
             RuleFor(tb_SaleOut => tb_SaleOut.Paytype_ID).Must(CheckForeignKeyValue).WithMessage("付款方式:下拉选择值不正确。");

@@ -235,10 +235,10 @@ namespace RUINORERP.UI.FM
                         }
                     }
                 }
-                else
-                {
-                    cmbPayeeInfoID.Enabled = false;
-                }
+                //else
+                //{
+                //    cmbPayeeInfoID.Enabled = false;
+                //}
                 if (s2.PropertyName == entity.GetPropertyName<tb_FM_PaymentApplication>(c => c.TotalAmount))
                 {
                     entity.PamountInWords = entity.TotalAmount.Value.ToUpper();

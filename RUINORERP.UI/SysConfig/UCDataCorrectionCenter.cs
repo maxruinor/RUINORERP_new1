@@ -1243,7 +1243,43 @@ namespace RUINORERP.UI.SysConfig
 
                     }
                 }
+                if (treeView1.SelectedNode.Text == "采购订单未交数量修复")
+                {
+                    List<tb_PurOrderDetail> updateDetaillist = new();
+                    List<tb_PurOrder> yjList = await MainForm.Instance.AppContext.Db.Queryable<tb_PurOrder>()
+                        .Includes(c => c.tb_PurOrderDetails)
+                        .ToListAsync();
 
+                    List<tb_PurOrder> updatelist = new();
+                    for (int i = 0; i < yjList.Count; i++)
+                    {
+                        for (int j = 0; j < yjList[i].tb_PurOrderDetails.Count; j++)
+                        {
+                            yjList[i].tb_PurOrderDetails[j].UndeliveredQty = yjList[i].tb_PurOrderDetails[j].Quantity - yjList[i].tb_PurOrderDetails[j].DeliveredQuantity;
+                            if (yjList[i].tb_PurOrderDetails[j].UndeliveredQty > 0)
+                            {
+                                updateDetaillist.Add(yjList[i].tb_PurOrderDetails[j]);
+                            }
+                        }
+
+                        if (yjList[i].TotalUndeliveredQty != yjList[i].tb_PurOrderDetails.Sum(c => c.UndeliveredQty))
+                        {
+                            yjList[i].TotalUndeliveredQty = yjList[i].tb_PurOrderDetails.Sum(c => c.UndeliveredQty);
+                            updatelist.Add(yjList[i]);
+                        }
+                       
+                    }
+
+                    int totalmasterCounter = 0;
+                    int totaldetailcounter = 0;
+                    if (!chkTestMode.Checked)
+                    {
+                        totaldetailcounter = await MainForm.Instance.AppContext.Db.Updateable(updateDetaillist).UpdateColumns(t => new { t.UndeliveredQty }).ExecuteCommandAsync();
+                        totalmasterCounter = await MainForm.Instance.AppContext.Db.Updateable(updatelist).UpdateColumns(t => new { t.TotalUndeliveredQty }).ExecuteCommandAsync();
+                    }
+                    richTextBoxLog.AppendText($"采购订单未交数量修复 明细 修复成功：{totaldetailcounter} " + "\r\n");
+                    richTextBoxLog.AppendText($"采购订单未交数量修复 主表 修复成功：{totalmasterCounter} " + "\r\n");
+                }
 
                 if (treeView1.SelectedNode.Text == "制令单自制品修复")
                 {

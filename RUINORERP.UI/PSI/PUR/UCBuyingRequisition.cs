@@ -125,7 +125,7 @@ namespace RUINORERP.UI.PSI.PUR
 
             DataBindingHelper.BindData4TextBox<tb_BuyingRequisition>(entity, t => t.PuRequisitionNo, txtPuRequisitionNo, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_BuyingRequisition>(entity, t => t.Purpose, txtPurpose, BindDataType4TextBox.Text, false);
-            
+
             DataBindingHelper.BindData4DataTime<tb_BuyingRequisition>(entity, t => t.RequirementDate, dtpRequirementDate, false);
             DataBindingHelper.BindData4DataTime<tb_BuyingRequisition>(entity, t => t.ApplicationDate, dtpApplicationDate, false);
 
@@ -288,7 +288,7 @@ namespace RUINORERP.UI.PSI.PUR
             sgh.OnLoadMultiRowData += Sgh_OnLoadMultiRowData;
             //Clear(sgd);
             ShowSelectedColumn();
-            UIHelper.ControlMasterColumnsInvisible(CurMenuInfo,this);
+            UIHelper.ControlMasterColumnsInvisible(CurMenuInfo, this);
         }
 
         private void Sgh_OnLoadMultiRowData(object rows, Position position)
@@ -302,7 +302,7 @@ namespace RUINORERP.UI.PSI.PUR
             if (RowDetails != null)
             {
                 List<tb_BuyingRequisitionDetail> details = new List<tb_BuyingRequisitionDetail>();
-                
+
                 foreach (var item in RowDetails)
                 {
                     tb_BuyingRequisitionDetail bOM_SDetail = MainForm.Instance.mapper.Map<tb_BuyingRequisitionDetail>(item);
@@ -812,12 +812,13 @@ namespace RUINORERP.UI.PSI.PUR
             tb_PurOrder entity = new tb_PurOrder();
             List<tb_PurOrderDetail> NewDetails = new List<tb_PurOrderDetail>();
             entity.PurDate = System.DateTime.Now;
-            entity.RefNO = EditEntity.PuRequisitionNo;
-            entity.RefBillID = EditEntity.PuRequisition_ID;
-            entity.RefBizType = (int)BizType.请购单;
+            //entity.RefNO = EditEntity.PuRequisitionNo;
+            //entity.RefBillID = EditEntity.PuRequisition_ID;
+            //entity.RefBizType = (int)BizType.请购单;
             entity.DataStatus = (int)DataStatus.草稿;
+            entity.Notes = $"由请购单{EditEntity.PuRequisitionNo}生成";
             List<string> tipsMsg = new List<string>();
-            
+
 
             for (int i = 0; i < details.Count; i++)
             {

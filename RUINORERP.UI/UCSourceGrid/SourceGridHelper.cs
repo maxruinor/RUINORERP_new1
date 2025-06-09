@@ -45,6 +45,8 @@ using Winista.Text.HtmlParser.Data;
 using Winista.Text.HtmlParser.Lex;
 using WorkflowCore.Primitives;
 using ZXing.Common;
+using static OpenTK.Graphics.OpenGL.GL;
+
 
 //using ZXing.Common;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.ListView;
@@ -103,6 +105,78 @@ namespace RUINORERP.UI.UCSourceGrid
         /// </summary>
         public event LoadMultiRowData OnLoadMultiRowData;
 
+
+        #region 为了解决主子表双向更新
+        // 添加列刷新方法
+        //public void InvalidateColumn(string columnName)
+        //{
+        //    var dc = SGDefine.DefineColumns.FirstOrDefault(d => d.ColName == columnName);
+        //    if (dc == null) return;
+
+        //    var colIndex = SGDefine.grid.Columns.GetColumnInfo(dc.UniqueId).Index;
+
+        //    // 刷新列的所有行（排除标题和总计行）
+        //    for (int row = 1; row < SGDefine.grid.Rows.Count - 1; row++)
+        //    {
+        //        SGDefine.grid.InvalidateCell(row, colIndex);
+        //    }
+        //}
+        public void UpdateGridColumn<T>(string colName)
+        {
+            var colDef = SGDefine[colName];
+            if (colDef == null) return;
+            var colIndex = SGDefine.grid.Columns.GetColumnInfo(colDef.UniqueId).Index;
+
+            for (int i = 0; i < SGDefine.grid.Rows.Count; i++)
+            {
+                if (SGDefine.grid.Rows[i].RowData is T detail)
+                {
+                    var position = new Position(i, colIndex);
+                    SetCellValueForCurrentUICell(colDef, colName, position, detail);
+                }
+            }
+        }
+        public void UpdateGridColumn<T>(Expression<Func<T, object>> columnExpr)
+        {
+            // 网格更新逻辑（复用您现有的SourceGridHelper）
+            var colName = columnExpr.GetMemberInfo().Name;
+            UpdateGridColumn<T>(colName);
+        }
+
+        // 添加安全更新方法
+        public void SafeUpdateCellValue(SGDefineColumnItem dc, Position position, object value)
+        {
+            if (position.Row < 1 || position.Row >= SGDefine.grid.Rows.Count - 1)
+                return;
+
+            try
+            {
+                // 获取当前行数据
+                var rowData = SGDefine.grid.Rows[position.Row].RowData as BaseEntity;
+                if (rowData == null) return;
+
+                // 设置属性值但不触发通知
+                rowData.SuppressNotifyPropertyChanged = true;//不让通知，再赋值
+                ReflectionHelper.SetPropertyValue(rowData, dc.ColName, value);
+                rowData.SuppressNotifyPropertyChanged = false;
+
+                // 更新单元格显示
+                SGDefine.grid[position.Row, position.Column].Value = value;
+
+                // 特殊格式处理
+                if (dc.IsFKRelationColumn)
+                {
+                    string displayText = ShowFKColumnText(dc, value, SGDefine);
+                    SGDefine.grid[position.Row, position.Column].DisplayText = displayText;
+                }
+            }
+            catch (Exception ex)
+            {
+                //Logger.Error("单元格更新失败", ex);
+            }
+        }
+
+        #endregion
 
         #region  添加右键事件
 
@@ -4465,10 +4539,9 @@ namespace RUINORERP.UI.UCSourceGrid
             {
                 int realIndex = sgdefine.grid.Columns.GetColumnInfo(dc.UniqueId).Index;
                 //设置目标的绑定数据值，就是产品ID
-              //  SourceGrid.CellContext processContext = new SourceGrid.CellContext(sgdefine.grid, new Position(p.Row, realIndex));
+                //  SourceGrid.CellContext processContext = new SourceGrid.CellContext(sgdefine.grid, new Position(p.Row, realIndex));
                 var cellValue = ReflectionHelper.GetPropertyValue(rowEntity, toColName);
                 sgdefine.grid[p.Row, realIndex].Value = cellValue;
-          
                 switch (dc.CustomFormat)
                 {
                     case CustomFormatType.DefaultFormat:

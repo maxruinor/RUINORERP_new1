@@ -106,6 +106,10 @@ namespace RUINORERP.Business
                     }
                     else
                     {
+                        if (invTo.Inv_Cost == 0 && child.TargetInitCost > 0)
+                        {
+                            invTo.Inv_Cost = child.TargetInitCost;
+                        }
                         BusinessHelper.Instance.EditEntity(invTo);
                     }
 
@@ -133,11 +137,11 @@ namespace RUINORERP.Business
                 }
                 DbHelper<tb_Inventory> dbHelper = _appContext.GetRequiredService<DbHelper<tb_Inventory>>();
                 var InvMainCounter = await dbHelper.BaseDefaultAddElseUpdateAsync(invList);
-                if (InvMainCounter.ToInt()==0)
+                if (InvMainCounter.ToInt() == 0)
                 {
                     _logger.LogInformation($"{entity.ConversionNo}更新库存结果为0行，请检查数据！");
                 }
-                
+
 
 
                 //这部分是否能提出到上一级公共部分？

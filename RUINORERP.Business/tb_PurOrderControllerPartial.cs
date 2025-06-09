@@ -156,29 +156,29 @@ namespace RUINORERP.Business
                 _unitOfWorkManage.BeginTran();
 
                 //如果采购订单明细数据来自于请购单，则明细要回写状态为已采购
-                if (entity.RefBillID.HasValue && entity.RefBillID.Value > 0)
-                {
-                    if (entity.RefBizType == (int)BizType.请购单)
-                    {
-                        tb_BuyingRequisition buyingRequisition = _appContext.Db.Queryable<tb_BuyingRequisition>()
-                            .Includes(c => c.tb_BuyingRequisitionDetails)
-                            .Where(c => c.PuRequisition_ID == entity.RefBillID).Single();
-                        if (buyingRequisition != null)
-                        {
-                            foreach (var child in entity.tb_PurOrderDetails)
-                            {
-                                var buyItem = buyingRequisition.tb_BuyingRequisitionDetails
-                                    .FirstOrDefault(c => c.ProdDetailID == child.ProdDetailID);
-                                if (buyItem != null)//为空则是买的东西不在请购单明细中。
-                                {
-                                    buyItem.Purchased = true;
-                                    buyItem.HasChanged = true;
-                                }
-                            }
-                            await _unitOfWorkManage.GetDbClient().Updateable<tb_BuyingRequisitionDetail>(buyingRequisition.tb_BuyingRequisitionDetails).ExecuteCommandAsync();
-                        }
-                    }
-                }
+                //if (entity.RefBillID.HasValue && entity.RefBillID.Value > 0)
+                //{
+                //    if (entity.RefBizType == (int)BizType.请购单)
+                //    {
+                //        tb_BuyingRequisition buyingRequisition = _appContext.Db.Queryable<tb_BuyingRequisition>()
+                //            .Includes(c => c.tb_BuyingRequisitionDetails)
+                //            .Where(c => c.PuRequisition_ID == entity.RefBillID).Single();
+                //        if (buyingRequisition != null)
+                //        {
+                //            foreach (var child in entity.tb_PurOrderDetails)
+                //            {
+                //                var buyItem = buyingRequisition.tb_BuyingRequisitionDetails
+                //                    .FirstOrDefault(c => c.ProdDetailID == child.ProdDetailID);
+                //                if (buyItem != null)//为空则是买的东西不在请购单明细中。
+                //                {
+                //                    buyItem.Purchased = true;
+                //                    buyItem.HasChanged = true;
+                //                }
+                //            }
+                //            await _unitOfWorkManage.GetDbClient().Updateable<tb_BuyingRequisitionDetail>(buyingRequisition.tb_BuyingRequisitionDetails).ExecuteCommandAsync();
+                //        }
+                //    }
+                //}
 
                 var inventoryGroups = new Dictionary<(long ProdDetailID, long LocationID), (tb_Inventory Inventory, decimal OnTheWayQty)>();
 
@@ -449,29 +449,29 @@ namespace RUINORERP.Business
                 // 开启事务，保证数据一致性
                 _unitOfWorkManage.BeginTran();
 
-                //如果采购订单明细数据来自于请购单，则明细要回写状态为已采购
-                if (entity.RefBillID.HasValue && entity.RefBillID.Value > 0)
-                {
-                    if (entity.RefBizType == (int)BizType.请购单)
-                    {
-                        tb_BuyingRequisition buyingRequisition = _appContext.Db.Queryable<tb_BuyingRequisition>()
-                            .Includes(c => c.tb_BuyingRequisitionDetails)
-                            .Where(c => c.PuRequisition_ID == entity.RefBillID).Single();
-                        if (buyingRequisition != null)
-                        {
+                ////如果采购订单明细数据来自于请购单，则明细要回写状态为已采购
+                //if (entity.RefBillID.HasValue && entity.RefBillID.Value > 0)
+                //{
+                //    if (entity.RefBizType == (int)BizType.请购单)
+                //    {
+                //        tb_BuyingRequisition buyingRequisition = _appContext.Db.Queryable<tb_BuyingRequisition>()
+                //            .Includes(c => c.tb_BuyingRequisitionDetails)
+                //            .Where(c => c.PuRequisition_ID == entity.RefBillID).Single();
+                //        if (buyingRequisition != null)
+                //        {
 
-                            foreach (var child in entity.tb_PurOrderDetails)
-                            {
-                                var buyItem = buyingRequisition.tb_BuyingRequisitionDetails
-                                    .FirstOrDefault(c => c.ProdDetailID == child.ProdDetailID);
-                                buyItem.Purchased = false;
-                            }
+                //            foreach (var child in entity.tb_PurOrderDetails)
+                //            {
+                //                var buyItem = buyingRequisition.tb_BuyingRequisitionDetails
+                //                    .FirstOrDefault(c => c.ProdDetailID == child.ProdDetailID);
+                //                buyItem.Purchased = false;
+                //            }
 
-                            await _unitOfWorkManage.GetDbClient().Updateable<tb_BuyingRequisitionDetail>(buyingRequisition.tb_BuyingRequisitionDetails).ExecuteCommandAsync();
+                //            await _unitOfWorkManage.GetDbClient().Updateable<tb_BuyingRequisitionDetail>(buyingRequisition.tb_BuyingRequisitionDetails).ExecuteCommandAsync();
 
-                        }
-                    }
-                }
+                //        }
+                //    }
+                //}
 
                 tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
 

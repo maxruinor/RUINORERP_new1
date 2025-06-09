@@ -44,6 +44,10 @@ using RUINORERP.Global.EnumExt;
 using RUINORERP.UI.AdvancedUIModule;
 using RUINORERP.UI.Monitoring.Auditing;
 using SourceGrid;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.ListView;
+using RUINORERP.UI.BusinessService.CalculationService;
+using System.Threading;
+
 namespace RUINORERP.UI.PSI.SAL
 {
     [MenuAttrAssemblyInfo("销售出库单", ModuleMenuDefine.模块定义.进销存管理, ModuleMenuDefine.进销存管理.销售管理, BizType.销售出库单)]
@@ -52,16 +56,12 @@ namespace RUINORERP.UI.PSI.SAL
         public UCSaleOut()
         {
             InitializeComponent();
-            //InitDataToCmbByEnumDynamicGeneratedDataSource<tb_SaleOut>(typeof(Priority), e => e.OrderPriority, cmbOrderPriority);
-
             base.toolStripButton结案.Visible = true;
             AddPublicEntityObject(typeof(ProductSharePart));
         }
 
 
-
-
-
+        private SaleOutCoordinator _coordinator;
         internal override void LoadDataToUI(object Entity)
         {
             ActionStatus actionStatus = ActionStatus.无操作;
@@ -97,7 +97,7 @@ namespace RUINORERP.UI.PSI.SAL
                 {
                     entity.PrimaryKeyID = entity.SaleOut_MainID;
                     entity.ActionStatus = ActionStatus.加载;
-                    if (entity.Currency_ID.HasValue && entity.Currency_ID != AppContext.BaseCurrency.Currency_ID)
+                    if (entity.Currency_ID != AppContext.BaseCurrency.Currency_ID)
                     {
                         lblExchangeRate.Visible = true;
                         txtExchangeRate.Visible = true;
@@ -144,7 +144,7 @@ namespace RUINORERP.UI.PSI.SAL
             DataBindingHelper.BindData4Cmb<tb_ProjectGroup>(entity, k => k.ProjectGroup_ID, v => v.ProjectGroupName, cmbProjectGroup);
             DataBindingHelper.BindData4Cmb<tb_Employee>(entity, k => k.Employee_ID, v => v.Employee_Name, cmbEmployee_ID);
             DataBindingHelper.BindData4Cmb<tb_CustomerVendor>(entity, k => k.CustomerVendor_ID, v => v.CVName, cmbCustomerVendor_ID, c => c.IsCustomer == true);
-            DataBindingHelper.BindData4Cmb<tb_Currency>(entity, k => k.Currency_ID, v => v.CurrencyName, cmbCurrency_ID);
+
             DataBindingHelper.BindData4TextBox<tb_SaleOut>(entity, t => t.TotalCommissionAmount.ToString(), txtTotalCommissionAmount, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4TextBox<tb_SaleOut>(entity, t => t.CustomerPONo, txtCustomerPONo, BindDataType4TextBox.Text, false);
             //DataBindingHelper.BindData4Cmb<tb_SaleOrder>(entity, k => k.SOrder_ID, v => v.SOrderNo, cmbOrder_ID);
@@ -156,6 +156,7 @@ namespace RUINORERP.UI.PSI.SAL
             DataBindingHelper.BindData4TextBox<tb_SaleOut>(entity, t => t.FreightIncome.ToString(), txtFreightIncome, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4TextBox<tb_SaleOut>(entity, t => t.FreightCost.ToString(), txtFreightCost, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4TextBox<tb_SaleOut>(entity, t => t.TotalAmount.ToString(), txtTotalAmount, BindDataType4TextBox.Money, false);
+            DataBindingHelper.BindData4Cmb<tb_Currency>(entity, k => k.Currency_ID, v => v.CurrencyName, cmbCurrency_ID);
             DataBindingHelper.BindData4TextBox<tb_SaleOut>(entity, t => t.ExchangeRate.ToString(), txtExchangeRate, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4DataTime<tb_SaleOut>(entity, t => t.DeliveryDate, dtpDeliveryDate, false);
             DataBindingHelper.BindData4DataTime<tb_SaleOut>(entity, t => t.OutDate, dtpOutDate, false);
@@ -183,14 +184,10 @@ namespace RUINORERP.UI.PSI.SAL
             DataBindingHelper.BindData4ControlByEnum<tb_SaleOut>(entity, t => t.ApprovalStatus, lblReview, BindDataType4Enum.EnumName, typeof(Global.ApprovalStatus));
             if (entity.tb_SaleOutDetails != null && entity.tb_SaleOutDetails.Count > 0)
             {
-                //LoadDataToGrid(entity.tb_SaleOutDetails);
-                sgh.LoadItemDataToGrid<tb_SaleOutDetail>(grid1, sgd, entity.tb_SaleOutDetails, c => c.ProdDetailID);
+                details = entity.tb_SaleOutDetails;
             }
-            else
-            {
-                //LoadDataToGrid(new List<tb_SaleOutDetail>());
-                sgh.LoadItemDataToGrid<tb_SaleOutDetail>(grid1, sgd, new List<tb_SaleOutDetail>(), c => c.ProdDetailID);
-            }
+            sgh.LoadItemDataToGrid<tb_SaleOutDetail>(grid1, sgd, details, c => c.ProdDetailID);
+
 
             //缓存一下结果下次如果一样，就忽略？
             //object tempcopy = entity.Clone();
@@ -248,82 +245,107 @@ namespace RUINORERP.UI.PSI.SAL
                             EditEntity.tb_paymentmethod = paymentMethod;
                         }
                     }
-
+                    /*
 
                     #region 计算运费成本分摊
-                    if (entity.FreightCost > 0 && s2.PropertyName == entity.GetPropertyName<tb_SaleOut>(c => c.FreightCost))
+                    if (entity.FreightCost >= 0 && s2.PropertyName == entity.GetPropertyName<tb_SaleOut>(c => c.FreightCost))
                     {
-                        Expression<Func<tb_SaleOutDetail, object>> colNameExp = c => c.AllocatedFreightCost;
-                        string colName = colNameExp.GetMemberInfo().Name;
-                        var coltarget = sgh.SGDefine[colName];
-                        int colIndex = sgh.SGDefine.grid.Columns.GetColumnInfo(coltarget.UniqueId).Index;
-
-
-                        //默认认为 订单中的运费收入 就是实际发货的运费成本， 可以手动修改覆盖
-                        //根据系统设置中的分摊规则来分配运费收入到明细。
-                        if (MainForm.Instance.AppContext.SysConfig.FreightAllocationRules == (int)FreightAllocationRules.产品数量占比)
+                        // 如果正在计算中，则跳过本次处理，避免循环
+                        if (_isCalculating) return;
+                        try
                         {
-                            // 单个产品分摊运费 = 整单运费 ×（该产品数量 ÷ 总产品数量） 
-                            foreach (var item in entity.tb_SaleOutDetails)
+                            // 设置计算状态
+                            _isCalculating = true;
+                            Expression<Func<tb_SaleOutDetail, object>> colNameExp = c => c.AllocatedFreightCost;
+                            string colName = colNameExp.GetMemberInfo().Name;
+                            var coltarget = sgh.SGDefine[colName];
+                            int colIndex = sgh.SGDefine.grid.Columns.GetColumnInfo(coltarget.UniqueId).Index;
+
+
+                            //默认认为 订单中的运费收入 就是实际发货的运费成本， 可以手动修改覆盖
+                            //根据系统设置中的分摊规则来分配运费收入到明细。
+                            if (MainForm.Instance.AppContext.SysConfig.FreightAllocationRules == (int)FreightAllocationRules.产品数量占比)
                             {
-                                item.AllocatedFreightCost = EditEntity.FreightCost * (item.Quantity.ToDecimal() / EditEntity.TotalQty.ToDecimal());
-                                item.AllocatedFreightCost = item.AllocatedFreightCost.ToRoundDecimalPlaces(authorizeController.GetMoneyDataPrecision());
-                                item.FreightAllocationRules = MainForm.Instance.AppContext.SysConfig.FreightAllocationRules;
-                                for (int i = 0; i < sgh.SGDefine.grid.Rows.Count; i++)
+                                // 单个产品分摊运费 = 整单运费 ×（该产品数量 ÷ 总产品数量） 
+                                foreach (var item in entity.tb_SaleOutDetails)
                                 {
-                                    if (sgh.SGDefine.grid.Rows[i].RowData != null && sgh.SGDefine.grid.Rows[i].RowData is tb_SaleOutDetail line)
+                                    item.AllocatedFreightCost = EditEntity.FreightCost * (item.Quantity.ToDecimal() / EditEntity.TotalQty.ToDecimal());
+                                    item.AllocatedFreightCost = item.AllocatedFreightCost.ToRoundDecimalPlaces(authorizeController.GetMoneyDataPrecision());
+                                    item.FreightAllocationRules = MainForm.Instance.AppContext.SysConfig.FreightAllocationRules;
+                                    for (int i = 0; i < sgh.SGDefine.grid.Rows.Count; i++)
                                     {
-                                        if (line.ProdDetailID == item.ProdDetailID)
+                                        if (sgh.SGDefine.grid.Rows[i].RowData != null && sgh.SGDefine.grid.Rows[i].RowData is tb_SaleOutDetail line)
                                         {
-                                            Position position = new Position(i, colIndex);
-                                            sgh.SetCellValueForCurrentUICell(coltarget, colName, position, item);
-                                            continue;
+                                            if (line.ProdDetailID == item.ProdDetailID)
+                                            {
+                                                Position position = new Position(i, colIndex);
+                                                sgh.SetCellValueForCurrentUICell(coltarget, colName, position, item);
+                                                continue;
+                                            }
                                         }
                                     }
                                 }
                             }
+                        }
+                        finally
+                        {
+                            // 无论是否发生异常，都要重置计算状态
+                            _isCalculating = false;
                         }
                     }
 
                     #endregion
 
                     #region 计算运费收入分摊
-                    if (entity.FreightIncome > 0 && s2.PropertyName == entity.GetPropertyName<tb_SaleOut>(c => c.FreightIncome))
-                    {
-                        Expression<Func<tb_SaleOutDetail, object>> colNameExp = c => c.AllocatedFreightIncome;
-                        string colName = colNameExp.GetMemberInfo().Name;
-                        var coltarget = sgh.SGDefine[colName];
-                        int colIndex = sgh.SGDefine.grid.Columns.GetColumnInfo(coltarget.UniqueId).Index;
-
-
-                        //默认认为 订单中的运费收入 就是实际发货的运费成本， 可以手动修改覆盖
-                        //根据系统设置中的分摊规则来分配运费收入到明细。
-                        if (MainForm.Instance.AppContext.SysConfig.FreightAllocationRules == (int)FreightAllocationRules.产品数量占比)
+                    if (entity.FreightIncome >= 0 && s2.PropertyName == entity.GetPropertyName<tb_SaleOut>(c => c.FreightIncome))
+                    {// 如果正在计算中，则跳过本次处理，避免循环
+                        if (_isCalculating) return;
+                        try
                         {
-                            // 单个产品分摊运费 = 整单运费 ×（该产品数量 ÷ 总产品数量） 
-                            foreach (var item in entity.tb_SaleOutDetails)
+                            // 设置计算状态
+                            _isCalculating = true;
+                            Expression<Func<tb_SaleOutDetail, object>> colNameExp = c => c.AllocatedFreightIncome;
+                            string colName = colNameExp.GetMemberInfo().Name;
+                            var coltarget = sgh.SGDefine[colName];
+                            int colIndex = sgh.SGDefine.grid.Columns.GetColumnInfo(coltarget.UniqueId).Index;
+                            //默认认为 订单中的运费收入 就是实际发货的运费成本， 可以手动修改覆盖
+                            //根据系统设置中的分摊规则来分配运费收入到明细。
+                            if (MainForm.Instance.AppContext.SysConfig.FreightAllocationRules == (int)FreightAllocationRules.产品数量占比)
                             {
-                                item.AllocatedFreightIncome = EditEntity.FreightIncome * (item.Quantity.ToDecimal() / EditEntity.TotalQty.ToDecimal());
-                                item.AllocatedFreightIncome = item.AllocatedFreightIncome.ToRoundDecimalPlaces(authorizeController.GetMoneyDataPrecision());
-                                item.FreightAllocationRules = MainForm.Instance.AppContext.SysConfig.FreightAllocationRules;
-                                for (int i = 0; i < sgh.SGDefine.grid.Rows.Count; i++)
+                                // 单个产品分摊运费 = 整单运费 ×（该产品数量 ÷ 总产品数量） 
+                                foreach (var item in entity.tb_SaleOutDetails)
                                 {
-                                    if (sgh.SGDefine.grid.Rows[i].RowData != null && sgh.SGDefine.grid.Rows[i].RowData is tb_SaleOutDetail line)
+                                    item.AllocatedFreightIncome = EditEntity.FreightIncome * (item.Quantity.ToDecimal() / EditEntity.TotalQty.ToDecimal());
+                                    item.AllocatedFreightIncome = item.AllocatedFreightIncome.ToRoundDecimalPlaces(authorizeController.GetMoneyDataPrecision());
+                                    item.FreightAllocationRules = MainForm.Instance.AppContext.SysConfig.FreightAllocationRules;
+                                    for (int i = 0; i < sgh.SGDefine.grid.Rows.Count; i++)
                                     {
-                                        if (line.ProdDetailID == item.ProdDetailID)
+                                        if (sgh.SGDefine.grid.Rows[i].RowData != null && sgh.SGDefine.grid.Rows[i].RowData is tb_SaleOutDetail line)
                                         {
-                                            Position position = new Position(i, colIndex);
-                                            sgh.SetCellValueForCurrentUICell(coltarget, colName, position, item);
-                                            continue;
+                                            if (line.ProdDetailID == item.ProdDetailID)
+                                            {
+                                                Position position = new Position(i, colIndex);
+                                                sgh.SetCellValueForCurrentUICell(coltarget, colName, position, item);
+                                                continue;
+                                            }
                                         }
                                     }
                                 }
                             }
                         }
+                        catch (Exception ex)
+                        {
+
+                        }
+                        finally
+                        {
+                            // 无论是否发生异常，都要重置计算状态
+                            _isCalculating = false;
+                        }
                     }
 
                     #endregion
-
+                    */
 
                     if (entity.CustomerVendor_ID > 0 && s2.PropertyName == entity.GetPropertyName<tb_SaleOut>(c => c.CustomerVendor_ID))
                     {
@@ -393,6 +415,7 @@ namespace RUINORERP.UI.PSI.SAL
             sgd.GridMasterData = entity;
             sgd.GridMasterDataType = entity.GetType();
 
+            _coordinator = new SaleOutCoordinator(EditEntity, details, sgh);
             base.BindData(entity);
         }
 
@@ -541,7 +564,8 @@ namespace RUINORERP.UI.PSI.SAL
             prodConversion.tb_ProdConversionDetails.Add(conversionDetail);
             return prodConversion;
         }
-
+        // 声明一个状态标志，用于控制计算逻辑
+        private bool _isCalculating = false;
         AuthorizeController authorizeController = null;
         private void Sgh_OnCalculateColumnValue(object rowObj, SourceGridDefine griddefine, SourceGrid.Position Position)
         {
@@ -581,11 +605,36 @@ namespace RUINORERP.UI.PSI.SAL
                 EditEntity.TotalTaxAmount = details.Sum(c => c.SubtotalTaxAmount);
                 EditEntity.TotalCommissionAmount = details.Sum(c => c.CommissionAmount);
                 EditEntity.TotalTaxAmount = EditEntity.TotalTaxAmount.ToRoundDecimalPlaces(MainForm.Instance.authorizeController.GetMoneyDataPrecision());
-                EditEntity.FreightCost = details.Sum(c => c.AllocatedFreightCost);
-                EditEntity.ForeignFreightIncome = details.Sum(c => c.AllocatedFreightIncome);
+                /*
+                #region 计算运费总额
+                try
+                {
+                    // 如果正在计算中，则跳过本次处理，避免循环
+                    if (!_isCalculating)
+                    {
+                        // 设置计算状态
+                        _isCalculating = true;
+                        EditEntity.FreightCost = details.Sum(c => c.AllocatedFreightCost);
+                        EditEntity.FreightIncome = details.Sum(c => c.AllocatedFreightIncome);
+                    }
+
+                }
+                catch (Exception ex)
+                {
+                    logger.LogError("计算出错", ex);
+                    MainForm.Instance.uclog.AddLog("Sgh_OnCalculateColumnValue" + ex.Message);
+                }
+                finally
+                {
+                    // 无论是否发生异常，都要重置计算状态
+                    _isCalculating = false;
+                }
+                #endregion
+                */
+
                 EditEntity.TotalAmount = details.Sum(c => c.TransactionPrice * c.Quantity);
                 EditEntity.TotalAmount = EditEntity.TotalAmount + EditEntity.FreightIncome;
-                if (EditEntity.Currency_ID.HasValue && EditEntity.Currency_ID != AppContext.BaseCurrency.Currency_ID)
+                if (EditEntity.Currency_ID != AppContext.BaseCurrency.Currency_ID)
                 {
                     EditEntity.ForeignTotalAmount = EditEntity.TotalAmount / EditEntity.ExchangeRate;
                     //
@@ -752,7 +801,7 @@ namespace RUINORERP.UI.PSI.SAL
 
                 EditEntity.TotalAmount = details.Sum(c => c.TransactionPrice * c.Quantity);
                 EditEntity.TotalAmount = EditEntity.TotalAmount + EditEntity.FreightIncome;
-                if (EditEntity.Currency_ID.HasValue && EditEntity.Currency_ID != AppContext.BaseCurrency.Currency_ID)
+                if (EditEntity.Currency_ID != AppContext.BaseCurrency.Currency_ID)
                 {
                     EditEntity.ForeignTotalAmount = EditEntity.TotalAmount / EditEntity.ExchangeRate;
                     //

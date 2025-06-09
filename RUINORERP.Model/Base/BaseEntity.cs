@@ -33,9 +33,20 @@ namespace RUINORERP.Model
     [Serializable()]
     public class BaseEntity : INotifyPropertyChanged, IDataErrorInfo//, IStatusProvider
     {
+        #region 像出库时 成本与分摊双向计算的情况
+        public void RaisePropertyChanged(string propertyName)
+        {
+            OnPropertyChanged(propertyName);
+        }
+
+        #endregion
 
         #region  状态管理相关代码
         #region 状态字段事件通知
+
+
+
+
 
         public event EventHandler<StatusChangedEventArgs> StatusChanged;
         protected virtual void OnPropertyChangedStatus(string propertyName, object oldValue, object newValue)
@@ -287,6 +298,11 @@ namespace RUINORERP.Model
         public event PropertyChangedEventHandler PropertyChanged;
 
 
+        /// <summary>
+        /// Suppress禁止的意思。 
+        /// 禁止通知属性已更改
+        /// 默认值为false ，是支持属性更改通知
+        /// </summary>
         [SugarColumn(IsIgnore = true)]
         [Browsable(false)]
         public bool SuppressNotifyPropertyChanged { get; set; }

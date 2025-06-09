@@ -39,6 +39,7 @@ using RUINORERP.Business.Security;
 using Netron.GraphLib;
 using Krypton.Toolkit;
 using RUINORERP.Global.EnumExt;
+using RUINORERP.Business.CommService;
 
 
 
@@ -203,6 +204,7 @@ namespace RUINORERP.UI.PSI.INV
             listCols.SetCol_NeverVisible<tb_ProdConversionDetail>(c => c.ConversionID);
 
             listCols.SetCol_DefaultHide<tb_ProdConversionDetail>(c => c.TargetInitCost);
+            //listCols.SetCol_Visible<tb_ProdConversionDetail>(c => c.TargetInitCost, sgd, chkInitCost.Checked);
 
             List<SourceToTargetMatchCol> sourceToTargetMatchesA = new List<SourceToTargetMatchCol>();
             sourceToTargetMatchesA.SetSourceToTargetMatchCol<View_ProdDetail, tb_ProdConversionDetail>(s => s.SKU, t => t.SKU_from);
@@ -214,6 +216,8 @@ namespace RUINORERP.UI.PSI.INV
             sourceToTargetMatchesA.SetSourceToTargetMatchCol<View_ProdDetail, tb_ProdConversionDetail>(s => s.ProdDetailID, t => t.ProdDetailID_from);
             sourceToTargetMatchesA.SetSourceToTargetMatchCol<View_ProdDetail, tb_ProdConversionDetail>(s => s.BarCode, t => t.BarCode_from);
 
+            //如果目标 成本为0时。则将来源成本给过去。至少 。 或提示 来源成本再加上实际差异成本。手动添加到目标成本？
+            // listCols.SetCol_FormulaReverse<tb_ProdConversionDetail>(d => d.TargetInitCost == 0, (a, b) => a. / b.UnitPrice, c => c.Discount);//-->折扣 
 
 
             List<SourceToTargetMatchCol> sourceToTargetMatchesB = new List<SourceToTargetMatchCol>();
@@ -317,7 +321,7 @@ namespace RUINORERP.UI.PSI.INV
             sgh.OnCalculateColumnValue += Sgh_OnCalculateColumnValue;
             sgh.OnLoadRelevantFields += Sgh_OnLoadRelevantFields;
             grid1.Enter += Grid1_Enter;
-            UIHelper.ControlMasterColumnsInvisible(CurMenuInfo,this);
+            UIHelper.ControlMasterColumnsInvisible(CurMenuInfo, this);
         }
 
         private void Sgh_OnLoadRelevantFields(object _View_ProdDetail, object rowObj, SourceGridDefine griddefine, Position Position)
@@ -435,8 +439,68 @@ namespace RUINORERP.UI.PSI.INV
                     System.Windows.Forms.MessageBox.Show("明细中，相同的产品不能多行录入,如有需要,请另建单据保存!", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     return false;
                 }
+
+                if (details.Any(c => c.TargetInitCost == 0))
+                {
+                    var zeroDetails = details.Where(c => c.TargetInitCost == 0).ToList();
+                    if (System.Windows.Forms.MessageBox.Show("明细中，目标产品成本不能为零。\r\n 系统已经将来源成本设置为当前目标成本，请将差异成本加到目标成本中!", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information) == DialogResult.OK)
+                    {
+                        for (global::System.Int32 r = 0; r < zeroDetails.Count; r++)
+                        {
+                            var zeroDetail = zeroDetails[r];
+                            var prod = BizCacheHelper.Instance.GetEntity<View_ProdDetail>(zeroDetail.ProdDetailID_from);
+                            if (prod != null && prod.Inv_Cost.HasValue)
+                            {
+                                zeroDetail.TargetInitCost = prod.Inv_Cost.Value;
+
+                                #region 设置值到UI
+                                try
+                                {
+                                    Expression<Func<tb_ProdConversionDetail, object>> colNameExp = c => c.TargetInitCost;
+                                    string colName = colNameExp.GetMemberInfo().Name;
+                                    var coltarget = sgh.SGDefine[colName];
+                                    int colIndex = sgh.SGDefine.grid.Columns.GetColumnInfo(coltarget.UniqueId).Index;
+
+                                    for (int i = 0; i < sgh.SGDefine.grid.Rows.Count; i++)
+                                    {
+                                        if (sgh.SGDefine.grid.Rows[i].RowData != null && sgh.SGDefine.grid.Rows[i].RowData is tb_ProdConversionDetail line)
+                                        {
+                                            if (line.ProdDetailID_to == zeroDetail.ProdDetailID_to)
+                                            {
+                                                Position position = new Position(i, colIndex);
+                                                sgh.SetCellValueForCurrentUICell(coltarget, colName, position, zeroDetail);
+                                                continue;
+                                            }
+                                        }
+                                    }
+
+
+                                }
+                                catch (Exception ex)
+                                {
+
+                                }
+                                 
+
+                                #endregion
+                            }
+                        }
+                    }
+
+                }
+
+                if (details.Any(c => c.TargetInitCost == 0))
+                {
+                    System.Windows.Forms.MessageBox.Show("明细中，目标成本不能为零，请录入正确的目标成本!", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    return false;
+                }
+
                 EditEntity.TotalConversionQty = details.Sum(c => c.ConversionQty);
                 EditEntity.tb_ProdConversionDetails = details;
+
+
+
+
                 //没有经验通过下面先不计算
                 if (NeedValidated && !base.Validator(EditEntity))
                 {
@@ -475,7 +539,7 @@ namespace RUINORERP.UI.PSI.INV
 
         private void chkInitCost_CheckedChanged(object sender, EventArgs e)
         {
-             listCols.SetCol_Visible<tb_ProdConversionDetail>(c => c.TargetInitCost, sgd, chkInitCost.Checked);
+            listCols.SetCol_Visible<tb_ProdConversionDetail>(c => c.TargetInitCost, sgd, chkInitCost.Checked);
         }
     }
 }

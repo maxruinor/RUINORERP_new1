@@ -19,7 +19,14 @@ namespace RUINORERP.UI.UControls
     [Serializable]
     public class ColDisplayController : INotifyPropertyChanged, IEquatable<ColDisplayController>
     {
-        //public string ColKeName { get; set; } = Guid.NewGuid().ToString();
+
+        //这个主要是查询。来自于数据库主子表等。认为列名不行重复。这里暂时不用
+        // 添加唯一键属性（使用UniqueId或生成组合键）
+       // public string CompositeKey => UniqueId; // 或使用 $"{GridKeyName}_{ColName}";
+        // 添加UniqueId属性（如果尚未添加）
+        //public string UniqueId { get; set; } = Guid.NewGuid().ToString();
+
+ 
         private bool isPrimaryKey = false;
 
         private string colDisplayText = string.Empty;

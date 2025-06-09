@@ -1112,7 +1112,7 @@ namespace RUINORERP.Business
             return entity;
         }
 
-        /*
+
         /// <summary>
         /// 转换为销售出库单
         /// </summary>
@@ -1141,179 +1141,35 @@ namespace RUINORERP.Business
                 entity.ApprovalOpinions = "";
                 entity.Modified_at = null;
                 entity.Modified_by = null;
+                entity.CustomerVendor_ID = 0;//销售订单是客户，这里是厂商。默认为空。验证时要填写
+
                 List<string> tipsMsg = new List<string>();
                 List<tb_PurOrderDetail> details = mapper.Map<List<tb_PurOrderDetail>>(saleorder.tb_SaleOrderDetails);
-                List<tb_PurOrderDetail> NewDetails = new List<tb_PurOrderDetail>();
+                entity.TotalQty = details.Sum(c => c.Quantity);
 
-                //多行相同产品时 可能还在仔细优化核对
-                for (global::System.Int32 i = 0; i < details.Count; i++)
-                {
-                    View_ProdDetail obj = null;
-                    var aa = details.Select(c => c.ProdDetailID).ToList().GroupBy(x => x).Where(x => x.Count() > 1).Select(x => x.Key).ToList();
-                    if (aa.Count > 0 && details[i].PurOrder_ChildID > 0)
-                    {
-                        obj = BizCacheHelper.Instance.GetEntity<View_ProdDetail>(details[i].ProdDetailID);
-                        #region 产品ID可能大于1行，共用料号情况
-                        tb_SaleOrderDetail item = saleorder.tb_SaleOrderDetails.FirstOrDefault(c => c.ProdDetailID == details[i].ProdDetailID
-                        && c.Location_ID == details[i].Location_ID
-                        && c.SaleOrderDetail_ID == details[i].PurOrder_ChildID);
-                        details[i].Cost = item.Cost;
-                        details[i].CustomizedCost = item.CustomizedCost;
-                        //这时有一种情况就是订单时没有成本。没有产品。出库前有类似采购入库确定的成本
-                        if (details[i].Cost == 0)
-                        {
-                            obj = BizCacheHelper.Instance.GetEntity<View_ProdDetail>(details[i].ProdDetailID);
-                            if (obj != null && obj.GetType().Name != "Object" && obj is View_ProdDetail prodDetail)
-                            {
-                                details[i].Cost = obj.Inv_Cost.Value;
-                            }
-                        }
-                        details[i].Quantity = item.Quantity - item.TotalDeliveredQty;// 已经出数量去掉
-                        details[i].SubtotalTransAmount = details[i].TransactionPrice * details[i].Quantity;
-                        details[i].SubtotalCostAmount = (details[i].Cost + details[i].CustomizedCost) * details[i].Quantity;
-                        if (details[i].Quantity > 0)
-                        {
-                            NewDetails.Add(details[i]);
-                        }
-                        else
-                        {
-                            if (obj == null)
-                            {
-                                obj = BizCacheHelper.Instance.GetEntity<View_ProdDetail>(details[i].ProdDetailID);
-                            }
-                            tipsMsg.Add($"销售订单{saleorder.SOrderNo}，{obj.CNName + obj.Specifications}已出库数为{item.TotalDeliveredQty}，可出库数为{details[i].Quantity}，当前行数据忽略！");
-                        }
-
-                        #endregion
-                    }
-                    else
-                    {
-                        #region 每行产品ID唯一
-                        tb_SaleOrderDetail item = saleorder.tb_SaleOrderDetails.FirstOrDefault(c => c.ProdDetailID == details[i].ProdDetailID
-                          && c.Location_ID == details[i].Location_ID
-                        && c.SaleOrderDetail_ID == details[i].SaleOrderDetail_ID);
-                        details[i].Cost = item.Cost;
-                        details[i].CustomizedCost = item.CustomizedCost;
-                        //这时有一种情况就是订单时没有成本。没有产品。出库前有类似采购入库确定的成本
-                        if (details[i].Cost == 0)
-                        {
-                            obj = BizCacheHelper.Instance.GetEntity<View_ProdDetail>(details[i].ProdDetailID);
-                            if (obj != null && obj.GetType().Name != "Object" && obj is View_ProdDetail prodDetail)
-                            {
-                                if (obj.Inv_Cost == null)
-                                {
-                                    obj.Inv_Cost = 0;
-                                }
-                                details[i].Cost = obj.Inv_Cost.Value;
-                            }
-                        }
-                        details[i].Quantity = details[i].Quantity - item.TotalDeliveredQty;// 减掉已经出库的数量
-                        details[i].SubtotalTransAmount = details[i].TransactionPrice * details[i].Quantity;
-                        details[i].SubtotalCostAmount = (details[i].Cost + details[i].CustomizedCost) * details[i].Quantity;
-
-                        if (details[i].Quantity > 0)
-                        {
-                            NewDetails.Add(details[i]);
-                        }
-                        else
-                        {
-                            if (obj == null)
-                            {
-                                obj = BizCacheHelper.Instance.GetEntity<View_ProdDetail>(details[i].ProdDetailID);
-                            }
-                            tipsMsg.Add($"当前订单的SKU:{obj.SKU}{obj.CNName}已出库数量为{details[i].Quantity}，当前行数据将不会加载到明细！");
-                        }
-                        #endregion
-                    }
-
-                }
-
-                if (NewDetails.Count == 0)
-                {
-                    tipsMsg.Add($"订单:{entity.SaleOrderNo}已全部出库，请检查是否正在重复出库！");
-                }
-
-                //如果这个订单已经有出库单 则第二次运费为0
-                if (saleorder.tb_SaleOuts != null && saleorder.tb_SaleOuts.Count > 0)
-                {
-                    if (saleorder.FreightIncome > 0)
-                    {
-                        tipsMsg.Add($"当前订单已经有出库记录，运费收入已经计入前面出库单，当前出库运费收入为零！");
-                        entity.FreightIncome = 0;
-                    }
-                    else
-                    {
-                        tipsMsg.Add($"当前订单已经有出库记录！");
-                    }
-                }
-
-                entity.TotalQty = NewDetails.Sum(c => c.Quantity);
-
-                //默认认为 订单中的运费收入 就是实际发货的运费成本， 可以手动修改覆盖
-                if (entity.FreightIncome > 0)
-                {
-                    entity.FreightCost = entity.FreightIncome;
-                    //根据系统设置中的分摊规则来分配运费收入到明细。
-
-                    if (_appContext.SysConfig.FreightAllocationRules == (int)FreightAllocationRules.产品数量占比)
-                    {
-                        // 单个产品分摊运费 = 整单运费 ×（该产品数量 ÷ 总产品数量） 
-                        foreach (var item in NewDetails)
-                        {
-                            item.AllocatedFreightIncome = entity.FreightIncome * (item.Quantity.ToDecimal() / saleorder.TotalQty.ToDecimal());
-                            item.AllocatedFreightIncome = item.AllocatedFreightIncome.ToRoundDecimalPlaces(authorizeController.GetMoneyDataPrecision());
-                            item.FreightAllocationRules = _appContext.SysConfig.FreightAllocationRules;
-                        }
-                    }
-                }
-
-
-                entity.tb_SaleOutDetails = NewDetails;
-                entity.OutDate = System.DateTime.Now;
-                entity.DeliveryDate = System.DateTime.Now;
-
+                entity.tb_PurOrderDetails = details;
+                entity.PurDate = System.DateTime.Now;
+                entity.PreDeliveryDate = saleorder.PreDeliveryDate;
                 BusinessHelper.Instance.InitEntity(entity);
-
                 if (entity.SOrder_ID.HasValue && entity.SOrder_ID > 0)
                 {
-                    entity.CustomerVendor_ID = saleorder.CustomerVendor_ID;
-                    entity.SaleOrderNo = saleorder.SOrderNo;
-                    entity.PlatformOrderNo = saleorder.PlatformOrderNo;
-                    entity.IsFromPlatform = saleorder.IsFromPlatform;
+                    entity.RefNO = saleorder.SOrderNo;//销售订单号.
+                    entity.Notes = saleorder.Notes;
+                    entity.tb_saleorder = saleorder;
+                    entity.ShipCost = saleorder.FreightIncome;
                 }
-                entity.SaleOutNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.销售出库单);
-                //if (NewDetails.Count != details.Count)
-                //{
-                //    //已经出库过，第二次不包括 运费
-                //    entity.TotalQty = NewDetails.Sum(c => c.Quantity);
-                //    entity.TotalCost = NewDetails.Sum(c => c.Cost * c.Quantity);
-                //    entity.TotalAmount = NewDetails.Sum(c => c.TransactionPrice * c.Quantity);
-                //    entity.TotalTaxAmount = NewDetails.Sum(c => c.SubtotalTaxAmount);
-                //    entity.TotalUntaxedAmount = NewDetails.Sum(c => c.SubtotalUntaxedAmount);
 
-
-                //}
+                entity.PurOrderNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.采购订单);
                 entity.tb_saleorder = saleorder;
-
-                entity.TotalCost = NewDetails.Sum(c => c.Cost * c.Quantity);
-                entity.TotalCost = entity.TotalCost + entity.FreightCost;
-
-                entity.TotalTaxAmount = NewDetails.Sum(c => c.SubtotalTaxAmount);
-
-
+                entity.TotalTaxAmount = details.Sum(c => c.TaxAmount);
                 entity.TotalTaxAmount = entity.TotalTaxAmount.ToRoundDecimalPlaces(authorizeController.GetMoneyDataPrecision());
-
-                entity.TotalAmount = NewDetails.Sum(c => c.TransactionPrice * c.Quantity);
-                entity.TotalAmount = entity.TotalAmount + entity.FreightIncome;
-
-
+                entity.TotalAmount = details.Sum(c => c.UnitPrice * c.Quantity);
+                entity.TotalAmount = entity.TotalAmount + entity.ShipCost;
                 BusinessHelper.Instance.InitEntity(entity);
-                //保存到数据库
-
             }
             return entity;
         }
-        */
+
 
 
         //应该就是反审 直接删除。或逻辑删除。不用再做一个重复的方法来实现。

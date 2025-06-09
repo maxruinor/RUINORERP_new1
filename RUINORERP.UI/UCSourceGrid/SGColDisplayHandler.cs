@@ -19,6 +19,8 @@ namespace RUINORERP.UI.UCSourceGrid
     [Serializable]
     public class SGColDisplayHandler : INotifyPropertyChanged, IEquatable<SGColDisplayHandler>
     {
+        // 添加唯一键属性（组合键）
+        public string CompositeKey => $"{BelongingObjectName}_{ColName}";
 
         /// <summary>
         /// 根据大思路 表格数据源是来自公共产品部分和单据明细部分。这里保存了分别所属类型
@@ -32,7 +34,7 @@ namespace RUINORERP.UI.UCSourceGrid
         /// 用于唯一标识一个列的定义
         /// </summary>
         public string UniqueId { get; set; }
-
+        private int colDisplayIndex = 0;
         public string ColCaption
         {
             get; set;
@@ -71,6 +73,18 @@ namespace RUINORERP.UI.UCSourceGrid
             set
             {
                 SetProperty(ref _ColWidth, value);
+            }
+        }
+
+        /// <summary>
+        /// 显示顺序
+        /// </summary>
+        public int ColDisplayIndex
+        {
+            get { return colDisplayIndex; }
+            set
+            {
+                SetProperty(ref colDisplayIndex, value);
             }
         }
 

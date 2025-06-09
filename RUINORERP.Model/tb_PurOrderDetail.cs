@@ -310,6 +310,20 @@ namespace RUINORERP.Model
             SetProperty(ref _DeliveredQuantity, value);
                         }
         }
+        private int _UndeliveredQty;
+        /// <summary>
+        /// 未交数量
+        /// </summary>
+        [AdvQueryAttribute(ColName = "UndeliveredQty", ColDesc = "未交数量")]
+        [SugarColumn(ColumnDataType = "int", SqlParameterDbType = "Int32", ColumnName = "UndeliveredQty", DecimalDigits = 0, IsNullable = false, ColumnDescription = "未交数量")]
+        public int UndeliveredQty
+        {
+            get { return _UndeliveredQty; }
+            set
+            {
+                SetProperty(ref _UndeliveredQty, value);
+            }
+        }
 
         private bool _IncludingTax= false;
         /// <summary>

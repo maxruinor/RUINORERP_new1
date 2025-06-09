@@ -124,6 +124,21 @@ namespace RUINORERP.Model
                         }
         }
 
+        private decimal _UnitCost = ((0));
+        /// <summary>
+        /// 单位成本
+        /// </summary>
+        [AdvQueryAttribute(ColName = "UnitCost", ColDesc = "单位成本")]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType = "Decimal", ColumnName = "UnitCost", DecimalDigits = 4, IsNullable = false, ColumnDescription = "单位成本")]
+        public decimal UnitCost
+        {
+            get { return _UnitCost; }
+            set
+            {
+                SetProperty(ref _UnitCost, value);
+            }
+        }
+
         private string _Summary;
         /// <summary>
         /// 摘要

@@ -44,6 +44,7 @@ using RUINORERP.Global.EnumExt;
 using RUINORERP.UI.AdvancedUIModule;
 using NPOI.SS.Formula.Functions;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.ListView;
+using Krypton.Toolkit;
 
 namespace RUINORERP.UI.PSI.PUR
 {
@@ -137,6 +138,8 @@ namespace RUINORERP.UI.PSI.PUR
 
                 lblExchangeRate.Visible = false;
                 txtExchangeRate.Visible = false;
+
+
                 UIHelper.ControlForeignFieldInvisible<tb_PurOrder>(this, false);
             }
             DataBindingHelper.BindData4CmbByEnum<tb_PurOrder>(entity, k => k.PayStatus, typeof(PayStatus), cmbPayStatus, false);
@@ -185,7 +188,7 @@ namespace RUINORERP.UI.PSI.PUR
             DataBindingHelper.BindData4TextBox<tb_PurOrder>(entity, t => t.ForeignDeposit.ToString(), txtForeignDeposit, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4TextBox<tb_PurOrder>(entity, t => t.Deposit.ToString(), txtDeposit, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4TextBox<tb_PurOrder>(entity, t => t.ApprovalOpinions, txtApprovalOpinions, BindDataType4TextBox.Text, false);
-            DataBindingHelper.BindData4TextBox<tb_PurOrder>(entity, t => t.RefNO, txtRefNO, BindDataType4TextBox.Text, false);
+            DataBindingHelper.BindData4TextBox<tb_PurOrder>(entity, t => t.RefNO, txtSorderNo, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4ControlByEnum<tb_PurOrder>(entity, t => t.DataStatus, lblDataStatus, BindDataType4Enum.EnumName, typeof(Global.DataStatus));
             DataBindingHelper.BindData4ControlByEnum<tb_PurOrder>(entity, t => t.ApprovalStatus, lblReview, BindDataType4Enum.EnumName, typeof(Global.ApprovalStatus));
 
@@ -200,10 +203,34 @@ namespace RUINORERP.UI.PSI.PUR
             {
                 sgh.LoadItemDataToGrid<tb_PurOrderDetail>(grid1, sgd, new List<tb_PurOrderDetail>(), c => c.ProdDetailID);
             }
+            DataBindingHelper.BindData4TextBox<tb_PurOrder>(entity, v => v.RefNO, txtSorderNo, BindDataType4TextBox.Text, true);
+            #region  引用销售订单转为采购订单
+            //创建表达式  草稿 结案 和没有提交的都不显示
+            BaseProcessor basePro = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_SaleOrder).Name + "Processor");
+            QueryFilter queryFilter = basePro.GetQueryFilter();
+
+            var lambdaSaleOut = Expressionable.Create<tb_SaleOrder>()
+         .And(t => t.DataStatus == (int)DataStatus.确认)
+         .And(t => t.ApprovalStatus.HasValue && t.ApprovalStatus.Value == (int)ApprovalStatus.已审核)
+         .And(t => t.ApprovalResults.HasValue && t.ApprovalResults.Value == true)
+          .And(t => t.isdeleted == false)
+         .ToExpression();
+            queryFilter.SetFieldLimitCondition(lambdaSaleOut);
+            ControlBindingHelper.ConfigureControlFilter<tb_PurOrder, tb_SaleOrder>(entity, txtSorderNo, t => t.RefNO,
+                f => f.SOrderNo, queryFilter, a => a.SOrder_ID, b => b.SOrder_ID, null, false);
+
+            #endregion
 
             //如果属性变化 则状态为修改
-            entity.PropertyChanged += (sender, s2) =>
+            entity.PropertyChanged += async (sender, s2) =>
             {
+                //如果是销售订单引入变化则加载明细及相关数据
+                if ((entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改) 
+                && entity.SOrder_ID.HasValue && entity.SOrder_ID > 0 && s2.PropertyName == entity.GetPropertyName<tb_PurOrder>(c => c.SOrder_ID))
+                {
+                    await OrderToOutBill(entity.SOrder_ID.Value);
+                }
+
                 if (s2.PropertyName == entity.GetPropertyName<tb_PurOrder>(c => c.PayStatus) && entity.PayStatus == (int)PayStatus.未付款)
                 {
                     //默认为账期
@@ -356,6 +383,8 @@ namespace RUINORERP.UI.PSI.PUR
             QueryFilter queryFilterC = baseProcessor.GetQueryFilter();
             queryFilterC.FilterLimitExpressions.Add(lambda);
             DataBindingHelper.InitFilterForControlByExp<tb_CustomerVendor>(entity, cmbCustomerVendor_ID, c => c.CVName, queryFilterC);
+
+
             base.BindData(entity);
         }
 
@@ -480,7 +509,8 @@ namespace RUINORERP.UI.PSI.PUR
             sgh.SetPointToColumnPairs<ProductSharePart, tb_PurOrderDetail>(sgd, f => f.Location_ID, t => t.Location_ID);
             sgh.SetPointToColumnPairs<ProductSharePart, tb_PurOrderDetail>(sgd, f => f.prop, t => t.property);
             sgh.SetPointToColumnPairs<ProductSharePart, tb_PurOrderDetail>(sgd, f => f.VendorModelCode, t => t.VendorModelCode);
-
+            //新建时默认数量就是未交数量，入库时对应减少
+            sgh.SetPointToColumnPairs<tb_PurOrderDetail, tb_PurOrderDetail>(sgd, f => f.Quantity, t => t.UndeliveredQty);
             //应该只提供一个结构
             List<tb_PurOrderDetail> lines = new List<tb_PurOrderDetail>();
             bindingSourceSub.DataSource = lines; //  ctrSub.Query(" 1>2 ");
@@ -875,6 +905,28 @@ namespace RUINORERP.UI.PSI.PUR
             }
 
         }
+
+        private async Task<tb_PurOrder> OrderToOutBill(long _sorderid)
+        {
+            tb_SaleOrder saleorder;
+            ButtonSpecAny bsa = txtSorderNo.ButtonSpecs.FirstOrDefault(c => c.UniqueName == "btnQuery");
+            if (bsa == null)
+            {
+                return null;
+            }
+            saleorder = await MainForm.Instance.AppContext.Db.Queryable<tb_SaleOrder>()
+            //.Includes(a => a.tb_SaleOuts)
+            .Includes(a => a.tb_SaleOrderDetails, b => b.tb_proddetail, c => c.tb_prod)
+            .Where(c => c.SOrder_ID == _sorderid)
+            .SingleAsync();
+            tb_SaleOrderController<tb_SaleOrder> ctr = Startup.GetFromFac<tb_SaleOrderController<tb_SaleOrder>>();
+            tb_PurOrder TargetBill = ctr.SaleOrderToPurOrder(saleorder);
+            ActionStatus actionStatus = ActionStatus.无操作;
+            BindData(TargetBill, actionStatus);
+            return TargetBill;
+        }
+
+
     }
 }
 

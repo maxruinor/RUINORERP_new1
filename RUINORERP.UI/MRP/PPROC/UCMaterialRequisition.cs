@@ -385,9 +385,10 @@ namespace RUINORERP.UI.MRP.MP
 
 
             sgh.SetPointToColumnPairs<ProductSharePart, tb_MaterialRequisitionDetail>(sgd, f => f.prop, t => t.property);
-
+            sgh.SetPointToColumnPairs<ProductSharePart, tb_MaterialRequisitionDetail>(sgd, f => f.Inv_Cost, t => t.Cost);
             //listCols.SetCol_Formula<tb_MaterialRequisitionDetail>((a, b, c) => a.TransactionPrice * b.Quantity - c.SubtotalTaxAmount, d => d.ActualSentQty);
-            //  listCols.SetCol_Formula<tb_MaterialRequisitionDetail>((a, b) => a.CanQuantity - b.ActualSentQty, c => c.);
+             listCols.SetCol_Formula<tb_MaterialRequisitionDetail>((a, b) => a.Cost * b.ActualSentQty, c => c.SubtotalCost);
+           
 
             //应该只提供一个结构
             List<tb_MaterialRequisitionDetail> lines = new List<tb_MaterialRequisitionDetail>();

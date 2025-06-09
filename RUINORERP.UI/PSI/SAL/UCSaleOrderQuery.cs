@@ -63,7 +63,7 @@ namespace RUINORERP.UI.PSI.SAL
             list.Add(new ContextMenuController("【标记已打印】", true, false, "NewSumDataGridView_标记已打印"));
             list.Add(new ContextMenuController("【转为出库单】", true, false, "NewSumDataGridView_转为销售出库单"));
             list.Add(new ContextMenuController("【取消订单】", true, false, "NewSumDataGridView_取消订单"));
-            //list.Add(new ContextMenuController("【转为采购单】", true, false, "NewSumDataGridView_转为采购单"));
+            list.Add(new ContextMenuController("【转为采购单】", true, false, "NewSumDataGridView_转为采购订单"));
             return list;
         }
 
@@ -135,7 +135,7 @@ namespace RUINORERP.UI.PSI.SAL
 
 
         //里面代码是转出库单的，还没有实现。后面再实现TODO!!!
-        private async void NewSumDataGridView_转为采购订单(object sender, EventArgs e)
+        private void NewSumDataGridView_转为采购订单(object sender, EventArgs e)
         {
             List<tb_SaleOrder> selectlist = GetSelectResult();
             foreach (var item in selectlist)
@@ -143,11 +143,9 @@ namespace RUINORERP.UI.PSI.SAL
                 //只有审核状态才可以转换为出库单
                 if (item.DataStatus == (int)DataStatus.确认 && item.ApprovalStatus == (int)ApprovalStatus.已审核 && item.ApprovalResults.HasValue && item.ApprovalResults.Value)
                 {
-                    //从数据库中查询采购订单中的来源字段是否来自于这个销售订单
-                    tb_PurOrder tb_PurOrder = await MainForm.Instance.AppContext.Db.Queryable<tb_PurOrder>().Where(c => c.RefBillID == item.SOrder_ID && c.RefBizType == (int)BizType.销售订单).SingleAsync();
-                    if (tb_PurOrder != null)
+                    if (item.tb_PurOrders != null && item.tb_PurOrders.Count > 0)
                     {
-                        if (MessageBox.Show($"当前订单{item.SOrderNo}：已经生成采购单，\r\n确定再次生成吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Information) == DialogResult.Yes)
+                        if (MessageBox.Show($"当前订单{item.SOrderNo}：已经生成过采购单，\r\n确定再次生成吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Information) == DialogResult.Yes)
                         {
 
                         }
@@ -158,7 +156,7 @@ namespace RUINORERP.UI.PSI.SAL
                     }
 
                     tb_SaleOrderController<tb_SaleOrder> ctr = Startup.GetFromFac<tb_SaleOrderController<tb_SaleOrder>>();
-                    tb_PurOrder purOrder = null;// ctr.SaleOrderToPurOrder(item);
+                    tb_PurOrder purOrder = ctr.SaleOrderToPurOrder(item);
                     MenuPowerHelper menuPowerHelper;
                     menuPowerHelper = Startup.GetFromFac<MenuPowerHelper>();
                     tb_MenuInfo RelatedMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble && m.EntityName == nameof(tb_PurOrder) && m.BIBaseForm == "BaseBillEditGeneric`2").FirstOrDefault();

@@ -69,6 +69,11 @@ namespace RUINORERP.Business
                 }
                 else
                 {
+                    //如果母件 成本为零 则将子件的加总赋值。实际少了加工费这些。缴款才是合理的入库成本变更的方式。这里暂时应急
+                    if (invMother.Inv_Cost == 0)
+                    {
+                        invMother.Inv_Cost = entity.tb_ProdMergeDetails.Sum(c => c.UnitCost);
+                    }
                     //更新库存
                     invMother.Quantity = invMother.Quantity + entity.MergeTargetQty;
                     invMother.LatestStorageTime = DateTime.Now;
@@ -146,7 +151,7 @@ namespace RUINORERP.Business
 
 
                     // 使用LINQ查询
-                    var CheckNewInvList = invUpdateList.Where(c=>c.Inventory_ID==0)
+                    var CheckNewInvList = invUpdateList.Where(c => c.Inventory_ID == 0)
                         .GroupBy(i => new { i.ProdDetailID, i.Location_ID })
                         .Where(g => g.Count() > 1)
                         .Select(g => g.Key.ProdDetailID)
@@ -163,7 +168,7 @@ namespace RUINORERP.Business
 
                     DbHelper<tb_Inventory> dbHelper = _appContext.GetRequiredService<DbHelper<tb_Inventory>>();
                     var Counter = await dbHelper.BaseDefaultAddElseUpdateAsync(invUpdateList);
-                    if (Counter ==0)
+                    if (Counter == 0)
                     {
                         _unitOfWorkManage.RollbackTran();
                         throw new Exception("子件库存更新失败！");
@@ -280,7 +285,7 @@ namespace RUINORERP.Business
                     }
                     DbHelper<tb_Inventory> dbHelper = _appContext.GetRequiredService<DbHelper<tb_Inventory>>();
                     var Counter = await dbHelper.BaseDefaultAddElseUpdateAsync(invUpdateList);
-                    if (Counter ==0)
+                    if (Counter == 0)
                     {
                         _unitOfWorkManage.RollbackTran();
                         throw new Exception("子件库存更新失败！");

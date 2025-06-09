@@ -174,3 +174,21 @@ var student = db.Queryable<Student>().Where(conModels).ToList();
             //{
             //    await MainForm.Instance.AppContext.Db.Updateable(GridSetting).ExecuteCommandAsync();
             //}
+
+
+
+
+                public static string FormatDate(object dateValue, string format = "yyyy-MM-dd")
+    {
+        if (dateValue == null || dateValue == DBNull.Value)
+        {
+            return string.Empty;
+        }
+
+        if (DateTime.TryParse(dateValue.ToString(), out DateTime date))
+        {
+            return date.ToString(format);
+        }
+
+        return string.Empty;
+    }

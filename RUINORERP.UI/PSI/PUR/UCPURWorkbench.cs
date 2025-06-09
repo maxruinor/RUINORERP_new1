@@ -285,7 +285,7 @@ namespace RUINORERP.UI.PUR
                         if (SOIds.Length > 0)
                         {
                             expPO = Expressionable.Create<tb_PurOrder>() //创建表达式
-                         .AndIF(SOIds.Length > 0, c => c.SOrder_ID.HasValue && c.RefBizType == (int)BizType.销售订单 && SOIds.ToArray().Contains(c.RefBillID.Value))
+                         .AndIF(SOIds.Length > 0, c => c.SOrder_ID.HasValue && SOIds.ToArray().Contains(c.SOrder_ID.Value))
                          .ToExpression();
 
                             goto case 1;
@@ -294,20 +294,20 @@ namespace RUINORERP.UI.PUR
                     break;
                 case 4:
                     //请购单
-                    if (txtBuyRequestNO.Text.Trim().Length > 0)
-                    {
-                        List<tb_BuyingRequisition> BRList = await MainForm.Instance.AppContext.Db.Queryable<tb_BuyingRequisition>()
-                             .WhereIF(txtBuyRequestNO.Text.Trim().Length > 0, w => w.PuRequisitionNo.Contains(txtBuyRequestNO.Text.Trim()))
-                             .ToListAsync();
-                        long[] BRIds = BRList.Select(c => c.PuRequisition_ID).ToArray();
-                        if (BRIds.Length > 0)
-                        {
-                            expPO = Expressionable.Create<tb_PurOrder>() //创建表达式
-                            .AndIF(BRIds.Length > 0, c => c.RefBillID.HasValue && c.RefBizType == (int)BizType.请购单 && BRIds.ToArray().Contains(c.RefBillID.Value))
-                            .ToExpression();
-                            goto case 1;
-                        }
-                    }
+                    //if (txtBuyRequestNO.Text.Trim().Length > 0)
+                    //{
+                    //    List<tb_BuyingRequisition> BRList = await MainForm.Instance.AppContext.Db.Queryable<tb_BuyingRequisition>()
+                    //         .WhereIF(txtBuyRequestNO.Text.Trim().Length > 0, w => w.PuRequisitionNo.Contains(txtBuyRequestNO.Text.Trim()))
+                    //         .ToListAsync();
+                    //    long[] BRIds = BRList.Select(c => c.PuRequisition_ID).ToArray();
+                    //    if (BRIds.Length > 0)
+                    //    {
+                    //        expPO = Expressionable.Create<tb_PurOrder>() //创建表达式
+                    //        .AndIF(BRIds.Length > 0, c => c.RefBillID.HasValue && c.RefBizType == (int)BizType.请购单 && BRIds.ToArray().Contains(c.RefBillID.Value))
+                    //        .ToExpression();
+                    //        goto case 1;
+                    //    }
+                    //}
                     break;
                 case 5:
                     //采购退货
@@ -455,7 +455,7 @@ namespace RUINORERP.UI.PUR
 
                     break;
 
-                
+
                 case MenuItemEnums.打印:
 
                     break;

@@ -78,13 +78,10 @@ namespace RUINORERP.Business
                 //        return rrs;
                 //    }
                 //}
-
-                // 开启事务，保证数据一致性
-                _unitOfWorkManage.BeginTran();
+         
                 tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
                 if (entity == null)
                 {
-                    _unitOfWorkManage.RollbackTran();
                     rrs.Succeeded = false;
                     return rrs;
                 }
@@ -104,13 +101,14 @@ namespace RUINORERP.Business
                         {
                             //特殊情况 要选择客户信息，还要进一步完善！TODO
                             rrs.ErrorMsg = "退货金额不能大于出库金额。如果特殊情况，请单独使用【其他费用支出】完成退款。";
-                            _unitOfWorkManage.RollbackTran();
                             rrs.Succeeded = false;
                             return rrs;
                         }
                     }
                 }
 
+                // 开启事务，保证数据一致性
+                _unitOfWorkManage.BeginTran();
 
                 //处理业务数据
                 if (!entity.RefundOnly)
@@ -292,7 +290,6 @@ namespace RUINORERP.Business
                     {
                         _logger.LogInformation($"{entity.ReturnNo}审核时，更新库存结果为0行，请检查数据！");
                     }
-
 
 
                     if (entity.tb_SaleOutReRefurbishedMaterialsDetails != null)

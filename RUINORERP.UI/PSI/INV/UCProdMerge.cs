@@ -342,7 +342,7 @@ namespace RUINORERP.UI.PSI.INV
             listCols.SetCol_NeverVisible<tb_ProdMergeDetail>(c => c.ProdDetailID);
             listCols.SetCol_NeverVisible<tb_ProdMergeDetail>(c => c.MergeSub_ID);
             listCols.SetCol_NeverVisible<tb_ProdMergeDetail>(c => c.MergeID);
-
+            listCols.SetCol_NeverVisible<tb_ProdMergeDetail>(c => c.UnitCost);
 
             UIHelper.ControlChildColumnsInvisible(CurMenuInfo, listCols);
             //实际在中间实体定义时加了只读属性，功能相同
@@ -374,7 +374,7 @@ namespace RUINORERP.UI.PSI.INV
 
             sgh.SetPointToColumnPairs<ProductSharePart, tb_ProdMergeDetail>(sgd, f => f.prop, t => t.property);
 
-
+            sgh.SetPointToColumnPairs<ProductSharePart, tb_ProdMergeDetail>(sgd, f => f.Inv_Cost, t => t.UnitCost);
 
             //应该只提供一个结构
             List<tb_ProdMergeDetail> lines = new List<tb_ProdMergeDetail>();
@@ -396,7 +396,7 @@ namespace RUINORERP.UI.PSI.INV
             sgh.OnCalculateColumnValue += Sgh_OnCalculateColumnValue;
             sgh.OnLoadMultiRowData += Sgh_OnLoadMultiRowData;
             grid1.Enter += Grid1_Enter;
-            UIHelper.ControlMasterColumnsInvisible(CurMenuInfo,this);
+            UIHelper.ControlMasterColumnsInvisible(CurMenuInfo, this);
         }
 
         private void Grid1_Enter(object sender, EventArgs e)
@@ -426,7 +426,7 @@ namespace RUINORERP.UI.PSI.INV
             if (RowDetails != null)
             {
                 List<tb_ProdMergeDetail> details = new List<tb_ProdMergeDetail>();
-                
+
                 foreach (var item in RowDetails)
                 {
                     tb_ProdMergeDetail bOM_SDetail = MainForm.Instance.mapper.Map<tb_ProdMergeDetail>(item);
@@ -751,7 +751,7 @@ namespace RUINORERP.UI.PSI.INV
                     if (RowDetails != null)
                     {
                         List<tb_ProdMergeDetail> details = new List<tb_ProdMergeDetail>();
-                        
+
                         foreach (var item in RowDetails)
                         {
                             tb_ProdMergeDetail bOM_SDetail = MainForm.Instance.mapper.Map<tb_ProdMergeDetail>(item);

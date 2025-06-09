@@ -105,11 +105,11 @@ namespace RUINORERP.Business
 
             RuleFor(tb_PurOrder => tb_PurOrder.Modified_by).NotEmpty().When(x => x.Modified_by.HasValue);
 
-            RuleFor(tb_PurOrder => tb_PurOrder.RefBillID).NotEmpty().When(x => x.RefBillID.HasValue);
+            
 
             RuleFor(tb_PurOrder => tb_PurOrder.RefNO).MaximumLength(25).WithMessage("引用单据:不能超过最大长度,25.");
 
-            RuleFor(tb_PurOrder => tb_PurOrder.RefBizType).NotEmpty().When(x => x.RefBizType.HasValue);
+             
 
             //long
             //PurOrder_ID

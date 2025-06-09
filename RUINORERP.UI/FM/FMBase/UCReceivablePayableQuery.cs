@@ -296,6 +296,8 @@ namespace RUINORERP.UI.FM
 
             base.MasterSummaryCols.Add(c => c.ForeignPaidAmount);
             base.MasterSummaryCols.Add(c => c.LocalPaidAmount);
+            base.ChildSummaryCols.Add(c => c.LocalPayableAmount);
+            base.ChildSummaryCols.Add(c => c.TaxLocalAmount);
         }
 
 

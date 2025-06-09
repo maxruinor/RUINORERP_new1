@@ -272,6 +272,21 @@ namespace RUINORERP.Model
                         }
         }
 
+        private int _TotalUndeliveredQty;
+        /// <summary>
+        /// 未交数量
+        /// </summary>
+        [AdvQueryAttribute(ColName = "TotalUndeliveredQty", ColDesc = "未交数量")]
+        [SugarColumn(ColumnDataType = "int", SqlParameterDbType = "Int32", ColumnName = "TotalUndeliveredQty", DecimalDigits = 0, IsNullable = false, ColumnDescription = "未交数量")]
+        public int TotalUndeliveredQty
+        {
+            get { return _TotalUndeliveredQty; }
+            set
+            {
+                SetProperty(ref _TotalUndeliveredQty, value);
+            }
+        }
+
         private decimal _ShipCost;
         /// <summary>
         /// 运费
@@ -640,19 +655,7 @@ namespace RUINORERP.Model
                         }
         }
 
-        private long? _RefBillID;
-        /// <summary>
-        /// 转入单
-        /// </summary>
-        [AdvQueryAttribute(ColName = "RefBillID",ColDesc = "转入单")] 
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "RefBillID" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "转入单" )]
-        public long? RefBillID
-        { 
-            get{return _RefBillID;}
-            set{
-            SetProperty(ref _RefBillID, value);
-                        }
-        }
+ 
 
         private string _RefNO;
         /// <summary>
@@ -668,19 +671,7 @@ namespace RUINORERP.Model
                         }
         }
 
-        private int? _RefBizType;
-        /// <summary>
-        /// 单据类型
-        /// </summary>
-        [AdvQueryAttribute(ColName = "RefBizType",ColDesc = "单据类型")] 
-        [SugarColumn(ColumnDataType = "int", SqlParameterDbType ="Int32",  ColumnName = "RefBizType" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "单据类型" )]
-        public int? RefBizType
-        { 
-            get{return _RefBizType;}
-            set{
-            SetProperty(ref _RefBizType, value);
-                        }
-        }
+       
 
         #endregion
 

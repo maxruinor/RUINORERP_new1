@@ -643,6 +643,9 @@
     <Compile Include="BI\UCUserPersonalizedEdit.designer.cs">
       <DependentUpon>UCUserPersonalizedEdit.cs</DependentUpon>
     </Compile>
+    <Compile Include="BusinessService\CalculationService\PurEntryCoordinator.cs" />
+    <Compile Include="BusinessService\CalculationService\SaleOutCoordinator.cs" />
+    <Compile Include="BusinessService\CalculationService\SourceGridCoordinator.cs" />
     <Compile Include="BusinessService\UniqueCodeChecker.cs" />
     <Compile Include="BusyDialog.cs">
       <SubType>Form</SubType>
@@ -650,6 +653,7 @@
     <Compile Include="BusyDialog.Designer.cs">
       <DependentUpon>BusyDialog.cs</DependentUpon>
     </Compile>
+    <Compile Include="Common\ColumnComparer.cs" />
     <Compile Include="Common\ControlExtensions.cs" />
     <Compile Include="Common\MenuItemEnumsExtensions.cs" />
     <Compile Include="Common\ProgressExtensions.cs" />

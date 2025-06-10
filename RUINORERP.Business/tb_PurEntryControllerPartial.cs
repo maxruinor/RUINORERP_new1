@@ -526,7 +526,7 @@ namespace RUINORERP.Business
                                 // 生成核销记录证明从预付中付款抵扣应付
                                 tb_FM_PaymentSettlement writeoff = new tb_FM_PaymentSettlement();
                                 writeoff.SettlementType = (int)SettlementType.预付冲应付;
-                                writeoff.SettlementNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.付款核销款);
+                                writeoff.SettlementNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.付款核销);
                                 writeoff.SettleDate = DateTime.Now;
                                 writeoff.ReceivePaymentType = (int)ReceivePaymentType.付款;
                                 writeoff.Account_id = prePayments[i].Account_id;

@@ -603,7 +603,7 @@ namespace RUINORERP.UI
         // 接口检测辅助方法
         private static bool ISharedForm(Type type)
         {
-            // 确保是具体类，且实现了IFMBillBusinessType接口
+            // 确保是具体类，且实现了ISharedIdentification接口
             return type.IsClass && !type.IsAbstract &&
                    typeof(ISharedIdentification).IsAssignableFrom(type);
         }
@@ -618,7 +618,7 @@ namespace RUINORERP.UI
             //       .Named<BaseQuery>(type.Name) // 保持原有命名规则
             //       .PropertiesAutowired(new CustPropertyAutowiredSelector())
             //       .AsSelf() // 同时支持按自身类型解析
-            //       .As(typeof(IFMBillBusinessType)); // 支持接口注入（可选）
+            //       .As(typeof(ISharedIdentification)); // 支持接口注入（可选）
 
             if (type.BaseType.BaseType.Name.Contains("BaseBillEditGeneric"))
             {

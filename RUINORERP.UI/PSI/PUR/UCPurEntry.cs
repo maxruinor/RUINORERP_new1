@@ -145,15 +145,12 @@ namespace RUINORERP.UI.PSI.PUR
 
             DataBindingHelper.BindData4ControlByEnum<tb_PurEntry>(entity, t => t.ApprovalStatus, lblReview, BindDataType4Enum.EnumName, typeof(Global.ApprovalStatus));
             //DataBindingHelper.BindData4Cmb<tb_PurOrder>(entity, k => k.PurOrder_ID, v => v.PurOrderNo, cmbPOID);
-
+           
             if (entity.tb_PurEntryDetails != null && entity.tb_PurEntryDetails.Count > 0)
             {
-                sgh.LoadItemDataToGrid<tb_PurEntryDetail>(grid1, sgd, entity.tb_PurEntryDetails, c => c.ProdDetailID);
+                details = entity.tb_PurEntryDetails;
             }
-            else
-            {
-                sgh.LoadItemDataToGrid<tb_PurEntryDetail>(grid1, sgd, new List<tb_PurEntryDetail>(), c => c.ProdDetailID);
-            }
+            sgh.LoadItemDataToGrid<tb_PurEntryDetail>(grid1, sgd, details, c => c.ProdDetailID);
 
             //如果属性变化 则状态为修改
             entity.PropertyChanged += (sender, s2) =>

@@ -54,7 +54,7 @@ namespace RUINORERP.Business
         public async override Task<ReturnResults<T>> AntiApprovalAsync(T ObjectEntity)
         {
             ReturnResults<T> rmrs = new ReturnResults<T>();
-            rmrs.ErrorMsg = "付款记录，已审核后不能反审。只能红冲";
+            rmrs.ErrorMsg = "付款记录，不能反审。只能红冲";
             await Task.Delay(0);
             return rmrs;
         }

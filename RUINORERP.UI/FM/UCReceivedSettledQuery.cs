@@ -14,7 +14,7 @@ using System.Windows.Forms;
 
 namespace RUINORERP.UI.FM
 {
-    [MenuAttrAssemblyInfo("收款核销查询", ModuleMenuDefine.模块定义.财务管理, ModuleMenuDefine.财务管理.收款管理, BizType.收款核销款)]
+    [MenuAttrAssemblyInfo("收款核销查询", ModuleMenuDefine.模块定义.财务管理, ModuleMenuDefine.财务管理.收款管理, BizType.收款核销)]
     [SharedIdRequired]
     public partial class UCReceivedSettledQuery : UCPaymentSettlementQuery, ISharedIdentification
     {

@@ -325,10 +325,10 @@ namespace RUINORERP.Business
                 case BizType.应收款单:
                     rule = "{S:YSK}{D:yyMMdd}{redis:{S:应收单}{D:yyMM}/000}";
                     break;
-                case BizType.收款核销款:
+                case BizType.收款核销:
                     rule = "{S:SKHX}{D:yyMMdd}{redis:{S:收款核销}{D:yyMM}/000}";
                     break;
-                case BizType.付款核销款:
+                case BizType.付款核销:
                     rule = "{S:FKHX}{D:yyMMdd}{redis:{S:付款核销}{D:yyMM}/000}";
                     break;
                 case BizType.销售价格调整单:

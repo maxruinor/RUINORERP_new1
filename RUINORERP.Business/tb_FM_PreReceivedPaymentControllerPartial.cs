@@ -70,20 +70,24 @@ namespace RUINORERP.Business
                 var paymentRecordController = _appContext.GetRequiredService<tb_FM_PaymentRecordController<tb_FM_PaymentRecord>>();
                 // 开启事务，保证数据一致性
                 _unitOfWorkManage.BeginTran();
-                
-                
-                //注意，反审 将对应的预付生成的收款单，只有收款单没有审核前，删除
-                ////删除
-                //if (entity.ReceivePaymentType == (int)ReceivePaymentType.收款)
-                //{
-                //    var list = await _appContext.Db.Queryable<tb_FM_PaymentRecord>()
-                //                  .Where(c => (c.PaymentStatus == (long)PaymentStatus.草稿 || c.PaymentStatus == (long)PaymentStatus.待审核) && c.tb_FM_PaymentRecordDetails.Any(d => d.SourceBilllId == entity.PreRPID && d.SourceBizType == (int)BizType.预收款单)).ToListAsync();
-                //}
-                //else
-                //{
-                //    await _appContext.Db.Deleteable<tb_FM_PaymentRecord>()
-                //        .Where(c => (c.PaymentStatus == (long)PaymentStatus.草稿 || c.PaymentStatus == (long)PaymentStatus.待审核) && c.tb_FM_PaymentRecordDetails.Any(d => d.SourceBilllId == entity.PreRPID && d.SourceBizType == (int)BizType.预付款单)).ExecuteCommandAsync();
-                //}
+
+
+                //注意，反审 将对应的预付生成的收款单，只有收款单没有审核前，可以删除
+                 //删除
+                 if (entity.ReceivePaymentType == (int)ReceivePaymentType.收款)
+                 {
+                     var list = await _appContext.Db.Queryable<tb_FM_PaymentRecord>()
+                                   .Where(c => (c.PaymentStatus == (long)PaymentStatus.草稿 || c.PaymentStatus == (long)PaymentStatus.待审核)
+                                   && c.tb_FM_PaymentRecordDetails.Any(d => d.SourceBilllId == entity.PreRPID 
+                                   && d.SourceBizType == (int)BizType.预收款单))
+                                   .ToListAsync();
+                 }
+                 else
+                 {
+                     await _appContext.Db.Deleteable<tb_FM_PaymentRecord>()
+                         .Where(c => (c.PaymentStatus == (long)PaymentStatus.草稿 || c.PaymentStatus == (long)PaymentStatus.待审核) 
+                         && c.tb_FM_PaymentRecordDetails.Any(d => d.SourceBilllId == entity.PreRPID && d.SourceBizType == (int)BizType.预付款单)).ExecuteCommandAsync();
+                 }
 
 
                 entity.PrePaymentStatus = (long)PrePaymentStatus.草稿;
@@ -131,7 +135,7 @@ namespace RUINORERP.Business
 
                 tb_FM_PaymentRecordController<tb_FM_PaymentRecord> settlementController = _appContext.GetRequiredService<tb_FM_PaymentRecordController<tb_FM_PaymentRecord>>();
                 tb_FM_PaymentRecord paymentRecord = await settlementController.CreatePaymentRecord(entity, false);
-             
+
                 //确认收到款  应该是收款审核时 反写回来 成 【待核销】
                 //if (paymentRecord.PaymentId > 0)
                 //{
@@ -175,7 +179,12 @@ namespace RUINORERP.Business
             return false;
         }
 
-
+        /// <summary>
+        /// 通过销售订单生成预收款单
+        /// </summary>
+        /// <param name="entity"></param>
+        /// <param name="SaveToDb"></param>
+        /// <returns></returns>
         public async Task<ReturnResults<tb_FM_PreReceivedPayment>> CreatePreReceivedPayment(tb_SaleOrder entity, bool SaveToDb = false)
         {
             ReturnResults<tb_FM_PreReceivedPayment> rmrs = new ReturnResults<tb_FM_PreReceivedPayment>();
@@ -236,7 +245,7 @@ namespace RUINORERP.Business
                     payable.LocalPrepaidAmount = entity.TotalAmount;
                 }
             }
-            //来自于订金
+            else            //来自于订金
             if (entity.PayStatus == (int)PayStatus.部分付款)
             {
                 //外币时
@@ -281,6 +290,10 @@ namespace RUINORERP.Business
             #endregion
             return rmrs;
         }
+
+
+
+
 
         ///// <summary>
         ///// 要生成收付单 没完成

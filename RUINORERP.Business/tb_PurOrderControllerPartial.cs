@@ -138,7 +138,7 @@ namespace RUINORERP.Business
 
 
 
-        //        采购预付款（预付）	- 生成预付单
+        //  采购预付款（预付）	- 生成预付单
         //- 收货后核销预付 → 冲抵应付	- 预收付表：减少 RemainAmount
         //- 应收应付表（应付）：减少 TotalAmount
         public async override Task<ReturnResults<T>> ApprovalAsync(T ObjectEntity)
@@ -355,6 +355,7 @@ namespace RUINORERP.Business
                                 payable.LocalPrepaidAmount = entity.TotalAmount;
                             }
                         }
+                        else
                         //来自于订金
                         if (entity.PayStatus == (int)PayStatus.部分付款)
                         {
@@ -377,6 +378,7 @@ namespace RUINORERP.Business
                         if (rmpay.Succeeded)
                         {
                             // 预付款单生成成功后的处理逻辑
+                            //无,当预付款单审核时才会生成付款单（付款申请单）？
                         }
                         else
                         {

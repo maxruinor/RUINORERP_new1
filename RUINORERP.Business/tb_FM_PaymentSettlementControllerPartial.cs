@@ -38,6 +38,84 @@ namespace RUINORERP.Business
     /// </summary>
     public partial class tb_FM_PaymentSettlementController<T> : BaseController<T> where T : class
     {
+        /// <summary>
+        /// 预收款抵扣应收款（正向核销）
+        /// 应收付审核时调用
+        /// </summary>
+        /// <param name="entity"></param>
+        /// <returns></returns>
+        public async Task<List<tb_FM_PaymentSettlement>> GenerateSettlement(tb_FM_PreReceivedPayment preReceivedPayment, tb_FM_ReceivablePayable receivablePayable)
+        {
+
+            decimal remainingLocal = receivablePayable.LocalBalanceAmount; // 本币剩余待抵扣金额
+            decimal remainingForeign = receivablePayable.ForeignBalanceAmount; // 外币剩余待抵扣金额
+
+            // 可抵扣金额：预收款余额与剩余待抵扣金额的较小值
+            // 计算可抵扣金额（本币优先）
+            decimal localDeduct = Math.Min(preReceivedPayment.LocalBalanceAmount, remainingLocal);
+            decimal foreignDeduct = Math.Min(preReceivedPayment.ForeignBalanceAmount, remainingForeign);
+
+            List<tb_FM_PaymentSettlement> SettlementRecords = new();
+            //预收付款单 审核时 自动生成 收付款记录
+            #region  生成核销记录
+
+            tb_FM_PaymentSettlement SettlementRecord = new tb_FM_PaymentSettlement();
+            SettlementRecord.ActionStatus = ActionStatus.新增;
+            SettlementRecord.IsAutoSettlement = true;
+            SettlementRecord.ReceivePaymentType = receivablePayable.ReceivePaymentType;
+            if (receivablePayable.ReceivePaymentType == (int)ReceivePaymentType.收款)
+            {
+                SettlementRecord.SourceBizType = (int)BizType.预收款单;
+                SettlementRecord.TargetBizType = (int)BizType.应收款单;
+                SettlementRecord.SettlementNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.收款核销);
+                SettlementRecord.SettlementType = (int)SettlementType.收款核销;
+                
+            }
+            else
+            {
+                SettlementRecord.SourceBizType = (int)BizType.预付款单;
+                SettlementRecord.SourceBizType = (int)BizType.应付款单;
+                SettlementRecord.SettlementNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.付款核销);
+                SettlementRecord.SettlementType = (int)SettlementType.付款核销;
+                //SettlementRecord.Account_id =
+            }
+            SettlementRecord.Currency_ID = preReceivedPayment.Currency_ID;
+            SettlementRecord.ExchangeRate = receivablePayable.ExchangeRate;
+            SettlementRecord.CustomerVendor_ID= receivablePayable.CustomerVendor_ID;
+            SettlementRecord.SettledForeignAmount = foreignDeduct;
+            SettlementRecord.SettledLocalAmount = localDeduct;
+            SettlementRecord.IsAutoSettlement = true;
+            //按明细生成具体的核销记录
+            if (receivablePayable.TotalForeignPayableAmount < 0 || receivablePayable.TotalLocalPayableAmount < 0)
+            {
+                SettlementRecord.SettlementType = (int)SettlementType.红冲核销;
+                SettlementRecord.IsReversed = true;
+                //SettlementRecord.ReversedSettlementID=
+            }
+            if (SettlementRecord.SettledLocalAmount < 0)
+            {
+                SettlementRecord.SettlementType = (int)SettlementType.红冲核销;
+            }
+            SettlementRecord.SourceBillNo = preReceivedPayment.PreRPNO;
+            SettlementRecord.SourceBillId = preReceivedPayment.PreRPID;
+
+            SettlementRecord.TargetBillId = receivablePayable.ARAPId;
+            SettlementRecord.TargetBillNo = receivablePayable.ARAPNo;
+            SettlementRecord.SettleDate = System.DateTime.Now;
+          
+            BusinessHelper.Instance.InitEntity(SettlementRecord);
+            #endregion
+            SettlementRecords.Add(SettlementRecord);
+
+
+            List<long> ids = await _unitOfWorkManage.GetDbClient().Insertable(SettlementRecords).ExecuteReturnSnowflakeIdListAsync();
+            if (ids.Count > 0)
+            {
+
+            }
+            return SettlementRecords;
+        }
+
 
 
         /// <summary>
@@ -64,7 +142,7 @@ namespace RUINORERP.Business
                     SettlementRecord.ReceivePaymentType = entity.ReceivePaymentType;
                     if (entity.ReceivePaymentType == (int)ReceivePaymentType.收款)
                     {
-                        SettlementRecord.SettlementNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.收款核销款);
+                        SettlementRecord.SettlementNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.收款核销);
                         SettlementRecord.SettlementType = (int)SettlementType.收款核销;
                         if (entity.TotalForeignAmount < 0 || entity.TotalLocalAmount < 0)
                         {
@@ -75,7 +153,7 @@ namespace RUINORERP.Business
                     }
                     else
                     {
-                        SettlementRecord.SettlementNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.付款核销款);
+                        SettlementRecord.SettlementNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.付款核销);
                         SettlementRecord.SettlementType = (int)SettlementType.付款核销;
                         if (entity.TotalForeignAmount < 0 || entity.TotalLocalAmount < 0)
                         {
@@ -134,7 +212,7 @@ namespace RUINORERP.Business
             SettlementRecord.ReceivePaymentType = targetEntity.ReceivePaymentType;
             if (targetEntity.ReceivePaymentType == (int)ReceivePaymentType.收款)
             {
-                SettlementRecord.SettlementNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.收款核销款);
+                SettlementRecord.SettlementNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.收款核销);
                 SettlementRecord.SettlementType = (int)SettlementType.收款核销;
                 if (targetEntity.ForeignPaidAmount < 0 || targetEntity.ForeignPaidAmount < 0)
                 {
@@ -146,7 +224,7 @@ namespace RUINORERP.Business
             }
             else
             {
-                SettlementRecord.SettlementNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.付款核销款);
+                SettlementRecord.SettlementNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.付款核销);
                 SettlementRecord.SettlementType = (int)SettlementType.付款核销;
                 if (targetEntity.ForeignPaidAmount < 0 || targetEntity.ForeignPaidAmount < 0)
                 {

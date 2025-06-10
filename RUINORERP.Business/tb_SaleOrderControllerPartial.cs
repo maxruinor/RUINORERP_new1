@@ -47,7 +47,7 @@ namespace RUINORERP.Business
         /// 全部付款生成应收
         /// 账期就要等出库审核时生成应收款。
         /// 
-        /// 销售订金（预收）	- 预收定金生成预收单
+        /// 销售订金（预收）	- 预收定金生成预收单--》预收审核时 生成收款单 收款单审核代表完成支付。
         //- 后续订单核销预收 → 自动冲抵应收	- 预收付表：减少 RemainAmount
         //- 应收应付表：减少 TotalAmount
 
@@ -201,12 +201,10 @@ namespace RUINORERP.Business
                     }
 
                     //销售订单审核时，非账期，即时收款时
-                    //订金，部分收款 生成预收款。
-                    //全款生成应收 转收款单
+                    //订金，部分收款和全部收款都要生成预收款。（因为财务必须有一个审核收款行为）
+                    //销售出库时，生成应收去核销预收。 如果客户超付，（预收，收款，实际已经支付。 出库时 只要生成应收，和核销记录，并且回写
                     var ctrpay = _appContext.GetRequiredService<tb_FM_PreReceivedPaymentController<tb_FM_PreReceivedPayment>>();
-                    if (entity.Paytype_ID != _appContext.PaymentMethodOfPeriod.Paytype_ID
-                        && entity.PayStatus == (int)PayStatus.部分付款
-                        )
+                    if (entity.Paytype_ID != _appContext.PaymentMethodOfPeriod.Paytype_ID)
                     {
                         var PreReceivedPayment = ctrpay.CreatePreReceivedPayment(entity, true);
                     }
@@ -718,23 +716,51 @@ namespace RUINORERP.Business
                     #region  预收款单处理
 
                     tb_FM_PreReceivedPaymentController<tb_FM_PreReceivedPayment> ctrpay = _appContext.GetRequiredService<tb_FM_PreReceivedPaymentController<tb_FM_PreReceivedPayment>>();
-                    var pay = await ctrpay.IsExistEntityAsync(p => p.SourceBillId == entity.SOrder_ID);
-                    if (pay != null)
+                    var PrePayment = await ctrpay.IsExistEntityAsync(p => p.SourceBillId == entity.SOrder_ID);
+                    //一个订单。只会有一个预收款单
+                    //pay= await _unitOfWorkManage.GetDbClient().Queryable< tb_FM_PreReceivedPayment >()
+                    //    .Includes(a=>a.tb)
+                    //    .Where(c=>c.SourceBillId==entity.SOrder_ID).FirstAsync();
+                    if (PrePayment != null)
                     {
-                        if (pay.PrePaymentStatus == (long)PrePaymentStatus.草稿 || pay.PrePaymentStatus == (long)PrePaymentStatus.待审核)
+                        if (PrePayment.PrePaymentStatus == (long)PrePaymentStatus.草稿 || PrePayment.PrePaymentStatus == (long)PrePaymentStatus.待审核)
                         {
-                            await ctrpay.DeleteAsync(pay);
+                            await ctrpay.DeleteAsync(PrePayment);
                         }
                         else
                         {
                             //订单反审核  只是用来修改，还是真实取消订单。取消的话。则要退款。修改的话。则不需要退款。
                             //如果没有出库，则生成红冲单  ，已冲销  已取消，先用取消标记
                             //如果是要退款，则在预收款查询这，生成退款单。
+                            //如果预收单审核了，生成收款单 在财务没有审核前。还是可以反审。这是为了保存系统的灵活性。
+                            var Payment = await _unitOfWorkManage.GetDbClient().Queryable<tb_FM_PaymentRecord>()
+                                  .Includes(a => a.tb_FM_PaymentRecordDetails)
+                                 .Where(c => c.tb_FM_PaymentRecordDetails.Any(d => d.SourceBilllId == PrePayment.SourceBillId)).FirstAsync();
+                            if (Payment != null)
+                            {
+                                if (Payment.PaymentStatus == (int)PaymentStatus.草稿 || Payment.PaymentStatus == (int)PaymentStatus.待审核)
+                                {
 
-                            //rmrs.ErrorMsg = $"销售订单{pay.SourceBillNo}已经生成预收款单{pay.PreRPNO}，已经确认收款，请不能反审核。";
-                            //_unitOfWorkManage.RollbackTran();
-                            //rmrs.Succeeded = false;
-                            //return rmrs;
+                                    int PaymentCounter = await _unitOfWorkManage.GetDbClient().Deleteable(Payment).ExecuteCommandAsync();
+                                    //if (PaymentCounter > 0)
+                                    //{
+                                    await ctrpay.DeleteAsync(PrePayment);
+                                    //}
+                                }
+                                else
+                                {
+                                    rmrs.ErrorMsg = $"销售订单{PrePayment.SourceBillNo}的预收款单{PrePayment.PreRPNO}，已经确认收款，单号为：{Payment.PaymentNo}，请不能反审核。";
+                                    _unitOfWorkManage.RollbackTran();
+                                    rmrs.Succeeded = false;
+                                    return rmrs;
+                                }
+                            }
+                            else
+                            {
+                                //预收单审核了。应该有收款单。正常不会到这步
+                                await ctrpay.DeleteAsync(PrePayment);
+                            }
+                            
                         }
 
                     }

@@ -61,9 +61,16 @@ namespace RUINORERP.UI.BusinessService.CalculationService
 
         private void AllocateFreight(string masterPropertyName, decimal masterValue, Expression<Func<tb_SaleOutDetail, decimal>> detailSelector)
         {
-            if (masterValue == 0) return;
-
             string detailPropertyName = detailSelector.GetMemberInfo().Name;
+            //如果汇总的字段都为0才不计算。
+            decimal allocatedFreightCostTotal = 0;
+            allocatedFreightCostTotal = _details.Sum(d => (decimal?)typeof(tb_SaleOutDetail).GetProperty(detailPropertyName)?.GetValue(d) ?? 0m);
+            if (masterValue == 0 && allocatedFreightCostTotal == 0)
+            {
+                return;
+            }
+
+  
             string mapKey = MapFields.FirstOrDefault(m => m.Value == detailPropertyName).Key;
 
             if (mapKey == null) return;
@@ -82,6 +89,37 @@ namespace RUINORERP.UI.BusinessService.CalculationService
                 var quantity = detail.Quantity.ObjToDecimal();
                 var allocatedValue = masterValue * (quantity / _master.TotalQty).ToRoundDecimalPlaces(_authController.GetMoneyDataPrecision());
                 typeof(tb_SaleOutDetail).GetProperty(detailPropertyName)?.SetValue(detail, allocatedValue);
+            }
+
+            //计算后新值的和
+            allocatedFreightCostTotal = _details.Sum(d => (decimal?)typeof(tb_SaleOutDetail).GetProperty(detailPropertyName)?.GetValue(d) ?? 0m);
+            if (masterValue != allocatedFreightCostTotal)
+            {
+                #region 如果因为分摊时 四舍五入导致总和不等于主表值，再采用“比例分配+余数调整”的方法重新分摊
+                decimal remainingFreight = masterValue;
+                int lastDetailIndex = _details.Count - 1;
+
+                for (int i = 0; i < _details.Count; i++)
+                {
+                    var detail = _details[i];
+                    var quantity = detail.Quantity.ObjToDecimal();
+
+                    if (i == lastDetailIndex)
+                    {
+                        // 最后一行调整余数，确保总和等于主表值
+                        var allocatedValue = remainingFreight.ToRoundDecimalPlaces(_authController.GetMoneyDataPrecision());
+                        detail.SetPropertyValue(detailPropertyName, allocatedValue);
+                        remainingFreight -= allocatedValue;
+                    }
+                    else
+                    {
+                        var allocatedValue = masterValue * (quantity / _master.TotalQty).ToRoundDecimalPlaces(_authController.GetMoneyDataPrecision());
+                        detail.SetPropertyValue(detailPropertyName, allocatedValue);
+                        remainingFreight -= allocatedValue;
+                    }
+
+                }
+                #endregion
             }
 
             _gridHelper.UpdateGridColumn<tb_SaleOutDetail>(detailPropertyName);

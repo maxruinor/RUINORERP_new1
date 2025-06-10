@@ -3113,12 +3113,17 @@ namespace RUINORERP.UI.BaseForm
                 }
                 else
                 {
-                  
+
                     //当数据不是新建时。直接提交不再保存了。只更新主表状态字段  要优化！！！！！！！！！！！！！！！TODO
                     if (ReflectionHelper.ExistPropertyName<T>(typeof(DataStatus).Name))
                     {
                         ReflectionHelper.SetPropertyValue(EditEntity, typeof(DataStatus).Name, (int)DataStatus.新建);
                     }
+                    if (ReflectionHelper.ExistPropertyName<T>(typeof(ApprovalStatus).Name))
+                    {
+                        ReflectionHelper.SetPropertyValue(EditEntity, typeof(ApprovalStatus).Name, (int)ApprovalStatus.未审核);
+                    }
+
                     ReturnResults<T> rmr = new ReturnResults<T>();
                     BaseController<T> ctr = Startup.GetFromFacByName<BaseController<T>>(typeof(T).Name + "Controller");
                     rmr = await ctr.BaseSaveOrUpdate(EditEntity);
@@ -3246,6 +3251,10 @@ namespace RUINORERP.UI.BaseForm
                 if (ReflectionHelper.ExistPropertyName<T>(typeof(DataStatus).Name))
                 {
                     ReflectionHelper.SetPropertyValue(EditEntity, typeof(DataStatus).Name, (int)DataStatus.新建);
+                }
+                if (ReflectionHelper.ExistPropertyName<T>(typeof(ApprovalStatus).Name))
+                {
+                    ReflectionHelper.SetPropertyValue(EditEntity, typeof(ApprovalStatus).Name, (int)ApprovalStatus.未审核);
                 }
                 bool rs = await this.Save(true);
                 if (rs)

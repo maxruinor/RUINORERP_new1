@@ -612,7 +612,6 @@ namespace RUINORERP.UI.Common
                     cdc.ColDisplayText = dc.HeaderText;
                     cdc.ColDisplayIndex = dc.DisplayIndex;
                     cdc.ColWidth = dc.Width;
-                    cdc.ColEncryptedName = dc.Name;
                     cdc.ColName = dc.Name;
                     cdc.IsFixed = dc.Frozen;
                     cdc.Visible = dc.Visible;
@@ -814,7 +813,6 @@ namespace RUINORERP.UI.Common
                     cdc.ColDisplayText = dc.HeaderText;
                     cdc.ColDisplayIndex = dc.DisplayIndex;
                     cdc.ColWidth = dc.Width;
-                    cdc.ColEncryptedName = dc.Name;
                     cdc.ColName = dc.Name;
                     cdc.IsFixed = dc.Frozen;
                     cdc.Visible = dc.Visible;
@@ -932,6 +930,14 @@ namespace RUINORERP.UI.Common
                 ColumnDisplays.Add(col);
             }
 
+            if (InvisibleCols==null)
+            {
+                InvisibleCols = dataGridView.BizInvisibleCols;
+            }
+
+           
+
+
             // 获取Graphics对象
             Graphics graphics = dataGridView.CreateGraphics();
             ColumnDisplays.ForEach(c =>
@@ -1024,6 +1030,8 @@ namespace RUINORERP.UI.Common
                 });
             });
             //不管什么情况都处理系统和权限的限制列显示
+            //程序中 硬编码不显示的列，在这里要排掉,----要隐藏
+            //ColumnDisplays = ColumnDisplays.Where(x => !InvisibleCols.Contains(x.ColName)).ToList();
             ColumnDisplays.ForEach(c =>
             {
                 //系统指定不显示的
@@ -1614,10 +1622,8 @@ namespace RUINORERP.UI.Common
 
             List<SGColDisplayHandler> newColumns = JsonConvert.DeserializeObject<List<SGColDisplayHandler>>(json);
 
-         
-              var  result = oldColumns.CompareColumns(newColumns);
-           
-           
+
+            var result = oldColumns.CompareColumns(newColumns);
 
 
 

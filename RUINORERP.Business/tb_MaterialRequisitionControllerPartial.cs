@@ -318,16 +318,9 @@ namespace RUINORERP.Business
                 int last = await _unitOfWorkManage.GetDbClient().Updateable<tb_MaterialRequisition>(entity).ExecuteCommandAsync();
                 if (last > 0)
                 {
-                    _logger.LogInformation("审核领料单成功" + entity.MaterialRequisitionNO);
+                    //_logger.LogInformation("审核领料单成功" + entity.MaterialRequisitionNO);
                 }
-                else
-                {
-                    _logger.LogInformation("审核领料单失败" + entity.MaterialRequisitionNO);
-                    _unitOfWorkManage.RollbackTran();
-                    rrs.Succeeded = false;
-                    return rrs;
-                }
-
+             
 
                 // 注意信息的完整性
                 _unitOfWorkManage.CommitTran();

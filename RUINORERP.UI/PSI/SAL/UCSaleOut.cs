@@ -415,7 +415,7 @@ namespace RUINORERP.UI.PSI.SAL
             sgd.GridMasterData = entity;
             sgd.GridMasterDataType = entity.GetType();
 
-            _coordinator = new SaleOutCoordinator(EditEntity, details, sgh);
+            _coordinator = new SaleOutCoordinator(EditEntity, EditEntity.tb_SaleOutDetails, sgh);
             base.BindData(entity);
         }
 
@@ -599,6 +599,12 @@ namespace RUINORERP.UI.PSI.SAL
                     item.SubtotalCostAmount = item.Cost * item.Quantity;
                 }
 
+                if (_coordinator != null)
+                {
+                    _coordinator.Master = EditEntity;
+                    _coordinator.Details = details;
+                }
+
                 EditEntity.TotalQty = details.Sum(c => c.Quantity);
                 EditEntity.TotalCost = details.Sum(c => (c.Cost + c.CustomizedCost) * c.Quantity);
                 EditEntity.TotalCost = EditEntity.TotalCost + EditEntity.FreightCost;
@@ -757,12 +763,18 @@ namespace RUINORERP.UI.PSI.SAL
                 {
                     if (EditEntity.FreightCost != details.Sum(c => c.AllocatedFreightCost))
                     {
-                        if (MessageBox.Show($"运费成本{EditEntity.FreightCost}与明细运费成本分摊总金额{details.Sum(c => c.AllocatedFreightCost)}不一致，确定要保存吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2) == DialogResult.No)
+                        _coordinator.HandleMasterPropertyChange(c => c.FreightCost);
+
+                        if (MessageBox.Show($"运费成本{EditEntity.FreightCost}与明细运费成本分摊的总金额{details.Sum(c => c.AllocatedFreightCost)}不一致\r\n" +
+                            $"系统已经自动分摊，确定要保存吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button1) == DialogResult.No)
                             return false;
+
                     }
                     if (EditEntity.FreightIncome != details.Sum(c => c.AllocatedFreightIncome))
                     {
-                        if (MessageBox.Show($"运费收入{EditEntity.FreightCost}与明细运费收入分摊总金额{details.Sum(c => c.AllocatedFreightCost)}不一致，确定要保存吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2) == DialogResult.No)
+                        _coordinator.HandleMasterPropertyChange(c => c.FreightIncome);
+                        if (MessageBox.Show($"运费收入{EditEntity.FreightIncome}与明细运费收入分摊总金额{details.Sum(c => c.AllocatedFreightIncome)}不一致\r\n" +
+                            $"系统已经自动分摊，确定要保存吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2) == DialogResult.No)
                             return false;
                     }
                 }

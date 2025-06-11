@@ -22,18 +22,29 @@ namespace RUINORERP.UI.UControls
 
         //这个主要是查询。来自于数据库主子表等。认为列名不行重复。这里暂时不用
         // 添加唯一键属性（使用UniqueId或生成组合键）
-       // public string CompositeKey => UniqueId; // 或使用 $"{GridKeyName}_{ColName}";
+        // public string CompositeKey => UniqueId; // 或使用 $"{GridKeyName}_{ColName}";
+
+        // 添加唯一键属性（组合键）
+        public string CompositeKey => $"{BelongingObjectName}_{ColName}";
+
+
+
+        /// <summary>
+        /// 根据大思路 表格数据源是来自公共产品部分和单据明细部分。这里保存了分别所属类型
+        /// 这个类来于自定义列。有些表格显示时  有产品公共部分和明细 要用这个来区别
+        /// </summary>
+        public string BelongingObjectName { get; set; }
+
+
         // 添加UniqueId属性（如果尚未添加）
         //public string UniqueId { get; set; } = Guid.NewGuid().ToString();
 
- 
         private bool isPrimaryKey = false;
-
         private string colDisplayText = string.Empty;
         private bool isFixed = false;
         private int colDisplayIndex = 0;
         private int _ColWidth = 50;
-        private string colEncryptedName = string.Empty;
+ 
 
         /// <summary>
         /// 所属表格的唯一名称
@@ -103,16 +114,15 @@ namespace RUINORERP.UI.UControls
             }
         }
 
-        /// <summary>
-        /// 加密后的列名，暂时不用
-        /// </summary>
-        public string ColEncryptedName { get => colEncryptedName; set => colEncryptedName = value; }
-
+   
         /// <summary>
         /// 列名
         /// </summary>
         public string ColName { get; set; }
 
+        /// <summary>
+        /// 数据属性名称
+        /// </summary>
         public string DataPropertyName { get; set; }
 
         private bool _Visible;

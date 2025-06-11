@@ -19,6 +19,7 @@ using RUINORERP.Common.Extensions;
 using SqlSugar;
 using RUINORERP.Business.Security;
 using RUINORERP.Business.Processor;
+using Org.BouncyCastle.Crypto.Prng;
 
 namespace RUINORERP.UI.PSI.PUR
 {
@@ -57,14 +58,14 @@ namespace RUINORERP.UI.PSI.PUR
             base._UCMasterQuery.ColDisplayTypes.Add(typeof(tb_ProductType));
             base._UCMasterQuery.ColDisplayTypes.Add(typeof(tb_PurOrder));
             base._UCMasterQuery.ColDisplayTypes.Add(typeof(tb_PurOrderDetail));
-            
+
 
             base._UCOutlookGridGroupAnalysis.ColDisplayTypes = base._UCMasterQuery.ColDisplayTypes;
- 
+
             base._UCOutlookGridGroupAnalysis.GridRelated.SetRelatedInfo<View_PurOrderItems, tb_PurOrder>(c => c.PurOrderNo, r => r.PurOrder_ID);
             base._UCOutlookGridGroupAnalysis.GridRelated.SetRelatedInfo<View_PurOrderItems, tb_SaleOrder>(c => c.SOrder_ID, r => r.SOrder_ID);
         }
-    
+
 
         public override void BuildLimitQueryConditions()
         {
@@ -99,6 +100,7 @@ namespace RUINORERP.UI.PSI.PUR
         {
             base.MasterInvisibleCols.Add(c => c.PurOrder_ID);
             base.MasterInvisibleCols.Add(c => c.PrimaryKeyID);
+            base.MasterInvisibleCols.Add(c => c.SOrder_ID);
         }
 
     }

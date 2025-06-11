@@ -130,7 +130,7 @@ namespace RUINORERP.UI.UCSourceGrid
                         SubtotalResultAttribute subtotalResultAttribute = attr as SubtotalResultAttribute;
                         col.SubtotalResult = true;
                     }
-
+                 
                     //if (attr is SubtotalAttribute)
                     //{
                     //    SubtotalAttribute subtotalAttribute = attr as SubtotalAttribute;

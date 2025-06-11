@@ -45,6 +45,8 @@ using RUINORERP.UI.AdvancedUIModule;
 using NPOI.SS.Formula.Functions;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.ListView;
 using Krypton.Toolkit;
+using Fireasy.Common.Extensions;
+using RUINORERP.Global.Model;
 
 namespace RUINORERP.UI.PSI.PUR
 {
@@ -188,7 +190,7 @@ namespace RUINORERP.UI.PSI.PUR
             DataBindingHelper.BindData4TextBox<tb_PurOrder>(entity, t => t.ForeignDeposit.ToString(), txtForeignDeposit, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4TextBox<tb_PurOrder>(entity, t => t.Deposit.ToString(), txtDeposit, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4TextBox<tb_PurOrder>(entity, t => t.ApprovalOpinions, txtApprovalOpinions, BindDataType4TextBox.Text, false);
-            DataBindingHelper.BindData4TextBox<tb_PurOrder>(entity, t => t.RefNO, txtSorderNo, BindDataType4TextBox.Text, false);
+            DataBindingHelper.BindData4TextBox<tb_PurOrder>(entity, t => t.SOrderNo, txtSorderNo, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4ControlByEnum<tb_PurOrder>(entity, t => t.DataStatus, lblDataStatus, BindDataType4Enum.EnumName, typeof(Global.DataStatus));
             DataBindingHelper.BindData4ControlByEnum<tb_PurOrder>(entity, t => t.ApprovalStatus, lblReview, BindDataType4Enum.EnumName, typeof(Global.ApprovalStatus));
 
@@ -203,7 +205,7 @@ namespace RUINORERP.UI.PSI.PUR
             {
                 sgh.LoadItemDataToGrid<tb_PurOrderDetail>(grid1, sgd, new List<tb_PurOrderDetail>(), c => c.ProdDetailID);
             }
-            DataBindingHelper.BindData4TextBox<tb_PurOrder>(entity, v => v.RefNO, txtSorderNo, BindDataType4TextBox.Text, true);
+            DataBindingHelper.BindData4TextBox<tb_PurOrder>(entity, v => v.SOrderNo, txtSorderNo, BindDataType4TextBox.Text, true);
             #region  引用销售订单转为采购订单
             //创建表达式  草稿 结案 和没有提交的都不显示
             BaseProcessor basePro = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_SaleOrder).Name + "Processor");
@@ -216,7 +218,7 @@ namespace RUINORERP.UI.PSI.PUR
           .And(t => t.isdeleted == false)
          .ToExpression();
             queryFilter.SetFieldLimitCondition(lambdaSaleOut);
-            ControlBindingHelper.ConfigureControlFilter<tb_PurOrder, tb_SaleOrder>(entity, txtSorderNo, t => t.RefNO,
+            ControlBindingHelper.ConfigureControlFilter<tb_PurOrder, tb_SaleOrder>(entity, txtSorderNo, t => t.SOrderNo,
                 f => f.SOrderNo, queryFilter, a => a.SOrder_ID, b => b.SOrder_ID, null, false);
 
             #endregion
@@ -225,7 +227,7 @@ namespace RUINORERP.UI.PSI.PUR
             entity.PropertyChanged += async (sender, s2) =>
             {
                 //如果是销售订单引入变化则加载明细及相关数据
-                if ((entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改) 
+                if ((entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改)
                 && entity.SOrder_ID.HasValue && entity.SOrder_ID > 0 && s2.PropertyName == entity.GetPropertyName<tb_PurOrder>(c => c.SOrder_ID))
                 {
                     await OrderToOutBill(entity.SOrder_ID.Value);
@@ -320,12 +322,18 @@ namespace RUINORERP.UI.PSI.PUR
 
                 if (s2.PropertyName == entity.GetPropertyName<tb_PurOrder>(c => c.ShipCost))
                 {
-                    EditEntity.TotalAmount = EditEntity.TotalAmount + EditEntity.ShipCost;
-
+                    EditEntity.TotalAmount = EditEntity.tb_PurOrderDetails.Sum(c => c.SubtotalAmount) + EditEntity.ShipCost;
+                    var taxrate = EditEntity.tb_PurOrderDetails.FirstOrDefault(c => c.TaxRate > 0);
+                    if (taxrate != null)
+                    {
+                        decimal FreightTaxRate = taxrate.TaxRate;
+                        var UntaxedShippingCost = (EditEntity.ShipCost / (1 + FreightTaxRate)); //计算列：不含税运费
+                        EditEntity.TotalUntaxedAmount = EditEntity.tb_PurOrderDetails.Sum(c => c.SubtotalUntaxedAmount);
+                        EditEntity.TotalUntaxedAmount += Math.Round(UntaxedShippingCost, 2);
+                    }
                     if (EditEntity.Currency_ID != AppContext.BaseCurrency.Currency_ID)
                     {
                         EditEntity.ForeignTotalAmount = EditEntity.TotalAmount / EditEntity.ExchangeRate;
-                        //
                         EditEntity.ForeignTotalAmount = Math.Round(EditEntity.ForeignTotalAmount, 2); // 四舍五入到 2 位小数
                     }
                 }
@@ -458,7 +466,7 @@ namespace RUINORERP.UI.PSI.PUR
             listCols.SetCol_ReadOnly<tb_PurOrderDetail>(c => c.IncludingTax);
             listCols.SetCol_ReadOnly<tb_PurOrderDetail>(c => c.DeliveredQuantity);
             listCols.SetCol_ReadOnly<tb_PurOrderDetail>(c => c.TotalReturnedQty);
-
+            listCols.SetCol_ReadOnly<tb_PurOrderDetail>(c => c.TaxAmount);
             //listCols.SetCol_ReadOnly<ProductSharePart>(c => c.Location_ID);
 
 
@@ -497,6 +505,7 @@ namespace RUINORERP.UI.PSI.PUR
                     col.SetCol_Summary<tb_PurOrderDetail>(item);
                 }
             }
+            listCols.SetCol_Summary<tb_PurOrderDetail>(c => c.SubtotalUntaxedAmount);
 
             listCols.SetCol_Formula<tb_PurOrderDetail>((a, b, c) => (a.CustomizedCost + a.UnitPrice) * c.Quantity, c => c.SubtotalAmount);
             listCols.SetCol_Formula<tb_PurOrderDetail>((a, b, c) => a.SubtotalAmount / (1 + b.TaxRate) * c.TaxRate, d => d.TaxAmount);
@@ -509,8 +518,9 @@ namespace RUINORERP.UI.PSI.PUR
             sgh.SetPointToColumnPairs<ProductSharePart, tb_PurOrderDetail>(sgd, f => f.Location_ID, t => t.Location_ID);
             sgh.SetPointToColumnPairs<ProductSharePart, tb_PurOrderDetail>(sgd, f => f.prop, t => t.property);
             sgh.SetPointToColumnPairs<ProductSharePart, tb_PurOrderDetail>(sgd, f => f.VendorModelCode, t => t.VendorModelCode);
-            //新建时默认数量就是未交数量，入库时对应减少
-            sgh.SetPointToColumnPairs<tb_PurOrderDetail, tb_PurOrderDetail>(sgd, f => f.Quantity, t => t.UndeliveredQty);
+            //新建时默认数量就是未交数量，入库时对应减少, 但是 数量不隐藏
+            // sgh.SetPointToColumnPairs<tb_PurOrderDetail, tb_PurOrderDetail>(sgd, f => f.Quantity, t => t.UndeliveredQty, false);
+            listCols.SetCol_RelatedValue<tb_PurOrderDetail>(a => a.Quantity, b => b.UndeliveredQty, "{0}", c => c.Quantity);
             //应该只提供一个结构
             List<tb_PurOrderDetail> lines = new List<tb_PurOrderDetail>();
             bindingSourceSub.DataSource = lines; //  ctrSub.Query(" 1>2 ");
@@ -613,12 +623,15 @@ namespace RUINORERP.UI.PSI.PUR
                 EditEntity.TotalUntaxedAmount = details.Sum(c => (c.UntaxedCustomizedCost + c.UntaxedUnitPrice) * c.Quantity);
 
                 //不含税的总金额+不含税运费
-                decimal UntaxedShippingCost = 0;
                 if (EditEntity.ShipCost > 0 && EditEntity.TotalTaxAmount > 0)
                 {
-                    decimal FreightTaxRate = details.FirstOrDefault(c => c.TaxRate > 0).TaxRate;
-                    UntaxedShippingCost = (EditEntity.ShipCost / (1 + FreightTaxRate)); //计算列：不含税运费
-                    EditEntity.TotalUntaxedAmount += Math.Round(UntaxedShippingCost, 2);
+                    var FreightTaxRate = EditEntity.tb_PurOrderDetails.FirstOrDefault(c => c.TaxRate > 0);
+                    if (FreightTaxRate != null)
+                    {
+                        var UntaxedShippingCost = (EditEntity.ShipCost / (1 + FreightTaxRate.TaxRate)); //计算列：不含税运费
+                        EditEntity.TotalUntaxedAmount = EditEntity.tb_PurOrderDetails.Sum(c => c.SubtotalUntaxedAmount);
+                        EditEntity.TotalUntaxedAmount += Math.Round(UntaxedShippingCost, 2);
+                    }
                 }
 
 
@@ -709,6 +722,19 @@ namespace RUINORERP.UI.PSI.PUR
                 //   表格中的验证提示
                 //   其他输入条码验证
 
+                if (NeedValidated && EditEntity.TotalQty != details.Sum(c => c.UndeliveredQty) || details.Sum(c => c.Quantity) != details.Sum(c => c.UndeliveredQty))
+                {
+                    if (EditEntity.DataStatus == (int)DataStatus.草稿 || EditEntity.DataStatus == (int)DataStatus.新建)
+                    {
+                        details.ForEach(c =>
+                        {
+                            c.UndeliveredQty = c.Quantity;
+                        });
+                    }
+                    //System.Windows.Forms.MessageBox.Show("订购数量和明细未交数量的和不相等，请检查记录！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    //return false;
+                }
+
                 EditEntity.tb_PurOrderDetails = details;
                 EditEntity.tb_PurOrderDetails.ForEach(c =>
                 {
@@ -784,6 +810,9 @@ namespace RUINORERP.UI.PSI.PUR
                         return false;
                     }
                 }
+
+
+
 
                 ReturnMainSubResults<tb_PurOrder> SaveResult = new ReturnMainSubResults<tb_PurOrder>();
                 if (NeedValidated)

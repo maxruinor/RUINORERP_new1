@@ -390,7 +390,10 @@ namespace RUINORERP.UI.Common
                         //设置不可见
                         if (item.tb_fieldinfo != null)
                         {
+                            if (item.tb_fieldinfo.IsChild && item.tb_fieldinfo.FieldName== "Quantity")
+                            {
 
+                            }
 
                             //如果字段不启用时，直接不显示
                             if (!item.tb_fieldinfo.IsEnabled)
@@ -1369,7 +1372,7 @@ namespace RUINORERP.UI.Common
                 foreach (PropertyInfo field in type.GetProperties())
                 {
                     ColDisplayController col = new ColDisplayController();
-
+                    
                     bool Browsable = true;
                     var attributes = field.GetCustomAttributes(true);
                     if (attributes.Contains(new BrowsableAttribute(false)))
@@ -1405,6 +1408,8 @@ namespace RUINORERP.UI.Common
                         entityAttr = attr as SugarColumn;
                         if (null != entityAttr)
                         {
+                            col.DataPropertyName = entityAttr.SqlParameterDbType.ToString();
+                            col.BelongingObjectName = type.Name;
                             //类型
                             if (entityAttr.ColumnDescription == null)
                             {

@@ -42,13 +42,13 @@ namespace RUINORERP.UI.BusinessService.CalculationService
 
         protected override void HandleMasterPropertyChange(string propertyName)
         {
-            decimal totalQty = _details.Sum(d => d.Quantity);
+            decimal totalQty = Details.Sum(d => d.Quantity);
             if (totalQty <= 0) return;
 
             switch (propertyName)
             {
                 case nameof(tb_PurEntry.ShipCost):
-                    AllocateFreight(_master.ShipCost, d => d.AllocatedFreightCost);
+                    AllocateFreight(Master.ShipCost, d => d.AllocatedFreightCost);
                     break;
             }
 
@@ -62,7 +62,7 @@ namespace RUINORERP.UI.BusinessService.CalculationService
         /// <param name="detailSelector"></param>
         private void AllocateFreight(decimal masterValue, Expression<Func<tb_PurEntryDetail, decimal>> detailSelector)
         {
-            if (masterValue == 0 && _details.Sum(d => d.AllocatedFreightCost) == 0)
+            if (masterValue == 0 && Details.Sum(d => d.AllocatedFreightCost) == 0)
             {
                 return;
             }
@@ -72,32 +72,32 @@ namespace RUINORERP.UI.BusinessService.CalculationService
 
             if (mapKey == null) return;
 
-            var allocatedTotal = _details.Sum(d => (decimal?)typeof(tb_PurEntryDetail).GetProperty(detailPropertyName)?.GetValue(d) ?? 0m);
-            if (Math.Abs((decimal)typeof(tb_PurEntry).GetProperty(mapKey)?.GetValue(_master) - allocatedTotal) < 0.001m)
+            var allocatedTotal = Details.Sum(d => (decimal?)typeof(tb_PurEntryDetail).GetProperty(detailPropertyName)?.GetValue(d) ?? 0m);
+            if (Math.Abs((decimal)typeof(tb_PurEntry).GetProperty(mapKey)?.GetValue(Master) - allocatedTotal) < 0.001m)
                 return;
 
             if (MainForm.Instance.AppContext.SysConfig.FreightAllocationRules != (int)FreightAllocationRules.产品数量占比)
                 return;
 
 
-            if (_master.TotalQty <= 0) return;
+            if (Master.TotalQty <= 0) return;
 
-            foreach (var detail in _details)
+            foreach (var detail in Details)
             {
                 var quantity = detail.Quantity.ObjToDecimal();
-                var allocatedValue = masterValue * (quantity / _master.TotalQty).ToRoundDecimalPlaces(_authController.GetMoneyDataPrecision());
+                var allocatedValue = masterValue * (quantity / Master.TotalQty).ToRoundDecimalPlaces(_authController.GetMoneyDataPrecision());
                 typeof(tb_PurEntryDetail).GetProperty(detailPropertyName)?.SetValue(detail, allocatedValue);
             }
 
-            if (masterValue != _details.Sum(d => d.AllocatedFreightCost))
+            if (masterValue != Details.Sum(d => d.AllocatedFreightCost))
             {
                 #region 如果因为分摊时 四舍五入导致总和不等于主表值，再采用“比例分配+余数调整”的方法重新分摊
                 decimal remainingFreight = masterValue;
-                int lastDetailIndex = _details.Count - 1;
+                int lastDetailIndex = Details.Count - 1;
 
-                for (int i = 0; i < _details.Count; i++)
+                for (int i = 0; i < Details.Count; i++)
                 {
-                    var detail = _details[i];
+                    var detail = Details[i];
                     var quantity = detail.Quantity.ObjToDecimal();
 
                     if (i == lastDetailIndex)
@@ -110,7 +110,7 @@ namespace RUINORERP.UI.BusinessService.CalculationService
                     }
                     else
                     {
-                        var allocatedValue = masterValue * (quantity / _master.TotalQty).ToRoundDecimalPlaces(_authController.GetMoneyDataPrecision());
+                        var allocatedValue = masterValue * (quantity / Master.TotalQty).ToRoundDecimalPlaces(_authController.GetMoneyDataPrecision());
                         //typeof(tb_PurEntryDetail).GetProperty(detailPropertyName)?.SetValue(detail, allocatedValue);
                         detail.SetPropertyValue(detailPropertyName, allocatedValue);
                         remainingFreight -= allocatedValue;
@@ -128,10 +128,10 @@ namespace RUINORERP.UI.BusinessService.CalculationService
             SafeExecute(() =>
             {
 
-                decimal freightSum = _details.Sum(d => d.AllocatedFreightCost);
-                if (Math.Abs(_master.ShipCost - freightSum) > 0.001m)
+                decimal freightSum = Details.Sum(d => d.AllocatedFreightCost);
+                if (Math.Abs(Master.ShipCost - freightSum) > 0.001m)
                 {
-                    _master.ShipCost = freightSum;
+                    Master.ShipCost = freightSum;
                 }
 
                 CalculateSummary();
@@ -140,10 +140,10 @@ namespace RUINORERP.UI.BusinessService.CalculationService
 
         private void CalculateSummary()
         {
-            _master.TotalQty = _details.Sum(d => d.Quantity);
-            _master.TotalAmount = _details.Sum(d => (d.UnitPrice + d.CustomizedCost) * d.Quantity) + _master.ShipCost;
-            _master.TotalTaxAmount = _details.Sum(c => c.TaxAmount);
-            _master.TotalTaxAmount = _master.TotalTaxAmount.ToRoundDecimalPlaces(_authController.GetMoneyDataPrecision());
+            Master.TotalQty = Details.Sum(d => d.Quantity);
+            Master.TotalAmount = Details.Sum(d => (d.UnitPrice + d.CustomizedCost) * d.Quantity) + Master.ShipCost;
+            Master.TotalTaxAmount = Details.Sum(c => c.TaxAmount);
+            Master.TotalTaxAmount = Master.TotalTaxAmount.ToRoundDecimalPlaces(_authController.GetMoneyDataPrecision());
         }
     }
 }

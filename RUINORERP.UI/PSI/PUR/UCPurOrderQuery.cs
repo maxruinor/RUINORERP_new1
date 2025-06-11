@@ -28,11 +28,12 @@ using RUINORERP.Business.CommService;
 using FastReport.Table;
 using RUINORERP.UI.UControls;
 using StackExchange.Redis;
+using RUINORERP.Global.EnumExt;
 namespace RUINORERP.UI.PSI.PUR
 {
 
     [MenuAttrAssemblyInfo("采购订单查询", ModuleMenuDefine.模块定义.进销存管理, ModuleMenuDefine.进销存管理.采购管理, BizType.采购订单)]
-    public partial class UCPurOrderQuery : BaseBillQueryMC<tb_PurOrder, tb_PurOrderDetail>,UI.AdvancedUIModule.IContextMenuInfoAuth
+    public partial class UCPurOrderQuery : BaseBillQueryMC<tb_PurOrder, tb_PurOrderDetail>, UI.AdvancedUIModule.IContextMenuInfoAuth
     {
         public UCPurOrderQuery()
         {
@@ -90,7 +91,7 @@ namespace RUINORERP.UI.PSI.PUR
 
                     tb_PurOrderController<tb_PurOrder> ctr = Startup.GetFromFac<tb_PurOrderController<tb_PurOrder>>();
                     tb_PurEntry purEntry = ctr.PurOrderTotb_PurEntry(item);
-               
+
                     MenuPowerHelper menuPowerHelper;
                     menuPowerHelper = Startup.GetFromFac<MenuPowerHelper>();
                     tb_MenuInfo RelatedMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble && m.EntityName == nameof(tb_PurEntry) && m.BIBaseForm == "BaseBillEditGeneric`2").FirstOrDefault();
@@ -107,7 +108,7 @@ namespace RUINORERP.UI.PSI.PUR
                 }
             }
         }
-       
+
 
         public override void BuildLimitQueryConditions()
         {
@@ -134,7 +135,12 @@ namespace RUINORERP.UI.PSI.PUR
 
         }
 
-   
+        public override void BuildInvisibleCols()
+        {
+            base.MasterInvisibleCols.Add(c => c.SOrder_ID);
+            base.ChildInvisibleCols.Add(c => c.PurOrder_ChildID);
+        }
+
 
         public override void BuildSummaryCols()
         {
@@ -151,7 +157,7 @@ namespace RUINORERP.UI.PSI.PUR
         /// <summary>
         /// 批量转换为采购入库单
         /// </summary>
-        public async  void BatchConversion()
+        public async void BatchConversion()
         {
             tb_PurEntryController<tb_PurEntry> ctr = Startup.GetFromFac<tb_PurEntryController<tb_PurEntry>>();
             List<tb_PurOrder> selectlist = GetSelectResult();
@@ -174,7 +180,7 @@ namespace RUINORERP.UI.PSI.PUR
 
                     }
 
-                     
+
                     tb_PurOrderController<tb_PurOrder> ctrPurOrder = Startup.GetFromFac<tb_PurOrderController<tb_PurOrder>>();
                     tb_PurEntry purEntry = ctrPurOrder.PurOrderTotb_PurEntry(item);
                     if (purEntry.tb_PurEntryDetails.Count > 0)

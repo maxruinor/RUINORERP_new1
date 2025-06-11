@@ -62,6 +62,9 @@ namespace RUINORERP.UI.BaseForm
                 KeyValuePair<string, bool> kv = new KeyValuePair<string, bool>();
                 newSumDataGridViewMaster.FieldNameList.TryRemove(item, out kv);
             }
+
+            newSumDataGridViewMaster.BizInvisibleCols = InvisibleCols;
+
             //这里设置指定列默认隐藏。可以手动配置显示
             foreach (var item in DefaultHideCols)
             {

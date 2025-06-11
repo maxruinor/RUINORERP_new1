@@ -100,7 +100,6 @@ namespace RUINORERP.UI.UControls
                     cdc.ColDisplayText = dc.HeaderText;
                     cdc.ColDisplayIndex = dc.DisplayIndex;
                     cdc.ColWidth = dc.Width;
-                    cdc.ColEncryptedName = dc.Name;
                     cdc.ColName = dc.Name;
                     cdc.IsFixed = dc.Frozen;
                     cdc.Visible = dc.Visible;
@@ -196,7 +195,6 @@ namespace RUINORERP.UI.UControls
                         cdc.ColDisplayText = dc.HeaderText;
                         cdc.ColDisplayIndex = dc.DisplayIndex;
                         cdc.ColWidth = dc.Width;
-                        cdc.ColEncryptedName = dc.Name;
                         cdc.ColName = dc.Name;
                         cdc.IsFixed = dc.Frozen;
                         cdc.Visible = dc.Visible;

@@ -43,16 +43,16 @@ namespace RUINORERP.UI.BusinessService.CalculationService
 
         protected override void HandleMasterPropertyChange(string propertyName)
         {
-            decimal totalQty = _details.Sum(d => d.Quantity);
+            decimal totalQty = Details.Sum(d => d.Quantity);
             if (totalQty <= 0) return;
 
             switch (propertyName)
             {
                 case nameof(tb_SaleOut.FreightCost):
-                    AllocateFreight(propertyName, _master.FreightCost, d => d.AllocatedFreightCost);
+                    AllocateFreight(propertyName, Master.FreightCost, d => d.AllocatedFreightCost);
                     break;
                 case nameof(tb_SaleOut.FreightIncome):
-                    AllocateFreight(propertyName, _master.FreightIncome, d => d.AllocatedFreightIncome);
+                    AllocateFreight(propertyName, Master.FreightIncome, d => d.AllocatedFreightIncome);
                     break;
             }
 
@@ -64,7 +64,7 @@ namespace RUINORERP.UI.BusinessService.CalculationService
             string detailPropertyName = detailSelector.GetMemberInfo().Name;
             //如果汇总的字段都为0才不计算。
             decimal allocatedFreightCostTotal = 0;
-            allocatedFreightCostTotal = _details.Sum(d => (decimal?)typeof(tb_SaleOutDetail).GetProperty(detailPropertyName)?.GetValue(d) ?? 0m);
+            allocatedFreightCostTotal = Details.Sum(d => (decimal?)typeof(tb_SaleOutDetail).GetProperty(detailPropertyName)?.GetValue(d) ?? 0m);
             if (masterValue == 0 && allocatedFreightCostTotal == 0)
             {
                 return;
@@ -75,33 +75,33 @@ namespace RUINORERP.UI.BusinessService.CalculationService
 
             if (mapKey == null) return;
 
-            var allocatedTotal = _details.Sum(d => (decimal?)typeof(tb_SaleOutDetail).GetProperty(detailPropertyName)?.GetValue(d) ?? 0m);
-            if (Math.Abs((decimal)typeof(tb_SaleOut).GetProperty(mapKey)?.GetValue(_master) - allocatedTotal) < 0.001m)
+            var allocatedTotal = Details.Sum(d => (decimal?)typeof(tb_SaleOutDetail).GetProperty(detailPropertyName)?.GetValue(d) ?? 0m);
+            if (Math.Abs((decimal)typeof(tb_SaleOut).GetProperty(mapKey)?.GetValue(Master) - allocatedTotal) < 0.001m)
                 return;
 
             if (MainForm.Instance.AppContext.SysConfig.FreightAllocationRules != (int)FreightAllocationRules.产品数量占比)
                 return;
 
-            _master.TotalQty = _details.Sum(d => d.Quantity);
+            Master.TotalQty = Details.Sum(d => d.Quantity);
 
-            foreach (var detail in _details)
+            foreach (var detail in Details)
             {
                 var quantity = detail.Quantity.ObjToDecimal();
-                var allocatedValue = masterValue * (quantity / _master.TotalQty).ToRoundDecimalPlaces(_authController.GetMoneyDataPrecision());
+                var allocatedValue = masterValue * (quantity / Master.TotalQty).ToRoundDecimalPlaces(_authController.GetMoneyDataPrecision());
                 typeof(tb_SaleOutDetail).GetProperty(detailPropertyName)?.SetValue(detail, allocatedValue);
             }
 
             //计算后新值的和
-            allocatedFreightCostTotal = _details.Sum(d => (decimal?)typeof(tb_SaleOutDetail).GetProperty(detailPropertyName)?.GetValue(d) ?? 0m);
+            allocatedFreightCostTotal = Details.Sum(d => (decimal?)typeof(tb_SaleOutDetail).GetProperty(detailPropertyName)?.GetValue(d) ?? 0m);
             if (masterValue != allocatedFreightCostTotal)
             {
                 #region 如果因为分摊时 四舍五入导致总和不等于主表值，再采用“比例分配+余数调整”的方法重新分摊
                 decimal remainingFreight = masterValue;
-                int lastDetailIndex = _details.Count - 1;
+                int lastDetailIndex = Details.Count - 1;
 
-                for (int i = 0; i < _details.Count; i++)
+                for (int i = 0; i < Details.Count; i++)
                 {
-                    var detail = _details[i];
+                    var detail = Details[i];
                     var quantity = detail.Quantity.ObjToDecimal();
 
                     if (i == lastDetailIndex)
@@ -113,7 +113,7 @@ namespace RUINORERP.UI.BusinessService.CalculationService
                     }
                     else
                     {
-                        var allocatedValue = masterValue * (quantity / _master.TotalQty).ToRoundDecimalPlaces(_authController.GetMoneyDataPrecision());
+                        var allocatedValue = masterValue * (quantity / Master.TotalQty).ToRoundDecimalPlaces(_authController.GetMoneyDataPrecision());
                         detail.SetPropertyValue(detailPropertyName, allocatedValue);
                         remainingFreight -= allocatedValue;
                     }
@@ -131,16 +131,16 @@ namespace RUINORERP.UI.BusinessService.CalculationService
             {
                 detail.SubtotalCostAmount = detail.Cost * detail.Quantity;
 
-                decimal freightSum = _details.Sum(d => d.AllocatedFreightCost);
-                if (Math.Abs(_master.FreightCost - freightSum) > 0.001m)
+                decimal freightSum = Details.Sum(d => d.AllocatedFreightCost);
+                if (Math.Abs(Master.FreightCost - freightSum) > 0.001m)
                 {
-                    _master.FreightCost = freightSum;
+                    Master.FreightCost = freightSum;
                 }
 
-                decimal freightIncomeSum = _details.Sum(d => d.AllocatedFreightIncome);
-                if (Math.Abs(_master.FreightIncome - freightIncomeSum) > 0.001m)
+                decimal freightIncomeSum = Details.Sum(d => d.AllocatedFreightIncome);
+                if (Math.Abs(Master.FreightIncome - freightIncomeSum) > 0.001m)
                 {
-                    _master.FreightIncome = freightIncomeSum;
+                    Master.FreightIncome = freightIncomeSum;
                 }
 
                 CalculateSummary();
@@ -149,12 +149,12 @@ namespace RUINORERP.UI.BusinessService.CalculationService
 
         private void CalculateSummary()
         {
-            _master.TotalQty = _details.Sum(d => d.Quantity);
-            _master.TotalCost = _details.Sum(d => (d.Cost + d.CustomizedCost) * d.Quantity) + _master.FreightCost;
-            _master.TotalAmount = _details.Sum(d => d.TransactionPrice * d.Quantity) + _master.FreightIncome;
-            _master.TotalCommissionAmount = _details.Sum(c => c.CommissionAmount);
-            _master.TotalTaxAmount = _details.Sum(c => c.SubtotalTaxAmount);
-            _master.TotalTaxAmount = _master.TotalTaxAmount.ToRoundDecimalPlaces(_authController.GetMoneyDataPrecision());
+            Master.TotalQty = Details.Sum(d => d.Quantity);
+            Master.TotalCost = Details.Sum(d => (d.Cost + d.CustomizedCost) * d.Quantity) + Master.FreightCost;
+            Master.TotalAmount = Details.Sum(d => d.TransactionPrice * d.Quantity) + Master.FreightIncome;
+            Master.TotalCommissionAmount = Details.Sum(c => c.CommissionAmount);
+            Master.TotalTaxAmount = Details.Sum(c => c.SubtotalTaxAmount);
+            Master.TotalTaxAmount = Master.TotalTaxAmount.ToRoundDecimalPlaces(_authController.GetMoneyDataPrecision());
 
         }
     }

@@ -107,7 +107,7 @@ namespace RUINORERP.Business
 
             
 
-            RuleFor(tb_PurOrder => tb_PurOrder.RefNO).MaximumLength(25).WithMessage("引用单据:不能超过最大长度,25.");
+            RuleFor(tb_PurOrder => tb_PurOrder.SOrderNo).MaximumLength(25).WithMessage("引用单据:不能超过最大长度,25.");
 
              
 

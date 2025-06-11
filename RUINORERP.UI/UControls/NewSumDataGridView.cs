@@ -49,6 +49,13 @@ namespace RUINORERP.UI.UControls
     [Serializable]
     public class NewSumDataGridView : KryptonDataGridView
     {
+        /// <summary>
+        /// 保存不可见的列 ,业务性的。由程序硬编码控制了
+        /// 系统设置为不可用，或程序中控制了不可见的列
+        /// add by  watson2025-6-11
+        /// </summary>
+        public HashSet<string> BizInvisibleCols { get; set; } = new HashSet<string>();
+
 
         private bool _CustomRowNo = false;
 
@@ -1454,7 +1461,6 @@ namespace RUINORERP.UI.UControls
                     //所以通过添加一个属性和一个方法来判断，并且拖放时立即保存到List中。保存时就不从dg中取显示顺序了
                     //cdc.ColDisplayIndex = dc.DisplayIndex; 这个特别处理
                     cdc.ColWidth = dc.Width;
-                    cdc.ColEncryptedName = dc.Name;
                     cdc.ColName = dc.Name;
                     cdc.IsFixed = dc.Frozen;
                     cdc.Visible = dc.Visible;

@@ -145,7 +145,7 @@ namespace RUINORERP.UI.SysConfig
                 KeyValuePair<string, bool> kv = new KeyValuePair<string, bool>();
                 dataGridView1.FieldNameList.TryRemove(item, out kv);
             }
-
+            dataGridView1.BizInvisibleCols=InvisibleCols;
             dataGridView1.UseCustomColumnDisplay = true;
             InitListData();
             bindingSourceList.DataSource = new List<tb_ProjectGroupEmployees>();

@@ -191,7 +191,7 @@ namespace RUINORERP.UI.PSI.SAL
                     {
                         entity.SOrderNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.销售订单);
                     }
-                    
+
                     entity.SaleDate = System.DateTime.Now;
                     //通过动态参数来设置这个默认值。这样每个公司不同设置按自己的来。
                     entity.IsFromPlatform = AppContext.GlobalVariableConfig.IsFromPlatform;
@@ -425,7 +425,7 @@ namespace RUINORERP.UI.PSI.SAL
                 }
 
 
-                if (entity.FreightIncome > 0 && s2.PropertyName == entity.GetPropertyName<tb_SaleOrder>(c => c.FreightIncome))
+                if (entity.FreightIncome >= 0 && s2.PropertyName == entity.GetPropertyName<tb_SaleOrder>(c => c.FreightIncome))
                 {
                     if (EditEntity.tb_SaleOrderDetails != null)
                     {
@@ -952,13 +952,18 @@ using var binder = new UIStateBinder(..., customEvaluator);
                 EditEntity.TotalAmount = EditEntity.TotalAmount + EditEntity.FreightIncome;
 
 
-
                 //如果没有有效的明细。直接提示
                 if (NeedValidated && details.Count == 0)
                 {
                     MessageBox.Show("请录入有效明细记录！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     return false;
                 }
+                if (NeedValidated && (EditEntity.FreightIncome > 0 && EditEntity.TotalAmount != detailentity.Sum(c => c.SubtotalTransAmount) + EditEntity.FreightIncome))
+                {
+                    MessageBox.Show("销售总金额需要包含运费。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return false;
+                }
+
                 if (NeedValidated && (EditEntity.TotalQty == 0 || detailentity.Sum(c => c.Quantity) == 0))
                 {
                     MessageBox.Show("单据及明细总数量不为能0！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);

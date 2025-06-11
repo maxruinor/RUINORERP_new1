@@ -190,7 +190,7 @@ namespace RUINORERP.Business
                                 var RowQty = entity.tb_PurEntryDetails.Where(c => c.ProdDetailID == entity.tb_purorder.tb_PurOrderDetails[i].ProdDetailID
                                 && c.Location_ID == entity.tb_purorder.tb_PurOrderDetails[i].Location_ID).Sum(c => c.Quantity);
                                 entity.tb_purorder.tb_PurOrderDetails[i].DeliveredQuantity += RowQty;
-                                entity.tb_purorder.tb_PurOrderDetails[i].DeliveredQuantity -= RowQty;
+                                entity.tb_purorder.tb_PurOrderDetails[i].UndeliveredQty -= RowQty;
                                 //如果已交数据大于 订单数量 给出警告实际操作中 使用其他方式将备品入库
                                 if (entity.tb_purorder.tb_PurOrderDetails[i].DeliveredQuantity > entity.tb_purorder.tb_PurOrderDetails[i].Quantity)
                                 {

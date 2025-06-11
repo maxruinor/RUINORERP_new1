@@ -370,7 +370,7 @@ namespace RUINORERP.UI.UCSourceGrid
             List<ColumnInfo> columnInfos = new List<ColumnInfo>();
             for (int i = 0; i < sgdefine.grid.Columns.Count; i++)
             {
-                if (sgdefine.grid.Columns[i]==null)
+                if (sgdefine.grid.Columns[i] == null)
                 {
 
                 }
@@ -378,7 +378,7 @@ namespace RUINORERP.UI.UCSourceGrid
                 {
                     columnInfos.Add(sgdefine.grid.Columns[i]);
                 }
-                
+
             }
 
             List<ColumnInfo> OtherColumnInfos = new List<ColumnInfo>();
@@ -392,7 +392,7 @@ namespace RUINORERP.UI.UCSourceGrid
 
             for (int i = 0; i < DefineColumns.Count; i++)
             {
-                
+
 
                 var colInfo = columnInfos.FirstOrDefault(c => c.Tag as SGDefineColumnItem != null
                 && c.Tag is SGDefineColumnItem columnItem
@@ -524,6 +524,15 @@ namespace RUINORERP.UI.UCSourceGrid
                 if (coldisplayItem != null)
                 {
                     coldisplayItem.Visible = colDisplay.Visible;
+                }
+                else
+                {
+                    //数据配置问题 导致找不到。这个情况在老数据中存在。
+                    coldisplayItem = ColumnDisplays.FirstOrDefault(x => x.ColName == colDisplay.ColName);
+                    if (coldisplayItem != null)
+                    {
+                        coldisplayItem.Visible = colDisplay.Visible;
+                    }
                 }
                 //ColumnDisplays.First(x => x.UniqueId == colDisplay.UniqueId)
                 //   .Visible = colDisplay.Visible;

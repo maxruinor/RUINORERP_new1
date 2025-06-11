@@ -28,8 +28,8 @@ namespace RUINORERP.UI.BusinessService.CalculationService
         where TMaster : BaseEntity
         where TDetail : BaseEntity
     {
-        public readonly TMaster _master;
-        public readonly List<TDetail> _details;
+        private TMaster master;
+        private List<TDetail> details;
         public readonly SourceGridHelper _gridHelper;
         private readonly System.Threading.Timer _calculationTimer;
         private readonly ConcurrentQueue<GridChangeEvent> _pendingEvents = new();
@@ -37,18 +37,20 @@ namespace RUINORERP.UI.BusinessService.CalculationService
         private const int CalculationDelay = 300; // ms
 
         public Dictionary<string, string> MapFields { get; private set; } = new Dictionary<string, string>();
+        public List<TDetail> Details { get => details; set => details = value; }
+        public TMaster Master { get => master; set => master = value; }
 
         protected SourceGridCoordinator(
             TMaster master,
             List<TDetail> details,
             SourceGridHelper gridHelper)
         {
-            _master = master;
-            _details = details;
+            Master = master;
+            Details = details;
             _gridHelper = gridHelper;
 
             // 注册主表变更监听
-            _master.PropertyChanged += (s, e) =>
+            Master.PropertyChanged += (s, e) =>
             {
                 if (MapFields.ContainsKey(e.PropertyName))
                 {
@@ -80,7 +82,7 @@ namespace RUINORERP.UI.BusinessService.CalculationService
 
         public void EnqueueEvent(GridChangeType changeType, TDetail detail)
         {
-            _pendingEvents.Enqueue(new GridChangeEvent(changeType, _master, detail));
+            _pendingEvents.Enqueue(new GridChangeEvent(changeType, Master, detail));
             ResetCalculationTimer();
         }
 
@@ -105,7 +107,7 @@ namespace RUINORERP.UI.BusinessService.CalculationService
                                 HandleMasterPropertyChange(changeEvent.MasterEntity.ToString());
                                 break;
                             case GridChangeType.DetailCell:
-                                HandleDetailChange(_master, (TDetail)changeEvent.DetailEntities);
+                                HandleDetailChange(Master, (TDetail)changeEvent.DetailEntities);
                                 break;
                         }
                     }
@@ -122,6 +124,13 @@ namespace RUINORERP.UI.BusinessService.CalculationService
         }
 
         protected abstract void HandleMasterPropertyChange(string propertyName);
+
+        public virtual void HandleMasterPropertyChange(Expression<Func<TMaster, object>> MasterExpColName)
+        {
+            string ColName = MasterExpColName.GetMemberInfo().Name;
+            HandleMasterPropertyChange(ColName);
+        }
+
         protected abstract void HandleDetailChange(TMaster master, TDetail detail);
         protected abstract void SetMapFields();
         public void SetMapFields(Expression<Func<TMaster, object>> fromExp, Expression<Func<TDetail, object>> toExp)

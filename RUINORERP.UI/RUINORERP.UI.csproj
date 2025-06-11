@@ -3053,6 +3053,9 @@
     <Compile Include="WorkFlowTester\worker.cs" />
     <Compile Include="WorkFlowTester\WorkWorkflow.cs" />
     <Compile Include="WorkFlowTester\WorkWorkflow2.cs" />
+    <Content Include="Chinese %28Simplified%29.frl">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <None Include="OpenTK.dll.config" />
     <None Include="ResourceFile\import_32x32.ico" />
     <Content Include="ChartFramework\分层架构设计.txt" />

@@ -72,6 +72,7 @@ namespace RUINORERP.UI.FormProperty
                 KeyValuePair<string, bool> kv = new KeyValuePair<string, bool>();
                 dataGridView1.FieldNameList.TryRemove(item, out kv);
             }
+            dataGridView1.BizInvisibleCols = InvisibleCols;
             dataGridView1.DataSource = bindingSourceData;
             ContextMenuStrip newContextMenuStrip = dataGridView1.GetContextMenu(contextMenuStrip1);
             dataGridView1.ContextMenuStrip = newContextMenuStrip;

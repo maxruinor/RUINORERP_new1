@@ -760,7 +760,7 @@ namespace RUINORERP.Business
                                 //预收单审核了。应该有收款单。正常不会到这步
                                 await ctrpay.DeleteAsync(PrePayment);
                             }
-                            
+
                         }
 
                     }
@@ -1179,13 +1179,16 @@ namespace RUINORERP.Business
                 BusinessHelper.Instance.InitEntity(entity);
                 if (entity.SOrder_ID.HasValue && entity.SOrder_ID > 0)
                 {
-                    entity.RefNO = saleorder.SOrderNo;//销售订单号.
+                    entity.SOrderNo = saleorder.SOrderNo;//销售订单号.
                     entity.Notes = saleorder.Notes;
                     entity.tb_saleorder = saleorder;
                     entity.ShipCost = saleorder.FreightIncome;
                 }
 
-                entity.PurOrderNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.采购订单);
+                //销售订单单号 转为 采购订单单号
+                entity.PurOrderNo = saleorder.SOrderNo.Replace("SO", "PO");
+                //entity.PurOrderNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.采购订单);
+
                 entity.tb_saleorder = saleorder;
                 entity.TotalTaxAmount = details.Sum(c => c.TaxAmount);
                 entity.TotalTaxAmount = entity.TotalTaxAmount.ToRoundDecimalPlaces(authorizeController.GetMoneyDataPrecision());

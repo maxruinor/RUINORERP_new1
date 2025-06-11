@@ -596,7 +596,7 @@ namespace RUINORERP.Business
                     if (authorizeController.EnableFinancialModule())
                     {
                         //账期和全款（全款时如果多次出库不好处理，所以这里统一起先应收）就是出库时生成应收
-                        #region 生成应收 ,应收从预收中抵扣 同时 核销
+                        #region 生成应收 ,  同时 核销
                         var ctrpayable = _appContext.GetRequiredService<tb_FM_ReceivablePayableController<tb_FM_ReceivablePayable>>();
 
                         //出库时，全部生成应收，账期的。就加上到期日. 应收金额是全金额。核销金额有预收才加上预收的。未付就前面两个减过来算出来。
@@ -1142,9 +1142,12 @@ namespace RUINORERP.Business
                             || (ReceivablePayable.ARAPStatus == (long)ARAPStatus.已生效))
                         {
                             await _appContext.Db.DeleteNav(ReceivablePayable).Include(c => c.tb_FM_ReceivablePayableDetails).ExecuteCommandAsync();
+                            //这里还要判断 是否有付款单，还是只有预收付的核销。有付款单则用红冲。
                         }
                         else
                         {
+                            //根据不同情况处理： 如果没有收款记录，
+
                             //提示不可以反审
 
                             #region

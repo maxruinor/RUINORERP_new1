@@ -14,7 +14,7 @@ using System.Text.Json.Serialization;
 namespace RUINORERP.UI.UCSourceGrid
 {
     /// <summary>
-    /// 列显示控制器
+    /// SourceGrid 列显示控制器
     /// </summary>
     [Serializable]
     public class SGColDisplayHandler : INotifyPropertyChanged, IEquatable<SGColDisplayHandler>
@@ -43,7 +43,7 @@ namespace RUINORERP.UI.UCSourceGrid
         private bool isFixed = false;
         private int _ColWidth = 50;
         private string colEncryptedName = string.Empty;
-   
+
         private bool _isFixed;
 
         /// <summary>
@@ -88,10 +88,6 @@ namespace RUINORERP.UI.UCSourceGrid
             }
         }
 
-        /// <summary>
-        /// 加密后的列名，暂时不用
-        /// </summary>
-        public string ColEncryptedName { get => colEncryptedName; set => colEncryptedName = value; }
         /// <summary>
         /// 列名
         /// </summary>

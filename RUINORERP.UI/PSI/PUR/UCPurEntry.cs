@@ -335,6 +335,7 @@ namespace RUINORERP.UI.PSI.PUR
             listCols.SetCol_Summary<tb_PurEntryDetail>(c => c.Quantity);
             listCols.SetCol_Summary<tb_PurEntryDetail>(c => c.TaxAmount);
             listCols.SetCol_Summary<tb_PurEntryDetail>(c => c.SubtotalAmount);
+            listCols.SetCol_Summary<tb_PurEntryDetail>(c => c.SubtotalUntaxedAmount);
 
 
             listCols.SetCol_Formula<tb_PurEntryDetail>((a, b, c) => (a.UnitPrice + a.CustomizedCost) * c.Quantity, c => c.SubtotalAmount);
@@ -411,6 +412,13 @@ namespace RUINORERP.UI.PSI.PUR
                     MainForm.Instance.uclog.AddLog("请先选择产品数据");
                     return;
                 }
+
+                if (_coordinator != null)
+                {
+                    _coordinator.Master = EditEntity;
+                    _coordinator.Details = details;
+                }
+
                 EditEntity.TotalQty = details.Sum(c => c.Quantity);
                 EditEntity.TotalAmount = details.Sum(c => (c.UnitPrice + c.CustomizedCost) * c.Quantity);
                 EditEntity.TotalAmount = EditEntity.TotalAmount + EditEntity.ShipCost;
@@ -511,7 +519,9 @@ namespace RUINORERP.UI.PSI.PUR
                 {
                     if (EditEntity.ShipCost != details.Sum(c => c.AllocatedFreightCost))
                     {
-                        if (MessageBox.Show($"运费成本{EditEntity.ShipCost}与明细运费成本分摊总金额{details.Sum(c => c.AllocatedFreightCost)}不一致，确定要保存吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2) == DialogResult.No)
+                        _coordinator.HandleMasterPropertyChange(c => c.ShipCost);
+                        if (MessageBox.Show($"运费成本{EditEntity.ShipCost}与明细运费成本分摊的总金额{details.Sum(c => c.AllocatedFreightCost)}不一致\r\n" +
+                           $"系统已经自动分摊，确定要保存吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button1) == DialogResult.No)
                             return false;
                     }
                 }

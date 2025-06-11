@@ -145,7 +145,18 @@ namespace RUINORERP.UI.UCSourceGrid
         /// <summary>
         /// 保存列的属性 属性中保存了重要信息 比方 金额 mssqlserver中是 money，c#中是decimal(19,4) 
         /// </summary>
-        public PropertyInfo ColPropertyInfo { get => _colPropertyInfo; set => _colPropertyInfo = value; }
+        public PropertyInfo ColPropertyInfo
+        {
+            get => _colPropertyInfo;
+            set
+            {
+                _colPropertyInfo = value;
+                if (this.DisplayController != null && value != null)
+                {
+                    DisplayController.DataPropertyName = value.PropertyType.Name;
+                }
+            }
+        }
 
         public string fastkey = null;
 

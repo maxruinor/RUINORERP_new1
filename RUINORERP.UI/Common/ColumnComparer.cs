@@ -3,6 +3,7 @@ using RUINORERP.UI.UControls;
 using RUINORERP.UI.UCSourceGrid;
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -63,6 +64,36 @@ namespace RUINORERP.UI.Common
                 if (oldItems == null) oldItems = new List<T>();
                 if (newItems == null) newItems = new List<T>();
 
+                #region 检测一下是否有相同的字段
+                // 查找ColName属性值相同的元素
+                var OldDuplicateItems = oldItems
+                    .GroupBy(item => keySelector(item))
+                    .Where(group => group.Count() > 1)
+                    .SelectMany(group => group);
+                // 输出结果
+                //Console.WriteLine("具有相同ColName的元素:");
+                //旧数据有重复的键，则清空。 
+                if (OldDuplicateItems.Count() > 0)
+                {
+                    oldItems = new List<T>();
+                }
+                //foreach (var item in OldDuplicateItems)
+                //{
+                //    // MainForm.Instance.logger.LogInformation($"Old: ColName: {keySelector(item)}, Value: {item}");
+
+                //}
+
+                // 查找ColName属性值相同的元素
+                var NewDuplicateItems = newItems
+                    .GroupBy(item => keySelector(item))
+                    .Where(group => group.Count() > 1)
+                    .SelectMany(group => group);
+                // 输出结果
+                if (NewDuplicateItems.Count() > 0)
+                {
+                    MainForm.Instance.PrintInfoLog("个性化列调整失败，请设置为默认值后重试！", Color.Red);
+                }
+                #endregion
                 // 使用字典加速查找，同时记录原始索引位置
                 var oldLookup = oldItems
                     .Select((item, index) => new { Item = item, Index = index })
@@ -124,7 +155,7 @@ namespace RUINORERP.UI.Common
             }
             catch (Exception ex)
             {
-                MainForm.Instance.logger.LogError(ex.Message, ex);
+                MainForm.Instance.logger.LogError("个性化设置保存时，比较集合时出错。" + ex.Message, ex);
             }
             return result;
         }
@@ -181,7 +212,7 @@ namespace RUINORERP.UI.Common
             return GenericComparer.CompareCollections(
                 oldColumns,
                 newColumns,
-                c => c.ColName,//这里是指定比较的标准。不能重复值的列名
+                c => c.CompositeKey,//这里是指定比较的标准。不能重复值的列名
                 nameof(ColDisplayController.ColDisplayText),
                 nameof(ColDisplayController.IsFixed),
                 nameof(ColDisplayController.ColDisplayIndex),

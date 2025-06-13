@@ -410,6 +410,7 @@ namespace RUINORERP.UI.PSI.PUR
             EditEntity.Approver_at = null;
             EditEntity.tb_PurEntries = null;
             EditEntity.tb_PurOrderRes = null;
+            EditEntity.PurOrderNo = string.Empty;
             BusinessHelper.Instance.InitEntity(EditEntity);
             foreach (var item in EditEntity.tb_PurOrderDetails)
             {

@@ -544,9 +544,9 @@ namespace RUINORERP.UI.PSI.SAL
 
         public override void BuildInvisibleCols()
         {
-            base.MasterInvisibleCols.Add(c => c.TotalCost);
-            base.ChildInvisibleCols.Add(c => c.Cost);
-            base.ChildInvisibleCols.Add(c => c.SubtotalCostAmount);
+            //base.MasterInvisibleCols.Add(c => c.TotalCost);
+            //base.ChildInvisibleCols.Add(c => c.Cost);
+            //base.ChildInvisibleCols.Add(c => c.SubtotalCostAmount);
         }
 
 

@@ -571,6 +571,12 @@
     <Compile Include="AdvancedUIModule\UIQueryHelper.cs" />
     <Compile Include="ATechnologyStack\AOP\DbBizLogAOP.cs" />
     <Compile Include="ATechnologyStack\ISharedIdentification.cs" />
+    <Compile Include="BI\UCAuditLogsTracker.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="BI\UCAuditLogsTracker.designer.cs">
+      <DependentUpon>UCAuditLogsTracker.cs</DependentUpon>
+    </Compile>
     <Compile Include="BI\UCAuditLogsEdit.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -2362,6 +2368,12 @@
     <Compile Include="PSI\PUR\UCPurEntryQuery.Designer.cs">
       <DependentUpon>UCPurEntryQuery.cs</DependentUpon>
     </Compile>
+    <Compile Include="PSI\PUR\UCPurEntryReStatistics.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="PSI\PUR\UCPurEntryReStatistics.Designer.cs">
+      <DependentUpon>UCPurEntryReStatistics.cs</DependentUpon>
+    </Compile>
     <Compile Include="PSI\PUR\UCPurReturnEntry.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -3170,6 +3182,9 @@
     <EmbeddedResource Include="BaseForm\UCQueryShow.resx">
       <DependentUpon>UCQueryShow.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="BI\UCAuditLogsTracker.resx">
+      <DependentUpon>UCAuditLogsTracker.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="BI\UCAuditLogsEdit.resx">
       <DependentUpon>UCAuditLogsEdit.cs</DependentUpon>
     </EmbeddedResource>
@@ -3856,6 +3871,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="PSI\PUR\UCPurEntryQuery.resx">
       <DependentUpon>UCPurEntryQuery.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="PSI\PUR\UCPurEntryReStatistics.resx">
+      <DependentUpon>UCPurEntryReStatistics.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="PSI\PUR\UCPurReturnEntry.resx">
       <DependentUpon>UCPurReturnEntry.cs</DependentUpon>

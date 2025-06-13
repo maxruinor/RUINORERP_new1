@@ -70,7 +70,7 @@ namespace RUINORERP.UI.BusinessService.CalculationService
                 return;
             }
 
-  
+
             string mapKey = MapFields.FirstOrDefault(m => m.Value == detailPropertyName).Key;
 
             if (mapKey == null) return;
@@ -129,7 +129,7 @@ namespace RUINORERP.UI.BusinessService.CalculationService
         {
             SafeExecute(() =>
             {
-                detail.SubtotalCostAmount = detail.Cost * detail.Quantity;
+                detail.SubtotalCostAmount = (detail.Cost + detail.CustomizedCost) * detail.Quantity;
 
                 decimal freightSum = Details.Sum(d => d.AllocatedFreightCost);
                 if (Math.Abs(Master.FreightCost - freightSum) > 0.001m)

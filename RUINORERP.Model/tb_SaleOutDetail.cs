@@ -154,13 +154,13 @@ namespace RUINORERP.Model
             }
         }
 
-        private decimal? _Discount;
+        private decimal _Discount=1;
         /// <summary>
         /// 折扣
         /// </summary>
         [AdvQueryAttribute(ColName = "Discount", ColDesc = "折扣")]
-        [SugarColumn(ColumnDataType = "decimal", SqlParameterDbType = "Decimal", ColumnName = "Discount", DecimalDigits = 3, IsNullable = true, ColumnDescription = "折扣")]
-        public decimal? Discount
+        [SugarColumn(ColumnDataType = "decimal", SqlParameterDbType = "Decimal", ColumnName = "Discount", DecimalDigits = 3, IsNullable = false, ColumnDescription = "折扣")]
+        public decimal Discount
         {
             get { return _Discount; }
             set

@@ -2,6 +2,7 @@
 using FastReport.Table;
 using Fireasy.Common.Extensions;
 using MathNet.Numerics.LinearAlgebra.Factorization;
+using Microsoft.Extensions.Logging;
 using Netron.GraphLib;
 using Netron.Neon.HtmlHelp;
 using Newtonsoft.Json;
@@ -38,6 +39,7 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Web.Caching;
+using System.Windows.Documents;
 using System.Windows.Forms;
 using System.Windows.Markup;
 using TransInstruction;
@@ -557,49 +559,103 @@ namespace RUINORERP.UI.Common
             }
             List<ColDisplayController> originalColumnDisplays = new List<ColDisplayController>();
             //如果数据有则加载，无则加载默认的
-            if (!string.IsNullOrEmpty(GridSetting.ColsSetting))
+
+            bool hasValidSettings = !string.IsNullOrEmpty(GridSetting.ColsSetting);
+
+            if (hasValidSettings)
             {
-                object objList = JsonConvert.DeserializeObject(GridSetting.ColsSetting);
-                if (objList != null && objList.GetType().Name == "JArray")//(Newtonsoft.Json.Linq.JArray))
+                try
                 {
-                    var jsonlist = objList as Newtonsoft.Json.Linq.JArray;
-                    originalColumnDisplays = jsonlist.ToObject<List<ColDisplayController>>();
+                    object objList = JsonConvert.DeserializeObject(GridSetting.ColsSetting);
+                    if (objList != null && objList.GetType().Name == "JArray")//(Newtonsoft.Json.Linq.JArray))
+                    {
+                        var jsonlist = objList as Newtonsoft.Json.Linq.JArray;
+                        originalColumnDisplays = jsonlist.ToObject<List<ColDisplayController>>();
+                        // 查找ColName属性值相同的元素
+                        //var hasDuplicates = originalColumnDisplays
+                        //    .GroupBy(item => item.CompositeKey)
+                        //    .Where(group => group.Count() > 1)
+                        //    //.Select(g => g.Skip(1))//排除掉第一个元素，这个是第一个重复的元素，要保留
+                        //    .SelectMany(group => group);
+
+                        if (originalColumnDisplays.Count == 0)
+                        {
+                            hasValidSettings = false;
+                        }
+
+                        // 检查是否有重复项
+                        bool hasDuplicates = originalColumnDisplays
+                            .GroupBy(item => item.CompositeKey)
+                            .Any(group => group.Count() > 1);
+
+                        if (hasDuplicates)
+                        {
+                            hasValidSettings = false;
+                        }
+                    }
+                    else
+                    {
+                        hasValidSettings = false;
+                    }
+
+                }
+                catch (Exception ex)
+                {
+                    // 处理JSON解析异常
+                    MainForm.Instance.logger?.LogError("解析列设置时出错: " + ex.Message);
+                    hasValidSettings = false;
                 }
             }
-            else
+
+            // 如果设置无效，则加载默认设置
+            if (!hasValidSettings)
             {
                 //找到最原始的数据来自于硬编码
                 originalColumnDisplays = UIHelper.GetColumnDisplayList(GridSourceType);
 
-                //newSumDataGridViewMaster.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.ColumnHeader;
-                //不能设置上面这两个属性。因为设置了将不能自动调整宽度。这里计算一下按标题给个差不多的
+                // 获取Graphics对象
+                using (Graphics graphics = dataGridView.CreateGraphics())
+                {
+                    originalColumnDisplays.ForEach(c =>
+                    {
+                        // 计算文本宽度
+                        float textWidth = UITools.CalculateTextWidth(c.ColDisplayText, dataGridView.Font, graphics);
+                        c.ColWidth = (int)textWidth + 10; // 加上一些额外的空间
+                        if (c.ColWidth < 100)
+                        {
+                            c.ColWidth = 100;
+                        }
+                    });
+                }
 
                 // 获取Graphics对象
-                Graphics graphics = dataGridView.CreateGraphics();
-                originalColumnDisplays.ForEach(c =>
-                {
-                    // 计算文本宽度
-                    float textWidth = UITools.CalculateTextWidth(c.ColDisplayText, dataGridView.Font, graphics);
-                    c.ColWidth = (int)textWidth + 10; // 加上一些额外的空间
-                    if (c.ColWidth < 100)
-                    {
-                        c.ColWidth = 100;
-                    }
-                });
+                //Graphics graphics = dataGridView.CreateGraphics();
+                //originalColumnDisplays.ForEach(c =>
+                //{
+                //    // 计算文本宽度
+                //    float textWidth = UITools.CalculateTextWidth(c.ColDisplayText, dataGridView.Font, graphics);
+                //    c.ColWidth = (int)textWidth + 10; // 加上一些额外的空间
+                //    if (c.ColWidth < 100)
+                //    {
+                //        c.ColWidth = 100;
+                //    }
+                //});
 
-                //第一次设置为默认隐藏，然后他自己可以设置是不是要显示
-                originalColumnDisplays.ForEach(c =>
+                // 第一次设置为默认隐藏，然后用户可以设置是否显示
+                if (DefaultHideCols != null)
                 {
-                    //权限设置隐藏的
-                    if (DefaultHideCols != null)
+                    originalColumnDisplays.ForEach(c =>
                     {
+                        // 权限设置隐藏的
                         if (DefaultHideCols.Any(ic => c.ColName.Equals(ic)))
                         {
                             c.Visible = false;
                             c.Disable = false;
                         }
-                    }
-                });
+                    });
+                }
+
+
 
             }
 
@@ -620,38 +676,49 @@ namespace RUINORERP.UI.Common
                 }
             }
 
-
-            //不管什么情况都处理系统和权限的限制列显示
-            originalColumnDisplays.ForEach(c =>
+            //系统指定不显示的
+            if (InvisibleCols != null)
             {
-                //系统指定不显示的
-                if (InvisibleCols != null)
+                //不管什么情况都处理系统和权限的限制列显示
+                originalColumnDisplays.ForEach(c =>
                 {
+
                     if (InvisibleCols.Any(ic => c.ColName.Equals(ic)))
                     {
                         c.Visible = false;
                         c.Disable = true;
                     }
-
-                }
-
-            });
+                });
+            }
 
             // 检查并添加条件
             foreach (var oldCol in originalColumnDisplays)
             {
                 // 检查existingConditions中是否已经存在相同的条件
-                if (!dataGridView.ColumnDisplays.Any(ec => ec.ColName == oldCol.ColName))
+                int index = dataGridView.ColumnDisplays.FindIndex(ec => ec.ColName == oldCol.ColName);
+                if (index == -1)
                 {
                     // 如果不存在 
                     dataGridView.ColumnDisplays.Add(oldCol);
                 }
                 else
                 {
-                    //更新一下标题
-                    var colset = dataGridView.ColumnDisplays.FirstOrDefault(ec => ec.ColName == oldCol.ColName);
-                    colset = oldCol;
+                    // 更新现有列设置
+                    dataGridView.ColumnDisplays[index] = oldCol;
                 }
+
+                //// 检查existingConditions中是否已经存在相同的条件
+                //if (!dataGridView.ColumnDisplays.Any(ec => ec.ColName == oldCol.ColName))
+                //{
+                //    // 如果不存在 
+                //    dataGridView.ColumnDisplays.Add(oldCol);
+                //}
+                //else
+                //{
+                //    //更新一下标题
+                //    var colset = dataGridView.ColumnDisplays.FirstOrDefault(ec => ec.ColName == oldCol.ColName);
+                //    colset = oldCol;
+                //}
             }
 
             if (SaveGridSetting)
@@ -860,8 +927,8 @@ namespace RUINORERP.UI.Common
 
             List<ColDisplayController> newColumns = JsonConvert.DeserializeObject<List<ColDisplayController>>(json);
 
-            // 执行比较（使用之前提供的ColumnComparer类）
-            //var result = ColumnComparer.CompareColumns(oldColumns, newColumns);
+
+
             var result = oldColumns.CompareColumns(newColumns);
 
             if (GridSetting.UIGID == 0)
@@ -930,12 +997,12 @@ namespace RUINORERP.UI.Common
                 ColumnDisplays.Add(col);
             }
 
-            if (InvisibleCols==null)
+            if (InvisibleCols == null)
             {
                 InvisibleCols = dataGridView.BizInvisibleCols;
             }
 
-           
+
 
 
             // 获取Graphics对象
@@ -1048,7 +1115,9 @@ namespace RUINORERP.UI.Common
             });
             dataGridView.ColumnDisplays = ColumnDisplays;
             dataGridView.BindColumnStyle();
+
         }
+
 
 
         public static T GetProdDetail<T>(long ProdDetailID) where T : class
@@ -1536,25 +1605,58 @@ namespace RUINORERP.UI.Common
             }
             List<SGColDisplayHandler> originalColumnDisplays = new List<SGColDisplayHandler>();
             //如果数据有则加载，无则加载默认的
-            if (!string.IsNullOrEmpty(GridSetting.ColsSetting))
+            // 如果数据有则加载，无则加载默认的
+            bool hasValidSettings = !string.IsNullOrEmpty(GridSetting.ColsSetting);
+
+            if (hasValidSettings)
             {
-                object objList = JsonConvert.DeserializeObject(GridSetting.ColsSetting);
-                if (objList != null && objList.GetType().Name == "JArray")//(Newtonsoft.Json.Linq.JArray))
+                try
                 {
-                    var jsonlist = objList as Newtonsoft.Json.Linq.JArray;
-                    originalColumnDisplays = jsonlist.ToObject<List<SGColDisplayHandler>>();
-                    //如果缓存设置中的唯一标识为空，则重新生成唯一标识
-                    originalColumnDisplays.ForEach(c =>
+
+                    object objList = JsonConvert.DeserializeObject(GridSetting.ColsSetting);
+                    if (objList != null && objList.GetType().Name == "JArray")//(Newtonsoft.Json.Linq.JArray))
                     {
-                        if (c.UniqueId == null)
+                        var jsonlist = objList as Newtonsoft.Json.Linq.JArray;
+                        originalColumnDisplays = jsonlist.ToObject<List<SGColDisplayHandler>>();
+                        //如果缓存设置中的唯一标识为空，则重新生成唯一标识
+                        originalColumnDisplays.ForEach(c =>
                         {
-                            c.UniqueId = Guid.NewGuid().ToString();
+                            if (c.UniqueId == null)
+                            {
+                                c.UniqueId = Guid.NewGuid().ToString();
+                            }
+                        }
+                        );
+
+                        if (originalColumnDisplays.Count == 0)
+                        {
+                            hasValidSettings = false;
+                        }
+
+                        // 检查是否有重复项
+                        bool hasDuplicates = originalColumnDisplays
+                                .GroupBy(item => item.CompositeKey)
+                                .Any(group => group.Count() > 1);
+
+                        if (hasDuplicates)
+                        {
+                            hasValidSettings = false;
                         }
                     }
-                    );
+                    else
+                    {
+                        hasValidSettings = false;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    // 处理JSON解析异常
+                    MainForm.Instance.logger?.LogError("解析SG列设置时出错: " + ex.Message);
+                    hasValidSettings = false;
                 }
             }
-            else
+            // 如果设置无效，则加载默认设置
+            if (!hasValidSettings)
             {
                 originalColumnDisplays = LoadInitSourceGridSetting(gridDefine, CurMenuInfo);
             }

@@ -35,7 +35,7 @@ namespace RUINORERP.UI.PSI.SAL
        
 
         }
-        public List<ContextMenuController> AddContextMenu()
+        public override List<ContextMenuController> AddContextMenu()
         {
             List<EventHandler> ContextClickList = new List<EventHandler>();
             ContextClickList.Add(NewSumDataGridView_转为退货单);

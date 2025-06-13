@@ -26,6 +26,8 @@ using RUINORERP.UI.UControls;
 using Newtonsoft.Json;
 using RUINORERP.UI.Monitoring.Auditing;
 using RUINORERP.Business.CommService;
+using RUINORERP.UI.CommonUI;
+using RUINORERP.Global.Model;
 
 namespace RUINORERP.UI.BI
 {
@@ -62,7 +64,63 @@ namespace RUINORERP.UI.BI
             mapper = Startup.GetFromFac<BizTypeMapper>();
 
         }
+        #region 添加 产品跟踪
 
+        /// <summary>
+        /// 添加回收
+        /// </summary>
+        /// <returns></returns>
+        public override ToolStripItem[] AddExtendButton(tb_MenuInfo menuInfo)
+        {
+
+            ToolStripButton toolStripButton产品跟踪 = new System.Windows.Forms.ToolStripButton();
+            toolStripButton产品跟踪.Text = "产品跟踪";
+            toolStripButton产品跟踪.Image = global::RUINORERP.UI.Properties.Resources.Assignment;
+            toolStripButton产品跟踪.ImageTransparentColor = System.Drawing.Color.Magenta;
+            toolStripButton产品跟踪.Name = "产品跟踪AssignmentToBizEmp";
+            //if (MainForm.Instance.AppContext.IsSuperUser)
+            //{
+            //    toolStripButton产品跟踪.Visible = true;//默认
+            //}
+            //else
+            //{
+            //    toolStripButton产品跟踪.Visible = false;//默认隐藏
+            //}
+
+            UIHelper.ControlButton(CurMenuInfo, toolStripButton产品跟踪);
+            toolStripButton产品跟踪.ToolTipText = "根据审计日志数据来进行产品跟踪。";
+            toolStripButton产品跟踪.Click += new System.EventHandler(this.toolStripButton产品跟踪_Click);
+
+            System.Windows.Forms.ToolStripItem[] extendButtons = new System.Windows.Forms.ToolStripItem[] { toolStripButton产品跟踪 };
+            this.BaseToolStrip.Items.AddRange(extendButtons);
+            return extendButtons;
+
+        }
+
+
+
+        private void toolStripButton产品跟踪_Click(object sender, EventArgs e)
+        {
+            UIHelper.CheckValidation(this);
+            List<tb_AuditLogs> updateList = new List<tb_AuditLogs>();
+            foreach (var item in bindingSourceList)
+            {
+                if (item is tb_AuditLogs sourceEntity)
+                {
+                    updateList.Add(sourceEntity);
+                }
+            }
+
+            if (updateList.Count > 0)
+            {
+                UCAuditLogsTracker frm = new UCAuditLogsTracker();
+                frm.AuditLogs = updateList;
+                frm.Show();
+            }
+        }
+
+
+        #endregion
 
         public override void AddExcludeMenuList()
         {
@@ -214,6 +272,27 @@ namespace RUINORERP.UI.BI
             return rs;
         }
 
-
+        private void UCAuditLogsList_Load(object sender, EventArgs e)
+        {
+            #region 双击单号后按业务类型查询显示对应业务窗体
+            GridRelated.ComplexType = true;
+            //由这个列来决定单号显示哪个的业务窗体
+            GridRelated.SetComplexTargetField<tb_AuditLogs>(c => c.ObjectType, c => c.ObjectNo);
+            BizTypeMapper mapper = new BizTypeMapper();
+            //将枚举中的值循环
+            foreach (var biztype in Enum.GetValues(typeof(BizType)))
+            {
+                var tableName = mapper.GetTableType((BizType)biztype);
+                if (tableName == null)
+                {
+                    continue;
+                }
+                ////这个参数中指定要双击的列单号。是来自另一组  一对一的指向关系
+                //因为后面代码去查找时，直接用的 从一个对象中找这个列的值。但是枚举显示的是名称。所以这里直接传入枚举的值。
+                KeyNamePair keyNamePair = new KeyNamePair(((int)((BizType)biztype)).ToString(), tableName.Name);
+                GridRelated.SetRelatedInfo<tb_AuditLogs>(c => c.ObjectNo, keyNamePair);
+            }
+            #endregion
+        }
     }
 }

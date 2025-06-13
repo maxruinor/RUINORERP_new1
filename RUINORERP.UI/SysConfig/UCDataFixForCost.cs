@@ -428,7 +428,7 @@ namespace RUINORERP.UI.SysConfig
                 MessageBox.Show("请先选中要处理的库存数据");
                 return;
             }
-           
+
             View_Inventory child = null;
             long ProdDetailID = 0;
             View_ProdDetail prodDetail = null;
@@ -1208,7 +1208,7 @@ namespace RUINORERP.UI.SysConfig
                                 .Includes(b => b.tb_bom_s, c => c.tb_BOM_SDetails)
                                 .Includes(a => a.tb_ManufacturingOrderDetails)
 
-                                .Where(a => a.tb_ManufacturingOrderDetails.Any(c => c.ProdDetailID == child.ProdDetailID && c.Location_ID==child.Location_ID)).ToList();
+                                .Where(a => a.tb_ManufacturingOrderDetails.Any(c => c.ProdDetailID == child.ProdDetailID && c.Location_ID == child.Location_ID)).ToList();
 
 
                                     var distinctMObills = MOs
@@ -1467,7 +1467,7 @@ namespace RUINORERP.UI.SysConfig
                                                 if (rdb小计总计.Checked)
                                                 {
                                                     //saleoutdetails.Cost = child.Inv_Cost;
-                                                    saleoutdetails.SubtotalCostAmount = saleoutdetails.Cost * saleoutdetails.Quantity;
+                                                    saleoutdetails.SubtotalCostAmount = (saleoutdetails.Cost + saleoutdetails.CustomizedCost) * saleoutdetails.Quantity;
                                                     saleoutdetails.SubtotalTransAmount = saleoutdetails.TransactionPrice * saleoutdetails.Quantity;
                                                     if (saleoutdetails.TaxRate > 0)
                                                     {
@@ -1478,7 +1478,7 @@ namespace RUINORERP.UI.SysConfig
                                                 if (rdb成本为0的才修复.Checked && saleoutdetails.Cost == 0)
                                                 {
                                                     saleoutdetails.Cost = child.Inv_Cost;
-                                                    saleoutdetails.SubtotalCostAmount = saleoutdetails.Cost * saleoutdetails.Quantity;
+                                                    saleoutdetails.SubtotalCostAmount = (saleoutdetails.Cost + saleoutdetails.CustomizedCost) * saleoutdetails.Quantity;
 
                                                     saleoutdetails.SubtotalTransAmount = saleoutdetails.TransactionPrice * saleoutdetails.Quantity;
                                                     if (saleoutdetails.TaxRate > 0)
@@ -1490,7 +1490,7 @@ namespace RUINORERP.UI.SysConfig
                                                 if (rdb时间区间.Checked)
                                                 {
                                                     saleoutdetails.Cost = child.Inv_Cost;
-                                                    saleoutdetails.SubtotalCostAmount = saleoutdetails.Cost * saleoutdetails.Quantity;
+                                                    saleoutdetails.SubtotalCostAmount = (saleoutdetails.Cost + saleoutdetails.CustomizedCost) * saleoutdetails.Quantity;
 
                                                     saleoutdetails.SubtotalTransAmount = saleoutdetails.TransactionPrice * saleoutdetails.Quantity;
                                                     if (saleoutdetails.TaxRate > 0)
@@ -1505,7 +1505,7 @@ namespace RUINORERP.UI.SysConfig
                                                     if (saleoutdetails.Cost < txtUnitCost.Text.ToDecimal())
                                                     {
                                                         saleoutdetails.Cost = child.Inv_Cost;
-                                                        saleoutdetails.SubtotalCostAmount = saleoutdetails.Cost * saleoutdetails.Quantity;
+                                                        saleoutdetails.SubtotalCostAmount = (saleoutdetails.Cost + saleoutdetails.CustomizedCost) * saleoutdetails.Quantity;
 
                                                         saleoutdetails.SubtotalTransAmount = saleoutdetails.TransactionPrice * saleoutdetails.Quantity;
                                                         if (saleoutdetails.TaxRate > 0)
@@ -1520,7 +1520,7 @@ namespace RUINORERP.UI.SysConfig
                                                     if (saleoutdetails.Cost > txtUnitCost.Text.ToDecimal())
                                                     {
                                                         saleoutdetails.Cost = child.Inv_Cost;
-                                                        saleoutdetails.SubtotalCostAmount = saleoutdetails.Cost * saleoutdetails.Quantity;
+                                                        saleoutdetails.SubtotalCostAmount = (saleoutdetails.Cost + saleoutdetails.CustomizedCost) * saleoutdetails.Quantity;
 
                                                         saleoutdetails.SubtotalTransAmount = saleoutdetails.TransactionPrice * saleoutdetails.Quantity;
                                                         if (saleoutdetails.TaxRate > 0)
@@ -1551,7 +1551,7 @@ namespace RUINORERP.UI.SysConfig
                                             SaleOut.TotalAmount = SaleOut.tb_SaleOutDetails.Sum(c => c.SubtotalTransAmount);
                                             SaleOut.TotalQty = SaleOut.tb_SaleOutDetails.Sum(c => c.Quantity);
                                             SaleOut.TotalTaxAmount = SaleOut.tb_SaleOutDetails.Sum(c => c.SubtotalTaxAmount);
-
+                                            SaleOut.TotalCommissionAmount = SaleOut.tb_SaleOutDetails.Sum(c => c.CommissionAmount);
                                             richTextBoxLog.AppendText($"销售出库{SaleOut.SaleOutNo}总金额：{SaleOut.TotalCost} " + "\r\n");
                                         }
                                         if (saleoutCounter > 0)
@@ -1688,7 +1688,7 @@ namespace RUINORERP.UI.SysConfig
 
                                         #endregion
 
-                                        if (!chkTestMode.Checked  && needupdateOut)
+                                        if (!chkTestMode.Checked && needupdateOut)
                                         {
                                             await MainForm.Instance.AppContext.Db.Updateable<tb_SaleOut>(SaleOut).ExecuteCommandAsync();
                                             await MainForm.Instance.AppContext.Db.Updateable<tb_SaleOutDetail>(SaleOut.tb_SaleOutDetails).ExecuteCommandAsync();
@@ -2383,7 +2383,7 @@ namespace RUINORERP.UI.SysConfig
                                         {
                                             foreach (var item in order.tb_SaleOutDetails)
                                             {
-                                                item.SubtotalCostAmount = item.Cost * item.Quantity;
+                                                item.SubtotalCostAmount = (item.Cost + item.CustomizedCost) * item.Quantity;
                                             }
                                             order.TotalCost = order.tb_SaleOutDetails.Sum(c => c.SubtotalCostAmount);
                                             await MainForm.Instance.AppContext.Db.Updateable<tb_SaleOutDetail>(order.tb_SaleOutDetails).ExecuteCommandAsync();
@@ -2448,7 +2448,7 @@ namespace RUINORERP.UI.SysConfig
                                         {
                                             foreach (var item in order.tb_SaleOutDetails)
                                             {
-                                                item.SubtotalCostAmount = item.Cost * item.Quantity;
+                                                item.SubtotalCostAmount = (item.Cost + item.CustomizedCost) * item.Quantity;
                                             }
                                             order.TotalCost = order.tb_SaleOutDetails.Sum(c => c.SubtotalCostAmount);
                                             await MainForm.Instance.AppContext.Db.Updateable<tb_SaleOutDetail>(order.tb_SaleOutDetails).ExecuteCommandAsync();

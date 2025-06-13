@@ -46,12 +46,9 @@ namespace RUINORERP.Business.Processor
                           .ToExpression();//注意 这一句 不能少
             queryFilter.FilterLimitExpressions.Add(lambda);
 
-        
-
             var lambdacv = Expressionable.Create<tb_CustomerVendor>()
              .And(t => t.isdeleted == false)
-   
-             .And(t => t.IsCustomer == true)
+             .And(t => t.IsOther == true)
              .And(t => t.Is_enabled == true)
             // .AndIF(AuthorizeController.GetSaleLimitedAuth(_appContext), t => t.Employee_ID == _appContext.CurUserInfo.UserInfo.Employee_ID)//限制了销售只看到自己的客户,采购不限制
              .ToExpression();//注意 这一句 不能少

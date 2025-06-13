@@ -2632,6 +2632,8 @@ namespace RUINORERP.UI.BaseForm
             {
                 MainForm.Instance.PrintInfoLog($"修正失败。", Color.Red);
             }
+
+            MainForm.Instance.AuditLogHelper.CreateAuditLog("数据修正", EditEntity, $"结果:{(SaveResult.Succeeded ? "成功" : "失败")},{SaveResult.ErrorMsg}");
         }
 
         private string GetPrimaryKeyProperty(Type type)
@@ -3130,8 +3132,6 @@ namespace RUINORERP.UI.BaseForm
                     if (rmr.Succeeded)
                     {
                         ToolBarEnabledControl(MenuItemEnums.提交);
-                        MainForm.Instance.AuditLogHelper.CreateAuditLog<T>("提交", rmr.ReturnObject);
-
                         //这里推送到审核，启动工作流 后面优化
                         // OriginalData od = ActionForClient.工作流提交(pkid, (int)BizType.盘点单);
                         // MainForm.Instance.ecs.AddSendData(od);]
@@ -3244,6 +3244,7 @@ namespace RUINORERP.UI.BaseForm
                         MainForm.Instance.uclog.AddLog($"提交失败，请重试;或联系管理员。\r\n 错误信息：{rmr.ErrorMsg}", UILogType.错误);
                         submitrs = false;
                     }
+                    MainForm.Instance.AuditLogHelper.CreateAuditLog<T>("提交", rmr.ReturnObject, $"结果:{(rmr.Succeeded ? "成功" : "失败")},{rmr.ErrorMsg}");
                 }
             }
             else
@@ -3329,9 +3330,6 @@ namespace RUINORERP.UI.BaseForm
                     if (rmr.Succeeded)
                     {
                         ToolBarEnabledControl(MenuItemEnums.提交);
-                        MainForm.Instance.AuditLogHelper.CreateAuditLog<T>("提交", rmr.ReturnObject);
-
-
                         CommBillData cbd = new CommBillData();
                         BillConverterFactory bcf = Startup.GetFromFac<BillConverterFactory>();
                         cbd = bcf.GetBillData<T>(EditEntity as T);
@@ -3347,6 +3345,7 @@ namespace RUINORERP.UI.BaseForm
                         MainForm.Instance.uclog.AddLog($"提交失败，请重试;或联系管理员。\r\n 错误信息：{rmr.ErrorMsg}", UILogType.错误);
                         submitrs = false;
                     }
+                    MainForm.Instance.AuditLogHelper.CreateAuditLog<T>("提交", rmr.ReturnObject, $"结果:{(rmr.Succeeded ? "成功" : "失败")},{rmr.ErrorMsg}");
                 }
             }
             else
@@ -3370,17 +3369,13 @@ namespace RUINORERP.UI.BaseForm
                     if (rmr.Succeeded)
                     {
                         ToolBarEnabledControl(MenuItemEnums.提交);
-                        MainForm.Instance.AuditLogHelper.CreateAuditLog<T>("保存后->提交", rmr.ReturnObject);
                         //这里推送到审核，启动工作流 后面优化
                         // OriginalData od = ActionForClient.工作流提交(pkid, (int)BizType.盘点单);
                         // MainForm.Instance.ecs.AddSendData(od);
                         submitrs = true;
                         return true;
                     }
-                    else
-                    {
-                        MainForm.Instance.AuditLogHelper.CreateAuditLog<T>("保存-提交-出错了" + rmr.ErrorMsg, rmr.ReturnObject);
-                    }
+                    MainForm.Instance.AuditLogHelper.CreateAuditLog<T>("提交", rmr.ReturnObject, $"结果:{(rmr.Succeeded ? "成功" : "失败")},{rmr.ErrorMsg}");
                 }
                 else
                 {

@@ -464,7 +464,10 @@ namespace RUINORERP.UI.PSI.SAL
             listCols.SetCol_ReadOnly<tb_SaleOutDetail>(c => c.TransactionPrice);
             //}
             listCols.SetCol_ReadOnly<tb_SaleOutDetail>(c => c.SubtotalTransAmount);
-            listCols.SetCol_ReadOnly<tb_SaleOutDetail>(c => c.CustomizedCost);
+            if (!AppContext.CurUserInfo.UserInfo.IsSuperUser)
+            {
+                listCols.SetCol_ReadOnly<tb_SaleOutDetail>(c => c.CustomizedCost);
+            }
             listCols.SetCol_ReadOnly<tb_SaleOutDetail>(c => c.SubtotalCostAmount);
 
 
@@ -596,7 +599,7 @@ namespace RUINORERP.UI.PSI.SAL
                 }
                 foreach (var item in details)
                 {
-                    item.SubtotalCostAmount = item.Cost * item.Quantity;
+                    item.SubtotalCostAmount = (item.Cost + item.CustomizedCost) * item.Quantity;
                 }
 
                 if (_coordinator != null)
@@ -702,7 +705,24 @@ namespace RUINORERP.UI.PSI.SAL
                 //    System.Windows.Forms.MessageBox.Show("明细中，相同的产品不能多行录入,如有需要,请另建单据保存!", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 //    return;
                 //}
-
+                details.ForEach(
+                   c =>
+                   {
+                       if (c.ProdDetailID > 0)
+                       {
+                           //if (c.SubtotalCostAmount != (c.Cost + c.CustomizedCost) * c.Quantity)
+                           //{
+                           //    c.SubtotalCostAmount = (c.Cost + c.CustomizedCost) * c.Quantity;
+                           //}
+                           //c.SubtotalTransAmount = c.TransactionPrice * c.Quantity;
+                           //c.SubtotalTaxAmount = c.SubtotalTransAmount / (1 + c.TaxRate) * c.TaxRate;
+                           if (c.CustomizedCost > 0)
+                           {
+                               EditEntity.IsCustomizedOrder = true;
+                           }
+                       }
+                   }
+               );
                 EditEntity.tb_SaleOutDetails = details;
                 if (NeedValidated && (EditEntity.tb_SaleOutDetails == null || EditEntity.tb_SaleOutDetails.Count == 0))
                 {

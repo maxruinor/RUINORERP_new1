@@ -32,8 +32,8 @@
             System.Windows.Forms.TreeNode treeNode1 = new System.Windows.Forms.TreeNode("菜单枚举类型修复");
             System.Windows.Forms.TreeNode treeNode2 = new System.Windows.Forms.TreeNode("采购订单价格修复");
             System.Windows.Forms.TreeNode treeNode3 = new System.Windows.Forms.TreeNode("采购入库单价格修复");
-            System.Windows.Forms.TreeNode treeNode4 = new System.Windows.Forms.TreeNode("销售订单价格修复");
-            System.Windows.Forms.TreeNode treeNode5 = new System.Windows.Forms.TreeNode("销售出库单价格修复");
+            System.Windows.Forms.TreeNode treeNode4 = new System.Windows.Forms.TreeNode("销售订单成本数量修复");
+            System.Windows.Forms.TreeNode treeNode5 = new System.Windows.Forms.TreeNode("销售出库单成本数量修复");
             System.Windows.Forms.TreeNode treeNode6 = new System.Windows.Forms.TreeNode("生产计划数量修复");
             System.Windows.Forms.TreeNode treeNode7 = new System.Windows.Forms.TreeNode("制令单自制品修复");
             System.Windows.Forms.TreeNode treeNode8 = new System.Windows.Forms.TreeNode("属性重复的SKU检测");
@@ -214,10 +214,10 @@
             treeNode2.Text = "采购订单价格修复";
             treeNode3.Name = "采购入库单价格修复";
             treeNode3.Text = "采购入库单价格修复";
-            treeNode4.Name = "销售订单价格修复";
-            treeNode4.Text = "销售订单价格修复";
-            treeNode5.Name = "销售出库单价格修复";
-            treeNode5.Text = "销售出库单价格修复";
+            treeNode4.Name = "销售订单成本数量修复";
+            treeNode4.Text = "销售订单成本数量修复";
+            treeNode5.Name = "销售出库单成本数量修复";
+            treeNode5.Text = "销售出库单成本数量修复";
             treeNode6.Name = "生产计划数量修复";
             treeNode6.Text = "生产计划数量修复";
             treeNode7.Name = "制令单自制品修复";

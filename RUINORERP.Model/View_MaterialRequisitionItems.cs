@@ -113,15 +113,15 @@ namespace RUINORERP.Model
         }
 
         private long? _CustomerVendor_ID;
-        
-        
+
+
         /// <summary>
-        /// 客户
+        /// 外发厂商
         /// </summary>
 
-        [AdvQueryAttribute(ColName = "CustomerVendor_ID",ColDesc = "客户")]
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "CustomerVendor_ID" ,IsNullable = true,ColumnDescription = "客户" )]
-        [Display(Name = "客户")]
+        [AdvQueryAttribute(ColName = "CustomerVendor_ID",ColDesc = "外发厂商")]
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "CustomerVendor_ID" ,IsNullable = true,ColumnDescription = "外发厂商")]
+        [Display(Name = "外发厂商")]
         public long? CustomerVendor_ID 
         { 
             get{return _CustomerVendor_ID;}            set{                SetProperty(ref _CustomerVendor_ID, value);                }

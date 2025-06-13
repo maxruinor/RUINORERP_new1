@@ -44,7 +44,7 @@ namespace RUINORERP.Business.Processor
 
             var lambda = Expressionable.Create<tb_CustomerVendor>()
                        .And(t => t.isdeleted == false)
-                       .And(t => t.IsCustomer == true)
+                       .And(t => t.IsVendor == true)
                        .And(t => t.Is_enabled == true)
                        .AndIF(AuthorizeController.GetPurBizLimitedAuth(_appContext), t => t.Employee_ID == _appContext.CurUserInfo.UserInfo.Employee_ID)//限制了销售只看到自己的客户,采购不限制
                        .OrIF(AuthorizeController.GetExclusiveLimitedAuth(_appContext), t => t.IsExclusive == true && t.Employee_ID == _appContext.CurUserInfo.UserInfo.Employee_ID)

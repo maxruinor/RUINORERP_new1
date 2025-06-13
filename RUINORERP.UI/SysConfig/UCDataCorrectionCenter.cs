@@ -832,15 +832,270 @@ namespace RUINORERP.UI.SysConfig
                     dataGridView1.DataSource = await CostFix(false);
                 }
 
-                if (treeView1.SelectedNode.Text == "销售订单价格修复")
+                if (treeView1.SelectedNode.Text == "销售订单成本数量修复")
                 {
+                    List<tb_SaleOrderDetail> saleOrderDetails = new List<tb_SaleOrderDetail>();
+                    List<tb_SaleOrder> updatelist = new List<tb_SaleOrder>();
+                    #region 销售订单数量与明细数量和的检测
+                    List<tb_SaleOrder> SaleOrders = await MainForm.Instance.AppContext.Db.Queryable<tb_SaleOrder>()
+                        .Includes(c => c.tb_SaleOrderDetails)
+                        .Where(c => c.SOrderNo == "SO250611751")
+                       .ToListAsync();
+                    foreach (tb_SaleOrder SaleOrder in SaleOrders)
+                    {
+                        for (int i = 0; i < SaleOrder.tb_SaleOrderDetails.Count; i++)
+                        {
+                            var detail = SaleOrder.tb_SaleOrderDetails[i];
+                            bool needadd = false;
+                            if (detail.TransactionPrice != detail.UnitPrice * detail.Discount)
+                            {
+                                richTextBoxLog.AppendText($"销售订单 明细 成交价 不对：{SaleOrder.SOrderNo}" + "\r\n");
+                                detail.TransactionPrice = detail.UnitPrice * detail.Discount;
+                                needadd = true;
+                            }
 
 
+                            if (detail.SubtotalTransAmount != detail.TransactionPrice * detail.Quantity)
+                            {
+                                richTextBoxLog.AppendText($"销售订单 明细  成交价小计 不对：{SaleOrder.SOrderNo}" + "\r\n");
+                                detail.SubtotalTransAmount = detail.TransactionPrice * detail.Quantity;
+                                needadd = true;
+                            }
+
+                            if (detail.SubtotalTaxAmount != detail.SubtotalTransAmount / (1 + detail.TaxRate) * detail.TaxRate)
+                            {
+                                richTextBoxLog.AppendText($"销售订单 明细税额小计 不对：{SaleOrder.SOrderNo}" + "\r\n");
+                                detail.SubtotalTaxAmount = detail.SubtotalTransAmount / (1 + detail.TaxRate) * detail.TaxRate;
+                                needadd = true;
+                            }
+
+                            if (detail.SubtotalCostAmount != (detail.Cost + detail.CustomizedCost) * detail.Quantity)
+                            {
+                                richTextBoxLog.AppendText($"销售订单 明细成本小计 不对：{SaleOrder.SOrderNo}" + "\r\n");
+                                detail.SubtotalCostAmount = (detail.Cost + detail.CustomizedCost) * detail.Quantity;
+                                needadd = true;
+                            }
+                            if (needadd)
+                            {
+                                saleOrderDetails.Add(detail);
+                                needadd = false;
+                            }
+                        }
+
+
+                        bool needaddmain = false;
+                        if (!SaleOrder.TotalQty.Equals(SaleOrder.tb_SaleOrderDetails.Sum(c => c.Quantity)))
+                        {
+                            SaleOrder.TotalQty = SaleOrder.tb_SaleOrderDetails.Sum(c => c.Quantity);
+
+                            richTextBoxLog.AppendText($"销售订单 总数量不对：{SaleOrder.SOrderNo}" + "\r\n");
+                            needaddmain = true;
+                        }
+
+                        if (!SaleOrder.TotalCommissionAmount.Equals(SaleOrder.tb_SaleOrderDetails.Sum(c => c.CommissionAmount)))
+                        {
+                            SaleOrder.TotalCommissionAmount = SaleOrder.tb_SaleOrderDetails.Sum(c => c.CommissionAmount);
+                            needaddmain = true;
+                            richTextBoxLog.AppendText($"销售订单 总佣金不对：{SaleOrder.SOrderNo}" + "\r\n");
+                        }
+                        if (!SaleOrder.TotalAmount.Equals(SaleOrder.tb_SaleOrderDetails.Sum(c => c.SubtotalTransAmount) + SaleOrder.FreightIncome))
+                        {
+                            SaleOrder.TotalAmount = SaleOrder.tb_SaleOrderDetails.Sum(c => c.SubtotalTransAmount) + SaleOrder.FreightIncome;
+                            needaddmain = true;
+                            richTextBoxLog.AppendText($"销售订单 总成交价 不对：{SaleOrder.SOrderNo}" + "\r\n");
+                        }
+
+                        if (!SaleOrder.TotalTaxAmount.Equals(SaleOrder.tb_SaleOrderDetails.Sum(c => c.SubtotalTaxAmount)))
+                        {
+                            SaleOrder.TotalTaxAmount = SaleOrder.tb_SaleOrderDetails.Sum(c => c.SubtotalTaxAmount);
+                            needaddmain = true;
+                            richTextBoxLog.AppendText($"销售订单 总税额 不对：{SaleOrder.SOrderNo}" + "\r\n");
+                        }
+
+                        if (!SaleOrder.TotalCost.Equals(SaleOrder.tb_SaleOrderDetails.Sum(c => c.SubtotalCostAmount)))
+                        {
+                            SaleOrder.TotalCost = SaleOrder.tb_SaleOrderDetails.Sum(c => c.SubtotalCostAmount);
+
+                            needaddmain = true;
+                            richTextBoxLog.AppendText($"销售订单 总成本 不对：{SaleOrder.SOrderNo}" + "\r\n");
+                        }
+                        if (needaddmain)
+                        {
+                            updatelist.Add(SaleOrder);
+                            needaddmain = false;
+                        }
+                    }
+
+
+                    if (!chkTestMode.Checked)
+                    {
+                        if (saleOrderDetails.Count > 0)
+                        {
+                            int detailcounter = await MainForm.Instance.AppContext.Db.Updateable(saleOrderDetails).UpdateColumns(t => new { t.SubtotalCostAmount }).ExecuteCommandAsync();
+                            if (detailcounter > 0)
+                            {
+                                richTextBoxLog.AppendText($"销售订单 明细 修复成功：{detailcounter} " + "\r\n");
+                            }
+                        }
+
+                        if (updatelist.Count > 0)
+                        {
+                            int totalamountCounter = await MainForm.Instance.AppContext.Db.Updateable(updatelist)
+                           .UpdateColumns(t => new
+                           {
+                               t.TotalQty,
+                               t.TotalCost,
+                           }).ExecuteCommandAsync();
+                            richTextBoxLog.AppendText($"销售订单 主表 修复成功：{totalamountCounter} " + "\r\n");
+                        }
+
+                    }
+                    else
+                    {
+                        richTextBoxLog.AppendText($"销售订单 主表{updatelist.Count} 明细 {saleOrderDetails.Count}  需要修复" + "\r\n");
+                    }
+                    #endregion
                 }
-                if (treeView1.SelectedNode.Text == "销售出库单价格修复")
+
+
+                if (treeView1.SelectedNode.Text == "销售出库单成本数量修复")
                 {
+                    List<tb_SaleOutDetail> saleOutDetails = new List<tb_SaleOutDetail>();
+                    List<tb_SaleOut> updatelist = new List<tb_SaleOut>();
+                    #region 销售出库数量与明细数量和的检测
+                    List<tb_SaleOut> SaleOuts = await MainForm.Instance.AppContext.Db.Queryable<tb_SaleOut>()
+                        .Includes(c => c.tb_SaleOutDetails)
+                       .ToListAsync();
+                    foreach (tb_SaleOut Saleout in SaleOuts)
+                    {
+                        for (int i = 0; i < Saleout.tb_SaleOutDetails.Count; i++)
+                        {
+                            var detail = Saleout.tb_SaleOutDetails[i];
+                            bool needadd = false;
+                            if (detail.TransactionPrice != detail.UnitPrice * detail.Discount)
+                            {
+                                richTextBoxLog.AppendText($"销售出库 明细 成交价 不对：{Saleout.SaleOutNo}" + "\r\n");
+                                detail.TransactionPrice = detail.UnitPrice * detail.Discount;
+                                needadd = true;
+                            }
 
+
+                            if (detail.SubtotalTransAmount != detail.TransactionPrice * detail.Quantity)
+                            {
+                                richTextBoxLog.AppendText($"销售出库 明细  成交价小计 不对：{Saleout.SaleOutNo}" + "\r\n");
+                                detail.SubtotalTransAmount = detail.TransactionPrice * detail.Quantity;
+                                needadd = true;
+                            }
+
+                            if (detail.SubtotalTaxAmount != detail.SubtotalTransAmount / (1 + detail.TaxRate) * detail.TaxRate)
+                            {
+                                decimal tempTax = detail.SubtotalTransAmount / (1 + detail.TaxRate) * detail.TaxRate;
+                                decimal diffpirce = Math.Abs(detail.SubtotalTaxAmount - tempTax);
+                                if (diffpirce > 0.01m)
+                                {
+                                    richTextBoxLog.AppendText($"销售出库 明细税额小计 不对：{Saleout.SaleOutNo}" + "\r\n");
+                                    detail.SubtotalTaxAmount = detail.SubtotalTransAmount / (1 + detail.TaxRate) * detail.TaxRate;
+                                    needadd = true;
+                                }
+
+                            }
+
+                            if (detail.SubtotalCostAmount != (detail.Cost + detail.CustomizedCost) * detail.Quantity)
+                            {
+                                richTextBoxLog.AppendText($"销售出库 明细成本小计 不对：{Saleout.SaleOutNo}" + "\r\n");
+                                detail.SubtotalCostAmount = (detail.Cost + detail.CustomizedCost) * detail.Quantity;
+                                needadd = true;
+                            }
+                            if (needadd)
+                            {
+                                saleOutDetails.Add(detail);
+                                needadd = false;
+                            }
+                        }
+
+
+                        bool needaddmain = false;
+                        if (!Saleout.TotalQty.Equals(Saleout.tb_SaleOutDetails.Sum(c => c.Quantity)))
+                        {
+                            Saleout.TotalQty = Saleout.tb_SaleOutDetails.Sum(c => c.Quantity);
+
+                            richTextBoxLog.AppendText($"销售出库 总数量不对：{Saleout.SaleOutNo}" + "\r\n");
+                            needaddmain = true;
+                        }
+
+                        if (!Saleout.TotalCommissionAmount.Equals(Saleout.tb_SaleOutDetails.Sum(c => c.CommissionAmount)))
+                        {
+                            Saleout.TotalCommissionAmount = Saleout.tb_SaleOutDetails.Sum(c => c.CommissionAmount);
+                            needaddmain = true;
+                            richTextBoxLog.AppendText($"销售出库 总佣金不对：{Saleout.SaleOutNo}" + "\r\n");
+                        }
+                        if (!Saleout.TotalAmount.Equals(Saleout.tb_SaleOutDetails.Sum(c => c.SubtotalTransAmount) + Saleout.FreightIncome))
+                        {
+                            Saleout.TotalAmount = Saleout.tb_SaleOutDetails.Sum(c => c.SubtotalTransAmount) + Saleout.FreightIncome;
+                            needaddmain = true;
+                            richTextBoxLog.AppendText($"销售出库 总成交价 不对：{Saleout.SaleOutNo}" + "\r\n");
+                        }
+
+                        if (!Saleout.TotalTaxAmount.Equals(Saleout.tb_SaleOutDetails.Sum(c => c.SubtotalTaxAmount)))
+                        {
+
+                            decimal diffpirce = Math.Abs(Saleout.TotalTaxAmount - Saleout.tb_SaleOutDetails.Sum(c => c.SubtotalTaxAmount));
+                            if (diffpirce > 0.01m && ComparePrice(Saleout.tb_SaleOutDetails.Sum(c => c.SubtotalTaxAmount).ToDouble(), Saleout.TotalTaxAmount.ToDouble()) > 10)
+                            {
+                                Saleout.TotalTaxAmount = Saleout.tb_SaleOutDetails.Sum(c => c.SubtotalTaxAmount);
+                                needaddmain = true;
+                                richTextBoxLog.AppendText($"销售出库 总税额 不对：{Saleout.SaleOutNo}" + "\r\n");
+                            }
+
+                        }
+
+                        if (!Saleout.TotalCost.Equals((Saleout.tb_SaleOutDetails.Sum(c => c.SubtotalCostAmount) + Saleout.FreightCost)))
+                        {
+                            Saleout.TotalCost = Saleout.tb_SaleOutDetails.Sum(c => c.SubtotalCostAmount) + Saleout.FreightCost;
+
+                            needaddmain = true;
+                            richTextBoxLog.AppendText($"销售出库 总成本 不对：{Saleout.SaleOutNo}" + "\r\n");
+                        }
+
+
+                        if (needaddmain)
+                        {
+                            updatelist.Add(Saleout);
+                            needaddmain = false;
+                        }
+                    }
+
+
+                    if (!chkTestMode.Checked)
+                    {
+                        if (saleOutDetails.Count > 0)
+                        {
+                            int detailcounter = await MainForm.Instance.AppContext.Db.Updateable(saleOutDetails).UpdateColumns(t => new { t.SubtotalCostAmount }).ExecuteCommandAsync();
+                            if (detailcounter > 0)
+                            {
+                                richTextBoxLog.AppendText($"销售出库 数量成本的检测 修复成功：{detailcounter} " + "\r\n");
+                            }
+                        }
+
+                        if (updatelist.Count > 0)
+                        {
+                            int totalamountCounter = await MainForm.Instance.AppContext.Db.Updateable(updatelist)
+                           .UpdateColumns(t => new
+                           {
+                               t.TotalQty,
+                               t.TotalCost,
+                           }).ExecuteCommandAsync();
+                            richTextBoxLog.AppendText($"销售出库 数量成本的检测 修复成功：{totalamountCounter} " + "\r\n");
+                        }
+
+                    }
+                    else
+                    {
+                        richTextBoxLog.AppendText($"销售出库 主表{updatelist.Count} 明细 {saleOutDetails.Count}  需要修复" + "\r\n");
+                    }
+                    #endregion
                 }
+
 
                 if (treeView1.SelectedNode.Text == "配方数量成本的检测")
                 {
@@ -1267,7 +1522,7 @@ namespace RUINORERP.UI.SysConfig
                             yjList[i].TotalUndeliveredQty = yjList[i].tb_PurOrderDetails.Sum(c => c.UndeliveredQty);
                             updatelist.Add(yjList[i]);
                         }
-                       
+
                     }
 
                     int totalmasterCounter = 0;
@@ -1384,8 +1639,6 @@ namespace RUINORERP.UI.SysConfig
                 {
                     MainForm.Instance.AppContext.Db.Ado.BeginTran();
                 }
-                //MainForm.Instance.AppContext.Db.Insertable(new Order() { .....}).ExecuteCommand();
-                // MainForm.Instance.AppContext.Db.Insertable(new Order() { .....}).ExecuteCommand();
                 //成本修复思路
                 //1）成本本身修复，将所有入库明细按加权平均算一下。更新到库存里面。
                 //2）修复所有出库明细，主要是销售出库，当然还有其它，比方借出，成本金额是重要的指标数据
@@ -1423,11 +1676,6 @@ namespace RUINORERP.UI.SysConfig
                             double percentDiff = ComparePrice(item.Inv_Cost.ToDouble(), transPrice.ToDouble());
                             if (percentDiff > 10)
                             {
-                                //}
-                                //transPrice = Math.Round(transPrice, 3);
-                                //decimal diffpirce = Math.Abs(transPrice - item.Inv_Cost);
-                                //if (diffpirce > 0.2m)
-                                //{
                                 richTextBoxLog.AppendText($"产品{item.tb_proddetail.tb_prod.CNName} " +
                                 $"{item.ProdDetailID}  SKU:{item.tb_proddetail.SKU}   旧成本{item.Inv_Cost},  相差为{diffpirce}   百分比为{percentDiff}%,    修复为：{transPrice}：" + "\r\n");
 
@@ -1661,7 +1909,7 @@ namespace RUINORERP.UI.SysConfig
                                     if (ComparePrice(child.Inv_Cost.ToDouble(), Detail.Cost.ToDouble()) > 10)
                                     {
                                         Detail.Cost = child.Inv_Cost;
-                                        Detail.SubtotalCostAmount = Detail.Cost * Detail.Quantity;
+                                        Detail.SubtotalCostAmount = (Detail.Cost + Detail.CustomizedCost) * Detail.Quantity;
                                         Detail.SubtotalTransAmount = Detail.TransactionPrice * Detail.Quantity;
                                         if (Detail.TaxRate > 0)
                                         {
@@ -1691,7 +1939,7 @@ namespace RUINORERP.UI.SysConfig
                                         if (saleoutdetails.ProdDetailID == child.ProdDetailID)
                                         {
                                             saleoutdetails.Cost = child.Inv_Cost;
-                                            saleoutdetails.SubtotalCostAmount = saleoutdetails.Cost * saleoutdetails.Quantity;
+                                            saleoutdetails.SubtotalCostAmount = (saleoutdetails.Cost + saleoutdetails.CustomizedCost) * saleoutdetails.Quantity;
 
                                             saleoutdetails.SubtotalTransAmount = saleoutdetails.TransactionPrice * saleoutdetails.Quantity;
                                             if (saleoutdetails.TaxRate > 0)

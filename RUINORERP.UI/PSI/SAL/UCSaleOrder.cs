@@ -47,6 +47,7 @@ using RUINORERP.UI.CommonUI;
 using RUINORERP.Global.EnumExt;
 using Fireasy.Common.Configuration;
 using RUINORERP.UI.Monitoring.Auditing;
+using NPOI.SS.Formula.Functions;
 
 
 namespace RUINORERP.UI.PSI.SAL
@@ -147,7 +148,7 @@ namespace RUINORERP.UI.PSI.SAL
                 command.Undo();
                 MainForm.Instance.PrintInfoLog($"{EditEntity.SOrderNo}付款调整失败{rr.ErrorMsg},请联系管理员！", Color.Red);
             }
-
+            MainForm.Instance.AuditLogHelper.CreateAuditLog<tb_SaleOrder>("付款调整", EditEntity, $"结果:{(rr.Succeeded ? "成功" : "失败")},{rr.ErrorMsg}");
         }
 
 
@@ -170,14 +171,10 @@ namespace RUINORERP.UI.PSI.SAL
                     entity.ActionStatus = ActionStatus.加载;
                     if (entity.Currency_ID != AppContext.BaseCurrency.Currency_ID)
                     {
-                        lblExchangeRate.Visible = true;
-                        txtExchangeRate.Visible = true;
                         UIHelper.ControlForeignFieldInvisible<tb_SaleOrder>(this, true);
                     }
                     else
                     {
-                        lblExchangeRate.Visible = false;
-                        txtExchangeRate.Visible = false;
                         UIHelper.ControlForeignFieldInvisible<tb_SaleOrder>(this, false);
                     }
                     // entity.DataStatus = (int)DataStatus.确认;
@@ -212,8 +209,7 @@ namespace RUINORERP.UI.PSI.SAL
                         entity.Currency_ID = AppContext.BaseCurrency.Currency_ID;
                     }
 
-                    lblExchangeRate.Visible = false;
-                    txtExchangeRate.Visible = false;
+
                     UIHelper.ControlForeignFieldInvisible<tb_SaleOrder>(this, false);
                 }
             }
@@ -250,21 +246,17 @@ namespace RUINORERP.UI.PSI.SAL
                 DataBindingHelper.BindData4Cmb<tb_ProjectGroup>(entity, k => k.ProjectGroup_ID, v => v.ProjectGroupName, cmbProjectGroup);
             }
 
-            //DataBindingHelper.BindData4Cmb<tb_CustomerVendor>(entity, k => k.CustomerVendor_ID, v => v.CVName, cmbCustomerVendor_ID, true);
-            DataBindingHelper.BindData4Cmb<tb_Currency>(entity, k => k.Currency_ID, v => v.CurrencyName, cmbCurrency_ID);
+
             DataBindingHelper.BindData4CmbByEnum<tb_SaleOrder>(entity, k => k.PayStatus, typeof(PayStatus), cmbPayStatus, false);
             DataBindingHelper.BindData4TextBox<tb_SaleOrder>(entity, t => t.FreightIncome.ToString(), txtFreightIncome, BindDataType4TextBox.Money, false);
-            DataBindingHelper.BindData4TextBox<tb_SaleOrder>(entity, t => t.ForeignFreightIncome.ToString(), txtForeignFreightIncome, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4TextBox<tb_SaleOrder>(entity, t => t.TotalAmount.ToString(), txtTotalAmount, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4TextBox<tb_SaleOrder>(entity, t => t.TotalCommissionAmount.ToString(), txtTotalCommissionAmount, BindDataType4TextBox.Money, false);
-            DataBindingHelper.BindData4TextBox<tb_SaleOrder>(entity, t => t.ExchangeRate.ToString(), txtExchangeRate, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4DataTime<tb_SaleOrder>(entity, t => t.PreDeliveryDate, dtpPreDeliveryDate, false);
             DataBindingHelper.BindData4DataTime<tb_SaleOrder>(entity, t => t.SaleDate, dtpSaleDate, false);
             DataBindingHelper.BindData4TextBox<tb_SaleOrder>(entity, t => t.ShippingAddress, txtShippingAddress, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_SaleOrder>(entity, t => t.ShippingWay, txtshippingWay, BindDataType4TextBox.Text, false);
 
             DataBindingHelper.BindData4TextBox<tb_SaleOrder>(entity, t => t.ForeignTotalAmount.ToString(), txtForeignTotalAmount, BindDataType4TextBox.Money, false);
-            DataBindingHelper.BindData4TextBox<tb_SaleOrder>(entity, t => t.ForeignDeposit.ToString(), txtForeignDeposit, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4TextBox<tb_SaleOrder>(entity, t => t.Notes, txtNotes, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_SaleOrder>(entity, t => t.ApprovalOpinions, txtApprovalOpinions, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4CmbByEnum<tb_SaleOrder>(entity, k => k.OrderPriority, typeof(Priority), cmbOrderPriority, true);
@@ -304,61 +296,15 @@ namespace RUINORERP.UI.PSI.SAL
                     return;
                 }
 
-                if (toolStripButton付款调整.Visible = true && (s2.PropertyName == entity.GetPropertyName<tb_SaleOrder>(c => c.PayStatus) || s2.PropertyName == entity.GetPropertyName<tb_SaleOrder>(c => c.Paytype_ID)))
+                if (s2.PropertyName == entity.GetPropertyName<tb_SaleOrder>(c => c.PayStatus) || s2.PropertyName == entity.GetPropertyName<tb_SaleOrder>(c => c.Paytype_ID))
                 {
                     toolStripButton付款调整.Enabled = true;
+                    UIHelper.ControlButton<ToolStripButton>(CurMenuInfo, toolStripButton付款调整);
                 }
 
                 //权限允许
                 if ((true && entity.DataStatus == (int)DataStatus.草稿) || (true && entity.DataStatus == (int)DataStatus.新建))
                 {
-                    //根据币别如果是外币才显示外币相关的字段
-                    if (s2.PropertyName == entity.GetPropertyName<tb_SaleOrder>(c => c.Currency_ID) && entity.Currency_ID > 0)
-                    {
-                        // var obj = BizCacheHelper.Instance.GetEntity<tb_Currency>(entity.Currency_ID);
-                        //if (obj != null && obj.ToString() != "System.Object")
-                        //{
-                        if (cmbCurrency_ID.SelectedItem is tb_Currency cv)
-                        {
-                            if (entity.Account_id.HasValue && entity.Account_id.Value > 0)
-                            {
-                                if (entity.tb_fm_account.Currency_ID.HasValue && entity.tb_fm_account.Currency_ID.Value != cv.Currency_ID)
-                                {
-                                    MessageBox.Show("当前收款账户的币别与选择的币别不一致。请联系管理员或财务确认后操作。");
-                                    return;
-                                }
-                            }
-
-                            if (cv.CurrencyCode.Trim() != DefaultCurrency.RMB.ToString())
-                            {
-                                //显示外币相关
-                                UIHelper.ControlForeignFieldInvisible<tb_SaleOrder>(this, true);
-                                entity.ExchangeRate = BizService.GetExchangeRateFromCache(cv.Currency_ID, AppContext.BaseCurrency.Currency_ID);
-                                if (EditEntity.Currency_ID != AppContext.BaseCurrency.Currency_ID)
-                                {
-                                    EditEntity.ForeignTotalAmount = EditEntity.TotalAmount / EditEntity.ExchangeRate;
-                                    //
-                                    EditEntity.ForeignTotalAmount = Math.Round(EditEntity.ForeignTotalAmount, 2); // 四舍五入到 2 位小数
-                                }
-                                lblExchangeRate.Visible = true;
-                                txtExchangeRate.Visible = true;
-
-
-                                lblForeignTotalAmount.Text = $"金额({cv.CurrencyCode})";
-                            }
-                            else
-                            {
-                                //隐藏外币相关
-                                UIHelper.ControlForeignFieldInvisible<tb_SaleOrder>(this, false);
-                                lblExchangeRate.Visible = false;
-                                txtExchangeRate.Visible = false;
-                                entity.ExchangeRate = 1;
-                                entity.ForeignTotalAmount = 0;
-                            }
-                        }
-                        //}
-                    }
-
                     if (s2.PropertyName == entity.GetPropertyName<tb_SaleOrder>(c => c.PayStatus) && entity.PayStatus == (int)PayStatus.未付款)
                     {
                         //默认为账期
@@ -563,7 +509,7 @@ using var binder = new UIStateBinder(..., customEvaluator);
         {
             if (EditEntity == null)
             {
-                MessageBox.Show("请先选择一个采购订单作为复制的基准。", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show("请先选择一个单据作为复制的基准。", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
             EditEntity.ActionStatus = ActionStatus.新增;
@@ -573,6 +519,7 @@ using var binder = new UIStateBinder(..., customEvaluator);
             EditEntity.Approver_at = null;
             EditEntity.ApprovalResults = null;
             EditEntity.tb_SaleOuts = null;
+            EditEntity.SOrderNo = string.Empty;
             EditEntity.tb_PurOrders = null;
             BusinessHelper.Instance.InitEntity(EditEntity);
             foreach (var item in EditEntity.tb_SaleOrderDetails)
@@ -709,8 +656,7 @@ using var binder = new UIStateBinder(..., customEvaluator);
 
             UIHelper.ControlMasterColumnsInvisible(CurMenuInfo, this);
             UIHelper.ControlForeignFieldInvisible<tb_SaleOrder>(this, false);
-            lblExchangeRate.Visible = false;
-            txtExchangeRate.Visible = false;
+
         }
 
         /// <summary>
@@ -814,7 +760,6 @@ using var binder = new UIStateBinder(..., customEvaluator);
             }
             catch (Exception ex)
             {
-
                 logger.LogError("计算出错", ex);
                 MainForm.Instance.uclog.AddLog("Sgh_OnCalculateColumnValue" + ex.Message);
             }
@@ -944,6 +889,26 @@ using var binder = new UIStateBinder(..., customEvaluator);
             {
                 //产品ID有值才算有效值
                 details = detailentity.Where(t => t.ProdDetailID > 0).ToList();
+
+                details.ForEach(
+                    c =>
+                    {
+                        if (c.ProdDetailID > 0)
+                        {
+                            //if (c.SubtotalCostAmount != (c.Cost + c.CustomizedCost) * c.Quantity)
+                            //{
+                            //    c.SubtotalCostAmount = (c.Cost + c.CustomizedCost) * c.Quantity;
+                            //}
+                            //c.SubtotalTransAmount = c.TransactionPrice * c.Quantity;
+                            //c.SubtotalTaxAmount = c.SubtotalTransAmount / (1 + c.TaxRate) * c.TaxRate;
+                            if (c.CustomizedCost > 0)
+                            {
+                                EditEntity.IsCustomizedOrder = true;
+                            }
+                        }
+                    }
+                );
+
                 EditEntity.TotalQty = details.Sum(c => c.Quantity);
                 EditEntity.TotalCost = details.Sum(c => (c.Cost + c.CustomizedCost) * c.Quantity);
                 EditEntity.TotalAmount = details.Sum(c => c.TransactionPrice * c.Quantity);
@@ -1584,6 +1549,14 @@ using var binder = new UIStateBinder(..., customEvaluator);
 
         }
 
+        private void lblFreightIncome_Click(object sender, EventArgs e)
+        {
 
+        }
+
+        private void txtFreightIncome_TextChanged(object sender, EventArgs e)
+        {
+
+        }
     }
 }

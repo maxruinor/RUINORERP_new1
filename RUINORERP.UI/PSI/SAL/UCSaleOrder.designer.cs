@@ -34,10 +34,6 @@
             this.lblCustomerPONo = new Krypton.Toolkit.KryptonLabel();
             this.lblAccount_id = new Krypton.Toolkit.KryptonLabel();
             this.cmbAccount_id = new Krypton.Toolkit.KryptonComboBox();
-            this.lblExchangeRate = new Krypton.Toolkit.KryptonLabel();
-            this.txtExchangeRate = new Krypton.Toolkit.KryptonTextBox();
-            this.lblCurrency_ID = new Krypton.Toolkit.KryptonLabel();
-            this.cmbCurrency_ID = new Krypton.Toolkit.KryptonComboBox();
             this.chkIsCustomizedOrder = new Krypton.Toolkit.KryptonCheckBox();
             this.chk平台单 = new Krypton.Toolkit.KryptonCheckBox();
             this.lblDataStatus = new Krypton.Toolkit.KryptonLabel();
@@ -63,14 +59,10 @@
             this.dtpPreDeliveryDate = new Krypton.Toolkit.KryptonDateTimePicker();
             this.lblPriority = new Krypton.Toolkit.KryptonLabel();
             this.lblPreDeliveryDate = new Krypton.Toolkit.KryptonLabel();
-            this.txtForeignFreightIncome = new Krypton.Toolkit.KryptonTextBox();
             this.txtFreightIncome = new Krypton.Toolkit.KryptonTextBox();
-            this.lblForeignFreightIncome = new Krypton.Toolkit.KryptonLabel();
             this.lblFreightIncome = new Krypton.Toolkit.KryptonLabel();
-            this.lblForeignDeposit = new Krypton.Toolkit.KryptonLabel();
             this.lblDeposit = new Krypton.Toolkit.KryptonLabel();
             this.cmbEmployee_ID = new Krypton.Toolkit.KryptonComboBox();
-            this.txtForeignDeposit = new Krypton.Toolkit.KryptonTextBox();
             this.txtDeposit = new Krypton.Toolkit.KryptonTextBox();
             this.lblEmployee_ID = new Krypton.Toolkit.KryptonLabel();
             this.lblPlatformOrderNo = new Krypton.Toolkit.KryptonLabel();
@@ -80,6 +72,8 @@
             this.lblPaytype_ID = new Krypton.Toolkit.KryptonLabel();
             this.kryptonSplitContainerGridAndSub = new Krypton.Toolkit.KryptonSplitContainer();
             this.grid1 = new SourceGrid.Grid();
+            this.txtTotalCommissionAmount = new Krypton.Toolkit.KryptonTextBox();
+            this.lblTotalCommissionAmount = new Krypton.Toolkit.KryptonLabel();
             this.txtTotalQty = new Krypton.Toolkit.KryptonTextBox();
             this.kryptonLabel1 = new Krypton.Toolkit.KryptonLabel();
             this.lblTaxAmount = new Krypton.Toolkit.KryptonLabel();
@@ -92,8 +86,6 @@
             this.lblTotalAmount = new Krypton.Toolkit.KryptonLabel();
             this.txtApprovalOpinions = new Krypton.Toolkit.KryptonTextBox();
             this.lblApprovalOpinions = new Krypton.Toolkit.KryptonLabel();
-            this.txtTotalCommissionAmount = new Krypton.Toolkit.KryptonTextBox();
-            this.lblTotalCommissionAmount = new Krypton.Toolkit.KryptonLabel();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceSub)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1)).BeginInit();
@@ -105,7 +97,6 @@
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanelMainInfo)).BeginInit();
             this.kryptonPanelMainInfo.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.cmbAccount_id)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.cmbCurrency_ID)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmbPayStatus)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmbProjectGroup)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmbOrderPriority)).BeginInit();
@@ -146,10 +137,6 @@
             this.kryptonPanelMainInfo.Controls.Add(this.lblCustomerPONo);
             this.kryptonPanelMainInfo.Controls.Add(this.lblAccount_id);
             this.kryptonPanelMainInfo.Controls.Add(this.cmbAccount_id);
-            this.kryptonPanelMainInfo.Controls.Add(this.lblExchangeRate);
-            this.kryptonPanelMainInfo.Controls.Add(this.txtExchangeRate);
-            this.kryptonPanelMainInfo.Controls.Add(this.lblCurrency_ID);
-            this.kryptonPanelMainInfo.Controls.Add(this.cmbCurrency_ID);
             this.kryptonPanelMainInfo.Controls.Add(this.chkIsCustomizedOrder);
             this.kryptonPanelMainInfo.Controls.Add(this.chk平台单);
             this.kryptonPanelMainInfo.Controls.Add(this.lblDataStatus);
@@ -175,14 +162,10 @@
             this.kryptonPanelMainInfo.Controls.Add(this.dtpPreDeliveryDate);
             this.kryptonPanelMainInfo.Controls.Add(this.lblPriority);
             this.kryptonPanelMainInfo.Controls.Add(this.lblPreDeliveryDate);
-            this.kryptonPanelMainInfo.Controls.Add(this.txtForeignFreightIncome);
             this.kryptonPanelMainInfo.Controls.Add(this.txtFreightIncome);
-            this.kryptonPanelMainInfo.Controls.Add(this.lblForeignFreightIncome);
             this.kryptonPanelMainInfo.Controls.Add(this.lblFreightIncome);
-            this.kryptonPanelMainInfo.Controls.Add(this.lblForeignDeposit);
             this.kryptonPanelMainInfo.Controls.Add(this.lblDeposit);
             this.kryptonPanelMainInfo.Controls.Add(this.cmbEmployee_ID);
-            this.kryptonPanelMainInfo.Controls.Add(this.txtForeignDeposit);
             this.kryptonPanelMainInfo.Controls.Add(this.txtDeposit);
             this.kryptonPanelMainInfo.Controls.Add(this.lblEmployee_ID);
             this.kryptonPanelMainInfo.Controls.Add(this.lblPlatformOrderNo);
@@ -199,14 +182,14 @@
             // 
             // txtCustomerPONo
             // 
-            this.txtCustomerPONo.Location = new System.Drawing.Point(647, 132);
+            this.txtCustomerPONo.Location = new System.Drawing.Point(951, 108);
             this.txtCustomerPONo.Name = "txtCustomerPONo";
             this.txtCustomerPONo.Size = new System.Drawing.Size(142, 23);
             this.txtCustomerPONo.TabIndex = 196;
             // 
             // lblCustomerPONo
             // 
-            this.lblCustomerPONo.Location = new System.Drawing.Point(566, 133);
+            this.lblCustomerPONo.Location = new System.Drawing.Point(870, 109);
             this.lblCustomerPONo.Name = "lblCustomerPONo";
             this.lblCustomerPONo.Size = new System.Drawing.Size(75, 20);
             this.lblCustomerPONo.TabIndex = 195;
@@ -229,41 +212,9 @@
             this.cmbAccount_id.Size = new System.Drawing.Size(135, 21);
             this.cmbAccount_id.TabIndex = 194;
             // 
-            // lblExchangeRate
-            // 
-            this.lblExchangeRate.Location = new System.Drawing.Point(1107, 113);
-            this.lblExchangeRate.Name = "lblExchangeRate";
-            this.lblExchangeRate.Size = new System.Drawing.Size(36, 20);
-            this.lblExchangeRate.TabIndex = 191;
-            this.lblExchangeRate.Values.Text = "汇率";
-            // 
-            // txtExchangeRate
-            // 
-            this.txtExchangeRate.Location = new System.Drawing.Point(1149, 112);
-            this.txtExchangeRate.Name = "txtExchangeRate";
-            this.txtExchangeRate.Size = new System.Drawing.Size(71, 23);
-            this.txtExchangeRate.TabIndex = 192;
-            // 
-            // lblCurrency_ID
-            // 
-            this.lblCurrency_ID.Location = new System.Drawing.Point(605, 109);
-            this.lblCurrency_ID.Name = "lblCurrency_ID";
-            this.lblCurrency_ID.Size = new System.Drawing.Size(36, 20);
-            this.lblCurrency_ID.TabIndex = 189;
-            this.lblCurrency_ID.Values.Text = "币别";
-            // 
-            // cmbCurrency_ID
-            // 
-            this.cmbCurrency_ID.DropDownWidth = 100;
-            this.cmbCurrency_ID.IntegralHeight = false;
-            this.cmbCurrency_ID.Location = new System.Drawing.Point(647, 109);
-            this.cmbCurrency_ID.Name = "cmbCurrency_ID";
-            this.cmbCurrency_ID.Size = new System.Drawing.Size(142, 21);
-            this.cmbCurrency_ID.TabIndex = 190;
-            // 
             // chkIsCustomizedOrder
             // 
-            this.chkIsCustomizedOrder.Location = new System.Drawing.Point(1149, 137);
+            this.chkIsCustomizedOrder.Location = new System.Drawing.Point(1094, 141);
             this.chkIsCustomizedOrder.Name = "chkIsCustomizedOrder";
             this.chkIsCustomizedOrder.Size = new System.Drawing.Size(62, 20);
             this.chkIsCustomizedOrder.TabIndex = 102;
@@ -345,7 +296,7 @@
             // 
             this.txtshippingWay.Location = new System.Drawing.Point(951, 83);
             this.txtshippingWay.Name = "txtshippingWay";
-            this.txtshippingWay.Size = new System.Drawing.Size(125, 23);
+            this.txtshippingWay.Size = new System.Drawing.Size(142, 23);
             this.txtshippingWay.TabIndex = 67;
             // 
             // cmbPayStatus
@@ -454,7 +405,7 @@
             this.dtpPreDeliveryDate.Location = new System.Drawing.Point(951, 57);
             this.dtpPreDeliveryDate.Name = "dtpPreDeliveryDate";
             this.dtpPreDeliveryDate.ShowCheckBox = true;
-            this.dtpPreDeliveryDate.Size = new System.Drawing.Size(125, 21);
+            this.dtpPreDeliveryDate.Size = new System.Drawing.Size(142, 21);
             this.dtpPreDeliveryDate.TabIndex = 59;
             // 
             // lblPriority
@@ -473,51 +424,30 @@
             this.lblPreDeliveryDate.TabIndex = 58;
             this.lblPreDeliveryDate.Values.Text = "预交日期";
             // 
-            // txtForeignFreightIncome
-            // 
-            this.txtForeignFreightIncome.Location = new System.Drawing.Point(1149, 87);
-            this.txtForeignFreightIncome.Name = "txtForeignFreightIncome";
-            this.txtForeignFreightIncome.Size = new System.Drawing.Size(71, 23);
-            this.txtForeignFreightIncome.TabIndex = 55;
-            // 
             // txtFreightIncome
             // 
-            this.txtFreightIncome.Location = new System.Drawing.Point(1149, 58);
+            this.txtFreightIncome.Location = new System.Drawing.Point(648, 134);
             this.txtFreightIncome.Name = "txtFreightIncome";
-            this.txtFreightIncome.Size = new System.Drawing.Size(71, 23);
+            this.txtFreightIncome.Size = new System.Drawing.Size(141, 23);
             this.txtFreightIncome.TabIndex = 55;
-            // 
-            // lblForeignFreightIncome
-            // 
-            this.lblForeignFreightIncome.Location = new System.Drawing.Point(1084, 90);
-            this.lblForeignFreightIncome.Name = "lblForeignFreightIncome";
-            this.lblForeignFreightIncome.Size = new System.Drawing.Size(62, 20);
-            this.lblForeignFreightIncome.TabIndex = 54;
-            this.lblForeignFreightIncome.Values.Text = "运费外币";
+            this.txtFreightIncome.TextChanged += new System.EventHandler(this.txtFreightIncome_TextChanged);
             // 
             // lblFreightIncome
             // 
-            this.lblFreightIncome.Location = new System.Drawing.Point(1107, 61);
+            this.lblFreightIncome.Location = new System.Drawing.Point(606, 137);
             this.lblFreightIncome.Name = "lblFreightIncome";
             this.lblFreightIncome.Size = new System.Drawing.Size(36, 20);
             this.lblFreightIncome.TabIndex = 54;
             this.lblFreightIncome.Values.Text = "运费";
-            // 
-            // lblForeignDeposit
-            // 
-            this.lblForeignDeposit.Location = new System.Drawing.Point(885, 135);
-            this.lblForeignDeposit.Name = "lblForeignDeposit";
-            this.lblForeignDeposit.Size = new System.Drawing.Size(62, 20);
-            this.lblForeignDeposit.TabIndex = 86;
-            this.lblForeignDeposit.Values.Text = "订金外币";
+            this.lblFreightIncome.Click += new System.EventHandler(this.lblFreightIncome_Click);
             // 
             // lblDeposit
             // 
-            this.lblDeposit.Location = new System.Drawing.Point(884, 112);
+            this.lblDeposit.Location = new System.Drawing.Point(605, 111);
             this.lblDeposit.Name = "lblDeposit";
-            this.lblDeposit.Size = new System.Drawing.Size(62, 20);
+            this.lblDeposit.Size = new System.Drawing.Size(36, 20);
             this.lblDeposit.TabIndex = 86;
-            this.lblDeposit.Values.Text = "订金本币";
+            this.lblDeposit.Values.Text = "订金";
             // 
             // cmbEmployee_ID
             // 
@@ -528,18 +458,11 @@
             this.cmbEmployee_ID.Size = new System.Drawing.Size(226, 21);
             this.cmbEmployee_ID.TabIndex = 51;
             // 
-            // txtForeignDeposit
-            // 
-            this.txtForeignDeposit.Location = new System.Drawing.Point(951, 134);
-            this.txtForeignDeposit.Name = "txtForeignDeposit";
-            this.txtForeignDeposit.Size = new System.Drawing.Size(125, 23);
-            this.txtForeignDeposit.TabIndex = 87;
-            // 
             // txtDeposit
             // 
-            this.txtDeposit.Location = new System.Drawing.Point(951, 109);
+            this.txtDeposit.Location = new System.Drawing.Point(647, 108);
             this.txtDeposit.Name = "txtDeposit";
-            this.txtDeposit.Size = new System.Drawing.Size(125, 23);
+            this.txtDeposit.Size = new System.Drawing.Size(142, 23);
             this.txtDeposit.TabIndex = 87;
             // 
             // lblEmployee_ID
@@ -638,6 +561,21 @@
             this.grid1.TabStop = true;
             this.grid1.ToolTipText = "";
             // 
+            // txtTotalCommissionAmount
+            // 
+            this.txtTotalCommissionAmount.Location = new System.Drawing.Point(77, 47);
+            this.txtTotalCommissionAmount.Name = "txtTotalCommissionAmount";
+            this.txtTotalCommissionAmount.Size = new System.Drawing.Size(100, 23);
+            this.txtTotalCommissionAmount.TabIndex = 104;
+            // 
+            // lblTotalCommissionAmount
+            // 
+            this.lblTotalCommissionAmount.Location = new System.Drawing.Point(4, 50);
+            this.lblTotalCommissionAmount.Name = "lblTotalCommissionAmount";
+            this.lblTotalCommissionAmount.Size = new System.Drawing.Size(62, 20);
+            this.lblTotalCommissionAmount.TabIndex = 103;
+            this.lblTotalCommissionAmount.Values.Text = "抽成佣金";
+            // 
             // txtTotalQty
             // 
             this.txtTotalQty.Location = new System.Drawing.Point(77, 18);
@@ -731,21 +669,6 @@
             this.lblApprovalOpinions.TabIndex = 76;
             this.lblApprovalOpinions.Values.Text = "审批意见";
             // 
-            // txtTotalCommissionAmount
-            // 
-            this.txtTotalCommissionAmount.Location = new System.Drawing.Point(77, 47);
-            this.txtTotalCommissionAmount.Name = "txtTotalCommissionAmount";
-            this.txtTotalCommissionAmount.Size = new System.Drawing.Size(100, 23);
-            this.txtTotalCommissionAmount.TabIndex = 104;
-            // 
-            // lblTotalCommissionAmount
-            // 
-            this.lblTotalCommissionAmount.Location = new System.Drawing.Point(4, 50);
-            this.lblTotalCommissionAmount.Name = "lblTotalCommissionAmount";
-            this.lblTotalCommissionAmount.Size = new System.Drawing.Size(62, 20);
-            this.lblTotalCommissionAmount.TabIndex = 103;
-            this.lblTotalCommissionAmount.Values.Text = "抽成佣金";
-            // 
             // UCSaleOrder
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
@@ -767,7 +690,6 @@
             this.kryptonPanelMainInfo.ResumeLayout(false);
             this.kryptonPanelMainInfo.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.cmbAccount_id)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.cmbCurrency_ID)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmbPayStatus)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmbProjectGroup)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmbOrderPriority)).EndInit();
@@ -841,16 +763,8 @@
         private Krypton.Toolkit.KryptonLabel lblDataStatus;
         private Krypton.Toolkit.KryptonCheckBox chk平台单;
         private Krypton.Toolkit.KryptonCheckBox chkIsCustomizedOrder;
-        private Krypton.Toolkit.KryptonLabel lblExchangeRate;
-        private Krypton.Toolkit.KryptonTextBox txtExchangeRate;
-        private Krypton.Toolkit.KryptonLabel lblCurrency_ID;
-        private Krypton.Toolkit.KryptonComboBox cmbCurrency_ID;
-        private Krypton.Toolkit.KryptonLabel lblForeignDeposit;
-        private Krypton.Toolkit.KryptonTextBox txtForeignDeposit;
         private Krypton.Toolkit.KryptonLabel lblAccount_id;
         private Krypton.Toolkit.KryptonComboBox cmbAccount_id;
-        private Krypton.Toolkit.KryptonTextBox txtForeignFreightIncome;
-        private Krypton.Toolkit.KryptonLabel lblForeignFreightIncome;
         private Krypton.Toolkit.KryptonTextBox txtCustomerPONo;
         private Krypton.Toolkit.KryptonLabel lblCustomerPONo;
         private Krypton.Toolkit.KryptonTextBox txtTotalCommissionAmount;

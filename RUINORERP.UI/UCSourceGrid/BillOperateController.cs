@@ -840,12 +840,11 @@ namespace RUINORERP.UI.UCSourceGrid
                     return;
                 }
                 //如果编辑后的值等于原来的值。则不进行后面的操作。特别是反向计算。不然会一直循环重复计算。导致数据错误
-                var oldValue = setcurrentObj.GetPropertyValue(CurrDefinedColumn.ColName);
-
-                if (oldValue != null && (oldValue.ToString().Equals(sender.Value.ToString())))
-                {
-                    return;
-                }
+                //var oldValue = setcurrentObj.GetPropertyValue(CurrDefinedColumn.ColName);
+                //if (oldValue != null && (oldValue.ToString().Equals(sender.Value.ToString())))
+                //{
+                //    return;
+                //}
                 if (CurrDefinedColumn.CustomFormat == CustomFormatType.WebPathImage)
                 {
                     if (sender.Cell.Editor != null && sender.Cell.Editor is ImageWebPickEditor webPicker)

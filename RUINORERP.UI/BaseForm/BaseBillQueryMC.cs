@@ -589,7 +589,9 @@ namespace RUINORERP.UI.BaseForm
                     {
                         BaseController<M> ctr = Startup.GetFromFacByName<BaseController<M>>(typeof(M).Name + "Controller");
                         object PKValue = item.GetPropertyValue(UIHelper.GetPrimaryKeyColName(typeof(M)));
+
                         bool rs = await ctr.BaseDeleteByNavAsync(item as M);
+                        //bool rs = await ctr.BaseDeleteAsync(item);
                         if (rs)
                         {
                             //删除远程图片及本地图片

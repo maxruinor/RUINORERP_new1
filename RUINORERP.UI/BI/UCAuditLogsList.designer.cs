@@ -28,7 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(UCLogsList));
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(UCAuditLogsList));
             ((System.ComponentModel.ISupportInitialize)(this.kryptonHeaderGroupTop)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonHeaderGroupTop.Panel)).BeginInit();
             this.kryptonHeaderGroupTop.SuspendLayout();
@@ -36,16 +36,17 @@
             // 
             // kryptonHeaderGroupTop
             // 
-            this.kryptonHeaderGroupTop.Size = new System.Drawing.Size(691, 26);
+            this.kryptonHeaderGroupTop.Size = new System.Drawing.Size(691, 85);
             this.kryptonHeaderGroupTop.ValuesPrimary.Heading = "";
             this.kryptonHeaderGroupTop.ValuesPrimary.Image = ((System.Drawing.Image)(resources.GetObject("kryptonHeaderGroupTop.ValuesPrimary.Image")));
             // 
-            // UCLogsList
+            // UCAuditLogsList
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.Name = "UCLogsList";
+            this.Name = "UCAuditLogsList";
             this.Size = new System.Drawing.Size(691, 544);
+            this.Load += new System.EventHandler(this.UCAuditLogsList_Load);
             ((System.ComponentModel.ISupportInitialize)(this.kryptonHeaderGroupTop.Panel)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonHeaderGroupTop)).EndInit();
             this.kryptonHeaderGroupTop.ResumeLayout(false);

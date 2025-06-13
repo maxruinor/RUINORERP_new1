@@ -27,6 +27,10 @@ using RUINORERP.Common.Extensions;
 using RUINORERP.Business.CommService;
 using RUINORERP.Model.CommonModel;
 using RUINORERP.Global.Model;
+using OfficeOpenXml;
+using RUINORERP.UI.CommonUI;
+using System.IO;
+using Krypton.Toolkit.Suite.Extended.Outlook.Grid;
 
 
 namespace RUINORERP.UI.PSI.INV
@@ -103,14 +107,16 @@ namespace RUINORERP.UI.PSI.INV
             base._UCMasterQuery.ColDisplayTypes.Add(typeof(tb_ProductType));
             base._UCOutlookGridGroupAnalysis.ColDisplayTypes = base._UCMasterQuery.ColDisplayTypes;
 
-            //base._UCMasterQuery.newSumDataGridViewMaster.Use是否使用内置右键功能 = false;
+            base._UCMasterQuery.newSumDataGridViewMaster.Use是否使用内置右键功能 = true;
             base._UCMasterQuery.newSumDataGridViewMaster.ContextMenuStrip = contextMenuStrip1;
 
             KryptonPage page1 = kryptonWorkspace1.AllPages().FirstOrDefault(c => c.UniqueName == NavParts.结果分析1.ToString());
             page1.Text = "纵向库存跟踪";
             base._UCOutlookGridAnalysis1.GridRelated.FromMenuInfo = this.CurMenuInfo;
             base._UCOutlookGridAnalysis1.GridRelated.ComplexType = true;
-            base._UCOutlookGridAnalysis1.GridRelated.SetComplexTargetField<Proc_InventoryTracking>(c => c.业务类型,c=>c.单据编号);
+            base._UCOutlookGridAnalysis1.GridRelated.SetComplexTargetField<Proc_InventoryTracking>(c => c.业务类型, c => c.单据编号);
+            _UCOutlookGridAnalysis1.kryptonOutlookGrid1.ContextMenuStrip = this.contextMenuStripTracker;
+
             //base._UCOutlookGridAnalysis1.GridRelated.ComplexTargtetField = "业务类型";
             var mappings = new Dictionary<string, string>
         {
@@ -158,7 +164,7 @@ namespace RUINORERP.UI.PSI.INV
             base.MasterInvisibleCols.Add(c => c.Inv_Cost);
         }
 
-        private  void 纵向库存跟踪ToolStripMenuItem_Click(object sender, EventArgs e)
+        private void 纵向库存跟踪ToolStripMenuItem_Click(object sender, EventArgs e)
         {
             if (_UCMasterQuery.bindingSourceMaster.Current != null)
             {
@@ -175,7 +181,7 @@ namespace RUINORERP.UI.PSI.INV
                     List<string> SummaryCols = new List<string>();
                     SummaryCols.Add("数量");//这里要优化，按理可以是引用类型来处理
                     _UCOutlookGridAnalysis1.kryptonOutlookGrid1.SubtotalColumns = SummaryCols;
-                  
+
                     _UCOutlookGridAnalysis1.ColDisplayTypes = new List<Type>();
                     //这个视图是用SQL语句生成的,用生成器。
                     _UCOutlookGridAnalysis1.ColDisplayTypes.Add(typeof(Proc_InventoryTracking));
@@ -194,7 +200,7 @@ namespace RUINORERP.UI.PSI.INV
 
 
 
-        private   void 库存异常检测ToolStripMenuItem_Click(object sender, EventArgs e)
+        private void 库存异常检测ToolStripMenuItem_Click(object sender, EventArgs e)
         {
             //进出加起来不等于期末的
             int ErrorCounter = 0;
@@ -228,6 +234,146 @@ namespace RUINORERP.UI.PSI.INV
                 MainForm.Instance.uclog.AddLog("功能", "库存异常的数据行数为：" + ErrorCounter);
             }
         }
+
+        private void 导出ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+
+            ExportToExcel(_UCOutlookGridAnalysis1.kryptonOutlookGrid1);
+        }
+
+
+        /// <summary>
+        /// 导出 OutlookGrid 数据到 Excel
+        /// </summary>
+        public void ExportToExcel(KryptonOutlookGrid kryptonOutlookGrid1)
+        {
+            if (kryptonOutlookGrid1.RowCount == 0)
+            {
+                MessageBox.Show("没有可导出的数据", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            try
+            {
+                using (SaveFileDialog saveDialog = new SaveFileDialog())
+                {
+                    saveDialog.Filter = "Excel Files (*.xlsx; *.xls)|*.xlsx; *.xls";
+                    saveDialog.FilterIndex = 1;
+                    saveDialog.Title = "导出Excel文件";
+                    saveDialog.FileName = $"分析结果_{DateTime.Now:yyyyMMddHHmmss}";
+                    saveDialog.RestoreDirectory = true;
+
+                    if (saveDialog.ShowDialog() != DialogResult.OK)
+                        return;
+
+                    ExcelPackage.LicenseContext = OfficeOpenXml.LicenseContext.NonCommercial;
+                    var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+
+                    using (var progressForm = new ExcelProgressForm("正在导出数据..."))
+                    using (var package = new ExcelPackage())
+                    {
+                        progressForm.Show();
+                        Application.DoEvents();
+
+                        ExcelWorksheet worksheet = package.Workbook.Worksheets.Add("分析结果");
+                        int exportedRows = 0;
+
+                        try
+                        {
+                            // 生成表头
+                            int colIndex = 1;
+                            for (int i = 0; i < kryptonOutlookGrid1.ColumnCount; i++)
+                            {
+                                if (kryptonOutlookGrid1.Columns[i].Visible &&
+                                    !string.IsNullOrEmpty(kryptonOutlookGrid1.Columns[i].HeaderText))
+                                {
+                                    worksheet.Cells[1, colIndex].Value = kryptonOutlookGrid1.Columns[i].HeaderText;
+                                    worksheet.Column(colIndex).Width = kryptonOutlookGrid1.Columns[i].Width / 7.5;
+                                    colIndex++;
+                                }
+                            }
+
+                            // 填充数据
+                            int rowCount = kryptonOutlookGrid1.Rows.Count;
+                            for (int rowIndex = 0; rowIndex < rowCount; rowIndex++)
+                            {
+                                DataGridViewRow gridRow = kryptonOutlookGrid1.Rows[rowIndex];
+                                if (gridRow.Visible)
+                                {
+                                    colIndex = 1;
+                                    for (int col = 0; col < kryptonOutlookGrid1.ColumnCount; col++)
+                                    {
+                                        if (kryptonOutlookGrid1.Columns[col].Visible &&
+                                            !string.IsNullOrEmpty(kryptonOutlookGrid1.Columns[col].HeaderText))
+                                        {
+                                            var cell = kryptonOutlookGrid1[col, rowIndex];
+                                            var excelCell = worksheet.Cells[exportedRows + 2, colIndex];
+
+                                            if (cell.Value != null)
+                                            {
+                                                if (cell.Value is DateTime)
+                                                {
+                                                    excelCell.Value = cell.FormattedValue.ToString();
+                                                }
+                                                else if (cell.Value is string || cell.Value is long)
+                                                {
+                                                    excelCell.Value = cell.FormattedValue.ToString();
+                                                }
+                                                else if (cell.Value is int && !cell.Value.ToString().Equals(cell.FormattedValue.ToString()))
+                                                {
+                                                    excelCell.Value = cell.FormattedValue.ToString();
+                                                }
+                                                else
+                                                {
+                                                    excelCell.Value = cell.Value;
+                                                }
+                                            }
+                                            colIndex++;
+                                        }
+                                    }
+                                    exportedRows++;
+                                }
+
+                                // 每100行更新一次进度
+                                if (rowIndex % 100 == 0)
+                                {
+                                    progressForm.SetProgress((int)((rowIndex + 1) * 100f / rowCount));
+                                    Application.DoEvents();
+                                }
+                            }
+
+                            // 自动调整列宽以获得更好的显示效果
+                            worksheet.Cells.AutoFitColumns();
+                        }
+                        catch (Exception ex)
+                        {
+                            MainForm.Instance?.uclog?.AddLog("Excel导出时出错！" + ex.Message);
+                            throw;
+                        }
+                        finally
+                        {
+                            package.SaveAs(new FileInfo(saveDialog.FileName));
+                            stopwatch.Stop();
+                            progressForm.Close();
+                        }
+
+                        if (MessageBox.Show($"成功导出 {exportedRows} 行数据，耗时 {stopwatch.Elapsed.TotalSeconds:F2} 秒。\n是否立即打开文件？",
+                            "导出完成", MessageBoxButtons.YesNo, MessageBoxIcon.Information) == DialogResult.Yes)
+                        {
+                            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(saveDialog.FileName) { UseShellExecute = true });
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"导出失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+
+
+
     }
 }
 

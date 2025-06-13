@@ -46,8 +46,6 @@ namespace RUINORERP.Business.Processor
                           .ToExpression();//注意 这一句 不能少
             queryFilter.FilterLimitExpressions.Add(lambda);
 
-
-
             var lambdacv = Expressionable.Create<tb_CustomerVendor>()
              .And(t => t.isdeleted == false)
        

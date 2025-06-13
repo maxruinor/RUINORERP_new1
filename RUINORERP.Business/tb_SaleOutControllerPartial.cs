@@ -152,11 +152,9 @@ namespace RUINORERP.Business
                     return rrs;
                 }
                 tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
-                //这部分是否能提出到上一级公共部分？
-                entity.DataStatus = (int)DataStatus.确认;
-                // entity.ApprovalOpinions = approvalEntity.ApprovalComments;
-                //后面已经修改为
-                //  entity.ApprovalResults = approvalEntity.ApprovalResults;
+
+                //这里设置一个集合 用于保存特殊情况，后面统一更新
+                List<tb_SaleOutDetail> UpdateSaleOutCostlist = new List<tb_SaleOutDetail>();
 
                 #region 审核 通过时
                 if (entity.ApprovalResults.HasValue && entity.ApprovalResults.Value)
@@ -215,8 +213,6 @@ namespace RUINORERP.Business
                     // 使用字典按 (ProdDetailID, LocationID) 分组，存储库存记录及累计数据
                     var inventoryGroups = new Dictionary<(long ProdDetailID, long LocationID), (tb_Inventory Inventory, decimal OutQtySum, DateTime LatestOutboundTime)>();
 
-                    //这里设置一个集合 用于保存特殊情况，后面统一更新
-                    List<tb_SaleOutDetail> UpdateSaleOutCostlist = new List<tb_SaleOutDetail>();
 
                     List<tb_PriceRecord> priceUpdateList = new List<tb_PriceRecord>();
 
@@ -273,8 +269,9 @@ namespace RUINORERP.Business
                             priceUpdateList.Add(priceRecord);
                             #endregion
 
-                            #region 如果成本为零时则会实时检测库存成本，以库存成本为基准。这种情况解决未知成本，提前销售的情况。
-                            if (child.Cost == 0 && inv.Inv_Cost > 0)
+                            #region 实时检测库存成本，以库存成本为基准。
+                            //!!!!!!!!! 更新新于2025-06-12  以仓库成本为准。因为 订单时，后面可能多次入库修改成本。
+                            if (!child.Cost.Equals(inv.Inv_Cost))
                             {
                                 child.Cost = inv.Inv_Cost;
                                 child.SubtotalCostAmount = (child.Cost + child.CustomizedCost) * child.Quantity;
@@ -347,6 +344,7 @@ namespace RUINORERP.Business
 
                     if (UpdateSaleOutCostlist.Count > 0)
                     {
+                        entity.TotalCost = UpdateSaleOutCostlist.Sum(c => c.SubtotalCostAmount);
                         var Counter = await dbHelper.BaseDefaultAddElseUpdateAsync(UpdateSaleOutCostlist);
                         if (Counter == 0)
                         {
@@ -411,10 +409,10 @@ namespace RUINORERP.Business
 
                                 if (inQty > entity.tb_saleorder.tb_SaleOrderDetails[i].Quantity)
                                 {
+                                    _unitOfWorkManage.RollbackTran();
                                     string msg = $"销售订单:{entity.tb_saleorder.SOrderNo}的【{prodName}】的出库数量不能大于订单中对应行的数量，\r\n\" " +
                                         $"或存在当前销售订单重复录入了销售出库单。";
                                     rrs.ErrorMsg = msg;
-                                    _unitOfWorkManage.RollbackTran();
                                     _logger.LogInformation(msg);
                                     return rrs;
                                 }
@@ -453,11 +451,10 @@ namespace RUINORERP.Business
                                 ).Sum(c => c.Quantity);
                                 if (inQty > entity.tb_saleorder.tb_SaleOrderDetails[i].Quantity)
                                 {
-
+                                    _unitOfWorkManage.RollbackTran();
                                     string msg = $"销售订单:{entity.tb_saleorder.SOrderNo}的【{prodName}】的出库数量不能大于订单中对应行的数量，\r\n\" " +
                                         $"或存在当前销售订单重复录入了销售出库单，审核失败！";
                                     rrs.ErrorMsg = msg;
-                                    _unitOfWorkManage.RollbackTran();
                                     _logger.LogInformation(msg);
                                     return rrs;
                                 }
@@ -514,8 +511,8 @@ namespace RUINORERP.Business
                     //如果出库金额为0，但是订单中不是为0，则不允许出库,如果明细中注明了。都是赠品是可以的。
                     if (entity.TotalAmount == 0 && entity.tb_saleorder.TotalAmount != 0 && !entity.tb_SaleOutDetails.Any(c => c.Gift))
                     {
-                        string msg = $"出库单:{entity.tb_saleorder.SOrderNo}的总金额为0， 但是订单中不为0，请检查数据!";
                         _unitOfWorkManage.RollbackTran();
+                        string msg = $"出库单:{entity.tb_saleorder.SOrderNo}的总金额为0， 但是订单中不为0，请检查数据!";
                         rrs.ErrorMsg = msg;
                         _logger.LogInformation(msg);
                         return rrs;
@@ -794,23 +791,34 @@ namespace RUINORERP.Business
                     entity.ApprovalResults = false;
                 }
 
-                var last = await _unitOfWorkManage.GetDbClient().Updateable<tb_SaleOut>(entity).UpdateColumns(it => new
+
+                //如果成本也更新了
+                if (UpdateSaleOutCostlist.Count > 0)
                 {
-                    it.ApprovalStatus,
-                    it.DataStatus,
-                    it.ApprovalResults,
-                    it.Approver_at,
-                    it.Approver_by,
-                    it.ApprovalOpinions
-                }).ExecuteCommandAsync();
-                //int last = await _unitOfWorkManage.GetDbClient().Updateable<tb_SaleOut>(entity).ExecuteCommandAsync();
-                if (last < 0)
-                {
-                    _logger.LogInformation("审核销售出库单失败" + entity.SaleOutNo);
-                    _unitOfWorkManage.RollbackTran();
-                    rrs.Succeeded = false;
-                    return rrs;
+                    var last = await _unitOfWorkManage.GetDbClient().Updateable<tb_SaleOut>(entity).UpdateColumns(it => new
+                    {
+                        it.ApprovalStatus,
+                        it.DataStatus,
+                        it.ApprovalResults,
+                        it.Approver_at,
+                        it.Approver_by,
+                        it.ApprovalOpinions,
+                        it.TotalCost
+                    }).ExecuteCommandAsync();
                 }
+                else
+                {
+                    var last = await _unitOfWorkManage.GetDbClient().Updateable<tb_SaleOut>(entity).UpdateColumns(it => new
+                    {
+                        it.ApprovalStatus,
+                        it.DataStatus,
+                        it.ApprovalResults,
+                        it.Approver_at,
+                        it.Approver_by,
+                        it.ApprovalOpinions
+                    }).ExecuteCommandAsync();
+                }
+
 
                 // 注意信息的完整性
                 _unitOfWorkManage.CommitTran();
@@ -1358,7 +1366,7 @@ namespace RUINORERP.Business
                         }
                     }
 
-             
+
                     #endregion
                 }
 

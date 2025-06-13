@@ -399,7 +399,8 @@ namespace RUINORERP.Business
                                 || returnpayable.ARAPStatus == (int)ARAPStatus.待审核 || returnpayable.ARAPStatus == (int)ARAPStatus.已生效)
                             {
                                 //删除
-                                bool deleters = await ctrpayable.BaseDeleteByNavAsync(returnpayable);
+                                //bool deleters = await ctrpayable.BaseDeleteByNavAsync(returnpayable);
+                                bool deleters = await ctrpayable.BaseDeleteAsync(returnpayable);
                             }
                             else
                             {

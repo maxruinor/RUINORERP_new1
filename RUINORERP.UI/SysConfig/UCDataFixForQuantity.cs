@@ -61,7 +61,7 @@ using NPOI.POIFS.Properties;
 
 namespace RUINORERP.UI.SysConfig
 {
-    [MenuAttrAssemblyInfo("库存数据校正", ModuleMenuDefine.模块定义.系统设置, ModuleMenuDefine.系统设置.系统工具)]
+    [MenuAttrAssemblyInfo("库存数量数据校正", ModuleMenuDefine.模块定义.系统设置, ModuleMenuDefine.系统设置.系统工具)]
     public partial class UCDataFixForQuantity : UserControl
     {
         public UCDataFixForQuantity()

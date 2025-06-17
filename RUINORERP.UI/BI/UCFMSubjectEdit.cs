@@ -36,7 +36,7 @@ namespace RUINORERP.UI.BI
         private tb_FM_Subject _EditEntity;
         public tb_FM_Subject EditEntity { get => _EditEntity; set => _EditEntity = value; }
 
-      public List<tb_FM_Subject> SubjectList { get; set; }
+        public List<tb_FM_Subject> SubjectList { get; set; }
         public override void BindData(BaseEntity entity)
         {
             _EditEntity = entity as tb_FM_Subject;
@@ -122,7 +122,7 @@ namespace RUINORERP.UI.BI
                 //tb_FM_Subject entity = list.Find(t => t.Subject_name == cevent.Value.ToString());
                 //这里是按 显示的文本来找，这里显示格式变化了一下。
                 tb_FM_Subject entity = SubjectList.Find(t => t.Subject_code + "【" + t.Subject_name + "】" == cevent.Value.ToString());
-                
+
                 if (entity != null)
                 {
                     cevent.Value = entity.Subject_id;
@@ -169,7 +169,7 @@ namespace RUINORERP.UI.BI
             {
                 //这里 在数据库中不能建立外键约束，0为默认值，不然会报错
                 //或者先给你默认的顶级节点为，id为0的节点，这样子就不会报错。
-                EditEntity.Parent_subject_id =0;
+                EditEntity.Parent_subject_id = 0;
             }
 
             if (base.Validator())
@@ -180,7 +180,7 @@ namespace RUINORERP.UI.BI
             }
         }
 
-        private  void UCProductCategoriesEdit_Load(object sender, EventArgs e)
+        private void UCProductCategoriesEdit_Load(object sender, EventArgs e)
         {
             //tb_FM_SubjectController<tb_FM_Subject> ctr = Startup.GetFromFac<tb_FM_SubjectController<tb_FM_Subject>>();
             //list = await ctr.QueryAsync();

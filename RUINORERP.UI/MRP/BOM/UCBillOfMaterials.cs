@@ -926,14 +926,6 @@ namespace RUINORERP.UI.MRP.BOM
 
 
 
-
-
-
-
-
-
-
-
         /// <summary>
         /// 子集中，比方类型，在上级是用grid formating事件查出来的，这里需要递归填充
         /// 如果强制将树展开，也可以显示

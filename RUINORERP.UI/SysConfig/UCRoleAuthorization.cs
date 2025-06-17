@@ -1087,6 +1087,7 @@ namespace RUINORERP.UI.SysConfig
                     pb = new tb_P4Button();
                     BusinessHelper.Instance.InitEntity(pb);
                     pb.Notes = item.BtnText;
+                    pb.ButtonType = item.ButtonType;
                 }
                 else
                 {
@@ -1213,6 +1214,7 @@ namespace RUINORERP.UI.SysConfig
                     button.MenuID = SelectedMenuInfo.MenuID;
                     // 设置选中状态
                     SetButtonSelection(button, selected);
+                    BusinessHelper.Instance.InitEntity(button);
                     newButtons.Add(button);
                 }
                 else

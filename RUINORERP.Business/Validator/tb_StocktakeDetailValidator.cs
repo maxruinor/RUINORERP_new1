@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/18/2024 17:45:32
+// 时间：06/14/2025 11:15:28
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -41,12 +41,18 @@ namespace RUINORERP.Business
 //***** 
  RuleFor(tb_StocktakeDetail =>tb_StocktakeDetail.MainID).NotNull().WithMessage(":不能为空。");
 
- RuleFor(tb_StocktakeDetail =>tb_StocktakeDetail.ProdDetailID).Must(CheckForeignKeyValue).WithMessage(":下拉选择值不正确。");
+ RuleFor(tb_StocktakeDetail =>tb_StocktakeDetail.ProdDetailID).Must(CheckForeignKeyValue).WithMessage("产品:下拉选择值不正确。");
 
  RuleFor(tb_StocktakeDetail =>tb_StocktakeDetail.Rack_ID).Must(CheckForeignKeyValueCanNull).WithMessage("货架:下拉选择值不正确。");
  RuleFor(tb_StocktakeDetail =>tb_StocktakeDetail.Rack_ID).NotEmpty().When(x => x.Rack_ID.HasValue);
 
+ RuleFor(tb_StocktakeDetail =>tb_StocktakeDetail.property).MaximumLength(127).WithMessage("属性:不能超过最大长度,127.");
+
  RuleFor(x => x.Cost).PrecisionScale(19,4,true).WithMessage("成本:小数位不能超过4。");
+
+ RuleFor(x => x.TaxRate).PrecisionScale(5,3,true).WithMessage("税率:小数位不能超过3。");
+
+ RuleFor(x => x.UntaxedCost).PrecisionScale(19,4,true).WithMessage("未税单价:小数位不能超过4。");
 
 //***** 
  RuleFor(tb_StocktakeDetail =>tb_StocktakeDetail.CarryinglQty).NotNull().WithMessage("载账数量:不能为空。");
@@ -64,8 +70,6 @@ namespace RUINORERP.Business
  RuleFor(x => x.CheckSubtotalAmount).PrecisionScale(19,4,true).WithMessage("盘点小计:小数位不能超过4。");
 
  RuleFor(tb_StocktakeDetail =>tb_StocktakeDetail.Notes).MaximumLength(127).WithMessage("备注:不能超过最大长度,127.");
-
- RuleFor(tb_StocktakeDetail =>tb_StocktakeDetail.property).MaximumLength(127).WithMessage("属性:不能超过最大长度,127.");
 
            	        Initialize();
      }

@@ -21,9 +21,10 @@ namespace RUINORERP.UI.UserCenter.DataParts
     }
     public class ConditionBuilderFactory
     {
-        public List<ConditionGroup> GetCommonConditionGroups()
+        public List<ConditionGroup> GetCommonConditionGroups(BizType bizType)
         {
-            return new List<ConditionGroup>
+
+            var grouplist = new List<ConditionGroup>
         {
             new ConditionGroup
             {
@@ -64,7 +65,57 @@ namespace RUINORERP.UI.UserCenter.DataParts
                 }
             }
         };
+            switch (bizType)
+            {
+                case BizType.销售订单:
+                case BizType.销售出库单:
+                case BizType.销售退回单:
+                    // 添加销售限制条件（如果有权限限制）
+                    if (AuthorizeController.GetSaleLimitedAuth(MainForm.Instance.AppContext))
+                    {
+                        AddEmployeeIdCondition(grouplist);
+                    }
+                    break;
+                case BizType.采购订单:
+                    // 添加销售限制条件（如果有权限限制）
+                    if (AuthorizeController.GetPurBizLimitedAuth(MainForm.Instance.AppContext))
+                    {
+                        AddEmployeeIdCondition(grouplist);
+                    }
+                    break;
+                case BizType.借出单:
+                case BizType.归还单:
+                    // 添加销售限制条件（如果有权限限制）
+                    if (AuthorizeController.GetOwnershipControl(MainForm.Instance.AppContext))
+                    {
+                        AddEmployeeIdCondition(grouplist);
+                    }
+
+                    break;
+
+            }
+
+
+
+            return grouplist;
         }
+
+        private void AddEmployeeIdCondition(List<ConditionGroup> grouplist)
+        {
+            var employeeIdCondition = new ConditionalModel
+            {
+                FieldName = "Employee_ID",
+                ConditionalType = ConditionalType.Equal,
+                FieldValue = MainForm.Instance.AppContext.CurUserInfo.UserInfo.tb_employee.Employee_ID.ToString(),
+                CSharpTypeName = "long"
+            };
+
+            foreach (var group in grouplist)
+            {
+                group.Conditions.Add(employeeIdCondition);
+            }
+        }
+
 
         public List<ConditionGroup> GetPrePaymentConditionGroups(ReceivePaymentType paymentType)
         {
@@ -134,7 +185,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
                     {
                         FieldName = "PrePaymentStatus",
                         ConditionalType = ConditionalType.Equal,
-                        FieldValue = ((long)PrePaymentStatus.待核销).ToString(),
+                        FieldValue = ((long)PrePaymentStatus.已生效).ToString(),
                         CSharpTypeName = "long"
                     },
                      new ConditionalModel

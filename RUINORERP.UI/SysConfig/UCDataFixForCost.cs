@@ -421,7 +421,7 @@ namespace RUINORERP.UI.SysConfig
             AddLoadRelatedData();
         }
 
-        private void AddLoadRelatedData()
+        private async void AddLoadRelatedData()
         {
             if (dataGridViewInv.CurrentRow == null)
             {
@@ -445,7 +445,8 @@ namespace RUINORERP.UI.SysConfig
                             入库日期 = it.EntryDate,
                             采购入库单号 = it.PurEntryNo,
                             SKU码 = it.SKU,
-                            成本 = it.UnitPrice,
+                            含税单价 = it.UnitPrice,
+                            未税单价 = it.UntaxedUnitPrice,
                             数量 = it.Quantity
                         })
                         .ToList();
@@ -476,8 +477,6 @@ namespace RUINORERP.UI.SysConfig
                     switch (bt)
                     {
                         case BizType.销售订单:
-
-
                             #region 销售订单 出库  退货 记录成本修复
 
                             List<dynamic> SaleOrderItems = MainForm.Instance.AppContext.Db.Queryable<View_SaleOrderItems>()
@@ -514,7 +513,6 @@ namespace RUINORERP.UI.SysConfig
                                 tabControl.TabPages.Add(page销售订单);
                                 dgv销售订单.Refresh();
                             }
-
 
                             break;
                         case BizType.销售出库单:
@@ -556,8 +554,7 @@ namespace RUINORERP.UI.SysConfig
                             break;
                         case BizType.销售退回单:
                             break;
-                        case BizType.采购订单:
-                            break;
+                   
                         case BizType.采购入库单:
                             break;
                         case BizType.采购退货单:
@@ -604,30 +601,80 @@ namespace RUINORERP.UI.SysConfig
                         case BizType.盘点单:
                             break;
                         case BizType.制令单:
-                            #region 制令单
+                            #region 制令单母件为指定SKU
 
-                            List<dynamic> MOItems = MainForm.Instance.AppContext.Db.Queryable<View_ManufacturingOrderItems>()
+                            List<dynamic> MOItems = MainForm.Instance.AppContext.Db.Queryable<tb_ManufacturingOrder>()
                        //.OrderBy(a => a.)
                        .Where(a => a.ProdDetailID == ProdDetailID)
                        .Select(it => (dynamic)new
                        {
-                           数量 = it.ActualSentQty,
-                           配方号 = it.BOM_NO,
-                           成本 = it.UnitCost,
-                           成本小计 = it.SubtotalUnitCost
+                           制令单号 = it.MONO,
+                           生产数量 = it.ManufacturingQty,
+                           配方号 = it.BOM_No,
+                           平均成本 = it.TotalProductionCost / it.ManufacturingQty,
+                           总成本 = it.TotalProductionCost
                        }).ToList();
                             if (MOItems.Count > 0)
                             {
+                                TabPage page制令单母件为指定SKU = new TabPage();
+                                DataGridView dgv制令单母件为指定SKU = new DataGridView();
+                                dgv制令单母件为指定SKU.DataSource = MOItems.ToDataTable();
+                                dgv制令单母件为指定SKU.Dock = DockStyle.Fill;
+                                // 自动调整列宽
+                                dgv制令单母件为指定SKU.AutoResizeColumns(DataGridViewAutoSizeColumnsMode.AllCells);
+                                dgv制令单母件为指定SKU.AutoResizeRows();
+                                dgv制令单母件为指定SKU.Tag = bt;
+
+                                page制令单母件为指定SKU.Text = "母件为指定SKU制令单";
+                                page制令单母件为指定SKU.Tag = bt;
+                                dgv制令单母件为指定SKU.Tag = bt;
+                                page制令单母件为指定SKU.Controls.Add(dgv制令单母件为指定SKU);
+                                tabControl.TabPages.Add(page制令单母件为指定SKU);
+                            }
+                            #endregion
+
+
+                            #region 制令单 子件为指定SKU
+
+                            List<ManufacturingOrderItem> manufacturings = new List<ManufacturingOrderItem>();
+                            var MosubItems = await MainForm.Instance.AppContext.Db.Queryable<tb_ManufacturingOrder>()
+                         .Includes(a => a.tb_ManufacturingOrderDetails)
+                         .Where(a => a.tb_ManufacturingOrderDetails.Any(z => z.ProdDetailID == ProdDetailID))
+                         .ToListAsync();
+
+                            foreach (var moItem in MosubItems)
+                            {
+                                foreach (var subItem in moItem.tb_ManufacturingOrderDetails)
+                                {
+                                    if (subItem.ProdDetailID == ProdDetailID)
+                                    {
+                                        var moitem = new ManufacturingOrderItem
+                                        {
+                                            应发数 = subItem.ShouldSendQty,
+                                            配方编号 = moItem.BOM_No,
+                                            子件成本 = subItem.UnitCost,
+                                            子件小计 = subItem.SubtotalUnitCost,
+                                        };
+                                        manufacturings.Add(moitem);
+
+                                    }
+
+                                }
+                            }
+
+
+                            if (manufacturings.Count > 0)
+                            {
                                 TabPage page制令单 = new TabPage();
                                 DataGridView dgv制令单 = new DataGridView();
-                                dgv制令单.DataSource = MOItems.ToDataTable();
+                                dgv制令单.DataSource = manufacturings;
                                 dgv制令单.Dock = DockStyle.Fill;
                                 // 自动调整列宽
                                 dgv制令单.AutoResizeColumns(DataGridViewAutoSizeColumnsMode.AllCells);
                                 dgv制令单.AutoResizeRows();
                                 dgv制令单.Tag = bt;
 
-                                page制令单.Text = "制令单" + MOItems.Count;
+                                page制令单.Text = "子件为指定SKU制令单";
                                 page制令单.Tag = bt;
                                 dgv制令单.Tag = bt;
                                 page制令单.Controls.Add(dgv制令单);
@@ -667,7 +714,7 @@ namespace RUINORERP.UI.SysConfig
                                 dgvBOMDetail.AutoResizeRows();
 
 
-                                pageBOMDetail.Text = "配方清单明细" + ProdbomItems.Count;
+                                pageBOMDetail.Text = "子件为指定SKU的配方明细";
                                 pageBOMDetail.Tag = bt;
                                 dgvBOMDetail.Tag = bt;
                                 pageBOMDetail.Controls.Add(dgvBOMDetail);
@@ -709,7 +756,7 @@ namespace RUINORERP.UI.SysConfig
                                 // 自动调整列宽
                                 dgvBOM.AutoResizeColumns(DataGridViewAutoSizeColumnsMode.AllCells);
                                 dgvBOM.AutoResizeRows();
-                                pageBOM.Text = "对应配方" + boms.Count;
+                                pageBOM.Text = "母件为指定SKU配方";
                                 pageBOM.Tag = bt;
                                 dgvBOM.Tag = bt;
 
@@ -725,8 +772,6 @@ namespace RUINORERP.UI.SysConfig
 
                             break;
                         case BizType.生产领料单:
-
-
                             #region 领料单
 
                             List<dynamic> MRBills = MainForm.Instance.AppContext.Db.Queryable<View_MaterialRequisitionItems>()
@@ -809,8 +854,7 @@ namespace RUINORERP.UI.SysConfig
                             }
                             #endregion
                             break;
-                        case BizType.请购单:
-                            break;
+           
                         case BizType.产品分割单:
                             break;
                         case BizType.产品组合单:
@@ -936,12 +980,10 @@ namespace RUINORERP.UI.SysConfig
                             break;
                         case BizType.返工退库单:
                             break;
-                        case BizType.返工退库统计:
-                            break;
+                 
                         case BizType.返工入库单:
                             break;
-                        case BizType.返工入库统计:
-                            break;
+               
 
                         default:
                             break;
@@ -1202,15 +1244,14 @@ namespace RUINORERP.UI.SysConfig
                                 case BizType.制令单:
                                     #region 更新制令单价格,和BOM类似
 
+                                    // BOM成本变化后。还没有缴库的制作令单 要同步修改
+
 
                                     List<tb_ManufacturingOrder> MOs = MainForm.Instance.AppContext.Db.Queryable<tb_ManufacturingOrder>()
-                                .InnerJoin<tb_ManufacturingOrderDetail>((a, b) => a.MOID == b.MOID)
-                                .Includes(b => b.tb_bom_s, c => c.tb_BOM_SDetails)
-                                .Includes(a => a.tb_ManufacturingOrderDetails)
-
-                                .Where(a => a.tb_ManufacturingOrderDetails.Any(c => c.ProdDetailID == child.ProdDetailID && c.Location_ID == child.Location_ID)).ToList();
-
-
+                                   .InnerJoin<tb_ManufacturingOrderDetail>((a, b) => a.MOID == b.MOID)
+                                   .Includes(b => b.tb_bom_s, c => c.tb_BOM_SDetails)
+                                   .Includes(a => a.tb_ManufacturingOrderDetails)
+                                   .Where(a => a.tb_ManufacturingOrderDetails.Any(c => c.ProdDetailID == child.ProdDetailID && c.Location_ID == child.Location_ID)).ToList();
                                     var distinctMObills = MOs
                                     .GroupBy(o => o.MOID)
                                     .Select(g => g.First())
@@ -1295,6 +1336,56 @@ namespace RUINORERP.UI.SysConfig
 
 
                                     #endregion
+
+
+                                    #region 更新制令单价格, 如果母件是指定SKU的话
+
+                                    // BOM成本变化后。还没有缴库的制作令单 要同步修改 这里是指母件为指定SKU
+
+                                    List<tb_ManufacturingOrder> MOSKU = MainForm.Instance.AppContext.Db.Queryable<tb_ManufacturingOrder>()
+                                   .Includes(b => b.tb_bom_s, c => c.tb_BOM_SDetails)
+                                   .Includes(a => a.tb_ManufacturingOrderDetails)
+                                   //.Where(a => a.ManufacturingQty != a.QuantityDelivered)
+                                   .Where(a => a.ProdDetailID == child.ProdDetailID && a.Location_ID == child.Location_ID).ToList();
+                                    foreach (var bill in MOSKU)
+                                    {
+                                        foreach (var modetail in bill.tb_ManufacturingOrderDetails)
+                                        {
+                                            //对应配方中的明细更新。
+                                            var modetailchild = bill.tb_bom_s.tb_BOM_SDetails.FirstOrDefault(c => c.ProdDetailID == modetail.ProdDetailID);
+                                            if (modetailchild != null)
+                                            {
+                                                modetail.UnitCost = modetailchild.UnitCost;
+                                                modetail.SubtotalUnitCost = modetail.UnitCost * modetail.ShouldSendQty;
+                                            }
+                                        }
+                                        if (!chkTestMode.Checked)
+                                        {
+                                            await MainForm.Instance.AppContext.Db.Updateable(bill.tb_ManufacturingOrderDetails).ExecuteCommandAsync();
+                                        }
+                                        bill.TotalMaterialCost = bill.tb_ManufacturingOrderDetails.Sum(c => c.SubtotalUnitCost);
+                                        if (bill.IsOutSourced)
+                                        {
+                                            bill.TotalManuFee = bill.tb_bom_s.TotalOutManuCost * bill.ManufacturingQty;
+                                            bill.ApportionedCost = bill.tb_bom_s.OutApportionedCost * bill.ManufacturingQty;
+                                        }
+                                        else
+                                        {
+                                            bill.TotalManuFee = bill.tb_bom_s.TotalSelfManuCost * bill.ManufacturingQty;
+                                            bill.ApportionedCost = bill.tb_bom_s.SelfApportionedCost * bill.ManufacturingQty;
+                                        }
+
+                                        bill.TotalProductionCost = bill.TotalMaterialCost + bill.ApportionedCost + bill.TotalManuFee;
+                                    }
+
+                                    if (!chkTestMode.Checked)
+                                    {
+                                        await MainForm.Instance.AppContext.Db.Updateable(MOSKU).ExecuteCommandAsync();
+                                    }
+
+                                    #endregion
+
+
                                     break;
                                 case BizType.销售订单:
                                     #region 销售订单 出库  退货 记录成本修复
@@ -1727,60 +1818,28 @@ namespace RUINORERP.UI.SysConfig
                                             {
                                                 if (rdb时间区间.Checked)
                                                 {
-                                                    Detail.MaterialCost = child.Inv_Cost;
-                                                    Detail.UnitCost = Detail.MaterialCost + Detail.ManuFee + Detail.ApportionedCost;
+                                                    //这里库存成本是最终成本 这里要拆分
+                                                    Detail.UnitCost=child.Inv_Cost;
+                                                    Detail.MaterialCost = Detail.UnitCost - Detail.ManuFee - Detail.ApportionedCost;
                                                     Detail.ProductionAllCost = Detail.UnitCost * Detail.Qty;
-
-                                                    //这时可以算出缴库的产品的单位成本
-                                                    var nextInv = Detail.tb_proddetail.tb_Inventories.FirstOrDefault(c => c.Location_ID == Detail.Location_ID);
-                                                    if (nextInv != null)
-                                                    {
-                                                        nextInv.Inv_Cost = Detail.UnitCost;
-                                                        if (!chkTestMode.Checked)
-                                                        {
-                                                            await MainForm.Instance.AppContext.Db.Updateable<tb_Inventory>(nextInv).ExecuteCommandAsync();
-                                                        }
-                                                    }
-
                                                     updateFGListdetail.Add(Detail);
                                                 }
                                                 if (rdb成本为0的才修复.Checked && Detail.UnitCost == 0)
                                                 {
-                                                    Detail.MaterialCost = child.Inv_Cost;
-                                                    Detail.UnitCost = Detail.MaterialCost + Detail.ManuFee + Detail.ApportionedCost;
+                                                    //这里库存成本是最终成本 这里要拆分
+                                                    Detail.UnitCost = child.Inv_Cost;
+                                                    Detail.MaterialCost = Detail.UnitCost - Detail.ManuFee - Detail.ApportionedCost;
                                                     Detail.ProductionAllCost = Detail.UnitCost * Detail.Qty;
-
-                                                    //这时可以算出缴库的产品的单位成本
-                                                    var nextInv = Detail.tb_proddetail.tb_Inventories.FirstOrDefault(c => c.Location_ID == Detail.Location_ID);
-                                                    if (nextInv != null)
-                                                    {
-                                                        nextInv.Inv_Cost = Detail.UnitCost;
-                                                        if (!chkTestMode.Checked)
-                                                        {
-                                                            await MainForm.Instance.AppContext.Db.Updateable<tb_Inventory>(nextInv).ExecuteCommandAsync();
-                                                        }
-                                                    }
-
                                                     updateFGListdetail.Add(Detail);
                                                 }
                                                 if (rdb小于指定成本.Checked && Detail.UnitCost != 0)
                                                 {
                                                     if (Detail.UnitCost < txtUnitCost.Text.ToDecimal())
                                                     {
-                                                        Detail.MaterialCost = child.Inv_Cost;
-                                                        Detail.UnitCost = Detail.MaterialCost + Detail.ManuFee + Detail.ApportionedCost;
+                                                        //这里库存成本是最终成本 这里要拆分
+                                                        Detail.UnitCost = child.Inv_Cost;
+                                                        Detail.MaterialCost = Detail.UnitCost - Detail.ManuFee - Detail.ApportionedCost;
                                                         Detail.ProductionAllCost = Detail.UnitCost * Detail.Qty;
-                                                        //这时可以算出缴库的产品的单位成本
-                                                        var nextInv = Detail.tb_proddetail.tb_Inventories.FirstOrDefault(c => c.Location_ID == Detail.Location_ID);
-                                                        if (nextInv != null)
-                                                        {
-                                                            nextInv.Inv_Cost = Detail.UnitCost;
-                                                            if (!chkTestMode.Checked)
-                                                            {
-                                                                await MainForm.Instance.AppContext.Db.Updateable<tb_Inventory>(nextInv).ExecuteCommandAsync();
-                                                            }
-                                                        }
-
                                                         updateFGListdetail.Add(Detail);
                                                     }
                                                 }
@@ -1788,40 +1847,20 @@ namespace RUINORERP.UI.SysConfig
                                                 {
                                                     if (Detail.UnitCost > txtUnitCost.Text.ToDecimal())
                                                     {
-                                                        Detail.MaterialCost = child.Inv_Cost;
-                                                        Detail.UnitCost = Detail.MaterialCost + Detail.ManuFee + Detail.ApportionedCost;
+                                                        //这里库存成本是最终成本 这里要拆分
+                                                        Detail.UnitCost = child.Inv_Cost;
+                                                        Detail.MaterialCost = Detail.UnitCost - Detail.ManuFee - Detail.ApportionedCost;
                                                         Detail.ProductionAllCost = Detail.UnitCost * Detail.Qty;
-                                                        //这时可以算出缴库的产品的单位成本
-                                                        var nextInv = Detail.tb_proddetail.tb_Inventories.FirstOrDefault(c => c.Location_ID == Detail.Location_ID);
-                                                        if (nextInv != null)
-                                                        {
-                                                            nextInv.Inv_Cost = Detail.UnitCost;
-                                                            if (!chkTestMode.Checked)
-                                                            {
-                                                                await MainForm.Instance.AppContext.Db.Updateable<tb_Inventory>(nextInv).ExecuteCommandAsync();
-                                                            }
-                                                        }
-
                                                         updateFGListdetail.Add(Detail);
                                                     }
                                                 }
                                                 if (rdb小计总计.Checked && Detail.UnitCost != 0)
-                                                {    //如果存在则更新 
+                                                {
 
-                                                    //Detail.MaterialCost = child.Inv_Cost;
-                                                    Detail.UnitCost = Detail.MaterialCost + Detail.ManuFee + Detail.ApportionedCost;
+                                                    //这里库存成本是最终成本 这里要拆分
+                                                    Detail.UnitCost = child.Inv_Cost;
+                                                    Detail.MaterialCost = Detail.UnitCost - Detail.ManuFee - Detail.ApportionedCost;
                                                     Detail.ProductionAllCost = Detail.UnitCost * Detail.Qty;
-                                                    //这时可以算出缴库的产品的单位成本
-                                                    var nextInv = Detail.tb_proddetail.tb_Inventories.FirstOrDefault(c => c.Location_ID == Detail.Location_ID);
-                                                    if (nextInv != null)
-                                                    {
-                                                        //nextInv.Inv_Cost = Detail.UnitCost;
-                                                        if (!chkTestMode.Checked)
-                                                        {
-                                                            await MainForm.Instance.AppContext.Db.Updateable<tb_Inventory>(nextInv).ExecuteCommandAsync();
-                                                        }
-                                                    }
-
                                                     updateFGListdetail.Add(Detail);
 
                                                 }
@@ -1832,20 +1871,10 @@ namespace RUINORERP.UI.SysConfig
                                                     {
                                                         if (Detail.UnitCost > txtUnitCost.Text.ToDecimal())
                                                         {
-                                                            Detail.MaterialCost = child.Inv_Cost;
-                                                            Detail.UnitCost = Detail.MaterialCost * Detail.ManuFee + Detail.ApportionedCost;
+                                                            //这里库存成本是最终成本 这里要拆分
+                                                            Detail.UnitCost = child.Inv_Cost;
+                                                            Detail.MaterialCost = Detail.UnitCost - Detail.ManuFee - Detail.ApportionedCost;
                                                             Detail.ProductionAllCost = Detail.UnitCost * Detail.Qty;
-                                                            //这时可以算出缴库的产品的单位成本
-                                                            var nextInv = Detail.tb_proddetail.tb_Inventories.FirstOrDefault(c => c.Location_ID == Detail.Location_ID);
-                                                            if (nextInv != null)
-                                                            {
-                                                                nextInv.Inv_Cost = Detail.UnitCost;
-                                                                if (!chkTestMode.Checked)
-                                                                {
-                                                                    await MainForm.Instance.AppContext.Db.Updateable<tb_Inventory>(nextInv).ExecuteCommandAsync();
-                                                                }
-                                                            }
-
                                                             updateFGListdetail.Add(Detail);
                                                         }
                                                     }
@@ -1853,10 +1882,15 @@ namespace RUINORERP.UI.SysConfig
                                             }
                                         }
 
+
                                         bill.TotalMaterialCost = bill.tb_FinishedGoodsInvDetails.Sum(c => c.MaterialCost * c.Qty);
+
                                         bill.TotalManuFee = bill.tb_FinishedGoodsInvDetails.Sum(c => c.ManuFee * c.Qty);
+
                                         bill.TotalApportionedCost = bill.tb_FinishedGoodsInvDetails.Sum(c => c.ApportionedCost * c.Qty);
+
                                         bill.TotalProductionCost = bill.tb_FinishedGoodsInvDetails.Sum(c => c.ProductionAllCost);
+
                                         //又进入下一轮更新了
                                         if (!chkTestMode.Checked && updateFGListdetail.Count > 0)
                                         {
@@ -2588,4 +2622,28 @@ namespace RUINORERP.UI.SysConfig
 
 
     }
+
+    public class ManufacturingOrderItem
+    {
+        /// <summary>
+        /// 应发数
+        /// </summary>
+        public decimal 应发数 { get; set; }
+
+        /// <summary>
+        /// BOM配方编号
+        /// </summary>
+        public string 配方编号 { get; set; }
+
+        /// <summary>
+        /// 子件单位成本
+        /// </summary>
+        public decimal 子件成本 { get; set; }
+
+        /// <summary>
+        /// 子件成本小计
+        /// </summary>
+        public decimal 子件小计 { get; set; }
+    }
+
 }

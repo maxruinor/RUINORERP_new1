@@ -632,12 +632,12 @@ namespace RUINORERP.Business
                 //更新拟销售量减少
 
 
-                //判断是否能反审?
+                //判断是否能反审? 如果出库是草稿，订单反审 修改后。出库再提交 审核。所以 出库审核要核对订单数据。
                 if (entity.tb_SaleOuts != null
                     && (entity.tb_SaleOuts.Any(c => c.DataStatus == (int)DataStatus.确认 || c.DataStatus == (int)DataStatus.完结)
                     && entity.tb_SaleOuts.Any(c => c.ApprovalStatus == (int)ApprovalStatus.已审核)))
                 {
-                    rmrs.ErrorMsg = "存在已确认或已完结，或已审核的销售出库单，不能反审核,请退回处理。";
+                    rmrs.ErrorMsg = "存在已确认或已完结，或已审核的销售出库单，不能反审核,请联系管理员，或作退回处理。";
                     rmrs.Succeeded = false;
                     return rmrs;
                 }
@@ -1255,25 +1255,22 @@ namespace RUINORERP.Business
                 {
                     _logger.LogInformation($"{entity.SOrderNo}取消时，更新库存结果为0行，请检查数据！");
                 }
-
-
                 #region  预收款单处理
-
                 tb_FM_PreReceivedPaymentController<tb_FM_PreReceivedPayment> ctrpay = _appContext.GetRequiredService<tb_FM_PreReceivedPaymentController<tb_FM_PreReceivedPayment>>();
-                var pay = await ctrpay.IsExistEntityAsync(p => p.SourceBillId == entity.SOrder_ID && p.PrePaymentStatus == (long)PrePaymentStatus.待核销);
+                var pay = await ctrpay.IsExistEntityAsync(p => p.SourceBillId == entity.SOrder_ID && p.PrePaymentStatus == (long)PrePaymentStatus.已生效);
                 if (pay != null)
                 {
-                    if (pay.PrePaymentStatus == (long)PrePaymentStatus.待核销)
+                    if (pay.PrePaymentStatus == (long)PrePaymentStatus.已生效)
                     {
                         //预收款未核销：全额退款，生成退款单。  让财务退款
                         if (pay.ForeignBalanceAmount > 0 || pay.LocalBalanceAmount > 0)
                         {
-                            tb_FM_PaymentRecordController<tb_FM_PaymentRecord> paymentController = _appContext.GetRequiredService<tb_FM_PaymentRecordController<tb_FM_PaymentRecord>>();
+                            var paymentController = _appContext.GetRequiredService<tb_FM_PaymentRecordController<tb_FM_PaymentRecord>>();
                             bool isRefund = true;
-                            tb_FM_PaymentRecord paymentRecord = await paymentController.CreatePaymentRecord(pay, isRefund);
+                            tb_FM_PaymentRecord paymentRecord =  paymentController.BuildPaymentRecord(pay, isRefund);
+                            ReturnMainSubResults<tb_FM_PaymentRecord> rrs = await paymentController.BaseSaveOrUpdateWithChild<tb_FM_PaymentRecord>(paymentRecord, false);
                         }
                         //推送到财务 ，告诉要退款 TODO
-
                     }
                     else if (pay.PrePaymentStatus == (long)PrePaymentStatus.部分核销)
                     {
@@ -1292,17 +1289,18 @@ namespace RUINORERP.Business
                         rmrs.Succeeded = false;
                         return rmrs;
                     }
-                    else if (pay.PrePaymentStatus == (long)PrePaymentStatus.已冲销)
+                    else if (pay.PrePaymentStatus == (long)PrePaymentStatus.已关闭)
                     {
                         //预收款已核销：冲销原核销记录，释放应收单金额，再退款
-                        rmrs.ErrorMsg = $"已冲销的预收款单不能直接取消订单。";
-                        _unitOfWorkManage.RollbackTran();
-                        rmrs.Succeeded = false;
-                        return rmrs;
+                        //rmrs.ErrorMsg = $"已关闭的预收款单不能直接取消订单。";
+                        //_unitOfWorkManage.RollbackTran();
+                        //rmrs.Succeeded = false;
+                        //return rmrs;
                     }
                     else
                     {
-                        await ctrpay.DeleteAsync(pay);
+                        //不能直接关闭
+                        //await ctrpay.DeleteAsync(pay);
                     }
                 }
 

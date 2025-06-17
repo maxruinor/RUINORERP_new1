@@ -41,7 +41,7 @@ namespace RUINORERP.Business.Processor
         public override QueryFilter GetQueryFilter()
         {
             QueryFilter queryFilter = new QueryFilter();
-
+            queryFilter.SetQueryField<tb_FM_PaymentApplication>(c => c.ApplicationNo);
             var lambda = Expressionable.Create<tb_CustomerVendor>()
                        .And(t => t.isdeleted == false)
                        .And(t => t.IsVendor == true)
@@ -49,7 +49,7 @@ namespace RUINORERP.Business.Processor
                        .ToExpression();
             queryFilter.SetQueryField<tb_FM_PaymentApplication, tb_CustomerVendor>(c => c.CustomerVendor_ID, lambda);
             //可以根据关联外键自动加载条件，条件用公共虚方法
-            queryFilter.SetQueryField<tb_FM_PaymentApplication>(c => c.ApplicationNo);
+ 
             queryFilter.SetQueryField<tb_FM_PaymentApplication>(c => c.Employee_ID);
             queryFilter.SetQueryField<tb_FM_PaymentApplication>(c => c.Currency_ID);
             queryFilter.SetQueryField<tb_FM_PaymentApplication>(c => c.DepartmentID);

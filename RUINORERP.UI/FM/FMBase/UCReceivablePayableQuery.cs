@@ -198,7 +198,7 @@ namespace RUINORERP.UI.FM
                 _UCBillMasterQuery.newSumDataGridViewMaster.ContextMenuStrip = newContextMenuStrip;
             }
         }
-        private async void NewSumDataGridView_转为收付款单(object sender, EventArgs e)
+        private void NewSumDataGridView_转为收付款单(object sender, EventArgs e)
         {
 
             List<tb_FM_ReceivablePayable> selectlist = GetSelectResult();
@@ -243,14 +243,9 @@ namespace RUINORERP.UI.FM
                 return;
             }
 
-            tb_FM_PaymentRecordController<tb_FM_PaymentRecord> paymentController = MainForm.Instance.AppContext.GetRequiredService<tb_FM_PaymentRecordController<tb_FM_PaymentRecord>>();
-            ReturnResults<tb_FM_PaymentRecord> rr = await paymentController.CreatePaymentRecord(RealList, false);
-            if (!rr.Succeeded)
-            {
-                MessageBox.Show(rr.ErrorMsg);
-                return;
-            }
-            tb_FM_PaymentRecord paymentRecord = rr.ReturnObject;
+            var paymentController = MainForm.Instance.AppContext.GetRequiredService<tb_FM_PaymentRecordController<tb_FM_PaymentRecord>>();
+            tb_FM_PaymentRecord ReturnObject = paymentController.BuildPaymentRecord(RealList);
+            tb_FM_PaymentRecord paymentRecord = ReturnObject;
             MenuPowerHelper menuPowerHelper;
             menuPowerHelper = Startup.GetFromFac<MenuPowerHelper>();
 

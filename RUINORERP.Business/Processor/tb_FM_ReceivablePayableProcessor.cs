@@ -42,10 +42,12 @@ namespace RUINORERP.Business.Processor
         public override QueryFilter GetQueryFilter()
         {
             QueryFilter queryFilter = new QueryFilter();
-            queryFilter.SetQueryField<tb_FM_ReceivablePayable, tb_CustomerVendor>(c => c.CustomerVendor_ID);
-            //可以根据关联外键自动加载条件，条件用公共虚方法
             queryFilter.SetQueryField<tb_FM_ReceivablePayable>(c => c.ARAPNo);
             queryFilter.SetQueryField<tb_FM_ReceivablePayable>(c => c.SourceBillNo);
+            queryFilter.SetQueryField<tb_FM_ReceivablePayable, tb_CustomerVendor>(c => c.CustomerVendor_ID);
+            //可以根据关联外键自动加载条件，条件用公共虚方法
+        
+        
             queryFilter.SetQueryField<tb_FM_ReceivablePayable>(c => c.Currency_ID);
             queryFilter.SetQueryField<tb_FM_ReceivablePayable>(c => c.DepartmentID);
             queryFilter.SetQueryField<tb_FM_ReceivablePayable>(c => c.ProjectGroup_ID);

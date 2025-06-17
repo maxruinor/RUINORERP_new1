@@ -30,6 +30,7 @@
         {
             this.kryptonSplitContainer1 = new Krypton.Toolkit.KryptonSplitContainer();
             this.kryptonPanelMainInfo = new Krypton.Toolkit.KryptonPanel();
+            this.chkIsCustomizedOrder = new Krypton.Toolkit.KryptonCheckBox();
             this.lblTotalProductionCost = new Krypton.Toolkit.KryptonLabel();
             this.txtTotalProductionCost = new Krypton.Toolkit.KryptonTextBox();
             this.lblTotalMaterialCost = new Krypton.Toolkit.KryptonLabel();
@@ -95,7 +96,6 @@
             this.grid1 = new SourceGrid.Grid();
             this.txtApprovalOpinions = new Krypton.Toolkit.KryptonTextBox();
             this.lblApprovalOpinions = new Krypton.Toolkit.KryptonLabel();
-            this.chkIsCustomizedOrder = new Krypton.Toolkit.KryptonCheckBox();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceSub)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1)).BeginInit();
@@ -137,8 +137,8 @@
             // kryptonSplitContainer1.Panel2
             // 
             this.kryptonSplitContainer1.Panel2.Controls.Add(this.kryptonSplitContainerGridAndSub);
-            this.kryptonSplitContainer1.Size = new System.Drawing.Size(1067, 624);
-            this.kryptonSplitContainer1.SplitterDistance = 274;
+            this.kryptonSplitContainer1.Size = new System.Drawing.Size(1165, 699);
+            this.kryptonSplitContainer1.SplitterDistance = 306;
             this.kryptonSplitContainer1.TabIndex = 0;
             // 
             // kryptonPanelMainInfo
@@ -208,8 +208,16 @@
             this.kryptonPanelMainInfo.Dock = System.Windows.Forms.DockStyle.Fill;
             this.kryptonPanelMainInfo.Location = new System.Drawing.Point(0, 0);
             this.kryptonPanelMainInfo.Name = "kryptonPanelMainInfo";
-            this.kryptonPanelMainInfo.Size = new System.Drawing.Size(1067, 274);
+            this.kryptonPanelMainInfo.Size = new System.Drawing.Size(1165, 306);
             this.kryptonPanelMainInfo.TabIndex = 100;
+            // 
+            // chkIsCustomizedOrder
+            // 
+            this.chkIsCustomizedOrder.Location = new System.Drawing.Point(629, 197);
+            this.chkIsCustomizedOrder.Name = "chkIsCustomizedOrder";
+            this.chkIsCustomizedOrder.Size = new System.Drawing.Size(62, 20);
+            this.chkIsCustomizedOrder.TabIndex = 215;
+            this.chkIsCustomizedOrder.Values.Text = "定制单";
             // 
             // lblTotalProductionCost
             // 
@@ -306,11 +314,11 @@
             // 
             // kryptonLabel1
             // 
-            this.kryptonLabel1.Location = new System.Drawing.Point(333, 166);
+            this.kryptonLabel1.Location = new System.Drawing.Point(28, 140);
             this.kryptonLabel1.Name = "kryptonLabel1";
-            this.kryptonLabel1.Size = new System.Drawing.Size(33, 20);
+            this.kryptonLabel1.Size = new System.Drawing.Size(59, 20);
             this.kryptonLabel1.TabIndex = 206;
-            this.kryptonLabel1.Values.Text = "SKU";
+            this.kryptonLabel1.Values.Text = "母件SKU";
             // 
             // txtMachineHour
             // 
@@ -321,9 +329,9 @@
             // 
             // txtSKU
             // 
-            this.txtSKU.Location = new System.Drawing.Point(375, 164);
+            this.txtSKU.Location = new System.Drawing.Point(91, 138);
             this.txtSKU.Name = "txtSKU";
-            this.txtSKU.Size = new System.Drawing.Size(157, 23);
+            this.txtSKU.Size = new System.Drawing.Size(153, 23);
             this.txtSKU.TabIndex = 207;
             // 
             // lblMachineHour
@@ -409,7 +417,7 @@
             // 
             // kryptonLabel5
             // 
-            this.kryptonLabel5.Location = new System.Drawing.Point(51, 139);
+            this.kryptonLabel5.Location = new System.Drawing.Point(335, 163);
             this.kryptonLabel5.Name = "kryptonLabel5";
             this.kryptonLabel5.Size = new System.Drawing.Size(36, 20);
             this.kryptonLabel5.TabIndex = 196;
@@ -417,9 +425,9 @@
             // 
             // txtSpec
             // 
-            this.txtSpec.Location = new System.Drawing.Point(91, 138);
+            this.txtSpec.Location = new System.Drawing.Point(375, 162);
             this.txtSpec.Name = "txtSpec";
-            this.txtSpec.Size = new System.Drawing.Size(153, 23);
+            this.txtSpec.Size = new System.Drawing.Size(157, 23);
             this.txtSpec.TabIndex = 197;
             // 
             // kryptonLabel2
@@ -667,7 +675,7 @@
             this.txtNotes.Location = new System.Drawing.Point(91, 218);
             this.txtNotes.Multiline = true;
             this.txtNotes.Name = "txtNotes";
-            this.txtNotes.Size = new System.Drawing.Size(956, 49);
+            this.txtNotes.Size = new System.Drawing.Size(956, 64);
             this.txtNotes.TabIndex = 75;
             // 
             // lblNotes
@@ -722,8 +730,8 @@
             // 
             this.kryptonSplitContainerGridAndSub.Panel2.Controls.Add(this.txtApprovalOpinions);
             this.kryptonSplitContainerGridAndSub.Panel2.Controls.Add(this.lblApprovalOpinions);
-            this.kryptonSplitContainerGridAndSub.Size = new System.Drawing.Size(1067, 345);
-            this.kryptonSplitContainerGridAndSub.SplitterDistance = 272;
+            this.kryptonSplitContainerGridAndSub.Size = new System.Drawing.Size(1165, 388);
+            this.kryptonSplitContainerGridAndSub.SplitterDistance = 305;
             this.kryptonSplitContainerGridAndSub.TabIndex = 1;
             // 
             // grid1
@@ -735,7 +743,7 @@
             this.grid1.Name = "grid1";
             this.grid1.OptimizeMode = SourceGrid.CellOptimizeMode.ForRows;
             this.grid1.SelectionMode = SourceGrid.GridSelectionMode.Cell;
-            this.grid1.Size = new System.Drawing.Size(1067, 272);
+            this.grid1.Size = new System.Drawing.Size(1165, 305);
             this.grid1.TabIndex = 0;
             this.grid1.TabStop = true;
             this.grid1.ToolTipText = "";
@@ -756,21 +764,13 @@
             this.lblApprovalOpinions.TabIndex = 76;
             this.lblApprovalOpinions.Values.Text = "审批意见";
             // 
-            // chkIsCustomizedOrder
-            // 
-            this.chkIsCustomizedOrder.Location = new System.Drawing.Point(629, 197);
-            this.chkIsCustomizedOrder.Name = "chkIsCustomizedOrder";
-            this.chkIsCustomizedOrder.Size = new System.Drawing.Size(62, 20);
-            this.chkIsCustomizedOrder.TabIndex = 215;
-            this.chkIsCustomizedOrder.Values.Text = "定制单";
-            // 
             // UCManufacturingOrder
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.Controls.Add(this.kryptonSplitContainer1);
             this.Name = "UCManufacturingOrder";
-            this.Size = new System.Drawing.Size(1067, 649);
+            this.Size = new System.Drawing.Size(1165, 724);
             this.Load += new System.EventHandler(this.UcSaleOrderEdit_Load);
             this.Controls.SetChildIndex(this.kryptonSplitContainer1, 0);
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceSub)).EndInit();

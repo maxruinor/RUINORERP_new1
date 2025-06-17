@@ -692,11 +692,14 @@ protected async override Task<ApprovalEntity> ReReview()
 
                 NewDetail.NetWorkingHours = decimal.Round(SourceBill.WorkingHour / SourceBill.ManufacturingQty, 4);
                 NewDetail.NetMachineHours = decimal.Round(SourceBill.MachineHour / SourceBill.ManufacturingQty, 4);
+
                 NewDetail.MaterialCost = decimal.Round(SourceBill.TotalMaterialCost / SourceBill.ManufacturingQty, 4);
                 NewDetail.ManuFee = decimal.Round(SourceBill.TotalManuFee / SourceBill.ManufacturingQty, 4);
                 NewDetail.ApportionedCost = decimal.Round(SourceBill.ApportionedCost / SourceBill.ManufacturingQty, 4);
+
                 NewDetail.UnitCost = NewDetail.MaterialCost + NewDetail.ManuFee + NewDetail.ApportionedCost;
                 NewDetail.ProductionAllCost = decimal.Round(NewDetail.UnitCost * NewDetail.Qty, 4);
+
                 #endregion
                 NewDetails.Add(NewDetail);
                 if (NewDetails.Count == 0)

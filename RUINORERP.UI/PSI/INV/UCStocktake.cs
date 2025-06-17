@@ -102,24 +102,18 @@ namespace RUINORERP.UI.PSI.INV
             lblReview.Text = "";
             DataBindingHelper.InitDataToCmb<tb_Employee>(k => k.Employee_ID, v => v.Employee_Name, cmbEmployee_ID);
             DataBindingHelper.InitDataToCmb<tb_Location>(k => k.Location_ID, v => v.Name, cmbLocation_ID);
-            //  InitDataToCmbByEnumDynamicGeneratedDataSource(typeof(CheckMode), cmbCheckMode);
+            InitDataToCmbByEnumDynamicGeneratedDataSource<tb_Stocktake>(typeof(CheckMode), e => e.CheckMode, cmbCheckMode, true);
             DataBindingHelper.InitDataToCmbByEnumDynamicGeneratedDataSource<tb_Stocktake>(typeof(Adjust_Type), e => e.Adjust_Type, cmb调整类型, false);
-            EnumBindingHelper bindingHelper = new EnumBindingHelper();
+
+            /*
             //枚举过滤了一下
-            // CheckMode checkMode = CheckMode.日常盘点;
+            EnumBindingHelper bindingHelper = new EnumBindingHelper();
             List<string> listStr = new List<string>();
             List<EnumEntityMember> list = new List<EnumEntityMember>();
             list = typeof(CheckMode).GetListByEnum<CheckMode>(selectedItem: 2);
             bindingHelper.InitDataToCmbByEnumOnWhere(list, "CheckMode", cmbCheckMode);
+            */
 
-            //var c = new Controller();
-            //cmb调整类型.DataBindings.Add(new Binding("SelectedValue", c, "SelectedValue", true, DataSourceUpdateMode.OnPropertyChanged));
-            //this.BindingContextChanged += (sender, e) =>
-            //{
-            //    // If you change combo binding formatting enabled parameter to false,
-            //    // the next will throw the exception you are getting
-            //    c.SelectedValue = Adjust_Type.全部;
-            //};
         }
 
         protected override void Cancel()
@@ -158,10 +152,14 @@ namespace RUINORERP.UI.PSI.INV
                     entity.CarryingDate = System.DateTime.Now;
                     entity.Employee_ID = MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID.Value;
                     //设置一下默认的枚举
-                    if (entity.CheckMode == 0)
-                    {
-                        entity.CheckMode = (int)CheckMode.一般盘点;
-                    }
+                    //不要默认，让用户选。因为输入数据后再选择。会清空输入的内容
+
+                    //if (entity.CheckMode == 0)
+                    //{
+                    //    entity.CheckMode = (int)CheckMode.一般盘点;
+                    //}
+
+
                     if (entity.Adjust_Type == 0)
                     {
                         entity.Adjust_Type = (int)Adjust_Type.全部;
@@ -353,8 +351,22 @@ namespace RUINORERP.UI.PSI.INV
 
         private void InitLoadGrid()
         {
+            listCols.SetCol_Format<tb_StocktakeDetail>(c => c.TaxRate, CustomFormatType.PercentFormat);
+            listCols.SetCol_Format<tb_StocktakeDetail>(c => c.Cost, CustomFormatType.CurrencyFormat);
+            listCols.SetCol_Format<tb_StocktakeDetail>(c => c.UntaxedCost, CustomFormatType.CurrencyFormat);
+            listCols.SetCol_Format<tb_StocktakeDetail>(c => c.DiffSubtotalAmount, CustomFormatType.CurrencyFormat);
+            listCols.SetCol_Format<tb_StocktakeDetail>(c => c.CheckSubtotalAmount, CustomFormatType.CurrencyFormat);
+            listCols.SetCol_Format<tb_StocktakeDetail>(c => c.CarryingSubtotalAmount, CustomFormatType.CurrencyFormat);
+
             sgd = new SourceGridDefine(grid1, listCols, true);
             sgd.GridMasterData = EditEntity;
+
+            sgh.SetPointToColumnPairs<ProductSharePart, tb_StocktakeDetail>(sgd, f => f.Rack_ID, t => t.Rack_ID);
+            sgh.SetPointToColumnPairs<ProductSharePart, tb_StocktakeDetail>(sgd, f => f.Inv_Cost, t => t.UntaxedCost);
+            sgh.SetPointToColumnPairs<ProductSharePart, tb_StocktakeDetail>(sgd, f => f.prop, t => t.property);
+            //由查询的结果中含有的字段，指向到明细中的字段中,这里是将查询到的库存放到载账数量
+
+            sgh.SetQueryItemToColumnPairs<View_ProdDetail, tb_StocktakeDetail>(sgd, f => f.Quantity, t => t.CarryinglQty);
 
             //  listCols.SetCol_Formula<tb_StocktakeDetail>((a, b, c) => (a.CarryinglQty * b.CarryinglQty * c.CarryinglQty), F => F.CarryinglQty);
             listCols.SetCol_Summary<tb_StocktakeDetail>(c => c.CheckQty);
@@ -366,31 +378,20 @@ namespace RUINORERP.UI.PSI.INV
             listCols.SetCol_Summary<tb_StocktakeDetail>(c => c.CarryingSubtotalAmount);
 
 
-            //listCols.SetCol_FormulaReverse<tb_StocktakeDetail>(d => d.CheckQty != d.CarryinglQty, (a, b) => (a.CheckQty - b.CarryinglQty), r => r.DiffQty);//-->成交价是结果列
             listCols.SetCol_Formula<tb_StocktakeDetail>((a, b) => (a.CheckQty - b.CarryinglQty), r => r.DiffQty);//-->成交价是结果列
+            listCols.SetCol_Formula<tb_StocktakeDetail>((a, b, c) => a.Cost / (1 + b.TaxRate), d => d.UntaxedCost);
+            //listCols.SetCol_FormulaReverse<tb_StocktakeDetail>(d => d.CheckQty != d.CarryinglQty, (a, b) => (a.CheckQty - b.CarryinglQty), r => r.DiffQty);//-->成交价是结果列
 
-            listCols.SetCol_Formula<tb_StocktakeDetail>((a, b) => (a.DiffQty * b.Cost), r => r.DiffSubtotalAmount);
-            listCols.SetCol_Formula<tb_StocktakeDetail>((a, b) => (a.CarryinglQty * b.Cost), r => r.CarryingSubtotalAmount);
-            listCols.SetCol_Formula<tb_StocktakeDetail>((a, b) => (a.CheckQty * b.Cost), r => r.CheckSubtotalAmount);
+            listCols.SetCol_FormulaReverse<tb_StocktakeDetail>(d => d.Cost == 0, (a, b, c) => a.UntaxedCost / (1 + b.TaxRate), d => d.Cost);
 
-            sgh.SetPointToColumnPairs<ProductSharePart, tb_StocktakeDetail>(sgd, f => f.Rack_ID, t => t.Rack_ID);
-            sgh.SetPointToColumnPairs<ProductSharePart, tb_StocktakeDetail>(sgd, f => f.Inv_Cost, t => t.Cost);
-            sgh.SetPointToColumnPairs<ProductSharePart, tb_StocktakeDetail>(sgd, f => f.prop, t => t.property);
-            //由查询的结果中含有的字段，指向到明细中的字段中,这里是将查询到的库存放到载账数量
-
-            sgh.SetQueryItemToColumnPairs<View_ProdDetail, tb_StocktakeDetail>(sgd, f => f.Quantity, t => t.CarryinglQty);
+            listCols.SetCol_Formula<tb_StocktakeDetail>((a, b) => (a.DiffQty * b.UntaxedCost), r => r.DiffSubtotalAmount);
+            listCols.SetCol_Formula<tb_StocktakeDetail>((a, b) => (a.CarryinglQty * b.UntaxedCost), r => r.CarryingSubtotalAmount);
+            listCols.SetCol_Formula<tb_StocktakeDetail>((a, b) => (a.CheckQty * b.UntaxedCost), r => r.CheckSubtotalAmount);
 
             //应该只提供一个结构
             List<tb_StocktakeDetail> lines = new List<tb_StocktakeDetail>();
-            bindingSourceSub.DataSource = lines; //  ctrSub.Query(" 1>2 ");
+            bindingSourceSub.DataSource = lines;
             sgd.BindingSourceLines = bindingSourceSub;
-            //Expression<Func<View_ProdDetail, bool>> exp = Expressionable.Create<View_ProdDetail>() //创建表达式
-            //   .AndIF(true, w => w.CNName.Length > 0)
-            //  // .AndIF(txtSpecifications.Text.Trim().Length > 0, w => w.Specifications.Contains(txtSpecifications.Text.Trim()))
-            //  .ToExpression();//注意 这一句 不能少
-            //                  // StringBuilder sb = new StringBuilder();
-            ///// sb.Append(string.Format("{0}='{1}'", item.ColName, valValue));
-            //list = dc.BaseQueryByWhere(exp);
             list = MainForm.Instance.list;
             sgd.SetDependencyObject<ProductSharePart, tb_StocktakeDetail>(list);
             sgd.HasRowHeader = true;
@@ -403,10 +404,32 @@ namespace RUINORERP.UI.PSI.INV
             {
                 return;
             }
+
+            StringBuilder sb = new StringBuilder();
+            Control firstInvalidControl = null;
+
             if (EditEntity.Location_ID == 0 || EditEntity.Location_ID == -1)
             {
-                MessageBox.Show("请选择【盘点仓库】。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                cmbLocation_ID.Focus();
+                sb.AppendLine("请选择【盘点仓库】。");
+                firstInvalidControl = cmbLocation_ID;
+            }
+
+            if (EditEntity.CheckMode == 0 || EditEntity.CheckMode == -1)
+            {
+                sb.AppendLine("请选择【盘点方式】。");
+                if (firstInvalidControl == null)
+                {
+                    firstInvalidControl = cmbCheckMode;
+                }
+            }
+
+            if (sb.Length > 0)
+            {
+                MessageBox.Show(sb.ToString(), "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                if (firstInvalidControl != null)
+                {
+                    firstInvalidControl.Focus();
+                }
             }
         }
 
@@ -473,9 +496,9 @@ namespace RUINORERP.UI.PSI.INV
                 EditEntity.CheckTotalQty = details.Sum(c => c.CheckQty);
                 EditEntity.CarryingTotalQty = details.Sum(c => c.CarryinglQty);
                 EditEntity.DiffTotalQty = details.Sum(c => c.DiffQty);
-                EditEntity.CheckTotalAmount = details.Sum(c => c.Cost * c.CheckQty);
-                EditEntity.CarryingTotalAmount = details.Sum(c => c.Cost * c.CarryinglQty);
-                EditEntity.DiffTotalAmount = details.Sum(c => c.Cost * c.DiffQty);
+                EditEntity.CheckTotalAmount = details.Sum(c => c.UntaxedCost * c.CheckQty);
+                EditEntity.CarryingTotalAmount = details.Sum(c => c.UntaxedCost * c.CarryinglQty);
+                EditEntity.DiffTotalAmount = details.Sum(c => c.UntaxedCost * c.DiffQty);
 
             }
             catch (Exception ex)
@@ -494,9 +517,9 @@ namespace RUINORERP.UI.PSI.INV
                 return false;
             }
             CheckMode initMode = (CheckMode)EditEntity.CheckMode;
-            if (initMode == CheckMode.期初盘点 && details.Any(c => c.Cost == 0))
+            if (initMode == CheckMode.期初盘点 && details.Any(c => c.UntaxedCost == 0))
             {
-                MessageBox.Show("【期初盘点】模式下，盘点产品的成本不能为0！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show("【期初盘点】模式下，盘点产品的未税成本不能为0！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return false;
             }
             switch (EditEntity.Adjust_Type)
@@ -671,13 +694,13 @@ namespace RUINORERP.UI.PSI.INV
                         detail.property = item.prop;
                         if (item.Inv_Cost.HasValue)
                         {
-                            detail.Cost = item.Inv_Cost.Value;
+                            detail.UntaxedCost = item.Inv_Cost.Value;
                         }
                         if (item.Quantity.HasValue)
                         {
                             detail.CarryinglQty = item.Quantity.Value;
                         }
-                        detail.CarryingSubtotalAmount = detail.Cost * detail.CarryinglQty;
+                        detail.CarryingSubtotalAmount = detail.UntaxedCost * detail.CarryinglQty;
                         detail.CheckQty = 0;
                         detail.DiffQty = 0;
                         detail.CheckSubtotalAmount = 0;
@@ -690,45 +713,6 @@ namespace RUINORERP.UI.PSI.INV
 
         }
 
-        private void cmbCheckMode_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            return;
-            if (sgd == null || cmbCheckMode.SelectedItem == null || cmbCheckMode.SelectedValue.ToString() == "-1")
-            {
-                return;
-            }
-            //如果选期初 ，则载账日期需要是当前时间，调整方式 则不可能是减少，是增加。
-            if (cmbCheckMode.SelectedValue.ToString() == ((int)CheckMode.期初盘点).ToString())
-            {
-                //成本字段可以修改
-                sgd.DefineColumns.SetCol_ReadWrite<tb_StocktakeDetail>(c => c.Cost);
-                //添加
-                listCols.FirstOrDefault(c => c.ColName == nameof(tb_StocktakeDetail.Cost)).Visible = true;
-                InitLoadGrid();
-            }
-            else
-            {
-                UIHelper.ControlChildColumnsInvisible(CurMenuInfo, listCols);
-
-                //成本字段不可以修改
-                sgd.DefineColumns.SetCol_ReadOnly<tb_StocktakeDetail>(c => c.Cost);
-                //如果权限配方不能看成本时。录入明细后不能切换成期初盘点。因为期初是可以看成本的。大于权限配置。
-                if (listCols != null)
-                {
-                    var detail = new tb_StocktakeDetail();
-                    if (listCols.Where(c => c.ColName == nameof(detail.Cost)).FirstOrDefault().Visible == false)
-                    {
-                        // cmbCheckMode.Enabled = false;
-                    }
-                    else
-                    {
-                        // cmbCheckMode.Enabled = true;
-                    }
-                }
-
-            }
-        }
-
 
         private void ControlCostByCheckModel(CheckMode checkMode)
         {
@@ -736,24 +720,40 @@ namespace RUINORERP.UI.PSI.INV
             //如果选期初 ，则载账日期需要是当前时间，调整方式 则不可能是减少，是增加。
             if (checkMode == CheckMode.期初盘点)
             {
+                lblCostTips.Visible = true;
                 //成本字段可以修改
                 sgd.DefineColumns.SetCol_ReadWrite<tb_StocktakeDetail>(c => c.Cost);
+                sgd.DefineColumns.SetCol_ReadWrite<tb_StocktakeDetail>(c => c.UntaxedCost);
+                sgd.DefineColumns.SetCol_ReadWrite<tb_StocktakeDetail>(c => c.TaxRate);
                 //添加
                 listCols.FirstOrDefault(c => c.ColName == nameof(tb_StocktakeDetail.Cost)).NeverVisible = false;
                 listCols.FirstOrDefault(c => c.ColName == nameof(tb_StocktakeDetail.Cost)).Visible = true;
+
+                listCols.FirstOrDefault(c => c.ColName == nameof(tb_StocktakeDetail.UntaxedCost)).NeverVisible = false;
+                listCols.FirstOrDefault(c => c.ColName == nameof(tb_StocktakeDetail.UntaxedCost)).Visible = true;
+
+                listCols.FirstOrDefault(c => c.ColName == nameof(tb_StocktakeDetail.TaxRate)).NeverVisible = false;
+                listCols.FirstOrDefault(c => c.ColName == nameof(tb_StocktakeDetail.TaxRate)).Visible = true;
+
                 InitLoadGrid();
             }
             else
             {
+                lblCostTips.Visible = false;
                 UIHelper.ControlChildColumnsInvisible(CurMenuInfo, listCols);
                 InitLoadGrid();
                 //成本字段不可以修改
+                sgd.DefineColumns.SetCol_ReadOnly<tb_StocktakeDetail>(c => c.UntaxedCost);
+                //成本字段不可以修改
                 sgd.DefineColumns.SetCol_ReadOnly<tb_StocktakeDetail>(c => c.Cost);
+                //成本字段不可以修改
+                sgd.DefineColumns.SetCol_ReadOnly<tb_StocktakeDetail>(c => c.TaxRate);
+
                 //如果权限配方不能看成本时。录入明细后不能切换成期初盘点。因为期初是可以看成本的。大于权限配置。
                 if (listCols != null)
                 {
                     var detail = new tb_StocktakeDetail();
-                    if (listCols.Where(c => c.ColName == nameof(detail.Cost)).FirstOrDefault().Visible == false)
+                    if (listCols.Where(c => c.ColName == nameof(detail.UntaxedCost)).FirstOrDefault().Visible == false)
                     {
                         cmbCheckMode.Enabled = false;
                     }

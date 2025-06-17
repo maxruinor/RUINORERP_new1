@@ -18,122 +18,111 @@ namespace RUINORERP.Global.EnumExt
         草稿 = 0,       // 初始状态
         已发送 = 1,     // 已发送给客户
         已确认 = 2,     // 客户确认对账
-        已关闭 = 4,     // 流程终止
-        已结清 = 8,     // 完全结清
-        部分结算 = 16   // 部分金额结算
+        已关闭 = 3,     // 流程终止
+        已结清 = 4,     // 完全结清
+        部分结算 = 5   // 部分金额结算
     }
 
     // 基础状态 (所有财务单据共用)
     [Flags]
-    public enum BaseFMPaymentStatus : long
+    public enum BaseFMStatus : long
     {
         [Description("未提交")]
-        草稿 = 0,
+        草稿 = 1 << 0,  // 1
 
         [Description("待审核")]
-        待审核 = 1,
+        待审核 = 1 << 1,  // 2
 
         [Description("审核通过")]
-        已生效 = 2,
+        已生效 = 1 << 2,  // 4
 
-        [Description("反向冲抵")]
-        已冲销 = 4,
-
-        [Description("流程终止")]
-        已取消 = 8,
+        [Description("已关闭")]
+        已关闭 = 1 << 3   // 8
     }
 
-  
+
+
+
+    //草稿 -> 待审核 -> 已生效 ->（部分核销 -> 全部核销）-> 已关闭
+    //        │
+    //        └─> 已关闭（取消）
     [Flags]
-    //（5~10位）
     public enum PrePaymentStatus : long
     {
 
-        // 继承基础状态（0-4位）
-        草稿 = BaseFMPaymentStatus.草稿,   // 0
-        待审核 = BaseFMPaymentStatus.待审核, // 1
-        
-        
-        //审核就变成已生效，并且生成收付单，审核后变为待核销
-        [Description("已生效")]
-        已生效 = BaseFMPaymentStatus.已生效, // 2
-        已冲销 = BaseFMPaymentStatus.已冲销, // 4
-        已取消 = BaseFMPaymentStatus.已取消, // 8
+        草稿 = BaseFMStatus.草稿,
+        待审核 = BaseFMStatus.待审核,
+        已生效 = BaseFMStatus.已生效,
+        已关闭 = BaseFMStatus.已关闭,
 
-        // 扩展状态（5-9位）
         [Description("部分核销")]
-        部分核销 = 32,    // 0b100000 (2^5)
+        部分核销 = 1 << 4,  // 16
 
         [Description("全额核销")]
-        全额核销 = 64,    // 0b1000000 (2^6)
+        全额核销 = 1 << 5   // 32
 
+        
+        //已关闭状态：
 
-        //表示已经支付成功
-        [Description("待核销")]
-        待核销 = 128    // 0b10000000 (2^7)
+        //包含"取消"和"退款"两种含义
+
+        //单据关闭前必须处理资金：
+
+        //未核销：直接关闭（相当于取消）
+
+        //已核销：需先退款再关闭
+
+        //简化设计：不需要单独的"已取消"和"已冲销"状态
 
     }
 
 
 
-    // 应收/应付单据状态
+    //草稿 -> 待审核 -> 已生效 ->（部分支付 -> 全部支付）-> 已关闭
+    //        │                │
+    //        └─> 已关闭       └─> 坏账 -> 已关闭
     // 应收付状态扩展（11~15位）
     [Flags]
     public enum ARAPStatus : long
     {
 
-        // 继承基础状态（0-4位）
-        草稿 = BaseFMPaymentStatus.草稿,   // 0
-        待审核 = BaseFMPaymentStatus.待审核, // 1
-        已生效 = BaseFMPaymentStatus.已生效, // 2
-        已冲销 = BaseFMPaymentStatus.已冲销, // 4
-        已取消 = BaseFMPaymentStatus.已取消, // 8
+        草稿 = BaseFMStatus.草稿,
+        待审核 = BaseFMStatus.待审核,
+        已生效 = BaseFMStatus.已生效,
+        已关闭 = BaseFMStatus.已关闭,
 
-        // 扩展状态（10-14位）
-        [Description("已结清")]
-        已结清 = 1024,   // 0b10000000000 (2^10)
-
-        [Description("坏账")]
-        坏账 = 2048,   // 0b100000000000 (2^11)
+        [Description("全部支付")]
+        全部支付 = 1 << 6,  // 64
 
         [Description("部分支付")]
-        部分支付 = 4096    // 0b1000000000000 (2^12)
+        部分支付 = 1 << 7,  // 128
 
-
-       
-
-
-   
+        [Description("坏账")]
+        坏账 = 1 << 8      // 256
+        //坏账状态：
+        //特殊关闭状态，标记无法收回的款项
+        //最终仍需转为"已关闭"
 
     }
 
+
+
+
+    //草稿 -> 待审核 -> 已审核 -> 已支付 -> 已关闭
+    //        │             │
+    //        └─> 已关闭    └─> 已关闭（退款）
     // 收/付款单据状态
-    // 收付款状态扩展（16~20位）
     [Flags]
     public enum PaymentStatus : long
     {
 
-        // 继承基础状态（0-4位）
-        草稿 = BaseFMPaymentStatus.草稿,   // 0
-        待审核 = BaseFMPaymentStatus.待审核, // 1
-        已生效 = BaseFMPaymentStatus.已生效, // 2
-        已冲销 = BaseFMPaymentStatus.已冲销, // 4
-        已取消 = BaseFMPaymentStatus.已取消, // 8
+        草稿 = BaseFMStatus.草稿,
+        待审核 = BaseFMStatus.待审核,
+        已生效 = BaseFMStatus.已生效,
+        已关闭 = BaseFMStatus.已关闭,
 
-        // 扩展状态（15-19位）
         [Description("已支付")]
-        已支付 = 32768,  // 0b1000000000000000 (2^15)
-
-        [Description("已核销")]
-        已核销 = 65536   // 0b10000000000000000 (2^16)
-
-      
-
- 
-
-
- 
-
+        已支付 = 1 << 9     // 512
     }
 
     /// <summary>
@@ -166,9 +155,6 @@ namespace RUINORERP.Global.EnumExt
 
         [Description("退款红冲")]
         红冲核销 = 6,
-
-        [Description("多币种调汇")]
-        汇差调整 = 7
 
     }
 

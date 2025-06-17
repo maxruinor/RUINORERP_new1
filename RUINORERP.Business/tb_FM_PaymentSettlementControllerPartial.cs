@@ -106,8 +106,6 @@ namespace RUINORERP.Business
             BusinessHelper.Instance.InitEntity(SettlementRecord);
             #endregion
             SettlementRecords.Add(SettlementRecord);
-
-
             List<long> ids = await _unitOfWorkManage.GetDbClient().Insertable(SettlementRecords).ExecuteReturnSnowflakeIdListAsync();
             if (ids.Count > 0)
             {

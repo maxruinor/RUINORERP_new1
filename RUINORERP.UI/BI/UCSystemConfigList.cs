@@ -18,6 +18,7 @@ using RUINORERP.Business;
 using TransInstruction;
 using System.Threading;
 using RUINORERP.Global;
+using SourceGrid2.Win32;
 
 namespace RUINORERP.UI.BI
 {
@@ -55,12 +56,41 @@ namespace RUINORERP.UI.BI
             }
         }
 
+
+        public override async Task<List<tb_SystemConfig>> Save()
+        {
+            BindingSortCollection<tb_SystemConfig> list = new BindingSortCollection<tb_SystemConfig>();
+            list = bindingSourceList.List as BindingSortCollection<tb_SystemConfig>;
+            foreach (var item in list)
+            {
+                if (item.CheckNegativeInventory)
+                {
+                    if (MessageBox.Show("不建议开启负库存。\r\n你确定要开启吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Information) == DialogResult.Yes)
+                    {
+                        await base.Save();
+                    }
+                    else
+                    {
+                        MainForm.Instance.PrintInfoLog("配置信息未保存。");
+                    }
+                }
+
+                else
+                {
+                    await base.Save();
+                }
+            }
+            return list.ToList();
+        }
+
+
+
         public UCSystemConfigList()
         {
             InitializeComponent();
             base.EditForm = typeof(UCSystemConfigEdit);
             //如果有一行数据 就无法增加，
-            if (base.bindingSourceList.Count>0)
+            if (base.bindingSourceList.Count > 0)
             {
 
             }

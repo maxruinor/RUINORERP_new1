@@ -236,6 +236,11 @@ namespace RUINORERP.UI.PSI.SAL
 
         private async void NewSumDataGridView_取消订单(object sender, EventArgs e)
         {
+            if (MessageBox.Show("确定要执行【取消订单】操作吗?", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Information, MessageBoxDefaultButton.Button2) == DialogResult.No)
+            {
+                return;
+            }
+
             List<tb_SaleOrder> selectlist = GetSelectResult();
             foreach (var item in selectlist)
             {

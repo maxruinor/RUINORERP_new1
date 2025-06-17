@@ -23,6 +23,7 @@ using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Documents;
 using System.Windows.Forms;
 
 namespace RUINORERP.UI.UserCenter.DataParts
@@ -491,7 +492,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
             // 公共状态条件（DataStatus相关）
             if (bizEntity.ContainsProperty(typeof(DataStatus).Name))
             {
-                conditionGroups.AddRange(_conditionBuilderFactory.GetCommonConditionGroups());
+                conditionGroups.AddRange(_conditionBuilderFactory.GetCommonConditionGroups(bizType));
             }
 
             // 预付款/预收款状态条件
@@ -525,7 +526,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
                     conditionGroups.AddRange(_conditionBuilderFactory.GetARAPConditionGroups(paymentType));
                 }
             }
-               
+
 
             // 付款/收款状态条件
             if (bizEntity.ContainsProperty(typeof(PaymentStatus).Name))
@@ -541,7 +542,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
                     conditionGroups.AddRange(_conditionBuilderFactory.GetPaymentConditionGroups(paymentType));
                 }
 
-                
+
             }
 
             // 特殊业务类型条件（示例）
@@ -551,7 +552,10 @@ namespace RUINORERP.UI.UserCenter.DataParts
                     conditionGroups.AddRange(_conditionBuilderFactory.GetPurchaseOrderSpecialConditions());
                     break;
                 case BizType.销售订单:
-                    conditionGroups.AddRange(_conditionBuilderFactory.GetSalesOrderSpecialConditions());
+                    var grouplist = _conditionBuilderFactory.GetSalesOrderSpecialConditions();
+               
+                    conditionGroups.AddRange(grouplist);
+
                     break;
                 case BizType.借出单:
                     conditionGroups.AddRange(_conditionBuilderFactory.GetBorrowedSpecialConditions());
@@ -930,26 +934,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
 
         #endregion
 
-
-        private IEnumerable<ConditionGroup> GetPaymentConditionGroups(ReceivePaymentType paymentType)
-        {
-            return new List<ConditionGroup>();
-        }
-
-        private IEnumerable<ConditionGroup> GetSalesOrderSpecialConditions()
-        {
-            return new List<ConditionGroup>();
-        }
-
-        private IEnumerable<ConditionGroup> GetPurchaseOrderSpecialConditions()
-        {
-            return new List<ConditionGroup>();
-        }
-
-        private IEnumerable<ConditionGroup> GetARAPConditionGroups(ReceivePaymentType paymentType)
-        {
-            return new List<ConditionGroup>();
-        }
+ 
 
 
         // 示例条件组定义
@@ -974,7 +959,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
                             {
                                 FieldName = "PrePaymentStatus",
                                 ConditionalType = ConditionalType.Equal,
-                                FieldValue = ((long)PrePaymentStatus.待核销).ToString(),
+                                FieldValue = ((long)PrePaymentStatus.已生效).ToString(),
                                 CSharpTypeName = "long"
                             }
                         }
@@ -1081,7 +1066,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
                         UIPropertyIdentifier = group.Identifier
                     };
 
-                        parentNode.Nodes.Add(new TreeNode($"{group.StatusName}【{count}】")
+                    parentNode.Nodes.Add(new TreeNode($"{group.StatusName}【{count}】")
                     {
                         Tag = parameter,
                         Name = $"{tableType.Name}_{bizType}_{group.StatusName}"

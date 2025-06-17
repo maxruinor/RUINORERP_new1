@@ -894,11 +894,7 @@ namespace RUINORERP.UI.BaseForm
                 bool canEdit = statusValue.IsEditable();
                 bool canCancel = statusValue.CanCancel(HasRelatedRecords(entity as BaseEntity));
 
-                // 通用按钮控制逻辑
-                toolStripbtnAdd.Enabled = !isFinal && canEdit;
-                toolStripBtnCancel.Visible = canCancel;
-                toolStripbtnModify.Enabled = canEdit;
-                toolStripbtnDelete.Enabled = canEdit && !isFinal;
+
 
                 // 根据不同类型细化控制
                 switch (statusValue)
@@ -917,6 +913,21 @@ namespace RUINORERP.UI.BaseForm
                         break;
                 }
 
+                // 通用按钮控制逻辑
+                toolStripbtnAdd.Enabled = !isFinal && canEdit;
+                toolStripBtnCancel.Visible = canCancel;
+                toolStripbtnModify.Enabled = canEdit;
+                toolStripbtnDelete.Enabled = canEdit && !isFinal;
+                toolStripButtonSave.Enabled = canEdit && !isFinal;
+
+                if (statusValue.IsFinalStatus())
+                {
+                    toolStripBtnReverseReview.Enabled = false;
+                    toolStripbtnModify.Enabled = false;
+                    toolStripbtnSubmit.Enabled = false;
+                    toolStripButtonSave.Enabled = false;
+                    toolStripbtnReview.Enabled = false;
+                }
                 // 处理锁定状态
                 HandleLockStatus(entity as BaseEntity);
 
@@ -931,11 +942,17 @@ namespace RUINORERP.UI.BaseForm
             toolStripbtnSubmit.Enabled = status == PrePaymentStatus.草稿;
             toolStripbtnReview.Enabled = status == PrePaymentStatus.待审核;
             //反审核相关控制
-            //toolStripBtnReverseReview.Enabled = status.CanReverseSettle();
+            toolStripBtnReverseReview.Enabled = !status.HasFlag(PrePaymentStatus.已生效);
             toolStripButton结案.Enabled = status.HasFlag(PrePaymentStatus.全额核销);
+            toolStripButtonSave.Enabled = !status.HasFlag(PrePaymentStatus.已生效);
+            if (status.IsFinalStatus())
+            {
+                toolStripBtnReverseReview.Enabled = false;
+                toolStripbtnModify.Enabled = false;
+                toolStripbtnSubmit.Enabled = false;
+                toolStripButtonSave.Enabled = false;
+            }
 
-            // 核销相关控制
-            // toolStripButton核销.Enabled = status.CanSettlePrepayment();
             // toolStripButton反核销.Enabled = status.AllowReverseSettle();
 
             // 特殊状态处理
@@ -956,7 +973,13 @@ namespace RUINORERP.UI.BaseForm
             // 支付相关控制
             //toolStripButton部分支付.Enabled = status.AllowPartialPayment();
             //toolStripButton全额支付.Enabled = status.CanCreatePayment();
-
+            if (status.IsFinalStatus())
+            {
+                toolStripBtnReverseReview.Enabled = false;
+                toolStripbtnModify.Enabled = false;
+                toolStripbtnSubmit.Enabled = false;
+                toolStripButtonSave.Enabled = false;
+            }
             // 坏账特殊处理
             if (status.HasFlag(ARAPStatus.坏账))
             {
@@ -1145,6 +1168,166 @@ namespace RUINORERP.UI.BaseForm
         }
         #endregion
 
+
+        #region 状态机处理新2025-6-17
+
+        /// <summary>根据单据状态控制工具栏按钮</summary>
+        protected virtual void ToolBarEnabledControl(BaseEntity entity)
+        {
+            if (entity == null) return;
+
+            // 状态检测器
+            var statusDetector = new StatusDetector(entity);
+
+            // 通用按钮状态
+            toolStripbtnAdd.Enabled = statusDetector.IsEditable;
+            toolStripBtnCancel.Visible = statusDetector.CanCancel;
+            toolStripbtnModify.Enabled = statusDetector.IsEditable;
+            toolStripbtnDelete.Enabled = statusDetector.IsEditable;
+            toolStripButtonSave.Enabled = statusDetector.IsEditable;
+
+            // 特定状态按钮
+            toolStripbtnSubmit.Enabled = statusDetector.CanSubmit;
+            toolStripbtnReview.Enabled = statusDetector.CanReview;
+            toolStripBtnReverseReview.Enabled = statusDetector.CanReverseReview;
+            toolStripButton结案.Enabled = statusDetector.CanClose;
+
+            // 锁定状态处理
+            HandleLockStatus(entity, statusDetector);
+
+            // 注册状态变更事件
+            statusDetector.RegisterStatusChangeHandler();
+        }
+
+        /// <summary>状态检测器 - 封装状态逻辑</summary>
+        private class StatusDetector
+        {
+            private readonly BaseEntity _entity;
+
+            public bool IsEditable { get; }
+            public bool CanCancel { get; }
+            public bool CanSubmit { get; }
+            public bool CanReview { get; }
+            public bool CanReverseReview { get; }
+            public bool CanClose { get; }
+            public bool IsFinalStatus { get; }
+
+            public StatusDetector(BaseEntity entity)
+            {
+                _entity = entity;
+
+                // 获取实际状态值
+                var status = GetActualStatus();
+                var hasRelatedRecords = CheckRelatedRecords();
+
+                // 计算属性值
+                IsFinalStatus = status?.IsFinalStatus() ?? false;
+                IsEditable = status?.IsEditable() ?? false;
+                CanCancel = status?.CanCancel(hasRelatedRecords) ?? false;
+
+                // 特定状态判断
+                switch (status)
+                {
+                    case PrePaymentStatus pre:
+                        CanSubmit = pre == PrePaymentStatus.草稿;
+                        CanReview = pre == PrePaymentStatus.待审核;
+                        CanReverseReview = !pre.HasFlag(PrePaymentStatus.已生效);
+                        CanClose = pre.HasFlag(PrePaymentStatus.全额核销);
+                        break;
+
+                    case ARAPStatus arap:
+                        CanSubmit = arap == ARAPStatus.草稿;
+                        CanReview = arap == ARAPStatus.待审核;
+                        CanReverseReview = false;
+                        CanClose = arap.HasFlag(ARAPStatus.全部支付) ||
+                                  arap.HasFlag(ARAPStatus.坏账);
+                        break;
+
+                    case PaymentStatus pay:
+                        CanSubmit = pay == PaymentStatus.草稿;
+                        CanReview = pay == PaymentStatus.待审核;
+                        CanReverseReview = false;
+                        CanClose = pay.HasFlag(PaymentStatus.已支付);
+                        break;
+                }
+            }
+
+            private Enum GetActualStatus()
+            {
+                if (_entity.ContainsProperty(typeof(PrePaymentStatus).Name))
+                    return _entity.GetStatusValue<PrePaymentStatus>();
+
+                if (_entity.ContainsProperty(typeof(ARAPStatus).Name))
+                    return _entity.GetStatusValue<ARAPStatus>();
+
+                if (_entity.ContainsProperty(typeof(PaymentStatus).Name))
+                    return _entity.GetStatusValue<PaymentStatus>();
+
+                return null;
+            }
+
+            private bool CheckRelatedRecords()
+            {
+                // 实现关联记录检查逻辑
+                return false;
+            }
+
+            public void RegisterStatusChangeHandler()
+            {
+                _entity.PropertyChanged += (sender, e) =>
+                {
+                    if (e.PropertyName.EndsWith("Status"))
+                    {
+                        // 刷新UI状态
+                        // RefreshToolbar();
+                    }
+                };
+            }
+        }
+
+        /// <summary>处理单据锁定状态</summary>
+        private void HandleLockStatus(BaseEntity entity, StatusDetector detector)
+        {
+            long pkid = GetPrimaryKeyValue(entity);
+            if (pkid <= 0) return;
+
+            var lockInfo = MainForm.Instance.lockManager.GetLockStatus(pkid);
+            bool isLocked = lockInfo?.LockedByID > 0;
+            bool isSelfLock = lockInfo?.LockedByID == MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID;
+
+            // 更新锁定按钮状态
+            tsBtnLocked.Visible = isLocked;
+            tsBtnLocked.Image = isSelfLock ?
+                Properties.Resources.unlockbill :
+                Properties.Resources.Lockbill;
+            if (lockInfo != null)
+            {
+                tsBtnLocked.ToolTipText = isSelfLock ?
+                "您已锁定当前单据" :
+                $"单据已被【{lockInfo.LockedByName}】锁定";
+            }
+            
+            // 被他人锁定时禁用所有操作
+            if (isLocked && !isSelfLock)
+            {
+                toolStripbtnModify.Enabled = false;
+                toolStripbtnSubmit.Enabled = false;
+                toolStripbtnReview.Enabled = false;
+                toolStripButtonSave.Enabled = false;
+                toolStripbtnDelete.Enabled = false;
+            }
+        }
+
+        ///// <summary>刷新工具栏状态</summary>
+        public void RefreshToolbar()
+        {
+            if (EditEntity != null)
+            {
+                ToolBarEnabledControl(EditEntity);
+            }
+        }
+
+        #endregion
 
 
         #region 帮助信息提示
@@ -3302,13 +3485,13 @@ namespace RUINORERP.UI.BaseForm
             long pkid = (long)ReflectionHelper.GetPropertyValue(EditEntity, PKCol);
             if (pkid > 0)
             {
-                var dataStatus = (BaseFMPaymentStatus)(EditEntity.GetPropertyValue(FMEnum.Name).ToInt());
+                var dataStatus = (BaseFMStatus)(EditEntity.GetPropertyValue(FMEnum.Name).ToInt());
                 if (FMPaymentStatusHelper.IsFinalStatus(dataStatus))
                 {
                     MainForm.Instance.uclog.AddLog("单据非【草稿】时状态，提交失败。");
                 }
 
-                if (dataStatus != BaseFMPaymentStatus.草稿)
+                if (dataStatus != BaseFMStatus.草稿)
                 {
                     toolStripbtnSubmit.Enabled = false;
                     if (AuthorizeController.GetShowDebugInfoAuthorization(MainForm.Instance.AppContext))
@@ -3322,7 +3505,7 @@ namespace RUINORERP.UI.BaseForm
                     //当数据不是新建时。直接提交不再保存了。只更新主表状态字段
                     if (ReflectionHelper.ExistPropertyName<T>(FMEnum.Name))
                     {
-                        ReflectionHelper.SetPropertyValue(EditEntity, FMEnum.Name, (long)BaseFMPaymentStatus.待审核);
+                        ReflectionHelper.SetPropertyValue(EditEntity, FMEnum.Name, (long)BaseFMStatus.待审核);
                     }
                     ReturnResults<T> rmr = new ReturnResults<T>();
                     BaseController<T> ctr = Startup.GetFromFacByName<BaseController<T>>(typeof(T).Name + "Controller");
@@ -3356,7 +3539,7 @@ namespace RUINORERP.UI.BaseForm
                     MainForm.Instance.AuditLogHelper.CreateAuditLog<T>("提交前->保存", EditEntity);
                     if (ReflectionHelper.ExistPropertyName<T>(FMEnum.Name))
                     {
-                        ReflectionHelper.SetPropertyValue(EditEntity, FMEnum.Name, (long)BaseFMPaymentStatus.待审核);
+                        ReflectionHelper.SetPropertyValue(EditEntity, FMEnum.Name, (long)BaseFMStatus.待审核);
                     }
                     //先保存再提交
                     if (AuthorizeController.GetShowDebugInfoAuthorization(MainForm.Instance.AppContext))
@@ -3497,6 +3680,7 @@ namespace RUINORERP.UI.BaseForm
                             }
                             bindingSourceSub.Clear();
                             OnBindDataToUIEvent(EditEntity, ActionStatus.加载);
+
                             //if (pkentity.PrimaryKeyID > 0)
                             //{
                             //    //可以修改
@@ -3943,4 +4127,10 @@ namespace RUINORERP.UI.BaseForm
             return result;
         }
     }
+
+
+
+
+
+
 }

@@ -48,13 +48,23 @@ namespace RUINORERP.Business
             ReturnResults<T> rs = new ReturnResults<T>();
             try
             {
-                // 开启事务，保证数据一致性
-                _unitOfWorkManage.BeginTran();
                 tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
                 if (entity == null)
                 {
                     return rs;
                 }
+
+                if (entity.PurEntryID.HasValue && entity.PurEntryID.Value > 0)
+                {
+                    entity.tb_purentry = await _unitOfWorkManage.GetDbClient().Queryable<tb_PurEntry>()
+                                .Where(c => c.PurEntryID == entity.PurEntryID.Value)
+                               .FirstAsync();
+
+                }
+
+
+                // 开启事务，保证数据一致性
+                _unitOfWorkManage.BeginTran();
                 List<tb_Inventory> invUpdateList = new List<tb_Inventory>();
                 foreach (var ReDetail in entity.tb_PurEntryReDetails)
                 {
@@ -71,12 +81,26 @@ namespace RUINORERP.Business
                             return rs;
                         }
 
+                        //反向计算成本
+                        // inv.Inv_Cost = 0;//这里需要计算，根据系统设置中的算法计算。
+                        //退货后库存：
+                        //数量 = Q1 - Q2
+                        //总成本 = C1 - Q2×U2
+                        //新单位成本 = 总成本 ÷ 数量 = (C1 - Q2×U2)÷(Q1 - Q2)
+                        //确认一下  可以直接用退货明细的成本不。这个成本是不是原始入库的成本。如果是则可以。
+                        //实际是引用了入库的单价。没有未税。要使用未税这里可以暂时算一下
+                        decimal UnTaxedCost = ReDetail.UnitPrice / (1 + ReDetail.TaxRate);
+                        //库存减少
+                        CommService.CostCalculations.AntiCostCalculation(_appContext, inv, ReDetail.Quantity, UnTaxedCost);
+
                         //更新库存
                         inv.Quantity = inv.Quantity - ReDetail.Quantity;
                         if (entity.ProcessWay == (int)PurReProcessWay.需要返回)
                         {
                             inv.On_the_way_Qty = inv.On_the_way_Qty + ReDetail.Quantity;
                         }
+
+
 
                         BusinessHelper.Instance.EditEntity(inv);
 
@@ -89,17 +113,8 @@ namespace RUINORERP.Business
                     }
 
 
-                    /*
-                  直接输入成本：在录入库存记录时，直接输入该产品或物品的成本价格。这种方式适用于成本价格相对稳定或容易确定的情况。
-                 平均成本法：通过计算一段时间内该产品或物品的平均成本来确定成本价格。这种方法适用于成本价格随时间波动的情况，可以更准确地反映实际成本。
-                 先进先出法（FIFO）：按照先入库的产品先出库的原则，计算库存成本。这种方法适用于库存流转速度较快，成本价格相对稳定的情况。
-                 后进先出法（LIFO）：按照后入库的产品先出库的原则，计算库存成本。这种方法适用于库存流转速度较慢，成本价格波动较大的情况。
-                 数据来源可以是多种多样的，例如：
-                 采购价格：从供应商处购买产品或物品时的价格。
-                 生产成本：自行生产产品时的成本，包括原材料、人工和间接费用等。
-                 市场价格：参考市场上类似产品或物品的价格。
-                  */
-                    // inv.Inv_Cost = 0;//这里需要计算，根据系统设置中的算法计算。
+
+
                     inv.Inv_SubtotalCostMoney = inv.Inv_Cost * inv.Quantity;
                     inv.LatestStorageTime = System.DateTime.Now;
                     #endregion
@@ -317,7 +332,18 @@ namespace RUINORERP.Business
                  生产成本：自行生产产品时的成本，包括原材料、人工和间接费用等。
                  市场价格：参考市场上类似产品或物品的价格。
                   */
-                    CommService.CostCalculations.AntiCostCalculation(_appContext, inv, child.Quantity, child.UnitPrice);
+                    //反向计算成本
+                    // inv.Inv_Cost = 0;//这里需要计算，根据系统设置中的算法计算。
+                    //退货后库存：
+                    //数量 = Q1 - Q2
+                    //总成本 = C1 - Q2×U2
+                    //新单位成本 = 总成本 ÷ 数量 = (C1 - Q2×U2)÷(Q1 - Q2)
+                    //确认一下  可以直接用退货明细的成本不。这个成本是不是原始入库的成本。如果是则可以。
+                    //实际是引用了入库的单价。没有未税。要使用未税这里可以暂时算一下
+                    decimal UnTaxedCost = child.UnitPrice / (1 + child.TaxRate);
+                    //这里是退货的反审。库存增加
+                    CommService.CostCalculations.CostCalculation(_appContext, inv, child.Quantity, UnTaxedCost);
+
                     inv.Quantity = inv.Quantity + child.Quantity;
                     if (entity.ProcessWay == (int)PurReProcessWay.需要返回)
                     {
@@ -391,7 +417,7 @@ namespace RUINORERP.Business
                         //被冲销了，无法反审了。实在要反向。就业务上反向
                         tb_FM_ReceivablePayable returnpayable = await _appContext.Db.Queryable<tb_FM_ReceivablePayable>()
                                                .Where(c => c.CustomerVendor_ID == entity.CustomerVendor_ID
-                                                && c.SourceBizType == (int)BizType. 采购退货单 && c.SourceBillId == entity.PurEntryRe_ID
+                                                && c.SourceBizType == (int)BizType.采购退货单 && c.SourceBillId == entity.PurEntryRe_ID
                                                 ).SingleAsync();
                         if (returnpayable != null)
                         {

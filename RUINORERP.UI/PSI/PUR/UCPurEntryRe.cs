@@ -642,8 +642,8 @@ protected async override void ReReview()
                 entity.TotalAmount = NewDetails.Sum(c => c.SubtotalTrPriceAmount);
                 entity.TotalQty = NewDetails.Sum(c => c.Quantity);
                 entity.TotalTaxAmount = NewDetails.Sum(c => c.TaxAmount);
-
-
+                //这里还要有一个未税总金额TotalUntaxedAmount
+                
                 entity.DataStatus = (int)DataStatus.草稿;
                 entity.ApprovalStatus = (int)ApprovalStatus.未审核;
                 entity.ApprovalResults = null;

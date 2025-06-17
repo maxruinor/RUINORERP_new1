@@ -703,8 +703,6 @@ namespace RUINORERP.UI.BaseForm
                     && EditEntity.GetPropertyValue("ApprovalResults").ToBool() == true
                     )
                 {
-
-
                     MainForm.Instance.uclog.AddLog("提示", "【未审核】或【驳回】的单据才能审核。");
                     return ae;
                 }
@@ -804,17 +802,15 @@ namespace RUINORERP.UI.BaseForm
                     //ToolBarEnabledControl(MenuItemEnums.反审);
                     Query(QueryDto);
                     //这里推送到审核，启动工作流
-                    MainForm.Instance.AuditLogHelper.CreateAuditLog<M>("审核", EditEntity, $"审核结果{ae.ApprovalResults}-{ae.ApprovalOpinions}");
                 }
                 else
                 {
                     //审核失败 要恢复之前的值
                     command.Undo();
-                    MainForm.Instance.AuditLogHelper.CreateAuditLog<M>("审核失败", EditEntity, $"错误信息：{rmr.ErrorMsg}\r\n审核结果{ae.ApprovalResults}-{ae.ApprovalOpinions}");
                     MainForm.Instance.PrintInfoLog($"{ae.bizName}:{ae.BillNo}审核失败{rmr.ErrorMsg},请联系管理员！", Color.Red);
-                    MessageBox.Show("提示", $"{ae.bizName}:{ae.BillNo}审核失败。\r\n {rmr.ErrorMsg}", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBox.Show($"{ae.bizName}:{ae.BillNo}审核失败。\r\n {rmr.ErrorMsg}", "提示", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
-
+                MainForm.Instance.AuditLogHelper.CreateAuditLog<M>("审核", EditEntity, $"意见{ae.ApprovalOpinions}" + $"结果:{(ae.ApprovalResults ? "通过" : "拒绝")},{rmr.ErrorMsg}");
             }
 
             return ae;
@@ -907,16 +903,15 @@ namespace RUINORERP.UI.BaseForm
                 {
                     //ToolBarEnabledControl(MenuItemEnums.反审);
                     //这里推送到审核，启动工作流
-                    MainForm.Instance.AuditLogHelper.CreateAuditLog<M>("反审", EditEntity, $"反审原因{ae.ApprovalOpinions}");
                 }
                 else
                 {
                     //审核失败 要恢复之前的值
                     command.Undo();
-                    //MainForm.Instance.PrintInfoLog($"{EditEntity.SOrderNo}反审失败{rr.ErrorMsg},请联系管理员！", Color.Red);
                     MainForm.Instance.PrintInfoLog($"{ae.bizName}:{ae.BillNo}审核失败,请联系管理员！", Color.Red);
-                    MessageBox.Show("提示", $"{ae.bizName}:{ae.BillNo}反审核失败。\r\n {rmr.ErrorMsg}", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBox.Show($"{ae.bizName}:{ae.BillNo}反审核失败。\r\n {rmr.ErrorMsg}", "提示", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
+                MainForm.Instance.AuditLogHelper.CreateAuditLog<M>("反审", EditEntity, $"反审原因{ae.ApprovalOpinions}" + $"结果:{(ae.ApprovalResults ? "通过" : "拒绝")},{rmr.ErrorMsg}");
             }
             return ae;
             #endregion

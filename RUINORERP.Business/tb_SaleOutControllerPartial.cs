@@ -613,7 +613,7 @@ namespace RUINORERP.Business
                                     .Where(c => c.CustomerVendor_ID == entity.CustomerVendor_ID
                                      && c.Currency_ID == entity.Currency_ID // 添加币种条件
                                      && c.IsAvailable == true
-                                    && (c.PrePaymentStatus == (long)PrePaymentStatus.待核销
+                                    && (c.PrePaymentStatus == (long)PrePaymentStatus.已生效
                                      || c.PrePaymentStatus == (long)PrePaymentStatus.部分核销))
                                     .OrderBy(c => c.PrePayDate)
                                     .ToListAsync();
@@ -656,7 +656,7 @@ namespace RUINORERP.Business
                                         payable.ForeignBalanceAmount = entity.ForeignTotalAmount - payable.ForeignPaidAmount;
                                         if (payable.ForeignBalanceAmount == 0)
                                         {
-                                            payable.ARAPStatus = (long)ARAPStatus.已结清;
+                                            payable.ARAPStatus = (long)ARAPStatus.全部支付;
                                         }
                                         else
                                         {
@@ -682,7 +682,7 @@ namespace RUINORERP.Business
                                         payable.LocalBalanceAmount = entity.TotalAmount - payable.LocalPaidAmount;
                                         if (payable.LocalBalanceAmount == 0)
                                         {
-                                            payable.ARAPStatus = (long)ARAPStatus.已结清;
+                                            payable.ARAPStatus = (long)ARAPStatus.全部支付;
                                         }
                                         else
                                         {
@@ -844,7 +844,7 @@ namespace RUINORERP.Business
         {
             if (payable.ForeignBalanceAmount == 0 || payable.LocalBalanceAmount == 0)
             {
-                payable.ARAPStatus = (long)ARAPStatus.已结清;
+                payable.ARAPStatus = (long)ARAPStatus.全部支付;
             }
             else
             {
@@ -1162,10 +1162,9 @@ namespace RUINORERP.Business
                             //开始认为可以删除时直接删除。如果不行。则可能是已经结算或部分结算则。则查出来 根据不同情况来处理
                             List<tb_FM_ReceivablePayable> payableList = await _appContext.Db.Queryable<tb_FM_ReceivablePayable>()
                                  .Where(c => (c.ARAPStatus == (long)ARAPStatus.坏账
-                                 || c.ARAPStatus == (long)ARAPStatus.已冲销
-                                 || c.ARAPStatus == (long)ARAPStatus.已结清
+                                 || c.ARAPStatus == (long)ARAPStatus.已关闭
+                                 || c.ARAPStatus == (long)ARAPStatus.全部支付
                                  || c.ARAPStatus == (long)ARAPStatus.部分支付
-                                 || c.ARAPStatus == (long)ARAPStatus.已取消
                                  )
                                  && c.SourceBillId == entity.SaleOut_MainID && c.SourceBizType == (int)BizType.销售出库单).ToListAsync();
                             foreach (var payable in payableList)
@@ -1173,7 +1172,7 @@ namespace RUINORERP.Business
                                 //要根据他核销的是预收的。还是收款单的 分别处理
                                 switch (payable.ARAPStatus)
                                 {
-                                    case (long)ARAPStatus.已结清:
+                                    case (long)ARAPStatus.全部支付:
                                         //全额反向
                                         //出库时，全部生成应收，账期的。就加上到期日
                                         //有付款过的。就去预收中抵扣，生成反向应收单
@@ -1244,7 +1243,7 @@ namespace RUINORERP.Business
                                             payable.ForeignBalanceAmount = entity.ForeignTotalAmount - payable.ForeignPaidAmount;
                                             if (payable.ForeignBalanceAmount == 0)
                                             {
-                                                payable.ARAPStatus = (long)ARAPStatus.已结清;
+                                                payable.ARAPStatus = (long)ARAPStatus.全部支付;
                                             }
                                             else
                                             {
@@ -1270,7 +1269,7 @@ namespace RUINORERP.Business
                                             payable.LocalBalanceAmount = entity.TotalAmount - payable.LocalPaidAmount;
                                             if (payable.LocalBalanceAmount == 0)
                                             {
-                                                payable.ARAPStatus = (long)ARAPStatus.已结清;
+                                                payable.ARAPStatus = (long)ARAPStatus.全部支付;
                                             }
                                             else
                                             {

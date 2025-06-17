@@ -63,9 +63,7 @@ namespace RUINORERP.Business
                     rrs.Succeeded = false;
                     return rrs;
                 }
-
                 //支持无出库单退货
-
                 tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
 
                 //如果退回单是引用了销售出库来的。则所退产品要在订单出库明细中体现出来。回写。
@@ -87,128 +85,149 @@ namespace RUINORERP.Business
                         return rrs;
                     }
                 }
+                //要注意的是  如果销售订单中有 多行相同SKU的的情况（实际是不同配置时） 出库退库要把订单的明细主键带上。
+                if (entity != null)
+                {
+                    entity.HasChanged = false;
+                }
+
+                // 开启事务，保证数据一致性
+                _unitOfWorkManage.BeginTran();
+
+                if (entity.tb_saleout != null)
+                {
+                    #region   将更新销售订单ReturnedQty已退数量，销售出库单OrderReturnTotalQty订单退回数
+                    // 如果退回单是引用了销售订单来的 则所退产品要在订单出库明细中。
+                    // 回写出库单
+                    foreach (var child in entity.tb_SaleOutReDetails)
+                    {
+                        bool exist = entity.tb_saleout.tb_SaleOutDetails.Where(c => c.ProdDetailID == child.ProdDetailID && c.Location_ID == child.Location_ID).Any();
+                        if (!exist)
+                        {
+                            _unitOfWorkManage.RollbackTran();
+                            View_ProdDetail view_Prod = BizCacheHelper.Instance.GetEntity<View_ProdDetail>(child.ProdDetailID);
+                            if (view_Prod != null)
+                            {
+                                string prodName = "【" + view_Prod.SKU + "】" + view_Prod.CNName;
+                                rrs.ErrorMsg = $"{prodName} ，不存在于对应销售出库的明细数据中!";
+                            }
+                            else
+                            {
+                                rrs.ErrorMsg = $"数量为:{child.Quantity}的产品，不存在于对应销售出库的明细数据中!";
+                            }
+                            rrs.Succeeded = false;
+                            return rrs;
+                        }
+                    }
+
+                    foreach (var child in entity.tb_saleout.tb_SaleOutDetails)
+                    {
+                        tb_SaleOutReDetail returnDetail = entity.tb_SaleOutReDetails
+                            .Where(c => c.ProdDetailID == child.ProdDetailID
+                            && c.Location_ID == child.Location_ID
+                            && c.SaleOutDetail_ID == child.SaleOutDetail_ID
+                            ).FirstOrDefault();
+                        if (returnDetail == null) //这里主要 是因为 条件是后面加的前面退货明细中没有出库行号值
+                        {
+                            returnDetail = entity.tb_SaleOutReDetails
+                            .Where(c => c.ProdDetailID == child.ProdDetailID
+                            && c.Location_ID == child.Location_ID
+                            ).FirstOrDefault();
+                        }
+                        //如果权退款则数量不能加回？
+                        if (returnDetail == null || entity.RefundOnly)
+                        {
+                            continue;
+                        }
+
+                        //出库的总退回数量=这次退回的。加之前的。意思是一个出库单，可以退多次。但是不能超过出库数量
+                        child.TotalReturnedQty += returnDetail.Quantity;
+                        //如果已交数据大于 订单数量 给出警告实际操作中 使用其他方式将备品入库
+                        if (child.TotalReturnedQty > child.Quantity)
+                        {
+                            _unitOfWorkManage.RollbackTran();
+                            rrs.ErrorMsg = $"销售退回单：{entity.ReturnNo}中，明细退回总数量不能大于出库数量！请检查该出库单是否已经退回过！";
+                            rrs.Succeeded = false;
+                            return rrs;
+                        }
+                        if (child.TotalReturnedQty < 0)
+                        {
+                            _unitOfWorkManage.RollbackTran();
+                            rrs.ErrorMsg = $"销售退回单：{entity.ReturnNo}中，明细退回总数量不能小于0！请检查数据后重试！";
+                            rrs.Succeeded = false;
+                            return rrs;
+                        }
+                    }
 
 
 
-                //处理业务数据
+                    await _unitOfWorkManage.GetDbClient().Updateable<tb_SaleOutDetail>(entity.tb_saleout.tb_SaleOutDetails)
+                        .UpdateColumns(t => new { t.TotalReturnedQty })
+                        .ExecuteCommandAsync();
+
+                    #endregion
+
+                    #region 回写销售订单
+
+                    //2024-4-15思路更新:如果销售订单中有相同的产品的多行情况。时 如订单: A 5PCS  A2PCS  ,出库也可以多行，A 2,A3, A2 按订单循环
+                    //回写订单退回数量
+
+                    List<tb_SaleOutReDetail> outReDetailsList = new List<tb_SaleOutReDetail>();
+                    outReDetailsList.AddRange(entity.tb_SaleOutReDetails);
+
+                    for (int i = 0; i < entity.tb_saleout.tb_saleorder.tb_SaleOrderDetails.Count; i++)
+                    {
+                        tb_SaleOrderDetail orderDetail = entity.tb_saleout.tb_saleorder.tb_SaleOrderDetails[i];
+                        var totalReturnedQty = outReDetailsList.Where(c => c.ProdDetailID == orderDetail.ProdDetailID
+                        && c.Location_ID == orderDetail.Location_ID).ToList().Sum(c => c.Quantity);
+                        //没有退回
+                        if (totalReturnedQty == 0)
+                        {
+                            continue;
+                        }
+
+                        orderDetail.TotalReturnedQty += totalReturnedQty;
+
+                        //上面明细中 没办法处理 相同料号多次录入订单情况。这里 合并数量来判断。
+                        int totalOrderTotalQty = entity.tb_saleout.tb_saleorder.tb_SaleOrderDetails.Where(c => c.ProdDetailID == orderDetail.ProdDetailID).Sum(c => c.Quantity);
+
+                        //如果已交数据大于 订单数量 给出警告实际操作中 使用其他方式将备品入库
+                        if (orderDetail.TotalReturnedQty > totalOrderTotalQty)
+                        {
+                            _unitOfWorkManage.RollbackTran();
+                            View_ProdDetail ProdDetail = BizCacheHelper.Instance.GetEntity<View_ProdDetail>(orderDetail.ProdDetailID);
+
+                            if (ProdDetail != null)
+                            {
+                                rrs.ErrorMsg = $"销售出库退回时，出库单：{entity.tb_saleout.SaleOutNo}中，{ProdDetail.SKU} 退回总数{orderDetail.TotalReturnedQty}不能大于订单中对应数量{orderDetail.Quantity}！";
+                            }
+                            else
+                            {
+                                rrs.ErrorMsg = $"销售出库退回时，出库单：{entity.tb_saleout.SaleOutNo}中， 退回总数{orderDetail.TotalReturnedQty}不能大于订单中对应数量{orderDetail.Quantity}！";
+                            }
+                            rrs.Succeeded = false;
+                            return rrs;
+                        }
+                    }
+
+                    //更新已退数量
+                    await _unitOfWorkManage.GetDbClient().Updateable<tb_SaleOrderDetail>(entity.tb_saleout.tb_saleorder.tb_SaleOrderDetails)
+                        .UpdateColumns(t => new { t.TotalReturnedQty }).ExecuteCommandAsync();
+
+                    //销售出库单，如果来自于销售订单，则要把出库数量累加到订单中的已交数量 并且如果数量够则自动结案
+                    //相当于出库的。全退了。
+                    if (entity.tb_saleout.TotalQty == entity.tb_saleout.tb_SaleOutDetails.Sum(c => c.TotalReturnedQty))
+                    {
+                        entity.tb_saleout.DataStatus = (int)DataStatus.完结;
+                        await _unitOfWorkManage.GetDbClient().Updateable(entity.tb_saleout).UpdateColumns(t => new { t.DataStatus }).ExecuteCommandAsync();
+                    }
+
+                    #endregion
+
+                }
+
                 if (!entity.RefundOnly)
                 {
-                    //要注意的是  如果销售订单中有 多行相同SKU的的情况（实际是不同配置时） 出库退库要把订单的明细主键带上。
-                    if (entity != null)
-                    {
-                        entity.HasChanged = false;
-                    }
-                    // 开启事务，保证数据一致性
-                    _unitOfWorkManage.BeginTran();
-                    if (entity.tb_saleout != null)
-                    {
-                        #region   将更新销售订单ReturnedQty已退数量，销售出库单OrderReturnTotalQty订单退回数
-                        // 如果退回单是引用了销售订单来的 则所退产品要在订单出库明细中。
-                        //回写出库单
-                        foreach (var child in entity.tb_SaleOutReDetails)
-                        {
-                            bool exist = entity.tb_saleout.tb_SaleOutDetails.Where(c => c.ProdDetailID == child.ProdDetailID && c.Location_ID == child.Location_ID).Any();
-                            if (!exist)
-                            {
-                                View_ProdDetail view_Prod = await _unitOfWorkManage.GetDbClient().Queryable<View_ProdDetail>()
-                                    .Where(w => w.ProdDetailID == child.ProdDetailID && w.Location_ID == child.Location_ID).FirstAsync();
-                                string prodName = "【" + view_Prod.SKU + "】" + view_Prod.CNName;
-                                _unitOfWorkManage.RollbackTran();
-                                rrs.ErrorMsg = $"{prodName} ，不存在于对应销售出库的明细数据中!";
-                                rrs.Succeeded = false;
-                                return rrs;
-                            }
-                        }
-
-                        foreach (var child in entity.tb_saleout.tb_SaleOutDetails)
-                        {
-                            tb_SaleOutReDetail returnDetail = entity.tb_SaleOutReDetails
-                                .Where(c => c.ProdDetailID == child.ProdDetailID
-                                && c.Location_ID == child.Location_ID
-                                && c.SaleOutDetail_ID == child.SaleOutDetail_ID
-                                ).FirstOrDefault();
-                            if (returnDetail == null) //这里主要 是因为 条件是后面加的前面退货明细中没有出库行号值
-                            {
-                                returnDetail = entity.tb_SaleOutReDetails
-                                .Where(c => c.ProdDetailID == child.ProdDetailID
-                                && c.Location_ID == child.Location_ID
-                                ).FirstOrDefault();
-                            }
-                            if (returnDetail == null)
-                            {
-                                continue;
-                            }
-                            //出库的总退回数量=这次退回的。加之前的。意思是一个出库单，可以退多次。但是不能超过出库数量
-                            child.TotalReturnedQty += returnDetail.Quantity;
-                            //如果已交数据大于 订单数量 给出警告实际操作中 使用其他方式将备品入库
-                            if (child.TotalReturnedQty > child.Quantity)
-                            {
-                                rrs.ErrorMsg = $"销售退回单：{entity.ReturnNo}中，明细退回总数量不能大于出库数量！请检查该出库单是否已经退回过！";
-                                rrs.Succeeded = false;
-                                return rrs;
-                            }
-                            if (child.TotalReturnedQty < 0)
-                            {
-                                rrs.ErrorMsg = $"销售退回单：{entity.ReturnNo}中，明细退回总数量不能小于0！请检查数据后重试！";
-                                rrs.Succeeded = false;
-                                return rrs;
-                            }
-                        }
-
-                        await _unitOfWorkManage.GetDbClient().Updateable<tb_SaleOutDetail>(entity.tb_saleout.tb_SaleOutDetails).ExecuteCommandAsync();
-
-                        #endregion
-
-
-                        #region 回写销售订单
-
-                        //2024-4-15思路更新:如果销售订单中有相同的产品的多行情况。时 如订单: A 5PCS  A2PCS  ,出库也可以多行，A 2,A3, A2 按订单循环
-                        //回写订单退回数量
-
-                        List<tb_SaleOutDetail> outDetailsList = new List<tb_SaleOutDetail>();
-                        outDetailsList.AddRange(entity.tb_saleout.tb_SaleOutDetails);
-
-                        for (int i = 0; i < entity.tb_saleout.tb_saleorder.tb_SaleOrderDetails.Count; i++)
-                        {
-
-                            tb_SaleOrderDetail orderDetail = entity.tb_saleout.tb_saleorder.tb_SaleOrderDetails[i];
-                            var totalReturnedQty = outDetailsList.Where(c => c.ProdDetailID == orderDetail.ProdDetailID
-                            && c.Location_ID == orderDetail.Location_ID && c.SaleOrderDetail_ID == orderDetail.SaleOrderDetail_ID
-                            ).ToList().Sum(c => c.TotalReturnedQty);
-                            //没有退回
-                            if (totalReturnedQty == 0)
-                            {
-                                continue;
-                            }
-
-                            orderDetail.TotalReturnedQty += totalReturnedQty;
-                            //如果已交数据大于 订单数量 给出警告实际操作中 使用其他方式将备品入库
-                            if (orderDetail.TotalReturnedQty > orderDetail.Quantity)
-                            {
-                                tb_ProdDetail ProdDetail = BizCacheHelper.Instance.GetEntity<tb_ProdDetail>(orderDetail.ProdDetailID);
-                                _unitOfWorkManage.RollbackTran();
-                                rrs.ErrorMsg = $"销售出库退回时，出库单：{entity.tb_saleout.SaleOutNo}中，{ProdDetail.SKU} 退回总数不能大于订单中对应数量！";
-                                rrs.Succeeded = false;
-                                return rrs;
-                            }
-                        }
-
-                        //更新已退数量
-                        await _unitOfWorkManage.GetDbClient().Updateable<tb_SaleOrderDetail>(entity.tb_saleout.tb_saleorder.tb_SaleOrderDetails).ExecuteCommandAsync();
-
-
-                        //销售出库单，如果来自于销售订单，则要把出库数量累加到订单中的已交数量 并且如果数量够则自动结案
-                        //相当于出库的。全退了。
-                        if (entity.tb_saleout.TotalQty == entity.tb_saleout.tb_SaleOutDetails.Sum(c => c.TotalReturnedQty))
-                        {
-                            entity.tb_saleout.DataStatus = (int)DataStatus.完结;
-                            await _unitOfWorkManage.GetDbClient().Updateable(entity.tb_saleout).UpdateColumns(t => new { t.DataStatus }).ExecuteCommandAsync();
-                        }
-
-                        #endregion
-
-                    }
-
                     List<tb_Inventory> invUpdateList = new List<tb_Inventory>();
                     foreach (var child in entity.tb_SaleOutReDetails)
                     {
@@ -217,16 +236,7 @@ namespace RUINORERP.Business
                         //更新库存
                         inv.Quantity = inv.Quantity + child.Quantity;
                         BusinessHelper.Instance.EditEntity(inv);
-                        /*
-                      直接输入成本：在录入库存记录时，直接输入该产品或物品的成本价格。这种方式适用于成本价格相对稳定或容易确定的情况。
-                     平均成本法：通过计算一段时间内该产品或物品的平均成本来确定成本价格。这种方法适用于成本价格随时间波动的情况，可以更准确地反映实际成本。
-                     先进先出法（FIFO）：按照先入库的产品先出库的原则，计算库存成本。这种方法适用于库存流转速度较快，成本价格相对稳定的情况。
-                     后进先出法（LIFO）：按照后入库的产品先出库的原则，计算库存成本。这种方法适用于库存流转速度较慢，成本价格波动较大的情况。
-                     数据来源可以是多种多样的，例如：
-                     采购价格：从供应商处购买产品或物品时的价格。
-                     生产成本：自行生产产品时的成本，包括原材料、人工和间接费用等。
-                     市场价格：参考市场上类似产品或物品的价格。
-                      */
+
                         //inv.Inv_Cost = 0;//这里需要计算，根据系统设置中的算法计算。
                         inv.Inv_SubtotalCostMoney = inv.Inv_Cost * inv.Quantity;
                         inv.LatestStorageTime = System.DateTime.Now;
@@ -261,23 +271,11 @@ namespace RUINORERP.Business
                                 inv.Quantity = inv.Quantity - child.Quantity;
                                 BusinessHelper.Instance.EditEntity(inv);
                             }
-
-                            // 直接输入成本：在录入库存记录时，直接输入该产品或物品的成本价格。这种方式适用于成本价格相对稳定或容易确定的情况。
-                            //平均成本法：通过计算一段时间内该产品或物品的平均成本来确定成本价格。这种方法适用于成本价格随时间波动的情况，可以更准确地反映实际成本。
-                            //先进先出法（FIFO）：按照先入库的产品先出库的原则，计算库存成本。这种方法适用于库存流转速度较快，成本价格相对稳定的情况。
-                            //后进先出法（LIFO）：按照后入库的产品先出库的原则，计算库存成本。这种方法适用于库存流转速度较慢，成本价格波动较大的情况。
-                            //数据来源可以是多种多样的，例如：
-                            //采购价格：从供应商处购买产品或物品时的价格。
-                            //生产成本：自行生产产品时的成本，包括原材料、人工和间接费用等。
-                            //市场价格：参考市场上类似产品或物品的价格。
-
                             // CommService.CostCalculations.CostCalculation(_appContext, inv, child.TransactionPrice);
-
                             //inv.Inv_Cost = child.TransactionPrice;//这里需要计算，根据系统设置中的算法计算。
                             //inv.CostFIFO = child.TransactionPrice;
                             //inv.CostMonthlyWA = child.TransactionPrice;
                             //inv.CostMovingWA = child.TransactionPrice;
-
                             inv.Inv_SubtotalCostMoney = inv.Inv_Cost * inv.Quantity;
                             inv.LatestStorageTime = System.DateTime.Now;
 
@@ -287,7 +285,9 @@ namespace RUINORERP.Business
 
                         if (invMaterialsUpdateList.Count > 0)
                         {
-                            int invMaterialsCounter = await _unitOfWorkManage.GetDbClient().Updateable(invMaterialsUpdateList).ExecuteCommandAsync();
+                            int invMaterialsCounter = await _unitOfWorkManage.GetDbClient().Updateable(invMaterialsUpdateList)
+                                .UpdateColumns(t => new { t.Quantity,t.LatestStorageTime })
+                                .ExecuteCommandAsync();
                             if (invMaterialsCounter == 0)
                             {
                                 _unitOfWorkManage.RollbackTran();
@@ -296,7 +296,9 @@ namespace RUINORERP.Business
                         }
 
                     }
+
                 }
+
 
                 AuthorizeController authorizeController = _appContext.GetRequiredService<AuthorizeController>();
                 if (authorizeController.EnableFinancialModule())
@@ -536,16 +538,7 @@ namespace RUINORERP.Business
                                 inv.Quantity = inv.Quantity + child.Quantity; //翻新用的耗材这里反审就是还回去。用加
                                 BusinessHelper.Instance.EditEntity(inv);
                             }
-                            /*
-                          直接输入成本：在录入库存记录时，直接输入该产品或物品的成本价格。这种方式适用于成本价格相对稳定或容易确定的情况。
-                         平均成本法：通过计算一段时间内该产品或物品的平均成本来确定成本价格。这种方法适用于成本价格随时间波动的情况，可以更准确地反映实际成本。
-                         先进先出法（FIFO）：按照先入库的产品先出库的原则，计算库存成本。这种方法适用于库存流转速度较快，成本价格相对稳定的情况。
-                         后进先出法（LIFO）：按照后入库的产品先出库的原则，计算库存成本。这种方法适用于库存流转速度较慢，成本价格波动较大的情况。
-                         数据来源可以是多种多样的，例如：
-                         采购价格：从供应商处购买产品或物品时的价格。
-                         生产成本：自行生产产品时的成本，包括原材料、人工和间接费用等。
-                         市场价格：参考市场上类似产品或物品的价格。
-                          */
+                       
                             //inv.Inv_Cost = 0;//这里需要计算，根据系统设置中的算法计算。
                             inv.Inv_SubtotalCostMoney = inv.Inv_Cost * inv.Quantity;
                             inv.LatestStorageTime = System.DateTime.Now;
@@ -565,15 +558,14 @@ namespace RUINORERP.Business
                     //2024-4-15思路更新:如果销售订单中有相同的产品的多行情况。时 如订单: A 5PCS  A2PCS  ,出库也可以多行，A 2,A3, A2 按订单循环
                     //回写订单退回数量 反审，就是恢复当前的数量 （变化的是上面的 退回数量）这里只是求和 保存回去？
 
-                    List<tb_SaleOutDetail> outDetailsList = new List<tb_SaleOutDetail>();
-                    outDetailsList.AddRange(entity.tb_saleout.tb_SaleOutDetails);
+                    List<tb_SaleOutReDetail> outReDetailsList = new List<tb_SaleOutReDetail>();
+                    outReDetailsList.AddRange(entity.tb_SaleOutReDetails);
 
                     for (int i = 0; i < entity.tb_saleout.tb_saleorder.tb_SaleOrderDetails.Count; i++)
                     {
                         tb_SaleOrderDetail orderDetail = entity.tb_saleout.tb_saleorder.tb_SaleOrderDetails[i];
-                        var totalReturnedQty = outDetailsList.Where(c => c.ProdDetailID == orderDetail.ProdDetailID
-                        && c.Location_ID == orderDetail.Location_ID && c.SaleOrderDetail_ID == orderDetail.SaleOrderDetail_ID
-                        ).ToList().Sum(c => c.TotalReturnedQty);
+                        var totalReturnedQty = outReDetailsList.Where(c => c.ProdDetailID == orderDetail.ProdDetailID
+                        && c.Location_ID == orderDetail.Location_ID).ToList().Sum(c => c.Quantity);
                         //没有退回
                         if (totalReturnedQty == 0)
                         {
@@ -585,7 +577,6 @@ namespace RUINORERP.Business
                         if (orderDetail.TotalReturnedQty < 0)
                         {
                             _unitOfWorkManage.RollbackTran();
-                            tb_ProdDetail ProdDetail = BizCacheHelper.Instance.GetEntity<tb_ProdDetail>(orderDetail.ProdDetailID);
                             rrs.ErrorMsg = $"销售退回单反审核时，对应销售订单：{entity.tb_saleout.tb_saleorder.SOrderNo}中，明细退回总数量不能小于0！请检查数据后重试！";
                             rrs.Succeeded = false;
                             return rrs;
@@ -641,13 +632,7 @@ namespace RUINORERP.Business
                         }
                         await _unitOfWorkManage.GetDbClient().Updateable(entity.tb_saleout.tb_SaleOutDetails).UpdateColumns(t => new { t.TotalReturnedQty }).ExecuteCommandAsync();
 
-                        #region
-
-
-
-
-
-                        #endregion
+                    
                     }
 
                     //销售出库单，如果来自于销售订单，则要把出库数量累加到订单中的已交数量 并且如果数量够则自动结案

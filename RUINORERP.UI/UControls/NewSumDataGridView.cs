@@ -1682,7 +1682,7 @@ namespace RUINORERP.UI.UControls
                 {
                     if (SumColumns == null || SumColumns.Length == 0)
                     {
-                        MessageBox.Show("统计列的属性，需要在数据源之前赋值！", "控件提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        //MessageBox.Show("统计列的属性，需要在数据源之前赋值！", "控件提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     }
                     else
                     {

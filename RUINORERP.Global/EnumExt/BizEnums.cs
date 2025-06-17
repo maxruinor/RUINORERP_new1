@@ -520,11 +520,11 @@ var description = typeof(BoxRuleBasis)
 
     /// <summary>
     /// 盘点方式
+    /// 一般盘点 在2025-06-14前 值是0 要改一下数据库内容。
     /// </summary>
     public enum CheckMode
     {
-        一般盘点 = 0,
-        //日常盘点 = 1,
+        一般盘点 = 1,
         期初盘点 = 2,
     }
 

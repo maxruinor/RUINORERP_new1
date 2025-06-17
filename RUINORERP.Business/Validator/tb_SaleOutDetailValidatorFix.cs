@@ -23,12 +23,12 @@ namespace RUINORERP.Business
     /// </summary>
     public partial class tb_SaleOutDetailValidator : BaseValidatorGeneric<tb_SaleOutDetail>
     {
-       public override void Initialize()
-       {
-           // 这里添加额外的初始化代码
-           base.RuleFor(x => x.Quantity).GreaterThan(0).WithMessage("明细中，数量：要大于零。");
+        public override void Initialize()
+        {
+            // 这里添加额外的初始化代码
+            base.RuleFor(x => x.Quantity).GreaterThan(0).WithMessage("明细中，数量：要大于零。");
             RuleFor(x => x.TransactionPrice * x.Quantity).GreaterThanOrEqualTo(x => x.SubtotalTransAmount).WithMessage("明细中，成交小计：要大于等于成交价*数量。");
-            RuleFor(x => x.Cost * x.Quantity).Equal(x => x.SubtotalCostAmount).WithMessage("明细中，成本小计：要等于成本价*数量。");
+            RuleFor(x => (x.Cost + x.CustomizedCost) * x.Quantity).Equal(x => x.SubtotalCostAmount).WithMessage("明细中，成本小计：要等于（成本价+定制成本）*数量。");
         }
     }
 }

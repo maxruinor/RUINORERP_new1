@@ -278,7 +278,7 @@ namespace RUINORERP.UI.FM
                 {
                     if (entity.SourceBillId.HasValue && entity.SourceBillId.Value > 0 && s2.PropertyName == entity.GetPropertyName<tb_FM_PriceAdjustment>(c => c.SourceBillId))
                     {
-                        var newEntity = await ctr.CreatePriceAdjustment(PaymentType, entity.SourceBillId.Value, entity.AdjustNo);
+                        var newEntity = await ctr.BuildPriceAdjustment(PaymentType, entity.SourceBillId.Value, entity.AdjustNo);
                         if (newEntity != null)
                         {
                             BindData(newEntity, actionStatus: ActionStatus.无操作);

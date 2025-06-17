@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/13/2024 18:44:37
+// 时间：06/14/2025 11:15:27
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -49,10 +49,10 @@ namespace RUINORERP.Model.QueryDto
 
         private long _ProdDetailID;
         /// <summary>
-        /// 
+        /// 产品
         /// </summary>
-        [AdvQueryAttribute(ColName = "ProdDetailID",ColDesc = "")]
-        [SugarColumn(ColumnDataType = "bigint",SqlParameterDbType ="Int64",ColumnName = "ProdDetailID",IsNullable = false,ColumnDescription = "" )]
+        [AdvQueryAttribute(ColName = "ProdDetailID",ColDesc = "产品")]
+        [SugarColumn(ColumnDataType = "bigint",SqlParameterDbType ="Int64",ColumnName = "ProdDetailID",IsNullable = false,ColumnDescription = "产品" )]
         [FKRelationAttribute("tb_ProdDetail","ProdDetailID")]
         public long ProdDetailID 
         { 
@@ -75,6 +75,19 @@ namespace RUINORERP.Model.QueryDto
         }
      
 
+        private string _property;
+        /// <summary>
+        /// 属性
+        /// </summary>
+        [AdvQueryAttribute(ColName = "property",ColDesc = "属性")]
+        [SugarColumn(ColumnDataType = "varchar",SqlParameterDbType ="String",ColumnName = "property",Length=255,IsNullable = true,ColumnDescription = "属性" )]
+        public string property 
+        { 
+            get{return _property;}
+            set{SetProperty(ref _property, value);}
+        }
+     
+
         private decimal _Cost= ((0));
         /// <summary>
         /// 成本
@@ -85,6 +98,32 @@ namespace RUINORERP.Model.QueryDto
         { 
             get{return _Cost;}
             set{SetProperty(ref _Cost, value);}
+        }
+     
+
+        private decimal _TaxRate= ((0));
+        /// <summary>
+        /// 税率
+        /// </summary>
+        [AdvQueryAttribute(ColName = "TaxRate",ColDesc = "税率")]
+        [SugarColumn(ColumnDataType = "decimal",SqlParameterDbType ="Decimal",ColumnName = "TaxRate",IsNullable = false,ColumnDescription = "税率" )]
+        public decimal TaxRate 
+        { 
+            get{return _TaxRate;}
+            set{SetProperty(ref _TaxRate, value);}
+        }
+     
+
+        private decimal _UntaxedCost= ((0));
+        /// <summary>
+        /// 未税单价
+        /// </summary>
+        [AdvQueryAttribute(ColName = "UntaxedCost",ColDesc = "未税单价")]
+        [SugarColumn(ColumnDataType = "money",SqlParameterDbType ="Decimal",ColumnName = "UntaxedCost",IsNullable = false,ColumnDescription = "未税单价" )]
+        public decimal UntaxedCost 
+        { 
+            get{return _UntaxedCost;}
+            set{SetProperty(ref _UntaxedCost, value);}
         }
      
 
@@ -176,19 +215,6 @@ namespace RUINORERP.Model.QueryDto
         { 
             get{return _Notes;}
             set{SetProperty(ref _Notes, value);}
-        }
-     
-
-        private string _property;
-        /// <summary>
-        /// 属性
-        /// </summary>
-        [AdvQueryAttribute(ColName = "property",ColDesc = "属性")]
-        [SugarColumn(ColumnDataType = "varchar",SqlParameterDbType ="String",ColumnName = "property",Length=255,IsNullable = true,ColumnDescription = "属性" )]
-        public string property 
-        { 
-            get{return _property;}
-            set{SetProperty(ref _property, value);}
         }
 
 

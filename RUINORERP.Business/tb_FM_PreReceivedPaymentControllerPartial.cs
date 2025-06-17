@@ -67,27 +67,49 @@ namespace RUINORERP.Business
 
                     return rmrs;
                 }
+
                 var paymentRecordController = _appContext.GetRequiredService<tb_FM_PaymentRecordController<tb_FM_PaymentRecord>>();
                 // 开启事务，保证数据一致性
                 _unitOfWorkManage.BeginTran();
 
 
                 //注意，反审 将对应的预付生成的收款单，只有收款单没有审核前，可以删除
-                 //删除
-                 if (entity.ReceivePaymentType == (int)ReceivePaymentType.收款)
-                 {
-                     var list = await _appContext.Db.Queryable<tb_FM_PaymentRecord>()
-                                   .Where(c => (c.PaymentStatus == (long)PaymentStatus.草稿 || c.PaymentStatus == (long)PaymentStatus.待审核)
-                                   && c.tb_FM_PaymentRecordDetails.Any(d => d.SourceBilllId == entity.PreRPID 
-                                   && d.SourceBizType == (int)BizType.预收款单))
-                                   .ToListAsync();
-                 }
-                 else
-                 {
-                     await _appContext.Db.Deleteable<tb_FM_PaymentRecord>()
-                         .Where(c => (c.PaymentStatus == (long)PaymentStatus.草稿 || c.PaymentStatus == (long)PaymentStatus.待审核) 
-                         && c.tb_FM_PaymentRecordDetails.Any(d => d.SourceBilllId == entity.PreRPID && d.SourceBizType == (int)BizType.预付款单)).ExecuteCommandAsync();
-                 }
+                //不能直接删除上级。要让对应的人员自己删除。不然不清楚。逻辑也不对。只能通过判断
+                var PaymentRecordlist = await _appContext.Db.Queryable<tb_FM_PaymentRecord>()
+                            // .Where(c => (c.PaymentStatus == (long)PaymentStatus.草稿 || c.PaymentStatus == (long)PaymentStatus.待审核))
+                            .Where(c => c.tb_FM_PaymentRecordDetails.Any(d => d.SourceBilllId == entity.PreRPID
+                              && d.SourceBizType == (int)BizType.预收款单))
+                              .ToListAsync();
+                if (PaymentRecordlist != null&&PaymentRecordlist.Count > 0)
+                {
+                    //判断是否能反审? 如果出库是草稿，订单反审 修改后。出库再提交 审核。所以 出库审核要核对订单数据。
+                    if ((PaymentRecordlist.Any(c => c.PaymentStatus == (int)PaymentStatus.已支付 || c.PaymentStatus == (int)PaymentStatus.已关闭)
+                        && PaymentRecordlist.Any(c => c.ApprovalStatus == (int)ApprovalStatus.已审核)))
+                    {
+                        rmrs.ErrorMsg = "存在已确认或已完结，或已审核的销售出库单，不能反审核,请联系管理员，或作退回处理。";
+                        rmrs.Succeeded = false;
+                        return rmrs;
+                    }
+
+                }
+
+               
+
+
+                //if (entity.ReceivePaymentType == (int)ReceivePaymentType.收款)
+                //{
+                //    var list = await _appContext.Db.Queryable<tb_FM_PaymentRecord>()
+                //                  .Where(c => (c.PaymentStatus == (long)PaymentStatus.草稿 || c.PaymentStatus == (long)PaymentStatus.待审核)
+                //                  && c.tb_FM_PaymentRecordDetails.Any(d => d.SourceBilllId == entity.PreRPID
+                //                  && d.SourceBizType == (int)BizType.预收款单))
+                //                  .ToListAsync();
+                //}
+                //else
+                //{
+                //    await _appContext.Db.Deleteable<tb_FM_PaymentRecord>()
+                //        .Where(c => (c.PaymentStatus == (long)PaymentStatus.草稿 || c.PaymentStatus == (long)PaymentStatus.待审核)
+                //        && c.tb_FM_PaymentRecordDetails.Any(d => d.SourceBilllId == entity.PreRPID && d.SourceBizType == (int)BizType.预付款单)).ExecuteCommandAsync();
+                //}
 
 
                 entity.PrePaymentStatus = (long)PrePaymentStatus.草稿;
@@ -130,12 +152,49 @@ namespace RUINORERP.Business
             tb_FM_PreReceivedPayment entity = ObjectEntity as tb_FM_PreReceivedPayment;
             try
             {
+                if (entity.PrePaymentStatus != (long)PrePaymentStatus.草稿 && entity.PrePaymentStatus != (long)PrePaymentStatus.待审核)
+                {
+                    rmrs.Succeeded = false;
+                    rmrs.ErrorMsg = $"预{((ReceivePaymentType)entity.ReceivePaymentType).ToString()}单{entity.PreRPNO}，状态为【{((PrePaymentStatus)entity.PrePaymentStatus).ToString()}】\r\n请确认状态为【草稿】或【待审核】才可以审核。";
+
+                    if (_appContext.SysConfig.ShowDebugInfo)
+                    {
+                        _logger.LogInformation(rmrs.ErrorMsg);
+                    }
+
+                    return rmrs;
+                }
+
+                var paymentController = _appContext.GetRequiredService<tb_FM_PaymentRecordController<tb_FM_PaymentRecord>>();
+
+                //一个预收付款，可以多次收付款？ 不支持太复杂了
+
+                //var records = _unitOfWorkManage.GetDbClient().Queryable<tb_FM_PaymentRecordDetail>()
+                //    .Includes(c => c.tb_fm_paymentrecord)
+                //    .Where(c => c.SourceBizType == (int)BizType.预收款单 && c.SourceBilllId == entity.PreRPID)
+                //    .Where(c => c.tb_fm_paymentrecord.ApprovalStatus == (int)ApprovalStatus.已审核
+                //    && c.tb_fm_paymentrecord.ApprovalResults.HasValue
+                //    && c.tb_fm_paymentrecord.ApprovalResults.Value
+                //    && (c.tb_fm_paymentrecord.PaymentStatus == (long)PaymentStatus.已支付 || c.tb_fm_paymentrecord.PaymentStatus == (long)PaymentStatus.已核销))
+                //    .ToList();
+                //if (records.Count > 0)
+                //{
+                //    rmrs.Succeeded = false;
+                //    rmrs.ErrorMsg = $" 预{((ReceivePaymentType)entity.ReceivePaymentType).ToString()}单{entity.PreRPNO},已生成收款单。";
+                //    if (_appContext.SysConfig.ShowDebugInfo)
+                //    {
+                //        _logger.LogInformation(rmrs.ErrorMsg);
+                //    }
+                //    return rmrs;
+                //}
+
                 // 开启事务，保证数据一致性
                 _unitOfWorkManage.BeginTran();
 
-                tb_FM_PaymentRecordController<tb_FM_PaymentRecord> settlementController = _appContext.GetRequiredService<tb_FM_PaymentRecordController<tb_FM_PaymentRecord>>();
-                tb_FM_PaymentRecord paymentRecord = await settlementController.CreatePaymentRecord(entity, false);
+                tb_FM_PaymentRecord paymentRecord = paymentController.BuildPaymentRecord(entity, false);
+                var rrs = await paymentController.BaseSaveOrUpdateWithChild<tb_FM_PaymentRecord>(paymentRecord, false);
 
+                //预收付款中
                 //确认收到款  应该是收款审核时 反写回来 成 【待核销】
                 //if (paymentRecord.PaymentId > 0)
                 //{
@@ -156,7 +215,6 @@ namespace RUINORERP.Business
             }
             catch (Exception ex)
             {
-
                 _unitOfWorkManage.RollbackTran();
                 _logger.Error(ex, "事务回滚" + ex.Message);
                 rmrs.ErrorMsg = ex.Message;
@@ -379,13 +437,13 @@ namespace RUINORERP.Business
 
 
                     //判断 能结案的 是确认审核过的。
-                    if (entitys[m].PrePaymentStatus != (long)PrePaymentStatus.已冲销 || !entitys[m].ApprovalResults.HasValue)
+                    if (entitys[m].PrePaymentStatus != (long)PrePaymentStatus.已关闭 || !entitys[m].ApprovalResults.HasValue)
                     {
                         //return false;
                         continue;
                     }
                     //这部分是否能提出到上一级公共部分？
-                    entitys[m].PrePaymentStatus = (long)PrePaymentStatus.已冲销;
+                    entitys[m].PrePaymentStatus = (long)PrePaymentStatus.已关闭;
                     BusinessHelper.Instance.EditEntity(entitys[m]);
                     //只更新指定列
                     var affectedRows = await _unitOfWorkManage.GetDbClient()

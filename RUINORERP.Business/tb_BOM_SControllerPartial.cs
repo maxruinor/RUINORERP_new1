@@ -24,6 +24,18 @@ using RUINORERP.Common.Helper;
 using RUINORERP.Extensions.Middlewares;
 using RUINORERP.Business.Security;
 using RUINORERP.Business.CommService;
+using RUINORERP.Global.EnumExt;
+using RUINORERP.Common.Extensions;
+using RUINORERP.IServices.BASE;
+using RUINORERP.Model.Context;
+using System.Linq;
+using AutoMapper;
+using RUINORERP.Business.FMService;
+using MapsterMapper;
+using IMapper = AutoMapper.IMapper;
+using System.Text;
+using System.Windows.Forms;
+
 
 namespace RUINORERP.Business
 {
@@ -133,12 +145,9 @@ namespace RUINORERP.Business
 
             try
             {
-                // 开启事务，保证数据一致性
-                _unitOfWorkManage.BeginTran();
+
                 tb_ProdDetailController<tb_ProdDetail> ctrDetail = _appContext.GetRequiredService<tb_ProdDetailController<tb_ProdDetail>>();
                 tb_BOM_SController<tb_BOM_S> ctrinv = _appContext.GetRequiredService<tb_BOM_SController<tb_BOM_S>>();
-                //  BillConverterFactory bcf = _appContext.GetRequiredService<BillConverterFactory>();
-
                 if (entity == null)
                 {
                     return rmrs;
@@ -154,6 +163,8 @@ namespace RUINORERP.Business
                         return rmrs;
                     }
                 }
+                // 开启事务，保证数据一致性
+                _unitOfWorkManage.BeginTran();
 
                 //更新产品表回写他的配方号
                 //entity.tb_proddetail.DataStatus = (int)DataStatus.完结;
@@ -167,7 +178,33 @@ namespace RUINORERP.Business
                     await ctrDetail.UpdateAsync(detail);
                 }
 
-                
+                //如果这个配方的母件，属性其它的配方子件。则同时要更新他对应的子件成本及配件总成本。
+                var PreviouslevelBomList = await _appContext.Db.Queryable<tb_BOM_S>()
+                                       .Includes(x => x.tb_BOM_SDetails)
+                                          .WhereIF(1 == 1, x => x.tb_BOM_SDetails.Any(z => z.ProdDetailID == entity.ProdDetailID))
+                                          .ToListAsync();
+                if (PreviouslevelBomList != null && PreviouslevelBomList.Count > 0)
+                {
+                    //更新配方明细的成本后，再汇总到主表并更新
+                    foreach (var bOM_S in PreviouslevelBomList)
+                    {
+                        foreach (var item in bOM_S.tb_BOM_SDetails)
+                        {
+                            if (item.ProdDetailID == entity.ProdDetailID)
+                            {
+                                //默认选择自产成本作为上一级的配方明细的单位成本
+                                item.UnitCost = entity.SelfProductionAllCosts;
+                                item.SubtotalUnitCost = item.UnitCost * item.UsedQty;
+                            }
+                        }
+                        bOM_S.TotalMaterialCost = bOM_S.tb_BOM_SDetails.Sum(c => c.SubtotalUnitCost);
+                        bOM_S.OutProductionAllCosts = bOM_S.TotalMaterialCost + bOM_S.TotalOutManuCost + bOM_S.OutApportionedCost;
+                        bOM_S.SelfProductionAllCosts = bOM_S.TotalMaterialCost + bOM_S.TotalSelfManuCost + bOM_S.SelfApportionedCost;
+                        await _unitOfWorkManage.GetDbClient().Updateable<tb_BOM_SDetail>(bOM_S.tb_BOM_SDetails).ExecuteCommandAsync();
+                    }
+
+                    await _unitOfWorkManage.GetDbClient().Updateable<tb_BOM_S>(PreviouslevelBomList).ExecuteCommandAsync();
+                }
 
                 //这部分是否能提出到上一级公共部分？
                 entity.DataStatus = (int)DataStatus.确认;

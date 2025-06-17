@@ -85,19 +85,19 @@ namespace RUINORERP.Business
                         }
 
                         inv = new tb_Inventory();
-                        if (child.Cost == 0)
+                        if (child.UntaxedCost == 0)
                         {
                             View_ProdDetail view_Prod = await _unitOfWorkManage.GetDbClient().Queryable<View_ProdDetail>().Where(c => c.ProdDetailID == child.ProdDetailID && c.Location_ID == entity.Location_ID).FirstAsync();
                             _unitOfWorkManage.RollbackTran();
-                            rmrs.ErrorMsg = $"{view_Prod.SKU}=> {view_Prod.CNName}\r\n【期初盘点】时，必须输入正确的成本价格。";
+                            rmrs.ErrorMsg = $"{view_Prod.SKU}=> {view_Prod.CNName}\r\n【期初盘点】时，必须输入正确的未税成本价格。";
                             return rmrs;
                         }
                         else
                         {
-                            inv.Inv_Cost = child.Cost;
-                            inv.Inv_AdvCost = child.Cost;
-                            inv.CostMovingWA = child.Cost;
-                            inv.CostFIFO = child.Cost;
+                            inv.Inv_Cost = child.UntaxedCost;
+                            inv.Inv_AdvCost = child.UntaxedCost;
+                            inv.CostMovingWA = child.UntaxedCost;
+                            inv.CostFIFO = child.UntaxedCost;
                         }
                         inv.Location_ID = entity.Location_ID;
                         inv.ProdDetailID = child.ProdDetailID;
@@ -127,7 +127,7 @@ namespace RUINORERP.Business
                     //并且其实盘点时只有数量大于0时才计算成本
                     if (CheckMode.期初盘点 == cm && child.DiffQty > 0)
                     {
-                        CommService.CostCalculations.CostCalculation(_appContext, inv, child.DiffQty, child.Cost);
+                        CommService.CostCalculations.CostCalculation(_appContext, inv, child.DiffQty, child.UntaxedCost);
                     }
                     //更新库存
                     if (entity.Adjust_Type == (int)Adjust_Type.全部)
@@ -180,9 +180,9 @@ namespace RUINORERP.Business
                 // 开启事务，保证数据一致性
                 _unitOfWorkManage.BeginTran();
 
-                 
 
-               
+
+
 
                 DbHelper<tb_Inventory> InvdbHelper = _appContext.GetRequiredService<DbHelper<tb_Inventory>>();
                 var Counter = await InvdbHelper.BaseDefaultAddElseUpdateAsync(invUpdateList);
@@ -191,7 +191,7 @@ namespace RUINORERP.Business
                     _logger.LogInformation($"{entity.CheckNo}审核时，更新库存结果为0行，请检查数据！");
                 }
 
-              
+
 
 
                 List<tb_Inventory> UpdateList = invUpdateList.Where(c => c.Inventory_ID > 0).ToList();
@@ -247,7 +247,7 @@ namespace RUINORERP.Business
 
             try
             {
- 
+
 
                 tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
                 //更新拟销售量减少
@@ -301,10 +301,9 @@ namespace RUINORERP.Business
                  生产成本：自行生产产品时的成本，包括原材料、人工和间接费用等。
                  市场价格：参考市场上类似产品或物品的价格。
                   */
-                    inv.CostFIFO = child.Cost;
-                    inv.CostMonthlyWA = child.Cost;
-                    inv.CostMovingWA = child.Cost;
-                    inv.Inv_Cost = child.Cost;//这里需要计算，根据系统设置中的算法计算。
+
+                    CommService.CostCalculations.AntiCostCalculation(_appContext, inv, child.DiffQty, child.UntaxedCost);
+                    //inv.Inv_Cost = child.UntaxedCost;//这里需要计算，根据系统设置中的算法计算。
                     inv.ProdDetailID = child.ProdDetailID;
                     inv.Rack_ID = child.Rack_ID;
                     inv.Inv_SubtotalCostMoney = inv.Inv_Cost * inv.Quantity;

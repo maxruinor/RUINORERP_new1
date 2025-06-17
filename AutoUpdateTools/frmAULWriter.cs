@@ -830,7 +830,7 @@ namespace AULWriter
             {
                 HandleSuccessfulCompletion(e.Result as UpdateXmlResult);
             }
-            
+
             AppendLog("检测到差异文件个数为: " + DiffFileList.Count);
         }
 
@@ -839,6 +839,12 @@ namespace AULWriter
         {
 
             XDocument document = result?.Document;
+            if (document == null)
+            {
+                MessageBox.Show("配置文件读取失败，请检查更新服务器是否能正常访问。");
+                return;
+            }
+
             // 在保存文档前调用
             UpdateLastUpdateTime(document);
 

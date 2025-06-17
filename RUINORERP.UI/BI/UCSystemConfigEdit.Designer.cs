@@ -29,6 +29,8 @@
         private void InitializeComponent()
         {
             this.kryptonPanel1 = new Krypton.Toolkit.KryptonPanel();
+            this.cmbFreightAllocationRules = new Krypton.Toolkit.KryptonComboBox();
+            this.kryptonLabel10 = new Krypton.Toolkit.KryptonLabel();
             this.lblEnableVoucherModule = new Krypton.Toolkit.KryptonLabel();
             this.chkEnableVoucherModule = new Krypton.Toolkit.KryptonCheckBox();
             this.lblEnableContractModule = new Krypton.Toolkit.KryptonLabel();
@@ -77,13 +79,12 @@
             this.chkDepartBizLimited = new Krypton.Toolkit.KryptonCheckBox();
             this.lblPurchsaeBizLimited = new Krypton.Toolkit.KryptonLabel();
             this.chkPurchsaeBizLimited = new Krypton.Toolkit.KryptonCheckBox();
-            this.cmbFreightAllocationRules = new Krypton.Toolkit.KryptonComboBox();
-            this.kryptonLabel10 = new Krypton.Toolkit.KryptonLabel();
+            this.kryptonLabel11 = new Krypton.Toolkit.KryptonLabel();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel1)).BeginInit();
             this.kryptonPanel1.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.cmbCostCalculationMethod)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmbFreightAllocationRules)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.cmbCostCalculationMethod)).BeginInit();
             this.SuspendLayout();
             // 
             // kryptonPanel1
@@ -119,6 +120,7 @@
             this.kryptonPanel1.Controls.Add(this.kryptonLabel1);
             this.kryptonPanel1.Controls.Add(this.chkAutoAddZero);
             this.kryptonPanel1.Controls.Add(this.cmbCostCalculationMethod);
+            this.kryptonPanel1.Controls.Add(this.kryptonLabel11);
             this.kryptonPanel1.Controls.Add(this.lblCostCalculationMethod);
             this.kryptonPanel1.Controls.Add(this.lblQtyDataPrecision);
             this.kryptonPanel1.Controls.Add(this.txtQtyDataPrecision);
@@ -143,6 +145,23 @@
             this.kryptonPanel1.Name = "kryptonPanel1";
             this.kryptonPanel1.Size = new System.Drawing.Size(721, 607);
             this.kryptonPanel1.TabIndex = 0;
+            // 
+            // cmbFreightAllocationRules
+            // 
+            this.cmbFreightAllocationRules.DropDownWidth = 181;
+            this.cmbFreightAllocationRules.IntegralHeight = false;
+            this.cmbFreightAllocationRules.Location = new System.Drawing.Point(184, 411);
+            this.cmbFreightAllocationRules.Name = "cmbFreightAllocationRules";
+            this.cmbFreightAllocationRules.Size = new System.Drawing.Size(181, 21);
+            this.cmbFreightAllocationRules.TabIndex = 200;
+            // 
+            // kryptonLabel10
+            // 
+            this.kryptonLabel10.Location = new System.Drawing.Point(90, 411);
+            this.kryptonLabel10.Name = "kryptonLabel10";
+            this.kryptonLabel10.Size = new System.Drawing.Size(88, 20);
+            this.kryptonLabel10.TabIndex = 199;
+            this.kryptonLabel10.Values.Text = "运费分摊规则";
             // 
             // lblEnableVoucherModule
             // 
@@ -541,22 +560,14 @@
             this.chkPurchsaeBizLimited.TabIndex = 19;
             this.chkPurchsaeBizLimited.Values.Text = "";
             // 
-            // cmbFreightAllocationRules
+            // kryptonLabel11
             // 
-            this.cmbFreightAllocationRules.DropDownWidth = 181;
-            this.cmbFreightAllocationRules.IntegralHeight = false;
-            this.cmbFreightAllocationRules.Location = new System.Drawing.Point(184, 411);
-            this.cmbFreightAllocationRules.Name = "cmbFreightAllocationRules";
-            this.cmbFreightAllocationRules.Size = new System.Drawing.Size(181, 21);
-            this.cmbFreightAllocationRules.TabIndex = 200;
-            // 
-            // kryptonLabel10
-            // 
-            this.kryptonLabel10.Location = new System.Drawing.Point(90, 411);
-            this.kryptonLabel10.Name = "kryptonLabel10";
-            this.kryptonLabel10.Size = new System.Drawing.Size(88, 20);
-            this.kryptonLabel10.TabIndex = 199;
-            this.kryptonLabel10.Values.Text = "运费分摊规则";
+            this.kryptonLabel11.LabelStyle = Krypton.Toolkit.LabelStyle.TitleControl;
+            this.kryptonLabel11.Location = new System.Drawing.Point(60, 463);
+            this.kryptonLabel11.Name = "kryptonLabel11";
+            this.kryptonLabel11.Size = new System.Drawing.Size(556, 29);
+            this.kryptonLabel11.TabIndex = 28;
+            this.kryptonLabel11.Values.Text = "根据会计准则，系统自动按未税价核算成本，含税价仅用于参考";
             // 
             // UCSystemConfigEdit
             // 
@@ -571,8 +582,8 @@
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel1)).EndInit();
             this.kryptonPanel1.ResumeLayout(false);
             this.kryptonPanel1.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.cmbCostCalculationMethod)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmbFreightAllocationRules)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.cmbCostCalculationMethod)).EndInit();
             this.ResumeLayout(false);
 
         }
@@ -630,5 +641,6 @@
         private Krypton.Toolkit.KryptonCheckBox chkEnableFinancialModule;
         private Krypton.Toolkit.KryptonComboBox cmbFreightAllocationRules;
         private Krypton.Toolkit.KryptonLabel kryptonLabel10;
+        private Krypton.Toolkit.KryptonLabel kryptonLabel11;
     }
 }

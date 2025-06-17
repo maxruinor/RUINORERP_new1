@@ -710,12 +710,25 @@ namespace RUINORERP.UI.PSI.SAL
                    {
                        if (c.ProdDetailID > 0)
                        {
-                           //if (c.SubtotalCostAmount != (c.Cost + c.CustomizedCost) * c.Quantity)
-                           //{
-                           //    c.SubtotalCostAmount = (c.Cost + c.CustomizedCost) * c.Quantity;
-                           //}
-                           //c.SubtotalTransAmount = c.TransactionPrice * c.Quantity;
-                           //c.SubtotalTaxAmount = c.SubtotalTransAmount / (1 + c.TaxRate) * c.TaxRate;
+                           if (c.SubtotalCostAmount != (c.Cost + c.CustomizedCost) * c.Quantity)
+                           {
+                               c.SubtotalCostAmount = (c.Cost + c.CustomizedCost) * c.Quantity;
+                           }
+
+
+                           if (c.SubtotalTransAmount != c.TransactionPrice * c.Quantity)
+                           {
+                               c.SubtotalTransAmount = c.TransactionPrice * c.Quantity;
+                           }
+
+                           decimal tempSubTaxAmount = c.SubtotalTransAmount / (1 + c.TaxRate) * c.TaxRate;
+                           decimal diffpirce = Math.Abs(tempSubTaxAmount - c.SubtotalTaxAmount);
+                           if (diffpirce > 0.01m)
+                           {
+                               c.SubtotalTaxAmount = c.SubtotalTransAmount / (1 + c.TaxRate) * c.TaxRate;
+                               c.SubtotalTaxAmount = c.SubtotalTaxAmount.ToRoundDecimalPlaces(MainForm.Instance.authorizeController.GetMoneyDataPrecision());
+                           }
+
                            if (c.CustomizedCost > 0)
                            {
                                EditEntity.IsCustomizedOrder = true;

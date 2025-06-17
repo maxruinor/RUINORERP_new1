@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace RUINORERP.Business.CommService
@@ -66,6 +67,18 @@ namespace RUINORERP.Business.CommService
         }
           */
 
+        /// <summary>
+        /// 移动加权平均成本计算，要以未税成本为基准
+        /// </summary>
+        /// <param name="_appContext"></param>
+        /// <param name="inv"></param>
+        /// <param name="currentQty"></param>
+        /// <param name="UntaxedUnitPrice"></param>
+        /// <param name="UntaxedShippCost"></param>
+        /// <exception cref="ArgumentException"></exception>
+        /// <exception cref="InvalidOperationException"></exception>
+        /// <exception cref="DivideByZeroException"></exception>
+        /// <exception cref="NotImplementedException"></exception>
         public static void CostCalculation(ApplicationContext _appContext, tb_Inventory inv, int currentQty,
             decimal UntaxedUnitPrice, decimal UntaxedShippCost = 0)
         {
@@ -84,6 +97,8 @@ namespace RUINORERP.Business.CommService
             {
                 throw new InvalidOperationException($"库存数量不能为负（操作后数量：{newQty}）");
             }
+
+
             switch (m)
             {
                 case 库存成本计算方式.先进先出法:
@@ -109,29 +124,15 @@ namespace RUINORERP.Business.CommService
                     // 分母异常处理（避免除零或负数导致的不合理计算）
                     if (totalQty == 0)
                     {
-                        // 数量归零时保留原成本（如果系统允许）
-                        if (allowNegativeInventory && inv.Inv_Cost > 0)
-                        {
-                            // 保留原成本值
-                        }
-                        else
-                        {
-                            throw new DivideByZeroException("移动加权平均计算时总数量不能为0");
-                        }
+                        // 数量归零时保留 前后成本选最大的，保守防御性设置成本。利润可少。不真实亏。
+                        //出库金额ForeignTotalAmount和 预付金额prePayments[i].ForeignBalanceAmount 比较
+                        var SelectCost = Math.Max(inv.Inv_Cost, UntaxedUnitPrice);
+                        //因为特殊情况，前面系统中出现了负数。如果入库数量与原来的和为0，则取最新成本为结果。
+                        inv.Inv_Cost = SelectCost;
+                        return;
                     }
                     else
                     {
-                        //if (totalQty < 0)
-                        //{
-                        //    // 当总数量为负时，检查是否因负库存导致
-                        //    if (inv.Quantity < 0 && Math.Abs(inv.Quantity) > currentQty)
-                        //    {
-                        //        throw new InvalidOperationException("移动加权平均计算时，现有负库存数量超过当前操作数量，无法正确计算成本");
-                        //    }
-                        //    // 其他情况（如currentQty为负且绝对值过大）
-                        //    throw new InvalidOperationException($"移动加权平均计算时总数量不能为负（当前总数量：{totalQty}）");
-                        //}
-
                         // 核心计算公式：
                         // 新成本 = (原库存金额 + 新入库金额 + 运费) / 新库存总量
                         decimal originalAmount = inv.Inv_Cost * inv.Quantity;
@@ -142,7 +143,7 @@ namespace RUINORERP.Business.CommService
                         inv.Inv_Cost = inv.CostMovingWA;
 
                     }
-                    
+
                     break;
 
                 case 库存成本计算方式.实际成本法:
@@ -159,7 +160,7 @@ namespace RUINORERP.Business.CommService
             {
                 throw new InvalidOperationException($"计算得到负库存成本（成本值：{inv.Inv_Cost}）");
             }
-     
+
         }
         public static void AntiCostCalculation(ApplicationContext _appContext, tb_Inventory inv, int currentQty, decimal currentCostPrice)
         {
@@ -232,7 +233,7 @@ namespace RUINORERP.Business.CommService
                     //    throw new InvalidOperationException($"移动加权平均反审核分母不能为负（当前分母：{denominator}）");
                     //}
 
- 
+
                     break;
 
                 case 库存成本计算方式.实际成本法:

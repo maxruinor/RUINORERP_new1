@@ -416,7 +416,27 @@ namespace RUINORERP.Model
             }
         }
 
-          
+
+        private decimal? _UntaxedUnitPrice;
+
+
+        /// <summary>
+        /// 未税单价
+        /// </summary>
+
+        [AdvQueryAttribute(ColName = "UntaxedUnitPrice", ColDesc = "未税单价")]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType = "Decimal", ColumnName = "UntaxedUnitPrice", IsNullable = true, ColumnDescription = "未税单价")]
+        [Display(Name = "未税单价")]
+        public decimal? UntaxedUnitPrice
+        {
+            get { return _UntaxedUnitPrice; }
+            set
+            {
+                SetProperty(ref _UntaxedUnitPrice, value);
+            }
+        }
+
+
         private decimal? _TaxRate;
 
 

@@ -38,6 +38,7 @@ namespace RUINORERP.UI.PSI.INV
             this.lblReview = new Krypton.Toolkit.KryptonLabel();
             this.lblLocation_ID = new Krypton.Toolkit.KryptonLabel();
             this.cmbLocation_ID = new Krypton.Toolkit.KryptonComboBox();
+            this.lblCostTips = new Krypton.Toolkit.KryptonLabel();
             this.btnImportCheckProd = new Krypton.Toolkit.KryptonButton();
             this.kryptonLabel3 = new Krypton.Toolkit.KryptonLabel();
             this.dtpCarryingDate = new Krypton.Toolkit.KryptonDateTimePicker();
@@ -58,6 +59,7 @@ namespace RUINORERP.UI.PSI.INV
             this.lbl盘点单 = new Krypton.Toolkit.KryptonLabel();
             this.SplitContainerGridAndSub = new Krypton.Toolkit.KryptonSplitContainer();
             this.grid1 = new SourceGrid.Grid();
+            this.txtDiffTotalQty = new Krypton.Toolkit.KryptonTextBox();
             this.lblDiffTotalQty = new Krypton.Toolkit.KryptonLabel();
             this.txtCheckTotalQty = new Krypton.Toolkit.KryptonTextBox();
             this.txtCheckTotalAmount = new Krypton.Toolkit.KryptonTextBox();
@@ -69,7 +71,6 @@ namespace RUINORERP.UI.PSI.INV
             this.txtCarryingTotalAmount = new Krypton.Toolkit.KryptonTextBox();
             this.lblCarryingTotalAmount = new Krypton.Toolkit.KryptonLabel();
             this.lblCarryingTotalQty = new Krypton.Toolkit.KryptonLabel();
-            this.txtDiffTotalQty = new Krypton.Toolkit.KryptonTextBox();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceSub)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1)).BeginInit();
@@ -105,6 +106,7 @@ namespace RUINORERP.UI.PSI.INV
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.lblReview);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.lblLocation_ID);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.cmbLocation_ID);
+            this.kryptonSplitContainer1.Panel1.Controls.Add(this.lblCostTips);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.btnImportCheckProd);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.kryptonLabel3);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.dtpCarryingDate);
@@ -127,8 +129,8 @@ namespace RUINORERP.UI.PSI.INV
             // kryptonSplitContainer1.Panel2
             // 
             this.kryptonSplitContainer1.Panel2.Controls.Add(this.SplitContainerGridAndSub);
-            this.kryptonSplitContainer1.Size = new System.Drawing.Size(927, 545);
-            this.kryptonSplitContainer1.SplitterDistance = 189;
+            this.kryptonSplitContainer1.Size = new System.Drawing.Size(1018, 695);
+            this.kryptonSplitContainer1.SplitterDistance = 241;
             this.kryptonSplitContainer1.TabIndex = 4;
             // 
             // lblDataStatus
@@ -178,6 +180,18 @@ namespace RUINORERP.UI.PSI.INV
             this.cmbLocation_ID.Size = new System.Drawing.Size(132, 21);
             this.cmbLocation_ID.TabIndex = 86;
             // 
+            // lblCostTips
+            // 
+            this.lblCostTips.LabelStyle = Krypton.Toolkit.LabelStyle.TitleControl;
+            this.lblCostTips.Location = new System.Drawing.Point(123, 219);
+            this.lblCostTips.Name = "lblCostTips";
+            this.lblCostTips.Size = new System.Drawing.Size(435, 21);
+            this.lblCostTips.StateCommon.ShortText.Color1 = System.Drawing.Color.Red;
+            this.lblCostTips.StateCommon.ShortText.Font = new System.Drawing.Font("宋体", 11F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.lblCostTips.TabIndex = 65;
+            this.lblCostTips.Values.Text = "根据会计准则，系统自动按未税价核算成本，含税价仅用于参考";
+            this.lblCostTips.Visible = false;
+            // 
             // btnImportCheckProd
             // 
             this.btnImportCheckProd.Location = new System.Drawing.Point(388, 98);
@@ -211,7 +225,6 @@ namespace RUINORERP.UI.PSI.INV
             this.cmbCheckMode.Name = "cmbCheckMode";
             this.cmbCheckMode.Size = new System.Drawing.Size(137, 21);
             this.cmbCheckMode.TabIndex = 79;
-            this.cmbCheckMode.SelectedIndexChanged += new System.EventHandler(this.cmbCheckMode_SelectedIndexChanged);
             // 
             // kryptonLabel2
             // 
@@ -268,7 +281,7 @@ namespace RUINORERP.UI.PSI.INV
             this.txtNotes.Location = new System.Drawing.Point(123, 127);
             this.txtNotes.Multiline = true;
             this.txtNotes.Name = "txtNotes";
-            this.txtNotes.Size = new System.Drawing.Size(661, 57);
+            this.txtNotes.Size = new System.Drawing.Size(661, 86);
             this.txtNotes.TabIndex = 58;
             // 
             // lblstatus
@@ -354,8 +367,8 @@ namespace RUINORERP.UI.PSI.INV
             this.SplitContainerGridAndSub.Panel2.Controls.Add(this.txtCarryingTotalAmount);
             this.SplitContainerGridAndSub.Panel2.Controls.Add(this.lblCarryingTotalAmount);
             this.SplitContainerGridAndSub.Panel2.Controls.Add(this.lblCarryingTotalQty);
-            this.SplitContainerGridAndSub.Size = new System.Drawing.Size(927, 351);
-            this.SplitContainerGridAndSub.SplitterDistance = 250;
+            this.SplitContainerGridAndSub.Size = new System.Drawing.Size(1018, 449);
+            this.SplitContainerGridAndSub.SplitterDistance = 357;
             this.SplitContainerGridAndSub.TabIndex = 2;
             // 
             // grid1
@@ -367,14 +380,21 @@ namespace RUINORERP.UI.PSI.INV
             this.grid1.Name = "grid1";
             this.grid1.OptimizeMode = SourceGrid.CellOptimizeMode.ForRows;
             this.grid1.SelectionMode = SourceGrid.GridSelectionMode.Cell;
-            this.grid1.Size = new System.Drawing.Size(927, 250);
+            this.grid1.Size = new System.Drawing.Size(1018, 357);
             this.grid1.TabIndex = 1;
             this.grid1.TabStop = true;
             this.grid1.ToolTipText = "";
             // 
+            // txtDiffTotalQty
+            // 
+            this.txtDiffTotalQty.Location = new System.Drawing.Point(684, 19);
+            this.txtDiffTotalQty.Name = "txtDiffTotalQty";
+            this.txtDiffTotalQty.Size = new System.Drawing.Size(131, 23);
+            this.txtDiffTotalQty.TabIndex = 72;
+            // 
             // lblDiffTotalQty
             // 
-            this.lblDiffTotalQty.Location = new System.Drawing.Point(579, 19);
+            this.lblDiffTotalQty.Location = new System.Drawing.Point(610, 20);
             this.lblDiffTotalQty.Name = "lblDiffTotalQty";
             this.lblDiffTotalQty.Size = new System.Drawing.Size(75, 20);
             this.lblDiffTotalQty.TabIndex = 69;
@@ -382,21 +402,21 @@ namespace RUINORERP.UI.PSI.INV
             // 
             // txtCheckTotalQty
             // 
-            this.txtCheckTotalQty.Location = new System.Drawing.Point(114, 18);
+            this.txtCheckTotalQty.Location = new System.Drawing.Point(145, 19);
             this.txtCheckTotalQty.Name = "txtCheckTotalQty";
             this.txtCheckTotalQty.Size = new System.Drawing.Size(122, 23);
             this.txtCheckTotalQty.TabIndex = 66;
             // 
             // txtCheckTotalAmount
             // 
-            this.txtCheckTotalAmount.Location = new System.Drawing.Point(114, 45);
+            this.txtCheckTotalAmount.Location = new System.Drawing.Point(145, 46);
             this.txtCheckTotalAmount.Name = "txtCheckTotalAmount";
             this.txtCheckTotalAmount.Size = new System.Drawing.Size(122, 23);
             this.txtCheckTotalAmount.TabIndex = 68;
             // 
             // lblCheckTotalAmount
             // 
-            this.lblCheckTotalAmount.Location = new System.Drawing.Point(41, 46);
+            this.lblCheckTotalAmount.Location = new System.Drawing.Point(72, 47);
             this.lblCheckTotalAmount.Name = "lblCheckTotalAmount";
             this.lblCheckTotalAmount.Size = new System.Drawing.Size(75, 20);
             this.lblCheckTotalAmount.TabIndex = 67;
@@ -404,7 +424,7 @@ namespace RUINORERP.UI.PSI.INV
             // 
             // lblCheckTotalQty
             // 
-            this.lblCheckTotalQty.Location = new System.Drawing.Point(41, 19);
+            this.lblCheckTotalQty.Location = new System.Drawing.Point(72, 20);
             this.lblCheckTotalQty.Name = "lblCheckTotalQty";
             this.lblCheckTotalQty.Size = new System.Drawing.Size(75, 20);
             this.lblCheckTotalQty.TabIndex = 65;
@@ -412,14 +432,14 @@ namespace RUINORERP.UI.PSI.INV
             // 
             // txtDiffTotalAmount
             // 
-            this.txtDiffTotalAmount.Location = new System.Drawing.Point(653, 45);
+            this.txtDiffTotalAmount.Location = new System.Drawing.Point(684, 46);
             this.txtDiffTotalAmount.Name = "txtDiffTotalAmount";
             this.txtDiffTotalAmount.Size = new System.Drawing.Size(131, 23);
             this.txtDiffTotalAmount.TabIndex = 64;
             // 
             // lblDiffAmount
             // 
-            this.lblDiffAmount.Location = new System.Drawing.Point(579, 46);
+            this.lblDiffAmount.Location = new System.Drawing.Point(610, 47);
             this.lblDiffAmount.Name = "lblDiffAmount";
             this.lblDiffAmount.Size = new System.Drawing.Size(75, 20);
             this.lblDiffAmount.TabIndex = 63;
@@ -427,21 +447,21 @@ namespace RUINORERP.UI.PSI.INV
             // 
             // txtCarryingTotalQty
             // 
-            this.txtCarryingTotalQty.Location = new System.Drawing.Point(361, 18);
+            this.txtCarryingTotalQty.Location = new System.Drawing.Point(392, 19);
             this.txtCarryingTotalQty.Name = "txtCarryingTotalQty";
             this.txtCarryingTotalQty.Size = new System.Drawing.Size(123, 23);
             this.txtCarryingTotalQty.TabIndex = 48;
             // 
             // txtCarryingTotalAmount
             // 
-            this.txtCarryingTotalAmount.Location = new System.Drawing.Point(361, 45);
+            this.txtCarryingTotalAmount.Location = new System.Drawing.Point(392, 46);
             this.txtCarryingTotalAmount.Name = "txtCarryingTotalAmount";
             this.txtCarryingTotalAmount.Size = new System.Drawing.Size(123, 23);
             this.txtCarryingTotalAmount.TabIndex = 50;
             // 
             // lblCarryingTotalAmount
             // 
-            this.lblCarryingTotalAmount.Location = new System.Drawing.Point(288, 46);
+            this.lblCarryingTotalAmount.Location = new System.Drawing.Point(319, 47);
             this.lblCarryingTotalAmount.Name = "lblCarryingTotalAmount";
             this.lblCarryingTotalAmount.Size = new System.Drawing.Size(75, 20);
             this.lblCarryingTotalAmount.TabIndex = 49;
@@ -449,18 +469,11 @@ namespace RUINORERP.UI.PSI.INV
             // 
             // lblCarryingTotalQty
             // 
-            this.lblCarryingTotalQty.Location = new System.Drawing.Point(288, 19);
+            this.lblCarryingTotalQty.Location = new System.Drawing.Point(319, 20);
             this.lblCarryingTotalQty.Name = "lblCarryingTotalQty";
             this.lblCarryingTotalQty.Size = new System.Drawing.Size(75, 20);
             this.lblCarryingTotalQty.TabIndex = 47;
             this.lblCarryingTotalQty.Values.Text = "载账总数量";
-            // 
-            // txtDiffTotalQty
-            // 
-            this.txtDiffTotalQty.Location = new System.Drawing.Point(653, 18);
-            this.txtDiffTotalQty.Name = "txtDiffTotalQty";
-            this.txtDiffTotalQty.Size = new System.Drawing.Size(131, 23);
-            this.txtDiffTotalQty.TabIndex = 72;
             // 
             // UCStocktake
             // 
@@ -468,6 +481,7 @@ namespace RUINORERP.UI.PSI.INV
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.Controls.Add(this.kryptonSplitContainer1);
             this.Name = "UCStocktake";
+            this.Size = new System.Drawing.Size(1018, 720);
             this.Load += new System.EventHandler(this.UCStocktake_Load);
             this.Controls.SetChildIndex(this.kryptonSplitContainer1, 0);
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceSub)).EndInit();
@@ -535,5 +549,6 @@ namespace RUINORERP.UI.PSI.INV
         private Krypton.Toolkit.KryptonLabel lblPrintStatus;
         private Krypton.Toolkit.KryptonLabel lblReview;
         private Krypton.Toolkit.KryptonTextBox txtDiffTotalQty;
+        private Krypton.Toolkit.KryptonLabel lblCostTips;
     }
 }

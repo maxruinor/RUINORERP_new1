@@ -49,6 +49,7 @@ using RUINORERP.UI.PSI.SAL;
 using RUINORERP.UI.UserCenter.DataParts;
 using NPOI.POIFS.Properties;
 using Org.BouncyCastle.Crypto;
+using NPOI.SS.UserModel;
 
 
 namespace RUINORERP.UI.SysConfig
@@ -839,7 +840,8 @@ namespace RUINORERP.UI.SysConfig
                     #region 销售订单数量与明细数量和的检测
                     List<tb_SaleOrder> SaleOrders = await MainForm.Instance.AppContext.Db.Queryable<tb_SaleOrder>()
                         .Includes(c => c.tb_SaleOrderDetails)
-                        .Where(c => c.SOrderNo == "SO250611751")
+                       //.Where(c => c.SOrderNo == "SO0066")
+                       //.Where(c => c.Created_at.HasValue && c.Created_at.Value < DateTime.Now.AddMonths(-15))
                        .ToListAsync();
                     foreach (tb_SaleOrder SaleOrder in SaleOrders)
                     {
@@ -849,9 +851,25 @@ namespace RUINORERP.UI.SysConfig
                             bool needadd = false;
                             if (detail.TransactionPrice != detail.UnitPrice * detail.Discount)
                             {
-                                richTextBoxLog.AppendText($"销售订单 明细 成交价 不对：{SaleOrder.SOrderNo}" + "\r\n");
+
+                                if (detail.SubtotalTransAmount == detail.TransactionPrice * detail.Quantity)
+                                {
+                                    //说明是折扣问题
+                                    richTextBoxLog.AppendText($"销售订单 说明是折扣问题 明细 成交价 不对：{SaleOrder.SOrderNo}" + "\r\n");
+                                    if (detail.Discount == 1)
+                                    {
+                                        detail.UnitPrice = detail.SubtotalTransAmount / detail.Quantity;
+                                    }
+                                }
+                                else
+                                {
+                                    richTextBoxLog.AppendText($"销售订单 明细 成交价 不对：{SaleOrder.SOrderNo}" + "\r\n");
+                                }
+
                                 detail.TransactionPrice = detail.UnitPrice * detail.Discount;
                                 needadd = true;
+
+
                             }
 
 
@@ -862,11 +880,25 @@ namespace RUINORERP.UI.SysConfig
                                 needadd = true;
                             }
 
+                            if (detail.CommissionAmount != detail.UnitCommissionAmount * detail.Quantity)
+                            {
+                                richTextBoxLog.AppendText($"销售订单 明细  佣金小计 不对：{SaleOrder.SOrderNo}" + "\r\n");
+                                detail.CommissionAmount = detail.UnitCommissionAmount * detail.Quantity;
+                                needadd = true;
+                            }
+
+
                             if (detail.SubtotalTaxAmount != detail.SubtotalTransAmount / (1 + detail.TaxRate) * detail.TaxRate)
                             {
-                                richTextBoxLog.AppendText($"销售订单 明细税额小计 不对：{SaleOrder.SOrderNo}" + "\r\n");
-                                detail.SubtotalTaxAmount = detail.SubtotalTransAmount / (1 + detail.TaxRate) * detail.TaxRate;
-                                needadd = true;
+                                decimal tempTax = detail.SubtotalTransAmount / (1 + detail.TaxRate) * detail.TaxRate;
+                                decimal diffpirce = Math.Abs(detail.SubtotalTaxAmount - tempTax);
+                                if (diffpirce > 0.01m)
+                                {
+                                    richTextBoxLog.AppendText($"销售订单 明细税额小计 不对：{SaleOrder.SOrderNo}" + "\r\n");
+                                    detail.SubtotalTaxAmount = detail.SubtotalTransAmount / (1 + detail.TaxRate) * detail.TaxRate;
+                                    needadd = true;
+                                }
+
                             }
 
                             if (detail.SubtotalCostAmount != (detail.Cost + detail.CustomizedCost) * detail.Quantity)
@@ -875,6 +907,8 @@ namespace RUINORERP.UI.SysConfig
                                 detail.SubtotalCostAmount = (detail.Cost + detail.CustomizedCost) * detail.Quantity;
                                 needadd = true;
                             }
+
+
                             if (needadd)
                             {
                                 saleOrderDetails.Add(detail);
@@ -931,7 +965,15 @@ namespace RUINORERP.UI.SysConfig
                     {
                         if (saleOrderDetails.Count > 0)
                         {
-                            int detailcounter = await MainForm.Instance.AppContext.Db.Updateable(saleOrderDetails).UpdateColumns(t => new { t.SubtotalCostAmount }).ExecuteCommandAsync();
+                            int detailcounter = await MainForm.Instance.AppContext.Db.Updateable(saleOrderDetails).UpdateColumns(t => new
+                            {
+                                t.SubtotalCostAmount,
+                                t.UnitPrice,
+                                t.CommissionAmount,
+                                t.TransactionPrice,
+                                t.SubtotalTransAmount,
+                                t.SubtotalTaxAmount
+                            }).ExecuteCommandAsync();
                             if (detailcounter > 0)
                             {
                                 richTextBoxLog.AppendText($"销售订单 明细 修复成功：{detailcounter} " + "\r\n");
@@ -945,6 +987,9 @@ namespace RUINORERP.UI.SysConfig
                            {
                                t.TotalQty,
                                t.TotalCost,
+                               t.TotalAmount,
+                               t.TotalCommissionAmount,
+                               t.TotalTaxAmount,
                            }).ExecuteCommandAsync();
                             richTextBoxLog.AppendText($"销售订单 主表 修复成功：{totalamountCounter} " + "\r\n");
                         }
@@ -998,6 +1043,13 @@ namespace RUINORERP.UI.SysConfig
                                     needadd = true;
                                 }
 
+                            }
+
+                            if (detail.CommissionAmount != detail.UnitCommissionAmount * detail.Quantity)
+                            {
+                                richTextBoxLog.AppendText($"销售订单 明细  佣金小计 不对：{Saleout.SaleOutNo}" + "\r\n");
+                                detail.CommissionAmount = detail.UnitCommissionAmount * detail.Quantity;
+                                needadd = true;
                             }
 
                             if (detail.SubtotalCostAmount != (detail.Cost + detail.CustomizedCost) * detail.Quantity)
@@ -1070,7 +1122,16 @@ namespace RUINORERP.UI.SysConfig
                     {
                         if (saleOutDetails.Count > 0)
                         {
-                            int detailcounter = await MainForm.Instance.AppContext.Db.Updateable(saleOutDetails).UpdateColumns(t => new { t.SubtotalCostAmount }).ExecuteCommandAsync();
+                            int detailcounter = await MainForm.Instance.AppContext.Db.Updateable(saleOutDetails).UpdateColumns(t => new {
+
+                                t.SubtotalCostAmount,
+                                t.UnitPrice,
+                                t.CommissionAmount,
+                                t.TransactionPrice,
+                                t.SubtotalTransAmount,
+                                t.SubtotalTaxAmount
+
+                            }).ExecuteCommandAsync();
                             if (detailcounter > 0)
                             {
                                 richTextBoxLog.AppendText($"销售出库 数量成本的检测 修复成功：{detailcounter} " + "\r\n");
@@ -1084,6 +1145,10 @@ namespace RUINORERP.UI.SysConfig
                            {
                                t.TotalQty,
                                t.TotalCost,
+                               t.TotalAmount,
+                               t.TotalCommissionAmount,
+                               t.TotalTaxAmount,
+
                            }).ExecuteCommandAsync();
                             richTextBoxLog.AppendText($"销售出库 数量成本的检测 修复成功：{totalamountCounter} " + "\r\n");
                         }
@@ -1794,8 +1859,7 @@ namespace RUINORERP.UI.SysConfig
                             }
 
                             bill.TotalMaterialCost = bill.tb_ManufacturingOrderDetails.Sum(c => c.SubtotalUnitCost);
-                            bill.TotalProductionCost = bill.TotalMaterialCost + bill.TotalManuFee;
-
+                            bill.TotalProductionCost = bill.TotalMaterialCost + bill.ApportionedCost + bill.TotalManuFee;
                             if (!chkTestMode.Checked && updateListdetail.Count > 0)
                             {
                                 await MainForm.Instance.AppContext.Db.Updateable<tb_ManufacturingOrder>(bill).ExecuteCommandAsync();

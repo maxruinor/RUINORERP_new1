@@ -867,7 +867,7 @@ namespace RUINORERP.UI
 
 
 
-       
+
 
 
         private bool SqlsugarSetup_RemindEvent(SqlSugarException ex)
@@ -1267,7 +1267,10 @@ namespace RUINORERP.UI
                     TreeView1.ExpandAll();
                     p.Controls.Add(TreeView1);
                     #endregion
-
+                    if (TreeView1.TreeView.Nodes.Count == 0)
+                    {
+                        continue;
+                    }
                     kryptonNavigator1.Pages.Add(p);
                 }
             }

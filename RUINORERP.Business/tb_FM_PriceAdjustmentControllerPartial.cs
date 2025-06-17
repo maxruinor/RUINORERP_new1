@@ -136,7 +136,7 @@ namespace RUINORERP.Business
                 {
                     //生成应收应付，如果是采购后面生成付款单，则会影响入库成本哦。销售则影响利润哦。
                     tb_FM_ReceivablePayable payable = await paymentController.CreateReceivablePayable(entity);
-                    ReturnMainSubResults<tb_FM_ReceivablePayable> rmr = await paymentController.BaseSaveOrUpdateWithChild<tb_FM_ReceivablePayable>(payable);
+                    ReturnMainSubResults<tb_FM_ReceivablePayable> rmr = await paymentController.BaseSaveOrUpdateWithChild<tb_FM_ReceivablePayable>(payable, false);
                     if (rmr.Succeeded)
                     {
                         var paybalbe = rmr.ReturnObject as tb_FM_ReceivablePayable;
@@ -331,7 +331,7 @@ namespace RUINORERP.Business
         */
 
 
-        public async Task<tb_FM_PriceAdjustment> CreatePriceAdjustment(ReceivePaymentType PaymentType, long sourceBillID, string NewBillNo = "")
+        public async Task<tb_FM_PriceAdjustment> BuildPriceAdjustment(ReceivePaymentType PaymentType, long sourceBillID, string NewBillNo = "")
         {
             tb_FM_PriceAdjustment priceAdjustment = new tb_FM_PriceAdjustment();
 
@@ -358,6 +358,7 @@ namespace RUINORERP.Business
                     {
                         priceAdjustment.AdjustNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.销售价格调整单);
                     }
+
                     priceAdjustment.AdjustDate = System.DateTime.Now;
                     priceAdjustment.ApprovalOpinions = "";
                     priceAdjustment.ApprovalResults = null;
@@ -370,6 +371,9 @@ namespace RUINORERP.Business
                     priceAdjustment.ApprovalOpinions = "";
                     priceAdjustment.Modified_at = null;
                     priceAdjustment.Modified_by = null;
+                    priceAdjustment.Created_at = null;
+                    priceAdjustment.Created_by = null;
+
                     List<tb_FM_PriceAdjustmentDetail> NewDetails = new List<tb_FM_PriceAdjustmentDetail>();
                     List<string> tipsMsg = new List<string>();
                     for (global::System.Int32 i = 0; i < details.Count; i++)

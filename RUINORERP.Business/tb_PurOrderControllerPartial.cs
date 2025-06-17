@@ -660,9 +660,6 @@ namespace RUINORERP.Business
                 }
 
 
-
-
-
                 entity.tb_PurEntryDetails = NewDetails;
                 entity.DataStatus = (int)DataStatus.草稿;
                 entity.ApprovalStatus = (int)ApprovalStatus.未审核;
@@ -672,6 +669,8 @@ namespace RUINORERP.Business
                 entity.Modified_by = null;
                 entity.Approver_at = null;
                 entity.Approver_by = null;
+                entity.Created_by = null;
+                entity.Created_at = null;
                 entity.ActionStatus = ActionStatus.新增;
 
                 entity.TotalQty = NewDetails.Sum(c => c.Quantity);

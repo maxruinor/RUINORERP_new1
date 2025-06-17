@@ -169,7 +169,7 @@ namespace RUINORERP.Business
                 // 找相同客户相同币种 是否有预收付余额
                 var settlementController = _appContext.GetRequiredService<tb_FM_PaymentSettlementController<tb_FM_PaymentSettlement>>();
                 var prePayments = await _unitOfWorkManage.GetDbClient().Queryable<tb_FM_PreReceivedPayment>()
-                    .Where(x => (x.PrePaymentStatus == (int)PrePaymentStatus.待核销 || x.PrePaymentStatus == (int)PrePaymentStatus.部分核销)
+                    .Where(x => (x.PrePaymentStatus == (int)PrePaymentStatus.已生效 || x.PrePaymentStatus == (int)PrePaymentStatus.部分核销)
                 && x.CustomerVendor_ID == entity.CustomerVendor_ID
                 && x.Currency_ID == entity.Currency_ID
                 && x.ReceivePaymentType == entity.ReceivePaymentType
@@ -192,7 +192,7 @@ namespace RUINORERP.Business
 
                     if (localDeduct > 0 || foreignDeduct > 0)
                     {
-                        
+
 
 
                         // 更新预收款单
@@ -258,7 +258,7 @@ namespace RUINORERP.Business
                 entity.LocalBalanceAmount = remainingLocal;
                 if (remainingLocal == 0)
                 {
-                    entity.ARAPStatus = (long)ARAPStatus.已结清;
+                    entity.ARAPStatus = (long)ARAPStatus.全部支付;
                 }
                 else if (entity.LocalBalanceAmount == entity.TotalLocalPayableAmount)
                 {
@@ -479,23 +479,24 @@ namespace RUINORERP.Business
             ReturnMainSubResults<tb_FM_ReceivablePayable> rmr = new ReturnMainSubResults<tb_FM_ReceivablePayable>();
             if (IsSaveToDb)
             {
-                BaseController<tb_FM_ReceivablePayable> ctrpay = _appContext.GetRequiredServiceByName<BaseController<tb_FM_ReceivablePayable>>(typeof(T).Name + "Controller");
-                rmr = await ctrpay.BaseSaveOrUpdateWithChild<tb_FM_ReceivablePayable>(payable);
-                if (rmr.Succeeded)
-                {
-                    var paybalbe = rmr.ReturnObject as tb_FM_ReceivablePayable;
-                    paybalbe.ApprovalOpinions = "自动审核通过";
-                    ReturnResults<tb_FM_ReceivablePayable> rr = await ctrpay.ApprovalAsync(paybalbe);
-                    if (rr.Succeeded)
-                    {
-                        return rmr;
-                    }
-                    else
-                    {
-                        rmr.Succeeded = false;
-                        rmr.ErrorMsg = rr.ErrorMsg;
-                    }
-                }
+                var ctrpay = _appContext.GetRequiredService<tb_FM_ReceivablePayableController<tb_FM_ReceivablePayable>>();
+                rmr = await ctrpay.BaseSaveOrUpdateWithChild<tb_FM_ReceivablePayable>(payable, false);
+                //事务不能嵌套
+                //if (rmr.Succeeded)
+                //{
+                //    var paybalbe = rmr.ReturnObject as tb_FM_ReceivablePayable;
+                //    paybalbe.ApprovalOpinions = "自动审核通过";
+                //    ReturnResults<tb_FM_ReceivablePayable> rr = await ctrpay.ApprovalAsync(paybalbe);
+                //    if (rr.Succeeded)
+                //    {
+                //        return rmr;
+                //    }
+                //    else
+                //    {
+                //        rmr.Succeeded = false;
+                //        rmr.ErrorMsg = rr.ErrorMsg;
+                //    }
+                //}
             }
             else
             {
@@ -597,7 +598,7 @@ namespace RUINORERP.Business
 
             if (entity.tb_customervendor.CustomerCreditDays.HasValue)
             {
-                // 从销售出库日期开始计算到期日
+                // 从调整日期开始计算到期日
                 //应收账期 的到期时间
                 payable.DueDate = entity.AdjustDate.AddDays(entity.tb_customervendor.CustomerCreditDays.Value).AddDays(1).AddTicks(-1);
             }
@@ -895,8 +896,8 @@ namespace RUINORERP.Business
             }
 
              */
-            BaseController<tb_FM_ReceivablePayable> ctrpay = _appContext.GetRequiredServiceByName<BaseController<tb_FM_ReceivablePayable>>(typeof(T).Name + "Controller");
-            ReturnMainSubResults<tb_FM_ReceivablePayable> rmr = await ctrpay.BaseSaveOrUpdateWithChild<tb_FM_ReceivablePayable>(payable);
+            var ctrpay = _appContext.GetRequiredService<tb_FM_ReceivablePayableController<tb_FM_ReceivablePayable>>();
+            ReturnMainSubResults<tb_FM_ReceivablePayable> rmr = await ctrpay.BaseSaveOrUpdateWithChild<tb_FM_ReceivablePayable>(payable, false);
             if (rmr.Succeeded)
             {
                 var paybalbe = rmr.ReturnObject as tb_FM_ReceivablePayable;
@@ -919,8 +920,7 @@ namespace RUINORERP.Business
         }
 
         /// <summary>
-        /// 创建应付款单
-        /// 反审用
+        /// 创建应付款单，审核时如果有预付，会先核销
         /// </summary>
         /// <param name="entity"></param>
         /// <param name="isRefund">true为红字冲销</param>
@@ -998,7 +998,7 @@ namespace RUINORERP.Business
 
                 if (entity.tb_customervendor.SupplierCreditDays.HasValue)
                 {
-                    // 从销售出库日期开始计算到期日
+                    // 从入库日期开始计算到期日
                     payable.DueDate = entity.EntryDate.Date.AddDays(entity.tb_customervendor.SupplierCreditDays.Value).AddDays(1).AddTicks(-1);
                 }
             }
@@ -1044,23 +1044,62 @@ namespace RUINORERP.Business
                 payable.ForeignPaidAmount = 0;
                 payable.TotalForeignPayableAmount = entity.ForeignTotalAmount;
             }
-            else
-            {
-                //本币时
-                payable.LocalBalanceAmount = entity.TotalAmount;
-                payable.LocalPaidAmount = 0;
-                payable.TotalLocalPayableAmount = entity.TotalAmount;
-            }
+
+            //本币时 一定会有值。
+            payable.LocalBalanceAmount = entity.TotalAmount;
+            payable.LocalPaidAmount = 0;
+            payable.TotalLocalPayableAmount = entity.TotalAmount;
+
 
             payable.Remark = $"采购入库单：{entity.PurEntryNo}的应付款";
 
             Business.BusinessHelper.Instance.InitEntity(payable);
             payable.ARAPStatus = (long)ARAPStatus.待审核;
 
-            BaseController<tb_FM_ReceivablePayable> ctrpay = _appContext.GetRequiredServiceByName<BaseController<tb_FM_ReceivablePayable>>(typeof(T).Name + "Controller");
-            ReturnMainSubResults<tb_FM_ReceivablePayable> rmr = await ctrpay.BaseSaveOrUpdateWithChild<tb_FM_ReceivablePayable>(payable);
+            var ctrpay = _appContext.GetRequiredService<tb_FM_ReceivablePayableController<tb_FM_ReceivablePayable>>();
+            ReturnMainSubResults<tb_FM_ReceivablePayable> rmr = await ctrpay.BaseSaveOrUpdateWithChild<tb_FM_ReceivablePayable>(payable, false);
             return rmr;
         }
+
+
+        public async Task<ReturnMainSubResults<T>> BaseSaveOrUpdateWithChild<C>(T model, bool UseTran = false) where C : class
+        {
+            bool rs = false;
+            RevertCommand command = new RevertCommand();
+            ReturnMainSubResults<T> rsms = new ReturnMainSubResults<T>();
+            //缓存当前编辑的对象。如果撤销就回原来的值
+            T oldobj = CloneHelper.DeepCloneObject<T>((T)model);
+
+            tb_FM_ReceivablePayable entity = model as tb_FM_ReceivablePayable;
+            command.UndoOperation = delegate ()
+            {
+                //Undo操作会执行到的代码
+                CloneHelper.SetValues<T>(entity, oldobj);
+            };
+
+            if (entity.ARAPId > 0)
+            {
+
+                rs = await _unitOfWorkManage.GetDbClient().UpdateNav<tb_FM_ReceivablePayable>(entity as tb_FM_ReceivablePayable)
+           .Include(m => m.tb_FM_StatementDetails)
+       .Include(m => m.tb_FM_ReceivablePayableDetails)
+       .ExecuteCommandAsync();
+            }
+            else
+            {
+                rs = await _unitOfWorkManage.GetDbClient().InsertNav<tb_FM_ReceivablePayable>(entity as tb_FM_ReceivablePayable)
+        .Include(m => m.tb_FM_StatementDetails)
+        .Include(m => m.tb_FM_ReceivablePayableDetails)
+        .ExecuteCommandAsync();
+
+            }
+
+            rsms.ReturnObject = entity as T;
+            entity.PrimaryKeyID = entity.ARAPId;
+            rsms.Succeeded = rs;
+            return rsms;
+        }
+
 
         /// <summary>
         /// 创建为红字冲销 应收款单
@@ -1150,23 +1189,24 @@ namespace RUINORERP.Business
 
             Business.BusinessHelper.Instance.InitEntity(payable);
             payable.ARAPStatus = (long)ARAPStatus.待审核;
-            BaseController<tb_FM_ReceivablePayable> ctrpay = _appContext.GetRequiredServiceByName<BaseController<tb_FM_ReceivablePayable>>(typeof(T).Name + "Controller");
-            ReturnMainSubResults<tb_FM_ReceivablePayable> rmr = await ctrpay.BaseSaveOrUpdateWithChild<tb_FM_ReceivablePayable>(payable);
-            if (rmr.Succeeded)
-            {
-                var paybalbe = rmr.ReturnObject as tb_FM_ReceivablePayable;
-                paybalbe.ApprovalOpinions = "自动审核通过";
-                ReturnResults<tb_FM_ReceivablePayable> rr = await ctrpay.ApprovalAsync(paybalbe);
-                if (rr.Succeeded)
-                {
-                    return rmr;
-                }
-                else
-                {
-                    rmr.Succeeded = false;
-                    rmr.ErrorMsg = rr.ErrorMsg;
-                }
-            }
+            var ctrpay = _appContext.GetRequiredService<tb_FM_ReceivablePayableController<tb_FM_ReceivablePayable>>();
+            ReturnMainSubResults<tb_FM_ReceivablePayable> rmr = await ctrpay.BaseSaveOrUpdateWithChild<tb_FM_ReceivablePayable>(payable, false);
+            //自动审核  审核中用了事务。事务不能嵌套
+            //if (rmr.Succeeded)
+            //{
+            //    var paybalbe = rmr.ReturnObject as tb_FM_ReceivablePayable;
+            //    paybalbe.ApprovalOpinions = "自动审核通过";
+            //    ReturnResults<tb_FM_ReceivablePayable> rr = await ctrpay.ApprovalAsync(paybalbe);
+            //    if (rr.Succeeded)
+            //    {
+            //        return rmr;
+            //    }
+            //    else
+            //    {
+            //        rmr.Succeeded = false;
+            //        rmr.ErrorMsg = rr.ErrorMsg;
+            //    }
+            //}
             return rmr;
         }
 

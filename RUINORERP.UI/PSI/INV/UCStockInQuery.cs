@@ -53,7 +53,12 @@ namespace RUINORERP.UI.PSI.INV
         public override void BuildQueryCondition()
         {
             BaseProcessor baseProcessor = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_StockIn).Name + "Processor");
-            QueryConditionFilter = baseProcessor.GetQueryFilter();
+            //非超级用户时，只能查看自己的订单,如果设置的销售业务限制范围的话
+            var lambda = Expressionable.Create<tb_StockIn>()
+                .AndIF(AuthorizeController.GetSaleLimitedAuth(MainForm.Instance.AppContext) && !MainForm.Instance.AppContext.IsSuperUser, t => t.Employee_ID == MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID)//限制了销售只看到自己的客户,采购不限制
+              .ToExpression();
+
+            QueryConditionFilter.FilterLimitExpressions.Add(lambda);
         }
 
         public override void BuildSummaryCols()

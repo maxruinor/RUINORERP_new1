@@ -525,7 +525,9 @@ namespace RUINORERP.UI.Common
                             ClassPath = info.ClassPath,
                             MenuID = menuInfo.MenuID,
                             IsEnabled = true,
-                            ButtonType = buttonTypeStr
+                            ButtonType = buttonTypeStr,
+                            Created_at = System.DateTime.Now,
+                            Created_by = _appContext.CurUserInfo?.Id
                         });
                     }
                 }

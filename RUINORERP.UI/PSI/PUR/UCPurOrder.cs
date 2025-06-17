@@ -518,10 +518,14 @@ namespace RUINORERP.UI.PSI.PUR
             listCols.SetCol_FormulaReverse<tb_PurOrderDetail>(d => d.UnitPrice == 0, (a, b) => a.SubtotalAmount / b.Quantity, c => c.UnitPrice);//-->成交价是结果列
             sgh.SetPointToColumnPairs<ProductSharePart, tb_PurOrderDetail>(sgd, f => f.Location_ID, t => t.Location_ID);
             sgh.SetPointToColumnPairs<ProductSharePart, tb_PurOrderDetail>(sgd, f => f.prop, t => t.property);
+
             sgh.SetPointToColumnPairs<ProductSharePart, tb_PurOrderDetail>(sgd, f => f.VendorModelCode, t => t.VendorModelCode);
+
             //新建时默认数量就是未交数量，入库时对应减少, 但是 数量不隐藏
             // sgh.SetPointToColumnPairs<tb_PurOrderDetail, tb_PurOrderDetail>(sgd, f => f.Quantity, t => t.UndeliveredQty, false);
-            listCols.SetCol_RelatedValue<tb_PurOrderDetail>(a => a.Quantity, b => b.UndeliveredQty, "{0}", c => c.Quantity);
+            // listCols.SetCol_RelatedValue<tb_PurOrderDetail>(a => a.Quantity, b => b.UndeliveredQty, "{0}", c => c.Quantity);
+            listCols.SetCol_Formula<tb_PurOrderDetail>((a, b) => a.Quantity - b.DeliveredQuantity, c => c.UndeliveredQty);
+
             //应该只提供一个结构
             List<tb_PurOrderDetail> lines = new List<tb_PurOrderDetail>();
             bindingSourceSub.DataSource = lines; //  ctrSub.Query(" 1>2 ");

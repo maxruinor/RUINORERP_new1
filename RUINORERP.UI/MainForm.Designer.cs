@@ -499,6 +499,7 @@ namespace RUINORERP.UI
             this.btntsbRefresh.Padding = new System.Windows.Forms.Padding(50, 0, 0, 0);
             this.btntsbRefresh.Size = new System.Drawing.Size(103, 22);
             this.btntsbRefresh.Text = "刷新";
+            this.btntsbRefresh.Visible = false;
             this.btntsbRefresh.Click += new System.EventHandler(this.btntsbRefresh_Click);
             // 
             // tsbtnloginFileServer

@@ -190,7 +190,6 @@ namespace RUINORERP.UI.PSI.INV
 
             //先绑定这个。InitFilterForControl 这个才生效
             DataBindingHelper.BindData4TextBox<tb_ProdBorrowing>(entity, v => v.BorrowNo, txtBorrowNO, BindDataType4TextBox.Text, true);
-            DataBindingHelper.BindData4TextBoxWithTagQuery<tb_ProdBorrowing>(entity, v => v.BorrowID, txtBorrowNO, true);
 
             //创建表达式  草稿 结案 和没有提交的都不显示
             var lambdaBorrow = Expressionable.Create<tb_ProdBorrowing>()
@@ -204,8 +203,8 @@ namespace RUINORERP.UI.PSI.INV
 
             queryFilter.FilterLimitExpressions.Add(lambdaBorrow);//意思是只有审核确认的。没有结案的。才能查询出来。
 
-            DataBindingHelper.InitFilterForControlByExp<tb_ProdBorrowing>(entity, txtBorrowNO, c => c.BorrowNo, queryFilter);
-
+            ControlBindingHelper.ConfigureControlFilter<tb_ProdReturning, tb_ProdBorrowing>(entity, txtBorrowNO, t => t.BorrowNO,
+             f => f.BorrowNo, queryFilter, a => a.BorrowID, b => b.BorrowID, null, false);
             base.BindData(entity);
 
             sw.Stop();

@@ -1639,24 +1639,24 @@ namespace RUINORERP.UI.SysConfig
                     }
                 }
 
-                if (treeView1.SelectedNode.Text == "清空业务数据")
+                if (treeView1.SelectedNode.Text == "清空财务数据")
                 {
                     //核销表 付款表  应收付表 预收付表
                     var StatementController = MainForm.Instance.AppContext.GetRequiredService<tb_FM_StatementController<tb_FM_Statement>>();
                     var StatementList = StatementController.QueryByNav(c => c.StatementId > 0);
-                    richTextBoxLog.AppendText($"即将清空业务数据 核销表：{StatementList.Count} " + "\r\n");
+                    richTextBoxLog.AppendText($"即将清空财务数据 核销表：{StatementList.Count} " + "\r\n");
 
                     var PaymentRecordController = MainForm.Instance.AppContext.GetRequiredService<tb_FM_PaymentRecordController<tb_FM_PaymentRecord>>();
                     var PaymentRecordList = PaymentRecordController.QueryByNav(c => c.PaymentId > 0);
-                    richTextBoxLog.AppendText($"即将清空业务数据 付款表：{PaymentRecordList.Count} " + "\r\n");
+                    richTextBoxLog.AppendText($"即将清空财务数据 付款表：{PaymentRecordList.Count} " + "\r\n");
 
                     var ReceivablePayableController = MainForm.Instance.AppContext.GetRequiredService<tb_FM_ReceivablePayableController<tb_FM_ReceivablePayable>>();
                     var ReceivablePayableList = ReceivablePayableController.QueryByNav(c => c.ARAPId > 0);
-                    richTextBoxLog.AppendText($"即将清空业务数据 应收付表：{ReceivablePayableList.Count} " + "\r\n");
+                    richTextBoxLog.AppendText($"即将清空财务数据 应收付表：{ReceivablePayableList.Count} " + "\r\n");
 
                     var PreReceivedPaymentController = MainForm.Instance.AppContext.GetRequiredService<tb_FM_PreReceivedPaymentController<tb_FM_PreReceivedPayment>>();
                     var PreReceivedPaymentList = PreReceivedPaymentController.QueryByNav(c => c.PreRPID > 0);
-                    richTextBoxLog.AppendText($"即将清空业务数据 预收付表：{PreReceivedPaymentList.Count} " + "\r\n");
+                    richTextBoxLog.AppendText($"即将清空财务数据 预收付表：{PreReceivedPaymentList.Count} " + "\r\n");
 
                     int totalamountCounter = 0;
                     //销售出库 销售订单
@@ -1687,7 +1687,7 @@ namespace RUINORERP.UI.SysConfig
                         }
 
 
-                        richTextBoxLog.AppendText($"修复生产计划总数量 修复成功：{totalamountCounter} " + "\r\n");
+                        richTextBoxLog.AppendText($"清空财务数据总数量：{totalamountCounter} " + "\r\n");
                     }
                 }
 

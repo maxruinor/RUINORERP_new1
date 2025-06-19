@@ -813,7 +813,7 @@ namespace RUINORERP.UI
             // 使用 ConfigureOptions 手动覆盖特定值
             services.Configure<AuditLogOptions>(options =>
             {
-                options.BatchSize = 3;
+                options.BatchSize = 5;
                 options.FlushInterval = 5000;
                 options.EnableAudit = true;
             });

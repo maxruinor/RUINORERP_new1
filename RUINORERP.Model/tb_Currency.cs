@@ -21,7 +21,7 @@ namespace RUINORERP.Model
     /// 币别资料表-备份第一行数据后删除重建 如果不行则直接修改字段删除字段
     /// </summary>
     [Serializable()]
-    [Description("币别资料表-备份第一行数据后删除重建 如果不行则直接修改字段删除字段")]
+    [Description("币别资料表")]
     [SugarTable("tb_Currency")]
     public partial class tb_Currency: BaseEntity, ICloneable
     {

@@ -41,7 +41,18 @@ namespace RUINORERP.UI.Common
 {
     public static class UIHelper
     {
+        /// <summary>
+        /// 获取实体类的中文描述（从Description特性中提取）
+        /// </summary>
+        public static string GetEntityDescription(Type entityType)
+        {
+            // 尝试获取Description特性
+            var descriptionAttribute = entityType.GetCustomAttributes(typeof(DescriptionAttribute), true)
+                .FirstOrDefault() as DescriptionAttribute;
 
+            // 如果找到Description特性，则返回其值，否则返回类名
+            return descriptionAttribute?.Description ?? entityType.Name;
+        }
         public static bool ShowInvalidMessage(ValidationResult results)
         {
             bool validationSucceeded = results.IsValid;

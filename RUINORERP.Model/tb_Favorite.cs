@@ -21,7 +21,7 @@ namespace RUINORERP.Model
     /// 收藏表 收藏订单 产品 库存报警等
     /// </summary>
     [Serializable()]
-    [Description("收藏表 收藏订单 产品 库存报警等")]
+    [Description("收藏表")]
     [SugarTable("tb_Favorite")]
     public partial class tb_Favorite: BaseEntity, ICloneable
     {

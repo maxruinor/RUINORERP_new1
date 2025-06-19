@@ -200,12 +200,6 @@ namespace RUINORERP.UI.PSI.PUR
             }
 
 
-
-
-
-
-
-
             //创建表达式
             var lambda = Expressionable.Create<tb_CustomerVendor>()
                             .And(t => t.IsVendor == true)
@@ -216,10 +210,7 @@ namespace RUINORERP.UI.PSI.PUR
             DataBindingHelper.BindData4Cmb<tb_CustomerVendor>(entity, k => k.CustomerVendor_ID, v => v.CVName, cmbCustomerVendor_ID, queryFilterC.GetFilterExpression<tb_CustomerVendor>(), true);
             DataBindingHelper.InitFilterForControlByExp<tb_CustomerVendor>(entity, cmbCustomerVendor_ID, c => c.CVName, queryFilterC);
 
-
-
-            //先绑定这个。InitFilterForControl 这个才生效
-            DataBindingHelper.BindData4TextBoxWithTagQuery<tb_PurEntry>(entity, v => v.PurEntryID, txtPurEntryNo, true);
+            DataBindingHelper.BindData4TextBox<tb_PurEntryRe>(entity, v => v.PurEntryNo, txtPurEntryNo, BindDataType4TextBox.Text, true);
 
             //创建表达式  草稿 结案 和没有提交的都不显示
             var lambdaOrder = Expressionable.Create<tb_PurEntry>()
@@ -228,7 +219,8 @@ namespace RUINORERP.UI.PSI.PUR
                             .ToExpression();//注意 这一句 不能少
             BaseProcessor baseProcessorPUR = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_PurEntry).Name + "Processor");
             QueryFilter queryFilterPUR = baseProcessorPUR.GetQueryFilter();
-            DataBindingHelper.InitFilterForControlByExp<tb_PurEntry>(entity, txtPurEntryNo, c => c.PurEntryNo, queryFilterPUR);
+            ControlBindingHelper.ConfigureControlFilter<tb_PurEntryRe, tb_PurEntry>(entity, txtPurEntryNo, t => t.PurEntryNo,
+              f => f.PurEntryNo, queryFilterPUR, a => a.PurEntryID, b => b.PurEntryID, null, false);
             base.BindData(entity);
         }
 
@@ -386,12 +378,13 @@ namespace RUINORERP.UI.PSI.PUR
                     EditEntity.IsIncludeTax = false;
                 }
 
-                //没有经验通过下面先不计算
-                if (NeedValidated && !base.Validator(EditEntity))
+        
+                if (NeedValidated && !base.Validator<tb_PurEntryReDetail>(details))
                 {
                     return false;
                 }
-                if (NeedValidated && !base.Validator<tb_PurEntryReDetail>(details))
+                //没有经验通过下面先不计算
+                if (NeedValidated && !base.Validator(EditEntity))
                 {
                     return false;
                 }

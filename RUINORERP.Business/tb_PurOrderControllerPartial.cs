@@ -373,7 +373,7 @@ namespace RUINORERP.Business
 
                         payable.PrePaymentReason = $"采购订单{entity.PurOrderNo}的预付款";
                         Business.BusinessHelper.Instance.InitEntity(payable);
-                        payable.PrePaymentStatus = (long)PrePaymentStatus.待审核;
+                        payable.PrePaymentStatus = (int)PrePaymentStatus.待审核;
                         ReturnResults<tb_FM_PreReceivedPayment> rmpay = await ctrpay.SaveOrUpdate(payable);
                         if (rmpay.Succeeded)
                         {

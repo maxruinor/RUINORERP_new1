@@ -21,7 +21,7 @@ namespace RUINORERP.Model
     /// 制令单的原料明细表 明细对应的是一个树，结构同BOM，先把BOM搞好再来实现这里的细节
     /// </summary>
     [Serializable()]
-    [Description("制令单的原料明细表 明细对应的是一个树，结构同BOM，先把BOM搞好再来实现这里的细节")]
+    [Description("制令单明细表")]
     [SugarTable("tb_ManufacturingOrderDetail")]
     public partial class tb_ManufacturingOrderDetail: BaseEntity, ICloneable
     {

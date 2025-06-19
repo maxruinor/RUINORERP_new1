@@ -21,7 +21,7 @@ namespace RUINORERP.Model
     /// 往来单位类型,如级别，电商，大客户，亚马逊等
     /// </summary>
     [Serializable()]
-    [Description("往来单位类型,如级别，电商，大客户，亚马逊等")]
+    [Description("往来单位类型")]
     [SugarTable("tb_CustomerVendorType")]
     public partial class tb_CustomerVendorType: BaseEntity, ICloneable
     {

@@ -245,7 +245,7 @@ namespace RUINORERP.UI.MRP.PQC
 
 
             //先绑定这个。InitFilterForControl 这个才生效
-            DataBindingHelper.BindData4TextBoxWithTagQuery<tb_FinishedGoodsInv>(entity, v => v.FG_ID, txtFG, true);
+            DataBindingHelper.BindData4TextBox<tb_FinishedGoodsInv>(entity, v => v.FG_ID, txtFG, BindDataType4TextBox.Text, true);
 
             //创建表达式  草稿 结案 和没有提交的都不显示
             var lambdaMO = Expressionable.Create<tb_FinishedGoodsInv>()
@@ -256,7 +256,8 @@ namespace RUINORERP.UI.MRP.PQC
             BaseProcessor baseProcessorMO = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_FinishedGoodsInv).Name + "Processor");
             QueryFilter queryFilterMO = baseProcessorMO.GetQueryFilter();
             queryFilterMO.FilterLimitExpressions.Add(lambdaMO);
-            DataBindingHelper.InitFilterForControlByExp<tb_FinishedGoodsInv>(entity, txtFG, c => c.DeliveryBillNo, queryFilterMO);
+            ControlBindingHelper.ConfigureControlFilter<tb_MRP_ReworkReturn, tb_FinishedGoodsInv>(entity, txtFG, t => t.DeliveryBillNo,
+           f => f.DeliveryBillNo, queryFilterMO, a => a.FG_ID, b => b.FG_ID, null, false);
             base.BindData(entity);
 
         }

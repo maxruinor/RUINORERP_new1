@@ -249,7 +249,7 @@ namespace RUINORERP.UI.Monitoring.Auditing
     // 审计日志配置类
     public class AuditLogOptions
     {
-        public int BatchSize { get; set; } = 5; // 批量写入大小
+        public int BatchSize { get; set; } = 10; // 批量写入大小
         public int FlushInterval { get; set; } = 3000; // 自动刷新间隔(毫秒)
         public bool EnableAudit { get; set; } = true; // 是否启用审计
     }
@@ -289,7 +289,6 @@ namespace RUINORERP.UI.Monitoring.Auditing
             // 延迟解析依赖，直到第一次使用时才获取实例
             _billConverterFactory = new Lazy<BillConverterFactory>(
                 () => MainForm.Instance.AppContext.GetRequiredService<BillConverterFactory>());// 缓存工厂
-
 
             _AuditLogsController = new Lazy<tb_AuditLogsController<tb_AuditLogs>>(() => Startup.GetFromFac<tb_AuditLogsController<tb_AuditLogs>>());
             // 启动定时刷新

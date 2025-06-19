@@ -426,13 +426,13 @@ namespace RUINORERP.Model
                         }
         }
 
-        private long? _ARAPStatus;
+        private int? _ARAPStatus;
         /// <summary>
         /// 支付状态
         /// </summary>
         [AdvQueryAttribute(ColName = "ARAPStatus",ColDesc = "支付状态")] 
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "ARAPStatus" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "支付状态" )]
-        public long? ARAPStatus
+        [SugarColumn(ColumnDataType = "int", SqlParameterDbType = "Int32",  ColumnName = "ARAPStatus" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "支付状态" )]
+        public int? ARAPStatus
         { 
             get{return _ARAPStatus;}
             set{

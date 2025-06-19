@@ -14,6 +14,7 @@ using FluentValidation;
 using Microsoft.Extensions.Options;
 using RUINORERP.Model.ConfigModel;
 using RUINORERP.Global;
+using System.Linq;
 
 //https://github.com/FluentValidation/FluentValidation 使用实例
 //https://blog.csdn.net/WuLex/article/details/127985756 中文教程
@@ -37,9 +38,11 @@ namespace RUINORERP.Business
         //    Globalconfig = _Globalconfig;
         //}
 
-
+        
         public override void Initialize()
         {
+            RuleFor(x => x.TotalAmount).Equal(x => x.tb_PurOrderDetails.Sum(c => (c.UnitPrice+c.CustomizedCost) * c.Quantity) + x.ShipCost).WithMessage("总金额：要等于成交价*数量，包含运费。");
+
             RuleFor(customer => customer.PreDeliveryDate)
            .Custom((value, context) =>
            {

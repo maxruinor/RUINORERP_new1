@@ -39,6 +39,7 @@ using Castle.Components.DictionaryAdapter.Xml;
 using log4net.Repository.Hierarchy;
 using RUINORERP.UI.SS;
 using RUINORERP.UI.Monitoring.Auditing;
+using Mysqlx.Crud;
 
 
 namespace RUINORERP.UI.SysConfig
@@ -221,13 +222,6 @@ namespace RUINORERP.UI.SysConfig
             .Includes(m => m.tb_P4Buttons, c => c.tb_buttoninfo)
            .Includes(m => m.tb_P4Fields, c => c.tb_fieldinfo)
            .Includes(m => m.tb_P4Menus, c => c.tb_menuinfo)
-           //.AsNavQueryable()
-           //.Includes(m => m.tb_P4Menus, t => t.tb_menuinfo, b => b.tb_P4Buttons)
-           //.Includes(m => m.tb_P4Menus, t => t.tb_menuinfo, b => b.tb_P4Fields)
-           //.Includes(m => m.tb_P4Menus, t => t.tb_menuinfo, b => b.tb_P4Menus)
-           // .Includes(m => m.tb_P4Menus, t => t.tb_roleinfo, b => b.tb_P4Buttons)
-           // .Includes(m => m.tb_P4Menus, t => t.tb_roleinfo, b => b.tb_P4Fields)
-           // .Includes(m => m.tb_P4Menus, t => t.tb_roleinfo, b => b.tb_P4Menus)
            .ToListAsync();
 
             DataBindingHelper.InitCmb<tb_RoleInfo>(k => k.RoleID, v => v.RoleName, cmRoleInfo.ComboBox, true, roleInfos);
@@ -583,6 +577,9 @@ namespace RUINORERP.UI.SysConfig
             {
                 CurrentRole.tb_P4Menus = new List<tb_P4Menu>();
             }
+            // 记录加载后的状态为原始值
+            CurrentRole.tb_P4Menus.ForEach(c => c.BeginOperation());
+
             //保存顶级菜单勾选情况  是用更新 第一个是根节点
             UpdateP4Module(TreeView1.Nodes[0].Nodes, CurrentRole.tb_P4Menus);
             toolStripButtonSave.Enabled = false;
@@ -647,8 +644,11 @@ namespace RUINORERP.UI.SysConfig
                     if (pm != null)
                     {
                         //已经存在菜单角色关系的只更新选择状态
-                        pm.IsVisble = tn.Checked;
-                        BusinessHelper.Instance.EditEntity(pm);
+                        if (pm.IsVisble != tn.Checked)
+                        {
+                            pm.IsVisble = tn.Checked;
+                            BusinessHelper.Instance.EditEntity(pm);
+                        }
                     }
                     else
                     {
@@ -695,8 +695,6 @@ namespace RUINORERP.UI.SysConfig
                 CurrentRole.tb_P4Menus = tb_P4Menus.Where(p => !deleteIds.Contains(p.MenuID)).ToList();
             }
 
-
-
             //保存菜单勾选情况  是用更新 顶级 只有一级 对应模块
             //模块等于顶级菜单这里要同时保存一下菜单关系
             //准备要更新的集合
@@ -704,23 +702,54 @@ namespace RUINORERP.UI.SysConfig
             //    .Where(p => p.RoleID == CurrentRole.RoleID)
             //    .Includes(m => m.tb_menuinfo)
             //    .ToListAsync();
+
             foreach (ThreeStateTreeNode tn in Nodes)
             {
-                if (tn.Checked && tn.Tag is tb_MenuInfo menuInfo)
+                if (tn.Tag is tb_MenuInfo menuInfo)
                 {
                     //保存菜单勾选情况  是用更新
                     UpdateP4Menu(tn.Nodes, tb_P4Menus);
-                    if (tb_P4Menus.Where(c => c.P4Menu_ID == 0).ToList().Count > 0)
+                    tb_P4Menu p4Menu = tb_P4Menus.FirstOrDefault(c => c.MenuID == menuInfo.MenuID);
+                    if (p4Menu != null)
                     {
-                        var rs = await MainForm.Instance.AppContext.Db.CopyNew().Insertable(tb_P4Menus.Where(c => c.P4Menu_ID == 0).ToList()).ExecuteReturnSnowflakeIdListAsync();
+                        if (p4Menu.IsVisble != tn.Checked)
+                        {
+                            p4Menu.IsVisble = tn.Checked;
+                            BusinessHelper.Instance.EditEntity(p4Menu);
+                          
+                        }
                     }
-                    if (tb_P4Menus.Where(c => c.P4Menu_ID > 0).ToList().Count > 0)
+                    else
                     {
-                        bool rs = await MainForm.Instance.AppContext.Db.CopyNew().Updateable(tb_P4Menus.Where(c => c.P4Menu_ID > 0).ToList()).ExecuteCommandHasChangeAsync();
+                        #region 添加顶级菜单
+                        //新的菜单则需要新增 这种情况少 单个操作也可以
+                        tb_P4Menu pmNew = new tb_P4Menu();
+                        pmNew.RoleID = CurrentRole.RoleID;
+                        pmNew.MenuID = menuInfo.MenuID;
+                        pmNew.ModuleID = menuInfo.ModuleID;
+                        pmNew.IsVisble = tn.Checked;
+                        BusinessHelper.Instance.InitEntity(pmNew);
+                        tb_P4Menus.Add(pmNew);
+                        #endregion
                     }
+
                 }
             }
 
+            if (tb_P4Menus.Where(c => c.P4Menu_ID == 0).ToList().Count > 0)
+            {
+                var rs = await MainForm.Instance.AppContext.Db.CopyNew().Insertable(tb_P4Menus.Where(c => c.P4Menu_ID == 0).ToList()).ExecuteReturnSnowflakeIdListAsync();
+            }
+
+            List<tb_P4Menu> UpdateP4Menus = tb_P4Menus.Where(c => c.P4Menu_ID > 0
+            && c.RoleID == CurrentRole.RoleID && c.HasChanged
+            ).ToList();
+
+            if (UpdateP4Menus.Count > 0)
+            {
+                bool rs = await MainForm.Instance.AppContext.Db.CopyNew().Updateable(UpdateP4Menus).ExecuteCommandHasChangeAsync();
+                UpdateP4Menus.ForEach(c => c.AcceptChanges());
+            }
         }
 
 
@@ -2068,7 +2097,7 @@ namespace RUINORERP.UI.SysConfig
         }
 
 
-        private  void toolsbtnFullAuthorization_ClickAsync(object sender, EventArgs e)
+        private void toolsbtnFullAuthorization_ClickAsync(object sender, EventArgs e)
         {
             if (CurrentRole == null)
             {

@@ -45,7 +45,7 @@
             System.Windows.Forms.TreeNode treeNode14 = new System.Windows.Forms.TreeNode("修复CRM跟进计划状态");
             System.Windows.Forms.TreeNode treeNode15 = new System.Windows.Forms.TreeNode("用户密码加密");
             System.Windows.Forms.TreeNode treeNode16 = new System.Windows.Forms.TreeNode("配方数量成本的检测");
-            System.Windows.Forms.TreeNode treeNode17 = new System.Windows.Forms.TreeNode("清空业务数据");
+            System.Windows.Forms.TreeNode treeNode17 = new System.Windows.Forms.TreeNode("清空财务数据");
             System.Windows.Forms.TreeNode treeNode18 = new System.Windows.Forms.TreeNode("佣金数据修复[tb_SaleOrder]");
             System.Windows.Forms.TreeNode treeNode19 = new System.Windows.Forms.TreeNode("佣金数据修复[tb_SaleOut]");
             System.Windows.Forms.TreeNode treeNode20 = new System.Windows.Forms.TreeNode("采购订单未交数量修复");
@@ -240,8 +240,8 @@
             treeNode15.Text = "用户密码加密";
             treeNode16.Name = "配方数量成本的检测";
             treeNode16.Text = "配方数量成本的检测";
-            treeNode17.Name = "清空业务数据";
-            treeNode17.Text = "清空业务数据";
+            treeNode17.Name = "清空财务数据";
+            treeNode17.Text = "清空财务数据";
             treeNode18.Name = "佣金数据修复[tb_SaleOrder]";
             treeNode18.Text = "佣金数据修复[tb_SaleOrder]";
             treeNode19.Name = "佣金数据修复[tb_SaleOut]";

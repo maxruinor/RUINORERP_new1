@@ -28,10 +28,9 @@ namespace RUINORERP.Business
             RuleFor(x => x.TotalQty).GreaterThan(0).WithMessage("总数量：要大于零。");
             //如果成交小计不等于成交价*数量，则抛出异常
             //总金额包了运费要大于等于成交小计
-            RuleFor(x => x.TotalAmount).GreaterThanOrEqualTo(x => x.tb_SaleOutDetails.Sum(c => (c.TransactionPrice) * c.Quantity)).WithMessage("明细中，成交小计：要大于等于成交价*数量。");
-
+            RuleFor(x => x.TotalAmount).GreaterThanOrEqualTo(x => x.tb_SaleOutDetails.Sum(c => (c.TransactionPrice) * c.Quantity) + x.FreightIncome).WithMessage("总金额：等于成交价*数量。包含运费");
             //成本包含了运费成本，也要大于等于成本小计
-            RuleFor(x => x.TotalCost).GreaterThanOrEqualTo(x => x.tb_SaleOutDetails.Sum(c => (c.Cost + c.CustomizedCost) * c.Quantity)).WithMessage("明细中，成本小计：要大于等于成本加定制成本*数量。");
+            RuleFor(x => x.TotalCost).Equal(x => x.tb_SaleOutDetails.Sum(c => (c.Cost + c.CustomizedCost) * c.Quantity) + x.FreightCost).WithMessage("总成本：等于（成本+加定制成本）*数量。包含运费成本");
 
         }
     }

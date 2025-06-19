@@ -181,7 +181,7 @@ namespace RUINORERP.UI.PSI.SAL
 
 
             //先绑定这个。InitFilterForControl 这个才生效
-            DataBindingHelper.BindData4TextBoxWithTagQuery<tb_SaleOutRe>(entity, v => v.SaleOut_MainID, txtSaleOutNo, true);
+            DataBindingHelper.BindData4TextBox<tb_SaleOutRe>(entity, v => v.SaleOut_NO, txtSaleOutNo, BindDataType4TextBox.Text, true);
 
             //创建表达式  草稿 结案 和没有提交的都不显示
             var lambdaSO = Expressionable.Create<tb_SaleOut>()
@@ -192,7 +192,10 @@ namespace RUINORERP.UI.PSI.SAL
             BaseProcessor baseProcessorSO = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_SaleOut).Name + "Processor");
             QueryFilter queryFilterSO = baseProcessorSO.GetQueryFilter();
             queryFilterSO.FilterLimitExpressions.Add(lambdaSO);
-            DataBindingHelper.InitFilterForControlByExp<tb_SaleOut>(entity, txtSaleOutNo, c => c.SaleOutNo, queryFilterSO);
+
+            ControlBindingHelper.ConfigureControlFilter<tb_SaleOutRe, tb_SaleOut>(entity, txtSaleOutNo, t => t.SaleOut_NO,
+              f => f.SaleOutNo, queryFilterSO, a => a.SaleOut_MainID, b => b.SaleOut_MainID, null, false);
+
             ToolBarEnabledControl(entity);
 
             //如果属性变化 则状态为修改

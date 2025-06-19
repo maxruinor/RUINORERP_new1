@@ -21,7 +21,7 @@ namespace RUINORERP.Model
     /// 调拨单-两个仓库之间的库存转移
     /// </summary>
     [Serializable()]
-    [Description("调拨单-两个仓库之间的库存转移")]
+    [Description("调拨单")]
     [SugarTable("tb_StockTransfer")]
     public partial class tb_StockTransfer: BaseEntity, ICloneable
     {

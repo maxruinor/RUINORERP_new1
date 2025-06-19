@@ -149,7 +149,7 @@ namespace RUINORERP.UI.FM
                 #endregion
 
                 //如果状态是已经生效才可能有审核，如果是待收款 才可能有反审
-                if (entity.ARAPStatus == (long)ARAPStatus.待审核)
+                if (entity.ARAPStatus == (int)ARAPStatus.待审核)
                 {
                     base.toolStripbtnReview.Visible = true;
                 }
@@ -158,7 +158,7 @@ namespace RUINORERP.UI.FM
                     base.toolStripbtnReview.Visible = false;
                 }
 
-                if (entity.ARAPStatus == (long)ARAPStatus.已生效)
+                if (entity.ARAPStatus == (int)ARAPStatus.待支付)
                 {
                     base.toolStripBtnReverseReview.Visible = true;
                 }
@@ -171,7 +171,7 @@ namespace RUINORERP.UI.FM
             else
             {
                 entity.ActionStatus = ActionStatus.新增;
-                entity.ARAPStatus = (long)ARAPStatus.草稿;
+                entity.ARAPStatus = (int)ARAPStatus.草稿;
                 entity.ReceivePaymentType = (int)PaymentType;
                 entity.ActionStatus = ActionStatus.新增;
 
@@ -310,8 +310,8 @@ namespace RUINORERP.UI.FM
                     item.PropertyChanged += (sender, s1) =>
                     {
                         //权限允许
-                        if ((true && entity.ARAPStatus == (long)ARAPStatus.草稿) ||
-                        (true && entity.ARAPStatus == (long)ARAPStatus.待审核))
+                        if ((true && entity.ARAPStatus == (int)ARAPStatus.草稿) ||
+                        (true && entity.ARAPStatus == (int)ARAPStatus.待审核))
                         {
                             EditEntity.ActionStatus = ActionStatus.修改;
                         }
@@ -330,8 +330,8 @@ namespace RUINORERP.UI.FM
             entity.PropertyChanged += (sender, s2) =>
             {
                 //权限允许
-                if ((true && entity.ARAPStatus == (long)ARAPStatus.草稿)
-                || (true && entity.ARAPStatus == (long)ARAPStatus.待审核))
+                if ((true && entity.ARAPStatus == (int)ARAPStatus.草稿)
+                || (true && entity.ARAPStatus == (int)ARAPStatus.待审核))
                 {
                     EditEntity.ActionStatus = ActionStatus.修改;
                 }
@@ -816,8 +816,8 @@ namespace RUINORERP.UI.FM
 
         protected override async Task<bool> Submit()
         {
-            bool rs = await base.Submit(typeof(ARAPStatus));
-            if (rs)
+            bool result = await Submit(ARAPStatus.待审核);
+            if (result)
             {
                 ConfigManager configManager = Startup.GetFromFac<ConfigManager>();
                 var temppath = configManager.GetValue("WebServerUrl");

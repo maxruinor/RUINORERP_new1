@@ -154,8 +154,8 @@ namespace RUINORERP.UI.UserCenter.DataParts
                     {
                         FieldName = "PrePaymentStatus",
                         ConditionalType = ConditionalType.Equal,
-                        FieldValue = ((long)PrePaymentStatus.待审核).ToString(),
-                        CSharpTypeName = "long"
+                        FieldValue = ((int)PrePaymentStatus.待审核).ToString(),
+                        CSharpTypeName = "int"
                     },
                      new ConditionalModel
                     {
@@ -185,8 +185,8 @@ namespace RUINORERP.UI.UserCenter.DataParts
                     {
                         FieldName = "PrePaymentStatus",
                         ConditionalType = ConditionalType.Equal,
-                        FieldValue = ((long)PrePaymentStatus.已生效).ToString(),
-                        CSharpTypeName = "long"
+                        FieldValue = ((int)PrePaymentStatus.待核销).ToString(),
+                        CSharpTypeName = "int"
                     },
                      new ConditionalModel
                     {
@@ -235,8 +235,8 @@ namespace RUINORERP.UI.UserCenter.DataParts
                     {
                         FieldName = "ARAPStatus",
                         ConditionalType = ConditionalType.Equal,
-                        FieldValue = ((long)ARAPStatus.已生效).ToString(),
-                        CSharpTypeName = "long"
+                        FieldValue = ((int)ARAPStatus.待支付).ToString(),
+                        CSharpTypeName = "int"
                     },
                     new ConditionalModel
                     {
@@ -285,8 +285,8 @@ namespace RUINORERP.UI.UserCenter.DataParts
                     {
                         FieldName = "PaymentStatus",
                         ConditionalType = ConditionalType.Equal,
-                        FieldValue = ((long)PaymentStatus.待审核).ToString(),
-                        CSharpTypeName = "long"
+                        FieldValue = ((int)PaymentStatus.待审核).ToString(),
+                        CSharpTypeName = "int"
                     }
                 }
             }

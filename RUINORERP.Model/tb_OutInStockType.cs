@@ -21,7 +21,7 @@ namespace RUINORERP.Model
     /// 出入库类型  非生产领料/退料  借出，归还  报损报溢？单独处理？
     /// </summary>
     [Serializable()]
-    [Description("出入库类型  非生产领料/退料  借出，归还  报损报溢？单独处理？")]
+    [Description("其它出入库类型")]
     [SugarTable("tb_OutInStockType")]
     public partial class tb_OutInStockType: BaseEntity, ICloneable
     {

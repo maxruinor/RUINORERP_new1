@@ -208,8 +208,8 @@ namespace RUINORERP.UI.FM
             foreach (var item in selectlist)
             {
                 //只有审核状态才可以转换为收款单
-                bool canConvert = item.ARAPStatus == (long)ARAPStatus.已生效 && item.ApprovalStatus == (int)ApprovalStatus.已审核 && item.ApprovalResults.HasValue && item.ApprovalResults.Value;
-                if (canConvert || item.ARAPStatus == (long)ARAPStatus.部分支付)
+                bool canConvert = item.ARAPStatus == (int)ARAPStatus.待支付 && item.ApprovalStatus == (int)ApprovalStatus.已审核 && item.ApprovalResults.HasValue && item.ApprovalResults.Value;
+                if (canConvert || item.ARAPStatus == (int)ARAPStatus.部分支付)
                 {
                     RealList.Add(item);
                 }

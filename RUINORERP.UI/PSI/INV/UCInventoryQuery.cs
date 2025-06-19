@@ -39,7 +39,6 @@ namespace RUINORERP.UI.PSI.INV
             InitializeComponent();
             //生成查询条件的相关实体
             base.EditForm = null;
-
             System.Linq.Expressions.Expression<Func<tb_Prod, int?>> expr;
             expr = (p) => p.SourceType;
             base.ColNameDataDictionary.TryAdd(expr.GetMemberInfo().Name, CommonHelper.Instance.GetKeyValuePairs(typeof(GoodsSource)));

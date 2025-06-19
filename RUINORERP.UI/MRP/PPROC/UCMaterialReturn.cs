@@ -227,7 +227,6 @@ namespace RUINORERP.UI.MRP.MP
 
             //先绑定这个。InitFilterForControl 这个才生效
             DataBindingHelper.BindData4TextBox<tb_MaterialReturn>(entity, v => v.MaterialRequisitionNO, txtRefNO, BindDataType4TextBox.Text, true);
-            DataBindingHelper.BindData4TextBoxWithTagQuery<tb_MaterialReturn>(entity, v => v.MR_ID, txtRefNO, true);
 
             BaseProcessor basePro = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_MaterialRequisition).Name + "Processor");
             QueryFilter queryFilter = basePro.GetQueryFilter();
@@ -239,8 +238,8 @@ namespace RUINORERP.UI.MRP.MP
                              //如果有限制则设置一下 但是注意 不应该在这设置，灵活的应该是在调用层设置
             queryFilter.SetFieldLimitCondition(lambdaOrder);
 
-            DataBindingHelper.InitFilterForControlByExp<tb_MaterialRequisition>(entity, txtRefNO, c => c.MaterialRequisitionNO, queryFilter);
-
+            ControlBindingHelper.ConfigureControlFilter<tb_MaterialReturn, tb_MaterialRequisition>(entity, txtRefNO, t => t.MaterialRequisitionNO,
+               f => f.MaterialRequisitionNO, queryFilter, a => a.MR_ID, b => b.MR_ID, null, false);
 
             //创建表达式 外发工厂
             var lambdaOut = Expressionable.Create<tb_CustomerVendor>()

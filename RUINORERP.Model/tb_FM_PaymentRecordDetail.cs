@@ -21,7 +21,7 @@ namespace RUINORERP.Model
     /// 收款单明细表：记录收款分配到应收单的明细
     /// </summary>
     [Serializable()]
-    [Description("收款单明细表：记录收款分配到应收单的明细")]
+    [Description("收付款单明细表")]
     [SugarTable("tb_FM_PaymentRecordDetail")]
     public partial class tb_FM_PaymentRecordDetail: BaseEntity, ICloneable
     {

@@ -21,7 +21,7 @@ namespace RUINORERP.Model
     /// 入库单 非生产领料/退料
     /// </summary>
     [Serializable()]
-    [Description("入库单 非生产领料/退料")]
+    [Description("其它入库单")]
     [SugarTable("tb_StockIn")]
     public partial class tb_StockIn: BaseEntity, ICloneable
     {

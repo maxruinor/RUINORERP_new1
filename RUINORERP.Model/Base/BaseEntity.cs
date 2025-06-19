@@ -12,6 +12,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -33,6 +34,98 @@ namespace RUINORERP.Model
     [Serializable()]
     public class BaseEntity : INotifyPropertyChanged, IDataErrorInfo//, IStatusProvider
     {
+        #region 属性变更追踪
+
+        // 记录原始值的字典
+        //private readonly ConcurrentDictionary<string, object> _originalValues = new ConcurrentDictionary<string, object>();
+        private readonly Dictionary<string, object> _originalValues = new Dictionary<string, object>();
+        // 记录已变更属性的集合  
+        // 跟踪已修改的属性（只需要知道哪些属性被修改过）
+        //private readonly ConcurrentDictionary<string, object> _changedProperties = new ConcurrentDictionary<string, object>();
+        //private readonly Dictionary<string, object> _changedProperties = new Dictionary<string, object>();
+        private readonly HashSet<string> _changedProperties = new HashSet<string>();
+        // 获取变更属性集合
+   
+
+        /// <summary>
+        /// 获取所有已变更属性的名称集合
+        /// 获取所有已修改的属性名
+        /// </summary>
+        [SugarColumn(IsIgnore = true)]
+        [Browsable(false)]
+        public IEnumerable<string> ChangedProperties => _changedProperties;
+        
+
+        // 追踪属性变更的标志
+        private bool _trackChanges = true;
+
+        /// <summary>
+        /// 是否启用属性变更追踪，默认为true
+        /// </summary>
+        [SugarColumn(IsIgnore = true)]
+        [Browsable(false)]
+        public bool TrackChanges
+        {
+            get => _trackChanges;
+            set => _trackChanges = value;
+        }
+
+
+
+
+ 
+
+        /// <summary>
+        /// 检查特定属性是否有变更
+        /// </summary>
+        /// <param name="propertyName">属性名称</param>
+        /// <returns>如果属性有变更返回true，否则返回false</returns>
+        public bool HasPropertyChanged(string propertyName)
+        {
+            return _changedProperties.Contains(propertyName);
+        }
+
+        /// <summary>
+        /// 获取属性的原始值
+        /// </summary>
+        /// <param name="propertyName">属性名称</param>
+        /// <returns>属性的原始值</returns>
+        public object GetOriginalValue(string propertyName)
+        {
+            if (_originalValues.TryGetValue(propertyName, out object value))
+            {
+                return value;
+            }
+
+            // 如果原始值字典中没有，尝试从当前属性获取
+            PropertyInfo property = GetType().GetProperty(propertyName);
+            if (property != null && property.CanRead)
+            {
+                return property.GetValue(this);
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// 获取属性的当前值
+        /// </summary>
+        /// <param name="propertyName">属性名称</param>
+        /// <returns>属性的当前值</returns>
+        public object GetCurrentValue(string propertyName)
+        {
+            PropertyInfo property = GetType().GetProperty(propertyName);
+            if (property != null && property.CanRead)
+            {
+                return property.GetValue(this);
+            }
+
+            return null;
+        }
+
+        #endregion
+
+
         #region 像出库时 成本与分摊双向计算的情况
         public void RaisePropertyChanged(string propertyName)
         {
@@ -56,17 +149,33 @@ namespace RUINORERP.Model
         protected virtual void OnPropertyChanged(string propertyName, object oldValue, object newValue)
         {
             // 触发常规属性变更事件 已经调用 了。
-            //PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+            // 合并通知逻辑
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
 
             // 检查是否是状态属性变更
             if (propertyName == _statusPropertyName && !oldValue.Equals(newValue))
             {
+                // 状态变更处理
                 //OnPropertyChangedStatus(propertyName, oldValue, newValue);
             }
         }
 
 
         #endregion
+
+        private readonly Stopwatch _performanceStopwatch = new Stopwatch();
+
+        public void StartPerformanceMonitoring()
+        {
+            _performanceStopwatch.Restart();
+        }
+
+        public void StopPerformanceMonitoring(string operationName)
+        {
+            _performanceStopwatch.Stop();
+            Console.WriteLine($"{operationName} took {_performanceStopwatch.ElapsedMilliseconds} ms");
+        }
+
         #region 状态机管理
 
 
@@ -131,7 +240,243 @@ namespace RUINORERP.Model
                 //}
             };
             */
+ 
         }
+
+
+        private static readonly ConcurrentDictionary<Type, PropertyInfo[]> _propertyCache = new ConcurrentDictionary<Type, PropertyInfo[]>();
+        private PropertyInfo[] GetCachedProperties()
+        {
+            var type = GetType();
+            return _propertyCache.GetOrAdd(type, t =>
+                t.GetProperties(BindingFlags.Public | BindingFlags.Instance)
+                 .Where(p => !ShouldSkipTracking(p)).ToArray());
+        }
+
+
+        #region 状态计算 deepseek
+
+        /// <summary>
+        /// 标记业务操作开始（如加载单据后），记录当前状态为原始值
+        /// 在加载数据后必须调用BeginOperation
+        /// </summary>
+        //public void BeginOperation()
+        //{
+        //    // 清除历史记录
+        //    _originalValues.Clear();
+        //    _changedProperties.Clear();
+
+        //    // 获取需要跟踪的属性列表（使用缓存）
+        //    var properties = GetCachedProperties();
+
+        //    // 记录所有需要跟踪的属性的当前值
+        //    foreach (var property in properties)
+        //    {
+        //        var value = property.GetValue(this);
+        //        _originalValues[property.Name] = value is ICloneable cloneable
+        //            ? cloneable.Clone()
+        //            : value;
+        //    }
+
+        //    HasChanged = false;
+        //}
+
+        /// <summary>
+        /// 开始业务操作，记录当前状态为原始值
+        /// </summary>
+        public void BeginOperation()
+        {
+            // 清除历史状态
+            _originalValues.Clear();
+            _changedProperties.Clear();
+
+            // 获取需要跟踪的属性列表（使用缓存）
+            var properties = GetCachedProperties();
+
+            // 记录所有需要跟踪的属性的当前值
+            foreach (var property in properties)
+            {
+                try
+                {
+                    var value = property.GetValue(this);
+
+                    // 处理特殊类型：深拷贝可克隆对象
+                    if (value is ICloneable cloneable)
+                    {
+                        _originalValues[property.Name] = cloneable.Clone();
+                    }
+                    // 处理集合类型：创建副本
+                    else if (value is System.Collections.IEnumerable enumerable &&
+                             !(value is string))
+                    {
+                        // 特殊处理List类型
+                        if (value is System.Collections.IList list)
+                        {
+                            var newList = (System.Collections.IList)Activator.CreateInstance(list.GetType());
+                            foreach (var item in list)
+                            {
+                                newList.Add(item);
+                            }
+                            _originalValues[property.Name] = newList;
+                        }
+                        else
+                        {
+                            _originalValues[property.Name] = enumerable.Cast<object>().ToList();
+                        }
+                    }
+                    // 其他类型直接存储
+                    else
+                    {
+                        _originalValues[property.Name] = value;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    // 记录错误但继续执行
+                    Debug.WriteLine($"记录属性 {property.Name} 原始值时出错: {ex.Message}");
+                }
+            }
+
+            HasChanged = false;
+        }
+
+        /// <summary>
+        /// 接受变更，将当前值设为新的原始值（保存后调用）
+        /// 在保存数据后必须调用AcceptChanges
+        /// </summary>
+        public void AcceptChanges()
+        {
+            foreach (var propName in _changedProperties.ToList())
+            {
+                var property = GetType().GetProperty(propName);
+                if (property != null)
+                {
+                    var value = property.GetValue(this);
+                    _originalValues[propName] = value is ICloneable cloneable
+                        ? cloneable.Clone()
+                        : value;
+                }
+            }
+            _changedProperties.Clear();
+            HasChanged = false;
+        }
+
+
+        void RollbackChanges()
+        {
+            // 回滚到操作开始时的状态
+            foreach (var prop in _changedProperties)
+            {
+                var original = _originalValues[prop];
+                GetType().GetProperty(prop)?.SetValue(this, original);
+            }
+            _changedProperties.Clear();
+        }
+
+
+        /// <summary>
+        /// 重置变更追踪状态
+        /// </summary>
+        //public void ResetChanges()
+        //{
+        //    foreach (var propName in _changedProperties)
+        //    {
+        //        if (_originalValues.TryGetValue(propName, out var original))
+        //        {
+        //            var property = GetType().GetProperty(propName);
+        //            property?.SetValue(this, original);
+        //        }
+        //    }
+        //    //ResetChangeTracking();
+        //    _changedProperties.Clear();
+        //}
+
+
+        // 新增：初始化原始值快照
+        private void InitializeOriginalValues()
+        {
+            // var properties = GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance);
+            var properties = GetCachedProperties();
+            foreach (var property in properties)
+            {
+                // 忽略不应跟踪的属性
+                if (ShouldSkipTracking(property)) continue;
+
+                var value = property.GetValue(this);
+                _originalValues[property.Name] = value is ICloneable cloneable ? cloneable.Clone() : value;
+            }
+        }
+        // 新增：检查属性是否应跳过跟踪
+        private bool ShouldSkipTracking(PropertyInfo property)
+        {
+            // 跳过标记为忽略的属性
+            var sugarColumnAttr = property.GetCustomAttribute<SugarColumn>();
+            if (sugarColumnAttr != null && sugarColumnAttr.IsIgnore) return true;
+
+            // 跳过导航属性
+            if (property.GetCustomAttribute<Navigate>() != null) return true;
+
+            // 跳过特定属性
+            var skipProperties = new[] { "StatusEvaluator", "FieldNameList", "HelpInfos", "RowImage", "ActionStatus" };
+            return skipProperties.Contains(property.Name);
+        }
+        // 新增：检查值是否实际变化
+        private bool IsValueChanged<T>(string propertyName, object newValue)
+        {
+            if (!_originalValues.TryGetValue(propertyName, out var originalValue))
+                return true;
+
+            // 特殊处理可空类型
+            if (originalValue == null && newValue == null) return false;
+            if (originalValue == null || newValue == null) return true;
+
+            // 处理实现了 IEquatable 接口的类型
+            if (originalValue is IEquatable<T> equatable && equatable.Equals(newValue))
+                return false;
+
+            // 默认比较
+            return !originalValue.Equals(newValue);
+        }
+
+
+        // 新增：检查特定属性是否修改
+        public bool IsPropertyChanged(string propertyName)
+        {
+            return _changedProperties.Contains(propertyName);
+        }
+
+        // 新增：重置变更状态（保存后调用）
+        public void ResetChangeTracking()
+        {
+            _changedProperties.Clear();
+            HasChanged = false;
+
+            //是清空还是保存原值？
+            //_originalValues.Clear();
+
+            // 更新原始值为当前值
+            //var properties = GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance);
+            //foreach (var property in properties)
+            //{
+            //    if (!_changedProperties.ContainsKey(property.Name)) continue;
+            //    var value = property.GetValue(this);
+            //    _originalValues[property.Name] = value is ICloneable cloneable ? cloneable.Clone() : value;
+            //}
+
+            //foreach (var propertyName in _changedProperties.Keys.ToList())
+            //{
+            //    var property = GetType().GetProperty(propertyName);
+            //    if (property != null)
+            //    {
+            //        var value = property.GetValue(this);
+            //        _originalValues[propertyName] = value is ICloneable cloneable ? cloneable.Clone() : value;
+            //    }
+            //}
+
+        }
+
+        #endregion
+
 
         // 允许子类替换状态提供器
         protected void SetStatusProvider(IStatusEvaluator statusEvaluator)
@@ -183,37 +528,6 @@ namespace RUINORERP.Model
 
         #region 字段基类描述对应列表 - 基类实现
 
-
-        #region 字段列表
-        //private ConcurrentDictionary<string, string> fieldNameList;
-
-        ///// <summary>
-        ///// 表列名的中文描述集合
-        ///// </summary>
-        //[Description("列名中文描述"), Category("自定属性")]
-        //[SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
-        //[JsonIgnore]
-        //[XmlIgnore]
-        //public virtual ConcurrentDictionary<string, string> FieldNameList
-        //{
-        //    get
-        //    {
-        //        return fieldNameList;
-        //    }
-        //    set
-        //    {
-        //        fieldNameList = value;
-        //    }
-
-        //}
-
-
-
-
-
-        #endregion
-
         private static readonly ConcurrentDictionary<Type, ConcurrentDictionary<string, string>> _fieldNameListCache = new ConcurrentDictionary<Type, ConcurrentDictionary<string, string>>();
 
         [Description("列名中文描述"), Category("自定属性")]
@@ -233,7 +547,11 @@ namespace RUINORERP.Model
 
         private static ConcurrentDictionary<string, string> GenerateFieldNameList(Type type)
         {
-            var fieldNameList = new ConcurrentDictionary<string, string>();
+            if (_fieldNameListCache.TryGetValue(type, out var fieldNameList))
+            {
+                return fieldNameList;
+            }
+             fieldNameList = new ConcurrentDictionary<string, string>();
             foreach (var property in type.GetProperties())
             {
                 var sugarColumnAttr = property.GetCustomAttribute<SugarColumn>(false);
@@ -242,6 +560,7 @@ namespace RUINORERP.Model
                     fieldNameList.TryAdd(property.Name, sugarColumnAttr.ColumnDescription);
                 }
             }
+            _fieldNameListCache[type] = fieldNameList;
             return fieldNameList;
         }
 
@@ -249,7 +568,7 @@ namespace RUINORERP.Model
 
         public void SetDetails<C>(List<C> details) where C : class, new()
         {
-
+            // 实现细节
         }
 
         private DataRowImage _RowImage = new DataRowImage();
@@ -270,16 +589,12 @@ namespace RUINORERP.Model
         /// 用于转入单时明细是否选中的逻辑，下面的属性后面优化
         /// 默认不显示，忽略
         /// </summary>
-        //        [SugarColumn(IsIgnore = true, ColumnDescription = "选择")]
+        //[SugarColumn(IsIgnore = true, ColumnDescription = "选择")]
         [SugarColumn(IsIgnore = true)]
         [Browsable(true)]
         public bool? Selected { get => _selected; set => _selected = value; }
 
-        /// <summary>
-        /// 审核数据
-        /// </summary>
-        // [SugarColumn(IsIgnore = true)]
-        // public ApprovalData approvalData { get; set; }
+ 
 
         [SugarColumn(IsIgnore = true)]
         /// <summary>
@@ -308,20 +623,21 @@ namespace RUINORERP.Model
         public bool SuppressNotifyPropertyChanged { get; set; }
         protected virtual void OnPropertyChanged(string propertyName)
         {
-            if (this.PropertyChanged != null && !SuppressNotifyPropertyChanged)
-            {
-                try
-                {
-                    this.PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
-                    HasChanged = true;
-                }
-                catch (Exception ex)
-                {
+            // 删除此方法或保留为空
+            //if (this.PropertyChanged != null && !SuppressNotifyPropertyChanged)
+            //{
+            //    try
+            //    {
+            //        this.PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
+            //        HasChanged = true;
+            //    }
+            //    catch (Exception ex)
+            //    {
 
 
-                }
+            //    }
 
-            }
+            //}
         }
 
         protected virtual void OnPropertyChanged<T>(Expression<Func<T>> expr)
@@ -349,9 +665,15 @@ namespace RUINORERP.Model
             {
                 throw new ArgumentException("Expression must be a PropertyExpression!", "expr");
             }
+
             var propName = propInfo.Name;
+
+            T oldValue = propField;
             propField = value;
+
+            this.OnPropertyChanged(propName, oldValue, value);
             this.OnPropertyChanged(propName);
+            HasChanged = true;
         }
 
         /// <summary>
@@ -363,24 +685,99 @@ namespace RUINORERP.Model
         /// <param name="propertyName"></param>
         protected void SetProperty<T>(ref T storage, T value, [CallerMemberName] String propertyName = null)
         {
+            /*
+            #region 检测判断是否是相同的值
+            if (EqualityComparer<T>.Default.Equals(storage, value)) return;
+
+            if (object.Equals(storage, value)) return;
+
+            // 首先检查引用是否相等（同一实例）
+            if (ReferenceEquals(storage, value))
+                return;
+
+            // 如果都是 null，认为相等
+            if (storage == null && value == null)
+                return;
+      
+            // 使用适当的比较方法
+            bool areEqual;
+            // 特殊处理字符串类型
+            if (typeof(T) == typeof(string))
+            {
+                areEqual = string.Equals(storage as string, value as string);
+            }
+            // 特殊处理集合类型（如果需要）
+            else if (typeof(System.Collections.IEnumerable).IsAssignableFrom(typeof(T)))
+            {
+                // 这里可以实现更复杂的集合比较逻辑
+                areEqual = object.Equals(storage, value);
+            }
+            else
+            {
+                // 使用默认比较器
+                areEqual = EqualityComparer<T>.Default.Equals(storage, value);
+            }
+
+            if (areEqual)
+                return;
+
+            #endregion
+            */
+
+            // 简化为单次高效比较
             if (EqualityComparer<T>.Default.Equals(storage, value))
                 return;
 
-            if (object.Equals(storage, value)) return;
-            storage = value;
             T oldValue = storage;
-            OnPropertyChanged(propertyName, oldValue, value);
-            this.OnPropertyChanged(propertyName);
+            storage = value;
+
+            // 首次变更时记录原始值
+            if (!_originalValues.ContainsKey(propertyName))
+                _originalValues[propertyName] = oldValue;
+
+            _changedProperties.Add(propertyName);
             HasChanged = true;
+
+            // 合并通知事件
+            OnPropertyChanged(propertyName, oldValue, value);
+     
+            /*
+            // 检查值是否实际变化
+            bool isValueChanged = IsValueChanged<T>(propertyName, value);
+
+            storage = value;
+            //T oldValue = storage;
+
+            if (isValueChanged)
+            {
+                // 标记属性为已修改
+                _changedProperties[propertyName] = true;
+                HasChanged = true;
+                _changeHistory[propertyName] = new ValueChangeRecord((object)storage, value);
+            }
+            else if (_changedProperties.ContainsKey(propertyName))
+            {
+                // 如果值改回原始值，移除修改标记
+                _changedProperties.TryRemove(propertyName, out _);
+                // 如果没有其他修改，重置HasChanged
+                if (_changedProperties.IsEmpty) HasChanged = false;
+            }
+           
+            OnPropertyChanged(propertyName, (object)storage, value);
+            this.OnPropertyChanged(propertyName);*/
         }
         #endregion
         public virtual void Save()
         {
+            // 保存后重置变更追踪
+            ResetChangeTracking();
             HasChanged = false;
         }
 
         public virtual void Update()
         {
+            // 更新后重置变更追踪
+            ResetChangeTracking();
             HasChanged = false;
 
         }
@@ -531,15 +928,6 @@ namespace RUINORERP.Model
             }
 
             return pname;
-
-            //string pname = string.Empty;
-            //var unary = expression.Body as UnaryExpression;
-            //var exp = (unary as UnaryExpression).Operand;
-            //if (exp is MemberExpression member)
-            //{
-            //    pname = member.Member.Name;
-            //}
-            // return pname;
         }
 
         public bool IsIdValid(decimal? value)
@@ -560,8 +948,16 @@ namespace RUINORERP.Model
         }
         public virtual object Clone()
         {
-            BaseEntity loctype = (BaseEntity)this.MemberwiseClone(); //创建当前对象的浅拷贝。
-            return loctype;
+            BaseEntity clone = (BaseEntity)this.MemberwiseClone(); //创建当前对象的浅拷贝。
+
+            //clone.ResetChangeTracking(); // 重置克隆对象的变更状态
+
+            // 重置克隆对象的变更追踪状态
+            clone._originalValues.Clear();
+            clone._changedProperties.Clear();
+            clone.HasChanged = false;
+
+            return clone;
         }
 
        
@@ -682,7 +1078,7 @@ namespace RUINORERP.Model
             return false;
         }
         #endregion
-
+      
     }
 
     // 定义一个事件参数类，用于传递新旧值

@@ -21,7 +21,7 @@ namespace RUINORERP.Model
     /// 用户角色菜单个性化设置表一个角色用户菜单 三个字段为联合主键 就一行数据
     /// </summary>
     [Serializable()]
-    [Description("用户角色菜单个性化设置表一个角色用户菜单 三个字段为联合主键 就一行数据")]
+    [Description("菜单个性化设置表")]
     [SugarTable("tb_UIMenuPersonalization")]
     public partial class tb_UIMenuPersonalization: BaseEntity, ICloneable
     {

@@ -183,11 +183,6 @@ namespace RUINORERP.UI.PSI.PUR
                 {
                     await Task.Delay(200);//要延迟一下。不然tag中的值还没有赋值就会执行了
                     LoadRefBillData(entity.PurEntryRe_ID);
-                    //Task.Delay(200).ContinueWith(t =>
-                    //{
-                    //    LoadRefBillData(entity.PurEntryRe_ID);
-                    //}
-                    //);
                 }
                 else
                 {
@@ -199,7 +194,6 @@ namespace RUINORERP.UI.PSI.PUR
 
             //绑定这个。数据联动
             DataBindingHelper.BindData4TextBox<tb_PurReturnEntry>(entity, v => v.PurEntryReNo, txtPurEntryRe_ID, BindDataType4TextBox.Text, true);
-            DataBindingHelper.BindData4TextBoxWithTagQuery<tb_PurReturnEntry>(entity, v => v.PurEntryRe_ID, txtPurEntryRe_ID, true);
 
             BaseProcessor baseProcessor = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_CustomerVendor).Name + "Processor");
             QueryFilter queryFilterC = baseProcessor.GetQueryFilter();
@@ -213,11 +207,7 @@ namespace RUINORERP.UI.PSI.PUR
             //后面这些依赖于控件绑定的数据源和字段。所以要在绑定后执行。
             if (entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改)
             {
-
-
                 DataBindingHelper.InitFilterForControlByExp<tb_CustomerVendor>(entity, cmbCustomerVendor_ID, c => c.CVName, queryFilterC);
-
-
 
                 //创建表达式  草稿 结案 和没有提交的都不显示
                 var lambdaRe = Expressionable.Create<tb_PurEntryRe>()
@@ -229,7 +219,9 @@ namespace RUINORERP.UI.PSI.PUR
                 queryFilter.FilterLimitExpressions.Add(lambdaRe);//意思是只有审核确认的。没有结案的。才能查询出来。
 
                 //绑定这个。数据感叹号快捷查询
-                DataBindingHelper.InitFilterForControlByExp<tb_PurEntryRe>(entity, txtPurEntryRe_ID, c => c.PurEntryReNo, queryFilter);
+                ControlBindingHelper.ConfigureControlFilter<tb_PurReturnEntry, tb_PurEntryRe>(entity, txtPurEntryRe_ID, t => t.PurEntryReNo,
+            f => f.PurEntryReNo, queryFilter, a => a.PurEntryRe_ID, b => b.PurEntryRe_ID, null, false);
+
                 base.InitRequiredToControl(MainForm.Instance.AppContext.GetRequiredService <tb_PurReturnEntryValidator> (), kryptonSplitContainer1.Panel1.Controls);
                 //  base.InitEditItemToControl(entity, kryptonPanel1.Controls);
             }

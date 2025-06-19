@@ -15,6 +15,7 @@ using RUINORERP.Common.Helper;
 using RUINORERP.Global;
 using RUINORERP.Global.CustomAttribute;
 using RUINORERP.Model;
+using RUINORERP.Model.Dto;
 using RUINORERP.UI.BaseForm;
 using RUINORERP.UI.Common;
 using RUINORERP.UI.UCSourceGrid;
@@ -510,6 +511,17 @@ namespace RUINORERP.UI.UCSourceGrid
 
                 //将行的数据设置到每个格子中显示出来
                 #region 优化
+
+                
+
+                //公共部分
+                var prodetailID = ReflectionHelper.GetPropertyValue(detail, key);
+                var v_ProductSharePart = sgdefine.SourceList.Find(x => ReflectionHelper.GetPropertyValue(x, key).ToString() == prodetailID.ToString());
+                if (v_ProductSharePart == null)
+                {
+                    //从数据库取？
+                }
+
                 foreach (SGDefineColumnItem dc in sgdefine.ToArray())
                 {
                     var columninfo = grid1.Columns.GetColumnInfo(dc.UniqueId);
@@ -597,19 +609,17 @@ namespace RUINORERP.UI.UCSourceGrid
                         }
                         else
                         {
-                            //公共部分
-                            var prodetailID = ReflectionHelper.GetPropertyValue(detail, key);
-                            var v_prod = sgdefine.SourceList.Find(x => ReflectionHelper.GetPropertyValue(x, key).ToString() == prodetailID.ToString());
-                            if (v_prod != null)
+
+                            if (v_ProductSharePart != null)
                             {
-                                object cellvalue = ReflectionHelper.GetPropertyValue(v_prod, dc.ColName);
+                                object cellvalue = ReflectionHelper.GetPropertyValue(v_ProductSharePart, dc.ColName);
                                 if (!cellvalue.IsNullOrEmpty())
                                 {
                                     if (!isLoadData)
                                     {
                                         //如果是加载数据，不用设置值，插入时才设置
                                         //如果这个列指定和目标，也要设置一下 ，但是这里是加载。都已经保存在数据库了。不需要？
-                                        SetCellValue(dc, pt, v_prod, true);
+                                        SetCellValue(dc, pt, v_ProductSharePart, true);
                                     }
                                     //如果是产品图片时，显示出来
                                     if (dc.CustomFormat == CustomFormatType.Image)
@@ -624,7 +634,7 @@ namespace RUINORERP.UI.UCSourceGrid
                                         {
                                             // currContext.Cell.View = sgdefine.ViewNormal;
                                         }
-                                        currContext.Tag = v_prod;
+                                        currContext.Tag = v_ProductSharePart;
                                     }
                                     else if (dc.CustomFormat == CustomFormatType.WebPathImage)
                                     {
@@ -638,7 +648,7 @@ namespace RUINORERP.UI.UCSourceGrid
                                         {
                                             //  currContext.Cell.View = sgdefine.ViewNormal;
                                         }
-                                        currContext.Tag = v_prod;
+                                        currContext.Tag = v_ProductSharePart;
                                     }
                                     else
                                     {
@@ -654,7 +664,7 @@ namespace RUINORERP.UI.UCSourceGrid
                                             currContext.Value = cellvalue;
                                         }
                                         currContext.Cell.View = sgdefine.ViewNormal;
-                                        currContext.Tag = v_prod;
+                                        currContext.Tag = v_ProductSharePart;
                                     }
 
 

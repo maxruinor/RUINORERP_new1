@@ -21,7 +21,7 @@ namespace RUINORERP.Model
     /// 标准物料表BOM明细-要适当冗余
     /// </summary>
     [Serializable()]
-    [Description("标准物料表BOM明细-要适当冗余")]
+    [Description("标准物料表BOM明细")]
     [SugarTable("tb_BOM_SDetail")]
     public partial class tb_BOM_SDetail: BaseEntity, ICloneable
     {

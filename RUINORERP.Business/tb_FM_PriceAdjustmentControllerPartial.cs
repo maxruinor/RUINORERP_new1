@@ -228,7 +228,7 @@ namespace RUINORERP.Business
         //            foreach (var entity in entitys)
         //            {
         //                //这部分是否能提出到上一级公共部分？
-        //                entity.PrePaymentStatus = (long)PrePaymentStatus.已生效;
+        //                entity.PrePaymentStatus = (int)PrePaymentStatus.已生效;
         //                entity.ApprovalOpinions = approvalEntity.ApprovalOpinions;
         //                //后面已经修改为
         //                entity.ApprovalResults = approvalEntity.ApprovalResults;
@@ -289,13 +289,13 @@ namespace RUINORERP.Business
 
 
                     //判断 能结案的 是确认审核过的。
-                    if (entitys[m].PrePaymentStatus != (long)PrePaymentStatus.已冲销 || !entitys[m].ApprovalResults.HasValue)
+                    if (entitys[m].PrePaymentStatus != (int)PrePaymentStatus.已冲销 || !entitys[m].ApprovalResults.HasValue)
                     {
                         //return false;
                         continue;
                     }
                     //这部分是否能提出到上一级公共部分？
-                    entitys[m].PrePaymentStatus = (long)PrePaymentStatus.已冲销;
+                    entitys[m].PrePaymentStatus = (int)PrePaymentStatus.已冲销;
                     BusinessHelper.Instance.EditEntity(entitys[m]);
                     //只更新指定列
                     var affectedRows = await _unitOfWorkManage.GetDbClient()

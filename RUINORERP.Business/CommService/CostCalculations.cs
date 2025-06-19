@@ -208,7 +208,8 @@ namespace RUINORERP.Business.CommService
                         {
                             // 当分母为0且无手工指定成本时，保留原始成本更合理
                             // 但需要明确提示可能的风险
-                            throw new InvalidOperationException("移动加权平均反审核时总数量为0且未提供有效手工成本，无法确定新成本");
+                            throw new InvalidOperationException("【移动加权平均计算时】反审核时总数量为0且未提供有效单价，是否有引用入库单？\r\n" +
+                                "系统无法确定新成本。审核失败！");
                         }
                         return;
                     }

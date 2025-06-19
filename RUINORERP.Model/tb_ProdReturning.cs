@@ -21,7 +21,7 @@ namespace RUINORERP.Model
     /// 归还单，如果部分无法归还，则强制结案借出单。生成一个财务数据做记录。
     /// </summary>
     [Serializable()]
-    [Description("归还单，如果部分无法归还，则强制结案借出单。生成一个财务数据做记录。")]
+    [Description("归还单")]
     [SugarTable("tb_ProdReturning")]
     public partial class tb_ProdReturning: BaseEntity, ICloneable
     {

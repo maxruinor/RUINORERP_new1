@@ -283,13 +283,13 @@ namespace RUINORERP.Model
                         }
         }
 
-        private long _PrePaymentStatus;
+        private int _PrePaymentStatus;
         /// <summary>
         /// 预收付状态
         /// </summary>
         [AdvQueryAttribute(ColName = "PrePaymentStatus",ColDesc = "预收付状态")] 
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "PrePaymentStatus" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "预收付状态" )]
-        public long PrePaymentStatus
+        [SugarColumn(ColumnDataType = "int", SqlParameterDbType = "Int32",  ColumnName = "PrePaymentStatus" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "预收付状态" )]
+        public int PrePaymentStatus
         { 
             get{return _PrePaymentStatus;}
             set{

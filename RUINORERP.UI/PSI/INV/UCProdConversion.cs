@@ -440,7 +440,7 @@ namespace RUINORERP.UI.PSI.INV
                     return false;
                 }
 
-                if (details.Any(c => c.TargetInitCost == 0))
+                if (NeedValidated&&details.Any(c => c.TargetInitCost == 0))
                 {
                     var zeroDetails = details.Where(c => c.TargetInitCost == 0).ToList();
                     if (System.Windows.Forms.MessageBox.Show("明细中，目标产品成本不能为零。\r\n 系统已经将来源成本设置为当前目标成本，请将差异成本加到目标成本中!", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information) == DialogResult.OK)
@@ -489,7 +489,7 @@ namespace RUINORERP.UI.PSI.INV
 
                 }
 
-                if (details.Any(c => c.TargetInitCost == 0))
+                if (NeedValidated&&details.Any(c => c.TargetInitCost == 0))
                 {
                     System.Windows.Forms.MessageBox.Show("明细中，目标成本不能为零，请录入正确的目标成本!", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     return false;

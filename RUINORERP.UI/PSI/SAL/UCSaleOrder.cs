@@ -224,6 +224,7 @@ namespace RUINORERP.UI.PSI.SAL
                 lblReview.Text = ((ApprovalStatus)entity.ApprovalStatus).ToString();
             }
             EditEntity = entity;
+            DataBindingHelper.BindData4Cmb<tb_Currency>(entity, k => k.Currency_ID, v => v.CurrencyName, cmbCurrency_ID);
             DataBindingHelper.BindData4TextBox<tb_SaleOrder>(entity, t => t.SOrderNo, txtOrderNo, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_SaleOrder>(entity, t => t.CustomerPONo, txtCustomerPONo, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4Cmb<tb_PaymentMethod>(entity, k => k.Paytype_ID, v => v.Paytype_Name, cmbPaytype_ID);
@@ -973,11 +974,10 @@ using var binder = new UIStateBinder(..., customEvaluator);
 
                 EditEntity.TotalQty = details.Sum(c => c.Quantity);
                 EditEntity.TotalCost = details.Sum(c => (c.Cost + c.CustomizedCost) * c.Quantity);
-                EditEntity.TotalAmount = details.Sum(c => c.TransactionPrice * c.Quantity);
+                
                 EditEntity.TotalTaxAmount = details.Sum(c => c.SubtotalTaxAmount);
                 EditEntity.TotalCommissionAmount = details.Sum(c => c.CommissionAmount);
-                EditEntity.TotalAmount = EditEntity.TotalAmount + EditEntity.FreightIncome;
-
+                EditEntity.TotalAmount = details.Sum(c => c.TransactionPrice * c.Quantity) + EditEntity.FreightIncome;
 
                 //如果没有有效的明细。直接提示
                 if (NeedValidated && details.Count == 0)

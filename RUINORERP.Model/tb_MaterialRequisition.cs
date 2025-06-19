@@ -21,7 +21,7 @@ namespace RUINORERP.Model
     /// 领料单(包括生产和托工)
     /// </summary>
     [Serializable()]
-    [Description("领料单(包括生产和托工)")]
+    [Description("领料单")]
     [SugarTable("tb_MaterialRequisition")]
     public partial class tb_MaterialRequisition: BaseEntity, ICloneable
     {

@@ -11,118 +11,104 @@ namespace RUINORERP.Global.EnumExt
 
 
     /// <summary>
-    /// 对账单状态（独立状态机）
+    /// 对账单状态
     /// </summary>
-    public enum StatementStatus : long
+    public enum StatementStatus 
     {
-        草稿 = 0,       // 初始状态
-        已发送 = 1,     // 已发送给客户
-        已确认 = 2,     // 客户确认对账
-        已关闭 = 3,     // 流程终止
-        已结清 = 4,     // 完全结清
-        部分结算 = 5   // 部分金额结算
+        草稿 = 1,       // 初始状态
+        已发送 = 2,     // 已发送给客户
+        已确认 = 3,     // 客户确认对账
+        已关闭 = 4,     // 流程终止
+        已结清 = 5,     // 完全结清
+        部分结算 =6   // 部分金额结算
     }
 
-    // 基础状态 (所有财务单据共用)
-    [Flags]
-    public enum BaseFMStatus : long
+    //// 基础状态 (所有财务单据共用)
+    //[Flags]
+    //public enum BaseFMStatus : long
+    //{
+    //    [Description("未提交")]
+    //    草稿 = 1 << 0,  // 1
+
+    //    [Description("待审核")]
+    //    待审核 = 1 << 1,  // 2
+
+    //    [Description("审核通过")]
+    //    已生效 = 1 << 2,  // 4
+
+    //    [Description("已关闭")]
+    //    已关闭 = 1 << 3   // 8
+    //}
+
+
+
+    /// <summary>预付款状态</summary>
+    public enum PrePaymentStatus 
     {
-        [Description("未提交")]
-        草稿 = 1 << 0,  // 1
+        [Description("草稿")]
+        草稿 = 1,
 
         [Description("待审核")]
-        待审核 = 1 << 1,  // 2
+        待审核 = 2,
 
-        [Description("审核通过")]
-        已生效 = 1 << 2,  // 4
-
-        [Description("已关闭")]
-        已关闭 = 1 << 3   // 8
-    }
-
-
-
-
-    //草稿 -> 待审核 -> 已生效 ->（部分核销 -> 全部核销）-> 已关闭
-    //        │
-    //        └─> 已关闭（取消）
-    [Flags]
-    public enum PrePaymentStatus : long
-    {
-
-        草稿 = BaseFMStatus.草稿,
-        待审核 = BaseFMStatus.待审核,
-        已生效 = BaseFMStatus.已生效,
-        已关闭 = BaseFMStatus.已关闭,
+        [Description("待核销")]
+        待核销 = 3,
 
         [Description("部分核销")]
-        部分核销 = 1 << 4,  // 16
+        部分核销 = 4,
 
         [Description("全额核销")]
-        全额核销 = 1 << 5   // 32
+        全额核销 = 5,
 
-        
-        //已关闭状态：
+        [Description("已退款")]
+        已退款 = 6
 
-        //包含"取消"和"退款"两种含义
-
-        //单据关闭前必须处理资金：
-
-        //未核销：直接关闭（相当于取消）
-
-        //已核销：需先退款再关闭
-
-        //简化设计：不需要单独的"已取消"和"已冲销"状态
 
     }
 
 
-
-    //草稿 -> 待审核 -> 已生效 ->（部分支付 -> 全部支付）-> 已关闭
-    //        │                │
-    //        └─> 已关闭       └─> 坏账 -> 已关闭
-    // 应收付状态扩展（11~15位）
-    [Flags]
-    public enum ARAPStatus : long
+    /// <summary>应收应付状态</summary>
+    public enum ARAPStatus  
     {
+        [Description("草稿")]
+        草稿 = 1,
 
-        草稿 = BaseFMStatus.草稿,
-        待审核 = BaseFMStatus.待审核,
-        已生效 = BaseFMStatus.已生效,
-        已关闭 = BaseFMStatus.已关闭,
+        [Description("待审核")]
+        待审核 = 2,
 
-        [Description("全部支付")]
-        全部支付 = 1 << 6,  // 64
+        [Description("待支付")]
+        待支付 = 3,
 
         [Description("部分支付")]
-        部分支付 = 1 << 7,  // 128
+        部分支付 = 4,
+
+        [Description("全部支付")]
+        全部支付 = 5,
 
         [Description("坏账")]
-        坏账 = 1 << 8      // 256
-        //坏账状态：
-        //特殊关闭状态，标记无法收回的款项
-        //最终仍需转为"已关闭"
+        坏账 = 6,
+
+        [Description("已冲销")]
+        已冲销 = 7
 
     }
 
 
 
 
-    //草稿 -> 待审核 -> 已审核 -> 已支付 -> 已关闭
-    //        │             │
-    //        └─> 已关闭    └─> 已关闭（退款）
-    // 收/付款单据状态
-    [Flags]
-    public enum PaymentStatus : long
+
+    /// <summary>付款状态</summary>
+    public enum PaymentStatus  
     {
 
-        草稿 = BaseFMStatus.草稿,
-        待审核 = BaseFMStatus.待审核,
-        已生效 = BaseFMStatus.已生效,
-        已关闭 = BaseFMStatus.已关闭,
+        [Description("草稿")]
+        草稿 = 1,
+
+        [Description("待审核")]
+        待审核 = 2,
 
         [Description("已支付")]
-        已支付 = 1 << 9     // 512
+        已支付 = 3
     }
 
     /// <summary>

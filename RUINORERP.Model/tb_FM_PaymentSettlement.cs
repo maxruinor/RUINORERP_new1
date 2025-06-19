@@ -21,7 +21,7 @@ namespace RUINORERP.Model
     /// 记录收款 与应收的匹配，核销表 核销记录用于跟踪资金与债权债务的冲抵关系，确保财务数据可追溯。正常的收款，支付不需要保存核销记录
     /// </summary>
     [Serializable()]
-    [Description("记录收款 与应收的匹配，核销表 核销记录用于跟踪资金与债权债务的冲抵关系，确保财务数据可追溯。正常的收款，支付不需要保存核销记录")]
+    [Description("核销记录表")]
     [SugarTable("tb_FM_PaymentSettlement")]
     public partial class tb_FM_PaymentSettlement: BaseEntity, ICloneable
     {

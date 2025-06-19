@@ -31,6 +31,7 @@ using RUINORERP.Business.CommService;
 using AutoMapper;
 using System.IO.IsolatedStorage;
 using StackExchange.Redis;
+using RUINORERP.Business.FMService;
 
 namespace RUINORERP.Business
 {
@@ -39,6 +40,16 @@ namespace RUINORERP.Business
     /// </summary>
     public partial class tb_FM_ReceivablePayableController<T> : BaseController<T> where T : class
     {
+        
+        // 应收应付标记坏账
+        //protected async Task MarkBadDebt()
+        //{
+        //    bool result = await Submit(ARAPStatus.坏账);
+        //    if (result)
+        //    {
+        //        // 标记坏账后处理
+        //    }
+        //}
         /// <summary>
         /// 客户取消订单时，如果有订单，如果财务没有在他对应的收付单里审核前是可以反审的。否则只能通过红冲机制处理。
         /// 应收应付 没有审核，没有生成付款单，也没有从预收付中抵扣时。即可 状态和 核销金额和 应收付金额一样时可以反审删除
@@ -52,20 +63,21 @@ namespace RUINORERP.Business
 
             try
             {
-                //只有生效状态的才允许反审，其它不能也不需要，有可能可删除。也可能只能红冲
-                if (entity.ARAPStatus != (long)ARAPStatus.已生效)
-                {
-                    if (entity.ReceivePaymentType == (int)ReceivePaymentType.收款)
-                    {
-                        rmrs.ErrorMsg = "只有【已生效】状态的预收款单才可以反审";
-                    }
-                    else
-                    {
-                        rmrs.ErrorMsg = "只有【已生效】状态的预付款单才可以反审";
-                    }
 
+                // 获取当前状态
+                var statusProperty = typeof(ARAPStatus).Name;
+                var currentStatus = (ARAPStatus)Enum.ToObject(
+                    typeof(ARAPStatus),
+                    entity.GetPropertyValue(statusProperty)
+                );
+
+                if (!FMPaymentStatusHelper.CanReReview(currentStatus, false))
+                {
+                    rmrs.ErrorMsg = $"状态为【{currentStatus.ToString()}】的预{((ReceivePaymentType)entity.ReceivePaymentType).ToString()}单不可以反审";
                     return rmrs;
                 }
+
+                
 
                 // 开启事务，保证数据一致性
                 _unitOfWorkManage.BeginTran();
@@ -80,7 +92,7 @@ namespace RUINORERP.Business
                 //{
                 //    await _appContext.Db.Deleteable<tb_FM_PaymentRecord>().Where(c => c.SourceBilllID == entity.ARAPId && c.BizType == (int)BizType.应付单).ExecuteCommandAsync();
                 //}
-                entity.ARAPStatus = (long)ARAPStatus.草稿;
+                entity.ARAPStatus = (int)ARAPStatus.草稿;
                 entity.ApprovalResults = false;
                 entity.ApprovalStatus = (int)ApprovalStatus.未审核;
                 BusinessHelper.Instance.ApproverEntity(entity);
@@ -169,7 +181,7 @@ namespace RUINORERP.Business
                 // 找相同客户相同币种 是否有预收付余额
                 var settlementController = _appContext.GetRequiredService<tb_FM_PaymentSettlementController<tb_FM_PaymentSettlement>>();
                 var prePayments = await _unitOfWorkManage.GetDbClient().Queryable<tb_FM_PreReceivedPayment>()
-                    .Where(x => (x.PrePaymentStatus == (int)PrePaymentStatus.已生效 || x.PrePaymentStatus == (int)PrePaymentStatus.部分核销)
+                    .Where(x => (x.PrePaymentStatus == (int)PrePaymentStatus.待核销 || x.PrePaymentStatus == (int)PrePaymentStatus.部分核销)
                 && x.CustomerVendor_ID == entity.CustomerVendor_ID
                 && x.Currency_ID == entity.Currency_ID
                 && x.ReceivePaymentType == entity.ReceivePaymentType
@@ -258,15 +270,15 @@ namespace RUINORERP.Business
                 entity.LocalBalanceAmount = remainingLocal;
                 if (remainingLocal == 0)
                 {
-                    entity.ARAPStatus = (long)ARAPStatus.全部支付;
+                    entity.ARAPStatus = (int)ARAPStatus.全部支付;
                 }
                 else if (entity.LocalBalanceAmount == entity.TotalLocalPayableAmount)
                 {
-                    entity.ARAPStatus = (long)ARAPStatus.已生效;
+                    entity.ARAPStatus = (int)ARAPStatus.待支付;
                 }
                 else
                 {
-                    entity.ARAPStatus = (long)ARAPStatus.部分支付;
+                    entity.ARAPStatus = (int)ARAPStatus.部分支付;
                 }
 
 
@@ -475,7 +487,7 @@ namespace RUINORERP.Business
 
             payable.Remark = $"销售出库单：{entity.SaleOut_NO}对应的销售退回单{entity.ReturnNo}的应退款";
             Business.BusinessHelper.Instance.InitEntity(payable);
-            payable.ARAPStatus = (long)ARAPStatus.待审核;
+            payable.ARAPStatus = (int)ARAPStatus.待审核;
             ReturnMainSubResults<tb_FM_ReceivablePayable> rmr = new ReturnMainSubResults<tb_FM_ReceivablePayable>();
             if (IsSaveToDb)
             {
@@ -654,7 +666,7 @@ namespace RUINORERP.Business
 
 
             Business.BusinessHelper.Instance.InitEntity(payable);
-            payable.ARAPStatus = (long)ARAPStatus.待审核;
+            payable.ARAPStatus = (int)ARAPStatus.待审核;
 
             #endregion
             //var ctrpay = _appContext.GetRequiredServiceByName<BaseController<tb_FM_ReceivablePayable>>(typeof(T).Name + "Controller");
@@ -858,7 +870,7 @@ namespace RUINORERP.Business
             payable.Remark = $"销售出库单：{entity.SaleOutNo} 的应收款";
 
             Business.BusinessHelper.Instance.InitEntity(payable);
-            payable.ARAPStatus = (long)ARAPStatus.待审核;
+            payable.ARAPStatus = (int)ARAPStatus.待审核;
 
             #endregion
 
@@ -1054,7 +1066,7 @@ namespace RUINORERP.Business
             payable.Remark = $"采购入库单：{entity.PurEntryNo}的应付款";
 
             Business.BusinessHelper.Instance.InitEntity(payable);
-            payable.ARAPStatus = (long)ARAPStatus.待审核;
+            payable.ARAPStatus = (int)ARAPStatus.待审核;
 
             var ctrpay = _appContext.GetRequiredService<tb_FM_ReceivablePayableController<tb_FM_ReceivablePayable>>();
             ReturnMainSubResults<tb_FM_ReceivablePayable> rmr = await ctrpay.BaseSaveOrUpdateWithChild<tb_FM_ReceivablePayable>(payable, false);
@@ -1188,7 +1200,7 @@ namespace RUINORERP.Business
             payable.Remark = $"采购入库单：{entity.PurEntryNo}对应的采购退回单{entity.PurEntryReNo}的应收款";
 
             Business.BusinessHelper.Instance.InitEntity(payable);
-            payable.ARAPStatus = (long)ARAPStatus.待审核;
+            payable.ARAPStatus = (int)ARAPStatus.待审核;
             var ctrpay = _appContext.GetRequiredService<tb_FM_ReceivablePayableController<tb_FM_ReceivablePayable>>();
             ReturnMainSubResults<tb_FM_ReceivablePayable> rmr = await ctrpay.BaseSaveOrUpdateWithChild<tb_FM_ReceivablePayable>(payable, false);
             //自动审核  审核中用了事务。事务不能嵌套
@@ -1248,7 +1260,7 @@ namespace RUINORERP.Business
         //            foreach (var entity in entitys)
         //            {
         //                //这部分是否能提出到上一级公共部分？
-        //                entity.PrePaymentStatus = (long)PrePaymentStatus.已生效;
+        //                entity.PrePaymentStatus = (int)PrePaymentStatus.已生效;
         //                entity.ApprovalOpinions = approvalEntity.ApprovalOpinions;
         //                //后面已经修改为
         //                entity.ApprovalResults = approvalEntity.ApprovalResults;
@@ -1309,13 +1321,13 @@ namespace RUINORERP.Business
 
 
                     //判断 能结案的 是确认审核过的。
-                    if (entitys[m].PrePaymentStatus != (long)PrePaymentStatus.已冲销 || !entitys[m].ApprovalResults.HasValue)
+                    if (entitys[m].PrePaymentStatus != (int)PrePaymentStatus.已冲销 || !entitys[m].ApprovalResults.HasValue)
                     {
                         //return false;
                         continue;
                     }
                     //这部分是否能提出到上一级公共部分？
-                    entitys[m].PrePaymentStatus = (long)PrePaymentStatus.已冲销;
+                    entitys[m].PrePaymentStatus = (int)PrePaymentStatus.已冲销;
                     BusinessHelper.Instance.EditEntity(entitys[m]);
                     //只更新指定列
                     var affectedRows = await _unitOfWorkManage.GetDbClient()

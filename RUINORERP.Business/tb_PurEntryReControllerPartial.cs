@@ -180,7 +180,7 @@ namespace RUINORERP.Business
                             tb_FM_ReceivablePayable returnpayable = results.ReturnObject;
                             //如果这个供应商要退款给我们，则去找这个供应商名下是否还有应付款。找到所有的。倒算自动红冲 余额。抵消
                             var PositivePayableList = await ctrpayable.BaseQueryByWhereAsync(c => c.CustomerVendor_ID == returnpayable.CustomerVendor_ID
-                            && (c.ARAPStatus == (long)ARAPStatus.已生效 || c.ARAPStatus == (long)ARAPStatus.部分支付)
+                            && (c.ARAPStatus == (int)ARAPStatus.待支付 || c.ARAPStatus == (int)ARAPStatus.部分支付)
                             &&
                             (c.LocalBalanceAmount > 0 && c.ForeignBalanceAmount > 0)
                             );
@@ -199,8 +199,8 @@ namespace RUINORERP.Business
                                 OriginalPayable.ForeignBalanceAmount -= entity.ForeignTotalAmount;
                                 //-500 加上退款500 应该为0
                                 returnpayable.ForeignBalanceAmount += entity.ForeignTotalAmount;
-                                OriginalPayable.ARAPStatus = (long)ARAPStatus.已冲销;
-                                returnpayable.ARAPStatus = (long)ARAPStatus.已冲销;
+                                OriginalPayable.ARAPStatus = (int)ARAPStatus.已冲销;
+                                returnpayable.ARAPStatus = (int)ARAPStatus.已冲销;
                                 //生成核销记录证明正负抵消应收应付
                                 //生成一笔核销记录  应收红冲
                                 var settlementController = _appContext.GetRequiredService<tb_FM_PaymentSettlementController<tb_FM_PaymentSettlement>>();
@@ -422,7 +422,7 @@ namespace RUINORERP.Business
                         if (returnpayable != null)
                         {
                             if (returnpayable.ARAPStatus == (int)ARAPStatus.草稿
-                                || returnpayable.ARAPStatus == (int)ARAPStatus.待审核 || returnpayable.ARAPStatus == (int)ARAPStatus.已生效)
+                                || returnpayable.ARAPStatus == (int)ARAPStatus.待审核 || returnpayable.ARAPStatus == (int)ARAPStatus.待支付)
                             {
                                 //删除
                                 //bool deleters = await ctrpayable.BaseDeleteByNavAsync(returnpayable);

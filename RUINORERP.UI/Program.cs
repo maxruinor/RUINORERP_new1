@@ -40,6 +40,8 @@ using System.Runtime.InteropServices;
 using Microsoft.Extensions.Caching.Memory;
 using log4net.Repository.Hierarchy;
 using System.Text.RegularExpressions;
+using RUINORERP.UI.Common;
+using SqlSugar;
 
 
 namespace RUINORERP.UI
@@ -789,6 +791,36 @@ namespace RUINORERP.UI
                 );
                 return true;
             }
+
+
+            errorMsg = ex.Message;
+            // 新增：处理外键约束冲突
+            if (errorMsg.Contains("REFERENCE 约束") || errorMsg.Contains("reference constraint") || errorMsg.Contains("外键约束"))
+            {
+                // 提取约束名称和表名
+                string constraintName = Regex.Match(errorMsg, @"约束""([^""]+)""").Groups[1].Value;
+                string relatedTable = Regex.Match(errorMsg, @"表""([^""]+)""").Groups[1].Value;
+
+                // 简化表名显示（去除dbo.前缀）
+                if (relatedTable.StartsWith("dbo."))
+                    relatedTable = relatedTable.Substring(4);
+
+                // 尝试从表名推断实体类型名称（移除tb_前缀并处理复数）
+                string entityTypeName = relatedTable;
+           
+
+                // 通过反射获取实体类的Description特性值
+                string entityDescription = GetEntityDescriptionFromTableName(entityTypeName);
+
+                MessageBox.Show(
+                    $"无法删除当前记录，因为【{entityDescription}】中存在关联数据。\n请先删除或修改相关联的业务单据。",
+                    "关联数据冲突",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error
+                );
+                return true;
+            }
+
             return false;
         }
 
@@ -874,6 +906,42 @@ namespace RUINORERP.UI
             MainForm.Instance.logger.LogError("当前域_未处理异常2,请更新到新版本，如果无法解决，请联系管理员", error);
             MessageBox.Show(str, "系统错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
+        /// <summary>
+        /// 根据表名获取对应的实体类描述
+        /// </summary>
+        private static string GetEntityDescriptionFromTableName(string tableName)
+        {
+            try
+            {
+                // 假设实体类都在当前程序集的某个命名空间下
+        
+
+                // 尝试查找对应的实体类型
+                var assembly = Assembly.GetExecutingAssembly();
+                Type entityType = assembly.GetTypes()
+                    .FirstOrDefault(t =>
+                        t.Name.Equals(tableName, StringComparison.OrdinalIgnoreCase) ||
+                        (t.GetCustomAttributes(typeof(SugarTable), true)
+                            .FirstOrDefault() as SugarTable)?.TableName == tableName);
+
+                entityType = Assembly.LoadFrom(Global.GlobalConstants.ModelDLL_NAME).GetType(Global.GlobalConstants.Model_NAME + "." + tableName);
+
+                if (entityType != null)
+                {
+                    return UIHelper.GetEntityDescription(entityType);
+                }
+
+                // 如果找不到对应的实体类型，返回表名本身
+                return tableName;
+            }
+            catch
+            {
+                // 发生异常时返回原始表名
+                return tableName;
+            }
+        }
+
+
     }
 }
 

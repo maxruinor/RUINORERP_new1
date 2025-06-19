@@ -396,7 +396,7 @@ namespace RUINORERP.UI.PSI.SAL
 
             //先绑定这个。InitFilterForControl 这个才生效
             DataBindingHelper.BindData4TextBox<tb_SaleOut>(entity, v => v.SaleOrderNo, txtSaleOrder, BindDataType4TextBox.Text, true);
-            //DataBindingHelper.BindData4TextBoxWithTagQuery<tb_SaleOut>(entity, v => v.SOrder_ID, txtSaleOrder, true);
+            
 
             BaseProcessor basePro = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_SaleOrder).Name + "Processor");
             QueryFilter queryFilter = basePro.GetQueryFilter();

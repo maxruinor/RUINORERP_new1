@@ -376,90 +376,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
 
 
 
-        /// <summary>
-        /// 待办事项
-        /// </summary>
-        private async void BuilderToDoListTreeView_old()
-        {
-            kryptonTreeViewJobList.Nodes.Clear();
-
-            // 创建根节点
-            TreeNode rootNode = new TreeNode("待办事项") { ImageIndex = 0 };
-
-            // 获取配置的待办事项类型
-            List<BizType> bizTypes = GetConfiguredBizTypes();
-            // 为每种业务类型构建节点
-            foreach (var bizType in bizTypes)
-            {
-                TreeNode node = new TreeNode(bizType.ToString());
-                Type tableType = _mapper.GetTableType(bizType);
-
-                var BizEntity = Activator.CreateInstance(tableType);
-
-                // 根据表类型添加不同状态的子节点
-                if (BizEntity.ContainsProperty(typeof(DataStatus).Name))
-                {
-                    await AddStatusNodes(node, tableType, bizType, GetCommonStatusConditions());
-                }
-                else if (BizEntity.ContainsProperty(typeof(PrePaymentStatus).Name))
-                {
-                    if (bizType == BizType.预付款单)
-                    {
-                        await AddStatusNodes(node, tableType, bizType, GetPrePaymentStatusConditions(ReceivePaymentType.付款), SharedFlag.Flag2.ToString());
-                    }
-                    if (bizType == BizType.预收款单)
-                    {
-                        await AddStatusNodes(node, tableType, bizType, GetPrePaymentStatusConditions(ReceivePaymentType.收款), SharedFlag.Flag1.ToString());
-                    }
-
-                }
-                else if (BizEntity.ContainsProperty(typeof(ARAPStatus).Name))
-                {
-                    if (bizType == BizType.应付款单)
-                    {
-                        await AddStatusNodes(node, tableType, bizType, GetARAPStatusConditions(ReceivePaymentType.付款), SharedFlag.Flag2.ToString());
-                    }
-                    if (bizType == BizType.应收款单)
-                    {
-                        await AddStatusNodes(node, tableType, bizType, GetARAPStatusConditions(ReceivePaymentType.收款), SharedFlag.Flag1.ToString());
-                    }
-                }
-                else if (BizEntity.ContainsProperty(typeof(PaymentStatus).Name))
-                {
-                    if (bizType == BizType.付款单)
-                    {
-                        await AddStatusNodes(node, tableType, bizType, GetPaymentStatusConditions(ReceivePaymentType.付款), SharedFlag.Flag2.ToString());
-                    }
-                    if (bizType == BizType.收款单)
-                    {
-                        await AddStatusNodes(node, tableType, bizType, GetPaymentStatusConditions(ReceivePaymentType.收款), SharedFlag.Flag1.ToString());
-                    }
-                }
-
-                // 添加特定业务类型的特殊状态节点
-                await AddSpecialStatusNodes(node, tableType, bizType);
-
-                // 如果有子节点，添加到根节点
-                if (node.Nodes.Count > 0)
-                {
-                    rootNode.Nodes.Add(node);
-                }
-            }
-
-            // 将根节点的子节点直接添加到树视图
-            foreach (TreeNode item in rootNode.Nodes)
-            {
-                kryptonTreeViewJobList.Nodes.Add(item);
-            }
-
-            // 展开所有节点
-            kryptonTreeViewJobList.ExpandAll();
-
-
-            //  kryptonTreeViewJobList.Nodes[0].Expand();
-
-        }
-
+  
 
         private async Task<TreeNode> ProcessBizTypeNodeAsync(BizType bizType)
         {
@@ -757,32 +674,30 @@ namespace RUINORERP.UI.UserCenter.DataParts
             var conModel未提交 = new List<IConditionalModel>
             {
                 new ConditionalModel { FieldName = "ReceivePaymentType", ConditionalType = ConditionalType.Equal, FieldValue = ((int)paymentType).ToString(), CSharpTypeName = "int" },
-                new ConditionalModel { FieldName = "PrePaymentStatus", ConditionalType = ConditionalType.Equal, FieldValue = ((long)PrePaymentStatus.待审核).ToString(), CSharpTypeName = "long" },
+                new ConditionalModel { FieldName = "PrePaymentStatus", ConditionalType = ConditionalType.Equal, FieldValue = ((int)PrePaymentStatus.草稿).ToString(), CSharpTypeName = "int" },
                 new ConditionalModel { FieldName = "isdeleted", ConditionalType = ConditionalType.Equal, FieldValue = "False", CSharpTypeName = "bool" }
             };
 
             // 添加销售限制条件
             AddSaleLimitedCondition(conModel未提交);
-
             conditions.Add("未提交", conModel未提交);
 
             // 未审核条件
             var conModel未审核 = new List<IConditionalModel>
             {
                 new ConditionalModel { FieldName = "ReceivePaymentType", ConditionalType = ConditionalType.Equal, FieldValue = ((int)paymentType).ToString(), CSharpTypeName = "int" },
-                new ConditionalModel { FieldName = "PrePaymentStatus", ConditionalType = ConditionalType.Equal, FieldValue = ((long)PrePaymentStatus.草稿).ToString(), CSharpTypeName = "long" },
+                new ConditionalModel { FieldName = "PrePaymentStatus", ConditionalType = ConditionalType.Equal, FieldValue = ((int)PrePaymentStatus.待审核).ToString(), CSharpTypeName = "int" },
                 new ConditionalModel { FieldName = "isdeleted", ConditionalType = ConditionalType.Equal, FieldValue = "False", CSharpTypeName = "bool" }
             };
 
             // 添加销售限制条件
             AddSaleLimitedCondition(conModel未审核);
-
             conditions.Add("未审核", conModel未审核);
 
             // 待核销条件
             var conModel待核销 = new List<IConditionalModel>
             {new ConditionalModel { FieldName = "ReceivePaymentType", ConditionalType = ConditionalType.Equal, FieldValue = ((int)paymentType).ToString(), CSharpTypeName = "int" },
-                new ConditionalModel { FieldName = "PrePaymentStatus", ConditionalType = ConditionalType.Equal, FieldValue = (1 << 12).ToString(), CSharpTypeName = "long" },
+                new ConditionalModel { FieldName = "PrePaymentStatus", ConditionalType = ConditionalType.Equal, FieldValue = ((int)PrePaymentStatus.待核销).ToString(), CSharpTypeName = "int" },
                 new ConditionalModel { FieldName = "isdeleted", ConditionalType = ConditionalType.Equal, FieldValue = "False", CSharpTypeName = "bool" }
             };
 
@@ -802,7 +717,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
             var conModel未提交 = new List<IConditionalModel>
             {
                 new ConditionalModel { FieldName = "ReceivePaymentType", ConditionalType = ConditionalType.Equal, FieldValue = ((int)paymentType).ToString(), CSharpTypeName = "int" },
-                new ConditionalModel { FieldName = "ARAPStatus", ConditionalType = ConditionalType.Equal, FieldValue = ((long)PrePaymentStatus.待审核).ToString(), CSharpTypeName = "long" },
+                new ConditionalModel { FieldName = "ARAPStatus", ConditionalType = ConditionalType.Equal, FieldValue = ((int)ARAPStatus.草稿).ToString(), CSharpTypeName = "int" },
                 new ConditionalModel { FieldName = "isdeleted", ConditionalType = ConditionalType.Equal, FieldValue = "False", CSharpTypeName = "bool" }
             };
 
@@ -815,7 +730,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
             var conModel未审核 = new List<IConditionalModel>
             {
                 new ConditionalModel { FieldName = "ReceivePaymentType", ConditionalType = ConditionalType.Equal, FieldValue = ((int)paymentType).ToString(), CSharpTypeName = "int" },
-                new ConditionalModel { FieldName = "ARAPStatus", ConditionalType = ConditionalType.Equal, FieldValue = ((long)PrePaymentStatus.待审核).ToString(), CSharpTypeName = "long" },
+                new ConditionalModel { FieldName = "ARAPStatus", ConditionalType = ConditionalType.Equal, FieldValue = ((int)ARAPStatus.待审核).ToString(), CSharpTypeName = "int" },
                 new ConditionalModel { FieldName = "isdeleted", ConditionalType = ConditionalType.Equal, FieldValue = "False", CSharpTypeName = "bool" }
             };
 
@@ -828,14 +743,14 @@ namespace RUINORERP.UI.UserCenter.DataParts
             var conModel等待回款付款 = new List<IConditionalModel>
             {
                 new ConditionalModel { FieldName = "ReceivePaymentType", ConditionalType = ConditionalType.Equal, FieldValue = ((int)paymentType).ToString(), CSharpTypeName = "int" },
-                new ConditionalModel { FieldName = "ARAPStatus", ConditionalType = ConditionalType.Equal, FieldValue = ((long)ARAPStatus.已生效).ToString(), CSharpTypeName = "long" },
+                new ConditionalModel { FieldName = "ARAPStatus", ConditionalType = ConditionalType.Equal, FieldValue = ((int)ARAPStatus.待支付).ToString(), CSharpTypeName = "int" },
                 new ConditionalModel { FieldName = "isdeleted", ConditionalType = ConditionalType.Equal, FieldValue = "False", CSharpTypeName = "bool" }
             };
 
             // 添加销售限制条件
             AddSaleLimitedCondition(conModel等待回款付款);
 
-            conditions.Add("等待回款付款", conModel等待回款付款);
+            conditions.Add("待回款", conModel等待回款付款);
 
             return conditions;
         }
@@ -848,7 +763,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
             var conModel未提交 = new List<IConditionalModel>
             {
                 new ConditionalModel { FieldName = "ReceivePaymentType", ConditionalType = ConditionalType.Equal, FieldValue = ((int)paymentType).ToString(), CSharpTypeName = "int" },
-                new ConditionalModel { FieldName = "PaymentStatus", ConditionalType = ConditionalType.Equal, FieldValue = ((long)PrePaymentStatus.待审核).ToString(), CSharpTypeName = "long" },
+                new ConditionalModel { FieldName = "PaymentStatus", ConditionalType = ConditionalType.Equal, FieldValue = ((int)PaymentStatus.草稿).ToString(), CSharpTypeName = "int" },
                 new ConditionalModel { FieldName = "isdeleted", ConditionalType = ConditionalType.Equal, FieldValue = "False", CSharpTypeName = "bool" }
             };
 
@@ -861,7 +776,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
             var conModel未审核 = new List<IConditionalModel>
             {
                 new ConditionalModel { FieldName = "ReceivePaymentType", ConditionalType = ConditionalType.Equal, FieldValue = ((int)paymentType).ToString(), CSharpTypeName = "int" },
-                new ConditionalModel { FieldName = "PaymentStatus", ConditionalType = ConditionalType.Equal, FieldValue = ((long)PrePaymentStatus.待审核).ToString(), CSharpTypeName = "long" },
+                new ConditionalModel { FieldName = "PaymentStatus", ConditionalType = ConditionalType.Equal, FieldValue = ((int)PaymentStatus.待审核).ToString(), CSharpTypeName = "int" },
                 new ConditionalModel { FieldName = "isdeleted", ConditionalType = ConditionalType.Equal, FieldValue = "False", CSharpTypeName = "bool" }
             };
 
@@ -870,15 +785,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
 
             conditions.Add("未审核", conModel未审核);
 
-            // 待支付条件
-            var conModel待支付 = new List<IConditionalModel>
-            {
-                new ConditionalModel { FieldName = "ReceivePaymentType", ConditionalType = ConditionalType.Equal, FieldValue = ((int)paymentType).ToString(), CSharpTypeName = "int" },
-                new ConditionalModel { FieldName = "PaymentStatus", ConditionalType = ConditionalType.Equal, FieldValue = ((long)PaymentStatus.待审核).ToString(), CSharpTypeName = "long" },
-                new ConditionalModel { FieldName = "isdeleted", ConditionalType = ConditionalType.Equal, FieldValue = "False", CSharpTypeName = "bool" }
-            };
-
-            conditions.Add("待支付", conModel待支付);
+          
 
             return conditions;
         }
@@ -937,36 +844,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
  
 
 
-        // 示例条件组定义
-        private List<ConditionGroup> GetPrePaymentConditionGroups(ReceivePaymentType paymentType)
-        {
-            return new List<ConditionGroup>
-                {
-                    new ConditionGroup
-                    {
-                        StatusName = "预付款待核销",
-                        Identifier = SharedFlag.Flag2.ToString(),
-                        Conditions = new List<IConditionalModel>
-                        {
-                            new ConditionalModel
-                            {
-                                FieldName = "ReceivePaymentType",
-                                ConditionalType = ConditionalType.Equal,
-                                FieldValue = ((int)paymentType).ToString(),
-                                CSharpTypeName = "int"
-                            },
-                            new ConditionalModel
-                            {
-                                FieldName = "PrePaymentStatus",
-                                ConditionalType = ConditionalType.Equal,
-                                FieldValue = ((long)PrePaymentStatus.已生效).ToString(),
-                                CSharpTypeName = "long"
-                            }
-                        }
-                    }
-                };
-        }
-
+  
         #region new
 
 
@@ -1375,7 +1253,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
             var conditions = new List<IConditionalModel>
             {
                 new ConditionalModel { FieldName = "ReceivePaymentType", ConditionalType = ConditionalType.Equal, FieldValue = ((int)paymentType).ToString(), CSharpTypeName = "int" },
-                new ConditionalModel { FieldName = "PrePaymentStatus", ConditionalType = ConditionalType.Equal, FieldValue = (1 << 12).ToString(), CSharpTypeName = "long" },
+                new ConditionalModel { FieldName = "PrePaymentStatus", ConditionalType = ConditionalType.Equal, FieldValue = PrePaymentStatus.待核销.ToString(), CSharpTypeName = "int" },
                 new ConditionalModel { FieldName = "isdeleted", ConditionalType = ConditionalType.Equal, FieldValue = "False", CSharpTypeName = "bool" }
             };
 
@@ -1389,7 +1267,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
             var conditions = new List<IConditionalModel>
             {
                 new ConditionalModel { FieldName = "ReceivePaymentType", ConditionalType = ConditionalType.Equal, FieldValue = ((int)paymentType).ToString(), CSharpTypeName = "int" },
-                new ConditionalModel { FieldName = "ARAPStatus", ConditionalType = ConditionalType.Equal, FieldValue = ((long)ARAPStatus.已生效).ToString(), CSharpTypeName = "long" },
+                new ConditionalModel { FieldName = "ARAPStatus", ConditionalType = ConditionalType.Equal, FieldValue = ((int)ARAPStatus.待支付).ToString(), CSharpTypeName = "int" },
                 new ConditionalModel { FieldName = "isdeleted", ConditionalType = ConditionalType.Equal, FieldValue = "False", CSharpTypeName = "bool" }
             };
 
@@ -1403,7 +1281,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
             return new List<IConditionalModel>
             {
                 new ConditionalModel { FieldName = "ReceivePaymentType", ConditionalType = ConditionalType.Equal, FieldValue = ((int)paymentType).ToString(), CSharpTypeName = "int" },
-                new ConditionalModel { FieldName = "PaymentStatus", ConditionalType = ConditionalType.Equal, FieldValue = ((long)PaymentStatus.待审核).ToString(), CSharpTypeName = "long" },
+                new ConditionalModel { FieldName = "PaymentStatus", ConditionalType = ConditionalType.Equal, FieldValue = ((int)PaymentStatus.待审核).ToString(), CSharpTypeName = "int" },
                 new ConditionalModel { FieldName = "isdeleted", ConditionalType = ConditionalType.Equal, FieldValue = "False", CSharpTypeName = "bool" }
             };
         }

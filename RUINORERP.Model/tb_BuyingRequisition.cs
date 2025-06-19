@@ -21,7 +21,7 @@ namespace RUINORERP.Model
     /// 请购单，可能来自销售订单,也可以来自其它日常需求也可能来自生产需求也可以直接录数据，是一个纯业务性的数据表
     /// </summary>
     [Serializable()]
-    [Description("请购单，可能来自销售订单,也可以来自其它日常需求也可能来自生产需求也可以直接录数据，是一个纯业务性的数据表")]
+    [Description("请购单")]
     [SugarTable("tb_BuyingRequisition")]
     public partial class tb_BuyingRequisition: BaseEntity, ICloneable
     {

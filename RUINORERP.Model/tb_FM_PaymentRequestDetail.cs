@@ -21,7 +21,7 @@ namespace RUINORERP.Model
     /// 付款申请单明细-对应的应付单据项目
     /// </summary>
     [Serializable()]
-    [Description("付款申请单明细-对应的应付单据项目")]
+    [Description("付款申请单明细")]
     [SugarTable("tb_FM_PaymentRequestDetail")]
     public partial class tb_FM_PaymentRequestDetail: BaseEntity, ICloneable
     {

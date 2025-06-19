@@ -238,7 +238,7 @@ namespace RUINORERP.UI.MRP.PQC
             }
 
             //先绑定这个。InitFilterForControl 这个才生效
-            DataBindingHelper.BindData4TextBoxWithTagQuery<tb_MRP_ReworkReturn>(entity, v => v.ReworkReturnID, txtReworkReturnID, true);
+            DataBindingHelper.BindData4TextBox<tb_MRP_ReworkReturn>(entity, v => v.ReworkReturnID, txtReworkReturnID, BindDataType4TextBox.Text, true);
 
             //创建表达式  草稿 结案 和没有提交的都不显示
             var lambdaMO = Expressionable.Create<tb_MRP_ReworkReturn>()
@@ -248,7 +248,8 @@ namespace RUINORERP.UI.MRP.PQC
             BaseProcessor baseProcessorMO = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_MRP_ReworkReturn).Name + "Processor");
             QueryFilter queryFilterMO = baseProcessorMO.GetQueryFilter();
             queryFilterMO.FilterLimitExpressions.Add(lambdaMO);
-            DataBindingHelper.InitFilterForControlByExp<tb_MRP_ReworkReturn>(entity, txtReworkReturnID, c => c.ReworkReturnNo, queryFilterMO);
+            ControlBindingHelper.ConfigureControlFilter<tb_MRP_ReworkEntry, tb_MRP_ReworkReturn>(entity, txtReworkReturnID, t => t.ReworkReturnNo,
+             f => f.ReworkReturnNo, queryFilterMO, a => a.ReworkReturnID, b => b.ReworkReturnID, null, false);
             base.BindData(entity);
         }
 

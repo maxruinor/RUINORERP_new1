@@ -123,7 +123,7 @@ namespace RUINORERP.UI.FM
                 entity.ReceivePaymentType = (int)PaymentType;
                 entity.ActionStatus = ActionStatus.新增;
                 entity.PaymentDate = System.DateTime.Now;
-                entity.PaymentStatus = (long)PaymentStatus.草稿;
+                entity.PaymentStatus = (int)PaymentStatus.草稿;
                 if (string.IsNullOrEmpty(entity.PaymentNo))
                 {
                     if (PaymentType == ReceivePaymentType.付款)
@@ -529,8 +529,9 @@ namespace RUINORERP.UI.FM
 
         protected override async Task<bool> Submit()
         {
-            bool rs = await base.Submit(typeof(PaymentStatus));
-            if (rs)
+           // bool rs = await base.Submit(typeof(PaymentStatus));
+            bool result = await Submit(PrePaymentStatus.待审核);
+            if (result)
             {
                 ConfigManager configManager = Startup.GetFromFac<ConfigManager>();
                 var temppath = configManager.GetValue("WebServerUrl");

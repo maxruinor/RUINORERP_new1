@@ -452,8 +452,8 @@ namespace RUINORERP.Business
                                     .Where(c => c.CustomerVendor_ID == entity.CustomerVendor_ID
                                      && c.Currency_ID == entity.Currency_ID // 添加币种条件
                                      && c.IsAvailable == true
-                                    && (c.PrePaymentStatus == (long)PrePaymentStatus.已生效
-                                     || c.PrePaymentStatus == (long)PrePaymentStatus.部分核销))
+                                    && (c.PrePaymentStatus == (int)PrePaymentStatus.待核销
+                                     || c.PrePaymentStatus == (int)PrePaymentStatus.部分核销))
                                     .OrderBy(c => c.PrePayDate)
                                     .ToListAsync();
 
@@ -480,11 +480,11 @@ namespace RUINORERP.Business
 
                                         if (prePayments[i].ForeignBalanceAmount == 0)
                                         {
-                                            prePayments[i].PrePaymentStatus = (long)PrePaymentStatus.全额核销;
+                                            prePayments[i].PrePaymentStatus = (int)PrePaymentStatus.全额核销;
                                         }
                                         else
                                         {
-                                            prePayments[i].PrePaymentStatus = (long)PrePaymentStatus.部分核销;
+                                            prePayments[i].PrePaymentStatus = (int)PrePaymentStatus.部分核销;
                                         }
                                         // 更新应付表
 
@@ -495,11 +495,11 @@ namespace RUINORERP.Business
                                         payable.ForeignBalanceAmount = entity.ForeignTotalAmount - payable.ForeignPaidAmount;
                                         if (payable.ForeignBalanceAmount == 0)
                                         {
-                                            payable.ARAPStatus = (long)ARAPStatus.全部支付;
+                                            payable.ARAPStatus = (int)ARAPStatus.全部支付;
                                         }
                                         else
                                         {
-                                            payable.ARAPStatus = (long)ARAPStatus.部分支付;
+                                            payable.ARAPStatus = (int)ARAPStatus.部分支付;
                                         }
                                     }
                                     else
@@ -510,22 +510,22 @@ namespace RUINORERP.Business
                                         TotalAmount -= prePayLocalAmount;
                                         if (prePayments[i].LocalBalanceAmount == 0)
                                         {
-                                            prePayments[i].PrePaymentStatus = (long)ARAPStatus.全部支付;
+                                            prePayments[i].PrePaymentStatus = (int)ARAPStatus.全部支付;
                                         }
                                         else
                                         {
-                                            prePayments[i].PrePaymentStatus = (long)ARAPStatus.部分支付;
+                                            prePayments[i].PrePaymentStatus = (int)ARAPStatus.部分支付;
                                         }
                                         // 更新应付表
                                         payable.LocalPaidAmount += prePayLocalAmount;
                                         payable.LocalBalanceAmount = entity.TotalAmount - payable.LocalPaidAmount;
                                         if (payable.LocalBalanceAmount == 0)
                                         {
-                                            payable.ARAPStatus = (long)ARAPStatus.全部支付;
+                                            payable.ARAPStatus = (int)ARAPStatus.全部支付;
                                         }
                                         else
                                         {
-                                            payable.ARAPStatus = (long)ARAPStatus.部分支付;
+                                            payable.ARAPStatus = (int)ARAPStatus.部分支付;
                                         }
                                     }
                                     // 生成核销记录证明从预付中付款抵扣应付
@@ -1011,8 +1011,8 @@ namespace RUINORERP.Business
                                                   .Queryable<tb_FM_ReceivablePayable>()
                                                   .Where(c => c.CustomerVendor_ID == entity.CustomerVendor_ID
                                                    && c.Currency_ID == entity.Currency_ID
-                                                  && (c.ARAPStatus == (long)ARAPStatus.已生效
-                                                   || c.ARAPStatus == (long)PrePaymentStatus.部分核销))
+                                                  && (c.ARAPStatus == (int)ARAPStatus.待支付
+                                                   || c.ARAPStatus == (int)PrePaymentStatus.部分核销))
                                                   .OrderBy(c => c.DueDate)
                                                   .ToListAsync();
 
@@ -1031,8 +1031,8 @@ namespace RUINORERP.Business
                     //            .Where(c => c.CustomerVendor_ID == entity.CustomerVendor_ID
                     //             && c.Currency_ID == entity.Currency_ID // 添加币种条件
                     //             && c.IsAvailable == true
-                    //            && (c.PrePaymentStatus == (long)PrePaymentStatus.已生效
-                    //             || c.PrePaymentStatus == (long)PrePaymentStatus.部分核销))
+                    //            && (c.PrePaymentStatus == (int)PrePaymentStatus.已生效
+                    //             || c.PrePaymentStatus == (int)PrePaymentStatus.部分核销))
                     //            .OrderBy(c => c.PrePayDate)
                     //            .ToListAsync();
 
@@ -1059,11 +1059,11 @@ namespace RUINORERP.Business
 
                     //                if (prePayments[i].ForeignBalanceAmount == 0)
                     //                {
-                    //                    prePayments[i].PrePaymentStatus = (long)PrePaymentStatus.全额核销;
+                    //                    prePayments[i].PrePaymentStatus = (int)PrePaymentStatus.全额核销;
                     //                }
                     //                else
                     //                {
-                    //                    prePayments[i].PrePaymentStatus = (long)PrePaymentStatus.部分核销;
+                    //                    prePayments[i].PrePaymentStatus = (int)PrePaymentStatus.部分核销;
                     //                }
                     //                // 更新应付表
 
@@ -1074,11 +1074,11 @@ namespace RUINORERP.Business
                     //                payable.ForeignBalanceAmount = entity.ForeignTotalAmount - payable.ForeignPaidAmount;
                     //                if (payable.ForeignBalanceAmount == 0)
                     //                {
-                    //                    payable.ARAPStatus = (long)ARAPStatus.已结清;
+                    //                    payable.ARAPStatus = (int)ARAPStatus.已结清;
                     //                }
                     //                else
                     //                {
-                    //                    payable.ARAPStatus = (long)ARAPStatus.部分支付;
+                    //                    payable.ARAPStatus = (int)ARAPStatus.部分支付;
                     //                }
                     //            }
                     //            else
@@ -1089,22 +1089,22 @@ namespace RUINORERP.Business
                     //                TotalAmount -= prePayLocalAmount;
                     //                if (prePayments[i].LocalBalanceAmount == 0)
                     //                {
-                    //                    prePayments[i].PrePaymentStatus = (long)ARAPStatus.已结清;
+                    //                    prePayments[i].PrePaymentStatus = (int)ARAPStatus.已结清;
                     //                }
                     //                else
                     //                {
-                    //                    prePayments[i].PrePaymentStatus = (long)ARAPStatus.部分支付;
+                    //                    prePayments[i].PrePaymentStatus = (int)ARAPStatus.部分支付;
                     //                }
                     //                // 更新应付表
                     //                payable.LocalPaidAmount += prePayLocalAmount;
                     //                payable.LocalBalanceAmount = entity.TotalAmount - payable.LocalPaidAmount;
                     //                if (payable.LocalBalanceAmount == 0)
                     //                {
-                    //                    payable.ARAPStatus = (long)ARAPStatus.已结清;
+                    //                    payable.ARAPStatus = (int)ARAPStatus.已结清;
                     //                }
                     //                else
                     //                {
-                    //                    payable.ARAPStatus = (long)ARAPStatus.部分支付;
+                    //                    payable.ARAPStatus = (int)ARAPStatus.部分支付;
                     //                }
                     //            }
                     //            // 生成核销记录证明从预付中付款抵扣应付

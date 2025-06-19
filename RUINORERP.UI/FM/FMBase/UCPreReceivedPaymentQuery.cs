@@ -117,8 +117,8 @@ namespace RUINORERP.UI.FM
             foreach (var item in selectlist)
             {
                 //只有审核状态才可以转换为收款单  或部分核销，一张预付款  核销了一部分。还有一部分要收取时用部分核销。
-                bool canConvert = item.PrePaymentStatus == (long)PrePaymentStatus.已生效 && item.ApprovalStatus == (int)ApprovalStatus.已审核 && item.ApprovalResults.HasValue && item.ApprovalResults.Value;
-                if (canConvert || item.PrePaymentStatus == (long)PrePaymentStatus.部分核销)
+                bool canConvert = item.PrePaymentStatus == (int)PrePaymentStatus.待核销 && item.ApprovalStatus == (int)ApprovalStatus.已审核 && item.ApprovalResults.HasValue && item.ApprovalResults.Value;
+                if (canConvert || item.PrePaymentStatus == (int)PrePaymentStatus.部分核销)
                 {
                     RealList.Add(item);
                 }
@@ -202,8 +202,8 @@ namespace RUINORERP.UI.FM
             List<tb_FM_PreReceivedPayment> selectlist = GetSelectResult();
             foreach (var item in selectlist)
             {
-                bool canConvert = item.PrePaymentStatus == (long)PrePaymentStatus.已生效 && item.ApprovalStatus == (int)ApprovalStatus.已审核 && item.ApprovalResults.HasValue && item.ApprovalResults.Value;
-                if (canConvert || item.PrePaymentStatus == (long)PrePaymentStatus.部分核销)
+                bool canConvert = item.PrePaymentStatus == (int)PrePaymentStatus.待核销 && item.ApprovalStatus == (int)ApprovalStatus.已审核 && item.ApprovalResults.HasValue && item.ApprovalResults.Value;
+                if (canConvert || item.PrePaymentStatus == (int)PrePaymentStatus.部分核销)
                 {
                     //审核就是收款 或 付款了 ，则生成退款单  （负数的收款单）
                     //这个状态要退款单审核后回写

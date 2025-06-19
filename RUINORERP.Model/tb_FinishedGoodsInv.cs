@@ -18,10 +18,10 @@ using RUINORERP.Global.CustomAttribute;
 namespace RUINORERP.Model
 {
     /// <summary>
-    /// 成品入库单 要进一步完善
+    /// 缴库单
     /// </summary>
     [Serializable()]
-    [Description("成品入库单 要进一步完善")]
+    [Description("缴库单")]
     [SugarTable("tb_FinishedGoodsInv")]
     public partial class tb_FinishedGoodsInv : BaseEntity, ICloneable
     {

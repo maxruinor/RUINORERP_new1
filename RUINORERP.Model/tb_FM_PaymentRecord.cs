@@ -21,7 +21,7 @@ namespace RUINORERP.Model
     /// 收款付款记录表-记录所有资金流动一批订单可分账户分批付 记录真实资金流动，用户需确保其 与银行流水一致
     /// </summary>
     [Serializable()]
-    [Description("收款付款记录表-记录所有资金流动一批订单可分账户分批付 记录真实资金流动，用户需确保其 与银行流水一致")]
+    [Description("收付款记录表")]
     [SugarTable("tb_FM_PaymentRecord")]
     public partial class tb_FM_PaymentRecord: BaseEntity, ICloneable
     {
@@ -225,13 +225,13 @@ namespace RUINORERP.Model
                         }
         }
 
-        private long _PaymentStatus;
+        private int _PaymentStatus;
         /// <summary>
         /// 支付状态
         /// </summary>
         [AdvQueryAttribute(ColName = "PaymentStatus",ColDesc = "支付状态")] 
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "PaymentStatus" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "支付状态" )]
-        public long PaymentStatus
+        [SugarColumn(ColumnDataType = "int", SqlParameterDbType = "Int32",  ColumnName = "PaymentStatus" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "支付状态" )]
+        public int PaymentStatus
         { 
             get{return _PaymentStatus;}
             set{

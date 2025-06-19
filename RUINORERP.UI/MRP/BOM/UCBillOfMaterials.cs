@@ -1321,8 +1321,6 @@ namespace RUINORERP.UI.MRP.BOM
 
             //先绑定这个。InitFilterForControl 这个才生效, 一共三个来控制，这里分别是绑定ID和SKU。下面InitFilterForControlByExp 是生成快捷按钮
             DataBindingHelper.BindData4TextBox<tb_BOM_S>(EditEntity, k => k.SKU, txtProdDetailID, BindDataType4TextBox.Text, true);
-            DataBindingHelper.BindData4TextBoxWithTagQuery<tb_BOM_S>(EditEntity, v => v.ProdDetailID, txtProdDetailID, true);
-
 
             //如果属性变化 则状态为修改
             EditEntity.PropertyChanged += async (sender, s2) =>
@@ -1433,7 +1431,10 @@ namespace RUINORERP.UI.MRP.BOM
                 QueryFilter queryFilterC = baseProcessor.GetQueryFilter();
 
                 ///视图指定成实体表，为了显示关联数据
-                DataBindingHelper.InitFilterForControlByExp<View_ProdDetail>(EditEntity, txtProdDetailID, c => c.SKU, queryFilterC, typeof(tb_Prod));
+                //DataBindingHelper.InitFilterForControlByExp<View_ProdDetail>(EditEntity, txtProdDetailID, c => c.SKU, queryFilterC, typeof(tb_Prod));
+
+                ControlBindingHelper.ConfigureControlFilter<tb_BOM_S, View_ProdDetail>(entity, txtProdDetailID, t => t.SKU,
+              f => f.SKU, queryFilterC, a => a.ProdDetailID, b => b.ProdDetailID, null, false);
             }
             base.BindData(entity);
         }

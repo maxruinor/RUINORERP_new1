@@ -79,13 +79,16 @@ DBCC INPUTBUFFER (269)
  use master
  go
 
+use erpnew
+go
 select
 request_session_id spid, 
-OBJECT_NAME(resource_associated_entity_id) tableName 
+OBJECT_NAME(resource_associated_entity_id) tableName ,HOST_NAME() as hostname
 from
 sys.dm_tran_locks 
 where
 resource_type='OBJECT'
+
 		
 exec sp_who2 1245
 DBCC INPUTBUFFER (1245)   --显示从客户端发送到服务器的最后一个语句 

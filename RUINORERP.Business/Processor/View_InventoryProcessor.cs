@@ -1,11 +1,14 @@
 ﻿
 
+using Fireasy.Common.Extensions;
 using Microsoft.Extensions.Logging;
+using RUINORERP.Business.Security;
 using RUINORERP.Common.Helper;
 using RUINORERP.Global;
 using RUINORERP.Model;
 using RUINORERP.Model.Context;
 using RUINORERP.Repository.UnitOfWorks;
+using SqlSugar;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -25,6 +28,12 @@ namespace RUINORERP.Business.Processor
             queryFilter.SetQueryField<View_Inventory>(c => c.CNName);
             queryFilter.SetQueryField<View_Inventory>(c => c.Model);
             queryFilter.SetQueryField<View_Inventory>(c => c.Category_ID);
+            var lambda = Expressionable.Create<tb_CustomerVendor>()
+                                .And(t => t.isdeleted == false)
+                                .And(t => t.IsVendor == true)
+                                .ToExpression();//注意 这一句 不能少
+
+            queryFilter.SetQueryField<View_Inventory, tb_CustomerVendor>(c => c.CustomerVendor_ID, lambda);
             queryFilter.SetQueryField<View_Inventory>(c => c.Specifications);
             queryFilter.SetQueryField<View_Inventory>(c => c.ProductNo);
             queryFilter.SetQueryField<View_Inventory>(c => c.prop);

@@ -481,11 +481,9 @@ namespace RUINORERP.UI.BaseForm
         /// <param name="entity"></param>
         protected virtual void ToolBarEnabledControl(object entity)
         {
+            if (entity == null) return;
             UIHelper.ControlMasterColumnsInvisible(CurMenuInfo, this);
-            if (entity == null)
-            {
-                return;
-            }
+
             //可以修改
             if (entity.ContainsProperty(typeof(DataStatus).Name))
             {
@@ -678,206 +676,66 @@ namespace RUINORERP.UI.BaseForm
                 }
                 #endregion
             }
-            /*
-            #region 财务模块的单据状态不一样
 
-            //可以修改
-            if (entity.ContainsProperty(typeof(PrePaymentStatus).Name)|| entity.ContainsProperty(typeof(ARAPStatus).Name)||  entity.ContainsProperty(typeof(PaymentStatus).Name))
+            // 获取状态类型和值
+            var statusType = GetStatusType(entity as BaseEntity);
+            if (statusType == null) return;
+
+            // 动态获取状态值
+            dynamic status = entity.GetPropertyValue(statusType.Name);
+            int statusValue = (int)status;
+            dynamic statusEnum = Enum.ToObject(statusType, statusValue);
+
+            // 通用按钮状态
+            bool isEditable = FMPaymentStatusHelper.IsEditable(statusEnum);
+            bool canCancel = FMPaymentStatusHelper.CanCancel(statusEnum, HasRelatedRecords(entity as BaseEntity));
+
+            toolStripbtnModify.Enabled = isEditable;
+            toolStripButtonSave.Enabled = isEditable;
+            toolStripbtnDelete.Enabled = isEditable;
+            toolStripBtnCancel.Visible = canCancel;
+
+
+             
+
+            // 特殊操作按钮
+            ConfigureSpecialButtons(statusEnum);
+             
+
+            // 通用按钮状态
+            toolStripbtnSubmit.Enabled = FMPaymentStatusHelper.CanSubmit(statusEnum);
+            toolStripbtnReview.Enabled = statusEnum is PrePaymentStatus pre && pre == PrePaymentStatus.待审核 ||
+                                        statusEnum is ARAPStatus arap && arap == ARAPStatus.待审核 ||
+                                        statusEnum is PaymentStatus pay && pay == PaymentStatus.待审核;
+
+            // 结案/特殊操作按钮
+            toolStripButton结案.Enabled = false;
+            toolStripButton结案.Visible = false;
+
+            if (statusEnum is PrePaymentStatus preStatus)
             {
-                FMPaymentStatus dataStatus = (FMPaymentStatus)int.Parse(entity.GetPropertyValue(typeof(FMPaymentStatus).Name).ToString());
-                ActionStatus actionStatus = (ActionStatus)(Enum.Parse(typeof(ActionStatus), entity.GetPropertyValue(typeof(ActionStatus).Name).ToString()));
-                switch (dataStatus)
-                {
-                    //点新增
-                    case FMPaymentStatus.草稿:
-                        toolStripbtnAdd.Enabled = false;
-                        toolStripBtnCancel.Visible = true;
-                        toolStripbtnModify.Enabled = true;
-                        toolStripbtnSubmit.Enabled = true;
-                        toolStripbtnReview.Enabled = false;
-                        if (actionStatus == ActionStatus.新增)
-                        {
-                            toolStripButtonSave.Enabled = true;
-                            toolStripbtnModify.Enabled = false;
-                        }
-                        else
-                        {
-                            toolStripButtonSave.Enabled = false;
-                        }
-
-                        toolStripBtnReverseReview.Enabled = false;
-                        toolStripbtnPrint.Enabled = false;
-                        toolStripbtnDelete.Enabled = true;
-                        toolStripButton结案.Enabled = false;
-                        break;
-                    case FMPaymentStatus.提交:
-                        toolStripbtnAdd.Enabled = false;
-                        toolStripBtnCancel.Visible = true;
-                        toolStripbtnModify.Enabled = true;
-                        toolStripbtnSubmit.Enabled = false;
-                        toolStripBtnReverseReview.Enabled = false;
-                        toolStripbtnReview.Enabled = true;
-                        toolStripButtonSave.Enabled = true;
-                        toolStripbtnDelete.Enabled = true;
-                        toolStripbtnPrint.Enabled = true;
-                        toolStripButton结案.Enabled = false;
-                        break;
-                    case FMPaymentStatus.全额核销:
-                        toolStripbtnModify.Enabled = false;
-                        toolStripbtnSubmit.Enabled = false;
-                        toolStripBtnReverseReview.Enabled = true;
-                        toolStripbtnReview.Enabled = false;
-                        toolStripButtonSave.Enabled = false;
-                        toolStripbtnPrint.Enabled = true;
-                        toolStripButton结案.Enabled = true;
-                        toolStripbtnDelete.Enabled = false;
-                        break;
-                    case FMPaymentStatus.已取消:
-                    case FMPaymentStatus.已冲销:
-                        //
-                        toolStripbtnModify.Enabled = false;
-                        toolStripbtnSubmit.Enabled = false;
-                        toolStripbtnReview.Enabled = false;
-                        toolStripButtonSave.Enabled = false;
-                        toolStripBtnReverseReview.Enabled = false;
-                        toolStripbtnPrint.Enabled = true;
-                        toolStripButton结案.Enabled = false;
-                        toolStripBtnCancel.Enabled = false;
-                        toolStripbtnDelete.Enabled = false;
-                        break;
-                    default:
-                        break;
-                }
-
-                //单据被锁定时。显示锁定图标。并且提示无法操作？
-                string PKCol = BaseUIHelper.GetEntityPrimaryKey<T>();
-                long pkid = (long)ReflectionHelper.GetPropertyValue(entity, PKCol);
-                if (pkid > 0)
-                {
-                    //如果要锁这个单 看这个单是不是已经被其它人锁，如果没有人锁则我可以锁
-                    //TODO 注意 同一个人，同一个业务单据。只能锁定一张单。所以在锁新单时。清除所有旧单。
-                    //关闭时会解锁，查询的方式不停加载也要解锁前面的
-                    long userid = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID;
-
-                    //解锁这个业务的自己名下的其它单
-                    UNLockByBizName(userid);
-
-                    if (MainForm.Instance.lockManager.GetLockedBy(pkid) > 0)
-                    {
-                        var lockinfo = MainForm.Instance.lockManager.GetLockStatus(pkid);
-                        if (lockinfo.LockedByID == userid)
-                        {
-                            //得到了锁 就是自己。得不到就是
-                            tsBtnLocked.AutoToolTip = false;
-                            tsBtnLocked.ToolTipText = string.Empty;
-                            //别人锁定了
-                            string tipMsg = $"您锁定了当前单据。";
-                            MainForm.Instance.uclog.AddLog(tipMsg);
-                            tsBtnLocked.AutoToolTip = true;
-                            tsBtnLocked.ToolTipText = tipMsg;
-                            tsBtnLocked.Visible = true;
-                            tsBtnLocked.Tag = lockinfo;
-                            //自己就表达绿色
-                            this.tsBtnLocked.Image = global::RUINORERP.UI.Properties.Resources.unlockbill;
-
-
-
-                        }
-                        else
-                        {
-                            //别人锁定了
-                            string tipMsg = $"单据已被用户【{lockinfo.LockedByName}】锁定，请刷新后再试,或点击【已锁定】联系锁定人员解锁。";
-                            MainForm.Instance.uclog.AddLog(tipMsg);
-                            tsBtnLocked.AutoToolTip = true;
-                            tsBtnLocked.ToolTipText = tipMsg;
-                            tsBtnLocked.Visible = true;
-                            tsBtnLocked.Tag = lockinfo;
-                            this.tsBtnLocked.Image = global::RUINORERP.UI.Properties.Resources.Lockbill;
-                            toolStripBtnCancel.Visible = true;
-                            toolStripbtnModify.Enabled = false;
-                            toolStripbtnSubmit.Enabled = false;
-                            toolStripBtnReverseReview.Enabled = false;
-                            toolStripbtnReview.Enabled = false;
-                            toolStripButtonSave.Enabled = false;
-                            toolStripbtnDelete.Enabled = false;
-                            toolStripbtnPrint.Enabled = false;
-                            toolStripButton结案.Enabled = false;
-                        }
-                    }
-                    else
-                    {
-                        //没人锁定
-                        tsBtnLocked.AutoToolTip = false;
-                        tsBtnLocked.ToolTipText = string.Empty;
-                        tsBtnLocked.Visible = false;
-                        tsBtnLocked.Tag = null;
-                    }
-                }
-
-                #region 数据状态修改时也会影响到按钮
-                if (entity is BaseEntity baseEntity)
-                {
-                    //为了不重复执行
-                    // 定义一个局部变量来存储事件处理程序
-                    EventHandler<ActionStatusChangedEventArgs> eventHandler = (sender, s2) =>
-                    {
-                        if (s2.OldValue != ActionStatus.修改 && s2.NewValue == ActionStatus.修改)
-                        {
-                            LockBill();
-                        }
-                    };
-
-                    // 先移除之前可能添加的处理程序
-                    baseEntity.ActionStatusChanged -= eventHandler;
-                    // 再添加处理程序
-                    baseEntity.ActionStatusChanged += eventHandler;
-
-
-                    //如果属性变化 则状态为修改
-                    baseEntity.PropertyChanged += (sender, s2) =>
-                    {
-                        //权限允许
-                        if ((true && dataStatus == FMPaymentStatus.草稿) || (true && dataStatus == FMPaymentStatus.提交))
-                        {
-                            baseEntity.ActionStatus = ActionStatus.修改;
-                            ToolBarEnabledControl(MenuItemEnums.修改);
-                        }
-
-                        //数据状态变化会影响按钮变化
-                        if (s2.PropertyName == "FMPaymentStatus")
-                        {
-                            if (dataStatus == FMPaymentStatus.草稿)
-                            {
-                                ToolBarEnabledControl(MenuItemEnums.新增);
-                            }
-                            if (dataStatus == FMPaymentStatus.提交)
-                            {
-                                ToolBarEnabledControl(MenuItemEnums.新增);
-                            }
-                            if (dataStatus == FMPaymentStatus.已审核)
-                            {
-                                ToolBarEnabledControl(MenuItemEnums.审核);
-                            }
-
-                            if (dataStatus == FMPaymentStatus.已冲销 || dataStatus == FMPaymentStatus.已取消)
-                            {
-                                ToolBarEnabledControl(MenuItemEnums.结案);
-                            }
-
-                        }
-
-                    };
-
-
-
-
-                }
-                #endregion
+                toolStripButton结案.Text = "退款";
+                toolStripButton结案.Visible = preStatus == PrePaymentStatus.待核销;
+                toolStripButton结案.Enabled = preStatus == PrePaymentStatus.待核销;
             }
+            else if (statusEnum is ARAPStatus arapStatus)
+            {
+                toolStripButton结案.Text = "冲销";
+                toolStripButton结案.Visible = arapStatus == ARAPStatus.待支付 ||
+                                             arapStatus == ARAPStatus.部分支付;
+                toolStripButton结案.Enabled = arapStatus == ARAPStatus.待支付 ||
+                                             arapStatus == ARAPStatus.部分支付;
 
-            #endregion
-            */
+                // 坏账按钮
+                //toolStripButton坏账.Visible = toolStripButton结案.Visible;
+                //toolStripButton坏账.Enabled = toolStripButton结案.Enabled;
+            }
+            // 状态检测器
+            var statusDetector = new StatusDetector(entity as BaseEntity);
+            // 锁定状态处理
+            HandleLockStatus(entity as BaseEntity, statusDetector);
 
+            /*
             if (entity.ContainsProperty(typeof(PrePaymentStatus).Name) ||
     entity.ContainsProperty(typeof(ARAPStatus).Name) ||
     entity.ContainsProperty(typeof(PaymentStatus).Name))
@@ -934,164 +792,89 @@ namespace RUINORERP.UI.BaseForm
                 // 状态变更事件处理
                 HandleStatusChangeEvents(entity as BaseEntity, statusValue);
             }
+            */
+
         }
 
         #region 状态处理私有方法
+
+        private void ConfigureSpecialButtons(dynamic status)
+        {
+            toolStripButton结案.Visible = false;
+            //toolStripButton坏账.Visible = false;
+
+            if (status is PrePaymentStatus preStatus)
+            {
+                toolStripButton结案.Text = "退款";
+                toolStripButton结案.Visible = preStatus == PrePaymentStatus.待核销;
+                toolStripButton结案.Enabled = preStatus == PrePaymentStatus.待核销;
+            }
+            else if (status is ARAPStatus arapStatus)
+            {
+                toolStripButton结案.Text = "冲销";
+                toolStripButton结案.Visible = arapStatus == ARAPStatus.待支付 ||
+                                             arapStatus == ARAPStatus.部分支付;
+                toolStripButton结案.Enabled = FMPaymentStatusHelper.CanReverse(arapStatus);
+
+                //toolStripButton坏账.Visible = toolStripButton结案.Visible;
+                //toolStripButton坏账.Enabled = toolStripButton结案.Enabled;
+            }
+        }
+
+        private bool HasRelatedRecords(BaseEntity entity)
+        {
+            // 实现关联记录检查逻辑
+            // 例如：检查是否有核销记录、支付记录等
+            return false;
+        }
+ 
+
+        /// <summary>获取实体的状态类型</summary>
+        private Type GetStatusType(BaseEntity entity)
+        {
+            if (entity.ContainsProperty(typeof(PrePaymentStatus).Name))
+                return typeof(PrePaymentStatus);
+
+            if (entity.ContainsProperty(typeof(ARAPStatus).Name))
+                return typeof(ARAPStatus);
+
+            if (entity.ContainsProperty(typeof(PaymentStatus).Name))
+                return typeof(PaymentStatus);
+
+            return null;
+        }
+
         private void HandlePrePaymentStatus(PrePaymentStatus status, ActionStatus actionStatus)
         {
             toolStripbtnSubmit.Enabled = status == PrePaymentStatus.草稿;
             toolStripbtnReview.Enabled = status == PrePaymentStatus.待审核;
-            //反审核相关控制
-            toolStripBtnReverseReview.Enabled = !status.HasFlag(PrePaymentStatus.已生效);
-            toolStripButton结案.Enabled = status.HasFlag(PrePaymentStatus.全额核销);
-            toolStripButtonSave.Enabled = !status.HasFlag(PrePaymentStatus.已生效);
-            if (status.IsFinalStatus())
+            toolStripBtnReverseReview.Enabled = status == PrePaymentStatus.待核销;
+
+            // 结案按钮改为"退款"
+            toolStripButton结案.Text = "退款";
+            toolStripButton结案.Enabled = status == PrePaymentStatus.待核销;
+
+            toolStripButtonSave.Enabled = FMPaymentStatusHelper.IsEditable(status);
+
+            if (FMPaymentStatusHelper.IsFinalStatus(status))
             {
                 toolStripBtnReverseReview.Enabled = false;
                 toolStripbtnModify.Enabled = false;
                 toolStripbtnSubmit.Enabled = false;
                 toolStripButtonSave.Enabled = false;
-            }
-
-            // toolStripButton反核销.Enabled = status.AllowReverseSettle();
-
-            // 特殊状态处理
-            if (status.HasFlag(PrePaymentStatus.部分核销))
-            {
-                toolStripbtnModify.Enabled = false;
-                toolStripbtnSubmit.Enabled = false;
+                toolStripButton结案.Enabled = false;
             }
         }
 
-        private void HandleARAPStatus(ARAPStatus status, ActionStatus actionStatus)
-        {
-            toolStripbtnSubmit.Enabled = status == ARAPStatus.草稿;
-            toolStripbtnReview.Enabled = status == ARAPStatus.待审核;
-            // toolStripButton坏账.Enabled = status.CanMarkBadDebt();
-            // toolStripButton结清.Enabled = status.CanCreatePayment();
-
-            // 支付相关控制
-            //toolStripButton部分支付.Enabled = status.AllowPartialPayment();
-            //toolStripButton全额支付.Enabled = status.CanCreatePayment();
-            if (status.IsFinalStatus())
-            {
-                toolStripBtnReverseReview.Enabled = false;
-                toolStripbtnModify.Enabled = false;
-                toolStripbtnSubmit.Enabled = false;
-                toolStripButtonSave.Enabled = false;
-            }
-            // 坏账特殊处理
-            if (status.HasFlag(ARAPStatus.坏账))
-            {
-                toolStripbtnModify.Enabled = false;
-                toolStripbtnSubmit.Enabled = false;
-                // toolStripButton结清.Enabled = false;
-            }
-        }
+ 
 
         private void HandlePaymentStatus(PaymentStatus status, ActionStatus actionStatus)
         {
             toolStripbtnSubmit.Enabled = status == PaymentStatus.草稿;
             toolStripbtnReview.Enabled = status == PaymentStatus.待审核;
-            //toolStripButton核销.Enabled = status.CanSettlePayment();
-            // toolStripButton反核销.Enabled = status.HasFlag(PaymentStatus.已核销);
-
-            // 金额修改控制
-            // toolStripbtnModify金额.Enabled = status.AllowAmountChange();
+            toolStripButton结案.Visible = false; // 付款单不需要结案按钮
         }
 
-
-
-
-        private void HandleLockStatus(BaseEntity entity)
-        {
-            //单据被锁定时。显示锁定图标。并且提示无法操作？
-            string PKCol = BaseUIHelper.GetEntityPrimaryKey<T>();
-            long pkid = (long)ReflectionHelper.GetPropertyValue(entity, PKCol);
-            if (pkid > 0)
-            {
-                //如果要锁这个单 看这个单是不是已经被其它人锁，如果没有人锁则我可以锁
-                //TODO 注意 同一个人，同一个业务单据。只能锁定一张单。所以在锁新单时。清除所有旧单。
-                //关闭时会解锁，查询的方式不停加载也要解锁前面的
-                long userid = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID;
-
-                //解锁这个业务的自己名下的其它单
-                UNLockByBizName(userid);
-
-                if (MainForm.Instance.lockManager.GetLockedBy(pkid) > 0)
-                {
-                    var lockinfo = MainForm.Instance.lockManager.GetLockStatus(pkid);
-                    if (lockinfo.LockedByID == userid)
-                    {
-                        //得到了锁 就是自己。得不到就是
-                        tsBtnLocked.AutoToolTip = false;
-                        tsBtnLocked.ToolTipText = string.Empty;
-                        //别人锁定了
-                        string tipMsg = $"您锁定了当前单据。";
-                        MainForm.Instance.uclog.AddLog(tipMsg);
-                        tsBtnLocked.AutoToolTip = true;
-                        tsBtnLocked.ToolTipText = tipMsg;
-                        tsBtnLocked.Visible = true;
-                        tsBtnLocked.Tag = lockinfo;
-                        //自己就表达绿色
-                        this.tsBtnLocked.Image = global::RUINORERP.UI.Properties.Resources.unlockbill;
-
-
-
-                    }
-                    else
-                    {
-                        //别人锁定了
-                        string tipMsg = $"单据已被用户【{lockinfo.LockedByName}】锁定，请刷新后再试,或点击【已锁定】联系锁定人员解锁。";
-                        MainForm.Instance.uclog.AddLog(tipMsg);
-                        tsBtnLocked.AutoToolTip = true;
-                        tsBtnLocked.ToolTipText = tipMsg;
-                        tsBtnLocked.Visible = true;
-                        tsBtnLocked.Tag = lockinfo;
-                        this.tsBtnLocked.Image = global::RUINORERP.UI.Properties.Resources.Lockbill;
-                        toolStripBtnCancel.Visible = true;
-                        toolStripbtnModify.Enabled = false;
-                        toolStripbtnSubmit.Enabled = false;
-                        toolStripBtnReverseReview.Enabled = false;
-                        toolStripbtnReview.Enabled = false;
-                        toolStripButtonSave.Enabled = false;
-                        toolStripbtnDelete.Enabled = false;
-                        toolStripbtnPrint.Enabled = false;
-                        toolStripButton结案.Enabled = false;
-                    }
-                }
-                else
-                {
-                    //没人锁定
-                    tsBtnLocked.AutoToolTip = false;
-                    tsBtnLocked.ToolTipText = string.Empty;
-                    tsBtnLocked.Visible = false;
-                    tsBtnLocked.Tag = null;
-                }
-            }
-
-            return;
-            long pkidd = GetPrimaryKeyValue(entity);
-            if (pkidd > 0)
-            {
-                var lockInfo = MainForm.Instance.lockManager.GetLockStatus(pkidd);
-                bool isLocked = lockInfo?.LockedByID > 0;
-                bool isSelfLock = lockInfo?.LockedByID == MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID;
-
-                // 锁定状态显示
-                tsBtnLocked.Visible = isLocked;
-                tsBtnLocked.Image = isSelfLock ? Properties.Resources.unlockbill : Properties.Resources.Lockbill;
-                tsBtnLocked.ToolTipText = isSelfLock ?
-                    "您已锁定当前单据" :
-                    $"单据已被【{lockInfo.LockedByName}】锁定";
-
-                // 锁定时的按钮禁用
-                if (isLocked && !isSelfLock)
-                {
-                    DisableAllOperations();
-                }
-            }
-        }
 
         private long GetPrimaryKeyValue(BaseEntity entity)
         {
@@ -1128,44 +911,8 @@ namespace RUINORERP.UI.BaseForm
             return (Enum)Enum.Parse(statusType, value.ToString());
         }
 
-        private bool HasRelatedRecords(BaseEntity entity)
-        {
-            // 实现关联记录检查逻辑
-            return false;
-            //return entity.RelatedRecords?.Any() ?? false;
-        }
+      
 
-        private void HandleStatusChangeEvents(BaseEntity entity, Enum status)
-        {
-            entity.PropertyChanged += (sender, e) =>
-            {
-                if (e.PropertyName == "Status")
-                {
-                    // 状态变更时重新加载按钮状态
-                    //RefreshToolbar();
-
-                    // 自动锁定机制
-                    if (status.IsInProcess() && !status.IsFinalStatus())
-                    {
-                        LockBill();
-                    }
-                }
-            };
-
-            // 添加终态验证
-            entity.ActionStatusChanged += (sender, e) =>
-            {
-                try
-                {
-                    status.CheckStatusConflict();
-                }
-                catch (InvalidDataException ex)
-                {
-                    // e.Cancel = true;
-                    // ShowErrorMessage("状态冲突：" + ex.Message);
-                }
-            };
-        }
         #endregion
 
 
@@ -1219,40 +966,41 @@ namespace RUINORERP.UI.BaseForm
                 // 获取实际状态值
                 var status = GetActualStatus();
                 var hasRelatedRecords = CheckRelatedRecords();
-
+                bool CanReverse = false;
                 // 计算属性值
-                IsFinalStatus = status?.IsFinalStatus() ?? false;
-                IsEditable = status?.IsEditable() ?? false;
-                CanCancel = status?.CanCancel(hasRelatedRecords) ?? false;
+                IsFinalStatus = FMPaymentStatusHelper.IsFinalStatus(status);
+                IsEditable = FMPaymentStatusHelper.IsEditable(status);
+                CanCancel = FMPaymentStatusHelper.CanCancel(status, false);
 
-                // 特定状态判断
                 switch (status)
                 {
                     case PrePaymentStatus pre:
                         CanSubmit = pre == PrePaymentStatus.草稿;
                         CanReview = pre == PrePaymentStatus.待审核;
-                        CanReverseReview = !pre.HasFlag(PrePaymentStatus.已生效);
-                        CanClose = pre.HasFlag(PrePaymentStatus.全额核销);
+                        CanReverseReview = pre == PrePaymentStatus.待核销;
+                        CanClose = pre == PrePaymentStatus.待核销; // 可退款
+                        CanReverse = false;
                         break;
 
                     case ARAPStatus arap:
                         CanSubmit = arap == ARAPStatus.草稿;
                         CanReview = arap == ARAPStatus.待审核;
-                        CanReverseReview = false;
-                        CanClose = arap.HasFlag(ARAPStatus.全部支付) ||
-                                  arap.HasFlag(ARAPStatus.坏账);
+                        CanReverseReview = arap == ARAPStatus.待支付;
+                        //CanClose = arap.CanReverse(); // 可冲销
+                        //CanReverse = arap.CanReverse();
                         break;
 
                     case PaymentStatus pay:
                         CanSubmit = pay == PaymentStatus.草稿;
                         CanReview = pay == PaymentStatus.待审核;
                         CanReverseReview = false;
-                        CanClose = pay.HasFlag(PaymentStatus.已支付);
+                        CanClose = false;
+                        CanReverse = false;
                         break;
                 }
             }
 
-            private Enum GetActualStatus()
+            public Enum GetActualStatus()
             {
                 if (_entity.ContainsProperty(typeof(PrePaymentStatus).Name))
                     return _entity.GetStatusValue<PrePaymentStatus>();
@@ -1288,7 +1036,11 @@ namespace RUINORERP.UI.BaseForm
         /// <summary>处理单据锁定状态</summary>
         private void HandleLockStatus(BaseEntity entity, StatusDetector detector)
         {
-            long pkid = GetPrimaryKeyValue(entity);
+            if (entity == null) return;
+
+            string PKCol = BaseUIHelper.GetEntityPrimaryKey<T>();
+            long pkid = (long)ReflectionHelper.GetPropertyValue(entity, PKCol);
+
             if (pkid <= 0) return;
 
             var lockInfo = MainForm.Instance.lockManager.GetLockStatus(pkid);
@@ -1300,13 +1052,11 @@ namespace RUINORERP.UI.BaseForm
             tsBtnLocked.Image = isSelfLock ?
                 Properties.Resources.unlockbill :
                 Properties.Resources.Lockbill;
-            if (lockInfo != null)
-            {
-                tsBtnLocked.ToolTipText = isSelfLock ?
+
+            tsBtnLocked.ToolTipText = isSelfLock ?
                 "您已锁定当前单据" :
-                $"单据已被【{lockInfo.LockedByName}】锁定";
-            }
-            
+                $"单据已被【{lockInfo?.LockedByName}】锁定";
+
             // 被他人锁定时禁用所有操作
             if (isLocked && !isSelfLock)
             {
@@ -1315,8 +1065,157 @@ namespace RUINORERP.UI.BaseForm
                 toolStripbtnReview.Enabled = false;
                 toolStripButtonSave.Enabled = false;
                 toolStripbtnDelete.Enabled = false;
+
+                // 根据不同类型禁用特定按钮
+                if (detector.GetActualStatus() is PrePaymentStatus)
+                {
+                    toolStripButton结案.Enabled = false; // 退款按钮
+                }
+                else if (detector.GetActualStatus() is ARAPStatus)
+                {
+                    toolStripButton结案.Enabled = false; // 冲销按钮
+                    //toolStripButton坏账.Enabled = false;
+                }
+            }
+            else if (isSelfLock)
+            {
+                // 自己锁定时启用适当操作
+                EnableOperationsBasedOnStatus(detector.GetActualStatus());
             }
         }
+        /// <summary>根据状态启用操作按钮</summary>
+        private void EnableOperationsBasedOnStatus(Enum status)
+        {
+            if (status is PrePaymentStatus preStatus)
+            {
+                toolStripbtnSubmit.Enabled = FMPaymentStatusHelper.CanSubmit(preStatus);
+                toolStripbtnReview.Enabled = preStatus == PrePaymentStatus.待审核;
+                toolStripButton结案.Enabled = preStatus == PrePaymentStatus.待核销;
+            }
+            else if (status is ARAPStatus arapStatus)
+            {
+                toolStripbtnSubmit.Enabled = FMPaymentStatusHelper.CanSubmit(arapStatus);
+                toolStripbtnReview.Enabled = arapStatus == ARAPStatus.待审核;
+                toolStripButton结案.Enabled = FMPaymentStatusHelper.CanReverse(arapStatus);
+                //toolStripButton坏账.Enabled = arapStatus == ARAPStatus.待支付 ||arapStatus == ARAPStatus.部分支付;
+            }
+            else if (status is PaymentStatus payStatus)
+            {
+                toolStripbtnSubmit.Enabled = FMPaymentStatusHelper.CanSubmit(payStatus);
+                toolStripbtnReview.Enabled = payStatus == PaymentStatus.待审核;
+            }
+        }
+
+        /// <summary>设置实体状态属性值</summary>
+        private void SetEntityStatus<TStatus>(BaseEntity entity, TStatus status) where TStatus : Enum
+        {
+            string propertyName = typeof(TStatus).Name;
+            if (entity.ContainsProperty(propertyName))
+            {
+                ReflectionHelper.SetPropertyValue(entity, propertyName, (int)(object)status);
+            }
+        }
+
+
+        /*
+       private void HandleLockStatus(BaseEntity entity, StatusDetector detector)
+       {    
+           //单据被锁定时。显示锁定图标。并且提示无法操作？
+           string PKCol = BaseUIHelper.GetEntityPrimaryKey<T>();
+           long pkid = (long)ReflectionHelper.GetPropertyValue(entity, PKCol);
+           if (pkid <= 0) return;
+
+           var lockInfo = MainForm.Instance.lockManager.GetLockStatus(pkid);
+           bool isLocked = lockInfo?.LockedByID > 0;
+           bool isSelfLock = lockInfo?.LockedByID == MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID;
+
+           // 更新锁定按钮状态
+           tsBtnLocked.Visible = isLocked;
+           tsBtnLocked.Image = isSelfLock ?
+               Properties.Resources.unlockbill :
+               Properties.Resources.Lockbill;
+
+           tsBtnLocked.ToolTipText = isSelfLock ?
+      "您已锁定当前单据" :
+      $"单据已被【{lockInfo?.LockedByName}】锁定";
+           // 被他人锁定时禁用所有操作
+           if (isLocked && !isSelfLock)
+           {
+               toolStripbtnModify.Enabled = false;
+               toolStripbtnSubmit.Enabled = false;
+               toolStripbtnReview.Enabled = false;
+               toolStripButtonSave.Enabled = false;
+               toolStripbtnDelete.Enabled = false;
+               toolStripButton结案.Enabled = false;
+           }
+
+           if (pkid > 0)
+           {
+               //如果要锁这个单 看这个单是不是已经被其它人锁，如果没有人锁则我可以锁
+               //TODO 注意 同一个人，同一个业务单据。只能锁定一张单。所以在锁新单时。清除所有旧单。
+               //关闭时会解锁，查询的方式不停加载也要解锁前面的
+               long userid = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID;
+
+               //解锁这个业务的自己名下的其它单
+               UNLockByBizName(userid);
+
+               if (MainForm.Instance.lockManager.GetLockedBy(pkid) > 0)
+               {
+                   var lockinfo = MainForm.Instance.lockManager.GetLockStatus(pkid);
+                   if (lockinfo.LockedByID == userid)
+                   {
+                       //得到了锁 就是自己。得不到就是
+                       tsBtnLocked.AutoToolTip = false;
+                       tsBtnLocked.ToolTipText = string.Empty;
+                       //别人锁定了
+                       string tipMsg = $"您锁定了当前单据。";
+                       MainForm.Instance.uclog.AddLog(tipMsg);
+                       tsBtnLocked.AutoToolTip = true;
+                       tsBtnLocked.ToolTipText = tipMsg;
+                       tsBtnLocked.Visible = true;
+                       tsBtnLocked.Tag = lockinfo;
+                       //自己就表达绿色
+                       this.tsBtnLocked.Image = global::RUINORERP.UI.Properties.Resources.unlockbill;
+
+
+
+                   }
+                   else
+                   {
+                       //别人锁定了
+                       string tipMsg = $"单据已被用户【{lockinfo.LockedByName}】锁定，请刷新后再试,或点击【已锁定】联系锁定人员解锁。";
+                       MainForm.Instance.uclog.AddLog(tipMsg);
+                       tsBtnLocked.AutoToolTip = true;
+                       tsBtnLocked.ToolTipText = tipMsg;
+                       tsBtnLocked.Visible = true;
+                       tsBtnLocked.Tag = lockinfo;
+                       this.tsBtnLocked.Image = global::RUINORERP.UI.Properties.Resources.Lockbill;
+                       toolStripBtnCancel.Visible = true;
+                       toolStripbtnModify.Enabled = false;
+                       toolStripbtnSubmit.Enabled = false;
+                       toolStripBtnReverseReview.Enabled = false;
+                       toolStripbtnReview.Enabled = false;
+                       toolStripButtonSave.Enabled = false;
+                       toolStripbtnDelete.Enabled = false;
+                       toolStripbtnPrint.Enabled = false;
+                       toolStripButton结案.Enabled = false;
+                   }
+               }
+               else
+               {
+                   //没人锁定
+                   tsBtnLocked.AutoToolTip = false;
+                   tsBtnLocked.ToolTipText = string.Empty;
+                   tsBtnLocked.Visible = false;
+                   tsBtnLocked.Tag = null;
+               }
+           }
+
+           return;
+
+       }
+
+         */
 
         ///// <summary>刷新工具栏状态</summary>
         public void RefreshToolbar()
@@ -3166,10 +3065,8 @@ namespace RUINORERP.UI.BaseForm
                     //注意這里保存的是枚举
                     ReflectionHelper.SetPropertyValue(entity, typeof(ActionStatus).Name, (int)ActionStatus.加载);
                 }
-
                 ToolBarEnabledControl(MenuItemEnums.保存);
                 MainForm.Instance.uclog.AddLog("保存成功");
-
                 //var sw = new Stopwatch();
                 //sw.Start();
                 //var resultContext = await next();
@@ -3181,7 +3078,9 @@ namespace RUINORERP.UI.BaseForm
             else
             {
                 MainForm.Instance.uclog.AddLog("保存失败，请重试;或联系管理员。" + rmr.ErrorMsg, UILogType.错误);
+                MainForm.Instance.logger.LogError("保存失败", rmr.ErrorMsg);
             }
+            MainForm.Instance.AuditLogHelper.CreateAuditLog<T>("保存", rmr.ReturnObject, $"结果:{(rmr.Succeeded ? "成功" : "失败")},{rmr.ErrorMsg}");
             return rmr;
         }
 
@@ -3470,8 +3369,10 @@ namespace RUINORERP.UI.BaseForm
             return submitrs;
         }
 
+
+        /*
         /// <summary>
-        /// 提交
+        /// <summary>提交单据</summary>
         /// </summary>
         protected async Task<bool> Submit(Type FMEnum)
         {
@@ -3567,6 +3468,71 @@ namespace RUINORERP.UI.BaseForm
             }
             return submitrs;
         }
+        */
+
+
+        /// <summary>提交单据</summary>
+        protected async Task<bool> Submit<TStatus>(TStatus targetStatus)
+            where TStatus : Enum
+        {
+            if (EditEntity == null) return false;
+
+            // 获取当前状态
+            var statusProperty = typeof(TStatus).Name;
+            var currentStatus = (TStatus)Enum.ToObject(
+                typeof(TStatus),
+                EditEntity.GetPropertyValue(statusProperty)
+            );
+
+            // 验证状态转换
+            try
+            {
+                FMPaymentStatusHelper.ValidateTransition(currentStatus, targetStatus);
+            }
+            catch (InvalidOperationException ex)
+            {
+                MainForm.Instance.uclog.AddLog($"提交失败: {ex.Message}");
+                return false;
+            }
+
+            // 状态为草稿时直接更新状态
+            if (FMPaymentStatusHelper.CanSubmit(currentStatus))
+            {
+                ReflectionHelper.SetPropertyValue(EditEntity, statusProperty, (int)(object)targetStatus);
+            }
+            else
+            {
+                MainForm.Instance.uclog.AddLog("单据非草稿状态，提交失败");
+                toolStripbtnSubmit.Enabled = false;
+                return false;
+            }
+
+            // 保存实体
+            var controller = Startup.GetFromFacByName<BaseController<T>>(
+                $"{typeof(T).Name}Controller"
+            );
+
+            var result = await controller.BaseSaveOrUpdate(EditEntity as T);
+
+            if (result.Succeeded)
+            {
+                MainForm.Instance.uclog.AddLog("提交成功");
+                ToolBarEnabledControl(EditEntity);
+
+                // 记录审计日志
+                MainForm.Instance.AuditLogHelper.CreateAuditLog<T>(
+                    "提交",
+                    result.ReturnObject,
+                    $"状态变更: {currentStatus} → {targetStatus}"
+                );
+
+                return true;
+            }
+
+            MainForm.Instance.uclog.AddLog($"提交失败: {result.ErrorMsg}", UILogType.错误);
+            return false;
+        }
+
 
         /// <summary>
         /// 优化后的查询条件

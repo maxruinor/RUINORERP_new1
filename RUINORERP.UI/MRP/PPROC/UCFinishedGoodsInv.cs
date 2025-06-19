@@ -220,7 +220,6 @@ namespace RUINORERP.UI.PSI.PUR
 
             //先绑定这个。InitFilterForControl 这个才生效
             DataBindingHelper.BindData4TextBox<tb_FinishedGoodsInv>(entity, v => v.MONo, txtRef_BillNo, BindDataType4TextBox.Text, true);
-            DataBindingHelper.BindData4TextBoxWithTagQuery<tb_FinishedGoodsInv>(entity, v => v.MOID, txtRef_BillNo, true);
             //if (entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改)
             //{
             //创建表达式  草稿 结案 和没有提交的都不显示
@@ -234,7 +233,11 @@ namespace RUINORERP.UI.PSI.PUR
             QueryFilter queryFilter = basePro.GetQueryFilter();
 
             queryFilter.FilterLimitExpressions.Add(lambdaOrder);//意思是只有审核确认的。没有结案的。才能查询出来。
-            DataBindingHelper.InitFilterForControlByExp<tb_ManufacturingOrder>(entity, txtRef_BillNo, c => c.MONO, queryFilter, null, c => c.MOID);
+
+            ControlBindingHelper.ConfigureControlFilter<tb_FinishedGoodsInv, tb_ManufacturingOrder>(entity, txtRef_BillNo, t => t.MONo,
+             f => f.MONO, queryFilter, a => a.MOID, b => b.MOID, null, false);
+
+
             //}
             ToolBarEnabledControl(entity);
         }

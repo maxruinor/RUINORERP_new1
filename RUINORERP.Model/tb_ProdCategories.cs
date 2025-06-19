@@ -21,7 +21,7 @@ namespace RUINORERP.Model
     /// 产品类别表 与行业相关的产品分类
     /// </summary>
     [Serializable()]
-    [Description("产品类别表 与行业相关的产品分类")]
+    [Description("产品类别表")]
     [SugarTable("tb_ProdCategories")]
     public partial class tb_ProdCategories: BaseEntity, ICloneable
     {

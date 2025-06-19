@@ -40,7 +40,18 @@ namespace RUINORERP.Business
     /// </summary>
     public partial class tb_FM_PreReceivedPaymentController<T> : BaseController<T> where T : class
     {
+        //protected async Task SettlePrePayment()
+        //{
+        //    var targetStatus = IsFullSettlement ?
+        //        PrePaymentStatus.全额核销 :
+        //        PrePaymentStatus.部分核销;
 
+        //    bool result = await Submit(targetStatus);
+        //    if (result)
+        //    {
+        //        // 核销成功后处理
+        //    }
+        //}
         /// <summary>
         /// 客户取消订单时，如果有订单，如果财务没有在他对应的收付单里审核前是可以反审的。否则只能通过红冲机制处理。
         /// </summary>
@@ -54,17 +65,16 @@ namespace RUINORERP.Business
             try
             {
                 //只有生效状态的才允许反审，其它不能也不需要，有可能可删除。也可能只能红冲
-                if (entity.PrePaymentStatus != (long)PrePaymentStatus.已生效)
-                {
-                    if (entity.ReceivePaymentType == (int)ReceivePaymentType.收款)
-                    {
-                        rmrs.ErrorMsg = "只有【已生效】状态的预收款单才可以反审";
-                    }
-                    else
-                    {
-                        rmrs.ErrorMsg = "只有【已生效】状态的预付款单才可以反审";
-                    }
+                // 获取当前状态
+                var statusProperty = typeof(PrePaymentStatus).Name;
+                var currentStatus = (PrePaymentStatus)Enum.ToObject(
+                    typeof(PrePaymentStatus),
+                    entity.GetPropertyValue(statusProperty)
+                );
 
+                if (!FMPaymentStatusHelper.CanReReview(currentStatus, false))
+                {
+                    rmrs.ErrorMsg = $"状态为【{currentStatus.ToString()}】的预{((ReceivePaymentType)entity.ReceivePaymentType).ToString()}单不可以反审";
                     return rmrs;
                 }
 
@@ -72,34 +82,34 @@ namespace RUINORERP.Business
                 // 开启事务，保证数据一致性
                 _unitOfWorkManage.BeginTran();
 
-
                 //注意，反审 将对应的预付生成的收款单，只有收款单没有审核前，可以删除
                 //不能直接删除上级。要让对应的人员自己删除。不然不清楚。逻辑也不对。只能通过判断
                 var PaymentRecordlist = await _appContext.Db.Queryable<tb_FM_PaymentRecord>()
-                            // .Where(c => (c.PaymentStatus == (long)PaymentStatus.草稿 || c.PaymentStatus == (long)PaymentStatus.待审核))
+                            // .Where(c => (c.PaymentStatus == (int)PaymentStatus.草稿 || c.PaymentStatus == (int)PaymentStatus.待审核))
                             .Where(c => c.tb_FM_PaymentRecordDetails.Any(d => d.SourceBilllId == entity.PreRPID
                               && d.SourceBizType == (int)BizType.预收款单))
                               .ToListAsync();
-                if (PaymentRecordlist != null&&PaymentRecordlist.Count > 0)
+                if (PaymentRecordlist != null && PaymentRecordlist.Count > 0)
                 {
                     //判断是否能反审? 如果出库是草稿，订单反审 修改后。出库再提交 审核。所以 出库审核要核对订单数据。
-                    if ((PaymentRecordlist.Any(c => c.PaymentStatus == (int)PaymentStatus.已支付 || c.PaymentStatus == (int)PaymentStatus.已关闭)
+                    if ((PaymentRecordlist.Any(c => c.PaymentStatus == (int)PaymentStatus.已支付)
                         && PaymentRecordlist.Any(c => c.ApprovalStatus == (int)ApprovalStatus.已审核)))
                     {
-                        rmrs.ErrorMsg = "存在已确认或已完结，或已审核的销售出库单，不能反审核,请联系管理员，或作退回处理。";
+                        _unitOfWorkManage.RollbackTran();
+                        rmrs.ErrorMsg = "存在【已支付】的付款单，不能反审预款单,请联系管理员，或作退回处理。";
                         rmrs.Succeeded = false;
                         return rmrs;
                     }
 
                 }
 
-               
+
 
 
                 //if (entity.ReceivePaymentType == (int)ReceivePaymentType.收款)
                 //{
                 //    var list = await _appContext.Db.Queryable<tb_FM_PaymentRecord>()
-                //                  .Where(c => (c.PaymentStatus == (long)PaymentStatus.草稿 || c.PaymentStatus == (long)PaymentStatus.待审核)
+                //                  .Where(c => (c.PaymentStatus == (int)PaymentStatus.草稿 || c.PaymentStatus == (int)PaymentStatus.待审核)
                 //                  && c.tb_FM_PaymentRecordDetails.Any(d => d.SourceBilllId == entity.PreRPID
                 //                  && d.SourceBizType == (int)BizType.预收款单))
                 //                  .ToListAsync();
@@ -107,12 +117,12 @@ namespace RUINORERP.Business
                 //else
                 //{
                 //    await _appContext.Db.Deleteable<tb_FM_PaymentRecord>()
-                //        .Where(c => (c.PaymentStatus == (long)PaymentStatus.草稿 || c.PaymentStatus == (long)PaymentStatus.待审核)
+                //        .Where(c => (c.PaymentStatus == (int)PaymentStatus.草稿 || c.PaymentStatus == (int)PaymentStatus.待审核)
                 //        && c.tb_FM_PaymentRecordDetails.Any(d => d.SourceBilllId == entity.PreRPID && d.SourceBizType == (int)BizType.预付款单)).ExecuteCommandAsync();
                 //}
 
 
-                entity.PrePaymentStatus = (long)PrePaymentStatus.草稿;
+                entity.PrePaymentStatus = (int)PrePaymentStatus.草稿;
                 entity.ApprovalResults = false;
                 entity.ApprovalStatus = (int)ApprovalStatus.未审核;
                 BusinessHelper.Instance.ApproverEntity(entity);
@@ -152,7 +162,7 @@ namespace RUINORERP.Business
             tb_FM_PreReceivedPayment entity = ObjectEntity as tb_FM_PreReceivedPayment;
             try
             {
-                if (entity.PrePaymentStatus != (long)PrePaymentStatus.草稿 && entity.PrePaymentStatus != (long)PrePaymentStatus.待审核)
+                if (entity.PrePaymentStatus != (int)PrePaymentStatus.草稿 && entity.PrePaymentStatus != (int)PrePaymentStatus.待审核)
                 {
                     rmrs.Succeeded = false;
                     rmrs.ErrorMsg = $"预{((ReceivePaymentType)entity.ReceivePaymentType).ToString()}单{entity.PreRPNO}，状态为【{((PrePaymentStatus)entity.PrePaymentStatus).ToString()}】\r\n请确认状态为【草稿】或【待审核】才可以审核。";
@@ -175,7 +185,7 @@ namespace RUINORERP.Business
                 //    .Where(c => c.tb_fm_paymentrecord.ApprovalStatus == (int)ApprovalStatus.已审核
                 //    && c.tb_fm_paymentrecord.ApprovalResults.HasValue
                 //    && c.tb_fm_paymentrecord.ApprovalResults.Value
-                //    && (c.tb_fm_paymentrecord.PaymentStatus == (long)PaymentStatus.已支付 || c.tb_fm_paymentrecord.PaymentStatus == (long)PaymentStatus.已核销))
+                //    && (c.tb_fm_paymentrecord.PaymentStatus == (int)PaymentStatus.已支付 || c.tb_fm_paymentrecord.PaymentStatus == (int)PaymentStatus.已核销))
                 //    .ToList();
                 //if (records.Count > 0)
                 //{
@@ -201,7 +211,7 @@ namespace RUINORERP.Business
                 //    entity.ForeignBalanceAmount = entity.ForeignPrepaidAmount;
                 //    entity.LocalBalanceAmount = entity.LocalPrepaidAmount;
                 //}
-                entity.PrePaymentStatus = (long)PrePaymentStatus.已生效;
+                entity.PrePaymentStatus = (int)PrePaymentStatus.待核销;
                 entity.ApprovalStatus = (int)ApprovalStatus.已审核;
                 BusinessHelper.Instance.ApproverEntity(entity);
                 //只更新指定列
@@ -243,9 +253,8 @@ namespace RUINORERP.Business
         /// <param name="entity"></param>
         /// <param name="SaveToDb"></param>
         /// <returns></returns>
-        public async Task<ReturnResults<tb_FM_PreReceivedPayment>> CreatePreReceivedPayment(tb_SaleOrder entity, bool SaveToDb = false)
+        public tb_FM_PreReceivedPayment BuildPreReceivedPayment(tb_SaleOrder entity)
         {
-            ReturnResults<tb_FM_PreReceivedPayment> rmrs = new ReturnResults<tb_FM_PreReceivedPayment>();
 
             // 外币相关处理 正确是 外币时一定要有汇率
             decimal exchangeRate = 1; // 获取销售订单的汇率
@@ -257,7 +266,6 @@ namespace RUINORERP.Business
             }
 
             #region 生成预收款
-            var ctrpay = _appContext.GetRequiredService<tb_FM_PreReceivedPaymentController<tb_FM_PreReceivedPayment>>();
 
             tb_FM_PreReceivedPayment payable = new tb_FM_PreReceivedPayment();
             payable = mapper.Map<tb_FM_PreReceivedPayment>(entity);
@@ -324,29 +332,10 @@ namespace RUINORERP.Business
 
             payable.PrePaymentReason = $"销售订单{entity.SOrderNo}的预收款";
             Business.BusinessHelper.Instance.InitEntity(payable);
-            payable.PrePaymentStatus = (long)PrePaymentStatus.待审核;
-            if (SaveToDb)
-            {
-                ReturnResults<tb_FM_PreReceivedPayment> rmpay = await ctrpay.SaveOrUpdate(payable);
-                if (rmpay.Succeeded)
-                {
-                    // 预收款单生成成功后的处理逻辑
-                }
-                else
-                {
-                    // 处理预收款单生成失败的情况
-                    rmrs.Succeeded = false;
-                    _unitOfWorkManage.RollbackTran();
-                    rmrs.ErrorMsg = $"预收款单生成失败：{rmpay.ErrorMsg ?? "未知错误"}";
-                    if (_appContext.SysConfig.ShowDebugInfo)
-                    {
-                        _logger.LogInformation(rmrs.ErrorMsg);
-                    }
-                }
-            }
-            rmrs.ReturnObject = payable;
+            payable.PrePaymentStatus = (int)PrePaymentStatus.待审核;
+
             #endregion
-            return rmrs;
+            return payable;
         }
 
 
@@ -376,7 +365,7 @@ namespace RUINORERP.Business
         //            foreach (var entity in entitys)
         //            {
         //                //这部分是否能提出到上一级公共部分？
-        //                entity.PrePaymentStatus = (long)PrePaymentStatus.已生效;
+        //                entity.PrePaymentStatus = (int)PrePaymentStatus.已生效;
         //                entity.ApprovalOpinions = approvalEntity.ApprovalOpinions;
         //                //后面已经修改为
         //                entity.ApprovalResults = approvalEntity.ApprovalResults;
@@ -404,79 +393,7 @@ namespace RUINORERP.Business
         //}
 
 
-
-        /// <summary>
-        /// 批量结案  销售订单标记结案，数据状态为8, 
-        /// 如果还没有出库。但是结案的订单时。修正拟出库数量。
-        /// 目前暂时是这个逻辑。后面再处理凭证财务相关的
-        /// 目前认为结案 是仓库和业务确定这个订单不再执行的一个确认过程。
-        /// </summary>
-        /// <param name="entity"></param>
-        /// <returns></returns>
-        public async override Task<ReturnResults<bool>> BatchCloseCaseAsync(List<T> NeedCloseCaseList)
-        {
-            List<tb_FM_PreReceivedPayment> entitys = new List<tb_FM_PreReceivedPayment>();
-            entitys = NeedCloseCaseList as List<tb_FM_PreReceivedPayment>;
-
-            ReturnResults<bool> rs = new ReturnResults<bool>();
-            try
-            {
-                // 开启事务，保证数据一致性
-                _unitOfWorkManage.BeginTran();
-                #region 结案
-                //更新拟销售量  减少
-                for (int m = 0; m < entitys.Count; m++)
-                {
-                    //DOTO 没有完成
-                    //判断 能结案的 是关闭的意思。就是没有收到款 作废
-                    // 检查预付款取消
-                    var preStatus = PrePaymentStatus.已生效 | PrePaymentStatus.部分核销;
-                    bool hasRelated = false; // 存在核销单
-                    bool canCancel = preStatus.CanCancel(hasRelated); // 返回false
-
-
-
-                    //判断 能结案的 是确认审核过的。
-                    if (entitys[m].PrePaymentStatus != (long)PrePaymentStatus.已关闭 || !entitys[m].ApprovalResults.HasValue)
-                    {
-                        //return false;
-                        continue;
-                    }
-                    //这部分是否能提出到上一级公共部分？
-                    entitys[m].PrePaymentStatus = (long)PrePaymentStatus.已关闭;
-                    BusinessHelper.Instance.EditEntity(entitys[m]);
-                    //只更新指定列
-                    var affectedRows = await _unitOfWorkManage.GetDbClient()
-                        .Updateable<tb_FM_PreReceivedPayment>(entitys[m])
-                        .UpdateColumns(it => new
-                        {
-                            it.PrePaymentStatus,
-                            it.ApprovalStatus,
-                            it.ApprovalResults,
-                            it.ApprovalOpinions,
-                            it.PaymentImagePath,
-                            it.Modified_by,
-                            it.Modified_at,
-                            it.Remark
-                        }).ExecuteCommandAsync();
-                }
-                #endregion
-                // 注意信息的完整性
-                _unitOfWorkManage.CommitTran();
-                rs.Succeeded = true;
-                return rs;
-            }
-            catch (Exception ex)
-            {
-                _unitOfWorkManage.RollbackTran();
-                _logger.Error(ex);
-                rs.ErrorMsg = ex.Message;
-                rs.Succeeded = false;
-                return rs;
-            }
-
-        }
-
+ 
         public async override Task<List<T>> GetPrintDataSource(long ID)
         {
             List<tb_FM_PreReceivedPayment> list = await _appContext.Db.CopyNew().Queryable<tb_FM_PreReceivedPayment>()

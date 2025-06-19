@@ -144,7 +144,7 @@ namespace RUINORERP.UI.FM
                 entity.ReceivePaymentType = (int)PaymentType;
                 entity.ActionStatus = ActionStatus.新增;
                 entity.PrePayDate = System.DateTime.Now;
-                entity.PrePaymentStatus = (long)PrePaymentStatus.草稿;
+                entity.PrePaymentStatus = (int)PrePaymentStatus.草稿;
                 if (string.IsNullOrEmpty(entity.PreRPNO ))
                 {
                     if (PaymentType == ReceivePaymentType.付款)
@@ -526,8 +526,8 @@ namespace RUINORERP.UI.FM
 
         protected override async Task<bool> Submit()
         {
-            bool rs = await base.Submit(typeof(PrePaymentStatus));
-            if (rs)
+            bool result = await Submit(PaymentStatus.待审核);
+            if (result)
             {
                 ConfigManager configManager = Startup.GetFromFac<ConfigManager>();
                 var temppath = configManager.GetValue("WebServerUrl");
@@ -580,7 +580,7 @@ namespace RUINORERP.UI.FM
                 //https://www.runoob.com/w3cnote/csharp-enum.html
                 var dataStatus = (PrePaymentStatus)(EditEntity.GetPropertyValue(typeof(PrePaymentStatus).Name).ToInt());
                 //没有收到钱之前都可以删除？
-                if (dataStatus == PrePaymentStatus.草稿 || dataStatus == PrePaymentStatus.待审核 || dataStatus == PrePaymentStatus.已生效)
+                if (dataStatus == PrePaymentStatus.草稿 || dataStatus == PrePaymentStatus.待审核 || dataStatus == PrePaymentStatus.待核销)
                 {
                     //如果草稿。都可以删除。如果是新建，则提交过了。要创建人或超级管理员才能删除
                     if (!AppContext.IsSuperUser)

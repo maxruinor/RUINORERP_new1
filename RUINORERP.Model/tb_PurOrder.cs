@@ -21,7 +21,7 @@ namespace RUINORERP.Model
     /// 采购订单，可能来自销售订单也可能来自生产需求也可以直接录数据
     /// </summary>
     [Serializable()]
-    [Description("采购订单，可能来自销售订单也可能来自生产需求也可以直接录数据")]
+    [Description("采购订单")]
     [SugarTable("tb_PurOrder")]
     public partial class tb_PurOrder : BaseEntity, ICloneable
     {

@@ -49,17 +49,17 @@ namespace RUINORERP.Business
                  }
              });
 
-
             RuleFor(x => x.tb_SaleOrderDetails).Must(list => list.Count > 0).WithMessage("销售明细不能为空。");
             RuleFor(x => x.TotalAmount).GreaterThan(0).When(x => x.tb_SaleOrderDetails.Any(s => s.Gift == false)).WithMessage("总金额：明细中有非赠品产品时，总金额要大于零。");//可非全赠品时 总金额要大于0.订单。
             RuleFor(x => x.TotalQty).GreaterThan(0).WithMessage("总数量：要大于零。");
             RuleFor(x => x.TotalAmount).GreaterThan(0).WithMessage("总金额：要大于零。");
-            RuleFor(x => x.TotalAmount).GreaterThanOrEqualTo(x => x.tb_SaleOrderDetails.Sum(c => (c.TransactionPrice) * c.Quantity)).WithMessage("明细中，成交小计：要等于成交价*数量。");
+            RuleFor(x => x.TotalAmount).Equal(x => x.tb_SaleOrderDetails.Sum(c => (c.TransactionPrice) * c.Quantity) + x.FreightIncome).WithMessage("总金额，成交小计：要等于成交价*数量，包含运费。");
             RuleFor(x => x.PlatformOrderNo).NotEmpty().When(c => c.IsFromPlatform).WithMessage("平台单时，平台订单号不能为空。");
             RuleFor(x => x.PayStatus).GreaterThan(0).WithMessage("付款状态:不能为空。");
             RuleFor(x => x.Paytype_ID).GreaterThan(0).When(c => c.PayStatus != (int)PayStatus.未付款).WithMessage("付款方式:有付款的情况下，付款方式不能为空。");
             RuleFor(x => x.Notes).MinimumLength(5).When(c => c.IsCustomizedOrder == true).WithMessage("备注:定制单时下，备注内容长度必须超过5。");
             RuleFor(x => x.ExchangeRate).GreaterThan(0).WithMessage("汇率:必须大于零。");
+
 
             RuleFor(x => x.PayStatus)
       .Custom((value, context) =>

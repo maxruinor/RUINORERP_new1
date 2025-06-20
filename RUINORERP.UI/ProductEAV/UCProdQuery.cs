@@ -317,7 +317,7 @@ namespace RUINORERP.UI.ProductEAV
             //图片特殊处理 要优化处理。会被覆盖值
             if (newSumDataGridView产品.Columns[e.ColumnIndex].Name == "Images")
             {
-                if (e.Value != null)
+                if (e.Value != null && e.Value.GetType() == typeof(byte[]))
                 {
                     if (!(e.Value is byte[]))
                     {
@@ -386,14 +386,18 @@ namespace RUINORERP.UI.ProductEAV
             {
                 if (newSumDataGridView产品.CurrentCell.Value != null)
                 {
-                    System.IO.MemoryStream buf = new System.IO.MemoryStream((byte[])newSumDataGridView产品.CurrentCell.Value);
-                    Image image = Image.FromStream(buf, true);
-                    if (image != null)
+                    if (newSumDataGridView产品.CurrentCell.Value != null && newSumDataGridView产品.CurrentCell.Value.GetType() == typeof(byte[]))
                     {
-                        frmPictureViewer frmShow = new frmPictureViewer();
-                        frmShow.PictureBoxViewer.Image = image;
-                        frmShow.ShowDialog();
+                        System.IO.MemoryStream buf = new System.IO.MemoryStream((byte[])newSumDataGridView产品.CurrentCell.Value);
+                        Image image = Image.FromStream(buf, true);
+                        if (image != null)
+                        {
+                            frmPictureViewer frmShow = new frmPictureViewer();
+                            frmShow.PictureBoxViewer.Image = image;
+                            frmShow.ShowDialog();
+                        }
                     }
+                   
                 }
             }
         }

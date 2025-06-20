@@ -42,10 +42,10 @@ namespace RUINORERP.UI.AdvancedUIModule
 {
     public class UIGenerateHelper
     {
-        public static BaseEntity CreateQueryUI<Q>(bool useLike, Krypton.Toolkit.KryptonPanel UcPanel, QueryFilter queryFilter, decimal DefineColNum) where Q : class
-        {
-            return CreateQueryUI(typeof(Q), useLike, UcPanel, queryFilter, DefineColNum);
-        }
+        //public static BaseEntity CreateQueryUI<Q>(bool useLike, Krypton.Toolkit.KryptonPanel UcPanel, QueryFilter queryFilter, decimal DefineColNum) where Q : class
+        //{
+        //    return CreateQueryUI(typeof(Q), useLike, UcPanel, queryFilter, DefineColNum);
+        //}
 
 
         public static BaseEntity CreateQueryUI(Type type, bool useLike, Krypton.Toolkit.KryptonPanel UcPanel, QueryFilter queryFilter, decimal DefineColNum)
@@ -654,15 +654,7 @@ namespace RUINORERP.UI.AdvancedUIModule
                             newDto.SetPropertyValue(dtpKeyName1, datetimeValue1);
                         }
                         DataBindingHelper.BindData4DataTime(newDto, datetimeValue1, dtpKeyName1, dtpgroup.dtp1, true);
-                        if (queryField.EnableDefault1.HasValue)
-                        {
-                            dtpgroup.dtp1.Checked = queryField.EnableDefault1.Value;
-                        }
-                        else
-                        {
-                            dtpgroup.dtp1.Checked = queryField.IsEnabled;
-                        }
-
+        
 
                         dtpgroup.dtp2.Name = dtpKeyName2;
                         object datetimeValue2 = ReflectionHelper.GetPropertyValue(newDto, dtpKeyName2);
@@ -673,14 +665,35 @@ namespace RUINORERP.UI.AdvancedUIModule
                             dtpgroup.dtp2.Value = System.DateTime.Now.AddDays(queryField.DiffDays2.Value);
                         }
                         DataBindingHelper.BindData4DataTime(newDto, datetimeValue2, dtpKeyName2, dtpgroup.dtp2, true);
+
+
+                        //如果时间区间的参数不为空。看参数里设置默认选中情况
+                        if (queryField.QueryFieldDataPara != null)
+                        {
+                            var queryFieldDataPara = queryField.QueryFieldDataPara;
+                            if (queryFieldDataPara is QueryFieldDateTimeRangeData dateTimeData)
+                            {
+                                dtpgroup.dtp1.Checked = dateTimeData.Selected;
+                                dtpgroup.dtp2.Checked = dateTimeData.Selected;
+                            }
+                        }
+                        else
+                        {
+                            //默认选中
+                            dtpgroup.dtp1.Checked = queryField.IsEnabled;
+                            dtpgroup.dtp2.Checked = queryField.IsEnabled;
+                        }
+
+                        if (queryField.EnableDefault1.HasValue)
+                        {
+                            dtpgroup.dtp1.Checked = queryField.EnableDefault1.Value;
+                        }
+
                         if (queryField.EnableDefault2.HasValue)
                         {
                             dtpgroup.dtp2.Checked = queryField.EnableDefault2.Value;
                         }
-                        else
-                        {
-                            dtpgroup.dtp2.Checked = queryField.IsEnabled;
-                        }
+                    
                         //时间控件更长为260px，这里要特殊处理
                         dtpgroup.Location = new System.Drawing.Point(_x, _y);
                         _x = _x + 260;

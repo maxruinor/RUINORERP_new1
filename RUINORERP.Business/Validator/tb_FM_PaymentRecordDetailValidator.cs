@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：05/07/2025 15:37:43
+// 时间：06/20/2025 16:20:07
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,7 +21,7 @@ using Microsoft.Extensions.Options;
 namespace RUINORERP.Business
 {
     /// <summary>
-    /// 收款单明细表：记录收款分配到应收单的明细验证类
+    /// 收付款记录明细表验证类
     /// </summary>
     /*public partial class tb_FM_PaymentRecordDetailValidator:AbstractValidator<tb_FM_PaymentRecordDetail>*/
     public partial class tb_FM_PaymentRecordDetailValidator:BaseValidatorGeneric<tb_FM_PaymentRecordDetail>
@@ -49,8 +49,13 @@ namespace RUINORERP.Business
  RuleFor(tb_FM_PaymentRecordDetail =>tb_FM_PaymentRecordDetail.SourceBillNo).MaximumLength(15).WithMessage("来源单号:不能超过最大长度,15.");
  RuleFor(tb_FM_PaymentRecordDetail =>tb_FM_PaymentRecordDetail.SourceBillNo).NotEmpty().WithMessage("来源单号:不能为空。");
 
-//***** 
- RuleFor(tb_FM_PaymentRecordDetail =>tb_FM_PaymentRecordDetail.Currency_ID).NotNull().WithMessage("币别:不能为空。");
+ RuleFor(tb_FM_PaymentRecordDetail =>tb_FM_PaymentRecordDetail.DepartmentID).Must(CheckForeignKeyValueCanNull).WithMessage("部门:下拉选择值不正确。");
+ RuleFor(tb_FM_PaymentRecordDetail =>tb_FM_PaymentRecordDetail.DepartmentID).NotEmpty().When(x => x.DepartmentID.HasValue);
+
+ RuleFor(tb_FM_PaymentRecordDetail =>tb_FM_PaymentRecordDetail.ProjectGroup_ID).Must(CheckForeignKeyValueCanNull).WithMessage("项目组:下拉选择值不正确。");
+ RuleFor(tb_FM_PaymentRecordDetail =>tb_FM_PaymentRecordDetail.ProjectGroup_ID).NotEmpty().When(x => x.ProjectGroup_ID.HasValue);
+
+ RuleFor(tb_FM_PaymentRecordDetail =>tb_FM_PaymentRecordDetail.Currency_ID).Must(CheckForeignKeyValue).WithMessage("币别:下拉选择值不正确。");
 
  RuleFor(x => x.ExchangeRate).PrecisionScale(10,4,true).WithMessage("汇率:小数位不能超过4。");
 

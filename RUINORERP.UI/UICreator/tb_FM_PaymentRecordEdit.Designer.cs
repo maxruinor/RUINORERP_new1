@@ -3,7 +3,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：05/07/2025 15:37:39
+// 时间：06/20/2025 16:20:03
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -14,7 +14,7 @@ using FluentValidation;
 namespace RUINORERP.UI
 {
     /// <summary>
-    /// 收款付款记录表-记录所有资金流动一批订单可分账户分批付 记录真实资金流动，用户需确保其 与银行流水一致
+    /// 收付款记录表
     /// </summary>
     partial class tb_FM_PaymentRecordEdit
     {
@@ -55,24 +55,24 @@ namespace RUINORERP.UI
      this.lblPaymentNo = new Krypton.Toolkit.KryptonLabel();
 this.txtPaymentNo = new Krypton.Toolkit.KryptonTextBox();
 
-this.lblReceivePaymentType = new Krypton.Toolkit.KryptonLabel();
+ReversedByPaymentId主外字段不一致。ReversedOriginalId主外字段不一致。this.lblReceivePaymentType = new Krypton.Toolkit.KryptonLabel();
 this.txtReceivePaymentType = new Krypton.Toolkit.KryptonTextBox();
 
 this.lblAccount_id = new Krypton.Toolkit.KryptonLabel();
 this.cmbAccount_id = new Krypton.Toolkit.KryptonComboBox();
-
+ReversedByPaymentId主外字段不一致。ReversedOriginalId主外字段不一致。
 this.lblCustomerVendor_ID = new Krypton.Toolkit.KryptonLabel();
 this.cmbCustomerVendor_ID = new Krypton.Toolkit.KryptonComboBox();
-
+ReversedByPaymentId主外字段不一致。ReversedOriginalId主外字段不一致。
 this.lblPayeeInfoID = new Krypton.Toolkit.KryptonLabel();
 this.cmbPayeeInfoID = new Krypton.Toolkit.KryptonComboBox();
-
+ReversedByPaymentId主外字段不一致。ReversedOriginalId主外字段不一致。
 this.lblPayeeAccountNo = new Krypton.Toolkit.KryptonLabel();
 this.txtPayeeAccountNo = new Krypton.Toolkit.KryptonTextBox();
 
 this.lblCurrency_ID = new Krypton.Toolkit.KryptonLabel();
 this.cmbCurrency_ID = new Krypton.Toolkit.KryptonComboBox();
-
+ReversedByPaymentId主外字段不一致。ReversedOriginalId主外字段不一致。
 this.lblTotalForeignAmount = new Krypton.Toolkit.KryptonLabel();
 this.txtTotalForeignAmount = new Krypton.Toolkit.KryptonTextBox();
 
@@ -84,11 +84,11 @@ this.dtpPaymentDate = new Krypton.Toolkit.KryptonDateTimePicker();
 
 this.lblEmployee_ID = new Krypton.Toolkit.KryptonLabel();
 this.cmbEmployee_ID = new Krypton.Toolkit.KryptonComboBox();
-
+ReversedByPaymentId主外字段不一致。ReversedOriginalId主外字段不一致。
 this.lblPaytype_ID = new Krypton.Toolkit.KryptonLabel();
 this.cmbPaytype_ID = new Krypton.Toolkit.KryptonComboBox();
-
-this.lblPaymentStatus = new Krypton.Toolkit.KryptonLabel();
+ReversedByPaymentId主外字段不一致。ReversedOriginalId主外字段不一致。
+ReversedByPaymentId主外字段不一致。ReversedOriginalId主外字段不一致。this.lblPaymentStatus = new Krypton.Toolkit.KryptonLabel();
 this.txtPaymentStatus = new Krypton.Toolkit.KryptonTextBox();
 
 this.lblPaymentImagePath = new Krypton.Toolkit.KryptonLabel();
@@ -103,11 +103,17 @@ this.lblIsReversed = new Krypton.Toolkit.KryptonLabel();
 this.chkIsReversed = new Krypton.Toolkit.KryptonCheckBox();
 this.chkIsReversed.Values.Text ="";
 
-this.lblReversedPaymentId = new Krypton.Toolkit.KryptonLabel();
-this.txtReversedPaymentId = new Krypton.Toolkit.KryptonTextBox();
+ReversedByPaymentId主外字段不一致。ReversedOriginalId主外字段不一致。this.lblReversedOriginalId = new Krypton.Toolkit.KryptonLabel();
+this.txtReversedOriginalId = new Krypton.Toolkit.KryptonTextBox();
 
-this.lblReversedPaymentNo = new Krypton.Toolkit.KryptonLabel();
-this.txtReversedPaymentNo = new Krypton.Toolkit.KryptonTextBox();
+this.lblReversedOriginalIdNo = new Krypton.Toolkit.KryptonLabel();
+this.txtReversedOriginalIdNo = new Krypton.Toolkit.KryptonTextBox();
+
+ReversedByPaymentId主外字段不一致。ReversedOriginalId主外字段不一致。this.lblReversedByPaymentId = new Krypton.Toolkit.KryptonLabel();
+this.txtReversedByPaymentId = new Krypton.Toolkit.KryptonTextBox();
+
+this.lblReversedByPaymentIdNo = new Krypton.Toolkit.KryptonLabel();
+this.txtReversedByPaymentIdNo = new Krypton.Toolkit.KryptonTextBox();
 
 this.lblRemark = new Krypton.Toolkit.KryptonLabel();
 this.txtRemark = new Krypton.Toolkit.KryptonTextBox();
@@ -116,13 +122,13 @@ this.txtRemark.Multiline = true;
 this.lblCreated_at = new Krypton.Toolkit.KryptonLabel();
 this.dtpCreated_at = new Krypton.Toolkit.KryptonDateTimePicker();
 
-this.lblCreated_by = new Krypton.Toolkit.KryptonLabel();
+ReversedByPaymentId主外字段不一致。ReversedOriginalId主外字段不一致。this.lblCreated_by = new Krypton.Toolkit.KryptonLabel();
 this.txtCreated_by = new Krypton.Toolkit.KryptonTextBox();
 
 this.lblModified_at = new Krypton.Toolkit.KryptonLabel();
 this.dtpModified_at = new Krypton.Toolkit.KryptonDateTimePicker();
 
-this.lblModified_by = new Krypton.Toolkit.KryptonLabel();
+ReversedByPaymentId主外字段不一致。ReversedOriginalId主外字段不一致。this.lblModified_by = new Krypton.Toolkit.KryptonLabel();
 this.txtModified_by = new Krypton.Toolkit.KryptonTextBox();
 
 this.lblisdeleted = new Krypton.Toolkit.KryptonLabel();
@@ -133,7 +139,7 @@ this.lblApprovalOpinions = new Krypton.Toolkit.KryptonLabel();
 this.txtApprovalOpinions = new Krypton.Toolkit.KryptonTextBox();
 this.txtApprovalOpinions.Multiline = true;
 
-this.lblApprover_by = new Krypton.Toolkit.KryptonLabel();
+ReversedByPaymentId主外字段不一致。ReversedOriginalId主外字段不一致。this.lblApprover_by = new Krypton.Toolkit.KryptonLabel();
 this.txtApprover_by = new Krypton.Toolkit.KryptonTextBox();
 
 this.lblApprover_at = new Krypton.Toolkit.KryptonLabel();
@@ -144,7 +150,7 @@ this.lblApprovalResults = new Krypton.Toolkit.KryptonLabel();
 this.chkApprovalResults = new Krypton.Toolkit.KryptonCheckBox();
 this.chkApprovalResults.Values.Text ="";
 
-this.lblPrintStatus = new Krypton.Toolkit.KryptonLabel();
+ReversedByPaymentId主外字段不一致。ReversedOriginalId主外字段不一致。this.lblPrintStatus = new Krypton.Toolkit.KryptonLabel();
 this.txtPrintStatus = new Krypton.Toolkit.KryptonTextBox();
 
     
@@ -195,7 +201,9 @@ this.Controls.Add(this.txtPaymentNo);
 //属性测试50ReceivePaymentType
 //属性测试50ReceivePaymentType
 //属性测试50ReceivePaymentType
-this.lblReceivePaymentType.AutoSize = true;
+//属性测试50ReceivePaymentType
+ReversedByPaymentId主外字段不一致。//属性测试50ReceivePaymentType
+ReversedOriginalId主外字段不一致。this.lblReceivePaymentType.AutoSize = true;
 this.lblReceivePaymentType.Location = new System.Drawing.Point(100,50);
 this.lblReceivePaymentType.Name = "lblReceivePaymentType";
 this.lblReceivePaymentType.Size = new System.Drawing.Size(41, 12);
@@ -379,14 +387,16 @@ this.cmbPaytype_ID.TabIndex = 12;
 this.Controls.Add(this.lblPaytype_ID);
 this.Controls.Add(this.cmbPaytype_ID);
 
-           //#####PaymentStatus###Int64
+           //#####PaymentStatus###Int32
 //属性测试325PaymentStatus
 //属性测试325PaymentStatus
 //属性测试325PaymentStatus
 //属性测试325PaymentStatus
 //属性测试325PaymentStatus
 //属性测试325PaymentStatus
-this.lblPaymentStatus.AutoSize = true;
+//属性测试325PaymentStatus
+ReversedByPaymentId主外字段不一致。//属性测试325PaymentStatus
+ReversedOriginalId主外字段不一致。this.lblPaymentStatus.AutoSize = true;
 this.lblPaymentStatus.Location = new System.Drawing.Point(100,325);
 this.lblPaymentStatus.Name = "lblPaymentStatus";
 this.lblPaymentStatus.Size = new System.Drawing.Size(41, 12);
@@ -441,187 +451,231 @@ this.chkIsReversed.TabIndex = 16;
 this.Controls.Add(this.lblIsReversed);
 this.Controls.Add(this.chkIsReversed);
 
-           //#####ReversedPaymentId###Int64
-//属性测试425ReversedPaymentId
-//属性测试425ReversedPaymentId
-//属性测试425ReversedPaymentId
-//属性测试425ReversedPaymentId
-//属性测试425ReversedPaymentId
-//属性测试425ReversedPaymentId
-this.lblReversedPaymentId.AutoSize = true;
-this.lblReversedPaymentId.Location = new System.Drawing.Point(100,425);
-this.lblReversedPaymentId.Name = "lblReversedPaymentId";
-this.lblReversedPaymentId.Size = new System.Drawing.Size(41, 12);
-this.lblReversedPaymentId.TabIndex = 17;
-this.lblReversedPaymentId.Text = "对冲记录";
-this.txtReversedPaymentId.Location = new System.Drawing.Point(173,421);
-this.txtReversedPaymentId.Name = "txtReversedPaymentId";
-this.txtReversedPaymentId.Size = new System.Drawing.Size(100, 21);
-this.txtReversedPaymentId.TabIndex = 17;
-this.Controls.Add(this.lblReversedPaymentId);
-this.Controls.Add(this.txtReversedPaymentId);
+           //#####ReversedOriginalId###Int64
+//属性测试425ReversedOriginalId
+//属性测试425ReversedOriginalId
+//属性测试425ReversedOriginalId
+//属性测试425ReversedOriginalId
+//属性测试425ReversedOriginalId
+//属性测试425ReversedOriginalId
+//属性测试425ReversedOriginalId
+ReversedByPaymentId主外字段不一致。//属性测试425ReversedOriginalId
+ReversedOriginalId主外字段不一致。this.lblReversedOriginalId.AutoSize = true;
+this.lblReversedOriginalId.Location = new System.Drawing.Point(100,425);
+this.lblReversedOriginalId.Name = "lblReversedOriginalId";
+this.lblReversedOriginalId.Size = new System.Drawing.Size(41, 12);
+this.lblReversedOriginalId.TabIndex = 17;
+this.lblReversedOriginalId.Text = "冲销记录";
+this.txtReversedOriginalId.Location = new System.Drawing.Point(173,421);
+this.txtReversedOriginalId.Name = "txtReversedOriginalId";
+this.txtReversedOriginalId.Size = new System.Drawing.Size(100, 21);
+this.txtReversedOriginalId.TabIndex = 17;
+this.Controls.Add(this.lblReversedOriginalId);
+this.Controls.Add(this.txtReversedOriginalId);
 
-           //#####30ReversedPaymentNo###String
-this.lblReversedPaymentNo.AutoSize = true;
-this.lblReversedPaymentNo.Location = new System.Drawing.Point(100,450);
-this.lblReversedPaymentNo.Name = "lblReversedPaymentNo";
-this.lblReversedPaymentNo.Size = new System.Drawing.Size(41, 12);
-this.lblReversedPaymentNo.TabIndex = 18;
-this.lblReversedPaymentNo.Text = "对冲单号";
-this.txtReversedPaymentNo.Location = new System.Drawing.Point(173,446);
-this.txtReversedPaymentNo.Name = "txtReversedPaymentNo";
-this.txtReversedPaymentNo.Size = new System.Drawing.Size(100, 21);
-this.txtReversedPaymentNo.TabIndex = 18;
-this.Controls.Add(this.lblReversedPaymentNo);
-this.Controls.Add(this.txtReversedPaymentNo);
+           //#####30ReversedOriginalIdNo###String
+this.lblReversedOriginalIdNo.AutoSize = true;
+this.lblReversedOriginalIdNo.Location = new System.Drawing.Point(100,450);
+this.lblReversedOriginalIdNo.Name = "lblReversedOriginalIdNo";
+this.lblReversedOriginalIdNo.Size = new System.Drawing.Size(41, 12);
+this.lblReversedOriginalIdNo.TabIndex = 18;
+this.lblReversedOriginalIdNo.Text = "冲销单号";
+this.txtReversedOriginalIdNo.Location = new System.Drawing.Point(173,446);
+this.txtReversedOriginalIdNo.Name = "txtReversedOriginalIdNo";
+this.txtReversedOriginalIdNo.Size = new System.Drawing.Size(100, 21);
+this.txtReversedOriginalIdNo.TabIndex = 18;
+this.Controls.Add(this.lblReversedOriginalIdNo);
+this.Controls.Add(this.txtReversedOriginalIdNo);
+
+           //#####ReversedByPaymentId###Int64
+//属性测试475ReversedByPaymentId
+//属性测试475ReversedByPaymentId
+//属性测试475ReversedByPaymentId
+//属性测试475ReversedByPaymentId
+//属性测试475ReversedByPaymentId
+//属性测试475ReversedByPaymentId
+//属性测试475ReversedByPaymentId
+ReversedByPaymentId主外字段不一致。//属性测试475ReversedByPaymentId
+ReversedOriginalId主外字段不一致。this.lblReversedByPaymentId.AutoSize = true;
+this.lblReversedByPaymentId.Location = new System.Drawing.Point(100,475);
+this.lblReversedByPaymentId.Name = "lblReversedByPaymentId";
+this.lblReversedByPaymentId.Size = new System.Drawing.Size(41, 12);
+this.lblReversedByPaymentId.TabIndex = 19;
+this.lblReversedByPaymentId.Text = "被冲销记录";
+this.txtReversedByPaymentId.Location = new System.Drawing.Point(173,471);
+this.txtReversedByPaymentId.Name = "txtReversedByPaymentId";
+this.txtReversedByPaymentId.Size = new System.Drawing.Size(100, 21);
+this.txtReversedByPaymentId.TabIndex = 19;
+this.Controls.Add(this.lblReversedByPaymentId);
+this.Controls.Add(this.txtReversedByPaymentId);
+
+           //#####30ReversedByPaymentIdNo###String
+this.lblReversedByPaymentIdNo.AutoSize = true;
+this.lblReversedByPaymentIdNo.Location = new System.Drawing.Point(100,500);
+this.lblReversedByPaymentIdNo.Name = "lblReversedByPaymentIdNo";
+this.lblReversedByPaymentIdNo.Size = new System.Drawing.Size(41, 12);
+this.lblReversedByPaymentIdNo.TabIndex = 20;
+this.lblReversedByPaymentIdNo.Text = "被冲销单号";
+this.txtReversedByPaymentIdNo.Location = new System.Drawing.Point(173,496);
+this.txtReversedByPaymentIdNo.Name = "txtReversedByPaymentIdNo";
+this.txtReversedByPaymentIdNo.Size = new System.Drawing.Size(100, 21);
+this.txtReversedByPaymentIdNo.TabIndex = 20;
+this.Controls.Add(this.lblReversedByPaymentIdNo);
+this.Controls.Add(this.txtReversedByPaymentIdNo);
 
            //#####300Remark###String
 this.lblRemark.AutoSize = true;
-this.lblRemark.Location = new System.Drawing.Point(100,475);
+this.lblRemark.Location = new System.Drawing.Point(100,525);
 this.lblRemark.Name = "lblRemark";
 this.lblRemark.Size = new System.Drawing.Size(41, 12);
-this.lblRemark.TabIndex = 19;
+this.lblRemark.TabIndex = 21;
 this.lblRemark.Text = "备注";
-this.txtRemark.Location = new System.Drawing.Point(173,471);
+this.txtRemark.Location = new System.Drawing.Point(173,521);
 this.txtRemark.Name = "txtRemark";
 this.txtRemark.Size = new System.Drawing.Size(100, 21);
-this.txtRemark.TabIndex = 19;
+this.txtRemark.TabIndex = 21;
 this.Controls.Add(this.lblRemark);
 this.Controls.Add(this.txtRemark);
 
            //#####Created_at###DateTime
 this.lblCreated_at.AutoSize = true;
-this.lblCreated_at.Location = new System.Drawing.Point(100,500);
+this.lblCreated_at.Location = new System.Drawing.Point(100,550);
 this.lblCreated_at.Name = "lblCreated_at";
 this.lblCreated_at.Size = new System.Drawing.Size(41, 12);
-this.lblCreated_at.TabIndex = 20;
+this.lblCreated_at.TabIndex = 22;
 this.lblCreated_at.Text = "创建时间";
-//111======500
-this.dtpCreated_at.Location = new System.Drawing.Point(173,496);
+//111======550
+this.dtpCreated_at.Location = new System.Drawing.Point(173,546);
 this.dtpCreated_at.Name ="dtpCreated_at";
 this.dtpCreated_at.ShowCheckBox =true;
 this.dtpCreated_at.Size = new System.Drawing.Size(100, 21);
-this.dtpCreated_at.TabIndex = 20;
+this.dtpCreated_at.TabIndex = 22;
 this.Controls.Add(this.lblCreated_at);
 this.Controls.Add(this.dtpCreated_at);
 
            //#####Created_by###Int64
-//属性测试525Created_by
-//属性测试525Created_by
-//属性测试525Created_by
-//属性测试525Created_by
-//属性测试525Created_by
-//属性测试525Created_by
-this.lblCreated_by.AutoSize = true;
-this.lblCreated_by.Location = new System.Drawing.Point(100,525);
+//属性测试575Created_by
+//属性测试575Created_by
+//属性测试575Created_by
+//属性测试575Created_by
+//属性测试575Created_by
+//属性测试575Created_by
+//属性测试575Created_by
+ReversedByPaymentId主外字段不一致。//属性测试575Created_by
+ReversedOriginalId主外字段不一致。this.lblCreated_by.AutoSize = true;
+this.lblCreated_by.Location = new System.Drawing.Point(100,575);
 this.lblCreated_by.Name = "lblCreated_by";
 this.lblCreated_by.Size = new System.Drawing.Size(41, 12);
-this.lblCreated_by.TabIndex = 21;
+this.lblCreated_by.TabIndex = 23;
 this.lblCreated_by.Text = "创建人";
-this.txtCreated_by.Location = new System.Drawing.Point(173,521);
+this.txtCreated_by.Location = new System.Drawing.Point(173,571);
 this.txtCreated_by.Name = "txtCreated_by";
 this.txtCreated_by.Size = new System.Drawing.Size(100, 21);
-this.txtCreated_by.TabIndex = 21;
+this.txtCreated_by.TabIndex = 23;
 this.Controls.Add(this.lblCreated_by);
 this.Controls.Add(this.txtCreated_by);
 
            //#####Modified_at###DateTime
 this.lblModified_at.AutoSize = true;
-this.lblModified_at.Location = new System.Drawing.Point(100,550);
+this.lblModified_at.Location = new System.Drawing.Point(100,600);
 this.lblModified_at.Name = "lblModified_at";
 this.lblModified_at.Size = new System.Drawing.Size(41, 12);
-this.lblModified_at.TabIndex = 22;
+this.lblModified_at.TabIndex = 24;
 this.lblModified_at.Text = "修改时间";
-//111======550
-this.dtpModified_at.Location = new System.Drawing.Point(173,546);
+//111======600
+this.dtpModified_at.Location = new System.Drawing.Point(173,596);
 this.dtpModified_at.Name ="dtpModified_at";
 this.dtpModified_at.ShowCheckBox =true;
 this.dtpModified_at.Size = new System.Drawing.Size(100, 21);
-this.dtpModified_at.TabIndex = 22;
+this.dtpModified_at.TabIndex = 24;
 this.Controls.Add(this.lblModified_at);
 this.Controls.Add(this.dtpModified_at);
 
            //#####Modified_by###Int64
-//属性测试575Modified_by
-//属性测试575Modified_by
-//属性测试575Modified_by
-//属性测试575Modified_by
-//属性测试575Modified_by
-//属性测试575Modified_by
-this.lblModified_by.AutoSize = true;
-this.lblModified_by.Location = new System.Drawing.Point(100,575);
+//属性测试625Modified_by
+//属性测试625Modified_by
+//属性测试625Modified_by
+//属性测试625Modified_by
+//属性测试625Modified_by
+//属性测试625Modified_by
+//属性测试625Modified_by
+ReversedByPaymentId主外字段不一致。//属性测试625Modified_by
+ReversedOriginalId主外字段不一致。this.lblModified_by.AutoSize = true;
+this.lblModified_by.Location = new System.Drawing.Point(100,625);
 this.lblModified_by.Name = "lblModified_by";
 this.lblModified_by.Size = new System.Drawing.Size(41, 12);
-this.lblModified_by.TabIndex = 23;
+this.lblModified_by.TabIndex = 25;
 this.lblModified_by.Text = "修改人";
-this.txtModified_by.Location = new System.Drawing.Point(173,571);
+this.txtModified_by.Location = new System.Drawing.Point(173,621);
 this.txtModified_by.Name = "txtModified_by";
 this.txtModified_by.Size = new System.Drawing.Size(100, 21);
-this.txtModified_by.TabIndex = 23;
+this.txtModified_by.TabIndex = 25;
 this.Controls.Add(this.lblModified_by);
 this.Controls.Add(this.txtModified_by);
 
            //#####isdeleted###Boolean
 this.lblisdeleted.AutoSize = true;
-this.lblisdeleted.Location = new System.Drawing.Point(100,600);
+this.lblisdeleted.Location = new System.Drawing.Point(100,650);
 this.lblisdeleted.Name = "lblisdeleted";
 this.lblisdeleted.Size = new System.Drawing.Size(41, 12);
-this.lblisdeleted.TabIndex = 24;
+this.lblisdeleted.TabIndex = 26;
 this.lblisdeleted.Text = "逻辑删除";
-this.chkisdeleted.Location = new System.Drawing.Point(173,596);
+this.chkisdeleted.Location = new System.Drawing.Point(173,646);
 this.chkisdeleted.Name = "chkisdeleted";
 this.chkisdeleted.Size = new System.Drawing.Size(100, 21);
-this.chkisdeleted.TabIndex = 24;
+this.chkisdeleted.TabIndex = 26;
 this.Controls.Add(this.lblisdeleted);
 this.Controls.Add(this.chkisdeleted);
 
            //#####255ApprovalOpinions###String
 this.lblApprovalOpinions.AutoSize = true;
-this.lblApprovalOpinions.Location = new System.Drawing.Point(100,625);
+this.lblApprovalOpinions.Location = new System.Drawing.Point(100,675);
 this.lblApprovalOpinions.Name = "lblApprovalOpinions";
 this.lblApprovalOpinions.Size = new System.Drawing.Size(41, 12);
-this.lblApprovalOpinions.TabIndex = 25;
+this.lblApprovalOpinions.TabIndex = 27;
 this.lblApprovalOpinions.Text = "审批意见";
-this.txtApprovalOpinions.Location = new System.Drawing.Point(173,621);
+this.txtApprovalOpinions.Location = new System.Drawing.Point(173,671);
 this.txtApprovalOpinions.Name = "txtApprovalOpinions";
 this.txtApprovalOpinions.Size = new System.Drawing.Size(100, 21);
-this.txtApprovalOpinions.TabIndex = 25;
+this.txtApprovalOpinions.TabIndex = 27;
 this.Controls.Add(this.lblApprovalOpinions);
 this.Controls.Add(this.txtApprovalOpinions);
 
            //#####Approver_by###Int64
-//属性测试650Approver_by
-//属性测试650Approver_by
-//属性测试650Approver_by
-//属性测试650Approver_by
-//属性测试650Approver_by
-//属性测试650Approver_by
-this.lblApprover_by.AutoSize = true;
-this.lblApprover_by.Location = new System.Drawing.Point(100,650);
+//属性测试700Approver_by
+//属性测试700Approver_by
+//属性测试700Approver_by
+//属性测试700Approver_by
+//属性测试700Approver_by
+//属性测试700Approver_by
+//属性测试700Approver_by
+ReversedByPaymentId主外字段不一致。//属性测试700Approver_by
+ReversedOriginalId主外字段不一致。this.lblApprover_by.AutoSize = true;
+this.lblApprover_by.Location = new System.Drawing.Point(100,700);
 this.lblApprover_by.Name = "lblApprover_by";
 this.lblApprover_by.Size = new System.Drawing.Size(41, 12);
-this.lblApprover_by.TabIndex = 26;
+this.lblApprover_by.TabIndex = 28;
 this.lblApprover_by.Text = "审批人";
-this.txtApprover_by.Location = new System.Drawing.Point(173,646);
+this.txtApprover_by.Location = new System.Drawing.Point(173,696);
 this.txtApprover_by.Name = "txtApprover_by";
 this.txtApprover_by.Size = new System.Drawing.Size(100, 21);
-this.txtApprover_by.TabIndex = 26;
+this.txtApprover_by.TabIndex = 28;
 this.Controls.Add(this.lblApprover_by);
 this.Controls.Add(this.txtApprover_by);
 
            //#####Approver_at###DateTime
 this.lblApprover_at.AutoSize = true;
-this.lblApprover_at.Location = new System.Drawing.Point(100,675);
+this.lblApprover_at.Location = new System.Drawing.Point(100,725);
 this.lblApprover_at.Name = "lblApprover_at";
 this.lblApprover_at.Size = new System.Drawing.Size(41, 12);
-this.lblApprover_at.TabIndex = 27;
+this.lblApprover_at.TabIndex = 29;
 this.lblApprover_at.Text = "审批时间";
-//111======675
-this.dtpApprover_at.Location = new System.Drawing.Point(173,671);
+//111======725
+this.dtpApprover_at.Location = new System.Drawing.Point(173,721);
 this.dtpApprover_at.Name ="dtpApprover_at";
 this.dtpApprover_at.ShowCheckBox =true;
 this.dtpApprover_at.Size = new System.Drawing.Size(100, 21);
-this.dtpApprover_at.TabIndex = 27;
+this.dtpApprover_at.TabIndex = 29;
 this.Controls.Add(this.lblApprover_at);
 this.Controls.Add(this.dtpApprover_at);
 
@@ -629,35 +683,37 @@ this.Controls.Add(this.dtpApprover_at);
 
            //#####ApprovalResults###Boolean
 this.lblApprovalResults.AutoSize = true;
-this.lblApprovalResults.Location = new System.Drawing.Point(100,725);
+this.lblApprovalResults.Location = new System.Drawing.Point(100,775);
 this.lblApprovalResults.Name = "lblApprovalResults";
 this.lblApprovalResults.Size = new System.Drawing.Size(41, 12);
-this.lblApprovalResults.TabIndex = 29;
+this.lblApprovalResults.TabIndex = 31;
 this.lblApprovalResults.Text = "审批结果";
-this.chkApprovalResults.Location = new System.Drawing.Point(173,721);
+this.chkApprovalResults.Location = new System.Drawing.Point(173,771);
 this.chkApprovalResults.Name = "chkApprovalResults";
 this.chkApprovalResults.Size = new System.Drawing.Size(100, 21);
-this.chkApprovalResults.TabIndex = 29;
+this.chkApprovalResults.TabIndex = 31;
 this.Controls.Add(this.lblApprovalResults);
 this.Controls.Add(this.chkApprovalResults);
 
            //#####PrintStatus###Int32
-//属性测试750PrintStatus
-//属性测试750PrintStatus
-//属性测试750PrintStatus
-//属性测试750PrintStatus
-//属性测试750PrintStatus
-//属性测试750PrintStatus
-this.lblPrintStatus.AutoSize = true;
-this.lblPrintStatus.Location = new System.Drawing.Point(100,750);
+//属性测试800PrintStatus
+//属性测试800PrintStatus
+//属性测试800PrintStatus
+//属性测试800PrintStatus
+//属性测试800PrintStatus
+//属性测试800PrintStatus
+//属性测试800PrintStatus
+ReversedByPaymentId主外字段不一致。//属性测试800PrintStatus
+ReversedOriginalId主外字段不一致。this.lblPrintStatus.AutoSize = true;
+this.lblPrintStatus.Location = new System.Drawing.Point(100,800);
 this.lblPrintStatus.Name = "lblPrintStatus";
 this.lblPrintStatus.Size = new System.Drawing.Size(41, 12);
-this.lblPrintStatus.TabIndex = 30;
+this.lblPrintStatus.TabIndex = 32;
 this.lblPrintStatus.Text = "打印状态";
-this.txtPrintStatus.Location = new System.Drawing.Point(173,746);
+this.txtPrintStatus.Location = new System.Drawing.Point(173,796);
 this.txtPrintStatus.Name = "txtPrintStatus";
 this.txtPrintStatus.Size = new System.Drawing.Size(100, 21);
-this.txtPrintStatus.TabIndex = 30;
+this.txtPrintStatus.TabIndex = 32;
 this.Controls.Add(this.lblPrintStatus);
 this.Controls.Add(this.txtPrintStatus);
 
@@ -675,14 +731,14 @@ this.Controls.Add(this.txtPrintStatus);
             //this.kryptonPanel1.Location = new System.Drawing.Point(0, 0);
            // this.kryptonPanel1.Name = "kryptonPanel1";
            // this.kryptonPanel1.Size = new System.Drawing.Size(404, 300);
-           // this.kryptonPanel1.TabIndex = 30;
+           // this.kryptonPanel1.TabIndex = 32;
 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
                 this.Controls.Add(this.lblPaymentNo );
 this.Controls.Add(this.txtPaymentNo );
 
-                this.Controls.Add(this.lblReceivePaymentType );
+                ReversedByPaymentId主外字段不一致。ReversedOriginalId主外字段不一致。this.Controls.Add(this.lblReceivePaymentType );
 this.Controls.Add(this.txtReceivePaymentType );
 
                 this.Controls.Add(this.lblAccount_id );
@@ -715,7 +771,7 @@ this.Controls.Add(this.cmbEmployee_ID );
                 this.Controls.Add(this.lblPaytype_ID );
 this.Controls.Add(this.cmbPaytype_ID );
 
-                this.Controls.Add(this.lblPaymentStatus );
+                ReversedByPaymentId主外字段不一致。ReversedOriginalId主外字段不一致。this.Controls.Add(this.lblPaymentStatus );
 this.Controls.Add(this.txtPaymentStatus );
 
                 this.Controls.Add(this.lblPaymentImagePath );
@@ -727,11 +783,17 @@ this.Controls.Add(this.txtReferenceNo );
                 this.Controls.Add(this.lblIsReversed );
 this.Controls.Add(this.chkIsReversed );
 
-                this.Controls.Add(this.lblReversedPaymentId );
-this.Controls.Add(this.txtReversedPaymentId );
+                ReversedByPaymentId主外字段不一致。ReversedOriginalId主外字段不一致。this.Controls.Add(this.lblReversedOriginalId );
+this.Controls.Add(this.txtReversedOriginalId );
 
-                this.Controls.Add(this.lblReversedPaymentNo );
-this.Controls.Add(this.txtReversedPaymentNo );
+                this.Controls.Add(this.lblReversedOriginalIdNo );
+this.Controls.Add(this.txtReversedOriginalIdNo );
+
+                ReversedByPaymentId主外字段不一致。ReversedOriginalId主外字段不一致。this.Controls.Add(this.lblReversedByPaymentId );
+this.Controls.Add(this.txtReversedByPaymentId );
+
+                this.Controls.Add(this.lblReversedByPaymentIdNo );
+this.Controls.Add(this.txtReversedByPaymentIdNo );
 
                 this.Controls.Add(this.lblRemark );
 this.Controls.Add(this.txtRemark );
@@ -739,13 +801,13 @@ this.Controls.Add(this.txtRemark );
                 this.Controls.Add(this.lblCreated_at );
 this.Controls.Add(this.dtpCreated_at );
 
-                this.Controls.Add(this.lblCreated_by );
+                ReversedByPaymentId主外字段不一致。ReversedOriginalId主外字段不一致。this.Controls.Add(this.lblCreated_by );
 this.Controls.Add(this.txtCreated_by );
 
                 this.Controls.Add(this.lblModified_at );
 this.Controls.Add(this.dtpModified_at );
 
-                this.Controls.Add(this.lblModified_by );
+                ReversedByPaymentId主外字段不一致。ReversedOriginalId主外字段不一致。this.Controls.Add(this.lblModified_by );
 this.Controls.Add(this.txtModified_by );
 
                 this.Controls.Add(this.lblisdeleted );
@@ -754,7 +816,7 @@ this.Controls.Add(this.chkisdeleted );
                 this.Controls.Add(this.lblApprovalOpinions );
 this.Controls.Add(this.txtApprovalOpinions );
 
-                this.Controls.Add(this.lblApprover_by );
+                ReversedByPaymentId主外字段不一致。ReversedOriginalId主外字段不一致。this.Controls.Add(this.lblApprover_by );
 this.Controls.Add(this.txtApprover_by );
 
                 this.Controls.Add(this.lblApprover_at );
@@ -764,7 +826,7 @@ this.Controls.Add(this.dtpApprover_at );
                 this.Controls.Add(this.lblApprovalResults );
 this.Controls.Add(this.chkApprovalResults );
 
-                this.Controls.Add(this.lblPrintStatus );
+                ReversedByPaymentId主外字段不一致。ReversedOriginalId主外字段不一致。this.Controls.Add(this.lblPrintStatus );
 this.Controls.Add(this.txtPrintStatus );
 
                             // 
@@ -796,24 +858,24 @@ private Krypton.Toolkit.KryptonTextBox txtPaymentNo;
 
     
         
-              private Krypton.Toolkit.KryptonLabel lblReceivePaymentType;
+              ReversedByPaymentId主外字段不一致。ReversedOriginalId主外字段不一致。private Krypton.Toolkit.KryptonLabel lblReceivePaymentType;
 private Krypton.Toolkit.KryptonTextBox txtReceivePaymentType;
 
     
         
               private Krypton.Toolkit.KryptonLabel lblAccount_id;
 private Krypton.Toolkit.KryptonComboBox cmbAccount_id;
-
+ReversedByPaymentId主外字段不一致。ReversedOriginalId主外字段不一致。
     
         
               private Krypton.Toolkit.KryptonLabel lblCustomerVendor_ID;
 private Krypton.Toolkit.KryptonComboBox cmbCustomerVendor_ID;
-
+ReversedByPaymentId主外字段不一致。ReversedOriginalId主外字段不一致。
     
         
               private Krypton.Toolkit.KryptonLabel lblPayeeInfoID;
 private Krypton.Toolkit.KryptonComboBox cmbPayeeInfoID;
-
+ReversedByPaymentId主外字段不一致。ReversedOriginalId主外字段不一致。
     
         
               private Krypton.Toolkit.KryptonLabel lblPayeeAccountNo;
@@ -823,7 +885,7 @@ private Krypton.Toolkit.KryptonTextBox txtPayeeAccountNo;
         
               private Krypton.Toolkit.KryptonLabel lblCurrency_ID;
 private Krypton.Toolkit.KryptonComboBox cmbCurrency_ID;
-
+ReversedByPaymentId主外字段不一致。ReversedOriginalId主外字段不一致。
     
         
               private Krypton.Toolkit.KryptonLabel lblTotalForeignAmount;
@@ -843,15 +905,15 @@ private Krypton.Toolkit.KryptonDateTimePicker dtpPaymentDate;
         
               private Krypton.Toolkit.KryptonLabel lblEmployee_ID;
 private Krypton.Toolkit.KryptonComboBox cmbEmployee_ID;
-
+ReversedByPaymentId主外字段不一致。ReversedOriginalId主外字段不一致。
     
         
               private Krypton.Toolkit.KryptonLabel lblPaytype_ID;
 private Krypton.Toolkit.KryptonComboBox cmbPaytype_ID;
-
+ReversedByPaymentId主外字段不一致。ReversedOriginalId主外字段不一致。
     
         
-              private Krypton.Toolkit.KryptonLabel lblPaymentStatus;
+              ReversedByPaymentId主外字段不一致。ReversedOriginalId主外字段不一致。private Krypton.Toolkit.KryptonLabel lblPaymentStatus;
 private Krypton.Toolkit.KryptonTextBox txtPaymentStatus;
 
     
@@ -871,13 +933,23 @@ private Krypton.Toolkit.KryptonCheckBox chkIsReversed;
 
     
         
-              private Krypton.Toolkit.KryptonLabel lblReversedPaymentId;
-private Krypton.Toolkit.KryptonTextBox txtReversedPaymentId;
+              ReversedByPaymentId主外字段不一致。ReversedOriginalId主外字段不一致。private Krypton.Toolkit.KryptonLabel lblReversedOriginalId;
+private Krypton.Toolkit.KryptonTextBox txtReversedOriginalId;
 
     
         
-              private Krypton.Toolkit.KryptonLabel lblReversedPaymentNo;
-private Krypton.Toolkit.KryptonTextBox txtReversedPaymentNo;
+              private Krypton.Toolkit.KryptonLabel lblReversedOriginalIdNo;
+private Krypton.Toolkit.KryptonTextBox txtReversedOriginalIdNo;
+
+    
+        
+              ReversedByPaymentId主外字段不一致。ReversedOriginalId主外字段不一致。private Krypton.Toolkit.KryptonLabel lblReversedByPaymentId;
+private Krypton.Toolkit.KryptonTextBox txtReversedByPaymentId;
+
+    
+        
+              private Krypton.Toolkit.KryptonLabel lblReversedByPaymentIdNo;
+private Krypton.Toolkit.KryptonTextBox txtReversedByPaymentIdNo;
 
     
         
@@ -891,7 +963,7 @@ private Krypton.Toolkit.KryptonDateTimePicker dtpCreated_at;
 
     
         
-              private Krypton.Toolkit.KryptonLabel lblCreated_by;
+              ReversedByPaymentId主外字段不一致。ReversedOriginalId主外字段不一致。private Krypton.Toolkit.KryptonLabel lblCreated_by;
 private Krypton.Toolkit.KryptonTextBox txtCreated_by;
 
     
@@ -901,7 +973,7 @@ private Krypton.Toolkit.KryptonDateTimePicker dtpModified_at;
 
     
         
-              private Krypton.Toolkit.KryptonLabel lblModified_by;
+              ReversedByPaymentId主外字段不一致。ReversedOriginalId主外字段不一致。private Krypton.Toolkit.KryptonLabel lblModified_by;
 private Krypton.Toolkit.KryptonTextBox txtModified_by;
 
     
@@ -916,7 +988,7 @@ private Krypton.Toolkit.KryptonTextBox txtApprovalOpinions;
 
     
         
-              private Krypton.Toolkit.KryptonLabel lblApprover_by;
+              ReversedByPaymentId主外字段不一致。ReversedOriginalId主外字段不一致。private Krypton.Toolkit.KryptonLabel lblApprover_by;
 private Krypton.Toolkit.KryptonTextBox txtApprover_by;
 
     
@@ -934,7 +1006,7 @@ private Krypton.Toolkit.KryptonCheckBox chkApprovalResults;
 
     
         
-              private Krypton.Toolkit.KryptonLabel lblPrintStatus;
+              ReversedByPaymentId主外字段不一致。ReversedOriginalId主外字段不一致。private Krypton.Toolkit.KryptonLabel lblPrintStatus;
 private Krypton.Toolkit.KryptonTextBox txtPrintStatus;
 
     

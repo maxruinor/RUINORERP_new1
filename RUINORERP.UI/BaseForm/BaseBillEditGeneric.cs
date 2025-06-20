@@ -699,7 +699,7 @@ namespace RUINORERP.UI.BaseForm
              
 
             // 特殊操作按钮
-            ConfigureSpecialButtons(statusEnum);
+            //ConfigureSpecialButtons(statusEnum);
              
 
             // 通用按钮状态
@@ -708,28 +708,26 @@ namespace RUINORERP.UI.BaseForm
                                         statusEnum is ARAPStatus arap && arap == ARAPStatus.待审核 ||
                                         statusEnum is PaymentStatus pay && pay == PaymentStatus.待审核;
 
-            // 结案/特殊操作按钮
-            toolStripButton结案.Enabled = false;
-            toolStripButton结案.Visible = false;
+            //// 结案/特殊操作按钮
+            //toolStripButton结案.Enabled = false;
+            //toolStripButton结案.Visible = false;
 
-            if (statusEnum is PrePaymentStatus preStatus)
-            {
-                toolStripButton结案.Text = "退款";
-                toolStripButton结案.Visible = preStatus == PrePaymentStatus.待核销;
-                toolStripButton结案.Enabled = preStatus == PrePaymentStatus.待核销;
-            }
-            else if (statusEnum is ARAPStatus arapStatus)
-            {
-                toolStripButton结案.Text = "冲销";
-                toolStripButton结案.Visible = arapStatus == ARAPStatus.待支付 ||
-                                             arapStatus == ARAPStatus.部分支付;
-                toolStripButton结案.Enabled = arapStatus == ARAPStatus.待支付 ||
-                                             arapStatus == ARAPStatus.部分支付;
+            //if (statusEnum is PrePaymentStatus preStatus)
+            //{
+            //    toolStripButton结案.Visible = preStatus == PrePaymentStatus.待核销;
+            //    toolStripButton结案.Enabled = preStatus == PrePaymentStatus.待核销;
+            //}
+            //else if (statusEnum is ARAPStatus arapStatus)
+            //{
+            //    toolStripButton结案.Visible = arapStatus == ARAPStatus.待支付 ||
+            //                                 arapStatus == ARAPStatus.部分支付;
+            //    toolStripButton结案.Enabled = arapStatus == ARAPStatus.待支付 ||
+            //                                 arapStatus == ARAPStatus.部分支付;
 
                 // 坏账按钮
                 //toolStripButton坏账.Visible = toolStripButton结案.Visible;
                 //toolStripButton坏账.Enabled = toolStripButton结案.Enabled;
-            }
+            //}
             // 状态检测器
             var statusDetector = new StatusDetector(entity as BaseEntity);
             // 锁定状态处理
@@ -805,13 +803,11 @@ namespace RUINORERP.UI.BaseForm
 
             if (status is PrePaymentStatus preStatus)
             {
-                toolStripButton结案.Text = "退款";
                 toolStripButton结案.Visible = preStatus == PrePaymentStatus.待核销;
                 toolStripButton结案.Enabled = preStatus == PrePaymentStatus.待核销;
             }
             else if (status is ARAPStatus arapStatus)
             {
-                toolStripButton结案.Text = "冲销";
                 toolStripButton结案.Visible = arapStatus == ARAPStatus.待支付 ||
                                              arapStatus == ARAPStatus.部分支付;
                 toolStripButton结案.Enabled = FMPaymentStatusHelper.CanReverse(arapStatus);
@@ -2364,6 +2360,7 @@ namespace RUINORERP.UI.BaseForm
                     MainForm.Instance.AuditLogHelper.CreateAuditLog<T>("反审失败", EditEntity, $"反审原因{ae.ApprovalOpinions},{rmr.ErrorMsg}");
                     MainForm.Instance.logger.LogError($"{cbd.BillNo}反审失败{rmr.ErrorMsg}");
                     MainForm.Instance.PrintInfoLog($"{cbd.BillNo}反审失败{rmr.ErrorMsg},请联系管理员！", Color.Red);
+                    MessageBox.Show($"{ae.bizName}:{ae.BillNo}反审失败。\r\n {rmr.ErrorMsg}", "提示", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
             return rs;

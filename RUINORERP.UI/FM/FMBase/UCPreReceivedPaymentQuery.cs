@@ -202,7 +202,10 @@ namespace RUINORERP.UI.FM
             List<tb_FM_PreReceivedPayment> selectlist = GetSelectResult();
             foreach (var item in selectlist)
             {
-                bool canConvert = item.PrePaymentStatus == (int)PrePaymentStatus.待核销 && item.ApprovalStatus == (int)ApprovalStatus.已审核 && item.ApprovalResults.HasValue && item.ApprovalResults.Value;
+                bool canConvert = item.PrePaymentStatus == (int)PrePaymentStatus.待核销 
+                    && item.ApprovalStatus == (int)ApprovalStatus.已审核 
+                    && item.ApprovalResults.HasValue && item.ApprovalResults.Value;
+
                 if (canConvert || item.PrePaymentStatus == (int)PrePaymentStatus.部分核销)
                 {
                     //审核就是收款 或 付款了 ，则生成退款单  （负数的收款单）
@@ -241,7 +244,7 @@ namespace RUINORERP.UI.FM
                     else
                     {
                         //没有金额可退。
-
+                        MessageBox.Show($"当前预{((ReceivePaymentType)PaymentType).ToString()}单 {item.PreRPNO}没有可退金额。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     }
 
                 }

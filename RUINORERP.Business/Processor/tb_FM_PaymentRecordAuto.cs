@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：05/07/2025 15:37:40
+// 时间：06/20/2025 16:20:04
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -30,7 +30,7 @@ using RUINORERP.Common.Helper;
 namespace RUINORERP.Business.Processor
 {
     /// <summary>
-    /// 收款付款记录表-记录所有资金流动一批订单可分账户分批付 记录真实资金流动，用户需确保其 与银行流水一致
+    /// 收付款记录表
     /// </summary>
     public partial class tb_FM_PaymentRecordProcessor:BaseProcessor 
     {

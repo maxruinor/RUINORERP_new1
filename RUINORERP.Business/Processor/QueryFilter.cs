@@ -307,7 +307,7 @@ namespace RUINORERP.Business.Processor
                 {
                     if (this.QueryTargetType == null)
                     {
-                        this.QueryTargetType= typeof(R);
+                        this.QueryTargetType = typeof(R);
                     }
 
                     FilterLimitExpressions.Add(whereExp);
@@ -335,12 +335,61 @@ namespace RUINORERP.Business.Processor
             }
         }
 
+ 
 
+        /// <summary>
+        /// 能默认一次添加的普通字段用这个
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="fieldType">根据情况设计不同的数据类型</param>
+        /// <param name="Para">参数，不同数据类型有不同的情况。根据这个传不同参数</param>
+        /// <param name="queryFieldExp"></param>
+        public QueryField SetQueryField<T>(Expression<Func<T, object>> queryFieldExp, QueryFieldType fieldType, IQueryFieldData Para)
+        {
+            QueryField queryField = SetQueryField<T>(queryFieldExp, true);
+            switch (fieldType)
+            {
+                case QueryFieldType.String:
+                    break;
+                case QueryFieldType.Money:
+                    break;
+                case QueryFieldType.Qty:
+                    break;
+                case QueryFieldType.CmbEnum:
+                    QueryFieldEnumData enumDataStatus = Para as QueryFieldEnumData;
 
+                    queryField.FieldType = QueryFieldType.CmbEnum;
+                    enumDataStatus.SetEnumValueColName<T>(queryFieldExp);
+                    enumDataStatus.AddSelectItem = true;
+                    enumDataStatus.BindDataSource = EnumBindExt.GetListByEnum(enumDataStatus.EnumType, -1);
+                    queryField.AdvQueryFieldType = AdvQueryProcessType.EnumSelect;
+                    queryField.QueryFieldDataPara = enumDataStatus;
+                    break;
+                case QueryFieldType.CmbDbList:
+                    break;
+                case QueryFieldType.DateTime:
+                    break;
+                case QueryFieldType.DateTimeRange:
+                    QueryFieldDateTimeRangeData dateTimeRangeData = Para as QueryFieldDateTimeRangeData;
+                    queryField.FieldType = QueryFieldType.DateTimeRange;
+                    dateTimeRangeData.Selected = dateTimeRangeData.Selected;
+                    queryField.QueryFieldDataPara = dateTimeRangeData;
+                    queryField.AdvQueryFieldType = AdvQueryProcessType.datetimeRange;
+                    break;
+                case QueryFieldType.CheckBox:
+                    break;
+                case QueryFieldType.RdbYesNo:
+                    break;
+                default:
+                    break;
+            }
+            return queryField;
+        }
 
 
         /// <summary>
         /// 能默认一次添加的普通字段用这个
+        /// 作废 只是不想修改太多了。用
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="queryFieldExp"></param>

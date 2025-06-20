@@ -529,8 +529,7 @@ namespace RUINORERP.UI.FM
 
         protected override async Task<bool> Submit()
         {
-           // bool rs = await base.Submit(typeof(PaymentStatus));
-            bool result = await Submit(PrePaymentStatus.待审核);
+            bool result = await Submit(PaymentStatus.待审核);
             if (result)
             {
                 ConfigManager configManager = Startup.GetFromFac<ConfigManager>();

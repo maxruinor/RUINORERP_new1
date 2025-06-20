@@ -51,18 +51,20 @@ namespace RUINORERP.Global.EnumExt
         [Description("待审核")]
         待审核 = 2,
 
+        [Description("已生效")]
+        已生效 = 3,  // 审核通过后状态
+
         [Description("待核销")]
-        待核销 = 3,
+        待核销 = 4,// 支付完成后状态
 
         [Description("部分核销")]
-        部分核销 = 4,
+        部分核销 = 5,
 
         [Description("全额核销")]
-        全额核销 = 5,
+        全额核销 = 6,
 
         [Description("已退款")]
-        已退款 = 6
-
+        已退款 = 7
 
     }
 

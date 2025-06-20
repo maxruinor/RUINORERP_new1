@@ -266,12 +266,12 @@ namespace RUINORERP.UI.UserCenter.DataParts
                 identifier = SharedFlag.Flag1.ToString();
             }
 
-            return new List<ConditionGroup>
+            var grouplist = new List<ConditionGroup>
         {
             new ConditionGroup
             {
                 Identifier= identifier,
-                StatusName = "待支付",
+                StatusName = StatusNameDescription,
                 Conditions = new List<IConditionalModel>
                 {
                     new ConditionalModel
@@ -291,6 +291,10 @@ namespace RUINORERP.UI.UserCenter.DataParts
                 }
             }
         };
+
+          
+
+            return grouplist;
         }
 
         public List<ConditionGroup> GetPurchaseOrderSpecialConditions()

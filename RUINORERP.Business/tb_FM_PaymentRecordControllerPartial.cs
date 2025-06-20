@@ -352,6 +352,7 @@ namespace RUINORERP.Business
                                 if (prePayment != null)
                                 {
                                     prePayment.PrePaymentStatus = (int)PrePaymentStatus.待核销;
+                                    prePayment.PrePayDate = DateTime.Now;
                                     prePayment.ForeignBalanceAmount += RecordDetail.ForeignAmount;
                                     prePayment.LocalBalanceAmount += RecordDetail.LocalAmount;
 
@@ -408,14 +409,16 @@ namespace RUINORERP.Business
                                          .SingleAsync();
                                         if (oldPayment != null)
                                         {
-                                            oldPayment.IsReversed = true;
-                                            oldPayment.ReversedPaymentId = entity.PaymentId;
-                                            oldPayment.ReversedPaymentNo = entity.PaymentNo;
-                                       
+                                            // 更新原始记录 指向[负数]冲销记录
+                                            oldPayment.ReversedByPaymentId = entity.PaymentId;
+                                            oldPayment.ReversedByPaymentNo = entity.PaymentNo;
                                             //更新原来的上一个预付记录
                                             await _unitOfWorkManage.GetDbClient().Updateable<tb_FM_PaymentRecord>(oldPayment).ExecuteCommandAsync();
                                         }
-
+                                        entity.IsReversed = true;
+                                        // 指向原始记录
+                                        entity.ReversedOriginalId = oldPayment.PaymentId;
+                                        entity.ReversedOriginalNo = oldPayment.PaymentNo;
                                         //生成核销记录
                                         //退款或红冲时。审核就会生成一笔核销记录  收款抵扣应收
                                         await settlementController.GenerateSettlement(entity);
@@ -585,6 +588,7 @@ namespace RUINORERP.Business
                 paymentRecordDetail.LocalAmount = entity.LocalPrepaidAmount;
                 paymentRecordDetail.ForeignAmount = entity.ForeignPrepaidAmount;
             }
+            paymentRecordDetail.Summary = $"由预收单{entity.PreRPNO}转换自动生成。";
 
             paymentRecord.TotalLocalAmount = paymentRecordDetail.LocalAmount;
             paymentRecord.TotalForeignAmount = paymentRecordDetail.ForeignAmount;
@@ -670,8 +674,8 @@ namespace RUINORERP.Business
                 paymentRecord.IsReversed = true;
                 if (OriginalPaymentRecord != null)
                 {
-                    paymentRecord.ReversedPaymentId = OriginalPaymentRecord.PaymentId;
-                    paymentRecord.ReversedPaymentNo = OriginalPaymentRecord.PaymentNo;
+                    paymentRecord.ReversedOriginalId = OriginalPaymentRecord.PaymentId;
+                    paymentRecord.ReversedOriginalNo = OriginalPaymentRecord.PaymentNo;
                 }
             }
 
@@ -878,7 +882,7 @@ namespace RUINORERP.Business
 
         }
 
- 
+
 
         public async override Task<List<T>> GetPrintDataSource(long ID)
         {

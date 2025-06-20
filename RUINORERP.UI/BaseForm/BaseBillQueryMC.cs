@@ -1122,11 +1122,16 @@ namespace RUINORERP.UI.BaseForm
                     {
                         //因为查询UI生成时。自动 转换成代理类如：tb_SaleOutProxy，并且时间是区间型式,将起为null即可
                         QueryDto.SetPropertyValue(item.FieldName + "_Start", null);
-                        if (kryptonPanelQuery.Controls.Find(item.FieldName, true)[0] is UCAdvDateTimerPickerGroup timerPickerGroup)
+                        var fieldNameControl = kryptonPanelQuery.Controls.Find(item.FieldName, true);
+                        if (fieldNameControl != null && fieldNameControl.Count() > 0)
                         {
-                            timerPickerGroup.dtp1.Checked = false;
-                            timerPickerGroup.dtp2.Checked = false;
+                            if (kryptonPanelQuery.Controls.Find(item.FieldName, true)[0] is UCAdvDateTimerPickerGroup timerPickerGroup)
+                            {
+                                timerPickerGroup.dtp1.Checked = false;
+                                timerPickerGroup.dtp2.Checked = false;
+                            }
                         }
+                        
                         //KryptonDateTimePicker dtp = _UCBillQueryCondition.kryptonPanelQuery.Controls.Find(item.FieldName + "_Start", true) as KryptonDateTimePicker;
                         //if (dtp != null)
                         //{

@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：05/07/2025 15:37:42
+// 时间：06/20/2025 16:20:07
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -29,7 +29,7 @@ using RUINORERP.Common.Helper;
 namespace RUINORERP.Business
 {
     /// <summary>
-    /// 收款单明细表：记录收款分配到应收单的明细
+    /// 收付款记录明细表
     /// </summary>
     public partial class tb_FM_PaymentRecordDetailController<T>:BaseController<T> where T : class
     {
@@ -468,7 +468,10 @@ namespace RUINORERP.Business
          public virtual async Task<List<tb_FM_PaymentRecordDetail>> QueryByNavAsync()
         {
             List<tb_FM_PaymentRecordDetail> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_FM_PaymentRecordDetail>()
+                               .Includes(t => t.tb_currency )
+                               .Includes(t => t.tb_projectgroup )
                                .Includes(t => t.tb_fm_paymentrecord )
+                               .Includes(t => t.tb_department )
                                     .ToListAsync();
             
             foreach (var item in list)
@@ -488,7 +491,10 @@ namespace RUINORERP.Business
          public virtual async Task<List<tb_FM_PaymentRecordDetail>> QueryByNavAsync(Expression<Func<tb_FM_PaymentRecordDetail, bool>> exp)
         {
             List<tb_FM_PaymentRecordDetail> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_FM_PaymentRecordDetail>().Where(exp)
+                               .Includes(t => t.tb_currency )
+                               .Includes(t => t.tb_projectgroup )
                                .Includes(t => t.tb_fm_paymentrecord )
+                               .Includes(t => t.tb_department )
                                     .ToListAsync();
             
             foreach (var item in list)
@@ -508,7 +514,10 @@ namespace RUINORERP.Business
          public virtual List<tb_FM_PaymentRecordDetail> QueryByNav(Expression<Func<tb_FM_PaymentRecordDetail, bool>> exp)
         {
             List<tb_FM_PaymentRecordDetail> list = _unitOfWorkManage.GetDbClient().Queryable<tb_FM_PaymentRecordDetail>().Where(exp)
+                            .Includes(t => t.tb_currency )
+                            .Includes(t => t.tb_projectgroup )
                             .Includes(t => t.tb_fm_paymentrecord )
+                            .Includes(t => t.tb_department )
                                     .ToList();
             
             foreach (var item in list)
@@ -545,7 +554,10 @@ namespace RUINORERP.Business
         public override async Task<T> BaseQueryByIdNavAsync(object id)
         {
             tb_FM_PaymentRecordDetail entity = await _unitOfWorkManage.GetDbClient().Queryable<tb_FM_PaymentRecordDetail>().Where(w => w.PaymentDetailId == (long)id)
-                             .Includes(t => t.tb_fm_paymentrecord )
+                             .Includes(t => t.tb_currency )
+                            .Includes(t => t.tb_projectgroup )
+                            .Includes(t => t.tb_fm_paymentrecord )
+                            .Includes(t => t.tb_department )
                                     .FirstAsync();
             if(entity!=null)
             {

@@ -147,12 +147,14 @@ namespace RUINORERP.Business
         }
 
 
+
         /// <summary>
         /// 这个审核可以由业务来审。后面还会有财务来定是否真实收付，这财务审核收款单前，还是可以反审的
         /// 审核通过时
         /// 预收款单本身是「收款」的一种业务类型，销售订单审核时已经生成了预收款单 ，通过 BizType 标记其业务属性为预收款。
         /// 这里审核生成收款单
         /// tb_FM_PaymentSettlement 不需要立即生成，但需在后续触发核销时生成（抵扣时生成）。
+        /// 销售订单审核时，则自动审核掉预收款单
         /// </summary>
         /// <param name="ObjectEntity"></param>
         /// <returns></returns>
@@ -211,8 +213,9 @@ namespace RUINORERP.Business
                 //    entity.ForeignBalanceAmount = entity.ForeignPrepaidAmount;
                 //    entity.LocalBalanceAmount = entity.LocalPrepaidAmount;
                 //}
-                entity.PrePaymentStatus = (int)PrePaymentStatus.待核销;
+                entity.PrePaymentStatus = (int)PrePaymentStatus.已生效;
                 entity.ApprovalStatus = (int)ApprovalStatus.已审核;
+                entity.ApprovalResults = true;
                 BusinessHelper.Instance.ApproverEntity(entity);
                 //只更新指定列
                 // var result = _unitOfWorkManage.GetDbClient().Updateable<tb_Stocktake>(entity).UpdateColumns(it => new { it.FMPaymentStatus, it.ApprovalOpinions }).ExecuteCommand();
@@ -232,6 +235,64 @@ namespace RUINORERP.Business
             }
 
         }
+
+
+
+        /// <summary>
+        /// 这个审核可以由业务来审。后面还会有财务来定是否真实收付，这财务审核收款单前，还是可以反审的
+        /// 审核通过时
+        /// 预收款单本身是「收款」的一种业务类型，销售订单审核时已经生成了预收款单 ，通过 BizType 标记其业务属性为预收款。
+        /// 这里审核生成收款单
+        /// tb_FM_PaymentSettlement 不需要立即生成，但需在后续触发核销时生成（抵扣时生成）。
+        /// 销售订单审核时，则自动审核掉预收款单
+        /// </summary>
+        /// <param name="ObjectEntity"></param>
+        /// <returns></returns>
+        public async Task<ReturnResults<T>> AutoApprovalAsync(T ObjectEntity)
+        {
+            ReturnResults<T> rmrs = new ReturnResults<T>();
+            tb_FM_PreReceivedPayment entity = ObjectEntity as tb_FM_PreReceivedPayment;
+
+            if (entity.PrePaymentStatus != (int)PrePaymentStatus.草稿 && entity.PrePaymentStatus != (int)PrePaymentStatus.待审核)
+            {
+                rmrs.Succeeded = false;
+                rmrs.ErrorMsg = $"预{((ReceivePaymentType)entity.ReceivePaymentType).ToString()}单{entity.PreRPNO}，状态为【{((PrePaymentStatus)entity.PrePaymentStatus).ToString()}】\r\n请确认状态为【草稿】或【待审核】才可以审核。";
+
+                if (_appContext.SysConfig.ShowDebugInfo)
+                {
+                    _logger.LogInformation(rmrs.ErrorMsg);
+                }
+
+                return rmrs;
+            }
+
+            var paymentController = _appContext.GetRequiredService<tb_FM_PaymentRecordController<tb_FM_PaymentRecord>>();
+
+            tb_FM_PaymentRecord paymentRecord = paymentController.BuildPaymentRecord(entity, false);
+            var rrs = await paymentController.BaseSaveOrUpdateWithChild<tb_FM_PaymentRecord>(paymentRecord, false);
+
+            //预收付款中
+            //确认收到款  应该是收款审核时 反写回来 成 【待核销】
+            //if (paymentRecord.PaymentId > 0)
+            //{
+            //    entity.ForeignBalanceAmount = entity.ForeignPrepaidAmount;
+            //    entity.LocalBalanceAmount = entity.LocalPrepaidAmount;
+            //}
+            entity.PrePaymentStatus = (int)PrePaymentStatus.已生效;
+            entity.ApprovalStatus = (int)ApprovalStatus.已审核;
+            entity.ApprovalResults = true;
+            BusinessHelper.Instance.ApproverEntity(entity);
+            //只更新指定列
+            // var result = _unitOfWorkManage.GetDbClient().Updateable<tb_Stocktake>(entity).UpdateColumns(it => new { it.FMPaymentStatus, it.ApprovalOpinions }).ExecuteCommand();
+            await _unitOfWorkManage.GetDbClient().Updateable<tb_FM_PreReceivedPayment>(entity).ExecuteCommandAsync();
+      
+            rmrs.Succeeded = true;
+            rmrs.ReturnObject = entity as T;
+            return rmrs;
+
+        }
+
+
 
         public async Task<bool> BaseLogicDeleteAsync(tb_FM_PreReceivedPayment ObjectEntity)
         {
@@ -393,7 +454,7 @@ namespace RUINORERP.Business
         //}
 
 
- 
+
         public async override Task<List<T>> GetPrintDataSource(long ID)
         {
             List<tb_FM_PreReceivedPayment> list = await _appContext.Db.CopyNew().Queryable<tb_FM_PreReceivedPayment>()

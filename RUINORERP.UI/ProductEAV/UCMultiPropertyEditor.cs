@@ -144,7 +144,7 @@ namespace RUINORERP.UI.ProductEAV
             exclude.Add((int)ProductAttributeType.虚拟);
             exclude.Add((int)ProductAttributeType.捆绑);
 
-            
+
             bindingHelper.InitDataToCmbByEnumOnWhere<tb_Prod>(typeof(ProductAttributeType).GetListByEnum<ProductAttributeType>(selectedItem: 2, exclude.ToArray()), e => e.PropertyType, cmbPropertyType);
 
             prodpropValueList = mcPropertyValue.QueryByNav(c => true);
@@ -987,7 +987,7 @@ namespace RUINORERP.UI.ProductEAV
             //图片特殊处理
             if (dataGridViewProd.Columns[e.ColumnIndex].Name == "Images")
             {
-                if (e.Value != null)
+                if (e.Value != null && e.Value.GetType() == typeof(byte[]))
                 {
                     System.IO.MemoryStream buf = new System.IO.MemoryStream((byte[])e.Value);
                     Image image = Image.FromStream(buf, true);
@@ -1496,9 +1496,51 @@ namespace RUINORERP.UI.ProductEAV
         }
 
 
-        private void 删除属性值ToolStripMenuItem_Click(object sender, EventArgs e)
+        private async void 删除属性值ToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            MessageBox.Show("该功能暂时没有实现。");
+            if (treeGridView1.CurrentCell != null)
+            {
+                if (dataGridViewProd.CurrentRow != null)
+                {
+                    //EditEntity = null;
+                    oldOjb = null;
+                    if (dataGridViewProd.CurrentRow.DataBoundItem is tb_Prod Prod)
+                    {
+                        if (treeGridView1.CurrentRow.Tag is tb_Prod_Attr_Relation Prod_Attr_Relation)
+                        {
+                            //var RAR_ID = treeGridView1.CurrentRow.NodeName;
+                            //var Prod_Attr_Relation = Prod.tb_Prod_Attr_Relations.FirstOrDefault(c => c.RAR_ID == RAR_ID);
+                            if (Prod_Attr_Relation != null)
+                            {
+                                if (Prod_Attr_Relation.RAR_ID > 0)
+                                {
+                                    //删除
+                                    if (MessageBox.Show("确定删除该SKU对应的属性值吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+                                    {
+                                        int counter = await MainForm.Instance.AppContext.Db.Deleteable(Prod_Attr_Relation).ExecuteCommandAsync(); ;
+                                        if (counter > 0)
+                                        {
+                                            //如果有外键引用了。会出错。这里删除没有问题。
+                                            //刷新
+                                            //LoadProdDetail();
+                                            treeGridView1.Nodes.Remove(treeGridView1.CurrentNode);
+                                            MainForm.Instance.ShowStatusText("成功删除该SKU对应的属性值。");
+                                        }
+                                    }
+                                }
+                                else
+                                {
+                                    //新增式 生成的组合有错误时。这里可以手动删除指定的行，其实就是树的节点
+                                    if (treeGridView1.CurrentNode != null && treeGridView1.CurrentNode.Tag is tb_Prod_Attr_Relation)
+                                    {
+                                        treeGridView1.Nodes.Remove(treeGridView1.CurrentNode);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
 
         private async void 删除SKU明细toolStripMenuItem_Click(object sender, EventArgs e)

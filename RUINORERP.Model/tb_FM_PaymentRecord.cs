@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：05/07/2025 15:37:41
+// 时间：06/20/2025 16:20:06
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -18,7 +18,7 @@ using RUINORERP.Global.CustomAttribute;
 namespace RUINORERP.Model
 {
     /// <summary>
-    /// 收款付款记录表-记录所有资金流动一批订单可分账户分批付 记录真实资金流动，用户需确保其 与银行流水一致
+    /// 收付款记录表
     /// </summary>
     [Serializable()]
     [Description("收付款记录表")]
@@ -30,7 +30,7 @@ namespace RUINORERP.Model
             
             if (!PK_FK_ID_Check())
             {
-                throw new Exception("收款付款记录表-记录所有资金流动一批订单可分账户分批付 记录真实资金流动，用户需确保其 与银行流水一致tb_FM_PaymentRecord" + "外键ID与对应主主键名称不一致。请修改数据库");
+                throw new Exception("收付款记录表tb_FM_PaymentRecord" + "外键ID与对应主主键名称不一致。请修改数据库");
             }
         }
 
@@ -225,12 +225,12 @@ namespace RUINORERP.Model
                         }
         }
 
-        private int _PaymentStatus;
+        private int _PaymentStatus= ((0));
         /// <summary>
         /// 支付状态
         /// </summary>
         [AdvQueryAttribute(ColName = "PaymentStatus",ColDesc = "支付状态")] 
-        [SugarColumn(ColumnDataType = "int", SqlParameterDbType = "Int32",  ColumnName = "PaymentStatus" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "支付状态" )]
+        [SugarColumn(ColumnDataType = "int", SqlParameterDbType ="Int32",  ColumnName = "PaymentStatus" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "支付状态" )]
         public int PaymentStatus
         { 
             get{return _PaymentStatus;}
@@ -281,31 +281,61 @@ namespace RUINORERP.Model
                         }
         }
 
-        private long? _ReversedPaymentId;
+        private long? _ReversedOriginalId;
         /// <summary>
-        /// 对冲记录
+        /// 冲销记录
         /// </summary>
-        [AdvQueryAttribute(ColName = "ReversedPaymentId",ColDesc = "对冲记录")] 
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "ReversedPaymentId" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "对冲记录" )]
-        public long? ReversedPaymentId
+        [AdvQueryAttribute(ColName = "ReversedOriginalId",ColDesc = "冲销记录")] 
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "ReversedOriginalId" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "冲销记录" )]
+        [FKRelationAttribute("tb_FM_PaymentRecord","ReversedOriginalId")]
+        public long? ReversedOriginalId
         { 
-            get{return _ReversedPaymentId;}
+            get{return _ReversedOriginalId;}
             set{
-            SetProperty(ref _ReversedPaymentId, value);
+            SetProperty(ref _ReversedOriginalId, value);
                         }
         }
 
-        private string _ReversedPaymentNo;
+        private string _ReversedOriginalNo;
         /// <summary>
-        /// 对冲单号
+        /// 冲销单号
         /// </summary>
-        [AdvQueryAttribute(ColName = "ReversedPaymentNo",ColDesc = "对冲单号")] 
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "ReversedPaymentNo" ,Length=30,IsNullable = true,ColumnDescription = "对冲单号" )]
-        public string ReversedPaymentNo
+        [AdvQueryAttribute(ColName = "ReversedOriginalNo",ColDesc = "冲销单号")] 
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "ReversedOriginalNo" ,Length=30,IsNullable = true,ColumnDescription = "冲销单号" )]
+        public string ReversedOriginalNo
         { 
-            get{return _ReversedPaymentNo;}
+            get{return _ReversedOriginalNo;}
             set{
-            SetProperty(ref _ReversedPaymentNo, value);
+            SetProperty(ref _ReversedOriginalNo, value);
+                        }
+        }
+
+        private long? _ReversedByPaymentId;
+        /// <summary>
+        /// 被冲销记录
+        /// </summary>
+        [AdvQueryAttribute(ColName = "ReversedByPaymentId",ColDesc = "被冲销记录")] 
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "ReversedByPaymentId" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "被冲销记录" )]
+        [FKRelationAttribute("tb_FM_PaymentRecord","ReversedByPaymentId")]
+        public long? ReversedByPaymentId
+        { 
+            get{return _ReversedByPaymentId;}
+            set{
+            SetProperty(ref _ReversedByPaymentId, value);
+                        }
+        }
+
+        private string _ReversedByPaymentNo;
+        /// <summary>
+        /// 被冲销单号
+        /// </summary>
+        [AdvQueryAttribute(ColName = "ReversedByPaymentNo",ColDesc = "被冲销单号")] 
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "ReversedByPaymentNo" ,Length=30,IsNullable = true,ColumnDescription = "被冲销单号" )]
+        public string ReversedByPaymentNo
+        { 
+            get{return _ReversedByPaymentNo;}
+            set{
+            SetProperty(ref _ReversedByPaymentNo, value);
                         }
         }
 
@@ -511,14 +541,40 @@ namespace RUINORERP.Model
         [Navigate(NavigateType.OneToOne, nameof(Account_id))]
         public virtual tb_FM_Account tb_fm_account { get; set; }
 
+        [SugarColumn(IsIgnore = true)]
+        //[Browsable(false)] 打印报表时的数据源会不显示
+        [Navigate(NavigateType.OneToOne, nameof(ReversedByPaymentId))]
+        public virtual tb_FM_PaymentRecord tb_fm_paymentrecord_Reversed { get; set; }
+
+        [SugarColumn(IsIgnore = true)]
+        //[Browsable(false)] 打印报表时的数据源会不显示
+        [Navigate(NavigateType.OneToOne, nameof(ReversedOriginalId))]
+        public virtual tb_FM_PaymentRecord tb_fm_paymentrecord_Original { get; set; }
+
 
         //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_FM_PaymentRecordDetail.PaymentId))]
         public virtual List<tb_FM_PaymentRecordDetail> tb_FM_PaymentRecordDetails { get; set; }
         //tb_FM_PaymentRecordDetail.PaymentId)
-        //PaymentId.FK_TB_FM_PA_REFERENCE_TB_FM_PA)
+        //PaymentId.FK_FM_PaymentRecordDetail_REF_TB_FM_PAymentRecord)
         //tb_FM_PaymentRecord.PaymentId)
+
+        //[Browsable(false)]打印报表时的数据源会不显示
+        [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_FM_PaymentRecord.ReversedByPaymentId))]
+        public virtual List<tb_FM_PaymentRecord> tb_FM_PaymentRecords_Reversed { get; set; }
+        //tb_FM_PaymentRecord.PaymentId)
+        //PaymentId.FK_TB_FM_PA_REFERENCE_TB_FM_PA_ReversedByPaymentId)
+        //tb_FM_PaymentRecord.ReversedByPaymentId)
+
+        //[Browsable(false)]打印报表时的数据源会不显示
+        [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_FM_PaymentRecord.ReversedOriginalId))]
+        public virtual List<tb_FM_PaymentRecord> tb_FM_PaymentRecords_Original{ get; set; }
+        //tb_FM_PaymentRecord.PaymentId)
+        //PaymentId.FK_TB_FM_PA_REFERENCE_TB_FM_PA_ReversedOriginalId)
+        //tb_FM_PaymentRecord.ReversedOriginalId)
 
 
         #endregion
@@ -530,11 +586,24 @@ namespace RUINORERP.Model
 private bool PK_FK_ID_Check()
 {
   bool rs=true;
+         if("PaymentId"!="ReversedByPaymentId")
+        {
+        // rs=false;
+        }
+         if("PaymentId"!="ReversedOriginalId")
+        {
+        // rs=false;
+        }
 return rs;
 }
 
 
 
+
+
+
+       
+        
 
         public override object Clone()
         {

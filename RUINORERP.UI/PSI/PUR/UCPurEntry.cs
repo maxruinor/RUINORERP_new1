@@ -120,6 +120,8 @@ namespace RUINORERP.UI.PSI.PUR
                     entity.tb_PurEntryDetails.ForEach(c => c.PurEntryDetail_ID = 0);
                 }
             }
+
+            DataBindingHelper.BindData4TextBox<tb_PurEntry>(entity, t => t.ExchangeRate.ToString(), txtExchangeRate, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4CmbByEnum<tb_PurEntry>(entity, k => k.PayStatus, typeof(PayStatus), cmbPayStatus, false);
             DataBindingHelper.BindData4TextBox<tb_PurEntry>(entity, t => t.PurEntryNo, txtPurEntryNo, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_PurEntry>(entity, t => t.ShipCost.ToString(), txtShipCost, BindDataType4TextBox.Money, false);
@@ -127,8 +129,8 @@ namespace RUINORERP.UI.PSI.PUR
             DataBindingHelper.BindData4Cmb<tb_Employee>(entity, k => k.Employee_ID, v => v.Employee_Name, cmbEmployee_ID);
             DataBindingHelper.BindData4Cmb<tb_PaymentMethod>(entity, k => k.Paytype_ID, v => v.Paytype_Name, cmbPaytype_ID);
             DataBindingHelper.BindData4Cmb<tb_ProjectGroup>(entity, k => k.ProjectGroup_ID, v => v.ProjectGroupName, cmbProjectGroup);
-
-
+            DataBindingHelper.BindData4Cmb<tb_Currency>(entity, k => k.Currency_ID, v => v.CurrencyName, cmbCurrency_ID);
+            DataBindingHelper.BindData4TextBox<tb_PurEntry>(entity, t => t.ForeignTotalAmount.ToString(), txtForeignTotalAmount, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4TextBox<tb_PurEntry>(entity, t => t.TotalQty.ToString(), txtTotalQty, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4TextBox<tb_PurEntry>(entity, t => t.TotalAmount.ToString(), txtTotalAmount, BindDataType4TextBox.Money, false);
 
@@ -158,6 +160,39 @@ namespace RUINORERP.UI.PSI.PUR
                 //权限允许
                 if ((true && entity.DataStatus == (int)DataStatus.草稿) || (true && entity.DataStatus == (int)DataStatus.新建))
                 {
+                    //根据币别如果是外币才显示外币相关的字段
+                    if (s2.PropertyName == entity.GetPropertyName<tb_PurOrder>(c => c.Currency_ID) && entity.Currency_ID > 0)
+                    {
+                        if (cmbCurrency_ID.SelectedItem is tb_Currency cv)
+                        {
+                            if (cv.CurrencyCode.Trim() != DefaultCurrency.RMB.ToString())
+                            {
+                                //显示外币相关
+                                UIHelper.ControlForeignFieldInvisible<tb_PurOrder>(this, true);
+                                entity.ExchangeRate = BizService.GetExchangeRateFromCache(cv.Currency_ID, AppContext.BaseCurrency.Currency_ID);
+                                if (EditEntity.Currency_ID != AppContext.BaseCurrency.Currency_ID)
+                                {
+                                    EditEntity.ForeignTotalAmount = EditEntity.TotalAmount / EditEntity.ExchangeRate;
+                                    //
+                                    EditEntity.ForeignTotalAmount = Math.Round(EditEntity.ForeignTotalAmount, 2); // 四舍五入到 2 位小数
+                                }
+                                lblExchangeRate.Visible = true;
+                                txtExchangeRate.Visible = true;
+                                lblForeignTotalAmount.Text = $"金额({cv.CurrencyCode})";
+                            }
+                            else
+                            {
+                                //隐藏外币相关
+                                UIHelper.ControlForeignFieldInvisible<tb_PurOrder>(this, false);
+                                lblExchangeRate.Visible = false;
+                                txtExchangeRate.Visible = false;
+                                entity.ExchangeRate = 1;
+                                entity.ForeignTotalAmount = 0;
+                            }
+                        }
+
+                    }
+
                     /*
 
                     if (s2.PropertyName == entity.GetPropertyName<tb_PurEntry>(c => c.ShipCost) && entity.ShipCost > 0)
@@ -720,6 +755,10 @@ namespace RUINORERP.UI.PSI.PUR
                 #endregion
 
                 entity.tb_PurEntryDetails = NewDetails;
+                if (entity.Currency_ID==null)
+                {
+                    entity.Currency_ID = AppContext.BaseCurrency.Currency_ID;
+                }
 
                 ActionStatus actionStatus = ActionStatus.无操作;
                 BindData(entity, actionStatus);

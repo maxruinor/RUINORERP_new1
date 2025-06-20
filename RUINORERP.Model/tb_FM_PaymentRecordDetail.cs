@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：05/07/2025 15:37:43
+// 时间：06/20/2025 16:20:07
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -18,10 +18,10 @@ using RUINORERP.Global.CustomAttribute;
 namespace RUINORERP.Model
 {
     /// <summary>
-    /// 收款单明细表：记录收款分配到应收单的明细
+    /// 收付款记录明细表
     /// </summary>
     [Serializable()]
-    [Description("收付款单明细表")]
+    [Description("收付款记录明细表")]
     [SugarTable("tb_FM_PaymentRecordDetail")]
     public partial class tb_FM_PaymentRecordDetail: BaseEntity, ICloneable
     {
@@ -30,7 +30,7 @@ namespace RUINORERP.Model
             
             if (!PK_FK_ID_Check())
             {
-                throw new Exception("收款单明细表：记录收款分配到应收单的明细tb_FM_PaymentRecordDetail" + "外键ID与对应主主键名称不一致。请修改数据库");
+                throw new Exception("收付款记录明细表tb_FM_PaymentRecordDetail" + "外键ID与对应主主键名称不一致。请修改数据库");
             }
         }
 
@@ -108,13 +108,43 @@ namespace RUINORERP.Model
                         }
         }
 
+        private long? _DepartmentID;
+        /// <summary>
+        /// 部门
+        /// </summary>
+        [AdvQueryAttribute(ColName = "DepartmentID",ColDesc = "部门")] 
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "DepartmentID" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "部门" )]
+        [FKRelationAttribute("tb_Department","DepartmentID")]
+        public long? DepartmentID
+        { 
+            get{return _DepartmentID;}
+            set{
+            SetProperty(ref _DepartmentID, value);
+                        }
+        }
+
+        private long? _ProjectGroup_ID;
+        /// <summary>
+        /// 项目组
+        /// </summary>
+        [AdvQueryAttribute(ColName = "ProjectGroup_ID",ColDesc = "项目组")] 
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "ProjectGroup_ID" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "项目组" )]
+        [FKRelationAttribute("tb_ProjectGroup","ProjectGroup_ID")]
+        public long? ProjectGroup_ID
+        { 
+            get{return _ProjectGroup_ID;}
+            set{
+            SetProperty(ref _ProjectGroup_ID, value);
+                        }
+        }
+
         private long _Currency_ID;
         /// <summary>
         /// 币别
         /// </summary>
         [AdvQueryAttribute(ColName = "Currency_ID",ColDesc = "币别")] 
         [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Currency_ID" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "币别" )]
-        [FKRelationAttribute("tb_Currency", "Currency_ID")]
+        [FKRelationAttribute("tb_Currency","Currency_ID")]
         public long Currency_ID
         { 
             get{return _Currency_ID;}
@@ -164,37 +194,7 @@ namespace RUINORERP.Model
             SetProperty(ref _LocalAmount, value);
                         }
         }
-        private long? _DepartmentID;
-        /// <summary>
-        /// 部门
-        /// </summary>
-        [AdvQueryAttribute(ColName = "DepartmentID", ColDesc = "部门")]
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType = "Int64", ColumnName = "DepartmentID", DecimalDigits = 0, IsNullable = true, ColumnDescription = "部门")]
-        [FKRelationAttribute("tb_Department", "DepartmentID")]
-        public long? DepartmentID
-        {
-            get { return _DepartmentID; }
-            set
-            {
-                SetProperty(ref _DepartmentID, value);
-            }
-        }
 
-        private long? _ProjectGroup_ID;
-        /// <summary>
-        /// 项目组
-        /// </summary>
-        [AdvQueryAttribute(ColName = "ProjectGroup_ID", ColDesc = "项目组")]
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType = "Int64", ColumnName = "ProjectGroup_ID", DecimalDigits = 0, IsNullable = true, ColumnDescription = "项目组")]
-        [FKRelationAttribute("tb_ProjectGroup", "ProjectGroup_ID")]
-        public long? ProjectGroup_ID
-        {
-            get { return _ProjectGroup_ID; }
-            set
-            {
-                SetProperty(ref _ProjectGroup_ID, value);
-            }
-        }
         private string _Summary;
         /// <summary>
         /// 摘要
@@ -214,8 +214,23 @@ namespace RUINORERP.Model
         #region 扩展属性
         [SugarColumn(IsIgnore = true)]
         //[Browsable(false)] 打印报表时的数据源会不显示
+        [Navigate(NavigateType.OneToOne, nameof(Currency_ID))]
+        public virtual tb_Currency tb_currency { get; set; }
+
+        [SugarColumn(IsIgnore = true)]
+        //[Browsable(false)] 打印报表时的数据源会不显示
+        [Navigate(NavigateType.OneToOne, nameof(ProjectGroup_ID))]
+        public virtual tb_ProjectGroup tb_projectgroup { get; set; }
+
+        [SugarColumn(IsIgnore = true)]
+        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(PaymentId))]
         public virtual tb_FM_PaymentRecord tb_fm_paymentrecord { get; set; }
+
+        [SugarColumn(IsIgnore = true)]
+        //[Browsable(false)] 打印报表时的数据源会不显示
+        [Navigate(NavigateType.OneToOne, nameof(DepartmentID))]
+        public virtual tb_Department tb_department { get; set; }
 
 
 
@@ -233,6 +248,10 @@ return rs;
 
 
 
+
+
+
+       
         
 
         public override object Clone()

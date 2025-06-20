@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：05/07/2025 15:37:42
+// 时间：06/20/2025 16:20:07
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,7 +21,7 @@ using Microsoft.Extensions.Options;
 namespace RUINORERP.Business
 {
     /// <summary>
-    /// 收款付款记录表-记录所有资金流动一批订单可分账户分批付 记录真实资金流动，用户需确保其 与银行流水一致验证类
+    /// 收付款记录表验证类
     /// </summary>
     /*public partial class tb_FM_PaymentRecordValidator:AbstractValidator<tb_FM_PaymentRecord>*/
     public partial class tb_FM_PaymentRecordValidator:BaseValidatorGeneric<tb_FM_PaymentRecord>
@@ -66,15 +66,22 @@ namespace RUINORERP.Business
 
  RuleFor(tb_FM_PaymentRecord =>tb_FM_PaymentRecord.Paytype_ID).Must(CheckForeignKeyValueCanNull).WithMessage("付款方式:下拉选择值不正确。");
  RuleFor(tb_FM_PaymentRecord =>tb_FM_PaymentRecord.Paytype_ID).NotEmpty().When(x => x.Paytype_ID.HasValue);
- 
+
+//***** 
+ RuleFor(tb_FM_PaymentRecord =>tb_FM_PaymentRecord.PaymentStatus).NotNull().WithMessage("支付状态:不能为空。");
+
  RuleFor(tb_FM_PaymentRecord =>tb_FM_PaymentRecord.PaymentImagePath).MaximumLength(300).WithMessage("付款凭证:不能超过最大长度,300.");
 
  RuleFor(tb_FM_PaymentRecord =>tb_FM_PaymentRecord.ReferenceNo).MaximumLength(150).WithMessage("交易参考号:不能超过最大长度,150.");
 
 
- RuleFor(tb_FM_PaymentRecord =>tb_FM_PaymentRecord.ReversedPaymentId).NotEmpty().When(x => x.ReversedPaymentId.HasValue);
+ RuleFor(tb_FM_PaymentRecord =>tb_FM_PaymentRecord.ReversedOriginalId).NotEmpty().When(x => x.ReversedOriginalId.HasValue);
 
- RuleFor(tb_FM_PaymentRecord =>tb_FM_PaymentRecord.ReversedPaymentNo).MaximumLength(15).WithMessage("对冲单号:不能超过最大长度,15.");
+ RuleFor(tb_FM_PaymentRecord =>tb_FM_PaymentRecord.ReversedOriginalNo).MaximumLength(15).WithMessage("冲销单号:不能超过最大长度,15.");
+
+ RuleFor(tb_FM_PaymentRecord =>tb_FM_PaymentRecord.ReversedByPaymentId).NotEmpty().When(x => x.ReversedByPaymentId.HasValue);
+
+ RuleFor(tb_FM_PaymentRecord =>tb_FM_PaymentRecord.ReversedByPaymentNo).MaximumLength(15).WithMessage("被冲销单号:不能超过最大长度,15.");
 
  RuleFor(tb_FM_PaymentRecord =>tb_FM_PaymentRecord.Remark).MaximumLength(150).WithMessage("备注:不能超过最大长度,150.");
 

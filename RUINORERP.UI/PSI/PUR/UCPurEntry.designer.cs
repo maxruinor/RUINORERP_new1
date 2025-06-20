@@ -29,6 +29,11 @@
         private void InitializeComponent()
         {
             this.kryptonSplitContainer1 = new Krypton.Toolkit.KryptonSplitContainer();
+            this.lblExchangeRate = new Krypton.Toolkit.KryptonLabel();
+            this.txtExchangeRate = new Krypton.Toolkit.KryptonTextBox();
+            this.lblCurrency_ID = new Krypton.Toolkit.KryptonLabel();
+            this.cmbCurrency_ID = new Krypton.Toolkit.KryptonComboBox();
+            this.chkIsCustomizedOrder = new Krypton.Toolkit.KryptonCheckBox();
             this.lblStore_ID = new Krypton.Toolkit.KryptonLabel();
             this.cmbProjectGroup = new Krypton.Toolkit.KryptonComboBox();
             this.lblPayStatus = new Krypton.Toolkit.KryptonLabel();
@@ -39,8 +44,6 @@
             this.txtPurOrderNO = new Krypton.Toolkit.KryptonTextBox();
             this.lblNotes = new Krypton.Toolkit.KryptonLabel();
             this.txtNotes = new Krypton.Toolkit.KryptonTextBox();
-            this.lblApprovalOpinions = new Krypton.Toolkit.KryptonLabel();
-            this.txtApprovalOpinions = new Krypton.Toolkit.KryptonTextBox();
             this.lblRefNO = new Krypton.Toolkit.KryptonLabel();
             this.txtRefNO = new Krypton.Toolkit.KryptonTextBox();
             this.lblDeliveryDate = new Krypton.Toolkit.KryptonLabel();
@@ -75,7 +78,10 @@
             this.txtTotalAmount = new Krypton.Toolkit.KryptonTextBox();
             this.txtTotalQty = new Krypton.Toolkit.KryptonTextBox();
             this.lblTotalAmount = new Krypton.Toolkit.KryptonLabel();
-            this.chkIsCustomizedOrder = new Krypton.Toolkit.KryptonCheckBox();
+            this.txtApprovalOpinions = new Krypton.Toolkit.KryptonTextBox();
+            this.lblApprovalOpinions = new Krypton.Toolkit.KryptonLabel();
+            this.lblForeignTotalAmount = new Krypton.Toolkit.KryptonLabel();
+            this.txtForeignTotalAmount = new Krypton.Toolkit.KryptonTextBox();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceSub)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1)).BeginInit();
@@ -84,6 +90,7 @@
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1.Panel2)).BeginInit();
             this.kryptonSplitContainer1.Panel2.SuspendLayout();
             this.kryptonSplitContainer1.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.cmbCurrency_ID)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmbProjectGroup)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmbPayStatus)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmbCustomerVendor_ID)).BeginInit();
@@ -108,6 +115,10 @@
             // 
             // kryptonSplitContainer1.Panel1
             // 
+            this.kryptonSplitContainer1.Panel1.Controls.Add(this.lblExchangeRate);
+            this.kryptonSplitContainer1.Panel1.Controls.Add(this.txtExchangeRate);
+            this.kryptonSplitContainer1.Panel1.Controls.Add(this.lblCurrency_ID);
+            this.kryptonSplitContainer1.Panel1.Controls.Add(this.cmbCurrency_ID);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.chkIsCustomizedOrder);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.lblStore_ID);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.cmbProjectGroup);
@@ -119,8 +130,6 @@
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.txtPurOrderNO);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.lblNotes);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.txtNotes);
-            this.kryptonSplitContainer1.Panel1.Controls.Add(this.lblApprovalOpinions);
-            this.kryptonSplitContainer1.Panel1.Controls.Add(this.txtApprovalOpinions);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.lblRefNO);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.txtRefNO);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.lblDeliveryDate);
@@ -154,9 +163,50 @@
             // kryptonSplitContainer1.Panel2
             // 
             this.kryptonSplitContainer1.Panel2.Controls.Add(this.kryptonSplitContainer2);
-            this.kryptonSplitContainer1.Size = new System.Drawing.Size(1133, 746);
-            this.kryptonSplitContainer1.SplitterDistance = 243;
+            this.kryptonSplitContainer1.Size = new System.Drawing.Size(1214, 788);
+            this.kryptonSplitContainer1.SplitterDistance = 256;
             this.kryptonSplitContainer1.TabIndex = 4;
+            // 
+            // lblExchangeRate
+            // 
+            this.lblExchangeRate.Location = new System.Drawing.Point(922, 163);
+            this.lblExchangeRate.Name = "lblExchangeRate";
+            this.lblExchangeRate.Size = new System.Drawing.Size(36, 20);
+            this.lblExchangeRate.TabIndex = 199;
+            this.lblExchangeRate.Values.Text = "汇率";
+            // 
+            // txtExchangeRate
+            // 
+            this.txtExchangeRate.Location = new System.Drawing.Point(964, 161);
+            this.txtExchangeRate.Name = "txtExchangeRate";
+            this.txtExchangeRate.Size = new System.Drawing.Size(143, 23);
+            this.txtExchangeRate.TabIndex = 200;
+            // 
+            // lblCurrency_ID
+            // 
+            this.lblCurrency_ID.Location = new System.Drawing.Point(922, 106);
+            this.lblCurrency_ID.Name = "lblCurrency_ID";
+            this.lblCurrency_ID.Size = new System.Drawing.Size(36, 20);
+            this.lblCurrency_ID.TabIndex = 197;
+            this.lblCurrency_ID.Values.Text = "币别";
+            // 
+            // cmbCurrency_ID
+            // 
+            this.cmbCurrency_ID.DropDownWidth = 100;
+            this.cmbCurrency_ID.IntegralHeight = false;
+            this.cmbCurrency_ID.Location = new System.Drawing.Point(964, 106);
+            this.cmbCurrency_ID.Name = "cmbCurrency_ID";
+            this.cmbCurrency_ID.Size = new System.Drawing.Size(143, 21);
+            this.cmbCurrency_ID.TabIndex = 198;
+            // 
+            // chkIsCustomizedOrder
+            // 
+            this.chkIsCustomizedOrder.Enabled = false;
+            this.chkIsCustomizedOrder.Location = new System.Drawing.Point(1123, 54);
+            this.chkIsCustomizedOrder.Name = "chkIsCustomizedOrder";
+            this.chkIsCustomizedOrder.Size = new System.Drawing.Size(62, 20);
+            this.chkIsCustomizedOrder.TabIndex = 160;
+            this.chkIsCustomizedOrder.Values.Text = "定制单";
             // 
             // lblStore_ID
             // 
@@ -202,18 +252,18 @@
             this.lblDataStatus.TabIndex = 136;
             this.lblDataStatus.Values.Text = "数据状态";
             // 
-            // lblShippingCost
+            // lblShipCost
             // 
             this.lblShipCost.Location = new System.Drawing.Point(922, 134);
-            this.lblShipCost.Name = "lblShippingCost";
+            this.lblShipCost.Name = "lblShipCost";
             this.lblShipCost.Size = new System.Drawing.Size(36, 20);
             this.lblShipCost.TabIndex = 134;
             this.lblShipCost.Values.Text = "运费";
             // 
-            // txtShippingCost
+            // txtShipCost
             // 
             this.txtShipCost.Location = new System.Drawing.Point(964, 133);
-            this.txtShipCost.Name = "txtShippingCost";
+            this.txtShipCost.Name = "txtShipCost";
             this.txtShipCost.Size = new System.Drawing.Size(143, 23);
             this.txtShipCost.TabIndex = 135;
             // 
@@ -240,21 +290,6 @@
             this.txtNotes.Name = "txtNotes";
             this.txtNotes.Size = new System.Drawing.Size(702, 66);
             this.txtNotes.TabIndex = 128;
-            // 
-            // lblApprovalOpinions
-            // 
-            this.lblApprovalOpinions.Location = new System.Drawing.Point(896, 107);
-            this.lblApprovalOpinions.Name = "lblApprovalOpinions";
-            this.lblApprovalOpinions.Size = new System.Drawing.Size(62, 20);
-            this.lblApprovalOpinions.TabIndex = 123;
-            this.lblApprovalOpinions.Values.Text = "审批意见";
-            // 
-            // txtApprovalOpinions
-            // 
-            this.txtApprovalOpinions.Location = new System.Drawing.Point(964, 106);
-            this.txtApprovalOpinions.Name = "txtApprovalOpinions";
-            this.txtApprovalOpinions.Size = new System.Drawing.Size(143, 23);
-            this.txtApprovalOpinions.TabIndex = 124;
             // 
             // lblRefNO
             // 
@@ -500,12 +535,16 @@
             // 
             // kryptonSplitContainer2.Panel2
             // 
+            this.kryptonSplitContainer2.Panel2.Controls.Add(this.lblForeignTotalAmount);
+            this.kryptonSplitContainer2.Panel2.Controls.Add(this.txtForeignTotalAmount);
             this.kryptonSplitContainer2.Panel2.Controls.Add(this.lblTotalQty);
             this.kryptonSplitContainer2.Panel2.Controls.Add(this.txtTotalAmount);
             this.kryptonSplitContainer2.Panel2.Controls.Add(this.txtTotalQty);
             this.kryptonSplitContainer2.Panel2.Controls.Add(this.lblTotalAmount);
-            this.kryptonSplitContainer2.Size = new System.Drawing.Size(1133, 498);
-            this.kryptonSplitContainer2.SplitterDistance = 421;
+            this.kryptonSplitContainer2.Panel2.Controls.Add(this.txtApprovalOpinions);
+            this.kryptonSplitContainer2.Panel2.Controls.Add(this.lblApprovalOpinions);
+            this.kryptonSplitContainer2.Size = new System.Drawing.Size(1214, 527);
+            this.kryptonSplitContainer2.SplitterDistance = 445;
             this.kryptonSplitContainer2.TabIndex = 2;
             // 
             // grid1
@@ -517,7 +556,7 @@
             this.grid1.Name = "grid1";
             this.grid1.OptimizeMode = SourceGrid.CellOptimizeMode.ForRows;
             this.grid1.SelectionMode = SourceGrid.GridSelectionMode.Cell;
-            this.grid1.Size = new System.Drawing.Size(1133, 421);
+            this.grid1.Size = new System.Drawing.Size(1214, 445);
             this.grid1.TabIndex = 2;
             this.grid1.TabStop = true;
             this.grid1.ToolTipText = "";
@@ -552,14 +591,35 @@
             this.lblTotalAmount.TabIndex = 115;
             this.lblTotalAmount.Values.Text = "总金额";
             // 
-            // chkIsCustomizedOrder
+            // txtApprovalOpinions
             // 
-            this.chkIsCustomizedOrder.Enabled = false;
-            this.chkIsCustomizedOrder.Location = new System.Drawing.Point(964, 164);
-            this.chkIsCustomizedOrder.Name = "chkIsCustomizedOrder";
-            this.chkIsCustomizedOrder.Size = new System.Drawing.Size(62, 20);
-            this.chkIsCustomizedOrder.TabIndex = 160;
-            this.chkIsCustomizedOrder.Values.Text = "定制单";
+            this.txtApprovalOpinions.Location = new System.Drawing.Point(842, 27);
+            this.txtApprovalOpinions.Name = "txtApprovalOpinions";
+            this.txtApprovalOpinions.Size = new System.Drawing.Size(343, 23);
+            this.txtApprovalOpinions.TabIndex = 124;
+            // 
+            // lblApprovalOpinions
+            // 
+            this.lblApprovalOpinions.Location = new System.Drawing.Point(774, 28);
+            this.lblApprovalOpinions.Name = "lblApprovalOpinions";
+            this.lblApprovalOpinions.Size = new System.Drawing.Size(62, 20);
+            this.lblApprovalOpinions.TabIndex = 123;
+            this.lblApprovalOpinions.Values.Text = "审批意见";
+            // 
+            // lblForeignTotalAmount
+            // 
+            this.lblForeignTotalAmount.Location = new System.Drawing.Point(506, 29);
+            this.lblForeignTotalAmount.Name = "lblForeignTotalAmount";
+            this.lblForeignTotalAmount.Size = new System.Drawing.Size(62, 20);
+            this.lblForeignTotalAmount.TabIndex = 127;
+            this.lblForeignTotalAmount.Values.Text = "金额外币";
+            // 
+            // txtForeignTotalAmount
+            // 
+            this.txtForeignTotalAmount.Location = new System.Drawing.Point(579, 28);
+            this.txtForeignTotalAmount.Name = "txtForeignTotalAmount";
+            this.txtForeignTotalAmount.Size = new System.Drawing.Size(143, 23);
+            this.txtForeignTotalAmount.TabIndex = 128;
             // 
             // UCPurEntry
             // 
@@ -567,7 +627,7 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.Controls.Add(this.kryptonSplitContainer1);
             this.Name = "UCPurEntry";
-            this.Size = new System.Drawing.Size(1133, 771);
+            this.Size = new System.Drawing.Size(1214, 813);
             this.Load += new System.EventHandler(this.UCStockIn_Load);
             this.Controls.SetChildIndex(this.kryptonSplitContainer1, 0);
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceSub)).EndInit();
@@ -579,6 +639,7 @@
             this.kryptonSplitContainer1.Panel2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1)).EndInit();
             this.kryptonSplitContainer1.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.cmbCurrency_ID)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmbProjectGroup)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmbPayStatus)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmbCustomerVendor_ID)).EndInit();
@@ -647,5 +708,11 @@
         private Krypton.Toolkit.KryptonLabel lblStore_ID;
         private Krypton.Toolkit.KryptonComboBox cmbProjectGroup;
         private Krypton.Toolkit.KryptonCheckBox chkIsCustomizedOrder;
+        private Krypton.Toolkit.KryptonLabel lblCurrency_ID;
+        private Krypton.Toolkit.KryptonComboBox cmbCurrency_ID;
+        private Krypton.Toolkit.KryptonLabel lblExchangeRate;
+        private Krypton.Toolkit.KryptonTextBox txtExchangeRate;
+        private Krypton.Toolkit.KryptonLabel lblForeignTotalAmount;
+        private Krypton.Toolkit.KryptonTextBox txtForeignTotalAmount;
     }
 }

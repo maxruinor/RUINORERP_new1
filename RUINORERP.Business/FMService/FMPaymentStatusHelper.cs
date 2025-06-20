@@ -144,6 +144,8 @@ namespace RUINORERP.Business.FMService
 
         private static void ValidatePrePaymentTransition(PrePaymentStatus current, PrePaymentStatus target)
         {
+   
+
             // 终态不能转换
             if (IsFinalStatus(current))
                 throw new InvalidOperationException("终态单据禁止状态变更");
@@ -156,6 +158,14 @@ namespace RUINORERP.Business.FMService
             if ((current == PrePaymentStatus.部分核销 || current == PrePaymentStatus.全额核销) &&
                 target == PrePaymentStatus.待核销)
                 throw new InvalidOperationException("已核销状态不可回退");
+
+            // 允许从草稿直接到已生效（自动审核）
+            if (current == PrePaymentStatus.草稿 && target == PrePaymentStatus.已生效)
+                return;
+
+            // 允许从已生效到待核销（支付完成）
+            if (current == PrePaymentStatus.已生效 && target == PrePaymentStatus.待核销)
+                return;
         }
 
         private static void ValidateARAPTransition(ARAPStatus current, ARAPStatus target)

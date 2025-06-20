@@ -75,6 +75,28 @@ namespace RUINORERP.Business.Processor
         public List<EnumEntityMember> BindDataSource { get; set; }
 
     }
+    /// <summary>
+    /// 枚举的类型的数据
+    /// </summary>
+    public class QueryFieldDateTimeRangeData : IQueryFieldData
+    {
+        public QueryFieldDateTimeRangeData()
+        {
+
+        }
+
+        public QueryFieldDateTimeRangeData(bool _Selected)
+        {
+            Selected = _Selected;
+        }
+        /// <summary>
+        /// 时间控件是否默认选中
+        /// </summary>
+        public bool Selected { get; set; }
+
+        
+
+    }
 
 
 }

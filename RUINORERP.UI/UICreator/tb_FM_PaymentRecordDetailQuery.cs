@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：05/07/2025 15:37:42
+// 时间：06/20/2025 16:20:07
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -24,9 +24,9 @@ using RUINORERP.UI.Common;
 namespace RUINORERP.UI
 {
     /// <summary>
-    /// 收款单明细表：记录收款分配到应收单的明细数据查询
+    /// 收付款记录明细表数据查询
     /// </summary>
-     [MenuAttribute(typeof(tb_FM_PaymentRecordDetailQuery), "收款单明细表：记录收款分配到应收单的明细数据查询", true)]
+     [MenuAttribute(typeof(tb_FM_PaymentRecordDetailQuery), "收付款记录明细表数据查询", true)]
     public partial class tb_FM_PaymentRecordDetailQuery:UserControl
     {
      public tb_FM_PaymentRecordDetailQuery() {
@@ -61,6 +61,10 @@ namespace RUINORERP.UI
         
     
         
+    
+        
+    
+        
 
   
    
@@ -72,7 +76,10 @@ namespace RUINORERP.UI
 
         public void LoadDroplistData()
         {
+          // DataBindingHelper.InitDataToCmb<tb_Currency>(k => k.Currency_ID, v=>v.XXNAME, cmbCurrency_ID);
+          // DataBindingHelper.InitDataToCmb<tb_ProjectGroup>(k => k.ProjectGroup_ID, v=>v.XXNAME, cmbProjectGroup_ID);
           // DataBindingHelper.InitDataToCmb<tb_FM_PaymentRecord>(k => k.PaymentId, v=>v.XXNAME, cmbPaymentId);
+          // DataBindingHelper.InitDataToCmb<tb_Department>(k => k.DepartmentID, v=>v.XXNAME, cmbDepartmentID);
         }
         
 

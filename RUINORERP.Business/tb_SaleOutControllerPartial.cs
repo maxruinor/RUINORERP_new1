@@ -587,7 +587,7 @@ namespace RUINORERP.Business
 
                     //出库 产生应收前，先判断预收的情况。先核销一下部分。生成付款单成已经付款状态。同时写核销记录。同时反写预收的余额。
                     //！！！！！！！！！！！！！！！！！！！！！！！！！！！！注意要实现 参考收款单审核中 反冲时回写预收old的代码
-
+                    //出库时，如果有预收款，如果收的金额 与 到账金额不一致时。是不是停止 出库？
                     //所有统一先应收再收款 by 2025-05-18 仅仅是订金时先处理了一些东西而已。
                     AuthorizeController authorizeController = _appContext.GetRequiredService<AuthorizeController>();
                     if (authorizeController.EnableFinancialModule())

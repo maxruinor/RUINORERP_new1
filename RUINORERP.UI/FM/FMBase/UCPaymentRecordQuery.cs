@@ -99,6 +99,8 @@ namespace RUINORERP.UI.FM
         {
             base.ChildInvisibleCols.Add(c => c.SourceBilllId);
             base.MasterInvisibleCols.Add(c => c.ReceivePaymentType);
+            base.MasterInvisibleCols.Add(c => c.ReversedByPaymentId);
+            base.MasterInvisibleCols.Add(c => c.ReversedOriginalId);
             //如果不用户多币种，则不用显示外币
             AuthorizeController authorizeController = MainForm.Instance.AppContext.GetRequiredService<AuthorizeController>();
             if (authorizeController.EnableMultiCurrency())

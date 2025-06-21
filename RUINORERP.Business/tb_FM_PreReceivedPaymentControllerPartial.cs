@@ -127,8 +127,14 @@ namespace RUINORERP.Business
                 entity.ApprovalStatus = (int)ApprovalStatus.未审核;
                 BusinessHelper.Instance.ApproverEntity(entity);
                 //只更新指定列
-                await _unitOfWorkManage.GetDbClient().Updateable<tb_FM_PreReceivedPayment>(entity).ExecuteCommandAsync();
-                //rmr = await ctr.BaseSaveOrUpdate(EditEntity);
+                var result =await _unitOfWorkManage.GetDbClient().Updateable<tb_FM_PreReceivedPayment>(entity).UpdateColumns(it => new { 
+                    it.PrePaymentStatus, 
+                    it.ApprovalResults,
+                    it.Approver_at,
+                    it.Approver_by,
+                    it.ApprovalOpinions,
+                }).ExecuteCommandAsync();
+         
                 // 注意信息的完整性
                 _unitOfWorkManage.CommitTran();
                 rmrs.Succeeded = true;
@@ -219,7 +225,13 @@ namespace RUINORERP.Business
                 BusinessHelper.Instance.ApproverEntity(entity);
                 //只更新指定列
                 // var result = _unitOfWorkManage.GetDbClient().Updateable<tb_Stocktake>(entity).UpdateColumns(it => new { it.FMPaymentStatus, it.ApprovalOpinions }).ExecuteCommand();
-                await _unitOfWorkManage.GetDbClient().Updateable<tb_FM_PreReceivedPayment>(entity).ExecuteCommandAsync();
+                var result = await _unitOfWorkManage.GetDbClient().Updateable<tb_FM_PreReceivedPayment>(entity).UpdateColumns(it => new {
+                    it.PrePaymentStatus,
+                    it.ApprovalResults,
+                    it.Approver_at,
+                    it.Approver_by,
+                    it.ApprovalOpinions,
+                }).ExecuteCommandAsync();
                 // 注意信息的完整性
                 _unitOfWorkManage.CommitTran();
                 rmrs.Succeeded = true;

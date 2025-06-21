@@ -696,11 +696,11 @@ namespace RUINORERP.UI.BaseForm
             toolStripBtnCancel.Visible = canCancel;
 
 
-             
+
 
             // 特殊操作按钮
             //ConfigureSpecialButtons(statusEnum);
-             
+
 
             // 通用按钮状态
             toolStripbtnSubmit.Enabled = FMPaymentStatusHelper.CanSubmit(statusEnum);
@@ -724,9 +724,9 @@ namespace RUINORERP.UI.BaseForm
             //    toolStripButton结案.Enabled = arapStatus == ARAPStatus.待支付 ||
             //                                 arapStatus == ARAPStatus.部分支付;
 
-                // 坏账按钮
-                //toolStripButton坏账.Visible = toolStripButton结案.Visible;
-                //toolStripButton坏账.Enabled = toolStripButton结案.Enabled;
+            // 坏账按钮
+            //toolStripButton坏账.Visible = toolStripButton结案.Visible;
+            //toolStripButton坏账.Enabled = toolStripButton结案.Enabled;
             //}
             // 状态检测器
             var statusDetector = new StatusDetector(entity as BaseEntity);
@@ -823,7 +823,7 @@ namespace RUINORERP.UI.BaseForm
             // 例如：检查是否有核销记录、支付记录等
             return false;
         }
- 
+
 
         /// <summary>获取实体的状态类型</summary>
         private Type GetStatusType(BaseEntity entity)
@@ -862,7 +862,7 @@ namespace RUINORERP.UI.BaseForm
             }
         }
 
- 
+
 
         private void HandlePaymentStatus(PaymentStatus status, ActionStatus actionStatus)
         {
@@ -907,7 +907,7 @@ namespace RUINORERP.UI.BaseForm
             return (Enum)Enum.Parse(statusType, value.ToString());
         }
 
-      
+
 
         #endregion
 
@@ -3163,7 +3163,7 @@ namespace RUINORERP.UI.BaseForm
         /// <summary>
         /// 提交
         /// </summary>
-        protected async override Task<bool> Submit()
+        protected async Task<bool> Submit_old()
         {
             if (EditEntity == null)
             {
@@ -3175,7 +3175,8 @@ namespace RUINORERP.UI.BaseForm
             //    StatusMachine.Submit();
             //    // 自动触发状态更新
             //}
-
+            BaseController<T> ctr = Startup.GetFromFacByName<BaseController<T>>(typeof(T).Name + "Controller");
+            ReturnResults<T> returnResults = await ctr.SubmitAsync(EditEntity, true);
 
             bool submitrs = false;
             string PKCol = BaseUIHelper.GetEntityPrimaryKey<T>();
@@ -3206,7 +3207,7 @@ namespace RUINORERP.UI.BaseForm
                     }
 
                     ReturnResults<T> rmr = new ReturnResults<T>();
-                    BaseController<T> ctr = Startup.GetFromFacByName<BaseController<T>>(typeof(T).Name + "Controller");
+
                     rmr = await ctr.BaseSaveOrUpdate(EditEntity);
                     if (rmr.Succeeded)
                     {
@@ -3323,7 +3324,7 @@ namespace RUINORERP.UI.BaseForm
                         MainForm.Instance.uclog.AddLog($"提交失败，请重试;或联系管理员。\r\n 错误信息：{rmr.ErrorMsg}", UILogType.错误);
                         submitrs = false;
                     }
-                    MainForm.Instance.AuditLogHelper.CreateAuditLog<T>("提交", rmr.ReturnObject, $"结果:{(rmr.Succeeded ? "成功" : "失败")},{rmr.ErrorMsg}");
+                    MainForm.Instance.AuditLogHelper.CreateAuditLog<T>("更新式提交", rmr.ReturnObject, $"结果:{(rmr.Succeeded ? "成功" : "失败")},{rmr.ErrorMsg}");
                 }
             }
             else
@@ -3339,7 +3340,7 @@ namespace RUINORERP.UI.BaseForm
                 bool rs = await this.Save(true);
                 if (rs)
                 {
-                    MainForm.Instance.AuditLogHelper.CreateAuditLog<T>("保存->提交", EditEntity);
+
                     //ReturnResults<T> rmr = new ReturnResults<T>();
                     //BaseController<T> ctr = Startup.GetFromFacByName<BaseController<T>>(typeof(T).Name + "Controller");
                     //rmr = await ctr.BaseSaveOrUpdate(EditEntity);
@@ -3350,7 +3351,6 @@ namespace RUINORERP.UI.BaseForm
                     // OriginalData od = ActionForClient.工作流提交(pkid, (int)BizType.盘点单);
                     // MainForm.Instance.ecs.AddSendData(od);
                     submitrs = true;
-                    return true;
                     //}
                     //else
                     //{
@@ -3360,12 +3360,188 @@ namespace RUINORERP.UI.BaseForm
                 else
                 {
                     MainForm.Instance.AuditLogHelper.CreateAuditLog<T>("保存->提交-出错", EditEntity);
-                    return false;
+                    submitrs = false;
                 }
+                MainForm.Instance.AuditLogHelper.CreateAuditLog<T>("保存式提交", EditEntity, $"结果:{(rs ? "成功" : "失败")}");
+
             }
             return submitrs;
         }
 
+        /// <summary>
+        /// 提交
+        /// </summary>
+        protected async override Task<bool> Submit()
+        {
+            if (EditEntity == null)
+            {
+                return false;
+            }
+
+            //if (StatusMachine.CanSubmit())
+            //{
+            //    StatusMachine.Submit();
+            //    // 自动触发状态更新
+            //}
+            BaseController<T> ctr = Startup.GetFromFacByName<BaseController<T>>(typeof(T).Name + "Controller");
+            bool submitrs = false;
+            string PKCol = BaseUIHelper.GetEntityPrimaryKey<T>();
+            long pkid = (long)ReflectionHelper.GetPropertyValue(EditEntity, PKCol);
+            if (pkid > 0)
+            {
+                var dataStatus = (DataStatus)(editEntity.GetPropertyValue(typeof(DataStatus).Name).ToInt());
+                if (dataStatus == DataStatus.完结 || dataStatus == DataStatus.确认)
+                {
+
+                    if (AuthorizeController.GetShowDebugInfoAuthorization(MainForm.Instance.AppContext))
+                    {
+                        MainForm.Instance.uclog.AddLog("单据已经是【完结】或【确认】状态，提交失败。");
+                    }
+                    return false;
+                }
+                else
+                {
+
+                    ReturnResults<T> rmr = await ctr.SubmitAsync(EditEntity, false);
+                    //rmr = await ctr.BaseSaveOrUpdate(EditEntity);
+                    if (rmr.Succeeded)
+                    {
+                        ToolBarEnabledControl(MenuItemEnums.提交);
+                        //这里推送到审核，启动工作流 后面优化
+                        // OriginalData od = ActionForClient.工作流提交(pkid, (int)BizType.盘点单);
+                        // MainForm.Instance.ecs.AddSendData(od);]
+
+                        //如果是销售订单或采购订单可以自动审核，有条件地执行？
+                        CommBillData cbd = new CommBillData();
+                        BillConverterFactory bcf = Startup.GetFromFac<BillConverterFactory>();
+                        cbd = bcf.GetBillData<T>(EditEntity as T);
+                        ApprovalEntity ae = new ApprovalEntity();
+                        ae.ApprovalOpinions = "自动审核";
+                        ae.ApprovalResults = true;
+                        ae.ApprovalStatus = (int)ApprovalStatus.已审核;
+                        if (cbd.BizType == BizType.销售订单 && AppContext.SysConfig.AutoApprovedSaleOrderAmount > 0)
+                        {
+                            if (EditEntity is tb_SaleOrder saleOrder)
+                            {
+                                if (saleOrder.TotalAmount <= AppContext.SysConfig.AutoApprovedSaleOrderAmount)
+                                {
+                                    RevertCommand command = new RevertCommand();
+                                    //缓存当前编辑的对象。如果撤销就回原来的值
+                                    tb_SaleOrder oldobj = CloneHelper.DeepCloneObject<tb_SaleOrder>(EditEntity);
+                                    command.UndoOperation = delegate ()
+                                    {
+                                        //Undo操作会执行到的代码 意思是如果退审核，内存中审核的数据要变为空白（之前的样子）
+                                        CloneHelper.SetValues<tb_SaleOrder>(EditEntity, oldobj);
+                                    };
+                                    BusinessHelper.Instance.ApproverEntity(EditEntity);
+                                    saleOrder.ApprovalResults = true;
+                                    saleOrder.ApprovalStatus = (int)ApprovalStatus.已审核;
+                                    saleOrder.ApprovalOpinions = "自动审核";
+                                    saleOrder.DataStatus = (int)DataStatus.确认;
+                                    tb_SaleOrderController<tb_SaleOrder> ctrSO = Startup.GetFromFac<tb_SaleOrderController<tb_SaleOrder>>();
+                                    ReturnResults<tb_SaleOrder> rmrs = await ctrSO.ApprovalAsync(saleOrder);
+                                    if (rmrs.Succeeded)
+                                    {
+                                        //这里审核完了的话，如果这个单存在于工作流的集合队列中，则向服务器说明审核完成。
+                                        //这里推送到审核，启动工作流  队列应该有一个策略 比方优先级，桌面不动1 3 5分钟 
+                                        //OriginalData od = ActionForClient.工作流审批(pkid, (int)BizType.盘点单, ae.ApprovalResults, ae.ApprovalComments);
+                                        //MainForm.Instance.ecs.AddSendData(od);
+                                        //审核成功
+                                        ToolBarEnabledControl(MenuItemEnums.审核);
+                                        MainForm.Instance.AuditLogHelper.CreateAuditLog<T>("审核", rmr.ReturnObject, "满足金额设置条件，自动审核通过");
+                                        //如果审核结果为不通过时，审核不是灰色。
+                                        if (!ae.ApprovalResults)
+                                        {
+                                            toolStripbtnReview.Enabled = true;
+                                        }
+                                    }
+                                    else
+                                    {
+                                        command.Undo();
+                                        //审核失败 要恢复之前的值
+                                        MainForm.Instance.PrintInfoLog($"{ae.bizName}:{ae.BillNo}审核失败,{rmrs.ErrorMsg}请联系管理员！", Color.Red);
+                                    }
+                                }
+                            }
+                        }
+
+                        if (cbd.BizType == BizType.采购订单 && AppContext.SysConfig.AutoApprovedPurOrderAmount > 0)
+                        {
+                            if (EditEntity is tb_PurOrder purOrder)
+                            {
+                                if (purOrder.TotalAmount <= AppContext.SysConfig.AutoApprovedPurOrderAmount)
+                                {
+                                    RevertCommand command = new RevertCommand();
+                                    //缓存当前编辑的对象。如果撤销就回原来的值
+                                    tb_PurOrder oldobj = CloneHelper.DeepCloneObject<tb_PurOrder>(EditEntity);
+                                    command.UndoOperation = delegate ()
+                                    {
+                                        //Undo操作会执行到的代码 意思是如果退审核，内存中审核的数据要变为空白（之前的样子）
+                                        CloneHelper.SetValues<tb_PurOrder>(EditEntity, oldobj);
+                                    };
+                                    purOrder.ApprovalResults = true;
+                                    purOrder.ApprovalStatus = (int)ApprovalStatus.已审核;
+                                    purOrder.ApprovalOpinions = "自动审核";
+                                    purOrder.DataStatus = (int)DataStatus.确认;
+                                    BusinessHelper.Instance.ApproverEntity(EditEntity);
+                                    tb_PurOrderController<tb_PurOrder> ctrSO = Startup.GetFromFac<tb_PurOrderController<tb_PurOrder>>();
+                                    ReturnResults<tb_PurOrder> rmrs = await ctrSO.ApprovalAsync(purOrder);
+                                    if (rmrs.Succeeded)
+                                    {
+                                        //这里审核完了的话，如果这个单存在于工作流的集合队列中，则向服务器说明审核完成。
+                                        //这里推送到审核，启动工作流  队列应该有一个策略 比方优先级，桌面不动1 3 5分钟 
+                                        //OriginalData od = ActionForClient.工作流审批(pkid, (int)BizType.盘点单, ae.ApprovalResults, ae.ApprovalComments);
+                                        //MainForm.Instance.ecs.AddSendData(od);
+
+                                        //审核成功
+                                        ToolBarEnabledControl(MenuItemEnums.审核);
+                                        MainForm.Instance.AuditLogHelper.CreateAuditLog<T>("审核", rmr.ReturnObject, "满足金额设置条件，自动审核通过");
+                                        //如果审核结果为不通过时，审核不是灰色。
+                                        if (!ae.ApprovalResults)
+                                        {
+                                            toolStripbtnReview.Enabled = true;
+                                        }
+                                    }
+                                    else
+                                    {
+                                        command.Undo();
+                                        //审核失败 要恢复之前的值
+                                        MainForm.Instance.PrintInfoLog($"{ae.bizName}:{ae.BillNo}审核失败,{rmrs.ErrorMsg},请联系管理员！", Color.Red);
+
+                                    }
+                                }
+                            }
+                        }
+                        submitrs = true;
+                    }
+                    else
+                    {
+                        MainForm.Instance.uclog.AddLog($"提交失败，请重试;或联系管理员。\r\n 错误信息：{rmr.ErrorMsg}", UILogType.错误);
+                        submitrs = false;
+                    }
+                    MainForm.Instance.AuditLogHelper.CreateAuditLog<T>("更新式提交", rmr.ReturnObject, $"结果:{(rmr.Succeeded ? "成功" : "失败")},{rmr.ErrorMsg}");
+                }
+            }
+            else
+            {
+                if (ReflectionHelper.ExistPropertyName<T>(typeof(DataStatus).Name))
+                {
+                    ReflectionHelper.SetPropertyValue(EditEntity, typeof(DataStatus).Name, (int)DataStatus.新建);
+                }
+                if (ReflectionHelper.ExistPropertyName<T>(typeof(ApprovalStatus).Name))
+                {
+                    ReflectionHelper.SetPropertyValue(EditEntity, typeof(ApprovalStatus).Name, (int)ApprovalStatus.未审核);
+                }
+                bool rs = await this.Save(true);
+                if (rs)
+                {
+                    ToolBarEnabledControl(MenuItemEnums.提交);
+                    submitrs = true;
+                }
+                MainForm.Instance.AuditLogHelper.CreateAuditLog<T>("保存式提交", EditEntity, $"结果:{(rs ? "成功" : "失败")}");
+            }
+            return submitrs;
+        }
 
         /*
         /// <summary>
@@ -3474,6 +3650,13 @@ namespace RUINORERP.UI.BaseForm
         {
             if (EditEntity == null) return false;
 
+
+            BaseController<T> ctr = Startup.GetFromFacByName<BaseController<T>>(typeof(T).Name + "Controller");
+
+      
+
+
+
             // 获取当前状态
             var statusProperty = typeof(TStatus).Name;
             var currentStatus = (TStatus)Enum.ToObject(
@@ -3509,8 +3692,8 @@ namespace RUINORERP.UI.BaseForm
                 $"{typeof(T).Name}Controller"
             );
 
-            var result = await controller.BaseSaveOrUpdate(EditEntity as T);
-
+            //var result = await controller.BaseSaveOrUpdate(EditEntity as T);
+            ReturnResults<T> result = await ctr.SubmitAsync(EditEntity, true);
             if (result.Succeeded)
             {
                 MainForm.Instance.uclog.AddLog("提交成功");

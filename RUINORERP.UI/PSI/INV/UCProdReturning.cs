@@ -195,7 +195,7 @@ namespace RUINORERP.UI.PSI.INV
             var lambdaBorrow = Expressionable.Create<tb_ProdBorrowing>()
                             .And(t => t.DataStatus == (int)DataStatus.确认)
                             //是不是有开关来设置
-                            //.AndIF(AuthorizeController.GetOwnershipControl(MainForm.Instance.AppContext) && !MainForm.Instance.AppContext.IsSuperUser, t => t.Employee_ID == MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID)
+                            .AndIF(AuthorizeController.GetSaleLimitedAuth(MainForm.Instance.AppContext) && !MainForm.Instance.AppContext.IsSuperUser, t => t.Employee_ID == MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID)
                              .And(t => t.isdeleted == false)
                             .ToExpression();//注意 这一句 不能少
             BaseProcessor basePro = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_ProdBorrowing).Name + "Processor");

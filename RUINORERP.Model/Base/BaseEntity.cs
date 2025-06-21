@@ -45,7 +45,7 @@ namespace RUINORERP.Model
         //private readonly Dictionary<string, object> _changedProperties = new Dictionary<string, object>();
         private readonly HashSet<string> _changedProperties = new HashSet<string>();
         // 获取变更属性集合
-   
+
 
         /// <summary>
         /// 获取所有已变更属性的名称集合
@@ -54,7 +54,7 @@ namespace RUINORERP.Model
         [SugarColumn(IsIgnore = true)]
         [Browsable(false)]
         public IEnumerable<string> ChangedProperties => _changedProperties;
-        
+
 
         // 追踪属性变更的标志
         private bool _trackChanges = true;
@@ -73,7 +73,7 @@ namespace RUINORERP.Model
 
 
 
- 
+
 
         /// <summary>
         /// 检查特定属性是否有变更
@@ -240,7 +240,7 @@ namespace RUINORERP.Model
                 //}
             };
             */
- 
+
         }
 
 
@@ -545,18 +545,26 @@ namespace RUINORERP.Model
             set { /* 如果需要子类覆盖，可以在这里实现 */ }
         }
 
+
+
+
+
         private static ConcurrentDictionary<string, string> GenerateFieldNameList(Type type)
         {
             if (_fieldNameListCache.TryGetValue(type, out var fieldNameList))
             {
                 return fieldNameList;
             }
-             fieldNameList = new ConcurrentDictionary<string, string>();
+            fieldNameList = new ConcurrentDictionary<string, string>();
             foreach (var property in type.GetProperties())
             {
                 var sugarColumnAttr = property.GetCustomAttribute<SugarColumn>(false);
                 if (sugarColumnAttr != null && !string.IsNullOrEmpty(sugarColumnAttr.ColumnDescription))
                 {
+                    if (sugarColumnAttr.IsPrimaryKey)
+                    {
+                        //  PrimaryKeyColName = sugarColumnAttr.ColumnName;
+                    }
                     fieldNameList.TryAdd(property.Name, sugarColumnAttr.ColumnDescription);
                 }
             }
@@ -594,7 +602,7 @@ namespace RUINORERP.Model
         [Browsable(true)]
         public bool? Selected { get => _selected; set => _selected = value; }
 
- 
+        #region 主键相关信息
 
         [SugarColumn(IsIgnore = true)]
         /// <summary>
@@ -602,6 +610,47 @@ namespace RUINORERP.Model
         /// </summary>
         [Browsable(false)]
         public long PrimaryKeyID { get; set; }
+
+
+
+        [SugarColumn(IsIgnore = true)]
+        /// <summary>
+        /// 主键值列名
+        /// </summary>
+        [Browsable(false)]
+        public string PrimaryKeyColName { get; set; }
+
+
+        public string GetPrimaryKeyColName()
+        {
+            if (!string.IsNullOrEmpty(PrimaryKeyColName))
+            {
+                return PrimaryKeyColName;
+            }
+            // 获取需要跟踪的属性列表（使用缓存）
+            var properties = GetCachedProperties();
+            // 记录所有需要跟踪的属性的当前值
+            foreach (var property in properties)
+            {
+                var sugarColumnAttr = property.GetCustomAttribute<SugarColumn>(false);
+                if (sugarColumnAttr != null)
+                {
+                    if (sugarColumnAttr.IsPrimaryKey)
+                    {
+                        PrimaryKeyColName = sugarColumnAttr.ColumnName;
+                        return PrimaryKeyColName;
+                    }
+                }
+            }
+            return PrimaryKeyColName;
+        }
+
+
+
+        #endregion
+
+
+
 
         private List<object> childs = new List<object>();
 
@@ -698,7 +747,7 @@ namespace RUINORERP.Model
             // 如果都是 null，认为相等
             if (storage == null && value == null)
                 return;
-      
+
             // 使用适当的比较方法
             bool areEqual;
             // 特殊处理字符串类型
@@ -740,7 +789,7 @@ namespace RUINORERP.Model
 
             // 合并通知事件
             OnPropertyChanged(propertyName, oldValue, value);
-     
+
             /*
             // 检查值是否实际变化
             bool isValueChanged = IsValueChanged<T>(propertyName, value);
@@ -762,7 +811,7 @@ namespace RUINORERP.Model
                 // 如果没有其他修改，重置HasChanged
                 if (_changedProperties.IsEmpty) HasChanged = false;
             }
-           
+
             OnPropertyChanged(propertyName, (object)storage, value);
             this.OnPropertyChanged(propertyName);*/
         }
@@ -960,7 +1009,7 @@ namespace RUINORERP.Model
             return clone;
         }
 
-       
+
 
         #region 提取重点数据
 
@@ -1078,7 +1127,7 @@ namespace RUINORERP.Model
             return false;
         }
         #endregion
-      
+
     }
 
     // 定义一个事件参数类，用于传递新旧值

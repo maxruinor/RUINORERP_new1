@@ -249,21 +249,12 @@ namespace RUINORERP.Business
 
                     rs = await _unitOfWorkManage.GetDbClient().UpdateNav<tb_SaleOrder>(entity as tb_SaleOrder)
                .Include(m => m.tb_SaleOrderDetails)
-           .Include(m => m.tb_SaleOuts)
-           .Include(m => m.tb_ProductionPlans)
-           .Include(m => m.tb_OrderPackings)
-           .Include(m => m.tb_PurOrders)
            .ExecuteCommandAsync();
                 }
                 else
                 {
                     rs = await _unitOfWorkManage.GetDbClient().InsertNav<tb_SaleOrder>(entity as tb_SaleOrder)
             .Include(m => m.tb_SaleOrderDetails)
-            .Include(m => m.tb_SaleOuts)
-            .Include(m => m.tb_ProductionPlans)
-            .Include(m => m.tb_OrderPackings)
-            .Include(m => m.tb_PurOrders)
-
             .ExecuteCommandAsync();
 
 

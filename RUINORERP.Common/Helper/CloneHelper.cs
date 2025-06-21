@@ -263,7 +263,6 @@ namespace RUINORERP.Common.Helper
         }
 
 
-
         public static T DeepCloneObject<T>(this T source)
         {
             if (source == null)

@@ -35,6 +35,7 @@ using SharpYaml.Tokens;
 using RUINORERP.Business.CommService;
 using System.Web.UI.WebControls;
 using AutoMapper;
+using RUINORERP.Global.EnumExt;
 
 namespace RUINORERP.Business
 {
@@ -88,7 +89,206 @@ namespace RUINORERP.Business
 
         #endregion
 
+        #region 提交 
 
+        /// <summary>
+        /// 提交单据（数据库业务级实现）
+        /// </summary>
+        /// <param name="entity">待提交的实体</param>
+        /// <param name="autoApprove">是否自动审核</param>
+        /// <returns>操作结果</returns>
+        public virtual async Task<ReturnResults<T>> SubmitAsync(T entity, bool autoApprove = false)
+        {
+            var result = new ReturnResults<T>();
+            // 参数验证
+            if (entity == null)
+            {
+                result.ErrorMsg = "提交的实体不能为空";
+                return result;
+            }
+            BaseEntity baseEntity = entity as BaseEntity;
+            // 获取主键值
+            baseEntity.GetPrimaryKeyColName();
+            object primaryKeyValue = ReflectionHelper.GetPropertyValue(entity, baseEntity.PrimaryKeyColName);
+
+            // 检查实体是否已存在
+            bool isNewEntity = primaryKeyValue == null || Convert.ToInt64(primaryKeyValue) <= 0;
+            if (isNewEntity)
+            {
+                result.ErrorMsg = "单据保存成功后再提交。";
+                return result;
+            }
+
+
+            // 获取状态类型和值
+            var statusType = GetStatusType(baseEntity);
+            if (statusType == null)
+            {
+                result.ErrorMsg = "提交的单据状态不能为空";
+                return result;
+            }
+
+            // 动态获取状态值
+            dynamic status = entity.GetPropertyValue(statusType.Name);
+            int statusValue = (int)status;
+            dynamic statusEnum = Enum.ToObject(statusType, statusValue);
+
+            // 检查是否可以提交
+            if (!CanSubmit(statusEnum))
+            {
+                result.ErrorMsg = $"单据当前状态为【{statusEnum}】，无法提交";
+                return result;
+            }
+
+            try
+            {
+                // 更新实体状态
+                UpdateEntityStatus(entity, statusEnum);
+
+                var update = await _unitOfWorkManage.GetDbClient().Updateable<object>()
+                             .AS(typeof(T).Name)
+                             .SetColumns(statusType.Name, statusValue)
+                             .Where(baseEntity.PrimaryKeyColName + "=" + primaryKeyValue).ExecuteCommandAsync();
+                if (update > 0)
+                {
+                    // 自动审核逻辑
+                    if (autoApprove && CanAutoApprove(entity))
+                    {
+                        var approvalResult = await ApprovalAsync(entity);
+                        if (!approvalResult.Succeeded)
+                        {
+                            result.ErrorMsg = $"自动审核失败: {approvalResult.ErrorMsg}";
+                            return result;
+                        }
+                    }
+
+                    // 执行子类特定的提交后逻辑
+                    //更新UI？
+                    await AfterSubmit(entity);
+
+                    result.Succeeded = true;
+                }
+                else
+                {
+                    result.Succeeded = false;
+                }
+
+                result.Succeeded = true;
+                result.ReturnObject = (T)entity;
+                return result;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "提交单据时发生异常");
+                result.ErrorMsg = "提交过程中发生异常，请联系管理员";
+                return result;
+            }
+        }
+
+        /// <summary>
+        /// 更新实体状态为提交
+        /// 由草稿变为确认或待审核
+        /// </summary>
+        private void UpdateEntityStatus<TEnum>(T entity, TEnum status) where TEnum : Enum
+        {
+            var statusName = status.GetType().Name;
+            if (statusName == typeof(DataStatus).Name)
+            {
+                if (ReflectionHelper.ExistPropertyName<T>(typeof(DataStatus).Name))
+                {
+                    ReflectionHelper.SetPropertyValue(entity, typeof(DataStatus).Name, DataStatus.新建);
+                }
+            }
+            else if (statusName == typeof(PrePaymentStatus).Name)
+            {
+                if (ReflectionHelper.ExistPropertyName<T>(typeof(PrePaymentStatus).Name))
+                {
+                    ReflectionHelper.SetPropertyValue(entity, typeof(PrePaymentStatus).Name, PrePaymentStatus.待审核);
+                }
+            }
+            else if (statusName == typeof(ARAPStatus).Name)
+            {
+                if (ReflectionHelper.ExistPropertyName<T>(typeof(ARAPStatus).Name))
+                {
+                    ReflectionHelper.SetPropertyValue(entity, typeof(ARAPStatus).Name, ARAPStatus.待审核);
+                }
+            }
+            else if (statusName == typeof(PaymentStatus).Name)
+            {
+                if (ReflectionHelper.ExistPropertyName<T>(typeof(PaymentStatus).Name))
+                {
+                    ReflectionHelper.SetPropertyValue(entity, typeof(PaymentStatus).Name, PaymentStatus.待审核);
+                }
+            }
+            else
+            {
+                _logger.LogError("基类提交时，没有找到对应的状态类型", "提交单据时发生异常");
+            }
+        }
+
+
+        /// <summary>
+        /// 检查是否可以自动审核
+        /// </summary>
+        protected virtual bool CanAutoApprove(T entity)
+        {
+            // 默认实现：销售订单和采购订单支持自动审核
+            if (entity is tb_SaleOrder saleOrder)
+            {
+                return _appContext.SysConfig.AutoApprovedSaleOrderAmount > 0 &&
+                       saleOrder.TotalAmount <= _appContext.SysConfig.AutoApprovedSaleOrderAmount;
+            }
+
+            if (entity is tb_PurOrder purOrder)
+            {
+                return _appContext.SysConfig.AutoApprovedPurOrderAmount > 0 &&
+                       purOrder.TotalAmount <= _appContext.SysConfig.AutoApprovedPurOrderAmount;
+            }
+
+            return false;
+        }
+
+        public virtual bool CanSubmit<TEnum>(TEnum status) where TEnum : Enum
+        {
+            return status switch
+            {
+                DataStatus dataStatus => dataStatus == DataStatus.草稿,
+                PrePaymentStatus pre => pre == PrePaymentStatus.草稿,
+                ARAPStatus arap => arap == ARAPStatus.草稿,
+                PaymentStatus pay => pay == PaymentStatus.草稿,
+                _ => false
+            };
+        }
+
+        /// <summary>获取实体的状态类型</summary>
+        private Type GetStatusType(BaseEntity entity)
+        {
+            if (entity.ContainsProperty(typeof(DataStatus).Name))
+                return typeof(DataStatus);
+
+            if (entity.ContainsProperty(typeof(PrePaymentStatus).Name))
+                return typeof(PrePaymentStatus);
+
+            if (entity.ContainsProperty(typeof(ARAPStatus).Name))
+                return typeof(ARAPStatus);
+
+            if (entity.ContainsProperty(typeof(PaymentStatus).Name))
+                return typeof(PaymentStatus);
+
+            return null;
+        }
+
+
+        /// <summary>
+        /// 提交后执行的操作（子类可重写）
+        /// </summary>
+        protected virtual Task AfterSubmit(T entity)
+        {
+            // 默认实现为空，子类可重写添加特定逻辑
+            return Task.CompletedTask;
+        }
+
+        #endregion
 
 
 

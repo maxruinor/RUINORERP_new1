@@ -250,7 +250,6 @@ namespace RUINORERP.Business
                              rs = await _unitOfWorkManage.GetDbClient().UpdateNav<tb_FM_Subject>(entity as tb_FM_Subject)
                         .Include(m => m.tb_FM_OtherExpenseDetails)
                     .Include(m => m.tb_FM_ExpenseClaimDetails)
-
                     .Include(m => m.tb_FM_ExpenseTypes)
                     .ExecuteCommandAsync();
                  }
@@ -259,9 +258,7 @@ namespace RUINORERP.Business
                         rs = await _unitOfWorkManage.GetDbClient().InsertNav<tb_FM_Subject>(entity as tb_FM_Subject)
                 .Include(m => m.tb_FM_OtherExpenseDetails)
                 .Include(m => m.tb_FM_ExpenseClaimDetails)
-   
                 .Include(m => m.tb_FM_ExpenseTypes)
-         
                 .ExecuteCommandAsync();
                                           
                      

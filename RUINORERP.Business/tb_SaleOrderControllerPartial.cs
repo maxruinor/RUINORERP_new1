@@ -783,9 +783,10 @@ namespace RUINORERP.Business
                                         tb_FM_PaymentRecord Payment = PaymentList[0];
                                         if (Payment.PaymentStatus == (int)PaymentStatus.草稿 || Payment.PaymentStatus == (int)PaymentStatus.待审核)
                                         {
-
-                                            int PaymentCounter = await _unitOfWorkManage.GetDbClient().Deleteable(Payment).ExecuteCommandAsync();
-                                            if (PaymentCounter > 0)
+                                            var PaymentCounter = await _unitOfWorkManage.GetDbClient().DeleteNav(Payment)
+                                                .Include(c => c.tb_FM_PaymentRecordDetails)
+                                                .ExecuteCommandAsync();
+                                            if (PaymentCounter)
                                             {
                                                 await _unitOfWorkManage.GetDbClient().Deleteable(PrePayment).ExecuteCommandAsync();
                                             }
@@ -1320,7 +1321,7 @@ namespace RUINORERP.Business
                     {
                         //订单取消后，预收款，可以退款可以下一个订单，应收来处理。由财务决定。
                     }
-                   
+
                 }
 
                 #endregion

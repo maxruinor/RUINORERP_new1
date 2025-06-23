@@ -539,6 +539,10 @@ namespace RUINORERP.UI.FM
                     MainForm.Instance.uclog.AddLog("请先配置图片服务器路径", UILogType.错误);
                 }
             }
+            else
+            {
+
+            }
             return true;
         }
 

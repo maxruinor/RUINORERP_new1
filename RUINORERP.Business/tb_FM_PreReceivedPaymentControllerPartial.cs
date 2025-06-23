@@ -86,8 +86,7 @@ namespace RUINORERP.Business
                 //不能直接删除上级。要让对应的人员自己删除。不然不清楚。逻辑也不对。只能通过判断
                 var PaymentRecordlist = await _appContext.Db.Queryable<tb_FM_PaymentRecord>()
                             // .Where(c => (c.PaymentStatus == (int)PaymentStatus.草稿 || c.PaymentStatus == (int)PaymentStatus.待审核))
-                            .Where(c => c.tb_FM_PaymentRecordDetails.Any(d => d.SourceBilllId == entity.PreRPID
-                              && d.SourceBizType == (int)BizType.预收款单))
+                            .Where(c => c.tb_FM_PaymentRecordDetails.Any(d => d.SourceBilllId == entity.PreRPID))
                               .ToListAsync();
                 if (PaymentRecordlist != null && PaymentRecordlist.Count > 0)
                 {
@@ -102,46 +101,32 @@ namespace RUINORERP.Business
                     }
                     else
                     {
-                        //删除对应的由预收款生成的收款单
-                        await _appContext.Db.Deleteable<tb_FM_PaymentRecord>()
-                            .Where(c => c.tb_FM_PaymentRecordDetails.Any(d => d.SourceBilllId == entity.PreRPID
-                              && d.SourceBizType == (int)BizType.预收款单)).ExecuteCommandAsync();
+                        foreach (var item in PaymentRecordlist)
+                        {
+                            //删除对应的由预收款生成的收款单
+                            await _appContext.Db.DeleteNav<tb_FM_PaymentRecord>(item)
+                                .Include(c => c.tb_FM_PaymentRecordDetails)
+                                .ExecuteCommandAsync();
+                        }
+
                     }
 
                 }
 
-
-
-
-                //if (entity.ReceivePaymentType == (int)ReceivePaymentType.收款)
-                //{
-                //    var list = await _appContext.Db.Queryable<tb_FM_PaymentRecord>()
-                //                  .Where(c => (c.PaymentStatus == (int)PaymentStatus.草稿 || c.PaymentStatus == (int)PaymentStatus.待审核)
-                //                  && c.tb_FM_PaymentRecordDetails.Any(d => d.SourceBilllId == entity.PreRPID
-                //                  && d.SourceBizType == (int)BizType.预收款单))
-                //                  .ToListAsync();
-                //}
-                //else
-                //{
-                //    await _appContext.Db.Deleteable<tb_FM_PaymentRecord>()
-                //        .Where(c => (c.PaymentStatus == (int)PaymentStatus.草稿 || c.PaymentStatus == (int)PaymentStatus.待审核)
-                //        && c.tb_FM_PaymentRecordDetails.Any(d => d.SourceBilllId == entity.PreRPID && d.SourceBizType == (int)BizType.预付款单)).ExecuteCommandAsync();
-                //}
-
-
-                entity.PrePaymentStatus = (int)PrePaymentStatus.草稿;
+                entity.PrePaymentStatus = (int)PrePaymentStatus.待审核;
                 entity.ApprovalResults = false;
                 entity.ApprovalStatus = (int)ApprovalStatus.未审核;
                 BusinessHelper.Instance.ApproverEntity(entity);
                 //只更新指定列
-                var result =await _unitOfWorkManage.GetDbClient().Updateable<tb_FM_PreReceivedPayment>(entity).UpdateColumns(it => new { 
-                    it.PrePaymentStatus, 
+                var result = await _unitOfWorkManage.GetDbClient().Updateable<tb_FM_PreReceivedPayment>(entity).UpdateColumns(it => new
+                {
+                    it.PrePaymentStatus,
                     it.ApprovalResults,
                     it.Approver_at,
                     it.Approver_by,
                     it.ApprovalOpinions,
                 }).ExecuteCommandAsync();
-         
+
                 // 注意信息的完整性
                 _unitOfWorkManage.CommitTran();
                 rmrs.Succeeded = true;
@@ -196,9 +181,8 @@ namespace RUINORERP.Business
                     .Includes(c => c.tb_fm_paymentrecord)
                     .Where(c => c.SourceBizType == (int)BizType.预收款单 && c.SourceBilllId == entity.PreRPID)
                     .Where(c => c.tb_fm_paymentrecord.ApprovalStatus == (int)ApprovalStatus.已审核
-                    && c.tb_fm_paymentrecord.ApprovalResults.HasValue
-                    && c.tb_fm_paymentrecord.ApprovalResults.Value
-                    && (c.tb_fm_paymentrecord.PaymentStatus == (int)PaymentStatus.已支付))
+                    && c.tb_fm_paymentrecord.ApprovalResults == true
+                    && c.tb_fm_paymentrecord.PaymentStatus == (int)PaymentStatus.已支付)
                     .ToList();
                 if (records.Count > 0)
                 {
@@ -211,26 +195,27 @@ namespace RUINORERP.Business
                     }
                     return rmrs;
                 }
-                
+                //if (!ValidatePaymentDetails(PendingApprovalDetails, rmrs))
+                //{
+                //    //rmrs.ErrorMsg = "相同业务类型下不能有相同的来源单号!审核失败。";
+                //    rmrs.Succeeded = false;
+                //    rmrs.ReturnObject = entity as T;
+                //    return rmrs;
+                //}
                 // 开启事务，保证数据一致性
                 _unitOfWorkManage.BeginTran();
 
                 tb_FM_PaymentRecord paymentRecord = paymentController.BuildPaymentRecord(entity, false);
                 var rrs = await paymentController.BaseSaveOrUpdateWithChild<tb_FM_PaymentRecord>(paymentRecord, false);
 
-                //预收付款中
-                //确认收到款  应该是收款审核时 反写回来 成 【待核销】
-                //if (paymentRecord.PaymentId > 0)
-                //{
-                //    entity.ForeignBalanceAmount = entity.ForeignPrepaidAmount;
-                //    entity.LocalBalanceAmount = entity.LocalPrepaidAmount;
-                //}
+
                 entity.PrePaymentStatus = (int)PrePaymentStatus.已生效;
                 entity.ApprovalStatus = (int)ApprovalStatus.已审核;
                 entity.ApprovalResults = true;
                 BusinessHelper.Instance.ApproverEntity(entity);
                 //只更新指定列
-                var result = await _unitOfWorkManage.GetDbClient().Updateable<tb_FM_PreReceivedPayment>(entity).UpdateColumns(it => new {
+                var result = await _unitOfWorkManage.GetDbClient().Updateable<tb_FM_PreReceivedPayment>(entity).UpdateColumns(it => new
+                {
                     it.PrePaymentStatus,
                     it.ApprovalResults,
                     it.Approver_at,
@@ -300,7 +285,7 @@ namespace RUINORERP.Business
             //只更新指定列
             // var result = _unitOfWorkManage.GetDbClient().Updateable<tb_Stocktake>(entity).UpdateColumns(it => new { it.FMPaymentStatus, it.ApprovalOpinions }).ExecuteCommand();
             await _unitOfWorkManage.GetDbClient().Updateable<tb_FM_PreReceivedPayment>(entity).ExecuteCommandAsync();
-      
+
             rmrs.Succeeded = true;
             rmrs.ReturnObject = entity as T;
             return rmrs;

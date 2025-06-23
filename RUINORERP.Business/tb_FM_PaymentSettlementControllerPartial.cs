@@ -45,15 +45,10 @@ namespace RUINORERP.Business
         /// </summary>
         /// <param name="entity"></param>
         /// <returns></returns>
-        public async Task<tb_FM_PaymentSettlement> GenerateSettlement(tb_FM_PreReceivedPayment preReceivedPayment, tb_FM_ReceivablePayable receivablePayable)
+        public async Task<tb_FM_PaymentSettlement> GenerateSettlement(tb_FM_PreReceivedPayment preReceivedPayment,
+            tb_FM_ReceivablePayable receivablePayable, decimal SettlementMoney, decimal foreignSettlementMoney)
         {
-            decimal remainingLocal = receivablePayable.LocalBalanceAmount; // 本币剩余待抵扣金额
-            decimal remainingForeign = receivablePayable.ForeignBalanceAmount; // 外币剩余待抵扣金额
 
-            // 可抵扣金额：预收款余额与剩余待抵扣金额的较小值
-            // 计算可抵扣金额（本币优先）
-            decimal localDeduct = Math.Min(preReceivedPayment.LocalBalanceAmount, remainingLocal);
-            decimal foreignDeduct = Math.Min(preReceivedPayment.ForeignBalanceAmount, remainingForeign);
 
             //预收付款单 审核时 自动生成 收付款记录
             #region  生成核销记录
@@ -81,10 +76,10 @@ namespace RUINORERP.Business
             SettlementRecord.Currency_ID = preReceivedPayment.Currency_ID;
             SettlementRecord.ExchangeRate = receivablePayable.ExchangeRate;
             SettlementRecord.CustomerVendor_ID = receivablePayable.CustomerVendor_ID;
-            SettlementRecord.SettledForeignAmount = foreignDeduct;
-            SettlementRecord.SettledLocalAmount = localDeduct;
+            SettlementRecord.SettledForeignAmount = foreignSettlementMoney;
+            SettlementRecord.SettledLocalAmount = SettlementMoney;
             SettlementRecord.IsAutoSettlement = true;
-        
+
             if (SettlementRecord.SettledLocalAmount < 0 || SettlementRecord.SettledForeignAmount < 0)
             {
                 SettlementRecord.SettlementType = (int)SettlementType.红冲核销;
@@ -110,21 +105,21 @@ namespace RUINORERP.Business
         }
 
         /// <summary>
-        /// 应收单转收款
+        /// 应收单转收款（正向核销）
         /// 客户支付账期订单款项，用收款单核销应收单。
         /// </summary>
         /// <param name="entity"></param>
         /// <returns></returns>
-        public async Task<tb_FM_PaymentSettlement> GenerateSettlement(tb_FM_PaymentRecord PaymentRecord, tb_FM_ReceivablePayable receivablePayable)
+        public async Task<tb_FM_PaymentSettlement> GenerateSettlement(tb_FM_PaymentRecord PaymentRecord, tb_FM_PaymentRecordDetail PaymentRecordDetail, tb_FM_ReceivablePayable receivablePayable)
         {
             //预收付款单 审核时 自动生成 收付款记录
             tb_FM_PaymentSettlement SettlementRecord = new tb_FM_PaymentSettlement();
-            SettlementRecord = mapper.Map<tb_FM_PaymentSettlement>(PaymentRecord);
+            SettlementRecord = mapper.Map<tb_FM_PaymentSettlement>(PaymentRecordDetail);
 
             SettlementRecord.ActionStatus = ActionStatus.新增;
             SettlementRecord.IsAutoSettlement = true;
             SettlementRecord.ReceivePaymentType = PaymentRecord.ReceivePaymentType;
-            if (PaymentRecord.ReceivePaymentType == (int)ReceivePaymentType.收款)
+            if (SettlementRecord.ReceivePaymentType == (int)ReceivePaymentType.收款)
             {
                 SettlementRecord.SettlementNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.收款核销);
                 SettlementRecord.SettlementType = (int)SettlementType.收款核销;
@@ -139,17 +134,19 @@ namespace RUINORERP.Business
                 SettlementRecord.SourceBizType = (int)BizType.应付款单;
             }
 
-            SettlementRecord.SettledLocalAmount = PaymentRecord.TotalLocalAmount;
-            SettlementRecord.SettledForeignAmount = PaymentRecord.TotalForeignAmount;
+            SettlementRecord.SettledLocalAmount = PaymentRecordDetail.LocalAmount;
+            SettlementRecord.SettledForeignAmount = PaymentRecordDetail.ForeignAmount; ;
             SettlementRecord.Account_id = PaymentRecord.Account_id;
             if (SettlementRecord.SettledLocalAmount < 0 || SettlementRecord.SettledForeignAmount < 0)
             {
                 SettlementRecord.SettlementType = (int)SettlementType.红冲核销;
             }
+
+            //应收单转收款
             SettlementRecord.SourceBillNo = receivablePayable.ARAPNo;
             SettlementRecord.SourceBillId = receivablePayable.ARAPId;
 
-            SettlementRecord.TargetBillId = PaymentRecord.PaymentId;
+            SettlementRecord.TargetBillId = PaymentRecordDetail.PaymentId;
             SettlementRecord.TargetBillNo = PaymentRecord.PaymentNo;
 
             SettlementRecord.SettleDate = System.DateTime.Now;
@@ -179,7 +176,7 @@ namespace RUINORERP.Business
 
 
 
-     
+
     }
 
 }

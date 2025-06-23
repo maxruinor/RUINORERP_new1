@@ -142,6 +142,7 @@ namespace RUINORERP.UI.FM
                 //因为后面代码去查找时，直接用的 从一个对象中找这个列的值。但是枚举显示的是名称。所以这里直接传入枚举的值。
                 KeyNamePair keyNamePair = new KeyNamePair(((int)((BizType)biztype)).ToString(), tableName.Name);
                 base._UCBillMasterQuery.GridRelated.SetRelatedInfo<tb_FM_PaymentSettlement>(c => c.SourceBillNo, keyNamePair);
+                base._UCBillMasterQuery.GridRelated.SetRelatedInfo<tb_FM_PaymentSettlement>(c => c.TargetBillNo, keyNamePair);
             }
             #endregion
         }

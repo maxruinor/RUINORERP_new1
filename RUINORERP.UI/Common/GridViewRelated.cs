@@ -187,10 +187,8 @@ namespace RUINORERP.UI.Common
             RelatedInfo relatedInfo = new RelatedInfo();
             relatedInfo.SourceTableName = typeof(T1).Name;
             relatedInfo.TargetTableName = TargetTableNameFromField;
-
             relatedInfo.SourceUniqueField = _ExpSourceUniqueField.GetMemberInfo().Name;
-
-            if (!RelatedInfoList.Any(c => c.TargetTableName.Key == TargetTableNameFromField.Key))
+            if (!RelatedInfoList.Any(c => c.TargetTableName.Key == TargetTableNameFromField.Key && c.SourceUniqueField == relatedInfo.SourceUniqueField))
             {
                 RelatedInfoList.Add(relatedInfo);
             }
@@ -422,7 +420,7 @@ namespace RUINORERP.UI.Common
                 //先判断是否多个，合并时会有两个再来根据属性标识去找正确的
                 List<tb_MenuInfo> TargetMenus = MainForm.Instance.MenuList.Where(m => m.IsVisble && m.EntityName == relatedRelationship.TargetTableName.Key
                 && m.BIBaseForm == "BaseBillEditGeneric`2").ToList();
-                    if (TargetMenus.Count > 1)
+                if (TargetMenus.Count > 1)
                 {
                     if (!string.IsNullOrEmpty(TargetMenus[0].BizInterface) && !string.IsNullOrEmpty(TargetMenus[1].BizInterface))
                     {
@@ -778,6 +776,7 @@ namespace RUINORERP.UI.Common
             if (tableName == typeof(tb_FM_PaymentRecord).Name)
             {
                 var obj = MainForm.Instance.AppContext.Db.Queryable<tb_FM_PaymentRecord>()
+                    .Includes(c => c.tb_FM_PaymentRecordDetails)
                     .WhereIF(billno.GetType() == typeof(long), c => c.PaymentId == billno.ToLong())
                     .WhereIF(billno.GetType() == typeof(string), c => c.PaymentNo == billno.ToString())
                     .Single();

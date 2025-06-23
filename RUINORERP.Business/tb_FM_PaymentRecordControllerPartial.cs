@@ -99,7 +99,10 @@ namespace RUINORERP.Business
                 //审核时 要检测明细中对应的相同业务类型下不能有相同来源单号。除非有正负总金额为0对冲情况。或是两行数据?
                 var PendingApprovalDetails = await _appContext.Db.Queryable<tb_FM_PaymentRecordDetail>()
                     .Includes(c => c.tb_fm_paymentrecord)
-                .Where(c => c.tb_fm_paymentrecord.PaymentStatus == (int)PaymentStatus.待审核).ToListAsync();
+                .Where(c => c.tb_fm_paymentrecord.PaymentStatus >= (int)PaymentStatus.待审核).ToListAsync();
+
+                //要把自己也算上。不能大于1
+                PendingApprovalDetails.AddRange(entity.tb_FM_PaymentRecordDetails);
 
                 if (!ValidatePaymentDetails(PendingApprovalDetails, rmrs))
                 {
@@ -331,9 +334,7 @@ namespace RUINORERP.Business
                                 }
 
                                 //生成核销记录
-                                await settlementController.GenerateSettlement(entity, receivablePayable);
-
-                                
+                                await settlementController.GenerateSettlement(entity, RecordDetail, receivablePayable);
                             }
 
                             receivablePayableUpdateList.AddRange(receivablePayableList);
@@ -438,7 +439,7 @@ namespace RUINORERP.Business
                                         // 指向原始记录
                                         entity.ReversedOriginalId = oldPayment.PaymentId;
                                         entity.ReversedOriginalNo = oldPayment.PaymentNo;
-                                  
+
 
                                         #endregion
 
@@ -531,7 +532,7 @@ namespace RUINORERP.Business
                                         #endregion
 
 
-                    
+
 
                                     }
 
@@ -673,7 +674,7 @@ namespace RUINORERP.Business
                         if (Math.Abs(totalLocalAmount) < 0.001m && Math.Abs(totalForeignAmount) < 0.001m)
                             continue;
                     }
-                    returnResults.ErrorMsg = $"待审核的{(ReceivePaymentType)paymentDetails[0].tb_fm_paymentrecord.ReceivePaymentType}单中不能存在({(BizType)groupedByBizType[0].Key}，来源单号为:{groupedByBillNo[0].Key}的相同重复数据。";
+                    returnResults.ErrorMsg = $"{(ReceivePaymentType)paymentDetails[0].tb_fm_paymentrecord.ReceivePaymentType}单中不能存在相同业务来源的数据:{(BizType)groupedByBizType[0].Key}，来源单号为:{groupedByBillNo[0].Key}。";
                     // 其他情况均视为不合法
                     return false;
                 }

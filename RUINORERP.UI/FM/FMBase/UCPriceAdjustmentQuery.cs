@@ -179,7 +179,7 @@ namespace RUINORERP.UI.FM
                 }
 
                 #region 暂时只支持一单一单生成转向指定的单据介面等待用户检查修改
-                tb_FM_ReceivablePayable rr = await paymentController.CreateReceivablePayable(RealList[0]);
+                tb_FM_ReceivablePayable rr = await paymentController.BuildReceivablePayable(RealList[0]);
                 tb_FM_ReceivablePayable receivablePayable = rr;
                 MenuPowerHelper menuPowerHelper;
                 menuPowerHelper = Startup.GetFromFac<MenuPowerHelper>();

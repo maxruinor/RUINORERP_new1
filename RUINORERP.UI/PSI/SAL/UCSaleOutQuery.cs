@@ -39,8 +39,10 @@ namespace RUINORERP.UI.PSI.SAL
         {
             List<EventHandler> ContextClickList = new List<EventHandler>();
             ContextClickList.Add(NewSumDataGridView_转为退货单);
+            ContextClickList.Add(NewSumDataGridView_转为应收款单);
             List<ContextMenuController> list = new List<ContextMenuController>();
             list.Add(new ContextMenuController("【转为退货单】", true, false, "NewSumDataGridView_转为退货单"));
+            list.Add(new ContextMenuController("【转为应收款单】", true, false, "NewSumDataGridView_转为应收款单"));
             return list;
         }
 
@@ -48,6 +50,7 @@ namespace RUINORERP.UI.PSI.SAL
         {
             List<EventHandler> ContextClickList = new List<EventHandler>();
             ContextClickList.Add(NewSumDataGridView_转为退货单);
+            ContextClickList.Add(NewSumDataGridView_转为应收款单);
             List<ContextMenuController> list = new List<ContextMenuController>();
             list = AddContextMenu();
 
@@ -101,6 +104,69 @@ namespace RUINORERP.UI.PSI.SAL
                 }
             }
         }
+
+        private async void NewSumDataGridView_转为应收款单(object sender, EventArgs e)
+        {
+            List<tb_SaleOut> selectlist = GetSelectResult();
+            if (selectlist.Count > 1)
+            {
+                MessageBox.Show("每次只能选择一个【销售出库单】转成【应收款单】");
+                return;
+            }
+            List<tb_SaleOut> RealList = new List<tb_SaleOut>();
+            StringBuilder msg = new StringBuilder();
+            int counter = 1;
+            foreach (var item in selectlist)
+            {
+                //只有审核状态才可以转换为应收
+                bool canConvert = item.DataStatus == (long)DataStatus.确认 && item.ApprovalStatus == (int)ApprovalStatus.已审核 && item.ApprovalResults.HasValue && item.ApprovalResults.Value;
+                if (canConvert)
+                {
+                    RealList.Add(item);
+                }
+                else
+                {
+                    msg.Append(counter.ToString() + ") ");
+                    msg.Append($"当前销售出库单 {item.SaleOutNo}状态为【 {((DataStatus)item.DataStatus).ToString()}】 无法生【应收款单】。").Append("\r\n");
+                    counter++;
+                }
+            }
+            
+            if (msg.ToString().Length > 0)
+            {
+                MessageBox.Show(msg.ToString(), "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                if (RealList.Count == 0)
+                {
+                    return;
+                }
+            }
+
+            if (RealList.Count == 0)
+            {
+                msg.Append("请至少选择一行数据转为【应收款单】");
+                MessageBox.Show(msg.ToString(), "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            var ReceivablePayableController = MainForm.Instance.AppContext.GetRequiredService<tb_FM_ReceivablePayableController<tb_FM_ReceivablePayable>>();
+            tb_FM_ReceivablePayable ReceivablePayable = await ReceivablePayableController.BuildReceivablePayable(RealList[0], false);
+            MenuPowerHelper menuPowerHelper;
+            menuPowerHelper = Startup.GetFromFac<MenuPowerHelper>();
+            string Flag = string.Empty;
+            //红冲收款
+            Flag = typeof(RUINORERP.UI.FM.UCReceivable).FullName;
+
+            tb_MenuInfo RelatedMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble
+                        && m.EntityName == nameof(tb_FM_ReceivablePayable)
+                        && m.BIBaseForm == "BaseBillEditGeneric`2" && m.ClassPath == Flag)
+            .FirstOrDefault();
+            if (RelatedMenuInfo != null)
+            {
+                menuPowerHelper.ExecuteEvents(RelatedMenuInfo, ReceivablePayable);
+            }
+
+        }
+
         public override void SetGridViewDisplayConfig()
         {
             //base.SetRelatedBillCols<tb_SaleOrder>(c => c.SOrderNo, r => r.SaleOrderNo);

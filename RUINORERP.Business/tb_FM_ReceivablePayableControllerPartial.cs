@@ -81,24 +81,25 @@ namespace RUINORERP.Business
 
                 // 开启事务，保证数据一致性
                 _unitOfWorkManage.BeginTran();
-                //应收应付 审核只是业务性确认，不会产生收会款单。通过对账单 确认，客户付款了才会产生付款单 应收右键生成收款单
-                ////注意，反审是将只有收款单没有审核前，删除
-                ////删除
-                //if (entity.ReceivePaymentType == (int)ReceivePaymentType.收款)
-                //{
-                //    await _appContext.Db.Deleteable<tb_FM_PaymentRecord>().Where(c => c.SourceBilllID == entity.ARAPId && c.BizType == (int)BizType.应收单).ExecuteCommandAsync();
-                //}
-                //else
-                //{
-                //    await _appContext.Db.Deleteable<tb_FM_PaymentRecord>().Where(c => c.SourceBilllID == entity.ARAPId && c.BizType == (int)BizType.应付单).ExecuteCommandAsync();
-                //}
-                entity.ARAPStatus = (int)ARAPStatus.草稿;
+
+                //反核销？
+
+                entity.ARAPStatus = (int)ARAPStatus.待审核;
                 entity.ApprovalResults = false;
                 entity.ApprovalStatus = (int)ApprovalStatus.未审核;
                 BusinessHelper.Instance.ApproverEntity(entity);
                 //只更新指定列
-                await _unitOfWorkManage.GetDbClient().Updateable<tb_FM_ReceivablePayable>(entity).ExecuteCommandAsync();
-                //rmr = await ctr.BaseSaveOrUpdate(EditEntity);
+                var result = await _unitOfWorkManage.GetDbClient().Updateable(entity).UpdateColumns(it => new
+                {
+                    it.ForeignPaidAmount,
+                    it.LocalPaidAmount,
+                    it.ForeignBalanceAmount,
+                    it.LocalBalanceAmount,
+                    it.ARAPStatus,
+                    it.ApprovalStatus,
+                    it.ApprovalResults,
+                    it.ApprovalOpinions
+                }).ExecuteCommandAsync();
                 // 注意信息的完整性
                 _unitOfWorkManage.CommitTran();
                 rmrs.Succeeded = true;
@@ -142,6 +143,25 @@ namespace RUINORERP.Business
                     rmrs.ErrorMsg = "只有待审核状态的应收款单才可以审核";
                     return rmrs;
                 }
+                //应收款中不能存在相同的来源的 正数金额的出库单的应收数据
+                //一个出库不能多次应收。一个出库一个应收（负数除外）。一个应收可以多次收款来抵扣
+
+                //审核时 要检测明细中对应的相同业务类型下不能有相同来源单号。除非有正负总金额为0对冲情况。或是两行数据?
+                var PendingApprovalReceivablePayable = await _appContext.Db.Queryable<tb_FM_ReceivablePayable>()
+                    .Includes(c => c.tb_FM_ReceivablePayableDetails)
+                .Where(c => c.ARAPStatus >= (int)ARAPStatus.待支付)
+                .ToListAsync();
+
+                //要把自己也算上。不能大于1
+                PendingApprovalReceivablePayable.Add(entity);
+
+                if (!ValidatePaymentDetails(PendingApprovalReceivablePayable, rmrs))
+                {
+                    //rmrs.ErrorMsg = "相同业务类型下不能有相同的来源单号!审核失败。";
+                    rmrs.Succeeded = false;
+                    rmrs.ReturnObject = entity as T;
+                    return rmrs;
+                }
 
                 //出库入库时生成应收。。其它业务审核确认这个就生效。
                 /*             
@@ -153,23 +173,13 @@ namespace RUINORERP.Business
                 8. 工作流触发	触发后续流程（如收款计划提醒、账期到期预警）	业务提醒与自动化
                  */
 
-                //确认收到款  应该是收款审核时 反写回来 成 【待核销】
-                //if (paymentRecord.PaymentId > 0)
-                //{
-                //    entity.ForeignBalanceAmount = entity.ForeignPrepaidAmount;
-                //    entity.LocalBalanceAmount = entity.LocalPrepaidAmount;
-                //}
-
-                //一、审核触发的主要数据逻辑
-                //以下通过表格形式总结审核应收单时的关键操作：
-
-
-
                 // 开启事务，保证数据一致性
                 _unitOfWorkManage.BeginTran();
 
+                //去核销预收付表
                 bool rs = await ApplyAutoPaymentAllocation(entity, false);
 
+                entity.ARAPStatus = (int)ARAPStatus.待支付;
                 entity.ApprovalStatus = (int)ApprovalStatus.已审核;
                 entity.ApprovalResults = true;
 
@@ -204,6 +214,54 @@ namespace RUINORERP.Business
         }
 
 
+        /// <summary>
+        /// 审核及之后的状态的应收付款中，不能有相同业务单号的数据存在。除非正负红冲情况
+        /// </summary>
+        /// <param name="ReceivablePayables"></param>
+        /// <param name="returnResults"></param>
+        /// <returns></returns>
+        public static bool ValidatePaymentDetails(List<tb_FM_ReceivablePayable> ReceivablePayables, ReturnResults<T> returnResults = null)
+        {
+            // 按来源业务类型分组
+            var groupedByBizType = ReceivablePayables
+                .GroupBy(d => d.SourceBizType)
+                .ToList();
+
+            foreach (var bizTypeGroup in groupedByBizType)
+            {
+                // 按来源单号分组
+                var groupedByBillNo = bizTypeGroup
+                    .GroupBy(d => d.SourceBillNo)
+                    .ToList();
+
+                foreach (var billNoGroup in groupedByBillNo)
+                {
+                    var items = billNoGroup.ToList();
+
+                    // 如果只有一条记录，直接通过
+                    if (items.Count == 1)
+                        continue;
+
+                    // 如果有两条记录，检查是否为对冲情况
+                    if (items.Count == 2)
+                    {
+                        // 计算本币金额总和
+                        decimal totalLocalAmount = items.Sum(i => i.TotalLocalPayableAmount);
+                        // 计算外币金额总和
+                        decimal totalForeignAmount = items.Sum(i => i.TotalForeignPayableAmount);
+
+                        // 检查是否满足对冲条件（总和接近0，考虑浮点数精度问题）
+                        if (Math.Abs(totalLocalAmount) < 0.001m && Math.Abs(totalForeignAmount) < 0.001m)
+                            continue;
+                    }
+                    returnResults.ErrorMsg = $"应{(ReceivePaymentType)ReceivablePayables[0].ReceivePaymentType}单中不能存在相同业务来源的数据：{(BizType)groupedByBizType[0].Key}，单号为:{groupedByBillNo[0].Key}。";
+                    // 其他情况均视为不合法
+                    return false;
+                }
+            }
+
+            return true;
+        }
 
 
         /// <summary>
@@ -380,7 +438,7 @@ namespace RUINORERP.Business
         /// </summary>
         /// <param name="entity">返回应收付款单给UI进一步检查</param>
         /// <returns></returns>
-        public async Task<tb_FM_ReceivablePayable> CreateReceivablePayable(tb_FM_PriceAdjustment entity)
+        public async Task<tb_FM_ReceivablePayable> BuildReceivablePayable(tb_FM_PriceAdjustment entity)
         {
 
             #region 创建应收款单
@@ -527,23 +585,7 @@ namespace RUINORERP.Business
             payable.ARAPStatus = (int)ARAPStatus.待审核;
 
             #endregion
-            //var ctrpay = _appContext.GetRequiredServiceByName<BaseController<tb_FM_ReceivablePayable>>(typeof(T).Name + "Controller");
-            //ReturnMainSubResults<tb_FM_ReceivablePayable> rmr = await ctrpay.BaseSaveOrUpdateWithChild<tb_FM_ReceivablePayable>(payable);
-            //if (rmr.Succeeded)
-            //{
-            //    var paybalbe = rmr.ReturnObject as tb_FM_ReceivablePayable;
-            //    paybalbe.ApprovalOpinions = "自动审核通过";
-            //    ReturnResults<tb_FM_ReceivablePayable> rr = await ctrpay.ApprovalAsync(paybalbe);
-            //    if (rr.Succeeded)
-            //    {
-            //        return rmr;
-            //    }
-            //    else
-            //    {
-            //rmr.Succeeded = false;
-            //        rmr.ErrorMsg = rr.ErrorMsg;
-            //    }
-            //}
+
             return payable;
         }
 
@@ -607,7 +649,7 @@ namespace RUINORERP.Business
                         //};
                       */
                         // 3. 生成核销记录
-                        await settlementController.GenerateSettlement(prePayment, entity);
+                        await settlementController.GenerateSettlement(prePayment, entity, localDeduct, foreignDeduct);
 
                         // 更新预收款状态
                         if (prePayment.LocalBalanceAmount == 0)

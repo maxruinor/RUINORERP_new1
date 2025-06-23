@@ -297,7 +297,7 @@ namespace RUINORERP.Model
         /// 核销日期
         /// </summary>
         [AdvQueryAttribute(ColName = "SettleDate",ColDesc = "核销日期")] 
-        [SugarColumn(ColumnDataType = "date", SqlParameterDbType ="DateTime",  ColumnName = "SettleDate" ,IsNullable = false,ColumnDescription = "核销日期" )]
+        [SugarColumn(ColumnDataType = "datetime", SqlParameterDbType ="DateTime",  ColumnName = "SettleDate" ,IsNullable = false,ColumnDescription = "核销日期" )]
         public DateTime SettleDate
         { 
             get{return _SettleDate;}

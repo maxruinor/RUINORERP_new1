@@ -41,25 +41,29 @@ namespace RUINORERP.Business.Processor
         public override QueryFilter GetQueryFilter()
         {
             QueryFilter queryFilter = new QueryFilter();
+
+
             queryFilter.SetQueryField<tb_FM_PaymentSettlement>(c => c.SourceBillNo);
+
+            queryFilter.SetQueryField<tb_FM_PaymentSettlement>(c => c.TargetBillNo);
+
+            
+            //没有限制了。这里应该是财务才能看
             var lambda = Expressionable.Create<tb_CustomerVendor>()
                        .And(t => t.isdeleted == false)
                        .And(t => t.Is_enabled == true)
                        .ToExpression();
             queryFilter.SetQueryField<tb_FM_PaymentSettlement, tb_CustomerVendor>(c => c.CustomerVendor_ID, lambda);
             //可以根据关联外键自动加载条件，条件用公共虚方法
-     
-        
-  
-            queryFilter.SetQueryField<tb_FM_PaymentSettlement>(c => c.SourceBizType, QueryFieldType.CmbEnum, typeof(BizType));
+
             queryFilter.SetQueryField<tb_FM_PaymentSettlement>(c => c.SourceBizType, QueryFieldType.CmbEnum, typeof(BizType));
             queryFilter.SetQueryField<tb_FM_PaymentSettlement>(c => c.TargetBizType, QueryFieldType.CmbEnum, typeof(BizType));
     
             queryFilter.SetQueryField<tb_FM_PaymentSettlement>(c => c.Account_id);
-
-
+            queryFilter.SetQueryField<tb_FM_PaymentSettlement>(c => c.IsReversed);
+        
             queryFilter.SetQueryFieldByAlias<tb_FM_PaymentSettlement, tb_Currency>(a => a.Currency_ID, null, b => b.Currency_ID, b => b.CurrencyName);
-            
+            queryFilter.SetQueryField<tb_FM_PaymentSettlement>(c => c.SettlementType, QueryFieldType.CmbEnum, typeof(SettlementType));
 
             queryFilter.SetQueryField<tb_FM_PaymentSettlement>(c => c.SettleDate, false);
 

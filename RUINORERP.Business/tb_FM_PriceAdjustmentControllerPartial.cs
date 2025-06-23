@@ -135,7 +135,7 @@ namespace RUINORERP.Business
                 else
                 {
                     //生成应收应付，如果是采购后面生成付款单，则会影响入库成本哦。销售则影响利润哦。
-                    tb_FM_ReceivablePayable payable = await paymentController.CreateReceivablePayable(entity);
+                    tb_FM_ReceivablePayable payable = await paymentController.BuildReceivablePayable(entity);
                     ReturnMainSubResults<tb_FM_ReceivablePayable> rmr = await paymentController.BaseSaveOrUpdateWithChild<tb_FM_ReceivablePayable>(payable, false);
                     if (rmr.Succeeded)
                     {

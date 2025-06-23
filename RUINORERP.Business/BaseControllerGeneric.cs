@@ -109,8 +109,8 @@ namespace RUINORERP.Business
             }
             BaseEntity baseEntity = entity as BaseEntity;
             // 获取主键值
-            baseEntity.GetPrimaryKeyColName();
-            object primaryKeyValue = ReflectionHelper.GetPropertyValue(entity, baseEntity.PrimaryKeyColName);
+            string PrimaryKeyColName = baseEntity.GetPrimaryKeyColName();
+            object primaryKeyValue = ReflectionHelper.GetPropertyValue(entity, PrimaryKeyColName);
 
             // 检查实体是否已存在
             bool isNewEntity = primaryKeyValue == null || Convert.ToInt64(primaryKeyValue) <= 0;
@@ -149,7 +149,7 @@ namespace RUINORERP.Business
                 var update = await _unitOfWorkManage.GetDbClient().Updateable<object>()
                              .AS(typeof(T).Name)
                              .SetColumns(statusType.Name, currentStatusValue)
-                             .Where(baseEntity.PrimaryKeyColName + "=" + primaryKeyValue).ExecuteCommandAsync();
+                             .Where(PrimaryKeyColName + "=" + primaryKeyValue).ExecuteCommandAsync();
                 if (update > 0)
                 {
                     // 自动审核逻辑

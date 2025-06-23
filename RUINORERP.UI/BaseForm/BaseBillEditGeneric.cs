@@ -3756,6 +3756,10 @@ namespace RUINORERP.UI.BaseForm
 
                 return true;
             }
+            else
+            {
+                return false;
+            }
 
             MainForm.Instance.uclog.AddLog($"提交失败: {result.ErrorMsg}", UILogType.错误);
             return false;

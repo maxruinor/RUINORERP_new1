@@ -613,20 +613,21 @@ namespace RUINORERP.Model
 
 
 
-        [SugarColumn(IsIgnore = true)]
-        /// <summary>
-        /// 主键值列名
-        /// </summary>
-        [Browsable(false)]
-        public string PrimaryKeyColName { get; set; }
+        //[SugarColumn(IsIgnore = true)]
+        ///// <summary>
+        ///// 主键值列名
+        ///// </summary>
+        //[Browsable(false)]
+        //public string PrimaryKeyColName { get; set; }
 
 
         public string GetPrimaryKeyColName()
         {
-            if (!string.IsNullOrEmpty(PrimaryKeyColName))
-            {
-                return PrimaryKeyColName;
-            }
+            //if (!string.IsNullOrEmpty(PrimaryKeyColName))
+            //{
+            //    return PrimaryKeyColName;
+            //}
+            string PrimaryKeyColName = string.Empty;
             // 获取需要跟踪的属性列表（使用缓存）
             var properties = GetCachedProperties();
             // 记录所有需要跟踪的属性的当前值

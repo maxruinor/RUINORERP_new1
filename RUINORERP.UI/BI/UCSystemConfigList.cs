@@ -80,6 +80,12 @@ namespace RUINORERP.UI.BI
                     await base.Save();
                 }
             }
+
+            if (list.Count==1)
+            {
+                MainForm.Instance.AppContext.SysConfig = list[0];
+            }
+
             return list.ToList();
         }
 

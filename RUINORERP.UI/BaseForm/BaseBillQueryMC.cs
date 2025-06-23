@@ -588,7 +588,8 @@ namespace RUINORERP.UI.BaseForm
                     if (dataStatus == DataStatus.新建 || dataStatus == DataStatus.草稿)
                     {
                         BaseController<M> ctr = Startup.GetFromFacByName<BaseController<M>>(typeof(M).Name + "Controller");
-                        object PKValue = item.GetPropertyValue(UIHelper.GetPrimaryKeyColName(typeof(M)));
+                        string PKColName = UIHelper.GetPrimaryKeyColName(typeof(M));
+                        object PKValue = item.GetPropertyValue(PKColName);
 
                         bool rs = await ctr.BaseDeleteByNavAsync(item as M);
                         //bool rs = await ctr.BaseDeleteAsync(item);
@@ -596,9 +597,17 @@ namespace RUINORERP.UI.BaseForm
                         {
                             //删除远程图片及本地图片
                             //await DeleteRemoteImages();
-
+                            MainForm.Instance.AuditLogHelper.CreateAuditLog<M>("删除", item);
                             counter++;
-                            MainForm.Instance.logger.LogInformation($"查询列表中删除:{typeof(M).Name}，主键值：{PKValue.ToString()} ");
+                
+                            for (global::System.Int32 i = 0; i < this._UCBillMasterQuery.bindingSourceMaster.Count; i++)
+                            {
+                                if (this._UCBillMasterQuery.bindingSourceMaster[i] is M && this._UCBillMasterQuery.bindingSourceMaster[i].GetPropertyValue(PKColName).ToString() == PKValue.ToString())
+                                {
+                                    this._UCBillMasterQuery.bindingSourceMaster.Remove(this._UCBillMasterQuery.bindingSourceMaster[i]);
+                                }
+                            }
+                           
                         }
                     }
                     else
@@ -926,119 +935,6 @@ namespace RUINORERP.UI.BaseForm
         }
 
 
-        public ApprovalEntity BatchApproval(List<M> EditEntitys)
-        {
-            //如果已经审核并且审核通过，则不能再次审核
-            ApprovalEntity ae = new ApprovalEntity();
-            if (EditEntitys == null)
-            {
-                return null;
-            }
-            if (EditEntitys.Count == 0)
-            {
-                return null;
-            }
-            BillConverterFactory bcf = Startup.GetFromFac<BillConverterFactory>();
-            CommonUI.frmApproval frm = new CommonUI.frmApproval();
-            string PKCol = BaseUIHelper.GetEntityPrimaryKey<M>();
-            long pkid = 0;
-            CommBillData cbd = new CommBillData();
-            pkid = (long)ReflectionHelper.GetPropertyValue(EditEntitys[0], PKCol);
-            cbd = bcf.GetBillData<M>(EditEntitys[0] as M);
-            ae.BillID = pkid;
-            if (EditEntitys.Count > 1)
-            {
-                ae.BillNo = "批量审核";
-                ae.ApprovalOpinions = "批量审核";
-            }
-            else
-            {
-                ae.BillNo = cbd.BillNo;
-            }
-            ae.bizType = cbd.BizType;
-            ae.bizName = cbd.BizName;
-            ae.Approver_by = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID;
-            //  await Task.Delay(1);
-            frm.BindData(ae);
-            if (frm.ShowDialog() == DialogResult.OK)//审核了。不管是同意还是不同意
-            {
-                //审核了。数据状态要更新为
-                foreach (var entity in EditEntitys)
-                {
-                    entity.SetPropertyValue(typeof(DataStatus).Name, (int)DataStatus.确认);
-                    //中间中的所有字段，都给值到单据主表中，后面需要处理审核历史这种再完善
-                    PropertyInfo[] array_property = ae.GetType().GetProperties();
-                    {
-                        foreach (var property in array_property)
-                        {
-                            if (ReflectionHelper.ExistPropertyName<M>(property.Name))
-                            {
-                                object aeValue = ReflectionHelper.GetPropertyValue(ae, property.Name);
-                                ReflectionHelper.SetPropertyValue(entity, property.Name, aeValue);
-                            }
-                        }
-                    }
-                }
-
-            }
-            return ae;
-        }
-
-        private ApprovalEntity SingleApproval(object EditEntity)
-        {
-            //如果已经审核并且审核通过，则不能再次审核
-            ApprovalEntity ae = new ApprovalEntity();
-            if (EditEntity == null)
-            {
-                return null;
-            }
-            BillConverterFactory bcf = Startup.GetFromFac<BillConverterFactory>();
-
-            CommonUI.frmApproval frm = new CommonUI.frmApproval();
-            string PKCol = BaseUIHelper.GetEntityPrimaryKey<M>();
-            long pkid = (long)ReflectionHelper.GetPropertyValue(EditEntity, PKCol);
-            ae.BillID = pkid;
-            CommBillData cbd = bcf.GetBillData<M>(EditEntity as M);
-            ae.BillNo = cbd.BillNo;
-            ae.bizType = cbd.BizType;
-            ae.bizName = cbd.BizName;
-            ae.Approver_by = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID;
-            RevertCommand command = new RevertCommand();
-            //缓存当前编辑的对象。如果撤销就回原来的值
-            M oldobj = CloneHelper.DeepCloneObject<M>(EditEntity);
-            frm.BindData(ae);
-            command.UndoOperation = delegate ()
-            {
-                //Undo操作会执行到的代码 意思是如果退审核，内存中审核的数据要变为空白（之前的样子）
-                CloneHelper.SetValues<M>(EditEntity, oldobj);
-            };
-            //  await Task.Delay(1);
-            if (frm.ShowDialog() == DialogResult.OK)//审核了。不管是同意还是不同意
-            {
-                //审核了。数据状态要更新为
-                EditEntity.SetPropertyValue(typeof(DataStatus).Name, (int)DataStatus.确认);
-                //中间中的所有字段，都给值到单据主表中，后面需要处理审核历史这种再完善
-                PropertyInfo[] array_property = ae.GetType().GetProperties();
-                {
-                    foreach (var property in array_property)
-                    {
-                        if (ReflectionHelper.ExistPropertyName<M>(property.Name))
-                        {
-                            object aeValue = ReflectionHelper.GetPropertyValue(ae, property.Name);
-                            ReflectionHelper.SetPropertyValue(EditEntity, property.Name, aeValue);
-                        }
-                    }
-                }
-            }
-            else
-            {
-                //用户退出审核，
-                command.Undo();
-            }
-            return ae;
-
-        }
-
 
 
         protected frmFormProperty frm = null;
@@ -1131,7 +1027,7 @@ namespace RUINORERP.UI.BaseForm
                                 timerPickerGroup.dtp2.Checked = false;
                             }
                         }
-                        
+
                         //KryptonDateTimePicker dtp = _UCBillQueryCondition.kryptonPanelQuery.Controls.Find(item.FieldName + "_Start", true) as KryptonDateTimePicker;
                         //if (dtp != null)
                         //{
@@ -1165,28 +1061,73 @@ namespace RUINORERP.UI.BaseForm
                 }
 
 
-                //传入查询对象的实例，
-                foreach (ConditionalModel item in nodeParameter.conditionals)
+                //传入查询对象的实例，有两种情况，一种是直接指定的条件。一种是 后面重新组合的  主要是 or， 如 应收中的部分支付和待支付都是要回款的。
+
+                if (nodeParameter.conditionals is List<IConditionalModel>)
                 {
-                    if (item.ConditionalType == ConditionalType.Equal)
+                    if (nodeParameter.conditionals[0] is ConditionalCollections)
                     {
-                        switch (item.CSharpTypeName)
+                        #region 组合查询
+                        for (int i = 0; i < nodeParameter.conditionals.Count; i++)
                         {
-                            case "int":
-                                QueryDto.SetPropertyValue(item.FieldName, item.FieldValue.ToInt());
-                                break;
-                            case "long":
-                                QueryDto.SetPropertyValue(item.FieldName, item.FieldValue.ToLong());
-                                break;
-                            case "bool":
-                                QueryDto.SetPropertyValue(item.FieldName, item.FieldValue.ToBool());
-                                break;
-                            default:
-                                QueryDto.SetPropertyValue(item.FieldName, item.FieldValue);
-                                break;
+                            ConditionalCollections ccs = nodeParameter.conditionals[i] as ConditionalCollections;
+                            for (int c = 0; c < ccs.ConditionalList.Count; c++)
+                            {
+                                ConditionalModel item = ccs.ConditionalList[c].Value;
+                                if (item.ConditionalType == ConditionalType.Equal)
+                                {
+                                    switch (item.CSharpTypeName)
+                                    {
+                                        case "int":
+                                            QueryDto.SetPropertyValue(item.FieldName, item.FieldValue.ToInt());
+                                            break;
+                                        case "long":
+                                            QueryDto.SetPropertyValue(item.FieldName, item.FieldValue.ToLong());
+                                            break;
+                                        case "bool":
+                                            QueryDto.SetPropertyValue(item.FieldName, item.FieldValue.ToBool());
+                                            break;
+                                        default:
+                                            QueryDto.SetPropertyValue(item.FieldName, item.FieldValue);
+                                            break;
+                                    }
+                                }
+
+                            }
+
                         }
+                        #endregion
                     }
+                    else
+                    {
+                        #region 直接查询
+                        foreach (ConditionalModel item in nodeParameter.conditionals)
+                        {
+                            if (item.ConditionalType == ConditionalType.Equal)
+                            {
+                                switch (item.CSharpTypeName)
+                                {
+                                    case "int":
+                                        QueryDto.SetPropertyValue(item.FieldName, item.FieldValue.ToInt());
+                                        break;
+                                    case "long":
+                                        QueryDto.SetPropertyValue(item.FieldName, item.FieldValue.ToLong());
+                                        break;
+                                    case "bool":
+                                        QueryDto.SetPropertyValue(item.FieldName, item.FieldValue.ToBool());
+                                        break;
+                                    default:
+                                        QueryDto.SetPropertyValue(item.FieldName, item.FieldValue);
+                                        break;
+                                }
+                            }
+                        }
+                        #endregion
+                    }
+
                 }
+
+
 
             }
 

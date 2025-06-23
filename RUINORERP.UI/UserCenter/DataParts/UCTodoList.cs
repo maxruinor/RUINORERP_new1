@@ -376,7 +376,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
 
 
 
-  
+
 
         private async Task<TreeNode> ProcessBizTypeNodeAsync(BizType bizType)
         {
@@ -470,7 +470,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
                     break;
                 case BizType.销售订单:
                     var grouplist = _conditionBuilderFactory.GetSalesOrderSpecialConditions();
-               
+
                     conditionGroups.AddRange(grouplist);
 
                     break;
@@ -592,6 +592,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
 
         /// <summary>
         /// 构建组合查询条件（使用OR连接不同状态组: 小组第一项目用or，第二项开始就用and）
+        /// 为了减少查询次数。特意将分组的条件 用or全部查出来。最后内存中再分开。
         /// </summary>
         /// <param name="conditionGroups"></param>
         /// <returns></returns>
@@ -602,26 +603,65 @@ namespace RUINORERP.UI.UserCenter.DataParts
             {
                 var combinedStatusCondition = new ConditionalCollections();
                 List<KeyValuePair<WhereType, ConditionalModel>> ConditionalList = new List<KeyValuePair<WhereType, ConditionalModel>>();
-                var conditions = item.Conditions.Cast<ConditionalModel>().ToList();
-                for (int i = 0; i < conditions.Count; i++)
+                if (item.Conditions.Count > 0)
                 {
-                    var conditionalModel = new ConditionalModel()
+                    if (item.Conditions[0] is ConditionalCollections)
                     {
-                        FieldName = conditions[i].FieldName,
-                        ConditionalType = ConditionalType.Equal,
-                        FieldValue = conditions[i].FieldValue
-                    };
-                    if (i == 0)
-                    {
-                        ConditionalList.Add(new KeyValuePair<WhereType, ConditionalModel>(WhereType.Or, conditionalModel));
+
+                        #region 已经是组合条件
+
+                        for (int i = 0; i < item.Conditions.Count; i++)
+                        {
+                            ConditionalCollections ccs = item.Conditions[i] as ConditionalCollections;
+                            for (int c = 0; c < ccs.ConditionalList.Count; c++)
+                            {
+                                //如果是第一个条件是。要转为or 因为要将按组的条件 合在一起查
+                                if (ccs.ConditionalList[c].Key == WhereType.And && c == 0)
+                                {
+                                    KeyValuePair<WhereType, ConditionalModel> kv = new KeyValuePair<WhereType, ConditionalModel>(WhereType.Or, ccs.ConditionalList[c].Value);
+                                    ConditionalList.Add(kv);
+                                }
+                                else
+                                {
+                                    KeyValuePair<WhereType, ConditionalModel> kv = new KeyValuePair<WhereType, ConditionalModel>(ccs.ConditionalList[c].Key, ccs.ConditionalList[c].Value);
+                                    ConditionalList.Add(kv);
+                                }
+
+                            }
+
+                        }
+                        combinedStatusCondition.ConditionalList = ConditionalList;
+                        conModels.Add(combinedStatusCondition);
+                        #endregion
                     }
                     else
                     {
-                        ConditionalList.Add(new KeyValuePair<WhereType, ConditionalModel>(WhereType.And, conditionalModel));
+                        var conditions = item.Conditions.Cast<ConditionalModel>().ToList();
+                        for (int i = 0; i < conditions.Count; i++)
+                        {
+                            var conditionalModel = new ConditionalModel()
+                            {
+                                FieldName = conditions[i].FieldName,
+                                ConditionalType = ConditionalType.Equal,
+                                FieldValue = conditions[i].FieldValue
+                            };
+                            if (i == 0)
+                            {
+                                ConditionalList.Add(new KeyValuePair<WhereType, ConditionalModel>(WhereType.Or, conditionalModel));
+                            }
+                            else
+                            {
+                                ConditionalList.Add(new KeyValuePair<WhereType, ConditionalModel>(WhereType.And, conditionalModel));
+                            }
+                        }
+                        combinedStatusCondition.ConditionalList = ConditionalList;
+                        conModels.Add(combinedStatusCondition);
+
                     }
+
                 }
-                combinedStatusCondition.ConditionalList = ConditionalList;
-                conModels.Add(combinedStatusCondition);
+
+
             }
             return conModels;
         }
@@ -630,6 +670,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
         #region 构建查询条件
 
 
+        /*
         /// <summary>
         /// 公共查询
         /// </summary>
@@ -785,7 +826,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
 
             conditions.Add("未审核", conModel未审核);
 
-          
+
 
             return conditions;
         }
@@ -838,13 +879,13 @@ namespace RUINORERP.UI.UserCenter.DataParts
             }
         };
         }
-
+           */
         #endregion
 
- 
 
 
-  
+
+
         #region new
 
 
@@ -926,7 +967,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
         {
             foreach (var group in conditionGroups)
             {
-                if (BizType.预收款单 == bizType)
+                if (BizType.应收款单 == bizType)
                 {
 
                 }

@@ -63,6 +63,10 @@ namespace RUINORERP.Business
                 entity.SetPropertyValue("Created_by", curUser?.Id);
             if (entity.ContainsProperty("isdeleted"))
                 entity.SetPropertyValue("isdeleted", false);
+            if (entity.ContainsProperty("PrintStatus"))
+                entity.SetPropertyValue("PrintStatus", 0);
+
+
         }
 
 
@@ -79,6 +83,23 @@ namespace RUINORERP.Business
                 entity.SetPropertyValue("Modified_by", curUser?.Id);
         }
 
+        public void ClearEntityEditInfo(object entity)
+        {
+            try
+            {
+                var curUser = _appContext.CurUserInfo;
+                if (entity.ContainsProperty("Modified_at"))
+                    entity.SetPropertyValue("Modified_at", null);
+                if (entity.ContainsProperty("Modified_by"))
+                    entity.SetPropertyValue("Modified_by", null);
+            }
+            catch (Exception ex)
+            {
+
+            }
+        }
+
+
         /// <summary>
         /// 审核单据信息
         /// </summary>
@@ -91,6 +112,24 @@ namespace RUINORERP.Business
             if (entity.ContainsProperty("Approver_by"))
                 entity.SetPropertyValue("Approver_by", curUser?.Id);
         }
+
+        public void ClearEntityApproverInfo(object entity)
+        {
+            try
+            {
+                var curUser = _appContext.CurUserInfo;
+                if (entity.ContainsProperty("Approver_at"))
+                    entity.SetPropertyValue("Approver_at", null);
+                if (entity.ContainsProperty("Approver_by"))
+                    entity.SetPropertyValue("Approver_by", null);
+            }
+            catch (Exception ex)
+            {
+
+
+            }
+        }
+
 
         /// <summary>
         /// 设置为 未审核，未打印 etc

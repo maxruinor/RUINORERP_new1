@@ -78,6 +78,11 @@ namespace RUINORERP.Extensions
 
                             if (CheckEvent != null)
                             {
+                                if (sql.Contains("tb_FM_ReceivablePayable"))
+                                {
+
+                                }
+                                Console.WriteLine(Common.DB.SqlProfiler.FormatParam(sql, pars));
                                 //kimi查询到说这个性能更好
                                 CheckEvent(Common.DB.SqlProfiler.FormatParam(sql, pars));
                             }

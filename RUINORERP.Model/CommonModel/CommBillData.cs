@@ -21,6 +21,9 @@ namespace RUINORERP.Model.CommonModel
         public long BillID { get => billID; set => billID = value; }
         public string BillNo { get => billNo; set => billNo = value; }
 
+        public string BillNoColName { get => billNoColName; set => billNoColName = value; }
+        private string billNoColName;
+
         public string BizName { get => bizName; set => bizName = value; }
         public Type BizEntityType { get => bizEntityType; set => bizEntityType = value; }
         public BizType BizType { get => _bizType; set => _bizType = value; }

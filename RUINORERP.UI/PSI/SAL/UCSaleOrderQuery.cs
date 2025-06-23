@@ -255,7 +255,7 @@ namespace RUINORERP.UI.PSI.SAL
                     }
 
                     tb_SaleOrderController<tb_SaleOrder> ctr = Startup.GetFromFac<tb_SaleOrderController<tb_SaleOrder>>();
-                    //审核状态时取消订单
+                    //审核状态时取消订单 有退款则退款？
                     ReturnResults<tb_SaleOrder> rmrs = await ctr.CancelOrder(item);
                     //if (result)
                     //{

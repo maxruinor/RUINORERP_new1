@@ -1439,13 +1439,14 @@ namespace RUINORERP.UI.MRP.BOM
             base.BindData(entity);
         }
 
-        protected override void AddByCopy()
+        protected override tb_BOM_S AddByCopy()
         {
             if (EditEntity == null)
             {
                 MessageBox.Show("请先选择一个BOM清单作为复制的基准。", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return;
+                return null;
             }
+            EditEntity=  base.AddByCopy();
             EditEntity.ActionStatus = ActionStatus.新增;
             EditEntity.BOM_ID = 0;
             EditEntity.ApprovalStatus = (int)ApprovalStatus.未审核;
@@ -1454,6 +1455,7 @@ namespace RUINORERP.UI.MRP.BOM
             EditEntity.ProdDetailID = 0;
             EditEntity.SKU = null;
             EditEntity.BOM_No = BizCodeGenerator.Instance.GetBizBillNo(BizType.BOM物料清单);
+            
             BusinessHelper.Instance.InitEntity(EditEntity);
             foreach (var item in EditEntity.tb_BOM_SDetails)
             {
@@ -1465,7 +1467,7 @@ namespace RUINORERP.UI.MRP.BOM
                 item.BOM_ID = 0;
                 item.SecID = 0;
             }
-            base.AddByCopy();
+            return EditEntity;
         }
 
         private void BindToTree(tb_BOM_S _bom)

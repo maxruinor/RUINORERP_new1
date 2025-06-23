@@ -48,6 +48,7 @@ namespace RUINORERP.UI.BaseForm
         }
 
 
+
         public GridViewDisplayTextResolver DisplayTextResolver;
 
         private void UCBillMasterQuery_Load(object sender, EventArgs e)

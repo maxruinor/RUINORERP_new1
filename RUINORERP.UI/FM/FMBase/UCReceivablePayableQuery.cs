@@ -38,6 +38,7 @@ using LiveChartsCore.Geo;
 using Netron.GraphLib;
 using RUINORERP.Business.CommService;
 using RUINORERP.Global.Model;
+using RUINORERP.UI.ToolForm;
 
 namespace RUINORERP.UI.FM
 {
@@ -176,7 +177,8 @@ namespace RUINORERP.UI.FM
             {
                 list.Add(new ContextMenuController("【转为付款单】", true, false, "NewSumDataGridView_转为收付款单"));
             }
-            // list.Add(new ContextMenuController("【生成对账单】", true, false, "NewSumDataGridView_生成对账单"));
+            list.Add(new ContextMenuController("【生成对账单】", true, false, "NewSumDataGridView_生成对账单"));
+            list.Add(new ContextMenuController($"【预{PaymentType}抵扣】", true, false, "NewSumDataGridView_预收预付抵扣"));
             return list;
         }
         public override void BuildContextMenuController()
@@ -184,6 +186,7 @@ namespace RUINORERP.UI.FM
             List<EventHandler> ContextClickList = new List<EventHandler>();
             ContextClickList.Add(NewSumDataGridView_转为收付款单);
             ContextClickList.Add(NewSumDataGridView_生成对账单);
+            ContextClickList.Add(NewSumDataGridView_预收预付抵扣);
             List<ContextMenuController> list = new List<ContextMenuController>();
             list = AddContextMenu();
 
@@ -271,7 +274,132 @@ namespace RUINORERP.UI.FM
         #endregion
 
 
+        //如果销售订单审核，预收款审核后 生成的收款单 在没有审核前。就执行销售出库，这时应收没有及时抵扣时，在这里执行抵扣
+        private async void NewSumDataGridView_预收预付抵扣(object sender, EventArgs e)
+        {
+            //1,查找能抵扣的待核销或部分核销的预收付款单数据集合
+            //2,抵扣，更新预收付款单和应收应付记录表
+            //3,核销记录
 
+            try
+            {
+                List<tb_FM_ReceivablePayable> selectlist = GetSelectResult();
+                List<tb_FM_ReceivablePayable> RealList = new List<tb_FM_ReceivablePayable>();
+                StringBuilder msg = new StringBuilder();
+                int counter = 1;
+                foreach (var item in selectlist)
+                {
+                    //只有审核状态才可以转换为收款单
+                    bool canConvert = item.ARAPStatus == (int)ARAPStatus.待支付 && item.ApprovalStatus == (int)ApprovalStatus.已审核 && item.ApprovalResults.HasValue && item.ApprovalResults.Value;
+                    if (canConvert || item.ARAPStatus == (int)ARAPStatus.部分支付)
+                    {
+                        RealList.Add(item);
+                    }
+                    else
+                    {
+                        msg.Append(counter.ToString() + ") ");
+                        msg.Append($"当前应{PaymentType.ToString()}单 {item.ARAPNo}状态为【 {((ARAPStatus)item.ARAPStatus.Value).ToString()}】 无法进行抵扣。").Append("\r\n");
+                        counter++;
+                    }
+                }
+                //多选时。要相同客户才能合并到一个收款单
+                if (RealList.Count() > 1)
+                {
+                    msg.Append("一次只能选择一行数据进行抵扣");
+                    MessageBox.Show(msg.ToString(), "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    return;
+                }
+                if (msg.ToString().Length > 0)
+                {
+                    MessageBox.Show(msg.ToString(), "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    if (RealList.Count == 0)
+                    {
+                        return;
+                    }
+                }
+
+                if (RealList.Count == 0)
+                {
+                    msg.Append("请至少选择一行数据进行抵扣");
+                    MessageBox.Show(msg.ToString(), "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    return;
+                }
+                var receivablePayableController = MainForm.Instance.AppContext.GetRequiredService<tb_FM_ReceivablePayableController<tb_FM_ReceivablePayable>>();
+
+                // 2. 查找可抵扣的预收付款单
+                var availableAdvances = await receivablePayableController.FindAvailableAdvances(RealList[0]);
+                if (!availableAdvances.Any())
+                {
+                    MessageBox.Show("没有找到可抵扣的预收付款单！");
+                    return;
+                }
+
+                // 创建列映射
+                var columns = new Dictionary<string, string>
+                {
+                     { "PreRPNO", "单据编号" },
+                     { "LocalPrepaidAmount", "金额" },
+                     { "LocalBalanceAmount", "可用金额" },
+                     { "CustomerVendor_ID", "客户" },
+                     { "PrePayDate", "付款日期" }
+                };
+
+                // 初始化选择器
+                using (var selector = new frmAdvanceSelector<tb_FM_PreReceivedPayment>())
+                {
+
+                    selector.ConfirmButtonText = "抵扣";
+                    selector.AllowMultiSelect = true;
+
+                    //selector.InitializeSelector(availableAdvances, columns, $"选择预{PaymentType}单");
+                    // 使用表达式树配置列映射
+                    selector.ConfigureColumn(x => x.PreRPNO, "单据编号");
+                    selector.ConfigureColumn(x => x.LocalPrepaidAmount, "金额");
+                    selector.ConfigureColumn(x => x.LocalBalanceAmount, "可用金额");
+                    selector.ConfigureColumn(x => x.CustomerVendor_ID, "客户");
+                    selector.ConfigureColumn(x => x.PrePayDate, "付款日期");
+                    selector.ConfigureSummaryColumn(x => x.LocalPrepaidAmount);
+                    selector.ConfigureSummaryColumn(x => x.LocalBalanceAmount);
+
+                    selector.InitializeSelector(availableAdvances, $"选择预{PaymentType}单");
+
+
+                    // 设置金额格式化
+                    //selector.SetColumnFormatter("Amount", value => $"{value:N2}");
+                    //selector.SetColumnFormatter("RemainAmount", value => $"{value:N2}");
+
+                    if (selector.ShowDialog() == DialogResult.OK)
+                    {
+                        var selectedAdvances = selector.SelectedItems;
+
+                        //// 将选中单据的PreRPNO字段值用逗号连接成字符串
+                        //string preRPNOs = string.Join(", ", selectedAdvances.Select(item => item.PreRPNO));
+
+                        // 显示前10个单据编号，其余用省略号表示
+                        string preRPNOsPreview = string.Join(", ",
+                            selectedAdvances.Take(5).Select(item => item.PreRPNO));
+                        preRPNOsPreview = preRPNOsPreview.TrimEnd(',');
+                        if (selectedAdvances.Count > 5)
+                        {
+                            preRPNOsPreview += $" 等 {selectedAdvances.Count} 张单据\r\n";
+                        }
+
+                        // 使用选中的预付款单
+                        //您确定要将当前应收款单，通过通过预收付款抵扣元吗？
+                        if (MessageBox.Show($"您确定要将当前【应{PaymentType}单】:{RealList[0].ARAPNo}\r\n通过【预{PaymentType}单】:{preRPNOsPreview} 抵扣{selectedAdvances.Sum(x => x.LocalBalanceAmount).ToString("##.00")}元吗？", "提示", MessageBoxButtons.OKCancel, MessageBoxIcon.Information) == DialogResult.OK)
+                        {
+                             receivablePayableController.ApplyManualPaymentAllocation(RealList[0], selectedAdvances);
+                        }
+                    }
+                }
+
+
+            }
+            catch (Exception ex)
+            {
+
+            }
+        }
 
         //按客户生成对账单
         private void NewSumDataGridView_生成对账单(object sender, EventArgs e)

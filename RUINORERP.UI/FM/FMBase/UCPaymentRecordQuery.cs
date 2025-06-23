@@ -132,8 +132,9 @@ namespace RUINORERP.UI.FM
                     var paymentStatus = (PaymentStatus)(item.GetPropertyValue(typeof(PaymentStatus).Name).ToInt());
                     if (paymentStatus == PaymentStatus.待审核 || paymentStatus == PaymentStatus.草稿)
                     {
+                        //查询删除逻辑和编辑的删除逻辑 其它功能也一样。要统一起来。 维护一份！！！！！！！！！！！！TODO by watson 2025-6-22
                         BaseController<tb_FM_PaymentRecord> ctr = Startup.GetFromFacByName<BaseController<tb_FM_PaymentRecord>>(typeof(tb_FM_PaymentRecord).Name + "Controller");
-                        bool rs = await ctr.BaseDeleteAsync(item);
+                        bool rs = await ctr.BaseDeleteByNavAsync(item);
                         if (rs)
                         {
                             counter++;

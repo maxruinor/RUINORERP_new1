@@ -192,7 +192,8 @@ namespace RUINORERP.UI.PSI.SAL
                     {
                         entity.SOrderNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.销售订单);
                     }
-
+                    entity.CloseCaseOpinions = string.Empty;
+                    entity.ApprovalOpinions = string.Empty;
                     entity.SaleDate = System.DateTime.Now;
                     //通过动态参数来设置这个默认值。这样每个公司不同设置按自己的来。
                     entity.IsFromPlatform = AppContext.GlobalVariableConfig.IsFromPlatform;
@@ -561,33 +562,29 @@ using var binder = new UIStateBinder(..., customEvaluator);
              
              */
         }
-        protected override void AddByCopy()
-        {
-            if (EditEntity == null)
-            {
-                MessageBox.Show("请先选择一个单据作为复制的基准。", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return;
-            }
-            EditEntity.ActionStatus = ActionStatus.新增;
-            EditEntity.SOrder_ID = 0;
-            EditEntity.ApprovalStatus = (int)ApprovalStatus.未审核;
-            EditEntity.DataStatus = (int)DataStatus.草稿;
-            EditEntity.Approver_at = null;
-            EditEntity.ApprovalResults = null;
-            EditEntity.tb_SaleOuts = null;
-            EditEntity.SOrderNo = string.Empty;
-            EditEntity.tb_PurOrders = null;
-            BusinessHelper.Instance.InitEntity(EditEntity);
-            foreach (var item in EditEntity.tb_SaleOrderDetails)
-            {
-                item.SOrder_ID = 0;
-                item.SaleOrderDetail_ID = 0;
-                item.PrimaryKeyID = 0;
-                item.tb_saleorder = null;
-            }
-
-            base.AddByCopy();
-        }
+        //protected override tb_SaleOrder AddByCopy()
+        //{
+        //    EditEntity = base.AddByCopy();
+        //    EditEntity.ActionStatus = ActionStatus.新增;
+        //    EditEntity.SOrder_ID = 0;
+        //    EditEntity.ApprovalStatus = (int)ApprovalStatus.未审核;
+        //    EditEntity.DataStatus = (int)DataStatus.草稿;
+        //    EditEntity.Approver_at = null;
+        //    EditEntity.ApprovalResults = null;
+        //    EditEntity.tb_SaleOuts = null;
+        //    EditEntity.SOrderNo = string.Empty;
+        //    EditEntity.tb_PurOrders = null;
+        //    EditEntity.PrintStatus = 0;
+        //    BusinessHelper.Instance.InitEntity(EditEntity);
+        //    foreach (var item in EditEntity.tb_SaleOrderDetails)
+        //    {
+        //        item.SOrder_ID = 0;
+        //        item.SaleOrderDetail_ID = 0;
+        //        item.PrimaryKeyID = 0;
+        //        item.tb_saleorder = null;
+        //    }
+        //    return EditEntity;
+        //}
 
         public void InitDataTocmbbox()
         {
@@ -974,7 +971,7 @@ using var binder = new UIStateBinder(..., customEvaluator);
 
                 EditEntity.TotalQty = details.Sum(c => c.Quantity);
                 EditEntity.TotalCost = details.Sum(c => (c.Cost + c.CustomizedCost) * c.Quantity);
-                
+
                 EditEntity.TotalTaxAmount = details.Sum(c => c.SubtotalTaxAmount);
                 EditEntity.TotalCommissionAmount = details.Sum(c => c.CommissionAmount);
                 EditEntity.TotalAmount = details.Sum(c => c.TransactionPrice * c.Quantity) + EditEntity.FreightIncome;

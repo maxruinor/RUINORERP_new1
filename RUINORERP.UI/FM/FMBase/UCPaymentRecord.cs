@@ -594,7 +594,7 @@ namespace RUINORERP.UI.FM
 
 
                     tb_FM_PaymentRecordController<tb_FM_PaymentRecord> ctr = Startup.GetFromFac<tb_FM_PaymentRecordController<tb_FM_PaymentRecord>>();
-                    bool rs = await ctr.BaseDeleteAsync(EditEntity as tb_FM_PaymentRecord);
+                    bool rs = await ctr.BaseDeleteByNavAsync(EditEntity as tb_FM_PaymentRecord);
                     if (rs)
                     {
                         //MainForm.Instance.AuditLogHelper.CreateAuditLog<T>("删除", EditEntity);

@@ -1,5 +1,6 @@
 ﻿using RUINORERP.Common.Extensions;
 using RUINORERP.Common.Helper;
+using RUINORERP.Global;
 using RUINORERP.Global.EnumExt;
 using RUINORERP.Model;
 using System;
@@ -15,10 +16,38 @@ namespace RUINORERP.Business.FMService
 {
     public static class FMPaymentStatusHelper
     {
+
+
+        /// <summary>获取实体的状态类型</summary>
+        public static Type GetStatusType(BaseEntity entity)
+        {
+            if (entity.ContainsProperty(typeof(DataStatus).Name))
+                return typeof(DataStatus);
+
+            if (entity.ContainsProperty(typeof(PrePaymentStatus).Name))
+                return typeof(PrePaymentStatus);
+
+            if (entity.ContainsProperty(typeof(ARAPStatus).Name))
+                return typeof(ARAPStatus);
+
+            if (entity.ContainsProperty(typeof(PaymentStatus).Name))
+                return typeof(PaymentStatus);
+
+            return null;
+        }
+
+
+
+
         /// <summary>是否是终态（不可修改状态）</summary>
         /// <param name="status">是状态枚举值类型</param>
         public static bool IsFinalStatus<T>(T status) where T : Enum
         {
+            if (status is DataStatus dataStatus)
+                return dataStatus == DataStatus.完结 ||
+                       dataStatus == DataStatus.已取消;
+
+
             if (status is PrePaymentStatus pre)
                 return pre == PrePaymentStatus.全额核销 ||
                        pre == PrePaymentStatus.已退款;
@@ -37,6 +66,10 @@ namespace RUINORERP.Business.FMService
         /// <summary>是否可编辑（草稿或待审核状态）</summary>
         public static bool IsEditable<T>(T status) where T : Enum
         {
+            if (status is DataStatus dataStatus)
+                return dataStatus == DataStatus.草稿 ||
+                       dataStatus == DataStatus.新建;
+
             if (status is PrePaymentStatus pre)
                 return pre == PrePaymentStatus.草稿 ||
                        pre == PrePaymentStatus.待审核;
@@ -57,6 +90,7 @@ namespace RUINORERP.Business.FMService
         {
             if (IsFinalStatus(status)) return false;
 
+
             if (status is PrePaymentStatus pre)
                 return pre != PrePaymentStatus.部分核销 && !hasRelatedRecords;
 
@@ -66,6 +100,10 @@ namespace RUINORERP.Business.FMService
 
             if (status is PaymentStatus pay)
                 return pay != PaymentStatus.已支付 && !hasRelatedRecords;
+
+            if (status is DataStatus  dataStatus)
+                return dataStatus != DataStatus.确认 && !hasRelatedRecords;
+
 
             return false;
         }
@@ -84,6 +122,10 @@ namespace RUINORERP.Business.FMService
 
             if (status is PaymentStatus pay)
                 return pay != PaymentStatus.已支付 && !hasRelatedRecords;
+
+            if (status is DataStatus dataStatus )
+                return dataStatus != DataStatus.新建 && dataStatus != DataStatus.草稿 && !hasRelatedRecords;
+
 
             return false;
         }
@@ -104,16 +146,31 @@ namespace RUINORERP.Business.FMService
 
 
         /// <summary>是否允许提交操作</summary>
-        public static bool CanSubmit<T>(T status) where T : Enum
+        public static bool CanSubmit<TEnum>(TEnum status) where TEnum : Enum
         {
             return status switch
             {
+                DataStatus pre => pre == DataStatus.草稿,
                 PrePaymentStatus pre => pre == PrePaymentStatus.草稿,
                 ARAPStatus arap => arap == ARAPStatus.草稿,
                 PaymentStatus pay => pay == PaymentStatus.草稿,
                 _ => false
             };
         }
+
+
+        //public virtual bool CanSubmit<TEnum>(TEnum status) where TEnum : Enum
+        //{
+        //    return status switch
+        //    {
+        //        DataStatus dataStatus => dataStatus == DataStatus.草稿,
+        //        PrePaymentStatus pre => pre == PrePaymentStatus.草稿,
+        //        ARAPStatus arap => arap == ARAPStatus.草稿,
+        //        PaymentStatus pay => pay == PaymentStatus.草稿,
+        //        _ => false
+        //    };
+        //}
+
 
         /// <summary>验证状态转换是否合法</summary>
         public static void ValidateTransition<T>(T current, T target) where T : Enum
@@ -135,6 +192,11 @@ namespace RUINORERP.Business.FMService
                      target is PaymentStatus payTarget)
             {
                 ValidatePaymentTransition(payCurrent, payTarget);
+            }
+            else if (current is DataStatus dataCurrent &&
+                    target is DataStatus dataTarget)
+            {
+                ValidatePaymentTransition(dataCurrent, dataTarget);
             }
             else
             {
@@ -196,6 +258,20 @@ namespace RUINORERP.Business.FMService
                 throw new InvalidOperationException("待审核状态只能转为已支付");
         }
 
+
+        private static void ValidatePaymentTransition(DataStatus current, DataStatus target)
+        {
+            if (current == DataStatus.完结|| current == DataStatus.已取消)
+                throw new InvalidOperationException("完结及取消状态禁止转换");
+
+            if (current == DataStatus.草稿 && target != DataStatus.新建)
+                throw new InvalidOperationException("草稿状态只能转为新建【已提交】");
+
+            if (current == DataStatus.新建 && target != DataStatus.确认)
+                throw new InvalidOperationException("新建【已提交】核状态只能转为确认【待审核】");
+        }
+
+
         /// <summary>获取状态描述</summary>
         public static string GetDescription<T>(T status) where T : Enum
         {
@@ -240,6 +316,7 @@ namespace RUINORERP.Business.FMService
             string[] statusTypes = {
             typeof(PrePaymentStatus).Name,
             typeof(ARAPStatus).Name,
+            typeof(DataStatus).Name,
             typeof(PaymentStatus).Name
         };
 

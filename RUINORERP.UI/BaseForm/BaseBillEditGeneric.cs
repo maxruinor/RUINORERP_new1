@@ -998,6 +998,9 @@ namespace RUINORERP.UI.BaseForm
 
             public Enum GetActualStatus()
             {
+                if (_entity.ContainsProperty(typeof(DataStatus).Name))
+                    return _entity.GetStatusValue<DataStatus>();
+
                 if (_entity.ContainsProperty(typeof(PrePaymentStatus).Name))
                     return _entity.GetStatusValue<PrePaymentStatus>();
 
@@ -2654,6 +2657,28 @@ namespace RUINORERP.UI.BaseForm
             {
                 return;
             }
+            // 获取状态类型和值
+            var statusType = FMPaymentStatusHelper.GetStatusType(editEntity as BaseEntity);
+            if (statusType == null)
+            {
+                return;
+            }
+
+            // 动态获取状态值
+            dynamic status = editEntity.GetPropertyValue(statusType.Name);
+            int statusValue = (int)status;
+            dynamic statusEnum = Enum.ToObject(statusType, statusValue);
+
+            if (!FMPaymentStatusHelper.IsEditable(statusEnum))
+            {
+                toolStripbtnModify.Enabled = false;
+                toolStripButtonSave.Enabled = false;
+                MainForm.Instance.PrintInfoLog($"当前单据状态为{statusEnum}不允许修改!");
+                //MessageBox.Show("当前单据不允许修改!", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+
             var dataStatus = (DataStatus)(editEntity.GetPropertyValue(typeof(DataStatus).Name).ToInt());
             if (dataStatus == DataStatus.新建 || dataStatus == DataStatus.草稿)
             {
@@ -2732,20 +2757,33 @@ namespace RUINORERP.UI.BaseForm
         }
 
 
-
-
-
-        protected override void AddByCopy()
+        protected virtual T AddByCopy()
         {
+            if (EditEntity == null)
+            {
+                MessageBox.Show("请先选择一个单据作为复制的基准。", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return null;
+            }
+
+            T NewEditEntity = default(T);
             if (OnBindDataToUIEvent != null)
             {
                 bindingSourceSub.Clear();
 
-                T NewEditEntity = Activator.CreateInstance(typeof(T)) as T;
+                // NewEditEntity = Activator.CreateInstance(typeof(T)) as T;
+
                 NewEditEntity = EditEntity.DeepCloneByjson();
                 //复制性新增 时  PK要清空，单据编号类的,还有他的关联性子集
                 // 获取主键列名
                 string PKCol = BaseUIHelper.GetEntityPrimaryKey<T>();
+                BillConverterFactory bcf = Startup.GetFromFac<BillConverterFactory>();
+                //这里只是取打印配置信息
+                CommBillData cbd = new CommBillData();
+                cbd = bcf.GetBillData(typeof(T), NewEditEntity);
+
+                string billNoColName = cbd.BillNoColName;
+
+                ReflectionHelper.SetPropertyValue(NewEditEntity, billNoColName, string.Empty);
 
                 // 重置主实体的主键
                 ResetPrimaryKey(NewEditEntity, PKCol);
@@ -2757,9 +2795,10 @@ namespace RUINORERP.UI.BaseForm
                 ProcessNavigationProperties(NewEditEntity, PKCol);
 
                 OnBindDataToUIEvent(NewEditEntity, ActionStatus.复制);
-            }
 
+            }
             ToolBarEnabledControl(MenuItemEnums.新增);
+            return NewEditEntity;
         }
 
         #region 复制性新增
@@ -2784,11 +2823,20 @@ namespace RUINORERP.UI.BaseForm
             {
                 ReflectionHelper.SetPropertyValue(entity, typeof(ApprovalStatus).Name, (int)ApprovalStatus.未审核);
             }
+            if (ReflectionHelper.ExistPropertyName(entity.GetType(), typeof(DataStatus).Name))
+            {
+                ReflectionHelper.SetPropertyValue(entity, typeof(DataStatus).Name, (int)DataStatus.草稿);
+            }
 
             if (ReflectionHelper.ExistPropertyName(entity.GetType(), "ApprovalResults"))
             {
                 ReflectionHelper.SetPropertyValue(entity, "ApprovalResults", false);
             }
+
+            BusinessHelper.Instance.InitEntity(entity);
+            BusinessHelper.Instance.ClearEntityApproverInfo(entity);
+            BusinessHelper.Instance.ClearEntityEditInfo(entity);
+            BusinessHelper.Instance.InitStatusEntity(entity);
         }
 
         // 递归处理所有导航属性（明细集合）
@@ -2819,6 +2867,10 @@ namespace RUINORERP.UI.BaseForm
         private void ProcessNavigationProperties(object entity, string parentPKCol)
         {
             if (entity == null) return;
+
+            if (entity.ContainsProperty("PrimaryKeyID"))
+                entity.SetPropertyValue("PrimaryKeyID", 0);
+
 
             var type = entity.GetType();
             var entityName = type.Name;
@@ -2857,6 +2909,9 @@ namespace RUINORERP.UI.BaseForm
                     {
                         foreach (var item in collection)
                         {
+                            if (item.ContainsProperty("PrimaryKeyID"))
+                                item.SetPropertyValue("PrimaryKeyID", 0);
+
                             // 重置明细的主键
                             ReflectionHelper.SetPropertyValue(item, detailPKCol, 0);
 
@@ -3651,11 +3706,6 @@ namespace RUINORERP.UI.BaseForm
             if (EditEntity == null) return false;
 
 
-            BaseController<T> ctr = Startup.GetFromFacByName<BaseController<T>>(typeof(T).Name + "Controller");
-
-      
-
-
 
             // 获取当前状态
             var statusProperty = typeof(TStatus).Name;
@@ -3675,23 +3725,21 @@ namespace RUINORERP.UI.BaseForm
                 return false;
             }
 
-            // 状态为草稿时直接更新状态
-            if (FMPaymentStatusHelper.CanSubmit(currentStatus))
+
+            if (!FMPaymentStatusHelper.CanSubmit(currentStatus))
             {
-                ReflectionHelper.SetPropertyValue(EditEntity, statusProperty, (int)(object)targetStatus);
-            }
-            else
-            {
+
+
                 MainForm.Instance.uclog.AddLog("单据非草稿状态，提交失败");
                 toolStripbtnSubmit.Enabled = false;
                 return false;
             }
 
-            // 保存实体
-            var controller = Startup.GetFromFacByName<BaseController<T>>(
-                $"{typeof(T).Name}Controller"
-            );
+            //   // 状态为草稿时直接更新状态  业务方法中判断了。不能重复
+            //ReflectionHelper.SetPropertyValue(EditEntity, statusProperty, (int)(object)targetStatus);
 
+            // 保存实体
+            var ctr = Startup.GetFromFacByName<BaseController<T>>($"{typeof(T).Name}Controller");
             //var result = await controller.BaseSaveOrUpdate(EditEntity as T);
             ReturnResults<T> result = await ctr.SubmitAsync(EditEntity, true);
             if (result.Succeeded)

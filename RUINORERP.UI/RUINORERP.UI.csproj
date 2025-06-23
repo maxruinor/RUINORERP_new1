@@ -2668,6 +2668,18 @@
     <Compile Include="SysConfig\UCWorkCenterConfig.Designer.cs">
       <DependentUpon>UCWorkCenterConfig.cs</DependentUpon>
     </Compile>
+    <Compile Include="ToolForm\frmAdvanceSelector.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="ToolForm\frmAdvanceSelector.Designer.cs">
+      <DependentUpon>frmAdvanceSelector.cs</DependentUpon>
+    </Compile>
+    <Compile Include="ToolForm\frmAdvanceSelectorGeneric.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="ToolForm\frmAdvanceSelectorGeneric.Designer.cs">
+      <DependentUpon>frmAdvanceSelectorGeneric.cs</DependentUpon>
+    </Compile>
     <Compile Include="ToolForm\frmSelectItemFromGrid.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -4010,6 +4022,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="SysConfig\UCWorkCenterConfig.resx">
       <DependentUpon>UCWorkCenterConfig.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ToolForm\frmAdvanceSelectorGeneric.resx">
+      <DependentUpon>frmAdvanceSelectorGeneric.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="ToolForm\frmSelectItemFromGrid.resx">
       <DependentUpon>frmSelectItemFromGrid.cs</DependentUpon>

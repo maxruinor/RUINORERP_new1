@@ -36,6 +36,7 @@ using RUINORERP.Business.CommService;
 using System.Web.UI.WebControls;
 using AutoMapper;
 using RUINORERP.Global.EnumExt;
+using RUINORERP.Business.FMService;
 
 namespace RUINORERP.Business
 {
@@ -121,7 +122,7 @@ namespace RUINORERP.Business
 
 
             // 获取状态类型和值
-            var statusType = GetStatusType(baseEntity);
+            var statusType = FMPaymentStatusHelper.GetStatusType(baseEntity);
             if (statusType == null)
             {
                 result.ErrorMsg = "提交的单据状态不能为空";
@@ -134,7 +135,7 @@ namespace RUINORERP.Business
             dynamic statusEnum = Enum.ToObject(statusType, statusValue);
 
             // 检查是否可以提交
-            if (!CanSubmit(statusEnum))
+            if (!FMPaymentStatusHelper.CanSubmit(statusEnum))
             {
                 result.ErrorMsg = $"单据当前状态为【{statusEnum}】，无法提交";
                 return result;
@@ -143,11 +144,11 @@ namespace RUINORERP.Business
             try
             {
                 // 更新实体状态
-                UpdateEntityStatus(entity, statusEnum);
+                int currentStatusValue = GetSubmitStatus(entity, statusEnum);
 
                 var update = await _unitOfWorkManage.GetDbClient().Updateable<object>()
                              .AS(typeof(T).Name)
-                             .SetColumns(statusType.Name, statusValue)
+                             .SetColumns(statusType.Name, currentStatusValue)
                              .Where(baseEntity.PrimaryKeyColName + "=" + primaryKeyValue).ExecuteCommandAsync();
                 if (update > 0)
                 {
@@ -189,7 +190,7 @@ namespace RUINORERP.Business
         /// 更新实体状态为提交
         /// 由草稿变为确认或待审核
         /// </summary>
-        private void UpdateEntityStatus<TEnum>(T entity, TEnum status) where TEnum : Enum
+        private int GetSubmitStatus<TEnum>(T entity, TEnum status) where TEnum : Enum
         {
             var statusName = status.GetType().Name;
             if (statusName == typeof(DataStatus).Name)
@@ -224,6 +225,9 @@ namespace RUINORERP.Business
             {
                 _logger.LogError("基类提交时，没有找到对应的状态类型", "提交单据时发生异常");
             }
+
+            int result = ReflectionHelper.GetPropertyValue(entity, statusName).ToInt();
+            return result;
         }
 
 
@@ -248,35 +252,8 @@ namespace RUINORERP.Business
             return false;
         }
 
-        public virtual bool CanSubmit<TEnum>(TEnum status) where TEnum : Enum
-        {
-            return status switch
-            {
-                DataStatus dataStatus => dataStatus == DataStatus.草稿,
-                PrePaymentStatus pre => pre == PrePaymentStatus.草稿,
-                ARAPStatus arap => arap == ARAPStatus.草稿,
-                PaymentStatus pay => pay == PaymentStatus.草稿,
-                _ => false
-            };
-        }
 
-        /// <summary>获取实体的状态类型</summary>
-        private Type GetStatusType(BaseEntity entity)
-        {
-            if (entity.ContainsProperty(typeof(DataStatus).Name))
-                return typeof(DataStatus);
 
-            if (entity.ContainsProperty(typeof(PrePaymentStatus).Name))
-                return typeof(PrePaymentStatus);
-
-            if (entity.ContainsProperty(typeof(ARAPStatus).Name))
-                return typeof(ARAPStatus);
-
-            if (entity.ContainsProperty(typeof(PaymentStatus).Name))
-                return typeof(PaymentStatus);
-
-            return null;
-        }
 
 
         /// <summary>

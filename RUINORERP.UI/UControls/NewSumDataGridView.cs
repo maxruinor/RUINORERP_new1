@@ -785,7 +785,7 @@ namespace RUINORERP.UI.UControls
             int currentX = this.RowHeadersWidth; // 从行头右侧开始
             int padding = 0; // 控件间间距
 
-            foreach (ColDisplayController col in this.ColumnDisplays.OrderBy(c=>c.ColDisplayIndex).ToList())
+            foreach (ColDisplayController col in this.ColumnDisplays.OrderBy(c => c.ColDisplayIndex).ToList())
             {
                 if (!col.Visible || col.ColWidth < 50) continue; // 跳过不可见或太窄的列
 
@@ -1095,7 +1095,7 @@ namespace RUINORERP.UI.UControls
                         {
                             this.Top = 0;
                             this.Height = this.Height;
-                            this.Dock= DockStyle.Fill;
+                            this.Dock = DockStyle.Fill;
                         }
 
                     }
@@ -1157,7 +1157,7 @@ namespace RUINORERP.UI.UControls
             customizeGrid.UseCustomColumnDisplay = UseCustomColumnDisplay;
             AllowUserToOrderColumns = UseCustomColumnDisplay;
             customizeGrid.targetDataGridView = this;
-            
+
 
             //运行时，直接判断属性是否设置。如果没有就提示
             //或者在数据变动时提示
@@ -2843,7 +2843,7 @@ namespace RUINORERP.UI.UControls
         }
         #endregion
 
- 
+
 
         private void NewSumDataGridView_SelectedAll(object sender, EventArgs e)
         {
@@ -3326,10 +3326,24 @@ namespace RUINORERP.UI.UControls
 
                 foreach (DataGridViewColumn col in this.Columns)
                 {
-                    var tempCol = (DataGridViewColumn)col.Clone();
-                    tempCol.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight;
-                    tempCol.DefaultCellStyle.Format = _sumCellFormat;
-                    _dgvSumRow.Columns.Add(tempCol);
+                    if (col.CellTemplate is DataGridViewCheckBoxCell)
+                    {
+                        //加总行 不显示 checkbox
+                        var tempCol = new DataGridViewColumn(new DataGridViewTextBoxCell());
+                        tempCol.Name = col.Name;
+                        tempCol.DataPropertyName=col.DataPropertyName;
+                        tempCol.DataPropertyName = string.Empty;
+                        tempCol.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight;
+                        tempCol.DefaultCellStyle.Format = _sumCellFormat;
+                        _dgvSumRow.Columns.Add(tempCol);
+                    }
+                    else
+                    {
+                        var tempCol = (DataGridViewColumn)col.Clone();
+                        tempCol.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight;
+                        tempCol.DefaultCellStyle.Format = _sumCellFormat;
+                        _dgvSumRow.Columns.Add(tempCol);
+                    }
                 }
             }
         }
@@ -3418,7 +3432,7 @@ namespace RUINORERP.UI.UControls
                         //{
                         //}
                         //tempSumVal += tempVal;
-                       
+
                         if (decimal.TryParse(this[colIndex, i].Value.ToString(), out decimal value))
                         {
                             tempSumVal += value;

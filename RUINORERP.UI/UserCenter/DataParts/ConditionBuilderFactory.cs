@@ -216,12 +216,12 @@ namespace RUINORERP.UI.UserCenter.DataParts
                 identifier = SharedFlag.Flag1.ToString();
             }
 
-            return new List<ConditionGroup>
+            var arapGroupList = new List<ConditionGroup>
         {
             new ConditionGroup
             {
                  Identifier =identifier,
-                StatusName = StatusNameDescription,
+                StatusName = "待提交",
                 Conditions = new List<IConditionalModel>
                 {
                     new ConditionalModel
@@ -235,7 +235,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
                     {
                         FieldName = "ARAPStatus",
                         ConditionalType = ConditionalType.Equal,
-                        FieldValue = ((int)ARAPStatus.待支付).ToString(),
+                        FieldValue = ((int)ARAPStatus.草稿).ToString(),
                         CSharpTypeName = "int"
                     },
                     new ConditionalModel
@@ -246,8 +246,95 @@ namespace RUINORERP.UI.UserCenter.DataParts
                         CSharpTypeName = "bool"
                     }
                 }
+            },
+              new ConditionGroup
+            {
+                 Identifier =identifier,
+                StatusName = "待审核",
+                Conditions = new List<IConditionalModel>
+                {
+                    new ConditionalModel
+                    {
+                        FieldName = "ReceivePaymentType",
+                        ConditionalType = ConditionalType.Equal,
+                        FieldValue = ((int)paymentType).ToString(),
+                        CSharpTypeName = "int"
+                    },
+                    new ConditionalModel
+                    {
+                        FieldName = "ARAPStatus",
+                        ConditionalType = ConditionalType.Equal,
+                        FieldValue = ((int)ARAPStatus.待审核).ToString(),
+                        CSharpTypeName = "int"
+                    },
+                    new ConditionalModel
+                    {
+                        FieldName = "isdeleted",
+                        ConditionalType = ConditionalType.Equal,
+                        FieldValue = "False",
+                        CSharpTypeName = "bool"
+                    }
+                }
+            },
+               new ConditionGroup
+            {
+                 Identifier =identifier,
+                StatusName = StatusNameDescription,
+                Conditions = new List<IConditionalModel>
+                {
+                new ConditionalModel
+                    {
+                        FieldName = "ARAPStatus",
+                        ConditionalType = ConditionalType.Equal,
+                        FieldValue = ((int)ARAPStatus.待支付).ToString(),
+                        CSharpTypeName = "int"
+                    },
+                    new ConditionalModel
+                    {
+                        FieldName = "ReceivePaymentType",
+                        ConditionalType = ConditionalType.Equal,
+                        FieldValue = ((int)paymentType).ToString(),
+                        CSharpTypeName = "int"
+                    },
+
+
+                    new ConditionalModel
+                    {
+                        FieldName = "isdeleted",
+                        ConditionalType = ConditionalType.Equal,
+                        FieldValue = "False",
+                        CSharpTypeName = "bool"
+                    }
+                }
             }
         };
+
+            List<IConditionalModel> conModels = arapGroupList.FirstOrDefault(c => c.StatusName == StatusNameDescription).Conditions;
+            conModels.Clear();
+            conModels.Add(new ConditionalCollections()
+            {
+                ConditionalList = new List<KeyValuePair<WhereType, SqlSugar.ConditionalModel>>()
+                              {
+                               new KeyValuePair<WhereType, ConditionalModel>(
+                               WhereType.And,
+                               new ConditionalModel(){FieldName ="ARAPStatus",ConditionalType=ConditionalType.Equal,FieldValue=((int)ARAPStatus.待支付).ToString(), CSharpTypeName = "int"}),
+
+                               new KeyValuePair<WhereType, ConditionalModel> (
+                               WhereType.Or,
+                               new ConditionalModel() {FieldName ="ARAPStatus",ConditionalType=ConditionalType.Equal,FieldValue=((int)ARAPStatus.部分支付).ToString(), CSharpTypeName = "int"}),
+
+
+                               new KeyValuePair<WhereType, ConditionalModel> (
+                               WhereType.
+                               And,new ConditionalModel() {FieldName="ReceivePaymentType",ConditionalType=ConditionalType.Equal,FieldValue= ((int)paymentType).ToString(), CSharpTypeName = "int"}),
+
+                               new KeyValuePair<WhereType, ConditionalModel> (
+                               WhereType.
+                               And,new ConditionalModel() {FieldName="isdeleted",ConditionalType=ConditionalType.Equal,FieldValue="False",CSharpTypeName = "bool"})
+                              }
+            });
+
+            return arapGroupList;
         }
 
         public List<ConditionGroup> GetPaymentConditionGroups(ReceivePaymentType paymentType)
@@ -256,12 +343,12 @@ namespace RUINORERP.UI.UserCenter.DataParts
             string identifier = string.Empty;
             if (paymentType == ReceivePaymentType.付款)
             {
-                StatusNameDescription = "待付款";
+                StatusNameDescription = "待支付";
                 identifier = SharedFlag.Flag2.ToString();
             }
             else
             {
-                StatusNameDescription = "待回款";
+                StatusNameDescription = "待支付";
                 //硬编码的
                 identifier = SharedFlag.Flag1.ToString();
             }
@@ -292,7 +379,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
             }
         };
 
-          
+
 
             return grouplist;
         }

@@ -1065,10 +1065,10 @@ namespace RUINORERP.UI.BaseForm
                 T loc = (T)this.bindingSourceList.Current;
                 string PKColName = UIHelper.GetPrimaryKeyColName(typeof(T));
                 object PKValue = this.bindingSourceList.Current.GetPropertyValue(PKColName);
-                this.bindingSourceList.Remove(loc);
                 rs = await ctr.BaseDeleteAsync(loc);
                 if (rs)
                 {
+                    this.bindingSourceList.Remove(loc);
                     if (MainForm.Instance.AppContext.SysConfig.IsDebug)
                     {
                         MainForm.Instance.logger.LogInformation($"删除:{typeof(T).Name}，主键值：{PKValue.ToString()} ");

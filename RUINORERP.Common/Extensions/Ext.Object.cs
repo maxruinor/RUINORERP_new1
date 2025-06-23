@@ -755,9 +755,6 @@ namespace RUINORERP.Common.Extensions
         //    return typeName;
         //}
 
-        public static string GetGenericTypeName(this object obj)
-        {
-            return GetGenericTypeName(obj.GetType());
-        }
+  
     }
 }

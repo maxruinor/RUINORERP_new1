@@ -260,10 +260,7 @@ namespace RUINORERP.UI.BaseForm
         }
 
 
-        protected virtual void AddByCopy()
-        {
 
-        }
 
         //protected virtual Task<ReturnResults<T>> Delete()
         //{

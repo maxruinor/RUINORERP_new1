@@ -34,6 +34,7 @@ using MapsterMapper;
 using IMapper = AutoMapper.IMapper;
 using System.Text;
 using System.Windows.Forms;
+using RUINORERP.Business.CommService;
 
 namespace RUINORERP.Business
 {
@@ -95,6 +96,19 @@ namespace RUINORERP.Business
                     rmrs.ReturnObject = entity as T;
                     return rmrs;
                 }
+                //审核时 要检测明细中对应的相同业务类型下不能有相同来源单号。除非有正负总金额为0对冲情况。或是两行数据?
+                var PendingApprovalDetails = await _appContext.Db.Queryable<tb_FM_PaymentRecordDetail>()
+                    .Includes(c => c.tb_fm_paymentrecord)
+                .Where(c => c.tb_fm_paymentrecord.PaymentStatus == (int)PaymentStatus.待审核).ToListAsync();
+
+                if (!ValidatePaymentDetails(PendingApprovalDetails, rmrs))
+                {
+                    //rmrs.ErrorMsg = "相同业务类型下不能有相同的来源单号!审核失败。";
+                    rmrs.Succeeded = false;
+                    rmrs.ReturnObject = entity as T;
+                    return rmrs;
+                }
+
 
                 //相同客户，多个应收可以合成一个收款 。所以明细中就是对应的应收单。
 
@@ -315,18 +329,17 @@ namespace RUINORERP.Business
                                         #endregion
                                     }
                                 }
+
+                                //生成核销记录
+                                await settlementController.GenerateSettlement(entity, receivablePayable);
+
+                                
                             }
 
                             receivablePayableUpdateList.AddRange(receivablePayableList);
 
                             #endregion
 
-                            #region 生成核销记录
-                            //收到，付了钱。审核就会生成一笔核销记录  收款抵扣应收
-                            //这里是不是只记录应收应付来的？  预收付只是一个记录过程？
-                            List<tb_FM_PaymentSettlement> paymentSettlements = await settlementController.GenerateSettlement(entity);
-                            var settlementIds = await _unitOfWorkManage.GetDbClient().Insertable<tb_FM_PaymentSettlement>(paymentSettlements).ExecuteReturnSnowflakeIdListAsync();
-                            #endregion
                             #region  对应的业务性单据 状态更新
                             //比方销售退货单 退款了就是结案。
                             //销售出库也对应结案。（出库对应订单结案）
@@ -381,6 +394,7 @@ namespace RUINORERP.Business
                                             if (oldPrePayment.LocalRefundAmount == oldPrePayment.LocalPrepaidAmount || oldPrePayment.ForeignRefundAmount == oldPrePayment.ForeignPrepaidAmount)
                                             {
                                                 oldPrePayment.PrePaymentStatus = (int)PrePaymentStatus.已退款;
+                                                oldPrePayment.IsAvailable = false;
                                             }
 
                                             //有退，有核销 则是  部分核销
@@ -413,17 +427,112 @@ namespace RUINORERP.Business
                                             oldPayment.ReversedByPaymentId = entity.PaymentId;
                                             oldPayment.ReversedByPaymentNo = entity.PaymentNo;
                                             //更新原来的上一个预付记录
-                                            await _unitOfWorkManage.GetDbClient().Updateable<tb_FM_PaymentRecord>(oldPayment).ExecuteCommandAsync();
+                                            await _unitOfWorkManage.GetDbClient().Updateable<tb_FM_PaymentRecord>(oldPayment).UpdateColumns(t => new
+                                            {
+                                                t.ReversedByPaymentId,
+                                                t.ReversedByPaymentNo
+                                            }
+                                            ).ExecuteCommandAsync();
                                         }
                                         entity.IsReversed = true;
                                         // 指向原始记录
                                         entity.ReversedOriginalId = oldPayment.PaymentId;
                                         entity.ReversedOriginalNo = oldPayment.PaymentNo;
-                                        //生成核销记录
-                                        //退款或红冲时。审核就会生成一笔核销记录  收款抵扣应收
-                                        await settlementController.GenerateSettlement(entity);
+                                  
 
                                         #endregion
+
+
+                                        #region 对应的订单变为取消 不调用业务的取消是事务不能嵌套
+
+                                        if (prePayment.SourceBizType == (int)BizType.销售订单 || prePayment.SourceBizType == (int)BizType.采购订单)
+                                        {
+                                            var ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
+                                            if (prePayment.SourceBizType == (int)BizType.销售订单)
+                                            {
+                                                var saleOrder = await _unitOfWorkManage.GetDbClient().Queryable<tb_SaleOrder>()
+                                                    .Includes(c => c.tb_SaleOrderDetails)
+                                                .Where(c => c.SOrder_ID == prePayment.SourceBillId)
+                                                .SingleAsync();
+                                                if (saleOrder != null)
+                                                {
+
+                                                    saleOrder.ApprovalOpinions += $" 订金退款，订单取消";
+                                                    saleOrder.DataStatus = (int)DataStatus.已取消;
+                                                    await _unitOfWorkManage.GetDbClient().Updateable(saleOrder).UpdateColumns(t => new
+                                                    {
+                                                        t.ApprovalOpinions,
+                                                        t.DataStatus
+                                                    }
+                                                     ).ExecuteCommandAsync();
+                                                }
+
+
+                                                #region 更新库存的拟销量
+
+                                                List<tb_Inventory> invUpdateList = new List<tb_Inventory>();
+                                                foreach (var child in saleOrder.tb_SaleOrderDetails)
+                                                {
+                                                    #region 库存表的更新 ，
+                                                    tb_Inventory inv = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == child.ProdDetailID && i.Location_ID == child.Location_ID);
+                                                    //更新在途库存
+                                                    inv.Sale_Qty = inv.Sale_Qty - child.Quantity;
+                                                    BusinessHelper.Instance.EditEntity(inv);
+                                                    #endregion
+                                                    invUpdateList.Add(inv);
+                                                }
+
+                                                DbHelper<tb_Inventory> dbHelper = _appContext.GetRequiredService<DbHelper<tb_Inventory>>();
+                                                var InvUpdateCounter = await dbHelper.BaseDefaultAddElseUpdateAsync(invUpdateList);
+
+                                                #endregion
+
+                                            }
+                                            else if (prePayment.SourceBizType == (int)BizType.采购订单)
+                                            {
+                                                var purOrder = await _unitOfWorkManage.GetDbClient().Queryable<tb_PurOrder>()
+                                                    .Includes(c => c.tb_PurOrderDetails)
+                                                .Where(c => c.SOrder_ID == prePayment.SourceBillId)
+                                                .SingleAsync();
+                                                if (purOrder != null)
+                                                {
+                                                    purOrder.ApprovalOpinions += $" 订金退款，订单取消";
+                                                    purOrder.DataStatus = (int)DataStatus.已取消;
+                                                    await _unitOfWorkManage.GetDbClient().Updateable(purOrder).UpdateColumns(t => new
+                                                    {
+                                                        t.ApprovalOpinions,
+                                                        t.DataStatus
+                                                    }
+                                                     ).ExecuteCommandAsync();
+                                                }
+
+                                                #region 更新库存的拟销量
+
+                                                List<tb_Inventory> invUpdateList = new List<tb_Inventory>();
+                                                foreach (var child in purOrder.tb_PurOrderDetails)
+                                                {
+                                                    #region 库存表的更新 ，
+                                                    tb_Inventory inv = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == child.ProdDetailID && i.Location_ID == child.Location_ID);
+                                                    inv.On_the_way_Qty = inv.On_the_way_Qty - child.Quantity;
+                                                    BusinessHelper.Instance.EditEntity(inv);
+                                                    #endregion
+                                                    invUpdateList.Add(inv);
+                                                }
+
+                                                DbHelper<tb_Inventory> dbHelper = _appContext.GetRequiredService<DbHelper<tb_Inventory>>();
+                                                var InvUpdateCounter = await dbHelper.BaseDefaultAddElseUpdateAsync(invUpdateList);
+
+                                                #endregion
+
+
+                                            }
+                                        }
+
+                                        #endregion
+
+
+                    
+
                                     }
 
 
@@ -466,6 +575,7 @@ namespace RUINORERP.Business
                         var preRs = await _unitOfWorkManage.GetDbClient().Updateable<tb_FM_PreReceivedPayment>(preReceivedPaymentUpdateList).UpdateColumns(it =>
                                     new
                                     {
+                                        it.PrePayDate,
                                         it.PrePaymentStatus,
                                         it.ForeignBalanceAmount,
                                         it.LocalBalanceAmount,
@@ -528,6 +638,50 @@ namespace RUINORERP.Business
                 return rmrs;
             }
         }
+
+        public static bool ValidatePaymentDetails(List<tb_FM_PaymentRecordDetail> paymentDetails, ReturnResults<T> returnResults = null)
+        {
+            // 按来源业务类型分组
+            var groupedByBizType = paymentDetails
+                .GroupBy(d => d.SourceBizType)
+                .ToList();
+
+            foreach (var bizTypeGroup in groupedByBizType)
+            {
+                // 按来源单号分组
+                var groupedByBillNo = bizTypeGroup
+                    .GroupBy(d => d.SourceBillNo)
+                    .ToList();
+
+                foreach (var billNoGroup in groupedByBillNo)
+                {
+                    var items = billNoGroup.ToList();
+
+                    // 如果只有一条记录，直接通过
+                    if (items.Count == 1)
+                        continue;
+
+                    // 如果有两条记录，检查是否为对冲情况
+                    if (items.Count == 2)
+                    {
+                        // 计算本币金额总和
+                        decimal totalLocalAmount = items.Sum(i => i.LocalAmount);
+                        // 计算外币金额总和
+                        decimal totalForeignAmount = items.Sum(i => i.ForeignAmount);
+
+                        // 检查是否满足对冲条件（总和接近0，考虑浮点数精度问题）
+                        if (Math.Abs(totalLocalAmount) < 0.001m && Math.Abs(totalForeignAmount) < 0.001m)
+                            continue;
+                    }
+                    returnResults.ErrorMsg = $"待审核的{(ReceivePaymentType)paymentDetails[0].tb_fm_paymentrecord.ReceivePaymentType}单中不能存在({(BizType)groupedByBizType[0].Key}，来源单号为:{groupedByBillNo[0].Key}的相同重复数据。";
+                    // 其他情况均视为不合法
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
 
 
         // 生成收付款记录表

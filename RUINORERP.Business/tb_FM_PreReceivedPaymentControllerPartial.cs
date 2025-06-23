@@ -96,9 +96,16 @@ namespace RUINORERP.Business
                         && PaymentRecordlist.Any(c => c.ApprovalStatus == (int)ApprovalStatus.已审核)))
                     {
                         _unitOfWorkManage.RollbackTran();
-                        rmrs.ErrorMsg = "存在【已支付】的付款单，不能反审预款单,请联系管理员，或作退回处理。";
+                        rmrs.ErrorMsg = "存在【已支付】的付款单，不能反审预款单,请联系上级财务，或作退回处理。";
                         rmrs.Succeeded = false;
                         return rmrs;
+                    }
+                    else
+                    {
+                        //删除对应的由预收款生成的收款单
+                        await _appContext.Db.Deleteable<tb_FM_PaymentRecord>()
+                            .Where(c => c.tb_FM_PaymentRecordDetails.Any(d => d.SourceBilllId == entity.PreRPID
+                              && d.SourceBizType == (int)BizType.预收款单)).ExecuteCommandAsync();
                     }
 
                 }
@@ -185,27 +192,26 @@ namespace RUINORERP.Business
 
                 var paymentController = _appContext.GetRequiredService<tb_FM_PaymentRecordController<tb_FM_PaymentRecord>>();
 
-                //一个预收付款，可以多次收付款？ 不支持太复杂了
-
-                //var records = _unitOfWorkManage.GetDbClient().Queryable<tb_FM_PaymentRecordDetail>()
-                //    .Includes(c => c.tb_fm_paymentrecord)
-                //    .Where(c => c.SourceBizType == (int)BizType.预收款单 && c.SourceBilllId == entity.PreRPID)
-                //    .Where(c => c.tb_fm_paymentrecord.ApprovalStatus == (int)ApprovalStatus.已审核
-                //    && c.tb_fm_paymentrecord.ApprovalResults.HasValue
-                //    && c.tb_fm_paymentrecord.ApprovalResults.Value
-                //    && (c.tb_fm_paymentrecord.PaymentStatus == (int)PaymentStatus.已支付 || c.tb_fm_paymentrecord.PaymentStatus == (int)PaymentStatus.已核销))
-                //    .ToList();
-                //if (records.Count > 0)
-                //{
-                //    rmrs.Succeeded = false;
-                //    rmrs.ErrorMsg = $" 预{((ReceivePaymentType)entity.ReceivePaymentType).ToString()}单{entity.PreRPNO},已生成收款单。";
-                //    if (_appContext.SysConfig.ShowDebugInfo)
-                //    {
-                //        _logger.LogInformation(rmrs.ErrorMsg);
-                //    }
-                //    return rmrs;
-                //}
-
+                var records = _unitOfWorkManage.GetDbClient().Queryable<tb_FM_PaymentRecordDetail>()
+                    .Includes(c => c.tb_fm_paymentrecord)
+                    .Where(c => c.SourceBizType == (int)BizType.预收款单 && c.SourceBilllId == entity.PreRPID)
+                    .Where(c => c.tb_fm_paymentrecord.ApprovalStatus == (int)ApprovalStatus.已审核
+                    && c.tb_fm_paymentrecord.ApprovalResults.HasValue
+                    && c.tb_fm_paymentrecord.ApprovalResults.Value
+                    && (c.tb_fm_paymentrecord.PaymentStatus == (int)PaymentStatus.已支付))
+                    .ToList();
+                if (records.Count > 0)
+                {
+                    //一个预收款单可以生成两份收款单，仅仅是在退款要冲销时。即收款金额要为负数
+                    rmrs.Succeeded = false;
+                    rmrs.ErrorMsg = $" 预{((ReceivePaymentType)entity.ReceivePaymentType).ToString()}单{entity.PreRPNO},已生成收款单,系统不支持重复生成收付款。";
+                    if (_appContext.SysConfig.ShowDebugInfo)
+                    {
+                        _logger.LogInformation(rmrs.ErrorMsg);
+                    }
+                    return rmrs;
+                }
+                
                 // 开启事务，保证数据一致性
                 _unitOfWorkManage.BeginTran();
 
@@ -224,7 +230,6 @@ namespace RUINORERP.Business
                 entity.ApprovalResults = true;
                 BusinessHelper.Instance.ApproverEntity(entity);
                 //只更新指定列
-                // var result = _unitOfWorkManage.GetDbClient().Updateable<tb_Stocktake>(entity).UpdateColumns(it => new { it.FMPaymentStatus, it.ApprovalOpinions }).ExecuteCommand();
                 var result = await _unitOfWorkManage.GetDbClient().Updateable<tb_FM_PreReceivedPayment>(entity).UpdateColumns(it => new {
                     it.PrePaymentStatus,
                     it.ApprovalResults,
@@ -245,9 +250,7 @@ namespace RUINORERP.Business
                 rmrs.ErrorMsg = ex.Message;
                 return rmrs;
             }
-
         }
-
 
 
         /// <summary>

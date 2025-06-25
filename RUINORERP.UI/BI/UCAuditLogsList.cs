@@ -87,7 +87,7 @@ namespace RUINORERP.UI.BI
             //    toolStripButton产品跟踪.Visible = false;//默认隐藏
             //}
 
-            UIHelper.ControlButton(CurMenuInfo, toolStripButton产品跟踪);
+            UIHelper.ControlButton<ToolStripButton>(CurMenuInfo, toolStripButton产品跟踪);
             toolStripButton产品跟踪.ToolTipText = "根据审计日志数据来进行产品跟踪。";
             toolStripButton产品跟踪.Click += new System.EventHandler(this.toolStripButton产品跟踪_Click);
 

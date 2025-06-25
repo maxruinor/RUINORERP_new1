@@ -34,6 +34,8 @@ using RUINORERP.UI.ClientCmdService;
 using System.Threading;
 using TransInstruction.CommandService;
 using RUINORERP.Global.EnumExt;
+using NPOI.SS.Formula.Functions;
+using System.Linq.Expressions;
 
 namespace RUINORERP.UI.BaseForm
 {
@@ -64,7 +66,10 @@ namespace RUINORERP.UI.BaseForm
 
         public virtual void AddExcludeMenuList(string menuItemText)
         {
-            ExcludeMenuTextList.Add(menuItemText);
+            if (!ExcludeMenuTextList.Contains(menuItemText))
+            {
+                ExcludeMenuTextList.Add(menuItemText);
+            }
         }
 
         /// <summary>
@@ -76,9 +81,24 @@ namespace RUINORERP.UI.BaseForm
 
         }
 
-        public virtual void AddExcludeMenuList(MenuItemEnums menuItem)
+        /// <summary>
+        /// 使用表达式树配置列映射
+        /// </summary>
+        //public void AddExcludeMenu<MenuItemEnums>(Expression<Func<MenuItemEnums, MenuItemEnums>> excludeItemExpression)
+        //{
+        //    var excludeItem = excludeItemExpression.GetMemberInfo().Name;
+        //    if (!ExcludeMenuList.Contains(excludeItem))
+        //    {
+        //        ExcludeMenuList.Add(propertyName);
+        //    }
+        //}
+
+        public virtual void AddExcludeMenuList( MenuItemEnums menuItem)
         {
-            ExcludeMenuList.Add(menuItem);
+            if (!ExcludeMenuList.Contains(menuItem))
+            {
+                ExcludeMenuList.Add(menuItem);
+            }
         }
         #endregion
 
@@ -805,7 +825,7 @@ namespace RUINORERP.UI.BaseForm
                                         foreach (var sub in subItem.DropDownItems)
                                         {
                                             ToolStripMenuItem subStripMenuItem = sub as ToolStripMenuItem;
-                                            UIHelper.ControlButton<ToolStripMenuItem>(CurMenuInfo, subStripMenuItem);
+                                            UIHelper.ControlButton<ToolStripMenuItem>(CurMenuInfo, subStripMenuItem, ExcludeMenuList);
                                             subStripMenuItem.Click += Item_Click;
                                         }
                                     }
@@ -821,7 +841,7 @@ namespace RUINORERP.UI.BaseForm
                                         {
                                             ToolStripItem subStripMenuItem = sub as ToolStripItem;
                                             subStripMenuItem.Click += Item_Click;
-                                            UIHelper.ControlButton<ToolStripItem>(CurMenuInfo, subStripMenuItem);
+                                            UIHelper.ControlButton<ToolStripItem>(CurMenuInfo, subStripMenuItem, ExcludeMenuList);
                                         }
                                     }
                                 }

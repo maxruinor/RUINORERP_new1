@@ -45,6 +45,7 @@ namespace RUINORERP.Business.Processor
             queryFilter.SetQueryField<tb_ButtonInfo>(c => c.MenuID);
             queryFilter.SetQueryField<tb_ButtonInfo>(c => c.Notes);
             queryFilter.SetQueryField<tb_ButtonInfo>(c => c.FormName);
+            queryFilter.SetQueryField<tb_ButtonInfo>(c => c.ButtonType);
             queryFilter.SetQueryField<tb_ButtonInfo>(c => c.HotKey);
             return queryFilter;
         }

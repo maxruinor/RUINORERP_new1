@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：05/24/2025 18:28:29
+// 时间：06/24/2025 18:44:35
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -54,7 +54,7 @@ namespace RUINORERP.Business
 
  RuleFor(x => x.OriginalUnitPrice).PrecisionScale(19,4,true).WithMessage("原始单价:小数位不能超过4。");
 
- RuleFor(x => x.AdjustedUnitPrice).PrecisionScale(19,4,true).WithMessage("调整单价:小数位不能超过4。");
+ RuleFor(x => x.AdjustedUnitPrice).PrecisionScale(19,4,true).WithMessage("调整后单价:小数位不能超过4。");
 
  RuleFor(x => x.DiffUnitPrice).PrecisionScale(19,4,true).WithMessage("差异单价:小数位不能超过4。");
 

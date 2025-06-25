@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：05/24/2025 18:28:29
+// 时间：06/24/2025 18:44:35
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -101,13 +101,13 @@ namespace RUINORERP.Model.QueryDto
         }
      
 
-        private decimal _ExchangeRate= ((1));
+        private decimal? _ExchangeRate= ((1));
         /// <summary>
         /// 汇率
         /// </summary>
         [AdvQueryAttribute(ColName = "ExchangeRate",ColDesc = "汇率")]
-        [SugarColumn(ColumnDataType = "decimal",SqlParameterDbType ="Decimal",ColumnName = "ExchangeRate",IsNullable = false,ColumnDescription = "汇率" )]
-        public decimal ExchangeRate 
+        [SugarColumn(ColumnDataType = "decimal",SqlParameterDbType ="Decimal",ColumnName = "ExchangeRate",IsNullable = true,ColumnDescription = "汇率" )]
+        public decimal? ExchangeRate 
         { 
             get{return _ExchangeRate;}
             set{SetProperty(ref _ExchangeRate, value);}
@@ -129,10 +129,10 @@ namespace RUINORERP.Model.QueryDto
 
         private decimal _AdjustedUnitPrice= ((0));
         /// <summary>
-        /// 调整单价
+        /// 调整后单价
         /// </summary>
-        [AdvQueryAttribute(ColName = "AdjustedUnitPrice",ColDesc = "调整单价")]
-        [SugarColumn(ColumnDataType = "money",SqlParameterDbType ="Decimal",ColumnName = "AdjustedUnitPrice",IsNullable = false,ColumnDescription = "调整单价" )]
+        [AdvQueryAttribute(ColName = "AdjustedUnitPrice",ColDesc = "调整后单价")]
+        [SugarColumn(ColumnDataType = "money",SqlParameterDbType ="Decimal",ColumnName = "AdjustedUnitPrice",IsNullable = false,ColumnDescription = "调整后单价" )]
         public decimal AdjustedUnitPrice 
         { 
             get{return _AdjustedUnitPrice;}

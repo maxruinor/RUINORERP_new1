@@ -74,7 +74,7 @@ namespace RUINORERP.UI.PSI.INV
             toolStripButton成本确认.ImageTransparentColor = System.Drawing.Color.Magenta;
             toolStripButton成本确认.Name = "成本确认MakesureCost";
             toolStripButton成本确认.Visible = false;//默认隐藏
-            UIHelper.ControlButton(CurMenuInfo, toolStripButton成本确认);
+            UIHelper.ControlButton<ToolStripButton>(CurMenuInfo, toolStripButton成本确认);
             toolStripButton成本确认.ToolTipText = "快速确认成本。";
             toolStripButton成本确认.Click += new System.EventHandler(this.toolStripButton成本确认_Click);
 

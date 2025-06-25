@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：05/24/2025 18:28:27
+// 时间：06/24/2025 18:44:33
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -109,6 +109,33 @@ namespace RUINORERP.Model.QueryDto
         { 
             get{return _SourceBillNo;}
             set{SetProperty(ref _SourceBillNo, value);}
+        }
+     
+
+        private int _PayStatus;
+        /// <summary>
+        /// 付款状态
+        /// </summary>
+        [AdvQueryAttribute(ColName = "PayStatus",ColDesc = "付款状态")]
+        [SugarColumn(ColumnDataType = "int",SqlParameterDbType ="Int32",ColumnName = "PayStatus",IsNullable = false,ColumnDescription = "付款状态" )]
+        public int PayStatus 
+        { 
+            get{return _PayStatus;}
+            set{SetProperty(ref _PayStatus, value);}
+        }
+     
+
+        private long? _Paytype_ID;
+        /// <summary>
+        /// 付款类型
+        /// </summary>
+        [AdvQueryAttribute(ColName = "Paytype_ID",ColDesc = "付款类型")]
+        [SugarColumn(ColumnDataType = "bigint",SqlParameterDbType ="Int64",ColumnName = "Paytype_ID",IsNullable = true,ColumnDescription = "付款类型" )]
+        [FKRelationAttribute("tb_PaymentMethod","Paytype_ID")]
+        public long? Paytype_ID 
+        { 
+            get{return _Paytype_ID;}
+            set{SetProperty(ref _Paytype_ID, value);}
         }
      
 
@@ -235,10 +262,10 @@ namespace RUINORERP.Model.QueryDto
 
         private decimal _TotalForeignDiffAmount= ((0));
         /// <summary>
-        /// 金额差总计外币
+        /// 金额总计外币
         /// </summary>
-        [AdvQueryAttribute(ColName = "TotalForeignDiffAmount",ColDesc = "金额差总计外币")]
-        [SugarColumn(ColumnDataType = "money",SqlParameterDbType ="Decimal",ColumnName = "TotalForeignDiffAmount",IsNullable = false,ColumnDescription = "金额差总计外币" )]
+        [AdvQueryAttribute(ColName = "TotalForeignDiffAmount",ColDesc = "金额总计外币")]
+        [SugarColumn(ColumnDataType = "money",SqlParameterDbType ="Decimal",ColumnName = "TotalForeignDiffAmount",IsNullable = false,ColumnDescription = "金额总计外币" )]
         public decimal TotalForeignDiffAmount 
         { 
             get{return _TotalForeignDiffAmount;}
@@ -248,10 +275,10 @@ namespace RUINORERP.Model.QueryDto
 
         private decimal _TotalLocalDiffAmount= ((0));
         /// <summary>
-        /// 金额差总计本币
+        /// 金额总计本币
         /// </summary>
-        [AdvQueryAttribute(ColName = "TotalLocalDiffAmount",ColDesc = "金额差总计本币")]
-        [SugarColumn(ColumnDataType = "money",SqlParameterDbType ="Decimal",ColumnName = "TotalLocalDiffAmount",IsNullable = false,ColumnDescription = "金额差总计本币" )]
+        [AdvQueryAttribute(ColName = "TotalLocalDiffAmount",ColDesc = "金额总计本币")]
+        [SugarColumn(ColumnDataType = "money",SqlParameterDbType ="Decimal",ColumnName = "TotalLocalDiffAmount",IsNullable = false,ColumnDescription = "金额总计本币" )]
         public decimal TotalLocalDiffAmount 
         { 
             get{return _TotalLocalDiffAmount;}
@@ -274,10 +301,10 @@ namespace RUINORERP.Model.QueryDto
 
         private decimal _TaxTotalDiffLocalAmount= ((0));
         /// <summary>
-        /// 税额差总计
+        /// 税额总计
         /// </summary>
-        [AdvQueryAttribute(ColName = "TaxTotalDiffLocalAmount",ColDesc = "税额差总计")]
-        [SugarColumn(ColumnDataType = "money",SqlParameterDbType ="Decimal",ColumnName = "TaxTotalDiffLocalAmount",IsNullable = false,ColumnDescription = "税额差总计" )]
+        [AdvQueryAttribute(ColName = "TaxTotalDiffLocalAmount",ColDesc = "税额总计")]
+        [SugarColumn(ColumnDataType = "money",SqlParameterDbType ="Decimal",ColumnName = "TaxTotalDiffLocalAmount",IsNullable = false,ColumnDescription = "税额总计" )]
         public decimal TaxTotalDiffLocalAmount 
         { 
             get{return _TaxTotalDiffLocalAmount;}

@@ -459,6 +459,22 @@ namespace RUINORERP.UI.Common
                                     page = NewPage(pr.CaptionCN, 1, menu);
                                 }
                                 else
+                                if (pr.BIBaseForm.Contains("BaseNavigatorGeneric"))
+                                {
+                                    //这里要区别处理两种情况。一种是普通的。一种是 财务共用表两层业务类的情况
+                                    if (string.IsNullOrEmpty(pr.BizInterface))
+                                    {
+                                        var menu = Startup.GetFromFacByName<UserControl>(pr.FormName);
+                                        page = NewPage(pr.CaptionCN, 1, menu);
+                                    }
+                                    else
+                                    {
+                                        var menu = Startup.GetFromFacByName<BaseNavigator>(pr.FormName);
+                                        page = NewPage(pr.CaptionCN, 1, menu);
+                                    }
+                                    
+                                }
+                                else
                                 if (pr.BIBaseForm.Contains("UCBaseClass"))
                                 {
                                     var menu = Startup.GetFromFacByName<UCBaseClass>(pr.FormName);

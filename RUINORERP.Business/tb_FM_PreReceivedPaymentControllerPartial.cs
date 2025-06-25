@@ -358,7 +358,7 @@ namespace RUINORERP.Business
             payable.LocalPrepaidAmountInWords = string.Empty;
             payable.Account_id = entity.Account_id;
             //如果是外币时，则由外币算出本币
-            if (entity.PayStatus == (int)PayStatus.全部付款)
+            if (entity.PayStatus == (int)PayStatus.全额预付)
             {
                 //外币时 全部付款，则外币金额=本币金额/汇率 在UI中显示出来。
                 if (_appContext.BaseCurrency.Currency_ID != entity.Currency_ID)
@@ -373,7 +373,7 @@ namespace RUINORERP.Business
                 }
             }
             else            //来自于订金
-            if (entity.PayStatus == (int)PayStatus.部分付款)
+            if (entity.PayStatus == (int)PayStatus.部分预付)
             {
                 //外币时
                 if (_appContext.BaseCurrency.Currency_ID != entity.Currency_ID)

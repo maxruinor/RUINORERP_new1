@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：05/24/2025 18:28:25
+// 时间：06/24/2025 18:44:30
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -66,6 +66,8 @@ namespace RUINORERP.UI
         
         
         
+        
+        
 
          }
 /*
@@ -79,7 +81,9 @@ namespace RUINORERP.UI
                         entity.SourceBizType = Int32.Parse(txtSourceBizType.Text);
                         entity.SourceBillId = Int64.Parse(txtSourceBillId.Text);
                         entity.SourceBillNo = txtSourceBillNo.Text ;
-                       entity.Currency_ID = Int64.Parse(txtCurrency_ID.Text);
+                       entity.PayStatus = Int32.Parse(txtPayStatus.Text);
+                        entity.Paytype_ID = Int64.Parse(txtPaytype_ID.Text);
+                        entity.Currency_ID = Int64.Parse(txtCurrency_ID.Text);
                         entity.AdjustReason = txtAdjustReason.Text ;
                        entity.ExchangeRate = Decimal.Parse(txtExchangeRate.Text);
                         entity.AdjustDate = DateTime.Parse(txtAdjustDate.Text);
@@ -121,6 +125,8 @@ namespace RUINORERP.UI
            DataBindingHelper.BindData4TextBox<tb_FM_PriceAdjustment>(entity, t => t.SourceBizType, txtSourceBizType, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4TextBox<tb_FM_PriceAdjustment>(entity, t => t.SourceBillId, txtSourceBillId, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4TextBox<tb_FM_PriceAdjustment>(entity, t => t.SourceBillNo, txtSourceBillNo, BindDataType4TextBox.Text,false);
+           DataBindingHelper.BindData4TextBox<tb_FM_PriceAdjustment>(entity, t => t.PayStatus, txtPayStatus, BindDataType4TextBox.Qty,false);
+          // DataBindingHelper.BindData4Cmb<tb_PaymentMethod>(entity, k => k.Paytype_ID, v=>v.XXNAME, cmbPaytype_ID);
           // DataBindingHelper.BindData4Cmb<tb_Currency>(entity, k => k.Currency_ID, v=>v.XXNAME, cmbCurrency_ID);
            DataBindingHelper.BindData4TextBox<tb_FM_PriceAdjustment>(entity, t => t.AdjustReason, txtAdjustReason, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_FM_PriceAdjustment>(entity, t => t.ExchangeRate.ToString(), txtExchangeRate, BindDataType4TextBox.Money,false);

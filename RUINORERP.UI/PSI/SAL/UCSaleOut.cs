@@ -609,8 +609,7 @@ namespace RUINORERP.UI.PSI.SAL
                 }
 
                 EditEntity.TotalQty = details.Sum(c => c.Quantity);
-                EditEntity.TotalCost = details.Sum(c => (c.Cost + c.CustomizedCost) * c.Quantity);
-                EditEntity.TotalCost = EditEntity.TotalCost + EditEntity.FreightCost;
+                EditEntity.TotalCost = details.Sum(c => (c.Cost + c.CustomizedCost) * c.Quantity)+ EditEntity.FreightCost;
                 EditEntity.TotalTaxAmount = details.Sum(c => c.SubtotalTaxAmount);
                 EditEntity.TotalCommissionAmount = details.Sum(c => c.CommissionAmount);
                 EditEntity.TotalTaxAmount = EditEntity.TotalTaxAmount.ToRoundDecimalPlaces(MainForm.Instance.authorizeController.GetMoneyDataPrecision());
@@ -838,14 +837,12 @@ namespace RUINORERP.UI.PSI.SAL
 
 
                 EditEntity.TotalQty = details.Sum(c => c.Quantity);
-                EditEntity.TotalCost = details.Sum(c => (c.Cost + c.CustomizedCost) * c.Quantity);
-                EditEntity.TotalCost = EditEntity.TotalCost + EditEntity.FreightCost;
+                EditEntity.TotalCost = details.Sum(c => (c.Cost + c.CustomizedCost) * c.Quantity)+ EditEntity.FreightCost;
                 EditEntity.TotalTaxAmount = details.Sum(c => c.SubtotalTaxAmount);
                 EditEntity.TotalCommissionAmount = details.Sum(c => c.CommissionAmount);
                 EditEntity.TotalTaxAmount = EditEntity.TotalTaxAmount.ToRoundDecimalPlaces(MainForm.Instance.authorizeController.GetMoneyDataPrecision());
 
-                EditEntity.TotalAmount = details.Sum(c => c.TransactionPrice * c.Quantity);
-                EditEntity.TotalAmount = EditEntity.TotalAmount + EditEntity.FreightIncome;
+                EditEntity.TotalAmount = details.Sum(c => c.TransactionPrice * c.Quantity)+ EditEntity.FreightIncome;
                 if (EditEntity.Currency_ID != AppContext.BaseCurrency.Currency_ID)
                 {
                     EditEntity.ForeignTotalAmount = EditEntity.TotalAmount / EditEntity.ExchangeRate;

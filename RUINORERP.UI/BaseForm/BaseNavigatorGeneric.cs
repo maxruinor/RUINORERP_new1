@@ -217,8 +217,8 @@ namespace RUINORERP.UI.BaseForm
             {
                 if (!this.DesignMode)
                 {
-                   
 
+             
 
                     Krypton.Toolkit.KryptonButton button设置查询条件 = new Krypton.Toolkit.KryptonButton();
                     button设置查询条件.Text = "设置查询条件";
@@ -700,13 +700,13 @@ namespace RUINORERP.UI.BaseForm
                     {
                         ToolStripButton subItem = item as ToolStripButton;
                         subItem.Click += Item_Click;
-                        UIHelper.ControlButton(this.CurMenuInfo, subItem);
+                        UIHelper.ControlButton<ToolStripButton>(this.CurMenuInfo, subItem);
                     }
                     if (item is ToolStripDropDownButton)
                     {
                         ToolStripDropDownButton subItem = item as ToolStripDropDownButton;
                         subItem.Click += Item_Click;
-                        UIHelper.ControlButton(this.CurMenuInfo, subItem);
+                        UIHelper.ControlButton<ToolStripDropDownButton>(this.CurMenuInfo, subItem);
                         //下一级
                         if (subItem.HasDropDownItems)
                         {
@@ -714,7 +714,7 @@ namespace RUINORERP.UI.BaseForm
                             {
                                 ToolStripMenuItem subStripMenuItem = sub as ToolStripMenuItem;
                                 subStripMenuItem.Click += Item_Click;
-                                UIHelper.ControlButton(this.CurMenuInfo, subStripMenuItem);
+                                UIHelper.ControlButton<ToolStripMenuItem>(this.CurMenuInfo, subStripMenuItem);
                             }
                         }
                     }
@@ -723,7 +723,7 @@ namespace RUINORERP.UI.BaseForm
                     {
                         ToolStripSplitButton subItem = item as ToolStripSplitButton;
                         subItem.Click += Item_Click;
-                        UIHelper.ControlButton(this.CurMenuInfo, subItem);
+                        UIHelper.ControlButton<ToolStripSplitButton>(this.CurMenuInfo, subItem);
                         //下一级
                         if (subItem.HasDropDownItems)
                         {
@@ -731,7 +731,7 @@ namespace RUINORERP.UI.BaseForm
                             {
                                 ToolStripItem subStripMenuItem = sub as ToolStripItem;
                                 subStripMenuItem.Click += Item_Click;
-                                UIHelper.ControlButton(this.CurMenuInfo, subStripMenuItem);
+                                UIHelper.ControlButton< ToolStripItem>(this.CurMenuInfo, subStripMenuItem);
                             }
                         }
                     }
@@ -751,9 +751,9 @@ namespace RUINORERP.UI.BaseForm
             kryptonWorkspace1.AllowDrop = true;
             kryptonWorkspace1.AllowPageDrag = true;
             kryptonWorkspace1.Root.Children.Clear();
-            Builder();
-            //添加查询条件
 
+            //添加查询条件
+            Builder();
 
 
             this.CurMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble && m.EntityName == typeof(M).Name && m.ClassPath == this.ToString()).FirstOrDefault();

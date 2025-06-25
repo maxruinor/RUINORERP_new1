@@ -47,6 +47,8 @@ using RUINORERP.Business.Processor;
 using RUINORERP.Business.Security;
 using System.Configuration;
 using RUINORERP.UI.AdvancedUIModule;
+using RUINORERP.Model.CommonModel;
+using RUINORERP.Business.FMService;
 
 namespace RUINORERP.UI.FM
 {
@@ -54,13 +56,18 @@ namespace RUINORERP.UI.FM
     /// <summary>
     /// 应收应付
     /// </summary>
-    public partial class UCReceivablePayable : BaseBillEditGeneric<tb_FM_ReceivablePayable, tb_FM_ReceivablePayableDetail>, IPublicEntityObject
+    public partial class UCReceivablePayable : BaseBillEditGeneric<tb_FM_ReceivablePayable, tb_FM_ReceivablePayableDetail>, IPublicEntityObject, IToolStripMenuInfoAuth
     {
         public UCReceivablePayable()
         {
             InitializeComponent();
             AddPublicEntityObject(typeof(ProductSharePart));
+        }
 
+        public override void AddExcludeMenuList()
+        {
+            base.AddExcludeMenuList(MenuItemEnums.反结案);
+            base.AddExcludeMenuList(MenuItemEnums.结案);
         }
 
         /// <summary>
@@ -438,7 +445,7 @@ namespace RUINORERP.UI.FM
 
         private void UCStockIn_Load(object sender, EventArgs e)
         {
-
+            AddExtendButton(CurMenuInfo);
             #region
             switch (PaymentType)
             {
@@ -569,7 +576,91 @@ namespace RUINORERP.UI.FM
             }
 
         }
+        #region 坏账处理
+        ToolStripButton toolStripButton坏账处理 = new System.Windows.Forms.ToolStripButton();
 
+
+        /// <summary>
+        /// 添加回收
+        /// </summary>
+        /// <returns></returns>
+        public ToolStripItem[] AddExtendButton(tb_MenuInfo menuInfo)
+        {
+            toolStripButton坏账处理.Text = "坏账处理";
+            toolStripButton坏账处理.Image = global::RUINORERP.UI.Properties.Resources.Assignment;
+            toolStripButton坏账处理.ImageTransparentColor = System.Drawing.Color.Magenta;
+            toolStripButton坏账处理.Name = "坏账处理";
+            toolStripButton坏账处理.Visible = false;//默认隐藏
+            UIHelper.ControlButton<ToolStripButton>(CurMenuInfo, toolStripButton坏账处理);
+            toolStripButton坏账处理.ToolTipText = "无法完成支付的账款，需标记为坏账时，使用本功能。";
+            toolStripButton坏账处理.Click += new System.EventHandler(this.toolStripButton坏账处理_Click);
+
+            System.Windows.Forms.ToolStripItem[] extendButtons = new System.Windows.Forms.ToolStripItem[]
+            { toolStripButton坏账处理};
+
+            this.BaseToolStrip.Items.AddRange(extendButtons);
+            return extendButtons;
+        }
+
+
+
+        private async void toolStripButton坏账处理_Click(object sender, EventArgs e)
+        {
+            if (EditEntity == null)
+            {
+                return;
+            }
+            if (!FMPaymentStatusHelper.CanWriteOffBadDebt((ARAPStatus)EditEntity.ARAPStatus))
+            {
+                MessageBox.Show($"当前单据,状态为【{(ARAPStatus)EditEntity.ARAPStatus}】不允许标记为坏账。");
+                return;
+            }
+
+            BillConverterFactory bcf = Startup.GetFromFac<BillConverterFactory>();
+            CommonUI.frmGenericOpinion<tb_FM_ReceivablePayable> frm = new();
+            frm.FormTitle = "坏账处理";
+            frm.OpinionLabelText = "坏账原因：";
+            frm.BindData(
+                 EditEntity,
+                 e => e.ARAPNo,
+                 e => e.ARAPNo,
+                 e => e.Remark
+            );
+            if (frm.ShowDialog() == DialogResult.OK)//审核了。不管是同意还是不同意
+            {
+                //已经审核的,未完结的才能标记坏账
+                var ctr = Startup.GetFromFac<tb_FM_ReceivablePayableController<tb_FM_ReceivablePayable>>();
+                ReturnResults<tb_FM_ReceivablePayable> rs = await ctr.WriteOffBadDebt(EditEntity, frm.txtOpinion.Text);
+                if (rs.Succeeded)
+                {
+                    //if (MainForm.Instance.WorkflowItemlist.ContainsKey(""))
+                    //{
+
+                    //}
+                    //这里审核完了的话，如果这个单存在于工作流的集合队列中，则向服务器说明审核完成。
+                    //这里推送到审核，启动工作流  队列应该有一个策略 比方优先级，桌面不动1 3 5分钟 
+                    //OriginalData od = ActionForClient.工作流审批(pkid, (int)BizType.盘点单, ae.ApprovalResults, ae.ApprovalComments);
+                    //MainForm.Instance.ecs.AddSendData(od);
+                    MainForm.Instance.AuditLogHelper.CreateAuditLog<tb_FM_ReceivablePayable>("坏账处理", EditEntity, $"原因:{EditEntity.Remark}");
+                    Refreshs();
+                }
+                else
+                {
+                    MainForm.Instance.PrintInfoLog($"{EditEntity.ARAPNo}坏账处理操作失败,原因是{rs.ErrorMsg},如果无法解决，请联系管理员！", Color.Red);
+                }
+            }
+            else
+            {
+
+            }
+
+
+        }
+
+
+
+
+        #endregion
         private void Sgh_OnAddDataRow(object rowObj)
         {
 

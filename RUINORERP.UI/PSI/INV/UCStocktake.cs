@@ -105,14 +105,14 @@ namespace RUINORERP.UI.PSI.INV
             InitDataToCmbByEnumDynamicGeneratedDataSource<tb_Stocktake>(typeof(CheckMode), e => e.CheckMode, cmbCheckMode, true);
             DataBindingHelper.InitDataToCmbByEnumDynamicGeneratedDataSource<tb_Stocktake>(typeof(Adjust_Type), e => e.Adjust_Type, cmb调整类型, false);
 
-            /*
+         
             //枚举过滤了一下
-            EnumBindingHelper bindingHelper = new EnumBindingHelper();
-            List<string> listStr = new List<string>();
-            List<EnumEntityMember> list = new List<EnumEntityMember>();
-            list = typeof(CheckMode).GetListByEnum<CheckMode>(selectedItem: 2);
-            bindingHelper.InitDataToCmbByEnumOnWhere(list, "CheckMode", cmbCheckMode);
-            */
+            //EnumBindingHelper bindingHelper = new EnumBindingHelper();
+            //List<string> listStr = new List<string>();
+            //List<EnumEntityMember> list = new List<EnumEntityMember>();
+            //list = typeof(CheckMode).GetListByEnum<CheckMode>(selectedItem: 2);
+            //bindingHelper.InitDataToCmbByEnumOnWhere(list, "CheckMode", cmbCheckMode);
+           
 
         }
 

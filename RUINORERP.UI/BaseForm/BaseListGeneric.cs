@@ -348,12 +348,12 @@ namespace RUINORERP.UI.BaseForm
                         {
                             ToolStripButton subItem = item as ToolStripButton;
                             subItem.Click += Item_Click;
-                            UIHelper.ControlButton(CurMenuInfo, subItem);
+                            UIHelper.ControlButton<ToolStripButton>(CurMenuInfo, subItem);
 
                         }
                         if (item is ToolStripDropDownButton subItemDr)
                         {
-                            UIHelper.ControlButton(CurMenuInfo, subItemDr);
+                            UIHelper.ControlButton<ToolStripDropDownButton>(CurMenuInfo, subItemDr);
                             subItemDr.Click += Item_Click;
                             //下一级
                             if (subItemDr.HasDropDownItems)
@@ -361,7 +361,7 @@ namespace RUINORERP.UI.BaseForm
                                 foreach (var sub in subItemDr.DropDownItems)
                                 {
                                     ToolStripMenuItem subStripMenuItem = sub as ToolStripMenuItem;
-                                    ControlButton(subStripMenuItem);
+                                    UIHelper. ControlButton<ToolStripMenuItem>(CurMenuInfo,subStripMenuItem);
                                     subStripMenuItem.Click += Item_Click;
                                 }
 
@@ -487,58 +487,7 @@ namespace RUINORERP.UI.BaseForm
             //UIHelper.ControlColumnsInvisible(CurMenuInfo, _UCBillChildQuery_Related.InvisibleCols, _UCBillChildQuery_Related.DefaultHideCols);
         }
 
-
-        public void ControlButton(ToolStripMenuItem btnItem)
-        {
-            if (!MainForm.Instance.AppContext.IsSuperUser)
-            {
-                if (CurMenuInfo.tb_P4Buttons == null)
-                {
-                    btnItem.Visible = false;
-                }
-                else
-                {
-                    //如果因为热键 Text改变了。到时再处理
-                    tb_P4Button p4b = CurMenuInfo.tb_P4Buttons.Where(b => b.tb_buttoninfo.BtnText == btnItem.Text).FirstOrDefault();
-                    if (p4b != null)
-                    {
-                        btnItem.Visible = p4b.IsVisble;
-                        btnItem.Enabled = p4b.IsEnabled;
-                    }
-                    else
-                    {
-                        btnItem.Visible = false;
-                    }
-                }
-            }
-        }
-
-        public void ControlButton(ToolStripDropDownButton btnItem)
-        {
-            if (!MainForm.Instance.AppContext.IsSuperUser)
-            {
-                if (CurMenuInfo.tb_P4Buttons == null)
-                {
-                    btnItem.Visible = false;
-                }
-                else
-                {
-                    //如果因为热键 Text改变了。到时再处理
-                    tb_P4Button p4b = CurMenuInfo.tb_P4Buttons.Where(b => b.tb_buttoninfo.BtnText == btnItem.Text).FirstOrDefault();
-                    if (p4b != null)
-                    {
-                        btnItem.Visible = p4b.IsVisble;
-                        btnItem.Enabled = p4b.IsEnabled;
-                    }
-                    else
-                    {
-                        btnItem.Visible = false;
-                    }
-                }
-            }
-        }
-
-
+ 
 
 
 
@@ -1339,7 +1288,7 @@ namespace RUINORERP.UI.BaseForm
             dataGridView1.Refresh();
         }
 
-        protected virtual void Modify(BaseEditGeneric<T> frmadd) 
+        protected virtual void Modify(BaseEditGeneric<T> frmadd)
         {
             if (bindingSourceList.Current != null)
             {

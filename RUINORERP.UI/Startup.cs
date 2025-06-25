@@ -639,6 +639,16 @@ namespace RUINORERP.UI
                 _builder.Register(c => Assemblyobj.CreateInstance(type.FullName)).Named<BaseQuery>(type.Name)
                           .PropertiesAutowired(new CustPropertyAutowiredSelector());//指定属性注入
             }
+            else if (type.BaseType.BaseType.Name.Contains("BaseNavigatorGeneric"))
+            {
+                //builder.RegisterType(type)
+                //          .As<BaseQuery>()
+                //          //.WithMetadata("BillType", "Payment") // 添加额外元数据
+                //          .PropertiesAutowired();
+
+                _builder.Register(c => Assemblyobj.CreateInstance(type.FullName)).Named<BaseNavigator>(type.Name)
+                          .PropertiesAutowired(new CustPropertyAutowiredSelector());//指定属性注入
+            }
             else if (type.BaseType.BaseType.Name.Contains("BaseListGeneric"))
             {
                 _builder.Register(c => Assemblyobj.CreateInstance(type.FullName)).Named<BaseUControl>(type.Name)

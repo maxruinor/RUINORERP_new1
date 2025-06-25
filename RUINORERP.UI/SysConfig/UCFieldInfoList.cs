@@ -64,7 +64,7 @@ namespace RUINORERP.UI.BI
             //toolStripButton提取重复数据.Image = global::RUINORERP.UI.Properties.Resources.MakeSureCost;
             toolStripButton提取重复数据.ImageTransparentColor = System.Drawing.Color.Magenta;
             toolStripButton提取重复数据.Name = "提取重复数据";
-            UIHelper.ControlButton(CurMenuInfo, toolStripButton提取重复数据);
+            UIHelper.ControlButton<ToolStripButton>(CurMenuInfo, toolStripButton提取重复数据);
             toolStripButton提取重复数据.ToolTipText = "提取重复数据，有一行会保留，没有显示出来。。";
             toolStripButton提取重复数据.Click += new System.EventHandler(button提取重复数据_Click);
 

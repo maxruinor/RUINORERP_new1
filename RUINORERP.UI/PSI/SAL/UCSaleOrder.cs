@@ -253,7 +253,15 @@ namespace RUINORERP.UI.PSI.SAL
             }
 
 
-            DataBindingHelper.BindData4CmbByEnum<tb_SaleOrder>(entity, k => k.PayStatus, typeof(PayStatus), cmbPayStatus, false);
+            //DataBindingHelper.BindData4CmbByEnum<tb_SaleOrder>(entity, k => k.PayStatus, typeof(PayStatus), cmbPayStatus, false);
+            EnumBindingHelper bindingHelper = new EnumBindingHelper();
+            //https://www.cnblogs.com/cdaniu/p/15236857.html
+            //加载枚举，并且可以过虑不需要的项 , 订单不需要用全部付款。只有在财务模块中 确认收货后。才是全部付款
+            List<int> exclude = new List<int>();
+            exclude.Add((int)PayStatus.全部付款);
+            bindingHelper.InitDataToCmbByEnumOnWhere<tb_SaleOrder>(typeof(PayStatus).GetListByEnum<PayStatus>(selectedItem: 1, exclude.ToArray()), e => e.PayStatus, cmbPayStatus);
+
+
             DataBindingHelper.BindData4TextBox<tb_SaleOrder>(entity, t => t.FreightIncome.ToString(), txtFreightIncome, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4TextBox<tb_SaleOrder>(entity, t => t.ForeignFreightIncome.ToString(), txtForeignFreightIncome, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4TextBox<tb_SaleOrder>(entity, t => t.TotalAmount.ToString(), txtTotalAmount, BindDataType4TextBox.Money, false);
@@ -586,12 +594,12 @@ using var binder = new UIStateBinder(..., customEvaluator);
         //    return EditEntity;
         //}
 
-        public void InitDataTocmbbox()
-        {
-            DataBindingHelper.InitDataToCmb<tb_Employee>(k => k.Employee_ID, v => v.Employee_Name, cmbEmployee_ID);
-            DataBindingHelper.InitDataToCmb<tb_PaymentMethod>(k => k.Paytype_ID, v => v.Paytype_Name, cmbPaytype_ID);
-            DataBindingHelper.InitDataToCmbByEnumDynamicGeneratedDataSource<tb_SaleOrder>(typeof(PayStatus), e => e.PayStatus, cmbPayStatus, false);
-        }
+        //public void InitDataTocmbbox()
+        //{
+        //    DataBindingHelper.InitDataToCmb<tb_Employee>(k => k.Employee_ID, v => v.Employee_Name, cmbEmployee_ID);
+        //    DataBindingHelper.InitDataToCmb<tb_PaymentMethod>(k => k.Paytype_ID, v => v.Paytype_Name, cmbPaytype_ID);
+        //    DataBindingHelper.InitDataToCmbByEnumDynamicGeneratedDataSource<tb_SaleOrder>(typeof(PayStatus), e => e.PayStatus, cmbPayStatus, false);
+        //}
 
         /*
          重要思路提示，这个表格控件，数据源的思路是，
@@ -638,6 +646,9 @@ using var binder = new UIStateBinder(..., customEvaluator);
             //如果库位为只读  暂时只会显示 ID
             //listCols.SetCol_ReadOnly<ProductSharePart>(c => c.Location_ID);
             listCols.SetCol_ReadOnly<tb_SaleOrderDetail>(c => c.TotalDeliveredQty);
+            listCols.SetCol_ReadOnly<tb_SaleOrderDetail>(c => c.SubtotalTaxAmount);
+            listCols.SetCol_ReadOnly<tb_SaleOrderDetail>(c => c.TotalReturnedQty);
+
 
             listCols.SetCol_Format<tb_SaleOrderDetail>(c => c.Discount, CustomFormatType.PercentFormat);
             listCols.SetCol_Format<tb_SaleOrderDetail>(c => c.TaxRate, CustomFormatType.PercentFormat);
@@ -874,7 +885,7 @@ using var binder = new UIStateBinder(..., customEvaluator);
                                 //如果是账期，但是又选择的是非 未付款
                                 if (pm.Paytype_Name == DefaultPaymentMethod.账期.ToString())
                                 {
-                                    MessageBox.Show("付款方式错误,全部付款或部分付款时，请选择付款时使用的方式。");
+                                    MessageBox.Show("付款方式错误,全部预付或部分预付时，请选择付款时使用的方式。");
                                     return false;
                                 }
                             }
@@ -896,7 +907,7 @@ using var binder = new UIStateBinder(..., customEvaluator);
 
                     }
                 }
-                if (EditEntity.PayStatus == (int)PayStatus.部分付款)
+                if (EditEntity.PayStatus == (int)PayStatus.部分预付)
                 {
                     //如果订金大于零时，则不能是未付款
                     if (EditEntity.Deposit > 0 || EditEntity.ForeignDeposit > 0)
@@ -905,15 +916,15 @@ using var binder = new UIStateBinder(..., customEvaluator);
                     }
                     else
                     {
-                        MessageBox.Show("部分付款时，请输入正确的订金金额。");
+                        MessageBox.Show("部分预付时，请输入正确的订金金额。");
                         return false;
                     }
                 }
-                if (EditEntity.PayStatus == (int)PayStatus.全部付款)
+                if (EditEntity.PayStatus == (int)PayStatus.全额预付)
                 {
                     if (EditEntity.Deposit > 0 || EditEntity.ForeignDeposit > 0)
                     {
-                        MessageBox.Show("全部付款时，不需要输入订金。");
+                        MessageBox.Show("全部预付时，不需要输入订金,系统默认总金额为支付金额。");
                         return false;
                     }
                 }
@@ -1466,7 +1477,7 @@ using var binder = new UIStateBinder(..., customEvaluator);
             toolStripButton定制成本确认.ImageTransparentColor = System.Drawing.Color.Magenta;
             toolStripButton定制成本确认.Name = "定制成本确认";
             toolStripButton定制成本确认.Visible = false;//默认隐藏
-            UIHelper.ControlButton(CurMenuInfo, toolStripButton定制成本确认);
+            UIHelper.ControlButton<ToolStripButton>(CurMenuInfo, toolStripButton定制成本确认);
             toolStripButton定制成本确认.ToolTipText = "定制订单时，产品的成本有变化，额外增加或减少的成本要在明细中体现，使用本功能。";
             toolStripButton定制成本确认.Click += new System.EventHandler(this.toolStripButton定制成本确认_Click);
 
@@ -1476,7 +1487,7 @@ using var binder = new UIStateBinder(..., customEvaluator);
             toolStripButton付款调整.ImageTransparentColor = System.Drawing.Color.Magenta;
             toolStripButton付款调整.Name = "付款调整";
             toolStripButton付款调整.Visible = false;//默认隐藏
-            UIHelper.ControlButton(CurMenuInfo, toolStripButton付款调整);
+            UIHelper.ControlButton<ToolStripButton>(CurMenuInfo, toolStripButton付款调整);
             toolStripButton付款调整.ToolTipText = "客户付款情况变动时，使用本功能。";
             toolStripButton付款调整.Click += new System.EventHandler(this.toolStripButton付款调整_Click);
 
@@ -1486,7 +1497,7 @@ using var binder = new UIStateBinder(..., customEvaluator);
             toolStripButton反结案.ImageTransparentColor = System.Drawing.Color.Magenta;
             toolStripButton反结案.Name = "反结案";
             toolStripButton反结案.Visible = false;//默认隐藏
-            UIHelper.ControlButton(CurMenuInfo, toolStripButton反结案);
+            UIHelper.ControlButton<ToolStripButton>(CurMenuInfo, toolStripButton反结案);
             toolStripButton反结案.ToolTipText = "结案错误，要上级特殊处理时，使用本功能。";
             toolStripButton反结案.Click += new System.EventHandler(this.toolStripButton反结案_Click);
 

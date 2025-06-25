@@ -135,6 +135,9 @@ namespace RUINORERP.UI.FM
                 }
             }
 
+            DataBindingHelper.BindData4Cmb<tb_PaymentMethod>(entity, k => k.Paytype_ID, v => v.Paytype_Name, cmbPaytype_ID);
+
+            DataBindingHelper.BindData4CmbByEnum<tb_FM_PriceAdjustment>(entity, k => k.PayStatus, typeof(PayStatus), cmbPayStatus, false);
             DataBindingHelper.BindData4TextBox<tb_FM_PriceAdjustment>(entity, t => t.AdjustNo, txtAdjustNo, BindDataType4TextBox.Qty, false);
             DataBindingHelper.BindData4TextBox<tb_FM_PriceAdjustment>(entity, t => t.ExchangeRate.ToString(), txtExchangeRate, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4TextBox<tb_FM_PriceAdjustment>(entity, t => t.TotalForeignDiffAmount.ToString(), txtTotalForeignDiffAmount, BindDataType4TextBox.Money, false);
@@ -287,6 +290,19 @@ namespace RUINORERP.UI.FM
                     }
                 }
 
+                if (s2.PropertyName == entity.GetPropertyName<tb_SaleOrder>(c => c.PayStatus) && entity.PayStatus == (int)PayStatus.未付款)
+                {
+                    //默认为账期
+                    entity.Paytype_ID = MainForm.Instance.AppContext.PaymentMethodOfPeriod.Paytype_ID;
+                }
+
+                if (s2.PropertyName == entity.GetPropertyName<tb_SaleOrder>(c => c.Paytype_ID) && entity.Paytype_ID > 0)
+                {
+                    if (cmbPaytype_ID.SelectedItem is tb_PaymentMethod paymentMethod)
+                    {
+                        EditEntity.tb_paymentmethod = paymentMethod;
+                    }
+                }
                 //到期日期应该是根据对应客户的账期的天数来算
                 if (entity.CustomerVendor_ID > 0 && s2.PropertyName == entity.GetPropertyName<tb_FM_PriceAdjustment>(c => c.CustomerVendor_ID))
                 {
@@ -667,6 +683,7 @@ namespace RUINORERP.UI.FM
                     }
                 }
 
+             
 
                 //没有经验通过下面先不计算
                 if (NeedValidated && !base.Validator(EditEntity))

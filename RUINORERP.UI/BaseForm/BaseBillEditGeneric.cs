@@ -160,6 +160,7 @@ namespace RUINORERP.UI.BaseForm
 
             if (System.ComponentModel.LicenseManager.UsageMode != System.ComponentModel.LicenseUsageMode.Designtime)
             {
+                AddExcludeMenuList();
                 if (!this.DesignMode)
                 {
                     frm = new frmFormProperty();

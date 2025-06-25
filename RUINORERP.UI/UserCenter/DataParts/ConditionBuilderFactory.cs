@@ -348,11 +348,11 @@ namespace RUINORERP.UI.UserCenter.DataParts
                               {
                                new KeyValuePair<WhereType, ConditionalModel>(
                                WhereType.And,
-                               new ConditionalModel(){FieldName ="ARAPStatus",ConditionalType=ConditionalType.Equal,FieldValue=((int)ARAPStatus.待支付).ToString(), CSharpTypeName = "int"}),
+                               new ConditionalModel(){FieldName ="ARAPStatus",ConditionalType=ConditionalType.Equal,FieldValue=((int)ARAPStatus.部分支付).ToString(), CSharpTypeName = "int"}),
 
                                new KeyValuePair<WhereType, ConditionalModel> (
                                WhereType.Or,
-                               new ConditionalModel() {FieldName ="ARAPStatus",ConditionalType=ConditionalType.Equal,FieldValue=((int)ARAPStatus.部分支付).ToString(), CSharpTypeName = "int"}),
+                               new ConditionalModel() {FieldName ="ARAPStatus",ConditionalType=ConditionalType.Equal,FieldValue=((int)ARAPStatus.待支付).ToString(), CSharpTypeName = "int"}),
 
 
                                new KeyValuePair<WhereType, ConditionalModel> (

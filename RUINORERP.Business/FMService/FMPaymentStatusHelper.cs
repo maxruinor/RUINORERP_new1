@@ -143,7 +143,17 @@ namespace RUINORERP.Business.FMService
             return false;
         }
 
-
+  
+        /// <summary>是否允许标记为坏账</summary>
+        public static bool CanWriteOffBadDebt<T>(T status) where T : Enum
+        {
+            if (status is ARAPStatus arap)
+            {
+                return arap == ARAPStatus.待支付 ||
+                       arap == ARAPStatus.部分支付;
+            }
+            return false;
+        }
 
         /// <summary>是否允许提交操作</summary>
         public static bool CanSubmit<TEnum>(TEnum status) where TEnum : Enum

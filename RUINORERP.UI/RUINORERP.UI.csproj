@@ -643,6 +643,18 @@
     <Compile Include="BI\UCSupplierList.Designer.cs">
       <DependentUpon>UCSupplierList.cs</DependentUpon>
     </Compile>
+    <Compile Include="BI\UCsysBillNoRuleEdit.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="BI\UCsysBillNoRuleEdit.Designer.cs">
+      <DependentUpon>UCsysBillNoRuleEdit.cs</DependentUpon>
+    </Compile>
+    <Compile Include="BI\UCsysBillNoRuleList.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="BI\UCsysBillNoRuleList.Designer.cs">
+      <DependentUpon>UCsysBillNoRuleList.cs</DependentUpon>
+    </Compile>
     <Compile Include="BI\UCUserPersonalizedEdit.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -658,6 +670,18 @@
     </Compile>
     <Compile Include="BusyDialog.Designer.cs">
       <DependentUpon>BusyDialog.cs</DependentUpon>
+    </Compile>
+    <Compile Include="CommonUI\frmOpinion.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="CommonUI\frmOpinion.Designer.cs">
+      <DependentUpon>frmOpinion.cs</DependentUpon>
+    </Compile>
+    <Compile Include="CommonUI\frmGenericOpinion.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="CommonUI\frmGenericOpinion.Designer.cs">
+      <DependentUpon>frmGenericOpinion.cs</DependentUpon>
     </Compile>
     <Compile Include="Common\ColumnComparer.cs" />
     <Compile Include="Common\ControlExtensions.cs" />
@@ -677,6 +701,12 @@
     </Compile>
     <Compile Include="CRM\UCTargetCustomerList.Designer.cs">
       <DependentUpon>UCTargetCustomerList.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FM\FMBase\UCPaymentRecordStatistics.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="FM\FMBase\UCPaymentRecordStatistics.Designer.cs">
+      <DependentUpon>UCPaymentRecordStatistics.cs</DependentUpon>
     </Compile>
     <Compile Include="FM\FMBase\UCPaymentRecord.cs">
       <SubType>UserControl</SubType>
@@ -1542,6 +1572,18 @@
     <Compile Include="CRM\UCLeadsList.Designer.cs">
       <DependentUpon>UCLeadsList.cs</DependentUpon>
     </Compile>
+    <Compile Include="FM\UCFMReceivedRecordStatistics.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="FM\UCFMReceivedRecordStatistics.Designer.cs">
+      <DependentUpon>UCFMReceivedRecordStatistics.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FM\UCFMPaymentRecordStatistics.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="FM\UCFMPaymentRecordStatistics.Designer.cs">
+      <DependentUpon>UCFMPaymentRecordStatistics.cs</DependentUpon>
+    </Compile>
     <Compile Include="FM\OtherExpenseVoucherStatistics.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -1763,12 +1805,6 @@
     </Compile>
     <Compile Include="CommonUI\frmMultiSelector.Designer.cs">
       <DependentUpon>frmMultiSelector.cs</DependentUpon>
-    </Compile>
-    <Compile Include="CommonUI\frmOpinion.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="CommonUI\frmOpinion.Designer.cs">
-      <DependentUpon>frmOpinion.cs</DependentUpon>
     </Compile>
     <Compile Include="Common\BarCodeCreator.cs" />
     <Compile Include="Common\BarCodeHelper.cs" />
@@ -3317,6 +3353,9 @@
     <EmbeddedResource Include="BI\UCGroupEmployeesAssignee.resx">
       <DependentUpon>UCGroupEmployeesAssignee.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="BI\UCsysBillNoRuleEdit.resx">
+      <DependentUpon>UCsysBillNoRuleEdit.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="BI\UCUserPersonalizedEdit.resx">
       <DependentUpon>UCUserPersonalizedEdit.cs</DependentUpon>
     </EmbeddedResource>
@@ -3455,6 +3494,12 @@
     <EmbeddedResource Include="CommonUI\frmInputObject.resx">
       <DependentUpon>frmInputObject.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="CommonUI\frmOpinion.resx">
+      <DependentUpon>frmOpinion.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="CommonUI\frmGenericOpinion.resx">
+      <DependentUpon>frmGenericOpinion.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="CommonUI\frmSelectObject.resx">
       <DependentUpon>frmSelectObject.cs</DependentUpon>
     </EmbeddedResource>
@@ -3526,6 +3571,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="CRM\UCLeadsList.resx">
       <DependentUpon>UCLeadsList.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FM\FMBase\UCPaymentRecordStatistics.resx">
+      <DependentUpon>UCPaymentRecordStatistics.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="FM\FMBase\UCPaymentRecord.resx">
       <DependentUpon>UCPaymentRecord.cs</DependentUpon>
@@ -3610,9 +3658,6 @@
     </EmbeddedResource>
     <EmbeddedResource Include="CommonUI\frmMultiSelector.resx">
       <DependentUpon>frmMultiSelector.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="CommonUI\frmOpinion.resx">
-      <DependentUpon>frmOpinion.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="DevTools\frmDbColumnToExlColumnConfig.resx">
       <DependentUpon>frmDbColumnToExlColumnConfig.cs</DependentUpon>

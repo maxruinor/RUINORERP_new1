@@ -1101,7 +1101,7 @@ namespace RUINORERP.UI.SysConfig
 
                         }
 
-                        if (!Saleout.TotalCost.Equals((Saleout.tb_SaleOutDetails.Sum(c => c.SubtotalCostAmount) + Saleout.FreightCost)))
+                        if (!Saleout.TotalCost.Equals(Saleout.tb_SaleOutDetails.Sum(c => c.SubtotalCostAmount) + Saleout.FreightCost))
                         {
                             Saleout.TotalCost = Saleout.tb_SaleOutDetails.Sum(c => c.SubtotalCostAmount) + Saleout.FreightCost;
 
@@ -1122,7 +1122,8 @@ namespace RUINORERP.UI.SysConfig
                     {
                         if (saleOutDetails.Count > 0)
                         {
-                            int detailcounter = await MainForm.Instance.AppContext.Db.Updateable(saleOutDetails).UpdateColumns(t => new {
+                            int detailcounter = await MainForm.Instance.AppContext.Db.Updateable(saleOutDetails).UpdateColumns(t => new
+                            {
 
                                 t.SubtotalCostAmount,
                                 t.UnitPrice,
@@ -1343,86 +1344,125 @@ namespace RUINORERP.UI.SysConfig
 
                 if (treeView1.SelectedNode.Text == "佣金数据修复[tb_SaleOrder]")
                 {
-                    if (treeViewTableList.SelectedNode.Tag != null && treeViewTableList.SelectedNode.Name == typeof(tb_SaleOrder).Name)
+                    if (treeViewTableList.SelectedNode.Tag != null)
                     {
-                        List<long> ids = new List<long>();
-                        List<tb_SaleOrderDetail> updateDetaillist = new();
-                        List<tb_SaleOrderDetail> allDetailList = await MainForm.Instance.AppContext.Db.Queryable<tb_SaleOrderDetail>()
-                       .Where(c => c.CommissionAmount > 0 && c.UnitCommissionAmount == 0)
-                      .ToListAsync();
-                        for (int o = 0; o < allDetailList.Count; o++)
+                        #region 佣金
+                        if (treeViewTableList.SelectedNode.Name == typeof(tb_SaleOrder).Name)
                         {
-                            var detail = allDetailList[o];
-                            detail.UnitCommissionAmount = detail.CommissionAmount / detail.Quantity;
-                            updateDetaillist.Add(detail);
-                            if (!ids.Contains(detail.SOrder_ID))
+                            List<long> ids = new List<long>();
+                            List<tb_SaleOrderDetail> updateDetaillist = new();
+                            List<tb_SaleOrderDetail> allDetailList = await MainForm.Instance.AppContext.Db.Queryable<tb_SaleOrderDetail>()
+                                .Includes(c => c.tb_saleorder)
+                           .Where(c => c.CommissionAmount > 0 && c.UnitCommissionAmount == 0)
+                          .ToListAsync();
+                            for (int o = 0; o < allDetailList.Count; o++)
                             {
-                                ids.Add(detail.SOrder_ID);
+                                var detail = allDetailList[o];
+                                detail.UnitCommissionAmount = detail.CommissionAmount / detail.Quantity;
+                                updateDetaillist.Add(detail);
+                                if (!ids.Contains(detail.SOrder_ID))
+                                {
+                                    ids.Add(detail.SOrder_ID);
+                                }
                             }
-                        }
 
-                        //修复缴库库明细和等于主表的总数量
-                        List<tb_SaleOrder> yjList = await MainForm.Instance.AppContext.Db.Queryable<tb_SaleOrder>()
-                            .Where(c => ids.Contains(c.SOrder_ID))
-                            .Includes(c => c.tb_SaleOrderDetails)
-                            .ToListAsync();
-                        List<tb_SaleOrder> updatelist = new();
-                        for (int i = 0; i < yjList.Count; i++)
-                        {
-                            yjList[i].TotalCommissionAmount = yjList[i].tb_SaleOrderDetails.Sum(c => c.CommissionAmount);
-                            updatelist.Add(yjList[i]);
+                            if (allDetailList.Count > 0)
+                            {
+                                //修复缴库库明细和等于主表的总数量
+                                List<tb_SaleOrder> yjList = await MainForm.Instance.AppContext.Db.Queryable<tb_SaleOrder>()
+                                    .Where(c => ids.Contains(c.SOrder_ID))
+                                    .Includes(c => c.tb_SaleOrderDetails)
+                                    .ToListAsync();
+                                List<tb_SaleOrder> updatelist = new();
+                                for (int i = 0; i < yjList.Count; i++)
+                                {
+                                    yjList[i].TotalCommissionAmount = yjList[i].tb_SaleOrderDetails.Sum(c => c.CommissionAmount);
+                                    updatelist.Add(yjList[i]);
+                                }
+                                int totalamountCounter = 0;
+                                int totaldetailcounter = 0;
+                                if (!chkTestMode.Checked)
+                                {
+                                    totaldetailcounter = await MainForm.Instance.AppContext.Db.Updateable(updateDetaillist).UpdateColumns(t => new { t.UnitCommissionAmount }).ExecuteCommandAsync();
+                                    totalamountCounter = await MainForm.Instance.AppContext.Db.Updateable(updatelist).UpdateColumns(t => new { t.TotalCommissionAmount }).ExecuteCommandAsync();
+                                }
+                                richTextBoxLog.AppendText($"销售订单佣金数据修复 明细 修复成功：{totaldetailcounter} " + "\r\n");
+                                richTextBoxLog.AppendText($"销售订单佣金数据修复 主表 修复成功：{totalamountCounter} " + "\r\n");
+                            }
+                            else
+                            {
+                                richTextBoxLog.AppendText($"没有需要修复的数据" + "\r\n");
+                            }
+
                         }
-                        int totalamountCounter = 0;
-                        int totaldetailcounter = 0;
-                        if (!chkTestMode.Checked)
+                        #endregion
+                        else
                         {
-                            totaldetailcounter = await MainForm.Instance.AppContext.Db.Updateable(updateDetaillist).UpdateColumns(t => new { t.UnitCommissionAmount }).ExecuteCommandAsync();
-                            totalamountCounter = await MainForm.Instance.AppContext.Db.Updateable(updatelist).UpdateColumns(t => new { t.TotalCommissionAmount }).ExecuteCommandAsync();
+                            richTextBoxLog.Clear();
+                            richTextBoxLog.AppendText($"请在左边选中要修复的表名：：{typeof(tb_SaleOrder).Name} " + "\r\n");
                         }
-                        richTextBoxLog.AppendText($"销售订单佣金数据修复 明细 修复成功：{totaldetailcounter} " + "\r\n");
-                        richTextBoxLog.AppendText($"销售订单佣金数据修复 主表 修复成功：{totalamountCounter} " + "\r\n");
                     }
                 }
+
                 if (treeView1.SelectedNode.Text == "佣金数据修复[tb_SaleOut]")
                 {
-                    if (treeViewTableList.SelectedNode.Tag != null && treeViewTableList.SelectedNode.Name == typeof(tb_SaleOut).Name)
+                    if (treeViewTableList.SelectedNode.Tag != null)
                     {
-                        List<long> ids = new List<long>();
-                        List<tb_SaleOutDetail> updateDetaillist = new();
-                        List<tb_SaleOutDetail> allDetailList = await MainForm.Instance.AppContext.Db.Queryable<tb_SaleOutDetail>()
-                       .Where(c => c.CommissionAmount > 0 && c.UnitCommissionAmount == 0)
-                      .ToListAsync();
-                        for (int o = 0; o < allDetailList.Count; o++)
+                        if (treeViewTableList.SelectedNode.Name == typeof(tb_SaleOut).Name)
                         {
-                            var detail = allDetailList[o];
-                            detail.UnitCommissionAmount = detail.CommissionAmount / detail.Quantity;
-                            updateDetaillist.Add(detail);
-                            if (!ids.Contains(detail.SaleOut_MainID))
+                            #region 佣金
+                            List<long> ids = new List<long>();
+                            List<tb_SaleOutDetail> updateDetaillist = new();
+                            List<tb_SaleOutDetail> allDetailList = await MainForm.Instance.AppContext.Db.Queryable<tb_SaleOutDetail>()
+                                .Includes(c => c.tb_saleout)
+                           .Where(c => c.CommissionAmount > 0 && c.UnitCommissionAmount == 0)
+                          .ToListAsync();
+                            for (int o = 0; o < allDetailList.Count; o++)
                             {
-                                ids.Add(detail.SaleOut_MainID);
+                                var detail = allDetailList[o];
+                                detail.UnitCommissionAmount = detail.CommissionAmount / detail.Quantity;
+                                updateDetaillist.Add(detail);
+                                if (!ids.Contains(detail.SaleOut_MainID))
+                                {
+                                    ids.Add(detail.SaleOut_MainID);
+                                    //richTextBoxLog.AppendText($"出库佣金数据修复 出库单号：：{detail.tb_saleout.SaleOutNo} " + "\r\n");
+                                }
                             }
-                        }
+                            if (allDetailList.Count > 0)
+                            {
+                                //修复缴库库明细和等于主表的总数量
+                                List<tb_SaleOut> yjList = await MainForm.Instance.AppContext.Db.Queryable<tb_SaleOut>()
+                                    .Where(c => ids.Contains(c.SaleOut_MainID))
+                                    .Includes(c => c.tb_SaleOutDetails)
+                                    .ToListAsync();
+                                List<tb_SaleOut> updatelist = new();
+                                for (int i = 0; i < yjList.Count; i++)
+                                {
+                                    yjList[i].TotalCommissionAmount = yjList[i].tb_SaleOutDetails.Sum(c => c.CommissionAmount);
+                                    updatelist.Add(yjList[i]);
+                                }
+                                int totalamountCounter = 0;
+                                int totaldetailcounter = 0;
+                                if (!chkTestMode.Checked)
+                                {
+                                    totaldetailcounter = await MainForm.Instance.AppContext.Db.Updateable(updateDetaillist).UpdateColumns(t => new { t.UnitCommissionAmount }).ExecuteCommandAsync();
+                                    totalamountCounter = await MainForm.Instance.AppContext.Db.Updateable(updatelist).UpdateColumns(t => new { t.TotalCommissionAmount }).ExecuteCommandAsync();
+                                }
+                                richTextBoxLog.AppendText($"出库佣金数据修复 明细 修复成功：{totaldetailcounter} " + "\r\n");
+                                richTextBoxLog.AppendText($"出库佣金数据修复 主表 修复成功：{totalamountCounter} " + "\r\n");
+                            }
+                            else
+                            {
+                                richTextBoxLog.AppendText($"没有需要修复的数据" + "\r\n");
+                            }
+                            #endregion
 
-                        //修复缴库库明细和等于主表的总数量
-                        List<tb_SaleOut> yjList = await MainForm.Instance.AppContext.Db.Queryable<tb_SaleOut>()
-                            .Where(c => ids.Contains(c.SaleOut_MainID))
-                            .Includes(c => c.tb_SaleOutDetails)
-                            .ToListAsync();
-                        List<tb_SaleOut> updatelist = new();
-                        for (int i = 0; i < yjList.Count; i++)
-                        {
-                            yjList[i].TotalCommissionAmount = yjList[i].tb_SaleOutDetails.Sum(c => c.CommissionAmount);
-                            updatelist.Add(yjList[i]);
                         }
-                        int totalamountCounter = 0;
-                        int totaldetailcounter = 0;
-                        if (!chkTestMode.Checked)
+                        else
                         {
-                            totaldetailcounter = await MainForm.Instance.AppContext.Db.Updateable(updateDetaillist).UpdateColumns(t => new { t.UnitCommissionAmount }).ExecuteCommandAsync();
-                            totalamountCounter = await MainForm.Instance.AppContext.Db.Updateable(updatelist).UpdateColumns(t => new { t.TotalCommissionAmount }).ExecuteCommandAsync();
+                            richTextBoxLog.Clear();
+                            richTextBoxLog.AppendText($"请在左边选中要修复的表名：：{typeof(tb_SaleOut).Name} " + "\r\n");
                         }
-                        richTextBoxLog.AppendText($"出库佣金数据修复 明细 修复成功：{totaldetailcounter} " + "\r\n");
-                        richTextBoxLog.AppendText($"出库佣金数据修复 主表 修复成功：{totalamountCounter} " + "\r\n");
                     }
                 }
 
@@ -1983,7 +2023,7 @@ namespace RUINORERP.UI.SysConfig
                                 }
                             }
                             order.TotalCost = order.tb_SaleOrderDetails.Sum(c => c.SubtotalCostAmount);
-                            order.TotalAmount = order.tb_SaleOrderDetails.Sum(c => c.SubtotalTransAmount);
+                            order.TotalAmount = order.tb_SaleOrderDetails.Sum(c => c.SubtotalTransAmount) + order.FreightIncome;
                             order.TotalQty = order.tb_SaleOrderDetails.Sum(c => c.Quantity);
                             order.TotalTaxAmount = order.tb_SaleOrderDetails.Sum(c => c.SubtotalTaxAmount);
                             richTextBoxLog.AppendText($"销售订单{order.SOrderNo}总金额：{order.TotalCost} " + "\r\n");
@@ -2012,11 +2052,10 @@ namespace RUINORERP.UI.SysConfig
                                             }
                                         }
                                     }
-                                    SaleOut.TotalCost = SaleOut.tb_SaleOutDetails.Sum(c => c.SubtotalCostAmount);
-                                    SaleOut.TotalAmount = SaleOut.tb_SaleOutDetails.Sum(c => c.SubtotalTransAmount);
+                                    SaleOut.TotalCost = SaleOut.tb_SaleOutDetails.Sum(c => c.SubtotalCostAmount) + SaleOut.FreightCost;
+                                    SaleOut.TotalAmount = SaleOut.tb_SaleOutDetails.Sum(c => c.SubtotalTransAmount) + SaleOut.FreightIncome;
                                     SaleOut.TotalQty = SaleOut.tb_SaleOutDetails.Sum(c => c.Quantity);
                                     SaleOut.TotalTaxAmount = SaleOut.tb_SaleOutDetails.Sum(c => c.SubtotalTaxAmount);
-
 
                                     richTextBoxLog.AppendText($"销售出库{SaleOut.SaleOutNo}总金额：{SaleOut.TotalCost} " + "\r\n");
                                     #region 销售退回

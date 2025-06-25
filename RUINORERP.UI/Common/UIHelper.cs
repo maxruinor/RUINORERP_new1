@@ -401,7 +401,7 @@ namespace RUINORERP.UI.Common
                         //设置不可见
                         if (item.tb_fieldinfo != null)
                         {
-                            if (item.tb_fieldinfo.IsChild && item.tb_fieldinfo.FieldName== "Quantity")
+                            if (item.tb_fieldinfo.IsChild && item.tb_fieldinfo.FieldName == "Quantity")
                             {
 
                             }
@@ -1383,7 +1383,7 @@ namespace RUINORERP.UI.Common
                 foreach (PropertyInfo field in type.GetProperties())
                 {
                     ColDisplayController col = new ColDisplayController();
-                    
+
                     bool Browsable = true;
                     var attributes = field.GetCustomAttributes(true);
                     if (attributes.Contains(new BrowsableAttribute(false)))
@@ -1405,7 +1405,7 @@ namespace RUINORERP.UI.Common
                     }
                     else
                     {
-                        SugarColumn sugarColumn = new ();
+                        SugarColumn sugarColumn = new();
                         sugarColumn.IsIgnore = true;
                         if (attributes.Contains(sugarColumn))
                         {
@@ -1619,21 +1619,22 @@ namespace RUINORERP.UI.Common
         /// <param name="ExcludeMenuList">窗体按钮权限控制  硬编码指定不显示的按钮</param>
         public static void ControlButton<T>(tb_MenuInfo CurMenuInfo, T btnItem, List<MenuItemEnums> ExcludeMenuList = null) where T : ToolStripItem
         {
+            if (CurMenuInfo == null)
+            {
+                return;
+            }
             if (ExcludeMenuList != null && ExcludeMenuList.Any(c => c.ToString() == btnItem.Text))
             {
                 btnItem.Visible = false;
-            }
-            if (CurMenuInfo == null || MainForm.Instance.AppContext.IsSuperUser)
-            {
                 return;
             }
-            if (MainForm.Instance.AppContext.IsSuperUser)
-            {
-                return;
-            }
+
             if (CurMenuInfo.tb_P4Buttons == null)
             {
-                btnItem.Visible = false;
+                btnItem.Visible = true;
+                btnItem.ToolTipText = "按钮无法使用，请联系管理员进行权限配置";
+                btnItem.Enabled = false;
+                return;
             }
             else
             {
@@ -1649,16 +1650,20 @@ namespace RUINORERP.UI.Common
                 }
             }
         }
-
+      
+        /*
         public static void ControlButton(tb_MenuInfo CurMenuInfo, ToolStripSplitButton btnItem)
         {
-            if (CurMenuInfo == null || MainForm.Instance.AppContext.IsSuperUser)
+            if (CurMenuInfo == null)
             {
                 return;
             }
             if (CurMenuInfo.tb_P4Buttons == null)
             {
-                btnItem.Visible = false;
+                btnItem.Visible = true;
+                btnItem.ToolTipText = "按钮无法使用，请联系管理员进行权限配置";
+                btnItem.Enabled = false;
+                return;
             }
             else
             {
@@ -1679,13 +1684,16 @@ namespace RUINORERP.UI.Common
 
         public static void ControlButton(tb_MenuInfo CurMenuInfo, ToolStripMenuItem btnItem)
         {
-            if (CurMenuInfo == null || MainForm.Instance.AppContext.IsSuperUser)
+            if (CurMenuInfo == null)
             {
                 return;
             }
             if (CurMenuInfo.tb_P4Buttons == null)
             {
-                btnItem.Visible = false;
+                btnItem.Visible = true;
+                btnItem.ToolTipText = "按钮无法使用，请联系管理员进行权限配置";
+                btnItem.Enabled = false;
+                return;
             }
             else
             {
@@ -1706,13 +1714,16 @@ namespace RUINORERP.UI.Common
 
         public static void ControlButton(tb_MenuInfo CurMenuInfo, ToolStripDropDownButton btnItem)
         {
-            if (CurMenuInfo == null || MainForm.Instance.AppContext.IsSuperUser)
+            if (CurMenuInfo == null)
             {
                 return;
             }
             if (CurMenuInfo.tb_P4Buttons == null)
             {
-                btnItem.Visible = false;
+                btnItem.Visible = true;
+                btnItem.ToolTipText = "按钮无法使用，请联系管理员进行权限配置";
+                btnItem.Enabled = false;
+                return;
             }
             else
             {
@@ -1733,13 +1744,17 @@ namespace RUINORERP.UI.Common
 
         public static void ControlButton(tb_MenuInfo CurMenuInfo, ToolStripButton btnItem)
         {
-            if (CurMenuInfo == null || MainForm.Instance.AppContext.IsSuperUser)
+            // || MainForm.Instance.AppContext.IsSuperUser
+            if (CurMenuInfo == null)
             {
                 return;
             }
             if (CurMenuInfo.tb_P4Buttons == null)
             {
-                btnItem.Visible = false;
+                btnItem.Visible = true;
+                btnItem.ToolTipText = "按钮无法使用，请联系管理员进行权限配置";
+                btnItem.Enabled = false;
+                return;
             }
             else
             {
@@ -1759,13 +1774,16 @@ namespace RUINORERP.UI.Common
         }
         public static void ControlButton(tb_MenuInfo CurMenuInfo, ToolStripItem btnItem)
         {
-            if (CurMenuInfo == null || MainForm.Instance.AppContext.IsSuperUser)
+            if (CurMenuInfo == null)
             {
                 return;
             }
             if (CurMenuInfo.tb_P4Buttons == null)
             {
-                btnItem.Visible = false;
+                btnItem.Visible = true;
+                btnItem.ToolTipText = "按钮无法使用，请联系管理员进行权限配置";
+                btnItem.Enabled = false;
+                return;
             }
             else
             {
@@ -1783,16 +1801,18 @@ namespace RUINORERP.UI.Common
             }
 
         }
-
         public static void ControlButton(tb_MenuInfo CurMenuInfo, ToolStripControlHost tsc)
         {
-            if (CurMenuInfo == null || MainForm.Instance.AppContext.IsSuperUser)
+            if (CurMenuInfo == null)
             {
                 return;
             }
             if (CurMenuInfo.tb_P4Buttons == null)
             {
-                tsc.Visible = false;
+                tsc.Visible = true;
+                tsc.ToolTipText = "按钮无法使用，请联系管理员进行权限配置";
+                tsc.Enabled = false;
+                return;
             }
             else
             {
@@ -1809,7 +1829,7 @@ namespace RUINORERP.UI.Common
                 }
             }
         }
-
+       */
         #endregion
 
 

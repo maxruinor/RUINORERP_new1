@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：05/24/2025 18:28:26
+// 时间：06/24/2025 18:44:32
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -461,6 +461,7 @@ namespace RUINORERP.Business
          public virtual async Task<List<tb_FM_PriceAdjustment>> QueryByNavAsync()
         {
             List<tb_FM_PriceAdjustment> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_FM_PriceAdjustment>()
+                               .Includes(t => t.tb_paymentmethod )
                                .Includes(t => t.tb_currency )
                                .Includes(t => t.tb_customervendor )
                                .Includes(t => t.tb_department )
@@ -486,6 +487,7 @@ namespace RUINORERP.Business
          public virtual async Task<List<tb_FM_PriceAdjustment>> QueryByNavAsync(Expression<Func<tb_FM_PriceAdjustment, bool>> exp)
         {
             List<tb_FM_PriceAdjustment> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_FM_PriceAdjustment>().Where(exp)
+                               .Includes(t => t.tb_paymentmethod )
                                .Includes(t => t.tb_currency )
                                .Includes(t => t.tb_customervendor )
                                .Includes(t => t.tb_department )
@@ -511,6 +513,7 @@ namespace RUINORERP.Business
          public virtual List<tb_FM_PriceAdjustment> QueryByNav(Expression<Func<tb_FM_PriceAdjustment, bool>> exp)
         {
             List<tb_FM_PriceAdjustment> list = _unitOfWorkManage.GetDbClient().Queryable<tb_FM_PriceAdjustment>().Where(exp)
+                            .Includes(t => t.tb_paymentmethod )
                             .Includes(t => t.tb_currency )
                             .Includes(t => t.tb_customervendor )
                             .Includes(t => t.tb_department )
@@ -553,7 +556,8 @@ namespace RUINORERP.Business
         public override async Task<T> BaseQueryByIdNavAsync(object id)
         {
             tb_FM_PriceAdjustment entity = await _unitOfWorkManage.GetDbClient().Queryable<tb_FM_PriceAdjustment>().Where(w => w.AdjustId == (long)id)
-                             .Includes(t => t.tb_currency )
+                             .Includes(t => t.tb_paymentmethod )
+                            .Includes(t => t.tb_currency )
                             .Includes(t => t.tb_customervendor )
                             .Includes(t => t.tb_department )
                             .Includes(t => t.tb_employee )

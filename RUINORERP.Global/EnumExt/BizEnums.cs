@@ -232,14 +232,14 @@ namespace RUINORERP.Global
     public enum BizType
     {
         无对应数据 = -1,
-        销售订单 = 0,
-        销售出库单 = 1,
-        销售退回单 = 2,
-        采购订单 = 3,
-        采购入库单 = 4,
-        采购退货单 = 5,
-        其他入库单 = 6,
-        其他出库单 = 7,
+        销售订单 = 0,// SO (Sales Order)
+        销售出库单 = 1,// STO (Sales Transfer Out)
+        销售退回单 = 2, // STR (Sales Return)
+        采购订单 = 3, // PO (Purchase Order)
+        采购入库单 = 4, // PIO (Purchase Inbound Order)
+        采购退货单 = 5,// PRT (Purchase Return)
+        其他入库单 = 6, // OIO (Other Inbound Order)
+        其他出库单 = 7,// OTO (Other Transfer Out)
 
         采购退货统计 = 8,
         // 返厂出库 = 9,
@@ -249,11 +249,11 @@ namespace RUINORERP.Global
         报损单 = 12,
         报溢单 = 13,
         盘点单 = 14,
-        制令单 = 15,
-        BOM物料清单 = 16,
-        生产领料单 = 17,
-        生产退料单 = 18,
-        生产补料单 = 19,
+        制令单 = 15,  // MO (Manufacturing Order)
+        BOM物料清单 = 16, // BOM (Bill of Materials)
+        生产领料单 = 17,// MPR (Material Pick Requisition)
+        生产退料单 = 18,  // MPRR (Material Pick Return)
+        生产补料单 = 19, // SFO (Subcontracting Fabrication Order)
         发料计划单 = 20,
         //成品缴库 = 21,//作废  可以换为其它业务
         托外加工单 = 22,
@@ -328,8 +328,8 @@ namespace RUINORERP.Global
         预收款单 = 84,
         预付款单 = 85,
 
-        应收款单 = 86,
-        应付款单 = 87,
+        应收款单 = 86,  // AR (Accounts Receivable)
+        应付款单 = 87,// AP (Accounts Payable)
 
         付款单 = 88,
         收款单 = 89,
@@ -341,6 +341,9 @@ namespace RUINORERP.Global
         销售价格调整单 = 92,
         采购价格调整单 = 93,
 
+        付款统计 = 94,
+        收款统计= 95, 
+        质量检验单 = 96,// QC (Quality Check)
         销售合同 = 150,
 
         营销活动 = 300,
@@ -513,8 +516,9 @@ var description = typeof(BoxRuleBasis)
     public enum PayStatus
     {
         未付款 = 1,
-        全部付款 = 2,
-        部分付款 = 3,
+        全额预付 = 2,
+        部分预付 = 3,
+        全部付款 = 4,
     }
 
 

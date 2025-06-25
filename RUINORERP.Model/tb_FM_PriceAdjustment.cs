@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：05/24/2025 18:28:28
+// 时间：06/24/2025 18:44:34
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -133,6 +133,35 @@ namespace RUINORERP.Model
             get{return _SourceBillNo;}
             set{
             SetProperty(ref _SourceBillNo, value);
+                        }
+        }
+
+        private int _PayStatus;
+        /// <summary>
+        /// 付款状态
+        /// </summary>
+        [AdvQueryAttribute(ColName = "PayStatus",ColDesc = "付款状态")] 
+        [SugarColumn(ColumnDataType = "int", SqlParameterDbType ="Int32",  ColumnName = "PayStatus" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "付款状态" )]
+        public int PayStatus
+        { 
+            get{return _PayStatus;}
+            set{
+            SetProperty(ref _PayStatus, value);
+                        }
+        }
+
+        private long? _Paytype_ID;
+        /// <summary>
+        /// 付款类型
+        /// </summary>
+        [AdvQueryAttribute(ColName = "Paytype_ID",ColDesc = "付款类型")] 
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Paytype_ID" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "付款类型" )]
+        [FKRelationAttribute("tb_PaymentMethod","Paytype_ID")]
+        public long? Paytype_ID
+        { 
+            get{return _Paytype_ID;}
+            set{
+            SetProperty(ref _Paytype_ID, value);
                         }
         }
 
@@ -508,6 +537,11 @@ namespace RUINORERP.Model
         #endregion
 
         #region 扩展属性
+        [SugarColumn(IsIgnore = true)]
+        //[Browsable(false)] 打印报表时的数据源会不显示
+        [Navigate(NavigateType.OneToOne, nameof(Paytype_ID))]
+        public virtual tb_PaymentMethod tb_paymentmethod { get; set; }
+
         [SugarColumn(IsIgnore = true)]
         //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(Currency_ID))]

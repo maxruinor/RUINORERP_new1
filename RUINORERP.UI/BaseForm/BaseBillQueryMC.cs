@@ -223,7 +223,7 @@ namespace RUINORERP.UI.BaseForm
                         }
                         else if (item is ToolStripControlHost tsc)
                         {
-                            UIHelper.ControlButton(CurMenuInfo, tsc);
+                            UIHelper.ControlButton<ToolStripControlHost>(CurMenuInfo, tsc);
                         }
                         else
                         {
@@ -599,7 +599,7 @@ namespace RUINORERP.UI.BaseForm
                             //await DeleteRemoteImages();
                             MainForm.Instance.AuditLogHelper.CreateAuditLog<M>("删除", item);
                             counter++;
-                
+
                             for (global::System.Int32 i = 0; i < this._UCBillMasterQuery.bindingSourceMaster.Count; i++)
                             {
                                 if (this._UCBillMasterQuery.bindingSourceMaster[i] is M && this._UCBillMasterQuery.bindingSourceMaster[i].GetPropertyValue(PKColName).ToString() == PKValue.ToString())
@@ -607,7 +607,7 @@ namespace RUINORERP.UI.BaseForm
                                     this._UCBillMasterQuery.bindingSourceMaster.Remove(this._UCBillMasterQuery.bindingSourceMaster[i]);
                                 }
                             }
-                           
+
                         }
                     }
                     else

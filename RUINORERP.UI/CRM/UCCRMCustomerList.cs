@@ -355,7 +355,7 @@ namespace RUINORERP.UI.CRM
                     toolStripButton分配.Visible = false;//默认隐藏
                 }
 
-                UIHelper.ControlButton(CurMenuInfo, toolStripButton分配);
+                UIHelper.ControlButton< ToolStripButton>(CurMenuInfo, toolStripButton分配);
                 toolStripButton分配.ToolTipText = "分配给指定业务员。";
                 toolStripButton分配.Click += new System.EventHandler(this.toolStripButton分配_Click);
 
@@ -379,7 +379,7 @@ namespace RUINORERP.UI.CRM
                 {
                     toolStripButton回收.Visible = false;//默认隐藏
                 }
-                UIHelper.ControlButton(CurMenuInfo, toolStripButton回收);
+                UIHelper.ControlButton<ToolStripButton>(CurMenuInfo, toolStripButton回收);
                 toolStripButton回收.ToolTipText = "回收到公海。";
                 toolStripButton回收.Click += new System.EventHandler(this.toolStripButton回收_Click);
 

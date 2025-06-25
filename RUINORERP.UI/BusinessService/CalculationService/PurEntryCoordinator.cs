@@ -127,7 +127,7 @@ namespace RUINORERP.UI.BusinessService.CalculationService
         {
             SafeExecute(() =>
             {
-
+                detail.SubtotalAmount = (detail.UnitPrice + detail.CustomizedCost) * detail.Quantity;
                 decimal freightSum = Details.Sum(d => d.AllocatedFreightCost);
                 if (Math.Abs(Master.ShipCost - freightSum) > 0.001m)
                 {

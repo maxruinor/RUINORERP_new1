@@ -270,7 +270,7 @@ namespace RUINORERP.Business
                             #endregion
 
                             #region 实时检测库存成本，以库存成本为基准。
-                            //!!!!!!!!! 更新新于2025-06-12  以仓库成本为准。因为 订单时，后面可能多次入库修改成本。
+                            //!!!!!!!!! 更新新于2025-06-12  以仓库实时成本为准。因为 订单时，后面可能有这个产品多次入库修改成本了。并不是当时订单时的成本
                             if (!child.Cost.Equals(inv.Inv_Cost))
                             {
                                 child.Cost = inv.Inv_Cost;
@@ -344,7 +344,7 @@ namespace RUINORERP.Business
 
                     if (UpdateSaleOutCostlist.Count > 0)
                     {
-                        entity.TotalCost = UpdateSaleOutCostlist.Sum(c => c.SubtotalCostAmount);
+                        entity.TotalCost = UpdateSaleOutCostlist.Sum(c => c.SubtotalCostAmount)+entity.FreightCost;
                         var Counter = await dbHelper.BaseDefaultAddElseUpdateAsync(UpdateSaleOutCostlist);
                         if (Counter == 0)
                         {
@@ -1024,7 +1024,7 @@ namespace RUINORERP.Business
 
 
                                 //从预收中抵扣，如果是账期则后面通过应收生成收款单去核销
-                                if (entity.PayStatus == (int)PayStatus.部分付款 || entity.PayStatus == (int)PayStatus.全部付款)
+                                if (entity.PayStatus == (int)PayStatus.部分预付 || entity.PayStatus == (int)PayStatus.全额预付)
                                 {
                                     #region 去预收中抵扣相同币种的情况下的预收款，生成收款单，并且生成核销记录
                                     //预付抵应收

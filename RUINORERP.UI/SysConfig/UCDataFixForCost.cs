@@ -1638,8 +1638,8 @@ namespace RUINORERP.UI.SysConfig
                                         if (needupdateOut)
                                         {
                                             saleoutCounter++;
-                                            SaleOut.TotalCost = SaleOut.tb_SaleOutDetails.Sum(c => c.SubtotalCostAmount);
-                                            SaleOut.TotalAmount = SaleOut.tb_SaleOutDetails.Sum(c => c.SubtotalTransAmount);
+                                            SaleOut.TotalCost = SaleOut.tb_SaleOutDetails.Sum(c => c.SubtotalCostAmount)+SaleOut.FreightCost;
+                                            SaleOut.TotalAmount = SaleOut.tb_SaleOutDetails.Sum(c => c.SubtotalTransAmount)+SaleOut.FreightIncome ;
                                             SaleOut.TotalQty = SaleOut.tb_SaleOutDetails.Sum(c => c.Quantity);
                                             SaleOut.TotalTaxAmount = SaleOut.tb_SaleOutDetails.Sum(c => c.SubtotalTaxAmount);
                                             SaleOut.TotalCommissionAmount = SaleOut.tb_SaleOutDetails.Sum(c => c.CommissionAmount);
@@ -2406,23 +2406,23 @@ namespace RUINORERP.UI.SysConfig
                                         }
                                     }
 
-                                    List<tb_SaleOut> orders = MainForm.Instance.AppContext.Db.Queryable<tb_SaleOut>()
+                                    List<tb_SaleOut> SaleOuts = MainForm.Instance.AppContext.Db.Queryable<tb_SaleOut>()
                                         .Includes(a => a.tb_SaleOutDetails)
                                         .Includes(c => c.tb_SaleOutRes, d => d.tb_SaleOutReDetails)
                                         .Where(a => strings.Contains(a.SaleOutNo)).ToList();
 
                                     if (!chkTestMode.Checked)
                                     {
-                                        foreach (var order in orders)
+                                        foreach (var order in SaleOuts)
                                         {
                                             foreach (var item in order.tb_SaleOutDetails)
                                             {
                                                 item.SubtotalCostAmount = (item.Cost + item.CustomizedCost) * item.Quantity;
                                             }
-                                            order.TotalCost = order.tb_SaleOutDetails.Sum(c => c.SubtotalCostAmount);
+                                            order.TotalCost = order.tb_SaleOutDetails.Sum(c => c.SubtotalCostAmount)+order.FreightCost;
                                             await MainForm.Instance.AppContext.Db.Updateable<tb_SaleOutDetail>(order.tb_SaleOutDetails).ExecuteCommandAsync();
                                         }
-                                        await MainForm.Instance.AppContext.Db.Updateable<tb_SaleOut>(orders).ExecuteCommandAsync();
+                                        await MainForm.Instance.AppContext.Db.Updateable<tb_SaleOut>(SaleOuts).ExecuteCommandAsync();
                                     }
                                     break;
                             }
@@ -2471,23 +2471,23 @@ namespace RUINORERP.UI.SysConfig
                                         }
                                     }
 
-                                    List<tb_SaleOut> orders = MainForm.Instance.AppContext.Db.Queryable<tb_SaleOut>()
+                                    List<tb_SaleOut> SaleOuts = MainForm.Instance.AppContext.Db.Queryable<tb_SaleOut>()
                                         .Includes(a => a.tb_SaleOutDetails)
                                         .Includes(c => c.tb_SaleOutRes, d => d.tb_SaleOutReDetails)
                                         .Where(a => strings.Contains(a.SaleOutNo)).ToList();
 
                                     if (!chkTestMode.Checked)
                                     {
-                                        foreach (var order in orders)
+                                        foreach (var order in SaleOuts)
                                         {
                                             foreach (var item in order.tb_SaleOutDetails)
                                             {
                                                 item.SubtotalCostAmount = (item.Cost + item.CustomizedCost) * item.Quantity;
                                             }
-                                            order.TotalCost = order.tb_SaleOutDetails.Sum(c => c.SubtotalCostAmount);
+                                            order.TotalCost = order.tb_SaleOutDetails.Sum(c => c.SubtotalCostAmount)+order.FreightCost;
                                             await MainForm.Instance.AppContext.Db.Updateable<tb_SaleOutDetail>(order.tb_SaleOutDetails).ExecuteCommandAsync();
                                         }
-                                        await MainForm.Instance.AppContext.Db.Updateable<tb_SaleOut>(orders).ExecuteCommandAsync();
+                                        await MainForm.Instance.AppContext.Db.Updateable<tb_SaleOut>(SaleOuts).ExecuteCommandAsync();
                                     }
                                     break;
                             }

@@ -145,7 +145,17 @@ namespace RUINORERP.UI.PSI.PUR
 
                 UIHelper.ControlForeignFieldInvisible<tb_PurOrder>(this, false);
             }
-            DataBindingHelper.BindData4CmbByEnum<tb_PurOrder>(entity, k => k.PayStatus, typeof(PayStatus), cmbPayStatus, false);
+
+            //DataBindingHelper.BindData4CmbByEnum<tb_PurOrder>(entity, k => k.PayStatus, typeof(PayStatus), cmbPayStatus, false);
+            EnumBindingHelper bindingHelper = new EnumBindingHelper();
+            //https://www.cnblogs.com/cdaniu/p/15236857.html
+            //加载枚举，并且可以过虑不需要的项 , 订单不需要用全部付款。只有在财务模块中 确认收货后。才是全部付款
+            List<int> exclude = new List<int>();
+            exclude.Add((int)PayStatus.全部付款);
+            bindingHelper.InitDataToCmbByEnumOnWhere<tb_PurOrder>(typeof(PayStatus).GetListByEnum<PayStatus>(selectedItem: 1, exclude.ToArray()), e => e.PayStatus, cmbPayStatus);
+
+
+
             DataBindingHelper.BindData4Cmb<tb_CustomerVendor>(entity, k => k.CustomerVendor_ID, v => v.CVName, cmbCustomerVendor_ID, c => c.IsVendor == true);
             DataBindingHelper.BindData4Cmb<tb_Employee>(entity, k => k.Employee_ID, v => v.Employee_Name, cmbEmployee_ID);
             DataBindingHelper.BindData4Cmb<tb_Department>(entity, k => k.DepartmentID, v => v.DepartmentName, cmbDepartmentID);
@@ -712,7 +722,43 @@ namespace RUINORERP.UI.PSI.PUR
                     }
                 }
             }
+            if (NeedValidated)
+            {
+                if (EditEntity.PayStatus == (int)PayStatus.未付款)
+                {
+                    //如果订金大于零时，则不能是未付款
+                    if (EditEntity.Deposit > 0 || EditEntity.ForeignDeposit > 0)
+                    {
+                        MessageBox.Show("未付款时，订金不能大于零。");
+                        return false;
+                    }
+                    if (EditEntity.Paytype_ID == 0)
+                    {
 
+                    }
+                }
+                if (EditEntity.PayStatus == (int)PayStatus.部分预付)
+                {
+                    //如果订金大于零时，则不能是未付款
+                    if (EditEntity.Deposit > 0 || EditEntity.ForeignDeposit > 0)
+                    {
+
+                    }
+                    else
+                    {
+                        MessageBox.Show("部分预付时，请输入正确的订金金额。");
+                        return false;
+                    }
+                }
+                if (EditEntity.PayStatus == (int)PayStatus.全额预付)
+                {
+                    if (EditEntity.Deposit > 0 || EditEntity.ForeignDeposit > 0)
+                    {
+                        MessageBox.Show("全部预付时，不需要输入订金,系统默认总金额为支付金额。");
+                        return false;
+                    }
+                }
+            }
             List<tb_PurOrderDetail> detailentity = bindingSourceSub.DataSource as List<tb_PurOrderDetail>;
             if (EditEntity.ActionStatus == ActionStatus.新增 || EditEntity.ActionStatus == ActionStatus.修改)
             {

@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：05/24/2025 18:28:29
+// 时间：06/24/2025 18:44:35
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -224,7 +224,7 @@ this.lblAdjustedUnitPrice.Location = new System.Drawing.Point(100,200);
 this.lblAdjustedUnitPrice.Name = "lblAdjustedUnitPrice";
 this.lblAdjustedUnitPrice.Size = new System.Drawing.Size(41, 12);
 this.lblAdjustedUnitPrice.TabIndex = 8;
-this.lblAdjustedUnitPrice.Text = "调整单价";
+this.lblAdjustedUnitPrice.Text = "调整后单价";
 //111======200
 this.txtAdjustedUnitPrice.Location = new System.Drawing.Point(173,196);
 this.txtAdjustedUnitPrice.Name ="txtAdjustedUnitPrice";

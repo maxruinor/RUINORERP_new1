@@ -120,11 +120,11 @@ namespace RUINORERP.UI.SAL
                         {
                             ToolStripButton subItem = item as ToolStripButton;
                             subItem.Click += Item_Click;
-                            UIHelper.ControlButton(CurMenuInfo, subItem);
+                            UIHelper.ControlButton<ToolStripButton>(CurMenuInfo, subItem);
                         }
                         if (item is ToolStripDropDownButton subItemDr)
                         {
-                            UIHelper.ControlButton(CurMenuInfo, subItemDr);
+                            UIHelper.ControlButton<ToolStripDropDownButton>(CurMenuInfo, subItemDr);
                             subItemDr.Click += Item_Click;
                             //下一级
                             if (subItemDr.HasDropDownItems)
@@ -132,7 +132,7 @@ namespace RUINORERP.UI.SAL
                                 foreach (var sub in subItemDr.DropDownItems)
                                 {
                                     ToolStripMenuItem subStripMenuItem = sub as ToolStripMenuItem;
-                                    UIHelper.ControlButton(CurMenuInfo, subStripMenuItem);
+                                    UIHelper.ControlButton<ToolStripMenuItem>(CurMenuInfo, subStripMenuItem);
                                     subStripMenuItem.Click += Item_Click;
                                 }
                             }
@@ -141,7 +141,7 @@ namespace RUINORERP.UI.SAL
                         {
                             ToolStripSplitButton subItem = item as ToolStripSplitButton;
                             subItem.Click += Item_Click;
-                            UIHelper.ControlButton(CurMenuInfo, subItem);
+                            UIHelper.ControlButton<ToolStripSplitButton>(CurMenuInfo, subItem);
                             //下一级
                             if (subItem.HasDropDownItems)
                             {

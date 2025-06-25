@@ -1167,12 +1167,9 @@ namespace RUINORERP.Business
                 //}
                 entity.tb_saleorder = saleorder;
 
-                entity.TotalCost = NewDetails.Sum(c => c.Cost * c.Quantity);
+                entity.TotalCost = NewDetails.Sum(c => (c.Cost+c.CustomizedCost) * c.Quantity);
                 entity.TotalCost = entity.TotalCost + entity.FreightCost;
-
                 entity.TotalTaxAmount = NewDetails.Sum(c => c.SubtotalTaxAmount);
-
-
                 entity.TotalTaxAmount = entity.TotalTaxAmount.ToRoundDecimalPlaces(authorizeController.GetMoneyDataPrecision());
 
                 entity.TotalAmount = NewDetails.Sum(c => c.TransactionPrice * c.Quantity);

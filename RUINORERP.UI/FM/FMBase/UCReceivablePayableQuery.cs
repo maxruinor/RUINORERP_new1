@@ -107,7 +107,7 @@ namespace RUINORERP.UI.FM
             toolStripButton生成对账单.ImageTransparentColor = System.Drawing.Color.Magenta;
             toolStripButton生成对账单.Name = "生成对账单MakesureCost";
             toolStripButton生成对账单.Visible = false;//默认隐藏
-            UIHelper.ControlButton(CurMenuInfo, toolStripButton生成对账单);
+            UIHelper.ControlButton<ToolStripButton>(CurMenuInfo, toolStripButton生成对账单);
             toolStripButton生成对账单.ToolTipText = "生成对账单。";
             toolStripButton生成对账单.Click += new System.EventHandler(this.toolStripButton生成对账单_Click);
 
@@ -388,7 +388,7 @@ namespace RUINORERP.UI.FM
                         //您确定要将当前应收款单，通过通过预收付款抵扣元吗？
                         if (MessageBox.Show($"您确定要将当前【应{PaymentType}单】:{RealList[0].ARAPNo}\r\n通过【预{PaymentType}单】:{preRPNOsPreview} 抵扣{selectedAdvances.Sum(x => x.LocalBalanceAmount).ToString("##.00")}元吗？", "提示", MessageBoxButtons.OKCancel, MessageBoxIcon.Information) == DialogResult.OK)
                         {
-                             receivablePayableController.ApplyManualPaymentAllocation(RealList[0], selectedAdvances);
+                           await  receivablePayableController.ApplyManualPaymentAllocation(RealList[0], selectedAdvances);
                         }
                     }
                 }

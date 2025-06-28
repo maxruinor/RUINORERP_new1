@@ -59,13 +59,12 @@ namespace RUINORERP.Business
                 BillConverterFactory bcf = _appContext.GetRequiredService<BillConverterFactory>();
                 if (entity.tb_FinishedGoodsInvDetails == null)
                 {
-                    entity = await _unitOfWorkManage.GetDbClient().Queryable<tb_FinishedGoodsInv>()
-                        .Includes(b => b.tb_FinishedGoodsInvDetails)
+                    entity.tb_FinishedGoodsInvDetails = await _unitOfWorkManage.GetDbClient().Queryable<tb_FinishedGoodsInvDetail>()
                         .Where(c => c.FG_ID == entity.FG_ID)
-                        .SingleAsync();
+                        .ToListAsync();
                 }
 
-            
+
                 //更新制令单的QuantityDelivered已交付数量 ,如果全交完了。则结案
                 //缴库复制。每次还是要先查询一下
                 if (entity.MOID > 0)
@@ -83,12 +82,12 @@ namespace RUINORERP.Business
                     .SingleAsync();
                 }
 
-         
+
 
 
                 #region 由缴库更新库存
 
-            
+
 
                 List<tb_Inventory> invUpdateList = new List<tb_Inventory>();
                 foreach (var child in entity.tb_FinishedGoodsInvDetails)
@@ -578,6 +577,8 @@ namespace RUINORERP.Business
                     {
                         manufacturingOrder.DataStatus = (int)DataStatus.确认;
                         manufacturingOrder.CloseCaseOpinions = $"缴库单:{entity.DeliveryBillNo}->制令单:{manufacturingOrder.MONO},缴库单反审时，生产数量不等于交付数量，取消自动结案";
+                        entity.tb_manufacturingorder.tb_MaterialRequisitions.Where(c => entity.ApprovalStatus == (int)ApprovalStatus.已审核).ToList().ForEach(c => c.DataStatus = (int)DataStatus.确认);
+                        int pomrCounter = await _unitOfWorkManage.GetDbClient().Updateable<tb_MaterialRequisition>(entity.tb_manufacturingorder.tb_MaterialRequisitions).ExecuteCommandAsync();
                     }
 
                     //更新制令单的已交数量

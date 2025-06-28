@@ -75,7 +75,7 @@ namespace RUINORERP.Business
 //***** 
  RuleFor(tb_FM_OtherExpense =>tb_FM_OtherExpense.PrintStatus).NotNull().WithMessage("打印状态:不能为空。");
 
- RuleFor(x => x.ApprovedAmount).PrecisionScale(19,4,true).WithMessage(":小数位不能超过4。");
+ RuleFor(x => x.ApprovedAmount).PrecisionScale(19,4,true).WithMessage("核准金额:小数位不能超过4。");
 
  RuleFor(tb_FM_OtherExpense =>tb_FM_OtherExpense.Currency_ID).Must(CheckForeignKeyValueCanNull).WithMessage("币种:下拉选择值不正确。");
  RuleFor(tb_FM_OtherExpense =>tb_FM_OtherExpense.Currency_ID).NotEmpty().When(x => x.Currency_ID.HasValue);

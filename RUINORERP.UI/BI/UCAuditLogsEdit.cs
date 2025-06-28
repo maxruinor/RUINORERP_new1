@@ -20,7 +20,7 @@ using RUINORERP.UI.Monitoring.Auditing;
 namespace RUINORERP.UI.BI
 {
 
-    [MenuAttrAssemblyInfo("审计日志查看", true, UIType.单表数据)]
+    [MenuAttrAssemblyInfo("业务审计查看", true, UIType.单表数据)]
     public partial class UCAuditLogsEdit : BaseEditGeneric<tb_AuditLogs>
     {
         public UCAuditLogsEdit()

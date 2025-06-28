@@ -43,6 +43,10 @@ namespace RUINORERP.UI.BusinessService.CalculationService
 
         protected override void HandleMasterPropertyChange(string propertyName)
         {
+            if (Details==null)
+            {
+                return;
+            }
             decimal totalQty = Details.Sum(d => d.Quantity);
             if (totalQty <= 0) return;
 
@@ -61,6 +65,10 @@ namespace RUINORERP.UI.BusinessService.CalculationService
 
         private void AllocateFreight(string masterPropertyName, decimal masterValue, Expression<Func<tb_SaleOutDetail, decimal>> detailSelector)
         {
+            if (Details == null)
+            {
+                return;
+            }
             string detailPropertyName = detailSelector.GetMemberInfo().Name;
             //如果汇总的字段都为0才不计算。
             decimal allocatedFreightCostTotal = 0;

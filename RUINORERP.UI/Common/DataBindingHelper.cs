@@ -47,6 +47,7 @@ using Image = System.Drawing.Image;
 using RUINORERP.Global.EnumExt;
 using RUINORERP.Global;
 using log4net.Repository.Hierarchy;
+using StackExchange.Redis;
 
 namespace RUINORERP.UI.Common
 {
@@ -1595,6 +1596,162 @@ namespace RUINORERP.UI.Common
         }
 
 
+        #region by watson 2025-06-26  一个新的绑定枚举的方法更友好
+        /// <summary>
+        /// by watson 2025-06-26
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="entity"></param>
+        /// <param name="expkey"></param>
+        /// <param name="cmbBox"></param>
+        /// <param name="addSelect"></param>
+        /// <param name="excludeEnums">需要排除绑定的控件的枚举值</param>
+        public static void BindData4CmbByEnum<TEntity, TEnum>(object entity, Expression<Func<TEntity, int?>> expkey, KryptonComboBox cmbBox, bool addSelect, params TEnum[] excludeEnums)
+             where TEnum : Enum
+        {
+            cmbBox.DataBindings.Clear();
+            MemberInfo minfo = expkey.GetMemberInfo();
+            string key = minfo.Name;
+            BindData4CmbByEnum<TEntity, TEnum>(entity, key, cmbBox, addSelect, excludeEnums);
+        }
+
+        /// <summary>
+        /// 绑定枚举类型
+        /// </summary>
+        /// <typeparam name="T">数据库对应该表实体名</typeparam>
+        /// <param name="entity"></param>
+        /// <param name="expkey"></param>
+        /// <param name="expValue"></param>
+        /// <param name="cmbBox"></param>
+        public static void BindData4CmbByEnum<TEntity, TEnum>(object entity, string keyName, KryptonComboBox cmbBox, bool addSelect, params TEnum[] excludeEnums)
+              where TEnum : Enum
+        {
+
+            cmbBox.Tag = keyName;
+            InitDataToCmbByEnumDynamicGeneratedDataSource<TEnum>(keyName, cmbBox, addSelect, excludeEnums);
+
+            var depa = new Binding("SelectedValue", entity, keyName, true, DataSourceUpdateMode.OnPropertyChanged);
+            //数据源的数据类型转换为控件要求的数据类型。
+            depa.Format += (s, args) => args.Value = args.Value == null ? -1 : args.Value;
+            //将控件的数据类型转换为数据源要求的数据类型。
+            depa.Parse += (s, args) => args.Value = args.Value == null ? -1 : args.Value;
+            cmbBox.DataBindings.Add(depa);
+
+        }
+
+
+  
+            /// <summary>
+            /// 枚举名称要与DB表中的字段名相同
+            /// </summary>
+            /// <typeparam name="T">枚举的类型</typeparam>
+            /// <param name="enumTypeName"></param>
+            /// <param name="cmbBox"></param>
+            public static void InitDataToCmbByEnumDynamicGeneratedDataSource<TEnum>(string keyName, KryptonComboBox cmbBox, bool addSelect, params TEnum[] excludeEnums) where TEnum : Enum
+        {
+            Type enumType = typeof(TEnum);
+
+            //枚举值为int/long，动态生成一个类再绑定，
+            // 获取枚举的基础类型
+            Type underlyingType = Enum.GetUnderlyingType(enumType);
+
+
+            var type = enumType;
+            var aName = new System.Reflection.AssemblyName(Assembly.GetExecutingAssembly().GetName().Name);
+
+
+            TypeConfig typeConfig = new TypeConfig();
+            typeConfig.FullName = aName.Name;
+
+            //要创建的属性
+            PropertyConfig propertyConfigKey = new PropertyConfig();
+            propertyConfigKey.PropertyName = keyName;// type.Name;默认枚举名改为可以指定名
+            if (underlyingType == typeof(int))
+            {
+                propertyConfigKey.PropertyType = typeof(int);//枚举值为int 默认
+            }
+            if (underlyingType == typeof(long))
+            {
+                propertyConfigKey.PropertyType = typeof(long);//枚举值为long 默认
+            }
+            PropertyConfig propertyConfigName = new PropertyConfig();
+            propertyConfigName.PropertyName = "Name";
+            propertyConfigName.PropertyType = typeof(string);
+
+            typeConfig.Properties.Add(propertyConfigKey);
+            typeConfig.Properties.Add(propertyConfigName);
+            Type newType = TypeBuilderHelper.BuildType(typeConfig);
+
+            List<object> list = new List<object>();
+            //(enumType[])Enum.GetValues(typeof(enumType));
+
+            Array enumValues = Enum.GetValues(type);
+            IEnumerator e = enumValues.GetEnumerator();
+            e.Reset();
+            int currentValue;
+            long currentValueLong;
+            string currentName;
+            while (e.MoveNext())
+            {
+                //排除指定的值
+                if (excludeEnums.Contains((TEnum)e.Current))
+                {
+                    continue;
+                }
+
+
+                object eobj = Activator.CreateInstance(newType);
+                if (underlyingType == typeof(int))
+                {
+                    currentValue = (int)e.Current;
+                    eobj.SetPropertyValue(keyName, currentValue);
+                }
+                else if (underlyingType == typeof(long))
+                {
+                    currentValueLong = (long)e.Current;
+                    eobj.SetPropertyValue(keyName, currentValueLong);
+                }
+
+                currentName = e.Current.ToString();
+
+
+                var fieldInfo = enumType.GetField(currentName);
+                var descriptionAttribute = fieldInfo?
+                    .GetCustomAttributes(typeof(DescriptionAttribute), false)
+                    .FirstOrDefault() as DescriptionAttribute;
+                string Description = descriptionAttribute?.Description ?? string.Empty;
+                if (!string.IsNullOrEmpty(Description))
+                {
+                    eobj.SetPropertyValue("Name", Description);
+                }
+                else
+                {
+                    eobj.SetPropertyValue("Name", currentName);
+                }
+                list.Add(eobj);
+            }
+            if (addSelect)
+            {
+                object sobj = Activator.CreateInstance(newType);
+                sobj.SetPropertyValue(keyName, -1);
+                sobj.SetPropertyValue("Name", "请选择");
+                list.Insert(0, sobj);
+            }
+
+            cmbBox.SelectedValue = -1;
+
+            BindingSource bs = new BindingSource();
+            bs.DataSource = list;
+            ComboBoxHelper.InitDropList(bs, cmbBox, keyName, "Name", ComboBoxStyle.DropDown, false);
+
+        }
+
+
+        #endregion
+
+
+
+
         /// <summary>
         /// by watson 2025-4-3
         /// </summary>
@@ -3045,7 +3202,6 @@ namespace RUINORERP.UI.Common
         public static void InitDataToCmbByEnumDynamicGeneratedDataSource(Type enumType, string keyName, KryptonComboBox cmbBox, bool addSelect)
         {
             //枚举值为int/long，动态生成一个类再绑定，
-
             // 获取枚举的基础类型
             Type underlyingType = Enum.GetUnderlyingType(enumType);
 

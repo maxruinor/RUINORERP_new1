@@ -32,7 +32,7 @@ using RUINORERP.Global.Model;
 namespace RUINORERP.UI.BI
 {
 
-    [MenuAttrAssemblyInfo("审计日志管理", ModuleMenuDefine.模块定义.系统设置, ModuleMenuDefine.系统设置.系统工具)]
+    [MenuAttrAssemblyInfo("业务审计管理", ModuleMenuDefine.模块定义.系统设置, ModuleMenuDefine.系统设置.系统工具)]
     public partial class UCAuditLogsList : BaseForm.BaseListGeneric<tb_AuditLogs>, UI.AdvancedUIModule.IContextMenuInfoAuth
     {
 

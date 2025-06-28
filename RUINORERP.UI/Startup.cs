@@ -63,6 +63,7 @@ using Newtonsoft.Json;
 using RUINORERP.UI.ATechnologyStack;
 using RUINORERP.Model.Base;
 using RUINORERP.UI.Monitoring.Auditing;
+using RUINORERP.Model.CommonModel;
 
 
 namespace RUINORERP.UI
@@ -831,9 +832,8 @@ namespace RUINORERP.UI
 
             // 注册审计日志服务
             services.AddSingleton<IAuditLogService, AuditLogService>();
-
-
-
+            // 注册审计日志服务
+            services.AddSingleton<IFMAuditLogService, FMAuditLogService>();
 
 
 
@@ -1074,7 +1074,22 @@ namespace RUINORERP.UI
                     ;
                     continue;
                 }
-
+                if (tempTypes[i].Name == "IAuditLogService")
+                {
+                    builder.RegisterType<AuditLogService>()
+                    .AsImplementedInterfaces().AsSelf()
+                    .PropertiesAutowired() //属性注入 如果没有这个  public Itb_LocationTypeServices _tb_LocationTypeServices { get; set; }  这个值会没有，所以实际后为null
+                    ;
+                    continue;
+                }
+                if (tempTypes[i].Name == "IFMAuditLogService")
+                {
+                    builder.RegisterType<FMAuditLogService>()
+                    .AsImplementedInterfaces().AsSelf()
+                    .PropertiesAutowired() //属性注入 如果没有这个  public Itb_LocationTypeServices _tb_LocationTypeServices { get; set; }  这个值会没有，所以实际后为null
+                    ;
+                    continue;
+                }
                 if (tempTypes[i].Name == "IAuthorizeController")
                 {
                     builder.RegisterType<AuthorizeController>()

@@ -571,6 +571,24 @@
     <Compile Include="AdvancedUIModule\UIQueryHelper.cs" />
     <Compile Include="ATechnologyStack\AOP\DbBizLogAOP.cs" />
     <Compile Include="ATechnologyStack\ISharedIdentification.cs" />
+    <Compile Include="BI\UCFMAuditLogsTracker.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="BI\UCFMAuditLogsTracker.designer.cs">
+      <DependentUpon>UCFMAuditLogsTracker.cs</DependentUpon>
+    </Compile>
+    <Compile Include="BI\UCFMAuditLogsEdit.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="BI\UCFMAuditLogsEdit.designer.cs">
+      <DependentUpon>UCFMAuditLogsEdit.cs</DependentUpon>
+    </Compile>
+    <Compile Include="BI\UCFMAuditLogsList.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="BI\UCFMAuditLogsList.designer.cs">
+      <DependentUpon>UCFMAuditLogsList.cs</DependentUpon>
+    </Compile>
     <Compile Include="BI\UCAuditLogsTracker.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -3130,9 +3148,12 @@
     <Content Include="InitSQL.sql" />
     <None Include="ResourceFile\Hint.ico" />
     <Content Include="ResourceFile\copy.png" />
+    <None Include="ResourceFile\guanlianchaxun.png" />
     <Content Include="ResourceFile\money-rmb.png" />
     <None Include="ResourceFile\人民币 -32.png" />
     <None Include="ResourceFile\search history_16x16.ico" />
+    <None Include="ResourceFile\relatedquery.png" />
+    <None Include="ResourceFile\new_relatedquery.png" />
     <Content Include="ResourceFile\unlockbill.png" />
     <None Include="ResourceFile\user-available.png" />
     <Content Include="ResourceFile\人民币.png" />
@@ -3141,6 +3162,7 @@
     <Content Include="SqlScript\地区省市.sql" />
     <Content Include="SqlScript\内置函数支持.sql" />
     <Content Include="SqlScript\清空业务表数据.sql" />
+    <Content Include="SqlScript\销售汇总.sql" />
     <Content Include="UpdateLog.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -3229,6 +3251,15 @@
     </EmbeddedResource>
     <EmbeddedResource Include="BaseForm\UCQueryShow.resx">
       <DependentUpon>UCQueryShow.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="BI\UCFMAuditLogsTracker.resx">
+      <DependentUpon>UCFMAuditLogsTracker.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="BI\UCFMAuditLogsEdit.resx">
+      <DependentUpon>UCFMAuditLogsEdit.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="BI\UCFMAuditLogsList.resx">
+      <DependentUpon>UCFMAuditLogsList.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="BI\UCAuditLogsTracker.resx">
       <DependentUpon>UCAuditLogsTracker.cs</DependentUpon>

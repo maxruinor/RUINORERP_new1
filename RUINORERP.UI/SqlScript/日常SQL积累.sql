@@ -27,3 +27,30 @@ and B.SOrderNo  in (
 SELECT SOrderNo FROM tb_SaleOrder   WHERE ShipCost>0  and SOrderNo in ( SELECT SaleOrderNo FROM tb_SaleOut GROUP BY SaleOrderNo HAVING COUNT ( SaleOrderNo ) > 1 )
 )
 
+
+-- 检测有主表记录但没有子表记录的情况
+SELECT 
+    '主表有记录但子表无记录' AS 问题类型,
+    m.SaleOutRe_ID,
+    m.ReturnNo,
+    m.ReturnDate
+FROM 
+    dbo.tb_SaleOutRe m
+LEFT JOIN 
+    dbo.tb_SaleOutReDetail c ON m.SaleOutRe_ID = c.SaleOutRe_ID
+WHERE 
+    c.SaleOutRe_ID IS NULL;
+
+-- 检测有子表记录但没有主表记录的情况
+SELECT 
+    '子表有记录但主表无记录' AS 问题类型,
+    c.SaleOutRe_ID,
+    c.ProdDetailID,
+    c.Quantity,
+    c.TransactionPrice
+FROM 
+    dbo.tb_SaleOutReDetail c
+LEFT JOIN 
+    dbo.tb_SaleOutRe m ON c.SaleOutRe_ID = m.SaleOutRe_ID
+WHERE 
+    m.SaleOutRe_ID IS NULL;    

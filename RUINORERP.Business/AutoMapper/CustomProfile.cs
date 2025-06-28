@@ -31,6 +31,7 @@ namespace RUINORERP.Business.AutoMapper
 
             //生成核销表
             CreateMap<tb_FM_PaymentRecord, tb_FM_PaymentSettlement>();
+            CreateMap<tb_FM_PaymentRecordDetail, tb_FM_PaymentSettlement>();
 
             //生成应收及明细
             CreateMap<tb_SaleOut, tb_FM_ReceivablePayable>();

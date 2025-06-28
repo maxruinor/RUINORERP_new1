@@ -1588,7 +1588,7 @@ namespace RUINORERP.UI.MRP.BOM
             exportExcel.Size = new System.Drawing.Size(139, 22);
             exportExcel.Text = "导出Excel";
             exportExcel.Click += ExportExcel_Click;
-            toolStripbtnFunction.DropDownItems.Add(exportExcel);
+            toolStripbtnRelatedQuery.DropDownItems.Add(exportExcel);
         }
 
 

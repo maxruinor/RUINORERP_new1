@@ -51,15 +51,13 @@ namespace RUINORERP.Business
 
  RuleFor(x => x.ClaimAmount).PrecisionScale(19,4,true).WithMessage("报销金额:小数位不能超过4。");
 
- RuleFor(x => x.ApprovedAmount).PrecisionScale(19,4,true).WithMessage("核准金额:小数位不能超过4。");
-
+ 
 
  RuleFor(tb_FM_ExpenseClaim =>tb_FM_ExpenseClaim.Notes).MaximumLength(500).WithMessage("备注:不能超过最大长度,500.");
 
  RuleFor(x => x.TaxAmount).PrecisionScale(19,4,true).WithMessage("税额:小数位不能超过4。");
 
- RuleFor(x => x.TaxRate).PrecisionScale(8,2,true).WithMessage("税率:小数位不能超过2。");
-
+ 
  RuleFor(x => x.UntaxedAmount).PrecisionScale(19,4,true).WithMessage("未税本位币:小数位不能超过4。");
 
 

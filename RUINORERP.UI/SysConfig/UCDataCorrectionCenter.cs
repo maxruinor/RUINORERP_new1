@@ -215,7 +215,144 @@ namespace RUINORERP.UI.SysConfig
                         #endregion
                     }
                 }
+                if (treeView1.SelectedNode.Text == "销售退货价格修复")
+                {
 
+                    if (treeViewTableList.SelectedNode.Tag != null && treeViewTableList.SelectedNode.Name == typeof(tb_SaleOutRe).Name)
+                    {
+                        #region 销售退货价格修复
+
+
+                        var ctrSaleOutRe = Startup.GetFromFac<tb_SaleOutReController<tb_SaleOutRe>>();
+
+                        var ctrSaleOutReDetail = Startup.GetFromFac<tb_SaleOutReDetailController<tb_SaleOutReDetail>>();
+                        /*
+
+                        List<tb_SaleOutReDetail> SaleOutReDetails = MainForm.Instance.AppContext.Db.Queryable<tb_SaleOutReDetail>()
+                            .Includes(c => c.tb_saleoutre, b => b.tb_SaleOutReDetails)
+                            .Where(c => c.TransactionPrice > 0)
+                            .ToList();
+
+                        for (int i = 0; i < SaleOutReDetails.Count; i++)
+                        {
+                            //PurOrderDetails[i].Discount = 1;
+
+                            SaleOutReDetails[i].SubtotalAmount = SaleOutReDetails[i].UnitPrice * SaleOutReDetails[i].Quantity;
+
+                            if (SaleOutReDetails[i].tb_purorder.tb_SaleOutReDetails.Count == 1)
+                            {
+                                SaleOutReDetails[i].tb_purorder.TotalAmount = SaleOutReDetails[i].SubtotalAmount;
+                                SaleOutReDetails[i].tb_purorder.TotalAmount = SaleOutReDetails[i].SubtotalAmount + SaleOutReDetails[i].tb_purorder.ShipCost;
+                            }
+                            else
+                            {
+
+                            }
+
+                            if (!chkTestMode.Checked)
+                            {
+
+                                await ctrPurOrderDetail.UpdateAsync(SaleOutReDetails[i]);
+                                if (SaleOutReDetails[i].tb_purorder.tb_SaleOutReDetails.Count == 1)
+                                {
+                                    await ctrPurOrder.UpdateAsync(SaleOutReDetails[i].tb_purorder);
+                                }
+                            }
+                        }
+
+
+                        //折扣为0的单价大于0的。成交价为0的。折扣修改为1，成交价修改为单价
+                        List<tb_SaleOutReDetail> PurOrderDetails1 = MainForm.Instance.AppContext.Db.Queryable<tb_SaleOutReDetail>()
+                            .Includes(c => c.tb_purorder, b => b.tb_SaleOutReDetails)
+                            .Where(c => c.UnitPrice == 0)
+                            .ToList();
+
+                        for (int i = 0; i < PurOrderDetails1.Count; i++)
+                        {
+
+
+                            PurOrderDetails1[i].SubtotalAmount = PurOrderDetails1[i].UnitPrice * PurOrderDetails1[i].Quantity;
+
+                            if (PurOrderDetails1[i].tb_purorder.tb_SaleOutReDetails.Count == 1)
+                            {
+                                PurOrderDetails1[i].tb_purorder.TotalAmount = PurOrderDetails1[i].SubtotalAmount;
+                                PurOrderDetails1[i].tb_purorder.TotalAmount = PurOrderDetails1[i].SubtotalAmount + PurOrderDetails1[i].tb_purorder.ShipCost;
+                            }
+                            else
+                            {
+
+                            }
+
+                            if (!chkTestMode.Checked)
+                            {
+
+                                await ctrPurOrderDetail.UpdateAsync(PurOrderDetails1[i]);
+                                if (PurOrderDetails1[i].tb_purorder.tb_SaleOutReDetails.Count == 1)
+                                {
+                                    await ctrPurOrder.UpdateAsync(PurOrderDetails1[i].tb_purorder);
+                                }
+                            }
+                        }
+                        */
+
+
+
+
+                        #endregion
+                    }
+
+                    if (treeViewTableList.SelectedNode.Tag != null && treeViewTableList.SelectedNode.Name == typeof(tb_PurOrder).Name)
+                    {
+                        #region 采购订单金额修复
+
+                        //折扣为0的单价大于0的。成交价为0的。折扣修改为1，成交价修改为单价
+                        List<tb_PurOrder> PurOrders = MainForm.Instance.AppContext.Db.Queryable<tb_PurOrder>()
+                            .Includes(c => c.tb_PurOrderDetails)
+                            .ToList();
+
+                        for (int i = 0; i < PurOrders.Count; i++)
+                        {
+                            //检测明细小计：
+                            for (int j = 0; j < PurOrders[i].tb_PurOrderDetails.Count; j++)
+                            {
+                                //如果明细的小计不等于成交价*数量
+                                if (PurOrders[i].tb_PurOrderDetails[j].SubtotalAmount !=
+                                    PurOrders[i].tb_PurOrderDetails[j].UnitPrice * PurOrders[i].tb_PurOrderDetails[j].Quantity)
+                                {
+                                    if (chkTestMode.Checked)
+                                    {
+                                        richTextBoxLog.AppendText($"采购订单金额：{PurOrders[i].PurOrderNo}中的{PurOrders[i].tb_PurOrderDetails[j].ProdDetailID}=> =========小计不等于成交价*数量========== " + "\r\n");
+                                    }
+                                    else
+                                    {
+                                        PurOrders[i].tb_PurOrderDetails[j].SubtotalAmount = PurOrders[i].tb_PurOrderDetails[j].UnitPrice * PurOrders[i].tb_PurOrderDetails[j].Quantity;
+                                        int totalamountCounter = await MainForm.Instance.AppContext.Db.Updateable(PurOrders[i].tb_PurOrderDetails[j]).UpdateColumns(t => new { t.SubtotalAmount }).ExecuteCommandAsync();
+                                        richTextBoxLog.AppendText($"采购订单明细{PurOrders[i].tb_PurOrderDetails[j].ProdDetailID}的小计金额{PurOrders[i].tb_PurOrderDetails[j].SubtotalAmount}修复成功：{totalamountCounter} " + "\r\n");
+                                    }
+                                }
+                            }
+
+                            //检测订单总计：
+                            if (PurOrders[i].tb_PurOrderDetails.Sum(c => c.SubtotalAmount) != PurOrders[i].TotalAmount)
+                            {
+                                if (chkTestMode.Checked)
+                                {
+                                    richTextBoxLog.AppendText($"采购订单金额：{PurOrders[i].PurOrderNo}总金额{PurOrders[i].TotalAmount}不等于他的明细的小计求各项总和：{PurOrders[i].tb_PurOrderDetails.Sum(c => c.SubtotalAmount)} " + "\r\n");
+                                }
+                                else
+                                {
+                                    PurOrders[i].TotalAmount = PurOrders[i].tb_PurOrderDetails.Sum(c => c.SubtotalAmount);
+                                    PurOrders[i].TotalAmount = PurOrders[i].TotalAmount + PurOrders[i].ShipCost;
+                                    int totalamountCounter = await MainForm.Instance.AppContext.Db.Updateable(PurOrders[i]).UpdateColumns(t => new { t.TotalAmount }).ExecuteCommandAsync();
+                                    richTextBoxLog.AppendText($"采购订单{PurOrders[i].PurOrderNo}的总金额修复成功：{totalamountCounter} " + "\r\n");
+                                }
+                            }
+                            //检测总计：
+                        }
+
+                        #endregion
+                    }
+                }
                 if (treeView1.SelectedNode.Text == "采购订单价格修复")
                 {
 

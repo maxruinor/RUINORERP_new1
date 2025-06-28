@@ -95,7 +95,7 @@ namespace RUINORERP.Business
                         && PaymentRecordlist.Any(c => c.ApprovalStatus == (int)ApprovalStatus.已审核)))
                     {
                         _unitOfWorkManage.RollbackTran();
-                        rmrs.ErrorMsg = "存在【已支付】的付款单，不能反审预款单,请联系上级财务，或作退回处理。";
+                        rmrs.ErrorMsg = $"存在【已支付】的{((ReceivePaymentType)entity.ReceivePaymentType).ToString()}单，不能反审预款单,请联系上级财务，或作退回处理。";
                         rmrs.Succeeded = false;
                         return rmrs;
                     }
@@ -114,7 +114,7 @@ namespace RUINORERP.Business
                 }
 
                 entity.PrePaymentStatus = (int)PrePaymentStatus.待审核;
-                entity.ApprovalResults = false;
+                entity.ApprovalResults = null;
                 entity.ApprovalStatus = (int)ApprovalStatus.未审核;
                 BusinessHelper.Instance.ApproverEntity(entity);
                 //只更新指定列
@@ -346,7 +346,6 @@ namespace RUINORERP.Business
             }
             //销售就是收款
             payable.ReceivePaymentType = (int)ReceivePaymentType.收款;
-
             payable.PreRPNO = BizCodeGenerator.Instance.GetBizBillNo(BizType.预收款单);
             payable.SourceBizType = (int)BizType.销售订单;
             payable.SourceBillNo = entity.SOrderNo;
@@ -366,11 +365,9 @@ namespace RUINORERP.Business
                     payable.ForeignPrepaidAmount = entity.ForeignTotalAmount;
                     //payable.LocalPrepaidAmount = payable.ForeignPrepaidAmount * exchangeRate;
                 }
-                else
-                {
-                    //本币时
-                    payable.LocalPrepaidAmount = entity.TotalAmount;
-                }
+                //本币时
+                payable.LocalPrepaidAmount = entity.TotalAmount;
+
             }
             else            //来自于订金
             if (entity.PayStatus == (int)PayStatus.部分预付)
@@ -391,7 +388,7 @@ namespace RUINORERP.Business
             payable.LocalPrepaidAmountInWords = payable.LocalPrepaidAmount.ToUpper();
             payable.IsAvailable = true;//默认可用
 
-            payable.PrePaymentReason = $"销售订单{entity.SOrderNo}的预收款";
+            payable.PrePaymentReason = $"销售订单{entity.SOrderNo}的预收款，平台单号：{entity.PlatformOrderNo}";
             Business.BusinessHelper.Instance.InitEntity(payable);
             payable.PrePaymentStatus = (int)PrePaymentStatus.待审核;
 
@@ -400,7 +397,93 @@ namespace RUINORERP.Business
         }
 
 
+        /// <summary>
+        /// 通过销售订单生成预收款单
+        /// </summary>
+        /// <param name="entity"></param>
+        /// <param name="SaveToDb"></param>
+        /// <returns></returns>
+        public tb_FM_PreReceivedPayment BuildPreReceivedPayment(tb_PurOrder entity)
+        {
 
+            // 外币相关处理 正确是 外币时一定要有汇率
+            decimal exchangeRate = 1; // 获取销售订单的汇率
+            if (_appContext.BaseCurrency.Currency_ID != entity.Currency_ID)
+            {
+                exchangeRate = entity.ExchangeRate; // 获取销售订单的汇率
+                                                    // 这里可以考虑获取最新的汇率，而不是直接使用销售订单的汇率
+                                                    // exchangeRate = GetLatestExchangeRate(entity.Currency_ID.Value, _appContext.BaseCurrency.Currency_ID);
+            }
+
+            #region 生成预收款
+
+            tb_FM_PreReceivedPayment payable = new tb_FM_PreReceivedPayment();
+            payable = mapper.Map<tb_FM_PreReceivedPayment>(entity);
+            payable.ApprovalResults = null;
+            payable.ApprovalStatus = (int)ApprovalStatus.未审核;
+            payable.Approver_at = null;
+            payable.Approver_by = null;
+            payable.PrintStatus = 0;
+            payable.IsAvailable = true;
+            payable.ActionStatus = ActionStatus.新增;
+            payable.ApprovalOpinions = "";
+            payable.Modified_at = null;
+            payable.Modified_by = null;
+            if (entity.tb_projectgroup != null)
+            {
+                payable.DepartmentID = entity.tb_projectgroup.DepartmentID;
+            }
+            //采购就是付款
+            payable.ReceivePaymentType = (int)ReceivePaymentType.付款;
+
+            payable.PreRPNO = BizCodeGenerator.Instance.GetBizBillNo(BizType.预付款单);
+            payable.SourceBizType = (int)BizType.采购订单;
+            payable.SourceBillNo = entity.PurOrderNo;
+            payable.SourceBillId = entity.PurOrder_ID;
+            payable.Currency_ID = entity.Currency_ID;
+            payable.PrePayDate = entity.PurDate;
+            payable.ExchangeRate = exchangeRate;
+
+            payable.LocalPrepaidAmountInWords = string.Empty;
+            //payable.Account_id = entity.Account_id;//付款账户信息 在采购订单时 不用填写。由财务决定 
+            //如果是外币时，则由外币算出本币
+            if (entity.PayStatus == (int)PayStatus.全额预付)
+            {
+                //外币时 全部付款，则外币金额=本币金额/汇率 在UI中显示出来。
+                if (_appContext.BaseCurrency.Currency_ID != entity.Currency_ID)
+                {
+                    payable.ForeignPrepaidAmount = entity.ForeignTotalAmount;
+                    //payable.LocalPrepaidAmount = payable.ForeignPrepaidAmount * exchangeRate;
+                }
+                //本币时
+                payable.LocalPrepaidAmount = entity.TotalAmount;
+
+            }
+            else            //来自于订金
+            if (entity.PayStatus == (int)PayStatus.部分预付)
+            {
+                //外币时
+                if (_appContext.BaseCurrency.Currency_ID != entity.Currency_ID)
+                {
+                    payable.ForeignPrepaidAmount = entity.ForeignDeposit;
+                    // payable.LocalPrepaidAmount = payable.ForeignPrepaidAmount * exchangeRate;
+                }
+                else
+                {
+                    payable.LocalPrepaidAmount = entity.Deposit;
+                }
+            }
+
+            //payable.LocalPrepaidAmountInWords = payable.LocalPrepaidAmount.ToString("C");
+            payable.LocalPrepaidAmountInWords = payable.LocalPrepaidAmount.ToUpper();
+            payable.IsAvailable = true;//默认可用
+            payable.PrePaymentReason = $"采购订单{entity.PurOrderNo}的预付款";
+            Business.BusinessHelper.Instance.InitEntity(payable);
+            payable.PrePaymentStatus = (int)PrePaymentStatus.待审核;
+
+            #endregion
+            return payable;
+        }
 
 
         ///// <summary>

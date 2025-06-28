@@ -30,7 +30,7 @@ namespace RUINORERP.UI.BI
         public UCFMSubjectEdit()
         {
             InitializeComponent();
-            DataBindingHelper.InitDataToCmbByEnumDynamicGeneratedDataSource<tb_FM_Subject>(typeof(SubjectType), e => e.Subject_Type, cmbSubject_Type, false);
+            //DataBindingHelper.InitDataToCmbByEnumDynamicGeneratedDataSource<tb_FM_Subject,SubjectType>(e => e.Subject_Type, cmbSubject_Type, false);
         }
 
         private tb_FM_Subject _EditEntity;
@@ -54,7 +54,7 @@ namespace RUINORERP.UI.BI
             DataBindingHelper.BindData4TextBox<tb_FM_Subject>(entity, t => t.Subject_code, txtsubject_code, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_FM_Subject>(entity, t => t.Subject_name, txtsubject_name, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_FM_Subject>(entity, t => t.Subject_en_name, txtsubject_en_name, BindDataType4TextBox.Text, false);
-            DataBindingHelper.BindData4CmbByEnum<tb_FM_Subject>(entity, k => k.Subject_Type, typeof(SubjectType), cmbSubject_Type, false);
+            DataBindingHelper.BindData4CmbByEnum<tb_FM_Subject, SubjectType>(entity, k => k.Subject_Type,  cmbSubject_Type, false);
             DataBindingHelper.BindData4CheckBox<tb_FM_Subject>(entity, t => t.Is_enabled, chkIs_enabled, false);
             //有默认值
             DataBindingHelper.BindData4TextBox<tb_FM_Subject>(entity, t => t.Notes, txtNotes, BindDataType4TextBox.Text, false);

@@ -78,6 +78,7 @@ namespace RUINORERP.Global.EnumExt
         [Description("待审核")]
         待审核 = 2,
 
+        //出库生成应付，应付审核时如果有预收付核销后应该是部分支付了。
         [Description("待支付")]
         待支付 = 3,
 

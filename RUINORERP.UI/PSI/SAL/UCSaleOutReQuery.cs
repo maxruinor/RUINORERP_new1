@@ -116,7 +116,7 @@ namespace RUINORERP.UI.PSI.SAL
             }
 
             var ReceivablePayableController = MainForm.Instance.AppContext.GetRequiredService<tb_FM_ReceivablePayableController<tb_FM_ReceivablePayable>>();
-            ReturnMainSubResults<tb_FM_ReceivablePayable> ReceivablePayable = await ReceivablePayableController.CreateReceivablePayable(RealList[0], false);
+            tb_FM_ReceivablePayable ReceivablePayable = await ReceivablePayableController.BuildReceivablePayable(RealList[0]);
             MenuPowerHelper menuPowerHelper;
             menuPowerHelper = Startup.GetFromFac<MenuPowerHelper>();
             string Flag = string.Empty;
@@ -129,7 +129,7 @@ namespace RUINORERP.UI.PSI.SAL
             .FirstOrDefault();
             if (RelatedMenuInfo != null)
             {
-                menuPowerHelper.ExecuteEvents(RelatedMenuInfo, ReceivablePayable.ReturnObject);
+                menuPowerHelper.ExecuteEvents(RelatedMenuInfo, ReceivablePayable);
             }
         }
         #endregion
@@ -179,7 +179,6 @@ namespace RUINORERP.UI.PSI.SAL
             base.MasterSummaryCols.Add(c => c.FreightIncome);
             base.MasterSummaryCols.Add(c => c.TotalCommissionAmount);
 
-
             base.ChildSummaryCols.Add(c => c.Quantity);
             base.ChildSummaryCols.Add(c => c.SubtotalUntaxedAmount);
             base.ChildSummaryCols.Add(c => c.CustomizedCost);
@@ -188,13 +187,8 @@ namespace RUINORERP.UI.PSI.SAL
             base.ChildSummaryCols.Add(c => c.SubtotalTransAmount);
             base.ChildSummaryCols.Add(c => c.SubtotalCostAmount);
             base.ChildSummaryCols.Add(c => c.CommissionAmount);
-
         }
 
-
-
     }
-
-
 
 }

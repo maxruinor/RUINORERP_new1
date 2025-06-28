@@ -42,6 +42,10 @@ namespace RUINORERP.UI.BusinessService.CalculationService
 
         protected override void HandleMasterPropertyChange(string propertyName)
         {
+            if (Details == null)
+            {
+                return;
+            }
             decimal totalQty = Details.Sum(d => d.Quantity);
             if (totalQty <= 0) return;
 
@@ -62,6 +66,10 @@ namespace RUINORERP.UI.BusinessService.CalculationService
         /// <param name="detailSelector"></param>
         private void AllocateFreight(decimal masterValue, Expression<Func<tb_PurEntryDetail, decimal>> detailSelector)
         {
+            if (Details == null)
+            {
+                return;
+            }
             if (masterValue == 0 && Details.Sum(d => d.AllocatedFreightCost) == 0)
             {
                 return;

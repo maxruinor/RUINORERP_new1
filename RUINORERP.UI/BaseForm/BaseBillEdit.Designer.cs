@@ -33,6 +33,8 @@
             this.toolTipBase = new System.Windows.Forms.ToolTip(this.components);
             this.timerForToolTip = new System.Windows.Forms.Timer(this.components);
             this.BaseToolStrip = new System.Windows.Forms.ToolStrip();
+            this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
+            this.bwRemoting = new System.ComponentModel.BackgroundWorker();
             this.toolStripbtnAdd = new System.Windows.Forms.ToolStripButton();
             this.toolStripBtnCancel = new System.Windows.Forms.ToolStripButton();
             this.toolStripbtnModify = new System.Windows.Forms.ToolStripButton();
@@ -44,19 +46,18 @@
             this.toolStripbtnPrint = new System.Windows.Forms.ToolStripSplitButton();
             this.toolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem2 = new System.Windows.Forms.ToolStripMenuItem();
-            this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
             this.toolStripbtnReview = new System.Windows.Forms.ToolStripButton();
             this.toolStripBtnReverseReview = new System.Windows.Forms.ToolStripButton();
             this.toolStripButton结案 = new System.Windows.Forms.ToolStripButton();
-            this.toolStripbtnFunction = new System.Windows.Forms.ToolStripDropDownButton();
-            this.复制性新增ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripDropDownbtnFuncation = new System.Windows.Forms.ToolStripDropDownButton();
+            this.toolStripMenuItem3 = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripMenuItem4 = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripbtnRelatedQuery = new System.Windows.Forms.ToolStripDropDownButton();
             this.toolStripbtnProperty = new System.Windows.Forms.ToolStripButton();
             this.toolStripbtnClose = new System.Windows.Forms.ToolStripButton();
             this.tsBtnLocked = new System.Windows.Forms.ToolStripButton();
-            this.bwRemoting = new System.ComponentModel.BackgroundWorker();
             this.errorProviderForAllInput = new System.Windows.Forms.ErrorProvider(this.components);
             this.bindingSourceSub = new System.Windows.Forms.BindingSource(this.components);
-            this.数据特殊修正ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.BaseToolStrip.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceSub)).BeginInit();
@@ -83,7 +84,8 @@
             this.toolStripbtnReview,
             this.toolStripBtnReverseReview,
             this.toolStripButton结案,
-            this.toolStripbtnFunction,
+            this.toolStripDropDownbtnFuncation,
+            this.toolStripbtnRelatedQuery,
             this.toolStripbtnProperty,
             this.toolStripbtnClose,
             this.tsBtnLocked});
@@ -92,6 +94,16 @@
             this.BaseToolStrip.Size = new System.Drawing.Size(1049, 25);
             this.BaseToolStrip.TabIndex = 3;
             this.BaseToolStrip.Text = "toolStrip1";
+            // 
+            // toolStripSeparator1
+            // 
+            this.toolStripSeparator1.Name = "toolStripSeparator1";
+            this.toolStripSeparator1.Size = new System.Drawing.Size(6, 25);
+            // 
+            // bwRemoting
+            // 
+            this.bwRemoting.WorkerReportsProgress = true;
+            this.bwRemoting.WorkerSupportsCancellation = true;
             // 
             // toolStripbtnAdd
             // 
@@ -180,11 +192,6 @@
             this.toolStripMenuItem2.Size = new System.Drawing.Size(100, 22);
             this.toolStripMenuItem2.Text = "设计";
             // 
-            // toolStripSeparator1
-            // 
-            this.toolStripSeparator1.Name = "toolStripSeparator1";
-            this.toolStripSeparator1.Size = new System.Drawing.Size(6, 25);
-            // 
             // toolStripbtnReview
             // 
             this.toolStripbtnReview.Image = ((System.Drawing.Image)(resources.GetObject("toolStripbtnReview.Image")));
@@ -209,22 +216,36 @@
             this.toolStripButton结案.Size = new System.Drawing.Size(53, 22);
             this.toolStripButton结案.Text = "结案";
             // 
-            // toolStripbtnFunction
+            // toolStripDropDownbtnFuncation
             // 
-            this.toolStripbtnFunction.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.复制性新增ToolStripMenuItem,
-            this.数据特殊修正ToolStripMenuItem});
-            this.toolStripbtnFunction.Image = ((System.Drawing.Image)(resources.GetObject("toolStripbtnFunction.Image")));
-            this.toolStripbtnFunction.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.toolStripbtnFunction.Name = "toolStripbtnFunction";
-            this.toolStripbtnFunction.Size = new System.Drawing.Size(62, 22);
-            this.toolStripbtnFunction.Text = "功能";
+            this.toolStripDropDownbtnFuncation.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.toolStripMenuItem3,
+            this.toolStripMenuItem4});
+            this.toolStripDropDownbtnFuncation.Image = ((System.Drawing.Image)(resources.GetObject("toolStripDropDownbtnFuncation.Image")));
+            this.toolStripDropDownbtnFuncation.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.toolStripDropDownbtnFuncation.Name = "toolStripDropDownbtnFuncation";
+            this.toolStripDropDownbtnFuncation.Size = new System.Drawing.Size(62, 22);
+            this.toolStripDropDownbtnFuncation.Text = "功能";
             // 
-            // 复制性新增ToolStripMenuItem
+            // toolStripMenuItem3
             // 
-            this.复制性新增ToolStripMenuItem.Name = "复制性新增ToolStripMenuItem";
-            this.复制性新增ToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
-            this.复制性新增ToolStripMenuItem.Text = "复制性新增";
+            this.toolStripMenuItem3.Name = "toolStripMenuItem3";
+            this.toolStripMenuItem3.Size = new System.Drawing.Size(180, 22);
+            this.toolStripMenuItem3.Text = "复制性新增";
+            // 
+            // toolStripMenuItem4
+            // 
+            this.toolStripMenuItem4.Name = "toolStripMenuItem4";
+            this.toolStripMenuItem4.Size = new System.Drawing.Size(180, 22);
+            this.toolStripMenuItem4.Text = "数据特殊修正";
+            // 
+            // toolStripbtnRelatedQuery
+            // 
+            this.toolStripbtnRelatedQuery.Image = global::RUINORERP.UI.Properties.Resources.new_relatedquery;
+            this.toolStripbtnRelatedQuery.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.toolStripbtnRelatedQuery.Name = "toolStripbtnRelatedQuery";
+            this.toolStripbtnRelatedQuery.Size = new System.Drawing.Size(62, 22);
+            this.toolStripbtnRelatedQuery.Text = "联查";
             // 
             // toolStripbtnProperty
             // 
@@ -250,20 +271,9 @@
             this.tsBtnLocked.Text = "已锁定";
             this.tsBtnLocked.Visible = false;
             // 
-            // bwRemoting
-            // 
-            this.bwRemoting.WorkerReportsProgress = true;
-            this.bwRemoting.WorkerSupportsCancellation = true;
-            // 
             // errorProviderForAllInput
             // 
             this.errorProviderForAllInput.ContainerControl = this;
-            // 
-            // 数据特殊修正ToolStripMenuItem
-            // 
-            this.数据特殊修正ToolStripMenuItem.Name = "数据特殊修正ToolStripMenuItem";
-            this.数据特殊修正ToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
-            this.数据特殊修正ToolStripMenuItem.Text = "数据特殊修正";
             // 
             // BaseBillEdit
             // 
@@ -299,8 +309,7 @@
         public System.Windows.Forms.ToolStripButton toolStripbtnReview;
         public System.Windows.Forms.ToolStripButton toolStripBtnReverseReview;
         public System.Windows.Forms.ToolStripButton toolStripButtonRefresh;
-        public System.Windows.Forms.ToolStripDropDownButton toolStripbtnFunction;
-        public System.Windows.Forms.ToolStripMenuItem 复制性新增ToolStripMenuItem;
+        public System.Windows.Forms.ToolStripDropDownButton toolStripbtnRelatedQuery;
         public System.Windows.Forms.ToolStripButton toolStripbtnSubmit;
         public System.Windows.Forms.ToolStripButton toolStripbtnAdd;
         internal System.Windows.Forms.ToolStripButton toolStripBtnCancel;
@@ -310,6 +319,8 @@
         public System.Windows.Forms.ToolStripSplitButton toolStripbtnPrint;
         private System.ComponentModel.BackgroundWorker bwRemoting;
         public System.Windows.Forms.ToolStripButton tsBtnLocked;
-        private System.Windows.Forms.ToolStripMenuItem 数据特殊修正ToolStripMenuItem;
+        public System.Windows.Forms.ToolStripDropDownButton toolStripDropDownbtnFuncation;
+        public System.Windows.Forms.ToolStripMenuItem toolStripMenuItem3;
+        private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem4;
     }
 }

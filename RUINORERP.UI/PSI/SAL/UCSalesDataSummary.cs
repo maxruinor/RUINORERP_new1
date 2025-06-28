@@ -402,7 +402,10 @@ namespace RUINORERP.UI.PSI.SAL
             var ProjectGroups = new SugarParameter("@ProjectGroups ", strProjectGroups == string.Empty ? null : strProjectGroups);
             var Employees = new SugarParameter("@Employees ", strEmployees == string.Empty ? null : strEmployees);
             var StartQuery = new SugarParameter("@Start ", paraOut.Start.ToString("yyyy-MM-dd"));//string 格式  '2024-04-01'
-            var EndQuery = new SugarParameter("@End ", paraOut.End.Date.AddDays(1).AddTicks(-1).ToString("yyyy-MM-dd HH:mm:ss")); ; // 这将时间设置为 23:59:59.9999999 (DateTime 的最大值)
+            //var EndQuery = new SugarParameter("@End ", paraOut.End.Date.AddDays(1).AddTicks(-1).ToString("yyyy-MM-dd HH:mm:ss")); ; // 这将时间设置为 23:59:59.9999999 (DateTime 的最大值)
+
+            //存储过程中已经设置处理时间为 "2025-06-25 23:59:59"
+            var EndQuery = new SugarParameter("@End ", paraOut.End.ToString("yyyy-MM-dd"));
             var sqloutput = new SugarParameter("@sqlOutput", null, true);//设置为output
                                                                          //var list = db.Ado.UseStoredProcedure().SqlQuery<Class1>("sp_school", nameP, ageP);//返回List
             var SaleOutList = MainForm.Instance.AppContext.Db.Ado.UseStoredProcedure().SqlQuery<Proc_SaleOutStatisticsByEmployee>("Proc_SaleOutStatisticsByEmployee",

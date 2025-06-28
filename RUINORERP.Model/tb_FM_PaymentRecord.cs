@@ -137,6 +137,21 @@ namespace RUINORERP.Model
             SetProperty(ref _PayeeAccountNo, value);
                         }
         }
+        private string _SourceBillNos;
+        /// <summary>
+        /// 来源单号
+        /// </summary>
+        [AdvQueryAttribute(ColName = "SourceBillNos", ColDesc = "来源单号")]
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType = "String", ColumnName = "SourceBillNos", Length = 1000, IsNullable = false, ColumnDescription = "来源单号")]
+        public string SourceBillNos
+        {
+            get { return _SourceBillNos; }
+            set
+            {
+                SetProperty(ref _SourceBillNos, value);
+            }
+        }
+
 
         private long _Currency_ID;
         /// <summary>

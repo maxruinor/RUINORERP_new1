@@ -62,7 +62,7 @@ namespace RUINORERP.Model
 
         public enum 财务管理
         {
-            基础资料,
+            基础设置,
             收款管理,
             付款管理,
             费用管理,       //报销业务-》报销单=》报销单明细=》报销单统计

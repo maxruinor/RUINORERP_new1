@@ -63,7 +63,7 @@ namespace RUINORERP.UI.PSI.SAL
         public UCSaleOrder()
         {
             InitializeComponent();
-            InitDataToCmbByEnumDynamicGeneratedDataSource<tb_SaleOrder>(typeof(Priority), e => e.OrderPriority, cmbOrderPriority, false);
+            //InitDataToCmbByEnumDynamicGeneratedDataSource<tb_SaleOrder>(typeof(Priority), e => e.OrderPriority, cmbOrderPriority, false);
             AddPublicEntityObject(typeof(ProductSharePart));
         }
 
@@ -233,7 +233,7 @@ namespace RUINORERP.UI.PSI.SAL
             DataBindingHelper.BindData4Cmb<tb_Employee>(entity, k => k.Employee_ID, v => v.Employee_Name, cmbEmployee_ID, true);
             if (AppContext.projectGroups != null && AppContext.projectGroups.Count > 0)
             {
-                #region 项目组
+                #region 项目组 如果有设置则按设置。没有则全部
                 cmbProjectGroup.DataSource = null;
                 cmbProjectGroup.DataBindings.Clear();
                 BindingSource bs = new BindingSource();
@@ -252,15 +252,7 @@ namespace RUINORERP.UI.PSI.SAL
                 DataBindingHelper.BindData4Cmb<tb_ProjectGroup>(entity, k => k.ProjectGroup_ID, v => v.ProjectGroupName, cmbProjectGroup);
             }
 
-
-            //DataBindingHelper.BindData4CmbByEnum<tb_SaleOrder>(entity, k => k.PayStatus, typeof(PayStatus), cmbPayStatus, false);
-            EnumBindingHelper bindingHelper = new EnumBindingHelper();
-            //https://www.cnblogs.com/cdaniu/p/15236857.html
-            //加载枚举，并且可以过虑不需要的项 , 订单不需要用全部付款。只有在财务模块中 确认收货后。才是全部付款
-            List<int> exclude = new List<int>();
-            exclude.Add((int)PayStatus.全部付款);
-            bindingHelper.InitDataToCmbByEnumOnWhere<tb_SaleOrder>(typeof(PayStatus).GetListByEnum<PayStatus>(selectedItem: 1, exclude.ToArray()), e => e.PayStatus, cmbPayStatus);
-
+            DataBindingHelper.BindData4CmbByEnum<tb_SaleOrder, PayStatus>(entity, k => k.PayStatus, cmbPayStatus, false , PayStatus.全部付款, PayStatus.部分付款);
 
             DataBindingHelper.BindData4TextBox<tb_SaleOrder>(entity, t => t.FreightIncome.ToString(), txtFreightIncome, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4TextBox<tb_SaleOrder>(entity, t => t.ForeignFreightIncome.ToString(), txtForeignFreightIncome, BindDataType4TextBox.Money, false);
@@ -648,7 +640,7 @@ using var binder = new UIStateBinder(..., customEvaluator);
             listCols.SetCol_ReadOnly<tb_SaleOrderDetail>(c => c.TotalDeliveredQty);
             listCols.SetCol_ReadOnly<tb_SaleOrderDetail>(c => c.SubtotalTaxAmount);
             listCols.SetCol_ReadOnly<tb_SaleOrderDetail>(c => c.TotalReturnedQty);
-
+            listCols.SetCol_ReadOnly<tb_SaleOrderDetail>(c => c.Cost);
 
             listCols.SetCol_Format<tb_SaleOrderDetail>(c => c.Discount, CustomFormatType.PercentFormat);
             listCols.SetCol_Format<tb_SaleOrderDetail>(c => c.TaxRate, CustomFormatType.PercentFormat);
@@ -916,7 +908,7 @@ using var binder = new UIStateBinder(..., customEvaluator);
                     }
                     else
                     {
-                        MessageBox.Show("部分预付时，请输入正确的订金金额。");
+                        MessageBox.Show("部分预付时，请输入正确的订金金额。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                         return false;
                     }
                 }
@@ -924,7 +916,7 @@ using var binder = new UIStateBinder(..., customEvaluator);
                 {
                     if (EditEntity.Deposit > 0 || EditEntity.ForeignDeposit > 0)
                     {
-                        MessageBox.Show("全部预付时，不需要输入订金,系统默认总金额为支付金额。");
+                        MessageBox.Show("全部预付时，不需要输入订金,系统默认总金额为支付金额。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                         return false;
                     }
                 }

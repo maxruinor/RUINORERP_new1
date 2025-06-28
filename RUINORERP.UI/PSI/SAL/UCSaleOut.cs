@@ -396,7 +396,7 @@ namespace RUINORERP.UI.PSI.SAL
 
             //先绑定这个。InitFilterForControl 这个才生效
             DataBindingHelper.BindData4TextBox<tb_SaleOut>(entity, v => v.SaleOrderNo, txtSaleOrder, BindDataType4TextBox.Text, true);
-            
+
 
             BaseProcessor basePro = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_SaleOrder).Name + "Processor");
             QueryFilter queryFilter = basePro.GetQueryFilter();
@@ -416,6 +416,14 @@ namespace RUINORERP.UI.PSI.SAL
             sgd.GridMasterDataType = entity.GetType();
 
             _coordinator = new SaleOutCoordinator(EditEntity, EditEntity.tb_SaleOutDetails, sgh);
+            if (EditEntity.FreightCost != details.Sum(c => c.AllocatedFreightCost))
+            {
+                _coordinator.HandleMasterPropertyChange(c => c.FreightCost);
+            }
+            if (EditEntity.FreightIncome != details.Sum(c => c.AllocatedFreightIncome))
+            {
+                _coordinator.HandleMasterPropertyChange(c => c.FreightIncome);
+            }
             base.BindData(entity);
         }
 
@@ -591,6 +599,10 @@ namespace RUINORERP.UI.PSI.SAL
                 List<tb_SaleOutDetail> details = sgd.BindingSourceLines.DataSource as List<tb_SaleOutDetail>;
                 //    return;
                 //}
+                if (details == null || details.Count == 0)
+                {
+                    return;
+                }
                 details = details.Where(c => c.ProdDetailID > 0).ToList();
                 if (details.Count == 0)
                 {
@@ -609,7 +621,7 @@ namespace RUINORERP.UI.PSI.SAL
                 }
 
                 EditEntity.TotalQty = details.Sum(c => c.Quantity);
-                EditEntity.TotalCost = details.Sum(c => (c.Cost + c.CustomizedCost) * c.Quantity)+ EditEntity.FreightCost;
+                EditEntity.TotalCost = details.Sum(c => (c.Cost + c.CustomizedCost) * c.Quantity) + EditEntity.FreightCost;
                 EditEntity.TotalTaxAmount = details.Sum(c => c.SubtotalTaxAmount);
                 EditEntity.TotalCommissionAmount = details.Sum(c => c.CommissionAmount);
                 EditEntity.TotalTaxAmount = EditEntity.TotalTaxAmount.ToRoundDecimalPlaces(MainForm.Instance.authorizeController.GetMoneyDataPrecision());
@@ -837,12 +849,12 @@ namespace RUINORERP.UI.PSI.SAL
 
 
                 EditEntity.TotalQty = details.Sum(c => c.Quantity);
-                EditEntity.TotalCost = details.Sum(c => (c.Cost + c.CustomizedCost) * c.Quantity)+ EditEntity.FreightCost;
+                EditEntity.TotalCost = details.Sum(c => (c.Cost + c.CustomizedCost) * c.Quantity) + EditEntity.FreightCost;
                 EditEntity.TotalTaxAmount = details.Sum(c => c.SubtotalTaxAmount);
                 EditEntity.TotalCommissionAmount = details.Sum(c => c.CommissionAmount);
                 EditEntity.TotalTaxAmount = EditEntity.TotalTaxAmount.ToRoundDecimalPlaces(MainForm.Instance.authorizeController.GetMoneyDataPrecision());
 
-                EditEntity.TotalAmount = details.Sum(c => c.TransactionPrice * c.Quantity)+ EditEntity.FreightIncome;
+                EditEntity.TotalAmount = details.Sum(c => c.TransactionPrice * c.Quantity) + EditEntity.FreightIncome;
                 if (EditEntity.Currency_ID != AppContext.BaseCurrency.Currency_ID)
                 {
                     EditEntity.ForeignTotalAmount = EditEntity.TotalAmount / EditEntity.ExchangeRate;

@@ -98,7 +98,7 @@ namespace RUINORERP.UI.FM.FMBase
                 if (CurMenuInfo != null)
                 {
                     lbl盘点单.Text = CurMenuInfo.CaptionCN;
-                    if (PaymentType==ReceivePaymentType.付款)
+                    if (PaymentType == ReceivePaymentType.付款)
                     {
                         entity.EXPOrINC = false;
                         if (string.IsNullOrEmpty(entity.ExpenseNo))
@@ -118,8 +118,8 @@ namespace RUINORERP.UI.FM.FMBase
                 }
             }
 
-
-
+            DataBindingHelper.BindData4Cmb<tb_PaymentMethod>(entity, k => k.Paytype_ID, v => v.Paytype_Name, cmbPaytype_ID);
+            DataBindingHelper.BindData4CmbByEnum<tb_FM_OtherExpense>(entity, k => k.PayStatus, typeof(PayStatus), cmbPayStatus, false);
             DataBindingHelper.BindData4Cmb<tb_Employee>(entity, k => k.Employee_ID, v => v.Employee_Name, cmbEmployee_ID);
             DataBindingHelper.BindData4TextBox<tb_FM_OtherExpense>(entity, t => t.TotalAmount.ToString(), txtTotalAmount, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4TextBox<tb_FM_OtherExpense>(entity, t => t.Notes, txtNotes, BindDataType4TextBox.Text, false);
@@ -129,10 +129,9 @@ namespace RUINORERP.UI.FM.FMBase
 
             DataBindingHelper.BindData4TextBox<tb_FM_OtherExpense>(entity, t => t.UntaxedAmount.ToString(), txtUntaxedAmount, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4TextBox<tb_FM_OtherExpense>(entity, t => t.ApprovalOpinions, txtApprovalOpinions, BindDataType4TextBox.Text, false);
-            DataBindingHelper.BindData4TextBox<tb_FM_ExpenseClaim>(entity, t => t.CloseCaseOpinions, txtCloseCaseOpinions, BindDataType4TextBox.Text, false);
-            DataBindingHelper.BindData4ControlByEnum<tb_FM_OtherExpense>(entity, t => t.DataStatus, txtstatus, BindDataType4Enum.EnumName, typeof(Global.DataStatus));
+            DataBindingHelper.BindData4TextBox<tb_FM_OtherExpense>(entity, t => t.CloseCaseOpinions, txtCloseCaseOpinions, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4ControlByEnum<tb_FM_OtherExpense>(entity, t => t.ApprovalStatus, lblReview, BindDataType4Enum.EnumName, typeof(Global.ApprovalStatus));
-            txtstatus.ReadOnly = true;
+            DataBindingHelper.BindData4ControlByEnum<tb_FM_OtherExpense>(entity, t => t.DataStatus, lblDataStatus, BindDataType4Enum.EnumName, typeof(DataStatus));
             if (entity.tb_FM_OtherExpenseDetails != null && entity.tb_FM_OtherExpenseDetails.Count > 0)
             {
                 sgh.LoadItemDataToGrid<tb_FM_OtherExpenseDetail>(grid1, sgd, entity.tb_FM_OtherExpenseDetails, c => c.ExpenseSubID);
@@ -151,7 +150,13 @@ namespace RUINORERP.UI.FM.FMBase
                 {
 
                 }
-
+                if (s2.PropertyName == entity.GetPropertyName<tb_SaleOrder>(c => c.Paytype_ID) && entity.Paytype_ID > 0)
+                {
+                    if (cmbPaytype_ID.SelectedItem is tb_PaymentMethod paymentMethod)
+                    {
+                        EditEntity.tb_paymentmethod = paymentMethod;
+                    }
+                }
                 //显示 打印状态 如果是草稿状态 不显示打印
                 if ((DataStatus)EditEntity.DataStatus != DataStatus.草稿)
                 {
@@ -183,22 +188,12 @@ namespace RUINORERP.UI.FM.FMBase
         {
             BaseProcessor baseProcessor = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_FM_OtherExpense).Name + "Processor");
             QueryConditionFilter = baseProcessor.GetQueryFilter();
-            bool isIncome = true;
-            if (PaymentType == ReceivePaymentType.收款)
-            {
-                isIncome = true;
-            }
-            else
-            {
-                isIncome = false;
-            }
-
             //创建表达式
             var lambda = Expressionable.Create<tb_FM_OtherExpense>()
                          //.AndIF(CurMenuInfo.CaptionCN.Contains("客户"), t => t.IsCustomer == true)
                          .And(t => t.isdeleted == false)
-                         .And(t => t.EXPOrINC == isIncome)
-                        // .And(t => t.Is_enabled == true)
+                         .AndIF(PaymentType == ReceivePaymentType.收款, t => t.EXPOrINC == true)
+                         .AndIF(PaymentType == ReceivePaymentType.付款, t => t.EXPOrINC == false)
                         //报销人员限制，财务不限制
                         .AndIF(AuthorizeController.GetOwnershipControl(MainForm.Instance.AppContext), t => t.Employee_ID == MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID)//限制了销售只看到自己的客户,采购不限制
                         .ToExpression();//注意 这一句 不能少

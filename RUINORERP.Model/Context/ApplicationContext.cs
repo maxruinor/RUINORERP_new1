@@ -145,6 +145,14 @@ namespace RUINORERP.Model.Context
         /// </summary>
         public List<tb_RoleInfo> Roles { get; set; }
 
+
+        
+        /// <summary>
+        /// 业务编码规则
+        /// </summary>
+        public List<tb_sys_BillNoRule> BillNoRules { get; set; }
+
+
         /// <summary>
         /// 当前角色
         /// </summary>

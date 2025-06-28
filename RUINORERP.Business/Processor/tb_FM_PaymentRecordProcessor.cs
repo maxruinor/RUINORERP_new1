@@ -51,6 +51,7 @@ namespace RUINORERP.Business.Processor
 
             queryFilter.SetQueryField<tb_FM_PaymentRecord>(c => c.PayeeAccountNo);
             queryFilter.SetQueryField<tb_FM_PaymentRecord>(c => c.Employee_ID);
+            queryFilter.SetQueryField<tb_FM_PaymentRecord>(c => c.SourceBillNos);
             queryFilter.SetQueryField<tb_FM_PaymentRecord>(c => c.Currency_ID);
             queryFilter.SetQueryField<tb_FM_PaymentRecord>(c => c.PaymentDate, false);
             queryFilter.SetQueryField<tb_FM_PaymentRecord>(c => c.ApprovalStatus, QueryFieldType.CmbEnum, typeof(ApprovalStatus));

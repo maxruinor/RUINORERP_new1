@@ -64,6 +64,7 @@ namespace RUINORERP.UI.FM.FMBase
             base.MasterSummaryCols.Add(c => c.TaxAmount);
             base.MasterSummaryCols.Add(c => c.TotalAmount);
             base.MasterSummaryCols.Add(c => c.UntaxedAmount);
+            
 
             base.ChildSummaryCols.Add(c => c.TaxAmount);
             base.ChildSummaryCols.Add(c => c.TotalAmount);
@@ -73,7 +74,7 @@ namespace RUINORERP.UI.FM.FMBase
 
         public override void BuildInvisibleCols()
         {
-
+            base.MasterInvisibleCols.Add(c => c.EXPOrINC);
             //base.ChildInvisibleCols.Add(c => c.Cost);
             //base.ChildInvisibleCols.Add(c => c.SubtotalCostAmount);
         }

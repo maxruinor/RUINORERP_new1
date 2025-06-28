@@ -172,8 +172,9 @@ namespace RUINORERP.Business
                         //如果是有出库情况，则反冲。如果是没有出库情况。则生成付款单
                         //退货单审核后生成红字应收单（负金额）
                         var ctrpayable = _appContext.GetRequiredService<tb_FM_ReceivablePayableController<tb_FM_ReceivablePayable>>();
-                        ReturnMainSubResults<tb_FM_ReceivablePayable> results = await ctrpayable.CreateReceivablePayable(entity);
-                        if (results.Succeeded)
+                        tb_FM_ReceivablePayable payable = await ctrpayable.BuildReceivablePayable(entity);
+                        ReturnMainSubResults<tb_FM_ReceivablePayable> rmr = await ctrpayable.BaseSaveOrUpdateWithChild<tb_FM_ReceivablePayable>(payable, false);
+                        if (rmr.Succeeded)
                         {
                             //下面冲销逻辑应该放到付款的审核时处理
                             /*

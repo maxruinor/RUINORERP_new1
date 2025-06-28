@@ -180,18 +180,6 @@ namespace RUINORERP.UI.Monitoring.Auditing
 
 
 
-    /*
-      private readonly IAuditLogService _auditLogService;
-
-    public ProductController(IAuditLogService auditLogService)
-    {
-        _auditLogService = auditLogService;
-    }
-
-    // 记录审计日志
-            await _auditLogService.LogAsync("创建产品", product, "管理员创建了新产品");
-
-     */
 
     // 审计日志帮助类（适配原有接口，逐步迁移到服务）
     public class AuditLogHelper
@@ -246,28 +234,8 @@ namespace RUINORERP.UI.Monitoring.Auditing
     }
 
 
-    // 审计日志配置类
-    public class AuditLogOptions
-    {
-        public int BatchSize { get; set; } = 10; // 批量写入大小
-        public int FlushInterval { get; set; } = 3000; // 自动刷新间隔(毫秒)
-        public bool EnableAudit { get; set; } = true; // 是否启用审计
-    }
 
-    // 审计字段特性
-    [AttributeUsage(AttributeTargets.Property)]
-    public class AuditFieldAttribute : Attribute
-    {
-        public bool IsAudited { get; set; } = true;
-        public string DisplayName { get; set; }
-    }
 
-    // 审计日志服务接口
-    public interface IAuditLogService
-    {
-        Task LogAsync<T>(string action, T entity, string description = "") where T : class;
-        Task LogAsync(string action, string description = "");
-    }
 
     // 审计日志服务实现
     public class AuditLogService : IAuditLogService, IDisposable

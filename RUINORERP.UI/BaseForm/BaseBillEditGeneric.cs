@@ -164,7 +164,7 @@ namespace RUINORERP.UI.BaseForm
                 if (!this.DesignMode)
                 {
                     frm = new frmFormProperty();
-                    QueryConditionBuilder();
+            
                     this.OnBindDataToUIEvent += BindData;
 
                     KryptonButton button保存当前单据 = new KryptonButton();
@@ -350,6 +350,24 @@ namespace RUINORERP.UI.BaseForm
         /// <param name="entity"></param>
         public virtual void BindData(T entity, ActionStatus actionStatus = ActionStatus.无操作)
         {
+
+            //加载关联的单据
+            //if (entity != null)
+            //{
+            //    ToolStripMenuItem menuItem = new ToolStripMenuItem();
+            //    menuItem.Name = "加载最新数据";
+            //    toolStripbtnRelatedQuery.DropDownItems.Add(menuItem);
+            //}
+
+            if (toolStripbtnRelatedQuery.DropDownItems.Count > 0)
+            {
+                toolStripbtnRelatedQuery.Visible = true;
+            }
+            else
+            {
+                toolStripbtnRelatedQuery.Visible = false;
+            }
+
             InitializeStateManagement();
             ToolBarEnabledControl(entity);
         }
@@ -460,9 +478,9 @@ namespace RUINORERP.UI.BaseForm
                     toolStripbtnReview.Enabled = false;
                     toolStripbtnAdd.Enabled = true;
                     toolStripbtnDelete.Enabled = false;
-                    toolStripBtnCancel.Visible = false;
+                    toolStripBtnCancel.Visible = true;
                     toolStripbtnModify.Enabled = false;
-                    toolStripBtnCancel.Enabled = false;
+                    toolStripBtnCancel.Enabled = true;
                     toolStripbtnPrint.Enabled = true;
                     toolStripButtonRefresh.Enabled = true;
                     break;
@@ -850,7 +868,6 @@ namespace RUINORERP.UI.BaseForm
             // 结案按钮改为"退款"
             toolStripButton结案.Text = "退款";
             toolStripButton结案.Enabled = status == PrePaymentStatus.待核销;
-
             toolStripButtonSave.Enabled = FMPaymentStatusHelper.IsEditable(status);
 
             if (FMPaymentStatusHelper.IsFinalStatus(status))
@@ -925,7 +942,7 @@ namespace RUINORERP.UI.BaseForm
 
             // 通用按钮状态
             toolStripbtnAdd.Enabled = statusDetector.IsEditable;
-            toolStripBtnCancel.Visible = statusDetector.CanCancel;
+            //toolStripBtnCancel.Visible = statusDetector.CanCancel;
             toolStripbtnModify.Enabled = statusDetector.IsEditable;
             toolStripbtnDelete.Enabled = statusDetector.IsEditable;
             toolStripButtonSave.Enabled = statusDetector.IsEditable;
@@ -935,7 +952,25 @@ namespace RUINORERP.UI.BaseForm
             toolStripbtnReview.Enabled = statusDetector.CanReview;
             toolStripBtnReverseReview.Enabled = statusDetector.CanReverseReview;
             toolStripButton结案.Enabled = statusDetector.CanClose;
+            //  RefreshToolbar
+            statusDetector.RefreshToolbar += (actionStatus, statusValue) =>
+            {
+                if (statusValue == null) return;
 
+
+                //if (statusValue == typeof(PrePaymentStatus))
+                //{
+                //    HandlePrePaymentStatus((PrePaymentStatus)statusValue, actionStatus);
+                //}
+                //else if (statusValue == typeof(ARAPStatus))
+                //{
+                //    HandleARAPStatus((ARAPStatus)statusValue, actionStatus);
+                //}
+                //else if (statusValue == typeof(PaymentStatus))
+                //{
+                //    HandlePaymentStatus((PaymentStatus)statusValue, actionStatus);
+                //}
+            };
             // 锁定状态处理
             HandleLockStatus(entity, statusDetector);
 
@@ -943,16 +978,36 @@ namespace RUINORERP.UI.BaseForm
             statusDetector.RegisterStatusChangeHandler();
         }
 
+        private void HandleARAPStatus(ARAPStatus statusValue, ActionStatus actionStatus)
+        {
+            toolStripbtnSubmit.Enabled = statusValue == ARAPStatus.草稿;
+            toolStripbtnReview.Enabled = statusValue == ARAPStatus.待审核;
+            toolStripButton结案.Visible = false; // 付款单不需要结案按钮
+        }
+
         /// <summary>状态检测器 - 封装状态逻辑</summary>
         private class StatusDetector
         {
             private readonly BaseEntity _entity;
 
+            //设置一个RefreshToolbar事件
+            public StatusChangeHandler RefreshToolbar;
+            public delegate void StatusChangeHandler(ActionStatus actionStatus, Enum StatusValue);
+
             public bool IsEditable { get; }
             public bool CanCancel { get; }
             public bool CanSubmit { get; }
+
+            /// <summary>
+            /// 可审核
+            /// </summary>
             public bool CanReview { get; }
+
+            /// <summary>
+            /// 可反审
+            /// </summary>
             public bool CanReverseReview { get; }
+
             public bool CanClose { get; }
             public bool IsFinalStatus { get; }
 
@@ -963,6 +1018,8 @@ namespace RUINORERP.UI.BaseForm
                 // 获取实际状态值
                 var status = GetActualStatus();
                 var hasRelatedRecords = CheckRelatedRecords();
+
+                //可冲销
                 bool CanReverse = false;
                 // 计算属性值
                 IsFinalStatus = FMPaymentStatusHelper.IsFinalStatus(status);
@@ -991,6 +1048,14 @@ namespace RUINORERP.UI.BaseForm
                         CanSubmit = pay == PaymentStatus.草稿;
                         CanReview = pay == PaymentStatus.待审核;
                         CanReverseReview = false;
+                        CanClose = false;
+                        CanReverse = false;
+                        break;
+
+                    case DataStatus dataStatus:
+                        CanSubmit = dataStatus == DataStatus.草稿;
+                        CanReview = dataStatus == DataStatus.新建;
+                        CanReverseReview = dataStatus == DataStatus.确认;
                         CanClose = false;
                         CanReverse = false;
                         break;
@@ -1028,6 +1093,14 @@ namespace RUINORERP.UI.BaseForm
                     {
                         // 刷新UI状态
                         // RefreshToolbar();
+                        if (RefreshToolbar != null)
+                        {
+                            if (e.PropertyName == nameof(DataStatus))
+                            {
+                                //RefreshToolbar(actionStatus: ActionStatus.更新, statusValue: _entity.GetPropertyValue(nameof(DataStatus)));
+                            }
+
+                        }
                     }
                 };
             }
@@ -1574,6 +1647,8 @@ namespace RUINORERP.UI.BaseForm
             long pkid = 0;
             switch (menuItem)
             {
+                case MenuItemEnums.联查:
+                    break;
                 case MenuItemEnums.已锁定:
                     if (tsBtnLocked.Tag is LockInfo lockRequest)
                     {
@@ -2193,7 +2268,17 @@ namespace RUINORERP.UI.BaseForm
                     ToolBarEnabledControl(EditEntity);
                     ae.ApprovalResults = true;
                     reviewResult.approval = ae;
-                    MainForm.Instance.AuditLogHelper.CreateAuditLog<T>("审核", EditEntity, $"审核结果：{(ae.ApprovalResults ? "通过" : "拒绝")}-{ae.ApprovalOpinions}");
+                    if (ae.bizType.ToString().Contains("款"))
+                    {
+                        MainForm.Instance.FMAuditLogHelper.CreateAuditLog<T>("审核", EditEntity, $"审核结果：{(ae.ApprovalResults ? "通过" : "拒绝")}-{ae.ApprovalOpinions}");
+                    }
+                    else
+                    {
+                        MainForm.Instance.AuditLogHelper.CreateAuditLog<T>("审核", EditEntity, $"审核结果：{(ae.ApprovalResults ? "通过" : "拒绝")}-{ae.ApprovalOpinions}");
+                    }
+
+
+
                     MainForm.Instance.PrintInfoLog($"{ae.bizName}:{ae.BillNo}审核成功。", Color.Red);
                 }
                 else
@@ -2201,8 +2286,8 @@ namespace RUINORERP.UI.BaseForm
                     //审核失败 要恢复之前的值
                     command.Undo();
                     ae.ApprovalResults = false;
-                    ToolBarEnabledControl(EditEntity);
                     ae.ApprovalStatus = (int)ApprovalStatus.未审核;
+                    ToolBarEnabledControl(EditEntity);
                     reviewResult.approval = ae;
                     // 记录审计日志
                     MainForm.Instance.AuditLogHelper.CreateAuditLog("审核失败", EditEntity, $"审核结果:{(ae.ApprovalResults ? "通过" : "拒绝")},{rmr.ErrorMsg}");
@@ -2757,7 +2842,70 @@ namespace RUINORERP.UI.BaseForm
             return string.Empty;
         }
 
+        /// <summary>
+        /// 加载相关数据的
+        /// </summary>
+        protected virtual void LoadRelatedDataToDropDownItems()
+        {
+            //if (entity != null)
+            //{
+            //    ToolStripMenuItem menuItem = new ToolStripMenuItem();
+            //    menuItem.Name = "加载最新数据";
+            //    toolStripbtnRelatedQuery.DropDownItems.Add(menuItem);
+            //}
 
+            if (toolStripbtnRelatedQuery.DropDownItems.Count > 0)
+            {
+                toolStripbtnRelatedQuery.Visible = true;
+            }
+            else
+            {
+                toolStripbtnRelatedQuery.Visible = false;
+            }
+        }
+
+        protected virtual void RelatedQuery()
+        {
+            if (EditEntity == null)
+            {
+                return;
+            }
+
+            T NewEditEntity = default(T);
+            if (OnBindDataToUIEvent != null)
+            {
+                bindingSourceSub.Clear();
+
+                // NewEditEntity = Activator.CreateInstance(typeof(T)) as T;
+
+                NewEditEntity = EditEntity.DeepCloneByjson();
+                //复制性新增 时  PK要清空，单据编号类的,还有他的关联性子集
+                // 获取主键列名
+                string PKCol = BaseUIHelper.GetEntityPrimaryKey<T>();
+                BillConverterFactory bcf = Startup.GetFromFac<BillConverterFactory>();
+                //这里只是取打印配置信息
+                CommBillData cbd = new CommBillData();
+                cbd = bcf.GetBillData(typeof(T), NewEditEntity);
+
+                string billNoColName = cbd.BillNoColName;
+
+                ReflectionHelper.SetPropertyValue(NewEditEntity, billNoColName, string.Empty);
+
+                // 重置主实体的主键
+                ResetPrimaryKey(NewEditEntity, PKCol);
+
+                // 重置审批状态
+                ResetApprovalStatus(NewEditEntity);
+
+                // 递归处理所有导航属性（明细集合）
+                ProcessNavigationProperties(NewEditEntity, PKCol);
+
+                OnBindDataToUIEvent(NewEditEntity, ActionStatus.复制);
+
+            }
+            ToolBarEnabledControl(MenuItemEnums.新增);
+            return;
+        }
         protected virtual T AddByCopy()
         {
             if (EditEntity == null)
@@ -3759,6 +3907,8 @@ namespace RUINORERP.UI.BaseForm
             }
             else
             {
+                //单据保存后再提交
+                MessageBox.Show("提交失败，请重试;或联系管理员。\r\n 错误信息：" + result.ErrorMsg, "提示", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return false;
             }
 
@@ -3855,6 +4005,7 @@ namespace RUINORERP.UI.BaseForm
         {
             if (editEntity == null)
             {
+                MainForm.Instance.PrintInfoLog("当前数据不存在，无法刷新。");
                 return;
             }
 
@@ -3871,10 +4022,15 @@ namespace RUINORERP.UI.BaseForm
                         if (OnBindDataToUIEvent != null)
                         {
                             BaseEntity pkentity = (editEntity as T) as BaseEntity;
-                            BaseController<T> ctr = Startup.GetFromFacByName<BaseController<T>>(typeof(T).Name + "Controller");
-                            editEntity = await ctr.BaseQueryByIdNavAsync(pkentity.PrimaryKeyID) as T;
-                            if (editEntity == null)
+                            if (pkentity.PrimaryKeyID > 0)
                             {
+                                BaseController<T> ctr = Startup.GetFromFacByName<BaseController<T>>(typeof(T).Name + "Controller");
+                                editEntity = await ctr.BaseQueryByIdNavAsync(pkentity.PrimaryKeyID) as T;
+                            }
+                            else
+                            {
+                                MessageBox.Show("数据不存在。系统自动转换为新增模式。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                                toolStripButtonRefresh.Enabled = false;
                                 editEntity = Activator.CreateInstance<T>();
                             }
                             bindingSourceSub.Clear();
@@ -4239,6 +4395,7 @@ namespace RUINORERP.UI.BaseForm
             {
                 if (!this.DesignMode)
                 {
+                    QueryConditionBuilder();
                     #region 请求缓存
                     //通过表名获取需要缓存的关系表再判断是否存在。没有就从服务器请求。这种是全新的请求。后面还要设计更新式请求。
                     UIBizSrvice.RequestCache<T>();

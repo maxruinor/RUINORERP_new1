@@ -386,8 +386,39 @@ namespace RUINORERP.UI.UserCenter.DataParts
 
             var grouplist = new List<ConditionGroup>
         {
+                new ConditionGroup
+            {
+                 Identifier =identifier,
+                StatusName = "待提交",
+                Conditions = new List<IConditionalModel>
+                {
+                    new ConditionalModel
+                    {
+                        FieldName = "ReceivePaymentType",
+                        ConditionalType = ConditionalType.Equal,
+                        FieldValue = ((int)paymentType).ToString(),
+                        CSharpTypeName = "int"
+                    },
+                    new ConditionalModel
+                    {
+                        FieldName = "PaymentStatus",
+                        ConditionalType = ConditionalType.Equal,
+                        FieldValue = ((int)PaymentStatus.草稿).ToString(),
+                        CSharpTypeName = "int"
+                    },
+                    new ConditionalModel
+                    {
+                        FieldName = "isdeleted",
+                        ConditionalType = ConditionalType.Equal,
+                        FieldValue = "False",
+                        CSharpTypeName = "bool"
+                    }
+                }
+            },
+
             new ConditionGroup
             {
+
                 Identifier= identifier,
                 StatusName = StatusNameDescription,
                 Conditions = new List<IConditionalModel>

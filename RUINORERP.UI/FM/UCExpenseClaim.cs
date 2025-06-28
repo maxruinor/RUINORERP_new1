@@ -117,11 +117,9 @@ namespace RUINORERP.UI.FM
             DataBindingHelper.BindData4Cmb<tb_FM_PayeeInfo>(entity, k => k.PayeeInfoID, v => v.Account_name, cmbPayeeInfoID, c => c.Employee_ID.HasValue && c.Employee_ID.Value == entity.Employee_ID);
             DataBindingHelper.BindData4DataTime<tb_FM_ExpenseClaim>(entity, t => t.DocumentDate, dtpDocumentDate, false);
             DataBindingHelper.BindData4TextBox<tb_FM_ExpenseClaim>(entity, t => t.ClaimAmount.ToString(), txtClaimlAmount, BindDataType4TextBox.Money, false);
-            DataBindingHelper.BindData4TextBox<tb_FM_ExpenseClaim>(entity, t => t.ApprovedAmount.ToString(), txtApprovedAmount, BindDataType4TextBox.Money, false);
-            DataBindingHelper.BindData4CheckBox<tb_FM_ExpenseClaim>(entity, t => t.IncludeTax, chkIncludeTax, false);
+             
             DataBindingHelper.BindData4TextBox<tb_FM_ExpenseClaim>(entity, t => t.Notes, txtNotes, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_FM_ExpenseClaim>(entity, t => t.TaxAmount.ToString(), txtTaxAmount, BindDataType4TextBox.Money, false);
-            DataBindingHelper.BindData4TextBox<tb_FM_ExpenseClaim>(entity, t => t.TaxRate.ToString(), txtTaxRate, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4TextBox<tb_FM_ExpenseClaim>(entity, t => t.UntaxedAmount.ToString(), txtUntaxedAmount, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4TextBox<tb_FM_ExpenseClaim>(entity, t => t.ApprovalOpinions, txtApprovalOpinions, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4CheckBox<tb_FM_ExpenseClaim>(entity, t => t.ApprovalResults, chkApprovalResults, false);
@@ -375,7 +373,7 @@ namespace RUINORERP.UI.FM
             //listCols.SetCol_ReadOnly<tb_FM_OtherExpenseDetail>(c => c.CNName);
 
             listCols.SetCol_Format<tb_FM_ExpenseClaimDetail>(c => c.TaxRate, CustomFormatType.PercentFormat);
-            listCols.SetCol_Format<tb_FM_ExpenseClaimDetail>(c => c.TotalAmount, CustomFormatType.CurrencyFormat);
+            listCols.SetCol_Format<tb_FM_ExpenseClaimDetail>(c => c.SingleAmount, CustomFormatType.CurrencyFormat);
             listCols.SetCol_Format<tb_FM_ExpenseClaimDetail>(c => c.TaxAmount, CustomFormatType.CurrencyFormat);
             listCols.SetCol_Format<tb_FM_ExpenseClaimDetail>(c => c.UntaxedAmount, CustomFormatType.CurrencyFormat);
             //            listCols.SetCol_Format<tb_FM_ExpenseClaimDetail>(c => c.EvidenceImage, CustomFormatType.Image);
@@ -394,12 +392,12 @@ namespace RUINORERP.UI.FM
 
 
             //listCols.SetCol_NeverVisible<tb_FM_ExpenseClaimDetail>(c => c.EvidenceImage);//后面会删除这一列
-            listCols.SetCol_Summary<tb_FM_ExpenseClaimDetail>(c => c.TotalAmount);
+            listCols.SetCol_Summary<tb_FM_ExpenseClaimDetail>(c => c.SingleAmount);
             listCols.SetCol_Summary<tb_FM_ExpenseClaimDetail>(c => c.TaxAmount);
             listCols.SetCol_Summary<tb_FM_ExpenseClaimDetail>(c => c.UntaxedAmount);
 
-            listCols.SetCol_Formula<tb_FM_ExpenseClaimDetail>((a, b, c) => a.TotalAmount / (1 + b.TaxRate) * c.TaxRate, d => d.TaxAmount);
-            listCols.SetCol_Formula<tb_FM_ExpenseClaimDetail>((a, b) => a.TotalAmount - b.TaxAmount, c => c.UntaxedAmount);
+            listCols.SetCol_Formula<tb_FM_ExpenseClaimDetail>((a, b, c) => a.SingleAmount / (1 + b.TaxRate) * c.TaxRate, d => d.TaxAmount);
+            listCols.SetCol_Formula<tb_FM_ExpenseClaimDetail>((a, b) => a.SingleAmount - b.TaxAmount, c => c.UntaxedAmount);
 
             ////反算成交单价，目标列能重复添加。已经优化好了。
             //listCols.SetCol_Formula<tb_FM_ExpenseClaimDetail>((a, b) => a.SubtotalAmount / b.Quantity, c => c.TransactionPrice);//-->成交价是结果列
@@ -443,16 +441,16 @@ namespace RUINORERP.UI.FM
 
                 //计算总金额  这些逻辑是不是放到业务层？后面要优化
                 List<tb_FM_ExpenseClaimDetail> details = sgd.BindingSourceLines.DataSource as List<tb_FM_ExpenseClaimDetail>;
-                details = details.Where(c => c.TotalAmount > 0).ToList();
+                details = details.Where(c => c.SingleAmount > 0).ToList();
                 if (details.Count == 0)
                 {
-                    MainForm.Instance.uclog.AddLog("金额必须大于0");
+                    MainForm.Instance.uclog.AddLog("单项金额必须大于0");
                     return;
                 }
                 EditEntity.TaxAmount = details.Sum(c => c.TaxAmount);
-                EditEntity.ClaimAmount = details.Sum(c => c.TotalAmount);
+                EditEntity.ClaimAmount = details.Sum(c => c.SingleAmount);
                 EditEntity.UntaxedAmount = details.Sum(C => C.UntaxedAmount);
-                EditEntity.ApprovedAmount = EditEntity.ClaimAmount;
+               
             }
             catch (Exception ex)
             {
@@ -566,22 +564,26 @@ namespace RUINORERP.UI.FM
             if (EditEntity.ActionStatus == ActionStatus.新增 || EditEntity.ActionStatus == ActionStatus.修改)
             {
                 //产品ID有值才算有效值
-                details = detailentity.Where(t => t.TotalAmount > 0).ToList();
+                details = detailentity.Where(t => t.SingleAmount > 0).ToList();
                 //如果没有有效的明细。直接提示
                 if (NeedValidated && details.Count == 0)
                 {
-                    MessageBox.Show("明细记录中，单项【总金额】不能为零，请录入有效记录！");
+                    MessageBox.Show("明细记录中，【单项金额】不能为零，请录入有效记录！");
                     return false;
                 }
 
-                EditEntity.tb_FM_ExpenseClaimDetails = details;
+                if (details.Sum(c => c.TaxAmount) > 0)
+                {
+                    EditEntity.IncludeTax = true;
+                }
 
+                EditEntity.tb_FM_ExpenseClaimDetails = details;
                 EditEntity.TaxAmount = details.Sum(c => c.TaxAmount);
-                EditEntity.ClaimAmount = details.Sum(c => c.TotalAmount);
+                EditEntity.ClaimAmount = details.Sum(c => c.SingleAmount);
                 EditEntity.UntaxedAmount = details.Sum(C => C.UntaxedAmount);
-                EditEntity.ApprovedAmount = EditEntity.ClaimAmount;
+            
                 //如果主表的总金额和明细金额加总后不相等，则提示
-                if (NeedValidated && EditEntity.ClaimAmount != details.Sum(c => c.TotalAmount))
+                if (NeedValidated && EditEntity.ClaimAmount != details.Sum(c => c.SingleAmount))
                 {
                     if (MessageBox.Show("总金额和明细金额总计不相等，你确定要保存吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button1) == DialogResult.No)
                     {
@@ -596,7 +598,7 @@ namespace RUINORERP.UI.FM
                     }
                 }
 
-                if (NeedValidated && EditEntity.ApprovedAmount != details.Sum(c => c.TotalAmount))
+                if (NeedValidated && EditEntity.ClaimAmount != details.Sum(c => c.SingleAmount))
                 {
                     if (MessageBox.Show("核准总金额和明细金额总计不相等，你确定要保存吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button1) == DialogResult.No)
                     {

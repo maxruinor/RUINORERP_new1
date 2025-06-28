@@ -163,7 +163,7 @@ namespace RUINORERP.Model
                         }
         }
 
-        private bool _IsActive;
+        private bool _IsActive=true;
         /// <summary>
         /// 是否启用
         /// </summary>

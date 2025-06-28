@@ -27,6 +27,7 @@ using RUINOR.Core;
 using RUINORERP.Common.Helper;
 using RUINORERP.Global;
 using RUINORERP.Business.Security;
+using RUINORERP.Global.EnumExt;
 
 namespace RUINORERP.Business
 {
@@ -52,10 +53,46 @@ namespace RUINORERP.Business
                 entity.ApprovalStatus = (int)ApprovalStatus.未审核;
                 BusinessHelper.Instance.ApproverEntity(entity);
                 //只更新指定列
-                // var result = _unitOfWorkManage.GetDbClient().Updateable<tb_Stocktake>(entity).UpdateColumns(it => new { it.DataStatus, it.ApprovalOpinions }).ExecuteCommand();
-                await _unitOfWorkManage.GetDbClient().Updateable<tb_FM_ExpenseClaim>(entity).ExecuteCommandAsync();
-                //rmr = await ctr.BaseSaveOrUpdate(EditEntity);
-                // 注意信息的完整性
+              
+                //只更新指定列
+                var result = await _unitOfWorkManage.GetDbClient().Updateable(entity).UpdateColumns(it => new { it.DataStatus, it.ApprovalStatus, it.ApprovalResults, it.ApprovalOpinions }).ExecuteCommandAsync();
+
+                AuthorizeController authorizeController = _appContext.GetRequiredService<AuthorizeController>();
+                if (authorizeController.EnableFinancialModule())
+                {
+                    //注意，反审 将对应的预付生成的收款单，只有收款单没有审核前，可以删除
+                    //不能直接删除上级。要让对应的人员自己删除。不然不清楚。逻辑也不对。只能通过判断
+                    var PaymentRecordlist = await _appContext.Db.Queryable<tb_FM_PaymentRecord>()
+                            .Where(c => c.tb_FM_PaymentRecordDetails.Any(d => d.SourceBilllId == entity.ClaimMainID))
+                              .ToListAsync();
+                    if (PaymentRecordlist != null && PaymentRecordlist.Count > 0)
+                    {
+                        //判断是否能反审? 如果出库是草稿，订单反审 修改后。出库再提交 审核。所以 出库审核要核对订单数据。
+                        if ((PaymentRecordlist.Any(c => c.PaymentStatus == (int)PaymentStatus.已支付)
+                            && PaymentRecordlist.Any(c => c.ApprovalStatus == (int)ApprovalStatus.已审核)))
+                        {
+                            _unitOfWorkManage.RollbackTran();
+                            rmrs.ErrorMsg = "存在【已支付】的付款单，不能反审,请联系上级财务，或作退回处理。";
+                            rmrs.Succeeded = false;
+                            return rmrs;
+                        }
+                        else
+                        {
+                            foreach (var item in PaymentRecordlist)
+                            {
+                                //删除对应生成的收款单
+                                await _appContext.Db.DeleteNav<tb_FM_PaymentRecord>(item)
+                                    .Include(c => c.tb_FM_PaymentRecordDetails)
+                                    .ExecuteCommandAsync();
+                            }
+
+                        }
+
+                    }
+                }
+
+
+
                 _unitOfWorkManage.CommitTran();
                 rmrs.Succeeded = true;
                 rmrs.ReturnObject = entity as T;
@@ -87,9 +124,17 @@ namespace RUINORERP.Business
                 entity.ApprovalStatus = (int)ApprovalStatus.已审核;
                 BusinessHelper.Instance.ApproverEntity(entity);
                 //只更新指定列
-                // var result = _unitOfWorkManage.GetDbClient().Updateable<tb_Stocktake>(entity).UpdateColumns(it => new { it.DataStatus, it.ApprovalOpinions }).ExecuteCommand();
-                await _unitOfWorkManage.GetDbClient().Updateable<tb_FM_ExpenseClaim>(entity).ExecuteCommandAsync();
-                // 注意信息的完整性
+                var result = await _unitOfWorkManage.GetDbClient().Updateable(entity).UpdateColumns(it => new { it.DataStatus, it.ApprovalStatus, it.ApprovalResults, it.ApprovalOpinions }).ExecuteCommandAsync();
+                AuthorizeController authorizeController = _appContext.GetRequiredService<AuthorizeController>();
+                if (authorizeController.EnableFinancialModule())
+                {
+                    //更新财务模块 
+                    var paymentController = _appContext.GetRequiredService<tb_FM_PaymentRecordController<tb_FM_PaymentRecord>>();
+                    tb_FM_PaymentRecord paymentRecord = paymentController.BuildPaymentRecord(entity);
+                    await paymentController.BaseSaveOrUpdateWithChild<tb_FM_PaymentRecord>(paymentRecord, false);
+                    //等待审核
+                }
+
                 _unitOfWorkManage.CommitTran();
                 rmrs.Succeeded = true;
                 rmrs.ReturnObject = entity as T;

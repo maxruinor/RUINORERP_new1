@@ -22,6 +22,11 @@
     <Compile Remove="AssemblyInfo.cs" />
     <Compile Remove="AutoMapper\CslaProfile.cs" />
     <Compile Remove="AutoMapper\CustomProfileAll.cs" />
+    <Compile Remove="BizCodeGeneration\BizNumberGenerator.cs" />
+    <Compile Remove="BizCodeGeneration\ConfigurableNumberGenerator.cs" />
+    <Compile Remove="BizCodeGeneration\ISerialNumberGenerator.cs" />
+    <Compile Remove="BizCodeGeneration\RedisSerialNumberGenerator.cs" />
+    <Compile Remove="BizCodeGeneration\SerialNumberGeneratorFactory.cs" />
     <Compile Remove="CommService\DictServiceHelper.cs" />
     <Compile Remove="CommService\InitDBData.cs" />
     <Compile Remove="Ean13.cs" />
@@ -84,6 +89,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="BizCodeGeneration\" />
     <Folder Include="IocExtensions\" />
   </ItemGroup>
 

@@ -203,8 +203,8 @@ namespace RUINORERP.UI.PSI.INV
                 txtCarryingTotalAmount.Visible = false;
             }*/
 
-            DataBindingHelper.BindData4CmbByEnum<tb_Stocktake>(entity, k => k.CheckMode, typeof(CheckMode), cmbCheckMode, false);
-            DataBindingHelper.BindData4CmbByEnum<tb_Stocktake>(entity, k => k.Adjust_Type, typeof(Adjust_Type), cmb调整类型, false);
+            DataBindingHelper.BindData4CmbByEnum<tb_Stocktake, CheckMode>(entity, k => k.CheckMode, cmbCheckMode, false);
+            DataBindingHelper.BindData4CmbByEnum<tb_Stocktake, Adjust_Type>(entity, k => k.Adjust_Type, cmb调整类型, false);
 
             DataBindingHelper.BindData4CmbByEntity<tb_Stocktake>(entity, k => k.Employee_ID, cmbEmployee_ID);
             DataBindingHelper.BindData4CmbByEntity<tb_Location>(entity, k => k.Location_ID, cmbLocation_ID);

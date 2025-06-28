@@ -170,11 +170,16 @@ namespace RUINORERP.UI
         public string Version { get => version; set => version = value; }
         public readonly AuditLogHelper auditLogHelper;
         public AuditLogHelper AuditLogHelper => auditLogHelper;
-        public MainForm(ILogger<MainForm> _logger, AuditLogHelper _auditLogHelper, IOptionsMonitor<SystemGlobalconfig> config)
+
+        public readonly FMAuditLogHelper fmauditLogHelper;
+        public FMAuditLogHelper FMAuditLogHelper => fmauditLogHelper;
+
+        public MainForm(ILogger<MainForm> _logger, AuditLogHelper _auditLogHelper, FMAuditLogHelper _fmauditLogHelper, IOptionsMonitor<SystemGlobalconfig> config)
         {
             InitializeComponent();
             lblStatusGlobal.Text = string.Empty;
             auditLogHelper = _auditLogHelper;
+            fmauditLogHelper = _fmauditLogHelper;
             logger = _logger;
             _main = this;
             System.Windows.Forms.Control.CheckForIllegalCrossThreadCalls = false;
@@ -1399,6 +1404,10 @@ namespace RUINORERP.UI
                 {
                     AppContext.SysConfig = config[0];
                 }
+                var ctrBillNoRule = Startup.GetFromFac<tb_sys_BillNoRuleController<tb_sys_BillNoRule>>();
+                List<tb_sys_BillNoRule> BillNoRules = ctrBillNoRule.Query();
+                AppContext.BillNoRules = BillNoRules;
+
                 rs = true;
                 if (AppContext.CurUserInfo != null)
                 {
@@ -1410,7 +1419,6 @@ namespace RUINORERP.UI
                     {
                         this.SystemOperatorState.Text = $"登陆: {AppContext.CurUserInfo.UserInfo.UserName}【{AppContext.CurrentRole.RoleName}】";
                     }
-
                 }
 
                 //加载角色

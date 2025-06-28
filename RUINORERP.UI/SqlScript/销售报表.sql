@@ -1,4 +1,5 @@
-﻿--销售出库统计依业务
+﻿--销售出库统计依业务--------作废
+
 drop proc Proc_SaleOutStatisticsByEmployee
 go
 
@@ -92,7 +93,6 @@ GROUP BY Employee_ID,m.ProjectGroup_ID ) as A
 LEFT JOIN  
 
 (
-
 SELECT Employee_ID,ProjectGroup_ID, sum(c.SubtotalTaxAmount)  as [退货税额] , sum(Quantity) as 退货数量,sum(c.TransactionPrice*c.Quantity) as 退货金额 , sum(CommissionAmount) as 佣金返还 ,sum(cost*Quantity) as 成本 from  tb_SaleOutRe m RIGHT JOIN  tb_SaleOutReDetail c on  m.SaleOutRe_ID=c.SaleOutRe_ID
 WHERE (m.DataStatus=4 or m.DataStatus=8) and m.ApprovalStatus=1 and m.ApprovalResults=1 and m.RefundOnly=0
  and  Convert(varchar(10),m.ReturnDate,120) >=''' + @Start + '''
@@ -104,10 +104,7 @@ WHERE (m.DataStatus=4 or m.DataStatus=8) and m.ApprovalStatus=1 and m.ApprovalRe
  and  Convert(varchar(10),m.ReturnDate,120) >=''' + @Start + '''
  and  Convert(varchar(10),m.ReturnDate,120) <= ''' + @End + '''
 GROUP BY Employee_ID,m.ProjectGroup_ID 
- 
- 
- 
- 
+
  
  ) as B
 on  A.Employee_ID=B.Employee_ID 
@@ -135,7 +132,7 @@ go
 
 
 DECLARE @sqlOutput VARCHAR(MAX)
-exec Proc_SaleOutStatisticsByEmployee null,'1740611989660635136,1740611989706772480', '2024-01-01','2024-03-01', @sqlOutput
+exec Proc_SaleOutStatisticsByEmployee null,null,'', '2025-06-25','2025-06-25', @sqlOutput
  --生成实体的方法是通过生成的那个软件。选择用SQL语句得到结果
   
 

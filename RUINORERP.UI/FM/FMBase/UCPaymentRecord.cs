@@ -383,6 +383,19 @@ namespace RUINORERP.UI.FM
             }
         }
 
+        protected override void LoadRelatedDataToDropDownItems()
+        {
+            if (base.EditEntity is tb_FM_PaymentRecord PaymentRecord)
+            {
+                //PaymentRecord.SourceBillNos
+            }
+            base.LoadRelatedDataToDropDownItems();
+        }
+
+        protected override void RelatedQuery()
+        {
+       
+        }
 
         private async void LoadImageData(string CloseCaseImagePath)
         {
@@ -538,10 +551,6 @@ namespace RUINORERP.UI.FM
                 {
                     MainForm.Instance.uclog.AddLog("请先配置图片服务器路径", UILogType.错误);
                 }
-            }
-            else
-            {
-
             }
             return true;
         }

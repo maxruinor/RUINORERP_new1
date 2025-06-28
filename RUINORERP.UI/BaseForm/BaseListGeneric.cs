@@ -1757,12 +1757,12 @@ namespace RUINORERP.UI.BaseForm
         protected BaseController<T> ctr;//= Startup.GetFromFacByName<BaseController<T>>(typeof(T).Name + "Controller");
         public async virtual Task<List<T>> Save()
         {
-            List<T> list = new List<T>();
+            List<T> Returnlist = new List<T>();
             //这里是否要用保存列表来处理
             foreach (var item in bindingSourceList.List)
             {
+               
                 var entity = item as BaseEntity;
-
                 switch (entity.ActionStatus)
                 {
                     case ActionStatus.无操作:
@@ -1835,7 +1835,7 @@ namespace RUINORERP.UI.BaseForm
                             //审计日志
                             //MainForm.Instance.AuditLogHelper.CreateAuditLog("保存", CurMenuInfo.CaptionCN);
                             MainForm.Instance.AuditLogHelper.CreateAuditLog<T>("保存", rr.ReturnObject);
-                            list.Add(rr.ReturnObject);
+                            //list.Add(rr.ReturnObject);
 
                             //根据要缓存的列表集合来判断是否需要上传到服务器。让服务器分发到其他客户端
                             KeyValuePair<string, string> pair = new KeyValuePair<string, string>();
@@ -1859,8 +1859,9 @@ namespace RUINORERP.UI.BaseForm
                         break;
                 }
                 entity.HasChanged = false;
+                Returnlist.Add(entity as T);
             }
-            return list;
+            return Returnlist;
         }
 
         #endregion

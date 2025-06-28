@@ -28,7 +28,6 @@ namespace RUINORERP.Business
 
         public virtual async Task<List<tb_ProdPropertyValue>> QueryByPropertyIDAsync(long id)
         {
-            //tb_ProdPropertyValue entity = await _tb_ProdPropertyValueServices.QueryByIdAsync(id);
             List<tb_ProdPropertyValue> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_ProdPropertyValue>().Where(p => p.Property_ID == id).ToListAsync();
             return list;
         }

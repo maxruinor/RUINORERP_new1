@@ -152,6 +152,8 @@ namespace RUINORERP.Business
                              .Where(PrimaryKeyColName + "=" + primaryKeyValue).ExecuteCommandAsync();
                 if (update > 0)
                 {
+                   
+
                     // 自动审核逻辑
                     if (autoApprove && CanAutoApprove(entity))
                     {

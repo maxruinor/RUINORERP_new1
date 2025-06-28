@@ -14,15 +14,6 @@ using System.Threading.Tasks;
 
 namespace RUINORERP.Business
 {
-
-
-    //public interface ISerialNumberGenerator
-    //{
-
-    //}
- 
-
-
     public class AutoComplete
     {
         public AutoComplete(SearchType searcherType)
@@ -353,10 +344,10 @@ namespace RUINORERP.Business
                     rule = "{S:SK}{D:yyMMdd}{redis:{S:收款单}{D:yyMM}/000}";
                     break;
                 case BizType.应付款单:
-                    rule = "{S:AP }{D:yyMMdd}{redis:{S:应付单}{D:yyMM}/000}";
+                    rule = "{S:AP}{D:yyMMdd}{redis:{S:应付单}{D:yyMM}/000}";
                     break;
                 case BizType.应收款单:
-                    rule = "{S:AR }{D:yyMMdd}{redis:{S:应收单}{D:yyMM}/000}";
+                    rule = "{S:AR}{D:yyMMdd}{redis:{S:应收单}{D:yyMM}/000}";
                     break;
                 case BizType.收款核销:
                     rule = "{S:SKHX}{D:yyMMdd}{redis:{S:收款核销}{D:yyMM}/000}";
@@ -563,7 +554,6 @@ namespace RUINORERP.Business
     {
         //财务用
         public ReceivePaymentType PaymentType = ReceivePaymentType.收款;
-
 
     }
 

@@ -511,7 +511,7 @@ var description = typeof(BoxRuleBasis)
      */
 
     /// <summary>
-    /// 付款状态，PO是后加的 随便设置为5 为了不为空
+    /// 付款状态
     /// </summary>
     public enum PayStatus
     {
@@ -519,6 +519,7 @@ var description = typeof(BoxRuleBasis)
         全额预付 = 2,
         部分预付 = 3,
         全部付款 = 4,
+        部分付款 = 5,
     }
 
 

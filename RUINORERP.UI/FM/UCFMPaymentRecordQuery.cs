@@ -54,6 +54,7 @@ namespace RUINORERP.UI.FM
         public override void BuildInvisibleCols()
         {
             base.ChildInvisibleCols.Add(c => c.SourceBilllId);
+            base.MasterInvisibleCols.Add(c => c.SourceBillNos);
             base.BuildInvisibleCols();
             //base.ChildInvisibleCols.Add(c => c.SubtotalCostAmount);
         }

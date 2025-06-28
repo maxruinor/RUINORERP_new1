@@ -207,14 +207,6 @@ namespace RUINORERP.Business
                     {
                         //正常来说。不能重复生成。即使退款也只会有一个对应订单的预收款单。 一个预收款单可以对应正负两个收款单。
                         // 生成预收款单前 检测
-
-                        //payable.SourceBizType = (int)BizType.销售订单;
-                        //payable.SourceBillNo = entity.SOrderNo;
-                        //payable.SourceBillId = entity.SOrder_ID;
-                        //payable.Currency_ID = entity.Currency_ID;
-
-                        // ctrpapy = _appContext.GetRequiredService<tb_PayableController<tb_Payable>>();
-
                         var ctrpay = _appContext.GetRequiredService<tb_FM_PreReceivedPaymentController<tb_FM_PreReceivedPayment>>();
                         var PreReceivedPayment = ctrpay.BuildPreReceivedPayment(entity);
                         ReturnResults<tb_FM_PreReceivedPayment> rmpay = await ctrpay.SaveOrUpdate(PreReceivedPayment);
@@ -242,6 +234,11 @@ namespace RUINORERP.Business
                                 {
                                     _logger.LogInformation(rmrs.ErrorMsg);
                                 }
+                            }
+                            else
+                            {
+                                FMAuditLogHelper fMAuditLog = _appContext.GetRequiredService<FMAuditLogHelper>();
+                                fMAuditLog.CreateAuditLog<tb_FM_PreReceivedPayment>("预收款单自动审核成功", rmrs.ReturnObject as tb_FM_PreReceivedPayment);
                             }
                         }
                     }
@@ -794,8 +791,9 @@ namespace RUINORERP.Business
                                     else
                                     {
                                         _unitOfWorkManage.RollbackTran();
-                                        rmrs.ErrorMsg = $"销售订单{PrePayment.SourceBillNo}的预收款单{PrePayment.PreRPNO}状态为【待核销】\r\n" +
-                                            $"需由财务将收款单：{Payment.PaymentNo}进行【退款】冲销处理，再取消订单。";
+                                        rmrs.ErrorMsg = $"对应的预收款单{PrePayment.PreRPNO}状态为【待核销】，不能反审后修改\r\n" +
+                                            $"只能将预收款单【退款】后，对收款单{Payment.PaymentNo}进行冲销处理\r\n" +
+                                            $"取消当前订单后，重新录入正确的销售订单。";
                                         rmrs.Succeeded = false;
                                         return rmrs;
                                     }
@@ -1167,7 +1165,7 @@ namespace RUINORERP.Business
                 //}
                 entity.tb_saleorder = saleorder;
 
-                entity.TotalCost = NewDetails.Sum(c => (c.Cost+c.CustomizedCost) * c.Quantity);
+                entity.TotalCost = NewDetails.Sum(c => (c.Cost + c.CustomizedCost) * c.Quantity);
                 entity.TotalCost = entity.TotalCost + entity.FreightCost;
                 entity.TotalTaxAmount = NewDetails.Sum(c => c.SubtotalTaxAmount);
                 entity.TotalTaxAmount = entity.TotalTaxAmount.ToRoundDecimalPlaces(authorizeController.GetMoneyDataPrecision());
@@ -1246,7 +1244,7 @@ namespace RUINORERP.Business
 
 
 
-        
+
         public async Task<ReturnResults<tb_SaleOrder>> CancelOrder(tb_SaleOrder ObjectEntity)
         {
             ReturnResults<tb_SaleOrder> rmrs = new ReturnResults<tb_SaleOrder>();

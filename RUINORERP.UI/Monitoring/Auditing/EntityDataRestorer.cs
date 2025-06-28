@@ -10,6 +10,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using SqlSugar;
+using RUINORERP.Model.CommonModel;
 
 namespace RUINORERP.UI.Monitoring.Auditing
 {

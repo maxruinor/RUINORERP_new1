@@ -54,8 +54,10 @@ namespace RUINORERP.Business.Processor
 
             //可以根据关联外键自动加载条件，条件用公共虚方法
             queryFilter.SetQueryField<tb_SaleOutRe>(c => c.ReturnNo);
+            queryFilter.SetQueryField<tb_SaleOutRe>(c => c.PlatformOrderNo);
             queryFilter.SetQueryField<tb_SaleOutRe, tb_SaleOut>(c => c.SaleOut_MainID, c => c.SaleOut_NO, t => t.SaleOutNo);
             queryFilter.SetQueryField<tb_SaleOutRe>(c => c.Employee_ID, true);
+            queryFilter.SetQueryField<tb_SaleOutRe>(c => c.IsFromPlatform);
             queryFilter.SetQueryField<tb_SaleOutRe>(c => c.ProjectGroup_ID, true, AdvQueryProcessType.CmbMultiChoiceCanIgnore);
             queryFilter.SetQueryField<tb_SaleOutRe>(c => c.PayStatus, QueryFieldType.CmbEnum, typeof(PayStatus));
             queryFilter.SetQueryField<tb_SaleOutRe>(c => c.PrintStatus, QueryFieldType.CmbEnum, typeof(PrintStatus));

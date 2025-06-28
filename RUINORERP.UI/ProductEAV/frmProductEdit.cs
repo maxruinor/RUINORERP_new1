@@ -299,18 +299,11 @@ namespace RUINORERP.UI.ProductEAV
             DataBindingHelper.InitDataToCmb<tb_ProductType>(k => k.Type_ID, v => v.TypeName, cmbType_ID);
             DataBindingHelper.InitDataToCmb<tb_StorageRack>(k => k.Rack_ID, v => v.RackName, cmbRack_ID);
             DataBindingHelper.InitDataToCmb<tb_Department>(k => k.DepartmentID, v => v.DepartmentName, cmbDepartmentID);
-
             //InitDataToCmbByEnumDynamicGeneratedDataSource<tb_Prod>(typeof(GoodsSource), e => e.SourceType.ToString(), cmbSourceType);
-            EnumBindingHelper bindingHelper = new EnumBindingHelper();
+            //EnumBindingHelper bindingHelper = new EnumBindingHelper();
             //https://www.cnblogs.com/cdaniu/p/15236857.html
-            //加载枚举，并且可以过虑不需要的项
-            List<int> exclude = new List<int>();
-            exclude.Add((int)ProductAttributeType.虚拟);
-            exclude.Add((int)ProductAttributeType.虚拟);
-
-            // 调用扩展方法
-            bindingHelper.InitDataToCmbByEnumOnWhere<tb_Prod>(typeof(ProductAttributeType).GetListByEnum<ProductAttributeType>(2, exclude.ToArray()), e => e.PropertyType, cmbPropertyType);
-            DataBindingHelper.InitDataToCmbByEnumDynamicGeneratedDataSource<tb_Prod>(typeof(GoodsSource), e => e.SourceType, cmbSourceType, false);
+            
+    
         }
 
 
@@ -859,7 +852,7 @@ namespace RUINORERP.UI.ProductEAV
 
             #endregion
 
-            DataBindingHelper.BindData4CmbByEnum<tb_Prod>(entity, k => k.SourceType, typeof(GoodsSource), cmbSourceType, false);
+            DataBindingHelper.BindData4CmbByEnum<tb_Prod, GoodsSource>(entity, k => k.SourceType, cmbSourceType, false);
             DataBindingHelper.BindData4TextBox<tb_Prod>(entity, t => t.ProductNo, txtNo, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_Prod>(entity, t => t.ShortCode, txtShortCode, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_Prod>(entity, t => t.VendorModelCode, txtVendorModelCode, BindDataType4TextBox.Text, false);
@@ -894,7 +887,7 @@ namespace RUINORERP.UI.ProductEAV
             DataBindingHelper.BindData4CmbByEntity<tb_StorageRack>(entity, k => k.Rack_ID, cmbRack_ID);
             DataBindingHelper.BindData4Cmb<tb_Department>(entity, k => k.DepartmentID, v => v.DepartmentName, cmbDepartmentID);
 
-            DataBindingHelper.BindData4CmbByEnum<tb_Prod>(entity, k => k.PropertyType, typeof(Global.ProductAttributeType), cmbPropertyType, false);
+            DataBindingHelper.BindData4CmbByEnum<tb_Prod, Global.ProductAttributeType>(entity, k => k.PropertyType, cmbPropertyType, false, Global.ProductAttributeType.捆绑, Global.ProductAttributeType.虚拟);
             //DataBindingHelper.BindData4CmbByEnumData<tb_Prod>(entity, k => k.PropertyType, cmbPropertyType);
             // DataBindingHelper.BindData4Cmb<tb_ProdPropertyType>(entity, k => k.PropertyType_ID, v => v.PropertyTypeName, cmbPropertyType);
             DataBindingHelper.BindData4TextBox<tb_Prod>(entity, k => k.CNName, txtName, BindDataType4TextBox.Text, false);

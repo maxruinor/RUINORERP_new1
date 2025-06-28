@@ -312,75 +312,15 @@ namespace RUINORERP.Business
                     //销售订单审核时，非账期，即时收款时，生成预收款。 订金，部分收款
                     if (entity.Paytype_ID != _appContext.PaymentMethodOfPeriod.Paytype_ID)
                     {
-                        tb_FM_PreReceivedPaymentController<tb_FM_PreReceivedPayment> ctrpay = _appContext.GetRequiredService<tb_FM_PreReceivedPaymentController<tb_FM_PreReceivedPayment>>();
-                        tb_FM_PreReceivedPayment payable = new tb_FM_PreReceivedPayment();
-                        payable = mapper.Map<tb_FM_PreReceivedPayment>(entity);
-                        payable.ApprovalResults = null;
-                        payable.ApprovalStatus = (int)ApprovalStatus.未审核;
-                        payable.Approver_at = null;
-                        payable.Approver_by = null;
-                        payable.PrintStatus = 0;
-                        payable.IsAvailable = true;
-                        payable.ActionStatus = ActionStatus.新增;
-                        payable.ApprovalOpinions = "";
-                        payable.Modified_at = null;
-                        payable.Modified_by = null;
-                        if (entity.tb_projectgroup != null && entity.tb_projectgroup.tb_department != null)
-                        {
-                            payable.DepartmentID = entity.tb_projectgroup.tb_department.DepartmentID;
-                        }
-                        //采购就是付款
-                        payable.ReceivePaymentType = (int)ReceivePaymentType.付款;
-                        payable.PreRPNO = BizCodeGenerator.Instance.GetBizBillNo(BizType.预付款单);
-                        payable.SourceBizType = (int)BizType.采购订单;
-                        payable.SourceBillNo = entity.PurOrderNo;
-                        payable.SourceBillId = entity.PurOrder_ID;
-                        payable.Currency_ID = entity.Currency_ID;
-                        payable.PrePayDate = entity.PurDate;
-                        payable.ExchangeRate = exchangeRate;
-                        payable.LocalPrepaidAmountInWords = string.Empty;
-                        //payable.Account_id = entity.Account_id; 付款账户信息 在采购订单时 不用填写。由财务决定 
-                        //如果是外币时，则由外币算出本币
-                        if (entity.PayStatus == (int)PayStatus.全额预付)
-                        {
-                            //外币时
-                            if (_appContext.BaseCurrency.Currency_ID != entity.Currency_ID)
-                            {
-                                payable.ForeignPrepaidAmount = entity.ForeignTotalAmount;
-                                payable.LocalPrepaidAmount = payable.ForeignPrepaidAmount * exchangeRate;
-                            }
-                            else
-                            {
-                                //本币时
-                                payable.LocalPrepaidAmount = entity.TotalAmount;
-                            }
-                        }
-                        else
-                        //来自于订金
-                        if (entity.PayStatus == (int)PayStatus.部分预付)
-                        {
-                            //外币时
-                            if (_appContext.BaseCurrency.Currency_ID != entity.Currency_ID)
-                            {
-                                payable.ForeignPrepaidAmount = entity.ForeignDeposit;
-                                payable.LocalPrepaidAmount = payable.ForeignPrepaidAmount * exchangeRate;
-                            }
-                            else
-                            {
-                                payable.LocalPrepaidAmount = entity.Deposit;
-                            }
-                        }
 
-                        payable.PrePaymentReason = $"采购订单{entity.PurOrderNo}的预付款";
-                        Business.BusinessHelper.Instance.InitEntity(payable);
-                        payable.PrePaymentStatus = (int)PrePaymentStatus.待审核;
-                        ReturnResults<tb_FM_PreReceivedPayment> rmpay = await ctrpay.SaveOrUpdate(payable);
-                        if (rmpay.Succeeded)
-                        {
-                            // 预付款单生成成功后的处理逻辑
-                            //无,当预付款单审核时才会生成付款单（付款申请单）？
-                        }
-                        else
+                        #region 生成预付款单
+
+                        //正常来说。不能重复生成。即使退款也只会有一个对应订单的预收款单。 一个预收款单可以对应正负两个收款单。
+                        // 生成预收款单前 检测
+                        var ctrpay = _appContext.GetRequiredService<tb_FM_PreReceivedPaymentController<tb_FM_PreReceivedPayment>>();
+                        var PreReceivedPayment = ctrpay.BuildPreReceivedPayment(entity);
+                        ReturnResults<tb_FM_PreReceivedPayment> rmpay = await ctrpay.SaveOrUpdate(PreReceivedPayment);
+                        if (!rmpay.Succeeded)
                         {
                             // 处理预收款单生成失败的情况
                             rmrs.Succeeded = false;
@@ -392,6 +332,27 @@ namespace RUINORERP.Business
                             }
                             return rmrs;
                         }
+                        else
+                        {
+                            //订单审核时自动将预付款单设为"已生效"状态
+                            ReturnResults<tb_FM_PreReceivedPayment> autoApproval = await ctrpay.AutoApprovalAsync(PreReceivedPayment);
+                            if (!autoApproval.Succeeded)
+                            {
+                                rmrs.Succeeded = false;
+                                _unitOfWorkManage.RollbackTran();
+                                rmrs.ErrorMsg = $"预付款单自动审核失败：{autoApproval.ErrorMsg ?? "未知错误"}";
+                                if (_appContext.SysConfig.ShowDebugInfo)
+                                {
+                                    _logger.LogInformation(rmrs.ErrorMsg);
+                                }
+                                return rmrs;
+                            }
+                        }
+
+
+                        #endregion
+
+                      
                     }
 
                     #endregion
@@ -399,16 +360,18 @@ namespace RUINORERP.Business
 
                 //这部分是否能提出到上一级公共部分？
                 entity.DataStatus = (int)DataStatus.确认;
-                //   entity.ApprovalOpinions = approvalEntity.ApprovalComments;
-                //后面已经修改为
-                //   entity.ApprovalResults = approvalEntity.ApprovalResults;
                 entity.ApprovalStatus = (int)ApprovalStatus.已审核;
                 BusinessHelper.Instance.ApproverEntity(entity);
                 //只更新指定列
-                // var result = _unitOfWorkManage.GetDbClient().Updateable<tb_Stocktake>(entity).UpdateColumns(it => new { it.DataStatus, it.ApprovalOpinions }).ExecuteCommand();
-                await _unitOfWorkManage.GetDbClient().Updateable<tb_PurOrder>(entity).ExecuteCommandAsync();
-                //rmr = await ctr.BaseSaveOrUpdate(EditEntity);
-                // 注意信息的完整性
+                var result =await _unitOfWorkManage.GetDbClient().Updateable(entity).UpdateColumns(it => new { 
+                    it.DataStatus,
+                    it.ApprovalStatus,
+                    it.ApprovalResults,
+                    it.ApprovalOpinions
+                }
+                ).ExecuteCommandAsync();
+
+    
                 _unitOfWorkManage.CommitTran();
                 //_logger.Info(approvalEntity.bizName + "审核事务成功");
                 rmrs.ReturnObject = entity as T;

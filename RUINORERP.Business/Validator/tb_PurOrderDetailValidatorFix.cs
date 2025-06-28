@@ -33,7 +33,7 @@ namespace RUINORERP.Business
             
             RuleFor(x => x.TaxAmount).NotEqual(0).When(c => c.TaxRate != 0).WithMessage("明细中，税额：税率非零时不能为零。");
             RuleFor(x => x.TaxRate).NotEqual(0).When(c => c.TaxAmount != 0).WithMessage("明细中，税率：税额非零时不能为零。");
-
+            
             RuleFor(x => x.UnitPrice).GreaterThan(0).When(c => c.IsGift == false).WithMessage("采购订单明细中，单价：非赠品时要大于零。");
             //RuleFor(x => x.TransactionPrice).GreaterThan(0).When(c => c.IsGift == false).WithMessage("采购明细中，成交价：非赠品时要大于零。");
             //如果成交小计不等于成交价*数量，则抛出异常

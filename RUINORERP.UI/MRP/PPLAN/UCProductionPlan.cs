@@ -48,7 +48,7 @@ namespace RUINORERP.UI.MRP.MP
         public UCProductionPlan()
         {
             InitializeComponent();
-            InitDataToCmbByEnumDynamicGeneratedDataSource<tb_ProductionPlan>(typeof(Priority), e => e.Priority, cmbOrderPriority, false);
+            //InitDataToCmbByEnumDynamicGeneratedDataSource<tb_ProductionPlan>(typeof(Priority), e => e.Priority, cmbOrderPriority, false);
 
         }
 

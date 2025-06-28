@@ -104,10 +104,16 @@ namespace RUINORERP.UI.BusinessService.CalculationService
                         switch (changeEvent.ChangeType)
                         {
                             case GridChangeType.MasterProperty:
-                                HandleMasterPropertyChange(changeEvent.MasterEntity.ToString());
+                                if (Master != null && Details != null)
+                                {
+                                    HandleMasterPropertyChange(changeEvent.MasterEntity.ToString());
+                                }
                                 break;
                             case GridChangeType.DetailCell:
-                                HandleDetailChange(Master, (TDetail)changeEvent.DetailEntities);
+                                if (Master != null && Details != null)
+                                {
+                                    HandleDetailChange(Master, (TDetail)changeEvent.DetailEntities);
+                                }
                                 break;
                         }
                     }

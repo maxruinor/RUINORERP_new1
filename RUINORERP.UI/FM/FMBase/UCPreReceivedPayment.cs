@@ -302,7 +302,9 @@ namespace RUINORERP.UI.FM
                         }
                         else
                         {
+                            entity.PayeeAccountNo = string.Empty;
                             txtPayeeAccountNo.Text = "";
+                            cmbAccount_type.SelectedIndex = -1;
                             lblBelongingBank.Text = "";
                             lblOpeningbank.Text = "";
                         }

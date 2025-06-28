@@ -138,19 +138,7 @@ namespace RUINORERP.Model
                         }
         }
 
-        private decimal _ApprovedAmount= ((0));
-        /// <summary>
-        /// 核准金额
-        /// </summary>
-        [AdvQueryAttribute(ColName = "ApprovedAmount",ColDesc = "核准金额")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "ApprovedAmount" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "核准金额" )]
-        public decimal ApprovedAmount
-        { 
-            get{return _ApprovedAmount;}
-            set{
-            SetProperty(ref _ApprovedAmount, value);
-                        }
-        }
+ 
 
         private bool _IncludeTax= false;
         /// <summary>
@@ -191,20 +179,6 @@ namespace RUINORERP.Model
             get{return _TaxAmount;}
             set{
             SetProperty(ref _TaxAmount, value);
-                        }
-        }
-
-        private decimal? _TaxRate;
-        /// <summary>
-        /// 税率
-        /// </summary>
-        [AdvQueryAttribute(ColName = "TaxRate",ColDesc = "税率")] 
-        [SugarColumn(ColumnDataType = "decimal", SqlParameterDbType ="Decimal",  ColumnName = "TaxRate" , DecimalDigits = 2,IsNullable = true,ColumnDescription = "税率" )]
-        public decimal? TaxRate
-        { 
-            get{return _TaxRate;}
-            set{
-            SetProperty(ref _TaxRate, value);
                         }
         }
 

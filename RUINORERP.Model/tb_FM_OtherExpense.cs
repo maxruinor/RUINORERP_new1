@@ -94,6 +94,37 @@ namespace RUINORERP.Model
                         }
         }
 
+        private int? _PayStatus;
+        /// <summary>
+        /// 付款状态
+        /// </summary>
+        [AdvQueryAttribute(ColName = "PayStatus", ColDesc = "付款状态")]
+        [SugarColumn(ColumnDataType = "int", SqlParameterDbType = "Int32", ColumnName = "PayStatus", DecimalDigits = 0, IsNullable = true, ColumnDescription = "付款状态")]
+        public int? PayStatus
+        {
+            get { return _PayStatus; }
+            set
+            {
+                SetProperty(ref _PayStatus, value);
+            }
+        }
+
+        private long? _Paytype_ID;
+        /// <summary>
+        /// 付款方式
+        /// </summary>
+        [AdvQueryAttribute(ColName = "Paytype_ID", ColDesc = "付款方式")]
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType = "Int64", ColumnName = "Paytype_ID", DecimalDigits = 0, IsNullable = true, ColumnDescription = "付款方式")]
+        [FKRelationAttribute("tb_PaymentMethod", "Paytype_ID")]
+        public long? Paytype_ID
+        {
+            get { return _Paytype_ID; }
+            set
+            {
+                SetProperty(ref _Paytype_ID, value);
+            }
+        }
+
         private decimal _TotalAmount= ((0));
         /// <summary>
         /// 总金额
@@ -110,7 +141,7 @@ namespace RUINORERP.Model
 
         private bool _EXPOrINC= true;
         /// <summary>
-        /// 为收入
+        /// 为收入 0出1收
         /// </summary>
         [AdvQueryAttribute(ColName = "EXPOrINC",ColDesc = "为收入")] 
         [SugarColumn(ColumnDataType = "bit", SqlParameterDbType ="Boolean",  ColumnName = "EXPOrINC" ,IsNullable = false,ColumnDescription = "为收入" )]
@@ -340,10 +371,10 @@ namespace RUINORERP.Model
 
         private decimal _ApprovedAmount= ((0));
         /// <summary>
-        /// 
+        /// 核准金额
         /// </summary>
-        [AdvQueryAttribute(ColName = "ApprovedAmount",ColDesc = "")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "ApprovedAmount" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "" )]
+        [AdvQueryAttribute(ColName = "ApprovedAmount",ColDesc = "核准金额")] 
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "ApprovedAmount" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "核准金额")]
         public decimal ApprovedAmount
         { 
             get{return _ApprovedAmount;}
@@ -408,6 +439,9 @@ namespace RUINORERP.Model
         [Navigate(NavigateType.OneToOne, nameof(Employee_ID))]
         public virtual tb_Employee tb_employee { get; set; }
 
+        //[Browsable(false)] 打印报表时的数据源会不显示
+        [Navigate(NavigateType.OneToOne, nameof(Paytype_ID))]
+        public virtual tb_PaymentMethod tb_paymentmethod { get; set; }
 
         //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]

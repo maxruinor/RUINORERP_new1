@@ -54,7 +54,7 @@ namespace RUINORERP.Business
             {
                 // 开启事务，保证数据一致性
                 _unitOfWorkManage.BeginTran();
-                
+
                 tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
                 BillConverterFactory bcf = _appContext.GetRequiredService<BillConverterFactory>();
 
@@ -124,7 +124,7 @@ namespace RUINORERP.Business
                         else
                         {
                             //当前行累计到交付，只能是当前行所以重新找到当前出库单明细的的数量
-                            var RowQty = entity.tb_ProdReturningDetails.Where(c => c.ProdDetailID == entity.tb_prodborrowing.tb_ProdBorrowingDetails[i].ProdDetailID&& c.Location_ID==entity.tb_prodborrowing.tb_ProdBorrowingDetails[i].Location_ID).Sum(c => c.Qty);
+                            var RowQty = entity.tb_ProdReturningDetails.Where(c => c.ProdDetailID == entity.tb_prodborrowing.tb_ProdBorrowingDetails[i].ProdDetailID && c.Location_ID == entity.tb_prodborrowing.tb_ProdBorrowingDetails[i].Location_ID).Sum(c => c.Qty);
                             entity.tb_prodborrowing.tb_ProdBorrowingDetails[i].ReQty += RowQty; //可以分多次还，所以累加
 
                             //如果已交数据大于 归还数量 给出警告实际操作中 
@@ -168,7 +168,7 @@ namespace RUINORERP.Business
                 {
                     #region 库存表的更新 这里应该是必需有库存的数据，
                     //标记是否有期初
-                   
+
                     tb_Inventory inv = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == child.ProdDetailID && i.Location_ID == child.Location_ID);
                     if (inv != null)
                     {
@@ -206,7 +206,7 @@ namespace RUINORERP.Business
 
                     #endregion
                     invUpdateList.Add(inv);
-                   
+
                 }
 
                 // 使用LINQ查询
@@ -286,65 +286,64 @@ namespace RUINORERP.Business
                 BusinessHelper.Instance.ApproverEntity(entity);
 
                 #region 审核 通过时
-                if (entity.ApprovalResults.Value)
+            
+                entity.tb_prodborrowing = _unitOfWorkManage.GetDbClient().Queryable<tb_ProdBorrowing>()
+                    .Includes(a => a.tb_ProdReturnings, b => b.tb_ProdReturningDetails)
+                    .AsNavQueryable()//加这个前面,超过三级在前面加这一行，并且第四级无VS智能提示，但是可以用
+                  .Includes(a => a.tb_ProdBorrowingDetails, b => b.tb_proddetail, c => c.tb_prod)
+                    .Where(c => c.BorrowID == entity.BorrowID).Single();
+
+                #region 回写借出的状态及明细数据
+                //先找到所有眼还明细,再找按借出明细去循环比较。如果眼还总数量大于借出订单数量，则不允许审核。
+                List<tb_ProdReturningDetail> detailList = new List<tb_ProdReturningDetail>();
+                foreach (var item in entity.tb_prodborrowing.tb_ProdReturnings)
                 {
+                    detailList.AddRange(item.tb_ProdReturningDetails);
+                }
 
-                    entity.tb_prodborrowing = _unitOfWorkManage.GetDbClient().Queryable<tb_ProdBorrowing>()
-                        .Includes(a => a.tb_ProdReturnings, b => b.tb_ProdReturningDetails)
-                        .AsNavQueryable()//加这个前面,超过三级在前面加这一行，并且第四级无VS智能提示，但是可以用
-                      .Includes(a => a.tb_ProdBorrowingDetails, b => b.tb_proddetail, c => c.tb_prod)
-                        .Where(c => c.BorrowID == entity.BorrowID).Single();
+                for (int i = 0; i < entity.tb_prodborrowing.tb_ProdBorrowingDetails.Count; i++)
+                {
+                    //如果当前归还明细行，不存在于借出明细。直接跳过
+                    string prodName = entity.tb_prodborrowing.tb_ProdBorrowingDetails[i].tb_proddetail.tb_prod.CNName +
+                              entity.tb_prodborrowing.tb_ProdBorrowingDetails[i].tb_proddetail.tb_prod.Specifications;
 
-                    #region 回写借出的状态及明细数据
-                    //先找到所有眼还明细,再找按借出明细去循环比较。如果眼还总数量大于借出订单数量，则不允许审核。
-                    List<tb_ProdReturningDetail> detailList = new List<tb_ProdReturningDetail>();
-                    foreach (var item in entity.tb_prodborrowing.tb_ProdReturnings)
+                    //一对一时，找到所有的出库明细数量总和
+                    var inQty = detailList.Where(c => c.ProdDetailID == entity.tb_prodborrowing.tb_ProdBorrowingDetails[i].ProdDetailID
+                    && c.Location_ID == entity.tb_prodborrowing.tb_ProdBorrowingDetails[i].Location_ID).Sum(c => c.Qty);
+                    if (inQty < 0)
                     {
-                        detailList.AddRange(item.tb_ProdReturningDetails);
+                        string msg = $"归还单:{entity.tb_prodborrowing.BorrowNo}的【{prodName}】的归还数量不能于小于零，\r\n\" " +
+                            "反审失败！";
+                        rs.ErrorMsg = msg;
+                        _unitOfWorkManage.RollbackTran();
+                        _logger.LogInformation(msg);
+                        return rs;
                     }
-
-                    for (int i = 0; i < entity.tb_prodborrowing.tb_ProdBorrowingDetails.Count; i++)
+                    else
                     {
-                        //如果当前归还明细行，不存在于借出明细。直接跳过
-                        string prodName = entity.tb_prodborrowing.tb_ProdBorrowingDetails[i].tb_proddetail.tb_prod.CNName +
-                                  entity.tb_prodborrowing.tb_ProdBorrowingDetails[i].tb_proddetail.tb_prod.Specifications;
-
-                        //一对一时，找到所有的出库明细数量总和
-                        var inQty = detailList.Where(c => c.ProdDetailID == entity.tb_prodborrowing.tb_ProdBorrowingDetails[i].ProdDetailID
-                        && c.Location_ID==entity.tb_prodborrowing.tb_ProdBorrowingDetails[i].Location_ID).Sum(c => c.Qty);
-                        if (inQty < 0)
-                        {
-                            string msg = $"归还单:{entity.tb_prodborrowing.BorrowNo}的【{prodName}】的归还数量不能于小于零，\r\n\" " +
-                                "反审失败！";
-                            rs.ErrorMsg = msg;
-                            _unitOfWorkManage.RollbackTran();
-                            _logger.LogInformation(msg);
-                            return rs;
-                        }
-                        else
-                        {
-                            //当前行累计到交付，只能是当前行所以重新找到当前出库单明细的的数量
-                            var RowQty = entity.tb_ProdReturningDetails.Where(c => c.ProdDetailID == entity.tb_prodborrowing.tb_ProdBorrowingDetails[i].ProdDetailID
-                            && c.Location_ID==entity.tb_prodborrowing.tb_ProdBorrowingDetails[i].Location_ID).Sum(c => c.Qty);
-                            entity.tb_prodborrowing.tb_ProdBorrowingDetails[i].ReQty -= RowQty; //可以分多次还，所以累加
-                        }
-
-                    }
-
-                    //更新已交数量
-                    int poCounter = await _unitOfWorkManage.GetDbClient().Updateable<tb_ProdBorrowingDetail>(entity.tb_prodborrowing.tb_ProdBorrowingDetails).ExecuteCommandAsync();
-
-                    #endregion
-
-                    //归还的等于借出的，数量够则自动结案
-                    if (entity.tb_prodborrowing != null && entity.tb_prodborrowing.tb_ProdBorrowingDetails.Sum(c => c.ReQty) != entity.tb_prodborrowing.tb_ProdBorrowingDetails.Sum(c => c.Qty))
-                    {
-                        entity.tb_prodborrowing.DataStatus = (int)DataStatus.确认;
-                        entity.tb_prodborrowing.CloseCaseOpinions = "【系统自动反结案】==》" + System.DateTime.Now.ToString() + _appContext.CurUserInfo.UserInfo.tb_employee.Employee_Name + "反审核归还单时:" + entity.ReturnNo + "反结案。"; ;
-                        await _unitOfWorkManage.GetDbClient().Updateable(entity.tb_prodborrowing).UpdateColumns(t => new { t.DataStatus, t.CloseCaseOpinions }).ExecuteCommandAsync();
+                        //当前行累计到交付，只能是当前行所以重新找到当前出库单明细的的数量
+                        var RowQty = entity.tb_ProdReturningDetails.Where(c => c.ProdDetailID == entity.tb_prodborrowing.tb_ProdBorrowingDetails[i].ProdDetailID
+                        && c.Location_ID == entity.tb_prodborrowing.tb_ProdBorrowingDetails[i].Location_ID).Sum(c => c.Qty);
+                        entity.tb_prodborrowing.tb_ProdBorrowingDetails[i].ReQty -= RowQty; //可以分多次还，所以累加
                     }
 
                 }
+
+                //更新已交数量
+                int poCounter = await _unitOfWorkManage.GetDbClient().Updateable<tb_ProdBorrowingDetail>
+                    (entity.tb_prodborrowing.tb_ProdBorrowingDetails).ExecuteCommandAsync();
+
+                #endregion
+
+                //归还的等于借出的，数量够则自动结案
+                if (entity.tb_prodborrowing != null && entity.tb_prodborrowing.tb_ProdBorrowingDetails.Sum(c => c.ReQty) != entity.tb_prodborrowing.tb_ProdBorrowingDetails.Sum(c => c.Qty))
+                {
+                    entity.tb_prodborrowing.DataStatus = (int)DataStatus.确认;
+                    entity.tb_prodborrowing.CloseCaseOpinions = "【系统自动反结案】==》" + System.DateTime.Now.ToString() + _appContext.CurUserInfo.UserInfo.tb_employee.Employee_Name + "反审核归还单时:" + entity.ReturnNo + "反结案。"; ;
+                    await _unitOfWorkManage.GetDbClient().Updateable(entity.tb_prodborrowing).UpdateColumns(t => new { t.DataStatus, t.CloseCaseOpinions }).ExecuteCommandAsync();
+                }
+
+
                 #endregion
 
                 foreach (var child in entity.tb_ProdReturningDetails)

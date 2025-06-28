@@ -500,8 +500,9 @@ namespace RUINORERP.UI.PSI.SAL
                     return;
                 }
                 EditEntity.TotalQty = details.Sum(c => c.Quantity);
-                EditEntity.TotalAmount = details.Sum(c => c.TransactionPrice * c.Quantity) + EditEntity.FreightIncome;
                 EditEntity.TotalCommissionAmount = details.Sum(c => c.CommissionAmount);
+                EditEntity.TotalAmount = details.Sum(c => c.TransactionPrice * c.Quantity) + EditEntity.FreightIncome;
+                EditEntity.TotalAmount = EditEntity.TotalAmount - EditEntity.TotalCommissionAmount;
             }
             catch (Exception ex)
             {
@@ -563,6 +564,7 @@ namespace RUINORERP.UI.PSI.SAL
                 EditEntity.TotalQty = details.Sum(c => c.Quantity);
                 EditEntity.TotalAmount = details.Sum(c => c.TransactionPrice * c.Quantity) + EditEntity.FreightIncome;
                 EditEntity.TotalCommissionAmount = details.Sum(c => c.CommissionAmount);
+                EditEntity.TotalAmount = EditEntity.TotalAmount - EditEntity.TotalCommissionAmount;
 
                 //产品ID有值才算有效值
                 LastRefurbishedMaterials = RefurbishedMaterials.Where(t => t.ProdDetailID > 0).ToList();
@@ -574,6 +576,15 @@ namespace RUINORERP.UI.PSI.SAL
                 }
 
                 EditEntity.tb_SaleOutReRefurbishedMaterialsDetails = LastRefurbishedMaterials;
+
+                if (NeedValidated && !EditEntity.ReturnDate.HasValue)
+                {
+                    if (System.Windows.Forms.MessageBox.Show("退回日期为空，你确定无法确认退回日期吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Information) == DialogResult.No)
+                    {
+                        return false;
+                    }
+                   
+                }
 
                 //没有经验通过下面先不计算
                 if (NeedValidated && !base.Validator(EditEntity))
@@ -652,10 +663,6 @@ namespace RUINORERP.UI.PSI.SAL
                 }
             }
         }
-
-
-
-
 
         /*
           protected override void Preview()
@@ -744,6 +751,7 @@ namespace RUINORERP.UI.PSI.SAL
                 if (saleout.tb_SaleOutRes.Sum(c => c.TotalQty) == saleout.tb_SaleOutDetails.Sum(c => c.Quantity))
                 {
                     MainForm.Instance.uclog.AddLog("当前出库单已经全部退回，无法再次退回。");
+
                     return;
                 }
 

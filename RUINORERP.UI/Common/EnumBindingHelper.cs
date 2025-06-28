@@ -41,7 +41,11 @@ namespace RUINORERP.UI.Common
             MemberInfo minfo = expKey.GetMemberInfo();
             string key = minfo.Name;
             InitDataToCmbByEnumOnWhere(listSource, key, cmbBox);
-            cmbBox.SelectedValue = listSource.Find(w => w.Selected == true).Value;
+            if (listSource.Find(w => w.Selected == true) != null)
+            {
+                cmbBox.SelectedValue = listSource.Find(w => w.Selected == true).Value;
+            }
+            
         }
 
 

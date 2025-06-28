@@ -55,10 +55,10 @@ namespace RUINORERP.UI.FM
         public override void BuildSummaryCols()
         {
             base.MasterSummaryCols.Add(c => c.TaxAmount);
-            base.MasterSummaryCols.Add(c => c.ApprovedAmount);
+            base.MasterSummaryCols.Add(c => c.ClaimAmount);
             base.MasterSummaryCols.Add(c => c.UntaxedAmount);
             base.ChildSummaryCols.Add(c => c.TaxAmount);
-            base.ChildSummaryCols.Add(c => c.TotalAmount);
+            base.ChildSummaryCols.Add(c => c.SingleAmount);
             base.ChildSummaryCols.Add(c => c.UntaxedAmount);
         }
 

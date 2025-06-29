@@ -95,7 +95,7 @@ namespace RUINORERP.Business
 
                 //如果反抵扣预收付后 还有核销，则是由收款来的。则不能反审了。 
                 #region 这里是以付款单为准，反审。暂时不用了
-                
+
                 var PaymentRecordlist = await _appContext.Db.Queryable<tb_FM_PaymentRecord>()
                             .Where(c => c.tb_FM_PaymentRecordDetails.Any(d => d.SourceBilllId == entity.ARAPId))
                               .ToListAsync();
@@ -120,7 +120,7 @@ namespace RUINORERP.Business
                                 .ExecuteCommandAsync();
                         }
                     }
-                } 
+                }
                 #endregion
 
                 #region
@@ -870,26 +870,28 @@ namespace RUINORERP.Business
                          .Where(x => (x.SaleOut_MainID == payable.SourceBillId))
                          .SingleAsync();
 
-                        if (payable.LocalPaidAmount < saleout.TotalAmount && saleout.PayStatus != (int)PayStatus.部分预付)
-                        {
-                            saleout.PayStatus = (int)PayStatus.部分预付;
-                            await _unitOfWorkManage.GetDbClient().Updateable(saleout).UpdateColumns(it => new { it.PayStatus, }).ExecuteCommandAsync();
-                        }
-                        if (payable.LocalPaidAmount < saleout.TotalAmount && saleout.TotalAmount < saleout.tb_saleorder.TotalAmount)
+
+                        if (saleout.tb_saleorder.Deposit > 0 && saleout.PayStatus != (int)PayStatus.部分预付)
                         {
                             saleout.tb_saleorder.PayStatus = (int)PayStatus.部分预付;
                             await _unitOfWorkManage.GetDbClient().Updateable(saleout.tb_saleorder).UpdateColumns(it => new { it.PayStatus, }).ExecuteCommandAsync();
+                            if (saleout.TotalAmount == saleout.TotalAmount && saleout.PayStatus == (int)PayStatus.部分付款)
+                            {
+                                saleout.PayStatus = (int)PayStatus.部分预付;
+                                await _unitOfWorkManage.GetDbClient().Updateable(saleout).UpdateColumns(it => new { it.PayStatus, }).ExecuteCommandAsync();
+                            }
                         }
 
-                        if (payable.LocalPaidAmount == saleout.TotalAmount && saleout.PayStatus != (int)PayStatus.全额预付)
-                        {
-                            saleout.PayStatus = (int)PayStatus.全额预付;
-                            await _unitOfWorkManage.GetDbClient().Updateable(saleout).UpdateColumns(it => new { it.PayStatus, }).ExecuteCommandAsync();
-                        }
-                        if (payable.LocalPaidAmount == saleout.TotalAmount && saleout.TotalAmount == saleout.tb_saleorder.TotalAmount)
+                        //要验证
+                        if (saleout.tb_saleorder.Deposit == 0 && saleout.PayStatus != (int)PayStatus.全额预付)
                         {
                             saleout.tb_saleorder.PayStatus = (int)PayStatus.全额预付;
                             await _unitOfWorkManage.GetDbClient().Updateable(saleout.tb_saleorder).UpdateColumns(it => new { it.PayStatus, }).ExecuteCommandAsync();
+                            if (saleout.TotalAmount == saleout.TotalAmount && saleout.PayStatus == (int)PayStatus.全部付款)
+                            {
+                                saleout.PayStatus = (int)PayStatus.全额预付;
+                                await _unitOfWorkManage.GetDbClient().Updateable(saleout).UpdateColumns(it => new { it.PayStatus, }).ExecuteCommandAsync();
+                            }
                         }
 
 
@@ -1071,8 +1073,6 @@ namespace RUINORERP.Business
                         {
                             prePayment.PrePaymentStatus = (int)PrePaymentStatus.部分核销;
                         }
-
-
                     }
                 }
 
@@ -1090,25 +1090,26 @@ namespace RUINORERP.Business
                          .Where(x => (x.SaleOut_MainID == entity.SourceBillId))
                          .SingleAsync();
 
-                        if (entity.LocalPaidAmount < saleout.TotalAmount && saleout.PayStatus != (int)PayStatus.部分预付)
+                        if (entity.LocalPaidAmount < saleout.TotalAmount)
                         {
-                            saleout.PayStatus = (int)PayStatus.部分预付;
+                            saleout.PayStatus = (int)PayStatus.部分付款;
                             await _unitOfWorkManage.GetDbClient().Updateable(saleout).UpdateColumns(it => new { it.PayStatus, }).ExecuteCommandAsync();
                         }
+                        if (entity.LocalPaidAmount == saleout.TotalAmount)
+                        {
+                            saleout.PayStatus = (int)PayStatus.全部付款;
+                            await _unitOfWorkManage.GetDbClient().Updateable(saleout).UpdateColumns(it => new { it.PayStatus, }).ExecuteCommandAsync();
+                        }
+
                         if (entity.LocalPaidAmount < saleout.TotalAmount && saleout.TotalAmount < saleout.tb_saleorder.TotalAmount)
                         {
-                            saleout.tb_saleorder.PayStatus = (int)PayStatus.部分预付;
+                            saleout.tb_saleorder.PayStatus = (int)PayStatus.部分付款;
                             await _unitOfWorkManage.GetDbClient().Updateable(saleout.tb_saleorder).UpdateColumns(it => new { it.PayStatus, }).ExecuteCommandAsync();
                         }
 
-                        if (entity.LocalPaidAmount == saleout.TotalAmount && saleout.PayStatus != (int)PayStatus.全额预付)
-                        {
-                            saleout.PayStatus = (int)PayStatus.全额预付;
-                            await _unitOfWorkManage.GetDbClient().Updateable(saleout).UpdateColumns(it => new { it.PayStatus, }).ExecuteCommandAsync();
-                        }
                         if (entity.LocalPaidAmount == saleout.TotalAmount && saleout.TotalAmount == saleout.tb_saleorder.TotalAmount)
                         {
-                            saleout.tb_saleorder.PayStatus = (int)PayStatus.全额预付;
+                            saleout.tb_saleorder.PayStatus = (int)PayStatus.全部付款;
                             await _unitOfWorkManage.GetDbClient().Updateable(saleout.tb_saleorder).UpdateColumns(it => new { it.PayStatus, }).ExecuteCommandAsync();
                         }
 
@@ -1122,25 +1123,26 @@ namespace RUINORERP.Business
                          .Where(x => (x.PurEntryID == entity.SourceBillId))
                          .SingleAsync();
 
-                        if (entity.LocalPaidAmount < purentry.TotalAmount && purentry.PayStatus != (int)PayStatus.部分预付)
+                        if (entity.LocalPaidAmount < purentry.TotalAmount)
                         {
-                            purentry.PayStatus = (int)PayStatus.部分预付;
+                            purentry.PayStatus = (int)PayStatus.部分付款;
                             await _unitOfWorkManage.GetDbClient().Updateable(purentry).UpdateColumns(it => new { it.PayStatus, }).ExecuteCommandAsync();
                         }
                         if (entity.LocalPaidAmount < purentry.TotalAmount && purentry.TotalAmount < purentry.tb_purorder.TotalAmount)
                         {
-                            purentry.tb_purorder.PayStatus = (int)PayStatus.部分预付;
+                            purentry.tb_purorder.PayStatus = (int)PayStatus.部分付款;
                             await _unitOfWorkManage.GetDbClient().Updateable(purentry.tb_purorder).UpdateColumns(it => new { it.PayStatus, }).ExecuteCommandAsync();
                         }
 
-                        if (entity.LocalPaidAmount == purentry.TotalAmount && purentry.PayStatus != (int)PayStatus.全额预付)
+
+                        if (entity.LocalPaidAmount == purentry.TotalAmount)
                         {
-                            purentry.PayStatus = (int)PayStatus.全额预付;
+                            purentry.PayStatus = (int)PayStatus.全部付款;
                             await _unitOfWorkManage.GetDbClient().Updateable(purentry).UpdateColumns(it => new { it.PayStatus, }).ExecuteCommandAsync();
                         }
                         if (entity.LocalPaidAmount == purentry.TotalAmount && purentry.TotalAmount == purentry.tb_purorder.TotalAmount)
                         {
-                            purentry.tb_purorder.PayStatus = (int)PayStatus.全额预付;
+                            purentry.tb_purorder.PayStatus = (int)PayStatus.全部付款;
                             await _unitOfWorkManage.GetDbClient().Updateable(purentry.tb_purorder).UpdateColumns(it => new { it.PayStatus, }).ExecuteCommandAsync();
                         }
 

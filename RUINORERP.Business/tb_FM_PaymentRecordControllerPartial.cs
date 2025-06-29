@@ -200,10 +200,11 @@ namespace RUINORERP.Business
                                             //财务只管财务的状态
                                             // saleOut.DataStatus = (int)DataStatus.完结;
                                             saleOut.PayStatus = (int)PayStatus.全部付款;
+                                            saleOut.Paytype_ID= entity.Paytype_ID.Value;
                                         }
                                         else
                                         {
-                                            saleOut.PayStatus = (int)PayStatus.部分预付;
+                                            saleOut.PayStatus = (int)PayStatus.部分付款;
                                         }
                                         if (saleOut.tb_saleorder.tb_SaleOuts != null)
                                         {
@@ -216,6 +217,7 @@ namespace RUINORERP.Business
                                                 && otherSaleOuts.Sum(c => c.TotalAmount) + saleOut.TotalAmount == saleOut.tb_saleorder.TotalAmount)
                                             {
                                                 saleOut.tb_saleorder.PayStatus = (int)PayStatus.全部付款;
+                                                saleOut.tb_saleorder.Paytype_ID = entity.Paytype_ID.Value;
                                             }
                                             else
                                             {
@@ -360,7 +362,7 @@ namespace RUINORERP.Business
                                     if (OtherExpense != null)
                                     {
                                         //应收结清，并且结清的金额等于销售出库金额，则修改出库单的状态。同时计算对应订单情况。也更新。
-                                        if (receivablePayable.LocalBalanceAmount == 0 && receivablePayable.LocalPaidAmount == OtherExpense.ApprovedAmount)
+                                        if (receivablePayable.LocalBalanceAmount == 0 && receivablePayable.LocalPaidAmount == OtherExpense.TotalAmount)
                                         {
                                             OtherExpense.DataStatus = (int)DataStatus.完结;
                                             OtherExpense.PayStatus = (int)PayStatus.全部付款;
@@ -429,10 +431,6 @@ namespace RUINORERP.Business
                                 prePayment.ForeignBalanceAmount += RecordDetail.ForeignAmount;
                                 prePayment.LocalBalanceAmount += RecordDetail.LocalAmount;
 
-                                //抵扣时 更新核销金额
-                                //prePayment.ForeignPaidAmount+=entity.ForeignPaidAmount;
-                                //prePayment.LocalPaidAmount += entity.LocalPaidAmount;
-
                                 //预收付的退款操作，对应收付款审核时。要找他对应的正向预收付单。修改状态。和退回金额。
                                 if (RecordDetail.LocalAmount < 0 || RecordDetail.ForeignAmount < 0)
                                 {
@@ -495,7 +493,6 @@ namespace RUINORERP.Business
                                     entity.ReversedOriginalNo = oldPayment.PaymentNo;
 
                                     #endregion
-
 
                                     #region 对应的订单变为取消 不调用业务的取消是事务不能嵌套
 
@@ -577,9 +574,7 @@ namespace RUINORERP.Business
 
                                     #endregion
 
-
                                 }
-
 
                             }
                         }
@@ -712,7 +707,8 @@ namespace RUINORERP.Business
                     it.ApprovalResults,
                     it.Approver_at,
                     it.Approver_by,
-                    it.ApprovalOpinions
+                    it.ApprovalOpinions,
+                    it.Paytype_ID
                 }).ExecuteCommandAsync();
 
                 // 注意信息的完整性
@@ -815,7 +811,7 @@ namespace RUINORERP.Business
             {
                 paymentRecord.PayeeAccountNo = entity.tb_fm_payeeinfo.Account_No;
             }
-           
+
 
             paymentRecord.tb_FM_PaymentRecordDetails = new List<tb_FM_PaymentRecordDetail>();
 
@@ -880,7 +876,7 @@ namespace RUINORERP.Business
             }
             else
             {
-            
+
                 paymentRecordDetail.SourceBizType = (int)BizType.其他费用支出;
                 paymentRecordDetail.Summary = $"由其他费用支出单{entity.ExpenseNo}转换自动生成。";
             }

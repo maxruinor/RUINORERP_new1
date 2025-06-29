@@ -186,20 +186,9 @@ namespace RUINORERP.Model
             get{return _ApprovalResults;}            set{                SetProperty(ref _ApprovalResults, value);                }
         }
 
-        private decimal? _ApprovedAmount;
+ 
         
         
-        /// <summary>
-        /// 核准金额
-        /// </summary>
-
-        [AdvQueryAttribute(ColName = "ApprovedAmount",ColDesc = "核准金额")]
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "ApprovedAmount" ,IsNullable = true,ColumnDescription = "核准金额" )]
-        [Display(Name = "核准金额")]
-        public decimal? ApprovedAmount 
-        { 
-            get{return _ApprovedAmount;}            set{                SetProperty(ref _ApprovedAmount, value);                }
-        }
 
         private long? _Currency_ID;
         
@@ -367,34 +356,23 @@ namespace RUINORERP.Model
         }
 
         private decimal? _TaxAmount;
-        
-        
+
+
+        private decimal _SingleAmount = ((0));
         /// <summary>
-        /// 税额
+        /// 单项金额
         /// </summary>
-
-        [AdvQueryAttribute(ColName = "TaxAmount",ColDesc = "税额")]
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "TaxAmount" ,IsNullable = true,ColumnDescription = "税额" )]
-        [Display(Name = "税额")]
-        public decimal? TaxAmount 
-        { 
-            get{return _TaxAmount;}            set{                SetProperty(ref _TaxAmount, value);                }
+        [AdvQueryAttribute(ColName = "SingleAmount", ColDesc = "单项金额")]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType = "Decimal", ColumnName = "SingleAmount", DecimalDigits = 4, IsNullable = false, ColumnDescription = "单项金额")]
+        public decimal SingleAmount
+        {
+            get { return _SingleAmount; }
+            set
+            {
+                SetProperty(ref _SingleAmount, value);
+            }
         }
-
-        private decimal? _TaxRate;
-        
-        
-        /// <summary>
-        /// 税率
-        /// </summary>
-
-        [AdvQueryAttribute(ColName = "TaxRate",ColDesc = "税率")]
-        [SugarColumn(ColumnDataType = "decimal", SqlParameterDbType ="Decimal",  ColumnName = "TaxRate" , DecimalDigits = 5,Length=5,IsNullable = true,ColumnDescription = "税率" )]
-        [Display(Name = "税率")]
-        public decimal? TaxRate 
-        { 
-            get{return _TaxRate;}            set{                SetProperty(ref _TaxRate, value);                }
-        }
+ 
 
         private decimal? _UntaxedAmount;
         

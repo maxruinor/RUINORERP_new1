@@ -26,6 +26,39 @@ namespace RUINORERP.Business
     {
 
 
+        /// <summary>
+        /// 带参数异步导航查询
+        /// </summary>
+        /// <returns>数据列表</returns>
+        public virtual async Task<List<tb_UserInfo>> QueryByNavWithMoreInfoAsync(Expression<Func<tb_UserInfo, bool>> exp)
+        {
+            List<tb_UserInfo> list =await _unitOfWorkManage.GetDbClient().Queryable<tb_UserInfo>().Where(exp)
+                            .Includes(t => t.tb_employee, e => e.tb_department, d => d.tb_company)
+                            .AsNavQueryable()
+                            .Includes(t => t.tb_User_Roles, ur => ur.tb_roleinfo, r => r.tb_P4Menus, s => s.tb_menuinfo)
+                            .AsNavQueryable()
+                            .Includes(t => t.tb_User_Roles, ur => ur.tb_roleinfo, r => r.tb_P4Fields, s => s.tb_fieldinfo)
+                            .AsNavQueryable()
+                            .Includes(t => t.tb_User_Roles, ur => ur.tb_roleinfo, r => r.tb_P4Buttons, s => s.tb_buttoninfo)
+                            .Includes(t => t.tb_User_Roles, ur => ur.tb_roleinfo, r => r.tb_rolepropertyconfig)
+                            .AsNavQueryable()
+                            .Includes(a => a.tb_User_Roles, b => b.tb_UserPersonalizeds, c => c.tb_UIMenuPersonalizations, d => d.tb_UIGridSettings)
+                            .AsNavQueryable()
+                            .Includes(a => a.tb_User_Roles, b => b.tb_UserPersonalizeds, c => c.tb_UIMenuPersonalizations, d => d.tb_UIQueryConditions)
+                              .AsNavQueryable()
+                            .Includes(a => a.tb_User_Roles, b => b.tb_UserPersonalizeds, c => c.tb_UIMenuPersonalizations, d => d.tb_UIInputDataFields)
+                            .ToListAsync();
+
+            foreach (var item in list)
+            {
+                item.HasChanged = false;
+            }
+
+            MyCacheManager.Instance.UpdateEntityList<tb_UserInfo>(list);
+            return list;
+        }
+
+
 
         /// <summary>
         /// 带参数异步导航查询

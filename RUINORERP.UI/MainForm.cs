@@ -89,6 +89,7 @@ using NPOI.SS.Formula.Functions;
 using RUINORERP.UI.Monitoring.Auditing;
 using System.Text.RegularExpressions;
 using Match = System.Text.RegularExpressions.Match;
+using LiveChartsCore.Geo;
 
 
 
@@ -2999,6 +3000,75 @@ namespace RUINORERP.UI
             f.Text = "Child " + (2).ToString();
             //f.MdiParent = this;
             f.ShowDialog();
+        }
+
+        /// <summary>
+        /// 刷新全局的一些配置 权限等
+        /// </summary>
+        internal void RefreshGlobalConfig()
+        {
+            _ = Task.Run(async () =>
+               {
+                   await Task.Delay(2000);
+
+                   #region  必要配置数据重新加载
+                   // 异步延迟3秒执行本位币别查询事件，不会阻止UI线程
+                   //password = EncryptionHelper.AesDecryptByHashKey(enPwd, username);
+
+                   string username = UserGlobalConfig.Instance.UseName;
+                   string password = UserGlobalConfig.Instance.PassWord;
+                   string EnPassword = EncryptionHelper.AesEncryptByHashKey(password, username);
+
+                   tb_UserInfoController<tb_UserInfo> ctrUser = AppContext.GetRequiredService<tb_UserInfoController<tb_UserInfo>>();
+                   List<tb_UserInfo> users = new List<tb_UserInfo>();
+                   users = await ctrUser.QueryByNavWithMoreInfoAsync(u => u.UserName == username && u.Password == EnPassword && u.is_available && u.is_enabled);
+                   if (users != null)
+                   {
+                       AppContext.CurUserInfo.UserModList.Clear();
+                       tb_UserInfo user = users[0];
+                       if (user != null)
+                       {
+                           PTPrincipal.SetCurrentUserInfo(AppContext, AppContext.CurUserInfo.UserInfo);
+                       }
+                   }
+
+
+
+
+                   #region 查询对应的项目组
+
+                   //todo 后面再优化为缓存级吧
+                   List<tb_ProjectGroup> projectGroups = new List<tb_ProjectGroup>();
+                   List<tb_ProjectGroupEmployees> groupEmployees = new List<tb_ProjectGroupEmployees>();
+                   groupEmployees = await MainForm.Instance.AppContext.Db.CopyNew()
+                   .Queryable<tb_ProjectGroupEmployees>()
+                   .Includes(a => a.tb_projectgroup, b => b.tb_department)
+                   .Includes(c => c.tb_projectgroup, d => d.tb_ProjectGroupAccountMappers, e => e.tb_fm_account)
+                   .Where(c => c.Employee_ID == MainForm.Instance.AppContext.CurUserInfo.Id).ToListAsync();
+
+                   MainForm.Instance.AppContext.projectGroups = groupEmployees.Select(c => c.tb_projectgroup).ToList();
+
+
+                   #endregion
+
+                   tb_SystemConfigController<tb_SystemConfig> ctr = Startup.GetFromFac<tb_SystemConfigController<tb_SystemConfig>>();
+                   List<tb_SystemConfig> config = ctr.Query();
+                   if (config.Count > 0)
+                   {
+                       AppContext.SysConfig = config[0];
+                   }
+                   var ctrBillNoRule = Startup.GetFromFac<tb_sys_BillNoRuleController<tb_sys_BillNoRule>>();
+                   List<tb_sys_BillNoRule> BillNoRules = ctrBillNoRule.Query();
+                   AppContext.BillNoRules = BillNoRules;
+
+
+                   #endregion
+
+
+               });
+
+
+
         }
     }
 }

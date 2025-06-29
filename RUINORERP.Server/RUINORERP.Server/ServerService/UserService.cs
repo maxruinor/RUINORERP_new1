@@ -898,6 +898,25 @@ namespace RUINORERP.Server.BizService
 
         }
 
+
+        public static void 更新全局配置(SessionforBiz PlayerSession)
+        {
+#pragma warning disable CS0168 // 声明了变量，但从未使用过
+            try
+            {
+                ByteBuff tx = new ByteBuff(50);
+                string sendtime = System.DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+                tx.PushString(sendtime);
+                PlayerSession.AddSendData((byte)ServerCmdEnum.更新全局配置, null, tx.toByte());
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("推送版本更新时出错" + ex.Message);
+            }
+#pragma warning restore CS0168 // 声明了变量，但从未使用过
+
+        }
+
     }
 
 }

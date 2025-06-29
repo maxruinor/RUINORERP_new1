@@ -46,14 +46,14 @@
             tsmY = new System.Windows.Forms.ToolStripMenuItem();
             tsmNo = new System.Windows.Forms.ToolStripMenuItem();
             tsbtnDataViewer = new System.Windows.Forms.ToolStripButton();
-            tsbtn在线用户 = new System.Windows.Forms.ToolStripButton();
+            toolStripButton1 = new System.Windows.Forms.ToolStripButton();
             toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
             toolStripButton2 = new System.Windows.Forms.ToolStripButton();
             menuStrip2 = new System.Windows.Forms.MenuStrip();
             系统注册ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            黑名单ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             statusStrip1 = new System.Windows.Forms.StatusStrip();
             tslblStatus = new System.Windows.Forms.ToolStripStatusLabel();
-            黑名单ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             menuStrip1.SuspendLayout();
             toolStrip1.SuspendLayout();
             menuStrip2.SuspendLayout();
@@ -133,7 +133,7 @@
             // 
             // toolStrip1
             // 
-            toolStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] { tsBtnStartServer, toolStripButton3, toolStripButton5, toolStripddbtnDebug, tsbtnDataViewer, tsbtn在线用户 });
+            toolStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] { tsBtnStartServer, toolStripButton3, toolStripButton5, toolStripddbtnDebug, tsbtnDataViewer, toolStripButton1 });
             toolStrip1.Location = new System.Drawing.Point(0, 50);
             toolStrip1.Name = "toolStrip1";
             toolStrip1.Size = new System.Drawing.Size(800, 25);
@@ -204,14 +204,14 @@
             tsbtnDataViewer.Text = "数据查看器";
             tsbtnDataViewer.Click += tsbtnDataViewer_Click;
             // 
-            // tsbtn在线用户
+            // toolStripButton1
             // 
-            tsbtn在线用户.Image = (System.Drawing.Image)resources.GetObject("tsbtn在线用户.Image");
-            tsbtn在线用户.ImageTransparentColor = System.Drawing.Color.Magenta;
-            tsbtn在线用户.Name = "tsbtn在线用户";
-            tsbtn在线用户.Size = new System.Drawing.Size(76, 22);
-            tsbtn在线用户.Text = "在线用户";
-            tsbtn在线用户.Click += tsbtn在线用户_Click;
+            toolStripButton1.Image = (System.Drawing.Image)resources.GetObject("toolStripButton1.Image");
+            toolStripButton1.ImageTransparentColor = System.Drawing.Color.Magenta;
+            toolStripButton1.Name = "toolStripButton1";
+            toolStripButton1.Size = new System.Drawing.Size(100, 22);
+            toolStripButton1.Text = "在线用户管理";
+            toolStripButton1.Click += toolStripButton1_Click_1;
             // 
             // toolStripSeparator1
             // 
@@ -243,6 +243,13 @@
             系统注册ToolStripMenuItem.Text = "系统注册";
             系统注册ToolStripMenuItem.Click += 系统注册ToolStripMenuItem_Click;
             // 
+            // 黑名单ToolStripMenuItem
+            // 
+            黑名单ToolStripMenuItem.Name = "黑名单ToolStripMenuItem";
+            黑名单ToolStripMenuItem.Size = new System.Drawing.Size(56, 21);
+            黑名单ToolStripMenuItem.Text = "黑名单";
+            黑名单ToolStripMenuItem.Click += 黑名单ToolStripMenuItem_Click;
+            // 
             // statusStrip1
             // 
             statusStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] { tslblStatus });
@@ -256,13 +263,6 @@
             // 
             tslblStatus.Name = "tslblStatus";
             tslblStatus.Size = new System.Drawing.Size(0, 17);
-            // 
-            // 黑名单ToolStripMenuItem
-            // 
-            黑名单ToolStripMenuItem.Name = "黑名单ToolStripMenuItem";
-            黑名单ToolStripMenuItem.Size = new System.Drawing.Size(56, 21);
-            黑名单ToolStripMenuItem.Text = "黑名单";
-            黑名单ToolStripMenuItem.Click += 黑名单ToolStripMenuItem_Click;
             // 
             // frmMain
             // 
@@ -279,7 +279,7 @@
             IsMdiContainer = true;
             MainMenuStrip = menuStrip2;
             Name = "frmMain";
-            Text = "服务管理端2.1";
+            Text = "服务管理端2.2";
             FormClosing += frmMain_FormClosing;
             Load += frmMain_Load;
             menuStrip1.ResumeLayout(false);
@@ -319,8 +319,8 @@
         private System.Windows.Forms.MenuStrip menuStrip2;
         private System.Windows.Forms.StatusStrip statusStrip1;
         private System.Windows.Forms.ToolStripStatusLabel tslblStatus;
-        private System.Windows.Forms.ToolStripButton tsbtn在线用户;
         private System.Windows.Forms.ToolStripMenuItem 黑名单ToolStripMenuItem;
+        private System.Windows.Forms.ToolStripButton toolStripButton1;
     }
 }
 

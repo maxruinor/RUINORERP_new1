@@ -151,6 +151,8 @@ namespace RUINORERP.UI.FM
                 cmbAccount_type.DataBindings.Clear();
                 txtPayeeAccountNo.Text = "";
             }
+
+            DataBindingHelper.BindData4Cmb<tb_PaymentMethod>(entity, k => k.Paytype_ID, v => v.Paytype_Name, cmbPaytype_ID);
             DataBindingHelper.BindData4Cmb<tb_Employee>(entity, k => k.Employee_ID, v => v.Employee_Name, cmbEmployee_ID);
             DataBindingHelper.BindData4Cmb<tb_Currency>(entity, k => k.Currency_ID, v => v.CurrencyName, cmbCurrency_ID);
             DataBindingHelper.BindData4Cmb<tb_FM_Account>(entity, k => k.Account_id, v => v.Account_name, cmbAccount_id);
@@ -346,7 +348,19 @@ namespace RUINORERP.UI.FM
             base.BindData(entity);
         }
 
-
+        protected async override Task<ReviewResult> Review()
+        {
+            ReviewResult reviewResult = new ReviewResult();
+            if (!EditEntity.Paytype_ID.HasValue || EditEntity.Paytype_ID.Value == MainForm.Instance.AppContext.PaymentMethodOfPeriod.Paytype_ID)
+            {
+                MessageBox.Show("请选择正确的付款方式。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+            else
+            {
+                reviewResult = await base.Review();
+            }
+            return reviewResult;
+        }
         private void ControlCurrency(tb_FM_PaymentRecord entity)
         {
             //根据币别如果是外币才显示外币相关的字段
@@ -394,7 +408,7 @@ namespace RUINORERP.UI.FM
 
         protected override void RelatedQuery()
         {
-       
+
         }
 
         private async void LoadImageData(string CloseCaseImagePath)

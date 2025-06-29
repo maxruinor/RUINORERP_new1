@@ -832,17 +832,18 @@ namespace RUINORERP.Server
                         SessionforBiz sessionforBiz = session as SessionforBiz;
                         sessionListBiz.TryAdd(session.SessionID, session as SessionforBiz);
 
-                        if (frmUserList == null)
+
+                        if (frmuserList == null)
                         {
-                            frmUserList = Startup.GetFromFac<frmUserListManage>();
+                            frmuserList = Startup.GetFromFac<frmUserList>();
                         }
-                        if (frmUserList.IsHandleCreated)
+                        if (frmuserList.IsHandleCreated)
                         {
-                            frmUserList.Invoke(new Action(() =>
+                            frmuserList.Invoke(new Action(() =>
                             {
-                                sessionforBiz.User.PropertyChanged -= frmUserList.UserInfo_PropertyChanged;
-                                sessionforBiz.User.PropertyChanged += frmUserList.UserInfo_PropertyChanged;
-                                frmUserList.userInfos.Add(sessionforBiz.User);
+                                sessionforBiz.User.PropertyChanged -= frmuserList.UserInfo_PropertyChanged;
+                                sessionforBiz.User.PropertyChanged += frmuserList.UserInfo_PropertyChanged;
+                                frmuserList.UserInfos.Add(sessionforBiz.User);
                             }));
                         }
 
@@ -871,20 +872,20 @@ namespace RUINORERP.Server
                             //{
                             // SephirothServer.CommandServer.RoleService.角色退出(sg);
                             //}
-
-                            if (frmUserList == null)
+                            if (frmuserList == null)
                             {
-                                frmUserList = Startup.GetFromFac<frmUserListManage>();
+                                frmuserList = Startup.GetFromFac<frmUserList>();
                             }
-                            if (frmUserList.IsHandleCreated)
+                            if (frmuserList.IsHandleCreated)
                             {
-                                frmUserList.Invoke(new Action(() =>
+                                frmuserList.Invoke(new Action(() =>
                                 {
-                                    frmUserList.userInfos.CollectionChanged -= frmUserList.UserInfos_CollectionChanged;
-                                    frmUserList.userInfos.CollectionChanged += frmUserList.UserInfos_CollectionChanged;
-                                    frmUserList.userInfos.Remove(sg.User);
+                                    frmuserList.UserInfos.CollectionChanged -= frmuserList.UserInfos_CollectionChanged;
+                                    frmuserList.UserInfos.CollectionChanged += frmuserList.UserInfos_CollectionChanged;
+                                    frmuserList.UserInfos.Remove(sg.User);
                                 }));
                             }
+                             
                             if (reason.Reason != SuperSocket.Connection.CloseReason.ServerShutdown)
                             {
                                 PrintMsg($"{DateTime.Now} [SessionforBiz-主要程序]  {session.RemoteEndPoint} closed，原因：: {reason.Reason}");
@@ -1368,9 +1369,9 @@ namespace RUINORERP.Server
 
         private void tsBtnStartServer_Click(object sender, EventArgs e)
         {
-            if (frmUserList == null)
+            if (frmuserList == null)
             {
-                frmUserList = Startup.GetFromFac<frmUserListManage>();
+                frmuserList = Startup.GetFromFac<frmUserList>();
             }
             InitAll();
             timer.Start();
@@ -1385,18 +1386,7 @@ namespace RUINORERP.Server
             frm.Show();
             frm.Activate();
         }
-        frmUserListManage frmUserList = Startup.GetFromFac<frmUserListManage>();
-        private void tsbtn在线用户_Click(object sender, EventArgs e)
-        {
-            if (frmUserList == null)
-            {
-                frmUserList = Startup.GetFromFac<frmUserListManage>();
-            }
-
-            frmUserList.MdiParent = this;
-            frmUserList.Show();
-            frmUserList.Activate();
-        }
+        //frmUserListManage frmUserList = Startup.GetFromFac<frmUserListManage>();
 
         private void 黑名单ToolStripMenuItem_Click(object sender, EventArgs e)
         {
@@ -1404,6 +1394,18 @@ namespace RUINORERP.Server
             frmBlacklist.MdiParent = this;
             frmBlacklist.Show();
             frmBlacklist.Activate();
+        }
+        frmUserList frmuserList = Startup.GetFromFac<frmUserList>();
+        private void toolStripButton1_Click_1(object sender, EventArgs e)
+        {
+            if (frmuserList == null)
+            {
+                frmuserList = Startup.GetFromFac<frmUserList>();
+            }
+
+            frmuserList.MdiParent = this;
+            frmuserList.Show();
+            frmuserList.Activate();
         }
     }
 }

@@ -453,6 +453,10 @@ namespace RUINORERP.UI.SuperSocketClient
                     }
                     switch (serverCmd)
                     {
+                        case ServerCmdEnum.更新全局配置:
+                            MainForm.Instance.RefreshGlobalConfig();
+                            break;
+
                         case ServerCmdEnum.复合型登陆处理:
                             var loginCommand = new RequestLoginCommand(CmdOperation.Receive);
                             loginCommand.DataPacket = od;

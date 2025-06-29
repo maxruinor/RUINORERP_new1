@@ -11,7 +11,8 @@ namespace HLH.Lib.Security
     public static class EncryptionHelper
     {
         /// <summary>
-        ///加密 传入的KEY可以随意一些。
+        ///加密
+        ///传入的KEY可以随意一些。
         /// </summary>
         /// <param name="str"></param>
         /// <param name="key"></param>

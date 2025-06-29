@@ -33,9 +33,157 @@ namespace RUINORERP.Server
             EnableDoubleBuffering(listView1);
             // 每2000ms批量刷新一次
             _refreshTimer = new System.Threading.Timer(RefreshDirtyItems, null, 2000, 2000);
+
+            // 初始化全选复选框
+            InitializeHeaderCheckBox();
+        }
+        // 初始化列标题复选框
+        private void InitializeHeaderCheckBox()
+        {
+            headerCheckBox = new CheckBox();
+            headerCheckBox.Size = new Size(15, 15);
+            headerCheckBox.Location = new Point(4, 2); // 调整位置以覆盖第一列标题
+            headerCheckBox.CheckedChanged += HeaderCheckBox_CheckedChanged;
+
+            // 将复选框添加到ListView的标题栏
+            listView1.Controls.Add(headerCheckBox);
+
+            // 设置ListView属性以显示复选框
+            listView1.CheckBoxes = true;
+            listView1.GridLines = true;
+            listView1.View = View.Details;
+            listView1.Scrollable = true;
+            listView1.MultiSelect = true;
+        }
+        // 处理全选复选框状态变化
+        private void HeaderCheckBox_CheckedChanged(object sender, EventArgs e)
+        {
+            // 防止在ListView加载过程中触发此事件
+            if (listView1.Items.Count == 0) return;
+
+            // 开始更新，防止界面闪烁
+            listView1.BeginUpdate();
+
+            try
+            {
+                // 设置所有行的选中状态
+                //foreach (ListViewItem item in listView1.Items)
+                //{
+                //    item.Checked = headerCheckBox.Checked;
+                //}
+                // 记录需要重绘的范围
+                int startIndex = 0;
+                bool isChecked = headerCheckBox.Checked;
+                int endIndex = listView1.VirtualListSize - 1;
+
+                // 设置所有行的选中状态
+                for (int i = 0; i < listView1.VirtualListSize; i++)
+                {
+                    _checkedStates[i] = isChecked; // 更新选中状态字典
+                    // 使用RedrawItems方法通知ListView某行需要重绘
+                    // 实际的选中状态将在RetrieveVirtualItem事件中处理
+                    _dirtyIndexes.Add(i);
+                }
+
+                // 批量重绘所有项
+                SafeRedrawItems(startIndex, endIndex);
+
+            }
+            finally
+            {
+                // 结束更新
+                listView1.EndUpdate();
+            }
+        }
+
+        // 新增：存储选中状态的字典
+        private Dictionary<int, bool> _checkedStates = new Dictionary<int, bool>();
+
+        /// <summary>
+        /// 获取所有选中的用户信息集合
+        /// </summary>
+        /// <returns>选中的用户信息列表</returns>
+        public List<UserInfo> GetSelectedUsers()
+        {
+            var selectedUsers = new List<UserInfo>();
+
+            // 遍历选中状态字典
+            foreach (var pair in _checkedStates)
+            {
+                if (pair.Value && pair.Key < userInfos.Count) // 确保索引有效
+                {
+                    selectedUsers.Add(userInfos[pair.Key]);
+                }
+            }
+
+            return selectedUsers;
         }
 
 
+
+        // 重写ListView的OnHandleCreated方法，确保复选框位置正确
+        protected override void OnHandleCreated(EventArgs e)
+        {
+            base.OnHandleCreated(e);
+
+            // 确保在ListView句柄创建后调整复选框位置
+            if (headerCheckBox != null && listView1.Columns.Count > 0)
+            {
+                // 调整复选框位置以适应列标题
+                headerCheckBox.Location = new Point(4, 2);
+            }
+        }
+
+
+
+        // 更新全选复选框状态
+        private void UpdateHeaderCheckBoxState()
+        {
+            if (listView1.Items.Count == 0)
+            {
+                //headerCheckBox.Checked = false;
+                headerCheckBox.CheckState = CheckState.Unchecked;
+                return;
+            }
+            int checkedCount = _checkedStates.Count(p => p.Value);
+            if (checkedCount == listView1.VirtualListSize)
+            {
+                headerCheckBox.CheckState = CheckState.Checked;
+            }
+            else if (checkedCount == 0)
+            {
+                headerCheckBox.CheckState = CheckState.Unchecked;
+            }
+            else
+            {
+                headerCheckBox.CheckState = CheckState.Indeterminate;
+            }
+
+            //int checkedCount = 0;
+            //foreach (ListViewItem item in listView1.Items)
+            //{
+            //    if (item.Checked)
+            //        checkedCount++;
+            //}
+
+            // 如果所有项都被选中，全选框为选中状态
+            // 如果没有项被选中，全选框为未选中状态
+            // 如果部分项被选中，全选框为不确定状态
+            if (checkedCount == listView1.Items.Count)
+            {
+                headerCheckBox.Checked = true;
+                headerCheckBox.CheckState = CheckState.Checked;
+            }
+            else if (checkedCount == 0)
+            {
+                headerCheckBox.Checked = false;
+                headerCheckBox.CheckState = CheckState.Unchecked;
+            }
+            else
+            {
+                headerCheckBox.CheckState = CheckState.Indeterminate;
+            }
+        }
 
         private void RefreshDirtyItems(object state)
         {
@@ -75,10 +223,31 @@ namespace RUINORERP.Server
             listView1.RetrieveVirtualItem += ListView1_RetrieveVirtualItem;
             listView1.VirtualListSize = userInfos.Count;
             listView1.MultiSelect = false; // 是否允许多选（根据需求设置）
+            listView1.ItemCheck+=ListView1_ItemCheck;
+            listView1.ItemChecked += ListView1_ItemChecked;
             AddCols();
             AddUserList();
 
         }
+
+        private void ListView1_ItemChecked(object sender, ItemCheckedEventArgs e)
+        {
+            // 更新选中状态字典
+           // _checkedStates[e.Index] = e.NewValue == CheckState.Checked;
+            // 检查所有项的状态，更新全选复选框状态
+            UpdateHeaderCheckBoxState();
+        }
+
+        private void ListView1_ItemCheck(object sender, ItemCheckEventArgs e)
+        {
+            
+            // 更新选中状态字典
+           // _checkedStates[e.Index] = e.CurrentValue.GetType().Checked;
+
+            // 检查所有项的状态，更新全选复选框状态
+            UpdateHeaderCheckBoxState();
+        }
+ 
 
         private void AddUserList()
         {
@@ -191,6 +360,25 @@ namespace RUINORERP.Server
                 //ListViewItem item = new ListViewItem(user.Employee_ID.ToString()); // 第一列为员工ID
                 ListViewItem item = e.Item ?? new ListViewItem(); // 重用现有项（若存在）
 
+                // 设置行的选中状态（根据需要）
+                // item.Checked = user.IsSelected; // 如果UserInfo类有IsSelected属性
+                // 清空所有子项（重要！确保不会重复添加）
+                item.SubItems.Clear();
+                // 按列顺序添加子项
+                //item.SubItems[0].Text = ""; // 复选框列
+
+                // 设置行的选中状态
+                //bool isChecked;
+                //if (_checkedStates.TryGetValue(e.ItemIndex, out isChecked))
+                //{
+                //    item.Checked = isChecked;
+                //}
+                // 设置复选框状态
+                bool isChecked = _checkedStates.ContainsKey(e.ItemIndex) && _checkedStates[e.ItemIndex];
+                item.Checked = isChecked;
+
+                item.SubItems.Add(new ListViewItem.ListViewSubItem() { Text = (e.ItemIndex + 1).ToString() });
+                //item.SubItems.Add(""); // 复选框列（第一列）
                 // 按列顺序添加子项
                 item.SubItems.Add(user.SessionId);                 // SessionId
                 item.SubItems.Add(user.用户名);                     // 用户名
@@ -213,12 +401,22 @@ namespace RUINORERP.Server
             else
             {
                 e.Item = new ListViewItem(); // 防止索引越界
+                                             // 处理空项情况
+                e.Item.SubItems.Clear();
+                for (int i = 0; i < listView1.Columns.Count; i++)
+                {
+                    e.Item.SubItems.Add("");
+                }
             }
         }
+        private CheckBox headerCheckBox; // 声明列标题复选框
 
+ 
         private void AddCols()
         {
             listView1.Columns.Clear();
+            // 调整第一列宽度，为复选框留出空间
+            listView1.Columns.Add("", 30); // 复选框列
             listView1.Columns.Add("员工ID", 80);          // Employee_ID
             listView1.Columns.Add("SessionId", 150);     // SessionId
             listView1.Columns.Add("用户名", 100);         // 用户名
@@ -431,6 +629,9 @@ namespace RUINORERP.Server
                 case "推送版本更新":
                     HandlePushUpdate(user);
                     break;
+                case "更新全局配置":
+                    HandlePushUpdateSysConfig(user);
+                    break;
                 case "推送缓存数据":
                     HandlePushCache(user);
                     break;
@@ -552,6 +753,18 @@ namespace RUINORERP.Server
             }
         }
 
+
+        private void HandlePushUpdateSysConfig(UserInfo user)
+        {
+            if (frmMain.Instance.sessionListBiz.TryGetValue(user.SessionId, out SessionforBiz sb))
+            {
+                if (sb.State == SessionState.Connected)
+                {
+                    UserService.推送版本更新(sb);
+                }
+            }
+        }
+
         private void HandlePushCache(UserInfo user)
         {
             if (frmMain.Instance.sessionListBiz.TryGetValue(user.SessionId, out SessionforBiz sb))
@@ -635,7 +848,7 @@ namespace RUINORERP.Server
             AddUserList();
         }
 
-
+  
     }
 }
 

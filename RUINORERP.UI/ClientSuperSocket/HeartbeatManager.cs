@@ -17,8 +17,8 @@ namespace RUINORERP.UI.ClientSuperSocket
         private volatile bool _isRunning;
         private Thread _heartbeatThread;
         private CancellationTokenSource _cts;
-     
-        
+
+
 
         public void Start()
         {
@@ -32,7 +32,7 @@ namespace RUINORERP.UI.ClientSuperSocket
                 _heartbeatThread.Name = "Heartbeat Thread";
                 _heartbeatThread.IsBackground = true; // 关键！设置为后台线程
                 _heartbeatThread.Start();
- 
+
             }
         }
 
@@ -54,7 +54,7 @@ namespace RUINORERP.UI.ClientSuperSocket
                 _cts?.Dispose();
                 _cts = null;
                 _heartbeatThread = null;
-                
+
             }
         }
 
@@ -155,7 +155,7 @@ namespace RUINORERP.UI.ClientSuperSocket
                 {
                     tx.PushString("");
                 }
-                tx.PushString(System.Environment.MachineName + ":" + MainForm.Instance.AppContext.CurrentUser.客户端版本);
+                tx.PushString(System.Environment.MachineName.PadRight(20) + ":" + MainForm.Instance.AppContext.CurrentUser.客户端版本);
                 MainForm.Instance.AppContext.CurrentUser.静止时间 = MainForm.GetLastInputTime();
                 tx.PushInt64(MainForm.Instance.AppContext.CurrentUser.静止时间);//电脑空闲时间
                 tx.PushString(MainForm.Instance.AppContext.log.Path);

@@ -35,6 +35,7 @@ using Netron.GraphLib;
 using RUINORERP.UI.UCSourceGrid;
 using RUINORERP.Model.Dto;
 using Microsoft.Extensions.Logging;
+using RUINORERP.Model.CommonModel;
 
 
 namespace RUINORERP.UI.FM
@@ -401,9 +402,36 @@ namespace RUINORERP.UI.FM
         {
             if (base.EditEntity is tb_FM_PaymentRecord PaymentRecord)
             {
-                //PaymentRecord.SourceBillNos
+                if (PaymentRecord.tb_FM_PaymentRecordDetails != null)
+                {
+                    foreach (var item in PaymentRecord.tb_FM_PaymentRecordDetails)
+                    {
+                        RelatedQueryParameter rqp = new RelatedQueryParameter();
+                        rqp.bizType = (BizType)item.SourceBizType;
+                        rqp.billId = item.SourceBilllId;
+
+                        ToolStripMenuItem RelatedMenuItem = new ToolStripMenuItem();
+                        RelatedMenuItem.Name = $"{item.SourceBilllId}";
+                        RelatedMenuItem.Tag= rqp;
+                        RelatedMenuItem.Text = $"{rqp.bizType}:{item.SourceBillNo}";
+                        RelatedMenuItem.Click += base.MenuItem_Click;
+                        RelatedMenuItem.DropDownItemClicked += MenuItem_DropDownItemClicked;
+
+                        if (!toolStripbtnRelatedQuery.DropDownItems.ContainsKey(item.SourceBilllId.ToString()))
+                        {
+                            toolStripbtnRelatedQuery.DropDownItems.Add(RelatedMenuItem);
+                        }
+                    }
+
+                }
             }
             base.LoadRelatedDataToDropDownItems();
+        }
+
+
+        private void MenuItem_DropDownItemClicked(object sender, ToolStripItemClickedEventArgs e)
+        {
+          
         }
 
         protected override void RelatedQuery()

@@ -39,9 +39,10 @@ using RUINORERP.Business.Processor;
 using RUINORERP.Business.Security;
 using Krypton.Toolkit;
 using System.Diagnostics;
- 
+
 using Netron.GraphLib;
 using RUINORERP.UI.AdvancedUIModule;
+using RUINORERP.Model.CommonModel;
 
 
 namespace RUINORERP.UI.PSI.INV
@@ -54,8 +55,31 @@ namespace RUINORERP.UI.PSI.INV
             InitializeComponent();
             AddPublicEntityObject(typeof(ProductSharePart));
         }
- 
 
+
+        protected override void LoadRelatedDataToDropDownItems()
+        {
+            if (base.EditEntity is tb_ProdReturning returning)
+            {
+                if (returning.BorrowID > 0)
+                {
+                    RelatedQueryParameter rqp = new RelatedQueryParameter();
+                    rqp.bizType = BizType.借出单;
+                    rqp.billId = returning.BorrowID;
+                    rqp.billNo = returning.BorrowNO;
+                    ToolStripMenuItem RelatedMenuItem = new ToolStripMenuItem();
+                    RelatedMenuItem.Name = $"{rqp.billId}";
+                    RelatedMenuItem.Tag = rqp;
+                    RelatedMenuItem.Text = $"{rqp.bizType}:{rqp.billNo}";
+                    RelatedMenuItem.Click += base.MenuItem_Click;
+                    if (!toolStripbtnRelatedQuery.DropDownItems.ContainsKey(rqp.billId.ToString()))
+                    {
+                        toolStripbtnRelatedQuery.DropDownItems.Add(RelatedMenuItem);
+                    }
+                }
+            }
+            base.LoadRelatedDataToDropDownItems();
+        }
         internal override void LoadDataToUI(object Entity)
         {
             ActionStatus actionStatus = ActionStatus.无操作;
@@ -81,7 +105,7 @@ namespace RUINORERP.UI.PSI.INV
         }
         public override void BindData(tb_ProdReturning entity, ActionStatus actionStatus)
         {
-           
+
             if (entity == null)
             {
 
@@ -146,7 +170,7 @@ namespace RUINORERP.UI.PSI.INV
                 //权限允许
                 if ((true && entity.DataStatus == (int)DataStatus.草稿) || (true && entity.DataStatus == (int)DataStatus.新建))
                 {
-                    
+
                 }
                 //如果是销售订单引入变化则加载明细及相关数据
                 if ((entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改) && entity.BorrowID > 0 && s2.PropertyName == entity.GetPropertyName<tb_ProdReturning>(c => c.BorrowID))
@@ -217,7 +241,7 @@ namespace RUINORERP.UI.PSI.INV
         View_ProdDetailController<View_ProdDetail> dc = Startup.GetFromFac<View_ProdDetailController<View_ProdDetail>>();
         List<View_ProdDetail> list = new List<View_ProdDetail>();
 
-        private  void UCStockIn_Load(object sender, EventArgs e)
+        private void UCStockIn_Load(object sender, EventArgs e)
         {
             var sw = new Stopwatch();
             // list = dc.Query();
@@ -278,10 +302,10 @@ namespace RUINORERP.UI.PSI.INV
             bindingSourceSub.DataSource = lines; //  ctrSub.Query(" 1>2 ");
             sgd.BindingSourceLines = bindingSourceSub;
 
-           // sw.Start();
-             //list = await dc.BaseQueryByWhereAsync(exp);
+            // sw.Start();
+            //list = await dc.BaseQueryByWhereAsync(exp);
             list = MainForm.Instance.list;
-           // sw.Stop();
+            // sw.Stop();
             //MainForm.Instance.uclog.AddLog("Load加载数据耗时：" + sw.ElapsedMilliseconds + "毫秒");
 
             sgd.SetDependencyObject<ProductSharePart, tb_ProdReturningDetail>(list);
@@ -290,7 +314,7 @@ namespace RUINORERP.UI.PSI.INV
             sgh.InitGrid(grid1, sgd, true, nameof(tb_ProdReturningDetail));
             sgh.OnCalculateColumnValue += Sgh_OnCalculateColumnValue;
             sgh.OnLoadMultiRowData += Sgh_OnLoadMultiRowData;
-            UIHelper.ControlMasterColumnsInvisible(CurMenuInfo,this);
+            UIHelper.ControlMasterColumnsInvisible(CurMenuInfo, this);
 
         }
         private void Sgh_OnLoadMultiRowData(object rows, Position position)
@@ -304,7 +328,7 @@ namespace RUINORERP.UI.PSI.INV
             if (RowDetails != null)
             {
                 List<tb_ProdReturningDetail> details = new List<tb_ProdReturningDetail>();
-                
+
                 foreach (var item in RowDetails)
                 {
                     tb_ProdReturningDetail bOM_SDetail = MainForm.Instance.mapper.Map<tb_ProdReturningDetail>(item);
@@ -592,7 +616,7 @@ namespace RUINORERP.UI.PSI.INV
             //新增时才可以转单
             if (refBill != null)
             {
-                
+
                 tb_ProdReturning master = MainForm.Instance.mapper.Map<tb_ProdReturning>(refBill);
                 List<tb_ProdReturningDetail> details = MainForm.Instance.mapper.Map<List<tb_ProdReturningDetail>>(refBill.tb_ProdBorrowingDetails);
                 master.ReturnDate = System.DateTime.Now;
@@ -655,7 +679,7 @@ namespace RUINORERP.UI.PSI.INV
                 master.ActionStatus = ActionStatus.新增;
 
                 BusinessHelper.Instance.InitEntity(master);
-               
+
 
                 ActionStatus actionStatus = ActionStatus.无操作;
                 BindData(master, actionStatus);

@@ -42,6 +42,7 @@ using RUINORERP.Business.CommService;
 using RUINORERP.Global.EnumExt;
 using RUINORERP.UI.AdvancedUIModule;
 using RUINORERP.UI.SysConfig;
+using RUINORERP.Model.CommonModel;
 
 namespace RUINORERP.UI.PSI.SAL
 {
@@ -75,6 +76,29 @@ namespace RUINORERP.UI.PSI.SAL
         }
 
 
+        protected override void LoadRelatedDataToDropDownItems()
+        {
+            if (base.EditEntity is tb_SaleOutRe saleOutRe)
+            {
+                if (saleOutRe.SaleOut_MainID.HasValue)
+                {
+                    RelatedQueryParameter rqp = new RelatedQueryParameter();
+                    rqp.bizType = BizType.销售出库单;
+                    rqp.billId = saleOutRe.SaleOut_MainID.Value;
+                    rqp.billNo = saleOutRe.SaleOut_NO;
+                    ToolStripMenuItem RelatedMenuItem = new ToolStripMenuItem();
+                    RelatedMenuItem.Name = $"{rqp.billId}";
+                    RelatedMenuItem.Tag = rqp;
+                    RelatedMenuItem.Text = $"{rqp.bizType}:{rqp.billNo}";
+                    RelatedMenuItem.Click += base.MenuItem_Click;
+                    if (!toolStripbtnRelatedQuery.DropDownItems.ContainsKey(rqp.billId.ToString()))
+                    {
+                        toolStripbtnRelatedQuery.DropDownItems.Add(RelatedMenuItem);
+                    }
+                }
+            }
+            base.LoadRelatedDataToDropDownItems();
+        }
         public override void BindData(tb_SaleOutRe entity, ActionStatus actionStatus = ActionStatus.无操作)
         {
             if (entity == null)
@@ -106,7 +130,10 @@ namespace RUINORERP.UI.PSI.SAL
                         entity.tb_SaleOutReDetails.ForEach(c => c.SaleOutRe_ID = 0);
                         entity.tb_SaleOutReDetails.ForEach(c => c.SOutReturnDetail_ID = 0);
                     }
-
+                    if (AppContext.BaseCurrency != null)
+                    {
+                        entity.Currency_ID = AppContext.BaseCurrency.Currency_ID;
+                    }
                 }
 
             }
@@ -583,7 +610,7 @@ namespace RUINORERP.UI.PSI.SAL
                     {
                         return false;
                     }
-                   
+
                 }
 
                 //没有经验通过下面先不计算

@@ -42,6 +42,7 @@ using RUINORERP.Business.Security;
 using System.Diagnostics;
 using Netron.GraphLib;
 using LiveChartsCore.Geo;
+using RUINORERP.Model.CommonModel;
 
 namespace RUINORERP.UI.PSI.INV
 {
@@ -53,8 +54,34 @@ namespace RUINORERP.UI.PSI.INV
             InitializeComponent();
             AddPublicEntityObject(typeof(ProductSharePart));
         }
- 
 
+        protected override void LoadRelatedDataToDropDownItems()
+        {
+            if (base.EditEntity is tb_ProdBorrowing borrowing)
+            {
+                if (borrowing.tb_ProdReturnings != null && borrowing.tb_ProdReturnings.Count > 0)
+                {
+                    foreach (var item in borrowing.tb_ProdReturnings)
+                    {
+                        RelatedQueryParameter rqp = new RelatedQueryParameter();
+                        rqp.bizType = BizType.归还单;
+                        rqp.billId = item.ReturnID;
+                        rqp.billNo = item.ReturnNo;
+                        ToolStripMenuItem RelatedMenuItem = new ToolStripMenuItem();
+                        RelatedMenuItem.Name = $"{rqp.billId}";
+                        RelatedMenuItem.Tag = rqp;
+                        RelatedMenuItem.Text = $"{rqp.bizType}:{rqp.billNo}";
+                        RelatedMenuItem.Click += base.MenuItem_Click;
+                        if (!toolStripbtnRelatedQuery.DropDownItems.ContainsKey(rqp.billId.ToString()))
+                        {
+                            toolStripbtnRelatedQuery.DropDownItems.Add(RelatedMenuItem);
+                        }
+                    }
+                }
+
+            }
+            base.LoadRelatedDataToDropDownItems();
+        }
 
         internal override void LoadDataToUI(object Entity)
         {
@@ -222,7 +249,7 @@ namespace RUINORERP.UI.PSI.INV
 
         private void InitLoadSupplierData(tb_ProdBorrowing entity)
         {
-         
+
             BaseProcessor baseProcessor = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_CustomerVendor).Name + "Processor");
             QueryFilter queryFilterSupplier = baseProcessor.GetQueryFilter();
 
@@ -364,7 +391,7 @@ namespace RUINORERP.UI.PSI.INV
             if (RowDetails != null)
             {
                 List<tb_ProdBorrowingDetail> details = new List<tb_ProdBorrowingDetail>();
-                
+
                 foreach (var item in RowDetails)
                 {
                     tb_ProdBorrowingDetail bOM_SDetail = MainForm.Instance.mapper.Map<tb_ProdBorrowingDetail>(item);

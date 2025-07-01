@@ -129,7 +129,7 @@ namespace RUINORERP.Business
             else
             {
                 SettlementRecord.SourceBizType = (int)BizType.预付款单;
-                SettlementRecord.SourceBizType = (int)BizType.应付款单;
+                SettlementRecord.TargetBizType = (int)BizType.应付款单;
                 SettlementRecord.SettlementNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.付款核销);
                 SettlementRecord.SettlementType = (int)SettlementType.预付冲应付;
             }

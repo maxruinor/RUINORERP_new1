@@ -43,6 +43,7 @@ using RUINORERP.UI.ToolForm;
 using RUINORERP.Business.Security;
 using RUINORERP.Global.EnumExt;
 using RUINORERP.UI.AdvancedUIModule;
+using RUINORERP.Model.CommonModel;
 
 
 namespace RUINORERP.UI.PSI.PUR
@@ -56,7 +57,29 @@ namespace RUINORERP.UI.PSI.PUR
 
             AddPublicEntityObject(typeof(ProductSharePart));
         }
- 
+        protected override void LoadRelatedDataToDropDownItems()
+        {
+            if (base.EditEntity is tb_PurReturnEntry returnEntry)
+            {
+                if (returnEntry.PurEntryRe_ID.HasValue)
+                {
+                    RelatedQueryParameter rqp = new RelatedQueryParameter();
+                    rqp.bizType = BizType.采购退货单;
+                    rqp.billId = returnEntry.PurEntryRe_ID.Value;
+                    rqp.billNo = returnEntry.PurEntryReNo;
+                    ToolStripMenuItem RelatedMenuItem = new ToolStripMenuItem();
+                    RelatedMenuItem.Name = $"{rqp.billId}";
+                    RelatedMenuItem.Tag = rqp;
+                    RelatedMenuItem.Text = $"{rqp.bizType}:{rqp.billNo}";
+                    RelatedMenuItem.Click += base.MenuItem_Click;
+                    if (!toolStripbtnRelatedQuery.DropDownItems.ContainsKey(rqp.billId.ToString()))
+                    {
+                        toolStripbtnRelatedQuery.DropDownItems.Add(RelatedMenuItem);
+                    }
+                }
+            }
+            base.LoadRelatedDataToDropDownItems();
+        }
 
         internal override void LoadDataToUI(object Entity)
         {
@@ -106,7 +129,7 @@ namespace RUINORERP.UI.PSI.PUR
                 purEntryReid = string.Empty;
                 entity.ActionStatus = ActionStatus.新增;
                 entity.DataStatus = (int)DataStatus.草稿;
-              
+
                 if (string.IsNullOrEmpty(entity.PurReEntryNo))
                 {
                     entity.PurReEntryNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.采购退货入库);
@@ -186,7 +209,7 @@ namespace RUINORERP.UI.PSI.PUR
                 }
                 else
                 {
-                   // MainForm.Instance.PrintInfoLog(entity.ActionStatus.GetName());
+                    // MainForm.Instance.PrintInfoLog(entity.ActionStatus.GetName());
                 }
 
             };
@@ -222,7 +245,7 @@ namespace RUINORERP.UI.PSI.PUR
                 ControlBindingHelper.ConfigureControlFilter<tb_PurReturnEntry, tb_PurEntryRe>(entity, txtPurEntryRe_ID, t => t.PurEntryReNo,
             f => f.PurEntryReNo, queryFilter, a => a.PurEntryRe_ID, b => b.PurEntryRe_ID, null, false);
 
-                base.InitRequiredToControl(MainForm.Instance.AppContext.GetRequiredService <tb_PurReturnEntryValidator> (), kryptonSplitContainer1.Panel1.Controls);
+                base.InitRequiredToControl(MainForm.Instance.AppContext.GetRequiredService<tb_PurReturnEntryValidator>(), kryptonSplitContainer1.Panel1.Controls);
                 //  base.InitEditItemToControl(entity, kryptonPanel1.Controls);
             }
 
@@ -281,9 +304,9 @@ namespace RUINORERP.UI.PSI.PUR
             listCols.SetCol_Summary<tb_PurReturnEntryDetail>(c => c.Quantity);
             listCols.SetCol_Summary<tb_PurReturnEntryDetail>(c => c.TaxAmount);
             listCols.SetCol_Summary<tb_PurReturnEntryDetail>(c => c.SubtotalTrPriceAmount);
-            
 
-            listCols.SetCol_Formula<tb_PurReturnEntryDetail>((a, b, c) => a.UnitPrice  * c.Quantity, c => c.SubtotalTrPriceAmount);
+
+            listCols.SetCol_Formula<tb_PurReturnEntryDetail>((a, b, c) => a.UnitPrice * c.Quantity, c => c.SubtotalTrPriceAmount);
             listCols.SetCol_Formula<tb_PurReturnEntryDetail>((a, b, c) => a.SubtotalTrPriceAmount / (1 + b.TaxRate) * c.TaxRate, d => d.TaxAmount);
 
 
@@ -310,7 +333,7 @@ namespace RUINORERP.UI.PSI.PUR
             sgd.HasRowHeader = true;
             sgh.InitGrid(grid1, sgd, true, nameof(tb_PurReturnEntryDetail));
             sgh.OnCalculateColumnValue += Sgh_OnCalculateColumnValue;
-            UIHelper.ControlMasterColumnsInvisible(CurMenuInfo,this);
+            UIHelper.ControlMasterColumnsInvisible(CurMenuInfo, this);
         }
 
 
@@ -451,7 +474,7 @@ namespace RUINORERP.UI.PSI.PUR
                     return;
                 }
                 purEntryReid = purEntryRe.PurEntryRe_ID.ToString();
-                
+
                 tb_PurReturnEntry entity = MainForm.Instance.mapper.Map<tb_PurReturnEntry>(purEntryRe);
                 List<tb_PurReturnEntryDetail> details = MainForm.Instance.mapper.Map<List<tb_PurReturnEntryDetail>>(purEntryRe.tb_PurEntryReDetails);
 

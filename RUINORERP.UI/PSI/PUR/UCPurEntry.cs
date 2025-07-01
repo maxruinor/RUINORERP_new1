@@ -84,7 +84,49 @@ namespace RUINORERP.UI.PSI.PUR
         }
 
         private PurEntryCoordinator _coordinator;
+        protected override void LoadRelatedDataToDropDownItems()
+        {
+                //加载关联的单据
+                if (base.EditEntity is tb_PurEntry purEntry)
+                {
+                    if (purEntry.PurOrder_ID.HasValue)
+                    {
+                        var rqp = new Model.CommonModel.RelatedQueryParameter();
+                        rqp.bizType = BizType.采购订单;
+                        rqp.billId = purEntry.PurOrder_ID.Value;
+                        ToolStripMenuItem RelatedMenuItem = new ToolStripMenuItem();
+                        RelatedMenuItem.Name = $"{rqp.billId}";
+                        RelatedMenuItem.Tag = rqp;
+                        RelatedMenuItem.Text = $"{rqp.bizType}:{purEntry.PurOrder_NO}";
+                        RelatedMenuItem.Click += base.MenuItem_Click;
+                        if (!toolStripbtnRelatedQuery.DropDownItems.ContainsKey(purEntry.PurOrder_ID.Value.ToString()))
+                        {
+                            toolStripbtnRelatedQuery.DropDownItems.Add(RelatedMenuItem);
+                        }
 
+                        if (purEntry.tb_PurEntryRes != null && purEntry.tb_PurEntryRes.Count > 0)
+                        {
+                            foreach (var item in purEntry.tb_PurEntryRes)
+                            {
+                                var rqpSub = new Model.CommonModel.RelatedQueryParameter();
+                                rqpSub.bizType = BizType.采购退货单;
+                                rqpSub.billId = item.PurEntryRe_ID;
+                                ToolStripMenuItem RelatedMenuItemSub = new ToolStripMenuItem();
+                                RelatedMenuItemSub.Name = $"{rqpSub.billId}";
+                                RelatedMenuItemSub.Tag = rqpSub;
+                                RelatedMenuItemSub.Text = $"{rqpSub.bizType}:{item.PurEntryReNo}";
+                                RelatedMenuItemSub.Click += base.MenuItem_Click;
+                                if (!toolStripbtnRelatedQuery.DropDownItems.ContainsKey(rqpSub.billId.ToString()))
+                                {
+                                    toolStripbtnRelatedQuery.DropDownItems.Add(RelatedMenuItemSub);
+                                }
+                            }
+
+                        }
+                    }
+                }
+                base.LoadRelatedDataToDropDownItems();
+            }
         public override void BindData(tb_PurEntry entity, ActionStatus actionStatus)
         {
             if (entity == null)
@@ -345,6 +387,10 @@ namespace RUINORERP.UI.PSI.PUR
             listCols.SetCol_ReadOnly<ProductSharePart>(c => c.Brand);
             listCols.SetCol_ReadOnly<ProductSharePart>(c => c.prop);
             listCols.SetCol_ReadOnly<ProductSharePart>(c => c.CNName);
+
+            //订单指定了仓库时。更新了 在途数量 所以这里不能修改了。要改前面订单也要改
+            listCols.SetCol_ReadOnly<tb_PurEntryDetail>(c => c.Location_ID);
+
 
             listCols.SetCol_Format<tb_PurEntryDetail>(c => c.FreightAllocationRules, CustomFormatType.EnumOptions, null, typeof(FreightAllocationRules));
             listCols.SetCol_Format<tb_PurEntryDetail>(c => c.TaxRate, CustomFormatType.PercentFormat);
@@ -627,6 +673,12 @@ namespace RUINORERP.UI.PSI.PUR
         string orderid = string.Empty;
 
         tb_PurOrder _purorder;
+
+
+        /// <summary>
+        /// 要统一起来。只做一个方法
+        /// </summary>
+        /// <param name="purOrderID"></param>
         private async void LoadPurOrder(long? purOrderID)
         {
             ButtonSpecAny bsa = (txtPurOrderNO as KryptonTextBox).ButtonSpecs.FirstOrDefault(c => c.UniqueName == "btnQuery");
@@ -660,7 +712,8 @@ namespace RUINORERP.UI.PSI.PUR
                 entity.ApprovalOpinions = "";
                 entity.Modified_at = null;
                 entity.Modified_by = null;
-
+                entity.PayStatus = purorder.PayStatus;
+                entity.Paytype_ID = purorder.Paytype_ID;
                 List<tb_PurEntryDetail> NewDetails = new List<tb_PurEntryDetail>();
                 List<string> tipsMsg = new List<string>();
                 for (global::System.Int32 i = 0; i < details.Count; i++)

@@ -300,10 +300,10 @@
             // 
             this.magicPictureBox1.AllowDrop = true;
             this.magicPictureBox1.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.magicPictureBox1.Location = new System.Drawing.Point(938, 148);
+            this.magicPictureBox1.Location = new System.Drawing.Point(927, 145);
             this.magicPictureBox1.Name = "magicPictureBox1";
             this.magicPictureBox1.RowImage = ((RUINORERP.Global.Model.DataRowImage)(resources.GetObject("magicPictureBox1.RowImage")));
-            this.magicPictureBox1.Size = new System.Drawing.Size(131, 68);
+            this.magicPictureBox1.Size = new System.Drawing.Size(178, 95);
             this.magicPictureBox1.TabIndex = 162;
             this.magicPictureBox1.TabStop = false;
             // 
@@ -316,7 +316,7 @@
             // 
             // lblApprovalResults
             // 
-            this.lblApprovalResults.Location = new System.Drawing.Point(865, 88);
+            this.lblApprovalResults.Location = new System.Drawing.Point(546, 91);
             this.lblApprovalResults.Name = "lblApprovalResults";
             this.lblApprovalResults.Size = new System.Drawing.Size(62, 20);
             this.lblApprovalResults.TabIndex = 159;
@@ -332,7 +332,7 @@
             // 
             // chkApprovalResults
             // 
-            this.chkApprovalResults.Location = new System.Drawing.Point(933, 88);
+            this.chkApprovalResults.Location = new System.Drawing.Point(614, 91);
             this.chkApprovalResults.Name = "chkApprovalResults";
             this.chkApprovalResults.Size = new System.Drawing.Size(19, 13);
             this.chkApprovalResults.TabIndex = 160;
@@ -343,12 +343,12 @@
             this.txtNotes.Location = new System.Drawing.Point(81, 148);
             this.txtNotes.Multiline = true;
             this.txtNotes.Name = "txtNotes";
-            this.txtNotes.Size = new System.Drawing.Size(817, 68);
+            this.txtNotes.Size = new System.Drawing.Size(715, 68);
             this.txtNotes.TabIndex = 142;
             // 
             // lblApprovalOpinions
             // 
-            this.lblApprovalOpinions.Location = new System.Drawing.Point(865, 63);
+            this.lblApprovalOpinions.Location = new System.Drawing.Point(859, 61);
             this.lblApprovalOpinions.Name = "lblApprovalOpinions";
             this.lblApprovalOpinions.Size = new System.Drawing.Size(62, 20);
             this.lblApprovalOpinions.TabIndex = 157;
@@ -364,10 +364,10 @@
             // 
             // txtApprovalOpinions
             // 
-            this.txtApprovalOpinions.Location = new System.Drawing.Point(934, 60);
+            this.txtApprovalOpinions.Location = new System.Drawing.Point(927, 61);
             this.txtApprovalOpinions.Multiline = true;
             this.txtApprovalOpinions.Name = "txtApprovalOpinions";
-            this.txtApprovalOpinions.Size = new System.Drawing.Size(131, 21);
+            this.txtApprovalOpinions.Size = new System.Drawing.Size(178, 78);
             this.txtApprovalOpinions.TabIndex = 158;
             // 
             // kryptonSplitContainer2
@@ -413,14 +413,14 @@
             // 
             // txtClaimlAmount
             // 
-            this.txtClaimlAmount.Location = new System.Drawing.Point(105, 22);
+            this.txtClaimlAmount.Location = new System.Drawing.Point(88, 19);
             this.txtClaimlAmount.Name = "txtClaimlAmount";
             this.txtClaimlAmount.Size = new System.Drawing.Size(121, 23);
             this.txtClaimlAmount.TabIndex = 144;
             // 
             // lblClaimlAmount
             // 
-            this.lblClaimlAmount.Location = new System.Drawing.Point(37, 26);
+            this.lblClaimlAmount.Location = new System.Drawing.Point(20, 23);
             this.lblClaimlAmount.Name = "lblClaimlAmount";
             this.lblClaimlAmount.Size = new System.Drawing.Size(62, 20);
             this.lblClaimlAmount.TabIndex = 143;
@@ -428,22 +428,22 @@
             // 
             // txtTaxAmount
             // 
-            this.txtTaxAmount.Location = new System.Drawing.Point(665, 19);
+            this.txtTaxAmount.Location = new System.Drawing.Point(648, 16);
             this.txtTaxAmount.Name = "txtTaxAmount";
             this.txtTaxAmount.Size = new System.Drawing.Size(121, 23);
             this.txtTaxAmount.TabIndex = 150;
             // 
             // txtCloseCaseOpinions
             // 
-            this.txtCloseCaseOpinions.Location = new System.Drawing.Point(990, 16);
+            this.txtCloseCaseOpinions.Location = new System.Drawing.Point(904, 16);
             this.txtCloseCaseOpinions.Multiline = true;
             this.txtCloseCaseOpinions.Name = "txtCloseCaseOpinions";
-            this.txtCloseCaseOpinions.Size = new System.Drawing.Size(131, 50);
+            this.txtCloseCaseOpinions.Size = new System.Drawing.Size(226, 50);
             this.txtCloseCaseOpinions.TabIndex = 132;
             // 
             // lblTaxAmount
             // 
-            this.lblTaxAmount.Location = new System.Drawing.Point(628, 24);
+            this.lblTaxAmount.Location = new System.Drawing.Point(611, 21);
             this.lblTaxAmount.Name = "lblTaxAmount";
             this.lblTaxAmount.Size = new System.Drawing.Size(36, 20);
             this.lblTaxAmount.TabIndex = 149;
@@ -451,7 +451,7 @@
             // 
             // lblstatus
             // 
-            this.lblstatus.Location = new System.Drawing.Point(921, 16);
+            this.lblstatus.Location = new System.Drawing.Point(836, 16);
             this.lblstatus.Name = "lblstatus";
             this.lblstatus.Size = new System.Drawing.Size(62, 20);
             this.lblstatus.TabIndex = 131;
@@ -459,14 +459,14 @@
             // 
             // txtUntaxedAmount
             // 
-            this.txtUntaxedAmount.Location = new System.Drawing.Point(374, 22);
+            this.txtUntaxedAmount.Location = new System.Drawing.Point(357, 19);
             this.txtUntaxedAmount.Name = "txtUntaxedAmount";
             this.txtUntaxedAmount.Size = new System.Drawing.Size(132, 23);
             this.txtUntaxedAmount.TabIndex = 154;
             // 
             // lblUntaxedAmount
             // 
-            this.lblUntaxedAmount.Location = new System.Drawing.Point(299, 22);
+            this.lblUntaxedAmount.Location = new System.Drawing.Point(282, 19);
             this.lblUntaxedAmount.Name = "lblUntaxedAmount";
             this.lblUntaxedAmount.Size = new System.Drawing.Size(75, 20);
             this.lblUntaxedAmount.TabIndex = 153;

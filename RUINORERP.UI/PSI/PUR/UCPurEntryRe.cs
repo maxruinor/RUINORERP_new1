@@ -43,6 +43,7 @@ using RUINORERP.UI.ToolForm;
 using RUINORERP.Business.Security;
 using RUINORERP.Global.EnumExt;
 using RUINORERP.UI.AdvancedUIModule;
+using RUINORERP.Model.CommonModel;
 
 
 namespace RUINORERP.UI.PSI.PUR
@@ -84,6 +85,52 @@ namespace RUINORERP.UI.PSI.PUR
             .AndIF(AuthorizeController.GetPurBizLimitedAuth(MainForm.Instance.AppContext) && !MainForm.Instance.AppContext.IsSuperUser, t => t.Employee_ID == MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID)//限制了销售只看到自己的客户,采购不限制
             .ToExpression();
             QueryConditionFilter.FilterLimitExpressions.Add(lambda);
+        }
+        protected override void LoadRelatedDataToDropDownItems()
+        {
+            if (base.EditEntity is tb_PurEntryRe  entryRe)
+            {
+                if (entryRe.PurEntryID.HasValue)
+                {
+                    RelatedQueryParameter rqp = new RelatedQueryParameter();
+                    rqp.bizType = BizType.采购入库单;
+                    rqp.billId = entryRe.PurEntryID.Value;
+                    rqp.billNo = entryRe.PurEntryNo;
+                    ToolStripMenuItem RelatedMenuItem = new ToolStripMenuItem();
+                    RelatedMenuItem.Name = $"{rqp.billId}";
+                    RelatedMenuItem.Tag = rqp;
+                    RelatedMenuItem.Text = $"{rqp.bizType}:{rqp.billNo}";
+                    RelatedMenuItem.Click += base.MenuItem_Click;
+                    if (!toolStripbtnRelatedQuery.DropDownItems.ContainsKey(rqp.billId.ToString()))
+                    {
+                        toolStripbtnRelatedQuery.DropDownItems.Add(RelatedMenuItem);
+                    }
+                }
+
+                if (entryRe.tb_PurReturnEntries != null && entryRe.tb_PurReturnEntries.Count > 0)
+                {
+                    foreach (var item in entryRe.tb_PurReturnEntries)
+                    {
+                        var rqpSub = new Model.CommonModel.RelatedQueryParameter();
+                        rqpSub.bizType = BizType.采购退货入库;
+                        rqpSub.billId = item.PurReEntry_ID;
+                        rqpSub.billNo = item.PurReEntryNo;
+                        ToolStripMenuItem RelatedMenuItem = new ToolStripMenuItem();
+                        RelatedMenuItem.Name = $"{rqpSub.billId}";
+                        RelatedMenuItem.Tag = rqpSub;
+                        RelatedMenuItem.Text = $"{rqpSub.bizType}:{rqpSub.billNo}";
+                        RelatedMenuItem.Click += base.MenuItem_Click;
+                        if (!toolStripbtnRelatedQuery.DropDownItems.ContainsKey(rqpSub.billId.ToString()))
+                        {
+                            toolStripbtnRelatedQuery.DropDownItems.Add(RelatedMenuItem);
+                        }
+                    }
+
+                }
+
+
+            }
+            base.LoadRelatedDataToDropDownItems();
         }
         public override void BindData(tb_PurEntryRe entity, ActionStatus actionStatus = ActionStatus.无操作)
         {

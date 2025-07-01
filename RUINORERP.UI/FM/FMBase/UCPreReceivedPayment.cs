@@ -57,7 +57,29 @@ namespace RUINORERP.UI.FM
             base.AddExcludeMenuList(MenuItemEnums.反结案);
             base.AddExcludeMenuList(MenuItemEnums.结案);
         }
+        protected override void LoadRelatedDataToDropDownItems()
+        {
+            if (base.EditEntity is tb_FM_PreReceivedPayment preReceivedPayment)
+            {
+                if (preReceivedPayment.SourceBillId.HasValue)
+                {
 
+                    RelatedQueryParameter rqp = new RelatedQueryParameter();
+                    rqp.bizType = (BizType)preReceivedPayment.SourceBizType;
+                    rqp.billId = preReceivedPayment.SourceBillId.Value;
+                    ToolStripMenuItem RelatedMenuItem = new ToolStripMenuItem();
+                    RelatedMenuItem.Name = $"{rqp.billId}";
+                    RelatedMenuItem.Tag = rqp;
+                    RelatedMenuItem.Text = $"{rqp.bizType}:{preReceivedPayment.SourceBillNo}";
+                    RelatedMenuItem.Click += base.MenuItem_Click;
+                    if (!toolStripbtnRelatedQuery.DropDownItems.ContainsKey(preReceivedPayment.SourceBillId.Value.ToString()))
+                    {
+                        toolStripbtnRelatedQuery.DropDownItems.Add(RelatedMenuItem);
+                    }
+                }
+            }
+            base.LoadRelatedDataToDropDownItems();
+        }
         /// <summary>
         /// 收付款方式决定对应的菜单功能
         /// </summary>
@@ -145,7 +167,7 @@ namespace RUINORERP.UI.FM
                 entity.ActionStatus = ActionStatus.新增;
                 entity.PrePayDate = System.DateTime.Now;
                 entity.PrePaymentStatus = (int)PrePaymentStatus.草稿;
-                if (string.IsNullOrEmpty(entity.PreRPNO ))
+                if (string.IsNullOrEmpty(entity.PreRPNO))
                 {
                     if (PaymentType == ReceivePaymentType.付款)
                     {
@@ -156,7 +178,7 @@ namespace RUINORERP.UI.FM
                         entity.PreRPNO = BizCodeGenerator.Instance.GetBizBillNo(BizType.预收款单);
                     }
                 }
-                
+
                 //entity.InvoiceDate = System.DateTime.Now;
                 entity.Employee_ID = MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID.Value;
                 //清空

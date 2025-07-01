@@ -417,7 +417,7 @@
             this.lblCustomerVendor_ID.Name = "lblCustomerVendor_ID";
             this.lblCustomerVendor_ID.Size = new System.Drawing.Size(36, 20);
             this.lblCustomerVendor_ID.TabIndex = 98;
-            this.lblCustomerVendor_ID.Values.Text = "客户";
+            this.lblCustomerVendor_ID.Values.Text = "退货客户";
             // 
             // cmbCustomerVendor_ID
             // 

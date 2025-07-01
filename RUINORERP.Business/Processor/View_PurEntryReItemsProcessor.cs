@@ -41,7 +41,7 @@ namespace RUINORERP.Business.Processor
    
             queryFilter.SetQueryField<View_PurEntryReItems>(c => c.PurEntryNo);
             queryFilter.SetQueryField<View_PurEntryReItems>(c => c.ReturnDate);
-
+            queryFilter.SetQueryField<View_PurEntryReItems>(c => c.PurEntryReNo);
             var lambdacv = Expressionable.Create<tb_CustomerVendor>()
              .And(t => t.isdeleted == false)
              .And(t => t.IsVendor == true)

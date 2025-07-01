@@ -361,7 +361,7 @@ namespace RUINORERP.UI.BaseForm
                                 foreach (var sub in subItemDr.DropDownItems)
                                 {
                                     ToolStripMenuItem subStripMenuItem = sub as ToolStripMenuItem;
-                                    UIHelper. ControlButton<ToolStripMenuItem>(CurMenuInfo,subStripMenuItem);
+                                    UIHelper.ControlButton<ToolStripMenuItem>(CurMenuInfo, subStripMenuItem);
                                     subStripMenuItem.Click += Item_Click;
                                 }
 
@@ -487,7 +487,7 @@ namespace RUINORERP.UI.BaseForm
             //UIHelper.ControlColumnsInvisible(CurMenuInfo, _UCBillChildQuery_Related.InvisibleCols, _UCBillChildQuery_Related.DefaultHideCols);
         }
 
- 
+
 
 
 
@@ -1022,7 +1022,7 @@ namespace RUINORERP.UI.BaseForm
                     {
                         MainForm.Instance.logger.LogInformation($"删除:{typeof(T).Name}，主键值：{PKValue.ToString()} ");
                     }
-                    MainForm.Instance.AuditLogHelper.CreateAuditLog("删除", CurMenuInfo.CaptionCN);
+                    MainForm.Instance.AuditLogHelper.CreateAuditLog<T>("删除", loc);
                     //提示服务器开启推送工作流
                     OriginalData beatDataDel = ClientDataBuilder.BaseInfoChangeBuilder(typeof(T).Name);
                     MainForm.Instance.ecs.AddSendData(beatDataDel);
@@ -1096,7 +1096,7 @@ namespace RUINORERP.UI.BaseForm
                             {
                                 MainForm.Instance.logger.LogInformation($"删除:{typeof(T).Name}，主键值：{PKValue.ToString()} ");
                             }
-                            MainForm.Instance.AuditLogHelper.CreateAuditLog("删除", CurMenuInfo.CaptionCN);
+                            MainForm.Instance.AuditLogHelper.CreateAuditLog<T>("删除", loc);
                         }
                     }
                 }
@@ -1761,7 +1761,7 @@ namespace RUINORERP.UI.BaseForm
             //这里是否要用保存列表来处理
             foreach (var item in bindingSourceList.List)
             {
-               
+
                 var entity = item as BaseEntity;
                 switch (entity.ActionStatus)
                 {

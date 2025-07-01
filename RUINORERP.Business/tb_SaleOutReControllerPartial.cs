@@ -134,7 +134,7 @@ namespace RUINORERP.Business
                             && c.Location_ID == child.Location_ID
                             ).FirstOrDefault();
                         }
-                        //如果权退款则数量不能加回？
+                        //如果仅退款则数量不能加回？
                         if (returnDetail == null || entity.RefundOnly)
                         {
                             continue;
@@ -742,7 +742,7 @@ namespace RUINORERP.Business
             catch (Exception ex)
             {
                 _unitOfWorkManage.RollbackTran();
-                _logger.Error(ex);
+                _logger.Error(ex,$"销售退货单：{entity.SaleOut_NO}");
                 rrs.Succeeded = false;
                 rrs.ErrorMsg = ex.Message;
                 return rrs;

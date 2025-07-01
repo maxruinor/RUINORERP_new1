@@ -151,7 +151,48 @@ namespace RUINORERP.UI.PSI.SAL
             MainForm.Instance.AuditLogHelper.CreateAuditLog<tb_SaleOrder>("付款调整", EditEntity, $"结果:{(rr.Succeeded ? "成功" : "失败")},{rr.ErrorMsg}");
         }
 
+        protected override void LoadRelatedDataToDropDownItems()
+        {
+            if (base.EditEntity is tb_SaleOrder saleOrder)
+            {
+                if (saleOrder.RefBillID.HasValue)
+                {
+                    RelatedQueryParameter rqp = new RelatedQueryParameter();
+                    rqp.bizType = (BizType)saleOrder.RefBizType;
+                    rqp.billId = saleOrder.RefBillID.Value;
+                    ToolStripMenuItem RelatedMenuItem = new ToolStripMenuItem();
+                    RelatedMenuItem.Name = $"{rqp.billId}";
+                    RelatedMenuItem.Tag = rqp;
+                    RelatedMenuItem.Text = $"{rqp.bizType}:{saleOrder.RefNO}";
+                    RelatedMenuItem.Click += base.MenuItem_Click;
+                    if (!toolStripbtnRelatedQuery.DropDownItems.ContainsKey(saleOrder.RefBillID.Value.ToString()))
+                    {
+                        toolStripbtnRelatedQuery.DropDownItems.Add(RelatedMenuItem);
+                    }
+                }
 
+                if (saleOrder.tb_SaleOuts != null && saleOrder.tb_SaleOuts.Count > 0)
+                {
+                    foreach (var item in saleOrder.tb_SaleOuts)
+                    {
+                        RelatedQueryParameter rqp = new RelatedQueryParameter();
+                        rqp.bizType = BizType.销售出库单;
+                        rqp.billId = item.SaleOut_MainID;
+                        ToolStripMenuItem RelatedMenuItem = new ToolStripMenuItem();
+                        RelatedMenuItem.Name = $"{rqp.billId}";
+                        RelatedMenuItem.Tag = rqp;
+                        RelatedMenuItem.Text = $"{rqp.bizType}:{item.SaleOutNo}";
+                        RelatedMenuItem.Click += base.MenuItem_Click;
+                        if (!toolStripbtnRelatedQuery.DropDownItems.ContainsKey(item.SaleOut_MainID.ToString()))
+                        {
+                            toolStripbtnRelatedQuery.DropDownItems.Add(RelatedMenuItem);
+                        }
+                    }
+                }
+
+            }
+            base.LoadRelatedDataToDropDownItems();
+        }
 
         public override void BindData(tb_SaleOrder entityPara, ActionStatus actionStatus)
         {
@@ -251,8 +292,15 @@ namespace RUINORERP.UI.PSI.SAL
             {
                 DataBindingHelper.BindData4Cmb<tb_ProjectGroup>(entity, k => k.ProjectGroup_ID, v => v.ProjectGroupName, cmbProjectGroup);
             }
+            if (entity.DataStatus >= (int)DataStatus.确认)
+            {
+                DataBindingHelper.BindData4CmbByEnum<tb_SaleOrder, PayStatus>(entity, k => k.PayStatus, cmbPayStatus, false);
+            }
+            else
+            {
+                DataBindingHelper.BindData4CmbByEnum<tb_SaleOrder, PayStatus>(entity, k => k.PayStatus, cmbPayStatus, false, PayStatus.全部付款, PayStatus.部分付款);
+            }
 
-            DataBindingHelper.BindData4CmbByEnum<tb_SaleOrder, PayStatus>(entity, k => k.PayStatus, cmbPayStatus, false , PayStatus.全部付款, PayStatus.部分付款);
 
             DataBindingHelper.BindData4TextBox<tb_SaleOrder>(entity, t => t.FreightIncome.ToString(), txtFreightIncome, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4TextBox<tb_SaleOrder>(entity, t => t.ForeignFreightIncome.ToString(), txtForeignFreightIncome, BindDataType4TextBox.Money, false);
@@ -1600,7 +1648,7 @@ using var binder = new UIStateBinder(..., customEvaluator);
 
 
         #endregion
-
+ 
         private void cmbPayStatus_SelectedIndexChanged(object sender, EventArgs e)
         {
 

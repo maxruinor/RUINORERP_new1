@@ -69,7 +69,28 @@ namespace RUINORERP.UI.FM
             base.AddExcludeMenuList(MenuItemEnums.反结案);
             base.AddExcludeMenuList(MenuItemEnums.结案);
         }
-
+        protected override void LoadRelatedDataToDropDownItems()
+        {
+            if (base.EditEntity is tb_FM_ReceivablePayable  receivablePayable)
+            {
+                if (receivablePayable.SourceBillId.HasValue)
+                {
+                    RelatedQueryParameter rqp = new RelatedQueryParameter();
+                    rqp.bizType = (BizType)receivablePayable.SourceBizType;
+                    rqp.billId = receivablePayable.SourceBillId.Value;
+                    ToolStripMenuItem RelatedMenuItem = new ToolStripMenuItem();
+                    RelatedMenuItem.Name = $"{rqp.billId}";
+                    RelatedMenuItem.Tag = rqp;
+                    RelatedMenuItem.Text = $"{rqp.bizType}:{receivablePayable.SourceBillNo}";
+                    RelatedMenuItem.Click += base.MenuItem_Click;
+                    if (!toolStripbtnRelatedQuery.DropDownItems.ContainsKey(receivablePayable.SourceBillId.Value.ToString()))
+                    {
+                        toolStripbtnRelatedQuery.DropDownItems.Add(RelatedMenuItem);
+                    }
+                }
+            }
+            base.LoadRelatedDataToDropDownItems();
+        }
         /// <summary>
         /// 收付款方式决定对应的菜单功能
         /// </summary>
@@ -98,7 +119,7 @@ namespace RUINORERP.UI.FM
 
             EditEntity = entity;
             if (entity.ARAPId > 0)
-            {
+                {
                 if (entity.Currency_ID == MainForm.Instance.AppContext.BaseCurrency.Currency_ID)
                 {
                     //隐藏外币相关

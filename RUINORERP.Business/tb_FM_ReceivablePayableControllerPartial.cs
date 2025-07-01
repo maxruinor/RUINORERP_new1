@@ -236,11 +236,9 @@ namespace RUINORERP.Business
                 {
                     entity.ARAPStatus = (int)ARAPStatus.部分支付;
                 }
-
-                //entity.ARAPStatus = (int)ARAPStatus.待支付;
                 entity.ApprovalStatus = (int)ApprovalStatus.已审核;
                 entity.ApprovalResults = true;
-
+                entity.ApprovalStatus = (int)ApprovalStatus.已审核;
                 BusinessHelper.Instance.ApproverEntity(entity);
                 //只更新指定列
                 var result = await _unitOfWorkManage.GetDbClient().Updateable(entity).UpdateColumns(it => new
@@ -254,7 +252,12 @@ namespace RUINORERP.Business
                     it.ApprovalResults,
                     it.ApprovalOpinions
                 }).ExecuteCommandAsync();
-
+                if (result <= 0)
+                {
+                    _unitOfWorkManage.RollbackTran();
+                    rmrs.ErrorMsg = "更新结果为零，请确保数据完整。请检查当前单据数据是否存在。";
+                    return rmrs;
+                }
                 // 注意信息的完整性
                 _unitOfWorkManage.CommitTran();
                 rmrs.Succeeded = true;
@@ -1890,9 +1893,9 @@ namespace RUINORERP.Business
                 rs.Succeeded = false;
                 return rs;
             }
-
         }
         */
+
         public async override Task<List<T>> GetPrintDataSource(long ID)
         {
             List<tb_FM_ReceivablePayable> list = await _appContext.Db.CopyNew().Queryable<tb_FM_ReceivablePayable>()
@@ -1903,7 +1906,8 @@ namespace RUINORERP.Business
                             .Includes(a => a.tb_department)
                             .Includes(a => a.tb_projectgroup)
                             .Includes(a => a.tb_customervendor)
-                            .Includes(a => a.tb_FM_ReceivablePayableDetails)
+                             .AsNavQueryable()//加这个前面,超过三级在前面加这一行，并且第四级无VS智能提示，但是可以用
+                              .Includes(a => a.tb_FM_ReceivablePayableDetails, b => b.tb_proddetail, c => c.tb_prod, d => d.tb_unit)
                             .ToListAsync();
             return list as List<T>;
         }

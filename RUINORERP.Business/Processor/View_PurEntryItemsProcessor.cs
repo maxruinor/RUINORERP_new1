@@ -50,7 +50,7 @@ namespace RUINORERP.Business.Processor
 
             queryFilter.SetQueryField<View_PurEntryItems>(c => c.PurEntryNo);
             queryFilter.SetQueryField<View_PurEntryItems>(c => c.EntryDate);
-
+            queryFilter.SetQueryField<View_PurEntryItems>(c => c.PurOrder_NO);
             var lambdacv = Expressionable.Create<tb_CustomerVendor>()
              .And(t => t.isdeleted == false)
     
@@ -67,7 +67,7 @@ namespace RUINORERP.Business.Processor
             queryFilter.SetQueryField<View_PurEntryItems>(c => c.DepartmentID,  typeof(tb_Department));
             queryFilter.SetQueryField<View_PurEntryItems>(c => c.ProdDetailID,  typeof(View_ProdDetail));
             queryFilter.SetQueryField<View_PurEntryItems>(c => c.property);
-
+          
             queryFilter.SetQueryField<View_PurEntryItems>(c => c.CNName);
             queryFilter.SetQueryField<View_PurEntryItems>(c => c.SKU);
             queryFilter.SetQueryField<View_PurEntryItems>(c => c.Model);

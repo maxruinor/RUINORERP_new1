@@ -47,6 +47,7 @@ using RUINORERP.Business.Processor;
 using RUINORERP.Business.Security;
 using System.Configuration;
 using RUINORERP.UI.AdvancedUIModule;
+using RUINORERP.Model.CommonModel;
 
 namespace RUINORERP.UI.FM
 {
@@ -61,7 +62,28 @@ namespace RUINORERP.UI.FM
             InitializeComponent();
             AddPublicEntityObject(typeof(ProductSharePart));
         }
-      
+        protected override void LoadRelatedDataToDropDownItems()
+        {
+            if (base.EditEntity is tb_FM_PriceAdjustment  priceAdjustment)
+            {
+                if (priceAdjustment.SourceBillId.HasValue)
+                {
+                    RelatedQueryParameter rqp = new RelatedQueryParameter();
+                    rqp.bizType = (BizType)priceAdjustment.SourceBizType;
+                    rqp.billId = priceAdjustment.SourceBillId.Value;
+                    ToolStripMenuItem RelatedMenuItem = new ToolStripMenuItem();
+                    RelatedMenuItem.Name = $"{rqp.billId}";
+                    RelatedMenuItem.Tag = rqp;
+                    RelatedMenuItem.Text = $"{rqp.bizType}:{priceAdjustment.SourceBillNo}";
+                    RelatedMenuItem.Click += base.MenuItem_Click;
+                    if (!toolStripbtnRelatedQuery.DropDownItems.ContainsKey(priceAdjustment.SourceBillId.Value.ToString()))
+                    {
+                        toolStripbtnRelatedQuery.DropDownItems.Add(RelatedMenuItem);
+                    }
+                }
+            }
+            base.LoadRelatedDataToDropDownItems();
+        }
         /// <summary>
         /// 收付款方式决定对应的菜单功能
         /// </summary>

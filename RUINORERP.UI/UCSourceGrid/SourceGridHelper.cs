@@ -512,7 +512,7 @@ namespace RUINORERP.UI.UCSourceGrid
                 //将行的数据设置到每个格子中显示出来
                 #region 优化
 
-                
+
 
                 //公共部分
                 var prodetailID = ReflectionHelper.GetPropertyValue(detail, key);
@@ -888,6 +888,7 @@ namespace RUINORERP.UI.UCSourceGrid
                     if (obj != null && obj.ToString() != "System.Object")
                     {
                         _DisplayText = obj.ToString();
+                        return _DisplayText;
                     }
                 }
             }
@@ -1385,6 +1386,12 @@ namespace RUINORERP.UI.UCSourceGrid
 
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="grid"></param>
+        /// <param name="define"></param>
+        /// <param name="RowReadonly">整行只读？</param>
         public void AddRow(SourceGrid.Grid grid, SourceGridDefine define, bool RowReadonly)
         {
             int row = grid.Rows.Count - 1;
@@ -1777,11 +1784,15 @@ namespace RUINORERP.UI.UCSourceGrid
                     SourceGrid.Cells.Cell c = new SourceGrid.Cells.Cell(null);
                     if (!RowReadonly)
                     {
+                        c = new SourceGrid.Cells.Cell(null, define[i].EditorForColumn);
                         //值
                         if (!define[i].ReadOnly)
                         {
                             define[i].EditorForColumn.EnableEdit = RowReadonly;
-                            c = new SourceGrid.Cells.Cell(null, define[i].EditorForColumn);
+                        }
+                        else
+                        {
+
                         }
                     }
 
@@ -2123,8 +2134,15 @@ namespace RUINORERP.UI.UCSourceGrid
                     }
                     else
                     {
-                        grid[r, c].Editor = null;
-                        //grid[r, c].Editor.EnableEdit = false;
+                        //grid[r, c].Editor = null;
+                        if (grid[r, c].Editor == null)
+                        {
+                            grid[r, c].Editor = newdefind.EditorForColumn;
+                        }
+                        if (grid[r, c].Editor != null)
+                        {
+                            grid[r, c].Editor.EnableEdit = false;
+                        }
                     }
 
                 }
@@ -3279,7 +3297,8 @@ namespace RUINORERP.UI.UCSourceGrid
 
             if (dci.ReadOnly)
             {
-                _editor = null;
+                //_editor = null;
+                _editor.EnableEdit = false;
             }
             dci.ParentGridDefine.ColEditors.Add(new KeyValuePair<string, EditorBase>(dci.ColName, _editor));
             dci.EditorForColumn = _editor;

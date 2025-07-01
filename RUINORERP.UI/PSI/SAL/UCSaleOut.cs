@@ -82,7 +82,49 @@ namespace RUINORERP.UI.PSI.SAL
 
         }
 
+        protected override void LoadRelatedDataToDropDownItems()
+        {
+            //加载关联的单据
+            if (base.EditEntity is tb_SaleOut saleOut)
+            {
+                if (saleOut.SOrder_ID.HasValue)
+                {
+                    var rqp = new Model.CommonModel.RelatedQueryParameter();
+                    rqp.bizType = BizType.销售订单;
+                    rqp.billId = saleOut.SOrder_ID.Value;
+                    ToolStripMenuItem RelatedMenuItem = new ToolStripMenuItem();
+                    RelatedMenuItem.Name = $"{rqp.billId}";
+                    RelatedMenuItem.Tag = rqp;
+                    RelatedMenuItem.Text = $"{rqp.bizType}:{saleOut.SaleOrderNo}";
+                    RelatedMenuItem.Click += base.MenuItem_Click;
+                    if (!toolStripbtnRelatedQuery.DropDownItems.ContainsKey(saleOut.SOrder_ID.Value.ToString()))
+                    {
+                        toolStripbtnRelatedQuery.DropDownItems.Add(RelatedMenuItem);
+                    }
 
+                    if (saleOut.tb_SaleOutRes != null && saleOut.tb_SaleOutRes.Count > 0)
+                    {
+                        foreach (var item in saleOut.tb_SaleOutRes)
+                        {
+                            var rqpSub = new Model.CommonModel.RelatedQueryParameter();
+                            rqpSub.bizType = BizType.销售退回单;
+                            rqpSub.billId = item.SaleOutRe_ID;
+                            ToolStripMenuItem RelatedMenuItemSub = new ToolStripMenuItem();
+                            RelatedMenuItemSub.Name = $"{rqpSub.billId}";
+                            RelatedMenuItemSub.Tag = rqpSub;
+                            RelatedMenuItemSub.Text = $"{rqpSub.bizType}:{item.ReturnNo}";
+                            RelatedMenuItemSub.Click += base.MenuItem_Click;
+                            if (!toolStripbtnRelatedQuery.DropDownItems.ContainsKey(rqpSub.billId.ToString()))
+                            {
+                                toolStripbtnRelatedQuery.DropDownItems.Add(RelatedMenuItemSub);
+                            }
+                        }
+                        
+                    }
+                }
+            }
+            base.LoadRelatedDataToDropDownItems();
+        }
         public override void BindData(tb_SaleOut entity, ActionStatus actionStatus)
         {
             if (entity == null)
@@ -478,6 +520,8 @@ namespace RUINORERP.UI.PSI.SAL
             }
             listCols.SetCol_ReadOnly<tb_SaleOutDetail>(c => c.SubtotalCostAmount);
 
+            //订单指定了仓库时。更新了 在途 拟销 等 数量 所以这里不能修改了。要改前面订单也要改
+            listCols.SetCol_ReadOnly<tb_SaleOutDetail>(c => c.Location_ID);
 
             UIHelper.ControlChildColumnsInvisible(CurMenuInfo, listCols);
 

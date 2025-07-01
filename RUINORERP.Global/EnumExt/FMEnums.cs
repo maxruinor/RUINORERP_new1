@@ -51,7 +51,7 @@ namespace RUINORERP.Global.EnumExt
         [Description("待审核")]
         待审核 = 2,
 
-        [Description("已生效")]
+        [Description("已审核")]
         已生效 = 3,  // 审核通过后状态
 
         [Description("待核销")]

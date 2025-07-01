@@ -125,10 +125,10 @@ namespace RUINORERP.Model
 
         private int _Quantity= ((0));
         /// <summary>
-        /// 数量
+        /// 退货数量
         /// </summary>
-        [AdvQueryAttribute(ColName = "Quantity",ColDesc = "数量")] 
-        [SugarColumn(ColumnDataType = "int", SqlParameterDbType ="Int32",  ColumnName = "Quantity" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "数量" )]
+        [AdvQueryAttribute(ColName = "Quantity",ColDesc = "退货数量")] 
+        [SugarColumn(ColumnDataType = "int", SqlParameterDbType ="Int32",  ColumnName = "Quantity" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "退货数量")]
         public int Quantity
         { 
             get{return _Quantity;}
@@ -139,10 +139,10 @@ namespace RUINORERP.Model
 
         private int _DeliveredQuantity= ((0));
         /// <summary>
-        /// 已交数量
+        /// 交回数量
         /// </summary>
-        [AdvQueryAttribute(ColName = "DeliveredQuantity",ColDesc = "已交数量")] 
-        [SugarColumn(ColumnDataType = "int", SqlParameterDbType ="Int32",  ColumnName = "DeliveredQuantity" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "已交数量" )]
+        [AdvQueryAttribute(ColName = "DeliveredQuantity",ColDesc = "交回数量")] 
+        [SugarColumn(ColumnDataType = "int", SqlParameterDbType ="Int32",  ColumnName = "DeliveredQuantity" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "交回数量")]
         public int DeliveredQuantity
         { 
             get{return _DeliveredQuantity;}

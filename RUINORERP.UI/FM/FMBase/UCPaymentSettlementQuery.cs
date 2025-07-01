@@ -111,7 +111,7 @@ namespace RUINORERP.UI.FM
             base.MasterInvisibleCols.Add(c => c.SourceBillId);
             base.MasterInvisibleCols.Add(c => c.TargetBillId);
             base.MasterInvisibleCols.Add(c => c.ReceivePaymentType);
-
+            
             //base.ChildInvisibleCols.Add(c => c.SubtotalCostAmount);
         }
 

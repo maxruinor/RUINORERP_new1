@@ -78,6 +78,8 @@ using NPOI.POIFS.Crypt.Dsig;
 using RUINORERP.Model.Base;
 using System.Windows.Documents;
 using RUINORERP.UI.Monitoring.Auditing;
+using RUINORERP.UI.FM;
+using RUINORERP.UI.FM.FMBase;
 
 namespace RUINORERP.UI.BaseForm
 {
@@ -157,14 +159,13 @@ namespace RUINORERP.UI.BaseForm
         public BaseBillEditGeneric()
         {
             InitializeComponent();
-
             if (System.ComponentModel.LicenseManager.UsageMode != System.ComponentModel.LicenseUsageMode.Designtime)
             {
                 AddExcludeMenuList();
                 if (!this.DesignMode)
                 {
                     frm = new frmFormProperty();
-            
+
                     this.OnBindDataToUIEvent += BindData;
 
                     KryptonButton button保存当前单据 = new KryptonButton();
@@ -219,10 +220,9 @@ namespace RUINORERP.UI.BaseForm
                     CurrentBizType = mapper.GetBizType(typeof(T).Name);
                     CurrentBizTypeName = CurrentBizType.ToString();
                 }
+                menuPowerHelper = Startup.GetFromFac<MenuPowerHelper>();
             }
         }
-
-
 
         private async void button录入数据预设_Click(object sender, EventArgs e)
         {
@@ -351,14 +351,8 @@ namespace RUINORERP.UI.BaseForm
         public virtual void BindData(T entity, ActionStatus actionStatus = ActionStatus.无操作)
         {
 
-            //加载关联的单据
-            //if (entity != null)
-            //{
-            //    ToolStripMenuItem menuItem = new ToolStripMenuItem();
-            //    menuItem.Name = "加载最新数据";
-            //    toolStripbtnRelatedQuery.DropDownItems.Add(menuItem);
-            //}
 
+            LoadRelatedDataToDropDownItems();
             if (toolStripbtnRelatedQuery.DropDownItems.Count > 0)
             {
                 toolStripbtnRelatedQuery.Visible = true;
@@ -936,7 +930,7 @@ namespace RUINORERP.UI.BaseForm
         protected virtual void ToolBarEnabledControl(BaseEntity entity)
         {
             if (entity == null) return;
-
+            entity.HasChanged = false;
             // 状态检测器
             var statusDetector = new StatusDetector(entity);
 
@@ -945,7 +939,7 @@ namespace RUINORERP.UI.BaseForm
             //toolStripBtnCancel.Visible = statusDetector.CanCancel;
             toolStripbtnModify.Enabled = statusDetector.IsEditable;
             toolStripbtnDelete.Enabled = statusDetector.IsEditable;
-            toolStripButtonSave.Enabled = statusDetector.IsEditable;
+            toolStripButtonSave.Enabled = entity.HasChanged;
 
             // 特定状态按钮
             toolStripbtnSubmit.Enabled = statusDetector.CanSubmit;
@@ -1846,7 +1840,180 @@ namespace RUINORERP.UI.BaseForm
 
         }
 
+        MenuPowerHelper menuPowerHelper = null;
+        public async void MenuItem_Click(object sender, EventArgs e)
+        {
+            if (sender is ToolStripMenuItem menuItem)
+            {
+                if (menuItem.Tag is RelatedQueryParameter parameter)
+                {
+                    if (parameter.bizType == BizType.应付款单 || parameter.bizType == BizType.应收款单)
+                    {
+                        var RelatedBillMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble
+                        && m.EntityName == typeof(tb_FM_ReceivablePayable).Name
+                        && m.BIBizBaseForm == nameof(UCReceivablePayable)
+                        && m.MenuName.Contains(parameter.bizType.ToString())
+                        ).FirstOrDefault();
+                        if (RelatedBillMenuInfo != null)
+                        {
+                            var controller = Startup.GetFromFacByName<BaseController<tb_FM_ReceivablePayable>>(typeof(tb_FM_ReceivablePayable).Name + "Controller");
+                            tb_FM_ReceivablePayable entity = await controller.BaseQueryByIdNavAsync(parameter.billId);
+                            //要把单据信息传过去
+                            menuPowerHelper.ExecuteEvents(RelatedBillMenuInfo, entity);
+                        }
+                    }
 
+                    if (parameter.bizType == BizType.预付款单 || parameter.bizType == BizType.预收款单)
+                    {
+                        var RelatedBillMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble
+                        && m.EntityName == typeof(tb_FM_PreReceivedPayment).Name
+                        && m.BIBizBaseForm == nameof(UCPreReceivedPayment)
+                        && m.MenuName.Contains(parameter.bizType.ToString())
+                        ).FirstOrDefault();
+                        if (RelatedBillMenuInfo != null)
+                        {
+                            var controller = Startup.GetFromFacByName<BaseController<tb_FM_PreReceivedPayment>>(typeof(tb_FM_PreReceivedPayment).Name + "Controller");
+                            tb_FM_PreReceivedPayment entity = await controller.BaseQueryByIdNavAsync(parameter.billId);
+                            //要把单据信息传过去
+                            menuPowerHelper.ExecuteEvents(RelatedBillMenuInfo, entity);
+                        }
+                    }
+                    if (parameter.bizType == BizType.其他费用收入 || parameter.bizType == BizType.其他费用支出)
+                    {
+                        var RelatedBillMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble
+                        && m.EntityName == typeof(tb_FM_OtherExpense).Name
+                        && m.BIBizBaseForm == nameof(UCOtherExpense)
+                        && m.MenuName.Contains(parameter.bizType.ToString())
+                        ).FirstOrDefault();
+                        if (RelatedBillMenuInfo != null)
+                        {
+                            var controller = Startup.GetFromFacByName<BaseController<tb_FM_OtherExpense>>(typeof(tb_FM_OtherExpense).Name + "Controller");
+                            tb_FM_OtherExpense entity = await controller.BaseQueryByIdNavAsync(parameter.billId);
+                            //要把单据信息传过去
+                            menuPowerHelper.ExecuteEvents(RelatedBillMenuInfo, entity);
+                        }
+                    }
+                    if (parameter.bizType == BizType.采购价格调整单 || parameter.bizType == BizType.销售价格调整单)
+                    {
+                        var RelatedBillMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble
+                        && m.EntityName == typeof(tb_FM_PriceAdjustment).Name
+                        && m.BIBizBaseForm == nameof(UCPriceAdjustment)
+                        && m.MenuName.Contains(parameter.bizType.ToString())
+                        ).FirstOrDefault();
+                        if (RelatedBillMenuInfo != null)
+                        {
+                            var controller = Startup.GetFromFacByName<BaseController<tb_FM_PriceAdjustment>>(typeof(tb_FM_PriceAdjustment).Name + "Controller");
+                            tb_FM_PriceAdjustment entity = await controller.BaseQueryByIdNavAsync(parameter.billId);
+                            //要把单据信息传过去
+                            menuPowerHelper.ExecuteEvents(RelatedBillMenuInfo, entity);
+                        }
+                    }
+
+                    if (parameter.bizType == BizType.采购订单)
+                    {
+                        var RelatedBillMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble
+                        && m.EntityName == typeof(tb_PurOrder).Name
+                        && m.MenuName.Contains(parameter.bizType.ToString())
+                        ).FirstOrDefault();
+                        if (RelatedBillMenuInfo != null)
+                        {
+                            var controller = Startup.GetFromFacByName<BaseController<tb_PurOrder>>(typeof(tb_PurOrder).Name + "Controller");
+                            tb_PurOrder entity = await controller.BaseQueryByIdNavAsync(parameter.billId);
+                            //要把单据信息传过去
+                            menuPowerHelper.ExecuteEvents(RelatedBillMenuInfo, entity);
+                        }
+                    }
+
+                    if (parameter.bizType == BizType.采购入库单)
+                    {
+                        var RelatedBillMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble
+                        && m.EntityName == typeof(tb_PurEntry).Name
+                        && m.MenuName.Contains(parameter.bizType.ToString())
+                        ).FirstOrDefault();
+                        if (RelatedBillMenuInfo != null)
+                        {
+                            var controller = Startup.GetFromFacByName<BaseController<tb_PurEntry>>(typeof(tb_PurEntry).Name + "Controller");
+                            tb_PurEntry entity = await controller.BaseQueryByIdNavAsync(parameter.billId);
+                            //要把单据信息传过去
+                            menuPowerHelper.ExecuteEvents(RelatedBillMenuInfo, entity);
+                        }
+                    }
+                    if (parameter.bizType == BizType.采购退货单)
+                    {
+                        var RelatedBillMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble
+                        && m.EntityName == typeof(tb_PurEntryRe).Name
+                        && m.MenuName.Contains(parameter.bizType.ToString())
+                        ).FirstOrDefault();
+                        if (RelatedBillMenuInfo != null)
+                        {
+                            var controller = Startup.GetFromFacByName<BaseController<tb_PurEntryRe>>(typeof(tb_PurEntryRe).Name + "Controller");
+                            tb_PurEntryRe entity = await controller.BaseQueryByIdNavAsync(parameter.billId);
+                            //要把单据信息传过去
+                            menuPowerHelper.ExecuteEvents(RelatedBillMenuInfo, entity);
+                        }
+                    }
+                    if (parameter.bizType == BizType.销售订单)
+                    {
+                        var RelatedBillMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble
+                        && m.EntityName == typeof(tb_SaleOrder).Name
+                        && m.MenuName.Contains(parameter.bizType.ToString())
+                        ).FirstOrDefault();
+                        if (RelatedBillMenuInfo != null)
+                        {
+                            var controller = Startup.GetFromFacByName<BaseController<tb_SaleOrder>>(typeof(tb_SaleOrder).Name + "Controller");
+                            tb_SaleOrder entity = await controller.BaseQueryByIdNavAsync(parameter.billId);
+                            //要把单据信息传过去
+                            menuPowerHelper.ExecuteEvents(RelatedBillMenuInfo, entity);
+                        }
+                    }
+                    if (parameter.bizType == BizType.销售出库单)
+                    {
+                        var RelatedBillMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble
+                        && m.EntityName == typeof(tb_SaleOut).Name
+                        && m.MenuName.Contains(parameter.bizType.ToString())
+                        ).FirstOrDefault();
+                        if (RelatedBillMenuInfo != null)
+                        {
+                            var controller = Startup.GetFromFacByName<BaseController<tb_SaleOut>>(typeof(tb_SaleOut).Name + "Controller");
+                            tb_SaleOut entity = await controller.BaseQueryByIdNavAsync(parameter.billId);
+                            //要把单据信息传过去
+                            menuPowerHelper.ExecuteEvents(RelatedBillMenuInfo, entity);
+                        }
+                    }
+                    if (parameter.bizType == BizType.销售退回单)
+                    {
+                        var RelatedBillMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble
+                        && m.EntityName == typeof(tb_SaleOutRe).Name
+                        && m.MenuName.Contains(parameter.bizType.ToString())
+                        ).FirstOrDefault();
+                        if (RelatedBillMenuInfo != null)
+                        {
+                            var controller = Startup.GetFromFacByName<BaseController<tb_SaleOutRe>>(typeof(tb_SaleOutRe).Name + "Controller");
+                            tb_SaleOutRe entity = await controller.BaseQueryByIdNavAsync(parameter.billId);
+                            //要把单据信息传过去
+                            menuPowerHelper.ExecuteEvents(RelatedBillMenuInfo, entity);
+                        }
+                    }
+
+                    if (parameter.bizType == BizType.费用报销单)
+                    {
+                        var RelatedBillMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble
+                        && m.EntityName == typeof(tb_FM_ExpenseClaim).Name
+                        && m.MenuName.Contains(parameter.bizType.ToString())
+                        ).FirstOrDefault();
+                        if (RelatedBillMenuInfo != null)
+                        {
+                            var controller = Startup.GetFromFacByName<BaseController<tb_FM_ExpenseClaim>>(typeof(tb_FM_ExpenseClaim).Name + "Controller");
+                            tb_FM_ExpenseClaim entity = await controller.BaseQueryByIdNavAsync(parameter.billId);
+                            //要把单据信息传过去
+                            menuPowerHelper.ExecuteEvents(RelatedBillMenuInfo, entity);
+                        }
+                    }
+
+                }
+            }
+
+        }
 
         /// <summary>
         ///UI上有显示锁定时不重复锁。后面要优化
@@ -2853,15 +3020,6 @@ namespace RUINORERP.UI.BaseForm
             //    menuItem.Name = "加载最新数据";
             //    toolStripbtnRelatedQuery.DropDownItems.Add(menuItem);
             //}
-
-            if (toolStripbtnRelatedQuery.DropDownItems.Count > 0)
-            {
-                toolStripbtnRelatedQuery.Visible = true;
-            }
-            else
-            {
-                toolStripbtnRelatedQuery.Visible = false;
-            }
         }
 
         protected virtual void RelatedQuery()

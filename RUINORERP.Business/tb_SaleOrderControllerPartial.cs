@@ -859,6 +859,7 @@ namespace RUINORERP.Business
         /// <summary>
         /// 更新付款状态，并且一次只能更新一个单据
         /// 更新订单，更新出库单的付款状态， 付款状态，付款方式。付款日期？付款凭证？
+        ///  没有完成！！！！！！！！！！！！！
         /// </summary>
         /// <param name="entity"></param>
         /// <returns></returns>
@@ -1010,6 +1011,8 @@ namespace RUINORERP.Business
                 entity.ApprovalOpinions = "";
                 entity.Modified_at = null;
                 entity.Modified_by = null;
+                entity.PayStatus = saleorder.PayStatus;
+                entity.Paytype_ID = saleorder.Paytype_ID;
                 List<string> tipsMsg = new List<string>();
                 List<tb_SaleOutDetail> details = mapper.Map<List<tb_SaleOutDetail>>(saleorder.tb_SaleOrderDetails);
                 List<tb_SaleOutDetail> NewDetails = new List<tb_SaleOutDetail>();
@@ -1183,7 +1186,7 @@ namespace RUINORERP.Business
 
 
         /// <summary>
-        /// 转换为销售出库单
+        /// 销售转换为采购订单
         /// </summary>
         /// <param name="saleorder"></param>
         public tb_PurOrder SaleOrderToPurOrder(tb_SaleOrder saleorder)
@@ -1211,7 +1214,8 @@ namespace RUINORERP.Business
                 entity.Modified_at = null;
                 entity.Modified_by = null;
                 entity.CustomerVendor_ID = 0;//销售订单是客户，这里是厂商。默认为空。验证时要填写
-
+                entity.PayStatus = 0;
+                entity.Paytype_ID = null;
                 List<string> tipsMsg = new List<string>();
                 List<tb_PurOrderDetail> details = mapper.Map<List<tb_PurOrderDetail>>(saleorder.tb_SaleOrderDetails);
                 entity.TotalQty = details.Sum(c => c.Quantity);

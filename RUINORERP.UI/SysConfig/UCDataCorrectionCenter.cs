@@ -492,6 +492,9 @@ namespace RUINORERP.UI.SysConfig
                         #endregion
                     }
                 }
+
+
+
                 if (treeView1.SelectedNode.Text == "采购入库单价格修复")
                 {
 
@@ -684,6 +687,122 @@ namespace RUINORERP.UI.SysConfig
                     }
 
                 }
+
+
+                if (treeView1.SelectedNode.Text == "采购退货数量回写修复")
+                {
+                    //要回写到采购入库及退货中
+                    if (treeViewTableList.SelectedNode.Tag != null && treeViewTableList.SelectedNode.Name == typeof(tb_PurEntryRe).Name)
+                    {
+                        #region 采购退货数量回写修复
+
+
+                        List<tb_PurEntry> PurEntrys = await MainForm.Instance.AppContext.Db.Queryable<tb_PurEntry>()
+                             .Includes(b => b.tb_PurEntryDetails)
+                            .Includes(a => a.tb_PurEntryRes, b => b.tb_purentry, c => c.tb_PurEntryDetails)
+                            .AsNavQueryable()
+                            .Includes(a => a.tb_purorder, b => b.tb_PurEntries, c => c.tb_PurEntryRes, d => d.tb_PurEntryReDetails)
+                            .ToListAsync();
+
+                        foreach (var item in PurEntrys)
+                        {
+                            //存在退回单时才处理
+                            if (item.tb_PurEntryRes.Any())
+                            {
+                                for (int a = 0; a < item.tb_PurEntryRes.Count; a++)
+                                {
+                                    var purentryRetrun= item.tb_PurEntryRes[a];
+
+                                    //采购退货明细
+                                    var returnDetails = purentryRetrun.tb_PurEntryReDetails;
+
+                                    foreach (var reDetail in returnDetails)
+                                    {
+                                        var detail = item.tb_PurEntryDetails.FirstOrDefault(c => c.ProdDetailID == reDetail.ProdDetailID && c.Location_ID == reDetail.Location_ID);
+                                        if (detail != null)
+                                        {
+                                            detail.ReturnedQty += reDetail.Quantity;
+                                        }
+                                    }
+                                }
+                            }
+
+                        }
+
+
+
+
+                        List<tb_PurEntryReDetail> reDetails = await MainForm.Instance.AppContext.Db.Queryable<tb_PurEntryReDetail>()
+                             .Includes(b => b.tb_purentryre)
+                            .Includes(a => a.tb_purentryre, b => b.tb_purentry, c => c.tb_PurEntryDetails)
+                            .AsNavQueryable()
+                            .Includes(a => a.tb_purentryre, b => b.tb_purentry, c => c.tb_PurEntryRes, d => d.tb_PurEntryReDetails)
+                            .ToListAsync();
+
+                        //按
+
+
+                        for (int i = 0; i < reDetails.Count; i++)
+                        {
+
+                            tb_PurEntryReDetail returnDetail = reDetails[i];
+                            var purEntryDetail = returnDetail.tb_purentryre.tb_purentry.tb_PurEntryDetails.FirstOrDefault(c => c.ProdDetailID == returnDetail.ProdDetailID && c.Location_ID == returnDetail.Location_ID);
+
+                            if (purEntryDetail.ReturnedQty == 0)
+                            {
+                                purEntryDetail.ReturnedQty += returnDetail.Quantity;
+                            }
+                            if (!chkTestMode.Checked)
+                            {
+                                await MainForm.Instance.AppContext.Db.Updateable(purEntryDetail).UpdateColumns(item => new { item.ReturnedQty }).ExecuteCommandAsync();
+                                richTextBoxLog.AppendText($"采购退货明细回写{purEntryDetail.ProdDetailID}修复成功" + "\r\n");
+                            }
+                            else
+                            {
+                                richTextBoxLog.AppendText($"采购退货明细回写{purEntryDetail.ProdDetailID}需要修复" + "\r\n");
+                            }
+                        }
+
+
+                        //var MyPurEntrys = await MainForm.Instance.AppContext.Db.Queryable<tb_purorder>()
+                        //  .Includes(b => b.tb_PurEntryRes)
+                        // .Includes(c => c.tb_PurEntryDetails)
+                        // .Includes(a => a.tb_purorder, d => d.tb_PurOrderDetails)
+                        //   .Includes(a => a.tb_purorder, d => d.tb_PurEntries, c => c.tb_PurEntryRes)
+                        // .ToListAsync();
+
+
+                        //for (int a = 0; a < MyPurEntrys.Count; a++)
+                        //{
+                        //    for (int b = 0; b < MyPurEntrys[a].tb_PurEntryDetails.Count; b++)
+                        //    {
+                        //        if (MyPurEntrys[a].tb_PurEntryDetails[b].ReturnedQty == 0)
+                        //        {
+                        //            //没有引用订单的跳过
+                        //            if (MyPurEntrys[a].tb_purorder == null)
+                        //            {
+                        //                continue;
+                        //            }
+                        //            var orderdetail = MyPurEntrys[a].tb_purorder.tb_PurOrderDetails.FirstOrDefault(c => c.ProdDetailID == MyPurEntrys[a].tb_PurEntryDetails[b].ProdDetailID);
+                        //            if (orderdetail != null)
+                        //            {
+                        //                if (orderdetail.ReturnedQty > 0)
+                        //                {
+                        //                    //更新入库单明细
+                        //                    if (chkTestMode.Checked)
+                        //                    {
+                        //                    }
+                        //                }
+                        //            }
+                        //        }
+                        //    }
+                        //}
+
+                        #endregion
+                    }
+
+                }
+
 
                 if (treeView1.SelectedNode.Text == "借出已还修复为完结")
                 {
@@ -1253,6 +1372,8 @@ namespace RUINORERP.UI.SysConfig
                             needaddmain = false;
                         }
                     }
+
+
 
 
                     if (!chkTestMode.Checked)

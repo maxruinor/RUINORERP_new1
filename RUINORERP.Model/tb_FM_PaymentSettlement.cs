@@ -123,10 +123,10 @@ namespace RUINORERP.Model
 
         private int? _TargetBizType;
         /// <summary>
-        /// 目标业务
+        /// 目标单据类型
         /// </summary>
-        [AdvQueryAttribute(ColName = "TargetBizType",ColDesc = "目标业务")] 
-        [SugarColumn(ColumnDataType = "int", SqlParameterDbType ="Int32",  ColumnName = "TargetBizType" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "目标业务" )]
+        [AdvQueryAttribute(ColName = "TargetBizType",ColDesc = "目标单据类型")] 
+        [SugarColumn(ColumnDataType = "int", SqlParameterDbType ="Int32",  ColumnName = "TargetBizType" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "目标单据类型")]
         public int? TargetBizType
         { 
             get{return _TargetBizType;}

@@ -962,7 +962,7 @@ namespace RUINORERP.Business
                                    .Where(c => c.SourceBillId == entity.SaleOut_MainID
                                    && c.TotalLocalPayableAmount > 0 //正向
                                    && c.SourceBizType == (int)BizType.销售出库单).ToListAsync();
-                    if (ARAPList != null)
+                    if (ARAPList != null && ARAPList.Count > 0)
                     {
                         if (ARAPList.Count == 1)
                         {
@@ -972,7 +972,7 @@ namespace RUINORERP.Business
                         {
                             //不会为多行。有错误
                             _unitOfWorkManage.RollbackTran();
-                            rs.ErrorMsg = $"销售出库单{entity.SaleOutNo}有多张应收单，数据重复，请检查数据正确性后，再操作。";
+                            rs.ErrorMsg = $"销售出库单{entity.SaleOutNo}有多张应收款单，数据重复，请检查数据正确性后，再操作。";
                             rs.Succeeded = false;
                             return rs;
                         }

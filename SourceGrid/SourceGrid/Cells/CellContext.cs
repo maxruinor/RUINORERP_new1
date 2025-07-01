@@ -203,7 +203,20 @@ namespace SourceGrid
                     }
                     else
                     {
-                        return Cell.Editor.ValueToDisplayString(val);
+                        if (val != null)
+                        {
+                            return Cell.Editor.ValueToDisplayString(val);
+                        }
+                        else
+                        {
+                            if (!string.IsNullOrEmpty(_DisplayText) || val == null)
+                                //  return string.Empty;
+                                return _DisplayText;
+                            else
+                                return val.ToString();
+
+                        }
+
                     }
                 }
                 catch (Exception err)

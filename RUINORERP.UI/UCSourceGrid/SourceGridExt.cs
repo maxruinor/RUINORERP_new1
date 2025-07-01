@@ -595,7 +595,6 @@ namespace RUINORERP.UI.UCSourceGrid
                     {
                         foreach (var item in col.ParentGridDefine.grid.Rows)
                         {
-
                             if (col.EditorForColumn != null)
                             {
                                 int realIndex = col.ParentGridDefine.grid.Columns.GetColumnInfo(col.UniqueId).Index;
@@ -638,8 +637,6 @@ namespace RUINORERP.UI.UCSourceGrid
                 }
             }
         }
-
-
 
         #region 正向算
 

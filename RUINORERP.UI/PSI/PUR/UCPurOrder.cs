@@ -90,7 +90,48 @@ namespace RUINORERP.UI.PSI.PUR
             DataBindingHelper.InitDataToCmb<tb_Department>(k => k.DepartmentID, v => v.DepartmentName, cmbDepartmentID);
             DataBindingHelper.InitDataToCmb<tb_PaymentMethod>(k => k.Paytype_ID, v => v.Paytype_Name, cmbPaytype_ID);
         }
+        protected override void LoadRelatedDataToDropDownItems()
+        {
+            if (base.EditEntity is tb_PurOrder purOrder)
+            {
+                if (purOrder.SOrder_ID.HasValue)
+                {
+                    RelatedQueryParameter rqp = new RelatedQueryParameter();
+                    rqp.bizType = BizType.销售订单;
+                    rqp.billId = purOrder.SOrder_ID.Value;
+                    ToolStripMenuItem RelatedMenuItem = new ToolStripMenuItem();
+                    RelatedMenuItem.Name = $"{rqp.billId}";
+                    RelatedMenuItem.Tag = rqp;
+                    RelatedMenuItem.Text = $"{rqp.bizType}:{purOrder.SOrderNo}";
+                    RelatedMenuItem.Click += base.MenuItem_Click;
+                    if (!toolStripbtnRelatedQuery.DropDownItems.ContainsKey(purOrder.SOrder_ID.Value.ToString()))
+                    {
+                        toolStripbtnRelatedQuery.DropDownItems.Add(RelatedMenuItem);
+                    }
+                }
 
+                if (purOrder.tb_PurEntries != null && purOrder.tb_PurEntries.Count > 0)
+                {
+                    foreach (var item in purOrder.tb_PurEntries)
+                    {
+                        RelatedQueryParameter rqp = new RelatedQueryParameter();
+                        rqp.bizType = BizType.采购入库单;
+                        rqp.billId = item.PurEntryID;
+                        ToolStripMenuItem RelatedMenuItem = new ToolStripMenuItem();
+                        RelatedMenuItem.Name = $"{rqp.billId}";
+                        RelatedMenuItem.Tag = rqp;
+                        RelatedMenuItem.Text = $"{rqp.bizType}:{item.PurEntryNo}";
+                        RelatedMenuItem.Click += base.MenuItem_Click;
+                        if (!toolStripbtnRelatedQuery.DropDownItems.ContainsKey(item.PurEntryID.ToString()))
+                        {
+                            toolStripbtnRelatedQuery.DropDownItems.Add(RelatedMenuItem);
+                        }
+                    }
+                }
+
+            }
+            base.LoadRelatedDataToDropDownItems();
+        }
         public override void BindData(tb_PurOrder entity, ActionStatus actionStatus)
         {
             if (entity == null)
@@ -147,8 +188,16 @@ namespace RUINORERP.UI.PSI.PUR
             }
 
 
+            if (entity.DataStatus >= (int)DataStatus.确认)
+            {
+                DataBindingHelper.BindData4CmbByEnum<tb_PurOrder, PayStatus>(entity, k => k.PayStatus, cmbPayStatus, false);
+            }
+            else
+            {
+                DataBindingHelper.BindData4CmbByEnum<tb_PurOrder, PayStatus>(entity, k => k.PayStatus, cmbPayStatus, false, PayStatus.全部付款, PayStatus.部分付款);
+            }
 
-            DataBindingHelper.BindData4CmbByEnum<tb_PurOrder, PayStatus>(entity, k => k.PayStatus, cmbPayStatus, false, PayStatus.全部付款,PayStatus.部分付款);
+
 
             //EnumBindingHelper bindingHelper = new EnumBindingHelper();
             ////https://www.cnblogs.com/cdaniu/p/15236857.html

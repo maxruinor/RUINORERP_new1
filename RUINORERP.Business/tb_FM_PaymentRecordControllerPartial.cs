@@ -205,13 +205,14 @@ namespace RUINORERP.Business
                                         else
                                         {
                                             saleOut.PayStatus = (int)PayStatus.部分付款;
+                                            saleOut.Paytype_ID = entity.Paytype_ID.Value;
                                         }
                                         if (saleOut.tb_saleorder.tb_SaleOuts != null)
                                         {
                                             //如果这个出库单的上级订单，的其它出库单的他出库的状态都是全部付款了。则这个订单就全部付款了。（排除自己）
                                             //订单要保证全部出库了。才能这样算否则就先不管订单状态。只是部分付款
                                             List<tb_SaleOut> otherSaleOuts = saleOut.tb_saleorder.tb_SaleOuts
-                                                .Where(c => c.SaleOut_MainID != saleOut.SaleOut_MainID && c.PayStatus == (int)PayStatus.全额预付).ToList();
+                                                .Where(c => c.SaleOut_MainID != saleOut.SaleOut_MainID && c.PayStatus == (int)PayStatus.全部付款).ToList();
 
                                             if (receivablePayable.LocalPaidAmount == saleOut.TotalAmount
                                                 && otherSaleOuts.Sum(c => c.TotalAmount) + saleOut.TotalAmount == saleOut.tb_saleorder.TotalAmount)
@@ -221,7 +222,8 @@ namespace RUINORERP.Business
                                             }
                                             else
                                             {
-                                                saleOut.tb_saleorder.PayStatus = (int)PayStatus.部分预付;
+                                                saleOut.tb_saleorder.PayStatus = (int)PayStatus.部分付款;
+                                                saleOut.tb_saleorder.Paytype_ID = entity.Paytype_ID.Value;
                                             }
 
                                         }
@@ -270,7 +272,7 @@ namespace RUINORERP.Business
                                         {
                                             //财务只管财务的状态?
                                             // purEntiry.DataStatus = (int)DataStatus.完结;
-                                            purEntiry.PayStatus = (int)PayStatus.全额预付;
+                                            purEntiry.PayStatus = (int)PayStatus.全部付款;
                                             purEntiry.Paytype_ID = entity.Paytype_ID;
                                         }
 
@@ -279,16 +281,18 @@ namespace RUINORERP.Business
                                             //如果这个出库单的上级 订单 是我次出库的。他出库的状态都是全部付款了。则这个订单就全部付款了。
                                             //订单要保证全部出库了。才能这样算否则就先不管订单状态。只是部分付款
                                             List<tb_PurEntry> otherPurEntrys = purEntiry.tb_purorder.tb_PurEntries
-                                            .Where(c => c.PurEntryID != purEntiry.PurEntryID && c.PayStatus == (int)PayStatus.全额预付).ToList();
+                                            .Where(c => c.PurEntryID != purEntiry.PurEntryID && c.PayStatus == (int)PayStatus.全部付款).ToList();
 
                                             if (receivablePayable.LocalPaidAmount == purEntiry.TotalAmount
                                                 && otherPurEntrys.Sum(c => c.TotalAmount) + purEntiry.TotalAmount == purEntiry.tb_purorder.TotalAmount)
                                             {
-                                                purEntiry.tb_purorder.PayStatus = (int)PayStatus.全额预付;
+                                                purEntiry.tb_purorder.PayStatus = (int)PayStatus.全部付款;
+                                                purEntiry.tb_purorder.Paytype_ID = entity.Paytype_ID;
                                             }
                                             else
                                             {
-                                                purEntiry.tb_purorder.PayStatus = (int)PayStatus.部分预付;
+                                                purEntiry.tb_purorder.PayStatus = (int)PayStatus.部分付款;
+                                                purEntiry.tb_purorder.Paytype_ID = entity.Paytype_ID;
                                             }
                                         }
                                         purOrderUpdateList.Add(purEntiry.tb_purorder);
@@ -510,7 +514,7 @@ namespace RUINORERP.Business
 
                                                 saleOrder.ApprovalOpinions += $" 订金退款，订单取消";
                                                 saleOrder.DataStatus = (int)DataStatus.已取消;
-
+                                                
                                                 saleOrderUpdateList.Add(saleOrder);
 
 

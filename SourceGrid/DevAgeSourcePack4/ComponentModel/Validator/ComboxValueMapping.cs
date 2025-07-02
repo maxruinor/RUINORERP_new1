@@ -2,6 +2,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Linq;
 
 namespace DevAge.ComponentModel.Validator
 {
@@ -160,15 +161,26 @@ namespace DevAge.ComponentModel.Validator
             //else if (m_bThrowErrorIfNotFound)
             //    e.ConvertingStatus = ConvertingStatus.Error;
 
-            if(e.ConvertingStatus == ConvertingStatus.Completed)
+            if (e.ConvertingStatus == ConvertingStatus.Completed)
             {
                 return;
             }
 
+            //以传入的值为ID优先，其次认为传就是name
             if (m_ValueList.ContainsKey(e.Value.ToString()))
             {
                 e.Value = m_ValueList[e.Value.ToString()].ToString();
                 e.ConvertingStatus = ConvertingStatus.Completed;
+                return;
+            }
+            else if (m_DisplayStringList != null && m_ValueList.Values.Contains(e.Value.ToString()))
+            {
+                var tempvalue = m_ValueList.Values.FirstOrDefault(c => c == e.Value.ToString());
+                if (tempvalue != null)
+                {
+                    e.Value = tempvalue.ToString();
+                    e.ConvertingStatus = ConvertingStatus.Completed;
+                }
                 return;
             }
             else if (m_bThrowErrorIfNotFound)
@@ -176,7 +188,7 @@ namespace DevAge.ComponentModel.Validator
                 e.ConvertingStatus = ConvertingStatus.Error;
                 return;
             }
-                
+
             //if (m_bThrowErrorIfNotFound)
             //    e.ConvertingStatus = ConvertingStatus.Error;
         }

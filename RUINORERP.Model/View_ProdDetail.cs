@@ -19,7 +19,7 @@ using RUINORERP.Model.Base;
 namespace RUINORERP.Model
 {
     /// <summary>
-    /// 产品详情视图
+    /// 产品详情库存视图
     /// </summary>
     [Serializable()]
     [SugarTable("View_ProdDetail")]

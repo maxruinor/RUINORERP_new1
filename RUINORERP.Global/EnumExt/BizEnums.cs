@@ -58,6 +58,7 @@ namespace RUINORERP.Global
 
     /// <summary>
     /// 在做采购入库退回单时，需要选择处理方式
+    /// 和重点是财务相关。退款 会生退款单。  否则不会。
     /// </summary>
     public enum PurReProcessWay
     {

@@ -43,7 +43,7 @@ namespace RUINORERP.Business
         {
             RuleFor(x => x.TotalAmount).GreaterThan(0).When(x => x.tb_PurEntryReDetails.Any(c => c.IsGift == null || (c.IsGift.HasValue && !c.IsGift.Value))).WithMessage("总金额：要大于零。");
             RuleFor(x => x.TotalAmount).Equal(x => x.tb_PurEntryReDetails.Sum(c => (c.UnitPrice + c.CustomizedCost) * c.Quantity)).WithMessage("总金额：要等于成交价*数量。");
-
+            RuleFor(x => x.ProcessWay).GreaterThan(-1).WithMessage("处理方式:选择不正确。");
             RuleFor(x => x.PayStatus).GreaterThan(0).WithMessage("付款状态:不能为空。");
             RuleFor(x => x.Paytype_ID).GreaterThan(0).When(c => c.PayStatus != (int)PayStatus.未付款).WithMessage("付款方式:有付款的情况下，付款方式不能为空。");
         }

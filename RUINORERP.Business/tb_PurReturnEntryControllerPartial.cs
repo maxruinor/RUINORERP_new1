@@ -52,10 +52,10 @@ namespace RUINORERP.Business
             {
                 // 开启事务，保证数据一致性
                 _unitOfWorkManage.BeginTran();
-                 
+
                 tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
                 BillConverterFactory bcf = _appContext.GetRequiredService<BillConverterFactory>();
-               
+
 
                 //处理采购退货单
                 entity.tb_purentryre = _unitOfWorkManage.GetDbClient().Queryable<tb_PurEntryRe>()
@@ -76,7 +76,7 @@ namespace RUINORERP.Business
                 //如果入库明细中的产品。不存在于采购退货单中。审核失败。
                 foreach (var child in entity.tb_PurReturnEntryDetails)
                 {
-                    if (!entity.tb_purentryre.tb_PurEntryReDetails.Any(c => c.ProdDetailID == child.ProdDetailID && c.Location_ID==child.Location_ID))
+                    if (!entity.tb_purentryre.tb_PurEntryReDetails.Any(c => c.ProdDetailID == child.ProdDetailID && c.Location_ID == child.Location_ID))
                     {
                         rs.Succeeded = false;
                         _unitOfWorkManage.RollbackTran();
@@ -94,8 +94,8 @@ namespace RUINORERP.Business
                     tb_Inventory inv = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == child.ProdDetailID && i.Location_ID == child.Location_ID);
                     if (inv == null)
                     {
-                       _unitOfWorkManage.RollbackTran();
-                       rs.ErrorMsg = $"{child.ProdDetailID}当前产品无库存数据，无法进行采购退货。请使用【期初盘点】【采购入库】】【生产缴库】的方式进行盘点后，再操作。";
+                        _unitOfWorkManage.RollbackTran();
+                        rs.ErrorMsg = $"{child.ProdDetailID}当前产品无库存数据，无法进行采购退货。请使用【期初盘点】【采购入库】】【生产缴库】的方式进行盘点后，再操作。";
                         rs.Succeeded = false;
                         return rs;
                     }
@@ -150,7 +150,7 @@ namespace RUINORERP.Business
                     inv.LatestStorageTime = System.DateTime.Now;
                     #endregion
                     invUpdateList.Add(inv);
-                    
+
                 }
 
                 DbHelper<tb_Inventory> dbHelper = _appContext.GetRequiredService<DbHelper<tb_Inventory>>();
@@ -160,7 +160,7 @@ namespace RUINORERP.Business
                     _logger.LogInformation($"{entity.PurReEntryNo}更新库存结果为0行，请检查数据！");
                 }
 
-               
+
 
                 //因为可以多次分批入库，所以需要判断当前入库数量是否大于退货数量
                 //先找到所有采购退货入库明细,再找按采购退款明细去循环比较。如果入库总数量大于退货数量，则不允许入库。
@@ -205,7 +205,7 @@ namespace RUINORERP.Business
                         else
                         {
                             var RowQty = entity.tb_PurReturnEntryDetails
-                                .Where(c => c.ProdDetailID == entity.tb_purentryre.tb_PurEntryReDetails[i].ProdDetailID 
+                                .Where(c => c.ProdDetailID == entity.tb_purentryre.tb_PurEntryReDetails[i].ProdDetailID
                                 && c.PurEntryRe_CID == entity.tb_purentryre.tb_PurEntryReDetails[i].PurEntryRe_CID
                                  && c.Location_ID == entity.tb_purentryre.tb_PurEntryReDetails[i].Location_ID
                                 ).Sum(c => c.Quantity);
@@ -228,8 +228,7 @@ namespace RUINORERP.Business
                         ).Sum(c => c.Quantity);
                         if (inQty > entity.tb_purentryre.tb_PurEntryReDetails[i].Quantity)
                         {
-
-                            string msg = $"采购退货单:{entity.tb_purentryre.PurEntryReNo}的【{prodName}】的入库数量不能大于退货单中对应行的数量\r\n" + $"或存在针对当前采购退货单重复录入了采购入库单。";
+                            string msg = $"采购退回入库单:{entity.PurReEntryNo}的【{prodName}】的入库数量不能大于【采购退货单】中对应行的数量\r\n" + $"或存在针对当前采购退货单重复录入了采购入库单。";
                             rs.ErrorMsg = msg;
                             _unitOfWorkManage.RollbackTran();
                             _logger.LogInformation(msg);
@@ -240,21 +239,22 @@ namespace RUINORERP.Business
                             //当前行累计到交付
                             var RowQty = entity.tb_PurReturnEntryDetails
                                 .Where(c => c.ProdDetailID == entity.tb_purentryre.tb_PurEntryReDetails[i].ProdDetailID
-                                && c.Location_ID==entity.tb_purentryre.tb_PurEntryReDetails[i].Location_ID
+                                && c.Location_ID == entity.tb_purentryre.tb_PurEntryReDetails[i].Location_ID
                                 ).Sum(c => c.Quantity);
                             entity.tb_purentryre.tb_PurEntryReDetails[i].DeliveredQuantity += RowQty;
                             //如果已交数据大于 退货单数量 给出警告实际操作中 使用其他方式将备品入库
                             if (entity.tb_purentryre.tb_PurEntryReDetails[i].DeliveredQuantity > entity.tb_purentryre.tb_PurEntryReDetails[i].Quantity)
                             {
                                 _unitOfWorkManage.RollbackTran();
-                                throw new Exception($"入库单：{entity.PurReEntryNo}审核时，对应的退货单：{entity.tb_purentryre.PurEntryReNo}，入库总数量不能大于退货单数量！");
+                                throw new Exception($"采购退回入库单：{entity.PurReEntryNo}审核时，对应的退货单：{entity.tb_purentryre.PurEntryReNo}，入库总数量不能大于退货单数量！");
                             }
                         }
                     }
                 }
 
                 //更新已交数量
-                int poCounter = await _unitOfWorkManage.GetDbClient().Updateable<tb_PurEntryReDetail>(entity.tb_purentryre.tb_PurEntryReDetails).ExecuteCommandAsync();
+                int poCounter = await _unitOfWorkManage.GetDbClient().Updateable<tb_PurEntryReDetail>(entity.tb_purentryre.tb_PurEntryReDetails)
+                    .UpdateColumns(it => new { it.DeliveredQuantity }).ExecuteCommandAsync();
                 if (poCounter > 0)
                 {
                     if (AuthorizeController.GetShowDebugInfoAuthorization(_appContext))
@@ -332,7 +332,7 @@ namespace RUINORERP.Business
 
                 // 开启事务，保证数据一致性
                 _unitOfWorkManage.BeginTran();
-                
+
                 tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
                 BillConverterFactory bcf = _appContext.GetRequiredService<BillConverterFactory>();
                 List<tb_Inventory> invUpdateList = new List<tb_Inventory>();
@@ -369,7 +369,7 @@ namespace RUINORERP.Business
 
                     #endregion
                     invUpdateList.Add(inv);
-                   
+
                 }
 
                 // 使用LINQ查询
@@ -390,11 +390,11 @@ namespace RUINORERP.Business
 
                 DbHelper<tb_Inventory> dbHelper = _appContext.GetRequiredService<DbHelper<tb_Inventory>>();
                 var InvUpdateCounter = await dbHelper.BaseDefaultAddElseUpdateAsync(invUpdateList);
-                 if (InvUpdateCounter == 0)
+                if (InvUpdateCounter == 0)
                 {
                     _logger.LogInformation($"{entity.PurReEntryNo}更新库存结果为0行，请检查数据！");
                 }
-               
+
 
 
                 if (entity.tb_purentryre != null)
@@ -463,10 +463,10 @@ namespace RUINORERP.Business
                             else
                             {
                                 var RowQty = entity.tb_PurReturnEntryDetails
-                                    .Where(c => c.ProdDetailID == entity.tb_purentryre.tb_PurEntryReDetails[i].ProdDetailID 
+                                    .Where(c => c.ProdDetailID == entity.tb_purentryre.tb_PurEntryReDetails[i].ProdDetailID
                                     && c.PurEntryRe_CID == entity.tb_purentryre.tb_PurEntryReDetails[i].PurEntryRe_CID
-                                    && c.Location_ID== entity.tb_purentryre.tb_PurEntryReDetails[i].Location_ID
-                                    
+                                    && c.Location_ID == entity.tb_purentryre.tb_PurEntryReDetails[i].Location_ID
+
                                     ).Sum(c => c.Quantity);
                                 //算出交付的数量
                                 entity.tb_purentryre.tb_PurEntryReDetails[i].DeliveredQuantity -= RowQty;
@@ -499,7 +499,7 @@ namespace RUINORERP.Business
                                 //当前行累计到交付
                                 var RowQty = entity.tb_PurReturnEntryDetails
                                     .Where(c => c.ProdDetailID == entity.tb_purentryre.tb_PurEntryReDetails[i].ProdDetailID
-                                    && c.Location_ID==entity.tb_purentryre.tb_PurEntryReDetails[i].Location_ID
+                                    && c.Location_ID == entity.tb_purentryre.tb_PurEntryReDetails[i].Location_ID
                                     ).Sum(c => c.Quantity);
                                 entity.tb_purentryre.tb_PurEntryReDetails[i].DeliveredQuantity -= RowQty;
                                 //如果已交数据大于 退货单数量 给出警告实际操作中 使用其他方式将备品入库

@@ -234,6 +234,8 @@ namespace RUINORERP.UI.PSI.SAL
             }
         }
 
+
+        [Obsolete("暂时废弃，后面要确认一下是不是需要有这个功能")]
         private async void NewSumDataGridView_取消订单(object sender, EventArgs e)
         {
             if (MessageBox.Show("确定要执行【取消订单】操作吗?", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Information, MessageBoxDefaultButton.Button2) == DialogResult.No)

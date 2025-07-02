@@ -410,6 +410,11 @@ namespace RUINORERP.UI.UserCenter.DataParts
             if (bizEntity.ContainsProperty(typeof(DataStatus).Name))
             {
                 conditionGroups.AddRange(_conditionBuilderFactory.GetCommonConditionGroups(bizType));
+                //等回
+                if (bizType == BizType.采购退货单)
+                {
+                    conditionGroups.AddRange(_conditionBuilderFactory.GetNeedBackConditionGroups(bizType));
+                }
             }
 
             // 预付款/预收款状态条件

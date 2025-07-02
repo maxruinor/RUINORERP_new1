@@ -99,6 +99,7 @@ namespace RUINORERP.UI.PSI.PUR
         public override void BuildSummaryCols()
         {
             base.MasterSummaryCols.Add(c => c.Quantity);
+            base.MasterSummaryCols.Add(c => c.ReturnedQty);
             base.MasterSummaryCols.Add(c => c.SubtotalAmount);
         }
 

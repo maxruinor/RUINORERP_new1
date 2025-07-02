@@ -21,6 +21,43 @@ namespace RUINORERP.UI.UserCenter.DataParts
     }
     public class ConditionBuilderFactory
     {
+        public List<ConditionGroup> GetNeedBackConditionGroups(BizType bizType)
+        {
+
+            var grouplist = new List<ConditionGroup>
+        {
+            new ConditionGroup
+            {
+                StatusName = "待返回",
+                Conditions = new List<IConditionalModel>
+                {
+                    new ConditionalModel
+                    {
+                        FieldName = "ApprovalStatus",
+                        ConditionalType = ConditionalType.Equal,
+                        FieldValue = "1",
+                        CSharpTypeName = "int"
+                    },
+                    new ConditionalModel
+                    {
+                        FieldName = "DataStatus",
+                        ConditionalType = ConditionalType.Equal,
+                        FieldValue = ((int)DataStatus.确认).ToString(),
+                        CSharpTypeName = "int"
+                    },
+                    new ConditionalModel
+                    {
+                        FieldName = "isdeleted",
+                        ConditionalType = ConditionalType.Equal,
+                        FieldValue = "False",
+                        CSharpTypeName = "bool"
+                    }
+                }
+            }
+        };
+            return grouplist;
+        }
+
         public List<ConditionGroup> GetCommonConditionGroups(BizType bizType)
         {
 

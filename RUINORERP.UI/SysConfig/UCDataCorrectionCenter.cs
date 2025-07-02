@@ -50,6 +50,7 @@ using RUINORERP.UI.UserCenter.DataParts;
 using NPOI.POIFS.Properties;
 using Org.BouncyCastle.Crypto;
 using NPOI.SS.UserModel;
+using Org.BouncyCastle.Asn1.Cmp;
 
 
 namespace RUINORERP.UI.SysConfig
@@ -696,107 +697,135 @@ namespace RUINORERP.UI.SysConfig
                     {
                         #region 采购退货数量回写修复
 
+                        Dictionary<string, List<tb_PurEntryDetail>> needupdatePurEntryDetails = new Dictionary<string, List<tb_PurEntryDetail>>();
+                        Dictionary<string, List<tb_PurOrderDetail>> needupdatePurOrderDetails = new Dictionary<string, List<tb_PurOrderDetail>>();
 
-                        List<tb_PurEntry> PurEntrys = await MainForm.Instance.AppContext.Db.Queryable<tb_PurEntry>()
-                             .Includes(b => b.tb_PurEntryDetails)
-                            .Includes(a => a.tb_PurEntryRes, b => b.tb_purentry, c => c.tb_PurEntryDetails)
+
+                        //回写订单
+                        List<tb_PurOrder> PurOrders = await MainForm.Instance.AppContext.Db.Queryable<tb_PurOrder>()
+                             .Includes(b => b.tb_PurOrderDetails)
+                            .Includes(b => b.tb_PurEntries, c => c.tb_PurEntryDetails)
                             .AsNavQueryable()
-                            .Includes(a => a.tb_purorder, b => b.tb_PurEntries, c => c.tb_PurEntryRes, d => d.tb_PurEntryReDetails)
+                            .Includes(b => b.tb_PurEntries, c => c.tb_PurEntryRes, d => d.tb_PurEntryReDetails)
+                            .Where(c => c.DataStatus >= (int)DataStatus.确认)
                             .ToListAsync();
 
-                        foreach (var item in PurEntrys)
+
+                        foreach (var item in PurOrders)
                         {
-                            //存在退回单时才处理
-                            if (item.tb_PurEntryRes.Any())
+                            var PurEntries = item.tb_PurEntries.Where(c => c.DataStatus >= (int)DataStatus.确认).ToList();
+                            for (int a = 0; a < PurEntries.Count; a++)
                             {
-                                for (int a = 0; a < item.tb_PurEntryRes.Count; a++)
+                                var purEntry = PurEntries[a];
+                                #region 存在退回单时才处理
+                                //存在退回单时才处理
+                                if (purEntry.tb_PurEntryRes.Any())
                                 {
-                                    var purentryRetrun= item.tb_PurEntryRes[a];
-
-                                    //采购退货明细
-                                    var returnDetails = purentryRetrun.tb_PurEntryReDetails;
-
-                                    foreach (var reDetail in returnDetails)
+                                    foreach (var purEntryLines in purEntry.tb_PurEntryDetails)
                                     {
-                                        var detail = item.tb_PurEntryDetails.FirstOrDefault(c => c.ProdDetailID == reDetail.ProdDetailID && c.Location_ID == reDetail.Location_ID);
-                                        if (detail != null)
+                                        purEntryLines.ReturnedQty = 0;
+                                        var PurEntryRes = purEntry.tb_PurEntryRes.Where(c => c.DataStatus >= (int)DataStatus.确认).ToList();
+                                        for (int b = 0; b < PurEntryRes.Count; b++)
                                         {
-                                            detail.ReturnedQty += reDetail.Quantity;
+                                            var purentryRetrun = PurEntryRes[b];
+                                            //采购退货明细
+                                            var returnDetails = purentryRetrun.tb_PurEntryReDetails;
+
+                                            var detail = returnDetails.FirstOrDefault(c => c.ProdDetailID == purEntryLines.ProdDetailID && c.Location_ID == purEntryLines.Location_ID);
+                                            if (detail != null)
+                                            {
+                                                purEntryLines.ReturnedQty += detail.Quantity;
+                                                if (needupdatePurEntryDetails.ContainsKey(purEntry.PurEntryNo))
+                                                {
+                                                    needupdatePurEntryDetails[purEntry.PurEntryNo].Add(purEntryLines);
+                                                }
+                                                else
+                                                {
+                                                    var lines = new List<tb_PurEntryDetail>();
+                                                    lines.Add(purEntryLines);
+                                                    needupdatePurEntryDetails.Add(purEntry.PurEntryNo, lines);
+                                                }
+
+                                            }
                                         }
                                     }
                                 }
+                                #endregion
                             }
 
+
+                            foreach (var purorderdetail in item.tb_PurOrderDetails)
+                            {
+                                purorderdetail.TotalReturnedQty = 0;
+                                for (int a = 0; a < PurEntries.Count; a++)
+                                {
+                                    var purEntry = PurEntries[a];
+                                    //存在退回单时才处理
+                                    if (purEntry.tb_PurEntryRes.Any())
+                                    {
+                                        var detail = purEntry.tb_PurEntryDetails.FirstOrDefault(c => c.ProdDetailID == purorderdetail.ProdDetailID && c.Location_ID == purorderdetail.Location_ID);
+                                        if (detail==null)
+                                        {
+                                            continue;
+                                        }
+                                        purorderdetail.TotalReturnedQty += detail.ReturnedQty;
+
+                                        if (needupdatePurOrderDetails.ContainsKey(item.PurOrderNo))
+                                        {
+                                            needupdatePurOrderDetails[item.PurOrderNo].Add(purorderdetail);
+                                        }
+                                        else
+                                        {
+                                            var lines = new List<tb_PurOrderDetail>();
+                                            lines.Add(purorderdetail);
+                                            needupdatePurOrderDetails.Add(item.PurOrderNo, lines);
+                                        }
+
+                                    }
+                                }
+                            }
                         }
 
 
-
-
-                        List<tb_PurEntryReDetail> reDetails = await MainForm.Instance.AppContext.Db.Queryable<tb_PurEntryReDetail>()
-                             .Includes(b => b.tb_purentryre)
-                            .Includes(a => a.tb_purentryre, b => b.tb_purentry, c => c.tb_PurEntryDetails)
-                            .AsNavQueryable()
-                            .Includes(a => a.tb_purentryre, b => b.tb_purentry, c => c.tb_PurEntryRes, d => d.tb_PurEntryReDetails)
-                            .ToListAsync();
-
-                        //按
-
-
-                        for (int i = 0; i < reDetails.Count; i++)
+                        if (chkTestMode.Checked)
                         {
-
-                            tb_PurEntryReDetail returnDetail = reDetails[i];
-                            var purEntryDetail = returnDetail.tb_purentryre.tb_purentry.tb_PurEntryDetails.FirstOrDefault(c => c.ProdDetailID == returnDetail.ProdDetailID && c.Location_ID == returnDetail.Location_ID);
-
-                            if (purEntryDetail.ReturnedQty == 0)
+                            foreach (var item in needupdatePurEntryDetails)
                             {
-                                purEntryDetail.ReturnedQty += returnDetail.Quantity;
+                                richTextBoxLog.AppendText($"采购退货时回写入库{item.Key}修复行数为:{item.Value.Count}" + "\r\n");
                             }
-                            if (!chkTestMode.Checked)
+                            foreach (var item in needupdatePurOrderDetails)
                             {
-                                await MainForm.Instance.AppContext.Db.Updateable(purEntryDetail).UpdateColumns(item => new { item.ReturnedQty }).ExecuteCommandAsync();
-                                richTextBoxLog.AppendText($"采购退货明细回写{purEntryDetail.ProdDetailID}修复成功" + "\r\n");
-                            }
-                            else
-                            {
-                                richTextBoxLog.AppendText($"采购退货明细回写{purEntryDetail.ProdDetailID}需要修复" + "\r\n");
+                                richTextBoxLog.AppendText($"采购退货时回写订单单数{item.Key}修复行数为:{item.Value.Count}" + "\r\n");
                             }
                         }
+                        else
+                        {
+                            int entrycounter = 0;
+                            int ordercounter = 0;
+
+                            foreach (var item in needupdatePurEntryDetails)
+                            {
+                                if (item.Value.Any())
+                                {
+                                    entrycounter = await MainForm.Instance.AppContext.Db.Updateable(item.Value).UpdateColumns(it => new { it.ReturnedQty }).ExecuteCommandAsync();
+                                }
+                                richTextBoxLog.AppendText($"采购退货时回写成功。入库{item.Key}修复行数为:{item.Value.Count}" + "\r\n");
+                            }
+                            foreach (var item in needupdatePurOrderDetails)
+                            {
+                                if (item.Value.Any())
+                                {
+                                    ordercounter = await MainForm.Instance.AppContext.Db.Updateable(item.Value).UpdateColumns(it => new { it.TotalReturnedQty }).ExecuteCommandAsync();
+                                }
+
+                                richTextBoxLog.AppendText($"采购退货时回写成功。订单单数{item.Key}修复行数为:{item.Value.Count}" + "\r\n");
+                            }
 
 
-                        //var MyPurEntrys = await MainForm.Instance.AppContext.Db.Queryable<tb_purorder>()
-                        //  .Includes(b => b.tb_PurEntryRes)
-                        // .Includes(c => c.tb_PurEntryDetails)
-                        // .Includes(a => a.tb_purorder, d => d.tb_PurOrderDetails)
-                        //   .Includes(a => a.tb_purorder, d => d.tb_PurEntries, c => c.tb_PurEntryRes)
-                        // .ToListAsync();
 
-
-                        //for (int a = 0; a < MyPurEntrys.Count; a++)
-                        //{
-                        //    for (int b = 0; b < MyPurEntrys[a].tb_PurEntryDetails.Count; b++)
-                        //    {
-                        //        if (MyPurEntrys[a].tb_PurEntryDetails[b].ReturnedQty == 0)
-                        //        {
-                        //            //没有引用订单的跳过
-                        //            if (MyPurEntrys[a].tb_purorder == null)
-                        //            {
-                        //                continue;
-                        //            }
-                        //            var orderdetail = MyPurEntrys[a].tb_purorder.tb_PurOrderDetails.FirstOrDefault(c => c.ProdDetailID == MyPurEntrys[a].tb_PurEntryDetails[b].ProdDetailID);
-                        //            if (orderdetail != null)
-                        //            {
-                        //                if (orderdetail.ReturnedQty > 0)
-                        //                {
-                        //                    //更新入库单明细
-                        //                    if (chkTestMode.Checked)
-                        //                    {
-                        //                    }
-                        //                }
-                        //            }
-                        //        }
-                        //    }
-                        //}
+                            richTextBoxLog.AppendText($"采购退货时回写入库修复成功行数：{entrycounter} " + "\r\n");
+                            richTextBoxLog.AppendText($"采购退货时回写订单修复成功行数：{ordercounter} " + "\r\n");
+                        }
 
                         #endregion
                     }

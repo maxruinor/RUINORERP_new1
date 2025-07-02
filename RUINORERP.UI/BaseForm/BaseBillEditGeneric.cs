@@ -351,7 +351,7 @@ namespace RUINORERP.UI.BaseForm
         public virtual void BindData(T entity, ActionStatus actionStatus = ActionStatus.无操作)
         {
 
-
+            toolStripbtnRelatedQuery.DropDownItems.Clear();
             LoadRelatedDataToDropDownItems();
             if (toolStripbtnRelatedQuery.DropDownItems.Count > 0)
             {

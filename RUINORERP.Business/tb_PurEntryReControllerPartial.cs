@@ -57,9 +57,10 @@ namespace RUINORERP.Business
                 if (entity.PurEntryID.HasValue && entity.PurEntryID.Value > 0)
                 {
                     entity.tb_purentry = await _unitOfWorkManage.GetDbClient().Queryable<tb_PurEntry>()
+                         .Includes(a => a.tb_PurEntryDetails)
+                         .Includes(a => a.tb_purorder, b => b.tb_PurOrderDetails)
                                 .Where(c => c.PurEntryID == entity.PurEntryID.Value)
                                .FirstAsync();
-
                 }
 
 
@@ -74,9 +75,9 @@ namespace RUINORERP.Business
                     {
                         if (!_appContext.SysConfig.CheckNegativeInventory && (inv.Quantity - ReDetail.Quantity) < 0)
                         {
+                            _unitOfWorkManage.RollbackTran();
                             // rrs.ErrorMsg = "系统设置不允许负库存，请检查物料出库数量与库存相关数据";
                             rs.ErrorMsg = $"库存为：{inv.Quantity}，采购退回数量为：{ReDetail.Quantity}\r\n 系统设置不允许负库存， 请检查退回数量与库存相关数据";
-                            _unitOfWorkManage.RollbackTran();
                             rs.Succeeded = false;
                             return rs;
                         }
@@ -100,8 +101,6 @@ namespace RUINORERP.Business
                             inv.On_the_way_Qty = inv.On_the_way_Qty + ReDetail.Quantity;
                         }
 
-
-
                         BusinessHelper.Instance.EditEntity(inv);
 
                     }
@@ -111,8 +110,6 @@ namespace RUINORERP.Business
                         //这里都是采购入库退货了。必须是入过库有数据的
                         throw new Exception($"当前仓库{ReDetail.Location_ID}无产品{ReDetail.ProdDetailID}的库存数据,请联系管理员");
                     }
-
-
 
 
                     inv.Inv_SubtotalCostMoney = inv.Inv_Cost * inv.Quantity;
@@ -127,40 +124,87 @@ namespace RUINORERP.Business
                     _unitOfWorkManage.RollbackTran();
                     throw new Exception("采购退货审核时，库存更新失败！");
                 }
-                //入库退回 写回入库单明细,审核用加，
+
+
                 if (entity.tb_purentry != null)
                 {
-                    if (entity.tb_purentry.tb_PurEntryDetails == null)
+                    #region 采购退货数量回写修复
+                    Dictionary<string, List<tb_PurEntryDetail>> needupdatePurEntryDetails = new Dictionary<string, List<tb_PurEntryDetail>>();
+                    Dictionary<string, List<tb_PurOrderDetail>> needupdatePurOrderDetails = new Dictionary<string, List<tb_PurOrderDetail>>();
+                    var purEntry = entity.tb_purentry;
+                    foreach (var purEntryLines in purEntry.tb_PurEntryDetails)
                     {
-                        entity.tb_purentry.tb_PurEntryDetails = await _unitOfWorkManage.GetDbClient().Queryable<tb_PurEntryDetail>()
-                            //.Includes(a=>a.tb_purentry,b=>b.tb_purorder)
-                            .Where(c => c.PurEntryID == entity.tb_purentry.PurEntryID).ToListAsync();
+                        //采购退货明细
+                        var returnDetails = entity.tb_PurEntryReDetails;
+                        var detail = returnDetails.FirstOrDefault(c => c.ProdDetailID == purEntryLines.ProdDetailID && c.Location_ID == purEntryLines.Location_ID);
+                        if (detail != null)
+                        {
+                            purEntryLines.ReturnedQty += detail.Quantity;
+                            //如果已退数量大于订单数量 给出警告实际操作中 使用其他方式出库
+                            if (purEntryLines.ReturnedQty > purEntryLines.Quantity)
+                            {
+                                _unitOfWorkManage.RollbackTran();
+                                throw new Exception($"退回数量{purEntryLines.ReturnedQty}不能大于对应入库单{purEntry.PurEntryNo}对应明细的数量{purEntryLines.Quantity}！");
+                            }
+                            if (needupdatePurEntryDetails.ContainsKey(purEntry.PurEntryNo))
+                            {
+                                needupdatePurEntryDetails[purEntry.PurEntryNo].Add(purEntryLines);
+                            }
+                            else
+                            {
+                                var lines = new List<tb_PurEntryDetail>();
+                                lines.Add(purEntryLines);
+                                needupdatePurEntryDetails.Add(purEntry.PurEntryNo, lines);
+                            }
+                        }
                     }
+                    foreach (var purorderdetail in entity.tb_purentry.tb_purorder.tb_PurOrderDetails)
+                    {
+                        //采购退货明细
+                        var returnDetails = entity.tb_PurEntryReDetails;
+                        var detail = returnDetails.FirstOrDefault(c => c.ProdDetailID == purorderdetail.ProdDetailID && c.Location_ID == purorderdetail.Location_ID);
+                        if (detail != null)
+                        {
+                            purorderdetail.TotalReturnedQty += detail.Quantity;
+                            //如果已退数量大于订单数量 给出警告实际操作中 使用其他方式出库
+                            if (purorderdetail.TotalReturnedQty > purorderdetail.Quantity)
+                            {
+                                _unitOfWorkManage.RollbackTran();
+                                throw new Exception($"退回数量{detail.Quantity}不能大于对应采购订单{entity.tb_purentry.tb_purorder.PurOrderNo}对应明细的数量{purorderdetail.Quantity}！");
+                            }
+                            if (needupdatePurOrderDetails.ContainsKey(entity.tb_purentry.tb_purorder.PurOrderNo))
+                            {
+                                needupdatePurOrderDetails[entity.tb_purentry.tb_purorder.PurOrderNo].Add(purorderdetail);
+                            }
+                            else
+                            {
+                                var lines = new List<tb_PurOrderDetail>();
+                                lines.Add(purorderdetail);
+                                needupdatePurOrderDetails.Add(entity.tb_purentry.tb_purorder.PurOrderNo, lines);
+                            }
+                        }
 
-                    //循环入库明细。更新入库明细中的对应的退回数量
-                    for (int i = 0; i < entity.tb_purentry.tb_PurEntryDetails.Count; i++)
-                    {
-                        var EntryDetail = entity.tb_purentry.tb_PurEntryDetails[i];
-                        tb_PurEntryReDetail ReturnDetail = entity.tb_PurEntryReDetails
-                            .Where(c => c.ProdDetailID == EntryDetail.ProdDetailID && c.Location_ID == EntryDetail.Location_ID).FirstOrDefault();
-                        if (ReturnDetail == null)
+                        int entrycounter = 0;
+                        int ordercounter = 0;
+                        foreach (var item in needupdatePurEntryDetails)
                         {
-                            continue;
+                            if (item.Value.Any())
+                            {
+                                entrycounter = await _appContext.Db.Updateable(item.Value).UpdateColumns(it => new { it.ReturnedQty }).ExecuteCommandAsync();
+                            }
                         }
-                        EntryDetail.ReturnedQty += ReturnDetail.Quantity;
-                        //如果已退数量大于订单数量 给出警告实际操作中 使用其他方式出库
-                        if (EntryDetail.ReturnedQty > entity.tb_purentry.TotalQty)
+                        foreach (var item in needupdatePurOrderDetails)
                         {
-                            _unitOfWorkManage.RollbackTran();
-                            throw new Exception("退回数量不能大于对应入库数量！");
+                            if (item.Value.Any())
+                            {
+                                ordercounter = await _appContext.Db.Updateable(item.Value).UpdateColumns(it => new { it.TotalReturnedQty }).ExecuteCommandAsync();
+                            }
                         }
+
+
                     }
-                    //更新已退回数量
-                    await _unitOfWorkManage.GetDbClient().Updateable(entity.tb_purentry.tb_PurEntryDetails)
-                        .UpdateColumns(t => t.ReturnedQty)
-                        .ExecuteCommandAsync();
+                    #endregion
                 }
-
 
                 AuthorizeController authorizeController = _appContext.GetRequiredService<AuthorizeController>();
                 if (authorizeController.EnableFinancialModule())
@@ -259,6 +303,7 @@ namespace RUINORERP.Business
                 rs.ReturnObject = entity as T;
                 rs.Succeeded = true;
                 return rs;
+
             }
             catch (Exception ex)
             {
@@ -364,45 +409,102 @@ namespace RUINORERP.Business
                     _logger.LogInformation($"{entity.PurEntryReNo}更新库存结果为0行，请检查数据！");
                 }
 
-
-                //入库退回 写回入库单明细，
                 if (entity.tb_purentry != null)
                 {
-                    if (entity.tb_purentry.tb_PurEntryDetails == null)
+                    #region 采购退货数量回写修复
+                    Dictionary<string, List<tb_PurEntryDetail>> needupdatePurEntryDetails = new Dictionary<string, List<tb_PurEntryDetail>>();
+                    Dictionary<string, List<tb_PurOrderDetail>> needupdatePurOrderDetails = new Dictionary<string, List<tb_PurOrderDetail>>();
+                    var purEntry = entity.tb_purentry;
+                    foreach (var purEntryLines in purEntry.tb_PurEntryDetails)
                     {
-                        entity.tb_purentry.tb_PurEntryDetails = await _unitOfWorkManage.GetDbClient().Queryable<tb_PurEntryDetail>().Where(c => c.PurEntryID == entity.tb_purentry.PurEntryID).ToListAsync();
-                    }
-                    //不用foreach
-                    for (int i = 0; i < entity.tb_purentry.tb_PurEntryDetails.Count; i++)
-                    {
-                        tb_PurEntryDetail entryDetail = entity.tb_purentry.tb_PurEntryDetails[i];
-                        tb_PurEntryReDetail ReturnDetail = entity.tb_PurEntryReDetails
-                            .Where(c => c.ProdDetailID == entryDetail.ProdDetailID && c.Location_ID == entryDetail.Location_ID).FirstOrDefault();
-                        if (ReturnDetail == null)
+                        //采购退货明细
+                        var returnDetails = entity.tb_PurEntryReDetails;
+                        var detail = returnDetails.FirstOrDefault(c => c.ProdDetailID == purEntryLines.ProdDetailID && c.Location_ID == purEntryLines.Location_ID);
+                        if (detail != null)
                         {
-                            continue;
-                        }
-                        entryDetail.ReturnedQty -= ReturnDetail.Quantity;
-                        //如果已交数据大于 订单数量 给出警告实际操作中 使用其他方式将备品入库
-                        if (entryDetail.ReturnedQty < 0)
-                        {
-                            _unitOfWorkManage.RollbackTran();
-                            throw new Exception("已退回数量不能小于0！");
+                            purEntryLines.ReturnedQty += detail.Quantity;
+                            //如果已退数量大于订单数量 给出警告实际操作中 使用其他方式出库
+                            if (purEntryLines.ReturnedQty > purEntryLines.Quantity)
+                            {
+                                _unitOfWorkManage.RollbackTran();
+                                throw new Exception($"退回数量{purEntryLines.ReturnedQty}不能大于对应入库单{purEntry.PurEntryNo}对应明细的数量{purEntryLines.Quantity}！");
+                            }                                            //如果已交数据大于 订单数量 给出警告实际操作中 使用其他方式将备品入库
+                            if (purEntryLines.ReturnedQty < 0)
+                            {
+                                _unitOfWorkManage.RollbackTran();
+                                throw new Exception("入库单中已退回数量不能小于0！");
+                            }
+                            if (needupdatePurEntryDetails.ContainsKey(purEntry.PurEntryNo))
+                            {
+                                needupdatePurEntryDetails[purEntry.PurEntryNo].Add(purEntryLines);
+                            }
+                            else
+                            {
+                                var lines = new List<tb_PurEntryDetail>();
+                                lines.Add(purEntryLines);
+                                needupdatePurEntryDetails.Add(purEntry.PurEntryNo, lines);
+                            }
                         }
                     }
-                    //更新已退回数量
-                    int ReturnQtyUpdaterCounter = await _unitOfWorkManage.GetDbClient().Updateable(entity.tb_purentry.tb_PurEntryDetails).ExecuteCommandAsync();
-                    if (ReturnQtyUpdaterCounter > 0)
+                    foreach (var purorderdetail in entity.tb_purentry.tb_purorder.tb_PurOrderDetails)
                     {
+                        //采购退货明细
+                        var returnDetails = entity.tb_PurEntryReDetails;
+                        var detail = returnDetails.FirstOrDefault(c => c.ProdDetailID == purorderdetail.ProdDetailID && c.Location_ID == purorderdetail.Location_ID);
+                        if (detail != null)
+                        {
+                            purorderdetail.TotalReturnedQty += detail.Quantity;
+                            //如果已退数量大于订单数量 给出警告实际操作中 使用其他方式出库
+                            if (purorderdetail.TotalReturnedQty > purorderdetail.Quantity)
+                            {
+                                _unitOfWorkManage.RollbackTran();
+                                throw new Exception($"退回数量{detail.Quantity}不能大于对应采购订单{entity.tb_purentry.tb_purorder.PurOrderNo}对应明细的数量{purorderdetail.Quantity}！");
+                            }
+                            //如果已交数据大于 订单数量 给出警告实际操作中 使用其他方式将备品入库
+                            if (purorderdetail.TotalReturnedQty < 0)
+                            {
+                                _unitOfWorkManage.RollbackTran();
+                                throw new Exception("采购退订单中已退回数量不能小于0！");
+                            }
+                            if (needupdatePurOrderDetails.ContainsKey(entity.tb_purentry.tb_purorder.PurOrderNo))
+                            {
+                                needupdatePurOrderDetails[entity.tb_purentry.tb_purorder.PurOrderNo].Add(purorderdetail);
+                            }
+                            else
+                            {
+                                var lines = new List<tb_PurOrderDetail>();
+                                lines.Add(purorderdetail);
+                                needupdatePurOrderDetails.Add(entity.tb_purentry.tb_purorder.PurOrderNo, lines);
+                            }
+                        }
+
+                        int entrycounter = 0;
+                        int ordercounter = 0;
+                        foreach (var item in needupdatePurEntryDetails)
+                        {
+                            if (item.Value.Any())
+                            {
+                                entrycounter = await _appContext.Db.Updateable(item.Value).UpdateColumns(it => new { it.ReturnedQty }).ExecuteCommandAsync();
+                            }
+                        }
+                        foreach (var item in needupdatePurOrderDetails)
+                        {
+                            if (item.Value.Any())
+                            {
+                                ordercounter = await _appContext.Db.Updateable(item.Value).UpdateColumns(it => new { it.TotalReturnedQty }).ExecuteCommandAsync();
+                            }
+                        }
+
 
                     }
+                    #endregion
                 }
-                //===============
+
+                 //===============
                 //也写回采购订单明细
                 //退回流程不算入采购订单的已交数量
                 //退回售后流程是一个独立的。与入库明细已交挂够。观察售后回来情况
                 //采购订单。入库时回写已交数量 是观察订单情况。两个要分开处理
-
 
 
                 AuthorizeController authorizeController = _appContext.GetRequiredService<AuthorizeController>();

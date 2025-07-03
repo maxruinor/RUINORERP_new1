@@ -69,6 +69,8 @@ namespace RUINORERP.UI.FM.FMBase
         {
             //创建表达式
             var lambda = Expressionable.Create<View_FM_OtherExpenseItems>()
+                                .AndIF(PaymentType == ReceivePaymentType.收款, t => t.EXPOrINC == true)
+                              .AndIF(PaymentType == ReceivePaymentType.付款, t => t.EXPOrINC == false)
                             //.AndIF(CurMenuInfo.CaptionCN.Contains("客户"), t => t.IsCustomer == true)
                             // .AndIF(CurMenuInfo.CaptionCN.Contains("供应商"), t => t.IsVendor == true)
                             // .And(t => t.isdeleted == false)

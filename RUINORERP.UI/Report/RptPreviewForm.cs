@@ -10,6 +10,10 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using FastReport;
 using FastReport.Data;
+using FastReport.Export.Pdf;
+using FastReport.Preview;
+using FastReport.Dialog;
+
 
 namespace RUINORERP.UI.Report
 {
@@ -28,15 +32,15 @@ namespace RUINORERP.UI.Report
         private void RptPreviewForm_Load(object sender, EventArgs e)
         {
             //pReport = new FastReport.Report();   //实例化一个Report报表
-           // pReport.RegisterData(MainList, "Main");
-           // pReport.RegisterData(SubList, "Sub");
+            // pReport.RegisterData(MainList, "Main");
+            // pReport.RegisterData(SubList, "Sub");
 
             //给DataBand(主表数据)绑定数据源 
-           // DataBand masterBand = pReport.FindObject("Main") as DataBand;
-          //  masterBand.DataSource = MainList; //主表 
+            // DataBand masterBand = pReport.FindObject("Main") as DataBand;
+            //  masterBand.DataSource = MainList; //主表 
 
             //给DataBand(明细数据)绑定数据源 
-           // DataBand detailBand = pReport.FindObject("Sub") as DataBand;
+            // DataBand detailBand = pReport.FindObject("Sub") as DataBand;
             //detailBand.DataSource = SubList; //明细表 
 
             //重要！！给明细表设置主外键关系！
@@ -46,14 +50,24 @@ namespace RUINORERP.UI.Report
             //detailBand.Relation.ChildColumns = new string[] { "SONO" };
             //detailBand.Relation.ChildDataSource = pReport.GetDataSource("tb_SOs"); //明细表
 
-          //  String reportFile =string.Format("ReportTemplate/{0}", ReprotfileName);
-          //  if (System.IO.File.Exists(Application.StartupPath + "\\" + reportFile))
-          //  {
-          //      MyReport.Load(reportFile);  //载入报表文件    
-          //  }
-          ////  MyReport.Load(reportFile);  //载入报表文件
+            //  String reportFile =string.Format("ReportTemplate/{0}", ReprotfileName);
+            //  if (System.IO.File.Exists(Application.StartupPath + "\\" + reportFile))
+            //  {
+            //      MyReport.Load(reportFile);  //载入报表文件    
+            //  }
+            ////  MyReport.Load(reportFile);  //载入报表文件
+            ///
+      
             MyReport.Preview = previewControl1; //设置报表的Preview控件（这里的previewControl1就是我们之前拖进去的那个）
+            
             MyReport.ShowPrepared();  //显示
+        }
+  
+
+
+        private void 导出PDFToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+           
         }
     }
 }

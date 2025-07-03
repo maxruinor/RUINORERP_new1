@@ -164,7 +164,7 @@ namespace RUINORERP.UI.FM
             DataBindingHelper.BindData4TextBox<tb_FM_PriceAdjustment>(entity, t => t.TotalForeignDiffAmount.ToString(), txtTotalForeignDiffAmount, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4TextBox<tb_FM_PriceAdjustment>(entity, t => t.TotalLocalDiffAmount.ToString(), txtTotalLocalDiffAmount, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4TextBox<tb_FM_PriceAdjustment>(entity, t => t.AdjustReason, txtAdjustReason, BindDataType4TextBox.Text, false);
-            
+            DataBindingHelper.BindData4CmbByEnum<tb_FM_PriceAdjustment, BizType>(entity, k => k.SourceBizType, cmbBizType, false);
 
             //先绑定这个。InitFilterForControl 这个才生效
             DataBindingHelper.BindData4TextBox<tb_FM_PriceAdjustment>(entity, v => v.SourceBillNo, txtSourceBillNo, BindDataType4TextBox.Text, true, false);

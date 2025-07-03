@@ -197,19 +197,7 @@ namespace RUINORERP.Model
                         }
         }
 
-        private string _Summary;
-        /// <summary>
-        /// 摘要
-        /// </summary>
-        [AdvQueryAttribute(ColName = "Summary",ColDesc = "摘要")] 
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "Summary" ,Length=500,IsNullable = true,ColumnDescription = "摘要" )]
-        public string Summary
-        { 
-            get{return _Summary;}
-            set{
-            SetProperty(ref _Summary, value);
-                        }
-        }
+       
 
         private decimal? _TaxRate;
         /// <summary>
@@ -266,7 +254,20 @@ namespace RUINORERP.Model
             SetProperty(ref _EvidenceImagePath, value);
                         }
         }
-
+        private string _Summary;
+        /// <summary>
+        /// 摘要
+        /// </summary>
+        [AdvQueryAttribute(ColName = "Summary", ColDesc = "摘要")]
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType = "String", ColumnName = "Summary", Length = 500, IsNullable = true, ColumnDescription = "摘要")]
+        public string Summary
+        {
+            get { return _Summary; }
+            set
+            {
+                SetProperty(ref _Summary, value);
+            }
+        }
         #endregion
 
         #region 扩展属性

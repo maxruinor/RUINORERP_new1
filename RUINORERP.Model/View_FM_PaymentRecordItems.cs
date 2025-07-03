@@ -66,8 +66,21 @@ namespace RUINORERP.Model
         }
 
         private string _SourceBillNo;
-        
-        
+
+        private int _ReceivePaymentType;
+        /// <summary>
+        /// 收付类型
+        /// </summary>
+        [AdvQueryAttribute(ColName = "ReceivePaymentType", ColDesc = "收付类型")]
+        [SugarColumn(ColumnDataType = "int", SqlParameterDbType = "Int32", ColumnName = "ReceivePaymentType", DecimalDigits = 0, IsNullable = false, ColumnDescription = "收付类型")]
+        public int ReceivePaymentType
+        {
+            get { return _ReceivePaymentType; }
+            set
+            {
+                SetProperty(ref _ReceivePaymentType, value);
+            }
+        }
         /// <summary>
         /// 来源单号
         /// </summary>

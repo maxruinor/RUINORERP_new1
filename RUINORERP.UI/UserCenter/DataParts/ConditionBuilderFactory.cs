@@ -38,6 +38,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
                         FieldValue = "1",
                         CSharpTypeName = "int"
                     },
+
                     new ConditionalModel
                     {
                         FieldName = "DataStatus",
@@ -45,6 +46,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
                         FieldValue = ((int)DataStatus.确认).ToString(),
                         CSharpTypeName = "int"
                     },
+
                     new ConditionalModel
                     {
                         FieldName = "isdeleted",
@@ -55,6 +57,11 @@ namespace RUINORERP.UI.UserCenter.DataParts
                 }
             }
         };
+
+            if (bizType == BizType.采购退货单)
+            {
+                AddNeedBackFromPurCondition(grouplist);
+            }
             return grouplist;
         }
 
@@ -120,6 +127,13 @@ namespace RUINORERP.UI.UserCenter.DataParts
                         AddEmployeeIdCondition(grouplist);
                     }
                     break;
+                case BizType.采购退货单:
+                    //// 添加销售限制条件（如果有权限限制）
+                    //if (AuthorizeController.GetPurBizLimitedAuth(MainForm.Instance.AppContext))
+                    //{
+                    //    AddEmployeeIdCondition(grouplist);
+                    //}
+                    break;
                 case BizType.借出单:
                 case BizType.归还单:
                     // 添加销售限制条件（如果有权限限制）
@@ -153,6 +167,25 @@ namespace RUINORERP.UI.UserCenter.DataParts
             }
         }
 
+        /// <summary>
+        /// 采购退款单 如果是处理方式是需要返回时提示
+        /// </summary>
+        /// <param name="grouplist"></param>
+        private void AddNeedBackFromPurCondition(List<ConditionGroup> grouplist)
+        {
+            var employeeIdCondition = new ConditionalModel
+            {
+                FieldName = "ProcessWay",
+                ConditionalType = ConditionalType.Equal,
+                FieldValue = ((int)PurReProcessWay.需要返回).ToString(),
+                CSharpTypeName = "int"
+            };
+
+            foreach (var group in grouplist)
+            {
+                group.Conditions.Add(employeeIdCondition);
+            }
+        }
 
         public List<ConditionGroup> GetPrePaymentConditionGroups(ReceivePaymentType paymentType)
         {

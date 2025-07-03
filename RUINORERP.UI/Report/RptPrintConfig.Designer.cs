@@ -58,6 +58,7 @@
             this.kryptonContextMenuColorColumns1 = new Krypton.Toolkit.KryptonContextMenuColorColumns();
             this.kryptonContextMenuCheckButton1 = new Krypton.Toolkit.KryptonContextMenuCheckButton();
             this.bindingSourcePrintTemplate = new System.Windows.Forms.BindingSource(this.components);
+            this.btnToPDF = new Krypton.Toolkit.KryptonButton();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1.Panel1)).BeginInit();
             this.kryptonSplitContainer1.Panel1.SuspendLayout();
@@ -109,6 +110,7 @@
             this.kryptonSplitContainer1.Panel2.Controls.Add(this.btnPrint);
             this.kryptonSplitContainer1.Panel2.Controls.Add(this.btnPreView);
             this.kryptonSplitContainer1.Panel2.Controls.Add(this.btnDelete);
+            this.kryptonSplitContainer1.Panel2.Controls.Add(this.btnToPDF);
             this.kryptonSplitContainer1.Panel2.Controls.Add(this.btnCreate);
             this.kryptonSplitContainer1.Panel2.Controls.Add(this.btnQueryBill);
             this.kryptonSplitContainer1.Size = new System.Drawing.Size(664, 473);
@@ -147,11 +149,13 @@
             this.newSumDataGridView1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
+            this.newSumDataGridView1.BizInvisibleCols = ((System.Collections.Generic.HashSet<string>)(resources.GetObject("newSumDataGridView1.BizInvisibleCols")));
             this.newSumDataGridView1.BorderStyle = System.Windows.Forms.BorderStyle.None;
             this.newSumDataGridView1.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.newSumDataGridView1.ContextMenuStrip = this.contextMenuStrip1;
             this.newSumDataGridView1.CustomRowNo = false;
             this.newSumDataGridView1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.newSumDataGridView1.EnableFiltering = false;
             this.newSumDataGridView1.FieldNameList = ((System.Collections.Concurrent.ConcurrentDictionary<string, System.Collections.Generic.KeyValuePair<string, bool>>)(resources.GetObject("newSumDataGridView1.FieldNameList")));
             this.newSumDataGridView1.IsShowSumRow = false;
             this.newSumDataGridView1.Location = new System.Drawing.Point(0, 0);
@@ -164,6 +168,7 @@
             this.newSumDataGridView1.SummaryDescription = "2020-08最新 带有合计列功能;";
             this.newSumDataGridView1.SumRowCellFormat = "N2";
             this.newSumDataGridView1.TabIndex = 0;
+            this.newSumDataGridView1.UseBatchEditColumn = false;
             this.newSumDataGridView1.UseCustomColumnDisplay = true;
             this.newSumDataGridView1.UseSelectedColumn = false;
             this.newSumDataGridView1.Use是否使用内置右键功能 = false;
@@ -360,6 +365,15 @@
             // 
             this.kryptonContextMenuCheckButton1.Text = "CheckButton";
             // 
+            // btnToPDF
+            // 
+            this.btnToPDF.Location = new System.Drawing.Point(120, 15);
+            this.btnToPDF.Name = "btnToPDF";
+            this.btnToPDF.Size = new System.Drawing.Size(90, 25);
+            this.btnToPDF.TabIndex = 2;
+            this.btnToPDF.Values.Text = "转为PDF";
+            this.btnToPDF.Click += new System.EventHandler(this.btnToPDF_Click);
+            // 
             // RptPrintConfig
             // 
             this.AcceptButton = this.btnPrint;
@@ -433,5 +447,6 @@
         private Krypton.Toolkit.KryptonComboBox cmbPrinterList;
         private System.Windows.Forms.ToolStripMenuItem 复制当前模板ToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem 保存模板设置ToolStripMenuItem;
+        private Krypton.Toolkit.KryptonButton btnToPDF;
     }
 }

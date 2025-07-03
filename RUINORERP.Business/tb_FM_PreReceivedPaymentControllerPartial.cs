@@ -388,7 +388,11 @@ namespace RUINORERP.Business
             payable.LocalPrepaidAmountInWords = payable.LocalPrepaidAmount.ToUpper();
             payable.IsAvailable = true;//默认可用
 
-            payable.PrePaymentReason = $"销售订单{entity.SOrderNo}的预收款，平台单号：{entity.PlatformOrderNo}";
+            payable.PrePaymentReason = $"销售订单{entity.SOrderNo}的预收款。";
+            if (!string.IsNullOrEmpty(entity.PlatformOrderNo) && entity.PlatformOrderNo.Trim().Length > 3)
+            {
+                payable.PrePaymentReason += $"平台单号：{entity.PlatformOrderNo}";
+            }
             Business.BusinessHelper.Instance.InitEntity(payable);
             payable.PrePaymentStatus = (int)PrePaymentStatus.待审核;
 

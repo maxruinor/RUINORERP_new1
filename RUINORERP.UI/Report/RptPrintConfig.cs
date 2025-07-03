@@ -19,9 +19,11 @@ using FastReport;
 using RUINORERP.Business.CommService;
 using RUINORERP.UI.BaseForm;
 using AutoMapper;
-using NPOI.SS.Formula.Functions;
 using RUINORERP.Global;
 using RUINORERP.Common.Extensions;
+using FastReport.Export.Pdf;
+using FastReport.Preview;
+using System.Diagnostics;
 
 namespace RUINORERP.UI.Report
 {
@@ -244,7 +246,7 @@ namespace RUINORERP.UI.Report
                 //打印次数提醒
                 if (PrintDataSources.Count > 0 && PrintDataSources[0].ContainsProperty("PrintStatus"))
                 {
-                    BizType bizType = Bizmapper.GetBizType(typeof(T).Name);
+                    BizType bizType = Bizmapper.GetBizType(PrintDataSources[0].GetType().Name);
                     int printCounter = PrintDataSources[0].GetPropertyValue("PrintStatus").ToString().ToInt();
                     if (printCounter > 0)
                     {
@@ -307,6 +309,14 @@ namespace RUINORERP.UI.Report
                 }
                 else if (rptMode == RptMode.PREVIEW)
                 {
+
+
+                    //PDFExport export = new PDFExport();
+                    //export.EmbeddingFonts = true;
+                    //export.TextInCurves = true;
+                    //TargetReport.Export(export, "result2025.pdf");
+
+
                     RptPreviewForm frm = new RptPreviewForm();
                     frm.Text = printConfig.BizName + "打印预览";
                     frm.MyReport = TargetReport;
@@ -321,6 +331,77 @@ namespace RUINORERP.UI.Report
                     //打印状态更新
                     PrintHelper<object>.UpdatePrintStatus(PrintDataSources, PKFieldName);
                 }
+                else if (rptMode == RptMode.ToPDF)
+                {
+                    using (var dialog = new SaveFileDialog())
+                    {
+                        dialog.Filter = "PDF Files (*.pdf)|*.pdf";
+                        string pdfName = Bizmapper.GetBizType(PrintDataSources[0].GetType().Name).ToString() + ".pdf";
+                        if (listboxBIll.Items.Count > 0)
+                        {
+                            pdfName = Bizmapper.GetBizType(PrintDataSources[0].GetType().Name).ToString() + listboxBIll.Items[0].ToString() + ".pdf";
+                        }
+                        dialog.FileName = pdfName;
+                        if (dialog.ShowDialog() == DialogResult.OK)
+                        {
+                            var stopwatch = Stopwatch.StartNew();
+
+                            using (PDFExport pdfExport = new PDFExport())
+                            {
+                                // 1. 禁用字体嵌入 - 核心解决方案
+                                pdfExport.EmbeddingFonts = false;  // 避免内存溢出的关键设置
+ 
+                                pdfExport.TextInCurves = true;
+
+                                // 2. 替代方案：使用基本字体代替
+                                //pdfExport.UseTrueTypeFonts = false;  // 使用基本PDF字体
+                                //PDFExport export = new PDFExport();
+                                //export.EmbeddingFonts = false;
+                                //export.TextInCurves = true;
+                                ////export.CurvesInterpolation=PDFExport.CurvesInterpolationEnum.Curves;
+                                ////export.CurvesInterpolationText = PDFExport.CurvesInterpolationEnum.Curves;
+                                ////export.GradientQuality = PDFExport.GradientQualityEnum.High;
+                                ///
+                                // 3. 强制使用通用字体（确保客户端有此字体）
+                                TargetReport.Styles.Add(new Style());
+                                TargetReport.Styles[0].Font = new Font("Arial", 10);
+                                
+                                // 4. 减少内存使用的其他设置
+                                //pdfExport.ImageDpi = 150;  // 降低DPI减少内存占用
+                                pdfExport.Compressed = true;  // 启用压缩
+                                pdfExport.OpenAfterExport = false;  // 避免额外内存开销
+
+                                // 5. 分页处理模式（对于超大报表）
+                                //pdfExport.ExportMode = PDFExportMode.Batch;
+                                //pdfExport.BatchSize = 10;  // 每批处理10页
+
+                                // 6. 清理报表资源
+                                TargetReport.Clear();
+
+                                // 7. 显式垃圾回收（谨慎使用）
+                                GC.Collect();
+                                GC.WaitForPendingFinalizers();
+
+                                // 导出报表
+                                TargetReport.Export(pdfExport, dialog.FileName);
+
+                            }
+
+             
+
+
+                            stopwatch.Stop();
+
+                        if (MessageBox.Show($"成功导出 {dialog}，耗时 {stopwatch.Elapsed.TotalSeconds:F2} 秒。\n是否立即打开文件？",
+                                "导出完成", MessageBoxButtons.YesNo, MessageBoxIcon.Information) == DialogResult.Yes)
+                        {
+                            Process.Start(new ProcessStartInfo(dialog.FileName) { UseShellExecute = true });
+                        }
+                    }
+                }
+
+            }
+
             }
             catch (Exception ex)
             {
@@ -336,142 +417,177 @@ namespace RUINORERP.UI.Report
 
 
         private void RptPrintConfig_Load(object sender, EventArgs e)
+{
+    try
+    {
+
+        listboxBIll.Items.Clear();
+        if (PrintDataSources != null)
         {
-            try
+            BillConverterFactory bcf = MainForm.Instance.AppContext.GetRequiredService<BillConverterFactory>();
+
+            foreach (var item in PrintDataSources)
             {
-
-                listboxBIll.Items.Clear();
-                if (PrintDataSources != null)
+                try
                 {
-                    BillConverterFactory bcf = MainForm.Instance.AppContext.GetRequiredService<BillConverterFactory>();
-
-                    foreach (var item in PrintDataSources)
+                    CommBillData cbd = bcf.GetBillData(item.GetType(), item);
+                    if (cbd.BillNo != null)
                     {
-                        try
-                        {
-                            CommBillData cbd = bcf.GetBillData(item.GetType(), item);
-                            if (cbd.BillNo != null)
-                            {
-                                listboxBIll.Items.Add(cbd.BillNo);
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            MainForm.Instance.logger.Error(ex);
-                        }
+                        listboxBIll.Items.Add(cbd.BillNo);
                     }
                 }
-
-                DataBindingHelper.BindData4CheckBox<tb_PrintConfig>(printConfig, t => t.PrinterSelected, chkSelectPrinter, false);
-
-                cmbPrinterList.Items.Clear();
-                var printers = LocalPrinter.GetLocalPrinters();
-                foreach (var item in printers)
+                catch (Exception ex)
                 {
-                    cmbPrinterList.Items.Add(item);
-                }
-                if (printConfig.PrinterSelected.HasValue && printConfig.PrinterSelected.Value)
-                {
-                    cmbPrinterList.SelectedIndex = cmbPrinterList.FindString(printConfig.PrinterName);
-                }
-
-                newSumDataGridView1.NeedSaveColumnsXml = true;
-                newSumDataGridView1.XmlFileName = typeof(tb_PrintTemplate).Name;
-                newSumDataGridView1.FieldNameList = Common.UIHelper.GetFieldNameColList(typeof(tb_PrintTemplate));
-
-                newSumDataGridView1.Use是否使用内置右键功能 = true;
-                //要这样处理，不然数据源不联动
-                if (printConfig.tb_PrintTemplates == null)
-                {
-                    printConfig.tb_PrintTemplates = new List<tb_PrintTemplate>();
-                }
-                bindingSourcePrintTemplate.DataSource = printConfig.tb_PrintTemplates;
-                // 绑定数据 不修改绑定
-                newSumDataGridView1.DataSource = null;
-                newSumDataGridView1.DataSource = bindingSourcePrintTemplate;
-
-                //如果个人的个性化打印设置了优先个人的设置
-                if (MainForm.Instance.AppContext.CurrentUser_Role_Personalized.UseUserOwnPrinter.HasValue
-                               && MainForm.Instance.AppContext.CurrentUser_Role_Personalized.UseUserOwnPrinter.Value)
-                {
-                    chkSelectPrinter.Visible = false;
-                    GroupBoxSelectPrinter.Visible = false;
+                    MainForm.Instance.logger.Error(ex);
                 }
             }
-            catch (Exception ex)
-            {
-                MainForm.Instance.logger.Error("打印配置加载异常", ex);
-            }
         }
 
-        private async void btnPrinter_Click(object sender, EventArgs e)
+        DataBindingHelper.BindData4CheckBox<tb_PrintConfig>(printConfig, t => t.PrinterSelected, chkSelectPrinter, false);
+
+        cmbPrinterList.Items.Clear();
+        var printers = LocalPrinter.GetLocalPrinters();
+        foreach (var item in printers)
         {
-
-
-            if (cmbPrinterList.SelectedItem != null)
-            {
-                printConfig.PrinterName = cmbPrinterList.SelectedItem.ToString();
-            }
-            printConfig.PrinterSelected = chkSelectPrinter.Checked;
-            if (printConfig.PrintConfigID > 0)
-            {
-                BusinessHelper.Instance.EditEntity(printConfig);
-            }
-            else
-            {
-                BusinessHelper.Instance.InitEntity(printConfig);
-            }
-            await MainForm.Instance.AppContext.Db.Updateable<tb_PrintConfig>(printConfig).ExecuteCommandAsync();
-
+            cmbPrinterList.Items.Add(item);
         }
-
-        private void 设为默认ToolStripMenuItem_Click(object sender, EventArgs e)
+        if (printConfig.PrinterSelected.HasValue && printConfig.PrinterSelected.Value)
         {
-            //设置一下默认，只能一行
-            //改一行，就会修改其他行
-            List<tb_PrintTemplate> Templates = bindingSourcePrintTemplate.DataSource as List<tb_PrintTemplate>;
-            if (Templates != null && newSumDataGridView1.CurrentRow != null)
-            {
-                //找到当前选中的，要设置为默认的行。
-                long currentID = (newSumDataGridView1.CurrentRow.DataBoundItem as tb_PrintTemplate).ID;
-
-                //指定行为默认
-                tb_PrintTemplate printTemplate = Templates.Where(t => t.ID == currentID).FirstOrDefault();
-                printTemplate.IsDefaultTemplate = true;
-
-                //其他行是否
-                Templates.Where(t => t.ID != currentID).ToList().ForEach(w => w.IsDefaultTemplate = false);
-                //保存
-                MainForm.Instance.AppContext.Db.Updateable<tb_PrintTemplate>(Templates).ExecuteCommand();
-                bindingSourcePrintTemplate.DataSource = Templates;
-                bindingSourcePrintTemplate.EndEdit();
-            }
+            cmbPrinterList.SelectedIndex = cmbPrinterList.FindString(printConfig.PrinterName);
         }
 
-        private void 复制当前模板ToolStripMenuItem_Click(object sender, EventArgs e)
+        newSumDataGridView1.NeedSaveColumnsXml = true;
+        newSumDataGridView1.XmlFileName = typeof(tb_PrintTemplate).Name;
+        newSumDataGridView1.FieldNameList = Common.UIHelper.GetFieldNameColList(typeof(tb_PrintTemplate));
+
+        newSumDataGridView1.Use是否使用内置右键功能 = true;
+        //要这样处理，不然数据源不联动
+        if (printConfig.tb_PrintTemplates == null)
         {
-            tb_PrintTemplate printTemplateOld = (bindingSourcePrintTemplate.Current as tb_PrintTemplate);
-
-            RptNewTemplate rptNew = new RptNewTemplate();
-            if (rptNew.ShowDialog() == DialogResult.OK)
-            {
-                tb_PrintTemplate printTemplate = new tb_PrintTemplate();
-                printTemplate = printTemplateOld.Clone() as tb_PrintTemplate;
-                printTemplate.Template_Name = rptNew.txtTemplateName.Text.Trim();
-                printTemplate.ID = RUINORERP.Common.SnowflakeIdHelper.IdHelper.GetLongId();
-                printTemplate.ActionStatus = ActionStatus.新增;
-                bindingSourcePrintTemplate.Add(printTemplate);
-                MainForm.Instance.AppContext.Db.Storageable<tb_PrintTemplate>(printTemplate).ExecuteReturnEntityAsync();
-                newSumDataGridView1.ReadOnly = false;
-                newSumDataGridView1.Columns["Template_Name"].ReadOnly = false;
-            }
-
+            printConfig.tb_PrintTemplates = new List<tb_PrintTemplate>();
         }
+        bindingSourcePrintTemplate.DataSource = printConfig.tb_PrintTemplates;
+        // 绑定数据 不修改绑定
+        newSumDataGridView1.DataSource = null;
+        newSumDataGridView1.DataSource = bindingSourcePrintTemplate;
 
-        private void 保存模板设置ToolStripMenuItem_Click(object sender, EventArgs e)
+        //如果个人的个性化打印设置了优先个人的设置
+        if (MainForm.Instance.AppContext.CurrentUser_Role_Personalized.UseUserOwnPrinter.HasValue
+                       && MainForm.Instance.AppContext.CurrentUser_Role_Personalized.UseUserOwnPrinter.Value)
         {
-            List<tb_PrintTemplate> Templates = bindingSourcePrintTemplate.DataSource as List<tb_PrintTemplate>;
-            MainForm.Instance.AppContext.Db.Updateable<tb_PrintTemplate>(Templates).ExecuteCommand();
+            chkSelectPrinter.Visible = false;
+            GroupBoxSelectPrinter.Visible = false;
         }
+    }
+    catch (Exception ex)
+    {
+        MainForm.Instance.logger.Error("打印配置加载异常", ex);
+    }
+}
+
+private async void btnPrinter_Click(object sender, EventArgs e)
+{
+
+
+    if (cmbPrinterList.SelectedItem != null)
+    {
+        printConfig.PrinterName = cmbPrinterList.SelectedItem.ToString();
+    }
+    printConfig.PrinterSelected = chkSelectPrinter.Checked;
+    if (printConfig.PrintConfigID > 0)
+    {
+        BusinessHelper.Instance.EditEntity(printConfig);
+    }
+    else
+    {
+        BusinessHelper.Instance.InitEntity(printConfig);
+    }
+    await MainForm.Instance.AppContext.Db.Updateable<tb_PrintConfig>(printConfig).ExecuteCommandAsync();
+
+}
+
+private void 设为默认ToolStripMenuItem_Click(object sender, EventArgs e)
+{
+    //设置一下默认，只能一行
+    //改一行，就会修改其他行
+    List<tb_PrintTemplate> Templates = bindingSourcePrintTemplate.DataSource as List<tb_PrintTemplate>;
+    if (Templates != null && newSumDataGridView1.CurrentRow != null)
+    {
+        //找到当前选中的，要设置为默认的行。
+        long currentID = (newSumDataGridView1.CurrentRow.DataBoundItem as tb_PrintTemplate).ID;
+
+        //指定行为默认
+        tb_PrintTemplate printTemplate = Templates.Where(t => t.ID == currentID).FirstOrDefault();
+        printTemplate.IsDefaultTemplate = true;
+
+        //其他行是否
+        Templates.Where(t => t.ID != currentID).ToList().ForEach(w => w.IsDefaultTemplate = false);
+        //保存
+        MainForm.Instance.AppContext.Db.Updateable<tb_PrintTemplate>(Templates).ExecuteCommand();
+        bindingSourcePrintTemplate.DataSource = Templates;
+        bindingSourcePrintTemplate.EndEdit();
+    }
+}
+
+private void 复制当前模板ToolStripMenuItem_Click(object sender, EventArgs e)
+{
+    tb_PrintTemplate printTemplateOld = (bindingSourcePrintTemplate.Current as tb_PrintTemplate);
+
+    RptNewTemplate rptNew = new RptNewTemplate();
+    if (rptNew.ShowDialog() == DialogResult.OK)
+    {
+        tb_PrintTemplate printTemplate = new tb_PrintTemplate();
+        printTemplate = printTemplateOld.Clone() as tb_PrintTemplate;
+        printTemplate.Template_Name = rptNew.txtTemplateName.Text.Trim();
+        printTemplate.ID = RUINORERP.Common.SnowflakeIdHelper.IdHelper.GetLongId();
+        printTemplate.ActionStatus = ActionStatus.新增;
+        bindingSourcePrintTemplate.Add(printTemplate);
+        MainForm.Instance.AppContext.Db.Storageable<tb_PrintTemplate>(printTemplate).ExecuteReturnEntityAsync();
+        newSumDataGridView1.ReadOnly = false;
+        newSumDataGridView1.Columns["Template_Name"].ReadOnly = false;
+    }
+
+}
+
+private void 保存模板设置ToolStripMenuItem_Click(object sender, EventArgs e)
+{
+    List<tb_PrintTemplate> Templates = bindingSourcePrintTemplate.DataSource as List<tb_PrintTemplate>;
+    MainForm.Instance.AppContext.Db.Updateable<tb_PrintTemplate>(Templates).ExecuteCommand();
+}
+
+private void btnToPDF_Click(object sender, EventArgs e)
+{
+    PrintReport(RptMode.ToPDF);
+}
+
+private void ShowCustomExportDialog(FastReport.Report report)
+{
+    using (var dialog = new SaveFileDialog())
+    {
+        dialog.Filter = "PDF Files (*.pdf)|*.pdf";
+        if (dialog.ShowDialog() == DialogResult.OK)
+        {
+            ExportHighQualityPdf(report, dialog.FileName);
+            MessageBox.Show("PDF exported successfully!");
+        }
+    }
+}
+
+// 高质量PDF导出方法
+public void ExportHighQualityPdf(FastReport.Report report, string fileName)
+{
+    using (PDFExport pdfExport = new PDFExport())
+    {
+        // 关键优化设置
+        pdfExport.EmbeddingFonts = true;
+        pdfExport.GradientQuality = PDFExport.GradientQualityEnum.High;
+        pdfExport.TextInCurves = true;
+        //pdfExport.Compressed = false; // 关闭压缩提高清晰度
+        // 应用设置并导出
+        report.Export(pdfExport, fileName);
+    }
+}
+
+
     }
 }

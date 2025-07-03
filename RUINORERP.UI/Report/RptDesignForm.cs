@@ -572,6 +572,7 @@ namespace RUINORERP.UI.Report
     {
         DESIGN,
         PREVIEW,
-        PRINT
+        PRINT,
+        ToPDF,
     }
 }

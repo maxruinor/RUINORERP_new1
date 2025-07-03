@@ -200,7 +200,7 @@ namespace RUINORERP.Business
                                             //财务只管财务的状态
                                             // saleOut.DataStatus = (int)DataStatus.完结;
                                             saleOut.PayStatus = (int)PayStatus.全部付款;
-                                            saleOut.Paytype_ID= entity.Paytype_ID.Value;
+                                            saleOut.Paytype_ID = entity.Paytype_ID.Value;
                                         }
                                         else
                                         {
@@ -308,19 +308,25 @@ namespace RUINORERP.Business
                                 //厂商退款 时才处理
                                 //退货单审核后生成红字应收单（负金额）
                                 //没有记录支付状态，只标记结案处理
-                                if (receivablePayable.ARAPStatus == (int)ARAPStatus.全部支付)
+                                if (receivablePayable.ARAPStatus == (int)ARAPStatus.全部支付|| receivablePayable.ARAPStatus == (int)ARAPStatus.部分支付)
                                 {
                                     tb_PurEntryRe purEntryRe = await _appContext.Db.Queryable<tb_PurEntryRe>()
                                         .Where(c => c.DataStatus >= (int)DataStatus.确认
                                      && c.PurEntryRe_ID == receivablePayable.SourceBillId).SingleAsync();
                                     if (purEntryRe != null)
                                     {
-                                        purEntryRe.DataStatus = (int)DataStatus.完结;
-                                        purEntryRe.PayStatus = (int)PayStatus.全部付款;
+                                        if (receivablePayable.ARAPStatus == (int)ARAPStatus.全部支付)
+                                        {
+                                            purEntryRe.DataStatus = (int)DataStatus.完结;
+                                            purEntryRe.PayStatus = (int)PayStatus.全部付款;
+                                        }
+                                        else
+                                        {
+                                            purEntryRe.PayStatus = (int)PayStatus.部分付款;
+                                        }
                                         purEntryRe.Paytype_ID = entity.Paytype_ID;
                                         purEntryReUpdateList.Add(purEntryRe);
                                     }
-
                                 }
                             }
 
@@ -514,7 +520,7 @@ namespace RUINORERP.Business
 
                                                 saleOrder.ApprovalOpinions += $" 订金退款，订单取消";
                                                 saleOrder.DataStatus = (int)DataStatus.已取消;
-                                                
+
                                                 saleOrderUpdateList.Add(saleOrder);
 
 
@@ -978,11 +984,13 @@ namespace RUINORERP.Business
                 paymentRecordDetail.LocalAmount = entity.LocalPrepaidAmount;
                 paymentRecordDetail.ForeignAmount = entity.ForeignPrepaidAmount;
             }
-            paymentRecordDetail.Summary = $"由预收单{entity.PreRPNO}转换自动生成。";
-
+            paymentRecordDetail.Summary = $"来自预收单{entity.PreRPNO}。";
+            if (entity.PrePaymentReason.Contains("平台单号"))
+            {
+                paymentRecordDetail.Summary += entity.PrePaymentReason;
+            }
             paymentRecord.TotalLocalAmount = paymentRecordDetail.LocalAmount;
             paymentRecord.TotalForeignAmount = paymentRecordDetail.ForeignAmount;
-
             paymentRecord.PaymentDate = entity.PrePayDate;
             paymentRecord.Currency_ID = entity.Currency_ID;
             paymentRecord.CustomerVendor_ID = entity.CustomerVendor_ID;

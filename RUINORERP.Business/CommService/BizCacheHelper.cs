@@ -454,6 +454,7 @@ namespace RUINORERP.Business.CommService
             "tb_Prod", 
             // "tb_ProdDetail", // 这个不能缓存，在 GridSetValue 时
             "View_ProdDetail",
+            "View_ProdInfo",
             "tb_ProdPropertyType",
             "tb_ProdProperty",
             "tb_Employee",

@@ -603,7 +603,7 @@ namespace RUINORERP.Business
                         #region 生成应收 
                         var ctrpayable = _appContext.GetRequiredService<tb_FM_ReceivablePayableController<tb_FM_ReceivablePayable>>();
 
-                        tb_FM_ReceivablePayable Payable = await ctrpayable.BuildReceivablePayable(entity, false);
+                        tb_FM_ReceivablePayable Payable = await ctrpayable.BuildReceivablePayable(entity);
                         var ctrpay = _appContext.GetRequiredService<tb_FM_ReceivablePayableController<tb_FM_ReceivablePayable>>();
                         ReturnMainSubResults<tb_FM_ReceivablePayable> rmr = await ctrpay.BaseSaveOrUpdateWithChild<tb_FM_ReceivablePayable>(Payable, false);
                         if (rmr.Succeeded)
@@ -611,7 +611,18 @@ namespace RUINORERP.Business
                             //已经是等审核。 审核时会核销预收付款
                         }
 
+                        #endregion
 
+                        #region 佣金生成应付
+                        if (entity.TotalCommissionAmount > 0)
+                        {
+                            tb_FM_ReceivablePayable PayableCommission = await ctrpayable.BuildReceivablePayable(entity, true);
+                            ReturnMainSubResults<tb_FM_ReceivablePayable> rmrCommission = await ctrpay.BaseSaveOrUpdateWithChild<tb_FM_ReceivablePayable>(PayableCommission, false);
+                            if (rmrCommission.Succeeded)
+                            {
+                                //已经是等审核。 审核时会核销预收付款
+                            }
+                        }
 
                         #endregion
                     }
@@ -964,11 +975,14 @@ namespace RUINORERP.Business
                                    && c.SourceBizType == (int)BizType.销售出库单).ToListAsync();
                     if (ARAPList != null && ARAPList.Count > 0)
                     {
-                        if (ARAPList.Count == 1)
+                        //处理收款时
+                        var receivableList = new List<tb_FM_ReceivablePayable>();
+                        receivableList = ARAPList.Where(c => c.ReceivePaymentType == (int)ReceivePaymentType.收款).ToList();
+                        if (receivableList.Count == 1)
                         {
-                            var result = await ctrpayable.AntiApplyManualPaymentAllocation(ARAPList[0], false);
+                            var result = await ctrpayable.AntiApplyManualPaymentAllocation(receivableList[0], ReceivePaymentType.收款, false);
                         }
-                        else
+                        else if (receivableList.Count > 1)
                         {
                             //不会为多行。有错误
                             _unitOfWorkManage.RollbackTran();
@@ -976,6 +990,24 @@ namespace RUINORERP.Business
                             rs.Succeeded = false;
                             return rs;
                         }
+
+
+                        //处理佣金（付款）
+                        var PayableList = new List<tb_FM_ReceivablePayable>();
+                        PayableList = ARAPList.Where(c => c.ReceivePaymentType == (int)ReceivePaymentType.付款).ToList();
+                        if (PayableList.Count == 1)
+                        {
+                            var result = await ctrpayable.AntiApplyManualPaymentAllocation(PayableList[0], ReceivePaymentType.付款, true);
+                        }
+                        else if (PayableList.Count > 1)
+                        {
+                            //不会为多行。有错误
+                            _unitOfWorkManage.RollbackTran();
+                            rs.ErrorMsg = $"销售出库单{entity.SaleOutNo}有多张佣金的应付款单，数据重复，请检查数据正确性后，再操作。";
+                            rs.Succeeded = false;
+                            return rs;
+                        }
+
                     }
 
                     #endregion

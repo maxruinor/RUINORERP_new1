@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：05/12/2025 00:31:25
+// 时间：07/04/2025 18:54:58
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -24,7 +24,7 @@ using RUINORERP.UI.Common;
 namespace RUINORERP.UI
 {
     /// <summary>
-    /// 库存策略通过这里设置的条件查询出一个库存集合提醒给用户数据编辑
+    /// 提醒规则数据编辑
     /// </summary>
      [MenuAttrAssemblyInfo( "库位编辑", true, UIType.单表数据)]
     public partial class tb_ReminderRuleEdit:UserControl
@@ -50,6 +50,9 @@ namespace RUINORERP.UI
         
         
         
+        
+        
+        
 
          }
 /*
@@ -58,14 +61,17 @@ namespace RUINORERP.UI
         {
         tb_ReminderRule entity = new tb_ReminderRule();
                      entity.RuleName = txtRuleName.Text ;
-                       entity.Description = txtDescription.Text ;
+                       entity.RuleEngineType = Int32.Parse(txtRuleEngineType.Text);
+                        entity.Description = txtDescription.Text ;
                        entity.ReminderBizType = Int32.Parse(txtReminderBizType.Text);
-                        entity.Priority = Int32.Parse(txtPriority.Text);
+                        entity.CheckIntervalByMinutes = Int32.Parse(txtCheckIntervalByMinutes.Text);
+                        entity.ReminderPriority = Int32.Parse(txtReminderPriority.Text);
                         entity.IsEnabled = Boolean.Parse(txtIsEnabled.Text);
-                        entity.NotifyChannels = txtNotifyChannels.Text ;
-                       entity.EffectiveDate = DateTime.Parse(txtEffectiveDate.Text);
+                        entity.NotifyChannel = Int32.Parse(txtNotifyChannel.Text);
+                        entity.EffectiveDate = DateTime.Parse(txtEffectiveDate.Text);
                         entity.ExpireDate = DateTime.Parse(txtExpireDate.Text);
                         entity.Condition = txtCondition.Text ;
+                       entity.NotifyRecipientNames = txtNotifyRecipientNames.Text ;
                        entity.NotifyRecipients = txtNotifyRecipients.Text ;
                        entity.NotifyMessage = txtNotifyMessage.Text ;
                        entity.JsonConfig = txtJsonConfig.Text ;
@@ -84,14 +90,17 @@ namespace RUINORERP.UI
         {
         _EditEntity = entity;
                         DataBindingHelper.BindData4TextBox<tb_ReminderRule>(entity, t => t.RuleName, txtRuleName, BindDataType4TextBox.Text,false);
+           DataBindingHelper.BindData4TextBox<tb_ReminderRule>(entity, t => t.RuleEngineType, txtRuleEngineType, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4TextBox<tb_ReminderRule>(entity, t => t.Description, txtDescription, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_ReminderRule>(entity, t => t.ReminderBizType, txtReminderBizType, BindDataType4TextBox.Qty,false);
-           DataBindingHelper.BindData4TextBox<tb_ReminderRule>(entity, t => t.Priority, txtPriority, BindDataType4TextBox.Qty,false);
+           DataBindingHelper.BindData4TextBox<tb_ReminderRule>(entity, t => t.CheckIntervalByMinutes, txtCheckIntervalByMinutes, BindDataType4TextBox.Qty,false);
+           DataBindingHelper.BindData4TextBox<tb_ReminderRule>(entity, t => t.ReminderPriority, txtReminderPriority, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4CheckBox<tb_ReminderRule>(entity, t => t.IsEnabled, chkIsEnabled, false);
-           DataBindingHelper.BindData4TextBox<tb_ReminderRule>(entity, t => t.NotifyChannels, txtNotifyChannels, BindDataType4TextBox.Text,false);
+           DataBindingHelper.BindData4TextBox<tb_ReminderRule>(entity, t => t.NotifyChannel, txtNotifyChannel, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4DataTime<tb_ReminderRule>(entity, t => t.EffectiveDate, dtpEffectiveDate,false);
            DataBindingHelper.BindData4DataTime<tb_ReminderRule>(entity, t => t.ExpireDate, dtpExpireDate,false);
            DataBindingHelper.BindData4TextBox<tb_ReminderRule>(entity, t => t.Condition, txtCondition, BindDataType4TextBox.Text,false);
+           DataBindingHelper.BindData4TextBox<tb_ReminderRule>(entity, t => t.NotifyRecipientNames, txtNotifyRecipientNames, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_ReminderRule>(entity, t => t.NotifyRecipients, txtNotifyRecipients, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_ReminderRule>(entity, t => t.NotifyMessage, txtNotifyMessage, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_ReminderRule>(entity, t => t.JsonConfig, txtJsonConfig, BindDataType4TextBox.Text,false);

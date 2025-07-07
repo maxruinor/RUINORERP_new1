@@ -11,7 +11,6 @@ namespace RUINORERP.Global.EnumExt
     public enum RuleEngineType
     {
         //RulesEngine/Roslyn
-        None = 0,
         RulesEngine = 1,
         Roslyn = 2,
         Hybrid = 3
@@ -19,40 +18,40 @@ namespace RUINORERP.Global.EnumExt
     public enum ReminderBizType
     {
         [Description("安全库存提醒")]
-        安全库存提醒,
+        安全库存提醒=1,
 
         [Description("库存积压提醒")]
-        库存积压提醒,
+        库存积压提醒=2,
 
         [Description("库存盘点提醒")]
-        库存盘点提醒,
+        库存盘点提醒=3,
 
         [Description("付款到期提醒")]
-        付款到期提醒,
+        付款到期提醒=4,
 
         [Description("收款逾期提醒")]
-        收款逾期提醒,
+        收款逾期提醒=5,
 
         [Description("生产任务到期提醒")]
-        生产任务到期提醒,
+        生产任务到期提醒=6,
 
         [Description("原材料短缺提醒")]
-        原材料短缺提醒,
+        原材料短缺提醒=7,
 
         [Description("潜在客户跟进提醒")]
-        潜在客户跟进提醒,
+        潜在客户跟进提醒=8,
 
         [Description("客户订单跟进提醒")]
-        客户订单跟进提醒,
+        客户订单跟进提醒=9,
 
         [Description("专利预警提醒")]
-        专利预警提醒,
+        专利预警提醒=10,
 
         [Description("单据审批提醒")]
-        单据审批提醒,
+        单据审批提醒=11,
 
         [Description("其他提醒")]
-        其他提醒
+        其他提醒=12
     }
 
 
@@ -78,11 +77,19 @@ namespace RUINORERP.Global.EnumExt
 审批流程相关提醒
 单据审批提醒（当有待审批单据时提醒）
      */
-    public enum NotificationChannel
+    public enum NotifyChannel
     {
+
+        [Description("系統实时提醒")]
         Realtime = 1,
+
+        [Description("邮件提醒")]
         Email = 2,
+
+        [Description("短信提醒")]
         SMS = 4,
+
+        [Description("工作流提醒")]
         Workflow = 8
     }
 

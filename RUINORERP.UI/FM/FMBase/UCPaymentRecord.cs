@@ -260,7 +260,7 @@ namespace RUINORERP.UI.FM
                         {
                             tb_FM_PayeeInfo payeeInfo = null;
                             var obj = BizCacheHelper.Instance.GetEntity<tb_FM_PayeeInfo>(entity.PayeeInfoID);
-                            if (obj != null && obj.ToString() != "System.Object")
+                            if (obj != null)
                             {
                                 if (obj is tb_FM_PayeeInfo cv)
                                 {
@@ -277,8 +277,8 @@ namespace RUINORERP.UI.FM
                                 DataBindingHelper.BindData4CmbByEnum<tb_FM_PayeeInfo>(payeeInfo, k => k.Account_type, typeof(AccountType), cmbAccount_type, false);
                                 //添加收款信息。展示给财务看
                                 entity.PayeeAccountNo = payeeInfo.Account_No;
-                                // lblBelongingBank.Text = payeeInfo.BelongingBank;
-                                // lblOpeningbank.Text = payeeInfo.OpeningBank;
+                                lblBelongingBank.Text = payeeInfo.BelongingBank;
+                                lblOpeningbank.Text = payeeInfo.OpeningBank;
                                 cmbAccount_type.SelectedItem = payeeInfo.Account_type;
                                 if (!string.IsNullOrEmpty(payeeInfo.PaymentCodeImagePath))
                                 {
@@ -295,8 +295,8 @@ namespace RUINORERP.UI.FM
                         else
                         {
                             txtPayeeAccountNo.Text = "";
-                            //lblBelongingBank.Text = "";
-                            // lblOpeningbank.Text = "";
+                            lblBelongingBank.Text = "";
+                             lblOpeningbank.Text = "";
                         }
                     }
 

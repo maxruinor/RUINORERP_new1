@@ -246,6 +246,14 @@ namespace RUINORERP.Server
 
             #region 智能提醒服务
 
+            builder.RegisterType<WorkflowReminderService>()
+          .AsImplementedInterfaces()
+          .InstancePerLifetimeScope()
+          .AsImplementedInterfaces().AsSelf()
+          .PropertiesAutowired() // 指定属性注入
+          .SingleInstance(); // 单例模式
+
+
             builder.RegisterType<NotificationService>().As<INotificationService>()
                 .AsImplementedInterfaces()
                 .InstancePerLifetimeScope()
@@ -267,19 +275,13 @@ namespace RUINORERP.Server
           .PropertiesAutowired() // 指定属性注入
           .SingleInstance(); // 单例模式
 
-            builder.RegisterType<SmartReminderMonitorStarter>()
-            .AsImplementedInterfaces()
-            .InstancePerLifetimeScope()
-            .AsImplementedInterfaces().AsSelf()
-            .PropertiesAutowired() // 指定属性注入
-            .SingleInstance(); // 单例模式
 
             // 添加健康检查
             //services.AddHealthChecks()
             //    .AddCheck<MonitorHealthCheck>("inventory_monitor");
 
             #endregion
-
+            builder.RegisterModule<SmartReminderModule>();
 
             //后面需要研究
             builder.Populate(services);//将自带的也注入到autofac

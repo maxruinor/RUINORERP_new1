@@ -480,9 +480,11 @@ namespace RUINORERP.UI.UserCenter.DataParts
 
                     break;
                 case BizType.借出单:
-                    conditionGroups.AddRange(_conditionBuilderFactory.GetBorrowedSpecialConditions());
+                    conditionGroups.AddRange(_conditionBuilderFactory.GetNeedReturnSpecialConditions("待归还"));
                     break;
-
+                case BizType.返工退库单:
+                    conditionGroups.AddRange(_conditionBuilderFactory.GetNeedReturnSpecialConditions("待返回"));
+                    break;
                     // 其他业务类型补充...
             }
 

@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：05/12/2025 00:31:25
+// 时间：07/04/2025 18:55:00
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -19,7 +19,7 @@ using RUINORERP.Model.Base;
 namespace RUINORERP.Model.QueryDto
 {
     /// <summary>
-    /// 库存策略通过这里设置的条件查询出一个库存集合提醒给用户
+    /// 提醒规则
     /// </summary>
     [Serializable()]
     [SugarTable("tb_ReminderRule")]
@@ -46,12 +46,25 @@ namespace RUINORERP.Model.QueryDto
         }
      
 
+        private int _RuleEngineType;
+        /// <summary>
+        /// 引擎类型
+        /// </summary>
+        [AdvQueryAttribute(ColName = "RuleEngineType",ColDesc = "引擎类型")]
+        [SugarColumn(ColumnDataType = "int",SqlParameterDbType ="Int32",ColumnName = "RuleEngineType",IsNullable = false,ColumnDescription = "引擎类型" )]
+        public int RuleEngineType 
+        { 
+            get{return _RuleEngineType;}
+            set{SetProperty(ref _RuleEngineType, value);}
+        }
+     
+
         private string _Description;
         /// <summary>
-        /// 规则 描述
+        /// 规则描述
         /// </summary>
-        [AdvQueryAttribute(ColName = "Description",ColDesc = "规则 描述")]
-        [SugarColumn(ColumnDataType = "varchar",SqlParameterDbType ="String",ColumnName = "Description",Length=500,IsNullable = false,ColumnDescription = "规则 描述" )]
+        [AdvQueryAttribute(ColName = "Description",ColDesc = "规则描述")]
+        [SugarColumn(ColumnDataType = "varchar",SqlParameterDbType ="String",ColumnName = "Description",Length=500,IsNullable = false,ColumnDescription = "规则描述" )]
         public string Description 
         { 
             get{return _Description;}
@@ -72,16 +85,29 @@ namespace RUINORERP.Model.QueryDto
         }
      
 
-        private int _Priority;
+        private int _CheckIntervalByMinutes;
+        /// <summary>
+        /// 检测频率(分钟)
+        /// </summary>
+        [AdvQueryAttribute(ColName = "CheckIntervalByMinutes",ColDesc = "检测频率(分钟)")]
+        [SugarColumn(ColumnDataType = "int",SqlParameterDbType ="Int32",ColumnName = "CheckIntervalByMinutes",IsNullable = false,ColumnDescription = "检测频率(分钟)" )]
+        public int CheckIntervalByMinutes 
+        { 
+            get{return _CheckIntervalByMinutes;}
+            set{SetProperty(ref _CheckIntervalByMinutes, value);}
+        }
+     
+
+        private int _ReminderPriority;
         /// <summary>
         /// 优先级
         /// </summary>
-        [AdvQueryAttribute(ColName = "Priority",ColDesc = "优先级")]
-        [SugarColumn(ColumnDataType = "int",SqlParameterDbType ="Int32",ColumnName = "Priority",IsNullable = false,ColumnDescription = "优先级" )]
-        public int Priority 
+        [AdvQueryAttribute(ColName = "ReminderPriority",ColDesc = "优先级")]
+        [SugarColumn(ColumnDataType = "int",SqlParameterDbType ="Int32",ColumnName = "ReminderPriority",IsNullable = false,ColumnDescription = "优先级" )]
+        public int ReminderPriority 
         { 
-            get{return _Priority;}
-            set{SetProperty(ref _Priority, value);}
+            get{return _ReminderPriority;}
+            set{SetProperty(ref _ReminderPriority, value);}
         }
      
 
@@ -98,16 +124,16 @@ namespace RUINORERP.Model.QueryDto
         }
      
 
-        private string _NotifyChannels;
+        private int _NotifyChannel;
         /// <summary>
         /// 通知渠道
         /// </summary>
-        [AdvQueryAttribute(ColName = "NotifyChannels",ColDesc = "通知渠道")]
-        [SugarColumn(ColumnDataType = "varchar",SqlParameterDbType ="String",ColumnName = "NotifyChannels",Length=50,IsNullable = false,ColumnDescription = "通知渠道" )]
-        public string NotifyChannels 
+        [AdvQueryAttribute(ColName = "NotifyChannel",ColDesc = "通知渠道")]
+        [SugarColumn(ColumnDataType = "int",SqlParameterDbType ="Int32",ColumnName = "NotifyChannel",IsNullable = false,ColumnDescription = "通知渠道" )]
+        public int NotifyChannel 
         { 
-            get{return _NotifyChannels;}
-            set{SetProperty(ref _NotifyChannels, value);}
+            get{return _NotifyChannel;}
+            set{SetProperty(ref _NotifyChannel, value);}
         }
      
 
@@ -150,12 +176,25 @@ namespace RUINORERP.Model.QueryDto
         }
      
 
+        private string _NotifyRecipientNames;
+        /// <summary>
+        /// 通知接收人员
+        /// </summary>
+        [AdvQueryAttribute(ColName = "NotifyRecipientNames",ColDesc = "通知接收人员")]
+        [SugarColumn(ColumnDataType = "text",SqlParameterDbType ="String",ColumnName = "NotifyRecipientNames",Length=2147483647,IsNullable = false,ColumnDescription = "通知接收人员" )]
+        public string NotifyRecipientNames 
+        { 
+            get{return _NotifyRecipientNames;}
+            set{SetProperty(ref _NotifyRecipientNames, value);}
+        }
+     
+
         private string _NotifyRecipients;
         /// <summary>
-        /// 知接收人
+        /// 通知接收人员ID
         /// </summary>
-        [AdvQueryAttribute(ColName = "NotifyRecipients",ColDesc = "知接收人")]
-        [SugarColumn(ColumnDataType = "text",SqlParameterDbType ="String",ColumnName = "NotifyRecipients",Length=2147483647,IsNullable = false,ColumnDescription = "知接收人" )]
+        [AdvQueryAttribute(ColName = "NotifyRecipients",ColDesc = "通知接收人员ID")]
+        [SugarColumn(ColumnDataType = "text",SqlParameterDbType ="String",ColumnName = "NotifyRecipients",Length=2147483647,IsNullable = false,ColumnDescription = "通知接收人员ID" )]
         public string NotifyRecipients 
         { 
             get{return _NotifyRecipients;}

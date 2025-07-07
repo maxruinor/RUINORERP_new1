@@ -420,16 +420,22 @@ namespace RUINORERP.Business
 
                 //更新累计退回数量
                 // await _unitOfWorkManage.GetDbClient().Updateable<tb_SaleOutReDetail>(entity.tb_SaleOutReDetails).ExecuteCommandAsync();
-
-                //entity.ApprovalOpinions = approvalEntity.ApprovalComments;
                 //后面已经修改为
-                //entity.ApprovalResults = ae.ApprovalResults;
+                entity.ApprovalResults = true;
                 entity.ApprovalStatus = (int)ApprovalStatus.已审核;
                 entity.DataStatus = (int)DataStatus.确认;
                 BusinessHelper.Instance.ApproverEntity(entity);
                 //只更新指定列
-                // var result = _unitOfWorkManage.GetDbClient().Updateable<tb_Stocktake>(entity).UpdateColumns(it => new { it.DataStatus, it.ApprovalOpinions }).ExecuteCommand();
-                await _unitOfWorkManage.GetDbClient().Updateable<tb_SaleOutRe>(entity).ExecuteCommandAsync();
+                var last = await _unitOfWorkManage.GetDbClient().Updateable(entity).UpdateColumns(it => new
+                {
+                    it.ApprovalStatus,
+                    it.DataStatus,
+                    it.ApprovalResults,
+                    it.Approver_at,
+                    it.Approver_by,
+                    it.ApprovalOpinions,
+                }).ExecuteCommandAsync();
+
                 _unitOfWorkManage.CommitTran();
                 rrs.ReturnObject = entity as T;
                 rrs.Succeeded = true;
@@ -732,8 +738,17 @@ namespace RUINORERP.Business
                 entity.DataStatus = (int)DataStatus.新建;
                 BusinessHelper.Instance.ApproverEntity(entity);
                 //只更新指定列
-                // var result = _unitOfWorkManage.GetDbClient().Updateable<tb_Stocktake>(entity).UpdateColumns(it => new { it.DataStatus, it.ApprovalOpinions }).ExecuteCommand();
-                await _unitOfWorkManage.GetDbClient().Updateable<tb_SaleOutRe>(entity).ExecuteCommandAsync();
+                var last = await _unitOfWorkManage.GetDbClient().Updateable(entity).UpdateColumns(it => new
+                {
+                    it.ApprovalStatus,
+                    it.DataStatus,
+                    it.ApprovalResults,
+                    it.Approver_at,
+                    it.Approver_by,
+                    it.ApprovalOpinions,
+                }).ExecuteCommandAsync();
+
+
                 _unitOfWorkManage.CommitTran();
                 rrs.Succeeded = true;
                 rrs.ReturnObject = entity as T;

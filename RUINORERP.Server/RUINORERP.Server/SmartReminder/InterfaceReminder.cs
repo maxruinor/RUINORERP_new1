@@ -2,7 +2,6 @@
 using RUINORERP.Model;
 using RUINORERP.Model.ReminderModel;
 using RUINORERP.Server.SmartReminder.InvReminder;
-using RUINORERP.Server.SmartReminder.ReminderContext;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,11 +10,10 @@ using System.Threading.Tasks;
 
 namespace RUINORERP.Server.SmartReminder
 {
- 
 
     public interface IReminderStrategy
     {
-        Task CheckAsync(IReminderRule rule, IReminderContext context);
+        Task<bool> CheckAsync(IReminderRule rule, IReminderContext context);
         int Priority { get; }
         bool CanHandle(ReminderBizType reminderType);
     }
@@ -27,7 +25,7 @@ namespace RUINORERP.Server.SmartReminder
         void StartMonitoring(TimeSpan interval);
   
         void AddStrategy(IReminderStrategy strategy);
-        object GetActiveRuleCount();
+        Task<List<IReminderRule>> GetActiveRulesAsync();
     }
     // 4. 通知服务实现
     public interface INotificationService

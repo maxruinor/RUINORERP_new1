@@ -1,4 +1,5 @@
-﻿using RUINORERP.Model;
+﻿using Newtonsoft.Json;
+using RUINORERP.Model;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,35 +8,51 @@ using System.Threading.Tasks;
 
 namespace RUINORERP.Model.ReminderModel
 {
-    // 安全库存提醒规则模型
-    //[RuleType(ReminderType.SafetyStock)]
-    public class SafetyStockRule : tb_ReminderRule
-    {
-        public SafetyStockConfig BusinessConfig { get; set; }
+ 
 
-        private string BuildCondition(SafetyStockConfig policy)
+
+
+    public class SafetyStockConfig : IRuleConfig
+    {
+        // 辅助属性，不参与JSON序列化
+        [JsonIgnore]
+        public string _ProductIds
         {
-            return $@"input => input.Quantity < {policy.MinStock} 
-                || input.Quantity > {policy.MaxStock}";
+            get => string.Join(",", ProductIds);
+            set => ProductIds = value?.Split(',')
+                                 .Select(long.Parse)
+                                 .ToList() ?? new List<long>();
         }
 
-        //public override string BuildCondition()
-        //{
-        //    return $@"input => input.Quantity < {Config.MinStock} 
-        //    || input.Quantity > {Config.MaxStock}";
-        //}
-    }
-
-    public class SafetyStockConfig
-    {
-        public List<int> ProductIds { get; set; }
+        public List<long> ProductIds { get; set; } = new List<long>();
         public int MinStock { get; set; }
         public int MaxStock { get; set; }
-        public List<string> ResponsibleRoles { get; set; } // 责任人角色
-        public bool IsInstantAlert { get; set; } // 是否实时提醒
-        public List<string> NotifyRoles { get; set; }
 
+        // 实现IRuleConfig接口
+        public int ReminderIntervalMinutes { get; set; } = 60; // 默认每小时提醒一次
+
+        private bool Is_enabled = true;
+        // 修正属性名与接口一致
+        public bool IsEnabled
+        {
+            get => Is_enabled;
+            set => Is_enabled = value;
+        }
+
+        public string RuleId { get; set; } = Guid.NewGuid().ToString();
+        public DateTime? StartTime { get; set; }
+        public DateTime? EndTime { get; set; }
+        public ReminderPriority Priority { get; set; } = ReminderPriority.Medium;
+
+        public bool Validate()
+        {
+            return ProductIds?.Any() == true
+                && MinStock >= 0
+                && MaxStock > MinStock
+                && ReminderIntervalMinutes > 0;
+        }
     }
+
 
     // 库存积压提醒规则模型
     public class StockOverstockRule : tb_ReminderRule

@@ -12,6 +12,8 @@ using System.Collections.Concurrent;
 using WorkflowCore.Interface;
 using RUINORERP.Global;
 using RUINORERP.Model.ConfigModel;
+using RUINORERP.Global.EnumExt;
+using RUINORERP.Model.ReminderModel;
 
 namespace RUINORERP.Model.Context
 {
@@ -21,6 +23,12 @@ namespace RUINORERP.Model.Context
     /// </summary>
     public class ApplicationContext
     {
+        #region 智能提醒配置字典
+        public Dictionary<ReminderBizType, IRuleConfig> RuleConfigDictionary { get; set; }
+
+
+        #endregion
+
 
         #region 全局可控件变量
         /// <summary>
@@ -47,9 +55,6 @@ namespace RUINORERP.Model.Context
         /// 专门保存一下账期的信息，省得比较判断时还要去缓存取
         /// </summary>
         public tb_PaymentMethod PaymentMethodOfPeriod { get; set; }
-
-
-
 
         //BillConverterFactory 中会用到这个。UI层才有缓存。单例模式没有作用到。暂时没有处理用。用这个属性来传值。
         public List<tb_MenuInfo> UserMenuList;
@@ -146,7 +151,7 @@ namespace RUINORERP.Model.Context
         public List<tb_RoleInfo> Roles { get; set; }
 
 
-        
+
         /// <summary>
         /// 业务编码规则
         /// </summary>
@@ -191,6 +196,10 @@ namespace RUINORERP.Model.Context
         {
             ApplicationContextAccessor = applicationContextAccessor;
             //ApplicationContextAccessor.GetContextManager().ApplicationContext = this;
+
+
+
+
         }
 
         internal ApplicationContextAccessor ApplicationContextAccessor { get; set; }

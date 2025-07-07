@@ -13,22 +13,22 @@ namespace RUINORERP.Server.SmartReminder
     // 添加 NotificationChannel 扩展方法
     public static class NotificationChannelExtensions
     {
-        public static List<string> ToChannelList(this List<NotificationChannel> channels)
+        public static List<string> ToChannelList(this List<NotifyChannel> channels)
         {
             return channels?.Select(c => c.ToString()).ToList() ?? new List<string>();
         }
 
-        public static List<NotificationChannel> FromChannelList(this List<string> channelStrings)
+        public static List<NotifyChannel> FromChannelList(this List<string> channelStrings)
         {
             return channelStrings?.ConvertAll(s =>
-                (NotificationChannel)Enum.Parse(typeof(NotificationChannel), s)) ?? new List<NotificationChannel>();
+                (NotifyChannel)Enum.Parse(typeof(NotifyChannel), s)) ?? new List<NotifyChannel>();
         }
     }
 
     // 添加 User 类扩展方法
     public static class UserExtensions
     {
-        public static string GetRecipientForChannel(this User user, NotificationChannel channel)
+        public static string GetRecipientForChannel(this User user, NotifyChannel channel)
         {
             return channel switch
             {

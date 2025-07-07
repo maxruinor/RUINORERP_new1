@@ -598,6 +598,7 @@ namespace RUINORERP.UI.PSI.SAL
             prodConversion.tb_ProdConversionDetails = new List<tb_ProdConversionDetail>();
             //销售的明细作为转换的明细中的来源
             tb_SaleOutDetail outDetail = rowObj as tb_SaleOutDetail;
+
             tb_ProdConversionDetail conversionDetail = new tb_ProdConversionDetail();
             prodConversion.Location_ID = outDetail.Location_ID;
             View_ProdDetail ViewDetail = list.FirstOrDefault(c => c.ProdDetailID == outDetail.ProdDetailID && c.Location_ID == outDetail.Location_ID);

@@ -129,9 +129,9 @@ namespace RUINORERP.Global
     /// </summary>
     public enum Priority
     {
-        正常,
-        重要,
-        重要紧急,
+        正常=1,
+        重要=2,
+        重要紧急=3,
     }
     public enum UILogType
     {

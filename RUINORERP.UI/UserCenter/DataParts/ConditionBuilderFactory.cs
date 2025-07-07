@@ -535,13 +535,16 @@ namespace RUINORERP.UI.UserCenter.DataParts
         }
 
 
-        public List<ConditionGroup> GetBorrowedSpecialConditions()
+
+
+
+        public List<ConditionGroup> GetNeedReturnSpecialConditions(string _StatusName)
         {
             var list = new List<ConditionGroup>
         {
             new ConditionGroup
             {
-                StatusName = "待归还",
+                StatusName = _StatusName,//"待归还",
                 Conditions = new List<IConditionalModel>
                 {
                     new ConditionalModel { FieldName = "ApprovalStatus", ConditionalType = ConditionalType.Equal, FieldValue = "1", CSharpTypeName = "int" },
@@ -568,7 +571,6 @@ namespace RUINORERP.UI.UserCenter.DataParts
                     group.Conditions.Add(employeeIdCondition);
                 }
             }
-
             return list;
         }
 

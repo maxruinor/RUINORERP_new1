@@ -31,7 +31,6 @@
     <Compile Remove="log4netHelper.cs" />
     <Compile Remove="SmartReminder\CachedRuleEngineCenter.cs" />
     <Compile Remove="SmartReminder\InvReminder\InventoryAlertWorkflow.cs" />
-    <Compile Remove="SmartReminder\WorkflowReminderService.cs" />
     <Compile Remove="Startup - 复制.cs" />
     <Compile Remove="Workflow\BillConverterFactory.cs" />
     <Compile Remove="Workflow\WFApproval\ActivityWorkflow.cs" />

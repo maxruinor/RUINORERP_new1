@@ -59,6 +59,7 @@ using Newtonsoft.Json.Linq;
 using FastReport.DevComponents.DotNetBar;
 using System.Runtime.InteropServices;
 using RUINORERP.Global.EnumExt;
+using RUINORERP.Model.ReminderModel;
 
 namespace RUINORERP.UI.Common
 {
@@ -132,6 +133,22 @@ namespace RUINORERP.UI.Common
                 else if (prop.Name == nameof(SettlementType))
                 {
                     FixedDictionaryMappings.Add(new FixedDictionaryMapping(_type.Name, nameof(SettlementType), Common.CommonHelper.Instance.GetKeyValuePairs(typeof(SettlementType))));
+                }
+                else if (prop.Name == nameof(NotifyChannel))
+                {
+                    FixedDictionaryMappings.Add(new FixedDictionaryMapping(_type.Name, nameof(NotifyChannel), Common.CommonHelper.Instance.GetKeyValuePairs(typeof(NotifyChannel))));
+                }
+                else if (prop.Name == nameof(ReminderBizType))
+                {
+                    FixedDictionaryMappings.Add(new FixedDictionaryMapping(_type.Name, nameof(ReminderBizType), Common.CommonHelper.Instance.GetKeyValuePairs(typeof(ReminderBizType))));
+                }
+                else if (prop.Name == nameof(RuleEngineType))
+                {
+                    FixedDictionaryMappings.Add(new FixedDictionaryMapping(_type.Name, nameof(RuleEngineType), Common.CommonHelper.Instance.GetKeyValuePairs(typeof(RuleEngineType))));
+                }
+                else if (prop.Name == nameof(ReminderPriority))
+                {
+                    FixedDictionaryMappings.Add(new FixedDictionaryMapping(_type.Name, nameof(ReminderPriority), Common.CommonHelper.Instance.GetKeyValuePairs(typeof(ReminderPriority))));
                 }
                 else if (prop.Name == nameof(PaymentStatus))
                 {

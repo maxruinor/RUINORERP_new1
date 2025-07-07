@@ -1,7 +1,6 @@
 ﻿using RUINORERP.Global.EnumExt;
 using RUINORERP.Model;
 using RUINORERP.Model.ReminderModel;
-using RUINORERP.Server.SmartReminder.ReminderContext;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -19,17 +18,19 @@ namespace RUINORERP.Server.SmartReminder.ReminderRuleStrategy
 
         public bool CanHandle(ReminderBizType reminderType)
         {
-            throw new NotImplementedException();
+            return true;
         }
 
-        public async Task CheckAsync(IReminderRule policy, tb_Inventory stock)
+        //public  Task CheckAsync(IReminderRule policy, tb_Inventory stock)
+        //{
+        //    // 实现销售趋势分析逻辑
+        //}
+
+        public async Task<bool> CheckAsync(IReminderRule rule, IReminderContext context)
         {
             // 实现销售趋势分析逻辑
-        }
-
-        public Task CheckAsync(IReminderRule rule, IReminderContext context)
-        {
-            throw new NotImplementedException();
+           
+            return true;
         }
     }
  

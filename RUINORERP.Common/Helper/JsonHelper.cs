@@ -1,6 +1,8 @@
-﻿using System;
+﻿using Newtonsoft.Json.Linq;
+using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
- 
+
 
 namespace RUINORERP.Common.Helper
 {
@@ -433,6 +435,21 @@ namespace RUINORERP.Common.Helper
             }
             return false;
         }
+
+
+        public static JObject SafeParseJson(string json)
+        {
+            try
+            {
+                return JObject.Parse(json);
+            }
+            catch (JsonReaderException)
+            {
+                return new JObject(); // 返回空对象或 null
+            }
+        }
+
+
     }
     /// <summary>
     /// 字符状态

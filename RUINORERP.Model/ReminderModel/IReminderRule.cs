@@ -13,10 +13,19 @@ namespace RUINORERP.Model.ReminderModel
 
         //脚本的代码，可能要用一个方法从数据库中的来转？
         string Condition { get; set; }
-
-        //也要从数据为中转换为过
-        ReminderBizType  ReminderBiz  { get; set; }
-        string NotifyChannels { get; set; }
+       
+        int ReminderBizType { get; set; }
+        int NotifyChannel { get; set; }
+        
         int RuleEngineType { get; set; }
+
+        ///// <summary>
+        ///// long类型的userid，用逗号隔开
+        ///// </summary>
+         string NotifyRecipients { get; set; }
+
+        IRuleConfig GetConfig<T>();
+
+
     }
 }

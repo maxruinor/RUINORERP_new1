@@ -245,7 +245,7 @@ namespace RUINORERP.UI.MRP.PQC
 
 
             //先绑定这个。InitFilterForControl 这个才生效
-            DataBindingHelper.BindData4TextBox<tb_FinishedGoodsInv>(entity, v => v.FG_ID, txtFG, BindDataType4TextBox.Text, true);
+            DataBindingHelper.BindData4TextBox<tb_FinishedGoodsInv>(entity, v => v.DeliveryBillNo, txtFG, BindDataType4TextBox.Text, true);
 
             //创建表达式  草稿 结案 和没有提交的都不显示
             var lambdaMO = Expressionable.Create<tb_FinishedGoodsInv>()

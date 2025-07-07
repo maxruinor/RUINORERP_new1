@@ -13,14 +13,11 @@ namespace RUINORERP.Server.SmartReminder
     /// </summary>
     public class WorkingHoursFilter
     {
-        private readonly InventoryMonitorConfig _config;
         private readonly ILogger<WorkingHoursFilter> _logger;
 
         public WorkingHoursFilter(
-            InventoryMonitorConfig config,
             ILogger<WorkingHoursFilter> logger)
         {
-            _config = config ?? throw new ArgumentNullException(nameof(config));
             _logger = logger;
         }
         public bool ShouldCheck()

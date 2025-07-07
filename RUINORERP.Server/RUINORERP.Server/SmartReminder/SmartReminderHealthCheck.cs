@@ -36,7 +36,7 @@ namespace RUINORERP.Server.SmartReminder
             _logger = logger;
         }
 
-        public Task<HealthCheckResult> CheckHealthAsync(
+        public  Task<HealthCheckResult> CheckHealthAsync(
             HealthCheckContext context,
             CancellationToken cancellationToken = default)
         {
@@ -46,10 +46,16 @@ namespace RUINORERP.Server.SmartReminder
                     HealthStatus.Healthy :
                     HealthStatus.Unhealthy;
 
+                //var redisHealth = await CheckRedisConnection();
+                //var dbHealth = await CheckDatabaseConnection();
+
                 var data = new Dictionary<string, object>
                 {
+                    //["Redis"] = redisHealth,
+                    //["Database"] = dbHealth,
+                    //["ActiveWorkflows"] = _workflowHost.GetActiveWorkflows().Count,
                     ["LastCheck"] = DateTime.Now,
-                    ["ActiveRules"] = _monitor.GetActiveRuleCount()
+                    ["ActiveRules"] = _monitor.GetActiveRulesAsync()
                 };
 
                 return Task.FromResult(new HealthCheckResult(

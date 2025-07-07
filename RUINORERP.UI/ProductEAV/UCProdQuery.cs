@@ -843,6 +843,14 @@ namespace RUINORERP.UI.ProductEAV
             kryptonNavigator1.SelectedPage = kryptonPage产品;
             SetPage();
 
+
+
+            #region 加载选择的项目
+
+
+            #endregion
+
+
         }
 
         private void KryptonNavigator1_SelectedPageChanged(object sender, EventArgs e)

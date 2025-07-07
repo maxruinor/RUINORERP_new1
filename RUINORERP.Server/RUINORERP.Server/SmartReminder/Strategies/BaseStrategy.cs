@@ -1,7 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
 using RUINORERP.Global.EnumExt;
 using RUINORERP.Model.ReminderModel;
-using RUINORERP.Server.SmartReminder.ReminderContext;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,6 +9,7 @@ using System.Threading.Tasks;
 
 namespace RUINORERP.Server.SmartReminder.Strategies
 {
+    //策略
     // File: Strategies/BaseStrategy.cs
     public abstract class BaseStrategy<T> : IReminderStrategy where T : IReminderContext
     {
@@ -31,7 +31,7 @@ namespace RUINORERP.Server.SmartReminder.Strategies
 
         public abstract bool CanHandle(ReminderBizType reminderType);
 
-        public async Task CheckAsync(IReminderRule rule, IReminderContext context)
+        public async Task<bool> CheckAsync(IReminderRule rule, IReminderContext context)
         {
             if (context is T typedContext)
             {
@@ -43,8 +43,11 @@ namespace RUINORERP.Server.SmartReminder.Strategies
                     await _notification.SendNotificationAsync(rule, message, typedContext.GetData());
                 }
             }
+            return true;
         }
 
         protected abstract string BuildMessage(IReminderRule rule, T context);
+
+        
     }
 }

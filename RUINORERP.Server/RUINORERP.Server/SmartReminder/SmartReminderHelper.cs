@@ -9,15 +9,15 @@ namespace RUINORERP.Server.SmartReminder
 {
     public static class SmartReminderHelper
     {
-        public static List<NotificationChannel> ParseChannels(string typeFlags)
+        public static List<NotifyChannel> ParseChannels(string typeFlags)
         {
-            List<NotificationChannel> channels = new List<NotificationChannel>();
+            List<NotifyChannel> channels = new List<NotifyChannel>();
             if (!string.IsNullOrEmpty(typeFlags))
             {
                 var flags = typeFlags.Split(',');
                 foreach (var flag in flags)
                 {
-                    if (Enum.TryParse(flag, out NotificationChannel channel))
+                    if (Enum.TryParse(flag, out NotifyChannel channel))
                     {
                         channels.Add(channel);
                     }

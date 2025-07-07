@@ -732,6 +732,11 @@ namespace RUINORERP.Server
                 frmMain.Instance.PrintInfoLog("服务器已经启动");
             }
 
+            // 启动监控
+            var reminderService = Startup.GetFromFac<SmartReminderService>();
+            //不能加await
+            Task.Run(async () => await reminderService.StartAsync(CancellationToken.None));
+
 
             // 每120秒（120000毫秒）执行一次检查
             System.Threading.Timer timerStatus = new System.Threading.Timer(CheckAndRemoveExpiredSessions, null, 0, 1000);
@@ -885,7 +890,7 @@ namespace RUINORERP.Server
                                     frmuserList.UserInfos.Remove(sg.User);
                                 }));
                             }
-                             
+
                             if (reason.Reason != SuperSocket.Connection.CloseReason.ServerShutdown)
                             {
                                 PrintMsg($"{DateTime.Now} [SessionforBiz-主要程序]  {session.RemoteEndPoint} closed，原因：: {reason.Reason}");

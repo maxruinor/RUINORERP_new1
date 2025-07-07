@@ -96,6 +96,8 @@ namespace RUINORERP.UI.PSI.INV
         public override void BuildSummaryCols()
         {
             base.MasterSummaryCols.Add(c => c.Qty);
+            base.MasterSummaryCols.Add(c => c.SubtotalPirceAmount);
+            base.MasterSummaryCols.Add(c => c.SubtotalCostAmount);
         }
 
         public override void BuildInvisibleCols()

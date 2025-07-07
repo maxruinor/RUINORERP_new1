@@ -16,7 +16,6 @@ using WorkflowCore.Primitives;
 using CacheManager.Core;
 using RUINORERP.Common;
 using RUINORERP.Model.ReminderModel;
-using RUINORERP.Server.SmartReminder.ReminderContext;
 using RUINORERP.Global.EnumExt;
 
 namespace RUINORERP.Server.SmartReminder
@@ -45,7 +44,7 @@ namespace RUINORERP.Server.SmartReminder
             _appContext = _AppContextData;
             _unitOfWorkManage = unitOfWorkManage;
             _notification = notification;
-            StartMonitoring(TimeSpan.FromMinutes(5));
+            //StartMonitoring(TimeSpan.FromMinutes(5));
         }
         private bool _isRunning;
         public bool IsRunning { get; set; }
@@ -66,97 +65,65 @@ namespace RUINORERP.Server.SmartReminder
         }
         public void StartMonitoring(TimeSpan interval)
         {
-            //    // 使用 Change 方法管理状态
-            //_timer = new Timer(CheckInventoryCallback,
-            //    null,
-            //    TimeSpan.Zero,
-            //    interval);
             // 首次检查延迟15秒，等待其他服务初始化
             // 在检查入口处添加过滤
             // if (!_scheduler.ShouldTrigger(currentRule)) return;
-
 
             _timer = new Timer(async _ => await CheckRemindersAsync(),
                 null,
                 dueTime: TimeSpan.FromSeconds(15),
                 period: interval);
             IsRunning = true;
-
-            //_timer = new Timer(async _ => await CheckInventoryAsync(),
-            //    null, TimeSpan.Zero, interval);
         }
-        // TODO 要如果调用修复？
-        //private async void SafeCheckInventory()
-        //{
-        //    try
-        //    {
-        //        await CheckInventoryAsync();
-        //    }
-        //    catch (DbException ex)
-        //    {
-        //        _logger.LogError("数据库访问失败: {Message}", ex.Message);
-        //        EnterDegradedMode();
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        _logger.LogCritical("未处理异常: {StackTrace}", ex.StackTrace);
-        //        StopMonitoring();
-        //    }
-        //}
 
         private readonly SemaphoreSlim _checkLock = new(1, 1);
 
         public async Task CheckRemindersAsync()
         {
-            if (!await _checkLock.WaitAsync(TimeSpan.Zero)) return;
-            var activeRules = await GetActiveRulesAsync();
-
-            foreach (var rule in activeRules)
-            {
-                var context = await CreateContextAsync(rule);
-
-                //                ReminderBizType reminderBiz= rule.ReminderBizType;
-                //这里要从数据库配置中转换过来
-                ReminderBizType reminderBiz = ReminderBizType.安全库存提醒;
-                var strategies = _strategies.Where(s => s.CanHandle(reminderBiz));
-
-                foreach (var strategy in strategies.OrderBy(s => s.Priority))
-                {
-                    await strategy.CheckAsync(rule, context);
-                }
-            }
-            /*
+            Console.WriteLine("执行一行检测" + System.DateTime.Now);
             try
             {
-                // 执行检查
-                var policies = await _unitOfWorkManage.GetDbClient().Queryable<tb_ReminderRule>()
-                                 .Where(p => p.IsEnabled)
-                                 .ToListAsync();
+                if (!await _checkLock.WaitAsync(TimeSpan.Zero)) return;
 
-                foreach (var policy in policies)
+                //在线有不有人？有人才提醒？
+
+                var activeRules = await GetActiveRulesAsync();
+                foreach (var rule in activeRules)
                 {
-                    var stock = await _unitOfWorkManage.GetDbClient().Queryable<tb_Inventory>()
-                                       .FirstAsync(p => p.ProdDetailID > 0);
+                    var irule = rule as IReminderRule;
+                    var context = await CreateContextAsync(irule);
 
-                    foreach (var strategy in _strategies.OrderBy(s => s.Priority))
+                    //这里要从数据库配置中转换过来
+                    ReminderBizType reminderBiz = (ReminderBizType)irule.ReminderBizType;
+                    if (reminderBiz == ReminderBizType.安全库存提醒)
                     {
-                        await strategy.CheckAsync(policy, stock);
+                        var strategies = _strategies.Where(s => s.CanHandle(reminderBiz));
+                        foreach (var strategy in strategies.OrderBy(s => s.Priority))
+                        {
+                            await strategy.CheckAsync(irule, context);
+                        }
                     }
                 }
             }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+            }
             finally
             {
+                // 释放信号量,不然无法执行下一次任务
                 _checkLock.Release();
-            }*/
+            }
+
         }
 
 
 
         private async Task<IReminderContext> CreateContextAsync(IReminderRule rule)
         {
-            return rule.ReminderBiz switch
+            return rule.ReminderBizType switch
             {
-                ReminderBizType.安全库存提醒 => await CreateInventoryContextAsync(rule),
+                (int)ReminderBizType.安全库存提醒 => await CreateInventoryContextAsync(rule),
                 //ReminderBizType.单据审批提醒 => await CreateOrderContextAsync(rule),
                 _ => throw new NotSupportedException()
             };
@@ -164,40 +131,46 @@ namespace RUINORERP.Server.SmartReminder
 
         private async Task<IReminderContext> CreateInventoryContextAsync(IReminderRule rule)
         {
-            //var productIds = rule.GetConfig<SafetyStockConfig>().ProductIds;
-            long[] productIds = new long[1];
+            var productIds = (rule.GetConfig<SafetyStockConfig>() as SafetyStockConfig).ProductIds;
             var stocks = await _unitOfWorkManage.GetDbClient().Queryable<tb_Inventory>()
                 .Where(s => productIds.Contains(s.ProdDetailID))
+                .WithCache()
                 .ToListAsync();
-            return new InventoryContext(stocks[0]);
+            return new InventoryContext(stocks);
         }
-        private async void CheckInventoryCallback(object state)
-        {
-            try
-            {
-                await CheckRemindersAsync();
-            }
-            catch (Exception ex)
-            {
-                // 记录日志
-                _logger.Error("库存检查失败", ex);
-            }
-        }
-
 
 
         private static readonly MemoryCache _policyCache = new(new MemoryCacheOptions());
 
-        private async Task<List<tb_ReminderRule>> GetActiveRulesAsync()
+        public async Task<List<IReminderRule>> GetActiveRulesAsync()
         {
-            return await _policyCache.GetOrCreateAsync("ActivePolicies", async entry =>
+            // 尝试从缓存获取数据
+            List<tb_ReminderRule> policies = null;
+            bool cacheHit = _policyCache.TryGetValue("ActivePolicies", out policies);
+
+            if (!cacheHit)
             {
-                entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5);
-                return await _unitOfWorkManage.GetDbClient().Queryable<tb_ReminderRule>()
-                              .Where(p => p.IsEnabled)
-                              .ToListAsync();
-            });
+                // 缓存未命中，从数据库查询
+                policies = await _unitOfWorkManage.GetDbClient()
+                    .Queryable<tb_ReminderRule>()
+                    .Where(p => p.IsEnabled)
+                    .ToListAsync();
+
+                // 将结果存入缓存，设置5分钟过期
+                _policyCache.Set("ActivePolicies", policies, TimeSpan.FromMinutes(5));
+            }
+
+            // 显式转换为接口列表
+            var result = new List<IReminderRule>();
+            foreach (var policy in policies)
+            {
+                result.Add(policy);
+            }
+
+            return result;
         }
+
+
         public void AddStrategy(IReminderStrategy strategy) => _strategies.Add(strategy);
 
         public void Dispose()
@@ -212,10 +185,7 @@ namespace RUINORERP.Server.SmartReminder
             //await Task.WhenAny(completion, timeout);
         }
 
-        public object GetActiveRuleCount()
-        {
-            throw new NotImplementedException();
-        }
+
     }
 
 }

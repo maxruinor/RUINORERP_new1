@@ -296,8 +296,21 @@ namespace RUINORERP.Model
                 }
         }
 
-       
-       
+
+        private string _PlatformOrderNo;
+        /// <summary>
+        /// 平台单号
+        /// </summary>
+        [AdvQueryAttribute(ColName = "PlatformOrderNo", ColDesc = "平台单号")]
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType = "String", ColumnName = "PlatformOrderNo", Length = 100, IsNullable = true, ColumnDescription = "平台单号")]
+        public string PlatformOrderNo
+        {
+            get { return _PlatformOrderNo; }
+            set
+            {
+                SetProperty(ref _PlatformOrderNo, value);
+            }
+        }
 
         private long? _ProdDetailID;
         

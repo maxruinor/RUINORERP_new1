@@ -76,7 +76,7 @@ namespace RUINORERP.UI.PSI.SAL
                 {
                     if (item.tb_SaleOutRes != null && item.tb_SaleOutRes.Count > 0)
                     {
-                        if (MessageBox.Show($"当前订单{item.SaleOutNo}：已经生成过退货单，\r\n确定再次生成吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Information) == DialogResult.Yes)
+                        if (MessageBox.Show($"当前【销售出库单】{item.SaleOutNo}：已经生成过【销售退货单】，\r\n确定再次生成吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Information) == DialogResult.Yes)
                         {
 
                         }
@@ -100,7 +100,7 @@ namespace RUINORERP.UI.PSI.SAL
                 else
                 {
                     // 弹出提示窗口：没有审核的销售订单，无源转为出库单
-                    MessageBox.Show($"当前出库单{item.SaleOutNo}：未审核，无法生成入库单", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    MessageBox.Show($"当前【销售出库单】{item.SaleOutNo}：未审核，无法生成【销售退货单】", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
             }
         }

@@ -25,6 +25,7 @@ namespace RUINORERP.Server.SmartReminder
     {
         Task<bool> EvaluateAsync(IReminderRule rule, object context);
     }
+    /*
     public class RuleEngineCenter : IRuleEngineCenter
     {
         private readonly RulesEngine.RulesEngine _reEngine;
@@ -95,7 +96,7 @@ namespace RUINORERP.Server.SmartReminder
             return await runner(globals);
         }
     }
-
+    **/
     public class RuleGlobals<T>
     {
         public T Context { get; }

@@ -702,9 +702,8 @@ namespace RUINORERP.Business
 
             try
             {
-                // 开启事务，保证数据一致性
-                _unitOfWorkManage.BeginTran();
-                //  
+       
+         
                 tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
                 //更新拟销售量减少
 
@@ -714,7 +713,6 @@ namespace RUINORERP.Business
                 {
 
                     rs.ErrorMsg = "存在已确认或已完结，或已审核的销售退回单，不能反审核  ";
-                    _unitOfWorkManage.RollbackTran();
                     rs.Succeeded = false;
                     return rs;
                 }
@@ -724,10 +722,10 @@ namespace RUINORERP.Business
                 {
                     //return false;
                     rs.ErrorMsg = "有结案的单据，已经跳过反审";
-                    _unitOfWorkManage.RollbackTran();
                     rs.Succeeded = false;
                     return rs;
                 }
+
                 List<tb_Inventory> invUpdateList = new List<tb_Inventory>();
                 // 使用字典按 (ProdDetailID, LocationID) 分组，存储库存记录及累计数据
                 var inventoryGroups = new Dictionary<(long ProdDetailID, long LocationID), (tb_Inventory Inventory, decimal OutQtySum, DateTime LatestOutboundTime)>();
@@ -746,7 +744,6 @@ namespace RUINORERP.Business
                         tb_Inventory inv = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == child.ProdDetailID && i.Location_ID == child.Location_ID);
                         if (inv == null)
                         {
-                            _unitOfWorkManage.RollbackTran();
                             rs.ErrorMsg = $"{child.ProdDetailID}当前产品无库存数据，无法出库。请使用【期初盘点】【采购入库】】【生产缴库】的方式进行盘点后，再操作。";
                             rs.Succeeded = false;
                             return rs;
@@ -789,15 +786,15 @@ namespace RUINORERP.Business
                     inv.Inv_SubtotalCostMoney = inv.Inv_Cost * inv.Quantity; // 需确保 Inv_Cost 有值
                     invUpdateList.Add(inv);
                 }
+          
 
                 DbHelper<tb_Inventory> InvdbHelper = _appContext.GetRequiredService<DbHelper<tb_Inventory>>();
+                _unitOfWorkManage.RollbackTran();
                 var Counter = await InvdbHelper.BaseDefaultAddElseUpdateAsync(invUpdateList);
                 if (Counter == 0)
                 {
                     _logger.LogInformation($"{entity.SaleOutNo}反审核时，更新库存结果为0行，请检查数据！");
                 }
-
-
 
                 if (!entity.ReplaceOut)
                 {
@@ -904,7 +901,7 @@ namespace RUINORERP.Business
 
 
                     //更新已交数量
-                    await _unitOfWorkManage.GetDbClient().Updateable<tb_SaleOrderDetail>(entity.tb_saleorder.tb_SaleOrderDetails).ExecuteCommandAsync();
+                    await _unitOfWorkManage.GetDbClient().Updateable<tb_SaleOrderDetail>(entity.tb_saleorder.tb_SaleOrderDetails).UpdateColumns(t => new { t.TotalDeliveredQty }).ExecuteCommandAsync();
                     //销售出库单，如果来自于销售订单，则要把出库数量累加到订单中的已交数量 并且如果数量够则自动结案
                     if (entity.tb_saleorder != null && entity.tb_saleorder.tb_SaleOrderDetails.Sum(c => c.TotalDeliveredQty) != entity.tb_saleorder.tb_SaleOrderDetails.Sum(c => c.Quantity))
                     {
@@ -953,7 +950,6 @@ namespace RUINORERP.Business
                     }
                     await _unitOfWorkManage.GetDbClient().Updateable(entity.tb_saleorder.tb_customervendor.tb_crm_customer).UpdateColumns(t => new { t.CustomerStatus, t.PurchaseCount, t.TotalPurchaseAmount, t.LastPurchaseDate }).ExecuteCommandAsync();
                 }
-
 
                 //销售出库的反审 
                 AuthorizeController authorizeController = _appContext.GetRequiredService<AuthorizeController>();
@@ -1020,10 +1016,16 @@ namespace RUINORERP.Business
                 BusinessHelper.Instance.ApproverEntity(entity);
 
                 //后面是不是要做一个审核历史记录表？
-
                 //只更新指定列
-                // var result = _unitOfWorkManage.GetDbClient().Updateable<tb_Stocktake>(entity).UpdateColumns(it => new { it.DataStatus, it.ApprovalOpinions }).ExecuteCommand();
-                await _unitOfWorkManage.GetDbClient().Updateable<tb_SaleOut>(entity).ExecuteCommandAsync();
+                var last = await _unitOfWorkManage.GetDbClient().Updateable<tb_SaleOut>(entity).UpdateColumns(it => new
+                {
+                    it.ApprovalStatus,
+                    it.DataStatus,
+                    it.ApprovalResults,
+                    it.Approver_at,
+                    it.Approver_by,
+                    it.ApprovalOpinions,
+                }).ExecuteCommandAsync();
 
                 // 注意信息的完整性
                 _unitOfWorkManage.CommitTran();

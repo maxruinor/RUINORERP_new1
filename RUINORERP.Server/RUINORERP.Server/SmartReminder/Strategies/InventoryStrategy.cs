@@ -1,6 +1,5 @@
 ﻿using RUINORERP.Model.ReminderModel;
 using RUINORERP.Model;
-using RUINORERP.Server.SmartReminder.ReminderContext;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -31,7 +30,7 @@ namespace RUINORERP.Server.SmartReminder.Strategies
             var stock = (tb_Inventory)context.GetData();
             return rule switch
             {
-                SafetyStockRule ssRule => $"安全库存预警：产品 {stock.ProdDetailID} 当前库存 {stock.Quantity}，安全范围 ({ssRule.BusinessConfig.MinStock}-{ssRule.BusinessConfig.MaxStock})",
+               // tb_ReminderRule ssRule => $"安全库存预警：产品 {stock.ProdDetailID} 当前库存 {stock.Quantity}，安全范围 ({ssRule.BusinessConfig.MinStock}-{ssRule.BusinessConfig.MaxStock})",
                // OverstockRule oRule => $"库存积压预警：产品 {stock.ProdDetailID} 当前库存 {stock.Quantity}，超过阈值 {oRule.Threshold}",
                 _ => "库存预警通知"
             };

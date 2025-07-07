@@ -31,6 +31,8 @@ namespace RUINORERP.Business
             // 这里添加额外的初始化代码
             // 如果选择了外发，则必须填写外发加工商
             RuleFor(x => x.ReasonForRework).MinimumLength(3).WithMessage("返工原因不能为空，并且要大于3个字符。");
+            RuleFor(x => x.CustomerVendor_ID).NotNull().When(c => c.IsOutSourced == true).WithMessage("生产单位:选择外发时，请选择发外工厂");
+
         }
     }
 

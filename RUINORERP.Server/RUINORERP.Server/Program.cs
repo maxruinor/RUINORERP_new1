@@ -35,6 +35,7 @@ using RUINORERP.Business.AutoMapper;
 using SuperSocket.Server.Host;
 using RUINORERP.Server.Comm;
 using Mapster;
+using RUINORERP.Server.SmartReminder;
 
 namespace RUINORERP.Server
 {
@@ -168,6 +169,13 @@ namespace RUINORERP.Server
                         serviceStarted = true;
                     }
                     WorkflowHost = host;
+
+                    // 启动监控
+                    //var reminderService = services.GetRequiredService<SmartReminderService_old>();
+                    //Task.Run(() => reminderService.RunSystemAsync());
+
+
+            
 
                     // 启动workflow工作流
                     // host.StartWorkflow("HelloWorkflow", 1, data: null); //

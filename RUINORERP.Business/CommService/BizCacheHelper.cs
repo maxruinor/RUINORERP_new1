@@ -570,6 +570,9 @@ namespace RUINORERP.Business.CommService
                 case "View_ProdDetail":
                     SetDictDataSource<View_ProdDetail>(k => k.ProdDetailID, v => v.CNName, LoadData);
                     break;
+                case "View_ProdInfo":
+                    SetDictDataSource<View_ProdInfo>(k => k.ProdDetailID.Value, v => v.CNName, LoadData);
+                    break;
                 case "tb_ProdPropertyType":
                     SetDictDataSource<tb_ProdPropertyType>(k => k.PropertyType_ID, v => v.PropertyTypeName, LoadData);
                     break;

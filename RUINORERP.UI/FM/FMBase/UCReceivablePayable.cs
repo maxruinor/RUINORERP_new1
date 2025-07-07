@@ -71,7 +71,7 @@ namespace RUINORERP.UI.FM
         }
         protected override void LoadRelatedDataToDropDownItems()
         {
-            if (base.EditEntity is tb_FM_ReceivablePayable  receivablePayable)
+            if (base.EditEntity is tb_FM_ReceivablePayable receivablePayable)
             {
                 if (receivablePayable.SourceBillId.HasValue)
                 {
@@ -119,7 +119,7 @@ namespace RUINORERP.UI.FM
 
             EditEntity = entity;
             if (entity.ARAPId > 0)
-                {
+            {
                 if (entity.Currency_ID == MainForm.Instance.AppContext.BaseCurrency.Currency_ID)
                 {
                     //隐藏外币相关
@@ -240,7 +240,7 @@ namespace RUINORERP.UI.FM
             DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayable>(entity, t => t.LocalPaidAmount.ToString(), txtLocalPaidAmount, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayable>(entity, t => t.ForeignBalanceAmount.ToString(), txtForeignBalanceAmount, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayable>(entity, t => t.LocalBalanceAmount.ToString(), txtLocalBalanceAmount, BindDataType4TextBox.Money, false);
-            
+
             // DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayable>(entity, t => t.SourceBillId, txtSourceBillId, BindDataType4TextBox.Qty, false);
             DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayable>(entity, t => t.SourceBillNo, txtSourceBillNo, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4CmbByEnum<tb_FM_ReceivablePayable, BizType>(entity, k => k.SourceBizType, cmbBizType, false);
@@ -355,7 +355,7 @@ namespace RUINORERP.UI.FM
             }
 
             //如果属性变化 则状态为修改
-            entity.PropertyChanged += (sender, s2) =>
+            entity.PropertyChanged += async (sender, s2) =>
             {
                 //权限允许
                 if ((true && entity.ARAPStatus == (int)ARAPStatus.草稿)
@@ -363,6 +363,60 @@ namespace RUINORERP.UI.FM
                 {
                     EditEntity.ActionStatus = ActionStatus.修改;
                 }
+
+                //后面这些依赖于控件绑定的数据源和字段。所以要在绑定后执行。
+                if (entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改)
+                {
+                    if (s2.PropertyName == entity.GetPropertyName<tb_FM_PayeeInfo>(c => c.PayeeInfoID))
+                    {
+                        cmbPayeeInfoID.Enabled = true;
+                        //加载收款信息
+                        if (entity.PayeeInfoID > 0)
+                        {
+                            tb_FM_PayeeInfo payeeInfo = null;
+                            var obj = BizCacheHelper.Instance.GetEntity<tb_FM_PayeeInfo>(entity.PayeeInfoID);
+                            if (obj != null)
+                            {
+                                if (obj is tb_FM_PayeeInfo cv)
+                                {
+                                    payeeInfo = cv;
+                                }
+                            }
+                            else
+                            {
+                                //直接加载 不用缓存
+                                payeeInfo = await MainForm.Instance.AppContext.Db.Queryable<tb_FM_PayeeInfo>().Where(c => c.PayeeInfoID == entity.PayeeInfoID).FirstAsync();
+                            }
+                            if (payeeInfo != null)
+                            {
+                                DataBindingHelper.BindData4CmbByEnum<tb_FM_PayeeInfo>(payeeInfo, k => k.Account_type, typeof(AccountType), cmbAccount_type, false);
+                                //添加收款信息。展示给财务看
+                                txtPayeeAccountNo.Text = payeeInfo.Account_No;
+                                lblBelongingBank.Text = payeeInfo.BelongingBank;
+                                lblOpeningbank.Text = payeeInfo.OpeningBank;
+                                cmbAccount_type.SelectedItem = payeeInfo.Account_type;
+                                if (!string.IsNullOrEmpty(payeeInfo.PaymentCodeImagePath))
+                                {
+                                    btnInfo.Tag = payeeInfo;
+                                    btnInfo.Visible = true;
+                                }
+                                else
+                                {
+                                    btnInfo.Tag = string.Empty;
+                                    btnInfo.Visible = false;
+                                }
+                            }
+                        }
+                        else
+                        {
+                            txtPayeeAccountNo.Text = "";
+                            lblBelongingBank.Text = "";
+                            lblOpeningbank.Text = "";
+                        }
+                    }
+                }
+
+
 
                 //到期日期应该是根据对应客户的账期的天数来算
                 if (entity.CustomerVendor_ID > 0 && s2.PropertyName == entity.GetPropertyName<tb_FM_ReceivablePayable>(c => c.CustomerVendor_ID))

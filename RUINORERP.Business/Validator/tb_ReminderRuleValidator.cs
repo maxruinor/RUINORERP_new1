@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：05/12/2025 00:31:26
+// 时间：07/04/2025 18:55:01
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,7 +21,7 @@ using Microsoft.Extensions.Options;
 namespace RUINORERP.Business
 {
     /// <summary>
-    /// 库存策略通过这里设置的条件查询出一个库存集合提醒给用户验证类
+    /// 提醒规则验证类
     /// </summary>
     /*public partial class tb_ReminderRuleValidator:AbstractValidator<tb_ReminderRule>*/
     public partial class tb_ReminderRuleValidator:BaseValidatorGeneric<tb_ReminderRule>
@@ -41,24 +41,32 @@ namespace RUINORERP.Business
  RuleFor(tb_ReminderRule =>tb_ReminderRule.RuleName).MaximumLength(50).WithMessage("规则名称:不能超过最大长度,50.");
  RuleFor(tb_ReminderRule =>tb_ReminderRule.RuleName).NotEmpty().WithMessage("规则名称:不能为空。");
 
- RuleFor(tb_ReminderRule =>tb_ReminderRule.Description).MaximumLength(250).WithMessage("规则 描述:不能超过最大长度,250.");
- RuleFor(tb_ReminderRule =>tb_ReminderRule.Description).NotEmpty().WithMessage("规则 描述:不能为空。");
+//***** 
+ RuleFor(tb_ReminderRule =>tb_ReminderRule.RuleEngineType).NotNull().WithMessage("引擎类型:不能为空。");
+
+ RuleFor(tb_ReminderRule =>tb_ReminderRule.Description).MaximumLength(250).WithMessage("规则描述:不能超过最大长度,250.");
+ RuleFor(tb_ReminderRule =>tb_ReminderRule.Description).NotEmpty().WithMessage("规则描述:不能为空。");
 
 //***** 
  RuleFor(tb_ReminderRule =>tb_ReminderRule.ReminderBizType).NotNull().WithMessage("业务类型:不能为空。");
 
 //***** 
- RuleFor(tb_ReminderRule =>tb_ReminderRule.Priority).NotNull().WithMessage("优先级:不能为空。");
+ RuleFor(tb_ReminderRule =>tb_ReminderRule.CheckIntervalByMinutes).NotNull().WithMessage("检测频率(分钟):不能为空。");
+
+//***** 
+ RuleFor(tb_ReminderRule =>tb_ReminderRule.ReminderPriority).NotNull().WithMessage("优先级:不能为空。");
 
 
- RuleFor(tb_ReminderRule =>tb_ReminderRule.NotifyChannels).MaximumLength(25).WithMessage("通知渠道:不能超过最大长度,25.");
- RuleFor(tb_ReminderRule =>tb_ReminderRule.NotifyChannels).NotEmpty().WithMessage("通知渠道:不能为空。");
+//***** 
+ RuleFor(tb_ReminderRule =>tb_ReminderRule.NotifyChannel).NotNull().WithMessage("通知渠道:不能为空。");
 
 
 
  RuleFor(tb_ReminderRule =>tb_ReminderRule.Condition).NotEmpty().WithMessage("规则条件:不能为空。");
 
- RuleFor(tb_ReminderRule =>tb_ReminderRule.NotifyRecipients).NotEmpty().WithMessage("知接收人:不能为空。");
+ RuleFor(tb_ReminderRule =>tb_ReminderRule.NotifyRecipientNames).NotEmpty().WithMessage("通知接收人员:不能为空。");
+
+ RuleFor(tb_ReminderRule =>tb_ReminderRule.NotifyRecipients).NotEmpty().WithMessage("通知接收人员ID:不能为空。");
 
  RuleFor(tb_ReminderRule =>tb_ReminderRule.NotifyMessage).NotEmpty().WithMessage("通知消息模板:不能为空。");
 

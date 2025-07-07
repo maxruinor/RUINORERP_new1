@@ -1,4 +1,5 @@
-﻿using System;
+﻿using RUINORERP.Server.SmartReminder.InvReminder;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -18,24 +19,35 @@ namespace RUINORERP.Server.SmartReminder
             RegisterFlows();
         }
 
-        private void RegisterFlows()
+        public void RegisterFlows()
         {
-            _workflowHost.RegisterWorkflow<OrderApprovalWorkflow>();
+            //_workflowHost.RegisterWorkflow<OrderApprovalWorkflow>();
+            _workflowHost.RegisterWorkflow<InventoryAlertWorkflow, InventoryAlertContext>();
+        }
+        public async Task TriggerWorkflowAsync<T>(T data) where T : new()
+        {
+            await _workflowHost.StartWorkflow(typeof(T).Name, data: data);
+        }
+
+    }
+
+
+    // 库存预警工作流 InventoryAlertWorkflow.cs
+    public class InventoryAlertWorkflow : IWorkflow<InventoryAlertContext>
+    {
+        public string Id => throw new NotImplementedException();
+
+        public int Version => throw new NotImplementedException();
+
+        public void Build(IWorkflowBuilder<InventoryAlertContext> builder)
+        {
+
         }
     }
 
-    public class OrderApprovalWorkflow : IWorkflow<OrderContext>
-    {
-        public void Build(IWorkflowBuilder<OrderContext> builder)
-        {
-            builder
-                .StartWith<SendReminderStep>()
-                .Input(step => step.Message, ctx => $"请审核订单 {ctx.OrderId}")
-                .Then<WaitForResponseStep>()
-                .Output(ctx => ctx.Approved, step => step.Response)
-                .Then<FinalizeStep>();
-        }
-    }
+
+
+
 
     public class SendReminderStep : StepBody
     {
@@ -43,12 +55,12 @@ namespace RUINORERP.Server.SmartReminder
         public override ExecutionResult Run(IStepExecutionContext context)
         {
             // 调用提醒服务
-            var reminder = context.Workflow.Services.GetService<SmartReminderService>();
-            reminder.Trigger(new ReminderRequest
-            {
-                Type = "OrderApproval",
-                Context = context.Workflow.Data
-            });
+            //var reminder = context.Workflow.GetService<SmartReminderService>();
+            //reminder.Trigger(new ReminderRequest
+            //{
+            //    Type = "OrderApproval",
+            //    Context = context.Workflow.Data
+            //});
             return ExecutionResult.Next();
         }
     }

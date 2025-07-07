@@ -655,6 +655,18 @@
     <Compile Include="BI\UCProjectGroupAssigneeEmployees.Designer.cs">
       <DependentUpon>UCProjectGroupAssigneeEmployees.cs</DependentUpon>
     </Compile>
+    <Compile Include="BI\UCReminderRuleEdit.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="BI\UCReminderRuleEdit.designer.cs">
+      <DependentUpon>UCReminderRuleEdit.cs</DependentUpon>
+    </Compile>
+    <Compile Include="BI\UCReminderRuleList.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="BI\UCReminderRuleList.designer.cs">
+      <DependentUpon>UCReminderRuleList.cs</DependentUpon>
+    </Compile>
     <Compile Include="BI\UCSupplierList.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -2594,6 +2606,12 @@
     </Compile>
     <Compile Include="Settings.cs" />
     <Compile Include="SingleInstanceChecker.cs" />
+    <Compile Include="SmartReminderClient\UCSafetyStockConfigEdit.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="SmartReminderClient\UCSafetyStockConfigEdit.designer.cs">
+      <DependentUpon>UCSafetyStockConfigEdit.cs</DependentUpon>
+    </Compile>
     <Compile Include="SS\MenuInit.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -3131,6 +3149,7 @@
     <Compile Include="WorkFlowTester\worker.cs" />
     <Compile Include="WorkFlowTester\WorkWorkflow.cs" />
     <Compile Include="WorkFlowTester\WorkWorkflow2.cs" />
+    <Content Include="ASS\售后管理.txt" />
     <Content Include="Chinese %28Simplified%29.frl">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -3384,6 +3403,12 @@
     </EmbeddedResource>
     <EmbeddedResource Include="BI\UCGroupEmployeesAssignee.resx">
       <DependentUpon>UCGroupEmployeesAssignee.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="BI\UCReminderRuleEdit.resx">
+      <DependentUpon>UCReminderRuleEdit.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="BI\UCReminderRuleList.resx">
+      <DependentUpon>UCReminderRuleList.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="BI\UCsysBillNoRuleEdit.resx">
       <DependentUpon>UCsysBillNoRuleEdit.cs</DependentUpon>
@@ -4044,6 +4069,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Report\UCPrintConfigQuery.resx">
       <DependentUpon>UCPrintConfigQuery.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SmartReminderClient\UCSafetyStockConfigEdit.resx">
+      <DependentUpon>UCSafetyStockConfigEdit.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="SS\MenuInit.resx">
       <DependentUpon>MenuInit.cs</DependentUpon>
@@ -4762,7 +4790,6 @@
     <Folder Include="Other\" />
     <Folder Include="PM\" />
     <Folder Include="RM\" />
-    <Folder Include="SmartReminderClient\" />
     <Folder Include="SysConfigFiles\" />
     <Folder Include="UCForm\" />
     <Folder Include="UControls\TreeGridView\" />

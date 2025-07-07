@@ -235,6 +235,7 @@ namespace RUINORERP.UI.PSI.PUR
 
                     }
 
+               
                     /*
 
                     if (s2.PropertyName == entity.GetPropertyName<tb_PurEntry>(c => c.ShipCost) && entity.ShipCost > 0)

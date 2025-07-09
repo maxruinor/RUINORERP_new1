@@ -335,7 +335,7 @@ namespace RUINORERP.Business.Processor
             }
         }
 
- 
+
 
         /// <summary>
         /// 能默认一次添加的普通字段用这个
@@ -606,7 +606,14 @@ namespace RUINORERP.Business.Processor
             return queryField;
         }
 
-
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="queryFieldIDExp"></param>
+        /// <param name="fieldType"></param>
+        /// <param name="isEnable">如果是时间则默认是否勾选</param>
+        /// <returns></returns>
         public QueryField SetQueryField<T>(Expression<Func<T, object>> queryFieldIDExp,
             AdvQueryProcessType fieldType = AdvQueryProcessType.None, bool isEnable = true)
         {
@@ -632,7 +639,12 @@ namespace RUINORERP.Business.Processor
         /// <param name="queryFieldNameExp">查询出来的显示为这个字段，ID-》name,通常这个编号的字段在主表及引用的表中 字段名要相同，如果不同则用上面的方法T R</param>
         /// <param name="AddSubFilter">如果是关联字段时，是否添加子过滤条件</param>
         /// <param name="SubFieldLimitExp">子条件限制器</param>
-        public QueryField SetQueryField<T>(Expression<Func<T, object>> queryFieldIDExp, AdvQueryProcessType fieldType = AdvQueryProcessType.None, Expression<Func<T, object>> queryFieldNameExp = null, bool AddSubFilter = true, LambdaExpression SubFieldLimitExp = null, bool isEnable = true)
+        ///<param name="isEnable">如果是时间则查询条件时默认是否勾选</param>
+        public QueryField SetQueryField<T>(Expression<Func<T, object>> queryFieldIDExp, AdvQueryProcessType fieldType = AdvQueryProcessType.None,
+            Expression<Func<T, object>> queryFieldNameExp = null,
+            bool AddSubFilter = true,
+            LambdaExpression SubFieldLimitExp = null,
+            bool isEnable = true)
         {
             if (queryFieldIDExp == null)
                 throw new ArgumentNullException(nameof(queryFieldIDExp));

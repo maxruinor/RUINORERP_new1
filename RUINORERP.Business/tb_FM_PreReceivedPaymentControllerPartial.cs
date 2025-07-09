@@ -175,6 +175,18 @@ namespace RUINORERP.Business
                     return rmrs;
                 }
 
+                if (entity.ReceivePaymentType == (int)ReceivePaymentType.付款)
+                {
+                    if (!entity.PayeeInfoID.HasValue)
+                    {
+                        rmrs.ErrorMsg = "付款时，对方的收款信息必填!";
+                        rmrs.Succeeded = false;
+                        rmrs.ReturnObject = entity as T;
+                        return rmrs;
+                    }
+                }
+
+
                 var paymentController = _appContext.GetRequiredService<tb_FM_PaymentRecordController<tb_FM_PaymentRecord>>();
 
                 var records = _unitOfWorkManage.GetDbClient().Queryable<tb_FM_PaymentRecordDetail>()
@@ -549,6 +561,7 @@ namespace RUINORERP.Business
                             .Includes(a => a.tb_employee)
                             .Includes(a => a.tb_currency)
                             .Includes(a => a.tb_paymentmethod)
+                              .Includes(a => a.tb_fm_payeeinfo)
                             .Includes(a => a.tb_projectgroup)
                             .Includes(a => a.tb_department)
                             .Includes(a => a.tb_customervendor)

@@ -129,9 +129,9 @@ namespace RUINORERP.Global
     /// </summary>
     public enum Priority
     {
-        正常=1,
-        重要=2,
-        重要紧急=3,
+        正常 = 1,
+        重要 = 2,
+        重要紧急 = 3,
     }
     public enum UILogType
     {
@@ -343,9 +343,18 @@ namespace RUINORERP.Global
         采购价格调整单 = 93,
 
         付款统计 = 94,
-        收款统计= 95, 
+        收款统计 = 95,
         质量检验单 = 96,// QC (Quality Check)
         销售合同 = 150,
+
+        售后申请单 = 161,
+        售后交付单 = 162,
+        维修工单 = 163,
+        维修领料单 = 164,
+        维修入库单 = 165,
+        报废单 = 166,
+        售后借出单 = 167,
+        售后归还单 = 168,
 
         营销活动 = 300,
     }
@@ -499,6 +508,7 @@ namespace RUINORERP.Global
         [Description("产品组合")]
         Combination = 4,  // 0b0100
     }
+
 
 
     /*

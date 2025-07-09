@@ -404,6 +404,56 @@ namespace RUINORERP.Business.CommService
                         cbd.BillNoColName = GetExpressionColumnName<tb_FM_ReceivablePayable>(c => c.ARAPNo);
                     }
                     break;
+
+                case BizType.售后申请单:
+                    var AfterSaleApply = Entity as tb_AS_AfterSaleApply;
+                    if (AfterSaleApply != null)
+                    {
+                        cbd.BillID = AfterSaleApply.ASApplyID;
+                        cbd.BillNo = AfterSaleApply.ASApplyNo;
+                        cbd.BillNoColName = GetExpressionColumnName<tb_AS_AfterSaleApply>(c => c.ASApplyNo);
+                    }
+                    break;
+
+                case BizType.售后交付单:
+                    var AfterSaleDelivery = Entity as tb_AS_AfterSaleDelivery;
+                    if (AfterSaleDelivery != null)
+                    {
+                        cbd.BillID = AfterSaleDelivery.ASDeliveryID;
+                        cbd.BillNo = AfterSaleDelivery.ASDeliveryNo;
+                        cbd.BillNoColName = GetExpressionColumnName<tb_AS_AfterSaleDelivery>(c => c.ASDeliveryNo);
+                    }
+                    break;
+
+                case BizType.维修工单:
+                    var RepairOrder = Entity as tb_AS_RepairOrder;
+                    if (RepairOrder != null)
+                    {
+                        cbd.BillID = RepairOrder.RepairOrderID;
+                        cbd.BillNo = RepairOrder.RepairOrderNo;
+                        cbd.BillNoColName = GetExpressionColumnName<tb_AS_RepairOrder>(c => c.RepairOrderNo);
+                    }
+                    break;
+
+                case BizType.维修入库单:
+                    var RepairInStock = Entity as tb_AS_RepairInStock;
+                    if (RepairInStock != null)
+                    {
+                        cbd.BillID = RepairInStock.RepairInStockID;
+                        cbd.BillNo = RepairInStock.RepairInStockNo;
+                        cbd.BillNoColName = GetExpressionColumnName<tb_AS_RepairInStock>(c => c.RepairInStockNo);
+                    }
+                    break;
+                case BizType.报废单:
+                    //var RepairInStock = Entity as tb_AS_ScrapDoc;
+                    //if (RepairInStock != null)
+                    //{
+                    //    cbd.BillID = RepairInStock.RepairInStockID;
+                    //    cbd.BillNo = RepairInStock.RepairInStockNo;
+                    //    cbd.BillNoColName = GetExpressionColumnName<tb_AS_ScrapDoc>(c => c.RepairInStockNo);
+                    //}
+                    break;
+
                 /*
         case BizType.托外退料单:
             var Return = Entity as tb_Return;

@@ -569,6 +569,18 @@
     </Compile>
     <Compile Include="AdvancedUIModule\UIGenerateHelper.cs" />
     <Compile Include="AdvancedUIModule\UIQueryHelper.cs" />
+    <Compile Include="ASS\UCASAfterSaleApply.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="ASS\UCASAfterSaleApply.designer.cs">
+      <DependentUpon>UCASAfterSaleApply.cs</DependentUpon>
+    </Compile>
+    <Compile Include="ASS\UCASAfterSaleApplyQuery.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="ASS\UCASAfterSaleApplyQuery.Designer.cs">
+      <DependentUpon>UCASAfterSaleApplyQuery.cs</DependentUpon>
+    </Compile>
     <Compile Include="ATechnologyStack\AOP\DbBizLogAOP.cs" />
     <Compile Include="ATechnologyStack\ISharedIdentification.cs" />
     <Compile Include="BI\UCFMAuditLogsTracker.cs">
@@ -3207,6 +3219,12 @@
     </EmbeddedResource>
     <EmbeddedResource Include="AdvancedUIModule\UCAdvYesOrNO.resx">
       <DependentUpon>UCAdvYesOrNO.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ASS\UCASAfterSaleApply.resx">
+      <DependentUpon>UCASAfterSaleApply.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ASS\UCASAfterSaleApplyQuery.resx">
+      <DependentUpon>UCASAfterSaleApplyQuery.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="BaseForm\BaseBillEdit.resx">
       <DependentUpon>BaseBillEdit.cs</DependentUpon>

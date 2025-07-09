@@ -2958,7 +2958,10 @@ namespace RUINORERP.UI.BaseForm
             List<C> details = new List<C>();
             bindingSourceSub.EndEdit();
             List<C> detailentity = bindingSourceSub.DataSource as List<C>;
-
+            if(detailentity==null)
+            {
+                return;
+            }
             string detailPKName = UIHelper.GetPrimaryKeyColName(typeof(C));
 
             //产品ID有值才算有效值

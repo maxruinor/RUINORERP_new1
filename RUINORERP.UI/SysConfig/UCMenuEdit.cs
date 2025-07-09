@@ -75,10 +75,18 @@ namespace RUINORERP.UI.SysConfig
             {
                 tb_MenuInfo info = new tb_MenuInfo();
                 info.MenuName = "新建菜单";
-                info.Parent_id = (comboBoxTreeView1.TreeView.SelectedNode.Tag as tb_MenuInfo).Parent_id;
+                if (comboBoxTreeView1.TreeView.SelectedNode.Tag != null)
+                {
+                    info.Parent_id = (comboBoxTreeView1.TreeView.SelectedNode.Tag as tb_MenuInfo).Parent_id;
+                    info.Sort = (comboBoxTreeView1.TreeView.SelectedNode.Tag as tb_MenuInfo).Sort + 1;
+                }
+                else
+                {
+                    info.Parent_id = 0;
+                }
+
                 info.IsEnabled = true;
                 info.IsVisble = true;
-                info.Sort = (comboBoxTreeView1.TreeView.SelectedNode.Tag as tb_MenuInfo).Sort + 1;
                 info.MenuType = "菜单";
                 BindData(info);
                 tree_MainMenu.SelectedNode.Tag = info;

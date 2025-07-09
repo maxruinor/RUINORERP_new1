@@ -29,7 +29,7 @@ namespace RUINORERP.Business
         public override void Initialize()
         {
             RuleFor(x => x.AdjustReason).NotNull().WithMessage("调整原因:不能为空。");
-            RuleFor(x => x.AdjustReason).MinimumLength(5).WithMessage("调整原因:要大于5个字。");
+            RuleFor(x => x.AdjustReason).MinimumLength(2).WithMessage("调整原因:要大于2个字。");
         }
     }
 

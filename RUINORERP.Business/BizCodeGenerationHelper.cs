@@ -361,6 +361,30 @@ namespace RUINORERP.Business
                 case BizType.采购价格调整单:
                     rule = "{S:PPA}{D:yyMMdd}{redis:{S:采购价格调整单}{D:yyMM}/000}";
                     break;
+                case BizType.售后申请单:
+                    rule = "{S:ASAP}{D:yyMMdd}{redis:{S:售后申请单}{D:yyMM}/000}";
+                    break;
+                case BizType.售后交付单:
+                    rule = "{S:ASAPD}{D:yyMMdd}{redis:{S:售后交付单}{D:yyMM}/000}";
+                    break;
+                case BizType.维修工单:
+                    rule = "{S:ASRO}{D:yyMMdd}{redis:{S:维修工单}{D:yyMM}/000}";
+                    break;
+                case BizType.维修入库单:
+                    rule = "{S:ASRIS}{D:yyMMdd}{redis:{S:维修入库单}{D:yyMM}/000}";
+                    break;
+                case BizType.维修领料单:
+                    rule = "{S:ASRMR}{D:yyMMdd}{redis:{S:维修领料单}{D:yyMM}/000}";
+                    break;
+                case BizType.报废单:
+                    rule = "{S:ASSD}{D:yyMMdd}{redis:{S:报废单}{D:yyMM}/000}";
+                    break;
+                case BizType.售后借出单:
+                    rule = "{S:ASBR}{D:yyMMdd}{redis:{S:售后借出单}{D:yyMM}/000}";
+                    break;
+                case BizType.售后归还单:
+                    rule = "{S:ASRE}{D:yyMMdd}{redis:{S:售后归还单}{D:yyMM}/000}";
+                    break;
                 default:
                     break;
             }

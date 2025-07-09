@@ -187,6 +187,18 @@ namespace RUINORERP.Business
                     rmrs.ErrorMsg = "只有待审核状态的应收款单才可以审核";
                     return rmrs;
                 }
+
+                if (entity.ReceivePaymentType == (int)ReceivePaymentType.付款)
+                {
+                    if (!entity.PayeeInfoID.HasValue)
+                    {
+                        rmrs.ErrorMsg = "付款时，对方的收款信息必填!";
+                        rmrs.Succeeded = false;
+                        rmrs.ReturnObject = entity as T;
+                        return rmrs;
+                    }
+                }
+
                 //应收款中不能存在相同的来源的 正数金额的出库单的应收数据
                 //一个出库不能多次应收。一个出库一个应收（负数除外）。一个应收可以多次收款来抵扣
 
@@ -464,7 +476,7 @@ namespace RUINORERP.Business
                 payable.TotalLocalPayableAmount = -entity.TotalAmount;
             }
 
-            payable.Remark = $"销售出库单：{entity.SaleOut_NO}对应的销售退回单{entity.ReturnNo}的应退款";
+            payable.Remark = $"销售出库单：{entity.SaleOut_NO}对应的销售退回单{entity.ReturnNo}的应付款";
             Business.BusinessHelper.Instance.InitEntity(payable);
             payable.ARAPStatus = (int)ARAPStatus.待审核;
             return payable;
@@ -505,7 +517,7 @@ namespace RUINORERP.Business
             {
                 payable.ARAPNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.应付款单);
                 payable.SourceBizType = (int)BizType.采购价格调整单;
-                payable.Remark = $"采购入库单调整后：{entity.SourceBillNo} 的应收款";
+                payable.Remark = $"采购入库单调整后：{entity.SourceBillNo} 的应付款";
             }
 
             //如果部门还是没有值 则从缓存中加载,如果项目有所属部门的话
@@ -783,7 +795,7 @@ namespace RUINORERP.Business
                                 }
                             }
                         }
-                     
+
                     }
 
                     if (payable.LocalPaidAmount == 0)
@@ -1924,6 +1936,7 @@ namespace RUINORERP.Business
                             .Includes(a => a.tb_fm_payeeinfo)
                             .Includes(a => a.tb_currency)
                             .Includes(a => a.tb_department)
+                            .Includes(a => a.tb_fm_payeeinfo)
                             .Includes(a => a.tb_projectgroup)
                             .Includes(a => a.tb_customervendor)
                              .AsNavQueryable()//加这个前面,超过三级在前面加这一行，并且第四级无VS智能提示，但是可以用

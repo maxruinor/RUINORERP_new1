@@ -156,12 +156,26 @@ namespace RUINORERP.UI.Common
                 }
                 else if (prop.Name == nameof(Adjust_Type))
                 {
-                    FixedDictionaryMappings.Add(new FixedDictionaryMapping(_type.Name, nameof(Adjust_Type), Common.CommonHelper.Instance.GetKeyValuePairs(typeof(PaymentStatus))));
+                    FixedDictionaryMappings.Add(new FixedDictionaryMapping(_type.Name, nameof(Adjust_Type), Common.CommonHelper.Instance.GetKeyValuePairs(typeof(Adjust_Type))));
                 }
                 else if (prop.Name == nameof(CheckMode))
                 {
-                    FixedDictionaryMappings.Add(new FixedDictionaryMapping(_type.Name, nameof(CheckMode), Common.CommonHelper.Instance.GetKeyValuePairs(typeof(PaymentStatus))));
+                    FixedDictionaryMappings.Add(new FixedDictionaryMapping(_type.Name, nameof(CheckMode), Common.CommonHelper.Instance.GetKeyValuePairs(typeof(CheckMode))));
                 }
+               
+                     else if (prop.Name == nameof(ASProcessStatus))
+                {
+                    FixedDictionaryMappings.Add(new FixedDictionaryMapping(_type.Name, nameof(ASProcessStatus), Common.CommonHelper.Instance.GetKeyValuePairs(typeof(ASProcessStatus))));
+                }
+                else if (prop.Name == nameof(ExpenseBearerType))
+                {
+                    FixedDictionaryMappings.Add(new FixedDictionaryMapping(_type.Name, nameof(ExpenseBearerType), Common.CommonHelper.Instance.GetKeyValuePairs(typeof(ExpenseBearerType))));
+                }
+                else if (prop.Name == nameof(ExpenseAllocationMode))
+                {
+                    FixedDictionaryMappings.Add(new FixedDictionaryMapping(_type.Name, nameof(ExpenseAllocationMode), Common.CommonHelper.Instance.GetKeyValuePairs(typeof(ExpenseAllocationMode))));
+                }
+
                 else if (prop.Name == nameof(PrePaymentStatus))
                 {
                     FixedDictionaryMappings.Add(new FixedDictionaryMapping(_type.Name, nameof(PrePaymentStatus), Common.CommonHelper.Instance.GetKeyValuePairs(typeof(PrePaymentStatus))));

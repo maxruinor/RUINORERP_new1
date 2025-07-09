@@ -74,6 +74,28 @@ namespace RUINORERP.Business
             var settlementController = _appContext.GetRequiredService<tb_FM_PaymentSettlementController<tb_FM_PaymentSettlement>>();
             try
             {
+
+                if (entity == null)
+                {
+                    rmrs.ErrorMsg = "付款单不能为空!";
+                    rmrs.Succeeded = false;
+                    rmrs.ReturnObject = entity as T;
+                    return rmrs;
+                }
+
+                if (entity.ReceivePaymentType == (int)ReceivePaymentType.付款)
+                {
+                    if (!entity.PayeeInfoID.HasValue)
+                    {
+                        rmrs.ErrorMsg = "付款时，对方的收款信息必填!";
+                        rmrs.Succeeded = false;
+                        rmrs.ReturnObject = entity as T;
+                        return rmrs;
+                    }
+                }
+
+
+
                 //不能直接将实体entity重新查询赋值，否则反应到UI时不是相同对象了。
                 if (entity.tb_FM_PaymentRecordDetails == null)
                 {
@@ -308,7 +330,7 @@ namespace RUINORERP.Business
                                 //厂商退款 时才处理
                                 //退货单审核后生成红字应收单（负金额）
                                 //没有记录支付状态，只标记结案处理
-                                if (receivablePayable.ARAPStatus == (int)ARAPStatus.全部支付|| receivablePayable.ARAPStatus == (int)ARAPStatus.部分支付)
+                                if (receivablePayable.ARAPStatus == (int)ARAPStatus.全部支付 || receivablePayable.ARAPStatus == (int)ARAPStatus.部分支付)
                                 {
                                     tb_PurEntryRe purEntryRe = await _appContext.Db.Queryable<tb_PurEntryRe>()
                                         .Where(c => c.DataStatus >= (int)DataStatus.确认
@@ -418,7 +440,6 @@ namespace RUINORERP.Business
                         receivablePayableUpdateList.AddRange(receivablePayableList);
 
                         #endregion
-
                     }
 
                     //单纯收款不用产生核销记录。核销要与业务相关联 这里只处理 应收，预收，对账单
@@ -1060,7 +1081,11 @@ namespace RUINORERP.Business
                     paymentRecordDetail.SourceBizType = (int)BizType.应付款单;
                 }
                 paymentRecordDetail.Summary = $"由应{((ReceivePaymentType)paymentRecord.ReceivePaymentType).ToString()}转换自动生成。";
-
+                var entity = entities.FirstOrDefault(c => c.ARAPId == details[i].SourceBilllId);
+                if (entity != null)
+                {
+                    paymentRecordDetail.Summary += entity.Remark;
+                }
                 #endregion
                 NewDetails.Add(paymentRecordDetail);
             }
@@ -1288,7 +1313,11 @@ namespace RUINORERP.Business
         }
 
 
-
+        /// <summary>
+        /// 这里如果查询得足够详细。就类似对账单了？
+        /// </summary>
+        /// <param name="ID"></param>
+        /// <returns></returns>
         public async override Task<List<T>> GetPrintDataSource(long ID)
         {
             List<tb_FM_PaymentRecord> list = await _appContext.Db.CopyNew().Queryable<tb_FM_PaymentRecord>()
@@ -1298,7 +1327,68 @@ namespace RUINORERP.Business
                             .Includes(a => a.tb_paymentmethod)
                             .Includes(a => a.tb_customervendor)
                             .Includes(a => a.tb_fm_account)
+                            .Includes(a => a.tb_fm_payeeinfo)
+                            .Includes(a => a.tb_customervendor)
+                             .AsNavQueryable()//加这个前面,超过三级在前面加这一行，并且第四级无VS智能提示，但是可以用
+                              .Includes(a => a.tb_FM_PaymentRecordDetails)
+                              .Includes(a => a.tb_FM_PaymentRecords_Original)
+                              .Includes(a => a.tb_FM_PaymentRecords_Reversed)
+                              .Includes(a => a.tb_fm_paymentrecord_Original)
+                              .Includes(a => a.tb_fm_paymentrecord_Reversed)
                             .ToListAsync();
+
+
+            foreach (var item in list)
+            {
+                //为了查询效率。收款明细中，按业务类型查。虽然少。但是有这种情况。如 又有预付，又有应付
+                //相同客户，多个应收可以合成一个收款 。所以明细中就是对应的应收单。
+                //为了提高性能 将按业务类型分组后再找到对应的单据去处理
+                //目前 所有业务都进应收应付 简化逻辑 
+                var groupList = item.tb_FM_PaymentRecordDetails.GroupBy(c => c.SourceBizType).Select(c => new { SourceBizType = c.Key }).ToList();
+
+                var details = item.tb_FM_PaymentRecordDetails;
+                Dictionary<int, List<long>> GroupResult = details
+                    .GroupBy(d => d.SourceBizType)
+                    .ToDictionary(
+                        g => g.Key,
+                        g => g.Select(d => d.PaymentDetailId).ToList()
+                    );
+
+                foreach (var group in GroupResult)
+                {
+                    long[] sourcebillids = item.tb_FM_PaymentRecordDetails.Where(c => group.Value.Contains(c.PaymentDetailId)).Select(c => c.SourceBilllId).ToArray();
+
+                    if (group.Key == (int)BizType.应收款单 || group.Key == (int)BizType.应付款单)
+                    {
+                        #region  
+                        List<tb_FM_ReceivablePayable> receivablePayableList = await _appContext.Db.Queryable<tb_FM_ReceivablePayable>()
+                             .Includes(c => c.tb_FM_ReceivablePayableDetails)
+                             .Where(c => sourcebillids.Contains(c.ARAPId))
+                             .ToListAsync();
+                        foreach (var detail in item.tb_FM_PaymentRecordDetails)
+                        {
+                            detail.tb_FM_ReceivablePayables = receivablePayableList.Where(c => c.SourceBillId.Value == detail.SourceBilllId).ToList();
+                        }
+
+                        #endregion
+                    }
+
+
+                    if (group.Key == (int)BizType.预收款单 || group.Key == (int)BizType.预付款单)
+                    {
+                        List<tb_FM_PreReceivedPayment> PreReceivablePayableList = await _appContext.Db.Queryable<tb_FM_PreReceivedPayment>()
+                           .Where(c => sourcebillids.Contains(c.PreRPID))
+                           .ToListAsync();
+                        foreach (var detail in item.tb_FM_PaymentRecordDetails)
+                        {
+                            detail.tb_FM_PreReceivedPayments = PreReceivablePayableList.Where(c => c.SourceBillId.Value == detail.SourceBilllId).ToList();
+                        }
+
+                    }
+                }
+
+            }
+
             return list as List<T>;
         }
 

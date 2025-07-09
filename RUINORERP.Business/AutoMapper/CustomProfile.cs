@@ -21,10 +21,17 @@ namespace RUINORERP.Business.AutoMapper
         public CustomProfile()
         {
             #region 财务模块
+            //由售后申请转为售后交付单
+            CreateMap<tb_AS_AfterSaleApply, tb_AS_AfterSaleDelivery>();
+
             //生成预付单
             CreateMap<tb_PurOrder, tb_FM_PreReceivedPayment>();
             //生成预收单
             CreateMap<tb_SaleOrder, tb_FM_PreReceivedPayment>();
+
+            //费用报销单生成收款记录表
+            CreateMap<tb_FM_ExpenseClaim, tb_FM_PaymentRecord>();
+
 
             //预收单生成收款记录表
             CreateMap<tb_FM_PreReceivedPayment, tb_FM_PaymentRecord>();

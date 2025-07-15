@@ -23,6 +23,8 @@ namespace RUINORERP.Business
     {
         public override void Initialize()
         {
+            RuleFor(x => x.tb_SaleOutReDetails).NotNull().WithMessage("明细:不能为空。");
+            RuleFor(x => x.tb_SaleOutReDetails).Must(list => list.Count > 0).WithMessage("明细不能为空。");
             RuleFor(tb_SaleOutRe => tb_SaleOutRe.CustomerVendor_ID).NotNull().WithMessage("退货客户:不能为空。");
             RuleFor(tb_SaleOutRe => tb_SaleOutRe.CustomerVendor_ID).Must(CheckForeignKeyValueCanNull).WithMessage("退货客户:下拉选择值不正确。");
             RuleFor(tb_SaleOutRe => tb_SaleOutRe.ReturnReason).MinimumLength(5).WithMessage("退货原因:不能小于长度,5.");

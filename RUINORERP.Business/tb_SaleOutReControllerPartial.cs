@@ -189,7 +189,7 @@ namespace RUINORERP.Business
                         orderDetail.TotalReturnedQty += totalReturnedQty;
 
                         //上面明细中 没办法处理 相同料号多次录入订单情况。这里 合并数量来判断。
-                        int totalOrderTotalQty = entity.tb_saleout.tb_saleorder.tb_SaleOrderDetails.Where(c => c.ProdDetailID == orderDetail.ProdDetailID).Sum(c => c.Quantity);
+                        int totalOrderTotalQty = entity.tb_saleout.tb_saleorder.tb_SaleOrderDetails.Where(c => c.ProdDetailID == orderDetail.ProdDetailID && c.Location_ID == orderDetail.Location_ID).Sum(c => c.Quantity);
 
                         //如果已交数据大于 订单数量 给出警告实际操作中 使用其他方式将备品入库
                         if (orderDetail.TotalReturnedQty > totalOrderTotalQty)
@@ -286,7 +286,7 @@ namespace RUINORERP.Business
                         if (invMaterialsUpdateList.Count > 0)
                         {
                             int invMaterialsCounter = await _unitOfWorkManage.GetDbClient().Updateable(invMaterialsUpdateList)
-                                .UpdateColumns(t => new { t.Quantity,t.LatestStorageTime })
+                                .UpdateColumns(t => new { t.Quantity, t.LatestStorageTime })
                                 .ExecuteCommandAsync();
                             if (invMaterialsCounter == 0)
                             {
@@ -310,11 +310,11 @@ namespace RUINORERP.Business
                     //退货单审核后生成红字应收单（负金额）
                     var ctrpayable = _appContext.GetRequiredService<tb_FM_ReceivablePayableController<tb_FM_ReceivablePayable>>();
                     tb_FM_ReceivablePayable Payable = await ctrpayable.BuildReceivablePayable(entity);
-                 
-                     
-                        ReturnMainSubResults<tb_FM_ReceivablePayable> rmr = await ctrpayable.BaseSaveOrUpdateWithChild<tb_FM_ReceivablePayable>(Payable, false);
-                        if (rmr.Succeeded)
-                        {
+
+
+                    ReturnMainSubResults<tb_FM_ReceivablePayable> rmr = await ctrpayable.BaseSaveOrUpdateWithChild<tb_FM_ReceivablePayable>(Payable, false);
+                    if (rmr.Succeeded)
+                    {
                         //已经是等审核。 审核时会核销预收付款
                         //应收 负 在 就是退款 审核时还要仔细跟进一下
 
@@ -550,7 +550,7 @@ namespace RUINORERP.Business
                                 inv.Quantity = inv.Quantity + child.Quantity; //翻新用的耗材这里反审就是还回去。用加
                                 BusinessHelper.Instance.EditEntity(inv);
                             }
-                       
+
                             //inv.Inv_Cost = 0;//这里需要计算，根据系统设置中的算法计算。
                             inv.Inv_SubtotalCostMoney = inv.Inv_Cost * inv.Quantity;
                             inv.LatestStorageTime = System.DateTime.Now;
@@ -644,7 +644,7 @@ namespace RUINORERP.Business
                         }
                         await _unitOfWorkManage.GetDbClient().Updateable(entity.tb_saleout.tb_SaleOutDetails).UpdateColumns(t => new { t.TotalReturnedQty }).ExecuteCommandAsync();
 
-                    
+
                     }
 
                     //销售出库单，如果来自于销售订单，则要把出库数量累加到订单中的已交数量 并且如果数量够则自动结案
@@ -757,7 +757,7 @@ namespace RUINORERP.Business
             catch (Exception ex)
             {
                 _unitOfWorkManage.RollbackTran();
-                _logger.Error(ex,$"销售退货单：{entity.SaleOut_NO}");
+                _logger.Error(ex, $"销售退货单：{entity.SaleOut_NO}");
                 rrs.Succeeded = false;
                 rrs.ErrorMsg = ex.Message;
                 return rrs;

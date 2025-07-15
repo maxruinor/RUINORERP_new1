@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：07/08/2025 19:05:31
+// 时间：07/11/2025 15:43:13
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -65,14 +65,14 @@ namespace RUINORERP.Model
                         }
         }
 
-        private long _ASApplyID;
+        private long? _ASApplyID;
         /// <summary>
         /// 售后申请单
         /// </summary>
         [AdvQueryAttribute(ColName = "ASApplyID",ColDesc = "售后申请单")] 
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "ASApplyID" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "售后申请单" )]
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "ASApplyID" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "售后申请单" )]
         [FKRelationAttribute("tb_AS_AfterSaleApply","ASApplyID")]
-        public long ASApplyID
+        public long? ASApplyID
         { 
             get{return _ASApplyID;}
             set{
@@ -82,10 +82,10 @@ namespace RUINORERP.Model
 
         private string _ASApplyNo;
         /// <summary>
-        /// 申请单号
+        /// 售后申请编号
         /// </summary>
-        [AdvQueryAttribute(ColName = "ASApplyNo",ColDesc = "申请单号")] 
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "ASApplyNo" ,Length=50,IsNullable = false,ColumnDescription = "申请单号" )]
+        [AdvQueryAttribute(ColName = "ASApplyNo",ColDesc = "售后申请编号")] 
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "ASApplyNo" ,Length=50,IsNullable = true,ColumnDescription = "售后申请编号" )]
         public string ASApplyNo
         { 
             get{return _ASApplyNo;}
@@ -111,10 +111,10 @@ namespace RUINORERP.Model
 
         private long? _ProjectGroup_ID;
         /// <summary>
-        /// 项目组
+        /// 项目小组
         /// </summary>
-        [AdvQueryAttribute(ColName = "ProjectGroup_ID",ColDesc = "项目组")] 
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "ProjectGroup_ID" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "项目组" )]
+        [AdvQueryAttribute(ColName = "ProjectGroup_ID",ColDesc = "项目小组")] 
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "ProjectGroup_ID" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "项目小组" )]
         [FKRelationAttribute("tb_ProjectGroup","ProjectGroup_ID")]
         public long? ProjectGroup_ID
         { 
@@ -139,13 +139,13 @@ namespace RUINORERP.Model
                         }
         }
 
-        private int _RepairStatus= ((0));
+        private int? _RepairStatus= ((0));
         /// <summary>
         /// 维修状态
         /// </summary>
         [AdvQueryAttribute(ColName = "RepairStatus",ColDesc = "维修状态")] 
-        [SugarColumn(ColumnDataType = "int", SqlParameterDbType ="Int32",  ColumnName = "RepairStatus" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "维修状态" )]
-        public int RepairStatus
+        [SugarColumn(ColumnDataType = "int", SqlParameterDbType ="Int32",  ColumnName = "RepairStatus" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "维修状态" )]
+        public int? RepairStatus
         { 
             get{return _RepairStatus;}
             set{
@@ -249,6 +249,34 @@ namespace RUINORERP.Model
             get{return _CustomerPaidAmount;}
             set{
             SetProperty(ref _CustomerPaidAmount, value);
+                        }
+        }
+
+        private int? _ExpenseAllocationMode;
+        /// <summary>
+        /// 费用承担模式
+        /// </summary>
+        [AdvQueryAttribute(ColName = "ExpenseAllocationMode",ColDesc = "费用承担模式")] 
+        [SugarColumn(ColumnDataType = "int", SqlParameterDbType ="Int32",  ColumnName = "ExpenseAllocationMode" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "费用承担模式" )]
+        public int? ExpenseAllocationMode
+        { 
+            get{return _ExpenseAllocationMode;}
+            set{
+            SetProperty(ref _ExpenseAllocationMode, value);
+                        }
+        }
+
+        private int? _ExpenseBearerType;
+        /// <summary>
+        /// 费用承担方
+        /// </summary>
+        [AdvQueryAttribute(ColName = "ExpenseBearerType",ColDesc = "费用承担方")] 
+        [SugarColumn(ColumnDataType = "int", SqlParameterDbType ="Int32",  ColumnName = "ExpenseBearerType" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "费用承担方" )]
+        public int? ExpenseBearerType
+        { 
+            get{return _ExpenseBearerType;}
+            set{
+            SetProperty(ref _ExpenseBearerType, value);
                         }
         }
 
@@ -508,18 +536,18 @@ namespace RUINORERP.Model
 
         //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_AS_RepairInStock.RepairOrderID))]
-        public virtual List<tb_AS_RepairInStock> tb_AS_RepairInStocks { get; set; }
-        //tb_AS_RepairInStock.RepairOrderID)
-        //RepairOrderID.FK_AS_REPAIRINSTOCK_REF_TB_AS_REPAIRORDER)
-        //tb_AS_RepairOrder.RepairOrderID)
-
-        //[Browsable(false)]打印报表时的数据源会不显示
-        [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_AS_RepairOrderDetail.RepairOrderID))]
         public virtual List<tb_AS_RepairOrderDetail> tb_AS_RepairOrderDetails { get; set; }
         //tb_AS_RepairOrderDetail.RepairOrderID)
         //RepairOrderID.FK_tb_AS_RepairOrder_REF_AS_RepairOrderDetail)
+        //tb_AS_RepairOrder.RepairOrderID)
+
+        //[Browsable(false)]打印报表时的数据源会不显示
+        [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_AS_RepairInStock.RepairOrderID))]
+        public virtual List<tb_AS_RepairInStock> tb_AS_RepairInStocks { get; set; }
+        //tb_AS_RepairInStock.RepairOrderID)
+        //RepairOrderID.FK_AS_REPAIRINSTOCK_REF_TB_AS_REPAIRORDER)
         //tb_AS_RepairOrder.RepairOrderID)
 
         //[Browsable(false)]打印报表时的数据源会不显示

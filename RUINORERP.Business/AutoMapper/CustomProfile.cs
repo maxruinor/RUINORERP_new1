@@ -21,8 +21,41 @@ namespace RUINORERP.Business.AutoMapper
         public CustomProfile()
         {
             #region 财务模块
+
+            //维修物料明细收费 转成应收明细
+            CreateMap<tb_AS_RepairOrderMaterialDetail, tb_FM_ReceivablePayableDetail>()
+          .ForMember(a => a.UnitPrice, o => o.MapFrom(d => d.UnitPrice))
+          .ForMember(a => a.Quantity, o => o.MapFrom(d => d.Quantity))
+          .ForMember(a => a.ProdDetailID, o => o.MapFrom(d => d.ProdDetailID))
+          .ForMember(a => a.property, o => o.MapFrom(d => d.property))
+          .ForMember(a => a.TaxRate, o => o.MapFrom(d => d.TaxRate))
+          .ForMember(a => a.TaxLocalAmount, o => o.MapFrom(d => d.SubtotalTaxAmount))
+          .ForMember(a => a.LocalPayableAmount, o => o.MapFrom(d => d.SubtotalTransAmount))
+          .ForMember(a => a.Summary, o => o.MapFrom(d => d.Summary));
+
+
+            CreateMap<View_ProdDetail, tb_AS_RepairInStockDetail>();
+            CreateMap<View_ProdDetail, tb_AS_RepairOrderDetail>();
+            CreateMap<View_ProdDetail, tb_AS_RepairOrderMaterialDetail>();
+            CreateMap<View_ProdDetail,tb_AS_AfterSaleApplyDetail>();
+            CreateMap<View_ProdDetail,tb_AS_AfterSaleDeliveryDetail>();
+
+            CreateMap<View_ProdDetail, tb_PurEntryReDetail>();
+            CreateMap<View_ProdDetail, tb_PurReturnEntryDetail>();
+            
+            
+
+
+
+            //由售后申请转为售后交付单
+            CreateMap<tb_AS_AfterSaleApplyDetail, tb_AS_RepairOrderDetail>();
+            CreateMap<tb_AS_AfterSaleApply, tb_AS_RepairOrder>();
+            CreateMap<tb_AS_RepairOrder, tb_AS_RepairInStock>();
+            CreateMap<tb_AS_RepairOrderDetail, tb_AS_RepairInStockDetail>();
+
             //由售后申请转为售后交付单
             CreateMap<tb_AS_AfterSaleApply, tb_AS_AfterSaleDelivery>();
+            CreateMap<tb_AS_AfterSaleApplyDetail, tb_AS_AfterSaleDeliveryDetail>();
 
             //生成预付单
             CreateMap<tb_PurOrder, tb_FM_PreReceivedPayment>();

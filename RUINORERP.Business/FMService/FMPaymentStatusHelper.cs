@@ -64,7 +64,7 @@ namespace RUINORERP.Business.FMService
         }
 
         /// <summary>是否可编辑（草稿或待审核状态）</summary>
-        public static bool IsEditable<T>(T status) where T : Enum
+        public static bool CanModify<T>(T status) where T : Enum
         {
             if (status is DataStatus dataStatus)
                 return dataStatus == DataStatus.草稿 ||
@@ -85,6 +85,12 @@ namespace RUINORERP.Business.FMService
             return false;
         }
 
+
+ 
+ 
+
+
+
         /// <summary>是否允许取消操作</summary>
         public static bool CanCancel<T>(T status, bool hasRelatedRecords) where T : Enum
         {
@@ -101,7 +107,7 @@ namespace RUINORERP.Business.FMService
             if (status is PaymentStatus pay)
                 return pay != PaymentStatus.已支付 && !hasRelatedRecords;
 
-            if (status is DataStatus  dataStatus)
+            if (status is DataStatus dataStatus)
                 return dataStatus != DataStatus.确认 && !hasRelatedRecords;
 
 
@@ -123,7 +129,7 @@ namespace RUINORERP.Business.FMService
             if (status is PaymentStatus pay)
                 return pay != PaymentStatus.已支付 && !hasRelatedRecords;
 
-            if (status is DataStatus dataStatus )
+            if (status is DataStatus dataStatus)
                 return dataStatus != DataStatus.新建 && dataStatus != DataStatus.草稿 && !hasRelatedRecords;
 
 
@@ -143,7 +149,7 @@ namespace RUINORERP.Business.FMService
             return false;
         }
 
-  
+
         /// <summary>是否允许标记为坏账</summary>
         public static bool CanWriteOffBadDebt<T>(T status) where T : Enum
         {
@@ -216,7 +222,7 @@ namespace RUINORERP.Business.FMService
 
         private static void ValidatePrePaymentTransition(PrePaymentStatus current, PrePaymentStatus target)
         {
-   
+
 
             // 终态不能转换
             if (IsFinalStatus(current))
@@ -271,7 +277,7 @@ namespace RUINORERP.Business.FMService
 
         private static void ValidatePaymentTransition(DataStatus current, DataStatus target)
         {
-            if (current == DataStatus.完结|| current == DataStatus.已取消)
+            if (current == DataStatus.完结 || current == DataStatus.已取消)
                 throw new InvalidOperationException("完结及取消状态禁止转换");
 
             if (current == DataStatus.草稿 && target != DataStatus.新建)

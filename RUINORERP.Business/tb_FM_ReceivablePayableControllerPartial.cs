@@ -338,6 +338,143 @@ namespace RUINORERP.Business
 
 
 
+        /// <summary>
+        /// 维修工单中的维修物料
+        /// </summary>
+        /// <param name="entity"></param>
+        /// <returns></returns>
+        public async Task<tb_FM_ReceivablePayable> BuildReceivablePayable(tb_AS_RepairOrder entity)
+        {
+            tb_FM_ReceivablePayable payable = new tb_FM_ReceivablePayable();
+            payable = mapper.Map<tb_FM_ReceivablePayable>(entity);
+            payable.ApprovalResults = null;
+            payable.ApprovalStatus = (int)ApprovalStatus.未审核;
+            payable.Approver_at = null;
+            payable.Approver_by = null;
+            payable.PrintStatus = 0;
+            payable.ActionStatus = ActionStatus.新增;
+            payable.ApprovalOpinions = "";
+            payable.Modified_at = null;
+            payable.Modified_by = null;
+            payable.SourceBillNo = entity.RepairOrderNo;
+            payable.SourceBillId = entity.RepairOrderID;
+            payable.SourceBizType = (int)BizType.维修工单;
+            if (entity.tb_projectgroup != null && entity.tb_projectgroup.tb_department != null)
+            {
+                payable.DepartmentID = entity.tb_projectgroup.tb_department.DepartmentID;
+            }
+            //如果部门还是没有值 则从缓存中加载,如果项目有所属部门的话
+            if (payable.ProjectGroup_ID.HasValue && !payable.DepartmentID.HasValue)
+            {
+                var projectgroup = BizCacheHelper.Instance.GetEntity<tb_ProjectGroup>(entity.ProjectGroup_ID);
+                if (projectgroup != null && projectgroup.ToString() != "System.Object")
+                {
+                    if (projectgroup is tb_ProjectGroup pj)
+                    {
+                        entity.tb_projectgroup = pj;
+                        payable.DepartmentID = pj.DepartmentID;
+                    }
+                }
+                else
+                {
+                    //db查询
+                    entity.tb_projectgroup = await _appContext.GetRequiredService<tb_ProjectGroupController<tb_ProjectGroup>>().BaseQueryByIdAsync(entity.ProjectGroup_ID);
+                    payable.DepartmentID = entity.tb_projectgroup.DepartmentID;
+                }
+            }
+
+            //销售就是收款
+            payable.ReceivePaymentType = (int)ReceivePaymentType.收款;
+
+            payable.ARAPNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.应收款单);
+
+            payable.Currency_ID = _appContext.BaseCurrency.Currency_ID;
+            payable.ExchangeRate = 1;
+            //if (entity.tb_saleorder.tb_paymentmethod.Paytype_Name == DefaultPaymentMethod.账期.ToString())
+            //{
+            //    if (entity.tb_customervendor.CustomerCreditDays.HasValue)
+            //    {
+            //        // 从销售出库日期开始计算到期日
+            //        payable.DueDate = entity.OutDate.Date.AddDays(entity.tb_customervendor.CustomerCreditDays.Value).AddDays(1).AddTicks(-1);
+            //    }
+            //}
+            payable.ExchangeRate = 1;
+
+            List<tb_FM_ReceivablePayableDetail> details = mapper.Map<List<tb_FM_ReceivablePayableDetail>>(entity.tb_AS_RepairOrderMaterialDetails);
+
+            for (global::System.Int32 i = 0; i < details.Count; i++)
+            {
+                var olditem = entity.tb_AS_RepairOrderMaterialDetails.Where(c => c.ProdDetailID == details[i].ProdDetailID).FirstOrDefault();
+                if (olditem != null)
+                {
+                    details[i].TaxRate = olditem.TaxRate;
+                    details[i].TaxLocalAmount = olditem.SubtotalTaxAmount;
+                    details[i].Quantity = olditem.Quantity;
+                    details[i].UnitPrice = olditem.UnitPrice;
+                    details[i].Summary = olditem.Summary;
+                    details[i].TaxRate = olditem.TaxRate;
+                    details[i].TaxLocalAmount = olditem.SubtotalTaxAmount;
+                    if (details[i].TaxLocalAmount > 0)
+                    {
+                        details[i].IncludeTax = true;
+                    }
+
+                    details[i].LocalPayableAmount = olditem.SubtotalTransAmount;
+                }
+                details[i].ExchangeRate = 1;
+                details[i].ActionStatus = ActionStatus.新增;
+
+                View_ProdDetail obj = BizCacheHelper.Instance.GetEntity<View_ProdDetail>(details[i].ProdDetailID);
+                if (obj != null && obj.GetType().Name != "Object" && obj is View_ProdDetail prodDetail)
+                {
+                    if (prodDetail != null && obj.Unit_ID != null && obj.Unit_ID.HasValue)
+                    {
+                        details[i].Unit_ID = obj.Unit_ID.Value;
+                    }
+                }
+                //数量标负数，单价保持正数是标准做法
+                details[i].Quantity = -details[i].Quantity;
+                details[i].TaxLocalAmount = -details[i].TaxLocalAmount;
+                details[i].LocalPayableAmount = details[i].UnitPrice.Value * details[i].Quantity.Value;
+            }
+
+            #region 单独加一行运算到明细中 默认退货不退运费,要的话,自己手动添加
+
+             // 添加人工成本（关键部分）
+             if (entity.LaborCost > 0)
+             {
+                 details.Add(new tb_FM_ReceivablePayableDetail
+                 {
+                     ProdDetailID = null,
+                     property = "人工费",
+                     Specifications = "",
+                     ExchangeRate = 1,
+                     Description = "人工费",
+                     UnitPrice = entity.LaborCost,
+                     Quantity = 1,
+                     TaxRate = 0.0m, // 假设运费税率为9%
+                     TaxLocalAmount = 0,
+                     Summary = "",
+                     LocalPayableAmount = entity.LaborCost
+                 });
+             }
+
+            #endregion
+
+            payable.tb_FM_ReceivablePayableDetails = details;
+
+            //本币时
+            payable.LocalBalanceAmount = entity.TotalAmount;
+            payable.LocalPaidAmount = 0;
+            payable.TotalLocalPayableAmount = entity.TotalAmount;
+
+            payable.Remark = $"售后申请单：{entity.ASApplyNo}对应的维修工单{entity.RepairOrderNo}的应付款";
+            Business.BusinessHelper.Instance.InitEntity(payable);
+            payable.ARAPStatus = (int)ARAPStatus.待审核;
+            return payable;
+
+        }
+
 
         /// <summary>
         /// 创建为红字冲销 应收款单
@@ -1443,7 +1580,7 @@ namespace RUINORERP.Business
                     Description = "发货运费",
                     UnitPrice = entity.FreightCost,
                     Quantity = 1,
-                    TaxRate = 1.0m, // 假设运费税率为9%
+                    TaxRate = 0.0m, // 假设运费税率为9%
                     TaxLocalAmount = 0,
                     Summary = "",
                     LocalPayableAmount = entity.FreightCost
@@ -1490,6 +1627,7 @@ namespace RUINORERP.Business
             #endregion
             return payable;
         }
+
 
         /// <summary>
         /// 创建应付款单，审核时如果有预付，会先核销
@@ -1616,7 +1754,7 @@ namespace RUINORERP.Business
                     Description = "发货运费",
                     UnitPrice = entity.ShipCost,
                     Quantity = 1,
-                    TaxRate = 1.0m, // 假设运费税率为9%
+                    TaxRate = 0.0m, // 假设运费税率为9%
                     TaxLocalAmount = 0,
                     Summary = "",
                     LocalPayableAmount = entity.ShipCost

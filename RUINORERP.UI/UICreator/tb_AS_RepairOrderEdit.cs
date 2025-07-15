@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：07/08/2025 19:05:29
+// 时间：07/11/2025 15:43:10
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -64,6 +64,8 @@ namespace RUINORERP.UI
         
         
         
+        
+        
 
          }
 /*
@@ -85,6 +87,8 @@ namespace RUINORERP.UI
                         entity.TotalMaterialAmount = Decimal.Parse(txtTotalMaterialAmount.Text);
                         entity.TotalAmount = Decimal.Parse(txtTotalAmount.Text);
                         entity.CustomerPaidAmount = Decimal.Parse(txtCustomerPaidAmount.Text);
+                        entity.ExpenseAllocationMode = Int32.Parse(txtExpenseAllocationMode.Text);
+                        entity.ExpenseBearerType = Int32.Parse(txtExpenseBearerType.Text);
                         entity.RepairStartDate = DateTime.Parse(txtRepairStartDate.Text);
                         entity.PreDeliveryDate = DateTime.Parse(txtPreDeliveryDate.Text);
                         entity.isdeleted = Boolean.Parse(txtisdeleted.Text);
@@ -125,6 +129,8 @@ namespace RUINORERP.UI
            DataBindingHelper.BindData4TextBox<tb_AS_RepairOrder>(entity, t => t.TotalMaterialAmount.ToString(), txtTotalMaterialAmount, BindDataType4TextBox.Money,false);
            DataBindingHelper.BindData4TextBox<tb_AS_RepairOrder>(entity, t => t.TotalAmount.ToString(), txtTotalAmount, BindDataType4TextBox.Money,false);
            DataBindingHelper.BindData4TextBox<tb_AS_RepairOrder>(entity, t => t.CustomerPaidAmount.ToString(), txtCustomerPaidAmount, BindDataType4TextBox.Money,false);
+           DataBindingHelper.BindData4TextBox<tb_AS_RepairOrder>(entity, t => t.ExpenseAllocationMode, txtExpenseAllocationMode, BindDataType4TextBox.Qty,false);
+           DataBindingHelper.BindData4TextBox<tb_AS_RepairOrder>(entity, t => t.ExpenseBearerType, txtExpenseBearerType, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4DataTime<tb_AS_RepairOrder>(entity, t => t.RepairStartDate, dtpRepairStartDate,false);
            DataBindingHelper.BindData4DataTime<tb_AS_RepairOrder>(entity, t => t.PreDeliveryDate, dtpPreDeliveryDate,false);
            DataBindingHelper.BindData4CheckBox<tb_AS_RepairOrder>(entity, t => t.isdeleted, chkisdeleted, false);

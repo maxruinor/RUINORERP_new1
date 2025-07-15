@@ -3,7 +3,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：07/08/2025 19:05:31
+// 时间：07/11/2025 15:43:14
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -68,34 +68,13 @@ this.txtproperty.Multiline = true;
 this.lblQuantity = new Krypton.Toolkit.KryptonLabel();
 this.txtQuantity = new Krypton.Toolkit.KryptonTextBox();
 
-this.lblSummary = new Krypton.Toolkit.KryptonLabel();
-this.txtSummary = new Krypton.Toolkit.KryptonTextBox();
-this.txtSummary.Multiline = true;
-
 this.lblRepairContent = new Krypton.Toolkit.KryptonLabel();
 this.txtRepairContent = new Krypton.Toolkit.KryptonTextBox();
 this.txtRepairContent.Multiline = true;
 
-this.lblMaterialCost = new Krypton.Toolkit.KryptonLabel();
-this.txtMaterialCost = new Krypton.Toolkit.KryptonTextBox();
-
-this.lblLaborCost = new Krypton.Toolkit.KryptonLabel();
-this.txtLaborCost = new Krypton.Toolkit.KryptonTextBox();
-
-this.lblSubtotalCost = new Krypton.Toolkit.KryptonLabel();
-this.txtSubtotalCost = new Krypton.Toolkit.KryptonTextBox();
-
-this.lblTaxRate = new Krypton.Toolkit.KryptonLabel();
-this.txtTaxRate = new Krypton.Toolkit.KryptonTextBox();
-
-this.lblSubtotalTaxAmount = new Krypton.Toolkit.KryptonLabel();
-this.txtSubtotalTaxAmount = new Krypton.Toolkit.KryptonTextBox();
-
-this.lblSubtotalCostAmount = new Krypton.Toolkit.KryptonLabel();
-this.txtSubtotalCostAmount = new Krypton.Toolkit.KryptonTextBox();
-
-this.lblTotalReturnedQty = new Krypton.Toolkit.KryptonLabel();
-this.txtTotalReturnedQty = new Krypton.Toolkit.KryptonTextBox();
+this.lblSummary = new Krypton.Toolkit.KryptonLabel();
+this.txtSummary = new Krypton.Toolkit.KryptonTextBox();
+this.txtSummary.Multiline = true;
 
     
     //for end
@@ -206,140 +185,33 @@ this.txtQuantity.TabIndex = 5;
 this.Controls.Add(this.lblQuantity);
 this.Controls.Add(this.txtQuantity);
 
-           //#####1000Summary###String
-this.lblSummary.AutoSize = true;
-this.lblSummary.Location = new System.Drawing.Point(100,150);
-this.lblSummary.Name = "lblSummary";
-this.lblSummary.Size = new System.Drawing.Size(41, 12);
-this.lblSummary.TabIndex = 6;
-this.lblSummary.Text = "摘要";
-this.txtSummary.Location = new System.Drawing.Point(173,146);
-this.txtSummary.Name = "txtSummary";
-this.txtSummary.Size = new System.Drawing.Size(100, 21);
-this.txtSummary.TabIndex = 6;
-this.Controls.Add(this.lblSummary);
-this.Controls.Add(this.txtSummary);
-
            //#####500RepairContent###String
 this.lblRepairContent.AutoSize = true;
-this.lblRepairContent.Location = new System.Drawing.Point(100,175);
+this.lblRepairContent.Location = new System.Drawing.Point(100,150);
 this.lblRepairContent.Name = "lblRepairContent";
 this.lblRepairContent.Size = new System.Drawing.Size(41, 12);
-this.lblRepairContent.TabIndex = 7;
+this.lblRepairContent.TabIndex = 6;
 this.lblRepairContent.Text = "维修内容";
-this.txtRepairContent.Location = new System.Drawing.Point(173,171);
+this.txtRepairContent.Location = new System.Drawing.Point(173,146);
 this.txtRepairContent.Name = "txtRepairContent";
 this.txtRepairContent.Size = new System.Drawing.Size(100, 21);
-this.txtRepairContent.TabIndex = 7;
+this.txtRepairContent.TabIndex = 6;
 this.Controls.Add(this.lblRepairContent);
 this.Controls.Add(this.txtRepairContent);
 
-           //#####MaterialCost###Decimal
-this.lblMaterialCost.AutoSize = true;
-this.lblMaterialCost.Location = new System.Drawing.Point(100,200);
-this.lblMaterialCost.Name = "lblMaterialCost";
-this.lblMaterialCost.Size = new System.Drawing.Size(41, 12);
-this.lblMaterialCost.TabIndex = 8;
-this.lblMaterialCost.Text = "单项材料费用";
-//111======200
-this.txtMaterialCost.Location = new System.Drawing.Point(173,196);
-this.txtMaterialCost.Name ="txtMaterialCost";
-this.txtMaterialCost.Size = new System.Drawing.Size(100, 21);
-this.txtMaterialCost.TabIndex = 8;
-this.Controls.Add(this.lblMaterialCost);
-this.Controls.Add(this.txtMaterialCost);
-
-           //#####LaborCost###Decimal
-this.lblLaborCost.AutoSize = true;
-this.lblLaborCost.Location = new System.Drawing.Point(100,225);
-this.lblLaborCost.Name = "lblLaborCost";
-this.lblLaborCost.Size = new System.Drawing.Size(41, 12);
-this.lblLaborCost.TabIndex = 9;
-this.lblLaborCost.Text = "单项人工费用";
-//111======225
-this.txtLaborCost.Location = new System.Drawing.Point(173,221);
-this.txtLaborCost.Name ="txtLaborCost";
-this.txtLaborCost.Size = new System.Drawing.Size(100, 21);
-this.txtLaborCost.TabIndex = 9;
-this.Controls.Add(this.lblLaborCost);
-this.Controls.Add(this.txtLaborCost);
-
-           //#####SubtotalCost###Decimal
-this.lblSubtotalCost.AutoSize = true;
-this.lblSubtotalCost.Location = new System.Drawing.Point(100,250);
-this.lblSubtotalCost.Name = "lblSubtotalCost";
-this.lblSubtotalCost.Size = new System.Drawing.Size(41, 12);
-this.lblSubtotalCost.TabIndex = 10;
-this.lblSubtotalCost.Text = "费用小计";
-//111======250
-this.txtSubtotalCost.Location = new System.Drawing.Point(173,246);
-this.txtSubtotalCost.Name ="txtSubtotalCost";
-this.txtSubtotalCost.Size = new System.Drawing.Size(100, 21);
-this.txtSubtotalCost.TabIndex = 10;
-this.Controls.Add(this.lblSubtotalCost);
-this.Controls.Add(this.txtSubtotalCost);
-
-           //#####TaxRate###Decimal
-this.lblTaxRate.AutoSize = true;
-this.lblTaxRate.Location = new System.Drawing.Point(100,275);
-this.lblTaxRate.Name = "lblTaxRate";
-this.lblTaxRate.Size = new System.Drawing.Size(41, 12);
-this.lblTaxRate.TabIndex = 11;
-this.lblTaxRate.Text = "税率";
-//111======275
-this.txtTaxRate.Location = new System.Drawing.Point(173,271);
-this.txtTaxRate.Name ="txtTaxRate";
-this.txtTaxRate.Size = new System.Drawing.Size(100, 21);
-this.txtTaxRate.TabIndex = 11;
-this.Controls.Add(this.lblTaxRate);
-this.Controls.Add(this.txtTaxRate);
-
-           //#####SubtotalTaxAmount###Decimal
-this.lblSubtotalTaxAmount.AutoSize = true;
-this.lblSubtotalTaxAmount.Location = new System.Drawing.Point(100,300);
-this.lblSubtotalTaxAmount.Name = "lblSubtotalTaxAmount";
-this.lblSubtotalTaxAmount.Size = new System.Drawing.Size(41, 12);
-this.lblSubtotalTaxAmount.TabIndex = 12;
-this.lblSubtotalTaxAmount.Text = "税额";
-//111======300
-this.txtSubtotalTaxAmount.Location = new System.Drawing.Point(173,296);
-this.txtSubtotalTaxAmount.Name ="txtSubtotalTaxAmount";
-this.txtSubtotalTaxAmount.Size = new System.Drawing.Size(100, 21);
-this.txtSubtotalTaxAmount.TabIndex = 12;
-this.Controls.Add(this.lblSubtotalTaxAmount);
-this.Controls.Add(this.txtSubtotalTaxAmount);
-
-           //#####SubtotalCostAmount###Decimal
-this.lblSubtotalCostAmount.AutoSize = true;
-this.lblSubtotalCostAmount.Location = new System.Drawing.Point(100,325);
-this.lblSubtotalCostAmount.Name = "lblSubtotalCostAmount";
-this.lblSubtotalCostAmount.Size = new System.Drawing.Size(41, 12);
-this.lblSubtotalCostAmount.TabIndex = 13;
-this.lblSubtotalCostAmount.Text = "成本小计";
-//111======325
-this.txtSubtotalCostAmount.Location = new System.Drawing.Point(173,321);
-this.txtSubtotalCostAmount.Name ="txtSubtotalCostAmount";
-this.txtSubtotalCostAmount.Size = new System.Drawing.Size(100, 21);
-this.txtSubtotalCostAmount.TabIndex = 13;
-this.Controls.Add(this.lblSubtotalCostAmount);
-this.Controls.Add(this.txtSubtotalCostAmount);
-
-           //#####TotalReturnedQty###Int32
-//属性测试350TotalReturnedQty
-//属性测试350TotalReturnedQty
-//属性测试350TotalReturnedQty
-this.lblTotalReturnedQty.AutoSize = true;
-this.lblTotalReturnedQty.Location = new System.Drawing.Point(100,350);
-this.lblTotalReturnedQty.Name = "lblTotalReturnedQty";
-this.lblTotalReturnedQty.Size = new System.Drawing.Size(41, 12);
-this.lblTotalReturnedQty.TabIndex = 14;
-this.lblTotalReturnedQty.Text = "已退回数";
-this.txtTotalReturnedQty.Location = new System.Drawing.Point(173,346);
-this.txtTotalReturnedQty.Name = "txtTotalReturnedQty";
-this.txtTotalReturnedQty.Size = new System.Drawing.Size(100, 21);
-this.txtTotalReturnedQty.TabIndex = 14;
-this.Controls.Add(this.lblTotalReturnedQty);
-this.Controls.Add(this.txtTotalReturnedQty);
+           //#####1000Summary###String
+this.lblSummary.AutoSize = true;
+this.lblSummary.Location = new System.Drawing.Point(100,175);
+this.lblSummary.Name = "lblSummary";
+this.lblSummary.Size = new System.Drawing.Size(41, 12);
+this.lblSummary.TabIndex = 7;
+this.lblSummary.Text = "摘要";
+this.txtSummary.Location = new System.Drawing.Point(173,171);
+this.txtSummary.Name = "txtSummary";
+this.txtSummary.Size = new System.Drawing.Size(100, 21);
+this.txtSummary.TabIndex = 7;
+this.Controls.Add(this.lblSummary);
+this.Controls.Add(this.txtSummary);
 
         //for 加入到容器
             //components = new System.ComponentModel.Container();
@@ -355,7 +227,7 @@ this.Controls.Add(this.txtTotalReturnedQty);
             //this.kryptonPanel1.Location = new System.Drawing.Point(0, 0);
            // this.kryptonPanel1.Name = "kryptonPanel1";
            // this.kryptonPanel1.Size = new System.Drawing.Size(404, 300);
-           // this.kryptonPanel1.TabIndex = 14;
+           // this.kryptonPanel1.TabIndex = 7;
 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
@@ -374,32 +246,11 @@ this.Controls.Add(this.txtproperty );
                 this.Controls.Add(this.lblQuantity );
 this.Controls.Add(this.txtQuantity );
 
-                this.Controls.Add(this.lblSummary );
-this.Controls.Add(this.txtSummary );
-
                 this.Controls.Add(this.lblRepairContent );
 this.Controls.Add(this.txtRepairContent );
 
-                this.Controls.Add(this.lblMaterialCost );
-this.Controls.Add(this.txtMaterialCost );
-
-                this.Controls.Add(this.lblLaborCost );
-this.Controls.Add(this.txtLaborCost );
-
-                this.Controls.Add(this.lblSubtotalCost );
-this.Controls.Add(this.txtSubtotalCost );
-
-                this.Controls.Add(this.lblTaxRate );
-this.Controls.Add(this.txtTaxRate );
-
-                this.Controls.Add(this.lblSubtotalTaxAmount );
-this.Controls.Add(this.txtSubtotalTaxAmount );
-
-                this.Controls.Add(this.lblSubtotalCostAmount );
-this.Controls.Add(this.txtSubtotalCostAmount );
-
-                this.Controls.Add(this.lblTotalReturnedQty );
-this.Controls.Add(this.txtTotalReturnedQty );
+                this.Controls.Add(this.lblSummary );
+this.Controls.Add(this.txtSummary );
 
                             // 
             // "tb_AS_RepairOrderDetailEdit"
@@ -450,48 +301,13 @@ private Krypton.Toolkit.KryptonTextBox txtQuantity;
 
     
         
-              private Krypton.Toolkit.KryptonLabel lblSummary;
-private Krypton.Toolkit.KryptonTextBox txtSummary;
-
-    
-        
               private Krypton.Toolkit.KryptonLabel lblRepairContent;
 private Krypton.Toolkit.KryptonTextBox txtRepairContent;
 
     
         
-              private Krypton.Toolkit.KryptonLabel lblMaterialCost;
-private Krypton.Toolkit.KryptonTextBox txtMaterialCost;
-
-    
-        
-              private Krypton.Toolkit.KryptonLabel lblLaborCost;
-private Krypton.Toolkit.KryptonTextBox txtLaborCost;
-
-    
-        
-              private Krypton.Toolkit.KryptonLabel lblSubtotalCost;
-private Krypton.Toolkit.KryptonTextBox txtSubtotalCost;
-
-    
-        
-              private Krypton.Toolkit.KryptonLabel lblTaxRate;
-private Krypton.Toolkit.KryptonTextBox txtTaxRate;
-
-    
-        
-              private Krypton.Toolkit.KryptonLabel lblSubtotalTaxAmount;
-private Krypton.Toolkit.KryptonTextBox txtSubtotalTaxAmount;
-
-    
-        
-              private Krypton.Toolkit.KryptonLabel lblSubtotalCostAmount;
-private Krypton.Toolkit.KryptonTextBox txtSubtotalCostAmount;
-
-    
-        
-              private Krypton.Toolkit.KryptonLabel lblTotalReturnedQty;
-private Krypton.Toolkit.KryptonTextBox txtTotalReturnedQty;
+              private Krypton.Toolkit.KryptonLabel lblSummary;
+private Krypton.Toolkit.KryptonTextBox txtSummary;
 
     
             //private ComponentFactory.Krypton.Toolkit.KryptonButton btnOk;

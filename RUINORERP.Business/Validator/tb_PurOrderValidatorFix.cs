@@ -41,6 +41,9 @@ namespace RUINORERP.Business
         
         public override void Initialize()
         {
+            RuleFor(x => x.tb_PurOrderDetails).NotNull().WithMessage("订单明细:不能为空。");
+            RuleFor(x => x.tb_PurOrderDetails).Must(list => list.Count > 0).WithMessage("订单明细不能为空。");
+
             RuleFor(x => x.TotalAmount).Equal(x => x.tb_PurOrderDetails.Sum(c => (c.UnitPrice+c.CustomizedCost) * c.Quantity) + x.ShipCost).WithMessage("总金额：要等于成交价*数量，包含运费。");
 
             RuleFor(customer => customer.PreDeliveryDate)

@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：07/08/2025 19:05:32
+// 时间：07/11/2025 15:43:14
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -49,24 +49,9 @@ namespace RUINORERP.Business
 //***** 
  RuleFor(tb_AS_RepairOrderDetail =>tb_AS_RepairOrderDetail.Quantity).NotNull().WithMessage("数量:不能为空。");
 
- RuleFor(tb_AS_RepairOrderDetail =>tb_AS_RepairOrderDetail.Summary).MaximumLength(500).WithMessage("摘要:不能超过最大长度,500.");
-
  RuleFor(tb_AS_RepairOrderDetail =>tb_AS_RepairOrderDetail.RepairContent).MaximumLength(250).WithMessage("维修内容:不能超过最大长度,250.");
 
- RuleFor(x => x.MaterialCost).PrecisionScale(19,4,true).WithMessage("单项材料费用:小数位不能超过4。");
-
- RuleFor(x => x.LaborCost).PrecisionScale(19,4,true).WithMessage("单项人工费用:小数位不能超过4。");
-
- RuleFor(x => x.SubtotalCost).PrecisionScale(19,4,true).WithMessage("费用小计:小数位不能超过4。");
-
- RuleFor(x => x.TaxRate).PrecisionScale(8,3,true).WithMessage("税率:小数位不能超过3。");
-
- RuleFor(x => x.SubtotalTaxAmount).PrecisionScale(19,4,true).WithMessage("税额:小数位不能超过4。");
-
- RuleFor(x => x.SubtotalCostAmount).PrecisionScale(19,4,true).WithMessage("成本小计:小数位不能超过4。");
-
-//***** 
- RuleFor(tb_AS_RepairOrderDetail =>tb_AS_RepairOrderDetail.TotalReturnedQty).NotNull().WithMessage("已退回数:不能为空。");
+ RuleFor(tb_AS_RepairOrderDetail =>tb_AS_RepairOrderDetail.Summary).MaximumLength(500).WithMessage("摘要:不能超过最大长度,500.");
 
            	        Initialize();
      }

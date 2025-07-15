@@ -87,8 +87,20 @@ namespace RUINORERP.UI.BaseForm
     /// 单据类型的编辑 主表T子表C
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    public partial class BaseBillEditGeneric<T, C> : BaseBillEdit where T : class where C : class
+    public partial class BaseBillEditGeneric<T, C> : BaseBillEdit, IContextMenuInfoAuth, IToolStripMenuInfoAuth where T : class, new() where C : class, new()
     {
+        public virtual List<UControls.ContextMenuController> AddContextMenu()
+        {
+            List<UControls.ContextMenuController> list = new List<UControls.ContextMenuController>();
+            return list;
+        }
+
+        public virtual ToolStripItem[] AddExtendButton(tb_MenuInfo menuInfo)
+        {
+            System.Windows.Forms.ToolStripItem[] extendButtons = new System.Windows.Forms.ToolStripItem[] { };
+            this.BaseToolStrip.Items.AddRange(extendButtons);
+            return extendButtons;
+        }
 
         #region 单据明细中的 产品公共部分的字段提取。为了能统一控制这些公共字段
 
@@ -162,6 +174,7 @@ namespace RUINORERP.UI.BaseForm
             if (System.ComponentModel.LicenseManager.UsageMode != System.ComponentModel.LicenseUsageMode.Designtime)
             {
                 AddExcludeMenuList();
+                AddExtendButton(CurMenuInfo);
                 if (!this.DesignMode)
                 {
                     frm = new frmFormProperty();
@@ -700,7 +713,7 @@ namespace RUINORERP.UI.BaseForm
             dynamic statusEnum = Enum.ToObject(statusType, statusValue);
 
             // 通用按钮状态
-            bool isEditable = FMPaymentStatusHelper.IsEditable(statusEnum);
+            bool isEditable = FMPaymentStatusHelper.CanModify(statusEnum);
             bool canCancel = FMPaymentStatusHelper.CanCancel(statusEnum, HasRelatedRecords(entity as BaseEntity));
 
             toolStripbtnModify.Enabled = isEditable;
@@ -862,7 +875,7 @@ namespace RUINORERP.UI.BaseForm
             // 结案按钮改为"退款"
             toolStripButton结案.Text = "退款";
             toolStripButton结案.Enabled = status == PrePaymentStatus.待核销;
-            toolStripButtonSave.Enabled = FMPaymentStatusHelper.IsEditable(status);
+            toolStripButtonSave.Enabled = FMPaymentStatusHelper.CanModify(status);
 
             if (FMPaymentStatusHelper.IsFinalStatus(status))
             {
@@ -1017,7 +1030,7 @@ namespace RUINORERP.UI.BaseForm
                 bool CanReverse = false;
                 // 计算属性值
                 IsFinalStatus = FMPaymentStatusHelper.IsFinalStatus(status);
-                IsEditable = FMPaymentStatusHelper.IsEditable(status);
+                IsEditable = FMPaymentStatusHelper.CanModify(status);
                 CanCancel = FMPaymentStatusHelper.CanCancel(status, false);
 
                 switch (status)
@@ -2010,6 +2023,64 @@ namespace RUINORERP.UI.BaseForm
                         }
                     }
 
+
+                    if (parameter.bizType == BizType.售后申请单)
+                    {
+                        var RelatedBillMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble
+                        && m.EntityName == typeof(tb_AS_AfterSaleApply).Name
+                        && m.MenuName.Contains(parameter.bizType.ToString())
+                        ).FirstOrDefault();
+                        if (RelatedBillMenuInfo != null)
+                        {
+                            var controller = Startup.GetFromFacByName<BaseController<tb_AS_AfterSaleApply>>(typeof(tb_AS_AfterSaleApply).Name + "Controller");
+                            tb_AS_AfterSaleApply entity = await controller.BaseQueryByIdNavAsync(parameter.billId);
+                            //要把单据信息传过去
+                            menuPowerHelper.ExecuteEvents(RelatedBillMenuInfo, entity);
+                        }
+                    }
+                    if (parameter.bizType == BizType.售后交付单)
+                    {
+                        var RelatedBillMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble
+                        && m.EntityName == typeof(tb_AS_AfterSaleDelivery).Name
+                        && m.MenuName.Contains(parameter.bizType.ToString())
+                        ).FirstOrDefault();
+                        if (RelatedBillMenuInfo != null)
+                        {
+                            var controller = Startup.GetFromFacByName<BaseController<tb_AS_AfterSaleDelivery>>(typeof(tb_AS_AfterSaleDelivery).Name + "Controller");
+                            tb_AS_AfterSaleDelivery entity = await controller.BaseQueryByIdNavAsync(parameter.billId);
+                            //要把单据信息传过去
+                            menuPowerHelper.ExecuteEvents(RelatedBillMenuInfo, entity);
+                        }
+                    }
+                    if (parameter.bizType == BizType.维修工单)
+                    {
+                        var RelatedBillMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble
+                        && m.EntityName == typeof(tb_AS_RepairOrder).Name
+                        && m.MenuName.Contains(parameter.bizType.ToString())
+                        ).FirstOrDefault();
+                        if (RelatedBillMenuInfo != null)
+                        {
+                            var controller = Startup.GetFromFacByName<BaseController<tb_AS_RepairOrder>>(typeof(tb_AS_RepairOrder).Name + "Controller");
+                            tb_AS_RepairOrder entity = await controller.BaseQueryByIdNavAsync(parameter.billId);
+                            //要把单据信息传过去
+                            menuPowerHelper.ExecuteEvents(RelatedBillMenuInfo, entity);
+                        }
+                    }
+                    if (parameter.bizType == BizType.维修入库单)
+                    {
+                        var RelatedBillMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble
+                        && m.EntityName == typeof(tb_AS_RepairInStock).Name
+                        && m.MenuName.Contains(parameter.bizType.ToString())
+                        ).FirstOrDefault();
+                        if (RelatedBillMenuInfo != null)
+                        {
+                            var controller = Startup.GetFromFacByName<BaseController<tb_AS_RepairInStock>>(typeof(tb_AS_RepairInStock).Name + "Controller");
+                            tb_AS_RepairInStock entity = await controller.BaseQueryByIdNavAsync(parameter.billId);
+                            //要把单据信息传过去
+                            menuPowerHelper.ExecuteEvents(RelatedBillMenuInfo, entity);
+                        }
+                    }
+
                 }
             }
 
@@ -2922,7 +2993,7 @@ namespace RUINORERP.UI.BaseForm
             int statusValue = (int)status;
             dynamic statusEnum = Enum.ToObject(statusType, statusValue);
 
-            if (!FMPaymentStatusHelper.IsEditable(statusEnum))
+            if (!FMPaymentStatusHelper.CanModify(statusEnum))
             {
                 toolStripbtnModify.Enabled = false;
                 toolStripButtonSave.Enabled = false;
@@ -2958,7 +3029,7 @@ namespace RUINORERP.UI.BaseForm
             List<C> details = new List<C>();
             bindingSourceSub.EndEdit();
             List<C> detailentity = bindingSourceSub.DataSource as List<C>;
-            if(detailentity==null)
+            if (detailentity == null)
             {
                 return;
             }
@@ -4643,6 +4714,8 @@ namespace RUINORERP.UI.BaseForm
             }
             return result;
         }
+
+
     }
 
 

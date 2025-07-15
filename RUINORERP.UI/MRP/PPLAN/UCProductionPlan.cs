@@ -51,7 +51,48 @@ namespace RUINORERP.UI.MRP.MP
             //InitDataToCmbByEnumDynamicGeneratedDataSource<tb_ProductionPlan>(typeof(Priority), e => e.Priority, cmbOrderPriority, false);
 
         }
+        protected override void LoadRelatedDataToDropDownItems()
+        {
+            if (base.EditEntity is tb_ProductionPlan ProductionPlan)
+            {
+                if (ProductionPlan.SOrder_ID.HasValue && ProductionPlan.SOrder_ID.Value > 0)
+                {
+                    RelatedQueryParameter rqp = new RelatedQueryParameter();
+                    rqp.bizType = BizType.销售订单;
+                    rqp.billId = ProductionPlan.SOrder_ID.Value;
+                    ToolStripMenuItem RelatedMenuItem = new ToolStripMenuItem();
+                    RelatedMenuItem.Name = $"{rqp.billId}";
+                    RelatedMenuItem.Tag = rqp;
+                    RelatedMenuItem.Text = $"{rqp.bizType}:{ProductionPlan.SaleOrderNo}";
+                    RelatedMenuItem.Click += base.MenuItem_Click;
+                    if (!toolStripbtnRelatedQuery.DropDownItems.ContainsKey(ProductionPlan.SOrder_ID.ToString()))
+                    {
+                        toolStripbtnRelatedQuery.DropDownItems.Add(RelatedMenuItem);
+                    }
+                }
 
+                if (ProductionPlan.tb_ProductionDemands != null && ProductionPlan.tb_ProductionDemands.Count > 0)
+                {
+                    foreach (var item in ProductionPlan.tb_ProductionDemands)
+                    {
+                        RelatedQueryParameter rqp = new RelatedQueryParameter();
+                        rqp.bizType = BizType.生产计划单;
+                        rqp.billId = item.PDID;
+                        ToolStripMenuItem RelatedMenuItem = new ToolStripMenuItem();
+                        RelatedMenuItem.Name = $"{rqp.billId}";
+                        RelatedMenuItem.Tag = rqp;
+                        RelatedMenuItem.Text = $"{rqp.bizType}:{item.PDNo}";
+                        RelatedMenuItem.Click += base.MenuItem_Click;
+                        if (!toolStripbtnRelatedQuery.DropDownItems.ContainsKey(item.PDID.ToString()))
+                        {
+                            toolStripbtnRelatedQuery.DropDownItems.Add(RelatedMenuItem);
+                        }
+                    }
+                }
+
+            }
+            base.LoadRelatedDataToDropDownItems();
+        }
 
         internal override void LoadDataToUI(object Entity)
         {

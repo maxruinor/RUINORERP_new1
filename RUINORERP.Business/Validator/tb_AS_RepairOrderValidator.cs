@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：07/08/2025 19:05:31
+// 时间：07/11/2025 15:43:14
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -40,21 +40,20 @@ namespace RUINORERP.Business
      
  RuleFor(tb_AS_RepairOrder =>tb_AS_RepairOrder.RepairOrderNo).MaximumLength(25).WithMessage("维修工单号:不能超过最大长度,25.");
 
- RuleFor(tb_AS_RepairOrder =>tb_AS_RepairOrder.ASApplyID).Must(CheckForeignKeyValue).WithMessage("售后申请单:下拉选择值不正确。");
+ RuleFor(tb_AS_RepairOrder =>tb_AS_RepairOrder.ASApplyID).Must(CheckForeignKeyValueCanNull).WithMessage("售后申请单:下拉选择值不正确。");
+ RuleFor(tb_AS_RepairOrder =>tb_AS_RepairOrder.ASApplyID).NotEmpty().When(x => x.ASApplyID.HasValue);
 
- RuleFor(tb_AS_RepairOrder =>tb_AS_RepairOrder.ASApplyNo).MaximumLength(25).WithMessage("申请单号:不能超过最大长度,25.");
- RuleFor(tb_AS_RepairOrder =>tb_AS_RepairOrder.ASApplyNo).NotEmpty().WithMessage("申请单号:不能为空。");
+ RuleFor(tb_AS_RepairOrder =>tb_AS_RepairOrder.ASApplyNo).MaximumLength(25).WithMessage("售后申请编号:不能超过最大长度,25.");
 
  RuleFor(tb_AS_RepairOrder =>tb_AS_RepairOrder.Employee_ID).Must(CheckForeignKeyValue).WithMessage("经办人员:下拉选择值不正确。");
 
- RuleFor(tb_AS_RepairOrder =>tb_AS_RepairOrder.ProjectGroup_ID).Must(CheckForeignKeyValueCanNull).WithMessage("项目组:下拉选择值不正确。");
+ RuleFor(tb_AS_RepairOrder =>tb_AS_RepairOrder.ProjectGroup_ID).Must(CheckForeignKeyValueCanNull).WithMessage("项目小组:下拉选择值不正确。");
  RuleFor(tb_AS_RepairOrder =>tb_AS_RepairOrder.ProjectGroup_ID).NotEmpty().When(x => x.ProjectGroup_ID.HasValue);
 
  RuleFor(tb_AS_RepairOrder =>tb_AS_RepairOrder.CustomerVendor_ID).Must(CheckForeignKeyValueCanNull).WithMessage("所属客户:下拉选择值不正确。");
  RuleFor(tb_AS_RepairOrder =>tb_AS_RepairOrder.CustomerVendor_ID).NotEmpty().When(x => x.CustomerVendor_ID.HasValue);
 
-//***** 
- RuleFor(tb_AS_RepairOrder =>tb_AS_RepairOrder.RepairStatus).NotNull().WithMessage("维修状态:不能为空。");
+ RuleFor(tb_AS_RepairOrder =>tb_AS_RepairOrder.RepairStatus).NotEmpty().When(x => x.RepairStatus.HasValue);
 
 //***** 
  RuleFor(tb_AS_RepairOrder =>tb_AS_RepairOrder.PayStatus).NotNull().WithMessage("付款状态:不能为空。");
@@ -71,6 +70,10 @@ namespace RUINORERP.Business
  RuleFor(x => x.TotalAmount).PrecisionScale(19,4,true).WithMessage("总费用:小数位不能超过4。");
 
  RuleFor(x => x.CustomerPaidAmount).PrecisionScale(19,4,true).WithMessage("客户支付金额:小数位不能超过4。");
+
+ RuleFor(tb_AS_RepairOrder =>tb_AS_RepairOrder.ExpenseAllocationMode).NotEmpty().When(x => x.ExpenseAllocationMode.HasValue);
+
+ RuleFor(tb_AS_RepairOrder =>tb_AS_RepairOrder.ExpenseBearerType).NotEmpty().When(x => x.ExpenseBearerType.HasValue);
 
 
 

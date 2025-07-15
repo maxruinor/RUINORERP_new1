@@ -43,6 +43,7 @@ using NPOI.Util;
 using NPOI.POIFS.Properties;
 using Netron.GraphLib;
 using Org.BouncyCastle.Utilities;
+using RUINORERP.Model.CommonModel;
 
 namespace RUINORERP.UI.MRP.MP
 {
@@ -57,7 +58,48 @@ namespace RUINORERP.UI.MRP.MP
             // InitDataToCmbByEnumDynamicGeneratedDataSource<tb_ProductionDemand>(typeof(Priority), e => e.Priority, cmbOrderPriority, false);
 
         }
+        protected override void LoadRelatedDataToDropDownItems()
+        {
+            if (base.EditEntity is tb_ProductionDemand ProductionDemand)
+            {
+                if (ProductionDemand.PPID > 0)
+                {
+                    RelatedQueryParameter rqp = new RelatedQueryParameter();
+                    rqp.bizType = BizType.生产计划单;
+                    rqp.billId = ProductionDemand.PPID;
+                    ToolStripMenuItem RelatedMenuItem = new ToolStripMenuItem();
+                    RelatedMenuItem.Name = $"{rqp.billId}";
+                    RelatedMenuItem.Tag = rqp;
+                    RelatedMenuItem.Text = $"{rqp.bizType}:{ProductionDemand.PPNo}";
+                    RelatedMenuItem.Click += base.MenuItem_Click;
+                    if (!toolStripbtnRelatedQuery.DropDownItems.ContainsKey(ProductionDemand.PPID.ToString()))
+                    {
+                        toolStripbtnRelatedQuery.DropDownItems.Add(RelatedMenuItem);
+                    }
+                }
 
+                if (ProductionDemand.tb_ManufacturingOrders != null && ProductionDemand.tb_ManufacturingOrders.Count > 0)
+                {
+                    foreach (var item in ProductionDemand.tb_ManufacturingOrders)
+                    {
+                        RelatedQueryParameter rqp = new RelatedQueryParameter();
+                        rqp.bizType = BizType.制令单;
+                        rqp.billId = item.MOID;
+                        ToolStripMenuItem RelatedMenuItem = new ToolStripMenuItem();
+                        RelatedMenuItem.Name = $"{rqp.billId}";
+                        RelatedMenuItem.Tag = rqp;
+                        RelatedMenuItem.Text = $"{rqp.bizType}:{item.MONO}";
+                        RelatedMenuItem.Click += base.MenuItem_Click;
+                        if (!toolStripbtnRelatedQuery.DropDownItems.ContainsKey(item.MOID.ToString()))
+                        {
+                            toolStripbtnRelatedQuery.DropDownItems.Add(RelatedMenuItem);
+                        }
+                    }
+                }
+
+            }
+            base.LoadRelatedDataToDropDownItems();
+        }
 
         /// <summary>
         /// 如果需要查询条件查询，就要在子类中重写这个方法

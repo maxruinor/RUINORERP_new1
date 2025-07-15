@@ -93,7 +93,7 @@ namespace RUINORERP.UI.BaseForm
         //    }
         //}
 
-        public virtual void AddExcludeMenuList( MenuItemEnums menuItem)
+        public virtual void AddExcludeMenuList(MenuItemEnums menuItem)
         {
             if (!ExcludeMenuList.Contains(menuItem))
             {
@@ -207,13 +207,12 @@ namespace RUINORERP.UI.BaseForm
             MainForm.Instance.AppContext.log.ActionName = sender.ToString();
             if (sender.ToString().Length > 0)
             {
-                DoButtonClick(EnumHelper.GetEnumByString<MenuItemEnums>(sender.ToString()));
+                bool isInEnum = Enum.IsDefined(typeof(MenuItemEnums), sender.ToString());
+                if (isInEnum)
+                {
+                    DoButtonClick(EnumHelper.GetEnumByString<MenuItemEnums>(sender.ToString()));
+                }
             }
-            else
-            {
-
-            }
-
         }
 
         protected virtual void ToolStrip1_ItemClicked(object sender, ToolStripItemClickedEventArgs e)
@@ -221,13 +220,12 @@ namespace RUINORERP.UI.BaseForm
             MainForm.Instance.AppContext.log.ActionName = e.ClickedItem.Text.ToString();
             if (e.ClickedItem.Text.Length > 0)
             {
-                DoButtonClick(EnumHelper.GetEnumByString<MenuItemEnums>(e.ClickedItem.Text));
+                bool isInEnum = Enum.IsDefined(typeof(MenuItemEnums), e.ClickedItem.Text);
+                if (isInEnum)
+                {
+                    DoButtonClick(EnumHelper.GetEnumByString<MenuItemEnums>(e.ClickedItem.Text));
+                }
             }
-            else
-            {
-
-            }
-
         }
 
         protected virtual void DoButtonClick(MenuItemEnums menuItem)

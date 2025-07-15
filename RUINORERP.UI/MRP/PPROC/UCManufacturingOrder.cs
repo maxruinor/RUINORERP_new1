@@ -38,6 +38,7 @@ using RUINORERP.UI.PSI.PUR;
 using RUINORERP.UI.CommonUI;
 using RUINORERP.Business.CommService;
 using HLH.WinControl.MyTypeConverter;
+using RUINORERP.Model.CommonModel;
 
 namespace RUINORERP.UI.MRP.MP
 {
@@ -49,7 +50,48 @@ namespace RUINORERP.UI.MRP.MP
             InitializeComponent();
             //InitDataToCmbByEnumDynamicGeneratedDataSource<tb_ManufacturingOrder>(typeof(Priority), e => e.Priority, cmbPriority, false);
         }
+        protected override void LoadRelatedDataToDropDownItems()
+        {
+            if (base.EditEntity is tb_ManufacturingOrder ManufacturingOrder)
+            {
+                if (ManufacturingOrder.PDID.HasValue && ManufacturingOrder.PDID.Value > 0)
+                {
+                    RelatedQueryParameter rqp = new RelatedQueryParameter();
+                    rqp.bizType = BizType.需求分析;
+                    rqp.billId = ManufacturingOrder.PDID.Value;
+                    ToolStripMenuItem RelatedMenuItem = new ToolStripMenuItem();
+                    RelatedMenuItem.Name = $"{rqp.billId}";
+                    RelatedMenuItem.Tag = rqp;
+                    RelatedMenuItem.Text = $"{rqp.bizType}:{ManufacturingOrder.PDNO}";
+                    RelatedMenuItem.Click += base.MenuItem_Click;
+                    if (!toolStripbtnRelatedQuery.DropDownItems.ContainsKey(ManufacturingOrder.PDID.Value.ToString()))
+                    {
+                        toolStripbtnRelatedQuery.DropDownItems.Add(RelatedMenuItem);
+                    }
+                }
 
+                if (ManufacturingOrder.tb_MaterialRequisitions != null && ManufacturingOrder.tb_MaterialRequisitions.Count > 0)
+                {
+                    foreach (var item in ManufacturingOrder.tb_MaterialRequisitions)
+                    {
+                        RelatedQueryParameter rqp = new RelatedQueryParameter();
+                        rqp.bizType = BizType.生产领料单;
+                        rqp.billId = item.MR_ID;
+                        ToolStripMenuItem RelatedMenuItem = new ToolStripMenuItem();
+                        RelatedMenuItem.Name = $"{rqp.billId}";
+                        RelatedMenuItem.Tag = rqp;
+                        RelatedMenuItem.Text = $"{rqp.bizType}:{item.MaterialRequisitionNO}";
+                        RelatedMenuItem.Click += base.MenuItem_Click;
+                        if (!toolStripbtnRelatedQuery.DropDownItems.ContainsKey(item.MR_ID.ToString()))
+                        {
+                            toolStripbtnRelatedQuery.DropDownItems.Add(RelatedMenuItem);
+                        }
+                    }
+                }
+
+            }
+            base.LoadRelatedDataToDropDownItems();
+        }
 
         internal override void LoadDataToUI(object Entity)
         {

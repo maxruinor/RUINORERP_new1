@@ -159,22 +159,7 @@ namespace RUINORERP.UI.FM
                 }
 
 
-                #region 应收单 不用显示 收款信息 ，付款时才要显示对方的信息。
-
-                if (PaymentType == ReceivePaymentType.收款)
-                {
-                    lblAccount_type.Visible = false;
-                    cmbAccount_type.Visible = false;
-                    btnInfo.Visible = false;
-                    lblPayeeInfoID.Visible = false;
-                    cmbPayeeInfoID.Visible = false;
-                    lblPayeeAccountNo.Visible = false;
-                    txtPayeeAccountNo.Visible = false;
-                }
-
-
-
-                #endregion
+            
 
                 //如果状态是已经生效才可能有审核，如果是待收款 才可能有反审
                 if (entity.ARAPStatus == (int)ARAPStatus.待审核)
@@ -304,7 +289,7 @@ namespace RUINORERP.UI.FM
             }
 
             //后面这些依赖于控件绑定的数据源和字段。所以要在绑定后执行。
-            if (entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改)
+                if (entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改)
             {
                 base.InitRequiredToControl(MainForm.Instance.AppContext.GetRequiredService<tb_FM_ReceivablePayableValidator>(), kryptonPanel1.Controls);
                 //UIBaseTool uIBaseTool = new();
@@ -460,6 +445,46 @@ namespace RUINORERP.UI.FM
                 base.ToolBarEnabledControl(entity);
 
             };
+
+            #region 应收单 不用显示 收款信息 ，付款时才要显示对方的信息。
+
+            if (PaymentType == ReceivePaymentType.收款)
+            {
+                lblAccount_type.Visible = false;
+                cmbAccount_type.Visible = false;
+                btnInfo.Visible = false;
+                lblPayeeInfoID.Visible = false;
+                cmbPayeeInfoID.Visible = false;
+                lblPayeeAccountNo.Visible = false;
+                txtPayeeAccountNo.Visible = false;
+            }
+            else
+            {
+                if (entity.tb_fm_payeeinfo != null)
+                {
+                    DataBindingHelper.BindData4CmbByEnum<tb_FM_PayeeInfo>(entity.tb_fm_payeeinfo, k => k.Account_type, typeof(AccountType), cmbAccount_type, false);
+                    //添加收款信息。展示给财务看
+                    txtPayeeAccountNo.Text = entity.tb_fm_payeeinfo.Account_No;
+                    lblBelongingBank.Text = entity.tb_fm_payeeinfo.BelongingBank;
+                    lblOpeningbank.Text = entity.tb_fm_payeeinfo.OpeningBank;
+                    cmbAccount_type.SelectedItem = entity.tb_fm_payeeinfo.Account_type;
+                    if (!string.IsNullOrEmpty(entity.tb_fm_payeeinfo.PaymentCodeImagePath))
+                    {
+                        btnInfo.Tag = entity.tb_fm_payeeinfo;
+                        btnInfo.Visible = true;
+                    }
+                    else
+                    {
+                        btnInfo.Tag = string.Empty;
+                        btnInfo.Visible = false;
+                    }
+                }
+            }
+
+
+
+            #endregion
+
 
             //显示 打印状态 如果是草稿状态 不显示打印
             if ((ARAPStatus)EditEntity.ARAPStatus != ARAPStatus.草稿)

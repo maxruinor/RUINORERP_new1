@@ -49,14 +49,14 @@ namespace RUINORERP.Business
                  }
              });
 
+            RuleFor(x => x.tb_SaleOrderDetails).NotNull().WithMessage("销售明细:不能为空。");
             RuleFor(x => x.tb_SaleOrderDetails).Must(list => list.Count > 0).WithMessage("销售明细不能为空。");
-            
 
             RuleFor(x => x.TotalAmount).GreaterThan(0).When(x => x.tb_SaleOrderDetails.Any(s => s.Gift == false)).WithMessage("总金额：明细中有非赠品产品时，总金额要大于零。");//可非全赠品时 总金额要大于0.订单。
             RuleFor(x => x.TotalQty).GreaterThan(0).WithMessage("总数量：要大于零。");
             RuleFor(x => x.TotalAmount).GreaterThanOrEqualTo(0).WithMessage("总金额：要大于零。");
             RuleFor(x => x.TotalAmount).Equal(x => x.tb_SaleOrderDetails.Sum(c => (c.TransactionPrice) * c.Quantity) + x.FreightIncome).WithMessage("总金额，成交小计：要等于成交价*数量，包含运费。");
-            RuleFor(x => x.TotalCost).Equal(x => x.tb_SaleOrderDetails.Sum(c => (c.Cost+c.CustomizedCost) * c.Quantity)).WithMessage("总金额，成本小计：要等于（成本价+定制成本）*数量。");
+            RuleFor(x => x.TotalCost).Equal(x => x.tb_SaleOrderDetails.Sum(c => (c.Cost + c.CustomizedCost) * c.Quantity)).WithMessage("总金额，成本小计：要等于（成本价+定制成本）*数量。");
 
             RuleFor(x => x.PlatformOrderNo).NotEmpty().When(c => c.IsFromPlatform).WithMessage("平台单时，平台订单号不能为空。");
             RuleFor(x => x.PayStatus).GreaterThan(0).WithMessage("付款状态:不能为空。");

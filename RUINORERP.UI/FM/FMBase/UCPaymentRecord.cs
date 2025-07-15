@@ -36,6 +36,7 @@ using RUINORERP.UI.UCSourceGrid;
 using RUINORERP.Model.Dto;
 using Microsoft.Extensions.Logging;
 using RUINORERP.Model.CommonModel;
+using RUINORERP.Business.FMService;
 
 
 namespace RUINORERP.UI.FM
@@ -151,6 +152,28 @@ namespace RUINORERP.UI.FM
                 cmbAccount_type.Items.Clear();
                 cmbAccount_type.DataBindings.Clear();
                 txtPayeeAccountNo.Text = "";
+
+                //如果是转单过来的
+
+                if (PaymentType == ReceivePaymentType.付款)
+                {
+                    //如果线索引入相关数据
+                    #region 收款信息可以根据往来单位带出 ，并且可以添加
+
+                    //创建表达式
+                    var lambdaPayeeInfo = Expressionable.Create<tb_FM_PayeeInfo>()
+                                .And(t => t.Is_enabled == true)
+                                .And(t => t.CustomerVendor_ID == entity.CustomerVendor_ID)
+                                .ToExpression();//注意 这一句 不能少
+                    BaseProcessor baseProcessorPayeeInfo = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_FM_PayeeInfo).Name + "Processor");
+                    QueryFilter queryFilterPayeeInfo = baseProcessorPayeeInfo.GetQueryFilter();
+                    queryFilterPayeeInfo.FilterLimitExpressions.Add(lambdaPayeeInfo);
+                    DataBindingHelper.BindData4Cmb<tb_FM_PayeeInfo>(entity, k => k.PayeeInfoID, v => v.Account_name, cmbPayeeInfoID, queryFilterPayeeInfo.GetFilterExpression<tb_FM_PayeeInfo>(), true);
+                    DataBindingHelper.InitFilterForControlByExpCanEdit<tb_FM_PayeeInfo>(entity, cmbPayeeInfoID, c => c.Account_name, queryFilterPayeeInfo, true);
+
+                    #endregion
+                }
+
             }
 
             DataBindingHelper.BindData4Cmb<tb_PaymentMethod>(entity, k => k.Paytype_ID, v => v.Paytype_Name, cmbPaytype_ID);
@@ -226,8 +249,21 @@ namespace RUINORERP.UI.FM
             {
                 base.InitRequiredToControl(MainForm.Instance.AppContext.GetRequiredService<tb_FM_PaymentRecordValidator>(), kryptonPanel1.Controls);
             }
+
+            //如果是草稿或新建  字段修改 自动状态为修改后
+            // 获取当前状态
+            var statusProperty = typeof(PaymentStatus).Name;
+            var currentStatus = (PaymentStatus)Enum.ToObject(typeof(PaymentStatus),
+                EditEntity.GetPropertyValue(statusProperty)
+            );
+
             entity.PropertyChanged += async (sender, s2) =>
             {
+                if (FMPaymentStatusHelper.CanModify<PaymentStatus>(currentStatus))
+                {
+                    entity.ActionStatus = ActionStatus.修改;
+                }
+
                 if (s2.PropertyName == entity.GetPropertyName<tb_FM_PaymentRecord>(c => c.CustomerVendor_ID))
                 {
                     if (PaymentType == ReceivePaymentType.付款)
@@ -296,7 +332,7 @@ namespace RUINORERP.UI.FM
                         {
                             txtPayeeAccountNo.Text = "";
                             lblBelongingBank.Text = "";
-                             lblOpeningbank.Text = "";
+                            lblOpeningbank.Text = "";
                         }
                     }
 
@@ -412,7 +448,7 @@ namespace RUINORERP.UI.FM
 
                         ToolStripMenuItem RelatedMenuItem = new ToolStripMenuItem();
                         RelatedMenuItem.Name = $"{item.SourceBilllId}";
-                        RelatedMenuItem.Tag= rqp;
+                        RelatedMenuItem.Tag = rqp;
                         RelatedMenuItem.Text = $"{rqp.bizType}:{item.SourceBillNo}";
                         RelatedMenuItem.Click += base.MenuItem_Click;
                         RelatedMenuItem.DropDownItemClicked += MenuItem_DropDownItemClicked;
@@ -431,7 +467,7 @@ namespace RUINORERP.UI.FM
 
         private void MenuItem_DropDownItemClicked(object sender, ToolStripItemClickedEventArgs e)
         {
-          
+
         }
 
         protected override void RelatedQuery()

@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：07/08/2025 19:05:32
+// 时间：07/11/2025 15:43:14
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -124,20 +124,6 @@ namespace RUINORERP.Model
                         }
         }
 
-        private string _Summary;
-        /// <summary>
-        /// 摘要
-        /// </summary>
-        [AdvQueryAttribute(ColName = "Summary",ColDesc = "摘要")] 
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "Summary" ,Length=1000,IsNullable = true,ColumnDescription = "摘要" )]
-        public string Summary
-        { 
-            get{return _Summary;}
-            set{
-            SetProperty(ref _Summary, value);
-                        }
-        }
-
         private string _RepairContent;
         /// <summary>
         /// 维修内容
@@ -152,101 +138,17 @@ namespace RUINORERP.Model
                         }
         }
 
-        private decimal _MaterialCost= ((0));
+        private string _Summary;
         /// <summary>
-        /// 单项材料费用
+        /// 摘要
         /// </summary>
-        [AdvQueryAttribute(ColName = "MaterialCost",ColDesc = "单项材料费用")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "MaterialCost" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "单项材料费用" )]
-        public decimal MaterialCost
+        [AdvQueryAttribute(ColName = "Summary",ColDesc = "摘要")] 
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "Summary" ,Length=1000,IsNullable = true,ColumnDescription = "摘要" )]
+        public string Summary
         { 
-            get{return _MaterialCost;}
+            get{return _Summary;}
             set{
-            SetProperty(ref _MaterialCost, value);
-                        }
-        }
-
-        private decimal _LaborCost;
-        /// <summary>
-        /// 单项人工费用
-        /// </summary>
-        [AdvQueryAttribute(ColName = "LaborCost",ColDesc = "单项人工费用")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "LaborCost" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "单项人工费用" )]
-        public decimal LaborCost
-        { 
-            get{return _LaborCost;}
-            set{
-            SetProperty(ref _LaborCost, value);
-                        }
-        }
-
-        private decimal _SubtotalCost;
-        /// <summary>
-        /// 费用小计
-        /// </summary>
-        [AdvQueryAttribute(ColName = "SubtotalCost",ColDesc = "费用小计")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "SubtotalCost" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "费用小计" )]
-        public decimal SubtotalCost
-        { 
-            get{return _SubtotalCost;}
-            set{
-            SetProperty(ref _SubtotalCost, value);
-                        }
-        }
-
-        private decimal _TaxRate;
-        /// <summary>
-        /// 税率
-        /// </summary>
-        [AdvQueryAttribute(ColName = "TaxRate",ColDesc = "税率")] 
-        [SugarColumn(ColumnDataType = "decimal", SqlParameterDbType ="Decimal",  ColumnName = "TaxRate" , DecimalDigits = 3,IsNullable = false,ColumnDescription = "税率" )]
-        public decimal TaxRate
-        { 
-            get{return _TaxRate;}
-            set{
-            SetProperty(ref _TaxRate, value);
-                        }
-        }
-
-        private decimal _SubtotalTaxAmount= ((0));
-        /// <summary>
-        /// 税额
-        /// </summary>
-        [AdvQueryAttribute(ColName = "SubtotalTaxAmount",ColDesc = "税额")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "SubtotalTaxAmount" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "税额" )]
-        public decimal SubtotalTaxAmount
-        { 
-            get{return _SubtotalTaxAmount;}
-            set{
-            SetProperty(ref _SubtotalTaxAmount, value);
-                        }
-        }
-
-        private decimal _SubtotalCostAmount= ((0));
-        /// <summary>
-        /// 成本小计
-        /// </summary>
-        [AdvQueryAttribute(ColName = "SubtotalCostAmount",ColDesc = "成本小计")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "SubtotalCostAmount" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "成本小计" )]
-        public decimal SubtotalCostAmount
-        { 
-            get{return _SubtotalCostAmount;}
-            set{
-            SetProperty(ref _SubtotalCostAmount, value);
-                        }
-        }
-
-        private int _TotalReturnedQty= ((0));
-        /// <summary>
-        /// 已退回数
-        /// </summary>
-        [AdvQueryAttribute(ColName = "TotalReturnedQty",ColDesc = "已退回数")] 
-        [SugarColumn(ColumnDataType = "int", SqlParameterDbType ="Int32",  ColumnName = "TotalReturnedQty" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "已退回数" )]
-        public int TotalReturnedQty
-        { 
-            get{return _TotalReturnedQty;}
-            set{
-            SetProperty(ref _TotalReturnedQty, value);
+            SetProperty(ref _Summary, value);
                         }
         }
 

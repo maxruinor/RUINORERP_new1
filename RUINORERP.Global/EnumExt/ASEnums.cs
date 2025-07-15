@@ -44,18 +44,31 @@ namespace RUINORERP.Global.EnumExt
         [Description("【登记】")]
         登记 = 1,
 
-        [Description("【评估报价】")]
-        评估报价 = 1,
+        [Description("【维修评估】")]
+        评估报价 = 2,
 
         [Description("【待领料】")]
-        待领料 = 2,
+        待领料 = 3,
 
         [Description("【维修中】")]
-        维修中 = 3,
+        维修中 = 4,
 
         [Description("【待交付】")]
-        待交付 = 4,
-  
+        待交付 = 5,
+
+    }
+
+
+    public enum RepairStatus
+    {
+    
+        待维修 = 1,
+ 
+        维修中 = 2,
+ 
+        部分交付 = 3,
+     
+        已完成 = 4,
     }
 
 }

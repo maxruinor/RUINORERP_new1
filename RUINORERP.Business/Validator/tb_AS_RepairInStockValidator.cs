@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：07/08/2025 19:05:29
+// 时间：07/11/2025 15:53:34
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -50,7 +50,7 @@ namespace RUINORERP.Business
 
  RuleFor(tb_AS_RepairInStock =>tb_AS_RepairInStock.CustomerVendor_ID).Must(CheckForeignKeyValue).WithMessage("客户:下拉选择值不正确。");
 
- RuleFor(tb_AS_RepairInStock =>tb_AS_RepairInStock.ProjectGroup_ID).Must(CheckForeignKeyValueCanNull).WithMessage("项目组:下拉选择值不正确。");
+ RuleFor(tb_AS_RepairInStock =>tb_AS_RepairInStock.ProjectGroup_ID).Must(CheckForeignKeyValueCanNull).WithMessage("项目小组:下拉选择值不正确。");
  RuleFor(tb_AS_RepairInStock =>tb_AS_RepairInStock.ProjectGroup_ID).NotEmpty().When(x => x.ProjectGroup_ID.HasValue);
 
 //***** 
@@ -79,11 +79,30 @@ namespace RUINORERP.Business
 //***** 
  RuleFor(tb_AS_RepairInStock =>tb_AS_RepairInStock.DataStatus).NotNull().WithMessage("数据状态:不能为空。");
 
-           	        Initialize();
+           	                //long?
+                //RepairInStockID
+                //tb_AS_RepairInStockDetail
+                //RuleFor(x => x.tb_AS_RepairInStockDetails).Must(DetailedRecordsNotEmpty).WithMessage("明细不能为空");
+               //视图不需要验证，目前认为无编辑新增操作
+                //RuleFor(c => c.tb_AS_RepairInStockDetails).NotNull();
+                //RuleForEach(x => x.tb_AS_RepairInStockDetails).NotNull();
+                //RuleFor(x => x.tb_AS_RepairInStockDetails).Must(DetailedRecordsNotEmpty).WithMessage("明细不能为空");
+                    Initialize();
      }
 
 
 
+
+        private bool DetailedRecordsNotEmpty(List<tb_AS_RepairInStockDetail> details)
+        {
+            bool rs = true;
+            if (details == null || details.Count == 0)
+            {
+                return false;
+            }
+            return rs;
+        }
+        
 
 
 

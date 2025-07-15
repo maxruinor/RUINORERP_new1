@@ -36,6 +36,7 @@ using RUINORERP.Business.Processor;
 using Krypton.Toolkit;
 using RUINORERP.UI.PSI.PUR;
 using System.Web.WebSockets;
+using RUINORERP.Model.CommonModel;
 
 namespace RUINORERP.UI.MRP.MP
 {
@@ -48,7 +49,31 @@ namespace RUINORERP.UI.MRP.MP
             // InitDataToCmbByEnumDynamicGeneratedDataSource<tb_MaterialReturn>(typeof(Priority), e => e.Priority, cmbOrderPriority, false);
         }
 
+        protected override void LoadRelatedDataToDropDownItems()
+        {
+            if (base.EditEntity is tb_MaterialReturn MaterialReturn)
+            {
+                if (MaterialReturn.MR_ID > 0)
+                {
+                    RelatedQueryParameter rqp = new RelatedQueryParameter();
+                    rqp.bizType = BizType.生产领料单;
+                    rqp.billId = MaterialReturn.MR_ID;
+                    ToolStripMenuItem RelatedMenuItem = new ToolStripMenuItem();
+                    RelatedMenuItem.Name = $"{rqp.billId}";
+                    RelatedMenuItem.Tag = rqp;
+                    RelatedMenuItem.Text = $"{rqp.bizType}:{MaterialReturn.MaterialRequisitionNO}";
+                    RelatedMenuItem.Click += base.MenuItem_Click;
+                    if (!toolStripbtnRelatedQuery.DropDownItems.ContainsKey(MaterialReturn.MR_ID.ToString()))
+                    {
+                        toolStripbtnRelatedQuery.DropDownItems.Add(RelatedMenuItem);
+                    }
+                }
 
+                
+
+            }
+            base.LoadRelatedDataToDropDownItems();
+        }
 
         internal override void LoadDataToUI(object Entity)
         {

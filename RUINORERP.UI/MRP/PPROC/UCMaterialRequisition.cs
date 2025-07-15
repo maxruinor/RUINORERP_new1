@@ -38,6 +38,7 @@ using RUINORERP.UI.PSI.PUR;
 using System.Web.WebSockets;
 using RUINORERP.Common.Extensions;
 using RUINORERP.Business.CommService;
+using RUINORERP.Model.CommonModel;
 
 namespace RUINORERP.UI.MRP.MP
 {
@@ -51,7 +52,48 @@ namespace RUINORERP.UI.MRP.MP
             // InitDataToCmbByEnumDynamicGeneratedDataSource<tb_MaterialRequisition>(typeof(Priority), e => e.Priority, cmbOrderPriority, false);
         }
 
+        protected override void LoadRelatedDataToDropDownItems()
+        {
+            if (base.EditEntity is tb_MaterialRequisition MaterialRequisition)
+            {
+                if (MaterialRequisition.MOID> 0)
+                {
+                    RelatedQueryParameter rqp = new RelatedQueryParameter();
+                    rqp.bizType = BizType.制令单;
+                    rqp.billId = MaterialRequisition.MOID;
+                    ToolStripMenuItem RelatedMenuItem = new ToolStripMenuItem();
+                    RelatedMenuItem.Name = $"{rqp.billId}";
+                    RelatedMenuItem.Tag = rqp;
+                    RelatedMenuItem.Text = $"{rqp.bizType}:{MaterialRequisition.MONO}";
+                    RelatedMenuItem.Click += base.MenuItem_Click;
+                    if (!toolStripbtnRelatedQuery.DropDownItems.ContainsKey(MaterialRequisition.MOID.ToString()))
+                    {
+                        toolStripbtnRelatedQuery.DropDownItems.Add(RelatedMenuItem);
+                    }
+                }
 
+                if (MaterialRequisition.tb_MaterialReturns != null && MaterialRequisition.tb_MaterialReturns.Count > 0)
+                {
+                    foreach (var item in MaterialRequisition.tb_MaterialReturns)
+                    {
+                        RelatedQueryParameter rqp = new RelatedQueryParameter();
+                        rqp.bizType = BizType.生产退料单;
+                        rqp.billId = item.MRE_ID;
+                        ToolStripMenuItem RelatedMenuItem = new ToolStripMenuItem();
+                        RelatedMenuItem.Name = $"{rqp.billId}";
+                        RelatedMenuItem.Tag = rqp;
+                        RelatedMenuItem.Text = $"{rqp.bizType}:{item.BillNo}";
+                        RelatedMenuItem.Click += base.MenuItem_Click;
+                        if (!toolStripbtnRelatedQuery.DropDownItems.ContainsKey(item.MRE_ID.ToString()))
+                        {
+                            toolStripbtnRelatedQuery.DropDownItems.Add(RelatedMenuItem);
+                        }
+                    }
+                }
+
+            }
+            base.LoadRelatedDataToDropDownItems();
+        }
         internal override void LoadDataToUI(object Entity)
         {
             ActionStatus actionStatus = ActionStatus.无操作;

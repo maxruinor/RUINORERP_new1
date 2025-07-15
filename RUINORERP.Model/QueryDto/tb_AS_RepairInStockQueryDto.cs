@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：07/08/2025 19:05:29
+// 时间：07/11/2025 15:53:33
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -103,10 +103,10 @@ namespace RUINORERP.Model.QueryDto
 
         private long? _ProjectGroup_ID;
         /// <summary>
-        /// 项目组
+        /// 项目小组
         /// </summary>
-        [AdvQueryAttribute(ColName = "ProjectGroup_ID",ColDesc = "项目组")]
-        [SugarColumn(ColumnDataType = "bigint",SqlParameterDbType ="Int64",ColumnName = "ProjectGroup_ID",IsNullable = true,ColumnDescription = "项目组" )]
+        [AdvQueryAttribute(ColName = "ProjectGroup_ID",ColDesc = "项目小组")]
+        [SugarColumn(ColumnDataType = "bigint",SqlParameterDbType ="Int64",ColumnName = "ProjectGroup_ID",IsNullable = true,ColumnDescription = "项目小组" )]
         [FKRelationAttribute("tb_ProjectGroup","ProjectGroup_ID")]
         public long? ProjectGroup_ID 
         { 

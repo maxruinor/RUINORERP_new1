@@ -1446,7 +1446,7 @@ namespace RUINORERP.UI.MRP.BOM
                 MessageBox.Show("请先选择一个BOM清单作为复制的基准。", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return null;
             }
-            EditEntity=  base.AddByCopy();
+            EditEntity = base.AddByCopy();
             EditEntity.ActionStatus = ActionStatus.新增;
             EditEntity.BOM_ID = 0;
             EditEntity.ApprovalStatus = (int)ApprovalStatus.未审核;
@@ -1455,7 +1455,7 @@ namespace RUINORERP.UI.MRP.BOM
             EditEntity.ProdDetailID = 0;
             EditEntity.SKU = null;
             EditEntity.BOM_No = BizCodeGenerator.Instance.GetBizBillNo(BizType.BOM物料清单);
-            
+
             BusinessHelper.Instance.InitEntity(EditEntity);
             foreach (var item in EditEntity.tb_BOM_SDetails)
             {
@@ -1975,7 +1975,7 @@ namespace RUINORERP.UI.MRP.BOM
                 //副产出暂时不做。为了不验证给一行空值，验证后清除掉
                 EditEntity.tb_BOM_SDetailSecondaries = new List<tb_BOM_SDetailSecondary>();
                 EditEntity.tb_BOM_SDetailSecondaries.Add(new tb_BOM_SDetailSecondary());
-
+                EditEntity.DataStatus = (int)DataStatus.草稿;
                 if (EditEntity.is_enabled && !EditEntity.is_enabled)
                 {
                     if (MessageBox.Show("BOM清单没有启用，确定保存吗？", "提示", MessageBoxButtons.OKCancel, MessageBoxIcon.Information) == DialogResult.Cancel)
@@ -2076,7 +2076,7 @@ namespace RUINORERP.UI.MRP.BOM
 
 
         protected async override Task<ReviewResult> Review()
-        { 
+        {
             ReviewResult reviewResult = await base.Review();
             if (reviewResult.approval.ApprovalResults)
             {

@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：07/08/2025 19:05:29
+// 时间：07/11/2025 15:53:32
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -247,22 +247,17 @@ namespace RUINORERP.Business
             if (entity.RepairInStockID > 0)
             {
             
-                                 var result= await _unitOfWorkManage.GetDbClient().Updateable<tb_AS_RepairInStock>(entity as tb_AS_RepairInStock)
+                             rs = await _unitOfWorkManage.GetDbClient().UpdateNav<tb_AS_RepairInStock>(entity as tb_AS_RepairInStock)
+                        .Include(m => m.tb_AS_RepairInStockDetails)
                     .ExecuteCommandAsync();
-                    if (result > 0)
-                    {
-                        rs = true;
-                    }
-            }
+                 }
         else    
         {
-                                  var result= await _unitOfWorkManage.GetDbClient().Insertable<tb_AS_RepairInStock>(entity as tb_AS_RepairInStock)
-                    .ExecuteReturnSnowflakeIdAsync();
-                    if (result > 0)
-                    {
-                        rs = true;
-                    }
-                                              
+                        rs = await _unitOfWorkManage.GetDbClient().InsertNav<tb_AS_RepairInStock>(entity as tb_AS_RepairInStock)
+                .Include(m => m.tb_AS_RepairInStockDetails)
+         
+                .ExecuteCommandAsync();
+                                          
                      
         }
         
@@ -293,9 +288,8 @@ namespace RUINORERP.Business
         public async override Task<List<T>> BaseQueryByAdvancedNavAsync(bool useLike, object dto)
         {
             var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<tb_AS_RepairInStock>()
-                                //这里一般是子表，或没有一对多外键的情况 ，用自动的只是为了语法正常一般不会调用这个方法
-                .IncludesAllFirstLayer()//自动更新导航 只能两层。这里项目中有时会失效，具体看文档
-                                .Where(useLike, dto);
+                                .Includes(m => m.tb_AS_RepairInStockDetails)
+                                        .Where(useLike, dto);
             return await querySqlQueryable.ToListAsync()as List<T>;
         }
 
@@ -304,9 +298,8 @@ namespace RUINORERP.Business
         {
             tb_AS_RepairInStock entity = model as tb_AS_RepairInStock;
              bool rs = await _unitOfWorkManage.GetDbClient().DeleteNav<tb_AS_RepairInStock>(m => m.RepairInStockID== entity.RepairInStockID)
-                                //这里一般是子表，或没有一对多外键的情况 ，用自动的只是为了语法正常一般不会调用这个方法
-                .IncludesAllFirstLayer()//自动更新导航 只能两层。这里项目中有时会失效，具体看文档
-                                .ExecuteCommandAsync();
+                                .Include(m => m.tb_AS_RepairInStockDetails)
+                                        .ExecuteCommandAsync();
             if (rs)
             {
                 //////生成时暂时只考虑了一个主键的情况
@@ -472,7 +465,8 @@ namespace RUINORERP.Business
                                .Includes(t => t.tb_employee )
                                .Includes(t => t.tb_projectgroup )
                                .Includes(t => t.tb_as_repairorder )
-                                    .ToListAsync();
+                                            .Includes(t => t.tb_AS_RepairInStockDetails )
+                        .ToListAsync();
             
             foreach (var item in list)
             {
@@ -495,7 +489,8 @@ namespace RUINORERP.Business
                                .Includes(t => t.tb_employee )
                                .Includes(t => t.tb_projectgroup )
                                .Includes(t => t.tb_as_repairorder )
-                                    .ToListAsync();
+                                            .Includes(t => t.tb_AS_RepairInStockDetails )
+                        .ToListAsync();
             
             foreach (var item in list)
             {
@@ -518,7 +513,8 @@ namespace RUINORERP.Business
                             .Includes(t => t.tb_employee )
                             .Includes(t => t.tb_projectgroup )
                             .Includes(t => t.tb_as_repairorder )
-                                    .ToList();
+                                        .Includes(t => t.tb_AS_RepairInStockDetails )
+                        .ToList();
             
             foreach (var item in list)
             {
@@ -558,7 +554,8 @@ namespace RUINORERP.Business
                             .Includes(t => t.tb_employee )
                             .Includes(t => t.tb_projectgroup )
                             .Includes(t => t.tb_as_repairorder )
-                                    .FirstAsync();
+                                        .Includes(t => t.tb_AS_RepairInStockDetails )
+                        .FirstAsync();
             if(entity!=null)
             {
                 entity.HasChanged = false;

@@ -31,7 +31,9 @@ namespace RUINORERP.Business
             // 这里添加额外的初始化代码
             // 这里添加额外的初始化代码
             RuleFor(x => x.TotalQty).GreaterThan(0).WithMessage("总数量：要大于零。");
-            
+
+            RuleFor(x => x.tb_SaleOutDetails).NotNull().WithMessage("明细:不能为空。");
+            RuleFor(x => x.tb_SaleOutDetails).Must(list => list.Count > 0).WithMessage("明细不能为空。");
 
             RuleFor(x => x.IsFromPlatform)
              .Custom((value, context) =>

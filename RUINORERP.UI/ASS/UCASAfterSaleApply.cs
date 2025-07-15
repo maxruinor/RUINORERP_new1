@@ -48,6 +48,7 @@ using RUINORERP.Global.EnumExt;
 using Fireasy.Common.Configuration;
 using RUINORERP.UI.Monitoring.Auditing;
 using NPOI.SS.Formula.Functions;
+using Netron.GraphLib;
 
 
 namespace RUINORERP.UI.ASS
@@ -119,6 +120,76 @@ namespace RUINORERP.UI.ASS
             }
             base.LoadRelatedDataToDropDownItems();
         }
+        ToolStripButton toolStripButton维修评估 = new System.Windows.Forms.ToolStripButton();
+        /// <summary>
+        /// 添加回收
+        /// </summary>
+        /// <returns></returns>
+        public override ToolStripItem[] AddExtendButton(tb_MenuInfo menuInfo)
+        {
+
+            toolStripButton维修评估.Text = "维修评估";
+            toolStripButton维修评估.Image = global::RUINORERP.UI.Properties.Resources.Assignment;
+            toolStripButton维修评估.ImageTransparentColor = System.Drawing.Color.Magenta;
+            toolStripButton维修评估.Name = "维修评估";
+            toolStripButton维修评估.Visible = false;//默认隐藏
+            UIHelper.ControlButton<ToolStripButton>(CurMenuInfo, toolStripButton维修评估);
+            toolStripButton维修评估.ToolTipText = "对售后申请单的产品进行维修评估及报价，生成维修工单，使用本功能。";
+            toolStripButton维修评估.Click += new System.EventHandler(this.toolStripButton维修评估_Click);
+
+
+            System.Windows.Forms.ToolStripItem[] extendButtons = new System.Windows.Forms.ToolStripItem[]
+            { toolStripButton维修评估};
+
+            this.BaseToolStrip.Items.AddRange(extendButtons);
+            return extendButtons;
+        }
+        private void toolStripButton维修评估_Click(object sender, EventArgs e)
+        {
+            if (EditEntity == null)
+            {
+                return;
+            }
+
+            if (EditEntity != null)
+            {
+                //只有审核状态才可以转换
+                if (EditEntity.DataStatus == (int)DataStatus.确认 && EditEntity.ApprovalStatus == (int)ApprovalStatus.已审核 && EditEntity.ApprovalResults.HasValue && EditEntity.ApprovalResults.Value)
+                {
+                    if (EditEntity.tb_AS_AfterSaleDeliveries != null && EditEntity.tb_AS_AfterSaleDeliveries.Count > 0)
+                    {
+                        MessageBox.Show($"当前【售后申请单】{EditEntity.ASApplyNo}：已经生成过【售后交付单】，无法进行维修评估", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        return;
+                    }
+
+                    if (EditEntity.tb_AS_RepairOrders != null && EditEntity.tb_AS_RepairOrders.Count > 0)
+                    {
+                        if (MessageBox.Show($"当前【售后申请单】{EditEntity.ASApplyNo}：已经生成过【维修工单】，\r\n确定再次生成吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Information) == DialogResult.No)
+                        {
+                            return;
+                        }
+                    }
+
+                    var ctr = Startup.GetFromFac<tb_AS_AfterSaleApplyController<tb_AS_AfterSaleApply>>();
+                    tb_AS_RepairOrder RepairOrder = ctr.ToRepairOrder(EditEntity);
+                    MenuPowerHelper menuPowerHelper;
+                    menuPowerHelper = Startup.GetFromFac<MenuPowerHelper>();
+                    tb_MenuInfo RelatedMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble && m.EntityName == nameof(tb_AS_RepairOrder) && m.BIBaseForm == "BaseBillEditGeneric`2").FirstOrDefault();
+                    if (RelatedMenuInfo != null)
+                    {
+                        menuPowerHelper.ExecuteEvents(RelatedMenuInfo, RepairOrder);
+                    }
+                    return;
+                }
+                else
+                {
+                    MessageBox.Show($"当前【售后申请单】{EditEntity.ASApplyNo}：未审核，无法生成【维修工单】", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+            }
+
+        }
+
+
 
         public override void BindData(tb_AS_AfterSaleApply entityPara, ActionStatus actionStatus)
         {
@@ -148,6 +219,7 @@ namespace RUINORERP.UI.ASS
                     {
                         entity.ASApplyNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.售后申请单);
                     }
+                    entity.ASProcessStatus = (int)ASProcessStatus.登记;
                     entity.RepairEvaluationOpinion = string.Empty;
                     entity.ApprovalOpinions = string.Empty;
                     entity.ApplyDate = System.DateTime.Now;
@@ -261,10 +333,10 @@ namespace RUINORERP.UI.ASS
                 {
                     if (s2.PropertyName == entity.GetPropertyName<tb_AS_AfterSaleApply>(c => c.ExpenseAllocationMode) && entity.ExpenseAllocationMode.HasValue && entity.ExpenseAllocationMode.Value > 0)
                     {
-                        if (entity.ExpenseAllocationMode.Value == (int)ExpenseAllocationMode.Single)
+                        if (entity.ExpenseAllocationMode.Value == (int)ExpenseAllocationMode.单一承担)
                         {
                             //默认为客户
-                            entity.ExpenseBearerType = (int)ExpenseBearerType.Customer;
+                            entity.ExpenseBearerType = (int)ExpenseBearerType.客户;
                         }
                     }
 
@@ -414,6 +486,10 @@ namespace RUINORERP.UI.ASS
                     col.SetCol_Summary<tb_AS_AfterSaleApplyDetail>(item);
                 }
             }
+            listCols.SetCol_Summary<tb_AS_AfterSaleApplyDetail>(c => c.ConfirmedQuantity);
+            listCols.SetCol_Summary<tb_AS_AfterSaleApplyDetail>(c => c.InitialQuantity);
+            listCols.SetCol_Summary<tb_AS_AfterSaleApplyDetail>(c => c.DeliveredQty);
+
 
             //公共到明细的映射 源 ，左边会隐藏
             sgh.SetPointToColumnPairs<ProductSharePart, tb_AS_AfterSaleApplyDetail>(sgd, f => f.Location_ID, t => t.Location_ID);
@@ -563,7 +639,7 @@ namespace RUINORERP.UI.ASS
                     return false;
                 }
 
-                if (NeedValidated && (EditEntity.TotalConfirmedQuantity !=  detailentity.Sum(c => c.ConfirmedQuantity)))
+                if (NeedValidated && (EditEntity.TotalConfirmedQuantity != detailentity.Sum(c => c.ConfirmedQuantity)))
                 {
                     MessageBox.Show($"单据总复核数量{EditEntity.TotalConfirmedQuantity}和明细复核数量之和{detailentity.Sum(c => c.ConfirmedQuantity)}不相同，请检查后再试！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     return false;
@@ -579,6 +655,7 @@ namespace RUINORERP.UI.ASS
                     MessageBox.Show($"单据总交付数量{EditEntity.TotalDeliveredQty}和明细交付数量之和{detailentity.Sum(c => c.DeliveredQty)}不相同，请检查后再试！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     return false;
                 }
+
 
                 //订单只是警告。可以继续
 

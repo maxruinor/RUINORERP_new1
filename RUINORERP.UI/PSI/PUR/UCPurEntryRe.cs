@@ -44,6 +44,7 @@ using RUINORERP.Business.Security;
 using RUINORERP.Global.EnumExt;
 using RUINORERP.UI.AdvancedUIModule;
 using RUINORERP.Model.CommonModel;
+using AutoUpdateTools;
 
 
 namespace RUINORERP.UI.PSI.PUR
@@ -152,7 +153,8 @@ namespace RUINORERP.UI.PSI.PUR
                 entity.ActionStatus = ActionStatus.新增;
                 entity.DataStatus = (int)DataStatus.草稿;
                 entity.ReturnDate = System.DateTime.Now;
-              
+                entity.Currency_ID = MainForm.Instance.AppContext.BaseCurrency.Currency_ID;
+                entity.ExchangeRate = 1;
                 if (string.IsNullOrEmpty(entity.PurEntryReNo))
                 {
                     entity.PurEntryReNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.采购退货单);
@@ -166,6 +168,8 @@ namespace RUINORERP.UI.PSI.PUR
                 }
             }
 
+            DataBindingHelper.BindData4TextBox<tb_PurEntryRe>(entity, t => t.ExchangeRate.ToString(), txtExchangeRate, BindDataType4TextBox.Money, false);
+            DataBindingHelper.BindData4Cmb<tb_Currency>(entity, k => k.Currency_ID, v => v.CurrencyName, cmbCurrency_ID);
             DataBindingHelper.BindData4TextBox<tb_PurEntryRe>(entity, v => v.PurEntryNo, txtPurEntryNo, BindDataType4TextBox.Text, true);
             DataBindingHelper.BindData4CmbByEnum<tb_PurEntryRe>(entity, k => k.ProcessWay, typeof(PurReProcessWay), cmbProcessWay, true);
             DataBindingHelper.BindData4Cmb<tb_Department>(entity, k => k.DepartmentID, v => v.DepartmentName, cmbDepartmentID);

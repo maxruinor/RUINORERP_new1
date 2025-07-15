@@ -58,7 +58,7 @@ namespace RUINORERP.UI.PSI.SAL
     /// 销售订单时：有运费外币，总金额外币，订单外币。反而出库时不用这么多。外币只是用于记账。出库时只要根据本币和外币及汇率。生成应收时自动算出来。
     /// </summary>
     [MenuAttrAssemblyInfo("销售订单", ModuleMenuDefine.模块定义.进销存管理, ModuleMenuDefine.进销存管理.销售管理, BizType.销售订单)]
-    public partial class UCSaleOrder : BaseBillEditGeneric<tb_SaleOrder, tb_SaleOrderDetail>, IToolStripMenuInfoAuth, IPublicEntityObject
+    public partial class UCSaleOrder : BaseBillEditGeneric<tb_SaleOrder, tb_SaleOrderDetail>,  IPublicEntityObject
     {
         public UCSaleOrder()
         {
@@ -933,7 +933,6 @@ using var binder = new UIStateBinder(..., customEvaluator);
                     }
                 }
 
-
                 if (EditEntity.PayStatus == (int)PayStatus.未付款)
                 {
                     //如果订金大于零时，则不能是未付款
@@ -1510,7 +1509,7 @@ using var binder = new UIStateBinder(..., customEvaluator);
         /// 添加回收
         /// </summary>
         /// <returns></returns>
-        public ToolStripItem[] AddExtendButton(tb_MenuInfo menuInfo)
+        public override ToolStripItem[] AddExtendButton(tb_MenuInfo menuInfo)
         {
             toolStripButton定制成本确认.Text = "定制成本确认";
             toolStripButton定制成本确认.Image = global::RUINORERP.UI.Properties.Resources.Assignment;

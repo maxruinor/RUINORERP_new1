@@ -856,6 +856,8 @@ namespace RUINORERP.Business
             }
             return rmrs;
         }
+
+
         /// <summary>
         /// 更新付款状态，并且一次只能更新一个单据
         /// 更新订单，更新出库单的付款状态， 付款状态，付款方式。付款日期？付款凭证？

@@ -81,6 +81,10 @@ namespace RUINORERP.Business.CommService
             Mapping.Add(BizType.付款核销, typeof(tb_FM_PaymentSettlement));
 
 
+            Mapping.Add(BizType.售后申请单, typeof(tb_AS_AfterSaleApply));
+            Mapping.Add(BizType.售后交付单, typeof(tb_AS_AfterSaleDelivery));
+            Mapping.Add(BizType.维修工单, typeof(tb_AS_RepairOrder));
+            Mapping.Add(BizType.维修入库单, typeof(tb_AS_RepairInStock));
 
             //mapping.Add(BizType.退料单, typeof(tb_Return));
             // 省略其他枚举值与表名的对应关系

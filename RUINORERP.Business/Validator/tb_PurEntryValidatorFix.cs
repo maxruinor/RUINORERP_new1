@@ -41,6 +41,9 @@ namespace RUINORERP.Business
 
         public override void Initialize()
         {
+            RuleFor(x => x.tb_PurEntryDetails).NotNull().WithMessage("明细:不能为空。");
+            RuleFor(x => x.tb_PurEntryDetails).Must(list => list.Count > 0).WithMessage("明细不能为空。");
+
             RuleFor(x => x.TotalAmount).GreaterThan(0).When(x => x.tb_PurEntryDetails.Any(c => c.IsGift == null || (c.IsGift.HasValue && c.IsGift == false))).WithMessage("总金额：要大于零。");
             RuleFor(x => x.TotalAmount).Equal(x => x.tb_PurEntryDetails.Sum(c => (c.UnitPrice + c.CustomizedCost) * c.Quantity) + x.ShipCost).WithMessage("总金额：要等于成交价*数量，包含运费。");
 

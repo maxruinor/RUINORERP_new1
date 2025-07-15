@@ -569,17 +569,53 @@
     </Compile>
     <Compile Include="AdvancedUIModule\UIGenerateHelper.cs" />
     <Compile Include="AdvancedUIModule\UIQueryHelper.cs" />
+    <Compile Include="ASS\UCASAfterSaleDelivery.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="ASS\UCASAfterSaleDelivery.designer.cs">
+      <DependentUpon>UCASAfterSaleDelivery.cs</DependentUpon>
+    </Compile>
     <Compile Include="ASS\UCASAfterSaleApply.cs">
       <SubType>UserControl</SubType>
     </Compile>
     <Compile Include="ASS\UCASAfterSaleApply.designer.cs">
       <DependentUpon>UCASAfterSaleApply.cs</DependentUpon>
     </Compile>
+    <Compile Include="ASS\UCASAfterSaleDeliveryQuery.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="ASS\UCASAfterSaleDeliveryQuery.Designer.cs">
+      <DependentUpon>UCASAfterSaleDeliveryQuery.cs</DependentUpon>
+    </Compile>
     <Compile Include="ASS\UCASAfterSaleApplyQuery.cs">
       <SubType>UserControl</SubType>
     </Compile>
     <Compile Include="ASS\UCASAfterSaleApplyQuery.Designer.cs">
       <DependentUpon>UCASAfterSaleApplyQuery.cs</DependentUpon>
+    </Compile>
+    <Compile Include="ASS\UCASRepairInStock.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="ASS\UCASRepairInStock.designer.cs">
+      <DependentUpon>UCASRepairInStock.cs</DependentUpon>
+    </Compile>
+    <Compile Include="ASS\UCASRepairOrder.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="ASS\UCASRepairOrder.designer.cs">
+      <DependentUpon>UCASRepairOrder.cs</DependentUpon>
+    </Compile>
+    <Compile Include="ASS\UCASRepairInStockQuery.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="ASS\UCASRepairInStockQuery.Designer.cs">
+      <DependentUpon>UCASRepairInStockQuery.cs</DependentUpon>
+    </Compile>
+    <Compile Include="ASS\UCASRepairOrderQuery.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="ASS\UCASRepairOrderQuery.Designer.cs">
+      <DependentUpon>UCASRepairOrderQuery.cs</DependentUpon>
     </Compile>
     <Compile Include="ATechnologyStack\AOP\DbBizLogAOP.cs" />
     <Compile Include="ATechnologyStack\ISharedIdentification.cs" />
@@ -3220,11 +3256,29 @@
     <EmbeddedResource Include="AdvancedUIModule\UCAdvYesOrNO.resx">
       <DependentUpon>UCAdvYesOrNO.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="ASS\UCASAfterSaleDelivery.resx">
+      <DependentUpon>UCASAfterSaleDelivery.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="ASS\UCASAfterSaleApply.resx">
       <DependentUpon>UCASAfterSaleApply.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="ASS\UCASAfterSaleDeliveryQuery.resx">
+      <DependentUpon>UCASAfterSaleDeliveryQuery.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="ASS\UCASAfterSaleApplyQuery.resx">
       <DependentUpon>UCASAfterSaleApplyQuery.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ASS\UCASRepairInStock.resx">
+      <DependentUpon>UCASRepairInStock.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ASS\UCASRepairOrder.resx">
+      <DependentUpon>UCASRepairOrder.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ASS\UCASRepairInStockQuery.resx">
+      <DependentUpon>UCASRepairInStockQuery.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ASS\UCASRepairOrderQuery.resx">
+      <DependentUpon>UCASRepairOrderQuery.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="BaseForm\BaseBillEdit.resx">
       <DependentUpon>BaseBillEdit.cs</DependentUpon>

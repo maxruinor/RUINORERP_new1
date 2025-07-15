@@ -9,6 +9,7 @@ using RUINORERP.Common.Extensions;
 using RUINORERP.Common.Helper;
 using RUINORERP.Global;
 using RUINORERP.Model;
+using RUINORERP.Model.CommonModel;
 using RUINORERP.Model.Dto;
 
 using RUINORERP.UI.BaseForm;
@@ -37,7 +38,48 @@ namespace RUINORERP.UI.PSI.PUR
         {
             InitializeComponent();
         }
+        protected override void LoadRelatedDataToDropDownItems()
+        {
+            if (base.EditEntity is tb_FinishedGoodsInv FinishedGoodsInv)
+            {
+                if (FinishedGoodsInv.MOID.HasValue && FinishedGoodsInv.MOID.Value > 0)
+                {
+                    RelatedQueryParameter rqp = new RelatedQueryParameter();
+                    rqp.bizType = BizType.制令单;
+                    rqp.billId = FinishedGoodsInv.MOID.Value;
+                    ToolStripMenuItem RelatedMenuItem = new ToolStripMenuItem();
+                    RelatedMenuItem.Name = $"{rqp.billId}";
+                    RelatedMenuItem.Tag = rqp;
+                    RelatedMenuItem.Text = $"{rqp.bizType}:{FinishedGoodsInv.MONo}";
+                    RelatedMenuItem.Click += base.MenuItem_Click;
+                    if (!toolStripbtnRelatedQuery.DropDownItems.ContainsKey(FinishedGoodsInv.MOID.Value.ToString()))
+                    {
+                        toolStripbtnRelatedQuery.DropDownItems.Add(RelatedMenuItem);
+                    }
+                }
 
+                if (FinishedGoodsInv.tb_MRP_ReworkReturns != null && FinishedGoodsInv.tb_MRP_ReworkReturns.Count > 0)
+                {
+                    foreach (var item in FinishedGoodsInv.tb_MRP_ReworkReturns)
+                    {
+                        RelatedQueryParameter rqp = new RelatedQueryParameter();
+                        rqp.bizType = BizType.返工退库单;
+                        rqp.billId = item.ReworkReturnID;
+                        ToolStripMenuItem RelatedMenuItem = new ToolStripMenuItem();
+                        RelatedMenuItem.Name = $"{rqp.billId}";
+                        RelatedMenuItem.Tag = rqp;
+                        RelatedMenuItem.Text = $"{rqp.bizType}:{item.ReworkReturnNo}";
+                        RelatedMenuItem.Click += base.MenuItem_Click;
+                        if (!toolStripbtnRelatedQuery.DropDownItems.ContainsKey(item.ReworkReturnID.ToString()))
+                        {
+                            toolStripbtnRelatedQuery.DropDownItems.Add(RelatedMenuItem);
+                        }
+                    }
+                }
+
+            }
+            base.LoadRelatedDataToDropDownItems();
+        }
 
         /// <summary>
         /// 用于其他UI传入的数据载入。并不是刷新数据
@@ -359,7 +401,7 @@ namespace RUINORERP.UI.PSI.PUR
             if (RowDetails != null)
             {
                 List<tb_FinishedGoodsInvDetail> details = new List<tb_FinishedGoodsInvDetail>();
-                
+
                 foreach (var item in RowDetails)
                 {
                     tb_FinishedGoodsInvDetail bOM_SDetail = MainForm.Instance.mapper.Map<tb_FinishedGoodsInvDetail>(item);
@@ -660,7 +702,7 @@ protected async override Task<ApprovalEntity> ReReview()
                 && SourceBill.QuantityDelivered < SourceBill.ManufacturingQty)
             {
 
-                
+
                 tb_FinishedGoodsInv entity = MainForm.Instance.mapper.Map<tb_FinishedGoodsInv>(SourceBill);
                 entity.MONo = SourceBill.MONO;
                 entity.MOID = SourceBill.MOID;

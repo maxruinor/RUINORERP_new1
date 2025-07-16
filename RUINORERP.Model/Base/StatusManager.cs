@@ -435,7 +435,7 @@ namespace RUINORERP.Model.Base
         public bool CanDelete()
         {
             return CurrentDataStatus == DataStatus.草稿 ||
-                   CurrentDataStatus == DataStatus.已取消;
+                   CurrentDataStatus == DataStatus.作废;
         }
 
         public bool CanSubmit()
@@ -468,7 +468,7 @@ namespace RUINORERP.Model.Base
         public bool CanClose()
         {
             return CurrentDataStatus == DataStatus.确认 ||
-                   CurrentDataStatus == DataStatus.已取消;
+                   CurrentDataStatus == DataStatus.作废;
         }
 
         public bool CanReverseClose()
@@ -479,7 +479,7 @@ namespace RUINORERP.Model.Base
         public bool CanCancel()
         {
             return CurrentDataStatus != DataStatus.完结 &&
-                   CurrentDataStatus != DataStatus.已取消;
+                   CurrentDataStatus != DataStatus.作废;
         }
         #endregion
 
@@ -508,7 +508,7 @@ namespace RUINORERP.Model.Base
             if (!CanDelete())
                 throw new InvalidOperationException("当前状态不能删除");
 
-            CurrentDataStatus = DataStatus.已取消;
+            CurrentDataStatus = DataStatus.作废;
             ApprovalStatus = ApprovalStatus.未审核;
             ApprovalResult = false;
 
@@ -648,9 +648,9 @@ namespace RUINORERP.Model.Base
         public void Cancel()
         {
             if (!CanCancel())
-                throw new InvalidOperationException("当前状态不能取消");
+                throw new InvalidOperationException("当前状态不能作废");
 
-            CurrentDataStatus = DataStatus.已取消;
+            CurrentDataStatus = DataStatus.作废;
             ApprovalStatus = ApprovalStatus.未审核;
             ApprovalResult = false;
 

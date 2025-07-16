@@ -798,6 +798,10 @@ namespace RUINORERP.UI.Common
 
         public static async void SaveGridSettingData(tb_MenuInfo CurMenuInfo, NewSumDataGridView dataGridView, Type datasourceType = null)
         {
+            if (CurMenuInfo==null)
+            {
+                return;
+            }
             if (dataGridView == null)
             {
                 return;

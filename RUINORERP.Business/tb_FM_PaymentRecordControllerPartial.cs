@@ -540,7 +540,7 @@ namespace RUINORERP.Business
                                             {
 
                                                 saleOrder.ApprovalOpinions += $" 订金退款，订单取消";
-                                                saleOrder.DataStatus = (int)DataStatus.已取消;
+                                                saleOrder.DataStatus = (int)DataStatus.作废;
 
                                                 saleOrderUpdateList.Add(saleOrder);
 
@@ -577,7 +577,7 @@ namespace RUINORERP.Business
                                             if (purOrder != null)
                                             {
                                                 purOrder.ApprovalOpinions += $" 订金退款，订单取消";
-                                                purOrder.DataStatus = (int)DataStatus.已取消;
+                                                purOrder.DataStatus = (int)DataStatus.作废;
                                                 purOrderUpdateList.Add(purOrder);
                                             }
 
@@ -1005,7 +1005,7 @@ namespace RUINORERP.Business
                 paymentRecordDetail.LocalAmount = entity.LocalPrepaidAmount;
                 paymentRecordDetail.ForeignAmount = entity.ForeignPrepaidAmount;
             }
-            paymentRecordDetail.Summary = $"来自预收单{entity.PreRPNO}。";
+            paymentRecordDetail.Summary = $"来自预{(ReceivePaymentType)entity.ReceivePaymentType}{entity.PreRPNO}。";
             if (entity.PrePaymentReason.Contains("平台单号"))
             {
                 paymentRecordDetail.Summary += entity.PrePaymentReason;

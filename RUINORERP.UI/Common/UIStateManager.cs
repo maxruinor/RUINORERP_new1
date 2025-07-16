@@ -140,7 +140,7 @@ namespace RUINORERP.UI.Common
 
         private ControlState GetCloseState() => new()
         {
-            Visible = _statusMachine.CurrentDataStatus.In(DataStatus.确认, DataStatus.已取消),
+            Visible = _statusMachine.CurrentDataStatus.In(DataStatus.确认, DataStatus.作废),
             Enabled = _statusMachine.CanClose()
         };
 
@@ -152,7 +152,7 @@ namespace RUINORERP.UI.Common
 
         private ControlState GetCancelState() => new()
         {
-            Visible = _statusMachine.CurrentDataStatus != DataStatus.已取消,
+            Visible = _statusMachine.CurrentDataStatus != DataStatus.作废,
             Enabled = _statusMachine.CanCancel()
         };
 
@@ -165,7 +165,7 @@ namespace RUINORERP.UI.Common
         private ControlState GetExportState() => new()
         {
             Visible = true,
-            Enabled = _statusMachine.CurrentDataStatus != DataStatus.已取消
+            Enabled = _statusMachine.CurrentDataStatus != DataStatus.作废
         };
 
         private ControlState GetPrintState() => new()
@@ -197,7 +197,7 @@ namespace RUINORERP.UI.Common
 
         private ControlState GetLockedState() => new()
         {
-            Visible = _statusMachine.CurrentDataStatus == DataStatus.已取消,
+            Visible = _statusMachine.CurrentDataStatus == DataStatus.作废,
             Enabled = false
         };
         #endregion
@@ -309,7 +309,7 @@ namespace RUINORERP.UI.Common
         {
             return new ControlState
             {
-                Visible = status.In(DataStatus.确认, DataStatus.已取消),
+                Visible = status.In(DataStatus.确认, DataStatus.作废),
                 Enabled = status == DataStatus.确认 &&
                          approval == ApprovalStatus.已审核 &&
                          result
@@ -911,7 +911,7 @@ _stateEvaluator = stateEvaluator ?? StatusEvaluator.GetControlState;
                     _controlMappings[MenuItemEnums.结案].Enabled = false;
 
                     break;
-                case DataStatus.已取消:
+                case DataStatus.作废:
                     _controlMappings[MenuItemEnums.新增].Enabled = true;
                     _controlMappings[MenuItemEnums.取消].Enabled = false;
                     _controlMappings[MenuItemEnums.修改].Enabled = false;

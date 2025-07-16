@@ -355,7 +355,8 @@ namespace RUINORERP.Global
         报废单 = 166,
         售后借出单 = 167,
         售后归还单 = 168,
-
+        售后申请统计=169,
+        售后交付统计=170,
         营销活动 = 300,
     }
 
@@ -443,7 +444,7 @@ namespace RUINORERP.Global
         完结 = 8,
 
         [Description("【取消】作废")]
-        已取消 = 16
+        作废 = 16
     }
 
 

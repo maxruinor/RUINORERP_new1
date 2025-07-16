@@ -617,6 +617,24 @@
     <Compile Include="ASS\UCASRepairOrderQuery.Designer.cs">
       <DependentUpon>UCASRepairOrderQuery.cs</DependentUpon>
     </Compile>
+    <Compile Include="ASS\UCASRepairMaterialPickup.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="ASS\UCASRepairMaterialPickup.designer.cs">
+      <DependentUpon>UCASRepairMaterialPickup.cs</DependentUpon>
+    </Compile>
+    <Compile Include="ASS\UCASRepairMaterialPickupQuery.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="ASS\UCASRepairMaterialPickupQuery.Designer.cs">
+      <DependentUpon>UCASRepairMaterialPickupQuery.cs</DependentUpon>
+    </Compile>
+    <Compile Include="ASS\UCASAfterSaleApplyStatistics.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="ASS\UCASAfterSaleApplyStatistics.Designer.cs">
+      <DependentUpon>UCASAfterSaleApplyStatistics.cs</DependentUpon>
+    </Compile>
     <Compile Include="ATechnologyStack\AOP\DbBizLogAOP.cs" />
     <Compile Include="ATechnologyStack\ISharedIdentification.cs" />
     <Compile Include="BI\UCFMAuditLogsTracker.cs">
@@ -3279,6 +3297,15 @@
     </EmbeddedResource>
     <EmbeddedResource Include="ASS\UCASRepairOrderQuery.resx">
       <DependentUpon>UCASRepairOrderQuery.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ASS\UCASRepairMaterialPickup.resx">
+      <DependentUpon>UCASRepairMaterialPickup.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ASS\UCASRepairMaterialPickupQuery.resx">
+      <DependentUpon>UCASRepairMaterialPickupQuery.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ASS\UCASAfterSaleApplyStatistics.resx">
+      <DependentUpon>UCASAfterSaleApplyStatistics.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="BaseForm\BaseBillEdit.resx">
       <DependentUpon>BaseBillEdit.cs</DependentUpon>

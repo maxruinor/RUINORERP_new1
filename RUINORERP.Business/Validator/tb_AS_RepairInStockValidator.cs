@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：07/11/2025 15:53:34
+// 时间：07/16/2025 10:05:09
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -45,7 +45,7 @@ namespace RUINORERP.Business
 
  RuleFor(tb_AS_RepairInStock =>tb_AS_RepairInStock.RepairOrderNo).MaximumLength(25).WithMessage("维修工单号:不能超过最大长度,25.");
 
- RuleFor(tb_AS_RepairInStock =>tb_AS_RepairInStock.Employee_ID).Must(CheckForeignKeyValueCanNull).WithMessage("业务员:下拉选择值不正确。");
+ RuleFor(tb_AS_RepairInStock =>tb_AS_RepairInStock.Employee_ID).Must(CheckForeignKeyValueCanNull).WithMessage("经办人员:下拉选择值不正确。");
  RuleFor(tb_AS_RepairInStock =>tb_AS_RepairInStock.Employee_ID).NotEmpty().When(x => x.Employee_ID.HasValue);
 
  RuleFor(tb_AS_RepairInStock =>tb_AS_RepairInStock.CustomerVendor_ID).Must(CheckForeignKeyValue).WithMessage("客户:下拉选择值不正确。");

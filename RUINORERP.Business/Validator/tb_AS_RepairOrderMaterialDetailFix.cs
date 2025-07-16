@@ -31,9 +31,9 @@ namespace RUINORERP.Business
         public override void Initialize()
         {
             RuleFor(x => x.SubtotalTransAmount).GreaterThan(0).When(x => x.Gift == false).WithMessage("单价：明细中有非赠品产品时，要大于零。");
-            RuleFor(x => x.Quantity).GreaterThan(0).WithMessage("数量：要大于零。");
+            RuleFor(x => x.ShouldSendQty).GreaterThan(0).WithMessage("数量：要大于零。");
             RuleFor(x => x.SubtotalCost).GreaterThanOrEqualTo(0).WithMessage("总金额：要大于零。");
-            RuleFor(x => x.SubtotalTransAmount).Equal(c => (c.UnitPrice) * c.Quantity).WithMessage("总金额，成交小计：要等于成交价*数量。");
+            RuleFor(x => x.SubtotalTransAmount).Equal(c => (c.UnitPrice) * c.ShouldSendQty).WithMessage("总金额，成交小计：要等于成交价*数量。");
 
         }
 

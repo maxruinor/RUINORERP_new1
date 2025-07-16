@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：07/11/2025 15:43:13
+// 时间：07/16/2025 10:05:13
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -540,6 +540,14 @@ namespace RUINORERP.Model
         public virtual List<tb_AS_RepairOrderDetail> tb_AS_RepairOrderDetails { get; set; }
         //tb_AS_RepairOrderDetail.RepairOrderID)
         //RepairOrderID.FK_tb_AS_RepairOrder_REF_AS_RepairOrderDetail)
+        //tb_AS_RepairOrder.RepairOrderID)
+
+        //[Browsable(false)]打印报表时的数据源会不显示
+        [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_AS_RepairMaterialPickup.RepairOrderID))]
+        public virtual List<tb_AS_RepairMaterialPickup> tb_AS_RepairMaterialPickups { get; set; }
+        //tb_AS_RepairMaterialPickup.RepairOrderID)
+        //RepairOrderID.FK_TB_AS_REPAIRMATERIALPICKUP_REF_TB_AS_REPAIRORDER)
         //tb_AS_RepairOrder.RepairOrderID)
 
         //[Browsable(false)]打印报表时的数据源会不显示

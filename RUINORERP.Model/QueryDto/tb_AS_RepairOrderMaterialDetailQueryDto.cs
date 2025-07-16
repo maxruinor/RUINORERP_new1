@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：07/11/2025 15:43:15
+// 时间：07/16/2025 10:31:33
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -88,16 +88,29 @@ namespace RUINORERP.Model.QueryDto
         }
      
 
-        private int _Quantity= ((0));
+        private decimal _ShouldSendQty= ((0));
         /// <summary>
-        /// 数量
+        /// 需求数量
         /// </summary>
-        [AdvQueryAttribute(ColName = "Quantity",ColDesc = "数量")]
-        [SugarColumn(ColumnDataType = "int",SqlParameterDbType ="Int32",ColumnName = "Quantity",IsNullable = false,ColumnDescription = "数量" )]
-        public int Quantity 
+        [AdvQueryAttribute(ColName = "ShouldSendQty",ColDesc = "需求数量")]
+        [SugarColumn(ColumnDataType = "decimal",SqlParameterDbType ="Decimal",ColumnName = "ShouldSendQty",IsNullable = false,ColumnDescription = "需求数量" )]
+        public decimal ShouldSendQty 
         { 
-            get{return _Quantity;}
-            set{SetProperty(ref _Quantity, value);}
+            get{return _ShouldSendQty;}
+            set{SetProperty(ref _ShouldSendQty, value);}
+        }
+     
+
+        private decimal _ActualSentQty= ((0));
+        /// <summary>
+        /// 实发数量
+        /// </summary>
+        [AdvQueryAttribute(ColName = "ActualSentQty",ColDesc = "实发数量")]
+        [SugarColumn(ColumnDataType = "decimal",SqlParameterDbType ="Decimal",ColumnName = "ActualSentQty",IsNullable = false,ColumnDescription = "实发数量" )]
+        public decimal ActualSentQty 
+        { 
+            get{return _ActualSentQty;}
+            set{SetProperty(ref _ActualSentQty, value);}
         }
      
 

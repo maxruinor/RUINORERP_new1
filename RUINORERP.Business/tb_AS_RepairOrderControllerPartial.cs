@@ -188,10 +188,9 @@ namespace RUINORERP.Business
                 }
 
                 // 开启事务，保证数据一致性
-                tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
-                List<tb_Inventory> invList = new List<tb_Inventory>();
-
                 _unitOfWorkManage.BeginTran();
+
+                // 后面可以优化  需求 请求这种。
 
                 entity.RepairStatus = (int)RepairStatus.待维修;
                 //这部分是否能提出到上一级公共部分？
@@ -330,7 +329,7 @@ namespace RUINORERP.Business
         /// </summary>
         /// <param name="ObjectEntity"></param>
         /// <returns></returns>
-        public async  Task<ReturnResults<T>> RepairProcessAsync(T ObjectEntity)
+        public async Task<ReturnResults<T>> RepairProcessAsync(T ObjectEntity)
         {
             ReturnResults<T> rmrs = new ReturnResults<T>();
             tb_AS_RepairOrder entity = ObjectEntity as tb_AS_RepairOrder;
@@ -415,7 +414,7 @@ namespace RUINORERP.Business
                 }
 
                 entity.RepairStatus = (int)RepairStatus.维修中;
-               
+
                 //只更新指定列
                 var result = await _unitOfWorkManage.GetDbClient().Updateable<tb_AS_RepairOrder>(entity).UpdateColumns(it => new
                 {
@@ -487,6 +486,8 @@ namespace RUINORERP.Business
                 }
                 // 开启事务，保证数据一致性
                 _unitOfWorkManage.BeginTran();
+
+                /*
                 // 使用字典按 (ProdDetailID, LocationID) 分组，存储库存记录及累计数据
                 var inventoryGroups = new Dictionary<(long ProdDetailID, long LocationID), (tb_Inventory Inventory, decimal ConfirmedQty)>();
 
@@ -541,12 +542,93 @@ namespace RUINORERP.Business
                 {
                     _logger.LogInformation($"{entity.ASApplyNo}反审核，更新库存结果为0行，请检查数据！");
                 }
+                */
 
-                //AuthorizeController authorizeController = _appContext.GetRequiredService<AuthorizeController>();
-                //if (authorizeController.EnableFinancialModule())
-                //{
+                AuthorizeController authorizeController = _appContext.GetRequiredService<AuthorizeController>();
+                if (authorizeController.EnableFinancialModule())
+                {
+                    //生成的应收款单 如果没有审核，及支付时是可以反审核删除的。
 
-                //}
+                    #region 反审 应收款单
+
+
+
+                    var ReceivablePayables = await _unitOfWorkManage.GetDbClient().Queryable<tb_FM_ReceivablePayable>()
+                        .Where(p => p.SourceBillId == entity.RepairOrderID && p.SourceBizType == (int)BizType.维修工单 && p.ReceivePaymentType == (int)ReceivePaymentType.收款)
+                        .ToListAsync();
+                    if (ReceivablePayables != null && ReceivablePayables.Count > 0)
+                    {
+                        var Paymentable = ReceivablePayables[0];
+                        //一个单。只会有一个应收款单
+                        if (Paymentable != null)
+                        {
+                            if (Paymentable.ARAPStatus <= (int)ARAPStatus.待支付)
+                            {
+                                await _unitOfWorkManage.GetDbClient().Deleteable(Paymentable).ExecuteCommandAsync();
+                            }
+                            else
+                            {
+                                //客户已经支付了维修款，只能先生成红字负数的应收
+                                #region  检测对应的收款单记录，如果没有支付也可以直接删除
+                                //订单反审核  只是用来修改，还是真实取消订单。取消的话。则要退款。修改的话。则不需要退款。
+                                //如果没有出库，则生成红冲单  ，已冲销  已取消，先用取消标记
+                                //如果是要退款，则在预收款查询这，生成退款单。
+                                //如果预收单审核了，生成收款单 在财务没有审核前。还是可以反审。这是为了保存系统的灵活性。
+                                var PaymentList = await _unitOfWorkManage.GetDbClient().Queryable<tb_FM_PaymentRecord>()
+                                      .Includes(a => a.tb_FM_PaymentRecordDetails)
+                                     .Where(c => c.tb_FM_PaymentRecordDetails.Any(d => d.SourceBilllId == Paymentable.ARAPId)).ToListAsync();
+                                if (PaymentList != null && PaymentList.Count > 0)
+                                {
+                                    if (PaymentList.Count > 1 && PaymentList.Sum(c => c.TotalLocalAmount) == 0 && PaymentList.Any(c => c.IsReversed))
+                                    {
+                                        //退款冲销过
+                                        _unitOfWorkManage.RollbackTran();
+                                        rmrs.ErrorMsg = $" 维修工单{Paymentable.SourceBillNo}的应收款单{Paymentable.ARAPNo}状态为【已冲销】，不能反审,只能【取消】作废。";
+                                        rmrs.Succeeded = false;
+                                        return rmrs;
+                                    }
+                                    else
+                                    {
+                                        tb_FM_PaymentRecord Payment = PaymentList[0];
+                                        if (Payment.PaymentStatus == (int)PaymentStatus.草稿 || Payment.PaymentStatus == (int)PaymentStatus.待审核)
+                                        {
+                                            var PaymentCounter = await _unitOfWorkManage.GetDbClient().DeleteNav(Payment)
+                                                .Include(c => c.tb_FM_PaymentRecordDetails)
+                                                .ExecuteCommandAsync();
+                                            if (PaymentCounter)
+                                            {
+                                                await _unitOfWorkManage.GetDbClient().Deleteable(Payment).ExecuteCommandAsync();
+                                            }
+                                        }
+                                        else
+                                        {
+                                            _unitOfWorkManage.RollbackTran();
+                                            rmrs.ErrorMsg = $"对应的收款单{Payment.PaymentNo}状态为【待核销】，不能反审\r\n" +
+                                                $"只能进行冲销处理";
+                                            rmrs.Succeeded = false;
+                                            return rmrs;
+                                        }
+                                    }
+
+                                }
+                                //else
+                                //{
+                                //    //预收单审核了。应该有收款单。正常不会到这步
+                                //    await _unitOfWorkManage.GetDbClient().Deleteable(PrePayment).ExecuteCommandAsync();
+                                //}
+                                #endregion
+                            }
+
+
+
+                        }
+                    }
+
+
+                    #endregion
+
+                }
+                entity.RepairStatus = null;
                 //这部分是否能提出到上一级公共部分？
                 entity.DataStatus = (int)DataStatus.新建;
                 entity.RepairStatus = null;

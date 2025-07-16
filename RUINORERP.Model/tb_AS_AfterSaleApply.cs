@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：07/09/2025 13:49:57
+// 时间：07/16/2025 10:05:05
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -532,18 +532,18 @@ namespace RUINORERP.Model
 
         //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_AS_AfterSaleApplyDetail.ASApplyID))]
-        public virtual List<tb_AS_AfterSaleApplyDetail> tb_AS_AfterSaleApplyDetails { get; set; }
-        //tb_AS_AfterSaleApplyDetail.ASApplyID)
-        //ASApplyID.FK_TB_AS_AF_REFERENCE_TB_AS_AF)
-        //tb_AS_AfterSaleApply.ASApplyID)
-
-        //[Browsable(false)]打印报表时的数据源会不显示
-        [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_AS_RepairOrder.ASApplyID))]
         public virtual List<tb_AS_RepairOrder> tb_AS_RepairOrders { get; set; }
         //tb_AS_RepairOrder.ASApplyID)
         //ASApplyID.FK_TB_AS_RE_REFERENCE_TB_AS_AF)
+        //tb_AS_AfterSaleApply.ASApplyID)
+
+        //[Browsable(false)]打印报表时的数据源会不显示
+        [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_AS_AfterSaleApplyDetail.ASApplyID))]
+        public virtual List<tb_AS_AfterSaleApplyDetail> tb_AS_AfterSaleApplyDetails { get; set; }
+        //tb_AS_AfterSaleApplyDetail.ASApplyID)
+        //ASApplyID.FK_TB_AS_AF_REFERENCE_TB_AS_AF)
         //tb_AS_AfterSaleApply.ASApplyID)
 
 

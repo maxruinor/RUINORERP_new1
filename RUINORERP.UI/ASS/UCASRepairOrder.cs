@@ -44,6 +44,7 @@ using RUINORERP.UI.AdvancedUIModule;
 using RUINORERP.UI.SysConfig;
 using RUINORERP.Model.CommonModel;
 using RUINORERP.UI.PSI.SAL;
+using RUINORERP.Common.Extensions;
 
 
 namespace RUINORERP.UI.ASS
@@ -146,29 +147,24 @@ namespace RUINORERP.UI.ASS
                 //只有审核状态才可以转换
                 if (EditEntity.DataStatus == (int)DataStatus.确认 && EditEntity.ApprovalStatus == (int)ApprovalStatus.已审核 && EditEntity.ApprovalResults.HasValue && EditEntity.ApprovalResults.Value)
                 {
-                    //if (EditEntity.tb_AS_AfterSaleDeliveries != null && EditEntity.tb_AS_AfterSaleDeliveries.Count > 0)
-                    //{
-                    //    MessageBox.Show($"当前【售后申请单】{EditEntity.ASApplyNo}：已经生成过【售后交付单】，无法进行维修处理", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    //    return;
-                    //}
+                    if (EditEntity.tb_AS_RepairMaterialPickups != null && EditEntity.tb_AS_RepairMaterialPickups.Count > 0)
+                    {
+                        if (EditEntity.tb_AS_RepairMaterialPickups.Where(c => c.DataStatus >= (int)DataStatus.确认).Sum(c => c.TotalSendQty) == EditEntity.TotalQty)
+                        {
+                            MessageBox.Show($"当前【维修工单】{EditEntity.ASApplyNo}的维修材料已经全部领取，无法重复领取", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                            return;
+                        }
+                    }
 
-                    //if (EditEntity.tb_AS_RepairOrders != null && EditEntity.tb_AS_RepairOrders.Count > 0)
-                    //{
-                    //    if (MessageBox.Show($"当前【售后申请单】{EditEntity.ASApplyNo}：已经生成过【维修工单】，\r\n确定再次生成吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Information) == DialogResult.No)
-                    //    {
-                    //        return;
-                    //    }
-                    //}
-
-                    //var ctr = Startup.GetFromFac<tb_AS_AfterSaleApplyController<tb_AS_AfterSaleApply>>();
-                    //tb_AS_RepairOrder RepairOrder = ctr.ToRepairOrder(EditEntity);
-                    //MenuPowerHelper menuPowerHelper;
-                    //menuPowerHelper = Startup.GetFromFac<MenuPowerHelper>();
-                    //tb_MenuInfo RelatedMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble && m.EntityName == nameof(tb_AS_RepairOrder) && m.BIBaseForm == "BaseBillEditGeneric`2").FirstOrDefault();
-                    //if (RelatedMenuInfo != null)
-                    //{
-                    //    menuPowerHelper.ExecuteEvents(RelatedMenuInfo, RepairOrder);
-                    //}
+                    var ctr = Startup.GetFromFac<tb_AS_RepairMaterialPickupController<tb_AS_RepairMaterialPickup>>();
+                    tb_AS_RepairMaterialPickup RepairOrder = ctr.ToRepairMaterialPickup(EditEntity);
+                    MenuPowerHelper menuPowerHelper;
+                    menuPowerHelper = Startup.GetFromFac<MenuPowerHelper>();
+                    tb_MenuInfo RelatedMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble && m.EntityName == nameof(tb_AS_RepairMaterialPickup) && m.BIBaseForm == "BaseBillEditGeneric`2").FirstOrDefault();
+                    if (RelatedMenuInfo != null)
+                    {
+                        menuPowerHelper.ExecuteEvents(RelatedMenuInfo, RepairOrder);
+                    }
                     return;
                 }
                 else
@@ -598,14 +594,15 @@ namespace RUINORERP.UI.ASS
                 listCols.SetCol_NeverVisible<tb_AS_RepairOrderDetail>(c => c.Cost);
                 listCols.SetCol_NeverVisible<tb_AS_RepairOrderDetail>(c => c.TotalCostAmount);
             }*/
-            listCols.SetCol_Summary<tb_AS_RepairOrderMaterialDetail>(c => c.Quantity);
+            listCols.SetCol_Summary<tb_AS_RepairOrderMaterialDetail>(c => c.ShouldSendQty);
+            listCols.SetCol_Summary<tb_AS_RepairOrderMaterialDetail>(c => c.ActualSentQty);
             listCols.SetCol_Summary<tb_AS_RepairOrderMaterialDetail>(c => c.SubtotalTransAmount);
             listCols.SetCol_Summary<tb_AS_RepairOrderMaterialDetail>(c => c.SubtotalCost);
             listCols.SetCol_Summary<tb_AS_RepairOrderMaterialDetail>(c => c.SubtotalTaxAmount);
             listCols.SetCol_Summary<tb_AS_RepairOrderMaterialDetail>(c => c.SubtotalUntaxedAmount);
 
-            listCols.SetCol_Formula<tb_AS_RepairOrderMaterialDetail>((a, b) => a.Cost * b.Quantity, c => c.SubtotalCost);
-            listCols.SetCol_Formula<tb_AS_RepairOrderMaterialDetail>((a, b) => a.UnitPrice * b.Quantity, c => c.SubtotalTransAmount);
+            listCols.SetCol_Formula<tb_AS_RepairOrderMaterialDetail>((a, b) => a.Cost * b.ShouldSendQty, c => c.SubtotalCost);
+            listCols.SetCol_Formula<tb_AS_RepairOrderMaterialDetail>((a, b) => a.UnitPrice * b.ShouldSendQty, c => c.SubtotalTransAmount);
             listCols.SetCol_Formula<tb_AS_RepairOrderMaterialDetail>((a, b) => a.SubtotalTransAmount - b.SubtotalTaxAmount, c => c.SubtotalUntaxedAmount);
             listCols.SetCol_Formula<tb_AS_RepairOrderMaterialDetail>((a, b, c) => a.SubtotalTransAmount / (1 + b.TaxRate) * c.TaxRate, d => d.SubtotalTaxAmount);
 
@@ -662,13 +659,13 @@ namespace RUINORERP.UI.ASS
                     MainForm.Instance.uclog.AddLog("请先选择产品数据");
                     return;
                 }
-                EditEntity.TotalQty = details.Sum(c => c.Quantity);
+                EditEntity.TotalQty = details.Sum(c => c.ShouldSendQty.ToInt());
 
 
                 EditEntity.tb_AS_RepairOrderMaterialDetails = details;
-                EditEntity.TotalMaterialAmount = EditEntity.tb_AS_RepairOrderMaterialDetails.Sum(c => c.UnitPrice * c.Quantity);
-                EditEntity.TotalAmount = EditEntity.tb_AS_RepairOrderMaterialDetails.Sum(c => c.UnitPrice * c.Quantity) + EditEntity.LaborCost;
-                EditEntity.TotalMaterialCost = EditEntity.tb_AS_RepairOrderMaterialDetails.Sum(c => c.Cost * c.Quantity);
+                EditEntity.TotalMaterialAmount = EditEntity.tb_AS_RepairOrderMaterialDetails.Sum(c => c.UnitPrice * c.ShouldSendQty.ToInt());
+                EditEntity.TotalAmount = EditEntity.tb_AS_RepairOrderMaterialDetails.Sum(c => c.UnitPrice * c.ShouldSendQty.ToInt()) + EditEntity.LaborCost;
+                EditEntity.TotalMaterialCost = EditEntity.tb_AS_RepairOrderMaterialDetails.Sum(c => c.Cost * c.ShouldSendQty.ToInt());
                 Sgh_OnCalculateColumnValue(null, null, new Position());
 
             }
@@ -716,7 +713,8 @@ namespace RUINORERP.UI.ASS
                 foreach (var item in RowDetails)
                 {
                     tb_AS_RepairOrderMaterialDetail bOM_SDetail = MainForm.Instance.mapper.Map<tb_AS_RepairOrderMaterialDetail>(item);
-                    bOM_SDetail.Quantity = 0;
+                    bOM_SDetail.ShouldSendQty = 0;
+                    bOM_SDetail.ActualSentQty = 0;
                     details.Add(bOM_SDetail);
                 }
                 sgh2.InsertItemDataToGrid<tb_AS_RepairOrderMaterialDetail>(grid2, sgd2, details, c => c.ProdDetailID, position);
@@ -751,9 +749,9 @@ namespace RUINORERP.UI.ASS
                 //EditEntity.tb_AS_RepairOrderMaterialDetails = LastRefurbishedMaterials;
                 if (EditEntity.tb_AS_RepairOrderMaterialDetails != null)
                 {
-                    EditEntity.TotalMaterialAmount = EditEntity.tb_AS_RepairOrderMaterialDetails.Sum(c => c.UnitPrice * c.Quantity);
-                    EditEntity.TotalAmount = EditEntity.tb_AS_RepairOrderMaterialDetails.Sum(c => c.UnitPrice * c.Quantity) + EditEntity.LaborCost;
-                    EditEntity.TotalMaterialCost = EditEntity.tb_AS_RepairOrderMaterialDetails.Sum(c => c.Cost * c.Quantity);
+                    EditEntity.TotalMaterialAmount = EditEntity.tb_AS_RepairOrderMaterialDetails.Sum(c => c.UnitPrice * c.ShouldSendQty.ToInt());
+                    EditEntity.TotalAmount = EditEntity.tb_AS_RepairOrderMaterialDetails.Sum(c => c.UnitPrice * c.ShouldSendQty.ToInt()) + EditEntity.LaborCost;
+                    EditEntity.TotalMaterialCost = EditEntity.tb_AS_RepairOrderMaterialDetails.Sum(c => c.Cost * c.ShouldSendQty.ToInt());
                 }
 
             }
@@ -891,9 +889,9 @@ namespace RUINORERP.UI.ASS
                 }
 
                 EditEntity.tb_AS_RepairOrderMaterialDetails = LastRefurbishedMaterials;
-                EditEntity.TotalMaterialAmount = EditEntity.tb_AS_RepairOrderMaterialDetails.Sum(c => c.UnitPrice * c.Quantity);
-                EditEntity.TotalAmount = EditEntity.tb_AS_RepairOrderMaterialDetails.Sum(c => c.UnitPrice * c.Quantity) + EditEntity.LaborCost;
-                EditEntity.TotalMaterialCost = EditEntity.tb_AS_RepairOrderMaterialDetails.Sum(c => c.Cost * c.Quantity);
+                EditEntity.TotalMaterialAmount = EditEntity.tb_AS_RepairOrderMaterialDetails.Sum(c => c.UnitPrice * c.ShouldSendQty.ToInt());
+                EditEntity.TotalAmount = EditEntity.tb_AS_RepairOrderMaterialDetails.Sum(c => c.UnitPrice * c.ShouldSendQty.ToInt()) + EditEntity.LaborCost;
+                EditEntity.TotalMaterialCost = EditEntity.tb_AS_RepairOrderMaterialDetails.Sum(c => c.Cost * c.ShouldSendQty.ToInt());
                 if (NeedValidated && !EditEntity.PreDeliveryDate.HasValue)
                 {
                     if (System.Windows.Forms.MessageBox.Show("预交日期为空，你确定无法确认预交日期吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Information) == DialogResult.No)

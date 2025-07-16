@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：07/08/2025 19:05:26
+// 时间：07/16/2025 10:05:07
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -122,7 +122,7 @@ this.lblASDeliveryNo.Location = new System.Drawing.Point(100,25);
 this.lblASDeliveryNo.Name = "lblASDeliveryNo";
 this.lblASDeliveryNo.Size = new System.Drawing.Size(41, 12);
 this.lblASDeliveryNo.TabIndex = 1;
-this.lblASDeliveryNo.Text = "售后交付单号";
+this.lblASDeliveryNo.Text = "交付单号";
 this.txtASDeliveryNo.Location = new System.Drawing.Point(173,21);
 this.txtASDeliveryNo.Name = "txtASDeliveryNo";
 this.txtASDeliveryNo.Size = new System.Drawing.Size(100, 21);
@@ -152,7 +152,7 @@ this.lblASApplyNo.Location = new System.Drawing.Point(100,75);
 this.lblASApplyNo.Name = "lblASApplyNo";
 this.lblASApplyNo.Size = new System.Drawing.Size(41, 12);
 this.lblASApplyNo.TabIndex = 3;
-this.lblASApplyNo.Text = "售后申请编号";
+this.lblASApplyNo.Text = "申请编号";
 this.txtASApplyNo.Location = new System.Drawing.Point(173,71);
 this.txtASApplyNo.Name = "txtASApplyNo";
 this.txtASApplyNo.Size = new System.Drawing.Size(100, 21);
@@ -205,7 +205,7 @@ this.lblProjectGroup_ID.Location = new System.Drawing.Point(100,150);
 this.lblProjectGroup_ID.Name = "lblProjectGroup_ID";
 this.lblProjectGroup_ID.Size = new System.Drawing.Size(41, 12);
 this.lblProjectGroup_ID.TabIndex = 6;
-this.lblProjectGroup_ID.Text = "项目组";
+this.lblProjectGroup_ID.Text = "项目小组";
 //111======150
 this.cmbProjectGroup_ID.Location = new System.Drawing.Point(173,146);
 this.cmbProjectGroup_ID.Name ="cmbProjectGroup_ID";

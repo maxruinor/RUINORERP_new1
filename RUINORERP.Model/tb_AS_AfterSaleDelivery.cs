@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：07/08/2025 19:05:27
+// 时间：07/16/2025 10:05:07
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -53,10 +53,10 @@ namespace RUINORERP.Model
 
         private string _ASDeliveryNo;
         /// <summary>
-        /// 售后交付单号
+        /// 交付单号
         /// </summary>
-        [AdvQueryAttribute(ColName = "ASDeliveryNo",ColDesc = "售后交付单号")] 
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "ASDeliveryNo" ,Length=50,IsNullable = true,ColumnDescription = "售后交付单号" )]
+        [AdvQueryAttribute(ColName = "ASDeliveryNo",ColDesc = "交付单号")] 
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "ASDeliveryNo" ,Length=50,IsNullable = true,ColumnDescription = "交付单号" )]
         public string ASDeliveryNo
         { 
             get{return _ASDeliveryNo;}
@@ -82,10 +82,10 @@ namespace RUINORERP.Model
 
         private string _ASApplyNo;
         /// <summary>
-        /// 申请单号
+        /// 申请编号
         /// </summary>
-        [AdvQueryAttribute(ColName = "ASApplyNo",ColDesc = "申请单号")] 
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "ASApplyNo" ,Length=50,IsNullable = false,ColumnDescription = "申请单号" )]
+        [AdvQueryAttribute(ColName = "ASApplyNo",ColDesc = "申请编号")] 
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "ASApplyNo" ,Length=50,IsNullable = false,ColumnDescription = "申请编号" )]
         public string ASApplyNo
         { 
             get{return _ASApplyNo;}
@@ -126,10 +126,10 @@ namespace RUINORERP.Model
 
         private long? _ProjectGroup_ID;
         /// <summary>
-        /// 项目组
+        /// 项目小组
         /// </summary>
-        [AdvQueryAttribute(ColName = "ProjectGroup_ID",ColDesc = "项目组")] 
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "ProjectGroup_ID" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "项目组" )]
+        [AdvQueryAttribute(ColName = "ProjectGroup_ID",ColDesc = "项目小组")] 
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "ProjectGroup_ID" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "项目小组" )]
         [FKRelationAttribute("tb_ProjectGroup","ProjectGroup_ID")]
         public long? ProjectGroup_ID
         { 

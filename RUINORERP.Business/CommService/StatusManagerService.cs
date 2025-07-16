@@ -31,7 +31,7 @@ namespace RUINORERP.Business.CommService
         /// </summary>
         public static bool IsFinalStatus(DataStatus dataStatus)
         {
-            return dataStatus == DataStatus.完结 || dataStatus == DataStatus.已取消;
+            return dataStatus == DataStatus.完结 || dataStatus == DataStatus.作废;
         }
 
         #endregion
@@ -56,7 +56,7 @@ namespace RUINORERP.Business.CommService
         /// </summary>
         public static bool CanDelete(DataStatus dataStatus)
         {
-            return dataStatus == DataStatus.草稿 || dataStatus == DataStatus.已取消;
+            return dataStatus == DataStatus.草稿 || dataStatus == DataStatus.作废;
         }
 
         /// <summary>
@@ -142,7 +142,7 @@ namespace RUINORERP.Business.CommService
                     break;
 
                 case DataStatus.完结:
-                case DataStatus.已取消:
+                case DataStatus.作废:
                     // 终态已在前面检查
                     break;
 
@@ -175,7 +175,7 @@ namespace RUINORERP.Business.CommService
             }
 
             // 数据状态只能转为确认或取消
-            if (targetDataStatus != DataStatus.确认 && targetDataStatus != DataStatus.已取消)
+            if (targetDataStatus != DataStatus.确认 && targetDataStatus != DataStatus.作废)
             {
                 throw new InvalidOperationException("新建状态只能转为确认或取消");
             }
@@ -341,10 +341,10 @@ namespace RUINORERP.Business.CommService
             new Dictionary<DataStatus, HashSet<DataStatus>>
             {
             { DataStatus.草稿, new HashSet<DataStatus> { DataStatus.新建 } },
-            { DataStatus.新建, new HashSet<DataStatus> { DataStatus.确认, DataStatus.已取消 } },
-            { DataStatus.确认, new HashSet<DataStatus> { DataStatus.完结, DataStatus.已取消 } },
+            { DataStatus.新建, new HashSet<DataStatus> { DataStatus.确认, DataStatus.作废 } },
+            { DataStatus.确认, new HashSet<DataStatus> { DataStatus.完结, DataStatus.作废 } },
             { DataStatus.完结, new HashSet<DataStatus>() },
-            { DataStatus.已取消, new HashSet<DataStatus>() }
+            { DataStatus.作废, new HashSet<DataStatus>() }
             };
 
         public static bool IsTransitionAllowed(DataStatus from, DataStatus to)

@@ -45,7 +45,7 @@ namespace RUINORERP.Business.FMService
         {
             if (status is DataStatus dataStatus)
                 return dataStatus == DataStatus.完结 ||
-                       dataStatus == DataStatus.已取消;
+                       dataStatus == DataStatus.作废;
 
 
             if (status is PrePaymentStatus pre)
@@ -277,8 +277,8 @@ namespace RUINORERP.Business.FMService
 
         private static void ValidatePaymentTransition(DataStatus current, DataStatus target)
         {
-            if (current == DataStatus.完结 || current == DataStatus.已取消)
-                throw new InvalidOperationException("完结及取消状态禁止转换");
+            if (current == DataStatus.完结 || current == DataStatus.作废)
+                throw new InvalidOperationException("完结及作废状态禁止转换");
 
             if (current == DataStatus.草稿 && target != DataStatus.新建)
                 throw new InvalidOperationException("草稿状态只能转为新建【已提交】");

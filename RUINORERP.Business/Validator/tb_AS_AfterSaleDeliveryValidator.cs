@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：07/08/2025 19:05:27
+// 时间：07/16/2025 10:05:07
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -38,20 +38,20 @@ namespace RUINORERP.Business
  
         
      
- RuleFor(tb_AS_AfterSaleDelivery =>tb_AS_AfterSaleDelivery.ASDeliveryNo).MaximumLength(25).WithMessage("售后交付单号:不能超过最大长度,25.");
+ RuleFor(tb_AS_AfterSaleDelivery =>tb_AS_AfterSaleDelivery.ASDeliveryNo).MaximumLength(25).WithMessage("交付单号:不能超过最大长度,25.");
 
  RuleFor(tb_AS_AfterSaleDelivery =>tb_AS_AfterSaleDelivery.ASApplyID).Must(CheckForeignKeyValueCanNull).WithMessage("售后申请单:下拉选择值不正确。");
  RuleFor(tb_AS_AfterSaleDelivery =>tb_AS_AfterSaleDelivery.ASApplyID).NotEmpty().When(x => x.ASApplyID.HasValue);
 
- RuleFor(tb_AS_AfterSaleDelivery =>tb_AS_AfterSaleDelivery.ASApplyNo).MaximumLength(25).WithMessage("申请单号:不能超过最大长度,25.");
- RuleFor(tb_AS_AfterSaleDelivery =>tb_AS_AfterSaleDelivery.ASApplyNo).NotEmpty().WithMessage("申请单号:不能为空。");
+ RuleFor(tb_AS_AfterSaleDelivery =>tb_AS_AfterSaleDelivery.ASApplyNo).MaximumLength(25).WithMessage("申请编号:不能超过最大长度,25.");
+ RuleFor(tb_AS_AfterSaleDelivery =>tb_AS_AfterSaleDelivery.ASApplyNo).NotEmpty().WithMessage("申请编号:不能为空。");
 
  RuleFor(tb_AS_AfterSaleDelivery =>tb_AS_AfterSaleDelivery.Employee_ID).Must(CheckForeignKeyValueCanNull).WithMessage("业务员:下拉选择值不正确。");
  RuleFor(tb_AS_AfterSaleDelivery =>tb_AS_AfterSaleDelivery.Employee_ID).NotEmpty().When(x => x.Employee_ID.HasValue);
 
  RuleFor(tb_AS_AfterSaleDelivery =>tb_AS_AfterSaleDelivery.CustomerVendor_ID).Must(CheckForeignKeyValue).WithMessage("客户:下拉选择值不正确。");
 
- RuleFor(tb_AS_AfterSaleDelivery =>tb_AS_AfterSaleDelivery.ProjectGroup_ID).Must(CheckForeignKeyValueCanNull).WithMessage("项目组:下拉选择值不正确。");
+ RuleFor(tb_AS_AfterSaleDelivery =>tb_AS_AfterSaleDelivery.ProjectGroup_ID).Must(CheckForeignKeyValueCanNull).WithMessage("项目小组:下拉选择值不正确。");
  RuleFor(tb_AS_AfterSaleDelivery =>tb_AS_AfterSaleDelivery.ProjectGroup_ID).NotEmpty().When(x => x.ProjectGroup_ID.HasValue);
 
 //***** 

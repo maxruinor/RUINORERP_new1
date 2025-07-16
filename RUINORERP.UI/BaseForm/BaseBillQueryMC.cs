@@ -1492,6 +1492,12 @@ namespace RUINORERP.UI.BaseForm
                 }
                 else
                 {
+                    if (CurMenuInfo == null)
+                    {
+                        //找不到当前菜单直接返回
+                        return;
+                    }
+
                     //没有个性化文件时用默认的
                     if (!string.IsNullOrEmpty(CurMenuInfo.DefaultLayout))
                     {
@@ -1519,6 +1525,7 @@ namespace RUINORERP.UI.BaseForm
                         }
                         #endregion
                     }
+
                 }
             }
             catch (Exception ex)

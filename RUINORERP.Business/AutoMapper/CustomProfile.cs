@@ -25,7 +25,7 @@ namespace RUINORERP.Business.AutoMapper
             //维修物料明细收费 转成应收明细
             CreateMap<tb_AS_RepairOrderMaterialDetail, tb_FM_ReceivablePayableDetail>()
           .ForMember(a => a.UnitPrice, o => o.MapFrom(d => d.UnitPrice))
-          .ForMember(a => a.Quantity, o => o.MapFrom(d => d.Quantity))
+          .ForMember(a => a.Quantity, o => o.MapFrom(d => d.ShouldSendQty))
           .ForMember(a => a.ProdDetailID, o => o.MapFrom(d => d.ProdDetailID))
           .ForMember(a => a.property, o => o.MapFrom(d => d.property))
           .ForMember(a => a.TaxRate, o => o.MapFrom(d => d.TaxRate))
@@ -33,17 +33,20 @@ namespace RUINORERP.Business.AutoMapper
           .ForMember(a => a.LocalPayableAmount, o => o.MapFrom(d => d.SubtotalTransAmount))
           .ForMember(a => a.Summary, o => o.MapFrom(d => d.Summary));
 
+            CreateMap<tb_AS_RepairOrder, tb_AS_RepairMaterialPickup>();
+            CreateMap<tb_AS_RepairOrderMaterialDetail, tb_AS_RepairMaterialPickupDetail>();
+
 
             CreateMap<View_ProdDetail, tb_AS_RepairInStockDetail>();
             CreateMap<View_ProdDetail, tb_AS_RepairOrderDetail>();
             CreateMap<View_ProdDetail, tb_AS_RepairOrderMaterialDetail>();
-            CreateMap<View_ProdDetail,tb_AS_AfterSaleApplyDetail>();
-            CreateMap<View_ProdDetail,tb_AS_AfterSaleDeliveryDetail>();
+            CreateMap<View_ProdDetail, tb_AS_AfterSaleApplyDetail>();
+            CreateMap<View_ProdDetail, tb_AS_AfterSaleDeliveryDetail>();
 
             CreateMap<View_ProdDetail, tb_PurEntryReDetail>();
             CreateMap<View_ProdDetail, tb_PurReturnEntryDetail>();
-            
-            
+
+
 
 
 

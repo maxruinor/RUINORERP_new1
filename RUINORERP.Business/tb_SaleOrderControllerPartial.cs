@@ -1324,7 +1324,7 @@ namespace RUINORERP.Business
                     _logger.LogInformation($"{entity.SOrderNo}取消时，更新库存结果为0行，请检查数据！");
                 }
 
-                entity.DataStatus = (int)DataStatus.已取消;
+                entity.DataStatus = (int)DataStatus.作废;
                 BusinessHelper.Instance.EditEntity(entity);
 
                 //只更新指定列

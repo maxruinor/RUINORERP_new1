@@ -409,7 +409,7 @@ namespace RUINORERP.Business
                 {
                     details[i].TaxRate = olditem.TaxRate;
                     details[i].TaxLocalAmount = olditem.SubtotalTaxAmount;
-                    details[i].Quantity = olditem.Quantity;
+                    details[i].Quantity = olditem.ShouldSendQty;
                     details[i].UnitPrice = olditem.UnitPrice;
                     details[i].Summary = olditem.Summary;
                     details[i].TaxRate = olditem.TaxRate;

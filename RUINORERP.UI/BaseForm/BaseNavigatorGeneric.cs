@@ -103,7 +103,7 @@ namespace RUINORERP.UI.BaseForm
         {
 
         }
- 
+
         public List<NavParts[]> strings = new List<NavParts[]>();
         public virtual List<NavParts[]> AddNavParts()
         {
@@ -218,7 +218,7 @@ namespace RUINORERP.UI.BaseForm
                 if (!this.DesignMode)
                 {
 
-             
+
 
                     Krypton.Toolkit.KryptonButton button设置查询条件 = new Krypton.Toolkit.KryptonButton();
                     button设置查询条件.Text = "设置查询条件";
@@ -262,7 +262,7 @@ namespace RUINORERP.UI.BaseForm
         /// 固定的值显示，入库ture 出库false
         /// 每个列表对应的值 ，单独设置
         /// 这里是用于分析。查询来的结果和要分析的是一样的数据。所有可以共用
-       
+
         /// </summary>
         public ConcurrentDictionary<string, List<KeyValuePair<object, string>>> MasterColNameDataDictionary { set; get; } = new ConcurrentDictionary<string, List<KeyValuePair<object, string>>>();
 
@@ -484,7 +484,7 @@ namespace RUINORERP.UI.BaseForm
 
         }
 
-        protected frmFormProperty frm =null;
+        protected frmFormProperty frm = null;
         protected virtual void Property()
         {
             if (frm.ShowDialog() == DialogResult.OK)
@@ -582,7 +582,7 @@ namespace RUINORERP.UI.BaseForm
             settings.Encoding = new UTF8Encoding(false);
             settings.NewLineChars = Environment.NewLine;
             settings.Indent = true;
-            
+
             using XmlWriter xmlWriter = XmlWriter.Create(xmlfilepath, settings);
             {
                 kryptonWorkspace1.SaveLayoutToXml(xmlWriter);
@@ -621,7 +621,7 @@ namespace RUINORERP.UI.BaseForm
                 MainForm.Instance.kryptonDockingManager1.RemovePage(page.UniqueName, true);
                 page.Dispose();
             }
- 
+
             /*
             if (page == null)
             {
@@ -731,7 +731,7 @@ namespace RUINORERP.UI.BaseForm
                             {
                                 ToolStripItem subStripMenuItem = sub as ToolStripItem;
                                 subStripMenuItem.Click += Item_Click;
-                                UIHelper.ControlButton< ToolStripItem>(this.CurMenuInfo, subStripMenuItem);
+                                UIHelper.ControlButton<ToolStripItem>(this.CurMenuInfo, subStripMenuItem);
                             }
                         }
                     }
@@ -963,7 +963,7 @@ namespace RUINORERP.UI.BaseForm
         /// 这个实际可以优化到基类统一起来。只要是有查询条件生成的情况下的都可以用
         /// </summary>
         /// <param name="useLike"></param>
-        public void LoadQueryConditionToUI(decimal QueryConditionShowColQty = 4)
+        public void LoadQueryConditionToUI(decimal QueryConditionShowColQty = 5)
         {
             Krypton.Toolkit.KryptonPanel kryptonPanel条件生成容器 = kryptonPanelQuery;
             //为了验证设置的属性
@@ -1225,7 +1225,7 @@ namespace RUINORERP.UI.BaseForm
             // _UCOutlookGridAnalysis1.InvisibleCols = ExpressionHelper.ExpressionListToStringList(MasterInvisibleCols);
             // _UCOutlookGridAnalysis1.ColNameDataDictionary = MasterColNameDataDictionary;
 
-          
+
             KryptonPage page = NewPage(NavParts.结果分析1.ToString(), 1, _UCOutlookGridAnalysis1);
             //page.ClearFlags(KryptonPageFlags.All);
             // Document pages cannot be docked or auto hidden
@@ -1233,7 +1233,7 @@ namespace RUINORERP.UI.BaseForm
             return page;
         }
 
-    
+
         #endregion
 
         #region  分析2

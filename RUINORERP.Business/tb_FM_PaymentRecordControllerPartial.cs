@@ -168,6 +168,10 @@ namespace RUINORERP.Business
                 List<tb_FM_OtherExpense> otherExpenseUpdateList = new List<tb_FM_OtherExpense>();
                 List<tb_FM_ExpenseClaim> expenseClaimUpdateList = new List<tb_FM_ExpenseClaim>();
 
+
+                List<tb_AS_RepairOrder> RepairOrderUpdateList = new List<tb_AS_RepairOrder>();
+
+
                 //相同客户，多个应收可以合成一个收款 。所以明细中就是对应的应收单。
                 // 开启事务，保证数据一致性
                 _unitOfWorkManage.BeginTran();
@@ -433,6 +437,40 @@ namespace RUINORERP.Business
                                     #endregion
                                 }
                             }
+
+
+                            if (receivablePayable.SourceBizType == (int)BizType.维修工单)
+                            {
+                                if (receivablePayable.ARAPStatus == (int)ARAPStatus.全部支付)
+                                {
+                                    #region 更新对应业务的单据状态和付款情况
+
+                                    tb_AS_RepairOrder RepairOrder = await _appContext.Db.Queryable<tb_AS_RepairOrder>()
+                                        .Includes(c => c.tb_as_aftersaleapply, b => b.tb_AS_AfterSaleDeliveries)
+                                      .Where(c => c.DataStatus >= (int)DataStatus.确认 && c.RepairOrderID == receivablePayable.SourceBillId).SingleAsync();
+                                    if (RepairOrder != null)
+                                    {
+                                        //应收结清，并且结清的金额等于销售出库金额，则修改出库单的状态。同时计算对应订单情况。也更新。
+                                        if (receivablePayable.LocalBalanceAmount == 0 && receivablePayable.LocalPaidAmount == RepairOrder.TotalAmount)
+                                        {
+                                            //财务只管财务的状态
+                                            // saleOut.DataStatus = (int)DataStatus.完结;
+                                            RepairOrder.PayStatus = (int)PayStatus.全部付款;
+                                            RepairOrder.Paytype_ID = entity.Paytype_ID.Value;
+                                        }
+                                        else
+                                        {
+                                            RepairOrder.PayStatus = (int)PayStatus.部分付款;
+                                            RepairOrder.Paytype_ID = entity.Paytype_ID.Value;
+                                        }
+
+                                        RepairOrderUpdateList.Add(RepairOrder);
+                                    }
+
+                                    #endregion
+                                }
+                            }
+
                             //应收应付 正反都 生成核销记录
                             await settlementController.GenerateSettlement(entity, RecordDetail, receivablePayable);
                         }
@@ -632,29 +670,59 @@ namespace RUINORERP.Business
                 {
                     var r = await _unitOfWorkManage.GetDbClient().Updateable(otherExpenseUpdateList).UpdateColumns(t => new
                     {
-                        t.ApprovalOpinions,
                         t.DataStatus,
+                        t.Paytype_ID,
                         t.PayStatus,
                     }).ExecuteCommandAsync();
                 }
 
                 if (priceAdjustmentUpdateList.Any())
                 {
-                    var r = await _unitOfWorkManage.GetDbClient().Updateable(priceAdjustmentUpdateList).ExecuteCommandAsync();
+                    var r = await _unitOfWorkManage.GetDbClient().Updateable(priceAdjustmentUpdateList).UpdateColumns(t => new
+                    {
+                        t.Paytype_ID,
+                        t.DataStatus,
+                        t.PayStatus
+                    }).ExecuteCommandAsync();
                 }
 
                 if (purEntryReUpdateList.Any())
                 {
-                    var r = await _unitOfWorkManage.GetDbClient().Updateable(purEntryReUpdateList).ExecuteCommandAsync();
+                    var r = await _unitOfWorkManage.GetDbClient().Updateable(purEntryReUpdateList).UpdateColumns(t => new
+                    {
+                        t.Paytype_ID,
+                        t.DataStatus,
+                        t.PayStatus
+                    }).ExecuteCommandAsync();
                 }
 
                 if (SaleOutReUpdateList.Any())
                 {
-                    var r = await _unitOfWorkManage.GetDbClient().Updateable<tb_SaleOutRe>(SaleOutReUpdateList).ExecuteCommandAsync();
+                    var r = await _unitOfWorkManage.GetDbClient().Updateable<tb_SaleOutRe>(SaleOutReUpdateList).UpdateColumns(t => new
+                    {
+                        t.Paytype_ID,
+                        t.DataStatus,
+                        t.PayStatus
+                    }).ExecuteCommandAsync();
                 }
                 if (saleOutUpdateList.Any())
                 {
-                    var r = await _unitOfWorkManage.GetDbClient().Updateable<tb_SaleOut>(saleOutUpdateList).ExecuteCommandAsync();
+                    var r = await _unitOfWorkManage.GetDbClient().Updateable<tb_SaleOut>(saleOutUpdateList).UpdateColumns(t => new
+                    {
+                        t.Paytype_ID,
+                        t.DataStatus,
+                        t.PayStatus
+                    }).ExecuteCommandAsync();
+                }
+
+                if (RepairOrderUpdateList.Any())
+                {
+                    var r = await _unitOfWorkManage.GetDbClient().Updateable(RepairOrderUpdateList).UpdateColumns(t => new
+                    {
+                        t.Paytype_ID,
+                        t.DataStatus,
+                        t.PayStatus
+                    }).ExecuteCommandAsync();
                 }
 
                 if (saleOrderUpdateList.Any())
@@ -670,7 +738,12 @@ namespace RUINORERP.Business
 
                 if (purEntryUpdateList.Any())
                 {
-                    var r = await _unitOfWorkManage.GetDbClient().Updateable<tb_PurEntry>(purEntryUpdateList).ExecuteCommandAsync();
+                    var r = await _unitOfWorkManage.GetDbClient().Updateable<tb_PurEntry>(purEntryUpdateList).UpdateColumns(t => new
+                    {
+                        t.Paytype_ID,
+                        t.DataStatus,
+                        t.PayStatus
+                    }).ExecuteCommandAsync();
                 }
 
                 if (purOrderUpdateList.Any())
@@ -685,7 +758,15 @@ namespace RUINORERP.Business
 
                 if (receivablePayableUpdateList.Any())
                 {
-                    var r = await _unitOfWorkManage.GetDbClient().Updateable<tb_FM_ReceivablePayable>(receivablePayableUpdateList).ExecuteCommandAsync();
+                    var r = await _unitOfWorkManage.GetDbClient().Updateable<tb_FM_ReceivablePayable>(receivablePayableUpdateList).UpdateColumns(it =>
+                                new
+                                {
+                                    it.ARAPStatus,
+                                    it.ForeignPaidAmount,
+                                    it.LocalPaidAmount,
+                                    it.LocalBalanceAmount,
+                                    it.ForeignBalanceAmount,
+                                }).ExecuteCommandAsync();
                 }
 
                 if (preReceivedPaymentUpdateList.Any())

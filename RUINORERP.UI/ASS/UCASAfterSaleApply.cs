@@ -117,6 +117,28 @@ namespace RUINORERP.UI.ASS
                         }
                     }
                 }
+
+                if (SaleApply.tb_AS_RepairOrders != null && SaleApply.tb_AS_RepairOrders.Count > 0)
+                {
+                    foreach (var item in SaleApply.tb_AS_RepairOrders)
+                    {
+                        RelatedQueryParameter rqp = new RelatedQueryParameter();
+                        rqp.bizType = BizType.维修工单;
+                        rqp.billId = item.RepairOrderID;
+                        ToolStripMenuItem RelatedMenuItem = new ToolStripMenuItem();
+                        RelatedMenuItem.Name = $"{rqp.billId}";
+                        RelatedMenuItem.Tag = rqp;
+                        RelatedMenuItem.Text = $"{rqp.bizType}:{item.RepairOrderNo}";
+                        RelatedMenuItem.Click += base.MenuItem_Click;
+                        if (!toolStripbtnRelatedQuery.DropDownItems.ContainsKey(item.RepairOrderID.ToString()))
+                        {
+                            toolStripbtnRelatedQuery.DropDownItems.Add(RelatedMenuItem);
+                        }
+                    }
+                }
+
+                
+
             }
             base.LoadRelatedDataToDropDownItems();
         }

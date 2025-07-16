@@ -1765,7 +1765,7 @@ namespace RUINORERP.UI.BaseForm
         /// 生成查询条件，并返回查询条件代理实体参数
         /// </summary>
         /// <param name="useLike">true：默认不是模糊查询</param>
-        internal override object LoadQueryConditionToUI(decimal QueryConditionShowColQty = 4)
+        internal override object LoadQueryConditionToUI(decimal QueryConditionShowColQty = 5)
         {
             Krypton.Toolkit.KryptonPanel kryptonPanel条件生成容器 = kryptonPanelQuery;
             //为了验证设置的属性

@@ -183,10 +183,6 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\dll\Krypton.Ribbon.dll</HintPath>
     </Reference>
-    <Reference Include="Krypton.Toolkit, Version=80.25.5.144, Culture=neutral, PublicKeyToken=a87e673e9ecb6e8e, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\dll\Krypton.Toolkit.dll</HintPath>
-    </Reference>
     <Reference Include="Krypton.Toolkit.Suite.Extended.Outlook.Grid, Version=80.25.5.144, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\dll\Krypton.Toolkit.Suite.Extended.Outlook.Grid.dll</HintPath>
@@ -797,6 +793,18 @@
     </Compile>
     <Compile Include="CRM\UCTargetCustomerList.Designer.cs">
       <DependentUpon>UCTargetCustomerList.cs</DependentUpon>
+    </Compile>
+    <Compile Include="EOP\UCEOPWaterStorageRegisterEdit.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="EOP\UCEOPWaterStorageRegisterEdit.Designer.cs">
+      <DependentUpon>UCEOPWaterStorageRegisterEdit.cs</DependentUpon>
+    </Compile>
+    <Compile Include="EOP\UCEOPWaterStorageRegisterList.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="EOP\UCEOPWaterStorageRegisterList.Designer.cs">
+      <DependentUpon>UCEOPWaterStorageRegisterList.cs</DependentUpon>
     </Compile>
     <Compile Include="FM\FMBase\UCPaymentRecordStatistics.cs">
       <SubType>UserControl</SubType>
@@ -3223,6 +3231,7 @@
     <None Include="ResourceFile\import_32x32.ico" />
     <Content Include="ChartFramework\分层架构设计.txt" />
     <Content Include="CRM\商机总览.sql" />
+    <Content Include="EOP\Eop.txt" />
     <Content Include="FM\应收付.txt" />
     <Content Include="FM\收付核销单.txt" />
     <Content Include="FM\预收付.txt" />
@@ -3727,6 +3736,12 @@
     </EmbeddedResource>
     <EmbeddedResource Include="CRM\UCLeadsList.resx">
       <DependentUpon>UCLeadsList.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EOP\UCEOPWaterStorageRegisterEdit.resx">
+      <DependentUpon>UCEOPWaterStorageRegisterEdit.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EOP\UCEOPWaterStorageRegisterList.resx">
+      <DependentUpon>UCEOPWaterStorageRegisterList.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="FM\FMBase\UCPaymentRecordStatistics.resx">
       <DependentUpon>UCPaymentRecordStatistics.cs</DependentUpon>
@@ -4502,6 +4517,10 @@
     <ProjectReference Include="..\HLH.Lib\HLH.Lib.csproj">
       <Project>{d9c7b9fb-8234-4c54-8a7a-4172878e3586}</Project>
       <Name>HLH.Lib</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Krypton Components\Krypton.Toolkit\Krypton.Toolkit 2022.csproj">
+      <Project>{626b796f-f3a0-40b7-8fc2-38804726c1f5}</Project>
+      <Name>Krypton.Toolkit 2022</Name>
     </ProjectReference>
     <ProjectReference Include="..\LightTalkChatBox\LightTalkChatBox\LightTalkChatBox.csproj">
       <Project>{2b53b023-f715-4ff0-ac73-33321f4de09c}</Project>

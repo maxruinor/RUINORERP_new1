@@ -67,6 +67,7 @@ namespace RUINORERP.Model
             商机总览,
             //销售看板
             绩效分析,
+            蓄水管理,
         }
 
         public enum 财务管理

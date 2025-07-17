@@ -231,24 +231,23 @@ namespace RUINORERP.Business
             RevertCommand command = new RevertCommand();
             ReturnMainSubResults<T> rsms = new ReturnMainSubResults<T>();
             //缓存当前编辑的对象。如果撤销就回原来的值
-            //T oldobj = CloneHelper.DeepCloneObject<T>((T)model);
+            T oldobj = CloneHelper.DeepCloneObject<T>((T)model);
             try
             {
-
                 tb_SaleOrder entity = model as tb_SaleOrder;
                 command.UndoOperation = delegate ()
                 {
                     //Undo操作会执行到的代码
-                    //CloneHelper.SetValues<T>(entity, oldobj);
-                    entity.SOrder_ID = 0;
-                    entity.tb_SaleOrderDetails.ForEach(
+                    CloneHelper.SetValues<T>(entity, oldobj);
+                    //entity.SOrder_ID = 0;
+                    //entity.tb_SaleOrderDetails.ForEach(
 
-                        c =>
-                        {
-                            c.SOrder_ID = 0;
-                            c.SaleOrderDetail_ID = 0;
-                        }
-                        );
+                    //    c =>
+                    //    {
+                    //        c.SOrder_ID = 0;
+                    //        c.SaleOrderDetail_ID = 0;
+                    //    }
+                    //    );
                 };
 
                 // 开启事务，保证数据一致性
@@ -258,8 +257,8 @@ namespace RUINORERP.Business
                 {
 
                     rs = await _unitOfWorkManage.GetDbClient().UpdateNav<tb_SaleOrder>(entity as tb_SaleOrder)
-               .Include(m => m.tb_SaleOrderDetails)
-           .ExecuteCommandAsync();
+                   .Include(m => m.tb_SaleOrderDetails)
+               .ExecuteCommandAsync();
                 }
                 else
                 {

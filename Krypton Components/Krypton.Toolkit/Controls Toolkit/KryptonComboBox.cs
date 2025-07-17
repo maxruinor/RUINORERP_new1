@@ -10,6 +10,8 @@
  */
 #endregion
 
+using System.Data;
+
 namespace Krypton.Toolkit
 {
     /// <summary>
@@ -29,6 +31,146 @@ namespace Krypton.Toolkit
                                    IContainedInputControl,
                                    ISupportInitializeNotification
     {
+
+        #region 实现搜索功能 by watson 2025-7-16
+
+
+
+
+        private System.Windows.Forms.Timer _searchTimer;
+        private bool _isSearching;
+
+        private void InitializeSearchTimer()
+        {
+            _searchTimer = new System.Windows.Forms.Timer();
+            _searchTimer.Interval = _searchDelay; // 300毫秒延迟
+            _searchTimer.Tick += (s, e) =>
+            {
+                _searchTimer.Stop();
+                string searchText = _comboBox.Text;
+                ApplyFilters(searchText);
+            };
+
+        }
+
+
+        private int _searchDelay = 300; // 默认延迟300ms
+        [Category("Behavior")]
+        [Description("搜索延迟时间(毫秒)")]
+        [DefaultValue(300)]
+        public int SearchDelay
+        {
+            get => _searchDelay;
+            set
+            {
+                _searchDelay = value;
+                if (_searchTimer != null)
+                {
+                    _searchTimer.Interval = value;
+                }
+            }
+        }
+
+        //默认启用
+        private bool _enableSearch = false;
+        [Category("Behavior")]
+        [Description("启用模糊搜索功能")]
+        [DefaultValue(true)]
+        public bool EnableSearch
+        {
+            get => _enableSearch;
+            set => _enableSearch = value;
+        }
+
+        private string _lastSearchText = string.Empty;
+
+        const string pleaseSelectText = "请选择";
+        bool hasPleaseSelect = false;
+        object pleaseSelectItem = null;
+
+
+        string strDisplayMember = string.Empty;
+        string strValueMember = string.Empty;
+
+
+        private bool _isApplyingFilter; // 添加重入保护标志
+
+
+        private void ApplyFilters(string filterValue)
+        {
+            if (this.DataSource == null) return;
+            string colName = DisplayMember;
+            try
+            {
+
+
+                string finalFilter = GetFilterCondition(colName, filterValue);
+
+
+                if (string.IsNullOrWhiteSpace(filterValue) || string.IsNullOrWhiteSpace(finalFilter) || filterValue == "请选择")
+                {
+                    finalFilter = "1=1";
+                }
+
+                if (this.DataSource is DataTable dt)
+                {
+                    dt.DefaultView.RowFilter = finalFilter;
+                }
+                else if (this.DataSource is DataView dv)
+                {
+                    dv.RowFilter = finalFilter;
+                }
+                else if (this.DataSource is BindingSource bs)
+                {
+                    if (bs.DataSource is DataTable bsDt)
+                    {
+                        bsDt.DefaultView.RowFilter = finalFilter;
+                    }
+                    else if (bs.DataSource is DataView bsDv)
+                    {
+                        bsDv.RowFilter = finalFilter;
+                    }
+                    else
+                    {
+                        //bs.Filter = finalFilter;
+                        bs.Sort = finalFilter;
+                    }
+                }
+                else
+                {
+
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"筛选出错: {ex.Message}");
+            }
+        }
+
+        private string GetFilterCondition(string columnName, string value)
+        {
+            if (string.IsNullOrWhiteSpace(value)) return string.Empty;
+            // 防止 SQL 注入式攻击
+            string safeValue = value.Replace("'", "''");
+            return $"{columnName} LIKE '%{safeValue}%'";
+        }
+        private string GetSafeItemText(object item)
+        {
+            try
+            {
+                return GetItemText(item) ?? string.Empty;
+            }
+            catch
+            {
+                return item?.ToString() ?? string.Empty;
+            }
+        }
+
+
+
+        #endregion
+
+
         #region Classes
         private class InternalPanel : Panel
         {
@@ -1164,6 +1306,8 @@ namespace Krypton.Toolkit
 
             // Set `CornerRoundingRadius' to 'GlobalStaticValues.PRIMARY_CORNER_ROUNDING_VALUE' (-1)
             _cornerRoundingRadius = GlobalStaticValues.PRIMARY_CORNER_ROUNDING_VALUE;
+
+            InitializeSearchTimer(); // 添加这行
         }
 
         /// <summary>
@@ -2267,7 +2411,16 @@ namespace Krypton.Toolkit
         /// Raises the DropDown event.
         /// </summary>
         /// <param name="e">An EventArgs containing the event data.</param>
-        protected virtual void OnDropDown(EventArgs e) => DropDown?.Invoke(this, e);
+        protected virtual void OnDropDown(EventArgs e)
+        {
+
+            DropDown?.Invoke(this, e);
+            //// 确保搜索时保持下拉打开
+            //if (EnableSearch && _isSearching)
+            //{
+            //    DroppedDown = true;
+            //}
+        }
 
         /// <summary>
         /// Raises the TrackMouseEnter event.
@@ -2981,7 +3134,42 @@ namespace Krypton.Toolkit
             _comboBox.Invalidate();
         }
 
-        private void OnComboBoxTextChanged(object sender, EventArgs e) => OnTextChanged(e);
+        //private void OnComboBoxTextChanged(object sender, EventArgs e) => OnTextChanged(e);
+        private void OnComboBoxTextChanged(object sender, EventArgs e)
+        {
+            if (!_enableSearch)
+            {
+                OnTextChanged(e);
+                return;
+            }
+
+
+            string currentText = _comboBox.Text;
+            // 避免重复处理相同文本
+            if (currentText == _lastSearchText)
+            {
+                OnTextChanged(e);
+                return;
+            }
+
+            _lastSearchText = currentText;
+
+            // 停止之前的计时器，重新开始
+            _searchTimer.Stop();
+
+            // 空文本立即恢复
+            if (string.IsNullOrEmpty(currentText))
+            {
+                //ApplySearchFilter(currentText);
+                ApplyFilters(currentText);
+            }
+            else
+            {
+                _searchTimer.Start();
+            }
+
+            OnTextChanged(e); // 保持原有事件触发
+        }
 
         private void OnComboBoxTextUpdate(object sender, EventArgs e) => OnTextUpdate(e);
 
@@ -2995,8 +3183,43 @@ namespace Krypton.Toolkit
 
         private void OnComboBoxDisplayMemberChanged(object sender, EventArgs e) => OnDisplayMemberChanged(e);
 
+        //private void OnComboBoxDropDownClosed(object sender, EventArgs e)
+        //{
+        //    _comboBox.Dropped = false;
+        //    Refresh();
+        //    OnDropDownClosed(e);
+        //}
+
         private void OnComboBoxDropDownClosed(object sender, EventArgs e)
         {
+            // 保存当前文本
+            //string currentText = ComboBox.Text;
+            //object currentSelectedItem = ComboBox.SelectedItem;
+
+            //// 恢复原始数据源
+            //// 如果不是在搜索状态，恢复原始数据源
+            //// 恢复原始数据源
+            //if (!_isSearching)
+            //{
+            //    DisplayMember = ComboBox.DisplayMember;
+            //    ValueMember = ComboBox.ValueMember;
+            //    // 恢复文本和选中项
+            //    ComboBox.Text = currentText;
+
+            //    try
+            //    {
+            //        if (currentSelectedItem != null)
+            //        {
+            //            ComboBox.SelectedItem = currentSelectedItem;
+            //        }
+            //    }
+            //    catch
+            //    {
+            //        // 忽略恢复选中项失败的情况
+            //    }
+            //}
+
+
             _comboBox.Dropped = false;
             Refresh();
             OnDropDownClosed(e);

@@ -51,7 +51,7 @@ namespace RUINORERP.UI.UControls
         private void kryptonButton1_Click(object sender, EventArgs e)
         {
 
-
+            
 
 
             var initialData = new MyNameClass();

@@ -58,7 +58,7 @@ namespace RUINORERP.UI.PSI.SAL
     /// 销售订单时：有运费外币，总金额外币，订单外币。反而出库时不用这么多。外币只是用于记账。出库时只要根据本币和外币及汇率。生成应收时自动算出来。
     /// </summary>
     [MenuAttrAssemblyInfo("销售订单", ModuleMenuDefine.模块定义.进销存管理, ModuleMenuDefine.进销存管理.销售管理, BizType.销售订单)]
-    public partial class UCSaleOrder : BaseBillEditGeneric<tb_SaleOrder, tb_SaleOrderDetail>,  IPublicEntityObject
+    public partial class UCSaleOrder : BaseBillEditGeneric<tb_SaleOrder, tb_SaleOrderDetail>, IPublicEntityObject
     {
         public UCSaleOrder()
         {
@@ -776,25 +776,29 @@ using var binder = new UIStateBinder(..., customEvaluator);
             {
                 return;
             }
-
-            View_ProdDetail vp = (View_ProdDetail)_View_ProdDetail;
-            tb_SaleOrderDetail _SDetail = (tb_SaleOrderDetail)rowObj;
-            //通过产品查询页查出来后引过来才有值，如果直接在输入框输入SKU这种唯一的。就没有则要查一次。这时是缓存了？
-            if (vp.ProdDetailID > 0 && EditEntity.Employee_ID > 0)
+            try
             {
-                tb_PriceRecord pr = MainForm.Instance.AppContext.Db.Queryable<tb_PriceRecord>().Where(a => a.Employee_ID == EditEntity.Employee_ID && a.ProdDetailID == vp.ProdDetailID).Single();
-                if (pr != null)
+                View_ProdDetail vp = (View_ProdDetail)_View_ProdDetail;
+                tb_SaleOrderDetail _SDetail = (tb_SaleOrderDetail)rowObj;
+                //通过产品查询页查出来后引过来才有值，如果直接在输入框输入SKU这种唯一的。就没有则要查一次。这时是缓存了？
+                if (vp.ProdDetailID > 0 && EditEntity.Employee_ID > 0)
                 {
-                    _SDetail.UnitPrice = pr.SalePrice;
-
-                    var Col = griddefine.grid.Columns.GetColumnInfo(griddefine.DefineColumns.FirstOrDefault(c => c.ColName == nameof(tb_SaleOrderDetail.UnitPrice)).UniqueId);
-                    if (Col != null)
+                    tb_PriceRecord pr = MainForm.Instance.AppContext.Db.Queryable<tb_PriceRecord>().Where(a => a.Employee_ID == EditEntity.Employee_ID && a.ProdDetailID == vp.ProdDetailID).Single();
+                    if (pr != null)
                     {
-                        griddefine.grid[Position.Row, Col.Index].Value = _SDetail.UnitPrice;
+                        _SDetail.UnitPrice = pr.SalePrice;
+
+                        var Col = griddefine.grid.Columns.GetColumnInfo(griddefine.DefineColumns.FirstOrDefault(c => c.ColName == nameof(tb_SaleOrderDetail.UnitPrice)).UniqueId);
+                        if (Col != null)
+                        {
+                            griddefine.grid[Position.Row, Col.Index].Value = _SDetail.UnitPrice;
+                        }
                     }
-
-
                 }
+            }
+            catch (Exception ex)
+            {
+                logger.LogError("价格历史自动给值出错", ex);
             }
         }
 
@@ -1647,7 +1651,7 @@ using var binder = new UIStateBinder(..., customEvaluator);
 
 
         #endregion
- 
+
         private void cmbPayStatus_SelectedIndexChanged(object sender, EventArgs e)
         {
 

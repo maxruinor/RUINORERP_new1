@@ -245,7 +245,7 @@ namespace RUINORERP.UI.SysConfig
 
 
                 //暂时是子节点的个数
-                if (comboBoxTreeView1.TreeView.SelectedNode != null)
+                if (comboBoxTreeView1.TreeView.SelectedNode != null && info.Sort == 0)
                 {
                     info.Sort = comboBoxTreeView1.TreeView.SelectedNode.Nodes.Count;
                 }

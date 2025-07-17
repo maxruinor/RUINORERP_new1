@@ -48,6 +48,7 @@ using RUINORERP.Global.EnumExt;
 using RUINORERP.Global;
 using log4net.Repository.Hierarchy;
 using StackExchange.Redis;
+using RUINORERP.Common.CollectionExtension;
 
 namespace RUINORERP.UI.Common
 {
@@ -1640,14 +1641,14 @@ namespace RUINORERP.UI.Common
         }
 
 
-  
-            /// <summary>
-            /// 枚举名称要与DB表中的字段名相同
-            /// </summary>
-            /// <typeparam name="T">枚举的类型</typeparam>
-            /// <param name="enumTypeName"></param>
-            /// <param name="cmbBox"></param>
-            public static void InitDataToCmbByEnumDynamicGeneratedDataSource<TEnum>(string keyName, KryptonComboBox cmbBox, bool addSelect, params TEnum[] excludeEnums) where TEnum : Enum
+
+        /// <summary>
+        /// 枚举名称要与DB表中的字段名相同
+        /// </summary>
+        /// <typeparam name="T">枚举的类型</typeparam>
+        /// <param name="enumTypeName"></param>
+        /// <param name="cmbBox"></param>
+        public static void InitDataToCmbByEnumDynamicGeneratedDataSource<TEnum>(string keyName, KryptonComboBox cmbBox, bool addSelect, params TEnum[] excludeEnums) where TEnum : Enum
         {
             Type enumType = typeof(TEnum);
 
@@ -3309,6 +3310,8 @@ namespace RUINORERP.UI.Common
                 }
                 List<T> tlist = new List<T>();
                 BindingSource bs = new BindingSource();
+
+
                 var cachelist = BizCacheHelper.Manager.CacheEntityList.Get(tableName);
                 if (cachelist == null)
                 {
@@ -3357,7 +3360,11 @@ namespace RUINORERP.UI.Common
 
                 #endregion
                 InsertSelectItem<T>(key, value, newlist);
-                bs.DataSource = newlist;
+                // bs.DataSource = newlist;
+                //var blv = new BindingListView<T>(newlist); // 实现了 IBindingListView ,Filter  才可以使用 bs.SupportsFiltering
+                var blv = new BindingListView<T>(newlist);
+                bs = new BindingSource { DataSource = blv };
+            
                 ComboBoxHelper.InitDropList(bs, cmbBox, key, value, ComboBoxStyle.DropDown, true);
                 if (cmbBox.Tag == null)
                 {
@@ -3365,6 +3372,11 @@ namespace RUINORERP.UI.Common
                 }
             }
         }
+
+
+
+
+
 
         /// <summary>
         /// 绑定数据到下拉（使用了缓存）
@@ -3384,7 +3396,10 @@ namespace RUINORERP.UI.Common
             // Func<T, bool> funCondition = ExpressionHelper.ConvertToFunc<T>(expCondition);
             List<T> Newlist = list.ToList();
             InsertSelectItem<T>(key, value, Newlist);
-            bs.DataSource = Newlist;
+
+            var blv = new BindingListView<T>(Newlist);
+            bs = new BindingSource { DataSource = blv };
+            //bs.DataSource = Newlist;
             cmbBox.Tag = tableName;
             ComboBoxHelper.InitDropList(bs, cmbBox, key, value, ComboBoxStyle.DropDown, false);
 

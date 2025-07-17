@@ -205,6 +205,35 @@ namespace RUINORERP.UI.Common
             //cmb.DataSource = null;
             //cmb.DataBindings.Clear();
             cmb.BeginUpdate();
+
+            // 启用搜索功能
+            cmb.EnableSearch = true;
+            cmb.SearchDelay = 300; // 设置400ms延迟
+
+            if (!cmb.EnableSearch)
+            {
+                #region 自动补全
+
+                AutoCompleteStringCollection sc = new AutoCompleteStringCollection();
+                foreach (var dr in bs.List)
+                {
+                    // sc.Add(dr[DisplayMember].ToString());
+                    sc.Add(ReflectionHelper.GetPropertyValue(dr, DisplayMember).ToString());
+                }
+
+                if (auto)
+                {
+                    if (DropStyle == ComboBoxStyle.DropDown)
+                    {
+
+                        cmb.AutoCompleteCustomSource = sc;
+                        cmb.AutoCompleteSource = AutoCompleteSource.CustomSource;
+                        cmb.AutoCompleteMode = AutoCompleteMode.Suggest;
+                    }
+                }
+                #endregion
+            }
+
             cmb.DataSource = bs;
             cmb.DropDownStyle = DropStyle;
             cmb.DisplayMember = DisplayMember;
@@ -218,23 +247,6 @@ namespace RUINORERP.UI.Common
             }
             
 
-            AutoCompleteStringCollection sc = new AutoCompleteStringCollection();
-            foreach (var dr in bs.List)
-            {
-                // sc.Add(dr[DisplayMember].ToString());
-                sc.Add(ReflectionHelper.GetPropertyValue(dr, DisplayMember).ToString());
-            }
-
-            if (auto)
-            {
-                if (DropStyle == ComboBoxStyle.DropDown)
-                {
-
-                    cmb.AutoCompleteCustomSource = sc;
-                    cmb.AutoCompleteSource = AutoCompleteSource.CustomSource;
-                    cmb.AutoCompleteMode = AutoCompleteMode.Suggest;
-                }
-            }
             cmb.EndUpdate();
             cmb.SelectedIndex = -1;
 
@@ -263,6 +275,8 @@ namespace RUINORERP.UI.Common
         public static void InitDropList(BindingSource bs, ComboBox cmb, string ValueMember, string DisplayMember, ComboBoxStyle DropStyle, bool auto, bool add请选择)
         {
             cmb.BeginUpdate();
+     
+
             cmb.DataSource = bs;
             cmb.DropDownStyle = DropStyle;
             cmb.DisplayMember = DisplayMember;

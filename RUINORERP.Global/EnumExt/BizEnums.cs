@@ -8,6 +8,14 @@ using System.Threading.Tasks;
 namespace RUINORERP.Global
 {
 
+    public enum PlatformType
+    {
+        阿里1688,
+        淘宝,
+        京东,
+        拼多多
+    }
+
     /// <summary>
     /// 运费分摊规则
     /// </summary>
@@ -355,8 +363,8 @@ namespace RUINORERP.Global
         报废单 = 166,
         售后借出单 = 167,
         售后归还单 = 168,
-        售后申请统计=169,
-        售后交付统计=170,
+        售后申请统计 = 169,
+        售后交付统计 = 170,
         营销活动 = 300,
     }
 

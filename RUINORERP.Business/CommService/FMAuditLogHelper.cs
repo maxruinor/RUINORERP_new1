@@ -118,6 +118,13 @@ namespace RUINORERP.Business.CommService
                 BizTypeMapper mapper = new BizTypeMapper();
                 var BizType = mapper.GetBizType(typeof(T).Name);
 
+                if (BizType == Global.BizType.默认数据)
+                {
+                    if (typeof(T) == typeof(tb_AuditLogs))
+                    {
+
+                    }
+                }
                 //BillConverterFactory bcf = _appContext.GetRequiredService<BillConverterFactory>();
                 //CommBillData cbd = bcf.GetBillData<T>(entity);
                 // 直接使用缓存的工厂，避免重复解析
@@ -343,7 +350,7 @@ namespace RUINORERP.Business.CommService
             }
             catch (Exception ex)
             {
-                 //
+                //
             }
         }
 
@@ -360,7 +367,7 @@ namespace RUINORERP.Business.CommService
             }
             catch (Exception ex)
             {
-             //
+                //
             }
         }
 

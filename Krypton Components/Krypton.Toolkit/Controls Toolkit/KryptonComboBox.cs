@@ -11,6 +11,7 @@
 #endregion
 
 using System.Data;
+using System.Windows.Forms;
 
 namespace Krypton.Toolkit
 {
@@ -48,7 +49,7 @@ namespace Krypton.Toolkit
             {
                 _searchTimer.Stop();
                 string searchText = _comboBox.Text;
-                ApplyFilters(searchText);
+                ApplySort(searchText);
             };
 
         }
@@ -95,6 +96,16 @@ namespace Krypton.Toolkit
 
         private bool _isApplyingFilter; // 添加重入保护标志
 
+        private void ApplySort(string searchText)
+        {
+            // 构建智能排序表达式
+            // 示例：假设按 "Name" 属性匹配
+            string filterExpression = $"{this.DisplayMember}.Contains(\"{searchText}\")";
+            if (DataSource is BindingSource bs)
+            {
+                bs.Filter = filterExpression;
+            }
+        }
 
         private void ApplyFilters(string filterValue)
         {
@@ -103,9 +114,7 @@ namespace Krypton.Toolkit
             try
             {
 
-
                 string finalFilter = GetFilterCondition(colName, filterValue);
-
 
                 if (string.IsNullOrWhiteSpace(filterValue) || string.IsNullOrWhiteSpace(finalFilter) || filterValue == "请选择")
                 {
@@ -133,7 +142,7 @@ namespace Krypton.Toolkit
                     else
                     {
                         //bs.Filter = finalFilter;
-                        bs.Sort = finalFilter;
+                        bs.Filter = finalFilter;
                     }
                 }
                 else
@@ -389,6 +398,7 @@ namespace Krypton.Toolkit
                     }
                 }
                 base.OnFontChanged(e);
+                //ResetMeasurementCache(); // 字体变化时重置缓存
             }
 
             /// <summary>
@@ -2153,12 +2163,20 @@ namespace Krypton.Toolkit
         /// <summary>
         /// Maintains performance when items are added to the ComboBox one at a time.
         /// </summary>
-        public void BeginUpdate() => _comboBox.BeginUpdate();
+        public void BeginUpdate()
+        {
+            _comboBox.BeginUpdate();
+            ResetMeasurementCache(); // 重置缓存
+        }
 
         /// <summary>
         /// Resumes painting the ComboBox control after painting is suspended by the BeginUpdate method. 
         /// </summary>
-        public void EndUpdate() => _comboBox.EndUpdate();
+        public void EndUpdate()
+        {
+            _comboBox.EndUpdate();
+            ResetMeasurementCache(); // 重置缓存
+        }
 
         /// <summary>
         /// Sets the fixed state of the control.
@@ -3035,16 +3053,41 @@ namespace Krypton.Toolkit
             }
         }
 
+
+        private Size _cachedItemSize = Size.Empty;
+        private int _cachedItemIndex = -1;
+
+
         private void OnComboBoxMeasureItem(object sender, MeasureItemEventArgs e)
         {
+            // 检查是否已经缓存了该项的大小
+            if (e.Index == _cachedItemIndex && !_cachedItemSize.IsEmpty)
+            {
+                e.ItemHeight = _cachedItemSize.Height;
+                e.ItemWidth = _cachedItemSize.Width;
+                return;
+            }
+
+            // 首次测量或项发生变化时进行计算
             UpdateContentFromItemIndex(e.Index);
 
             // Ask the view element to layout in given space, needs this before a render call
             using var context = new ViewLayoutContext(this, Renderer);
             Size size = _drawButton.GetPreferredSize(context);
+            // 缓存计算结果
+            _cachedItemSize = size;
+            _cachedItemIndex = e.Index;
+
             e.ItemWidth = size.Width;
             e.ItemHeight = size.Height;
         }
+
+        private void ResetMeasurementCache()
+        {
+            _cachedItemSize = Size.Empty;
+            _cachedItemIndex = -1;
+        }
+
 
         private void UpdateContentFromItemIndex(int index)
         {
@@ -3158,14 +3201,20 @@ namespace Krypton.Toolkit
             _searchTimer.Stop();
 
             // 空文本立即恢复
-            if (string.IsNullOrEmpty(currentText))
+            if (string.IsNullOrEmpty(currentText) || _enableSearch == false || currentText == "请选择")
             {
-                //ApplySearchFilter(currentText);
-                ApplyFilters(currentText);
+                if (DataSource is BindingSource bs)
+                {
+                    bs.RemoveFilter();
+                    //bs.RemoveSort();
+                }
             }
             else
             {
-                _searchTimer.Start();
+                if (this.Focused)
+                {
+                    _searchTimer.Start();
+                }
             }
 
             OnTextChanged(e); // 保持原有事件触发

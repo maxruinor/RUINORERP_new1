@@ -30,6 +30,7 @@ using RUINORERP.Model.TransModel;
 using RUINORERP.UI.SuperSocketClient;
 using TransInstruction;
 using AutoUpdateTools;
+using NPOI.SS.Formula.Functions;
 namespace RUINORERP.UI.BI
 {
 
@@ -37,7 +38,7 @@ namespace RUINORERP.UI.BI
     /// 新的基本资料编辑 并且实现了高级查询 
     /// 客户和供应商共用了 ，特殊处理， 菜单中文标题中有客户两字的。认为是客户，反之有供应商的，就是供应商
     /// </summary>
-    
+
     public partial class UCCustomerVendorList : BaseForm.BaseListGeneric<tb_CustomerVendor>
     {
         public UCCustomerVendorList()
@@ -68,45 +69,65 @@ namespace RUINORERP.UI.BI
 
         }
 
+
+
+
         public override async Task<List<tb_CustomerVendor>> Save()
         {
-            List<tb_CustomerVendor> list = await base.Save();
-            if (list.Count > 0)
+            List<tb_CustomerVendor> list = new List<tb_CustomerVendor>();
+            var ctr = MainForm.Instance.AppContext.GetRequiredService<tb_CustomerVendorController<tb_CustomerVendor>>();
+            foreach (var item in bindingSourceList.List)
             {
-                foreach (var item in list)
+                var entity = item as tb_CustomerVendor;
+                switch (entity.ActionStatus)
                 {
-                    if (item.Customer_id.HasValue)
-                    {
-                        //对象的目标客户设置为已转换
-                        item.IsCustomer = true;
-                        var result = MainForm.Instance.AppContext.Db.Updateable<tb_CRM_Customer>()
-                            .SetColumns(it => it.Converted == true)//SetColumns是可以叠加的 写2个就2个字段赋值
-                            .Where(it => it.Customer_id == item.Customer_id.Value)
-                            .ExecuteCommandAsync();
-                    }
-
-                    if (item.tb_crm_customer != null)
-                    {
-                        //如果修改了客户名称，则和销售客户同步
-                        if (item.CVName != item.tb_crm_customer.CustomerName)
+                    case ActionStatus.无操作:
+                        break;
+                    case ActionStatus.新增:
+                    case ActionStatus.修改:
+                        ReturnResults<tb_CustomerVendor> rr = new ReturnResults<tb_CustomerVendor>();
+                        rr = await ctr.SaveOrUpdate(entity);
+                        if (rr.Succeeded)
                         {
-                            item.tb_crm_customer.CustomerName = item.CVName;
-                            var result = MainForm.Instance.AppContext.Db.Updateable<tb_CRM_Customer>(item.tb_crm_customer)
-                            .SetColumns(it => it.CustomerName == item.CVName)//SetColumns是可以叠加的 写2个就2个字段赋值
-                            .Where(it => it.Customer_id == item.Customer_id.Value)
-                            .ExecuteCommandAsync();
+                            entity.AcceptChanges();
+                            if (entity.Customer_id.HasValue && entity.Customer_id.Value > 0)
+                            {
+                                //同步名称的修改
+                                //entity.tb_crm_customer.CustomerName = entity.CVName;
+                                //entity.tb_crm_customer.Converted = true;
+                                //var result = await MainForm.Instance.AppContext.Db.Updateable<tb_CRM_Customer>(entity.tb_crm_customer)
+                                //    .UpdateColumns(it => new { it.CustomerName,it.Converted })
+                                //// .SetColumns(it => it.CustomerName == entity.tb_crm_customer)//SetColumns是可以叠加的 写2个就2个字段赋值
+                                //.Where(it => it.Customer_id == entity.Customer_id.Value)
+                                //.ExecuteCommandAsync();
+                                long cid= entity.Customer_id.Value;
+                                 
+                                var result = await MainForm.Instance.AppContext.Db.Updateable<tb_CRM_Customer>()
+                                 .Where(it => it.Customer_id == cid)
+                                 .SetColumns(it => it.CustomerName == entity.CVName)//SetColumns是可以叠加的 写2个就2个字段赋值
+                                 .SetColumns(it => it.Converted == true)//SetColumns是可以叠加的 写2个就2个字段赋值
+                                .ExecuteCommandHasChangeAsync();
+
+
+                            }
+
+
+                            list.Add(rr.ReturnObject);
+                            ToolBarEnabledControl(MenuItemEnums.保存);
+                            MainForm.Instance.AuditLogHelper.CreateAuditLog<tb_CustomerVendor>("保存", rr.ReturnObject);
                         }
 
-                    }
-
+                        break;
+                    case ActionStatus.删除:
+                        break;
+                    default:
+                        break;
                 }
-
+                entity.HasChanged = false;
             }
             return list;
         }
 
-
- 
 
         /// <summary>
         /// 如果需要查询条件查询，就要在子类中重写这个方法，供应商和客户共用所有特殊处理

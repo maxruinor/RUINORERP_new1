@@ -324,6 +324,7 @@ namespace RUINORERP.UI.SysConfig
             DataBindingHelper.BindData4CheckBox<tb_MenuInfo>(entity, t => t.IsEnabled, chkEnable, false);
             DataBindingHelper.BindData4TextBox<tb_MenuInfo>(entity, t => t.BizType, txtBizType, BindDataType4TextBox.Text, false);
             cmbMenuType.SelectedIndex = cmbMenuType.FindString(entity.MenuType.ToString());
+            entity.AcceptChanges();
         }
         private void tree_MainMenu_AfterSelect(object sender, TreeViewEventArgs e)
         {

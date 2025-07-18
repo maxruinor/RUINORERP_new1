@@ -259,7 +259,7 @@ namespace RUINORERP.Business
                     //先看库存表中是否存在记录。
                     #region 库存表的更新
                     //标记是否有期初
-                    bool Opening = false;
+                    bool Opening;
                     tb_Inventory inv = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == child.ProdDetailID && i.Location_ID == entity.Location_ID);
                     if (inv != null)
                     {

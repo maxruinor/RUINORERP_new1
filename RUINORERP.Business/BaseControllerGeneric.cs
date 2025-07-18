@@ -65,7 +65,7 @@ namespace RUINORERP.Business
             BizTypeText = bizType.ToString();
             BizTypeInt = (int)bizType;
 
-          
+
             // mapper = AutoMapper.AutoMapperConfig.RegisterMappings().CreateMapper();
             mapper = appContext.GetRequiredService<IMapper>();
         }
@@ -154,7 +154,7 @@ namespace RUINORERP.Business
                              .Where(PrimaryKeyColName + "=" + primaryKeyValue).ExecuteCommandAsync();
                 if (update > 0)
                 {
-                   
+
 
                     // 自动审核逻辑
                     if (autoApprove && CanAutoApprove(entity))
@@ -279,9 +279,9 @@ namespace RUINORERP.Business
         /// <param name="exp"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        public virtual bool ExistFieldValue(Expression<Func<T, bool>> exp)
+        public virtual async Task<bool> ExistFieldValue(Expression<Func<T, bool>> exp)
         {
-            return _unitOfWorkManage.GetDbClient().Queryable<T>().Where(exp).Any();
+            return await _unitOfWorkManage.GetDbClient().Queryable<T>().Where(exp).AnyAsync();
         }
 
 
@@ -325,9 +325,9 @@ namespace RUINORERP.Business
         /// </summary>
         /// <param name="whereLambda">条件表达式</param>
         /// <returns>True or False</returns>
-        public virtual bool IsExist(Expression<Func<T, bool>> whereLambda = null)
+        public virtual async Task<bool> IsExist(Expression<Func<T, bool>> whereLambda = null)
         {
-            return _unitOfWorkManage.GetDbClient().Queryable<T>().WhereIF(!whereLambda.IsNullOrEmpty(), whereLambda).Any();
+            return await _unitOfWorkManage.GetDbClient().Queryable<T>().WhereIF(!whereLambda.IsNullOrEmpty(), whereLambda).AnyAsync();
         }
 
 
@@ -417,6 +417,21 @@ namespace RUINORERP.Business
         public virtual Task<ReturnResults<T>> BaseSaveOrUpdate(T entity)
         {
             //子类重写
+
+            //// 只更新变更的列
+            //if (entity.HasChanged)
+            //{
+            //    var changedColumns = entity.GetChangedColumnMappings().Values;
+            //    var update = _db.Updateable(model)
+            //        .UpdateColumns(changedColumns.ToArray()); // 关键优化
+
+            //    await update.ExecuteCommandAsync();
+            //}
+
+
+            //entity.AcceptChanges(); // 保存后重置状态
+
+
             throw new Exception("子类要重写SaveOrUpdate");
             //return null;
         }

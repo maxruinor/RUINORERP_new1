@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 using RUINORERP.Repository.UnitOfWorks;
 using RUINORERP.Common.Helper;
 using RUINORERP.Common.DI;
+using System.Linq;
 
 
 
@@ -127,7 +128,28 @@ namespace RUINORERP.Repository.Base
             //var i = await Task.Run(() => _db.Updateable(entity).ExecuteCommand());
             //return i > 0;
             //这种方式会以主键为条件
-            return await Db.Updateable(entity).ExecuteCommandHasChangeAsync();
+            bool rs = false;
+            // 只更新变更的列
+            if (entity is BaseEntity model)
+            {
+                if (model.HasChanged)
+                {
+                    // 获取包含主键的变更列映射
+                    // var changedMappings = model.GetChangedColumnMappingsWithPK();
+                    var changedMappings = model.GetChangedColumnMappings();
+                    var changedColumns = changedMappings.Values.ToArray();
+                    // 获取主键值
+                    var pkValue = model.PrimaryKeyID;
+                    var pkColumn = model.GetPrimaryKeyColName();
+                    rs = await Db.Updateable<TEntity>(model)
+                   .UpdateColumns(changedColumns)
+                   //.Where($"{pkColumn} = @pk", new { pk = pkValue }) // 添加主键条件
+                   .ExecuteCommandHasChangeAsync();
+                    model.AcceptChanges(); // 保存后重置状态
+                }
+            }
+            return rs;
+            //return await Db.Updateable(entity).ExecuteCommandHasChangeAsync();
         }
 
         public async Task<bool> Update(TEntity entity, string where)

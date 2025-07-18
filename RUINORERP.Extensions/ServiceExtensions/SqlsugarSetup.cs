@@ -7,6 +7,7 @@ using System.Linq.Dynamic.Core;
 using System.Linq.Dynamic.Core.CustomTypeProviders;
 using System.Reflection;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Web.UI.WebControls.WebParts;
 using Mapster;
@@ -188,6 +189,21 @@ namespace RUINORERP.Extensions
                                     Sql = errorsql
                                 };
                                 logger.Error("deadlock", JsonConvert.SerializeObject(deadlockInfo) + "\n");
+
+                                // 自动重试逻辑
+                                //int retryCount = 0;
+                                //while (retryCount < 3)
+                                //{
+                                //    try
+                                //    {
+                                //        Thread.Sleep(100 * retryCount); // 指数退避
+                                //        //RetryOperation(e.Sql); // 重试原SQL
+                                //        return;
+                                //    }
+                                //    catch { retryCount++; }
+                                //}
+
+
                             }
 
 

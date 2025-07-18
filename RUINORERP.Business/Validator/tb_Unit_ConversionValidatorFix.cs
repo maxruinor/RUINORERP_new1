@@ -38,7 +38,7 @@ namespace RUINORERP.Business
                  // 确保实体不为null  并且是新增时才判断
                  if (entity != null && entity.UnitConversion_ID == 0)
                  {
-                     string propertyName = context.PropertyName;
+                     string propertyName = context.PropertyPath;
 
                      if (entity.Source_unit_id == entity.Target_unit_id)
                      {

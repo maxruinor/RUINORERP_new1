@@ -68,9 +68,9 @@ namespace RUINORERP.Business
         /// </summary>
         /// <param name="exp">e => e.ModeuleName == mod.ModeuleName</param>
         /// <returns></returns>
-        public override bool ExistFieldValue(Expression<Func<T, bool>> exp)
+        public override async Task<bool> ExistFieldValue(Expression<Func<T, bool>> exp)
         {
-            return _unitOfWorkManage.GetDbClient().Queryable<T>().Where(exp).Any();
+            return await _unitOfWorkManage.GetDbClient().Queryable<T>().Where(exp).AnyAsync();
         }
       
         

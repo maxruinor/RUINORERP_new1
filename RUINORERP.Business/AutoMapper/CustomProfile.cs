@@ -20,6 +20,12 @@ namespace RUINORERP.Business.AutoMapper
         /// </summary>
         public CustomProfile()
         {
+
+            // 应用全局配置
+            //IgnoreBaseEntityProperties();
+            //ApplySmartConventions();
+
+
             #region 财务模块
 
             //维修物料明细收费 转成应收明细
@@ -414,6 +420,11 @@ namespace RUINORERP.Business.AutoMapper
                  .ForMember(a => a.Notes, o => o.MapFrom(d => d.Notes))
             ;
         }
+
+
+       
+
+
     }
 }
 

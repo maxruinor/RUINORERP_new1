@@ -1785,6 +1785,8 @@ namespace RUINORERP.UI.BaseForm
 
 
                         ReturnResults<T> rr = new ReturnResults<T>();
+
+
                         rr = await ctr.BaseSaveOrUpdate(entity as T);
                         if (rr.Succeeded)
                         {

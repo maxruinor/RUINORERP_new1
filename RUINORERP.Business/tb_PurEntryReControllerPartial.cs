@@ -216,7 +216,7 @@ namespace RUINORERP.Business
                         //如果是有出库情况，则反冲。如果是没有出库情况。则生成付款单
                         //退货单审核后生成红字应收单（负金额）
                         var ctrpayable = _appContext.GetRequiredService<tb_FM_ReceivablePayableController<tb_FM_ReceivablePayable>>();
-                        tb_FM_ReceivablePayable payable = await ctrpayable.BuildReceivablePayable(entity);
+                        tb_FM_ReceivablePayable payable = ctrpayable.BuildReceivablePayable(entity);
                         ReturnMainSubResults<tb_FM_ReceivablePayable> rmr = await ctrpayable.BaseSaveOrUpdateWithChild<tb_FM_ReceivablePayable>(payable, false);
                         if (rmr.Succeeded)
                         {
@@ -500,7 +500,7 @@ namespace RUINORERP.Business
                     #endregion
                 }
 
-                 //===============
+                //===============
                 //也写回采购订单明细
                 //退回流程不算入采购订单的已交数量
                 //退回售后流程是一个独立的。与入库明细已交挂够。观察售后回来情况

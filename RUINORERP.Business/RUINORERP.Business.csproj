@@ -20,6 +20,7 @@
 
   <ItemGroup>
     <Compile Remove="AssemblyInfo.cs" />
+    <Compile Remove="AutoMapper\ConventionBasedProfile.cs" />
     <Compile Remove="AutoMapper\CslaProfile.cs" />
     <Compile Remove="AutoMapper\CustomProfileAll.cs" />
     <Compile Remove="BizCodeGeneration\BizNumberGenerator.cs" />

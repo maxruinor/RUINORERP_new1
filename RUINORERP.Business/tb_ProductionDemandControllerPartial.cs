@@ -1086,10 +1086,11 @@ namespace RUINORERP.Business
             BaseController<tb_BuyingRequisition> ctrBuy = _appContext.GetRequiredServiceByName<BaseController<tb_BuyingRequisition>>(typeof(tb_BuyingRequisition).Name + "Controller");
             rmr = await ctrBuy.BaseSaveOrUpdateWithChild<tb_BuyingRequisition>(BuyingRequisition);
             return rmr;
+          
         }
+        
 
-
-        IMapper mapper = AutoMapperConfig.RegisterMappings().CreateMapper();
+        //IMapper mapper = AutoMapperConfig.RegisterMappings().CreateMapper();
 
 
 

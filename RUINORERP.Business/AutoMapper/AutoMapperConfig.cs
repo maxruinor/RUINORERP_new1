@@ -11,13 +11,19 @@ namespace RUINORERP.Business.AutoMapper
         {
             return new MapperConfiguration(cfg =>
             {
+
+                // 全局忽略 BaseEntity 属性
+                cfg.IgnoreBaseEntityProperties();
+                cfg.ApplySmartConventions();
+
+
                 // 也可以在指定的程序集中扫描从 Profile 继承的类，并将其添加到配置中
                 //cfg.AddMaps(System.AppDomain.CurrentDomain.GetAssemblies());
                 // 也可以传程序集名称（dll 名称）
                 //cfg.AddMaps("LibCoreTest");
 
                 //cfg.AddProfile(new Business.AutoMapper.CslaProfile());
-                 cfg.AddProfile(new CustomProfile());
+                cfg.AddProfile(new CustomProfile());
                // cfg.AddProfile(new CustomProfileAll());
             });
         }

@@ -37,7 +37,7 @@ namespace RUINORERP.Business
                  // 确保customer不为null  并且是新增时才判断
                  if (customer != null && customer.Employee_ID.HasValue && customer.Employee_ID == 0)
                  {
-                     string propertyName = context.PropertyName;
+                     string propertyName = context.PropertyPath;
                      // 实际的唯一性验证逻辑
                      if (!BeUniqueName(propertyName, value.Value.ToString()))
                      {

@@ -798,7 +798,7 @@ namespace RUINORERP.UI.Common
 
         public static async void SaveGridSettingData(tb_MenuInfo CurMenuInfo, NewSumDataGridView dataGridView, Type datasourceType = null)
         {
-            if (CurMenuInfo==null)
+            if (CurMenuInfo == null)
             {
                 return;
             }
@@ -1554,7 +1554,7 @@ namespace RUINORERP.UI.Common
         /// <param name="InvisibleCols">系统硬编码不可见和权限设置的不可见</param>
         /// <param name="DefaultHideCols">系统硬编码不可见和权限设置的不可见</param>
         /// <returns></returns>
-        public static List<SGColDisplayHandler> SetCustomSourceGridAsync(SourceGridDefine gridDefine,
+        public static  List<SGColDisplayHandler> SetCustomSourceGrid(SourceGridDefine gridDefine,
             tb_MenuInfo CurMenuInfo,
             HashSet<string> InvisibleCols = null,
             HashSet<string> DefaultHideCols = null,
@@ -1586,7 +1586,7 @@ namespace RUINORERP.UI.Common
                 menuPersonalization.UserPersonalizedID = userPersonalized.UserPersonalizedID;
                 menuPersonalization.QueryConditionCols = 4;//查询条件显示的列数 默认值
                 userPersonalized.tb_UIMenuPersonalizations.Add(menuPersonalization);
-                MainForm.Instance.AppContext.Db.Insertable<tb_UIMenuPersonalization>(menuPersonalization).ExecuteReturnEntityAsync();
+                 MainForm.Instance.AppContext.Db.Insertable<tb_UIMenuPersonalization>(menuPersonalization).ExecuteReturnEntity();
             }
 
 
@@ -1684,10 +1684,14 @@ namespace RUINORERP.UI.Common
             if (SaveGridSetting)
             {
                 // 如果需要保存设置，启动后台任务
-                Task.Run(async () =>
-                {
-                    await SaveGridSettingsAsync(menuPersonalization, GridSetting, SaveTargetColumnDisplays ?? originalColumnDisplays);
-                });
+                //Task.Run(async () =>
+                //{
+                //    await SaveGridSettingsAsync(menuPersonalization, GridSetting, SaveTargetColumnDisplays ?? originalColumnDisplays);
+                //});
+
+
+                 SaveGridSettingsAsync(menuPersonalization, GridSetting, SaveTargetColumnDisplays ?? originalColumnDisplays);
+
             }
             return originalColumnDisplays;
 

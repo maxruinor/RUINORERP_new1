@@ -9,6 +9,7 @@ using RUINORERP.Model.Base;
 using SharpYaml.Tokens;
 using SqlSugar;
 using System;
+using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -36,6 +37,11 @@ namespace RUINORERP.Model
     {
         #region 属性变更追踪
 
+
+
+        private readonly ConcurrentDictionary<string, PropertyChangeRecord> _changedProperties = new ConcurrentDictionary<string, PropertyChangeRecord>();
+
+
         // 记录原始值的字典
         //private readonly ConcurrentDictionary<string, object> _originalValues = new ConcurrentDictionary<string, object>();
         private readonly Dictionary<string, object> _originalValues = new Dictionary<string, object>();
@@ -43,7 +49,7 @@ namespace RUINORERP.Model
         // 跟踪已修改的属性（只需要知道哪些属性被修改过）
         //private readonly ConcurrentDictionary<string, object> _changedProperties = new ConcurrentDictionary<string, object>();
         //private readonly Dictionary<string, object> _changedProperties = new Dictionary<string, object>();
-        private readonly HashSet<string> _changedProperties = new HashSet<string>();
+       // private readonly HashSet<string> _changedProperties = new HashSet<string>();
         // 获取变更属性集合
 
 
@@ -53,7 +59,59 @@ namespace RUINORERP.Model
         /// </summary>
         [SugarColumn(IsIgnore = true)]
         [Browsable(false)]
-        public IEnumerable<string> ChangedProperties => _changedProperties;
+        public IEnumerable<string> ChangedProperties => _changedProperties.Keys;
+
+ 
+
+        // 标记属性已修改（供特殊映射场景使用）
+        public void SetPropertyModified(string propertyName)
+        {
+            if (!_changedProperties.Keys.Contains(propertyName))
+            {
+                var property = GetType().GetProperty(propertyName);
+                if (property != null)
+                {
+                    // 记录原始值（如果尚未记录）
+                    if (!_originalValues.ContainsKey(propertyName))
+                    {
+                        _originalValues[propertyName] =
+                            CloneValue(property.GetValue(this));
+                    }
+
+                    _changedProperties.Keys.Add(propertyName);
+                    HasChanged = true;
+                }
+            }
+        }
+
+
+
+        // 获取变更详情（属性名，原始值，新值）
+        public IEnumerable<(string Name, object Original, object Current)> GetPropertyChanges()
+        {
+            foreach (var kvp in _changedProperties)
+            {
+                yield return (kvp.Key, kvp.Value.OriginalValue, kvp.Value.CurrentValue);
+            }
+        }
+
+        // 获取变更的SQLSugar列名映射
+        public Dictionary<string, string> GetChangedColumnMappings()
+        {
+            var mappings = new Dictionary<string, string>();
+            var properties = GetCachedProperties();
+
+            foreach (var propName in _changedProperties.Keys)
+            {
+                var prop = properties.FirstOrDefault(p => p.Name == propName);
+                var columnAttr = prop?.GetCustomAttribute<SugarColumn>();
+                if (columnAttr != null && !string.IsNullOrEmpty(columnAttr.ColumnName))
+                {
+                    mappings[propName] = columnAttr.ColumnName;
+                }
+            }
+            return mappings;
+        }
 
 
         // 追踪属性变更的标志
@@ -82,7 +140,7 @@ namespace RUINORERP.Model
         /// <returns>如果属性有变更返回true，否则返回false</returns>
         public bool HasPropertyChanged(string propertyName)
         {
-            return _changedProperties.Contains(propertyName);
+            return _changedProperties.Keys.Contains(propertyName);
         }
 
         /// <summary>
@@ -346,31 +404,46 @@ namespace RUINORERP.Model
         /// </summary>
         public void AcceptChanges()
         {
-            foreach (var propName in _changedProperties.ToList())
+            foreach (var propName in _changedProperties.Keys.ToList())
             {
-                var property = GetType().GetProperty(propName);
-                if (property != null)
-                {
-                    var value = property.GetValue(this);
-                    _originalValues[propName] = value is ICloneable cloneable
-                        ? cloneable.Clone()
-                        : value;
-                }
+                var currentValue = GetCurrentValue(propName);
+                _originalValues[propName] = CloneValue(currentValue);
+
+
+                //var property = GetType().GetProperty(propName);
+                //if (property != null)
+                //{
+                //    var value = property.GetValue(this);
+                //    _originalValues[propName] = value is ICloneable cloneable
+                //        ? cloneable.Clone()
+                //        : value;
+                //}
             }
             _changedProperties.Clear();
             HasChanged = false;
         }
 
-
+        /// <summary>
+        /// 回滚变更
+        /// </summary>
         void RollbackChanges()
         {
             // 回滚到操作开始时的状态
-            foreach (var prop in _changedProperties)
+            //foreach (var prop in _changedProperties)
+            //{
+            //    var original = _originalValues[prop];
+            //    GetType().GetProperty(prop)?.SetValue(this, original);
+            //}
+
+            foreach (var propName in _changedProperties.Keys.ToList())
             {
-                var original = _originalValues[prop];
-                GetType().GetProperty(prop)?.SetValue(this, original);
+                var property = GetType().GetProperty(propName);
+                property?.SetValue(this, _changedProperties[propName].OriginalValue);
             }
             _changedProperties.Clear();
+            HasChanged = false;
+
+
         }
 
 
@@ -442,7 +515,7 @@ namespace RUINORERP.Model
         // 新增：检查特定属性是否修改
         public bool IsPropertyChanged(string propertyName)
         {
-            return _changedProperties.Contains(propertyName);
+            return _changedProperties.Keys.Contains(propertyName);
         }
 
         // 新增：重置变更状态（保存后调用）
@@ -450,7 +523,7 @@ namespace RUINORERP.Model
         {
             _changedProperties.Clear();
             HasChanged = false;
-
+            ActionStatus = ActionStatus.无操作;
             //是清空还是保存原值？
             //_originalValues.Clear();
 
@@ -474,7 +547,7 @@ namespace RUINORERP.Model
             //}
 
         }
-
+   
         #endregion
 
 
@@ -774,6 +847,9 @@ namespace RUINORERP.Model
             #endregion
             */
 
+    
+
+
             // 简化为单次高效比较
             if (EqualityComparer<T>.Default.Equals(storage, value))
                 return;
@@ -782,10 +858,25 @@ namespace RUINORERP.Model
             storage = value;
 
             // 首次变更时记录原始值
-            if (!_originalValues.ContainsKey(propertyName))
-                _originalValues[propertyName] = oldValue;
+            //if (!_originalValues.ContainsKey(propertyName))
+            //    _originalValues[propertyName] = oldValue;
 
-            _changedProperties.Add(propertyName);
+            //_changedProperties.Add(propertyName);
+
+            // 自动记录原始值（首次变更时）
+            if (!_changedProperties.ContainsKey(propertyName))
+            {
+                _changedProperties[propertyName] = new PropertyChangeRecord(
+                    originalValue: CloneValue(storage),
+                    currentValue: value
+                );
+            }
+            else
+            {
+                _changedProperties[propertyName].CurrentValue = value;
+            }
+
+            storage = value;
             HasChanged = true;
 
             // 合并通知事件
@@ -816,6 +907,35 @@ namespace RUINORERP.Model
             OnPropertyChanged(propertyName, (object)storage, value);
             this.OnPropertyChanged(propertyName);*/
         }
+
+        // 在 BaseEntity 类中添加
+        public Dictionary<string, string> GetChangedColumnMappingsWithPK()
+        {
+            var mappings = GetChangedColumnMappings();
+
+            // 获取主键列名
+            string pkColumn = GetPrimaryKeyColName();
+            PropertyInfo pkProperty = GetPrimaryKeyProperty();
+
+            // 确保主键列已包含在映射中
+            if (!string.IsNullOrEmpty(pkColumn) &&
+                !mappings.ContainsKey(pkProperty.Name))
+            {
+                mappings[pkProperty.Name] = pkColumn;
+            }
+
+            return mappings;
+        }
+
+
+        // 新增方法：获取主键属性
+        protected PropertyInfo GetPrimaryKeyProperty()
+        {
+            return GetCachedProperties()
+                .FirstOrDefault(p => p.GetCustomAttribute<SugarColumn>()?.IsPrimaryKey == true);
+        }
+
+
         #endregion
         public virtual void Save()
         {
@@ -1009,7 +1129,17 @@ namespace RUINORERP.Model
 
             return clone;
         }
-
+        private object CloneValue(object value)
+        {
+            if (value is ICloneable cloneable) return cloneable.Clone();
+            if (value is IEnumerable enumerable && !(value is string))
+            {
+                // 集合类型创建浅拷贝
+                var listType = typeof(List<>).MakeGenericType(value.GetType().GetGenericArguments()[0]);
+                return Activator.CreateInstance(listType, enumerable);
+            }
+            return value;
+        }
 
 
         #region 提取重点数据
@@ -1130,6 +1260,22 @@ namespace RUINORERP.Model
         #endregion
 
     }
+
+
+    // 使用专用类存储变更信息
+    public class PropertyChangeRecord
+    {
+        public object OriginalValue { get; }
+        public object CurrentValue { get; set; }
+
+        public PropertyChangeRecord(object originalValue, object currentValue)
+        {
+            OriginalValue = originalValue;
+            CurrentValue = currentValue;
+        }
+    }
+
+
 
     // 定义一个事件参数类，用于传递新旧值
     public class ActionStatusChangedEventArgs : EventArgs

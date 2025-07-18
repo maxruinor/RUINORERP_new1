@@ -1059,7 +1059,7 @@ namespace RUINORERP.UI.UCSourceGrid
 
         private void SaveGridSettingData()
         {
-            UIBizSrvice.SetCustomSourceGridAsync(SGDefine, CurMenuInfo, null, null, true, menuController.ColumnDisplays);
+            UIBizSrvice.SetCustomSourceGrid(SGDefine, CurMenuInfo, null, null, true, menuController.ColumnDisplays);
         }
 
         private void FindCurMenuInfo(SourceGridDefine griddefine)
@@ -1154,7 +1154,7 @@ namespace RUINORERP.UI.UCSourceGrid
 
             //这里卡住会打不开UI单据窗体。这里考虑用缓存保存再查询。
             //List<SGColDisplayHandler> displayHandlers = Task.Run(() => UIBizSrvice.SetCustomSourceGridAsync(SGDefine, CurMenuInfo, null, null, false)).Result;
-            List<SGColDisplayHandler> displayHandlers = UIBizSrvice.SetCustomSourceGridAsync(SGDefine, CurMenuInfo, null, null, false);
+            List<SGColDisplayHandler> displayHandlers = UIBizSrvice.SetCustomSourceGrid(SGDefine, CurMenuInfo, null, null, false);
 
             #endregion
 

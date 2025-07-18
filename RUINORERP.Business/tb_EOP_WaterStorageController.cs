@@ -66,9 +66,9 @@ namespace RUINORERP.Business
         /// </summary>
         /// <param name="exp">e => e.ModeuleName == mod.ModeuleName</param>
         /// <returns></returns>
-        public override bool ExistFieldValue(Expression<Func<T, bool>> exp)
+        public override async Task<bool> ExistFieldValue(Expression<Func<T, bool>> exp)
         {
-            return _unitOfWorkManage.GetDbClient().Queryable<T>().Where(exp).Any();
+            return await _unitOfWorkManage.GetDbClient().Queryable<T>().Where(exp).AnyAsync();
         }
       
         
@@ -125,7 +125,7 @@ namespace RUINORERP.Business
             try
             {
                 //生成时暂时只考虑了一个主键的情况
-                if (entity.WSR_ID > 0)
+                if (entity.WSR_ID > 0 && entity.HasChanged)
                 {
                     bool rs = await _tb_EOP_WaterStorageServices.Update(entity);
                     if (rs)
@@ -143,6 +143,8 @@ namespace RUINORERP.Business
                 rr.ReturnObject = Returnobj;
                 rr.Succeeded = true;
                 entity.ActionStatus = ActionStatus.无操作;
+
+               
             }
             catch (Exception ex)
             {

@@ -72,7 +72,7 @@ namespace RUINORERP.UI.BaseForm
                 entity.PrimaryKeyID = (long)ReflectionHelper.GetPropertyValue(entity, PrimaryKeyColName);
                 //ToolBarEnabledControl(entity);
             }
-
+            entity.AcceptChanges();
         }
 
         //public virtual void BindData(T entity, ActionStatus actionStatus = ActionStatus.无操作)

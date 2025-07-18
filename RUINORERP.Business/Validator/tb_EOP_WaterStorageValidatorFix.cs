@@ -30,6 +30,9 @@ namespace RUINORERP.Business
         public override void Initialize()
         {
             RuleFor(t => t.PlatformOrderNo).MinimumLength(3).WithMessage("平台单:不能小于长度3");
+            RuleFor(t => t.TotalAmount).GreaterThan(0).WithMessage("总金额:要大于零");
+            RuleFor(x => x.ProjectGroup_ID).NotNull().WithMessage("项目组:不能为空。");
+            RuleFor(x => x.ProjectGroup_ID).Must(CheckForeignKeyValueCanNull).WithMessage("项目组:下拉选择值不正确。");
         }
 
     }

@@ -189,13 +189,13 @@ namespace RUINORERP.Business
 
                 var paymentController = _appContext.GetRequiredService<tb_FM_PaymentRecordController<tb_FM_PaymentRecord>>();
 
-                var records = _unitOfWorkManage.GetDbClient().Queryable<tb_FM_PaymentRecordDetail>()
+                var records =await _unitOfWorkManage.GetDbClient().Queryable<tb_FM_PaymentRecordDetail>()
                     .Includes(c => c.tb_fm_paymentrecord)
                     .Where(c => c.SourceBizType == (int)BizType.预收款单 && c.SourceBilllId == entity.PreRPID)
                     .Where(c => c.tb_fm_paymentrecord.ApprovalStatus == (int)ApprovalStatus.已审核
                     && c.tb_fm_paymentrecord.ApprovalResults == true
                     && c.tb_fm_paymentrecord.PaymentStatus == (int)PaymentStatus.已支付)
-                    .ToList();
+                    .ToListAsync();
                 if (records.Count > 0)
                 {
                     //一个预收款单可以生成两份收款单，仅仅是在退款要冲销时。即收款金额要为负数

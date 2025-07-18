@@ -734,7 +734,7 @@ namespace RUINORERP.UI
             services.AddScoped(typeof(ReminderData));
             services.AddScoped(typeof(Model.LastCacheFetchInfo));
             services.AddScoped(typeof(Model.CacheFetchManager));
-
+            services.AddSingleton<ICacheService, SqlSugarMemoryCacheService>();
 
 
             // services.AddSingleton(new AppSettings(WebHostEnvironment));

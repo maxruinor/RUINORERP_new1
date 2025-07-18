@@ -1841,7 +1841,7 @@ namespace RUINORERP.Business
         /// </summary>
         /// <param name="entity"></param>
         /// <returns></returns>
-        public async Task<tb_FM_ReceivablePayable> BuildReceivablePayable(tb_PurEntryRe entity)
+        public  tb_FM_ReceivablePayable BuildReceivablePayable(tb_PurEntryRe entity)
         {
             tb_FM_ReceivablePayable payable = new tb_FM_ReceivablePayable();
             payable = mapper.Map<tb_FM_ReceivablePayable>(entity);

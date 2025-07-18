@@ -305,6 +305,11 @@ namespace RUINORERP.Business
                     it.Approver_by,
                     it.ApprovalOpinions
                 }).ExecuteCommandAsync();
+
+
+              
+
+
                 // 注意信息的完整性
                 _unitOfWorkManage.CommitTran();
                 rmrs.ReturnObject = entity as T;

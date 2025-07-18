@@ -1,70 +1,125 @@
 ﻿using Microsoft.Extensions.Caching.Memory;
 using SqlSugar;
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Reflection;
+using System.Collections.Concurrent;
+using System.Linq;
 
 namespace RUINORERP.Extensions
 {
     /// <summary>
-    /// 实现SqlSugar的ICacheService接口
+    /// 增强版SqlSugar缓存服务，解决键集合获取问题
     /// </summary>
     public class SqlSugarMemoryCacheService : ICacheService
     {
-        protected IMemoryCache _memoryCache;
+        private readonly IMemoryCache _memoryCache;
+
+        // 使用并发字典主动跟踪所有缓存键
+        private readonly ConcurrentDictionary<string, byte> _cacheKeys = new();
+
+        // 缓存分区前缀（避免与其他缓存冲突）
+        private const string CachePrefix = "SqlSugarDataCache.";
+
         public SqlSugarMemoryCacheService(IMemoryCache memoryCache)
         {
             _memoryCache = memoryCache;
         }
+
         public void Add<V>(string key, V value)
         {
-            _memoryCache.Set(key, value);
+            var fullKey = CachePrefix + key;
+            using var entry = _memoryCache.CreateEntry(fullKey);
+            entry.Value = value;
+            _cacheKeys[fullKey] = 0; // 跟踪键
         }
+
         public void Add<V>(string key, V value, int cacheDurationInSeconds)
         {
-            _memoryCache.Set(key, value, DateTimeOffset.Now.AddSeconds(cacheDurationInSeconds));
+            var fullKey = CachePrefix + key;
+            _memoryCache.Set(fullKey, value, DateTimeOffset.Now.AddSeconds(cacheDurationInSeconds));
+
+            // 注册过期回调自动清理
+            var options = new MemoryCacheEntryOptions()
+                .RegisterPostEvictionCallback(RemoveCallback);
+
+            _memoryCache.Set(fullKey, value, options);
+            _cacheKeys[fullKey] = 0;
         }
+
+        private void RemoveCallback(object key, object value, EvictionReason reason, object state)
+        {
+            if (key is string cacheKey)
+            {
+                _cacheKeys.TryRemove(cacheKey, out _);
+            }
+        }
+
         public bool ContainsKey<V>(string key)
         {
-            return _memoryCache.TryGetValue(key, out _);
+            return _memoryCache.TryGetValue(CachePrefix + key, out _);
         }
 
         public V Get<V>(string key)
         {
-            return _memoryCache.Get<V>(key);
+            return _memoryCache.Get<V>(CachePrefix + key);
         }
 
+        
         public IEnumerable<string> GetAllKey<V>()
         {
-            const BindingFlags flags = BindingFlags.Instance | BindingFlags.NonPublic;
-            var entries = _memoryCache.GetType().GetField("_entries", flags).GetValue(_memoryCache);
-            var cacheItems = entries as IDictionary;
-            var keys = new List<string>();
-            if (cacheItems == null) return keys;
-            foreach (DictionaryEntry cacheItem in cacheItems)
-            {
-                keys.Add(cacheItem.Key.ToString());
-            }
-            return keys;
+            // 直接返回主动跟踪的键集合（移除分区前缀）
+            return _cacheKeys.Keys
+                .Where(k => k.StartsWith(CachePrefix))
+                .Select(k => k.Substring(CachePrefix.Length))
+                .ToList();
+        }
+
+
+        /// <summary>
+        ///如果键数量巨大（>10,000） 在GetAllKey中分页返回
+        /// </summary>
+        /// <typeparam name="V"></typeparam>
+        /// <param name="batchSize"></param>
+        /// <returns></returns>
+        public IEnumerable<string> GetAllKey<V>(int batchSize = 1000)
+        {
+            // 直接返回主动跟踪的键集合（移除分区前缀）
+            return _cacheKeys.Keys
+                .Where(k => k.StartsWith(CachePrefix))
+                .Select(k => k.Substring(CachePrefix.Length))
+                .Take(batchSize)
+                .ToList();
         }
 
         public V GetOrCreate<V>(string cacheKey, Func<V> create, int cacheDurationInSeconds = int.MaxValue)
         {
-            if (!_memoryCache.TryGetValue<V>(cacheKey, out V value))
+            var fullKey = CachePrefix + cacheKey;
+
+            return _memoryCache.GetOrCreate(fullKey, entry =>
             {
-                value = create();
-                if (value != null)
+                _cacheKeys[fullKey] = 0;
+
+                if (cacheDurationInSeconds < int.MaxValue)
                 {
-                    _memoryCache.Set(cacheKey, value, DateTime.Now.AddSeconds(cacheDurationInSeconds));
+                    entry.AbsoluteExpirationRelativeToNow =
+                        TimeSpan.FromSeconds(cacheDurationInSeconds);
+                    entry.RegisterPostEvictionCallback(RemoveCallback);
                 }
-            }
-            return value;
+
+                return create();
+            });
         }
 
         public void Remove<V>(string key)
         {
-            _memoryCache.Remove(key);
+            var fullKey = CachePrefix + key;
+            _memoryCache.Remove(fullKey);
+            _cacheKeys.TryRemove(fullKey, out _);
         }
+
+
+
+        //添加缓存统计接口
+        public int CachedItemsCount => _cacheKeys.Count;
     }
 }

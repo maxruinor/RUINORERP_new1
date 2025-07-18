@@ -1,10 +1,9 @@
-﻿
-// **************************************
+﻿// **************************************
 // 生成：CodeBuilder (http://www.fireasy.cn/codebuilder)
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：07/17/2025 16:59:39
+// 时间：07/18/2025 10:33:37
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -17,7 +16,7 @@ namespace RUINORERP.UI
     /// <summary>
     /// 蓄水登记表
     /// </summary>
-    partial class tb_EOP_WaterStorageRegisterQuery
+    partial class tb_EOP_WaterStorageEdit
     {
     
     
@@ -48,61 +47,93 @@ namespace RUINORERP.UI
         private void InitializeComponent()
         {
         
-     //for start
-     
-     this.lblWSRNo = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
-this.txtWSRNo = new ComponentFactory.Krypton.Toolkit.KryptonTextBox();
+     //for definition
+     // this.btnOk = new ComponentFactory.Krypton.Toolkit.KryptonButton();
+     // this.btnCancel = new ComponentFactory.Krypton.Toolkit.KryptonButton();
+      //this.kryptonPanel1 = new ComponentFactory.Krypton.Toolkit.KryptonPanel();
+      //for definition
+     this.lblWSRNo = new Krypton.Toolkit.KryptonLabel();
+this.txtWSRNo = new Krypton.Toolkit.KryptonTextBox();
 
-this.lblPlatformOrderNo = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
-this.txtPlatformOrderNo = new ComponentFactory.Krypton.Toolkit.KryptonTextBox();
+this.lblPlatformOrderNo = new Krypton.Toolkit.KryptonLabel();
+this.txtPlatformOrderNo = new Krypton.Toolkit.KryptonTextBox();
 
+this.lblPlatformType = new Krypton.Toolkit.KryptonLabel();
+this.txtPlatformType = new Krypton.Toolkit.KryptonTextBox();
 
-this.lblEmployee_ID = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
-this.cmbEmployee_ID = new ComponentFactory.Krypton.Toolkit.KryptonComboBox();
+this.lblEmployee_ID = new Krypton.Toolkit.KryptonLabel();
+this.cmbEmployee_ID = new Krypton.Toolkit.KryptonComboBox();
 
-this.lblProjectGroup_ID = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
-this.cmbProjectGroup_ID = new ComponentFactory.Krypton.Toolkit.KryptonComboBox();
+this.lblProjectGroup_ID = new Krypton.Toolkit.KryptonLabel();
+this.cmbProjectGroup_ID = new Krypton.Toolkit.KryptonComboBox();
 
-this.lblTotalAmount = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
-this.txtTotalAmount = new ComponentFactory.Krypton.Toolkit.KryptonTextBox();
+this.lblTotalAmount = new Krypton.Toolkit.KryptonLabel();
+this.txtTotalAmount = new Krypton.Toolkit.KryptonTextBox();
 
-this.lblPlatformFeeAmount = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
-this.txtPlatformFeeAmount = new ComponentFactory.Krypton.Toolkit.KryptonTextBox();
+this.lblPlatformFeeAmount = new Krypton.Toolkit.KryptonLabel();
+this.txtPlatformFeeAmount = new Krypton.Toolkit.KryptonTextBox();
 
-this.lblOrderDate = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
-this.dtpOrderDate = new ComponentFactory.Krypton.Toolkit.KryptonDateTimePicker();
+this.lblOrderDate = new Krypton.Toolkit.KryptonLabel();
+this.dtpOrderDate = new Krypton.Toolkit.KryptonDateTimePicker();
 
-this.lblShippingAddress = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
-this.txtShippingAddress = new ComponentFactory.Krypton.Toolkit.KryptonTextBox();
+this.lblShippingAddress = new Krypton.Toolkit.KryptonLabel();
+this.txtShippingAddress = new Krypton.Toolkit.KryptonTextBox();
 this.txtShippingAddress.Multiline = true;
 
-this.lblShippingWay = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
-this.txtShippingWay = new ComponentFactory.Krypton.Toolkit.KryptonTextBox();
+this.lblShippingWay = new Krypton.Toolkit.KryptonLabel();
+this.txtShippingWay = new Krypton.Toolkit.KryptonTextBox();
 
-this.lblTrackNo = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
-this.txtTrackNo = new ComponentFactory.Krypton.Toolkit.KryptonTextBox();
+this.lblTrackNo = new Krypton.Toolkit.KryptonLabel();
+this.txtTrackNo = new Krypton.Toolkit.KryptonTextBox();
 
-this.lblCreated_at = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
-this.dtpCreated_at = new ComponentFactory.Krypton.Toolkit.KryptonDateTimePicker();
+this.lblCreated_at = new Krypton.Toolkit.KryptonLabel();
+this.dtpCreated_at = new Krypton.Toolkit.KryptonDateTimePicker();
 
+this.lblCreated_by = new Krypton.Toolkit.KryptonLabel();
+this.txtCreated_by = new Krypton.Toolkit.KryptonTextBox();
 
-this.lblModified_at = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
-this.dtpModified_at = new ComponentFactory.Krypton.Toolkit.KryptonDateTimePicker();
+this.lblModified_at = new Krypton.Toolkit.KryptonLabel();
+this.dtpModified_at = new Krypton.Toolkit.KryptonDateTimePicker();
 
+this.lblModified_by = new Krypton.Toolkit.KryptonLabel();
+this.txtModified_by = new Krypton.Toolkit.KryptonTextBox();
 
-this.lblNotes = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
-this.txtNotes = new ComponentFactory.Krypton.Toolkit.KryptonTextBox();
+this.lblNotes = new Krypton.Toolkit.KryptonLabel();
+this.txtNotes = new Krypton.Toolkit.KryptonTextBox();
 this.txtNotes.Multiline = true;
 
-this.lblisdeleted = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
-this.chkisdeleted = new ComponentFactory.Krypton.Toolkit.KryptonCheckBox();
+this.lblisdeleted = new Krypton.Toolkit.KryptonLabel();
+this.chkisdeleted = new Krypton.Toolkit.KryptonCheckBox();
 this.chkisdeleted.Values.Text ="";
 
+    
     //for end
+   // ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel1)).BeginInit();
+   // this.kryptonPanel1.SuspendLayout();
     this.SuspendLayout();
     
-         //for start
-                 //#####50WSRNo###String
+            // 
+            // btnOk
+            // 
+            //this.btnOk.Location = new System.Drawing.Point(126, 355);
+            //this.btnOk.Name = "btnOk";
+            //this.btnOk.Size = new System.Drawing.Size(90, 25);
+            //this.btnOk.TabIndex = 0;
+           // this.btnOk.Values.Text = "确定";
+            //this.btnOk.Click += new System.EventHandler(this.btnOk_Click);
+            // 
+            // btnCancel
+            // 
+           // this.btnCancel.Location = new System.Drawing.Point(244, 355);
+            //this.btnCancel.Name = "btnCancel";
+            //this.btnCancel.Size = new System.Drawing.Size(90, 25);
+            //this.btnCancel.TabIndex = 1;
+            //this.btnCancel.Values.Text = "取消";
+           // this.btnCancel.Click += new System.EventHandler(this.btnCancel_Click);
+            
+         //for size
+     
+            //#####50WSRNo###String
 this.lblWSRNo.AutoSize = true;
 this.lblWSRNo.Location = new System.Drawing.Point(100,25);
 this.lblWSRNo.Name = "lblWSRNo";
@@ -133,6 +164,18 @@ this.Controls.Add(this.txtPlatformOrderNo);
            //#####PlatformType###Int32
 //属性测试75PlatformType
 //属性测试75PlatformType
+this.lblPlatformType.AutoSize = true;
+this.lblPlatformType.Location = new System.Drawing.Point(100,75);
+this.lblPlatformType.Name = "lblPlatformType";
+this.lblPlatformType.Size = new System.Drawing.Size(41, 12);
+this.lblPlatformType.TabIndex = 3;
+this.lblPlatformType.Text = "平台类型";
+this.txtPlatformType.Location = new System.Drawing.Point(173,71);
+this.txtPlatformType.Name = "txtPlatformType";
+this.txtPlatformType.Size = new System.Drawing.Size(100, 21);
+this.txtPlatformType.TabIndex = 3;
+this.Controls.Add(this.lblPlatformType);
+this.Controls.Add(this.txtPlatformType);
 
            //#####Employee_ID###Int64
 //属性测试100Employee_ID
@@ -273,6 +316,18 @@ this.Controls.Add(this.dtpCreated_at);
            //#####Created_by###Int64
 //属性测试325Created_by
 //属性测试325Created_by
+this.lblCreated_by.AutoSize = true;
+this.lblCreated_by.Location = new System.Drawing.Point(100,325);
+this.lblCreated_by.Name = "lblCreated_by";
+this.lblCreated_by.Size = new System.Drawing.Size(41, 12);
+this.lblCreated_by.TabIndex = 13;
+this.lblCreated_by.Text = "创建人";
+this.txtCreated_by.Location = new System.Drawing.Point(173,321);
+this.txtCreated_by.Name = "txtCreated_by";
+this.txtCreated_by.Size = new System.Drawing.Size(100, 21);
+this.txtCreated_by.TabIndex = 13;
+this.Controls.Add(this.lblCreated_by);
+this.Controls.Add(this.txtCreated_by);
 
            //#####Modified_at###DateTime
 this.lblModified_at.AutoSize = true;
@@ -293,6 +348,18 @@ this.Controls.Add(this.dtpModified_at);
            //#####Modified_by###Int64
 //属性测试375Modified_by
 //属性测试375Modified_by
+this.lblModified_by.AutoSize = true;
+this.lblModified_by.Location = new System.Drawing.Point(100,375);
+this.lblModified_by.Name = "lblModified_by";
+this.lblModified_by.Size = new System.Drawing.Size(41, 12);
+this.lblModified_by.TabIndex = 15;
+this.lblModified_by.Text = "修改人";
+this.txtModified_by.Location = new System.Drawing.Point(173,371);
+this.txtModified_by.Name = "txtModified_by";
+this.txtModified_by.Size = new System.Drawing.Size(100, 21);
+this.txtModified_by.TabIndex = 15;
+this.Controls.Add(this.lblModified_by);
+this.Controls.Add(this.txtModified_by);
 
            //#####1500Notes###String
 this.lblNotes.AutoSize = true;
@@ -322,12 +389,22 @@ this.chkisdeleted.TabIndex = 17;
 this.Controls.Add(this.lblisdeleted);
 this.Controls.Add(this.chkisdeleted);
 
-          
-    //for end
-
+        //for 加入到容器
             //components = new System.ComponentModel.Container();
-            
-            
+           
+            //this.Controls.Add(this.btnCancel);
+            //this.Controls.Add(this.btnOk);
+            // 
+            // kryptonPanel1
+            // 
+          //  this.kryptonPanel1.Controls.Add(this.btnCancel);
+         //   this.kryptonPanel1.Controls.Add(this.btnOk);
+           // this.kryptonPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
+            //this.kryptonPanel1.Location = new System.Drawing.Point(0, 0);
+           // this.kryptonPanel1.Name = "kryptonPanel1";
+           // this.kryptonPanel1.Size = new System.Drawing.Size(404, 300);
+           // this.kryptonPanel1.TabIndex = 17;
+
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
                 this.Controls.Add(this.lblWSRNo );
@@ -336,7 +413,9 @@ this.Controls.Add(this.txtWSRNo );
                 this.Controls.Add(this.lblPlatformOrderNo );
 this.Controls.Add(this.txtPlatformOrderNo );
 
-                
+                this.Controls.Add(this.lblPlatformType );
+this.Controls.Add(this.txtPlatformType );
+
                 this.Controls.Add(this.lblEmployee_ID );
 this.Controls.Add(this.cmbEmployee_ID );
 
@@ -364,22 +443,38 @@ this.Controls.Add(this.txtTrackNo );
                 this.Controls.Add(this.lblCreated_at );
 this.Controls.Add(this.dtpCreated_at );
 
-                
+                this.Controls.Add(this.lblCreated_by );
+this.Controls.Add(this.txtCreated_by );
+
                 this.Controls.Add(this.lblModified_at );
 this.Controls.Add(this.dtpModified_at );
 
-                
+                this.Controls.Add(this.lblModified_by );
+this.Controls.Add(this.txtModified_by );
+
                 this.Controls.Add(this.lblNotes );
 this.Controls.Add(this.txtNotes );
 
                 this.Controls.Add(this.lblisdeleted );
 this.Controls.Add(this.chkisdeleted );
 
-                    
-            this.Name = "tb_EOP_WaterStorageRegisterQuery";
+                            // 
+            // "tb_EOP_WaterStorageEdit"
+            // 
+            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
+            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.ClientSize = new System.Drawing.Size(404, 300);
+            //this.Controls.Add(this.kryptonPanel1);
+            
+            this.Name = "tb_EOP_WaterStorageEdit";
             this.Size = new System.Drawing.Size(911, 490);
+          
+            
+            //((System.ComponentModel.ISupportInitialize)(this.kryptonPanel1)).EndInit();
+           // this.kryptonPanel1.ResumeLayout(false);
+           // this.kryptonPanel1.PerformLayout();
             this.ResumeLayout(false);
-            this.PerformLayout();
+            //this.PerformLayout();
             
         }
 
@@ -387,85 +482,93 @@ this.Controls.Add(this.chkisdeleted );
      //for start
      
          
-              private ComponentFactory.Krypton.Toolkit.KryptonLabel lblWSRNo;
-private ComponentFactory.Krypton.Toolkit.KryptonTextBox txtWSRNo;
+              private Krypton.Toolkit.KryptonLabel lblWSRNo;
+private Krypton.Toolkit.KryptonTextBox txtWSRNo;
 
     
         
-              private ComponentFactory.Krypton.Toolkit.KryptonLabel lblPlatformOrderNo;
-private ComponentFactory.Krypton.Toolkit.KryptonTextBox txtPlatformOrderNo;
+              private Krypton.Toolkit.KryptonLabel lblPlatformOrderNo;
+private Krypton.Toolkit.KryptonTextBox txtPlatformOrderNo;
 
     
         
-              
-    
-        
-              private ComponentFactory.Krypton.Toolkit.KryptonLabel lblEmployee_ID;
-private ComponentFactory.Krypton.Toolkit.KryptonComboBox cmbEmployee_ID;
+              private Krypton.Toolkit.KryptonLabel lblPlatformType;
+private Krypton.Toolkit.KryptonTextBox txtPlatformType;
 
     
         
-              private ComponentFactory.Krypton.Toolkit.KryptonLabel lblProjectGroup_ID;
-private ComponentFactory.Krypton.Toolkit.KryptonComboBox cmbProjectGroup_ID;
+              private Krypton.Toolkit.KryptonLabel lblEmployee_ID;
+private Krypton.Toolkit.KryptonComboBox cmbEmployee_ID;
 
     
         
-              private ComponentFactory.Krypton.Toolkit.KryptonLabel lblTotalAmount;
-private ComponentFactory.Krypton.Toolkit.KryptonTextBox txtTotalAmount;
+              private Krypton.Toolkit.KryptonLabel lblProjectGroup_ID;
+private Krypton.Toolkit.KryptonComboBox cmbProjectGroup_ID;
 
     
         
-              private ComponentFactory.Krypton.Toolkit.KryptonLabel lblPlatformFeeAmount;
-private ComponentFactory.Krypton.Toolkit.KryptonTextBox txtPlatformFeeAmount;
+              private Krypton.Toolkit.KryptonLabel lblTotalAmount;
+private Krypton.Toolkit.KryptonTextBox txtTotalAmount;
 
     
         
-              private ComponentFactory.Krypton.Toolkit.KryptonLabel lblOrderDate;
-private ComponentFactory.Krypton.Toolkit.KryptonDateTimePicker dtpOrderDate;
+              private Krypton.Toolkit.KryptonLabel lblPlatformFeeAmount;
+private Krypton.Toolkit.KryptonTextBox txtPlatformFeeAmount;
 
     
         
-              private ComponentFactory.Krypton.Toolkit.KryptonLabel lblShippingAddress;
-private ComponentFactory.Krypton.Toolkit.KryptonTextBox txtShippingAddress;
+              private Krypton.Toolkit.KryptonLabel lblOrderDate;
+private Krypton.Toolkit.KryptonDateTimePicker dtpOrderDate;
 
     
         
-              private ComponentFactory.Krypton.Toolkit.KryptonLabel lblShippingWay;
-private ComponentFactory.Krypton.Toolkit.KryptonTextBox txtShippingWay;
+              private Krypton.Toolkit.KryptonLabel lblShippingAddress;
+private Krypton.Toolkit.KryptonTextBox txtShippingAddress;
 
     
         
-              private ComponentFactory.Krypton.Toolkit.KryptonLabel lblTrackNo;
-private ComponentFactory.Krypton.Toolkit.KryptonTextBox txtTrackNo;
+              private Krypton.Toolkit.KryptonLabel lblShippingWay;
+private Krypton.Toolkit.KryptonTextBox txtShippingWay;
 
     
         
-              private ComponentFactory.Krypton.Toolkit.KryptonLabel lblCreated_at;
-private ComponentFactory.Krypton.Toolkit.KryptonDateTimePicker dtpCreated_at;
+              private Krypton.Toolkit.KryptonLabel lblTrackNo;
+private Krypton.Toolkit.KryptonTextBox txtTrackNo;
 
     
         
-              
-    
-        
-              private ComponentFactory.Krypton.Toolkit.KryptonLabel lblModified_at;
-private ComponentFactory.Krypton.Toolkit.KryptonDateTimePicker dtpModified_at;
+              private Krypton.Toolkit.KryptonLabel lblCreated_at;
+private Krypton.Toolkit.KryptonDateTimePicker dtpCreated_at;
 
     
         
-              
-    
-        
-              private ComponentFactory.Krypton.Toolkit.KryptonLabel lblNotes;
-private ComponentFactory.Krypton.Toolkit.KryptonTextBox txtNotes;
+              private Krypton.Toolkit.KryptonLabel lblCreated_by;
+private Krypton.Toolkit.KryptonTextBox txtCreated_by;
 
     
         
-              private ComponentFactory.Krypton.Toolkit.KryptonLabel lblisdeleted;
-private ComponentFactory.Krypton.Toolkit.KryptonCheckBox chkisdeleted;
+              private Krypton.Toolkit.KryptonLabel lblModified_at;
+private Krypton.Toolkit.KryptonDateTimePicker dtpModified_at;
 
     
+        
+              private Krypton.Toolkit.KryptonLabel lblModified_by;
+private Krypton.Toolkit.KryptonTextBox txtModified_by;
+
     
+        
+              private Krypton.Toolkit.KryptonLabel lblNotes;
+private Krypton.Toolkit.KryptonTextBox txtNotes;
+
+    
+        
+              private Krypton.Toolkit.KryptonLabel lblisdeleted;
+private Krypton.Toolkit.KryptonCheckBox chkisdeleted;
+
+    
+            //private ComponentFactory.Krypton.Toolkit.KryptonButton btnOk;
+        //private ComponentFactory.Krypton.Toolkit.KryptonButton btnCancel;
+       // private ComponentFactory.Krypton.Toolkit.KryptonPanel kryptonPanel1;
    
  
 
@@ -475,5 +578,4 @@ private ComponentFactory.Krypton.Toolkit.KryptonCheckBox chkisdeleted;
 
     }
 }
-
 

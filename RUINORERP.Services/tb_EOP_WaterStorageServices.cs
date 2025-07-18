@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：07/17/2025 16:59:41
+// 时间：07/18/2025 10:33:39
 // **************************************
 using AutoMapper;
 using RUINORERP.IRepository.Base;
@@ -22,10 +22,10 @@ namespace RUINORERP.Services
     /// <summary>
     /// 蓄水登记表
     /// </summary>
-    public partial class tb_EOP_WaterStorageRegisterServices : BaseServices<tb_EOP_WaterStorageRegister>, Itb_EOP_WaterStorageRegisterServices
+    public partial class tb_EOP_WaterStorageServices : BaseServices<tb_EOP_WaterStorage>, Itb_EOP_WaterStorageServices
     {
         IMapper _mapper;
-        public tb_EOP_WaterStorageRegisterServices(IMapper mapper, IBaseRepository<tb_EOP_WaterStorageRegister> dal)
+        public tb_EOP_WaterStorageServices(IMapper mapper, IBaseRepository<tb_EOP_WaterStorage> dal)
         {
             this._mapper = mapper;
             base.BaseDal = dal;

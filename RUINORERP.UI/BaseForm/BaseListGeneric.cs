@@ -1204,7 +1204,7 @@ namespace RUINORERP.UI.BaseForm
                 BusinessHelper.Instance.EditEntity(bty);
                 frmadd.BindData(bty, ActionStatus.修改);
                 //缓存当前编辑的对象。如果撤销就回原来的值
-                T oldobj = CloneHelper.DeepCloneObject<T>((T)bindingSourceList.Current);
+                T oldobj = CloneHelper.DeepCloneObject_maxnew<T>((T)bindingSourceList.Current);
                 int UpdateIndex = bindingSourceList.Position;
                 command.UndoOperation = delegate ()
                 {

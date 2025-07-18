@@ -735,8 +735,9 @@ namespace RUINORERP.UI.BaseForm
             {
                 RevertCommand command = new RevertCommand();
                 //缓存当前编辑的对象。如果撤销就回原来的值
-                M oldobj = CloneHelper.DeepCloneObject<M>(EditEntity);
+                //M oldobj_old = CloneHelper.DeepCloneObject<M>(EditEntity);
 
+                M oldobj = CloneHelper.DeepCloneObject_maxnew<M>(EditEntity);
                 command.UndoOperation = delegate ()
                 {
                     //Undo操作会执行到的代码 意思是如果退审核，内存中审核的数据要变为空白（之前的样子）
@@ -880,7 +881,7 @@ namespace RUINORERP.UI.BaseForm
             {
                 RevertCommand command = new RevertCommand();
                 //缓存当前编辑的对象。如果撤销就回原来的值
-                M oldobj = CloneHelper.DeepCloneObject<M>(EditEntity);
+                M oldobj = CloneHelper.DeepCloneObject_maxnew<M>(EditEntity);
                 command.UndoOperation = delegate ()
                 {
                     //Undo操作会执行到的代码 意思是如果取消反审，内存中反审核的数据要变为空白（之前的样子）

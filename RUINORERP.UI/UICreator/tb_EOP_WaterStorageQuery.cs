@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：07/17/2025 16:59:39
+// 时间：07/18/2025 10:33:37
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -26,10 +26,10 @@ namespace RUINORERP.UI
     /// <summary>
     /// 蓄水登记表数据查询
     /// </summary>
-     [MenuAttribute(typeof(tb_EOP_WaterStorageRegisterQuery), "蓄水登记表数据查询", true)]
-    public partial class tb_EOP_WaterStorageRegisterQuery:UserControl
+     [MenuAttribute(typeof(tb_EOP_WaterStorageQuery), "蓄水登记表数据查询", true)]
+    public partial class tb_EOP_WaterStorageQuery:UserControl
     {
-     public tb_EOP_WaterStorageRegisterQuery() {
+     public tb_EOP_WaterStorageQuery() {
      
          
                 
@@ -37,7 +37,7 @@ namespace RUINORERP.UI
 
             InitializeComponent();
 
-       // RuleFor(tb_EOP_WaterStorageRegister => tb_EOP_WaterStorageRegister.WSR_ID).NotEmpty();
+       // RuleFor(tb_EOP_WaterStorage => tb_EOP_WaterStorage.WSR_ID).NotEmpty();
        
        
        //===============

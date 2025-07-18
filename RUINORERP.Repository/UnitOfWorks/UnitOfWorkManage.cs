@@ -66,7 +66,11 @@ namespace RUINORERP.Repository.UnitOfWorks
             lock (this)
             {
                 _tranCount++;
-                
+                if (_tranCount > 1)
+                {
+                    Console.WriteLine($"_tranCount：{_tranCount}");
+                    _logger.LogInformation($"_tranCount：{ _tranCount}");
+                }
                 GetDbClient().BeginTran();
             }
         }
@@ -94,7 +98,7 @@ namespace RUINORERP.Repository.UnitOfWorks
                     }
                     catch (Exception ex)
                     {
-                        //Console.WriteLine(ex.Message);
+                        Console.WriteLine(ex.Message);
                         GetDbClient().RollbackTran();
                     }
                 }

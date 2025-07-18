@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：07/17/2025 16:59:40
+// 时间：07/18/2025 10:33:39
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -31,30 +31,30 @@ namespace RUINORERP.Business
     /// <summary>
     /// 蓄水登记表
     /// </summary>
-    public partial class tb_EOP_WaterStorageRegisterController<T>:BaseController<T> where T : class
+    public partial class tb_EOP_WaterStorageController<T>:BaseController<T> where T : class
     {
         /// <summary>
         /// 本为私有修改为公有，暴露出来方便使用
         /// </summary>
         //public readonly IUnitOfWorkManage _unitOfWorkManage;
         //public readonly ILogger<BaseController<T>> _logger;
-        public Itb_EOP_WaterStorageRegisterServices _tb_EOP_WaterStorageRegisterServices { get; set; }
+        public Itb_EOP_WaterStorageServices _tb_EOP_WaterStorageServices { get; set; }
        // private readonly ApplicationContext _appContext;
        
-        public tb_EOP_WaterStorageRegisterController(ILogger<tb_EOP_WaterStorageRegisterController<T>> logger, IUnitOfWorkManage unitOfWorkManage,tb_EOP_WaterStorageRegisterServices tb_EOP_WaterStorageRegisterServices , ApplicationContext appContext = null): base(logger, unitOfWorkManage, appContext)
+        public tb_EOP_WaterStorageController(ILogger<tb_EOP_WaterStorageController<T>> logger, IUnitOfWorkManage unitOfWorkManage,tb_EOP_WaterStorageServices tb_EOP_WaterStorageServices , ApplicationContext appContext = null): base(logger, unitOfWorkManage, appContext)
         {
             _logger = logger;
            _unitOfWorkManage = unitOfWorkManage;
-           _tb_EOP_WaterStorageRegisterServices = tb_EOP_WaterStorageRegisterServices;
+           _tb_EOP_WaterStorageServices = tb_EOP_WaterStorageServices;
             _appContext = appContext;
         }
       
         
-        public ValidationResult Validator(tb_EOP_WaterStorageRegister info)
+        public ValidationResult Validator(tb_EOP_WaterStorage info)
         {
 
-           // tb_EOP_WaterStorageRegisterValidator validator = new tb_EOP_WaterStorageRegisterValidator();
-           tb_EOP_WaterStorageRegisterValidator validator = _appContext.GetRequiredService<tb_EOP_WaterStorageRegisterValidator>();
+           // tb_EOP_WaterStorageValidator validator = new tb_EOP_WaterStorageValidator();
+           tb_EOP_WaterStorageValidator validator = _appContext.GetRequiredService<tb_EOP_WaterStorageValidator>();
             ValidationResult results = validator.Validate(info);
             return results;
         }
@@ -77,26 +77,26 @@ namespace RUINORERP.Business
         /// </summary>
         /// <param name="entity"></param>
         /// <returns></returns>
-        public async Task<ReturnResults<tb_EOP_WaterStorageRegister>> SaveOrUpdate(tb_EOP_WaterStorageRegister entity)
+        public async Task<ReturnResults<tb_EOP_WaterStorage>> SaveOrUpdate(tb_EOP_WaterStorage entity)
         {
-            ReturnResults<tb_EOP_WaterStorageRegister> rr = new ReturnResults<tb_EOP_WaterStorageRegister>();
-            tb_EOP_WaterStorageRegister Returnobj;
+            ReturnResults<tb_EOP_WaterStorage> rr = new ReturnResults<tb_EOP_WaterStorage>();
+            tb_EOP_WaterStorage Returnobj;
             try
             {
                 //生成时暂时只考虑了一个主键的情况
                 if (entity.WSR_ID > 0)
                 {
-                    bool rs = await _tb_EOP_WaterStorageRegisterServices.Update(entity);
+                    bool rs = await _tb_EOP_WaterStorageServices.Update(entity);
                     if (rs)
                     {
-                        MyCacheManager.Instance.UpdateEntityList<tb_EOP_WaterStorageRegister>(entity);
+                        MyCacheManager.Instance.UpdateEntityList<tb_EOP_WaterStorage>(entity);
                     }
                     Returnobj = entity;
                 }
                 else
                 {
-                    Returnobj = await _tb_EOP_WaterStorageRegisterServices.AddReEntityAsync(entity);
-                    MyCacheManager.Instance.UpdateEntityList<tb_EOP_WaterStorageRegister>(entity);
+                    Returnobj = await _tb_EOP_WaterStorageServices.AddReEntityAsync(entity);
+                    MyCacheManager.Instance.UpdateEntityList<tb_EOP_WaterStorage>(entity);
                 }
 
                 rr.ReturnObject = Returnobj;
@@ -120,24 +120,24 @@ namespace RUINORERP.Business
         public async override Task<ReturnResults<T>>  BaseSaveOrUpdate(T model)
         {
             ReturnResults<T> rr = new ReturnResults<T>();
-            tb_EOP_WaterStorageRegister entity = model as tb_EOP_WaterStorageRegister;
+            tb_EOP_WaterStorage entity = model as tb_EOP_WaterStorage;
             T Returnobj;
             try
             {
                 //生成时暂时只考虑了一个主键的情况
                 if (entity.WSR_ID > 0)
                 {
-                    bool rs = await _tb_EOP_WaterStorageRegisterServices.Update(entity);
+                    bool rs = await _tb_EOP_WaterStorageServices.Update(entity);
                     if (rs)
                     {
-                        MyCacheManager.Instance.UpdateEntityList<tb_EOP_WaterStorageRegister>(entity);
+                        MyCacheManager.Instance.UpdateEntityList<tb_EOP_WaterStorage>(entity);
                     }
                     Returnobj = entity as T;
                 }
                 else
                 {
-                    Returnobj = await _tb_EOP_WaterStorageRegisterServices.AddReEntityAsync(entity) as T ;
-                    MyCacheManager.Instance.UpdateEntityList<tb_EOP_WaterStorageRegister>(entity);
+                    Returnobj = await _tb_EOP_WaterStorageServices.AddReEntityAsync(entity) as T ;
+                    MyCacheManager.Instance.UpdateEntityList<tb_EOP_WaterStorage>(entity);
                 }
 
                 rr.ReturnObject = Returnobj;
@@ -154,10 +154,10 @@ namespace RUINORERP.Business
         
         public async override Task<List<T>> BaseQueryAsync(string wheresql) 
         {
-            List<T> list = await _tb_EOP_WaterStorageRegisterServices.QueryAsync(wheresql) as List<T>;
+            List<T> list = await _tb_EOP_WaterStorageServices.QueryAsync(wheresql) as List<T>;
             foreach (var item in list)
             {
-                tb_EOP_WaterStorageRegister entity = item as tb_EOP_WaterStorageRegister;
+                tb_EOP_WaterStorage entity = item as tb_EOP_WaterStorage;
                 entity.HasChanged = false;
             }
             if (list != null)
@@ -169,10 +169,10 @@ namespace RUINORERP.Business
         
         public async override Task<List<T>> BaseQueryAsync() 
         {
-            List<T> list = await _tb_EOP_WaterStorageRegisterServices.QueryAsync() as List<T>;
+            List<T> list = await _tb_EOP_WaterStorageServices.QueryAsync() as List<T>;
             foreach (var item in list)
             {
-                tb_EOP_WaterStorageRegister entity = item as tb_EOP_WaterStorageRegister;
+                tb_EOP_WaterStorage entity = item as tb_EOP_WaterStorage;
                 entity.HasChanged = false;
             }
             if (list != null)
@@ -185,12 +185,12 @@ namespace RUINORERP.Business
         
         public async override Task<bool> BaseDeleteAsync(T model)
         {
-            tb_EOP_WaterStorageRegister entity = model as tb_EOP_WaterStorageRegister;
-            bool rs = await _tb_EOP_WaterStorageRegisterServices.Delete(entity);
+            tb_EOP_WaterStorage entity = model as tb_EOP_WaterStorage;
+            bool rs = await _tb_EOP_WaterStorageServices.Delete(entity);
             if (rs)
             {
                 ////生成时暂时只考虑了一个主键的情况
-                MyCacheManager.Instance.DeleteEntityList<tb_EOP_WaterStorageRegister>(entity);
+                MyCacheManager.Instance.DeleteEntityList<tb_EOP_WaterStorage>(entity);
             }
             return rs;
         }
@@ -198,23 +198,23 @@ namespace RUINORERP.Business
         public async override Task<bool> BaseDeleteAsync(List<T> models)
         {
             bool rs=false;
-            List<tb_EOP_WaterStorageRegister> entitys = models as List<tb_EOP_WaterStorageRegister>;
-            int c = await _unitOfWorkManage.GetDbClient().Deleteable<tb_EOP_WaterStorageRegister>(entitys).ExecuteCommandAsync();
+            List<tb_EOP_WaterStorage> entitys = models as List<tb_EOP_WaterStorage>;
+            int c = await _unitOfWorkManage.GetDbClient().Deleteable<tb_EOP_WaterStorage>(entitys).ExecuteCommandAsync();
             if (c>0)
             {
                 rs=true;
                 ////生成时暂时只考虑了一个主键的情况
                  long[] result = entitys.Select(e => e.WSR_ID).ToArray();
-                MyCacheManager.Instance.DeleteEntityList<tb_EOP_WaterStorageRegister>(result);
+                MyCacheManager.Instance.DeleteEntityList<tb_EOP_WaterStorage>(result);
             }
             return rs;
         }
         
         public override ValidationResult BaseValidator(T info)
         {
-            //tb_EOP_WaterStorageRegisterValidator validator = new tb_EOP_WaterStorageRegisterValidator();
-           tb_EOP_WaterStorageRegisterValidator validator = _appContext.GetRequiredService<tb_EOP_WaterStorageRegisterValidator>();
-            ValidationResult results = validator.Validate(info as tb_EOP_WaterStorageRegister);
+            //tb_EOP_WaterStorageValidator validator = new tb_EOP_WaterStorageValidator();
+           tb_EOP_WaterStorageValidator validator = _appContext.GetRequiredService<tb_EOP_WaterStorageValidator>();
+            ValidationResult results = validator.Validate(info as tb_EOP_WaterStorage);
             return results;
         }
         
@@ -235,7 +235,7 @@ namespace RUINORERP.Business
             try
             {
 
-                tb_EOP_WaterStorageRegister entity = model as tb_EOP_WaterStorageRegister;
+                tb_EOP_WaterStorage entity = model as tb_EOP_WaterStorage;
                 command.UndoOperation = delegate ()
                 {
                     //Undo操作会执行到的代码
@@ -247,7 +247,7 @@ namespace RUINORERP.Business
             if (entity.WSR_ID > 0)
             {
             
-                                 var result= await _unitOfWorkManage.GetDbClient().Updateable<tb_EOP_WaterStorageRegister>(entity as tb_EOP_WaterStorageRegister)
+                                 var result= await _unitOfWorkManage.GetDbClient().Updateable<tb_EOP_WaterStorage>(entity as tb_EOP_WaterStorage)
                     .ExecuteCommandAsync();
                     if (result > 0)
                     {
@@ -256,7 +256,7 @@ namespace RUINORERP.Business
             }
         else    
         {
-                                  var result= await _unitOfWorkManage.GetDbClient().Insertable<tb_EOP_WaterStorageRegister>(entity as tb_EOP_WaterStorageRegister)
+                                  var result= await _unitOfWorkManage.GetDbClient().Insertable<tb_EOP_WaterStorage>(entity as tb_EOP_WaterStorage)
                     .ExecuteReturnSnowflakeIdAsync();
                     if (result > 0)
                     {
@@ -292,7 +292,7 @@ namespace RUINORERP.Business
 
         public async override Task<List<T>> BaseQueryByAdvancedNavAsync(bool useLike, object dto)
         {
-            var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<tb_EOP_WaterStorageRegister>()
+            var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<tb_EOP_WaterStorage>()
                                 //这里一般是子表，或没有一对多外键的情况 ，用自动的只是为了语法正常一般不会调用这个方法
                 .IncludesAllFirstLayer()//自动更新导航 只能两层。这里项目中有时会失效，具体看文档
                                 .Where(useLike, dto);
@@ -302,8 +302,8 @@ namespace RUINORERP.Business
 
         public async override Task<bool> BaseDeleteByNavAsync(T model) 
         {
-            tb_EOP_WaterStorageRegister entity = model as tb_EOP_WaterStorageRegister;
-             bool rs = await _unitOfWorkManage.GetDbClient().DeleteNav<tb_EOP_WaterStorageRegister>(m => m.WSR_ID== entity.WSR_ID)
+            tb_EOP_WaterStorage entity = model as tb_EOP_WaterStorage;
+             bool rs = await _unitOfWorkManage.GetDbClient().DeleteNav<tb_EOP_WaterStorage>(m => m.WSR_ID== entity.WSR_ID)
                                 //这里一般是子表，或没有一对多外键的情况 ，用自动的只是为了语法正常一般不会调用这个方法
                 .IncludesAllFirstLayer()//自动更新导航 只能两层。这里项目中有时会失效，具体看文档
                                 .ExecuteCommandAsync();
@@ -318,60 +318,60 @@ namespace RUINORERP.Business
         
         
         
-        public tb_EOP_WaterStorageRegister AddReEntity(tb_EOP_WaterStorageRegister entity)
+        public tb_EOP_WaterStorage AddReEntity(tb_EOP_WaterStorage entity)
         {
-            tb_EOP_WaterStorageRegister AddEntity =  _tb_EOP_WaterStorageRegisterServices.AddReEntity(entity);
-            MyCacheManager.Instance.UpdateEntityList<tb_EOP_WaterStorageRegister>(AddEntity);
+            tb_EOP_WaterStorage AddEntity =  _tb_EOP_WaterStorageServices.AddReEntity(entity);
+            MyCacheManager.Instance.UpdateEntityList<tb_EOP_WaterStorage>(AddEntity);
             entity.ActionStatus = ActionStatus.无操作;
             return AddEntity;
         }
         
-         public async Task<tb_EOP_WaterStorageRegister> AddReEntityAsync(tb_EOP_WaterStorageRegister entity)
+         public async Task<tb_EOP_WaterStorage> AddReEntityAsync(tb_EOP_WaterStorage entity)
         {
-            tb_EOP_WaterStorageRegister AddEntity = await _tb_EOP_WaterStorageRegisterServices.AddReEntityAsync(entity);
-            MyCacheManager.Instance.UpdateEntityList<tb_EOP_WaterStorageRegister>(AddEntity);
+            tb_EOP_WaterStorage AddEntity = await _tb_EOP_WaterStorageServices.AddReEntityAsync(entity);
+            MyCacheManager.Instance.UpdateEntityList<tb_EOP_WaterStorage>(AddEntity);
             entity.ActionStatus = ActionStatus.无操作;
             return AddEntity;
         }
         
-        public async Task<long> AddAsync(tb_EOP_WaterStorageRegister entity)
+        public async Task<long> AddAsync(tb_EOP_WaterStorage entity)
         {
-            long id = await _tb_EOP_WaterStorageRegisterServices.Add(entity);
+            long id = await _tb_EOP_WaterStorageServices.Add(entity);
             if(id>0)
             {
-                 MyCacheManager.Instance.UpdateEntityList<tb_EOP_WaterStorageRegister>(entity);
+                 MyCacheManager.Instance.UpdateEntityList<tb_EOP_WaterStorage>(entity);
             }
             return id;
         }
         
-        public async Task<List<long>> AddAsync(List<tb_EOP_WaterStorageRegister> infos)
+        public async Task<List<long>> AddAsync(List<tb_EOP_WaterStorage> infos)
         {
-            List<long> ids = await _tb_EOP_WaterStorageRegisterServices.Add(infos);
+            List<long> ids = await _tb_EOP_WaterStorageServices.Add(infos);
             if(ids.Count>0)//成功的个数 这里缓存 对不对呢？
             {
-                 MyCacheManager.Instance.UpdateEntityList<tb_EOP_WaterStorageRegister>(infos);
+                 MyCacheManager.Instance.UpdateEntityList<tb_EOP_WaterStorage>(infos);
             }
             return ids;
         }
         
         
-        public async Task<bool> DeleteAsync(tb_EOP_WaterStorageRegister entity)
+        public async Task<bool> DeleteAsync(tb_EOP_WaterStorage entity)
         {
-            bool rs = await _tb_EOP_WaterStorageRegisterServices.Delete(entity);
+            bool rs = await _tb_EOP_WaterStorageServices.Delete(entity);
             if (rs)
             {
-                MyCacheManager.Instance.DeleteEntityList<tb_EOP_WaterStorageRegister>(entity);
+                MyCacheManager.Instance.DeleteEntityList<tb_EOP_WaterStorage>(entity);
                 
             }
             return rs;
         }
         
-        public async Task<bool> UpdateAsync(tb_EOP_WaterStorageRegister entity)
+        public async Task<bool> UpdateAsync(tb_EOP_WaterStorage entity)
         {
-            bool rs = await _tb_EOP_WaterStorageRegisterServices.Update(entity);
+            bool rs = await _tb_EOP_WaterStorageServices.Update(entity);
             if (rs)
             {
-                 MyCacheManager.Instance.UpdateEntityList<tb_EOP_WaterStorageRegister>(entity);
+                 MyCacheManager.Instance.UpdateEntityList<tb_EOP_WaterStorage>(entity);
                 entity.ActionStatus = ActionStatus.无操作;
             }
             return rs;
@@ -379,65 +379,65 @@ namespace RUINORERP.Business
         
         public async Task<bool> DeleteAsync(long id)
         {
-            bool rs = await _tb_EOP_WaterStorageRegisterServices.DeleteById(id);
+            bool rs = await _tb_EOP_WaterStorageServices.DeleteById(id);
             if (rs)
             {
-                MyCacheManager.Instance.DeleteEntityList<tb_EOP_WaterStorageRegister>(id);
+                MyCacheManager.Instance.DeleteEntityList<tb_EOP_WaterStorage>(id);
             }
             return rs;
         }
         
          public async Task<bool> DeleteAsync(long[] ids)
         {
-            bool rs = await _tb_EOP_WaterStorageRegisterServices.DeleteByIds(ids);
+            bool rs = await _tb_EOP_WaterStorageServices.DeleteByIds(ids);
             if (rs)
             {
-                MyCacheManager.Instance.DeleteEntityList<tb_EOP_WaterStorageRegister>(ids);
+                MyCacheManager.Instance.DeleteEntityList<tb_EOP_WaterStorage>(ids);
             }
             return rs;
         }
         
-        public virtual async Task<List<tb_EOP_WaterStorageRegister>> QueryAsync()
+        public virtual async Task<List<tb_EOP_WaterStorage>> QueryAsync()
         {
-            List<tb_EOP_WaterStorageRegister> list = await  _tb_EOP_WaterStorageRegisterServices.QueryAsync();
+            List<tb_EOP_WaterStorage> list = await  _tb_EOP_WaterStorageServices.QueryAsync();
             foreach (var item in list)
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_EOP_WaterStorageRegister>(list);
+            MyCacheManager.Instance.UpdateEntityList<tb_EOP_WaterStorage>(list);
             return list;
         }
         
-        public virtual List<tb_EOP_WaterStorageRegister> Query()
+        public virtual List<tb_EOP_WaterStorage> Query()
         {
-            List<tb_EOP_WaterStorageRegister> list =  _tb_EOP_WaterStorageRegisterServices.Query();
+            List<tb_EOP_WaterStorage> list =  _tb_EOP_WaterStorageServices.Query();
             foreach (var item in list)
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_EOP_WaterStorageRegister>(list);
+            MyCacheManager.Instance.UpdateEntityList<tb_EOP_WaterStorage>(list);
             return list;
         }
         
-        public virtual List<tb_EOP_WaterStorageRegister> Query(string wheresql)
+        public virtual List<tb_EOP_WaterStorage> Query(string wheresql)
         {
-            List<tb_EOP_WaterStorageRegister> list =  _tb_EOP_WaterStorageRegisterServices.Query(wheresql);
+            List<tb_EOP_WaterStorage> list =  _tb_EOP_WaterStorageServices.Query(wheresql);
             foreach (var item in list)
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_EOP_WaterStorageRegister>(list);
+            MyCacheManager.Instance.UpdateEntityList<tb_EOP_WaterStorage>(list);
             return list;
         }
         
-        public virtual async Task<List<tb_EOP_WaterStorageRegister>> QueryAsync(string wheresql) 
+        public virtual async Task<List<tb_EOP_WaterStorage>> QueryAsync(string wheresql) 
         {
-            List<tb_EOP_WaterStorageRegister> list = await _tb_EOP_WaterStorageRegisterServices.QueryAsync(wheresql);
+            List<tb_EOP_WaterStorage> list = await _tb_EOP_WaterStorageServices.QueryAsync(wheresql);
             foreach (var item in list)
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_EOP_WaterStorageRegister>(list);
+            MyCacheManager.Instance.UpdateEntityList<tb_EOP_WaterStorage>(list);
             return list;
         }
         
@@ -448,14 +448,14 @@ namespace RUINORERP.Business
         /// </summary>
         /// <param name="exp"></param>
         /// <returns></returns>
-        public async Task<List<tb_EOP_WaterStorageRegister>> QueryAsync(Expression<Func<tb_EOP_WaterStorageRegister, bool>> exp)
+        public async Task<List<tb_EOP_WaterStorage>> QueryAsync(Expression<Func<tb_EOP_WaterStorage, bool>> exp)
         {
-            List<tb_EOP_WaterStorageRegister> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_EOP_WaterStorageRegister>().Where(exp).ToListAsync();
+            List<tb_EOP_WaterStorage> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_EOP_WaterStorage>().Where(exp).ToListAsync();
             foreach (var item in list)
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_EOP_WaterStorageRegister>(list);
+            MyCacheManager.Instance.UpdateEntityList<tb_EOP_WaterStorage>(list);
             return list;
         }
         
@@ -465,9 +465,9 @@ namespace RUINORERP.Business
         /// 无参数异步导航查询
         /// </summary>
         /// <returns>数据列表</returns>
-         public virtual async Task<List<tb_EOP_WaterStorageRegister>> QueryByNavAsync()
+         public virtual async Task<List<tb_EOP_WaterStorage>> QueryByNavAsync()
         {
-            List<tb_EOP_WaterStorageRegister> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_EOP_WaterStorageRegister>()
+            List<tb_EOP_WaterStorage> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_EOP_WaterStorage>()
                                .Includes(t => t.tb_employee )
                                .Includes(t => t.tb_projectgroup )
                                     .ToListAsync();
@@ -477,7 +477,7 @@ namespace RUINORERP.Business
                 item.HasChanged = false;
             }
             
-            MyCacheManager.Instance.UpdateEntityList<tb_EOP_WaterStorageRegister>(list);
+            MyCacheManager.Instance.UpdateEntityList<tb_EOP_WaterStorage>(list);
             return list;
         }
 
@@ -486,9 +486,9 @@ namespace RUINORERP.Business
         /// 带参数异步导航查询
         /// </summary>
         /// <returns>数据列表</returns>
-         public virtual async Task<List<tb_EOP_WaterStorageRegister>> QueryByNavAsync(Expression<Func<tb_EOP_WaterStorageRegister, bool>> exp)
+         public virtual async Task<List<tb_EOP_WaterStorage>> QueryByNavAsync(Expression<Func<tb_EOP_WaterStorage, bool>> exp)
         {
-            List<tb_EOP_WaterStorageRegister> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_EOP_WaterStorageRegister>().Where(exp)
+            List<tb_EOP_WaterStorage> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_EOP_WaterStorage>().Where(exp)
                                .Includes(t => t.tb_employee )
                                .Includes(t => t.tb_projectgroup )
                                     .ToListAsync();
@@ -498,7 +498,7 @@ namespace RUINORERP.Business
                 item.HasChanged = false;
             }
             
-            MyCacheManager.Instance.UpdateEntityList<tb_EOP_WaterStorageRegister>(list);
+            MyCacheManager.Instance.UpdateEntityList<tb_EOP_WaterStorage>(list);
             return list;
         }
         
@@ -507,9 +507,9 @@ namespace RUINORERP.Business
         /// 带参数异步导航查询
         /// </summary>
         /// <returns>数据列表</returns>
-         public virtual List<tb_EOP_WaterStorageRegister> QueryByNav(Expression<Func<tb_EOP_WaterStorageRegister, bool>> exp)
+         public virtual List<tb_EOP_WaterStorage> QueryByNav(Expression<Func<tb_EOP_WaterStorage, bool>> exp)
         {
-            List<tb_EOP_WaterStorageRegister> list = _unitOfWorkManage.GetDbClient().Queryable<tb_EOP_WaterStorageRegister>().Where(exp)
+            List<tb_EOP_WaterStorage> list = _unitOfWorkManage.GetDbClient().Queryable<tb_EOP_WaterStorage>().Where(exp)
                             .Includes(t => t.tb_employee )
                             .Includes(t => t.tb_projectgroup )
                                     .ToList();
@@ -519,7 +519,7 @@ namespace RUINORERP.Business
                 item.HasChanged = false;
             }
             
-            MyCacheManager.Instance.UpdateEntityList<tb_EOP_WaterStorageRegister>(list);
+            MyCacheManager.Instance.UpdateEntityList<tb_EOP_WaterStorage>(list);
             return list;
         }
         
@@ -529,9 +529,9 @@ namespace RUINORERP.Business
         /// 高级查询
         /// </summary>
         /// <returns></returns>
-        public async Task<List<tb_EOP_WaterStorageRegister>> QueryByAdvancedAsync(bool useLike,object dto)
+        public async Task<List<tb_EOP_WaterStorage>> QueryByAdvancedAsync(bool useLike,object dto)
         {
-            var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<tb_EOP_WaterStorageRegister>().Where(useLike,dto);
+            var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<tb_EOP_WaterStorage>().Where(useLike,dto);
             return await querySqlQueryable.ToListAsync();
         }
 
@@ -539,7 +539,7 @@ namespace RUINORERP.Business
 
         public async override Task<T> BaseQueryByIdAsync(object id)
         {
-            T entity = await _tb_EOP_WaterStorageRegisterServices.QueryByIdAsync(id) as T;
+            T entity = await _tb_EOP_WaterStorageServices.QueryByIdAsync(id) as T;
             return entity;
         }
         
@@ -547,7 +547,7 @@ namespace RUINORERP.Business
         
         public override async Task<T> BaseQueryByIdNavAsync(object id)
         {
-            tb_EOP_WaterStorageRegister entity = await _unitOfWorkManage.GetDbClient().Queryable<tb_EOP_WaterStorageRegister>().Where(w => w.WSR_ID == (long)id)
+            tb_EOP_WaterStorage entity = await _unitOfWorkManage.GetDbClient().Queryable<tb_EOP_WaterStorage>().Where(w => w.WSR_ID == (long)id)
                              .Includes(t => t.tb_employee )
                             .Includes(t => t.tb_projectgroup )
                                     .FirstAsync();
@@ -556,7 +556,7 @@ namespace RUINORERP.Business
                 entity.HasChanged = false;
             }
 
-            MyCacheManager.Instance.UpdateEntityList<tb_EOP_WaterStorageRegister>(entity);
+            MyCacheManager.Instance.UpdateEntityList<tb_EOP_WaterStorage>(entity);
             return entity as T;
         }
         

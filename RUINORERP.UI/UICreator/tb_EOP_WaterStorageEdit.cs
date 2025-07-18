@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：07/17/2025 16:59:38
+// 时间：07/18/2025 10:33:36
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -27,9 +27,9 @@ namespace RUINORERP.UI
     /// 蓄水登记表数据编辑
     /// </summary>
      [MenuAttrAssemblyInfo( "库位编辑", true, UIType.单表数据)]
-    public partial class tb_EOP_WaterStorageRegisterEdit:UserControl
+    public partial class tb_EOP_WaterStorageEdit:UserControl
     {
-     public tb_EOP_WaterStorageRegisterEdit() {
+     public tb_EOP_WaterStorageEdit() {
      
                          InitializeComponent();
       
@@ -55,9 +55,9 @@ namespace RUINORERP.UI
          }
 /*
         
-        tb_EOP_WaterStorageRegister UIToEntity()
+        tb_EOP_WaterStorage UIToEntity()
         {
-        tb_EOP_WaterStorageRegister entity = new tb_EOP_WaterStorageRegister();
+        tb_EOP_WaterStorage entity = new tb_EOP_WaterStorage();
                      entity.WSRNo = txtWSRNo.Text ;
                        entity.PlatformOrderNo = txtPlatformOrderNo.Text ;
                        entity.PlatformType = Int32.Parse(txtPlatformType.Text);
@@ -80,28 +80,28 @@ namespace RUINORERP.UI
         */
 
         
-        private tb_EOP_WaterStorageRegister _EditEntity;
-        public tb_EOP_WaterStorageRegister EditEntity { get => _EditEntity; set => _EditEntity = value; }
-        public void BindData(tb_EOP_WaterStorageRegister entity)
+        private tb_EOP_WaterStorage _EditEntity;
+        public tb_EOP_WaterStorage EditEntity { get => _EditEntity; set => _EditEntity = value; }
+        public void BindData(tb_EOP_WaterStorage entity)
         {
         _EditEntity = entity;
-                        DataBindingHelper.BindData4TextBox<tb_EOP_WaterStorageRegister>(entity, t => t.WSRNo, txtWSRNo, BindDataType4TextBox.Text,false);
-           DataBindingHelper.BindData4TextBox<tb_EOP_WaterStorageRegister>(entity, t => t.PlatformOrderNo, txtPlatformOrderNo, BindDataType4TextBox.Text,false);
-           DataBindingHelper.BindData4TextBox<tb_EOP_WaterStorageRegister>(entity, t => t.PlatformType, txtPlatformType, BindDataType4TextBox.Qty,false);
+                        DataBindingHelper.BindData4TextBox<tb_EOP_WaterStorage>(entity, t => t.WSRNo, txtWSRNo, BindDataType4TextBox.Text,false);
+           DataBindingHelper.BindData4TextBox<tb_EOP_WaterStorage>(entity, t => t.PlatformOrderNo, txtPlatformOrderNo, BindDataType4TextBox.Text,false);
+           DataBindingHelper.BindData4TextBox<tb_EOP_WaterStorage>(entity, t => t.PlatformType, txtPlatformType, BindDataType4TextBox.Qty,false);
           // DataBindingHelper.BindData4Cmb<tb_Employee>(entity, k => k.Employee_ID, v=>v.XXNAME, cmbEmployee_ID);
           // DataBindingHelper.BindData4Cmb<tb_ProjectGroup>(entity, k => k.ProjectGroup_ID, v=>v.XXNAME, cmbProjectGroup_ID);
-           DataBindingHelper.BindData4TextBox<tb_EOP_WaterStorageRegister>(entity, t => t.TotalAmount.ToString(), txtTotalAmount, BindDataType4TextBox.Money,false);
-           DataBindingHelper.BindData4TextBox<tb_EOP_WaterStorageRegister>(entity, t => t.PlatformFeeAmount.ToString(), txtPlatformFeeAmount, BindDataType4TextBox.Money,false);
-           DataBindingHelper.BindData4DataTime<tb_EOP_WaterStorageRegister>(entity, t => t.OrderDate, dtpOrderDate,false);
-           DataBindingHelper.BindData4TextBox<tb_EOP_WaterStorageRegister>(entity, t => t.ShippingAddress, txtShippingAddress, BindDataType4TextBox.Text,false);
-           DataBindingHelper.BindData4TextBox<tb_EOP_WaterStorageRegister>(entity, t => t.ShippingWay, txtShippingWay, BindDataType4TextBox.Text,false);
-           DataBindingHelper.BindData4TextBox<tb_EOP_WaterStorageRegister>(entity, t => t.TrackNo, txtTrackNo, BindDataType4TextBox.Text,false);
-           DataBindingHelper.BindData4DataTime<tb_EOP_WaterStorageRegister>(entity, t => t.Created_at, dtpCreated_at,false);
-           DataBindingHelper.BindData4TextBox<tb_EOP_WaterStorageRegister>(entity, t => t.Created_by, txtCreated_by, BindDataType4TextBox.Qty,false);
-           DataBindingHelper.BindData4DataTime<tb_EOP_WaterStorageRegister>(entity, t => t.Modified_at, dtpModified_at,false);
-           DataBindingHelper.BindData4TextBox<tb_EOP_WaterStorageRegister>(entity, t => t.Modified_by, txtModified_by, BindDataType4TextBox.Qty,false);
-           DataBindingHelper.BindData4TextBox<tb_EOP_WaterStorageRegister>(entity, t => t.Notes, txtNotes, BindDataType4TextBox.Text,false);
-           DataBindingHelper.BindData4CheckBox<tb_EOP_WaterStorageRegister>(entity, t => t.isdeleted, chkisdeleted, false);
+           DataBindingHelper.BindData4TextBox<tb_EOP_WaterStorage>(entity, t => t.TotalAmount.ToString(), txtTotalAmount, BindDataType4TextBox.Money,false);
+           DataBindingHelper.BindData4TextBox<tb_EOP_WaterStorage>(entity, t => t.PlatformFeeAmount.ToString(), txtPlatformFeeAmount, BindDataType4TextBox.Money,false);
+           DataBindingHelper.BindData4DataTime<tb_EOP_WaterStorage>(entity, t => t.OrderDate, dtpOrderDate,false);
+           DataBindingHelper.BindData4TextBox<tb_EOP_WaterStorage>(entity, t => t.ShippingAddress, txtShippingAddress, BindDataType4TextBox.Text,false);
+           DataBindingHelper.BindData4TextBox<tb_EOP_WaterStorage>(entity, t => t.ShippingWay, txtShippingWay, BindDataType4TextBox.Text,false);
+           DataBindingHelper.BindData4TextBox<tb_EOP_WaterStorage>(entity, t => t.TrackNo, txtTrackNo, BindDataType4TextBox.Text,false);
+           DataBindingHelper.BindData4DataTime<tb_EOP_WaterStorage>(entity, t => t.Created_at, dtpCreated_at,false);
+           DataBindingHelper.BindData4TextBox<tb_EOP_WaterStorage>(entity, t => t.Created_by, txtCreated_by, BindDataType4TextBox.Qty,false);
+           DataBindingHelper.BindData4DataTime<tb_EOP_WaterStorage>(entity, t => t.Modified_at, dtpModified_at,false);
+           DataBindingHelper.BindData4TextBox<tb_EOP_WaterStorage>(entity, t => t.Modified_by, txtModified_by, BindDataType4TextBox.Qty,false);
+           DataBindingHelper.BindData4TextBox<tb_EOP_WaterStorage>(entity, t => t.Notes, txtNotes, BindDataType4TextBox.Text,false);
+           DataBindingHelper.BindData4CheckBox<tb_EOP_WaterStorage>(entity, t => t.isdeleted, chkisdeleted, false);
 }
 
 

@@ -117,13 +117,21 @@ namespace RUINORERP.Business.CommService
             {
                 BizTypeMapper mapper = new BizTypeMapper();
                 var BizType = mapper.GetBizType(typeof(T).Name);
-
                 if (BizType == Global.BizType.默认数据)
                 {
-                    if (typeof(T) == typeof(tb_AuditLogs))
+                    var t = typeof(T);
+                    // 检查是否有 SugarTable 特性
+                    bool hasSugarTable = SugarAttributeHelper.HasSugarTableAttribute(typeof(T));
+                    if (hasSugarTable)
                     {
+                        // 获取 Description 值
+                        string tabledescription = SugarAttributeHelper.GetTypeDescription(t);
+                        auditLog.OldState = tabledescription;
 
+                        // 获取完整特性信息
+                        //  var (hasAttr, desc, tableName) = SugarAttributeHelper.GetTypeAttributes(t);
                     }
+
                 }
                 //BillConverterFactory bcf = _appContext.GetRequiredService<BillConverterFactory>();
                 //CommBillData cbd = bcf.GetBillData<T>(entity);

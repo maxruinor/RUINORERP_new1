@@ -103,6 +103,8 @@ namespace RUINORERP.Common.Helper
 
         #endregion
 
+    
+
         #region -- 快速使用區(如果有常用的Attribute，可以擴充在這邊) --
 
         public static DescriptionAttribute GetDescription<TModel>()

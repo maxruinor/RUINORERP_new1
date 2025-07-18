@@ -2357,8 +2357,6 @@ namespace RUINORERP.UI.BaseForm
             };
 
 
-
-
             ApprovalEntity ae = new ApprovalEntity();
             if (ReflectionHelper.ExistPropertyName<T>("ApprovalStatus") && ReflectionHelper.ExistPropertyName<T>("ApprovalResults"))
             {
@@ -2390,7 +2388,7 @@ namespace RUINORERP.UI.BaseForm
                 RevertCommand command = new RevertCommand();
                 //缓存当前编辑的对象。如果撤销就回原来的值
                 //审核只是修改的审核状态。不用缓存全部
-                T oldobj = CloneHelper.DeepCloneObject<T>(EditEntity);
+                T oldobj = CloneHelper.DeepCloneObject_maxnew<T>(EditEntity);
 
                 // 克隆指定字段的值
                 var originalFieldValues = CloneSpecificFields(EditEntity, fieldsToRestore);
@@ -2599,7 +2597,7 @@ namespace RUINORERP.UI.BaseForm
             {
                 RevertCommand command = new RevertCommand();
                 //缓存当前编辑的对象。如果撤销就回原来的值
-                T oldobj = CloneHelper.DeepCloneObject<T>(EditEntity);
+                T oldobj = CloneHelper.DeepCloneObject_maxnew<T>(EditEntity);
                 command.UndoOperation = delegate ()
                 {
                     //Undo操作会执行到的代码 意思是如果取消反审，内存中反审核的数据要变为空白（之前的样子）

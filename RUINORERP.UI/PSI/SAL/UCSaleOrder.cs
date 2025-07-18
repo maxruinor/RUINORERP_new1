@@ -107,7 +107,7 @@ namespace RUINORERP.UI.PSI.SAL
 
             RevertCommand command = new RevertCommand();
             //缓存当前编辑的对象。如果撤销就回原来的值
-            tb_SaleOrder oldobj = CloneHelper.DeepCloneObject<tb_SaleOrder>(EditEntity);
+            tb_SaleOrder oldobj = CloneHelper.DeepCloneObject_maxnew<tb_SaleOrder>(EditEntity);
             command.UndoOperation = delegate ()
             {
                 //Undo操作会执行到的代码 意思是如果退审核，内存中审核的数据要变为空白（之前的样子）
@@ -1586,7 +1586,7 @@ using var binder = new UIStateBinder(..., customEvaluator);
 
             RevertCommand command = new RevertCommand();
             //缓存当前编辑的对象。如果撤销就回原来的值
-            tb_SaleOrder oldobj = CloneHelper.DeepCloneObject<tb_SaleOrder>(EditEntity);
+            tb_SaleOrder oldobj = CloneHelper.DeepCloneObject_maxnew<tb_SaleOrder>(EditEntity);
             command.UndoOperation = delegate ()
             {
                 //Undo操作会执行到的代码 意思是如果退审核，内存中审核的数据要变为空白（之前的样子）

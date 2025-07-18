@@ -100,7 +100,7 @@ namespace RUINORERP.UI.BI
                 frmadd.BindData(base.bindingSourceList.Current as BaseEntity);
                 //缓存当前编辑的对象。如果撤销就回原来的值
                 // object obj = (base.bindingSourceList.Current as tb_LocationType).Clone();
-                object oldobj = CloneHelper.DeepCloneObject<tb_FM_Subject>(base.bindingSourceList.Current as tb_FM_Subject);
+                object oldobj = CloneHelper.DeepCloneObject_maxnew<tb_FM_Subject>(base.bindingSourceList.Current as tb_FM_Subject);
                 int UpdateIndex = base.bindingSourceList.Position;
                 command.UndoOperation = delegate ()
                 {

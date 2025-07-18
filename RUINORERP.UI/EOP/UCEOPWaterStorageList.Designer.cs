@@ -1,6 +1,6 @@
 ﻿namespace RUINORERP.UI.EOP
 {
-    partial class UCEOPWaterStorageRegisterList
+    partial class UCEOPWaterStorageList
     {
         /// <summary> 
         /// 必需的设计器变量。

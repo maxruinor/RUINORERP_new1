@@ -1003,7 +1003,7 @@ namespace RUINORERP.UI.PSI.PUR
             {
                 EditEntity.CloseCaseOpinions = frm.txtOpinion.Text;
                 RevertCommand command = new RevertCommand();
-                tb_PurOrder oldobj = CloneHelper.DeepCloneObject<tb_PurOrder>(EditEntity);
+                tb_PurOrder oldobj = CloneHelper.DeepCloneObject_maxnew<tb_PurOrder>(EditEntity);
                 command.UndoOperation = delegate ()
                 {
                     CloneHelper.SetValues<tb_PurOrder>(EditEntity, oldobj);

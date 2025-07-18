@@ -550,7 +550,7 @@ namespace RUINORERP.UI.BaseForm
                 bty.ActionStatus = ActionStatus.加载;
                 frmadd.BindData(bty);
                 //缓存当前编辑的对象。如果撤销就回原来的值
-                T oldobj = CloneHelper.DeepCloneObject<T>((T)bindingSourceList.Current);
+                T oldobj = CloneHelper.DeepCloneObject_maxnew<T>((T)bindingSourceList.Current);
                 int UpdateIndex = bindingSourceList.Position;
                 command.UndoOperation = delegate ()
                 {
@@ -649,7 +649,7 @@ namespace RUINORERP.UI.BaseForm
                 //缓存当前编辑的对象。如果撤销就回原来的值
                 // object obj = (base.bindingSourceList.Current as tb_LocationType).Clone();
                 //tb_LocationType oldobj = CloneHelper.DeepCloneObject<tb_LocationType>(bindingSourceList.Current as tb_LocationType);
-                BaseEntity oldobj = CloneHelper.DeepCloneObject<BaseEntity>(bindingSourceList.Current as BaseEntity);
+                BaseEntity oldobj = CloneHelper.DeepCloneObject_maxnew<BaseEntity>(bindingSourceList.Current as BaseEntity);
                 int UpdateIndex = bindingSourceList.Position;
                 command.UndoOperation = delegate ()
                 {

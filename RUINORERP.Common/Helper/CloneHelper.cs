@@ -262,7 +262,12 @@ namespace RUINORERP.Common.Helper
             return instance;
         }
 
-
+        /// <summary>
+        /// 2025-07-18验证，无法复制二级的子集合属性 用：DeepCloneObject_maxnew 可以
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="source"></param>
+        /// <returns></returns>
         public static T DeepCloneObject<T>(this T source)
         {
             if (source == null)

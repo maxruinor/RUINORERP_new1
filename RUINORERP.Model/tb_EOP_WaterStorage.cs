@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：07/17/2025 16:59:42
+// 时间：07/18/2025 10:33:40
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -22,15 +22,15 @@ namespace RUINORERP.Model
     /// </summary>
     [Serializable()]
     [Description("蓄水登记表")]
-    [SugarTable("tb_EOP_WaterStorageRegister")]
-    public partial class tb_EOP_WaterStorageRegister: BaseEntity, ICloneable
+    [SugarTable("tb_EOP_WaterStorage")]
+    public partial class tb_EOP_WaterStorage: BaseEntity, ICloneable
     {
-        public tb_EOP_WaterStorageRegister()
+        public tb_EOP_WaterStorage()
         {
             
             if (!PK_FK_ID_Check())
             {
-                throw new Exception("蓄水登记表tb_EOP_WaterStorageRegister" + "外键ID与对应主主键名称不一致。请修改数据库");
+                throw new Exception("蓄水登记表tb_EOP_WaterStorage" + "外键ID与对应主主键名称不一致。请修改数据库");
             }
         }
 
@@ -329,7 +329,7 @@ return rs;
 
         public override object Clone()
         {
-            tb_EOP_WaterStorageRegister loctype = (tb_EOP_WaterStorageRegister)this.MemberwiseClone(); //创建当前对象的浅拷贝。
+            tb_EOP_WaterStorage loctype = (tb_EOP_WaterStorage)this.MemberwiseClone(); //创建当前对象的浅拷贝。
             return loctype;
         }
     }

@@ -137,7 +137,7 @@ namespace RUINORERP.UI.ASS
                     }
                 }
 
-                
+
 
             }
             base.LoadRelatedDataToDropDownItems();
@@ -264,6 +264,16 @@ namespace RUINORERP.UI.ASS
             }
             EditEntity = entity;
 
+            ////提交后才能复核数量  ，暂时不限制。只是审核时。判断 复核数量不能为0.如果两个不相等。则提示
+            //if (EditEntity.DataStatus == (int)DataStatus.草稿)
+            //{
+            //    sgd.DefineColumns.SetCol_ReadOnly<tb_AS_AfterSaleApplyDetail>(c => c.ConfirmedQuantity);
+            //}
+            //else
+            //{
+            //    sgd.DefineColumns.SetCol_ReadOnly<tb_AS_AfterSaleApplyDetail>(c => c.ConfirmedQuantity, false);
+            //}
+
             DataBindingHelper.BindData4TextBox<tb_AS_AfterSaleApply>(entity, t => t.ASApplyNo, txtASApplyNo, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4Cmb<tb_CustomerVendor>(entity, k => k.CustomerVendor_ID, v => v.CVName, cmbCustomerVendor_ID);
             DataBindingHelper.BindData4CmbByEnum<tb_AS_AfterSaleApply>(entity, k => k.Priority, typeof(Priority), cmbPriority, true);
@@ -353,6 +363,7 @@ namespace RUINORERP.UI.ASS
                 //权限允许
                 if ((true && entity.DataStatus == (int)DataStatus.草稿) || (true && entity.DataStatus == (int)DataStatus.新建))
                 {
+
                     if (s2.PropertyName == entity.GetPropertyName<tb_AS_AfterSaleApply>(c => c.ExpenseAllocationMode) && entity.ExpenseAllocationMode.HasValue && entity.ExpenseAllocationMode.Value > 0)
                     {
                         if (entity.ExpenseAllocationMode.Value == (int)ExpenseAllocationMode.单一承担)
@@ -492,6 +503,9 @@ namespace RUINORERP.UI.ASS
             //如果库位为只读  暂时只会显示 ID
             //listCols.SetCol_ReadOnly<ProductSharePart>(c => c.Location_ID);
             listCols.SetCol_ReadOnly<tb_AS_AfterSaleApplyDetail>(c => c.DeliveredQty);
+
+
+
 
             sgd = new SourceGridDefine(grid1, listCols, true);
             sgd.GridMasterData = EditEntity;
@@ -748,7 +762,26 @@ namespace RUINORERP.UI.ASS
         }
 
 
+        protected async override Task<ReviewResult> Review()
+        {
+            ReviewResult reviewResult = new ReviewResult();
+            if (EditEntity.TotalConfirmedQuantity == 0)
+            {
+                MessageBox.Show("复核数量不能为零，请录入正确的数量。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return reviewResult;
+            }
 
+            if (EditEntity.TotalConfirmedQuantity != EditEntity.TotalInitialQuantity)
+            {
+                if (MessageBox.Show("登记数量和复核数量不相等，系统将以复核数量为准，确定要审核吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Information) == DialogResult.Yes)
+                {
+                    reviewResult = await base.Review();
+                }
+                return reviewResult;
+            }
+            reviewResult = await base.Review();
+            return reviewResult;
+        }
 
 
 

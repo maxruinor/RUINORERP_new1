@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：07/17/2025 16:59:41
+// 时间：07/18/2025 10:33:39
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -18,7 +18,7 @@ namespace RUINORERP.IServices
     /// <summary>
     /// 蓄水登记表
     /// </summary>
-    public partial interface Itb_EOP_WaterStorageRegisterServices : IBaseServices<tb_EOP_WaterStorageRegister>
+    public partial interface Itb_EOP_WaterStorageServices : IBaseServices<tb_EOP_WaterStorage>
     {
       
     }

@@ -476,7 +476,7 @@ namespace RUINORERP.UI.Common
                                 && !w.BelongingObjectType.Name.Contains(typeof(ProductSharePart).Name)).FirstOrDefault();
                                 if (defineColumnItem != null)
                                 {
-                                    defineColumnItem.SetCol_ReadOnly(item.tb_fieldinfo.FieldName);
+                                    defineColumnItem.SetCol_ReadOnly(item.tb_fieldinfo.FieldName, true);
                                 }
                             }
 
@@ -1650,7 +1650,7 @@ namespace RUINORERP.UI.Common
                 }
             }
         }
-      
+
         /*
         public static void ControlButton(tb_MenuInfo CurMenuInfo, ToolStripSplitButton btnItem)
         {

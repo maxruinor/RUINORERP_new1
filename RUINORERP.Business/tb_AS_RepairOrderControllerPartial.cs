@@ -191,6 +191,11 @@ namespace RUINORERP.Business
                 _unitOfWorkManage.BeginTran();
 
                 // 后面可以优化  需求 请求这种。
+                if (entity.tb_as_aftersaleapply == null && entity.ASApplyID > 0)
+                {
+
+                }
+
 
                 entity.RepairStatus = (int)RepairStatus.待维修;
                 //这部分是否能提出到上一级公共部分？

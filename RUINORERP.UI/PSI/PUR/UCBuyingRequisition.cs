@@ -592,7 +592,7 @@ namespace RUINORERP.UI.PSI.PUR
             {
                 EditEntity.CloseCaseOpinions = frm.txtOpinion.Text;
                 RevertCommand command = new RevertCommand();
-                tb_BuyingRequisition oldobj = CloneHelper.DeepCloneObject<tb_BuyingRequisition>(EditEntity);
+                tb_BuyingRequisition oldobj = CloneHelper.DeepCloneObject_maxnew<tb_BuyingRequisition>(EditEntity);
                 command.UndoOperation = delegate ()
                 {
                     CloneHelper.SetValues<tb_BuyingRequisition>(EditEntity, oldobj);

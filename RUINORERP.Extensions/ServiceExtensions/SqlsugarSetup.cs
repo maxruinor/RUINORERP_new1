@@ -57,19 +57,30 @@ namespace RUINORERP.Extensions
             var memoryCache = new MemoryCache(new MemoryCacheOptions());
             SqlSugarScope sqlSugar = new SqlSugarScope(new ConnectionConfig()
             {
+
                 DbType = SqlSugar.DbType.SqlServer,
                 ConnectionString = connectString,
                 IsAutoCloseConnection = true,
                 InitKeyType = InitKeyType.Attribute,//就改这一行
-
+              
                 ConfigureExternalServices = new ConfigureExternalServices()
                 {
                     DataInfoCacheService = new SqlSugarMemoryCacheService(memoryCache),
                 },
-                MoreSettings = new ConnMoreSettings() { IsWithNoLockQuery = true, DisableNvarchar = true }
+
+                MoreSettings = new ConnMoreSettings() 
+                { 
+                    IsWithNoLockQuery = true, 
+                    DisableNvarchar = true,
+                    DbMinDate=DateTime.MinValue ,
+                    IsAutoRemoveDataCache=true,
+                    
+                }
             },
                 db =>
                 {
+                    db.Ado.CommandTimeOut= 30;//单位秒
+                    
                     //单例参数配置，所有上下文生效       
                     db.Aop.OnLogExecuting = (sql, pars) =>
                         {
@@ -208,12 +219,7 @@ namespace RUINORERP.Extensions
             AppContextData.Db = sqlSugar;
         }
 
-
-        #region
-
-
-
-        #endregion
+ 
 
         public static void AddSqlsugarSetup(this IServiceCollection services,
             IConfiguration configuration, string dbName = "ConnectString")
@@ -229,6 +235,8 @@ namespace RUINORERP.Extensions
                 {
                     DataInfoCacheService = new SqlSugarMemoryCacheService(memoryCache)
                 }
+                ,
+               
 
             },
                 db =>

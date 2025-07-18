@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：07/17/2025 16:59:40
+// 时间：07/18/2025 10:33:39
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -26,22 +26,29 @@ using System.Linq;
 using RUINOR.Core;
 using RUINORERP.Common.Helper;
 
-
-namespace RUINORERP.Business.Processor
+namespace RUINORERP.Business
 {
     /// <summary>
     /// 蓄水登记表
     /// </summary>
-    public partial class tb_EOP_WaterStorageRegisterProcessor:BaseProcessor 
+    public partial class tb_EOP_WaterStorageController<T>:BaseController<T> where T : class
     {
-       
-        public tb_EOP_WaterStorageRegisterProcessor(ILogger<tb_EOP_WaterStorageRegisterProcessor> logger, IUnitOfWorkManage unitOfWorkManage, ApplicationContext appContext = null): base(logger, unitOfWorkManage, appContext)
+
+
+        /// <summary>
+        /// 某字段是否存在
+        /// </summary>
+        /// <param name="exp">e => e.ModeuleName == mod.ModeuleName</param>
+        /// <returns></returns>
+        public T ExistFieldValueWithReturn(Expression<Func<T, bool>> exp)
         {
-            _logger = logger;
-           _unitOfWorkManage = unitOfWorkManage;
-            _appContext = appContext;
+            return _unitOfWorkManage.GetDbClient().Queryable<T>()
+                .Where(exp)
+                .First();
         }
-        
+
+
+
     }
 }
 

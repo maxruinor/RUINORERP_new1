@@ -207,7 +207,7 @@ namespace RUINORERP.UI.UCSourceGrid
         /// <typeparam name="T"></typeparam>
         /// <param name="cols"></param>
         /// <param name="colNameExp"></param>
-        public static void SetCol_ReadOnly<T>(this List<SGDefineColumnItem> cols, Expression<Func<T, object>> colNameExp)
+        public static void SetCol_ReadOnly<T>(this List<SGDefineColumnItem> cols, Expression<Func<T, object>> colNameExp, bool readOnly = true)
         {
             MemberInfo minfo = colNameExp.GetMemberInfo();
             foreach (var item in cols)
@@ -218,7 +218,7 @@ namespace RUINORERP.UI.UCSourceGrid
                 }
                 if (item.BelongingObjectType.Name == typeof(T).Name)
                 {
-                    item.SetCol_ReadOnly(minfo.Name);
+                    item.SetCol_ReadOnly(minfo.Name, readOnly);
                 }
             }
         }
@@ -452,11 +452,11 @@ namespace RUINORERP.UI.UCSourceGrid
         }
         */
 
-        public static void SetCol_ReadOnly(this SGDefineColumnItem col, string colName)
+        public static void SetCol_ReadOnly(this SGDefineColumnItem col, string colName,bool readOnly = true)
         {
             if (col.ColName == colName)
             {
-                col.ReadOnly = true;
+                col.ReadOnly = readOnly;
                 if (col.ParentGridDefine != null)
                 {
                     foreach (var item in col.ParentGridDefine.grid.Rows)
@@ -469,7 +469,7 @@ namespace RUINORERP.UI.UCSourceGrid
 
                         if (col.EditorForColumn != null)
                         {
-                            col.EditorForColumn.EnableEdit = false;
+                            col.EditorForColumn.EnableEdit = !readOnly;
                         }
                     }
                 }

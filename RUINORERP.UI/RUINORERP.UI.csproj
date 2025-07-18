@@ -794,17 +794,17 @@
     <Compile Include="CRM\UCTargetCustomerList.Designer.cs">
       <DependentUpon>UCTargetCustomerList.cs</DependentUpon>
     </Compile>
-    <Compile Include="EOP\UCEOPWaterStorageRegisterEdit.cs">
+    <Compile Include="EOP\UCEOPWaterStorageEdit.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="EOP\UCEOPWaterStorageRegisterEdit.Designer.cs">
-      <DependentUpon>UCEOPWaterStorageRegisterEdit.cs</DependentUpon>
+    <Compile Include="EOP\UCEOPWaterStorageEdit.Designer.cs">
+      <DependentUpon>UCEOPWaterStorageEdit.cs</DependentUpon>
     </Compile>
-    <Compile Include="EOP\UCEOPWaterStorageRegisterList.cs">
+    <Compile Include="EOP\UCEOPWaterStorageList.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="EOP\UCEOPWaterStorageRegisterList.Designer.cs">
-      <DependentUpon>UCEOPWaterStorageRegisterList.cs</DependentUpon>
+    <Compile Include="EOP\UCEOPWaterStorageList.Designer.cs">
+      <DependentUpon>UCEOPWaterStorageList.cs</DependentUpon>
     </Compile>
     <Compile Include="FM\FMBase\UCPaymentRecordStatistics.cs">
       <SubType>UserControl</SubType>
@@ -3737,11 +3737,11 @@
     <EmbeddedResource Include="CRM\UCLeadsList.resx">
       <DependentUpon>UCLeadsList.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="EOP\UCEOPWaterStorageRegisterEdit.resx">
-      <DependentUpon>UCEOPWaterStorageRegisterEdit.cs</DependentUpon>
+    <EmbeddedResource Include="EOP\UCEOPWaterStorageEdit.resx">
+      <DependentUpon>UCEOPWaterStorageEdit.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="EOP\UCEOPWaterStorageRegisterList.resx">
-      <DependentUpon>UCEOPWaterStorageRegisterList.cs</DependentUpon>
+    <EmbeddedResource Include="EOP\UCEOPWaterStorageList.resx">
+      <DependentUpon>UCEOPWaterStorageList.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="FM\FMBase\UCPaymentRecordStatistics.resx">
       <DependentUpon>UCPaymentRecordStatistics.cs</DependentUpon>

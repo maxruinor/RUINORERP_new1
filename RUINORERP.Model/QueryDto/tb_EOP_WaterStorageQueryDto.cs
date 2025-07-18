@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：07/17/2025 16:59:41
+// 时间：07/18/2025 10:33:40
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -22,10 +22,10 @@ namespace RUINORERP.Model.QueryDto
     /// 蓄水登记表
     /// </summary>
     [Serializable()]
-    [SugarTable("tb_EOP_WaterStorageRegister")]
-    public partial class tb_EOP_WaterStorageRegisterQueryDto:BaseEntityDto
+    [SugarTable("tb_EOP_WaterStorage")]
+    public partial class tb_EOP_WaterStorageQueryDto:BaseEntityDto
     {
-        public tb_EOP_WaterStorageRegisterQueryDto()
+        public tb_EOP_WaterStorageQueryDto()
         {
 
         }

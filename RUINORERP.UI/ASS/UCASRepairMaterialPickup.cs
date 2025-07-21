@@ -39,6 +39,7 @@ using System.Web.WebSockets;
 using RUINORERP.Common.Extensions;
 using RUINORERP.Business.CommService;
 using RUINORERP.Model.CommonModel;
+using RUINORERP.Global.EnumExt;
 
 namespace RUINORERP.UI.ASS
 {
@@ -190,9 +191,9 @@ namespace RUINORERP.UI.ASS
                 //如果是制令单引入变化则加载明细及相关数据
                 if ((entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改))
                 {
-                    if (entity.RMRID > 0 && s2.PropertyName == entity.GetPropertyName<tb_AS_RepairMaterialPickup>(c => c.RMRID))
+                    if (entity.RepairOrderID > 0 && s2.PropertyName == entity.GetPropertyName<tb_AS_RepairMaterialPickup>(c => c.RepairOrderID))
                     {
-                        LoadChildItems(entity.RMRID);
+                        LoadChildItems(entity.RepairOrderID);
                     }
 
                     ToolBarEnabledControl(entity);
@@ -208,8 +209,8 @@ namespace RUINORERP.UI.ASS
                 //影响明细的数量
                 if ((entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改))
                 {
-                    
-                  
+
+
                 }
                 //显示 打印状态 如果是草稿状态 不显示打印
                 if ((DataStatus)EditEntity.DataStatus != DataStatus.草稿)
@@ -235,8 +236,8 @@ namespace RUINORERP.UI.ASS
 
             //先绑定这个。InitFilterForControl 这个才生效
             DataBindingHelper.BindData4TextBox<tb_AS_RepairMaterialPickup>(entity, v => v.RepairOrderNo, txtRepairOrderNo, BindDataType4TextBox.Text, true);
-           
-          
+
+
             BaseProcessor basePro = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_AS_RepairOrder).Name + "Processor");
             QueryFilter queryFilter = basePro.GetQueryFilter();
 
@@ -244,11 +245,12 @@ namespace RUINORERP.UI.ASS
             //TODO 
             var lambdaOrder = Expressionable.Create<tb_AS_RepairOrder>()
              .And(t => t.DataStatus == (int)DataStatus.确认)
+             .And(t => t.RepairStatus == (int)RepairStatus.维修中)//才可以领料
               .And(t => t.isdeleted == false)
              .ToExpression();//注意 这一句 不能少
             //如果有限制则设置一下 但是注意 不应该在这设置，灵活的应该是在调用层设置
             queryFilter.SetFieldLimitCondition(lambdaOrder);
-          
+
             ControlBindingHelper.ConfigureControlFilter<tb_AS_RepairMaterialPickup, tb_AS_RepairOrder>(entity, txtRepairOrderNo, t => t.RepairOrderNo,
            f => f.RepairOrderNo, queryFilter, a => a.RepairOrderID, b => b.RepairOrderID, null, false);
 
@@ -448,7 +450,7 @@ namespace RUINORERP.UI.ASS
 
                 if (NeedValidated && detailentity.Sum(c => c.ActualSentQty) == 0)
                 {
-                    MessageBox.Show("明细总数量不为能0！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    MessageBox.Show("明细中，实发总数量不为能0！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     return false;
                 }
 
@@ -497,7 +499,7 @@ namespace RUINORERP.UI.ASS
                 {
                     EditEntity.ApprovalStatus = (int)ApprovalStatus.未审核;
                 }
-                
+
 
                 ReturnMainSubResults<tb_AS_RepairMaterialPickup> SaveResult = new ReturnMainSubResults<tb_AS_RepairMaterialPickup>();
                 if (NeedValidated)

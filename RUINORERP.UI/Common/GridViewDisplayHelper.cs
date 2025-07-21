@@ -150,6 +150,14 @@ namespace RUINORERP.UI.Common
                 {
                     FixedDictionaryMappings.Add(new FixedDictionaryMapping(_type.Name, nameof(ReminderPriority), Common.CommonHelper.Instance.GetKeyValuePairs(typeof(ReminderPriority))));
                 }
+                else if (prop.Name == nameof(PlatformType))
+                {
+                    FixedDictionaryMappings.Add(new FixedDictionaryMapping(_type.Name, nameof(PlatformType), Common.CommonHelper.Instance.GetKeyValuePairs(typeof(PlatformType))));
+                }
+                else if (prop.Name == nameof(RepairStatus))
+                {
+                    FixedDictionaryMappings.Add(new FixedDictionaryMapping(_type.Name, nameof(RepairStatus), Common.CommonHelper.Instance.GetKeyValuePairs(typeof(RepairStatus))));
+                }
                 else if (prop.Name == nameof(PaymentStatus))
                 {
                     FixedDictionaryMappings.Add(new FixedDictionaryMapping(_type.Name, nameof(PaymentStatus), Common.CommonHelper.Instance.GetKeyValuePairs(typeof(PaymentStatus))));

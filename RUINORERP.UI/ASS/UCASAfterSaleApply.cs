@@ -222,7 +222,7 @@ namespace RUINORERP.UI.ASS
 
                 return;
             }
-
+            cmbASProcessStatus.Enabled = false;
             if (entity != null)
             {
                 if (entity.ASApplyID > 0)
@@ -273,7 +273,7 @@ namespace RUINORERP.UI.ASS
             //{
             //    sgd.DefineColumns.SetCol_ReadOnly<tb_AS_AfterSaleApplyDetail>(c => c.ConfirmedQuantity, false);
             //}
-
+            DataBindingHelper.BindData4CmbByEntity<tb_Location>(entity, k => k.Location_ID, cmbLocation_ID);
             DataBindingHelper.BindData4TextBox<tb_AS_AfterSaleApply>(entity, t => t.ASApplyNo, txtASApplyNo, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4Cmb<tb_CustomerVendor>(entity, k => k.CustomerVendor_ID, v => v.CVName, cmbCustomerVendor_ID);
             DataBindingHelper.BindData4CmbByEnum<tb_AS_AfterSaleApply>(entity, k => k.Priority, typeof(Priority), cmbPriority, true);
@@ -358,11 +358,23 @@ namespace RUINORERP.UI.ASS
                     return;
                 }
 
-
-
                 //权限允许
                 if ((true && entity.DataStatus == (int)DataStatus.草稿) || (true && entity.DataStatus == (int)DataStatus.新建))
                 {
+                    if (s2.PropertyName == entity.GetPropertyName<tb_AS_AfterSaleApply>(c => c.Location_ID))
+                    {
+                        if (EditEntity.Location_ID > 0)
+                        {
+
+                            //明细仓库优先来自于主表，可以手动修改。
+                            sgd.DefineColumns.SetCol_DefaultValue<tb_AS_AfterSaleApplyDetail>(c => c.Location_ID, EditEntity.Location_ID);
+                            if (entity.tb_AS_AfterSaleApplyDetails != null)
+                            {
+                                entity.tb_AS_AfterSaleApplyDetails.ForEach(c => c.Location_ID = EditEntity.Location_ID);
+                                sgh.SetCellValue<tb_AS_AfterSaleApplyDetail>(sgd, colNameExp => colNameExp.Location_ID, EditEntity.Location_ID);
+                            }
+                        }
+                    }
 
                     if (s2.PropertyName == entity.GetPropertyName<tb_AS_AfterSaleApply>(c => c.ExpenseAllocationMode) && entity.ExpenseAllocationMode.HasValue && entity.ExpenseAllocationMode.Value > 0)
                     {
@@ -465,6 +477,32 @@ namespace RUINORERP.UI.ASS
             }
             base.BindData(entity);
         }
+        private void Grid1_Enter(object sender, EventArgs e)
+        {
+            if (EditEntity == null)
+            {
+                return;
+            }
+
+            StringBuilder sb = new StringBuilder();
+            Control firstInvalidControl = null;
+
+            if (EditEntity.Location_ID == 0 || EditEntity.Location_ID == -1)
+            {
+                sb.AppendLine("请选择【售后暂存仓库】。");
+                firstInvalidControl = cmbLocation_ID;
+            }
+
+            if (sb.Length > 0)
+            {
+                MessageBox.Show(sb.ToString(), "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                if (firstInvalidControl != null)
+                {
+                    firstInvalidControl.Focus();
+                }
+            }
+        }
+
 
 
         // 在基类中定义静态属性
@@ -477,6 +515,8 @@ namespace RUINORERP.UI.ASS
         List<View_ProdDetail> list = new List<View_ProdDetail>();
         private void UcSaleOrderEdit_Load(object sender, EventArgs e)
         {
+            grid1.Enter += Grid1_Enter;
+
             var sw = new Stopwatch();
             sw.Start();
 
@@ -491,7 +531,8 @@ namespace RUINORERP.UI.ASS
             listCols.SetCol_NeverVisible<tb_AS_AfterSaleApplyDetail>(c => c.ProdDetailID);
             listCols.SetCol_NeverVisible<ProductSharePart>(c => c.Rack_ID);
             listCols.SetCol_NeverVisible<ProductSharePart>(c => c.VendorModelCode);
-
+            listCols.SetCol_NeverVisible<ProductSharePart>(c => c.Location_ID);
+        
             if (!AppContext.SysConfig.UseBarCode)
             {
                 listCols.SetCol_NeverVisible<ProductSharePart>(c => c.BarCode);
@@ -528,7 +569,9 @@ namespace RUINORERP.UI.ASS
 
 
             //公共到明细的映射 源 ，左边会隐藏
-            sgh.SetPointToColumnPairs<ProductSharePart, tb_AS_AfterSaleApplyDetail>(sgd, f => f.Location_ID, t => t.Location_ID);
+            //sgh.SetPointToColumnPairs<ProductSharePart, tb_AS_AfterSaleApplyDetail>(sgd, f => f.Location_ID, t => t.Location_ID);
+            //设置了默认值，上面的不能启用，不然会将产品的库位赋值过来
+            listCols.SetCol_ReadOnly<tb_AS_AfterSaleApplyDetail>(c => c.Location_ID, true);
             sgh.SetPointToColumnPairs<ProductSharePart, tb_AS_AfterSaleApplyDetail>(sgd, f => f.prop, t => t.property);
             sgh.SetPointToColumnPairs<ProductSharePart, tb_AS_AfterSaleApplyDetail>(sgd, f => f.Model, t => t.CustomerPartNo, false);
 

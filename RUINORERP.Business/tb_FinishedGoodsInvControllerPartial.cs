@@ -451,15 +451,9 @@ namespace RUINORERP.Business
                 entity.ApprovalStatus = (int)ApprovalStatus.已审核;
                 BusinessHelper.Instance.ApproverEntity(entity);
                 //只更新指定列
-                // var result = _unitOfWorkManage.GetDbClient().Updateable<tb_Stocktake>(entity).UpdateColumns(it => new { it.DataStatus, it.ApprovalOpinions }).ExecuteCommand();
-                int counter = await _unitOfWorkManage.GetDbClient().Updateable<tb_FinishedGoodsInv>(entity).ExecuteCommandAsync();
-                if (counter > 0)
-                {
-                    if (AuthorizeController.GetShowDebugInfoAuthorization(_appContext))
-                    {
-                        _logger.Info(entity.DeliveryBillNo + "==>" + "缴库单的状态更新成功");
-                    }
-                }
+                var result = await _unitOfWorkManage.GetDbClient().Updateable(entity)
+                            .UpdateColumns(it => new { it.DataStatus, it.ApprovalOpinions, it.ApprovalResults, it.ApprovalStatus, it.Approver_at, it.Approver_by })
+                            .ExecuteCommandHasChangeAsync();
 
                 // 注意信息的完整性
                 _unitOfWorkManage.CommitTran();
@@ -543,6 +537,7 @@ namespace RUINORERP.Business
                     .AsNavQueryable()//加这个前面,超过三级在前面加这一行，并且第四级无VS智能提示，但是可以用
                     .Includes(b => b.tb_proddetail, c => c.tb_prod)
                     .Includes(a => a.tb_FinishedGoodsInvs, b => b.tb_FinishedGoodsInvDetails)
+                    .Includes(b => b.tb_MaterialRequisitions, c => c.tb_MaterialRequisitionDetails)
                     .Where(c => c.MOID == entity.MOID)
                     .Single();
                 }
@@ -577,12 +572,19 @@ namespace RUINORERP.Business
                     {
                         manufacturingOrder.DataStatus = (int)DataStatus.确认;
                         manufacturingOrder.CloseCaseOpinions = $"缴库单:{entity.DeliveryBillNo}->制令单:{manufacturingOrder.MONO},缴库单反审时，生产数量不等于交付数量，取消自动结案";
-                        entity.tb_manufacturingorder.tb_MaterialRequisitions.Where(c => entity.ApprovalStatus == (int)ApprovalStatus.已审核).ToList().ForEach(c => c.DataStatus = (int)DataStatus.确认);
-                        int pomrCounter = await _unitOfWorkManage.GetDbClient().Updateable<tb_MaterialRequisition>(entity.tb_manufacturingorder.tb_MaterialRequisitions).ExecuteCommandAsync();
+
+                        //缴库的反审核  要不要影响领取料呢？
+                         entity.tb_manufacturingorder.tb_MaterialRequisitions.Where(c => entity.ApprovalStatus == (int)ApprovalStatus.已审核).ToList().ForEach(c => c.DataStatus = (int)DataStatus.确认);
+                         int pomrCounter = await _unitOfWorkManage.GetDbClient()
+                            .Updateable<tb_MaterialRequisition>(entity.tb_manufacturingorder.tb_MaterialRequisitions)
+                            .UpdateColumns(it => new { it.DataStatus, it.ApprovalOpinions })
+                            .ExecuteCommandAsync();
                     }
 
                     //更新制令单的已交数量
-                    int updatecounter = await _unitOfWorkManage.GetDbClient().Updateable<tb_ManufacturingOrder>(manufacturingOrder).ExecuteCommandAsync();
+                    int updatecounter = await _unitOfWorkManage.GetDbClient().Updateable<tb_ManufacturingOrder>(manufacturingOrder)
+                         .UpdateColumns(it => new { it.DataStatus, it.CloseCaseOpinions,it.QuantityDelivered })
+                        .ExecuteCommandAsync();
                     if (updatecounter == 0)
                     {
 
@@ -638,8 +640,10 @@ namespace RUINORERP.Business
                 entity.ApprovalStatus = (int)ApprovalStatus.未审核;
                 BusinessHelper.Instance.ApproverEntity(entity);
                 //只更新指定列
-                // var result = _unitOfWorkManage.GetDbClient().Updateable<tb_Stocktake>(entity).UpdateColumns(it => new { it.DataStatus, it.ApprovalOpinions }).ExecuteCommand();
-                await _unitOfWorkManage.GetDbClient().Updateable<tb_FinishedGoodsInv>(entity).ExecuteCommandAsync();
+                //只更新指定列
+                var result = await _unitOfWorkManage.GetDbClient().Updateable(entity)
+                                    .UpdateColumns(it => new { it.DataStatus, it.ApprovalOpinions, it.ApprovalResults, it.ApprovalStatus, it.Approver_at, it.Approver_by })
+                                    .ExecuteCommandHasChangeAsync();
                 _unitOfWorkManage.CommitTran();
                 rs.ReturnObject = entity as T;
                 rs.Succeeded = true;

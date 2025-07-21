@@ -45,6 +45,7 @@ using RUINORERP.Global;
 using RUINORERP.Business.Processor;
 using FluentValidation;
 using RUINORERP.Business.Security;
+using RUINORERP.Business.CommService;
 
 
 
@@ -409,6 +410,7 @@ public IHost CslaDIPortBackup()
             .AsImplementedInterfaces()
             .InstancePerLifetimeScope()
             .EnableInterfaceInterceptors().InterceptedBy(typeof(BaseDataCacheAOP));
+ 
 
 
             builder.Populate(Services);//将自带的也注入到autofac
@@ -588,6 +590,15 @@ public IHost CslaDIPortBackup()
             services.AddSingleton<ILoggerService, Log4NetService>();
             services.AddSingleton<IAuthorizationService, AuthorizationService>();
             services.AddSingleton<IAuthenticationService, AuthenticationService>();
+
+            // 注册审计日志服务
+            services.AddSingleton<IAuditLogService, AuditLogService>();
+            // 注册审计日志服务
+            services.AddSingleton<IFMAuditLogService, FMAuditLogService>();
+
+
+
+
 
             //services.AddScoped(typeof(UserControl));
             //services.AddScoped(typeof(BaseListWithTree));

@@ -45,20 +45,20 @@ namespace Krypton.Toolkit
         {
             _searchTimer = new System.Windows.Forms.Timer();
             _searchTimer.Interval = _searchDelay; // 300毫秒延迟
+
             _searchTimer.Tick += (s, e) =>
             {
                 _searchTimer.Stop();
                 string searchText = _comboBox.Text;
                 ApplySort(searchText);
             };
-
         }
 
 
-        private int _searchDelay = 300; // 默认延迟300ms
+        private int _searchDelay = 500; // 默认延迟300ms
         [Category("Behavior")]
         [Description("搜索延迟时间(毫秒)")]
-        [DefaultValue(300)]
+        [DefaultValue(500)]
         public int SearchDelay
         {
             get => _searchDelay;
@@ -76,7 +76,7 @@ namespace Krypton.Toolkit
         private bool _enableSearch = false;
         [Category("Behavior")]
         [Description("启用模糊搜索功能")]
-        [DefaultValue(true)]
+        [DefaultValue(false)]
         public bool EnableSearch
         {
             get => _enableSearch;
@@ -98,6 +98,11 @@ namespace Krypton.Toolkit
 
         private void ApplySort(string searchText)
         {
+            if (!EnableSearch)
+            {
+                return;
+            }
+
             // 构建智能排序表达式
             // 示例：假设按 "Name" 属性匹配
             string filterExpression = $"{this.DisplayMember}.Contains(\"{searchText}\")";

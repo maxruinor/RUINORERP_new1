@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：07/16/2025 10:05:02
+// 时间：07/19/2025 17:12:29
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -24,7 +24,7 @@ using RUINORERP.UI.Common;
 namespace RUINORERP.UI
 {
     /// <summary>
-    /// 售后申请单 -登记，评估，清单，确认。目标是维修翻新数据编辑
+    /// 售后申请单数据编辑
     /// </summary>
      [MenuAttrAssemblyInfo( "库位编辑", true, UIType.单表数据)]
     public partial class tb_AS_AfterSaleApplyEdit:UserControl
@@ -33,6 +33,7 @@ namespace RUINORERP.UI
      
                          InitializeComponent();
       
+        
         
         
         
@@ -76,7 +77,8 @@ namespace RUINORERP.UI
                      entity.ASApplyNo = txtASApplyNo.Text ;
                        entity.CustomerVendor_ID = Int64.Parse(txtCustomerVendor_ID.Text);
                         entity.CustomerSourceNo = txtCustomerSourceNo.Text ;
-                       entity.Priority = Int32.Parse(txtPriority.Text);
+                       entity.Location_ID = Int64.Parse(txtLocation_ID.Text);
+                        entity.Priority = Int32.Parse(txtPriority.Text);
                         entity.ASProcessStatus = Int32.Parse(txtASProcessStatus.Text);
                         entity.Employee_ID = Int64.Parse(txtEmployee_ID.Text);
                         entity.ProjectGroup_ID = Int64.Parse(txtProjectGroup_ID.Text);
@@ -118,6 +120,7 @@ namespace RUINORERP.UI
                         DataBindingHelper.BindData4TextBox<tb_AS_AfterSaleApply>(entity, t => t.ASApplyNo, txtASApplyNo, BindDataType4TextBox.Text,false);
           // DataBindingHelper.BindData4Cmb<tb_CustomerVendor>(entity, k => k.CustomerVendor_ID, v=>v.XXNAME, cmbCustomerVendor_ID);
            DataBindingHelper.BindData4TextBox<tb_AS_AfterSaleApply>(entity, t => t.CustomerSourceNo, txtCustomerSourceNo, BindDataType4TextBox.Text,false);
+          // DataBindingHelper.BindData4Cmb<tb_Location>(entity, k => k.Location_ID, v=>v.XXNAME, cmbLocation_ID);
            DataBindingHelper.BindData4TextBox<tb_AS_AfterSaleApply>(entity, t => t.Priority, txtPriority, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4TextBox<tb_AS_AfterSaleApply>(entity, t => t.ASProcessStatus, txtASProcessStatus, BindDataType4TextBox.Qty,false);
           // DataBindingHelper.BindData4Cmb<tb_Employee>(entity, k => k.Employee_ID, v=>v.XXNAME, cmbEmployee_ID);

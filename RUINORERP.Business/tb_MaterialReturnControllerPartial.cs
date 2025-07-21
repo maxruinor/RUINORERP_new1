@@ -73,10 +73,7 @@ namespace RUINORERP.Business
                         BusinessHelper.Instance.EditEntity(entity);
                         //只更新指定列
                         var affectedRows = await _unitOfWorkManage.GetDbClient().Updateable<tb_MaterialReturn>(entity).UpdateColumns(it => new { it.DataStatus, it.Modified_by, it.Modified_at }).ExecuteCommandAsync();
-                        //.Where(d => d.ProdBaseID == info.ProdBaseID).ExecuteCommandAsync();
-                        // return affectedRows > 0;
-                        //var result = _unitOfWorkManage.GetDbClient().Updateable<tb_Stocktake>(entity).UpdateColumns(it => new { it.DataStatus, it.ApprovalOpinions }).ExecuteCommand();
-                        //await _unitOfWorkManage.GetDbClient().Updateable<tb_SaleOut>(entity).ExecuteCommandAsync();
+                       
                     }
                 }
 
@@ -375,12 +372,10 @@ namespace RUINORERP.Business
                 entity.ApprovalOpinions = $"由{_appContext.CurUserInfo.UserInfo.UserName}反审核";
                 entity.ApprovalStatus = (int)ApprovalStatus.未审核;
                 BusinessHelper.Instance.ApproverEntity(entity);
+                var result = await _unitOfWorkManage.GetDbClient().Updateable(entity)
+                                                           .UpdateColumns(it => new { it.DataStatus, it.ApprovalOpinions, it.ApprovalResults, it.ApprovalStatus, it.Approver_at, it.Approver_by })
+                                                           .ExecuteCommandHasChangeAsync();
 
-                //后面是不是要做一个审核历史记录表？
-
-                //只更新指定列
-                // var result = _unitOfWorkManage.GetDbClient().Updateable<tb_Stocktake>(entity).UpdateColumns(it => new { it.DataStatus, it.ApprovalOpinions }).ExecuteCommand();
-                await _unitOfWorkManage.GetDbClient().Updateable<tb_MaterialReturn>(entity).ExecuteCommandAsync();
 
 
                 // 注意信息的完整性

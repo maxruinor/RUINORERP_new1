@@ -432,9 +432,8 @@ namespace RUINORERP.Business
                         details[i].Unit_ID = obj.Unit_ID.Value;
                     }
                 }
-                //数量标负数，单价保持正数是标准做法
-                details[i].Quantity = -details[i].Quantity;
-                details[i].TaxLocalAmount = -details[i].TaxLocalAmount;
+                details[i].Quantity = details[i].Quantity;
+                details[i].TaxLocalAmount = details[i].TaxLocalAmount;
                 details[i].LocalPayableAmount = details[i].UnitPrice.Value * details[i].Quantity.Value;
             }
 
@@ -446,7 +445,7 @@ namespace RUINORERP.Business
                  details.Add(new tb_FM_ReceivablePayableDetail
                  {
                      ProdDetailID = null,
-                     property = "人工费",
+                     //property = "人工费",
                      Specifications = "",
                      ExchangeRate = 1,
                      Description = "人工费",
@@ -454,7 +453,7 @@ namespace RUINORERP.Business
                      Quantity = 1,
                      TaxRate = 0.0m, // 假设运费税率为9%
                      TaxLocalAmount = 0,
-                     Summary = "",
+                     Summary = "人工费",
                      LocalPayableAmount = entity.LaborCost
                  });
              }
@@ -1802,7 +1801,7 @@ namespace RUINORERP.Business
             RevertCommand command = new RevertCommand();
             ReturnMainSubResults<T> rsms = new ReturnMainSubResults<T>();
             //缓存当前编辑的对象。如果撤销就回原来的值
-            T oldobj = CloneHelper.DeepCloneObject<T>((T)model);
+            T oldobj = CloneHelper.DeepCloneObject_maxnew<T>((T)model);
 
             tb_FM_ReceivablePayable entity = model as tb_FM_ReceivablePayable;
             command.UndoOperation = delegate ()

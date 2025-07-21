@@ -236,7 +236,7 @@ namespace RUINORERP.UI.UCSourceGrid
             MemberInfo minfo = colNameExp.GetMemberInfo();
             foreach (var item in cols)
             {
-                if (item.BelongingObjectType.Name != typeof(T).Name)
+                if (item.BelongingObjectType == null || item.BelongingObjectType.Name != typeof(T).Name)
                 {
                     continue;
                 }
@@ -288,8 +288,8 @@ namespace RUINORERP.UI.UCSourceGrid
         /// <param name="colNameTargetExp">程序控制要变化的列的值</param>
         /// <param name="NewValue">值内容，可以固定</param>
         /// <param name="valueParameters">可以用这个集合的列取值后点位符替换</param>
-        public static void SetCol_RelatedValue<T>(this List<SGDefineColumnItem> cols, 
-            Expression<Func<T, object>> colNameSourceExp, 
+        public static void SetCol_RelatedValue<T>(this List<SGDefineColumnItem> cols,
+            Expression<Func<T, object>> colNameSourceExp,
             Expression<Func<T, object>> colNameTargetExp, string NewValue, params Expression<Func<T, object>>[] valueParameters)
         {
             MemberInfo minfoSource = colNameSourceExp.GetMemberInfo();
@@ -452,7 +452,7 @@ namespace RUINORERP.UI.UCSourceGrid
         }
         */
 
-        public static void SetCol_ReadOnly(this SGDefineColumnItem col, string colName,bool readOnly = true)
+        public static void SetCol_ReadOnly(this SGDefineColumnItem col, string colName, bool readOnly = true)
         {
             if (col.ColName == colName)
             {

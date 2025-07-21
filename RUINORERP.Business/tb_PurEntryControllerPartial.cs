@@ -71,8 +71,7 @@ namespace RUINORERP.Business
                 var ctrtb_BOM_SDetail = _appContext.GetRequiredService<tb_BOM_SDetailController<tb_BOM_SDetail>>();
                 var ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
                 BillConverterFactory bcf = _appContext.GetRequiredService<BillConverterFactory>();
-                // 开启事务，保证数据一致性
-                _unitOfWorkManage.BeginTran();
+
                 if (entity.PurOrder_ID.HasValue && entity.PurOrder_ID.Value > 0)
                 {
                     //处理采购订单
@@ -87,12 +86,21 @@ namespace RUINORERP.Business
                     if (entity.tb_purorder == null)
                     {
                         rs.ErrorMsg = $"没有找到对应的采购订单!请检查数据后重试！";
-                        _unitOfWorkManage.RollbackTran();
                         rs.Succeeded = false;
                         return rs;
                     }
                     else
                     {
+                        //如果采购订单的供应商和这里入库的供应商不相同，要提示
+                        if (entity.CustomerVendor_ID != entity.tb_purorder.CustomerVendor_ID)
+                        {
+                            rs.Succeeded = false;
+                            rs.ErrorMsg = $"入库供应商和采购订单供应商不同!请检查数据后重试！";
+                            return rs;
+                        }
+
+
+
                         // 检查采购订单状态是否为已确认且审核通过
                         bool isOrderConfirmed = entity.tb_purorder.DataStatus == (int)DataStatus.确认;
                         bool isApproved = entity.tb_purorder.ApprovalResults.HasValue &&
@@ -101,10 +109,12 @@ namespace RUINORERP.Business
                         if (!isOrderConfirmed || !isApproved)
                         {
                             rs.Succeeded = false;
-                            _unitOfWorkManage.RollbackTran();
                             rs.ErrorMsg = $"{entity.tb_purorder.PurOrderNo} 请确认采购订单状态为【确认】已审核，并且审核结果为已通过!请检查数据后重试！";
                             return rs;
                         }
+
+
+
                     }
 
                     //如果入库明细中的产品。不存在于订单中。审核失败。
@@ -113,13 +123,14 @@ namespace RUINORERP.Business
                         if (!entity.tb_purorder.tb_PurOrderDetails.Any(c => c.ProdDetailID == child.ProdDetailID && c.Location_ID == child.Location_ID))
                         {
                             rs.Succeeded = false;
-                            _unitOfWorkManage.RollbackTran();
+
                             rs.ErrorMsg = $"入库明细中有产品不属于当前订单!请检查数据后重试！";
                             return rs;
                         }
                     }
 
 
+                    #region 
                     //先找到所有入库明细,再找按订单明细去循环比较。如果入库总数量大于订单数量，则不允许入库。
                     List<tb_PurEntryDetail> detailList = new List<tb_PurEntryDetail>();
                     foreach (var item in entity.tb_purorder.tb_PurEntries)
@@ -144,8 +155,6 @@ namespace RUINORERP.Business
                                 //如果存在不是引用的明细,则不允许入库。这样不支持手动添加的情况。
                                 string msg = $"采购订单:{entity.tb_purorder.PurOrderNo}的【{prodName}】在订单明细中拥有多行记录，必须使用引用的方式添加。";
                                 rs.ErrorMsg = msg;
-                                _unitOfWorkManage.RollbackTran();
-                                _logger.LogInformation(msg);
                                 return rs;
                             }
                             #endregion
@@ -158,8 +167,6 @@ namespace RUINORERP.Business
                             {
                                 string msg = $"采购订单:{entity.tb_purorder.PurOrderNo}的{entity}【{prodName}】的入库数量不能大于订单中对应行数量\r\n" + $"或当前采购订单重复录入采购入库单。";
                                 rs.ErrorMsg = msg;
-                                _unitOfWorkManage.RollbackTran();
-                                _logger.LogInformation(msg);
                                 return rs;
                             }
                             else
@@ -173,7 +180,6 @@ namespace RUINORERP.Business
                                 //如果已交数据大于 订单数量 给出警告实际操作中 使用其他方式将备品入库
                                 if (entity.tb_purorder.tb_PurOrderDetails[i].DeliveredQuantity > entity.tb_purorder.tb_PurOrderDetails[i].Quantity)
                                 {
-                                    _unitOfWorkManage.RollbackTran();
                                     throw new Exception($"入库单：{entity.PurEntryNo}审核时，对应的订单：{entity.tb_purorder.PurOrderNo}，入库总数量不能大于订单数量！");
                                 }
                             }
@@ -188,8 +194,6 @@ namespace RUINORERP.Business
 
                                 string msg = $"采购订单:{entity.tb_purorder.PurOrderNo}的【{prodName}】的入库数量不能大于订单中对应行数量\r\n" + $"或当前采购订单重复录入了采购入库单。";
                                 rs.ErrorMsg = msg;
-                                _unitOfWorkManage.RollbackTran();
-                                _logger.LogInformation(msg);
                                 return rs;
                             }
                             else
@@ -202,7 +206,6 @@ namespace RUINORERP.Business
                                 //如果已交数据大于 订单数量 给出警告实际操作中 使用其他方式将备品入库
                                 if (entity.tb_purorder.tb_PurOrderDetails[i].DeliveredQuantity > entity.tb_purorder.tb_PurOrderDetails[i].Quantity)
                                 {
-                                    _unitOfWorkManage.RollbackTran();
                                     throw new Exception($"入库单：{entity.PurEntryNo}审核时，对应的订单：{entity.tb_purorder.PurOrderNo}，入库总数量不能大于订单数量！");
                                 }
                             }
@@ -210,7 +213,11 @@ namespace RUINORERP.Business
                     }
 
 
+                    #endregion
+
                 }
+
+
 
                 // 使用字典按 (ProdDetailID, LocationID) 分组，存储库存记录及累计数据
                 var inventoryGroups = new Dictionary<(long ProdDetailID, long LocationID), (tb_Inventory Inventory, decimal PurQtySum, bool? IsGift,
@@ -288,6 +295,46 @@ namespace RUINORERP.Business
                 List<tb_BOM_SDetail> BOM_SDetails = new List<tb_BOM_SDetail>();
                 List<tb_BOM_S> BOMs = new List<tb_BOM_S>();
                 List<tb_PriceRecord> PriceRecords = new List<tb_PriceRecord>();
+
+      
+
+                //采购入库单，如果来自于采购订单，则要把入库数量累加到订单中的已交数量 TODO 销售也会有这种情况
+                if (entity.tb_purorder != null)
+                {
+
+                    entity.tb_purorder.TotalUndeliveredQty = entity.tb_purorder.tb_PurOrderDetails.Sum(c => c.UndeliveredQty);
+                    var OrderTotadeliveredQty = entity.tb_purorder.tb_PurOrderDetails.Sum(c => c.DeliveredQuantity);
+
+                    if (entity.tb_purorder.DataStatus == (int)DataStatus.确认
+                        && (entity.TotalQty == entity.tb_purorder.TotalQty || OrderTotadeliveredQty == entity.tb_purorder.TotalQty))
+                    {
+                        entity.tb_purorder.DataStatus = (int)DataStatus.完结;
+                        entity.tb_purorder.CloseCaseOpinions = "【系统自动结案】==》" + System.DateTime.Now.ToString() + _appContext.CurUserInfo.UserInfo.tb_employee.Employee_Name + "审核入库单:" + entity.PurEntryNo + "结案。"; ;
+                    }
+                }
+
+                // 开启事务，保证数据一致性
+                _unitOfWorkManage.BeginTran();
+                //更新未交数量
+                int OrderCounter = await _unitOfWorkManage.GetDbClient().Updateable(entity.tb_purorder)
+                    .UpdateColumns(it => new { it.TotalUndeliveredQty, it.DataStatus, it.CloseCaseOpinions, }).ExecuteCommandAsync();
+                if (OrderCounter > 0)
+                {
+
+                }
+
+                //更新已交数量
+                int poCounter = await _unitOfWorkManage.GetDbClient().Updateable(entity.tb_purorder.tb_PurOrderDetails)
+                    .UpdateColumns(it => new { it.DeliveredQuantity, it.UndeliveredQty }).ExecuteCommandAsync();
+                if (poCounter > 0)
+                {
+                    if (AuthorizeController.GetShowDebugInfoAuthorization(_appContext))
+                    {
+                        _logger.Debug(entity.PurEntryNo + "==>" + entity.PurOrder_NO + $"对应 的订单更新成功===重点代码 看已交数量是否正确");
+                    }
+                }
+
+
 
                 // 处理分组数据，更新库存记录的各字段
                 foreach (var group in inventoryGroups)
@@ -414,6 +461,31 @@ namespace RUINORERP.Business
                     }
                 }
 
+           
+
+                //这部分是否能提出到上一级公共部分？
+                entity.DataStatus = (int)DataStatus.确认;
+                entity.ApprovalStatus = (int)ApprovalStatus.已审核;
+                BusinessHelper.Instance.ApproverEntity(entity);
+                //只更新指定列
+                int counter = await _unitOfWorkManage.GetDbClient().Updateable(entity).UpdateColumns(
+                    it => new
+                    {
+                        it.DataStatus,
+                        it.ApprovalStatus,
+                        it.ApprovalResults,
+                        it.ApprovalOpinions
+                    }
+                    ).ExecuteCommandAsync();
+                if (counter > 0)
+                {
+                    if (AuthorizeController.GetShowDebugInfoAuthorization(_appContext))
+                    {
+                        // _logger.Info(entity.PurEntryNo + "==>" + "状态更新成功");
+                    }
+                }
+
+
                 AuthorizeController authorizeController = _appContext.GetRequiredService<AuthorizeController>();
                 if (authorizeController.EnableFinancialModule())
                 {
@@ -439,79 +511,16 @@ namespace RUINORERP.Business
                         throw new Exception("入库时，财务数据处理失败，更新失败！");
                     }
                 }
-                //这部分是否能提出到上一级公共部分？
-                entity.DataStatus = (int)DataStatus.确认;
-                entity.ApprovalStatus = (int)ApprovalStatus.已审核;
-                BusinessHelper.Instance.ApproverEntity(entity);
-                //只更新指定列
-                int counter = await _unitOfWorkManage.GetDbClient().Updateable(entity).UpdateColumns(
-                    it => new
-                    {
-                        it.DataStatus,
-                        it.ApprovalStatus,
-                        it.ApprovalResults,
-                        it.ApprovalOpinions
-                    }
-                    ).ExecuteCommandAsync();
-                if (counter > 0)
-                {
-                    if (AuthorizeController.GetShowDebugInfoAuthorization(_appContext))
-                    {
-                        // _logger.Info(entity.PurEntryNo + "==>" + "状态更新成功");
-                    }
-                }
-
-                //采购入库单，如果来自于采购订单，则要把入库数量累加到订单中的已交数量 TODO 销售也会有这种情况
-                if (entity.tb_purorder != null)
-                {
-
-                    entity.tb_purorder.TotalUndeliveredQty = entity.tb_purorder.tb_PurOrderDetails.Sum(c => c.UndeliveredQty);
-                    var OrderTotadeliveredQty = entity.tb_purorder.tb_PurOrderDetails.Sum(c => c.DeliveredQuantity);
-
-                    if (entity.tb_purorder.DataStatus == (int)DataStatus.确认
-                        && (entity.TotalQty == entity.tb_purorder.TotalQty || OrderTotadeliveredQty == entity.tb_purorder.TotalQty))
-                    {
-                        entity.tb_purorder.DataStatus = (int)DataStatus.完结;
-                        entity.tb_purorder.CloseCaseOpinions = "【系统自动结案】==》" + System.DateTime.Now.ToString() + _appContext.CurUserInfo.UserInfo.tb_employee.Employee_Name + "审核入库单:" + entity.PurEntryNo + "结案。"; ;
-                    }
-
-                    int poendcounter = await _unitOfWorkManage.GetDbClient().Updateable(entity.tb_purorder)
-                        .UpdateColumns(t => new { t.DataStatus, t.CloseCaseOpinions, t.TotalUndeliveredQty }).ExecuteCommandAsync();
-                    if (poendcounter > 0)
-                    {
-                        if (AuthorizeController.GetShowDebugInfoAuthorization(_appContext))
-                        {
-                            _logger.Info(entity.tb_purorder.PurOrderNo + "==>" + "结案状态更新成功");
-                        }
-                    }
-                }
-
-
-
-                //更新未交数量
-                int OrderCounter = await _unitOfWorkManage.GetDbClient().Updateable(entity.tb_purorder)
-                    .UpdateColumns(it => new { it.TotalUndeliveredQty }).ExecuteCommandAsync();
-                if (OrderCounter > 0)
-                {
-
-                }
-
-                //更新已交数量
-                int poCounter = await _unitOfWorkManage.GetDbClient().Updateable(entity.tb_purorder.tb_PurOrderDetails)
-                    .UpdateColumns(it => new { it.DeliveredQuantity, it.UndeliveredQty }).ExecuteCommandAsync();
-                if (poCounter > 0)
-                {
-                    if (AuthorizeController.GetShowDebugInfoAuthorization(_appContext))
-                    {
-                        _logger.Debug(entity.PurEntryNo + "==>" + entity.PurOrder_NO + $"对应 的订单更新成功===重点代码 看已交数量是否正确");
-                    }
-                }
 
 
                 // 注意信息的完整性
                 _unitOfWorkManage.CommitTran();
                 rs.ReturnObject = entity as T;
                 rs.Succeeded = true;
+
+              
+
+
                 return rs;
             }
             catch (Exception ex)
@@ -860,43 +869,7 @@ namespace RUINORERP.Business
 
                 }
 
-                #region 财务反审
-                AuthorizeController authorizeController = _appContext.GetRequiredService<AuthorizeController>();
-                if (authorizeController.EnableFinancialModule())
-                {
-                    #region 反审 反核销预付
-
-                    var ctrpayable = _appContext.GetRequiredService<tb_FM_ReceivablePayableController<tb_FM_ReceivablePayable>>();
-
-                    //出库时，全部生成应收，账期的。就加上到期日
-                    //有付款过的。就去预收中抵扣，不够的金额及状态标识出来
-                    //如果收款了，则不能反审,预收的可以
-                    var ARAPList = await _appContext.Db.Queryable<tb_FM_ReceivablePayable>()
-                                    .Includes(c => c.tb_FM_ReceivablePayableDetails)
-                                   .Where(c => c.SourceBillId == entity.PurEntryID
-                                   && c.TotalLocalPayableAmount > 0 //正向
-                                   && c.SourceBizType == (int)BizType.采购入库单).ToListAsync();
-                    if (ARAPList != null && ARAPList.Count > 0)
-                    {
-                        if (ARAPList.Count == 1)
-                        {
-                            var result = await ctrpayable.AntiApplyManualPaymentAllocation(ARAPList[0],ReceivePaymentType.付款, false);
-                        }
-                        else
-                        {
-                            //不会为多行。有错误
-                            _unitOfWorkManage.RollbackTran();
-                            rs.ErrorMsg = $"采购入库单{entity.PurEntryNo}有多张应付款单，数据重复，请检查数据正确性后，再操作。";
-                            rs.Succeeded = false;
-                            return rs;
-                        }
-                    }
-
-                    #endregion
-
-                }
-
-                #endregion
+               
 
                 //这部分是否能提出到上一级公共部分？
                 entity.DataStatus = (int)DataStatus.新建;
@@ -924,11 +897,51 @@ namespace RUINORERP.Business
                     entity.tb_purorder.DataStatus = (int)DataStatus.确认;
                     await _unitOfWorkManage.GetDbClient().Updateable(entity.tb_purorder).UpdateColumns(t => new { t.DataStatus }).ExecuteCommandAsync();
                 }
+                #region 财务反审
+                AuthorizeController authorizeController = _appContext.GetRequiredService<AuthorizeController>();
+                if (authorizeController.EnableFinancialModule())
+                {
+                    #region 反审 反核销预付
 
+                    var ctrpayable = _appContext.GetRequiredService<tb_FM_ReceivablePayableController<tb_FM_ReceivablePayable>>();
+
+                    //出库时，全部生成应收，账期的。就加上到期日
+                    //有付款过的。就去预收中抵扣，不够的金额及状态标识出来
+                    //如果收款了，则不能反审,预收的可以
+                    var ARAPList = await _appContext.Db.Queryable<tb_FM_ReceivablePayable>()
+                                    .Includes(c => c.tb_FM_ReceivablePayableDetails)
+                                   .Where(c => c.SourceBillId == entity.PurEntryID
+                                   && c.TotalLocalPayableAmount > 0 //正向
+                                   && c.SourceBizType == (int)BizType.采购入库单).ToListAsync();
+                    if (ARAPList != null && ARAPList.Count > 0)
+                    {
+                        if (ARAPList.Count == 1)
+                        {
+                            var result = await ctrpayable.AntiApplyManualPaymentAllocation(ARAPList[0], ReceivePaymentType.付款, false);
+                        }
+                        else
+                        {
+                            //不会为多行。有错误
+                            _unitOfWorkManage.RollbackTran();
+                            rs.ErrorMsg = $"采购入库单{entity.PurEntryNo}有多张应付款单，数据重复，请检查数据正确性后，再操作。";
+                            rs.Succeeded = false;
+                            return rs;
+                        }
+                    }
+
+                    #endregion
+
+                }
+
+                #endregion
 
                 _unitOfWorkManage.CommitTran();
+
                 rs.ReturnObject = entity as T;
                 rs.Succeeded = true;
+
+       
+
                 return rs;
             }
             catch (Exception ex)

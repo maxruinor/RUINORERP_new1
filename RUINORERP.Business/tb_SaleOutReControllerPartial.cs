@@ -77,6 +77,17 @@ namespace RUINORERP.Business
                                     .Includes(t => t.tb_saleorder, b => b.tb_SaleOuts, c => c.tb_SaleOutDetails)
                             .FirstAsync();
 
+
+
+                    //如果采购订单的供应商和这里入库的供应商不相同，要提示
+                    if (entity.CustomerVendor_ID != entity.tb_saleout.CustomerVendor_ID)
+                    {
+                        rrs.Succeeded = false;
+                        rrs.ErrorMsg = $"销售退回单的客户和销售出库的客户不同!请检查数据后重试！";
+                        return rrs;
+                    }
+  
+
                     if (entity.tb_saleout.TotalAmount < entity.TotalAmount || entity.tb_saleout.ForeignTotalAmount < entity.ForeignTotalAmount)
                     {
                         //特殊情况 要选择客户信息，还要进一步完善！TODO
@@ -84,6 +95,9 @@ namespace RUINORERP.Business
                         rrs.Succeeded = false;
                         return rrs;
                     }
+
+
+
                 }
                 //要注意的是  如果销售订单中有 多行相同SKU的的情况（实际是不同配置时） 出库退库要把订单的明细主键带上。
                 if (entity != null)

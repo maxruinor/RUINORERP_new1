@@ -47,7 +47,7 @@ namespace RUINORERP.Business
             {
                 // 开启事务，保证数据一致性
                 _unitOfWorkManage.BeginTran();
-              
+
                 tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
                 if (entity == null)
                 {
@@ -93,7 +93,7 @@ namespace RUINORERP.Business
 
                     #region 库存表的更新  调入时不考虑成本价格,如果初次入库时则使用调出时的成本。
                     //标记是否有期初
-                
+
                     tb_Inventory invTo = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == child.ProdDetailID && i.Location_ID == entity.Location_ID_to);
                     if (invTo != null)
                     {
@@ -104,8 +104,8 @@ namespace RUINORERP.Business
                         BusinessHelper.Instance.EditEntity(invTo);
                     }
                     else
-                    { 
-                      
+                    {
+
                         invTo = new tb_Inventory();
                         invTo.Location_ID = entity.Location_ID_to;
                         invTo.ProdDetailID = child.ProdDetailID;
@@ -124,7 +124,7 @@ namespace RUINORERP.Business
                     invUpdateListTo.Add(invTo);
                     #endregion
 
-                  
+
                 }
                 int InvUpdateCounterFrom = await _unitOfWorkManage.GetDbClient().Updateable(invUpdateListFrom).ExecuteCommandAsync();
                 if (InvUpdateCounterFrom == 0)
@@ -134,7 +134,7 @@ namespace RUINORERP.Business
                 }
 
                 List<tb_Inventory> invInsertList = invUpdateListTo.Where(c => c.Inventory_ID == 0).ToList();
-               
+
 
                 var InvInsertCounterTo = await _unitOfWorkManage.GetDbClient().Insertable(invInsertList).ExecuteReturnSnowflakeIdListAsync();
                 if (InvInsertCounterTo.Count == 0)
@@ -155,8 +155,10 @@ namespace RUINORERP.Business
                 entity.ApprovalStatus = (int)ApprovalStatus.已审核;
                 BusinessHelper.Instance.ApproverEntity(entity);
                 //只更新指定列
-                // var result = _unitOfWorkManage.GetDbClient().Updateable<tb_StockTransfer>(entity).UpdateColumns(it => new { it.DataStatus, it.ApprovalOpinions }).ExecuteCommand();
-                await _unitOfWorkManage.GetDbClient().Updateable<tb_StockTransfer>(entity).ExecuteCommandAsync();
+                var result = await _unitOfWorkManage.GetDbClient().Updateable(entity)
+                                    .UpdateColumns(it => new { it.DataStatus, it.ApprovalOpinions, it.ApprovalResults, it.ApprovalStatus, it.Approver_at, it.Approver_by })
+                                    .ExecuteCommandHasChangeAsync();
+
                 // 注意信息的完整性
                 _unitOfWorkManage.CommitTran();
                 rmsr.ReturnObject = entity as T;
@@ -239,7 +241,7 @@ namespace RUINORERP.Business
                     else
                     {
                         //正常逻辑不会执行到这里
-                        _unitOfWorkManage.RollbackTran(); 
+                        _unitOfWorkManage.RollbackTran();
                         throw new Exception("调入仓库中不存在这个产品的库存，出库产品必须存在于仓库中。");
                     }
 
@@ -254,10 +256,9 @@ namespace RUINORERP.Business
                 entity.ApprovalResults = false;
                 entity.ApprovalStatus = (int)ApprovalStatus.未审核;
                 BusinessHelper.Instance.ApproverEntity(entity);
-                //只更新指定列
-                // var result = _unitOfWorkManage.GetDbClient().Updateable<tb_StockTransfer>(entity).UpdateColumns(it => new { it.DataStatus, it.ApprovalOpinions }).ExecuteCommand();
-                await _unitOfWorkManage.GetDbClient().Updateable<tb_StockTransfer>(entity).ExecuteCommandAsync();
-
+                var result = await _unitOfWorkManage.GetDbClient().Updateable(entity)
+                                            .UpdateColumns(it => new { it.DataStatus, it.ApprovalOpinions, it.ApprovalResults, it.ApprovalStatus, it.Approver_at, it.Approver_by })
+                                            .ExecuteCommandHasChangeAsync();
                 // 注意信息的完整性
                 _unitOfWorkManage.CommitTran();
                 rmsr.Succeeded = true;

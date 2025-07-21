@@ -34,7 +34,7 @@ namespace RUINORERP.Business
     /// <summary>
     /// 维修入库单
     /// </summary>
-    public partial class tb_AS_RepairInStockController<T>:BaseController<T> where T : class
+    public partial class tb_AS_RepairInStockController<T> : BaseController<T> where T : class
     {
         /// <summary>
         /// 转为维修入库单
@@ -69,10 +69,12 @@ namespace RUINORERP.Business
                     #region 每行产品ID唯一
                     var item = RepairOrder.tb_AS_RepairOrderDetails.FirstOrDefault(c => c.ProdDetailID == details[i].ProdDetailID
                       && c.Location_ID == details[i].Location_ID);
-                    //details[i].Quantity = item.ConfirmedQuantity - item.DeliveredQty;// 减掉已经出库的数量
                     details[i].Quantity = item.Quantity;// 确认的数量全部修，但是可以根据实际来手工修改
                                                         //评估后 材料表中的成本传过来。成本才生效
                                                         // details[i].SubtotalCostAmount = (details[i].SubtotalCost + details[i].CustomizedCost) * details[i].Quantity;
+
+
+
                     if (details[i].Quantity > 0)
                     {
                         NewDetails.Add(details[i]);
@@ -126,6 +128,38 @@ namespace RUINORERP.Business
                     return rmrs;
                 }
 
+                if (entity.TotalQty != entity.tb_AS_RepairInStockDetails.Sum(c => c.Quantity))
+                {
+                    rmrs.ErrorMsg = $"单据总数量{entity.TotalQty}和明细数量之和{entity.tb_AS_RepairInStockDetails.Sum(c => c.Quantity)},不相等，请检查后再试！";
+                    rmrs.Succeeded = false;
+                    return rmrs;
+                }
+
+                if (entity.RepairOrderID > 0)
+                {
+                    entity.tb_as_repairorder = await _appContext.Db.Queryable<tb_AS_RepairOrder>().Where(c => c.RepairOrderID == entity.RepairOrderID)
+                     .Includes(t => t.tb_AS_RepairOrderDetails, d => d.tb_proddetail)
+                       .Includes(t => t.tb_AS_RepairInStocks, a => a.tb_AS_RepairInStockDetails)
+                       .Includes(t => t.tb_as_aftersaleapply, a => a.tb_AS_AfterSaleApplyDetails)
+                     .SingleAsync();
+
+                    //入库数量不能超过工单数量，也不能超过售后申请数量
+                    if (entity.TotalQty > entity.tb_as_repairorder.TotalQty)
+                    {
+                        rmrs.ErrorMsg = $"维修入库总数量{entity.TotalQty}不能大于维修工单数量，请检查后再试！";
+                        rmrs.Succeeded = false;
+                        return rmrs;
+                    }
+
+                    //入库数量不能超过工单数量，也不能超过售后申请数量
+                    if (entity.tb_as_repairorder.tb_as_aftersaleapply != null && entity.TotalQty > entity.tb_as_repairorder.tb_as_aftersaleapply.TotalConfirmedQuantity)
+                    {
+                        rmrs.ErrorMsg = $"维修入库总数量{entity.TotalQty}不能大于对应售后申请单的复核数量，请检查后再试！";
+                        rmrs.Succeeded = false;
+                        return rmrs;
+                    }
+                }
+
                 // 开启事务，保证数据一致性
                 tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
                 List<tb_Inventory> invList = new List<tb_Inventory>();
@@ -166,7 +200,7 @@ namespace RUINORERP.Business
                         group = (
                             Inventory: inv,
                             RepairQty: currentRepairQty // 首次累加
-                                                           //QtySum: currentQty
+                                                        //QtySum: currentQty
                         );
                         inventoryGroups[key] = group;
                         #endregion
@@ -184,6 +218,7 @@ namespace RUINORERP.Business
                 {
                     var inv = group.Value.Inventory;
                     inv.Quantity += group.Value.RepairQty.ToInt();
+                    inv.LatestStorageTime = System.DateTime.Now;
                     invList.Add(inv);
                 }
 
@@ -195,7 +230,18 @@ namespace RUINORERP.Business
                     _unitOfWorkManage.RollbackTran();
                     throw new Exception("库存更新数据为0，更新失败！");
                 }
-               
+
+                //if (entity.RepairOrderID > 0)
+                //{
+                //    await _unitOfWorkManage.GetDbClient().Updateable<tb_AS_AfterSaleApply>().SetColumns(it => it.ASProcessStatus == (int)ASProcessStatus.维修中).Where(it => it.ASApplyID == entity.ASApplyID).ExecuteCommandAsync();
+                //}
+                //entity.RepairStatus = (int)RepairStatus.维修中;
+                //if (entity.ASApplyID.HasValue && entity.ASApplyID.Value > 0)
+                //{
+                //    await _unitOfWorkManage.GetDbClient().Updateable<tb_AS_AfterSaleApply>().SetColumns(it => it.ASProcessStatus == (int)ASProcessStatus.维修中).Where(it => it.ASApplyID == entity.ASApplyID).ExecuteCommandAsync();
+                //}
+
+
                 //这部分是否能提出到上一级公共部分？
                 entity.DataStatus = (int)DataStatus.确认;
                 entity.ApprovalStatus = (int)ApprovalStatus.已审核;

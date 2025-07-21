@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：07/16/2025 10:05:13
+// 时间：07/19/2025 17:12:43
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -29,7 +29,7 @@ using RUINORERP.Common.Helper;
 namespace RUINORERP.Business
 {
     /// <summary>
-    /// 维修工单  工时费 材料费
+    /// 维修工单
     /// </summary>
     public partial class tb_AS_RepairOrderController<T>:BaseController<T> where T : class
     {
@@ -249,18 +249,18 @@ namespace RUINORERP.Business
             
                              rs = await _unitOfWorkManage.GetDbClient().UpdateNav<tb_AS_RepairOrder>(entity as tb_AS_RepairOrder)
                         .Include(m => m.tb_AS_RepairOrderDetails)
-                    .Include(m => m.tb_AS_RepairMaterialPickups)
                     .Include(m => m.tb_AS_RepairInStocks)
                     .Include(m => m.tb_AS_RepairOrderMaterialDetails)
+                    .Include(m => m.tb_AS_RepairMaterialPickups)
                     .ExecuteCommandAsync();
                  }
         else    
         {
                         rs = await _unitOfWorkManage.GetDbClient().InsertNav<tb_AS_RepairOrder>(entity as tb_AS_RepairOrder)
                 .Include(m => m.tb_AS_RepairOrderDetails)
-                .Include(m => m.tb_AS_RepairMaterialPickups)
                 .Include(m => m.tb_AS_RepairInStocks)
                 .Include(m => m.tb_AS_RepairOrderMaterialDetails)
+                .Include(m => m.tb_AS_RepairMaterialPickups)
          
                 .ExecuteCommandAsync();
                                           
@@ -295,9 +295,9 @@ namespace RUINORERP.Business
         {
             var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<tb_AS_RepairOrder>()
                                 .Includes(m => m.tb_AS_RepairOrderDetails)
-                        .Includes(m => m.tb_AS_RepairMaterialPickups)
                         .Includes(m => m.tb_AS_RepairInStocks)
                         .Includes(m => m.tb_AS_RepairOrderMaterialDetails)
+                        .Includes(m => m.tb_AS_RepairMaterialPickups)
                                         .Where(useLike, dto);
             return await querySqlQueryable.ToListAsync()as List<T>;
         }
@@ -308,9 +308,9 @@ namespace RUINORERP.Business
             tb_AS_RepairOrder entity = model as tb_AS_RepairOrder;
              bool rs = await _unitOfWorkManage.GetDbClient().DeleteNav<tb_AS_RepairOrder>(m => m.RepairOrderID== entity.RepairOrderID)
                                 .Include(m => m.tb_AS_RepairOrderDetails)
-                        .Include(m => m.tb_AS_RepairMaterialPickups)
                         .Include(m => m.tb_AS_RepairInStocks)
                         .Include(m => m.tb_AS_RepairOrderMaterialDetails)
+                        .Include(m => m.tb_AS_RepairMaterialPickups)
                                         .ExecuteCommandAsync();
             if (rs)
             {
@@ -479,9 +479,9 @@ namespace RUINORERP.Business
                                .Includes(t => t.tb_projectgroup )
                                .Includes(t => t.tb_as_aftersaleapply )
                                             .Includes(t => t.tb_AS_RepairOrderDetails )
-                                .Includes(t => t.tb_AS_RepairMaterialPickups )
                                 .Includes(t => t.tb_AS_RepairInStocks )
                                 .Includes(t => t.tb_AS_RepairOrderMaterialDetails )
+                                .Includes(t => t.tb_AS_RepairMaterialPickups )
                         .ToListAsync();
             
             foreach (var item in list)
@@ -507,9 +507,9 @@ namespace RUINORERP.Business
                                .Includes(t => t.tb_projectgroup )
                                .Includes(t => t.tb_as_aftersaleapply )
                                             .Includes(t => t.tb_AS_RepairOrderDetails )
-                                .Includes(t => t.tb_AS_RepairMaterialPickups )
                                 .Includes(t => t.tb_AS_RepairInStocks )
                                 .Includes(t => t.tb_AS_RepairOrderMaterialDetails )
+                                .Includes(t => t.tb_AS_RepairMaterialPickups )
                         .ToListAsync();
             
             foreach (var item in list)
@@ -535,9 +535,9 @@ namespace RUINORERP.Business
                             .Includes(t => t.tb_projectgroup )
                             .Includes(t => t.tb_as_aftersaleapply )
                                         .Includes(t => t.tb_AS_RepairOrderDetails )
-                            .Includes(t => t.tb_AS_RepairMaterialPickups )
                             .Includes(t => t.tb_AS_RepairInStocks )
                             .Includes(t => t.tb_AS_RepairOrderMaterialDetails )
+                            .Includes(t => t.tb_AS_RepairMaterialPickups )
                         .ToList();
             
             foreach (var item in list)
@@ -580,9 +580,9 @@ namespace RUINORERP.Business
                             .Includes(t => t.tb_projectgroup )
                             .Includes(t => t.tb_as_aftersaleapply )
                                         .Includes(t => t.tb_AS_RepairOrderDetails )
-                            .Includes(t => t.tb_AS_RepairMaterialPickups )
                             .Includes(t => t.tb_AS_RepairInStocks )
                             .Includes(t => t.tb_AS_RepairOrderMaterialDetails )
+                            .Includes(t => t.tb_AS_RepairMaterialPickups )
                         .FirstAsync();
             if(entity!=null)
             {

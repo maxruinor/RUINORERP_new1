@@ -63,25 +63,25 @@ namespace RUINORERP.Extensions
                 ConnectionString = connectString,
                 IsAutoCloseConnection = true,
                 InitKeyType = InitKeyType.Attribute,//就改这一行
-              
+
                 ConfigureExternalServices = new ConfigureExternalServices()
                 {
                     DataInfoCacheService = new SqlSugarMemoryCacheService(memoryCache),
                 },
 
-                MoreSettings = new ConnMoreSettings() 
-                { 
-                    IsWithNoLockQuery = true, 
+                MoreSettings = new ConnMoreSettings()
+                {
+                    IsWithNoLockQuery = true,
                     DisableNvarchar = true,
-                    DbMinDate=DateTime.MinValue ,
-                    IsAutoRemoveDataCache=true,
-                    
+                    //DbMinDate = DateTime.MinValue, //加上就出错。不加已经处理好了。 
+                    IsAutoRemoveDataCache = true,
+
                 }
             },
                 db =>
                 {
-                    db.Ado.CommandTimeOut= 30;//单位秒
-                    
+                    db.Ado.CommandTimeOut = 30;//单位秒
+
                     //单例参数配置，所有上下文生效       
                     db.Aop.OnLogExecuting = (sql, pars) =>
                         {
@@ -156,12 +156,12 @@ namespace RUINORERP.Extensions
                         //    string errorsql = SqlProfiler.FormatParam(e.Sql, e.Parametres as SugarParameter[]);
 
                         //    Console.WriteLine(errorsql);
-                        //    logger.LogInformation("LogInformation错误sql:" + errorsql);
-                        //    logger.LogError("LogError" + e.Message + errorsql);
+
+                        //    logger.LogError("db.Aop.OnError:" + e.Message + errorsql);
                         //}
                         //catch (Exception exx)
                         //{
-                        //    var aa = (e.Parametres as SugarParameter[]).ToDictionary(it => it.ParameterName, it => it.Value);
+                        //    Console.WriteLine(exx.Message);
                         //}
                         if (RemindEvent != null)
                         {
@@ -175,10 +175,10 @@ namespace RUINORERP.Extensions
 
                         try
                         {
+                            string errorsql = SqlProfiler.FormatParam(e.Sql, e.Parametres as SugarParameter[]);
+                            logger.LogError("db.Aop.OnError:" + errorsql);
                             Exception exception = e.GetBaseException();
-                            string errorsql = e.Message + "\r\n" + SqlProfiler.FormatParam(e.Sql, e.Parametres as SugarParameter[]);
                             logger.Error("Error" + errorsql, e);
-
                             if (e.InnerException != null && e.InnerException is SqlException sqlEx && sqlEx.Number == 1205)
                             {
                                 var deadlockInfo = new
@@ -235,7 +235,7 @@ namespace RUINORERP.Extensions
             AppContextData.Db = sqlSugar;
         }
 
- 
+
 
         public static void AddSqlsugarSetup(this IServiceCollection services,
             IConfiguration configuration, string dbName = "ConnectString")
@@ -252,7 +252,7 @@ namespace RUINORERP.Extensions
                     DataInfoCacheService = new SqlSugarMemoryCacheService(memoryCache)
                 }
                 ,
-               
+
 
             },
                 db =>

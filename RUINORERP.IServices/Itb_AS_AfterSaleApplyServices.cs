@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：07/16/2025 10:05:04
+// 时间：07/19/2025 17:12:32
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -16,7 +16,7 @@ using RUINORERP.Model;
 namespace RUINORERP.IServices
 {
     /// <summary>
-    /// 售后申请单 -登记，评估，清单，确认。目标是维修翻新
+    /// 售后申请单
     /// </summary>
     public partial interface Itb_AS_AfterSaleApplyServices : IBaseServices<tb_AS_AfterSaleApply>
     {

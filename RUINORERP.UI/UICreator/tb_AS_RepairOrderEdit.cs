@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：07/16/2025 10:05:12
+// 时间：07/19/2025 17:12:42
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -24,7 +24,7 @@ using RUINORERP.UI.Common;
 namespace RUINORERP.UI
 {
     /// <summary>
-    /// 维修工单  工时费 材料费数据编辑
+    /// 维修工单数据编辑
     /// </summary>
      [MenuAttrAssemblyInfo( "库位编辑", true, UIType.单表数据)]
     public partial class tb_AS_RepairOrderEdit:UserControl

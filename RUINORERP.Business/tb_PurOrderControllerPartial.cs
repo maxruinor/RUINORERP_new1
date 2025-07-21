@@ -363,15 +363,11 @@ namespace RUINORERP.Business
                 entity.ApprovalStatus = (int)ApprovalStatus.已审核;
                 BusinessHelper.Instance.ApproverEntity(entity);
                 //只更新指定列
-                var result =await _unitOfWorkManage.GetDbClient().Updateable(entity).UpdateColumns(it => new { 
-                    it.DataStatus,
-                    it.ApprovalStatus,
-                    it.ApprovalResults,
-                    it.ApprovalOpinions
-                }
-                ).ExecuteCommandAsync();
+ 
+                var result = await _unitOfWorkManage.GetDbClient().Updateable(entity)
+                    .UpdateColumns(it => new { it.DataStatus, it.ApprovalOpinions, it.ApprovalResults, it.ApprovalStatus, it.Approver_at, it.Approver_by })
+                    .ExecuteCommandHasChangeAsync();
 
-    
                 _unitOfWorkManage.CommitTran();
                 //_logger.Info(approvalEntity.bizName + "审核事务成功");
                 rmrs.ReturnObject = entity as T;

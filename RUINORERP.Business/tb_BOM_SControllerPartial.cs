@@ -214,8 +214,10 @@ namespace RUINORERP.Business
                 entity.ApprovalStatus = (int)ApprovalStatus.已审核;
                 BusinessHelper.Instance.ApproverEntity(entity);
                 //只更新指定列
-                // var result = _unitOfWorkManage.GetDbClient().Updateable<tb_Stocktake>(entity).UpdateColumns(it => new { it.DataStatus, it.ApprovalOpinions }).ExecuteCommand();
-                await _unitOfWorkManage.GetDbClient().Updateable<tb_BOM_S>(entity).ExecuteCommandAsync();
+                //只更新指定列
+                var result = await _unitOfWorkManage.GetDbClient().Updateable(entity)
+                                    .UpdateColumns(it => new { it.DataStatus, it.ApprovalOpinions, it.ApprovalResults, it.ApprovalStatus, it.Approver_at, it.Approver_by })
+                                    .ExecuteCommandHasChangeAsync();
 
                 // 注意信息的完整性
                 _unitOfWorkManage.CommitTran();
@@ -276,8 +278,10 @@ namespace RUINORERP.Business
                 entity.ApprovalStatus = (int)ApprovalStatus.未审核;
                 BusinessHelper.Instance.ApproverEntity(entity);
                 //只更新指定列
-                // var result = _unitOfWorkManage.GetDbClient().Updateable<tb_Stocktake>(entity).UpdateColumns(it => new { it.DataStatus, it.ApprovalOpinions }).ExecuteCommand();
-                await _unitOfWorkManage.GetDbClient().Updateable<tb_BOM_S>(entity).ExecuteCommandAsync();
+                //只更新指定列
+                var result = await _unitOfWorkManage.GetDbClient().Updateable(entity)
+                                    .UpdateColumns(it => new { it.DataStatus, it.ApprovalOpinions, it.ApprovalResults, it.ApprovalStatus, it.Approver_at, it.Approver_by })
+                                    .ExecuteCommandHasChangeAsync();
 
                 // 注意信息的完整性
                 _unitOfWorkManage.CommitTran();

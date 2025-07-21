@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：07/16/2025 10:05:05
+// 时间：07/19/2025 17:12:33
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -18,10 +18,10 @@ using RUINORERP.Global.CustomAttribute;
 namespace RUINORERP.Model
 {
     /// <summary>
-    /// 售后申请单 -登记，评估，清单，确认。目标是维修翻新
+    /// 售后申请单
     /// </summary>
     [Serializable()]
-    [Description("售后申请单 -登记，评估，清单，确认。目标是维修翻新")]
+    [Description("售后申请单")]
     [SugarTable("tb_AS_AfterSaleApply")]
     public partial class tb_AS_AfterSaleApply: BaseEntity, ICloneable
     {
@@ -30,7 +30,7 @@ namespace RUINORERP.Model
             
             if (!PK_FK_ID_Check())
             {
-                throw new Exception("售后申请单 -登记，评估，清单，确认。目标是维修翻新tb_AS_AfterSaleApply" + "外键ID与对应主主键名称不一致。请修改数据库");
+                throw new Exception("售后申请单tb_AS_AfterSaleApply" + "外键ID与对应主主键名称不一致。请修改数据库");
             }
         }
 
@@ -91,6 +91,21 @@ namespace RUINORERP.Model
             get{return _CustomerSourceNo;}
             set{
             SetProperty(ref _CustomerSourceNo, value);
+                        }
+        }
+
+        private long _Location_ID;
+        /// <summary>
+        /// 售后暂存仓
+        /// </summary>
+        [AdvQueryAttribute(ColName = "Location_ID",ColDesc = "售后暂存仓")] 
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Location_ID" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "售后暂存仓" )]
+        [FKRelationAttribute("tb_Location","Location_ID")]
+        public long Location_ID
+        { 
+            get{return _Location_ID;}
+            set{
+            SetProperty(ref _Location_ID, value);
                         }
         }
 
@@ -520,6 +535,11 @@ namespace RUINORERP.Model
         //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(ProjectGroup_ID))]
         public virtual tb_ProjectGroup tb_projectgroup { get; set; }
+
+        [SugarColumn(IsIgnore = true)]
+        //[Browsable(false)] 打印报表时的数据源会不显示
+        [Navigate(NavigateType.OneToOne, nameof(Location_ID))]
+        public virtual tb_Location tb_location { get; set; }
 
 
         //[Browsable(false)]打印报表时的数据源会不显示

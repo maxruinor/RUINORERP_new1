@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：07/16/2025 10:05:03
+// 时间：07/19/2025 17:12:30
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -24,9 +24,9 @@ using RUINORERP.UI.Common;
 namespace RUINORERP.UI
 {
     /// <summary>
-    /// 售后申请单 -登记，评估，清单，确认。目标是维修翻新数据查询
+    /// 售后申请单数据查询
     /// </summary>
-     [MenuAttribute(typeof(tb_AS_AfterSaleApplyQuery), "售后申请单 -登记，评估，清单，确认。目标是维修翻新数据查询", true)]
+     [MenuAttribute(typeof(tb_AS_AfterSaleApplyQuery), "售后申请单数据查询", true)]
     public partial class tb_AS_AfterSaleApplyQuery:UserControl
     {
      public tb_AS_AfterSaleApplyQuery() {
@@ -107,6 +107,8 @@ namespace RUINORERP.UI
         
     
         
+    
+        
 
   
    
@@ -121,6 +123,7 @@ namespace RUINORERP.UI
           // DataBindingHelper.InitDataToCmb<tb_CustomerVendor>(k => k.CustomerVendor_ID, v=>v.XXNAME, cmbCustomerVendor_ID);
           // DataBindingHelper.InitDataToCmb<tb_Employee>(k => k.Employee_ID, v=>v.XXNAME, cmbEmployee_ID);
           // DataBindingHelper.InitDataToCmb<tb_ProjectGroup>(k => k.ProjectGroup_ID, v=>v.XXNAME, cmbProjectGroup_ID);
+          // DataBindingHelper.InitDataToCmb<tb_Location>(k => k.Location_ID, v=>v.XXNAME, cmbLocation_ID);
         }
         
 

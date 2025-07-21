@@ -190,16 +190,11 @@ namespace RUINORERP.Business
                 //  entity.ApprovalResults = approvalEntity.ApprovalResults;
                 entity.ApprovalStatus = (int)ApprovalStatus.已审核;
                 BusinessHelper.Instance.ApproverEntity(entity);
-                //只更新指定列
-                // var result = _unitOfWorkManage.GetDbClient().Updateable<tb_Stocktake>(entity).UpdateColumns(it => new { it.DataStatus, it.ApprovalOpinions }).ExecuteCommand();
-                int counter = await _unitOfWorkManage.GetDbClient().Updateable<tb_MRP_ReworkEntry>(entity).ExecuteCommandAsync();
-                if (counter > 0)
-                {
-                    if (AuthorizeController.GetShowDebugInfoAuthorization(_appContext))
-                    {
-                        _logger.Info(entity.ReworkEntryNo + "==>" + "状态更新成功");
-                    }
-                }
+                var result = await _unitOfWorkManage.GetDbClient().Updateable(entity)
+                                             .UpdateColumns(it => new { it.DataStatus, it.ApprovalOpinions, it.ApprovalResults, it.ApprovalStatus, it.Approver_at, it.Approver_by })
+                                             .ExecuteCommandHasChangeAsync();
+
+                 
 
                 //采购入库单，如果来自于采购订单，则要把入库数量累加到订单中的已交数量 TODO 销售也会有这种情况
                 if (entity.tb_mrp_reworkreturn != null && entity.tb_mrp_reworkreturn.DataStatus == (int)DataStatus.确认 &&

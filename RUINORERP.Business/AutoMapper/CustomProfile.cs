@@ -39,6 +39,9 @@ namespace RUINORERP.Business.AutoMapper
           .ForMember(a => a.LocalPayableAmount, o => o.MapFrom(d => d.SubtotalTransAmount))
           .ForMember(a => a.Summary, o => o.MapFrom(d => d.Summary));
 
+            CreateMap<tb_AS_RepairOrder, tb_FM_ReceivablePayable>();
+         
+
             CreateMap<tb_AS_RepairOrder, tb_AS_RepairMaterialPickup>();
             CreateMap<tb_AS_RepairOrderMaterialDetail, tb_AS_RepairMaterialPickupDetail>();
 

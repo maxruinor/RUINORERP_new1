@@ -935,6 +935,19 @@ namespace RUINORERP.Model
                 .FirstOrDefault(p => p.GetCustomAttribute<SugarColumn>()?.IsPrimaryKey == true);
         }
 
+        public Dictionary<string, object> GetPrimaryKeyValues()
+        {
+            var keys = new Dictionary<string, object>();
+            foreach (var prop in GetCachedProperties())
+            {
+                var attr = prop.GetCustomAttribute<SugarColumn>();
+                if (attr?.IsPrimaryKey == true)
+                {
+                    keys[attr.ColumnName] = prop.GetValue(this);
+                }
+            }
+            return keys;
+        }
 
         #endregion
         public virtual void Save()

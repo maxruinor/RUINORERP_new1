@@ -14,6 +14,7 @@ using System.Data;
 using System.Windows.Forms;
 using RUINORERP.Common.CollectionExtension;
 using RUINOR.WinFormsUI.ChkComboBox;
+using System.Web.UI.WebControls;
 
 
 namespace RUINORERP.UI.Common
@@ -202,14 +203,20 @@ namespace RUINORERP.UI.Common
         /// <param name="add请选择">  是数据源绑定形式不可以自由添加，只能在数据源上做文章 ("请选择", "-1")</param>
         public static void InitDropList(BindingSource bs, KryptonComboBox cmb, string ValueMember, string DisplayMember, ComboBoxStyle DropStyle, bool auto)
         {
+            if (DropStyle == ComboBoxStyle.DropDownList)
+            {
+                // 启用搜索功能
+                cmb.EnableSearch = false;
+            }
+            else
+            {
+                // 启用搜索功能
+                cmb.EnableSearch = false;
+                cmb.SearchDelay = 500; // 设置400ms延迟
+            }
             //cmb.DataSource = null;
             //cmb.DataBindings.Clear();
             cmb.BeginUpdate();
-
-            // 启用搜索功能
-            cmb.EnableSearch = true;
-            cmb.SearchDelay = 300; // 设置400ms延迟
-
             if (!cmb.EnableSearch)
             {
                 #region 自动补全
@@ -245,7 +252,7 @@ namespace RUINORERP.UI.Common
             {
 
             }
-            
+
 
             cmb.EndUpdate();
             cmb.SelectedIndex = -1;
@@ -275,7 +282,7 @@ namespace RUINORERP.UI.Common
         public static void InitDropList(BindingSource bs, ComboBox cmb, string ValueMember, string DisplayMember, ComboBoxStyle DropStyle, bool auto, bool add请选择)
         {
             cmb.BeginUpdate();
-     
+
 
             cmb.DataSource = bs;
             cmb.DropDownStyle = DropStyle;

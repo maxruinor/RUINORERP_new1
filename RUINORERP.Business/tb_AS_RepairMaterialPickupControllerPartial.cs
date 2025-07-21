@@ -70,9 +70,8 @@ namespace RUINORERP.Business
                     #region 每行产品ID唯一
                     var item = RepairOrder.tb_AS_RepairOrderMaterialDetails.FirstOrDefault(c => c.ProdDetailID == details[i].ProdDetailID
                       && c.Location_ID == details[i].Location_ID);
-                    //details[i].Quantity = item.ConfirmedQuantity - item.DeliveredQty;// 减掉已经出库的数量
                     details[i].ActualSentQty = 0;
-                    details[i].ShouldSendQty = item.ShouldSendQty - item.ActualSentQty;
+                    details[i].ShouldSendQty = item.ShouldSendQty - item.ActualSentQty;// 减掉已经出库的数量
                     if (details[i].ShouldSendQty > 0)
                     {
                         NewDetails.Add(details[i]);
@@ -82,8 +81,6 @@ namespace RUINORERP.Business
                         tipsMsg.Add($"当前维修工单物料中的SKU:{item.tb_proddetail.SKU}已出库数量为{details[i].ActualSentQty}，当前行数据将不会加载到明细！");
                     }
                     #endregion
-
-
                 }
 
                 if (NewDetails.Count == 0)
@@ -118,8 +115,15 @@ namespace RUINORERP.Business
         {
             ReturnResults<T> rmrs = new ReturnResults<T>();
             tb_AS_RepairMaterialPickup entity = ObjectEntity as tb_AS_RepairMaterialPickup;
+            if (!entity.RepairOrderID.HasValue || entity.RepairOrderID.Value <= 0)
+            {
+                rmrs.ErrorMsg = $"维修领料单必须引用维修工单，请检查后再试！";
+                rmrs.Succeeded = false;
+                return rmrs;
+            }
             try
             {
+
                 if ((entity.TotalSendQty == 0 || entity.tb_AS_RepairMaterialPickupDetails.Sum(c => c.ActualSentQty) == 0))
                 {
                     rmrs.ErrorMsg = $"单据总数量{entity.TotalSendQty}和明细数量之和{entity.tb_AS_RepairMaterialPickupDetails.Sum(c => c.ActualSentQty)},其中有数据为零，请检查后再试！";
@@ -188,38 +192,80 @@ namespace RUINORERP.Business
                     invList.Add(inv);
                 }
 
-                _unitOfWorkManage.BeginTran();
-                DbHelper<tb_Inventory> dbHelper = _appContext.GetRequiredService<DbHelper<tb_Inventory>>();
-                var Counter = await dbHelper.BaseDefaultAddElseUpdateAsync(invList);
-                if (Counter == 0)
+                if (entity.RepairOrderID.HasValue && entity.RepairOrderID.Value > 0)
                 {
-                    _unitOfWorkManage.RollbackTran();
-                    throw new Exception("维修领料单审核时，库存更新数据为0，更新失败！");
-                }
+                    entity.tb_as_repairorder = await _unitOfWorkManage.GetDbClient().Queryable<tb_AS_RepairOrder>()
+                         .Includes(b => b.tb_AS_RepairOrderMaterialDetails)
+                         .Where(c => c.RepairOrderID == entity.RepairOrderID)
+                         .SingleAsync();
 
-                //这部分是否能提出到上一级公共部分？
-                if (entity.tb_as_repairorder.RepairStatus != (int)RepairStatus.维修中)
-                {
-                    entity.tb_as_repairorder.RepairStatus = (int)RepairStatus.维修中;
-                    var RepairStatusResult = await _unitOfWorkManage.GetDbClient().Updateable(entity.tb_as_repairorder).UpdateColumns(it => new
+                    if (entity.tb_as_repairorder.RepairStatus != (int)RepairStatus.维修中)
                     {
-                        it.RepairStatus,
+                        throw new Exception($"维修领料单审核时，维修工单{entity.tb_as_repairorder.RepairOrderNo}状态不是维修中，请检查后再试！");
+                    }
+
+                    //更新维修工单中 材料明细的实发数量
+                    for (int i = 0; i < entity.tb_AS_RepairMaterialPickupDetails.Count; i++)
+                    {
+                        var PickUpMaterial = entity.tb_AS_RepairMaterialPickupDetails[i];
+                        if (PickUpMaterial.ActualSentQty == 0)
+                        {
+                            continue;
+                        }
+                        var detail = entity.tb_as_repairorder.tb_AS_RepairOrderMaterialDetails
+                            .FirstOrDefault(c => c.ProdDetailID == PickUpMaterial.ProdDetailID && c.Location_ID == PickUpMaterial.Location_ID);
+                        if (detail != null)
+                        {
+                            detail.ActualSentQty += PickUpMaterial.ActualSentQty;
+                        }
+                        if (detail.ActualSentQty > detail.ShouldSendQty)
+                        {
+                            throw new Exception($"维修领料单审核时，明细中实发数量{detail.ActualSentQty}，不能大于应发数量{detail.ShouldSendQty}，请检查后再试！");
+                        }
+                    }
+
+
+
+                    _unitOfWorkManage.BeginTran();
+                    var MaterialQtyResult = await _unitOfWorkManage.GetDbClient().Updateable(entity.tb_as_repairorder.tb_AS_RepairOrderMaterialDetails).UpdateColumns(it => new
+                    {
+                        it.ActualSentQty,
+                    }).ExecuteCommandAsync();
+
+                    DbHelper<tb_Inventory> dbHelper = _appContext.GetRequiredService<DbHelper<tb_Inventory>>();
+                    var Counter = await dbHelper.BaseDefaultAddElseUpdateAsync(invList);
+                    if (Counter == 0)
+                    {
+                        _unitOfWorkManage.RollbackTran();
+                        throw new Exception("维修领料单审核时，库存更新数据为0，更新失败！");
+                    }
+
+                    //这部分是否能提出到上一级公共部分？
+                    if (entity.tb_as_repairorder.RepairStatus != (int)RepairStatus.维修中)
+                    {
+                        entity.tb_as_repairorder.RepairStatus = (int)RepairStatus.维修中;
+                        var RepairStatusResult = await _unitOfWorkManage.GetDbClient().Updateable(entity.tb_as_repairorder).UpdateColumns(it => new
+                        {
+                            it.RepairStatus,
+                        }).ExecuteCommandAsync();
+                    }
+
+                    entity.DataStatus = (int)DataStatus.确认;
+                    entity.ApprovalStatus = (int)ApprovalStatus.已审核;
+                    entity.ApprovalResults = true;
+                    BusinessHelper.Instance.ApproverEntity(entity);
+                    //只更新指定列
+                    var result = await _unitOfWorkManage.GetDbClient().Updateable<tb_AS_RepairMaterialPickup>(entity).UpdateColumns(it => new
+                    {
+                        it.DataStatus,
+                        it.ApprovalResults,
+                        it.ApprovalStatus,
+                        it.Approver_at,
+                        it.Approver_by,
+                        it.ApprovalOpinions
                     }).ExecuteCommandAsync();
                 }
-                entity.DataStatus = (int)DataStatus.确认;
-                entity.ApprovalStatus = (int)ApprovalStatus.已审核;
-                entity.ApprovalResults = true;
-                BusinessHelper.Instance.ApproverEntity(entity);
-                //只更新指定列
-                var result = await _unitOfWorkManage.GetDbClient().Updateable<tb_AS_RepairMaterialPickup>(entity).UpdateColumns(it => new
-                {
-                    it.DataStatus,
-                    it.ApprovalResults,
-                    it.ApprovalStatus,
-                    it.Approver_at,
-                    it.Approver_by,
-                    it.ApprovalOpinions
-                }).ExecuteCommandAsync();
+
                 // 注意信息的完整性
                 _unitOfWorkManage.CommitTran();
                 rmrs.ReturnObject = entity as T;
@@ -287,6 +333,14 @@ namespace RUINORERP.Business
                     {
                         // 累加已有分组的数值字段
                         group.RepairQty += currentRepairQty;
+                        if (!_appContext.SysConfig.CheckNegativeInventory && (group.Inventory.Quantity - group.RepairQty) < 0)
+                        {
+                            // rrs.ErrorMsg = "系统设置不允许负库存，请检查物料出库数量与库存相关数据";
+                            rmrs.ErrorMsg = $"sku:{group.Inventory.tb_proddetail.SKU}库存为：{group.Inventory.Quantity}，维修领料数量为：{group.RepairQty}\r\n 系统设置不允许负库存， 请检查出库数量与库存相关数据";
+                            _unitOfWorkManage.RollbackTran();
+                            rmrs.Succeeded = false;
+                            return rmrs;
+                        }
                         inventoryGroups[key] = group; // 更新分组数据
                     }
                 }
@@ -298,43 +352,68 @@ namespace RUINORERP.Business
                     inv.Quantity += group.Value.RepairQty.ToInt();
                     invList.Add(inv);
                 }
-
-                _unitOfWorkManage.BeginTran();
-                DbHelper<tb_Inventory> dbHelper = _appContext.GetRequiredService<DbHelper<tb_Inventory>>();
-                var Counter = await dbHelper.BaseDefaultAddElseUpdateAsync(invList);
-                if (Counter == 0)
+                if (entity.RepairOrderID.HasValue && entity.RepairOrderID.Value > 0)
                 {
-                    _unitOfWorkManage.RollbackTran();
-                    throw new Exception("库存更新数据为0，更新失败！");
-                }
+                    entity.tb_as_repairorder = await _unitOfWorkManage.GetDbClient().Queryable<tb_AS_RepairOrder>()
+                         .Includes(b => b.tb_AS_RepairOrderMaterialDetails)
+                         .Where(c => c.RepairOrderID == entity.RepairOrderID)
+                         .SingleAsync();
 
-
-                //如果有材料 ，一个没有领取则恢复
-                if (entity.tb_as_repairorder.tb_AS_RepairOrderMaterialDetails != null &&
-                    entity.tb_as_repairorder.tb_AS_RepairOrderMaterialDetails.Count > 0 &&
-                    entity.tb_as_repairorder.tb_AS_RepairMaterialPickups.Where(c => c.RMRID != entity.RMRID).Sum(c => c.TotalSendQty) == 0)
-                {
-                    entity.tb_as_repairorder.RepairStatus = (int)RepairStatus.待维修;
-                    var RepairStatusResult = await _unitOfWorkManage.GetDbClient().Updateable(entity.tb_as_repairorder).UpdateColumns(it => new
+                    if (entity.tb_as_repairorder.RepairStatus != (int)RepairStatus.维修中)
                     {
-                        it.RepairStatus,
+                        throw new Exception($"维修领料单审核时，维修工单{entity.tb_as_repairorder.RepairOrderNo}状态不是维修中，请检查后再试！");
+                    }
+
+                    //更新维修工单中 材料明细的实发数量
+                    for (int i = 0; i < entity.tb_AS_RepairMaterialPickupDetails.Count; i++)
+                    {
+                        var PickUpMaterial = entity.tb_AS_RepairMaterialPickupDetails[i];
+                        if (PickUpMaterial.ActualSentQty == 0)
+                        {
+                            continue;
+                        }
+                        var detail = entity.tb_as_repairorder.tb_AS_RepairOrderMaterialDetails
+                            .FirstOrDefault(c => c.ProdDetailID == PickUpMaterial.ProdDetailID && c.Location_ID == PickUpMaterial.Location_ID);
+                        if (detail != null)
+                        {
+                            detail.ActualSentQty -= PickUpMaterial.ActualSentQty;
+                        }
+                        if (detail.ActualSentQty < 0)
+                        {
+                            throw new Exception($"维修领料单反审核时，明细中实发数量{detail.ActualSentQty}，不能小于零，请检查后再试！");
+                        }
+                    }
+
+                    _unitOfWorkManage.BeginTran();
+                    var MaterialQtyResult = await _unitOfWorkManage.GetDbClient().Updateable(entity.tb_as_repairorder.tb_AS_RepairOrderMaterialDetails).UpdateColumns(it => new
+                    {
+                        it.ActualSentQty,
+                    }).ExecuteCommandAsync();
+
+
+                    DbHelper<tb_Inventory> dbHelper = _appContext.GetRequiredService<DbHelper<tb_Inventory>>();
+                    var Counter = await dbHelper.BaseDefaultAddElseUpdateAsync(invList);
+                    if (Counter == 0)
+                    {
+                        _unitOfWorkManage.RollbackTran();
+                        throw new Exception("库存更新数据为0，更新失败！");
+                    }
+                    //领料与维修状态无关
+                    entity.DataStatus = (int)DataStatus.新建;
+                    entity.ApprovalStatus = null;
+                    entity.ApprovalResults = null;
+                    BusinessHelper.Instance.ApproverEntity(entity);
+                    //只更新指定列
+                    var result = await _unitOfWorkManage.GetDbClient().Updateable(entity).UpdateColumns(it => new
+                    {
+                        it.DataStatus,
+                        it.ApprovalResults,
+                        it.ApprovalStatus,
+                        it.Approver_at,
+                        it.Approver_by,
+                        it.ApprovalOpinions
                     }).ExecuteCommandAsync();
                 }
-
-                entity.DataStatus = (int)DataStatus.新建;
-                entity.ApprovalStatus = null;
-                entity.ApprovalResults = null;
-                BusinessHelper.Instance.ApproverEntity(entity);
-                //只更新指定列
-                var result = await _unitOfWorkManage.GetDbClient().Updateable<tb_AS_RepairInStock>(entity).UpdateColumns(it => new
-                {
-                    it.DataStatus,
-                    it.ApprovalResults,
-                    it.ApprovalStatus,
-                    it.Approver_at,
-                    it.Approver_by,
-                    it.ApprovalOpinions
-                }).ExecuteCommandAsync();
                 // 注意信息的完整性
                 _unitOfWorkManage.CommitTran();
                 rmrs.ReturnObject = entity as T;

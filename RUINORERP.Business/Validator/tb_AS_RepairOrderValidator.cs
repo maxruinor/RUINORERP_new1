@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：07/16/2025 10:05:14
+// 时间：07/19/2025 17:12:44
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,7 +21,7 @@ using Microsoft.Extensions.Options;
 namespace RUINORERP.Business
 {
     /// <summary>
-    /// 维修工单  工时费 材料费验证类
+    /// 维修工单验证类
     /// </summary>
     /*public partial class tb_AS_RepairOrderValidator:AbstractValidator<tb_AS_RepairOrder>*/
     public partial class tb_AS_RepairOrderValidator:BaseValidatorGeneric<tb_AS_RepairOrder>

@@ -1372,21 +1372,19 @@ namespace RUINORERP.Business
                         entity.ApprovalResults = approvalEntity.ApprovalResults;
                         entity.ApprovalStatus = (int)ApprovalStatus.已审核;
                         BusinessHelper.Instance.ApproverEntity(entity);
-                        //只更新指定列
-                        // var result = _unitOfWorkManage.GetDbClient().Updateable<tb_Stocktake>(entity).UpdateColumns(it => new { it.FMPaymentStatus, it.ApprovalOpinions }).ExecuteCommand();
-                        await _unitOfWorkManage.GetDbClient().Updateable<tb_FM_PaymentRecord>(entity).ExecuteCommandAsync();
                     }
+
+                    //只更新指定列
+                    var result = _unitOfWorkManage.GetDbClient().Updateable(entitys).UpdateColumns(it => new { it.PaymentStatus, it.ApprovalOpinions, it.ApprovalResults, it.Approver_at, it.Approver_by }).ExecuteCommandHasChangeAsync();
                 }
                 // 注意信息的完整性
                 _unitOfWorkManage.CommitTran();
-
-                //_logger.Info(approvalEntity.bizName + "审核事务成功");
                 return true;
             }
             catch (Exception ex)
             {
-                _logger.Error(ex);
                 _unitOfWorkManage.RollbackTran();
+                _logger.Error(ex);
                 _logger.Error(approvalEntity.bizName + "事务回滚");
                 return false;
             }

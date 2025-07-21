@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：07/16/2025 10:05:13
+// 时间：07/19/2025 17:12:43
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -19,7 +19,7 @@ using RUINORERP.Model.Base;
 namespace RUINORERP.Model.QueryDto
 {
     /// <summary>
-    /// 维修工单  工时费 材料费
+    /// 维修工单
     /// </summary>
     [Serializable()]
     [SugarTable("tb_AS_RepairOrder")]

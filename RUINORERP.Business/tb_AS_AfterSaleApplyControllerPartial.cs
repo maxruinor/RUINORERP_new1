@@ -277,6 +277,7 @@ namespace RUINORERP.Business
                     var inv = group.Value.Inventory;
                     // 累加数值字段
                     inv.Quantity += group.Value.ConfirmedQty.ToInt();
+                    inv.LatestStorageTime = System.DateTime.Now;
                     invList.Add(inv);
                 }
 
@@ -305,9 +306,6 @@ namespace RUINORERP.Business
                     it.Approver_by,
                     it.ApprovalOpinions
                 }).ExecuteCommandAsync();
-
-
-              
 
 
                 // 注意信息的完整性
@@ -445,7 +443,7 @@ namespace RUINORERP.Business
 
                 //后面是不是要做一个审核历史记录表？
                 //只更新指定列
-                var result = await _unitOfWorkManage.GetDbClient().Updateable<tb_AS_AfterSaleApply>(entity).UpdateColumns(it => new
+                var result = await _unitOfWorkManage.GetDbClient().Updateable(entity).UpdateColumns(it => new
                 {
                     it.ApprovalStatus,
                     it.DataStatus,

@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：07/16/2025 10:05:04
+// 时间：07/19/2025 17:12:33
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -19,7 +19,7 @@ using RUINORERP.Model.Base;
 namespace RUINORERP.Model.QueryDto
 {
     /// <summary>
-    /// 售后申请单 -登记，评估，清单，确认。目标是维修翻新
+    /// 售后申请单
     /// </summary>
     [Serializable()]
     [SugarTable("tb_AS_AfterSaleApply")]
@@ -70,6 +70,20 @@ namespace RUINORERP.Model.QueryDto
         { 
             get{return _CustomerSourceNo;}
             set{SetProperty(ref _CustomerSourceNo, value);}
+        }
+     
+
+        private long _Location_ID;
+        /// <summary>
+        /// 售后暂存仓
+        /// </summary>
+        [AdvQueryAttribute(ColName = "Location_ID",ColDesc = "售后暂存仓")]
+        [SugarColumn(ColumnDataType = "bigint",SqlParameterDbType ="Int64",ColumnName = "Location_ID",IsNullable = false,ColumnDescription = "售后暂存仓" )]
+        [FKRelationAttribute("tb_Location","Location_ID")]
+        public long Location_ID 
+        { 
+            get{return _Location_ID;}
+            set{SetProperty(ref _Location_ID, value);}
         }
      
 

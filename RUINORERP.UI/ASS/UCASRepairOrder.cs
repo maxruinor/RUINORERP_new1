@@ -45,6 +45,7 @@ using RUINORERP.UI.SysConfig;
 using RUINORERP.Model.CommonModel;
 using RUINORERP.UI.PSI.SAL;
 using RUINORERP.Common.Extensions;
+using NPOI.SS.Formula.Functions;
 
 
 namespace RUINORERP.UI.ASS
@@ -109,27 +110,41 @@ namespace RUINORERP.UI.ASS
                 //只有审核状态才可以转换
                 if (EditEntity.DataStatus == (int)DataStatus.确认 && EditEntity.ApprovalStatus == (int)ApprovalStatus.已审核 && EditEntity.ApprovalResults.HasValue && EditEntity.ApprovalResults.Value)
                 {
-                    //if (EditEntity.tb_as_aftersaleapply != null && EditEntity.tb_as_aftersaleapply.tb_AS_AfterSaleDeliveries != null && EditEntity.tb_as_aftersaleapply.tb_AS_AfterSaleDeliveries.Count > 0)
-                    //{
-                    //    MessageBox.Show($"当前【维修工单】{EditEntity.ASApplyNo}的售后申请单已经交付，无法进行维修处理", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    //    return;
-                    //}
+                    if (EditEntity.RepairStatus.HasValue && EditEntity.RepairStatus.Value != (int)RepairStatus.待维修)
+                    {
+                        MessageBox.Show($"当前【维修工单】的维修状态为:{(RepairStatus)EditEntity.RepairStatus.Value}，无法重复进行维修处理", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        toolStripButton维修处理.Enabled = false;
+                        return;
+                    }
+
+                    if (EditEntity.PayStatus == (int)PayStatus.未付款)
+                    {
+                        if (MessageBox.Show($"当前【维修工单】的付款状态为:{(PayStatus)EditEntity.PayStatus}，你确定仍要进行【维修处理】吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Asterisk) == DialogResult.No)
+                        {
+                            return;
+                        }
+                    }
 
                     var ctr = Startup.GetFromFac<tb_AS_RepairOrderController<tb_AS_RepairOrder>>();
                     ReturnResults<tb_AS_RepairOrder> rrs = await ctr.RepairProcessAsync(EditEntity);
                     if (rrs.Succeeded)
                     {
-                        MessageBox.Show($"当前【维修工单】{EditEntity.ASApplyNo}的产品，将送往维修中心处理", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        toolStripButton维修领料.Enabled = true;
+                        toolStripButton维修处理.Enabled = false;
+                        MainForm.Instance.AuditLogHelper.CreateAuditLog<tb_AS_RepairOrder>("维修处理", EditEntity);
+                        MessageBox.Show($"当前【维修工单】的产品，将从【售后暂存仓】出库，交由维修人员处理", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+
+
                     }
                     else
                     {
-                        MessageBox.Show($"当前【维修工单】{EditEntity.ASApplyNo}：维修处理失败", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        MessageBox.Show($"当前【维修工单】维修处理失败", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     }
                     return;
                 }
                 else
                 {
-                    MessageBox.Show($"当前【维修工单】{EditEntity.ASApplyNo}：未审核，无法进行【维修处理】", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    MessageBox.Show($"当前【维修工单】未审核，无法进行【维修处理】", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
             }
 
@@ -147,11 +162,19 @@ namespace RUINORERP.UI.ASS
                 //只有审核状态才可以转换
                 if (EditEntity.DataStatus == (int)DataStatus.确认 && EditEntity.ApprovalStatus == (int)ApprovalStatus.已审核 && EditEntity.ApprovalResults.HasValue && EditEntity.ApprovalResults.Value)
                 {
+                    if (EditEntity.RepairStatus.HasValue && EditEntity.RepairStatus.Value != (int)RepairStatus.维修中)
+                    {
+                        MessageBox.Show($"【维修工单】{EditEntity.ASApplyNo}的维修状态为：{(RepairStatus)EditEntity.RepairStatus.Value}，请【维修处理】后，才能进行领料处理", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        toolStripButton维修领料.Enabled = false;
+                        return;
+                    }
+
+
                     if (EditEntity.tb_AS_RepairMaterialPickups != null && EditEntity.tb_AS_RepairMaterialPickups.Count > 0)
                     {
                         if (EditEntity.tb_AS_RepairMaterialPickups.Where(c => c.DataStatus >= (int)DataStatus.确认).Sum(c => c.TotalSendQty) == EditEntity.TotalQty)
                         {
-                            MessageBox.Show($"当前【维修工单】{EditEntity.ASApplyNo}的维修材料已经全部领取，无法重复领取", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                            MessageBox.Show($"当前【维修工单】的维修材料已全部领出，无法重复领取", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                             return;
                         }
                     }
@@ -246,6 +269,7 @@ namespace RUINORERP.UI.ASS
 
                 return;
             }
+            cmbRepairStatus.Enabled = false;
             base.EditEntity = entity;
             if (entity != null)
             {
@@ -255,6 +279,23 @@ namespace RUINORERP.UI.ASS
                     entity.ActionStatus = ActionStatus.加载;
                     //entity.DataStatus = (int)DataStatus.确认;
                     //如果审核了，审核要灰色
+                    if (EditEntity.RepairStatus.HasValue && EditEntity.RepairStatus.Value == (int)RepairStatus.待维修)
+                    {
+                        toolStripButton维修处理.Enabled = true;
+                    }
+                    else
+                    {
+                        toolStripButton维修处理.Enabled = false;
+                    }
+
+
+                    if (EditEntity.RepairStatus.HasValue && EditEntity.RepairStatus.Value == (int)RepairStatus.维修中)
+                    {
+                        toolStripButton维修领料.Enabled = true;
+                        toolStripBtnReverseReview.Enabled = false;//维修处理过了。不能反审核了
+                        toolStripBtnReverseReview.ToolTipText = "【维修处理】后不能反审核。";
+                    }
+
                 }
                 else
                 {
@@ -270,16 +311,23 @@ namespace RUINORERP.UI.ASS
                         entity.tb_AS_RepairOrderDetails.ForEach(c => c.RepairOrderID = 0);
                         entity.tb_AS_RepairOrderDetails.ForEach(c => c.RepairOrderDetailID = 0);
                     }
+
+                    //新建时  是未付款和账期
+                    entity.PayStatus = (int)PayStatus.未付款;
+                    entity.Paytype_ID = MainForm.Instance.AppContext.PaymentMethodOfPeriod.Paytype_ID;
+                    entity.RepairStatus = (int)RepairStatus.评估报价;
                 }
             }
 
             if (entity.DataStatus >= (int)DataStatus.确认)
             {
                 DataBindingHelper.BindData4CmbByEnum<tb_AS_RepairOrder, PayStatus>(entity, k => k.PayStatus, cmbPayStatus, false);
+                cmbRepairStatus.Enabled = false;
             }
             else
             {
                 DataBindingHelper.BindData4CmbByEnum<tb_AS_RepairOrder, PayStatus>(entity, k => k.PayStatus, cmbPayStatus, false, PayStatus.全部付款, PayStatus.部分付款, PayStatus.部分预付);
+                cmbRepairStatus.Enabled = true;
             }
 
             if (entity.ApprovalStatus.HasValue)
@@ -291,7 +339,7 @@ namespace RUINORERP.UI.ASS
             DataBindingHelper.BindData4TextBox<tb_AS_RepairOrder>(entity, t => t.RepairOrderNo, txtRepairOrderNo, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4Cmb<tb_ProjectGroup>(entity, k => k.ProjectGroup_ID, v => v.ProjectGroupName, cmbProjectGroup_ID);
             DataBindingHelper.BindData4CmbByEnum<tb_AS_RepairOrder>(entity, k => k.RepairStatus, typeof(RepairStatus), cmbRepairStatus, true);
-            cmbRepairStatus.Enabled = false;
+
 
             DataBindingHelper.BindData4Cmb<tb_PaymentMethod>(entity, k => k.Paytype_ID, v => v.Paytype_Name, cmbPaytype_ID);
             DataBindingHelper.BindData4TextBox<tb_AS_RepairOrder>(entity, t => t.TotalQty, txtTotalQty, BindDataType4TextBox.Qty, false);
@@ -580,6 +628,7 @@ namespace RUINORERP.UI.ASS
 
             listCols.SetCol_NeverVisible<ProductSharePart>(c => c.Location_ID);
             listCols.SetCol_NeverVisible<ProductSharePart>(c => c.Rack_ID);
+            listCols.SetCol_ReadOnly<tb_AS_RepairOrderMaterialDetail>(c => c.ActualSentQty);
             if (!AppContext.SysConfig.UseBarCode)
             {
                 listCols.SetCol_NeverVisible<ProductSharePart>(c => c.BarCode);

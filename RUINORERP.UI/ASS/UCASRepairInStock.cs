@@ -226,11 +226,11 @@ namespace RUINORERP.UI.ASS
                         }
                     }
                 }
-                //如果是销售订单引入变化则加载明细及相关数据
+               
                 if ((entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改) &&  entity.RepairOrderID > 0 
                 && s2.PropertyName == entity.GetPropertyName<tb_AS_RepairInStock>(c => c.RepairOrderID))
                 {
-                    ToRepairOrder(entity.RepairOrderID);
+                    RepairInStock(entity.RepairOrderID);
                 }
 
                 if (entity.CustomerVendor_ID > 0 && s2.PropertyName == entity.GetPropertyName<tb_AS_AfterSaleApply>(c => c.CustomerVendor_ID))
@@ -459,6 +459,15 @@ namespace RUINORERP.UI.ASS
             {
                 //产品ID有值才算有效值
                 details = detailentity.Where(t => t.ProdDetailID > 0).ToList();
+
+
+                if (NeedValidated && detailentity.Sum(c => c.Quantity) == 0)
+                {
+                    MessageBox.Show("明细中，入库总数量不为能0！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return false;
+                }
+
+
                 var aa = details.Select(c => c.ProdDetailID).ToList().GroupBy(x => x).Where(x => x.Count() > 1).Select(x => x.Key).ToList();
                 if (NeedValidated && aa.Count > 1)
                 {
@@ -570,7 +579,7 @@ namespace RUINORERP.UI.ASS
             }
         }
 
-        private async void ToRepairOrder(long? ASApplyID)
+        private async void RepairInStock(long? RepairOrderID)
         {
             //要加一个判断 值是否有变化
             //新增时才可以
@@ -581,9 +590,10 @@ namespace RUINORERP.UI.ASS
                 return;
             }
             var RepairOrder = bsa.Tag as tb_AS_RepairOrder;//这个tag值。赋值会比较当前方法晚，所以失效
-            RepairOrder = await MainForm.Instance.AppContext.Db.Queryable<tb_AS_RepairOrder>().Where(c => c.ASApplyID == ASApplyID)
+            RepairOrder = await MainForm.Instance.AppContext.Db.Queryable<tb_AS_RepairOrder>().Where(c => c.RepairOrderID == RepairOrderID)
             .Includes(t => t.tb_AS_RepairOrderDetails, d => d.tb_proddetail)
-            .Includes(t => t.tb_AS_RepairInStocks, a => a.tb_AS_RepairInStockDetails)
+          //  .Includes(t => t.tb_AS_RepairInStocks, a => a.tb_AS_RepairInStockDetails)
+          //  .Includes(t => t.tb_as_aftersaleapply, a => a.tb_AS_AfterSaleApplyDetails)
             .SingleAsync();
             if (RepairOrder != null)
             {

@@ -72,6 +72,9 @@ namespace RUINORERP.UI.AdvancedUIModule
             ColNameDataDictionary.TryAdd("PayStatus", Common.CommonHelper.Instance.GetKeyValuePairs(typeof(PayStatus)));
             ColNameDataDictionary.TryAdd("DataStatus", Common.CommonHelper.Instance.GetKeyValuePairs(typeof(DataStatus)));
             ColNameDataDictionary.TryAdd("Priority", Common.CommonHelper.Instance.GetKeyValuePairs(typeof(Priority)));
+            ColNameDataDictionary.TryAdd("RepairStatus", Common.CommonHelper.Instance.GetKeyValuePairs(typeof(RepairStatus)));
+            ColNameDataDictionary.TryAdd("ASProcessStatus", Common.CommonHelper.Instance.GetKeyValuePairs(typeof(ASProcessStatus)));
+
 
             InitBaseValue();
             InitListData();
@@ -548,7 +551,10 @@ namespace RUINORERP.UI.AdvancedUIModule
                 {
                     QueryConditionFilter.InvisibleCols.Add("Customer_id");
                 }
-
+                if (typeof(T).Name == typeof(tb_AS_RepairOrder).Name)
+                {
+                    QueryConditionFilter.InvisibleCols.Add("ASApplyID");
+                }
                 //这里设置了指定列不可见
                 foreach (var item in QueryConditionFilter.InvisibleCols)
                 {

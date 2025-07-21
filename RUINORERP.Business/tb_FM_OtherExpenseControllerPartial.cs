@@ -59,7 +59,9 @@ namespace RUINORERP.Business
                 entity.ApprovalStatus = (int)ApprovalStatus.已审核;
                 BusinessHelper.Instance.ApproverEntity(entity);
                 //只更新指定列
-                var result = await _unitOfWorkManage.GetDbClient().Updateable<tb_FM_OtherExpense>(entity).UpdateColumns(it => new { it.DataStatus, it.ApprovalStatus, it.ApprovalResults, it.ApprovalOpinions }).ExecuteCommandAsync();
+                var result = await _unitOfWorkManage.GetDbClient().Updateable(entity)
+                                    .UpdateColumns(it => new { it.DataStatus, it.ApprovalOpinions, it.ApprovalResults, it.ApprovalStatus, it.Approver_at, it.Approver_by })
+                                    .ExecuteCommandHasChangeAsync();
                 AuthorizeController authorizeController = _appContext.GetRequiredService<AuthorizeController>();
                 if (authorizeController.EnableFinancialModule())
                 {

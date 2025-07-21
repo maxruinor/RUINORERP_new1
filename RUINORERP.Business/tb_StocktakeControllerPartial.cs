@@ -194,30 +194,30 @@ namespace RUINORERP.Business
 
 
 
-                List<tb_Inventory> UpdateList = invUpdateList.Where(c => c.Inventory_ID > 0).ToList();
+                //List<tb_Inventory> UpdateList = invUpdateList.Where(c => c.Inventory_ID > 0).ToList();
 
-                int InvUpdateCounter = await _unitOfWorkManage.GetDbClient().Updateable(UpdateList).ExecuteCommandAsync();
-                if (InvUpdateCounter == 0)
-                {
-                    _unitOfWorkManage.RollbackTran();
-                    throw new Exception("库存更新失败！");
-                }
+                //int InvUpdateCounter = await _unitOfWorkManage.GetDbClient().Updateable(UpdateList).ExecuteCommandAsync();
+                //if (InvUpdateCounter == 0)
+                //{
+                //    _unitOfWorkManage.RollbackTran();
+                //    throw new Exception("库存更新失败！");
+                //}
 
                 //这部分是否能提出到上一级公共部分？
                 entity.DataStatus = (int)DataStatus.确认;
-                //entity.ApprovalOpinions = approvalEntity.ApprovalComments;
+                // entity.ApprovalOpinions = approvalEntity.ApprovalComments;
                 //后面已经修改为
                 // entity.ApprovalResults = approvalEntity.ApprovalResults;
                 entity.ApprovalStatus = (int)ApprovalStatus.已审核;
                 BusinessHelper.Instance.ApproverEntity(entity);
                 //只更新指定列
-                // var result = _unitOfWorkManage.GetDbClient().Updateable<tb_Stocktake>(entity).UpdateColumns(it => new { it.DataStatus, it.ApprovalOpinions }).ExecuteCommand();
-                await _unitOfWorkManage.GetDbClient().Updateable<tb_Stocktake>(entity).ExecuteCommandAsync();
-                //rmr = await ctr.BaseSaveOrUpdate(EditEntity);
+                var result = await _unitOfWorkManage.GetDbClient().Updateable(entity)
+                                    .UpdateColumns(it => new { it.DataStatus, it.ApprovalOpinions, it.ApprovalResults, it.ApprovalStatus, it.Approver_at, it.Approver_by })
+                                    .ExecuteCommandHasChangeAsync();
+
                 // 注意信息的完整性
                 _unitOfWorkManage.CommitTran();
                 rmrs.ReturnObject = entity as T;
-                //_logger.Info(approvalEntity.bizName + "审核事务成功");
                 rmrs.Succeeded = true;
                 return rmrs;
             }
@@ -359,11 +359,9 @@ namespace RUINORERP.Business
                 entity.ApprovalResults = false;
                 entity.ApprovalStatus = (int)ApprovalStatus.未审核;
                 BusinessHelper.Instance.ApproverEntity(entity);
-                //只更新指定列
-                // var result = _unitOfWorkManage.GetDbClient().Updateable<tb_Stocktake>(entity).UpdateColumns(it => new { it.DataStatus, it.ApprovalOpinions }).ExecuteCommand();
-                await _unitOfWorkManage.GetDbClient().Updateable<tb_Stocktake>(entity).ExecuteCommandAsync();
-                //rmr = await ctr.BaseSaveOrUpdate(EditEntity);
-
+                var result = await _unitOfWorkManage.GetDbClient().Updateable(entity)
+                                             .UpdateColumns(it => new { it.DataStatus, it.ApprovalOpinions, it.ApprovalResults, it.ApprovalStatus, it.Approver_at, it.Approver_by })
+                                             .ExecuteCommandHasChangeAsync();
                 // 注意信息的完整性
                 _unitOfWorkManage.CommitTran();
 

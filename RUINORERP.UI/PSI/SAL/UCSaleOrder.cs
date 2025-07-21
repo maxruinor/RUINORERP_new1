@@ -271,7 +271,10 @@ namespace RUINORERP.UI.PSI.SAL
             DataBindingHelper.BindData4TextBox<tb_SaleOrder>(entity, t => t.CustomerPONo, txtCustomerPONo, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4Cmb<tb_PaymentMethod>(entity, k => k.Paytype_ID, v => v.Paytype_Name, cmbPaytype_ID);
             DataBindingHelper.BindData4Cmb<tb_FM_Account>(entity, k => k.Account_id, v => v.Account_name, cmbAccount_id);
+            
+            cmbEmployee_ID.EnableSearch = false;
             DataBindingHelper.BindData4Cmb<tb_Employee>(entity, k => k.Employee_ID, v => v.Employee_Name, cmbEmployee_ID, true);
+        
             if (AppContext.projectGroups != null && AppContext.projectGroups.Count > 0)
             {
                 #region 项目组 如果有设置则按设置。没有则全部
@@ -542,6 +545,8 @@ namespace RUINORERP.UI.PSI.SAL
             queryFilterC.FilterLimitExpressions.Add(lambda);
             DataBindingHelper.BindData4Cmb<tb_CustomerVendor>(entity, k => k.CustomerVendor_ID, v => v.CVName, cmbCustomerVendor_ID, queryFilterC.GetFilterExpression<tb_CustomerVendor>(), true);
             DataBindingHelper.InitFilterForControlByExp<tb_CustomerVendor>(entity, cmbCustomerVendor_ID, c => c.CVName, queryFilterC);
+
+
 
             if (entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改)
             {
@@ -1117,6 +1122,10 @@ using var binder = new UIStateBinder(..., customEvaluator);
                             {
                                 if (MessageBox.Show($"产品{detail.SKU},{detail.CNName},{detail.prop}的库存不足\r\n实际数量为：{detail.Quantity} ，拟销数量为： {item.Quantity}，是否继续保存？", "提示", MessageBoxButtons.OKCancel, MessageBoxIcon.Warning) == DialogResult.Cancel)
                                 {
+                                    if (toolStripbtnPrint.Enabled)
+                                    {
+                                        toolStripbtnPrint.Enabled = false;
+                                    }
                                     return false;
                                 }
                             }
@@ -1171,6 +1180,7 @@ using var binder = new UIStateBinder(..., customEvaluator);
                     }
                     else
                     {
+                        toolStripbtnPrint.Enabled = false;
                         MainForm.Instance.PrintInfoLog($"保存失败,{SaveResult.ErrorMsg}。", Color.Red);
                     }
                 }

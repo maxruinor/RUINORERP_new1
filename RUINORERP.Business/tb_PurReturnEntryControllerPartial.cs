@@ -72,7 +72,13 @@ namespace RUINORERP.Business
                     rs.Succeeded = false;
                     return rs;
                 }
-
+                //如果采购入库的供应商和这里采购退货的供应商不相同，要提示
+                if (entity.CustomerVendor_ID != entity.tb_purentryre.CustomerVendor_ID)
+                {
+                    rs.Succeeded = false;
+                    rs.ErrorMsg = $"采购退回后的入库单的供应商和采购入库退货时的供应商不同!请检查数据后重试！";
+                    return rs;
+                }
                 //如果入库明细中的产品。不存在于采购退货单中。审核失败。
                 foreach (var child in entity.tb_PurReturnEntryDetails)
                 {
@@ -270,16 +276,9 @@ namespace RUINORERP.Business
                 //  entity.ApprovalResults = approvalEntity.ApprovalResults;
                 entity.ApprovalStatus = (int)ApprovalStatus.已审核;
                 BusinessHelper.Instance.ApproverEntity(entity);
-                //只更新指定列
-                // var result = _unitOfWorkManage.GetDbClient().Updateable<tb_Stocktake>(entity).UpdateColumns(it => new { it.DataStatus, it.ApprovalOpinions }).ExecuteCommand();
-                int counter = await _unitOfWorkManage.GetDbClient().Updateable<tb_PurReturnEntry>(entity).ExecuteCommandAsync();
-                if (counter > 0)
-                {
-                    if (AuthorizeController.GetShowDebugInfoAuthorization(_appContext))
-                    {
-                        _logger.Info(entity.PurReEntryNo + "==>" + "状态更新成功");
-                    }
-                }
+                var result = await _unitOfWorkManage.GetDbClient().Updateable(entity)
+                                            .UpdateColumns(it => new { it.DataStatus, it.ApprovalOpinions, it.ApprovalResults, it.ApprovalStatus, it.Approver_at, it.Approver_by })
+                                            .ExecuteCommandHasChangeAsync();
 
                 //采购入库单，如果来自于采购退货单，则要把入库数量累加到退货单中的已交数量 TODO 销售也会有这种情况
                 if (entity.tb_purentryre != null && entity.tb_purentryre.DataStatus == (int)DataStatus.确认 && (entity.TotalQty == entity.tb_purentryre.TotalQty || entity.tb_purentryre.tb_PurEntryReDetails.Sum(c => c.DeliveredQuantity) == entity.tb_purentryre.TotalQty))
@@ -530,9 +529,9 @@ namespace RUINORERP.Business
                 entity.ApprovalResults = false;
                 entity.ApprovalStatus = (int)ApprovalStatus.未审核;
                 BusinessHelper.Instance.ApproverEntity(entity);
-                //只更新指定列
-                // var result = _unitOfWorkManage.GetDbClient().Updateable<tb_Stocktake>(entity).UpdateColumns(it => new { it.DataStatus, it.ApprovalOpinions }).ExecuteCommand();
-                await _unitOfWorkManage.GetDbClient().Updateable<tb_PurReturnEntry>(entity).ExecuteCommandAsync();
+                var result = await _unitOfWorkManage.GetDbClient().Updateable(entity)
+                                            .UpdateColumns(it => new { it.DataStatus, it.ApprovalOpinions, it.ApprovalResults, it.ApprovalStatus, it.Approver_at, it.Approver_by })
+                                            .ExecuteCommandHasChangeAsync();
 
                 //采购入库单，如果来自于采购退货单，则要把入库数量累加到退货单中的已交数量
                 if (entity.tb_purentryre != null && entity.tb_purentryre.TotalQty != entity.tb_purentryre.tb_PurEntryReDetails.Sum(c => c.DeliveredQuantity))

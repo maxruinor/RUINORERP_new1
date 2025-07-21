@@ -189,7 +189,7 @@ namespace RUINORERP.Business
 
                 var paymentController = _appContext.GetRequiredService<tb_FM_PaymentRecordController<tb_FM_PaymentRecord>>();
 
-                var records =await _unitOfWorkManage.GetDbClient().Queryable<tb_FM_PaymentRecordDetail>()
+                var records = await _unitOfWorkManage.GetDbClient().Queryable<tb_FM_PaymentRecordDetail>()
                     .Includes(c => c.tb_fm_paymentrecord)
                     .Where(c => c.SourceBizType == (int)BizType.预收款单 && c.SourceBilllId == entity.PreRPID)
                     .Where(c => c.tb_fm_paymentrecord.ApprovalStatus == (int)ApprovalStatus.已审核
@@ -294,9 +294,9 @@ namespace RUINORERP.Business
             entity.ApprovalStatus = (int)ApprovalStatus.已审核;
             entity.ApprovalResults = true;
             BusinessHelper.Instance.ApproverEntity(entity);
-            //只更新指定列
-            // var result = _unitOfWorkManage.GetDbClient().Updateable<tb_Stocktake>(entity).UpdateColumns(it => new { it.FMPaymentStatus, it.ApprovalOpinions }).ExecuteCommand();
-            await _unitOfWorkManage.GetDbClient().Updateable<tb_FM_PreReceivedPayment>(entity).ExecuteCommandAsync();
+            var result = await _unitOfWorkManage.GetDbClient().Updateable(entity)
+                                              .UpdateColumns(it => new { it.PrePaymentStatus, it.ApprovalOpinions, it.ApprovalResults, it.ApprovalStatus, it.Approver_at, it.Approver_by })
+                                              .ExecuteCommandHasChangeAsync();
 
             rmrs.Succeeded = true;
             rmrs.ReturnObject = entity as T;

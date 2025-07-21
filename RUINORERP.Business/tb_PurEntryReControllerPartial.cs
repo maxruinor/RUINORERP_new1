@@ -61,6 +61,22 @@ namespace RUINORERP.Business
                          .Includes(a => a.tb_purorder, b => b.tb_PurOrderDetails)
                                 .Where(c => c.PurEntryID == entity.PurEntryID.Value)
                                .FirstAsync();
+
+                    if (entity.tb_purentry == null)
+                    {
+                        rs.ErrorMsg = $"没有找到对应的采购入库单!请检查数据后重试！";
+                        rs.Succeeded = false;
+                        return rs;
+                    }
+
+                    //如果采购入库的供应商和这里采购退货的供应商不相同，要提示
+                    if (entity.CustomerVendor_ID != entity.tb_purentry.CustomerVendor_ID)
+                    {
+                        rs.Succeeded = false;
+                        rs.ErrorMsg = $"入库供应商和采购退货供应商不同!请检查数据后重试！";
+                        return rs;
+                    }
+
                 }
 
 
@@ -295,9 +311,9 @@ namespace RUINORERP.Business
 
                 entity.ApprovalStatus = (int)ApprovalStatus.已审核;
                 BusinessHelper.Instance.ApproverEntity(entity);
-                //只更新指定列
-                // var result = _unitOfWorkManage.GetDbClient().Updateable<tb_Stocktake>(entity).UpdateColumns(it => new { it.DataStatus, it.ApprovalOpinions }).ExecuteCommand();
-                await _unitOfWorkManage.GetDbClient().Updateable<tb_PurEntryRe>(entity).ExecuteCommandAsync();
+                var result = await _unitOfWorkManage.GetDbClient().Updateable(entity)
+                                             .UpdateColumns(it => new { it.DataStatus, it.ApprovalOpinions, it.ApprovalResults, it.ApprovalStatus, it.Approver_at, it.Approver_by })
+                                             .ExecuteCommandHasChangeAsync();
                 // 注意信息的完整性
                 _unitOfWorkManage.CommitTran();
                 rs.ReturnObject = entity as T;

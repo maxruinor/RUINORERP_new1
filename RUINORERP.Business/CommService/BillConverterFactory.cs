@@ -444,6 +444,15 @@ namespace RUINORERP.Business.CommService
                         cbd.BillNoColName = GetExpressionColumnName<tb_AS_RepairInStock>(c => c.RepairInStockNo);
                     }
                     break;
+                case BizType.维修领料单:
+                    var RepairMaterialPickup = Entity as tb_AS_RepairMaterialPickup;
+                    if (RepairMaterialPickup != null)
+                    {
+                        cbd.BillID = RepairMaterialPickup.RMRID;
+                        cbd.BillNo = RepairMaterialPickup.MaterialPickupNO;
+                        cbd.BillNoColName = GetExpressionColumnName<tb_AS_RepairMaterialPickup>(c => c.MaterialPickupNO);
+                    }
+                    break;
                 case BizType.报废单:
                     //var RepairInStock = Entity as tb_AS_ScrapDoc;
                     //if (RepairInStock != null)

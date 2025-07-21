@@ -37,134 +37,6 @@ namespace RUINORERP.Business
     /// </summary>
     public partial class tb_AS_RepairOrderController<T> : BaseController<T> where T : class
     {
-        /*
-        public async Task<ReturnResults<T>> Submit(T ObjectEntity)
-        {
-            ReturnResults<T> rmrs = new ReturnResults<T>();
-            tb_AS_RepairOrder entity = ObjectEntity as tb_AS_RepairOrder;
-            try
-            {
-                _unitOfWorkManage.BeginTran();
-
-               
-                AuthorizeController authorizeController = _appContext.GetRequiredService<AuthorizeController>();
-                if (authorizeController.EnableFinancialModule())
-                {
-                    #region 生成应收款单
-
-                   
-                    // 获取付款方式信息
-                    if (_appContext.PaymentMethodOfPeriod == null)
-                    {
-                        _unitOfWorkManage.RollbackTran();
-                        rmrs.Succeeded = false;
-                        rmrs.ErrorMsg = $"请先配置付款方式信息！";
-                        if (_appContext.SysConfig.ShowDebugInfo)
-                        {
-                            _logger.LogInformation(rmrs.ErrorMsg);
-                        }
-                        return rmrs;
-                    }
-
-                    //如果是账期必须是未付款
-                    if (entity.Paytype_ID == _appContext.PaymentMethodOfPeriod.Paytype_ID)
-                    {
-                        if (entity.PayStatus != (int)PayStatus.未付款)
-                        {
-                            rmrs.Succeeded = false;
-                            _unitOfWorkManage.RollbackTran();
-                            rmrs.ErrorMsg = $"付款方式为账期的工单必须是未付款。";
-                            if (_appContext.SysConfig.ShowDebugInfo)
-                            {
-                                _logger.LogInformation(rmrs.ErrorMsg);
-                            }
-                            return rmrs;
-                        }
-                    }
-
-                    if (entity.PayStatus == (int)PayStatus.未付款)
-                    {
-                        if (entity.Paytype_ID != _appContext.PaymentMethodOfPeriod.Paytype_ID)
-                        {
-                            rmrs.Succeeded = false;
-                            _unitOfWorkManage.RollbackTran();
-                            rmrs.ErrorMsg = $"未付款工单的付款方式必须是账期。";
-                            if (_appContext.SysConfig.ShowDebugInfo)
-                            {
-                                _logger.LogInformation(rmrs.ErrorMsg);
-                            }
-                            return rmrs;
-                        }
-                    }
-
-
-                    if (entity.Paytype_ID != _appContext.PaymentMethodOfPeriod.Paytype_ID)
-                    {
-                        //正常来说。不能重复生成。即使退款也只会有一个对应订单的预收款单。 一个预收款单可以对应正负两个收款单。
-                        // 生成预收款单前 检测
-                        var ctrpay = _appContext.GetRequiredService<tb_FM_ReceivablePayableController<tb_FM_ReceivablePayable>>();
-                        var ReceivablePayable =await ctrpay.BuildReceivablePayable(entity);
-                        ReturnResults<tb_FM_ReceivablePayable> rmpay = await ctrpay.SaveOrUpdate(ReceivablePayable);
-                        if (!rmpay.Succeeded)
-                        {
-                            // 处理预收款单生成失败的情况
-                            rmrs.Succeeded = false;
-                            _unitOfWorkManage.RollbackTran();
-                            rmrs.ErrorMsg = $"应收款单生成失败：{rmpay.ErrorMsg ?? "未知错误"}";
-                            if (_appContext.SysConfig.ShowDebugInfo)
-                            {
-                                _logger.LogInformation(rmrs.ErrorMsg);
-                            }
-                        }
-                        //else
-                        //{
-                        //    ReturnResults<tb_FM_ReceivablePayable> autoApproval = await ctrpay.AutoApprovalAsync(ReceivablePayable);
-                        //    if (!autoApproval.Succeeded)
-                        //    {
-                        //        rmrs.Succeeded = false;
-                        //        _unitOfWorkManage.RollbackTran();
-                        //        rmrs.ErrorMsg = $"预收款单自动审核失败：{autoApproval.ErrorMsg ?? "未知错误"}";
-                        //        if (_appContext.SysConfig.ShowDebugInfo)
-                        //        {
-                        //            _logger.LogInformation(rmrs.ErrorMsg);
-                        //        }
-                        //    }
-                        //    else
-                        //    {
-                        //        FMAuditLogHelper fMAuditLog = _appContext.GetRequiredService<FMAuditLogHelper>();
-                        //        fMAuditLog.CreateAuditLog<tb_FM_PreReceivedPayment>("预收款单自动审核成功", rmrs.ReturnObject as tb_FM_PreReceivedPayment);
-                        //    }
-                        //}
-                    }
-
-                    #endregion
-                }
-                entity.RepairStatus = (int)RepairStatus.待维修;
-                //这部分是否能提出到上一级公共部分？
-                entity.DataStatus = (int)DataStatus.新建;
-                BusinessHelper.Instance.ApproverEntity(entity);
-                //只更新指定列
-                var result = await _unitOfWorkManage.GetDbClient().Updateable<tb_AS_RepairOrder>(entity).UpdateColumns(it => new
-                {
-                    it.RepairStatus,
-                    it.DataStatus,
-                }).ExecuteCommandAsync();
-                // 注意信息的完整性
-                _unitOfWorkManage.CommitTran();
-                rmrs.ReturnObject = entity as T;
-                rmrs.Succeeded = true;
-                return rmrs;
-            }
-            catch (Exception ex)
-            {
-                _unitOfWorkManage.RollbackTran();
-                _logger.Error(ex, "维修工单提交时，事务回滚" + ex.Message);
-                rmrs.ErrorMsg = "事务回滚=>" + ex.Message;
-                rmrs.Succeeded = false;
-                return rmrs;
-            }
-        }
-        */
 
         /// <summary>
         /// 将售后商品转到维后仓修售库
@@ -190,12 +62,16 @@ namespace RUINORERP.Business
                 // 开启事务，保证数据一致性
                 _unitOfWorkManage.BeginTran();
 
-                // 后面可以优化  需求 请求这种。
-                if (entity.tb_as_aftersaleapply == null && entity.ASApplyID > 0)
+                //// 后面可以优化  需求单 请求这种。
+                //if (entity.tb_as_aftersaleapply == null && entity.ASApplyID > 0)
+                //{
+
+                //}
+
+                if (entity.ASApplyID.HasValue && entity.ASApplyID.Value > 0)
                 {
-
+                    await _unitOfWorkManage.GetDbClient().Updateable<tb_AS_AfterSaleApply>().SetColumns(it => it.ASProcessStatus == (int)ASProcessStatus.评估报价中).Where(it => it.ASApplyID == entity.ASApplyID).ExecuteCommandHasChangeAsync();
                 }
-
 
                 entity.RepairStatus = (int)RepairStatus.待维修;
                 //这部分是否能提出到上一级公共部分？
@@ -206,6 +82,7 @@ namespace RUINORERP.Business
                 //只更新指定列
                 var result = await _unitOfWorkManage.GetDbClient().Updateable<tb_AS_RepairOrder>(entity).UpdateColumns(it => new
                 {
+                    it.RepairStatus,
                     it.DataStatus,
                     it.ApprovalResults,
                     it.ApprovalStatus,
@@ -266,14 +143,14 @@ namespace RUINORERP.Business
                         }
                     }
 
-
-                    if (entity.Paytype_ID != _appContext.PaymentMethodOfPeriod.Paytype_ID)
+                    //未付款的账期时，才生成应收款，向客户收取维修费用
+                    if (entity.Paytype_ID == _appContext.PaymentMethodOfPeriod.Paytype_ID)
                     {
                         //正常来说。不能重复生成。即使退款也只会有一个对应订单的预收款单。 一个预收款单可以对应正负两个收款单。
                         // 生成预收款单前 检测
                         var ctrpay = _appContext.GetRequiredService<tb_FM_ReceivablePayableController<tb_FM_ReceivablePayable>>();
                         var ReceivablePayable = await ctrpay.BuildReceivablePayable(entity);
-                        ReturnResults<tb_FM_ReceivablePayable> rmpay = await ctrpay.SaveOrUpdate(ReceivablePayable);
+                        var rmpay = await ctrpay.BaseSaveOrUpdateWithChild<tb_FM_ReceivablePayable>(ReceivablePayable, false);
                         if (!rmpay.Succeeded)
                         {
                             // 处理预收款单生成失败的情况
@@ -285,25 +162,6 @@ namespace RUINORERP.Business
                                 _logger.LogInformation(rmrs.ErrorMsg);
                             }
                         }
-                        //else
-                        //{
-                        //    ReturnResults<tb_FM_ReceivablePayable> autoApproval = await ctrpay.AutoApprovalAsync(ReceivablePayable);
-                        //    if (!autoApproval.Succeeded)
-                        //    {
-                        //        rmrs.Succeeded = false;
-                        //        _unitOfWorkManage.RollbackTran();
-                        //        rmrs.ErrorMsg = $"预收款单自动审核失败：{autoApproval.ErrorMsg ?? "未知错误"}";
-                        //        if (_appContext.SysConfig.ShowDebugInfo)
-                        //        {
-                        //            _logger.LogInformation(rmrs.ErrorMsg);
-                        //        }
-                        //    }
-                        //    else
-                        //    {
-                        //        FMAuditLogHelper fMAuditLog = _appContext.GetRequiredService<FMAuditLogHelper>();
-                        //        fMAuditLog.CreateAuditLog<tb_FM_PreReceivedPayment>("预收款单自动审核成功", rmrs.ReturnObject as tb_FM_PreReceivedPayment);
-                        //    }
-                        //}
                     }
 
                     #endregion
@@ -323,9 +181,7 @@ namespace RUINORERP.Business
                 rmrs.Succeeded = false;
                 return rmrs;
             }
-
         }
-
 
         /// <summary>
         /// 将售后商品转到维后仓修售库
@@ -354,7 +210,7 @@ namespace RUINORERP.Business
 
                 var inventoryGroups = new Dictionary<(long ProdDetailID, long LocationID), (tb_Inventory Inventory, decimal RepairQty)>();
 
-                //更新  维修仓的数量  减少
+                //更新  维修仓的数量  减少  材料 是通过领料来减少的。不是在这里处理的。
                 foreach (var child in entity.tb_AS_RepairOrderDetails)
                 {
                     var key = (child.ProdDetailID, child.Location_ID);
@@ -406,8 +262,10 @@ namespace RUINORERP.Business
                 {
                     var inv = group.Value.Inventory;
                     inv.Quantity -= group.Value.RepairQty.ToInt();
+                    inv.LatestOutboundTime = System.DateTime.Now;
                     invList.Add(inv);
                 }
+
 
                 _unitOfWorkManage.BeginTran();
                 DbHelper<tb_Inventory> dbHelper = _appContext.GetRequiredService<DbHelper<tb_Inventory>>();
@@ -419,6 +277,10 @@ namespace RUINORERP.Business
                 }
 
                 entity.RepairStatus = (int)RepairStatus.维修中;
+                if (entity.ASApplyID.HasValue && entity.ASApplyID.Value > 0)
+                {
+                    await _unitOfWorkManage.GetDbClient().Updateable<tb_AS_AfterSaleApply>().SetColumns(it => it.ASProcessStatus == (int)ASProcessStatus.维修中).Where(it => it.ASApplyID == entity.ASApplyID).ExecuteCommandAsync();
+                }
 
                 //只更新指定列
                 var result = await _unitOfWorkManage.GetDbClient().Updateable<tb_AS_RepairOrder>(entity).UpdateColumns(it => new
@@ -569,16 +431,13 @@ namespace RUINORERP.Business
                         {
                             if (Paymentable.ARAPStatus <= (int)ARAPStatus.待支付)
                             {
-                                await _unitOfWorkManage.GetDbClient().Deleteable(Paymentable).ExecuteCommandAsync();
+                                await _unitOfWorkManage.GetDbClient().DeleteNav(Paymentable).Include(c => c.tb_FM_ReceivablePayableDetails).ExecuteCommandAsync();
                             }
                             else
                             {
                                 //客户已经支付了维修款，只能先生成红字负数的应收
                                 #region  检测对应的收款单记录，如果没有支付也可以直接删除
-                                //订单反审核  只是用来修改，还是真实取消订单。取消的话。则要退款。修改的话。则不需要退款。
-                                //如果没有出库，则生成红冲单  ，已冲销  已取消，先用取消标记
-                                //如果是要退款，则在预收款查询这，生成退款单。
-                                //如果预收单审核了，生成收款单 在财务没有审核前。还是可以反审。这是为了保存系统的灵活性。
+
                                 var PaymentList = await _unitOfWorkManage.GetDbClient().Queryable<tb_FM_PaymentRecord>()
                                       .Includes(a => a.tb_FM_PaymentRecordDetails)
                                      .Where(c => c.tb_FM_PaymentRecordDetails.Any(d => d.SourceBilllId == Paymentable.ARAPId)).ToListAsync();
@@ -602,7 +461,7 @@ namespace RUINORERP.Business
                                                 .ExecuteCommandAsync();
                                             if (PaymentCounter)
                                             {
-                                                await _unitOfWorkManage.GetDbClient().Deleteable(Payment).ExecuteCommandAsync();
+                                                await _unitOfWorkManage.GetDbClient().DeleteNav(Paymentable).Include(c => c.tb_FM_ReceivablePayableDetails).ExecuteCommandAsync();
                                             }
                                         }
                                         else
@@ -633,7 +492,13 @@ namespace RUINORERP.Business
                     #endregion
 
                 }
-                entity.RepairStatus = null;
+
+                if (entity.ASApplyID.HasValue && entity.ASApplyID.Value > 0)
+                {
+                    await _unitOfWorkManage.GetDbClient().Updateable<tb_AS_AfterSaleApply>().SetColumns(it => it.ASProcessStatus == (int)ASProcessStatus.登记).Where(it => it.ASApplyID == entity.ASApplyID).ExecuteCommandHasChangeAsync();
+                }
+
+                entity.RepairStatus = (int)RepairStatus.评估报价;
                 //这部分是否能提出到上一级公共部分？
                 entity.DataStatus = (int)DataStatus.新建;
                 entity.RepairStatus = null;
@@ -647,6 +512,7 @@ namespace RUINORERP.Business
                 //只更新指定列
                 var result = await _unitOfWorkManage.GetDbClient().Updateable<tb_AS_RepairOrder>(entity).UpdateColumns(it => new
                 {
+                    it.RepairStatus,
                     it.ApprovalStatus,
                     it.DataStatus,
                     it.ApprovalResults,

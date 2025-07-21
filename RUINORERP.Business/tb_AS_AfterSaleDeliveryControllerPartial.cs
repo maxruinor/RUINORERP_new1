@@ -168,7 +168,7 @@ namespace RUINORERP.Business
                 entity.DataStatus = (int)DataStatus.新建;
                 entity.ApprovalStatus = (int)ApprovalStatus.未审核;
                 entity.ApprovalResults = false;
-                entity.ApprovalOpinions="";
+                entity.ApprovalOpinions = "";
                 entity.Approver_at = null;
                 entity.Approver_by = null;
 
@@ -266,6 +266,14 @@ namespace RUINORERP.Business
                     {
                         // 累加已有分组的数值字段
                         group.Qty += currentOutQty;
+                        if (!_appContext.SysConfig.CheckNegativeInventory && (group.Inventory.Quantity - group.Qty) < 0)
+                        {
+                            // rrs.ErrorMsg = "系统设置不允许负库存，请检查物料出库数量与库存相关数据";
+                            rmrs.ErrorMsg = $"sku:{group.Inventory.tb_proddetail.SKU}库存为：{group.Inventory.Quantity}，要交付的数量为：{group.Qty}\r\n 系统设置不允许负库存， 请检查出库数量与库存相关数据";
+                            _unitOfWorkManage.RollbackTran();
+                            rmrs.Succeeded = false;
+                            return rmrs;
+                        }
                         inventoryGroups[key] = group; // 更新分组数据
                     }
                 }
@@ -276,6 +284,7 @@ namespace RUINORERP.Business
                     var inv = group.Value.Inventory;
                     // 累加数值字段
                     inv.Quantity -= group.Value.Qty.ToInt();
+                    inv.LatestOutboundTime=System.DateTime.Now;
                     invList.Add(inv);
                 }
 
@@ -309,7 +318,12 @@ namespace RUINORERP.Business
                         }
 
                         AfterSaleApplyDetail.DeliveredQty += totalDeliveryQty;
+                        if (AfterSaleApplyDetail.DeliveredQty > AfterSaleApplyDetail.ConfirmedQuantity)
+                        {
+                            throw new Exception($"售后交付单中,交付数量{AfterSaleApplyDetail.DeliveredQty}不能大于申请单时复核的数量{AfterSaleApplyDetail.ConfirmedQuantity}，更新失败！");
+                        }
                     }
+
                     entity.tb_as_aftersaleapply.TotalDeliveredQty = entity.tb_as_aftersaleapply.tb_AS_AfterSaleApplyDetails.Sum(c => c.DeliveredQty);
                     //更新交付数量
                     await _unitOfWorkManage.GetDbClient().Updateable(entity.tb_as_aftersaleapply.tb_AS_AfterSaleApplyDetails)

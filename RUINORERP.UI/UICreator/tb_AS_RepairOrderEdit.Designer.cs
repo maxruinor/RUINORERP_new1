@@ -3,7 +3,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：07/16/2025 10:05:12
+// 时间：07/19/2025 17:12:42
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -14,7 +14,7 @@ using FluentValidation;
 namespace RUINORERP.UI
 {
     /// <summary>
-    /// 维修工单  工时费 材料费
+    /// 维修工单
     /// </summary>
     partial class tb_AS_RepairOrderEdit
     {

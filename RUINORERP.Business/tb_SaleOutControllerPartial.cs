@@ -76,11 +76,9 @@ namespace RUINORERP.Business
                         entity.DataStatus = (int)DataStatus.完结; //强制结案
                         BusinessHelper.Instance.EditEntity(entity);
                         //只更新指定列
-                        var affectedRows = await _unitOfWorkManage.GetDbClient().Updateable<tb_SaleOut>(entity).UpdateColumns(it => new { it.DataStatus, it.PayStatus, it.Paytype_ID, it.Modified_by, it.Modified_at }).ExecuteCommandAsync();
-                        //.Where(d => d.ProdBaseID == info.ProdBaseID).ExecuteCommandAsync();
-                        // return affectedRows > 0;
-                        //var result = _unitOfWorkManage.GetDbClient().Updateable<tb_Stocktake>(entity).UpdateColumns(it => new { it.DataStatus, it.ApprovalOpinions }).ExecuteCommand();
-                        //await _unitOfWorkManage.GetDbClient().Updateable<tb_SaleOut>(entity).ExecuteCommandAsync();
+                        var affectedRows = await _unitOfWorkManage.GetDbClient().Updateable<tb_SaleOut>(entity)
+                            .UpdateColumns(it => new { it.DataStatus, it.PayStatus, it.Paytype_ID, it.Modified_by, it.Modified_at }).ExecuteCommandAsync();
+                       
                     }
                 }
 
@@ -167,6 +165,16 @@ namespace RUINORERP.Business
                         .AsNavQueryable()//加这个前面,超过三级在前面加这一行，并且第四级无VS智能提示，但是可以用
                       .Includes(a => a.tb_SaleOrderDetails, b => b.tb_proddetail, c => c.tb_prod)
                         .Where(c => c.SOrder_ID == entity.SOrder_ID).SingleAsync();
+
+
+                    //如果采购订单的供应商和这里入库的供应商不相同，要提示
+                    if (entity.CustomerVendor_ID != entity.tb_saleorder.CustomerVendor_ID)
+                    {
+                        rrs.Succeeded = false;
+                        rrs.ErrorMsg = $"销售出库单的客户和销售订单的客户不同!请检查数据后重试！";
+                        return rrs;
+                    }
+
 
                     // 检查销售订单状态是否为已确认
                     bool isOrderConfirmed = entity.tb_saleorder.DataStatus == (int)DataStatus.确认;

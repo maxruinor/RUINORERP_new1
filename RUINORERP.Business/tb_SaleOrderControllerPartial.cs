@@ -252,7 +252,7 @@ namespace RUINORERP.Business
                 entity.ApprovalResults = true;
                 BusinessHelper.Instance.ApproverEntity(entity);
                 //只更新指定列
-                var result = await _unitOfWorkManage.GetDbClient().Updateable<tb_SaleOrder>(entity).UpdateColumns(it => new
+                var result = await _unitOfWorkManage.GetDbClient().Updateable(entity).UpdateColumns(it => new
                 {
                     it.DataStatus,
                     it.ApprovalResults,
@@ -348,10 +348,9 @@ namespace RUINORERP.Business
                         entity.ApprovalResults = approvalEntity.ApprovalResults;
                         entity.ApprovalStatus = (int)ApprovalStatus.已审核;
                         BusinessHelper.Instance.ApproverEntity(entity);
-                        //只更新指定列
-                        // var result = _unitOfWorkManage.GetDbClient().Updateable<tb_Stocktake>(entity).UpdateColumns(it => new { it.DataStatus, it.ApprovalOpinions }).ExecuteCommand();
-                        await _unitOfWorkManage.GetDbClient().Updateable<tb_SaleOrder>(entity).ExecuteCommandAsync();
-
+                        var result = await _unitOfWorkManage.GetDbClient().Updateable(entity)
+                                            .UpdateColumns(it => new { it.DataStatus, it.ApprovalOpinions, it.ApprovalResults, it.ApprovalStatus, it.Approver_at, it.Approver_by })
+                                            .ExecuteCommandHasChangeAsync();
                     }
 
 

@@ -100,15 +100,12 @@ namespace RUINORERP.UI.BI
                                 //// .SetColumns(it => it.CustomerName == entity.tb_crm_customer)//SetColumns是可以叠加的 写2个就2个字段赋值
                                 //.Where(it => it.Customer_id == entity.Customer_id.Value)
                                 //.ExecuteCommandAsync();
-                                long cid= entity.Customer_id.Value;
-                                 
-                                var result = await MainForm.Instance.AppContext.Db.Updateable<tb_CRM_Customer>()
-                                 .Where(it => it.Customer_id == cid)
-                                 .SetColumns(it => it.CustomerName == entity.CVName)//SetColumns是可以叠加的 写2个就2个字段赋值
-                                 .SetColumns(it => it.Converted == true)//SetColumns是可以叠加的 写2个就2个字段赋值
-                                .ExecuteCommandHasChangeAsync();
-
-
+                                //long cid = entity.Customer_id.Value;
+                                //var result = await MainForm.Instance.AppContext.Db.Updateable<tb_CRM_Customer>()
+                                // .SetColumns(it => it.CustomerName == entity.CVName)//SetColumns是可以叠加的 写2个就2个字段赋值
+                                // .SetColumns(it => it.Converted == true)//SetColumns是可以叠加的 写2个就2个字段赋值
+                                //   .Where(it => it.Customer_id == cid)
+                                //.ExecuteCommandAsync();
                             }
 
 

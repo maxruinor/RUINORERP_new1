@@ -13,6 +13,7 @@
   <ItemGroup>
     <Compile Remove="IRoleModulePermissionRepository.cs" />
     <Compile Remove="RoleModulePermissionRepository.cs" />
+    <Compile Remove="UnitOfWorks\UnitOfWork.cs" />
   </ItemGroup>
 
   <ItemGroup>

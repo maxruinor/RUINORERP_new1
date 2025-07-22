@@ -2,6 +2,7 @@
 using FastReport.Table;
 using Pipelines.Sockets.Unofficial.Arenas;
 using RUINORERP.Business;
+using RUINORERP.Business.BizMapperService;
 using RUINORERP.Business.Processor;
 using RUINORERP.Common.Extensions;
 using RUINORERP.Global.EnumExt;
@@ -32,11 +33,18 @@ namespace RUINORERP.UI.Common
     /// </summary>
     public class GridViewRelated
     {
+
+        private readonly EntityLoader _loader;
+        private readonly EnhancedBizTypeMapper _mapper;
+        private readonly EntityBizMappingService _mappingService;
         public GridViewRelated()
         {
 
             menuPowerHelper = Startup.GetFromFac<MenuPowerHelper>();
-
+            // 通过依赖注入获取服务实例
+            _loader = Startup.GetFromFac<EntityLoader>();
+            _mapper = Startup.GetFromFac<EnhancedBizTypeMapper>();
+            _mappingService = Startup.GetFromFac<EntityBizMappingService>();
         }
 
 
@@ -482,6 +490,23 @@ namespace RUINORERP.UI.Common
 
         public void OpenTargetEntity(tb_MenuInfo RelatedMenuInfo, string tableName, object billno)
         {
+
+            // 1. 把表名变成实体类型
+            var entityType = _mappingService.GetEntityTypeByTableName(tableName);
+
+            var entity = _loader.LoadEntityInternal(entityType, billno);
+            if (entity != null)
+            {
+                menuPowerHelper.ExecuteEvents(RelatedMenuInfo, entity);
+                return;
+            }
+            // 加载实体数据
+            //var order = _loader.LoadEntity(tableName, billno);
+            //if (order != null)
+            //{
+            //    menuPowerHelper.ExecuteEvents(RelatedMenuInfo, order);
+            //    return;
+            //}
 
 
             if (tableName == typeof(tb_SaleOutRe).Name)

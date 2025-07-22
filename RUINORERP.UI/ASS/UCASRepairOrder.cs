@@ -132,7 +132,7 @@ namespace RUINORERP.UI.ASS
                         toolStripButton维修领料.Enabled = true;
                         toolStripButton维修处理.Enabled = false;
                         MainForm.Instance.AuditLogHelper.CreateAuditLog<tb_AS_RepairOrder>("维修处理", EditEntity);
-                        MessageBox.Show($"当前【维修工单】的产品，将从【售后暂存仓】出库，交由维修人员处理", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        MessageBox.Show($"当前【维修工单】的产品，将从【售后暂存仓】出库，【全部】交由维修人员处理", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
 
 
                     }

@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：07/19/2025 17:12:43
+// 时间：07/22/2025 18:02:30
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -30,7 +30,7 @@ using RUINORERP.Common.Helper;
 namespace RUINORERP.Business.Processor
 {
     /// <summary>
-    /// 维修工单
+    /// 维修工单  工时费 材料费
     /// </summary>
     public partial class tb_AS_RepairOrderProcessor:BaseProcessor 
     {

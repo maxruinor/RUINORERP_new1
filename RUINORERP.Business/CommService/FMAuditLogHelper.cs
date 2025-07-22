@@ -11,12 +11,12 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Options;
 using RUINORERP.Business;
-using RUINORERP.Business.CommService;
 using RUINORERP.Common.Extensions;
 using RUINORERP.Common.Helper;
 using System.Threading;
 using RUINORERP.Model.Context;
 using Mapster;
+using RUINORERP.Business.BizMapperService;
 
 
 namespace RUINORERP.Business.CommService
@@ -35,6 +35,8 @@ namespace RUINORERP.Business.CommService
     {
         private readonly ConcurrentQueue<tb_AuditLogs> _auditLogQueue = new ConcurrentQueue<tb_AuditLogs>();
 
+        private readonly Lazy<EnhancedBizTypeMapper> _mapper;
+
         private readonly Lazy<BillConverterFactory> _billConverterFactory; // 缓存工厂
         private readonly Lazy<tb_AuditLogsController<tb_AuditLogs>> _AuditLogsController; // 缓存工厂
         private readonly Timer _flushTimer;
@@ -51,6 +53,11 @@ namespace RUINORERP.Business.CommService
             // 延迟解析依赖，直到第一次使用时才获取实例
             _billConverterFactory = new Lazy<BillConverterFactory>(
                 () => _appContext.GetRequiredService<BillConverterFactory>());// 缓存工厂
+
+
+            _mapper = new Lazy<EnhancedBizTypeMapper>(
+                () => _appContext.GetRequiredService<EnhancedBizTypeMapper>());// 缓存工厂
+
 
             _AuditLogsController = new Lazy<tb_AuditLogsController<tb_AuditLogs>>(() => _appContext.GetRequiredService<tb_AuditLogsController<tb_AuditLogs>>());
             // 启动定时刷新
@@ -135,15 +142,28 @@ namespace RUINORERP.Business.CommService
                 }
                 //BillConverterFactory bcf = _appContext.GetRequiredService<BillConverterFactory>();
                 //CommBillData cbd = bcf.GetBillData<T>(entity);
+
+
                 // 直接使用缓存的工厂，避免重复解析
                 // 使用时才解析依赖
-                var factory = _billConverterFactory.Value;
-                CommBillData cbd = factory.GetBillData<T>(entity);
-                auditLog.ObjectType = (int)BizType;
-                auditLog.ObjectId = cbd.BillID;
-                auditLog.ObjectNo = cbd.BillNo;
+                //var factory = _billConverterFactory.Value;
+                //CommBillData cbd = factory.GetBillData<T>(entity);
+                var bizType = _mapper.Value.GetBizType(typeof(T), entity);
+                auditLog.ObjectType = (int)bizType;
+
+                // 获取字段配置
+                var (idField, noField) = _mapper.Value.GetEntityFieldValue<long>(typeof(T), entity);
+                auditLog.ObjectId = idField;
+                auditLog.ObjectNo = noField;
+
+                //auditLog.ObjectId = cbd.BillID;
+                //auditLog.ObjectNo = cbd.BillNo;
                 var dataContent = EntityDataExtractor.ExtractDataContent(entity);
                 auditLog.DataContent = dataContent;
+
+
+
+
                 // 使用反射获取需要审计的字段
                 //auditLog.DataContent = GetAuditDataContent(entity);
             }

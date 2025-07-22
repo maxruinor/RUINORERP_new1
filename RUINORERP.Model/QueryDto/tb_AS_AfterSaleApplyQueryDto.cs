@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：07/19/2025 17:12:33
+// 时间：07/22/2025 18:02:21
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -19,7 +19,7 @@ using RUINORERP.Model.Base;
 namespace RUINORERP.Model.QueryDto
 {
     /// <summary>
-    /// 售后申请单
+    /// 售后申请单 -登记，评估，清单，确认。目标是维修翻新
     /// </summary>
     [Serializable()]
     [SugarTable("tb_AS_AfterSaleApply")]

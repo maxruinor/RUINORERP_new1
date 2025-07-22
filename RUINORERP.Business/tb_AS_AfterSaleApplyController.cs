@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：07/19/2025 17:12:32
+// 时间：07/22/2025 18:02:21
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -29,7 +29,7 @@ using RUINORERP.Common.Helper;
 namespace RUINORERP.Business
 {
     /// <summary>
-    /// 售后申请单
+    /// 售后申请单 -登记，评估，清单，确认。目标是维修翻新
     /// </summary>
     public partial class tb_AS_AfterSaleApplyController<T>:BaseController<T> where T : class
     {
@@ -249,16 +249,16 @@ namespace RUINORERP.Business
             
                              rs = await _unitOfWorkManage.GetDbClient().UpdateNav<tb_AS_AfterSaleApply>(entity as tb_AS_AfterSaleApply)
                         .Include(m => m.tb_AS_AfterSaleDeliveries)
-                    .Include(m => m.tb_AS_RepairOrders)
                     .Include(m => m.tb_AS_AfterSaleApplyDetails)
+                    .Include(m => m.tb_AS_RepairOrders)
                     .ExecuteCommandAsync();
                  }
         else    
         {
                         rs = await _unitOfWorkManage.GetDbClient().InsertNav<tb_AS_AfterSaleApply>(entity as tb_AS_AfterSaleApply)
                 .Include(m => m.tb_AS_AfterSaleDeliveries)
-                .Include(m => m.tb_AS_RepairOrders)
                 .Include(m => m.tb_AS_AfterSaleApplyDetails)
+                .Include(m => m.tb_AS_RepairOrders)
          
                 .ExecuteCommandAsync();
                                           
@@ -293,8 +293,8 @@ namespace RUINORERP.Business
         {
             var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<tb_AS_AfterSaleApply>()
                                 .Includes(m => m.tb_AS_AfterSaleDeliveries)
-                        .Includes(m => m.tb_AS_RepairOrders)
                         .Includes(m => m.tb_AS_AfterSaleApplyDetails)
+                        .Includes(m => m.tb_AS_RepairOrders)
                                         .Where(useLike, dto);
             return await querySqlQueryable.ToListAsync()as List<T>;
         }
@@ -305,8 +305,8 @@ namespace RUINORERP.Business
             tb_AS_AfterSaleApply entity = model as tb_AS_AfterSaleApply;
              bool rs = await _unitOfWorkManage.GetDbClient().DeleteNav<tb_AS_AfterSaleApply>(m => m.ASApplyID== entity.ASApplyID)
                                 .Include(m => m.tb_AS_AfterSaleDeliveries)
-                        .Include(m => m.tb_AS_RepairOrders)
                         .Include(m => m.tb_AS_AfterSaleApplyDetails)
+                        .Include(m => m.tb_AS_RepairOrders)
                                         .ExecuteCommandAsync();
             if (rs)
             {
@@ -474,8 +474,8 @@ namespace RUINORERP.Business
                                .Includes(t => t.tb_projectgroup )
                                .Includes(t => t.tb_location )
                                             .Includes(t => t.tb_AS_AfterSaleDeliveries )
-                                .Includes(t => t.tb_AS_RepairOrders )
                                 .Includes(t => t.tb_AS_AfterSaleApplyDetails )
+                                .Includes(t => t.tb_AS_RepairOrders )
                         .ToListAsync();
             
             foreach (var item in list)
@@ -500,8 +500,8 @@ namespace RUINORERP.Business
                                .Includes(t => t.tb_projectgroup )
                                .Includes(t => t.tb_location )
                                             .Includes(t => t.tb_AS_AfterSaleDeliveries )
-                                .Includes(t => t.tb_AS_RepairOrders )
                                 .Includes(t => t.tb_AS_AfterSaleApplyDetails )
+                                .Includes(t => t.tb_AS_RepairOrders )
                         .ToListAsync();
             
             foreach (var item in list)
@@ -526,8 +526,8 @@ namespace RUINORERP.Business
                             .Includes(t => t.tb_projectgroup )
                             .Includes(t => t.tb_location )
                                         .Includes(t => t.tb_AS_AfterSaleDeliveries )
-                            .Includes(t => t.tb_AS_RepairOrders )
                             .Includes(t => t.tb_AS_AfterSaleApplyDetails )
+                            .Includes(t => t.tb_AS_RepairOrders )
                         .ToList();
             
             foreach (var item in list)
@@ -569,8 +569,8 @@ namespace RUINORERP.Business
                             .Includes(t => t.tb_projectgroup )
                             .Includes(t => t.tb_location )
                                         .Includes(t => t.tb_AS_AfterSaleDeliveries )
-                            .Includes(t => t.tb_AS_RepairOrders )
                             .Includes(t => t.tb_AS_AfterSaleApplyDetails )
+                            .Includes(t => t.tb_AS_RepairOrders )
                         .FirstAsync();
             if(entity!=null)
             {

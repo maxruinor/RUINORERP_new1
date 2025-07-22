@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：07/19/2025 17:12:43
+// 时间：07/22/2025 18:02:31
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -18,10 +18,10 @@ using RUINORERP.Global.CustomAttribute;
 namespace RUINORERP.Model
 {
     /// <summary>
-    /// 维修工单
+    /// 维修工单  工时费 材料费
     /// </summary>
     [Serializable()]
-    [Description("维修工单")]
+    [Description("维修工单  工时费 材料费")]
     [SugarTable("tb_AS_RepairOrder")]
     public partial class tb_AS_RepairOrder: BaseEntity, ICloneable
     {
@@ -30,7 +30,7 @@ namespace RUINORERP.Model
             
             if (!PK_FK_ID_Check())
             {
-                throw new Exception("维修工单tb_AS_RepairOrder" + "外键ID与对应主主键名称不一致。请修改数据库");
+                throw new Exception("维修工单  工时费 材料费tb_AS_RepairOrder" + "外键ID与对应主主键名称不一致。请修改数据库");
             }
         }
 
@@ -193,6 +193,20 @@ namespace RUINORERP.Model
             get{return _TotalQty;}
             set{
             SetProperty(ref _TotalQty, value);
+                        }
+        }
+
+        private int _TotalDeliveredQty= ((0));
+        /// <summary>
+        /// 交付数量
+        /// </summary>
+        [AdvQueryAttribute(ColName = "TotalDeliveredQty",ColDesc = "交付数量")] 
+        [SugarColumn(ColumnDataType = "int", SqlParameterDbType ="Int32",  ColumnName = "TotalDeliveredQty" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "交付数量" )]
+        public int TotalDeliveredQty
+        { 
+            get{return _TotalDeliveredQty;}
+            set{
+            SetProperty(ref _TotalDeliveredQty, value);
                         }
         }
 
@@ -536,14 +550,6 @@ namespace RUINORERP.Model
 
         //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_AS_RepairOrderDetail.RepairOrderID))]
-        public virtual List<tb_AS_RepairOrderDetail> tb_AS_RepairOrderDetails { get; set; }
-        //tb_AS_RepairOrderDetail.RepairOrderID)
-        //RepairOrderID.FK_tb_AS_RepairOrder_REF_AS_RepairOrderDetail)
-        //tb_AS_RepairOrder.RepairOrderID)
-
-        //[Browsable(false)]打印报表时的数据源会不显示
-        [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_AS_RepairInStock.RepairOrderID))]
         public virtual List<tb_AS_RepairInStock> tb_AS_RepairInStocks { get; set; }
         //tb_AS_RepairInStock.RepairOrderID)
@@ -556,6 +562,14 @@ namespace RUINORERP.Model
         public virtual List<tb_AS_RepairOrderMaterialDetail> tb_AS_RepairOrderMaterialDetails { get; set; }
         //tb_AS_RepairOrderMaterialDetail.RepairOrderID)
         //RepairOrderID.FK_TB_AS_REPAIRMATERIALDETAIL_REF_AS_REPAIRORDER)
+        //tb_AS_RepairOrder.RepairOrderID)
+
+        //[Browsable(false)]打印报表时的数据源会不显示
+        [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_AS_RepairOrderDetail.RepairOrderID))]
+        public virtual List<tb_AS_RepairOrderDetail> tb_AS_RepairOrderDetails { get; set; }
+        //tb_AS_RepairOrderDetail.RepairOrderID)
+        //RepairOrderID.FK_tb_AS_RepairOrder_REF_AS_RepairOrderDetail)
         //tb_AS_RepairOrder.RepairOrderID)
 
         //[Browsable(false)]打印报表时的数据源会不显示

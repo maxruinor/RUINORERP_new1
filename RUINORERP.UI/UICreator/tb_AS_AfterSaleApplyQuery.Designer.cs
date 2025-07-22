@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：07/19/2025 17:12:30
+// 时间：07/22/2025 18:02:21
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -15,7 +15,7 @@ using FluentValidation;
 namespace RUINORERP.UI
 {
     /// <summary>
-    /// 售后申请单
+    /// 售后申请单 -登记，评估，清单，确认。目标是维修翻新
     /// </summary>
     partial class tb_AS_AfterSaleApplyQuery
     {

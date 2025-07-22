@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：07/19/2025 17:12:45
+// 时间：07/22/2025 18:02:33
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -110,6 +110,20 @@ namespace RUINORERP.Model
                         }
         }
 
+        private decimal _UnitPrice= ((0));
+        /// <summary>
+        /// 单价
+        /// </summary>
+        [AdvQueryAttribute(ColName = "UnitPrice",ColDesc = "单价")] 
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "UnitPrice" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "单价" )]
+        public decimal UnitPrice
+        { 
+            get{return _UnitPrice;}
+            set{
+            SetProperty(ref _UnitPrice, value);
+                        }
+        }
+
         private decimal _ShouldSendQty= ((0));
         /// <summary>
         /// 需求数量
@@ -135,20 +149,6 @@ namespace RUINORERP.Model
             get{return _ActualSentQty;}
             set{
             SetProperty(ref _ActualSentQty, value);
-                        }
-        }
-
-        private decimal _UnitPrice= ((0));
-        /// <summary>
-        /// 单价
-        /// </summary>
-        [AdvQueryAttribute(ColName = "UnitPrice",ColDesc = "单价")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "UnitPrice" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "单价" )]
-        public decimal UnitPrice
-        { 
-            get{return _UnitPrice;}
-            set{
-            SetProperty(ref _UnitPrice, value);
                         }
         }
 
@@ -250,20 +250,6 @@ namespace RUINORERP.Model
                         }
         }
 
-        private bool? _Gift= false;
-        /// <summary>
-        /// 赠品
-        /// </summary>
-        [AdvQueryAttribute(ColName = "Gift",ColDesc = "赠品")] 
-        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType ="Boolean",  ColumnName = "Gift" ,IsNullable = true,ColumnDescription = "赠品" )]
-        public bool? Gift
-        { 
-            get{return _Gift;}
-            set{
-            SetProperty(ref _Gift, value);
-                        }
-        }
-
         private bool? _IsCritical;
         /// <summary>
         /// 是否关键物料
@@ -275,6 +261,20 @@ namespace RUINORERP.Model
             get{return _IsCritical;}
             set{
             SetProperty(ref _IsCritical, value);
+                        }
+        }
+
+        private bool? _Gift= false;
+        /// <summary>
+        /// 赠品
+        /// </summary>
+        [AdvQueryAttribute(ColName = "Gift",ColDesc = "赠品")] 
+        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType ="Boolean",  ColumnName = "Gift" ,IsNullable = true,ColumnDescription = "赠品" )]
+        public bool? Gift
+        { 
+            get{return _Gift;}
+            set{
+            SetProperty(ref _Gift, value);
                         }
         }
 

@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：07/19/2025 17:12:44
+// 时间：07/22/2025 18:02:31
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -62,6 +62,7 @@ this.cmbLocation_ID = new ComponentFactory.Krypton.Toolkit.KryptonComboBox();
 this.lblproperty = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
 this.txtproperty = new ComponentFactory.Krypton.Toolkit.KryptonTextBox();
 this.txtproperty.Multiline = true;
+
 
 
 this.lblRepairContent = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
@@ -146,31 +147,36 @@ this.Controls.Add(this.txtproperty);
 //属性测试125Quantity
 //属性测试125Quantity
 
+           //#####DeliveredQty###Int32
+//属性测试150DeliveredQty
+//属性测试150DeliveredQty
+//属性测试150DeliveredQty
+
            //#####500RepairContent###String
 this.lblRepairContent.AutoSize = true;
-this.lblRepairContent.Location = new System.Drawing.Point(100,150);
+this.lblRepairContent.Location = new System.Drawing.Point(100,175);
 this.lblRepairContent.Name = "lblRepairContent";
 this.lblRepairContent.Size = new System.Drawing.Size(41, 12);
-this.lblRepairContent.TabIndex = 6;
+this.lblRepairContent.TabIndex = 7;
 this.lblRepairContent.Text = "维修内容";
-this.txtRepairContent.Location = new System.Drawing.Point(173,146);
+this.txtRepairContent.Location = new System.Drawing.Point(173,171);
 this.txtRepairContent.Name = "txtRepairContent";
 this.txtRepairContent.Size = new System.Drawing.Size(100, 21);
-this.txtRepairContent.TabIndex = 6;
+this.txtRepairContent.TabIndex = 7;
 this.Controls.Add(this.lblRepairContent);
 this.Controls.Add(this.txtRepairContent);
 
            //#####1000Summary###String
 this.lblSummary.AutoSize = true;
-this.lblSummary.Location = new System.Drawing.Point(100,175);
+this.lblSummary.Location = new System.Drawing.Point(100,200);
 this.lblSummary.Name = "lblSummary";
 this.lblSummary.Size = new System.Drawing.Size(41, 12);
-this.lblSummary.TabIndex = 7;
+this.lblSummary.TabIndex = 8;
 this.lblSummary.Text = "摘要";
-this.txtSummary.Location = new System.Drawing.Point(173,171);
+this.txtSummary.Location = new System.Drawing.Point(173,196);
 this.txtSummary.Name = "txtSummary";
 this.txtSummary.Size = new System.Drawing.Size(100, 21);
-this.txtSummary.TabIndex = 7;
+this.txtSummary.TabIndex = 8;
 this.Controls.Add(this.lblSummary);
 this.Controls.Add(this.txtSummary);
 
@@ -194,6 +200,7 @@ this.Controls.Add(this.cmbLocation_ID );
                 this.Controls.Add(this.lblproperty );
 this.Controls.Add(this.txtproperty );
 
+                
                 
                 this.Controls.Add(this.lblRepairContent );
 this.Controls.Add(this.txtRepairContent );
@@ -231,6 +238,9 @@ private ComponentFactory.Krypton.Toolkit.KryptonComboBox cmbLocation_ID;
               private ComponentFactory.Krypton.Toolkit.KryptonLabel lblproperty;
 private ComponentFactory.Krypton.Toolkit.KryptonTextBox txtproperty;
 
+    
+        
+              
     
         
               

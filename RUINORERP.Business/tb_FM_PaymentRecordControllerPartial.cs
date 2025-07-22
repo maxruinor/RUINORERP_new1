@@ -948,7 +948,7 @@ namespace RUINORERP.Business
 
         public tb_FM_PaymentRecord BuildPaymentRecord(tb_FM_OtherExpense entity)
         {
-            //预收付款单 审核时 自动生成 收付款记录
+            //其它费用收入支出 审核时 自动生成 收付款记录
 
             tb_FM_PaymentRecord paymentRecord = new tb_FM_PaymentRecord();
             paymentRecord = mapper.Map<tb_FM_PaymentRecord>(entity);

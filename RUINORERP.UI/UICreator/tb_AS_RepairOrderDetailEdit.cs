@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：07/19/2025 17:12:44
+// 时间：07/22/2025 18:02:31
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -41,6 +41,7 @@ namespace RUINORERP.UI
         
         
         
+        
 
          }
 /*
@@ -53,6 +54,7 @@ namespace RUINORERP.UI
                         entity.Location_ID = Int64.Parse(txtLocation_ID.Text);
                         entity.property = txtproperty.Text ;
                        entity.Quantity = Int32.Parse(txtQuantity.Text);
+                        entity.DeliveredQty = Int32.Parse(txtDeliveredQty.Text);
                         entity.RepairContent = txtRepairContent.Text ;
                        entity.Summary = txtSummary.Text ;
                                return entity;
@@ -70,6 +72,7 @@ namespace RUINORERP.UI
           // DataBindingHelper.BindData4Cmb<tb_Location>(entity, k => k.Location_ID, v=>v.XXNAME, cmbLocation_ID);
            DataBindingHelper.BindData4TextBox<tb_AS_RepairOrderDetail>(entity, t => t.property, txtproperty, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_AS_RepairOrderDetail>(entity, t => t.Quantity, txtQuantity, BindDataType4TextBox.Qty,false);
+           DataBindingHelper.BindData4TextBox<tb_AS_RepairOrderDetail>(entity, t => t.DeliveredQty, txtDeliveredQty, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4TextBox<tb_AS_RepairOrderDetail>(entity, t => t.RepairContent, txtRepairContent, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_AS_RepairOrderDetail>(entity, t => t.Summary, txtSummary, BindDataType4TextBox.Text,false);
 }

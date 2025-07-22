@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：07/19/2025 17:12:43
+// 时间：07/22/2025 18:02:30
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -19,7 +19,7 @@ using RUINORERP.Model.Base;
 namespace RUINORERP.Model.QueryDto
 {
     /// <summary>
-    /// 维修工单
+    /// 维修工单  工时费 材料费
     /// </summary>
     [Serializable()]
     [SugarTable("tb_AS_RepairOrder")]
@@ -165,6 +165,19 @@ namespace RUINORERP.Model.QueryDto
         { 
             get{return _TotalQty;}
             set{SetProperty(ref _TotalQty, value);}
+        }
+     
+
+        private int _TotalDeliveredQty= ((0));
+        /// <summary>
+        /// 交付数量
+        /// </summary>
+        [AdvQueryAttribute(ColName = "TotalDeliveredQty",ColDesc = "交付数量")]
+        [SugarColumn(ColumnDataType = "int",SqlParameterDbType ="Int32",ColumnName = "TotalDeliveredQty",IsNullable = false,ColumnDescription = "交付数量" )]
+        public int TotalDeliveredQty 
+        { 
+            get{return _TotalDeliveredQty;}
+            set{SetProperty(ref _TotalDeliveredQty, value);}
         }
      
 

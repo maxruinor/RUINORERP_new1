@@ -37,12 +37,12 @@ namespace RUINORERP.UI.ASS
         public UCASRepairInStockQuery()
         {
             InitializeComponent();
-            base.RelatedBillEditCol = (c => c.RepairOrderNo);
+            base.RelatedBillEditCol = (c => c.RepairInStockNo);
         }
      
         public override void SetGridViewDisplayConfig()
         {
-            _UCBillMasterQuery.GridRelated.SetRelatedInfo<tb_AS_RepairInStock, tb_AS_RepairOrder>(c => c.RepairOrderNo, r => r.ASApplyNo);
+            _UCBillMasterQuery.GridRelated.SetRelatedInfo<tb_AS_RepairInStock, tb_AS_RepairOrder>(c => c.RepairOrderNo, r => r.RepairOrderNo);
             base.SetGridViewDisplayConfig();
         }
 

@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：07/19/2025 17:12:42
+// 时间：07/22/2025 18:02:29
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -24,7 +24,7 @@ using RUINORERP.UI.Common;
 namespace RUINORERP.UI
 {
     /// <summary>
-    /// 维修工单数据编辑
+    /// 维修工单  工时费 材料费数据编辑
     /// </summary>
      [MenuAttrAssemblyInfo( "库位编辑", true, UIType.单表数据)]
     public partial class tb_AS_RepairOrderEdit:UserControl
@@ -33,6 +33,7 @@ namespace RUINORERP.UI
      
                          InitializeComponent();
       
+        
         
         
         
@@ -83,6 +84,7 @@ namespace RUINORERP.UI
                         entity.PayStatus = Int32.Parse(txtPayStatus.Text);
                         entity.Paytype_ID = Int64.Parse(txtPaytype_ID.Text);
                         entity.TotalQty = Int32.Parse(txtTotalQty.Text);
+                        entity.TotalDeliveredQty = Int32.Parse(txtTotalDeliveredQty.Text);
                         entity.LaborCost = Decimal.Parse(txtLaborCost.Text);
                         entity.TotalMaterialAmount = Decimal.Parse(txtTotalMaterialAmount.Text);
                         entity.TotalAmount = Decimal.Parse(txtTotalAmount.Text);
@@ -125,6 +127,7 @@ namespace RUINORERP.UI
            DataBindingHelper.BindData4TextBox<tb_AS_RepairOrder>(entity, t => t.PayStatus, txtPayStatus, BindDataType4TextBox.Qty,false);
           // DataBindingHelper.BindData4Cmb<tb_PaymentMethod>(entity, k => k.Paytype_ID, v=>v.XXNAME, cmbPaytype_ID);
            DataBindingHelper.BindData4TextBox<tb_AS_RepairOrder>(entity, t => t.TotalQty, txtTotalQty, BindDataType4TextBox.Qty,false);
+           DataBindingHelper.BindData4TextBox<tb_AS_RepairOrder>(entity, t => t.TotalDeliveredQty, txtTotalDeliveredQty, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4TextBox<tb_AS_RepairOrder>(entity, t => t.LaborCost.ToString(), txtLaborCost, BindDataType4TextBox.Money,false);
            DataBindingHelper.BindData4TextBox<tb_AS_RepairOrder>(entity, t => t.TotalMaterialAmount.ToString(), txtTotalMaterialAmount, BindDataType4TextBox.Money,false);
            DataBindingHelper.BindData4TextBox<tb_AS_RepairOrder>(entity, t => t.TotalAmount.ToString(), txtTotalAmount, BindDataType4TextBox.Money,false);

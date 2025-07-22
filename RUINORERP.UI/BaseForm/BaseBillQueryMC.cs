@@ -15,6 +15,7 @@ using Org.BouncyCastle.Asn1.X509.Qualified;
 using RUINOR.Core;
 using RUINORERP.AutoMapper;
 using RUINORERP.Business;
+using RUINORERP.Business.BizMapperService;
 using RUINORERP.Business.CommService;
 using RUINORERP.Business.Processor;
 using RUINORERP.Business.Security;
@@ -56,9 +57,11 @@ using System.Runtime.InteropServices;
 using System.Security.Policy;
 using System.Text;
 using System.Threading.Tasks;
+using System.Web.Configuration;
 using System.Web.UI.WebControls;
 using System.Windows.Forms;
 using System.Xml;
+using static StackExchange.Redis.Role;
 using CommonHelper = RUINORERP.UI.Common.CommonHelper;
 using ContextMenuController = RUINORERP.UI.UControls.ContextMenuController;
 using XmlDocument = System.Xml.XmlDocument;
@@ -131,7 +134,7 @@ namespace RUINORERP.UI.BaseForm
         /// </summary>
         public Expression<Func<M, string>> RelatedBillEditCol { get; set; }
 
-
+        private readonly EnhancedBizTypeMapper _mapper;
 
         public BaseBillQueryMC()
         {
@@ -144,6 +147,11 @@ namespace RUINORERP.UI.BaseForm
                     {
                         frm = new frmFormProperty();
                     }
+                    if (_mapper==null)
+                    {
+                        _mapper = Startup.GetFromFac<EnhancedBizTypeMapper>();
+                    }
+                    
 
                     //提前统一插入批量处理的菜单按钮
 
@@ -728,6 +736,22 @@ namespace RUINORERP.UI.BaseForm
             ae.BillNo = cbd.BillNo;
             ae.bizType = cbd.BizType;
             ae.bizName = cbd.BizName;
+
+            //// 获取销售订单实体类型
+            //var entityType = _mapper.GetEntityType(BizType.销售订单);
+
+            //var bi = _mapper.GetBizType(typeof(M), EditEntity);
+            //// 获取字段映射
+            //var (idField, noField) = _mapper.GetEntityFields(typeof(M));
+
+            // 使用字段名查询数据库...
+            //var order = await MainForm.Instance.AppContext.Db.Queryable<M>(entityType.Name)
+            //    .Includes()
+            //    .Where($"{idField} = @id", new { pkid })
+            //   .SingleAsync();
+
+
+
             ae.Approver_by = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID;
             frm.BindData(ae);
             await Task.Delay(1);

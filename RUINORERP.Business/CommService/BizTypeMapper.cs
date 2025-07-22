@@ -109,7 +109,12 @@ namespace RUINORERP.Business.CommService
         }
 
 
-
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="tableName"></param>
+        /// <param name="entity">有些共用表的单据。需要根据具体的实体中的某个字段来区别类型</param>
+        /// <returns></returns>
         public BizType GetBizType(string tableName)
         {
             BizType bizType = BizType.默认数据;
@@ -132,6 +137,9 @@ namespace RUINORERP.Business.CommService
             return bizType;
         }
 
+
+
+
         public BizType GetBizType(Type table)
         {
             foreach (KeyValuePair<BizType, Type> entry in Mapping)
@@ -145,7 +153,7 @@ namespace RUINORERP.Business.CommService
             throw new ArgumentException("无效的表名", nameof(table));
         }
 
- 
+
         //public string GetBillNoCol()
         //{
         //    BillConverterFactory bcf = Startup.GetFromFac<BillConverterFactory>();

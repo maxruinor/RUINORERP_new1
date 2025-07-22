@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace RUINORERP.Global
 {
-
+  
     public enum PlatformType
     {
         阿里1688,
@@ -366,6 +366,8 @@ namespace RUINORERP.Global
         售后申请统计 = 169,
         售后交付统计 = 170,
         营销活动 = 300,
+
+        未知类型= 999,
     }
 
 

@@ -6,14 +6,13 @@ namespace RUINORERP.Repository.UnitOfWorks
     public interface IUnitOfWorkManage
     {
         SqlSugarScope GetDbClient();
-        int TranCount { get; }
-        UnitOfWork CreateUnitOfWork();
 
+        int TranCount { get; }
         void BeginTran();
-        void BeginTran(MethodInfo method);
         void CommitTran();
-        void CommitTran(MethodInfo method);
         void RollbackTran();
-        void RollbackTran(MethodInfo method);
+        void RestoreTransactionState(UnitOfWorkManage.TransactionState originalState);
+        void MarkForRollback();
+        UnitOfWorkManage.TransactionState GetTransactionState();
     }
 }

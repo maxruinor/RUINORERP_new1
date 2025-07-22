@@ -3,6 +3,7 @@ using MathNet.Numerics.Distributions;
 using Netron.GraphLib;
 using Netron.GraphLib.Entitology;
 using NPOI.SS.Formula.Functions;
+using RUINORERP.Business.BizMapperService;
 using RUINORERP.Business.CommService;
 using RUINORERP.Business.Processor;
 using RUINORERP.Business.Security;
@@ -13,6 +14,7 @@ using RUINORERP.Model;
 using RUINORERP.UI.ATechnologyStack;
 using RUINORERP.UI.Common;
 using RUINORERP.UI.FM;
+using RulesEngine.Models;
 using SqlSugar;
 using System;
 using System.Collections.Concurrent;
@@ -33,6 +35,20 @@ namespace RUINORERP.UI.UserCenter.DataParts
         // 依赖注入的服务
         private readonly MenuPowerHelper _menuPowerHelper;
         private readonly BizTypeMapper _mapper;
+        private readonly EnhancedBizTypeMapper _Emapper;
+        private readonly EntityLoader _loader;
+        public UCTodoList(EnhancedBizTypeMapper mapper, EntityLoader loader)
+        {
+            InitializeComponent();
+            _Emapper = mapper;
+            _loader = loader;
+            // 通过依赖注入获取服务实例
+            _menuPowerHelper = Startup.GetFromFac<MenuPowerHelper>();
+            _mapper = new BizTypeMapper();
+            _conditionBuilderFactory = new ConditionBuilderFactory();
+        }
+        
+
 
         private readonly ConditionBuilderFactory _conditionBuilderFactory;
         public UCTodoList()
@@ -380,7 +396,13 @@ namespace RUINORERP.UI.UserCenter.DataParts
 
         private async Task<TreeNode> ProcessBizTypeNodeAsync(BizType bizType)
         {
-            Type tableType = _mapper.GetTableType(bizType);
+            if (bizType==BizType.预收款单)
+            {
+
+            }
+            //Type tableType = _mapper.GetTableType(bizType);
+            Type tableType = _Emapper.GetEntityType(bizType);
+
             var bizEntity = Activator.CreateInstance(tableType);
             TreeNode parentNode = new TreeNode(bizType.ToString());
 

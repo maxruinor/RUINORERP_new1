@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：07/19/2025 17:12:46
+// 时间：07/22/2025 18:02:33
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -46,11 +46,11 @@ namespace RUINORERP.Business
 
  RuleFor(tb_AS_RepairOrderMaterialDetail =>tb_AS_RepairOrderMaterialDetail.ProdDetailID).Must(CheckForeignKeyValue).WithMessage("维修物料:下拉选择值不正确。");
 
+ RuleFor(x => x.UnitPrice).PrecisionScale(19,4,true).WithMessage("单价:小数位不能超过4。");
+
  RuleFor(x => x.ShouldSendQty).PrecisionScale(10,3,true).WithMessage("需求数量:小数位不能超过3。");
 
  RuleFor(x => x.ActualSentQty).PrecisionScale(10,3,true).WithMessage("实发数量:小数位不能超过3。");
-
- RuleFor(x => x.UnitPrice).PrecisionScale(19,4,true).WithMessage("单价:小数位不能超过4。");
 
  RuleFor(x => x.SubtotalTransAmount).PrecisionScale(19,4,true).WithMessage("小计:小数位不能超过4。");
 

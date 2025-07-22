@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：07/19/2025 17:12:45
+// 时间：07/22/2025 18:02:32
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -61,9 +61,9 @@ namespace RUINORERP.UI
                         entity.Location_ID = Int64.Parse(txtLocation_ID.Text);
                         entity.property = txtproperty.Text ;
                        entity.ProdDetailID = Int64.Parse(txtProdDetailID.Text);
+                        entity.UnitPrice = Decimal.Parse(txtUnitPrice.Text);
                         entity.ShouldSendQty = Decimal.Parse(txtShouldSendQty.Text);
                         entity.ActualSentQty = Decimal.Parse(txtActualSentQty.Text);
-                        entity.UnitPrice = Decimal.Parse(txtUnitPrice.Text);
                         entity.SubtotalTransAmount = Decimal.Parse(txtSubtotalTransAmount.Text);
                         entity.TaxRate = Decimal.Parse(txtTaxRate.Text);
                         entity.SubtotalTaxAmount = Decimal.Parse(txtSubtotalTaxAmount.Text);
@@ -71,8 +71,8 @@ namespace RUINORERP.UI
                         entity.Summary = txtSummary.Text ;
                        entity.Cost = Decimal.Parse(txtCost.Text);
                         entity.SubtotalCost = Decimal.Parse(txtSubtotalCost.Text);
-                        entity.Gift = Boolean.Parse(txtGift.Text);
                         entity.IsCritical = Boolean.Parse(txtIsCritical.Text);
+                        entity.Gift = Boolean.Parse(txtGift.Text);
                                 return entity;
 }
         */
@@ -87,9 +87,9 @@ namespace RUINORERP.UI
           // DataBindingHelper.BindData4Cmb<tb_Location>(entity, k => k.Location_ID, v=>v.XXNAME, cmbLocation_ID);
            DataBindingHelper.BindData4TextBox<tb_AS_RepairOrderMaterialDetail>(entity, t => t.property, txtproperty, BindDataType4TextBox.Text,false);
           // DataBindingHelper.BindData4Cmb<tb_ProdDetail>(entity, k => k.ProdDetailID, v=>v.XXNAME, cmbProdDetailID);
+           DataBindingHelper.BindData4TextBox<tb_AS_RepairOrderMaterialDetail>(entity, t => t.UnitPrice.ToString(), txtUnitPrice, BindDataType4TextBox.Money,false);
            DataBindingHelper.BindData4TextBox<tb_AS_RepairOrderMaterialDetail>(entity, t => t.ShouldSendQty.ToString(), txtShouldSendQty, BindDataType4TextBox.Money,false);
            DataBindingHelper.BindData4TextBox<tb_AS_RepairOrderMaterialDetail>(entity, t => t.ActualSentQty.ToString(), txtActualSentQty, BindDataType4TextBox.Money,false);
-           DataBindingHelper.BindData4TextBox<tb_AS_RepairOrderMaterialDetail>(entity, t => t.UnitPrice.ToString(), txtUnitPrice, BindDataType4TextBox.Money,false);
            DataBindingHelper.BindData4TextBox<tb_AS_RepairOrderMaterialDetail>(entity, t => t.SubtotalTransAmount.ToString(), txtSubtotalTransAmount, BindDataType4TextBox.Money,false);
            DataBindingHelper.BindData4TextBox<tb_AS_RepairOrderMaterialDetail>(entity, t => t.TaxRate.ToString(), txtTaxRate, BindDataType4TextBox.Money,false);
            DataBindingHelper.BindData4TextBox<tb_AS_RepairOrderMaterialDetail>(entity, t => t.SubtotalTaxAmount.ToString(), txtSubtotalTaxAmount, BindDataType4TextBox.Money,false);
@@ -97,8 +97,8 @@ namespace RUINORERP.UI
            DataBindingHelper.BindData4TextBox<tb_AS_RepairOrderMaterialDetail>(entity, t => t.Summary, txtSummary, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_AS_RepairOrderMaterialDetail>(entity, t => t.Cost.ToString(), txtCost, BindDataType4TextBox.Money,false);
            DataBindingHelper.BindData4TextBox<tb_AS_RepairOrderMaterialDetail>(entity, t => t.SubtotalCost.ToString(), txtSubtotalCost, BindDataType4TextBox.Money,false);
-           DataBindingHelper.BindData4CheckBox<tb_AS_RepairOrderMaterialDetail>(entity, t => t.Gift, chkGift, false);
            DataBindingHelper.BindData4CheckBox<tb_AS_RepairOrderMaterialDetail>(entity, t => t.IsCritical, chkIsCritical, false);
+           DataBindingHelper.BindData4CheckBox<tb_AS_RepairOrderMaterialDetail>(entity, t => t.Gift, chkGift, false);
 }
 
 

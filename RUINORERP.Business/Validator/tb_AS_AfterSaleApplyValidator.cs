@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：07/19/2025 17:12:34
+// 时间：07/22/2025 18:02:22
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,7 +21,7 @@ using Microsoft.Extensions.Options;
 namespace RUINORERP.Business
 {
     /// <summary>
-    /// 售后申请单验证类
+    /// 售后申请单 -登记，评估，清单，确认。目标是维修翻新验证类
     /// </summary>
     /*public partial class tb_AS_AfterSaleApplyValidator:AbstractValidator<tb_AS_AfterSaleApply>*/
     public partial class tb_AS_AfterSaleApplyValidator:BaseValidatorGeneric<tb_AS_AfterSaleApply>

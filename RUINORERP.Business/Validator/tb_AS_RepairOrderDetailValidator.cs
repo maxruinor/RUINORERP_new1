@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：07/19/2025 17:12:45
+// 时间：07/22/2025 18:02:32
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -48,6 +48,9 @@ namespace RUINORERP.Business
 
 //***** 
  RuleFor(tb_AS_RepairOrderDetail =>tb_AS_RepairOrderDetail.Quantity).NotNull().WithMessage("数量:不能为空。");
+
+//***** 
+ RuleFor(tb_AS_RepairOrderDetail =>tb_AS_RepairOrderDetail.DeliveredQty).NotNull().WithMessage("交付数量:不能为空。");
 
  RuleFor(tb_AS_RepairOrderDetail =>tb_AS_RepairOrderDetail.RepairContent).MaximumLength(250).WithMessage("维修内容:不能超过最大长度,250.");
 

@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：07/19/2025 17:12:33
+// 时间：07/22/2025 18:02:22
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -18,10 +18,10 @@ using RUINORERP.Global.CustomAttribute;
 namespace RUINORERP.Model
 {
     /// <summary>
-    /// 售后申请单
+    /// 售后申请单 -登记，评估，清单，确认。目标是维修翻新
     /// </summary>
     [Serializable()]
-    [Description("售后申请单")]
+    [Description("售后申请单 -登记，评估，清单，确认。目标是维修翻新")]
     [SugarTable("tb_AS_AfterSaleApply")]
     public partial class tb_AS_AfterSaleApply: BaseEntity, ICloneable
     {
@@ -30,7 +30,7 @@ namespace RUINORERP.Model
             
             if (!PK_FK_ID_Check())
             {
-                throw new Exception("售后申请单tb_AS_AfterSaleApply" + "外键ID与对应主主键名称不一致。请修改数据库");
+                throw new Exception("售后申请单 -登记，评估，清单，确认。目标是维修翻新tb_AS_AfterSaleApply" + "外键ID与对应主主键名称不一致。请修改数据库");
             }
         }
 
@@ -552,18 +552,18 @@ namespace RUINORERP.Model
 
         //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_AS_RepairOrder.ASApplyID))]
-        public virtual List<tb_AS_RepairOrder> tb_AS_RepairOrders { get; set; }
-        //tb_AS_RepairOrder.ASApplyID)
-        //ASApplyID.FK_TB_AS_RE_REFERENCE_TB_AS_AF)
-        //tb_AS_AfterSaleApply.ASApplyID)
-
-        //[Browsable(false)]打印报表时的数据源会不显示
-        [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_AS_AfterSaleApplyDetail.ASApplyID))]
         public virtual List<tb_AS_AfterSaleApplyDetail> tb_AS_AfterSaleApplyDetails { get; set; }
         //tb_AS_AfterSaleApplyDetail.ASApplyID)
         //ASApplyID.FK_TB_AS_AF_REFERENCE_TB_AS_AF)
+        //tb_AS_AfterSaleApply.ASApplyID)
+
+        //[Browsable(false)]打印报表时的数据源会不显示
+        [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_AS_RepairOrder.ASApplyID))]
+        public virtual List<tb_AS_RepairOrder> tb_AS_RepairOrders { get; set; }
+        //tb_AS_RepairOrder.ASApplyID)
+        //ASApplyID.FK_TB_AS_RE_REFERENCE_TB_AS_AF)
         //tb_AS_AfterSaleApply.ASApplyID)
 
 

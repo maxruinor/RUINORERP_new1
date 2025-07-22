@@ -200,7 +200,7 @@ namespace RUINORERP.UI.ASS
             queryFilterSO.FilterLimitExpressions.Add(lambdaSO);
 
             ControlBindingHelper.ConfigureControlFilter<tb_AS_RepairInStock, tb_AS_RepairOrder>(entity, txtRepairOrderID, t => t.RepairOrderNo,
-              f => f.ASApplyNo, queryFilterSO, a => a.RepairOrderID, b => b.ASApplyID, null, false);
+              f => f.RepairOrderNo, queryFilterSO, a => a.RepairOrderID, b => b.RepairOrderID, null, false);
 
             ToolBarEnabledControl(entity);
 

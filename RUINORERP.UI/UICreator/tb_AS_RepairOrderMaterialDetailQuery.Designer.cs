@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：07/19/2025 17:12:45
+// 时间：07/22/2025 18:02:32
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -63,14 +63,14 @@ this.txtproperty.Multiline = true;
 this.lblProdDetailID = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
 this.cmbProdDetailID = new ComponentFactory.Krypton.Toolkit.KryptonComboBox();
 
+this.lblUnitPrice = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
+this.txtUnitPrice = new ComponentFactory.Krypton.Toolkit.KryptonTextBox();
+
 this.lblShouldSendQty = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
 this.txtShouldSendQty = new ComponentFactory.Krypton.Toolkit.KryptonTextBox();
 
 this.lblActualSentQty = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
 this.txtActualSentQty = new ComponentFactory.Krypton.Toolkit.KryptonTextBox();
-
-this.lblUnitPrice = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
-this.txtUnitPrice = new ComponentFactory.Krypton.Toolkit.KryptonTextBox();
 
 this.lblSubtotalTransAmount = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
 this.txtSubtotalTransAmount = new ComponentFactory.Krypton.Toolkit.KryptonTextBox();
@@ -94,13 +94,13 @@ this.txtCost = new ComponentFactory.Krypton.Toolkit.KryptonTextBox();
 this.lblSubtotalCost = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
 this.txtSubtotalCost = new ComponentFactory.Krypton.Toolkit.KryptonTextBox();
 
-this.lblGift = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
-this.chkGift = new ComponentFactory.Krypton.Toolkit.KryptonCheckBox();
-this.chkGift.Values.Text ="";
-
 this.lblIsCritical = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
 this.chkIsCritical = new ComponentFactory.Krypton.Toolkit.KryptonCheckBox();
 this.chkIsCritical.Values.Text ="";
+
+this.lblGift = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
+this.chkGift = new ComponentFactory.Krypton.Toolkit.KryptonCheckBox();
+this.chkGift.Values.Text ="";
 
     //for end
     this.SuspendLayout();
@@ -171,50 +171,50 @@ this.cmbProdDetailID.TabIndex = 4;
 this.Controls.Add(this.lblProdDetailID);
 this.Controls.Add(this.cmbProdDetailID);
 
+           //#####UnitPrice###Decimal
+this.lblUnitPrice.AutoSize = true;
+this.lblUnitPrice.Location = new System.Drawing.Point(100,125);
+this.lblUnitPrice.Name = "lblUnitPrice";
+this.lblUnitPrice.Size = new System.Drawing.Size(41, 12);
+this.lblUnitPrice.TabIndex = 5;
+this.lblUnitPrice.Text = "单价";
+//111======125
+this.txtUnitPrice.Location = new System.Drawing.Point(173,121);
+this.txtUnitPrice.Name ="txtUnitPrice";
+this.txtUnitPrice.Size = new System.Drawing.Size(100, 21);
+this.txtUnitPrice.TabIndex = 5;
+this.Controls.Add(this.lblUnitPrice);
+this.Controls.Add(this.txtUnitPrice);
+
            //#####ShouldSendQty###Decimal
 this.lblShouldSendQty.AutoSize = true;
-this.lblShouldSendQty.Location = new System.Drawing.Point(100,125);
+this.lblShouldSendQty.Location = new System.Drawing.Point(100,150);
 this.lblShouldSendQty.Name = "lblShouldSendQty";
 this.lblShouldSendQty.Size = new System.Drawing.Size(41, 12);
-this.lblShouldSendQty.TabIndex = 5;
+this.lblShouldSendQty.TabIndex = 6;
 this.lblShouldSendQty.Text = "需求数量";
-//111======125
-this.txtShouldSendQty.Location = new System.Drawing.Point(173,121);
+//111======150
+this.txtShouldSendQty.Location = new System.Drawing.Point(173,146);
 this.txtShouldSendQty.Name ="txtShouldSendQty";
 this.txtShouldSendQty.Size = new System.Drawing.Size(100, 21);
-this.txtShouldSendQty.TabIndex = 5;
+this.txtShouldSendQty.TabIndex = 6;
 this.Controls.Add(this.lblShouldSendQty);
 this.Controls.Add(this.txtShouldSendQty);
 
            //#####ActualSentQty###Decimal
 this.lblActualSentQty.AutoSize = true;
-this.lblActualSentQty.Location = new System.Drawing.Point(100,150);
+this.lblActualSentQty.Location = new System.Drawing.Point(100,175);
 this.lblActualSentQty.Name = "lblActualSentQty";
 this.lblActualSentQty.Size = new System.Drawing.Size(41, 12);
-this.lblActualSentQty.TabIndex = 6;
+this.lblActualSentQty.TabIndex = 7;
 this.lblActualSentQty.Text = "实发数量";
-//111======150
-this.txtActualSentQty.Location = new System.Drawing.Point(173,146);
+//111======175
+this.txtActualSentQty.Location = new System.Drawing.Point(173,171);
 this.txtActualSentQty.Name ="txtActualSentQty";
 this.txtActualSentQty.Size = new System.Drawing.Size(100, 21);
-this.txtActualSentQty.TabIndex = 6;
+this.txtActualSentQty.TabIndex = 7;
 this.Controls.Add(this.lblActualSentQty);
 this.Controls.Add(this.txtActualSentQty);
-
-           //#####UnitPrice###Decimal
-this.lblUnitPrice.AutoSize = true;
-this.lblUnitPrice.Location = new System.Drawing.Point(100,175);
-this.lblUnitPrice.Name = "lblUnitPrice";
-this.lblUnitPrice.Size = new System.Drawing.Size(41, 12);
-this.lblUnitPrice.TabIndex = 7;
-this.lblUnitPrice.Text = "单价";
-//111======175
-this.txtUnitPrice.Location = new System.Drawing.Point(173,171);
-this.txtUnitPrice.Name ="txtUnitPrice";
-this.txtUnitPrice.Size = new System.Drawing.Size(100, 21);
-this.txtUnitPrice.TabIndex = 7;
-this.Controls.Add(this.lblUnitPrice);
-this.Controls.Add(this.txtUnitPrice);
 
            //#####SubtotalTransAmount###Decimal
 this.lblSubtotalTransAmount.AutoSize = true;
@@ -320,33 +320,33 @@ this.txtSubtotalCost.TabIndex = 14;
 this.Controls.Add(this.lblSubtotalCost);
 this.Controls.Add(this.txtSubtotalCost);
 
-           //#####Gift###Boolean
-this.lblGift.AutoSize = true;
-this.lblGift.Location = new System.Drawing.Point(100,375);
-this.lblGift.Name = "lblGift";
-this.lblGift.Size = new System.Drawing.Size(41, 12);
-this.lblGift.TabIndex = 15;
-this.lblGift.Text = "赠品";
-this.chkGift.Location = new System.Drawing.Point(173,371);
-this.chkGift.Name = "chkGift";
-this.chkGift.Size = new System.Drawing.Size(100, 21);
-this.chkGift.TabIndex = 15;
-this.Controls.Add(this.lblGift);
-this.Controls.Add(this.chkGift);
-
            //#####IsCritical###Boolean
 this.lblIsCritical.AutoSize = true;
-this.lblIsCritical.Location = new System.Drawing.Point(100,400);
+this.lblIsCritical.Location = new System.Drawing.Point(100,375);
 this.lblIsCritical.Name = "lblIsCritical";
 this.lblIsCritical.Size = new System.Drawing.Size(41, 12);
-this.lblIsCritical.TabIndex = 16;
+this.lblIsCritical.TabIndex = 15;
 this.lblIsCritical.Text = "是否关键物料";
-this.chkIsCritical.Location = new System.Drawing.Point(173,396);
+this.chkIsCritical.Location = new System.Drawing.Point(173,371);
 this.chkIsCritical.Name = "chkIsCritical";
 this.chkIsCritical.Size = new System.Drawing.Size(100, 21);
-this.chkIsCritical.TabIndex = 16;
+this.chkIsCritical.TabIndex = 15;
 this.Controls.Add(this.lblIsCritical);
 this.Controls.Add(this.chkIsCritical);
+
+           //#####Gift###Boolean
+this.lblGift.AutoSize = true;
+this.lblGift.Location = new System.Drawing.Point(100,400);
+this.lblGift.Name = "lblGift";
+this.lblGift.Size = new System.Drawing.Size(41, 12);
+this.lblGift.TabIndex = 16;
+this.lblGift.Text = "赠品";
+this.chkGift.Location = new System.Drawing.Point(173,396);
+this.chkGift.Name = "chkGift";
+this.chkGift.Size = new System.Drawing.Size(100, 21);
+this.chkGift.TabIndex = 16;
+this.Controls.Add(this.lblGift);
+this.Controls.Add(this.chkGift);
 
           
     //for end
@@ -368,14 +368,14 @@ this.Controls.Add(this.txtproperty );
                 this.Controls.Add(this.lblProdDetailID );
 this.Controls.Add(this.cmbProdDetailID );
 
+                this.Controls.Add(this.lblUnitPrice );
+this.Controls.Add(this.txtUnitPrice );
+
                 this.Controls.Add(this.lblShouldSendQty );
 this.Controls.Add(this.txtShouldSendQty );
 
                 this.Controls.Add(this.lblActualSentQty );
 this.Controls.Add(this.txtActualSentQty );
-
-                this.Controls.Add(this.lblUnitPrice );
-this.Controls.Add(this.txtUnitPrice );
 
                 this.Controls.Add(this.lblSubtotalTransAmount );
 this.Controls.Add(this.txtSubtotalTransAmount );
@@ -398,11 +398,11 @@ this.Controls.Add(this.txtCost );
                 this.Controls.Add(this.lblSubtotalCost );
 this.Controls.Add(this.txtSubtotalCost );
 
-                this.Controls.Add(this.lblGift );
-this.Controls.Add(this.chkGift );
-
                 this.Controls.Add(this.lblIsCritical );
 this.Controls.Add(this.chkIsCritical );
+
+                this.Controls.Add(this.lblGift );
+this.Controls.Add(this.chkGift );
 
                     
             this.Name = "tb_AS_RepairOrderMaterialDetailQuery";
@@ -436,6 +436,11 @@ private ComponentFactory.Krypton.Toolkit.KryptonComboBox cmbProdDetailID;
 
     
         
+              private ComponentFactory.Krypton.Toolkit.KryptonLabel lblUnitPrice;
+private ComponentFactory.Krypton.Toolkit.KryptonTextBox txtUnitPrice;
+
+    
+        
               private ComponentFactory.Krypton.Toolkit.KryptonLabel lblShouldSendQty;
 private ComponentFactory.Krypton.Toolkit.KryptonTextBox txtShouldSendQty;
 
@@ -443,11 +448,6 @@ private ComponentFactory.Krypton.Toolkit.KryptonTextBox txtShouldSendQty;
         
               private ComponentFactory.Krypton.Toolkit.KryptonLabel lblActualSentQty;
 private ComponentFactory.Krypton.Toolkit.KryptonTextBox txtActualSentQty;
-
-    
-        
-              private ComponentFactory.Krypton.Toolkit.KryptonLabel lblUnitPrice;
-private ComponentFactory.Krypton.Toolkit.KryptonTextBox txtUnitPrice;
 
     
         
@@ -486,13 +486,13 @@ private ComponentFactory.Krypton.Toolkit.KryptonTextBox txtSubtotalCost;
 
     
         
-              private ComponentFactory.Krypton.Toolkit.KryptonLabel lblGift;
-private ComponentFactory.Krypton.Toolkit.KryptonCheckBox chkGift;
+              private ComponentFactory.Krypton.Toolkit.KryptonLabel lblIsCritical;
+private ComponentFactory.Krypton.Toolkit.KryptonCheckBox chkIsCritical;
 
     
         
-              private ComponentFactory.Krypton.Toolkit.KryptonLabel lblIsCritical;
-private ComponentFactory.Krypton.Toolkit.KryptonCheckBox chkIsCritical;
+              private ComponentFactory.Krypton.Toolkit.KryptonLabel lblGift;
+private ComponentFactory.Krypton.Toolkit.KryptonCheckBox chkGift;
 
     
     

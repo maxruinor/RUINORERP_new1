@@ -64,6 +64,7 @@ using RUINORERP.UI.ATechnologyStack;
 using RUINORERP.Model.Base;
 using RUINORERP.UI.Monitoring.Auditing;
 using RUINORERP.Model.CommonModel;
+using RUINORERP.Business.BizMapperService;
 
 
 namespace RUINORERP.UI
@@ -269,7 +270,7 @@ namespace RUINORERP.UI
                    .AsSelf()
                    .InstancePerLifetimeScope(); // 或根据需要使用 SingleInstance() 或根据需要选择生命周期
 
-             
+
 
             //_containerBuilder = builder;
             //AutoFacContainer = builder.Build();
@@ -737,6 +738,18 @@ namespace RUINORERP.UI
             services.AddSingleton<ICacheService, SqlSugarMemoryCacheService>();
 
 
+            var mappingService = new EntityBizMappingService();
+            mappingService.RegisterCommonMappings();
+            // 注册为单例服务
+            services.AddSingleton(mappingService);
+            // 添加映射服务为单例
+            // services.AddSingleton<EntityBizMappingService>();
+
+            // 添加其他服务...
+            services.AddScoped<EnhancedBizTypeMapper>();
+            services.AddScoped<EntityLoader>();
+
+
             // services.AddSingleton(new AppSettings(WebHostEnvironment));
             //services.AddScoped<ICurrentUser, CurrentUser>();
             //services.AddSingleton(Configuration);
@@ -820,7 +833,7 @@ namespace RUINORERP.UI
 
             // 添加审计日志配置 （如果存在）
             services.Configure<AuditLogOptions>(configuration.GetSection("AuditLog"));
-            
+
             // 使用 ConfigureOptions 手动覆盖特定值
             services.Configure<AuditLogOptions>(options =>
             {

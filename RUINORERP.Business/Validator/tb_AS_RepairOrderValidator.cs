@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：07/19/2025 17:12:44
+// 时间：07/22/2025 18:02:31
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,7 +21,7 @@ using Microsoft.Extensions.Options;
 namespace RUINORERP.Business
 {
     /// <summary>
-    /// 维修工单验证类
+    /// 维修工单  工时费 材料费验证类
     /// </summary>
     /*public partial class tb_AS_RepairOrderValidator:AbstractValidator<tb_AS_RepairOrder>*/
     public partial class tb_AS_RepairOrderValidator:BaseValidatorGeneric<tb_AS_RepairOrder>
@@ -63,6 +63,9 @@ namespace RUINORERP.Business
 //***** 
  RuleFor(tb_AS_RepairOrder =>tb_AS_RepairOrder.TotalQty).NotNull().WithMessage("总数量:不能为空。");
 
+//***** 
+ RuleFor(tb_AS_RepairOrder =>tb_AS_RepairOrder.TotalDeliveredQty).NotNull().WithMessage("交付数量:不能为空。");
+
  RuleFor(x => x.LaborCost).PrecisionScale(19,4,true).WithMessage("总人工成本:小数位不能超过4。");
 
  RuleFor(x => x.TotalMaterialAmount).PrecisionScale(19,4,true).WithMessage("总材料费用:小数位不能超过4。");
@@ -103,27 +106,27 @@ namespace RUINORERP.Business
 
            	                //long?
                 //RepairOrderID
-                //tb_AS_RepairOrderDetail
-                //RuleFor(x => x.tb_AS_RepairOrderDetails).Must(DetailedRecordsNotEmpty).WithMessage("明细不能为空");
-               //视图不需要验证，目前认为无编辑新增操作
-                //RuleFor(c => c.tb_AS_RepairOrderDetails).NotNull();
-                //RuleForEach(x => x.tb_AS_RepairOrderDetails).NotNull();
-                //RuleFor(x => x.tb_AS_RepairOrderDetails).Must(DetailedRecordsNotEmpty).WithMessage("明细不能为空");
-                            //long?
-                //RepairOrderID
                 //tb_AS_RepairOrderMaterialDetail
                 //RuleFor(x => x.tb_AS_RepairOrderMaterialDetails).Must(DetailedRecordsNotEmpty).WithMessage("明细不能为空");
                //视图不需要验证，目前认为无编辑新增操作
                 //RuleFor(c => c.tb_AS_RepairOrderMaterialDetails).NotNull();
                 //RuleForEach(x => x.tb_AS_RepairOrderMaterialDetails).NotNull();
                 //RuleFor(x => x.tb_AS_RepairOrderMaterialDetails).Must(DetailedRecordsNotEmpty).WithMessage("明细不能为空");
+                            //long?
+                //RepairOrderID
+                //tb_AS_RepairOrderDetail
+                //RuleFor(x => x.tb_AS_RepairOrderDetails).Must(DetailedRecordsNotEmpty).WithMessage("明细不能为空");
+               //视图不需要验证，目前认为无编辑新增操作
+                //RuleFor(c => c.tb_AS_RepairOrderDetails).NotNull();
+                //RuleForEach(x => x.tb_AS_RepairOrderDetails).NotNull();
+                //RuleFor(x => x.tb_AS_RepairOrderDetails).Must(DetailedRecordsNotEmpty).WithMessage("明细不能为空");
                     Initialize();
      }
 
 
 
 
-        private bool DetailedRecordsNotEmpty(List<tb_AS_RepairOrderDetail> details)
+        private bool DetailedRecordsNotEmpty(List<tb_AS_RepairOrderMaterialDetail> details)
         {
             bool rs = true;
             if (details == null || details.Count == 0)
@@ -134,7 +137,7 @@ namespace RUINORERP.Business
         }
         
 
-        private bool DetailedRecordsNotEmpty(List<tb_AS_RepairOrderMaterialDetail> details)
+        private bool DetailedRecordsNotEmpty(List<tb_AS_RepairOrderDetail> details)
         {
             bool rs = true;
             if (details == null || details.Count == 0)

@@ -3,7 +3,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：07/19/2025 17:12:44
+// 时间：07/22/2025 18:02:31
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -67,6 +67,9 @@ this.txtproperty.Multiline = true;
 
 this.lblQuantity = new Krypton.Toolkit.KryptonLabel();
 this.txtQuantity = new Krypton.Toolkit.KryptonTextBox();
+
+this.lblDeliveredQty = new Krypton.Toolkit.KryptonLabel();
+this.txtDeliveredQty = new Krypton.Toolkit.KryptonTextBox();
 
 this.lblRepairContent = new Krypton.Toolkit.KryptonLabel();
 this.txtRepairContent = new Krypton.Toolkit.KryptonTextBox();
@@ -185,31 +188,48 @@ this.txtQuantity.TabIndex = 5;
 this.Controls.Add(this.lblQuantity);
 this.Controls.Add(this.txtQuantity);
 
+           //#####DeliveredQty###Int32
+//属性测试150DeliveredQty
+//属性测试150DeliveredQty
+//属性测试150DeliveredQty
+this.lblDeliveredQty.AutoSize = true;
+this.lblDeliveredQty.Location = new System.Drawing.Point(100,150);
+this.lblDeliveredQty.Name = "lblDeliveredQty";
+this.lblDeliveredQty.Size = new System.Drawing.Size(41, 12);
+this.lblDeliveredQty.TabIndex = 6;
+this.lblDeliveredQty.Text = "交付数量";
+this.txtDeliveredQty.Location = new System.Drawing.Point(173,146);
+this.txtDeliveredQty.Name = "txtDeliveredQty";
+this.txtDeliveredQty.Size = new System.Drawing.Size(100, 21);
+this.txtDeliveredQty.TabIndex = 6;
+this.Controls.Add(this.lblDeliveredQty);
+this.Controls.Add(this.txtDeliveredQty);
+
            //#####500RepairContent###String
 this.lblRepairContent.AutoSize = true;
-this.lblRepairContent.Location = new System.Drawing.Point(100,150);
+this.lblRepairContent.Location = new System.Drawing.Point(100,175);
 this.lblRepairContent.Name = "lblRepairContent";
 this.lblRepairContent.Size = new System.Drawing.Size(41, 12);
-this.lblRepairContent.TabIndex = 6;
+this.lblRepairContent.TabIndex = 7;
 this.lblRepairContent.Text = "维修内容";
-this.txtRepairContent.Location = new System.Drawing.Point(173,146);
+this.txtRepairContent.Location = new System.Drawing.Point(173,171);
 this.txtRepairContent.Name = "txtRepairContent";
 this.txtRepairContent.Size = new System.Drawing.Size(100, 21);
-this.txtRepairContent.TabIndex = 6;
+this.txtRepairContent.TabIndex = 7;
 this.Controls.Add(this.lblRepairContent);
 this.Controls.Add(this.txtRepairContent);
 
            //#####1000Summary###String
 this.lblSummary.AutoSize = true;
-this.lblSummary.Location = new System.Drawing.Point(100,175);
+this.lblSummary.Location = new System.Drawing.Point(100,200);
 this.lblSummary.Name = "lblSummary";
 this.lblSummary.Size = new System.Drawing.Size(41, 12);
-this.lblSummary.TabIndex = 7;
+this.lblSummary.TabIndex = 8;
 this.lblSummary.Text = "摘要";
-this.txtSummary.Location = new System.Drawing.Point(173,171);
+this.txtSummary.Location = new System.Drawing.Point(173,196);
 this.txtSummary.Name = "txtSummary";
 this.txtSummary.Size = new System.Drawing.Size(100, 21);
-this.txtSummary.TabIndex = 7;
+this.txtSummary.TabIndex = 8;
 this.Controls.Add(this.lblSummary);
 this.Controls.Add(this.txtSummary);
 
@@ -227,7 +247,7 @@ this.Controls.Add(this.txtSummary);
             //this.kryptonPanel1.Location = new System.Drawing.Point(0, 0);
            // this.kryptonPanel1.Name = "kryptonPanel1";
            // this.kryptonPanel1.Size = new System.Drawing.Size(404, 300);
-           // this.kryptonPanel1.TabIndex = 7;
+           // this.kryptonPanel1.TabIndex = 8;
 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
@@ -245,6 +265,9 @@ this.Controls.Add(this.txtproperty );
 
                 this.Controls.Add(this.lblQuantity );
 this.Controls.Add(this.txtQuantity );
+
+                this.Controls.Add(this.lblDeliveredQty );
+this.Controls.Add(this.txtDeliveredQty );
 
                 this.Controls.Add(this.lblRepairContent );
 this.Controls.Add(this.txtRepairContent );
@@ -298,6 +321,11 @@ private Krypton.Toolkit.KryptonTextBox txtproperty;
         
               private Krypton.Toolkit.KryptonLabel lblQuantity;
 private Krypton.Toolkit.KryptonTextBox txtQuantity;
+
+    
+        
+              private Krypton.Toolkit.KryptonLabel lblDeliveredQty;
+private Krypton.Toolkit.KryptonTextBox txtDeliveredQty;
 
     
         

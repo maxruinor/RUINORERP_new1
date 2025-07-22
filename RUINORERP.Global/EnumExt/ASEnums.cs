@@ -52,7 +52,8 @@ namespace RUINORERP.Global.EnumExt
 
         [Description("【待交付】")]
         待交付 = 4,
-
+        [Description("【已完成】")]
+        已完成 = 5,
     }
 
     /// <summary>

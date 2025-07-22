@@ -231,16 +231,78 @@ namespace RUINORERP.Business
                     throw new Exception("库存更新数据为0，更新失败！");
                 }
 
-                //if (entity.RepairOrderID > 0)
-                //{
-                //    await _unitOfWorkManage.GetDbClient().Updateable<tb_AS_AfterSaleApply>().SetColumns(it => it.ASProcessStatus == (int)ASProcessStatus.维修中).Where(it => it.ASApplyID == entity.ASApplyID).ExecuteCommandAsync();
-                //}
+
+                #region 回写交付数量
+                if (entity.RepairOrderID > 0)
+                {
+                    if (entity.tb_as_repairorder == null || entity.tb_as_repairorder.tb_AS_RepairOrderDetails == null)
+                    {
+                        entity.tb_as_repairorder = await _unitOfWorkManage.GetDbClient().Queryable<tb_AS_RepairOrder>()
+                        .Includes(c => c.tb_AS_RepairOrderDetails)
+                        .Includes(t => t.tb_as_aftersaleapply)
+                        //.Includes(c => c.tb_as_aftersaleapply, b => b.tb_AS_AfterSaleApplyDetails)
+                       .Where(c => c.RepairOrderID == entity.RepairOrderID).FirstAsync();
+                    }
+
+                    List<tb_AS_RepairInStockDetail> RepairInStockDetails = new List<tb_AS_RepairInStockDetail>();
+                    RepairInStockDetails.AddRange(entity.tb_AS_RepairInStockDetails);
+
+                    for (int i = 0; i < entity.tb_as_repairorder.tb_AS_RepairOrderDetails.Count; i++)
+                    {
+                        tb_AS_RepairOrderDetail RepairOrderDetail = entity.tb_as_repairorder.tb_AS_RepairOrderDetails[i];
+                        var totalDeliveryQty = RepairInStockDetails.Where(c => c.ProdDetailID == RepairOrderDetail.ProdDetailID
+                        && c.Location_ID == RepairOrderDetail.Location_ID).ToList().Sum(c => c.Quantity);
+                        //没有交付
+                        if (totalDeliveryQty == 0)
+                        {
+                            continue;
+                        }
+
+                        RepairOrderDetail.DeliveredQty += totalDeliveryQty;
+                        if (RepairOrderDetail.DeliveredQty > RepairOrderDetail.Quantity)
+                        {
+                            throw new Exception($"维修入库单中,交付数量{RepairOrderDetail.DeliveredQty}不能大于维修工单的数量{RepairOrderDetail.Quantity}，审核失败！");
+                        }
+                    }
+                    entity.tb_as_repairorder.TotalDeliveredQty = entity.tb_as_repairorder.tb_AS_RepairOrderDetails.Sum(c => c.DeliveredQty);
+                    //更新交付数量
+                    await _unitOfWorkManage.GetDbClient().Updateable(entity.tb_as_repairorder.tb_AS_RepairOrderDetails)
+                        .UpdateColumns(t => new { t.DeliveredQty }).ExecuteCommandAsync();
+
+                    if (entity.tb_as_repairorder.TotalQty == entity.tb_as_repairorder.TotalDeliveredQty)
+                    {
+                        entity.tb_as_repairorder.DataStatus = (int)DataStatus.完结;
+                        entity.tb_as_repairorder.RepairStatus = (int)RepairStatus.已完成;
+                    }
+                    else if (entity.tb_as_repairorder.TotalQty > entity.tb_as_repairorder.TotalDeliveredQty)
+                    {
+                        entity.tb_as_repairorder.RepairStatus = (int)RepairStatus.部分交付;
+                    }
+                    //更新交付数量
+                    await _unitOfWorkManage.GetDbClient().Updateable(entity.tb_as_repairorder).UpdateColumns(t => new { t.DataStatus, t.RepairStatus, t.TotalDeliveredQty }).ExecuteCommandAsync();
+
+                    if (entity.tb_as_repairorder.tb_as_aftersaleapply != null)
+                    {
+                        if (entity.TotalQty == entity.tb_as_repairorder.tb_as_aftersaleapply.TotalConfirmedQuantity)
+                        {
+                            entity.tb_as_repairorder.tb_as_aftersaleapply.ASProcessStatus = (int)ASProcessStatus.待交付;
+                            await _unitOfWorkManage.GetDbClient().Updateable<tb_AS_AfterSaleApply>(entity.tb_as_repairorder.tb_as_aftersaleapply).UpdateColumns(it => new { it.ASProcessStatus }).ExecuteCommandAsync();
+                        }
+                    }
+
+                }
+                #endregion
+
+
+
+
+
+
                 //entity.RepairStatus = (int)RepairStatus.维修中;
                 //if (entity.ASApplyID.HasValue && entity.ASApplyID.Value > 0)
                 //{
                 //    await _unitOfWorkManage.GetDbClient().Updateable<tb_AS_AfterSaleApply>().SetColumns(it => it.ASProcessStatus == (int)ASProcessStatus.维修中).Where(it => it.ASApplyID == entity.ASApplyID).ExecuteCommandAsync();
                 //}
-
 
                 //这部分是否能提出到上一级公共部分？
                 entity.DataStatus = (int)DataStatus.确认;
@@ -362,6 +424,71 @@ namespace RUINORERP.Business
                     throw new Exception("库存更新数据为0，更新失败！");
                 }
 
+
+                #region 回写交付数量
+                if (entity.RepairOrderID > 0)
+                {
+                    if (entity.tb_as_repairorder == null || entity.tb_as_repairorder.tb_AS_RepairOrderDetails == null)
+                    {
+                        entity.tb_as_repairorder = await _unitOfWorkManage.GetDbClient().Queryable<tb_AS_RepairOrder>()
+                        .Includes(c => c.tb_AS_RepairOrderDetails)
+                        .Includes(t => t.tb_as_aftersaleapply)
+                        //.Includes(t => t.tb_as_aftersaleapply, a => a.tb_AS_AfterSaleApplyDetails)
+                       .Where(c => c.RepairOrderID == entity.RepairOrderID).FirstAsync();
+
+                    }
+
+                    List<tb_AS_RepairInStockDetail> RepairInStockDetails = new List<tb_AS_RepairInStockDetail>();
+                    RepairInStockDetails.AddRange(entity.tb_AS_RepairInStockDetails);
+
+                    for (int i = 0; i < entity.tb_as_repairorder.tb_AS_RepairOrderDetails.Count; i++)
+                    {
+                        tb_AS_RepairOrderDetail RepairOrderDetail = entity.tb_as_repairorder.tb_AS_RepairOrderDetails[i];
+                        var totalDeliveryQty = RepairInStockDetails.Where(c => c.ProdDetailID == RepairOrderDetail.ProdDetailID
+                        && c.Location_ID == RepairOrderDetail.Location_ID).ToList().Sum(c => c.Quantity);
+                        //没有交付
+                        if (totalDeliveryQty == 0)
+                        {
+                            continue;
+                        }
+
+                        RepairOrderDetail.DeliveredQty -= totalDeliveryQty;
+                        if (RepairOrderDetail.DeliveredQty < 0)
+                        {
+                            throw new Exception($"维修入库单中,交付数量{RepairOrderDetail.DeliveredQty}不能小于零，反审核失败！");
+                        }
+                    }
+                    entity.tb_as_repairorder.TotalDeliveredQty = entity.tb_as_repairorder.tb_AS_RepairOrderDetails.Sum(c => c.DeliveredQty);
+                    //更新交付数量
+                    await _unitOfWorkManage.GetDbClient().Updateable(entity.tb_as_repairorder.tb_AS_RepairOrderDetails)
+                        .UpdateColumns(t => new { t.DeliveredQty }).ExecuteCommandAsync();
+
+
+                    if (entity.tb_as_repairorder.TotalQty != entity.tb_as_repairorder.TotalDeliveredQty)
+                    {
+                        entity.tb_as_repairorder.DataStatus = (int)DataStatus.确认;
+                        if (entity.tb_as_repairorder.TotalDeliveredQty > 0 && entity.TotalQty > entity.tb_as_repairorder.TotalDeliveredQty)
+                        {
+                            entity.tb_as_repairorder.RepairStatus = (int)RepairStatus.部分交付;
+                        }
+                        else if (entity.tb_as_repairorder.TotalDeliveredQty == 0)
+                        {
+                            entity.tb_as_repairorder.RepairStatus = (int)RepairStatus.维修中;
+                        }
+                    }
+
+                    //更新交付数量
+                    await _unitOfWorkManage.GetDbClient().Updateable(entity.tb_as_repairorder).UpdateColumns(t => new { t.DataStatus, t.RepairStatus, t.TotalDeliveredQty }).ExecuteCommandAsync();
+                    if (entity.tb_as_repairorder.tb_as_aftersaleapply != null)
+                    {
+                        if (entity.TotalQty == entity.tb_as_repairorder.tb_as_aftersaleapply.TotalConfirmedQuantity)
+                        {
+                            entity.tb_as_repairorder.tb_as_aftersaleapply.ASProcessStatus = (int)ASProcessStatus.待交付;
+                            await _unitOfWorkManage.GetDbClient().Updateable<tb_AS_AfterSaleApply>(entity.tb_as_repairorder.tb_as_aftersaleapply).UpdateColumns(it => new { it.ASProcessStatus }).ExecuteCommandAsync();
+                        }
+                    }
+                }
+                #endregion
                 //这部分是否能提出到上一级公共部分？
                 entity.DataStatus = (int)DataStatus.确认;
                 entity.ApprovalStatus = (int)ApprovalStatus.已审核;

@@ -27,6 +27,7 @@ using RUINOR.Core;
 using RUINORERP.Common.Helper;
 using RUINORERP.Business.CommService;
 using RUINORERP.Global;
+using RUINORERP.Global.EnumExt;
 
 namespace RUINORERP.Business
 {
@@ -159,7 +160,8 @@ namespace RUINORERP.Business
                     if (entity.tb_as_aftersaleapply.TotalConfirmedQuantity != entity.tb_as_aftersaleapply.TotalDeliveredQty)
                     {
                         entity.tb_as_aftersaleapply.DataStatus = (int)DataStatus.确认;
-                        await _unitOfWorkManage.GetDbClient().Updateable(entity.tb_as_aftersaleapply).UpdateColumns(t => new { t.DataStatus }).ExecuteCommandAsync();
+                        entity.tb_as_aftersaleapply.ASProcessStatus = (int)ASProcessStatus.待交付;
+                        await _unitOfWorkManage.GetDbClient().Updateable(entity.tb_as_aftersaleapply).UpdateColumns(t => new { t.DataStatus,t.ASProcessStatus }).ExecuteCommandAsync();
                     }
                 }
                 #endregion
@@ -284,7 +286,7 @@ namespace RUINORERP.Business
                     var inv = group.Value.Inventory;
                     // 累加数值字段
                     inv.Quantity -= group.Value.Qty.ToInt();
-                    inv.LatestOutboundTime=System.DateTime.Now;
+                    inv.LatestOutboundTime = System.DateTime.Now;
                     invList.Add(inv);
                 }
 
@@ -337,7 +339,8 @@ namespace RUINORERP.Business
                     if (entity.tb_as_aftersaleapply.TotalConfirmedQuantity == entity.tb_as_aftersaleapply.TotalDeliveredQty)
                     {
                         entity.tb_as_aftersaleapply.DataStatus = (int)DataStatus.完结;
-                        await _unitOfWorkManage.GetDbClient().Updateable(entity.tb_as_aftersaleapply).UpdateColumns(t => new { t.DataStatus }).ExecuteCommandAsync();
+                        entity.tb_as_aftersaleapply.ASProcessStatus = (int)ASProcessStatus.已完成;
+                        await _unitOfWorkManage.GetDbClient().Updateable(entity.tb_as_aftersaleapply).UpdateColumns(t => new { t.DataStatus, t.ASProcessStatus }).ExecuteCommandAsync();
                     }
                 }
                 #endregion

@@ -467,7 +467,7 @@ namespace RUINORERP.Business
                                         else
                                         {
                                             _unitOfWorkManage.RollbackTran();
-                                            rmrs.ErrorMsg = $"对应的收款单{Payment.PaymentNo}状态为【待核销】，不能反审\r\n" +
+                                            rmrs.ErrorMsg = $"对应的收款单{Payment.PaymentNo}状态为【{(PaymentStatus)Payment.PaymentStatus}】，不能反审\r\n" +
                                                 $"只能进行冲销处理";
                                             rmrs.Succeeded = false;
                                             return rmrs;

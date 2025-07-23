@@ -49,6 +49,7 @@ using Fireasy.Common.Configuration;
 using RUINORERP.UI.Monitoring.Auditing;
 using NPOI.SS.Formula.Functions;
 using Netron.GraphLib;
+using Krypton.Toolkit;
 
 
 namespace RUINORERP.UI.ASS
@@ -117,7 +118,7 @@ namespace RUINORERP.UI.ASS
             }
             base.LoadRelatedDataToDropDownItems();
         }
- 
+
 
         public override void BindData(tb_AS_AfterSaleDelivery entityPara, ActionStatus actionStatus)
         {
@@ -142,10 +143,10 @@ namespace RUINORERP.UI.ASS
                 {
                     entity.ActionStatus = ActionStatus.新增;
                     entity.DataStatus = (int)DataStatus.草稿;
-                  
-                    if (string.IsNullOrEmpty(entity.ASApplyNo))
+
+                    if (string.IsNullOrEmpty(entity.ASDeliveryNo))
                     {
-                        entity.ASApplyNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.售后交付单);
+                        entity.ASDeliveryNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.售后交付单);
                     }
                     entity.ApprovalOpinions = string.Empty;
                     entity.DeliveryDate = System.DateTime.Now;
@@ -166,15 +167,14 @@ namespace RUINORERP.UI.ASS
             EditEntity = entity;
             //==
             DataBindingHelper.BindData4TextBox<tb_AS_AfterSaleDelivery>(entity, t => t.ASDeliveryNo, txtASDeliveryNo, BindDataType4TextBox.Text, false);
-             DataBindingHelper.BindData4Cmb<tb_ProjectGroup>(entity, k => k.ProjectGroup_ID, v=>v.ProjectGroupName, cmbProjectGroup);
             DataBindingHelper.BindData4TextBox<tb_AS_AfterSaleDelivery>(entity, t => t.TotalDeliveryQty, txtTotalDeliveryQty, BindDataType4TextBox.Qty, false);
             DataBindingHelper.BindData4DataTime<tb_AS_AfterSaleDelivery>(entity, t => t.DeliveryDate, dtpDeliveryDate, false);
             DataBindingHelper.BindData4TextBox<tb_AS_AfterSaleDelivery>(entity, t => t.ShippingAddress, txtShippingAddress, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_AS_AfterSaleDelivery>(entity, t => t.TrackNo, txtTrackNo, BindDataType4TextBox.Text, false);
-          
-         
+
+
             DataBindingHelper.BindData4TextBox<tb_AS_AfterSaleDelivery>(entity, t => t.Approver_by, txtApprover_by, BindDataType4TextBox.Qty, false);
-         
+
             //==
 
 
@@ -243,6 +243,12 @@ namespace RUINORERP.UI.ASS
                 if (EditEntity == null)
                 {
                     return;
+                }
+
+                if ((entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改) && entity.ASApplyID.HasValue && entity.ASApplyID.Value > 0
+              && s2.PropertyName == entity.GetPropertyName<tb_AS_AfterSaleDelivery>(c => c.ASApplyID))
+                {
+                    AfterSaleDelivery(entity.ASApplyID);
                 }
 
 
@@ -424,8 +430,8 @@ namespace RUINORERP.UI.ASS
                 }
             }
             listCols.SetCol_Summary<tb_AS_AfterSaleDeliveryDetail>(c => c.Quantity);
-            
-            
+
+
 
 
             //公共到明细的映射 源 ，左边会隐藏
@@ -601,7 +607,7 @@ namespace RUINORERP.UI.ASS
                     EditEntity.ApprovalStatus = (int)ApprovalStatus.未审核;
                 }
 
- 
+
                 //if (NeedValidated)
                 //{
                 //    if (EditEntity.tb_AS_RepairOrders != null && EditEntity.tb_AS_RepairOrders.Count > 0)
@@ -758,6 +764,34 @@ namespace RUINORERP.UI.ASS
                 return false;
             }
         }
+
+
+        private async void AfterSaleDelivery(long? ASApplyID)
+        {
+            //要加一个判断 值是否有变化
+            //新增时才可以
+            //转单
+            ButtonSpecAny bsa = (txtASApplyNo as KryptonTextBox).ButtonSpecs.FirstOrDefault(c => c.UniqueName == "btnQuery");
+            if (bsa == null)
+            {
+                return;
+            }
+            var AfterSaleApply = bsa.Tag as tb_AS_AfterSaleApply;//这个tag值。赋值会比较当前方法晚，所以失效
+            AfterSaleApply = await MainForm.Instance.AppContext.Db.Queryable<tb_AS_AfterSaleApply>().Where(c => c.ASApplyID == ASApplyID)
+            .Includes(t => t.tb_AS_AfterSaleApplyDetails, d => d.tb_proddetail)
+            .SingleAsync();
+            if (AfterSaleApply != null)
+            {
+                var ctr = Startup.GetFromFac<tb_AS_AfterSaleApplyController<tb_AS_AfterSaleApply>>();
+                tb_AS_AfterSaleDelivery SaleDelivery = ctr.ToAfterSaleDelivery(AfterSaleApply);
+                BindData(SaleDelivery, ActionStatus.无操作);
+            }
+            else
+            {
+                MainForm.Instance.PrintInfoLog("选取的对象为空！");
+            }
+        }
+
 
         private void lblCustomerVendor_ID_Click(object sender, EventArgs e)
         {

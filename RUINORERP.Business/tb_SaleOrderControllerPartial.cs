@@ -790,7 +790,7 @@ namespace RUINORERP.Business
                                     else
                                     {
                                         _unitOfWorkManage.RollbackTran();
-                                        rmrs.ErrorMsg = $"对应的预收款单{PrePayment.PreRPNO}状态为【待核销】，不能反审后修改\r\n" +
+                                        rmrs.ErrorMsg = $"对应的预收款单{PrePayment.PreRPNO}状态为【{(PrePaymentStatus)PrePayment.PrePaymentStatus}】，不能反审后修改\r\n" +
                                             $"只能将预收款单【退款】后，对收款单{Payment.PaymentNo}进行冲销处理\r\n" +
                                             $"取消当前订单后，重新录入正确的销售订单。";
                                         rmrs.Succeeded = false;

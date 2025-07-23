@@ -363,7 +363,7 @@ namespace RUINORERP.UI.BaseForm
         /// <param name="entity"></param>
         public virtual void BindData(T entity, ActionStatus actionStatus = ActionStatus.无操作)
         {
-
+            
             toolStripbtnRelatedQuery.DropDownItems.Clear();
             LoadRelatedDataToDropDownItems();
             if (toolStripbtnRelatedQuery.DropDownItems.Count > 0)
@@ -645,6 +645,7 @@ namespace RUINORERP.UI.BaseForm
                 #region 数据状态修改时也会影响到按钮
                 if (entity is BaseEntity baseEntity)
                 {
+                    baseEntity.AcceptChanges();
                     //为了不重复执行
                     // 定义一个局部变量来存储事件处理程序
                     EventHandler<ActionStatusChangedEventArgs> eventHandler = (sender, s2) =>

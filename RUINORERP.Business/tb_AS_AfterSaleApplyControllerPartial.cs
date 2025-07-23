@@ -79,7 +79,6 @@ namespace RUINORERP.Business
                             NewDetails.Add(details[i]);
                         }
 
-
                         #endregion
                     }
                     else

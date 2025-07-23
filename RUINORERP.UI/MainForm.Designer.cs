@@ -88,6 +88,9 @@ namespace RUINORERP.UI
             this.kryptonContextMenuItem1 = new Krypton.Toolkit.KryptonContextMenuItem();
             this.kryptonPanelBigg = new Krypton.Toolkit.KryptonPanel();
             this.kryptonSeparator1 = new Krypton.Toolkit.KryptonSeparator();
+            this.toolStripFunctionMenu = new System.Windows.Forms.ToolStrip();
+            this.toolStripButton4 = new System.Windows.Forms.ToolStripButton();
+            this.toolStripContainerMenu = new System.Windows.Forms.ToolStripContainer();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonNavigator1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPage5)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPage2)).BeginInit();
@@ -103,6 +106,11 @@ namespace RUINORERP.UI
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanelBigg)).BeginInit();
             this.kryptonPanelBigg.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSeparator1)).BeginInit();
+            this.toolStripFunctionMenu.SuspendLayout();
+            this.toolStripContainerMenu.BottomToolStripPanel.SuspendLayout();
+            this.toolStripContainerMenu.ContentPanel.SuspendLayout();
+            this.toolStripContainerMenu.TopToolStripPanel.SuspendLayout();
+            this.toolStripContainerMenu.SuspendLayout();
             this.SuspendLayout();
             // 
             // kryptonNavigator1
@@ -329,6 +337,7 @@ namespace RUINORERP.UI
             // 
             // statusStrip1
             // 
+            this.statusStrip1.Dock = System.Windows.Forms.DockStyle.None;
             this.statusStrip1.Font = new System.Drawing.Font("Segoe UI", 9F);
             this.statusStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.SystemOperatorState,
@@ -339,7 +348,7 @@ namespace RUINORERP.UI
             this.lblServerInfo,
             this.progressBar,
             this.tsdropBtn});
-            this.statusStrip1.Location = new System.Drawing.Point(0, 724);
+            this.statusStrip1.Location = new System.Drawing.Point(0, 0);
             this.statusStrip1.Name = "statusStrip1";
             this.statusStrip1.RenderMode = System.Windows.Forms.ToolStripRenderMode.ManagerRenderMode;
             this.statusStrip1.Size = new System.Drawing.Size(1353, 22);
@@ -456,9 +465,9 @@ namespace RUINORERP.UI
             this.btntsbRefresh,
             this.tsbtnloginFileServer,
             this.tsbtnSysTest});
-            this.toolStrip1.Location = new System.Drawing.Point(0, 24);
+            this.toolStrip1.Location = new System.Drawing.Point(3, 24);
             this.toolStrip1.Name = "toolStrip1";
-            this.toolStrip1.Size = new System.Drawing.Size(1353, 25);
+            this.toolStrip1.Size = new System.Drawing.Size(323, 25);
             this.toolStrip1.TabIndex = 7;
             this.toolStrip1.Text = "toolStrip1";
             // 
@@ -525,6 +534,7 @@ namespace RUINORERP.UI
             // 
             // menuStripMain
             // 
+            this.menuStripMain.Dock = System.Windows.Forms.DockStyle.None;
             this.menuStripMain.Font = new System.Drawing.Font("Segoe UI", 9F);
             this.menuStripMain.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.窗口ToolStripMenuItem});
@@ -632,7 +642,7 @@ namespace RUINORERP.UI
             this.kryptonPanelBigg.Controls.Add(this.kryptonSeparator1);
             this.kryptonPanelBigg.Controls.Add(this.kryptonNavigator1);
             this.kryptonPanelBigg.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.kryptonPanelBigg.Location = new System.Drawing.Point(0, 49);
+            this.kryptonPanelBigg.Location = new System.Drawing.Point(0, 0);
             this.kryptonPanelBigg.Name = "kryptonPanelBigg";
             this.kryptonPanelBigg.Size = new System.Drawing.Size(1353, 675);
             this.kryptonPanelBigg.TabIndex = 15;
@@ -645,16 +655,60 @@ namespace RUINORERP.UI
             this.kryptonSeparator1.Size = new System.Drawing.Size(10, 675);
             this.kryptonSeparator1.TabIndex = 3;
             // 
+            // toolStripFunctionMenu
+            // 
+            this.toolStripFunctionMenu.Dock = System.Windows.Forms.DockStyle.None;
+            this.toolStripFunctionMenu.Font = new System.Drawing.Font("Segoe UI", 9F);
+            this.toolStripFunctionMenu.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.toolStripButton4});
+            this.toolStripFunctionMenu.Location = new System.Drawing.Point(331, 24);
+            this.toolStripFunctionMenu.Name = "toolStripFunctionMenu";
+            this.toolStripFunctionMenu.Size = new System.Drawing.Size(146, 25);
+            this.toolStripFunctionMenu.TabIndex = 17;
+            this.toolStripFunctionMenu.Text = "toolStrip2";
+            // 
+            // toolStripButton4
+            // 
+            this.toolStripButton4.Image = global::RUINORERP.UI.Properties.Resources.Refresh;
+            this.toolStripButton4.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.toolStripButton4.Name = "toolStripButton4";
+            this.toolStripButton4.Padding = new System.Windows.Forms.Padding(50, 0, 0, 0);
+            this.toolStripButton4.Size = new System.Drawing.Size(103, 22);
+            this.toolStripButton4.Text = "刷新";
+            this.toolStripButton4.Visible = false;
+            // 
+            // toolStripContainerMenu
+            // 
+            // 
+            // toolStripContainerMenu.BottomToolStripPanel
+            // 
+            this.toolStripContainerMenu.BottomToolStripPanel.Controls.Add(this.statusStrip1);
+            // 
+            // toolStripContainerMenu.ContentPanel
+            // 
+            this.toolStripContainerMenu.ContentPanel.AutoScroll = true;
+            this.toolStripContainerMenu.ContentPanel.Controls.Add(this.kryptonPanelBigg);
+            this.toolStripContainerMenu.ContentPanel.Size = new System.Drawing.Size(1353, 675);
+            this.toolStripContainerMenu.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.toolStripContainerMenu.Location = new System.Drawing.Point(0, 0);
+            this.toolStripContainerMenu.Name = "toolStripContainerMenu";
+            this.toolStripContainerMenu.Size = new System.Drawing.Size(1353, 746);
+            this.toolStripContainerMenu.TabIndex = 18;
+            this.toolStripContainerMenu.Text = "toolStripContainer1";
+            // 
+            // toolStripContainerMenu.TopToolStripPanel
+            // 
+            this.toolStripContainerMenu.TopToolStripPanel.Controls.Add(this.toolStripFunctionMenu);
+            this.toolStripContainerMenu.TopToolStripPanel.Controls.Add(this.toolStrip1);
+            this.toolStripContainerMenu.TopToolStripPanel.Controls.Add(this.menuStripMain);
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.AutoSize = true;
             this.ClientSize = new System.Drawing.Size(1353, 746);
-            this.Controls.Add(this.kryptonPanelBigg);
-            this.Controls.Add(this.toolStrip1);
-            this.Controls.Add(this.statusStrip1);
-            this.Controls.Add(this.menuStripMain);
+            this.Controls.Add(this.toolStripContainerMenu);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.IsMdiContainer = true;
             this.Name = "MainForm";
@@ -682,8 +736,16 @@ namespace RUINORERP.UI
             this.kryptonPanelBigg.ResumeLayout(false);
             this.kryptonPanelBigg.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSeparator1)).EndInit();
+            this.toolStripFunctionMenu.ResumeLayout(false);
+            this.toolStripFunctionMenu.PerformLayout();
+            this.toolStripContainerMenu.BottomToolStripPanel.ResumeLayout(false);
+            this.toolStripContainerMenu.BottomToolStripPanel.PerformLayout();
+            this.toolStripContainerMenu.ContentPanel.ResumeLayout(false);
+            this.toolStripContainerMenu.TopToolStripPanel.ResumeLayout(false);
+            this.toolStripContainerMenu.TopToolStripPanel.PerformLayout();
+            this.toolStripContainerMenu.ResumeLayout(false);
+            this.toolStripContainerMenu.PerformLayout();
             this.ResumeLayout(false);
-            this.PerformLayout();
 
         }
 
@@ -742,6 +804,9 @@ namespace RUINORERP.UI
         private System.Windows.Forms.ToolStripComboBox toolStripComboBox1;
         internal System.Windows.Forms.ToolStripDropDownButton tsdropBtn;
         public System.Windows.Forms.ToolStripProgressBar progressBar;
+        private System.Windows.Forms.ToolStrip toolStripFunctionMenu;
+        private System.Windows.Forms.ToolStripButton toolStripButton4;
+        private System.Windows.Forms.ToolStripContainer toolStripContainerMenu;
     }
 }
 

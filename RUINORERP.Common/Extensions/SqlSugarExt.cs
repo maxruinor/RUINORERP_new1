@@ -46,7 +46,7 @@ namespace RUINORERP.Common.Extensions
         /// <param name="sugarQueryable">sugar查询对象</param>
         /// <param name="whereObj">查询实体</param>
         /// <returns></returns>
-        public static ISugarQueryable<T> Where<T>(this ISugarQueryable<T> sugarQueryable, bool useLike, List<Expression<Func<T, object>>> queryConditions, object whereObj)
+        public static ISugarQueryable<T> WhereCustom<T>(this ISugarQueryable<T> sugarQueryable, bool useLike, List<Expression<Func<T, object>>> queryConditions, object whereObj)
         {
             //这里的思路是将各种情况的where集合分类处理，最后拼接，如果有条件限制，则集合中过滤掉
             var sugarQueryableWhere = sugarQueryable;
@@ -346,7 +346,7 @@ namespace RUINORERP.Common.Extensions
         /// <param name="sugarQueryable">sugar查询对象</param>
         /// <param name="whereObj">查询实体</param>
         /// <returns></returns>
-        public static ISugarQueryable<T> Where<T>(this ISugarQueryable<T> sugarQueryable, bool useLike, List<string> _queryConditions, object whereObj)
+        public static ISugarQueryable<T> WhereCustom<T>(this ISugarQueryable<T> sugarQueryable, bool useLike, List<string> _queryConditions, object whereObj)
         {
             //如果查询参数对应的实体为null，则认为不需要条件查询
             if (whereObj == null)

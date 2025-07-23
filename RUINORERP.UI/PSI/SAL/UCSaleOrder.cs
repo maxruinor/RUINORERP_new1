@@ -366,6 +366,13 @@ namespace RUINORERP.UI.PSI.SAL
                 //权限允许
                 if ((true && entity.DataStatus == (int)DataStatus.草稿) || (true && entity.DataStatus == (int)DataStatus.新建))
                 {
+
+                    if (s2.PropertyName == entity.GetPropertyName<tb_SaleOrder>(c => c.FreightIncome))
+                    {
+                        Summation();
+                    }
+
+
                     if (s2.PropertyName == entity.GetPropertyName<tb_SaleOrder>(c => c.Account_id) && entity.Account_id.HasValue && entity.Account_id > 0)
                     {
                         if (cmbAccount_id.SelectedItem is tb_FM_Account ac)

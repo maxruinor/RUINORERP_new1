@@ -221,7 +221,7 @@ namespace RUINORERP.Business
 
         public async override Task<List<T>> BaseQueryByAdvancedAsync(bool useLike, object dto)
         {
-            var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<T>().Where(useLike, dto);
+            var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<T>().WhereCustom(useLike, dto);
             return await querySqlQueryable.ToListAsync();
         }
 
@@ -299,7 +299,7 @@ namespace RUINORERP.Business
                         .Includes(m => m.tb_ProductionPlans)
                         .Includes(m => m.tb_OrderPackings)
                         .Includes(m => m.tb_PurOrders)
-                                        .Where(useLike, dto);
+                                        .WhereCustom(useLike, dto);
             return await querySqlQueryable.ToListAsync() as List<T>;
         }
 
@@ -565,7 +565,7 @@ namespace RUINORERP.Business
         /// <returns></returns>
         public async Task<List<tb_SaleOrder>> QueryByAdvancedAsync(bool useLike, object dto)
         {
-            var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<tb_SaleOrder>().Where(useLike, dto);
+            var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<tb_SaleOrder>().WhereCustom(useLike, dto);
             return await querySqlQueryable.ToListAsync();
         }
 

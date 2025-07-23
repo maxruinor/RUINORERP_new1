@@ -19,16 +19,16 @@ namespace RUINORERP.Business
     public static class ISugarQueryableExt
     {
 
-        public static ISugarQueryable<T> Where<T>(this ISugarQueryable<T> sugarQueryable, bool useLike, object whereObj)
+        public static ISugarQueryable<T> WhereCustom<T>(this ISugarQueryable<T> sugarQueryable, bool useLike, object whereObj)
         {
-            return QueryConditionHelper<T>.Where(sugarQueryable, useLike, null, whereObj);
+            return QueryConditionHelper<T>.WhereCustom(sugarQueryable, useLike, null, whereObj);
             // return Where(sugarQueryable, useLike, new List<Expression<Func<T, object>>>(), whereObj);
         }
 
         [Obsolete("Use WhereAdv instead")]
         public static ISugarQueryable<T> WhereAdv_old<T>(this ISugarQueryable<T> sugarQueryable, bool useLike, object whereObj)
         {
-            return QueryConditionHelper<T>.Where(sugarQueryable, useLike, null, whereObj);
+            return QueryConditionHelper<T>.WhereCustom(sugarQueryable, useLike, null, whereObj);
         }
 
         /// <summary>
@@ -42,7 +42,7 @@ namespace RUINORERP.Business
         /// <returns></returns>
         public static ISugarQueryable<T> WhereAdv<T>(this ISugarQueryable<T> sugarQueryable, bool useLike, List<string> queryConditions, object whereObj)
         {
-            return QueryConditionHelper<T>.Where(sugarQueryable, useLike, queryConditions, whereObj);
+            return QueryConditionHelper<T>.WhereCustom(sugarQueryable, useLike, queryConditions, whereObj);
         }
 
 
@@ -58,7 +58,7 @@ namespace RUINORERP.Business
         /// <param name="queryConditions">查询条件限制</param>
         /// <param name="whereObj">查询实体</param>
         /// <returns></returns>
-        public static ISugarQueryable<T> Where(ISugarQueryable<T> sugarQueryable, bool useLike, List<string> queryConditions, object whereObj)
+        public static ISugarQueryable<T> WhereCustom(ISugarQueryable<T> sugarQueryable, bool useLike, List<string> queryConditions, object whereObj)
         {
             if (whereObj == null || queryConditions.Count == 0)
             {

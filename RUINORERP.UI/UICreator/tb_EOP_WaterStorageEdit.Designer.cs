@@ -3,7 +3,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：07/18/2025 10:33:37
+// 时间：07/23/2025 12:19:05
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -105,6 +105,26 @@ this.txtNotes.Multiline = true;
 this.lblisdeleted = new Krypton.Toolkit.KryptonLabel();
 this.chkisdeleted = new Krypton.Toolkit.KryptonCheckBox();
 this.chkisdeleted.Values.Text ="";
+
+this.lblDataStatus = new Krypton.Toolkit.KryptonLabel();
+this.txtDataStatus = new Krypton.Toolkit.KryptonTextBox();
+
+this.lblApprovalOpinions = new Krypton.Toolkit.KryptonLabel();
+this.txtApprovalOpinions = new Krypton.Toolkit.KryptonTextBox();
+
+this.lblApprover_by = new Krypton.Toolkit.KryptonLabel();
+this.txtApprover_by = new Krypton.Toolkit.KryptonTextBox();
+
+this.lblApprover_at = new Krypton.Toolkit.KryptonLabel();
+this.dtpApprover_at = new Krypton.Toolkit.KryptonDateTimePicker();
+
+
+this.lblApprovalResults = new Krypton.Toolkit.KryptonLabel();
+this.chkApprovalResults = new Krypton.Toolkit.KryptonCheckBox();
+this.chkApprovalResults.Values.Text ="";
+
+this.lblPrintStatus = new Krypton.Toolkit.KryptonLabel();
+this.txtPrintStatus = new Krypton.Toolkit.KryptonTextBox();
 
     
     //for end
@@ -389,6 +409,100 @@ this.chkisdeleted.TabIndex = 17;
 this.Controls.Add(this.lblisdeleted);
 this.Controls.Add(this.chkisdeleted);
 
+           //#####DataStatus###Int32
+//属性测试450DataStatus
+//属性测试450DataStatus
+this.lblDataStatus.AutoSize = true;
+this.lblDataStatus.Location = new System.Drawing.Point(100,450);
+this.lblDataStatus.Name = "lblDataStatus";
+this.lblDataStatus.Size = new System.Drawing.Size(41, 12);
+this.lblDataStatus.TabIndex = 18;
+this.lblDataStatus.Text = "数据状态";
+this.txtDataStatus.Location = new System.Drawing.Point(173,446);
+this.txtDataStatus.Name = "txtDataStatus";
+this.txtDataStatus.Size = new System.Drawing.Size(100, 21);
+this.txtDataStatus.TabIndex = 18;
+this.Controls.Add(this.lblDataStatus);
+this.Controls.Add(this.txtDataStatus);
+
+           //#####200ApprovalOpinions###String
+this.lblApprovalOpinions.AutoSize = true;
+this.lblApprovalOpinions.Location = new System.Drawing.Point(100,475);
+this.lblApprovalOpinions.Name = "lblApprovalOpinions";
+this.lblApprovalOpinions.Size = new System.Drawing.Size(41, 12);
+this.lblApprovalOpinions.TabIndex = 19;
+this.lblApprovalOpinions.Text = "审批意见";
+this.txtApprovalOpinions.Location = new System.Drawing.Point(173,471);
+this.txtApprovalOpinions.Name = "txtApprovalOpinions";
+this.txtApprovalOpinions.Size = new System.Drawing.Size(100, 21);
+this.txtApprovalOpinions.TabIndex = 19;
+this.Controls.Add(this.lblApprovalOpinions);
+this.Controls.Add(this.txtApprovalOpinions);
+
+           //#####Approver_by###Int64
+//属性测试500Approver_by
+//属性测试500Approver_by
+this.lblApprover_by.AutoSize = true;
+this.lblApprover_by.Location = new System.Drawing.Point(100,500);
+this.lblApprover_by.Name = "lblApprover_by";
+this.lblApprover_by.Size = new System.Drawing.Size(41, 12);
+this.lblApprover_by.TabIndex = 20;
+this.lblApprover_by.Text = "审批人";
+this.txtApprover_by.Location = new System.Drawing.Point(173,496);
+this.txtApprover_by.Name = "txtApprover_by";
+this.txtApprover_by.Size = new System.Drawing.Size(100, 21);
+this.txtApprover_by.TabIndex = 20;
+this.Controls.Add(this.lblApprover_by);
+this.Controls.Add(this.txtApprover_by);
+
+           //#####Approver_at###DateTime
+this.lblApprover_at.AutoSize = true;
+this.lblApprover_at.Location = new System.Drawing.Point(100,525);
+this.lblApprover_at.Name = "lblApprover_at";
+this.lblApprover_at.Size = new System.Drawing.Size(41, 12);
+this.lblApprover_at.TabIndex = 21;
+this.lblApprover_at.Text = "审批时间";
+//111======525
+this.dtpApprover_at.Location = new System.Drawing.Point(173,521);
+this.dtpApprover_at.Name ="dtpApprover_at";
+this.dtpApprover_at.ShowCheckBox =true;
+this.dtpApprover_at.Size = new System.Drawing.Size(100, 21);
+this.dtpApprover_at.TabIndex = 21;
+this.Controls.Add(this.lblApprover_at);
+this.Controls.Add(this.dtpApprover_at);
+
+           //#####ApprovalStatus###SByte
+
+           //#####ApprovalResults###Boolean
+this.lblApprovalResults.AutoSize = true;
+this.lblApprovalResults.Location = new System.Drawing.Point(100,575);
+this.lblApprovalResults.Name = "lblApprovalResults";
+this.lblApprovalResults.Size = new System.Drawing.Size(41, 12);
+this.lblApprovalResults.TabIndex = 23;
+this.lblApprovalResults.Text = "审批结果";
+this.chkApprovalResults.Location = new System.Drawing.Point(173,571);
+this.chkApprovalResults.Name = "chkApprovalResults";
+this.chkApprovalResults.Size = new System.Drawing.Size(100, 21);
+this.chkApprovalResults.TabIndex = 23;
+this.Controls.Add(this.lblApprovalResults);
+this.Controls.Add(this.chkApprovalResults);
+
+           //#####PrintStatus###Int32
+//属性测试600PrintStatus
+//属性测试600PrintStatus
+this.lblPrintStatus.AutoSize = true;
+this.lblPrintStatus.Location = new System.Drawing.Point(100,600);
+this.lblPrintStatus.Name = "lblPrintStatus";
+this.lblPrintStatus.Size = new System.Drawing.Size(41, 12);
+this.lblPrintStatus.TabIndex = 24;
+this.lblPrintStatus.Text = "打印状态";
+this.txtPrintStatus.Location = new System.Drawing.Point(173,596);
+this.txtPrintStatus.Name = "txtPrintStatus";
+this.txtPrintStatus.Size = new System.Drawing.Size(100, 21);
+this.txtPrintStatus.TabIndex = 24;
+this.Controls.Add(this.lblPrintStatus);
+this.Controls.Add(this.txtPrintStatus);
+
         //for 加入到容器
             //components = new System.ComponentModel.Container();
            
@@ -403,7 +517,7 @@ this.Controls.Add(this.chkisdeleted);
             //this.kryptonPanel1.Location = new System.Drawing.Point(0, 0);
            // this.kryptonPanel1.Name = "kryptonPanel1";
            // this.kryptonPanel1.Size = new System.Drawing.Size(404, 300);
-           // this.kryptonPanel1.TabIndex = 17;
+           // this.kryptonPanel1.TabIndex = 24;
 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
@@ -457,6 +571,25 @@ this.Controls.Add(this.txtNotes );
 
                 this.Controls.Add(this.lblisdeleted );
 this.Controls.Add(this.chkisdeleted );
+
+                this.Controls.Add(this.lblDataStatus );
+this.Controls.Add(this.txtDataStatus );
+
+                this.Controls.Add(this.lblApprovalOpinions );
+this.Controls.Add(this.txtApprovalOpinions );
+
+                this.Controls.Add(this.lblApprover_by );
+this.Controls.Add(this.txtApprover_by );
+
+                this.Controls.Add(this.lblApprover_at );
+this.Controls.Add(this.dtpApprover_at );
+
+                
+                this.Controls.Add(this.lblApprovalResults );
+this.Controls.Add(this.chkApprovalResults );
+
+                this.Controls.Add(this.lblPrintStatus );
+this.Controls.Add(this.txtPrintStatus );
 
                             // 
             // "tb_EOP_WaterStorageEdit"
@@ -564,6 +697,39 @@ private Krypton.Toolkit.KryptonTextBox txtNotes;
         
               private Krypton.Toolkit.KryptonLabel lblisdeleted;
 private Krypton.Toolkit.KryptonCheckBox chkisdeleted;
+
+    
+        
+              private Krypton.Toolkit.KryptonLabel lblDataStatus;
+private Krypton.Toolkit.KryptonTextBox txtDataStatus;
+
+    
+        
+              private Krypton.Toolkit.KryptonLabel lblApprovalOpinions;
+private Krypton.Toolkit.KryptonTextBox txtApprovalOpinions;
+
+    
+        
+              private Krypton.Toolkit.KryptonLabel lblApprover_by;
+private Krypton.Toolkit.KryptonTextBox txtApprover_by;
+
+    
+        
+              private Krypton.Toolkit.KryptonLabel lblApprover_at;
+private Krypton.Toolkit.KryptonDateTimePicker dtpApprover_at;
+
+    
+        
+              
+    
+        
+              private Krypton.Toolkit.KryptonLabel lblApprovalResults;
+private Krypton.Toolkit.KryptonCheckBox chkApprovalResults;
+
+    
+        
+              private Krypton.Toolkit.KryptonLabel lblPrintStatus;
+private Krypton.Toolkit.KryptonTextBox txtPrintStatus;
 
     
             //private ComponentFactory.Krypton.Toolkit.KryptonButton btnOk;

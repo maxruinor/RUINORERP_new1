@@ -302,7 +302,7 @@ namespace RUINORERP.Common.CollectionExtension
         {
             try
             {
-                return items.AsQueryable().Where(filter).ToList();
+                return items.AsQueryable().WhereCustom(filter).ToList();
             }
             catch
             {
@@ -575,7 +575,7 @@ namespace RUINORERP.Common.CollectionExtension
         /// <param name="source"></param>
         /// <param name="predicate"></param>
         /// <returns></returns>
-        public static IQueryable<T> Where<T>(this IQueryable<T> source, string predicate)
+        public static IQueryable<T> WhereCustom<T>(this IQueryable<T> source, string predicate)
         {
             if (string.IsNullOrEmpty(predicate)) return source;
 

@@ -18,6 +18,7 @@ using RUINORERP.Business.Processor;
 using RUINORERP.Common.Helper;
 using RUINORERP.Model;
 using RUINORERP.UI.BaseForm;
+using RUINORERP.UI.BusinessService.SmartMenuService;
 using RUINORERP.UI.FM;
 using RUINORERP.UI.PSI.SAL;
 using RUINORERP.UI.UserCenter;
@@ -42,14 +43,17 @@ namespace RUINORERP.UI.Common
 
         public RUINORERP.Model.Context.ApplicationContext appContext;
 
+        private readonly MenuTracker _menuTracker;
+
         /// <summary>
         /// 应该有基类，以后对  角色组，用户 各种方式的权限做不同处理 多态等
         /// </summary>
         /// 
 
-        public MenuPowerHelper(RUINORERP.Model.Context.ApplicationContext _appContext = null)
+        public MenuPowerHelper(MenuTracker menuTracker, RUINORERP.Model.Context.ApplicationContext _appContext = null)
         {
             appContext = _appContext;
+            _menuTracker = menuTracker;
         }
 
 
@@ -232,6 +236,8 @@ namespace RUINORERP.UI.Common
 
         private void ControlWindowsMenu(ToolStripItemCollection menus)
         {
+
+
             //是否显示关闭窗口菜单 
             foreach (ToolStripItem item in menus)
             {
@@ -305,9 +311,14 @@ namespace RUINORERP.UI.Common
                                 {
                                     ExecuteEvents(pr, null);
                                 }
-
-
-                                ControlWindowsMenu(this.MainMenu.Items);
+                                //if (this.MainMenu == null)
+                                //{
+                                //    this.MainMenu = MainForm.Instance.menuStripMain;
+                                //}
+                                if (this.MainMenu!=null)
+                                {
+                                    ControlWindowsMenu(this.MainMenu.Items);
+                                }
 
                                 #region 新方法
 
@@ -392,7 +403,7 @@ namespace RUINORERP.UI.Common
                     {
                         break;
                     }
-
+                    _menuTracker.RecordMenuUsage(pr.MenuID);
                     using (StatusBusy busy = new StatusBusy("菜单功能加载中.... 请稍候"))
                     {
                         KryptonWorkspaceCell cell = MainForm.Instance.kryptonDockableWorkspace1.ActiveCell;
@@ -472,7 +483,7 @@ namespace RUINORERP.UI.Common
                                         var menu = Startup.GetFromFacByName<BaseNavigator>(pr.FormName);
                                         page = NewPage(pr.CaptionCN, 1, menu);
                                     }
-                                    
+
                                 }
                                 else
                                 if (pr.BIBaseForm.Contains("UCBaseClass"))

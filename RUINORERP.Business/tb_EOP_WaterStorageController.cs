@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：07/18/2025 10:33:39
+// 时间：07/23/2025 12:19:07
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -125,7 +125,7 @@ namespace RUINORERP.Business
             try
             {
                 //生成时暂时只考虑了一个主键的情况
-                if (entity.WSR_ID > 0 && entity.HasChanged)
+                if (entity.WSR_ID > 0)
                 {
                     bool rs = await _tb_EOP_WaterStorageServices.Update(entity);
                     if (rs)
@@ -143,8 +143,6 @@ namespace RUINORERP.Business
                 rr.ReturnObject = Returnobj;
                 rr.Succeeded = true;
                 entity.ActionStatus = ActionStatus.无操作;
-
-               
             }
             catch (Exception ex)
             {
@@ -223,7 +221,7 @@ namespace RUINORERP.Business
         
         public async override Task<List<T>> BaseQueryByAdvancedAsync(bool useLike,object dto) 
         {
-            var  querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<T>().Where(useLike,dto);
+            var  querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<T>().WhereCustom(useLike,dto);
             return await querySqlQueryable.ToListAsync();
         }
         
@@ -297,7 +295,7 @@ namespace RUINORERP.Business
             var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<tb_EOP_WaterStorage>()
                                 //这里一般是子表，或没有一对多外键的情况 ，用自动的只是为了语法正常一般不会调用这个方法
                 .IncludesAllFirstLayer()//自动更新导航 只能两层。这里项目中有时会失效，具体看文档
-                                .Where(useLike, dto);
+                                .WhereCustom(useLike, dto);
             return await querySqlQueryable.ToListAsync()as List<T>;
         }
 
@@ -533,7 +531,7 @@ namespace RUINORERP.Business
         /// <returns></returns>
         public async Task<List<tb_EOP_WaterStorage>> QueryByAdvancedAsync(bool useLike,object dto)
         {
-            var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<tb_EOP_WaterStorage>().Where(useLike,dto);
+            var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<tb_EOP_WaterStorage>().WhereCustom(useLike,dto);
             return await querySqlQueryable.ToListAsync();
         }
 

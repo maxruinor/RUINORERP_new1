@@ -63,8 +63,7 @@ namespace RUINORERP.UI
             this.lblStatusGlobal = new System.Windows.Forms.ToolStripStatusLabel();
             this.lblServerInfo = new System.Windows.Forms.ToolStripStatusLabel();
             this.progressBar = new System.Windows.Forms.ToolStripProgressBar();
-            this.tsdropBtn = new System.Windows.Forms.ToolStripDropDownButton();
-            this.toolStripComboBox1 = new System.Windows.Forms.ToolStripComboBox();
+            this.toolStripDropDownButton1 = new System.Windows.Forms.ToolStripDropDownButton();
             this.toolStrip1 = new System.Windows.Forms.ToolStrip();
             this.toolStripBtnUpdate = new System.Windows.Forms.ToolStripButton();
             this.toolBtnlogOff = new System.Windows.Forms.ToolStripButton();
@@ -89,7 +88,7 @@ namespace RUINORERP.UI
             this.kryptonPanelBigg = new Krypton.Toolkit.KryptonPanel();
             this.kryptonSeparator1 = new Krypton.Toolkit.KryptonSeparator();
             this.toolStripFunctionMenu = new System.Windows.Forms.ToolStrip();
-            this.toolStripButton4 = new System.Windows.Forms.ToolStripButton();
+            this.toolStripMenuSearcher = new System.Windows.Forms.ToolStripComboBox();
             this.toolStripContainerMenu = new System.Windows.Forms.ToolStripContainer();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonNavigator1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPage5)).BeginInit();
@@ -347,7 +346,7 @@ namespace RUINORERP.UI
             this.lblStatusGlobal,
             this.lblServerInfo,
             this.progressBar,
-            this.tsdropBtn});
+            this.toolStripDropDownButton1});
             this.statusStrip1.Location = new System.Drawing.Point(0, 0);
             this.statusStrip1.Name = "statusStrip1";
             this.statusStrip1.RenderMode = System.Windows.Forms.ToolStripRenderMode.ManagerRenderMode;
@@ -438,25 +437,19 @@ namespace RUINORERP.UI
             this.progressBar.Size = new System.Drawing.Size(150, 16);
             this.progressBar.ToolTipText = "全局进度条";
             // 
-            // tsdropBtn
+            // toolStripDropDownButton1
             // 
-            this.tsdropBtn.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
-            this.tsdropBtn.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.toolStripComboBox1});
-            this.tsdropBtn.Image = ((System.Drawing.Image)(resources.GetObject("tsdropBtn.Image")));
-            this.tsdropBtn.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.tsdropBtn.Name = "tsdropBtn";
-            this.tsdropBtn.Size = new System.Drawing.Size(164, 20);
-            this.tsdropBtn.Text = "toolStripDropDownButton1";
-            this.tsdropBtn.Visible = false;
-            // 
-            // toolStripComboBox1
-            // 
-            this.toolStripComboBox1.Name = "toolStripComboBox1";
-            this.toolStripComboBox1.Size = new System.Drawing.Size(121, 25);
+            this.toolStripDropDownButton1.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.toolStripDropDownButton1.Image = ((System.Drawing.Image)(resources.GetObject("toolStripDropDownButton1.Image")));
+            this.toolStripDropDownButton1.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.toolStripDropDownButton1.Name = "toolStripDropDownButton1";
+            this.toolStripDropDownButton1.Size = new System.Drawing.Size(29, 20);
+            this.toolStripDropDownButton1.Text = "toolStripDropDownButton1";
+            this.toolStripDropDownButton1.Visible = false;
             // 
             // toolStrip1
             // 
+            this.toolStrip1.Dock = System.Windows.Forms.DockStyle.None;
             this.toolStrip1.Font = new System.Drawing.Font("Segoe UI", 9F);
             this.toolStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.toolStripBtnUpdate,
@@ -467,7 +460,7 @@ namespace RUINORERP.UI
             this.tsbtnSysTest});
             this.toolStrip1.Location = new System.Drawing.Point(3, 24);
             this.toolStrip1.Name = "toolStrip1";
-            this.toolStrip1.Size = new System.Drawing.Size(323, 25);
+            this.toolStrip1.Size = new System.Drawing.Size(426, 25);
             this.toolStrip1.TabIndex = 7;
             this.toolStrip1.Text = "toolStrip1";
             // 
@@ -508,7 +501,6 @@ namespace RUINORERP.UI
             this.btntsbRefresh.Padding = new System.Windows.Forms.Padding(50, 0, 0, 0);
             this.btntsbRefresh.Size = new System.Drawing.Size(103, 22);
             this.btntsbRefresh.Text = "刷新";
-            this.btntsbRefresh.Visible = false;
             this.btntsbRefresh.Click += new System.EventHandler(this.btntsbRefresh_Click);
             // 
             // tsbtnloginFileServer
@@ -660,22 +652,21 @@ namespace RUINORERP.UI
             this.toolStripFunctionMenu.Dock = System.Windows.Forms.DockStyle.None;
             this.toolStripFunctionMenu.Font = new System.Drawing.Font("Segoe UI", 9F);
             this.toolStripFunctionMenu.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.toolStripButton4});
-            this.toolStripFunctionMenu.Location = new System.Drawing.Point(331, 24);
+            this.toolStripMenuSearcher});
+            this.toolStripFunctionMenu.Location = new System.Drawing.Point(1180, 24);
             this.toolStripFunctionMenu.Name = "toolStripFunctionMenu";
-            this.toolStripFunctionMenu.Size = new System.Drawing.Size(146, 25);
+            this.toolStripFunctionMenu.Size = new System.Drawing.Size(135, 25);
             this.toolStripFunctionMenu.TabIndex = 17;
             this.toolStripFunctionMenu.Text = "toolStrip2";
             // 
-            // toolStripButton4
+            // toolStripMenuSearcher
             // 
-            this.toolStripButton4.Image = global::RUINORERP.UI.Properties.Resources.Refresh;
-            this.toolStripButton4.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.toolStripButton4.Name = "toolStripButton4";
-            this.toolStripButton4.Padding = new System.Windows.Forms.Padding(50, 0, 0, 0);
-            this.toolStripButton4.Size = new System.Drawing.Size(103, 22);
-            this.toolStripButton4.Text = "刷新";
-            this.toolStripButton4.Visible = false;
+            this.toolStripMenuSearcher.AutoCompleteMode = System.Windows.Forms.AutoCompleteMode.Suggest;
+            this.toolStripMenuSearcher.AutoCompleteSource = System.Windows.Forms.AutoCompleteSource.CustomSource;
+            this.toolStripMenuSearcher.AutoToolTip = true;
+            this.toolStripMenuSearcher.Name = "toolStripMenuSearcher";
+            this.toolStripMenuSearcher.Size = new System.Drawing.Size(121, 25);
+            this.toolStripMenuSearcher.ToolTipText = "菜单搜索";
             // 
             // toolStripContainerMenu
             // 
@@ -698,9 +689,9 @@ namespace RUINORERP.UI
             // 
             // toolStripContainerMenu.TopToolStripPanel
             // 
-            this.toolStripContainerMenu.TopToolStripPanel.Controls.Add(this.toolStripFunctionMenu);
-            this.toolStripContainerMenu.TopToolStripPanel.Controls.Add(this.toolStrip1);
             this.toolStripContainerMenu.TopToolStripPanel.Controls.Add(this.menuStripMain);
+            this.toolStripContainerMenu.TopToolStripPanel.Controls.Add(this.toolStrip1);
+            this.toolStripContainerMenu.TopToolStripPanel.Controls.Add(this.toolStripFunctionMenu);
             // 
             // MainForm
             // 
@@ -801,12 +792,11 @@ namespace RUINORERP.UI
         private KryptonSeparator kryptonSeparator1;
         private System.Windows.Forms.ToolStripButton tsbtnloginFileServer;
         private System.Windows.Forms.ToolStripButton tsbtnSysTest;
-        private System.Windows.Forms.ToolStripComboBox toolStripComboBox1;
-        internal System.Windows.Forms.ToolStripDropDownButton tsdropBtn;
         public System.Windows.Forms.ToolStripProgressBar progressBar;
         private System.Windows.Forms.ToolStrip toolStripFunctionMenu;
-        private System.Windows.Forms.ToolStripButton toolStripButton4;
         private System.Windows.Forms.ToolStripContainer toolStripContainerMenu;
+        private System.Windows.Forms.ToolStripDropDownButton toolStripDropDownButton1;
+        private System.Windows.Forms.ToolStripComboBox toolStripMenuSearcher;
     }
 }
 

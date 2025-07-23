@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：07/18/2025 10:33:36
+// 时间：07/23/2025 12:19:05
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -51,6 +51,13 @@ namespace RUINORERP.UI
         
         
         
+        
+        
+        
+        
+        
+        
+        
 
          }
 /*
@@ -75,6 +82,13 @@ namespace RUINORERP.UI
                         entity.Modified_by = Int64.Parse(txtModified_by.Text);
                         entity.Notes = txtNotes.Text ;
                        entity.isdeleted = Boolean.Parse(txtisdeleted.Text);
+                        entity.DataStatus = Int32.Parse(txtDataStatus.Text);
+                        entity.ApprovalOpinions = txtApprovalOpinions.Text ;
+                       entity.Approver_by = Int64.Parse(txtApprover_by.Text);
+                        entity.Approver_at = DateTime.Parse(txtApprover_at.Text);
+                        entity.ApprovalStatus = SByte.Parse(txtApprovalStatus.Text);
+                        entity.ApprovalResults = Boolean.Parse(txtApprovalResults.Text);
+                        entity.PrintStatus = Int32.Parse(txtPrintStatus.Text);
                                 return entity;
 }
         */
@@ -102,6 +116,13 @@ namespace RUINORERP.UI
            DataBindingHelper.BindData4TextBox<tb_EOP_WaterStorage>(entity, t => t.Modified_by, txtModified_by, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4TextBox<tb_EOP_WaterStorage>(entity, t => t.Notes, txtNotes, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4CheckBox<tb_EOP_WaterStorage>(entity, t => t.isdeleted, chkisdeleted, false);
+           DataBindingHelper.BindData4TextBox<tb_EOP_WaterStorage>(entity, t => t.DataStatus, txtDataStatus, BindDataType4TextBox.Qty,false);
+           DataBindingHelper.BindData4TextBox<tb_EOP_WaterStorage>(entity, t => t.ApprovalOpinions, txtApprovalOpinions, BindDataType4TextBox.Text,false);
+           DataBindingHelper.BindData4TextBox<tb_EOP_WaterStorage>(entity, t => t.Approver_by, txtApprover_by, BindDataType4TextBox.Qty,false);
+           DataBindingHelper.BindData4DataTime<tb_EOP_WaterStorage>(entity, t => t.Approver_at, dtpApprover_at,false);
+           //default  DataBindingHelper.BindData4TextBox<tb_EOP_WaterStorage>(entity, t => t.ApprovalStatus.ToString(), txtApprovalStatus, BindDataType4TextBox.Money,false);
+           DataBindingHelper.BindData4CheckBox<tb_EOP_WaterStorage>(entity, t => t.ApprovalResults, chkApprovalResults, false);
+           DataBindingHelper.BindData4TextBox<tb_EOP_WaterStorage>(entity, t => t.PrintStatus, txtPrintStatus, BindDataType4TextBox.Qty,false);
 }
 
 

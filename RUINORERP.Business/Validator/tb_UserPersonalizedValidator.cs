@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/18/2024 17:45:33
+// 时间：07/23/2025 14:00:48
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -41,6 +41,11 @@ namespace RUINORERP.Business
 
 
  RuleFor(tb_UserPersonalized =>tb_UserPersonalized.ID).Must(CheckForeignKeyValue).WithMessage("用户角色:下拉选择值不正确。");
+
+
+ RuleFor(tb_UserPersonalized =>tb_UserPersonalized.PrinterName).MaximumLength(100).WithMessage(":不能超过最大长度,100.");
+
+
 
            	        Initialize();
      }

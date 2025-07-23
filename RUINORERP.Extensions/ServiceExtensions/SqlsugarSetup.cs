@@ -86,7 +86,7 @@ namespace RUINORERP.Extensions
                     db.Aop.OnLogExecuting = (sql, pars) =>
                         {
                             //获取原生SQL推荐 5.1.4.63  性能OK
-                            //Console.WriteLine(UtilMethods.GetNativeSql(sql, pars));
+                            Console.WriteLine(UtilMethods.GetNativeSql(sql, pars));
 
                             if (CheckEvent != null)
                             {
@@ -223,7 +223,7 @@ namespace RUINORERP.Extensions
                         //Console.WriteLine("执行成功：" + sql);//输出sql
                         if (AppContextData.IsDebug)
                         {
-                            Console.WriteLine(Common.DB.SqlProfiler.FormatParam(sql, pars));
+                            //Console.WriteLine(Common.DB.SqlProfiler.FormatParam(sql, pars));
                             //logger.LogInformation(SqlProfiler.FormatParam(sql, pars as SugarParameter[]));
                         }
 

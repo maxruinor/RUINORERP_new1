@@ -241,6 +241,22 @@ namespace RUINORERP.UI.Common
             }
         }
 
+
+        public MenuAttrAssemblyInfo(string describe, 模块定义 所属模块, 电商运营 NextNavMenu, params BizType[] bizType)
+        {
+            string _MenuPath = string.Empty;
+            _MenuPath = 所属模块.ToString() + "|" + NextNavMenu.ToString() + "|";
+            this.Describe = describe;
+            this.MenuPath = _MenuPath;
+            Enabled = true;
+            UiType = UIType.单表数据;
+            if (bizType != null && bizType.Length > 0)
+            {
+                MenuBizType = bizType[0];
+            }
+        }
+
+
         #endregion
 
         public MenuAttrAssemblyInfo(string _name, string _caption, string _ClassPath, string _menuName)

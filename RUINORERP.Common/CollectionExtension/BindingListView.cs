@@ -231,7 +231,7 @@ namespace RUINORERP.Common.CollectionExtension
                     try
                     {
                         // 使用动态LINQ进行过滤
-                        var query = _originalList.AsQueryable().Where(_filter);
+                        var query = _originalList.AsQueryable().WhereCustom(_filter);
                         filteredItems = query.ToList();
                     }
                     catch (Exception ex)

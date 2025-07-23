@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：07/18/2025 10:33:40
+// 时间：07/23/2025 12:19:08
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -253,6 +253,97 @@ namespace RUINORERP.Model.QueryDto
         { 
             get{return _isdeleted;}
             set{SetProperty(ref _isdeleted, value);}
+        }
+     
+
+        private int _DataStatus;
+        /// <summary>
+        /// 数据状态
+        /// </summary>
+        [AdvQueryAttribute(ColName = "DataStatus",ColDesc = "数据状态")]
+        [SugarColumn(ColumnDataType = "int",SqlParameterDbType ="Int32",ColumnName = "DataStatus",IsNullable = false,ColumnDescription = "数据状态" )]
+        public int DataStatus 
+        { 
+            get{return _DataStatus;}
+            set{SetProperty(ref _DataStatus, value);}
+        }
+     
+
+        private string _ApprovalOpinions;
+        /// <summary>
+        /// 审批意见
+        /// </summary>
+        [AdvQueryAttribute(ColName = "ApprovalOpinions",ColDesc = "审批意见")]
+        [SugarColumn(ColumnDataType = "varchar",SqlParameterDbType ="String",ColumnName = "ApprovalOpinions",Length=200,IsNullable = true,ColumnDescription = "审批意见" )]
+        public string ApprovalOpinions 
+        { 
+            get{return _ApprovalOpinions;}
+            set{SetProperty(ref _ApprovalOpinions, value);}
+        }
+     
+
+        private long? _Approver_by;
+        /// <summary>
+        /// 审批人
+        /// </summary>
+        [AdvQueryAttribute(ColName = "Approver_by",ColDesc = "审批人")]
+        [SugarColumn(ColumnDataType = "bigint",SqlParameterDbType ="Int64",ColumnName = "Approver_by",IsNullable = true,ColumnDescription = "审批人" )]
+        public long? Approver_by 
+        { 
+            get{return _Approver_by;}
+            set{SetProperty(ref _Approver_by, value);}
+        }
+     
+
+        private DateTime? _Approver_at;
+        /// <summary>
+        /// 审批时间
+        /// </summary>
+        [AdvQueryAttribute(ColName = "Approver_at",ColDesc = "审批时间")]
+        [SugarColumn(ColumnDataType = "datetime",SqlParameterDbType ="DateTime",ColumnName = "Approver_at",IsNullable = true,ColumnDescription = "审批时间" )]
+        public DateTime? Approver_at 
+        { 
+            get{return _Approver_at;}
+            set{SetProperty(ref _Approver_at, value);}
+        }
+     
+
+        private int? _ApprovalStatus= ((0));
+        /// <summary>
+        /// 审批状态
+        /// </summary>
+        [AdvQueryAttribute(ColName = "ApprovalStatus",ColDesc = "审批状态")]
+        [SugarColumn(ColumnDataType = "tinyint",SqlParameterDbType ="SByte",ColumnName = "ApprovalStatus",IsNullable = true,ColumnDescription = "审批状态" )]
+        public int? ApprovalStatus 
+        { 
+            get{return _ApprovalStatus;}
+            set{SetProperty(ref _ApprovalStatus, value);}
+        }
+     
+
+        private bool? _ApprovalResults;
+        /// <summary>
+        /// 审批结果
+        /// </summary>
+        [AdvQueryAttribute(ColName = "ApprovalResults",ColDesc = "审批结果")]
+        [SugarColumn(ColumnDataType = "bit",SqlParameterDbType ="Boolean",ColumnName = "ApprovalResults",IsNullable = true,ColumnDescription = "审批结果" )]
+        public bool? ApprovalResults 
+        { 
+            get{return _ApprovalResults;}
+            set{SetProperty(ref _ApprovalResults, value);}
+        }
+     
+
+        private int _PrintStatus= ((0));
+        /// <summary>
+        /// 打印状态
+        /// </summary>
+        [AdvQueryAttribute(ColName = "PrintStatus",ColDesc = "打印状态")]
+        [SugarColumn(ColumnDataType = "int",SqlParameterDbType ="Int32",ColumnName = "PrintStatus",IsNullable = false,ColumnDescription = "打印状态" )]
+        public int PrintStatus 
+        { 
+            get{return _PrintStatus;}
+            set{SetProperty(ref _PrintStatus, value);}
         }
 
 

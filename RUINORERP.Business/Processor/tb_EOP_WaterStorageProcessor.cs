@@ -56,6 +56,9 @@ namespace RUINORERP.Business.Processor
             queryFilter.SetQueryField<tb_EOP_WaterStorage>(c => c.ShippingAddress);
             queryFilter.SetQueryField<tb_EOP_WaterStorage>(c => c.Created_by, typeof(tb_Employee));
             queryFilter.SetQueryField<tb_EOP_WaterStorage>(c => c.OrderDate);
+            queryFilter.SetQueryField<tb_EOP_WaterStorage>(c => c.PrintStatus, QueryFieldType.CmbEnum, typeof(PrintStatus));
+            queryFilter.SetQueryField<tb_EOP_WaterStorage>(c => c.ApprovalStatus, QueryFieldType.CmbEnum, typeof(ApprovalStatus));
+            queryFilter.SetQueryField<tb_EOP_WaterStorage>(c => c.DataStatus, QueryFieldType.CmbEnum, typeof(DataStatus));
             queryFilter.SetQueryField<tb_EOP_WaterStorage>(c => c.Notes);
 
             return queryFilter;

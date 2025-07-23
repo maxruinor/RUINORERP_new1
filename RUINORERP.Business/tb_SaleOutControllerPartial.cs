@@ -352,7 +352,7 @@ namespace RUINORERP.Business
 
                     if (UpdateSaleOutCostlist.Count > 0)
                     {
-                        entity.TotalCost = UpdateSaleOutCostlist.Sum(c => c.SubtotalCostAmount) + entity.FreightCost;
+                       
                         var Counter = await dbHelper.BaseDefaultAddElseUpdateAsync(UpdateSaleOutCostlist);
                         if (Counter == 0)
                         {
@@ -648,7 +648,7 @@ namespace RUINORERP.Business
                     entity.ApprovalResults = false;
                 }
 
-
+                entity.TotalCost = entity.tb_SaleOutDetails.Sum(c => c.SubtotalCostAmount) + entity.FreightCost;
 
                 var last = await _unitOfWorkManage.GetDbClient().Updateable<tb_SaleOut>(entity).UpdateColumns(it => new
                 {

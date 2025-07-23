@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace RUINORERP.Common.DB
@@ -25,37 +26,51 @@ namespace RUINORERP.Common.DB
         /// <returns></returns>
         public static string FormatParam(string sql, SugarParameter[] pars)
         {
-            if (pars != null)
+            if (pars == null || pars.Length == 0) return sql;
+
+            // 逆向遍历，防止 @TenantId1/@TenantId10 类问题
+            for (int i = pars.Length - 1; i >= 0; i--)
             {
-                //应逆向替换，否则由于 SqlSugar 多个表的过滤器问题导致替换不完整  如 @TenantId1  @TenantId10
-                for (int i = pars.Length - 1; i >= 0; i--)
+                var p = pars[i];
+                if (p == null) continue;
+
+                // 构造匹配“完整参数名”的正则，例如 @UserPersonalizedID\b
+                var regex = new Regex($@"\{Regex.Escape(p.ParameterName)}\b", RegexOptions.None, TimeSpan.FromSeconds(1));
+
+                string valueLiteral;
+
+                switch (p.DbType)
                 {
-                    if (pars[i].DbType == System.Data.DbType.String
-                        || pars[i].DbType == System.Data.DbType.DateTime
-                        || pars[i].DbType == System.Data.DbType.Date
-                        || pars[i].DbType == System.Data.DbType.Time
-                        || pars[i].DbType == System.Data.DbType.DateTime2
-                        || pars[i].DbType == System.Data.DbType.DateTimeOffset
-                        || pars[i].DbType == System.Data.DbType.Guid
-                        || pars[i].DbType == System.Data.DbType.VarNumeric
-                        || pars[i].DbType == System.Data.DbType.AnsiStringFixedLength
-                        || pars[i].DbType == System.Data.DbType.StringFixedLength)
-                    {
-                        sql = sql.Replace(pars[i].ParameterName, "'" + pars[i].Value?.ToString() + "'");
-                    }
-                    else if (pars[i].DbType == System.Data.DbType.Boolean)
-                    {
-                        sql = sql.Replace(pars[i].ParameterName, pars[i].Value.ToBool() ? "1" : "0");
-                    }
-                    else
-                    {
-                        sql = sql.Replace(pars[i].ParameterName, pars[i].Value?.ToString());
-                    }
+                    case System.Data.DbType.String:
+                    case System.Data.DbType.DateTime:
+                    case System.Data.DbType.Date:
+                    case System.Data.DbType.Time:
+                    case System.Data.DbType.DateTime2:
+                    case System.Data.DbType.DateTimeOffset:
+                    case System.Data.DbType.Guid:
+                    case System.Data.DbType.VarNumeric:
+                    case System.Data.DbType.AnsiStringFixedLength:
+                    case System.Data.DbType.StringFixedLength:
+                        valueLiteral = "'" + p.Value?.ToString()?.Replace("'", "''") + "'";
+                        break;
+
+                    case System.Data.DbType.Boolean:
+                        valueLiteral = Convert.ToBoolean(p.Value) ? "1" : "0";
+                        break;
+
+                    default:
+                        valueLiteral = p.Value?.ToString() ?? "NULL";
+                        break;
                 }
+
+                sql = regex.Replace(sql, valueLiteral);
             }
 
             return sql;
         }
+
+
+
 
         /// <summary>
         /// 格式化参数拼接成完整的SQL语句

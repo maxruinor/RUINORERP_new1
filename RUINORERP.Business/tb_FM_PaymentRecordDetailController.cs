@@ -221,7 +221,7 @@ namespace RUINORERP.Business
         
         public async override Task<List<T>> BaseQueryByAdvancedAsync(bool useLike,object dto) 
         {
-            var  querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<T>().Where(useLike,dto);
+            var  querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<T>().WhereCustom(useLike,dto);
             return await querySqlQueryable.ToListAsync();
         }
         
@@ -295,7 +295,7 @@ namespace RUINORERP.Business
             var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<tb_FM_PaymentRecordDetail>()
                                 //这里一般是子表，或没有一对多外键的情况 ，用自动的只是为了语法正常一般不会调用这个方法
                 .IncludesAllFirstLayer()//自动更新导航 只能两层。这里项目中有时会失效，具体看文档
-                                .Where(useLike, dto);
+                                .WhereCustom(useLike, dto);
             return await querySqlQueryable.ToListAsync()as List<T>;
         }
 
@@ -537,7 +537,7 @@ namespace RUINORERP.Business
         /// <returns></returns>
         public async Task<List<tb_FM_PaymentRecordDetail>> QueryByAdvancedAsync(bool useLike,object dto)
         {
-            var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<tb_FM_PaymentRecordDetail>().Where(useLike,dto);
+            var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<tb_FM_PaymentRecordDetail>().WhereCustom(useLike,dto);
             return await querySqlQueryable.ToListAsync();
         }
 

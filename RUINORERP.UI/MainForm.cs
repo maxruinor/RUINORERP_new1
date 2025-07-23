@@ -90,6 +90,10 @@ using RUINORERP.UI.Monitoring.Auditing;
 using System.Text.RegularExpressions;
 using Match = System.Text.RegularExpressions.Match;
 using LiveChartsCore.Geo;
+using Netron.GraphLib;
+using HLH.Lib.Helper;
+using RUINORERP.UI.BusinessService.SmartMenuService;
+using RUINORERP.UI.WorkFlowDesigner.Entities;
 
 
 
@@ -102,7 +106,7 @@ namespace RUINORERP.UI
     {
 
         public UILogManager logManager;
-
+        private readonly MenuTracker _menuTracker;
         //IOptions<T> 提供对配置设置的单例访问。它在整个应用程序生命周期中保持相同的实例，这意味着即使在配置文件更改后，通过 IOptions<T> 获取的值也不会改变
         //。
 
@@ -175,6 +179,7 @@ namespace RUINORERP.UI
         public readonly FMAuditLogHelper fmauditLogHelper;
         public FMAuditLogHelper FMAuditLogHelper => fmauditLogHelper;
 
+        private System.Threading.Timer _autoSaveTimer;
         public MainForm(ILogger<MainForm> _logger, AuditLogHelper _auditLogHelper, FMAuditLogHelper _fmauditLogHelper, IOptionsMonitor<SystemGlobalconfig> config)
         {
             InitializeComponent();
@@ -189,6 +194,7 @@ namespace RUINORERP.UI
             kryptonDockableWorkspace1.WorkspaceCellRemoved += KryptonDockableWorkspace1_WorkspaceCellRemoved;
             kryptonDockableWorkspace1.ControlRemoved += KryptonDockableWorkspace1_ControlRemoved;
             kryptonDockableWorkspace1.PageCloseClicked += KryptonDockableWorkspace1_PageCloseClicked;
+
 
 
             ecs.OnConnectClosed += Ecs_OnConnectClosed;
@@ -212,6 +218,15 @@ namespace RUINORERP.UI
             var clientCommandRegistry = new ClientCommandRegistry();
             var clientCommandHandlers = clientCommandRegistry.AutoRegisterCommandHandler();
             dispatcher = new ClientCommandDispatcher(clientCommandHandlers);
+
+            _menuTracker = Startup.GetFromFac<MenuTracker>();
+
+            // 设置5分钟自动保存定时器
+            _autoSaveTimer = new System.Threading.Timer(_ =>
+            {
+                _menuTracker.AutoSave();
+            }, null, TimeSpan.FromMinutes(5), TimeSpan.FromMinutes(5));
+
 
 
         }
@@ -301,6 +316,64 @@ namespace RUINORERP.UI
         {
 
         }
+
+
+        /// <summary>
+        /// 初始化工具栏 刷新工具栏
+        /// </summary>
+        private void RefreshToolbar()
+        {
+            //加载前先保存
+           // await _menuTracker.SaveToDb();
+
+            _menuTracker.LoadFromDb();
+
+            //目前就一个旧菜单。先保存一下再清除。加到最后
+            toolStripFunctionMenu.Items.Clear();
+
+            //// 清除旧菜单（保留前2个固定按钮）
+            //while (toolStripFunctionMenu.Items.Count > 2)
+            //    toolStripFunctionMenu.Items.RemoveAt(toolStripFunctionMenu.Items.Count - 1);
+
+            var SearcherList = MenuList.Where(c => c.MenuType == "行为菜单").OrderBy(c => c.CaptionCN).ToList();
+
+            // 添加Top10菜单
+            foreach (var menuId in _menuTracker.GetTopMenus())
+            {
+                var menuInfo = SearcherList.First(m => m.MenuID == menuId);
+                if (menuInfo == null) continue;
+
+                var btn = new ToolStripButton(menuInfo.MenuName)
+                {
+                    Tag = menuInfo,
+                    //Image = GetMenuIcon(menuId)
+                };
+                btn.Click += (s, e) =>
+                {
+                    if (s is ToolStripButton item && item.Tag is tb_MenuInfo menuInfo)
+                    {
+                        //按钮事件
+                        try
+                        {
+                            menuPowerHelper.ExecuteEvents(menuInfo, null);
+                        }
+                        catch (Exception ex)
+                        {
+
+                        }
+                    }
+                };
+
+                toolStripFunctionMenu.Items.Add(btn);
+
+            }
+
+            //最后添加那个菜单搜索的
+            toolStripFunctionMenu.Items.Add(toolStripMenuSearcher);
+        }
+
+
+
 
         public EasyClientService ecs = new EasyClientService();
 
@@ -738,6 +811,9 @@ namespace RUINORERP.UI
             Stopwatch stopwatchLoadUI = Stopwatch.StartNew();
             LoadUIMenus();
             LoadUIForIM_LogPages();
+
+
+
             stopwatchLoadUI.Stop();
             MainForm.Instance.uclog.AddLog($"LoadUIPages 执行时间：{stopwatchLoadUI.ElapsedMilliseconds} 毫秒");
             kryptonDockableWorkspace1.ActivePageChanged += kryptonDockableWorkspace1_ActivePageChanged;
@@ -1509,7 +1585,7 @@ namespace RUINORERP.UI
                     var result = await MainForm.Instance.AppContext.Db.Updateable<tb_UserInfo>(MainForm.Instance.AppContext.CurUserInfo.UserInfo)
                     .UpdateColumns(it => new { it.Lastlogout_at }).ExecuteCommandAsync();
                 }
-
+                _menuTracker.SaveToDb();
                 ClearUI();
                 ClearData();
                 Application.DoEvents();
@@ -1924,6 +2000,54 @@ namespace RUINORERP.UI
                 //MenuPowerHelper p = new MenuPowerHelper();
                 MenuPowerHelper p = Startup.GetFromFac<MenuPowerHelper>();
                 MenuList = p.AddMenu(this.menuStripMain);
+
+                //绑定的搜索下拉
+                #region
+
+                toolStripMenuSearcher.ComboBox.DataSource = null;
+                toolStripMenuSearcher.ComboBox.DataBindings.Clear();
+                toolStripMenuSearcher.ComboBox.AutoCompleteMode = AutoCompleteMode.SuggestAppend;
+                var SearcherList = MenuList.Where(c => c.MenuType == "行为菜单").OrderBy(c => c.CaptionCN).ToList();
+
+                AutoCompleteStringCollection sc = new AutoCompleteStringCollection();
+
+                foreach (tb_MenuInfo menuInfo in SearcherList)
+                {
+                    sc.Add(menuInfo.CaptionCN).ToString();
+                }
+
+                toolStripMenuSearcher.ComboBox.AutoCompleteCustomSource = sc;
+                toolStripMenuSearcher.ComboBox.AutoCompleteSource = AutoCompleteSource.CustomSource;
+
+                DropDownListHelper.InitDropList<tb_MenuInfo>(SearcherList, toolStripMenuSearcher.ComboBox, "MenuID", "CaptionCN", false);
+
+                toolStripMenuSearcher.ComboBox.SelectedIndexChanged += (s, e) =>
+                {
+                    //按钮事件
+                    if (s is ComboBox && (s as ComboBox).SelectedItem is tb_MenuInfo menuInfo)
+                    {
+                        try
+                        {
+                            menuPowerHelper.ExecuteEvents(menuInfo, null);
+                        }
+                        catch (Exception ex)
+                        {
+
+                        }
+
+                    }
+                };
+
+
+                RefreshToolbar();
+
+
+
+                #endregion
+
+
+                //ComboBoxHelper.InitDropList(bs, toolStripMenuSearcher.ComboBox, "ProjectGroup_ID", "ProjectGroupName", ComboBoxStyle.DropDownList, false);
+
                 p.OtherEvent += p_OtherEvent;
                 p.MainMenu = this.menuStripMain;
 
@@ -2250,8 +2374,13 @@ namespace RUINORERP.UI
             _byteArray = kryptonDockableWorkspace1.SaveLayoutToArray();
             try
             {
+
+
+
                 watcher.EnableRaisingEvents = false;
                 watcher.Dispose();
+
+                _menuTracker.SaveToDb(); // 确保退出时保存
 
                 //if (MessageBox.Show(this, "确定退出本系统吗?", "询问", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button2) == DialogResult.Yes)
                 //{
@@ -2940,6 +3069,8 @@ namespace RUINORERP.UI
             //    ClientService.请求缓存(string.Empty);
             //    SystemOptimizerService.异常信息发送("测试异常信息发送");
             //}
+
+            RefreshToolbar();
         }
 
         public async void LoginWebServer()

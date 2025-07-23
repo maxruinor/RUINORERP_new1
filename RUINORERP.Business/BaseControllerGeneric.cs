@@ -444,7 +444,7 @@ namespace RUINORERP.Business
             //throw new Exception("子类要重写BaseGetQueryableAsync");
             //var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<T>()
             //     .IncludesAllFirstLayer()
-            //    .Where(useLike,dto);
+            //    .WhereCustom(useLike,dto);
             //return await querySqlQueryable.ToListAsync();
         }
         public async virtual Task<ReturnResults<bool>> BatchCloseCaseAsync(List<T> entitys)
@@ -587,7 +587,7 @@ namespace RUINORERP.Business
         {
             //var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<T>()
             //     .IncludesAllFirstLayer()
-            //    .Where(useLike,dto);
+            //    .WhereCustom(useLike,dto);
             //return await querySqlQueryable.ToListAsync();
             throw new Exception("子类要重写BaseQueryByAdvancedNavAsync");
         }

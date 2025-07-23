@@ -756,6 +756,8 @@
     <Compile Include="BusinessService\CalculationService\PurEntryCoordinator.cs" />
     <Compile Include="BusinessService\CalculationService\SaleOutCoordinator.cs" />
     <Compile Include="BusinessService\CalculationService\SourceGridCoordinator.cs" />
+    <Compile Include="BusinessService\SmartMenuService\MenuTracker.cs" />
+    <Compile Include="BusinessService\SmartMenuService\MenuUseInfo.cs" />
     <Compile Include="BusinessService\UniqueCodeChecker.cs" />
     <Compile Include="BusyDialog.cs">
       <SubType>Form</SubType>
@@ -794,17 +796,17 @@
     <Compile Include="CRM\UCTargetCustomerList.Designer.cs">
       <DependentUpon>UCTargetCustomerList.cs</DependentUpon>
     </Compile>
-    <Compile Include="EOP\UCEOPWaterStorageEdit.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="EOP\UCEOPWaterStorageEdit.Designer.cs">
-      <DependentUpon>UCEOPWaterStorageEdit.cs</DependentUpon>
-    </Compile>
-    <Compile Include="EOP\UCEOPWaterStorageList.cs">
+    <Compile Include="EOP\UCEOPWaterStorage.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="EOP\UCEOPWaterStorageList.Designer.cs">
-      <DependentUpon>UCEOPWaterStorageList.cs</DependentUpon>
+    <Compile Include="EOP\UCEOPWaterStorage.Designer.cs">
+      <DependentUpon>UCEOPWaterStorage.cs</DependentUpon>
+    </Compile>
+    <Compile Include="EOP\UCEOPWaterStorageQuery.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="EOP\UCEOPWaterStorageQuery.Designer.cs">
+      <DependentUpon>UCEOPWaterStorageQuery.cs</DependentUpon>
     </Compile>
     <Compile Include="FM\FMBase\UCPaymentRecordStatistics.cs">
       <SubType>UserControl</SubType>
@@ -3737,11 +3739,11 @@
     <EmbeddedResource Include="CRM\UCLeadsList.resx">
       <DependentUpon>UCLeadsList.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="EOP\UCEOPWaterStorageEdit.resx">
-      <DependentUpon>UCEOPWaterStorageEdit.cs</DependentUpon>
+    <EmbeddedResource Include="EOP\UCEOPWaterStorage.resx">
+      <DependentUpon>UCEOPWaterStorage.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="EOP\UCEOPWaterStorageList.resx">
-      <DependentUpon>UCEOPWaterStorageList.cs</DependentUpon>
+    <EmbeddedResource Include="EOP\UCEOPWaterStorageQuery.resx">
+      <DependentUpon>UCEOPWaterStorageQuery.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="FM\FMBase\UCPaymentRecordStatistics.resx">
       <DependentUpon>UCPaymentRecordStatistics.cs</DependentUpon>

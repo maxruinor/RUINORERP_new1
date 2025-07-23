@@ -325,19 +325,19 @@ namespace RUINORERP.Model
             get{return _TranDate;}            set{                SetProperty(ref _TranDate, value);                }
         }
 
-        private decimal? _TotalAmount;
+        private decimal? _SingleAmount;
         
         
         /// <summary>
-        /// 总金额
+        /// 单项金额
         /// </summary>
 
-        [AdvQueryAttribute(ColName = "TotalAmount",ColDesc = "总金额")]
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "TotalAmount" ,IsNullable = true,ColumnDescription = "总金额" )]
-        [Display(Name = "总金额")]
-        public decimal? TotalAmount 
+        [AdvQueryAttribute(ColName = "SingleAmount",ColDesc = "单项金额")]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "SingleAmount" ,IsNullable = true,ColumnDescription = "单项金额" )]
+        [Display(Name = "单项金额")]
+        public decimal? SingleAmount 
         { 
-            get{return _TotalAmount;}            set{                SetProperty(ref _TotalAmount, value);                }
+            get{return _SingleAmount;}            set{                SetProperty(ref _SingleAmount, value);                }
         }
 
         private string _EvidenceImagePath;

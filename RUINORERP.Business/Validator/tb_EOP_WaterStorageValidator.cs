@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：07/18/2025 10:33:40
+// 时间：07/23/2025 12:19:09
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -71,6 +71,19 @@ namespace RUINORERP.Business
 
  RuleFor(tb_EOP_WaterStorage =>tb_EOP_WaterStorage.Notes).MaximumLength(750).WithMessage("备注:不能超过最大长度,750.");
 
+
+//***** 
+ RuleFor(tb_EOP_WaterStorage =>tb_EOP_WaterStorage.DataStatus).NotNull().WithMessage("数据状态:不能为空。");
+
+ RuleFor(tb_EOP_WaterStorage =>tb_EOP_WaterStorage.ApprovalOpinions).MaximumLength(100).WithMessage("审批意见:不能超过最大长度,100.");
+
+ RuleFor(tb_EOP_WaterStorage =>tb_EOP_WaterStorage.Approver_by).NotEmpty().When(x => x.Approver_by.HasValue);
+
+
+
+
+//***** 
+ RuleFor(tb_EOP_WaterStorage =>tb_EOP_WaterStorage.PrintStatus).NotNull().WithMessage("打印状态:不能为空。");
 
            	        Initialize();
      }

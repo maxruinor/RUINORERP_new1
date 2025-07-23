@@ -65,6 +65,7 @@ using RUINORERP.Model.Base;
 using RUINORERP.UI.Monitoring.Auditing;
 using RUINORERP.Model.CommonModel;
 using RUINORERP.Business.BizMapperService;
+using RUINORERP.UI.BusinessService.SmartMenuService;
 
 
 namespace RUINORERP.UI
@@ -848,7 +849,7 @@ namespace RUINORERP.UI
             // 注册审计日志服务
             services.AddSingleton<IFMAuditLogService, FMAuditLogService>();
 
-
+            services.AddSingleton(typeof(MenuTracker));
 
             //services.AddSingleton<ApplicationContext>(Program.AppContextData);
             //services.AddTransient<BaseController, AuthorizeController>();

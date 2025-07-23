@@ -7,7 +7,43 @@ using System.Threading.Tasks;
 
 namespace RUINORERP.Global
 {
-  
+
+
+    // 岗位类型枚举（仅用于菜单推荐逻辑）
+    public enum PositionType
+    {
+        [Description("采购")]
+        Purchasing,     // 采购
+
+        [Description("销售")]
+        Sales,          // 销售
+
+        [Description("仓库")]
+        Warehouse,      // 仓库
+
+        [Description("财务")]
+        Finance,        // 财务
+
+        [Description("生产")]
+        Manufacturing,   // 生产
+
+        [Description("售后")]
+        AfterSales,     // 售后
+
+        [Description("行政")]
+        Administrative,
+
+        [Description("管理层")]
+        Management,     // 管理层
+
+        [Description("电商运营")]
+        EcommerceOperation,
+
+        [Description("其他")]
+        Common          // 通用
+    }
+
+
     public enum PlatformType
     {
         阿里1688,
@@ -366,8 +402,8 @@ namespace RUINORERP.Global
         售后申请统计 = 169,
         售后交付统计 = 170,
         营销活动 = 300,
-
-        未知类型= 999,
+        蓄水订单 = 301,
+        未知类型 = 999,
     }
 
 

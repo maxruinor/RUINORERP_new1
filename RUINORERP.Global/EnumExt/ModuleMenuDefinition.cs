@@ -20,6 +20,7 @@ namespace RUINORERP.Model
             财务管理,
             行政管理,
             报表管理,
+            电商运营,
             基础资料,
             系统设置,
         }
@@ -52,9 +53,14 @@ namespace RUINORERP.Model
             维修中心,
             资产处置,
             提前交付,
-
-            
         }
+
+        public enum 电商运营
+        {
+            蓄水管理,
+        }
+
+
         public enum 客户关系
         {
             市场营销,
@@ -67,7 +73,6 @@ namespace RUINORERP.Model
             商机总览,
             //销售看板
             绩效分析,
-            蓄水管理,
         }
 
         public enum 财务管理

@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：02/08/2025 16:32:32
+// 时间：07/23/2025 14:00:47
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -27,7 +27,7 @@ namespace RUINORERP.Model
     {
         public tb_UserPersonalized()
         {
-             
+            
             if (!PK_FK_ID_Check())
             {
                 throw new Exception("用户角色个性化设置表tb_UserPersonalized" + "外键ID与对应主主键名称不一致。请修改数据库");
@@ -93,50 +93,62 @@ namespace RUINORERP.Model
             SetProperty(ref _ID, value);
                         }
         }
-        private string _PrinterName;
+
+        private bool? _UseUserOwnPrinter;
         /// <summary>
-        /// 打印机名称
+        /// 
         /// </summary>
-        [AdvQueryAttribute(ColName = "PrinterName", ColDesc = "打印机名称")]
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType = "String", ColumnName = "PrinterName", Length = 200, IsNullable = true, ColumnDescription = "打印机名称")]
-        public string PrinterName
-        {
-            get { return _PrinterName; }
-            set
-            {
-                SetProperty(ref _PrinterName, value);
-            }
-        }
-        private bool? _UseUserOwnPrinter = false;
-        /// <summary>
-        /// 设置指定打印机
-        /// </summary>
-        [AdvQueryAttribute(ColName = "UseUserOwnPrinter", ColDesc = "设置指定打印机")]
-        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType = "Boolean", ColumnName = "UseUserOwnPrinter", IsNullable = true, ColumnDescription = "设置指定打印机")]
+        [AdvQueryAttribute(ColName = "UseUserOwnPrinter",ColDesc = "")] 
+        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType ="Boolean",  ColumnName = "UseUserOwnPrinter" ,IsNullable = true,ColumnDescription = "" )]
         public bool? UseUserOwnPrinter
-        {
-            get { return _UseUserOwnPrinter; }
-            set
-            {
-                SetProperty(ref _UseUserOwnPrinter, value);
-            }
+        { 
+            get{return _UseUserOwnPrinter;}
+            set{
+            SetProperty(ref _UseUserOwnPrinter, value);
+                        }
         }
 
-        private bool? _SelectTemplatePrint = false;
+        private string _PrinterName;
+        /// <summary>
+        /// 
+        /// </summary>
+        [AdvQueryAttribute(ColName = "PrinterName",ColDesc = "")] 
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "PrinterName" ,Length=200,IsNullable = true,ColumnDescription = "" )]
+        public string PrinterName
+        { 
+            get{return _PrinterName;}
+            set{
+            SetProperty(ref _PrinterName, value);
+                        }
+        }
+
+        private bool? _SelectTemplatePrint;
         /// <summary>
         /// 选择模板打印
         /// </summary>
-        [AdvQueryAttribute(ColName = "SelectTemplatePrint", ColDesc = "选择模板打印")]
-        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType = "Boolean", ColumnName = "SelectTemplatePrint", IsNullable = true, ColumnDescription = "选择模板打印")]
+        [AdvQueryAttribute(ColName = "SelectTemplatePrint",ColDesc = "选择模板打印")] 
+        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType ="Boolean",  ColumnName = "SelectTemplatePrint" ,IsNullable = true,ColumnDescription = "选择模板打印" )]
         public bool? SelectTemplatePrint
-        {
-            get { return _SelectTemplatePrint; }
-            set
-            {
-                SetProperty(ref _SelectTemplatePrint, value);
-            }
+        { 
+            get{return _SelectTemplatePrint;}
+            set{
+            SetProperty(ref _SelectTemplatePrint, value);
+                        }
         }
 
+        private string _UserFavoriteMenu;
+        /// <summary>
+        /// 用户工具栏
+        /// </summary>
+        [AdvQueryAttribute(ColName = "UserFavoriteMenu",ColDesc = "用户工具栏")] 
+        [SugarColumn(ColumnDataType = "text", SqlParameterDbType ="String",  ColumnName = "UserFavoriteMenu" ,Length=2147483647,IsNullable = true,ColumnDescription = "用户工具栏" )]
+        public string UserFavoriteMenu
+        { 
+            get{return _UserFavoriteMenu;}
+            set{
+            SetProperty(ref _UserFavoriteMenu, value);
+                        }
+        }
 
         #endregion
 
@@ -173,7 +185,7 @@ return rs;
 
 
 
-        
+       
         
 
         public override object Clone()

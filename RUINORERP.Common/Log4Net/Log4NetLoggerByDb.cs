@@ -116,7 +116,7 @@ namespace RUINORERP.Common.Log4Net
                     Path = _appcontext.log.Path,
                     MAC = _appcontext.log.MAC,
                     MachineName = _appcontext.log.MachineName,
-                    Operator = _appcontext.log.Operator,
+                    Operator = _appcontext.CurrentUser.客户端版本,
                     Level = _appcontext.log.Level,
                     Date = DateTime.Now,
                     Message = message,
@@ -195,7 +195,7 @@ namespace RUINORERP.Common.Log4Net
                             _log.Error(log);
                             break;
                         case LogLevel.Information:
-                             _log.Info(log);
+                            _log.Info(log);
                             break;
                         case LogLevel.Warning:
                             _log.Warn(log);

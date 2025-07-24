@@ -340,14 +340,16 @@ namespace RUINORERP.UI
             // 添加Top10菜单
             foreach (var menuId in _menuTracker.GetTopMenus())
             {
-                var menuInfo = SearcherList.First(m => m.MenuID == menuId);
+                var menuInfo = SearcherList.FirstOrDefault(m => m.MenuID == menuId);
                 if (menuInfo == null) continue;
 
                 var btn = new ToolStripButton(menuInfo.MenuName)
                 {
                     Tag = menuInfo,
-                    //Image = GetMenuIcon(menuId)
-                };
+                    //Image = Image.FromStream(Common.DataBindingHelper.GetResource("toolbarmenulist"))
+            };
+
+
                 btn.Click += (s, e) =>
                 {
                     if (s is ToolStripButton item && item.Tag is tb_MenuInfo menuInfo)

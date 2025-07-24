@@ -17,45 +17,50 @@ using System.Threading.Tasks;
 
 namespace RUINORERP.UI.BusinessService.SmartMenuService
 {
+
     [NoWantIOC]
     public class MenuTracker
     {
-        public ApplicationContext _appContext { set; get; }
+        public ApplicationContext _appContext { get; set; }
+
         /// <summary>
         /// 菜单ID，相关信息
         /// </summary>
         private readonly ConcurrentDictionary<long, MenuUseInfo> _menuUsage = new();
         private DateTime _lastSaveTime = DateTime.MinValue;
         private readonly object _saveLock = new();
-        private int _totalClicks = 0;
+
+        // 用于比较的原始数据快照
+        private Dictionary<long, int> _originalSnapshot = new();
+
         public MenuTracker(ApplicationContext appContext)
         {
             _appContext = appContext;
-
+            LoadFromDb();
         }
 
         // 加载用户历史数据
-        public async void LoadFromDb()
+        public void LoadFromDb()
         {
-            if (_appContext.CurrentUser_Role_Personalized == null)
+            if (_appContext.CurrentUser_Role_Personalized == null ||
+                string.IsNullOrEmpty(_appContext.CurrentUser_Role_Personalized.UserFavoriteMenu))
             {
                 return;
-            }
-            if (string.IsNullOrEmpty(_appContext.CurrentUser_Role_Personalized.UserFavoriteMenu)) return;
-
-            //如果有变化，则先保存再加载
-
-            string json = JsonConvert.SerializeObject(GetAllMenuUsage());
-            if (_appContext.CurrentUser_Role_Personalized.UserFavoriteMenu != json && _menuUsage.Count > 0)
-            {
-                await SaveToDb();
             }
 
             try
             {
-                var menuInfos = JsonConvert.DeserializeObject<List<MenuUseInfo>>(_appContext.CurrentUser_Role_Personalized.UserFavoriteMenu);
+                var menuInfos = JsonConvert.DeserializeObject<List<MenuUseInfo>>(
+                    _appContext.CurrentUser_Role_Personalized.UserFavoriteMenu);
+
                 if (menuInfos != null)
                 {
+                    // 创建原始快照（只保存MenuId和Frequency）
+                    _originalSnapshot = menuInfos.ToDictionary(
+                        item => item.MenuId,
+                        item => item.Frequency);
+
+                    // 加载到内存
                     foreach (var item in menuInfos)
                     {
                         _menuUsage[item.MenuId] = item;
@@ -67,7 +72,6 @@ namespace RUINORERP.UI.BusinessService.SmartMenuService
                 MainForm.Instance.logger?.LogError($"加载用户菜单偏好数据时出错: {ex.Message}");
             }
         }
-
 
         // 记录菜单使用
         public void RecordMenuUsage(long menuId)
@@ -86,10 +90,8 @@ namespace RUINORERP.UI.BusinessService.SmartMenuService
                     return existing;
                 });
 
-            Interlocked.Increment(ref _totalClicks);
             AutoSave();
         }
-
 
         // 获取Top10菜单
         public List<long> GetTopMenus()
@@ -108,6 +110,31 @@ namespace RUINORERP.UI.BusinessService.SmartMenuService
             return _menuUsage.Values.ToList();
         }
 
+        // 检查数据是否有变化（忽略LastClickTime）
+        private bool HasDataChanged()
+        {
+            // 检查数量变化
+            if (_menuUsage.Count != _originalSnapshot.Count)
+                return true;
+
+            // 创建当前快照（只包含MenuId和Frequency）
+            var currentSnapshot = _menuUsage.ToDictionary(
+                kv => kv.Key,
+                kv => kv.Value.Frequency);
+
+            // 比较每个菜单项的变化
+            foreach (var kv in currentSnapshot)
+            {
+                if (!_originalSnapshot.TryGetValue(kv.Key, out int originalFrequency) ||
+                    originalFrequency != kv.Value)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
         // 自动保存（5分钟检查）
         public void AutoSave()
         {
@@ -119,34 +146,43 @@ namespace RUINORERP.UI.BusinessService.SmartMenuService
                 if ((DateTime.Now - _lastSaveTime).TotalMinutes < 5)
                     return;
 
-                SaveToDb();
-                _lastSaveTime = DateTime.Now;
+                // 只有数据变化时才保存
+                if (HasDataChanged())
+                {
+                    SaveToDb();
+                    _lastSaveTime = DateTime.Now;
+                }
             }
         }
 
         // 保存到数据库
         public async Task<bool> SaveToDb()
         {
-            if (!_menuUsage.Any()) return false;
+            if (!_menuUsage.Any())
+                return false;
+
             try
             {
                 // 更新JSON数据
-                _appContext.CurrentUser_Role_Personalized.UserFavoriteMenu = JsonConvert.SerializeObject(GetAllMenuUsage());
+                var jsonData = JsonConvert.SerializeObject(GetAllMenuUsage());
+                _appContext.CurrentUser_Role_Personalized.UserFavoriteMenu = jsonData;
 
                 // 更新数据库
-                //var rs = await _appContext.Db.Updateable(_appContext.CurrentUser_Role_Personalized)
-                //       .UpdateColumns(it => new
-                //       {
-                //           it.UserFavoriteMenu
-                //       })
-                //       .Where(it => it.UserPersonalizedID == _appContext.CurrentUser_Role_Personalized.UserPersonalizedID)
-                //       .ExecuteCommandAsync();
-                var id = _appContext.CurrentUser_Role_Personalized.UserPersonalizedID;
-                var rs = await _appContext.Db.Updateable<tb_UserPersonalized>()
-               .SetColumns(it => it.UserFavoriteMenu == _appContext.CurrentUser_Role_Personalized.UserFavoriteMenu)
-               .Where(it => it.UserPersonalizedID == id)
-               .ExecuteCommandAsync();
-                return true;
+                long id = _appContext.CurrentUser_Role_Personalized.UserPersonalizedID;
+                int rs = await _appContext.Db.Updateable<tb_UserPersonalized>()
+                   .SetColumns(it => it.UserFavoriteMenu == jsonData)
+                   .Where(it => it.UserPersonalizedID == id)
+                   .ExecuteCommandAsync();
+
+                if (rs > 0)
+                {
+                    // 更新成功后，更新原始快照
+                    _originalSnapshot = _menuUsage.ToDictionary(
+                        kv => kv.Key,
+                        kv => kv.Value.Frequency);
+
+                    return true;
+                }
             }
             catch (Exception ex)
             {
@@ -160,8 +196,13 @@ namespace RUINORERP.UI.BusinessService.SmartMenuService
         {
             lock (_saveLock)
             {
-                SaveToDb();
+                // 只有数据变化时才保存
+                if (HasDataChanged())
+                {
+                    SaveToDb();
+                }
             }
         }
     }
+
 }

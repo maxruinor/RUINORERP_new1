@@ -803,6 +803,16 @@ namespace RUINORERP.UI.Properties {
         /// <summary>
         ///   查找 System.Drawing.Bitmap 类型的本地化资源。
         /// </summary>
+        internal static System.Drawing.Bitmap menulist_16x16 {
+            get {
+                object obj = ResourceManager.GetObject("menulist_16x16", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   查找 System.Drawing.Bitmap 类型的本地化资源。
+        /// </summary>
         internal static System.Drawing.Bitmap money {
             get {
                 object obj = ResourceManager.GetObject("money", resourceCulture);
@@ -1176,6 +1186,26 @@ namespace RUINORERP.UI.Properties {
         internal static System.Drawing.Bitmap Synchronize {
             get {
                 object obj = ResourceManager.GetObject("Synchronize", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   查找 System.Drawing.Bitmap 类型的本地化资源。
+        /// </summary>
+        internal static System.Drawing.Bitmap toolbarmenu {
+            get {
+                object obj = ResourceManager.GetObject("toolbarmenu", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   查找 System.Drawing.Bitmap 类型的本地化资源。
+        /// </summary>
+        internal static System.Drawing.Bitmap toolbarmenulist {
+            get {
+                object obj = ResourceManager.GetObject("toolbarmenulist", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }

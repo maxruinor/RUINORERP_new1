@@ -67,13 +67,10 @@ using RUINORERP.Model.CommonModel;
 using RUINORERP.Business.BizMapperService;
 using RUINORERP.UI.BusinessService.SmartMenuService;
 
-
 namespace RUINORERP.UI
 {
-
     public class Startup
     {
-
         /// <summary>
         /// 没使用用csla时使用
         /// </summary>
@@ -849,7 +846,7 @@ namespace RUINORERP.UI
             // 注册审计日志服务
             services.AddSingleton<IFMAuditLogService, FMAuditLogService>();
 
-            services.AddSingleton(typeof(MenuTracker));
+            services.AddSingleton(typeof(MenuTracker)); // 菜单跟踪
 
             //services.AddSingleton<ApplicationContext>(Program.AppContextData);
             //services.AddTransient<BaseController, AuthorizeController>();

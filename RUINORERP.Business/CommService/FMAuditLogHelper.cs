@@ -148,6 +148,7 @@ namespace RUINORERP.Business.CommService
                 // 使用时才解析依赖
                 //var factory = _billConverterFactory.Value;
                 //CommBillData cbd = factory.GetBillData<T>(entity);
+
                 var bizType = _mapper.Value.GetBizType(typeof(T), entity);
                 auditLog.ObjectType = (int)bizType;
 
@@ -156,12 +157,9 @@ namespace RUINORERP.Business.CommService
                 auditLog.ObjectId = idField;
                 auditLog.ObjectNo = noField;
 
-                //auditLog.ObjectId = cbd.BillID;
-                //auditLog.ObjectNo = cbd.BillNo;
+      
                 var dataContent = EntityDataExtractor.ExtractDataContent(entity);
                 auditLog.DataContent = dataContent;
-
-
 
 
                 // 使用反射获取需要审计的字段
@@ -414,6 +412,10 @@ namespace RUINORERP.Business.CommService
         private readonly object _lockObject = new object();
         private bool _isFlushing = false;
         public ApplicationContext _appContext;
+
+        private readonly Lazy<EnhancedBizTypeMapper> _mapper;
+
+
         public FMAuditLogService(IOptions<AuditLogOptions> options, ILogger<FMAuditLogService> logger, ApplicationContext appContext)
         {
             _appContext = appContext;
@@ -422,6 +424,12 @@ namespace RUINORERP.Business.CommService
             // 延迟解析依赖，直到第一次使用时才获取实例
             _billConverterFactory = new Lazy<BillConverterFactory>(
                 () => appContext.GetRequiredService<BillConverterFactory>());// 缓存工厂
+
+
+            _mapper = new Lazy<EnhancedBizTypeMapper>(
+              () => _appContext.GetRequiredService<EnhancedBizTypeMapper>());// 缓存工厂
+
+
 
             _AuditLogsController = new Lazy<tb_FM_AuditLogsController<tb_FM_AuditLogs>>(() => appContext.GetRequiredService<tb_FM_AuditLogsController<tb_FM_AuditLogs>>());
             // 启动定时刷新
@@ -486,18 +494,26 @@ namespace RUINORERP.Business.CommService
 
             try
             {
-                BizTypeMapper mapper = new BizTypeMapper();
-                var BizType = mapper.GetBizType(typeof(T).Name);
+                //BizTypeMapper mapper = new BizTypeMapper();
+                //var BizType = mapper.GetBizType(typeof(T).Name);
 
                 //BillConverterFactory bcf = _appContext.GetRequiredService<BillConverterFactory>();
                 //CommBillData cbd = bcf.GetBillData<T>(entity);
                 // 直接使用缓存的工厂，避免重复解析
                 // 使用时才解析依赖
-                var factory = _billConverterFactory.Value;
-                CommBillData cbd = factory.GetBillData<T>(entity);
-                auditLog.ObjectType = (int)BizType;
-                auditLog.ObjectId = cbd.BillID;
-                auditLog.ObjectNo = cbd.BillNo;
+                //var factory = _billConverterFactory.Value;
+                //CommBillData cbd = factory.GetBillData<T>(entity);
+
+                var bizType = _mapper.Value.GetBizType(typeof(T), entity);
+                auditLog.ObjectType = (int)bizType;
+
+
+                // 获取字段配置
+                var (idField, noField) = _mapper.Value.GetEntityFieldValue<long>(typeof(T), entity);
+                auditLog.ObjectId = idField;
+                auditLog.ObjectNo = noField;
+           
+        
                 var dataContent = EntityDataExtractor.ExtractDataContent(entity);
                 auditLog.DataContent = dataContent;
                 // 使用反射获取需要审计的字段

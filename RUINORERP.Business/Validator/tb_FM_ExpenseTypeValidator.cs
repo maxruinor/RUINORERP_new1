@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/18/2024 17:45:27
+// 时间：07/25/2025 17:18:28
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -38,12 +38,14 @@ namespace RUINORERP.Business
  
         
      
- RuleFor(tb_FM_ExpenseType =>tb_FM_ExpenseType.subject_id).Must(CheckForeignKeyValueCanNull).WithMessage("科目:下拉选择值不正确。");
  RuleFor(tb_FM_ExpenseType =>tb_FM_ExpenseType.subject_id).NotEmpty().When(x => x.subject_id.HasValue);
 
  RuleFor(tb_FM_ExpenseType =>tb_FM_ExpenseType.Expense_name).MaximumLength(25).WithMessage("费用业务名称:不能超过最大长度,25.");
 
 //有默认值
+
+//***** 
+ RuleFor(tb_FM_ExpenseType =>tb_FM_ExpenseType.ReceivePaymentType).NotNull().WithMessage("收付类型:不能为空。");
 
  RuleFor(tb_FM_ExpenseType =>tb_FM_ExpenseType.Notes).MaximumLength(15).WithMessage("备注:不能超过最大长度,15.");
 

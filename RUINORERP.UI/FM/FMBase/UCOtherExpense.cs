@@ -336,7 +336,7 @@ namespace RUINORERP.UI.FM.FMBase
 
             listCols.SetCol_Formula<tb_FM_OtherExpenseDetail>((a, b, c) => a.TotalAmount / (1 + b.TaxRate) * c.TaxRate, d => d.TaxAmount);
             listCols.SetCol_Formula<tb_FM_OtherExpenseDetail>((a, b) => a.TotalAmount - b.TaxAmount, c => c.UntaxedAmount);
-
+     
 
             //应该只提供一个结构
             List<tb_FM_OtherExpenseDetail> lines = new List<tb_FM_OtherExpenseDetail>();

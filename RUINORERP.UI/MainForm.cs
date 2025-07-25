@@ -94,6 +94,7 @@ using Netron.GraphLib;
 using HLH.Lib.Helper;
 using RUINORERP.UI.BusinessService.SmartMenuService;
 using RUINORERP.UI.WorkFlowDesigner.Entities;
+using Newtonsoft.Json;
 
 
 
@@ -324,7 +325,7 @@ namespace RUINORERP.UI
         private void RefreshToolbar()
         {
             //加载前先保存
-           // await _menuTracker.SaveToDb();
+            // await _menuTracker.SaveToDb();
 
             _menuTracker.LoadFromDb();
 
@@ -347,7 +348,7 @@ namespace RUINORERP.UI
                 {
                     Tag = menuInfo,
                     //Image = Image.FromStream(Common.DataBindingHelper.GetResource("toolbarmenulist"))
-            };
+                };
 
 
                 btn.Click += (s, e) =>
@@ -1482,6 +1483,7 @@ namespace RUINORERP.UI
                 if (config.Count > 0)
                 {
                     AppContext.SysConfig = config[0];
+                    AppContext.FMConfig = JsonConvert.DeserializeObject<FMConfiguration>(config[0].FMConfig);
                 }
                 var ctrBillNoRule = Startup.GetFromFac<tb_sys_BillNoRuleController<tb_sys_BillNoRule>>();
                 List<tb_sys_BillNoRule> BillNoRules = ctrBillNoRule.Query();
@@ -2009,7 +2011,7 @@ namespace RUINORERP.UI
                 toolStripMenuSearcher.ComboBox.DataSource = null;
                 toolStripMenuSearcher.ComboBox.DataBindings.Clear();
                 toolStripMenuSearcher.ComboBox.AutoCompleteMode = AutoCompleteMode.SuggestAppend;
-                var SearcherList = MenuList.Where(c => c.MenuType == "行为菜单").OrderBy(c => c.CaptionCN).ToList();
+                var SearcherList = MenuList.Where(c => c.MenuType == "行为菜单" && !c.MenuName.Contains("高级查询")).OrderBy(c => c.CaptionCN).ToList();
 
                 AutoCompleteStringCollection sc = new AutoCompleteStringCollection();
 
@@ -3184,11 +3186,12 @@ namespace RUINORERP.UI
 
                    #endregion
 
-                   tb_SystemConfigController<tb_SystemConfig> ctr = Startup.GetFromFac<tb_SystemConfigController<tb_SystemConfig>>();
+                   var ctr = Startup.GetFromFac<tb_SystemConfigController<tb_SystemConfig>>();
                    List<tb_SystemConfig> config = ctr.Query();
                    if (config.Count > 0)
                    {
                        AppContext.SysConfig = config[0];
+                       AppContext.FMConfig = JsonConvert.DeserializeObject<FMConfiguration>(config[0].FMConfig);
                    }
                    var ctrBillNoRule = Startup.GetFromFac<tb_sys_BillNoRuleController<tb_sys_BillNoRule>>();
                    List<tb_sys_BillNoRule> BillNoRules = ctrBillNoRule.Query();

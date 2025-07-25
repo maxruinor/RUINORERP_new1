@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：02/08/2025 16:32:19
+// 时间：07/24/2025 17:35:22
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -79,9 +79,31 @@ namespace RUINORERP.Model
                         }
         }
 
+        private bool _ForSale;
+        /// <summary>
+        /// 待销类型
+        /// </summary>
+        [AdvQueryAttribute(ColName = "ForSale",ColDesc = "待销类型")] 
+        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType ="Boolean",  ColumnName = "ForSale" ,IsNullable = false,ColumnDescription = "待销类型" )]
+        public bool ForSale
+        { 
+            get{return _ForSale;}
+            set{
+            SetProperty(ref _ForSale, value);
+                        }
+        }
+
         #endregion
 
         #region 扩展属性
+
+        //[Browsable(false)]打印报表时的数据源会不显示
+        [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_ManufacturingOrder.Type_ID))]
+        public virtual List<tb_ManufacturingOrder> tb_ManufacturingOrders { get; set; }
+        //tb_ManufacturingOrder.Type_ID)
+        //Type_ID.FK_MANUFACTURINGORDER_REF_PRODUCTYPE)
+        //tb_ProductType.Type_ID)
 
         //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
@@ -94,7 +116,7 @@ namespace RUINORERP.Model
         //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_ProdConversionDetail.Type_ID_from))]
-        public virtual List<tb_ProdConversionDetail> tb_ProdConversionDetails_from { get; set; }
+        public virtual List<tb_ProdConversionDetail> tb_ProdConversionDetails { get; set; }
         //tb_ProdConversionDetail.Type_ID)
         //Type_ID.FK_TB_PRODConvertiondetail_REFE_TB_PRODU_typeFrom)
         //tb_ProductType.Type_ID_from)
@@ -106,14 +128,6 @@ namespace RUINORERP.Model
         //tb_ProdConversionDetail.Type_ID)
         //Type_ID.FK_TB_PRODConvertiondetail_REFE_TB_PRODU_typeTo)
         //tb_ProductType.Type_ID_to)
-
-        //[Browsable(false)]打印报表时的数据源会不显示
-        [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_ManufacturingOrder.Type_ID))]
-        public virtual List<tb_ManufacturingOrder> tb_ManufacturingOrders { get; set; }
-        //tb_ManufacturingOrder.Type_ID)
-        //Type_ID.FK_MANUFACTURINGORDER_REF_PRODUCTYPE)
-        //tb_ProductType.Type_ID)
 
 
         #endregion
@@ -131,6 +145,10 @@ return rs;
 
 
 
+
+
+       
+        
 
         public override object Clone()
         {

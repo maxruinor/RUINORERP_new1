@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：05/07/2025 15:37:43
+// 时间：07/24/2025 20:27:04
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -100,10 +100,10 @@ namespace RUINORERP.Model.QueryDto
 
         private int? _TargetBizType;
         /// <summary>
-        /// 目标业务
+        /// 目标单据类型
         /// </summary>
-        [AdvQueryAttribute(ColName = "TargetBizType",ColDesc = "目标业务")]
-        [SugarColumn(ColumnDataType = "int",SqlParameterDbType ="Int32",ColumnName = "TargetBizType",IsNullable = true,ColumnDescription = "目标业务" )]
+        [AdvQueryAttribute(ColName = "TargetBizType",ColDesc = "目标单据类型")]
+        [SugarColumn(ColumnDataType = "int",SqlParameterDbType ="Int32",ColumnName = "TargetBizType",IsNullable = true,ColumnDescription = "目标单据类型" )]
         public int? TargetBizType 
         { 
             get{return _TargetBizType;}
@@ -262,7 +262,7 @@ namespace RUINORERP.Model.QueryDto
         /// 核销日期
         /// </summary>
         [AdvQueryAttribute(ColName = "SettleDate",ColDesc = "核销日期")]
-        [SugarColumn(ColumnDataType = "date",SqlParameterDbType ="DateTime",ColumnName = "SettleDate",IsNullable = false,ColumnDescription = "核销日期" )]
+        [SugarColumn(ColumnDataType = "datetime",SqlParameterDbType ="DateTime",ColumnName = "SettleDate",IsNullable = false,ColumnDescription = "核销日期" )]
         public DateTime SettleDate 
         { 
             get{return _SettleDate;}
@@ -332,6 +332,19 @@ namespace RUINORERP.Model.QueryDto
         { 
             get{return _Created_by;}
             set{SetProperty(ref _Created_by, value);}
+        }
+     
+
+        private bool _isdeleted= false;
+        /// <summary>
+        /// 逻辑删除
+        /// </summary>
+        [AdvQueryAttribute(ColName = "isdeleted",ColDesc = "逻辑删除")]
+        [SugarColumn(ColumnDataType = "bit",SqlParameterDbType ="Boolean",ColumnName = "isdeleted",IsNullable = false,ColumnDescription = "逻辑删除" )]
+        public bool isdeleted 
+        { 
+            get{return _isdeleted;}
+            set{SetProperty(ref _isdeleted, value);}
         }
 
 

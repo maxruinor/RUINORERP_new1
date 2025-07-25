@@ -183,10 +183,6 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\dll\Krypton.Ribbon.dll</HintPath>
     </Reference>
-    <Reference Include="Krypton.Toolkit.Suite.Extended.Outlook.Grid, Version=80.25.5.144, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\dll\Krypton.Toolkit.Suite.Extended.Outlook.Grid.dll</HintPath>
-    </Reference>
     <Reference Include="Krypton.Toolkit.Suite.Extended.TreeGridView, Version=80.25.6.154, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\dll\Krypton.Toolkit.Suite.Extended.TreeGridView.dll</HintPath>
@@ -4527,6 +4523,10 @@
     <ProjectReference Include="..\Krypton Components\Krypton.Toolkit\Krypton.Toolkit 2022.csproj">
       <Project>{626b796f-f3a0-40b7-8fc2-38804726c1f5}</Project>
       <Name>Krypton.Toolkit 2022</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Krypton Toolkit\Krypton.Toolkit.Suite.Extended.Outlook.Grid\Krypton.Toolkit.Suite.Extended.Outlook.Grid 2022.csproj">
+      <Project>{207b6d11-38d7-43e6-a381-0e8203cb5721}</Project>
+      <Name>Krypton.Toolkit.Suite.Extended.Outlook.Grid 2022</Name>
     </ProjectReference>
     <ProjectReference Include="..\LightTalkChatBox\LightTalkChatBox\LightTalkChatBox.csproj">
       <Project>{2b53b023-f715-4ff0-ac73-33321f4de09c}</Project>

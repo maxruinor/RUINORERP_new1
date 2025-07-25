@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：05/08/2025 09:57:44
+// 时间：07/24/2025 20:25:44
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -33,6 +33,8 @@ namespace RUINORERP.UI
      
                          InitializeComponent();
       
+        
+        
         
         
         
@@ -87,7 +89,9 @@ namespace RUINORERP.UI
                         entity.EnableInvoiceModule = Boolean.Parse(txtEnableInvoiceModule.Text);
                         entity.EnableMultiCurrency = Boolean.Parse(txtEnableMultiCurrency.Text);
                         entity.EnableFinancialModule = Boolean.Parse(txtEnableFinancialModule.Text);
-                                return entity;
+                        entity.FreightAllocationRules = Int32.Parse(txtFreightAllocationRules.Text);
+                        entity.FMConfig = txtFMConfig.Text ;
+                               return entity;
 }
         */
 
@@ -127,6 +131,8 @@ namespace RUINORERP.UI
 //有默认值
            DataBindingHelper.BindData4CheckBox<tb_SystemConfig>(entity, t => t.EnableFinancialModule, chkEnableFinancialModule, false);
 //有默认值
+           DataBindingHelper.BindData4TextBox<tb_SystemConfig>(entity, t => t.FreightAllocationRules, txtFreightAllocationRules, BindDataType4TextBox.Qty,false);
+           DataBindingHelper.BindData4TextBox<tb_SystemConfig>(entity, t => t.FMConfig, txtFMConfig, BindDataType4TextBox.Text,false);
 }
 
 

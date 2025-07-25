@@ -383,16 +383,17 @@ namespace RUINORERP.UI.FM
                         {
                             preRPNOsPreview += $" 等 {selectedAdvances.Count} 张单据\r\n";
                         }
-
-                        // 使用选中的预付款单
-                        //您确定要将当前应收款单，通过通过预收付款抵扣元吗？
-                        if (MessageBox.Show($"您确定要将当前【应{PaymentType}单】:{RealList[0].ARAPNo}\r\n通过【预{PaymentType}单】:{preRPNOsPreview} 抵扣{selectedAdvances.Sum(x => x.LocalBalanceAmount).ToString("##.00")}元吗？", "提示", MessageBoxButtons.OKCancel, MessageBoxIcon.Information) == DialogResult.OK)
+                        if (selectedAdvances.Count > 0)
                         {
-                           await  receivablePayableController.ApplyManualPaymentAllocation(RealList[0], selectedAdvances);
+                            // 使用选中的预付款单
+                            //您确定要将当前应收款单，通过通过预收付款抵扣元吗？
+                            if (MessageBox.Show($"您确定要将当前【应{PaymentType}单】:{RealList[0].ARAPNo}\r\n通过【预{PaymentType}单】:{preRPNOsPreview} 抵扣{selectedAdvances.Sum(x => x.LocalBalanceAmount).ToString("##.00")}元吗？", "提示", MessageBoxButtons.OKCancel, MessageBoxIcon.Information) == DialogResult.OK)
+                            {
+                                await receivablePayableController.ApplyManualPaymentAllocation(RealList[0], selectedAdvances);
+                            }
                         }
                     }
                 }
-
 
             }
             catch (Exception ex)

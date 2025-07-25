@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：05/07/2025 15:37:44
+// 时间：07/24/2025 20:27:04
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,7 +21,7 @@ namespace RUINORERP.Model
     /// 记录收款 与应收的匹配，核销表 核销记录用于跟踪资金与债权债务的冲抵关系，确保财务数据可追溯。正常的收款，支付不需要保存核销记录
     /// </summary>
     [Serializable()]
-    [Description("核销记录表")]
+    [Description("记录收款 与应收的匹配，核销表 核销记录用于跟踪资金与债权债务的冲抵关系，确保财务数据可追溯。正常的收款，支付不需要保存核销记录")]
     [SugarTable("tb_FM_PaymentSettlement")]
     public partial class tb_FM_PaymentSettlement: BaseEntity, ICloneable
     {
@@ -126,7 +126,7 @@ namespace RUINORERP.Model
         /// 目标单据类型
         /// </summary>
         [AdvQueryAttribute(ColName = "TargetBizType",ColDesc = "目标单据类型")] 
-        [SugarColumn(ColumnDataType = "int", SqlParameterDbType ="Int32",  ColumnName = "TargetBizType" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "目标单据类型")]
+        [SugarColumn(ColumnDataType = "int", SqlParameterDbType ="Int32",  ColumnName = "TargetBizType" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "目标单据类型" )]
         public int? TargetBizType
         { 
             get{return _TargetBizType;}
@@ -375,21 +375,22 @@ namespace RUINORERP.Model
             SetProperty(ref _Created_by, value);
                         }
         }
-        private bool _isdeleted = false;
+
+        private bool _isdeleted= false;
         /// <summary>
         /// 逻辑删除
         /// </summary>
-        [AdvQueryAttribute(ColName = "isdeleted", ColDesc = "逻辑删除")]
-        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType = "Boolean", ColumnName = "isdeleted", IsNullable = false, ColumnDescription = "逻辑删除")]
+        [AdvQueryAttribute(ColName = "isdeleted",ColDesc = "逻辑删除")] 
+        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType ="Boolean",  ColumnName = "isdeleted" ,IsNullable = false,ColumnDescription = "逻辑删除" )]
         [Browsable(false)]
         public bool isdeleted
-        {
-            get { return _isdeleted; }
-            set
-            {
-                SetProperty(ref _isdeleted, value);
-            }
+        { 
+            get{return _isdeleted;}
+            set{
+            SetProperty(ref _isdeleted, value);
+                        }
         }
+
         #endregion
 
         #region 扩展属性
@@ -436,6 +437,11 @@ return rs;
 
 
 
+
+
+
+       
+        
 
         public override object Clone()
         {

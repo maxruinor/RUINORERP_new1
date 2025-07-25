@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：02/08/2025 16:32:00
+// 时间：07/25/2025 17:18:28
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,7 +21,7 @@ namespace RUINORERP.Model
     /// 业务类型 报销，员工借支还款，运费
     /// </summary>
     [Serializable()]
-    [Description("费用类型")]
+    [Description("业务类型 报销，员工借支还款，运费")]
     [SugarTable("tb_FM_ExpenseType")]
     public partial class tb_FM_ExpenseType: BaseEntity, ICloneable
     {
@@ -80,17 +80,19 @@ namespace RUINORERP.Model
                         }
         }
 
-        private bool _EXPOrINC= true;
+ 
+
+        private int _ReceivePaymentType;
         /// <summary>
-        /// 收支标识
+        /// 收付类型
         /// </summary>
-        [AdvQueryAttribute(ColName = "EXPOrINC",ColDesc = "收支标识")] 
-        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType ="Boolean",  ColumnName = "EXPOrINC" ,IsNullable = false,ColumnDescription = "收支标识" )]
-        public bool EXPOrINC
+        [AdvQueryAttribute(ColName = "ReceivePaymentType",ColDesc = "收付类型")] 
+        [SugarColumn(ColumnDataType = "int", SqlParameterDbType ="Int32",  ColumnName = "ReceivePaymentType" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "收付类型" )]
+        public int ReceivePaymentType
         { 
-            get{return _EXPOrINC;}
+            get{return _ReceivePaymentType;}
             set{
-            SetProperty(ref _EXPOrINC, value);
+            SetProperty(ref _ReceivePaymentType, value);
                         }
         }
 
@@ -133,8 +135,6 @@ namespace RUINORERP.Model
         //ExpenseType_id.FK_EXPENSECLAIMDETAIL_REF_EXPENSETYPE)
         //tb_FM_ExpenseType.ExpenseType_id)
 
-      
-
 
         #endregion
 
@@ -145,11 +145,20 @@ namespace RUINORERP.Model
 private bool PK_FK_ID_Check()
 {
   bool rs=true;
+         if("Subject_id"!="subject_id")
+        {
+        // rs=false;
+        }
 return rs;
 }
 
 
 
+
+
+
+       
+        
 
         public override object Clone()
         {

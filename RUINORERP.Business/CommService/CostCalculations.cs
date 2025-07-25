@@ -170,7 +170,7 @@ namespace RUINORERP.Business.CommService
             Global.库存成本计算方式 m = (Global.库存成本计算方式)_appContext.SysConfig.CostCalculationMethod;
 
             // 前置校验：当前操作数量不能为0（反审核无意义操作）
-            if (currentQty == 0) throw new ArgumentException("反审核操作的当前数量不能为0");
+            if (currentQty == 0) throw new ArgumentException("反审核操作成本计算时，当前数量不能为0");
             // 计算新库存数量
             int newQty = inv.Quantity - currentQty;
 

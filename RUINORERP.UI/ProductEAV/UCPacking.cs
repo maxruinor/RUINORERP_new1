@@ -112,7 +112,7 @@ namespace RUINORERP.UI.ProductEAV
                         {
                             entity.Unit_ID = entity.tb_prod.Unit_ID;
                         }
-                        
+
                     }
                     if (entity.tb_PackingDetails != null && entity.tb_PackingDetails.Count > 0)
                     {
@@ -132,6 +132,9 @@ namespace RUINORERP.UI.ProductEAV
 
             DataBindingHelper.BindData4TextBox<tb_Packing>(entity, t => t.PackagingName, txtPackagingName, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4Cmb<tb_Unit>(entity, t => t.Unit_ID, v => v.UnitName, cmbUnit_ID);
+            DataBindingHelper.BindData4Cmb<tb_Prod>(entity, t => t.ProdBaseID, v => v.CNName, cmbProdBaseID);
+            DataBindingHelper.BindData4Cmb<tb_ProdDetail>(entity, t => t.ProdDetailID, v => v.SKU, cmbProdDetailID);
+            DataBindingHelper.BindData4Cmb<tb_ProdBundle>(entity, t => t.BundleID, v => v.BundleName, cmbBundleID);
             DataBindingHelper.BindData4TextBox<tb_Packing>(entity, t => t.property, txtproperty, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_Packing>(entity, t => t.BoxMaterial, txtBoxMaterial, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_Packing>(entity, t => t.Volume.ToString(), txtVolume, BindDataType4TextBox.Money, false);
@@ -235,7 +238,7 @@ namespace RUINORERP.UI.ProductEAV
 
             if (entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改)
             {
-                base.InitRequiredToControl(MainForm.Instance.AppContext.GetRequiredService <tb_PackingValidator> (), kryptonPanelMainInfo.Controls);
+                base.InitRequiredToControl(MainForm.Instance.AppContext.GetRequiredService<tb_PackingValidator>(), kryptonPanelMainInfo.Controls);
                 //UIBaseTool uIBaseTool = new();
                 //uIBaseTool.CurMenuInfo = CurMenuInfo;
                 //uIBaseTool.InitEditItemToControl<tb_Packing>(entity, kryptonPanelMainInfo.Controls);
@@ -340,7 +343,7 @@ namespace RUINORERP.UI.ProductEAV
             base.ToolBarEnabledControl(MenuItemEnums.刷新);
             LoadGrid1();
             LoadGrid2();
-            UIHelper.ControlMasterColumnsInvisible(CurMenuInfo,this);
+            UIHelper.ControlMasterColumnsInvisible(CurMenuInfo, this);
         }
 
         private void LoadGrid1()
@@ -378,7 +381,7 @@ namespace RUINORERP.UI.ProductEAV
 
             listCols1.SetCol_ReadOnly<tb_PackingDetail>(c => c.PackDetail_ID);
             listCols1.SetCol_ReadOnly<tb_PackingDetail>(c => c.property);
-           
+
             sgd1 = new SourceGridDefine(grid1, listCols1, true);
             sgd1.GridMasterData = EditEntity;
 
@@ -409,7 +412,7 @@ namespace RUINORERP.UI.ProductEAV
             }*/
 
 
-  
+
 
             sgh1.SetPointToColumnPairs<ProductSharePart, tb_PackingDetail>(sgd1, f => f.prop, t => t.property);
 
@@ -425,7 +428,7 @@ namespace RUINORERP.UI.ProductEAV
             //   .AndIF(true, w => w.CNName.Length > 0)
             //  // .AndIF(txtSpecifications.Text.Trim().Length > 0, w => w.Specifications.Contains(txtSpecifications.Text.Trim()))
             //  .ToExpression();//注意 这一句 不能少
-          
+
             //list = dc.BaseQueryByWhere(exp);
 
             list = MainForm.Instance.list;
@@ -563,7 +566,7 @@ namespace RUINORERP.UI.ProductEAV
             if (RowDetails != null)
             {
                 List<tb_PackingDetail> details = new List<tb_PackingDetail>();
-                
+
                 foreach (var item in RowDetails)
                 {
                     tb_PackingDetail Detail = MainForm.Instance.mapper.Map<tb_PackingDetail>(item);
@@ -754,7 +757,7 @@ namespace RUINORERP.UI.ProductEAV
             //新增时才可以转单
             if (saleorder != null)
             {
-                
+
                 tb_Packing entity = MainForm.Instance.mapper.Map<tb_Packing>(saleorder);
                 List<tb_PackingDetail> details = MainForm.Instance.mapper.Map<List<tb_PackingDetail>>(saleorder.tb_SaleOrderDetails);
                 entity.Created_at = System.DateTime.Now;

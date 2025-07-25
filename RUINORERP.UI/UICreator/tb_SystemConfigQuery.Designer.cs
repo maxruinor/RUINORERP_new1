@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：05/08/2025 09:57:45
+// 时间：07/24/2025 20:25:44
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -141,6 +141,11 @@ this.chkEnableFinancialModule = new ComponentFactory.Krypton.Toolkit.KryptonChec
 this.chkEnableFinancialModule.Values.Text ="";
 this.chkEnableFinancialModule.Checked = true;
 this.chkEnableFinancialModule.CheckState = System.Windows.Forms.CheckState.Checked;
+
+
+this.lblFMConfig = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
+this.txtFMConfig = new ComponentFactory.Krypton.Toolkit.KryptonTextBox();
+this.txtFMConfig.Multiline = true;
 
     //for end
     this.SuspendLayout();
@@ -422,6 +427,23 @@ this.chkEnableFinancialModule.TabIndex = 23;
 this.Controls.Add(this.lblEnableFinancialModule);
 this.Controls.Add(this.chkEnableFinancialModule);
 
+           //#####FreightAllocationRules###Int32
+
+           //#####2147483647FMConfig###String
+this.lblFMConfig.AutoSize = true;
+this.lblFMConfig.Location = new System.Drawing.Point(100,625);
+this.lblFMConfig.Name = "lblFMConfig";
+this.lblFMConfig.Size = new System.Drawing.Size(41, 12);
+this.lblFMConfig.TabIndex = 25;
+this.lblFMConfig.Text = "财务模块配置";
+this.txtFMConfig.Location = new System.Drawing.Point(173,621);
+this.txtFMConfig.Name = "txtFMConfig";
+this.txtFMConfig.Size = new System.Drawing.Size(100, 21);
+this.txtFMConfig.TabIndex = 25;
+this.txtFMConfig.Multiline = true;
+this.Controls.Add(this.lblFMConfig);
+this.Controls.Add(this.txtFMConfig);
+
           
     //for end
 
@@ -490,6 +512,10 @@ this.Controls.Add(this.chkEnableMultiCurrency );
 
                 this.Controls.Add(this.lblEnableFinancialModule );
 this.Controls.Add(this.chkEnableFinancialModule );
+
+                
+                this.Controls.Add(this.lblFMConfig );
+this.Controls.Add(this.txtFMConfig );
 
                     
             this.Name = "tb_SystemConfigQuery";
@@ -607,6 +633,14 @@ private ComponentFactory.Krypton.Toolkit.KryptonCheckBox chkEnableMultiCurrency;
         
               private ComponentFactory.Krypton.Toolkit.KryptonLabel lblEnableFinancialModule;
 private ComponentFactory.Krypton.Toolkit.KryptonCheckBox chkEnableFinancialModule;
+
+    
+        
+              
+    
+        
+              private ComponentFactory.Krypton.Toolkit.KryptonLabel lblFMConfig;
+private ComponentFactory.Krypton.Toolkit.KryptonTextBox txtFMConfig;
 
     
     

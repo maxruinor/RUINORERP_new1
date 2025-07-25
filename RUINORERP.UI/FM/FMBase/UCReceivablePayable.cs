@@ -159,7 +159,7 @@ namespace RUINORERP.UI.FM
                 }
 
 
-            
+
 
                 //如果状态是已经生效才可能有审核，如果是待收款 才可能有反审
                 if (entity.ARAPStatus == (int)ARAPStatus.待审核)
@@ -215,7 +215,7 @@ namespace RUINORERP.UI.FM
                 cmbAccount_type.DataBindings.Clear();
                 txtPayeeAccountNo.Text = "";
             }
-
+            DataBindingHelper.BindData4CheckBox<tb_FM_ReceivablePayable>(entity, t => t.IsFromPlatform, chkIsFromPlatform, false);
             DataBindingHelper.BindData4Cmb<tb_FM_Account>(entity, k => k.Account_id, v => v.Account_name, cmbAccount_id);
             DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayable>(entity, t => t.ARAPNo, txtARAPNo, BindDataType4TextBox.Qty, false);
             DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayable>(entity, t => t.ExchangeRate.ToString(), txtExchangeRate, BindDataType4TextBox.Money, false);
@@ -225,6 +225,7 @@ namespace RUINORERP.UI.FM
             DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayable>(entity, t => t.LocalPaidAmount.ToString(), txtLocalPaidAmount, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayable>(entity, t => t.ForeignBalanceAmount.ToString(), txtForeignBalanceAmount, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayable>(entity, t => t.LocalBalanceAmount.ToString(), txtLocalBalanceAmount, BindDataType4TextBox.Money, false);
+            DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayable>(entity, t => t.ShippingFee.ToString(), txtShippingFee, BindDataType4TextBox.Money, false);
 
             // DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayable>(entity, t => t.SourceBillId, txtSourceBillId, BindDataType4TextBox.Qty, false);
             DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayable>(entity, t => t.SourceBillNo, txtSourceBillNo, BindDataType4TextBox.Text, false);
@@ -289,7 +290,7 @@ namespace RUINORERP.UI.FM
             }
 
             //后面这些依赖于控件绑定的数据源和字段。所以要在绑定后执行。
-                if (entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改)
+            if (entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改)
             {
                 base.InitRequiredToControl(MainForm.Instance.AppContext.GetRequiredService<tb_FM_ReceivablePayableValidator>(), kryptonPanel1.Controls);
                 //UIBaseTool uIBaseTool = new();
@@ -352,7 +353,7 @@ namespace RUINORERP.UI.FM
                 //后面这些依赖于控件绑定的数据源和字段。所以要在绑定后执行。
                 if (entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改)
                 {
-                    if (s2.PropertyName == entity.GetPropertyName<tb_FM_PayeeInfo>(c => c.PayeeInfoID))
+                    if (s2.PropertyName == entity.GetPropertyName<tb_FM_ReceivablePayable>(c => c.PayeeInfoID))
                     {
                         cmbPayeeInfoID.Enabled = true;
                         //加载收款信息
@@ -399,9 +400,12 @@ namespace RUINORERP.UI.FM
                             lblOpeningbank.Text = "";
                         }
                     }
+
+                    if (s2.PropertyName == entity.GetPropertyName<tb_FM_ReceivablePayable>(c => c.ShippingFee))
+                    {
+                        EditEntity.TotalLocalPayableAmount = details.Sum(c => c.LocalPayableAmount) + EditEntity.ShippingFee;
+                    }
                 }
-
-
 
                 //到期日期应该是根据对应客户的账期的天数来算
                 if (entity.CustomerVendor_ID > 0 && s2.PropertyName == entity.GetPropertyName<tb_FM_ReceivablePayable>(c => c.CustomerVendor_ID))
@@ -789,7 +793,7 @@ namespace RUINORERP.UI.FM
                     return;
                 }
                 //EditEntity.TotalForeignPayableAmount = details.Sum(c => c.ForeignPayableAmount);
-                EditEntity.TotalLocalPayableAmount = details.Sum(c => c.LocalPayableAmount);
+                EditEntity.TotalLocalPayableAmount = details.Sum(c => c.LocalPayableAmount)+EditEntity.ShippingFee;
             }
             catch (Exception ex)
             {

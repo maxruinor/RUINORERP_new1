@@ -34,6 +34,17 @@ namespace RUINORERP.Business.BizMapperService
         }
 
         /// <summary>
+        /// 通过表名得到类型名
+        /// </summary>
+        /// <param name="tableName"></param>
+        /// <returns></returns>
+        public Type GetEntityTypeByTableName(string tableName)
+        {
+            return _mappingService.GetEntityTypeByTableName(tableName);
+        }
+
+
+        /// <summary>
         /// 获取实体对象中主键字段和编号字段的值
         /// </summary>
         /// <typeparam name="TKey">主键字段的类型</typeparam>

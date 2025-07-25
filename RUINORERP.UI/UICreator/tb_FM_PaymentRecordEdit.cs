@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：06/20/2025 16:20:02
+// 时间：07/24/2025 20:26:59
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -66,6 +66,8 @@ namespace RUINORERP.UI
         
         
         
+        
+        
 
          }
 /*
@@ -79,7 +81,9 @@ namespace RUINORERP.UI
                         entity.CustomerVendor_ID = Int64.Parse(txtCustomerVendor_ID.Text);
                         entity.PayeeInfoID = Int64.Parse(txtPayeeInfoID.Text);
                         entity.PayeeAccountNo = txtPayeeAccountNo.Text ;
-                       entity.Currency_ID = Int64.Parse(txtCurrency_ID.Text);
+                       entity.SourceBillNos = txtSourceBillNos.Text ;
+                       entity.IsFromPlatform = Boolean.Parse(txtIsFromPlatform.Text);
+                        entity.Currency_ID = Int64.Parse(txtCurrency_ID.Text);
                         entity.TotalForeignAmount = Decimal.Parse(txtTotalForeignAmount.Text);
                         entity.TotalLocalAmount = Decimal.Parse(txtTotalLocalAmount.Text);
                         entity.PaymentDate = DateTime.Parse(txtPaymentDate.Text);
@@ -90,9 +94,9 @@ namespace RUINORERP.UI
                        entity.ReferenceNo = txtReferenceNo.Text ;
                        entity.IsReversed = Boolean.Parse(txtIsReversed.Text);
                         entity.ReversedOriginalId = Int64.Parse(txtReversedOriginalId.Text);
-                        entity.ReversedOriginalIdNo = txtReversedOriginalIdNo.Text ;
+                        entity.ReversedOriginalNo = txtReversedOriginalNo.Text ;
                        entity.ReversedByPaymentId = Int64.Parse(txtReversedByPaymentId.Text);
-                        entity.ReversedByPaymentIdNo = txtReversedByPaymentIdNo.Text ;
+                        entity.ReversedByPaymentNo = txtReversedByPaymentNo.Text ;
                        entity.Remark = txtRemark.Text ;
                        entity.Created_at = DateTime.Parse(txtCreated_at.Text);
                         entity.Created_by = Int64.Parse(txtCreated_by.Text);
@@ -121,6 +125,8 @@ namespace RUINORERP.UI
 ReversedByPaymentId主外字段不一致。ReversedOriginalId主外字段不一致。          // DataBindingHelper.BindData4Cmb<tb_CustomerVendor>(entity, k => k.CustomerVendor_ID, v=>v.XXNAME, cmbCustomerVendor_ID);
 ReversedByPaymentId主外字段不一致。ReversedOriginalId主外字段不一致。          // DataBindingHelper.BindData4Cmb<tb_FM_PayeeInfo>(entity, k => k.PayeeInfoID, v=>v.XXNAME, cmbPayeeInfoID);
 ReversedByPaymentId主外字段不一致。ReversedOriginalId主外字段不一致。           DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.PayeeAccountNo, txtPayeeAccountNo, BindDataType4TextBox.Text,false);
+           DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.SourceBillNos, txtSourceBillNos, BindDataType4TextBox.Text,false);
+           DataBindingHelper.BindData4CheckBox<tb_FM_PaymentRecord>(entity, t => t.IsFromPlatform, chkIsFromPlatform, false);
           // DataBindingHelper.BindData4Cmb<tb_Currency>(entity, k => k.Currency_ID, v=>v.XXNAME, cmbCurrency_ID);
 ReversedByPaymentId主外字段不一致。ReversedOriginalId主外字段不一致。           DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.TotalForeignAmount.ToString(), txtTotalForeignAmount, BindDataType4TextBox.Money,false);
            DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.TotalLocalAmount.ToString(), txtTotalLocalAmount, BindDataType4TextBox.Money,false);
@@ -132,9 +138,9 @@ ReversedByPaymentId主外字段不一致。ReversedOriginalId主外字段不一�
            DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.ReferenceNo, txtReferenceNo, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4CheckBox<tb_FM_PaymentRecord>(entity, t => t.IsReversed, chkIsReversed, false);
           ReversedByPaymentId主外字段不一致。ReversedOriginalId主外字段不一致。 DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.ReversedOriginalId, txtReversedOriginalId, BindDataType4TextBox.Qty,false);
-           DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.ReversedOriginalIdNo, txtReversedOriginalIdNo, BindDataType4TextBox.Text,false);
+           DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.ReversedOriginalNo, txtReversedOriginalNo, BindDataType4TextBox.Text,false);
           ReversedByPaymentId主外字段不一致。ReversedOriginalId主外字段不一致。 DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.ReversedByPaymentId, txtReversedByPaymentId, BindDataType4TextBox.Qty,false);
-           DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.ReversedByPaymentIdNo, txtReversedByPaymentIdNo, BindDataType4TextBox.Text,false);
+           DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.ReversedByPaymentNo, txtReversedByPaymentNo, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.Remark, txtRemark, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4DataTime<tb_FM_PaymentRecord>(entity, t => t.Created_at, dtpCreated_at,false);
           ReversedByPaymentId主外字段不一致。ReversedOriginalId主外字段不一致。 DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.Created_by, txtCreated_by, BindDataType4TextBox.Qty,false);

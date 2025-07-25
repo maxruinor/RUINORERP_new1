@@ -949,7 +949,6 @@ namespace RUINORERP.Business
         public tb_FM_PaymentRecord BuildPaymentRecord(tb_FM_OtherExpense entity)
         {
             //其它费用收入支出 审核时 自动生成 收付款记录
-
             tb_FM_PaymentRecord paymentRecord = new tb_FM_PaymentRecord();
             paymentRecord = mapper.Map<tb_FM_PaymentRecord>(entity);
             paymentRecord.ApprovalResults = null;
@@ -1060,7 +1059,7 @@ namespace RUINORERP.Business
                 paymentRecord.PaymentNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.付款单);
             }
             tb_FM_PaymentRecordDetail paymentRecordDetail = new tb_FM_PaymentRecordDetail();
-            #region 明细 
+            #region 明细   一笔预收付款单只有一条明细
 
             if (entity.ReceivePaymentType == (int)ReceivePaymentType.收款)
             {
@@ -1070,6 +1069,7 @@ namespace RUINORERP.Business
             {
                 paymentRecordDetail.SourceBizType = (int)BizType.预付款单;
             }
+            paymentRecordDetail.IsFromPlatform = entity.IsFromPlatform;
             paymentRecordDetail.SourceBillNo = entity.PreRPNO;
             paymentRecordDetail.SourceBilllId = entity.PreRPID;
             paymentRecordDetail.ExchangeRate = entity.ExchangeRate;
@@ -1091,6 +1091,9 @@ namespace RUINORERP.Business
             {
                 paymentRecordDetail.Summary += entity.PrePaymentReason;
             }
+          
+          
+
             paymentRecord.TotalLocalAmount = paymentRecordDetail.LocalAmount;
             paymentRecord.TotalForeignAmount = paymentRecordDetail.ForeignAmount;
             paymentRecord.PaymentDate = entity.PrePayDate;
@@ -1137,14 +1140,7 @@ namespace RUINORERP.Business
             paymentRecord.Modified_at = null;
             paymentRecord.Modified_by = null;
             paymentRecord.ReceivePaymentType = entities[0].ReceivePaymentType;
-            if (entities[0].ReceivePaymentType == (int)ReceivePaymentType.收款)
-            {
-                paymentRecord.PaymentNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.收款单);
-            }
-            else
-            {
-                paymentRecord.PaymentNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.付款单);
-            }
+
 
             List<tb_FM_PaymentRecordDetail> details = mapper.Map<List<tb_FM_PaymentRecordDetail>>(entities);
             List<tb_FM_PaymentRecordDetail> NewDetails = new List<tb_FM_PaymentRecordDetail>();
@@ -1192,7 +1188,18 @@ namespace RUINORERP.Business
             paymentRecord.CustomerVendor_ID = entities[0].CustomerVendor_ID;
             paymentRecord.PayeeAccountNo = entities[0].PayeeAccountNo;
             paymentRecord.tb_FM_PaymentRecordDetails = NewDetails;
-
+            if (entities[0].ReceivePaymentType == (int)ReceivePaymentType.收款)
+            {
+                paymentRecord.PaymentNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.收款单);
+                if (paymentRecord.tb_FM_PaymentRecordDetails.Where(c => c.IsFromPlatform.HasValue && c.IsFromPlatform == true).ToList().Count == paymentRecord.tb_FM_PaymentRecordDetails.Count)
+                {
+                    paymentRecord.IsFromPlatform = true;
+                }
+            }
+            else
+            {
+                paymentRecord.PaymentNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.付款单);
+            }
             //在收款单明细中，不可以存在：一种应付下有两同的两个应收单。 否则这里会出错。
             var checkList = paymentRecord.tb_FM_PaymentRecordDetails.GroupBy(c => c.SourceBizType, c => c.SourceBilllId).ToList();
             if (checkList.Count > 1)
@@ -1410,8 +1417,8 @@ namespace RUINORERP.Business
                             .Includes(a => a.tb_customervendor)
                              .AsNavQueryable()//加这个前面,超过三级在前面加这一行，并且第四级无VS智能提示，但是可以用
                               .Includes(a => a.tb_FM_PaymentRecordDetails)
-                              .Includes(a => a.tb_FM_PaymentRecords_Original)
-                              .Includes(a => a.tb_FM_PaymentRecords_Reversed)
+                              .Includes(a => a.tb_FM_PaymentRecords_Originals)
+                              .Includes(a => a.tb_FM_PaymentRecords_Reverseds)
                               .Includes(a => a.tb_fm_paymentrecord_Original)
                               .Includes(a => a.tb_fm_paymentrecord_Reversed)
                             .ToListAsync();

@@ -49,10 +49,8 @@ using Fireasy.Common.Configuration;
 using RUINORERP.UI.Monitoring.Auditing;
 using NPOI.SS.Formula.Functions;
 
-
 namespace RUINORERP.UI.PSI.SAL
 {
-
 
     /// <summary>
     /// 销售订单时：有运费外币，总金额外币，订单外币。反而出库时不用这么多。外币只是用于记账。出库时只要根据本币和外币及汇率。生成应收时自动算出来。
@@ -238,7 +236,7 @@ namespace RUINORERP.UI.PSI.SAL
                     entity.SaleDate = System.DateTime.Now;
                     //通过动态参数来设置这个默认值。这样每个公司不同设置按自己的来。
                     entity.IsFromPlatform = AppContext.GlobalVariableConfig.IsFromPlatform;
-
+                    entity.OrderPriority = (int)Priority.正常;
                     // 监听配置变化
                     MainForm.Instance.Globalconfig.OnChange((config, value) =>
                     {
@@ -271,10 +269,10 @@ namespace RUINORERP.UI.PSI.SAL
             DataBindingHelper.BindData4TextBox<tb_SaleOrder>(entity, t => t.CustomerPONo, txtCustomerPONo, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4Cmb<tb_PaymentMethod>(entity, k => k.Paytype_ID, v => v.Paytype_Name, cmbPaytype_ID);
             DataBindingHelper.BindData4Cmb<tb_FM_Account>(entity, k => k.Account_id, v => v.Account_name, cmbAccount_id);
-            
+
             cmbEmployee_ID.EnableSearch = false;
             DataBindingHelper.BindData4Cmb<tb_Employee>(entity, k => k.Employee_ID, v => v.Employee_Name, cmbEmployee_ID, true);
-        
+
             if (AppContext.projectGroups != null && AppContext.projectGroups.Count > 0)
             {
                 #region 项目组 如果有设置则按设置。没有则全部
@@ -1095,6 +1093,45 @@ using var binder = new UIStateBinder(..., customEvaluator);
                 //订单只是警告。可以继续
 
                 EditEntity.tb_SaleOrderDetails = details;
+
+                if (NeedValidated && EditEntity.tb_SaleOrderDetails.Count == 0)
+                {
+                    MessageBox.Show("请录入有效明细记录！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return false;
+                }
+                if (NeedValidated)
+                {
+                    StringBuilder forSaleTips = new StringBuilder();
+
+                    details.ForEach(
+               c =>
+               {
+                   if (c.ProdDetailID > 0)
+                   {
+                       var prodView = list.Where(t => t.ProdDetailID == c.ProdDetailID).FirstOrDefault();
+                       if (prodView != null)
+                       {
+                           if (prodView.tb_producttype == null)
+                           {
+                               prodView.tb_producttype = BizCacheHelper.Instance.GetEntity<tb_ProductType>(prodView.Type_ID);
+                           }
+                           if (!prodView.tb_producttype.ForSale)
+                           {
+                               forSaleTips.AppendLine($"{prodView.CNName}{prodView.SKU}的产品类型为【非待销】的{prodView.tb_producttype.TypeName}。");
+                           }
+                       }
+                   }
+               }
+           );
+                    if (forSaleTips.ToString().Trim().Length > 0)
+                    {
+                        if (MessageBox.Show(forSaleTips.ToString() + "\r\n确定继续保存吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Asterisk) == DialogResult.No)
+                        {
+                            return false;
+                        }
+                    }
+                }
+
                 //var aa = details.Select(c => c.ProdDetailID).ToList().GroupBy(x => x).Where(x => x.Count() > 1).Select(x => x.Key).ToList();
                 //if (aa.Count > 1)
                 //{
@@ -1117,7 +1154,7 @@ using var binder = new UIStateBinder(..., customEvaluator);
                     return false;
                 }
 
-                if (!MainForm.Instance.AppContext.SysConfig.CheckNegativeInventory)
+                if (NeedValidated && !MainForm.Instance.AppContext.SysConfig.CheckNegativeInventory)
                 {
                     list = await dc.BaseGetQueryableAsync().ToListAsync();
                     foreach (var item in details)

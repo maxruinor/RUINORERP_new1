@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：05/23/2025 14:28:30
+// 时间：07/25/2025 18:51:46
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -50,6 +50,7 @@ namespace RUINORERP.Business
  RuleFor(tb_FM_PreReceivedPayment =>tb_FM_PreReceivedPayment.PayeeInfoID).NotEmpty().When(x => x.PayeeInfoID.HasValue);
 
  RuleFor(tb_FM_PreReceivedPayment =>tb_FM_PreReceivedPayment.PayeeAccountNo).MaximumLength(50).WithMessage("收款账号:不能超过最大长度,50.");
+
 
  RuleFor(tb_FM_PreReceivedPayment =>tb_FM_PreReceivedPayment.Employee_ID).Must(CheckForeignKeyValueCanNull).WithMessage("经办人:下拉选择值不正确。");
  RuleFor(tb_FM_PreReceivedPayment =>tb_FM_PreReceivedPayment.Employee_ID).NotEmpty().When(x => x.Employee_ID.HasValue);

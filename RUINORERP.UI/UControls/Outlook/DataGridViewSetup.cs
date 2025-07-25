@@ -214,13 +214,15 @@ namespace RUINORERP.UI.UControls.Outlook
         private void LoadDefaultConfiguration_New<T>(KryptonOutlookGrid Grid)
         {
             Grid.ClearEverything();
-            Grid.GroupBox.Visible = true;
+            if (Grid.GroupBox!=null)
+            {
+                Grid.GroupBox.Visible = true;
+            }
+            
             Grid.HideColumnOnGrouping = false;
 
             Grid.FillMode = FillMode.GroupsAndNodes; //treemode enabled;
             Grid.ShowLines = true;
-
-
 
             foreach (var item in FieldNameList)
             {

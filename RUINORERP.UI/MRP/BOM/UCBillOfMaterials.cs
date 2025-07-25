@@ -48,6 +48,7 @@ using FileInfo = System.IO.FileInfo;
 using System.Windows.Documents;
 using RUINORERP.Global.EnumExt;
 using System.Diagnostics;
+using RUINORERP.UI.AdvancedUIModule;
 
 
 
@@ -69,7 +70,7 @@ namespace RUINORERP.UI.MRP.BOM
      
      */
     [MenuAttrAssemblyInfo("产品配方清单", ModuleMenuDefine.模块定义.生产管理, ModuleMenuDefine.生产管理.MRP基本资料, BizType.BOM物料清单)]
-    public partial class UCBillOfMaterials : BaseBillEditGeneric<tb_BOM_S, tb_BOM_SDetail>
+    public partial class UCBillOfMaterials : BaseBillEditGeneric<tb_BOM_S, tb_BOM_SDetail>, IPublicEntityObject
     {
         public UCBillOfMaterials()
         {
@@ -78,6 +79,36 @@ namespace RUINORERP.UI.MRP.BOM
             kryptonDockableNavigator1.SelectedPage = kryptonPage1;
             //            kryptonNavigator1.SelectedPage = kryptonPageMain;
         }
+
+
+        #region 导出excel
+        ToolStripButton toolStripButton导出excel = new System.Windows.Forms.ToolStripButton();
+
+        /// <summary>
+        /// 添加回收
+        /// </summary>
+        /// <returns></returns>
+        public override ToolStripItem[] AddExtendButton(tb_MenuInfo menuInfo)
+        {
+            toolStripButton导出excel.Text = "导出Excel";
+            toolStripButton导出excel.Image = global::RUINORERP.UI.Properties.Resources.Assignment;
+            toolStripButton导出excel.ImageTransparentColor = System.Drawing.Color.Magenta;
+            toolStripButton导出excel.Name = "导出Excel";
+            toolStripButton导出excel.Visible = false;//默认隐藏
+            UIHelper.ControlButton<ToolStripButton>(CurMenuInfo, toolStripButton导出excel);
+            toolStripButton导出excel.Click += new System.EventHandler(this.ExportExcel_Click);
+
+            System.Windows.Forms.ToolStripItem[] extendButtons = new System.Windows.Forms.ToolStripItem[]
+            {
+                toolStripButton导出excel };
+
+            this.BaseToolStrip.Items.AddRange(extendButtons);
+            return extendButtons;
+        }
+
+
+        #endregion
+
 
         private void ExportExcel_Click(object sender, EventArgs e)
         {
@@ -374,37 +405,88 @@ namespace RUINORERP.UI.MRP.BOM
             int costIndex = GetVisibleColumns().ToList().FirstOrDefault(c => c.HeaderText == "单位成本").Index;
 
             // 第StartRowIndex行：总材料数量
-            worksheet.Cells[StartRowIndex, 1].Value = $"自产分摊费用：";
-            worksheet.Cells[StartRowIndex, 1, StartRowIndex, costIndex].Merge = true;
-            worksheet.Cells[StartRowIndex, 1].Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
-            worksheet.Cells[StartRowIndex, costIndex + 1].Value = EditEntity.SelfApportionedCost;
+            int row = 0;
+            worksheet.Cells[StartRowIndex+ row, 1].Value = $"总物料费用：";
+            worksheet.Cells[StartRowIndex + row, 1, StartRowIndex+ row, costIndex].Merge = true;
+            worksheet.Cells[StartRowIndex + row, 1].Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
+            worksheet.Cells[StartRowIndex + row, costIndex + 1].Value = EditEntity.TotalMaterialCost;
 
-            worksheet.Cells[StartRowIndex + 1, 1].Value = $"外发分摊费用：";
-            worksheet.Cells[StartRowIndex + 1, 1, StartRowIndex + 1, costIndex].Merge = true;
-            worksheet.Cells[StartRowIndex + 1, 1].Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
-            worksheet.Cells[StartRowIndex + 1, costIndex + 1].Value = EditEntity.OutApportionedCost;
+            row++;
+            worksheet.Cells[StartRowIndex + row, 1].Value = $"自产分摊费用：";
+            worksheet.Cells[StartRowIndex + row, 1, StartRowIndex + row, costIndex].Merge = true;
+            worksheet.Cells[StartRowIndex + row, 1].Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
+            worksheet.Cells[StartRowIndex + row, costIndex + 1].Value = EditEntity.SelfApportionedCost;
+            row++;
+            worksheet.Cells[StartRowIndex + row, 1].Value = $"外发分摊费用：";
+            worksheet.Cells[StartRowIndex + row, 1, StartRowIndex + row, costIndex].Merge = true;
+            worksheet.Cells[StartRowIndex + row, 1].Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
+            worksheet.Cells[StartRowIndex + row, costIndex + 1].Value = EditEntity.OutApportionedCost;
+            row++;
+            worksheet.Cells[StartRowIndex + row, 1].Value = $"自行制造费用：";
+            worksheet.Cells[StartRowIndex + row, 1, StartRowIndex + row, costIndex].Merge = true;
+            worksheet.Cells[StartRowIndex + row, 1].Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
+            worksheet.Cells[StartRowIndex + row, costIndex + 1].Value = EditEntity.TotalSelfManuCost;
+            row++;
+            worksheet.Cells[StartRowIndex + row, 1].Value = $"外发加工费用：";
+            worksheet.Cells[StartRowIndex + row, 1, StartRowIndex + row, costIndex].Merge = true;
+            worksheet.Cells[StartRowIndex + row, 1].Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
+            worksheet.Cells[StartRowIndex + row, costIndex + 1].Value = EditEntity.TotalOutManuCost;
+            row++;
 
-            worksheet.Cells[StartRowIndex + 2, 1].Value = $"自产总成本：";
-            worksheet.Cells[StartRowIndex + 2, 1, StartRowIndex + 2, costIndex].Merge = true;
-            worksheet.Cells[StartRowIndex + 2, 1].Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
-            worksheet.Cells[StartRowIndex + 2, costIndex + 1].Value = EditEntity.SelfProductionAllCosts;
+            worksheet.Cells[StartRowIndex + row, 1].Value = $"自产总成本：";
+            worksheet.Cells[StartRowIndex + row, 1, StartRowIndex + row, costIndex].Merge = true;
+            worksheet.Cells[StartRowIndex + row, 1].Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
+            worksheet.Cells[StartRowIndex + row, costIndex + 1].Value = EditEntity.SelfProductionAllCosts;
+            row++;
+            worksheet.Cells[StartRowIndex + row, 1].Value = $"外发总成本：";
+            worksheet.Cells[StartRowIndex + row, 1, StartRowIndex + row, costIndex].Merge = true;
+            worksheet.Cells[StartRowIndex + row, 1].Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
+            worksheet.Cells[StartRowIndex + row, costIndex + 1].Value = EditEntity.OutProductionAllCosts;
 
-            worksheet.Cells[StartRowIndex + 3, 1].Value = $"外发总成本：";
-            worksheet.Cells[StartRowIndex + 3, 1, StartRowIndex + 3, costIndex].Merge = true;
-            worksheet.Cells[StartRowIndex + 3, 1].Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
-            worksheet.Cells[StartRowIndex + 3, costIndex + 1].Value = EditEntity.OutProductionAllCosts;
+
+            //worksheet.Cells[StartRowIndex, 1].Value = $"自产分摊费用：";
+            //worksheet.Cells[StartRowIndex, 1, StartRowIndex, costIndex].Merge = true;
+            //worksheet.Cells[StartRowIndex, 1].Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
+            //worksheet.Cells[StartRowIndex, costIndex + 1].Value = EditEntity.SelfApportionedCost;
+
+            //worksheet.Cells[StartRowIndex + 1, 1].Value = $"外发分摊费用：";
+            //worksheet.Cells[StartRowIndex + 1, 1, StartRowIndex + 1, costIndex].Merge = true;
+            //worksheet.Cells[StartRowIndex + 1, 1].Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
+            //worksheet.Cells[StartRowIndex + 1, costIndex + 1].Value = EditEntity.OutApportionedCost;
+
+
+            //worksheet.Cells[StartRowIndex + 2, 1].Value = $"自行制造费用：";
+            //worksheet.Cells[StartRowIndex + 2, 1, StartRowIndex+2, costIndex].Merge = true;
+            //worksheet.Cells[StartRowIndex + 2, 1].Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
+            //worksheet.Cells[StartRowIndex + 2, costIndex + 1].Value = EditEntity.SelfApportionedCost;
+
+            //worksheet.Cells[StartRowIndex + 3, 1].Value = $"外发加工费用：";
+            //worksheet.Cells[StartRowIndex + 3, 1, StartRowIndex + 3, costIndex].Merge = true;
+            //worksheet.Cells[StartRowIndex + 3, 1].Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
+            //worksheet.Cells[StartRowIndex + 3, costIndex + 1].Value = EditEntity.OutApportionedCost;
+
+
+            //worksheet.Cells[StartRowIndex + 4, 1].Value = $"自产总成本：";
+            //worksheet.Cells[StartRowIndex + 4, 1, StartRowIndex + 4, costIndex].Merge = true;
+            //worksheet.Cells[StartRowIndex + 4, 1].Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
+            //worksheet.Cells[StartRowIndex + 4, costIndex + 1].Value = EditEntity.SelfProductionAllCosts;
+
+            //worksheet.Cells[StartRowIndex + 5, 1].Value = $"外发总成本：";
+            //worksheet.Cells[StartRowIndex + 5, 1, StartRowIndex + 5, costIndex].Merge = true;
+            //worksheet.Cells[StartRowIndex + 5, 1].Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
+            //worksheet.Cells[StartRowIndex + 5, costIndex + 1].Value = EditEntity.OutProductionAllCosts;
 
 
             #region    导出日期
-
-            worksheet.Cells[StartRowIndex + 4, 1].Value = $"导出时间：" + System.DateTime.Now.ToString();
-            worksheet.Cells[StartRowIndex + 4, 1, StartRowIndex + 4, visibleColumnCount].Merge = true;
-            worksheet.Cells[StartRowIndex + 4, 1].Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
-            worksheet.Cells[StartRowIndex + 4, visibleColumnCount].Style.Font.Size = 20;
+            row++;
+            worksheet.Cells[StartRowIndex + row, 1].Value = $"导出时间：" + System.DateTime.Now.ToString();
+            worksheet.Cells[StartRowIndex + row, 1, StartRowIndex + row, visibleColumnCount].Merge = true;
+            worksheet.Cells[StartRowIndex + row, 1].Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
+            worksheet.Cells[StartRowIndex + row, visibleColumnCount].Style.Font.Size = 20;
             // 设置单元格内容居中对齐
-            worksheet.Cells[StartRowIndex + 4, visibleColumnCount].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
-            worksheet.Cells[StartRowIndex + 4, visibleColumnCount].Style.VerticalAlignment = ExcelVerticalAlignment.Center;
-            worksheet.Cells[StartRowIndex + 4, visibleColumnCount].Style.Font.Bold = false;
+            worksheet.Cells[StartRowIndex + row, visibleColumnCount].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+            worksheet.Cells[StartRowIndex + row, visibleColumnCount].Style.VerticalAlignment = ExcelVerticalAlignment.Center;
+            worksheet.Cells[StartRowIndex + row, visibleColumnCount].Style.Font.Bold = false;
 
             #endregion
 
@@ -1582,13 +1664,7 @@ namespace RUINORERP.UI.MRP.BOM
         {
             LoadGrid1();
             LoadgridSubstituteMaterial();
-            //不能放在构造函数里
-            ToolStripMenuItem exportExcel = new ToolStripMenuItem("导出Excel");
-            exportExcel.Name = "导出Excel";
-            exportExcel.Size = new System.Drawing.Size(139, 22);
-            exportExcel.Text = "导出Excel";
-            exportExcel.Click += ExportExcel_Click;
-            toolStripbtnRelatedQuery.DropDownItems.Add(exportExcel);
+
         }
 
 

@@ -31,6 +31,7 @@
             this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(UCPreReceivedPayment));
             this.kryptonPanel1 = new Krypton.Toolkit.KryptonPanel();
+            this.cmbBizType = new Krypton.Toolkit.KryptonComboBox();
             this.kryptonLabel1 = new Krypton.Toolkit.KryptonLabel();
             this.lblIsAvailable = new Krypton.Toolkit.KryptonLabel();
             this.chkIsAvailable = new Krypton.Toolkit.KryptonCheckBox();
@@ -94,11 +95,12 @@
             this.cmbCustomerVendor_ID = new Krypton.Toolkit.KryptonComboBox();
             this.lblRemark = new Krypton.Toolkit.KryptonLabel();
             this.txtRemark = new Krypton.Toolkit.KryptonTextBox();
-            this.cmbBizType = new Krypton.Toolkit.KryptonComboBox();
+            this.chkIsFromPlatform = new Krypton.Toolkit.KryptonCheckBox();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceSub)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel1)).BeginInit();
             this.kryptonPanel1.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.cmbBizType)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmbPayeeInfoID)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonGroupBox收款账号信息)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonGroupBox收款账号信息.Panel)).BeginInit();
@@ -113,11 +115,11 @@
             ((System.ComponentModel.ISupportInitialize)(this.cmbCurrency_ID)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmbDepartmentID)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmbCustomerVendor_ID)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.cmbBizType)).BeginInit();
             this.SuspendLayout();
             // 
             // kryptonPanel1
             // 
+            this.kryptonPanel1.Controls.Add(this.chkIsFromPlatform);
             this.kryptonPanel1.Controls.Add(this.cmbBizType);
             this.kryptonPanel1.Controls.Add(this.kryptonLabel1);
             this.kryptonPanel1.Controls.Add(this.lblIsAvailable);
@@ -181,6 +183,15 @@
             this.kryptonPanel1.PaletteMode = Krypton.Toolkit.PaletteMode.Office2007Blue;
             this.kryptonPanel1.Size = new System.Drawing.Size(1144, 696);
             this.kryptonPanel1.TabIndex = 2;
+            // 
+            // cmbBizType
+            // 
+            this.cmbBizType.DropDownWidth = 100;
+            this.cmbBizType.IntegralHeight = false;
+            this.cmbBizType.Location = new System.Drawing.Point(882, 188);
+            this.cmbBizType.Name = "cmbBizType";
+            this.cmbBizType.Size = new System.Drawing.Size(156, 21);
+            this.cmbBizType.TabIndex = 223;
             // 
             // kryptonLabel1
             // 
@@ -720,14 +731,13 @@
             this.txtRemark.Size = new System.Drawing.Size(294, 114);
             this.txtRemark.TabIndex = 32;
             // 
-            // cmbBizType
+            // chkIsFromPlatform
             // 
-            this.cmbBizType.DropDownWidth = 100;
-            this.cmbBizType.IntegralHeight = false;
-            this.cmbBizType.Location = new System.Drawing.Point(882, 188);
-            this.cmbBizType.Name = "cmbBizType";
-            this.cmbBizType.Size = new System.Drawing.Size(156, 21);
-            this.cmbBizType.TabIndex = 223;
+            this.chkIsFromPlatform.Location = new System.Drawing.Point(1044, 217);
+            this.chkIsFromPlatform.Name = "chkIsFromPlatform";
+            this.chkIsFromPlatform.Size = new System.Drawing.Size(62, 20);
+            this.chkIsFromPlatform.TabIndex = 224;
+            this.chkIsFromPlatform.Values.Text = "平台单";
             // 
             // UCPreReceivedPayment
             // 
@@ -743,6 +753,7 @@
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel1)).EndInit();
             this.kryptonPanel1.ResumeLayout(false);
             this.kryptonPanel1.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.cmbBizType)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmbPayeeInfoID)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonGroupBox收款账号信息.Panel)).EndInit();
             this.kryptonGroupBox收款账号信息.Panel.ResumeLayout(false);
@@ -758,7 +769,6 @@
             ((System.ComponentModel.ISupportInitialize)(this.cmbCurrency_ID)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmbDepartmentID)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmbCustomerVendor_ID)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.cmbBizType)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -830,5 +840,6 @@
         private Krypton.Toolkit.KryptonCheckBox chkIsAvailable;
         private Krypton.Toolkit.KryptonLabel kryptonLabel1;
         private Krypton.Toolkit.KryptonComboBox cmbBizType;
+        private Krypton.Toolkit.KryptonCheckBox chkIsFromPlatform;
     }
 }

@@ -582,6 +582,10 @@ namespace RUINORERP.UI.SysConfig
 
             //保存顶级菜单勾选情况  是用更新 第一个是根节点
             UpdateP4Module(TreeView1.Nodes[0].Nodes, CurrentRole.tb_P4Menus);
+
+            CurrentRole.tb_P4Menus.ForEach<tb_P4Menu>(c => c.AcceptChanges());
+
+
             toolStripButtonSave.Enabled = false;
             if (TreeView1.SelectedNode == null || !(TreeView1.SelectedNode.Tag is tb_MenuInfo))
             {
@@ -716,7 +720,7 @@ namespace RUINORERP.UI.SysConfig
                         {
                             p4Menu.IsVisble = tn.Checked;
                             BusinessHelper.Instance.EditEntity(p4Menu);
-                          
+
                         }
                     }
                     else
@@ -1244,7 +1248,11 @@ namespace RUINORERP.UI.SysConfig
                     // 设置选中状态
                     SetButtonSelection(button, selected);
                     BusinessHelper.Instance.InitEntity(button);
-                    newButtons.Add(button);
+                    if (!newButtons.Contains(button))
+                    {
+                        newButtons.Add(button);
+                    }
+
                 }
                 else
                 {
@@ -1514,7 +1522,10 @@ namespace RUINORERP.UI.SysConfig
                     field.MenuID = SelectedMenuInfo.MenuID;
                     // 设置选中状态
                     field.IsVisble = selected;
-                    newFields.Add(field);
+                    if (!newFields.Contains(field))
+                    {
+                        newFields.Add(field);
+                    }
                 }
                 else
                 {
@@ -1607,6 +1618,12 @@ namespace RUINORERP.UI.SysConfig
 
             #endregion
         }
+
+        /// <summary>
+        /// 加载按钮
+        /// </summary>
+        /// <param name="selectMenu"></param>
+        /// <param name="InitLoadData"></param>
         private async void InitLoadP4Button(tb_MenuInfo selectMenu, bool InitLoadData = false)
         {
             if (CurrentRole == null)
@@ -1634,6 +1651,9 @@ namespace RUINORERP.UI.SysConfig
                     col.ReadOnly = false;
                 }
             }
+
+            pblist.ForEach(x => UpdateSaveEnabled<tb_P4Button>(x));
+
         }
 
         private async void InitLoadP4Field(tb_MenuInfo selectMenu, bool InitLoadData = false)
@@ -1669,19 +1689,10 @@ namespace RUINORERP.UI.SysConfig
                 }
             }
 
+            pflist.ForEach(x => UpdateSaveEnabled<tb_P4Field>(x));
 
-            foreach (DataGridViewColumn col in dataGridView2.Columns)
-            {
-                if (col.ValueType.Name == "Boolean")
-                {
-                    col.ReadOnly = false;
-                }
-                //ischild只是标记是否为子表。他不可以编辑
-                if (col.DataPropertyName == "IsChild")
-                {
-                    col.ReadOnly = true;
-                }
-            }
+
+
         }
 
 

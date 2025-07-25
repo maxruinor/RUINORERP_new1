@@ -3,7 +3,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：05/07/2025 15:37:43
+// 时间：07/24/2025 20:27:03
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -125,6 +125,10 @@ this.dtpCreated_at = new Krypton.Toolkit.KryptonDateTimePicker();
 ReversedSettlementID主外字段不一致。this.lblCreated_by = new Krypton.Toolkit.KryptonLabel();
 this.txtCreated_by = new Krypton.Toolkit.KryptonTextBox();
 
+this.lblisdeleted = new Krypton.Toolkit.KryptonLabel();
+this.chkisdeleted = new Krypton.Toolkit.KryptonCheckBox();
+this.chkisdeleted.Values.Text ="";
+
     
     //for end
    // ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel1)).BeginInit();
@@ -238,7 +242,7 @@ this.lblTargetBizType.Location = new System.Drawing.Point(100,150);
 this.lblTargetBizType.Name = "lblTargetBizType";
 this.lblTargetBizType.Size = new System.Drawing.Size(41, 12);
 this.lblTargetBizType.TabIndex = 6;
-this.lblTargetBizType.Text = "目标业务";
+this.lblTargetBizType.Text = "目标单据类型";
 this.txtTargetBizType.Location = new System.Drawing.Point(173,146);
 this.txtTargetBizType.Name = "txtTargetBizType";
 this.txtTargetBizType.Size = new System.Drawing.Size(100, 21);
@@ -512,6 +516,20 @@ this.txtCreated_by.TabIndex = 23;
 this.Controls.Add(this.lblCreated_by);
 this.Controls.Add(this.txtCreated_by);
 
+           //#####isdeleted###Boolean
+this.lblisdeleted.AutoSize = true;
+this.lblisdeleted.Location = new System.Drawing.Point(100,600);
+this.lblisdeleted.Name = "lblisdeleted";
+this.lblisdeleted.Size = new System.Drawing.Size(41, 12);
+this.lblisdeleted.TabIndex = 24;
+this.lblisdeleted.Text = "逻辑删除";
+this.chkisdeleted.Location = new System.Drawing.Point(173,596);
+this.chkisdeleted.Name = "chkisdeleted";
+this.chkisdeleted.Size = new System.Drawing.Size(100, 21);
+this.chkisdeleted.TabIndex = 24;
+this.Controls.Add(this.lblisdeleted);
+this.Controls.Add(this.chkisdeleted);
+
         //for 加入到容器
             //components = new System.ComponentModel.Container();
            
@@ -526,7 +544,7 @@ this.Controls.Add(this.txtCreated_by);
             //this.kryptonPanel1.Location = new System.Drawing.Point(0, 0);
            // this.kryptonPanel1.Name = "kryptonPanel1";
            // this.kryptonPanel1.Size = new System.Drawing.Size(404, 300);
-           // this.kryptonPanel1.TabIndex = 23;
+           // this.kryptonPanel1.TabIndex = 24;
 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
@@ -598,6 +616,9 @@ this.Controls.Add(this.dtpCreated_at );
 
                 ReversedSettlementID主外字段不一致。this.Controls.Add(this.lblCreated_by );
 this.Controls.Add(this.txtCreated_by );
+
+                this.Controls.Add(this.lblisdeleted );
+this.Controls.Add(this.chkisdeleted );
 
                             // 
             // "tb_FM_PaymentSettlementEdit"
@@ -735,6 +756,11 @@ private Krypton.Toolkit.KryptonDateTimePicker dtpCreated_at;
         
               ReversedSettlementID主外字段不一致。private Krypton.Toolkit.KryptonLabel lblCreated_by;
 private Krypton.Toolkit.KryptonTextBox txtCreated_by;
+
+    
+        
+              private Krypton.Toolkit.KryptonLabel lblisdeleted;
+private Krypton.Toolkit.KryptonCheckBox chkisdeleted;
 
     
             //private ComponentFactory.Krypton.Toolkit.KryptonButton btnOk;

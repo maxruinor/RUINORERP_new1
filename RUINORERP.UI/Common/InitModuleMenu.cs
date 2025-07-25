@@ -709,7 +709,7 @@ namespace RUINORERP.UI.Common
                     }
 
                     //目前添加的是明细公共部分的。暂时也认为是子表中的一部分
-                    if (type.Name.Contains("") && type.Name.Contains(menuInfo.EntityName)||EntityType.Name.Contains("Detail"))
+                    if ((type.Name.Contains("ProductSharePart")) || EntityType.Name.Contains("Detail"))
                     {
                         isChild = true;
                     }

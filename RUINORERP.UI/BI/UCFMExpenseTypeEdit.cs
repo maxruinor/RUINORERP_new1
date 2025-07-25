@@ -16,6 +16,8 @@ using RUINORERP.Business.LogicaService;
 using RUINORERP.UI.Common;
 using RUINORERP.Business;
 using FastReport;
+using RUINORERP.Global;
+using RUINORERP.Global.EnumExt;
 
 namespace RUINORERP.UI.BI
 {
@@ -33,8 +35,7 @@ namespace RUINORERP.UI.BI
             DataBindingHelper.BindData4Cmb<tb_FM_Subject>(entity, k => k.Subject_id, v => v.Subject_name, cmbsubject_id);
 
             DataBindingHelper.BindData4TextBox<tb_FM_ExpenseType>(entity, t => t.Expense_name, txtExpense_name, BindDataType4TextBox.Text, false);
-
-            DataBindingHelper.BindData4CheckBox<tb_FM_ExpenseType>(entity, t => t.EXPOrINC, chkEXPOrINC, false);
+            DataBindingHelper.BindData4CmbByEnum<tb_FM_ExpenseType, ReceivePaymentType>(entity, k => k.ReceivePaymentType, cmbReceivePaymentType, false);
             //有默认值
 
             DataBindingHelper.BindData4TextBox<tb_FM_ExpenseType>(entity, t => t.Notes, txtNotes, BindDataType4TextBox.Text, false);

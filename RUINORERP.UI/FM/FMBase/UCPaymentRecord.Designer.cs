@@ -79,6 +79,7 @@ namespace RUINORERP.UI.FM
             this.lblTotalLocalAmount = new Krypton.Toolkit.KryptonLabel();
             this.txtTotalForeignAmount = new Krypton.Toolkit.KryptonTextBox();
             this.lblTotalForeignAmount = new Krypton.Toolkit.KryptonLabel();
+            this.chkIsFromPlatform = new Krypton.Toolkit.KryptonCheckBox();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceSub)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1)).BeginInit();
@@ -120,11 +121,12 @@ namespace RUINORERP.UI.FM
             // 
             this.kryptonSplitContainer1.Panel2.Controls.Add(this.kryptonSplitContainer2);
             this.kryptonSplitContainer1.Size = new System.Drawing.Size(1133, 746);
-            this.kryptonSplitContainer1.SplitterDistance = 271;
+            this.kryptonSplitContainer1.SplitterDistance = 251;
             this.kryptonSplitContainer1.TabIndex = 4;
             // 
             // kryptonPanel1
             // 
+            this.kryptonPanel1.Controls.Add(this.chkIsFromPlatform);
             this.kryptonPanel1.Controls.Add(this.lblBelongingBank);
             this.kryptonPanel1.Controls.Add(this.lblOpeningbank);
             this.kryptonPanel1.Controls.Add(this.cmbPaytype_ID);
@@ -169,7 +171,7 @@ namespace RUINORERP.UI.FM
             this.kryptonPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.kryptonPanel1.Location = new System.Drawing.Point(0, 0);
             this.kryptonPanel1.Name = "kryptonPanel1";
-            this.kryptonPanel1.Size = new System.Drawing.Size(1133, 271);
+            this.kryptonPanel1.Size = new System.Drawing.Size(1133, 251);
             this.kryptonPanel1.TabIndex = 4;
             // 
             // lblBelongingBank
@@ -468,7 +470,7 @@ namespace RUINORERP.UI.FM
             // 
             // txtRemark
             // 
-            this.txtRemark.Location = new System.Drawing.Point(79, 190);
+            this.txtRemark.Location = new System.Drawing.Point(78, 170);
             this.txtRemark.Multiline = true;
             this.txtRemark.Name = "txtRemark";
             this.txtRemark.Size = new System.Drawing.Size(645, 68);
@@ -484,7 +486,7 @@ namespace RUINORERP.UI.FM
             // 
             // lblNotes
             // 
-            this.lblNotes.Location = new System.Drawing.Point(34, 188);
+            this.lblNotes.Location = new System.Drawing.Point(33, 168);
             this.lblNotes.Name = "lblNotes";
             this.lblNotes.Size = new System.Drawing.Size(36, 20);
             this.lblNotes.TabIndex = 141;
@@ -534,8 +536,8 @@ namespace RUINORERP.UI.FM
             this.kryptonSplitContainer2.Panel2.Controls.Add(this.lblTotalLocalAmount);
             this.kryptonSplitContainer2.Panel2.Controls.Add(this.txtTotalForeignAmount);
             this.kryptonSplitContainer2.Panel2.Controls.Add(this.lblTotalForeignAmount);
-            this.kryptonSplitContainer2.Size = new System.Drawing.Size(1133, 470);
-            this.kryptonSplitContainer2.SplitterDistance = 416;
+            this.kryptonSplitContainer2.Size = new System.Drawing.Size(1133, 490);
+            this.kryptonSplitContainer2.SplitterDistance = 433;
             this.kryptonSplitContainer2.TabIndex = 2;
             // 
             // grid1
@@ -547,7 +549,7 @@ namespace RUINORERP.UI.FM
             this.grid1.Name = "grid1";
             this.grid1.OptimizeMode = SourceGrid.CellOptimizeMode.ForRows;
             this.grid1.SelectionMode = SourceGrid.GridSelectionMode.Cell;
-            this.grid1.Size = new System.Drawing.Size(1133, 416);
+            this.grid1.Size = new System.Drawing.Size(1133, 433);
             this.grid1.TabIndex = 2;
             this.grid1.TabStop = true;
             this.grid1.ToolTipText = "";
@@ -581,6 +583,14 @@ namespace RUINORERP.UI.FM
             this.lblTotalForeignAmount.Size = new System.Drawing.Size(88, 20);
             this.lblTotalForeignAmount.TabIndex = 202;
             this.lblTotalForeignAmount.Values.Text = "支付金额外币";
+            // 
+            // chkIsFromPlatform
+            // 
+            this.chkIsFromPlatform.Location = new System.Drawing.Point(746, 138);
+            this.chkIsFromPlatform.Name = "chkIsFromPlatform";
+            this.chkIsFromPlatform.Size = new System.Drawing.Size(62, 20);
+            this.chkIsFromPlatform.TabIndex = 226;
+            this.chkIsFromPlatform.Values.Text = "平台单";
             // 
             // UCPaymentRecord
             // 
@@ -674,5 +684,6 @@ namespace RUINORERP.UI.FM
         private Krypton.Toolkit.KryptonLabel lblPaytype_ID;
         private Krypton.Toolkit.KryptonLabel lblBelongingBank;
         private Krypton.Toolkit.KryptonLabel lblOpeningbank;
+        private Krypton.Toolkit.KryptonCheckBox chkIsFromPlatform;
     }
     }

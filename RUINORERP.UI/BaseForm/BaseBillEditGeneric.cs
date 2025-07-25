@@ -80,6 +80,7 @@ using System.Windows.Documents;
 using RUINORERP.UI.Monitoring.Auditing;
 using RUINORERP.UI.FM;
 using RUINORERP.UI.FM.FMBase;
+using LiveChartsCore.Geo;
 
 namespace RUINORERP.UI.BaseForm
 {
@@ -363,7 +364,7 @@ namespace RUINORERP.UI.BaseForm
         /// <param name="entity"></param>
         public virtual void BindData(T entity, ActionStatus actionStatus = ActionStatus.无操作)
         {
-            
+
             toolStripbtnRelatedQuery.DropDownItems.Clear();
             LoadRelatedDataToDropDownItems();
             if (toolStripbtnRelatedQuery.DropDownItems.Count > 0)
@@ -1718,16 +1719,21 @@ namespace RUINORERP.UI.BaseForm
                         pkid = (long)ReflectionHelper.GetPropertyValue(EditEntity, PKCol);
                         if (pkid > 0)
                         {
-                            var dataStatus = (DataStatus)(editEntity.GetPropertyValue(typeof(DataStatus).Name).ToInt());
-                            if (dataStatus == DataStatus.完结 || dataStatus == DataStatus.确认)
+                            //如果有审核状态才去判断
+                            if (editEntity.ContainsProperty(typeof(DataStatus).Name))
                             {
-                                toolStripbtnSubmit.Enabled = false;
-                                if (AuthorizeController.GetShowDebugInfoAuthorization(MainForm.Instance.AppContext))
+                                var dataStatus = (DataStatus)(editEntity.GetPropertyValue(typeof(DataStatus).Name).ToInt());
+                                if (dataStatus == DataStatus.完结 || dataStatus == DataStatus.确认)
                                 {
-                                    MainForm.Instance.uclog.AddLog("已经是【完结】或【确认】状态，保存失败。");
+                                    toolStripbtnSubmit.Enabled = false;
+                                    if (AuthorizeController.GetShowDebugInfoAuthorization(MainForm.Instance.AppContext))
+                                    {
+                                        MainForm.Instance.uclog.AddLog("已经是【完结】或【确认】状态，保存失败。");
+                                    }
+                                    return;
                                 }
-                                return;
                             }
+
                         }
                         toolStripButtonSave.Enabled = false;
                         bool rsSave = await Save(true);
@@ -2488,12 +2494,54 @@ namespace RUINORERP.UI.BaseForm
                                 //MainForm.Instance.ecs.AddSendData(od);
                             }
                         }
+
+                        #region 销售出库单如果启用了财务模块，则会生成应收款单
+
+                        AuthorizeController authorizeController = MainForm.Instance.AppContext.GetRequiredService<AuthorizeController>();
+                        if (authorizeController.EnableFinancialModule())
+                        {
+                            if (MainForm.Instance.AppContext.FMConfig.AutoAuditReceivePaymentable)
+                            {
+                                #region 自动审核应收款单
+                                //销售订单审核时自动将预付款单设为"已生效"状态
+                                var ctrpayable = MainForm.Instance.AppContext.GetRequiredService<tb_FM_ReceivablePayableController<tb_FM_ReceivablePayable>>();
+                                if (rmr.ReturnObjectAsOtherEntity is tb_FM_ReceivablePayable payable)
+                                {
+                                    //平台订单才处理
+                                    if (payable.IsFromPlatform.HasValue && payable.IsFromPlatform.Value)
+                                    {
+                                        payable.ApprovalOpinions = "系统自动审核";
+                                        payable.ApprovalStatus = (int)ApprovalStatus.已审核;
+                                        payable.ApprovalResults = true;
+                                        ReturnResults<tb_FM_ReceivablePayable> autoApproval = await ctrpayable.ApprovalAsync(payable);
+                                        if (!autoApproval.Succeeded)
+                                        {
+                                            autoApproval.Succeeded = false;
+                                            autoApproval.ErrorMsg = $"应收款单自动审核失败：{autoApproval.ErrorMsg ?? "未知错误"}";
+                                        }
+                                        else
+                                        {
+                                            MainForm.Instance.FMAuditLogHelper.CreateAuditLog<tb_FM_ReceivablePayable>("应收款单自动审核成功", autoApproval.ReturnObject as tb_FM_ReceivablePayable);
+                                        }
+                                    }
+
+                                }
+                                #endregion
+                            }
+                        }
+
+                        #endregion
+
                     }
 
                     //这里审核完了的话，如果这个单存在于工作流的集合队列中，则向服务器说明审核完成。
                     //这里推送到审核，启动工作流  队列应该有一个策略 比方优先级，桌面不动1 3 5分钟 
                     //OriginalData od = ActionForClient.工作流审批(pkid, (int)BizType.盘点单, ae.ApprovalResults, ae.ApprovalComments);
                     //MainForm.Instance.ecs.AddSendData(od);
+
+
+
+
 
                     //审核成功
                     ToolBarEnabledControl(MenuItemEnums.审核);
@@ -2982,39 +3030,35 @@ namespace RUINORERP.UI.BaseForm
             }
             // 获取状态类型和值
             var statusType = FMPaymentStatusHelper.GetStatusType(editEntity as BaseEntity);
-            if (statusType == null)
+            if (statusType != null)
             {
-                return;
+                // 动态获取状态值
+                dynamic status = editEntity.GetPropertyValue(statusType.Name);
+                int statusValue = (int)status;
+                dynamic statusEnum = Enum.ToObject(statusType, statusValue);
+
+                if (!FMPaymentStatusHelper.CanModify(statusEnum))
+                {
+                    toolStripbtnModify.Enabled = false;
+                    toolStripButtonSave.Enabled = false;
+                    MainForm.Instance.PrintInfoLog($"当前单据状态为{statusEnum}不允许修改!");
+                    return;
+                }
+
+                var dataStatus = (DataStatus)(editEntity.GetPropertyValue(typeof(DataStatus).Name).ToInt());
+                if (dataStatus == DataStatus.新建 || dataStatus == DataStatus.草稿)
+                {
+                    base.Modify();
+                    MainForm.Instance.AuditLogHelper.CreateAuditLog<T>("修改", EditEntity);
+                }
+                else
+                {
+                    toolStripbtnModify.Enabled = false;
+                }
             }
 
-            // 动态获取状态值
-            dynamic status = editEntity.GetPropertyValue(statusType.Name);
-            int statusValue = (int)status;
-            dynamic statusEnum = Enum.ToObject(statusType, statusValue);
-
-            if (!FMPaymentStatusHelper.CanModify(statusEnum))
-            {
-                toolStripbtnModify.Enabled = false;
-                toolStripButtonSave.Enabled = false;
-                MainForm.Instance.PrintInfoLog($"当前单据状态为{statusEnum}不允许修改!");
-                //MessageBox.Show("当前单据不允许修改!", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                return;
-            }
-
-
-            var dataStatus = (DataStatus)(editEntity.GetPropertyValue(typeof(DataStatus).Name).ToInt());
-            if (dataStatus == DataStatus.新建 || dataStatus == DataStatus.草稿)
-            {
-                BusinessHelper.Instance.EditEntity(EditEntity);
-                EditEntity.SetPropertyValue(typeof(ActionStatus).Name, ActionStatus.修改);
-                base.Modify();
-                MainForm.Instance.AuditLogHelper.CreateAuditLog<T>("修改", EditEntity);
-            }
-            else
-            {
-                EditEntity.SetPropertyValue(typeof(ActionStatus).Name, ActionStatus.修改);
-                toolStripbtnModify.Enabled = false;
-            }
+            BusinessHelper.Instance.EditEntity(EditEntity);
+            EditEntity.SetPropertyValue(typeof(ActionStatus).Name, ActionStatus.修改);
             ToolBarEnabledControl(MenuItemEnums.修改);
         }
 
@@ -3477,13 +3521,16 @@ namespace RUINORERP.UI.BaseForm
                 }
             }
 
-            //如果修改前的状态是新建，则修改后的状态是草稿。要重新提交才进入下一步审核
-            var dataStatus = (DataStatus)(editEntity.GetPropertyValue(typeof(DataStatus).Name).ToInt());
-            if (dataStatus == DataStatus.新建)
+            if (editEntity.ContainsProperty(typeof(DataStatus).Name))
             {
-                if (ReflectionHelper.ExistPropertyName<T>(typeof(DataStatus).Name))
+                //如果修改前的状态是新建，则修改后的状态是草稿。要重新提交才进入下一步审核
+                var dataStatus = (DataStatus)(editEntity.GetPropertyValue(typeof(DataStatus).Name).ToInt());
+                if (dataStatus == DataStatus.新建)
                 {
-                    ReflectionHelper.SetPropertyValue(EditEntity, typeof(DataStatus).Name, (int)DataStatus.草稿);
+                    if (ReflectionHelper.ExistPropertyName<T>(typeof(DataStatus).Name))
+                    {
+                        ReflectionHelper.SetPropertyValue(EditEntity, typeof(DataStatus).Name, (int)DataStatus.草稿);
+                    }
                 }
             }
 

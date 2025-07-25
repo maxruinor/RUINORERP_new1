@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：05/07/2025 14:22:23
+// 时间：07/24/2025 20:26:57
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -223,34 +223,10 @@ namespace RUINORERP.Model
 
         //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_FM_Statement.PayeeInfoID))]
-        public virtual List<tb_FM_Statement> tb_FM_Statements { get; set; }
-        //tb_FM_Statement.PayeeInfoID)
-        //PayeeInfoID.FK_FM_STATEMENT_REF_FM_PAYEEINFO)
-        //tb_FM_PayeeInfo.PayeeInfoID)
-
-        //[Browsable(false)]打印报表时的数据源会不显示
-        [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_FM_PaymentApplication.PayeeInfoID))]
-        public virtual List<tb_FM_PaymentApplication> tb_FM_PaymentApplications { get; set; }
-        //tb_FM_PaymentApplication.PayeeInfoID)
-        //PayeeInfoID.FK_PAYMENTAPPLICATION_REF_PAYEEINFO)
-        //tb_FM_PayeeInfo.PayeeInfoID)
-
-        //[Browsable(false)]打印报表时的数据源会不显示
-        [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_FM_PreReceivedPayment.PayeeInfoID))]
-        public virtual List<tb_FM_PreReceivedPayment> tb_FM_PreReceivedPayments { get; set; }
-        //tb_FM_PreReceivedPayment.PayeeInfoID)
-        //PayeeInfoID.FK_FM_PRereceivedpayment_REF_FM_PAyeeinfo)
-        //tb_FM_PayeeInfo.PayeeInfoID)
-
-        //[Browsable(false)]打印报表时的数据源会不显示
-        [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_FM_ExpenseClaim.PayeeInfoID))]
-        public virtual List<tb_FM_ExpenseClaim> tb_FM_ExpenseClaims { get; set; }
-        //tb_FM_ExpenseClaim.PayeeInfoID)
-        //PayeeInfoID.FK_EXPENSECLAIM_REF_PAYEEINFO)
+        [Navigate(NavigateType.OneToMany, nameof(tb_FM_ReceivablePayable.PayeeInfoID))]
+        public virtual List<tb_FM_ReceivablePayable> tb_FM_ReceivablePayables { get; set; }
+        //tb_FM_ReceivablePayable.PayeeInfoID)
+        //PayeeInfoID.FK_FM_RECEIVABLEPAYABLE_REF_FM_PAYEEINFO)
         //tb_FM_PayeeInfo.PayeeInfoID)
 
         //[Browsable(false)]打印报表时的数据源会不显示
@@ -263,10 +239,34 @@ namespace RUINORERP.Model
 
         //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_FM_ReceivablePayable.PayeeInfoID))]
-        public virtual List<tb_FM_ReceivablePayable> tb_FM_ReceivablePayables { get; set; }
-        //tb_FM_ReceivablePayable.PayeeInfoID)
-        //PayeeInfoID.FK_FM_RECEIVABLEPAYABLE_REF_FM_PAYEEINFO)
+        [Navigate(NavigateType.OneToMany, nameof(tb_FM_PaymentApplication.PayeeInfoID))]
+        public virtual List<tb_FM_PaymentApplication> tb_FM_PaymentApplications { get; set; }
+        //tb_FM_PaymentApplication.PayeeInfoID)
+        //PayeeInfoID.FK_PAYMENTAPPLICATION_REF_PAYEEINFO)
+        //tb_FM_PayeeInfo.PayeeInfoID)
+
+        //[Browsable(false)]打印报表时的数据源会不显示
+        [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_FM_ExpenseClaim.PayeeInfoID))]
+        public virtual List<tb_FM_ExpenseClaim> tb_FM_ExpenseClaims { get; set; }
+        //tb_FM_ExpenseClaim.PayeeInfoID)
+        //PayeeInfoID.FK_EXPENSECLAIM_REF_PAYEEINFO)
+        //tb_FM_PayeeInfo.PayeeInfoID)
+
+        //[Browsable(false)]打印报表时的数据源会不显示
+        [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_FM_PreReceivedPayment.PayeeInfoID))]
+        public virtual List<tb_FM_PreReceivedPayment> tb_FM_PreReceivedPayments { get; set; }
+        //tb_FM_PreReceivedPayment.PayeeInfoID)
+        //PayeeInfoID.FK_FM_PRereceivedpayment_REF_FM_PAyeeinfo)
+        //tb_FM_PayeeInfo.PayeeInfoID)
+
+        //[Browsable(false)]打印报表时的数据源会不显示
+        [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_FM_Statement.PayeeInfoID))]
+        public virtual List<tb_FM_Statement> tb_FM_Statements { get; set; }
+        //tb_FM_Statement.PayeeInfoID)
+        //PayeeInfoID.FK_FM_STATEMENT_REF_FM_PAYEEINFO)
         //tb_FM_PayeeInfo.PayeeInfoID)
 
 
@@ -284,6 +284,11 @@ return rs;
 
 
 
+
+
+
+       
+        
 
         public override object Clone()
         {

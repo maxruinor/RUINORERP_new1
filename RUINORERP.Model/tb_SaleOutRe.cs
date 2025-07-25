@@ -583,6 +583,22 @@ namespace RUINORERP.Model
             }
         }
 
+
+        private bool? _OfflineRefund = false;
+        /// <summary>
+        /// 线下退款
+        /// </summary>
+        [AdvQueryAttribute(ColName = "OfflineRefund", ColDesc = "线下退款")]
+        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType = "Boolean", ColumnName = "OfflineRefund", IsNullable = true, ColumnDescription = "线下退款")]
+        public bool? OfflineRefund
+        {
+            get { return _OfflineRefund; }
+            set
+            {
+                SetProperty(ref _OfflineRefund, value);
+            }
+        }
+
         private int? _KeepAccountsType;
         /// <summary>
         /// 立帐类型

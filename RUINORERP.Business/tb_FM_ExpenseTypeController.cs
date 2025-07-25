@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：03/14/2025 20:39:41
+// 时间：07/25/2025 17:18:27
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -292,7 +292,7 @@ namespace RUINORERP.Business
             var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<tb_FM_ExpenseType>()
                                 .Includes(m => m.tb_FM_OtherExpenseDetails)
                         .Includes(m => m.tb_FM_ExpenseClaimDetails)
-                                        .WhereCustom(useLike, dto);
+                                        .WhereCustom(useLike, dto);;
             return await querySqlQueryable.ToListAsync()as List<T>;
         }
 

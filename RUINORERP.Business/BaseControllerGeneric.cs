@@ -271,8 +271,6 @@ namespace RUINORERP.Business
 
         #endregion
 
-
-
         /// <summary>
         /// 查询指定字段的值是否存在
         /// </summary>
@@ -283,7 +281,6 @@ namespace RUINORERP.Business
         {
             return await _unitOfWorkManage.GetDbClient().Queryable<T>().Where(exp).AnyAsync();
         }
-
 
         /// <summary>
         /// 根据条件获取单个实体对象

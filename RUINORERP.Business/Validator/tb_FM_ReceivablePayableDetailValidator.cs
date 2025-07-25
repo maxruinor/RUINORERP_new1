@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：05/07/2025 15:37:49
+// 时间：07/24/2025 20:27:21
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -39,8 +39,6 @@ namespace RUINORERP.Business
         
      
  RuleFor(tb_FM_ReceivablePayableDetail =>tb_FM_ReceivablePayableDetail.ARAPId).NotEmpty().When(x => x.ARAPId.HasValue);
-
- 
 
  RuleFor(tb_FM_ReceivablePayableDetail =>tb_FM_ReceivablePayableDetail.ProdDetailID).Must(CheckForeignKeyValueCanNull).WithMessage("产品:下拉选择值不正确。");
  RuleFor(tb_FM_ReceivablePayableDetail =>tb_FM_ReceivablePayableDetail.ProdDetailID).NotEmpty().When(x => x.ProdDetailID.HasValue);

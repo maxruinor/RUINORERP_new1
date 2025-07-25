@@ -34,6 +34,7 @@ namespace RUINORERP.UI.BI
         {
             DataBindingHelper.BindData4TextBox<tb_ProductType>(entity, t => t.TypeName, txtTypeName, BindDataType4TextBox.Text, true);
             DataBindingHelper.BindData4TextBox<tb_ProductType>(entity, t => t.TypeDesc, txtDesc, BindDataType4TextBox.Text, true);
+            DataBindingHelper.BindData4RadioGroupTrueFalse<tb_ProductType>(entity, t => t.ForSale, rdbis_enabledYes, rdbis_enabledNo);
             base.BindData(entity);
         }
         private void btnCancel_Click(object sender, EventArgs e)

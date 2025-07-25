@@ -95,6 +95,7 @@ namespace RUINORERP.UI.BaseForm
         /// </summary>
         public bool HasChildData { get; set; } = true;
 
+        public bool ResultAnalysis { get; set; } = false;
 
         private QueryFilter _QueryConditionFilter = new QueryFilter();
 
@@ -147,11 +148,11 @@ namespace RUINORERP.UI.BaseForm
                     {
                         frm = new frmFormProperty();
                     }
-                    if (_mapper==null)
+                    if (_mapper == null)
                     {
                         _mapper = Startup.GetFromFac<EnhancedBizTypeMapper>();
                     }
-                    
+
 
                     //提前统一插入批量处理的菜单按钮
 
@@ -1179,13 +1180,11 @@ namespace RUINORERP.UI.BaseForm
             BaseController<M> ctr = Startup.GetFromFacByName<BaseController<M>>(typeof(M).Name + "Controller");
 
 
-
             int pageNum = 1;
             int pageSize = int.Parse(txtMaxRow.Text);
             List<M> list = new List<M>();
             //提取指定的列名，即条件集合
             List<string> queryConditions = new List<string>();
-
 
 
             queryConditions = new List<string>(QueryConditionFilter.QueryFields.Select(t => t.FieldName).ToList());
@@ -1211,6 +1210,20 @@ namespace RUINORERP.UI.BaseForm
             else
             {
                 toolStripSplitButtonPrint.Visible = false;
+            }
+            if (ResultAnalysis && _UCOutlookGridAnalysis1 != null)
+            {
+                _UCOutlookGridAnalysis1.ColDisplayTypes = new List<Type>();
+                
+                _UCOutlookGridAnalysis1.ColDisplayTypes.Add(typeof(M));
+
+                _UCOutlookGridAnalysis1.FieldNameList = _UCBillMasterQuery.newSumDataGridViewMaster.FieldNameList;
+                _UCOutlookGridAnalysis1.bindingSourceOutlook.DataSource = list;
+                //控制列的显示
+                _UCOutlookGridAnalysis1.ColumnDisplays = _UCBillMasterQuery.newSumDataGridViewMaster.ColumnDisplays;
+
+                // _UCOutlookGridAnalysis2.GridRelated.SetRelatedInfo<View_Inventory, tb_BOM_S>(c => c.BOM_ID, r => r.BOM_ID);
+                _UCOutlookGridAnalysis1.LoadDataToGrid<M>(list);
             }
             //测试代码
             //foreach (DataGridViewColumn dc in _UCBillMasterQuery.newSumDataGridViewMaster.Columns)
@@ -1482,6 +1495,11 @@ namespace RUINORERP.UI.BaseForm
                 {
                     Kpages.Add(Child_RelatedQuery());
                 }
+                //如果需要分析功能
+                if (ResultAnalysis)
+                {
+                    Kpages.Add(UCOutlookGridAnalysis1Load());
+                }
             }
 
             //加载布局
@@ -1576,6 +1594,9 @@ namespace RUINORERP.UI.BaseForm
                             break;
                         case "单据信息":
                             kryptonDockingManagerQuery.AddToWorkspace("Workspace", Kpages.Where(p => p.UniqueName == "单据信息").ToArray());
+                            break;
+                        case "结果分析":
+                            kryptonDockingManagerQuery.AddToWorkspace("Workspace", Kpages.Where(p => p.UniqueName == "结果分析").ToArray());
                             break;
                         case "关联信息":
                             if (ChildRelatedEntityType != null)
@@ -1982,7 +2003,41 @@ namespace RUINORERP.UI.BaseForm
         }
 
 
+        #region 分析1
 
+        /// <summary>
+        /// 分析结果中要统计的列
+        /// </summary>
+        public List<Expression<Func<M, object>>> OutlookGridAnalysis1SubtotalColumns { get; set; } = new List<Expression<Func<M, object>>>();
+
+
+
+        public UCBillOutlookGridAnalysis _UCOutlookGridAnalysis1;
+
+
+        /// <summary>
+        /// 加载分析数据 部分 数据 不能太多。不然性能影响体验
+        /// </summary>
+        /// <returns></returns>
+
+        private KryptonPage UCOutlookGridAnalysis1Load()
+        {
+            _UCOutlookGridAnalysis1 = new UCBillOutlookGridAnalysis();
+            //_UCOutlookGridAnalysis1.entityType = typeof(M);
+            //_UCOutlookGridAnalysis1.ColDisplayTypes = _UCMasterQuery.ColDisplayTypes;
+            //List<string> masterlist = ExpressionHelper.ExpressionListToStringList(MasterSummaryCols);
+            //_UCOutlookGridAnalysis1.SummaryCols = masterlist;
+            // _UCOutlookGridAnalysis1.InvisibleCols = ExpressionHelper.ExpressionListToStringList(MasterInvisibleCols);
+            // _UCOutlookGridAnalysis1.ColNameDataDictionary = MasterColNameDataDictionary;
+            KryptonPage page = NewPage("结果分析", 1, _UCOutlookGridAnalysis1);
+            //page.ClearFlags(KryptonPageFlags.All);
+            // Document pages cannot be docked or auto hidden
+            page.ClearFlags(KryptonPageFlags.DockingAllowAutoHidden | KryptonPageFlags.DockingAllowDocked | KryptonPageFlags.DockingAllowClose);
+            return page;
+        }
+
+
+        #endregion
 
     }
 }

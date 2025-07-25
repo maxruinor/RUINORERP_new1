@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：05/07/2025 15:37:43
+// 时间：07/24/2025 20:27:03
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -33,6 +33,7 @@ namespace RUINORERP.UI
      
                          InitializeComponent();
       
+        
         
         
         
@@ -87,6 +88,7 @@ namespace RUINORERP.UI
                         entity.EvidenceImagePath = txtEvidenceImagePath.Text ;
                        entity.Created_at = DateTime.Parse(txtCreated_at.Text);
                         entity.Created_by = Int64.Parse(txtCreated_by.Text);
+                        entity.isdeleted = Boolean.Parse(txtisdeleted.Text);
                                 return entity;
 }
         */
@@ -120,6 +122,7 @@ ReversedSettlementID主外字段不一致。           DataBindingHelper.BindDat
            DataBindingHelper.BindData4TextBox<tb_FM_PaymentSettlement>(entity, t => t.EvidenceImagePath, txtEvidenceImagePath, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4DataTime<tb_FM_PaymentSettlement>(entity, t => t.Created_at, dtpCreated_at,false);
           ReversedSettlementID主外字段不一致。 DataBindingHelper.BindData4TextBox<tb_FM_PaymentSettlement>(entity, t => t.Created_by, txtCreated_by, BindDataType4TextBox.Qty,false);
+           DataBindingHelper.BindData4CheckBox<tb_FM_PaymentSettlement>(entity, t => t.isdeleted, chkisdeleted, false);
 }
 
 

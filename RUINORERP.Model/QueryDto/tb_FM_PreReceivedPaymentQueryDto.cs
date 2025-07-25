@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：05/23/2025 14:28:29
+// 时间：07/25/2025 18:51:45
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -98,6 +98,19 @@ namespace RUINORERP.Model.QueryDto
         { 
             get{return _PayeeAccountNo;}
             set{SetProperty(ref _PayeeAccountNo, value);}
+        }
+     
+
+        private bool? _IsFromPlatform;
+        /// <summary>
+        /// 平台单
+        /// </summary>
+        [AdvQueryAttribute(ColName = "IsFromPlatform",ColDesc = "平台单")]
+        [SugarColumn(ColumnDataType = "bit",SqlParameterDbType ="Boolean",ColumnName = "IsFromPlatform",IsNullable = true,ColumnDescription = "平台单" )]
+        public bool? IsFromPlatform 
+        { 
+            get{return _IsFromPlatform;}
+            set{SetProperty(ref _IsFromPlatform, value);}
         }
      
 
@@ -249,13 +262,13 @@ namespace RUINORERP.Model.QueryDto
         }
      
 
-        private long _PrePaymentStatus;
+        private int _PrePaymentStatus;
         /// <summary>
         /// 预收付状态
         /// </summary>
         [AdvQueryAttribute(ColName = "PrePaymentStatus",ColDesc = "预收付状态")]
-        [SugarColumn(ColumnDataType = "bigint",SqlParameterDbType ="Int64",ColumnName = "PrePaymentStatus",IsNullable = false,ColumnDescription = "预收付状态" )]
-        public long PrePaymentStatus 
+        [SugarColumn(ColumnDataType = "int",SqlParameterDbType ="Int32",ColumnName = "PrePaymentStatus",IsNullable = false,ColumnDescription = "预收付状态" )]
+        public int PrePaymentStatus 
         { 
             get{return _PrePaymentStatus;}
             set{SetProperty(ref _PrePaymentStatus, value);}
@@ -405,13 +418,13 @@ namespace RUINORERP.Model.QueryDto
         }
      
 
-        private bool? _IsAvailable= true;
+        private bool _IsAvailable= true;
         /// <summary>
         /// 是否可用
         /// </summary>
         [AdvQueryAttribute(ColName = "IsAvailable",ColDesc = "是否可用")]
-        [SugarColumn(ColumnDataType = "bit",SqlParameterDbType ="Boolean",ColumnName = "IsAvailable",IsNullable = true,ColumnDescription = "是否可用" )]
-        public bool? IsAvailable 
+        [SugarColumn(ColumnDataType = "bit",SqlParameterDbType ="Boolean",ColumnName = "IsAvailable",IsNullable = false,ColumnDescription = "是否可用" )]
+        public bool IsAvailable 
         { 
             get{return _IsAvailable;}
             set{SetProperty(ref _IsAvailable, value);}

@@ -62,6 +62,11 @@ namespace RUINORERP.Business
             RuleFor(x => x.PayStatus).GreaterThan(0).WithMessage("付款状态:不能为空。");
             RuleFor(x => x.Paytype_ID).GreaterThan(0).When(c => c.PayStatus != (int)PayStatus.未付款).WithMessage("付款方式:有付款的情况下，付款方式不能为空。");
             RuleFor(x => x.Notes).MinimumLength(5).When(c => c.IsCustomizedOrder == true).WithMessage("备注:定制单时下，备注内容长度必须超过5。");
+            RuleFor(x => x.IsFromPlatform)
+            .Equal(true) // 等同于 .Must(value => value == true)
+            .When(c => !string.IsNullOrEmpty(c.PlatformOrderNo) && c.PlatformOrderNo.Length > 0)
+            .WithMessage("平台单号不为空时，平台来源必须勾选。");
+
             RuleFor(x => x.ExchangeRate).GreaterThan(0).WithMessage("汇率:必须大于零。");
 
 

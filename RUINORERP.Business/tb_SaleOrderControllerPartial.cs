@@ -26,6 +26,7 @@ using System.Windows.Forms;
 using RUINORERP.Global.EnumExt;
 using Fireasy.Common.Extensions;
 using System.Collections;
+using Mapster;
 
 namespace RUINORERP.Business
 {
@@ -223,23 +224,62 @@ namespace RUINORERP.Business
                         }
                         else
                         {
-                            //销售订单审核时自动将预付款单设为"已生效"状态
-                            ReturnResults<tb_FM_PreReceivedPayment> autoApproval = await ctrpay.AutoApprovalAsync(PreReceivedPayment);
-                            if (!autoApproval.Succeeded)
+                            if (_appContext.FMConfig.AutoAuditPreReceivePayment && PreReceivedPayment.IsFromPlatform.HasValue && PreReceivedPayment.IsFromPlatform.Value)
                             {
-                                rmrs.Succeeded = false;
-                                _unitOfWorkManage.RollbackTran();
-                                rmrs.ErrorMsg = $"预收款单自动审核失败：{autoApproval.ErrorMsg ?? "未知错误"}";
-                                if (_appContext.SysConfig.ShowDebugInfo)
+                                #region 自动审核预收款
+                                //销售订单审核时自动将预付款单设为"已生效"状态
+                                PreReceivedPayment.ApprovalOpinions = "系统自动审核";
+                                PreReceivedPayment.ApprovalStatus = (int)ApprovalStatus.已审核;
+                                PreReceivedPayment.ApprovalResults = true;
+                                ReturnResults<tb_FM_PreReceivedPayment> autoApproval = await ctrpay.ApprovalAsync(PreReceivedPayment);
+                                if (!autoApproval.Succeeded)
                                 {
-                                    _logger.LogInformation(rmrs.ErrorMsg);
+                                    rmrs.Succeeded = false;
+                                    _unitOfWorkManage.RollbackTran();
+                                    rmrs.ErrorMsg = $"预收款单自动审核失败：{autoApproval.ErrorMsg ?? "未知错误"}";
+                                    if (_appContext.SysConfig.ShowDebugInfo)
+                                    {
+                                        _logger.LogInformation(rmrs.ErrorMsg);
+                                    }
                                 }
+                                else
+                                {
+                                    FMAuditLogHelper fMAuditLog = _appContext.GetRequiredService<FMAuditLogHelper>();
+                                    fMAuditLog.CreateAuditLog<tb_FM_PreReceivedPayment>("预收款单自动审核成功", rmrs.ReturnObject as tb_FM_PreReceivedPayment);
+
+                                    //按配置自动审核收款单
+                                    if (_appContext.FMConfig.AutoAuditReceivePayment)
+                                    {
+                                        if (autoApproval.ReturnObjectAsOtherEntity is tb_FM_PaymentRecord paymentRecord)
+                                        {
+                                            if (paymentRecord.IsFromPlatform.HasValue && paymentRecord.IsFromPlatform.Value)
+                                            {
+                                                //自动审核收款单
+                                                paymentRecord.ApprovalOpinions = "系统自动审核";
+                                                paymentRecord.ApprovalStatus = (int)ApprovalStatus.已审核;
+                                                paymentRecord.ApprovalResults = true;
+                                                var ctrPaymentRecord = _appContext.GetRequiredService<tb_FM_PaymentRecordController<tb_FM_PaymentRecord>>();
+                                                ReturnResults<tb_FM_PaymentRecord> rr = await ctrPaymentRecord.ApprovalAsync(paymentRecord);
+                                                if (!rr.Succeeded)
+                                                {
+                                                    rmrs.ErrorMsg = "系统自动审核收款单失败，预收款单审核也同时失败!";
+                                                    rmrs.Succeeded = false;
+                                                    rmrs.ReturnObject = entity as T;
+                                                    return rmrs;
+                                                }
+                                                else
+                                                {
+                                                    fMAuditLog.CreateAuditLog<tb_FM_PaymentRecord>("收款单自动审核成功", rr.ReturnObject as tb_FM_PaymentRecord);
+                                                }
+                                            }
+                                        }
+                                    }
+
+
+                                }
+                                #endregion
                             }
-                            else
-                            {
-                                FMAuditLogHelper fMAuditLog = _appContext.GetRequiredService<FMAuditLogHelper>();
-                                fMAuditLog.CreateAuditLog<tb_FM_PreReceivedPayment>("预收款单自动审核成功", rmrs.ReturnObject as tb_FM_PreReceivedPayment);
-                            }
+
                         }
                     }
 
@@ -770,7 +810,7 @@ namespace RUINORERP.Business
                                 {
                                     //退款冲销过
                                     _unitOfWorkManage.RollbackTran();
-                                    rmrs.ErrorMsg = $"销售订单{PrePayment.SourceBillNo}的预收款单{PrePayment.PreRPNO}状态为【已冲销】，不能反审,只能【取消】作废。";
+                                    rmrs.ErrorMsg = $"销售订单{PrePayment.SourceBillNo}的预收款单{PrePayment.PreRPNO}状态为【{(PrePaymentStatus)PrePayment.PrePaymentStatus}】，不能反审,只能【取消】作废。";
                                     rmrs.Succeeded = false;
                                     return rmrs;
                                 }
@@ -790,8 +830,8 @@ namespace RUINORERP.Business
                                     else
                                     {
                                         _unitOfWorkManage.RollbackTran();
-                                        rmrs.ErrorMsg = $"对应的预收款单{PrePayment.PreRPNO}状态为【{(PrePaymentStatus)PrePayment.PrePaymentStatus}】，不能反审后修改\r\n" +
-                                            $"只能将预收款单【退款】后，对收款单{Payment.PaymentNo}进行冲销处理\r\n" +
+                                        rmrs.ErrorMsg = $"对应的预收款单{PrePayment.PreRPNO}状态为【{(PrePaymentStatus)PrePayment.PrePaymentStatus}】，反审失败\r\n" +
+                                            $"需将预收款单【退款】，对收款单{Payment.PaymentNo}进行冲销处理\r\n" +
                                             $"取消当前订单后，重新录入正确的销售订单。";
                                         rmrs.Succeeded = false;
                                         return rmrs;

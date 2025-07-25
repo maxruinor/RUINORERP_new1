@@ -27,6 +27,13 @@ namespace RUINORERP.Business
 
         public T ReturnObject { get => returnObject; set => returnObject = value; }
 
+
+        private object returnObjectAsOtherEntity;
+        /// <summary>
+        /// 销售出库审核时，如果生成了应该收款单则返回时放到这里
+        /// </summary>
+        public object ReturnObjectAsOtherEntity  { get => returnObjectAsOtherEntity; set => returnObjectAsOtherEntity = value; }
+
        // public List<string> ErrorMsgs { get => _errorMsgs; set => _errorMsgs = value; }
     }
 

@@ -335,7 +335,9 @@ namespace RUINORERP.Business
                         else
                         {
                             //订单审核时自动将预付款单设为"已生效"状态
-                            ReturnResults<tb_FM_PreReceivedPayment> autoApproval = await ctrpay.AutoApprovalAsync(PreReceivedPayment);
+                            //这里是程序设计，不是用户定义。 
+                            //审核方法中，对收款时才会判断是否自动审核收款单。这里是付款。不会执行。
+                            ReturnResults<tb_FM_PreReceivedPayment> autoApproval = await ctrpay.ApprovalAsync(PreReceivedPayment);
                             if (!autoApproval.Succeeded)
                             {
                                 rmrs.Succeeded = false;
@@ -349,9 +351,7 @@ namespace RUINORERP.Business
                             }
                         }
 
-
                         #endregion
-
                       
                     }
 
@@ -367,7 +367,6 @@ namespace RUINORERP.Business
                 var result = await _unitOfWorkManage.GetDbClient().Updateable(entity)
                     .UpdateColumns(it => new { it.DataStatus, it.ApprovalOpinions, it.ApprovalResults, it.ApprovalStatus, it.Approver_at, it.Approver_by })
                     .ExecuteCommandHasChangeAsync();
-
                 _unitOfWorkManage.CommitTran();
                 //_logger.Info(approvalEntity.bizName + "审核事务成功");
                 rmrs.ReturnObject = entity as T;
@@ -376,16 +375,12 @@ namespace RUINORERP.Business
             }
             catch (Exception ex)
             {
-
                 _unitOfWorkManage.RollbackTran();
                 _logger.Error(ex, "事务回滚" + ex.Message);
                 rmrs.ErrorMsg = "事务回滚=>" + ex.Message;
-
                 return rmrs;
             }
-
         }
-
 
         public async override Task<ReturnResults<T>> AntiApprovalAsync(T ObjectEntity)
         {

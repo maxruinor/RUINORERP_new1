@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：06/20/2025 16:20:07
+// 时间：07/24/2025 20:27:03
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -48,6 +48,7 @@ namespace RUINORERP.Business
 
  RuleFor(tb_FM_PaymentRecordDetail =>tb_FM_PaymentRecordDetail.SourceBillNo).MaximumLength(15).WithMessage("来源单号:不能超过最大长度,15.");
  RuleFor(tb_FM_PaymentRecordDetail =>tb_FM_PaymentRecordDetail.SourceBillNo).NotEmpty().WithMessage("来源单号:不能为空。");
+
 
  RuleFor(tb_FM_PaymentRecordDetail =>tb_FM_PaymentRecordDetail.DepartmentID).Must(CheckForeignKeyValueCanNull).WithMessage("部门:下拉选择值不正确。");
  RuleFor(tb_FM_PaymentRecordDetail =>tb_FM_PaymentRecordDetail.DepartmentID).NotEmpty().When(x => x.DepartmentID.HasValue);

@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：05/07/2025 14:22:25
+// 时间：07/24/2025 20:26:59
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,7 +21,7 @@ namespace RUINORERP.Model
     /// 付款申请单-目前代替纸的申请单将来完善明细则用付款单的主子表来完成系统可以根据客户来自动生成经人确认
     /// </summary>
     [Serializable()]
-    [Description("付款申请单")]
+    [Description("付款申请单-目前代替纸的申请单将来完善明细则用付款单的主子表来完成系统可以根据客户来自动生成经人确认")]
     [SugarTable("tb_FM_PaymentApplication")]
     public partial class tb_FM_PaymentApplication: BaseEntity, ICloneable
     {
@@ -528,6 +528,10 @@ return rs;
 
 
 
+
+
+       
+        
 
         public override object Clone()
         {

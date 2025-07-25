@@ -252,7 +252,7 @@ namespace RUINORERP.Business
                 tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
                 //更新拟销售量减少
                 BillConverterFactory bcf = _appContext.GetRequiredService<BillConverterFactory>();
-
+                CheckMode cm = (CheckMode)entity.CheckMode;
                 List<tb_Inventory> invUpdateList = new List<tb_Inventory>();
                 foreach (var child in entity.tb_StocktakeDetails)
                 {
@@ -302,7 +302,12 @@ namespace RUINORERP.Business
                  市场价格：参考市场上类似产品或物品的价格。
                   */
 
-                    CommService.CostCalculations.AntiCostCalculation(_appContext, inv, child.DiffQty, child.UntaxedCost);
+                    //如果数量没有变化。成本不参数反计算
+                    if (CheckMode.期初盘点 == cm && child.DiffQty != 0)
+                    {
+                        CommService.CostCalculations.AntiCostCalculation(_appContext, inv, child.DiffQty, child.UntaxedCost);
+                    }
+
                     //inv.Inv_Cost = child.UntaxedCost;//这里需要计算，根据系统设置中的算法计算。
                     inv.ProdDetailID = child.ProdDetailID;
                     inv.Rack_ID = child.Rack_ID;
@@ -345,8 +350,7 @@ namespace RUINORERP.Business
                 {
                     _logger.LogInformation($"{entity.CheckNo}反审核时，更新库存结果为0行，请检查数据！");
                 }
-
-                CheckMode cm = (CheckMode)entity.CheckMode;
+        
                 //盘点模式 三个含义是:期初时可以录入成本,另两个不可以,由库存表中带出来.
                 if (CheckMode.期初盘点 == cm)
                 {

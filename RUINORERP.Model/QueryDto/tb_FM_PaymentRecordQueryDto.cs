@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：06/20/2025 16:20:05
+// 时间：07/24/2025 20:27:01
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -111,6 +111,32 @@ namespace RUINORERP.Model.QueryDto
         { 
             get{return _PayeeAccountNo;}
             set{SetProperty(ref _PayeeAccountNo, value);}
+        }
+     
+
+        private string _SourceBillNos;
+        /// <summary>
+        /// 来源单号
+        /// </summary>
+        [AdvQueryAttribute(ColName = "SourceBillNos",ColDesc = "来源单号")]
+        [SugarColumn(ColumnDataType = "varchar",SqlParameterDbType ="String",ColumnName = "SourceBillNos",Length=1000,IsNullable = true,ColumnDescription = "来源单号" )]
+        public string SourceBillNos 
+        { 
+            get{return _SourceBillNos;}
+            set{SetProperty(ref _SourceBillNos, value);}
+        }
+     
+
+        private bool? _IsFromPlatform;
+        /// <summary>
+        /// 平台单
+        /// </summary>
+        [AdvQueryAttribute(ColName = "IsFromPlatform",ColDesc = "平台单")]
+        [SugarColumn(ColumnDataType = "bit",SqlParameterDbType ="Boolean",ColumnName = "IsFromPlatform",IsNullable = true,ColumnDescription = "平台单" )]
+        public bool? IsFromPlatform 
+        { 
+            get{return _IsFromPlatform;}
+            set{SetProperty(ref _IsFromPlatform, value);}
         }
      
 
@@ -261,16 +287,16 @@ namespace RUINORERP.Model.QueryDto
         }
      
 
-        private string _ReversedOriginalIdNo;
+        private string _ReversedOriginalNo;
         /// <summary>
         /// 冲销单号
         /// </summary>
-        [AdvQueryAttribute(ColName = "ReversedOriginalIdNo",ColDesc = "冲销单号")]
-        [SugarColumn(ColumnDataType = "varchar",SqlParameterDbType ="String",ColumnName = "ReversedOriginalIdNo",Length=30,IsNullable = true,ColumnDescription = "冲销单号" )]
-        public string ReversedOriginalIdNo 
+        [AdvQueryAttribute(ColName = "ReversedOriginalNo",ColDesc = "冲销单号")]
+        [SugarColumn(ColumnDataType = "varchar",SqlParameterDbType ="String",ColumnName = "ReversedOriginalNo",Length=30,IsNullable = true,ColumnDescription = "冲销单号" )]
+        public string ReversedOriginalNo 
         { 
-            get{return _ReversedOriginalIdNo;}
-            set{SetProperty(ref _ReversedOriginalIdNo, value);}
+            get{return _ReversedOriginalNo;}
+            set{SetProperty(ref _ReversedOriginalNo, value);}
         }
      
 
@@ -288,16 +314,16 @@ namespace RUINORERP.Model.QueryDto
         }
      
 
-        private string _ReversedByPaymentIdNo;
+        private string _ReversedByPaymentNo;
         /// <summary>
         /// 被冲销单号
         /// </summary>
-        [AdvQueryAttribute(ColName = "ReversedByPaymentIdNo",ColDesc = "被冲销单号")]
-        [SugarColumn(ColumnDataType = "varchar",SqlParameterDbType ="String",ColumnName = "ReversedByPaymentIdNo",Length=30,IsNullable = true,ColumnDescription = "被冲销单号" )]
-        public string ReversedByPaymentIdNo 
+        [AdvQueryAttribute(ColName = "ReversedByPaymentNo",ColDesc = "被冲销单号")]
+        [SugarColumn(ColumnDataType = "varchar",SqlParameterDbType ="String",ColumnName = "ReversedByPaymentNo",Length=30,IsNullable = true,ColumnDescription = "被冲销单号" )]
+        public string ReversedByPaymentNo 
         { 
-            get{return _ReversedByPaymentIdNo;}
-            set{SetProperty(ref _ReversedByPaymentIdNo, value);}
+            get{return _ReversedByPaymentNo;}
+            set{SetProperty(ref _ReversedByPaymentNo, value);}
         }
      
 

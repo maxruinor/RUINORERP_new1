@@ -26,6 +26,7 @@ namespace RUINORERP.Business.CommService
         public DbHelper(ILogger<DbHelper<T>> logger, IUnitOfWorkManage unitOfWorkManage, ApplicationContext appContext = null)
         {
             _logger = logger;
+            
             _unitOfWorkManage = unitOfWorkManage;
             _appContext = appContext;
             BizTypeMapper mapper = new BizTypeMapper();

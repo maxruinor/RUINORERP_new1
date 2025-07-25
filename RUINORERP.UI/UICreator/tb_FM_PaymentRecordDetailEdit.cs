@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：06/20/2025 16:20:07
+// 时间：07/24/2025 20:27:01
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -45,6 +45,7 @@ namespace RUINORERP.UI
         
         
         
+        
 
          }
 /*
@@ -56,7 +57,8 @@ namespace RUINORERP.UI
                         entity.SourceBizType = Int32.Parse(txtSourceBizType.Text);
                         entity.SourceBilllId = Int64.Parse(txtSourceBilllId.Text);
                         entity.SourceBillNo = txtSourceBillNo.Text ;
-                       entity.DepartmentID = Int64.Parse(txtDepartmentID.Text);
+                       entity.IsFromPlatform = Boolean.Parse(txtIsFromPlatform.Text);
+                        entity.DepartmentID = Int64.Parse(txtDepartmentID.Text);
                         entity.ProjectGroup_ID = Int64.Parse(txtProjectGroup_ID.Text);
                         entity.Currency_ID = Int64.Parse(txtCurrency_ID.Text);
                         entity.ExchangeRate = Decimal.Parse(txtExchangeRate.Text);
@@ -77,6 +79,7 @@ namespace RUINORERP.UI
            DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecordDetail>(entity, t => t.SourceBizType, txtSourceBizType, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecordDetail>(entity, t => t.SourceBilllId, txtSourceBilllId, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecordDetail>(entity, t => t.SourceBillNo, txtSourceBillNo, BindDataType4TextBox.Text,false);
+           DataBindingHelper.BindData4CheckBox<tb_FM_PaymentRecordDetail>(entity, t => t.IsFromPlatform, chkIsFromPlatform, false);
           // DataBindingHelper.BindData4Cmb<tb_Department>(entity, k => k.DepartmentID, v=>v.XXNAME, cmbDepartmentID);
           // DataBindingHelper.BindData4Cmb<tb_ProjectGroup>(entity, k => k.ProjectGroup_ID, v=>v.XXNAME, cmbProjectGroup_ID);
           // DataBindingHelper.BindData4Cmb<tb_Currency>(entity, k => k.Currency_ID, v=>v.XXNAME, cmbCurrency_ID);

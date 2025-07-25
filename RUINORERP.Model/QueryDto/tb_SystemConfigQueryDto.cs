@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：05/08/2025 09:57:46
+// 时间：07/24/2025 20:25:45
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -329,6 +329,32 @@ namespace RUINORERP.Model.QueryDto
         { 
             get{return _EnableFinancialModule;}
             set{SetProperty(ref _EnableFinancialModule, value);}
+        }
+     
+
+        private int _FreightAllocationRules= ((1));
+        /// <summary>
+        /// 运费分摊规则
+        /// </summary>
+        [AdvQueryAttribute(ColName = "FreightAllocationRules",ColDesc = "运费分摊规则")]
+        [SugarColumn(ColumnDataType = "int",SqlParameterDbType ="Int32",ColumnName = "FreightAllocationRules",IsNullable = false,ColumnDescription = "运费分摊规则" )]
+        public int FreightAllocationRules 
+        { 
+            get{return _FreightAllocationRules;}
+            set{SetProperty(ref _FreightAllocationRules, value);}
+        }
+     
+
+        private string _FMConfig;
+        /// <summary>
+        /// 财务模块配置
+        /// </summary>
+        [AdvQueryAttribute(ColName = "FMConfig",ColDesc = "财务模块配置")]
+        [SugarColumn(ColumnDataType = "text",SqlParameterDbType ="String",ColumnName = "FMConfig",Length=2147483647,IsNullable = false,ColumnDescription = "财务模块配置" )]
+        public string FMConfig 
+        { 
+            get{return _FMConfig;}
+            set{SetProperty(ref _FMConfig, value);}
         }
 
 

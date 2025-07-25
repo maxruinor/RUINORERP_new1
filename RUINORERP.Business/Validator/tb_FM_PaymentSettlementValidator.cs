@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：05/07/2025 15:37:44
+// 时间：07/24/2025 20:27:05
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -84,6 +84,7 @@ namespace RUINORERP.Business
 
 
  RuleFor(tb_FM_PaymentSettlement =>tb_FM_PaymentSettlement.Created_by).NotEmpty().When(x => x.Created_by.HasValue);
+
 
            	        Initialize();
      }

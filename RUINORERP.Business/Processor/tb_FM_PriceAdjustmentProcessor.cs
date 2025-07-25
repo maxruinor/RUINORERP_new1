@@ -47,7 +47,6 @@ namespace RUINORERP.Business.Processor
 
             queryFilter.SetQueryField<tb_FM_PriceAdjustment, tb_CustomerVendor>(c => c.CustomerVendor_ID);
             //可以根据关联外键自动加载条件，条件用公共虚方法
-   
             queryFilter.SetQueryField<tb_FM_PriceAdjustment>(c => c.Currency_ID);
             queryFilter.SetQueryField<tb_FM_PriceAdjustment>(c => c.DepartmentID);
             queryFilter.SetQueryField<tb_FM_PriceAdjustment>(c => c.ProjectGroup_ID);

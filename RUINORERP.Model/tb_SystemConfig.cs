@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：05/08/2025 09:57:47
+// 时间：07/24/2025 20:25:45
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -95,7 +95,7 @@ namespace RUINORERP.Model
 
         private bool _CheckNegativeInventory= true;
         /// <summary>
-        /// 允许负库存allowNegativeInventory 
+        /// 允许负库存
         /// </summary>
         [AdvQueryAttribute(ColName = "CheckNegativeInventory",ColDesc = "允许负库存")] 
         [SugarColumn(ColumnDataType = "bit", SqlParameterDbType ="Boolean",  ColumnName = "CheckNegativeInventory" ,IsNullable = false,ColumnDescription = "允许负库存" )]
@@ -373,19 +373,32 @@ namespace RUINORERP.Model
                         }
         }
 
-        private int _FreightAllocationRules = 1;
+        private int _FreightAllocationRules= ((1));
         /// <summary>
         /// 运费分摊规则
         /// </summary>
-        [AdvQueryAttribute(ColName = "FreightAllocationRules", ColDesc = "运费分摊规则")]
-        [SugarColumn(ColumnDataType = "int", SqlParameterDbType = "Int32", ColumnName = "FreightAllocationRules", DecimalDigits = 0, IsNullable = false, ColumnDescription = "运费分摊规则")]
+        [AdvQueryAttribute(ColName = "FreightAllocationRules",ColDesc = "运费分摊规则")] 
+        [SugarColumn(ColumnDataType = "int", SqlParameterDbType ="Int32",  ColumnName = "FreightAllocationRules" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "运费分摊规则" )]
         public int FreightAllocationRules
-        {
-            get { return _FreightAllocationRules; }
-            set
-            {
-                SetProperty(ref _FreightAllocationRules, value);
-            }
+        { 
+            get{return _FreightAllocationRules;}
+            set{
+            SetProperty(ref _FreightAllocationRules, value);
+                        }
+        }
+
+        private string _FMConfig;
+        /// <summary>
+        /// 财务模块配置
+        /// </summary>
+        [AdvQueryAttribute(ColName = "FMConfig",ColDesc = "财务模块配置")] 
+        [SugarColumn(ColumnDataType = "text", SqlParameterDbType ="String",  ColumnName = "FMConfig" ,Length=2147483647,IsNullable = false,ColumnDescription = "财务模块配置" )]
+        public string FMConfig
+        { 
+            get{return _FMConfig;}
+            set{
+            SetProperty(ref _FMConfig, value);
+                        }
         }
 
         #endregion
@@ -398,8 +411,8 @@ namespace RUINORERP.Model
 
 
 
-        //如果为false,则不可以。
-        private bool PK_FK_ID_Check()
+//如果为false,则不可以。
+private bool PK_FK_ID_Check()
 {
   bool rs=true;
 return rs;
@@ -410,6 +423,7 @@ return rs;
 
 
 
+       
         
 
         public override object Clone()

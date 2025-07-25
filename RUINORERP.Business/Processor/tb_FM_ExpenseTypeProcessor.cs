@@ -25,6 +25,8 @@ using RUINORERP.Model.Context;
 using System.Linq;
 using RUINOR.Core;
 using RUINORERP.Common.Helper;
+using RUINORERP.Global;
+using RUINORERP.Global.EnumExt;
 
 
 namespace RUINORERP.Business.Processor
@@ -39,7 +41,7 @@ namespace RUINORERP.Business.Processor
         {
             QueryFilter queryFilter = new QueryFilter();
             queryFilter.SetQueryField<tb_FM_ExpenseType>(c => c.Expense_name);
-            queryFilter.SetQueryField<tb_FM_ExpenseType>(c => c.EXPOrINC);
+            queryFilter.SetQueryField<tb_FM_ExpenseType>(c => c.ReceivePaymentType, QueryFieldType.CmbEnum, typeof(ReceivePaymentType));
             return queryFilter;
         }
 

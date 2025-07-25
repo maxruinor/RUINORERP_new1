@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：05/08/2025 09:57:47
+// 时间：07/24/2025 20:25:45
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -52,18 +52,17 @@ namespace RUINORERP.Business
 //***** 
  RuleFor(tb_SystemConfig =>tb_SystemConfig.CostCalculationMethod).NotNull().WithMessage("成本方式:不能为空。");
 
-            RuleFor(tb_SystemConfig => tb_SystemConfig.FreightAllocationRules).NotNull().WithMessage("运费分配规则:不能为空。");
 
-            //有默认值
-
+//有默认值
 
 
 
-            //有默认值
+
+//有默认值
 
 
 
-            RuleFor(x => x.AutoApprovedSaleOrderAmount).PrecisionScale(19,4,true).WithMessage("自动审核销售订单金额:小数位不能超过4。");
+ RuleFor(x => x.AutoApprovedSaleOrderAmount).PrecisionScale(19,4,true).WithMessage("自动审核销售订单金额:小数位不能超过4。");
 
  RuleFor(x => x.AutoApprovedPurOrderAmount).PrecisionScale(19,4,true).WithMessage("自动审核采购订单金额:小数位不能超过4。");
 
@@ -78,6 +77,11 @@ namespace RUINORERP.Business
 //有默认值
 
 //有默认值
+
+//***** 
+ RuleFor(tb_SystemConfig =>tb_SystemConfig.FreightAllocationRules).NotNull().WithMessage("运费分摊规则:不能为空。");
+
+ RuleFor(tb_SystemConfig =>tb_SystemConfig.FMConfig).NotEmpty().WithMessage("财务模块配置:不能为空。");
 
            	        Initialize();
      }

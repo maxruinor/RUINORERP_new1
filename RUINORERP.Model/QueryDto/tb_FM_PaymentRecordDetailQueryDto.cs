@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：06/20/2025 16:20:07
+// 时间：07/24/2025 20:27:02
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -83,6 +83,19 @@ namespace RUINORERP.Model.QueryDto
         { 
             get{return _SourceBillNo;}
             set{SetProperty(ref _SourceBillNo, value);}
+        }
+     
+
+        private bool? _IsFromPlatform;
+        /// <summary>
+        /// 平台单
+        /// </summary>
+        [AdvQueryAttribute(ColName = "IsFromPlatform",ColDesc = "平台单")]
+        [SugarColumn(ColumnDataType = "bit",SqlParameterDbType ="Boolean",ColumnName = "IsFromPlatform",IsNullable = true,ColumnDescription = "平台单" )]
+        public bool? IsFromPlatform 
+        { 
+            get{return _IsFromPlatform;}
+            set{SetProperty(ref _IsFromPlatform, value);}
         }
      
 

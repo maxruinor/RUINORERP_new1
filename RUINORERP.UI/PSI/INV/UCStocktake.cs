@@ -606,6 +606,7 @@ namespace RUINORERP.UI.PSI.INV
                     }
                 }
 
+
                 EditEntity.tb_StocktakeDetails = details;
                 EditEntity.CheckTotalQty = details.Sum(c => c.CheckQty);
                 EditEntity.CarryingTotalQty = details.Sum(c => c.CarryinglQty);

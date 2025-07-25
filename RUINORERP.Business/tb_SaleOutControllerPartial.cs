@@ -78,7 +78,7 @@ namespace RUINORERP.Business
                         //只更新指定列
                         var affectedRows = await _unitOfWorkManage.GetDbClient().Updateable<tb_SaleOut>(entity)
                             .UpdateColumns(it => new { it.DataStatus, it.PayStatus, it.Paytype_ID, it.Modified_by, it.Modified_at }).ExecuteCommandAsync();
-                       
+
                     }
                 }
 
@@ -352,7 +352,7 @@ namespace RUINORERP.Business
 
                     if (UpdateSaleOutCostlist.Count > 0)
                     {
-                       
+
                         var Counter = await dbHelper.BaseDefaultAddElseUpdateAsync(UpdateSaleOutCostlist);
                         if (Counter == 0)
                         {
@@ -566,6 +566,10 @@ namespace RUINORERP.Business
                         if (entity.tb_saleorder != null && entity.tb_saleorder.tb_SaleOrderDetails.Sum(c => c.TotalDeliveredQty) == entity.tb_saleorder.tb_SaleOrderDetails.Sum(c => c.Quantity))
                         {
                             crm_customer.PurchaseCount = crm_customer.PurchaseCount + 1;
+                            if (crm_customer.PurchaseCount > 1)
+                            {
+                                crm_customer.CustomerStatus = (int)CustomerStatus.活跃客户;
+                            }
                         }
 
 
@@ -616,7 +620,8 @@ namespace RUINORERP.Business
                         ReturnMainSubResults<tb_FM_ReceivablePayable> rmr = await ctrpay.BaseSaveOrUpdateWithChild<tb_FM_ReceivablePayable>(Payable, false);
                         if (rmr.Succeeded)
                         {
-                            //已经是等审核。 审核时会核销预收付款
+                            //已经是等审核。 
+                            rrs.ReturnObjectAsOtherEntity = rmr.ReturnObject;
                         }
 
                         #endregion
@@ -710,8 +715,8 @@ namespace RUINORERP.Business
 
             try
             {
-       
-         
+
+
                 tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
                 //更新拟销售量减少
 
@@ -794,7 +799,7 @@ namespace RUINORERP.Business
                     inv.Inv_SubtotalCostMoney = inv.Inv_Cost * inv.Quantity; // 需确保 Inv_Cost 有值
                     invUpdateList.Add(inv);
                 }
-          
+
 
                 DbHelper<tb_Inventory> InvdbHelper = _appContext.GetRequiredService<DbHelper<tb_Inventory>>();
                 _unitOfWorkManage.RollbackTran();

@@ -86,7 +86,7 @@ namespace RUINORERP.Business
                         rrs.ErrorMsg = $"销售退回单的客户和销售出库的客户不同!请检查数据后重试！";
                         return rrs;
                     }
-  
+
 
                     if (entity.tb_saleout.TotalAmount < entity.TotalAmount || entity.tb_saleout.ForeignTotalAmount < entity.ForeignTotalAmount)
                     {
@@ -698,7 +698,7 @@ namespace RUINORERP.Business
                         else
                         {
                             _unitOfWorkManage.RollbackTran();
-                            rrs.ErrorMsg = $"销售退回单：{entity.ReturnNo}中,对应的应收红冲数据已经生效。无法反审核！";
+                            rrs.ErrorMsg = $"销售退回单：{entity.ReturnNo}中,对应的应收红冲数据状态为【{(ARAPStatus)returnpayable.ARAPStatus}】。无法反审核！";
                             rrs.Succeeded = false;
                             return rrs;
                         }
@@ -739,7 +739,6 @@ namespace RUINORERP.Business
                             #endregion
                         }
                         */
-
                     }
 
                     #endregion

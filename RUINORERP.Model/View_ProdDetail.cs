@@ -831,6 +831,11 @@ namespace RUINORERP.Model
 
         [SugarColumn(IsIgnore = true)]
         [Browsable(false)]
+        [Navigate(NavigateType.OneToOne, nameof(Type_ID))]
+        public virtual tb_ProductType tb_producttype { get; set; }
+
+        [SugarColumn(IsIgnore = true)]
+        [Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(ProdDetailID))]
         public virtual tb_ProdDetail tb_proddetail { get; set; }
         #endregion

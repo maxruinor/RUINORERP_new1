@@ -19,6 +19,8 @@ using TransInstruction;
 using System.Threading;
 using RUINORERP.Global;
 using SourceGrid2.Win32;
+using Newtonsoft.Json;
+using RUINORERP.Model.ConfigModel;
 
 namespace RUINORERP.UI.BI
 {
@@ -81,9 +83,23 @@ namespace RUINORERP.UI.BI
                 }
             }
 
-            if (list.Count==1)
+            if (list.Count == 1)
             {
                 MainForm.Instance.AppContext.SysConfig = list[0];
+                //财务模块。直接解析一下
+                #region FMconfig
+
+                try
+                {
+                    MainForm.Instance.AppContext.FMConfig = JsonConvert.DeserializeObject<FMConfiguration>(list[0].FMConfig);
+                }
+                catch (Exception)
+                {
+
+                }
+
+                #endregion
+
             }
 
             return list.ToList();

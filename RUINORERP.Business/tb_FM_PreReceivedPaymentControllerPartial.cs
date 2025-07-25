@@ -32,6 +32,7 @@ using AutoMapper;
 using RUINORERP.Business.FMService;
 using OfficeOpenXml.Export.ToDataTable;
 using Fireasy.Common.Extensions;
+using RUINORERP.Business.CommService;
 
 namespace RUINORERP.Business
 {
@@ -214,16 +215,20 @@ namespace RUINORERP.Business
                 //    rmrs.ReturnObject = entity as T;
                 //    return rmrs;
                 //}
-                // 开启事务，保证数据一致性
-                _unitOfWorkManage.BeginTran();
-
-                tb_FM_PaymentRecord paymentRecord = paymentController.BuildPaymentRecord(entity, false);
-                var rrs = await paymentController.BaseSaveOrUpdateWithChild<tb_FM_PaymentRecord>(paymentRecord, false);
-
-
                 entity.PrePaymentStatus = (int)PrePaymentStatus.已生效;
                 entity.ApprovalStatus = (int)ApprovalStatus.已审核;
                 entity.ApprovalResults = true;
+
+                //下面的自动审核会修改PrePaymentStatus状态。所以已经生效生赋值。后面 可能是审核后变为等待核销
+                tb_FM_PaymentRecord paymentRecord = paymentController.BuildPaymentRecord(entity, false);
+                var rrs = await paymentController.BaseSaveOrUpdateWithChild<tb_FM_PaymentRecord>(paymentRecord, false);
+                if (rrs.Succeeded)
+                {
+                    rmrs.ReturnObjectAsOtherEntity = paymentRecord;
+                }
+                // 开启事务，保证数据一致性
+                _unitOfWorkManage.BeginTran();
+
                 BusinessHelper.Instance.ApproverEntity(entity);
                 //只更新指定列
                 var result = await _unitOfWorkManage.GetDbClient().Updateable<tb_FM_PreReceivedPayment>(entity).UpdateColumns(it => new
@@ -248,63 +253,6 @@ namespace RUINORERP.Business
                 return rmrs;
             }
         }
-
-
-        /// <summary>
-        /// 这个审核可以由业务来审。后面还会有财务来定是否真实收付，这财务审核收款单前，还是可以反审的
-        /// 审核通过时
-        /// 预收款单本身是「收款」的一种业务类型，销售订单审核时已经生成了预收款单 ，通过 BizType 标记其业务属性为预收款。
-        /// 这里审核生成收款单
-        /// tb_FM_PaymentSettlement 不需要立即生成，但需在后续触发核销时生成（抵扣时生成）。
-        /// 销售订单审核时，则自动审核掉预收款单
-        /// </summary>
-        /// <param name="ObjectEntity"></param>
-        /// <returns></returns>
-        public async Task<ReturnResults<T>> AutoApprovalAsync(T ObjectEntity)
-        {
-            ReturnResults<T> rmrs = new ReturnResults<T>();
-            tb_FM_PreReceivedPayment entity = ObjectEntity as tb_FM_PreReceivedPayment;
-
-            if (entity.PrePaymentStatus != (int)PrePaymentStatus.草稿 && entity.PrePaymentStatus != (int)PrePaymentStatus.待审核)
-            {
-                rmrs.Succeeded = false;
-                rmrs.ErrorMsg = $"预{((ReceivePaymentType)entity.ReceivePaymentType).ToString()}单{entity.PreRPNO}，状态为【{((PrePaymentStatus)entity.PrePaymentStatus).ToString()}】\r\n请确认状态为【草稿】或【待审核】才可以审核。";
-
-                if (_appContext.SysConfig.ShowDebugInfo)
-                {
-                    _logger.LogInformation(rmrs.ErrorMsg);
-                }
-
-                return rmrs;
-            }
-
-            var paymentController = _appContext.GetRequiredService<tb_FM_PaymentRecordController<tb_FM_PaymentRecord>>();
-
-            tb_FM_PaymentRecord paymentRecord = paymentController.BuildPaymentRecord(entity, false);
-            var rrs = await paymentController.BaseSaveOrUpdateWithChild<tb_FM_PaymentRecord>(paymentRecord, false);
-
-            //预收付款中
-            //确认收到款  应该是收款审核时 反写回来 成 【待核销】
-            //if (paymentRecord.PaymentId > 0)
-            //{
-            //    entity.ForeignBalanceAmount = entity.ForeignPrepaidAmount;
-            //    entity.LocalBalanceAmount = entity.LocalPrepaidAmount;
-            //}
-            entity.PrePaymentStatus = (int)PrePaymentStatus.已生效;
-            entity.ApprovalStatus = (int)ApprovalStatus.已审核;
-            entity.ApprovalResults = true;
-            BusinessHelper.Instance.ApproverEntity(entity);
-            var result = await _unitOfWorkManage.GetDbClient().Updateable(entity)
-                                              .UpdateColumns(it => new { it.PrePaymentStatus, it.ApprovalOpinions, it.ApprovalResults, it.ApprovalStatus, it.Approver_at, it.Approver_by })
-                                              .ExecuteCommandHasChangeAsync();
-
-            rmrs.Succeeded = true;
-            rmrs.ReturnObject = entity as T;
-            return rmrs;
-
-        }
-
-
 
         public async Task<bool> BaseLogicDeleteAsync(tb_FM_PreReceivedPayment ObjectEntity)
         {

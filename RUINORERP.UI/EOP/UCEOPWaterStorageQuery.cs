@@ -55,6 +55,7 @@ namespace RUINORERP.UI.EOP
 
             //标记没有明细子表
             HasChildData = false;
+            ResultAnalysis = true;
         }
 
         public override void AddExcludeMenuList()
@@ -66,7 +67,7 @@ namespace RUINORERP.UI.EOP
 
         public override void BuildLimitQueryConditions()
         {
-       
+
 
             //BaseProcessor baseProcessor = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_EOP_WaterStorage).Name + "Processor");
             //QueryConditionFilter = baseProcessor.GetQueryFilter();
@@ -141,7 +142,10 @@ namespace RUINORERP.UI.EOP
 
         private void UCPreReceivedPaymentQuery_Load(object sender, EventArgs e)
         {
-
+            if (ResultAnalysis && _UCOutlookGridAnalysis1 != null)
+            {
+                _UCOutlookGridAnalysis1.kryptonOutlookGrid1.SetSubtotalColumns<tb_EOP_WaterStorage>(e => e.TotalAmount);
+            }
 
         }
     }

@@ -335,10 +335,6 @@ namespace RUINORERP.Business
 
                         //修改领料单状态 系统认为制令单已完成时。领料单也会结案
                         //但是有个前提是实发数据大于等于（有超发情况） 应该发的数量。并且是审核通过时
-                        if (true)
-                        {
-
-                        }
                         entity.tb_manufacturingorder.tb_MaterialRequisitions.Where(c => c.DataStatus == (int)DataStatus.确认 && entity.ApprovalStatus == (int)ApprovalStatus.已审核).ToList().ForEach(c => c.DataStatus = (int)DataStatus.完结);
                         int pomrCounter = await _unitOfWorkManage.GetDbClient().Updateable<tb_MaterialRequisition>(entity.tb_manufacturingorder.tb_MaterialRequisitions).ExecuteCommandAsync();
                         if (pomrCounter > 0)
@@ -530,10 +526,10 @@ namespace RUINORERP.Business
 
                 //处理 制令单？ 要单独处理，查出来，因为没有用强引用
                 //更新制令单的QuantityDelivered已交付数量 ,如果全交完了。则结案--的反操作
-                tb_ManufacturingOrder manufacturingOrder = null;
+              
                 if (entity.MOID > 0)
                 {
-                    manufacturingOrder = _unitOfWorkManage.GetDbClient().Queryable<tb_ManufacturingOrder>()
+                    entity.tb_manufacturingorder = _unitOfWorkManage.GetDbClient().Queryable<tb_ManufacturingOrder>()
                     .AsNavQueryable()//加这个前面,超过三级在前面加这一行，并且第四级无VS智能提示，但是可以用
                     .Includes(b => b.tb_proddetail, c => c.tb_prod)
                     .Includes(a => a.tb_FinishedGoodsInvs, b => b.tb_FinishedGoodsInvDetails)
@@ -542,47 +538,47 @@ namespace RUINORERP.Business
                     .Single();
                 }
 
-                if (manufacturingOrder != null)
+                if (entity.tb_manufacturingorder != null)
                 {
                     #region  反审  退回  出库
                     //先找到所有入库明细,再找按订单明细去循环比较。如果入库总数量大于订单数量，则不允许入库。--反
                     List<tb_FinishedGoodsInvDetail> detailList = new List<tb_FinishedGoodsInvDetail>();
-                    foreach (var item in manufacturingOrder.tb_FinishedGoodsInvs)
+                    foreach (var item in entity.tb_manufacturingorder.tb_FinishedGoodsInvs)
                     {
                         detailList.AddRange(item.tb_FinishedGoodsInvDetails);
                     }
 
                     //这里与采购订单不一样。采购订单是用明细去比较，这里是回写的是制令单，是主表。
-                    string prodName = manufacturingOrder.tb_proddetail.tb_prod.CNName + manufacturingOrder.tb_proddetail.tb_prod.Specifications;
+                    string prodName = entity.tb_manufacturingorder.tb_proddetail.tb_prod.CNName + entity.tb_manufacturingorder.tb_proddetail.tb_prod.Specifications;
                     //一对一时
 
                     //当前缴库行累计到交付
-                    var RowQty = entity.tb_FinishedGoodsInvDetails.Where(c => c.ProdDetailID == manufacturingOrder.ProdDetailID && c.Location_ID == manufacturingOrder.Location_ID).Sum(c => c.Qty);
-                    manufacturingOrder.QuantityDelivered = manufacturingOrder.QuantityDelivered - RowQty;
+                    var RowQty = entity.tb_FinishedGoodsInvDetails.Where(c => c.ProdDetailID == entity.tb_manufacturingorder.ProdDetailID && c.Location_ID == entity.tb_manufacturingorder.Location_ID).Sum(c => c.Qty);
+                    entity.tb_manufacturingorder.QuantityDelivered = entity.tb_manufacturingorder.QuantityDelivered - RowQty;
                     //如果已交数据大于制令单数量 给出警告实际操作中 使用其他方式将备品入库
-                    if (manufacturingOrder.QuantityDelivered < 0)
+                    if (entity.tb_manufacturingorder.QuantityDelivered < 0)
                     {
                         _unitOfWorkManage.RollbackTran();
-                        throw new Exception($"缴库单：{entity.DeliveryBillNo}反审核时，对应的制令单：{manufacturingOrder.MONO}，{prodName}的生产数量不能为负数！");
+                        throw new Exception($"缴库单：{entity.DeliveryBillNo}反审核时，对应的制令单：{entity.tb_manufacturingorder.MONO}，{prodName}的生产数量不能为负数！");
                     }
 
 
                     #endregion
-                    if (manufacturingOrder.QuantityDelivered != manufacturingOrder.ManufacturingQty)
+                    if (entity.tb_manufacturingorder.QuantityDelivered != entity.tb_manufacturingorder.ManufacturingQty)
                     {
-                        manufacturingOrder.DataStatus = (int)DataStatus.确认;
-                        manufacturingOrder.CloseCaseOpinions = $"缴库单:{entity.DeliveryBillNo}->制令单:{manufacturingOrder.MONO},缴库单反审时，生产数量不等于交付数量，取消自动结案";
+                        entity.tb_manufacturingorder.DataStatus = (int)DataStatus.确认;
+                        entity.tb_manufacturingorder.CloseCaseOpinions = $"缴库单:{entity.DeliveryBillNo}->制令单:{entity.tb_manufacturingorder.MONO},缴库单反审时，生产数量不等于交付数量，取消自动结案";
 
-                        //缴库的反审核  要不要影响领取料呢？
-                         entity.tb_manufacturingorder.tb_MaterialRequisitions.Where(c => entity.ApprovalStatus == (int)ApprovalStatus.已审核).ToList().ForEach(c => c.DataStatus = (int)DataStatus.确认);
-                         int pomrCounter = await _unitOfWorkManage.GetDbClient()
-                            .Updateable<tb_MaterialRequisition>(entity.tb_manufacturingorder.tb_MaterialRequisitions)
-                            .UpdateColumns(it => new { it.DataStatus, it.ApprovalOpinions })
-                            .ExecuteCommandAsync();
+                        //缴库的反审核  要不要影响领取料呢？  应该是不影响。因为 多次领取出来的。多次缴进去。没办法对应起来了。
+                         //entity.tb_manufacturingorder.tb_MaterialRequisitions.Where(c => entity.ApprovalStatus == (int)ApprovalStatus.已审核).ToList().ForEach(c => c.DataStatus = (int)DataStatus.确认);
+                         //int pomrCounter = await _unitOfWorkManage.GetDbClient()
+                         //   .Updateable<tb_MaterialRequisition>(entity.tb_manufacturingorder.tb_MaterialRequisitions)
+                         //   .UpdateColumns(it => new { it.DataStatus, it.ApprovalOpinions })
+                         //   .ExecuteCommandAsync();
                     }
 
                     //更新制令单的已交数量
-                    int updatecounter = await _unitOfWorkManage.GetDbClient().Updateable<tb_ManufacturingOrder>(manufacturingOrder)
+                    int updatecounter = await _unitOfWorkManage.GetDbClient().Updateable<tb_ManufacturingOrder>(entity.tb_manufacturingorder)
                          .UpdateColumns(it => new { it.DataStatus, it.CloseCaseOpinions,it.QuantityDelivered })
                         .ExecuteCommandAsync();
                     if (updatecounter == 0)
@@ -592,14 +588,14 @@ namespace RUINORERP.Business
                 }
 
                 //更新计划单已交数量，制令单会引用需求分析，需求分析引用计划单
-                if (manufacturingOrder.PDID > 0)
+                if (entity.tb_manufacturingorder.PDID > 0)
                 {
 
 
                     tb_ProductionDemand productionDemand = await _unitOfWorkManage.GetDbClient().Queryable<tb_ProductionDemand>()
                        .AsNavQueryable()//加这个前面,超过三级在前面加这一行，并且第四级无VS智能提示，但是可以用
                        .Includes(a => a.tb_productionplan, b => b.tb_ProductionPlanDetails)
-                       .Where(c => c.PDID == manufacturingOrder.PDID)
+                       .Where(c => c.PDID == entity.tb_manufacturingorder.PDID)
                        .SingleAsync();
                     foreach (var child in entity.tb_FinishedGoodsInvDetails)
                     {

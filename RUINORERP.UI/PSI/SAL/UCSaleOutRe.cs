@@ -165,6 +165,11 @@ namespace RUINORERP.UI.PSI.SAL
             DataBindingHelper.BindData4CheckBox<tb_SaleOutRe>(entity, t => t.RefundOnly, chkRefundOnly, false);
             DataBindingHelper.BindData4CheckBox<tb_SaleOutRe>(entity, t => t.GenerateVouchers, chkGenerateVouchers, false);
             DataBindingHelper.BindData4CheckBox<tb_SaleOutRe>(entity, t => t.IsCustomizedOrder, chkIsCustomizedOrder, false);
+            DataBindingHelper.BindData4CheckBox<tb_SaleOutRe>(entity, t => t.IsFromPlatform, chkIsFromPlatform, false);
+            DataBindingHelper.BindData4CheckBox<tb_SaleOutRe>(entity, t => t.OfflineRefund, chkOfflineRefund, false);
+            DataBindingHelper.BindData4TextBox<tb_SaleOutRe>(entity, t => t.PlatformOrderNo, txtPlatformOrderNo, BindDataType4TextBox.Text, false);
+
+
             base.errorProviderForAllInput.DataSource = entity;
             base.errorProviderForAllInput.ContainerControl = this;
             //this.ValidateChildren();

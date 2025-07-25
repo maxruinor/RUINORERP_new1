@@ -139,6 +139,11 @@ namespace RUINORERP.Model.Context
         /// 系统级的配置，如果权限中配置了。则使用权限中的
         /// </summary>
         public tb_SystemConfig SysConfig { get; set; }
+        #region 子配置类 保存于主配置表tb_SystemConfig
+        public FMConfiguration FMConfig { get; set; } = new FMConfiguration();
+
+        #endregion
+
 
         /// <summary>
         /// 角色级的属性配置，作用于第一个角色组,即当前角色

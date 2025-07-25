@@ -123,11 +123,6 @@ namespace RUINORERP.Business
                 }
                 #endregion
 
-                #region
-
-                #endregion
-
-
                 entity.ARAPStatus = (int)ARAPStatus.待审核;
                 entity.ApprovalResults = false;
                 entity.ApprovalStatus = (int)ApprovalStatus.未审核;
@@ -230,10 +225,8 @@ namespace RUINORERP.Business
                  */
 
                 // 开启事务，保证数据一致性
-                _unitOfWorkManage.BeginTran();
 
-                //去核销预收付表
-                bool rs = await ApplyAutoPaymentAllocation(entity, false);
+                _unitOfWorkManage.BeginTran();
 
                 //出库生成应付，应付审核时如果有预收付核销后应该是部分支付了。
                 if (entity.LocalBalanceAmount == entity.TotalLocalPayableAmount)
@@ -248,9 +241,13 @@ namespace RUINORERP.Business
                 {
                     entity.ARAPStatus = (int)ARAPStatus.部分支付;
                 }
+
+
                 entity.ApprovalStatus = (int)ApprovalStatus.已审核;
                 entity.ApprovalResults = true;
                 entity.ApprovalStatus = (int)ApprovalStatus.已审核;
+
+
                 BusinessHelper.Instance.ApproverEntity(entity);
                 //只更新指定列
                 var result = await _unitOfWorkManage.GetDbClient().Updateable(entity).UpdateColumns(it => new
@@ -270,6 +267,24 @@ namespace RUINORERP.Business
                     rmrs.ErrorMsg = "更新结果为零，请确保数据完整。请检查当前单据数据是否存在。";
                     return rmrs;
                 }
+
+                if (entity.ReceivePaymentType == (int)ReceivePaymentType.付款)
+                {
+                    if (_appContext.FMConfig.EnableAPAutoOffsetPrepay)
+                    {
+                        //去核销预收付表
+                        bool rs = await ApplyAutoPaymentAllocation(entity, false);
+                    }
+                }
+                if (entity.ReceivePaymentType == (int)ReceivePaymentType.收款)
+                {
+                    if (_appContext.FMConfig.EnableARAutoOffsetPreReceive)
+                    {
+                        //去核销预收付表
+                        bool rs = await ApplyAutoPaymentAllocation(entity, false);
+                    }
+                }
+
                 // 注意信息的完整性
                 _unitOfWorkManage.CommitTran();
                 rmrs.Succeeded = true;
@@ -439,24 +454,24 @@ namespace RUINORERP.Business
 
             #region 单独加一行运算到明细中 默认退货不退运费,要的话,自己手动添加
 
-             // 添加人工成本（关键部分）
-             if (entity.LaborCost > 0)
-             {
-                 details.Add(new tb_FM_ReceivablePayableDetail
-                 {
-                     ProdDetailID = null,
-                     //property = "人工费",
-                     Specifications = "",
-                     ExchangeRate = 1,
-                     Description = "人工费",
-                     UnitPrice = entity.LaborCost,
-                     Quantity = 1,
-                     TaxRate = 0.0m, // 假设运费税率为9%
-                     TaxLocalAmount = 0,
-                     Summary = "人工费",
-                     LocalPayableAmount = entity.LaborCost
-                 });
-             }
+            // 添加人工成本（关键部分）
+            if (entity.LaborCost > 0)
+            {
+                details.Add(new tb_FM_ReceivablePayableDetail
+                {
+                    ProdDetailID = null,
+                    //property = "人工费",
+                    Specifications = "",
+                    ExchangeRate = 1,
+                    Description = "人工费",
+                    UnitPrice = entity.LaborCost,
+                    Quantity = 1,
+                    TaxRate = 0.0m, // 假设运费税率为9%
+                    TaxLocalAmount = 0,
+                    Summary = "人工费",
+                    LocalPayableAmount = entity.LaborCost
+                });
+            }
 
             #endregion
 
@@ -569,29 +584,12 @@ namespace RUINORERP.Business
                 details[i].LocalPayableAmount = details[i].UnitPrice.Value * details[i].Quantity.Value;
             }
 
-            #region 单独加一行运算到明细中 默认退货不退运费,要的话,自己手动添加
-
+            #region 单独处理运费 ,这里是应收。意思是收取客户的运费。应该以运费成本为标准。佣金不需要
             // 添加运费行（关键部分）
-            //if (entity.ShipCost > 0)
-            //{
-            //    details.Add(new tb_FM_ReceivablePayableDetail
-            //    {
-            //        ProdDetailID = null,
-            //        property = "运费",
-            //        SourceBillNo = entity.ReturnNo,
-            //        SourceBillId = entity.SaleOutRe_ID,
-            //        SourceBizType = (int)BizType.销售退回单,
-            //        Specifications = "",
-            //        ExchangeRate = 1,
-            //        Description = "发货运费",
-            //        UnitPrice = entity.ShipCost,
-            //        Quantity = 1,
-            //        TaxRate = 0.09m, // 假设运费税率为9%
-            //        TaxLocalAmount = 1,
-            //        Summary = "",
-            //        LocalPayableAmount = entity.ShipCost
-            //    });
-            //}
+            if (entity.FreightIncome > 0)
+            {
+                payable.ShippingFee = -entity.FreightIncome;
+            }
 
             #endregion
 
@@ -1234,6 +1232,8 @@ namespace RUINORERP.Business
                     }
                 }
 
+
+
                 // 处理后若仍有剩余金额，应收款状态为部分支付；否则为已结清
                 entity.LocalBalanceAmount = remainingLocal;
                 entity.ForeignBalanceAmount = remainingForeign;
@@ -1414,8 +1414,10 @@ namespace RUINORERP.Business
                 }
             }
             */
-
-            result = await ApplyManualPaymentAllocation(entity, prePayments, UseTransaction);
+            if (prePayments.Count > 0)
+            {
+                result = await ApplyManualPaymentAllocation(entity, prePayments, UseTransaction);
+            }
             return result;
         }
 
@@ -1442,8 +1444,6 @@ namespace RUINORERP.Business
             return prePayment;
         }
 
-
-
         /// <summary>
         /// 创建应收款单，并且自动审核，因为后面还会自动去冲预收款单
         /// 如果有订金，会先去预收检测
@@ -1466,6 +1466,11 @@ namespace RUINORERP.Business
             payable.ApprovalOpinions = "";
             payable.Modified_at = null;
             payable.Modified_by = null;
+
+            if (entity.tb_saleorder != null)
+            {
+                payable.Account_id = entity.tb_saleorder.Account_id;
+            }
             payable.SourceBillNo = entity.SaleOutNo;
             payable.SourceBillId = entity.SaleOut_MainID;
             payable.SourceBizType = (int)BizType.销售出库单;
@@ -1473,8 +1478,6 @@ namespace RUINORERP.Business
             {
                 payable.DepartmentID = entity.tb_projectgroup.DepartmentID;
             }
-
-
 
             //如果部门还是没有值 则从缓存中加载,如果项目有所属部门的话
             if (payable.ProjectGroup_ID.HasValue && !payable.DepartmentID.HasValue)
@@ -1534,8 +1537,6 @@ namespace RUINORERP.Business
 
             payable.Currency_ID = entity.Currency_ID;
 
-
-
             payable.ExchangeRate = entity.ExchangeRate;
 
             List<tb_FM_ReceivablePayableDetail> details = mapper.Map<List<tb_FM_ReceivablePayableDetail>>(entity.tb_SaleOutDetails);
@@ -1566,24 +1567,11 @@ namespace RUINORERP.Business
                 }
             }
 
-            #region 单独加一行运算到明细中 ,这里是应收。意思是收取客户的运费。应该以运费成本为标准。佣金不需要
+            #region 单独处理运费 ,这里是应收。意思是收取客户的运费。应该以运费成本为标准。佣金不需要
             // 添加运费行（关键部分）
             if (entity.FreightCost > 0 && !IsProcessCommission)
             {
-                details.Add(new tb_FM_ReceivablePayableDetail
-                {
-                    ProdDetailID = null,
-                    property = "运费",
-                    Specifications = "",
-                    ExchangeRate = 1,
-                    Description = "发货运费",
-                    UnitPrice = entity.FreightCost,
-                    Quantity = 1,
-                    TaxRate = 0.0m, // 假设运费税率为9%
-                    TaxLocalAmount = 0,
-                    Summary = "",
-                    LocalPayableAmount = entity.FreightCost
-                });
+                payable.ShippingFee = entity.FreightCost;
             }
 
             #endregion
@@ -1740,26 +1728,7 @@ namespace RUINORERP.Business
                     }
                 }
             }
-            #region 单独加一行运算到明细中 ,这里是应收。意思是收取客户的运费。应该以运费成本为标准。
-            // 添加运费行（关键部分）
-            if (entity.ShipCost > 0)
-            {
-                details.Add(new tb_FM_ReceivablePayableDetail
-                {
-                    ProdDetailID = null,
-                    property = "运费",
-                    Specifications = "",
-                    ExchangeRate = 1,
-                    Description = "发货运费",
-                    UnitPrice = entity.ShipCost,
-                    Quantity = 1,
-                    TaxRate = 0.0m, // 假设运费税率为9%
-                    TaxLocalAmount = 0,
-                    Summary = "",
-                    LocalPayableAmount = entity.ShipCost
-                });
-            }
-            #endregion
+
             payable.tb_FM_ReceivablePayableDetails = details;
             //如果是外币时，则由外币算出本币
             if (isRefund)
@@ -1777,7 +1746,13 @@ namespace RUINORERP.Business
                 payable.ForeignPaidAmount = 0;
                 payable.TotalForeignPayableAmount = entity.ForeignTotalAmount;
             }
-
+            #region 单独处理运费 ,这里是应收。意思是收取客户的运费。应该以运费成本为标准。
+            // 添加运费行（关键部分）
+            if (entity.ShipCost > 0)
+            {
+                payable.ShippingFee = entity.ShipCost;
+            }
+            #endregion
             //本币时 一定会有值。
             payable.LocalBalanceAmount = entity.TotalAmount;
             payable.LocalPaidAmount = 0;
@@ -1840,7 +1815,7 @@ namespace RUINORERP.Business
         /// </summary>
         /// <param name="entity"></param>
         /// <returns></returns>
-        public  tb_FM_ReceivablePayable BuildReceivablePayable(tb_PurEntryRe entity)
+        public tb_FM_ReceivablePayable BuildReceivablePayable(tb_PurEntryRe entity)
         {
             tb_FM_ReceivablePayable payable = new tb_FM_ReceivablePayable();
             payable = mapper.Map<tb_FM_ReceivablePayable>(entity);

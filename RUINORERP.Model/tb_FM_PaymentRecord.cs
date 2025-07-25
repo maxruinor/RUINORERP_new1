@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：06/20/2025 16:20:06
+// 时间：07/24/2025 20:27:01
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -137,21 +137,34 @@ namespace RUINORERP.Model
             SetProperty(ref _PayeeAccountNo, value);
                         }
         }
+
         private string _SourceBillNos;
         /// <summary>
         /// 来源单号
         /// </summary>
-        [AdvQueryAttribute(ColName = "SourceBillNos", ColDesc = "来源单号")]
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType = "String", ColumnName = "SourceBillNos", Length = 1000, IsNullable = false, ColumnDescription = "来源单号")]
+        [AdvQueryAttribute(ColName = "SourceBillNos",ColDesc = "来源单号")] 
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "SourceBillNos" ,Length=1000,IsNullable = true,ColumnDescription = "来源单号" )]
         public string SourceBillNos
-        {
-            get { return _SourceBillNos; }
-            set
-            {
-                SetProperty(ref _SourceBillNos, value);
-            }
+        { 
+            get{return _SourceBillNos;}
+            set{
+            SetProperty(ref _SourceBillNos, value);
+                        }
         }
 
+        private bool? _IsFromPlatform;
+        /// <summary>
+        /// 平台单
+        /// </summary>
+        [AdvQueryAttribute(ColName = "IsFromPlatform",ColDesc = "平台单")] 
+        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType ="Boolean",  ColumnName = "IsFromPlatform" ,IsNullable = true,ColumnDescription = "平台单" )]
+        public bool? IsFromPlatform
+        { 
+            get{return _IsFromPlatform;}
+            set{
+            SetProperty(ref _IsFromPlatform, value);
+                        }
+        }
 
         private long _Currency_ID;
         /// <summary>
@@ -578,7 +591,7 @@ namespace RUINORERP.Model
         //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_FM_PaymentRecord.ReversedByPaymentId))]
-        public virtual List<tb_FM_PaymentRecord> tb_FM_PaymentRecords_Reversed { get; set; }
+        public virtual List<tb_FM_PaymentRecord> tb_FM_PaymentRecords_Reverseds { get; set; }
         //tb_FM_PaymentRecord.PaymentId)
         //PaymentId.FK_TB_FM_PA_REFERENCE_TB_FM_PA_ReversedByPaymentId)
         //tb_FM_PaymentRecord.ReversedByPaymentId)
@@ -586,7 +599,7 @@ namespace RUINORERP.Model
         //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_FM_PaymentRecord.ReversedOriginalId))]
-        public virtual List<tb_FM_PaymentRecord> tb_FM_PaymentRecords_Original{ get; set; }
+        public virtual List<tb_FM_PaymentRecord> tb_FM_PaymentRecords_Originals { get; set; }
         //tb_FM_PaymentRecord.PaymentId)
         //PaymentId.FK_TB_FM_PA_REFERENCE_TB_FM_PA_ReversedOriginalId)
         //tb_FM_PaymentRecord.ReversedOriginalId)

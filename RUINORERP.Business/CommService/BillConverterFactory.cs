@@ -18,6 +18,7 @@ namespace RUINORERP.Business.CommService
     /// 目前的方法不合理。写死的 ,暂时没有想到好办法 
     /// 为了 比方传入采购订单类型 及单号就处理对应数据库的事
     /// </summary>
+    [Obsolete("用EnhancedBizTypeMapper等相关代替")]
     public class BillConverterFactory
     {
         private readonly ApplicationContext _context;

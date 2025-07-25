@@ -46,7 +46,7 @@
             this.lblPaytype_ID = new Krypton.Toolkit.KryptonLabel();
             this.txtPlatformOrderNo = new Krypton.Toolkit.KryptonTextBox();
             this.lblPlatformOrderNo = new Krypton.Toolkit.KryptonLabel();
-            this.chk平台单 = new Krypton.Toolkit.KryptonCheckBox();
+            this.chkIsFromPlatform = new Krypton.Toolkit.KryptonCheckBox();
             this.chk替代品出库 = new Krypton.Toolkit.KryptonCheckBox();
             this.lblDataStatus = new Krypton.Toolkit.KryptonLabel();
             this.dtpOutDate = new Krypton.Toolkit.KryptonDateTimePicker();
@@ -143,7 +143,7 @@
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.lblPaytype_ID);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.txtPlatformOrderNo);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.lblPlatformOrderNo);
-            this.kryptonSplitContainer1.Panel1.Controls.Add(this.chk平台单);
+            this.kryptonSplitContainer1.Panel1.Controls.Add(this.chkIsFromPlatform);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.chk替代品出库);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.lblDataStatus);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.dtpOutDate);
@@ -321,15 +321,15 @@
             this.lblPlatformOrderNo.TabIndex = 148;
             this.lblPlatformOrderNo.Values.Text = "平台单号";
             // 
-            // chk平台单
+            // chkIsFromPlatform
             // 
-            this.chk平台单.Checked = true;
-            this.chk平台单.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.chk平台单.Location = new System.Drawing.Point(797, 66);
-            this.chk平台单.Name = "chk平台单";
-            this.chk平台单.Size = new System.Drawing.Size(62, 20);
-            this.chk平台单.TabIndex = 147;
-            this.chk平台单.Values.Text = "平台单";
+            this.chkIsFromPlatform.Checked = true;
+            this.chkIsFromPlatform.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.chkIsFromPlatform.Location = new System.Drawing.Point(797, 66);
+            this.chkIsFromPlatform.Name = "chkIsFromPlatform";
+            this.chkIsFromPlatform.Size = new System.Drawing.Size(62, 20);
+            this.chkIsFromPlatform.TabIndex = 147;
+            this.chkIsFromPlatform.Values.Text = "平台单";
             // 
             // chk替代品出库
             // 
@@ -822,7 +822,7 @@
         private Krypton.Toolkit.KryptonTextBox txtTotalQty;
         private Krypton.Toolkit.KryptonLabel kryptonLabel2;
         private Krypton.Toolkit.KryptonCheckBox chk替代品出库;
-        private Krypton.Toolkit.KryptonCheckBox chk平台单;
+        private Krypton.Toolkit.KryptonCheckBox chkIsFromPlatform;
         private Krypton.Toolkit.KryptonTextBox txtPlatformOrderNo;
         private Krypton.Toolkit.KryptonLabel lblPlatformOrderNo;
         private Krypton.Toolkit.KryptonLabel kryptonLabel3;

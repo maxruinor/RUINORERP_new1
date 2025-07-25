@@ -20,10 +20,17 @@
 // ReSharper disable PrivateFieldCanBeConvertedToLocalVariable
 // ReSharper disable UnusedVariable
 // ReSharper disable RedundantAssignment
+using System.Linq.Expressions;
+
+using Krypton.Toolkit.Suite.Extended.Outlook.Grid.Classes.Helpers;
+
 namespace Krypton.Toolkit.Suite.Extended.Outlook.Grid
 {
     /// <summary>
     /// Krypton DataGridView allowing nested grouping and unlimited sorting
+    /// 2025-7-24
+    /// 优化设置统计列，用表达式来设置
+    /// 
     /// </summary>
     /// <seealso cref="KryptonDataGridView" />
     public partial class KryptonOutlookGrid : KryptonDataGridView
@@ -51,7 +58,7 @@ namespace Krypton.Toolkit.Suite.Extended.Outlook.Grid
         private OutlookGridGroupCollection _groupCollection;     // List of Groups (of rows)
         private List<OutlookGridRow> _internalRows;              // List of Rows in order to keep them as is (without grouping,...)
         private OutlookGridColumnCollection _internalColumns;    // List of columns in order to know if sorted, Grouped, types,...
-        
+
         ////小计列
         //private OutlookGridColumnCollection _subtotalColumns;
 
@@ -64,11 +71,35 @@ namespace Krypton.Toolkit.Suite.Extended.Outlook.Grid
         ////小计列
         private List<string> _subtotalColumns;
 
+
+
         ///// <summary>
         ///// 小计列<colName,元>
         ////  列名，显示单位
         ///// </summary>
+        ///
+
         public List<string> SubtotalColumns { get; set; } = new List<string>();
+        #region 小计列 用表达式来设置更好
+
+        public void SetSubtotalColumns<TEntity>(Expression<Func<TEntity, object?>> SubtotalColumnName) where TEntity : class
+        {
+            if (SubtotalColumnName==null)
+            {
+                return;
+            }
+            var SubtotalColumn = SubtotalColumnName.GetMemberInfo().Name;
+            if (!SubtotalColumns.Contains(SubtotalColumn))
+            {
+                SubtotalColumns.Add(SubtotalColumn);
+            }
+        }
+
+
+        #endregion
+
+
+
         private int _previousGroupRowSelected = -1; //Useful to allow the selection of a group row or not when on mouse down 
 
         //Krypton ContextMenu for the columns header

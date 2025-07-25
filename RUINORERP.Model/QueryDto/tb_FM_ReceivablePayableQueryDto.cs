@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：05/07/2025 15:37:47
+// 时间：07/24/2025 20:27:17
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -46,6 +46,45 @@ namespace RUINORERP.Model.QueryDto
         }
      
 
+        private int? _SourceBizType;
+        /// <summary>
+        /// 来源业务
+        /// </summary>
+        [AdvQueryAttribute(ColName = "SourceBizType",ColDesc = "来源业务")]
+        [SugarColumn(ColumnDataType = "int",SqlParameterDbType ="Int32",ColumnName = "SourceBizType",IsNullable = true,ColumnDescription = "来源业务" )]
+        public int? SourceBizType 
+        { 
+            get{return _SourceBizType;}
+            set{SetProperty(ref _SourceBizType, value);}
+        }
+     
+
+        private long? _SourceBillId;
+        /// <summary>
+        /// 来源单据
+        /// </summary>
+        [AdvQueryAttribute(ColName = "SourceBillId",ColDesc = "来源单据")]
+        [SugarColumn(ColumnDataType = "bigint",SqlParameterDbType ="Int64",ColumnName = "SourceBillId",IsNullable = true,ColumnDescription = "来源单据" )]
+        public long? SourceBillId 
+        { 
+            get{return _SourceBillId;}
+            set{SetProperty(ref _SourceBillId, value);}
+        }
+     
+
+        private string _SourceBillNo;
+        /// <summary>
+        /// 来源单号
+        /// </summary>
+        [AdvQueryAttribute(ColName = "SourceBillNo",ColDesc = "来源单号")]
+        [SugarColumn(ColumnDataType = "varchar",SqlParameterDbType ="String",ColumnName = "SourceBillNo",Length=30,IsNullable = true,ColumnDescription = "来源单号" )]
+        public string SourceBillNo 
+        { 
+            get{return _SourceBillNo;}
+            set{SetProperty(ref _SourceBillNo, value);}
+        }
+     
+
         private long _CustomerVendor_ID;
         /// <summary>
         /// 往来单位
@@ -71,6 +110,19 @@ namespace RUINORERP.Model.QueryDto
         { 
             get{return _Currency_ID;}
             set{SetProperty(ref _Currency_ID, value);}
+        }
+     
+
+        private bool? _IsFromPlatform;
+        /// <summary>
+        /// 平台单
+        /// </summary>
+        [AdvQueryAttribute(ColName = "IsFromPlatform",ColDesc = "平台单")]
+        [SugarColumn(ColumnDataType = "bit",SqlParameterDbType ="Boolean",ColumnName = "IsFromPlatform",IsNullable = true,ColumnDescription = "平台单" )]
+        public bool? IsFromPlatform 
+        { 
+            get{return _IsFromPlatform;}
+            set{SetProperty(ref _IsFromPlatform, value);}
         }
      
 
@@ -340,13 +392,13 @@ namespace RUINORERP.Model.QueryDto
         }
      
 
-        private long? _ARAPStatus;
+        private int? _ARAPStatus;
         /// <summary>
         /// 支付状态
         /// </summary>
         [AdvQueryAttribute(ColName = "ARAPStatus",ColDesc = "支付状态")]
-        [SugarColumn(ColumnDataType = "bigint",SqlParameterDbType ="Int64",ColumnName = "ARAPStatus",IsNullable = true,ColumnDescription = "支付状态" )]
-        public long? ARAPStatus 
+        [SugarColumn(ColumnDataType = "int",SqlParameterDbType ="Int32",ColumnName = "ARAPStatus",IsNullable = true,ColumnDescription = "支付状态" )]
+        public int? ARAPStatus 
         { 
             get{return _ARAPStatus;}
             set{SetProperty(ref _ARAPStatus, value);}

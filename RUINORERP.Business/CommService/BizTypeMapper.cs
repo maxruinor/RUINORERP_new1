@@ -12,6 +12,7 @@ namespace RUINORERP.Business.CommService
     /// <summary>
     /// 业务类型与表名的映射关系（实体名）
     /// </summary>
+    [Obsolete("用EnhancedBizTypeMapper代替")]
     public class BizTypeMapper
     {
         private Dictionary<BizType, Type> mapping;

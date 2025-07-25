@@ -13,6 +13,7 @@ using Krypton.Toolkit;
 using Krypton.Workspace;
 using LiveChartsCore.Geo;
 using Microsoft.Extensions.Logging;
+using NPOI.SS.Formula.Functions;
 using RUINORERP.Business;
 using RUINORERP.Business.Processor;
 using RUINORERP.Common.Helper;
@@ -27,6 +28,8 @@ namespace RUINORERP.UI.Common
 {
     public class MenuPowerHelper
     {
+
+
         #region 添加一个事件来将查询参数设置的过程在这里实现
 
         //sgd 要提供当前操作的行 列 值
@@ -44,15 +47,16 @@ namespace RUINORERP.UI.Common
         public RUINORERP.Model.Context.ApplicationContext appContext;
 
         private readonly MenuTracker _menuTracker;
-
+        public readonly ILogger<MenuPowerHelper> _logger;
         /// <summary>
         /// 应该有基类，以后对  角色组，用户 各种方式的权限做不同处理 多态等
         /// </summary>
         /// 
 
-        public MenuPowerHelper(MenuTracker menuTracker, RUINORERP.Model.Context.ApplicationContext _appContext = null)
+        public MenuPowerHelper(MenuTracker menuTracker, ILogger<MenuPowerHelper> logger, RUINORERP.Model.Context.ApplicationContext _appContext = null)
         {
             appContext = _appContext;
+            _logger = logger;
             _menuTracker = menuTracker;
         }
 
@@ -182,6 +186,11 @@ namespace RUINORERP.UI.Common
             //mlist = mlist.Sort(new MenuNameComparer());
             foreach (tb_MenuInfo var in sortlist)
             {
+                if (var.CaptionCN.IsNullOrEmpty())
+                {
+                    _logger.LogError($"{var.MenuID}{var.MenuName}菜单名称为空，请检查数据");
+                    continue;
+                }
                 if (var.CaptionCN.Contains("异常"))
                 {
 
@@ -315,7 +324,7 @@ namespace RUINORERP.UI.Common
                                 //{
                                 //    this.MainMenu = MainForm.Instance.menuStripMain;
                                 //}
-                                if (this.MainMenu!=null)
+                                if (this.MainMenu != null)
                                 {
                                     ControlWindowsMenu(this.MainMenu.Items);
                                 }
@@ -420,9 +429,10 @@ namespace RUINORERP.UI.Common
                             // Create new document to be added into workspace
                             if ((pr.IsVisble && pr.IsEnabled) || Program.AppContextData.IsSuperUser)
                             {
-                                if (pr.BIBaseForm.Trim().Length == 0)
+                                if (pr.BIBaseForm.IsNullOrEmpty())
                                 {
                                     MainForm.Instance.uclog.AddLog("请检查菜单基类名的配置是否为空！", Global.UILogType.错误);
+                                    return;
                                 }
 
                                 if (pr.BIBaseForm.Contains("BaseBillEditGeneric"))

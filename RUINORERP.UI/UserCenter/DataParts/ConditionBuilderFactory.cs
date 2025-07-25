@@ -199,6 +199,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
             }
             else
             {
+
                 StatusNameDescription = "待回款";
                 //硬编码的
                 identifier = SharedFlag.Flag1.ToString();
@@ -301,6 +302,14 @@ namespace RUINORERP.UI.UserCenter.DataParts
         };
         }
 
+
+        /// <summary>
+        /// 应收应付,如果为负数时有区别
+        /// 应收负数时，待退款
+        /// 应付负数时，待退款
+        /// </summary>
+        /// <param name="paymentType"></param>
+        /// <returns></returns>
         public List<ConditionGroup> GetARAPConditionGroups(ReceivePaymentType paymentType)
         {
             string StatusNameDescription = string.Empty;

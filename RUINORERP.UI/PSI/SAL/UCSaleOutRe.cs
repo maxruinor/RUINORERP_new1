@@ -106,6 +106,8 @@ namespace RUINORERP.UI.PSI.SAL
 
                 return;
             }
+            cmbPayStatus.Enabled = true;
+            cmbPaytype_ID.Enabled = true;
             base.EditEntity = entity;
             if (entity != null)
             {
@@ -134,6 +136,7 @@ namespace RUINORERP.UI.PSI.SAL
                     {
                         entity.Currency_ID = AppContext.BaseCurrency.Currency_ID;
                     }
+                     
                 }
 
             }
@@ -143,7 +146,8 @@ namespace RUINORERP.UI.PSI.SAL
                 lblReview.Text = ((ApprovalStatus)entity.ApprovalStatus).ToString();
             }
             EditEntity = entity;
-
+            DataBindingHelper.BindData4Cmb<tb_PaymentMethod>(entity, k => k.Paytype_ID, v => v.Paytype_Name, cmbPaytype_ID);
+            DataBindingHelper.BindData4CmbByEnum<tb_SaleOutRe, PayStatus>(entity, k => k.PayStatus, cmbPayStatus, false, PayStatus.全额预付, PayStatus.部分预付);
             DataBindingHelper.BindData4TextBox<tb_SaleOutRe>(entity, t => t.TotalCommissionAmount.ToString(), txtTotalCommissionAmount, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4Cmb<tb_Currency>(entity, k => k.Currency_ID, v => v.CurrencyName, cmbCurrency_ID);
             DataBindingHelper.BindData4TextBox<tb_SaleOutRe>(entity, t => t.ExchangeRate.ToString(), txtExchangeRate, BindDataType4TextBox.Money, false);
@@ -236,6 +240,23 @@ namespace RUINORERP.UI.PSI.SAL
                 //权限允许
                 if ((true && entity.DataStatus == (int)DataStatus.草稿) || (true && entity.DataStatus == (int)DataStatus.新建))
                 {
+                    if (s2.PropertyName == entity.GetPropertyName<tb_SaleOutRe>(c => c.PayStatus) && entity.PayStatus == (int)PayStatus.未付款)
+                    {
+                        //默认为账期
+                        entity.Paytype_ID = MainForm.Instance.AppContext.PaymentMethodOfPeriod.Paytype_ID;
+                    }
+                    if (s2.PropertyName == entity.GetPropertyName<tb_SaleOutRe>(c => c.Paytype_ID) && entity.Paytype_ID == MainForm.Instance.AppContext.PaymentMethodOfPeriod.Paytype_ID)
+                    {
+                        //默认为未付款
+                        entity.PayStatus = (int)PayStatus.未付款;
+                    }
+                    if (s2.PropertyName == entity.GetPropertyName<tb_SaleOutRe>(c => c.Paytype_ID) && entity.Paytype_ID > 0)
+                    {
+                        if (cmbPaytype_ID.SelectedItem is tb_PaymentMethod paymentMethod)
+                        {
+                            EditEntity.tb_paymentmethod = paymentMethod;
+                        }
+                    }
 
                 }
                 //如果是销售订单引入变化则加载明细及相关数据
@@ -783,73 +804,13 @@ namespace RUINORERP.UI.PSI.SAL
                 if (saleout.tb_SaleOutRes.Sum(c => c.TotalQty) == saleout.tb_SaleOutDetails.Sum(c => c.Quantity))
                 {
                     MainForm.Instance.uclog.AddLog("当前出库单已经全部退回，无法再次退回。");
-
                     return;
                 }
 
-                saleoutid = saleout.SaleOut_MainID;
-
-                tb_SaleOutRe entity = MainForm.Instance.mapper.Map<tb_SaleOutRe>(saleout);
-                List<tb_SaleOutReDetail> details = MainForm.Instance.mapper.Map<List<tb_SaleOutReDetail>>(saleout.tb_SaleOutDetails);
-                List<tb_SaleOutReDetail> NewDetails = new List<tb_SaleOutReDetail>();
-                List<string> tipsMsg = new List<string>();
-                for (global::System.Int32 i = 0; i < details.Count; i++)
-                {
-                    tb_SaleOutDetail item = saleout.tb_SaleOutDetails.FirstOrDefault(c => c.ProdDetailID == details[i].ProdDetailID);
-                    details[i].Quantity = details[i].Quantity - item.TotalReturnedQty;// 减掉已经退回的数量
-                    details[i].SubtotalTransAmount = details[i].TransactionPrice * details[i].Quantity;
-                    details[i].Cost = details[i].Cost;
-                    details[i].CustomizedCost = details[i].CustomizedCost;
-                    details[i].SubtotalCostAmount = (details[i].Cost + details[i].CustomizedCost) * details[i].Quantity;
-
-                    if (details[i].Quantity > 0)
-                    {
-                        NewDetails.Add(details[i]);
-                    }
-                    else
-                    {
-                        tipsMsg.Add($"当前行的SKU:{item.tb_proddetail.SKU}已退库数量为{details[i].Quantity}，当前行数据将不会加载到明细！");
-                    }
-                }
-
-                if (NewDetails.Count == 0)
-                {
-                    tipsMsg.Add($"销售出库单:{entity.SaleOut_NO}已全部退回，请检查是否正在重复操作！");
-                }
-
-                StringBuilder msg = new StringBuilder();
-                foreach (var item in tipsMsg)
-                {
-                    msg.Append(item).Append("\r\n");
-
-                }
-                if (tipsMsg.Count > 0)
-                {
-                    MessageBox.Show(msg.ToString(), "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                }
-
-
-                entity.tb_SaleOutReDetails = NewDetails;
-                entity.ReturnDate = System.DateTime.Now;
-                dtpDeliveryDate.Checked = true;
-                entity.DataStatus = (int)DataStatus.草稿;
-                entity.ApprovalStatus = (int)ApprovalStatus.未审核;
-                entity.ApprovalResults = null;
-                entity.ApprovalOpinions = "";
-                entity.Modified_at = null;
-                entity.Modified_by = null;
-                entity.Approver_at = null;
-                entity.Approver_by = null;
-                entity.PrintStatus = 0;
-                entity.ActionStatus = ActionStatus.新增;
-                if (entity.SaleOut_MainID.HasValue && entity.SaleOut_MainID > 0)
-                {
-                    entity.CustomerVendor_ID = saleout.CustomerVendor_ID;
-                    entity.SaleOut_NO = saleout.SaleOutNo;
-                    entity.SaleOut_MainID = saleout.SaleOut_MainID;
-                }
-                BusinessHelper.Instance.InitEntity(entity);
-                BindData(entity as tb_SaleOutRe);
+                tb_SaleOutController<tb_SaleOut> ctr = Startup.GetFromFac<tb_SaleOutController<tb_SaleOut>>();
+                tb_SaleOutRe saleOutre = ctr.SaleOutToSaleOutRe(saleout);
+                  
+                BindData(saleOutre as tb_SaleOutRe);
             }
             else
             {

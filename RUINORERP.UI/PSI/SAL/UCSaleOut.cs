@@ -119,7 +119,7 @@ namespace RUINORERP.UI.PSI.SAL
                                 toolStripbtnRelatedQuery.DropDownItems.Add(RelatedMenuItemSub);
                             }
                         }
-                        
+
                     }
                 }
             }
@@ -191,6 +191,7 @@ namespace RUINORERP.UI.PSI.SAL
             DataBindingHelper.BindData4TextBox<tb_SaleOut>(entity, t => t.CustomerPONo, txtCustomerPONo, BindDataType4TextBox.Text, false);
             //DataBindingHelper.BindData4Cmb<tb_SaleOrder>(entity, k => k.SOrder_ID, v => v.SOrderNo, cmbOrder_ID);
             DataBindingHelper.BindData4CmbByEnum<tb_SaleOut>(entity, k => k.PayStatus, typeof(PayStatus), cmbPayStatus, false);
+
             DataBindingHelper.BindData4Cmb<tb_PaymentMethod>(entity, k => k.Paytype_ID, v => v.Paytype_Name, cmbPaytype_ID);
             DataBindingHelper.BindData4CheckBox<tb_SaleOut>(entity, t => t.IsFromPlatform, chkIsFromPlatform, false);
             DataBindingHelper.BindData4TextBox<tb_SaleOut>(entity, t => t.PlatformOrderNo, txtPlatformOrderNo, BindDataType4TextBox.Text, false);

@@ -1096,6 +1096,9 @@ namespace RUINORERP.Business
                 entity.ApprovalOpinions = "";
                 entity.Modified_at = null;
                 entity.Modified_by = null;
+                //退货时 默认不写付款情况，实际是有些平台的。会提前退？线下是先退再付款
+                entity.PayStatus = null;
+                entity.Paytype_ID = null;
                 List<string> tipsMsg = new List<string>();
                 List<tb_SaleOutReDetail> details = mapper.Map<List<tb_SaleOutReDetail>>(saleout.tb_SaleOutDetails);
                 List<tb_SaleOutReDetail> NewDetails = new List<tb_SaleOutReDetail>();
